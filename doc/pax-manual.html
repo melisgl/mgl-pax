@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>
+<head>
+<title>PAX manual</title>
+<link type='text/css' href='style.css' rel='stylesheet'/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+</head>
+<body><p><a id='x:28MGL-PAX::40PAX-MANUAL:20MGL-PAX:SECTION:29'></a></p>
+
+<h1><span class="navigation"> <a href="#x:28:22mgl-pax:22:20ASDF:2FSYSTEM:SYSTEM:29" title="(\&quot;mgl-pax\&quot; ASDF/SYSTEM:SYSTEM)">&#8594;</a> <a href="#x:28MGL-PAX::40PAX-MANUAL:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MANUAL MGL-PAX:SECTION)">&#8634;</a></span>PAX manual</h1>
+
+<h2>Table of Contents</h2>
+
+<ul>
+<li><a href="#x:28:22mgl-pax:22:20ASDF:2FSYSTEM:SYSTEM:29" title="(\&quot;mgl-pax\&quot; ASDF/SYSTEM:SYSTEM)">1 mgl-pax ASDF System Details</a></li>
+<li><a href="#x:28MGL-PAX::40PAX-BACKGROUND:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-BACKGROUND MGL-PAX:SECTION)">2 Background</a></li>
+<li><a href="#x:28MGL-PAX::40PAX-TUTORIAL:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-TUTORIAL MGL-PAX:SECTION)">3 Tutorial</a></li>
+<li><a href="#x:28MGL-PAX::40PAX-EMACS-INTEGRATION:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-EMACS-INTEGRATION MGL-PAX:SECTION)">4 Emacs Integration</a></li>
+<li><a href="#x:28MGL-PAX::40PAX-BASICS:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-BASICS MGL-PAX:SECTION)">5 Basics</a></li>
+<li><a href="#x:28MGL-PAX::40PAX-MARKDOWN-SUPPORT:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MARKDOWN-SUPPORT MGL-PAX:SECTION)">6 Markdown Support</a>
+
+<ul>
+<li><a href="#x:28MGL-PAX::40PAX-MARKDOWN-INDENTATION:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MARKDOWN-INDENTATION MGL-PAX:SECTION)">6.1 Indentation</a></li>
+<li><a href="#x:28MGL-PAX::40PAX-MARKDOWN-SYNTAX-HIGHLIGHTING:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MARKDOWN-SYNTAX-HIGHLIGHTING MGL-PAX:SECTION)">6.2 Syntax highlighting</a></li>
+</ul></li>
+<li><a href="#x:28MGL-PAX::40PAX-DOCUMENTATION-PRINTER-VARIABLES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-DOCUMENTATION-PRINTER-VARIABLES MGL-PAX:SECTION)">7 Documentation Printer Variables</a></li>
+<li><a href="#x:28MGL-PAX::40PAX-LOCATIVE-TYPES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-LOCATIVE-TYPES MGL-PAX:SECTION)">8 Locative Types</a></li>
+<li><a href="#x:28MGL-PAX::40PAX-EXTENSION-API:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-EXTENSION-API MGL-PAX:SECTION)">9 Extension API</a>
+
+<ul>
+<li><a href="#x:28MGL-PAX::40PAX-LOCATIVES-AND-REFERENCES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-LOCATIVES-AND-REFERENCES MGL-PAX:SECTION)">9.1 Locatives and References</a></li>
+<li><a href="#x:28MGL-PAX::40PAX-NEW-OBJECT-TYPES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-NEW-OBJECT-TYPES MGL-PAX:SECTION)">9.2 Adding New Object Types</a></li>
+<li><a href="#x:28MGL-PAX::40PAX-REFERENCE-BASED-EXTENSIONS:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-REFERENCE-BASED-EXTENSIONS MGL-PAX:SECTION)">9.3 Reference Based Extensions</a></li>
+<li><a href="#x:28MGL-PAX::40PAX-SECTIONS:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-SECTIONS MGL-PAX:SECTION)">9.4 Sections</a></li>
+</ul></li>
+</ul>
+
+<h6>[in package MGL-PAX]</h6>
+
+<p><a id='x:28:22mgl-pax:22:20ASDF:2FSYSTEM:SYSTEM:29'></a></p>
+
+<h2><span class="navigation"> <a href="#x:28MGL-PAX::40PAX-MANUAL:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MANUAL MGL-PAX:SECTION)">&#8592;</a> <a href="#x:28MGL-PAX::40PAX-MANUAL:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MANUAL MGL-PAX:SECTION)">&#8593;</a> <a href="#x:28MGL-PAX::40PAX-BACKGROUND:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-BACKGROUND MGL-PAX:SECTION)">&#8594;</a> <a href="#x:28:22mgl-pax:22:20ASDF:2FSYSTEM:SYSTEM:29" title="(\&quot;mgl-pax\&quot; ASDF/SYSTEM:SYSTEM)">&#8634;</a></span>1 mgl-pax ASDF System Details</h2>
+
+<ul>
+<li>Version: 0.0.1</li>
+<li>Description: Documentation generator and browser.</li>
+<li>Licence: MIT, see COPYING.</li>
+<li>Author: Gábor Melis</li>
+<li>Mailto: <a href="mailto:mega@retes.hu" >mega@retes.hu</a></li>
+<li>Homepage: <a href="http://quotenil.com" >http://quotenil.com</a></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::40PAX-BACKGROUND:20MGL-PAX:SECTION:29'></a></p>
+
+<h2><span class="navigation"> <a href="#x:28:22mgl-pax:22:20ASDF:2FSYSTEM:SYSTEM:29" title="(\&quot;mgl-pax\&quot; ASDF/SYSTEM:SYSTEM)">&#8592;</a> <a href="#x:28MGL-PAX::40PAX-MANUAL:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MANUAL MGL-PAX:SECTION)">&#8593;</a> <a href="#x:28MGL-PAX::40PAX-TUTORIAL:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-TUTORIAL MGL-PAX:SECTION)">&#8594;</a> <a href="#x:28MGL-PAX::40PAX-BACKGROUND:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-BACKGROUND MGL-PAX:SECTION)">&#8634;</a></span>2 Background</h2>
+
+<p>As a user, I frequently run into documentation that's incomplete
+and out of date, so I tend to stay in the editor and explore the
+code by jumping around with SLIME's <a href="http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions" ><code>M-.</code></a>. As a library
+author, I spend a great deal of time polishing code, but precious
+little writing documentation.</p>
+
+<p>In fact, I rarely write anything more comprehensive than docstrings
+for exported stuff. Writing docstrings feels easier than writing a
+separate user manual and they are always close at hand during
+development. The drawback of this style is that users of the library
+have to piece the big picture together themselves.</p>
+
+<p>That's easy to solve, I thought, let's just put all the narrative
+that holds docstrings together in the code and be a bit like a
+Literate Programming weenie turned inside out. The original
+prototype which did almost everything I wanted was this:</p>
+
+<pre><code><span class="code"><span class="paren1">(<span class="code"><i><span class="symbol">defmacro</span></i> <i><span class="symbol">defsection</span></i> <span class="paren2">(<span class="code">name docstring</span>)</span>
+  `<span class="paren2">(<span class="code"><i><span class="symbol">defun</span></i> ,name <span class="paren3">(<span class="code"></span>)</span> ,docstring</span>)</span></span>)</span></span></code></pre>
+
+<p>Armed with <a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a>, I soon found myself organizing code following
+the flow of user level documentation and relegated comments to
+implementational details entirely. However, some portions of
+<a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a> docstrings were just listings of all the functions,
+macros and variables related to the narrative, and this list was
+effectively repeated in the <code>DEFPACKAGE</code> form complete with little
+comments that were like section names. A clear violation of
+<a href="http://c2.com/cgi/wiki?OnceAndOnlyOnce" >OAOO</a>, one of them had to go, so <a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a> got a list of
+symbols to export.</p>
+
+<p>That was great, but soon I found that the listing of symbols is
+ambiguous if, for example, a function, a compiler macro and a class
+are named by the same symbol. This did not concern exporting, of
+course, but it didn't help readability. Distractingly, on such
+symbols, M-. was popping up selection dialogs. There were two birds
+to kill, and the symbol got accompanied by a type which was later
+generalized into the concept of locatives:</p>
+
+<pre><code><span class="code"><span class="paren1">(<span class="code"><i><span class="symbol">defsection</span></i> @pax-introduction
+  <span class="string">"A single line for one man ..."</span>
+  <span class="paren2">(<span class="code">foo class</span>)</span>
+  <span class="paren2">(<span class="code">bar <i><span class="symbol">function</span></i></span>)</span></span>)</span></span></code></pre>
+
+<p>After a bit of elisp hacking, M-. was smart enough to disambiguate
+based on the locative found in the vicinity of the symbol and
+everything was good for a while.</p>
+
+<p>Then I realized that sections could refer to other sections if there
+were a <a href="#x:28MGL-PAX:SECTION:20MGL-PAX:LOCATIVE:29" title="(MGL-PAX:SECTION MGL-PAX:LOCATIVE)"><code>SECTION</code></a> locative. Going down that path, I soon began to feel
+the urge to generate pretty documentation as all the necessary
+information was manifest in the <a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a> forms. The design
+constraint imposed on documentation generation was that following
+the typical style of upcasing symbols in docstrings there should be
+no need to explicitly mark up links: if M-. works, then the
+documentation generator shall also be able find out what's being
+referred to.</p>
+
+<p>I settled on <a href="https://daringfireball.net/projects/markdown/" >Markdown</a> as a reasonably non-intrusive
+format, and a few thousand lines later PAX was born.</p>
+
+<p><a id='x:28MGL-PAX::40PAX-TUTORIAL:20MGL-PAX:SECTION:29'></a></p>
+
+<h2><span class="navigation"> <a href="#x:28MGL-PAX::40PAX-BACKGROUND:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-BACKGROUND MGL-PAX:SECTION)">&#8592;</a> <a href="#x:28MGL-PAX::40PAX-MANUAL:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MANUAL MGL-PAX:SECTION)">&#8593;</a> <a href="#x:28MGL-PAX::40PAX-EMACS-INTEGRATION:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-EMACS-INTEGRATION MGL-PAX:SECTION)">&#8594;</a> <a href="#x:28MGL-PAX::40PAX-TUTORIAL:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-TUTORIAL MGL-PAX:SECTION)">&#8634;</a></span>3 Tutorial</h2>
+
+<p>PAX provides an extremely poor man's Explorable Programming
+environment. Narrative primarily lives in so called sections that
+mix markdown docstrings with references to functions, variables,
+etc, all of which should probably have their own docstrings.</p>
+
+<p>The primary focus is on making code easily explorable by using
+SLIME's M-. (<code>slime-edit-definition</code>). See how to enable some
+fanciness in <a href="#x:28MGL-PAX::40PAX-EMACS-INTEGRATION:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-EMACS-INTEGRATION MGL-PAX:SECTION)">Emacs Integration</a>. Generating documentation from
+sections and all the referenced items in Markdown or HTML format is
+also implemented.</p>
+
+<p>With the simplistic tools provided, one may accomplish similar
+effects as with Literate Programming, but documentation is generated
+from code, not vice versa and there is no support for chunking yet.
+Code is first, code must look pretty, documentation is code.</p>
+
+<p>In typical use, PAX packages have no <code>:EXPORT</code>'s defined. Instead the
+<a href="#x:28MGL-PAX:DEFINE-PACKAGE:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFINE-PACKAGE MGL-PAX:MACRO)"><code>DEFINE-PACKAGE</code></a> form gets a docstring which may mention section
+names (defined with <a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a>). When the code is loaded into the
+lisp, pressing M-. in SLIME on the name of the section will take you
+there. Sections can also refer to other sections, packages,
+functions, etc and you can keep exploring.</p>
+
+<p>Here is an example of how it all works together:</p>
+
+<pre><code><span class="code"><span class="paren1">(<span class="code"><i><span class="symbol">mgl-pax:define-package</span></i> <span class="keyword">:foo-random</span>
+  <span class="paren2">(<span class="code"><span class="keyword">:documentation</span> <span class="string">"This package provides various utilities for
+  random. See FOO-RANDOM:@FOO-RANDOM-MANUAL."</span></span>)</span>
+  <span class="paren2">(<span class="code"><span class="keyword">:use</span> <span class="keyword">#:common-lisp</span> <span class="keyword">#:mgl-pax</span></span>)</span></span>)</span>
+
+<span class="paren1">(<span class="code">in-package <span class="keyword">:foo-random</span></span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defsection</span></i> @foo-random-manual <span class="paren2">(<span class="code"><span class="keyword">:title</span> <span class="string">"Foo Random manual"</span></span>)</span>
+  <span class="string">"Here you describe what's common to all the referenced (and
+  exported) functions that follow. They work with *FOO-STATE*,
+  and have a :RANDOM-STATE keyword arg. Also explain when to 
+  choose which."</span>
+  <span class="paren2">(<span class="code">foo-random-state class</span>)</span>
+  <span class="paren2">(<span class="code">state <span class="paren3">(<span class="code">reader foo-random-state</span>)</span></span>)</span>
+  <span class="string">"Hey we can also print states!"</span>
+  <span class="paren2">(<span class="code">print-object <span class="paren3">(<span class="code">method <span class="paren4">(<span class="code"></span>)</span> <span class="paren4">(<span class="code">foo-random-state t</span>)</span></span>)</span></span>)</span>
+  <span class="paren2">(<span class="code"><span class="special">*foo-state*</span> variable</span>)</span>
+  <span class="paren2">(<span class="code">gaussian-random <i><span class="symbol">function</span></i></span>)</span>
+  <span class="paren2">(<span class="code">uniform-random <i><span class="symbol">function</span></i></span>)</span>
+  <span class="comment">;; this is a subsection
+</span>  <span class="paren2">(<span class="code">@foo-random-examples section</span>)</span></span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defclass</span></i> foo-random-state <span class="paren2">(<span class="code"></span>)</span>
+  <span class="paren2">(<span class="code"><span class="paren3">(<span class="code">state <span class="keyword">:reader</span> state</span>)</span></span>)</span></span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> print-object <span class="paren2">(<span class="code"><span class="paren3">(<span class="code">object foo-random-state</span>)</span> stream</span>)</span>
+  <span class="paren2">(<span class="code">print-unreadable-object <span class="paren3">(<span class="code">object stream <span class="keyword">:type</span> t</span>)</span></span>)</span></span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defvar</span></i> <span class="special">*foo-state*</span> <span class="paren2">(<span class="code">make-instance 'foo-random-state</span>)</span>
+  <span class="string">"Much like *RANDOM-STATE* but uses the FOO algorithm."</span></span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defun</span></i> uniform-random <span class="paren2">(<span class="code">limit &amp;key <span class="paren3">(<span class="code">random-state <span class="special">*foo-state*</span></span>)</span></span>)</span>
+  <span class="string">"Return a random number from the [0, LIMIT) uniform distribution."</span>
+  nil</span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defun</span></i> gaussian-random <span class="paren2">(<span class="code">stddev &amp;key <span class="paren3">(<span class="code">random-state <span class="special">*foo-state*</span></span>)</span></span>)</span>
+  <span class="string">"Return a random number from a zero mean normal distribution with
+  STDDEV."</span>
+  nil</span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defsection</span></i> @foo-random-examples <span class="paren2">(<span class="code"><span class="keyword">:title</span> <span class="string">"Examples"</span></span>)</span></span>)</span></span></code></pre>
+
+<p>Generating documentation in a very stripped down markdown format is
+easy:</p>
+
+<pre><code><span class="code"><span class="paren1">(<span class="code">describe @foo-random-manual</span>)</span></span></code></pre>
+
+<p>For this example, the generated markdown would look like this:</p>
+
+<pre><code># Foo Random manual
+
+Here you describe what's common to all the referenced (and
+exported) functions that follow. They work with *FOO-STATE*,
+and have :RANDOM-STATE keyword arg. Also explain when to choose
+which.
+
+- [class] FOO-RANDOM-STATE
+
+- [reader] STATE FOO-RANDOM-STATE
+
+Hey we can also print states!
+
+- [method] PRINT-OBJECT (OBJECT FOO-RANDOM-STATE) STREAM
+
+- [variable] *FOO-STATE* #&lt;FOO-RANDOM-STATE &gt;
+
+    Much like *RANDOM-STATE* but uses the FOO algorithm.
+
+- [function] GAUSSIAN-RANDOM STDDEV &amp;KEY RANDOM-STATE
+
+    Return a random number from a zero mean normal distribution with
+    STDDEV.
+
+- [function] UNIFORM-RANDOM LIMIT &amp;KEY RANDOM-STATE
+
+    Return a random number from the [0, LIMIT) uniform distribution.
+
+## Examples
+</code></pre>
+
+<p>More fancy markdown or html output with automatic markup and linking
+of uppercase symbol names found in docstrings, section numbering,
+table of contents, etc is possible by calling the <a href="#x:28MGL-PAX:DOCUMENT:20FUNCTION:29" title="(MGL-PAX:DOCUMENT FUNCTION)"><code>DOCUMENT</code></a> function.</p>
+
+<p><em>One can even generate documentation for different, but related
+libraries at the same time with the output going to different files,
+but with cross-page links being automatically added for symbols
+mentioned in docstrings.</em> For a complete example of how to generate
+HTML with multiple pages, see <code>src/doc.lisp</code>.</p>
+
+<p>Note how <code>(VARIABLE *FOO-STATE*)</code> in the <a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a> form both
+exports <code>*FOO-STATE*</code> and includes its documentation in
+<code>@FOO-RANDOM-MANUAL</code>. The symbols <a href="#x:28VARIABLE:20MGL-PAX:LOCATIVE:29" title="(VARIABLE MGL-PAX:LOCATIVE)"><code>VARIABLE</code></a> and <a href="#x:28FUNCTION:20MGL-PAX:LOCATIVE:29" title="(FUNCTION MGL-PAX:LOCATIVE)"><code>FUNCTION</code></a> are just two
+instances of 'locatives' which are used in <a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a> to refer to
+definitions tied to symbols. See <a href="#x:28MGL-PAX::40PAX-LOCATIVE-TYPES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-LOCATIVE-TYPES MGL-PAX:SECTION)">Locative Types</a>.</p>
+
+<p><a id='x:28MGL-PAX::40PAX-EMACS-INTEGRATION:20MGL-PAX:SECTION:29'></a></p>
+
+<h2><span class="navigation"> <a href="#x:28MGL-PAX::40PAX-TUTORIAL:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-TUTORIAL MGL-PAX:SECTION)">&#8592;</a> <a href="#x:28MGL-PAX::40PAX-MANUAL:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MANUAL MGL-PAX:SECTION)">&#8593;</a> <a href="#x:28MGL-PAX::40PAX-BASICS:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-BASICS MGL-PAX:SECTION)">&#8594;</a> <a href="#x:28MGL-PAX::40PAX-EMACS-INTEGRATION:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-EMACS-INTEGRATION MGL-PAX:SECTION)">&#8634;</a></span>4 Emacs Integration</h2>
+
+<p>Integration into SLIME's M-. (<code>slime-edit-definition</code>) allows one
+to visit the source location of the thing that's identified by a
+symbol and the locative before or after the symbol in a buffer. With
+this extension, if a locative is the previous or the next expression
+around the symbol of interest, then M-. will go straight to the
+definition which corresponds to the locative. If that fails, M-.
+will try to find the definitions in the normal way which may involve
+popping up an xref buffer and letting the user interactively select
+one of possible definitions.</p>
+
+<p><em>Note that the this feature is implemented in terms of
+<code>SWANK-BACKEND:FIND-SOURCE-LOCATION</code> and
+<code>SWANK-BACKEND:FIND-DEFINITIONS</code> whose support varies across the Lisp
+implementations.</em></p>
+
+<p>In the following examples, pressing M-. when the cursor is on one of
+the characters of <code>FOO</code> or just after <code>FOO</code>, will visit the
+definition of function <code>FOO</code>:</p>
+
+<pre><code>function foo
+foo function
+(function foo)
+(foo function)
+</code></pre>
+
+<p>In particular, references in a <a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a> form are in (<code>SYMBOL</code>
+<a href="#x:28MGL-PAX:LOCATIVE:20MGL-PAX:LOCATIVE:29" title="(MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE)"><code>LOCATIVE</code></a>) format so M-. will work just fine there.</p>
+
+<p>Just like vanilla M-., this works in comments and docstrings. In
+this example pressing M-. on <code>FOO</code> will visit <code>FOO</code>'s default
+method:</p>
+
+<pre><code><span class="code"><span class="comment">;;;; See FOO `(method () (t t t))` for how this all works.
+</span><span class="comment">;;;; But if the locative has semicolons inside: FOO `(method
+</span><span class="comment">;;;; () (t t t))`, then it won't, so be wary of line breaks
+</span><span class="comment">;;;; in comments.</span></span></code></pre>
+
+<p>With a prefix argument (<code>C-u M-.</code>), one can enter a symbol plus a
+locative separated by whitespace to preselect one of the
+possibilities.</p>
+
+<p>The M-. extensions can be enabled by done adding this to your Emacs
+initialization file:</p>
+
+<pre><code><span class="code"><span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_167.html#IDX483" class="symbol"><i><span class="symbol">defun</span></i></a> slime-edit-locative-definition <span class="paren2">(<span class="code">name &amp;optional where</span>)</span>
+  <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_127.html#IDX392" class="symbol">or</a> <span class="paren3">(<span class="code">slime-locate-definition name <span class="paren4">(<span class="code">slime-locative-before</span>)</span></span>)</span>
+      <span class="paren3">(<span class="code">slime-locate-definition name <span class="paren4">(<span class="code">slime-locative-after</span>)</span></span>)</span>
+      <span class="paren3">(<span class="code">slime-locate-definition name <span class="paren4">(<span class="code">slime-locative-after-in-brackets</span>)</span></span>)</span>
+      <span class="comment">;; support "foo function" and "function foo" syntax in
+</span>      <span class="comment">;; interactive use
+</span>      <span class="paren3">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_141.html#IDX422" class="symbol"><i><span class="symbol">let</span></i></a> <span class="paren4">(<span class="code"><span class="paren5">(<span class="code">pos <span class="paren6">(<span class="code">cl-position ?s name</span>)</span></span>)</span></span>)</span>
+        <span class="paren4">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_126.html#IDX387" class="symbol">when</a> pos
+          <span class="paren5">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_127.html#IDX392" class="symbol">or</a> <span class="paren6">(<span class="code">slime-locate-definition <span class="paren1">(<span class="code">cl-subseq name 0 pos</span>)</span>
+                                       <span class="paren1">(<span class="code">cl-subseq name <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_63.html#IDX103" class="symbol">1+</a> pos</span>)</span></span>)</span></span>)</span>
+              <span class="paren6">(<span class="code">slime-locate-definition <span class="paren1">(<span class="code">cl-subseq name <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_63.html#IDX103" class="symbol">1+</a> pos</span>)</span></span>)</span>
+                                       <span class="paren1">(<span class="code">cl-subseq name 0 pos</span>)</span></span>)</span></span>)</span></span>)</span></span>)</span></span>)</span></span>)</span>
+
+<span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_167.html#IDX483" class="symbol"><i><span class="symbol">defun</span></i></a> slime-locative-before <span class="paren2">(<span class="code"></span>)</span>
+  <span class="paren2">(<span class="code">ignore-errors <span class="paren3">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_482.html#IDX1691" class="symbol">save-excursion</a>
+                   <span class="paren4">(<span class="code">slime-beginning-of-symbol</span>)</span>
+                   <span class="paren4">(<span class="code">slime-last-expression</span>)</span></span>)</span></span>)</span></span>)</span>
+
+<span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_167.html#IDX483" class="symbol"><i><span class="symbol">defun</span></i></a> slime-locative-after <span class="paren2">(<span class="code"></span>)</span>
+  <span class="paren2">(<span class="code">ignore-errors <span class="paren3">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_482.html#IDX1691" class="symbol">save-excursion</a>
+                   <span class="paren4">(<span class="code">slime-end-of-symbol</span>)</span>
+                   <span class="paren4">(<span class="code">slime-forward-sexp</span>)</span>
+                   <span class="paren4">(<span class="code">slime-last-expression</span>)</span></span>)</span></span>)</span></span>)</span>
+
+<span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_167.html#IDX483" class="symbol"><i><span class="symbol">defun</span></i></a> slime-locative-after-in-brackets <span class="paren2">(<span class="code"></span>)</span>
+  <span class="paren2">(<span class="code">ignore-errors <span class="paren3">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_482.html#IDX1691" class="symbol">save-excursion</a>
+                   <span class="paren4">(<span class="code">slime-end-of-symbol</span>)</span>
+                   <span class="paren4">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_481.html#IDX1689" class="symbol">skip-chars-forward</a> <span class="string">"`"</span> <span class="paren5">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_63.html#IDX105" class="symbol">+</a> <span class="paren6">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_473.html#IDX1644" class="symbol">point</a></span>)</span> 1</span>)</span></span>)</span>
+                   <span class="paren4">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_126.html#IDX387" class="symbol">when</a> <span class="paren5">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_127.html#IDX391" class="symbol">and</a> <span class="paren6">(<span class="code">= 1 <span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_481.html#IDX1689" class="symbol">skip-chars-forward</a> <span class="string">"</span><span class="string">\]</span><span class="string">"</span>
+                                                       <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_63.html#IDX105" class="symbol">+</a> <span class="paren3">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_473.html#IDX1644" class="symbol">point</a></span>)</span> 1</span>)</span></span>)</span></span>)</span>
+                              <span class="paren6">(<span class="code">= 1 <span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_481.html#IDX1689" class="symbol">skip-chars-forward</a> <span class="string">"</span><span class="string">\[</span><span class="string">"</span>
+                                                       <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_63.html#IDX105" class="symbol">+</a> <span class="paren3">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_473.html#IDX1644" class="symbol">point</a></span>)</span> 1</span>)</span></span>)</span></span>)</span></span>)</span>
+                     <span class="paren5">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_495.html#IDX1750" class="symbol">buffer-substring-no-properties</a>
+                      <span class="paren6">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_473.html#IDX1644" class="symbol">point</a></span>)</span>
+                      <span class="paren6">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_125.html#IDX383" class="symbol"><i><span class="symbol">progn</span></i></a> <span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_564.html#IDX2061" class="symbol">search-forward</a> <span class="string">"]"</span> <a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_6.html#SEC6" class="symbol">nil</a> <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_63.html#IDX105" class="symbol">+</a> <span class="paren3">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_473.html#IDX1644" class="symbol">point</a></span>)</span> 1000</span>)</span></span>)</span>
+                             <span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_63.html#IDX104" class="symbol">1-</a> <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_473.html#IDX1644" class="symbol">point</a></span>)</span></span>)</span></span>)</span></span>)</span></span>)</span></span>)</span></span>)</span></span>)</span>
+
+<span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_167.html#IDX483" class="symbol"><i><span class="symbol">defun</span></i></a> slime-locate-definition <span class="paren2">(<span class="code">name locative</span>)</span>
+  <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_126.html#IDX387" class="symbol">when</a> locative
+    <span class="paren3">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_141.html#IDX422" class="symbol"><i><span class="symbol">let</span></i></a> <span class="paren4">(<span class="code"><span class="paren5">(<span class="code">location
+           <span class="paren6">(<span class="code">slime-eval
+            <span class="comment">;; Silently fail if mgl-pax is not loaded.
+</span>            `<span class="paren1">(<span class="code">cl:when <span class="paren2">(<span class="code">cl:find-package <span class="keyword">:mgl-pax</span></span>)</span>
+                      <span class="paren2">(<span class="code">cl:funcall
+                       <span class="paren3">(<span class="code">cl:find-symbol 
+                        <span class="paren4">(<span class="code">cl:symbol-name <span class="keyword">:locate-definition-for-emacs</span></span>)</span>
+                        <span class="keyword">:mgl-pax</span></span>)</span>
+                       ,name ,locative</span>)</span></span>)</span></span>)</span></span>)</span></span>)</span>
+      <span class="paren4">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_126.html#IDX387" class="symbol">when</a> <span class="paren5">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_127.html#IDX391" class="symbol">and</a> <span class="paren6">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_81.html#IDX199" class="symbol">consp</a> location</span>)</span>
+                 <span class="paren6">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_127.html#IDX390" class="symbol">not</a> <span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_56.html#IDX68" class="symbol">eq</a> <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_82.html#IDX205" class="symbol">car</a> location</span>)</span> <span class="keyword">:error</span></span>)</span></span>)</span></span>)</span>
+        <span class="paren5">(<span class="code">slime-edit-definition-cont
+         <span class="paren6">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_83.html#IDX225" class="symbol">list</a> <span class="paren1">(<span class="code">make-slime-xref <span class="keyword">:dspec</span> `<span class="paren2">(<span class="code">,name</span>)</span>
+                                <span class="keyword">:location</span> location</span>)</span></span>)</span>
+         <span class="string">"dummy name"</span>
+         where</span>)</span></span>)</span></span>)</span></span>)</span></span>)</span>
+
+<span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_372.html#IDX1136" class="symbol">add-hook</a> 'slime-edit-definition-hooks 'slime-edit-locative-definition</span>)</span></span></code></pre>
+
+<p><a id='x:28MGL-PAX::40PAX-BASICS:20MGL-PAX:SECTION:29'></a></p>
+
+<h2><span class="navigation"> <a href="#x:28MGL-PAX::40PAX-EMACS-INTEGRATION:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-EMACS-INTEGRATION MGL-PAX:SECTION)">&#8592;</a> <a href="#x:28MGL-PAX::40PAX-MANUAL:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MANUAL MGL-PAX:SECTION)">&#8593;</a> <a href="#x:28MGL-PAX::40PAX-MARKDOWN-SUPPORT:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MARKDOWN-SUPPORT MGL-PAX:SECTION)">&#8594;</a> <a href="#x:28MGL-PAX::40PAX-BASICS:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-BASICS MGL-PAX:SECTION)">&#8634;</a></span>5 Basics</h2>
+
+<p>Now let's examine the most important pieces in detail.</p>
+
+<p><a id='x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29'></a></p>
+
+<ul>
+<li><p>[macro] <strong>DEFSECTION</strong> <em>NAME (&amp;KEY (PACKAGE *PACKAGE*) (EXPORT T) TITLE (DISCARD-DOCUMENTATION-P *DISCARD-DOCUMENTATION-P*)) &amp;BODY ENTRIES</em></p>
+
+<p>Define a documentation section and maybe export referenced symbols.
+A bit behind the scenes, a global variable with <code>NAME</code> is defined and is
+bound to a <a href="#x:28MGL-PAX:SECTION:20CLASS:29" title="(MGL-PAX:SECTION CLASS)"><code>SECTION</code></a> object. By convention, section names start
+with the character @. See <a href="#x:28MGL-PAX::40PAX-TUTORIAL:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-TUTORIAL MGL-PAX:SECTION)">Tutorial</a> for an example.</p>
+
+<p><code>ENTRIES</code> consists of docstrings and references. Docstrings are
+arbitrary strings in markdown format, references are defined in the
+form:</p>
+
+<pre><code>(symbol locative)
+</code></pre>
+
+<p>For example, <code>(FOO FUNCTION)</code> refers to the function <code>FOO</code>, <code>(@BAR
+SECTION)</code> says that <code>@BAR</code> is a subsection of this
+one. <code>(BAZ (METHOD () (T T T)))</code> refers to the default method of the
+three argument generic function <code>BAZ</code>. <code>(FOO FUNCTION)</code> is equivalent
+to <code>(FOO (FUNCTION))</code>.</p>
+
+<p>A locative in a reference can either be a symbol or it can be a list
+whose <code>CAR</code> is a symbol. In either case, the symbol is the called the
+type of the locative while the rest of the elements are the locative
+arguments. See <a href="#x:28MGL-PAX::40PAX-LOCATIVE-TYPES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-LOCATIVE-TYPES MGL-PAX:SECTION)">Locative Types</a> for the list of locative types
+available out of the box.</p>
+
+<p>The same symbol can occur multiple times in a reference, typically
+with different locatives, but this is not required.</p>
+
+<p>The references are not looked up (see <a href="#x:28MGL-PAX:RESOLVE:20FUNCTION:29" title="(MGL-PAX:RESOLVE FUNCTION)"><code>RESOLVE</code></a> in the
+<a href="#x:28MGL-PAX::40PAX-EXTENSION-API:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-EXTENSION-API MGL-PAX:SECTION)">Extension API</a>) until documentation is generated, so it is allowed
+to refer to things yet to be defined.</p>
+
+<p>If <code>EXPORT</code> is true (the default), the referenced symbols and <code>NAME</code> are
+candidates for exporting. A candidate symbol is exported if</p>
+
+<ul>
+<li><p>it is accessible in <code>PACKAGE</code> (it's not <code>OTHER-PACKAGE:SOMETHING</code>) and</p></li>
+<li><p>there is a reference to it in the section being defined with a
+  locative whose type is approved by <a href="#x:28MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P:20GENERIC-FUNCTION:29" title="(MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION)"><code>EXPORTABLE-LOCATIVE-TYPE-P</code></a>.</p></li>
+</ul>
+
+<p>See <a href="#x:28MGL-PAX:DEFINE-PACKAGE:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFINE-PACKAGE MGL-PAX:MACRO)"><code>DEFINE-PACKAGE</code></a> if you use the export feature. The idea with
+confounding documentation and exporting is to force documentation of
+all exported symbols.</p>
+
+<p>When <code>DISCARD-DOCUMENTATION-P</code> (defaults to <a href="#x:28MGL-PAX::2ADISCARD-DOCUMENTATION-P:2A:20VARIABLE:29" title="(MGL-PAX:*DISCARD-DOCUMENTATION-P* VARIABLE)"><code>*DISCARD-DOCUMENTATION-P*</code></a>)
+is true, <code>ENTRIES</code> will not be recorded to save memory.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::2ADISCARD-DOCUMENTATION-P:2A:20VARIABLE:29'></a></p>
+
+<ul>
+<li><p>[variable] <strong>*DISCARD-DOCUMENTATION-P*</strong> <em>NIL</em></p>
+
+<p>The default value of <a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a>'s <code>DISCARD-DOCUMENTATION-P</code> argument.
+One may want to set <a href="#x:28MGL-PAX::2ADISCARD-DOCUMENTATION-P:2A:20VARIABLE:29" title="(MGL-PAX:*DISCARD-DOCUMENTATION-P* VARIABLE)"><code>*DISCARD-DOCUMENTATION-P*</code></a> to true before
+building a binary application.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:DEFINE-PACKAGE:20MGL-PAX:MACRO:29'></a></p>
+
+<ul>
+<li><p>[macro] <strong>DEFINE-PACKAGE</strong> <em>PACKAGE &amp;REST OPTIONS</em></p>
+
+<p>This is like <code>CL:DEFPACKAGE</code> but silences warnings and errors
+signaled when the redefined package is at variance with the current
+state of the package. Typically this situation occurs when symbols
+are exported by calling <code>EXPORT</code> (as is the case with <a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a>) as
+opposed to adding <code>:EXPORT</code> forms to the <code>DEFPACKAGE</code> form and the
+package definition is reevaluated. See the section on <a href="http://www.sbcl.org/manual/#Package-Variance" >package
+variance</a> in the SBCL
+manual.</p>
+
+<p>The bottom line is that if you rely on <a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a> to do the
+exporting, then you'd better use <a href="#x:28MGL-PAX:DEFINE-PACKAGE:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFINE-PACKAGE MGL-PAX:MACRO)"><code>DEFINE-PACKAGE</code></a>.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:DOCUMENT:20FUNCTION:29'></a></p>
+
+<ul>
+<li><p>[function] <strong>DOCUMENT</strong> <em>OBJECT &amp;KEY STREAM PAGES (FORMAT :MARKDOWN)</em></p>
+
+<p>Write <code>OBJECT</code> in <code>FORMAT</code> to <code>STREAM</code> diverting some output to <code>PAGES</code>.
+<code>FORMAT</code> can be anything <a href="https://github.com/3b/3bmd" >3BMD</a> supports which is
+currently <code>:MARKDOWN</code>, <code>:HTML</code> and <code>:PLAIN</code>. <code>STREAM</code> may be a stream
+object, <code>T</code> or <code>NIL</code> as with <code>CL:FORMAT</code>.</p>
+
+<p>Most often, this function is called on section objects
+like <code>(DOCUMENT @PAX-MANUAL)</code>, but it supports all kinds of objects
+for which <a href="#x:28MGL-PAX:DOCUMENT-OBJECT:20GENERIC-FUNCTION:29" title="(MGL-PAX:DOCUMENT-OBJECT GENERIC-FUNCTION)"><code>DOCUMENT-OBJECT</code></a> is defined. To look up the documentation
+of function <a href="#x:28MGL-PAX:DOCUMENT:20FUNCTION:29" title="(MGL-PAX:DOCUMENT FUNCTION)"><code>DOCUMENT</code></a>:</p>
+
+<pre><code>(document #'document)
+</code></pre>
+
+<p>To generate the documentation for separate libraries with automatic
+cross-links:</p>
+
+<pre><code>(document (list @cube-manual @mat-manual))
+</code></pre>
+
+<p>Note that not only first class objects can have documentation. For
+instance, variables and deftypes are not represented by objects.
+That's why <code>CL:DOCUMENTATION</code> has a <code>DOC-TYPE</code> argument. <a href="#x:28MGL-PAX:DOCUMENT:20FUNCTION:29" title="(MGL-PAX:DOCUMENT FUNCTION)"><code>DOCUMENT</code></a> does
+not have anything like that, instead it relies on <a href="#x:28MGL-PAX:REFERENCE:20CLASS:29" title="(MGL-PAX:REFERENCE CLASS)"><code>REFERENCE</code></a> objects
+to carry the extra information. We are going to see later how
+references and locatives work. Until then, here is an example on how
+to look up the documentation of type <code>FOO</code>:</p>
+
+<pre><code>(document (locate 'foo 'type))
+</code></pre>
+
+<p>One can call <code>DESCRIBE</code> on <a href="#x:28MGL-PAX:SECTION:20CLASS:29" title="(MGL-PAX:SECTION CLASS)"><code>SECTION</code></a> objects to get
+documentation in markdown format with less markup than the default.
+See <a href="#x:28DESCRIBE-OBJECT:20:28METHOD:20NIL:20:28MGL-PAX:SECTION:20T:29:29:29" title="(DESCRIBE-OBJECT (METHOD NIL (MGL-PAX:SECTION T)))"><code>DESCRIBE-OBJECT</code></a> <code>(METHOD () (SECTION T))</code>.</p>
+
+<p>There are quite a few special variables that affect how output is
+generated, see <a href="#x:28MGL-PAX::40PAX-DOCUMENTATION-PRINTER-VARIABLES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-DOCUMENTATION-PRINTER-VARIABLES MGL-PAX:SECTION)">Documentation Printer Variables</a>.</p>
+
+<p>The rest of this description deals with how to generate multiple
+pages.</p>
+
+<p>The <code>PAGES</code> argument is to create multi-page documents by routing some
+of the generated output to files, strings or streams. <code>PAGES</code> is a
+list of page specification elements. A page spec is a plist with
+keys <code>:OBJECTS</code>, <code>:OUTPUT</code>, <code>:URI-FRAGMENT</code>, <code>:HEADER-FN</code> and <code>:FOOTER-FN</code>.
+<code>OBJECTS</code> is a list of objects (references are allowed but not
+required) whose documentation is to be sent to <code>OUTPUT</code>. <code>OUTPUT</code> can be
+a number things:</p>
+
+<ul>
+<li><p>If it's a list whose first element is a string or a pathname, then
+  output will be sent to the file denoted by that and the rest of
+  the elements of the list are passed on as arguments to <code>CL:OPEN</code>.
+  One extra keyword argument is <code>:ENSURE-DIRECTORIES-EXIST</code>. If it's
+  true, <code>ENSURE-DIRECTORIES-EXIST</code> will be called on the pathname
+  before it's opened.</p></li>
+<li><p>If it's <code>NIL</code>, then output will be collected in a string.</p></li>
+<li><p>If it's <code>T</code>, then output will be sent to <code>*STANDARD-OUTPUT*</code>.</p></li>
+<li><p>If it's a stream, then output will be sent to that stream.</p></li>
+</ul>
+
+<p>If some pages are specified, <a href="#x:28MGL-PAX:DOCUMENT:20FUNCTION:29" title="(MGL-PAX:DOCUMENT FUNCTION)"><code>DOCUMENT</code></a> returns a list of designators
+for generated output. If a page whose <code>OUTPUT</code> refers to a file that
+was created (which doesn't happen if nothing would be written to
+it), then the corresponding pathname is included in the list. For
+strings the string itself, while for streams the stream object is
+included in the list. This way it's possible to write some pages to
+files and some to strings and have the return value indicate what
+was created. The output designators in the returned list are ordered
+by creation time.</p>
+
+<p>If no <code>PAGES</code> are specified, <a href="#x:28MGL-PAX:DOCUMENT:20FUNCTION:29" title="(MGL-PAX:DOCUMENT FUNCTION)"><code>DOCUMENT</code></a> returns a single pathname,
+string or stream object according to the value of the <code>STREAM</code>
+argument.</p>
+
+<p>Note that even if <code>PAGES</code> is specified, <code>STREAM</code> acts as a catch all
+taking the generated documentation for references not claimed by any
+pages. Also, the filename, string or stream corresponding to <code>STREAM</code>
+is always the first element in list of generated things that is the
+return value.</p>
+
+<p><code>HEADER-FN</code>, if not <code>NIL</code>, is a function of a single stream argument
+which is called just before the first write to the page.
+Since <code>:FORMAT</code> <code>:HTML</code> only generates HTML fragments, this makes it
+possible to print arbitrary headers, typically setting the title,
+css stylesheet, or charset.</p>
+
+<p><code>FOOTER-FN</code> is similar to <code>HEADER-FN</code>, but it's called after the last
+write to the page. For HTML, it typically just closes the body.</p>
+
+<p>Finally, <code>URI-FRAGMENT</code> is a string such as <code>&quot;doc/manual.html&quot;</code> that
+specifies where the page will be deployed on a webserver. It defines
+how links between pages will look. If it's not specified and <code>OUTPUT</code>
+refers to a file, then it defaults to the name of the file. If
+<code>URI-FRAGMENT</code> is <code>NIL</code>, then no links will be made to or from that
+page.</p>
+
+<p>It may look something like this:</p>
+
+<pre><code><span class="code">`<span class="paren1">(<span class="code"><span class="paren2">(<span class="code"><span class="comment">;; The section about SECTIONs and everything below it ...
+</span>   <span class="keyword">:objects</span> <span class="paren3">(<span class="code">,@pax-sections</span>)</span>
+   <span class="comment">;; ... is so boring that it's not worth the disk space, so
+</span>   <span class="comment">;; send it to a string.
+</span>   <span class="keyword">:output</span> <span class="paren3">(<span class="code">nil</span>)</span>
+   <span class="comment">;; Explicitly tell other pages not to link to these guys.
+</span>   <span class="keyword">:uri-fragment</span> nil</span>)</span>
+  <span class="comment">;; Send the @PAX-EXTENSIONS section and everything reachable
+</span>  <span class="comment">;; from it ...
+</span>  <span class="paren2">(<span class="code"><span class="keyword">:objects</span> <span class="paren3">(<span class="code">,@pax-extension-api</span>)</span>
+   <span class="comment">;; ... to build/tmp/pax-extension-api.html.
+</span>   <span class="keyword">:output</span> <span class="paren3">(<span class="code"><span class="string">"build/tmp/pax-extension-api.html"</span></span>)</span>
+   <span class="comment">;; However, on the web server html files will be at this
+</span>   <span class="comment">;; location relative to some common root, so override the
+</span>   <span class="comment">;; default:
+</span>   <span class="keyword">:uri-fragment</span> <span class="string">"doc/dev/pax-extension-api.html"</span>
+   <span class="comment">;; Set html page title, stylesheet, charset.
+</span>   <span class="keyword">:header-fn</span> 'write-html-header
+   <span class="comment">;; Just close the body.
+</span>   <span class="keyword">:footer-fn</span> 'write-html-footer</span>)</span>
+  <span class="paren2">(<span class="code"><span class="keyword">:objects</span> <span class="paren3">(<span class="code">,@pax-manual</span>)</span>
+   <span class="keyword">:output</span> <span class="paren3">(<span class="code"><span class="string">"build/tmp/manual.html"</span></span>)</span>
+   <span class="comment">;; Links from the extension api page to the manual page will
+</span>   <span class="comment">;; be to ../user/pax-manual#&lt;anchor&gt;, while links going to
+</span>   <span class="comment">;; the opposite direction will be to
+</span>   <span class="comment">;; ../dev/pax-extension-api.html#&lt;anchor&gt;.
+</span>   <span class="keyword">:uri-fragment</span> <span class="string">"doc/user/pax-manual.html"</span>
+   <span class="keyword">:header-fn</span> 'write-html-header
+   <span class="keyword">:footer-fn</span> 'write-html-footer</span>)</span></span>)</span></span></code></pre></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::40PAX-MARKDOWN-SUPPORT:20MGL-PAX:SECTION:29'></a></p>
+
+<h2><span class="navigation"> <a href="#x:28MGL-PAX::40PAX-BASICS:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-BASICS MGL-PAX:SECTION)">&#8592;</a> <a href="#x:28MGL-PAX::40PAX-MANUAL:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MANUAL MGL-PAX:SECTION)">&#8593;</a> <a href="#x:28MGL-PAX::40PAX-MARKDOWN-INDENTATION:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MARKDOWN-INDENTATION MGL-PAX:SECTION)">&#8594;</a> <a href="#x:28MGL-PAX::40PAX-MARKDOWN-SUPPORT:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MARKDOWN-SUPPORT MGL-PAX:SECTION)">&#8634;</a></span>6 Markdown Support</h2>
+
+<p>The <a href="https://daringfireball.net/projects/markdown/" >Markdown</a> in docstrings is processed with the
+<a href="https://github.com/3b/3bmd" >3BMD</a> library.</p>
+
+<p><a id='x:28MGL-PAX::40PAX-MARKDOWN-INDENTATION:20MGL-PAX:SECTION:29'></a></p>
+
+<h3><span class="navigation"> <a href="#x:28MGL-PAX::40PAX-MARKDOWN-SUPPORT:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MARKDOWN-SUPPORT MGL-PAX:SECTION)">&#8592;</a> <a href="#x:28MGL-PAX::40PAX-MARKDOWN-SUPPORT:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MARKDOWN-SUPPORT MGL-PAX:SECTION)">&#8593;</a> <a href="#x:28MGL-PAX::40PAX-MARKDOWN-SYNTAX-HIGHLIGHTING:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MARKDOWN-SYNTAX-HIGHLIGHTING MGL-PAX:SECTION)">&#8594;</a> <a href="#x:28MGL-PAX::40PAX-MARKDOWN-INDENTATION:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MARKDOWN-INDENTATION MGL-PAX:SECTION)">&#8634;</a></span>6.1 Indentation</h3>
+
+<p>Docstrings can be indented in any of the usual styles. PAX
+normalizes indentation by converting:</p>
+
+<pre><code>(defun foo ()
+  &quot;This is
+  indented
+  differently&quot;)
+</code></pre>
+
+<p>to</p>
+
+<pre><code>(defun foo ()
+  &quot;This is
+indented
+differently&quot;)
+</code></pre>
+
+<p>See <a href="#x:28MGL-PAX:DOCUMENT-OBJECT:20:28METHOD:20NIL:20:28STRING:20T:29:29:29" title="(MGL-PAX:DOCUMENT-OBJECT (METHOD NIL (STRING T)))"><code>DOCUMENT-OBJECT</code></a> for the details.</p>
+
+<p><a id='x:28MGL-PAX::40PAX-MARKDOWN-SYNTAX-HIGHLIGHTING:20MGL-PAX:SECTION:29'></a></p>
+
+<h3><span class="navigation"> <a href="#x:28MGL-PAX::40PAX-MARKDOWN-INDENTATION:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MARKDOWN-INDENTATION MGL-PAX:SECTION)">&#8592;</a> <a href="#x:28MGL-PAX::40PAX-MARKDOWN-SUPPORT:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MARKDOWN-SUPPORT MGL-PAX:SECTION)">&#8593;</a> <a href="#x:28MGL-PAX::40PAX-DOCUMENTATION-PRINTER-VARIABLES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-DOCUMENTATION-PRINTER-VARIABLES MGL-PAX:SECTION)">&#8594;</a> <a href="#x:28MGL-PAX::40PAX-MARKDOWN-SYNTAX-HIGHLIGHTING:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MARKDOWN-SYNTAX-HIGHLIGHTING MGL-PAX:SECTION)">&#8634;</a></span>6.2 Syntax highlighting</h3>
+
+<p>For syntax highlighting, github's <a href="https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks" >fenced code
+blocks</a> markdown extension to mark up code
+blocks with triple backticks is enabled so all you need to do is
+write:</p>
+
+<pre><code>```elisp
+(defun foo ())
+```
+</code></pre>
+
+<p>to get syntactically marked up HTML output. Copy <code>doc/style.css</code>
+from PAX and you are set. The language tag, <code>elisp</code> in this example,
+is optional and defaults to <code>common-lisp</code>.</p>
+
+<p>See the documentation of <a href="https://github.com/3b/3bmd" >3BMD</a> and <a href="https://github.com/redline6561/colorize/" >colorize</a> for
+the details.</p>
+
+<p><a id='x:28MGL-PAX::40PAX-DOCUMENTATION-PRINTER-VARIABLES:20MGL-PAX:SECTION:29'></a></p>
+
+<h2><span class="navigation"> <a href="#x:28MGL-PAX::40PAX-MARKDOWN-SYNTAX-HIGHLIGHTING:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MARKDOWN-SYNTAX-HIGHLIGHTING MGL-PAX:SECTION)">&#8592;</a> <a href="#x:28MGL-PAX::40PAX-MANUAL:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MANUAL MGL-PAX:SECTION)">&#8593;</a> <a href="#x:28MGL-PAX::40PAX-LOCATIVE-TYPES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-LOCATIVE-TYPES MGL-PAX:SECTION)">&#8594;</a> <a href="#x:28MGL-PAX::40PAX-DOCUMENTATION-PRINTER-VARIABLES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-DOCUMENTATION-PRINTER-VARIABLES MGL-PAX:SECTION)">&#8634;</a></span>7 Documentation Printer Variables</h2>
+
+<p>Docstrings are assumed to be in markdown format and they are pretty
+much copied verbatim to the documentation subject to a few knobs
+described below.</p>
+
+<p><a id='x:28MGL-PAX::2ADOCUMENT-UPPERCASE-IS-CODE:2A:20VARIABLE:29'></a></p>
+
+<ul>
+<li><p>[variable] <strong>*DOCUMENT-UPPERCASE-IS-CODE*</strong> <em>T</em></p>
+
+<p>When true, words with at least three characters and no lowercase
+characters naming an interned symbol are assumed to be code as if
+they were marked up with backticks which is especially useful when
+combined with <a href="#x:28MGL-PAX::2ADOCUMENT-LINK-CODE:2A:20VARIABLE:29" title="(MGL-PAX:*DOCUMENT-LINK-CODE* VARIABLE)"><code>*DOCUMENT-LINK-CODE*</code></a>. For example, this docstring:</p>
+
+<pre><code>&quot;`FOO` and FOO.&quot;
+</code></pre>
+
+<p>is equivalent to this:</p>
+
+<pre><code>&quot;`FOO` and `FOO`.&quot;
+</code></pre>
+
+<p>iff <code>FOO</code> is an interned symbol. To suppress this behavior, add a
+backslash to the beginning of the symbol or right after the leading
+* if it would otherwise be parsed as markdown emphasis:</p>
+
+<pre><code>&quot;\\MGL-PAX *\\DOCUMENT-NORMALIZE-PACKAGES*&quot;
+</code></pre>
+
+<p>The number of backslashes is doubled above because that's how the
+example looks in a docstring. Note that the backslash is discarded
+even if <a href="#x:28MGL-PAX::2ADOCUMENT-UPPERCASE-IS-CODE:2A:20VARIABLE:29" title="(MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE* VARIABLE)"><code>*DOCUMENT-UPPERCASE-IS-CODE*</code></a> is false.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::2ADOCUMENT-LINK-CODE:2A:20VARIABLE:29'></a></p>
+
+<ul>
+<li><p>[variable] <strong>*DOCUMENT-LINK-CODE*</strong> <em>T</em></p>
+
+<p>When true, during the process of generating documentation for a
+<a href="#x:28MGL-PAX:SECTION:20CLASS:29" title="(MGL-PAX:SECTION CLASS)"><code>SECTION</code></a>, html anchors are added before the documentation of
+every reference that's not to a section. Also, markdown style
+reference links are added when a piece of inline code found in a
+docstring refers to a symbol that's referenced by one of the
+sections being documented. Assuming <code>BAR</code> is defined, the
+documentation for:</p>
+
+<pre><code><span class="code"><span class="paren1">(<span class="code"><i><span class="symbol">defsection</span></i> @foo
+  <span class="paren2">(<span class="code">foo <i><span class="symbol">function</span></i></span>)</span>
+  <span class="paren2">(<span class="code">bar <i><span class="symbol">function</span></i></span>)</span></span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defun</span></i> foo <span class="paren2">(<span class="code">x</span>)</span>
+  <span class="string">"Calls `BAR` on `X`."</span>
+  <span class="paren2">(<span class="code">bar x</span>)</span></span>)</span></span></code></pre>
+
+<p>would look like this:</p>
+
+<pre><code>- [function] FOO X
+
+    Calls [`BAR`][1] on `X`.
+</code></pre>
+
+<p>Instead of <code>BAR</code>, one can write <code>[bar][]</code> or <code>[`bar`][]</code> as well.
+Since symbol names are parsed according to <code>READTABLE-CASE</code>, character
+case rarely matters.</p>
+
+<p>Now, if <code>BAR</code> has references with different locatives:</p>
+
+<pre><code><span class="code"><span class="paren1">(<span class="code"><i><span class="symbol">defsection</span></i> @foo
+  <span class="paren2">(<span class="code">foo <i><span class="symbol">function</span></i></span>)</span>
+  <span class="paren2">(<span class="code">bar <i><span class="symbol">function</span></i></span>)</span>
+  <span class="paren2">(<span class="code">bar type</span>)</span></span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defun</span></i> foo <span class="paren2">(<span class="code">x</span>)</span>
+  <span class="string">"Calls `BAR` on `X`."</span>
+  <span class="paren2">(<span class="code">bar x</span>)</span></span>)</span></span></code></pre>
+
+<p>then documentation would link to all interpretations:</p>
+
+<pre><code>- [function] FOO X
+
+    Calls `BAR`([`1`][link-id-1] [`2`][link-id-2]) on `X`.
+</code></pre>
+
+<p>This situation occurs in PAX with <code>SECTION</code>(<a href="#x:28MGL-PAX:SECTION:20CLASS:29" title="(MGL-PAX:SECTION CLASS)"><code>0</code></a> <a href="#x:28MGL-PAX:SECTION:20MGL-PAX:LOCATIVE:29" title="(MGL-PAX:SECTION MGL-PAX:LOCATIVE)"><code>1</code></a>) which is both a class (see
+<a href="#x:28MGL-PAX:SECTION:20CLASS:29" title="(MGL-PAX:SECTION CLASS)"><code>SECTION</code></a>) and a locative type denoted by a symbol (see
+<a href="#x:28MGL-PAX:SECTION:20MGL-PAX:LOCATIVE:29" title="(MGL-PAX:SECTION MGL-PAX:LOCATIVE)"><code>SECTION</code></a>). Back in the example above, clearly,
+there is no reason to link to type <code>BAR</code>, so one may wish to select
+the function locative. There are two ways to do that. One is to
+specify the locative explicitly as the id of a reference link:</p>
+
+<pre><code>&quot;Calls [BAR][function] on X.&quot;
+</code></pre>
+
+<p>However, if in the text there is a locative immediately before or
+after the symbol, then that locative is used to narrow down the
+range of possibilities. This is similar to what the M-. extension
+does. In a nutshell, if M-. works without questions then the
+documentation will contain a single link. So this also works without
+any markup:</p>
+
+<pre><code>&quot;Calls function `BAR` on X.&quot;
+</code></pre>
+
+<p>This last option needs backticks around the locative if it's not a
+single symbol.</p>
+
+<p>Note that <a href="#x:28MGL-PAX::2ADOCUMENT-LINK-CODE:2A:20VARIABLE:29" title="(MGL-PAX:*DOCUMENT-LINK-CODE* VARIABLE)"><code>*DOCUMENT-LINK-CODE*</code></a> can be combined with
+<a href="#x:28MGL-PAX::2ADOCUMENT-UPPERCASE-IS-CODE:2A:20VARIABLE:29" title="(MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE* VARIABLE)"><code>*DOCUMENT-UPPERCASE-IS-CODE*</code></a> to have links generated for
+uppercase names with no quoting required.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::2ADOCUMENT-LINK-SECTIONS:2A:20VARIABLE:29'></a></p>
+
+<ul>
+<li><p>[variable] <strong>*DOCUMENT-LINK-SECTIONS*</strong> <em>T</em></p>
+
+<p>When true, html anchors are generated before the heading of
+sections which allows the table of contents to contain links and
+also code-like references to sections (like <code>@FOO-MANUAL</code>) to be
+translated to links with the section title being the name of the
+link.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::2ADOCUMENT-MIN-LINK-HASH-LENGTH:2A:20VARIABLE:29'></a></p>
+
+<ul>
+<li><p>[variable] <strong>*DOCUMENT-MIN-LINK-HASH-LENGTH*</strong> <em>4</em></p>
+
+<p>Recall that markdown reference style links (like <code>[label][id]</code>) are
+used for linking to sections and code. It is desirable to have ids
+that are short to maintain legibility of the generated markdown, but
+also stable to reduce the spurious diffs in the generated
+documentation which can be a pain in a version control system.</p>
+
+<p>Clearly, there is a tradeoff here. This variable controls how many
+characters of the md5 sum of the full link id (the reference as a
+string) are retained. If collisions are found due to the low number
+of characters, then the length of the hash of the colliding
+reference is increased.</p>
+
+<p>This variable has no effect on the html generated from markdown, but
+it can make markdown output more readable.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::2ADOCUMENT-MARK-UP-SIGNATURES:2A:20VARIABLE:29'></a></p>
+
+<ul>
+<li><p>[variable] <strong>*DOCUMENT-MARK-UP-SIGNATURES*</strong> <em>T</em></p>
+
+<p>When true, some things such as function names and arglists are
+rendered as bold and italic.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::2ADOCUMENT-MAX-NUMBERING-LEVEL:2A:20VARIABLE:29'></a></p>
+
+<ul>
+<li><p>[variable] <strong>*DOCUMENT-MAX-NUMBERING-LEVEL*</strong> <em>3</em></p>
+
+<p>A non-negative integer. In their hierarchy, sections on levels less
+than this value get numbered in the format of <code>3.1.2</code>. Setting it to
+0 turns numbering off.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::2ADOCUMENT-MAX-TABLE-OF-CONTENTS-LEVEL:2A:20VARIABLE:29'></a></p>
+
+<ul>
+<li><p>[variable] <strong>*DOCUMENT-MAX-TABLE-OF-CONTENTS-LEVEL*</strong> <em>3</em></p>
+
+<p>A non-negative integer. Top-level sections are given a table of
+contents which includes a nested tree of section titles whose depth
+is limited by this value. Setting it to 0 turns generation of the
+table of contents off. If <a href="#x:28MGL-PAX::2ADOCUMENT-LINK-SECTIONS:2A:20VARIABLE:29" title="(MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE)"><code>*DOCUMENT-LINK-SECTIONS*</code></a> is true, then the
+table of contents will link to the sections.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::2ADOCUMENT-TEXT-NAVIGATION:2A:20VARIABLE:29'></a></p>
+
+<ul>
+<li><p>[variable] <strong>*DOCUMENT-TEXT-NAVIGATION*</strong> <em>NIL</em></p>
+
+<p>If true, then before each heading a line is printed with links to
+the previous, parent and next section. Needs
+<a href="#x:28MGL-PAX::2ADOCUMENT-LINK-SECTIONS:2A:20VARIABLE:29" title="(MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE)"><code>*DOCUMENT-LINK-SECTIONS*</code></a> to be on to work.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::2ADOCUMENT-FANCY-HTML-NAVIGATION:2A:20VARIABLE:29'></a></p>
+
+<ul>
+<li><p>[variable] <strong>*DOCUMENT-FANCY-HTML-NAVIGATION*</strong> <em>T</em></p>
+
+<p>If true and the output format is HTML, then headings get a
+navigation component that consists of links to the previous, parent,
+next section and a permalink. This component is normally hidden, it
+is visible only when the mouse is over the heading. Needs
+<a href="#x:28MGL-PAX::2ADOCUMENT-LINK-SECTIONS:2A:20VARIABLE:29" title="(MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE)"><code>*DOCUMENT-LINK-SECTIONS*</code></a> to be on to work.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::2ADOCUMENT-NORMALIZE-PACKAGES:2A:20VARIABLE:29'></a></p>
+
+<ul>
+<li><p>[variable] <strong>*DOCUMENT-NORMALIZE-PACKAGES*</strong> <em>T</em></p>
+
+<p>If true, symbols are printed relative to <code>SECTION-PACKAGE</code> of the
+innermost containing section or with full package names if there is
+no containing section. To eliminate ambiguity <code>[in package ...]</code>
+messages are printed right after the section heading if necessary.
+If false, symbols are always printed relative to the current
+package.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::40PAX-LOCATIVE-TYPES:20MGL-PAX:SECTION:29'></a></p>
+
+<h2><span class="navigation"> <a href="#x:28MGL-PAX::40PAX-DOCUMENTATION-PRINTER-VARIABLES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-DOCUMENTATION-PRINTER-VARIABLES MGL-PAX:SECTION)">&#8592;</a> <a href="#x:28MGL-PAX::40PAX-MANUAL:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MANUAL MGL-PAX:SECTION)">&#8593;</a> <a href="#x:28MGL-PAX::40PAX-EXTENSION-API:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-EXTENSION-API MGL-PAX:SECTION)">&#8594;</a> <a href="#x:28MGL-PAX::40PAX-LOCATIVE-TYPES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-LOCATIVE-TYPES MGL-PAX:SECTION)">&#8634;</a></span>8 Locative Types</h2>
+
+<p>These are the locatives type supported out of the box. As all
+locative types, they are symbols and their names should make it
+obvious what kind of things they refer to. Unless otherwise noted,
+locatives take no arguments.</p>
+
+<p><a id='x:28ASDF:2FSYSTEM:SYSTEM:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li><p>[locative] <strong>ASDF/SYSTEM:SYSTEM</strong></p>
+
+<p>Refers to an asdf system. The generated documentation will include
+meta information extracted from the system definition. This also
+serves as an example of a symbol that's not accessible in the
+current package and consequently is not exported.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:SECTION:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li><p>[locative] <strong>SECTION</strong></p>
+
+<p>Refers to a section defined by <a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a>.</p></li>
+</ul>
+
+<p><a id='x:28VARIABLE:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li><p>[locative] <strong>VARIABLE</strong> <em>&amp;OPTIONAL INITFORM</em></p>
+
+<p>Refers to a global special variable. <code>INITFORM</code>, or if not specified,
+the global value of the variable is included in the documentation.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:CONSTANT:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li><p>[locative] <strong>CONSTANT</strong> <em>&amp;OPTIONAL INITFORM</em></p>
+
+<p>Refers to a <code>DEFCONSTANT</code>. <code>INITFORM</code>, or if not specified,
+the value of the constant is included in the documentation.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:MACRO:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li>[locative] <strong>MACRO</strong></li>
+</ul>
+
+<p><a id='x:28COMPILER-MACRO:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li>[locative] <strong>COMPILER-MACRO</strong></li>
+</ul>
+
+<p><a id='x:28FUNCTION:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li><p>[locative] <strong>FUNCTION</strong></p>
+
+<p>Note that the arglist in the generated documentation depends on
+the quality of <code>SWANK-BACKEND:ARGLIST</code>. It may be that default
+values of optional and keyword arguments are missing.</p></li>
+</ul>
+
+<p><a id='x:28GENERIC-FUNCTION:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li>[locative] <strong>GENERIC-FUNCTION</strong></li>
+</ul>
+
+<p><a id='x:28METHOD:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li><p>[locative] <strong>METHOD</strong> <em>METHOD-QUALIFIERS METHOD-SPECIALIZERS</em></p>
+
+<p>See <code>CL:FIND-METHOD</code> for the description of the arguments.
+To refer to the default method of the three argument generic
+function <code>FOO</code>:</p>
+
+<pre><code>(foo (method () (t t t)))
+</code></pre></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:ACCESSOR:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li><p>[locative] <strong>ACCESSOR</strong> <em>CLASS-NAME</em></p>
+
+<p>To refer to an accessor named <code>FOO-SLOT</code> of class
+<code>FOO</code>:</p>
+
+<pre><code>(foo-slot (accessor foo))
+</code></pre></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:READER:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li><p>[locative] <strong>READER</strong> <em>CLASS-NAME</em></p>
+
+<p>To refer to a reader named <code>FOO-SLOT</code> of class
+<code>FOO</code>:</p>
+
+<pre><code>(foo-slot (reader foo))
+</code></pre></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:WRITER:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li><p>[locative] <strong>WRITER</strong> <em>CLASS-NAME</em></p>
+
+<p>To refer to a writer named <code>FOO-SLOT</code> of class
+<code>FOO</code>:</p>
+
+<pre><code>(foo-slot (writer foo))
+</code></pre></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:STRUCTURE-ACCESSOR:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li><p>[locative] <strong>STRUCTURE-ACCESSOR</strong></p>
+
+<p>This is a synonym of <a href="#x:28FUNCTION:20MGL-PAX:LOCATIVE:29" title="(FUNCTION MGL-PAX:LOCATIVE)"><code>FUNCTION</code></a> with the difference that the often
+ugly and certainly uninformative lambda list will not be printed.</p></li>
+</ul>
+
+<p><a id='x:28CLASS:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li>[locative] <strong>CLASS</strong></li>
+</ul>
+
+<p><a id='x:28CONDITION:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li>[locative] <strong>CONDITION</strong></li>
+</ul>
+
+<p><a id='x:28TYPE:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li><p>[locative] <strong>TYPE</strong></p>
+
+<p><a href="#x:28TYPE:20MGL-PAX:LOCATIVE:29" title="(TYPE MGL-PAX:LOCATIVE)"><code>TYPE</code></a> can refer to classes as well, but it's better style to use the
+more specific <a href="#x:28CLASS:20MGL-PAX:LOCATIVE:29" title="(CLASS MGL-PAX:LOCATIVE)"><code>CLASS</code></a> locative type for that. Another difference to
+<a href="#x:28CLASS:20MGL-PAX:LOCATIVE:29" title="(CLASS MGL-PAX:LOCATIVE)"><code>CLASS</code></a> is that an attempt is made at printing the arguments of type
+specifiers.</p></li>
+</ul>
+
+<p><a id='x:28PACKAGE:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li>[locative] <strong>PACKAGE</strong></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:LOCATIVE:20MGL-PAX:LOCATIVE:29'></a></p>
+
+<ul>
+<li><p>[locative] <strong>LOCATIVE</strong> <em>LAMBDA-LIST</em></p>
+
+<p>This is the locative for locatives. When M-. is pressed on
+<a href="#x:28VARIABLE:20MGL-PAX:LOCATIVE:29" title="(VARIABLE MGL-PAX:LOCATIVE)"><code>VARIABLE</code></a> in <code>(VARIABLE LOCATIVE)</code>, this is what makes it possible
+to land at the <code>(DEFINE-LOCATIVE-TYPE VARIABLE ...)</code> form.
+Similarly, <code>(LOCATIVE LOCATIVE)</code> leads to this very definition.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::40PAX-EXTENSION-API:20MGL-PAX:SECTION:29'></a></p>
+
+<h2><span class="navigation"> <a href="#x:28MGL-PAX::40PAX-LOCATIVE-TYPES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-LOCATIVE-TYPES MGL-PAX:SECTION)">&#8592;</a> <a href="#x:28MGL-PAX::40PAX-MANUAL:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-MANUAL MGL-PAX:SECTION)">&#8593;</a> <a href="#x:28MGL-PAX::40PAX-LOCATIVES-AND-REFERENCES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-LOCATIVES-AND-REFERENCES MGL-PAX:SECTION)">&#8594;</a> <a href="#x:28MGL-PAX::40PAX-EXTENSION-API:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-EXTENSION-API MGL-PAX:SECTION)">&#8634;</a></span>9 Extension API</h2>
+
+<p><a id='x:28MGL-PAX::40PAX-LOCATIVES-AND-REFERENCES:20MGL-PAX:SECTION:29'></a></p>
+
+<h3><span class="navigation"> <a href="#x:28MGL-PAX::40PAX-EXTENSION-API:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-EXTENSION-API MGL-PAX:SECTION)">&#8592;</a> <a href="#x:28MGL-PAX::40PAX-EXTENSION-API:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-EXTENSION-API MGL-PAX:SECTION)">&#8593;</a> <a href="#x:28MGL-PAX::40PAX-NEW-OBJECT-TYPES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-NEW-OBJECT-TYPES MGL-PAX:SECTION)">&#8594;</a> <a href="#x:28MGL-PAX::40PAX-LOCATIVES-AND-REFERENCES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-LOCATIVES-AND-REFERENCES MGL-PAX:SECTION)">&#8634;</a></span>9.1 Locatives and References</h3>
+
+<p>While Common Lisp has rather good introspective abilities, not
+everything is first class. For example, there is no object
+representing the variable defined with <code>(DEFVAR
+FOO)</code>. <code>(MAKE-REFERENCE 'FOO 'VARIABLE)</code> constructs a <a href="#x:28MGL-PAX:REFERENCE:20CLASS:29" title="(MGL-PAX:REFERENCE CLASS)"><code>REFERENCE</code></a> that
+captures the path to take from an object (the symbol <code>FOO</code>) to an
+entity of interest (for example, the documentation of the variable).
+The path is called the locative. A locative can be applied to an
+object like this:</p>
+
+<pre><code>(locate 'foo 'variable)
+</code></pre>
+
+<p>which will return the same reference as <code>(MAKE-REFERENCE 'FOO
+'VARIABLE)</code>. Operations need to know how to deal with references
+which we will see in <a href="#x:28MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS:20GENERIC-FUNCTION:29" title="(MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION)"><code>LOCATE-AND-COLLECT-REACHABLE-OBJECTS</code></a>,
+<a href="#x:28MGL-PAX:LOCATE-AND-DOCUMENT:20GENERIC-FUNCTION:29" title="(MGL-PAX:LOCATE-AND-DOCUMENT GENERIC-FUNCTION)"><code>LOCATE-AND-DOCUMENT</code></a> and <a href="#x:28MGL-PAX:LOCATE-AND-FIND-SOURCE:20GENERIC-FUNCTION:29" title="(MGL-PAX:LOCATE-AND-FIND-SOURCE GENERIC-FUNCTION)"><code>LOCATE-AND-FIND-SOURCE</code></a>.</p>
+
+<p>Naturally, <code>(LOCATE 'FOO 'FUNCTION)</code> will simply return <code>#'FOO</code>, no
+need to muck with references when there is a perfectly good object.</p>
+
+<p><a id='x:28MGL-PAX:LOCATE:20FUNCTION:29'></a></p>
+
+<ul>
+<li><p>[function] <strong>LOCATE</strong> <em>OBJECT LOCATIVE &amp;KEY (ERRORP T)</em></p>
+
+<p>Follow <code>LOCATIVE</code> from <code>OBJECT</code> and return the object it leads to or a
+<a href="#x:28MGL-PAX:REFERENCE:20CLASS:29" title="(MGL-PAX:REFERENCE CLASS)"><code>REFERENCE</code></a> if there is no first class object corresponding to the
+location. If <code>ERRORP</code>, then a <a href="#x:28MGL-PAX:LOCATE-ERROR:20CONDITION:29" title="(MGL-PAX:LOCATE-ERROR CONDITION)"><code>LOCATE-ERROR</code></a> condition is signaled when
+lookup fails.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:LOCATE-ERROR:20CONDITION:29'></a></p>
+
+<ul>
+<li><p>[condition] <strong>LOCATE-ERROR</strong> <em>ERROR</em></p>
+
+<p>Signaled by <a href="#x:28MGL-PAX:LOCATE:20FUNCTION:29" title="(MGL-PAX:LOCATE FUNCTION)"><code>LOCATE</code></a> when lookup fails and <code>ERRORP</code> is
+true.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:LOCATE-ERROR-MESSAGE:20:28MGL-PAX:READER:20MGL-PAX:LOCATE-ERROR:29:29'></a></p>
+
+<ul>
+<li>[reader] <strong>LOCATE-ERROR-MESSAGE</strong> <em>LOCATE-ERROR</em></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:LOCATE-ERROR-OBJECT:20:28MGL-PAX:READER:20MGL-PAX:LOCATE-ERROR:29:29'></a></p>
+
+<ul>
+<li>[reader] <strong>LOCATE-ERROR-OBJECT</strong> <em>LOCATE-ERROR</em></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:LOCATE-ERROR-LOCATIVE:20:28MGL-PAX:READER:20MGL-PAX:LOCATE-ERROR:29:29'></a></p>
+
+<ul>
+<li>[reader] <strong>LOCATE-ERROR-LOCATIVE</strong> <em>LOCATE-ERROR</em></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:RESOLVE:20FUNCTION:29'></a></p>
+
+<ul>
+<li><p>[function] <strong>RESOLVE</strong> <em>REFERENCE &amp;KEY (ERRORP T)</em></p>
+
+<p>A convenience function to <a href="#x:28MGL-PAX:LOCATE:20FUNCTION:29" title="(MGL-PAX:LOCATE FUNCTION)"><code>LOCATE</code></a> <code>REFERENCE</code>'s object with its
+locative.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:REFERENCE:20CLASS:29'></a></p>
+
+<ul>
+<li><p>[class] <strong>REFERENCE</strong></p>
+
+<p>A <a href="#x:28MGL-PAX:REFERENCE:20CLASS:29" title="(MGL-PAX:REFERENCE CLASS)"><code>REFERENCE</code></a> represents a path (<a href="#x:28MGL-PAX:REFERENCE-LOCATIVE:20:28MGL-PAX:READER:20MGL-PAX:REFERENCE:29:29" title="(MGL-PAX:REFERENCE-LOCATIVE (MGL-PAX:READER MGL-PAX:REFERENCE))"><code>REFERENCE-LOCATIVE</code></a>)
+to take from an object (<a href="#x:28MGL-PAX:REFERENCE-OBJECT:20:28MGL-PAX:READER:20MGL-PAX:REFERENCE:29:29" title="(MGL-PAX:REFERENCE-OBJECT (MGL-PAX:READER MGL-PAX:REFERENCE))"><code>REFERENCE-OBJECT</code></a>).</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:REFERENCE-OBJECT:20:28MGL-PAX:READER:20MGL-PAX:REFERENCE:29:29'></a></p>
+
+<ul>
+<li>[reader] <strong>REFERENCE-OBJECT</strong> <em>REFERENCE</em></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:REFERENCE-LOCATIVE:20:28MGL-PAX:READER:20MGL-PAX:REFERENCE:29:29'></a></p>
+
+<ul>
+<li>[reader] <strong>REFERENCE-LOCATIVE</strong> <em>REFERENCE</em></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:MAKE-REFERENCE:20FUNCTION:29'></a></p>
+
+<ul>
+<li>[function] <strong>MAKE-REFERENCE</strong> <em>OBJECT LOCATIVE</em></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:LOCATIVE-TYPE:20FUNCTION:29'></a></p>
+
+<ul>
+<li><p>[function] <strong>LOCATIVE-TYPE</strong> <em>LOCATIVE</em></p>
+
+<p>The first element of <code>LOCATIVE</code> if it's a list. If it's a symbol then
+it's that symbol itself. Typically, methods of generic functions
+working with locatives take locative type and locative args as
+separate arguments to allow methods have eql specializers on the type
+symbol.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:LOCATIVE-ARGS:20FUNCTION:29'></a></p>
+
+<ul>
+<li><p>[function] <strong>LOCATIVE-ARGS</strong> <em>LOCATIVE</em></p>
+
+<p>The <code>REST</code> of <code>LOCATIVE</code> if it's a list. If it's a symbol then
+it's ().</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::40PAX-NEW-OBJECT-TYPES:20MGL-PAX:SECTION:29'></a></p>
+
+<h3><span class="navigation"> <a href="#x:28MGL-PAX::40PAX-LOCATIVES-AND-REFERENCES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-LOCATIVES-AND-REFERENCES MGL-PAX:SECTION)">&#8592;</a> <a href="#x:28MGL-PAX::40PAX-EXTENSION-API:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-EXTENSION-API MGL-PAX:SECTION)">&#8593;</a> <a href="#x:28MGL-PAX::40PAX-REFERENCE-BASED-EXTENSIONS:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-REFERENCE-BASED-EXTENSIONS MGL-PAX:SECTION)">&#8594;</a> <a href="#x:28MGL-PAX::40PAX-NEW-OBJECT-TYPES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-NEW-OBJECT-TYPES MGL-PAX:SECTION)">&#8634;</a></span>9.2 Adding New Object Types</h3>
+
+<p>One may wish to make the <a href="#x:28MGL-PAX:DOCUMENT:20FUNCTION:29" title="(MGL-PAX:DOCUMENT FUNCTION)"><code>DOCUMENT</code></a> function and M-. navigation work
+with new object types. Extending <a href="#x:28MGL-PAX:DOCUMENT:20FUNCTION:29" title="(MGL-PAX:DOCUMENT FUNCTION)"><code>DOCUMENT</code></a> can be done by defining a
+<a href="#x:28MGL-PAX:DOCUMENT-OBJECT:20GENERIC-FUNCTION:29" title="(MGL-PAX:DOCUMENT-OBJECT GENERIC-FUNCTION)"><code>DOCUMENT-OBJECT</code></a> method. To allow these objects to be referenced from
+<a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a> a <a href="#x:28MGL-PAX:LOCATE-OBJECT:20GENERIC-FUNCTION:29" title="(MGL-PAX:LOCATE-OBJECT GENERIC-FUNCTION)"><code>LOCATE-OBJECT</code></a> method is to be defined. Finally, for M-.
+<a href="#x:28MGL-PAX:FIND-SOURCE:20GENERIC-FUNCTION:29" title="(MGL-PAX:FIND-SOURCE GENERIC-FUNCTION)"><code>FIND-SOURCE</code></a> can be specialized. Finally, <a href="#x:28MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P:20GENERIC-FUNCTION:29" title="(MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION)"><code>EXPORTABLE-LOCATIVE-TYPE-P</code></a>
+may be overridden if exporting does not makes sense. Here is a
+stripped down example of how all this is done for <a href="#x:28ASDF:2FSYSTEM:SYSTEM:20MGL-PAX:LOCATIVE:29" title="(ASDF/SYSTEM:SYSTEM MGL-PAX:LOCATIVE)"><code>ASDF:SYSTEM:</code></a></p>
+
+<pre><code><span class="code"><span class="paren1">(<span class="code"><i><span class="symbol">define-locative-type</span></i> asdf:system <span class="paren2">(<span class="code"></span>)</span>
+  <span class="string">"Refers to an asdf system."</span></span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> exportable-locative-type-p <span class="paren2">(<span class="code"><span class="paren3">(<span class="code">locative-type <span class="paren4">(<span class="code">eql 'asdf:system</span>)</span></span>)</span></span>)</span>
+  nil</span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> locate-object <span class="paren2">(<span class="code">symbol <span class="paren3">(<span class="code">locative-type <span class="paren4">(<span class="code">eql 'asdf:system</span>)</span></span>)</span>
+                          locative-args</span>)</span>
+  <span class="paren2">(<span class="code">assert <span class="paren3">(<span class="code">endp locative-args</span>)</span></span>)</span>
+  <span class="paren2">(<span class="code">or <span class="paren3">(<span class="code">asdf:find-system symbol nil</span>)</span>
+      <span class="paren3">(<span class="code">locate-error</span>)</span></span>)</span></span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> canonical-reference <span class="paren2">(<span class="code"><span class="paren3">(<span class="code">system asdf:system</span>)</span></span>)</span>
+  <span class="paren2">(<span class="code">make-reference <span class="paren3">(<span class="code">asdf/find-system:primary-system-name system</span>)</span>
+                  'asdf:system</span>)</span></span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> document-object <span class="paren2">(<span class="code"><span class="paren3">(<span class="code">system asdf:system</span>)</span> stream</span>)</span>
+  <span class="paren2">(<span class="code"><i><span class="symbol">with-heading</span></i> <span class="paren3">(<span class="code">stream system
+                        <span class="paren4">(<span class="code">format nil <span class="string">"~A ASDF System Details"</span>
+                                <span class="paren5">(<span class="code">asdf/find-system:primary-system-name
+                                 system</span>)</span></span>)</span></span>)</span>
+    <span class="paren3">(<span class="code">format stream <span class="string">"Some content~%"</span></span>)</span></span>)</span></span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> find-source <span class="paren2">(<span class="code"><span class="paren3">(<span class="code">system asdf:system</span>)</span></span>)</span>
+  `<span class="paren2">(<span class="code"><span class="keyword">:location</span>
+    <span class="paren3">(<span class="code"><span class="keyword">:file</span> ,<span class="paren4">(<span class="code">namestring <span class="paren5">(<span class="code">asdf/system:system-source-file system</span>)</span></span>)</span></span>)</span>
+    <span class="paren3">(<span class="code"><span class="keyword">:position</span> 1</span>)</span>
+    <span class="paren3">(<span class="code"><span class="keyword">:snippet</span> <span class="string">""</span></span>)</span></span>)</span></span>)</span></span></code></pre>
+
+<p><a id='x:28MGL-PAX:DEFINE-LOCATIVE-TYPE:20MGL-PAX:MACRO:29'></a></p>
+
+<ul>
+<li><p>[macro] <strong>DEFINE-LOCATIVE-TYPE</strong> <em>LOCATIVE-TYPE LAMBDA-LIST &amp;BODY DOCSTRING</em></p>
+
+<p>Declare <code>LOCATIVE-TYPE</code> as a <a href="#x:28MGL-PAX:LOCATIVE:20MGL-PAX:LOCATIVE:29" title="(MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE)"><code>LOCATIVE</code></a>. One gets two
+things in return: first, a place to document the format and
+semantics of <code>LOCATIVE-TYPE</code> (in <code>LAMBDA-LIST</code> and <code>DOCSTRING</code>); second,
+being able to reference <code>(LOCATIVE-TYPE LOCATIVE)</code>. For example, if
+you have:</p>
+
+<pre><code><span class="code"><span class="paren1">(<span class="code"><i><span class="symbol">define-locative-type</span></i> variable <span class="paren2">(<span class="code">&amp;optional initform</span>)</span>
+  <span class="string">"Dummy docstring."</span></span>)</span></span></code></pre>
+
+<p>then <code>(VARIABLE LOCATIVE)</code> refers to this form.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P:20GENERIC-FUNCTION:29'></a></p>
+
+<ul>
+<li><p>[generic-function] <strong>EXPORTABLE-LOCATIVE-TYPE-P</strong> <em>LOCATIVE-TYPE</em></p>
+
+<p>Return true iff symbols in references with
+<code>LOCATIVE-TYPE</code> are to be exported by default when they occur in a
+<a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a>. The default method returns <code>T</code>, while the methods for
+<a href="#x:28PACKAGE:20MGL-PAX:LOCATIVE:29" title="(PACKAGE MGL-PAX:LOCATIVE)"><code>PACKAGE</code></a>, <a href="#x:28ASDF:2FSYSTEM:SYSTEM:20MGL-PAX:LOCATIVE:29" title="(ASDF/SYSTEM:SYSTEM MGL-PAX:LOCATIVE)"><code>ASDF:SYSTEM</code></a> and <a href="#x:28METHOD:20MGL-PAX:LOCATIVE:29" title="(METHOD MGL-PAX:LOCATIVE)"><code>METHOD</code></a> return <code>NIL</code>.</p>
+
+<p><a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a> calls this function to decide what symbols to export when
+its <code>EXPORT</code> argument is true.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:LOCATE-OBJECT:20GENERIC-FUNCTION:29'></a></p>
+
+<ul>
+<li><p>[generic-function] <strong>LOCATE-OBJECT</strong> <em>OBJECT LOCATIVE-TYPE LOCATIVE-ARGS</em></p>
+
+<p>Return the object <code>OBJECT</code> + locative refers to. For
+example, if <code>LOCATIVE-TYPE</code> is the symbol <a href="#x:28PACKAGE:20MGL-PAX:LOCATIVE:29" title="(PACKAGE MGL-PAX:LOCATIVE)"><code>PACKAGE</code></a>, this
+returns <code>(FIND-PACKAGE SYMBOL)</code>. Signal a <a href="#x:28MGL-PAX:LOCATE-ERROR:20CONDITION:29" title="(MGL-PAX:LOCATE-ERROR CONDITION)"><code>LOCATE-ERROR</code></a> condition by
+calling the <a href="#x:28MGL-PAX:LOCATE-ERROR:20FUNCTION:29" title="(MGL-PAX:LOCATE-ERROR FUNCTION)"><code>LOCATE-ERROR</code></a> function if lookup fails. Signal other
+errors if the types of the argument are bad, for instance
+<code>LOCATIVE-ARGS</code> is not the empty list in the package example. If a
+<a href="#x:28MGL-PAX:REFERENCE:20CLASS:29" title="(MGL-PAX:REFERENCE CLASS)"><code>REFERENCE</code></a> is returned then it must be canonical in the sense that
+calling <a href="#x:28MGL-PAX:CANONICAL-REFERENCE:20GENERIC-FUNCTION:29" title="(MGL-PAX:CANONICAL-REFERENCE GENERIC-FUNCTION)"><code>CANONICAL-REFERENCE</code></a> on it will return the same reference.
+For extension only, don't call this directly.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:LOCATE-ERROR:20FUNCTION:29'></a></p>
+
+<ul>
+<li><p>[function] <strong>LOCATE-ERROR</strong> <em>&amp;REST FORMAT-AND-ARGS</em></p>
+
+<p>Call this function to signal a <a href="#x:28MGL-PAX:LOCATE-ERROR:20CONDITION:29" title="(MGL-PAX:LOCATE-ERROR CONDITION)"><code>LOCATE-ERROR</code></a> condition from a
+<a href="#x:28MGL-PAX:LOCATE-OBJECT:20GENERIC-FUNCTION:29" title="(MGL-PAX:LOCATE-OBJECT GENERIC-FUNCTION)"><code>LOCATE-OBJECT</code></a> method. <code>FORMAT-AND-ARGS</code> contains a format string and
+args suitable for <code>FORMAT</code> from which the <a href="#x:28MGL-PAX:LOCATE-ERROR-MESSAGE:20:28MGL-PAX:READER:20MGL-PAX:LOCATE-ERROR:29:29" title="(MGL-PAX:LOCATE-ERROR-MESSAGE (MGL-PAX:READER MGL-PAX:LOCATE-ERROR))"><code>LOCATE-ERROR-MESSAGE</code></a> is
+constructed. If <code>FORMAT-AND-ARGS</code> is <code>NIL</code>, then the message will be <code>NIL</code>
+too.</p>
+
+<p>The object and the locative are not specified, they are added by
+<a href="#x:28MGL-PAX:LOCATE:20FUNCTION:29" title="(MGL-PAX:LOCATE FUNCTION)"><code>LOCATE</code></a> when it resignals the condition.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:CANONICAL-REFERENCE:20GENERIC-FUNCTION:29'></a></p>
+
+<ul>
+<li><p>[generic-function] <strong>CANONICAL-REFERENCE</strong> <em>OBJECT</em></p>
+
+<p>Return a <a href="#x:28MGL-PAX:REFERENCE:20CLASS:29" title="(MGL-PAX:REFERENCE CLASS)"><code>REFERENCE</code></a> that resolves to <code>OBJECT</code>.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:COLLECT-REACHABLE-OBJECTS:20GENERIC-FUNCTION:29'></a></p>
+
+<ul>
+<li><p>[generic-function] <strong>COLLECT-REACHABLE-OBJECTS</strong> <em>OBJECT</em></p>
+
+<p>Return a list of objects representing all things
+that would be documented in a (<a href="#x:28MGL-PAX:DOCUMENT:20FUNCTION:29" title="(MGL-PAX:DOCUMENT FUNCTION)"><code>DOCUMENT</code></a> <code>OBJECT</code>) call. For sections
+this is simply the union of references reachable from references in
+<a href="#x:28MGL-PAX:SECTION-ENTRIES:20:28MGL-PAX:READER:20MGL-PAX:SECTION:29:29" title="(MGL-PAX:SECTION-ENTRIES (MGL-PAX:READER MGL-PAX:SECTION))"><code>SECTION-ENTRIES</code></a>. The returned objects can be anything provided that
+<a href="#x:28MGL-PAX:CANONICAL-REFERENCE:20GENERIC-FUNCTION:29" title="(MGL-PAX:CANONICAL-REFERENCE GENERIC-FUNCTION)"><code>CANONICAL-REFERENCE</code></a> works on them. The list need not include <code>OBJECT</code>
+itself.</p>
+
+<p>One only has to specialize this for new container-like objects.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:COLLECT-REACHABLE-OBJECTS:20:28METHOD:20NIL:20:28T:29:29:29'></a></p>
+
+<ul>
+<li><p>[method] <strong>COLLECT-REACHABLE-OBJECTS</strong> <em>OBJECT</em></p>
+
+<p>This default implementation returns the empty list. This means that
+nothing is reachable from <code>OBJECT</code>.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:DOCUMENT-OBJECT:20GENERIC-FUNCTION:29'></a></p>
+
+<ul>
+<li><p>[generic-function] <strong>DOCUMENT-OBJECT</strong> <em>OBJECT STREAM</em></p>
+
+<p>Write <code>OBJECT</code> (and its references recursively) in
+<code>FORMAT</code> to <code>STREAM</code>.</p>
+
+<p>The <a href="#x:28MGL-PAX:DOCUMENT:20FUNCTION:29" title="(MGL-PAX:DOCUMENT FUNCTION)"><code>DOCUMENT</code></a> function calls this generic function with <code>LEVEL</code> 0,
+passing <code>FORMAT</code> on. Add methods specializing on <code>OBJECT</code> to customize
+how objects of that type are presented in the documentation.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:DOCUMENT-OBJECT:20:28METHOD:20NIL:20:28STRING:20T:29:29:29'></a></p>
+
+<ul>
+<li><p>[method] <strong>DOCUMENT-OBJECT</strong> <em>(STRING STRING) STREAM</em></p>
+
+<p>Print <code>STRING</code> verbatim to <code>STREAM</code> after cleaning up indentation.</p>
+
+<p>Docstrings in sources are indented in various ways which can easily
+mess up markdown. To handle the most common cases leave the first
+line alone, but from the rest of the lines strip the longest run of
+leading spaces that is common to all non-blank lines.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:FIND-SOURCE:20GENERIC-FUNCTION:29'></a></p>
+
+<ul>
+<li><p>[generic-function] <strong>FIND-SOURCE</strong> <em>OBJECT</em></p>
+
+<p>Like <code>SWANK:FIND-DEFINITION-FOR-THING</code>, but this one
+is a generic function to be extensible. In fact, the default
+implementation simply defers to <code>SWANK:FIND-DEFINITION-FOR-THING</code>.
+This function is called by <code>LOCATE-DEFINITION-FOR-EMACS</code> which lies
+behind the M-. extension (see <a href="#x:28MGL-PAX::40PAX-EMACS-INTEGRATION:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-EMACS-INTEGRATION MGL-PAX:SECTION)">Emacs Integration</a>).</p>
+
+<p>If successful, the return value looks like this:</p>
+
+<pre><code><span class="code"><span class="paren1">(<span class="code"><span class="keyword">:location</span> <span class="paren2">(<span class="code"><span class="keyword">:file</span> <span class="string">"/home/mega/own/mgl/pax/test/test.lisp"</span></span>)</span>
+           <span class="paren2">(<span class="code"><span class="keyword">:position</span> 24</span>)</span> nil</span>)</span></span></code></pre>
+
+<p>The <code>NIL</code> is the source snippet which is optional. Note that position
+1 is the first character. If unsuccessful, the return values is
+like:</p>
+
+<pre><code><span class="code"><span class="paren1">(<span class="code"><span class="keyword">:error</span> <span class="string">"Unknown source location for SOMETHING"</span></span>)</span></span></code></pre></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::40PAX-REFERENCE-BASED-EXTENSIONS:20MGL-PAX:SECTION:29'></a></p>
+
+<h3><span class="navigation"> <a href="#x:28MGL-PAX::40PAX-NEW-OBJECT-TYPES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-NEW-OBJECT-TYPES MGL-PAX:SECTION)">&#8592;</a> <a href="#x:28MGL-PAX::40PAX-EXTENSION-API:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-EXTENSION-API MGL-PAX:SECTION)">&#8593;</a> <a href="#x:28MGL-PAX::40PAX-SECTIONS:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-SECTIONS MGL-PAX:SECTION)">&#8594;</a> <a href="#x:28MGL-PAX::40PAX-REFERENCE-BASED-EXTENSIONS:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-REFERENCE-BASED-EXTENSIONS MGL-PAX:SECTION)">&#8634;</a></span>9.3 Reference Based Extensions</h3>
+
+<p>Let's see how to extend <a href="#x:28MGL-PAX:DOCUMENT:20FUNCTION:29" title="(MGL-PAX:DOCUMENT FUNCTION)"><code>DOCUMENT</code></a> and M-. navigation if there is no
+first class object to represent the thing of interest. Recall that
+<a href="#x:28MGL-PAX:LOCATE:20FUNCTION:29" title="(MGL-PAX:LOCATE FUNCTION)"><code>LOCATE</code></a> returns a <a href="#x:28MGL-PAX:REFERENCE:20CLASS:29" title="(MGL-PAX:REFERENCE CLASS)"><code>REFERENCE</code></a> object in this case. <a href="#x:28MGL-PAX:DOCUMENT-OBJECT:20GENERIC-FUNCTION:29" title="(MGL-PAX:DOCUMENT-OBJECT GENERIC-FUNCTION)"><code>DOCUMENT-OBJECT</code></a> and
+<a href="#x:28MGL-PAX:FIND-SOURCE:20GENERIC-FUNCTION:29" title="(MGL-PAX:FIND-SOURCE GENERIC-FUNCTION)"><code>FIND-SOURCE</code></a> defer to <a href="#x:28MGL-PAX:LOCATE-AND-DOCUMENT:20GENERIC-FUNCTION:29" title="(MGL-PAX:LOCATE-AND-DOCUMENT GENERIC-FUNCTION)"><code>LOCATE-AND-DOCUMENT</code></a> and <a href="#x:28MGL-PAX:LOCATE-AND-FIND-SOURCE:20GENERIC-FUNCTION:29" title="(MGL-PAX:LOCATE-AND-FIND-SOURCE GENERIC-FUNCTION)"><code>LOCATE-AND-FIND-SOURCE</code></a>
+which have <a href="#x:28MGL-PAX:LOCATIVE-TYPE:20FUNCTION:29" title="(MGL-PAX:LOCATIVE-TYPE FUNCTION)"><code>LOCATIVE-TYPE</code></a> in their argument list for <code>EQL</code> specializing
+pleasure. Here is a stripped down example of how the <a href="#x:28VARIABLE:20MGL-PAX:LOCATIVE:29" title="(VARIABLE MGL-PAX:LOCATIVE)"><code>VARIABLE</code></a>
+locative is defined:</p>
+
+<pre><code><span class="code"><span class="paren1">(<span class="code"><i><span class="symbol">define-locative-type</span></i> variable <span class="paren2">(<span class="code">&amp;optional initform</span>)</span>
+  <span class="string">"Refers to a global special variable. INITFORM, or if not specified,
+  the global value of the variable is included in the documentation."</span></span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> locate-object <span class="paren2">(<span class="code">symbol <span class="paren3">(<span class="code">locative-type <span class="paren4">(<span class="code">eql 'variable</span>)</span></span>)</span>
+                          locative-args</span>)</span>
+  <span class="paren2">(<span class="code">assert <span class="paren3">(<span class="code">&lt;= <span class="paren4">(<span class="code">length locative-args</span>)</span> 1</span>)</span></span>)</span>
+  <span class="paren2">(<span class="code">make-reference symbol <span class="paren3">(<span class="code">cons locative-type locative-args</span>)</span></span>)</span></span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> locate-and-document <span class="paren2">(<span class="code">symbol <span class="paren3">(<span class="code">locative-type <span class="paren4">(<span class="code">eql 'variable</span>)</span></span>)</span>
+                                locative-args stream</span>)</span>
+  <span class="paren2">(<span class="code">destructuring-bind <span class="paren3">(<span class="code">&amp;optional <span class="paren4">(<span class="code">initform nil initformp</span>)</span></span>)</span> locative-args
+    <span class="paren3">(<span class="code">format stream <span class="string">"- [~A] "</span> <span class="paren4">(<span class="code">string-downcase locative-type</span>)</span></span>)</span>
+    <span class="paren3">(<span class="code">print-name <span class="paren4">(<span class="code">prin1-to-string symbol</span>)</span> stream</span>)</span>
+    <span class="paren3">(<span class="code">write-char #Space stream</span>)</span>
+    <span class="paren3">(<span class="code">multiple-value-bind <span class="paren4">(<span class="code">value unboundp</span>)</span> <span class="paren4">(<span class="code">symbol-global-value symbol</span>)</span>
+      <span class="paren4">(<span class="code">print-arglist <span class="paren5">(<span class="code">prin1-to-string <span class="paren6">(<span class="code"><i><span class="symbol">cond</span></i> <span class="paren1">(<span class="code">initformp initform</span>)</span>
+                                            <span class="paren1">(<span class="code">unboundp <span class="string">"-unbound-"</span></span>)</span>
+                                            <span class="paren1">(<span class="code">t value</span>)</span></span>)</span></span>)</span>
+                     stream</span>)</span></span>)</span>
+    <span class="paren3">(<span class="code">terpri stream</span>)</span>
+    <span class="paren3">(<span class="code">maybe-print-docstring symbol locative-type stream</span>)</span></span>)</span></span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> locate-and-find-source <span class="paren2">(<span class="code">symbol <span class="paren3">(<span class="code">locative-type <span class="paren4">(<span class="code">eql 'variable</span>)</span></span>)</span>
+                                   locative-args</span>)</span>
+  <span class="paren2">(<span class="code">declare <span class="paren3">(<span class="code">ignore locative-args</span>)</span></span>)</span>
+  <span class="paren2">(<span class="code">find-one-location <span class="paren3">(<span class="code">swank-backend:find-definitions symbol</span>)</span>
+                     '<span class="paren3">(<span class="code"><span class="string">"variable"</span> <span class="string">"defvar"</span> <span class="string">"defparameter"</span>
+                       <span class="string">"special-declaration"</span></span>)</span></span>)</span></span>)</span></span></code></pre>
+
+<p><a id='x:28MGL-PAX:COLLECT-REACHABLE-OBJECTS:20:28METHOD:20NIL:20:28MGL-PAX:REFERENCE:29:29:29'></a></p>
+
+<ul>
+<li><p>[method] <strong>COLLECT-REACHABLE-OBJECTS</strong> <em>(REFERENCE REFERENCE)</em></p>
+
+<p>If <code>REFERENCE</code> can be resolved to a non-reference, call
+<a href="#x:28MGL-PAX:COLLECT-REACHABLE-OBJECTS:20GENERIC-FUNCTION:29" title="(MGL-PAX:COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION)"><code>COLLECT-REACHABLE-OBJECTS</code></a> with it, else call
+<a href="#x:28MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS:20GENERIC-FUNCTION:29" title="(MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION)"><code>LOCATE-AND-COLLECT-REACHABLE-OBJECTS</code></a> on the object, locative-type,
+locative-args of <code>REFERENCE</code></p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS:20GENERIC-FUNCTION:29'></a></p>
+
+<ul>
+<li><p>[generic-function] <strong>LOCATE-AND-COLLECT-REACHABLE-OBJECTS</strong> <em>OBJECT LOCATIVE-TYPE LOCATIVE-ARGS</em></p>
+
+<p>Called by <a href="#x:28MGL-PAX:COLLECT-REACHABLE-OBJECTS:20GENERIC-FUNCTION:29" title="(MGL-PAX:COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION)"><code>COLLECT-REACHABLE-OBJECTS</code></a> on <a href="#x:28MGL-PAX:REFERENCE:20CLASS:29" title="(MGL-PAX:REFERENCE CLASS)"><code>REFERENCE</code></a>
+objects, this function has essentially the same purpose as its
+caller but it has different arguments to allow specializing on
+<code>LOCATIVE-TYPE</code>.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS:20:28METHOD:20NIL:20:28T:20T:20T:29:29:29'></a></p>
+
+<ul>
+<li><p>[method] <strong>LOCATE-AND-COLLECT-REACHABLE-OBJECTS</strong> <em>OBJECT LOCATIVE-TYPE LOCATIVE-ARGS</em></p>
+
+<p>This default implementation returns the empty list. This means that
+nothing is reachable from the reference.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:DOCUMENT-OBJECT:20:28METHOD:20NIL:20:28MGL-PAX:REFERENCE:20T:29:29:29'></a></p>
+
+<ul>
+<li><p>[method] <strong>DOCUMENT-OBJECT</strong> <em>(REFERENCE REFERENCE) STREAM</em></p>
+
+<p>If <code>REFERENCE</code> can be resolved to a non-reference, call
+<a href="#x:28MGL-PAX:DOCUMENT-OBJECT:20GENERIC-FUNCTION:29" title="(MGL-PAX:DOCUMENT-OBJECT GENERIC-FUNCTION)"><code>DOCUMENT-OBJECT</code></a> with it, else call LOCATE-AND-DOCUMENT-OBJECT on the
+object, locative-type, locative-args of <code>REFERENCE</code></p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:LOCATE-AND-DOCUMENT:20GENERIC-FUNCTION:29'></a></p>
+
+<ul>
+<li><p>[generic-function] <strong>LOCATE-AND-DOCUMENT</strong> <em>OBJECT LOCATIVE-TYPE LOCATIVE-ARGS STREAM</em></p>
+
+<p>Called by <a href="#x:28MGL-PAX:DOCUMENT-OBJECT:20GENERIC-FUNCTION:29" title="(MGL-PAX:DOCUMENT-OBJECT GENERIC-FUNCTION)"><code>DOCUMENT-OBJECT</code></a> on <a href="#x:28MGL-PAX:REFERENCE:20CLASS:29" title="(MGL-PAX:REFERENCE CLASS)"><code>REFERENCE</code></a> objects,
+this function has essentially the same purpose as <a href="#x:28MGL-PAX:DOCUMENT-OBJECT:20GENERIC-FUNCTION:29" title="(MGL-PAX:DOCUMENT-OBJECT GENERIC-FUNCTION)"><code>DOCUMENT-OBJECT</code></a>
+but it has different arguments to allow specializing on
+<code>LOCATIVE-TYPE</code>.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:FIND-SOURCE:20:28METHOD:20NIL:20:28MGL-PAX:REFERENCE:29:29:29'></a></p>
+
+<ul>
+<li><p>[method] <strong>FIND-SOURCE</strong> <em>(REFERENCE REFERENCE)</em></p>
+
+<p>If <code>REFERENCE</code> can be resolved to a non-reference, call <a href="#x:28MGL-PAX:FIND-SOURCE:20GENERIC-FUNCTION:29" title="(MGL-PAX:FIND-SOURCE GENERIC-FUNCTION)"><code>FIND-SOURCE</code></a>
+with it, else call <a href="#x:28MGL-PAX:LOCATE-AND-FIND-SOURCE:20GENERIC-FUNCTION:29" title="(MGL-PAX:LOCATE-AND-FIND-SOURCE GENERIC-FUNCTION)"><code>LOCATE-AND-FIND-SOURCE</code></a> on the object,
+locative-type, locative-args of <code>REFERENCE</code></p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:LOCATE-AND-FIND-SOURCE:20GENERIC-FUNCTION:29'></a></p>
+
+<ul>
+<li><p>[generic-function] <strong>LOCATE-AND-FIND-SOURCE</strong> <em>OBJECT LOCATIVE-TYPE LOCATIVE-ARGS</em></p>
+
+<p>Called by <a href="#x:28MGL-PAX:FIND-SOURCE:20GENERIC-FUNCTION:29" title="(MGL-PAX:FIND-SOURCE GENERIC-FUNCTION)"><code>FIND-SOURCE</code></a> on <a href="#x:28MGL-PAX:REFERENCE:20CLASS:29" title="(MGL-PAX:REFERENCE CLASS)"><code>REFERENCE</code></a> objects, this
+function has essentially the same purpose as <a href="#x:28MGL-PAX:FIND-SOURCE:20GENERIC-FUNCTION:29" title="(MGL-PAX:FIND-SOURCE GENERIC-FUNCTION)"><code>FIND-SOURCE</code></a> but it has
+different arguments to allow specializing on <code>LOCATIVE-TYPE</code>.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:LOCATE-AND-FIND-SOURCE:20:28METHOD:20NIL:20:28T:20T:20T:29:29:29'></a></p>
+
+<ul>
+<li><p>[method] <strong>LOCATE-AND-FIND-SOURCE</strong> <em>OBJECT LOCATIVE-TYPE LOCATIVE-ARGS</em></p>
+
+<p>This default implementation simply calls <a href="#x:28MGL-PAX:FIND-SOURCE:20GENERIC-FUNCTION:29" title="(MGL-PAX:FIND-SOURCE GENERIC-FUNCTION)"><code>FIND-SOURCE</code></a> with <code>OBJECT</code>
+which should cover the common case of a macro expanding to, for
+instance, a defun but having its own locative type.</p></li>
+</ul>
+
+<p>We have covered the basic building blocks of reference based
+extensions. Now let's see how the obscure
+<a href="#x:28MGL-PAX:DEFINE-SYMBOL-LOCATIVE-TYPE:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFINE-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO)"><code>DEFINE-SYMBOL-LOCATIVE-TYPE</code></a> and
+<a href="#x:28MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO)"><code>DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE</code></a> macros work together to
+simplify the common task of associating definition and documentation
+with symbols in a certain context.</p>
+
+<p><a id='x:28MGL-PAX:DEFINE-SYMBOL-LOCATIVE-TYPE:20MGL-PAX:MACRO:29'></a></p>
+
+<ul>
+<li><p>[macro] <strong>DEFINE-SYMBOL-LOCATIVE-TYPE</strong> <em>LOCATIVE-TYPE LAMBDA-LIST &amp;BODY DOCSTRING</em></p>
+
+<p>Similar to <a href="#x:28MGL-PAX:DEFINE-LOCATIVE-TYPE:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFINE-LOCATIVE-TYPE MGL-PAX:MACRO)"><code>DEFINE-LOCATIVE-TYPE</code></a> but it assumes that all things
+locatable with <code>LOCATIVE-TYPE</code> are going to be just symbols defined
+with a definer defined with <a href="#x:28MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO)"><code>DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE</code></a>.
+It is useful to attach documentation and source location to symbols
+in a particular context. An example will make everything clear:</p>
+
+<pre><code><span class="code"><span class="paren1">(<span class="code"><i><span class="symbol">define-symbol-locative-type</span></i> direction <span class="paren2">(<span class="code"></span>)</span>
+  <span class="string">"A direction is a symbol. (After this M-. on `DIRECTION LOCATIVE`
+  works and it can also be included in DEFSECTION forms.)"</span></span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">define-definer-for-symbol-locative-type</span></i> <i><span class="symbol">define-direction</span></i> direction <span class="paren2">(<span class="code"></span>)</span>
+  <span class="string">"With DEFINE-DIRECTION one document how what a symbol means when
+  interpreted as a direction."</span></span>)</span>
+
+<span class="paren1">(<span class="code"><i><span class="symbol">define-direction</span></i> up <span class="paren2">(<span class="code"></span>)</span>
+  <span class="string">"UP is equivalent to a coordinate delta of (0, -1)."</span></span>)</span></span></code></pre>
+
+<p>After all this, <code>(UP DIRECTION)</code> refers to the <code>DEFINE-DIRECTION</code>
+form above.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE:20MGL-PAX:MACRO:29'></a></p>
+
+<ul>
+<li><p>[macro] <strong>DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE</strong> <em>NAME LOCATIVE-TYPE &amp;BODY DOCSTRING</em></p>
+
+<p>Define a macro with <code>NAME</code> which can be used to attach documentation,
+a lambda-list and source location to a symbol in the context of
+<code>LOCATIVE-TYPE</code>. The defined macro's arglist is (<code>SYMBOL</code> <code>LAMBDA-LIST</code>
+&amp;OPTIONAL <code>DOCSTRING</code>). <code>LOCATIVE-TYPE</code> is assumed to have been defined
+with <a href="#x:28MGL-PAX:DEFINE-SYMBOL-LOCATIVE-TYPE:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFINE-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO)"><code>DEFINE-SYMBOL-LOCATIVE-TYPE</code></a>.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX::40PAX-SECTIONS:20MGL-PAX:SECTION:29'></a></p>
+
+<h3><span class="navigation"> <a href="#x:28MGL-PAX::40PAX-REFERENCE-BASED-EXTENSIONS:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-REFERENCE-BASED-EXTENSIONS MGL-PAX:SECTION)">&#8592;</a> <a href="#x:28MGL-PAX::40PAX-EXTENSION-API:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-EXTENSION-API MGL-PAX:SECTION)">&#8593;</a> <a href="#x:28MGL-PAX::40PAX-SECTIONS:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-SECTIONS MGL-PAX:SECTION)">&#8634;</a></span>9.4 Sections</h3>
+
+<p><a href="#x:28MGL-PAX:SECTION:20CLASS:29" title="(MGL-PAX:SECTION CLASS)"><code>Section</code></a> objects rarely need to be dissected since
+<a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a> and <a href="#x:28MGL-PAX:DOCUMENT:20FUNCTION:29" title="(MGL-PAX:DOCUMENT FUNCTION)"><code>DOCUMENT</code></a> cover most needs. However, it is plausible
+that one wants to subclass them and maybe redefine how they are
+presented.</p>
+
+<p><a id='x:28MGL-PAX:SECTION:20CLASS:29'></a></p>
+
+<ul>
+<li><p>[class] <strong>SECTION</strong></p>
+
+<p><a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a> stores its <code>NAME</code>, <code>TITLE</code> and <code>ENTRIES</code> in
+<a href="#x:28MGL-PAX:SECTION:20CLASS:29" title="(MGL-PAX:SECTION CLASS)"><code>SECTION</code></a> objects.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:SECTION-NAME:20:28MGL-PAX:READER:20MGL-PAX:SECTION:29:29'></a></p>
+
+<ul>
+<li><p>[reader] <strong>SECTION-NAME</strong> <em>SECTION</em></p>
+
+<p>The name of the global variable whose value is
+this section object.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:SECTION-TITLE:20:28MGL-PAX:READER:20MGL-PAX:SECTION:29:29'></a></p>
+
+<ul>
+<li><p>[reader] <strong>SECTION-TITLE</strong> <em>SECTION</em></p>
+
+<p>Used in generated documentation.</p></li>
+</ul>
+
+<p><a id='x:28MGL-PAX:SECTION-ENTRIES:20:28MGL-PAX:READER:20MGL-PAX:SECTION:29:29'></a></p>
+
+<ul>
+<li><p>[reader] <strong>SECTION-ENTRIES</strong> <em>SECTION</em></p>
+
+<p>A list of strings and <a href="#x:28MGL-PAX:REFERENCE:20CLASS:29" title="(MGL-PAX:REFERENCE CLASS)"><code>REFERENCE</code></a> objects in the
+order they occurred in <a href="#x:28MGL-PAX:DEFSECTION:20MGL-PAX:MACRO:29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a>.</p></li>
+</ul>
+
+<p><a id='x:28DESCRIBE-OBJECT:20:28METHOD:20NIL:20:28MGL-PAX:SECTION:20T:29:29:29'></a></p>
+
+<ul>
+<li><p>[method] <strong>DESCRIBE-OBJECT</strong> <em>(SECTION SECTION) STREAM</em></p>
+
+<p><a href="#x:28MGL-PAX:SECTION:20CLASS:29" title="(MGL-PAX:SECTION CLASS)"><code>SECTION</code></a> objects are printed by calling <a href="#x:28MGL-PAX:DOCUMENT:20FUNCTION:29" title="(MGL-PAX:DOCUMENT FUNCTION)"><code>DOCUMENT</code></a> on them
+with all <a href="#x:28MGL-PAX::40PAX-DOCUMENTATION-PRINTER-VARIABLES:20MGL-PAX:SECTION:29" title="(MGL-PAX:@PAX-DOCUMENTATION-PRINTER-VARIABLES MGL-PAX:SECTION)">Documentation Printer Variables</a>, except for
+<a href="#x:28MGL-PAX::2ADOCUMENT-NORMALIZE-PACKAGES:2A:20VARIABLE:29" title="(MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES* VARIABLE)"><code>*DOCUMENT-NORMALIZE-PACKAGES*</code></a>, turned off to reduce clutter.</p></li>
+</ul>
+</body>
+</html>

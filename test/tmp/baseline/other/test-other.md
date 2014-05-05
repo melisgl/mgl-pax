@@ -1,0 +1,7 @@
+<a id='x:28MGL-PAX-TEST:::40TEST-OTHER:20MGL-PAX:SECTION:29'></a>
+
+## 2 test other title
+
+backlink [@TEST][a755]
+
+  [a755]: ../test.md#x:28MGL-PAX-TEST:::40TEST:20MGL-PAX:SECTION:29 "(MGL-PAX-TEST::@TEST MGL-PAX:SECTION)"
