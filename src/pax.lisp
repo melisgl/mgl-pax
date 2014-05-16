@@ -1545,12 +1545,12 @@
           nil t))
 
 ;;; Call FN with STRING and START, END indices. FN returns three
-;;; values: a replacement parse tree fragment (or NIL, if it the
-;;; subseq shall not be replaced), whether it the replacement shall be
-;;; sliced into the result list, and the number of characters replaced
-;;; (may be less than (- END START). MAP-NAMES results a parse tree
-;;; fragment that's a list non-replaced string and replacements (maybe
-;;; sliced). Consecutive strings are concatenated.
+;;; values: a replacement parse tree fragment (or NIL, if the subseq
+;;; shall not be replaced), whether the replacement shall be sliced
+;;; into the result list, and the number of characters replaced (may
+;;; be less than (- END START). MAP-NAMES returns a parse tree
+;;; fragment that's a list of non-replaced parts of STRING and
+;;; replacements (maybe sliced). Consecutive strings are concatenated.
 (defun map-names (string fn)
   (let ((translated ())
         (i 0)
