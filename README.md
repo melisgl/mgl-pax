@@ -26,7 +26,8 @@
 ## 1 mgl-pax ASDF System Details
 
 - Version: 0.0.1
-- Description: Documentation generator and browser.
+- Description: Exploratory programming tool and documentation
+  generator.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)

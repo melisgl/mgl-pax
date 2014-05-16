@@ -7,7 +7,8 @@
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
   :homepage "http://quotenil.com"
-  :description "Documentation generator and browser."
+  :description "Exploratory programming tool and documentation
+  generator."
   :depends-on (:3bmd :3bmd-ext-code-blocks :alexandria :babel :colorize
                      :ironclad :swank)
   :components ((:module "src"
