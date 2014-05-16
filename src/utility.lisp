@@ -176,11 +176,17 @@
 
 ;;;; String utilities
 
-(defun spacep (char)
-  (char= char #\Space))
+(defparameter *whitespace-chars*
+  '(#\Space #\Tab #\Return #\Newline #\Linefeed #\Page))
+
+(defun whitespacep (char)
+  (member char *whitespace-chars*))
 
 (defun blankp (string)
-  (every #'spacep string))
+  (every #'whitespacep string))
+
+(defun trim-whitespace (string)
+  (string-trim #.(format nil "~{~A~}" *whitespace-chars*) string))
 
 
 ;;;; Escaping of HTML ID and NAME

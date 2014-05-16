@@ -32,8 +32,28 @@
   This should be no link because the page of @TEST-EXAMPLES
   has :URI-FRAGMENT NIL.
 
-  This is code: T"
+  This is code: T
+  
+  See
+  FOO compiler-macro
+
+  See FOO
+  compiler-macro
+
+  See
+  compiler-macro FOO
+
+  See compiler-macro
+  FOO
+
+  See
+  compiler-macro 
+  FOO
+
+  See
+  FOO"
   (foo function)
+  (foo compiler-macro)
   (foo-a (accessor foo))
   (*navigation-test-cases* variable)
   (@test-examples section)

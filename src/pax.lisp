@@ -384,15 +384,6 @@
                     string)))
     (read-locative-from-string string)))
 
-(defparameter *whitespace-chars*
-  '(#\Space #\Tab #\Return #\Newline #\Linefeed #\Page))
-
-(defun whitespacep (char)
-  (member char *whitespace-chars*))
-
-(defun trim-whitespace (string)
-  (string-trim #.(format nil "~{~A~}" *whitespace-chars*) string))
-
 ;;; Like READ-FROM-STRING, but try to avoid interning symbols.
 (defun read-locative-from-string (string)
   (let ((swank::*buffer-package* *package*))
@@ -1518,12 +1509,14 @@
                             (try (first (third element)))))))
                (when reference
                  (return-from find-locative-around reference)))))
+    ;; For example, (:PLAIN "See" "function" " " "FOO")
     (loop for rest on tree
           do (when (and (eq (third rest) name-element)
                         (stringp (second rest))
                         (blankp (second rest)))
                (try (first rest))
                (return)))
+    ;; For example, (:PLAIN "See" "the" "FOO" " " "function")
     (loop for rest on tree
           do (when (and (eq (first rest) name-element)
                         (stringp (second rest))

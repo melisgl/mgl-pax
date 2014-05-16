@@ -33,7 +33,7 @@
 [`FOO-A`][6483]
 
 Escaped: FOO *NAVIGATION-TEST-CASES*
-Non escaped: [`FOO`][4244] [`*NAVIGATION-TEST-CASES*`][799d]
+Non escaped: `FOO`([`0`][4ded] [`1`][4244]) [`*NAVIGATION-TEST-CASES*`][799d]
 [test other title][22dd]
 
 This should be no link because the page of `@TEST-EXAMPLES`
@@ -41,9 +41,32 @@ has `:URI-FRAGMENT` `NIL`.
 
 This is code: `T`
 
+See
+[`FOO`][4ded] compiler-macro
+
+See [`FOO`][4ded]
+compiler-macro
+
+See
+compiler-macro [`FOO`][4ded]
+
+See compiler-macro
+[`FOO`][4ded]
+
+See
+compiler-macro 
+[`FOO`][4ded]
+
+See
+`FOO`([`0`][4ded] [`1`][4244])
+
 <a id='x:28MGL-PAX-TEST::FOO:20FUNCTION:29'></a>
 
 - [function] **FOO** 
+
+<a id='x:28MGL-PAX-TEST::FOO:20COMPILER-MACRO:29'></a>
+
+- [compiler-macro] **FOO** 
 
 <a id='x:28MGL-PAX-TEST::FOO-A:20:28MGL-PAX:ACCESSOR:20MGL-PAX-TEST::FOO:29:29'></a>
 
@@ -66,5 +89,6 @@ This is code: `T`
 
   [22dd]: other/test-other.md#x:28MGL-PAX-TEST:::40TEST-OTHER:20MGL-PAX:SECTION:29 "(MGL-PAX-TEST::@TEST-OTHER MGL-PAX:SECTION)"
   [4244]: #x:28MGL-PAX-TEST::FOO:20FUNCTION:29 "(MGL-PAX-TEST::FOO FUNCTION)"
+  [4ded]: #x:28MGL-PAX-TEST::FOO:20COMPILER-MACRO:29 "(MGL-PAX-TEST::FOO COMPILER-MACRO)"
   [6483]: #x:28MGL-PAX-TEST::FOO-A:20:28MGL-PAX:ACCESSOR:20MGL-PAX-TEST::FOO:29:29 "(MGL-PAX-TEST::FOO-A (MGL-PAX:ACCESSOR MGL-PAX-TEST::FOO))"
   [799d]: #x:28MGL-PAX-TEST:::2ANAVIGATION-TEST-CASES:2A:20VARIABLE:29 "(MGL-PAX-TEST::*NAVIGATION-TEST-CASES* VARIABLE)"
