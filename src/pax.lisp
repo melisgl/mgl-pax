@@ -343,24 +343,25 @@
 ;;; string arguments and returns a location suitable for
 ;;; make-slime-xref.
 (defun locate-definition-for-emacs (name locative-string)
-  (swank-backend::converting-errors-to-error-location
-    (swank::with-buffer-syntax ()
-      (or
-       ;; SECTION class and class SECTION
-       ;; SECTION `class` and `class` SECTION
-       ;; `SECTION` class and class `SECTION`
-       ;; `SECTION` `class` and `class` `SECTION`
-       (ignore-errors
-        (locate-definition-for-emacs-1 name locative-string))
-       ;; [SECTION][(class)] gets here as NAME="[SECTION][",
-       ;; LOCATIVE-STRING="(class)".
-       (ignore-errors
-        (locate-definition-for-emacs-1 (string-trim "[]" name)
-                                       locative-string))
-       ;; [SECTION][class] gets here as NAME="[SECTION][class]",
-       ;; LOCATIVE-STRING=garbage.
-       (ignore-errors
-        (locate-reference-link-definition-for-emacs name))))))
+  (let ((locative-string (trim-whitespace locative-string)))
+    (swank-backend::converting-errors-to-error-location
+      (swank::with-buffer-syntax ()
+        (or
+         ;; SECTION class and class SECTION
+         ;; SECTION `class` and `class` SECTION
+         ;; `SECTION` class and class `SECTION`
+         ;; `SECTION` `class` and `class` `SECTION`
+         (ignore-errors
+          (locate-definition-for-emacs-1 name locative-string))
+         ;; [SECTION][(class)] gets here as NAME="[SECTION][",
+         ;; LOCATIVE-STRING="(class)".
+         (ignore-errors
+          (locate-definition-for-emacs-1 (string-trim "[]" name)
+                                         locative-string))
+         ;; [SECTION][class] gets here as NAME="[SECTION][class]",
+         ;; LOCATIVE-STRING=garbage.
+         (ignore-errors
+          (locate-reference-link-definition-for-emacs name)))))))
 
 ;;; Handle references with quoted or non-quoted symbols and locatives.
 ;;; Since SECTION is both a class and and a documented symbol it
@@ -383,8 +384,14 @@
                     string)))
     (read-locative-from-string string)))
 
+(defparameter *whitespace-chars*
+  '(#\Space #\Tab #\Return #\Newline #\Linefeed #\Page))
+
 (defun whitespacep (char)
-  (member char '(#\Space #\Tab #\Return #\Newline #\Linefeed #\Page)))
+  (member char *whitespace-chars*))
+
+(defun trim-whitespace (string)
+  (string-trim #.(format nil "~{~A~}" *whitespace-chars*) string))
 
 ;;; Like READ-FROM-STRING, but try to avoid interning symbols.
 (defun read-locative-from-string (string)
