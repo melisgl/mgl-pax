@@ -208,10 +208,12 @@
 (defparameter +name-characters+ 
   (let ((array (copy-seq +first-name-characters+)))
     (_mark-range array #\0 #\9)
-    (_mark-one array #\_)
     (_mark-one array #\-)
-    (_mark-one array #\.)
-    (_mark-one array #\:)
+    ;; Encode these as well to work around github markdown bug which
+    ;; would otherwise break links.
+    #+nil (_mark-one array #\_)
+    #+nil (_mark-one array #\.)
+    #+nil (_mark-one array #\:)
     array))
 
 (defun html-safe-name (name)
@@ -239,7 +241,7 @@
                       ;; colons (":"), and periods (".").
                       (when first?
                         (write-char #\x out)) 
-                      (format out ":~:@(~16,r~)" code)))
+                      (format out "-~:@(~16,r~)" code)))
                (setf first? nil)))
     (coerce output 'simple-string)))
 
@@ -247,7 +249,7 @@
 ;;;; Text based HTML fragments
 
 (defun anchor (anchor stream)
-  (format stream "<a id='~A'></a>~%~%" (html-safe-name anchor)))
+  (format stream "<a name='~A'></a>~%~%" (html-safe-name anchor)))
 
 
 ;;;; Text based markdown fragments
