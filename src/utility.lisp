@@ -176,8 +176,9 @@
 
 ;;;; String utilities
 
-(defparameter *whitespace-chars*
-  '(#\Space #\Tab #\Return #\Newline #\Linefeed #\Page))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter *whitespace-chars*
+    '(#\Space #\Tab #\Return #\Newline #\Linefeed #\Page)))
 
 (defun whitespacep (char)
   (member char *whitespace-chars*))
