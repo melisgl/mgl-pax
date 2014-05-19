@@ -85,7 +85,10 @@ code {
 a {
   color: #222222;
   text-decoration: underline;
-  font-weight: normal;
+}
+
+h6 a {
+  color: #777777;
 }
 
 a:hover {
