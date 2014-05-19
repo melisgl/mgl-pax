@@ -648,8 +648,8 @@
   list of page specification elements. A page spec is a plist with
   keys :OBJECTS, :OUTPUT, :URI-FRAGMENT, :HEADER-FN and :FOOTER-FN.
   OBJECTS is a list of objects (references are allowed but not
-  required) whose documentation is to be sent to OUTPUT. OUTPUT can be
-  a number things:
+  required) whose documentation is to be sent to `OUTPUT`. `OUTPUT`
+  can be a number things:
 
   - If it's a list whose first element is a string or a pathname, then
     output will be sent to the file denoted by that and the rest of
@@ -665,7 +665,7 @@
   - If it's a stream, then output will be sent to that stream.
 
   If some pages are specified, DOCUMENT returns a list of designators
-  for generated output. If a page whose OUTPUT refers to a file that
+  for generated output. If a page whose `OUTPUT` refers to a file that
   was created (which doesn't happen if nothing would be written to
   it), then the corresponding pathname is included in the list. For
   strings the string itself, while for streams the stream object is
@@ -695,7 +695,7 @@
 
   Finally, URI-FRAGMENT is a string such as `\"doc/manual.html\"` that
   specifies where the page will be deployed on a webserver. It defines
-  how links between pages will look. If it's not specified and OUTPUT
+  how links between pages will look. If it's not specified and `OUTPUT`
   refers to a file, then it defaults to the name of the file. If
   URI-FRAGMENT is NIL, then no links will be made to or from that
   page.

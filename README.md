@@ -471,8 +471,8 @@ Now let's examine the most important pieces in detail.
     list of page specification elements. A page spec is a plist with
     keys `:OBJECTS`, `:OUTPUT`, `:URI-FRAGMENT`, `:HEADER-FN` and `:FOOTER-FN`.
     `OBJECTS` is a list of objects (references are allowed but not
-    required) whose documentation is to be sent to `OUTPUT`. `OUTPUT` can be
-    a number things:
+    required) whose documentation is to be sent to `OUTPUT`. `OUTPUT`
+    can be a number things:
     
     - If it's a list whose first element is a string or a pathname, then
       output will be sent to the file denoted by that and the rest of
