@@ -14,7 +14,6 @@
   :components ((:module "src"
                 :serial t
                 :components ((:file "package")
-                             (:file "3bmd")
                              (:file "utility")
                              (:file "pax-early")
                              (:file "pax")))))
