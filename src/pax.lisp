@@ -1,14 +1,11 @@
 ;;;; TODO
 ;;;;
-;;;; - get allegro changes to swank merged
-;;;;
-;;;; - get 3bmd changes merged
-;;;;
 ;;;; - locative aliases for docstrings (object[s] -> class)
 ;;;;
 ;;;; - add method-combination locative
 ;;;;
-;;;; - chunking
+;;;; - chunking: including [a fragment of] code and what it evaluates
+;;;;   to? Include a whole file? Bleh.
 ;;;;
 ;;;; - esrap is slow with allegro cl
 ;;;;
