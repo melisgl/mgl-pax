@@ -21,4 +21,4 @@
 (defmethod asdf:perform ((o asdf:test-op)
                          (c (eql (asdf:find-system '#:mgl-pax))))
   (asdf:oos 'asdf:load-op '#:mgl-pax-test)
-  (funcall (intern (symbol-name '#:test) (find-package '#:mgl-pax))))
+  (funcall (intern (symbol-name '#:test) (find-package '#:mgl-pax-test))))
