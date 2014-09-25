@@ -22,7 +22,3 @@
                          (c (eql (asdf:find-system '#:mgl-pax))))
   (asdf:oos 'asdf:test-op '#:mgl-pax-test)
   (funcall (intern (symbol-name '#:test) (find-package '#:mgl-pax))))
-
-(defmethod asdf:operation-done-p ((o asdf:test-op)
-                                  (c (eql (asdf:find-system '#:mgl-pax))))
-  (values nil))
