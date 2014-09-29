@@ -986,15 +986,15 @@ need to muck with references when there is a perfectly good object.
 
 <a name='x-28MGL-PAX-3ALOCATE-ERROR-MESSAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29'></a>
 
-- [reader] **LOCATE-ERROR-MESSAGE** *LOCATE-ERROR*
+- [reader] **LOCATE-ERROR-MESSAGE** *LOCATE-ERROR* *(:MESSAGE)*
 
 <a name='x-28MGL-PAX-3ALOCATE-ERROR-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29'></a>
 
-- [reader] **LOCATE-ERROR-OBJECT** *LOCATE-ERROR*
+- [reader] **LOCATE-ERROR-OBJECT** *LOCATE-ERROR* *(:OBJECT)*
 
 <a name='x-28MGL-PAX-3ALOCATE-ERROR-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29'></a>
 
-- [reader] **LOCATE-ERROR-LOCATIVE** *LOCATE-ERROR*
+- [reader] **LOCATE-ERROR-LOCATIVE** *LOCATE-ERROR* *(:LOCATIVE)*
 
 <a name='x-28MGL-PAX-3ARESOLVE-20FUNCTION-29'></a>
 
@@ -1012,11 +1012,11 @@ need to muck with references when there is a perfectly good object.
 
 <a name='x-28MGL-PAX-3AREFERENCE-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29'></a>
 
-- [reader] **REFERENCE-OBJECT** *REFERENCE*
+- [reader] **REFERENCE-OBJECT** *REFERENCE* *(:OBJECT)*
 
 <a name='x-28MGL-PAX-3AREFERENCE-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29'></a>
 
-- [reader] **REFERENCE-LOCATIVE** *REFERENCE*
+- [reader] **REFERENCE-LOCATIVE** *REFERENCE* *(:LOCATIVE)*
 
 <a name='x-28MGL-PAX-3AMAKE-REFERENCE-20FUNCTION-29'></a>
 
@@ -1385,20 +1385,20 @@ presented.
 
 <a name='x-28MGL-PAX-3ASECTION-NAME-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 
-- [reader] **SECTION-NAME** *SECTION*
+- [reader] **SECTION-NAME** *SECTION* *(:NAME)*
 
     The name of the global variable whose value is
     this section object.
 
 <a name='x-28MGL-PAX-3ASECTION-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 
-- [reader] **SECTION-TITLE** *SECTION*
+- [reader] **SECTION-TITLE** *SECTION* *(:TITLE)*
 
     Used in generated documentation.
 
 <a name='x-28MGL-PAX-3ASECTION-ENTRIES-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 
-- [reader] **SECTION-ENTRIES** *SECTION*
+- [reader] **SECTION-ENTRIES** *SECTION* *(:ENTRIES)*
 
     A list of strings and [`REFERENCE`][cc37] objects in the
     order they occurred in [`DEFSECTION`][2863].

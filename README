@@ -872,11 +872,11 @@ need to muck with references when there is a perfectly good object.
     Signaled by LOCATE when lookup fails and ERRORP is
     true.
 
-- [reader] LOCATE-ERROR-MESSAGE LOCATE-ERROR
+- [reader] LOCATE-ERROR-MESSAGE LOCATE-ERROR (:MESSAGE)
 
-- [reader] LOCATE-ERROR-OBJECT LOCATE-ERROR
+- [reader] LOCATE-ERROR-OBJECT LOCATE-ERROR (:OBJECT)
 
-- [reader] LOCATE-ERROR-LOCATIVE LOCATE-ERROR
+- [reader] LOCATE-ERROR-LOCATIVE LOCATE-ERROR (:LOCATIVE)
 
 - [function] RESOLVE REFERENCE &KEY (ERRORP T)
 
@@ -888,9 +888,9 @@ need to muck with references when there is a perfectly good object.
     A REFERENCE represents a path (REFERENCE-LOCATIVE)
     to take from an object (REFERENCE-OBJECT).
 
-- [reader] REFERENCE-OBJECT REFERENCE
+- [reader] REFERENCE-OBJECT REFERENCE (:OBJECT)
 
-- [reader] REFERENCE-LOCATIVE REFERENCE
+- [reader] REFERENCE-LOCATIVE REFERENCE (:LOCATIVE)
 
 - [function] MAKE-REFERENCE OBJECT LOCATIVE
 
@@ -1203,16 +1203,16 @@ presented.
     DEFSECTION stores its NAME, TITLE and ENTRIES in
     [SECTION][class] objects.
 
-- [reader] SECTION-NAME SECTION
+- [reader] SECTION-NAME SECTION (:NAME)
 
     The name of the global variable whose value is
     this section object.
 
-- [reader] SECTION-TITLE SECTION
+- [reader] SECTION-TITLE SECTION (:TITLE)
 
     Used in generated documentation.
 
-- [reader] SECTION-ENTRIES SECTION
+- [reader] SECTION-ENTRIES SECTION (:ENTRIES)
 
     A list of strings and REFERENCE objects in the
     order they occurred in DEFSECTION.

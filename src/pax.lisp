@@ -2838,6 +2838,16 @@ locative."
   (print-name (prin1-to-string symbol) stream)
   (write-char #\Space stream)
   (print-arglist locative-args stream)
+  (when (or (swank-mop:slot-definition-initargs slot-def)
+            (swank-mop:slot-definition-initfunction slot-def))
+    (write-char #\Space stream)
+    (print-arglist (prin1-to-string
+                    `(,@(when (swank-mop:slot-definition-initargs slot-def)
+                          (swank-mop:slot-definition-initargs slot-def))
+                      ,@(when (swank-mop:slot-definition-initfunction slot-def)
+                          `(<=
+                            ,(swank-mop:slot-definition-initform slot-def)))))
+                   stream))
   (terpri stream)
   ;; No documentation for condition accessors, and some
   ;; implementations signal warnings.
