@@ -1853,7 +1853,7 @@
 
 (defun resolve (reference &key (errorp t))
   "A convenience function to LOCATE REFERENCE's object with its
-locative."
+  locative."
   (locate (reference-object reference) (reference-locative reference)
           :errorp errorp))
 

@@ -13,49 +13,50 @@
                             (discard-documentation-p *discard-documentation-p*))
                       &body entries)
   "Define a documentation section and maybe export referenced symbols.
-A bit behind the scenes, a global variable with NAME is defined and is
-bound to a [SECTION][class] object. By convention, section names start
-with the character @. See @PAX-TUTORIAL for an example.
+  A bit behind the scenes, a global variable with NAME is defined and
+  is bound to a [SECTION][class] object. By convention, section names
+  start with the character @. See @PAX-TUTORIAL for an example.
 
-ENTRIES consists of docstrings and references. Docstrings are
-arbitrary strings in markdown format, references are defined in the
-form:
+  ENTRIES consists of docstrings and references. Docstrings are
+  arbitrary strings in markdown format, references are defined in the
+  form:
 
-    (symbol locative)
+      (symbol locative)
 
-For example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
-SECTION)` says that `@BAR` is a subsection of this
-one. `(BAZ (METHOD () (T T T)))` refers to the default method of the
-three argument generic function `BAZ`. `(FOO FUNCTION)` is equivalent
-to `(FOO (FUNCTION))`.
+  For example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
+  SECTION)` says that `@BAR` is a subsection of this
+  one. `(BAZ (METHOD () (T T T)))` refers to the default method of the
+  three argument generic function `BAZ`. `(FOO FUNCTION)` is
+  equivalent to `(FOO (FUNCTION))`.
 
-A locative in a reference can either be a symbol or it can be a list
-whose CAR is a symbol. In either case, the symbol is the called the
-type of the locative while the rest of the elements are the locative
-arguments. See @PAX-LOCATIVE-TYPES for the list of locative types
-available out of the box.
+  A locative in a reference can either be a symbol or it can be a list
+  whose CAR is a symbol. In either case, the symbol is the called the
+  type of the locative while the rest of the elements are the locative
+  arguments. See @PAX-LOCATIVE-TYPES for the list of locative types
+  available out of the box.
 
-The same symbol can occur multiple times in a reference, typically
-with different locatives, but this is not required.
+  The same symbol can occur multiple times in a reference, typically
+  with different locatives, but this is not required.
 
-The references are not looked up (see RESOLVE in the
-@PAX-EXTENSION-API) until documentation is generated, so it is allowed
-to refer to things yet to be defined.
+  The references are not looked up (see RESOLVE in the
+  @PAX-EXTENSION-API) until documentation is generated, so it is
+  allowed to refer to things yet to be defined.
 
-If EXPORT is true (the default), the referenced symbols and NAME are
-candidates for exporting. A candidate symbol is exported if
+  If EXPORT is true (the default), the referenced symbols and NAME are
+  candidates for exporting. A candidate symbol is exported if
 
-- it is accessible in PACKAGE (it's not `OTHER-PACKAGE:SOMETHING`) and
+  - it is accessible in PACKAGE (it's not `OTHER-PACKAGE:SOMETHING`)
+    and
 
-- there is a reference to it in the section being defined with a
-  locative whose type is approved by EXPORTABLE-LOCATIVE-TYPE-P.
+  - there is a reference to it in the section being defined with a
+    locative whose type is approved by EXPORTABLE-LOCATIVE-TYPE-P.
 
-See DEFINE-PACKAGE if you use the export feature. The idea with
-confounding documentation and exporting is to force documentation of
-all exported symbols.
+  See DEFINE-PACKAGE if you use the export feature. The idea with
+  confounding documentation and exporting is to force documentation of
+  all exported symbols.
 
-When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
-is true, ENTRIES will not be recorded to save memory."
+  When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
+  is true, ENTRIES will not be recorded to save memory."
   ;; Let's check the syntax as early as possible.
   (transform-entries entries)
   `(progn
@@ -123,17 +124,17 @@ is true, ENTRIES will not be recorded to save memory."
 
 (defun locative-type (locative)
   "The first element of LOCATIVE if it's a list. If it's a symbol then
-it's that symbol itself. Typically, methods of generic functions
-working with locatives take locative type and locative args as
-separate arguments to allow methods have eql specializers on the type
-symbol."
+  it's that symbol itself. Typically, methods of generic functions
+  working with locatives take locative type and locative args as
+  separate arguments to allow methods have eql specializers on the
+  type symbol."
   (if (listp locative)
       (first locative)
       locative))
 
 (defun locative-args (locative)
   "The REST of LOCATIVE if it's a list. If it's a symbol then
-it's ()."
+  it's ()."
   (if (listp locative)
       (rest locative)
       ()))
