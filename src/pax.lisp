@@ -2846,7 +2846,7 @@
                     `(,@(when (swank-mop:slot-definition-initargs slot-def)
                           (swank-mop:slot-definition-initargs slot-def))
                       ,@(when (swank-mop:slot-definition-initfunction slot-def)
-                          `(<=
+                          `(=
                             ,(swank-mop:slot-definition-initform slot-def)))))
                    stream))
   (terpri stream)
