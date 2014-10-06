@@ -436,12 +436,13 @@
 
   The bottom line is that if you rely on DEFSECTION to do the
   exporting, then you'd better use DEFINE-PACKAGE."
-  `(locally
-       (declare #+sbcl
-                (sb-ext:muffle-conditions sb-kernel::package-at-variance))
-     (handler-bind
-         (#+sbcl (sb-kernel::package-at-variance #'muffle-warning))
-       (cl:defpackage ,package ,@options))))
+  `(eval-when (:compile-toplevel, :load-toplevel, :execute)
+     (locally
+         (declare #+sbcl
+                  (sb-ext:muffle-conditions sb-kernel::package-at-variance))
+       (handler-bind
+           (#+sbcl (sb-kernel::package-at-variance #'muffle-warning))
+         (cl:defpackage ,package ,@options)))))
 
 ;;;; Generating documentation
 
