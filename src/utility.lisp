@@ -264,7 +264,7 @@
       (format nil "`~A`" string)))
 
 (defun markdown-special-char-p (char)
-  (member char '(#\* #\_ #\`)))
+  (member char '(#\* #\_ #\` #\< #\>)))
 
 (defun escape-markdown (string)
   (with-output-to-string (stream)
