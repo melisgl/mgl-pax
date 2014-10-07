@@ -358,7 +358,11 @@
          ;; [SECTION][class] gets here as NAME="[SECTION][class]",
          ;; LOCATIVE-STRING=garbage.
          (ignore-errors
-          (locate-reference-link-definition-for-emacs name)))))))
+          (locate-reference-link-definition-for-emacs name))
+         ;; [DEFSECTION][]
+         (let ((swank:*find-definitions-left-trim* "[#:<")
+               (swank:*find-definitions-right-trim* "][,:.>"))
+           (first (rest (first (swank:find-definitions-for-emacs name))))))))))
 
 ;;; Handle references with quoted or non-quoted symbols and locatives.
 ;;; Since SECTION is both a class and and a documented symbol it

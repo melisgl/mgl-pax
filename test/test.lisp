@@ -1,7 +1,12 @@
 (in-package :mgl-pax-test)
 
 (defsection @test (:export nil)
-  "FOO function, function FOO,
+  "[*NAVIGATION-TEST-CASES*][]
+  [`*NAVIGATION-TEST-CASES*`][]
+  [*navigation-test-cases*][]
+  [`*navigation-test-cases*`][]
+  [mgl-pax-test:*navigation-test-cases*][]
+  FOO function, function FOO,
   `FOO` function, function `FOO`,
   FOO `function`, `function` FOO,
   `FOO` `function`, `function` `FOO`,

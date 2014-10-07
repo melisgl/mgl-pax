@@ -8,6 +8,11 @@
 - [2 test other title][22dd]
 
 ###### \[in package MGL-PAX-TEST\]
+[`*NAVIGATION-TEST-CASES*`][799d]
+[`*NAVIGATION-TEST-CASES*`][799d]
+[`*navigation-test-cases*`][799d]
+[`*navigation-test-cases*`][799d]
+[mgl-pax-test:*navigation-test-cases*][]
 [`FOO`][4244] function, function [`FOO`][4244],
 [`FOO`][4244] function, function [`FOO`][4244],
 [`FOO`][4244] `function`, `function` [`FOO`][4244],
