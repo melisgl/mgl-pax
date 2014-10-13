@@ -360,9 +360,12 @@
          (ignore-errors
           (locate-reference-link-definition-for-emacs name))
          ;; [DEFSECTION][]
-         (let ((swank:*find-definitions-left-trim* "[#:<")
-               (swank:*find-definitions-right-trim* "][,:.>"))
-           (first (rest (first (swank:find-definitions-for-emacs name))))))))))
+         (let* ((swank:*find-definitions-left-trim* "[#:<")
+                (swank:*find-definitions-right-trim* "][,:.>")
+                (locations (swank:find-definitions-for-emacs name)))
+           (if (= (length locations) 1)
+               (first (rest (first locations)))
+               nil)))))))
 
 ;;; Handle references with quoted or non-quoted symbols and locatives.
 ;;; Since SECTION is both a class and and a documented symbol it

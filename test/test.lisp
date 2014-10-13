@@ -56,13 +56,19 @@
   FOO
 
   See
-  FOO"
+  FOO
+
+  In documentation, when the only ambiguity is between a generic
+  function and its methods, it's resolved in favor if the gf:
+  TEST-GF."
   (foo function)
   (foo compiler-macro)
   (foo-a (accessor foo))
   (*navigation-test-cases* variable)
   (@test-examples section)
-  (@test-other section))
+  (@test-other section)
+  (test-gf generic-function)
+  (test-gf (method () (number))))
 
 (defsection @test-examples (:export nil)
   "example section")
@@ -89,6 +95,9 @@
 (defstruct baz
   aaa)
 
+(defgeneric test-gf (x))
+(defmethod test-gf ((x number)))
+
 (defparameter *navigation-test-cases*
   '((foo function (defun foo))
     (foo type (defclass foo))
@@ -108,7 +117,9 @@
     (@pax-manual section (defsection @pax-manual))
     (baz-aaa structure-accessor (defstruct baz))
     (mgl-pax package (defpackage))
-    (mgl-pax asdf:system ())))
+    (mgl-pax asdf:system ())
+    (test-gf generic-function (defgeneric test-gf))
+    (test-gf (method () (number)) (defmethod test-gf))))
 
 (defun working-locative-p (locative)
   (declare (ignorable locative))
@@ -129,7 +140,7 @@
                               (read-form-from-file-position file position))))
                  (assert (alexandria:starts-with-subseq prefix form) ()
                          "Could not find prefix ~S at source location ~S ~
-                       for reference (~S ~S). Form was: ~S."
+                         for reference (~S ~S). Form was: ~S."
                          prefix location symbol locative form))))))
 
 (defun read-form-from-file-position (filename position)
