@@ -32,10 +32,8 @@ that holds docstrings together in the code and be a bit like a
 Literate Programming weenie turned inside out. The original
 prototype which did almost everything I wanted was this:
 
-```
-(defmacro defsection (name docstring)
-  `(defun ,name () ,docstring))
-```
+    (defmacro defsection (name docstring)
+      `(defun ,name () ,docstring))
 
 Armed with DEFSECTION, I soon found myself organizing code following
 the flow of user level documentation and relegated comments to
@@ -53,18 +51,18 @@ That was great, but soon I found that the listing of symbols is
 ambiguous if, for example, a function, a compiler macro and a class
 are named by the same symbol. This did not concern exporting, of
 course, but it didn't help readability. Distractingly, on such
-symbols, M-. was popping up selection dialogs. There were two birds
-to kill, and the symbol got accompanied by a type which was later
-generalized into the concept of locatives:
+symbols, `M-.` was popping up selection dialogs. There were two
+birds to kill, and the symbol got accompanied by a type which was
+later generalized into the concept of locatives:
 
-```
-(defsection @pax-introduction
+```commonlisp
+(defsection @mgl-pax-introduction ()
   "A single line for one man ..."
   (foo class)
   (bar function))
 ```
 
-After a bit of elisp hacking, M-. was smart enough to disambiguate
+After a bit of elisp hacking, `M-.` was smart enough to disambiguate
 based on the locative found in the vicinity of the symbol and
 everything was good for a while.
 
@@ -74,7 +72,7 @@ the urge to generate pretty documentation as all the necessary
 information was manifest in the DEFSECTION forms. The design
 constraint imposed on documentation generation was that following
 the typical style of upcasing symbols in docstrings there should be
-no need to explicitly mark up links: if M-. works, then the
+no need to explicitly mark up links: if `M-.` works, then the
 documentation generator shall also be able find out what's being
 referred to.
 
@@ -92,10 +90,10 @@ mix markdown docstrings with references to functions, variables,
 etc, all of which should probably have their own docstrings.
 
 The primary focus is on making code easily explorable by using
-SLIME's M-. (`slime-edit-definition`). See how to enable some
-fanciness in @PAX-EMACS-INTEGRATION. Generating documentation from
-sections and all the referenced items in Markdown or HTML format is
-also implemented.
+SLIME's `M-.` (`slime-edit-definition`). See how to enable some
+fanciness in @MGL-PAX-EMACS-INTEGRATION. Generating documentation
+from sections and all the referenced items in Markdown or HTML
+format is also implemented.
 
 With the simplistic tools provided, one may accomplish similar
 effects as with Literate Programming, but documentation is generated
@@ -105,13 +103,13 @@ Code is first, code must look pretty, documentation is code.
 In typical use, PAX packages have no :EXPORT's defined. Instead the
 DEFINE-PACKAGE form gets a docstring which may mention section
 names (defined with DEFSECTION). When the code is loaded into the
-lisp, pressing M-. in SLIME on the name of the section will take you
-there. Sections can also refer to other sections, packages,
+lisp, pressing `M-.` in SLIME on the name of the section will take
+you there. Sections can also refer to other sections, packages,
 functions, etc and you can keep exploring.
 
 Here is an example of how it all works together:
 
-```
+```commonlisp
 (mgl-pax:define-package :foo-random
   (:documentation "This package provides various utilities for
   random. See FOO-RANDOM:@FOO-RANDOM-MANUAL.")
@@ -144,7 +142,8 @@ Here is an example of how it all works together:
   "Much like *RANDOM-STATE* but uses the FOO algorithm.")
 
 (defun uniform-random (limit &key (random-state *foo-state*))
-  "Return a random number from the [0, LIMIT) uniform distribution."
+  "Return a random number from the between 0 and LIMIT (exclusive)
+  uniform distribution."
   nil)
 
 (defun gaussian-random (stddev &key (random-state *foo-state*))
@@ -152,13 +151,25 @@ Here is an example of how it all works together:
   STDDEV."
   nil)
 
-(defsection @foo-random-examples (:title "Examples"))
+(defsection @foo-random-examples (:title "Examples")
+  "Let's see the transcript of a real session of someone working
+  with FOO:
+
+  ```cl-transcript
+  (values (princ :hello) (list 1 2))
+  .. HELLO
+  => :HELLO
+  => (1 2)
+
+  (make-instance 'foo-random-state)
+  ==> #<FOO-RANDOM-STATE >
+  ```")
 ```
 
 Generating documentation in a very stripped down markdown format is
 easy:
 
-```
+```commonlisp
 (describe @foo-random-manual)
 ```
 
@@ -166,10 +177,11 @@ For this example, the generated markdown would look like this:
 
     # Foo Random manual
     
+    ###### \[in package FOO-RANDOM\]
     Here you describe what's common to all the referenced (and
     exported) functions that follow. They work with *FOO-STATE*,
-    and have :RANDOM-STATE keyword arg. Also explain when to choose
-    which.
+    and have a :RANDOM-STATE keyword arg. Also explain when to 
+    choose which.
     
     - [class] FOO-RANDOM-STATE
     
@@ -183,16 +195,31 @@ For this example, the generated markdown would look like this:
     
         Much like *RANDOM-STATE* but uses the FOO algorithm.
     
-    - [function] GAUSSIAN-RANDOM STDDEV &KEY RANDOM-STATE
+    - [function] GAUSSIAN-RANDOM STDDEV &KEY (RANDOM-STATE *FOO-STATE*)
     
         Return a random number from a zero mean normal distribution with
         STDDEV.
     
-    - [function] UNIFORM-RANDOM LIMIT &KEY RANDOM-STATE
+    - [function] UNIFORM-RANDOM LIMIT &KEY (RANDOM-STATE *FOO-STATE*)
     
-        Return a random number from the [0, LIMIT) uniform distribution.
+        Return a random number from the between 0 and LIMIT (exclusive)
+        uniform distribution.
     
     ## Examples
+    
+    Let's see the transcript of a real session of someone working
+    with FOO:
+    
+    ```cl-transcript
+    (values (princ :hello) (list 1 2))
+    .. HELLO
+    => :HELLO
+    => (1 2)
+    
+    (make-instance 'foo-random-state)
+    ==> #<FOO-RANDOM-STATE >
+    
+    ```
 
 More fancy markdown or html output with automatic markup and linking
 of uppercase symbol names found in docstrings, section numbering,
@@ -208,16 +235,20 @@ Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
 exports `*FOO-STATE*` and includes its documentation in
 `@FOO-RANDOM-MANUAL`. The symbols VARIABLE and FUNCTION are just two
 instances of 'locatives' which are used in DEFSECTION to refer to
-definitions tied to symbols. See @PAX-LOCATIVE-TYPES.
+definitions tied to symbols. See @MGL-PAX-LOCATIVE-TYPES.
+
+The transcript in the code block tagged with `cl-transcript` is
+automatically checked for up-to-dateness. See
+@MGL-PAX-TRANSCRIPT.
 
 ## Emacs Integration
 
-Integration into SLIME's M-. (`slime-edit-definition`) allows one
-to visit the source location of the thing that's identified by a
+Integration into SLIME's `M-.` (`slime-edit-definition`) allows
+one to visit the source location of the thing that's identified by a
 symbol and the locative before or after the symbol in a buffer. With
 this extension, if a locative is the previous or the next expression
-around the symbol of interest, then M-. will go straight to the
-definition which corresponds to the locative. If that fails, M-.
+around the symbol of interest, then `M-.` will go straight to the
+definition which corresponds to the locative. If that fails, `M-.`
 will try to find the definitions in the normal way which may involve
 popping up an xref buffer and letting the user interactively select
 one of possible definitions.
@@ -227,8 +258,8 @@ SWANK-BACKEND:FIND-SOURCE-LOCATION and
 SWANK-BACKEND:FIND-DEFINITIONS whose support varies across the Lisp
 implementations.*
 
-In the following examples, pressing M-. when the cursor is on one of
-the characters of `FOO` or just after `FOO`, will visit the
+In the following examples, pressing `M-.` when the cursor is on one
+of the characters of `FOO` or just after `FOO`, will visit the
 definition of function `FOO`:
 
     function foo
@@ -237,10 +268,10 @@ definition of function `FOO`:
     (foo function)
 
 In particular, references in a DEFSECTION form are in (SYMBOL
-LOCATIVE) format so M-. will work just fine there.
+LOCATIVE) format so `M-.` will work just fine there.
 
-Just like vanilla M-., this works in comments and docstrings. In
-this example pressing M-. on `FOO` will visit `FOO`'s default
+Just like vanilla `M-.`, this works in comments and docstrings. In
+this example pressing `M-.` on `FOO` will visit `FOO`'s default
 method:
 
 ```commonlisp
@@ -254,7 +285,7 @@ With a prefix argument (`C-u M-.`), one can enter a symbol plus a
 locative separated by whitespace to preselect one of the
 possibilities.
 
-The M-. extensions can be enabled by done adding this to your Emacs
+The `M-.` extensions can be enabled by adding this to your Emacs
 initialization file:
 
 ```elisp
@@ -264,7 +295,7 @@ initialization file:
       (slime-locate-definition name (slime-locative-after-in-brackets))
       ;; support "foo function" and "function foo" syntax in
       ;; interactive use
-      (let ((pos (cl-position ?s name)))
+      (let ((pos (cl-position ?\s name)))
         (when pos
           (or (slime-locate-definition (cl-subseq name 0 pos)
                                        (cl-subseq name (1+ pos)))
@@ -286,9 +317,9 @@ initialization file:
   (ignore-errors (save-excursion
                    (slime-end-of-symbol)
                    (skip-chars-forward "`" (+ (point) 1))
-                   (when (and (= 1 (skip-chars-forward "\]"
+                   (when (and (= 1 (skip-chars-forward "\\]"
                                                        (+ (point) 1)))
-                              (= 1 (skip-chars-forward "\["
+                              (= 1 (skip-chars-forward "\\["
                                                        (+ (point) 1))))
                      (buffer-substring-no-properties
                       (point)
@@ -327,7 +358,7 @@ Now let's examine the most important pieces in detail.
     Define a documentation section and maybe export referenced symbols.
     A bit behind the scenes, a global variable with NAME is defined and
     is bound to a [SECTION][class] object. By convention, section names
-    start with the character @. See @PAX-TUTORIAL for an example.
+    start with the character `@`. See @MGL-PAX-TUTORIAL for an example.
     
     ENTRIES consists of docstrings and references. Docstrings are
     arbitrary strings in markdown format, references are defined in the
@@ -344,14 +375,14 @@ Now let's examine the most important pieces in detail.
     A locative in a reference can either be a symbol or it can be a list
     whose CAR is a symbol. In either case, the symbol is the called the
     type of the locative while the rest of the elements are the locative
-    arguments. See @PAX-LOCATIVE-TYPES for the list of locative types
-    available out of the box.
+    arguments. See @MGL-PAX-LOCATIVE-TYPES for the list of locative
+    types available out of the box.
     
     The same symbol can occur multiple times in a reference, typically
     with different locatives, but this is not required.
     
     The references are not looked up (see RESOLVE in the
-    @PAX-EXTENSION-API) until documentation is generated, so it is
+    @MGL-PAX-EXTENSION-API) until documentation is generated, so it is
     allowed to refer to things yet to be defined.
     
     If EXPORT is true (the default), the referenced symbols and NAME are
@@ -398,9 +429,9 @@ Now let's examine the most important pieces in detail.
     object, T or NIL as with CL:FORMAT.
     
     Most often, this function is called on section objects
-    like `(DOCUMENT @PAX-MANUAL)`, but it supports all kinds of objects
-    for which DOCUMENT-OBJECT is defined. To look up the documentation
-    of function DOCUMENT:
+    like `(DOCUMENT @MGL-PAX-MANUAL)`, but it supports all kinds of
+    objects for which DOCUMENT-OBJECT is defined. To look up the
+    documentation of function DOCUMENT:
     
         (document #'document)
     
@@ -424,7 +455,7 @@ Now let's examine the most important pieces in detail.
     See DESCRIBE-OBJECT `(METHOD () (SECTION T))`.
     
     There are quite a few special variables that affect how output is
-    generated, see @PAX-DOCUMENTATION-PRINTER-VARIABLES.
+    generated, see @MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES.
     
     The rest of this description deals with how to generate multiple
     pages.
@@ -488,17 +519,17 @@ Now let's examine the most important pieces in detail.
     
     It may look something like this:
     
-    ```
+    ```commonlisp
     `((;; The section about SECTIONs and everything below it ...
-       :objects (,@pax-sections)
+       :objects (,@mgl-pax-sections)
        ;; ... is so boring that it's not worth the disk space, so
        ;; send it to a string.
        :output (nil)
        ;; Explicitly tell other pages not to link to these guys.
        :uri-fragment nil)
-      ;; Send the @PAX-EXTENSIONS section and everything reachable
+      ;; Send the @MGL-PAX-EXTENSIONS section and everything reachable
       ;; from it ...
-      (:objects (,@pax-extension-api)
+      (:objects (,@mgl-pax-extension-api)
        ;; ... to build/tmp/pax-extension-api.html.
        :output ("build/tmp/pax-extension-api.html")
        ;; However, on the web server html files will be at this
@@ -509,7 +540,7 @@ Now let's examine the most important pieces in detail.
        :header-fn 'write-html-header
        ;; Just close the body.
        :footer-fn 'write-html-footer)
-      (:objects (,@pax-manual)
+      (:objects (,@mgl-pax-manual)
        :output ("build/tmp/manual.html")
        ;; Links from the extension api page to the manual page will
        ;; be to ../user/pax-manual#<anchor>, while links going to
@@ -609,7 +640,7 @@ described below.
     sections being documented. Assuming `BAR` is defined, the
     documentation for:
     
-    ```
+    ```commonlisp
     (defsection @foo
       (foo function)
       (bar function))
@@ -631,7 +662,7 @@ described below.
     
     Now, if `BAR` has references with different locatives:
     
-    ```
+    ```commonlisp
     (defsection @foo
       (foo function)
       (bar function)
@@ -659,8 +690,8 @@ described below.
     
     However, if in the text there is a locative immediately before or
     after the symbol, then that locative is used to narrow down the
-    range of possibilities. This is similar to what the M-. extension
-    does. In a nutshell, if M-. works without questions then the
+    range of possibilities. This is similar to what the `M-.` extension
+    does. In a nutshell, if `M-.` works without questions then the
     documentation will contain a single link. So this also works without
     any markup:
     
@@ -833,7 +864,7 @@ locatives take no arguments.
 
 - [locative] LOCATIVE LAMBDA-LIST
 
-    This is the locative for locatives. When M-. is pressed on
+    This is the locative for locatives. When `M-.` is pressed on
     `VARIABLE` in `(VARIABLE LOCATIVE)`, this is what makes it possible
     to land at the `(DEFINE-LOCATIVE-TYPE VARIABLE ...)` form.
     Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.
@@ -910,15 +941,16 @@ need to muck with references when there is a perfectly good object.
 
 ### Adding New Object Types
 
-One may wish to make the DOCUMENT function and M-. navigation work
-with new object types. Extending DOCUMENT can be done by defining a
-DOCUMENT-OBJECT method. To allow these objects to be referenced from
-DEFSECTION a LOCATE-OBJECT method is to be defined. Finally, for M-.
-FIND-SOURCE can be specialized. Finally, EXPORTABLE-LOCATIVE-TYPE-P
-may be overridden if exporting does not makes sense. Here is a
-stripped down example of how all this is done for ASDF:SYSTEM:
+One may wish to make the DOCUMENT function and `M-.` navigation
+work with new object types. Extending DOCUMENT can be done by
+defining a DOCUMENT-OBJECT method. To allow these objects to be
+referenced from DEFSECTION a LOCATE-OBJECT method is to be defined.
+Finally, for `M-.` FIND-SOURCE can be specialized. Finally,
+EXPORTABLE-LOCATIVE-TYPE-P may be overridden if exporting does not
+makes sense. Here is a stripped down example of how all this is done
+for ASDF:SYSTEM:
 
-```
+```commonlisp
 (define-locative-type asdf:system ()
   "Refers to an asdf system.")
 
@@ -958,7 +990,7 @@ stripped down example of how all this is done for ASDF:SYSTEM:
     being able to reference `(LOCATIVE-TYPE LOCATIVE)`. For example, if
     you have:
     
-    ```
+    ```common-lisp
     (define-locative-type variable (&optional initform)
       "Dummy docstring.")
     ```
@@ -1038,15 +1070,15 @@ stripped down example of how all this is done for ASDF:SYSTEM:
 
 - [generic-function] FIND-SOURCE OBJECT
 
-    Like SWANK:FIND-DEFINITION-FOR-THING, but this one
-    is a generic function to be extensible. In fact, the default
+    Like SWANK:FIND-DEFINITION-FOR-THING, but this
+    one is a generic function to be extensible. In fact, the default
     implementation simply defers to SWANK:FIND-DEFINITION-FOR-THING.
     This function is called by LOCATE-DEFINITION-FOR-EMACS which lies
-    behind the M-. extension (see @PAX-EMACS-INTEGRATION).
+    behind the `M-.` extension (see @MGL-PAX-EMACS-INTEGRATION).
     
     If successful, the return value looks like this:
     
-    ```
+    ```commonlisp
     (:location (:file "/home/mega/own/mgl/pax/test/test.lisp")
                (:position 24) nil)
     ```
@@ -1055,22 +1087,22 @@ stripped down example of how all this is done for ASDF:SYSTEM:
     1 is the first character. If unsuccessful, the return values is
     like:
     
-    ```
+    ```commonlisp
     (:error "Unknown source location for SOMETHING")
     ```
 
 
 ### Reference Based Extensions
 
-Let's see how to extend DOCUMENT and M-. navigation if there is no
-first class object to represent the thing of interest. Recall that
-LOCATE returns a REFERENCE object in this case. DOCUMENT-OBJECT and
-FIND-SOURCE defer to LOCATE-AND-DOCUMENT and LOCATE-AND-FIND-SOURCE
-which have LOCATIVE-TYPE in their argument list for EQL specializing
-pleasure. Here is a stripped down example of how the VARIABLE
-locative is defined:
+Let's see how to extend DOCUMENT and `M-.` navigation if there is
+no first class object to represent the thing of interest. Recall
+that LOCATE returns a REFERENCE object in this case. DOCUMENT-OBJECT
+and FIND-SOURCE defer to LOCATE-AND-DOCUMENT and
+LOCATE-AND-FIND-SOURCE which have LOCATIVE-TYPE in their argument
+list for EQL specializing pleasure. Here is a stripped down example
+of how the VARIABLE locative is defined:
 
-```
+```commonlisp
 (define-locative-type variable (&optional initform)
   "Refers to a global special variable. INITFORM, or if not specified,
   the global value of the variable is included in the documentation.")
@@ -1085,7 +1117,7 @@ locative is defined:
   (destructuring-bind (&optional (initform nil initformp)) locative-args
     (format stream "- [~A] " (string-downcase locative-type))
     (print-name (prin1-to-string symbol) stream)
-    (write-char #Space stream)
+    (write-char #\Space stream)
     (multiple-value-bind (value unboundp) (symbol-global-value symbol)
       (print-arglist (prin1-to-string (cond (initformp initform)
                                             (unboundp "-unbound-")
@@ -1168,9 +1200,9 @@ with symbols in a certain context.
     It is useful to attach documentation and source location to symbols
     in a particular context. An example will make everything clear:
     
-    ```
+    ```commonlisp
     (define-symbol-locative-type direction ()
-      "A direction is a symbol. (After this M-. on `DIRECTION LOCATIVE`
+      "A direction is a symbol. (After this `M-.` on `DIRECTION LOCATIVE`
       works and it can also be included in DEFSECTION forms.)")
     
     (define-definer-for-symbol-locative-type define-direction direction ()
@@ -1221,8 +1253,306 @@ presented.
 - [method] DESCRIBE-OBJECT (SECTION SECTION) STREAM
 
     [SECTION][class] objects are printed by calling DOCUMENT on them
-    with all @PAX-DOCUMENTATION-PRINTER-VARIABLES, except for
+    with all @MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES, except for
     *DOCUMENT-NORMALIZE-PACKAGES*, turned off to reduce clutter.
+
+## Transcripts
+
+What are transcripts for? When writing a tutorial, one often wants
+to include a REPL session with maybe a few defuns and a couple of
+forms whose output or return values are shown. Also, in a function's
+docstring an example call with concrete arguments and return values
+speaks volumes. A transcript is a text that looks like a repl
+session, but which has a light markup for printed output and return
+values, while no markup (i.e. prompt) for lisp forms. The PAX
+transcripts may include output and return values of all forms, or
+only selected ones. In either case the transcript itself can be
+easily generated from the source code.
+
+The main worry associated with including examples in the
+documentation is that they tend to get out-of-sync with the code.
+This is solved by being able to parse back and update transcripts.
+In fact, this is exactly what happens during documentation
+generation with PAX. Code sections tagged "cl-transcript" are
+retranscribed and checked for inconsistency (that is, any difference
+in output or return values). If the consistency check fails, an
+error message is signalled that includes the reference to the object
+being documented.
+
+Going beyond documentation, transcript consistency checks can be
+used for writing simple tests in a very readable form. For example:
+
+```cl-transcript
+(+ 1 2)
+=> 3
+
+(values (princ :hello) (list 1 2))
+.. HELLO
+=> :HELLO
+=> (1 2)
+
+```
+
+All in all, transcripts are a handy tool especially when combined
+with the Emacs support to regenerate them and with
+PYTHONIC-STRING-READER and its triple-quoted strings that allow one
+to work with nested strings with less noise. The triple-quote syntax
+can be enabled with:
+
+    (in-readtable pythonic-string-syntax)
+
+
+### Transcribing with Emacs
+
+Typical transcript usage from within Emacs is simple: add a lisp
+form to a docstring at any indentation level. Move the cursor right
+after the end of the form as if you were to evaluate it with `C-x
+C-e`. The cursor is marked by `#\^`:
+
+    This is part of a docstring.
+    
+    ```cl-transcript
+    (values (princ :hello) (list 1 2))^
+    ```
+
+Note that the usage of fenced code blocks with the language tag
+`cl-transcript` is only to tell PAX to perform consistency checks at
+documentation generation time.
+
+Now invoke the elisp function `mgl-pax-transcribe` where the cursor
+is and the fenced code block from the docstring becomes:
+
+    (values (princ :hello) (list 1 2))
+    .. HELLO
+    => :HELLO
+    => (1 2)
+    ^
+
+Then you change the printed message and add a comment to the second
+return value:
+
+    (values (princ :hello-world) (list 1 2))
+    .. HELLO
+    => :HELLO
+    => (1
+        ;; This value is arbitrary.
+        2)
+
+When generating the documentation you get a
+TRANSCRIPTION-CONSISTENCY-ERROR because the printed output and the
+first return value changed so you regenerate the documentation by
+marking the region of bounded by `#\|` and the cursor at `#\^` in
+the example:
+
+    |(values (princ :hello-world) (list 1 2))
+    .. HELLO
+    => :HELLO
+    => (1
+        ;; This value is arbitrary.
+        2)
+    ^
+
+then invoke the elisp function `mgl-pax-retranscribe-region` to get:
+
+    (values (princ :hello-world) (list 1 2))
+    .. HELLO-WORLD
+    => :HELLO-WORLD
+    => (1
+        ;; This value is arbitrary.
+        2)
+    ^
+
+Note how the indentation and the comment of `(1 2)` was left alone
+but the output and the first return value got updated.
+
+Transcription support in emacs can be enabled by adding this to your
+Emacs initialization file:
+
+```elisp
+(defun mgl-pax-transcribe-last-expression ()
+  "A bit like C-u C-x C-e (slime-eval-last-expression) that
+inserts the output and values of the sexp before the point,
+this does the same but with MGL-PAX:TRANSCRIBE."
+  (interactive)
+  (insert
+   (save-excursion
+     (let* ((end (point))
+            (start (progn (backward-sexp)
+                          (move-beginning-of-line nil)
+                          (point))))
+       (mgl-pax-transcribe start end nil nil nil)))))
+
+(defun mgl-pax-retranscribe-region (start end)
+  "Updates the transcription in the current region (as in calling
+MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
+  (interactive "r")
+  (let* ((point-at-start-p (= (point) start))
+         (point-at-end-p (= (point) end))
+         (transcript (mgl-pax-transcribe start end t t t)))
+    (if point-at-start-p
+        (save-excursion
+          (goto-char start)
+          (delete-region start end)
+          (insert transcript))
+      (save-excursion
+          (goto-char start)
+          (delete-region start end))
+      (insert transcript))))
+
+(defun mgl-pax-transcribe (start end update-only echo first-line-special-p)
+  (slime-eval
+   `(cl:when (cl:find-package :mgl-pax)
+             (cl:funcall
+              (cl:find-symbol
+               (cl:symbol-name :transcribe-for-emacs) :mgl-pax)
+              ,(buffer-substring-no-properties start end)
+              ,update-only ,echo ,first-line-special-p))))
+```
+
+
+### Transcript API
+
+- [function] TRANSCRIBE SOURCE TRANSCRIPT &KEY UPDATE-ONLY CHECK-CONSISTENCY (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) DEBUG (PREFIX-PREFIX "") (OUTPUT-PREFIX ".. ") (VALUE-PREFIX "=> ") (UNREADABLE-VALUE-PREFIX "==> ") (UNREADABLE-VALUE-CONTINUATION-PREFIX "--> ") (TRANSCRIBED-PREFIX-PREFIX PREFIX-PREFIX) (TRANSCRIBED-OUTPUT-PREFIX OUTPUT-PREFIX) (TRANSCRIBED-VALUE-PREFIX VALUE-PREFIX) (TRANSCRIBED-UNREADABLE-VALUE-PREFIX UNREADABLE-VALUE-PREFIX) (TRANSCRIBED-UNREADABLE-VALUE-CONTINUATION-PREFIX UNREADABLE-VALUE-CONTINUATION-PREFIX) (NO-VALUE-MARKER "; No value")
+
+    Read forms from SOURCE and write them (iff ECHO) to TRANSCRIPT
+    followed by any output and return values produced by calling EVAL on
+    the form. SOURCE can be a stream or a string, while TRANSCRIPT can
+    be a stream or NIL in which case transcription goes into a string.
+    The return value is the TRANSCRIPT stream or the string that was
+    constructed.
+    
+    A simple example is this:
+    
+    ```cl-transcript
+    (transcribe "(princ 42) " nil)
+    => "(princ 42)
+    .. 42
+    => 42
+    "
+    
+    ```
+    
+    However, it may be a bit confusing since this documentation uses
+    TRANSCRIBE markup syntax in this very example, so let's do it
+    differently. If we have a file with these contents:
+    
+        (values (princ 42) (list 1 2))
+    
+    they are transcribed to:
+    
+        (values (princ 42) (list 1 2))
+        .. 42
+        => 42
+        => (1 2)
+    
+    Output to all standard streams is captured and printed with
+    OUTPUT-PREFIX (".. " above). Return values are printed with
+    VALUE-PREFIX ("=> "). Note how these prefixes are always printed on
+    a new line to facilitate parsing.
+    
+    TRANSCRIBE is able to parse its own output. If we transcribe the
+    previous output above, we get it back exactly. However, if we remove
+    all output markers, leave only a placeholder value marker and
+    pass :UPDATE-ONLY T with source:
+    
+        (values (princ 42) (list 1 2))
+        =>
+    
+    we get this:
+    
+        (values (princ 42) (list 1 2))
+        => 42
+        => (1 2)
+    
+    With UPDATE-ONLY, printed output of a form is only transcribed if
+    there were output markers in the source. Similarly, with
+    UPDATE-ONLY, return values are only transcribed if there were value
+    markers in the source.
+    
+    If the form produces no output or returns no values then whether
+    output and values are transcribed is controlled by INCLUDE-NO-OUTPUT
+    and INCLUDE-NO-VALUE, respectively. By default, neither is on so:
+    
+        (values)
+        ..
+        =>
+    
+    is transcribed to
+    
+        (values)
+    
+    With UPDATE-ONLY true, we probably wouldn't like to lose those
+    markers since they were put there for a reason. Hence, with
+    UPDATE-ONLY, INCLUDE-NO-OUTPUT and INCLUDE-NO-VALUE default to true.
+    So with UPDATE-ONLY the above example is transcribed to:
+    
+        (values)
+        ..
+        => ; No value
+    
+    where "; No value" is the default NO-VALUE-MARKER.
+    
+    If CHECK-CONSISTENCY is true, then TRANSCRIBE signals a continuable
+    TRANSCRIPTION-CONSISTENCY-ERROR whenever a form's output is
+    different between the source and the evaluation. Similary, for
+    values, a consistency error is signalled if a value read from the
+    source does not print as the same string as the value returned by
+    EVAL. This allows readable values to be hand-indented without
+    failing consistency checks:
+    
+        (list 1 2)
+        => (1
+              2)
+    
+    The above scheme involves READ, so unreadable values cannot be
+    treated the same. In fact, unreadable values must even be printed
+    differently for transcribe to be able to read them back:
+    
+        (defclass some-class () ())
+        
+        (defmethod print-object ((obj some-class) stream)
+          (print-unreadable-object (obj stream :type t)
+            (format stream "~%~%end")))
+        
+        (make-instance 'some-class)
+        ==> #<SOME-CLASS 
+        -->
+        --> end>
+    
+    "==> " is UNREADABLE-VALUE-PREFIX and "--> " is
+    UNREADABLE-VALUE-CONTINUATION-PREFIX. As with outputs, a consistency
+    check between a unreadable value from the source and the value from
+    EVAL is performed with STRING=. That is, the value from EVAL is
+    printed to a string and compared to the source value. Hence, any
+    change to unreadable values will break consistency checks. This is
+    most troublesome with instances of classes with the default
+    PRINT-OBJECT method printing the memory address. There is currently
+    no remedy for that, except for customizing PRINT-OBJECT or not
+    transcribing that kind of stuff.
+    
+    Trailing whitespaces are never printed unless the output or the
+    values have trailing spaces themselves. This means that all prefix
+    strings are right trimmed if the rest of the line is empty.
+    
+    Finally, one may want to produce a transcript that's valid Common
+    Lisp. This can be achieved by adding a semicolon character to all
+    prefixes used for markup like this which can be done with
+    :PREFIX-PREFIX ";". One can even translate a transcription from the
+    default markup to the one with semicolons
+    with :TRANSCRIBED-PREFIX-PREFIX ";". In general, there is a set of
+    prefix arguments used when writing the transcript that mirror those
+    for parsing SOURCE.
+
+- [condition] TRANSCRIPTION-ERROR ERROR
+
+    Represents syntactic errors in the SOURCE argument
+    of TRANSCRIBE and also serves as the superclass of
+    TRANSCRIPTION-CONSISTENCY-ERROR.
+
+- [condition] TRANSCRIPTION-CONSISTENCY-ERROR TRANSCRIPTION-ERROR
+
+    Signaled by TRANSCRIBE (with CERROR) when a
+    consistency check fails.
 
 * * *
 ###### \[generated by [MGL-PAX](https://github.com/melisgl/mgl-pax)\]

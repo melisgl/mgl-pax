@@ -4,9 +4,6 @@
 ;;;;
 ;;;; - add method-combination locative
 ;;;;
-;;;; - chunking: including [a fragment of] code and what it evaluates
-;;;;   to? Include a whole file? Bleh.
-;;;;
 ;;;; - esrap is slow with allegro cl
 ;;;;
 ;;;; - link to doc instead of including it if it is referenced
@@ -21,18 +18,21 @@
 
 (in-package :mgl-pax)
 
-(defsection @pax-manual (:title "PAX manual")
-  (mgl-pax asdf:system)
-  (@pax-background section)
-  (@pax-tutorial section)
-  (@pax-emacs-integration section)
-  (@pax-basics section)
-  (@pax-markdown-support section)
-  (@pax-documentation-printer-variables section)
-  (@pax-locative-types section)
-  (@pax-extension-api section))
+(in-readtable pythonic-string-syntax)
 
-(defsection @pax-background (:export nil :title "Background")
+(defsection @mgl-pax-manual (:title "PAX manual")
+  (mgl-pax asdf:system)
+  (@mgl-pax-background section)
+  (@mgl-pax-tutorial section)
+  (@mgl-pax-emacs-integration section)
+  (@mgl-pax-basics section)
+  (@mgl-pax-markdown-support section)
+  (@mgl-pax-documentation-printer-variables section)
+  (@mgl-pax-locative-types section)
+  (@mgl-pax-extension-api section)
+  (@mgl-pax-transcript section))
+
+(defsection @mgl-pax-background (:export nil :title "Background")
   "As a user, I frequently run into documentation that's incomplete
   and out of date, so I tend to stay in the editor and explore the
   code by jumping around with SLIME's [`M-.`][SLIME-M-.]. As a library
@@ -52,10 +52,8 @@
   Literate Programming weenie turned inside out. The original
   prototype which did almost everything I wanted was this:
 
-  ```
-  (defmacro defsection (name docstring)
-    `(defun ,name () ,docstring))
-  ```
+      (defmacro defsection (name docstring)
+        `(defun ,name () ,docstring))
 
   Armed with DEFSECTION, I soon found myself organizing code following
   the flow of user level documentation and relegated comments to
@@ -73,18 +71,18 @@
   ambiguous if, for example, a function, a compiler macro and a class
   are named by the same symbol. This did not concern exporting, of
   course, but it didn't help readability. Distractingly, on such
-  symbols, M-. was popping up selection dialogs. There were two birds
-  to kill, and the symbol got accompanied by a type which was later
-  generalized into the concept of locatives:
+  symbols, `M-.` was popping up selection dialogs. There were two
+  birds to kill, and the symbol got accompanied by a type which was
+  later generalized into the concept of locatives:
 
-  ```
-  (defsection @pax-introduction
+  ```commonlisp
+  (defsection @mgl-pax-introduction ()
     \"A single line for one man ...\"
     (foo class)
     (bar function))
   ```
 
-  After a bit of elisp hacking, M-. was smart enough to disambiguate
+  After a bit of elisp hacking, `M-.` was smart enough to disambiguate
   based on the locative found in the vicinity of the symbol and
   everything was good for a while.
 
@@ -94,7 +92,7 @@
   information was manifest in the DEFSECTION forms. The design
   constraint imposed on documentation generation was that following
   the typical style of upcasing symbols in docstrings there should be
-  no need to explicitly mark up links: if M-. works, then the
+  no need to explicitly mark up links: if `M-.` works, then the
   documentation generator shall also be able find out what's being
   referred to.
 
@@ -103,17 +101,17 @@
 
   [markdown]: https://daringfireball.net/projects/markdown/")
 
-(defsection @pax-tutorial (:title "Tutorial")
-  "PAX provides an extremely poor man's Explorable Programming
+(defsection @mgl-pax-tutorial (:title "Tutorial")
+  """PAX provides an extremely poor man's Explorable Programming
   environment. Narrative primarily lives in so called sections that
   mix markdown docstrings with references to functions, variables,
   etc, all of which should probably have their own docstrings.
 
   The primary focus is on making code easily explorable by using
-  SLIME's M-. (`slime-edit-definition`). See how to enable some
-  fanciness in @PAX-EMACS-INTEGRATION. Generating documentation from
-  sections and all the referenced items in Markdown or HTML format is
-  also implemented.
+  SLIME's `M-.` (`slime-edit-definition`). See how to enable some
+  fanciness in @MGL-PAX-EMACS-INTEGRATION. Generating documentation
+  from sections and all the referenced items in Markdown or HTML
+  format is also implemented.
 
   With the simplistic tools provided, one may accomplish similar
   effects as with Literate Programming, but documentation is generated
@@ -123,28 +121,28 @@
   In typical use, PAX packages have no :EXPORT's defined. Instead the
   DEFINE-PACKAGE form gets a docstring which may mention section
   names (defined with DEFSECTION). When the code is loaded into the
-  lisp, pressing M-. in SLIME on the name of the section will take you
-  there. Sections can also refer to other sections, packages,
+  lisp, pressing `M-.` in SLIME on the name of the section will take
+  you there. Sections can also refer to other sections, packages,
   functions, etc and you can keep exploring.
 
   Here is an example of how it all works together:
 
-  ```
+  ```commonlisp
   (mgl-pax:define-package :foo-random
-    (:documentation \"This package provides various utilities for
-    random. See FOO-RANDOM:@FOO-RANDOM-MANUAL.\")
+    (:documentation "This package provides various utilities for
+    random. See FOO-RANDOM:@FOO-RANDOM-MANUAL.")
     (:use #:common-lisp #:mgl-pax))
 
   (in-package :foo-random)
 
-  (defsection @foo-random-manual (:title \"Foo Random manual\")
-    \"Here you describe what's common to all the referenced (and
+  (defsection @foo-random-manual (:title "Foo Random manual")
+    "Here you describe what's common to all the referenced (and
     exported) functions that follow. They work with *FOO-STATE*,
     and have a :RANDOM-STATE keyword arg. Also explain when to 
-    choose which.\"
+    choose which."
     (foo-random-state class)
     (state (reader foo-random-state))
-    \"Hey we can also print states!\"
+    "Hey we can also print states!"
     (print-object (method () (foo-random-state t)))
     (*foo-state* variable)
     (gaussian-random function)
@@ -159,24 +157,37 @@
     (print-unreadable-object (object stream :type t)))
 
   (defvar *foo-state* (make-instance 'foo-random-state)
-    \"Much like *RANDOM-STATE* but uses the FOO algorithm.\")
+    "Much like *RANDOM-STATE* but uses the FOO algorithm.")
 
   (defun uniform-random (limit &key (random-state *foo-state*))
-    \"Return a random number from the [0, LIMIT) uniform distribution.\"
+    "Return a random number from the between 0 and LIMIT (exclusive)
+    uniform distribution."
     nil)
 
   (defun gaussian-random (stddev &key (random-state *foo-state*))
-    \"Return a random number from a zero mean normal distribution with
-    STDDEV.\"
+    "Return a random number from a zero mean normal distribution with
+    STDDEV."
     nil)
 
-  (defsection @foo-random-examples (:title \"Examples\"))
+  (defsection @foo-random-examples (:title "Examples")
+    "Let's see the transcript of a real session of someone working
+    with FOO:
+
+    ```cl-transcript
+    (values (princ :hello) (list 1 2))
+    .. HELLO
+    => :HELLO
+    => (1 2)
+
+    (make-instance 'foo-random-state)
+    ==> #<FOO-RANDOM-STATE >
+    ```")
   ```
 
   Generating documentation in a very stripped down markdown format is
   easy:
 
-  ```
+  ```commonlisp
   (describe @foo-random-manual)
   ```
 
@@ -184,10 +195,11 @@
 
       # Foo Random manual
 
+      ###### \[in package FOO-RANDOM\]
       Here you describe what's common to all the referenced (and
       exported) functions that follow. They work with *FOO-STATE*,
-      and have :RANDOM-STATE keyword arg. Also explain when to choose
-      which.
+      and have a :RANDOM-STATE keyword arg. Also explain when to 
+      choose which.
 
       - [class] FOO-RANDOM-STATE
 
@@ -201,16 +213,31 @@
 
           Much like *RANDOM-STATE* but uses the FOO algorithm.
 
-      - [function] GAUSSIAN-RANDOM STDDEV &KEY RANDOM-STATE
+      - [function] GAUSSIAN-RANDOM STDDEV &KEY (RANDOM-STATE *FOO-STATE*)
 
           Return a random number from a zero mean normal distribution with
           STDDEV.
 
-      - [function] UNIFORM-RANDOM LIMIT &KEY RANDOM-STATE
+      - [function] UNIFORM-RANDOM LIMIT &KEY (RANDOM-STATE *FOO-STATE*)
 
-          Return a random number from the [0, LIMIT) uniform distribution.
+          Return a random number from the between 0 and LIMIT (exclusive)
+          uniform distribution.
 
       ## Examples
+
+      Let's see the transcript of a real session of someone working
+      with FOO:
+
+      ```cl-transcript
+      (values (princ :hello) (list 1 2))
+      .. HELLO
+      => :HELLO
+      => (1 2)
+
+      (make-instance 'foo-random-state)
+      ==> #<FOO-RANDOM-STATE >
+
+      ```
 
   More fancy markdown or html output with automatic markup and linking
   of uppercase symbol names found in docstrings, section numbering,
@@ -226,15 +253,19 @@
   exports `*FOO-STATE*` and includes its documentation in
   `@FOO-RANDOM-MANUAL`. The symbols VARIABLE and FUNCTION are just two
   instances of 'locatives' which are used in DEFSECTION to refer to
-  definitions tied to symbols. See @PAX-LOCATIVE-TYPES.")
+  definitions tied to symbols. See @MGL-PAX-LOCATIVE-TYPES.
 
-(defsection @pax-emacs-integration (:title "Emacs Integration")
-  "Integration into SLIME's M-. (`slime-edit-definition`) allows one
-  to visit the source location of the thing that's identified by a
+  The transcript in the code block tagged with `cl-transcript` is
+  automatically checked for up-to-dateness. See
+  @MGL-PAX-TRANSCRIPT.""")
+
+(defsection @mgl-pax-emacs-integration (:title "Emacs Integration")
+  """Integration into SLIME's `M-.` (`slime-edit-definition`) allows
+  one to visit the source location of the thing that's identified by a
   symbol and the locative before or after the symbol in a buffer. With
   this extension, if a locative is the previous or the next expression
-  around the symbol of interest, then M-. will go straight to the
-  definition which corresponds to the locative. If that fails, M-.
+  around the symbol of interest, then `M-.` will go straight to the
+  definition which corresponds to the locative. If that fails, `M-.`
   will try to find the definitions in the normal way which may involve
   popping up an xref buffer and letting the user interactively select
   one of possible definitions.
@@ -244,8 +275,8 @@
   SWANK-BACKEND:FIND-DEFINITIONS whose support varies across the Lisp
   implementations.*
 
-  In the following examples, pressing M-. when the cursor is on one of
-  the characters of `FOO` or just after `FOO`, will visit the
+  In the following examples, pressing `M-.` when the cursor is on one
+  of the characters of `FOO` or just after `FOO`, will visit the
   definition of function `FOO`:
 
       function foo
@@ -254,10 +285,10 @@
       (foo function)
 
   In particular, references in a DEFSECTION form are in (SYMBOL
-  LOCATIVE) format so M-. will work just fine there.
+  LOCATIVE) format so `M-.` will work just fine there.
 
-  Just like vanilla M-., this works in comments and docstrings. In
-  this example pressing M-. on `FOO` will visit `FOO`'s default
+  Just like vanilla `M-.`, this works in comments and docstrings. In
+  this example pressing `M-.` on `FOO` will visit `FOO`'s default
   method:
 
   ```commonlisp
@@ -271,7 +302,7 @@
   locative separated by whitespace to preselect one of the
   possibilities.
 
-  The M-. extensions can be enabled by done adding this to your Emacs
+  The `M-.` extensions can be enabled by adding this to your Emacs
   initialization file:
 
   ```elisp
@@ -279,7 +310,7 @@
     (or (slime-locate-definition name (slime-locative-before))
         (slime-locate-definition name (slime-locative-after))
         (slime-locate-definition name (slime-locative-after-in-brackets))
-        ;; support \"foo function\" and \"function foo\" syntax in
+        ;; support "foo function" and "function foo" syntax in
         ;; interactive use
         (let ((pos (cl-position ?\s name)))
           (when pos
@@ -302,14 +333,14 @@
   (defun slime-locative-after-in-brackets ()
     (ignore-errors (save-excursion
                      (slime-end-of-symbol)
-                     (skip-chars-forward \"`\" (+ (point) 1))
-                     (when (and (= 1 (skip-chars-forward \"\\]\"
+                     (skip-chars-forward "`" (+ (point) 1))
+                     (when (and (= 1 (skip-chars-forward "\\]"
                                                          (+ (point) 1)))
-                                (= 1 (skip-chars-forward \"\\[\"
+                                (= 1 (skip-chars-forward "\\["
                                                          (+ (point) 1))))
                        (buffer-substring-no-properties
                         (point)
-                        (progn (search-forward \"]\" nil (+ (point) 1000))
+                        (progn (search-forward "]" nil (+ (point) 1000))
                                (1- (point))))))))
 
   (defun slime-locate-definition (name locative)
@@ -328,11 +359,11 @@
           (slime-edit-definition-cont
            (list (make-slime-xref :dspec `(,name)
                                   :location location))
-           \"dummy name\"
+           "dummy name"
            where)))))
 
   (add-hook 'slime-edit-definition-hooks 'slime-edit-locative-definition)
-  ```")
+  ```""")
 
 ;;; Return one source location for the thing that can be located with
 ;;; NAME (a string) and LOCATIVE-STRING. Called from the elisp
@@ -424,7 +455,7 @@
          (subseq string (1+ second-open) second-close))))))
 
 
-(defsection @pax-basics (:title "Basics")
+(defsection @mgl-pax-basics (:title "Basics")
   "Now let's examine the most important pieces in detail."
   (defsection macro)
   (*discard-documentation-p* variable)
@@ -443,7 +474,7 @@
 
   The bottom line is that if you rely on DEFSECTION to do the
   exporting, then you'd better use DEFINE-PACKAGE."
-  `(eval-when (:compile-toplevel, :load-toplevel, :execute)
+  `(eval-when (:compile-toplevel :load-toplevel, :execute)
      (locally
          (declare #+sbcl
                   (sb-ext:muffle-conditions sb-kernel::package-at-variance))
@@ -468,8 +499,8 @@
 ;;; and HEADER-FN, FOOTER-FN are called to write arbitrary leading and
 ;;; trailing content to the final stream.
 ;;;
-;;; Finally, URI-FRAGMENT is a string such as `\"doc/manual.html\"`
-;;; that specifies where the page will be deployed on a webserver. It
+;;; Finally, URI-FRAGMENT is a string such as "doc/manual.html" that
+;;; specifies where the page will be deployed on a webserver. It
 ;;; defines how links between pages will look. If it's not specified
 ;;; and OUTPUT refers to a file, then it defaults to the name of the
 ;;; file. If URI-FRAGMENT is NIL, then no links will be made to or
@@ -611,15 +642,15 @@
      ,@body))
 
 (defun document (object &key stream pages (format :markdown))
-  "Write OBJECT in FORMAT to STREAM diverting some output to PAGES.
+  """Write OBJECT in FORMAT to STREAM diverting some output to PAGES.
   FORMAT can be anything [3BMD][3bmd] supports which is
   currently :MARKDOWN, :HTML and :PLAIN. STREAM may be a stream
   object, T or NIL as with CL:FORMAT.
 
   Most often, this function is called on section objects
-  like `(DOCUMENT @PAX-MANUAL)`, but it supports all kinds of objects
-  for which DOCUMENT-OBJECT is defined. To look up the documentation
-  of function DOCUMENT:
+  like `(DOCUMENT @MGL-PAX-MANUAL)`, but it supports all kinds of
+  objects for which DOCUMENT-OBJECT is defined. To look up the
+  documentation of function DOCUMENT:
 
       (document #'document)
 
@@ -643,7 +674,7 @@
   See DESCRIBE-OBJECT `(METHOD () (SECTION T))`.
 
   There are quite a few special variables that affect how output is
-  generated, see @PAX-DOCUMENTATION-PRINTER-VARIABLES.
+  generated, see @MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES.
 
   The rest of this description deals with how to generate multiple
   pages.
@@ -698,7 +729,7 @@
   FOOTER-FN is similar to HEADER-FN, but it's called after the last
   write to the page. For HTML, it typically just closes the body.
 
-  Finally, URI-FRAGMENT is a string such as `\"doc/manual.html\"` that
+  Finally, URI-FRAGMENT is a string such as `"doc/manual.html"` that
   specifies where the page will be deployed on a webserver. It defines
   how links between pages will look. If it's not specified and `OUTPUT`
   refers to a file, then it defaults to the name of the file. If
@@ -707,37 +738,37 @@
 
   It may look something like this:
 
-  ```
+  ```commonlisp
   `((;; The section about SECTIONs and everything below it ...
-     :objects (,@pax-sections)
+     :objects (,@mgl-pax-sections)
      ;; ... is so boring that it's not worth the disk space, so
      ;; send it to a string.
      :output (nil)
      ;; Explicitly tell other pages not to link to these guys.
      :uri-fragment nil)
-    ;; Send the @PAX-EXTENSIONS section and everything reachable
+    ;; Send the @MGL-PAX-EXTENSIONS section and everything reachable
     ;; from it ...
-    (:objects (,@pax-extension-api)
+    (:objects (,@mgl-pax-extension-api)
      ;; ... to build/tmp/pax-extension-api.html.
-     :output (\"build/tmp/pax-extension-api.html\")
+     :output ("build/tmp/pax-extension-api.html")
      ;; However, on the web server html files will be at this
      ;; location relative to some common root, so override the
      ;; default:
-     :uri-fragment \"doc/dev/pax-extension-api.html\"
+     :uri-fragment "doc/dev/pax-extension-api.html"
      ;; Set html page title, stylesheet, charset.
      :header-fn 'write-html-header
      ;; Just close the body.
      :footer-fn 'write-html-footer)
-    (:objects (,@pax-manual)
-     :output (\"build/tmp/manual.html\")
+    (:objects (,@mgl-pax-manual)
+     :output ("build/tmp/manual.html")
      ;; Links from the extension api page to the manual page will
      ;; be to ../user/pax-manual#<anchor>, while links going to
      ;; the opposite direction will be to
      ;; ../dev/pax-extension-api.html#<anchor>.
-     :uri-fragment \"doc/user/pax-manual.html\"
+     :uri-fragment "doc/user/pax-manual.html"
      :header-fn 'write-html-header
      :footer-fn 'write-html-footer))
-  ```"
+  ```"""
   (let ((*format* format)
         (*print-right-margin* (or *print-right-margin* 80))
         (*package* (if *document-normalize-packages*
@@ -748,7 +779,13 @@
                              :output (list stream))
                        format))
         (3bmd-code-blocks:*code-blocks* t)
-        (3bmd-code-blocks:*code-blocks-default-colorize* :common-lisp))
+        (3bmd-code-blocks:*code-blocks-default-colorize* :common-lisp)
+        (3bmd-code-blocks::*colorize-name-map*
+          (alexandria:plist-hash-table
+           `("cl-transcript" :common-lisp
+                             ,@(alexandria:hash-table-plist
+                                3bmd-code-blocks::*colorize-name-map*))
+           :test #'equal)))
     (with-tracking-pages-created ()
       (with-pages ((append (translate-page-specs pages format)
                            (list default-page)))
@@ -880,31 +917,31 @@
      ,@body))
 
 
-(defsection @pax-markdown-support (:title "Markdown Support")
+(defsection @mgl-pax-markdown-support (:title "Markdown Support")
   "The [Markdown][markdown] in docstrings is processed with the
   [3BMD][3bmd] library."
-  (@pax-markdown-indentation section)
-  (@pax-markdown-syntax-highlighting section))
+  (@mgl-pax-markdown-indentation section)
+  (@mgl-pax-markdown-syntax-highlighting section))
 
-(defsection @pax-markdown-indentation (:title "Indentation")
-  "Docstrings can be indented in any of the usual styles. PAX
+(defsection @mgl-pax-markdown-indentation (:title "Indentation")
+  """Docstrings can be indented in any of the usual styles. PAX
   normalizes indentation by converting:
 
       (defun foo ()
-        \"This is
+        "This is
         indented
-        differently\")
+        differently")
 
   to
 
       (defun foo ()
-        \"This is
+        "This is
       indented
-      differently\")
+      differently")
 
-  See [DOCUMENT-OBJECT][(method () (string t))] for the details.")
+  See [DOCUMENT-OBJECT][(method () (string t))] for the details.""")
 
-(defsection @pax-markdown-syntax-highlighting (:title "Syntax highlighting")
+(defsection @mgl-pax-markdown-syntax-highlighting (:title "Syntax highlighting")
   "For syntax highlighting, github's [fenced code
   blocks][fenced-code-blocks] markdown extension to mark up code
   blocks with triple backticks is enabled so all you need to do is
@@ -926,7 +963,7 @@
   [fenced-code-blocks]: https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks")
 
 
-(defsection @pax-documentation-printer-variables
+(defsection @mgl-pax-documentation-printer-variables
     (:title "Documentation Printer Variables")
   "Docstrings are assumed to be in markdown format and they are pretty
   much copied verbatim to the documentation subject to a few knobs
@@ -943,31 +980,31 @@
   (*document-normalize-packages* variable))
 
 (defvar *document-uppercase-is-code* t
-  "When true, words with at least three characters and no lowercase
+  """When true, words with at least three characters and no lowercase
   characters naming an interned symbol are assumed to be code as if
   they were marked up with backticks which is especially useful when
   combined with *DOCUMENT-LINK-CODE*. For example, this docstring:
 
-      \"`FOO` and FOO.\"
+      "`FOO` and FOO."
 
   is equivalent to this:
 
-      \"`FOO` and `FOO`.\"
+      "`FOO` and `FOO`."
 
   iff `FOO` is an interned symbol. To suppress this behavior, add a
   backslash to the beginning of the symbol or right after the leading
   * if it would otherwise be parsed as markdown emphasis:
 
-      \"\\\\MGL-PAX *\\\\DOCUMENT-NORMALIZE-PACKAGES*\"
+      "\\MGL-PAX *\\DOCUMENT-NORMALIZE-PACKAGES*"
 
   The number of backslashes is doubled above because that's how the
   example looks in a docstring. Note that the backslash is discarded
-  even if *DOCUMENT-UPPERCASE-IS-CODE* is false.")
+  even if *DOCUMENT-UPPERCASE-IS-CODE* is false.""")
 
 ;;;; Links
 
 (defvar *document-link-code* t
-  "When true, during the process of generating documentation for a
+  """When true, during the process of generating documentation for a
   [SECTION][class], html anchors are added before the documentation of
   every reference that's not to a section. Also, markdown style
   reference links are added when a piece of inline code found in a
@@ -975,13 +1012,13 @@
   sections being documented. Assuming `BAR` is defined, the
   documentation for:
 
-  ```
+  ```commonlisp
   (defsection @foo
     (foo function)
     (bar function))
 
   (defun foo (x)
-    \"Calls `BAR` on `X`.\"
+    "Calls `BAR` on `X`."
     (bar x))
   ```
 
@@ -997,14 +1034,14 @@
 
   Now, if `BAR` has references with different locatives:
 
-  ```
+  ```commonlisp
   (defsection @foo
     (foo function)
     (bar function)
     (bar type))
 
   (defun foo (x)
-    \"Calls `BAR` on `X`.\"
+    "Calls `BAR` on `X`."
     (bar x))
   ```
 
@@ -1021,23 +1058,23 @@
   the function locative. There are two ways to do that. One is to
   specify the locative explicitly as the id of a reference link:
 
-      \"Calls [BAR][function] on X.\"
+      "Calls [BAR][function] on X."
 
   However, if in the text there is a locative immediately before or
   after the symbol, then that locative is used to narrow down the
-  range of possibilities. This is similar to what the M-. extension
-  does. In a nutshell, if M-. works without questions then the
+  range of possibilities. This is similar to what the `M-.` extension
+  does. In a nutshell, if `M-.` works without questions then the
   documentation will contain a single link. So this also works without
   any markup:
 
-      \"Calls function `BAR` on X.\"
+      "Calls function `BAR` on X."
 
   This last option needs backticks around the locative if it's not a
   single symbol.
 
   Note that [*DOCUMENT-LINK-CODE*][variable] can be combined with
   [`*DOCUMENT-UPPERCASE-IS-CODE*`][] to have links generated for
-  uppercase names with no quoting required.")
+  uppercase names with no quoting required.""")
 
 (defvar *document-link-sections* t
   "When true, html anchors are generated before the heading of
@@ -1330,21 +1367,23 @@
 
 ;;; Normalize indentation of docstrings as it's described in
 ;;; (METHOD () (STRING T)) DOCUMENT-OBJECT.
-(defun strip-docstring-indentation (docstring)
-  (let ((indentation (docstring-indentation docstring)))
-    (with-output-to-string (out)
-      (with-input-from-string (s docstring)
-        (loop for i upfrom 0
-              do (multiple-value-bind (line missing-newline-p)
-                     (read-line s nil nil)
-                   (unless line
-                     (return))
-                   (if (or (zerop i)
-                           (blankp line))
-                       (write-string line out)
-                       (write-string (subseq line indentation) out))
-                   (unless missing-newline-p
-                     (terpri out))))))))
+(defun strip-docstring-indentation (docstring &key (first-line-special-p t))
+  (let ((indentation
+          (docstring-indentation docstring
+                                 :first-line-special-p first-line-special-p)))
+    (values (with-output-to-string (out)
+              (with-input-from-string (s docstring)
+                (loop for i upfrom 0
+                      do (multiple-value-bind (line missing-newline-p)
+                             (read-line s nil nil)
+                           (unless line
+                             (return))
+                           (if (and first-line-special-p (zerop i))
+                               (write-string line out)
+                               (write-string (subseq* line indentation) out))
+                           (unless missing-newline-p
+                             (terpri out))))))
+            indentation)))
 
 (defun n-leading-spaces (line)
   (let ((n 0))
@@ -1355,13 +1394,13 @@
 
 ;;; Return the minimum number of leading spaces in non-blank lines
 ;;; after the first.
-(defun docstring-indentation (docstring)
+(defun docstring-indentation (docstring &key (first-line-special-p t))
   (let ((n-min-indentation nil))
     (with-input-from-string (s docstring)
       (loop for i upfrom 0
             for line = (read-line s nil nil)
             while line
-            do (when (and (plusp i)
+            do (when (and (or (not first-line-special-p) (plusp i))
                           (not (blankp line)))
                  (when (or (null n-min-indentation)
                            (< (n-leading-spaces line) n-min-indentation))
@@ -1369,14 +1408,16 @@
     (or n-min-indentation 0)))
 
 ;;; Add PREFIX to every line in STRING.
-(defun prefix-lines (prefix string)
+(defun prefix-lines (prefix string &key exclude-first-line-p)
   (with-output-to-string (out)
     (with-input-from-string (in string)
-      (loop
+      (loop for i upfrom 0 do
         (multiple-value-bind (line missing-newline-p) (read-line in nil nil)
           (unless line
             (return))
-          (format out "~a~a" prefix line)
+          (if (and exclude-first-line-p (= i 0))
+              (format out "~a" line)
+              (format out "~a~a" prefix line))
           (unless missing-newline-p
             (terpri out)))))))
 
@@ -1389,22 +1430,39 @@
 ;;; string.
 (defun replace-known-references (string known-references)
   (when string
-    (let ((string
-            ;; Handle :EMPH (to recognize *VAR*), :CODE for `SYMBOL`
-            ;; and :REFERENCE-LINK for [symbol][locative]. Don't hurt
-            ;; links.
-            (map-markdown-parse-tree
-             '(:emph :code :reference-link)
-             '(:explicit-link :image :mailto)
-             nil
-             (alexandria:rcurry #'translate-tagged known-references)
-             string)))
-      ;; Replace in strings except when they are in code or links.
-      (map-markdown-parse-tree
-       '() '(:code :verbatim 3bmd-code-blocks::code-block
-             :reference-link :explicit-link :image :mailto) t
-       (alexandria:rcurry #'translate-uppercase-words known-references)
-       string))))
+    (let* ((string
+             ;; Handle :EMPH (to recognize *VAR*), :CODE for `SYMBOL`
+             ;; and :REFERENCE-LINK for [symbol][locative]. Don't hurt
+             ;; links.
+             (map-markdown-parse-tree
+              '(:emph :code :reference-link)
+              '(:explicit-link :image :mailto)
+              nil
+              (alexandria:rcurry #'translate-tagged known-references)
+              string))
+           (string
+             ;; Replace in strings except when they are in code or links.
+             (map-markdown-parse-tree
+              '() '(:code :verbatim 3bmd-code-blocks::code-block
+                    :reference-link :explicit-link :image :mailto) t
+                    (alexandria:rcurry
+                     #'translate-uppercase-words known-references)
+                    string)))
+      (map-markdown-parse-tree '(3bmd-code-blocks::code-block) '() nil
+                               #'retranscribe-code-block string))))
+
+;;; CODE-BLOCK looks like this:
+;;;
+;;;     (3BMD-CODE-BLOCKS::CODE-BLOCK :LANG "commonlisp" :CONTENT "42")
+(defun retranscribe-code-block (parent code-block)
+  (declare (ignore parent))
+  (let ((lang (getf (rest code-block) :lang)))
+    (if (equal lang "cl-transcript")
+        `(3bmd-code-blocks::code-block
+          :lang ,lang
+          :content ,(transcribe (getf (rest code-block) :content) nil
+                                :update-only t :check-consistency t))
+        code-block)))
 
 ;;; In 3bmd parlance 'tagged' is an element of the markdown parse tree
 ;;; that is not a string (e.g. (:EMPH "this")). This function
@@ -1770,7 +1828,7 @@
       (find char "*+@\\.:" :test #'char=)))
 
 
-(defsection @pax-locative-types (:title "Locative Types")
+(defsection @mgl-pax-locative-types (:title "Locative Types")
   "These are the locatives type supported out of the box. As all
   locative types, they are symbols and their names should make it
   obvious what kind of things they refer to. Unless otherwise noted,
@@ -1795,14 +1853,15 @@
   (locative locative))
 
 
-(defsection @pax-extension-api (:title "Extension API")
-  (@pax-locatives-and-references section)
-  (@pax-new-object-types section)
-  (@pax-reference-based-extensions section)
-  (@pax-sections section))
+(defsection @mgl-pax-extension-api (:title "Extension API")
+  (@mgl-pax-locatives-and-references section)
+  (@mgl-pax-new-object-types section)
+  (@mgl-pax-reference-based-extensions section)
+  (@mgl-pax-sections section))
 
 
-(defsection @pax-locatives-and-references (:title "Locatives and References")
+(defsection @mgl-pax-locatives-and-references
+    (:title "Locatives and References")
   "While Common Lisp has rather good introspective abilities, not
   everything is first class. For example, there is no object
   representing the variable defined with `(DEFVAR
@@ -1866,18 +1925,19 @@
           :errorp errorp))
 
 
-(defsection @pax-new-object-types (:title "Adding New Object Types")
-  "One may wish to make the DOCUMENT function and M-. navigation work
-  with new object types. Extending DOCUMENT can be done by defining a
-  DOCUMENT-OBJECT method. To allow these objects to be referenced from
-  DEFSECTION a LOCATE-OBJECT method is to be defined. Finally, for M-.
-  FIND-SOURCE can be specialized. Finally, EXPORTABLE-LOCATIVE-TYPE-P
-  may be overridden if exporting does not makes sense. Here is a
-  stripped down example of how all this is done for ASDF:SYSTEM:
+(defsection @mgl-pax-new-object-types (:title "Adding New Object Types")
+  """One may wish to make the DOCUMENT function and `M-.` navigation
+  work with new object types. Extending DOCUMENT can be done by
+  defining a DOCUMENT-OBJECT method. To allow these objects to be
+  referenced from DEFSECTION a LOCATE-OBJECT method is to be defined.
+  Finally, for `M-.` FIND-SOURCE can be specialized. Finally,
+  EXPORTABLE-LOCATIVE-TYPE-P may be overridden if exporting does not
+  makes sense. Here is a stripped down example of how all this is done
+  for ASDF:SYSTEM:
 
-  ```
+  ```commonlisp
   (define-locative-type asdf:system ()
-    \"Refers to an asdf system.\")
+    "Refers to an asdf system.")
 
   (defmethod exportable-locative-type-p ((locative-type (eql 'asdf:system)))
     nil)
@@ -1894,17 +1954,17 @@
 
   (defmethod document-object ((system asdf:system) stream)
     (with-heading (stream system
-                          (format nil \"~A ASDF System Details\"
+                          (format nil "~A ASDF System Details"
                                   (asdf/find-system:primary-system-name
                                    system)))
-      (format stream \"Some content~%\")))
+      (format stream "Some content~%")))
 
   (defmethod find-source ((system asdf:system))
     `(:location
       (:file ,(namestring (asdf/system:system-source-file system)))
       (:position 1)
-      (:snippet \"\")))
-  ```"
+      (:snippet "")))
+  ```"""
   (define-locative-type macro)
   (exportable-locative-type-p generic-function)
   (locate-object generic-function)
@@ -1917,18 +1977,18 @@
   (find-source generic-function))
 
 (defmacro define-locative-type (locative-type lambda-list &body docstring)
-  "Declare LOCATIVE-TYPE as a [LOCATIVE][locative]. One gets two
+  """Declare LOCATIVE-TYPE as a [LOCATIVE][locative]. One gets two
   things in return: first, a place to document the format and
   semantics of LOCATIVE-TYPE (in LAMBDA-LIST and DOCSTRING); second,
   being able to reference `(LOCATIVE-TYPE LOCATIVE)`. For example, if
   you have:
 
-  ```
+  ```common-lisp
   (define-locative-type variable (&optional initform)
-    \"Dummy docstring.\")
+    "Dummy docstring.")
   ```
 
-  then `(VARIABLE LOCATIVE)` refers to this form."
+  then `(VARIABLE LOCATIVE)` refers to this form."""
   (assert (or (endp docstring)
               (and (= 1 (length docstring))
                    (string (first docstring)))))
@@ -2009,16 +2069,16 @@
           (massage-docstring string :indentation "")))
 
 (defgeneric find-source (object)
-  (:documentation "Like SWANK:FIND-DEFINITION-FOR-THING, but this one
-  is a generic function to be extensible. In fact, the default
+  (:documentation """Like SWANK:FIND-DEFINITION-FOR-THING, but this
+  one is a generic function to be extensible. In fact, the default
   implementation simply defers to SWANK:FIND-DEFINITION-FOR-THING.
   This function is called by LOCATE-DEFINITION-FOR-EMACS which lies
-  behind the M-. extension (see @PAX-EMACS-INTEGRATION).
+  behind the `M-.` extension (see @MGL-PAX-EMACS-INTEGRATION).
 
   If successful, the return value looks like this:
 
-  ```
-  (:location (:file \"/home/mega/own/mgl/pax/test/test.lisp\")
+  ```commonlisp
+  (:location (:file "/home/mega/own/mgl/pax/test/test.lisp")
              (:position 24) nil)
   ```
 
@@ -2026,9 +2086,9 @@
   1 is the first character. If unsuccessful, the return values is
   like:
 
-  ```
-  (:error \"Unknown source location for SOMETHING\")
-  ```")
+  ```commonlisp
+  (:error "Unknown source location for SOMETHING")
+  ```""")
   (:method (object)
     (swank:find-definition-for-thing object)))
 
@@ -2066,20 +2126,20 @@
                  locations))
 
 
-(defsection @pax-reference-based-extensions
+(defsection @mgl-pax-reference-based-extensions
     (:title "Reference Based Extensions")
-  "Let's see how to extend DOCUMENT and M-. navigation if there is no
-  first class object to represent the thing of interest. Recall that
-  LOCATE returns a REFERENCE object in this case. DOCUMENT-OBJECT and
-  FIND-SOURCE defer to LOCATE-AND-DOCUMENT and LOCATE-AND-FIND-SOURCE
-  which have LOCATIVE-TYPE in their argument list for EQL specializing
-  pleasure. Here is a stripped down example of how the VARIABLE
-  locative is defined:
+  """Let's see how to extend DOCUMENT and `M-.` navigation if there is
+  no first class object to represent the thing of interest. Recall
+  that LOCATE returns a REFERENCE object in this case. DOCUMENT-OBJECT
+  and FIND-SOURCE defer to LOCATE-AND-DOCUMENT and
+  LOCATE-AND-FIND-SOURCE which have LOCATIVE-TYPE in their argument
+  list for EQL specializing pleasure. Here is a stripped down example
+  of how the VARIABLE locative is defined:
 
-  ```
+  ```commonlisp
   (define-locative-type variable (&optional initform)
-    \"Refers to a global special variable. INITFORM, or if not specified,
-    the global value of the variable is included in the documentation.\")
+    "Refers to a global special variable. INITFORM, or if not specified,
+    the global value of the variable is included in the documentation.")
 
   (defmethod locate-object (symbol (locative-type (eql 'variable))
                             locative-args)
@@ -2089,12 +2149,12 @@
   (defmethod locate-and-document (symbol (locative-type (eql 'variable))
                                   locative-args stream)
     (destructuring-bind (&optional (initform nil initformp)) locative-args
-      (format stream \"- [~A] \" (string-downcase locative-type))
+      (format stream "- [~A] " (string-downcase locative-type))
       (print-name (prin1-to-string symbol) stream)
       (write-char #\Space stream)
       (multiple-value-bind (value unboundp) (symbol-global-value symbol)
         (print-arglist (prin1-to-string (cond (initformp initform)
-                                              (unboundp \"-unbound-\")
+                                              (unboundp "-unbound-")
                                               (t value)))
                        stream))
       (terpri stream)
@@ -2104,9 +2164,9 @@
                                      locative-args)
     (declare (ignore locative-args))
     (find-one-location (swank-backend:find-definitions symbol)
-                       '(\"variable\" \"defvar\" \"defparameter\"
-                         \"special-declaration\")))
-  ```"
+                       '("variable" "defvar" "defparameter"
+                         "special-declaration")))
+  ```"""
   (collect-reachable-objects (method () (reference)))
   (locate-and-collect-reachable-objects generic-function)
   (locate-and-collect-reachable-objects (method () (t t t)))
@@ -2151,18 +2211,24 @@
   (declare (ignore object locative-type locative-args))
   ())
 
+;;; We need this for more informative TRANSCRIBE-ERRORs.
+(defvar *reference-being-documented* nil)
+
 (defmethod document-object :around (object stream)
-  (cond ((or (stringp object) (typep object 'reference))
-         (call-next-method))
-        (t
-         (let ((reference (canonical-reference object)))
-           (assert (eq object (resolve reference)))
-           (with-temp-output-to-page (stream (reference-page reference))
-             (when (and *document-link-code*
-                        (not (typep object 'section))
-                        (not (typep object 'asdf:system)))
-               (anchor (reference-to-anchor reference) stream))
-             (call-next-method object stream))))))
+  (loop
+    (return
+      (cond ((or (stringp object) (typep object 'reference))
+             (call-next-method))
+            (t
+             (let* ((reference (canonical-reference object))
+                    (*reference-being-documented* reference))
+               (assert (eq object (resolve reference)))
+               (with-temp-output-to-page (stream (reference-page reference))
+                 (when (and *document-link-code*
+                            (not (typep object 'section))
+                            (not (typep object 'asdf:system)))
+                   (anchor (reference-to-anchor reference) stream))
+                 (call-next-method object stream))))))))
 
 (defmethod document-object ((reference reference) stream)
   "If REFERENCE can be resolved to a non-reference, call
@@ -2211,27 +2277,27 @@
 
 (defmacro define-symbol-locative-type (locative-type lambda-list
                                        &body docstring)
-  "Similar to DEFINE-LOCATIVE-TYPE but it assumes that all things
+  """Similar to DEFINE-LOCATIVE-TYPE but it assumes that all things
   locatable with LOCATIVE-TYPE are going to be just symbols defined
   with a definer defined with DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE.
   It is useful to attach documentation and source location to symbols
   in a particular context. An example will make everything clear:
 
-  ```
+  ```commonlisp
   (define-symbol-locative-type direction ()
-    \"A direction is a symbol. (After this M-. on `DIRECTION LOCATIVE`
-    works and it can also be included in DEFSECTION forms.)\")
+    "A direction is a symbol. (After this `M-.` on `DIRECTION LOCATIVE`
+    works and it can also be included in DEFSECTION forms.)")
 
   (define-definer-for-symbol-locative-type define-direction direction ()
-    \"With DEFINE-DIRECTION one document how what a symbol means when
-    interpreted as a direction.\")
+    "With DEFINE-DIRECTION one document how what a symbol means when
+    interpreted as a direction.")
 
   (define-direction up ()
-    \"UP is equivalent to a coordinate delta of (0, -1).\")
+    "UP is equivalent to a coordinate delta of (0, -1).")
   ```
 
   After all this, `(UP DIRECTION)` refers to the `DEFINE-DIRECTION`
-  form above."
+  form above."""
   (check-body-docstring docstring)
   `(progn
      (define-locative-type ,locative-type ,lambda-list ,@docstring)
@@ -2293,7 +2359,7 @@
      ',lambda-list))
 
 
-(defsection @pax-sections (:title "Sections")
+(defsection @mgl-pax-sections (:title "Sections")
   "[Section][class] objects rarely need to be dissected since
   DEFSECTION and DOCUMENT cover most needs. However, it is plausible
   that one wants to subclass them and maybe redefine how they are
@@ -2306,7 +2372,7 @@
 
 (defmethod describe-object ((section section) stream)
   "[SECTION][class] objects are printed by calling DOCUMENT on them
-  with all @PAX-DOCUMENTATION-PRINTER-VARIABLES, except for
+  with all @MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES, except for
   *DOCUMENT-NORMALIZE-PACKAGES*, turned off to reduce clutter."
   (let ((*document-uppercase-is-code* nil)
         (*document-link-code* nil)
@@ -2321,7 +2387,7 @@
 ;;;; LOCATIVE locative
 
 (define-locative-type locative (lambda-list)
-  "This is the locative for locatives. When M-. is pressed on
+  "This is the locative for locatives. When `M-.` is pressed on
   `VARIABLE` in `(VARIABLE LOCATIVE)`, this is what makes it possible
   to land at the `(DEFINE-LOCATIVE-TYPE VARIABLE ...)` form.
   Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.")
@@ -2736,9 +2802,9 @@
 ;;;; tweaked.
 
 (defun method-specializers-for-inspect (method)
-  "Return a \"pretty\" list of the method's specializers. Normal
-  specializers are replaced by the name of the class, eql
-  specializers are replaced by `(eql ,object)."
+  """Return a "pretty" list of the method's specializers. Normal
+  specializers are replaced by the name of the class, eql specializers
+  are replaced by `(eql ,object)."""
   (mapcar (lambda (name spec)
             (let ((name (if (listp name) (first name) name)))
               (if (eq spec t)
@@ -2748,11 +2814,11 @@
           (method-specializers-list method)))
 
 (defun method-for-inspect-value (method)
-  "Returns a \"pretty\" list describing METHOD. The first element of
+  """Returns a "pretty" list describing METHOD. The first element of
   the list is the name of generic-function method is specialized on,
   the second element is the method qualifiers, the rest of the list is
   the method's specialiazers (as per
-  method-specializers-for-inspect)."
+  METHOD-SPECIALIZERS-FOR-INSPECT)."""
   (append (list (swank-mop:generic-function-name
                  (swank-mop:method-generic-function method)))
           (swank-mop:method-qualifiers method)
@@ -2781,7 +2847,8 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'accessor))
                           locative-args)
-  (assert (= 1 (length locative-args)))
+  (assert (= 1 (length locative-args)) ()
+          "The syntax of the ACCESSOR locative is (ACCESSOR <CLASS-NAME>).")
   (find-accessor-slot-definition symbol (first locative-args))
   (make-reference symbol (cons locative-type locative-args)))
 
@@ -2798,7 +2865,8 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'reader))
                           locative-args)
-  (assert (= 1 (length locative-args)))
+  (assert (= 1 (length locative-args)) ()
+          "The syntax of the READER locative is (READER <CLASS-NAME>).")
   (find-reader-slot-definition symbol (first locative-args))
   (make-reference symbol (cons locative-type locative-args)))
 
@@ -2811,7 +2879,8 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'writer))
                           locative-args)
-  (assert (= 1 (length locative-args)))
+  (assert (= 1 (length locative-args)) ()
+          "The syntax of the WRITER locative is (WRITER <CLASS-NAME>).")
   (find-writer-slot-definition symbol (first locative-args))
   (make-reference symbol (cons locative-type locative-args)))
 

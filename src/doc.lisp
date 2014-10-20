@@ -10,7 +10,7 @@
                           :direction :output
                           :if-does-not-exist :create
                           :if-exists :supersede)
-    (document @pax-manual :stream stream)
+    (document @mgl-pax-manual :stream stream)
     (print-markdown-footer stream))
   ;; README is optimized for reading in text format. Has no links and
   ;; cluttery markup.
@@ -18,7 +18,7 @@
                           :direction :output
                           :if-does-not-exist :create
                           :if-exists :supersede)
-    (describe @pax-manual stream)
+    (describe @mgl-pax-manual stream)
     (print-markdown-footer stream)))
 
 (defun print-markdown-footer (stream)
@@ -31,15 +31,15 @@
    ;; This could be a list of objects (typically sections), if you
    ;; want to generate documentation for related libraries with
    ;; cross-links.
-   @pax-manual
+   @mgl-pax-manual
    :pages (loop for section in
                             (list
                              ;; Comment this in, if you want
                              ;; the 'Extension API' section
                              ;; to go to a separate file.
                              #+nil
-                             @pax-extension-api
-                             @pax-manual)
+                             @mgl-pax-extension-api
+                             @mgl-pax-manual)
                 collect (section-to-page-spec section))
    :format :html))
 

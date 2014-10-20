@@ -18,6 +18,9 @@
           :do (write-sequence buffer datum :start 0 :end bytes-read)
           :while (= bytes-read buffer-size))))))
 
+(defun subseq* (seq start)
+  (subseq seq (min (length seq) start)))
+
 (defun relativize-pathname (pathname reference-pathname)
   "Return a pathname that's equivalent to PATHNAME but relative to
   REFERENCE-PATHNAME if possible. Like ENOUGH-NAMESTRING, but inserts
@@ -327,8 +330,8 @@
 (defun map-markdown-parse-tree (tags stop-tags handle-strings fn string)
   (let* ((3bmd-grammar:*smart-quotes* nil)
          (parse-tree
-           ;; To be able to work recognize symbols like FOO* join
-           ;; (... "FOO" "*" ...) to look like (... "FOO*" ...).
+           ;; To be able to recognize symbols like FOO* join (...
+           ;; "FOO" "*" ...) to look like (... "FOO*" ...).
            (join-consecutive-non-blank-strings-in-parse-tree
             (3bmd-grammar:parse-doc string))))
     (with-output-to-string (out)
