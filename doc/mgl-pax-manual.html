@@ -1596,11 +1596,11 @@ easily generated from the source code.</p>
 documentation is that they tend to get out-of-sync with the code.
 This is solved by being able to parse back and update transcripts.
 In fact, this is exactly what happens during documentation
-generation with PAX. Code sections tagged &quot;cl-transcript&quot; are
+generation with PAX. Code sections tagged <code>&quot;cl-transcript&quot;</code> are
 retranscribed and checked for inconsistency (that is, any difference
 in output or return values). If the consistency check fails, an
-error message is signalled that includes the reference to the object
-being documented.</p>
+error is signalled that includes a reference to the object being
+documented.</p>
 
 <p>Going beyond documentation, transcript consistency checks can be
 used for writing simple tests in a very readable form. For example:</p>
@@ -1639,7 +1639,7 @@ C-e</code>. The cursor is marked by <code>#\^</code>:</p>
 ```
 </code></pre>
 
-<p>Note that the usage of fenced code blocks with the language tag
+<p>Note that the use of fenced code blocks with the language tag
 <code>cl-transcript</code> is only to tell PAX to perform consistency checks at
 documentation generation time.</p>
 
@@ -1776,9 +1776,9 @@ differently. If we have a file with these contents:</p>
 </code></pre>
 
 <p>Output to all standard streams is captured and printed with
-<code>OUTPUT-PREFIX</code> (&quot;.. &quot; above). Return values are printed with
-<code>VALUE-PREFIX</code> (&quot;=&gt; &quot;). Note how these prefixes are always printed on
-a new line to facilitate parsing.</p>
+<code>OUTPUT-PREFIX</code> (<code>&quot;.. &quot;</code> above). Return values are printed with
+<code>VALUE-PREFIX</code> (<code>&quot;=&gt; &quot;</code>). Note how these prefixes are always printed
+on a new line to facilitate parsing.</p>
 
 <p><a href="#x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29" title="(MGL-PAX:TRANSCRIBE FUNCTION)"><code>TRANSCRIBE</code></a> is able to parse its own output. If we transcribe the
 previous output above, we get it back exactly. However, if we remove
@@ -1825,7 +1825,7 @@ So with <code>UPDATE-ONLY</code> the above example is transcribed to:</p>
 =&gt; ; No value
 </code></pre>
 
-<p>where &quot;; No value&quot; is the default <code>NO-VALUE-MARKER</code>.</p>
+<p>where <code>&quot;; No value&quot;</code> is the default <code>NO-VALUE-MARKER</code>.</p>
 
 <p>If <code>CHECK-CONSISTENCY</code> is true, then <a href="#x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29" title="(MGL-PAX:TRANSCRIBE FUNCTION)"><code>TRANSCRIBE</code></a> signals a continuable
 <a href="#x-28MGL-PAX-3ATRANSCRIPTION-CONSISTENCY-ERROR-20CONDITION-29" title="(MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION)"><code>TRANSCRIPTION-CONSISTENCY-ERROR</code></a> whenever a form's output is
@@ -1856,7 +1856,7 @@ differently for transcribe to be able to read them back:</p>
 --&gt; end&gt;
 </code></pre>
 
-<p>&quot;==&gt; &quot; is <code>UNREADABLE-VALUE-PREFIX</code> and &quot;--&gt; &quot; is
+<p><code>&quot;==&gt; &quot;</code> is <code>UNREADABLE-VALUE-PREFIX</code> and <code>&quot;--&gt; &quot;</code> is
 <code>UNREADABLE-VALUE-CONTINUATION-PREFIX</code>. As with outputs, a consistency
 check between a unreadable value from the source and the value from
 <code>EVAL</code> is performed with <code>STRING=</code>. That is, the value from <code>EVAL</code> is
@@ -1874,11 +1874,11 @@ strings are right trimmed if the rest of the line is empty.</p>
 <p>Finally, one may want to produce a transcript that's valid Common
 Lisp. This can be achieved by adding a semicolon character to all
 prefixes used for markup like this which can be done with
-<code>:PREFIX-PREFIX</code> &quot;;&quot;. One can even translate a transcription from the
-default markup to the one with semicolons
-with <code>:TRANSCRIBED-PREFIX-PREFIX</code> &quot;;&quot;. In general, there is a set of
-prefix arguments used when writing the transcript that mirror those
-for parsing <code>SOURCE</code>.</p></li>
+<code>:PREFIX-PREFIX</code> <code>&quot;;&quot;</code>. One can even translate a transcription from
+the default markup to the one with semicolons
+with <code>:TRANSCRIBED-PREFIX-PREFIX</code> <code>&quot;;&quot;</code>. In general, there is a set
+of prefix arguments used when writing the transcript that mirror
+those for parsing <code>SOURCE</code>.</p></li>
 </ul>
 
 <p><a name='x-28MGL-PAX-3ATRANSCRIPTION-ERROR-20CONDITION-29'></a></p>

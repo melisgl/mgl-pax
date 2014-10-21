@@ -25,11 +25,11 @@
   documentation is that they tend to get out-of-sync with the code.
   This is solved by being able to parse back and update transcripts.
   In fact, this is exactly what happens during documentation
-  generation with PAX. Code sections tagged \"cl-transcript\" are
+  generation with PAX. Code sections tagged `\"cl-transcript\"` are
   retranscribed and checked for inconsistency (that is, any difference
   in output or return values). If the consistency check fails, an
-  error message is signalled that includes the reference to the object
-  being documented.
+  error is signalled that includes a reference to the object being
+  documented.
 
   Going beyond documentation, transcript consistency checks can be
   used for writing simple tests in a very readable form. For example:
@@ -115,7 +115,7 @@
                    (transcribed-unreadable-value-continuation-prefix
                     unreadable-value-continuation-prefix)
                    (no-value-marker "; No value"))
-  """Read forms from SOURCE and write them (iff ECHO) to TRANSCRIPT
+  "Read forms from SOURCE and write them (iff ECHO) to TRANSCRIPT
   followed by any output and return values produced by calling EVAL on
   the form. SOURCE can be a stream or a string, while TRANSCRIPT can
   be a stream or NIL in which case transcription goes into a string.
@@ -125,11 +125,11 @@
   A simple example is this:
 
   ```cl-transcript
-  (transcribe "(princ 42) " nil)
-  => "(princ 42)
+  (transcribe \"(princ 42) \" nil)
+  => \"(princ 42)
   .. 42
   => 42
-  "
+  \"
   ```
 
   However, it may be a bit confusing since this documentation uses
@@ -146,9 +146,9 @@
       => (1 2)
 
   Output to all standard streams is captured and printed with
-  OUTPUT-PREFIX (".. " above). Return values are printed with
-  VALUE-PREFIX ("=> "). Note how these prefixes are always printed on
-  a new line to facilitate parsing.
+  OUTPUT-PREFIX (`\".. \"` above). Return values are printed with
+  VALUE-PREFIX (`\"=> \"`). Note how these prefixes are always printed
+  on a new line to facilitate parsing.
 
   TRANSCRIBE is able to parse its own output. If we transcribe the
   previous output above, we get it back exactly. However, if we remove
@@ -190,7 +190,7 @@
       ..
       => ; No value
 
-  where "\; No value" is the default NO-VALUE-MARKER.
+  where `\"; No value\"` is the default NO-VALUE-MARKER.
 
   If CHECK-CONSISTENCY is true, then TRANSCRIBE signals a continuable
   TRANSCRIPTION-CONSISTENCY-ERROR whenever a form's output is
@@ -212,14 +212,14 @@
       
       (defmethod print-object ((obj some-class) stream)
         (print-unreadable-object (obj stream :type t)
-          (format stream "~%~%end")))
+          (format stream \"~%~%end\")))
 
       (make-instance 'some-class)
       ==> #<SOME-CLASS 
       -->
       --> end>
 
-  "==> " is UNREADABLE-VALUE-PREFIX and "--> " is
+  `\"==> \"` is UNREADABLE-VALUE-PREFIX and `\"--> \"` is
   UNREADABLE-VALUE-CONTINUATION-PREFIX. As with outputs, a consistency
   check between a unreadable value from the source and the value from
   EVAL is performed with STRING=. That is, the value from EVAL is
@@ -237,11 +237,11 @@
   Finally, one may want to produce a transcript that's valid Common
   Lisp. This can be achieved by adding a semicolon character to all
   prefixes used for markup like this which can be done with
-  :PREFIX-PREFIX "\;". One can even translate a transcription from the
-  default markup to the one with semicolons
-  with :TRANSCRIBED-PREFIX-PREFIX "\;". In general, there is a set of
-  prefix arguments used when writing the transcript that mirror those
-  for parsing SOURCE."""
+  :PREFIX-PREFIX `\";\"`. One can even translate a transcription from
+  the default markup to the one with semicolons
+  with :TRANSCRIBED-PREFIX-PREFIX `\";\"`. In general, there is a set
+  of prefix arguments used when writing the transcript that mirror
+  those for parsing SOURCE."
   (check-type source (or stream string))
   (check-type transcript (or stream null))
   (with-transcription-streams (source transcript)
@@ -706,7 +706,7 @@
       (values (princ :hello) (list 1 2))^
       ```
 
-  Note that the usage of fenced code blocks with the language tag
+  Note that the use of fenced code blocks with the language tag
   `cl-transcript` is only to tell PAX to perform consistency checks at
   documentation generation time.
 
