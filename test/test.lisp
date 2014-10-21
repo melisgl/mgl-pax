@@ -118,6 +118,8 @@
     (baz-aaa structure-accessor (defstruct baz))
     (mgl-pax package (eval-when (:compile-toplevel :load-toplevel :execute)))
     (mgl-pax asdf:system ())
+    ;; Allegro has the location off by one form.
+    #-allegro
     (test-gf generic-function (defgeneric test-gf))
     (test-gf (method () (number)) (defmethod test-gf))))
 
