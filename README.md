@@ -1595,13 +1595,18 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
       (insert transcript))))
 
 (defun mgl-pax-transcribe (start end update-only echo first-line-special-p)
-  (slime-eval
-   `(cl:when (cl:find-package :mgl-pax)
-             (cl:funcall
-              (cl:find-symbol
-               (cl:symbol-name :transcribe-for-emacs) :mgl-pax)
-              ,(buffer-substring-no-properties start end)
-              ,update-only ,echo ,first-line-special-p))))
+  (let ((transcription
+         (slime-eval
+          `(cl:if (cl:find-package :mgl-pax)
+                  (cl:funcall
+                   (cl:find-symbol
+                    (cl:symbol-name :transcribe-for-emacs) :mgl-pax)
+                   ,(buffer-substring-no-properties start end)
+                   ,update-only ,echo ,first-line-special-p)
+                  t))))
+    (if (eq transcription t)
+        (error "MGL-PAX is not loaded.")
+      transcription)))
 ```
 
 

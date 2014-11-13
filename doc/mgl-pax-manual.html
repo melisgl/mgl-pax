@@ -1727,13 +1727,18 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"</span>
       <span class="paren4">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_497.html#IDX1756" class="symbol">insert</a> transcript</span>)</span></span>)</span></span>)</span></span>)</span>
 
 <span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_167.html#IDX483" class="symbol"><i><span class="symbol">defun</span></i></a> mgl-pax-transcribe <span class="paren2">(<span class="code">start end update-only echo first-line-special-p</span>)</span>
-  <span class="paren2">(<span class="code">slime-eval
-   `<span class="paren3">(<span class="code">cl:when <span class="paren4">(<span class="code">cl:find-package <span class="keyword">:mgl-pax</span></span>)</span>
-             <span class="paren4">(<span class="code">cl:funcall
-              <span class="paren5">(<span class="code">cl:find-symbol
-               <span class="paren6">(<span class="code">cl:symbol-name <span class="keyword">:transcribe-for-emacs</span></span>)</span> <span class="keyword">:mgl-pax</span></span>)</span>
-              ,<span class="paren5">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_495.html#IDX1750" class="symbol">buffer-substring-no-properties</a> start end</span>)</span>
-              ,update-only ,echo ,first-line-special-p</span>)</span></span>)</span></span>)</span></span>)</span></span></code></pre>
+  <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_141.html#IDX422" class="symbol"><i><span class="symbol">let</span></i></a> <span class="paren3">(<span class="code"><span class="paren4">(<span class="code">transcription
+         <span class="paren5">(<span class="code">slime-eval
+          `<span class="paren6">(<span class="code"><i><span class="symbol">cl:if</span></i> <span class="paren1">(<span class="code">cl:find-package <span class="keyword">:mgl-pax</span></span>)</span>
+                  <span class="paren1">(<span class="code">cl:funcall
+                   <span class="paren2">(<span class="code">cl:find-symbol
+                    <span class="paren3">(<span class="code">cl:symbol-name <span class="keyword">:transcribe-for-emacs</span></span>)</span> <span class="keyword">:mgl-pax</span></span>)</span>
+                   ,<span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_495.html#IDX1750" class="symbol">buffer-substring-no-properties</a> start end</span>)</span>
+                   ,update-only ,echo ,first-line-special-p</span>)</span>
+                  <a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_266.html#IDX704" class="symbol">t</a></span>)</span></span>)</span></span>)</span></span>)</span>
+    <span class="paren3">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_126.html#IDX386" class="symbol"><i><span class="symbol">if</span></i></a> <span class="paren4">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_56.html#IDX68" class="symbol">eq</a> transcription <a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_266.html#IDX704" class="symbol">t</a></span>)</span>
+        <span class="paren4">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_231.html#IDX610" class="symbol">error</a> <span class="string">"MGL-PAX is not loaded."</span></span>)</span>
+      transcription</span>)</span></span>)</span></span>)</span></span></code></pre>
 
 <p><a name='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-API-20MGL-PAX-3ASECTION-29'></a></p>
 
