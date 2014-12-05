@@ -873,7 +873,7 @@ locatives take no arguments.
     pathname in which case the whole file is being pointed to or it can
     explicitly supply START, END locatives. INCLUDE is typically used to
     include non-lisp files in the documentation (say markdown or elisp
-    as the next example) or regions of lisp source files. This can
+    as in the next example) or regions of lisp source files. This can
     reduce clutter and duplication.
     
     ```commonlisp
@@ -901,15 +901,15 @@ locatives take no arguments.
     
     In the above example, pressing `M-.` on PAX.EL will open the
     `src/pax.el` file and put the cursor on its first character. `M-.`
-    on FOO-EXAMPLE will go to the source location of the `(asdf:system
+    on `FOO-EXAMPLE` will go to the source location of the `(asdf:system
     locative)` locative.
     
     When documentation is generated, the entire `pax.el` file is
     included in the markdown surrounded by the strings given as
     HEADER-NL and FOOTER-NL (if any). The trailing newline character is
     assumed implicitly. If that's undesirable, then use HEADER and
-    FOOTER instead. The documentation of FOO-EXAMPLE will be the region
-    of the file from the source location of the START
+    FOOTER instead. The documentation of `FOO-EXAMPLE` will be the
+    region of the file from the source location of the START
     locative (inclusive) to the source location of the END
     locative (exclusive). START and END default to the beginning and end
     of the file, respectively.

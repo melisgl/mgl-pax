@@ -1056,7 +1056,7 @@ Similarly, <code>(LOCATIVE LOCATIVE)</code> leads to this very definition.</p></
 pathname in which case the whole file is being pointed to or it can
 explicitly supply <code>START</code>, <code>END</code> locatives. <a href="#x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29" title="(MGL-PAX:INCLUDE MGL-PAX:LOCATIVE)"><code>INCLUDE</code></a> is typically used to
 include non-lisp files in the documentation (say markdown or elisp
-as the next example) or regions of lisp source files. This can
+as in the next example) or regions of lisp source files. This can
 reduce clutter and duplication.</p>
 
 <pre><code><span class="code"><span class="paren1">(<span class="code"><i><span class="symbol">defsection</span></i> example-section <span class="paren2">(<span class="code"></span>)</span>
@@ -1082,15 +1082,15 @@ reduce clutter and duplication.</p>
 
 <p>In the above example, pressing <code>M-.</code> on <a href="#x-28MGL-PAX-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmega-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29" title="(MGL-PAX:PAX.EL (MGL-PAX:INCLUDE #P\&quot;/home/mega/own/mgl-pax/src/pax.el\&quot; :HEADER-NL \&quot;```elisp\&quot; :FOOTER-NL \&quot;```\&quot;))"><code>PAX.EL</code></a> will open the
 <code>src/pax.el</code> file and put the cursor on its first character. <code>M-.</code>
-on FOO-EXAMPLE will go to the source location of the <code>(asdf:system
+on <code>FOO-EXAMPLE</code> will go to the source location of the <code>(asdf:system
 locative)</code> locative.</p>
 
 <p>When documentation is generated, the entire <a href="#x-28MGL-PAX-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmega-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29" title="(MGL-PAX:PAX.EL (MGL-PAX:INCLUDE #P\&quot;/home/mega/own/mgl-pax/src/pax.el\&quot; :HEADER-NL \&quot;```elisp\&quot; :FOOTER-NL \&quot;```\&quot;))"><code>pax.el</code></a> file is
 included in the markdown surrounded by the strings given as
 <code>HEADER-NL</code> and <code>FOOTER-NL</code> (if any). The trailing newline character is
 assumed implicitly. If that's undesirable, then use <code>HEADER</code> and
-<code>FOOTER</code> instead. The documentation of FOO-EXAMPLE will be the region
-of the file from the source location of the <code>START</code>
+<code>FOOTER</code> instead. The documentation of <code>FOO-EXAMPLE</code> will be the
+region of the file from the source location of the <code>START</code>
 locative (inclusive) to the source location of the <code>END</code>
 locative (exclusive). <code>START</code> and <code>END</code> default to the beginning and end
 of the file, respectively.</p>
