@@ -264,8 +264,8 @@
   @MGL-PAX-TRANSCRIPT.""")
 
 (defsection @mgl-pax-emacs-integration (:title "Emacs Integration")
-  """Integration into SLIME's `M-.` (`slime-edit-definition`) allows
-  one to visit the source location of the thing that's identified by a
+  "Integration into SLIME's `M-.` (`slime-edit-definition`) allows one
+  to visit the source location of the thing that's identified by a
   symbol and the locative before or after the symbol in a buffer. With
   this extension, if a locative is the previous or the next expression
   around the symbol of interest, then `M-.` will go straight to the
@@ -307,67 +307,9 @@
   possibilities.
 
   The `M-.` extensions can be enabled by adding this to your Emacs
-  initialization file:
-
-  ```elisp
-  (defun slime-edit-locative-definition (name &optional where)
-    (or (slime-locate-definition name (slime-locative-before))
-        (slime-locate-definition name (slime-locative-after))
-        (slime-locate-definition name (slime-locative-after-in-brackets))
-        ;; support "foo function" and "function foo" syntax in
-        ;; interactive use
-        (let ((pos (cl-position ?\s name)))
-          (when pos
-            (or (slime-locate-definition (cl-subseq name 0 pos)
-                                         (cl-subseq name (1+ pos)))
-                (slime-locate-definition (cl-subseq name (1+ pos))
-                                         (cl-subseq name 0 pos)))))))
-
-  (defun slime-locative-before ()
-    (ignore-errors (save-excursion
-                     (slime-beginning-of-symbol)
-                     (slime-last-expression))))
-
-  (defun slime-locative-after ()
-    (ignore-errors (save-excursion
-                     (slime-end-of-symbol)
-                     (slime-forward-sexp)
-                     (slime-last-expression))))
-
-  (defun slime-locative-after-in-brackets ()
-    (ignore-errors (save-excursion
-                     (slime-end-of-symbol)
-                     (skip-chars-forward "`" (+ (point) 1))
-                     (when (and (= 1 (skip-chars-forward "\\]"
-                                                         (+ (point) 1)))
-                                (= 1 (skip-chars-forward "\\["
-                                                         (+ (point) 1))))
-                       (buffer-substring-no-properties
-                        (point)
-                        (progn (search-forward "]" nil (+ (point) 1000))
-                               (1- (point))))))))
-
-  (defun slime-locate-definition (name locative)
-    (when locative
-      (let ((location
-             (slime-eval
-              ;; Silently fail if mgl-pax is not loaded.
-              `(cl:when (cl:find-package :mgl-pax)
-                        (cl:funcall
-                         (cl:find-symbol 
-                          (cl:symbol-name :locate-definition-for-emacs)
-                          :mgl-pax)
-                         ,name ,locative)))))
-        (when (and (consp location)
-                   (not (eq (car location) :error)))
-          (slime-edit-definition-cont
-           (list (make-slime-xref :dspec `(,name)
-                                  :location location))
-           "dummy name"
-           where)))))
-
-  (add-hook 'slime-edit-definition-hooks 'slime-edit-locative-definition)
-  ```""")
+  initialization file (or loading `src/pax.el`):"
+  (pax.el (include #.(asdf:system-relative-pathname :mgl-pax "src/pax.el")
+                   :header-nl "```elisp" :footer-nl "```")))
 
 ;;; Return one source location for the thing that can be located with
 ;;; NAME (a string) and LOCATIVE-STRING. Called from the elisp
@@ -444,7 +386,8 @@
                   (when found
                     ;; The rest of the symbols in the string need not be
                     ;; already interned, so let's just read it.
-                    (ignore-errors (read-from-string string)))))))))))
+                    (ignore-errors (let ((*read-eval* t))
+                                     (read-from-string string))))))))))))
 
 (defun locate-reference-link-definition-for-emacs (string)
   (when (and (= 2 (count #\[ string))
@@ -1854,7 +1797,8 @@
   (condition locative)
   (type locative)
   (package locative)
-  (locative locative))
+  (locative locative)
+  (include locative))
 
 
 (defsection @mgl-pax-extension-api (:title "Extension API")
@@ -1930,45 +1874,18 @@
 
 
 (defsection @mgl-pax-new-object-types (:title "Adding New Object Types")
-  """One may wish to make the DOCUMENT function and `M-.` navigation
+  "One may wish to make the DOCUMENT function and `M-.` navigation
   work with new object types. Extending DOCUMENT can be done by
   defining a DOCUMENT-OBJECT method. To allow these objects to be
   referenced from DEFSECTION a LOCATE-OBJECT method is to be defined.
   Finally, for `M-.` FIND-SOURCE can be specialized. Finally,
   EXPORTABLE-LOCATIVE-TYPE-P may be overridden if exporting does not
   makes sense. Here is a stripped down example of how all this is done
-  for ASDF:SYSTEM:
-
-  ```commonlisp
-  (define-locative-type asdf:system ()
-    "Refers to an asdf system.")
-
-  (defmethod exportable-locative-type-p ((locative-type (eql 'asdf:system)))
-    nil)
-
-  (defmethod locate-object (symbol (locative-type (eql 'asdf:system))
-                            locative-args)
-    (assert (endp locative-args))
-    (or (asdf:find-system symbol nil)
-        (locate-error)))
-
-  (defmethod canonical-reference ((system asdf:system))
-    (make-reference (asdf/find-system:primary-system-name system)
-                    'asdf:system))
-
-  (defmethod document-object ((system asdf:system) stream)
-    (with-heading (stream system
-                          (format nil "~A ASDF System Details"
-                                  (asdf/find-system:primary-system-name
-                                   system)))
-      (format stream "Some content~%")))
-
-  (defmethod find-source ((system asdf:system))
-    `(:location
-      (:file ,(namestring (asdf/system:system-source-file system)))
-      (:position 1)
-      (:snippet "")))
-  ```"""
+  for ASDF:SYSTEM:"
+  (asdf-example (include (:start (asdf:system locative)
+                                 :end (end-of-asdf-example variable))
+                         :header-nl "```commonlisp"
+                         :footer-nl "```"))
   (define-locative-type macro)
   (exportable-locative-type-p generic-function)
   (locate-object generic-function)
@@ -2132,45 +2049,17 @@
 
 (defsection @mgl-pax-reference-based-extensions
     (:title "Reference Based Extensions")
-  """Let's see how to extend DOCUMENT and `M-.` navigation if there is
+  "Let's see how to extend DOCUMENT and `M-.` navigation if there is
   no first class object to represent the thing of interest. Recall
   that LOCATE returns a REFERENCE object in this case. DOCUMENT-OBJECT
   and FIND-SOURCE defer to LOCATE-AND-DOCUMENT and
   LOCATE-AND-FIND-SOURCE which have LOCATIVE-TYPE in their argument
   list for EQL specializing pleasure. Here is a stripped down example
-  of how the VARIABLE locative is defined:
-
-  ```commonlisp
-  (define-locative-type variable (&optional initform)
-    "Refers to a global special variable. INITFORM, or if not specified,
-    the global value of the variable is included in the documentation.")
-
-  (defmethod locate-object (symbol (locative-type (eql 'variable))
-                            locative-args)
-    (assert (<= (length locative-args) 1))
-    (make-reference symbol (cons locative-type locative-args)))
-
-  (defmethod locate-and-document (symbol (locative-type (eql 'variable))
-                                  locative-args stream)
-    (destructuring-bind (&optional (initform nil initformp)) locative-args
-      (format stream "- [~A] " (string-downcase locative-type))
-      (print-name (prin1-to-string symbol) stream)
-      (write-char #\Space stream)
-      (multiple-value-bind (value unboundp) (symbol-global-value symbol)
-        (print-arglist (prin1-to-string (cond (initformp initform)
-                                              (unboundp "-unbound-")
-                                              (t value)))
-                       stream))
-      (terpri stream)
-      (maybe-print-docstring symbol locative-type stream)))
-
-  (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))
-                                     locative-args)
-    (declare (ignore locative-args))
-    (find-one-location (swank-backend:find-definitions symbol)
-                       '("variable" "defvar" "defparameter"
-                         "special-declaration")))
-  ```"""
+  of how the VARIABLE locative is defined:"
+  (variable-example (include (:start (variable locative)
+                                     :end (end-of-variable-example variable))
+                             :header-nl "```commonlisp"
+                             :footer-nl "```"))
   (collect-reachable-objects (method () (reference)))
   (locate-and-collect-reachable-objects generic-function)
   (locate-and-collect-reachable-objects (method () (t t t)))
@@ -2293,8 +2182,8 @@
     works and it can also be included in DEFSECTION forms.)")
 
   (define-definer-for-symbol-locative-type define-direction direction ()
-    "With DEFINE-DIRECTION one document how what a symbol means when
-    interpreted as a direction.")
+    "With DEFINE-DIRECTION one can document how what a symbol means
+    when interpreted as a direction.")
 
   (define-direction up ()
     "UP is equivalent to a coordinate delta of (0, -1).")
@@ -2370,6 +2259,7 @@
   presented."
   (section class)
   (section-name (reader section))
+  (section-package (reader section))
   (section-title (reader section))
   (section-entries (reader section))
   (describe-object (method () (section t))))
@@ -2479,11 +2369,14 @@
                 (link-to-reference (canonical-reference object))))
       ""))
 
+(defvar *section*)
+
 (defmethod document-object ((section section) stream)
   (let ((same-package (eq *package* (section-package section)))
         (*package* (if *document-normalize-packages*
                        (section-package section)
-                       *package*)))
+                       *package*))
+        (*section* section))
     (with-heading (stream section (section-title-or-name section))
       (when (and *document-normalize-packages* (not same-package))
         (format stream "###### \\[in package ~A\\]~%" (package-name *package*)))
@@ -2529,6 +2422,8 @@
   (find-one-location (swank-backend:find-definitions symbol)
                      '("variable" "defvar" "defparameter"
                        "special-declaration")))
+
+(defvar end-of-variable-example)
 
 
 ;;;; CONSTANT locative
@@ -2613,6 +2508,8 @@
     (:file ,(namestring (asdf/system:system-source-file system)))
     (:position 1)
     (:snippet "")))
+
+(defvar end-of-asdf-example)
 
 
 ;;;; STRUCTURE-ACCESSOR locative
@@ -3061,3 +2958,165 @@
 (defmethod locate-object (symbol (locative-type (eql 'argument)) locative-args)
   (declare (ignore symbol locative-args))
   (locate-error))
+
+
+;;;; INCLUDE locative
+
+(define-locative-type include (source &key line-prefix header footer
+                                      header-nl footer-nl)
+  """Refers to a region of a file. SOURCE can be a string or a
+  pathname in which case the whole file is being pointed to or it can
+  explicitly supply START, END locatives. INCLUDE is typically used to
+  include non-lisp files in the documentation (say markdown or elisp
+  as the next example) or regions of lisp source files. This can
+  reduce clutter and duplication.
+
+  ```commonlisp
+  (defsection example-section ()
+    (pax.el (include #.(asdf:system-relative-pathname :mgl-pax "src/pax.el")
+                     :header-nl "```elisp" :footer-nl "```"))
+    (foo-example (include (:start (foo function)
+                           :end (end-of-foo-example variable))
+                          :header-nl "```commonlisp"
+                          :footer-nl "```"))
+
+  (defun foo (x)
+    (1+ x))
+
+  ;;; Since file regions are copied verbatim, comments survive.
+  (defmacro bar ())
+
+  ;;; This comment is the last thing in FOO-EXAMPLE's
+  ;;; documentation since we use the dummy END-OF-FOO-EXAMPLE
+  ;;; variable to mark the end location.
+  (defvar end-of-foo-example)
+
+  ;;; More irrelevant code follows.
+  ```
+
+  In the above example, pressing `M-.` on PAX.EL will open the
+  `src/pax.el` file and put the cursor on its first character. `M-.`
+  on FOO-EXAMPLE will go to the source location of the `(asdf:system
+  locative)` locative.
+
+  When documentation is generated, the entire `pax.el` file is
+  included in the markdown surrounded by the strings given as
+  HEADER-NL and FOOTER-NL (if any). The trailing newline character is
+  assumed implicitly. If that's undesirable, then use HEADER and
+  FOOTER instead. The documentation of FOO-EXAMPLE will be the region
+  of the file from the source location of the START
+  locative (inclusive) to the source location of the END
+  locative (exclusive). START and END default to the beginning and end
+  of the file, respectively.
+
+  Note that the file of the source location of :START and :END must be
+  the same. If SOURCE is pathname designator, then it must be absolute
+  so that the locative is context independent.
+
+  Finally, if specified LINE-PREFIX is a string that's prepended to
+  each line included in the documentation. For example, a string of
+  four spaces makes markdown think it's a code block.""")
+
+(defmethod exportable-locative-type-p ((locative-type (eql 'include)))
+  nil)
+
+(defmethod locate-object (symbol (locative-type (eql 'include))
+                          locative-args)
+  (destructuring-bind (source &key line-prefix header footer
+                       header-nl footer-nl) locative-args
+    (declare (ignore source line-prefix header footer header-nl footer-nl))
+    (make-reference symbol (cons locative-type locative-args))))
+
+(defmethod locate-and-find-source (symbol (locative-type (eql 'include))
+                                   locative-args)
+  (multiple-value-bind (file start) (include-region (first locative-args))
+    (assert file)
+    `(:location
+      (:file ,(namestring file))
+      (:position ,(1+ start))
+      nil)))
+
+(defmethod locate-and-document (symbol (locative-type (eql 'include))
+                                locative-args stream)
+  (destructuring-bind (source &key (line-prefix "") header footer
+                       header-nl footer-nl) locative-args
+    (when header
+      (format stream "~A" header))
+    (when header-nl
+      (format stream "~A~%" header-nl))
+    (format stream "~A"
+            (prefix-lines line-prefix
+                          (multiple-value-call #'file-subseq
+                            (include-region source))))
+    (when footer
+      (format stream "~A" footer))
+    (when footer-nl
+      (format stream "~A~%" footer-nl))))
+
+;;; Return the filename and start, end positions of the region to be
+;;; included.
+(defun include-region (source)
+  (cond ((or (stringp source) (pathnamep source))
+         (assert (uiop/pathname:absolute-pathname-p source) ()
+                 "Pathnames given as the SOURCE argument of the ~
+                 INCLUDE locative must be absolute, but ~S is not."
+                 source)
+         (values source 0 nil))
+        ((and source (listp source))
+         (destructuring-bind (&key start end) source
+           (let ((start (find-source (entry-to-reference start)))
+                 (end (find-source (entry-to-reference end))))
+             (when start
+               (check-location start))
+             (when end
+               (check-location end))
+             (let ((start-file (when start (location-file start)))
+                   (start-position (when start (location-position start)))
+                   (end-file (when end (location-file end)))
+                   (end-position (when end (location-position end))))
+               (when (and start end)
+                 (assert (string= (namestring (truename start-file))
+                                  (namestring (truename end-file)))
+                         () "Include starts in file ~S and ends in ~
+                         another file ~S." start-file end-file))
+               (values (or start-file end-file) start-position end-position)))))
+        (t
+         (error "Malformed include source ~S." source))))
+
+;;; Check that LOCATION looks like this:
+;;;
+;;;     (:location
+;;;      (:file "filename")
+;;;      (:position 1)
+;;;      (:snippet ""))
+(defun check-location (location)
+  (assert (listp location) () "Location ~S is not a list." location)
+  (assert (eq (first location) :location) ()
+          "Location ~S does not start with ~S." location :location)
+  (assert (and (location-file location)
+               (location-position location))
+          () "Location ~S should contain: ~S."
+          location '(:file :position)))
+
+(defun location-file (location)
+  (second (find :file (rest location) :key #'first)))
+
+(defun location-position (location)
+  (1- (second (find :position (rest location) :key #'first))))
+
+(defun file-subseq (pathname &optional start end)
+  (with-open-file (stream pathname)
+    (let ((*print-pretty* nil)
+          (start (or start 0))
+          (end (or end (file-length stream)))
+          (buffer-size 4096))
+      (file-position stream start)
+      (with-output-to-string (datum)
+        (let ((buffer (make-array buffer-size :element-type 'character)))
+          (loop
+            for bytes-read = (read-sequence
+                              buffer stream
+                              :end (min buffer-size
+                                        (- end (file-position stream))))
+            do (write-sequence buffer datum :start 0 :end bytes-read)
+            while (= bytes-read buffer-size)))))))

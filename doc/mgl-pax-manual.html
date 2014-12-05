@@ -284,8 +284,8 @@ automatically checked for up-to-dateness. See
 
 <h2><span class="navigation"> <a href="#x-28MGL-PAX-3A-40MGL-PAX-TUTORIAL-20MGL-PAX-3ASECTION-29" title="(MGL-PAX:@MGL-PAX-TUTORIAL MGL-PAX:SECTION)">&#8592;</a> <a href="#x-28MGL-PAX-3A-40MGL-PAX-MANUAL-20MGL-PAX-3ASECTION-29" title="(MGL-PAX:@MGL-PAX-MANUAL MGL-PAX:SECTION)">&#8593;</a> <a href="#x-28MGL-PAX-3A-40MGL-PAX-BASICS-20MGL-PAX-3ASECTION-29" title="(MGL-PAX:@MGL-PAX-BASICS MGL-PAX:SECTION)">&#8594;</a> <a href="#x-28MGL-PAX-3A-40MGL-PAX-EMACS-INTEGRATION-20MGL-PAX-3ASECTION-29" title="(MGL-PAX:@MGL-PAX-EMACS-INTEGRATION MGL-PAX:SECTION)">&#8634;</a></span>4 Emacs Integration</h2>
 
-<p>Integration into SLIME's <code>M-.</code> (<code>slime-edit-definition</code>) allows
-one to visit the source location of the thing that's identified by a
+<p>Integration into SLIME's <code>M-.</code> (<code>slime-edit-definition</code>) allows one
+to visit the source location of the thing that's identified by a
 symbol and the locative before or after the symbol in a buffer. With
 this extension, if a locative is the previous or the next expression
 around the symbol of interest, then <code>M-.</code> will go straight to the
@@ -326,9 +326,13 @@ locative separated by whitespace to preselect one of the
 possibilities.</p>
 
 <p>The <code>M-.</code> extensions can be enabled by adding this to your Emacs
-initialization file:</p>
+initialization file (or loading <code>src/pax.el</code>):</p>
 
-<pre><code><span class="code"><span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_167.html#IDX483" class="symbol"><i><span class="symbol">defun</span></i></a> slime-edit-locative-definition <span class="paren2">(<span class="code">name &amp;optional where</span>)</span>
+<p><a name='x-28MGL-PAX-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmega-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a></p>
+
+<pre><code><span class="code"><span class="comment">;;; MGL-PAX M-. integration
+</span>
+<span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_167.html#IDX483" class="symbol"><i><span class="symbol">defun</span></i></a> slime-edit-locative-definition <span class="paren2">(<span class="code">name &amp;optional where</span>)</span>
   <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_127.html#IDX392" class="symbol">or</a> <span class="paren3">(<span class="code">slime-locate-definition name <span class="paren4">(<span class="code">slime-locative-before</span>)</span></span>)</span>
       <span class="paren3">(<span class="code">slime-locate-definition name <span class="paren4">(<span class="code">slime-locative-after</span>)</span></span>)</span>
       <span class="paren3">(<span class="code">slime-locate-definition name <span class="paren4">(<span class="code">slime-locative-after-in-brackets</span>)</span></span>)</span>
@@ -356,10 +360,8 @@ initialization file:</p>
   <span class="paren2">(<span class="code">ignore-errors <span class="paren3">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_482.html#IDX1691" class="symbol">save-excursion</a>
                    <span class="paren4">(<span class="code">slime-end-of-symbol</span>)</span>
                    <span class="paren4">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_481.html#IDX1689" class="symbol">skip-chars-forward</a> <span class="string">"`"</span> <span class="paren5">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_63.html#IDX105" class="symbol">+</a> <span class="paren6">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_473.html#IDX1644" class="symbol">point</a></span>)</span> 1</span>)</span></span>)</span>
-                   <span class="paren4">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_126.html#IDX387" class="symbol">when</a> <span class="paren5">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_127.html#IDX391" class="symbol">and</a> <span class="paren6">(<span class="code">= 1 <span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_481.html#IDX1689" class="symbol">skip-chars-forward</a> <span class="string">"</span><span class="string">\\</span><span class="string">]"</span>
-                                                       <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_63.html#IDX105" class="symbol">+</a> <span class="paren3">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_473.html#IDX1644" class="symbol">point</a></span>)</span> 1</span>)</span></span>)</span></span>)</span>
-                              <span class="paren6">(<span class="code">= 1 <span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_481.html#IDX1689" class="symbol">skip-chars-forward</a> <span class="string">"</span><span class="string">\\</span><span class="string">["</span>
-                                                       <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_63.html#IDX105" class="symbol">+</a> <span class="paren3">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_473.html#IDX1644" class="symbol">point</a></span>)</span> 1</span>)</span></span>)</span></span>)</span></span>)</span>
+                   <span class="paren4">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_126.html#IDX387" class="symbol">when</a> <span class="paren5">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_127.html#IDX391" class="symbol">and</a> <span class="paren6">(<span class="code">= 1 <span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_481.html#IDX1689" class="symbol">skip-chars-forward</a> <span class="string">"</span><span class="string">\\</span><span class="string">]"</span> <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_63.html#IDX105" class="symbol">+</a> <span class="paren3">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_473.html#IDX1644" class="symbol">point</a></span>)</span> 1</span>)</span></span>)</span></span>)</span>
+                              <span class="paren6">(<span class="code">= 1 <span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_481.html#IDX1689" class="symbol">skip-chars-forward</a> <span class="string">"</span><span class="string">\\</span><span class="string">["</span> <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_63.html#IDX105" class="symbol">+</a> <span class="paren3">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_473.html#IDX1644" class="symbol">point</a></span>)</span> 1</span>)</span></span>)</span></span>)</span></span>)</span>
                      <span class="paren5">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_495.html#IDX1750" class="symbol">buffer-substring-no-properties</a>
                       <span class="paren6">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_473.html#IDX1644" class="symbol">point</a></span>)</span>
                       <span class="paren6">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_125.html#IDX383" class="symbol"><i><span class="symbol">progn</span></i></a> <span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_564.html#IDX2061" class="symbol">search-forward</a> <span class="string">"]"</span> <a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_6.html#SEC6" class="symbol">nil</a> <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_63.html#IDX105" class="symbol">+</a> <span class="paren3">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_473.html#IDX1644" class="symbol">point</a></span>)</span> 1000</span>)</span></span>)</span>
@@ -372,9 +374,8 @@ initialization file:</p>
             <span class="comment">;; Silently fail if mgl-pax is not loaded.
 </span>            `<span class="paren1">(<span class="code">cl:when <span class="paren2">(<span class="code">cl:find-package <span class="keyword">:mgl-pax</span></span>)</span>
                       <span class="paren2">(<span class="code">cl:funcall
-                       <span class="paren3">(<span class="code">cl:find-symbol 
-                        <span class="paren4">(<span class="code">cl:symbol-name <span class="keyword">:locate-definition-for-emacs</span></span>)</span>
-                        <span class="keyword">:mgl-pax</span></span>)</span>
+                       <span class="paren3">(<span class="code">cl:find-symbol
+                        <span class="paren4">(<span class="code">cl:symbol-name <span class="keyword">:locate-definition-for-emacs</span></span>)</span> <span class="keyword">:mgl-pax</span></span>)</span>
                        ,name ,locative</span>)</span></span>)</span></span>)</span></span>)</span></span>)</span>
       <span class="paren4">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_126.html#IDX387" class="symbol">when</a> <span class="paren5">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_127.html#IDX391" class="symbol">and</a> <span class="paren6">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_81.html#IDX199" class="symbol">consp</a> location</span>)</span>
                  <span class="paren6">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_127.html#IDX390" class="symbol">not</a> <span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_56.html#IDX68" class="symbol">eq</a> <span class="paren2">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_82.html#IDX205" class="symbol">car</a> location</span>)</span> <span class="keyword">:error</span></span>)</span></span>)</span></span>)</span>
@@ -866,7 +867,7 @@ is visible only when the mouse is over the heading. Needs
 <ul>
 <li><p>[variable] <strong>*DOCUMENT-NORMALIZE-PACKAGES*</strong> <em>T</em></p>
 
-<p>If true, symbols are printed relative to <code>SECTION-PACKAGE</code> of the
+<p>If true, symbols are printed relative to <a href="#x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29" title="(MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION))"><code>SECTION-PACKAGE</code></a> of the
 innermost containing section or with full package names if there is
 no containing section. To eliminate ambiguity <code>[in package ...]</code>
 messages are printed right after the section heading if necessary.
@@ -1046,6 +1047,63 @@ to land at the <code>(DEFINE-LOCATIVE-TYPE VARIABLE ...)</code> form.
 Similarly, <code>(LOCATIVE LOCATIVE)</code> leads to this very definition.</p></li>
 </ul>
 
+<p><a name='x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29'></a></p>
+
+<ul>
+<li><p>[locative] <strong>INCLUDE</strong> <em>SOURCE &amp;KEY LINE-PREFIX HEADER FOOTER HEADER-NL FOOTER-NL</em></p>
+
+<p>Refers to a region of a file. <code>SOURCE</code> can be a string or a
+pathname in which case the whole file is being pointed to or it can
+explicitly supply <code>START</code>, <code>END</code> locatives. <a href="#x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29" title="(MGL-PAX:INCLUDE MGL-PAX:LOCATIVE)"><code>INCLUDE</code></a> is typically used to
+include non-lisp files in the documentation (say markdown or elisp
+as the next example) or regions of lisp source files. This can
+reduce clutter and duplication.</p>
+
+<pre><code><span class="code"><span class="paren1">(<span class="code"><i><span class="symbol">defsection</span></i> example-section <span class="paren2">(<span class="code"></span>)</span>
+  <span class="paren2">(<span class="code">pax.el <span class="paren3">(<span class="code">include #.<span class="paren4">(<span class="code">asdf:system-relative-pathname <span class="keyword">:mgl-pax</span> <span class="string">"src/pax.el"</span></span>)</span>
+                   <span class="keyword">:header-nl</span> <span class="string">"```elisp"</span> <span class="keyword">:footer-nl</span> <span class="string">"```"</span></span>)</span></span>)</span>
+  <span class="paren2">(<span class="code">foo-example <span class="paren3">(<span class="code">include <span class="paren4">(<span class="code"><span class="keyword">:start</span> <span class="paren5">(<span class="code">foo <i><span class="symbol">function</span></i></span>)</span>
+                         <span class="keyword">:end</span> <span class="paren5">(<span class="code">end-of-foo-example variable</span>)</span></span>)</span>
+                        <span class="keyword">:header-nl</span> <span class="string">"```commonlisp"</span>
+                        <span class="keyword">:footer-nl</span> <span class="string">"```"</span></span>)</span></span>)</span>
+
+<span class="paren2">(<span class="code"><i><span class="symbol">defun</span></i> foo <span class="paren3">(<span class="code">x</span>)</span>
+  <span class="paren3">(<span class="code">1+ x</span>)</span></span>)</span>
+
+<span class="comment">;;; Since file regions are copied verbatim, comments survive.
+</span><span class="paren2">(<span class="code"><i><span class="symbol">defmacro</span></i> bar <span class="paren3">(<span class="code"></span>)</span></span>)</span>
+
+<span class="comment">;;; This comment is the last thing in FOO-EXAMPLE's
+</span><span class="comment">;;; documentation since we use the dummy END-OF-FOO-EXAMPLE
+</span><span class="comment">;;; variable to mark the end location.
+</span><span class="paren2">(<span class="code"><i><span class="symbol">defvar</span></i> end-of-foo-example</span>)</span>
+
+<span class="comment">;;; More irrelevant code follows.</span></span></span></span></code></pre>
+
+<p>In the above example, pressing <code>M-.</code> on <a href="#x-28MGL-PAX-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmega-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29" title="(MGL-PAX:PAX.EL (MGL-PAX:INCLUDE #P\&quot;/home/mega/own/mgl-pax/src/pax.el\&quot; :HEADER-NL \&quot;```elisp\&quot; :FOOTER-NL \&quot;```\&quot;))"><code>PAX.EL</code></a> will open the
+<code>src/pax.el</code> file and put the cursor on its first character. <code>M-.</code>
+on FOO-EXAMPLE will go to the source location of the <code>(asdf:system
+locative)</code> locative.</p>
+
+<p>When documentation is generated, the entire <a href="#x-28MGL-PAX-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmega-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29" title="(MGL-PAX:PAX.EL (MGL-PAX:INCLUDE #P\&quot;/home/mega/own/mgl-pax/src/pax.el\&quot; :HEADER-NL \&quot;```elisp\&quot; :FOOTER-NL \&quot;```\&quot;))"><code>pax.el</code></a> file is
+included in the markdown surrounded by the strings given as
+<code>HEADER-NL</code> and <code>FOOTER-NL</code> (if any). The trailing newline character is
+assumed implicitly. If that's undesirable, then use <code>HEADER</code> and
+<code>FOOTER</code> instead. The documentation of FOO-EXAMPLE will be the region
+of the file from the source location of the <code>START</code>
+locative (inclusive) to the source location of the <code>END</code>
+locative (exclusive). <code>START</code> and <code>END</code> default to the beginning and end
+of the file, respectively.</p>
+
+<p>Note that the file of the source location of <code>:START</code> and <code>:END</code> must be
+the same. If <code>SOURCE</code> is pathname designator, then it must be absolute
+so that the locative is context independent.</p>
+
+<p>Finally, if specified <code>LINE-PREFIX</code> is a string that's prepended to
+each line included in the documentation. For example, a string of
+four spaces makes markdown think it's a code block.</p></li>
+</ul>
+
 <p><a name='x-28MGL-PAX-3A-40MGL-PAX-EXTENSION-API-20MGL-PAX-3ASECTION-29'></a></p>
 
 <h2><span class="navigation"> <a href="#x-28MGL-PAX-3A-40MGL-PAX-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29" title="(MGL-PAX:@MGL-PAX-LOCATIVE-TYPES MGL-PAX:SECTION)">&#8592;</a> <a href="#x-28MGL-PAX-3A-40MGL-PAX-MANUAL-20MGL-PAX-3ASECTION-29" title="(MGL-PAX:@MGL-PAX-MANUAL MGL-PAX:SECTION)">&#8593;</a> <a href="#x-28MGL-PAX-3A-40MGL-PAX-LOCATIVES-AND-REFERENCES-20MGL-PAX-3ASECTION-29" title="(MGL-PAX:@MGL-PAX-LOCATIVES-AND-REFERENCES MGL-PAX:SECTION)">&#8594;</a> <a href="#x-28MGL-PAX-3A-40MGL-PAX-EXTENSION-API-20MGL-PAX-3ASECTION-29" title="(MGL-PAX:@MGL-PAX-EXTENSION-API MGL-PAX:SECTION)">&#8634;</a></span>9 Extension API</h2>
@@ -1182,34 +1240,55 @@ Finally, for <code>M-.</code> <a href="#x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNC
 makes sense. Here is a stripped down example of how all this is done
 for <a href="#x-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29" title="(ASDF/SYSTEM:SYSTEM MGL-PAX:LOCATIVE)"><code>ASDF:SYSTEM:</code></a></p>
 
-<pre><code><span class="code"><span class="paren1">(<span class="code"><i><span class="symbol">define-locative-type</span></i> asdf:system <span class="paren2">(<span class="code"></span>)</span>
-  <span class="string">"Refers to an asdf system."</span></span>)</span>
+<p><a name='x-28MGL-PAX-3AASDF-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-28-3ASTART-20-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29-20-3AEND-20-28MGL-PAX-3A-3AEND-OF-ASDF-EXAMPLE-20VARIABLE-29-29-20-3AHEADER-NL-20-22-60-60-60commonlisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a></p>
 
-<span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> exportable-locative-type-p <span class="paren2">(<span class="code"><span class="paren3">(<span class="code">locative-type <span class="paren4">(<span class="code">eql 'asdf:system</span>)</span></span>)</span></span>)</span>
-  nil</span>)</span>
+<pre><code><span class="code"><span class="paren1">(<span class="code"><i><span class="symbol">define-locative-type</span></i> asdf:system <span class="paren2">(<span class="code"></span>)</span>
+  <span class="string">"Refers to an asdf system. The generated documentation will include
+  meta information extracted from the system definition. This also
+  serves as an example of a symbol that's not accessible in the
+  current package and consequently is not exported."</span></span>)</span>
 
 <span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> locate-object <span class="paren2">(<span class="code">symbol <span class="paren3">(<span class="code">locative-type <span class="paren4">(<span class="code">eql 'asdf:system</span>)</span></span>)</span>
                           locative-args</span>)</span>
   <span class="paren2">(<span class="code">assert <span class="paren3">(<span class="code">endp locative-args</span>)</span></span>)</span>
-  <span class="paren2">(<span class="code">or <span class="paren3">(<span class="code">asdf:find-system symbol nil</span>)</span>
+  <span class="comment">;; FIXME: This is slow as hell.
+</span>  <span class="paren2">(<span class="code">or <span class="paren3">(<span class="code">asdf:find-system symbol nil</span>)</span>
       <span class="paren3">(<span class="code">locate-error</span>)</span></span>)</span></span>)</span>
 
 <span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> canonical-reference <span class="paren2">(<span class="code"><span class="paren3">(<span class="code">system asdf:system</span>)</span></span>)</span>
-  <span class="paren2">(<span class="code">make-reference <span class="paren3">(<span class="code">asdf/find-system:primary-system-name system</span>)</span>
-                  'asdf:system</span>)</span></span>)</span>
+  <span class="paren2">(<span class="code">make-reference <span class="paren3">(<span class="code">asdf/find-system:primary-system-name system</span>)</span> 'asdf:system</span>)</span></span>)</span>
 
 <span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> document-object <span class="paren2">(<span class="code"><span class="paren3">(<span class="code">system asdf:system</span>)</span> stream</span>)</span>
   <span class="paren2">(<span class="code"><i><span class="symbol">with-heading</span></i> <span class="paren3">(<span class="code">stream system
                         <span class="paren4">(<span class="code">format nil <span class="string">"~A ASDF System Details"</span>
-                                <span class="paren5">(<span class="code">asdf/find-system:primary-system-name
-                                 system</span>)</span></span>)</span></span>)</span>
-    <span class="paren3">(<span class="code">format stream <span class="string">"Some content~%"</span></span>)</span></span>)</span></span>)</span>
+                                <span class="paren5">(<span class="code">asdf/find-system:primary-system-name system</span>)</span></span>)</span></span>)</span>
+    <span class="paren3">(<span class="code"><i><span class="symbol">flet</span></i> <span class="paren4">(<span class="code"><span class="paren5">(<span class="code">foo <span class="paren6">(<span class="code">name fn &amp;key type</span>)</span>
+             <span class="paren6">(<span class="code"><i><span class="symbol">let</span></i> <span class="paren1">(<span class="code"><span class="paren2">(<span class="code">value <span class="paren3">(<span class="code">funcall fn system</span>)</span></span>)</span></span>)</span>
+               <span class="paren1">(<span class="code">when value
+                 <span class="paren2">(<span class="code">case type
+                   <span class="paren3">(<span class="code"><span class="paren4">(<span class="code"><span class="keyword">:link</span></span>)</span>
+                    <span class="paren4">(<span class="code">format stream <span class="string">"- ~A: [~A](~A)~%"</span> name value value</span>)</span></span>)</span>
+                   <span class="paren3">(<span class="code"><span class="paren4">(<span class="code"><span class="keyword">:mailto</span></span>)</span>
+                    <span class="paren4">(<span class="code">format stream <span class="string">"- ~A: [~A](mailto:~A)~%"</span>
+                            name value value</span>)</span></span>)</span>
+                   <span class="paren3">(<span class="code"><span class="paren4">(<span class="code">nil</span>)</span>
+                    <span class="paren4">(<span class="code">format stream <span class="string">"- ~A: ~A~%"</span> name value</span>)</span></span>)</span></span>)</span></span>)</span></span>)</span></span>)</span></span>)</span>
+      <span class="paren4">(<span class="code">foo <span class="string">"Version"</span> 'asdf/component:component-version</span>)</span>
+      <span class="paren4">(<span class="code">foo <span class="string">"Description"</span> 'asdf/system:system-description</span>)</span>
+      <span class="paren4">(<span class="code">foo <span class="string">"Licence"</span> 'asdf/system:system-licence</span>)</span>
+      <span class="paren4">(<span class="code">foo <span class="string">"Author"</span> 'asdf/system:system-author</span>)</span>
+      <span class="paren4">(<span class="code">foo <span class="string">"Maintainer"</span> 'asdf/system:system-maintainer</span>)</span>
+      <span class="paren4">(<span class="code">foo <span class="string">"Mailto"</span> 'asdf/system:system-mailto <span class="keyword">:type</span> <span class="keyword">:mailto</span></span>)</span>
+      <span class="paren4">(<span class="code">foo <span class="string">"Homepage"</span> 'asdf/system:system-homepage <span class="keyword">:type</span> <span class="keyword">:link</span></span>)</span>
+      <span class="paren4">(<span class="code">foo <span class="string">"Bug tracker"</span> 'asdf/system:system-bug-tracker</span>)</span>
+      <span class="paren4">(<span class="code">foo <span class="string">"Long description"</span> 'asdf/system:system-long-description</span>)</span></span>)</span></span>)</span></span>)</span>
 
 <span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> find-source <span class="paren2">(<span class="code"><span class="paren3">(<span class="code">system asdf:system</span>)</span></span>)</span>
   `<span class="paren2">(<span class="code"><span class="keyword">:location</span>
     <span class="paren3">(<span class="code"><span class="keyword">:file</span> ,<span class="paren4">(<span class="code">namestring <span class="paren5">(<span class="code">asdf/system:system-source-file system</span>)</span></span>)</span></span>)</span>
     <span class="paren3">(<span class="code"><span class="keyword">:position</span> 1</span>)</span>
-    <span class="paren3">(<span class="code"><span class="keyword">:snippet</span> <span class="string">""</span></span>)</span></span>)</span></span>)</span></span></code></pre>
+    <span class="paren3">(<span class="code"><span class="keyword">:snippet</span> <span class="string">""</span></span>)</span></span>)</span></span>)</span>
+</span></code></pre>
 
 <p><a name='x-28MGL-PAX-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29'></a></p>
 
@@ -1366,12 +1445,13 @@ and <a href="#x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNCTION-29" title="(MGL-PAX:F
 list for <code>EQL</code> specializing pleasure. Here is a stripped down example
 of how the <a href="#x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29" title="(VARIABLE MGL-PAX:LOCATIVE)"><code>VARIABLE</code></a> locative is defined:</p>
 
+<p><a name='x-28MGL-PAX-3AVARIABLE-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-28-3ASTART-20-28VARIABLE-20MGL-PAX-3ALOCATIVE-29-20-3AEND-20-28MGL-PAX-3A-3AEND-OF-VARIABLE-EXAMPLE-20VARIABLE-29-29-20-3AHEADER-NL-20-22-60-60-60commonlisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a></p>
+
 <pre><code><span class="code"><span class="paren1">(<span class="code"><i><span class="symbol">define-locative-type</span></i> variable <span class="paren2">(<span class="code">&amp;optional initform</span>)</span>
   <span class="string">"Refers to a global special variable. INITFORM, or if not specified,
   the global value of the variable is included in the documentation."</span></span>)</span>
 
-<span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> locate-object <span class="paren2">(<span class="code">symbol <span class="paren3">(<span class="code">locative-type <span class="paren4">(<span class="code">eql 'variable</span>)</span></span>)</span>
-                          locative-args</span>)</span>
+<span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> locate-object <span class="paren2">(<span class="code">symbol <span class="paren3">(<span class="code">locative-type <span class="paren4">(<span class="code">eql 'variable</span>)</span></span>)</span> locative-args</span>)</span>
   <span class="paren2">(<span class="code">assert <span class="paren3">(<span class="code">&lt;= <span class="paren4">(<span class="code">length locative-args</span>)</span> 1</span>)</span></span>)</span>
   <span class="paren2">(<span class="code">make-reference symbol <span class="paren3">(<span class="code">cons locative-type locative-args</span>)</span></span>)</span></span>)</span>
 
@@ -1394,7 +1474,8 @@ of how the <a href="#x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29" title="(VARIABLE MGL-
   <span class="paren2">(<span class="code">declare <span class="paren3">(<span class="code">ignore locative-args</span>)</span></span>)</span>
   <span class="paren2">(<span class="code">find-one-location <span class="paren3">(<span class="code">swank-backend:find-definitions symbol</span>)</span>
                      '<span class="paren3">(<span class="code"><span class="string">"variable"</span> <span class="string">"defvar"</span> <span class="string">"defparameter"</span>
-                       <span class="string">"special-declaration"</span></span>)</span></span>)</span></span>)</span></span></code></pre>
+                       <span class="string">"special-declaration"</span></span>)</span></span>)</span></span>)</span>
+</span></code></pre>
 
 <p><a name='x-28MGL-PAX-3ACOLLECT-REACHABLE-OBJECTS-20-28METHOD-20NIL-20-28MGL-PAX-3AREFERENCE-29-29-29'></a></p>
 
@@ -1501,8 +1582,8 @@ in a particular context. An example will make everything clear:</p>
   works and it can also be included in DEFSECTION forms.)"</span></span>)</span>
 
 <span class="paren1">(<span class="code"><i><span class="symbol">define-definer-for-symbol-locative-type</span></i> <i><span class="symbol">define-direction</span></i> direction <span class="paren2">(<span class="code"></span>)</span>
-  <span class="string">"With DEFINE-DIRECTION one document how what a symbol means when
-  interpreted as a direction."</span></span>)</span>
+  <span class="string">"With DEFINE-DIRECTION one can document how what a symbol means
+  when interpreted as a direction."</span></span>)</span>
 
 <span class="paren1">(<span class="code"><i><span class="symbol">define-direction</span></i> up <span class="paren2">(<span class="code"></span>)</span>
   <span class="string">"UP is equivalent to a coordinate delta of (0, -1)."</span></span>)</span></span></code></pre>
@@ -1548,6 +1629,15 @@ presented.</p>
 
 <p>The name of the global variable whose value is
 this section object.</p></li>
+</ul>
+
+<p><a name='x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a></p>
+
+<ul>
+<li><p>[reader] <strong>SECTION-PACKAGE</strong> <em>SECTION</em> <em>(:PACKAGE)</em></p>
+
+<p><code>*PACKAGE*</code> will be bound to this package when
+generating documentation for this section.</p></li>
 </ul>
 
 <p><a name='x-28MGL-PAX-3ASECTION-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a></p>
@@ -1694,9 +1784,13 @@ the example:</p>
 but the output and the first return value got updated.</p>
 
 <p>Transcription support in emacs can be enabled by adding this to your
-Emacs initialization file:</p>
+Emacs initialization file (or loading <code>src/transcribe.el</code>):</p>
 
-<pre><code><span class="code"><span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_167.html#IDX483" class="symbol"><i><span class="symbol">defun</span></i></a> mgl-pax-transcribe-last-expression <span class="paren2">(<span class="code"></span>)</span>
+<p><a name='x-28MGL-PAX-3A-3ATRANSCRIBE-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmega-2Fown-2Fmgl-pax-2Fsrc-2Ftranscribe-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a></p>
+
+<pre><code><span class="code"><span class="comment">;;; MGL-PAX transcription
+</span>
+<span class="paren1">(<span class="code"><a href="http://www.gnu.org/software/emacs/elisp-manual/html_node/elisp_167.html#IDX483" class="symbol"><i><span class="symbol">defun</span></i></a> mgl-pax-transcribe-last-expression <span class="paren2">(<span class="code"></span>)</span>
   <span class="string">"A bit like C-u C-x C-e (slime-eval-last-expression) that
 inserts the output and values of the sexp before the point,
 this does the same but with MGL-PAX:TRANSCRIBE."</span>

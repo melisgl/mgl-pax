@@ -243,8 +243,8 @@ automatically checked for up-to-dateness. See
 
 ## Emacs Integration
 
-Integration into SLIME's `M-.` (`slime-edit-definition`) allows
-one to visit the source location of the thing that's identified by a
+Integration into SLIME's `M-.` (`slime-edit-definition`) allows one
+to visit the source location of the thing that's identified by a
 symbol and the locative before or after the symbol in a buffer. With
 this extension, if a locative is the previous or the next expression
 around the symbol of interest, then `M-.` will go straight to the
@@ -286,9 +286,11 @@ locative separated by whitespace to preselect one of the
 possibilities.
 
 The `M-.` extensions can be enabled by adding this to your Emacs
-initialization file:
+initialization file (or loading `src/pax.el`):
 
 ```elisp
+;;; MGL-PAX M-. integration
+
 (defun slime-edit-locative-definition (name &optional where)
   (or (slime-locate-definition name (slime-locative-before))
       (slime-locate-definition name (slime-locative-after))
@@ -317,10 +319,8 @@ initialization file:
   (ignore-errors (save-excursion
                    (slime-end-of-symbol)
                    (skip-chars-forward "`" (+ (point) 1))
-                   (when (and (= 1 (skip-chars-forward "\\]"
-                                                       (+ (point) 1)))
-                              (= 1 (skip-chars-forward "\\["
-                                                       (+ (point) 1))))
+                   (when (and (= 1 (skip-chars-forward "\\]" (+ (point) 1)))
+                              (= 1 (skip-chars-forward "\\[" (+ (point) 1))))
                      (buffer-substring-no-properties
                       (point)
                       (progn (search-forward "]" nil (+ (point) 1000))
@@ -333,9 +333,8 @@ initialization file:
             ;; Silently fail if mgl-pax is not loaded.
             `(cl:when (cl:find-package :mgl-pax)
                       (cl:funcall
-                       (cl:find-symbol 
-                        (cl:symbol-name :locate-definition-for-emacs)
-                        :mgl-pax)
+                       (cl:find-symbol
+                        (cl:symbol-name :locate-definition-for-emacs) :mgl-pax)
                        ,name ,locative)))))
       (when (and (consp location)
                  (not (eq (car location) :error)))
@@ -347,7 +346,6 @@ initialization file:
 
 (add-hook 'slime-edit-definition-hooks 'slime-edit-locative-definition)
 ```
-
 
 ## Basics
 
@@ -869,6 +867,61 @@ locatives take no arguments.
     to land at the `(DEFINE-LOCATIVE-TYPE VARIABLE ...)` form.
     Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.
 
+- [locative] INCLUDE SOURCE &KEY LINE-PREFIX HEADER FOOTER HEADER-NL FOOTER-NL
+
+    Refers to a region of a file. SOURCE can be a string or a
+    pathname in which case the whole file is being pointed to or it can
+    explicitly supply START, END locatives. INCLUDE is typically used to
+    include non-lisp files in the documentation (say markdown or elisp
+    as the next example) or regions of lisp source files. This can
+    reduce clutter and duplication.
+    
+    ```commonlisp
+    (defsection example-section ()
+      (pax.el (include #.(asdf:system-relative-pathname :mgl-pax "src/pax.el")
+                       :header-nl "```elisp" :footer-nl "```"))
+      (foo-example (include (:start (foo function)
+                             :end (end-of-foo-example variable))
+                            :header-nl "```commonlisp"
+                            :footer-nl "```"))
+    
+    (defun foo (x)
+      (1+ x))
+    
+    ;;; Since file regions are copied verbatim, comments survive.
+    (defmacro bar ())
+    
+    ;;; This comment is the last thing in FOO-EXAMPLE's
+    ;;; documentation since we use the dummy END-OF-FOO-EXAMPLE
+    ;;; variable to mark the end location.
+    (defvar end-of-foo-example)
+    
+    ;;; More irrelevant code follows.
+    ```
+    
+    In the above example, pressing `M-.` on PAX.EL will open the
+    `src/pax.el` file and put the cursor on its first character. `M-.`
+    on FOO-EXAMPLE will go to the source location of the `(asdf:system
+    locative)` locative.
+    
+    When documentation is generated, the entire `pax.el` file is
+    included in the markdown surrounded by the strings given as
+    HEADER-NL and FOOTER-NL (if any). The trailing newline character is
+    assumed implicitly. If that's undesirable, then use HEADER and
+    FOOTER instead. The documentation of FOO-EXAMPLE will be the region
+    of the file from the source location of the START
+    locative (inclusive) to the source location of the END
+    locative (exclusive). START and END default to the beginning and end
+    of the file, respectively.
+    
+    Note that the file of the source location of :START and :END must be
+    the same. If SOURCE is pathname designator, then it must be absolute
+    so that the locative is context independent.
+    
+    Finally, if specified LINE-PREFIX is a string that's prepended to
+    each line included in the documentation. For example, a string of
+    four spaces makes markdown think it's a code block.
+
 ## Extension API
 
 ### Locatives and References
@@ -952,35 +1005,53 @@ for ASDF:SYSTEM:
 
 ```commonlisp
 (define-locative-type asdf:system ()
-  "Refers to an asdf system.")
-
-(defmethod exportable-locative-type-p ((locative-type (eql 'asdf:system)))
-  nil)
+  "Refers to an asdf system. The generated documentation will include
+  meta information extracted from the system definition. This also
+  serves as an example of a symbol that's not accessible in the
+  current package and consequently is not exported.")
 
 (defmethod locate-object (symbol (locative-type (eql 'asdf:system))
                           locative-args)
   (assert (endp locative-args))
+  ;; FIXME: This is slow as hell.
   (or (asdf:find-system symbol nil)
       (locate-error)))
 
 (defmethod canonical-reference ((system asdf:system))
-  (make-reference (asdf/find-system:primary-system-name system)
-                  'asdf:system))
+  (make-reference (asdf/find-system:primary-system-name system) 'asdf:system))
 
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
                         (format nil "~A ASDF System Details"
-                                (asdf/find-system:primary-system-name
-                                 system)))
-    (format stream "Some content~%")))
+                                (asdf/find-system:primary-system-name system)))
+    (flet ((foo (name fn &key type)
+             (let ((value (funcall fn system)))
+               (when value
+                 (case type
+                   ((:link)
+                    (format stream "- ~A: [~A](~A)~%" name value value))
+                   ((:mailto)
+                    (format stream "- ~A: [~A](mailto:~A)~%"
+                            name value value))
+                   ((nil)
+                    (format stream "- ~A: ~A~%" name value)))))))
+      (foo "Version" 'asdf/component:component-version)
+      (foo "Description" 'asdf/system:system-description)
+      (foo "Licence" 'asdf/system:system-licence)
+      (foo "Author" 'asdf/system:system-author)
+      (foo "Maintainer" 'asdf/system:system-maintainer)
+      (foo "Mailto" 'asdf/system:system-mailto :type :mailto)
+      (foo "Homepage" 'asdf/system:system-homepage :type :link)
+      (foo "Bug tracker" 'asdf/system:system-bug-tracker)
+      (foo "Long description" 'asdf/system:system-long-description))))
 
 (defmethod find-source ((system asdf:system))
   `(:location
     (:file ,(namestring (asdf/system:system-source-file system)))
     (:position 1)
     (:snippet "")))
-```
 
+```
 
 - [macro] DEFINE-LOCATIVE-TYPE LOCATIVE-TYPE LAMBDA-LIST &BODY DOCSTRING
 
@@ -1107,8 +1178,7 @@ of how the VARIABLE locative is defined:
   "Refers to a global special variable. INITFORM, or if not specified,
   the global value of the variable is included in the documentation.")
 
-(defmethod locate-object (symbol (locative-type (eql 'variable))
-                          locative-args)
+(defmethod locate-object (symbol (locative-type (eql 'variable)) locative-args)
   (assert (<= (length locative-args) 1))
   (make-reference symbol (cons locative-type locative-args)))
 
@@ -1132,8 +1202,8 @@ of how the VARIABLE locative is defined:
   (find-one-location (swank-backend:find-definitions symbol)
                      '("variable" "defvar" "defparameter"
                        "special-declaration")))
-```
 
+```
 
 - [method] COLLECT-REACHABLE-OBJECTS (REFERENCE REFERENCE)
 
@@ -1206,8 +1276,8 @@ with symbols in a certain context.
       works and it can also be included in DEFSECTION forms.)")
     
     (define-definer-for-symbol-locative-type define-direction direction ()
-      "With DEFINE-DIRECTION one document how what a symbol means when
-      interpreted as a direction.")
+      "With DEFINE-DIRECTION one can document how what a symbol means
+      when interpreted as a direction.")
     
     (define-direction up ()
       "UP is equivalent to a coordinate delta of (0, -1).")
@@ -1240,6 +1310,11 @@ presented.
 
     The name of the global variable whose value is
     this section object.
+
+- [reader] SECTION-PACKAGE SECTION (:PACKAGE)
+
+    *PACKAGE* will be bound to this package when
+    generating documentation for this section.
 
 - [reader] SECTION-TITLE SECTION (:TITLE)
 
@@ -1366,9 +1441,11 @@ Note how the indentation and the comment of `(1 2)` was left alone
 but the output and the first return value got updated.
 
 Transcription support in emacs can be enabled by adding this to your
-Emacs initialization file:
+Emacs initialization file (or loading `src/transcribe.el`):
 
 ```elisp
+;;; MGL-PAX transcription
+
 (defun mgl-pax-transcribe-last-expression ()
   "A bit like C-u C-x C-e (slime-eval-last-expression) that
 inserts the output and values of the sexp before the point,
@@ -1413,7 +1490,6 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
         (error "MGL-PAX is not loaded.")
       transcription)))
 ```
-
 
 ### Transcript API
 

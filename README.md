@@ -274,8 +274,8 @@ automatically checked for up-to-dateness. See
 
 ## 4 Emacs Integration
 
-Integration into SLIME's `M-.` (`slime-edit-definition`) allows
-one to visit the source location of the thing that's identified by a
+Integration into SLIME's `M-.` (`slime-edit-definition`) allows one
+to visit the source location of the thing that's identified by a
 symbol and the locative before or after the symbol in a buffer. With
 this extension, if a locative is the previous or the next expression
 around the symbol of interest, then `M-.` will go straight to the
@@ -317,9 +317,13 @@ locative separated by whitespace to preselect one of the
 possibilities.
 
 The `M-.` extensions can be enabled by adding this to your Emacs
-initialization file:
+initialization file (or loading `src/pax.el`):
+
+<a name='x-28MGL-PAX-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmega-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
 
 ```elisp
+;;; MGL-PAX M-. integration
+
 (defun slime-edit-locative-definition (name &optional where)
   (or (slime-locate-definition name (slime-locative-before))
       (slime-locate-definition name (slime-locative-after))
@@ -348,10 +352,8 @@ initialization file:
   (ignore-errors (save-excursion
                    (slime-end-of-symbol)
                    (skip-chars-forward "`" (+ (point) 1))
-                   (when (and (= 1 (skip-chars-forward "\\]"
-                                                       (+ (point) 1)))
-                              (= 1 (skip-chars-forward "\\["
-                                                       (+ (point) 1))))
+                   (when (and (= 1 (skip-chars-forward "\\]" (+ (point) 1)))
+                              (= 1 (skip-chars-forward "\\[" (+ (point) 1))))
                      (buffer-substring-no-properties
                       (point)
                       (progn (search-forward "]" nil (+ (point) 1000))
@@ -364,9 +366,8 @@ initialization file:
             ;; Silently fail if mgl-pax is not loaded.
             `(cl:when (cl:find-package :mgl-pax)
                       (cl:funcall
-                       (cl:find-symbol 
-                        (cl:symbol-name :locate-definition-for-emacs)
-                        :mgl-pax)
+                       (cl:find-symbol
+                        (cl:symbol-name :locate-definition-for-emacs) :mgl-pax)
                        ,name ,locative)))))
       (when (and (consp location)
                  (not (eq (car location) :error)))
@@ -378,7 +379,6 @@ initialization file:
 
 (add-hook 'slime-edit-definition-hooks 'slime-edit-locative-definition)
 ```
-
 
 <a name='x-28MGL-PAX-3A-40MGL-PAX-BASICS-20MGL-PAX-3ASECTION-29'></a>
 
@@ -833,7 +833,7 @@ described below.
 
 - [variable] **\*DOCUMENT-NORMALIZE-PACKAGES\*** *T*
 
-    If true, symbols are printed relative to `SECTION-PACKAGE` of the
+    If true, symbols are printed relative to [`SECTION-PACKAGE`][87c7] of the
     innermost containing section or with full package names if there is
     no containing section. To eliminate ambiguity `[in package ...]`
     messages are printed right after the section heading if necessary.
@@ -976,6 +976,63 @@ locatives take no arguments.
     to land at the `(DEFINE-LOCATIVE-TYPE VARIABLE ...)` form.
     Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.
 
+<a name='x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29'></a>
+
+- [locative] **INCLUDE** *SOURCE &KEY LINE-PREFIX HEADER FOOTER HEADER-NL FOOTER-NL*
+
+    Refers to a region of a file. `SOURCE` can be a string or a
+    pathname in which case the whole file is being pointed to or it can
+    explicitly supply `START`, `END` locatives. [`INCLUDE`][6f8d] is typically used to
+    include non-lisp files in the documentation (say markdown or elisp
+    as the next example) or regions of lisp source files. This can
+    reduce clutter and duplication.
+    
+    ```commonlisp
+    (defsection example-section ()
+      (pax.el (include #.(asdf:system-relative-pathname :mgl-pax "src/pax.el")
+                       :header-nl "```elisp" :footer-nl "```"))
+      (foo-example (include (:start (foo function)
+                             :end (end-of-foo-example variable))
+                            :header-nl "```commonlisp"
+                            :footer-nl "```"))
+    
+    (defun foo (x)
+      (1+ x))
+    
+    ;;; Since file regions are copied verbatim, comments survive.
+    (defmacro bar ())
+    
+    ;;; This comment is the last thing in FOO-EXAMPLE's
+    ;;; documentation since we use the dummy END-OF-FOO-EXAMPLE
+    ;;; variable to mark the end location.
+    (defvar end-of-foo-example)
+    
+    ;;; More irrelevant code follows.
+    ```
+    
+    In the above example, pressing `M-.` on [`PAX.EL`][ad5a] will open the
+    `src/pax.el` file and put the cursor on its first character. `M-.`
+    on FOO-EXAMPLE will go to the source location of the `(asdf:system
+    locative)` locative.
+    
+    When documentation is generated, the entire [`pax.el`][ad5a] file is
+    included in the markdown surrounded by the strings given as
+    `HEADER-NL` and `FOOTER-NL` (if any). The trailing newline character is
+    assumed implicitly. If that's undesirable, then use `HEADER` and
+    `FOOTER` instead. The documentation of FOO-EXAMPLE will be the region
+    of the file from the source location of the `START`
+    locative (inclusive) to the source location of the `END`
+    locative (exclusive). `START` and `END` default to the beginning and end
+    of the file, respectively.
+    
+    Note that the file of the source location of `:START` and `:END` must be
+    the same. If `SOURCE` is pathname designator, then it must be absolute
+    so that the locative is context independent.
+    
+    Finally, if specified `LINE-PREFIX` is a string that's prepended to
+    each line included in the documentation. For example, a string of
+    four spaces makes markdown think it's a code block.
+
 <a name='x-28MGL-PAX-3A-40MGL-PAX-EXTENSION-API-20MGL-PAX-3ASECTION-29'></a>
 
 ## 9 Extension API
@@ -1087,37 +1144,57 @@ Finally, for `M-.` [`FIND-SOURCE`][b417] can be specialized. Finally,
 makes sense. Here is a stripped down example of how all this is done
 for [`ASDF:SYSTEM:`][90f2]
 
+<a name='x-28MGL-PAX-3AASDF-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-28-3ASTART-20-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29-20-3AEND-20-28MGL-PAX-3A-3AEND-OF-ASDF-EXAMPLE-20VARIABLE-29-29-20-3AHEADER-NL-20-22-60-60-60commonlisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
+
 ```commonlisp
 (define-locative-type asdf:system ()
-  "Refers to an asdf system.")
-
-(defmethod exportable-locative-type-p ((locative-type (eql 'asdf:system)))
-  nil)
+  "Refers to an asdf system. The generated documentation will include
+  meta information extracted from the system definition. This also
+  serves as an example of a symbol that's not accessible in the
+  current package and consequently is not exported.")
 
 (defmethod locate-object (symbol (locative-type (eql 'asdf:system))
                           locative-args)
   (assert (endp locative-args))
+  ;; FIXME: This is slow as hell.
   (or (asdf:find-system symbol nil)
       (locate-error)))
 
 (defmethod canonical-reference ((system asdf:system))
-  (make-reference (asdf/find-system:primary-system-name system)
-                  'asdf:system))
+  (make-reference (asdf/find-system:primary-system-name system) 'asdf:system))
 
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
                         (format nil "~A ASDF System Details"
-                                (asdf/find-system:primary-system-name
-                                 system)))
-    (format stream "Some content~%")))
+                                (asdf/find-system:primary-system-name system)))
+    (flet ((foo (name fn &key type)
+             (let ((value (funcall fn system)))
+               (when value
+                 (case type
+                   ((:link)
+                    (format stream "- ~A: [~A](~A)~%" name value value))
+                   ((:mailto)
+                    (format stream "- ~A: [~A](mailto:~A)~%"
+                            name value value))
+                   ((nil)
+                    (format stream "- ~A: ~A~%" name value)))))))
+      (foo "Version" 'asdf/component:component-version)
+      (foo "Description" 'asdf/system:system-description)
+      (foo "Licence" 'asdf/system:system-licence)
+      (foo "Author" 'asdf/system:system-author)
+      (foo "Maintainer" 'asdf/system:system-maintainer)
+      (foo "Mailto" 'asdf/system:system-mailto :type :mailto)
+      (foo "Homepage" 'asdf/system:system-homepage :type :link)
+      (foo "Bug tracker" 'asdf/system:system-bug-tracker)
+      (foo "Long description" 'asdf/system:system-long-description))))
 
 (defmethod find-source ((system asdf:system))
   `(:location
     (:file ,(namestring (asdf/system:system-source-file system)))
     (:position 1)
     (:snippet "")))
-```
 
+```
 
 <a name='x-28MGL-PAX-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29'></a>
 
@@ -1261,13 +1338,14 @@ and [`FIND-SOURCE`][b417] defer to [`LOCATE-AND-DOCUMENT`][6c17] and
 list for `EQL` specializing pleasure. Here is a stripped down example
 of how the [`VARIABLE`][474c] locative is defined:
 
+<a name='x-28MGL-PAX-3AVARIABLE-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-28-3ASTART-20-28VARIABLE-20MGL-PAX-3ALOCATIVE-29-20-3AEND-20-28MGL-PAX-3A-3AEND-OF-VARIABLE-EXAMPLE-20VARIABLE-29-29-20-3AHEADER-NL-20-22-60-60-60commonlisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
+
 ```commonlisp
 (define-locative-type variable (&optional initform)
   "Refers to a global special variable. INITFORM, or if not specified,
   the global value of the variable is included in the documentation.")
 
-(defmethod locate-object (symbol (locative-type (eql 'variable))
-                          locative-args)
+(defmethod locate-object (symbol (locative-type (eql 'variable)) locative-args)
   (assert (<= (length locative-args) 1))
   (make-reference symbol (cons locative-type locative-args)))
 
@@ -1291,8 +1369,8 @@ of how the [`VARIABLE`][474c] locative is defined:
   (find-one-location (swank-backend:find-definitions symbol)
                      '("variable" "defvar" "defparameter"
                        "special-declaration")))
-```
 
+```
 
 <a name='x-28MGL-PAX-3ACOLLECT-REACHABLE-OBJECTS-20-28METHOD-20NIL-20-28MGL-PAX-3AREFERENCE-29-29-29'></a>
 
@@ -1383,8 +1461,8 @@ with symbols in a certain context.
       works and it can also be included in DEFSECTION forms.)")
     
     (define-definer-for-symbol-locative-type define-direction direction ()
-      "With DEFINE-DIRECTION one document how what a symbol means when
-      interpreted as a direction.")
+      "With DEFINE-DIRECTION one can document how what a symbol means
+      when interpreted as a direction.")
     
     (define-direction up ()
       "UP is equivalent to a coordinate delta of (0, -1).")
@@ -1425,6 +1503,13 @@ presented.
 
     The name of the global variable whose value is
     this section object.
+
+<a name='x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
+
+- [reader] **SECTION-PACKAGE** *SECTION* *(:PACKAGE)*
+
+    `*PACKAGE*` will be bound to this package when
+    generating documentation for this section.
 
 <a name='x-28MGL-PAX-3ASECTION-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 
@@ -1561,9 +1646,13 @@ Note how the indentation and the comment of `(1 2)` was left alone
 but the output and the first return value got updated.
 
 Transcription support in emacs can be enabled by adding this to your
-Emacs initialization file:
+Emacs initialization file (or loading `src/transcribe.el`):
+
+<a name='x-28MGL-PAX-3A-3ATRANSCRIBE-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmega-2Fown-2Fmgl-pax-2Fsrc-2Ftranscribe-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
 
 ```elisp
+;;; MGL-PAX transcription
+
 (defun mgl-pax-transcribe-last-expression ()
   "A bit like C-u C-x C-e (slime-eval-last-expression) that
 inserts the output and values of the sexp before the point,
@@ -1608,7 +1697,6 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
         (error "MGL-PAX is not loaded.")
       transcription)))
 ```
-
 
 <a name='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-API-20MGL-PAX-3ASECTION-29'></a>
 
@@ -1788,6 +1876,7 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
   [68e7]: #x-28MGL-PAX-3ADEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO)"
   [6c17]: #x-28MGL-PAX-3ALOCATE-AND-DOCUMENT-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-DOCUMENT GENERIC-FUNCTION)"
   [6e37]: #x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "(CLASS MGL-PAX:LOCATIVE)"
+  [6f8d]: #x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:INCLUDE MGL-PAX:LOCATIVE)"
   [76b5]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE)"
   [7a11]: #x-28MGL-PAX-3ALOCATE-AND-COLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION)"
   [7a32]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-TRANSCRIPT MGL-PAX:SECTION)"
@@ -1796,6 +1885,7 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
   [819a]: #x-28MGL-PAX-3AREFERENCE-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29 "(MGL-PAX:REFERENCE-LOCATIVE (MGL-PAX:READER MGL-PAX:REFERENCE))"
   [81be]: #x-28MGL-PAX-3ALOCATE-ERROR-MESSAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29 "(MGL-PAX:LOCATE-ERROR-MESSAGE (MGL-PAX:READER MGL-PAX:LOCATE-ERROR))"
   [84ee]: #x-28MGL-PAX-3A-40MGL-PAX-BACKGROUND-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-BACKGROUND MGL-PAX:SECTION)"
+  [87c7]: #x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "(MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION))"
   [8be2]: #x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE* VARIABLE)"
   [8ed9]: #x-28MGL-PAX-3A-40MGL-PAX-EXTENSION-API-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-EXTENSION-API MGL-PAX:SECTION)"
   [90f2]: #x-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29 "(ASDF/SYSTEM:SYSTEM MGL-PAX:LOCATIVE)"
@@ -1804,6 +1894,7 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
   [a05e]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-20GENERIC-FUNCTION-29 "(MGL-PAX:DOCUMENT-OBJECT GENERIC-FUNCTION)"
   [aa52]: #x-28MGL-PAX-3A-40MGL-PAX-TUTORIAL-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-TUTORIAL MGL-PAX:SECTION)"
   [acc9]: #x-28MGL-PAX-3ALOCATE-OBJECT-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-OBJECT GENERIC-FUNCTION)"
+  [ad5a]: #x-28MGL-PAX-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmega-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29 "(MGL-PAX:PAX.EL (MGL-PAX:INCLUDE #P\"/home/mega/own/mgl-pax/src/pax.el\" :HEADER-NL \"```elisp\" :FOOTER-NL \"```\"))"
   [aee8]: #x-28MGL-PAX-3ASECTION-20CLASS-29 "(MGL-PAX:SECTION CLASS)"
   [b2be]: #x-28MGL-PAX-3ALOCATE-20FUNCTION-29 "(MGL-PAX:LOCATE FUNCTION)"
   [b417]: #x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNCTION-29 "(MGL-PAX:FIND-SOURCE GENERIC-FUNCTION)"
