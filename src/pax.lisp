@@ -1577,7 +1577,7 @@
             do (let ((replacement nil)
                      (n-chars-replaced nil)
                      (slice nil))
-                 (when (and (symbol-first-char-p char)
+                 (when (and (not (delimiterp char))
                             (or (null prev) (delimiterp prev)))
                    (let ((end (or (position-if #'delimiterp string :start i)
                                   (length string))))
@@ -1769,10 +1769,6 @@
 (defun delimiterp (char)
   (or (whitespacep char)
       (find char "()'`\"#<")))
-
-(defun symbol-first-char-p (char)
-  (or (alpha-char-p char)
-      (find char "*+@\\.:" :test #'char=)))
 
 
 (defsection @mgl-pax-locative-types (:title "Locative Types")

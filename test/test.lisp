@@ -30,6 +30,8 @@
   [`FOO-A`][(accessor foo)],
   [`FOO-A`][(ACCESSOR FOO)]
 
+  ->MAX
+
   Escaped: \\FOO *\\NAVIGATION-TEST-CASES*
   Non escaped: FOO *NAVIGATION-TEST-CASES*
   @TEST-OTHER
@@ -97,6 +99,8 @@
 
 (defgeneric test-gf (x))
 (defmethod test-gf ((x number)))
+
+(defun ->max ())
 
 (defparameter *navigation-test-cases*
   '((foo function (defun foo))

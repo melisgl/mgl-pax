@@ -1478,7 +1478,7 @@ with symbols in a certain context.
     Define a macro with `NAME` which can be used to attach documentation,
     a lambda-list and source location to a symbol in the context of
     `LOCATIVE-TYPE`. The defined macro's arglist is (`SYMBOL` `LAMBDA-LIST`
-    &OPTIONAL `DOCSTRING`). `LOCATIVE-TYPE` is assumed to have been defined
+    `&OPTIONAL` `DOCSTRING`). `LOCATIVE-TYPE` is assumed to have been defined
     with [`DEFINE-SYMBOL-LOCATIVE-TYPE`][57cb].
 
 <a name='x-28MGL-PAX-3A-40MGL-PAX-SECTIONS-20MGL-PAX-3ASECTION-29'></a>

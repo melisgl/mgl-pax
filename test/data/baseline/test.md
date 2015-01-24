@@ -37,6 +37,8 @@
 [`FOO-A`][6483],
 [`FOO-A`][6483]
 
+`->MAX`
+
 Escaped: FOO *NAVIGATION-TEST-CASES*
 Non escaped: `FOO`([`0`][4ded] [`1`][4244]) [`*NAVIGATION-TEST-CASES*`][799d]
 [test other title][22dd]
