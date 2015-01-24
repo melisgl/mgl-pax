@@ -194,7 +194,7 @@
     (dolist (output outputs)
       (when (pathnamep output)
         (let ((baseline (make-pathname
-                         :directory (substitute "baseline" "new"
+                         :directory (substitute "baseline" "tmp"
                                                 (pathname-directory output)
                                                 :test #'equal)
                          :defaults output)))
