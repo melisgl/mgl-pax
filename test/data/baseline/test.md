@@ -39,7 +39,7 @@
 
 `->MAX`
 
-Escaped: FOO *NAVIGATION-TEST-CASES*
+Escaped: FOO `FOO` *NAVIGATION-TEST-CASES*
 Non escaped: `FOO`([`0`][4ded] [`1`][4244]) [`*NAVIGATION-TEST-CASES*`][799d]
 [test other title][22dd]
 

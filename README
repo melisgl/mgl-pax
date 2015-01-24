@@ -860,6 +860,20 @@ locatives take no arguments.
 
 - [locative] PACKAGE
 
+- [locative] DISLOCATED
+
+    Refers to a symbol in a non-specific context. Useful for preventing
+    autolinking. For example, if there is a function called `FOO` then
+    
+        `FOO`
+    
+    will be linked to (if *DOCUMENT-LINK-CODE*) its definition. However,
+    
+        [`FOO`][dislocated]
+    
+    will not be. On a dislocated locative LOCATE always fails with a
+    LOCATE-ERROR condition.
+
 - [locative] LOCATIVE LAMBDA-LIST
 
     This is the locative for locatives. When `M-.` is pressed on
@@ -1194,7 +1208,7 @@ of how the VARIABLE locative is defined:
                                             (t value)))
                      stream))
     (terpri stream)
-    (with-argument-symbols ((list symbol))
+    (with-dislocated-symbols ((list symbol))
       (maybe-print-docstring symbol locative-type stream))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))

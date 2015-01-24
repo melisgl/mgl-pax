@@ -967,6 +967,22 @@ locatives take no arguments.
 
 - [locative] **PACKAGE**
 
+<a name='x-28MGL-PAX-3ADISLOCATED-20MGL-PAX-3ALOCATIVE-29'></a>
+
+- [locative] **DISLOCATED**
+
+    Refers to a symbol in a non-specific context. Useful for preventing
+    autolinking. For example, if there is a function called `FOO` then
+    
+        `FOO`
+    
+    will be linked to (if [`*DOCUMENT-LINK-CODE*`][8082]) its definition. However,
+    
+        [`FOO`][dislocated]
+    
+    will not be. On a dislocated locative [`LOCATE`][b2be] always fails with a
+    [`LOCATE-ERROR`][2285] condition.
+
 <a name='x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29'></a>
 
 - [locative] **LOCATIVE** *LAMBDA-LIST*
@@ -1361,7 +1377,7 @@ of how the [`VARIABLE`][474c] locative is defined:
                                             (t value)))
                      stream))
     (terpri stream)
-    (with-argument-symbols ((list symbol))
+    (with-dislocated-symbols ((list symbol))
       (maybe-print-docstring symbol locative-type stream))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))

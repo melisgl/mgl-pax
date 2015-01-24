@@ -32,7 +32,7 @@
 
   ->MAX
 
-  Escaped: \\FOO *\\NAVIGATION-TEST-CASES*
+  Escaped: \\FOO [`FOO`][dislocated] *\\NAVIGATION-TEST-CASES*
   Non escaped: FOO *NAVIGATION-TEST-CASES*
   @TEST-OTHER
 

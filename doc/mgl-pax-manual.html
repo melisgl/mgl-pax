@@ -1036,6 +1036,26 @@ specifiers.</p></li>
 <li>[locative] <strong>PACKAGE</strong></li>
 </ul>
 
+<p><a name='x-28MGL-PAX-3ADISLOCATED-20MGL-PAX-3ALOCATIVE-29'></a></p>
+
+<ul>
+<li><p>[locative] <strong>DISLOCATED</strong></p>
+
+<p>Refers to a symbol in a non-specific context. Useful for preventing
+autolinking. For example, if there is a function called <code>FOO</code> then</p>
+
+<pre><code>`FOO`
+</code></pre>
+
+<p>will be linked to (if <a href="#x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20VARIABLE-29" title="(MGL-PAX:*DOCUMENT-LINK-CODE* VARIABLE)"><code>*DOCUMENT-LINK-CODE*</code></a>) its definition. However,</p>
+
+<pre><code>[`FOO`][dislocated]
+</code></pre>
+
+<p>will not be. On a dislocated locative <a href="#x-28MGL-PAX-3ALOCATE-20FUNCTION-29" title="(MGL-PAX:LOCATE FUNCTION)"><code>LOCATE</code></a> always fails with a
+<a href="#x-28MGL-PAX-3ALOCATE-ERROR-20CONDITION-29" title="(MGL-PAX:LOCATE-ERROR CONDITION)"><code>LOCATE-ERROR</code></a> condition.</p></li>
+</ul>
+
 <p><a name='x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29'></a></p>
 
 <ul>
@@ -1467,7 +1487,7 @@ of how the <a href="#x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29" title="(VARIABLE MGL-
                                             <span class="paren1">(<span class="code">t value</span>)</span></span>)</span></span>)</span>
                      stream</span>)</span></span>)</span>
     <span class="paren3">(<span class="code">terpri stream</span>)</span>
-    <span class="paren3">(<span class="code"><i><span class="symbol">with-argument-symbols</span></i> <span class="paren4">(<span class="code"><span class="paren5">(<span class="code">list symbol</span>)</span></span>)</span>
+    <span class="paren3">(<span class="code"><i><span class="symbol">with-dislocated-symbols</span></i> <span class="paren4">(<span class="code"><span class="paren5">(<span class="code">list symbol</span>)</span></span>)</span>
       <span class="paren4">(<span class="code">maybe-print-docstring symbol locative-type stream</span>)</span></span>)</span></span>)</span></span>)</span>
 
 <span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> locate-and-find-source <span class="paren2">(<span class="code">symbol <span class="paren3">(<span class="code">locative-type <span class="paren4">(<span class="code">eql 'variable</span>)</span></span>)</span>

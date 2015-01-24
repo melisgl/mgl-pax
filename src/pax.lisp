@@ -516,7 +516,7 @@
   ;; be recognized without markup because its name is too short. The
   ;; correct solution would be to add links automatically for the
   ;; hyperspec.
-  (list (make-reference t 'unknown)))
+  (list (make-reference t 'dislocated)))
 
 ;;; Add a LINK to *LINKS* (and a REFERENCE to *REFERENCES*) for each
 ;;; reference in PAGE-REFERENCES of PAGE.
@@ -856,10 +856,11 @@
 ;;; will surely be marked up as code, but it's not linkified in the
 ;;; absence of an explicit locative even if it the symbol refers to
 ;;; other things with different locatives.
-(defmacro with-argument-symbols ((symbols) &body body)
+(defmacro with-dislocated-symbols ((symbols) &body body)
   `(with-pages ((list (make-page
                        :references (mapcar (lambda (symbol)
-                                             (make-reference symbol 'argument))
+                                             (make-reference symbol
+                                                             'dislocated))
                                            ,symbols))))
      ,@body))
 
@@ -1448,7 +1449,8 @@
                                       ;; resolution so we don't call
                                       ;; FILTER-REFERENCES.
                                       (filter-references-by-format
-                                       references))))))
+                                       references)
+                                      :if-dislocated symbol)))))
                (if references
                    (values (format-references name references) nil t)
                    tree))))))
@@ -1521,7 +1523,8 @@
                (try (third rest))
                (return)))))
 
-(defun find-reference-by-locative-string (locative-string known-references)
+(defun find-reference-by-locative-string (locative-string known-references
+                                          &key if-dislocated)
   (let ((locative (read-locative-from-string locative-string)))
     (when locative
       ;; This won't find [SECTION][TYPE] because SECTION is a class.
@@ -1529,8 +1532,10 @@
       ;; Reference lookup could look for a different locative which
       ;; would lead to the same object/reference, but there is no sane
       ;; generalization of that to locative-types.
-      (find locative known-references
-            :key #'reference-locative :test #'equal))))
+      (if (and if-dislocated (eq locative 'dislocated))
+          (make-reference if-dislocated 'dislocated)
+          (find locative known-references
+                :key #'reference-locative :test #'equal)))))
 
 (defun translate-to-code (parent tree known-references)
   (cond ((stringp tree)
@@ -1665,7 +1670,7 @@
                      refs)
       ;; Don't codify A, I and similar.
       (if (< 2 n-chars-read)
-          (list (make-reference symbol 'unknown))
+          (list (make-reference symbol 'dislocated))
           ())))
 
 (defun references-for-similar-names (name refs)
@@ -1703,17 +1708,16 @@
   (let ((refs (filter-references-by-format refs)))
     (if (references-for-the-same-symbol-p refs)
         (resolve-generic-function-and-methods
-         (resolve-argument-and-unknown refs))
+         (resolve-dislocated refs))
         refs)))
 
 (defun references-for-the-same-symbol-p (refs)
   (= 1 (length (remove-duplicates (mapcar #'reference-object refs)))))
 
-;;; If there is an ARGUMENT or UNKNOWN reference then don't link
-;;; anywhere (remove all the other references).
-(defun resolve-argument-and-unknown (refs)
-  (let ((ref (or (find 'argument refs :key #'reference-locative-type)
-                 (find 'unknown refs :key #'reference-locative-type))))
+;;; If there is a DISLOCATED reference, then don't link anywhere
+;;; (remove all the other references).
+(defun resolve-dislocated (refs)
+  (let ((ref (find 'dislocated refs :key #'reference-locative-type)))
     (if ref
         (list ref)
         refs)))
@@ -1737,8 +1741,7 @@
                           (or
                            ;; These have no pages, but won't result in
                            ;; link anyway. Keep them.
-                           (member (reference-locative-type ref)
-                                   '(unknown argument))
+                           (member (reference-locative-type ref) '(dislocated))
                            ;; Intrapage links always work.
                            (eq *page* page)
                            ;; Else we need to know the URI-FRAGMENT of
@@ -1769,7 +1772,7 @@
                                    :definition ,(link-to-reference ref))))
                      ")")
                    t))
-          ((member (reference-locative-type ref-1) '(argument unknown))
+          ((member (reference-locative-type ref-1) '(dislocated))
            `(,(code-fragment name)))
           ((typep (resolve ref-1) 'section)
            `((:reference-link :label (,(section-title-or-name (resolve ref-1)))
@@ -1805,6 +1808,7 @@
   (condition locative)
   (type locative)
   (package locative)
+  (dislocated locative)
   (locative locative)
   (include locative))
 
@@ -2213,7 +2217,7 @@
              (lambda-list (symbol-lambda-list symbol ',locative-type)))
          (format stream "- [~A] " (string-downcase locative-type))
          (print-name (prin1-to-string symbol) stream)
-         (with-argument-symbols ((macro-arg-names lambda-list))
+         (with-dislocated-symbols ((macro-arg-names lambda-list))
            (when lambda-list
              (write-char #\Space stream)
              (print-arglist lambda-list stream))
@@ -2310,12 +2314,12 @@
         (lambda-list (locative-lambda-list symbol)))
     (format stream "- [~A] " (string-downcase locative-type))
     (print-name (prin1-to-string symbol) stream)
-    (with-argument-symbols ((macro-arg-names lambda-list))
+    (with-dislocated-symbols ((macro-arg-names lambda-list))
       (when lambda-list
         (write-char #\Space stream)
         (print-arglist lambda-list stream))
       (terpri stream)
-      (with-argument-symbols ((list symbol))
+      (with-dislocated-symbols ((list symbol))
         (maybe-print-docstring method t stream))))
   (format stream "~&"))
 
@@ -2423,7 +2427,7 @@
                                             (t value)))
                      stream))
     (terpri stream)
-    (with-argument-symbols ((list symbol))
+    (with-dislocated-symbols ((list symbol))
       (maybe-print-docstring symbol locative-type stream))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))
@@ -2461,7 +2465,7 @@
                                            "<unbound>")))
                    stream)
     (terpri stream)
-    (with-argument-symbols ((list symbol))
+    (with-dislocated-symbols ((list symbol))
       (maybe-print-docstring symbol locative-type stream))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'constant))
@@ -2544,7 +2548,7 @@
   (format stream "- [structure-accessor] ")
   (print-name (prin1-to-string symbol) stream)
   (terpri stream)
-  (with-argument-symbols ((list symbol))
+  (with-dislocated-symbols ((list symbol))
     (maybe-print-docstring symbol 'function stream)))
 
 (defmethod locate-and-find-source (symbol
@@ -2578,7 +2582,7 @@
   (let ((arglist (swank-backend:arglist symbol)))
     (print-arglist arglist stream)
     (terpri stream)
-    (with-argument-symbols ((macro-arg-names arglist))
+    (with-dislocated-symbols ((macro-arg-names arglist))
       (maybe-print-docstring symbol 'function stream))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'macro))
@@ -2606,7 +2610,7 @@
   (let ((arglist (swank-backend:arglist symbol)))
     (print-arglist arglist stream)
     (terpri stream)
-    (with-argument-symbols ((macro-arg-names arglist))
+    (with-dislocated-symbols ((macro-arg-names arglist))
       (maybe-print-docstring symbol 'function stream))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'compiler-macro))
@@ -2662,7 +2666,7 @@
     (let ((arglist (swank-backend:arglist function)))
       (print-arglist arglist stream)
       (terpri stream)
-      (with-argument-symbols ((function-arg-names arglist))
+      (with-dislocated-symbols ((function-arg-names arglist))
         (maybe-print-docstring name 'function stream)))))
 
 
@@ -2708,7 +2712,7 @@
     (write-char #\Space stream)
     (print-arglist arglist stream)
     (terpri stream)
-    (with-argument-symbols ((function-arg-names arglist))
+    (with-dislocated-symbols ((function-arg-names arglist))
       (maybe-print-docstring method t stream))))
 
 ;;;; These were lifted from the fancy inspector contrib and then
@@ -2887,7 +2891,7 @@
       (write-char #\Space stream)
       (print-arglist arglist stream)))
   (terpri stream)
-  (with-argument-symbols ((list symbol))
+  (with-dislocated-symbols ((list symbol))
     (maybe-print-docstring symbol 'type stream)))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'type))
@@ -2938,7 +2942,7 @@
       (write-char #\Space stream)
       (print-arglist superclasses stream))
     (terpri stream)
-    (with-argument-symbols ((list symbol))
+    (with-dislocated-symbols ((list symbol))
       (maybe-print-docstring class t stream))))
 
 
@@ -2959,19 +2963,27 @@
   (let ((symbol (package-name package)))
     (print-name (princ-to-string symbol) stream)
     (terpri stream)
-    (with-argument-symbols ((list symbol))
+    (with-dislocated-symbols ((list symbol))
       (maybe-print-docstring package t stream))))
 
 
-;;;; UNKNOWN and ARGUMENT locatives
+;;;; DISLOCATED locative
 
-;;; UNKNOWN is used internally to stand for interned symbols not
-;;; referenced by sections.
-(defmethod locate-object (symbol (locative-type (eql 'unknown)) locative-args)
-  (declare (ignore symbol locative-args))
-  (locate-error))
+(define-locative-type dislocated ()
+  "Refers to a symbol in a non-specific context. Useful for preventing
+  autolinking. For example, if there is a function called `FOO` then
 
-(defmethod locate-object (symbol (locative-type (eql 'argument)) locative-args)
+      `FOO`
+
+  will be linked to (if *DOCUMENT-LINK-CODE*) its definition. However,
+
+      [`FOO`][dislocated]
+
+  will not be. On a dislocated locative LOCATE always fails with a
+  LOCATE-ERROR condition.")
+
+(defmethod locate-object (symbol (locative-type (eql 'dislocated))
+                          locative-args)
   (declare (ignore symbol locative-args))
   (locate-error))
 
