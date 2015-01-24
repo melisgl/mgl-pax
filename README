@@ -1194,7 +1194,8 @@ of how the VARIABLE locative is defined:
                                             (t value)))
                      stream))
     (terpri stream)
-    (maybe-print-docstring symbol locative-type stream)))
+    (with-argument-symbols ((list symbol))
+      (maybe-print-docstring symbol locative-type stream))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))
                                    locative-args)

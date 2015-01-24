@@ -441,7 +441,7 @@ Now let's examine the most important pieces in detail.
 - [variable] **\*DISCARD-DOCUMENTATION-P\*** *NIL*
 
     The default value of [`DEFSECTION`][2863]'s `DISCARD-DOCUMENTATION-P` argument.
-    One may want to set [`*DISCARD-DOCUMENTATION-P*`][d259] to true before
+    One may want to set `*DISCARD-DOCUMENTATION-P*` to true before
     building a binary application.
 
 <a name='x-28MGL-PAX-3ADEFINE-PACKAGE-20MGL-PAX-3AMACRO-29'></a>
@@ -679,7 +679,7 @@ described below.
     
     The number of backslashes is doubled above because that's how the
     example looks in a docstring. Note that the backslash is discarded
-    even if [`*DOCUMENT-UPPERCASE-IS-CODE*`][8be2] is false.
+    even if `*DOCUMENT-UPPERCASE-IS-CODE*` is false.
 
 <a name='x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20VARIABLE-29'></a>
 
@@ -958,7 +958,7 @@ locatives take no arguments.
 
 - [locative] **TYPE**
 
-    [`TYPE`][d8db] can refer to classes as well, but it's better style to use the
+    `TYPE` can refer to classes as well, but it's better style to use the
     more specific [`CLASS`][6e37] locative type for that. Another difference to
     [`CLASS`][6e37] is that an attempt is made at printing the arguments of type
     specifiers.
@@ -982,7 +982,7 @@ locatives take no arguments.
 
     Refers to a region of a file. `SOURCE` can be a string or a
     pathname in which case the whole file is being pointed to or it can
-    explicitly supply `START`, `END` locatives. [`INCLUDE`][6f8d] is typically used to
+    explicitly supply `START`, `END` locatives. `INCLUDE` is typically used to
     include non-lisp files in the documentation (say markdown or elisp
     as in the next example) or regions of lisp source files. This can
     reduce clutter and duplication.
@@ -1099,7 +1099,7 @@ need to muck with references when there is a perfectly good object.
 
 - [class] **REFERENCE**
 
-    A [`REFERENCE`][cc37] represents a path ([`REFERENCE-LOCATIVE`][819a])
+    A `REFERENCE` represents a path ([`REFERENCE-LOCATIVE`][819a])
     to take from an object ([`REFERENCE-OBJECT`][0412]).
 
 <a name='x-28MGL-PAX-3AREFERENCE-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29'></a>
@@ -1361,7 +1361,8 @@ of how the [`VARIABLE`][474c] locative is defined:
                                             (t value)))
                      stream))
     (terpri stream)
-    (maybe-print-docstring symbol locative-type stream)))
+    (with-argument-symbols ((list symbol))
+      (maybe-print-docstring symbol locative-type stream))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))
                                    locative-args)
@@ -1876,7 +1877,6 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
   [68e7]: #x-28MGL-PAX-3ADEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO)"
   [6c17]: #x-28MGL-PAX-3ALOCATE-AND-DOCUMENT-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-DOCUMENT GENERIC-FUNCTION)"
   [6e37]: #x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "(CLASS MGL-PAX:LOCATIVE)"
-  [6f8d]: #x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:INCLUDE MGL-PAX:LOCATIVE)"
   [76b5]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE)"
   [7a11]: #x-28MGL-PAX-3ALOCATE-AND-COLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION)"
   [7a32]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-TRANSCRIPT MGL-PAX:SECTION)"
@@ -1908,7 +1908,6 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
   [d58f]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-MARKDOWN-SUPPORT MGL-PAX:SECTION)"
   [d71c]: #x-28METHOD-20MGL-PAX-3ALOCATIVE-29 "(METHOD MGL-PAX:LOCATIVE)"
   [d7eb]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28STRING-20T-29-29-29 "(MGL-PAX:DOCUMENT-OBJECT (METHOD NIL (STRING T)))"
-  [d8db]: #x-28TYPE-20MGL-PAX-3ALOCATIVE-29 "(TYPE MGL-PAX:LOCATIVE)"
   [df39]: #x-28DESCRIBE-OBJECT-20-28METHOD-20NIL-20-28MGL-PAX-3ASECTION-20T-29-29-29 "(DESCRIBE-OBJECT (METHOD NIL (MGL-PAX:SECTION T)))"
   [e0d7]: #x-28MGL-PAX-3ARESOLVE-20FUNCTION-29 "(MGL-PAX:RESOLVE FUNCTION)"
   [e2a1]: #x-28MGL-PAX-3A-40MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES MGL-PAX:SECTION)"

@@ -851,7 +851,7 @@
       (foo arglist))
     (reverse names)))
 
-;;; Add a dummy page with for references to SYMBOLS whose locatives is
+;;; Add a dummy page with for references to SYMBOLS whose locative is
 ;;; ARGUMENT. If an ARGUMENT reference is present for a symbol, it
 ;;; will surely be marked up as code, but it's not linkified in the
 ;;; absence of an explicit locative even if it the symbol refers to
@@ -2303,7 +2303,8 @@
         (write-char #\Space stream)
         (print-arglist lambda-list stream))
       (terpri stream)
-      (maybe-print-docstring method t stream)))
+      (with-argument-symbols ((list symbol))
+        (maybe-print-docstring method t stream))))
   (format stream "~&"))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'locative))
@@ -2410,7 +2411,8 @@
                                             (t value)))
                      stream))
     (terpri stream)
-    (maybe-print-docstring symbol locative-type stream)))
+    (with-argument-symbols ((list symbol))
+      (maybe-print-docstring symbol locative-type stream))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))
                                    locative-args)
@@ -2447,7 +2449,8 @@
                                            "<unbound>")))
                    stream)
     (terpri stream)
-    (maybe-print-docstring symbol locative-type stream)))
+    (with-argument-symbols ((list symbol))
+      (maybe-print-docstring symbol locative-type stream))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'constant))
                                    locative-args)
@@ -2529,7 +2532,8 @@
   (format stream "- [structure-accessor] ")
   (print-name (prin1-to-string symbol) stream)
   (terpri stream)
-  (maybe-print-docstring symbol 'function stream))
+  (with-argument-symbols ((list symbol))
+    (maybe-print-docstring symbol 'function stream)))
 
 (defmethod locate-and-find-source (symbol
                                    (locative-type (eql 'structure-accessor))
@@ -2825,10 +2829,11 @@
   (terpri stream)
   ;; No documentation for condition accessors, and some
   ;; implementations signal warnings.
-  (unless (subtypep (find-class (first locative-args)) 'condition)
-    (let ((docstring (swank-mop:slot-definition-documentation slot-def)))
-      (when docstring
-        (format stream "~%~A~%" (massage-docstring docstring))))))
+  (with-dislocated-symbols ((list symbol))
+    (unless (subtypep (find-class (first locative-args)) 'condition)
+      (let ((docstring (swank-mop:slot-definition-documentation slot-def)))
+        (when docstring
+          (format stream "~%~A~%" (massage-docstring docstring)))))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'accessor))
                                    locative-args)
@@ -2870,7 +2875,8 @@
       (write-char #\Space stream)
       (print-arglist arglist stream)))
   (terpri stream)
-  (maybe-print-docstring symbol 'type stream))
+  (with-argument-symbols ((list symbol))
+    (maybe-print-docstring symbol 'type stream)))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'type))
                                    locative-args)
@@ -2920,7 +2926,8 @@
       (write-char #\Space stream)
       (print-arglist superclasses stream))
     (terpri stream)
-    (maybe-print-docstring class t stream)))
+    (with-argument-symbols ((list symbol))
+      (maybe-print-docstring class t stream))))
 
 
 ;;;; PACKAGE locative
@@ -2940,7 +2947,8 @@
   (let ((symbol (package-name package)))
     (print-name (princ-to-string symbol) stream)
     (terpri stream)
-    (maybe-print-docstring package t stream)))
+    (with-argument-symbols ((list symbol))
+      (maybe-print-docstring package t stream))))
 
 
 ;;;; UNKNOWN and ARGUMENT locatives

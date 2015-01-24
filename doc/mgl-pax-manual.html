@@ -453,7 +453,7 @@ is true, <code>ENTRIES</code> will not be recorded to save memory.</p></li>
 <li><p>[variable] <strong>*DISCARD-DOCUMENTATION-P*</strong> <em>NIL</em></p>
 
 <p>The default value of <a href="#x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29" title="(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"><code>DEFSECTION</code></a>'s <code>DISCARD-DOCUMENTATION-P</code> argument.
-One may want to set <a href="#x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20VARIABLE-29" title="(MGL-PAX:*DISCARD-DOCUMENTATION-P* VARIABLE)"><code>*DISCARD-DOCUMENTATION-P*</code></a> to true before
+One may want to set <code>*DISCARD-DOCUMENTATION-P*</code> to true before
 building a binary application.</p></li>
 </ul>
 
@@ -695,7 +695,7 @@ backslash to the beginning of the symbol or right after the leading
 
 <p>The number of backslashes is doubled above because that's how the
 example looks in a docstring. Note that the backslash is discarded
-even if <a href="#x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20VARIABLE-29" title="(MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE* VARIABLE)"><code>*DOCUMENT-UPPERCASE-IS-CODE*</code></a> is false.</p></li>
+even if <code>*DOCUMENT-UPPERCASE-IS-CODE*</code> is false.</p></li>
 </ul>
 
 <p><a name='x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20VARIABLE-29'></a></p>
@@ -1024,7 +1024,7 @@ ugly and certainly uninformative lambda list will not be printed.</p></li>
 <ul>
 <li><p>[locative] <strong>TYPE</strong></p>
 
-<p><a href="#x-28TYPE-20MGL-PAX-3ALOCATIVE-29" title="(TYPE MGL-PAX:LOCATIVE)"><code>TYPE</code></a> can refer to classes as well, but it's better style to use the
+<p><code>TYPE</code> can refer to classes as well, but it's better style to use the
 more specific <a href="#x-28CLASS-20MGL-PAX-3ALOCATIVE-29" title="(CLASS MGL-PAX:LOCATIVE)"><code>CLASS</code></a> locative type for that. Another difference to
 <a href="#x-28CLASS-20MGL-PAX-3ALOCATIVE-29" title="(CLASS MGL-PAX:LOCATIVE)"><code>CLASS</code></a> is that an attempt is made at printing the arguments of type
 specifiers.</p></li>
@@ -1054,7 +1054,7 @@ Similarly, <code>(LOCATIVE LOCATIVE)</code> leads to this very definition.</p></
 
 <p>Refers to a region of a file. <code>SOURCE</code> can be a string or a
 pathname in which case the whole file is being pointed to or it can
-explicitly supply <code>START</code>, <code>END</code> locatives. <a href="#x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29" title="(MGL-PAX:INCLUDE MGL-PAX:LOCATIVE)"><code>INCLUDE</code></a> is typically used to
+explicitly supply <code>START</code>, <code>END</code> locatives. <code>INCLUDE</code> is typically used to
 include non-lisp files in the documentation (say markdown or elisp
 as in the next example) or regions of lisp source files. This can
 reduce clutter and duplication.</p>
@@ -1184,7 +1184,7 @@ locative.</p></li>
 <ul>
 <li><p>[class] <strong>REFERENCE</strong></p>
 
-<p>A <a href="#x-28MGL-PAX-3AREFERENCE-20CLASS-29" title="(MGL-PAX:REFERENCE CLASS)"><code>REFERENCE</code></a> represents a path (<a href="#x-28MGL-PAX-3AREFERENCE-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29" title="(MGL-PAX:REFERENCE-LOCATIVE (MGL-PAX:READER MGL-PAX:REFERENCE))"><code>REFERENCE-LOCATIVE</code></a>)
+<p>A <code>REFERENCE</code> represents a path (<a href="#x-28MGL-PAX-3AREFERENCE-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29" title="(MGL-PAX:REFERENCE-LOCATIVE (MGL-PAX:READER MGL-PAX:REFERENCE))"><code>REFERENCE-LOCATIVE</code></a>)
 to take from an object (<a href="#x-28MGL-PAX-3AREFERENCE-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29" title="(MGL-PAX:REFERENCE-OBJECT (MGL-PAX:READER MGL-PAX:REFERENCE))"><code>REFERENCE-OBJECT</code></a>).</p></li>
 </ul>
 
@@ -1467,7 +1467,8 @@ of how the <a href="#x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29" title="(VARIABLE MGL-
                                             <span class="paren1">(<span class="code">t value</span>)</span></span>)</span></span>)</span>
                      stream</span>)</span></span>)</span>
     <span class="paren3">(<span class="code">terpri stream</span>)</span>
-    <span class="paren3">(<span class="code">maybe-print-docstring symbol locative-type stream</span>)</span></span>)</span></span>)</span>
+    <span class="paren3">(<span class="code"><i><span class="symbol">with-argument-symbols</span></i> <span class="paren4">(<span class="code"><span class="paren5">(<span class="code">list symbol</span>)</span></span>)</span>
+      <span class="paren4">(<span class="code">maybe-print-docstring symbol locative-type stream</span>)</span></span>)</span></span>)</span></span>)</span>
 
 <span class="paren1">(<span class="code"><i><span class="symbol">defmethod</span></i> locate-and-find-source <span class="paren2">(<span class="code">symbol <span class="paren3">(<span class="code">locative-type <span class="paren4">(<span class="code">eql 'variable</span>)</span></span>)</span>
                                    locative-args</span>)</span>
