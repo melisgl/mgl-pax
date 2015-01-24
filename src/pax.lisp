@@ -1378,23 +1378,25 @@
 (defun replace-known-references (string known-references)
   (when string
     (let* ((string
-             ;; Handle :EMPH (to recognize *VAR*), :CODE for `SYMBOL`
-             ;; and :REFERENCE-LINK for [symbol][locative]. Don't hurt
-             ;; links.
+             ;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings
+             ;; and :EMPH (to recognize *VAR*).
              (map-markdown-parse-tree
-              '(:emph :code :reference-link)
-              '(:explicit-link :image :mailto)
-              nil
-              (alexandria:rcurry #'translate-tagged known-references)
+              '(:emph)
+              '(:code :verbatim 3bmd-code-blocks::code-block
+                :reference-link :explicit-link :image :mailto)
+              t
+              (alexandria:rcurry #'translate-to-code known-references)
               string))
            (string
-             ;; Replace in strings except when they are in code or links.
+             ;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
+             ;; :REFERENCE-LINK for [symbol][locative]). Don't hurt
+             ;; links.
              (map-markdown-parse-tree
-              '() '(:code :verbatim 3bmd-code-blocks::code-block
-                    :reference-link :explicit-link :image :mailto) t
-                    (alexandria:rcurry
-                     #'translate-uppercase-words known-references)
-                    string)))
+              '(:code :reference-link)
+              '(:explicit-link :image :mailto)
+              nil
+              (alexandria:rcurry #'translate-to-links known-references)
+              string)))
       (map-markdown-parse-tree '(3bmd-code-blocks::code-block) '() nil
                                #'retranscribe-code-block string))))
 
@@ -1411,23 +1413,8 @@
                                 :update-only t :check-consistency t))
         code-block)))
 
-;;; In 3bmd parlance 'tagged' is an element of the markdown parse tree
-;;; that is not a string (e.g. (:EMPH "this")). This function
-;;; transforms TREE according to KNOWN-REFERENCES.
-(defun translate-tagged (parent tree known-references)
+(defun translate-to-links (parent tree known-references)
   (cond
-    ;; (:EMPH "something")
-    ((and (eq :emph (first tree))
-          (= 2 (length tree))
-          (stringp (second tree)))
-     (let ((translation (translate-uppercase-name parent tree (second tree)
-                                                  known-references)))
-       (if translation
-           ;; Replace TREE with TRANSLATION, don't process TRANSLATION
-           ;; again recursively, slice the return value into the list
-           ;; of children of PARENT.
-           (values translation nil t)
-           tree)))
     ;; (:CODE "something")
     ((and (eq :code (first tree))
           (= 2 (length tree))
@@ -1545,14 +1532,20 @@
       (find locative known-references
             :key #'reference-locative :test #'equal))))
 
-(defun translate-uppercase-words (parent string known-references)
-  (values (map-names string
-                     (lambda (string start end)
-                       (let ((name (subseq string start end)))
-                         (translate-uppercase-name parent string name
-                                                   known-references))))
-          ;; don't recurse, slice
-          nil t))
+(defun translate-to-code (parent tree known-references)
+  (cond ((stringp tree)
+         (let ((string tree))
+           (values (map-names string
+                              (lambda (string start end)
+                                (let ((name (subseq string start end)))
+                                  (translate-uppercase-name parent string name
+                                                            known-references))))
+                   ;; don't recurse, do slice
+                   nil t)))
+        ((eq :emph (first tree))
+         (translate-emph parent tree known-references))
+        (t
+         (assert nil () "Only strings and :EMPH are expected."))))
 
 ;;; Call FN with STRING and START, END indices. FN returns three
 ;;; values: a replacement parse tree fragment (or NIL, if the subseq
@@ -1600,20 +1593,39 @@
 ;;; SLICE, N-CHARS-READ. Also called by TRANSLATE-TAGGED that expects
 ;;; only a single return value: the new tree.
 (defun translate-uppercase-name (parent tree name known-references)
+  (declare (ignore parent))
   (when (no-lowercase-chars-p name)
-    (let ((emph (and (listp tree) (eq :emph (first tree)))))
-      (cond ((and emph (eql #\\ (alexandria:first-elt name)))
-             (values (list `(:emph ,(subseq name 1))) t (length name)))
-            ((eql #\\ (alexandria:first-elt name))
-             ;; Discard the leading backslash escape.
-             (values (list (subseq name 1)) t (length name)))
-            ((not *document-uppercase-is-code*)
-             nil)
-            (emph
-             (translate-name parent tree (format nil "*~A*" name)
-                             known-references))
-            (t
-             (translate-name parent tree name known-references))))))
+    (flet ((foo (name)
+             (multiple-value-bind (refs n-chars-read)
+                 (references-for-similar-names name known-references)
+               (when refs
+                 (values `(,(code-fragment name)) t n-chars-read)))))
+      (let ((emph (and (listp tree) (eq :emph (first tree)))))
+        (cond ((and emph (eql #\\ (alexandria:first-elt name)))
+               (values (list `(:emph ,(subseq name 1))) t (length name)))
+              ((eql #\\ (alexandria:first-elt name))
+               ;; Discard the leading backslash escape.
+               (values (list (subseq name 1)) t (length name)))
+              ((not *document-uppercase-is-code*)
+               nil)
+              (emph
+               (foo (format nil "*~A*" name)))
+              (t
+               (foo name)))))))
+
+(defun translate-emph (parent tree known-references)
+  (if (= 2 (length tree))
+      (let ((translation (translate-uppercase-name parent tree (second tree)
+                                                   known-references)))
+        (if translation
+            ;; Replace TREE with TRANSLATION, don't process
+            ;; TRANSLATION again recursively, slice the return value
+            ;; into the list of children of PARENT.
+            (values translation nil t)
+            ;; leave it alone, don't recurse, don't slice
+            (values tree nil nil)))
+      ;; leave it alone, recurse, don't slice
+      (values tree t nil)))
 
 (defun no-lowercase-chars-p (string)
   (notany (lambda (char)

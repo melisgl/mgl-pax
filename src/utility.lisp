@@ -297,6 +297,12 @@
 
 ;;;; Markdown parse tree transformation
 
+;;; Perform a depth first traversal of TREE. Call FN with the parent
+;;; of each node and the node itself. FN returns three values: a new
+;;; tree to be substituted for the node, a recurse and slice flag. If
+;;; slice, then the new tree is sliced into parent. If recurse (and
+;;; the new tree is not a leaf), then traversal goes recurses into the
+;;; new tree.
 (defun transform-tree (fn tree)
   (labels ((foo (parent tree)
              (multiple-value-bind (new-tree recurse slice)
