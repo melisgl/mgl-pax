@@ -1720,14 +1720,20 @@
         (list ref)
         refs)))
 
-;;; If in doubt, prefer the generic function to methods.
 (defun resolve-generic-function-and-methods (refs)
-  (if (find 'generic-function refs :key #'reference-locative-type)
-      (remove-if (lambda (ref)
-                   (member (reference-locative-type ref)
-                           '(accessor reader writer method)))
-                 refs)
-      refs))
+  (flet ((non-method-refs ()
+           (remove-if (lambda (ref)
+                        (member (reference-locative-type ref)
+                                '(accessor reader writer method)))
+                      refs)))
+    (cond
+      ;; If in doubt, prefer the generic function to methods.
+      ((find 'generic-function refs :key #'reference-locative-type)
+       (non-method-refs))
+      ;; No generic function, prefer non-methods to methods.
+      ((non-method-refs))
+      (t
+       refs))))
 
 (defun filter-references-by-format (refs)
   (remove-if-not (lambda (ref)
