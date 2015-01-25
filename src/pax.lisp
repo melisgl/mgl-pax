@@ -1378,41 +1378,24 @@
 ;;; string.
 (defun replace-known-references (string known-references)
   (when string
-    (let* ((string
-             ;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings
-             ;; and :EMPH (to recognize *VAR*).
-             (map-markdown-parse-tree
-              '(:emph)
-              '(:code :verbatim 3bmd-code-blocks::code-block
-                :reference-link :explicit-link :image :mailto)
-              t
-              (alexandria:rcurry #'translate-to-code known-references)
-              string))
-           (string
-             ;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
-             ;; :REFERENCE-LINK for [symbol][locative]). Don't hurt
-             ;; links.
-             (map-markdown-parse-tree
-              '(:code :reference-link)
-              '(:explicit-link :image :mailto)
-              nil
-              (alexandria:rcurry #'translate-to-links known-references)
-              string)))
-      (map-markdown-parse-tree '(3bmd-code-blocks::code-block) '() nil
-                               #'retranscribe-code-block string))))
-
-;;; CODE-BLOCK looks like this:
-;;;
-;;;     (3BMD-CODE-BLOCKS::CODE-BLOCK :LANG "commonlisp" :CONTENT "42")
-(defun retranscribe-code-block (parent code-block)
-  (declare (ignore parent))
-  (let ((lang (getf (rest code-block) :lang)))
-    (if (equal lang "cl-transcript")
-        `(3bmd-code-blocks::code-block
-          :lang ,lang
-          :content ,(transcribe (getf (rest code-block) :content) nil
-                                :update-only t :check-consistency t))
-        code-block)))
+    (let ((string
+            ;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings
+            ;; and :EMPH (to recognize *VAR*).
+            (map-markdown-parse-tree
+             '(:emph 3bmd-code-blocks::code-block)
+             '(:code :verbatim 3bmd-code-blocks::code-block
+               :reference-link :explicit-link :image :mailto)
+             t
+             (alexandria:rcurry #'translate-to-code known-references)
+             string)))
+      ;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
+      ;; :REFERENCE-LINK for [symbol][locative]). Don't hurt links.
+      (map-markdown-parse-tree
+       '(:code :reference-link)
+       '(:explicit-link :image :mailto)
+       nil
+       (alexandria:rcurry #'translate-to-links known-references)
+       string))))
 
 (defun translate-to-links (parent tree known-references)
   (cond
@@ -1549,8 +1532,23 @@
                    nil t)))
         ((eq :emph (first tree))
          (translate-emph parent tree known-references))
+        ((eq '3bmd-code-blocks::code-block (first tree))
+         (translate-code-block parent tree))
         (t
-         (assert nil () "Only strings and :EMPH are expected."))))
+         (error "Unexpected tree type ~S." (first tree)))))
+
+;;; CODE-BLOCK looks like this:
+;;;
+;;;     (3BMD-CODE-BLOCKS::CODE-BLOCK :LANG "commonlisp" :CONTENT "42")
+(defun translate-code-block (parent code-block)
+  (declare (ignore parent))
+  (let ((lang (getf (rest code-block) :lang)))
+    (if (equal lang "cl-transcript")
+        `(3bmd-code-blocks::code-block
+          :lang ,lang
+          :content ,(transcribe (getf (rest code-block) :content) nil
+                                :update-only t :check-consistency t))
+        code-block)))
 
 ;;; Call FN with STRING and START, END indices. FN returns three
 ;;; values: a replacement parse tree fragment (or NIL, if the subseq
