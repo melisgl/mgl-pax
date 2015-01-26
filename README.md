@@ -1,6 +1,6 @@
 <a name='x-28MGL-PAX-3A-40MGL-PAX-MANUAL-20MGL-PAX-3ASECTION-29'></a>
 
-# PAX manual
+# PAX Manual
 
 ## Table of Contents
 

@@ -24,7 +24,7 @@
 
 (in-readtable pythonic-string-syntax)
 
-(defsection @mgl-pax-manual (:title "PAX manual")
+(defsection @mgl-pax-manual (:title "PAX Manual")
   (mgl-pax asdf:system)
   (@mgl-pax-background section)
   (@mgl-pax-tutorial section)
