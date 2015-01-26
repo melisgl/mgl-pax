@@ -388,7 +388,7 @@ Now let's examine the most important pieces in detail.
 
 <a name='x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29'></a>
 
-- [macro] **DEFSECTION** *NAME (&KEY (PACKAGE \*PACKAGE\*) (EXPORT T) TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &BODY ENTRIES*
+- [macro] **DEFSECTION** *NAME (&KEY (PACKAGE '\*PACKAGE\*) (READTABLE '\*READTABLE\*) (EXPORT T) TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &BODY ENTRIES*
 
     Define a documentation section and maybe export referenced symbols.
     A bit behind the scenes, a global variable with `NAME` is defined and
@@ -1527,6 +1527,13 @@ presented.
 
     `*PACKAGE*` will be bound to this package when
     generating documentation for this section.
+
+<a name='x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
+
+- [reader] **SECTION-READTABLE** *SECTION* *(:READTABLE)*
+
+    `*READTABLE*` will be bound to this when generating
+    documentation for this section.
 
 <a name='x-28MGL-PAX-3ASECTION-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 

@@ -9,7 +9,8 @@
   One may want to set *DISCARD-DOCUMENTATION-P* to true before
   building a binary application.")
 
-(defmacro defsection (name (&key (package *package*) (export t) title
+(defmacro defsection (name (&key (package '*package*) (readtable '*readtable*)
+                            (export t) title
                             (discard-documentation-p *discard-documentation-p*))
                       &body entries)
   "Define a documentation section and maybe export referenced symbols.
@@ -67,6 +68,7 @@
        (make-instance 'section
                       :name ',name
                       :package ,package
+                      :readtable ,readtable
                       :title ,title
                       :entries ,(if discard-documentation-p
                                     ()
@@ -104,6 +106,10 @@
     :initarg :package :reader section-package
     :documentation "*PACKAGE* will be bound to this package when
     generating documentation for this section.")
+   (readtable
+    :initarg :readtable :reader section-readtable
+    :documentation "*READTABLE* will be bound to this when generating
+    documentation for this section.")
    (title
     :initarg :title :reader section-title
     :documentation "Used in generated documentation.")

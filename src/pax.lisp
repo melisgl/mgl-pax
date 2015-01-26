@@ -2276,6 +2276,7 @@
   (section class)
   (section-name (reader section))
   (section-package (reader section))
+  (section-readtable (reader section))
   (section-title (reader section))
   (section-entries (reader section))
   (describe-object (method () (section t))))
@@ -2393,6 +2394,7 @@
         (*package* (if *document-normalize-packages*
                        (section-package section)
                        *package*))
+        (*readtable* (section-readtable section))
         (*section* section))
     (with-heading (stream section (section-title-or-name section))
       (when (and *document-normalize-packages* (not same-package))

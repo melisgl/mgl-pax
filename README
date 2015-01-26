@@ -351,7 +351,7 @@ initialization file (or loading `src/pax.el`):
 
 Now let's examine the most important pieces in detail.
 
-- [macro] DEFSECTION NAME (&KEY (PACKAGE *PACKAGE*) (EXPORT T) TITLE (DISCARD-DOCUMENTATION-P *DISCARD-DOCUMENTATION-P*)) &BODY ENTRIES
+- [macro] DEFSECTION NAME (&KEY (PACKAGE '*PACKAGE*) (READTABLE '*READTABLE*) (EXPORT T) TITLE (DISCARD-DOCUMENTATION-P *DISCARD-DOCUMENTATION-P*)) &BODY ENTRIES
 
     Define a documentation section and maybe export referenced symbols.
     A bit behind the scenes, a global variable with NAME is defined and
@@ -1330,6 +1330,11 @@ presented.
 
     *PACKAGE* will be bound to this package when
     generating documentation for this section.
+
+- [reader] SECTION-READTABLE SECTION (:READTABLE)
+
+    *READTABLE* will be bound to this when generating
+    documentation for this section.
 
 - [reader] SECTION-TITLE SECTION (:TITLE)
 

@@ -396,7 +396,7 @@ initialization file (or loading <code>src/pax.el</code>):</p>
 <p><a name='x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29'></a></p>
 
 <ul>
-<li><p>[macro] <strong>DEFSECTION</strong> <em>NAME (&amp;KEY (PACKAGE *PACKAGE*) (EXPORT T) TITLE (DISCARD-DOCUMENTATION-P *DISCARD-DOCUMENTATION-P*)) &amp;BODY ENTRIES</em></p>
+<li><p>[macro] <strong>DEFSECTION</strong> <em>NAME (&amp;KEY (PACKAGE '*PACKAGE*) (READTABLE '*READTABLE*) (EXPORT T) TITLE (DISCARD-DOCUMENTATION-P *DISCARD-DOCUMENTATION-P*)) &amp;BODY ENTRIES</em></p>
 
 <p>Define a documentation section and maybe export referenced symbols.
 A bit behind the scenes, a global variable with <code>NAME</code> is defined and
@@ -1659,6 +1659,15 @@ this section object.</p></li>
 
 <p><code>*PACKAGE*</code> will be bound to this package when
 generating documentation for this section.</p></li>
+</ul>
+
+<p><a name='x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a></p>
+
+<ul>
+<li><p>[reader] <strong>SECTION-READTABLE</strong> <em>SECTION</em> <em>(:READTABLE)</em></p>
+
+<p><code>*READTABLE*</code> will be bound to this when generating
+documentation for this section.</p></li>
 </ul>
 
 <p><a name='x-28MGL-PAX-3ASECTION-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a></p>
