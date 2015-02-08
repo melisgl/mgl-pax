@@ -243,7 +243,7 @@
 
       ```
 
-  More fancy markdown or html output with automatic markup and linking
+  More fancy markdown or HTML output with automatic markup and linking
   of uppercase symbol names found in docstrings, section numbering,
   table of contents, etc is possible by calling the DOCUMENT function.
 
@@ -483,7 +483,7 @@
 (defun find-link (reference)
   (find reference *links* :key #'link-reference :test #'reference=))
 
-;;; Return the unescaped name of the html anchor for REFERENCE. See
+;;; Return the unescaped name of the HTML anchor for REFERENCE. See
 ;;; HTML-SAFE-NAME.
 (defun reference-to-anchor (reference)
   (with-standard-io-syntax
@@ -953,7 +953,7 @@
 
 (defvar *document-link-code* t
   """When true, during the process of generating documentation for a
-  [SECTION][class], html anchors are added before the documentation of
+  [SECTION][class], HTML anchors are added before the documentation of
   every reference that's not to a section. Also, markdown style
   reference links are added when a piece of inline code found in a
   docstring refers to a symbol that's referenced by one of the
@@ -1025,7 +1025,7 @@
   uppercase names with no quoting required.""")
 
 (defvar *document-link-sections* t
-  "When true, html anchors are generated before the heading of
+  "When true, HTML anchors are generated before the heading of
   sections which allows the table of contents to contain links and
   also code-like references to sections (like `@FOO-MANUAL`) to be
   translated to links with the section title being the name of the
@@ -1044,7 +1044,7 @@
   of characters, then the length of the hash of the colliding
   reference is increased.
 
-  This variable has no effect on the html generated from markdown, but
+  This variable has no effect on the HTML generated from markdown, but
   it can make markdown output more readable.")
 
 (defun hash-link (string detect-collision-fn
@@ -1172,7 +1172,7 @@
   (flet ((foo ()
            ;; Arrange for all output to go to /dev/null
            ;; (MAKE-BROADCAST-STREAM) except for the headings when we
-           ;; are generatig the table of contents.
+           ;; are generating the table of contents.
            (cond
              (*collecting-headings-p*
               (funcall fn (make-broadcast-stream)))

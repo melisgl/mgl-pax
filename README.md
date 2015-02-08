@@ -250,7 +250,7 @@ For this example, the generated markdown would look like this:
     
     ```
 
-More fancy markdown or html output with automatic markup and linking
+More fancy markdown or HTML output with automatic markup and linking
 of uppercase symbol names found in docstrings, section numbering,
 table of contents, etc is possible by calling the [`DOCUMENT`][1eb8] function.
 
@@ -686,7 +686,7 @@ described below.
 - [variable] **\*DOCUMENT-LINK-CODE\*** *T*
 
     When true, during the process of generating documentation for a
-    [`SECTION`][aee8], html anchors are added before the documentation of
+    [`SECTION`][aee8], HTML anchors are added before the documentation of
     every reference that's not to a section. Also, markdown style
     reference links are added when a piece of inline code found in a
     docstring refers to a symbol that's referenced by one of the
@@ -761,7 +761,7 @@ described below.
 
 - [variable] **\*DOCUMENT-LINK-SECTIONS\*** *T*
 
-    When true, html anchors are generated before the heading of
+    When true, HTML anchors are generated before the heading of
     sections which allows the table of contents to contain links and
     also code-like references to sections (like `@FOO-MANUAL`) to be
     translated to links with the section title being the name of the
@@ -783,7 +783,7 @@ described below.
     of characters, then the length of the hash of the colliding
     reference is increased.
     
-    This variable has no effect on the html generated from markdown, but
+    This variable has no effect on the HTML generated from markdown, but
     it can make markdown output more readable.
 
 <a name='x-28MGL-PAX-3A-2ADOCUMENT-MARK-UP-SIGNATURES-2A-20VARIABLE-29'></a>
