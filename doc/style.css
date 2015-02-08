@@ -1,7 +1,5 @@
 body {
   font-family: sans-serif;
-  max-width: 85ex;
-  padding: 1em;
   margin: auto;
   background-color: #FFFEFB;
   color: #000000;
@@ -11,26 +9,27 @@ h1, h2, h3, h4, h5, h6 {
   font-family: serif;
   font-weight: bold;
   text-shadow: 0.05em 0.05em 0.02em #DDDDDD;
+  margin-top: 0;
 }
 
 h1 a {
-  text-decoration: none;
+  border-bottom: none;
 }
 
 h2 a {
-  text-decoration: none;
+  border-bottom: none;
 }
 
 h3 a {
-  text-decoration: none;
+  border-bottom: none;
 }
 
 h4 a {
-  text-decoration: none;
+  border-bottom: none;
 }
 
 h5 a {
-  text-decoration: none;
+  border-bottom: none;
 }
 
 h2 {
@@ -99,7 +98,8 @@ code {
 
 a {
   color: #222222;
-  text-decoration: underline;
+  text-decoration: none;
+  border-bottom: 1px solid;
 }
 
 h6 a {
@@ -118,7 +118,7 @@ a:hover {
 }
 
 .reference-object a {
-  text-decoration: none;
+  border-bottom: none;
 }
 
 .locative-args {
@@ -128,7 +128,7 @@ a:hover {
 .navigation a {
   color: #CCCCCC;
   text-shadow: none;
-  text-decoration: none;
+  border-bottom: none;
 }
 
 /* Option 1 for navigation links: just hide the links in the previous
@@ -140,12 +140,7 @@ a:hover {
   visibility: hidden;
 }
 
-h1:hover .navigation,
-h2:hover .navigation,
-h3:hover .navigation,
-h4:hover .navigation,
-h5:hover .navigation,
-h6:hover .navigation {
+.outer-navigation:hover .navigation {
   visibility: visible;
 }
 
@@ -216,3 +211,74 @@ a.symbol:hover { color : #229955; background-color : transparent; text-decoratio
 /* span.paren5:hover { color : inherit; background-color : #CAFFCA; } */
 /* span.paren6 { background-color : inherit; -webkit-transition: background-color 0.2s linear; } */
 /* span.paren6:hover { color : inherit; background-color : #FFBAFF; } */
+
+#content-container
+{
+  margin: 0;
+  padding: 0;
+}
+
+#content
+{
+  margin-left: 40ex;
+  padding-left: 2.5em;
+  max-width: 85ex;
+}
+
+#toc {
+  top: 0px;
+  left: 0px;
+  height: 100%;
+  width: 40ex;
+  max-width: 33%;
+  position: fixed;
+  overflow-y:auto;
+  overflow-x:hidden;
+  background: #333;
+  box-shadow: inset -5px 0 5px 0px #000;
+  color: #aaa;
+}
+
+#toc a {
+  color: #777;
+  border-bottom: none;
+}
+
+#toc hr {
+  height: 0.05em;
+  border: 0;
+  background: #777;
+}
+
+#toc ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#toc li {
+  padding: 5px 10px;
+}
+
+#toc .toc-h2 {
+  padding-left: 10px;
+}
+
+#toc .toc-h3 {
+  padding-left: 20px;
+}
+
+#toc .toc-active {
+  background: #336699;
+  box-shadow: inset -5px 0px 10px -5px #000;
+}
+
+#page-toc a {
+  color: #fff;
+}
+
+#toc-footer
+{
+  font-size: 70%;
+  color: #777777;
+}

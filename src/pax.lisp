@@ -1218,14 +1218,13 @@
                   (let ((anchor (reference-to-anchor object)))
                     (anchor anchor stream)
                     (navigation-link object stream)
+                    (format stream "~A" (fancy-navigation object))
                     (heading *heading-level* stream)
                     (if (eq *format* :html)
-                        (format stream " ~A<a href=\"#~A\">~A~A</a>~%~%"
-                                (inline-navigation object)
+                        (format stream " <a href=\"#~A\">~A~A</a>~%~%"
                                 (html-safe-name anchor) (heading-number)
                                 (escape-markdown title))
-                        (format stream " ~A~A~A~%~%"
-                                (inline-navigation object) (heading-number)
+                        (format stream " ~A~A~%~%" (heading-number)
                                 (escape-markdown title))))
                   (progn
                     (heading *heading-level* stream)
@@ -2398,7 +2397,7 @@
                            (typep entry 'reference))
                          (section-entries section))))
 
-(defun inline-navigation (object)
+(defun fancy-navigation (object)
   (if (and *document-fancy-html-navigation*
            *document-link-sections*
            (eq *format* :html))
@@ -2412,12 +2411,13 @@
                          :from-end t :key #'heading-level)))
              (next (when (< position (1- n))
                      (elt *headings* (1+ position)))))
-        (format nil "<span class=\"navigation\">~
+        (format nil "<span class=\"outer-navigation\">~
+                    <span class=\"navigation\">~
                     ~@[ [&#8592;][~A]~]~
                     ~@[ [&#8593;][~A]~]~
                     ~@[ [&#8594;][~A]~] ~
                     [&#8634;][~A]~
-                    </span>"
+                    </span></span>~%"
                 (when prev
                   (link-to-reference
                    (canonical-reference (heading-object prev))))
