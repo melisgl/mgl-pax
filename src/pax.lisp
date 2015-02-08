@@ -486,9 +486,10 @@
 ;;; Return the unescaped name of the HTML anchor for REFERENCE. See
 ;;; HTML-SAFE-NAME.
 (defun reference-to-anchor (reference)
-  (with-standard-io-syntax
-    (prin1-to-string (list (reference-object reference)
-                           (reference-locative reference)))))
+  (let ((reference (canonical-reference reference)))
+    (with-standard-io-syntax
+      (prin1-to-string (list (reference-object reference)
+                             (reference-locative reference))))))
 
 ;;; For the link to REFERENCE, increment the link counter for the
 ;;; current page and return the link id.
@@ -1064,24 +1065,55 @@
   "When true, some things such as function names and arglists are
   rendered as bold and italic.")
 
-(defun print-name (name stream)
-  (if *document-mark-up-signatures*
-      (bold name stream)
-      (format stream "~A" name)))
+;;; Print REFERENCE to STREAM as:
+;;;
+;;;     - [locative-type] symbol
+;;;
+;;; When generating HTML, link SYMBOL to its own anchor.
+(defun print-reference-bullet (reference stream)
+  (let ((locative-type (string-downcase
+                        (reference-locative-type reference)))
+        (name (prin1-to-string (reference-object reference))))
+    (if *document-mark-up-signatures*
+        ;; insert self links in HTML
+        (let ((locative-type (escape-markdown locative-type))
+              (name (escape-markdown name)))
+          (if (eq *format* :html)
+              (format stream
+                      "- <span class=\"locative-type\">\\[~A]</span> ~
+                      <span class=\"reference-object\">[~A](#~A)</span>"
+                      locative-type name
+                      (html-safe-name (reference-to-anchor reference)))
+              (format stream "- [~A] ~A" locative-type (bold name nil))))
+        (format stream "- [~A] ~A" locative-type name))))
+
+(defun locate-and-print-bullet (locative-type locative-args symbol stream)
+  (print-reference-bullet
+   (canonical-reference
+    (make-reference symbol (cons locative-type locative-args)))
+   stream))
+
+(defun print-bullet (object stream)
+  (print-reference-bullet (canonical-reference object) stream))
 
 (defun print-arglist (arglist stream)
   (let ((string (if (stringp arglist)
                     arglist
                     (arglist-to-string arglist))))
     (if *document-mark-up-signatures*
-        (italic string stream)
+        (if (eq *format* :html)
+            (format stream "<span class=\"locative-args\">~A</span>"
+                    (escape-markdown string))
+            (italic (escape-markdown string) stream))
         (format stream "~A" string))))
 
 ;;; Print arg names without the package prefix to a string. The
 ;;; default value with prefix. Works for macro arglists too.
 (defun arglist-to-string (arglist)
   (with-output-to-string (out)
-    (let ((seen-special-p nil))
+    (let ((seen-special-p nil)
+          (*print-pretty* t)
+          (*print-right-margin* nil))
       (labels ((foo (arglist level)
                  (unless (= level 0)
                    (format out "("))
@@ -1182,13 +1214,23 @@
                                                *table-of-contents-stream*)
                 (funcall fn (make-broadcast-stream))))
              (t
-              (when *document-link-sections*
-                (anchor (reference-to-anchor (canonical-reference object))
-                        stream)
-                (navigation-link object stream))
-              (heading *heading-level* stream)
-              (format stream " ~A~A~A~%~%" (inline-navigation object)
-                      (heading-number) title)
+              (if *document-link-sections*
+                  (let ((anchor (reference-to-anchor object)))
+                    (anchor anchor stream)
+                    (navigation-link object stream)
+                    (heading *heading-level* stream)
+                    (if (eq *format* :html)
+                        (format stream " ~A<a href=\"#~A\">~A~A</a>~%~%"
+                                (inline-navigation object)
+                                (html-safe-name anchor) (heading-number)
+                                (escape-markdown title))
+                        (format stream " ~A~A~A~%~%"
+                                (inline-navigation object) (heading-number)
+                                (escape-markdown title))))
+                  (progn
+                    (heading *heading-level* stream)
+                    (format stream " ~A~A~%~%"
+                            (heading-number) (escape-markdown title))))
               (when (and (zerop *heading-level*)
                          (plusp *document-max-table-of-contents-level*))
                 (heading (1+ *heading-level*) stream)
@@ -1966,10 +2008,14 @@
   (:documentation "Return a REFERENCE that resolves to OBJECT."))
 
 (defmethod canonical-reference ((reference reference))
-  (let ((object (resolve reference)))
-    (if (typep object 'reference)
-        reference
-        (canonical-reference object))))
+  (handler-case
+      (let ((object (resolve reference)))
+        (if (typep object 'reference)
+            object
+            (canonical-reference object)))
+    (locate-error ()
+      ;; DISLOCATED ends up here
+      reference)))
 
 (defgeneric collect-reachable-objects (object)
   (:documentation "Return a list of objects representing all things
@@ -2219,8 +2265,7 @@
          (symbol (locative-type (eql ',locative-type)) locative-args stream)
        (let ((method (symbol-lambda-list-method symbol ',locative-type))
              (lambda-list (symbol-lambda-list symbol ',locative-type)))
-         (format stream "- [~A] " (string-downcase locative-type))
-         (print-name (prin1-to-string symbol) stream)
+         (locate-and-print-bullet locative-type locative-args symbol stream)
          (with-dislocated-symbols ((macro-arg-names lambda-list))
            (when lambda-list
              (write-char #\Space stream)
@@ -2314,11 +2359,9 @@
 
 (defmethod locate-and-document (symbol (locative-type (eql 'locative))
                                 locative-args stream)
-  (declare (ignore locative-args))
   (let ((method (locative-lambda-list-method-for-symbol symbol))
         (lambda-list (locative-lambda-list symbol)))
-    (format stream "- [~A] " (string-downcase locative-type))
-    (print-name (prin1-to-string symbol) stream)
+    (locate-and-print-bullet locative-type locative-args symbol stream)
     (with-dislocated-symbols ((macro-arg-names lambda-list))
       (when lambda-list
         (write-char #\Space stream)
@@ -2424,8 +2467,7 @@
 (defmethod locate-and-document (symbol (locative-type (eql 'variable))
                                 locative-args stream)
   (destructuring-bind (&optional (initform nil initformp)) locative-args
-    (format stream "- [~A] " (string-downcase locative-type))
-    (print-name (prin1-to-string symbol) stream)
+    (locate-and-print-bullet locative-type locative-args symbol stream)
     (write-char #\Space stream)
     (multiple-value-bind (value unboundp) (symbol-global-value symbol)
       (print-arglist (prin1-to-string (cond (initformp initform)
@@ -2460,8 +2502,7 @@
 (defmethod locate-and-document (symbol (locative-type (eql 'constant))
                                 locative-args stream)
   (destructuring-bind (&optional (initform nil initformp)) locative-args
-    (format stream "- [~A] " (string-downcase locative-type))
-    (print-name (prin1-to-string symbol) stream)
+    (locate-and-print-bullet locative-type locative-args symbol stream)
     (write-char #\Space stream)
     (print-arglist (prin1-to-string (cond (initformp
                                            initform)
@@ -2550,9 +2591,7 @@
 (defmethod locate-and-document ((symbol symbol)
                                 (locative-type (eql 'structure-accessor))
                                 locative-args stream)
-  (declare (ignore locative-args))
-  (format stream "- [structure-accessor] ")
-  (print-name (prin1-to-string symbol) stream)
+  (locate-and-print-bullet locative-type locative-args symbol stream)
   (terpri stream)
   (with-dislocated-symbols ((list symbol))
     (maybe-print-docstring symbol 'function stream)))
@@ -2581,9 +2620,7 @@
 
 (defmethod locate-and-document (symbol (locative-type (eql 'macro))
                                 locative-args stream)
-  (declare (ignore locative-args))
-  (format stream "- [macro] ")
-  (print-name (prin1-to-string symbol) stream)
+  (locate-and-print-bullet locative-type locative-args symbol stream)
   (write-char #\Space stream)
   (let ((arglist (swank-backend:arglist symbol)))
     (print-arglist arglist stream)
@@ -2609,9 +2646,7 @@
 
 (defmethod locate-and-document (symbol (locative-type (eql 'compiler-macro))
                                 locative-args stream)
-  (declare (ignore locative-args))
-  (format stream "- [compiler-macro] ")
-  (print-name (prin1-to-string symbol) stream)
+  (locate-and-print-bullet locative-type locative-args symbol stream)
   (write-char #\Space stream)
   (let ((arglist (swank-backend:arglist symbol)))
     (print-arglist arglist stream)
@@ -2662,18 +2697,15 @@
   (make-reference (swank-mop:generic-function-name function) 'generic-function))
 
 (defmethod document-object ((function function) stream)
-  (multiple-value-bind (type name)
-      (if (typep function 'generic-function)
-          (values "generic-function" (swank-mop:generic-function-name function))
-          (values "function" (swank-backend:function-name function)))
-    (format stream "- [~A] " type)
-    (print-name (prin1-to-string name) stream)
+  (let ((reference (canonical-reference function)))
+    (print-bullet reference stream)
     (write-char #\Space stream)
     (let ((arglist (swank-backend:arglist function)))
       (print-arglist arglist stream)
       (terpri stream)
       (with-dislocated-symbols ((function-arg-names arglist))
-        (maybe-print-docstring name 'function stream)))))
+        (maybe-print-docstring (reference-object reference) 'function
+                               stream)))))
 
 
 ;;;; METHOD locative
@@ -2710,11 +2742,8 @@
           (swank-mop:method-specializers method)))
 
 (defmethod document-object ((method method) stream)
-  (format stream "- [method] ")
-  (let ((symbol (swank-mop:generic-function-name
-                 (swank-mop:method-generic-function method)))
-        (arglist (rest (method-for-inspect-value method))))
-    (print-name (prin1-to-string symbol) stream)
+  (let ((arglist (rest (method-for-inspect-value method))))
+    (print-bullet method stream)
     (write-char #\Space stream)
     (print-arglist arglist stream)
     (terpri stream)
@@ -2834,8 +2863,7 @@
 
 (defun generate-documentation-for-slot-definition
     (symbol slot-def locative-type locative-args stream)
-  (format stream "- [~A] " (string-downcase locative-type))
-  (print-name (prin1-to-string symbol) stream)
+  (locate-and-print-bullet locative-type locative-args symbol stream)
   (write-char #\Space stream)
   (print-arglist locative-args stream)
   (when (or (swank-mop:slot-definition-initargs slot-def)
@@ -2889,9 +2917,7 @@
 
 (defmethod locate-and-document (symbol (locative-type (eql 'type)) locative-args
                                 stream)
-  (declare (ignore locative-args))
-  (format stream "- [~A] " (string-downcase locative-type))
-  (print-name (prin1-to-string symbol) stream)
+  (locate-and-print-bullet locative-type locative-args symbol stream)
   (let ((arglist (swank-backend:type-specifier-arglist symbol)))
     (when (and arglist (not (eq arglist :not-available)))
       (write-char #\Space stream)
@@ -2940,10 +2966,7 @@
                             (and conditionp (eq name 'condition))))
                       (mapcar #'class-name
                               (swank-mop:class-direct-superclasses class)))))
-    (if conditionp
-        (format stream "- [condition] ")
-        (format stream "- [class] "))
-    (print-name (prin1-to-string symbol) stream)
+    (print-bullet class stream)
     (when superclasses
       (write-char #\Space stream)
       (print-arglist superclasses stream))
@@ -2965,9 +2988,8 @@
   (make-reference (package-name package) 'package))
 
 (defmethod document-object ((package package) stream)
-  (format stream "- [package] ")
   (let ((symbol (package-name package)))
-    (print-name (princ-to-string symbol) stream)
+    (print-bullet package stream)
     (terpri stream)
     (with-dislocated-symbols ((list symbol))
       (maybe-print-docstring package t stream))))

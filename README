@@ -1199,8 +1199,7 @@ of how the VARIABLE locative is defined:
 (defmethod locate-and-document (symbol (locative-type (eql 'variable))
                                 locative-args stream)
   (destructuring-bind (&optional (initform nil initformp)) locative-args
-    (format stream "- [~A] " (string-downcase locative-type))
-    (print-name (prin1-to-string symbol) stream)
+    (locate-and-print-bullet locative-type locative-args symbol stream)
     (write-char #\Space stream)
     (multiple-value-bind (value unboundp) (symbol-global-value symbol)
       (print-arglist (prin1-to-string (cond (initformp initform)

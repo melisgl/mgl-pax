@@ -62,14 +62,14 @@ prototype which did almost everything I wanted was this:
     (defmacro defsection (name docstring)
       `(defun ,name () ,docstring))
 
-Armed with [`DEFSECTION`][2863], I soon found myself organizing code following
+Armed with [`DEFSECTION`][b1e7], I soon found myself organizing code following
 the flow of user level documentation and relegated comments to
 implementational details entirely. However, some portions of
-[`DEFSECTION`][2863] docstrings were just listings of all the functions,
+[`DEFSECTION`][b1e7] docstrings were just listings of all the functions,
 macros and variables related to the narrative, and this list was
 effectively repeated in the `DEFPACKAGE` form complete with little
 comments that were like section names. A clear violation of
-[OAOO][oaoo], one of them had to go, so [`DEFSECTION`][2863] got a list of
+[OAOO][oaoo], one of them had to go, so [`DEFSECTION`][b1e7] got a list of
 symbols to export.
 
 [oaoo]: http://c2.com/cgi/wiki?OnceAndOnlyOnce 
@@ -94,9 +94,9 @@ based on the locative found in the vicinity of the symbol and
 everything was good for a while.
 
 Then I realized that sections could refer to other sections if there
-were a [`SECTION`][2cf1] locative. Going down that path, I soon began to feel
+were a `SECTION`([`0`][aee8] [`1`][53a8]) locative. Going down that path, I soon began to feel
 the urge to generate pretty documentation as all the necessary
-information was manifest in the [`DEFSECTION`][2863] forms. The design
+information was manifest in the [`DEFSECTION`][b1e7] forms. The design
 constraint imposed on documentation generation was that following
 the typical style of upcasing symbols in docstrings there should be
 no need to explicitly mark up links: if `M-.` works, then the
@@ -130,8 +130,8 @@ from code, not vice versa and there is no support for chunking yet.
 Code is first, code must look pretty, documentation is code.
 
 In typical use, PAX packages have no `:EXPORT`'s defined. Instead the
-[`DEFINE-PACKAGE`][c98c] form gets a docstring which may mention section
-names (defined with [`DEFSECTION`][2863]). When the code is loaded into the
+[`DEFINE-PACKAGE`][34f5] form gets a docstring which may mention section
+names (defined with [`DEFSECTION`][b1e7]). When the code is loaded into the
 lisp, pressing `M-.` in SLIME on the name of the section will take
 you there. Sections can also refer to other sections, packages,
 functions, etc and you can keep exploring.
@@ -260,10 +260,10 @@ but with cross-page links being automatically added for symbols
 mentioned in docstrings.* For a complete example of how to generate
 HTML with multiple pages, see `src/doc.lisp`.
 
-Note how `(VARIABLE *FOO-STATE*)` in the [`DEFSECTION`][2863] form both
+Note how `(VARIABLE *FOO-STATE*)` in the [`DEFSECTION`][b1e7] form both
 exports `*FOO-STATE*` and includes its documentation in
-`@FOO-RANDOM-MANUAL`. The symbols [`VARIABLE`][474c] and [`FUNCTION`][3023] are just two
-instances of 'locatives' which are used in [`DEFSECTION`][2863] to refer to
+`@FOO-RANDOM-MANUAL`. The symbols [`VARIABLE`][2be0] and [`FUNCTION`][6b15] are just two
+instances of 'locatives' which are used in [`DEFSECTION`][b1e7] to refer to
 definitions tied to symbols. See [Locative Types][1fbb].
 
 The transcript in the code block tagged with `cl-transcript` is
@@ -298,8 +298,8 @@ definition of function `FOO`:
     (function foo)
     (foo function)
 
-In particular, references in a [`DEFSECTION`][2863] form are in (`SYMBOL`
-[`LOCATIVE`][76b5]) format so `M-.` will work just fine there.
+In particular, references in a [`DEFSECTION`][b1e7] form are in (`SYMBOL`
+[`LOCATIVE`][12a1]) format so `M-.` will work just fine there.
 
 Just like vanilla `M-.`, this works in comments and docstrings. In
 this example pressing `M-.` on `FOO` will visit `FOO`'s default
@@ -386,7 +386,7 @@ initialization file (or loading `src/pax.el`):
 
 Now let's examine the most important pieces in detail.
 
-<a name='x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29'></a>
+<a name='x-28MGL-PAX-3ADEFSECTION-20-28MGL-PAX-3AMACRO-29-29'></a>
 
 - [macro] **DEFSECTION** *NAME (&KEY (PACKAGE '\*PACKAGE\*) (READTABLE '\*READTABLE\*) (EXPORT T) TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &BODY ENTRIES*
 
@@ -429,36 +429,36 @@ Now let's examine the most important pieces in detail.
     - there is a reference to it in the section being defined with a
       locative whose type is approved by [`EXPORTABLE-LOCATIVE-TYPE-P`][96c5].
     
-    See [`DEFINE-PACKAGE`][c98c] if you use the export feature. The idea with
+    See [`DEFINE-PACKAGE`][34f5] if you use the export feature. The idea with
     confounding documentation and exporting is to force documentation of
     all exported symbols.
     
-    When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][d259])
+    When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][1514])
     is true, `ENTRIES` will not be recorded to save memory.
 
-<a name='x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20VARIABLE-29'></a>
+<a name='x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*DISCARD-DOCUMENTATION-P\*** *NIL*
 
-    The default value of [`DEFSECTION`][2863]'s `DISCARD-DOCUMENTATION-P` argument.
+    The default value of [`DEFSECTION`][b1e7]'s `DISCARD-DOCUMENTATION-P` argument.
     One may want to set `*DISCARD-DOCUMENTATION-P*` to true before
     building a binary application.
 
-<a name='x-28MGL-PAX-3ADEFINE-PACKAGE-20MGL-PAX-3AMACRO-29'></a>
+<a name='x-28MGL-PAX-3ADEFINE-PACKAGE-20-28MGL-PAX-3AMACRO-29-29'></a>
 
 - [macro] **DEFINE-PACKAGE** *PACKAGE &REST OPTIONS*
 
     This is like `CL:DEFPACKAGE` but silences warnings and errors
     signaled when the redefined package is at variance with the current
     state of the package. Typically this situation occurs when symbols
-    are exported by calling `EXPORT` (as is the case with [`DEFSECTION`][2863]) as
+    are exported by calling `EXPORT` (as is the case with [`DEFSECTION`][b1e7]) as
     opposed to adding `:EXPORT` forms to the `DEFPACKAGE` form and the
     package definition is reevaluated. See the section on [package
     variance](http://www.sbcl.org/manual/#Package-Variance) in the SBCL
     manual.
     
-    The bottom line is that if you rely on [`DEFSECTION`][2863] to do the
-    exporting, then you'd better use [`DEFINE-PACKAGE`][c98c].
+    The bottom line is that if you rely on [`DEFSECTION`][b1e7] to do the
+    exporting, then you'd better use [`DEFINE-PACKAGE`][34f5].
 
 <a name='x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29'></a>
 
@@ -656,14 +656,14 @@ Docstrings are assumed to be in markdown format and they are pretty
 much copied verbatim to the documentation subject to a few knobs
 described below.
 
-<a name='x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20VARIABLE-29'></a>
+<a name='x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*DOCUMENT-UPPERCASE-IS-CODE\*** *T*
 
     When true, words with at least three characters and no lowercase
     characters naming an interned symbol are assumed to be code as if
     they were marked up with backticks which is especially useful when
-    combined with [`*DOCUMENT-LINK-CODE*`][8082]. For example, this docstring:
+    combined with [`*DOCUMENT-LINK-CODE*`][1d4c]. For example, this docstring:
     
         "`FOO` and FOO."
     
@@ -681,7 +681,7 @@ described below.
     example looks in a docstring. Note that the backslash is discarded
     even if `*DOCUMENT-UPPERCASE-IS-CODE*` is false.
 
-<a name='x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20VARIABLE-29'></a>
+<a name='x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*DOCUMENT-LINK-CODE\*** *T*
 
@@ -732,9 +732,9 @@ described below.
         
             Calls `BAR`([`1`][link-id-1] [`2`][link-id-2]) on `X`.
     
-    This situation occurs in PAX with `SECTION`([`0`][aee8] [`1`][2cf1]) which is both a class (see
+    This situation occurs in PAX with `SECTION`([`0`][aee8] [`1`][53a8]) which is both a class (see
     [`SECTION`][aee8]) and a locative type denoted by a symbol (see
-    [`SECTION`][2cf1]). Back in the example above, clearly,
+    [SECTION][locative]). Back in the example above, clearly,
     there is no reason to link to type `BAR`, so one may wish to select
     the function locative. There are two ways to do that. One is to
     specify the locative explicitly as the id of a reference link:
@@ -753,11 +753,11 @@ described below.
     This last option needs backticks around the locative if it's not a
     single symbol.
     
-    Note that [`*DOCUMENT-LINK-CODE*`][8082] can be combined with
-    [`*DOCUMENT-UPPERCASE-IS-CODE*`][8be2] to have links generated for
+    Note that [*DOCUMENT-LINK-CODE*][variable] can be combined with
+    [`*DOCUMENT-UPPERCASE-IS-CODE*`][a282] to have links generated for
     uppercase names with no quoting required.
 
-<a name='x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20VARIABLE-29'></a>
+<a name='x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*DOCUMENT-LINK-SECTIONS\*** *T*
 
@@ -767,7 +767,7 @@ described below.
     translated to links with the section title being the name of the
     link.
 
-<a name='x-28MGL-PAX-3A-2ADOCUMENT-MIN-LINK-HASH-LENGTH-2A-20VARIABLE-29'></a>
+<a name='x-28MGL-PAX-3A-2ADOCUMENT-MIN-LINK-HASH-LENGTH-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*DOCUMENT-MIN-LINK-HASH-LENGTH\*** *4*
 
@@ -786,14 +786,14 @@ described below.
     This variable has no effect on the HTML generated from markdown, but
     it can make markdown output more readable.
 
-<a name='x-28MGL-PAX-3A-2ADOCUMENT-MARK-UP-SIGNATURES-2A-20VARIABLE-29'></a>
+<a name='x-28MGL-PAX-3A-2ADOCUMENT-MARK-UP-SIGNATURES-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*DOCUMENT-MARK-UP-SIGNATURES\*** *T*
 
     When true, some things such as function names and arglists are
     rendered as bold and italic.
 
-<a name='x-28MGL-PAX-3A-2ADOCUMENT-MAX-NUMBERING-LEVEL-2A-20VARIABLE-29'></a>
+<a name='x-28MGL-PAX-3A-2ADOCUMENT-MAX-NUMBERING-LEVEL-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*DOCUMENT-MAX-NUMBERING-LEVEL\*** *3*
 
@@ -801,25 +801,25 @@ described below.
     than this value get numbered in the format of `3.1.2`. Setting it to
     0 turns numbering off.
 
-<a name='x-28MGL-PAX-3A-2ADOCUMENT-MAX-TABLE-OF-CONTENTS-LEVEL-2A-20VARIABLE-29'></a>
+<a name='x-28MGL-PAX-3A-2ADOCUMENT-MAX-TABLE-OF-CONTENTS-LEVEL-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*DOCUMENT-MAX-TABLE-OF-CONTENTS-LEVEL\*** *3*
 
     A non-negative integer. Top-level sections are given a table of
     contents which includes a nested tree of section titles whose depth
     is limited by this value. Setting it to 0 turns generation of the
-    table of contents off. If [`*DOCUMENT-LINK-SECTIONS*`][3fef] is true, then the
+    table of contents off. If [`*DOCUMENT-LINK-SECTIONS*`][f901] is true, then the
     table of contents will link to the sections.
 
-<a name='x-28MGL-PAX-3A-2ADOCUMENT-TEXT-NAVIGATION-2A-20VARIABLE-29'></a>
+<a name='x-28MGL-PAX-3A-2ADOCUMENT-TEXT-NAVIGATION-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*DOCUMENT-TEXT-NAVIGATION\*** *NIL*
 
     If true, then before each heading a line is printed with links to
     the previous, parent and next section. Needs
-    [`*DOCUMENT-LINK-SECTIONS*`][3fef] to be on to work.
+    [`*DOCUMENT-LINK-SECTIONS*`][f901] to be on to work.
 
-<a name='x-28MGL-PAX-3A-2ADOCUMENT-FANCY-HTML-NAVIGATION-2A-20VARIABLE-29'></a>
+<a name='x-28MGL-PAX-3A-2ADOCUMENT-FANCY-HTML-NAVIGATION-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*DOCUMENT-FANCY-HTML-NAVIGATION\*** *T*
 
@@ -827,9 +827,9 @@ described below.
     navigation component that consists of links to the previous, parent,
     next section and a permalink. This component is normally hidden, it
     is visible only when the mouse is over the heading. Needs
-    [`*DOCUMENT-LINK-SECTIONS*`][3fef] to be on to work.
+    [`*DOCUMENT-LINK-SECTIONS*`][f901] to be on to work.
 
-<a name='x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20VARIABLE-29'></a>
+<a name='x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*DOCUMENT-NORMALIZE-PACKAGES\*** *T*
 
@@ -849,7 +849,7 @@ locative types, they are symbols and their names should make it
 obvious what kind of things they refer to. Unless otherwise noted,
 locatives take no arguments.
 
-<a name='x-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28ASDF-2FSYSTEM-3ASYSTEM-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **ASDF/SYSTEM:SYSTEM**
 
@@ -858,35 +858,35 @@ locatives take no arguments.
     serves as an example of a symbol that's not accessible in the
     current package and consequently is not exported.
 
-<a name='x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28MGL-PAX-3ASECTION-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **SECTION**
 
-    Refers to a section defined by [`DEFSECTION`][2863].
+    Refers to a section defined by [`DEFSECTION`][b1e7].
 
-<a name='x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28VARIABLE-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **VARIABLE** *&OPTIONAL INITFORM*
 
     Refers to a global special variable. `INITFORM`, or if not specified,
     the global value of the variable is included in the documentation.
 
-<a name='x-28MGL-PAX-3ACONSTANT-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28MGL-PAX-3ACONSTANT-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **CONSTANT** *&OPTIONAL INITFORM*
 
     Refers to a `DEFCONSTANT`. `INITFORM`, or if not specified,
     the value of the constant is included in the documentation.
 
-<a name='x-28MGL-PAX-3AMACRO-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28MGL-PAX-3AMACRO-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **MACRO**
 
-<a name='x-28COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28COMPILER-MACRO-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **COMPILER-MACRO**
 
-<a name='x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28FUNCTION-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **FUNCTION**
 
@@ -894,11 +894,11 @@ locatives take no arguments.
     the quality of `SWANK-BACKEND:ARGLIST`. It may be that default
     values of optional and keyword arguments are missing.
 
-<a name='x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28GENERIC-FUNCTION-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **GENERIC-FUNCTION**
 
-<a name='x-28METHOD-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28METHOD-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **METHOD** *METHOD-QUALIFIERS METHOD-SPECIALIZERS*
 
@@ -909,7 +909,7 @@ locatives take no arguments.
         (foo (method () (t t t)))
 
 
-<a name='x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28MGL-PAX-3AACCESSOR-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **ACCESSOR** *CLASS-NAME*
 
@@ -919,7 +919,7 @@ locatives take no arguments.
         (foo-slot (accessor foo))
 
 
-<a name='x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28MGL-PAX-3AREADER-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **READER** *CLASS-NAME*
 
@@ -929,7 +929,7 @@ locatives take no arguments.
         (foo-slot (reader foo))
 
 
-<a name='x-28MGL-PAX-3AWRITER-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28MGL-PAX-3AWRITER-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **WRITER** *CLASS-NAME*
 
@@ -939,35 +939,35 @@ locatives take no arguments.
         (foo-slot (writer foo))
 
 
-<a name='x-28MGL-PAX-3ASTRUCTURE-ACCESSOR-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28MGL-PAX-3ASTRUCTURE-ACCESSOR-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **STRUCTURE-ACCESSOR**
 
-    This is a synonym of [`FUNCTION`][3023] with the difference that the often
+    This is a synonym of [`FUNCTION`][6b15] with the difference that the often
     ugly and certainly uninformative lambda list will not be printed.
 
-<a name='x-28CLASS-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28CLASS-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **CLASS**
 
-<a name='x-28CONDITION-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28CONDITION-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **CONDITION**
 
-<a name='x-28TYPE-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28TYPE-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **TYPE**
 
     `TYPE` can refer to classes as well, but it's better style to use the
-    more specific [`CLASS`][6e37] locative type for that. Another difference to
-    [`CLASS`][6e37] is that an attempt is made at printing the arguments of type
+    more specific [`CLASS`][0208] locative type for that. Another difference to
+    [`CLASS`][0208] is that an attempt is made at printing the arguments of type
     specifiers.
 
-<a name='x-28PACKAGE-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28PACKAGE-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **PACKAGE**
 
-<a name='x-28MGL-PAX-3ADISLOCATED-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28MGL-PAX-3ADISLOCATED-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **DISLOCATED**
 
@@ -976,23 +976,23 @@ locatives take no arguments.
     
         `FOO`
     
-    will be linked to (if [`*DOCUMENT-LINK-CODE*`][8082]) its definition. However,
+    will be linked to (if [`*DOCUMENT-LINK-CODE*`][1d4c]) its definition. However,
     
         [`FOO`][dislocated]
     
     will not be. On a dislocated locative [`LOCATE`][b2be] always fails with a
     [`LOCATE-ERROR`][2285] condition.
 
-<a name='x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28MGL-PAX-3ALOCATIVE-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **LOCATIVE** *LAMBDA-LIST*
 
     This is the locative for locatives. When `M-.` is pressed on
-    [`VARIABLE`][474c] in `(VARIABLE LOCATIVE)`, this is what makes it possible
+    [`VARIABLE`][2be0] in `(VARIABLE LOCATIVE)`, this is what makes it possible
     to land at the `(DEFINE-LOCATIVE-TYPE VARIABLE ...)` form.
     Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.
 
-<a name='x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29'></a>
+<a name='x-28MGL-PAX-3AINCLUDE-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **INCLUDE** *SOURCE &KEY LINE-PREFIX HEADER FOOTER HEADER-NL FOOTER-NL*
 
@@ -1154,11 +1154,11 @@ need to muck with references when there is a perfectly good object.
 One may wish to make the [`DOCUMENT`][1eb8] function and `M-.` navigation
 work with new object types. Extending [`DOCUMENT`][1eb8] can be done by
 defining a [`DOCUMENT-OBJECT`][a05e] method. To allow these objects to be
-referenced from [`DEFSECTION`][2863] a [`LOCATE-OBJECT`][acc9] method is to be defined.
+referenced from [`DEFSECTION`][b1e7] a [`LOCATE-OBJECT`][acc9] method is to be defined.
 Finally, for `M-.` [`FIND-SOURCE`][b417] can be specialized. Finally,
 [`EXPORTABLE-LOCATIVE-TYPE-P`][96c5] may be overridden if exporting does not
 makes sense. Here is a stripped down example of how all this is done
-for [`ASDF:SYSTEM:`][90f2]
+for [`ASDF:SYSTEM:`][bf8a]
 
 <a name='x-28MGL-PAX-3AASDF-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-28-3ASTART-20-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29-20-3AEND-20-28MGL-PAX-3A-3AEND-OF-ASDF-EXAMPLE-20VARIABLE-29-29-20-3AHEADER-NL-20-22-60-60-60commonlisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
 
@@ -1212,11 +1212,11 @@ for [`ASDF:SYSTEM:`][90f2]
 
 ```
 
-<a name='x-28MGL-PAX-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29'></a>
+<a name='x-28MGL-PAX-3ADEFINE-LOCATIVE-TYPE-20-28MGL-PAX-3AMACRO-29-29'></a>
 
 - [macro] **DEFINE-LOCATIVE-TYPE** *LOCATIVE-TYPE LAMBDA-LIST &BODY DOCSTRING*
 
-    Declare `LOCATIVE-TYPE` as a [`LOCATIVE`][76b5]. One gets two
+    Declare `LOCATIVE-TYPE` as a [LOCATIVE][locative]. One gets two
     things in return: first, a place to document the format and
     semantics of `LOCATIVE-TYPE` (in `LAMBDA-LIST` and `DOCSTRING`); second,
     being able to reference `(LOCATIVE-TYPE LOCATIVE)`. For example, if
@@ -1235,10 +1235,10 @@ for [`ASDF:SYSTEM:`][90f2]
 
     Return true iff symbols in references with
     `LOCATIVE-TYPE` are to be exported by default when they occur in a
-    [`DEFSECTION`][2863]. The default method returns `T`, while the methods for
-    [`PACKAGE`][16ad], [`ASDF:SYSTEM`][90f2] and [`METHOD`][d71c] return `NIL`.
+    [`DEFSECTION`][b1e7]. The default method returns `T`, while the methods for
+    [`PACKAGE`][a15b], [`ASDF:SYSTEM`][bf8a] and [`METHOD`][f1a0] return `NIL`.
     
-    [`DEFSECTION`][2863] calls this function to decide what symbols to export when
+    [`DEFSECTION`][b1e7] calls this function to decide what symbols to export when
     its `EXPORT` argument is true.
 
 <a name='x-28MGL-PAX-3ALOCATE-OBJECT-20GENERIC-FUNCTION-29'></a>
@@ -1246,7 +1246,7 @@ for [`ASDF:SYSTEM:`][90f2]
 - [generic-function] **LOCATE-OBJECT** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS*
 
     Return the object `OBJECT` + locative refers to. For
-    example, if `LOCATIVE-TYPE` is the symbol [`PACKAGE`][16ad], this
+    example, if `LOCATIVE-TYPE` is the symbol [`PACKAGE`][a15b], this
     returns `(FIND-PACKAGE SYMBOL)`. Signal a [`LOCATE-ERROR`][2285] condition by
     calling the [`LOCATE-ERROR`][f3b7] function if lookup fails. Signal other
     errors if the types of the argument are bad, for instance
@@ -1352,7 +1352,7 @@ that [`LOCATE`][b2be] returns a [`REFERENCE`][cc37] object in this case. [`DOCUM
 and [`FIND-SOURCE`][b417] defer to [`LOCATE-AND-DOCUMENT`][6c17] and
 [`LOCATE-AND-FIND-SOURCE`][e9e9] which have [`LOCATIVE-TYPE`][966a] in their argument
 list for `EQL` specializing pleasure. Here is a stripped down example
-of how the [`VARIABLE`][474c] locative is defined:
+of how the [`VARIABLE`][2be0] locative is defined:
 
 <a name='x-28MGL-PAX-3AVARIABLE-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-28-3ASTART-20-28VARIABLE-20MGL-PAX-3ALOCATIVE-29-20-3AEND-20-28MGL-PAX-3A-3AEND-OF-VARIABLE-EXAMPLE-20VARIABLE-29-29-20-3AHEADER-NL-20-22-60-60-60commonlisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
 
@@ -1368,8 +1368,7 @@ of how the [`VARIABLE`][474c] locative is defined:
 (defmethod locate-and-document (symbol (locative-type (eql 'variable))
                                 locative-args stream)
   (destructuring-bind (&optional (initform nil initformp)) locative-args
-    (format stream "- [~A] " (string-downcase locative-type))
-    (print-name (prin1-to-string symbol) stream)
+    (locate-and-print-bullet locative-type locative-args symbol stream)
     (write-char #\Space stream)
     (multiple-value-bind (value unboundp) (symbol-global-value symbol)
       (print-arglist (prin1-to-string (cond (initformp initform)
@@ -1457,18 +1456,18 @@ of how the [`VARIABLE`][474c] locative is defined:
 
 We have covered the basic building blocks of reference based
 extensions. Now let's see how the obscure
-[`DEFINE-SYMBOL-LOCATIVE-TYPE`][57cb] and
-[`DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE`][68e7] macros work together to
+[`DEFINE-SYMBOL-LOCATIVE-TYPE`][5d5a] and
+[`DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE`][ce09] macros work together to
 simplify the common task of associating definition and documentation
 with symbols in a certain context.
 
-<a name='x-28MGL-PAX-3ADEFINE-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29'></a>
+<a name='x-28MGL-PAX-3ADEFINE-SYMBOL-LOCATIVE-TYPE-20-28MGL-PAX-3AMACRO-29-29'></a>
 
 - [macro] **DEFINE-SYMBOL-LOCATIVE-TYPE** *LOCATIVE-TYPE LAMBDA-LIST &BODY DOCSTRING*
 
-    Similar to [`DEFINE-LOCATIVE-TYPE`][62d4] but it assumes that all things
+    Similar to [`DEFINE-LOCATIVE-TYPE`][b811] but it assumes that all things
     locatable with `LOCATIVE-TYPE` are going to be just symbols defined
-    with a definer defined with [`DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE`][68e7].
+    with a definer defined with [`DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE`][ce09].
     It is useful to attach documentation and source location to symbols
     in a particular context. An example will make everything clear:
     
@@ -1488,7 +1487,7 @@ with symbols in a certain context.
     After all this, `(UP DIRECTION)` refers to the `DEFINE-DIRECTION`
     form above.
 
-<a name='x-28MGL-PAX-3ADEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29'></a>
+<a name='x-28MGL-PAX-3ADEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE-20-28MGL-PAX-3AMACRO-29-29'></a>
 
 - [macro] **DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE** *NAME LOCATIVE-TYPE &BODY DOCSTRING*
 
@@ -1496,14 +1495,14 @@ with symbols in a certain context.
     a lambda-list and source location to a symbol in the context of
     `LOCATIVE-TYPE`. The defined macro's arglist is (`SYMBOL` `LAMBDA-LIST`
     `&OPTIONAL` `DOCSTRING`). `LOCATIVE-TYPE` is assumed to have been defined
-    with [`DEFINE-SYMBOL-LOCATIVE-TYPE`][57cb].
+    with [`DEFINE-SYMBOL-LOCATIVE-TYPE`][5d5a].
 
 <a name='x-28MGL-PAX-3A-40MGL-PAX-SECTIONS-20MGL-PAX-3ASECTION-29'></a>
 
 ### 9.4 Sections
 
 [`Section`][aee8] objects rarely need to be dissected since
-[`DEFSECTION`][2863] and [`DOCUMENT`][1eb8] cover most needs. However, it is plausible
+[`DEFSECTION`][b1e7] and [`DOCUMENT`][1eb8] cover most needs. However, it is plausible
 that one wants to subclass them and maybe redefine how they are
 presented.
 
@@ -1511,7 +1510,7 @@ presented.
 
 - [class] **SECTION**
 
-    [`DEFSECTION`][2863] stores its `NAME`, `TITLE` and `ENTRIES` in
+    [`DEFSECTION`][b1e7] stores its `NAME`, `TITLE` and `ENTRIES` in
     [`SECTION`][aee8] objects.
 
 <a name='x-28MGL-PAX-3ASECTION-NAME-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
@@ -1546,7 +1545,7 @@ presented.
 - [reader] **SECTION-ENTRIES** *SECTION* *(:ENTRIES)*
 
     A list of strings and [`REFERENCE`][cc37] objects in the
-    order they occurred in [`DEFSECTION`][2863].
+    order they occurred in [`DEFSECTION`][b1e7].
 
 <a name='x-28DESCRIBE-OBJECT-20-28METHOD-20NIL-20-28MGL-PAX-3ASECTION-20T-29-29-29'></a>
 
@@ -1554,7 +1553,7 @@ presented.
 
     [`SECTION`][aee8] objects are printed by calling [`DOCUMENT`][1eb8] on them
     with all [Documentation Printer Variables][e2a1], except for
-    [`*DOCUMENT-NORMALIZE-PACKAGES*`][353f], turned off to reduce clutter.
+    [`*DOCUMENT-NORMALIZE-PACKAGES*`][ada7], turned off to reduce clutter.
 
 <a name='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-20MGL-PAX-3ASECTION-29'></a>
 
@@ -1875,68 +1874,68 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
     consistency check fails.
 
   [00f0]: #x-28MGL-PAX-3A-40MGL-PAX-REFERENCE-BASED-EXTENSIONS-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-REFERENCE-BASED-EXTENSIONS MGL-PAX:SECTION)"
+  [0208]: #x-28CLASS-20-28MGL-PAX-3ALOCATIVE-29-29 "(CLASS (MGL-PAX:LOCATIVE))"
   [0382]: #x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29 "(MGL-PAX:TRANSCRIBE FUNCTION)"
   [0412]: #x-28MGL-PAX-3AREFERENCE-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29 "(MGL-PAX:REFERENCE-OBJECT (MGL-PAX:READER MGL-PAX:REFERENCE))"
-  [16ad]: #x-28PACKAGE-20MGL-PAX-3ALOCATIVE-29 "(PACKAGE MGL-PAX:LOCATIVE)"
+  [12a1]: #x-28MGL-PAX-3ALOCATIVE-20-28MGL-PAX-3ALOCATIVE-29-29 "(MGL-PAX:LOCATIVE (MGL-PAX:LOCATIVE))"
+  [1514]: #x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DISCARD-DOCUMENTATION-P* (VARIABLE))"
   [1920]: #x-28MGL-PAX-3ACOLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29 "(MGL-PAX:COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION)"
+  [1d4c]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DOCUMENT-LINK-CODE* (VARIABLE))"
   [1eb8]: #x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29 "(MGL-PAX:DOCUMENT FUNCTION)"
   [1f66]: #x-28MGL-PAX-3ASECTION-ENTRIES-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "(MGL-PAX:SECTION-ENTRIES (MGL-PAX:READER MGL-PAX:SECTION))"
   [1fbb]: #x-28MGL-PAX-3A-40MGL-PAX-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-LOCATIVE-TYPES MGL-PAX:SECTION)"
   [2285]: #x-28MGL-PAX-3ALOCATE-ERROR-20CONDITION-29 "(MGL-PAX:LOCATE-ERROR CONDITION)"
   [24fc]: #x-28MGL-PAX-3ACANONICAL-REFERENCE-20GENERIC-FUNCTION-29 "(MGL-PAX:CANONICAL-REFERENCE GENERIC-FUNCTION)"
-  [2863]: #x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"
-  [2cf1]: #x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:SECTION MGL-PAX:LOCATIVE)"
-  [3023]: #x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29 "(FUNCTION MGL-PAX:LOCATIVE)"
+  [2be0]: #x-28VARIABLE-20-28MGL-PAX-3ALOCATIVE-29-29 "(VARIABLE (MGL-PAX:LOCATIVE))"
   [32ac]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-MARKDOWN-SYNTAX-HIGHLIGHTING MGL-PAX:SECTION)"
-  [353f]: #x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES* VARIABLE)"
-  [3fef]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE)"
+  [34f5]: #x-28MGL-PAX-3ADEFINE-PACKAGE-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFINE-PACKAGE (MGL-PAX:MACRO))"
   [4336]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-MARKDOWN-INDENTATION MGL-PAX:SECTION)"
-  [474c]: #x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29 "(VARIABLE MGL-PAX:LOCATIVE)"
   [4918]: #x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax\" ASDF/SYSTEM:SYSTEM)"
   [5161]: #x-28MGL-PAX-3A-40MGL-PAX-NEW-OBJECT-TYPES-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-NEW-OBJECT-TYPES MGL-PAX:SECTION)"
-  [57cb]: #x-28MGL-PAX-3ADEFINE-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO)"
+  [53a8]: #x-28MGL-PAX-3ASECTION-20-28MGL-PAX-3ALOCATIVE-29-29 "(MGL-PAX:SECTION (MGL-PAX:LOCATIVE))"
   [5a2c]: #x-28MGL-PAX-3ATRANSCRIPTION-CONSISTENCY-ERROR-20CONDITION-29 "(MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION)"
-  [62d4]: #x-28MGL-PAX-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-LOCATIVE-TYPE MGL-PAX:MACRO)"
-  [68e7]: #x-28MGL-PAX-3ADEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO)"
+  [5d5a]: #x-28MGL-PAX-3ADEFINE-SYMBOL-LOCATIVE-TYPE-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFINE-SYMBOL-LOCATIVE-TYPE (MGL-PAX:MACRO))"
+  [6b15]: #x-28FUNCTION-20-28MGL-PAX-3ALOCATIVE-29-29 "(FUNCTION (MGL-PAX:LOCATIVE))"
   [6c17]: #x-28MGL-PAX-3ALOCATE-AND-DOCUMENT-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-DOCUMENT GENERIC-FUNCTION)"
-  [6e37]: #x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "(CLASS MGL-PAX:LOCATIVE)"
-  [76b5]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE)"
   [7a11]: #x-28MGL-PAX-3ALOCATE-AND-COLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION)"
   [7a32]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-TRANSCRIPT MGL-PAX:SECTION)"
   [8059]: #x-28MGL-PAX-3A-40MGL-PAX-BASICS-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-BASICS MGL-PAX:SECTION)"
-  [8082]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-LINK-CODE* VARIABLE)"
   [819a]: #x-28MGL-PAX-3AREFERENCE-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29 "(MGL-PAX:REFERENCE-LOCATIVE (MGL-PAX:READER MGL-PAX:REFERENCE))"
   [81be]: #x-28MGL-PAX-3ALOCATE-ERROR-MESSAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29 "(MGL-PAX:LOCATE-ERROR-MESSAGE (MGL-PAX:READER MGL-PAX:LOCATE-ERROR))"
   [84ee]: #x-28MGL-PAX-3A-40MGL-PAX-BACKGROUND-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-BACKGROUND MGL-PAX:SECTION)"
   [87c7]: #x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "(MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION))"
-  [8be2]: #x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE* VARIABLE)"
   [8ed9]: #x-28MGL-PAX-3A-40MGL-PAX-EXTENSION-API-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-EXTENSION-API MGL-PAX:SECTION)"
-  [90f2]: #x-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29 "(ASDF/SYSTEM:SYSTEM MGL-PAX:LOCATIVE)"
   [966a]: #x-28MGL-PAX-3ALOCATIVE-TYPE-20FUNCTION-29 "(MGL-PAX:LOCATIVE-TYPE FUNCTION)"
   [96c5]: #x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29 "(MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION)"
   [a05e]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-20GENERIC-FUNCTION-29 "(MGL-PAX:DOCUMENT-OBJECT GENERIC-FUNCTION)"
+  [a15b]: #x-28PACKAGE-20-28MGL-PAX-3ALOCATIVE-29-29 "(PACKAGE (MGL-PAX:LOCATIVE))"
+  [a282]: #x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE* (VARIABLE))"
   [aa52]: #x-28MGL-PAX-3A-40MGL-PAX-TUTORIAL-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-TUTORIAL MGL-PAX:SECTION)"
   [acc9]: #x-28MGL-PAX-3ALOCATE-OBJECT-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-OBJECT GENERIC-FUNCTION)"
   [ad5a]: #x-28MGL-PAX-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmega-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29 "(MGL-PAX:PAX.EL (MGL-PAX:INCLUDE #P\"/home/mega/own/mgl-pax/src/pax.el\" :HEADER-NL \"```elisp\" :FOOTER-NL \"```\"))"
+  [ada7]: #x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES* (VARIABLE))"
   [aee8]: #x-28MGL-PAX-3ASECTION-20CLASS-29 "(MGL-PAX:SECTION CLASS)"
+  [b1e7]: #x-28MGL-PAX-3ADEFSECTION-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFSECTION (MGL-PAX:MACRO))"
   [b2be]: #x-28MGL-PAX-3ALOCATE-20FUNCTION-29 "(MGL-PAX:LOCATE FUNCTION)"
   [b417]: #x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNCTION-29 "(MGL-PAX:FIND-SOURCE GENERIC-FUNCTION)"
+  [b811]: #x-28MGL-PAX-3ADEFINE-LOCATIVE-TYPE-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFINE-LOCATIVE-TYPE (MGL-PAX:MACRO))"
   [be22]: #x-28MGL-PAX-3A-40MGL-PAX-SECTIONS-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-SECTIONS MGL-PAX:SECTION)"
   [bf16]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-API-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-TRANSCRIPT-API MGL-PAX:SECTION)"
+  [bf8a]: #x-28ASDF-2FSYSTEM-3ASYSTEM-20-28MGL-PAX-3ALOCATIVE-29-29 "(ASDF/SYSTEM:SYSTEM (MGL-PAX:LOCATIVE))"
   [c694]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-EMACS-INTEGRATION-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-TRANSCRIPT-EMACS-INTEGRATION MGL-PAX:SECTION)"
-  [c98c]: #x-28MGL-PAX-3ADEFINE-PACKAGE-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-PACKAGE MGL-PAX:MACRO)"
   [cc37]: #x-28MGL-PAX-3AREFERENCE-20CLASS-29 "(MGL-PAX:REFERENCE CLASS)"
+  [ce09]: #x-28MGL-PAX-3ADEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE (MGL-PAX:MACRO))"
   [d023]: #x-28MGL-PAX-3A-40MGL-PAX-LOCATIVES-AND-REFERENCES-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-LOCATIVES-AND-REFERENCES MGL-PAX:SECTION)"
-  [d259]: #x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20VARIABLE-29 "(MGL-PAX:*DISCARD-DOCUMENTATION-P* VARIABLE)"
   [d58f]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-MARKDOWN-SUPPORT MGL-PAX:SECTION)"
-  [d71c]: #x-28METHOD-20MGL-PAX-3ALOCATIVE-29 "(METHOD MGL-PAX:LOCATIVE)"
   [d7eb]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28STRING-20T-29-29-29 "(MGL-PAX:DOCUMENT-OBJECT (METHOD NIL (STRING T)))"
   [df39]: #x-28DESCRIBE-OBJECT-20-28METHOD-20NIL-20-28MGL-PAX-3ASECTION-20T-29-29-29 "(DESCRIBE-OBJECT (METHOD NIL (MGL-PAX:SECTION T)))"
   [e0d7]: #x-28MGL-PAX-3ARESOLVE-20FUNCTION-29 "(MGL-PAX:RESOLVE FUNCTION)"
   [e2a1]: #x-28MGL-PAX-3A-40MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES MGL-PAX:SECTION)"
   [e9e9]: #x-28MGL-PAX-3ALOCATE-AND-FIND-SOURCE-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-FIND-SOURCE GENERIC-FUNCTION)"
   [eff4]: #x-28MGL-PAX-3A-40MGL-PAX-EMACS-INTEGRATION-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-EMACS-INTEGRATION MGL-PAX:SECTION)"
+  [f1a0]: #x-28METHOD-20-28MGL-PAX-3ALOCATIVE-29-29 "(METHOD (MGL-PAX:LOCATIVE))"
   [f3b7]: #x-28MGL-PAX-3ALOCATE-ERROR-20FUNCTION-29 "(MGL-PAX:LOCATE-ERROR FUNCTION)"
+  [f901]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DOCUMENT-LINK-SECTIONS* (VARIABLE))"
 
 * * *
 ###### \[generated by [MGL-PAX](https://github.com/melisgl/mgl-pax)\]

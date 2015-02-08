@@ -280,12 +280,12 @@
 (defun bold (string stream)
   (if (zerop (length string))
       ""
-      (format stream "**~A**" (escape-markdown string))))
+      (format stream "**~A**" string)))
 
 (defun italic (string stream)
   (if (zerop (length string))
       ""
-      (format stream "*~A*" (escape-markdown string))))
+      (format stream "*~A*" string)))
 
 
 

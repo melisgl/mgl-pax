@@ -13,9 +13,24 @@ h1, h2, h3, h4, h5, h6 {
   text-shadow: 0.05em 0.05em 0.02em #DDDDDD;
 }
 
-h1 {
-  font-size: 250%;
-  font-variant: small-caps;
+h1 a {
+  text-decoration: none;
+}
+
+h2 a {
+  text-decoration: none;
+}
+
+h3 a {
+  text-decoration: none;
+}
+
+h4 a {
+  text-decoration: none;
+}
+
+h5 a {
+  text-decoration: none;
 }
 
 h2 {
@@ -93,6 +108,21 @@ h6 a {
 
 a:hover {
   /* text-decoration: none; */
+}
+
+.locative-type {
+}
+
+.reference-object {
+  font-weight: bold;
+}
+
+.reference-object a {
+  text-decoration: none;
+}
+
+.locative-args {
+  font-style: italic;
 }
 
 .navigation a {
