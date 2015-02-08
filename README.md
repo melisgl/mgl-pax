@@ -28,7 +28,7 @@
 
 ## 1 mgl-pax ASDF System Details
 
-- Version: 0.0.1
+- Version: 0.0.2
 - Description: Exploratory programming tool and documentation
   generator.
 - Licence: MIT, see COPYING.

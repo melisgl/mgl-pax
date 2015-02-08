@@ -3,7 +3,7 @@
 ;;; See MGL-PAX:@MGL-PAX-MANUAL for the user guide.
 (asdf:defsystem #:mgl-pax
   :licence "MIT, see COPYING."
-  :version "0.0.1"
+  :version "0.0.2"
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
   :homepage "http://quotenil.com"
