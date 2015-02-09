@@ -145,6 +145,10 @@
       (rest locative)
       ()))
 
+(defun locative-equal (locative-1 locative-2)
+  (equal (alexandria:ensure-list locative-1)
+         (alexandria:ensure-list locative-2)))
+
 (defun transform-entries (entries)
   (mapcar (lambda (entry)
             (if (stringp entry)

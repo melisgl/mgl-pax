@@ -94,7 +94,7 @@ based on the locative found in the vicinity of the symbol and
 everything was good for a while.
 
 Then I realized that sections could refer to other sections if there
-were a `SECTION`([`0`][aee8] [`1`][53a8]) locative. Going down that path, I soon began to feel
+were a [`SECTION`][53a8] locative. Going down that path, I soon began to feel
 the urge to generate pretty documentation as all the necessary
 information was manifest in the [`DEFSECTION`][b1e7] forms. The design
 constraint imposed on documentation generation was that following
@@ -734,7 +734,7 @@ described below.
     
     This situation occurs in PAX with `SECTION`([`0`][aee8] [`1`][53a8]) which is both a class (see
     [`SECTION`][aee8]) and a locative type denoted by a symbol (see
-    [SECTION][locative]). Back in the example above, clearly,
+    [`SECTION`][53a8]). Back in the example above, clearly,
     there is no reason to link to type `BAR`, so one may wish to select
     the function locative. There are two ways to do that. One is to
     specify the locative explicitly as the id of a reference link:
@@ -753,7 +753,7 @@ described below.
     This last option needs backticks around the locative if it's not a
     single symbol.
     
-    Note that [*DOCUMENT-LINK-CODE*][variable] can be combined with
+    Note that [`*DOCUMENT-LINK-CODE*`][1d4c] can be combined with
     [`*DOCUMENT-UPPERCASE-IS-CODE*`][a282] to have links generated for
     uppercase names with no quoting required.
 
@@ -1216,7 +1216,7 @@ for [`ASDF:SYSTEM:`][bf8a]
 
 - [macro] **DEFINE-LOCATIVE-TYPE** *LOCATIVE-TYPE LAMBDA-LIST &BODY DOCSTRING*
 
-    Declare `LOCATIVE-TYPE` as a [LOCATIVE][locative]. One gets two
+    Declare `LOCATIVE-TYPE` as a [`LOCATIVE`][12a1]. One gets two
     things in return: first, a place to document the format and
     semantics of `LOCATIVE-TYPE` (in `LAMBDA-LIST` and `DOCSTRING`); second,
     being able to reference `(LOCATIVE-TYPE LOCATIVE)`. For example, if

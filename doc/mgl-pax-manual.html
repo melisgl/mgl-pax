@@ -126,7 +126,7 @@ based on the locative found in the vicinity of the symbol and
 everything was good for a while.</p>
 
 <p>Then I realized that sections could refer to other sections if there
-were a <code>SECTION</code>(<a href="#x-28MGL-PAX-3ASECTION-20CLASS-29" title="(MGL-PAX:SECTION CLASS)"><code>0</code></a> <a href="#x-28MGL-PAX-3ASECTION-20-28MGL-PAX-3ALOCATIVE-29-29" title="(MGL-PAX:SECTION (MGL-PAX:LOCATIVE))"><code>1</code></a>) locative. Going down that path, I soon began to feel
+were a <a href="#x-28MGL-PAX-3ASECTION-20-28MGL-PAX-3ALOCATIVE-29-29" title="(MGL-PAX:SECTION (MGL-PAX:LOCATIVE))"><code>SECTION</code></a> locative. Going down that path, I soon began to feel
 the urge to generate pretty documentation as all the necessary
 information was manifest in the <a href="#x-28MGL-PAX-3ADEFSECTION-20-28MGL-PAX-3AMACRO-29-29" title="(MGL-PAX:DEFSECTION (MGL-PAX:MACRO))"><code>DEFSECTION</code></a> forms. The design
 constraint imposed on documentation generation was that following
@@ -780,7 +780,7 @@ case rarely matters.</p>
 
 <p>This situation occurs in PAX with <code>SECTION</code>(<a href="#x-28MGL-PAX-3ASECTION-20CLASS-29" title="(MGL-PAX:SECTION CLASS)"><code>0</code></a> <a href="#x-28MGL-PAX-3ASECTION-20-28MGL-PAX-3ALOCATIVE-29-29" title="(MGL-PAX:SECTION (MGL-PAX:LOCATIVE))"><code>1</code></a>) which is both a class (see
 <a href="#x-28MGL-PAX-3ASECTION-20CLASS-29" title="(MGL-PAX:SECTION CLASS)"><code>SECTION</code></a>) and a locative type denoted by a symbol (see
-[SECTION]). Back in the example above, clearly,
+<a href="#x-28MGL-PAX-3ASECTION-20-28MGL-PAX-3ALOCATIVE-29-29" title="(MGL-PAX:SECTION (MGL-PAX:LOCATIVE))"><code>SECTION</code></a>). Back in the example above, clearly,
 there is no reason to link to type <code>BAR</code>, so one may wish to select
 the function locative. There are two ways to do that. One is to
 specify the locative explicitly as the id of a reference link:</p>
@@ -801,7 +801,7 @@ any markup:</p>
 <p>This last option needs backticks around the locative if it's not a
 single symbol.</p>
 
-<p>Note that [<em>DOCUMENT-LINK-CODE</em>] can be combined with
+<p>Note that <a href="#x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20-28VARIABLE-29-29" title="(MGL-PAX:*DOCUMENT-LINK-CODE* (VARIABLE))"><code>*DOCUMENT-LINK-CODE*</code></a> can be combined with
 <a href="#x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20-28VARIABLE-29-29" title="(MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE* (VARIABLE))"><code>*DOCUMENT-UPPERCASE-IS-CODE*</code></a> to have links generated for
 uppercase names with no quoting required.</p></li>
 </ul>
@@ -1353,7 +1353,7 @@ for <a href="#x-28ASDF-2FSYSTEM-3ASYSTEM-20-28MGL-PAX-3ALOCATIVE-29-29" title="(
 <ul>
 <li><p><span class="locative-type">[macro]</span> <span class="reference-object"><a href="#x-28MGL-PAX-3ADEFINE-LOCATIVE-TYPE-20-28MGL-PAX-3AMACRO-29-29" >DEFINE-LOCATIVE-TYPE</a></span> <span class="locative-args">LOCATIVE-TYPE LAMBDA-LIST &amp;BODY DOCSTRING</span></p>
 
-<p>Declare <code>LOCATIVE-TYPE</code> as a [LOCATIVE]. One gets two
+<p>Declare <code>LOCATIVE-TYPE</code> as a <a href="#x-28MGL-PAX-3ALOCATIVE-20-28MGL-PAX-3ALOCATIVE-29-29" title="(MGL-PAX:LOCATIVE (MGL-PAX:LOCATIVE))"><code>LOCATIVE</code></a>. One gets two
 things in return: first, a place to document the format and
 semantics of <code>LOCATIVE-TYPE</code> (in <code>LAMBDA-LIST</code> and <code>DOCSTRING</code>); second,
 being able to reference <code>(LOCATIVE-TYPE LOCATIVE)</code>. For example, if

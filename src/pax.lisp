@@ -1559,7 +1559,7 @@
       (if (and if-dislocated (eq locative 'dislocated))
           (make-reference if-dislocated 'dislocated)
           (find locative known-references
-                :key #'reference-locative :test #'equal)))))
+                :key #'reference-locative :test #'locative-equal)))))
 
 (defun translate-to-code (parent tree known-references)
   (cond ((stringp tree)
