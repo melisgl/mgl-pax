@@ -100,8 +100,14 @@
    stream
    "  </div>~%~
    </div>~%~
-   <script>$('#page-toc').toc();</script>~
-   </body>~%</html>~%"))
+   <script>$('#page-toc').toc(~A);</script>~
+   </body>~%</html>~%"
+   (toc-options)))
+
+(defun toc-options ()
+  (format nil "{'selectors': '~{~A~^,~}'}"
+          (loop for i upfrom 1 upto (1+ *document-max-table-of-contents-level*)
+                collect (format nil "h~S" i))))
 
 #|
 
