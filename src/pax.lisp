@@ -1679,38 +1679,26 @@
 ;;; Return the references from REFS which are for SYMBOL or which are
 ;;; for a non-symbol but resolve to the same object with SYMBOL.
 (defun references-for-symbol (symbol refs n-chars-read)
-  (or (remove-if-not (lambda (ref)
-                       (or (eq symbol (reference-object ref))
-                           ;; FIXME: This is only called when there is
-                           ;; an interned symbol for something named
-                           ;; by a string. Bleh.
-                           ;;
-                           ;; If the object of REF is replaced with
-                           ;; SYMBOL, does it resolve to the same
-                           ;; object? This is necessary to get package
-                           ;; and asdf systems right, because the
-                           ;; object in their canonical references are
-                           ;; strings and we compare to symbols.
-                           ;;
-                           ;; FIXME: this is also a performance
-                           ;; problem.
-                           (and (not (symbolp (reference-object ref)))
-                                (let ((resolved-1 (ignore-errors (resolve ref)))
-                                      (resolved-2
-                                        (ignore-errors
-                                         (locate symbol
-                                                 (reference-locative ref)))))
-                                  (and resolved-1 resolved-2
-                                       (or (eq resolved-1 resolved-2)
-                                           (and (typep resolved-1 'reference)
-                                                (typep resolved-2 'reference)
-                                                (reference= resolved-1
-                                                            resolved-2))))))))
-                     refs)
-      ;; Don't codify A, I and similar.
-      (if (< 2 n-chars-read)
-          (list (make-reference symbol 'dislocated))
-          ())))
+  (let ((symbol-name (symbol-name symbol)))
+    (or (remove-if-not (lambda (ref)
+                         (or (eq symbol (reference-object ref))
+                             ;; This function is only called when
+                             ;; there is an interned symbol for
+                             ;; something named by a string.
+                             ;;
+                             ;; KLUDGE: If the object of REF is
+                             ;; replaced with SYMBOL, does it resolve
+                             ;; to the same object? This is necessary
+                             ;; to get package and asdf systems right,
+                             ;; because the object in their canonical
+                             ;; references are strings and we compare
+                             ;; to symbols.
+                             (equalp symbol-name (reference-object ref))))
+                       refs)
+        ;; Don't codify A, I and similar.
+        (if (< 2 n-chars-read)
+            (list (make-reference symbol 'dislocated))
+            ()))))
 
 (defun references-for-similar-names (name refs)
   (multiple-value-bind (symbol n-chars-read)
