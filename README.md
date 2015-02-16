@@ -149,7 +149,7 @@ Here is an example of how it all works together:
 (defsection @foo-random-manual (:title "Foo Random manual")
   "Here you describe what's common to all the referenced (and
   exported) functions that follow. They work with *FOO-STATE*,
-  and have a :RANDOM-STATE keyword arg. Also explain when to 
+  and have a :RANDOM-STATE keyword arg. Also explain when to
   choose which."
   (foo-random-state class)
   (state (reader foo-random-state))
@@ -209,7 +209,7 @@ For this example, the generated markdown would look like this:
     ###### \[in package FOO-RANDOM\]
     Here you describe what's common to all the referenced (and
     exported) functions that follow. They work with *FOO-STATE*,
-    and have a :RANDOM-STATE keyword arg. Also explain when to 
+    and have a :RANDOM-STATE keyword arg. Also explain when to
     choose which.
     
     - [class] FOO-RANDOM-STATE

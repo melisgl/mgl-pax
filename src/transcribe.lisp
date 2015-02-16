@@ -4,6 +4,8 @@
 ;;;;   other parameters.
 ;;;;
 ;;;; - lightweight syntax instead of ```cl-transcript?
+;;;;
+;;;; - executable transcript syntax
 
 (in-package :mgl-pax)
 

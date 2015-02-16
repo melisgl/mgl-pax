@@ -70,7 +70,7 @@
   symbols to export.
 
   [oaoo]: http://c2.com/cgi/wiki?OnceAndOnlyOnce
-  
+
   That was great, but soon I found that the listing of symbols is
   ambiguous if, for example, a function, a compiler macro and a class
   are named by the same symbol. This did not concern exporting, of
@@ -142,7 +142,7 @@
   (defsection @foo-random-manual (:title "Foo Random manual")
     "Here you describe what's common to all the referenced (and
     exported) functions that follow. They work with *FOO-STATE*,
-    and have a :RANDOM-STATE keyword arg. Also explain when to 
+    and have a :RANDOM-STATE keyword arg. Also explain when to
     choose which."
     (foo-random-state class)
     (state (reader foo-random-state))
@@ -202,7 +202,7 @@
       ###### \[in package FOO-RANDOM\]
       Here you describe what's common to all the referenced (and
       exported) functions that follow. They work with *FOO-STATE*,
-      and have a :RANDOM-STATE keyword arg. Also explain when to 
+      and have a :RANDOM-STATE keyword arg. Also explain when to
       choose which.
 
       - [class] FOO-RANDOM-STATE
