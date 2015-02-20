@@ -3206,3 +3206,56 @@
                                         (- end (file-position stream))))
             do (write-sequence buffer datum :start 0 :end bytes-read)
             while (= bytes-read buffer-size)))))))
+
+
+(defsection @mgl-pax-utilities (:title "Utilities")
+  (make-github-source-uri-fn function))
+
+(defun make-github-source-uri-fn (asdf-system github-uri &key
+                                  (git-version "master"))
+  "Return a function suitable as :SOURCE-URI-FN of a page spec (see
+  the PAGES argument of DOCUMENT). The function looks the source
+  location of the reference passed to it, and if the location is
+  found, the path is made relative to the root directory of
+  ASDF-SYSTEM and finally an URI pointing to github is returned. The
+  URI looks like this:
+
+      https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
+
+  \"master\" in the above link comes from GIT-VERSION.
+
+  A separate warning is signalled whenever source location lookup
+  fails or if the source location points to a directory not below the
+  directory of ASDF-SYSTEM."
+  (let* ((system-dir (asdf:system-relative-pathname asdf-system "")))
+    (lambda (reference)
+      (multiple-value-bind (relative-path line-number)
+          (convert-source-location (find-source (mgl-pax:resolve reference))
+                                   system-dir reference)
+        (when relative-path
+          (format nil "~A/blob/~A/~A#L~S" github-uri git-version relative-path
+                  (1+ line-number)))))))
+
+(defun convert-source-location (source-location system-dir reference)
+  (cond ((eq (first source-location) :error)
+         (warn "~@<No source location found for reference ~:_~A: ~:_~A~%~@:>"
+               reference (second source-location)))
+        (t
+         (assert (eq (first source-location) :location))
+         (let* ((filename (second (assoc :file (rest source-location))))
+                (position (second (assoc :position (rest source-location))))
+                (relative-path (and filename
+                                    (enough-namestring filename system-dir))))
+           (if (and relative-path (cl-fad:pathname-relative-p relative-path))
+               (values relative-path
+                       (file-position-to-line-number filename position))
+               (warn "Source location for ~S is not below system ~
+                     directory ~S.~%" reference system-dir))))))
+
+(defun file-position-to-line-number (filename file-position)
+  (with-open-file (stream filename)
+    (loop for line = (read-line stream nil nil)
+          for line-number upfrom 0
+          while line
+          do (when (< file-position (file-position stream))
+               (return line-number)))))
