@@ -21,8 +21,6 @@
 ;;;; - markup for default values of &OPTIONAL &KEY arguments?
 ;;;;
 ;;;; - mathjax
-;;;;
-;;;; - link to source code from HTML
 
 (in-package :mgl-pax)
 
@@ -2421,13 +2419,15 @@
                    (find (1- level) (subseq *headings* 0 position)
                          :from-end t :key #'heading-level)))
              (next (when (< position (1- n))
-                     (elt *headings* (1+ position)))))
+                     (elt *headings* (1+ position))))
+             (source-uri (source-uri (canonical-reference object))))
         (format nil "<span class=\"outer-navigation\">~
                     <span class=\"navigation\">~
                     ~@[ [&#8592;][~A]~]~
                     ~@[ [&#8593;][~A]~]~
                     ~@[ [&#8594;][~A]~] ~
                     [&#8634;][~A]~
+                    ~A~
                     </span></span>~%"
                 (when prev
                   (link-to-reference
@@ -2438,7 +2438,10 @@
                 (when next
                   (link-to-reference
                    (canonical-reference (heading-object next))))
-                (link-to-reference (canonical-reference object))))
+                (link-to-reference (canonical-reference object))
+                (if source-uri
+                    (format nil " <a href=~S>&#955;</a>" source-uri)
+                    "")))
       ""))
 
 (defvar *section*)
