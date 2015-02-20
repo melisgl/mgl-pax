@@ -19,6 +19,10 @@
 ;;;; - autolinking to the hyperspec
 ;;;;
 ;;;; - markup for default values of &OPTIONAL &KEY arguments?
+;;;;
+;;;; - mathjax
+;;;;
+;;;; - link to source code from HTML
 
 (in-package :mgl-pax)
 
@@ -458,7 +462,8 @@
   final-stream-spec
   uri-fragment
   header-fn
-  footer-fn)
+  footer-fn
+  source-uri-fn)
 
 ;;; The current page where output is being sent.
 (defvar *page* nil)
@@ -630,10 +635,10 @@
   The PAGES argument is to create multi-page documents by routing some
   of the generated output to files, strings or streams. PAGES is a
   list of page specification elements. A page spec is a plist with
-  keys :OBJECTS, :OUTPUT, :URI-FRAGMENT, :HEADER-FN and :FOOTER-FN.
-  OBJECTS is a list of objects (references are allowed but not
-  required) whose documentation is to be sent to `OUTPUT`. `OUTPUT`
-  can be a number things:
+  keys :OBJECTS, :OUTPUT, :URI-FRAGMENT, :SOURCE-URI-FN, :HEADER-FN
+  and :FOOTER-FN. OBJECTS is a list of objects (references are allowed
+  but not required) whose documentation is to be sent to `OUTPUT`.
+  `OUTPUT` can be a number things:
 
   - If it's a list whose first element is a string or a pathname, then
     output will be sent to the file denoted by that and the rest of
@@ -677,14 +682,19 @@
   FOOTER-FN is similar to HEADER-FN, but it's called after the last
   write to the page. For HTML, it typically just closes the body.
 
-  Finally, URI-FRAGMENT is a string such as `"doc/manual.html"` that
-  specifies where the page will be deployed on a webserver. It defines
-  how links between pages will look. If it's not specified and `OUTPUT`
-  refers to a file, then it defaults to the name of the file. If
-  URI-FRAGMENT is NIL, then no links will be made to or from that
-  page.
+  URI-FRAGMENT is a string such as `"doc/manual.html"` that specifies
+  where the page will be deployed on a webserver. It defines how links
+  between pages will look. If it's not specified and `OUTPUT` refers
+  to a file, then it defaults to the name of the file. If URI-FRAGMENT
+  is NIL, then no links will be made to or from that page.
 
-  It may look something like this:
+  Finally, SOURCE-URI-FN is a function of a single, REFERENCE
+  argument. If it returns a value other than NIL, then it must be a
+  string representing an URI. If FORMAT is :HTML and
+  *DOCUMENT-MARK-UP-SIGNATURES* is true, then the locative as
+  displayed in the signature will be a link to this uri.
+
+  PAGES may look something like this:
 
   ```commonlisp
   `((;; The section about SECTIONs and everything below it ...
@@ -796,7 +806,8 @@
 
 (defun translate-page-spec (page format)
   (destructuring-bind (&key objects output header-fn footer-fn
-                       (uri-fragment nil uri-fragment-p))
+                       (uri-fragment nil uri-fragment-p)
+                       source-uri-fn)
       page
     (let ((stream-spec (apply #'make-stream-spec output)))
       (make-page
@@ -813,7 +824,8 @@
                              (file-stream-spec-pathname stream-spec)
                              nil))
        :header-fn header-fn
-       :footer-fn footer-fn))))
+       :footer-fn footer-fn
+       :source-uri-fn source-uri-fn))))
 
 (defun reachable-canonical-references (objects)
   (mapcan (lambda (object)
@@ -1079,13 +1091,22 @@
         (let ((locative-type (escape-markdown locative-type))
               (name (escape-markdown name)))
           (if (eq *format* :html)
-              (format stream
-                      "- <span class=\"locative-type\">\\[~A]</span> ~
-                      <span class=\"reference-object\">[~A](#~A)</span>"
-                      locative-type name
-                      (html-safe-name (reference-to-anchor reference)))
+              (let ((source-uri (source-uri reference)))
+                (format stream
+                        "- <span class=\"locative-type\">~
+                           ~@[<a href=\"~A\">~]\\[~A]~:[~;</a>~]~
+                           </span> ~
+                        <span class=\"reference-object\">[~A](#~A)</span>"
+                        source-uri locative-type source-uri name
+                        (html-safe-name (reference-to-anchor reference))))
               (format stream "- [~A] ~A" locative-type (bold name nil))))
         (format stream "- [~A] ~A" locative-type name))))
+
+(defun source-uri (reference)
+  (let ((fn (page-source-uri-fn *page*)))
+    (if fn
+        (funcall fn reference)
+        nil)))
 
 (defun locate-and-print-bullet (locative-type locative-args symbol stream)
   (print-reference-bullet

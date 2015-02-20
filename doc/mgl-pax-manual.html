@@ -545,10 +545,10 @@ pages.</p>
 <p>The <code>PAGES</code> argument is to create multi-page documents by routing some
 of the generated output to files, strings or streams. <code>PAGES</code> is a
 list of page specification elements. A page spec is a plist with
-keys <code>:OBJECTS</code>, <code>:OUTPUT</code>, <code>:URI-FRAGMENT</code>, <code>:HEADER-FN</code> and <code>:FOOTER-FN</code>.
-<code>OBJECTS</code> is a list of objects (references are allowed but not
-required) whose documentation is to be sent to <code>OUTPUT</code>. <code>OUTPUT</code>
-can be a number things:</p>
+keys <code>:OBJECTS</code>, <code>:OUTPUT</code>, <code>:URI-FRAGMENT</code>, <code>:SOURCE-URI-FN</code>, <code>:HEADER-FN</code>
+and <code>:FOOTER-FN</code>. <code>OBJECTS</code> is a list of objects (references are allowed
+but not required) whose documentation is to be sent to <code>OUTPUT</code>.
+<code>OUTPUT</code> can be a number things:</p>
 
 <ul>
 <li><p>If it's a list whose first element is a string or a pathname, then
@@ -591,14 +591,19 @@ css stylesheet, or charset.</p>
 <p><code>FOOTER-FN</code> is similar to <code>HEADER-FN</code>, but it's called after the last
 write to the page. For HTML, it typically just closes the body.</p>
 
-<p>Finally, <code>URI-FRAGMENT</code> is a string such as <code>&quot;doc/manual.html&quot;</code> that
-specifies where the page will be deployed on a webserver. It defines
-how links between pages will look. If it's not specified and <code>OUTPUT</code>
-refers to a file, then it defaults to the name of the file. If
-<code>URI-FRAGMENT</code> is <code>NIL</code>, then no links will be made to or from that
-page.</p>
+<p><code>URI-FRAGMENT</code> is a string such as <code>&quot;doc/manual.html&quot;</code> that specifies
+where the page will be deployed on a webserver. It defines how links
+between pages will look. If it's not specified and <code>OUTPUT</code> refers
+to a file, then it defaults to the name of the file. If <code>URI-FRAGMENT</code>
+is <code>NIL</code>, then no links will be made to or from that page.</p>
 
-<p>It may look something like this:</p>
+<p>Finally, <code>SOURCE-URI-FN</code> is a function of a single, <a href="#x-28MGL-PAX-3AREFERENCE-20CLASS-29" title="(MGL-PAX:REFERENCE CLASS)"><code>REFERENCE</code></a>
+argument. If it returns a value other than <code>NIL</code>, then it must be a
+string representing an URI. If <code>FORMAT</code> is <code>:HTML</code> and
+<a href="#x-28MGL-PAX-3A-2ADOCUMENT-MARK-UP-SIGNATURES-2A-20-28VARIABLE-29-29" title="(MGL-PAX:*DOCUMENT-MARK-UP-SIGNATURES* (VARIABLE))"><code>*DOCUMENT-MARK-UP-SIGNATURES*</code></a> is true, then the locative as
+displayed in the signature will be a link to this uri.</p>
+
+<p><code>PAGES</code> may look something like this:</p>
 
 <pre><code><span class="code">`<span class="paren1">(<span class="code"><span class="paren2">(<span class="code"><span class="comment">;; The section about SECTIONs and everything below it ...
 </span>   <span class="keyword">:objects</span> <span class="paren3">(<span class="code">,@mgl-pax-sections</span>)</span>

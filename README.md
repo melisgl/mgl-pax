@@ -504,10 +504,10 @@ Now let's examine the most important pieces in detail.
     The `PAGES` argument is to create multi-page documents by routing some
     of the generated output to files, strings or streams. `PAGES` is a
     list of page specification elements. A page spec is a plist with
-    keys `:OBJECTS`, `:OUTPUT`, `:URI-FRAGMENT`, `:HEADER-FN` and `:FOOTER-FN`.
-    `OBJECTS` is a list of objects (references are allowed but not
-    required) whose documentation is to be sent to `OUTPUT`. `OUTPUT`
-    can be a number things:
+    keys `:OBJECTS`, `:OUTPUT`, `:URI-FRAGMENT`, `:SOURCE-URI-FN`, `:HEADER-FN`
+    and `:FOOTER-FN`. `OBJECTS` is a list of objects (references are allowed
+    but not required) whose documentation is to be sent to `OUTPUT`.
+    `OUTPUT` can be a number things:
     
     - If it's a list whose first element is a string or a pathname, then
       output will be sent to the file denoted by that and the rest of
@@ -551,14 +551,19 @@ Now let's examine the most important pieces in detail.
     `FOOTER-FN` is similar to `HEADER-FN`, but it's called after the last
     write to the page. For HTML, it typically just closes the body.
     
-    Finally, `URI-FRAGMENT` is a string such as `"doc/manual.html"` that
-    specifies where the page will be deployed on a webserver. It defines
-    how links between pages will look. If it's not specified and `OUTPUT`
-    refers to a file, then it defaults to the name of the file. If
-    `URI-FRAGMENT` is `NIL`, then no links will be made to or from that
-    page.
+    `URI-FRAGMENT` is a string such as `"doc/manual.html"` that specifies
+    where the page will be deployed on a webserver. It defines how links
+    between pages will look. If it's not specified and `OUTPUT` refers
+    to a file, then it defaults to the name of the file. If `URI-FRAGMENT`
+    is `NIL`, then no links will be made to or from that page.
     
-    It may look something like this:
+    Finally, `SOURCE-URI-FN` is a function of a single, [`REFERENCE`][cc37]
+    argument. If it returns a value other than `NIL`, then it must be a
+    string representing an URI. If `FORMAT` is `:HTML` and
+    [`*DOCUMENT-MARK-UP-SIGNATURES*`][46ea] is true, then the locative as
+    displayed in the signature will be a link to this uri.
+    
+    `PAGES` may look something like this:
     
     ```commonlisp
     `((;; The section about SECTIONs and everything below it ...
@@ -1890,6 +1895,7 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
   [32ac]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-MARKDOWN-SYNTAX-HIGHLIGHTING MGL-PAX:SECTION)"
   [34f5]: #x-28MGL-PAX-3ADEFINE-PACKAGE-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFINE-PACKAGE (MGL-PAX:MACRO))"
   [4336]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-MARKDOWN-INDENTATION MGL-PAX:SECTION)"
+  [46ea]: #x-28MGL-PAX-3A-2ADOCUMENT-MARK-UP-SIGNATURES-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DOCUMENT-MARK-UP-SIGNATURES* (VARIABLE))"
   [4918]: #x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax\" ASDF/SYSTEM:SYSTEM)"
   [5161]: #x-28MGL-PAX-3A-40MGL-PAX-NEW-OBJECT-TYPES-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-NEW-OBJECT-TYPES MGL-PAX:SECTION)"
   [53a8]: #x-28MGL-PAX-3ASECTION-20-28MGL-PAX-3ALOCATIVE-29-29 "(MGL-PAX:SECTION (MGL-PAX:LOCATIVE))"

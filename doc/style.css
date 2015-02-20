@@ -110,7 +110,9 @@ a:hover {
   /* text-decoration: none; */
 }
 
-.locative-type {
+.locative-type a {
+  text-decoration: none;
+  border-bottom: 0;
 }
 
 .reference-object {
