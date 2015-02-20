@@ -9,7 +9,7 @@
   :homepage "http://quotenil.com"
   :description "Exploratory programming tool and documentation
   generator."
-  :depends-on (:3bmd :3bmd-ext-code-blocks :alexandria :babel :colorize
+  :depends-on (:3bmd :3bmd-ext-code-blocks :alexandria :babel :cl-fad :colorize
                      :ironclad :named-readtables :pythonic-string-reader :swank)
   :components ((:module "src"
                 :serial t
