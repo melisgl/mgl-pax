@@ -798,7 +798,20 @@ described below.
 - [variable] **\*DOCUMENT-MARK-UP-SIGNATURES\*** *T*
 
     When true, some things such as function names and arglists are
-    rendered as bold and italic.
+    rendered as bold and italic. In `:HTML` output, locative types become
+    links to sources (if `:SOURCE-URI-FN` is provided, see [`DOCUMENT`][1eb8]), and
+    the symbol becomes a self-link for your permalinking pleasure.
+    
+    For example, a reference is rendered in markdown roughly as:
+    
+        - [function] foo x y
+    
+    With this option on, the above becomes:
+    
+        - [function] **foo** *x y*
+    
+    Also, in HTML `**foo**` will be a link to that very entry and
+    `[function]` may turn into a link to sources.
 
 <a name='x-28MGL-PAX-3A-2ADOCUMENT-MAX-NUMBERING-LEVEL-2A-20-28VARIABLE-29-29'></a>
 

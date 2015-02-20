@@ -1075,9 +1075,22 @@
 
 (defvar *document-mark-up-signatures* t
   "When true, some things such as function names and arglists are
-  rendered as bold and italic.")
+  rendered as bold and italic. In :HTML output, locative types become
+  links to sources (if :SOURCE-URI-FN is provided, see DOCUMENT), and
+  the symbol becomes a self-link for your permalinking pleasure.
 
-;;; Print REFERENCE to STREAM as:
+  For example, a reference is rendered in markdown roughly as:
+
+      - [function] foo x y
+
+  With this option on, the above becomes:
+
+      - [function] **foo** *x y*
+
+  Also, in HTML `**foo**` will be a link to that very entry and
+  `[function]` may turn into a link to sources.")
+
+;;; PRINT REFERENCE to STREAM as:
 ;;;
 ;;;     - [locative-type] symbol
 ;;;
