@@ -787,7 +787,10 @@
                                                   *page*)
                       nil)
                   (html-safe-name anchor)
-                  (princ-to-string anchor)))))))
+                  (let ((object (resolve (link-reference link))))
+                    (if (typep object 'section)
+                        (escape-markdown (section-title object))
+                        (princ-to-string anchor)))))))))
 
 (defun relative-page-uri-fragment (page reference-page)
   (if (eq page reference-page)
