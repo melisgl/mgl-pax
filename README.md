@@ -22,6 +22,7 @@
 - [10 Transcripts][7a32]
     - [10.1 Transcribing with Emacs][c694]
     - [10.2 Transcript API][bf16]
+- [11 Utilities][32a7]
 
 ###### \[in package MGL-PAX\]
 <a name='x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29'></a>
@@ -561,7 +562,8 @@ Now let's examine the most important pieces in detail.
     argument. If it returns a value other than `NIL`, then it must be a
     string representing an URI. If `FORMAT` is `:HTML` and
     [`*DOCUMENT-MARK-UP-SIGNATURES*`][46ea] is true, then the locative as
-    displayed in the signature will be a link to this uri.
+    displayed in the signature will be a link to this uri. See
+    [`MAKE-GITHUB-SOURCE-URI-FN`][1cc6].
     
     `PAGES` may look something like this:
     
@@ -1878,6 +1880,29 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
     Signaled by [`TRANSCRIBE`][0382] (with `CERROR`) when a
     consistency check fails.
 
+<a name='x-28MGL-PAX-3A-40MGL-PAX-UTILITIES-20MGL-PAX-3ASECTION-29'></a>
+
+## 11 Utilities
+
+<a name='x-28MGL-PAX-3AMAKE-GITHUB-SOURCE-URI-FN-20FUNCTION-29'></a>
+
+- [function] **MAKE-GITHUB-SOURCE-URI-FN** *ASDF-SYSTEM GITHUB-URI &KEY (GIT-VERSION "master")*
+
+    Return a function suitable as `:SOURCE-URI-FN` of a page spec (see
+    the `PAGES` argument of [`DOCUMENT`][1eb8]). The function looks the source
+    location of the reference passed to it, and if the location is
+    found, the path is made relative to the root directory of
+    `ASDF-SYSTEM` and finally an URI pointing to github is returned. The
+    URI looks like this:
+    
+        https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
+    
+    "master" in the above link comes from `GIT-VERSION`.
+    
+    A separate warning is signalled whenever source location lookup
+    fails or if the source location points to a directory not below the
+    directory of `ASDF-SYSTEM`.
+
   [00f0]: #x-28MGL-PAX-3A-40MGL-PAX-REFERENCE-BASED-EXTENSIONS-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-REFERENCE-BASED-EXTENSIONS MGL-PAX:SECTION)"
   [0208]: #x-28CLASS-20-28MGL-PAX-3ALOCATIVE-29-29 "(CLASS (MGL-PAX:LOCATIVE))"
   [0382]: #x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29 "(MGL-PAX:TRANSCRIBE FUNCTION)"
@@ -1885,6 +1910,7 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
   [12a1]: #x-28MGL-PAX-3ALOCATIVE-20-28MGL-PAX-3ALOCATIVE-29-29 "(MGL-PAX:LOCATIVE (MGL-PAX:LOCATIVE))"
   [1514]: #x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DISCARD-DOCUMENTATION-P* (VARIABLE))"
   [1920]: #x-28MGL-PAX-3ACOLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29 "(MGL-PAX:COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION)"
+  [1cc6]: #x-28MGL-PAX-3AMAKE-GITHUB-SOURCE-URI-FN-20FUNCTION-29 "(MGL-PAX:MAKE-GITHUB-SOURCE-URI-FN FUNCTION)"
   [1d4c]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DOCUMENT-LINK-CODE* (VARIABLE))"
   [1eb8]: #x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29 "(MGL-PAX:DOCUMENT FUNCTION)"
   [1f66]: #x-28MGL-PAX-3ASECTION-ENTRIES-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "(MGL-PAX:SECTION-ENTRIES (MGL-PAX:READER MGL-PAX:SECTION))"
@@ -1892,6 +1918,7 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
   [2285]: #x-28MGL-PAX-3ALOCATE-ERROR-20CONDITION-29 "(MGL-PAX:LOCATE-ERROR CONDITION)"
   [24fc]: #x-28MGL-PAX-3ACANONICAL-REFERENCE-20GENERIC-FUNCTION-29 "(MGL-PAX:CANONICAL-REFERENCE GENERIC-FUNCTION)"
   [2be0]: #x-28VARIABLE-20-28MGL-PAX-3ALOCATIVE-29-29 "(VARIABLE (MGL-PAX:LOCATIVE))"
+  [32a7]: #x-28MGL-PAX-3A-40MGL-PAX-UTILITIES-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-UTILITIES MGL-PAX:SECTION)"
   [32ac]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-MARKDOWN-SYNTAX-HIGHLIGHTING MGL-PAX:SECTION)"
   [34f5]: #x-28MGL-PAX-3ADEFINE-PACKAGE-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFINE-PACKAGE (MGL-PAX:MACRO))"
   [4336]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29 "(MGL-PAX:@MGL-PAX-MARKDOWN-INDENTATION MGL-PAX:SECTION)"

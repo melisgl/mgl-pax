@@ -61,6 +61,9 @@
     `(:objects
       (,section)
       :output (,(section-to-filename section) ,@open-args)
+      :source-uri-fn ,(make-github-source-uri-fn
+                       :mgl-pax
+                       "https://github.com/melisgl/mgl-pax")
       :header-fn ,(lambda (stream)
                     (header (section-title section) stream))
       :footer-fn ,#'footer)))

@@ -38,7 +38,8 @@
   (@mgl-pax-documentation-printer-variables section)
   (@mgl-pax-locative-types section)
   (@mgl-pax-extension-api section)
-  (@mgl-pax-transcript section))
+  (@mgl-pax-transcript section)
+  (@mgl-pax-utilities section))
 
 (defsection @mgl-pax-background (:export nil :title "Background")
   "As a user, I frequently run into documentation that's incomplete
@@ -692,7 +693,8 @@
   argument. If it returns a value other than NIL, then it must be a
   string representing an URI. If FORMAT is :HTML and
   *DOCUMENT-MARK-UP-SIGNATURES* is true, then the locative as
-  displayed in the signature will be a link to this uri.
+  displayed in the signature will be a link to this uri. See
+  MAKE-GITHUB-SOURCE-URI-FN.
 
   PAGES may look something like this:
 
