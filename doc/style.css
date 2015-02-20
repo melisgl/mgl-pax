@@ -222,7 +222,7 @@ a.symbol:hover { color : #229955; background-color : transparent; text-decoratio
 
 #content
 {
-  margin-left: 50ex;
+  margin-left: 40ex;
   padding-left: 2.5em;
   max-width: 85ex;
 }
@@ -231,7 +231,7 @@ a.symbol:hover { color : #229955; background-color : transparent; text-decoratio
   top: 0px;
   left: 0px;
   height: 100%;
-  width: 50ex;
+  width: 40ex;
   max-width: 33%;
   position: fixed;
   overflow-y:auto;
