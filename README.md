@@ -12,6 +12,7 @@
 - [6 Markdown Support][d58f]
     - [6.1 Indentation][4336]
     - [6.2 Syntax highlighting][32ac]
+    - [6.3 MathJax][55dd]
 - [7 Documentation Printer Variables][e2a1]
 - [8 Locative Types][1fbb]
 - [9 Extension API][8ed9]
@@ -654,6 +655,31 @@ the details.
 
 [fenced-code-blocks]: https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks 
 
+
+<a name='x-28MGL-PAX-3A-40MGL-PAX-MATHJAX-20MGL-PAX-3ASECTION-29'></a>
+
+### 6.3 MathJax
+
+Displaying pretty mathematics in TeX format is supported via
+MathJax. It can be done inline with `$` like this:
+
+    $\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$
+
+which is diplayed as $\int\_0^\infty e^{-x^2}
+dx=\frac{\sqrt{\pi}}{2}$, or it can be delimited by `$$` like this:
+
+    $$\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
+
+to get: $$\int\_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
+
+MathJax will leave code blocks (including those inline with
+backticks) alone. Outside code blocks, escape `$` by prefixing it
+with a backslash to scare MathJax off.
+
+Escaping all those backslashes in TeX fragments embedded in Lisp
+strings can be pain. [Pythonic String
+Reader](https://github.com/smithzvk/pythonic-string-reader) can help
+with that.
 
 <a name='x-28MGL-PAX-3A-40MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29'></a>
 
@@ -1939,6 +1965,7 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
   [4918]: #x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax\" ASDF/SYSTEM:SYSTEM)"
   [5161]: #x-28MGL-PAX-3A-40MGL-PAX-NEW-OBJECT-TYPES-20MGL-PAX-3ASECTION-29 "Adding New Object Types"
   [53a8]: #x-28MGL-PAX-3ASECTION-20-28MGL-PAX-3ALOCATIVE-29-29 "(MGL-PAX:SECTION (MGL-PAX:LOCATIVE))"
+  [55dd]: #x-28MGL-PAX-3A-40MGL-PAX-MATHJAX-20MGL-PAX-3ASECTION-29 "MathJax"
   [5a2c]: #x-28MGL-PAX-3ATRANSCRIPTION-CONSISTENCY-ERROR-20CONDITION-29 "(MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION)"
   [5d5a]: #x-28MGL-PAX-3ADEFINE-SYMBOL-LOCATIVE-TYPE-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFINE-SYMBOL-LOCATIVE-TYPE (MGL-PAX:MACRO))"
   [6b15]: #x-28FUNCTION-20-28MGL-PAX-3ALOCATIVE-29-29 "(FUNCTION (MGL-PAX:LOCATIVE))"

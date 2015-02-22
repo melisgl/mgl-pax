@@ -19,8 +19,6 @@
 ;;;; - autolinking to the hyperspec
 ;;;;
 ;;;; - markup for default values of &OPTIONAL &KEY arguments?
-;;;;
-;;;; - mathjax
 
 (in-package :mgl-pax)
 
@@ -885,7 +883,8 @@
   "The [Markdown][markdown] in docstrings is processed with the
   [3BMD][3bmd] library."
   (@mgl-pax-markdown-indentation section)
-  (@mgl-pax-markdown-syntax-highlighting section))
+  (@mgl-pax-markdown-syntax-highlighting section)
+  (@mgl-pax-mathjax section))
 
 (defsection @mgl-pax-markdown-indentation (:title "Indentation")
   """Docstrings can be indented in any of the usual styles. PAX
@@ -925,6 +924,28 @@
   [3bmd]: https://github.com/3b/3bmd
   [colorize]: https://github.com/redline6561/colorize/
   [fenced-code-blocks]: https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks")
+
+(defsection @mgl-pax-mathjax (:title "MathJax")
+  """Displaying pretty mathematics in TeX format is supported via
+  MathJax. It can be done inline with `$` like this:
+
+      $\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$
+
+  which is diplayed as $\int_0^\infty e^{-x^2}
+  dx=\frac{\sqrt{\pi}}{2}$, or it can be delimited by `$$` like this:
+
+      $$\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
+
+  to get: $$\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
+
+  MathJax will leave code blocks (including those inline with
+  backticks) alone. Outside code blocks, escape `$` by prefixing it
+  with a backslash to scare MathJax off.
+
+  Escaping all those backslashes in TeX fragments embedded in Lisp
+  strings can be pain. [Pythonic String
+  Reader](https://github.com/smithzvk/pythonic-string-reader) can help
+  with that.""")
 
 
 (defsection @mgl-pax-documentation-printer-variables

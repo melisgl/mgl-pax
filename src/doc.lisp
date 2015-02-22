@@ -72,30 +72,39 @@
                     link-to-pax-world-p)
   (format
    stream
-   "<!DOCTYPE html>~%~
+   """<!DOCTYPE html>~%~
    <html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>~%~
    <head>~%~
    ~@[<title>~A</title>~]~%~
    ~@[<link type='text/css' href='~A' rel='stylesheet'/>~]~%~
-   ~@[<meta http-equiv=\"Content-Type\" ~
-            content=\"text/html; ~
-            charset=~A\"/>~]~%~
-   <script src=\"jquery.min.js\"></script>~%~
-   <script src=\"toc.min.js\"></script>~%~
+   ~@[<meta http-equiv="Content-Type" ~
+            content="text/html; ~
+            charset=~A"/>~]~%~
+   <script src="jquery.min.js"></script>~%~
+   <script src="toc.min.js"></script>~%~
+   <script type="text/x-mathjax-config">
+     MathJax.Hub.Config({
+       tex2jax: {
+         inlineMath: [['$','$']],
+         processEscapes: true
+       }
+     });
+   </script>
+   <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
    </head>~%~
    <body>~%~
-   <div id=\"content-container\">~%~
-     <div id=\"toc\">~%~
-       ~:[~;<div id=\"toc-header\"><ul><li><a href=\"index.html\">~
+   <div id="content-container">~%~
+     <div id="toc">~%~
+       ~:[~;<div id="toc-header"><ul><li><a href="index.html">~
             PAX World</a></li></ul></div>~%~]~
-       <div id=\"page-toc\">~%~
+       <div id="page-toc">~%~
        </div>~%~
-       <div id=\"toc-footer\">~
-         <ul><li><a href=\"https://github.com/melisgl/mgl-pax\">[generated ~
+       <div id="toc-footer">~
+         <ul><li><a href="https://github.com/melisgl/mgl-pax">[generated ~
              by MGL-PAX]</a></li></ul>~
        </div>~%~
      </div>~%~
-     <div id=\"content\">~%"
+     <div id="content">~%"""
    title stylesheet charset link-to-pax-world-p))
 
 (defun html-footer (stream)
