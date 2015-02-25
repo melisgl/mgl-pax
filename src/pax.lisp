@@ -1154,15 +1154,16 @@
 (defun print-bullet (object stream)
   (print-reference-bullet (canonical-reference object) stream))
 
-(defun print-arglist (arglist stream)
+(defun print-arglist (arglist stream &key markdownp)
   (let ((string (if (stringp arglist)
                     arglist
                     (arglist-to-string arglist))))
     (if *document-mark-up-signatures*
         (if (eq *format* :html)
             (format stream "<span class=\"locative-args\">~A</span>"
-                    (escape-markdown string))
-            (italic (escape-markdown string) stream))
+                    (if markdownp string (escape-markdown string)))
+            (italic (if markdownp string (escape-markdown string))
+                    stream))
         (format stream "~A" string))))
 
 ;;; Print arg names without the package prefix to a string. The
@@ -3020,10 +3021,28 @@
     (print-bullet class stream)
     (when superclasses
       (write-char #\Space stream)
-      (print-arglist superclasses stream))
+      (if *document-mark-up-signatures*
+          (print-arglist (mark-up-superclasses superclasses) stream)
+          (print-arglist superclasses stream)))
     (terpri stream)
     (with-dislocated-symbols ((list symbol))
       (maybe-print-docstring class t stream))))
+
+(defun mark-up-superclasses (superclasses)
+  (with-output-to-string (stream)
+    (loop for class in superclasses
+          for i upfrom 0
+          do (let ((reference (make-reference class 'class)))
+               (let ((name (escape-markdown (prin1-to-string class))))
+                 (unless (zerop i)
+                   (format stream " "))
+                 (if (find-known-reference reference)
+                     (format stream "[~A][~A]" name
+                             (link-to-reference reference))
+                     (format stream "~A" name)))))))
+
+(defun find-known-reference (reference)
+  (find reference *references* :test #'reference=))
 
 
 ;;;; PACKAGE locative
