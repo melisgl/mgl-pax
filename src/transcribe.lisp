@@ -464,8 +464,8 @@
   (:report (lambda (condition stream)
              (let ((on (transcription-error-on condition)))
                (format stream
-                       "~@<Transcription error in ~A~@[ ~:@_at position ~A~].~
-                       ~:@_~?~:@_~
+                       "~@<Transcription error in ~A~@[ ~:_at position ~A~].~
+                       ~:_~?~:_~
                        Form: ~:@_~S~:@>"
                        (if (typep on 'reference)
                            ;; Allow M-. to work in the slime debugger.
@@ -528,7 +528,7 @@
         (cond ((/= (length values) (length old-values))
                (consistency-error
                 stream form-as-string
-                "Source had ~S return values ~:@_while there are actually ~S."
+                "Source had ~S return values ~:_while there are actually ~S."
                 (length old-values) (length values)))
               (t
                (loop for value in values
@@ -546,13 +546,13 @@
                 (not (eq (car old-value) :readable)))
            (consistency-error
             stream form-as-string
-            "Unreadable value ~:@_~S ~:@_in source became readable ~:@_~S."
+            "Unreadable value ~:_~S ~:_in source became readable ~:_~S."
             old-value-value value))
           ((and (not value-readable-p)
                 (not (eq (car old-value) :unreadable)))
            (consistency-error
             stream form-as-string
-            "Readable value ~:@_~S~:@_ in source became unreadable ~:@_~S."
+            "Readable value ~:_~S~:_ in source became unreadable ~:_~S."
             old-value-value value))
           ;; At this point we know that both are readable or both are
           ;; unreadable.
@@ -562,14 +562,14 @@
                               (prin1-to-string old-value-value)))
              (consistency-error
               stream form-as-string
-              "Readable value ~:@_~S~:@_ in source does not print the ~
-              same as ~:@_~S." old-value-value value)))
+              "Readable value ~:_~S~:_ in source does not print the ~
+              same as ~:_~S." old-value-value value)))
           ((not (string= (prin1-to-string value)
                          old-value-value))
            (consistency-error
             stream form-as-string
-            "Unreadable value ~:@_~S ~:@_in source does not print the ~
-            same as ~:@_~S." old-value-value value)))))
+            "Unreadable value ~:_~S ~:_in source does not print the ~
+            same as ~:_~S." old-value-value value)))))
 
 (defun join-collected-lines (lines)
   (let ((n (length lines)))
