@@ -137,7 +137,9 @@
     (baz variable (defvar baz))
     (@mgl-pax-manual section (defsection @mgl-pax-manual))
     (baz-aaa structure-accessor (defstruct baz))
-    (mgl-pax package (eval-when (:compile-toplevel :load-toplevel :execute)))
+    (mgl-pax package
+     #-ccl (eval-when (:compile-toplevel :load-toplevel :execute))
+     #+ccl (cl:defpackage))
     (mgl-pax asdf:system ())
     ;; Allegro has the location off by one form.
     #-allegro
