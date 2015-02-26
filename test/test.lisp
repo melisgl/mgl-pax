@@ -1,11 +1,11 @@
 (in-package :mgl-pax-test)
 
 (defsection @test (:export nil)
-  "[*NAVIGATION-TEST-CASES*][]
-  [`*NAVIGATION-TEST-CASES*`][]
-  [*navigation-test-cases*][]
-  [`*navigation-test-cases*`][]
-  [mgl-pax-test:*navigation-test-cases*][]
+  "[*TEST-VARIABLE*][]
+  [`*TEST-VARIABLE*`][]
+  [*test-variable*][]
+  [`*test-variable*`][]
+  [mgl-pax-test:*test-variable*][]
   FOO function, function FOO,
   `FOO` function, function `FOO`,
   FOO `function`, `function` FOO,
@@ -33,7 +33,7 @@
   ->MAX
 
   Escaped: \\FOO [`FOO`][dislocated] *\\NAVIGATION-TEST-CASES*
-  Non escaped: FOO *NAVIGATION-TEST-CASES*
+  Non escaped: FOO *TEST-VARIABLE*
   @TEST-OTHER
 
   This should be no link because the page of @TEST-EXAMPLES
@@ -60,13 +60,27 @@
   See
   FOO
 
+  ```cl-transcript
+  (values (print (1+ 2)) :aaa)
+  ..
+  .. 3 
+  => 3
+  => :AAA
+  ```
+
+  ```cl-transcript
+  (make-array 12 :initial-element 0d0)
+  => #(0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0
+       0.0d0)
+  ```
+
   In documentation, when the only ambiguity is between a generic
   function and its methods, it's resolved in favor if the gf:
   TEST-GF."
   (foo function)
   (foo compiler-macro)
   (foo-a (accessor foo))
-  (*navigation-test-cases* variable)
+  (*test-variable* variable)
   (@test-examples section)
   (@test-other section)
   (test-gf generic-function)
@@ -87,6 +101,9 @@
 (defvar foo-a)
 (defvar foo-b)
 (defvar foo-c)
+
+(defparameter *test-variable*
+  '(xxx 34))
 
 (defmacro bar ())
 (deftype bar () 'null)

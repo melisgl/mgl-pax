@@ -536,40 +536,52 @@
                      do (check-value-consistency stream form-as-string
                                                  value old-value)))))))
 
+(defmacro with-transcription-syntax (() &body body)
+  (alexandria:with-gensyms (package)
+    `(let ((,package *package*))
+       (with-standard-io-syntax
+         (let ((*package* ,package)
+               (*print-readably* nil)
+               (*print-pretty* t)
+               (*print-right-margin* 72))
+           ,@body)))))
+
 (defun check-value-consistency (stream form-as-string value old-value)
-  (let ((value-readable-p (readable-object-p value))
-        (old-value-value
-          (if (eq (car old-value) :readable)
-              (second old-value)
-              (join-collected-lines (cdr old-value)))))
-    (cond ((and value-readable-p
-                (not (eq (car old-value) :readable)))
-           (consistency-error
-            stream form-as-string
-            "Unreadable value ~:_~S ~:_in source became readable ~:_~S."
-            old-value-value value))
-          ((and (not value-readable-p)
-                (not (eq (car old-value) :unreadable)))
-           (consistency-error
-            stream form-as-string
-            "Readable value ~:_~S~:_ in source became unreadable ~:_~S."
-            old-value-value value))
-          ;; At this point we know that both are readable or both are
-          ;; unreadable.
-          (value-readable-p
-           (unless (with-standard-io-syntax
-                     (string= (prin1-to-string value)
-                              (prin1-to-string old-value-value)))
+  (flet ((stringify (object)
+           (with-transcription-syntax ()
+             (prin1-to-string object))))
+    (let ((value-readable-p (readable-object-p value))
+          (old-value-value
+            (if (eq (car old-value) :readable)
+                (second old-value)
+                (join-collected-lines (cdr old-value)))))
+      (cond ((and value-readable-p
+                  (not (eq (car old-value) :readable)))
              (consistency-error
               stream form-as-string
-              "Readable value ~:_~S~:_ in source does not print the ~
-              same as ~:_~S." old-value-value value)))
-          ((not (string= (prin1-to-string value)
-                         old-value-value))
-           (consistency-error
-            stream form-as-string
-            "Unreadable value ~:_~S ~:_in source does not print the ~
-            same as ~:_~S." old-value-value value)))))
+              "Unreadable value ~:_~S ~:_in source became readable ~:_~S."
+              old-value-value value))
+            ((and (not value-readable-p)
+                  (not (eq (car old-value) :unreadable)))
+             (consistency-error
+              stream form-as-string
+              "Readable value ~:_~S~:_ in source became unreadable ~:_~S."
+              old-value-value value))
+            ;; At this point we know that both are readable or both are
+            ;; unreadable.
+            (value-readable-p
+             (unless (string= (stringify value)
+                              (stringify old-value-value))
+               (consistency-error
+                stream form-as-string
+                "Readable value ~:_~S~:_ in source does not print the ~
+              same as ~:_~S." (stringify old-value-value)
+              (eval-and-capture value))))
+            ((not (string= (stringify value) old-value-value))
+             (consistency-error
+              stream form-as-string
+              "Unreadable value ~:_~S ~:_in source does not print the ~
+            same as ~:_~S." old-value-value (stringify value)))))))
 
 (defun join-collected-lines (lines)
   (let ((n (length lines)))
@@ -602,13 +614,14 @@
                              :fill-pointer 0 :adjustable t))
          (values (multiple-value-list
                   (with-output-to-string (output buffer)
-                    (let ((*standard-output* output)
-                          (*error-output* output)
-                          (*trace-output* output)
-                          (*debug-io* output)
-                          (*query-io* output)
-                          (*terminal-io* output))
-                      (eval form))))))
+                    (with-transcription-syntax ()
+                      (let ((*standard-output* output)
+                            (*error-output* output)
+                            (*trace-output* output)
+                            (*debug-io* output)
+                            (*query-io* output)
+                            (*terminal-io* output))
+                        (eval form)))))))
     (values buffer values)))
 
 (defun rtrim-whitespace (string)
@@ -645,23 +658,24 @@
                           transcribed-unreadable-value-prefix
                           transcribed-unreadable-value-continuation-prefix
                           no-value-marker)
-  (let ((old-values (if (eq old-values :no-value)
-                        ()
-                        (reverse old-values))))
-    (if (endp values)
-        (when include-no-value
-          (format stream "~A~A~%"
-                  transcribed-value-prefix no-value-marker))
-        (loop for value in values
-              for i upfrom 0
-              do (if (readable-object-p value)
-                     (transcribe-readable-value
-                      stream transcribed-value-prefix
-                      value (ignore-errors (elt old-values i)))
-                     (transcribe-unreadable-value
-                      stream value
-                      transcribed-unreadable-value-prefix
-                      transcribed-unreadable-value-continuation-prefix))))))
+  (with-transcription-syntax ()
+    (let ((old-values (if (eq old-values :no-value)
+                          ()
+                          (reverse old-values))))
+      (if (endp values)
+          (when include-no-value
+            (format stream "~A~A~%"
+                    transcribed-value-prefix no-value-marker))
+          (loop for value in values
+                for i upfrom 0
+                do (if (readable-object-p value)
+                       (transcribe-readable-value
+                        stream transcribed-value-prefix
+                        value (ignore-errors (elt old-values i)))
+                       (transcribe-unreadable-value
+                        stream value
+                        transcribed-unreadable-value-prefix
+                        transcribed-unreadable-value-continuation-prefix)))))))
 
 (defun transcribe-readable-value (stream prefix value old-value)
   (if (and old-value (readably-consistent-p value old-value))

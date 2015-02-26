@@ -8,11 +8,11 @@
 - [2 test other title][22dd]
 
 ###### \[in package MGL-PAX-TEST\]
-[`*NAVIGATION-TEST-CASES*`][438e]
-[`*NAVIGATION-TEST-CASES*`][438e]
-[`*navigation-test-cases*`][438e]
-[`*navigation-test-cases*`][438e]
-[mgl-pax-test:*navigation-test-cases*][]
+[`*TEST-VARIABLE*`][c066]
+[`*TEST-VARIABLE*`][c066]
+[`*test-variable*`][c066]
+[`*test-variable*`][c066]
+[mgl-pax-test:*test-variable*][]
 [`FOO`][4244] function, function [`FOO`][4244],
 [`FOO`][4244] function, function [`FOO`][4244],
 [`FOO`][4244] `function`, `function` [`FOO`][4244],
@@ -40,7 +40,7 @@
 `->MAX`
 
 Escaped: FOO `FOO` *NAVIGATION-TEST-CASES*
-Non escaped: `FOO`([`0`][f1a9] [`1`][4244]) [`*NAVIGATION-TEST-CASES*`][438e]
+Non escaped: `FOO`([`0`][f1a9] [`1`][4244]) [`*TEST-VARIABLE*`][c066]
 [test other title][22dd]
 
 This should be no link because the page of `@TEST-EXAMPLES`
@@ -67,6 +67,22 @@ compiler-macro
 See
 `FOO`([`0`][f1a9] [`1`][4244])
 
+```cl-transcript
+(values (print (1+ 2)) :aaa)
+..
+.. 3 
+=> 3
+=> :AAA
+
+```
+
+```cl-transcript
+(make-array 12 :initial-element 0d0)
+=> #(0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0
+     0.0d0)
+
+```
+
 In documentation, when the only ambiguity is between a generic
 function and its methods, it's resolved in favor if the gf:
 [`TEST-GF`][efc1].
@@ -83,22 +99,9 @@ function and its methods, it's resolved in favor if the gf:
 
 - [accessor] **FOO-A** *FOO*
 
-<a name='x-28MGL-PAX-TEST-3A-3A-2ANAVIGATION-TEST-CASES-2A-20-28VARIABLE-29-29'></a>
+<a name='x-28MGL-PAX-TEST-3A-3A-2ATEST-VARIABLE-2A-20-28VARIABLE-29-29'></a>
 
-- [variable] **\*NAVIGATION-TEST-CASES\*** *((FOO FUNCTION (DEFUN FOO)) (FOO TYPE (DEFCLASS FOO))
- (FOO CLASS (DEFCLASS FOO)) (FOO COMPILER-MACRO (DEFINE-COMPILER-MACRO FOO))
- (FOO-A (ACCESSOR FOO) (DEFCLASS FOO)) (FOO-R (READER FOO) (DEFCLASS FOO))
- (FOO-W (WRITER FOO) (DEFCLASS FOO)) (FOO-A VARIABLE (DEFVAR FOO-A))
- (FOO-B VARIABLE (DEFVAR FOO-B)) (FOO-C VARIABLE (DEFVAR FOO-C))
- (BAR MACRO (DEFMACRO BAR)) (BAR TYPE (DEFTYPE BAR))
- (BAR CONSTANT (DEFCONSTANT BAR)) (BAZ GENERIC-FUNCTION (DEFGENERIC BAZ))
- (BAZ VARIABLE (DEFVAR BAZ))
- (@MGL-PAX-MANUAL SECTION (DEFSECTION @MGL-PAX-MANUAL))
- (BAZ-AAA STRUCTURE-ACCESSOR (DEFSTRUCT BAZ))
- (MGL-PAX PACKAGE (EVAL-WHEN (:COMPILE-TOPLEVEL :LOAD-TOPLEVEL :EXECUTE)))
- (MGL-PAX ASDF/SYSTEM:SYSTEM NIL)
- (TEST-GF GENERIC-FUNCTION (DEFGENERIC TEST-GF))
- (TEST-GF (METHOD NIL (NUMBER)) (DEFMETHOD TEST-GF)))*
+- [variable] **\*TEST-VARIABLE\*** *(XXX 34)*
 
 
 
@@ -112,7 +115,7 @@ function and its methods, it's resolved in favor if the gf:
 
   [22dd]: other/test-other.md#x-28MGL-PAX-TEST-3A-3A-40TEST-OTHER-20MGL-PAX-3ASECTION-29 "test other title"
   [4244]: #x-28MGL-PAX-TEST-3A-3AFOO-20FUNCTION-29 "(MGL-PAX-TEST::FOO FUNCTION)"
-  [438e]: #x-28MGL-PAX-TEST-3A-3A-2ANAVIGATION-TEST-CASES-2A-20-28VARIABLE-29-29 "(MGL-PAX-TEST::*NAVIGATION-TEST-CASES* (VARIABLE))"
   [6483]: #x-28MGL-PAX-TEST-3A-3AFOO-A-20-28MGL-PAX-3AACCESSOR-20MGL-PAX-TEST-3A-3AFOO-29-29 "(MGL-PAX-TEST::FOO-A (MGL-PAX:ACCESSOR MGL-PAX-TEST::FOO))"
+  [c066]: #x-28MGL-PAX-TEST-3A-3A-2ATEST-VARIABLE-2A-20-28VARIABLE-29-29 "(MGL-PAX-TEST::*TEST-VARIABLE* (VARIABLE))"
   [efc1]: #x-28MGL-PAX-TEST-3A-3ATEST-GF-20GENERIC-FUNCTION-29 "(MGL-PAX-TEST::TEST-GF GENERIC-FUNCTION)"
   [f1a9]: #x-28MGL-PAX-TEST-3A-3AFOO-20-28COMPILER-MACRO-29-29 "(MGL-PAX-TEST::FOO (COMPILER-MACRO))"
