@@ -3277,7 +3277,11 @@
                   (1+ line-number)))))))
 
 (defun convert-source-location (source-location system-dir reference)
-  (cond ((eq (first source-location) :error)
+  (cond ((or
+          ;; CCL
+          (null source-location)
+          ;; SBCL, AllegroCL
+          (eq (first source-location) :error))
          (warn "~@<No source location found for reference ~:_~A: ~:_~A~%~@:>"
                reference (second source-location)))
         (t
