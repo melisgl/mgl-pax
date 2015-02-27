@@ -127,6 +127,10 @@ a:hover {
   font-style: italic;
 }
 
+.locative-args code {
+  font-family: sans-serif;
+}
+
 .navigation a {
   color: #CCCCCC;
   text-shadow: none;
