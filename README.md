@@ -390,7 +390,7 @@ Now let's examine the most important pieces in detail.
 
 <a name='x-28MGL-PAX-3ADEFSECTION-20-28MGL-PAX-3AMACRO-29-29'></a>
 
-- [macro] **DEFSECTION** *NAME (&KEY (PACKAGE '`*PACKAGE*`) (READTABLE '`*READTABLE*`) (EXPORT `T`) TITLE (DISCARD-DOCUMENTATION-P [`*DISCARD-DOCUMENTATION-P*`][1514])) &BODY ENTRIES*
+- [macro] **DEFSECTION** *NAME (&KEY (PACKAGE '\*PACKAGE\*) (READTABLE '\*READTABLE\*) (EXPORT T) TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &BODY ENTRIES*
 
     Define a documentation section and maybe export referenced symbols.
     A bit behind the scenes, a global variable with `NAME` is defined and
@@ -464,7 +464,7 @@ Now let's examine the most important pieces in detail.
 
 <a name='x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29'></a>
 
-- [function] **DOCUMENT** *OBJECT &KEY STREAM PAGES (FORMAT `:MARKDOWN`)*
+- [function] **DOCUMENT** *OBJECT &KEY STREAM PAGES (FORMAT :MARKDOWN)*
 
     Write `OBJECT` in `FORMAT` to `STREAM` diverting some output to `PAGES`.
     `FORMAT` can be anything [3BMD][3bmd] supports which is
@@ -1124,7 +1124,7 @@ need to muck with references when there is a perfectly good object.
 
 <a name='x-28MGL-PAX-3ALOCATE-20FUNCTION-29'></a>
 
-- [function] **LOCATE** *OBJECT LOCATIVE &KEY (ERRORP `T`)*
+- [function] **LOCATE** *OBJECT LOCATIVE &KEY (ERRORP T)*
 
     Follow `LOCATIVE` from `OBJECT` and return the object it leads to or a
     [`REFERENCE`][cc37] if there is no first class object corresponding to the
@@ -1152,7 +1152,7 @@ need to muck with references when there is a perfectly good object.
 
 <a name='x-28MGL-PAX-3ARESOLVE-20FUNCTION-29'></a>
 
-- [function] **RESOLVE** *REFERENCE &KEY (ERRORP `T`)*
+- [function] **RESOLVE** *REFERENCE &KEY (ERRORP T)*
 
     A convenience function to [`LOCATE`][b2be] `REFERENCE`'s object with its
     locative.
@@ -1773,7 +1773,7 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
 
 <a name='x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29'></a>
 
-- [function] **TRANSCRIBE** *SOURCE TRANSCRIPT &KEY UPDATE-ONLY CHECK-CONSISTENCY (INCLUDE-NO-OUTPUT `UPDATE-ONLY`) (INCLUDE-NO-VALUE `UPDATE-ONLY`) (ECHO `T`) DEBUG (PREFIX-PREFIX "") (OUTPUT-PREFIX ".. ") (VALUE-PREFIX "=> ") (UNREADABLE-VALUE-PREFIX "==> ") (UNREADABLE-VALUE-CONTINUATION-PREFIX "--> ") (TRANSCRIBED-PREFIX-PREFIX `PREFIX-PREFIX`) (TRANSCRIBED-OUTPUT-PREFIX `OUTPUT-PREFIX`) (TRANSCRIBED-VALUE-PREFIX `VALUE-PREFIX`) (TRANSCRIBED-UNREADABLE-VALUE-PREFIX `UNREADABLE-VALUE-PREFIX`) (TRANSCRIBED-UNREADABLE-VALUE-CONTINUATION-PREFIX `UNREADABLE-VALUE-CONTINUATION-PREFIX`) (NO-VALUE-MARKER "; No value")*
+- [function] **TRANSCRIBE** *SOURCE TRANSCRIPT &KEY UPDATE-ONLY CHECK-CONSISTENCY (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) DEBUG (PREFIX-PREFIX "") (OUTPUT-PREFIX ".. ") (VALUE-PREFIX "=\> ") (UNREADABLE-VALUE-PREFIX "==\> ") (UNREADABLE-VALUE-CONTINUATION-PREFIX "--\> ") (TRANSCRIBED-PREFIX-PREFIX PREFIX-PREFIX) (TRANSCRIBED-OUTPUT-PREFIX OUTPUT-PREFIX) (TRANSCRIBED-VALUE-PREFIX VALUE-PREFIX) (TRANSCRIBED-UNREADABLE-VALUE-PREFIX UNREADABLE-VALUE-PREFIX) (TRANSCRIBED-UNREADABLE-VALUE-CONTINUATION-PREFIX UNREADABLE-VALUE-CONTINUATION-PREFIX) (NO-VALUE-MARKER "; No value")*
 
     Read forms from `SOURCE` and write them (iff `ECHO`) to `TRANSCRIPT`
     followed by any output and return values produced by calling `EVAL` on

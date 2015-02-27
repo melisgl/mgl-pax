@@ -1173,7 +1173,11 @@
           (*print-pretty* t)
           (*print-right-margin* nil))
       (labels ((resolve* (object)
-                 (if *document-mark-up-signatures*
+                 (if (and *document-mark-up-signatures*
+                          ;; KLUDGE: github has trouble displaying
+                          ;; things like '`*package*`, so disable
+                          ;; this.
+                          (eq *format* :html))
                      (replace-known-references
                       (prin1-and-escape-markdown object))
                      (prin1-and-escape-markdown object)))
@@ -2931,7 +2935,7 @@
   (when (or (swank-mop:slot-definition-initargs slot-def)
             (swank-mop:slot-definition-initfunction slot-def))
     (write-char #\Space stream)
-    (if *document-mark-up-signatures*
+    (if (and *document-mark-up-signatures* (eq *format* :html))
         (let ((initarg-strings
                 (when (swank-mop:slot-definition-initargs slot-def)
                   (mapcar #'prin1-and-escape-markdown
