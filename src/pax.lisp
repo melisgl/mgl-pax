@@ -1154,16 +1154,15 @@
 (defun print-bullet (object stream)
   (print-reference-bullet (canonical-reference object) stream))
 
-(defun print-arglist (arglist stream &key markdownp)
+(defun print-arglist (arglist stream)
   (let ((string (if (stringp arglist)
+                    ;; must be escaped markdown
                     arglist
                     (arglist-to-string arglist))))
     (if *document-mark-up-signatures*
         (if (eq *format* :html)
-            (format stream "<span class=\"locative-args\">~A</span>"
-                    (if markdownp string (escape-markdown string)))
-            (italic (if markdownp string (escape-markdown string))
-                    stream))
+            (format stream "<span class=\"locative-args\">~A</span>" string)
+            (italic string stream))
         (format stream "~A" string))))
 
 ;;; Print arg names without the package prefix to a string. The
@@ -1187,15 +1186,20 @@
                             (format out " "))
                           (cond ((member arg '(&key &optional &rest &body))
                                  (setq seen-special-p t)
-                                 (format out "~S" arg))
+                                 (format out "~A"
+                                         (prin1-and-escape-markdown arg)))
                                 ((symbolp arg)
-                                 (format out "~A" (symbol-name arg)))
+                                 (format out "~A"
+                                         (escape-markdown
+                                          (symbol-name arg))))
                                 (seen-special-p
                                  (if (symbolp (first arg))
                                      (format out "(~A~{ ~A~})"
-                                             (symbol-name (first arg))
+                                             (escape-markdown
+                                              (symbol-name (first arg)))
                                              (mapcar #'resolve* (rest arg)))
-                                     (format out "~S" arg)))
+                                     (format out "~A"
+                                             (prin1-and-escape-markdown arg))))
                                 (t
                                  (foo arg (1+ level)))))
                  (unless (= level 0)
@@ -2942,7 +2946,7 @@
                                  (swank-mop:slot-definition-initform
                                   slot-def))))
                        ""))
-           stream :markdownp t))
+           stream))
         (print-arglist
          (prin1-to-string
           `(,@(when (swank-mop:slot-definition-initargs slot-def)
