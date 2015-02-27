@@ -1173,7 +1173,12 @@
     (let ((seen-special-p nil)
           (*print-pretty* t)
           (*print-right-margin* nil))
-      (labels ((foo (arglist level)
+      (labels ((resolve* (object)
+                 (if *document-mark-up-signatures*
+                     (replace-known-references
+                      (prin1-and-escape-markdown object))
+                     (prin1-and-escape-markdown object)))
+               (foo (arglist level)
                  (unless (= level 0)
                    (format out "("))
                  (loop for i upfrom 0
@@ -1187,9 +1192,9 @@
                                  (format out "~A" (symbol-name arg)))
                                 (seen-special-p
                                  (if (symbolp (first arg))
-                                     (format out "(~A~{ ~S~})"
+                                     (format out "(~A~{ ~A~})"
                                              (symbol-name (first arg))
-                                             (rest arg))
+                                             (mapcar #'resolve* (rest arg)))
                                      (format out "~S" arg)))
                                 (t
                                  (foo arg (1+ level)))))
@@ -1393,8 +1398,7 @@
       ;; operation, skip it.
       ""
       (let ((docstring (strip-docstring-indentation docstring)))
-        (prefix-lines indentation
-                      (replace-known-references docstring *references*)))))
+        (prefix-lines indentation (replace-known-references docstring)))))
 
 (defun filter-documentation (symbol doc-type)
   (let ((docstring (documentation symbol doc-type)))
@@ -1476,7 +1480,7 @@
 ;;; (if *DOCUMENT-LINK-SECTIONS*, *DOCUMENT-LINK-CODE*) and handle
 ;;; explicit links with locatives (always). Return the transformed
 ;;; string.
-(defun replace-known-references (string known-references)
+(defun replace-known-references (string &key (known-references *references*))
   (when string
     (let ((string
             ;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings
@@ -2921,13 +2925,30 @@
   (when (or (swank-mop:slot-definition-initargs slot-def)
             (swank-mop:slot-definition-initfunction slot-def))
     (write-char #\Space stream)
-    (print-arglist (prin1-to-string
-                    `(,@(when (swank-mop:slot-definition-initargs slot-def)
-                          (swank-mop:slot-definition-initargs slot-def))
-                      ,@(when (swank-mop:slot-definition-initfunction slot-def)
-                          `(=
-                            ,(swank-mop:slot-definition-initform slot-def)))))
-                   stream))
+    (if *document-mark-up-signatures*
+        (let ((initarg-strings
+                (when (swank-mop:slot-definition-initargs slot-def)
+                  (mapcar #'prin1-and-escape-markdown
+                          (swank-mop:slot-definition-initargs slot-def)))))
+          (print-arglist
+           (format nil "(~{~A~^ ~}~A)" initarg-strings
+                   (if (swank-mop:slot-definition-initfunction slot-def)
+                       (format nil "~A= ~A"
+                               (if initarg-strings " " "")
+                               (replace-known-references
+                                (prin1-and-escape-markdown
+                                 (swank-mop:slot-definition-initform
+                                  slot-def))))
+                       ""))
+           stream :markdownp t))
+        (print-arglist
+         (prin1-to-string
+          `(,@(when (swank-mop:slot-definition-initargs slot-def)
+                (swank-mop:slot-definition-initargs slot-def))
+            ,@(when (swank-mop:slot-definition-initfunction slot-def)
+                `(=
+                  ,(swank-mop:slot-definition-initform slot-def)))))
+         stream)))
   (terpri stream)
   ;; No documentation for condition accessors, and some
   ;; implementations signal warnings.

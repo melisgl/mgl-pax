@@ -176,7 +176,8 @@
 
 (defun test-replace-known-references ()
   (assert (string= "`FOO`"
-                   (mgl-pax::replace-known-references "`FOO`" ()))))
+                   (mgl-pax::replace-known-references "`FOO`"
+                                                      :known-references ()))))
 
 (defun test-transform-tree ()
   (assert (equal '(1)

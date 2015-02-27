@@ -269,6 +269,9 @@
 (defun markdown-special-char-p (char)
   (member char '(#\* #\_ #\` #\< #\>)))
 
+(defun prin1-and-escape-markdown (object)
+  (escape-markdown (prin1-to-string object)))
+
 (defun escape-markdown (string)
   (with-output-to-string (stream)
     (dotimes (i (length string))
