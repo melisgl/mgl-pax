@@ -2386,7 +2386,9 @@
         (*document-mark-up-signatures* nil)
         (*document-max-numbering-level* 0)
         (*document-max-table-of-contents-level* 0)
-        (*document-text-navigation* nil))
+        (*document-text-navigation* nil)
+        ;; Some Lisps bind it to T in DESCRIBE, some don't.
+        (*print-circle* nil))
     (document section :stream stream :format :markdown)))
 
 
