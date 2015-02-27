@@ -3318,9 +3318,11 @@
                      directory ~S.~%" reference system-dir))))))
 
 (defun file-position-to-line-number (filename file-position)
-  (with-open-file (stream filename)
-    (loop for line = (read-line stream nil nil)
-          for line-number upfrom 0
-          while line
-          do (when (< file-position (file-position stream))
-               (return line-number)))))
+  (if file-position
+      (with-open-file (stream filename)
+        (loop for line = (read-line stream nil nil)
+              for line-number upfrom 0
+              while line
+              do (when (< file-position (file-position stream))
+                   (return line-number))))
+      0))
