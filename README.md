@@ -5,25 +5,26 @@
 ## Table of Contents
 
 - [1 mgl-pax ASDF System Details][4918]
-- [2 Background][84ee]
-- [3 Tutorial][aa52]
-- [4 Emacs Integration][eff4]
-- [5 Basics][8059]
-- [6 Markdown Support][d58f]
-    - [6.1 Indentation][4336]
-    - [6.2 Syntax highlighting][32ac]
-    - [6.3 MathJax][55dd]
-- [7 Documentation Printer Variables][e2a1]
-- [8 Locative Types][1fbb]
-- [9 Extension API][8ed9]
-    - [9.1 Locatives and References][d023]
-    - [9.2 Adding New Object Types][5161]
-    - [9.3 Reference Based Extensions][00f0]
-    - [9.4 Sections][be22]
-- [10 Transcripts][7a32]
-    - [10.1 Transcribing with Emacs][c694]
-    - [10.2 Transcript API][bf16]
-- [11 Utilities][32a7]
+- [2 Links][d7e0]
+- [3 Background][84ee]
+- [4 Tutorial][aa52]
+- [5 Emacs Integration][eff4]
+- [6 Basics][8059]
+- [7 Markdown Support][d58f]
+    - [7.1 Indentation][4336]
+    - [7.2 Syntax highlighting][32ac]
+    - [7.3 MathJax][55dd]
+- [8 Documentation Printer Variables][e2a1]
+- [9 Locative Types][1fbb]
+- [10 Extension API][8ed9]
+    - [10.1 Locatives and References][d023]
+    - [10.2 Adding New Object Types][5161]
+    - [10.3 Reference Based Extensions][00f0]
+    - [10.4 Sections][be22]
+- [11 Transcripts][7a32]
+    - [11.1 Transcribing with Emacs][c694]
+    - [11.2 Transcript API][bf16]
+- [12 Utilities][32a7]
 
 ###### \[in package MGL-PAX\]
 <a id='x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29'></a>
@@ -38,9 +39,18 @@
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
 - Homepage: [http://quotenil.com](http://quotenil.com)
 
+<a id='x-28MGL-PAX-3A-40MGL-PAX-LINKS-20MGL-PAX-3ASECTION-29'></a>
+
+## 2 Links
+
+Here is the [official
+repository](https://github.com/melisgl/mgl-pax) and the [HTML
+documentation](http://melisgl.github.io/mgl-pax-world/mgl-pax-manual.html)
+for the latest version.
+
 <a id='x-28MGL-PAX-3A-40MGL-PAX-BACKGROUND-20MGL-PAX-3ASECTION-29'></a>
 
-## 2 Background
+## 3 Background
 
 As a user, I frequently run into documentation that's incomplete
 and out of date, so I tend to stay in the editor and explore the
@@ -113,7 +123,7 @@ format, and a few thousand lines later PAX was born.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-TUTORIAL-20MGL-PAX-3ASECTION-29'></a>
 
-## 3 Tutorial
+## 4 Tutorial
 
 PAX provides an extremely poor man's Explorable Programming
 environment. Narrative primarily lives in so called sections that
@@ -274,7 +284,7 @@ automatically checked for up-to-dateness. See
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-EMACS-INTEGRATION-20MGL-PAX-3ASECTION-29'></a>
 
-## 4 Emacs Integration
+## 5 Emacs Integration
 
 Integration into SLIME's `M-.` (`slime-edit-definition`) allows one
 to visit the source location of the thing that's identified by a
@@ -384,7 +394,7 @@ initialization file (or loading `src/pax.el`):
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-BASICS-20MGL-PAX-3ASECTION-29'></a>
 
-## 5 Basics
+## 6 Basics
 
 Now let's examine the most important pieces in detail.
 
@@ -603,14 +613,14 @@ Now let's examine the most important pieces in detail.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29'></a>
 
-## 6 Markdown Support
+## 7 Markdown Support
 
 The [Markdown][markdown] in docstrings is processed with the
 [3BMD][3bmd] library.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29'></a>
 
-### 6.1 Indentation
+### 7.1 Indentation
 
 Docstrings can be indented in any of the usual styles. PAX
 normalizes indentation by converting:
@@ -631,7 +641,7 @@ See [`DOCUMENT-OBJECT`][d7eb] for the details.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29'></a>
 
-### 6.2 Syntax highlighting
+### 7.2 Syntax highlighting
 
 For syntax highlighting, github's [fenced code
 blocks][fenced-code-blocks] markdown extension to mark up code
@@ -658,7 +668,7 @@ the details.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MATHJAX-20MGL-PAX-3ASECTION-29'></a>
 
-### 6.3 MathJax
+### 7.3 MathJax
 
 Displaying pretty mathematics in TeX format is supported via
 MathJax. It can be done inline with `$` like this:
@@ -683,7 +693,7 @@ with that.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29'></a>
 
-## 7 Documentation Printer Variables
+## 8 Documentation Printer Variables
 
 Docstrings are assumed to be in markdown format and they are pretty
 much copied verbatim to the documentation subject to a few knobs
@@ -888,7 +898,7 @@ described below.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29'></a>
 
-## 8 Locative Types
+## 9 Locative Types
 
 These are the locatives type supported out of the box. As all
 locative types, they are symbols and their names should make it
@@ -1097,11 +1107,11 @@ locatives take no arguments.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-EXTENSION-API-20MGL-PAX-3ASECTION-29'></a>
 
-## 9 Extension API
+## 10 Extension API
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-LOCATIVES-AND-REFERENCES-20MGL-PAX-3ASECTION-29'></a>
 
-### 9.1 Locatives and References
+### 10.1 Locatives and References
 
 While Common Lisp has rather good introspective abilities, not
 everything is first class. For example, there is no object
@@ -1195,7 +1205,7 @@ need to muck with references when there is a perfectly good object.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-NEW-OBJECT-TYPES-20MGL-PAX-3ASECTION-29'></a>
 
-### 9.2 Adding New Object Types
+### 10.2 Adding New Object Types
 
 One may wish to make the [`DOCUMENT`][1eb8] function and `M-.` navigation
 work with new object types. Extending [`DOCUMENT`][1eb8] can be done by
@@ -1390,7 +1400,7 @@ for [`ASDF:SYSTEM:`][bf8a]
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-REFERENCE-BASED-EXTENSIONS-20MGL-PAX-3ASECTION-29'></a>
 
-### 9.3 Reference Based Extensions
+### 10.3 Reference Based Extensions
 
 Let's see how to extend [`DOCUMENT`][1eb8] and `M-.` navigation if there is
 no first class object to represent the thing of interest. Recall
@@ -1545,7 +1555,7 @@ with symbols in a certain context.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-SECTIONS-20MGL-PAX-3ASECTION-29'></a>
 
-### 9.4 Sections
+### 10.4 Sections
 
 [`Section`][aee8] objects rarely need to be dissected since
 [`DEFSECTION`][b1e7] and [`DOCUMENT`][1eb8] cover most needs. However, it is plausible
@@ -1603,7 +1613,7 @@ presented.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-20MGL-PAX-3ASECTION-29'></a>
 
-## 10 Transcripts
+## 11 Transcripts
 
 What are transcripts for? When writing a tutorial, one often wants
 to include a REPL session with maybe a few defuns and a couple of
@@ -1651,7 +1661,7 @@ can be enabled with:
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-EMACS-INTEGRATION-20MGL-PAX-3ASECTION-29'></a>
 
-### 10.1 Transcribing with Emacs
+### 11.1 Transcribing with Emacs
 
 Typical transcript usage from within Emacs is simple: add a lisp
 form to a docstring at any indentation level. Move the cursor right
@@ -1769,7 +1779,7 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-API-20MGL-PAX-3ASECTION-29'></a>
 
-### 10.2 Transcript API
+### 11.2 Transcript API
 
 <a id='x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29'></a>
 
@@ -1921,7 +1931,7 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-UTILITIES-20MGL-PAX-3ASECTION-29'></a>
 
-## 11 Utilities
+## 12 Utilities
 
 <a id='x-28MGL-PAX-3AMAKE-GITHUB-SOURCE-URI-FN-20FUNCTION-29'></a>
 
@@ -2000,6 +2010,7 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
   [ce09]: #x-28MGL-PAX-3ADEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE (MGL-PAX:MACRO))"
   [d023]: #x-28MGL-PAX-3A-40MGL-PAX-LOCATIVES-AND-REFERENCES-20MGL-PAX-3ASECTION-29 "Locatives and References"
   [d58f]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29 "Markdown Support"
+  [d7e0]: #x-28MGL-PAX-3A-40MGL-PAX-LINKS-20MGL-PAX-3ASECTION-29 "Links"
   [d7eb]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28STRING-20T-29-29-29 "(MGL-PAX:DOCUMENT-OBJECT (METHOD NIL (STRING T)))"
   [df39]: #x-28DESCRIBE-OBJECT-20-28METHOD-20NIL-20-28MGL-PAX-3ASECTION-20T-29-29-29 "(DESCRIBE-OBJECT (METHOD NIL (MGL-PAX:SECTION T)))"
   [e0d7]: #x-28MGL-PAX-3ARESOLVE-20FUNCTION-29 "(MGL-PAX:RESOLVE FUNCTION)"

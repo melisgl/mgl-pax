@@ -26,6 +26,7 @@
 
 (defsection @mgl-pax-manual (:title "PAX Manual")
   (mgl-pax asdf:system)
+  (@mgl-pax-links section)
   (@mgl-pax-background section)
   (@mgl-pax-tutorial section)
   (@mgl-pax-emacs-integration section)
@@ -36,6 +37,12 @@
   (@mgl-pax-extension-api section)
   (@mgl-pax-transcript section)
   (@mgl-pax-utilities section))
+
+(defsection @mgl-pax-links (:title "Links")
+  "Here is the [official
+  repository](https://github.com/melisgl/mgl-pax) and the [HTML
+  documentation](http://melisgl.github.io/mgl-pax-world/mgl-pax-manual.html)
+  for the latest version.")
 
 (defsection @mgl-pax-background (:export nil :title "Background")
   "As a user, I frequently run into documentation that's incomplete
