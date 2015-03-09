@@ -253,7 +253,7 @@
 ;;;; Text based HTML fragments
 
 (defun anchor (anchor stream)
-  (format stream "<a name='~A'></a>~%~%" (html-safe-name anchor)))
+  (format stream "<a id='~A'></a>~%~%" (html-safe-name anchor)))
 
 
 ;;;; Text based markdown fragments
