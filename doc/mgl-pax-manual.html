@@ -1830,12 +1830,12 @@ documented.</p>
 used for writing simple tests in a very readable form. For example:</p>
 
 <pre><code>(+ 1 2)
-=> 3
+=&gt; 3
 
 (values (princ :hello) (list 1 2))
 .. HELLO
-=> :HELLO
-=> (1 2)
+=&gt; :HELLO
+=&gt; (1 2)
 </code></pre>
 
 <p>All in all, transcripts are a handy tool especially when combined
@@ -1991,9 +1991,9 @@ constructed.</p>
 <p>A simple example is this:</p>
 
 <pre><code>(transcribe "(princ 42) " nil)
-=> "(princ 42)
+=&gt; "(princ 42)
 .. 42
-=> 42
+=&gt; 42
 "
 </code></pre>
 
