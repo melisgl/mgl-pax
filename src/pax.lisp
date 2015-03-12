@@ -17,8 +17,6 @@
 ;;;;   it's translated to a list item
 ;;;;
 ;;;; - autolinking to the hyperspec
-;;;;
-;;;; - markup for default values of &OPTIONAL &KEY arguments?
 
 (in-package :mgl-pax)
 
