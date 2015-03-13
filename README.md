@@ -1935,7 +1935,7 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
 
 <a id='x-28MGL-PAX-3AMAKE-GITHUB-SOURCE-URI-FN-20FUNCTION-29'></a>
 
-- [function] **MAKE-GITHUB-SOURCE-URI-FN** *ASDF-SYSTEM GITHUB-URI &KEY (GIT-VERSION "master")*
+- [function] **MAKE-GITHUB-SOURCE-URI-FN** *ASDF-SYSTEM GITHUB-URI &KEY GIT-VERSION*
 
     Return a function suitable as `:SOURCE-URI-FN` of a page spec (see
     the `PAGES` argument of [`DOCUMENT`][1eb8]). The function looks the source
@@ -1947,6 +1947,11 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
         https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
     
     "master" in the above link comes from `GIT-VERSION`.
+    
+    If `GIT-VERSION` is `NIL`, then an attempt is made to determine to
+    current commit id from the `.git` in the directory holding
+    `ASDF-SYSTEM`. If no `.git` directory is found, then no links to
+    github will be generated.
     
     A separate warning is signalled whenever source location lookup
     fails or if the source location points to a directory not below the

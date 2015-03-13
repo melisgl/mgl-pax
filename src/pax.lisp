@@ -3287,8 +3287,7 @@
 (defsection @mgl-pax-utilities (:title "Utilities")
   (make-github-source-uri-fn function))
 
-(defun make-github-source-uri-fn (asdf-system github-uri &key
-                                  (git-version "master"))
+(defun make-github-source-uri-fn (asdf-system github-uri &key git-version)
   "Return a function suitable as :SOURCE-URI-FN of a page spec (see
   the PAGES argument of DOCUMENT). The function looks the source
   location of the reference passed to it, and if the location is
@@ -3300,17 +3299,50 @@
 
   \"master\" in the above link comes from GIT-VERSION.
 
+  If GIT-VERSION is NIL, then an attempt is made to determine to
+  current commit id from the `.git` in the directory holding
+  ASDF-SYSTEM. If no `.git` directory is found, then no links to
+  github will be generated.
+
   A separate warning is signalled whenever source location lookup
   fails or if the source location points to a directory not below the
   directory of ASDF-SYSTEM."
-  (let* ((system-dir (asdf:system-relative-pathname asdf-system "")))
-    (lambda (reference)
-      (multiple-value-bind (relative-path line-number)
-          (convert-source-location (find-source (mgl-pax:resolve reference))
-                                   system-dir reference)
-        (when relative-path
-          (format nil "~A/blob/~A/~A#L~S" github-uri git-version relative-path
-                  (1+ line-number)))))))
+  (let* ((git-version (or git-version (asdf-system-git-version asdf-system)))
+         (system-dir (asdf:system-relative-pathname asdf-system "")))
+    (if git-version
+        (lambda (reference)
+          (multiple-value-bind (relative-path line-number)
+              (convert-source-location (find-source
+                                        (mgl-pax:resolve reference))
+                                       system-dir reference)
+            (when relative-path
+              (format nil "~A/blob/~A/~A#L~S" github-uri git-version
+                      relative-path (1+ line-number)))))
+        (warn "No GIT-VERSION given and can't find .git directory ~
+              for ASDF system~% ~A. Links to github will not be generated."
+              (asdf:component-name (asdf:find-system asdf-system))))))
+
+(defun asdf-system-git-version (system)
+  (let ((git-dir
+          (merge-pathnames (make-pathname :directory '(:relative ".git"))
+                           (asdf:system-relative-pathname
+                            (asdf:component-name (asdf:find-system system))
+                            ""))))
+    (if (probe-file git-dir)
+        (git-version git-dir)
+        nil)))
+
+(defun git-version (git-dir)
+  (let ((head-string (read-first-line
+                      (merge-pathnames (make-pathname :name "HEAD") git-dir))))
+    (if (alexandria:starts-with-subseq "ref: " head-string)
+        (let ((ref (subseq head-string 5)))
+          (values (read-first-line (merge-pathnames ref git-dir)) ref))
+        head-string)))
+
+(defun read-first-line (filename)
+  (with-open-file (stream filename)
+    (read-line stream)))
 
 (defun convert-source-location (source-location system-dir reference)
   (cond ((or
