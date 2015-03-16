@@ -1,4 +1,4 @@
-<a name='x-28MGL-PAX-TEST-3A-3A-40TEST-20MGL-PAX-3ASECTION-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3A-40TEST-20MGL-PAX-3ASECTION-29'></a>
 
 # @TEST
 
@@ -87,29 +87,29 @@ In documentation, when the only ambiguity is between a generic
 function and its methods, it's resolved in favor if the gf:
 [`TEST-GF`][efc1].
 
-<a name='x-28MGL-PAX-TEST-3A-3AFOO-20FUNCTION-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3AFOO-20FUNCTION-29'></a>
 
 - [function] **FOO** 
 
-<a name='x-28MGL-PAX-TEST-3A-3AFOO-20-28COMPILER-MACRO-29-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3AFOO-20-28COMPILER-MACRO-29-29'></a>
 
 - [compiler-macro] **FOO** 
 
-<a name='x-28MGL-PAX-TEST-3A-3AFOO-A-20-28MGL-PAX-3AACCESSOR-20MGL-PAX-TEST-3A-3AFOO-29-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3AFOO-A-20-28MGL-PAX-3AACCESSOR-20MGL-PAX-TEST-3A-3AFOO-29-29'></a>
 
 - [accessor] **FOO-A** *FOO*
 
-<a name='x-28MGL-PAX-TEST-3A-3A-2ATEST-VARIABLE-2A-20-28VARIABLE-29-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3A-2ATEST-VARIABLE-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*TEST-VARIABLE\*** *(XXX 34)*
 
 
 
-<a name='x-28MGL-PAX-TEST-3A-3ATEST-GF-20GENERIC-FUNCTION-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3ATEST-GF-20GENERIC-FUNCTION-29'></a>
 
 - [generic-function] **TEST-GF** *X*
 
-<a name='x-28MGL-PAX-TEST-3A-3ATEST-GF-20-28METHOD-20NIL-20-28NUMBER-29-29-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3ATEST-GF-20-28METHOD-20NIL-20-28NUMBER-29-29-29'></a>
 
 - [method] **TEST-GF** *(X NUMBER)*
 
