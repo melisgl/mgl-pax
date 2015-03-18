@@ -3,9 +3,7 @@
 ;;;; - Maybe implement inline commands that can change prefixes and
 ;;;;   other parameters.
 ;;;;
-;;;; - lightweight syntax instead of ```cl-transcript?
-;;;;
-;;;; - executable transcript syntax
+;;;; - special comment?
 
 (in-package :mgl-pax)
 
@@ -55,73 +53,50 @@
       (in-readtable pythonic-string-syntax)"
   (@mgl-pax-transcript-emacs-integration section)
   (@mgl-pax-transcript-api section))
+
 
 (defsection @mgl-pax-transcript-api (:title "Transcript API")
   (transcribe function)
+  (*prefixes* variable)
   (transcription-error condition)
-  (transcription-consistency-error condition))
+  (transcription-consistency-error condition)
+  (transcription-output-consistency-error condition)
+  (transcription-values-consistency-error condition))
 
-(defmacro with-transcription-streams ((input output) &body body)
-  `(call-with-transcription-streams (lambda (,input ,output)
-                                      ,@body)
-                                    ,input ,output))
+(defparameter *prefixes*
+  '((:output "..")
+    (:commented-output ";..")
+    ;; To give precedence to these no value markers, they are listed
+    ;; before :READABLE and :COMMENTED-READABLE.
+    (:no-value "=> ; No value")
+    (:commented-no-value ";=> ; No value")
+    (:readable "=>")
+    (:commented-readable ";=>")
+    ;; There is no need for :UNREADABLE-CONTINUATION because we READ
+    ;; an entire form following this prefix.
+    (:commented-readable-continuation ";->")
+    (:unreadable "==>")
+    (:commented-unreadable ";==>")
+    (:unreadable-continuation "-->")
+    (:commented-unreadable-continuation ";-->"))
+  "The default prefixes used by TRANSCRIBE for reading and writing
+  lines containing output and values of an evaluated form. When
+  writing, an extra space is added automatically if the line to be
+  prefixed is not empty. Similarly, the first space following the
+  prefix discarded when reading.")
 
-(defun call-with-transcription-streams (fn input output)
-  (flet ((call-with-input (input)
-           (if output
-               (funcall fn input output)
-               (with-output-to-string (output)
-                 (funcall fn input output)))))
-    (cond ((typep input 'stream)
-           ;; There is no way to guarantee that FILE-POSITION will
-           ;; work on a string so let's just read the entire INPUT
-           ;; into a string.
-           (with-input-from-string (input (read-stream-into-string input))
-             (call-with-input input)))
-          ((typep input 'string)
-           (with-input-from-string (input input)
-             (call-with-input input)))
-          (t
-           ;; CHECK-TYPE in TRANSCRIBE makes this impossible.
-           (assert nil)))))
-
-(defmacro with-load-environment ((stream) &body body)
-  (alexandria:once-only (stream)
-    `(let* ((*readtable* *readtable*)
-            (*package* *package*)
-            (*load-pathname* (handler-case (pathname ,stream)
-                               (error () nil)))
-            (*load-truename* (when *load-pathname*
-                               (handler-case (truename ,stream)
-                                 (file-error () nil))))
-            #+sbcl
-            (sb-c::*policy* sb-c::*policy*))
-       ,@body)))
-
-(defun transcribe (source transcript &key
-                   update-only
-                   check-consistency
+(defun transcribe (input output &key update-only
+                   (comment :keep)
                    (include-no-output update-only)
                    (include-no-value update-only)
-                   (echo t)
-                   debug
-                   (prefix-prefix "")
-                   (output-prefix ".. ")
-                   (value-prefix "=> ")
-                   (unreadable-value-prefix "==> ")
-                   (unreadable-value-continuation-prefix "--> ")
-                   (transcribed-prefix-prefix prefix-prefix)
-                   (transcribed-output-prefix output-prefix)
-                   (transcribed-value-prefix value-prefix)
-                   (transcribed-unreadable-value-prefix unreadable-value-prefix)
-                   (transcribed-unreadable-value-continuation-prefix
-                    unreadable-value-continuation-prefix)
-                   (no-value-marker "; No value"))
-  "Read forms from SOURCE and write them (iff ECHO) to TRANSCRIPT
-  followed by any output and return values produced by calling EVAL on
-  the form. SOURCE can be a stream or a string, while TRANSCRIPT can
-  be a stream or NIL in which case transcription goes into a string.
-  The return value is the TRANSCRIPT stream or the string that was
+                   (echo t) check-consistency
+                   (input-prefixes *prefixes*)
+                   (output-prefixes *prefixes*))
+  "Read forms from INPUT and write them (iff ECHO) to OUTPUT followed
+  by any output and return values produced by calling EVAL on the
+  form. INPUT can be a stream or a string, while OUTPUT can be a
+  stream or NIL in which case transcription goes into a string. The
+  return value is the OUTPUT stream or the string that was
   constructed.
 
   A simple example is this:
@@ -148,14 +123,15 @@
       => (1 2)
 
   Output to all standard streams is captured and printed with
-  OUTPUT-PREFIX (`\".. \"` above). Return values are printed with
-  VALUE-PREFIX (`\"=> \"`). Note how these prefixes are always printed
-  on a new line to facilitate parsing.
+  the :OUTPUT prefix (defaults to `\"..\"`, looked up in
+  OUTPUT-PREFIXES). The return values above are printed with
+  the :READABLE prefix (`\"=>\"`). Note how these prefixes are always
+  printed on a new line to facilitate parsing.
 
-  TRANSCRIBE is able to parse its own output. If we transcribe the
-  previous output above, we get it back exactly. However, if we remove
-  all output markers, leave only a placeholder value marker and
-  pass :UPDATE-ONLY T with source:
+  TRANSCRIBE is able to parse its own output (using INPUT-PREFIXES).
+  If we transcribe the previous output above, we get it back exactly.
+  However, if we remove all output markers, leave only a placeholder
+  value marker and pass :UPDATE-ONLY T with source:
 
       (values (princ 42) (list 1 2))
       =>
@@ -192,7 +168,7 @@
       ..
       => ; No value
 
-  where `\"; No value\"` is the default NO-VALUE-MARKER.
+  where `\"=> ; No value\"` is the :NO-VALUE prefix.
 
   If CHECK-CONSISTENCY is true, then TRANSCRIBE signals a continuable
   TRANSCRIPTION-CONSISTENCY-ERROR whenever a form's output is
@@ -221,7 +197,7 @@
       -->
       --> end>
 
-  `\"==> \"` is UNREADABLE-VALUE-PREFIX and `\"--> \"` is
+  `\"==>\"` is UNREADABLE-VALUE-PREFIX and `\"-->\"` is
   UNREADABLE-VALUE-CONTINUATION-PREFIX. As with outputs, a consistency
   check between a unreadable value from the source and the value from
   EVAL is performed with STRING=. That is, the value from EVAL is
@@ -232,208 +208,619 @@
   no remedy for that, except for customizing PRINT-OBJECT or not
   transcribing that kind of stuff.
 
-  Trailing whitespaces are never printed unless the output or the
-  values have trailing spaces themselves. This means that all prefix
-  strings are right trimmed if the rest of the line is empty.
+  Finally, one may want to produce a transcript that's can be
+  evaluated. If the COMMENT argument is T, then instead of :OUTPUT
+  the :COMMENTED-OUTPUT prefix is used. Similar translations are
+  peformed for other prefixes. For example:
 
-  Finally, one may want to produce a transcript that's valid Common
-  Lisp. This can be achieved by adding a semicolon character to all
-  prefixes used for markup like this which can be done with
-  :PREFIX-PREFIX `\";\"`. One can even translate a transcription from
-  the default markup to the one with semicolons
-  with :TRANSCRIBED-PREFIX-PREFIX `\";\"`. In general, there is a set
-  of prefix arguments used when writing the transcript that mirror
-  those for parsing SOURCE."
-  (check-type source (or stream string))
-  (check-type transcript (or stream null))
-  (with-transcription-streams (source transcript)
-    (let ((output-prefix (concatenate 'string prefix-prefix output-prefix))
-          (value-prefix (concatenate 'string prefix-prefix value-prefix))
-          (unreadable-value-prefix
-            (concatenate 'string prefix-prefix unreadable-value-prefix))
-          (unreadable-value-continuation-prefix
-            (concatenate 'string prefix-prefix
-                         unreadable-value-continuation-prefix))
-          (transcribed-output-prefix
-            (concatenate 'string
-                         transcribed-prefix-prefix transcribed-output-prefix))
-          (transcribed-value-prefix
-            (concatenate 'string
-                         transcribed-prefix-prefix transcribed-value-prefix))
-          (transcribed-unreadable-value-prefix
-            (concatenate 'string transcribed-prefix-prefix
-                         transcribed-unreadable-value-prefix))
-          (transcribed-unreadable-value-continuation-prefix
-            (concatenate 'string transcribed-prefix-prefix
-                         transcribed-unreadable-value-continuation-prefix))
-          (rtrimmed-output-prefix (rtrim-whitespace output-prefix))
-          (rtrimmed-value-prefix (rtrim-whitespace value-prefix))
-          (rtrimmed-unreadable-value-prefix
-            (rtrim-whitespace unreadable-value-prefix))
-          (rtrimmed-unreadable-value-continuation-prefix
-            (rtrim-whitespace unreadable-value-continuation-prefix)))
-      (with-load-environment (source)
-        (let* ((eof (gensym))
-               (at-bol-p t)
-               (form nil)
-               (form-as-string nil)
-               (form-output nil)
-               (form-values nil)
-               (form-old-output nil)
-               (form-old-values ()))
-          (flet ((flush-form (&key (add-new-line-p t))
-                   (when form-as-string
-                     (when echo
-                       (write-string form-as-string transcript))
-                     (when (and echo add-new-line-p)
-                       (terpri transcript))
-                     (unless (eq form eof)
-                       (when (or (not update-only) form-old-output)
-                         (when check-consistency
-                           (check-output-consistency source
-                                                     form-as-string
-                                                     form-output
-                                                     form-old-output))
-                         (transcribe-output transcript
-                                            form-output form-old-output
-                                            update-only include-no-output
-                                            output-prefix
-                                            transcribed-output-prefix))
-                       (when (or (not update-only) form-old-values)
-                         (when check-consistency
-                           (check-values-consistency source
-                                                     form-as-string
-                                                     form-values
-                                                     form-old-values))
-                         (transcribe-values
-                          transcript form-values form-old-values
-                          include-no-value
-                          transcribed-value-prefix
-                          transcribed-unreadable-value-prefix
-                          transcribed-unreadable-value-continuation-prefix
-                          no-value-marker)))
-                     (setq form nil
-                           form-as-string nil
-                           form-output nil
-                           form-values nil
-                           form-old-output nil
-                           form-old-values nil))))
-            (loop
-              (let ((file-position (file-position  source)))
-                (multiple-value-bind (line-at-bol missing-newline-p)
-                    (when at-bol-p (read-line source nil nil))
-                  (when (and debug line-at-bol)
-                    (format debug "LINE: ~S~%" line-at-bol))
-                  (cond
-                    ;; EOF at beginning-of-line, bail out.
-                    ((and at-bol-p (null line-at-bol))
-                     (flush-form)
-                     (return))
-                    ;; Looking at a line of output, remember it. The
-                    ;; actual output is needed for CHECK-CONSISTENCY.
-                    ;; The information of the presence of any output
-                    ;; marker is needed when UPDATE-ONLY.
-                    ((and at-bol-p
-                          (alexandria:starts-with-subseq
-                           rtrimmed-output-prefix line-at-bol))
-                     (let ((output
-                             (subseq* line-at-bol (length output-prefix))))
-                       (when debug
-                         (format debug "OUTPUT: ~S~%" output))
-                       (push output form-old-output)
-                       (unless missing-newline-p
-                         (push #.(format nil "~%") output)))
-                     (setq at-bol-p t))
-                    ;; Looking at a line with a return value.
-                    ((and at-bol-p
-                          (alexandria:starts-with-subseq
-                           rtrimmed-value-prefix line-at-bol))
-                     (cond
-                       ;; It may be that there is no value following
-                       ;; the value marker, because it was put there
-                       ;; as a placeholder.
-                       ((every #'whitespacep
-                               (subseq line-at-bol
-                                       (length rtrimmed-value-prefix)))
-                        (push (list :readable nil nil) form-old-values))
-                       ((string= no-value-marker
-                                 (subseq* line-at-bol (length value-prefix)))
-                        (unless (endp form-old-values)
-                          (transcription-error
-                           source file-position form-as-string
-                           "No-value marker ~S seen after values."
-                           no-value-marker))
-                        (setq form-old-values :no-value))
-                       (t
-                        (file-position  source (+ file-position
-                                                  (length value-prefix)))
-                        ;; Don't preserve whitespace (the newline),
-                        ;; but remember we are at the beginning of a
-                        ;; line (because we print a newline after
-                        ;; readable values).
-                        (multiple-value-bind (value string)
-                            (read-form-and-string source eof
-                                                  :preserve-whitespace-p t)
-                          (when (eq value eof)
-                            (transcription-error
-                             source file-position form-as-string
-                             "Unexpected eof when reading from non-empty ~
-                             value line."))
-                          (skip-white-space-till-end-of-line source)
-                          (when debug
-                            (format debug "READABLE VALUE: ~S~%" value))
-                          (push (list :readable value string)
-                                form-old-values))))
-                     (setq at-bol-p t))
-                    ;; Looking at a line with an unreadable return value.
-                    ((and at-bol-p
-                          (alexandria:starts-with-subseq
-                           rtrimmed-unreadable-value-prefix line-at-bol))
-                     (push (cons :unreadable
-                                 (list
-                                  (subseq* line-at-bol
-                                           (length unreadable-value-prefix))))
-                           form-old-values))
-                    ;; Looking at a line with an unreadable return value
-                    ;; but it's not the first line of its printed
-                    ;; representation.
-                    ((and at-bol-p
-                          (alexandria:starts-with-subseq
-                           rtrimmed-unreadable-value-continuation-prefix
-                           line-at-bol))
-                     (let ((most-recent-value (first form-old-values)))
-                       (unless (eq (car most-recent-value) :unreadable)
-                         (transcription-error
-                          source file-position form-as-string
-                          "~S found with no preceeding ~S."
-                          rtrimmed-unreadable-value-continuation-prefix
-                          rtrimmed-unreadable-value-prefix))
-                       (push (subseq* line-at-bol
-                                      (length
-                                       unreadable-value-continuation-prefix))
-                             (cdr most-recent-value))))
-                    ;; No special markers found.
-                    (t
-                     (flush-form)
-                     (when at-bol-p
-                       ;; Undo do damage caused by READ-LINE above.
-                       (file-position  source file-position))
-                     (multiple-value-setq (form form-as-string)
-                       (read-form-and-string source eof
-                                             :preserve-whitespace-p t))
-                     (when debug
-                       (format debug "READ: ~S~%" form-as-string))
-                     (when (eq form eof)
-                       (flush-form :add-new-line-p nil)
-                       (return))
-                     ;; Now read that whitespace char that we
-                     ;; preserved. This logic ensures that even if
-                     ;; forms appear on the same line, they are
-                     ;; transcribed properly.
-                     (skip-white-space-till-end-of-line source)
-                     (multiple-value-setq (form-output form-values)
-                       (eval-and-capture form)))))))
-            transcript))))))
+      (make-instance 'some-class)
+      ;==> #<SOME-CLASS
+      ;-->
+      ;--> end>
+
+      (list 1 2)
+      ;=> (1
+      ;->    2)
+
+  If COMMENT is false, then the transcribed output will use the
+  non-commented prefixes. If COMMENT is :KEEP (the default), then an
+  effort will be made to maintain the commenting style of the input."
+  (write-transcript (read-transcript input :prefixes input-prefixes)
+                    output
+                    :update-only update-only
+                    :check-consistency check-consistency
+                    :include-no-output include-no-output
+                    :include-no-value include-no-value
+                    :echo echo
+                    :comment comment
+                    :prefixes output-prefixes))
+
+
+;;;; Prefix utilities
+
+(defun find-prefix (id)
+  (or (second (find id *prefixes* :key #'first))
+      (error "Cannot find prefix with id ~S~%" id)))
+
+(defun continuation-prefix-id-p (id)
+  (or (eq id :commented-readable-continuation)
+      (eq id :unreadable-continuation)
+      (eq id :commented-unreadable-continuation)))
+
+(defun start-prefix (id)
+  (find-prefix
+   (ecase id
+     ((:commented-readable-continuation) :commented-readable)
+     ((:unreadable-continuation) :unreadable)
+     ((:commented-unreadable-continuation) :commented-unreadable))))
+
+(defun continuation-prefix (id)
+  (find-prefix
+   (ecase id
+     ((:commented-readable) :commented-readable-continuation)
+     ((:unreadable) :unreadable-continuation)
+     ((:commented-unreadable) :commented-unreadable-continuation))))
+
+(defun commented-prefix-id (id)
+  (ecase id
+    ((:output) :commented-output)
+    ((:readable) :commented-readable)
+    ((:unreadable) :commented-unreadable)))
+
+(defun commented-prefix-id-p (id)
+  (member id '(:commented-output :commented-readable :commented-unreadable)))
+
+(defun match-prefixes (line)
+  (values-list (find-if (lambda (entry)
+                          (alexandria:starts-with-subseq (second entry) line))
+                        *prefixes*)))
+
+
+;;;; READ-TRANSCRIPT constructs a parse tree that's fed into
+;;;; WRITE-TRANSCRIPT by TRANSCRIBE. This parse tree is simply called
+;;;; _transcript_ and is a list of transcript commands.
+;;;;
+;;;; A transcript command, or simply _command_, is the parsed
+;;;; representation of a single top-level form together with its
+;;;; output and values. The following transcript of one command:
+;;;;
+;;;;     ;;; This is a comment before the form.
+;;;;     (values (find-package :keyword) (princ 42))
+;;;;     .. 42
+;;;;     ==> #<PACKAGE "KEYWORD">
+;;;;     => 42
+;;;;
+;;;; is parsed as:
+;;;;
+;;;;     ((((VALUES (FIND-PACKAGE :KEYWORD) (PRINC 42))
+;;;;        ";;; This is a comment before the form.
+;;;;     (values (find-package :keyword) (princ 42))")
+;;;;       (:OUTPUT "42")
+;;;;       (:UNREADABLE "#<PACKAGE \"KEYWORD\">")
+;;;;       (:READABLE (42 "42"))))
+;;;;
+;;;; Note how the command contains both the sexp and the original
+;;;; string (including preceeding comments). It also has a variable
+;;;; number of output (0 or 1) and value captures.
+
+(defun command-form (command)
+  (first (first command)))
+
+(defun command-string (command)
+  (second (first command)))
+
+(defun command-captures (command)
+  (rest command))
+
+(defun command-output-capture (command)
+  (let ((captures
+          (remove-if-not #'output-capture-p (command-captures command))))
+    (when (< 1 (length captures))
+      (transcription-error* "Multiple output captures found."))
+    (first captures)))
+
+(defun command-value-captures (command)
+  (remove-if-not #'value-capture-p (command-captures command)))
+
+(defun check-command-values (command)
+  (when (and (some #'no-value-capture-p (command-captures command))
+             (< 1 (count-if #'value-capture-p (command-captures command))))
+    (transcription-error* "Found no-value-marker and other values.")))
+
+(defun capture-id (capture)
+  (first capture))
+
+(defun capture-value (capture)
+  (second capture))
+
+(defun filter-captures (captures &rest ids)
+  (remove-if-not (lambda (capture)
+                   (member (capture-id capture) ids))
+                 captures))
+
+(defun output-capture-p (capture)
+  (member (capture-id capture) '(:output :commented-output)))
+
+(defun output-string (output-capture)
+  (assert (output-capture-p output-capture))
+  (capture-value output-capture))
+
+(defun value-capture-p (capture)
+  (or (no-value-capture-p capture)
+      (readable-capture-p capture)
+      (unreadable-capture-p capture)))
+
+(defun no-value-capture-p (capture)
+  (member (capture-id capture) '(:no-value :commented-no-value)))
+
+(defun readable-capture-p (capture)
+  (member (capture-id capture) '(:readable :commented-readable)))
+
+(defun readable-object (readable-capture)
+  (assert (readable-capture-p readable-capture))
+  (first (capture-value readable-capture)))
+
+(defun readable-string (readable-capture)
+  (assert (readable-capture-p readable-capture))
+  (second (capture-value readable-capture)))
+
+(defun unreadable-capture-p (capture)
+  (member (capture-id capture) '(:unreadable :commented-unreadable)))
+
+(defun unreadable-string (unreadable-capture)
+  (assert (unreadable-capture-p unreadable-capture))
+  (capture-value unreadable-capture))
+
+(defun transcript-has-commented-p (transcript)
+  (some (lambda (command)
+          (some (lambda (capture)
+                  (commented-prefix-id-p (capture-id capture)))
+                (command-captures command)))
+        transcript))
+
+
+;;;; READ-TRANSCRIPT implementation
+
+(defmacro with-input-stream ((stream input) &body body)
+  `(call-with-input-stream (lambda (,stream)
+                             ,@body)
+                           ,input))
+
+(defun call-with-input-stream (fn input)
+  (cond ((typep input 'stream)
+         ;; There is no way to guarantee that FILE-POSITION will work
+         ;; on a stream so let's just read the entire INPUT into a
+         ;; string.
+         (with-input-from-string (stream (read-stream-into-string input))
+           (funcall fn stream)))
+        ((typep input 'string)
+         (with-input-from-string (input input)
+           (funcall fn input)))
+        (t
+         ;; CHECK-TYPE in READ-TRANSCRIPT makes this impossible.
+         (assert nil))))
+
+(defmacro with-load-environment ((stream) &body body)
+  (alexandria:once-only (stream)
+    `(let* ((*readtable* *readtable*)
+            (*package* *package*)
+            (*load-pathname* (handler-case (pathname ,stream)
+                               (error () nil)))
+            (*load-truename* (when *load-pathname*
+                               (handler-case (truename ,stream)
+                                 (file-error () nil))))
+            #+sbcl
+            (sb-c::*policy* sb-c::*policy*))
+       ,@body)))
+
+(defun read-transcript (input &key (prefixes *prefixes*))
+  (check-type input (or stream string))
+  (with-input-stream (stream input)
+    (with-load-environment (stream)
+      (let ((*prefixes* prefixes)
+            (transcript ())
+            (partial-line-p nil)
+            ;; file position of the beginning of LINE
+            (file-position (file-position stream)))
+        (multiple-value-bind (line missing-newline-p)
+            (read-line stream nil nil)
+          (handler-case
+              (loop while line do
+                (multiple-value-bind (prefix-id prefix)
+                    (and (not partial-line-p) (match-prefixes line))
+                  (let ((match-length (length prefix))
+                        value
+                        n-lines-read
+                        file-position-1)
+                    (file-position stream (+ file-position match-length))
+                    (multiple-value-setq
+                        (value n-lines-read
+                               line missing-newline-p file-position-1
+                               partial-line-p)
+                      (parse-transcript-element stream prefix-id line
+                                                match-length))
+                    ;; Forms create a new entry, form output and values are
+                    ;; pushed into that entry.
+                    (cond (prefix-id
+                           (when (endp transcript)
+                             (transcription-error* "No open form."))
+                           (setf (cdr (first transcript))
+                                 (append (cdr (first transcript))
+                                         (list (list prefix-id value))))
+                           (check-command-values (first transcript)))
+                          (t
+                           (push (list value) transcript)))
+                    (setq file-position file-position-1))))
+            (transcription-error (e)
+              (apply #'transcription-error
+                     stream file-position
+                     (second (first (first transcript)))
+                     (transcription-error-message e)
+                     (transcription-error-message-args e)))))
+        (nreverse transcript)))))
+
+(defun parse-transcript-element (stream prefix-id first-line match-length)
+  (cond ((null prefix-id)
+         (parse-form stream))
+        ((eq prefix-id :output)
+         (parse-prefixed stream :output))
+        ((eq prefix-id :commented-output)
+         (parse-prefixed stream :commented-output))
+        ((eq prefix-id :readable)
+         ;; It may be that there is no value following the :READEABLE
+         ;; prefix, because it was put there as a placeholder for
+         ;; UPDATE-ONLY to fill in.
+         (cond ((every #'whitespacep (subseq first-line match-length))
+                (read-line stream nil nil)
+                (values-list `(,(list nil nil)
+                               1
+                               ,@(multiple-value-list
+                                  (read-line* stream nil nil))
+                               nil)))
+               (t
+                (parse-readable stream))))
+        ((eq prefix-id :commented-readable)
+         (parse-commented-readable stream))
+        ((eq prefix-id :unreadable)
+         (parse-prefixed stream :unreadable-continuation))
+        ((eq prefix-id :commented-unreadable)
+         (parse-prefixed stream :commented-unreadable-continuation))
+        ((or (eq prefix-id :no-value)
+             (eq prefix-id :commented-no-value))
+         (when (< match-length (length first-line))
+           (transcription-error* "Trailing junk after ~S."
+                                 (find-prefix prefix-id)))
+         (read-line stream nil nil)
+         (values-list `(nil
+                        1
+                        ,@(multiple-value-list
+                           (read-line* stream nil nil))
+                        nil)))
+        ((continuation-prefix-id-p prefix-id)
+         (transcription-error* "Prefix ~S must be preceeded by ~S."
+                               (find-prefix prefix-id)
+                               (start-prefix prefix-id)))
+        (t
+         (transcription-error* "Unknown prefix id ~S in *PREFIXES*."
+                               prefix-id))))
+
+(defun parse-form (stream)
+  (let ((form-and-string (read-form-and-string stream 'eof
+                                               :preserve-whitespace-p t)))
+    (cond ((eq form-and-string 'eof) nil)
+          (t
+           (let ((at-bol-p (skip-white-space-till-end-of-line stream)))
+             (values-list `(,form-and-string
+                            ;; FIXME: N-LINES-READ
+                            1
+                            ,@(multiple-value-list (read-line* stream nil nil))
+                            ,(not at-bol-p))))))))
+
+(defun parse-prefixed (stream prefix-id)
+  (read-prefixed-lines stream (find-prefix prefix-id)
+                       :first-line-prefix ""))
+
+(defun parse-readable (stream)
+  ;; We are after a readable prefix. Eat a single space if any so that
+  ;; "=>1" is parsed the same as "=> 1".
+  (when (eql (peek-char nil stream nil nil) #\Space)
+    (read-char stream))
+  (let ((form-and-string (read-form-and-string stream 'eof
+                                               :preserve-whitespace-p t)))
+    (when (eq (first form-and-string) 'eof)
+      (transcription-error* "Unexpected EOF while parsing readable value."))
+    (unless (skip-white-space-till-end-of-line stream)
+      (transcription-error* "Trailing junk after readable value ~S."
+                            (second form-and-string)))
+    (values-list `(,form-and-string
+                   ;; FIXME: N-LINES-READ
+                   1
+                   ,@(multiple-value-list (read-line* stream nil nil))
+                   nil))))
+
+(defun parse-commented-readable (stream)
+  (multiple-value-bind (string n-lines-read
+                        next-line missing-newline-p file-position)
+      (read-prefixed-lines stream
+                           (find-prefix :commented-readable-continuation)
+                           :first-line-prefix "")
+    ;; FIXME: eof?
+    (let ((form (first (with-input-from-string (stream string)
+                         (read-form-and-string stream nil)))))
+      (values (list form string) n-lines-read
+              next-line missing-newline-p file-position
+              nil))))
+
+;;; Read a sexp from STREAM or return EOF. The second value is a
+;;; string of all of the characters that were read even if EOF
+;;; (whitespace, comments).
+(defun read-form-and-string (stream eof &key preserve-whitespace-p)
+  (let* ((old-file-position (file-position  stream))
+         (form (handler-case
+                   (funcall (if preserve-whitespace-p
+                                #'read-preserving-whitespace
+                                #'read)
+                            stream nil eof nil)
+                 (error (e)
+                   (transcription-error* "READ failed with error:~%~A"
+                                         (princ-to-string e)))))
+         (new-file-position (file-position  stream))
+         (n (- new-file-position old-file-position))
+         (form-as-string (make-string n)))
+    (file-position  stream old-file-position)
+    (read-sequence form-as-string stream)
+    (assert (= (file-position  stream) new-file-position))
+    (list form form-as-string)))
+
+;;; Read all whitespace chars until the first non-whitespace char or
+;;; the end of the line. Return :EOF on EOF, T on hitting the end of
+;;; the line, and NIL if on running into a non-whitespace char.
+(defun skip-white-space-till-end-of-line (stream)
+  (loop for char = (peek-char nil stream nil nil)
+        do (unless char
+             (return :eof))
+           (unless (whitespacep char)
+             (return nil))
+           (read-char stream nil nil)
+           (when (char= char #\Newline)
+             (return t))))
+
+
+;;;; WRITE-TRANSCRIPT implementation
+
+(defmacro with-output-stream ((stream output) &body body)
+  `(call-with-output-stream (lambda (,stream)
+                              ,@body)
+                            ,output))
+
+(defun call-with-output-stream (fn output)
+  (if output
+      (funcall fn output)
+      (with-output-to-string (output)
+        (funcall fn output))))
+
+(defun write-transcript (transcript output &key update-only
+                         (comment :keep)
+                         (include-no-output update-only)
+                         (include-no-value update-only)
+                         (echo t) check-consistency
+                         (prefixes *prefixes*))
+  (check-type output (or stream null))
+  (check-type comment (member nil :keep t))
+  (with-output-stream (stream output)
+    (let ((*prefixes* prefixes)
+          (comment (if (and (eq comment :keep)
+                            (transcript-has-commented-p transcript))
+                       :keep-t
+                       comment)))
+      (dolist (command transcript)
+        (let ((form (command-form command))
+              (form-as-string (command-string command)))
+          (when echo
+            (format stream "~A" (command-string command))
+            (unless (eq form 'eof)
+              (terpri stream)))
+          (unless (eq form 'eof)
+            (multiple-value-bind (form-output form-values)
+                (eval-and-capture form)
+              (let ((output-capture (command-output-capture command)))
+                (when (and check-consistency output-capture)
+                  (check-output-consistency
+                   nil form-as-string form-output
+                   (output-string output-capture)))
+                (transcribe-output stream form-output output-capture
+                                   comment update-only include-no-output))
+              (let ((value-captures (command-value-captures command)))
+                (when check-consistency
+                  (check-values-consistency nil form-as-string
+                                            form-values value-captures))
+                (transcribe-values stream form-values value-captures comment
+                                   update-only include-no-value)))))))))
+
+(defun readable-object-p (object)
+  (null
+   (nth-value 1 (ignore-errors
+                 (values (read-from-string (prin1-to-string object)))))))
+
+(defun check-output-consistency (stream form-as-string output captured-output)
+  (check-type output string)
+  (check-type captured-output (or string null))
+  (unless (string= output (or captured-output ""))
+    (consistency-error
+     'transcription-output-consistency-error
+     stream form-as-string
+     "Inconsistent output found.~%~%Source: ~:_~S~%~%Output: ~:_~S~%"
+     captured-output output)))
+
+(defun check-values-consistency (stream form-as-string values value-captures)
+  (when value-captures
+    (let ((value-captures (if (and (= 1 (length value-captures))
+                                   (no-value-capture-p (first value-captures)))
+                              ()
+                              value-captures)))
+      (cond ((/= (length values) (length value-captures))
+             (consistency-error
+              'transcription-values-consistency-error
+              stream form-as-string
+              "Source had ~S return values ~:_while there are actually ~S."
+              (length value-captures) (length values)))
+            (t
+             (loop for value in values
+                   for value-capture in value-captures
+                   do (check-value-consistency stream form-as-string
+                                               value value-capture)))))))
+
+(defmacro with-transcription-syntax (() &body body)
+  (alexandria:with-gensyms (package)
+    `(let ((,package *package*))
+       (with-standard-io-syntax
+         (let ((*package* ,package)
+               (*print-readably* nil)
+               (*print-pretty* t)
+               (*print-right-margin* 72))
+           ,@body)))))
+
+(defun check-value-consistency (stream form-as-string value value-capture)
+  (assert (not (no-value-capture-p value-capture)))
+  (flet ((stringify (object)
+           (with-transcription-syntax ()
+             (prin1-to-string object))))
+    (let ((value-readable-p (readable-object-p value)))
+      (cond ((and value-readable-p
+                  (not (readable-capture-p value-capture)))
+             (consistency-error
+              'transcription-values-consistency-error
+              stream form-as-string
+              "Unreadable value ~:_~S ~:_in source became readable ~:_~S."
+              (unreadable-string value-capture) value))
+            ((and (not value-readable-p)
+                  (not (unreadable-capture-p value-capture)))
+             (consistency-error
+              'transcription-values-consistency-error
+              stream form-as-string
+              "Readable value ~:_~S~:_ in source became unreadable ~:_~S."
+              (readable-string value-capture) value))
+            ;; At this point we know that both are readable or both are
+            ;; unreadable.
+            (value-readable-p
+             (unless (string= (stringify value)
+                              (stringify (readable-object value-capture)))
+               (consistency-error
+                'transcription-values-consistency-error
+                stream form-as-string
+                "Readable value ~:_~S ~:_in source does not print the ~
+                same as ~:_~S." (stringify (readable-object value-capture))
+                (stringify value))))
+            ((not (string= (stringify value) (unreadable-string value-capture)))
+             (consistency-error
+              'transcription-values-consistency-error
+              stream form-as-string
+              "Unreadable value ~:_~S ~:_in source does not print the ~
+              same as ~:_~S." (unreadable-string value-capture)
+              (stringify value)))))))
+
+(defun eval-and-capture (form)
+  (let* ((buffer (make-array 0 :element-type 'character
+                             :fill-pointer 0 :adjustable t))
+         (values (multiple-value-list
+                  (with-output-to-string (output buffer)
+                    (with-transcription-syntax ()
+                      (let ((*standard-output* output)
+                            (*error-output* output)
+                            (*trace-output* output)
+                            (*debug-io* output)
+                            (*query-io* output)
+                            (*terminal-io* output))
+                        (eval form)))))))
+    (values buffer values)))
+
+(defun transcribed-prefix-id (id capture-id comment)
+  (cond ((and (or (eq comment :keep) (eq comment :keep-t))
+              capture-id)
+         (if (commented-prefix-id-p capture-id)
+             (commented-prefix-id id)
+             id))
+        ((eq comment :keep)
+         id)
+        (comment
+         (commented-prefix-id id))
+        (t id)))
+
+(defun transcribed-prefix (id capture-id comment)
+  (find-prefix (transcribed-prefix-id id capture-id comment)))
+
+(defun transcribe-output (stream output capture comment
+                          update-only include-no-output)
+  (when (if update-only
+            (not (null capture))
+            (or include-no-output (plusp (length output))))
+    (let ((prefix (transcribed-prefix :output (capture-id capture) comment)))
+      (write-prefixed-lines output prefix stream))))
+
+(defun transcribe-values (stream values captures comment
+                          update-only include-no-value)
+  (when (if update-only
+            captures
+            (or include-no-value values))
+    (with-transcription-syntax ()
+      (if (endp values)
+          (when include-no-value
+            (format stream "~A~%"
+                    (transcribed-prefix :no-value
+                                        (capture-id (first captures))
+                                        comment)))
+          (loop for value in values
+                for i upfrom 0
+                for capture = (if (< i (length captures))
+                                  (elt captures i)
+                                  nil)
+                do (if (readable-object-p value)
+                       (transcribe-readable-value
+                        stream value capture comment)
+                       (transcribe-unreadable-value
+                        stream value capture comment)))))))
+
+;;; Assuming that OBJECT prints readably, check that whether CAPTURE
+;;; is readable and it prints the same.
+(defun readably-consistent-p (object capture)
+  (and (readable-capture-p capture)
+       (with-standard-io-syntax
+         (string= (prin1-to-string object)
+                  (prin1-to-string (readable-object capture))))))
+
+(defun transcribe-readable-value (stream value capture comment)
+  (let* ((prefix-id
+           (transcribed-prefix-id :readable (capture-id capture) comment))
+         (prefix (find-prefix prefix-id)))
+    (if (or (null capture)
+            (not (readably-consistent-p value capture)))
+        (if (eq prefix-id :readable)
+            (format stream "~A ~S~%" prefix value)
+            ;; FIXME: indentation can be wrong with multiline
+            (write-prefixed-lines
+             (princ-to-string value)
+             (find-prefix :commented-readable-continuation)
+             stream :first-line-prefix prefix))
+        ;; They print the same, so use the parsed string, because
+        ;; it might have been hand-indented.
+        (if (eq prefix-id :readable)
+            (format stream "~A ~A~%" prefix (readable-string capture))
+            (write-prefixed-lines
+             (readable-string capture)
+             (find-prefix :commented-readable-continuation)
+             stream :first-line-prefix prefix)))))
+
+(defun transcribe-unreadable-value (stream object capture comment)
+  (let ((first-line-prefix-id
+          (transcribed-prefix-id :unreadable (capture-id capture) comment)))
+    (write-prefixed-lines (prin1-to-string object)
+                          (continuation-prefix first-line-prefix-id)
+                          stream
+                          :first-line-prefix (find-prefix
+                                              first-line-prefix-id))))
+
+
+;;;; Conditions
 
 (define-condition transcription-error (error)
   (;; This is usually the source stream object on which TRANSCRIBE
@@ -464,13 +851,18 @@
   (:report (lambda (condition stream)
              (let ((on (transcription-error-on condition)))
                (format stream
-                       "~@<Transcription error in ~A~@[ ~:_at position ~A~].~
-                       ~:_~?~:_~
-                       Form: ~:@_~S~:@>"
+                       "~@<Transcription error~@[ in ~:_~A~]~
+                       ~@[ ~:_at position ~A~].~
+                       ~:_ ~?~%~
+                       Form: ~:_~S~:@>"
                        (if (typep on 'reference)
                            ;; Allow M-. to work in the slime debugger.
                            (print-reference-with-package on)
-                           on)
+                           ;; Don't print the stream, since it's
+                           ;; likely to be constructed by
+                           ;; WITH-INPUT-STREAM which is meaningless
+                           ;; for the user.
+                           nil)
                        (transcription-error-file-position condition)
                        (transcription-error-message condition)
                        (transcription-error-message-args condition)
@@ -490,229 +882,41 @@
          :message message
          :message-args message-args))
 
+(defun transcription-error* (message &rest message-args)
+  (apply #'transcription-error nil nil nil message message-args))
+
 (define-condition transcription-consistency-error (transcription-error)
   ()
-  (:documentation "Signaled by TRANSCRIBE (with CERROR) when a
-  consistency check fails."))
+  (:documentation "A common superclass for
+  TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR and
+  TRANSCRIPTION-VALUES-CONSISTENCY-ERROR."))
 
-(defun consistency-error (stream form-as-string message &rest message-args)
-  (cerror "Continue." 'transcription-consistency-error
+(define-condition transcription-output-consistency-error
+    (transcription-consistency-error)
+  ()
+  (:documentation "Signaled (with CERROR) by TRANSCRIBE when invoked
+  with :CHECK-CONSISTENCY and the output of a form is not the same as
+  what was parsed."))
+
+(define-condition transcription-values-consistency-error
+    (transcription-consistency-error)
+  ()
+  (:documentation "Signaled (with CERROR) by TRANSCRIBE when invoked
+  with :CHECK-CONSISTENCY and the values of a form are inconsistent
+  with their parsed representation."))
+
+(defun consistency-error (class stream form-as-string
+                          message &rest message-args)
+  (cerror "Continue." class
           :on (or *reference-being-documented* stream)
-          :file-position (if *reference-being-documented*
-                             nil
-                             (file-position stream))
+          :file-position (cond (*reference-being-documented*
+                                nil)
+                               (stream
+                                (file-position stream))
+                               (t nil))
           :form-as-string form-as-string
           :message message
           :message-args message-args))
-
-(defun readable-object-p (object)
-  (null
-   (nth-value 1 (ignore-errors
-                 (values (read-from-string (prin1-to-string object)))))))
-
-(defun check-output-consistency (stream form-as-string
-                                 output-string output-lines)
-  (let ((joined (join-collected-lines output-lines)))
-    (unless (string= output-string joined)
-      (consistency-error
-       stream form-as-string
-       "Inconsistent output found.~:@_Source: ~:@_~S ~:@_Output: ~:@_~S"
-       joined output-string))))
-
-(defun check-values-consistency (stream form-as-string values old-values)
-  (if (null old-values)
-      (consistency-error stream form-as-string
-                         "No return value found in source.")
-      (let ((old-values (if (eq old-values :no-value) () old-values)))
-        (assert (listp old-values))
-        (cond ((/= (length values) (length old-values))
-               (consistency-error
-                stream form-as-string
-                "Source had ~S return values ~:_while there are actually ~S."
-                (length old-values) (length values)))
-              (t
-               (loop for value in values
-                     for old-value in (reverse old-values)
-                     do (check-value-consistency stream form-as-string
-                                                 value old-value)))))))
-
-(defmacro with-transcription-syntax (() &body body)
-  (alexandria:with-gensyms (package)
-    `(let ((,package *package*))
-       (with-standard-io-syntax
-         (let ((*package* ,package)
-               (*print-readably* nil)
-               (*print-pretty* t)
-               (*print-right-margin* 72))
-           ,@body)))))
-
-(defun check-value-consistency (stream form-as-string value old-value)
-  (flet ((stringify (object)
-           (with-transcription-syntax ()
-             (prin1-to-string object))))
-    (let ((value-readable-p (readable-object-p value))
-          (old-value-value
-            (if (eq (car old-value) :readable)
-                (second old-value)
-                (join-collected-lines (cdr old-value)))))
-      (cond ((and value-readable-p
-                  (not (eq (car old-value) :readable)))
-             (consistency-error
-              stream form-as-string
-              "Unreadable value ~:_~S ~:_in source became readable ~:_~S."
-              old-value-value value))
-            ((and (not value-readable-p)
-                  (not (eq (car old-value) :unreadable)))
-             (consistency-error
-              stream form-as-string
-              "Readable value ~:_~S~:_ in source became unreadable ~:_~S."
-              old-value-value value))
-            ;; At this point we know that both are readable or both are
-            ;; unreadable.
-            (value-readable-p
-             (unless (string= (stringify value)
-                              (stringify old-value-value))
-               (consistency-error
-                stream form-as-string
-                "Readable value ~:_~S~:_ in source does not print the ~
-              same as ~:_~S." (stringify old-value-value)
-              (eval-and-capture value))))
-            ((not (string= (stringify value) old-value-value))
-             (consistency-error
-              stream form-as-string
-              "Unreadable value ~:_~S ~:_in source does not print the ~
-            same as ~:_~S." old-value-value (stringify value)))))))
-
-(defun join-collected-lines (lines)
-  (let ((n (length lines)))
-    (with-output-to-string (stream)
-      (loop for i upfrom 0
-            for line in (reverse lines)
-            do (write-string line stream)
-               (when (< i (1- n))
-                 (terpri stream))))))
-
-;;; Read a sexp from STREAM or return EOF. The second value is a
-;;; string of all of the characters that were read even if EOF
-;;; (whitespace, comments).
-(defun read-form-and-string (stream eof &key preserve-whitespace-p)
-  (let* ((old-file-position (file-position  stream))
-         (form (funcall (if preserve-whitespace-p
-                            #'read-preserving-whitespace
-                            #'read)
-                        stream nil eof nil))
-         (new-file-position (file-position  stream))
-         (n (- new-file-position old-file-position))
-         (form-as-string (make-string n)))
-    (file-position  stream old-file-position)
-    (read-sequence form-as-string stream)
-    (assert (= (file-position  stream) new-file-position))
-    (values form form-as-string)))
-
-(defun eval-and-capture (form)
-  (let* ((buffer (make-array 0 :element-type 'character
-                             :fill-pointer 0 :adjustable t))
-         (values (multiple-value-list
-                  (with-output-to-string (output buffer)
-                    (with-transcription-syntax ()
-                      (let ((*standard-output* output)
-                            (*error-output* output)
-                            (*trace-output* output)
-                            (*debug-io* output)
-                            (*query-io* output)
-                            (*terminal-io* output))
-                        (eval form)))))))
-    (values buffer values)))
-
-(defun rtrim-whitespace (string)
-  (string-right-trim *whitespace-chars* string))
-
-(defun transcribe-output (stream output old-output
-                          update-only include-no-output
-                          output-prefix transcribed-output-prefix)
-  (let ((rtrimmed-output-prefix (rtrim-whitespace output-prefix)))
-    (if (zerop (length output))
-        (when (if update-only
-                  (and old-output include-no-output)
-                  include-no-output)
-          (format stream "~A~%" rtrimmed-output-prefix))
-        (when (or (plusp (length output)) old-output)
-          (let ((last-newline-missing-p nil))
-            (with-input-from-string (s output)
-              (loop
-                (multiple-value-bind (line missing-newline-p)
-                    (read-line s nil nil)
-                  (unless line
-                    (return))
-                  (setq last-newline-missing-p missing-newline-p)
-                  (if (zerop (length line))
-                      (format stream "~A~%" rtrimmed-output-prefix)
-                      (format stream "~A~A~%"
-                              transcribed-output-prefix line)))))
-            (unless last-newline-missing-p
-              (format stream "~A~%" rtrimmed-output-prefix)))))))
-
-(defun transcribe-values (stream values old-values
-                          include-no-value
-                          transcribed-value-prefix
-                          transcribed-unreadable-value-prefix
-                          transcribed-unreadable-value-continuation-prefix
-                          no-value-marker)
-  (with-transcription-syntax ()
-    (let ((old-values (if (eq old-values :no-value)
-                          ()
-                          (reverse old-values))))
-      (if (endp values)
-          (when include-no-value
-            (format stream "~A~A~%"
-                    transcribed-value-prefix no-value-marker))
-          (loop for value in values
-                for i upfrom 0
-                do (if (readable-object-p value)
-                       (transcribe-readable-value
-                        stream transcribed-value-prefix
-                        value (ignore-errors (elt old-values i)))
-                       (transcribe-unreadable-value
-                        stream value
-                        transcribed-unreadable-value-prefix
-                        transcribed-unreadable-value-continuation-prefix)))))))
-
-(defun transcribe-readable-value (stream prefix value old-value)
-  (if (and old-value (readably-consistent-p value old-value))
-      ;; They print the same, so use the string representation from
-      ;; the source, because it might have been hand-indented.
-      (format stream "~A~A~%" prefix (third old-value))
-      (format stream "~A~S~%" prefix value)))
-
-;;; Assuming VALUE prints readably, check that whether OLD-VALUE is
-;;; readable and it prints the same.
-(defun readably-consistent-p (value old-value)
-  (and (eq (first old-value) :readable)
-       (with-standard-io-syntax
-         (string= (prin1-to-string value)
-                  (prin1-to-string (second old-value))))))
-
-(defun transcribe-unreadable-value (stream object first-line-prefix
-                                    continuation-prefix)
-  ;; FIXME: printer control vars?
-  (with-input-from-string (s (prin1-to-string object))
-    (loop for i upfrom 0
-          for line = (read-line s nil nil)
-          while line
-          do (format stream "~A~A~%"
-                     (funcall (if (zerop (length line))
-                                  #'rtrim-whitespace
-                                  #'identity)
-                              (if (zerop i)
-                                  first-line-prefix
-                                  continuation-prefix))
-                     line))))
-
-(defun skip-white-space-till-end-of-line (stream)
-  (loop for char = (peek-char nil stream nil nil)
-        while (and char (whitespacep char))
-        do (read-char stream nil nil)
-        until (char= char #\Newline)))
 
 
 (defsection @mgl-pax-transcript-emacs-integration
@@ -778,6 +982,17 @@
   Note how the indentation and the comment of `(1 2)` was left alone
   but the output and the first return value got updated.
 
+  Alternatively, `C-u mgl-pax-transcribe` will emit commented markup:
+
+      (values (princ :hello) (list 1 2))
+      ;.. HELLO
+      ;=> HELLO
+      ;=> (1 2)
+
+  `C-u - mgl-pax-retranscribe-region` will turn commented into
+  non-commented markup. Without a prefix argument
+  `mgl-pax-retranscribe-region` will not change the markup style.
+
   Transcription support in emacs can be enabled by adding this to your
   Emacs initialization file (or loading `src/transcribe.el`):"""
   (transcribe.el (include
@@ -785,15 +1000,16 @@
                   :header-nl "```elisp"
                   :footer-nl "```")))
 
-(defun transcribe-for-emacs (string update-only echo first-line-special-p)
+(defun transcribe-for-emacs (string comment update-only echo
+                             first-line-special-p)
   (swank::with-buffer-syntax ()
     (multiple-value-bind (string indentation)
         (strip-docstring-indentation string
                                      :first-line-special-p first-line-special-p)
       (let ((transcript
               (prefix-lines (make-string indentation :initial-element #\Space)
-                            (transcribe string nil :update-only update-only
-                                        :echo echo)
+                            (transcribe string nil :comment comment
+                                        :update-only update-only :echo echo)
                             :exclude-first-line-p first-line-special-p)))
         (if echo
             transcript

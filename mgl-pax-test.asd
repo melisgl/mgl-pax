@@ -5,4 +5,5 @@
   :components ((:module "test"
                 :serial t
                 :components ((:file "package")
+                             (:file "test-transcribe")
                              (:file "test")))))

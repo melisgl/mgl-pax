@@ -69,6 +69,13 @@
   ```
 
   ```cl-transcript
+  (values '(1 2) '(3 4))
+  ;=> (1 2)
+  ;=> (3
+  ;->  4)
+  ```
+
+  ```cl-transcript
   (make-array 12 :initial-element 0d0)
   => #(0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0
        0.0d0)
@@ -247,124 +254,10 @@
    (asdf:system-relative-pathname :mgl-pax "test/data/baseline/")))
 
 
-(defparameter *transcribe-source-file*
-  (asdf:system-relative-pathname
-   :mgl-pax "test/data/baseline/transcribe-source.lisp"))
-
-(defparameter *transcribe-transcription-file*
-  (asdf:system-relative-pathname
-   :mgl-pax "test/data/baseline/transcribe-transcription.lisp"))
-
-(defun test-transcribe ()
-  (test-transcribe-from-source)
-  (test-transcribe-stability)
-  (test-transcribe-cases))
-
-(defun test-transcribe-from-source ()
-  (check-transcription *transcribe-source-file*
-                       *transcribe-transcription-file*
-                       :check-consistency nil))
-
-;;; Check that repeated transcription produces the same results.
-(defun test-transcribe-stability ()
-  (check-transcription *transcribe-transcription-file*
-                       *transcribe-transcription-file*
-                       :check-consistency t))
-
-(defun check-transcription (source-file transcription-file
-                            &key check-consistency debug)
-  (unless (string= (alexandria:read-file-into-string transcription-file)
-                   (with-output-to-string (transcription)
-                     (with-open-file (source source-file)
-                       (transcribe source transcription :update-only t
-                                   :check-consistency check-consistency
-                                   :debug debug))))
-    (cerror "Update transcription file." "Transcription differs from ~S."
-            transcription-file)
-    (with-input-from-string (source (alexandria:read-file-into-string
-                                     source-file))
-      (with-open-file (transcription transcription-file :direction :output
-                                     :if-exists :rename-and-delete)
-        (transcribe source transcription :update-only t
-                    :check-consistency check-consistency)))))
-
-(defun test-transcribe-cases ()
-  (flet ((foo (input expected-output
-               &key expected-errors expected-inconsistencies
-               check-consistency update-only
-               include-no-output include-no-value)
-           (format t "case: ~S ~S ~S ~S ~S ~S ~S ~S~%" input expected-output
-                   expected-errors expected-inconsistencies
-                   check-consistency update-only
-                   include-no-output include-no-value)
-           (let ((inconsistencies ())
-                 (errors ()))
-             (catch 'here
-               (handler-bind
-                   ((transcription-consistency-error
-                      (lambda (e)
-                        (push (mgl-pax::transcription-error-file-position e)
-                              inconsistencies)
-                        (continue)))
-                    (transcription-error
-                      (lambda (e)
-                        (push (mgl-pax::transcription-error-file-position e)
-                              errors)
-                        (throw 'here nil))))
-                 (assert
-                  (string= (format nil expected-output)
-                           (transcribe (format nil input) nil
-                                       :check-consistency check-consistency
-                                       :update-only update-only
-                                       :include-no-output include-no-output
-                                       :include-no-value include-no-value)))))
-             (assert (equal (reverse inconsistencies) expected-inconsistencies))
-             (assert (equal (reverse errors) expected-errors)))))
-    (foo "42" "42~%=> 42~%")
-    (foo "42~%" "42~%=> 42~%")
-    ;; The spaces are discarded.
-    (foo "42  ~%" "42~%=> 42~%")
-    ;; No preceeding "==>" error.
-    (foo "42~%-->" "" :expected-errors '(3))
-    ;; No-value marker after values.
-    (foo "42~%=> 42~%=> ; No value" "" :expected-errors '(9))
-    ;; No whitespace after form.
-    (foo "42;comment" "42~%=> 42~%;comment")
-    ;; Unexpected eof on non-empty value line.
-    (foo "42~%=> ;" "" :expected-errors '(3))
-    ;; Multiple forms on the same line.
-    (foo "(list)(values 1 2)" "(list)~%=> NIL~%(values 1 2)~%=> 1~%=> 2~%")
-    ;; Multiple forms on the same line with space.
-    (foo "(list) (values 1 2)" "(list)~%=> NIL~%(values 1 2)~%=> 1~%=> 2~%")
-    ;; No value included.
-    (foo "(values)" "(values)~%=> ; No value~%" :include-no-value t)
-    ;; No value not included.
-    (foo "(values)" "(values)~%")
-    ;; No output included.
-    (foo "(values)" "(values)~%..~%" :include-no-output t)
-    ;; No output not included.
-    (foo "(values)" "(values)~%")
-    ;; Capturing *ERROR-OUTPUT*.
-    (foo "(princ 42 *error-output*)"
-         "(princ 42 *error-output*)~%.. 42~%=> 42~%")
-    ;; Capturing *TRACE-OUTPUT*.
-    (foo "(princ 42 *trace-output*)"
-         "(princ 42 *trace-output*)~%.. 42~%=> 42~%")
-    ;; Capturing *DEBUG-IO*.
-    (foo "(princ 42 *debug-io*)"
-         "(princ 42 *debug-io*)~%.. 42~%=> 42~%")
-    ;; Capturing *QUERY-IO*.
-    (foo "(princ 42 *query-io*)"
-         "(princ 42 *query-io*)~%.. 42~%=> 42~%")
-    ;; Capturing *TERMINAL-IO*.
-    (foo "(princ 42 *terminal-io*)"
-         "(princ 42 *terminal-io*)~%.. 42~%=> 42~%")))
-
-
 (defun test ()
+  (test-transcribe)
   (test-navigation)
   (test-replace-known-references)
   (test-transform-tree)
   (test-macro-arg-names)
-  (test-document)
-  (test-transcribe))
+  (test-document))

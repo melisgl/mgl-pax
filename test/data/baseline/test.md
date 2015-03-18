@@ -77,6 +77,14 @@ See
 ```
 
 ```cl-transcript
+(values '(1 2) '(3 4))
+;=> (1 2)
+;=> (3
+;->  4)
+
+```
+
+```cl-transcript
 (make-array 12 :initial-element 0d0)
 => #(0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0
      0.0d0)

@@ -1724,6 +1724,17 @@ then invoke the elisp function `mgl-pax-retranscribe-region` to get:
 Note how the indentation and the comment of `(1 2)` was left alone
 but the output and the first return value got updated.
 
+Alternatively, `C-u mgl-pax-transcribe` will emit commented markup:
+
+    (values (princ :hello) (list 1 2))
+    ;.. HELLO
+    ;=> HELLO
+    ;=> (1 2)
+
+`C-u - mgl-pax-retranscribe-region` will turn commented into
+non-commented markup. Without a prefix argument
+`mgl-pax-retranscribe-region` will not change the markup style.
+
 Transcription support in emacs can be enabled by adding this to your
 Emacs initialization file (or loading `src/transcribe.el`):
 
@@ -1734,8 +1745,9 @@ Emacs initialization file (or loading `src/transcribe.el`):
 
 (defun mgl-pax-transcribe-last-expression ()
   "A bit like C-u C-x C-e (slime-eval-last-expression) that
-inserts the output and values of the sexp before the point,
-this does the same but with MGL-PAX:TRANSCRIBE."
+inserts the output and values of the sexp before the point, this
+does the same but with MGL-PAX:TRANSCRIBE. With a prefix
+arg (except -), it inserts a ; character before the markup."
   (interactive)
   (insert
    (save-excursion
@@ -1743,15 +1755,22 @@ this does the same but with MGL-PAX:TRANSCRIBE."
             (start (progn (backward-sexp)
                           (move-beginning-of-line nil)
                           (point))))
-       (mgl-pax-transcribe start end nil nil nil)))))
+       (mgl-pax-transcribe start end (mgl-pax-transcribe-comment-arg)
+                           nil nil nil)))))
 
 (defun mgl-pax-retranscribe-region (start end)
   "Updates the transcription in the current region (as in calling
-MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
+MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T). With a prefix arg of -,
+the output transcript will use non-commented
+prefixes (corresponding to :COMMENT nil). With other prefix args,
+the commented prefixes will be used (:COMMENT T). Without a
+prefix arg, the prefixes will not be changed (:COMMENT :KEEP)."
   (interactive "r")
   (let* ((point-at-start-p (= (point) start))
          (point-at-end-p (= (point) end))
-         (transcript (mgl-pax-transcribe start end t t t)))
+         (transcript (mgl-pax-transcribe start end
+                                         (mgl-pax-transcribe-comment-arg)
+                                         t t t)))
     (if point-at-start-p
         (save-excursion
           (goto-char start)
@@ -1762,7 +1781,13 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
           (delete-region start end))
       (insert transcript))))
 
-(defun mgl-pax-transcribe (start end update-only echo first-line-special-p)
+(defun mgl-pax-transcribe-comment-arg ()
+  (cond ((eq current-prefix-arg '-) nil)
+        (current-prefix-arg t)
+        (t :keep)))
+
+(defun mgl-pax-transcribe (start end comment update-only echo
+                                 first-line-special-p)
   (let ((transcription
          (slime-eval
           `(cl:if (cl:find-package :mgl-pax)
@@ -1770,7 +1795,7 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
                    (cl:find-symbol
                     (cl:symbol-name :transcribe-for-emacs) :mgl-pax)
                    ,(buffer-substring-no-properties start end)
-                   ,update-only ,echo ,first-line-special-p)
+                   ',comment ',update-only ',echo ',first-line-special-p)
                   t))))
     (if (eq transcription t)
         (error "MGL-PAX is not loaded.")
@@ -1783,13 +1808,13 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
 
 <a id='x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29'></a>
 
-- [function] **TRANSCRIBE** *SOURCE TRANSCRIPT &KEY UPDATE-ONLY CHECK-CONSISTENCY (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) DEBUG (PREFIX-PREFIX "") (OUTPUT-PREFIX ".. ") (VALUE-PREFIX "=\> ") (UNREADABLE-VALUE-PREFIX "==\> ") (UNREADABLE-VALUE-CONTINUATION-PREFIX "--\> ") (TRANSCRIBED-PREFIX-PREFIX PREFIX-PREFIX) (TRANSCRIBED-OUTPUT-PREFIX OUTPUT-PREFIX) (TRANSCRIBED-VALUE-PREFIX VALUE-PREFIX) (TRANSCRIBED-UNREADABLE-VALUE-PREFIX UNREADABLE-VALUE-PREFIX) (TRANSCRIBED-UNREADABLE-VALUE-CONTINUATION-PREFIX UNREADABLE-VALUE-CONTINUATION-PREFIX) (NO-VALUE-MARKER "; No value")*
+- [function] **TRANSCRIBE** *INPUT OUTPUT &KEY UPDATE-ONLY (COMMENT :KEEP) (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) CHECK-CONSISTENCY (INPUT-PREFIXES \*PREFIXES\*) (OUTPUT-PREFIXES \*PREFIXES\*)*
 
-    Read forms from `SOURCE` and write them (iff `ECHO`) to `TRANSCRIPT`
-    followed by any output and return values produced by calling `EVAL` on
-    the form. `SOURCE` can be a stream or a string, while `TRANSCRIPT` can
-    be a stream or `NIL` in which case transcription goes into a string.
-    The return value is the `TRANSCRIPT` stream or the string that was
+    Read forms from `INPUT` and write them (iff `ECHO`) to `OUTPUT` followed
+    by any output and return values produced by calling `EVAL` on the
+    form. `INPUT` can be a stream or a string, while `OUTPUT` can be a
+    stream or `NIL` in which case transcription goes into a string. The
+    return value is the `OUTPUT` stream or the string that was
     constructed.
     
     A simple example is this:
@@ -1817,14 +1842,15 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
         => (1 2)
     
     Output to all standard streams is captured and printed with
-    `OUTPUT-PREFIX` (`".. "` above). Return values are printed with
-    `VALUE-PREFIX` (`"=> "`). Note how these prefixes are always printed
-    on a new line to facilitate parsing.
+    the `:OUTPUT` prefix (defaults to `".."`, looked up in
+    `OUTPUT-PREFIXES`). The return values above are printed with
+    the `:READABLE` prefix (`"=>"`). Note how these prefixes are always
+    printed on a new line to facilitate parsing.
     
-    [`TRANSCRIBE`][0382] is able to parse its own output. If we transcribe the
-    previous output above, we get it back exactly. However, if we remove
-    all output markers, leave only a placeholder value marker and
-    pass `:UPDATE-ONLY` `T` with source:
+    [`TRANSCRIBE`][0382] is able to parse its own output (using `INPUT-PREFIXES`).
+    If we transcribe the previous output above, we get it back exactly.
+    However, if we remove all output markers, leave only a placeholder
+    value marker and pass `:UPDATE-ONLY` `T` with source:
     
         (values (princ 42) (list 1 2))
         =>
@@ -1861,7 +1887,7 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
         ..
         => ; No value
     
-    where `"; No value"` is the default `NO-VALUE-MARKER`.
+    where `"=> ; No value"` is the `:NO-VALUE` prefix.
     
     If `CHECK-CONSISTENCY` is true, then [`TRANSCRIBE`][0382] signals a continuable
     [`TRANSCRIPTION-CONSISTENCY-ERROR`][5a2c] whenever a form's output is
@@ -1890,8 +1916,8 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
         -->
         --> end>
     
-    `"==> "` is `UNREADABLE-VALUE-PREFIX` and `"--> "` is
-    `UNREADABLE-VALUE-CONTINUATION-PREFIX`. As with outputs, a consistency
+    `"==>"` is UNREADABLE-VALUE-PREFIX and `"-->"` is
+    UNREADABLE-VALUE-CONTINUATION-PREFIX. As with outputs, a consistency
     check between a unreadable value from the source and the value from
     `EVAL` is performed with `STRING=`. That is, the value from `EVAL` is
     printed to a string and compared to the source value. Hence, any
@@ -1901,18 +1927,37 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
     no remedy for that, except for customizing `PRINT-OBJECT` or not
     transcribing that kind of stuff.
     
-    Trailing whitespaces are never printed unless the output or the
-    values have trailing spaces themselves. This means that all prefix
-    strings are right trimmed if the rest of the line is empty.
+    Finally, one may want to produce a transcript that's can be
+    evaluated. If the `COMMENT` argument is `T`, then instead of `:OUTPUT`
+    the `:COMMENTED-OUTPUT` prefix is used. Similar translations are
+    peformed for other prefixes. For example:
     
-    Finally, one may want to produce a transcript that's valid Common
-    Lisp. This can be achieved by adding a semicolon character to all
-    prefixes used for markup like this which can be done with
-    `:PREFIX-PREFIX` `";"`. One can even translate a transcription from
-    the default markup to the one with semicolons
-    with `:TRANSCRIBED-PREFIX-PREFIX` `";"`. In general, there is a set
-    of prefix arguments used when writing the transcript that mirror
-    those for parsing `SOURCE`.
+        (make-instance 'some-class)
+        ;==> #<SOME-CLASS
+        ;-->
+        ;--> end>
+        
+        (list 1 2)
+        ;=> (1
+        ;->    2)
+    
+    If `COMMENT` is false, then the transcribed output will use the
+    non-commented prefixes. If `COMMENT` is `:KEEP` (the default), then an
+    effort will be made to maintain the commenting style of the input.
+
+<a id='x-28MGL-PAX-3A-2APREFIXES-2A-20-28VARIABLE-29-29'></a>
+
+- [variable] **\*PREFIXES\*** *((:OUTPUT "..") (:COMMENTED-OUTPUT ";..") (:NO-VALUE "=> ; No value")
+ (:COMMENTED-NO-VALUE ";=> ; No value") (:READABLE "=>")
+ (:COMMENTED-READABLE ";=>") (:COMMENTED-READABLE-CONTINUATION ";->")
+ (:UNREADABLE "==>") (:COMMENTED-UNREADABLE ";==>")
+ (:UNREADABLE-CONTINUATION "-->") (:COMMENTED-UNREADABLE-CONTINUATION ";-->"))*
+
+    The default prefixes used by [`TRANSCRIBE`][0382] for reading and writing
+    lines containing output and values of an evaluated form. When
+    writing, an extra space is added automatically if the line to be
+    prefixed is not empty. Similarly, the first space following the
+    prefix discarded when reading.
 
 <a id='x-28MGL-PAX-3ATRANSCRIPTION-ERROR-20CONDITION-29'></a>
 
@@ -1926,8 +1971,25 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
 
 - [condition] **TRANSCRIPTION-CONSISTENCY-ERROR** *TRANSCRIPTION-ERROR*
 
-    Signaled by [`TRANSCRIBE`][0382] (with `CERROR`) when a
-    consistency check fails.
+    A common superclass for
+    [`TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR`][8a71] and
+    [`TRANSCRIPTION-VALUES-CONSISTENCY-ERROR`][a73e].
+
+<a id='x-28MGL-PAX-3ATRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR-20CONDITION-29'></a>
+
+- [condition] **TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR** *TRANSCRIPTION-CONSISTENCY-ERROR*
+
+    Signaled (with `CERROR`) by [`TRANSCRIBE`][0382] when invoked
+    with `:CHECK-CONSISTENCY` and the output of a form is not the same as
+    what was parsed.
+
+<a id='x-28MGL-PAX-3ATRANSCRIPTION-VALUES-CONSISTENCY-ERROR-20CONDITION-29'></a>
+
+- [condition] **TRANSCRIPTION-VALUES-CONSISTENCY-ERROR** *TRANSCRIPTION-CONSISTENCY-ERROR*
+
+    Signaled (with `CERROR`) by [`TRANSCRIBE`][0382] when invoked
+    with `:CHECK-CONSISTENCY` and the values of a form are inconsistent
+    with their parsed representation.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-UTILITIES-20MGL-PAX-3ASECTION-29'></a>
 
@@ -1992,12 +2054,14 @@ MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T.)"
   [81be]: #x-28MGL-PAX-3ALOCATE-ERROR-MESSAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29 "(MGL-PAX:LOCATE-ERROR-MESSAGE (MGL-PAX:READER MGL-PAX:LOCATE-ERROR))"
   [84ee]: #x-28MGL-PAX-3A-40MGL-PAX-BACKGROUND-20MGL-PAX-3ASECTION-29 "Background"
   [87c7]: #x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "(MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION))"
+  [8a71]: #x-28MGL-PAX-3ATRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR-20CONDITION-29 "(MGL-PAX:TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR CONDITION)"
   [8ed9]: #x-28MGL-PAX-3A-40MGL-PAX-EXTENSION-API-20MGL-PAX-3ASECTION-29 "Extension API"
   [966a]: #x-28MGL-PAX-3ALOCATIVE-TYPE-20FUNCTION-29 "(MGL-PAX:LOCATIVE-TYPE FUNCTION)"
   [96c5]: #x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29 "(MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION)"
   [a05e]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-20GENERIC-FUNCTION-29 "(MGL-PAX:DOCUMENT-OBJECT GENERIC-FUNCTION)"
   [a15b]: #x-28PACKAGE-20-28MGL-PAX-3ALOCATIVE-29-29 "(PACKAGE (MGL-PAX:LOCATIVE))"
   [a282]: #x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE* (VARIABLE))"
+  [a73e]: #x-28MGL-PAX-3ATRANSCRIPTION-VALUES-CONSISTENCY-ERROR-20CONDITION-29 "(MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION)"
   [aa52]: #x-28MGL-PAX-3A-40MGL-PAX-TUTORIAL-20MGL-PAX-3ASECTION-29 "Tutorial"
   [acc9]: #x-28MGL-PAX-3ALOCATE-OBJECT-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-OBJECT GENERIC-FUNCTION)"
   [ad5a]: #x-28MGL-PAX-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmega-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29 "(MGL-PAX:PAX.EL (MGL-PAX:INCLUDE #P\"/home/mega/own/mgl-pax/src/pax.el\" :HEADER-NL \"```elisp\" :FOOTER-NL \"```\"))"
