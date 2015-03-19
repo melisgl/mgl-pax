@@ -27,7 +27,7 @@ prefix arg, the prefixes will not be changed (:COMMENT :KEEP)."
          (point-at-end-p (= (point) end))
          (transcript (mgl-pax-transcribe start end
                                          (mgl-pax-transcribe-comment-arg)
-                                         t t t)))
+                                         t t nil)))
     (if point-at-start-p
         (save-excursion
           (goto-char start)

@@ -25,7 +25,7 @@
   documentation is that they tend to get out-of-sync with the code.
   This is solved by being able to parse back and update transcripts.
   In fact, this is exactly what happens during documentation
-  generation with PAX. Code sections tagged `\"cl-transcript\"` are
+  generation with PAX. Code sections tagged `cl-transcript` are
   retranscribed and checked for inconsistency (that is, any difference
   in output or return values). If the consistency check fails, an
   error is signalled that includes a reference to the object being
@@ -922,9 +922,9 @@
 (defsection @mgl-pax-transcript-emacs-integration
     (:title "Transcribing with Emacs")
   """Typical transcript usage from within Emacs is simple: add a lisp
-  form to a docstring at any indentation level. Move the cursor right
-  after the end of the form as if you were to evaluate it with `C-x
-  C-e`. The cursor is marked by `#\^`:
+  form to a docstring or comment at any indentation level. Move the
+  cursor right after the end of the form as if you were to evaluate it
+  with `C-x C-e`. The cursor is marked by `#\^`:
 
       This is part of a docstring.
 
@@ -993,6 +993,14 @@
   non-commented markup. Without a prefix argument
   `mgl-pax-retranscribe-region` will not change the markup style.
 
+  Finally, not only do both functions work at any indentation level,
+  but in comments too:
+
+      ;;;; (values (princ :hello) (list 1 2))
+      ;;;; .. HELLO
+      ;;;; => :HELLO
+      ;;;; => (1 2)
+
   Transcription support in emacs can be enabled by adding this to your
   Emacs initialization file (or loading `src/transcribe.el`):"""
   (transcribe.el (include
@@ -1003,11 +1011,11 @@
 (defun transcribe-for-emacs (string comment update-only echo
                              first-line-special-p)
   (swank::with-buffer-syntax ()
-    (multiple-value-bind (string indentation)
-        (strip-docstring-indentation string
+    (multiple-value-bind (string prefix)
+        (strip-longest-common-prefix string "; "
                                      :first-line-special-p first-line-special-p)
       (let ((transcript
-              (prefix-lines (make-string indentation :initial-element #\Space)
+              (prefix-lines prefix
                             (transcribe string nil :comment comment
                                         :update-only update-only :echo echo)
                             :exclude-first-line-p first-line-special-p)))
