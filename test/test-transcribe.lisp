@@ -67,81 +67,91 @@
 
 (defparameter *transcribe-test-cases*
   '((:input "1"
-     :transcript (((1 "1")))
+     :transcript (((1 "1") nil))
      :output "1~%"
      :update-only t)
     (:input ";; this~%   (+ 1~%      2)"
-     :transcript ((((+ 1 2) ";; this~%   (+ 1~%      2)")))
+     :transcript ((((+ 1 2) ";; this~%   (+ 1~%      2)") nil))
      :output ";; this~%   (+ 1~%      2)~%"
      :update-only t)
     (:input "(+ 1 2)42"
-     :transcript ((((+ 1 2) "(+ 1 2)"))
-                  ((42 "42")))
+     :transcript ((((+ 1 2) "(+ 1 2)") nil)
+                  ((42 "42") nil))
      :output "(+ 1 2)~%42~%"
      :update-only t)
     (:input "(+ 1 2) 42"
-     :transcript ((((+ 1 2) "(+ 1 2)"))
-                  ((42 "42")))
+     :transcript ((((+ 1 2) "(+ 1 2)") nil)
+                  ((42 "42") nil))
      :output "(+ 1 2)~%42~%"
      :update-only t)
     (:input "(princ 1)~%.. 1"
-     :transcript ((((princ 1) "(princ 1)") (:output "1")))
+     :transcript ((((princ 1) "(princ 1)")
+                   :default
+                   (:output "1")))
      :output "(princ 1)~%.. 1~%"
      :update-only t)
     (:input "(progn (princ 1) (print 2))~%.. 1~%.. 2 "
      :transcript ((((progn (princ 1) (print 2)) "(progn (princ 1) (print 2))")
+                   :default
                    (:output "1~%2 ")))
      :output "(progn (princ 1) (print 2))~%.. 1~%.. 2 ~%"
      :update-only t)
     (:input "(princ 1)~%;.. 1"
-     :transcript ((((princ 1) "(princ 1)") (:commented-output "1")))
+     :transcript ((((princ 1) "(princ 1)") :commented-1
+                   (:output "1")))
      :output "(princ 1)~%;.. 1~%"
      :update-only t)
     (:input "(progn (princ 1) (print 2))~%;.. 1~%;.. 2 "
      :transcript ((((progn (princ 1) (print 2)) "(progn (princ 1) (print 2))")
-                   (:commented-output "1~%2 ")))
+                   :commented-1
+                   (:output "1~%2 ")))
      :output "(progn (princ 1) (print 2))~%;.. 1~%;.. 2 ~%"
      :update-only t)
     (:input "1~%=> 1"
-     :transcript (((1 "1") (:readable (1 "1"))))
+     :transcript (((1 "1") :default (:readable (1 "1"))))
      :output "1~%=> 1~%"
      :update-only t)
     (:input "(list 1 2)~%=> ;; this~%   (1~%    2)"
-     :transcript ((((list 1 2) "(list 1 2)")
+     :transcript ((((list 1 2) "(list 1 2)") :default
                    (:readable ((1 2) ";; this~%   (1~%    2)"))))
      :output "(list 1 2)~%=> ;; this~%   (1~%    2)~%"
      :update-only t)
     (:input "(values)~%=> ; No value"
-     :transcript ((((values) "(values)") (:no-value nil)))
+     :transcript ((((values) "(values)") :default (:no-value nil)))
      :output "(values)~%=> ; No value~%"
      :update-only t)
     (:input "1~%;=> 1"
-     :transcript (((1 "1") (:commented-readable (1 "1"))))
+     :transcript (((1 "1") :commented-1 (:readable (1 "1"))))
      :output "1~%;=> 1~%"
      :update-only t)
     (:input "(list 1 2)~%;=> ;; this~%;-> (1~%;->  2)"
      :transcript ((((list 1 2) "(list 1 2)")
-                   (:commented-readable ((1 2) ";; this~%(1~% 2)"))))
+                   :commented-1
+                   (:readable ((1 2) ";; this~%(1~% 2)"))))
      :output "(list 1 2)~%;=> ;; this~%;-> (1~%;->  2)~%"
      :update-only t)
     (:input "(make-instance 'bbb)~%==> #<BBB >"
      :transcript ((((make-instance 'bbb) "(make-instance 'bbb)")
+                   :default
                    (:unreadable "#<BBB >")))
      :output "(make-instance 'bbb)~%==> #<BBB >~%"
      :update-only t)
     (:input "(make-instance 'bbb*)~%==> #<BBB* ~%--> >"
      :transcript ((((make-instance 'bbb*) "(make-instance 'bbb*)")
+                   :default
                    (:unreadable "#<BBB* ~%>")))
      :output "(make-instance 'bbb*)~%==> #<BBB* ~%--> >~%"
      :update-only t)
     (:input "(make-instance 'bbb)~%;==> #<BBB >"
      :transcript ((((make-instance 'bbb) "(make-instance 'bbb)")
-                   (:commented-unreadable "#<BBB >")))
+                   :commented-1
+                   (:unreadable "#<BBB >")))
      :output "(make-instance 'bbb)~%;==> #<BBB >~%"
      :update-only t)
     (:input "(make-instance 'bbb*)~%;==> #<BBB* ~%;--> >"
      :transcript ((((make-instance 'bbb*) "(make-instance 'bbb*)")
-                   (:commented-unreadable "#<BBB* ~%>")))
+                   :commented-1
+                   (:unreadable "#<BBB* ~%>")))
      :output "(make-instance 'bbb*)~%;==> #<BBB* ~%;--> >~%"
      :update-only t)
     (:input "42"
@@ -222,10 +232,13 @@
     (:input "(values 1 2)~%;=> 1"
      :output "(values 1 2)~%;=> 1~%;=> 2~%"
      :update-only t)
-    ;; commenting of new output with :KEEP
+    ;; commenting of new output
     (:input "(princ 1)~%;=> 1"
-     :output "(princ 1)~%;.. 1~%;=> 1~%"
-     :comment :keep)
+     :output "(princ 1)~%;.. 1~%;=> 1~%")
+    ;; commenting of new output in syntax
+    (:input "(princ 1)~%;=> 1"
+     :output "(princ 1)~%;;.. 1~%;;=> 1~%"
+     :default-syntax :commented-2)
     ;; eof in form
     (:input "(sdf"
      :errors (0))
@@ -240,7 +253,10 @@
      :output "(list 1 2)~%=> (1 2)~%")
     ;; missing commented readable value
     (:input "(list 1 2)~%;=>"
-     :output "(list 1 2)~%;=> (1 2)~%")))
+     :output "(list 1 2)~%;=> (1 2)~%")
+    ;; mixed syntax
+    (:input "(princ 1)~%;.. 1~%=> 1~%"
+     :errors (nil))))
 
 (defun call-format-on-strings (tree)
   (mgl-pax::transform-tree (lambda (parent node)
@@ -257,8 +273,7 @@
       (destructuring-bind (&key input transcript output check-consistency
                            update-only (include-no-output update-only)
                            (include-no-value update-only)
-                           (comment :keep)
-                           errors output-consistency-errors
+                           default-syntax errors output-consistency-errors
                            values-consistency-errors)
           test-case
         (let ((output-consistency-errors* ())
@@ -292,7 +307,7 @@
                         :update-only update-only
                         :include-no-output include-no-output
                         :include-no-value include-no-value
-                        :comment comment)))
+                        :default-syntax default-syntax)))
                 (when transcript
                   (assert (equal transcript transcript*)))
                 (when output

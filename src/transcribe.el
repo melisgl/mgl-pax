@@ -3,8 +3,10 @@
 (defun mgl-pax-transcribe-last-expression ()
   "A bit like C-u C-x C-e (slime-eval-last-expression) that
 inserts the output and values of the sexp before the point, this
-does the same but with MGL-PAX:TRANSCRIBE. With a prefix
-arg (except -), it inserts a ; character before the markup."
+does the same but with MGL-PAX:TRANSCRIBE. Use a numeric prefix
+argument as in index to select one of the Common Lisp
+MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
+Without a prefix argument, the first syntax is used."
   (interactive)
   (insert
    (save-excursion
@@ -12,21 +14,21 @@ arg (except -), it inserts a ; character before the markup."
             (start (progn (backward-sexp)
                           (move-beginning-of-line nil)
                           (point))))
-       (mgl-pax-transcribe start end (mgl-pax-transcribe-comment-arg)
+       (mgl-pax-transcribe start end (mgl-pax-transcribe-syntax-arg)
                            nil nil nil)))))
 
 (defun mgl-pax-retranscribe-region (start end)
   "Updates the transcription in the current region (as in calling
-MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T). With a prefix arg of -,
-the output transcript will use non-commented
-prefixes (corresponding to :COMMENT nil). With other prefix args,
-the commented prefixes will be used (:COMMENT T). Without a
-prefix arg, the prefixes will not be changed (:COMMENT :KEEP)."
+MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T). Use a numeric prefix
+argument as in index to select one of the Common Lisp
+MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
+Without a prefix argument, the syntax of the input will not be
+changed."
   (interactive "r")
   (let* ((point-at-start-p (= (point) start))
          (point-at-end-p (= (point) end))
          (transcript (mgl-pax-transcribe start end
-                                         (mgl-pax-transcribe-comment-arg)
+                                         (mgl-pax-transcribe-syntax-arg)
                                          t t nil)))
     (if point-at-start-p
         (save-excursion
@@ -38,12 +40,12 @@ prefix arg, the prefixes will not be changed (:COMMENT :KEEP)."
           (delete-region start end))
       (insert transcript))))
 
-(defun mgl-pax-transcribe-comment-arg ()
-  (cond ((eq current-prefix-arg '-) nil)
-        (current-prefix-arg t)
-        (t :keep)))
+(defun mgl-pax-transcribe-syntax-arg ()
+  (if current-prefix-arg
+      (prefix-numeric-value current-prefix-arg)
+    nil))
 
-(defun mgl-pax-transcribe (start end comment update-only echo
+(defun mgl-pax-transcribe (start end syntax update-only echo
                                  first-line-special-p)
   (let ((transcription
          (slime-eval
@@ -52,7 +54,7 @@ prefix arg, the prefixes will not be changed (:COMMENT :KEEP)."
                    (cl:find-symbol
                     (cl:symbol-name :transcribe-for-emacs) :mgl-pax)
                    ,(buffer-substring-no-properties start end)
-                   ',comment ',update-only ',echo ',first-line-special-p)
+                   ',syntax ',update-only ',echo ',first-line-special-p)
                   t))))
     (if (eq transcription t)
         (error "MGL-PAX is not loaded.")

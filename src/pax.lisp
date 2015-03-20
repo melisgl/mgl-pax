@@ -17,6 +17,9 @@
 ;;;;   it's translated to a list item
 ;;;;
 ;;;; - autolinking to the hyperspec
+;;;;
+;;;; - pretty print lambda-lists (including default values) and values
+;;;;   of variables
 
 (in-package :mgl-pax)
 

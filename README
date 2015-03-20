@@ -1508,16 +1508,18 @@ then invoke the elisp function `mgl-pax-retranscribe-region` to get:
 Note how the indentation and the comment of `(1 2)` was left alone
 but the output and the first return value got updated.
 
-Alternatively, `C-u mgl-pax-transcribe` will emit commented markup:
+Alternatively, `C-u 1 mgl-pax-transcribe` will emit commented markup:
 
     (values (princ :hello) (list 1 2))
     ;.. HELLO
-    ;=> HELLO
+    ;=> :HELLO
     ;=> (1 2)
 
-`C-u - mgl-pax-retranscribe-region` will turn commented into
-non-commented markup. Without a prefix argument
-`mgl-pax-retranscribe-region` will not change the markup style.
+`C-u 0 mgl-pax-retranscribe-region` will turn commented into
+non-commented markup. In general, the numeric prefix argument is the
+index of the syntax to be used in MGL-PAX:*SYNTAXES*. Without a
+prefix argument `mgl-pax-retranscribe-region` will not change the
+markup style.
 
 Finally, not only do both functions work at any indentation level,
 but in comments too:
@@ -1536,8 +1538,10 @@ Emacs initialization file (or loading `src/transcribe.el`):
 (defun mgl-pax-transcribe-last-expression ()
   "A bit like C-u C-x C-e (slime-eval-last-expression) that
 inserts the output and values of the sexp before the point, this
-does the same but with MGL-PAX:TRANSCRIBE. With a prefix
-arg (except -), it inserts a ; character before the markup."
+does the same but with MGL-PAX:TRANSCRIBE. Use a numeric prefix
+argument as in index to select one of the Common Lisp
+MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
+Without a prefix argument, the first syntax is used."
   (interactive)
   (insert
    (save-excursion
@@ -1545,21 +1549,21 @@ arg (except -), it inserts a ; character before the markup."
             (start (progn (backward-sexp)
                           (move-beginning-of-line nil)
                           (point))))
-       (mgl-pax-transcribe start end (mgl-pax-transcribe-comment-arg)
+       (mgl-pax-transcribe start end (mgl-pax-transcribe-syntax-arg)
                            nil nil nil)))))
 
 (defun mgl-pax-retranscribe-region (start end)
   "Updates the transcription in the current region (as in calling
-MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T). With a prefix arg of -,
-the output transcript will use non-commented
-prefixes (corresponding to :COMMENT nil). With other prefix args,
-the commented prefixes will be used (:COMMENT T). Without a
-prefix arg, the prefixes will not be changed (:COMMENT :KEEP)."
+MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T). Use a numeric prefix
+argument as in index to select one of the Common Lisp
+MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
+Without a prefix argument, the syntax of the input will not be
+changed."
   (interactive "r")
   (let* ((point-at-start-p (= (point) start))
          (point-at-end-p (= (point) end))
          (transcript (mgl-pax-transcribe start end
-                                         (mgl-pax-transcribe-comment-arg)
+                                         (mgl-pax-transcribe-syntax-arg)
                                          t t nil)))
     (if point-at-start-p
         (save-excursion
@@ -1571,12 +1575,12 @@ prefix arg, the prefixes will not be changed (:COMMENT :KEEP)."
           (delete-region start end))
       (insert transcript))))
 
-(defun mgl-pax-transcribe-comment-arg ()
-  (cond ((eq current-prefix-arg '-) nil)
-        (current-prefix-arg t)
-        (t :keep)))
+(defun mgl-pax-transcribe-syntax-arg ()
+  (if current-prefix-arg
+      (prefix-numeric-value current-prefix-arg)
+    nil))
 
-(defun mgl-pax-transcribe (start end comment update-only echo
+(defun mgl-pax-transcribe (start end syntax update-only echo
                                  first-line-special-p)
   (let ((transcription
          (slime-eval
@@ -1585,7 +1589,7 @@ prefix arg, the prefixes will not be changed (:COMMENT :KEEP)."
                    (cl:find-symbol
                     (cl:symbol-name :transcribe-for-emacs) :mgl-pax)
                    ,(buffer-substring-no-properties start end)
-                   ',comment ',update-only ',echo ',first-line-special-p)
+                   ',syntax ',update-only ',echo ',first-line-special-p)
                   t))))
     (if (eq transcription t)
         (error "MGL-PAX is not loaded.")
@@ -1594,11 +1598,11 @@ prefix arg, the prefixes will not be changed (:COMMENT :KEEP)."
 
 ### Transcript API
 
-- [function] TRANSCRIBE INPUT OUTPUT &KEY UPDATE-ONLY (COMMENT :KEEP) (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) CHECK-CONSISTENCY (INPUT-PREFIXES \*PREFIXES\*) (OUTPUT-PREFIXES \*PREFIXES\*)
+- [function] TRANSCRIBE INPUT OUTPUT &KEY UPDATE-ONLY (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) CHECK-CONSISTENCY DEFAULT-SYNTAX (INPUT-SYNTAXES \*SYNTAXES\*) (OUTPUT-SYNTAXES \*SYNTAXES\*)
 
-    Read forms from INPUT and write them (iff ECHO) to OUTPUT followed
-    by any output and return values produced by calling EVAL on the
-    form. INPUT can be a stream or a string, while OUTPUT can be a
+    Read forms from INPUT and write them (iff ECHO) to OUTPUT
+    followed by any output and return values produced by calling EVAL on
+    the form. INPUT can be a stream or a string, while OUTPUT can be a
     stream or NIL in which case transcription goes into a string. The
     return value is the OUTPUT stream or the string that was
     constructed.
@@ -1614,97 +1618,124 @@ prefix arg, the prefixes will not be changed (:COMMENT :KEEP)."
     
     ```
     
-    However, it may be a bit confusing since this documentation uses
-    TRANSCRIBE markup syntax in this very example, so let's do it
+    However, the above may be a bit confusing since this documentation
+    uses TRANSCRIBE markup syntax in this very example, so let's do it
     differently. If we have a file with these contents:
     
-        (values (princ 42) (list 1 2))
+    ```commonlisp
+    (values (princ 42) (list 1 2))
+    ```
     
-    they are transcribed to:
+    it is transcribed to:
     
-        (values (princ 42) (list 1 2))
-        .. 42
-        => 42
-        => (1 2)
+    ```commonlisp
+    (values (princ 42) (list 1 2))
+    .. 42
+    => 42
+    => (1 2)
+    ```
     
     Output to all standard streams is captured and printed with
-    the :OUTPUT prefix (defaults to `".."`, looked up in
-    OUTPUT-PREFIXES). The return values above are printed with
-    the :READABLE prefix (`"=>"`). Note how these prefixes are always
-    printed on a new line to facilitate parsing.
+    the :OUTPUT prefix (`".."`). The return values above are printed
+    with the :READABLE prefix (`"=>"`). Note how these prefixes are
+    always printed on a new line to facilitate parsing.
     
-    TRANSCRIBE is able to parse its own output (using INPUT-PREFIXES).
-    If we transcribe the previous output above, we get it back exactly.
-    However, if we remove all output markers, leave only a placeholder
-    value marker and pass :UPDATE-ONLY T with source:
+    **Updating**
     
-        (values (princ 42) (list 1 2))
-        =>
+    TRANSCRIBE is able to parse its own output. If we transcribe the
+    previous output above, we get it back exactly. However, if we remove
+    all output markers, leave only a placeholder value marker and
+    pass :UPDATE-ONLY T with source:
+    
+    ```commonlisp
+    (values (princ 42) (list 1 2))
+    =>
+    ```
     
     we get this:
     
-        (values (princ 42) (list 1 2))
-        => 42
-        => (1 2)
+    ```commonlisp
+    (values (princ 42) (list 1 2))
+    => 42
+    => (1 2)
+    ```
     
     With UPDATE-ONLY, printed output of a form is only transcribed if
     there were output markers in the source. Similarly, with
     UPDATE-ONLY, return values are only transcribed if there were value
     markers in the source.
     
-    If the form produces no output or returns no values then whether
-    output and values are transcribed is controlled by INCLUDE-NO-OUTPUT
-    and INCLUDE-NO-VALUE, respectively. By default, neither is on so:
+    **No Output/Values**
     
-        (values)
-        ..
-        =>
+    If the form produces no output or returns no values, then whether or
+    not output and values are transcribed is controlled by
+    INCLUDE-NO-OUTPUT and INCLUDE-NO-VALUE, respectively. By default,
+    neither is on so:
+    
+    ```commonlisp
+    (values)
+    ..
+    =>
+    ```
     
     is transcribed to
     
-        (values)
+    ```commonlisp
+    (values)
+    ```
     
     With UPDATE-ONLY true, we probably wouldn't like to lose those
     markers since they were put there for a reason. Hence, with
     UPDATE-ONLY, INCLUDE-NO-OUTPUT and INCLUDE-NO-VALUE default to true.
     So with UPDATE-ONLY the above example is transcribed to:
     
-        (values)
-        ..
-        => ; No value
+    ```commonlisp
+    (values)
+    ..
+    => ; No value
+    ```
     
-    where `"=> ; No value"` is the :NO-VALUE prefix.
+    where the last line is the :NO-VALUE prefix.
+    
+    **Consistency Checks**
     
     If CHECK-CONSISTENCY is true, then TRANSCRIBE signals a continuable
-    TRANSCRIPTION-CONSISTENCY-ERROR whenever a form's output is
-    different between the source and the evaluation. Similary, for
-    values, a consistency error is signalled if a value read from the
-    source does not print as the same string as the value returned by
-    EVAL. This allows readable values to be hand-indented without
-    failing consistency checks:
+    TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR whenever a form's output as a
+    string is different from what was in INPUT, provided that INPUT
+    contained the output. Similary, for values, a continuable
+    TRANSCRIPTION-VALUES-CONSISTENCY-ERROR is signalled if a value read
+    from the source does not print as the as the value returned by EVAL.
+    This allows readable values to be hand-indented without failing
+    consistency checks:
     
-        (list 1 2)
-        => (1
-              2)
+    ```commonlisp
+    (list 1 2)
+    => (1
+          2)
+    ```
     
-    The above scheme involves READ, so unreadable values cannot be
-    treated the same. In fact, unreadable values must even be printed
-    differently for transcribe to be able to read them back:
+    **Unreadable Values**
     
-        (defclass some-class () ())
-        
-        (defmethod print-object ((obj some-class) stream)
-          (print-unreadable-object (obj stream :type t)
-            (format stream "~%~%end")))
-        
-        (make-instance 'some-class)
-        ==> #<SOME-CLASS 
-        -->
-        --> end>
+    The above scheme involves READ, so consistency of unreadable values
+    cannot be treated the same. In fact, unreadable values must even be
+    printed differently for transcribe to be able to read them back:
     
-    `"==>"` is UNREADABLE-VALUE-PREFIX and `"-->"` is
-    UNREADABLE-VALUE-CONTINUATION-PREFIX. As with outputs, a consistency
-    check between a unreadable value from the source and the value from
+    ```commonlisp
+    (defclass some-class () ())
+    
+    (defmethod print-object ((obj some-class) stream)
+      (print-unreadable-object (obj stream :type t)
+        (format stream \"~%~%end\")))
+    
+    (make-instance 'some-class)
+    ==> #<SOME-CLASS 
+    -->
+    --> end>
+    ```
+    
+    where `"==>"` is the :UNREADABLE prefix and `"-->"` is
+    the :UNREADABLE-CONTINUATION prefix. As with outputs, a consistency
+    check between an unreadable value from the source and the value from
     EVAL is performed with STRING=. That is, the value from EVAL is
     printed to a string and compared to the source value. Hence, any
     change to unreadable values will break consistency checks. This is
@@ -1713,36 +1744,76 @@ prefix arg, the prefixes will not be changed (:COMMENT :KEEP)."
     no remedy for that, except for customizing PRINT-OBJECT or not
     transcribing that kind of stuff.
     
-    Finally, one may want to produce a transcript that's can be
-    evaluated. If the COMMENT argument is T, then instead of :OUTPUT
-    the :COMMENTED-OUTPUT prefix is used. Similar translations are
-    peformed for other prefixes. For example:
+    **Syntaxes**
     
-        (make-instance 'some-class)
-        ;==> #<SOME-CLASS
-        ;-->
-        ;--> end>
-        
-        (list 1 2)
-        ;=> (1
-        ;->    2)
+    Finally, a transcript may employ different syntaxes for the output
+    and values of different forms. When INPUT is read, the syntax for
+    each form is determined by trying to match all prefixes from all
+    syntaxes in INPUT-SYNTAXES against a line. If there are no output or
+    values for a form in INPUT, then the syntax remains undetermined.
     
-    If COMMENT is false, then the transcribed output will use the
-    non-commented prefixes. If COMMENT is :KEEP (the default), then an
-    effort will be made to maintain the commenting style of the input.
+    When OUTPUT is written, the prefixes to be used are looked up in
+    DEFAULT-SYNTAX of OUTPUT-SYNTAXES, if DEFAULT-SYNTAX is not NIL. If
+    DEFAULT-SYNTAX is NIL, then the syntax used by the same form in the
+    INPUT is used or (if that could not be determined) the syntax of the
+    previous form. If there was no previous form, then the first syntax
+    if OUTPUT-SYNTAXES is used.
+    
+    To produce a transcript that's executable Lisp code,
+    use :DEFAULT-SYNTAX :COMMENTED-1:
+    
+    ```commonlisp
+    (make-instance 'some-class)
+    ;==> #<SOME-CLASS
+    ;-->
+    ;--> end>
+    
+    (list 1 2)
+    ;=> (1
+    ;->    2)
+    ```
+    
+    To translate the above to uncommented syntax,
+    use :DEFAULT-SYNTAX :DEFAULT. If DEFAULT-SYNTAX is NIL (the
+    default), the same syntax will be used in the output as in the input
+    as much as possible.
 
-- [variable] *PREFIXES* ((:OUTPUT "..") (:COMMENTED-OUTPUT ";..") (:NO-VALUE "=> ; No value")
- (:COMMENTED-NO-VALUE ";=> ; No value") (:READABLE "=>")
- (:COMMENTED-READABLE ";=>") (:COMMENTED-READABLE-CONTINUATION ";->")
- (:UNREADABLE "==>") (:COMMENTED-UNREADABLE ";==>")
- (:UNREADABLE-CONTINUATION "-->")
- (:COMMENTED-UNREADABLE-CONTINUATION ";-->"))
+- [variable] *SYNTAXES* ((:DEFAULT (:OUTPUT "..") (:NO-VALUE "=> ; No value") (:READABLE "=>")
+  (:UNREADABLE "==>") (:UNREADABLE-CONTINUATION "-->"))
+ (:COMMENTED-1 (:OUTPUT ";..") (:NO-VALUE ";=> ; No value")
+  (:READABLE ";=>") (:READABLE-CONTINUATION ";->") (:UNREADABLE ";==>")
+  (:UNREADABLE-CONTINUATION ";-->"))
+ (:COMMENTED-2 (:OUTPUT ";;..") (:NO-VALUE ";;=> ; No value")
+  (:READABLE ";;=>") (:READABLE-CONTINUATION ";;->")
+  (:UNREADABLE ";;==>") (:UNREADABLE-CONTINUATION ";;-->")))
 
-    The default prefixes used by TRANSCRIBE for reading and writing
-    lines containing output and values of an evaluated form. When
-    writing, an extra space is added automatically if the line to be
-    prefixed is not empty. Similarly, the first space following the
+    The default syntaxes used by TRANSCRIBE for reading and writing
+    lines containing output and values of an evaluated form.
+    
+    A syntax is a list of of the form `(SYNTAX-ID &REST PREFIXES)` where
+    `PREFIXES` is a list of `(PREFIX-ID PREFIX-STRING)` elements. For
+    example the syntax :COMMENTED-1 looks like this:
+    
+    ```commonlisp
+    (:commented-1
+     (:output ";..")
+     (:no-value ";=>  No value")
+     (:readable ";=>")
+     (:readable-continuation ";->")
+     (:unreadable ";==>")
+     (:unreadable-continuation ";-->"))
+    ```
+    
+    All of the above prefixes must be defined for every syntax except
+    for :READABLE-CONTINUATION. If that's missing (as in the :DEFAULT
+    syntax), then the following value is read with READ and printed with
+    PRIN1 (hence no need to mark up the following lines).
+    
+    When writing, an extra space is added automatically if the line to
+    be prefixed is not empty. Similarly, the first space following the
     prefix discarded when reading.
+    
+    See TRANSCRIBE for how the actual syntax to be used is selected.
 
 - [condition] TRANSCRIPTION-ERROR ERROR
 

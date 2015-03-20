@@ -3,7 +3,15 @@
 ;;;; - Maybe implement inline commands that can change prefixes and
 ;;;;   other parameters.
 ;;;;
-;;;; - special comment?
+;;;; - special comment syntax for the 'narrative' to produce something
+;;;;   like an ipython notebook
+;;;;
+;;;; - special prompt syntax for forms not to be evaluated when a file
+;;;;   is loaded
+;;;;
+;;;; - pathnames for input/output
+;;;;
+;;;; - capture conditions signalled?
 
 (in-package :mgl-pax)
 
@@ -57,44 +65,74 @@
 
 (defsection @mgl-pax-transcript-api (:title "Transcript API")
   (transcribe function)
-  (*prefixes* variable)
+  (*syntaxes* variable)
   (transcription-error condition)
   (transcription-consistency-error condition)
   (transcription-output-consistency-error condition)
   (transcription-values-consistency-error condition))
 
-(defparameter *prefixes*
-  '((:output "..")
-    (:commented-output ";..")
-    ;; To give precedence to these no value markers, they are listed
-    ;; before :READABLE and :COMMENTED-READABLE.
-    (:no-value "=> ; No value")
-    (:commented-no-value ";=> ; No value")
-    (:readable "=>")
-    (:commented-readable ";=>")
-    ;; There is no need for :UNREADABLE-CONTINUATION because we READ
-    ;; an entire form following this prefix.
-    (:commented-readable-continuation ";->")
-    (:unreadable "==>")
-    (:commented-unreadable ";==>")
-    (:unreadable-continuation "-->")
-    (:commented-unreadable-continuation ";-->"))
-  "The default prefixes used by TRANSCRIBE for reading and writing
-  lines containing output and values of an evaluated form. When
-  writing, an extra space is added automatically if the line to be
-  prefixed is not empty. Similarly, the first space following the
-  prefix discarded when reading.")
+(defparameter *syntaxes*
+  '((:default
+     (:output "..")
+     ;; To give precedence to this no value marker, it is listed
+     ;; before :READABLE.
+     (:no-value "=> ; No value")
+     ;; No :READABLE-CONTINUATION which is fine because READ knows
+     ;; where to stop anyway.
+     (:readable "=>")
+     (:unreadable "==>")
+     (:unreadable-continuation "-->"))
+    (:commented-1
+     (:output ";..")
+     (:no-value ";=> ; No value")
+     (:readable ";=>")
+     (:readable-continuation ";->")
+     (:unreadable ";==>")
+     (:unreadable-continuation ";-->"))
+    (:commented-2
+     (:output ";;..")
+     (:no-value ";;=> ; No value")
+     (:readable ";;=>")
+     (:readable-continuation ";;->")
+     (:unreadable ";;==>")
+     (:unreadable-continuation ";;-->")))
+  "The default syntaxes used by TRANSCRIBE for reading and writing
+  lines containing output and values of an evaluated form.
+
+  A syntax is a list of of the form `(SYNTAX-ID &REST PREFIXES)` where
+  `PREFIXES` is a list of `(PREFIX-ID PREFIX-STRING)` elements. For
+  example the syntax :COMMENTED-1 looks like this:
+
+  ```commonlisp
+  (:commented-1
+   (:output \";..\")
+   (:no-value \";=>  No value\")
+   (:readable \";=>\")
+   (:readable-continuation \";->\")
+   (:unreadable \";==>\")
+   (:unreadable-continuation \";-->\"))
+  ```
+
+  All of the above prefixes must be defined for every syntax except
+  for :READABLE-CONTINUATION. If that's missing (as in the :DEFAULT
+  syntax), then the following value is read with READ and printed with
+  PRIN1 (hence no need to mark up the following lines).
+
+  When writing, an extra space is added automatically if the line to
+  be prefixed is not empty. Similarly, the first space following the
+  prefix discarded when reading.
+
+  See TRANSCRIBE for how the actual syntax to be used is selected.")
 
 (defun transcribe (input output &key update-only
-                   (comment :keep)
                    (include-no-output update-only)
                    (include-no-value update-only)
                    (echo t) check-consistency
-                   (input-prefixes *prefixes*)
-                   (output-prefixes *prefixes*))
-  "Read forms from INPUT and write them (iff ECHO) to OUTPUT followed
-  by any output and return values produced by calling EVAL on the
-  form. INPUT can be a stream or a string, while OUTPUT can be a
+                   default-syntax (input-syntaxes *syntaxes*)
+                   (output-syntaxes *syntaxes*))
+  """Read forms from INPUT and write them (iff ECHO) to OUTPUT
+  followed by any output and return values produced by calling EVAL on
+  the form. INPUT can be a stream or a string, while OUTPUT can be a
   stream or NIL in which case transcription goes into a string. The
   return value is the OUTPUT stream or the string that was
   constructed.
@@ -102,104 +140,131 @@
   A simple example is this:
 
   ```cl-transcript
-  (transcribe \"(princ 42) \" nil)
-  => \"(princ 42)
+  (transcribe "(princ 42) " nil)
+  => "(princ 42)
   .. 42
   => 42
-  \"
+  "
   ```
 
-  However, it may be a bit confusing since this documentation uses
-  TRANSCRIBE markup syntax in this very example, so let's do it
+  However, the above may be a bit confusing since this documentation
+  uses TRANSCRIBE markup syntax in this very example, so let's do it
   differently. If we have a file with these contents:
 
-      (values (princ 42) (list 1 2))
+  ```commonlisp
+  (values (princ 42) (list 1 2))
+  ```
 
-  they are transcribed to:
+  it is transcribed to:
 
-      (values (princ 42) (list 1 2))
-      .. 42
-      => 42
-      => (1 2)
+  ```commonlisp
+  (values (princ 42) (list 1 2))
+  .. 42
+  => 42
+  => (1 2)
+  ```
 
   Output to all standard streams is captured and printed with
-  the :OUTPUT prefix (defaults to `\"..\"`, looked up in
-  OUTPUT-PREFIXES). The return values above are printed with
-  the :READABLE prefix (`\"=>\"`). Note how these prefixes are always
-  printed on a new line to facilitate parsing.
+  the :OUTPUT prefix (`".."`). The return values above are printed
+  with the :READABLE prefix (`"=>"`). Note how these prefixes are
+  always printed on a new line to facilitate parsing.
 
-  TRANSCRIBE is able to parse its own output (using INPUT-PREFIXES).
-  If we transcribe the previous output above, we get it back exactly.
-  However, if we remove all output markers, leave only a placeholder
-  value marker and pass :UPDATE-ONLY T with source:
+  **Updating**
 
-      (values (princ 42) (list 1 2))
-      =>
+  TRANSCRIBE is able to parse its own output. If we transcribe the
+  previous output above, we get it back exactly. However, if we remove
+  all output markers, leave only a placeholder value marker and
+  pass :UPDATE-ONLY T with source:
+
+  ```commonlisp
+  (values (princ 42) (list 1 2))
+  =>
+  ```
 
   we get this:
 
-      (values (princ 42) (list 1 2))
-      => 42
-      => (1 2)
+  ```commonlisp
+  (values (princ 42) (list 1 2))
+  => 42
+  => (1 2)
+  ```
 
   With UPDATE-ONLY, printed output of a form is only transcribed if
   there were output markers in the source. Similarly, with
   UPDATE-ONLY, return values are only transcribed if there were value
   markers in the source.
 
-  If the form produces no output or returns no values then whether
-  output and values are transcribed is controlled by INCLUDE-NO-OUTPUT
-  and INCLUDE-NO-VALUE, respectively. By default, neither is on so:
+  **No Output/Values**
 
-      (values)
-      ..
-      =>
+  If the form produces no output or returns no values, then whether or
+  not output and values are transcribed is controlled by
+  INCLUDE-NO-OUTPUT and INCLUDE-NO-VALUE, respectively. By default,
+  neither is on so:
+
+  ```commonlisp
+  (values)
+  ..
+  =>
+  ```
 
   is transcribed to
 
-      (values)
+  ```commonlisp
+  (values)
+  ```
 
   With UPDATE-ONLY true, we probably wouldn't like to lose those
   markers since they were put there for a reason. Hence, with
   UPDATE-ONLY, INCLUDE-NO-OUTPUT and INCLUDE-NO-VALUE default to true.
   So with UPDATE-ONLY the above example is transcribed to:
 
-      (values)
-      ..
-      => ; No value
+  ```commonlisp
+  (values)
+  ..
+  => ; No value
+  ```
 
-  where `\"=> ; No value\"` is the :NO-VALUE prefix.
+  where the last line is the :NO-VALUE prefix.
+
+  **Consistency Checks**
 
   If CHECK-CONSISTENCY is true, then TRANSCRIBE signals a continuable
-  TRANSCRIPTION-CONSISTENCY-ERROR whenever a form's output is
-  different between the source and the evaluation. Similary, for
-  values, a consistency error is signalled if a value read from the
-  source does not print as the same string as the value returned by
-  EVAL. This allows readable values to be hand-indented without
-  failing consistency checks:
+  TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR whenever a form's output as a
+  string is different from what was in INPUT, provided that INPUT
+  contained the output. Similary, for values, a continuable
+  TRANSCRIPTION-VALUES-CONSISTENCY-ERROR is signalled if a value read
+  from the source does not print as the as the value returned by EVAL.
+  This allows readable values to be hand-indented without failing
+  consistency checks:
 
-      (list 1 2)
-      => (1
-            2)
+  ```commonlisp
+  (list 1 2)
+  => (1
+        2)
+  ```
 
-  The above scheme involves READ, so unreadable values cannot be
-  treated the same. In fact, unreadable values must even be printed
-  differently for transcribe to be able to read them back:
+  **Unreadable Values**
 
-      (defclass some-class () ())
-      
-      (defmethod print-object ((obj some-class) stream)
-        (print-unreadable-object (obj stream :type t)
-          (format stream \"~%~%end\")))
+  The above scheme involves READ, so consistency of unreadable values
+  cannot be treated the same. In fact, unreadable values must even be
+  printed differently for transcribe to be able to read them back:
 
-      (make-instance 'some-class)
-      ==> #<SOME-CLASS 
-      -->
-      --> end>
+  ```commonlisp
+  (defclass some-class () ())
+  
+  (defmethod print-object ((obj some-class) stream)
+    (print-unreadable-object (obj stream :type t)
+      (format stream \"~%~%end\")))
 
-  `\"==>\"` is UNREADABLE-VALUE-PREFIX and `\"-->\"` is
-  UNREADABLE-VALUE-CONTINUATION-PREFIX. As with outputs, a consistency
-  check between a unreadable value from the source and the value from
+  (make-instance 'some-class)
+  ==> #<SOME-CLASS 
+  -->
+  --> end>
+  ```
+
+  where `"==>"` is the :UNREADABLE prefix and `"-->"` is
+  the :UNREADABLE-CONTINUATION prefix. As with outputs, a consistency
+  check between an unreadable value from the source and the value from
   EVAL is performed with STRING=. That is, the value from EVAL is
   printed to a string and compared to the source value. Hence, any
   change to unreadable values will break consistency checks. This is
@@ -208,72 +273,82 @@
   no remedy for that, except for customizing PRINT-OBJECT or not
   transcribing that kind of stuff.
 
-  Finally, one may want to produce a transcript that's can be
-  evaluated. If the COMMENT argument is T, then instead of :OUTPUT
-  the :COMMENTED-OUTPUT prefix is used. Similar translations are
-  peformed for other prefixes. For example:
+  **Syntaxes**
 
-      (make-instance 'some-class)
-      ;==> #<SOME-CLASS
-      ;-->
-      ;--> end>
+  Finally, a transcript may employ different syntaxes for the output
+  and values of different forms. When INPUT is read, the syntax for
+  each form is determined by trying to match all prefixes from all
+  syntaxes in INPUT-SYNTAXES against a line. If there are no output or
+  values for a form in INPUT, then the syntax remains undetermined.
 
-      (list 1 2)
-      ;=> (1
-      ;->    2)
+  When OUTPUT is written, the prefixes to be used are looked up in
+  DEFAULT-SYNTAX of OUTPUT-SYNTAXES, if DEFAULT-SYNTAX is not NIL. If
+  DEFAULT-SYNTAX is NIL, then the syntax used by the same form in the
+  INPUT is used or (if that could not be determined) the syntax of the
+  previous form. If there was no previous form, then the first syntax
+  if OUTPUT-SYNTAXES is used.
 
-  If COMMENT is false, then the transcribed output will use the
-  non-commented prefixes. If COMMENT is :KEEP (the default), then an
-  effort will be made to maintain the commenting style of the input."
-  (write-transcript (read-transcript input :prefixes input-prefixes)
+  To produce a transcript that's executable Lisp code,
+  use :DEFAULT-SYNTAX :COMMENTED-1:
+
+  ```commonlisp
+  (make-instance 'some-class)
+  ;==> #<SOME-CLASS
+  ;-->
+  ;--> end>
+
+  (list 1 2)
+  ;=> (1
+  ;->    2)
+  ```
+
+  To translate the above to uncommented syntax,
+  use :DEFAULT-SYNTAX :DEFAULT. If DEFAULT-SYNTAX is NIL (the
+  default), the same syntax will be used in the output as in the input
+  as much as possible."""
+  (write-transcript (read-transcript input :syntaxes input-syntaxes)
                     output
                     :update-only update-only
                     :check-consistency check-consistency
                     :include-no-output include-no-output
                     :include-no-value include-no-value
                     :echo echo
-                    :comment comment
-                    :prefixes output-prefixes))
+                    :default-syntax default-syntax
+                    :syntaxes output-syntaxes))
 
 
 ;;;; Prefix utilities
 
-(defun find-prefix (id)
-  (or (second (find id *prefixes* :key #'first))
-      (error "Cannot find prefix with id ~S~%" id)))
+(defun find-syntax (syntax)
+  (or (find syntax *syntaxes* :key #'first)
+      (error "Cannot find syntax ~S.~%" syntax)))
 
-(defun continuation-prefix-id-p (id)
-  (or (eq id :commented-readable-continuation)
-      (eq id :unreadable-continuation)
-      (eq id :commented-unreadable-continuation)))
+(defun find-prefix (id syntax &key (errorp t))
+  (flet ((foo (syntax-definition)
+           (list (second (find id (rest syntax-definition) :key #'first))
+                 (first syntax-definition))))
+    (destructuring-bind (prefix syntax) (if syntax
+                                            (foo (find-syntax syntax))
+                                            (some #'foo *syntaxes*))
+      (when (and (not prefix) errorp)
+        (error "Cannot find prefix with id ~S~%" id))
+      (values prefix syntax ))))
 
-(defun start-prefix (id)
-  (find-prefix
-   (ecase id
-     ((:commented-readable-continuation) :commented-readable)
-     ((:unreadable-continuation) :unreadable)
-     ((:commented-unreadable-continuation) :commented-unreadable))))
-
-(defun continuation-prefix (id)
-  (find-prefix
-   (ecase id
-     ((:commented-readable) :commented-readable-continuation)
-     ((:unreadable) :unreadable-continuation)
-     ((:commented-unreadable) :commented-unreadable-continuation))))
-
-(defun commented-prefix-id (id)
-  (ecase id
-    ((:output) :commented-output)
-    ((:readable) :commented-readable)
-    ((:unreadable) :commented-unreadable)))
-
-(defun commented-prefix-id-p (id)
-  (member id '(:commented-output :commented-readable :commented-unreadable)))
-
-(defun match-prefixes (line)
-  (values-list (find-if (lambda (entry)
-                          (alexandria:starts-with-subseq (second entry) line))
-                        *prefixes*)))
+;;; Find a syntax and a prefix that matches LINE. If SYNTAX, then only
+;;; consider prefixes in that syntax. Return the id of the matching
+;;; prefix, its string and the id of syntax.
+(defun match-prefixes (line syntax-id)
+  (flet ((foo (syntax-definition)
+           (let ((match (find-if (lambda (entry)
+                                   (alexandria:starts-with-subseq
+                                    (second entry) line))
+                                 (rest syntax-definition))))
+             (if match
+                 (list (first match) (second match) (first syntax-definition))
+                 nil))))
+    (values-list (if syntax-id
+                     (foo (find-syntax syntax-id))
+                     (some #'foo *syntaxes*)))))
 
 
 ;;;; READ-TRANSCRIPT constructs a parse tree that's fed into
@@ -295,6 +370,7 @@
 ;;;;     ((((VALUES (FIND-PACKAGE :KEYWORD) (PRINC 42))
 ;;;;        ";;; This is a comment before the form.
 ;;;;     (values (find-package :keyword) (princ 42))")
+;;;;       :DEFAULT
 ;;;;       (:OUTPUT "42")
 ;;;;       (:UNREADABLE "#<PACKAGE \"KEYWORD\">")
 ;;;;       (:READABLE (42 "42"))))
@@ -309,8 +385,14 @@
 (defun command-string (command)
   (second (first command)))
 
+(defun command-syntax-id (command)
+  (second command))
+
+(defsetf command-syntax-id (command) (syntax-id)
+  `(setf (second ,command) ,syntax-id))
+
 (defun command-captures (command)
-  (rest command))
+  (rest (rest command)))
 
 (defun command-output-capture (command)
   (let ((captures
@@ -370,13 +452,6 @@
 (defun unreadable-string (unreadable-capture)
   (assert (unreadable-capture-p unreadable-capture))
   (capture-value unreadable-capture))
-
-(defun transcript-has-commented-p (transcript)
-  (some (lambda (command)
-          (some (lambda (capture)
-                  (commented-prefix-id-p (capture-id capture)))
-                (command-captures command)))
-        transcript))
 
 
 ;;;; READ-TRANSCRIPT implementation
@@ -413,11 +488,11 @@
             (sb-c::*policy* sb-c::*policy*))
        ,@body)))
 
-(defun read-transcript (input &key (prefixes *prefixes*))
+(defun read-transcript (input &key (syntaxes *syntaxes*))
   (check-type input (or stream string))
   (with-input-stream (stream input)
     (with-load-environment (stream)
-      (let ((*prefixes* prefixes)
+      (let ((*syntaxes* syntaxes)
             (transcript ())
             (partial-line-p nil)
             ;; file position of the beginning of LINE
@@ -426,8 +501,10 @@
             (read-line stream nil nil)
           (handler-case
               (loop while line do
-                (multiple-value-bind (prefix-id prefix)
-                    (and (not partial-line-p) (match-prefixes line))
+                (multiple-value-bind (prefix-id prefix syntax-id)
+                    (and (not partial-line-p)
+                         (match-prefixes line (command-syntax-id
+                                               (first transcript))))
                   (let ((match-length (length prefix))
                         value
                         n-lines-read
@@ -437,19 +514,24 @@
                         (value n-lines-read
                                line missing-newline-p file-position-1
                                partial-line-p)
-                      (parse-transcript-element stream prefix-id line
-                                                match-length))
+                      (parse-transcript-element stream prefix-id syntax-id
+                                                line match-length))
                     ;; Forms create a new entry, form output and values are
                     ;; pushed into that entry.
                     (cond (prefix-id
                            (when (endp transcript)
                              (transcription-error* "No open form."))
-                           (setf (cdr (first transcript))
-                                 (append (cdr (first transcript))
+                           (setf (rest (rest (first transcript)))
+                                 (append (command-captures (first transcript))
                                          (list (list prefix-id value))))
+                           ;; The first capture determines the syntax
+                           ;; and the rest must match.
+                           (setf (command-syntax-id (first transcript))
+                                 syntax-id)
                            (check-command-values (first transcript)))
                           (t
-                           (push (list value) transcript)))
+                           ;; NIL means the syntax is not yet known.
+                           (push (list value nil) transcript)))
                     (setq file-position file-position-1))))
             (transcription-error (e)
               (apply #'transcription-error
@@ -459,13 +541,12 @@
                      (transcription-error-message-args e)))))
         (nreverse transcript)))))
 
-(defun parse-transcript-element (stream prefix-id first-line match-length)
+(defun parse-transcript-element (stream prefix-id syntax-id
+                                 first-line match-length)
   (cond ((null prefix-id)
          (parse-form stream))
         ((eq prefix-id :output)
-         (parse-prefixed stream :output))
-        ((eq prefix-id :commented-output)
-         (parse-prefixed stream :commented-output))
+         (parse-prefixed stream :output syntax-id))
         ((eq prefix-id :readable)
          ;; It may be that there is no value following the :READEABLE
          ;; prefix, because it was put there as a placeholder for
@@ -478,28 +559,27 @@
                                   (read-line* stream nil nil))
                                nil)))
                (t
-                (parse-readable stream))))
-        ((eq prefix-id :commented-readable)
-         (parse-commented-readable stream))
+                (parse-readable stream syntax-id))))
         ((eq prefix-id :unreadable)
-         (parse-prefixed stream :unreadable-continuation))
-        ((eq prefix-id :commented-unreadable)
-         (parse-prefixed stream :commented-unreadable-continuation))
-        ((or (eq prefix-id :no-value)
-             (eq prefix-id :commented-no-value))
+         (parse-prefixed stream :unreadable-continuation syntax-id))
+        ((eq prefix-id :no-value)
          (when (< match-length (length first-line))
            (transcription-error* "Trailing junk after ~S."
-                                 (find-prefix prefix-id)))
+                                 (find-prefix prefix-id syntax-id)))
          (read-line stream nil nil)
          (values-list `(nil
                         1
                         ,@(multiple-value-list
                            (read-line* stream nil nil))
                         nil)))
-        ((continuation-prefix-id-p prefix-id)
+        ((eq prefix-id :readable-continuation)
          (transcription-error* "Prefix ~S must be preceeded by ~S."
-                               (find-prefix prefix-id)
-                               (start-prefix prefix-id)))
+                               (find-prefix prefix-id syntax-id)
+                               (find-prefix :readable syntax-id)))
+        ((eq prefix-id :unreadable-continuation)
+         (transcription-error* "Prefix ~S must be preceeded by ~S."
+                               (find-prefix prefix-id syntax-id)
+                               (find-prefix :unreadable syntax-id)))
         (t
          (transcription-error* "Unknown prefix id ~S in *PREFIXES*."
                                prefix-id))))
@@ -516,17 +596,37 @@
                             ,@(multiple-value-list (read-line* stream nil nil))
                             ,(not at-bol-p))))))))
 
-(defun parse-prefixed (stream prefix-id)
-  (read-prefixed-lines stream (find-prefix prefix-id)
+(defun parse-prefixed (stream prefix-id syntax-id)
+  (read-prefixed-lines stream (find-prefix prefix-id syntax-id)
                        :first-line-prefix ""))
 
-(defun parse-readable (stream)
+(defun parse-readable (stream syntax-id)
+  (let ((continuation-prefix (find-prefix :readable-continuation syntax-id
+                                          :errorp nil)))
+    (if continuation-prefix
+        (parse-readable-with-continuation stream continuation-prefix)
+        (parse-readable* stream))))
+
+(defun parse-readable-with-continuation (stream continuation-prefix)
+  (multiple-value-bind (string n-lines-read
+                        next-line missing-newline-p file-position)
+      (read-prefixed-lines stream continuation-prefix
+                           :first-line-prefix "")
+    ;; FIXME: eof?
+    (let ((form (first (with-input-from-string (stream string)
+                         (read-form-and-string stream nil)))))
+      (values (list form string) n-lines-read
+              next-line missing-newline-p file-position
+              nil))))
+
+(defun parse-readable* (stream)
   ;; We are after a readable prefix. Eat a single space if any so that
   ;; "=>1" is parsed the same as "=> 1".
   (when (eql (peek-char nil stream nil nil) #\Space)
     (read-char stream))
-  (let ((form-and-string (read-form-and-string stream 'eof
-                                               :preserve-whitespace-p t)))
+  (let ((form-and-string
+          (read-form-and-string stream 'eof
+                                :preserve-whitespace-p t)))
     (when (eq (first form-and-string) 'eof)
       (transcription-error* "Unexpected EOF while parsing readable value."))
     (unless (skip-white-space-till-end-of-line stream)
@@ -537,19 +637,6 @@
                    1
                    ,@(multiple-value-list (read-line* stream nil nil))
                    nil))))
-
-(defun parse-commented-readable (stream)
-  (multiple-value-bind (string n-lines-read
-                        next-line missing-newline-p file-position)
-      (read-prefixed-lines stream
-                           (find-prefix :commented-readable-continuation)
-                           :first-line-prefix "")
-    ;; FIXME: eof?
-    (let ((form (first (with-input-from-string (stream string)
-                         (read-form-and-string stream nil)))))
-      (values (list form string) n-lines-read
-              next-line missing-newline-p file-position
-              nil))))
 
 ;;; Read a sexp from STREAM or return EOF. The second value is a
 ;;; string of all of the characters that were read even if EOF
@@ -600,22 +687,22 @@
         (funcall fn output))))
 
 (defun write-transcript (transcript output &key update-only
-                         (comment :keep)
                          (include-no-output update-only)
                          (include-no-value update-only)
                          (echo t) check-consistency
-                         (prefixes *prefixes*))
+                         default-syntax (syntaxes *syntaxes*))
   (check-type output (or stream null))
-  (check-type comment (member nil :keep t))
   (with-output-stream (stream output)
-    (let ((*prefixes* prefixes)
-          (comment (if (and (eq comment :keep)
-                            (transcript-has-commented-p transcript))
-                       :keep-t
-                       comment)))
+    (let ((*syntaxes* syntaxes)
+          (last-syntax-id default-syntax))
       (dolist (command transcript)
         (let ((form (command-form command))
               (form-as-string (command-string command)))
+          ;; When SYNTAX is NIL, we default to the syntax of the this
+          ;; command or the last command with known syntax.
+          (setq last-syntax-id (or default-syntax
+                                   (command-syntax-id command)
+                                   last-syntax-id))
           (when echo
             (format stream "~A" (command-string command))
             (unless (eq form 'eof)
@@ -629,13 +716,15 @@
                    nil form-as-string form-output
                    (output-string output-capture)))
                 (transcribe-output stream form-output output-capture
-                                   comment update-only include-no-output))
+                                   last-syntax-id update-only
+                                   include-no-output))
               (let ((value-captures (command-value-captures command)))
                 (when check-consistency
                   (check-values-consistency nil form-as-string
                                             form-values value-captures))
-                (transcribe-values stream form-values value-captures comment
-                                   update-only include-no-value)))))))))
+                (transcribe-values stream form-values value-captures
+                                   last-syntax-id update-only
+                                   include-no-value)))))))))
 
 (defun readable-object-p (object)
   (null
@@ -723,41 +812,30 @@
   (let* ((buffer (make-array 0 :element-type 'character
                              :fill-pointer 0 :adjustable t))
          (values (multiple-value-list
-                  (with-output-to-string (output buffer)
-                    (with-transcription-syntax ()
-                      (let ((*standard-output* output)
-                            (*error-output* output)
-                            (*trace-output* output)
-                            (*debug-io* output)
-                            (*query-io* output)
-                            (*terminal-io* output))
-                        (eval form)))))))
+                  (handler-case
+                      (with-output-to-string (output buffer)
+                        (with-transcription-syntax ()
+                          (let ((*standard-output* output)
+                                (*error-output* output)
+                                (*trace-output* output)
+                                (*debug-io* output)
+                                (*query-io* output)
+                                (*terminal-io* output))
+                            (eval form))))
+                    (error (e)
+                      (transcription-error nil nil form
+                                           "Error while evaluating form.~%~A"
+                                           (princ-to-string e)))))))
     (values buffer values)))
 
-(defun transcribed-prefix-id (id capture-id comment)
-  (cond ((and (or (eq comment :keep) (eq comment :keep-t))
-              capture-id)
-         (if (commented-prefix-id-p capture-id)
-             (commented-prefix-id id)
-             id))
-        ((eq comment :keep)
-         id)
-        (comment
-         (commented-prefix-id id))
-        (t id)))
-
-(defun transcribed-prefix (id capture-id comment)
-  (find-prefix (transcribed-prefix-id id capture-id comment)))
-
-(defun transcribe-output (stream output capture comment
+(defun transcribe-output (stream output capture syntax-id
                           update-only include-no-output)
   (when (if update-only
             (not (null capture))
             (or include-no-output (plusp (length output))))
-    (let ((prefix (transcribed-prefix :output (capture-id capture) comment)))
-      (write-prefixed-lines output prefix stream))))
+    (write-prefixed-lines output (find-prefix :output syntax-id) stream)))
 
-(defun transcribe-values (stream values captures comment
+(defun transcribe-values (stream values captures syntax-id
                           update-only include-no-value)
   (when (if update-only
             captures
@@ -765,10 +843,7 @@
     (with-transcription-syntax ()
       (if (endp values)
           (when include-no-value
-            (format stream "~A~%"
-                    (transcribed-prefix :no-value
-                                        (capture-id (first captures))
-                                        comment)))
+            (format stream "~A~%" (find-prefix :no-value syntax-id)))
           (loop for value in values
                 for i upfrom 0
                 for capture = (if (< i (length captures))
@@ -776,9 +851,9 @@
                                   nil)
                 do (if (readable-object-p value)
                        (transcribe-readable-value
-                        stream value capture comment)
+                        stream value capture syntax-id)
                        (transcribe-unreadable-value
-                        stream value capture comment)))))))
+                        stream value syntax-id)))))))
 
 ;;; Assuming that OBJECT prints readably, check that whether CAPTURE
 ;;; is readable and it prints the same.
@@ -788,36 +863,31 @@
          (string= (prin1-to-string object)
                   (prin1-to-string (readable-object capture))))))
 
-(defun transcribe-readable-value (stream value capture comment)
-  (let* ((prefix-id
-           (transcribed-prefix-id :readable (capture-id capture) comment))
-         (prefix (find-prefix prefix-id)))
+(defun transcribe-readable-value (stream value capture syntax-id)
+  (let ((prefix (find-prefix :readable syntax-id))
+        (continuation-prefix (find-prefix :readable-continuation syntax-id
+                                          :errorp nil)))
     (if (or (null capture)
             (not (readably-consistent-p value capture)))
-        (if (eq prefix-id :readable)
+        (if (null continuation-prefix)
+            ;; No continuation prefix, just mark the first line.
             (format stream "~A ~S~%" prefix value)
             ;; FIXME: indentation can be wrong with multiline
-            (write-prefixed-lines
-             (princ-to-string value)
-             (find-prefix :commented-readable-continuation)
-             stream :first-line-prefix prefix))
-        ;; They print the same, so use the parsed string, because
-        ;; it might have been hand-indented.
-        (if (eq prefix-id :readable)
+            (write-prefixed-lines (princ-to-string value) continuation-prefix
+                                  stream :first-line-prefix prefix))
+        ;; They print the same, so use the parsed string, because it
+        ;; might have been hand-indented.
+        (if (null continuation-prefix)
             (format stream "~A ~A~%" prefix (readable-string capture))
-            (write-prefixed-lines
-             (readable-string capture)
-             (find-prefix :commented-readable-continuation)
-             stream :first-line-prefix prefix)))))
+            (write-prefixed-lines (readable-string capture)
+                                  continuation-prefix
+                                  stream :first-line-prefix prefix)))))
 
-(defun transcribe-unreadable-value (stream object capture comment)
-  (let ((first-line-prefix-id
-          (transcribed-prefix-id :unreadable (capture-id capture) comment)))
-    (write-prefixed-lines (prin1-to-string object)
-                          (continuation-prefix first-line-prefix-id)
-                          stream
-                          :first-line-prefix (find-prefix
-                                              first-line-prefix-id))))
+(defun transcribe-unreadable-value (stream object syntax-id)
+  (let ((prefix (find-prefix :unreadable syntax-id))
+        (continuation-prefix (find-prefix :unreadable-continuation syntax-id)))
+    (write-prefixed-lines (prin1-to-string object) continuation-prefix
+                          stream :first-line-prefix prefix)))
 
 
 ;;;; Conditions
@@ -982,16 +1052,18 @@
   Note how the indentation and the comment of `(1 2)` was left alone
   but the output and the first return value got updated.
 
-  Alternatively, `C-u mgl-pax-transcribe` will emit commented markup:
+  Alternatively, `C-u 1 mgl-pax-transcribe` will emit commented markup:
 
       (values (princ :hello) (list 1 2))
       ;.. HELLO
-      ;=> HELLO
+      ;=> :HELLO
       ;=> (1 2)
 
-  `C-u - mgl-pax-retranscribe-region` will turn commented into
-  non-commented markup. Without a prefix argument
-  `mgl-pax-retranscribe-region` will not change the markup style.
+  `C-u 0 mgl-pax-retranscribe-region` will turn commented into
+  non-commented markup. In general, the numeric prefix argument is the
+  index of the syntax to be used in MGL-PAX:*SYNTAXES*. Without a
+  prefix argument `mgl-pax-retranscribe-region` will not change the
+  markup style.
 
   Finally, not only do both functions work at any indentation level,
   but in comments too:
@@ -1008,17 +1080,24 @@
                   :header-nl "```elisp"
                   :footer-nl "```")))
 
-(defun transcribe-for-emacs (string comment update-only echo
+(defun transcribe-for-emacs (string default-syntax* update-only echo
                              first-line-special-p)
-  (swank::with-buffer-syntax ()
-    (multiple-value-bind (string prefix)
-        (strip-longest-common-prefix string "; "
-                                     :first-line-special-p first-line-special-p)
-      (let ((transcript
-              (prefix-lines prefix
-                            (transcribe string nil :comment comment
-                                        :update-only update-only :echo echo)
-                            :exclude-first-line-p first-line-special-p)))
-        (if echo
-            transcript
-            (format nil "~%~A" transcript))))))
+  (let ((default-syntax (cond ((numberp default-syntax*)
+                               (first (elt *syntaxes* default-syntax*)))
+                              ((null default-syntax*)
+                               nil)
+                              (t (error "Unexpected default syntax ~S."
+                                        default-syntax*)))))
+    (swank::with-buffer-syntax ()
+      (multiple-value-bind (string prefix)
+          (strip-longest-common-prefix
+           string "; " :first-line-special-p first-line-special-p)
+        (let ((transcript
+                (prefix-lines prefix
+                              (transcribe string nil
+                                          :default-syntax default-syntax
+                                          :update-only update-only :echo echo)
+                              :exclude-first-line-p first-line-special-p)))
+          (if echo
+              transcript
+              (format nil "~%~A" transcript)))))))
