@@ -9,8 +9,6 @@
 ;;;; - special prompt syntax for forms not to be evaluated when a file
 ;;;;   is loaded
 ;;;;
-;;;; - pathnames for input/output
-;;;;
 ;;;; - capture conditions signalled?
 
 (in-package :mgl-pax)
@@ -462,13 +460,13 @@
                            ,input))
 
 (defun call-with-input-stream (fn input)
-  (cond ((typep input 'stream)
+  (cond ((streamp input)
          ;; There is no way to guarantee that FILE-POSITION will work
          ;; on a stream so let's just read the entire INPUT into a
          ;; string.
          (with-input-from-string (stream (read-stream-into-string input))
            (funcall fn stream)))
-        ((typep input 'string)
+        ((stringp input)
          (with-input-from-string (input input)
            (funcall fn input)))
         (t
@@ -681,10 +679,13 @@
                             ,output))
 
 (defun call-with-output-stream (fn output)
-  (if output
-      (funcall fn output)
-      (with-output-to-string (output)
-        (funcall fn output))))
+  (cond ((streamp output)
+         (funcall fn output))
+        ((null output)
+         (with-output-to-string (stream)
+           (funcall fn stream)))
+        (t
+         (assert nil))))
 
 (defun write-transcript (transcript output &key update-only
                          (include-no-output update-only)
