@@ -13,10 +13,9 @@
   (let ((*print-pretty* nil))
     (with-output-to-string (datum)
       (let ((buffer (make-array buffer-size :element-type 'character)))
-        (loop
-          :for bytes-read = (read-sequence buffer stream)
-          :do (write-sequence buffer datum :start 0 :end bytes-read)
-          :while (= bytes-read buffer-size))))))
+        (loop for bytes-read = (read-sequence buffer stream)
+              do (write-sequence buffer datum :start 0 :end bytes-read)
+              while (= bytes-read buffer-size))))))
 
 (defun subseq* (seq start)
   (subseq seq (min (length seq) start)))
@@ -24,7 +23,7 @@
 (defun relativize-pathname (pathname reference-pathname)
   "Return a pathname that's equivalent to PATHNAME but relative to
   REFERENCE-PATHNAME if possible. Like ENOUGH-NAMESTRING, but inserts
-  ..'s if necessary."
+  :UP components if necessary."
   (let ((pathname (merge-pathnames pathname *default-pathname-defaults*))
         (reference-pathname (merge-pathnames reference-pathname
                                              *default-pathname-defaults*)))
@@ -479,4 +478,3 @@
                 (concatenate 'string (first result) element))
           (push element result)))
     (reverse result)))
-

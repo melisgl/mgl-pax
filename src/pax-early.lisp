@@ -117,8 +117,8 @@
     :initarg :entries :reader section-entries
     :documentation "A list of strings and REFERENCE objects in the
     order they occurred in DEFSECTION."))
-  (:documentation "DEFSECTION stores its NAME, TITLE and ENTRIES in
-  [SECTION][class] objects."))
+  (:documentation "DEFSECTION stores its NAME, TITLE, PACKAGE,
+  READTABLE and ENTRIES in [SECTION][class] objects."))
 
 (defmethod print-object ((section section) stream)
   (print-unreadable-object (section stream :type t)
@@ -191,8 +191,8 @@
     (declare (ignore locative-type))
     t))
 
-;;;; These method must be defined here else the DEFSECTION forms in
-;;;; pax.lisp will export too mcuh.
+;;;; These methods must be defined here else the DEFSECTION forms in
+;;;; pax.lisp will export too much.
 
 (defmethod exportable-locative-type-p ((locative-type (eql 'asdf:system)))
   nil)
