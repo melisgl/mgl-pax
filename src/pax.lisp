@@ -374,11 +374,26 @@
                     string)))
     (read-locative-from-string string)))
 
+;;; Ensure that some Swank internal facilities (such as
+;;; SWANK::FIND-DEFINITIONS-FIND-SYMBOL-OR-PACKAGE,
+;;; SWANK::WITH-BUFFER-SYNTAX, SWANK::PARSE-SYMBOL) are operational
+;;; even when not running under Slime.
+(defmacro with-swank (() &body body)
+  `(let* ((swank::*buffer-package* (if (boundp 'swank::*buffer-package*)
+                                       swank::*buffer-package*
+                                       *package*))
+          (swank::*buffer-readtable*
+            (if (boundp 'swank::*buffer-readtable*)
+                swank::*buffer-readtable*
+                (swank::guess-buffer-readtable swank::*buffer-package*))))
+     ,@body))
+
 ;;; Like READ-FROM-STRING, but try to avoid interning symbols.
 (defun read-locative-from-string (string)
   (let ((swank::*buffer-package* *package*))
     (multiple-value-bind (symbol found)
-        (swank::find-definitions-find-symbol-or-package string)
+        (with-swank ()
+          (swank::find-definitions-find-symbol-or-package string))
       (if found
           symbol
           (let ((first-char-pos (position-if-not #'whitespacep string)))
@@ -1792,8 +1807,9 @@
 (defun find-definitions-find-symbol-or-package (name)
   (flet ((do-find (name n)
            (multiple-value-bind (symbol found name)
-               (swank::with-buffer-syntax (*package*)
-                 (swank::parse-symbol name))
+               (with-swank ()
+                 (swank::with-buffer-syntax (*package*)
+                   (swank::parse-symbol name)))
              (cond (found
                     (return-from find-definitions-find-symbol-or-package
                       (values symbol n)))
