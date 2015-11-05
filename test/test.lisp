@@ -131,9 +131,9 @@
     (foo type (defclass foo))
     (foo class (defclass foo))
     (foo compiler-macro (define-compiler-macro foo))
-    (foo-a (accessor foo) (defclass foo))
-    (foo-r (reader foo) (defclass foo))
-    (foo-w (writer foo) (defclass foo))
+    (foo-a (accessor foo) (defclass foo) (a :accessor foo-a))
+    (foo-r (reader foo) (defclass foo) (r :reader foo-r))
+    (foo-w (writer foo) (defclass foo) (w :writer foo-w))
     (foo-a variable (defvar foo-a))
     (foo-b variable (defvar foo-b))
     (foo-c variable (defvar foo-c))
@@ -145,8 +145,8 @@
     (@mgl-pax-manual section (defsection @mgl-pax-manual))
     (baz-aaa structure-accessor (defstruct baz))
     (mgl-pax package
-     #-ccl (eval-when (:compile-toplevel :load-toplevel :execute))
-     #+ccl (cl:defpackage))
+     (eval-when (:compile-toplevel :load-toplevel :execute))
+     (cl:defpackage))
     (mgl-pax asdf:system ())
     ;; Allegro has the location off by one form.
     #-allegro
@@ -160,21 +160,29 @@
   #-allegro t)
 
 (defun test-navigation ()
-  (loop for (symbol locative prefix) in *navigation-test-cases*
-        do (when (working-locative-p locative)
-             (let ((location (find-source (locate symbol locative))))
-               (assert (not (eq :error (first location))) ()
-                       "Could not find source location for (~S ~S)"
-                       symbol locative)
-               (let* ((file (second (second location)))
-                      (position (1- (second (third location))))
-                      (form (let ((*package* (find-package :mgl-pax-test)))
-                              (read-form-from-file-position file position))))
-                 (assert
-                  (alexandria:starts-with-subseq prefix form :test #'equal)
-                  () "Could not find prefix ~S at source location ~S ~
-                     for reference (~S ~S). Form was: ~S."
-                  prefix location symbol locative form))))))
+  (loop for test-case in *navigation-test-cases*
+        do (destructuring-bind
+               (symbol locative prefix &optional alternative-prefix) test-case
+             (when (working-locative-p locative)
+               (let ((location (find-source (locate symbol locative))))
+                 (assert (not (eq :error (first location))) ()
+                         "Could not find source location for (~S ~S)"
+                         symbol locative)
+                 (let* ((file (second (second location)))
+                        (position (1- (second (third location))))
+                        (form (let ((*package* (find-package :mgl-pax-test)))
+                                (read-form-from-file-position file position))))
+                   (assert
+                    (or (alexandria:starts-with-subseq prefix form
+                                                       :test #'equal)
+                        (and alternative-prefix
+                             (alexandria:starts-with-subseq
+                              alternative-prefix form :test #'equal)))
+                    () "Could not find prefix ~S~@[ or ~S~] ~
+                     at source location~%~S~%for reference (~S ~S).~%~
+                     Form found was:~%~S."
+                    prefix alternative-prefix
+                    location symbol locative form)))))))
 
 (defun read-form-from-file-position (filename position)
   (with-open-file (stream filename :direction :input)
