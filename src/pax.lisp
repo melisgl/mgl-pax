@@ -2628,12 +2628,12 @@
       (locate-error)))
 
 (defmethod canonical-reference ((system asdf:system))
-  (make-reference (asdf/find-system:primary-system-name system) 'asdf:system))
+  (make-reference (asdf::primary-system-name system) 'asdf:system))
 
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
                         (format nil "~A ASDF System Details"
-                                (asdf/find-system:primary-system-name system)))
+                                (asdf::primary-system-name system)))
     (flet ((foo (name fn &key type)
              (let ((value (funcall fn system)))
                (when value
