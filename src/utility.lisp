@@ -352,7 +352,7 @@
                       ;; colons (":"), and periods (".").
                       (when first?
                         (write-char #\x out)) 
-                      (format out "-~:@(~16,r~)" code)))
+                      (format out "-~:@(~16r~)" code)))
                (setf first? nil)))
     (coerce output 'simple-string)))
 
