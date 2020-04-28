@@ -101,7 +101,7 @@
   ((name
     :initarg :name :reader section-name
     :documentation "The name of the global variable whose value is
-    this section object.")
+    this SECTION object.")
    (package
     :initarg :package :reader section-package
     :documentation "*PACKAGE* will be bound to this package when

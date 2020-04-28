@@ -966,7 +966,7 @@
   with a backslash to scare MathJax off.
 
   Escaping all those backslashes in TeX fragments embedded in Lisp
-  strings can be pain. [Pythonic String
+  strings can be a pain. [Pythonic String
   Reader](https://github.com/smithzvk/pythonic-string-reader) can help
   with that.""")
 
@@ -1985,7 +1985,7 @@
   "Follow LOCATIVE from OBJECT and return the object it leads to or a
   REFERENCE if there is no first class object corresponding to the
   location. If ERRORP, then a LOCATE-ERROR condition is signaled when
-  lookup fails."
+  the lookup fails."
   (handler-case
       (locate-object object (locative-type locative)
                      (locative-args locative))
@@ -1998,8 +1998,8 @@
   ((message :initarg :message :reader locate-error-message)
    (object :initarg :object :reader locate-error-object)
    (locative :initarg :locative :reader locate-error-locative))
-  (:documentation "Signaled by LOCATE when lookup fails and ERRORP is
-  true.")
+  (:documentation "Signaled by LOCATE when the lookup fails and ERRORP
+  is true.")
   (:report (lambda (condition stream)
              (format stream "Could not locate ~A ~A.~@[ ~A~]"
                      (locate-error-locative condition)
@@ -2063,10 +2063,10 @@
 (defgeneric locative-lambda-list (symbol))
 
 (defgeneric locate-object (object locative-type locative-args)
-  (:documentation "Return the object OBJECT + locative refers to. For
-  example, if LOCATIVE-TYPE is the symbol PACKAGE, this
+  (:documentation "Return the object, to which OBJECT and the locative
+  refer. For example, if LOCATIVE-TYPE is the symbol PACKAGE, this
   returns `(FIND-PACKAGE SYMBOL)`. Signal a LOCATE-ERROR condition by
-  calling the LOCATE-ERROR function if lookup fails. Signal other
+  calling the LOCATE-ERROR function if the lookup fails. Signal other
   errors if the types of the argument are bad, for instance
   LOCATIVE-ARGS is not the empty list in the package example. If a
   REFERENCE is returned then it must be canonical in the sense that
@@ -2326,8 +2326,8 @@
     works and it can also be included in DEFSECTION forms.)")
 
   (define-definer-for-symbol-locative-type define-direction direction ()
-    "With DEFINE-DIRECTION one can document how what a symbol means
-    when interpreted as a direction.")
+    "With DEFINE-DIRECTION one can document what a symbol means when
+    interpreted as a direction.")
 
   (define-direction up ()
     "UP is equivalent to a coordinate delta of (0, -1).")
