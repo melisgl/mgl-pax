@@ -1142,10 +1142,10 @@
 ;;;     - [locative-type] symbol
 ;;;
 ;;; When generating HTML, link SYMBOL to its own anchor.
-(defun print-reference-bullet (reference stream)
+(defun print-reference-bullet (reference stream &key name)
   (let ((locative-type (string-downcase
                         (reference-locative-type reference)))
-        (name (prin1-to-string (reference-object reference))))
+        (name (or name (prin1-to-string (reference-object reference)))))
     (if *document-mark-up-signatures*
         ;; insert self links in HTML
         (let ((locative-type (escape-markdown locative-type))
@@ -1168,11 +1168,12 @@
         (funcall fn reference)
         nil)))
 
-(defun locate-and-print-bullet (locative-type locative-args symbol stream)
-  (print-reference-bullet
-   (canonical-reference
-    (make-reference symbol (cons locative-type locative-args)))
-   stream))
+(defun locate-and-print-bullet (locative-type locative-args symbol stream
+                                &key name)
+  (let ((reference
+          (canonical-reference (make-reference
+                                symbol (cons locative-type locative-args)))))
+    (print-reference-bullet reference stream :name name)))
 
 (defun print-bullet (object stream)
   (print-reference-bullet (canonical-reference object) stream))
@@ -1905,6 +1906,10 @@
           ((typep (resolve ref-1) 'section)
            `((:reference-link :label (,(section-title-or-name (resolve ref-1)))
                               :definition ,(link-to-reference ref-1))))
+          ((typep (resolve ref-1) 'glossary-term)
+           `((:reference-link :label (,(glossary-term-title-or-name
+                                        (resolve ref-1)))
+                              :definition ,(link-to-reference ref-1))))
           (t
            `((:reference-link :label (,(code-fragment name))
                               :definition ,(link-to-reference ref-1)))))))
@@ -1938,6 +1943,8 @@
   (package locative)
   (dislocated locative)
   (locative locative)
+  (glossary-term locative)
+  (define-glossary-term macro)
   (include locative))
 
 
@@ -3139,6 +3146,71 @@
                           locative-args)
   (declare (ignore symbol locative-args))
   (locate-error))
+
+
+;;;; GLOSSARY-TERM locative
+
+(defclass glossary-term ()
+  ((name
+    :initarg :name :reader glossary-term-name
+    :documentation "The name of the global variable whose value is
+    this GLOSSARY-TERM object.")
+   (title
+    :initarg :title :reader glossary-term-title
+    :documentation "Used in generated documentation.")
+   (docstring
+    :initarg :docstring :reader glossary-term-docstring)))
+
+(defmacro define-glossary-term
+    (name (&key title (discard-documentation-p *discard-documentation-p*))
+     docstring)
+  "Define a global variable with NAME and set it to a glossary term
+  object. A glossary term is just a symbol to hang a docstring on. It
+  is a bit like a SECTION in that, when linked to, its TITLE will be
+  the link text instead of the name of the symbol. Unlike sections
+  though, glossary terms are not rendered with headings, but in the
+  more lightweight bullet + locative + name/title style.
+
+  When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
+  is true, DOCSTRING will not be recorded to save memory."
+  `(defparameter ,name
+     (make-instance 'glossary-term
+                    :name ',name :title ,title
+                    :docstring ,(unless discard-documentation-p
+                                  docstring))))
+
+(defun glossary-term-title-or-name (glossary-term)
+  (or (glossary-term-title glossary-term)
+      (prin1-to-string (glossary-term-name glossary-term))))
+
+(defmethod print-object ((glossary-term glossary-term) stream)
+  (print-unreadable-object (glossary-term stream :type t)
+    (format stream "~a" (glossary-term-name glossary-term))))
+
+(define-locative-type glossary-term ()
+  "Refers to a glossary term defined by DEFINE-GLOSSARY-TERM.")
+
+(defmethod locate-object (symbol (locative-type (eql 'glossary-term))
+                          locative-args)
+  (declare (ignore locative-args))
+  (assert (typep (symbol-value symbol) 'glossary-term))
+  (symbol-value symbol))
+
+(defmethod document-object ((glossary-term glossary-term) stream)
+  (let ((symbol (glossary-term-name glossary-term)))
+    (locate-and-print-bullet 'glossary-term () symbol stream
+                             :name (glossary-term-title-or-name glossary-term))
+    (terpri stream)
+    (with-dislocated-symbols ((list symbol))
+      (let ((docstring (glossary-term-docstring glossary-term)))
+        (when docstring
+          (format stream "~%~A~%" (massage-docstring docstring)))))))
+
+(defmethod canonical-reference ((glossary-term glossary-term))
+  (make-reference (glossary-term-name glossary-term) 'glossary-term))
+
+(defmethod find-source ((glossary-term glossary-term))
+  (locate-and-find-source (glossary-term-name glossary-term) 'variable ()))
 
 
 ;;;; INCLUDE locative

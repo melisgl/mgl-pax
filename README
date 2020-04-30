@@ -631,7 +631,7 @@ backticks) alone. Outside code blocks, escape `$` by prefixing it
 with a backslash to scare MathJax off.
 
 Escaping all those backslashes in TeX fragments embedded in Lisp
-strings can be pain. [Pythonic String
+strings can be a pain. [Pythonic String
 Reader](https://github.com/smithzvk/pythonic-string-reader) can help
 with that.
 
@@ -930,6 +930,19 @@ locatives take no arguments.
     to land at the `(DEFINE-LOCATIVE-TYPE VARIABLE ...)` form.
     Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.
 
+- [locative] GLOSSARY-TERM
+
+    Refers to a glossary term defined by DEFINE-GLOSSARY-TERM.
+
+- [macro] DEFINE-GLOSSARY-TERM NAME (&KEY TITLE) DOCSTRING
+
+    Define a global variable with NAME and set it to a glossary term
+    object. A glossary term is just a symbol to hang a docstring on. It
+    is a bit like a SECTION in that, when linked to, its TITLE will be
+    the link text instead of the name of the symbol. Unlike sections
+    though, glossary terms are not rendered with headings, but in the
+    more lightweight bullet + locative + name/title style.
+
 - [locative] INCLUDE SOURCE &KEY LINE-PREFIX HEADER FOOTER HEADER-NL FOOTER-NL
 
     Refers to a region of a file. SOURCE can be a string or a
@@ -1013,12 +1026,12 @@ need to muck with references when there is a perfectly good object.
     Follow LOCATIVE from OBJECT and return the object it leads to or a
     REFERENCE if there is no first class object corresponding to the
     location. If ERRORP, then a LOCATE-ERROR condition is signaled when
-    lookup fails.
+    the lookup fails.
 
 - [condition] LOCATE-ERROR ERROR
 
-    Signaled by LOCATE when lookup fails and ERRORP is
-    true.
+    Signaled by LOCATE when the lookup fails and ERRORP
+    is true.
 
 - [reader] LOCATE-ERROR-MESSAGE LOCATE-ERROR (:MESSAGE)
 
@@ -1081,12 +1094,12 @@ for ASDF:SYSTEM:
       (locate-error)))
 
 (defmethod canonical-reference ((system asdf:system))
-  (make-reference (asdf/find-system:primary-system-name system) 'asdf:system))
+  (make-reference (asdf::primary-system-name system) 'asdf:system))
 
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
                         (format nil "~A ASDF System Details"
-                                (asdf/find-system:primary-system-name system)))
+                                (asdf::primary-system-name system)))
     (flet ((foo (name fn &key type)
              (let ((value (funcall fn system)))
                (when value
@@ -1143,10 +1156,10 @@ for ASDF:SYSTEM:
 
 - [generic-function] LOCATE-OBJECT OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
 
-    Return the object OBJECT + locative refers to. For
-    example, if LOCATIVE-TYPE is the symbol PACKAGE, this
+    Return the object, to which OBJECT and the locative
+    refer. For example, if LOCATIVE-TYPE is the symbol PACKAGE, this
     returns `(FIND-PACKAGE SYMBOL)`. Signal a LOCATE-ERROR condition by
-    calling the LOCATE-ERROR function if lookup fails. Signal other
+    calling the LOCATE-ERROR function if the lookup fails. Signal other
     errors if the types of the argument are bad, for instance
     LOCATIVE-ARGS is not the empty list in the package example. If a
     REFERENCE is returned then it must be canonical in the sense that
@@ -1339,8 +1352,8 @@ with symbols in a certain context.
       works and it can also be included in DEFSECTION forms.)")
     
     (define-definer-for-symbol-locative-type define-direction direction ()
-      "With DEFINE-DIRECTION one can document how what a symbol means
-      when interpreted as a direction.")
+      "With DEFINE-DIRECTION one can document what a symbol means when
+      interpreted as a direction.")
     
     (define-direction up ()
       "UP is equivalent to a coordinate delta of (0, -1).")
@@ -1366,13 +1379,13 @@ presented.
 
 - [class] SECTION
 
-    DEFSECTION stores its NAME, TITLE and ENTRIES in
-    [SECTION][class] objects.
+    DEFSECTION stores its NAME, TITLE, PACKAGE,
+    READTABLE and ENTRIES in [SECTION][class] objects.
 
 - [reader] SECTION-NAME SECTION (:NAME)
 
     The name of the global variable whose value is
-    this section object.
+    this SECTION object.
 
 - [reader] SECTION-PACKAGE SECTION (:PACKAGE)
 

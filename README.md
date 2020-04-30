@@ -331,7 +331,7 @@ possibilities.
 The `M-.` extensions can be enabled by adding this to your Emacs
 initialization file (or loading `src/pax.el`):
 
-<a id='x-28MGL-PAX-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmega-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
+<a id='x-28MGL-PAX-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
 
 ```elisp
 ;;; MGL-PAX M-. integration
@@ -687,7 +687,7 @@ backticks) alone. Outside code blocks, escape `$` by prefixing it
 with a backslash to scare MathJax off.
 
 Escaping all those backslashes in TeX fragments embedded in Lisp
-strings can be pain. [Pythonic String
+strings can be a pain. [Pythonic String
 Reader](https://github.com/smithzvk/pythonic-string-reader) can help
 with that.
 
@@ -1048,6 +1048,23 @@ locatives take no arguments.
     to land at the `(DEFINE-LOCATIVE-TYPE VARIABLE ...)` form.
     Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.
 
+<a id='x-28MGL-PAX-3AGLOSSARY-TERM-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
+
+- [locative] **GLOSSARY-TERM**
+
+    Refers to a glossary term defined by [`DEFINE-GLOSSARY-TERM`][0261].
+
+<a id='x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20-28MGL-PAX-3AMACRO-29-29'></a>
+
+- [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE) DOCSTRING*
+
+    Define a global variable with `NAME` and set it to a glossary term
+    object. A glossary term is just a symbol to hang a docstring on. It
+    is a bit like a `SECTION`([`0`][aee8] [`1`][53a8]) in that, when linked to, its `TITLE` will be
+    the link text instead of the name of the symbol. Unlike sections
+    though, glossary terms are not rendered with headings, but in the
+    more lightweight bullet + locative + name/title style.
+
 <a id='x-28MGL-PAX-3AINCLUDE-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **INCLUDE** *SOURCE &KEY LINE-PREFIX HEADER FOOTER HEADER-NL FOOTER-NL*
@@ -1082,12 +1099,12 @@ locatives take no arguments.
     ;;; More irrelevant code follows.
     ```
     
-    In the above example, pressing `M-.` on [`PAX.EL`][ad5a] will open the
+    In the above example, pressing `M-.` on [`PAX.EL`][ff5c] will open the
     `src/pax.el` file and put the cursor on its first character. `M-.`
     on `FOO-EXAMPLE` will go to the source location of the `(asdf:system
     locative)` locative.
     
-    When documentation is generated, the entire [`pax.el`][ad5a] file is
+    When documentation is generated, the entire [`pax.el`][ff5c] file is
     included in the markdown surrounded by the strings given as
     `HEADER-NL` and `FOOTER-NL` (if any). The trailing newline character is
     assumed implicitly. If that's undesirable, then use `HEADER` and
@@ -1139,14 +1156,14 @@ need to muck with references when there is a perfectly good object.
     Follow `LOCATIVE` from `OBJECT` and return the object it leads to or a
     [`REFERENCE`][cc37] if there is no first class object corresponding to the
     location. If `ERRORP`, then a [`LOCATE-ERROR`][2285] condition is signaled when
-    lookup fails.
+    the lookup fails.
 
 <a id='x-28MGL-PAX-3ALOCATE-ERROR-20CONDITION-29'></a>
 
 - [condition] **LOCATE-ERROR** *ERROR*
 
-    Signaled by [`LOCATE`][b2be] when lookup fails and `ERRORP` is
-    true.
+    Signaled by [`LOCATE`][b2be] when the lookup fails and `ERRORP`
+    is true.
 
 <a id='x-28MGL-PAX-3ALOCATE-ERROR-MESSAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29'></a>
 
@@ -1233,12 +1250,12 @@ for [`ASDF:SYSTEM:`][bf8a]
       (locate-error)))
 
 (defmethod canonical-reference ((system asdf:system))
-  (make-reference (asdf/find-system:primary-system-name system) 'asdf:system))
+  (make-reference (asdf::primary-system-name system) 'asdf:system))
 
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
                         (format nil "~A ASDF System Details"
-                                (asdf/find-system:primary-system-name system)))
+                                (asdf::primary-system-name system)))
     (flet ((foo (name fn &key type)
              (let ((value (funcall fn system)))
                (when value
@@ -1301,10 +1318,10 @@ for [`ASDF:SYSTEM:`][bf8a]
 
 - [generic-function] **LOCATE-OBJECT** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS*
 
-    Return the object `OBJECT` + locative refers to. For
-    example, if `LOCATIVE-TYPE` is the symbol [`PACKAGE`][a15b], this
+    Return the object, to which `OBJECT` and the locative
+    refer. For example, if `LOCATIVE-TYPE` is the symbol [`PACKAGE`][a15b], this
     returns `(FIND-PACKAGE SYMBOL)`. Signal a [`LOCATE-ERROR`][2285] condition by
-    calling the [`LOCATE-ERROR`][f3b7] function if lookup fails. Signal other
+    calling the [`LOCATE-ERROR`][f3b7] function if the lookup fails. Signal other
     errors if the types of the argument are bad, for instance
     `LOCATIVE-ARGS` is not the empty list in the package example. If a
     [`REFERENCE`][cc37] is returned then it must be canonical in the sense that
@@ -1533,8 +1550,8 @@ with symbols in a certain context.
       works and it can also be included in DEFSECTION forms.)")
     
     (define-definer-for-symbol-locative-type define-direction direction ()
-      "With DEFINE-DIRECTION one can document how what a symbol means
-      when interpreted as a direction.")
+      "With DEFINE-DIRECTION one can document what a symbol means when
+      interpreted as a direction.")
     
     (define-direction up ()
       "UP is equivalent to a coordinate delta of (0, -1).")
@@ -1566,15 +1583,15 @@ presented.
 
 - [class] **SECTION**
 
-    [`DEFSECTION`][b1e7] stores its `NAME`, `TITLE` and `ENTRIES` in
-    [`SECTION`][aee8] objects.
+    [`DEFSECTION`][b1e7] stores its `NAME`, `TITLE`, [`PACKAGE`][a15b],
+    `READTABLE` and `ENTRIES` in [`SECTION`][aee8] objects.
 
 <a id='x-28MGL-PAX-3ASECTION-NAME-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 
 - [reader] **SECTION-NAME** *SECTION* *(:NAME)*
 
     The name of the global variable whose value is
-    this section object.
+    this `SECTION`([`0`][aee8] [`1`][53a8]) object.
 
 <a id='x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 
@@ -1748,7 +1765,7 @@ but in comments too:
 Transcription support in emacs can be enabled by adding this to your
 Emacs initialization file (or loading `src/transcribe.el`):
 
-<a id='x-28MGL-PAX-3A-3ATRANSCRIBE-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmega-2Fown-2Fmgl-pax-2Fsrc-2Ftranscribe-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
+<a id='x-28MGL-PAX-3A-3ATRANSCRIBE-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Ftranscribe-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
 
 ```elisp
 ;;; MGL-PAX transcription
@@ -2101,6 +2118,7 @@ changed."
 
   [00f0]: #x-28MGL-PAX-3A-40MGL-PAX-REFERENCE-BASED-EXTENSIONS-20MGL-PAX-3ASECTION-29 "Reference Based Extensions"
   [0208]: #x-28CLASS-20-28MGL-PAX-3ALOCATIVE-29-29 "(CLASS (MGL-PAX:LOCATIVE))"
+  [0261]: #x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFINE-GLOSSARY-TERM (MGL-PAX:MACRO))"
   [0382]: #x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29 "(MGL-PAX:TRANSCRIBE FUNCTION)"
   [0412]: #x-28MGL-PAX-3AREFERENCE-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29 "(MGL-PAX:REFERENCE-OBJECT (MGL-PAX:READER MGL-PAX:REFERENCE))"
   [12a1]: #x-28MGL-PAX-3ALOCATIVE-20-28MGL-PAX-3ALOCATIVE-29-29 "(MGL-PAX:LOCATIVE (MGL-PAX:LOCATIVE))"
@@ -2145,7 +2163,6 @@ changed."
   [a73e]: #x-28MGL-PAX-3ATRANSCRIPTION-VALUES-CONSISTENCY-ERROR-20CONDITION-29 "(MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION)"
   [aa52]: #x-28MGL-PAX-3A-40MGL-PAX-TUTORIAL-20MGL-PAX-3ASECTION-29 "Tutorial"
   [acc9]: #x-28MGL-PAX-3ALOCATE-OBJECT-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-OBJECT GENERIC-FUNCTION)"
-  [ad5a]: #x-28MGL-PAX-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmega-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29 "(MGL-PAX:PAX.EL (MGL-PAX:INCLUDE #P\"/home/mega/own/mgl-pax/src/pax.el\" :HEADER-NL \"```elisp\" :FOOTER-NL \"```\"))"
   [ada7]: #x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES* (VARIABLE))"
   [aee8]: #x-28MGL-PAX-3ASECTION-20CLASS-29 "(MGL-PAX:SECTION CLASS)"
   [b1e7]: #x-28MGL-PAX-3ADEFSECTION-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFSECTION (MGL-PAX:MACRO))"
@@ -2170,6 +2187,7 @@ changed."
   [f1a0]: #x-28METHOD-20-28MGL-PAX-3ALOCATIVE-29-29 "(METHOD (MGL-PAX:LOCATIVE))"
   [f3b7]: #x-28MGL-PAX-3ALOCATE-ERROR-20FUNCTION-29 "(MGL-PAX:LOCATE-ERROR FUNCTION)"
   [f901]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DOCUMENT-LINK-SECTIONS* (VARIABLE))"
+  [ff5c]: #x-28MGL-PAX-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29 "(MGL-PAX:PAX.EL (MGL-PAX:INCLUDE #P\"/home/melisgl/own/mgl-pax/src/pax.el\" :HEADER-NL \"```elisp\" :FOOTER-NL \"```\"))"
 
 * * *
 ###### \[generated by [MGL-PAX](https://github.com/melisgl/mgl-pax)\]
