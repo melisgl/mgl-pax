@@ -3,7 +3,7 @@
 ###### \[in package MGL-PAX\]
 ## mgl-pax ASDF System Details
 
-- Version: 0.0.2
+- Version: 0.0.3
 - Description: Exploratory programming tool and documentation
   generator.
 - Licence: MIT, see COPYING.
@@ -235,8 +235,8 @@ table of contents, etc is possible by calling the DOCUMENT function.
 *One can even generate documentation for different, but related
 libraries at the same time with the output going to different files,
 but with cross-page links being automatically added for symbols
-mentioned in docstrings.* For a complete example of how to generate
-HTML with multiple pages, see `src/doc.lisp`.
+mentioned in docstrings. See @MGL-PAX-GENERATING-DOCUMENTATION for
+some convenience functions to cover the most common cases.*
 
 Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
 exports `*FOO-STATE*` and includes its documentation in
@@ -562,6 +562,146 @@ Now let's examine the most important pieces in detail.
        :footer-fn 'write-html-footer))
     ```
 
+
+## Generating Documentation
+
+Two convenience functions are provided to serve the common case of
+having an ASDF system with some readmes and a directory with for the
+HTML documentation and the default css stylesheet.
+
+- [function] UPDATE-ASDF-SYSTEM-READMES SECTIONS ASDF-SYSTEM
+
+    Convenience function to generate two readme files in the directory
+    holding the ASDF-SYSTEM definition.
+    
+    README.md has anchors, links, inline code, and other markup added.
+    Not necessarily the easiest on the eye in an editor, but looks good
+    on github.
+    
+    README is optimized for reading in text format. Has no links and
+    cluttery markup.
+    
+    Example usage:
+    
+    ```
+    (update-asdf-system-readmes @mgl-pax-manual :mgl-pax)
+    ```
+
+
+- [function] UPDATE-ASDF-SYSTEM-HTML-DOCS SECTIONS ASDF-SYSTEM &KEY PAGES (TARGET-DIR (ASDF/SYSTEM:SYSTEM-RELATIVE-PATHNAME ASDF-SYSTEM "doc/")) (UPDATE-CSS-P T)
+
+    Generate pretty HTML documentation for a single ASDF system,
+    possibly linking to github. If UPDATE-CSS-P, copy the CSS style
+    sheet to TARGET-DIR, as well. Example usage:
+    
+    ```commonlisp
+    (update-asdf-system-html-docs @mgl-pax-manual :mgl-pax)
+    ```
+    
+    The same, linking to the sources on github:
+    
+    ```commonlisp
+    (update-asdf-system-html-docs
+      @mgl-pax-manual :mgl-pax
+      :pages
+      `((:objects
+        (,mgl-pax:@mgl-pax-manual)
+        :source-uri-fn ,(make-github-source-uri-fn
+                         :mgl-pax
+                         "https://github.com/melisgl/mgl-pax"))))
+    ```
+
+
+### Github Workflow
+
+It is generally recommended to commit generated readmes (see
+UPDATE-ASDF-SYSTEM-READMES) so that users have something to read
+without reading the code and sites like github can display them.
+
+HTML documentation can also be committed, but there is an issue with
+that: when linking to the sources (see MAKE-GITHUB-SOURCE-URI-FN),
+the commit id is in the link. This means that code changes need to
+be committed first, then HTML documentation regenerated and
+committed in a followup commit.
+
+The second issue is that github is not very good at serving HTMLs
+files from the repository itself (and
+[http://htmlpreview.github.io](http://htmlpreview.github.io) chokes
+on links to the sources).
+
+The recommended workflow is to use
+[gh-pages](https://pages.github.com/), which can be made relatively
+painless with the `git workflow` command. The gist of it is to make
+the `doc/` directory a checkout of the branch named `gh-pages`. A
+good description of this process is
+[http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html](http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html).
+Two commits needed still, but it is somewhat less painful.
+
+This way the HTML documentation will be available at
+`http://<username>.github.io/<repo-name>`. It is probably a good
+idea to add section like the @MGL-PAX-LINKS section to allow jumping
+between the repository and the gh-pages site.
+
+- [function] MAKE-GITHUB-SOURCE-URI-FN ASDF-SYSTEM GITHUB-URI &KEY GIT-VERSION
+
+    Return a function suitable as :SOURCE-URI-FN of a page spec (see
+    the PAGES argument of DOCUMENT). The function looks the source
+    location of the reference passed to it, and if the location is
+    found, the path is made relative to the root directory of
+    ASDF-SYSTEM and finally an URI pointing to github is returned. The
+    URI looks like this:
+    
+        https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
+    
+    "master" in the above link comes from GIT-VERSION.
+    
+    If GIT-VERSION is NIL, then an attempt is made to determine to
+    current commit id from the `.git` in the directory holding
+    ASDF-SYSTEM. If no `.git` directory is found, then no links to
+    github will be generated.
+    
+    A separate warning is signalled whenever source location lookup
+    fails or if the source location points to a directory not below the
+    directory of ASDF-SYSTEM.
+
+### PAX World
+
+PAX World is a registry of documents, which can generate
+cross-linked HTML documentation pages for all the registered
+documents.
+
+- [function] REGISTER-DOC-IN-PAX-WORLD NAME SECTIONS PAGE-SPECS
+
+    Register SECTIONS and PAGE-SPECS under NAME in PAX World. By
+    default, UPDATE-PAX-WORLD generates documentation for all of these.
+
+For example, this is how PAX registers itself:
+
+```commonlisp
+(defun pax-sections ()
+  (list @mgl-pax-manual))
+(defun pax-pages ()
+  `((:objects
+     (,mgl-pax:@mgl-pax-manual)
+     :source-uri-fn ,(make-github-source-uri-fn
+                      :mgl-pax
+                      "https://github.com/melisgl/mgl-pax"))))
+(register-doc-in-pax-world :mgl-pax (pax-sections) (pax-pages))
+```
+
+- [function] UPDATE-PAX-WORLD &KEY DOCS DIR
+
+    Generate HTML documentation for all DOCS. By default, files are
+    created in *PAX-WORLD-DIR* or `(asdf:system-relative-pathname
+    :mgl-pax "world/")`, if NIL. DOCS is a list of entries of the
+    form (NAME SECTIONS PAGE-SPECS). The default for DOCS is all the
+    sections and pages registered with REGISTER-DOC-IN-PAX-WORLD.
+    
+    In the absence of :HEADER-FN :FOOTER-FN, :OUTPUT, every spec in
+    PAGE-SPECS is augmented with HTML headers, footers and output
+    location specifications (based on the name of the section).
+    
+    If necessary a default page spec is created for every section.
 
 ## Markdown Support
 
@@ -1854,30 +1994,6 @@ changed."
     Signaled (with CERROR) by TRANSCRIBE when invoked
     with :CHECK-CONSISTENCY and the values of a form are inconsistent
     with their parsed representation.
-
-## Utilities
-
-- [function] MAKE-GITHUB-SOURCE-URI-FN ASDF-SYSTEM GITHUB-URI &KEY GIT-VERSION
-
-    Return a function suitable as :SOURCE-URI-FN of a page spec (see
-    the PAGES argument of DOCUMENT). The function looks the source
-    location of the reference passed to it, and if the location is
-    found, the path is made relative to the root directory of
-    ASDF-SYSTEM and finally an URI pointing to github is returned. The
-    URI looks like this:
-    
-        https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
-    
-    "master" in the above link comes from GIT-VERSION.
-    
-    If GIT-VERSION is NIL, then an attempt is made to determine to
-    current commit id from the `.git` in the directory holding
-    ASDF-SYSTEM. If no `.git` directory is found, then no links to
-    github will be generated.
-    
-    A separate warning is signalled whenever source location lookup
-    fails or if the source location points to a directory not below the
-    directory of ASDF-SYSTEM.
 
 * * *
 ###### \[generated by [MGL-PAX](https://github.com/melisgl/mgl-pax)\]

@@ -32,12 +32,12 @@
   (@mgl-pax-tutorial section)
   (@mgl-pax-emacs-integration section)
   (@mgl-pax-basics section)
+  (@mgl-pax-generating-documentation section)
   (@mgl-pax-markdown-support section)
   (@mgl-pax-documentation-printer-variables section)
   (@mgl-pax-locative-types section)
   (@mgl-pax-extension-api section)
-  (@mgl-pax-transcript section)
-  (@mgl-pax-utilities section))
+  (@mgl-pax-transcript section))
 
 (defsection @mgl-pax-links (:title "Links")
   "Here is the [official
@@ -259,8 +259,8 @@
   *One can even generate documentation for different, but related
   libraries at the same time with the output going to different files,
   but with cross-page links being automatically added for symbols
-  mentioned in docstrings.* For a complete example of how to generate
-  HTML with multiple pages, see `src/doc.lisp`.
+  mentioned in docstrings. See @MGL-PAX-GENERATING-DOCUMENTATION for
+  some convenience functions to cover the most common cases.*
 
   Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
   exports `*FOO-STATE*` and includes its documentation in
@@ -2030,7 +2030,7 @@
   makes sense. Here is a stripped down example of how all this is done
   for ASDF:SYSTEM:"
   (asdf-example (include (:start (asdf:system locative)
-                                 :end (end-of-asdf-example variable))
+                          :end (end-of-asdf-example variable))
                          :header-nl "```commonlisp"
                          :footer-nl "```"))
   (define-locative-type macro)
@@ -3373,94 +3373,3 @@
                                         (- end (file-position stream))))
             do (write-sequence buffer datum :start 0 :end bytes-read)
             while (= bytes-read buffer-size)))))))
-
-
-(defsection @mgl-pax-utilities (:title "Utilities")
-  (make-github-source-uri-fn function))
-
-(defun make-github-source-uri-fn (asdf-system github-uri &key git-version)
-  "Return a function suitable as :SOURCE-URI-FN of a page spec (see
-  the PAGES argument of DOCUMENT). The function looks the source
-  location of the reference passed to it, and if the location is
-  found, the path is made relative to the root directory of
-  ASDF-SYSTEM and finally an URI pointing to github is returned. The
-  URI looks like this:
-
-      https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
-
-  \"master\" in the above link comes from GIT-VERSION.
-
-  If GIT-VERSION is NIL, then an attempt is made to determine to
-  current commit id from the `.git` in the directory holding
-  ASDF-SYSTEM. If no `.git` directory is found, then no links to
-  github will be generated.
-
-  A separate warning is signalled whenever source location lookup
-  fails or if the source location points to a directory not below the
-  directory of ASDF-SYSTEM."
-  (let* ((git-version (or git-version (asdf-system-git-version asdf-system)))
-         (system-dir (asdf:system-relative-pathname asdf-system "")))
-    (if git-version
-        (lambda (reference)
-          (multiple-value-bind (relative-path line-number)
-              (convert-source-location (find-source
-                                        (mgl-pax:resolve reference))
-                                       system-dir reference)
-            (when relative-path
-              (format nil "~A/blob/~A/~A#L~S" github-uri git-version
-                      relative-path (1+ line-number)))))
-        (warn "No GIT-VERSION given and can't find .git directory ~
-              for ASDF system~% ~A. Links to github will not be generated."
-              (asdf:component-name (asdf:find-system asdf-system))))))
-
-(defun asdf-system-git-version (system)
-  (let ((git-dir
-          (merge-pathnames (make-pathname :directory '(:relative ".git"))
-                           (asdf:system-relative-pathname
-                            (asdf:component-name (asdf:find-system system))
-                            ""))))
-    (if (probe-file git-dir)
-        (git-version git-dir)
-        nil)))
-
-(defun git-version (git-dir)
-  (let ((head-string (read-first-line
-                      (merge-pathnames (make-pathname :name "HEAD") git-dir))))
-    (if (alexandria:starts-with-subseq "ref: " head-string)
-        (let ((ref (subseq head-string 5)))
-          (values (read-first-line (merge-pathnames ref git-dir)) ref))
-        head-string)))
-
-(defun read-first-line (filename)
-  (with-open-file (stream filename)
-    (read-line stream)))
-
-(defun convert-source-location (source-location system-dir reference)
-  (cond ((or
-          ;; CCL
-          (null source-location)
-          ;; SBCL, AllegroCL
-          (eq (first source-location) :error))
-         (warn "~@<No source location found for reference ~:_~A: ~:_~A~%~@:>"
-               reference (second source-location)))
-        (t
-         (assert (eq (first source-location) :location))
-         (let* ((filename (second (assoc :file (rest source-location))))
-                (position (second (assoc :position (rest source-location))))
-                (relative-path (and filename
-                                    (enough-namestring filename system-dir))))
-           (if (and relative-path (cl-fad:pathname-relative-p relative-path))
-               (values relative-path
-                       (file-position-to-line-number filename position))
-               (warn "Source location for ~S is not below system ~
-                     directory ~S.~%" reference system-dir))))))
-
-(defun file-position-to-line-number (filename file-position)
-  (if file-position
-      (with-open-file (stream filename)
-        (loop for line = (read-line stream nil nil)
-              for line-number upfrom 0
-              while line
-              do (when (< file-position (file-position stream))
-                   (return line-number))))
-      0))

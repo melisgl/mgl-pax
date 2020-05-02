@@ -10,28 +10,30 @@
 - [4 Tutorial][aa52]
 - [5 Emacs Integration][eff4]
 - [6 Basics][8059]
-- [7 Markdown Support][d58f]
-    - [7.1 Indentation][4336]
-    - [7.2 Syntax highlighting][32ac]
-    - [7.3 MathJax][55dd]
-- [8 Documentation Printer Variables][e2a1]
-- [9 Locative Types][1fbb]
-- [10 Extension API][8ed9]
-    - [10.1 Locatives and References][d023]
-    - [10.2 Adding New Object Types][5161]
-    - [10.3 Reference Based Extensions][00f0]
-    - [10.4 Sections][be22]
-- [11 Transcripts][7a32]
-    - [11.1 Transcribing with Emacs][c694]
-    - [11.2 Transcript API][bf16]
-- [12 Utilities][32a7]
+- [7 Generating Documentation][063a]
+    - [7.1 Github Workflow][2748]
+    - [7.2 PAX World][e65c]
+- [8 Markdown Support][d58f]
+    - [8.1 Indentation][4336]
+    - [8.2 Syntax highlighting][32ac]
+    - [8.3 MathJax][55dd]
+- [9 Documentation Printer Variables][e2a1]
+- [10 Locative Types][1fbb]
+- [11 Extension API][8ed9]
+    - [11.1 Locatives and References][d023]
+    - [11.2 Adding New Object Types][5161]
+    - [11.3 Reference Based Extensions][00f0]
+    - [11.4 Sections][be22]
+- [12 Transcripts][7a32]
+    - [12.1 Transcribing with Emacs][c694]
+    - [12.2 Transcript API][bf16]
 
 ###### \[in package MGL-PAX\]
 <a id='x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29'></a>
 
 ## 1 mgl-pax ASDF System Details
 
-- Version: 0.0.2
+- Version: 0.0.3
 - Description: Exploratory programming tool and documentation
   generator.
 - Licence: MIT, see COPYING.
@@ -269,8 +271,8 @@ table of contents, etc is possible by calling the [`DOCUMENT`][1eb8] function.
 *One can even generate documentation for different, but related
 libraries at the same time with the output going to different files,
 but with cross-page links being automatically added for symbols
-mentioned in docstrings.* For a complete example of how to generate
-HTML with multiple pages, see `src/doc.lisp`.
+mentioned in docstrings. See [Generating Documentation][063a] for
+some convenience functions to cover the most common cases.*
 
 Note how `(VARIABLE *FOO-STATE*)` in the [`DEFSECTION`][b1e7] form both
 exports `*FOO-STATE*` and includes its documentation in
@@ -611,16 +613,174 @@ Now let's examine the most important pieces in detail.
     ```
 
 
+<a id='x-28MGL-PAX-3A-40MGL-PAX-GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29'></a>
+
+## 7 Generating Documentation
+
+Two convenience functions are provided to serve the common case of
+having an `ASDF` system with some readmes and a directory with for the
+HTML documentation and the default css stylesheet.
+
+<a id='x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29'></a>
+
+- [function] **UPDATE-ASDF-SYSTEM-READMES** *SECTIONS ASDF-SYSTEM*
+
+    Convenience function to generate two readme files in the directory
+    holding the `ASDF-SYSTEM` definition.
+    
+    README.md has anchors, links, inline code, and other markup added.
+    Not necessarily the easiest on the eye in an editor, but looks good
+    on github.
+    
+    README is optimized for reading in text format. Has no links and
+    cluttery markup.
+    
+    Example usage:
+    
+    ```
+    (update-asdf-system-readmes @mgl-pax-manual :mgl-pax)
+    ```
+
+
+<a id='x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-HTML-DOCS-20FUNCTION-29'></a>
+
+- [function] **UPDATE-ASDF-SYSTEM-HTML-DOCS** *SECTIONS ASDF-SYSTEM &KEY PAGES (TARGET-DIR (ASDF/SYSTEM:SYSTEM-RELATIVE-PATHNAME ASDF-SYSTEM "doc/")) (UPDATE-CSS-P T)*
+
+    Generate pretty HTML documentation for a single `ASDF` system,
+    possibly linking to github. If `UPDATE-CSS-P`, copy the CSS style
+    sheet to `TARGET-DIR`, as well. Example usage:
+    
+    ```commonlisp
+    (update-asdf-system-html-docs @mgl-pax-manual :mgl-pax)
+    ```
+    
+    The same, linking to the sources on github:
+    
+    ```commonlisp
+    (update-asdf-system-html-docs
+      @mgl-pax-manual :mgl-pax
+      :pages
+      `((:objects
+        (,mgl-pax:@mgl-pax-manual)
+        :source-uri-fn ,(make-github-source-uri-fn
+                         :mgl-pax
+                         "https://github.com/melisgl/mgl-pax"))))
+    ```
+
+
+<a id='x-28MGL-PAX-3A-40MGL-PAX-GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29'></a>
+
+### 7.1 Github Workflow
+
+It is generally recommended to commit generated readmes (see
+[`UPDATE-ASDF-SYSTEM-READMES`][2e7a]) so that users have something to read
+without reading the code and sites like github can display them.
+
+HTML documentation can also be committed, but there is an issue with
+that: when linking to the sources (see [`MAKE-GITHUB-SOURCE-URI-FN`][1cc6]),
+the commit id is in the link. This means that code changes need to
+be committed first, then HTML documentation regenerated and
+committed in a followup commit.
+
+The second issue is that github is not very good at serving HTMLs
+files from the repository itself (and
+[http://htmlpreview.github.io](http://htmlpreview.github.io) chokes
+on links to the sources).
+
+The recommended workflow is to use
+[gh-pages](https://pages.github.com/), which can be made relatively
+painless with the `git workflow` command. The gist of it is to make
+the `doc/` directory a checkout of the branch named `gh-pages`. A
+good description of this process is
+[http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html](http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html).
+Two commits needed still, but it is somewhat less painful.
+
+This way the HTML documentation will be available at
+`http://<username>.github.io/<repo-name>`. It is probably a good
+idea to add section like the [Links][d7e0] section to allow jumping
+between the repository and the gh-pages site.
+
+<a id='x-28MGL-PAX-3AMAKE-GITHUB-SOURCE-URI-FN-20FUNCTION-29'></a>
+
+- [function] **MAKE-GITHUB-SOURCE-URI-FN** *ASDF-SYSTEM GITHUB-URI &KEY GIT-VERSION*
+
+    Return a function suitable as `:SOURCE-URI-FN` of a page spec (see
+    the `PAGES` argument of [`DOCUMENT`][1eb8]). The function looks the source
+    location of the reference passed to it, and if the location is
+    found, the path is made relative to the root directory of
+    `ASDF-SYSTEM` and finally an URI pointing to github is returned. The
+    URI looks like this:
+    
+        https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
+    
+    "master" in the above link comes from `GIT-VERSION`.
+    
+    If `GIT-VERSION` is `NIL`, then an attempt is made to determine to
+    current commit id from the `.git` in the directory holding
+    `ASDF-SYSTEM`. If no `.git` directory is found, then no links to
+    github will be generated.
+    
+    A separate warning is signalled whenever source location lookup
+    fails or if the source location points to a directory not below the
+    directory of `ASDF-SYSTEM`.
+
+<a id='x-28MGL-PAX-3A-40MGL-PAX-WORLD-20MGL-PAX-3ASECTION-29'></a>
+
+### 7.2 PAX World
+
+PAX World is a registry of documents, which can generate
+cross-linked HTML documentation pages for all the registered
+documents.
+
+<a id='x-28MGL-PAX-3AREGISTER-DOC-IN-PAX-WORLD-20FUNCTION-29'></a>
+
+- [function] **REGISTER-DOC-IN-PAX-WORLD** *NAME SECTIONS PAGE-SPECS*
+
+    Register `SECTIONS` and `PAGE-SPECS` under `NAME` in PAX World. By
+    default, [`UPDATE-PAX-WORLD`][4f82] generates documentation for all of these.
+
+For example, this is how PAX registers itself:
+
+<a id='x-28MGL-PAX-3A-3AREGISTER-DOC-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-28-3ASTART-20-28MGL-PAX-3A-3APAX-SECTIONS-20FUNCTION-29-20-3AEND-20-28MGL-PAX-3A-3AEND-OF-REGISTER-DOC-EXAMPLE-20VARIABLE-29-29-20-3AHEADER-NL-20-22-60-60-60commonlisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
+
+```commonlisp
+(defun pax-sections ()
+  (list @mgl-pax-manual))
+(defun pax-pages ()
+  `((:objects
+     (,mgl-pax:@mgl-pax-manual)
+     :source-uri-fn ,(make-github-source-uri-fn
+                      :mgl-pax
+                      "https://github.com/melisgl/mgl-pax"))))
+(register-doc-in-pax-world :mgl-pax (pax-sections) (pax-pages))
+```
+
+<a id='x-28MGL-PAX-3AUPDATE-PAX-WORLD-20FUNCTION-29'></a>
+
+- [function] **UPDATE-PAX-WORLD** *&KEY DOCS DIR*
+
+    Generate HTML documentation for all `DOCS`. By default, files are
+    created in `*PAX-WORLD-DIR*` or `(asdf:system-relative-pathname
+    :mgl-pax "world/")`, if `NIL`. `DOCS` is a list of entries of the
+    form (`NAME` `SECTIONS` `PAGE-SPECS`). The default for `DOCS` is all the
+    sections and pages registered with [`REGISTER-DOC-IN-PAX-WORLD`][c5f2].
+    
+    In the absence of `:HEADER-FN` `:FOOTER-FN`, `:OUTPUT`, every spec in
+    `PAGE-SPECS` is augmented with HTML headers, footers and output
+    location specifications (based on the name of the section).
+    
+    If necessary a default page spec is created for every section.
+
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29'></a>
 
-## 7 Markdown Support
+## 8 Markdown Support
 
 The [Markdown][markdown] in docstrings is processed with the
 [3BMD][3bmd] library.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29'></a>
 
-### 7.1 Indentation
+### 8.1 Indentation
 
 Docstrings can be indented in any of the usual styles. PAX
 normalizes indentation by converting:
@@ -641,7 +801,7 @@ See [`DOCUMENT-OBJECT`][d7eb] for the details.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29'></a>
 
-### 7.2 Syntax highlighting
+### 8.2 Syntax highlighting
 
 For syntax highlighting, github's [fenced code
 blocks][fenced-code-blocks] markdown extension to mark up code
@@ -668,7 +828,7 @@ the details.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MATHJAX-20MGL-PAX-3ASECTION-29'></a>
 
-### 7.3 MathJax
+### 8.3 MathJax
 
 Displaying pretty mathematics in TeX format is supported via
 MathJax. It can be done inline with `$` like this:
@@ -693,7 +853,7 @@ with that.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29'></a>
 
-## 8 Documentation Printer Variables
+## 9 Documentation Printer Variables
 
 Docstrings are assumed to be in markdown format and they are pretty
 much copied verbatim to the documentation subject to a few knobs
@@ -898,7 +1058,7 @@ described below.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29'></a>
 
-## 9 Locative Types
+## 10 Locative Types
 
 These are the locatives type supported out of the box. As all
 locative types, they are symbols and their names should make it
@@ -1127,11 +1287,11 @@ locatives take no arguments.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-EXTENSION-API-20MGL-PAX-3ASECTION-29'></a>
 
-## 10 Extension API
+## 11 Extension API
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-LOCATIVES-AND-REFERENCES-20MGL-PAX-3ASECTION-29'></a>
 
-### 10.1 Locatives and References
+### 11.1 Locatives and References
 
 While Common Lisp has rather good introspective abilities, not
 everything is first class. For example, there is no object
@@ -1225,7 +1385,7 @@ need to muck with references when there is a perfectly good object.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-NEW-OBJECT-TYPES-20MGL-PAX-3ASECTION-29'></a>
 
-### 10.2 Adding New Object Types
+### 11.2 Adding New Object Types
 
 One may wish to make the [`DOCUMENT`][1eb8] function and `M-.` navigation
 work with new object types. Extending [`DOCUMENT`][1eb8] can be done by
@@ -1420,7 +1580,7 @@ for [`ASDF:SYSTEM:`][bf8a]
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-REFERENCE-BASED-EXTENSIONS-20MGL-PAX-3ASECTION-29'></a>
 
-### 10.3 Reference Based Extensions
+### 11.3 Reference Based Extensions
 
 Let's see how to extend [`DOCUMENT`][1eb8] and `M-.` navigation if there is
 no first class object to represent the thing of interest. Recall
@@ -1575,7 +1735,7 @@ with symbols in a certain context.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-SECTIONS-20MGL-PAX-3ASECTION-29'></a>
 
-### 10.4 Sections
+### 11.4 Sections
 
 [`Section`][aee8] objects rarely need to be dissected since
 [`DEFSECTION`][b1e7] and [`DOCUMENT`][1eb8] cover most needs. However, it is plausible
@@ -1633,7 +1793,7 @@ presented.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-20MGL-PAX-3ASECTION-29'></a>
 
-## 11 Transcripts
+## 12 Transcripts
 
 What are transcripts for? When writing a tutorial, one often wants
 to include a REPL session with maybe a few defuns and a couple of
@@ -1681,7 +1841,7 @@ can be enabled with:
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-EMACS-INTEGRATION-20MGL-PAX-3ASECTION-29'></a>
 
-### 11.1 Transcribing with Emacs
+### 12.1 Transcribing with Emacs
 
 Typical transcript usage from within Emacs is simple: add a lisp
 form to a docstring or comment at any indentation level. Move the
@@ -1836,7 +1996,7 @@ changed."
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-API-20MGL-PAX-3ASECTION-29'></a>
 
-### 11.2 Transcript API
+### 12.2 Transcript API
 
 <a id='x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29'></a>
 
@@ -2091,39 +2251,12 @@ changed."
     with `:CHECK-CONSISTENCY` and the values of a form are inconsistent
     with their parsed representation.
 
-<a id='x-28MGL-PAX-3A-40MGL-PAX-UTILITIES-20MGL-PAX-3ASECTION-29'></a>
-
-## 12 Utilities
-
-<a id='x-28MGL-PAX-3AMAKE-GITHUB-SOURCE-URI-FN-20FUNCTION-29'></a>
-
-- [function] **MAKE-GITHUB-SOURCE-URI-FN** *ASDF-SYSTEM GITHUB-URI &KEY GIT-VERSION*
-
-    Return a function suitable as `:SOURCE-URI-FN` of a page spec (see
-    the `PAGES` argument of [`DOCUMENT`][1eb8]). The function looks the source
-    location of the reference passed to it, and if the location is
-    found, the path is made relative to the root directory of
-    `ASDF-SYSTEM` and finally an URI pointing to github is returned. The
-    URI looks like this:
-    
-        https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
-    
-    "master" in the above link comes from `GIT-VERSION`.
-    
-    If `GIT-VERSION` is `NIL`, then an attempt is made to determine to
-    current commit id from the `.git` in the directory holding
-    `ASDF-SYSTEM`. If no `.git` directory is found, then no links to
-    github will be generated.
-    
-    A separate warning is signalled whenever source location lookup
-    fails or if the source location points to a directory not below the
-    directory of `ASDF-SYSTEM`.
-
   [00f0]: #x-28MGL-PAX-3A-40MGL-PAX-REFERENCE-BASED-EXTENSIONS-20MGL-PAX-3ASECTION-29 "Reference Based Extensions"
   [0208]: #x-28CLASS-20-28MGL-PAX-3ALOCATIVE-29-29 "(CLASS (MGL-PAX:LOCATIVE))"
   [0261]: #x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFINE-GLOSSARY-TERM (MGL-PAX:MACRO))"
   [0382]: #x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29 "(MGL-PAX:TRANSCRIBE FUNCTION)"
   [0412]: #x-28MGL-PAX-3AREFERENCE-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29 "(MGL-PAX:REFERENCE-OBJECT (MGL-PAX:READER MGL-PAX:REFERENCE))"
+  [063a]: #x-28MGL-PAX-3A-40MGL-PAX-GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Generating Documentation"
   [12a1]: #x-28MGL-PAX-3ALOCATIVE-20-28MGL-PAX-3ALOCATIVE-29-29 "(MGL-PAX:LOCATIVE (MGL-PAX:LOCATIVE))"
   [1514]: #x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DISCARD-DOCUMENTATION-P* (VARIABLE))"
   [1920]: #x-28MGL-PAX-3ACOLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29 "(MGL-PAX:COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION)"
@@ -2134,13 +2267,15 @@ changed."
   [1fbb]: #x-28MGL-PAX-3A-40MGL-PAX-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29 "Locative Types"
   [2285]: #x-28MGL-PAX-3ALOCATE-ERROR-20CONDITION-29 "(MGL-PAX:LOCATE-ERROR CONDITION)"
   [24fc]: #x-28MGL-PAX-3ACANONICAL-REFERENCE-20GENERIC-FUNCTION-29 "(MGL-PAX:CANONICAL-REFERENCE GENERIC-FUNCTION)"
+  [2748]: #x-28MGL-PAX-3A-40MGL-PAX-GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29 "Github Workflow"
   [2be0]: #x-28VARIABLE-20-28MGL-PAX-3ALOCATIVE-29-29 "(VARIABLE (MGL-PAX:LOCATIVE))"
-  [32a7]: #x-28MGL-PAX-3A-40MGL-PAX-UTILITIES-20MGL-PAX-3ASECTION-29 "Utilities"
+  [2e7a]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29 "(MGL-PAX:UPDATE-ASDF-SYSTEM-READMES FUNCTION)"
   [32ac]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29 "Syntax highlighting"
   [34f5]: #x-28MGL-PAX-3ADEFINE-PACKAGE-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFINE-PACKAGE (MGL-PAX:MACRO))"
   [4336]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29 "Indentation"
   [46ea]: #x-28MGL-PAX-3A-2ADOCUMENT-MARK-UP-SIGNATURES-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DOCUMENT-MARK-UP-SIGNATURES* (VARIABLE))"
   [4918]: #x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax\" ASDF/SYSTEM:SYSTEM)"
+  [4f82]: #x-28MGL-PAX-3AUPDATE-PAX-WORLD-20FUNCTION-29 "(MGL-PAX:UPDATE-PAX-WORLD FUNCTION)"
   [5161]: #x-28MGL-PAX-3A-40MGL-PAX-NEW-OBJECT-TYPES-20MGL-PAX-3ASECTION-29 "Adding New Object Types"
   [53a8]: #x-28MGL-PAX-3ASECTION-20-28MGL-PAX-3ALOCATIVE-29-29 "(MGL-PAX:SECTION (MGL-PAX:LOCATIVE))"
   [55dd]: #x-28MGL-PAX-3A-40MGL-PAX-MATHJAX-20MGL-PAX-3ASECTION-29 "MathJax"
@@ -2175,6 +2310,7 @@ changed."
   [be22]: #x-28MGL-PAX-3A-40MGL-PAX-SECTIONS-20MGL-PAX-3ASECTION-29 "Sections"
   [bf16]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-API-20MGL-PAX-3ASECTION-29 "Transcript API"
   [bf8a]: #x-28ASDF-2FSYSTEM-3ASYSTEM-20-28MGL-PAX-3ALOCATIVE-29-29 "(ASDF/SYSTEM:SYSTEM (MGL-PAX:LOCATIVE))"
+  [c5f2]: #x-28MGL-PAX-3AREGISTER-DOC-IN-PAX-WORLD-20FUNCTION-29 "(MGL-PAX:REGISTER-DOC-IN-PAX-WORLD FUNCTION)"
   [c694]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-EMACS-INTEGRATION-20MGL-PAX-3ASECTION-29 "Transcribing with Emacs"
   [cc37]: #x-28MGL-PAX-3AREFERENCE-20CLASS-29 "(MGL-PAX:REFERENCE CLASS)"
   [ce09]: #x-28MGL-PAX-3ADEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE (MGL-PAX:MACRO))"
@@ -2185,6 +2321,7 @@ changed."
   [df39]: #x-28DESCRIBE-OBJECT-20-28METHOD-20NIL-20-28MGL-PAX-3ASECTION-20T-29-29-29 "(DESCRIBE-OBJECT (METHOD NIL (MGL-PAX:SECTION T)))"
   [e0d7]: #x-28MGL-PAX-3ARESOLVE-20FUNCTION-29 "(MGL-PAX:RESOLVE FUNCTION)"
   [e2a1]: #x-28MGL-PAX-3A-40MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29 "Documentation Printer Variables"
+  [e65c]: #x-28MGL-PAX-3A-40MGL-PAX-WORLD-20MGL-PAX-3ASECTION-29 "PAX World"
   [e9e9]: #x-28MGL-PAX-3ALOCATE-AND-FIND-SOURCE-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-FIND-SOURCE GENERIC-FUNCTION)"
   [eff4]: #x-28MGL-PAX-3A-40MGL-PAX-EMACS-INTEGRATION-20MGL-PAX-3ASECTION-29 "Emacs Integration"
   [f1a0]: #x-28METHOD-20-28MGL-PAX-3ALOCATIVE-29-29 "(METHOD (MGL-PAX:LOCATIVE))"

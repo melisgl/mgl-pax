@@ -17,6 +17,9 @@
               do (write-sequence buffer datum :start 0 :end bytes-read)
               while (= bytes-read buffer-size))))))
 
+(defun ensure-list (x)
+  (if (listp x) x (list x)))
+
 (defun subseq* (seq start)
   (subseq seq (min (length seq) start)))
 

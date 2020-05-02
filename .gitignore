@@ -2,3 +2,5 @@
 *.fasl
 *.*fsl
 test/data/tmp/
+world/
+doc/

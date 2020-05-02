@@ -3,7 +3,7 @@
 ;;; See MGL-PAX:@MGL-PAX-MANUAL for the user guide.
 (asdf:defsystem #:mgl-pax
   :licence "MIT, see COPYING."
-  :version "0.0.2"
+  :version "0.0.3"
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
   :homepage "http://quotenil.com"
@@ -17,6 +17,7 @@
                              (:file "utility")
                              (:file "pax-early")
                              (:file "pax")
+                             (:file "doc")
                              (:file "transcribe")))))
 
 (defmethod asdf:perform ((o asdf:test-op)
