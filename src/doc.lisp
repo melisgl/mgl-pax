@@ -452,9 +452,11 @@
 
 #+nil
 (progn
+  (asdf:load-system :mgl-mat)
   (asdf:load-system :named-readtables/doc)
   (asdf:load-system :micmac)
   (asdf:load-system :mgl-gpr)
-  (asdf:load-system :mgl-mat)
-  (asdf:load-system :mgl)
-  (update-pax-world))
+  (asdf:load-system :mgl))
+
+#+nil
+(update-pax-world)
