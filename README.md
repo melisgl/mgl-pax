@@ -521,6 +521,12 @@ Now let's examine the most important pieces in detail.
     keys `:OBJECTS`, `:OUTPUT`, `:URI-FRAGMENT`, `:SOURCE-URI-FN`, `:HEADER-FN`
     and `:FOOTER-FN`. `OBJECTS` is a list of objects (references are allowed
     but not required) whose documentation is to be sent to `OUTPUT`.
+    
+    When documentation for an object is generated, the first matching
+    page spec is used, where the object matches the page spec if it is
+    contained in one of its `:OBJECTS` in the sense of
+    [`COLLECT-REACHABLE-OBJECTS`][1920].
+    
     `OUTPUT` can be a number things:
     
     - If it's a list whose first element is a string or a pathname, then
@@ -582,15 +588,15 @@ Now let's examine the most important pieces in detail.
     
     ```commonlisp
     `((;; The section about SECTIONs and everything below it ...
-       :objects (,@mgl-pax-sections)
+       :objects (, @mgl-pax-sections)
        ;; ... is so boring that it's not worth the disk space, so
        ;; send it to a string.
        :output (nil)
        ;; Explicitly tell other pages not to link to these guys.
        :uri-fragment nil)
-      ;; Send the @MGL-PAX-EXTENSIONS section and everything reachable
+      ;; Send the @MGL-PAX-EXTENSION-API section and everything reachable
       ;; from it ...
-      (:objects (,@mgl-pax-extension-api)
+      (:objects (, @mgl-pax-extension-api)
        ;; ... to build/tmp/pax-extension-api.html.
        :output ("build/tmp/pax-extension-api.html")
        ;; However, on the web server html files will be at this
@@ -601,7 +607,9 @@ Now let's examine the most important pieces in detail.
        :header-fn 'write-html-header
        ;; Just close the body.
        :footer-fn 'write-html-footer)
-      (:objects (,@mgl-pax-manual)
+      ;; Catch the reference that were not reachable from the above. It
+      ;; is important for this page spec to be last.
+      (:objects (, @mgl-pax-manual)
        :output ("build/tmp/manual.html")
        ;; Links from the extension api page to the manual page will
        ;; be to ../user/pax-manual#<anchor>, while links going to
