@@ -10,7 +10,7 @@
   building a binary application.")
 
 (defmacro defsection (name (&key (package '*package*) (readtable '*readtable*)
-                            (export t) title
+                            (export t) title link-title-to
                             (discard-documentation-p *discard-documentation-p*))
                       &body entries)
   "Define a documentation section and maybe export referenced symbols.
@@ -56,10 +56,18 @@
   confounding documentation and exporting is to force documentation of
   all exported symbols.
 
+  TITLE is a non-marked-up string or NIL. If non-NIL, it determines
+  the text of the heading in the generated output. LINK-TITLE-TO is a
+  reference given as an
+  (OBJECT LOCATIVE) pair or NIL, to which the heading will link when
+  generating HTML. If not specified, the heading will link to its own
+  anchor.
+
   When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
   is true, ENTRIES will not be recorded to save memory."
   ;; Let's check the syntax as early as possible.
   (transform-entries entries)
+  (transform-link-title-to link-title-to)
   `(progn
      (eval-when (:compile-toplevel :load-toplevel :execute)
        (when ,export
@@ -70,6 +78,7 @@
                       :package ,package
                       :readtable ,readtable
                       :title ,title
+                      :link-title-to (transform-link-title-to ',link-title-to)
                       :entries ,(if discard-documentation-p
                                     ()
                                     `(transform-entries ',entries))))))
@@ -112,7 +121,11 @@
     documentation for this section.")
    (title
     :initarg :title :reader section-title
-    :documentation "Used in generated documentation.")
+    :documentation "STRING or NIL. Used in generated documentation.")
+   (link-title-to
+    :initform nil
+    :initarg :link-title-to :reader section-link-title-to
+    :documentation "A REFERENCE or NIL. Used in generated documentation.")
    (entries
     :initarg :entries :reader section-entries
     :documentation "A list of strings and REFERENCE objects in the
@@ -125,8 +138,8 @@
     (format stream "~a" (section-name section))))
 
 (defun section-title-or-name (section)
-  (string (or (section-title section)
-              (section-name section))))
+  (or (section-title section)
+      (prin1-to-string (section-name section))))
 
 (defun locative-type (locative)
   "The first element of LOCATIVE if it's a list. If it's a symbol then
@@ -163,6 +176,12 @@
             "~S is not a valid reference its first element is not a ~
             symbol." entry)
     (make-reference symbol locative)))
+
+(defun transform-link-title-to (link-title-to)
+  (when link-title-to
+    (if (typep link-title-to 'reference)
+        link-title-to
+        (apply #'make-reference link-title-to))))
 
 ;;;; Exporting
 

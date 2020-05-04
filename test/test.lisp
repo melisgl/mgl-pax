@@ -91,13 +91,24 @@
   (@test-examples section)
   (@test-other section)
   (test-gf generic-function)
-  (test-gf (method () (number))))
+  (test-gf (method () (number)))
+  (@test-section-with-link-to-other-page-in-title section)
+  (@test-section-with-link-to-same-page-in-title section))
 
 (defsection @test-examples (:export nil)
   "example section")
 
 (defsection @test-other (:export nil :title "test other title")
   "backlink @TEST")
+
+(defsection @test-section-with-link-to-other-page-in-title
+    (:title "Link to @TEST-OTHER"
+            :link-title-to (@test-other section))
+  "Same link in docstring to @TEST-OTHER.")
+
+(defsection @test-section-with-link-to-same-page-in-title
+    (:title "Link to @TEST" :link-title-to (@test section))
+  "Same link in docstring to @TEST.")
 
 (defun foo ())
 (define-compiler-macro foo ())
@@ -223,9 +234,10 @@
   (assert (equal '(x a b c)
                  (mgl-pax::macro-arg-names '((&key (x y)) (a b) &key (c d))))))
 
-(defun test-document ()
+(defun test-document (format)
   (let ((outputs (write-test-document-files
-                  (asdf:system-relative-pathname :mgl-pax "test/data/tmp/"))))
+                  (asdf:system-relative-pathname :mgl-pax "test/data/tmp/")
+                  format)))
     (assert (= 4 (length outputs)))
     ;; the default page corresponding to :STREAM is empty
     (assert (string= "" (first outputs)))
@@ -239,12 +251,16 @@
                          :defaults output)))
           (unless (string= (alexandria:read-file-into-string baseline)
                            (alexandria:read-file-into-string output))
-            (cerror "Update output file." "Output differs from ~S." output)
-            (update-test-document-files)))))))
+            (cerror "Update output file." "Output ~S differs from baseline ~S."
+                    output baseline)
+            (update-test-document-baseline format)))))))
 
-(defun write-test-document-files (basedir)
+(defun write-test-document-files (basedir format)
   (flet ((rebase (pathname)
-           (merge-pathnames pathname basedir)))
+           (merge-pathnames pathname
+                            (make-pathname
+                             :type (if (eq format :markdown) "md" "html")
+                             :directory (pathname-directory basedir)))))
     (let ((open-args '(:if-exists :supersede :ensure-directories-exist t)))
       (document @test
                 :pages `((:objects
@@ -252,14 +268,16 @@
                           :output (nil))
                          (:objects
                           ,(list @test-other)
-                          :output (,(rebase "other/test-other.md") ,@open-args))
+                          :output (,(rebase "other/test-other") ,@open-args))
                          (:objects
                           ,(list @test)
-                          :output (,(rebase "test.md") ,@open-args)))))))
+                          :output (,(rebase "test") ,@open-args)))
+                :format format))))
 
-(defun update-test-document-files ()
+(defun update-test-document-baseline (format)
   (write-test-document-files
-   (asdf:system-relative-pathname :mgl-pax "test/data/baseline/")))
+   (asdf:system-relative-pathname :mgl-pax "test/data/baseline/")
+   format))
 
 
 (defun test ()
@@ -268,4 +286,5 @@
   (test-replace-known-references)
   (test-transform-tree)
   (test-macro-arg-names)
-  (test-document))
+  (test-document :markdown)
+  (test-document :html))

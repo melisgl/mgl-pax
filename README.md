@@ -402,7 +402,7 @@ Now let's examine the most important pieces in detail.
 
 <a id='x-28MGL-PAX-3ADEFSECTION-20-28MGL-PAX-3AMACRO-29-29'></a>
 
-- [macro] **DEFSECTION** *NAME (&KEY (PACKAGE '\*PACKAGE\*) (READTABLE '\*READTABLE\*) (EXPORT T) TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &BODY ENTRIES*
+- [macro] **DEFSECTION** *NAME (&KEY (PACKAGE '\*PACKAGE\*) (READTABLE '\*READTABLE\*) (EXPORT T) TITLE LINK-TITLE-TO (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &BODY ENTRIES*
 
     Define a documentation section and maybe export referenced symbols.
     A bit behind the scenes, a global variable with `NAME` is defined and
@@ -446,6 +446,13 @@ Now let's examine the most important pieces in detail.
     See [`DEFINE-PACKAGE`][34f5] if you use the export feature. The idea with
     confounding documentation and exporting is to force documentation of
     all exported symbols.
+    
+    `TITLE` is a non-marked-up string or `NIL`. If non-NIL, it determines
+    the text of the heading in the generated output. `LINK-TITLE-TO` is a
+    reference given as an
+    (`OBJECT` [`LOCATIVE`][12a1]) pair or `NIL`, to which the heading will link when
+    generating HTML. If not specified, the heading will link to its own
+    anchor.
     
     When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][1514])
     is true, `ENTRIES` will not be recorded to save memory.
@@ -1782,7 +1789,13 @@ presented.
 
 - [reader] **SECTION-TITLE** *SECTION* *(:TITLE)*
 
-    Used in generated documentation.
+    `STRING` or `NIL`. Used in generated documentation.
+
+<a id='x-28MGL-PAX-3ASECTION-LINK-TITLE-TO-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
+
+- [reader] **SECTION-LINK-TITLE-TO** *SECTION* *(:LINK-TITLE-TO = NIL)*
+
+    A [`REFERENCE`][cc37] or `NIL`. Used in generated documentation.
 
 <a id='x-28MGL-PAX-3ASECTION-ENTRIES-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 

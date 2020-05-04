@@ -818,7 +818,7 @@
                   (html-safe-name anchor)
                   (let ((object (resolve (link-reference link))))
                     (if (typep object 'section)
-                        (escape-markdown (section-title object))
+                        (escape-markdown (section-title-or-name object))
                         (princ-to-string anchor)))))))))
 
 (defun relative-page-uri-fragment (page reference-page)
@@ -1291,8 +1291,10 @@
 ;;; context.
 (defvar *table-of-contents-page* nil)
 
-(defmacro with-heading ((stream object title) &body body)
-  `(call-with-heading ,stream ,object ,title (lambda (,stream) ,@body)))
+(defmacro with-heading ((stream object title &key link-title-to)
+                        &body body)
+  `(call-with-heading ,stream ,object ,title ,link-title-to
+                      (lambda (,stream) ,@body)))
 
 (defun print-table-of-contents-entry (object string stream)
   (loop repeat (* 4 (1- *heading-level*))
@@ -1304,7 +1306,7 @@
         (format stream "- ~A~A" (heading-number) string)))
   (terpri stream))
 
-(defun call-with-heading (stream object title fn)
+(defun call-with-heading (stream object title link-title-to fn)
   (flet ((foo ()
            ;; Arrange for all output to go to /dev/null
            ;; (MAKE-BROADCAST-STREAM) except for the headings when we
@@ -1325,9 +1327,14 @@
                     (format stream "~A" (fancy-navigation object))
                     (heading *heading-level* stream)
                     (if (eq *format* :html)
-                        (format stream " <a href=\"#~A\">~A~A</a>~%~%"
-                                (html-safe-name anchor) (heading-number)
-                                (escape-markdown title))
+                        (if link-title-to
+                            (format stream " [~A~A][~A]~%~%"
+                                    (heading-number) title
+                                    (link-to-reference link-title-to))
+                            (format stream " <a href=\"#~A\">~A~A</a>~%~%"
+                                    (html-safe-name anchor)
+                                    (heading-number)
+                                    (escape-markdown title)))
                         (format stream " ~A~A~%~%" (heading-number)
                                 (escape-markdown title))))
                   (progn
@@ -2420,6 +2427,7 @@
   (section-package (reader section))
   (section-readtable (reader section))
   (section-title (reader section))
+  (section-link-title-to (reader section))
   (section-entries (reader section))
   (describe-object (method () (section t))))
 
@@ -2544,7 +2552,8 @@
                        *package*))
         (*readtable* (section-readtable section))
         (*section* section))
-    (with-heading (stream section (section-title-or-name section))
+    (with-heading (stream section (section-title-or-name section)
+                          :link-title-to (section-link-title-to section))
       (when (and *document-normalize-packages* (not same-package))
         (format stream "###### \\[in package ~A\\]~%" (package-name *package*)))
       (let ((firstp t))
