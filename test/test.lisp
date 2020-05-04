@@ -93,7 +93,8 @@
   (test-gf generic-function)
   (test-gf (method () (number)))
   (@test-section-with-link-to-other-page-in-title section)
-  (@test-section-with-link-to-same-page-in-title section))
+  (@test-section-with-link-to-same-page-in-title section)
+  (@test-tricky-title section))
 
 (defsection @test-examples (:export nil)
   "example section")
@@ -109,6 +110,10 @@
 (defsection @test-section-with-link-to-same-page-in-title
     (:title "Link to @TEST" :link-title-to (@test section))
   "Same link in docstring to @TEST.")
+
+(defsection @test-tricky-title
+    (:export nil :title "`CODE` *italic* _italic2_ *bold* [link][sdf] <thing>")
+  "backlink @TEST")
 
 (defun foo ())
 (define-compiler-macro foo ())

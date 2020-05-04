@@ -818,7 +818,7 @@
                   (html-safe-name anchor)
                   (let ((object (resolve (link-reference link))))
                     (if (typep object 'section)
-                        (escape-markdown (section-title-or-name object))
+                        (section-title-or-name object)
                         (princ-to-string anchor)))))))))
 
 (defun relative-page-uri-fragment (page reference-page)
@@ -1300,7 +1300,8 @@
   (loop repeat (* 4 (1- *heading-level*))
         do (write-char #\Space stream))
   (let ((link-id (let ((*page* *table-of-contents-page*))
-                   (link-to-reference (canonical-reference object)))))
+                   (link-to-reference (canonical-reference object))))
+        (string (escape-markdown string)))
     (if (and *document-link-sections* link-id)
         (format stream "- [~A~A][~A]" (heading-number) string link-id)
         (format stream "- ~A~A" (heading-number) string)))

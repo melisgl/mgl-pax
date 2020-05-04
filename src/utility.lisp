@@ -377,7 +377,7 @@
       (format nil "`~A`" string)))
 
 (defun markdown-special-char-p (char)
-  (member char '(#\* #\_ #\` #\< #\>)))
+  (member char '(#\* #\_ #\` #\< #\> #\[ #\])))
 
 (defun prin1-and-escape-markdown (object)
   (escape-markdown (prin1-to-string object)))
