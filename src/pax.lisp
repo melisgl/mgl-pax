@@ -489,9 +489,9 @@
 (defvar *page* nil)
 
 ;;; This is a link target. REFERENCE is the thing it is about, PAGE is
-;;; where its documentation will go, ID is markdown reference link id
-;;; and PAGE-TO-N-USES is a hash table that counts how many times this
-;;; was linked to for each page.
+;;; where its documentation will go, ID is the markdown reference link
+;;; id and PAGE-TO-N-USES is a hash table that counts how many times
+;;; this was linked to for each page.
 (defstruct link
   reference
   page
