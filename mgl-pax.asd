@@ -18,9 +18,20 @@
                              (:file "pax-early")
                              (:file "pax")
                              (:file "doc")
-                             (:file "transcribe")))))
+                             (:file "transcribe"))))
+  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
-(defmethod asdf:perform ((o asdf:test-op)
-                         (c (eql (asdf:find-system '#:mgl-pax))))
-  (asdf:oos 'asdf:load-op '#:mgl-pax-test)
-  (funcall (intern (symbol-name '#:test) (find-package '#:mgl-pax-test))))
+(asdf:defsystem mgl-pax/test
+  :licence "MIT, see COPYING."
+  :author "Gábor Melis"
+  :mailto "mega@retes.hu"
+  :homepage "http://quotenil.com"
+  :description "Test system for MGL-PAX."
+  :depends-on (#:mgl-pax)
+  :components ((:module "test"
+                :serial t
+                :components ((:file "package")
+                             (:file "test-transcribe")
+                             (:file "test"))))
+  :perform (asdf:test-op (o s)
+             (uiop:symbol-call '#:mgl-pax-test '#:test)))
