@@ -57,10 +57,10 @@
                  page-specs)))
     (mapcar (lambda (page-spec)
               (add-markdown-defaults-to-page-spec page-spec dir))
-            (append (mapcar (lambda (section)
+            (append page-specs
+                    (mapcar (lambda (section)
                               `(:objects (,section)))
-                            (remove-if #'section-has-page-spec-p sections))
-                    page-specs))))
+                            (remove-if #'section-has-page-spec-p sections))))))
 
 (defun add-markdown-defaults-to-page-spec (page-spec filename)
   `(,@page-spec
@@ -121,10 +121,10 @@
     (mapcar (lambda (page-spec)
               (add-html-defaults-to-page-spec page-spec dir
                                               link-to-pax-world-p))
-            (append (mapcar (lambda (section)
+            (append page-specs
+                    (mapcar (lambda (section)
                               `(:objects (,section)))
-                            (remove-if #'section-has-page-spec-p sections))
-                    page-specs))))
+                            (remove-if #'section-has-page-spec-p sections))))))
 
 (defun add-html-defaults-to-page-spec (page-spec dir link-to-pax-world-p)
   (let* ((objects (getf page-spec :objects))
