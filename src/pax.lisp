@@ -65,8 +65,10 @@
   Literate Programming weenie turned inside out. The original
   prototype which did almost everything I wanted was this:
 
-      (defmacro defsection (name docstring)
-        `(defun ,name () ,docstring))
+  ```
+  (defmacro defsection (name docstring)
+    `(defun ,name () ,docstring))
+  ```
 
   Armed with DEFSECTION, I soon found myself organizing code following
   the flow of user level documentation and relegated comments to

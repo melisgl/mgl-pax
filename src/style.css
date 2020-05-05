@@ -31,6 +31,10 @@ h5 a {
   border-bottom: none;
 }
 
+h1 {
+  font-size: 250%
+}
+
 h2 {
   border-bottom: 0.05em solid #CCCCCC;
   font-size: 200%;
