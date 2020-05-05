@@ -9,6 +9,9 @@
   HTML documentation and the default css stylesheet."
   (update-asdf-system-readmes function)
   (update-asdf-system-html-docs function)
+  (*document-html-max-navigation-table-of-contents-level* variable)
+  (*document-html-top-blocks-of-links* variable)
+  (*document-html-bottom-blocks-of-links* variable)
   (@mgl-pax-github-workflow section)
   (@mgl-pax-world section))
 
@@ -170,8 +173,22 @@
                            (merge-pathnames (file-namestring file)
                                             target-dir))))
 
-(defun html-header (stream &key title stylesheet (charset "UTF-8")
-                    link-to-pax-world-p)
+(defvar *document-html-top-blocks-of-links* ()
+  "A list of blocks of links to be display on the sidebar on the left,
+  above the table of contents. A block is of the form `(&KEY TITLE ID
+  LINKS)`, where TITLE will be displayed at the top of the block in a
+  HTML `DIV` with `ID`, followed by the links. LINKS is a list
+  of `(URI LABEL) elements.`")
+
+(defvar *document-html-bottom-blocks-of-links* ()
+  "Like *DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS*, only it is displayed
+  below the table of contents.")
+
+(defun html-header
+    (stream &key title stylesheet (charset "UTF-8")
+     link-to-pax-world-p
+     (top-blocks-of-links *document-html-top-blocks-of-links*)
+     (bottom-blocks-of-links *document-html-bottom-blocks-of-links*))
   (format
    stream
    """<!DOCTYPE html>~%~
@@ -181,7 +198,7 @@
    ~@[<link type='text/css' href='~A' rel='stylesheet'/>~]~%~
    ~@[<meta http-equiv="Content-Type" ~
             content="text/html; ~
-            charset=~A"/>~]~%~
+   charset=~A"/>~]~%~
    <script src="jquery.min.js"></script>~%~
    <script src="toc.min.js"></script>~%~
    <script type="text/x-mathjax-config">
@@ -199,17 +216,42 @@
    <body>~%~
    <div id="content-container">~%~
      <div id="toc">~%~
+       ~A~
        ~:[~;<div id="toc-header"><ul><li><a href="index.html">~
             PAX World</a></li></ul></div>~%~]~
        <div id="page-toc">~%~
        </div>~%~
+       ~A~
        <div id="toc-footer">~
          <ul><li><a href="https://github.com/melisgl/mgl-pax">[generated ~
              by MGL-PAX]</a></li></ul>~
        </div>~%~
      </div>~%~
      <div id="content">~%"""
-     title stylesheet charset link-to-pax-world-p))
+   title stylesheet charset
+   (blocks-of-links-to-html-string top-blocks-of-links)
+   link-to-pax-world-p
+   (blocks-of-links-to-html-string bottom-blocks-of-links)))
+
+(defun blocks-of-links-to-html-string (blocks-of-links)
+  (format nil "~{~A~}" (mapcar #'block-of-links-to-html-string
+                               blocks-of-links)))
+
+(defun block-of-links-to-html-string (block-of-links)
+  (destructuring-bind (&key title id links) block-of-links
+    (with-output-to-string (stream)
+      (format stream "<div class=\"menu-block\"")
+      (when id
+        (format stream " id=\"~A\"" id))
+      (format stream ">")
+      (when title
+        (format stream "<span class=\"menu-block-title\">~A</span>" title))
+      (format stream "<ul>")
+      (dolist (link links)
+        (format stream "<li><a href=\"~A\">~A</a></li>"
+                (first link)
+                (second link)))
+      (princ "</ul></div>" stream))))
 
 (defvar *google-analytics-id* nil)
 
@@ -229,10 +271,17 @@
    (toc-options)
    google-analytics-id google-analytics-id))
 
+(defvar *document-html-max-navigation-table-of-contents-level* nil
+  "NIL or a non-negative integer. If non-NIL, it overrides
+  *DOCUMENT-MAX-NUMBERING-LEVEL* in dynamic HTML table of contents on
+  the left of the page.")
+
 (defun toc-options ()
-  (format nil "{'selectors': '~{~A~^,~}'}"
-          (loop for i upfrom 1 upto (1+ *document-max-table-of-contents-level*)
-                collect (format nil "h~S" i))))
+  (let ((max-level (or *document-html-max-navigation-table-of-contents-level*
+                       *document-max-table-of-contents-level*)))
+    (format nil "{'selectors': '~{~A~^,~}'}"
+            (loop for i upfrom 1 upto (1+ max-level)
+                  collect (format nil "h~S" i)))))
 
 
 
