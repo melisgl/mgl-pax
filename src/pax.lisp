@@ -1676,7 +1676,8 @@
       ;;
       ;; Reference lookup could look for a different locative which
       ;; would lead to the same object/reference, but there is no sane
-      ;; generalization of that to locative-types.
+      ;; generalization of that to locative-types. Do we need
+      ;; something like LOCATIVE-SUBTYPE-P?
       (if (and if-dislocated (eq locative 'dislocated))
           (make-reference if-dislocated 'dislocated)
           (find locative possible-references
