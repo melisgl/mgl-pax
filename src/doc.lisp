@@ -49,7 +49,7 @@
                           :direction :output
                           :if-does-not-exist :create
                           :if-exists :supersede)
-    (loop for section in (ensure-list sections) do
+    (loop for section in (alexandria:ensure-list sections) do
       (describe section stream))
     (print-markdown-footer stream)))
 
@@ -110,9 +110,9 @@
   (when update-css-p
     (copy-css target-dir))
   (document sections
-            :pages (add-html-defaults-to-page-specs (ensure-list sections)
-                                                    page-specs target-dir
-                                                    link-to-pax-world-p)
+            :pages (add-html-defaults-to-page-specs
+                    (alexandria:ensure-list sections)
+                    page-specs target-dir link-to-pax-world-p)
             :format :html))
 
 (defun add-html-defaults-to-page-specs (sections page-specs dir
