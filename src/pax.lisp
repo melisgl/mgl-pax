@@ -1638,15 +1638,15 @@
 ;;; with which NAME occurs in KNOWN-REFERENCES. Return the matching
 ;;; REFERENCE, if found. KNOWN-REFERENCES must only contain references
 ;;; to the symbol.
-(defun find-locative-around (tree name-element known-references)
+(defun find-locative-around (tree name-element possible-references)
   (labels ((try (element)
              (let ((reference
                      (cond ((stringp element)
                             (find-reference-by-locative-string
-                             element known-references))
+                             element possible-references))
                            ((eq :code (first element))
                             (find-reference-by-locative-string
-                             (second element) known-references))
+                             (second element) possible-references))
                            ;; (:REFERENCE-LINK :LABEL ((:CODE
                            ;; "CLASS")) :DEFINITION "0524")
                            ((eq :reference-link (first element))
@@ -1668,7 +1668,7 @@
                (try (third rest))
                (return)))))
 
-(defun find-reference-by-locative-string (locative-string known-references
+(defun find-reference-by-locative-string (locative-string possible-references
                                           &key if-dislocated)
   (let ((locative (read-locative-from-string locative-string)))
     (when locative
@@ -1679,7 +1679,7 @@
       ;; generalization of that to locative-types.
       (if (and if-dislocated (eq locative 'dislocated))
           (make-reference if-dislocated 'dislocated)
-          (find locative known-references
+          (find locative possible-references
                 :key #'reference-locative :test #'locative-equal)))))
 
 (defun translate-to-code (parent tree known-references)
