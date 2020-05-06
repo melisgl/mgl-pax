@@ -20,6 +20,12 @@
 ;;;;
 ;;;; - pretty print lambda-lists (including default values) and values
 ;;;;   of variables
+;;;;
+;;;; - make the the documentation generation code easier to understand
+;;;;
+;;;; - add [link name][(FOO VARIABLE)] kind of link
+;;;;
+;;;; - port the hyperspec to pax
 
 (in-package :mgl-pax)
 
@@ -947,7 +953,7 @@
       (defun foo ())
       ```
 
-  to get syntactically marked up HTML output. Copy `doc/style.css`
+  to get syntactically marked up HTML output. Copy `src/style.css`
   from PAX and you are set. The language tag, `elisp` in this example,
   is optional and defaults to `common-lisp`.
 
@@ -1984,7 +1990,9 @@
   The path is called the locative. A locative can be applied to an
   object like this:
 
-      (locate 'foo 'variable)
+  ```
+  (locate 'foo 'variable)
+  ```
 
   which will return the same reference as `(MAKE-REFERENCE 'FOO
   'VARIABLE)`. Operations need to know how to deal with references
@@ -2042,7 +2050,7 @@
   "One may wish to make the DOCUMENT function and `M-.` navigation
   work with new object types. Extending DOCUMENT can be done by
   defining a DOCUMENT-OBJECT method. To allow these objects to be
-  referenced from DEFSECTION a LOCATE-OBJECT method is to be defined.
+  referenced from DEFSECTION, a LOCATE-OBJECT method is to be defined.
   Finally, for `M-.` FIND-SOURCE can be specialized. Finally,
   EXPORTABLE-LOCATIVE-TYPE-P may be overridden if exporting does not
   makes sense. Here is a stripped down example of how all this is done
@@ -2222,7 +2230,7 @@
   no first class object to represent the thing of interest. Recall
   that LOCATE returns a REFERENCE object in this case. DOCUMENT-OBJECT
   and FIND-SOURCE defer to LOCATE-AND-DOCUMENT and
-  LOCATE-AND-FIND-SOURCE which have LOCATIVE-TYPE in their argument
+  LOCATE-AND-FIND-SOURCE, which have LOCATIVE-TYPE in their argument
   list for EQL specializing pleasure. Here is a stripped down example
   of how the VARIABLE locative is defined:"
   (variable-example (include (:start (variable locative)
