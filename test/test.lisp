@@ -256,7 +256,8 @@
                          :defaults output)))
           (unless (string= (alexandria:read-file-into-string baseline)
                            (alexandria:read-file-into-string output))
-            (cerror "Update output file." "Output ~S differs from baseline ~S."
+            (cerror "Update output file."
+                    "~@<Output ~S ~_differs from baseline ~S.~@:>"
                     output baseline)
             (update-test-document-baseline format)))))))
 

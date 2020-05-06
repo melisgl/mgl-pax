@@ -1695,7 +1695,7 @@
         ((eq '3bmd-code-blocks::code-block (first tree))
          (translate-code-block parent tree))
         (t
-         (error "Unexpected tree type ~S." (first tree)))))
+         (error "~@<Unexpected tree type ~S.~:@>" (first tree)))))
 
 ;;; CODE-BLOCK looks like this:
 ;;;
@@ -2034,7 +2034,7 @@
   (:documentation "Signaled by LOCATE when the lookup fails and ERRORP
   is true.")
   (:report (lambda (condition stream)
-             (format stream "Could not locate ~A ~A.~@[ ~A~]"
+             (format stream "~@<Could not locate ~A ~A.~@[ ~A~]~:@>"
                      (locate-error-locative condition)
                      (locate-error-object condition)
                      (locate-error-message condition)))))
@@ -2211,8 +2211,8 @@
                         (second (first filtered-locations))))
                      (t
                       (push (length filtered-locations) n-matches)))))
-    (error "Could not find a single location in with filters ~S. ~
-           Number of matches for each filter ~S."
+    (error "~@<Could not find a single location in with filters ~S. ~
+           Number of matches for each filter ~S.~:@>"
            filter-strings n-matches)))
 
 (defun filter-locations (locations filter-string)
@@ -3368,7 +3368,7 @@
                          another file ~S." start-file end-file))
                (values (or start-file end-file) start-position end-position)))))
         (t
-         (error "Malformed include source ~S." source))))
+         (error "~@<Malformed include source ~S.~:@>" source))))
 
 ;;; Check that LOCATION looks like this:
 ;;;
