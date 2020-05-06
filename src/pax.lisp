@@ -23,7 +23,8 @@
 ;;;;
 ;;;; - make the the documentation generation code easier to understand
 ;;;;
-;;;; - add [link name][(FOO VARIABLE)] kind of link
+;;;; - add [link name][(FOO VARIABLE)] kind of link (maybe with a
+;;;;   retitling-locative? [FOO][(RETITLE "link name" VARIABLE)])
 ;;;;
 ;;;; - port the hyperspec to pax
 
@@ -1570,6 +1571,7 @@
            tree)))
     ;; [section][type], [`section`][type], [*var*][variable], [section][]
     ((and (eq :reference-link (first tree)))
+     ;; For example, the tree for [`section`][type] is
      ;; (:REFERENCE-LINK :LABEL ((:CODE "SECTION")) :DEFINITION "type")
      (destructuring-bind (&key label definition tail) (rest tree)
        (let* ((name (extract-name-from-label label))
