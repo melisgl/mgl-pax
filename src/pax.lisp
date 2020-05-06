@@ -2670,6 +2670,9 @@
                    ((:mailto)
                     (format stream "- ~A: [~A](mailto:~A)~%"
                             name value value))
+                   ((:source-control)
+                    (format stream "- ~A: [~A](~A)"
+                            name (first value) (second value)))
                    ((nil)
                     (format stream "- ~A: ~A~%" name value)))))))
       (foo "Version" 'asdf/component:component-version)
@@ -2679,8 +2682,11 @@
       (foo "Maintainer" 'asdf/system:system-maintainer)
       (foo "Mailto" 'asdf/system:system-mailto :type :mailto)
       (foo "Homepage" 'asdf/system:system-homepage :type :link)
-      (foo "Bug tracker" 'asdf/system:system-bug-tracker)
-      (foo "Long description" 'asdf/system:system-long-description))))
+      (foo "Bug tracker" 'asdf/system:system-bug-tracker :type :link)
+      (foo "Source control" 'asdf/system:system-source-control
+           :type :source-control)
+      (foo "Long description" 'asdf/system:system-long-description)
+      (terpri stream))))
 
 (defmethod find-source ((system asdf:system))
   `(:location

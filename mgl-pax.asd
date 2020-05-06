@@ -6,7 +6,9 @@
   :version "0.0.3"
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
-  :homepage "http://quotenil.com"
+  :homepage "http://melisgl.github.io/mgl-pax"
+  :bug-tracker "https://github.com/melisgl/mgl-pax/issues"
+  :source-control (:git "https://github.com/melisgl/mgl-pax.git")
   :description "Exploratory programming tool and documentation
   generator."
   :depends-on (:3bmd :3bmd-ext-code-blocks :alexandria :babel :cl-fad :colorize
