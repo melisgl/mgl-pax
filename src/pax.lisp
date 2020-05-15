@@ -18,6 +18,8 @@
 ;;;;
 ;;;; - autolinking to the hyperspec
 ;;;;
+;;;; - fake/override documentation for existing stuff
+;;;;
 ;;;; - pretty print lambda-lists (including default values) and values
 ;;;;   of variables
 ;;;;
@@ -26,7 +28,18 @@
 ;;;; - add [link name][(FOO VARIABLE)] kind of link (maybe with a
 ;;;;   retitling-locative? [FOO][(RETITLE "link name" VARIABLE)])
 ;;;;
-;;;; - port the hyperspec to pax
+;;;; - port the hyperspec to pax (copyright on lispworks' version is
+;;;;   restrictive, allegro?)
+;;;;
+;;;; - add *DOCUMENT-DOWNCASE-P*?
+;;;;
+;;;; - don't list unexported superclasses?
+;;;;
+;;;; - inclued signalled errors in transcript?
+;;;;
+;;;; - Make ARGUMENT an alias for DISLOCATED to allow writing stuff
+;;;;   like: "see the CONDITION argument of JOURNALED." without having
+;;;;   to prevent linking with [CONDITION][dislocated].
 
 (in-package :mgl-pax)
 
