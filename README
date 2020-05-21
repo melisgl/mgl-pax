@@ -270,8 +270,8 @@ SWANK-BACKEND:FIND-DEFINITIONS whose support varies across the Lisp
 implementations.*
 
 In the following examples, pressing `M-.` when the cursor is on one
-of the characters of `FOO` or just after `FOO`, will visit the
-definition of function `FOO`:
+of the characters of `foo` or just after `foo`, will visit the
+definition of function `foo`:
 
     function foo
     foo function
@@ -282,7 +282,7 @@ In particular, references in a DEFSECTION form are in (SYMBOL
 LOCATIVE) format so `M-.` will work just fine there.
 
 Just like vanilla `M-.`, this works in comments and docstrings. In
-this example pressing `M-.` on `FOO` will visit `FOO`'s default
+this example pressing `M-.` on `foo` will visit `foo`'s default
 method:
 
 ```commonlisp
@@ -375,7 +375,7 @@ Now let's examine the most important pieces in detail.
     
         (symbol locative)
     
-    For example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
+    For example, `(FOO FUNCTION)` refers to the function `foo`, `(@BAR
     SECTION)` says that `@BAR` is a subsection of this
     one. `(BAZ (METHOD () (T T T)))` refers to the default method of the
     three argument generic function `BAZ`. `(FOO FUNCTION)` is
@@ -462,7 +462,7 @@ Now let's examine the most important pieces in detail.
     not have anything like that, instead it relies on REFERENCE objects
     to carry the extra information. We are going to see later how
     references and locatives work. Until then, here is an example on how
-    to look up the documentation of type `FOO`:
+    to look up the documentation of type `foo`:
     
         (document (locate 'foo 'type))
     
@@ -481,14 +481,14 @@ Now let's examine the most important pieces in detail.
     list of page specification elements. A page spec is a plist with
     keys :OBJECTS, :OUTPUT, :URI-FRAGMENT, :SOURCE-URI-FN, :HEADER-FN
     and :FOOTER-FN. OBJECTS is a list of objects (references are allowed
-    but not required) whose documentation is to be sent to `OUTPUT`.
+    but not required) whose documentation is to be sent to `output`.
     
     When documentation for an object is generated, the first matching
     page spec is used, where the object matches the page spec if it is
     contained in one of its :OBJECTS in the sense of
     COLLECT-REACHABLE-OBJECTS.
     
-    `OUTPUT` can be a number things:
+    `output` can be a number things:
     
     - If it's a list whose first element is a string or a pathname, then
       output will be sent to the file denoted by that and the rest of
@@ -504,7 +504,7 @@ Now let's examine the most important pieces in detail.
     - If it's a stream, then output will be sent to that stream.
     
     If some pages are specified, DOCUMENT returns a list of designators
-    for generated output. If a page whose `OUTPUT` refers to a file that
+    for generated output. If a page whose `output` refers to a file that
     was created (which doesn't happen if nothing would be written to
     it), then the corresponding pathname is included in the list. For
     strings the string itself, while for streams the stream object is
@@ -534,7 +534,7 @@ Now let's examine the most important pieces in detail.
     
     URI-FRAGMENT is a string such as `"doc/manual.html"` that specifies
     where the page will be deployed on a webserver. It defines how links
-    between pages will look. If it's not specified and `OUTPUT` refers
+    between pages will look. If it's not specified and `output` refers
     to a file, then it defaults to the name of the file. If URI-FRAGMENT
     is NIL, then no links will be made to or from that page.
     
@@ -776,7 +776,7 @@ write:
     (defun foo ())
     ```
 
-to get syntactically marked up HTML output. Copy `doc/style.css`
+to get syntactically marked up HTML output. Copy `src/style.css`
 from PAX and you are set. The language tag, `elisp` in this example,
 is optional and defaults to `common-lisp`.
 
@@ -832,7 +832,7 @@ described below.
     
         "`FOO` and `FOO`."
     
-    iff `FOO` is an interned symbol. To suppress this behavior, add a
+    iff `foo` is an interned symbol. To suppress this behavior, add a
     backslash to the beginning of the symbol or right after the leading
     \* if it would otherwise be parsed as markdown emphasis:
     
@@ -841,6 +841,14 @@ described below.
     The number of backslashes is doubled above because that's how the
     example looks in a docstring. Note that the backslash is discarded
     even if *DOCUMENT-UPPERCASE-IS-CODE* is false.
+
+- [variable] *DOCUMENT-DOWNCASE-UPPERCASE-CODE* T
+
+    If true, then the names of symbols recognized as code (including
+    those found if *DOCUMENT-UPPERCASE-IS-CODE*) are downcased in the
+    output if they only consist of uppercase characters. If it is
+    :ONLY-IN-MARKUP, then if the output format does not support
+    markup (e.g. it's :PLAIN), then no downcasing is performed.
 
 - [variable] *DOCUMENT-LINK-CODE* T
 
@@ -1048,7 +1056,7 @@ locatives take no arguments.
 - [locative] ACCESSOR CLASS-NAME
 
     To refer to an accessor named `FOO-SLOT` of class
-    `FOO`:
+    `foo`:
     
         (foo-slot (accessor foo))
 
@@ -1056,7 +1064,7 @@ locatives take no arguments.
 - [locative] READER CLASS-NAME
 
     To refer to a reader named `FOO-SLOT` of class
-    `FOO`:
+    `foo`:
     
         (foo-slot (reader foo))
 
@@ -1064,7 +1072,7 @@ locatives take no arguments.
 - [locative] WRITER CLASS-NAME
 
     To refer to a writer named `FOO-SLOT` of class
-    `FOO`:
+    `foo`:
     
         (foo-slot (writer foo))
 
@@ -1090,7 +1098,7 @@ locatives take no arguments.
 - [locative] DISLOCATED
 
     Refers to a symbol in a non-specific context. Useful for preventing
-    autolinking. For example, if there is a function called `FOO` then
+    autolinking. For example, if there is a function called `foo` then
     
         `FOO`
     
@@ -1104,7 +1112,7 @@ locatives take no arguments.
 - [locative] LOCATIVE LAMBDA-LIST
 
     This is the locative for locatives. When `M-.` is pressed on
-    `VARIABLE` in `(VARIABLE LOCATIVE)`, this is what makes it possible
+    `variable` in `(VARIABLE LOCATIVE)`, this is what makes it possible
     to land at the `(DEFINE-LOCATIVE-TYPE VARIABLE ...)` form.
     Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.
 
@@ -1192,7 +1200,9 @@ entity of interest (for example, the documentation of the variable).
 The path is called the locative. A locative can be applied to an
 object like this:
 
-    (locate 'foo 'variable)
+```
+(locate 'foo 'variable)
+```
 
 which will return the same reference as `(MAKE-REFERENCE 'FOO
 'VARIABLE)`. Operations need to know how to deal with references
@@ -1254,7 +1264,7 @@ need to muck with references when there is a perfectly good object.
 One may wish to make the DOCUMENT function and `M-.` navigation
 work with new object types. Extending DOCUMENT can be done by
 defining a DOCUMENT-OBJECT method. To allow these objects to be
-referenced from DEFSECTION a LOCATE-OBJECT method is to be defined.
+referenced from DEFSECTION, a LOCATE-OBJECT method is to be defined.
 Finally, for `M-.` FIND-SOURCE can be specialized. Finally,
 EXPORTABLE-LOCATIVE-TYPE-P may be overridden if exporting does not
 makes sense. Here is a stripped down example of how all this is done
@@ -1432,7 +1442,7 @@ Let's see how to extend DOCUMENT and `M-.` navigation if there is
 no first class object to represent the thing of interest. Recall
 that LOCATE returns a REFERENCE object in this case. DOCUMENT-OBJECT
 and FIND-SOURCE defer to LOCATE-AND-DOCUMENT and
-LOCATE-AND-FIND-SOURCE which have LOCATIVE-TYPE in their argument
+LOCATE-AND-FIND-SOURCE, which have LOCATIVE-TYPE in their argument
 list for EQL specializing pleasure. Here is a stripped down example
 of how the VARIABLE locative is defined:
 

@@ -455,6 +455,10 @@
   (define-package macro)
   (document function))
 
+(defun section-title-or-name (section)
+  (or (section-title section)
+      (maybe-downcase (prin1-to-string (section-name section)))))
+
 (defmacro define-package (package &rest options)
   "This is like CL:DEFPACKAGE but silences warnings and errors
   signaled when the redefined package is at variance with the current
@@ -1007,6 +1011,7 @@
   much copied verbatim to the documentation subject to a few knobs
   described below."
   (*document-uppercase-is-code* variable)
+  (*document-downcase-uppercase-code* variable)
   (*document-link-code* variable)
   (*document-link-sections* variable)
   (*document-min-link-hash-length* variable)
@@ -1038,6 +1043,13 @@
   The number of backslashes is doubled above because that's how the
   example looks in a docstring. Note that the backslash is discarded
   even if *DOCUMENT-UPPERCASE-IS-CODE* is false.""")
+
+(defvar *document-downcase-uppercase-code* :only-in-markup
+  "If true, then the names of symbols recognized as code (including
+  those found if *DOCUMENT-UPPERCASE-IS-CODE*) are downcased in the
+  output if they only consist of uppercase characters. If it is
+  :ONLY-IN-MARKUP, then if the output format does not support
+  markup (e.g. it's :PLAIN), then no downcasing is performed.")
 
 ;;;; Links
 
@@ -1628,6 +1640,17 @@
                 (stringp (second e)))
            (second e)))))
 
+(defun maybe-downcase (string)
+  (if (and (or (and *document-downcase-uppercase-code*
+                    (not (eq *document-downcase-uppercase-code*
+                             :only-in-markup)))
+               (and (eq *document-downcase-uppercase-code*
+                        :only-in-markup)
+                    (not (eq *format* :plain))))
+           (no-lowercase-chars-p string))
+      (string-downcase string)
+      string))
+
 ;;; Translate NAME (a string) that's part of TREE (e.g. it's "xxx"
 ;;; from (:CODE "xxx") or from "xxx,yyy"), or it's constructed from
 ;;; TREE (e.g. it's "*SYM*" from (:EMPH "SYM")).
@@ -1643,7 +1666,8 @@
           (let ((reference (find-locative-around parent tree refs)))
             (when reference
               (setq refs (list reference)))))
-        (values (format-references (subseq name 0 n-chars-read) refs)
+        (values (format-references
+                 (maybe-downcase (subseq name 0 n-chars-read)) refs)
                 t n-chars-read)))))
 
 ;;; NAME-ELEMENT is a child of TREE. It is the name of the symbol or
@@ -1778,13 +1802,15 @@
              (multiple-value-bind (refs n-chars-read)
                  (references-for-similar-names name known-references)
                (when refs
-                 (values `(,(code-fragment name)) t n-chars-read)))))
+                 (values `(,(code-fragment (maybe-downcase name)))
+                         t n-chars-read)))))
       (let ((emph (and (listp tree) (eq :emph (first tree)))))
         (cond ((and emph (eql #\\ (alexandria:first-elt name)))
-               (values (list `(:emph ,(subseq name 1))) t (length name)))
+               (values (list `(:emph ,(maybe-downcase (subseq name 1))))
+                       t (length name)))
               ((eql #\\ (alexandria:first-elt name))
                ;; Discard the leading backslash escape.
-               (values (list (subseq name 1)) t (length name)))
+               (values (list (maybe-downcase (subseq name 1))) t (length name)))
               ((not *document-uppercase-is-code*)
                nil)
               (emph
@@ -1929,7 +1955,7 @@
            `(,(code-fragment name)))
           ((< 1 (length refs))
            ;; `name`([1][link-id-1] [2][link-id-2])
-           (values `(,(code-fragment name)
+           (values `(,(code-fragment (maybe-downcase name))
                      "("
                      ,@(loop
                          for i upfrom 0
@@ -1942,7 +1968,7 @@
                      ")")
                    t))
           ((member (reference-locative-type ref-1) '(dislocated))
-           `(,(code-fragment name)))
+           `(,(code-fragment (maybe-downcase name))))
           ((typep (resolve ref-1) 'section)
            `((:reference-link :label (,(section-title-or-name (resolve ref-1)))
                               :definition ,(link-to-reference ref-1))))
@@ -1951,7 +1977,7 @@
                                         (resolve ref-1)))
                               :definition ,(link-to-reference ref-1))))
           (t
-           `((:reference-link :label (,(code-fragment name))
+           `((:reference-link :label (,(code-fragment (maybe-downcase name)))
                               :definition ,(link-to-reference ref-1)))))))
 
 (defun delimiterp (char)
@@ -3231,7 +3257,7 @@
 
 (defun glossary-term-title-or-name (glossary-term)
   (or (glossary-term-title glossary-term)
-      (prin1-to-string (glossary-term-name glossary-term))))
+      (maybe-downcase (prin1-to-string (glossary-term-name glossary-term)))))
 
 (defmethod print-object ((glossary-term glossary-term) stream)
   (print-unreadable-object (glossary-term stream :type t)

@@ -80,14 +80,14 @@ prototype which did almost everything I wanted was this:
   `(defun ,name () ,docstring))
 ```
 
-Armed with [`DEFSECTION`][b1e7], I soon found myself organizing code following
+Armed with [`defsection`][b1e7], I soon found myself organizing code following
 the flow of user level documentation and relegated comments to
 implementational details entirely. However, some portions of
-[`DEFSECTION`][b1e7] docstrings were just listings of all the functions,
+[`defsection`][b1e7] docstrings were just listings of all the functions,
 macros and variables related to the narrative, and this list was
-effectively repeated in the `DEFPACKAGE` form complete with little
+effectively repeated in the `defpackage` form complete with little
 comments that were like section names. A clear violation of
-[OAOO][oaoo], one of them had to go, so [`DEFSECTION`][b1e7] got a list of
+[OAOO][oaoo], one of them had to go, so [`defsection`][b1e7] got a list of
 symbols to export.
 
 [oaoo]: http://c2.com/cgi/wiki?OnceAndOnlyOnce 
@@ -112,9 +112,9 @@ based on the locative found in the vicinity of the symbol and
 everything was good for a while.
 
 Then I realized that sections could refer to other sections if there
-were a [`SECTION`][53a8] locative. Going down that path, I soon began to feel
+were a [`section`][53a8] locative. Going down that path, I soon began to feel
 the urge to generate pretty documentation as all the necessary
-information was manifest in the [`DEFSECTION`][b1e7] forms. The design
+information was manifest in the [`defsection`][b1e7] forms. The design
 constraint imposed on documentation generation was that following
 the typical style of upcasing symbols in docstrings there should be
 no need to explicitly mark up links: if `M-.` works, then the
@@ -147,9 +147,9 @@ effects as with Literate Programming, but documentation is generated
 from code, not vice versa and there is no support for chunking yet.
 Code is first, code must look pretty, documentation is code.
 
-In typical use, PAX packages have no `:EXPORT`'s defined. Instead the
-[`DEFINE-PACKAGE`][34f5] form gets a docstring which may mention section
-names (defined with [`DEFSECTION`][b1e7]). When the code is loaded into the
+In typical use, PAX packages have no `:export`'s defined. Instead the
+[`define-package`][34f5] form gets a docstring which may mention section
+names (defined with [`defsection`][b1e7]). When the code is loaded into the
 lisp, pressing `M-.` in SLIME on the name of the section will take
 you there. Sections can also refer to other sections, packages,
 functions, etc and you can keep exploring.
@@ -270,7 +270,7 @@ For this example, the generated markdown would look like this:
 
 More fancy markdown or HTML output with automatic markup and linking
 of uppercase symbol names found in docstrings, section numbering,
-table of contents, etc is possible by calling the [`DOCUMENT`][1eb8] function.
+table of contents, etc is possible by calling the [`document`][1eb8] function.
 
 *One can even generate documentation for different, but related
 libraries at the same time with the output going to different files,
@@ -278,10 +278,10 @@ but with cross-page links being automatically added for symbols
 mentioned in docstrings. See [Generating Documentation][063a] for
 some convenience functions to cover the most common cases.*
 
-Note how `(VARIABLE *FOO-STATE*)` in the [`DEFSECTION`][b1e7] form both
+Note how `(VARIABLE *FOO-STATE*)` in the [`defsection`][b1e7] form both
 exports `*FOO-STATE*` and includes its documentation in
-`@FOO-RANDOM-MANUAL`. The symbols [`VARIABLE`][2be0] and [`FUNCTION`][6b15] are just two
-instances of 'locatives' which are used in [`DEFSECTION`][b1e7] to refer to
+`@FOO-RANDOM-MANUAL`. The symbols [`variable`][2be0] and [`function`][6b15] are just two
+instances of 'locatives' which are used in [`defsection`][b1e7] to refer to
 definitions tied to symbols. See [Locative Types][1fbb].
 
 The transcript in the code block tagged with `cl-transcript` is
@@ -303,24 +303,24 @@ popping up an xref buffer and letting the user interactively select
 one of possible definitions.
 
 *Note that the this feature is implemented in terms of
-`SWANK-BACKEND:FIND-SOURCE-LOCATION` and
-`SWANK-BACKEND:FIND-DEFINITIONS` whose support varies across the Lisp
+`swank-backend:find-source-location` and
+`swank-backend:find-definitions` whose support varies across the Lisp
 implementations.*
 
 In the following examples, pressing `M-.` when the cursor is on one
-of the characters of `FOO` or just after `FOO`, will visit the
-definition of function `FOO`:
+of the characters of `foo` or just after `foo`, will visit the
+definition of function `foo`:
 
     function foo
     foo function
     (function foo)
     (foo function)
 
-In particular, references in a [`DEFSECTION`][b1e7] form are in (`SYMBOL`
-[`LOCATIVE`][12a1]) format so `M-.` will work just fine there.
+In particular, references in a [`defsection`][b1e7] form are in (`symbol`
+[`locative`][12a1]) format so `M-.` will work just fine there.
 
 Just like vanilla `M-.`, this works in comments and docstrings. In
-this example pressing `M-.` on `FOO` will visit `FOO`'s default
+this example pressing `M-.` on `foo` will visit `foo`'s default
 method:
 
 ```commonlisp
@@ -409,24 +409,24 @@ Now let's examine the most important pieces in detail.
 - [macro] **DEFSECTION** *NAME (&KEY (PACKAGE '\*PACKAGE\*) (READTABLE '\*READTABLE\*) (EXPORT T) TITLE LINK-TITLE-TO (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &BODY ENTRIES*
 
     Define a documentation section and maybe export referenced symbols.
-    A bit behind the scenes, a global variable with `NAME` is defined and
-    is bound to a [`SECTION`][aee8] object. By convention, section names
+    A bit behind the scenes, a global variable with `name` is defined and
+    is bound to a [`section`][aee8] object. By convention, section names
     start with the character `@`. See [Tutorial][aa52] for an example.
     
-    `ENTRIES` consists of docstrings and references. Docstrings are
+    `entries` consists of docstrings and references. Docstrings are
     arbitrary strings in markdown format, references are defined in the
     form:
     
         (symbol locative)
     
-    For example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
+    For example, `(FOO FUNCTION)` refers to the function `foo`, `(@BAR
     SECTION)` says that `@BAR` is a subsection of this
     one. `(BAZ (METHOD () (T T T)))` refers to the default method of the
     three argument generic function `BAZ`. `(FOO FUNCTION)` is
     equivalent to `(FOO (FUNCTION))`.
     
     A locative in a reference can either be a symbol or it can be a list
-    whose `CAR` is a symbol. In either case, the symbol is the called the
+    whose `car` is a symbol. In either case, the symbol is the called the
     type of the locative while the rest of the elements are the locative
     arguments. See [Locative Types][1fbb] for the list of locative
     types available out of the box.
@@ -434,70 +434,70 @@ Now let's examine the most important pieces in detail.
     The same symbol can occur multiple times in a reference, typically
     with different locatives, but this is not required.
     
-    The references are not looked up (see [`RESOLVE`][e0d7] in the
+    The references are not looked up (see [`resolve`][e0d7] in the
     [Extension API][8ed9]) until documentation is generated, so it is
     allowed to refer to things yet to be defined.
     
-    If `EXPORT` is true (the default), the referenced symbols and `NAME` are
+    If `export` is true (the default), the referenced symbols and `name` are
     candidates for exporting. A candidate symbol is exported if
     
-    - it is accessible in `PACKAGE` (it's not `OTHER-PACKAGE:SOMETHING`)
+    - it is accessible in `package` (it's not `OTHER-PACKAGE:SOMETHING`)
       and
     
     - there is a reference to it in the section being defined with a
-      locative whose type is approved by [`EXPORTABLE-LOCATIVE-TYPE-P`][96c5].
+      locative whose type is approved by [`exportable-locative-type-p`][96c5].
     
-    See [`DEFINE-PACKAGE`][34f5] if you use the export feature. The idea with
+    See [`define-package`][34f5] if you use the export feature. The idea with
     confounding documentation and exporting is to force documentation of
     all exported symbols.
     
-    `TITLE` is a non-marked-up string or `NIL`. If non-NIL, it determines
-    the text of the heading in the generated output. `LINK-TITLE-TO` is a
+    `title` is a non-marked-up string or `nil`. If non-NIL, it determines
+    the text of the heading in the generated output. `link-title-to` is a
     reference given as an
-    (`OBJECT` [`LOCATIVE`][12a1]) pair or `NIL`, to which the heading will link when
+    (`object` [`locative`][12a1]) pair or `nil`, to which the heading will link when
     generating HTML. If not specified, the heading will link to its own
     anchor.
     
-    When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][1514])
-    is true, `ENTRIES` will not be recorded to save memory.
+    When `discard-documentation-p` (defaults to [`*discard-documentation-p*`][1514])
+    is true, `entries` will not be recorded to save memory.
 
 <a id='x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*DISCARD-DOCUMENTATION-P\*** *NIL*
 
-    The default value of [`DEFSECTION`][b1e7]'s `DISCARD-DOCUMENTATION-P` argument.
-    One may want to set `*DISCARD-DOCUMENTATION-P*` to true before
+    The default value of [`defsection`][b1e7]'s `discard-documentation-p` argument.
+    One may want to set `*discard-documentation-p*` to true before
     building a binary application.
 
 <a id='x-28MGL-PAX-3ADEFINE-PACKAGE-20-28MGL-PAX-3AMACRO-29-29'></a>
 
 - [macro] **DEFINE-PACKAGE** *PACKAGE &REST OPTIONS*
 
-    This is like `CL:DEFPACKAGE` but silences warnings and errors
+    This is like `cl:defpackage` but silences warnings and errors
     signaled when the redefined package is at variance with the current
     state of the package. Typically this situation occurs when symbols
-    are exported by calling `EXPORT` (as is the case with [`DEFSECTION`][b1e7]) as
-    opposed to adding `:EXPORT` forms to the `DEFPACKAGE` form and the
+    are exported by calling `export` (as is the case with [`defsection`][b1e7]) as
+    opposed to adding `:export` forms to the `defpackage` form and the
     package definition is reevaluated. See the section on [package
     variance](http://www.sbcl.org/manual/#Package-Variance) in the SBCL
     manual.
     
-    The bottom line is that if you rely on [`DEFSECTION`][b1e7] to do the
-    exporting, then you'd better use [`DEFINE-PACKAGE`][34f5].
+    The bottom line is that if you rely on [`defsection`][b1e7] to do the
+    exporting, then you'd better use [`define-package`][34f5].
 
 <a id='x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29'></a>
 
 - [function] **DOCUMENT** *OBJECT &KEY STREAM PAGES (FORMAT :MARKDOWN)*
 
-    Write `OBJECT` in `FORMAT` to `STREAM` diverting some output to `PAGES`.
-    `FORMAT` can be anything [3BMD][3bmd] supports which is
-    currently `:MARKDOWN`, `:HTML` and `:PLAIN`. `STREAM` may be a stream
-    object, `T` or `NIL` as with `CL:FORMAT`.
+    Write `object` in `format` to `stream` diverting some output to `pages`.
+    `format` can be anything [3BMD][3bmd] supports which is
+    currently `:markdown`, `:html` and `:plain`. `stream` may be a stream
+    object, `t` or `nil` as with `cl:format`.
     
     Most often, this function is called on section objects
     like `(DOCUMENT @MGL-PAX-MANUAL)`, but it supports all kinds of
-    objects for which [`DOCUMENT-OBJECT`][a05e] is defined. To look up the
-    documentation of function [`DOCUMENT`][1eb8]:
+    objects for which [`document-object`][a05e] is defined. To look up the
+    documentation of function [`document`][1eb8]:
     
         (document #'document)
     
@@ -508,17 +508,17 @@ Now let's examine the most important pieces in detail.
     
     Note that not only first class objects can have documentation. For
     instance, variables and deftypes are not represented by objects.
-    That's why `CL:DOCUMENTATION` has a `DOC-TYPE` argument. [`DOCUMENT`][1eb8] does
-    not have anything like that, instead it relies on [`REFERENCE`][cc37] objects
+    That's why `cl:documentation` has a `doc-type` argument. [`document`][1eb8] does
+    not have anything like that, instead it relies on [`reference`][cc37] objects
     to carry the extra information. We are going to see later how
     references and locatives work. Until then, here is an example on how
-    to look up the documentation of type `FOO`:
+    to look up the documentation of type `foo`:
     
         (document (locate 'foo 'type))
     
-    One can call `DESCRIBE` on [`SECTION`][aee8] objects to get
+    One can call `describe` on [`section`][aee8] objects to get
     documentation in markdown format with less markup than the default.
-    See [`DESCRIBE-OBJECT`][df39] `(METHOD () (SECTION T))`.
+    See [`describe-object`][df39] `(METHOD () (SECTION T))`.
     
     There are quite a few special variables that affect how output is
     generated, see [Documentation Printer Variables][e2a1].
@@ -526,35 +526,35 @@ Now let's examine the most important pieces in detail.
     The rest of this description deals with how to generate multiple
     pages.
     
-    The `PAGES` argument is to create multi-page documents by routing some
-    of the generated output to files, strings or streams. `PAGES` is a
+    The `pages` argument is to create multi-page documents by routing some
+    of the generated output to files, strings or streams. `pages` is a
     list of page specification elements. A page spec is a plist with
-    keys `:OBJECTS`, `:OUTPUT`, `:URI-FRAGMENT`, `:SOURCE-URI-FN`, `:HEADER-FN`
-    and `:FOOTER-FN`. `OBJECTS` is a list of objects (references are allowed
-    but not required) whose documentation is to be sent to `OUTPUT`.
+    keys `:objects`, `:output`, `:uri-fragment`, `:source-uri-fn`, `:header-fn`
+    and `:footer-fn`. `objects` is a list of objects (references are allowed
+    but not required) whose documentation is to be sent to `output`.
     
     When documentation for an object is generated, the first matching
     page spec is used, where the object matches the page spec if it is
-    contained in one of its `:OBJECTS` in the sense of
-    [`COLLECT-REACHABLE-OBJECTS`][1920].
+    contained in one of its `:objects` in the sense of
+    [`collect-reachable-objects`][1920].
     
-    `OUTPUT` can be a number things:
+    `output` can be a number things:
     
     - If it's a list whose first element is a string or a pathname, then
       output will be sent to the file denoted by that and the rest of
-      the elements of the list are passed on as arguments to `CL:OPEN`.
-      One extra keyword argument is `:ENSURE-DIRECTORIES-EXIST`. If it's
-      true, `ENSURE-DIRECTORIES-EXIST` will be called on the pathname
+      the elements of the list are passed on as arguments to `cl:open`.
+      One extra keyword argument is `:ensure-directories-exist`. If it's
+      true, `ensure-directories-exist` will be called on the pathname
       before it's opened.
     
-    - If it's `NIL`, then output will be collected in a string.
+    - If it's `nil`, then output will be collected in a string.
     
-    - If it's `T`, then output will be sent to `*STANDARD-OUTPUT*`.
+    - If it's `t`, then output will be sent to `*standard-output*`.
     
     - If it's a stream, then output will be sent to that stream.
     
-    If some pages are specified, [`DOCUMENT`][1eb8] returns a list of designators
-    for generated output. If a page whose `OUTPUT` refers to a file that
+    If some pages are specified, [`document`][1eb8] returns a list of designators
+    for generated output. If a page whose `output` refers to a file that
     was created (which doesn't happen if nothing would be written to
     it), then the corresponding pathname is included in the list. For
     strings the string itself, while for streams the stream object is
@@ -563,39 +563,39 @@ Now let's examine the most important pieces in detail.
     was created. The output designators in the returned list are ordered
     by creation time.
     
-    If no `PAGES` are specified, [`DOCUMENT`][1eb8] returns a single pathname,
-    string or stream object according to the value of the `STREAM`
+    If no `pages` are specified, [`document`][1eb8] returns a single pathname,
+    string or stream object according to the value of the `stream`
     argument.
     
-    Note that even if `PAGES` is specified, `STREAM` acts as a catch all
+    Note that even if `pages` is specified, `stream` acts as a catch all
     taking the generated documentation for references not claimed by any
-    pages. Also, the filename, string or stream corresponding to `STREAM`
+    pages. Also, the filename, string or stream corresponding to `stream`
     is always the first element in list of generated things that is the
     return value.
     
-    `HEADER-FN`, if not `NIL`, is a function of a single stream argument
+    `header-fn`, if not `nil`, is a function of a single stream argument
     which is called just before the first write to the page.
-    Since `:FORMAT` `:HTML` only generates HTML fragments, this makes it
+    Since `:format` `:html` only generates HTML fragments, this makes it
     possible to print arbitrary headers, typically setting the title,
     css stylesheet, or charset.
     
-    `FOOTER-FN` is similar to `HEADER-FN`, but it's called after the last
+    `footer-fn` is similar to `header-fn`, but it's called after the last
     write to the page. For HTML, it typically just closes the body.
     
-    `URI-FRAGMENT` is a string such as `"doc/manual.html"` that specifies
+    `uri-fragment` is a string such as `"doc/manual.html"` that specifies
     where the page will be deployed on a webserver. It defines how links
-    between pages will look. If it's not specified and `OUTPUT` refers
-    to a file, then it defaults to the name of the file. If `URI-FRAGMENT`
-    is `NIL`, then no links will be made to or from that page.
+    between pages will look. If it's not specified and `output` refers
+    to a file, then it defaults to the name of the file. If `uri-fragment`
+    is `nil`, then no links will be made to or from that page.
     
-    Finally, `SOURCE-URI-FN` is a function of a single, [`REFERENCE`][cc37]
-    argument. If it returns a value other than `NIL`, then it must be a
-    string representing an URI. If `FORMAT` is `:HTML` and
-    [`*DOCUMENT-MARK-UP-SIGNATURES*`][46ea] is true, then the locative as
+    Finally, `source-uri-fn` is a function of a single, [`reference`][cc37]
+    argument. If it returns a value other than `nil`, then it must be a
+    string representing an URI. If `format` is `:html` and
+    [`*document-mark-up-signatures*`][46ea] is true, then the locative as
     displayed in the signature will be a link to this uri. See
-    [`MAKE-GITHUB-SOURCE-URI-FN`][1cc6].
+    [`make-github-source-uri-fn`][1cc6].
     
-    `PAGES` may look something like this:
+    `pages` may look something like this:
     
     ```commonlisp
     `((;; The section about SECTIONs and everything below it ...
@@ -637,7 +637,7 @@ Now let's examine the most important pieces in detail.
 ## 7 Generating Documentation
 
 Two convenience functions are provided to serve the common case of
-having an `ASDF` system with some readmes and a directory with for the
+having an `asdf` system with some readmes and a directory with for the
 HTML documentation and the default css stylesheet.
 
 <a id='x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29'></a>
@@ -645,7 +645,7 @@ HTML documentation and the default css stylesheet.
 - [function] **UPDATE-ASDF-SYSTEM-READMES** *SECTIONS ASDF-SYSTEM*
 
     Convenience function to generate two readme files in the directory
-    holding the `ASDF-SYSTEM` definition.
+    holding the `asdf-system` definition.
     
     README.md has anchors, links, inline code, and other markup added.
     Not necessarily the easiest on the eye in an editor, but looks good
@@ -665,9 +665,9 @@ HTML documentation and the default css stylesheet.
 
 - [function] **UPDATE-ASDF-SYSTEM-HTML-DOCS** *SECTIONS ASDF-SYSTEM &KEY PAGES (TARGET-DIR (ASDF/SYSTEM:SYSTEM-RELATIVE-PATHNAME ASDF-SYSTEM "doc/")) (UPDATE-CSS-P T)*
 
-    Generate pretty HTML documentation for a single `ASDF` system,
-    possibly linking to github. If `UPDATE-CSS-P`, copy the CSS style
-    sheet to `TARGET-DIR`, as well. Example usage:
+    Generate pretty HTML documentation for a single `asdf` system,
+    possibly linking to github. If `update-css-p`, copy the CSS style
+    sheet to `target-dir`, as well. Example usage:
     
     ```commonlisp
     (update-asdf-system-html-docs @mgl-pax-manual :mgl-pax)
@@ -691,8 +691,8 @@ HTML documentation and the default css stylesheet.
 
 - [variable] **\*DOCUMENT-HTML-MAX-NAVIGATION-TABLE-OF-CONTENTS-LEVEL\*** *NIL*
 
-    `NIL` or a non-negative integer. If non-NIL, it overrides
-    [`*DOCUMENT-MAX-NUMBERING-LEVEL*`][fde0] in dynamic HTML table of contents on
+    `nil` or a non-negative integer. If non-NIL, it overrides
+    [`*document-max-numbering-level*`][fde0] in dynamic HTML table of contents on
     the left of the page.
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-HTML-TOP-BLOCKS-OF-LINKS-2A-20-28VARIABLE-29-29'></a>
@@ -701,15 +701,15 @@ HTML documentation and the default css stylesheet.
 
     A list of blocks of links to be display on the sidebar on the left,
     above the table of contents. A block is of the form `(&KEY TITLE ID
-    LINKS)`, where `TITLE` will be displayed at the top of the block in a
-    HTML `DIV` with `ID`, followed by the links. `LINKS` is a list
+    LINKS)`, where `title` will be displayed at the top of the block in a
+    HTML `DIV` with `ID`, followed by the links. `links` is a list
     of `(URI LABEL) elements.`
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*DOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS\*** *NIL*
 
-    Like [`*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS*`][be7f], only it is displayed
+    Like [`*document-html-top-blocks-of-links*`][be7f], only it is displayed
     below the table of contents.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29'></a>
@@ -717,11 +717,11 @@ HTML documentation and the default css stylesheet.
 ### 7.1 Github Workflow
 
 It is generally recommended to commit generated readmes (see
-[`UPDATE-ASDF-SYSTEM-READMES`][2e7a]) so that users have something to read
+[`update-asdf-system-readmes`][2e7a]) so that users have something to read
 without reading the code and sites like github can display them.
 
 HTML documentation can also be committed, but there is an issue with
-that: when linking to the sources (see [`MAKE-GITHUB-SOURCE-URI-FN`][1cc6]),
+that: when linking to the sources (see [`make-github-source-uri-fn`][1cc6]),
 the commit id is in the link. This means that code changes need to
 be committed first, then HTML documentation regenerated and
 committed in a followup commit.
@@ -748,25 +748,25 @@ between the repository and the gh-pages site.
 
 - [function] **MAKE-GITHUB-SOURCE-URI-FN** *ASDF-SYSTEM GITHUB-URI &KEY GIT-VERSION*
 
-    Return a function suitable as `:SOURCE-URI-FN` of a page spec (see
-    the `PAGES` argument of [`DOCUMENT`][1eb8]). The function looks the source
+    Return a function suitable as `:source-uri-fn` of a page spec (see
+    the `pages` argument of [`document`][1eb8]). The function looks the source
     location of the reference passed to it, and if the location is
     found, the path is made relative to the root directory of
-    `ASDF-SYSTEM` and finally an URI pointing to github is returned. The
+    `asdf-system` and finally an URI pointing to github is returned. The
     URI looks like this:
     
         https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
     
-    "master" in the above link comes from `GIT-VERSION`.
+    "master" in the above link comes from `git-version`.
     
-    If `GIT-VERSION` is `NIL`, then an attempt is made to determine to
+    If `git-version` is `nil`, then an attempt is made to determine to
     current commit id from the `.git` in the directory holding
-    `ASDF-SYSTEM`. If no `.git` directory is found, then no links to
+    `asdf-system`. If no `.git` directory is found, then no links to
     github will be generated.
     
     A separate warning is signalled whenever source location lookup
     fails or if the source location points to a directory not below the
-    directory of `ASDF-SYSTEM`.
+    directory of `asdf-system`.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-WORLD-20MGL-PAX-3ASECTION-29'></a>
 
@@ -780,8 +780,8 @@ documents.
 
 - [function] **REGISTER-DOC-IN-PAX-WORLD** *NAME SECTIONS PAGE-SPECS*
 
-    Register `SECTIONS` and `PAGE-SPECS` under `NAME` in PAX World. By
-    default, [`UPDATE-PAX-WORLD`][4f82] generates documentation for all of these.
+    Register `sections` and `page-specs` under `name` in PAX World. By
+    default, [`update-pax-world`][4f82] generates documentation for all of these.
 
 For example, this is how PAX registers itself:
 
@@ -803,14 +803,14 @@ For example, this is how PAX registers itself:
 
 - [function] **UPDATE-PAX-WORLD** *&KEY DOCS DIR*
 
-    Generate HTML documentation for all `DOCS`. By default, files are
-    created in `*PAX-WORLD-DIR*` or `(asdf:system-relative-pathname
-    :mgl-pax "world/")`, if `NIL`. `DOCS` is a list of entries of the
-    form (`NAME` `SECTIONS` `PAGE-SPECS`). The default for `DOCS` is all the
-    sections and pages registered with [`REGISTER-DOC-IN-PAX-WORLD`][c5f2].
+    Generate HTML documentation for all `docs`. By default, files are
+    created in `*pax-world-dir*` or `(asdf:system-relative-pathname
+    :mgl-pax "world/")`, if `nil`. `docs` is a list of entries of the
+    form (`name` `sections` `page-specs`). The default for `docs` is all the
+    sections and pages registered with [`register-doc-in-pax-world`][c5f2].
     
-    In the absence of `:HEADER-FN` `:FOOTER-FN`, `:OUTPUT`, every spec in
-    `PAGE-SPECS` is augmented with HTML headers, footers and output
+    In the absence of `:header-fn` `:footer-fn`, `:output`, every spec in
+    `page-specs` is augmented with HTML headers, footers and output
     location specifications (based on the name of the section).
     
     If necessary a default page spec is created for every section.
@@ -841,7 +841,7 @@ to
     indented
     differently")
 
-See [`DOCUMENT-OBJECT`][d7eb] for the details.
+See [`document-object`][d7eb] for the details.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29'></a>
 
@@ -856,7 +856,7 @@ write:
     (defun foo ())
     ```
 
-to get syntactically marked up HTML output. Copy `doc/style.css`
+to get syntactically marked up HTML output. Copy `src/style.css`
 from PAX and you are set. The language tag, `elisp` in this example,
 is optional and defaults to `common-lisp`.
 
@@ -910,7 +910,7 @@ described below.
     When true, words with at least three characters and no lowercase
     characters naming an interned symbol are assumed to be code as if
     they were marked up with backticks which is especially useful when
-    combined with [`*DOCUMENT-LINK-CODE*`][1d4c]. For example, this docstring:
+    combined with [`*document-link-code*`][1d4c]. For example, this docstring:
     
         "`FOO` and FOO."
     
@@ -918,7 +918,7 @@ described below.
     
         "`FOO` and `FOO`."
     
-    iff `FOO` is an interned symbol. To suppress this behavior, add a
+    iff `foo` is an interned symbol. To suppress this behavior, add a
     backslash to the beginning of the symbol or right after the leading
     \* if it would otherwise be parsed as markdown emphasis:
     
@@ -926,14 +926,24 @@ described below.
     
     The number of backslashes is doubled above because that's how the
     example looks in a docstring. Note that the backslash is discarded
-    even if `*DOCUMENT-UPPERCASE-IS-CODE*` is false.
+    even if `*document-uppercase-is-code*` is false.
+
+<a id='x-28MGL-PAX-3A-2ADOCUMENT-DOWNCASE-UPPERCASE-CODE-2A-20-28VARIABLE-29-29'></a>
+
+- [variable] **\*DOCUMENT-DOWNCASE-UPPERCASE-CODE\*** *T*
+
+    If true, then the names of symbols recognized as code (including
+    those found if [`*document-uppercase-is-code*`][a282]) are downcased in the
+    output if they only consist of uppercase characters. If it is
+    `:only-in-markup`, then if the output format does not support
+    markup (e.g. it's `:plain`), then no downcasing is performed.
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*DOCUMENT-LINK-CODE\*** *T*
 
     When true, during the process of generating documentation for a
-    [`SECTION`][aee8], HTML anchors are added before the documentation of
+    [`section`][aee8], HTML anchors are added before the documentation of
     every reference that's not to a section. Also, markdown style
     reference links are added when a piece of inline code found in a
     docstring refers to a symbol that's referenced by one of the
@@ -957,7 +967,7 @@ described below.
             Calls [`BAR`][1] on `X`.
     
     Instead of `BAR`, one can write `[bar][]` or ``[`bar`][]`` as well.
-    Since symbol names are parsed according to `READTABLE-CASE`, character
+    Since symbol names are parsed according to `readtable-case`, character
     case rarely matters.
     
     Now, if `BAR` has references with different locatives:
@@ -979,9 +989,9 @@ described below.
         
             Calls `BAR`([`1`][link-id-1] [`2`][link-id-2]) on `X`.
     
-    This situation occurs in PAX with `SECTION`([`0`][aee8] [`1`][53a8]) which is both a class (see
-    [`SECTION`][aee8]) and a locative type denoted by a symbol (see
-    [`SECTION`][53a8]). Back in the example above, clearly,
+    This situation occurs in PAX with `section`([`0`][aee8] [`1`][53a8]) which is both a class (see
+    [`section`][aee8]) and a locative type denoted by a symbol (see
+    [`section`][53a8]). Back in the example above, clearly,
     there is no reason to link to type `BAR`, so one may wish to select
     the function locative. There are two ways to do that. One is to
     specify the locative explicitly as the id of a reference link:
@@ -1000,8 +1010,8 @@ described below.
     This last option needs backticks around the locative if it's not a
     single symbol.
     
-    Note that [`*DOCUMENT-LINK-CODE*`][1d4c] can be combined with
-    [`*DOCUMENT-UPPERCASE-IS-CODE*`][a282] to have links generated for
+    Note that [`*document-link-code*`][1d4c] can be combined with
+    [`*document-uppercase-is-code*`][a282] to have links generated for
     uppercase names with no quoting required.
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20-28VARIABLE-29-29'></a>
@@ -1038,8 +1048,8 @@ described below.
 - [variable] **\*DOCUMENT-MARK-UP-SIGNATURES\*** *T*
 
     When true, some things such as function names and arglists are
-    rendered as bold and italic. In `:HTML` output, locative types become
-    links to sources (if `:SOURCE-URI-FN` is provided, see [`DOCUMENT`][1eb8]), and
+    rendered as bold and italic. In `:html` output, locative types become
+    links to sources (if `:source-uri-fn` is provided, see [`document`][1eb8]), and
     the symbol becomes a self-link for your permalinking pleasure.
     
     For example, a reference is rendered in markdown roughly as:
@@ -1068,7 +1078,7 @@ described below.
     A non-negative integer. Top-level sections are given a table of
     contents which includes a nested tree of section titles whose depth
     is limited by this value. Setting it to 0 turns generation of the
-    table of contents off. If [`*DOCUMENT-LINK-SECTIONS*`][f901] is true, then the
+    table of contents off. If [`*document-link-sections*`][f901] is true, then the
     table of contents will link to the sections.
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-TEXT-NAVIGATION-2A-20-28VARIABLE-29-29'></a>
@@ -1077,7 +1087,7 @@ described below.
 
     If true, then before each heading a line is printed with links to
     the previous, parent and next section. Needs
-    [`*DOCUMENT-LINK-SECTIONS*`][f901] to be on to work.
+    [`*document-link-sections*`][f901] to be on to work.
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-FANCY-HTML-NAVIGATION-2A-20-28VARIABLE-29-29'></a>
 
@@ -1087,13 +1097,13 @@ described below.
     navigation component that consists of links to the previous, parent,
     next section and a permalink. This component is normally hidden, it
     is visible only when the mouse is over the heading. Needs
-    [`*DOCUMENT-LINK-SECTIONS*`][f901] to be on to work.
+    [`*document-link-sections*`][f901] to be on to work.
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*DOCUMENT-NORMALIZE-PACKAGES\*** *T*
 
-    If true, symbols are printed relative to [`SECTION-PACKAGE`][87c7] of the
+    If true, symbols are printed relative to [`section-package`][87c7] of the
     innermost containing section or with full package names if there is
     no containing section. To eliminate ambiguity `[in package ...]`
     messages are printed right after the section heading if necessary.
@@ -1122,20 +1132,20 @@ locatives take no arguments.
 
 - [locative] **SECTION**
 
-    Refers to a section defined by [`DEFSECTION`][b1e7].
+    Refers to a section defined by [`defsection`][b1e7].
 
 <a id='x-28VARIABLE-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **VARIABLE** *&OPTIONAL INITFORM*
 
-    Refers to a global special variable. `INITFORM`, or if not specified,
+    Refers to a global special variable. `initform`, or if not specified,
     the global value of the variable is included in the documentation.
 
 <a id='x-28MGL-PAX-3ACONSTANT-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **CONSTANT** *&OPTIONAL INITFORM*
 
-    Refers to a `DEFCONSTANT`. `INITFORM`, or if not specified,
+    Refers to a `defconstant`. `initform`, or if not specified,
     the value of the constant is included in the documentation.
 
 <a id='x-28MGL-PAX-3AMACRO-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
@@ -1151,7 +1161,7 @@ locatives take no arguments.
 - [locative] **FUNCTION**
 
     Note that the arglist in the generated documentation depends on
-    the quality of `SWANK-BACKEND:ARGLIST`. It may be that default
+    the quality of `swank-backend:arglist`. It may be that default
     values of optional and keyword arguments are missing.
 
 <a id='x-28GENERIC-FUNCTION-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
@@ -1162,9 +1172,9 @@ locatives take no arguments.
 
 - [locative] **METHOD** *METHOD-QUALIFIERS METHOD-SPECIALIZERS*
 
-    See `CL:FIND-METHOD` for the description of the arguments.
+    See `cl:find-method` for the description of the arguments.
     To refer to the default method of the three argument generic
-    function `FOO`:
+    function `foo`:
     
         (foo (method () (t t t)))
 
@@ -1174,7 +1184,7 @@ locatives take no arguments.
 - [locative] **ACCESSOR** *CLASS-NAME*
 
     To refer to an accessor named `FOO-SLOT` of class
-    `FOO`:
+    `foo`:
     
         (foo-slot (accessor foo))
 
@@ -1184,7 +1194,7 @@ locatives take no arguments.
 - [locative] **READER** *CLASS-NAME*
 
     To refer to a reader named `FOO-SLOT` of class
-    `FOO`:
+    `foo`:
     
         (foo-slot (reader foo))
 
@@ -1194,7 +1204,7 @@ locatives take no arguments.
 - [locative] **WRITER** *CLASS-NAME*
 
     To refer to a writer named `FOO-SLOT` of class
-    `FOO`:
+    `foo`:
     
         (foo-slot (writer foo))
 
@@ -1203,7 +1213,7 @@ locatives take no arguments.
 
 - [locative] **STRUCTURE-ACCESSOR**
 
-    This is a synonym of [`FUNCTION`][6b15] with the difference that the often
+    This is a synonym of [`function`][6b15] with the difference that the often
     ugly and certainly uninformative lambda list will not be printed.
 
 <a id='x-28CLASS-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
@@ -1218,9 +1228,9 @@ locatives take no arguments.
 
 - [locative] **TYPE**
 
-    `TYPE` can refer to classes as well, but it's better style to use the
-    more specific [`CLASS`][0208] locative type for that. Another difference to
-    [`CLASS`][0208] is that an attempt is made at printing the arguments of type
+    `type` can refer to classes as well, but it's better style to use the
+    more specific [`class`][0208] locative type for that. Another difference to
+    [`class`][0208] is that an attempt is made at printing the arguments of type
     specifiers.
 
 <a id='x-28PACKAGE-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
@@ -1232,23 +1242,23 @@ locatives take no arguments.
 - [locative] **DISLOCATED**
 
     Refers to a symbol in a non-specific context. Useful for preventing
-    autolinking. For example, if there is a function called `FOO` then
+    autolinking. For example, if there is a function called `foo` then
     
         `FOO`
     
-    will be linked to (if [`*DOCUMENT-LINK-CODE*`][1d4c]) its definition. However,
+    will be linked to (if [`*document-link-code*`][1d4c]) its definition. However,
     
         [`FOO`][dislocated]
     
-    will not be. On a dislocated locative [`LOCATE`][b2be] always fails with a
-    [`LOCATE-ERROR`][2285] condition.
+    will not be. On a dislocated locative [`locate`][b2be] always fails with a
+    [`locate-error`][2285] condition.
 
 <a id='x-28MGL-PAX-3ALOCATIVE-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **LOCATIVE** *LAMBDA-LIST*
 
     This is the locative for locatives. When `M-.` is pressed on
-    [`VARIABLE`][2be0] in `(VARIABLE LOCATIVE)`, this is what makes it possible
+    [`variable`][2be0] in `(VARIABLE LOCATIVE)`, this is what makes it possible
     to land at the `(DEFINE-LOCATIVE-TYPE VARIABLE ...)` form.
     Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.
 
@@ -1256,29 +1266,29 @@ locatives take no arguments.
 
 - [locative] **GLOSSARY-TERM**
 
-    Refers to a glossary term defined by [`DEFINE-GLOSSARY-TERM`][0261].
+    Refers to a glossary term defined by [`define-glossary-term`][0261].
 
 <a id='x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20-28MGL-PAX-3AMACRO-29-29'></a>
 
 - [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) DOCSTRING*
 
-    Define a global variable with `NAME` and set it to a glossary term
+    Define a global variable with `name` and set it to a glossary term
     object. A glossary term is just a symbol to hang a docstring on. It
-    is a bit like a `SECTION`([`0`][aee8] [`1`][53a8]) in that, when linked to, its `TITLE` will be
+    is a bit like a `section`([`0`][aee8] [`1`][53a8]) in that, when linked to, its `title` will be
     the link text instead of the name of the symbol. Unlike sections
     though, glossary terms are not rendered with headings, but in the
     more lightweight bullet + locative + name/title style.
     
-    When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][1514])
-    is true, `DOCSTRING` will not be recorded to save memory.
+    When `discard-documentation-p` (defaults to [`*discard-documentation-p*`][1514])
+    is true, `docstring` will not be recorded to save memory.
 
 <a id='x-28MGL-PAX-3AINCLUDE-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **INCLUDE** *SOURCE &KEY LINE-PREFIX HEADER FOOTER HEADER-NL FOOTER-NL*
 
-    Refers to a region of a file. `SOURCE` can be a string or a
+    Refers to a region of a file. `source` can be a string or a
     pathname in which case the whole file is being pointed to or it can
-    explicitly supply `START`, `END` locatives. `INCLUDE` is typically used to
+    explicitly supply `start`, `end` locatives. `include` is typically used to
     include non-lisp files in the documentation (say markdown or elisp
     as in the next example) or regions of lisp source files. This can
     reduce clutter and duplication.
@@ -1306,26 +1316,26 @@ locatives take no arguments.
     ;;; More irrelevant code follows.
     ```
     
-    In the above example, pressing `M-.` on [`PAX.EL`][ff5c] will open the
+    In the above example, pressing `M-.` on [`pax.el`][ff5c] will open the
     `src/pax.el` file and put the cursor on its first character. `M-.`
     on `FOO-EXAMPLE` will go to the source location of the `(asdf:system
     locative)` locative.
     
     When documentation is generated, the entire [`pax.el`][ff5c] file is
     included in the markdown surrounded by the strings given as
-    `HEADER-NL` and `FOOTER-NL` (if any). The trailing newline character is
-    assumed implicitly. If that's undesirable, then use `HEADER` and
-    `FOOTER` instead. The documentation of `FOO-EXAMPLE` will be the
-    region of the file from the source location of the `START`
-    locative (inclusive) to the source location of the `END`
-    locative (exclusive). `START` and `END` default to the beginning and end
+    `header-nl` and `footer-nl` (if any). The trailing newline character is
+    assumed implicitly. If that's undesirable, then use `header` and
+    `footer` instead. The documentation of `FOO-EXAMPLE` will be the
+    region of the file from the source location of the `start`
+    locative (inclusive) to the source location of the `end`
+    locative (exclusive). `start` and `end` default to the beginning and end
     of the file, respectively.
     
-    Note that the file of the source location of `:START` and `:END` must be
-    the same. If `SOURCE` is pathname designator, then it must be absolute
+    Note that the file of the source location of `:start` and `:end` must be
+    the same. If `source` is pathname designator, then it must be absolute
     so that the locative is context independent.
     
-    Finally, if specified `LINE-PREFIX` is a string that's prepended to
+    Finally, if specified `line-prefix` is a string that's prepended to
     each line included in the documentation. For example, a string of
     four spaces makes markdown think it's a code block.
 
@@ -1340,18 +1350,20 @@ locatives take no arguments.
 While Common Lisp has rather good introspective abilities, not
 everything is first class. For example, there is no object
 representing the variable defined with `(DEFVAR
-FOO)`. `(MAKE-REFERENCE 'FOO 'VARIABLE)` constructs a [`REFERENCE`][cc37] that
-captures the path to take from an object (the symbol `FOO`) to an
+FOO)`. `(MAKE-REFERENCE 'FOO 'VARIABLE)` constructs a [`reference`][cc37] that
+captures the path to take from an object (the symbol `foo`) to an
 entity of interest (for example, the documentation of the variable).
 The path is called the locative. A locative can be applied to an
 object like this:
 
-    (locate 'foo 'variable)
+```
+(locate 'foo 'variable)
+```
 
 which will return the same reference as `(MAKE-REFERENCE 'FOO
 'VARIABLE)`. Operations need to know how to deal with references
-which we will see in [`LOCATE-AND-COLLECT-REACHABLE-OBJECTS`][7a11],
-[`LOCATE-AND-DOCUMENT`][6c17] and [`LOCATE-AND-FIND-SOURCE`][e9e9].
+which we will see in [`locate-and-collect-reachable-objects`][7a11],
+[`locate-and-document`][6c17] and [`locate-and-find-source`][e9e9].
 
 Naturally, `(LOCATE 'FOO 'FUNCTION)` will simply return `#'FOO`, no
 need to muck with references when there is a perfectly good object.
@@ -1360,16 +1372,16 @@ need to muck with references when there is a perfectly good object.
 
 - [function] **LOCATE** *OBJECT LOCATIVE &KEY (ERRORP T)*
 
-    Follow `LOCATIVE` from `OBJECT` and return the object it leads to or a
-    [`REFERENCE`][cc37] if there is no first class object corresponding to the
-    location. If `ERRORP`, then a [`LOCATE-ERROR`][2285] condition is signaled when
+    Follow `locative` from `object` and return the object it leads to or a
+    [`reference`][cc37] if there is no first class object corresponding to the
+    location. If `errorp`, then a [`locate-error`][2285] condition is signaled when
     the lookup fails.
 
 <a id='x-28MGL-PAX-3ALOCATE-ERROR-20CONDITION-29'></a>
 
 - [condition] **LOCATE-ERROR** *ERROR*
 
-    Signaled by [`LOCATE`][b2be] when the lookup fails and `ERRORP`
+    Signaled by [`locate`][b2be] when the lookup fails and `errorp`
     is true.
 
 <a id='x-28MGL-PAX-3ALOCATE-ERROR-MESSAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29'></a>
@@ -1388,15 +1400,15 @@ need to muck with references when there is a perfectly good object.
 
 - [function] **RESOLVE** *REFERENCE &KEY (ERRORP T)*
 
-    A convenience function to [`LOCATE`][b2be] `REFERENCE`'s object with its
+    A convenience function to [`locate`][b2be] `reference`'s object with its
     locative.
 
 <a id='x-28MGL-PAX-3AREFERENCE-20CLASS-29'></a>
 
 - [class] **REFERENCE**
 
-    A `REFERENCE` represents a path ([`REFERENCE-LOCATIVE`][819a])
-    to take from an object ([`REFERENCE-OBJECT`][0412]).
+    A `reference` represents a path ([`reference-locative`][819a])
+    to take from an object ([`reference-object`][0412]).
 
 <a id='x-28MGL-PAX-3AREFERENCE-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29'></a>
 
@@ -1414,7 +1426,7 @@ need to muck with references when there is a perfectly good object.
 
 - [function] **LOCATIVE-TYPE** *LOCATIVE*
 
-    The first element of `LOCATIVE` if it's a list. If it's a symbol then
+    The first element of `locative` if it's a list. If it's a symbol then
     it's that symbol itself. Typically, methods of generic functions
     working with locatives take locative type and locative args as
     separate arguments to allow methods have eql specializers on the
@@ -1424,21 +1436,21 @@ need to muck with references when there is a perfectly good object.
 
 - [function] **LOCATIVE-ARGS** *LOCATIVE*
 
-    The `REST` of `LOCATIVE` if it's a list. If it's a symbol then
+    The `rest` of `locative` if it's a list. If it's a symbol then
     it's ().
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-NEW-OBJECT-TYPES-20MGL-PAX-3ASECTION-29'></a>
 
 ### 11.2 Adding New Object Types
 
-One may wish to make the [`DOCUMENT`][1eb8] function and `M-.` navigation
-work with new object types. Extending [`DOCUMENT`][1eb8] can be done by
-defining a [`DOCUMENT-OBJECT`][a05e] method. To allow these objects to be
-referenced from [`DEFSECTION`][b1e7] a [`LOCATE-OBJECT`][acc9] method is to be defined.
-Finally, for `M-.` [`FIND-SOURCE`][b417] can be specialized. Finally,
-[`EXPORTABLE-LOCATIVE-TYPE-P`][96c5] may be overridden if exporting does not
+One may wish to make the [`document`][1eb8] function and `M-.` navigation
+work with new object types. Extending [`document`][1eb8] can be done by
+defining a [`document-object`][a05e] method. To allow these objects to be
+referenced from [`defsection`][b1e7], a [`locate-object`][acc9] method is to be defined.
+Finally, for `M-.` [`find-source`][b417] can be specialized. Finally,
+[`exportable-locative-type-p`][96c5] may be overridden if exporting does not
 makes sense. Here is a stripped down example of how all this is done
-for [`ASDF:SYSTEM:`][bf8a]
+for [`asdf:system:`][bf8a]
 
 <a id='x-28MGL-PAX-3AASDF-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-28-3ASTART-20-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29-20-3AEND-20-28MGL-PAX-3A-3AEND-OF-ASDF-EXAMPLE-20VARIABLE-29-29-20-3AHEADER-NL-20-22-60-60-60commonlisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
 
@@ -1502,9 +1514,9 @@ for [`ASDF:SYSTEM:`][bf8a]
 
 - [macro] **DEFINE-LOCATIVE-TYPE** *LOCATIVE-TYPE LAMBDA-LIST &BODY DOCSTRING*
 
-    Declare `LOCATIVE-TYPE` as a [`LOCATIVE`][12a1]. One gets two
+    Declare `locative-type` as a [`locative`][12a1]. One gets two
     things in return: first, a place to document the format and
-    semantics of `LOCATIVE-TYPE` (in `LAMBDA-LIST` and `DOCSTRING`); second,
+    semantics of `locative-type` (in `lambda-list` and `docstring`); second,
     being able to reference `(LOCATIVE-TYPE LOCATIVE)`. For example, if
     you have:
     
@@ -1520,55 +1532,55 @@ for [`ASDF:SYSTEM:`][bf8a]
 - [generic-function] **EXPORTABLE-LOCATIVE-TYPE-P** *LOCATIVE-TYPE*
 
     Return true iff symbols in references with
-    `LOCATIVE-TYPE` are to be exported by default when they occur in a
-    [`DEFSECTION`][b1e7]. The default method returns `T`, while the methods for
-    [`PACKAGE`][a15b], [`ASDF:SYSTEM`][bf8a] and [`METHOD`][f1a0] return `NIL`.
+    `locative-type` are to be exported by default when they occur in a
+    [`defsection`][b1e7]. The default method returns `t`, while the methods for
+    [`package`][a15b], [`asdf:system`][bf8a] and [`method`][f1a0] return `nil`.
     
-    [`DEFSECTION`][b1e7] calls this function to decide what symbols to export when
-    its `EXPORT` argument is true.
+    [`defsection`][b1e7] calls this function to decide what symbols to export when
+    its `export` argument is true.
 
 <a id='x-28MGL-PAX-3ALOCATE-OBJECT-20GENERIC-FUNCTION-29'></a>
 
 - [generic-function] **LOCATE-OBJECT** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS*
 
-    Return the object, to which `OBJECT` and the locative
-    refer. For example, if `LOCATIVE-TYPE` is the symbol [`PACKAGE`][a15b], this
-    returns `(FIND-PACKAGE SYMBOL)`. Signal a [`LOCATE-ERROR`][2285] condition by
-    calling the [`LOCATE-ERROR`][f3b7] function if the lookup fails. Signal other
+    Return the object, to which `object` and the locative
+    refer. For example, if `locative-type` is the symbol [`package`][a15b], this
+    returns `(FIND-PACKAGE SYMBOL)`. Signal a [`locate-error`][2285] condition by
+    calling the [`locate-error`][f3b7] function if the lookup fails. Signal other
     errors if the types of the argument are bad, for instance
-    `LOCATIVE-ARGS` is not the empty list in the package example. If a
-    [`REFERENCE`][cc37] is returned then it must be canonical in the sense that
-    calling [`CANONICAL-REFERENCE`][24fc] on it will return the same reference.
+    `locative-args` is not the empty list in the package example. If a
+    [`reference`][cc37] is returned then it must be canonical in the sense that
+    calling [`canonical-reference`][24fc] on it will return the same reference.
     For extension only, don't call this directly.
 
 <a id='x-28MGL-PAX-3ALOCATE-ERROR-20FUNCTION-29'></a>
 
 - [function] **LOCATE-ERROR** *&REST FORMAT-AND-ARGS*
 
-    Call this function to signal a [`LOCATE-ERROR`][2285] condition from a
-    [`LOCATE-OBJECT`][acc9] method. `FORMAT-AND-ARGS` contains a format string and
-    args suitable for `FORMAT` from which the [`LOCATE-ERROR-MESSAGE`][81be] is
-    constructed. If `FORMAT-AND-ARGS` is `NIL`, then the message will be `NIL`
+    Call this function to signal a [`locate-error`][2285] condition from a
+    [`locate-object`][acc9] method. `format-and-args` contains a format string and
+    args suitable for `format` from which the [`locate-error-message`][81be] is
+    constructed. If `format-and-args` is `nil`, then the message will be `nil`
     too.
     
     The object and the locative are not specified, they are added by
-    [`LOCATE`][b2be] when it resignals the condition.
+    [`locate`][b2be] when it resignals the condition.
 
 <a id='x-28MGL-PAX-3ACANONICAL-REFERENCE-20GENERIC-FUNCTION-29'></a>
 
 - [generic-function] **CANONICAL-REFERENCE** *OBJECT*
 
-    Return a [`REFERENCE`][cc37] that resolves to `OBJECT`.
+    Return a [`reference`][cc37] that resolves to `object`.
 
 <a id='x-28MGL-PAX-3ACOLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29'></a>
 
 - [generic-function] **COLLECT-REACHABLE-OBJECTS** *OBJECT*
 
     Return a list of objects representing all things
-    that would be documented in a ([`DOCUMENT`][1eb8] `OBJECT`) call. For sections
+    that would be documented in a ([`document`][1eb8] `object`) call. For sections
     this is simply the union of references reachable from references in
-    [`SECTION-ENTRIES`][1f66]. The returned objects can be anything provided that
-    [`CANONICAL-REFERENCE`][24fc] works on them. The list need not include `OBJECT`
+    [`section-entries`][1f66]. The returned objects can be anything provided that
+    [`canonical-reference`][24fc] works on them. The list need not include `object`
     itself.
     
     One only has to specialize this for new container-like objects.
@@ -1578,24 +1590,24 @@ for [`ASDF:SYSTEM:`][bf8a]
 - [method] **COLLECT-REACHABLE-OBJECTS** *OBJECT*
 
     This default implementation returns the empty list. This means that
-    nothing is reachable from `OBJECT`.
+    nothing is reachable from `object`.
 
 <a id='x-28MGL-PAX-3ADOCUMENT-OBJECT-20GENERIC-FUNCTION-29'></a>
 
 - [generic-function] **DOCUMENT-OBJECT** *OBJECT STREAM*
 
-    Write `OBJECT` (and its references recursively) in
-    `FORMAT` to `STREAM`.
+    Write `object` (and its references recursively) in
+    `format` to `stream`.
     
-    The [`DOCUMENT`][1eb8] function calls this generic function with `LEVEL` 0,
-    passing `FORMAT` on. Add methods specializing on `OBJECT` to customize
+    The [`document`][1eb8] function calls this generic function with `level` 0,
+    passing `format` on. Add methods specializing on `object` to customize
     how objects of that type are presented in the documentation.
 
 <a id='x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28STRING-20T-29-29-29'></a>
 
 - [method] **DOCUMENT-OBJECT** *(STRING STRING) STREAM*
 
-    Print `STRING` verbatim to `STREAM` after cleaning up indentation.
+    Print `string` verbatim to `stream` after cleaning up indentation.
     
     Docstrings in sources are indented in various ways which can easily
     mess up markdown. To handle the most common cases leave the first
@@ -1606,10 +1618,10 @@ for [`ASDF:SYSTEM:`][bf8a]
 
 - [generic-function] **FIND-SOURCE** *OBJECT*
 
-    Like `SWANK:FIND-DEFINITION-FOR-THING`, but this
+    Like `swank:find-definition-for-thing`, but this
     one is a generic function to be extensible. In fact, the default
-    implementation simply defers to `SWANK:FIND-DEFINITION-FOR-THING`.
-    This function is called by `LOCATE-DEFINITION-FOR-EMACS` which lies
+    implementation simply defers to `swank:find-definition-for-thing`.
+    This function is called by `locate-definition-for-emacs` which lies
     behind the `M-.` extension (see [Emacs Integration][eff4]).
     
     If successful, the return value looks like this:
@@ -1619,7 +1631,7 @@ for [`ASDF:SYSTEM:`][bf8a]
                (:position 24) nil)
     ```
     
-    The `NIL` is the source snippet which is optional. Note that position
+    The `nil` is the source snippet which is optional. Note that position
     1 is the first character. If unsuccessful, the return values is
     like:
     
@@ -1632,13 +1644,13 @@ for [`ASDF:SYSTEM:`][bf8a]
 
 ### 11.3 Reference Based Extensions
 
-Let's see how to extend [`DOCUMENT`][1eb8] and `M-.` navigation if there is
+Let's see how to extend [`document`][1eb8] and `M-.` navigation if there is
 no first class object to represent the thing of interest. Recall
-that [`LOCATE`][b2be] returns a [`REFERENCE`][cc37] object in this case. [`DOCUMENT-OBJECT`][a05e]
-and [`FIND-SOURCE`][b417] defer to [`LOCATE-AND-DOCUMENT`][6c17] and
-[`LOCATE-AND-FIND-SOURCE`][e9e9] which have [`LOCATIVE-TYPE`][966a] in their argument
-list for `EQL` specializing pleasure. Here is a stripped down example
-of how the [`VARIABLE`][2be0] locative is defined:
+that [`locate`][b2be] returns a [`reference`][cc37] object in this case. [`document-object`][a05e]
+and [`find-source`][b417] defer to [`locate-and-document`][6c17] and
+[`locate-and-find-source`][e9e9], which have [`locative-type`][966a] in their argument
+list for `eql` specializing pleasure. Here is a stripped down example
+of how the [`variable`][2be0] locative is defined:
 
 <a id='x-28MGL-PAX-3AVARIABLE-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-28-3ASTART-20-28VARIABLE-20MGL-PAX-3ALOCATIVE-29-20-3AEND-20-28MGL-PAX-3A-3AEND-OF-VARIABLE-EXAMPLE-20VARIABLE-29-29-20-3AHEADER-NL-20-22-60-60-60commonlisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
 
@@ -1678,19 +1690,19 @@ of how the [`VARIABLE`][2be0] locative is defined:
 
 - [method] **COLLECT-REACHABLE-OBJECTS** *(REFERENCE REFERENCE)*
 
-    If `REFERENCE` can be resolved to a non-reference, call
-    [`COLLECT-REACHABLE-OBJECTS`][1920] with it, else call
-    [`LOCATE-AND-COLLECT-REACHABLE-OBJECTS`][7a11] on the object, locative-type,
-    locative-args of `REFERENCE`
+    If `reference` can be resolved to a non-reference, call
+    [`collect-reachable-objects`][1920] with it, else call
+    [`locate-and-collect-reachable-objects`][7a11] on the object, locative-type,
+    locative-args of `reference`
 
 <a id='x-28MGL-PAX-3ALOCATE-AND-COLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29'></a>
 
 - [generic-function] **LOCATE-AND-COLLECT-REACHABLE-OBJECTS** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS*
 
-    Called by [`COLLECT-REACHABLE-OBJECTS`][1920] on [`REFERENCE`][cc37]
+    Called by [`collect-reachable-objects`][1920] on [`reference`][cc37]
     objects, this function has essentially the same purpose as its
     caller but it has different arguments to allow specializing on
-    `LOCATIVE-TYPE`.
+    `locative-type`.
 
 <a id='x-28MGL-PAX-3ALOCATE-AND-COLLECT-REACHABLE-OBJECTS-20-28METHOD-20NIL-20-28T-20T-20T-29-29-29'></a>
 
@@ -1703,47 +1715,47 @@ of how the [`VARIABLE`][2be0] locative is defined:
 
 - [method] **DOCUMENT-OBJECT** *(REFERENCE REFERENCE) STREAM*
 
-    If `REFERENCE` can be resolved to a non-reference, call
-    [`DOCUMENT-OBJECT`][a05e] with it, else call LOCATE-AND-DOCUMENT-OBJECT on the
-    object, locative-type, locative-args of `REFERENCE`
+    If `reference` can be resolved to a non-reference, call
+    [`document-object`][a05e] with it, else call LOCATE-AND-DOCUMENT-OBJECT on the
+    object, locative-type, locative-args of `reference`
 
 <a id='x-28MGL-PAX-3ALOCATE-AND-DOCUMENT-20GENERIC-FUNCTION-29'></a>
 
 - [generic-function] **LOCATE-AND-DOCUMENT** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS STREAM*
 
-    Called by [`DOCUMENT-OBJECT`][a05e] on [`REFERENCE`][cc37] objects,
-    this function has essentially the same purpose as [`DOCUMENT-OBJECT`][a05e]
+    Called by [`document-object`][a05e] on [`reference`][cc37] objects,
+    this function has essentially the same purpose as [`document-object`][a05e]
     but it has different arguments to allow specializing on
-    `LOCATIVE-TYPE`.
+    `locative-type`.
 
 <a id='x-28MGL-PAX-3AFIND-SOURCE-20-28METHOD-20NIL-20-28MGL-PAX-3AREFERENCE-29-29-29'></a>
 
 - [method] **FIND-SOURCE** *(REFERENCE REFERENCE)*
 
-    If `REFERENCE` can be resolved to a non-reference, call [`FIND-SOURCE`][b417]
-    with it, else call [`LOCATE-AND-FIND-SOURCE`][e9e9] on the object,
-    locative-type, locative-args of `REFERENCE`
+    If `reference` can be resolved to a non-reference, call [`find-source`][b417]
+    with it, else call [`locate-and-find-source`][e9e9] on the object,
+    locative-type, locative-args of `reference`
 
 <a id='x-28MGL-PAX-3ALOCATE-AND-FIND-SOURCE-20GENERIC-FUNCTION-29'></a>
 
 - [generic-function] **LOCATE-AND-FIND-SOURCE** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS*
 
-    Called by [`FIND-SOURCE`][b417] on [`REFERENCE`][cc37] objects, this
-    function has essentially the same purpose as [`FIND-SOURCE`][b417] but it has
-    different arguments to allow specializing on `LOCATIVE-TYPE`.
+    Called by [`find-source`][b417] on [`reference`][cc37] objects, this
+    function has essentially the same purpose as [`find-source`][b417] but it has
+    different arguments to allow specializing on `locative-type`.
 
 <a id='x-28MGL-PAX-3ALOCATE-AND-FIND-SOURCE-20-28METHOD-20NIL-20-28T-20T-20T-29-29-29'></a>
 
 - [method] **LOCATE-AND-FIND-SOURCE** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS*
 
-    This default implementation simply calls [`FIND-SOURCE`][b417] with `OBJECT`
+    This default implementation simply calls [`find-source`][b417] with `object`
     which should cover the common case of a macro expanding to, for
     instance, a defun but having its own locative type.
 
 We have covered the basic building blocks of reference based
 extensions. Now let's see how the obscure
-[`DEFINE-SYMBOL-LOCATIVE-TYPE`][5d5a] and
-[`DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE`][ce09] macros work together to
+[`define-symbol-locative-type`][5d5a] and
+[`define-definer-for-symbol-locative-type`][ce09] macros work together to
 simplify the common task of associating definition and documentation
 with symbols in a certain context.
 
@@ -1751,9 +1763,9 @@ with symbols in a certain context.
 
 - [macro] **DEFINE-SYMBOL-LOCATIVE-TYPE** *LOCATIVE-TYPE LAMBDA-LIST &BODY DOCSTRING*
 
-    Similar to [`DEFINE-LOCATIVE-TYPE`][b811] but it assumes that all things
-    locatable with `LOCATIVE-TYPE` are going to be just symbols defined
-    with a definer defined with [`DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE`][ce09].
+    Similar to [`define-locative-type`][b811] but it assumes that all things
+    locatable with `locative-type` are going to be just symbols defined
+    with a definer defined with [`define-definer-for-symbol-locative-type`][ce09].
     It is useful to attach documentation and source location to symbols
     in a particular context. An example will make everything clear:
     
@@ -1777,18 +1789,18 @@ with symbols in a certain context.
 
 - [macro] **DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE** *NAME LOCATIVE-TYPE &BODY DOCSTRING*
 
-    Define a macro with `NAME` which can be used to attach documentation,
+    Define a macro with `name` which can be used to attach documentation,
     a lambda-list and source location to a symbol in the context of
-    `LOCATIVE-TYPE`. The defined macro's arglist is (`SYMBOL` `LAMBDA-LIST`
-    `&OPTIONAL` `DOCSTRING`). `LOCATIVE-TYPE` is assumed to have been defined
-    with [`DEFINE-SYMBOL-LOCATIVE-TYPE`][5d5a].
+    `locative-type`. The defined macro's arglist is (`symbol` `lambda-list`
+    `&optional` `docstring`). `locative-type` is assumed to have been defined
+    with [`define-symbol-locative-type`][5d5a].
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-SECTIONS-20MGL-PAX-3ASECTION-29'></a>
 
 ### 11.4 Sections
 
 [`Section`][aee8] objects rarely need to be dissected since
-[`DEFSECTION`][b1e7] and [`DOCUMENT`][1eb8] cover most needs. However, it is plausible
+[`defsection`][b1e7] and [`document`][1eb8] cover most needs. However, it is plausible
 that one wants to subclass them and maybe redefine how they are
 presented.
 
@@ -1796,56 +1808,56 @@ presented.
 
 - [class] **SECTION**
 
-    [`DEFSECTION`][b1e7] stores its `NAME`, `TITLE`, [`PACKAGE`][a15b],
-    `READTABLE` and `ENTRIES` in [`SECTION`][aee8] objects.
+    [`defsection`][b1e7] stores its `name`, `title`, [`package`][a15b],
+    `readtable` and `entries` in [`section`][aee8] objects.
 
 <a id='x-28MGL-PAX-3ASECTION-NAME-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 
 - [reader] **SECTION-NAME** *SECTION* *(:NAME)*
 
     The name of the global variable whose value is
-    this `SECTION`([`0`][aee8] [`1`][53a8]) object.
+    this `section`([`0`][aee8] [`1`][53a8]) object.
 
 <a id='x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 
 - [reader] **SECTION-PACKAGE** *SECTION* *(:PACKAGE)*
 
-    `*PACKAGE*` will be bound to this package when
+    `*package*` will be bound to this package when
     generating documentation for this section.
 
 <a id='x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 
 - [reader] **SECTION-READTABLE** *SECTION* *(:READTABLE)*
 
-    `*READTABLE*` will be bound to this when generating
+    `*readtable*` will be bound to this when generating
     documentation for this section.
 
 <a id='x-28MGL-PAX-3ASECTION-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 
 - [reader] **SECTION-TITLE** *SECTION* *(:TITLE)*
 
-    `STRING` or `NIL`. Used in generated documentation.
+    `string` or `nil`. Used in generated documentation.
 
 <a id='x-28MGL-PAX-3ASECTION-LINK-TITLE-TO-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 
 - [reader] **SECTION-LINK-TITLE-TO** *SECTION* *(:LINK-TITLE-TO = NIL)*
 
-    A [`REFERENCE`][cc37] or `NIL`. Used in generated documentation.
+    A [`reference`][cc37] or `nil`. Used in generated documentation.
 
 <a id='x-28MGL-PAX-3ASECTION-ENTRIES-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 
 - [reader] **SECTION-ENTRIES** *SECTION* *(:ENTRIES)*
 
-    A list of strings and [`REFERENCE`][cc37] objects in the
-    order they occurred in [`DEFSECTION`][b1e7].
+    A list of strings and [`reference`][cc37] objects in the
+    order they occurred in [`defsection`][b1e7].
 
 <a id='x-28DESCRIBE-OBJECT-20-28METHOD-20NIL-20-28MGL-PAX-3ASECTION-20T-29-29-29'></a>
 
 - [method] **DESCRIBE-OBJECT** *(SECTION SECTION) STREAM*
 
-    [`SECTION`][aee8] objects are printed by calling [`DOCUMENT`][1eb8] on them
+    [`section`][aee8] objects are printed by calling [`document`][1eb8] on them
     with all [Documentation Printer Variables][e2a1], except for
-    [`*DOCUMENT-NORMALIZE-PACKAGES*`][ada7], turned off to reduce clutter.
+    [`*document-normalize-packages*`][ada7], turned off to reduce clutter.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-20MGL-PAX-3ASECTION-29'></a>
 
@@ -1888,7 +1900,7 @@ used for writing simple tests in a very readable form. For example:
 
 All in all, transcripts are a handy tool especially when combined
 with the Emacs support to regenerate them and with
-`PYTHONIC-STRING-READER` and its triple-quoted strings that allow one
+`pythonic-string-reader` and its triple-quoted strings that allow one
 to work with nested strings with less noise. The triple-quote syntax
 can be enabled with:
 
@@ -1934,7 +1946,7 @@ return value:
         2)
 
 When generating the documentation you get a
-[`TRANSCRIPTION-CONSISTENCY-ERROR`][5a2c] because the printed output and the
+[`transcription-consistency-error`][5a2c] because the printed output and the
 first return value changed so you regenerate the documentation by
 marking the region of bounded by `#\|` and the cursor at `#\^` in
 the example:
@@ -1969,7 +1981,7 @@ Alternatively, `C-u 1 mgl-pax-transcribe` will emit commented markup:
 
 `C-u 0 mgl-pax-retranscribe-region` will turn commented into
 non-commented markup. In general, the numeric prefix argument is the
-index of the syntax to be used in [`MGL-PAX`][4918]:[`*SYNTAXES*`][6a46]. Without a
+index of the syntax to be used in [`mgl-pax`][4918]:[`*syntaxes*`][6a46]. Without a
 prefix argument `mgl-pax-retranscribe-region` will not change the
 markup style.
 
@@ -2058,11 +2070,11 @@ changed."
 
 - [function] **TRANSCRIBE** *INPUT OUTPUT &KEY UPDATE-ONLY (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) CHECK-CONSISTENCY DEFAULT-SYNTAX (INPUT-SYNTAXES \*SYNTAXES\*) (OUTPUT-SYNTAXES \*SYNTAXES\*)*
 
-    Read forms from `INPUT` and write them (iff `ECHO`) to `OUTPUT`
-    followed by any output and return values produced by calling `EVAL` on
-    the form. `INPUT` can be a stream or a string, while `OUTPUT` can be a
-    stream or `NIL` in which case transcription goes into a string. The
-    return value is the `OUTPUT` stream or the string that was
+    Read forms from `input` and write them (iff `echo`) to `output`
+    followed by any output and return values produced by calling `eval` on
+    the form. `input` can be a stream or a string, while `output` can be a
+    stream or `nil` in which case transcription goes into a string. The
+    return value is the `output` stream or the string that was
     constructed.
     
     A simple example is this:
@@ -2077,7 +2089,7 @@ changed."
     ```
     
     However, the above may be a bit confusing since this documentation
-    uses [`TRANSCRIBE`][0382] markup syntax in this very example, so let's do it
+    uses [`transcribe`][0382] markup syntax in this very example, so let's do it
     differently. If we have a file with these contents:
     
     ```commonlisp
@@ -2094,16 +2106,16 @@ changed."
     ```
     
     Output to all standard streams is captured and printed with
-    the `:OUTPUT` prefix (`".."`). The return values above are printed
-    with the `:READABLE` prefix (`"=>"`). Note how these prefixes are
+    the `:output` prefix (`".."`). The return values above are printed
+    with the `:readable` prefix (`"=>"`). Note how these prefixes are
     always printed on a new line to facilitate parsing.
     
     **Updating**
     
-    [`TRANSCRIBE`][0382] is able to parse its own output. If we transcribe the
+    [`transcribe`][0382] is able to parse its own output. If we transcribe the
     previous output above, we get it back exactly. However, if we remove
     all output markers, leave only a placeholder value marker and
-    pass `:UPDATE-ONLY` `T` with source:
+    pass `:update-only` `t` with source:
     
     ```commonlisp
     (values (princ 42) (list 1 2))
@@ -2118,16 +2130,16 @@ changed."
     => (1 2)
     ```
     
-    With `UPDATE-ONLY`, printed output of a form is only transcribed if
+    With `update-only`, printed output of a form is only transcribed if
     there were output markers in the source. Similarly, with
-    `UPDATE-ONLY`, return values are only transcribed if there were value
+    `update-only`, return values are only transcribed if there were value
     markers in the source.
     
     **No Output/Values**
     
     If the form produces no output or returns no values, then whether or
     not output and values are transcribed is controlled by
-    `INCLUDE-NO-OUTPUT` and `INCLUDE-NO-VALUE`, respectively. By default,
+    `include-no-output` and `include-no-value`, respectively. By default,
     neither is on so:
     
     ```commonlisp
@@ -2142,10 +2154,10 @@ changed."
     (values)
     ```
     
-    With `UPDATE-ONLY` true, we probably wouldn't like to lose those
+    With `update-only` true, we probably wouldn't like to lose those
     markers since they were put there for a reason. Hence, with
-    `UPDATE-ONLY`, `INCLUDE-NO-OUTPUT` and `INCLUDE-NO-VALUE` default to true.
-    So with `UPDATE-ONLY` the above example is transcribed to:
+    `update-only`, `include-no-output` and `include-no-value` default to true.
+    So with `update-only` the above example is transcribed to:
     
     ```commonlisp
     (values)
@@ -2153,16 +2165,16 @@ changed."
     => ; No value
     ```
     
-    where the last line is the `:NO-VALUE` prefix.
+    where the last line is the `:no-value` prefix.
     
     **Consistency Checks**
     
-    If `CHECK-CONSISTENCY` is true, then [`TRANSCRIBE`][0382] signals a continuable
-    [`TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR`][8a71] whenever a form's output as a
-    string is different from what was in `INPUT`, provided that `INPUT`
+    If `check-consistency` is true, then [`transcribe`][0382] signals a continuable
+    [`transcription-output-consistency-error`][8a71] whenever a form's output as a
+    string is different from what was in `input`, provided that `input`
     contained the output. Similary, for values, a continuable
-    [`TRANSCRIPTION-VALUES-CONSISTENCY-ERROR`][a73e] is signalled if a value read
-    from the source does not print as the as the value returned by `EVAL`.
+    [`transcription-values-consistency-error`][a73e] is signalled if a value read
+    from the source does not print as the as the value returned by `eval`.
     This allows readable values to be hand-indented without failing
     consistency checks:
     
@@ -2174,7 +2186,7 @@ changed."
     
     **Unreadable Values**
     
-    The above scheme involves `READ`, so consistency of unreadable values
+    The above scheme involves `read`, so consistency of unreadable values
     cannot be treated the same. In fact, unreadable values must even be
     printed differently for transcribe to be able to read them back:
     
@@ -2191,34 +2203,34 @@ changed."
     --> end>
     ```
     
-    where `"==>"` is the `:UNREADABLE` prefix and `"-->"` is
-    the `:UNREADABLE-CONTINUATION` prefix. As with outputs, a consistency
+    where `"==>"` is the `:unreadable` prefix and `"-->"` is
+    the `:unreadable-continuation` prefix. As with outputs, a consistency
     check between an unreadable value from the source and the value from
-    `EVAL` is performed with `STRING=`. That is, the value from `EVAL` is
+    `eval` is performed with `string=`. That is, the value from `eval` is
     printed to a string and compared to the source value. Hence, any
     change to unreadable values will break consistency checks. This is
     most troublesome with instances of classes with the default
-    `PRINT-OBJECT` method printing the memory address. There is currently
-    no remedy for that, except for customizing `PRINT-OBJECT` or not
+    `print-object` method printing the memory address. There is currently
+    no remedy for that, except for customizing `print-object` or not
     transcribing that kind of stuff.
     
     **Syntaxes**
     
     Finally, a transcript may employ different syntaxes for the output
-    and values of different forms. When `INPUT` is read, the syntax for
+    and values of different forms. When `input` is read, the syntax for
     each form is determined by trying to match all prefixes from all
-    syntaxes in `INPUT-SYNTAXES` against a line. If there are no output or
-    values for a form in `INPUT`, then the syntax remains undetermined.
+    syntaxes in `input-syntaxes` against a line. If there are no output or
+    values for a form in `input`, then the syntax remains undetermined.
     
-    When `OUTPUT` is written, the prefixes to be used are looked up in
-    `DEFAULT-SYNTAX` of `OUTPUT-SYNTAXES`, if `DEFAULT-SYNTAX` is not `NIL`. If
-    `DEFAULT-SYNTAX` is `NIL`, then the syntax used by the same form in the
-    `INPUT` is used or (if that could not be determined) the syntax of the
+    When `output` is written, the prefixes to be used are looked up in
+    `default-syntax` of `output-syntaxes`, if `default-syntax` is not `nil`. If
+    `default-syntax` is `nil`, then the syntax used by the same form in the
+    `input` is used or (if that could not be determined) the syntax of the
     previous form. If there was no previous form, then the first syntax
-    if `OUTPUT-SYNTAXES` is used.
+    if `output-syntaxes` is used.
     
     To produce a transcript that's executable Lisp code,
-    use `:DEFAULT-SYNTAX` `:COMMENTED-1:`
+    use `:default-syntax` `:commented-1:`
     
     ```commonlisp
     (make-instance 'some-class)
@@ -2232,7 +2244,7 @@ changed."
     ```
     
     To translate the above to uncommented syntax,
-    use `:DEFAULT-SYNTAX` `:DEFAULT`. If `DEFAULT-SYNTAX` is `NIL` (the
+    use `:default-syntax` `:default`. If `default-syntax` is `nil` (the
     default), the same syntax will be used in the output as in the input
     as much as possible.
 
@@ -2247,12 +2259,12 @@ changed."
   (:READABLE ";;=>") (:READABLE-CONTINUATION ";;->") (:UNREADABLE ";;==>")
   (:UNREADABLE-CONTINUATION ";;-->")))*
 
-    The default syntaxes used by [`TRANSCRIBE`][0382] for reading and writing
+    The default syntaxes used by [`transcribe`][0382] for reading and writing
     lines containing output and values of an evaluated form.
     
     A syntax is a list of of the form `(SYNTAX-ID &REST PREFIXES)` where
     `PREFIXES` is a list of `(PREFIX-ID PREFIX-STRING)` elements. For
-    example the syntax `:COMMENTED-1` looks like this:
+    example the syntax `:commented-1` looks like this:
     
     ```commonlisp
     (:commented-1
@@ -2265,46 +2277,46 @@ changed."
     ```
     
     All of the above prefixes must be defined for every syntax except
-    for `:READABLE-CONTINUATION`. If that's missing (as in the `:DEFAULT`
-    syntax), then the following value is read with `READ` and printed with
-    `PRIN1` (hence no need to mark up the following lines).
+    for `:readable-continuation`. If that's missing (as in the `:default`
+    syntax), then the following value is read with `read` and printed with
+    `prin1` (hence no need to mark up the following lines).
     
     When writing, an extra space is added automatically if the line to
     be prefixed is not empty. Similarly, the first space following the
     prefix discarded when reading.
     
-    See [`TRANSCRIBE`][0382] for how the actual syntax to be used is selected.
+    See [`transcribe`][0382] for how the actual syntax to be used is selected.
 
 <a id='x-28MGL-PAX-3ATRANSCRIPTION-ERROR-20CONDITION-29'></a>
 
 - [condition] **TRANSCRIPTION-ERROR** *ERROR*
 
-    Represents syntactic errors in the `SOURCE` argument
-    of [`TRANSCRIBE`][0382] and also serves as the superclass of
-    [`TRANSCRIPTION-CONSISTENCY-ERROR`][5a2c].
+    Represents syntactic errors in the `source` argument
+    of [`transcribe`][0382] and also serves as the superclass of
+    [`transcription-consistency-error`][5a2c].
 
 <a id='x-28MGL-PAX-3ATRANSCRIPTION-CONSISTENCY-ERROR-20CONDITION-29'></a>
 
 - [condition] **TRANSCRIPTION-CONSISTENCY-ERROR** *TRANSCRIPTION-ERROR*
 
     A common superclass for
-    [`TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR`][8a71] and
-    [`TRANSCRIPTION-VALUES-CONSISTENCY-ERROR`][a73e].
+    [`transcription-output-consistency-error`][8a71] and
+    [`transcription-values-consistency-error`][a73e].
 
 <a id='x-28MGL-PAX-3ATRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR-20CONDITION-29'></a>
 
 - [condition] **TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR** *TRANSCRIPTION-CONSISTENCY-ERROR*
 
-    Signaled (with `CERROR`) by [`TRANSCRIBE`][0382] when invoked
-    with `:CHECK-CONSISTENCY` and the output of a form is not the same as
+    Signaled (with `cerror`) by [`transcribe`][0382] when invoked
+    with `:check-consistency` and the output of a form is not the same as
     what was parsed.
 
 <a id='x-28MGL-PAX-3ATRANSCRIPTION-VALUES-CONSISTENCY-ERROR-20CONDITION-29'></a>
 
 - [condition] **TRANSCRIPTION-VALUES-CONSISTENCY-ERROR** *TRANSCRIPTION-CONSISTENCY-ERROR*
 
-    Signaled (with `CERROR`) by [`TRANSCRIBE`][0382] when invoked
-    with `:CHECK-CONSISTENCY` and the values of a form are inconsistent
+    Signaled (with `cerror`) by [`transcribe`][0382] when invoked
+    with `:check-consistency` and the values of a form are inconsistent
     with their parsed representation.
 
   [00f0]: #x-28MGL-PAX-3A-40MGL-PAX-REFERENCE-BASED-EXTENSIONS-20MGL-PAX-3ASECTION-29 "Reference Based Extensions"

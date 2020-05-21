@@ -267,7 +267,8 @@
                             (make-pathname
                              :type (if (eq format :markdown) "md" "html")
                              :directory (pathname-directory basedir)))))
-    (let ((open-args '(:if-exists :supersede :ensure-directories-exist t)))
+    (let ((open-args '(:if-exists :supersede :ensure-directories-exist t))
+          (*document-downcase-uppercase-code* (eq format :html)))
       (document @test
                 :pages `((:objects
                           ,(list @test-examples)

@@ -137,10 +137,6 @@
   (print-unreadable-object (section stream :type t)
     (format stream "~a" (section-name section))))
 
-(defun section-title-or-name (section)
-  (or (section-title section)
-      (prin1-to-string (section-name section))))
-
 (defun locative-type (locative)
   "The first element of LOCATIVE if it's a list. If it's a symbol then
   it's that symbol itself. Typically, methods of generic functions
