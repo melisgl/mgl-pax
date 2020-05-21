@@ -1835,7 +1835,8 @@
 (defun no-lowercase-chars-p (string)
   (notany (lambda (char)
             (char/= char (char-upcase char)))
-          string))
+          ;; Allows plurals as in "FRAMEs" and "FRAMEs."
+          (swank::string-right-trim *find-definitions-right-trim-2* string)))
 
 ;;; Return the references from REFS which are for SYMBOL or which are
 ;;; for a non-symbol but resolve to the same object with SYMBOL.
@@ -1868,6 +1869,7 @@
       (values (references-for-symbol symbol refs n-chars-read) n-chars-read))))
 
 (defvar *find-definitions-right-trim* ",:.>")
+(defparameter *find-definitions-right-trim-2* ",:.>sS")
 
 ;;; Lifted from SWANK, and tweaked to return the number of characters
 ;;; read.
@@ -1885,12 +1887,15 @@
                    ((find-package name)
                     (return-from find-definitions-find-symbol-or-package
                       (values (make-symbol name) n)))))))
-    (let* ((length (length name))
-           (right-trimmed
+    (do-find name (length name))
+    (let* ((right-trimmed
              (swank::string-right-trim *find-definitions-right-trim* name))
            (right-trimmed-length (length right-trimmed)))
-      (do-find name length)
-      (do-find right-trimmed right-trimmed-length))))
+      (do-find right-trimmed right-trimmed-length))
+    (let* ((right-trimmed-2
+             (swank::string-right-trim *find-definitions-right-trim-2* name))
+           (right-trimmed-2-length (length right-trimmed-2)))
+      (do-find right-trimmed-2 right-trimmed-2-length))))
 
 ;;; Select some references from REFS heuristically.
 (defun filter-references (refs)

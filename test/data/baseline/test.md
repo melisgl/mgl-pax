@@ -51,6 +51,12 @@ has `:URI-FRAGMENT` `NIL`.
 
 This is code: `T`
 
+Plural uppercase ambiguous symbol: see `FOO`([`0`][f1a9] [`1`][4244])s
+
+Plural uppercase symbol: [`TEST-GF`][efc1]s
+
+Plural uppercase dislocated symbol: `->MAX`s
+
 See
 [`FOO`][f1a9] compiler-macro
 

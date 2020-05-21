@@ -40,6 +40,12 @@
   has :URI-FRAGMENT NIL.
 
   This is code: T
+
+  Plural uppercase ambiguous symbol: see FOOs
+
+  Plural uppercase symbol: TEST-GFs
+
+  Plural uppercase dislocated symbol: ->MAXs
   
   See
   FOO compiler-macro
