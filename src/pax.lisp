@@ -31,7 +31,9 @@
 ;;;; - port the hyperspec to pax (copyright on lispworks' version is
 ;;;;   restrictive, allegro?)
 ;;;;
-;;;; - add *DOCUMENT-DOWNCASE-P*?
+;;;; - with *DOCUMENT-DOWNCASE-UPPERCASE-CODE* T, noninterned stuff is
+;;;;   not downcased, which leads to having to mix casing up in the
+;;;;   docstring.
 ;;;;
 ;;;; - don't list unexported superclasses?
 ;;;;
@@ -1044,7 +1046,7 @@
   example looks in a docstring. Note that the backslash is discarded
   even if *DOCUMENT-UPPERCASE-IS-CODE* is false.""")
 
-(defvar *document-downcase-uppercase-code* :only-in-markup
+(defvar *document-downcase-uppercase-code* nil
   "If true, then the names of symbols recognized as code (including
   those found if *DOCUMENT-UPPERCASE-IS-CODE*) are downcased in the
   output if they only consist of uppercase characters. If it is
