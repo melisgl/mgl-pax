@@ -1830,12 +1830,6 @@
       ;; leave it alone, recurse, don't slice
       (values tree t nil)))
 
-(defun no-lowercase-chars-p (string)
-  (notany (lambda (char)
-            (char/= char (char-upcase char)))
-          ;; Allows plurals as in "FRAMEs" and "FRAMEs."
-          (swank::string-right-trim *find-definitions-right-trim-2* string)))
-
 ;;; Return the references from REFS which are for SYMBOL or which are
 ;;; for a non-symbol but resolve to the same object with SYMBOL.
 (defun references-for-symbol (symbol refs n-chars-read)
@@ -1868,6 +1862,12 @@
 
 (defvar *find-definitions-right-trim* ",:.>")
 (defparameter *find-definitions-right-trim-2* ",:.>sS")
+
+(defun no-lowercase-chars-p (string)
+  (notany (lambda (char)
+            (char/= char (char-upcase char)))
+          ;; Allows plurals as in "FRAMEs" and "FRAMEs."
+          (swank::string-right-trim *find-definitions-right-trim-2* string)))
 
 ;;; Lifted from SWANK, and tweaked to return the number of characters
 ;;; read.
