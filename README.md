@@ -1253,6 +1253,26 @@ locatives take no arguments.
     will not be. On a dislocated locative [`locate`][b2be] always fails with a
     [`locate-error`][2285] condition.
 
+<a id='x-28MGL-PAX-3AARGUMENT-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
+
+- [locative] **ARGUMENT**
+
+    An alias for [`dislocated`][7078], so the one can refer to an argument of a
+    macro without accidentally linking to a class that has the same name
+    as that argument. In the following example, `format` may link to
+    `cl:format` (if we generated documentation for it):
+    
+    ```
+    "See the FORMAT in DOCUMENT."
+    ```
+    
+    Since `argument` is a locative, we can prevent that linking by writing:
+    
+    ```
+    "See the FORMAT argument of DOCUMENT."
+    ```
+
+
 <a id='x-28MGL-PAX-3ALOCATIVE-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **LOCATIVE** *LAMBDA-LIST*
@@ -2352,6 +2372,7 @@ changed."
   [6a46]: #x-28MGL-PAX-3A-2ASYNTAXES-2A-20-28VARIABLE-29-29 "(MGL-PAX:*SYNTAXES* (VARIABLE))"
   [6b15]: #x-28FUNCTION-20-28MGL-PAX-3ALOCATIVE-29-29 "(FUNCTION (MGL-PAX:LOCATIVE))"
   [6c17]: #x-28MGL-PAX-3ALOCATE-AND-DOCUMENT-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-DOCUMENT GENERIC-FUNCTION)"
+  [7078]: #x-28MGL-PAX-3ADISLOCATED-20-28MGL-PAX-3ALOCATIVE-29-29 "(MGL-PAX:DISLOCATED (MGL-PAX:LOCATIVE))"
   [7a11]: #x-28MGL-PAX-3ALOCATE-AND-COLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION)"
   [7a32]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-20MGL-PAX-3ASECTION-29 "Transcripts"
   [8059]: #x-28MGL-PAX-3A-40MGL-PAX-BASICS-20MGL-PAX-3ASECTION-29 "Basics"

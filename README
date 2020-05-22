@@ -1109,6 +1109,24 @@ locatives take no arguments.
     will not be. On a dislocated locative LOCATE always fails with a
     LOCATE-ERROR condition.
 
+- [locative] ARGUMENT
+
+    An alias for DISLOCATED, so the one can refer to an argument of a
+    macro without accidentally linking to a class that has the same name
+    as that argument. In the following example, FORMAT may link to
+    CL:FORMAT (if we generated documentation for it):
+    
+    ```
+    "See the FORMAT in DOCUMENT."
+    ```
+    
+    Since ARGUMENT is a locative, we can prevent that linking by writing:
+    
+    ```
+    "See the FORMAT argument of DOCUMENT."
+    ```
+
+
 - [locative] LOCATIVE LAMBDA-LIST
 
     This is the locative for locatives. When `M-.` is pressed on

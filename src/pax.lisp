@@ -37,11 +37,7 @@
 ;;;;
 ;;;; - don't list unexported superclasses?
 ;;;;
-;;;; - inclued signalled errors in transcript?
-;;;;
-;;;; - Make ARGUMENT an alias for DISLOCATED to allow writing stuff
-;;;;   like: "see the CONDITION argument of JOURNALED." without having
-;;;;   to prevent linking with [CONDITION][dislocated].
+;;;; - include signalled errors in transcript?
 
 (in-package :mgl-pax)
 
@@ -2015,6 +2011,7 @@
   (type locative)
   (package locative)
   (dislocated locative)
+  (argument locative)
   (locative locative)
   (glossary-term locative)
   (define-glossary-term macro)
@@ -3227,6 +3224,29 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'dislocated))
                           locative-args)
+  (declare (ignore symbol locative-args))
+  (locate-error))
+
+
+;;;; ARGUMENT locative
+
+(define-locative-type argument ()
+  """An alias for DISLOCATED, so the one can refer to an argument of a
+  macro without accidentally linking to a class that has the same name
+  as that argument. In the following example, FORMAT may link to
+  CL:FORMAT (if we generated documentation for it):
+
+  ```
+  "See the FORMAT in DOCUMENT."
+  ```
+
+  Since ARGUMENT is a locative, we can prevent that linking by writing:
+
+  ```
+  "See the FORMAT argument of DOCUMENT."
+  ```""")
+
+(defmethod locate-object (symbol (locative-type (eql 'argument)) locative-args)
   (declare (ignore symbol locative-args))
   (locate-error))
 
