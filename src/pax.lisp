@@ -367,7 +367,7 @@
           (locate-reference-link-definition-for-emacs name))
          ;; [DEFSECTION][]
          (let* ((swank:*find-definitions-left-trim* "[#:<")
-                (swank:*find-definitions-right-trim* "][,:.>")
+                (swank:*find-definitions-right-trim* "][,:.>sS")
                 (locations (swank:find-definitions-for-emacs name)))
            (if (= (length locations) 1)
                (first (rest (first locations)))
