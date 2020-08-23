@@ -1897,11 +1897,21 @@
 
 ;;; Select some references from REFS heuristically.
 (defun filter-references (refs)
-  (let ((refs (filter-references-by-format refs)))
+  (let ((refs (filter-asdf-system-references
+               (filter-references-by-format refs))))
     (if (references-for-the-same-symbol-p refs)
         (resolve-generic-function-and-methods
          (resolve-dislocated refs))
         refs)))
+
+;;; REFERENCE-OBJECT on a CANONICAL-REFERENCE of ASDF:SYSTEM is a
+;;; string, which makes REFERENCES-FOR-THE-SAME-SYMBOL-P return NIL.
+;;; It's rare to link to ASDF systems in an ambiguous situation, so
+;;; don't.
+(defun filter-asdf-system-references (refs)
+  (if (< 1 (length refs))
+      (remove 'asdf:system refs :key #'reference-locative-type)
+      refs))
 
 (defun references-for-the-same-symbol-p (refs)
   (= 1 (length (remove-duplicates (mapcar #'reference-object refs)))))
