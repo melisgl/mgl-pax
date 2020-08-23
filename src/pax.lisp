@@ -2622,7 +2622,10 @@
     (with-heading (stream section (section-title-or-name section)
                           :link-title-to (section-link-title-to section))
       (when (and *document-normalize-packages* (not same-package))
-        (format stream "###### \\[in package ~A\\]~%" (package-name *package*)))
+        (format stream "###### \\[in package ~A~A\\]~%" (package-name *package*)
+                (if (package-nicknames *package*)
+                    (format nil " with nicknames ~{~A~^, ~}" (package-nicknames *package*))
+                    "")))
       (let ((firstp t))
         (dolist (entry (section-entries section))
           (if firstp

@@ -8,4 +8,5 @@
         (#+sbcl (sb-kernel::package-at-variance #'muffle-warning))
       (cl:defpackage :mgl-pax
         (:documentation "See MGL-PAX:@MGL-PAX-MANUAL.")
-        (:use #:common-lisp #:named-readtables #:pythonic-string-reader)))))
+        (:use #:common-lisp #:named-readtables #:pythonic-string-reader)
+        (:nicknames #:pax)))))
