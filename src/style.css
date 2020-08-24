@@ -326,6 +326,10 @@ a.symbol:hover { color : #229955; background-color : transparent; text-decoratio
   border-bottom: none;
 }
 
+#toc-header a {
+  color: #777777;
+}
+
 #toc-footer a {
   font-size: 80%;
   color: #777777;
