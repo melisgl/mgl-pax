@@ -1193,14 +1193,22 @@
           (if (eq *format* :html)
               (let ((source-uri (source-uri reference)))
                 (format stream
-                        "- <span class=\"locative-type\">~
+                        "- <span class=reference-bullet>~
+                           <span class=reference>~
+                           <span class=\"locative-type\">~
                            ~@[<a href=\"~A\">~]\\[~A]~:[~;</a>~]~
                            </span> ~
-                        <span class=\"reference-object\">[~A](#~A)</span>"
+                        <span class=\"reference-object\">[~A](#~A)</span></span>"
                         source-uri locative-type source-uri name
                         (html-safe-name (reference-to-anchor reference))))
               (format stream "- [~A] ~A" locative-type (bold name nil))))
         (format stream "- [~A] ~A" locative-type name))))
+
+(defun print-end-bullet (stream)
+  (if (eq *format* :html)
+      ;; end "reference-bullet" span
+      (format stream "</span>~%")
+      (format stream "~%")))
 
 (defun source-uri (reference)
   (let ((fn (page-source-uri-fn *page*)))
@@ -2441,7 +2449,7 @@
            (when lambda-list
              (write-char #\Space stream)
              (print-arglist lambda-list stream))
-           (terpri stream)
+           (print-end-bullet stream)
            (maybe-print-docstring method t stream)))
        (format stream "~&"))
      (defmethod locate-and-find-source
@@ -2540,7 +2548,7 @@
       (when lambda-list
         (write-char #\Space stream)
         (print-arglist lambda-list stream))
-      (terpri stream)
+      (print-end-bullet stream)
       (with-dislocated-symbols ((list symbol))
         (maybe-print-docstring method t stream))))
   (format stream "~&"))
@@ -2658,7 +2666,7 @@
                                             (unboundp "-unbound-")
                                             (t value)))
                      stream))
-    (terpri stream)
+    (print-end-bullet stream)
     (with-dislocated-symbols ((list symbol))
       (maybe-print-docstring symbol locative-type stream))))
 
@@ -2695,7 +2703,7 @@
                                           (t
                                            "<unbound>")))
                    stream)
-    (terpri stream)
+    (print-end-bullet stream)
     (with-dislocated-symbols ((list symbol))
       (maybe-print-docstring symbol locative-type stream))))
 
@@ -2782,7 +2790,7 @@
                                 (locative-type (eql 'structure-accessor))
                                 locative-args stream)
   (locate-and-print-bullet locative-type locative-args symbol stream)
-  (terpri stream)
+  (print-end-bullet stream)
   (with-dislocated-symbols ((list symbol))
     (maybe-print-docstring symbol 'function stream)))
 
@@ -2814,7 +2822,7 @@
   (write-char #\Space stream)
   (let ((arglist (swank-backend:arglist symbol)))
     (print-arglist arglist stream)
-    (terpri stream)
+    (print-end-bullet stream)
     (with-dislocated-symbols ((macro-arg-names arglist))
       (maybe-print-docstring symbol 'function stream))))
 
@@ -2840,7 +2848,7 @@
   (write-char #\Space stream)
   (let ((arglist (swank-backend:arglist symbol)))
     (print-arglist arglist stream)
-    (terpri stream)
+    (print-end-bullet stream)
     (with-dislocated-symbols ((macro-arg-names arglist))
       (maybe-print-docstring symbol 'function stream))))
 
@@ -2892,7 +2900,7 @@
     (write-char #\Space stream)
     (let ((arglist (swank-backend:arglist function)))
       (print-arglist arglist stream)
-      (terpri stream)
+      (print-end-bullet stream)
       (with-dislocated-symbols ((function-arg-names arglist))
         (maybe-print-docstring (reference-object reference) 'function
                                stream)))))
@@ -2936,7 +2944,7 @@
     (print-bullet method stream)
     (write-char #\Space stream)
     (print-arglist arglist stream)
-    (terpri stream)
+    (print-end-bullet stream)
     (with-dislocated-symbols ((function-arg-names arglist))
       (maybe-print-docstring method t stream))))
 
@@ -3083,7 +3091,7 @@
                 `(=
                   ,(swank-mop:slot-definition-initform slot-def)))))
          stream)))
-  (terpri stream)
+  (print-end-bullet stream)
   ;; No documentation for condition accessors, and some
   ;; implementations signal warnings.
   (with-dislocated-symbols ((list symbol))
@@ -3129,7 +3137,7 @@
     (when (and arglist (not (eq arglist :not-available)))
       (write-char #\Space stream)
       (print-arglist arglist stream)))
-  (terpri stream)
+  (print-end-bullet stream)
   (with-dislocated-symbols ((list symbol))
     (maybe-print-docstring symbol 'type stream)))
 
@@ -3179,7 +3187,7 @@
       (if *document-mark-up-signatures*
           (print-arglist (mark-up-superclasses superclasses) stream)
           (print-arglist superclasses stream)))
-    (terpri stream)
+    (print-end-bullet stream)
     (with-dislocated-symbols ((list symbol))
       (maybe-print-docstring class t stream))))
 
@@ -3215,7 +3223,7 @@
 (defmethod document-object ((package package) stream)
   (let ((symbol (package-name package)))
     (print-bullet package stream)
-    (terpri stream)
+    (print-end-bullet stream)
     (with-dislocated-symbols ((list symbol))
       (maybe-print-docstring package t stream))))
 
@@ -3316,7 +3324,7 @@
   (let ((symbol (glossary-term-name glossary-term)))
     (locate-and-print-bullet 'glossary-term () symbol stream
                              :name (glossary-term-title-or-name glossary-term))
-    (terpri stream)
+    (print-end-bullet stream)
     (with-dislocated-symbols ((list symbol))
       (let ((docstring (glossary-term-docstring glossary-term)))
         (when docstring

@@ -1693,7 +1693,7 @@ of how the [`VARIABLE`][2be0] locative is defined:
                                             (unboundp "-unbound-")
                                             (t value)))
                      stream))
-    (terpri stream)
+    (print-end-bullet stream)
     (with-dislocated-symbols ((list symbol))
       (maybe-print-docstring symbol locative-type stream))))
 
