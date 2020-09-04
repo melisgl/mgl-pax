@@ -338,16 +338,18 @@
   (let* ((git-version (or git-version (asdf-system-git-version asdf-system)))
          (system-dir (asdf:system-relative-pathname asdf-system "")))
     (if git-version
-        (let ((line-file-position-cache (make-hash-table :test #'equal)))
+        (let ((line-file-position-cache (make-hash-table :test #'equal))
+              (find-source-cache (make-hash-table :test #'equal)))
           (lambda (reference)
-            (multiple-value-bind (relative-path line-number)
-                (convert-source-location (find-source
-                                          (mgl-pax:resolve reference))
-                                         system-dir reference
-                                         line-file-position-cache)
-              (when relative-path
-                (format nil "~A/blob/~A/~A#L~S" github-uri git-version
-                        relative-path (1+ line-number))))))
+            (let ((*find-source-cache* find-source-cache))
+              (multiple-value-bind (relative-path line-number)
+                  (convert-source-location (find-source
+                                            (mgl-pax:resolve reference))
+                                           system-dir reference
+                                           line-file-position-cache)
+                (when relative-path
+                  (format nil "~A/blob/~A/~A#L~S" github-uri git-version
+                          relative-path (1+ line-number)))))))
         (warn "No GIT-VERSION given and can't find .git directory ~
               for ASDF system~% ~A. Links to github will not be generated."
               (asdf:component-name (asdf:find-system asdf-system))))))

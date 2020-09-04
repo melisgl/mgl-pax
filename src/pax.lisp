@@ -2233,6 +2233,10 @@
   (format stream "~a~%"
           (massage-docstring string :indentation "")))
 
+;;; This is bound to an EQUAL hash table in MAKE-GITHUB-SOURCE-URI-FN
+;;; to speed up FIND-SOURCE. It's still very slow though.
+(defvar *find-source-cache* nil)
+
 (defgeneric find-source (object)
   (:documentation """Like SWANK:FIND-DEFINITION-FOR-THING, but this
   one is a generic function to be extensible. In fact, the default
@@ -2254,6 +2258,16 @@
   ```commonlisp
   (:error "Unknown source location for SOMETHING")
   ```""")
+  (:method :around (object)
+    (if *find-source-cache*
+        (let ((key (if (typep object 'reference)
+                       (list (reference-object object)
+                             (reference-locative object))
+                       object)))
+          (or (gethash key *find-source-cache*)
+              (setf (gethash key *find-source-cache*)
+                    (call-next-method))))
+        (call-next-method)))
   (:method (object)
     (swank:find-definition-for-thing object)))
 
