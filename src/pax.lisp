@@ -1200,7 +1200,8 @@
                            <span class=\"locative-type\">~
                            ~@[<a href=\"~A\">~]\\[~A]~:[~;</a>~]~
                            </span> ~
-                        <span class=\"reference-object\">[~A](#~A)</span></span>"
+                        <span class=\"reference-object\">[~A](#~A)</span>~
+                        </span>"
                         source-uri locative-type source-uri name
                         (html-safe-name (reference-to-anchor reference))))
               (format stream "- [~A] ~A" locative-type (bold name nil))))
