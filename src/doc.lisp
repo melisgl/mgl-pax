@@ -523,7 +523,8 @@
   (asdf:load-system :named-readtables/doc)
   (asdf:load-system :micmac)
   (asdf:load-system :mgl-gpr)
-  (asdf:load-system :mgl))
+  (asdf:load-system :mgl)
+  (asdf:load-system :journal))
 
 #+nil
 (update-pax-world)

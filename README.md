@@ -1519,7 +1519,6 @@ for [`ASDF:SYSTEM:`][bf8a]
       (foo "Bug tracker" 'asdf/system:system-bug-tracker :type :link)
       (foo "Source control" 'asdf/system:system-source-control
            :type :source-control)
-      (foo "Long description" 'asdf/system:system-long-description)
       (terpri stream))))
 
 (defmethod find-source ((system asdf:system))
