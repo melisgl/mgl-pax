@@ -338,14 +338,16 @@
   (let* ((git-version (or git-version (asdf-system-git-version asdf-system)))
          (system-dir (asdf:system-relative-pathname asdf-system "")))
     (if git-version
-        (lambda (reference)
-          (multiple-value-bind (relative-path line-number)
-              (convert-source-location (find-source
-                                        (mgl-pax:resolve reference))
-                                       system-dir reference)
-            (when relative-path
-              (format nil "~A/blob/~A/~A#L~S" github-uri git-version
-                      relative-path (1+ line-number)))))
+        (let ((line-file-position-cache (make-hash-table :test #'equal)))
+          (lambda (reference)
+            (multiple-value-bind (relative-path line-number)
+                (convert-source-location (find-source
+                                          (mgl-pax:resolve reference))
+                                         system-dir reference
+                                         line-file-position-cache)
+              (when relative-path
+                (format nil "~A/blob/~A/~A#L~S" github-uri git-version
+                        relative-path (1+ line-number))))))
         (warn "No GIT-VERSION given and can't find .git directory ~
               for ASDF system~% ~A. Links to github will not be generated."
               (asdf:component-name (asdf:find-system asdf-system))))))
@@ -372,7 +374,8 @@
   (with-open-file (stream filename)
     (read-line stream)))
 
-(defun convert-source-location (source-location system-dir reference)
+(defun convert-source-location (source-location system-dir reference
+                                line-file-position-cache)
   (cond ((or
           ;; CCL
           (null source-location)
@@ -388,19 +391,32 @@
                                     (enough-namestring filename system-dir))))
            (if (and relative-path (cl-fad:pathname-relative-p relative-path))
                (values relative-path
-                       (file-position-to-line-number filename position))
+                       (file-position-to-line-number filename position
+                                                     line-file-position-cache))
                (warn "Source location for ~S is not below system ~
                      directory ~S.~%" reference system-dir))))))
 
-(defun file-position-to-line-number (filename file-position)
-  (if file-position
-      (with-open-file (stream filename)
-        (loop for line = (read-line stream nil nil)
-              for line-number upfrom 0
-              while line
-              do (when (< file-position (file-position stream))
-                   (return line-number))))
-      0))
+(defun file-position-to-line-number (filename file-position cache)
+  (if (null file-position)
+      0
+      (let ((line-file-positions (or (gethash filename cache)
+                                     (setf (gethash filename cache)
+                                           (line-file-positions filename)))))
+        (loop for line-number upfrom 0
+              for line-file-position in line-file-positions
+              do (when (< file-position line-file-position)
+                   (return line-number))))))
+
+;;; This is cached because it is determining the line number for a
+;;; given file position would need to traverse the file, which is
+;;; extremely expesive. Note that position 0 is not included, but
+;;; FILE-LENGTH is.
+(defun line-file-positions (filename)
+  (with-open-file (stream filename)
+    (loop for line = (read-line stream nil nil)
+          for line-number upfrom 0
+          while line
+          collect (file-position stream))))
 
 
 (defsection @mgl-pax-world (:title "PAX World")

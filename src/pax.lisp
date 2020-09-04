@@ -38,6 +38,8 @@
 ;;;; - don't list unexported superclasses?
 ;;;;
 ;;;; - include signalled errors in transcript?
+;;;;
+;;;; - macro names in the docstring link back to their own bullet
 
 (in-package :mgl-pax)
 
