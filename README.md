@@ -1224,6 +1224,25 @@ locatives take no arguments.
 
 - [locative] **CONDITION**
 
+<a id='x-28RESTART-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
+
+- [locative] **RESTART**
+
+<a id='x-28MGL-PAX-3ADEFINE-RESTART-20-28MGL-PAX-3AMACRO-29-29'></a>
+
+- [macro] **DEFINE-RESTART** *SYMBOL LAMBDA-LIST &BODY DOCSTRING*
+
+    A definer macro to hang the documentation of a restart on a
+    symbol.
+    
+    ```
+    (define-restart my-ignore-error ()
+      "Available when MY-ERROR is signalled, MY-IGNORE-ERROR unsafely continues.")
+    ```
+    
+    Note that while there is a [`CL:RESTART`][ba5d] class, there is no
+    corresponding source location or docstring like for [`CONDITION`][af3c]s.
+
 <a id='x-28TYPE-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
 - [locative] **TYPE**
@@ -1793,7 +1812,7 @@ with symbols in a certain context.
       "A direction is a symbol. (After this `M-.` on `DIRECTION LOCATIVE`
       works and it can also be included in DEFSECTION forms.)")
     
-    (define-definer-for-symbol-locative-type define-direction direction ()
+    (define-definer-for-symbol-locative-type define-direction direction
       "With DEFINE-DIRECTION one can document what a symbol means when
       interpreted as a direction.")
     
@@ -2391,10 +2410,12 @@ changed."
   [acc9]: #x-28MGL-PAX-3ALOCATE-OBJECT-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-OBJECT GENERIC-FUNCTION)"
   [ada7]: #x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES* (VARIABLE))"
   [aee8]: #x-28MGL-PAX-3ASECTION-20CLASS-29 "(MGL-PAX:SECTION CLASS)"
+  [af3c]: #x-28CONDITION-20-28MGL-PAX-3ALOCATIVE-29-29 "(CONDITION (MGL-PAX:LOCATIVE))"
   [b1e7]: #x-28MGL-PAX-3ADEFSECTION-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFSECTION (MGL-PAX:MACRO))"
   [b2be]: #x-28MGL-PAX-3ALOCATE-20FUNCTION-29 "(MGL-PAX:LOCATE FUNCTION)"
   [b417]: #x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNCTION-29 "(MGL-PAX:FIND-SOURCE GENERIC-FUNCTION)"
   [b811]: #x-28MGL-PAX-3ADEFINE-LOCATIVE-TYPE-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFINE-LOCATIVE-TYPE (MGL-PAX:MACRO))"
+  [ba5d]: #x-28RESTART-20-28MGL-PAX-3ALOCATIVE-29-29 "(RESTART (MGL-PAX:LOCATIVE))"
   [be22]: #x-28MGL-PAX-3A-40MGL-PAX-SECTIONS-20MGL-PAX-3ASECTION-29 "Sections"
   [be7f]: #x-28MGL-PAX-3A-2ADOCUMENT-HTML-TOP-BLOCKS-OF-LINKS-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* (VARIABLE))"
   [bf16]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-API-20MGL-PAX-3ASECTION-29 "Transcript API"

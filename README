@@ -1086,6 +1086,21 @@ locatives take no arguments.
 
 - [locative] CONDITION
 
+- [locative] RESTART
+
+- [macro] DEFINE-RESTART SYMBOL LAMBDA-LIST &BODY DOCSTRING
+
+    A definer macro to hang the documentation of a restart on a
+    symbol.
+    
+    ```
+    (define-restart my-ignore-error ()
+      "Available when MY-ERROR is signalled, MY-IGNORE-ERROR unsafely continues.")
+    ```
+    
+    Note that while there is a CL:RESTART class, there is no
+    corresponding source location or docstring like for CONDITIONs.
+
 - [locative] TYPE
 
     TYPE can refer to classes as well, but it's better style to use the
@@ -1565,7 +1580,7 @@ with symbols in a certain context.
       "A direction is a symbol. (After this `M-.` on `DIRECTION LOCATIVE`
       works and it can also be included in DEFSECTION forms.)")
     
-    (define-definer-for-symbol-locative-type define-direction direction ()
+    (define-definer-for-symbol-locative-type define-direction direction
       "With DEFINE-DIRECTION one can document what a symbol means when
       interpreted as a direction.")
     

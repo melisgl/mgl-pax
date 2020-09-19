@@ -2029,6 +2029,8 @@
   (structure-accessor locative)
   (class locative)
   (condition locative)
+  (restart locative)
+  (define-restart macro)
   (type locative)
   (package locative)
   (dislocated locative)
@@ -2439,7 +2441,7 @@
     "A direction is a symbol. (After this `M-.` on `DIRECTION LOCATIVE`
     works and it can also be included in DEFSECTION forms.)")
 
-  (define-definer-for-symbol-locative-type define-direction direction ()
+  (define-definer-for-symbol-locative-type define-direction direction
     "With DEFINE-DIRECTION one can document what a symbol means when
     interpreted as a direction.")
 
@@ -3222,6 +3224,24 @@
 
 (defun find-known-reference (reference)
   (find reference *references* :test #'reference=))
+
+
+;;;; RESTART-NAME locative
+
+(define-symbol-locative-type restart ())
+
+(define-definer-for-symbol-locative-type define-restart restart
+  """A definer macro to hang the documentation of a restart on a
+  symbol.
+
+  ```
+  (define-restart my-ignore-error ()
+    "Available when MY-ERROR is signalled, MY-IGNORE-ERROR unsafely continues.")
+  ```
+
+  Note that while there is a CL:RESTART class, there is no
+  corresponding source location or docstring like for CONDITIONs.
+  """)
 
 
 ;;;; PACKAGE locative
