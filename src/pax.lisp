@@ -2475,10 +2475,11 @@
          (symbol (locative-type (eql ',locative-type)) locative-args)
        (find-source (symbol-lambda-list-method symbol ',locative-type)))))
 
-(defun check-body-docstring (docstring)
-  (assert (or (endp docstring)
-              (and (= 1 (length docstring))
-                   (string (first docstring))))))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun check-body-docstring (docstring)
+    (assert (or (endp docstring)
+                (and (= 1 (length docstring))
+                     (string (first docstring)))))))
 
 ;;; A somewhat dummy generic function whose methods are
 ;;; eql-specialized on SYMBOL and LOCATIVE-TYPE. The appropriate
