@@ -130,6 +130,10 @@ function and its methods, it's resolved in favor if the gf:
 
 - [method] **TEST-GF** *(X NUMBER)*
 
+<a id='x-28MGL-PAX-TEST-3A-3ATEST-GF-20-28METHOD-20NIL-20-28-28EQL-207-29-29-29-29'></a>
+
+- [method] **TEST-GF** *(X (EQL 7))*
+
 <a id='x-28MGL-PAX-TEST-3A-40TEST-SECTION-WITH-LINK-TO-OTHER-PAGE-IN-TITLE-20MGL-PAX-3ASECTION-29'></a>
 
 ## 3 Link to @TEST-OTHER
