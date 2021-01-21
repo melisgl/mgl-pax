@@ -2937,10 +2937,17 @@
 (defmethod locate-object (symbol (locative-type (eql 'method))
                           locative-args)
   (assert (= 2 (length locative-args)))
-  (or (ignore-errors
-       (find-method (symbol-function symbol) (first locative-args)
-                    (mapcar #'find-class (second locative-args))))
-      (locate-error)))
+  (destructuring-bind (qualifiers specializers)
+      locative-args
+    (or (ignore-errors
+         (find-method (symbol-function symbol) qualifiers
+                      (loop for specializer in specializers
+                            collect (typecase specializer
+                                      ;; Specializer can be a cons like (:eql :some-value)
+                                      (cons specializer)
+                                      ;; or a typespecifier denoting a class:
+                                      (t (find-class specializer))))))
+        (mgl-pax:locate-error))))
 
 (defmethod canonical-reference ((method method))
   (make-reference (swank-mop:generic-function-name
