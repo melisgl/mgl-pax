@@ -43,7 +43,7 @@
 
 (in-package :mgl-pax)
 
-(in-readtable pythonic-string-syntax)
+(named-readtables:in-readtable pythonic-string-reader:pythonic-string-syntax)
 
 (defsection @mgl-pax-manual (:title "PAX Manual")
   (mgl-pax asdf:system)

@@ -154,9 +154,17 @@
       (rest locative)
       ()))
 
+;; This function is from alexandria, to not
+;; introduce any dependencies to mgl-pax-minimal
+(defun ensure-list (list)
+  "If LIST is a list, it is returned. Otherwise returns the list designated by LIST."
+  (if (listp list)
+      list
+      (list list)))
+
 (defun locative-equal (locative-1 locative-2)
-  (equal (alexandria:ensure-list locative-1)
-         (alexandria:ensure-list locative-2)))
+  (equal (ensure-list locative-1)
+         (ensure-list locative-2)))
 
 (defun transform-entries (entries)
   (mapcar (lambda (entry)
