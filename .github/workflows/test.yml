@@ -1,13 +1,17 @@
 name: 'Run Tests'
 
 on:
+  # This will run tests on pushes
+  # to master branch or on pull merges:
   push:
     branches:
       - 'main'
       - 'master'
+  # This will run tests for every pull request:
+  pull_request:
+  # Rerun tests at 10 AM every Monday
+  # to check if they still work with latest dependencies.
   schedule:
-    # Rerun tests at 10 AM every Monday
-    # to check if they still work with latest dependencies.
     - cron:  '0 10 * * 1'
 
 jobs:
