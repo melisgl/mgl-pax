@@ -36,21 +36,15 @@ jobs:
       OS: ${{ matrix.os }}
       QUICKLISP_DIST: ${{ matrix.quicklisp-dist }}
 
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - name: Show env
-        run: 'env | sort -u'
+        run: |
+          env | sort -u
       - name: Install Roswell
-        env:
-          LISP: sbcl-bin
         run: |
           curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
           echo /home/runner/.roswell/bin >> $GITHUB_PATH
-      - name: Check CL Version
-        run: |
-          ros install 40ants/cl-info
-          cl-info
       - name: Install Qlot
         run: |
           ros install qlot
@@ -64,6 +58,10 @@ jobs:
           fi
 
           qlot install
+      - name: Check CL Version
+        run: |
+          qlot exec ros install 40ants/cl-info
+          qlot exec cl-info
       - name: Run tests
         run: |
           qlot exec ros run \
