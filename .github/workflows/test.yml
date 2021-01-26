@@ -45,6 +45,9 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
           echo /home/runner/.roswell/bin >> $GITHUB_PATH
+      - name: Upgrade ASDF to the latest version
+        run: |
+          ros install asdf
       - name: Install Qlot
         run: |
           ros install qlot
