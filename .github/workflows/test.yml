@@ -58,6 +58,7 @@ jobs:
           fi
 
           qlot install
+          echo .qlot/bin >> $GITHUB_PATH
       - name: Check CL Version
         run: |
           qlot exec ros install 40ants/cl-info
