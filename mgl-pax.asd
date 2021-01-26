@@ -16,7 +16,8 @@
                :mgl-pax-minimal)
   :components ((:module "src"
                 :serial t
-                :components ((:file "utility")
+                :components ((:file "package")
+                             (:file "utility")
                              (:file "pax")
                              (:file "doc")
                              (:file "transcribe"))))

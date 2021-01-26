@@ -16,5 +16,5 @@
   :depends-on ()
   :components ((:module "src"
                 :serial t
-                :components ((:file "package")
+                :components ((:file "minimal-package")
                              (:file "pax-early")))))

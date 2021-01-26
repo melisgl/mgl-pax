@@ -459,26 +459,6 @@
   (or (section-title section)
       (maybe-downcase (prin1-to-string (section-name section)))))
 
-(defmacro define-package (package &rest options)
-  "This is like CL:DEFPACKAGE but silences warnings and errors
-  signaled when the redefined package is at variance with the current
-  state of the package. Typically this situation occurs when symbols
-  are exported by calling EXPORT (as is the case with DEFSECTION) as
-  opposed to adding :EXPORT forms to the DEFPACKAGE form and the
-  package definition is reevaluated. See the section on [package
-  variance](http://www.sbcl.org/manual/#Package-Variance) in the SBCL
-  manual.
-
-  The bottom line is that if you rely on DEFSECTION to do the
-  exporting, then you'd better use DEFINE-PACKAGE."
-  `(eval-when (:compile-toplevel :load-toplevel, :execute)
-     (locally
-         (declare #+sbcl
-                  (sb-ext:muffle-conditions sb-kernel::package-at-variance))
-       (handler-bind
-           (#+sbcl (sb-kernel::package-at-variance #'muffle-warning))
-         (cl:defpackage ,package ,@options)))))
-
 ;;;; Generating documentation
 
 ;;; Documentation starts out being sent to a certain stream, but the
