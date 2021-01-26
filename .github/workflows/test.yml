@@ -11,7 +11,27 @@ on:
     - cron:  '0 10 * * 1'
 
 jobs:
-  build_docs:
+  run_tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        lisp:
+          - sbcl-bin
+          - ccl-bin
+        os:
+          - ubuntu-latest
+          - macos-latest
+        quicklisp-dist:
+          - quicklisp
+          - ultralisp
+          
+    runs-on: ${{ matrix.os }}
+    
+    env:
+      LISP: ${{ matrix.lisp }}
+      OS: ${{ matrix.os }}
+      QUICKLISP_DIST: ${{ matrix.quicklisp-dist }}
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -32,7 +52,13 @@ jobs:
           ros install qlot
       - name: Install Dependencies
         run: |
-          echo dist ultralisp http://dist.ultralisp.org/
+          rm -fr qlfile
+          touch qlfile
+          
+          if [[ "${QUICKLISP_DIST}" == 'ultralisp' ]]; then
+              echo dist ultralisp http://dist.ultralisp.org/ >> qlfile
+          fi
+
           qlot install
       - name: Run tests
         run: |
