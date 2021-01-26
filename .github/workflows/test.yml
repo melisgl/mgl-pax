@@ -64,9 +64,12 @@ jobs:
           echo .qlot/bin >> $GITHUB_PATH
       - name: Check CL Version
         run: |
+          set +x
           qlot exec ros install 40ants/defmain
           qlot exec ros install 40ants/cl-info
           qlot exec cl-info
+        env:
+          CC: gcc
       - name: Run tests
         run: |
           qlot exec ros run \
