@@ -10,5 +10,8 @@
                 #:reference-locative-type
                 #:reference-object
                 #:reference=
-                #:*discard-documentation-p*)
+                #:*discard-documentation-p*
+                #:reader
+                #:writer
+                #:accessor)
   (:nicknames #:pax))

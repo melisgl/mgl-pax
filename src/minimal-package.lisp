@@ -26,4 +26,9 @@
                  #:section-readtable
                  #:section-title
                  #:section-link-title-to
-                 #:section-entries)))))
+                 #:section-entries
+                 ;; Locatives for these symbols will be defined
+                 ;; in the full mgl-pax package:
+                 #:reader
+                 #:writer
+                 #:accessor)))))
