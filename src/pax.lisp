@@ -896,31 +896,33 @@
 ;;; Return the names of the function arguments in ARGLIST that's a
 ;;; lambda list. Handles &KEY, &OPTIONAL, &REST.
 (defun function-arg-names (arglist)
-  (mapcar (lambda (arg)
-            (if (and (listp arg)
-                     (symbolp (first arg)))
-                (first arg)
-                arg))
-          arglist))
+  (unless (eq arglist :not-available)
+    (mapcar (lambda (arg)
+              (if (and (listp arg)
+                       (symbolp (first arg)))
+                  (first arg)
+                  arg))
+            arglist)))
 
 ;;; Return the names of the arguments in ARGLIST that's a macro lambda
 ;;; list.
 (defun macro-arg-names (arglist)
-  (let ((names ()))
-    (labels ((foo (arglist)
-               (let ((seen-special-p nil))
-                 (loop for arg in arglist
-                       do (cond ((member arg '(&key &optional &rest &body))
-                                 (setq seen-special-p t))
-                                ((symbolp arg)
-                                 (push arg names))
-                                (seen-special-p
-                                 (when (symbolp (first arg))
-                                   (push (first arg) names)))
-                                (t
-                                 (foo arg)))))))
-      (foo arglist))
-    (reverse names)))
+  (unless (eq arglist :not-available)
+    (let ((names ()))
+      (labels ((foo (arglist)
+                 (let ((seen-special-p nil))
+                   (loop for arg in arglist
+                         do (cond ((member arg '(&key &optional &rest &body))
+                                   (setq seen-special-p t))
+                                  ((symbolp arg)
+                                   (push arg names))
+                                  (seen-special-p
+                                   (when (symbolp (first arg))
+                                     (push (first arg) names)))
+                                  (t
+                                   (foo arg)))))))
+        (foo arglist))
+      (reverse names))))
 
 ;;; Add a dummy page with for references to SYMBOLS whose locative is
 ;;; ARGUMENT. If an ARGUMENT reference is present for a symbol, it
@@ -1230,10 +1232,12 @@
   (print-reference-bullet (canonical-reference object) stream))
 
 (defun print-arglist (arglist stream)
-  (let ((string (if (stringp arglist)
-                    ;; must be escaped markdown
-                    arglist
-                    (arglist-to-string arglist))))
+  (let ((string (cond ((stringp arglist)
+                       ;; must be escaped markdown
+                       arglist)
+                      ((eq arglist :not-available)
+                       "")
+                      (t (arglist-to-string arglist)))))
     (if *document-mark-up-signatures*
         (if (eq *format* :html)
             (format stream "<span class=\"locative-args\">~A</span>" string)

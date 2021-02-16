@@ -297,6 +297,8 @@
 
 (defun test ()
   (test-transcribe)
+  ;; ECL does not provide source locations for most things.
+  #-ecl
   (test-navigation)
   (test-replace-known-references)
   (test-transform-tree)
