@@ -56,14 +56,21 @@
   ())
 
 (defmethod print-object ((bbb bbb) stream)
-  (print-unreadable-object (bbb stream :type t)))
+  #-ecl
+  (print-unreadable-object (bbb stream :type t))
+  ;; PRINT-UNREADABLE-OBJECT lower-cases the name of the class on ECL.
+  #+ecl
+  (format stream "#<BBB >"))
 
 (defclass bbb* ()
   ())
 
 (defmethod print-object ((bbb bbb*) stream)
+  #-ecl
   (print-unreadable-object (bbb stream :type t)
-    (format stream "~%")))
+    (format stream "~%"))
+  #+ecl
+  (format stream "#<BBB* ~%>"))
 
 (defparameter *transcribe-test-cases*
   '((:input "1"
