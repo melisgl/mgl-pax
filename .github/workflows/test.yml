@@ -43,33 +43,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
-      - name: Show env
-        run: |
-          env | sort -u
-      - name: Install Roswell
-        run: |
-          curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
-          echo $HOME/.roswell/bin >> $GITHUB_PATH
-      - name: Upgrade ASDF to the latest version
-        run: |
-          ros install asdf
-      - name: Install Qlot
-        run: |
-          ros install qlot
-      - name: Install Dependencies
-        run: |
-          rm -fr qlfile
-          touch qlfile
-          
-          if [[ "${QUICKLISP_DIST}" == 'ultralisp' ]]; then
-              echo dist ultralisp http://dist.ultralisp.org/ >> qlfile
-          fi
-
-          qlot install
-          echo .qlot/bin >> $GITHUB_PATH
-      - name: Run tests
-        run: |
-          qlot exec ros run \
-             --eval '(if (asdf:test-system :mgl-pax)
-                        (uiop:quit 0)
-                        (uiop:quit 1))'
+      - uses: 40ants/setup-lisp@v1
+        with:
+          qlfile-template: |
+            {% ifequal quicklisp_dist "ultralisp" %}
+            dist ultralisp http://dist.ultralisp.org
+            {% endifequal %}
+      - uses: 40ants/run-tests
+        asdf-system: mgl-pax
