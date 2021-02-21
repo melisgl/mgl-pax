@@ -50,4 +50,5 @@ jobs:
             dist ultralisp http://dist.ultralisp.org
             {% endifequal %}
       - uses: 40ants/run-tests
-        asdf-system: mgl-pax
+        with:
+          asdf-system: mgl-pax
