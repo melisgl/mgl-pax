@@ -31,4 +31,5 @@
                  ;; in the full mgl-pax package:
                  #:reader
                  #:writer
-                 #:accessor)))))
+                 #:accessor
+                 #:macro)))))
