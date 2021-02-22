@@ -19,6 +19,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+        quicklisp-dist:
+          - quicklisp
+          - ultralisp
         lisp:
           - sbcl-bin
           # Uncomment to run tests
@@ -31,12 +37,6 @@ jobs:
           # - allegro
           # - clisp
           # - cmucl
-        os:
-          - ubuntu-latest
-          - macos-latest
-        quicklisp-dist:
-          - quicklisp
-          - ultralisp
           
     runs-on: ${{ matrix.os }}
     
@@ -56,3 +56,8 @@ jobs:
       - uses: 40ants/run-tests@v2
         with:
           asdf-system: mgl-pax
+          coveralls-token: |
+            ${{ matrix.lisp == 'sbcl-bin' &&
+                matrix.os == 'ubuntu-latest' &&
+                matrix.quicklisp-dist == 'ultralisp' &&
+                secrets.github_token }}
