@@ -1,0 +1,28 @@
+name: 'Docs'
+
+on:
+  # This will run tests on pushes
+  # to master branch and every monday:
+  push:
+    branches:
+      - 'main'
+      - 'master'
+      # A branch to demo how docs are updated
+      # at https://github.com/svetlyak40wt/mgl-pax/pull/1
+      - 'mgl-pax-minimal'
+  schedule:
+    - cron:  '0 10 * * 1'
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    
+    env:
+      LISP: sbcl-bin
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: 40ants/setup-lisp@v1
+      - uses: 40ants/build-docs@v1
+        with:
+          asdf-system: mgl-pax
