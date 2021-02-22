@@ -46,6 +46,9 @@
 (named-readtables:in-readtable pythonic-string-reader:pythonic-string-syntax)
 
 (defsection @mgl-pax-manual (:title "PAX Manual")
+  "
+[![](http://github-actions.40ants.com/svetlyak40wt/mgl-pax/matrix.svg?branch=mgl-pax-minimal)](https://github.com/melisgl/mgl-pax)
+"
   (mgl-pax asdf:system)
   (@mgl-pax-links section)
   (@mgl-pax-background section)
