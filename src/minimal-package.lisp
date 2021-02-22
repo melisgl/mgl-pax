@@ -20,6 +20,8 @@
                  #:locative-type
                  #:make-reference
                  #:reference
+                 #:reference-object
+                 #:reference-locative
                  #:section
                  #:section-name
                  #:section-package
