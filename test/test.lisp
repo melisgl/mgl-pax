@@ -98,6 +98,7 @@
   (@test-other section)
   (test-gf generic-function)
   (test-gf (method () (number)))
+  (test-gf (method () ((eql 7))))
   (@test-section-with-link-to-other-page-in-title section)
   (@test-section-with-link-to-same-page-in-title section)
   (@test-tricky-title section))
@@ -145,6 +146,7 @@
 
 (defgeneric test-gf (x))
 (defmethod test-gf ((x number)))
+(defmethod test-gf ((x (eql 7))))
 
 (defun ->max ())
 
@@ -295,6 +297,8 @@
 
 (defun test ()
   (test-transcribe)
+  ;; ECL does not provide source locations for most things.
+  #-ecl
   (test-navigation)
   (test-replace-known-references)
   (test-transform-tree)

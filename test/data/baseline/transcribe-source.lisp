@@ -4,8 +4,11 @@
   ((aaa :initarg :aaa :reader aaa)))
 
 (defmethod print-object ((aaa aaa) stream)
+  #-ecl
   (print-unreadable-object (aaa stream :type t)
-    (format stream "~%~%~S" (aaa aaa))))
+    (format stream "~%~%~S" (aaa aaa)))
+  #+ecl
+  (format stream "#<AAA ~%~%~S>" (aaa aaa)))
 
 ;;; Basic forms
 42
