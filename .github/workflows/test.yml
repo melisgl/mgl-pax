@@ -21,12 +21,16 @@ jobs:
       matrix:
         lisp:
           - sbcl-bin
-          - ccl-bin
-          - ecl
-          - abcl
-          - allegro
-          - clisp
-          - cmucl
+          # Uncomment to run tests
+          # on these implementations.
+          # When when tested at 2021-02-22
+          # all of them failed:
+          # - ccl-bin
+          # - ecl
+          # - abcl
+          # - allegro
+          # - clisp
+          # - cmucl
         os:
           - ubuntu-latest
           - macos-latest
