@@ -29,6 +29,8 @@
     - [12.2 Transcript API][7dfd]
 
 ###### \[in package MGL-PAX with nicknames PAX\]
+[![](http://github-actions.40ants.com/svetlyak40wt/mgl-pax/matrix.svg?branch=mgl-pax-minimal)](https://github.com/melisgl/mgl-pax)
+
 <a id='x-28-23A-28-287-29-20BASE-CHAR-20-2E-20-22mgl-pax-22-29-20ASDF-2FSYSTEM-3ASYSTEM-29'></a>
 
 ## 1 mgl-pax ASDF System Details

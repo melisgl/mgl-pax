@@ -1,6 +1,8 @@
 # PAX Manual
 
 ###### \[in package MGL-PAX with nicknames PAX\]
+[![](http://github-actions.40ants.com/svetlyak40wt/mgl-pax/matrix.svg?branch=mgl-pax-minimal)](https://github.com/melisgl/mgl-pax)
+
 ## mgl-pax ASDF System Details
 
 - Version: 0.0.3
