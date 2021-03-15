@@ -368,13 +368,28 @@
   (let ((head-string (read-first-line
                       (merge-pathnames (make-pathname :name "HEAD") git-dir))))
     (if (alexandria:starts-with-subseq "ref: " head-string)
-        (let ((ref (subseq head-string 5)))
-          (values (read-first-line (merge-pathnames ref git-dir)) ref))
+        (let* ((ref (subseq head-string 5))
+               (ref-file (merge-pathnames ref git-dir)))
+          (values (if (probe-file ref-file)
+                      (read-first-line ref-file)
+                      (git-get-info-hash git-dir ref))
+                  ref))
         head-string)))
 
 (defun read-first-line (filename)
   (with-open-file (stream filename)
     (read-line stream)))
+
+(defun git-get-info-hash (git-dir ref-to-match)
+  (let ((file (merge-pathnames "info/refs" git-dir)))
+    (when (probe-file file)
+      (with-open-file (stream file)
+        (loop for line = (read-line stream nil)
+              while line do
+                (destructuring-bind (hash ref)
+                    (split-sequence:split-sequence #\Tab line)
+                  (when (equal ref ref-to-match)
+                    (return hash))))))))
 
 (defun convert-source-location (source-location system-dir reference
                                 line-file-position-cache)
