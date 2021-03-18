@@ -12,12 +12,12 @@
   :description "Exploratory programming tool and documentation
   generator."
   :depends-on (:3bmd :3bmd-ext-code-blocks :alexandria :babel :cl-fad :colorize
-                     :ironclad :named-readtables :pythonic-string-reader :swank)
+               :ironclad :named-readtables :pythonic-string-reader :swank
+               :mgl-pax-minimal)
   :components ((:module "src"
                 :serial t
                 :components ((:file "package")
                              (:file "utility")
-                             (:file "pax-early")
                              (:file "pax")
                              (:file "doc")
                              (:file "transcribe"))))

@@ -1,7 +1,7 @@
 ;;;; After this file is loaded, the rest of PAX can be written using
 ;;;; DEFSECTION.
 
-(in-package :mgl-pax)
+(in-package :mgl-pax-minimal)
 
 ;;; Should this remove docstrings of referenced things?
 (defvar *discard-documentation-p* nil
@@ -154,9 +154,17 @@
       (rest locative)
       ()))
 
+;; This function is from alexandria, to not
+;; introduce any dependencies to mgl-pax-minimal
+(defun ensure-list (list)
+  "If LIST is a list, it is returned. Otherwise returns the list designated by LIST."
+  (if (listp list)
+      list
+      (list list)))
+
 (defun locative-equal (locative-1 locative-2)
-  (equal (alexandria:ensure-list locative-1)
-         (alexandria:ensure-list locative-2)))
+  (equal (ensure-list locative-1)
+         (ensure-list locative-2)))
 
 (defun transform-entries (entries)
   (mapcar (lambda (entry)
@@ -217,3 +225,39 @@
 
 (defmethod exportable-locative-type-p ((locative-type (eql 'method)))
   nil)
+
+
+(defmacro define-package (package &body options)
+  "This is like CL:DEFPACKAGE but silences warnings and errors
+  signaled when the redefined package is at variance with the current
+  state of the package. Typically this situation occurs when symbols
+  are exported by calling EXPORT (as is the case with DEFSECTION) as
+  opposed to adding :EXPORT forms to the DEFPACKAGE form and the
+  package definition is reevaluated. See the section on [package
+  variance](http://www.sbcl.org/manual/#Package-Variance) in the SBCL
+  manual.
+
+  The bottom line is that if you rely on DEFSECTION to do the
+  exporting, then you'd better use DEFINE-PACKAGE.
+
+  To uses this macro in your own ASDF systems, add this to the DEFSYSTEM
+  form:
+
+  ```lisp
+  :defsystem-depends-on (\"mgl-pax-minimal\")
+  ```
+"
+  `(eval-when (:compile-toplevel :load-toplevel, :execute)
+     (locally
+         (declare #+sbcl
+                  (sb-ext:muffle-conditions sb-kernel::package-at-variance))
+       (handler-bind
+           (#+sbcl (sb-kernel::package-at-variance #'muffle-warning))
+         (cl:defpackage ,package ,@options)))))
+
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  ;; This makes our custom define-package
+  ;; work with package inferred asdf systems:
+  (pushnew 'define-package
+           asdf/package-inferred-system:*defpackage-forms*))

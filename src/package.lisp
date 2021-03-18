@@ -1,12 +1,17 @@
-;;; This is is basically MGL-PAX:DEFINE-PACKAGE but we don't have it
-;;; defined yet.
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (locally
-      (declare #+sbcl
-               (sb-ext:muffle-conditions sb-kernel::package-at-variance))
-    (handler-bind
-        (#+sbcl (sb-kernel::package-at-variance #'muffle-warning))
-      (cl:defpackage :mgl-pax
-        (:documentation "See MGL-PAX:@MGL-PAX-MANUAL.")
-        (:use #:common-lisp #:named-readtables #:pythonic-string-reader)
-        (:nicknames #:pax)))))
+(mgl-pax-minimal:define-package :mgl-pax
+  (:documentation "See MGL-PAX:@MGL-PAX-MANUAL.")
+  (:use #:common-lisp #:mgl-pax-minimal)
+  ;; These symbols are internal in the MGL-PAX-MINIMAL
+  ;; but we want to reuse them in MGL-PAX:
+  (:import-from #:mgl-pax-minimal
+                #:entry-to-reference
+                #:locative-equal
+                #:reference-locative
+                #:reference-locative-type
+                #:reference-object
+                #:reference=
+                #:*discard-documentation-p*
+                #:reader
+                #:writer
+                #:accessor)
+  (:nicknames #:pax))

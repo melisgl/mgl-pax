@@ -1,0 +1,63 @@
+name: 'Run Tests'
+
+on:
+  # This will run tests on pushes
+  # to master branch or on pull merges:
+  push:
+    branches:
+      - 'main'
+      - 'master'
+  # This will run tests for every pull request:
+  pull_request:
+  # Rerun tests at 10 AM every Monday
+  # to check if they still work with latest dependencies.
+  schedule:
+    - cron:  '0 10 * * 1'
+
+jobs:
+  run_tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+        quicklisp-dist:
+          - quicklisp
+          - ultralisp
+        lisp:
+          - sbcl-bin
+          # Uncomment to run tests
+          # on these implementations.
+          # When when tested at 2021-02-22
+          # all of them failed:
+          # - ccl-bin
+          # - ecl
+          # - abcl
+          # - allegro
+          # - clisp
+          # - cmucl
+          
+    runs-on: ${{ matrix.os }}
+    
+    env:
+      LISP: ${{ matrix.lisp }}
+      OS: ${{ matrix.os }}
+      QUICKLISP_DIST: ${{ matrix.quicklisp-dist }}
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: 40ants/setup-lisp@v1
+        with:
+          qlfile-template: |
+            {% ifequal quicklisp_dist "ultralisp" %}
+            dist ultralisp http://dist.ultralisp.org
+            {% endifequal %}
+      - uses: 40ants/run-tests@v2
+        with:
+          asdf-system: mgl-pax
+          coveralls-token: |
+            ${{ matrix.lisp == 'sbcl-bin' &&
+                matrix.os == 'ubuntu-latest' &&
+                matrix.quicklisp-dist == 'ultralisp' &&
+                secrets.github_token }}

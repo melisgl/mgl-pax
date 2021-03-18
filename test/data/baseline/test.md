@@ -1,14 +1,14 @@
-<a id='x-28MGL-PAX-TEST-3A-3A-40TEST-20MGL-PAX-3ASECTION-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3A-40TEST-20MGL-PAX-MINIMAL-3ASECTION-29'></a>
 
 # @TEST
 
 ## Table of Contents
 
 - 1 @TEST-EXAMPLES
-- [2 test other title][22dd]
-- [3 Link to @TEST-OTHER][1dbc]
-- [4 Link to @TEST][2820]
-- [5 \`CODE\` \*italic\* \_italic2\_ \*bold\* \[link\]\[sdf\] \<thing\>][d484]
+- [2 test other title][2429]
+- [3 Link to @TEST-OTHER][ca9d]
+- [4 Link to @TEST][82a6]
+- [5 \`CODE\` \*italic\* \_italic2\_ \*bold\* \[link\]\[sdf\] \<thing\>][b232]
 
 ###### \[in package MGL-PAX-TEST\]
 [`*TEST-VARIABLE*`][c066]
@@ -29,22 +29,22 @@
 [`FOO`][4244],
 [`FOO`][4244],
 
-[`FOO-A`][6483] `(accessor foo)`, `(accessor foo)` [`FOO-A`][6483],
-[`FOO-A`][6483] `(accessor foo)`, `(accessor foo)` [`FOO-A`][6483],
-[`foo-a`][6483],
-[`foo-a`][6483],
-[`FOO-A`][6483],
-[`FOO-A`][6483],
-[`foo-a`][6483],
-[`foo-a`][6483],
-[`FOO-A`][6483],
-[`FOO-A`][6483]
+[`FOO-A`][9c76] `(accessor foo)`, `(accessor foo)` [`FOO-A`][9c76],
+[`FOO-A`][9c76] `(accessor foo)`, `(accessor foo)` [`FOO-A`][9c76],
+[`foo-a`][9c76],
+[`foo-a`][9c76],
+[`FOO-A`][9c76],
+[`FOO-A`][9c76],
+[`foo-a`][9c76],
+[`foo-a`][9c76],
+[`FOO-A`][9c76],
+[`FOO-A`][9c76]
 
 `->MAX`
 
 Escaped: FOO `FOO` *NAVIGATION-TEST-CASES*
 Non escaped: `FOO`([`0`][f1a9] [`1`][4244]) [`*TEST-VARIABLE*`][c066]
-[test other title][22dd]
+[test other title][2429]
 
 This should be no link because the page of `@TEST-EXAMPLES`
 has `:URI-FRAGMENT` `NIL`.
@@ -112,7 +112,7 @@ function and its methods, it's resolved in favor if the gf:
 
 - [compiler-macro] **FOO** 
 
-<a id='x-28MGL-PAX-TEST-3A-3AFOO-A-20-28MGL-PAX-3AACCESSOR-20MGL-PAX-TEST-3A-3AFOO-29-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3AFOO-A-20-28MGL-PAX-MINIMAL-3AACCESSOR-20MGL-PAX-TEST-3A-3AFOO-29-29'></a>
 
 - [accessor] **FOO-A** *FOO*
 
@@ -134,31 +134,31 @@ function and its methods, it's resolved in favor if the gf:
 
 - [method] **TEST-GF** *(X (EQL 7))*
 
-<a id='x-28MGL-PAX-TEST-3A-40TEST-SECTION-WITH-LINK-TO-OTHER-PAGE-IN-TITLE-20MGL-PAX-3ASECTION-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-40TEST-SECTION-WITH-LINK-TO-OTHER-PAGE-IN-TITLE-20MGL-PAX-MINIMAL-3ASECTION-29'></a>
 
 ## 3 Link to @TEST-OTHER
 
-Same link in docstring to [test other title][22dd].
+Same link in docstring to [test other title][2429].
 
-<a id='x-28MGL-PAX-TEST-3A-40TEST-SECTION-WITH-LINK-TO-SAME-PAGE-IN-TITLE-20MGL-PAX-3ASECTION-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-40TEST-SECTION-WITH-LINK-TO-SAME-PAGE-IN-TITLE-20MGL-PAX-MINIMAL-3ASECTION-29'></a>
 
 ## 4 Link to @TEST
 
-Same link in docstring to [@TEST][a755].
+Same link in docstring to [@TEST][32b2].
 
-<a id='x-28MGL-PAX-TEST-3A-3A-40TEST-TRICKY-TITLE-20MGL-PAX-3ASECTION-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3A-40TEST-TRICKY-TITLE-20MGL-PAX-MINIMAL-3ASECTION-29'></a>
 
 ## 5 \`CODE\` \*italic\* \_italic2\_ \*bold\* \[link\]\[sdf\] \<thing\>
 
-backlink [@TEST][a755]
+backlink [@TEST][32b2]
 
-  [1dbc]: #x-28MGL-PAX-TEST-3A-40TEST-SECTION-WITH-LINK-TO-OTHER-PAGE-IN-TITLE-20MGL-PAX-3ASECTION-29 "Link to @TEST-OTHER"
-  [22dd]: other/test-other.md#x-28MGL-PAX-TEST-3A-3A-40TEST-OTHER-20MGL-PAX-3ASECTION-29 "test other title"
-  [2820]: #x-28MGL-PAX-TEST-3A-40TEST-SECTION-WITH-LINK-TO-SAME-PAGE-IN-TITLE-20MGL-PAX-3ASECTION-29 "Link to @TEST"
+  [2429]: other/test-other.md#x-28MGL-PAX-TEST-3A-3A-40TEST-OTHER-20MGL-PAX-MINIMAL-3ASECTION-29 "test other title"
+  [32b2]: #x-28MGL-PAX-TEST-3A-3A-40TEST-20MGL-PAX-MINIMAL-3ASECTION-29 "MGL-PAX-TEST::@TEST"
   [4244]: #x-28MGL-PAX-TEST-3A-3AFOO-20FUNCTION-29 "(MGL-PAX-TEST::FOO FUNCTION)"
-  [6483]: #x-28MGL-PAX-TEST-3A-3AFOO-A-20-28MGL-PAX-3AACCESSOR-20MGL-PAX-TEST-3A-3AFOO-29-29 "(MGL-PAX-TEST::FOO-A (MGL-PAX:ACCESSOR MGL-PAX-TEST::FOO))"
-  [a755]: #x-28MGL-PAX-TEST-3A-3A-40TEST-20MGL-PAX-3ASECTION-29 "MGL-PAX-TEST::@TEST"
+  [82a6]: #x-28MGL-PAX-TEST-3A-40TEST-SECTION-WITH-LINK-TO-SAME-PAGE-IN-TITLE-20MGL-PAX-MINIMAL-3ASECTION-29 "Link to @TEST"
+  [9c76]: #x-28MGL-PAX-TEST-3A-3AFOO-A-20-28MGL-PAX-MINIMAL-3AACCESSOR-20MGL-PAX-TEST-3A-3AFOO-29-29 "(MGL-PAX-TEST::FOO-A (MGL-PAX-MINIMAL:ACCESSOR MGL-PAX-TEST::FOO))"
+  [b232]: #x-28MGL-PAX-TEST-3A-3A-40TEST-TRICKY-TITLE-20MGL-PAX-MINIMAL-3ASECTION-29 "`CODE` *italic* _italic2_ *bold* [link][sdf] <thing>"
   [c066]: #x-28MGL-PAX-TEST-3A-3A-2ATEST-VARIABLE-2A-20-28VARIABLE-29-29 "(MGL-PAX-TEST::*TEST-VARIABLE* (VARIABLE))"
-  [d484]: #x-28MGL-PAX-TEST-3A-3A-40TEST-TRICKY-TITLE-20MGL-PAX-3ASECTION-29 "`CODE` *italic* _italic2_ *bold* [link][sdf] <thing>"
+  [ca9d]: #x-28MGL-PAX-TEST-3A-40TEST-SECTION-WITH-LINK-TO-OTHER-PAGE-IN-TITLE-20MGL-PAX-MINIMAL-3ASECTION-29 "Link to @TEST-OTHER"
   [efc1]: #x-28MGL-PAX-TEST-3A-3ATEST-GF-20GENERIC-FUNCTION-29 "(MGL-PAX-TEST::TEST-GF GENERIC-FUNCTION)"
   [f1a9]: #x-28MGL-PAX-TEST-3A-3AFOO-20-28COMPILER-MACRO-29-29 "(MGL-PAX-TEST::FOO (COMPILER-MACRO))"

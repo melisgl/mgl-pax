@@ -1,6 +1,6 @@
 (in-package :mgl-pax)
 
-(in-readtable pythonic-string-syntax)
+(named-readtables:in-readtable pythonic-string-reader:pythonic-string-syntax)
 
 (defsection @mgl-pax-generating-documentation
     (:title "Generating Documentation")

@@ -1,6 +1,8 @@
 # PAX Manual
 
 ###### \[in package MGL-PAX with nicknames PAX\]
+[![](http://github-actions.40ants.com/svetlyak40wt/mgl-pax/matrix.svg?branch=mgl-pax-minimal)](https://github.com/melisgl/mgl-pax)
+
 ## mgl-pax ASDF System Details
 
 - Version: 0.0.3
@@ -423,7 +425,7 @@ Now let's examine the most important pieces in detail.
     One may want to set *DISCARD-DOCUMENTATION-P* to true before
     building a binary application.
 
-- [macro] DEFINE-PACKAGE PACKAGE &REST OPTIONS
+- [macro] DEFINE-PACKAGE PACKAGE &BODY OPTIONS
 
     This is like CL:DEFPACKAGE but silences warnings and errors
     signaled when the redefined package is at variance with the current
@@ -436,6 +438,14 @@ Now let's examine the most important pieces in detail.
     
     The bottom line is that if you rely on DEFSECTION to do the
     exporting, then you'd better use DEFINE-PACKAGE.
+    
+    To uses this macro in your own ASDF systems, add this to the DEFSYSTEM
+    form:
+    
+    ```lisp
+    :defsystem-depends-on ("mgl-pax-minimal")
+    ```
+
 
 - [function] DOCUMENT OBJECT &KEY STREAM PAGES (FORMAT :MARKDOWN)
 

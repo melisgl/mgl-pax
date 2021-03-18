@@ -168,7 +168,7 @@
     (baz variable (defvar baz))
     (@mgl-pax-manual section (defsection @mgl-pax-manual))
     (baz-aaa structure-accessor (defstruct baz))
-    (mgl-pax package
+    (mgl-pax-minimal package
      (eval-when (:compile-toplevel :load-toplevel :execute))
      (cl:defpackage))
     (mgl-pax asdf:system ())

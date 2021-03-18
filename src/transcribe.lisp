@@ -13,7 +13,7 @@
 
 (in-package :mgl-pax)
 
-(in-readtable pythonic-string-syntax)
+(named-readtables:in-readtable pythonic-string-reader:pythonic-string-syntax)
 
 (defsection @mgl-pax-transcript (:title "Transcripts")
   "What are transcripts for? When writing a tutorial, one often wants
