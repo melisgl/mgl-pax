@@ -1,5 +1,29 @@
 (in-package :mgl-pax)
 
+;;; The simple stubbing code below severes compile time dependencies,
+;;; which we use on heavier dependencies of documentation generation
+;;; such as ironclad and 3bmd.
+;;;
+;;; Another implementation could be to move the documentation
+;;; generation code entirely to the MGL-PAX/FULL system. This path was
+;;; not taken to make it easier for client systems to use the
+;;; @MGL-PAX-EXTENSION-API to add new locatives.
+(defun symbol-stub (string)
+  (multiple-value-bind (symbol error)
+      (ignore-errors (values (read-from-string string)))
+    (cond (error
+           (asdf:load-system :mgl-pax/full)
+           (values (read-from-string string)))
+          (t
+           symbol))))
+
+(defun var-stub (string)
+  (symbol-value (symbol-stub string)))
+
+(defun call-stub (string &rest args)
+  (apply (symbol-stub string) args))
+
+
 (defun symbol-global-value (symbol)
   #+sbcl
   (ignore-errors (sb-ext:symbol-global-value symbol))
@@ -444,19 +468,20 @@
          (values tree (and tree (listp tree)) nil))))
 
 (defun map-markdown-parse-tree (tags stop-tags handle-strings fn string)
-  (let* ((3bmd-grammar:*smart-quotes* nil)
-         (parse-tree
-           ;; To be able to recognize symbols like FOO* join (...
-           ;; "FOO" "*" ...) to look like (... "FOO*" ...).
-           (join-consecutive-non-blank-strings-in-parse-tree
-            (3bmd-grammar:parse-doc string))))
-    (with-output-to-string (out)
-      (3bmd::print-doc-to-stream-using-format
-       (transform-tree (lambda (parent tree)
-                         (defer-tag-handling tags stop-tags handle-strings
-                           fn parent tree))
-                       parse-tree)
-       out :markdown))))
+  (progv (list (symbol-stub "3bmd-grammar:*smart-quotes*"))
+      (list nil)
+    (let* ((parse-tree
+             ;; To be able to recognize symbols like FOO* join (...
+             ;; "FOO" "*" ...) to look like (... "FOO*" ...).
+             (join-consecutive-non-blank-strings-in-parse-tree
+              (call-stub "3bmd-grammar:parse-doc" string))))
+      (with-output-to-string (out)
+        (call-stub "3bmd::print-doc-to-stream-using-format"
+                   (transform-tree (lambda (parent tree)
+                                     (defer-tag-handling tags stop-tags
+                                       handle-strings fn parent tree))
+                                   parse-tree)
+                   out :markdown)))))
 
 (defun join-consecutive-non-blank-strings-in-parse-tree (parse-tree)
   (transform-tree

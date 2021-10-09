@@ -944,6 +944,9 @@
     (format nil "~S ~S" (reference-object reference)
             (reference-locative reference))))
 
+;;; We need this for more informative TRANSCRIBE-ERRORs.
+(defvar *reference-being-documented* nil)
+
 (defun transcription-error (stream file-position form-as-string
                             message &rest message-args)
   (error 'transcription-error

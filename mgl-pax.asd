@@ -3,7 +3,7 @@
 ;;; See MGL-PAX:@MGL-PAX-MANUAL for the user guide.
 (asdf:defsystem #:mgl-pax
   :licence "MIT, see COPYING."
-  :version "0.0.3"
+  :version "0.0.4"
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
   :homepage "http://melisgl.github.io/mgl-pax"
@@ -11,23 +11,44 @@
   :source-control (:git "https://github.com/melisgl/mgl-pax.git")
   :description "Exploratory programming tool and documentation
   generator."
-  :depends-on (:3bmd :3bmd-ext-code-blocks :alexandria :babel :cl-fad :colorize
-                     :ironclad :named-readtables :pythonic-string-reader :swank)
+  ;; These are *all* the dependencies as currently only
+  ;; PYTHONIC-STRING-READER has a dependency (on NAMED-READTABLES).
+  ;; All the heavy-weight dependencies are loaded on demand or eagerly
+  ;; by MGL-PAX/FULL.
+  :depends-on (:alexandria :named-readtables :pythonic-string-reader :swank)
   :components ((:module "src"
                 :serial t
                 :components ((:file "package")
                              (:file "utility")
                              (:file "pax-early")
                              (:file "pax")
-                             (:file "doc")
-                             (:file "transcribe"))))
+                             (:file "extension-api")
+                             (:file "navigate")
+                             (:file "transcribe")
+                             (:file "document")
+                             (:file "locatives"))))
+  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
+
+(asdf:defsystem #:mgl-pax/full
+  :licence "MIT, see COPYING."
+  :author "Gábor Melis"
+  :mailto "mega@retes.hu"
+  :description "MGL-PAX with all dependencies preloaded."
+  :long-description "To ease deployment, the set of dependencies of
+  the MGL-PAX system is kept light and its heavier dependencies are
+  loaded on demand. If this is undesirable, then the MGL-PAX/FULL
+  system can be loaded."
+  :depends-on (:mgl-pax :3bmd :3bmd-ext-code-blocks
+                        :babel :cl-fad :colorize :ironclad)
+  :components ((:module "src"
+                :serial t
+                :components ((:file "describe"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
 (asdf:defsystem mgl-pax/test
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
-  :homepage "http://quotenil.com"
   :description "Test system for MGL-PAX."
   :depends-on (#:mgl-pax)
   :components ((:module "test"
