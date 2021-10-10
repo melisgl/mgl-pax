@@ -2136,8 +2136,11 @@
   (update-asdf-system-readmes (pax-sections) :mgl-pax)
   (update-asdf-system-html-docs (pax-sections) :mgl-pax :pages (pax-pages)))
 
+;;; KLUDGE: Bind *READTABLE* so that when evaluating in Slime (e.g.
+;;; with C-x C-e) the file's readtable is not used (which leads to a
+;;; reader macro conflict with CL-SYNTAX).
 #+nil
-(progn
+(let ((*readtable* (named-readtables:find-readtable :standard)))
   (asdf:load-system :mgl-mat)
   (asdf:load-system :named-readtables/doc)
   (asdf:load-system :micmac)
