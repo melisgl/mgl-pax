@@ -83,7 +83,7 @@
   That's easy to solve, I thought, let's just put all the narrative
   that holds docstrings together in the code and be a bit like a
   Literate Programming weenie turned inside out. The original
-  prototype which did almost everything I wanted was this:
+  prototype, which did almost everything I wanted was this:
 
   ```
   (defmacro defsection (name docstring)
@@ -107,7 +107,7 @@
   are named by the same symbol. This did not concern exporting, of
   course, but it didn't help readability. Distractingly, on such
   symbols, `M-.` was popping up selection dialogs. There were two
-  birds to kill, and the symbol got accompanied by a type which was
+  birds to kill, and the symbol got accompanied by a type, which was
   later generalized into the concept of locatives:
 
   ```commonlisp
@@ -154,7 +154,7 @@
   Code is first, code must look pretty, documentation is code.
 
   In typical use, PAX packages have no :EXPORT's defined. Instead the
-  DEFINE-PACKAGE form gets a docstring which may mention section
+  DEFINE-PACKAGE form gets a docstring, which may mention section
   names (defined with DEFSECTION). When the code is loaded into the
   lisp, pressing `M-.` in SLIME on the name of the section will take
   you there. Sections can also refer to other sections, packages,
@@ -301,9 +301,9 @@
   this extension, if a locative is the previous or the next expression
   around the symbol of interest, then `M-.` will go straight to the
   definition which corresponds to the locative. If that fails, `M-.`
-  will try to find the definitions in the normal way which may involve
-  popping up an xref buffer and letting the user interactively select
-  one of possible definitions.
+  will try to find the definitions in the normal way, which may
+  involve popping up an xref buffer and letting the user interactively
+  select one of possible definitions.
 
   *Note that the this feature is implemented in terms of
   SWANK-BACKEND:FIND-SOURCE-LOCATION and
@@ -642,9 +642,9 @@
 
 (defun document (object &key stream pages (format :markdown))
   """Write OBJECT in FORMAT to STREAM diverting some output to PAGES.
-  FORMAT can be anything [3BMD][3bmd] supports which is
-  currently :MARKDOWN, :HTML and :PLAIN. STREAM may be a stream
-  object, T or NIL as with CL:FORMAT.
+  FORMAT can be anything [3BMD][3bmd] supports, which is currently
+  :MARKDOWN, :HTML and :PLAIN. STREAM may be a stream object, T or NIL
+  as with CL:FORMAT.
 
   Most often, this function is called on section objects
   like `(DOCUMENT @MGL-PAX-MANUAL)`, but it supports all kinds of
@@ -725,11 +725,11 @@
   is always the first element in list of generated things that is the
   return value.
 
-  HEADER-FN, if not NIL, is a function of a single stream argument
-  which is called just before the first write to the page.
-  Since :FORMAT :HTML only generates HTML fragments, this makes it
-  possible to print arbitrary headers, typically setting the title,
-  css stylesheet, or charset.
+  HEADER-FN, if not NIL, is a function of a single stream argument,
+  which is called just before the first write to the page. Since
+  :FORMAT :HTML only generates HTML fragments, this makes it possible
+  to print arbitrary headers, typically setting the title, css
+  stylesheet, or charset.
 
   FOOTER-FN is similar to HEADER-FN, but it's called after the last
   write to the page. For HTML, it typically just closes the body.
@@ -1027,7 +1027,7 @@
 (defvar *document-uppercase-is-code* t
   """When true, words with at least three characters and no lowercase
   characters naming an interned symbol are assumed to be code as if
-  they were marked up with backticks which is especially useful when
+  they were marked up with backticks, which is especially useful when
   combined with *DOCUMENT-LINK-CODE*. For example, this docstring:
 
       "`FOO` and FOO."
@@ -1103,12 +1103,12 @@
 
           Calls `BAR`([`1`][link-id-1] [`2`][link-id-2]) on `X`.
 
-  This situation occurs in PAX with SECTION which is both a class (see
-  [SECTION][class]) and a locative type denoted by a symbol (see
-  [SECTION][locative]). Back in the example above, clearly,
-  there is no reason to link to type `BAR`, so one may wish to select
-  the function locative. There are two ways to do that. One is to
-  specify the locative explicitly as the id of a reference link:
+  This situation occurs in PAX with SECTION, which is both a
+  class (see [SECTION][class]) and a locative type denoted by a
+  symbol (see [SECTION][locative]). Back in the example above,
+  clearly, there is no reason to link to type `BAR`, so one may wish
+  to select the function locative. There are two ways to do that. One
+  is to specify the locative explicitly as the id of a reference link:
 
       "Calls [BAR][function] on X."
 
@@ -1130,7 +1130,7 @@
 
 (defvar *document-link-sections* t
   "When true, HTML anchors are generated before the heading of
-  sections which allows the table of contents to contain links and
+  sections, which allows the table of contents to contain links and
   also code-like references to sections (like `@FOO-MANUAL`) to be
   translated to links with the section title being the name of the
   link.")
@@ -1140,7 +1140,7 @@
   used for linking to sections and code. It is desirable to have ids
   that are short to maintain legibility of the generated markdown, but
   also stable to reduce the spurious diffs in the generated
-  documentation which can be a pain in a version control system.
+  documentation, which can be a pain in a version control system.
 
   Clearly, there is a tradeoff here. This variable controls how many
   characters of the md5 sum of the full link id (the reference as a
@@ -1301,7 +1301,7 @@
 
 (defvar *document-max-table-of-contents-level* 3
   "A non-negative integer. Top-level sections are given a table of
-  contents which includes a nested tree of section titles whose depth
+  contents, which includes a nested tree of section titles whose depth
   is limited by this value. Setting it to 0 turns generation of the
   table of contents off. If *DOCUMENT-LINK-SECTIONS* is true, then the
   table of contents will link to the sections.")
@@ -1728,7 +1728,7 @@
       ;; This won't find [SECTION][TYPE] because SECTION is a class.
       ;;
       ;; Reference lookup could look for a different locative which
-      ;; would lead to the same object/reference, but there is no sane
+      ;; leads to the same object/reference, but there is no sane
       ;; generalization of that to locative-types. Do we need
       ;; something like LOCATIVE-SUBTYPE-P?
       (if (and if-dislocated (eq locative 'dislocated))
@@ -2071,7 +2071,7 @@
   ```
 
   which will return the same reference as `(MAKE-REFERENCE 'FOO
-  'VARIABLE)`. Operations need to know how to deal with references
+  'VARIABLE)`. Operations need to know how to deal with references,
   which we will see in LOCATE-AND-COLLECT-REACHABLE-OBJECTS,
   LOCATE-AND-DOCUMENT and LOCATE-AND-FIND-SOURCE.
 
@@ -2127,7 +2127,7 @@
   work with new object types. Extending DOCUMENT can be done by
   defining a DOCUMENT-OBJECT method. To allow these objects to be
   referenced from DEFSECTION, a LOCATE-OBJECT method is to be defined.
-  Finally, for `M-.` FIND-SOURCE can be specialized. Finally,
+  For `M-.` FIND-SOURCE can be specialized. Finally,
   EXPORTABLE-LOCATIVE-TYPE-P may be overridden if exporting does not
   makes sense. Here is a stripped down example of how all this is done
   for ASDF:SYSTEM:"
@@ -2172,7 +2172,7 @@
 (defgeneric locative-lambda-list (symbol))
 
 (defgeneric locate-object (object locative-type locative-args)
-  (:documentation "Return the object, to which OBJECT and the locative
+  (:documentation "Return the object to which OBJECT and the locative
   refer. For example, if LOCATIVE-TYPE is the symbol PACKAGE, this
   returns `(FIND-PACKAGE SYMBOL)`. Signal a LOCATE-ERROR condition by
   calling the LOCATE-ERROR function if the lookup fails. Signal other
@@ -2235,7 +2235,7 @@
 (defmethod document-object ((string string) stream)
   "Print STRING verbatim to STREAM after cleaning up indentation.
 
-  Docstrings in sources are indented in various ways which can easily
+  Docstrings in sources are indented in various ways, which can easily
   mess up markdown. To handle the most common cases leave the first
   line alone, but from the rest of the lines strip the longest run of
   leading spaces that is common to all non-blank lines."
@@ -2250,7 +2250,7 @@
   (:documentation """Like SWANK:FIND-DEFINITION-FOR-THING, but this
   one is a generic function to be extensible. In fact, the default
   implementation simply defers to SWANK:FIND-DEFINITION-FOR-THING.
-  This function is called by LOCATE-DEFINITION-FOR-EMACS which lies
+  This function is called by LOCATE-DEFINITION-FOR-EMACS, which lies
   behind the `M-.` extension (see @MGL-PAX-EMACS-INTEGRATION).
 
   If successful, the return value looks like this:
@@ -2260,7 +2260,7 @@
              (:position 24) nil)
   ```
 
-  The NIL is the source snippet which is optional. Note that position
+  The NIL is the source snippet, which is optional. Note that position
   1 is the first character. If unsuccessful, the return values is
   like:
 
@@ -2536,7 +2536,7 @@
 (defmethod describe-object ((section section) stream)
   "[SECTION][class] objects are printed by calling DOCUMENT on them
   with all @MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES, except for
-  *DOCUMENT-NORMALIZE-PACKAGES*, turned off to reduce clutter."
+  *DOCUMENT-NORMALIZE-PACKAGES* turned off to reduce clutter."
   (let ((*document-uppercase-is-code* nil)
         (*document-link-code* nil)
         (*document-link-sections* nil)
@@ -2659,7 +2659,8 @@
       (when (and *document-normalize-packages* (not same-package))
         (format stream "###### \\[in package ~A~A\\]~%" (package-name *package*)
                 (if (package-nicknames *package*)
-                    (format nil " with nicknames ~{~A~^, ~}" (package-nicknames *package*))
+                    (format nil " with nicknames ~{~A~^, ~}"
+                            (package-nicknames *package*))
                     "")))
       (let ((firstp t))
         (dolist (entry (section-entries section))
