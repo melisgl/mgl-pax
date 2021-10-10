@@ -2428,13 +2428,6 @@
   function has essentially the same purpose as FIND-SOURCE but it has
   different arguments to allow specializing on LOCATIVE-TYPE."))
 
-(defmethod locate-and-find-source (object locative-type locative-args)
-  "This default implementation simply calls FIND-SOURCE with OBJECT
-  which should cover the common case of a macro expanding to, for
-  instance, a defun but having its own locative type."
-  (declare (ignore locative-type locative-args))
-  (find-source object))
-
 (defmacro define-symbol-locative-type (locative-type lambda-list
                                        &body docstring)
   """Similar to DEFINE-LOCATIVE-TYPE but it assumes that all things
