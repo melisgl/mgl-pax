@@ -135,7 +135,7 @@
 
 (defmethod print-object ((section section) stream)
   (print-unreadable-object (section stream :type t)
-    (format stream "~a" (section-name section))))
+    (format stream "~S" (section-name section))))
 
 (defun locative-type (locative)
   "The first element of LOCATIVE if it's a list. If it's a symbol then
