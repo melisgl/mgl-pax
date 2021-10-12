@@ -4,7 +4,7 @@
 
 ## Table of Contents
 
-- [1 mgl-pax ASDF System Details][4918]
+- [1 MGL-PAX ASDF System Details][4918]
 - [2 Links][d7e0]
 - [3 Background][84ee]
 - [4 Tutorial][aa52]
@@ -12,7 +12,7 @@
 - [6 Basics][8059]
 - [7 Locative Types][1fbb]
 - [8 Generating Documentation][063a]
-    - [8.1 mgl-pax/full ASDF System Details][0785]
+    - [8.1 MGL-PAX/FULL ASDF System Details][0785]
     - [8.2 Markdown Support][d58f]
         - [8.2.1 Indentation][4336]
         - [8.2.2 Syntax Highlighting][32ac]
@@ -33,7 +33,7 @@
 ###### \[in package MGL-PAX with nicknames PAX\]
 <a id='x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29'></a>
 
-## 1 mgl-pax ASDF System Details
+## 1 MGL-PAX ASDF System Details
 
 - Version: 0.0.4
 - Description: Exploratory programming tool and documentation
@@ -936,7 +936,7 @@ location and the docstring of the defining form is recorded (see
 
 <a id='x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29'></a>
 
-### 8.1 mgl-pax/full ASDF System Details
+### 8.1 MGL-PAX/FULL ASDF System Details
 
 - Description: [`MGL-PAX`][4918] with all dependencies preloaded.
 - Long Description: To ease deployment, the set of dependencies of
@@ -2021,7 +2021,8 @@ for [`ASDF:SYSTEM:`][bf8a]
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
                         (format nil "~A ASDF System Details"
-                                (slot-value system 'asdf::name)))
+                                (string-upcase
+                                 (slot-value system 'asdf::name))))
     (flet ((foo (name fn &key type)
              (let ((value (funcall fn system)))
                (when value

@@ -607,7 +607,8 @@
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
                         (format nil "~A ASDF System Details"
-                                (slot-value system 'asdf::name)))
+                                (string-upcase
+                                 (slot-value system 'asdf::name))))
     (flet ((foo (name fn &key type)
              (let ((value (funcall fn system)))
                (when value

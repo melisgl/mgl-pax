@@ -1,7 +1,7 @@
 # PAX Manual
 
 ###### \[in package MGL-PAX with nicknames PAX\]
-## mgl-pax ASDF System Details
+## MGL-PAX ASDF System Details
 
 - Version: 0.0.4
 - Description: Exploratory programming tool and documentation
@@ -828,7 +828,7 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     ```
 
 
-### mgl-pax/full ASDF System Details
+### MGL-PAX/FULL ASDF System Details
 
 - Description: MGL-PAX with all dependencies preloaded.
 - Long Description: To ease deployment, the set of dependencies of
@@ -1805,7 +1805,8 @@ for ASDF:SYSTEM:
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
                         (format nil "~A ASDF System Details"
-                                (slot-value system 'asdf::name)))
+                                (string-upcase
+                                 (slot-value system 'asdf::name))))
     (flet ((foo (name fn &key type)
              (let ((value (funcall fn system)))
                (when value
