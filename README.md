@@ -2040,7 +2040,7 @@ for [`ASDF:SYSTEM:`][bf8a]
                             ;; Like MASSAGE-DOCSTRING but without
                             ;; indenting.
                             (prefix-lines "  "
-                                          (replace-known-references
+                                          (codify-and-autolink
                                            (strip-docstring-indentation value))
                                           :exclude-first-line-p t)))
                    ((nil)
@@ -2156,9 +2156,8 @@ for [`ASDF:SYSTEM:`][bf8a]
     Write `OBJECT` (and its references recursively) in
     `FORMAT` to `STREAM`.
     
-    The [`DOCUMENT`][1eb8] function calls this generic function with `LEVEL` 0,
-    passing `FORMAT` on. Add methods specializing on `OBJECT` to customize
-    how objects of that type are presented in the documentation.
+    Add methods specializing on `OBJECT` to customize how objects of that
+    type are presented in the documentation.
 
 <a id='x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28STRING-20T-29-29-29'></a>
 

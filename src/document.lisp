@@ -10,10 +10,16 @@
   (@mgl-pax-documentation-printer-variables section)
   (@mgl-pax-documentation-utilities section))
 
+;;; A PAGE is basically a single markdown or html file, to where the
+;;; documentation of some references is written. See the DOCUMENT
+;;; function.
+;;;
 ;;; Documentation starts out being sent to a certain stream, but the
 ;;; output is redirected to different stream if it is for a reference
-;;; among PAGE-REFERENCES. This stream is given by TEMP-STREAM-SPEC
-;;; that's a stream spec to allow it to
+;;; on the current page (see COLLECT-REACHABLE-OBJECTS,
+;;; PAGE-REFERENCES). This stream - to which the temporary markdown
+;;; output written - is given by TEMP-STREAM-SPEC that's a stream spec
+;;; to allow it to
 ;;;
 ;;; - be created lazily so that no stray files are left around and
 ;;;   only a small number of fds are needed even for a huge project
@@ -43,18 +49,22 @@
 ;;; The current page where output is being sent.
 (defvar *page* nil)
 
-;;; This is a link target. REFERENCE is the thing it is about, PAGE is
-;;; where its documentation will go, ID is the markdown reference link
-;;; id and PAGE-TO-N-USES is a hash table that counts how many times
-;;; this was linked to for each page.
+;;; This is a possible link to REFERENCE on PAGE (note that the same
+;;; REFERENCE may be written to multiple pages). ID is the markdown
+;;; reference link id and PAGE-TO-N-USES is a hash table that counts
+;;; how many times this was linked to from each page.
 (defstruct link
   reference
   page
   id
   page-to-n-uses)
 
-;;; A list of LINK objects. If a reference occurs multiple times,
-;;; earlier links have precedence.
+;;; A list of LINK objects representing all possible things which may
+;;; be linked to. Bound only once (by WITH-PAGES) after pages are
+;;; created (to the list of links to all reachable references from all
+;;; the objects being documented). If a reference occurs multiple
+;;; times, earlier links (thus pages earlier in DOCUMENT's PAGES
+;;; argument) have precedence.
 (defparameter *links* ())
 
 (defun find-link-by-id (id)
@@ -341,7 +351,7 @@
           (let ((outputs ()))
             (do-pages-created (page)
               (with-temp-output-to-page (stream page)
-                (emit-footer stream))
+                (write-markdown-reference-style-link-definitions stream))
               (unless (eq format :markdown)
                 (let ((markdown-string (with-temp-input-from-page (stream page)
                                          (read-stream-into-string stream))))
@@ -358,15 +368,17 @@
                 (first outputs)
                 (reverse outputs))))))))
 
-;;; Emit markdown definitions for links to REFERENCE objects that were
-;;; linked to.
-(defun emit-footer (stream)
+;;; Emit markdown definitions for links (in *LINKS*) to REFERENCE
+;;; objects that were linked to on the current page.
+(defun write-markdown-reference-style-link-definitions (stream)
   (let ((used-links (sort (remove-if-not #'link-used-on-current-page-p *links*)
                           #'string< :key #'link-id)))
     (when used-links
       (format stream "~%")
       (dolist (link used-links)
         (let ((anchor (reference-to-anchor (link-reference link))))
+          ;; The format is [label]: url "title"
+          ;; E.g.  [1]: http://example.org/Hobbit#Lifestyle "Hobbit lifestyles"
           (format stream "  [~A]: ~@[~A~]#~A ~S~%"
                   (link-id link)
                   (if (link-page link)
@@ -386,6 +398,7 @@
             (reference-fragment (page-uri-fragment reference-page)))
         (assert (and fragment reference-fragment))
         (relativize-pathname fragment reference-fragment))))
+
 
 ;;;; Page specs
 
@@ -422,52 +435,6 @@
             (mapcar #'canonical-reference
                     (cons object (collect-reachable-objects object))))
           objects))
-
-;;;; Argument handling
-
-;;; Return the names of the function arguments in ARGLIST that's a
-;;; lambda list. Handles &KEY, &OPTIONAL, &REST.
-(defun function-arg-names (arglist)
-  (unless (eq arglist :not-available)
-    (mapcar (lambda (arg)
-              (if (and (listp arg)
-                       (symbolp (first arg)))
-                  (first arg)
-                  arg))
-            arglist)))
-
-;;; Return the names of the arguments in ARGLIST that's a macro lambda
-;;; list.
-(defun macro-arg-names (arglist)
-  (unless (eq arglist :not-available)
-    (let ((names ()))
-      (labels ((foo (arglist)
-                 (let ((seen-special-p nil))
-                   (loop for arg in arglist
-                         do (cond ((member arg '(&key &optional &rest &body))
-                                   (setq seen-special-p t))
-                                  ((symbolp arg)
-                                   (push arg names))
-                                  (seen-special-p
-                                   (when (symbolp (first arg))
-                                     (push (first arg) names)))
-                                  (t
-                                   (foo arg)))))))
-        (foo arglist))
-      (reverse names))))
-
-;;; Add a dummy page with for references to SYMBOLS whose locative is
-;;; ARGUMENT. If an ARGUMENT reference is present for a symbol, it
-;;; will surely be marked up as code, but it's not linkified in the
-;;; absence of an explicit locative even if it the symbol refers to
-;;; other things with different locatives.
-(defmacro with-dislocated-symbols ((symbols) &body body)
-  `(with-pages ((list (make-page
-                       :references (mapcar (lambda (symbol)
-                                             (make-reference symbol
-                                                             'dislocated))
-                                           ,symbols))))
-     ,@body))
 
 
 (defsection @mgl-pax-markdown-support (:title "Markdown Support")
@@ -555,6 +522,19 @@
   (*document-text-navigation* variable)
   (*document-fancy-html-navigation* variable)
   (*document-normalize-packages* variable))
+
+
+;;;; Automatic markup of symbols
+
+;;; Take a string in markdown format and a list of KNOWN-REFERENCES.
+;;; Markup symbols as code (if *DOCUMENT-UPPERCASE-IS-CODE*), autolink
+;;; (if *DOCUMENT-LINK-SECTIONS*, *DOCUMENT-LINK-CODE*) and always
+;;; handle explicit links with locatives (e.g. [FOO][function]).
+;;; Return the transformed string.
+(defun codify-and-autolink (string &key (known-references *references*))
+  (when string
+    (autolink (codify string known-references) known-references)))
+
 
 (defvar *document-uppercase-is-code* t
   """When true, words with at least three characters and no lowercase
@@ -578,6 +558,133 @@
   example looks in a docstring. Note that the backslash is discarded
   even if *DOCUMENT-UPPERCASE-IS-CODE* is false.""")
 
+;;; The core of the implementation of *DOCUMENT-UPPERCASE-IS-CODE*.
+;;;
+;;; This is called by MAP-NAMES so the return values are NEW-TREE,
+;;; SLICE, N-CHARS-READ. Also called by TRANSLATE-EMPH that expects
+;;; only a single return value: the new tree.
+(defun translate-uppercase-name (parent tree name known-references)
+  (declare (ignore parent))
+  (when (no-lowercase-chars-p name)
+    (flet ((foo (name)
+             (multiple-value-bind (refs n-chars-read)
+                 (references-for-similar-names name known-references)
+               (when refs
+                 (values `(,(code-fragment (maybe-downcase name)))
+                         t n-chars-read)))))
+      (let ((emph (and (listp tree) (eq :emph (first tree)))))
+        ;; *DOCUMENT-UPPERCASE-IS-CODE* escaping
+        (cond ((and emph (eql #\\ (alexandria:first-elt name)))
+               ;; E.g. "*\\DOCUMENT-NORMALIZE-PACKAGES*"
+               ;; -> (:EMPH "DOCUMENT-NORMALIZE-PACKAGES")
+               (values (list `(:emph ,(maybe-downcase (subseq name 1))))
+                       t (length name)))
+              ((eql #\\ (alexandria:first-elt name))
+               ;; Discard the leading backslash escape.
+               ;; E.g. "\\MGL-PAX" -> "MGL-PAX"
+               (values (list (maybe-downcase (subseq name 1))) t (length name)))
+              ((not *document-uppercase-is-code*)
+               ;; Don't change anything.
+               nil)
+              (emph
+               (foo (format nil "*~A*" name)))
+              (t
+               (foo name)))))))
+
+;;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings and :EMPH
+;;; (to recognize *VAR*). Also, perform consistency checking of
+;;; cl-transcript code blocks (see
+;;; @MGL-PAX-TRANSCRIPT-EMACS-INTEGRATION).
+(defun codify (string known-references)
+  (map-markdown-parse-tree
+   (list :emph (symbol-stub "3bmd-code-blocks::code-block"))
+   '(:code :verbatim (symbol-stub "3bmd-code-blocks::code-block")
+     :reference-link :explicit-link :image :mailto)
+   t
+   (alexandria:rcurry #'translate-to-code known-references)
+   string))
+
+;;; This is called with with a list TREE whose CAR is :EMPH or
+;;; 3BMD-CODE-BLOCKS::CODE-BLOCK or with TREE being a string (as per
+;;; the MAP-MARKDOWN-PARSE-TREE above).
+(defun translate-to-code (parent tree known-references)
+  (cond ((stringp tree)
+         (let ((string tree))
+           (values (map-names string
+                              (lambda (string start end)
+                                (let ((name (subseq string start end)))
+                                  (translate-uppercase-name parent string name
+                                                            known-references))))
+                   ;; don't recurse, do slice
+                   nil t)))
+        ((eq :emph (first tree))
+         (translate-emph parent tree known-references))
+        ((eq (symbol-stub "3bmd-code-blocks::code-block") (first tree))
+         (translate-code-block parent tree))
+        (t
+         (error "~@<Unexpected tree type ~S.~:@>" (first tree)))))
+
+;;; CODE-BLOCK looks like this:
+;;;
+;;;     (3BMD-CODE-BLOCKS::CODE-BLOCK :LANG "commonlisp" :CONTENT "42")
+(defun translate-code-block (parent code-block)
+  (declare (ignore parent))
+  (let ((lang (getf (rest code-block) :lang)))
+    (if (equal lang "cl-transcript")
+        `(,(symbol-stub "3bmd-code-blocks::code-block")
+          :lang ,lang
+          :content ,(transcribe (getf (rest code-block) :content) nil
+                                :update-only t :check-consistency t))
+        code-block)))
+
+;;; Undo the :EMPH parsing for code references. E.g. (:EMPH "XXX") ->
+;;; "*XXX*" (if *XXX* is in a REFERENCE-OBJECT KNOWN-REFERENCES).
+(defun translate-emph (parent tree known-references)
+  (if (= 2 (length tree))
+      (let ((translation (translate-uppercase-name parent tree (second tree)
+                                                   known-references)))
+        (if translation
+            ;; Replace TREE with TRANSLATION, don't process
+            ;; TRANSLATION again recursively, slice the return value
+            ;; into the list of children of PARENT.
+            (values translation nil t)
+            ;; leave it alone, don't recurse, don't slice
+            (values tree nil nil)))
+      ;; Tell MAP-MARKDOWN-PARSE-TREE to leave TREE unchanged,
+      ;; recurse, don't slice.
+      (values tree t nil)))
+
+
+(defvar *find-definitions-right-trim* ",:.>")
+(defparameter *find-definitions-right-trim-2* ",:.>sS")
+
+;;; Lifted from SWANK, and tweaked to return the number of characters
+;;; read.
+(defun find-definitions-find-symbol-or-package (name)
+  (flet ((do-find (name n)
+           (multiple-value-bind (symbol found name)
+               (with-swank ()
+                 (swank::with-buffer-syntax (*package*)
+                   (swank::parse-symbol name)))
+             (cond (found
+                    (return-from find-definitions-find-symbol-or-package
+                      (values symbol n)))
+                   ;; Packages are not named by symbols, so
+                   ;; not-interned symbols can refer to packages
+                   ((find-package name)
+                    (return-from find-definitions-find-symbol-or-package
+                      (values (make-symbol name) n)))))))
+    (do-find name (length name))
+    (let* ((right-trimmed
+             (swank::string-right-trim *find-definitions-right-trim* name))
+           (right-trimmed-length (length right-trimmed)))
+      (do-find right-trimmed right-trimmed-length))
+    (let* ((right-trimmed-2
+             (swank::string-right-trim *find-definitions-right-trim-2* name))
+           (right-trimmed-2-length (length right-trimmed-2)))
+      (do-find right-trimmed-2 right-trimmed-2-length))))
+
+
 (defvar *document-downcase-uppercase-code* nil
   "If true, then the names of symbols recognized as code (including
   those found if *DOCUMENT-UPPERCASE-IS-CODE*) are downcased in the
@@ -585,7 +692,23 @@
   :ONLY-IN-MARKUP, then if the output format does not support
   markup (e.g. it's :PLAIN), then no downcasing is performed.")
 
-;;;; Links
+(defun maybe-downcase (string)
+  (if (and (or (and *document-downcase-uppercase-code*
+                    (not (eq *document-downcase-uppercase-code*
+                             :only-in-markup)))
+               (and (eq *document-downcase-uppercase-code*
+                        :only-in-markup)
+                    (not (eq *format* :plain))))
+           (no-lowercase-chars-p string))
+      (string-downcase string)
+      string))
+
+(defun no-lowercase-chars-p (string)
+  (notany (lambda (char)
+            (char/= char (char-upcase char)))
+          ;; Allows plurals as in "FRAMEs" and "FRAMEs."
+          (swank::string-right-trim *find-definitions-right-trim-2* string)))
+
 
 (defvar *document-link-code* t
   """When true, during the process of generating documentation for a
@@ -667,6 +790,293 @@
   translated to links with the section title being the name of the
   link.")
 
+;;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
+;;; :REFERENCE-LINK for [symbol][locative]). Don't hurt other links.
+(defun autolink (string known-references)
+  (map-markdown-parse-tree
+   '(:code :reference-link)
+   '(:explicit-link :image :mailto)
+   nil
+   (alexandria:rcurry #'translate-to-links known-references)
+   string))
+
+;;; This is the first of the translator functions, which are those
+;;; passed to MAP-MARKDOWN-PARSE-TREE. This particular translator
+;;;
+;;; - handles (:CODE "SOMETHING"), the parse of `SOMETHING`: looks for
+;;;   any KNOW-REFERENCES to "something" (which may name a symbol or a
+;;;   package) and tanslates it to, for example, (:REFERENCE-LINK
+;;;   :LABEL ((:CODE "SOMETHING")) :DEFINITION "function") if there is
+;;;   a single function reference to it. See FORMAT-REFERENCES-TO-NAME
+;;;   and format-references for all the cases.
+;;;
+;;;  - handles :REFERENCE-LINK nodes:
+;;;
+;;;    - those with explicit locative given (:REFERENCE-LINK :LABEL
+;;;      ((:CODE "SOMETHING")) :DEFINITION "function"), the parse of
+;;;      [`SOMETHING`][function],
+;;;
+;;;    - and those with no locative (:REFERENCE-LINK :LABEL ((:CODE
+;;;      "SOMETHING")) :TAIL "[]"), the parse of [`SOMETHING`][].
+(defun translate-to-links (parent tree known-references)
+  (cond
+    ;; (:CODE "something")
+    ((and (eq :code (first tree))
+          (= 2 (length tree))
+          (stringp (second tree)))
+     (let* ((name (second tree))
+            (references (format-references-to-name parent tree name
+                                                   known-references)))
+       (if references
+           (values references nil t)
+           tree)))
+    ;; [section][type], [`section`][type], [*var*][variable], [section][]
+    ((and (eq :reference-link (first tree)))
+     ;; For example, the tree for [`section`][type] is
+     ;; (:REFERENCE-LINK :LABEL ((:CODE "SECTION")) :DEFINITION "type")
+     (destructuring-bind (&key label definition tail) (rest tree)
+       (let* ((name (extract-name-from-reference-link-label label))
+              (symbol (if name
+                          (find-definitions-find-symbol-or-package name)
+                          nil)))
+         (if (not symbol)
+             tree
+             (let* ((references (remove symbol known-references
+                                        :test-not #'eq
+                                        :key #'reference-object))
+                    (references (if (and (zerop (length definition))
+                                         (equal tail "[]"))
+                                    (filter-references references)
+                                    (alexandria:ensure-list
+                                     (find-reference-by-locative-string
+                                      definition
+                                      ;; Explicit references don't
+                                      ;; need heuristic conflict
+                                      ;; resolution so we don't call
+                                      ;; FILTER-REFERENCES.
+                                      (filter-references-by-format
+                                       references)
+                                      :if-dislocated symbol)))))
+               (if references
+                   (values (format-references name references) nil t)
+                   tree))))))
+    (t
+     tree)))
+
+(defun extract-name-from-reference-link-label (label)
+  (let ((e (first label)))
+    (cond ((stringp e)
+           ;; ("S") -> "S"
+           e)
+          ((and (eq :emph (first e))
+                (= 2 (length e))
+                (stringp (second e)))
+           ;; (:EMPH "S") -> "*S*"
+           (format nil "*~A*" (second e)))
+          ((and (eq :code (first e))
+                (= 2 (length e))
+                (stringp (second e)))
+           ;; (:CODE "S") -> "S"
+           (second e)))))
+
+;;; Translate NAME (a string) that's part of TREE (e.g. it's "xxx"
+;;; from (:CODE "xxx") or from "xxx,yyy"), or it's constructed from
+;;; TREE (e.g. it's "*SYM*" from (:EMPH "SYM")).
+(defun format-references-to-name (parent tree name known-references)
+  (multiple-value-bind (refs n-chars-read)
+      (references-for-similar-names name known-references)
+    (when refs
+      (let ((refs (filter-references refs)))
+        ;; If necessary, try to find a locative before or after NAME
+        ;; to disambiguate.
+        (when (and (< 1 (length refs))
+                   (references-for-the-same-symbol-p refs))
+          (let ((reference (find-locative-around parent tree refs)))
+            (when reference
+              (setq refs (list reference)))))
+        (format-references (maybe-downcase (subseq name 0 n-chars-read))
+                           refs)))))
+
+;;; NAME-ELEMENT is a child of TREE. It is the name of the symbol or
+;;; it contains the name. Find a locative before or after NAME-ELEMENT
+;;; with which NAME occurs in POSSIBLE-REFERENCES. Return the matching
+;;; REFERENCE, if found. POSSIBLE-REFERENCES must only contain
+;;; references to the symbol.
+(defun find-locative-around (tree name-element possible-references)
+  (labels ((try (element)
+             (let ((reference
+                     (cond ((stringp element)
+                            (find-reference-by-locative-string
+                             element possible-references))
+                           ((eq :code (first element))
+                            (find-reference-by-locative-string
+                             (second element) possible-references))
+                           ;; (:REFERENCE-LINK :LABEL ((:CODE
+                           ;; "CLASS")) :DEFINITION "0524")
+                           ((eq :reference-link (first element))
+                            (try (first (third element)))))))
+               (when reference
+                 (return-from find-locative-around reference)))))
+    ;; For example, (:PLAIN "See" "function" " " "FOO")
+    (loop for rest on tree
+          do (when (and (eq (third rest) name-element)
+                        (stringp (second rest))
+                        (blankp (second rest)))
+               (try (first rest))
+               (return)))
+    ;; For example, (:PLAIN "See" "the" "FOO" " " "function")
+    (loop for rest on tree
+          do (when (and (eq (first rest) name-element)
+                        (stringp (second rest))
+                        (blankp (second rest)))
+               (try (third rest))
+               (return)))))
+
+(defun find-reference-by-locative-string (locative-string possible-references
+                                          &key if-dislocated)
+  (let ((locative (read-locative-from-string locative-string)))
+    (when locative
+      ;; This won't find [SECTION][TYPE] because SECTION is a class.
+      ;;
+      ;; Reference lookup could look for a different locative which
+      ;; leads to the same object/reference, but there is no sane
+      ;; generalization of that to locative-types. Do we need
+      ;; something like LOCATIVE-SUBTYPE-P?
+      (if (and if-dislocated (eq locative 'dislocated))
+          (make-reference if-dislocated 'dislocated)
+          (find locative possible-references
+                :key #'reference-locative :test #'locative-equal)))))
+
+;;; Return the references from REFS which are for SYMBOL or which are
+;;; for a non-symbol but resolve to the same object with SYMBOL.
+(defun references-for-symbol (symbol refs n-chars-read)
+  (let ((symbol-name (symbol-name symbol)))
+    (or (remove-if-not (lambda (ref)
+                         (or (eq symbol (reference-object ref))
+                             ;; This function is only called when
+                             ;; there is an interned symbol for
+                             ;; something named by a string.
+                             ;;
+                             ;; KLUDGE: If the object of REF is
+                             ;; replaced with SYMBOL, does it resolve
+                             ;; to the same object? This is necessary
+                             ;; to get packages and asdf systems
+                             ;; right, because the object in their
+                             ;; canonical references are strings and
+                             ;; we compare to symbols.
+                             (equalp symbol-name (reference-object ref))))
+                       refs)
+        ;; Don't codify A, I and similar.
+        (if (< 2 n-chars-read)
+            (list (make-reference symbol 'dislocated))
+            ()))))
+
+(defun references-for-similar-names (name refs)
+  (multiple-value-bind (symbol n-chars-read)
+      (find-definitions-find-symbol-or-package name)
+    (when n-chars-read
+      (values (references-for-symbol symbol refs n-chars-read) n-chars-read))))
+
+;;; Select some references from REFS heuristically.
+(defun filter-references (refs)
+  (let ((refs (filter-asdf-system-references
+               (filter-references-by-format refs))))
+    (if (references-for-the-same-symbol-p refs)
+        (resolve-generic-function-and-methods
+         (resolve-dislocated refs))
+        refs)))
+
+;;; REFERENCE-OBJECT on a CANONICAL-REFERENCE of ASDF:SYSTEM is a
+;;; string, which makes REFERENCES-FOR-THE-SAME-SYMBOL-P return NIL.
+;;; It's rare to link to ASDF systems in an ambiguous situation, so
+;;; don't.
+(defun filter-asdf-system-references (refs)
+  (if (< 1 (length refs))
+      (remove 'asdf:system refs :key #'reference-locative-type)
+      refs))
+
+(defun references-for-the-same-symbol-p (refs)
+  (= 1 (length (remove-duplicates (mapcar #'reference-object refs)))))
+
+;;; If there is a DISLOCATED reference, then don't link anywhere
+;;; (remove all the other references).
+(defun resolve-dislocated (refs)
+  (let ((ref (find 'dislocated refs :key #'reference-locative-type)))
+    (if ref
+        (list ref)
+        refs)))
+
+(defun resolve-generic-function-and-methods (refs)
+  (flet ((non-method-refs ()
+           (remove-if (lambda (ref)
+                        (member (reference-locative-type ref)
+                                '(accessor reader writer method)))
+                      refs)))
+    (cond
+      ;; If in doubt, prefer the generic function to methods.
+      ((find 'generic-function refs :key #'reference-locative-type)
+       (non-method-refs))
+      ;; No generic function, prefer non-methods to methods.
+      ((non-method-refs))
+      (t
+       refs))))
+
+(defun filter-references-by-format (refs)
+  (remove-if-not (lambda (ref)
+                   (and (or (and *document-link-sections*
+                                 (typep (resolve ref :errorp nil)
+                                        'section))
+                            *document-link-code*)
+                        (let ((page (reference-page ref)))
+                          (or
+                           ;; These have no pages, but won't result in
+                           ;; link anyway. Keep them.
+                           (member (reference-locative-type ref) '(dislocated))
+                           ;; Intrapage links always work.
+                           (eq *page* page)
+                           ;; Else we need to know the URI-FRAGMENT of
+                           ;; both pages. See
+                           ;; RELATIVE-PAGE-URI-FRAGMENT.
+                           (and (page-uri-fragment *page*)
+                                (page-uri-fragment page))))))
+                 refs))
+
+;;; For NAME (a STRING) and some references to it (REFS), return a
+;;; markdown parse tree fragment to be spliced into a markdown parse
+;;; tree with NAME formatted as :CODE with :REFERENCE-LINKs.
+(defun format-references (name refs)
+  (let ((ref-1 (first refs)))
+    (cond ((endp refs)
+           ;; all references were filtered out
+           `(,(code-fragment name)))
+          ((< 1 (length refs))
+           ;; `name`([1][link-id-1] [2][link-id-2])
+           (values `(,(code-fragment (maybe-downcase name))
+                     "("
+                     ,@(loop
+                         for i upfrom 0
+                         for ref in refs
+                         append `(,@(unless (zerop i)
+                                      '(" "))
+                                  (:reference-link
+                                   :label (,(code-fragment i))
+                                   :definition ,(link-to-reference ref))))
+                     ")")
+                   t))
+          ((member (reference-locative-type ref-1) '(dislocated))
+           `(,(code-fragment (maybe-downcase name))))
+          ((typep (resolve ref-1) 'section)
+           `((:reference-link :label (,(section-title-or-name (resolve ref-1)))
+                              :definition ,(link-to-reference ref-1))))
+          ((typep (resolve ref-1) 'glossary-term)
+           `((:reference-link :label (,(glossary-term-title-or-name
+                                        (resolve ref-1)))
+                              :definition ,(link-to-reference ref-1))))
+          (t
+           `((:reference-link :label (,(code-fragment (maybe-downcase name)))
+                              :definition ,(link-to-reference ref-1)))))))
+
+
 (defparameter *document-min-link-hash-length* 4
   "Recall that markdown reference style links (like `[label][id]`) are
   used for linking to sections and code. It is desirable to have ids
@@ -695,6 +1105,7 @@
                (unless (funcall detect-collision-fn hash)
                  (return-from hash-link hash))))
     (assert nil () "MD5 collision collision detected.")))
+
 
 ;;;; Signatures
 
@@ -791,7 +1202,7 @@
                           ;; things like '`*package*`, so disable
                           ;; this.
                           (eq *format* :html))
-                     (replace-known-references
+                     (codify-and-autolink
                       (prin1-and-escape-markdown object))
                      (prin1-and-escape-markdown object)))
                (foo (arglist level)
@@ -825,6 +1236,7 @@
                  (unless (= level 0)
                    (format out ")"))))
         (foo arglist 0)))))
+
 
 ;;;; Section numbering, table of contents and navigation links
 
@@ -1041,6 +1453,7 @@
 (defmacro with-nested-headings (() &body body)
   `(let ((*heading-level* (1+ *heading-level*)))
      ,@body))
+
 
 ;;;; Packages
 
@@ -1051,541 +1464,6 @@
   messages are printed right after the section heading if necessary.
   If false, symbols are always printed relative to the current
   package.")
-
-;;;; High level printing utilities
-
-;;; Print (DOCUMENTATION OBJECT DOC-TYPE) to STREAM in FORMAT. Clean
-;;; up docstring indentation, then indent it by four spaces.
-;;; Automarkup symbols.
-(defun maybe-print-docstring (object doc-type stream)
-  (let ((docstring (filter-documentation object doc-type)))
-    (when docstring
-      (format stream "~%~A~%" (massage-docstring docstring)))))
-
-(defun massage-docstring (docstring &key (indentation "    "))
-  (if *table-of-contents-stream*
-      ;; The output is going to /dev/null and this is a costly
-      ;; operation, skip it.
-      ""
-      (let ((docstring (strip-docstring-indentation docstring)))
-        (prefix-lines indentation (replace-known-references docstring)))))
-
-(defun filter-documentation (symbol doc-type)
-  (let ((docstring (documentation symbol doc-type)))
-    #+sbcl
-    (if (member docstring
-                '("Return whether debug-block represents elsewhere code."
-                  "automatically generated accessor method"
-                  "automatically generated reader method"
-                  "automatically generated writer method")
-                :test #'equal)
-        ;; Discard the garbage docstring.
-        nil
-        docstring)
-    #-sbcl
-    docstring))
-
-;;;; Indentation utilities
-
-;;; Normalize indentation of docstrings as it's described in
-;;; (METHOD () (STRING T)) DOCUMENT-OBJECT.
-(defun strip-docstring-indentation (docstring &key (first-line-special-p t))
-  (let ((indentation
-          (docstring-indentation docstring
-                                 :first-line-special-p first-line-special-p)))
-    (values (with-output-to-string (out)
-              (with-input-from-string (s docstring)
-                (loop for i upfrom 0
-                      do (multiple-value-bind (line missing-newline-p)
-                             (read-line s nil nil)
-                           (unless line
-                             (return))
-                           (if (and first-line-special-p (zerop i))
-                               (write-string line out)
-                               (write-string (subseq* line indentation) out))
-                           (unless missing-newline-p
-                             (terpri out))))))
-            indentation)))
-
-(defun n-leading-spaces (line)
-  (let ((n 0))
-    (loop for i below (length line)
-          while (char= (aref line i) #\Space)
-          do (incf n))
-    n))
-
-;;; Return the minimum number of leading spaces in non-blank lines
-;;; after the first.
-(defun docstring-indentation (docstring &key (first-line-special-p t))
-  (let ((n-min-indentation nil))
-    (with-input-from-string (s docstring)
-      (loop for i upfrom 0
-            for line = (read-line s nil nil)
-            while line
-            do (when (and (or (not first-line-special-p) (plusp i))
-                          (not (blankp line)))
-                 (when (or (null n-min-indentation)
-                           (< (n-leading-spaces line) n-min-indentation))
-                   (setq n-min-indentation (n-leading-spaces line))))))
-    (or n-min-indentation 0)))
-
-;;; Add PREFIX to every line in STRING.
-(defun prefix-lines (prefix string &key exclude-first-line-p)
-  (with-output-to-string (out)
-    (with-input-from-string (in string)
-      (loop for i upfrom 0 do
-        (multiple-value-bind (line missing-newline-p) (read-line in nil nil)
-          (unless line
-            (return))
-          (if (and exclude-first-line-p (= i 0))
-              (format out "~a" line)
-              (format out "~a~a" prefix line))
-          (unless missing-newline-p
-            (terpri out)))))))
-
-;;;; Automatic markup of symbols
-
-;;; Take a string in markdown format and a list of KNOWN-REFERENCES.
-;;; Markup symbols as code (if *DOCUMENT-UPPERCASE-IS-CODE*), autolink
-;;; (if *DOCUMENT-LINK-SECTIONS*, *DOCUMENT-LINK-CODE*) and handle
-;;; explicit links with locatives (always). Return the transformed
-;;; string.
-(defun replace-known-references (string &key (known-references *references*))
-  (when string
-    (let ((string
-            ;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings
-            ;; and :EMPH (to recognize *VAR*).
-            (map-markdown-parse-tree
-             (list :emph (symbol-stub "3bmd-code-blocks::code-block"))
-             '(:code :verbatim (symbol-stub "3bmd-code-blocks::code-block")
-               :reference-link :explicit-link :image :mailto)
-             t
-             (alexandria:rcurry #'translate-to-code known-references)
-             string)))
-      ;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
-      ;; :REFERENCE-LINK for [symbol][locative]). Don't hurt links.
-      (map-markdown-parse-tree
-       '(:code :reference-link)
-       '(:explicit-link :image :mailto)
-       nil
-       (alexandria:rcurry #'translate-to-links known-references)
-       string))))
-
-(defun translate-to-links (parent tree known-references)
-  (cond
-    ;; (:CODE "something")
-    ((and (eq :code (first tree))
-          (= 2 (length tree))
-          (stringp (second tree)))
-     (let* ((name (second tree))
-            (translation (translate-name parent tree name known-references)))
-       (if translation
-           (values translation nil t)
-           tree)))
-    ;; [section][type], [`section`][type], [*var*][variable], [section][]
-    ((and (eq :reference-link (first tree)))
-     ;; For example, the tree for [`section`][type] is
-     ;; (:REFERENCE-LINK :LABEL ((:CODE "SECTION")) :DEFINITION "type")
-     (destructuring-bind (&key label definition tail) (rest tree)
-       (let* ((name (extract-name-from-label label))
-              (symbol (if name
-                          (find-definitions-find-symbol-or-package name)
-                          nil)))
-         (if (not symbol)
-             tree
-             (let* ((references (remove symbol known-references
-                                        :test-not #'eq
-                                        :key #'reference-object))
-                    (references (if (and (zerop (length definition))
-                                         (equal tail "[]"))
-                                    (filter-references references)
-                                    (alexandria:ensure-list
-                                     (find-reference-by-locative-string
-                                      definition
-                                      ;; Explicit references don't
-                                      ;; need heuristic conflict
-                                      ;; resolution so we don't call
-                                      ;; FILTER-REFERENCES.
-                                      (filter-references-by-format
-                                       references)
-                                      :if-dislocated symbol)))))
-               (if references
-                   (values (format-references name references) nil t)
-                   tree))))))
-    (t
-     tree)))
-
-(defun extract-name-from-label (label)
-  (let ((e (first label)))
-    (cond ((stringp e)
-           e)
-          ((and (eq :emph (first e))
-                (= 2 (length e))
-                (stringp (second e)))
-           (format nil "*~A*" (second e)))
-          ((and (eq :code (first e))
-                (= 2 (length e))
-                (stringp (second e)))
-           (second e)))))
-
-(defun maybe-downcase (string)
-  (if (and (or (and *document-downcase-uppercase-code*
-                    (not (eq *document-downcase-uppercase-code*
-                             :only-in-markup)))
-               (and (eq *document-downcase-uppercase-code*
-                        :only-in-markup)
-                    (not (eq *format* :plain))))
-           (no-lowercase-chars-p string))
-      (string-downcase string)
-      string))
-
-;;; Translate NAME (a string) that's part of TREE (e.g. it's "xxx"
-;;; from (:CODE "xxx") or from "xxx,yyy"), or it's constructed from
-;;; TREE (e.g. it's "*SYM*" from (:EMPH "SYM")).
-(defun translate-name (parent tree name known-references)
-  (multiple-value-bind (refs n-chars-read)
-      (references-for-similar-names name known-references)
-    (when refs
-      (let ((refs (filter-references refs)))
-        ;; If necessary, try to find a locative before or after NAME
-        ;; to disambiguate.
-        (when (and (< 1 (length refs))
-                   (references-for-the-same-symbol-p refs))
-          (let ((reference (find-locative-around parent tree refs)))
-            (when reference
-              (setq refs (list reference)))))
-        (values (format-references
-                 (maybe-downcase (subseq name 0 n-chars-read)) refs)
-                t n-chars-read)))))
-
-;;; NAME-ELEMENT is a child of TREE. It is the name of the symbol or
-;;; it contains the name. Find a locative before or after NAME-ELEMENT
-;;; with which NAME occurs in KNOWN-REFERENCES. Return the matching
-;;; REFERENCE, if found. KNOWN-REFERENCES must only contain references
-;;; to the symbol.
-(defun find-locative-around (tree name-element possible-references)
-  (labels ((try (element)
-             (let ((reference
-                     (cond ((stringp element)
-                            (find-reference-by-locative-string
-                             element possible-references))
-                           ((eq :code (first element))
-                            (find-reference-by-locative-string
-                             (second element) possible-references))
-                           ;; (:REFERENCE-LINK :LABEL ((:CODE
-                           ;; "CLASS")) :DEFINITION "0524")
-                           ((eq :reference-link (first element))
-                            (try (first (third element)))))))
-               (when reference
-                 (return-from find-locative-around reference)))))
-    ;; For example, (:PLAIN "See" "function" " " "FOO")
-    (loop for rest on tree
-          do (when (and (eq (third rest) name-element)
-                        (stringp (second rest))
-                        (blankp (second rest)))
-               (try (first rest))
-               (return)))
-    ;; For example, (:PLAIN "See" "the" "FOO" " " "function")
-    (loop for rest on tree
-          do (when (and (eq (first rest) name-element)
-                        (stringp (second rest))
-                        (blankp (second rest)))
-               (try (third rest))
-               (return)))))
-
-(defun find-reference-by-locative-string (locative-string possible-references
-                                          &key if-dislocated)
-  (let ((locative (read-locative-from-string locative-string)))
-    (when locative
-      ;; This won't find [SECTION][TYPE] because SECTION is a class.
-      ;;
-      ;; Reference lookup could look for a different locative which
-      ;; leads to the same object/reference, but there is no sane
-      ;; generalization of that to locative-types. Do we need
-      ;; something like LOCATIVE-SUBTYPE-P?
-      (if (and if-dislocated (eq locative 'dislocated))
-          (make-reference if-dislocated 'dislocated)
-          (find locative possible-references
-                :key #'reference-locative :test #'locative-equal)))))
-
-(defun translate-to-code (parent tree known-references)
-  (cond ((stringp tree)
-         (let ((string tree))
-           (values (map-names string
-                              (lambda (string start end)
-                                (let ((name (subseq string start end)))
-                                  (translate-uppercase-name parent string name
-                                                            known-references))))
-                   ;; don't recurse, do slice
-                   nil t)))
-        ((eq :emph (first tree))
-         (translate-emph parent tree known-references))
-        ((eq (symbol-stub "3bmd-code-blocks::code-block") (first tree))
-         (translate-code-block parent tree))
-        (t
-         (error "~@<Unexpected tree type ~S.~:@>" (first tree)))))
-
-;;; CODE-BLOCK looks like this:
-;;;
-;;;     (3BMD-CODE-BLOCKS::CODE-BLOCK :LANG "commonlisp" :CONTENT "42")
-(defun translate-code-block (parent code-block)
-  (declare (ignore parent))
-  (let ((lang (getf (rest code-block) :lang)))
-    (if (equal lang "cl-transcript")
-        `(,(symbol-stub "3bmd-code-blocks::code-block")
-          :lang ,lang
-          :content ,(transcribe (getf (rest code-block) :content) nil
-                                :update-only t :check-consistency t))
-        code-block)))
-
-;;; Call FN with STRING and START, END indices. FN returns three
-;;; values: a replacement parse tree fragment (or NIL, if the subseq
-;;; shall not be replaced), whether the replacement shall be sliced
-;;; into the result list, and the number of characters replaced (may
-;;; be less than (- END START). MAP-NAMES returns a parse tree
-;;; fragment that's a list of non-replaced parts of STRING and
-;;; replacements (maybe sliced). Consecutive strings are concatenated.
-(defun map-names (string fn)
-  (let ((translated ())
-        (i 0)
-        (n (length string)))
-    (flet ((add (a)
-             (if (and (stringp a)
-                      (stringp (first translated)))
-                 (setf (first translated)
-                       (concatenate 'string (first translated) a))
-                 (push a translated ))))
-      (loop while (< i n)
-            for prev = nil then char
-            for char = (aref string i)
-            do (let ((replacement nil)
-                     (n-chars-replaced nil)
-                     (slice nil))
-                 (when (and (not (delimiterp char))
-                            (or (null prev) (delimiterp prev)))
-                   (let ((end (or (position-if #'delimiterp string :start i)
-                                  (length string))))
-                     (multiple-value-setq (replacement slice n-chars-replaced)
-                       (funcall fn string i end))
-                     (when replacement
-                       (if slice
-                           (dolist (a replacement)
-                             (add a))
-                           (add replacement))
-                       (if n-chars-replaced
-                           (incf i n-chars-replaced)
-                           (setq i end)))))
-                 (unless replacement
-                   (add (string char))
-                   (incf i)))))
-    (reverse translated)))
-
-;;; This is called by MAP-NAMES so the return values are NEW-TREE,
-;;; SLICE, N-CHARS-READ. Also called by TRANSLATE-TAGGED that expects
-;;; only a single return value: the new tree.
-(defun translate-uppercase-name (parent tree name known-references)
-  (declare (ignore parent))
-  (when (no-lowercase-chars-p name)
-    (flet ((foo (name)
-             (multiple-value-bind (refs n-chars-read)
-                 (references-for-similar-names name known-references)
-               (when refs
-                 (values `(,(code-fragment (maybe-downcase name)))
-                         t n-chars-read)))))
-      (let ((emph (and (listp tree) (eq :emph (first tree)))))
-        (cond ((and emph (eql #\\ (alexandria:first-elt name)))
-               (values (list `(:emph ,(maybe-downcase (subseq name 1))))
-                       t (length name)))
-              ((eql #\\ (alexandria:first-elt name))
-               ;; Discard the leading backslash escape.
-               (values (list (maybe-downcase (subseq name 1))) t (length name)))
-              ((not *document-uppercase-is-code*)
-               nil)
-              (emph
-               (foo (format nil "*~A*" name)))
-              (t
-               (foo name)))))))
-
-(defun translate-emph (parent tree known-references)
-  (if (= 2 (length tree))
-      (let ((translation (translate-uppercase-name parent tree (second tree)
-                                                   known-references)))
-        (if translation
-            ;; Replace TREE with TRANSLATION, don't process
-            ;; TRANSLATION again recursively, slice the return value
-            ;; into the list of children of PARENT.
-            (values translation nil t)
-            ;; leave it alone, don't recurse, don't slice
-            (values tree nil nil)))
-      ;; leave it alone, recurse, don't slice
-      (values tree t nil)))
-
-;;; Return the references from REFS which are for SYMBOL or which are
-;;; for a non-symbol but resolve to the same object with SYMBOL.
-(defun references-for-symbol (symbol refs n-chars-read)
-  (let ((symbol-name (symbol-name symbol)))
-    (or (remove-if-not (lambda (ref)
-                         (or (eq symbol (reference-object ref))
-                             ;; This function is only called when
-                             ;; there is an interned symbol for
-                             ;; something named by a string.
-                             ;;
-                             ;; KLUDGE: If the object of REF is
-                             ;; replaced with SYMBOL, does it resolve
-                             ;; to the same object? This is necessary
-                             ;; to get package and asdf systems right,
-                             ;; because the object in their canonical
-                             ;; references are strings and we compare
-                             ;; to symbols.
-                             (equalp symbol-name (reference-object ref))))
-                       refs)
-        ;; Don't codify A, I and similar.
-        (if (< 2 n-chars-read)
-            (list (make-reference symbol 'dislocated))
-            ()))))
-
-(defun references-for-similar-names (name refs)
-  (multiple-value-bind (symbol n-chars-read)
-      (find-definitions-find-symbol-or-package name)
-    (when n-chars-read
-      (values (references-for-symbol symbol refs n-chars-read) n-chars-read))))
-
-(defvar *find-definitions-right-trim* ",:.>")
-(defparameter *find-definitions-right-trim-2* ",:.>sS")
-
-(defun no-lowercase-chars-p (string)
-  (notany (lambda (char)
-            (char/= char (char-upcase char)))
-          ;; Allows plurals as in "FRAMEs" and "FRAMEs."
-          (swank::string-right-trim *find-definitions-right-trim-2* string)))
-
-;;; Lifted from SWANK, and tweaked to return the number of characters
-;;; read.
-(defun find-definitions-find-symbol-or-package (name)
-  (flet ((do-find (name n)
-           (multiple-value-bind (symbol found name)
-               (with-swank ()
-                 (swank::with-buffer-syntax (*package*)
-                   (swank::parse-symbol name)))
-             (cond (found
-                    (return-from find-definitions-find-symbol-or-package
-                      (values symbol n)))
-                   ;; Packages are not named by symbols, so
-                   ;; not-interned symbols can refer to packages
-                   ((find-package name)
-                    (return-from find-definitions-find-symbol-or-package
-                      (values (make-symbol name) n)))))))
-    (do-find name (length name))
-    (let* ((right-trimmed
-             (swank::string-right-trim *find-definitions-right-trim* name))
-           (right-trimmed-length (length right-trimmed)))
-      (do-find right-trimmed right-trimmed-length))
-    (let* ((right-trimmed-2
-             (swank::string-right-trim *find-definitions-right-trim-2* name))
-           (right-trimmed-2-length (length right-trimmed-2)))
-      (do-find right-trimmed-2 right-trimmed-2-length))))
-
-;;; Select some references from REFS heuristically.
-(defun filter-references (refs)
-  (let ((refs (filter-asdf-system-references
-               (filter-references-by-format refs))))
-    (if (references-for-the-same-symbol-p refs)
-        (resolve-generic-function-and-methods
-         (resolve-dislocated refs))
-        refs)))
-
-;;; REFERENCE-OBJECT on a CANONICAL-REFERENCE of ASDF:SYSTEM is a
-;;; string, which makes REFERENCES-FOR-THE-SAME-SYMBOL-P return NIL.
-;;; It's rare to link to ASDF systems in an ambiguous situation, so
-;;; don't.
-(defun filter-asdf-system-references (refs)
-  (if (< 1 (length refs))
-      (remove 'asdf:system refs :key #'reference-locative-type)
-      refs))
-
-(defun references-for-the-same-symbol-p (refs)
-  (= 1 (length (remove-duplicates (mapcar #'reference-object refs)))))
-
-;;; If there is a DISLOCATED reference, then don't link anywhere
-;;; (remove all the other references).
-(defun resolve-dislocated (refs)
-  (let ((ref (find 'dislocated refs :key #'reference-locative-type)))
-    (if ref
-        (list ref)
-        refs)))
-
-(defun resolve-generic-function-and-methods (refs)
-  (flet ((non-method-refs ()
-           (remove-if (lambda (ref)
-                        (member (reference-locative-type ref)
-                                '(accessor reader writer method)))
-                      refs)))
-    (cond
-      ;; If in doubt, prefer the generic function to methods.
-      ((find 'generic-function refs :key #'reference-locative-type)
-       (non-method-refs))
-      ;; No generic function, prefer non-methods to methods.
-      ((non-method-refs))
-      (t
-       refs))))
-
-(defun filter-references-by-format (refs)
-  (remove-if-not (lambda (ref)
-                   (and (or (and *document-link-sections*
-                                 (typep (resolve ref :errorp nil)
-                                        'section))
-                            *document-link-code*)
-                        (let ((page (reference-page ref)))
-                          (or
-                           ;; These have no pages, but won't result in
-                           ;; link anyway. Keep them.
-                           (member (reference-locative-type ref) '(dislocated))
-                           ;; Intrapage links always work.
-                           (eq *page* page)
-                           ;; Else we need to know the URI-FRAGMENT of
-                           ;; both pages. See
-                           ;; RELATIVE-PAGE-URI-FRAGMENT.
-                           (and (page-uri-fragment *page*)
-                                (page-uri-fragment page))))))
-                 refs))
-
-;;; REFS is the list of references for NAME after filtering. Mark it
-;;; up as code, create link(s).
-(defun format-references (name refs)
-  (let ((ref-1 (first refs)))
-    (cond ((endp refs)
-           ;; all references were filtered out
-           `(,(code-fragment name)))
-          ((< 1 (length refs))
-           ;; `name`([1][link-id-1] [2][link-id-2])
-           (values `(,(code-fragment (maybe-downcase name))
-                     "("
-                     ,@(loop
-                         for i upfrom 0
-                         for ref in refs
-                         append `(,@(unless (zerop i)
-                                      '(" "))
-                                  (:reference-link
-                                   :label (,(code-fragment i))
-                                   :definition ,(link-to-reference ref))))
-                     ")")
-                   t))
-          ((member (reference-locative-type ref-1) '(dislocated))
-           `(,(code-fragment (maybe-downcase name))))
-          ((typep (resolve ref-1) 'section)
-           `((:reference-link :label (,(section-title-or-name (resolve ref-1)))
-                              :definition ,(link-to-reference ref-1))))
-          ((typep (resolve ref-1) 'glossary-term)
-           `((:reference-link :label (,(glossary-term-title-or-name
-                                        (resolve ref-1)))
-                              :definition ,(link-to-reference ref-1))))
-          (t
-           `((:reference-link :label (,(code-fragment (maybe-downcase name)))
-                              :definition ,(link-to-reference ref-1)))))))
-
-(defun delimiterp (char)
-  (or (whitespacep char)
-      (find char "()'`\"#<")))
 
 
 ;;;; Basic DOCUMENT-OBJECT and DESCRIBE-OBJECT methods
@@ -1622,532 +1500,3 @@
                                  (locative-args locative)
                                  stream)))
         (document-object resolved-object stream))))
-
-
-(defsection @mgl-pax-documentation-utilities
-    (:title "Utilities for Generating Documentation")
-  "Two convenience functions are provided to serve the common case of
-  having an ASDF system with some readmes and a directory with for the
-  HTML documentation and the default css stylesheet."
-  (update-asdf-system-readmes function)
-  (update-asdf-system-html-docs function)
-  (*document-html-max-navigation-table-of-contents-level* variable)
-  (*document-html-top-blocks-of-links* variable)
-  (*document-html-bottom-blocks-of-links* variable)
-  (@mgl-pax-github-workflow section)
-  (@mgl-pax-world section))
-
-(defparameter *default-output-options*
-  '(:if-does-not-exist :create
-    :if-exists :supersede
-    :ensure-directories-exist t))
-
-(defun update-asdf-system-readmes (sections asdf-system)
-  "Convenience function to generate two readme files in the directory
-  holding the ASDF-SYSTEM definition.
-
-  README.md has anchors, links, inline code, and other markup added.
-  Not necessarily the easiest on the eye in an editor, but looks good
-  on github.
-
-  README is optimized for reading in text format. Has no links and
-  cluttery markup.
-
-  Example usage:
-
-  ```
-  (update-asdf-system-readmes @mgl-pax-manual :mgl-pax)
-  ```"
-  (with-open-file (stream (asdf:system-relative-pathname
-                           asdf-system "README.md")
-                          :direction :output
-                          :if-does-not-exist :create
-                          :if-exists :supersede)
-    (document sections :stream stream)
-    (print-markdown-footer stream))
-  (with-open-file (stream (asdf:system-relative-pathname
-                           asdf-system "README")
-                          :direction :output
-                          :if-does-not-exist :create
-                          :if-exists :supersede)
-    (loop for section in (alexandria:ensure-list sections) do
-      (describe section stream))
-    (print-markdown-footer stream)))
-
-(defun add-markdown-defaults-to-page-specs (sections page-specs dir)
-  (flet ((section-has-page-spec-p (section)
-           (some (lambda (page-spec)
-                   (member section (getf page-spec :objects)))
-                 page-specs)))
-    (mapcar (lambda (page-spec)
-              (add-markdown-defaults-to-page-spec page-spec dir))
-            (append page-specs
-                    (mapcar (lambda (section)
-                              `(:objects (,section)))
-                            (remove-if #'section-has-page-spec-p sections))))))
-
-(defun add-markdown-defaults-to-page-spec (page-spec filename)
-  `(,@page-spec
-    ,@(unless (getf page-spec :output)
-        `(:output (,filename ,@*default-output-options*)))
-    ,@(unless (getf page-spec :footer-fn)
-        `(:footer-fn ,#'print-markdown-footer))))
-
-(defun print-markdown-footer (stream)
-  (format stream "~%* * *~%")
-  (format stream "###### \\[generated by ~
-                 [MGL-PAX](https://github.com/melisgl/mgl-pax)\\]~%"))
-
-
-(defun update-asdf-system-html-docs (sections asdf-system &key pages
-                                     (target-dir (asdf:system-relative-pathname
-                                                  asdf-system "doc/"))
-                                     (update-css-p t))
-  "Generate pretty HTML documentation for a single ASDF system,
-  possibly linking to github. If UPDATE-CSS-P, copy the CSS style
-  sheet to TARGET-DIR, as well. Example usage:
-
-  ```commonlisp
-  (update-asdf-system-html-docs @mgl-pax-manual :mgl-pax)
-  ```
-
-  The same, linking to the sources on github:
-
-  ```commonlisp
-  (update-asdf-system-html-docs
-    @mgl-pax-manual :mgl-pax
-    :pages
-    `((:objects
-      (,mgl-pax:@mgl-pax-manual)
-      :source-uri-fn ,(make-github-source-uri-fn
-                       :mgl-pax
-                       \"https://github.com/melisgl/mgl-pax\"))))
-  ```"
-  (document-html sections pages target-dir update-css-p nil))
-
-;;; Generate with the default HTML look
-(defun document-html (sections page-specs target-dir update-css-p
-                      link-to-pax-world-p)
-  (when update-css-p
-    (copy-css target-dir))
-  (document sections
-            :pages (add-html-defaults-to-page-specs
-                    (alexandria:ensure-list sections)
-                    page-specs target-dir link-to-pax-world-p)
-            :format :html))
-
-(defun add-html-defaults-to-page-specs (sections page-specs dir
-                                        link-to-pax-world-p)
-  (flet ((section-has-page-spec-p (section)
-           (some (lambda (page-spec)
-                   (member section (getf page-spec :objects)))
-                 page-specs)))
-    (mapcar (lambda (page-spec)
-              (add-html-defaults-to-page-spec page-spec dir
-                                              link-to-pax-world-p))
-            (append page-specs
-                    (mapcar (lambda (section)
-                              `(:objects (,section)))
-                            (remove-if #'section-has-page-spec-p sections))))))
-
-(defun add-html-defaults-to-page-spec (page-spec dir link-to-pax-world-p)
-  (let* ((objects (getf page-spec :objects))
-         (section (if (and (= 1 (length objects))
-                           (typep (first objects) 'section))
-                      (first objects)
-                      nil))
-         (title (if section
-                    (section-title section)
-                    nil))
-         (filename (sections-to-filename objects dir)))
-    (flet ((header (stream)
-             (html-header stream :title title
-                          :stylesheet "style.css" :charset "UTF-8"
-                          :link-to-pax-world-p link-to-pax-world-p))
-           (footer (stream)
-             (html-footer stream)))
-      `(,@page-spec
-        ,@(unless (getf page-spec :output)
-            `(:output (,filename ,@*default-output-options*)))
-        ,@(unless (getf page-spec :header-fn)
-            `(:header-fn ,#'header))
-        ,@(unless (getf page-spec :footer-fn)
-            `(:footer-fn ,#'footer))))))
-
-(defun sections-to-filename (sections dir)
-  (flet ((name (section)
-           (string-downcase
-            (remove-special-chars (symbol-name (section-name section))))))
-    (merge-pathnames (format nil "~{~A~^-~}.html"
-                             (mapcar #'name sections))
-                     dir)))
-
-(defun remove-special-chars (string)
-  (remove-if (lambda (char)
-               (find char "!@#$%^&*"))
-             string))
-
-(defun copy-css (target-dir)
-  (ensure-directories-exist target-dir)
-  (loop for file in '("src/jquery.min.js" "src/toc.min.js" "src/style.css")
-        do (uiop:copy-file (asdf:system-relative-pathname :mgl-pax file)
-                           (merge-pathnames (file-namestring file)
-                                            target-dir))))
-
-(defvar *document-html-top-blocks-of-links* ()
-  "A list of blocks of links to be display on the sidebar on the left,
-  above the table of contents. A block is of the form `(&KEY TITLE ID
-  LINKS)`, where TITLE will be displayed at the top of the block in a
-  HTML `DIV` with `ID`, followed by the links. LINKS is a list
-  of `(URI LABEL) elements.`")
-
-(defvar *document-html-bottom-blocks-of-links* ()
-  "Like *DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS*, only it is displayed
-  below the table of contents.")
-
-(defun html-header
-    (stream &key title stylesheet (charset "UTF-8")
-     link-to-pax-world-p
-     (top-blocks-of-links *document-html-top-blocks-of-links*)
-     (bottom-blocks-of-links *document-html-bottom-blocks-of-links*))
-  (format
-   stream
-   """<!DOCTYPE html>~%~
-   <html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>~%~
-   <head>~%~
-   ~@[<title>~A</title>~]~%~
-   ~@[<link type='text/css' href='~A' rel='stylesheet'/>~]~%~
-   ~@[<meta http-equiv="Content-Type" ~
-            content="text/html; ~
-   charset=~A"/>~]~%~
-   <script src="jquery.min.js"></script>~%~
-   <script src="toc.min.js"></script>~%~
-   <script type="text/x-mathjax-config">
-     MathJax.Hub.Config({
-       tex2jax: {
-         inlineMath: [['$','$']],
-         processEscapes: true
-       }
-     });
-   </script>
-   <script type="text/javascript" ~
-    src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
-   </script>
-   </head>~%~
-   <body>~%~
-   <div id="content-container">~%~
-     <div id="toc">~%~
-       ~A~
-       ~:[~;<div id="toc-header"><ul><li><a href="index.html">~
-            PAX World</a></li></ul></div>~%~]~
-       <div id="page-toc">~%~
-       </div>~%~
-       ~A~
-       <div id="toc-footer">~
-         <ul><li><a href="https://github.com/melisgl/mgl-pax">[generated ~
-             by MGL-PAX]</a></li></ul>~
-       </div>~%~
-     </div>~%~
-     <div id="content">~%"""
-   title stylesheet charset
-   (blocks-of-links-to-html-string top-blocks-of-links)
-   link-to-pax-world-p
-   (blocks-of-links-to-html-string bottom-blocks-of-links)))
-
-(defun blocks-of-links-to-html-string (blocks-of-links)
-  (format nil "~{~A~}" (mapcar #'block-of-links-to-html-string
-                               blocks-of-links)))
-
-(defun block-of-links-to-html-string (block-of-links)
-  (destructuring-bind (&key title id links) block-of-links
-    (with-output-to-string (stream)
-      (format stream "<div class=\"menu-block\"")
-      (when id
-        (format stream " id=\"~A\"" id))
-      (format stream ">")
-      (when title
-        (format stream "<span class=\"menu-block-title\">~A</span>" title))
-      (format stream "<ul>")
-      (dolist (link links)
-        (format stream "<li><a href=\"~A\">~A</a></li>"
-                (first link)
-                (second link)))
-      (princ "</ul></div>" stream))))
-
-(defvar *google-analytics-id* nil)
-
-(defun html-footer (stream &key (google-analytics-id *google-analytics-id*))
-  (format
-   stream
-   "  </div>~%~
-   </div>~%~
-   <script>$('#page-toc').toc(~A);</script>~%~
-   ~:[~;<script>
-   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){~
-   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement~
-   (o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.~
-   insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/~
-   analytics.js','ga');ga('create', '~A', 'auto');ga('send', 'pageview');~
-   </script>~%~]</body>~%</html>~%"
-   (toc-options)
-   google-analytics-id google-analytics-id))
-
-(defvar *document-html-max-navigation-table-of-contents-level* nil
-  "NIL or a non-negative integer. If non-NIL, it overrides
-  *DOCUMENT-MAX-NUMBERING-LEVEL* in dynamic HTML table of contents on
-  the left of the page.")
-
-(defun toc-options ()
-  (let ((max-level (or *document-html-max-navigation-table-of-contents-level*
-                       *document-max-table-of-contents-level*)))
-    (format nil "{'selectors': '~{~A~^,~}'}"
-            (loop for i upfrom 1 upto (1+ max-level)
-                  collect (format nil "h~S" i)))))
-
-
-(defsection @mgl-pax-github-workflow (:title "Github Workflow")
-  "It is generally recommended to commit generated readmes (see
-  UPDATE-ASDF-SYSTEM-READMES) so that users have something to read
-  without reading the code and sites like github can display them.
-
-  HTML documentation can also be committed, but there is an issue with
-  that: when linking to the sources (see MAKE-GITHUB-SOURCE-URI-FN),
-  the commit id is in the link. This means that code changes need to
-  be committed first, then HTML documentation regenerated and
-  committed in a followup commit.
-
-  The second issue is that github is not very good at serving HTMLs
-  files from the repository itself (and
-  [http://htmlpreview.github.io](http://htmlpreview.github.io) chokes
-  on links to the sources).
-
-  The recommended workflow is to use
-  [gh-pages](https://pages.github.com/), which can be made relatively
-  painless with the `git workflow` command. The gist of it is to make
-  the `doc/` directory a checkout of the branch named `gh-pages`. A
-  good description of this process is
-  [http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html](http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html).
-  Two commits needed still, but it is somewhat less painful.
-
-  This way the HTML documentation will be available at
-  `http://<username>.github.io/<repo-name>`. It is probably a good
-  idea to add section like the @MGL-PAX-LINKS section to allow jumping
-  between the repository and the gh-pages site."
-  (make-github-source-uri-fn function))
-
-(defun make-github-source-uri-fn (asdf-system github-uri &key git-version)
-  "Return a function suitable as :SOURCE-URI-FN of a page spec (see
-  the PAGES argument of DOCUMENT). The function looks the source
-  location of the reference passed to it, and if the location is
-  found, the path is made relative to the root directory of
-  ASDF-SYSTEM and finally an URI pointing to github is returned. The
-  URI looks like this:
-
-      https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
-
-  \"master\" in the above link comes from GIT-VERSION.
-
-  If GIT-VERSION is NIL, then an attempt is made to determine to
-  current commit id from the `.git` in the directory holding
-  ASDF-SYSTEM. If no `.git` directory is found, then no links to
-  github will be generated.
-
-  A separate warning is signalled whenever source location lookup
-  fails or if the source location points to a directory not below the
-  directory of ASDF-SYSTEM."
-  (let* ((git-version (or git-version (asdf-system-git-version asdf-system)))
-         (system-dir (asdf:system-relative-pathname asdf-system "")))
-    (if git-version
-        (let ((line-file-position-cache (make-hash-table :test #'equal))
-              (find-source-cache (make-hash-table :test #'equal)))
-          (lambda (reference)
-            (let ((*find-source-cache* find-source-cache))
-              (multiple-value-bind (relative-path line-number)
-                  (convert-source-location (find-source
-                                            (resolve reference))
-                                           system-dir reference
-                                           line-file-position-cache)
-                (when relative-path
-                  (format nil "~A/blob/~A/~A#L~S" github-uri git-version
-                          relative-path (1+ line-number)))))))
-        (warn "No GIT-VERSION given and can't find .git directory ~
-              for ASDF system~% ~A. Links to github will not be generated."
-              (asdf:component-name (asdf:find-system asdf-system))))))
-
-(defun asdf-system-git-version (system)
-  (let ((git-dir
-          (merge-pathnames (make-pathname :directory '(:relative ".git"))
-                           (asdf:system-relative-pathname
-                            (asdf:component-name (asdf:find-system system))
-                            ""))))
-    (if (probe-file git-dir)
-        (git-version git-dir)
-        nil)))
-
-(defun git-version (git-dir)
-  (multiple-value-bind (version error-output exit-code)
-      (uiop:run-program (list "git" "-C" (namestring git-dir)
-                              "rev-parse" "HEAD")
-                        :output '(:string :stripped t) :ignore-error-status t)
-    (declare (ignore error-output))
-    (if (zerop exit-code)
-        version
-        nil)))
-
-(defun convert-source-location (source-location system-dir reference
-                                line-file-position-cache)
-  (cond ((or
-          ;; CCL
-          (null source-location)
-          ;; SBCL, AllegroCL
-          (eq (first source-location) :error))
-         (warn "~@<No source location found for reference ~:_~A: ~:_~A~%~@:>"
-               reference (second source-location)))
-        (t
-         (assert (eq (first source-location) :location))
-         (let* ((filename (second (assoc :file (rest source-location))))
-                (position (second (assoc :position (rest source-location))))
-                (relative-path (and filename
-                                    (enough-namestring filename system-dir))))
-           (if (and relative-path (call-stub "cl-fad:pathname-relative-p"
-                                             relative-path))
-               (values relative-path
-                       (file-position-to-line-number filename position
-                                                     line-file-position-cache))
-               (warn "Source location for ~S is not below system ~
-                     directory ~S.~%" reference system-dir))))))
-
-(defun file-position-to-line-number (filename file-position cache)
-  (if (null file-position)
-      0
-      (let ((line-file-positions (or (gethash filename cache)
-                                     (setf (gethash filename cache)
-                                           (line-file-positions filename)))))
-        (loop for line-number upfrom 0
-              for line-file-position in line-file-positions
-              do (when (< file-position line-file-position)
-                   (return line-number))))))
-
-;;; This is cached because it is determining the line number for a
-;;; given file position would need to traverse the file, which is
-;;; extremely expesive. Note that position 0 is not included, but
-;;; FILE-LENGTH is.
-(defun line-file-positions (filename)
-  (with-open-file (stream filename)
-    (loop for line = (read-line stream nil nil)
-          for line-number upfrom 0
-          while line
-          collect (file-position stream))))
-
-
-(defsection @mgl-pax-world (:title "PAX World")
-  "PAX World is a registry of documents, which can generate
-  cross-linked HTML documentation pages for all the registered
-  documents."
-  (register-doc-in-pax-world function)
-  "For example, this is how PAX registers itself:"
-  (register-doc-example (include (:start (pax-sections function)
-                                  :end (end-of-register-doc-example variable))
-                                 :header-nl "```commonlisp"
-                                 :footer-nl "```"))
-  (update-pax-world function))
-
-(defvar *registered-pax-world-docs* ())
-
-(defun register-doc-in-pax-world (name sections page-specs)
-  "Register SECTIONS and PAGE-SPECS under NAME in PAX World. By
-  default, UPDATE-PAX-WORLD generates documentation for all of these."
-  (setq *registered-pax-world-docs*
-        (remove name *registered-pax-world-docs* :key #'first))
-  (push (list name sections page-specs) *registered-pax-world-docs*))
-
-;;; Register PAX itself.
-(defun pax-sections ()
-  (list @mgl-pax-manual))
-(defun pax-pages ()
-  `((:objects
-     (,mgl-pax:@mgl-pax-manual)
-     :source-uri-fn ,(make-github-source-uri-fn
-                      :mgl-pax
-                      "https://github.com/melisgl/mgl-pax"))))
-(register-doc-in-pax-world :mgl-pax (pax-sections) (pax-pages))
-(defvar end-of-register-doc-example)
-
-(defvar *pax-world-dir* nil
-  "The default location to which to write the generated documentation.
-  Defaults to:
-
-  ```commonlisp
-  (asdf:system-relative-pathname :mgl-pax \"world/\")
-  ```")
-
-(defun update-pax-world (&key docs dir)
-  "Generate HTML documentation for all DOCS. By default, files are
-  created in *PAX-WORLD-DIR* or `(asdf:system-relative-pathname
-  :mgl-pax \"world/\")`, if NIL. DOCS is a list of entries of the
-  form (NAME SECTIONS PAGE-SPECS). The default for DOCS is all the
-  sections and pages registered with REGISTER-DOC-IN-PAX-WORLD.
-
-  In the absence of :HEADER-FN :FOOTER-FN, :OUTPUT, every spec in
-  PAGE-SPECS is augmented with HTML headers, footers and output
-  location specifications (based on the name of the section).
-
-  If necessary a default page spec is created for every section."
-  (let ((dir (or dir (asdf:system-relative-pathname :mgl-pax "world/")))
-        (docs (or docs (sort (copy-seq *registered-pax-world-docs*) #'string<
-                             :key (lambda (entry)
-                                    (string (first entry)))))))
-    (multiple-value-bind (sections pages) (sections-and-pages docs)
-      (create-pax-world sections pages dir t))))
-
-(defun sections-and-pages (registered-docs)
-  (values (apply #'append (mapcar #'second registered-docs))
-          (apply #'append (mapcar #'third registered-docs))))
-
-;;; This section is not in the documentation of PAX-WORLD itself. It
-;;; is dynamically extended with the list of sections for which
-;;; UPDATE-PAX-WORLD was called. FIXME: this is not thread-safe.
-(defsection @mgl-pax-world-dummy (:title "PAX World")
-  "This is a list of documents generated with MGL-PAX in the default
-  style. The documents are cross-linked: links to other documents are
-  added automatically when a reference is found. Note that clicking on
-  the locative type (e.g. `[function]`) will take you to the sources
-  on github if possible.")
-
-(defun create-pax-world (sections page-specs dir update-css-p)
-  (set-pax-world-list sections)
-  (document-html (cons @mgl-pax-world-dummy sections)
-                 (cons `(:objects
-                         ,(list @mgl-pax-world-dummy)
-                         :output (,(merge-pathnames "index.html" dir)
-                                  ,@*default-output-options*))
-                       page-specs)
-                 dir update-css-p t))
-
-(defun set-pax-world-list (objects)
-  (setf (slot-value @mgl-pax-world-dummy 'entries)
-        (list (first (section-entries @mgl-pax-world-dummy))
-              (with-output-to-string (stream)
-                (dolist (object objects)
-                  (format stream "- ~S~%~%" (section-name object)))))))
-
-#+nil
-(progn
-  (update-asdf-system-readmes (pax-sections) :mgl-pax)
-  (update-asdf-system-html-docs (pax-sections) :mgl-pax :pages (pax-pages)))
-
-;;; KLUDGE: Bind *READTABLE* so that when evaluating in Slime (e.g.
-;;; with C-x C-e) the file's readtable is not used (which leads to a
-;;; reader macro conflict with CL-SYNTAX).
-#+nil
-(let ((*readtable* (named-readtables:find-readtable :standard)))
-  (asdf:load-system :mgl-mat)
-  (asdf:load-system :named-readtables/doc)
-  (asdf:load-system :micmac)
-  (asdf:load-system :mgl-gpr)
-  (asdf:load-system :mgl)
-  (asdf:load-system :journal)
-  (asdf:load-system :trivial-utf-8/doc))
-
-#+nil
-(update-pax-world)

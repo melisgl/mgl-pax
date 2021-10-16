@@ -1824,7 +1824,7 @@ for ASDF:SYSTEM:
                             ;; Like MASSAGE-DOCSTRING but without
                             ;; indenting.
                             (prefix-lines "  "
-                                          (replace-known-references
+                                          (codify-and-autolink
                                            (strip-docstring-indentation value))
                                           :exclude-first-line-p t)))
                    ((nil)
@@ -1924,9 +1924,8 @@ for ASDF:SYSTEM:
     Write OBJECT (and its references recursively) in
     FORMAT to STREAM.
     
-    The DOCUMENT function calls this generic function with LEVEL 0,
-    passing FORMAT on. Add methods specializing on OBJECT to customize
-    how objects of that type are presented in the documentation.
+    Add methods specializing on OBJECT to customize how objects of that
+    type are presented in the documentation.
 
 - [method] DOCUMENT-OBJECT (STRING STRING) STREAM
 

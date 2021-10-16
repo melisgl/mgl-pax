@@ -213,10 +213,10 @@
     (file-position stream position)
     (read stream)))
 
-(defun test-replace-known-references ()
+(defun test-codify-and-autolink ()
   (assert (string= "`FOO`"
-                   (mgl-pax::replace-known-references "`FOO`"
-                                                      :known-references ()))))
+                   (mgl-pax::codify-and-autolink "`FOO`"
+                                                 :known-references ()))))
 
 (defun test-transform-tree ()
   (assert (equal '(1)
@@ -300,7 +300,7 @@
   ;; ECL does not provide source locations for most things.
   #-ecl
   (test-navigation)
-  (test-replace-known-references)
+  (test-codify-and-autolink)
   (test-transform-tree)
   (test-macro-arg-names)
   (test-document :markdown)

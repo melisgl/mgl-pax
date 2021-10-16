@@ -45,6 +45,134 @@
   (dislocated locative)
   (argument locative))
 
+
+
+;;;; Utilities for argument handling
+
+;;; Return the names of the function arguments in ARGLIST that's a
+;;; lambda list. Handles &KEY, &OPTIONAL, &REST.
+(defun function-arg-names (arglist)
+  (unless (eq arglist :not-available)
+    (mapcar (lambda (arg)
+              (if (and (listp arg)
+                       (symbolp (first arg)))
+                  (first arg)
+                  arg))
+            arglist)))
+
+;;; Return the names of the arguments in ARGLIST that's a macro lambda
+;;; list.
+(defun macro-arg-names (arglist)
+  (unless (eq arglist :not-available)
+    (let ((names ()))
+      (labels ((foo (arglist)
+                 (let ((seen-special-p nil))
+                   (loop for arg in arglist
+                         do (cond ((member arg '(&key &optional &rest &body))
+                                   (setq seen-special-p t))
+                                  ((symbolp arg)
+                                   (push arg names))
+                                  (seen-special-p
+                                   (when (symbolp (first arg))
+                                     (push (first arg) names)))
+                                  (t
+                                   (foo arg)))))))
+        (foo arglist))
+      (reverse names))))
+
+;;; Add a dummy page with for references to SYMBOLS whose locative is
+;;; ARGUMENT. If an ARGUMENT reference is present for a symbol, it
+;;; will surely be marked up as code, but it's not linkified in the
+;;; absence of an explicit locative even if the symbol refers to other
+;;; things with different locatives.
+(defmacro with-dislocated-symbols ((symbols) &body body)
+  `(with-pages ((list (make-page
+                       :references (mapcar (lambda (symbol)
+                                             (make-reference symbol
+                                                             'dislocated))
+                                           ,symbols))))
+     ,@body))
+
+
+;;;; Indentation utilities
+
+;;; Normalize indentation of docstrings as it's described in
+;;; (METHOD () (STRING T)) DOCUMENT-OBJECT.
+(defun strip-docstring-indentation (docstring &key (first-line-special-p t))
+  (let ((indentation
+          (docstring-indentation docstring
+                                 :first-line-special-p first-line-special-p)))
+    (values (with-output-to-string (out)
+              (with-input-from-string (s docstring)
+                (loop for i upfrom 0
+                      do (multiple-value-bind (line missing-newline-p)
+                             (read-line s nil nil)
+                           (unless line
+                             (return))
+                           (if (and first-line-special-p (zerop i))
+                               (write-string line out)
+                               (write-string (subseq* line indentation) out))
+                           (unless missing-newline-p
+                             (terpri out))))))
+            indentation)))
+
+(defun n-leading-spaces (line)
+  (let ((n 0))
+    (loop for i below (length line)
+          while (char= (aref line i) #\Space)
+          do (incf n))
+    n))
+
+;;; Return the minimum number of leading spaces in non-blank lines
+;;; after the first.
+(defun docstring-indentation (docstring &key (first-line-special-p t))
+  (let ((n-min-indentation nil))
+    (with-input-from-string (s docstring)
+      (loop for i upfrom 0
+            for line = (read-line s nil nil)
+            while line
+            do (when (and (or (not first-line-special-p) (plusp i))
+                          (not (blankp line)))
+                 (when (or (null n-min-indentation)
+                           (< (n-leading-spaces line) n-min-indentation))
+                   (setq n-min-indentation (n-leading-spaces line))))))
+    (or n-min-indentation 0)))
+
+
+;;;; High level printing utilities
+
+;;; Print (DOCUMENTATION OBJECT DOC-TYPE) to STREAM in FORMAT. Clean
+;;; up docstring indentation, then indent it by four spaces.
+;;; Automarkup symbols.
+(defun maybe-print-docstring (object doc-type stream)
+  (let ((docstring (filter-documentation object doc-type)))
+    (when docstring
+      (format stream "~%~A~%" (massage-docstring docstring)))))
+
+(defun massage-docstring (docstring &key (indentation "    "))
+  (if *table-of-contents-stream*
+      ;; The output is going to /dev/null and this is a costly
+      ;; operation, skip it.
+      ""
+      (let ((docstring (strip-docstring-indentation docstring)))
+        (prefix-lines indentation (codify-and-autolink docstring)))))
+
+(defun filter-documentation (symbol doc-type)
+  (let ((docstring (documentation symbol doc-type)))
+    #+sbcl
+    (if (member docstring
+                '("Return whether debug-block represents elsewhere code."
+                  "automatically generated accessor method"
+                  "automatically generated reader method"
+                  "automatically generated writer method")
+                :test #'equal)
+        ;; Discard the garbage docstring.
+        nil
+        docstring)
+    #-sbcl
+    docstring))
+
+
 ;;;; VARIABLE locative
 
 (define-locative-type variable (&optional initform)
@@ -391,7 +519,7 @@
                    (if (swank-mop:slot-definition-initfunction slot-def)
                        (format nil "~A= ~A"
                                (if initarg-strings " " "")
-                               (replace-known-references
+                               (codify-and-autolink
                                 (prin1-and-escape-markdown
                                  (swank-mop:slot-definition-initform
                                   slot-def))))
@@ -626,7 +754,7 @@
                             ;; Like MASSAGE-DOCSTRING but without
                             ;; indenting.
                             (prefix-lines "  "
-                                          (replace-known-references
+                                          (codify-and-autolink
                                            (strip-docstring-indentation value))
                                           :exclude-first-line-p t)))
                    ((nil)

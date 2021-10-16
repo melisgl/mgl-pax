@@ -322,6 +322,20 @@
                       line)))))
     (unless last-newline-missing-p
       (write-line prefix stream))))
+
+;;; Add PREFIX to every line in STRING.
+(defun prefix-lines (prefix string &key exclude-first-line-p)
+  (with-output-to-string (out)
+    (with-input-from-string (in string)
+      (loop for i upfrom 0 do
+        (multiple-value-bind (line missing-newline-p) (read-line in nil nil)
+          (unless line
+            (return))
+          (if (and exclude-first-line-p (= i 0))
+              (format out "~a" line)
+              (format out "~a~a" prefix line))
+          (unless missing-newline-p
+            (terpri out)))))))
 
 
 ;;;; Escaping of HTML ID and NAME
@@ -435,8 +449,8 @@
 ;;; of each node and the node itself. FN returns three values: a new
 ;;; tree to be substituted for the node, a recurse and slice flag. If
 ;;; slice, then the new tree is sliced into parent. If recurse (and
-;;; the new tree is not a leaf), then traversal goes recurses into the
-;;; new tree.
+;;; the new tree is not a leaf), then traversal recurses into the new
+;;; tree.
 (defun transform-tree (fn tree)
   (labels ((foo (parent tree)
              (multiple-value-bind (new-tree recurse slice)
@@ -455,6 +469,14 @@
                            slice)))))
     (foo nil tree)))
 
+;;; When used as the FN argument to TRANSFORM-TREE, leave the tree
+;;; intact except for subtrees (lists) whose CAR is in TAGS, whose
+;;; transformation is deferred to FN. FN must return the three values
+;;; TRANSFORM-TREE expects. If HANDLE-STRINGS, then FN is called with
+;;; STRING nodes, too.
+;;;
+;;; If the CAR of a subtree is in STOP-TAGS, then the entire subtree
+;;; is included in the output without further processing.
 (defun defer-tag-handling (tags stop-tags handle-strings fn parent tree)
   (cond ((or (and (listp tree)
                   (member (first tree) tags))
@@ -503,3 +525,50 @@
                 (concatenate 'string (first result) element))
           (push element result)))
     (reverse result)))
+
+;;; Call FN with STRING and START, END indices of consecutive
+;;; DELIMETERP characters. FN must return three values: a replacement
+;;; markdown parse tree fragment (or NIL, if the subseq shall not be
+;;; replaced), whether the replacement shall be sliced into the result
+;;; list, and the number of characters replaced (may be less than (-
+;;; END START). MAP-NAMES returns a parse tree fragment that's a list
+;;; of non-replaced parts of STRING and replacements (maybe sliced).
+;;; Consecutive strings are concatenated.
+(defun map-names (string fn)
+  (let ((translated ())
+        (i 0)
+        (n (length string)))
+    (flet ((add (a)
+             (if (and (stringp a)
+                      (stringp (first translated)))
+                 (setf (first translated)
+                       (concatenate 'string (first translated) a))
+                 (push a translated ))))
+      (loop while (< i n)
+            for prev = nil then char
+            for char = (aref string i)
+            do (let ((replacement nil)
+                     (n-chars-replaced nil)
+                     (slice nil))
+                 (when (and (not (delimiterp char))
+                            (or (null prev) (delimiterp prev)))
+                   (let ((end (or (position-if #'delimiterp string :start i)
+                                  (length string))))
+                     (multiple-value-setq (replacement slice n-chars-replaced)
+                       (funcall fn string i end))
+                     (when replacement
+                       (if slice
+                           (dolist (a replacement)
+                             (add a))
+                           (add replacement))
+                       (if n-chars-replaced
+                           (incf i n-chars-replaced)
+                           (setq i end)))))
+                 (unless replacement
+                   (add (string char))
+                   (incf i)))))
+    (reverse translated)))
+
+(defun delimiterp (char)
+  (or (whitespacep char)
+      (find char "()'`\"#<")))

@@ -115,9 +115,8 @@
   (:documentation "Write OBJECT (and its references recursively) in
   FORMAT to STREAM.
 
-  The DOCUMENT function calls this generic function with LEVEL 0,
-  passing FORMAT on. Add methods specializing on OBJECT to customize
-  how objects of that type are presented in the documentation."))
+  Add methods specializing on OBJECT to customize how objects of that
+  type are presented in the documentation."))
 
 (defmethod document-object ((string string) stream)
   "Print STRING verbatim to STREAM after cleaning up indentation.

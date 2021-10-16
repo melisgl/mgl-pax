@@ -19,13 +19,14 @@
   :components ((:module "src"
                 :serial t
                 :components ((:file "package")
-                             (:file "utility")
+                             (:file "util")
                              (:file "pax-early")
                              (:file "pax")
                              (:file "extension-api")
                              (:file "navigate")
                              (:file "transcribe")
                              (:file "document")
+                             (:file "document-util")
                              (:file "locatives"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
