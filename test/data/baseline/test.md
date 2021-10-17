@@ -11,6 +11,18 @@
 - [5 \`CODE\` \*italic\* \_italic2\_ \*bold\* \[link\]\[sdf\] \<thing\>][d484]
 
 ###### \[in package MGL-PAX-TEST\]
+<a id='x-28MGL-PAX-TEST-3A-3AFOO-20FUNCTION-29'></a>
+
+- [function] **FOO** 
+
+    Docstring of a function.
+
+<a id='x-28MGL-PAX-TEST-3A-3AFOO-20-28COMPILER-MACRO-29-29'></a>
+
+- [compiler-macro] **FOO** 
+
+    Docstring of a compiler macro.
+
 [`*TEST-VARIABLE*`][c066]
 [`*TEST-VARIABLE*`][c066]
 [`*test-variable*`][c066]
@@ -108,9 +120,13 @@ function and its methods, it's resolved in favor if the gf:
 
 - [function] **FOO** 
 
+    Docstring of a function.
+
 <a id='x-28MGL-PAX-TEST-3A-3AFOO-20-28COMPILER-MACRO-29-29'></a>
 
 - [compiler-macro] **FOO** 
+
+    Docstring of a compiler macro.
 
 <a id='x-28MGL-PAX-TEST-3A-3AFOO-A-20-28MGL-PAX-3AACCESSOR-20MGL-PAX-TEST-3A-3AFOO-29-29'></a>
 

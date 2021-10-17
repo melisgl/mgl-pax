@@ -284,7 +284,7 @@
     (print-arglist arglist stream)
     (print-end-bullet stream)
     (with-dislocated-symbols ((macro-arg-names arglist))
-      (maybe-print-docstring symbol 'function stream))))
+      (maybe-print-docstring symbol 'compiler-macro stream))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'compiler-macro))
                                    locative-args)

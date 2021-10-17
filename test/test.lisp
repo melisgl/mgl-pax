@@ -1,6 +1,8 @@
 (in-package :mgl-pax-test)
 
 (defsection @test (:export nil)
+  (foo function)
+  (foo compiler-macro)
   "[*TEST-VARIABLE*][]
   [`*TEST-VARIABLE*`][]
   [*test-variable*][]
@@ -122,8 +124,12 @@
     (:export nil :title "`CODE` *italic* _italic2_ *bold* [link][sdf] <thing>")
   "backlink @TEST")
 
-(defun foo ())
-(define-compiler-macro foo ())
+(defun foo ()
+  "Docstring of a function."
+  nil)
+(define-compiler-macro foo ()
+  "Docstring of a compiler macro."
+  nil)
 (defclass foo ()
   ((a :accessor foo-a)
    (r :reader foo-r)
