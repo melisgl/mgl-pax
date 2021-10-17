@@ -11,7 +11,10 @@
           (or (slime-locate-definition (cl-subseq name 0 pos)
                                        (cl-subseq name (1+ pos)))
               (slime-locate-definition (cl-subseq name (1+ pos))
-                                       (cl-subseq name 0 pos)))))))
+                                       (cl-subseq name 0 pos)))))
+      ;; This catches pluralized symbols without locatives e.g
+      ;; (MGL-PAX:SECTIONs).
+      (slime-locate-definition name "")))
 
 (defun slime-locative-before ()
   (ignore-errors (save-excursion
