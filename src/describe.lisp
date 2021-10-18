@@ -4,10 +4,9 @@
 
 (defmethod describe-object ((section section) stream)
   "[SECTION][class] objects are printed by calling DOCUMENT on them
-  with all @MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES, except for
-  *DOCUMENT-NORMALIZE-PACKAGES* turned off to reduce clutter. This
-  method is only defined if MGL-PAX/FULL is loaded to allow non-fancy
-  descriptions to be printed when using CL:DESCRIBE."
+  with *DOCUMENT-NORMALIZE-PACKAGES* turned off to reduce clutter.
+  This method is only defined if MGL-PAX/FULL is loaded to allow
+  non-fancy descriptions to be printed when using CL:DESCRIBE."
   (let ((*document-uppercase-is-code* nil)
         (*document-link-code* nil)
         (*document-link-sections* nil)

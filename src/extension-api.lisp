@@ -147,7 +147,7 @@
   ```
 
   The NIL is the source snippet, which is optional. Note that position
-  1 is the first character. If unsuccessful, the return values is
+  1 is the first character. If unsuccessful, the return value is
   like:
 
   ```commonlisp
@@ -313,12 +313,15 @@
        (let ((method (symbol-lambda-list-method symbol ',locative-type))
              (lambda-list (symbol-lambda-list symbol ',locative-type)))
          (locate-and-print-bullet locative-type locative-args symbol stream)
-         (with-dislocated-symbols ((macro-arg-names lambda-list))
-           (when lambda-list
-             (write-char #\Space stream)
-             (print-arglist lambda-list stream))
-           (print-end-bullet stream)
-           (maybe-print-docstring method t stream)))
+         (with-local-references ((list (make-reference symbol
+                                                       (cons locative-type
+                                                             locative-args))))
+             (with-dislocated-symbols ((macro-arg-names lambda-list))
+               (when lambda-list
+                 (write-char #\Space stream)
+                 (print-arglist lambda-list stream))
+               (print-end-bullet stream)
+               (maybe-print-docstring method t stream))))
        (format stream "~&"))
      (defmethod locate-and-find-source
          (symbol (locative-type (eql ',locative-type)) locative-args)

@@ -7,7 +7,10 @@
   (document function)
   (mgl-pax/full asdf:system)
   (@mgl-pax-markdown-support section)
-  (@mgl-pax-documentation-printer-variables section)
+  (@mgl-pax-codification section)
+  (@mgl-pax-linking-to-code section)
+  (@mgl-pax-linking-to-sections section)
+  (@mgl-pax-miscellaneous-documentation-printer-variables section)
   (@mgl-pax-documentation-utilities section))
 
 ;;; A PAGE is basically a single markdown or html file, to where the
@@ -104,15 +107,24 @@
 ;;; convenience.
 (defparameter *references*
   ;; KLUDGE: Include T explicitly, because it's oft used and would not
-  ;; be recognized without markup because its name is too short. The
-  ;; correct solution would be to add links automatically for the
-  ;; hyperspec.
+  ;; be recognized without markup because its name is too short (see
+  ;; REFERENCES-FOR-SYMBOL).
   (list (make-reference t 'dislocated)))
+
+;;; A list of references not to be autolinked. See
+;;; FILTER-REFERENCES-FOR-SYMBOL,
+;;; FILTER-REFERENCES-FOR-UNSPECIFIED-LOCATIVE, and
+;;; FILTER-REFERENCES-FOR-SPECIFIED-LOCATIVE. The reference being
+;;; documented is always on this list. Arguments are typically also
+;;; are. Bound by WITH-LOCAL-REFERENCES.
+(defparameter *local-references*
+  ())
 
 ;;; Add a LINK to *LINKS* (and a REFERENCE to *REFERENCES*) for each
 ;;; reference in PAGE-REFERENCES of PAGE.
 (defmacro with-pages ((pages) &body body)
   `(let ((*references* *references*)
+         (*local-references* *local-references*)
          (*links* *links*))
      (with-standard-io-syntax
        (loop for page in ,pages
@@ -212,7 +224,9 @@
   See DESCRIBE-OBJECT `(METHOD () (SECTION T))`.
 
   There are quite a few special variables that affect how output is
-  generated, see @MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES.
+  generated, see @MGL-PAX-CODIFICATION, @MGL-PAX-LINKING-TO-CODE,
+  @MGL-PAX-LINKING-TO-SECTIONS, and
+  @MGL-PAX-MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES.
 
   The rest of this description deals with how to generate multiple
   pages.
@@ -506,24 +520,6 @@
   with that.""")
 
 
-(defsection @mgl-pax-documentation-printer-variables
-    (:title "Documentation Printer Variables")
-  "Docstrings are assumed to be in markdown format and they are pretty
-  much copied verbatim to the documentation subject to a few knobs
-  described below."
-  (*document-uppercase-is-code* variable)
-  (*document-downcase-uppercase-code* variable)
-  (*document-link-code* variable)
-  (*document-link-sections* variable)
-  (*document-min-link-hash-length* variable)
-  (*document-mark-up-signatures* variable)
-  (*document-max-numbering-level* variable)
-  (*document-max-table-of-contents-level* variable)
-  (*document-text-navigation* variable)
-  (*document-fancy-html-navigation* variable)
-  (*document-normalize-packages* variable))
-
-
 ;;;; Automatic markup of symbols
 
 ;;; Take a string in markdown format and a list of KNOWN-REFERENCES.
@@ -533,8 +529,16 @@
 ;;; Return the transformed string.
 (defun codify-and-autolink (string &key (known-references *references*))
   (when string
-    (autolink (codify string known-references) known-references)))
+    (autolink (codify string
+                      ;; Recognize as code all the things we don't
+                      ;; want to link to.
+                      (append known-references *local-references*))
+              known-references)))
 
+
+(defsection @mgl-pax-codification (:title "Codification")
+  (*document-uppercase-is-code* variable)
+  (*document-downcase-uppercase-code* variable))
 
 (defvar *document-uppercase-is-code* t
   """When true, words with at least three characters and no lowercase
@@ -570,7 +574,8 @@
              (multiple-value-bind (refs n-chars-read)
                  (references-for-similar-names name known-references)
                (when refs
-                 (values `(,(code-fragment (maybe-downcase name)))
+                 (values `(,(code-fragment
+                             (maybe-downcase (subseq name 0 n-chars-read))))
                          t n-chars-read)))))
       (let ((emph (and (listp tree) (eq :emph (first tree)))))
         ;; *DOCUMENT-UPPERCASE-IS-CODE* escaping
@@ -590,6 +595,46 @@
                (foo (format nil "*~A*" name)))
               (t
                (foo name)))))))
+
+;;; Return the references from REFS which are for the symbol to which
+;;; NAME parses and the number of characters read. Some trimming is
+;;; attempted to handle separators and plurals. Packages and ASDF
+;;; systems are treated somewhat differently because their
+;;; REFERENCE-OBJECTs may be strings.
+;;;
+;;; If a symbol (whose name is longer than 2 characters) is read and
+;;; no references to it are found, then it gets a DISLOCATED reference
+;;; to ensure that it gets codified. FIXME: Should this logic be in
+;;; FORMAT-REFERENCES instead?
+(defun references-for-similar-names (name refs)
+  (multiple-value-bind (symbol n-chars-read)
+      (find-definitions-find-symbol-or-package name)
+    (when n-chars-read
+      (values (references-for-symbol symbol refs n-chars-read) n-chars-read))))
+
+;;; Return the references from REFS which are for SYMBOL or which are
+;;; for a non-symbol but resolve to the same object with SYMBOL.
+(defun references-for-symbol (symbol refs n-chars-read)
+  (let ((symbol-name (symbol-name symbol)))
+    (or (remove-if-not (lambda (ref)
+                         (or (eq symbol (reference-object ref))
+                             ;; This function is only called when
+                             ;; there is an interned symbol for
+                             ;; something named by a string.
+                             ;;
+                             ;; KLUDGE: If the object of REF is
+                             ;; replaced with SYMBOL, does it resolve
+                             ;; to the same object? This is necessary
+                             ;; to get packages and asdf systems
+                             ;; right, because the object in their
+                             ;; canonical references are strings and
+                             ;; we compare to symbols.
+                             (equalp symbol-name (reference-object ref))))
+                       refs)
+        ;; Don't codify A, I and similar.
+        (if (< 2 n-chars-read)
+            (list (make-reference symbol 'dislocated))
+            ()))))
 
 ;;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings and :EMPH
 ;;; (to recognize *VAR*). Also, perform consistency checking of
@@ -710,6 +755,10 @@
           (swank::string-right-trim *find-definitions-right-trim-2* string)))
 
 
+(defsection @mgl-pax-linking-to-code (:title "Linking to Code")
+  (*document-link-code* variable)
+  (@mgl-pax-reference-resolution section))
+
 (defvar *document-link-code* t
   """When true, during the process of generating documentation for a
   [SECTION][class], HTML anchors are added before the documentation of
@@ -739,7 +788,7 @@
   Since symbol names are parsed according to READTABLE-CASE, character
   case rarely matters.
 
-  Now, if `BAR` has references with different locatives:
+  Now, if `BAR` has multiple references with different locatives:
 
   ```commonlisp
   (defsection @foo
@@ -779,16 +828,9 @@
   This last option needs backticks around the locative if it's not a
   single symbol.
 
-  Note that [*DOCUMENT-LINK-CODE*][variable] can be combined with
-  [`*DOCUMENT-UPPERCASE-IS-CODE*`][] to have links generated for
-  uppercase names with no quoting required.""")
-
-(defvar *document-link-sections* t
-  "When true, HTML anchors are generated before the heading of
-  sections, which allows the table of contents to contain links and
-  also code-like references to sections (like `@FOO-MANUAL`) to be
-  translated to links with the section title being the name of the
-  link.")
+  Note that *DOCUMENT-LINK-CODE* can be combined with
+  *DOCUMENT-UPPERCASE-IS-CODE* to have links generated for uppercase
+  names with no quoting required.""")
 
 ;;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
 ;;; :REFERENCE-LINK for [symbol][locative]). Don't hurt other links.
@@ -842,19 +884,17 @@
          (if (not symbol)
              tree
              (let* ((references (remove symbol known-references
+                                        ;; FIXME: EQUAL or EQ?
                                         :test-not #'eq
                                         :key #'reference-object))
                     (references (if (and (zerop (length definition))
                                          (equal tail "[]"))
-                                    (filter-references references)
+                                    (filter-references-for-unspecified-locative
+                                     references)
                                     (alexandria:ensure-list
                                      (find-reference-by-locative-string
                                       definition
-                                      ;; Explicit references don't
-                                      ;; need heuristic conflict
-                                      ;; resolution so we don't call
-                                      ;; FILTER-REFERENCES.
-                                      (filter-references-by-format
+                                      (filter-references-for-specified-locative
                                        references)
                                       :if-dislocated symbol)))))
                (if references
@@ -886,16 +926,19 @@
   (multiple-value-bind (refs n-chars-read)
       (references-for-similar-names name known-references)
     (when refs
-      (let ((refs (filter-references refs)))
-        ;; If necessary, try to find a locative before or after NAME
-        ;; to disambiguate.
-        (when (and (< 1 (length refs))
-                   (references-for-the-same-symbol-p refs))
-          (let ((reference (find-locative-around parent tree refs)))
-            (when reference
-              (setq refs (list reference)))))
-        (format-references (maybe-downcase (subseq name 0 n-chars-read))
-                           refs)))))
+      ;; If necessary, try to find a locative before or after NAME to
+      ;; disambiguate.
+      (when (and (< 1 (length refs))
+                 (references-for-the-same-symbol-p refs))
+        (let ((reference (find-locative-around parent tree refs)))
+          (when reference
+            (setq refs (list reference))
+            (return-from format-references-to-name
+              (format-references (maybe-downcase (subseq name 0 n-chars-read))
+                                 (filter-references-for-specified-locative
+                                  refs))))))
+      (format-references (maybe-downcase (subseq name 0 n-chars-read))
+                         (filter-references-for-symbol refs)))))
 
 ;;; NAME-ELEMENT is a child of TREE. It is the name of the symbol or
 ;;; it contains the name. Find a locative before or after NAME-ELEMENT
@@ -943,48 +986,97 @@
       ;; generalization of that to locative-types. Do we need
       ;; something like LOCATIVE-SUBTYPE-P?
       (if (and if-dislocated (eq locative 'dislocated))
+          ;; Handle an explicit [FOO][dislocated] in markdown.
           (make-reference if-dislocated 'dislocated)
           (find locative possible-references
                 :key #'reference-locative :test #'locative-equal)))))
+
 
-;;; Return the references from REFS which are for SYMBOL or which are
-;;; for a non-symbol but resolve to the same object with SYMBOL.
-(defun references-for-symbol (symbol refs n-chars-read)
-  (let ((symbol-name (symbol-name symbol)))
-    (or (remove-if-not (lambda (ref)
-                         (or (eq symbol (reference-object ref))
-                             ;; This function is only called when
-                             ;; there is an interned symbol for
-                             ;; something named by a string.
-                             ;;
-                             ;; KLUDGE: If the object of REF is
-                             ;; replaced with SYMBOL, does it resolve
-                             ;; to the same object? This is necessary
-                             ;; to get packages and asdf systems
-                             ;; right, because the object in their
-                             ;; canonical references are strings and
-                             ;; we compare to symbols.
-                             (equalp symbol-name (reference-object ref))))
-                       refs)
-        ;; Don't codify A, I and similar.
-        (if (< 2 n-chars-read)
-            (list (make-reference symbol 'dislocated))
-            ()))))
+(defsection @mgl-pax-reference-resolution (:title "Reference Resolution")
+  """Links are generated according to *DOCUMENT-LINK-CODE* in general
+  but with some additional heuristics for convenience."""
+  (@mgl-pax-filtering-multiple-references section)
+  (@mgl-pax-local-references section))
 
-(defun references-for-similar-names (name refs)
-  (multiple-value-bind (symbol n-chars-read)
-      (find-definitions-find-symbol-or-package name)
-    (when n-chars-read
-      (values (references-for-symbol symbol refs n-chars-read) n-chars-read))))
+(defsection @mgl-pax-filtering-multiple-references
+    (:title "Filtering Multiple References")
+  """When there are multiple references to link to - as seen in the
+  second example in *DOCUMENT-LINK-CODE* - some references are removed
+  by the following rules.
 
-;;; Select some references from REFS heuristically.
-(defun filter-references (refs)
+  - References to ASDF:SYSTEMs are removed if there are other
+    references which are not to ASDF:SYSTEMs. This is because system
+    names often collide with the name of a class or function and are
+    rarely useful to link to. Use explicit links to ASDF:SYSTEMs, if
+    necessary.
+
+  - If references include a GENERIC-FUNCTION, then all references of
+    LOCATIVE-TYPE METHOD, ACCESSOR, READER and WRITER are removed to
+    avoid linking to a possibly large number of methods.""")
+
+(defsection @mgl-pax-local-references (:title "Local References")
+  """To unclutter the generated output by reducing the number of
+  links, the so-called 'local' references (references to things for
+  which documentation is being generated) are treated specially. In
+  the following example, there are local references to the function
+  FOO and its arguments, so none of them get turned into links:
+
+  ```common-lisp
+  (defun foo (arg1 arg2)
+    "FOO takes two arguments: ARG1 and ARG2.")
+  ```
+
+  If linking was desired one could write `[FOO][function]` or `FOO
+  function`, both of which result in a single link. An explicit link
+  with an unspecified locative like in `[*DOCUMENT-LINK-CODE*][]`
+  generates links to all references involving the *DOCUMENT-LINK-CODE*
+  symbol except the local ones.
+
+  The exact rules for local references are as follows:
+
+  - Unadorned names in code (e.g. `FOO`) do not get any links if there
+    is _any_ local reference with the same symbol.
+
+  - With a locative specified (e.g. in the explicit link
+    `[FOO][function]` or in the text `the FOO function`), a single
+    link is made irrespective of any local references.
+
+  - Explicit links with an unspecified locative (e.g. `[FOO][]`) are
+    linked to all non-local references.""")
+
+;;; A symbol in code like `FOO` will link to all references involving
+;;; FOO (given as REFS) unless any reference with FOO is on
+;;; *LOCAL-REFERENCES* in which case it will not link to anything.
+(defun filter-references-for-symbol (refs)
+  (when refs
+    (let ((symbol (reference-object (first refs))))
+      (unless (find symbol *local-references* :key #'reference-object
+                    :test #'equal)
+        (let ((refs (filter-asdf-system-references
+                     (filter-references-by-format refs))))
+          (if (references-for-the-same-symbol-p refs)
+              (resolve-generic-function-and-methods refs)
+              refs))))))
+
+;;; A reference link like [foo][] will link to all references
+;;; involving FOO (given as REFS) which are not on
+;;; *LOCAL-REFERENCES*.
+(defun filter-references-for-unspecified-locative (refs)
   (let ((refs (filter-asdf-system-references
-               (filter-references-by-format refs))))
+               (filter-references-by-format
+                (set-difference refs *local-references*
+                                ;; FIXME: Should compare canonical
+                                ;; references?
+                                :test #'reference=)))))
     (if (references-for-the-same-symbol-p refs)
-        (resolve-generic-function-and-methods
-         (resolve-dislocated refs))
+        (resolve-generic-function-and-methods refs)
         refs)))
+
+;;; A reference link like [foo][function] or text fragment like
+;;; "function FOO" will link to the function FOO irrespective of
+;;; *LOCAL-REFERENCES*.
+(defun filter-references-for-specified-locative (refs)
+  (filter-references-by-format refs))
 
 ;;; REFERENCE-OBJECT on a CANONICAL-REFERENCE of ASDF:SYSTEM is a
 ;;; string, which makes REFERENCES-FOR-THE-SAME-SYMBOL-P return NIL.
@@ -997,14 +1089,6 @@
 
 (defun references-for-the-same-symbol-p (refs)
   (= 1 (length (remove-duplicates (mapcar #'reference-object refs)))))
-
-;;; If there is a DISLOCATED reference, then don't link anywhere
-;;; (remove all the other references).
-(defun resolve-dislocated (refs)
-  (let ((ref (find 'dislocated refs :key #'reference-locative-type)))
-    (if ref
-        (list ref)
-        refs)))
 
 (defun resolve-generic-function-and-methods (refs)
   (flet ((non-method-refs ()
@@ -1022,6 +1106,7 @@
        refs))))
 
 (defun filter-references-by-format (refs)
+  (declare (special *document-link-sections*))
   (remove-if-not (lambda (ref)
                    (and (or (and *document-link-sections*
                                  (typep (resolve ref :errorp nil)
@@ -1048,7 +1133,7 @@
   (let ((ref-1 (first refs)))
     (cond ((endp refs)
            ;; all references were filtered out
-           `(,(code-fragment name)))
+           `(,(code-fragment (maybe-downcase name))))
           ((< 1 (length refs))
            ;; `name`([1][link-id-1] [2][link-id-2])
            (values `(,(code-fragment (maybe-downcase name))
@@ -1077,168 +1162,21 @@
                               :definition ,(link-to-reference ref-1)))))))
 
 
-(defparameter *document-min-link-hash-length* 4
-  "Recall that markdown reference style links (like `[label][id]`) are
-  used for linking to sections and code. It is desirable to have ids
-  that are short to maintain legibility of the generated markdown, but
-  also stable to reduce the spurious diffs in the generated
-  documentation, which can be a pain in a version control system.
+(defsection @mgl-pax-linking-to-sections (:title "Linking to Sections")
+  "The following variables control how to generate section numbering,
+  table of contents and navigation links."
+  (*document-link-sections* variable)
+  (*document-max-numbering-level* variable)
+  (*document-max-table-of-contents-level* variable)
+  (*document-text-navigation* variable)
+  (*document-fancy-html-navigation* variable))
 
-  Clearly, there is a tradeoff here. This variable controls how many
-  characters of the md5 sum of the full link id (the reference as a
-  string) are retained. If collisions are found due to the low number
-  of characters, then the length of the hash of the colliding
-  reference is increased.
-
-  This variable has no effect on the HTML generated from markdown, but
-  it can make markdown output more readable.")
-
-(defun hash-link (string detect-collision-fn
-                  &key (min-n-chars *document-min-link-hash-length*))
-  (let ((hex (call-stub "ironclad:byte-array-to-hex-string"
-                        (call-stub "ironclad:digest-sequence"
-                                   (symbol-stub "ironclad:md5")
-                                   (call-stub "babel:string-to-octets"
-                                              string)))))
-    (loop for i upfrom min-n-chars below 32
-          do (let ((hash (subseq hex 0 (min 32 i))))
-               (unless (funcall detect-collision-fn hash)
-                 (return-from hash-link hash))))
-    (assert nil () "MD5 collision collision detected.")))
-
-
-;;;; Signatures
-
-(defvar *document-mark-up-signatures* t
-  "When true, some things such as function names and arglists are
-  rendered as bold and italic. In :HTML output, locative types become
-  links to sources (if :SOURCE-URI-FN is provided, see DOCUMENT), and
-  the symbol becomes a self-link for your permalinking pleasure.
-
-  For example, a reference is rendered in markdown roughly as:
-
-      - [function] foo x y
-
-  With this option on, the above becomes:
-
-      - [function] **foo** *x y*
-
-  Also, in HTML `**foo**` will be a link to that very entry and
-  `[function]` may turn into a link to sources.")
-
-;;; PRINT REFERENCE to STREAM as:
-;;;
-;;;     - [locative-type] symbol
-;;;
-;;; When generating HTML, link SYMBOL to its own anchor.
-(defun print-reference-bullet (reference stream &key name)
-  (let ((locative-type (string-downcase
-                        (reference-locative-type reference)))
-        (name (or name (prin1-to-string (reference-object reference)))))
-    (if *document-mark-up-signatures*
-        ;; insert self links in HTML
-        (let ((locative-type (escape-markdown locative-type))
-              (name (escape-markdown name)))
-          (if (eq *format* :html)
-              (let ((source-uri (source-uri reference)))
-                (format stream
-                        "- <span class=reference-bullet>~
-                           <span class=reference>~
-                           <span class=\"locative-type\">~
-                           ~@[<a href=\"~A\">~]\\[~A]~:[~;</a>~]~
-                           </span> ~
-                        <span class=\"reference-object\">[~A](#~A)</span>~
-                        </span>"
-                        source-uri locative-type source-uri name
-                        (html-safe-name (reference-to-anchor reference))))
-              (format stream "- [~A] ~A" locative-type (bold name nil))))
-        (format stream "- [~A] ~A" locative-type name))))
-
-(defun print-end-bullet (stream)
-  (if (eq *format* :html)
-      ;; end "reference-bullet" span
-      (format stream "</span>~%")
-      (format stream "~%")))
-
-(defun source-uri (reference)
-  (let ((fn (page-source-uri-fn *page*)))
-    (if fn
-        (funcall fn reference)
-        nil)))
-
-(defun locate-and-print-bullet (locative-type locative-args symbol stream
-                                &key name)
-  (let ((reference
-          (canonical-reference (make-reference
-                                symbol (cons locative-type locative-args)))))
-    (print-reference-bullet reference stream :name name)))
-
-(defun print-bullet (object stream)
-  (print-reference-bullet (canonical-reference object) stream))
-
-(defun print-arglist (arglist stream)
-  (let ((string (cond ((stringp arglist)
-                       ;; must be escaped markdown
-                       arglist)
-                      ((eq arglist :not-available)
-                       "")
-                      (t (arglist-to-string arglist)))))
-    (if *document-mark-up-signatures*
-        (if (eq *format* :html)
-            (format stream "<span class=\"locative-args\">~A</span>" string)
-            (italic string stream))
-        (format stream "~A" string))))
-
-;;; Print arg names without the package prefix to a string. The
-;;; default value with prefix. Works for macro arglists too.
-(defun arglist-to-string (arglist)
-  (with-output-to-string (out)
-    (let ((seen-special-p nil)
-          (*print-pretty* t)
-          (*print-right-margin* nil))
-      (labels ((resolve* (object)
-                 (if (and *document-mark-up-signatures*
-                          ;; KLUDGE: github has trouble displaying
-                          ;; things like '`*package*`, so disable
-                          ;; this.
-                          (eq *format* :html))
-                     (codify-and-autolink
-                      (prin1-and-escape-markdown object))
-                     (prin1-and-escape-markdown object)))
-               (foo (arglist level)
-                 (unless (= level 0)
-                   (format out "("))
-                 (loop for i upfrom 0
-                       for arg in arglist
-                       do (unless (zerop i)
-                            (format out " "))
-                          (cond ((member arg '(&key &optional &rest &body))
-                                 (setq seen-special-p t)
-                                 (format out "~A"
-                                         (prin1-and-escape-markdown arg)))
-                                ((symbolp arg)
-                                 (format out "~A"
-                                         (escape-markdown
-                                          (symbol-name arg))))
-                                ((atom arg)
-                                 (format out "~A"
-                                         (prin1-and-escape-markdown arg)))
-                                (seen-special-p
-                                 (if (symbolp (first arg))
-                                     (format out "(~A~{ ~A~})"
-                                             (escape-markdown
-                                              (symbol-name (first arg)))
-                                             (mapcar #'resolve* (rest arg)))
-                                     (format out "~A"
-                                             (prin1-and-escape-markdown arg))))
-                                (t
-                                 (foo arg (1+ level)))))
-                 (unless (= level 0)
-                   (format out ")"))))
-        (foo arglist 0)))))
-
-
-;;;; Section numbering, table of contents and navigation links
+(defvar *document-link-sections* t
+  "When true, HTML anchors are generated before the heading of
+  sections, which allows the table of contents to contain links and
+  also code-like references to sections (like `@FOO-MANUAL`) to be
+  translated to links with the section title being the name of the
+  link.")
 
 (defvar *document-max-numbering-level* 3
   "A non-negative integer. In their hierarchy, sections on levels less
@@ -1455,7 +1393,171 @@
      ,@body))
 
 
-;;;; Packages
+(defsection @mgl-pax-miscellaneous-documentation-printer-variables
+    (:title "Miscellaneous Variables")
+  (*document-min-link-hash-length* variable)
+  (*document-mark-up-signatures* variable)
+  (*document-normalize-packages* variable))
+
+
+(defparameter *document-min-link-hash-length* 4
+  "Recall that markdown reference style links (like `[label][id]`) are
+  used for linking to sections and code. It is desirable to have ids
+  that are short to maintain legibility of the generated markdown, but
+  also stable to reduce the spurious diffs in the generated
+  documentation, which can be a pain in a version control system.
+
+  Clearly, there is a tradeoff here. This variable controls how many
+  characters of the md5 sum of the full link id (the reference as a
+  string) are retained. If collisions are found due to the low number
+  of characters, then the length of the hash of the colliding
+  reference is increased.
+
+  This variable has no effect on the HTML generated from markdown, but
+  it can make markdown output more readable.")
+
+(defun hash-link (string detect-collision-fn
+                  &key (min-n-chars *document-min-link-hash-length*))
+  (let ((hex (call-stub "ironclad:byte-array-to-hex-string"
+                        (call-stub "ironclad:digest-sequence"
+                                   (symbol-stub "ironclad:md5")
+                                   (call-stub "babel:string-to-octets"
+                                              string)))))
+    (loop for i upfrom min-n-chars below 32
+          do (let ((hash (subseq hex 0 (min 32 i))))
+               (unless (funcall detect-collision-fn hash)
+                 (return-from hash-link hash))))
+    (assert nil () "MD5 collision collision detected.")))
+
+
+(defvar *document-mark-up-signatures* t
+  "When true, some things such as function names and arglists are
+  rendered as bold and italic. In :HTML output, locative types become
+  links to sources (if :SOURCE-URI-FN is provided, see DOCUMENT), and
+  the symbol becomes a self-link for your permalinking pleasure.
+
+  For example, a reference is rendered in markdown roughly as:
+
+      - [function] foo x y
+
+  With this option on, the above becomes:
+
+      - [function] **foo** *x y*
+
+  Also, in HTML `**foo**` will be a link to that very entry and
+  `[function]` may turn into a link to sources.")
+
+;;; PRINT REFERENCE to STREAM as:
+;;;
+;;;     - [locative-type] symbol
+;;;
+;;; When generating HTML, link SYMBOL to its own anchor.
+(defun print-reference-bullet (reference stream &key name)
+  (let ((locative-type (string-downcase
+                        (reference-locative-type reference)))
+        (name (or name (prin1-to-string (reference-object reference)))))
+    (if *document-mark-up-signatures*
+        ;; insert self links in HTML
+        (let ((locative-type (escape-markdown locative-type))
+              (name (escape-markdown name)))
+          (if (eq *format* :html)
+              (let ((source-uri (source-uri reference)))
+                (format stream
+                        "- <span class=reference-bullet>~
+                           <span class=reference>~
+                           <span class=\"locative-type\">~
+                           ~@[<a href=\"~A\">~]\\[~A]~:[~;</a>~]~
+                           </span> ~
+                        <span class=\"reference-object\">[~A](#~A)</span>~
+                        </span>"
+                        source-uri locative-type source-uri name
+                        (html-safe-name (reference-to-anchor reference))))
+              (format stream "- [~A] ~A" locative-type (bold name nil))))
+        (format stream "- [~A] ~A" locative-type name))))
+
+(defun print-end-bullet (stream)
+  (if (eq *format* :html)
+      ;; end "reference-bullet" span
+      (format stream "</span>~%")
+      (format stream "~%")))
+
+(defun source-uri (reference)
+  (let ((fn (page-source-uri-fn *page*)))
+    (if fn
+        (funcall fn reference)
+        nil)))
+
+(defun locate-and-print-bullet (locative-type locative-args symbol stream
+                                &key name)
+  (let ((reference
+          (canonical-reference (make-reference
+                                symbol (cons locative-type locative-args)))))
+    (print-reference-bullet reference stream :name name)))
+
+(defun print-bullet (object stream)
+  (print-reference-bullet (canonical-reference object) stream))
+
+(defun print-arglist (arglist stream)
+  (let ((string (cond ((stringp arglist)
+                       ;; must be escaped markdown
+                       arglist)
+                      ((eq arglist :not-available)
+                       "")
+                      (t (arglist-to-string arglist)))))
+    (if *document-mark-up-signatures*
+        (if (eq *format* :html)
+            (format stream "<span class=\"locative-args\">~A</span>" string)
+            (italic string stream))
+        (format stream "~A" string))))
+
+;;; Print arg names without the package prefix to a string. The
+;;; default value with prefix. Works for macro arglists too.
+(defun arglist-to-string (arglist)
+  (with-output-to-string (out)
+    (let ((seen-special-p nil)
+          (*print-pretty* t)
+          (*print-right-margin* nil))
+      (labels ((resolve* (object)
+                 (if (and *document-mark-up-signatures*
+                          ;; KLUDGE: github has trouble displaying
+                          ;; things like '`*package*`, so disable
+                          ;; this.
+                          (eq *format* :html))
+                     (codify-and-autolink
+                      (prin1-and-escape-markdown object))
+                     (prin1-and-escape-markdown object)))
+               (foo (arglist level)
+                 (unless (= level 0)
+                   (format out "("))
+                 (loop for i upfrom 0
+                       for arg in arglist
+                       do (unless (zerop i)
+                            (format out " "))
+                          (cond ((member arg '(&key &optional &rest &body))
+                                 (setq seen-special-p t)
+                                 (format out "~A"
+                                         (prin1-and-escape-markdown arg)))
+                                ((symbolp arg)
+                                 (format out "~A"
+                                         (escape-markdown
+                                          (symbol-name arg))))
+                                ((atom arg)
+                                 (format out "~A"
+                                         (prin1-and-escape-markdown arg)))
+                                (seen-special-p
+                                 (if (symbolp (first arg))
+                                     (format out "(~A~{ ~A~})"
+                                             (escape-markdown
+                                              (symbol-name (first arg)))
+                                             (mapcar #'resolve* (rest arg)))
+                                     (format out "~A"
+                                             (prin1-and-escape-markdown arg))))
+                                (t
+                                 (foo arg (1+ level)))))
+                 (unless (= level 0)
+                   (format out ")"))))
+        (foo arglist 0)))))
+
 
 (defvar *document-normalize-packages* t
   "If true, symbols are printed relative to SECTION-PACKAGE of the

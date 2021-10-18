@@ -9,20 +9,9 @@
 - [3 Link to @TEST-OTHER][1dbc]
 - [4 Link to @TEST][2820]
 - [5 \`CODE\` \*italic\* \_italic2\_ \*bold\* \[link\]\[sdf\] \<thing\>][d484]
+- [6 MGL-PAX-TEST::@STEALING-FROM-OTHER-PACKAGE][a48a]
 
 ###### \[in package MGL-PAX-TEST\]
-<a id='x-28MGL-PAX-TEST-3A-3AFOO-20FUNCTION-29'></a>
-
-- [function] **FOO** 
-
-    Docstring of a function.
-
-<a id='x-28MGL-PAX-TEST-3A-3AFOO-20-28COMPILER-MACRO-29-29'></a>
-
-- [compiler-macro] **FOO** 
-
-    Docstring of a compiler macro.
-
 [`*TEST-VARIABLE*`][c066]
 [`*TEST-VARIABLE*`][c066]
 [`*test-variable*`][c066]
@@ -55,7 +44,7 @@
 `->MAX`
 
 Escaped: FOO `FOO` *NAVIGATION-TEST-CASES*
-Non escaped: `FOO`([`0`][f1a9] [`1`][4244]) [`*TEST-VARIABLE*`][c066]
+Non escaped: `FOO`([`0`][22be] [`1`][f1a9] [`2`][4244]) [`*TEST-VARIABLE*`][c066]
 [test other title][22dd]
 
 This should be no link because the page of `@TEST-EXAMPLES`
@@ -63,7 +52,7 @@ has `:URI-FRAGMENT` `NIL`.
 
 This is code: `T`
 
-Plural uppercase ambiguous symbol: see `FOO`([`0`][f1a9] [`1`][4244])s
+Plural uppercase ambiguous symbol: see `FOO`([`0`][22be] [`1`][f1a9] [`2`][4244])s
 
 Plural uppercase symbol: [`TEST-GF`][efc1]s
 
@@ -86,7 +75,7 @@ compiler-macro
 [`FOO`][f1a9]
 
 See
-`FOO`([`0`][f1a9] [`1`][4244])
+`FOO`([`0`][22be] [`1`][f1a9] [`2`][4244])
 
 ```cl-transcript
 (values (print (1+ 2)) :aaa)
@@ -118,23 +107,64 @@ function and its methods, it's resolved in favor if the gf:
 
 <a id='x-28MGL-PAX-TEST-3A-3AFOO-20FUNCTION-29'></a>
 
-- [function] **FOO** 
+- [function] **FOO** *BAZ X*
 
-    Docstring of a function.
+    `FOO` has args `BAZ` and `X`.
+    
+    This function [`FOO`][4244] is related to compiler-macro [`FOO`][f1a9].
+    
+    Or [`foo`][f1a9], if you prefer.
+    
+    Now, `foo`([`0`][f1a9] [`1`][22be]) should link to [`foo`][f1a9] and [`foo`][22be]
+    but not to [`foo`][4244].
 
 <a id='x-28MGL-PAX-TEST-3A-3AFOO-20-28COMPILER-MACRO-29-29'></a>
 
-- [compiler-macro] **FOO** 
+- [compiler-macro] **FOO** *BAZ X*
 
     Docstring of a compiler macro.
+
+<a id='x-28MGL-PAX-TEST-3A-3AFOO-20CLASS-29'></a>
+
+- [class] **FOO**
 
 <a id='x-28MGL-PAX-TEST-3A-3AFOO-A-20-28MGL-PAX-3AACCESSOR-20MGL-PAX-TEST-3A-3AFOO-29-29'></a>
 
 - [accessor] **FOO-A** *FOO*
 
+<a id='x-28MGL-PAX-TEST-3A-3ABAR-20-28MGL-PAX-3AMACRO-29-29'></a>
+
+- [macro] **BAR** *X Y*
+
+    `BAR` has args `X` and `Y`.
+
+<a id='x-28MGL-PAX-TEST-3A-3ABAR-20-28TYPE-29-29'></a>
+
+- [type] **BAR** *X &REST R*
+
+    `BAR` has args X and R.
+
+<a id='x-28MGL-PAX-TEST-3A-3ABAR-20-28MGL-PAX-3ACONSTANT-29-29'></a>
+
+- [constant] **BAR** *2*
+
+    `BAR` is not a link.
+
+<a id='x-28MGL-PAX-TEST-3A-3ABAZ-20-28TYPE-29-29'></a>
+
+- [type] **BAZ**
+
 <a id='x-28MGL-PAX-TEST-3A-3A-2ATEST-VARIABLE-2A-20-28VARIABLE-29-29'></a>
 
 - [variable] **\*TEST-VARIABLE\*** *(XXX 34)*
+
+    `*TEST-VARIABLE*` is not a link.
+
+<a id='x-28MGL-PAX-TEST-3A-3ASOME-RESTART-20-28RESTART-29-29'></a>
+
+- [restart] **SOME-RESTART** *ARG1*
+
+    This is `SOME-RESTART` with `ARG1`.
 
 
 
@@ -142,13 +172,23 @@ function and its methods, it's resolved in favor if the gf:
 
 - [generic-function] **TEST-GF** *X*
 
+    `TEST-GF` is not a link.
+
 <a id='x-28MGL-PAX-TEST-3A-3ATEST-GF-20-28METHOD-20NIL-20-28NUMBER-29-29-29'></a>
 
 - [method] **TEST-GF** *(X NUMBER)*
 
+    [`TEST-GF`][efc1] links to the generic function. `X` is not a link.
+
 <a id='x-28MGL-PAX-TEST-3A-3ATEST-GF-20-28METHOD-20NIL-20-28-28EQL-207-29-29-29-29'></a>
 
 - [method] **TEST-GF** *(X (EQL 7))*
+
+<a id='x-28MGL-PAX-TEST-3A-3ASOME-TERM-20MGL-PAX-3AGLOSSARY-TERM-29'></a>
+
+- [glossary-term] **SOME-TERM**
+
+    `SOME-TERM` is not a link.
 
 <a id='x-28MGL-PAX-TEST-3A-40TEST-SECTION-WITH-LINK-TO-OTHER-PAGE-IN-TITLE-20MGL-PAX-3ASECTION-29'></a>
 
@@ -168,11 +208,30 @@ Same link in docstring to [@TEST][a755].
 
 backlink [@TEST][a755]
 
+<a id='x-28MGL-PAX-TEST-3A-3A-40STEALING-FROM-OTHER-PACKAGE-20MGL-PAX-3ASECTION-29'></a>
+
+## 6 MGL-PAX-TEST::@STEALING-FROM-OTHER-PACKAGE
+
+###### \[in package MGL-PAX with nicknames PAX\]
+<a id='x-28METHOD-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
+
+- [locative] **METHOD** *METHOD-QUALIFIERS METHOD-SPECIALIZERS*
+
+    See `CL:FIND-METHOD` for the description of the arguments
+    `METHOD-QUALIFIERS` and `METHOD-SPECIALIZERS`. For example, this
+    `DEFSECTION` entry refers to the default method of the three argument
+    generic function `FOO`:
+    
+        (foo (method () (t t t)))
+
+
   [1dbc]: #x-28MGL-PAX-TEST-3A-40TEST-SECTION-WITH-LINK-TO-OTHER-PAGE-IN-TITLE-20MGL-PAX-3ASECTION-29 "Link to @TEST-OTHER"
+  [22be]: #x-28MGL-PAX-TEST-3A-3AFOO-20CLASS-29 "(MGL-PAX-TEST::FOO CLASS)"
   [22dd]: other/test-other.md#x-28MGL-PAX-TEST-3A-3A-40TEST-OTHER-20MGL-PAX-3ASECTION-29 "test other title"
   [2820]: #x-28MGL-PAX-TEST-3A-40TEST-SECTION-WITH-LINK-TO-SAME-PAGE-IN-TITLE-20MGL-PAX-3ASECTION-29 "Link to @TEST"
   [4244]: #x-28MGL-PAX-TEST-3A-3AFOO-20FUNCTION-29 "(MGL-PAX-TEST::FOO FUNCTION)"
   [6483]: #x-28MGL-PAX-TEST-3A-3AFOO-A-20-28MGL-PAX-3AACCESSOR-20MGL-PAX-TEST-3A-3AFOO-29-29 "(MGL-PAX-TEST::FOO-A (MGL-PAX:ACCESSOR MGL-PAX-TEST::FOO))"
+  [a48a]: #x-28MGL-PAX-TEST-3A-3A-40STEALING-FROM-OTHER-PACKAGE-20MGL-PAX-3ASECTION-29 "MGL-PAX-TEST::@STEALING-FROM-OTHER-PACKAGE"
   [a755]: #x-28MGL-PAX-TEST-3A-3A-40TEST-20MGL-PAX-3ASECTION-29 "MGL-PAX-TEST::@TEST"
   [c066]: #x-28MGL-PAX-TEST-3A-3A-2ATEST-VARIABLE-2A-20-28VARIABLE-29-29 "(MGL-PAX-TEST::*TEST-VARIABLE* (VARIABLE))"
   [d484]: #x-28MGL-PAX-TEST-3A-3A-40TEST-TRICKY-TITLE-20MGL-PAX-3ASECTION-29 "`CODE` *italic* _italic2_ *bold* [link][sdf] <thing>"

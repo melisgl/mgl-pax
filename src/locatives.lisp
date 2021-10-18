@@ -80,17 +80,14 @@
         (foo arglist))
       (reverse names))))
 
-;;; Add a dummy page with for references to SYMBOLS whose locative is
-;;; ARGUMENT. If an ARGUMENT reference is present for a symbol, it
-;;; will surely be marked up as code, but it's not linkified in the
-;;; absence of an explicit locative even if the symbol refers to other
-;;; things with different locatives.
+(defmacro with-local-references ((refs) &body body)
+  `(let ((*local-references* (append ,refs *local-references*)))
+     ,@body))
+
 (defmacro with-dislocated-symbols ((symbols) &body body)
-  `(with-pages ((list (make-page
-                       :references (mapcar (lambda (symbol)
-                                             (make-reference symbol
-                                                             'dislocated))
-                                           ,symbols))))
+  `(with-local-references ((mapcar (lambda (symbol)
+                                (make-reference symbol 'dislocated))
+                              ,symbols))
      ,@body))
 
 
@@ -194,7 +191,7 @@
                                             (t value)))
                      stream))
     (print-end-bullet stream)
-    (with-dislocated-symbols ((list symbol))
+    (with-local-references ((list (make-reference symbol 'variable)))
       (maybe-print-docstring symbol locative-type stream))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))
@@ -231,8 +228,8 @@
                                            "<unbound>")))
                    stream)
     (print-end-bullet stream)
-    (with-dislocated-symbols ((list symbol))
-      (maybe-print-docstring symbol locative-type stream))))
+    (with-local-references ((list (make-reference symbol 'constant)))
+      (maybe-print-docstring symbol 'variable stream))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'constant))
                                    locative-args)
@@ -257,8 +254,9 @@
   (let ((arglist (swank-backend:arglist symbol)))
     (print-arglist arglist stream)
     (print-end-bullet stream)
-    (with-dislocated-symbols ((macro-arg-names arglist))
-      (maybe-print-docstring symbol 'function stream))))
+    (with-local-references ((list (make-reference symbol 'macro)))
+      (with-dislocated-symbols ((macro-arg-names arglist))
+        (maybe-print-docstring symbol 'function stream)))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'macro))
                                    locative-args)
@@ -280,6 +278,8 @@
                                 locative-args stream)
   (locate-and-print-bullet locative-type locative-args symbol stream)
   (write-char #\Space stream)
+  ;; FIXME: This is the arglist of the function, not the compiler
+  ;; macro.
   (let ((arglist (swank-backend:arglist symbol)))
     (print-arglist arglist stream)
     (print-end-bullet stream)
@@ -335,17 +335,19 @@
     (let ((arglist (swank-backend:arglist function)))
       (print-arglist arglist stream)
       (print-end-bullet stream)
-      (with-dislocated-symbols ((function-arg-names arglist))
-        (maybe-print-docstring (reference-object reference) 'function
-                               stream)))))
+      (with-local-references ((list reference))
+        (with-dislocated-symbols ((function-arg-names arglist))
+          (maybe-print-docstring (reference-object reference) 'function
+                                 stream))))))
 
 
 ;;;; METHOD locative
 
 (define-locative-type method (method-qualifiers method-specializers)
-  "See CL:FIND-METHOD for the description of the arguments.
-  This DEFSECTION entry refers to the default method of the three
-  argument generic function FOO:
+  "See CL:FIND-METHOD for the description of the arguments
+  METHOD-QUALIFIERS and METHOD-SPECIALIZERS. For example, this
+  DEFSECTION entry refers to the default method of the three argument
+  generic function FOO:
 
       (foo (method () (t t t)))")
 
@@ -536,7 +538,9 @@
   (print-end-bullet stream)
   ;; No documentation for condition accessors, and some
   ;; implementations signal warnings.
-  (with-dislocated-symbols ((list symbol))
+  (with-local-references ((list (make-reference symbol
+                                                (cons locative-type
+                                                      locative-args))))
     (unless (subtypep (find-class (first locative-args)) 'condition)
       (let ((docstring (swank-mop:slot-definition-documentation slot-def)))
         (when docstring
@@ -578,7 +582,7 @@
                                 locative-args stream)
   (locate-and-print-bullet locative-type locative-args symbol stream)
   (print-end-bullet stream)
-  (with-dislocated-symbols ((list symbol))
+  (with-local-references ((list (make-reference symbol 'structure-accessor)))
     (maybe-print-docstring symbol 'function stream)))
 
 (defmethod locate-and-find-source (symbol
@@ -615,7 +619,7 @@
       (write-char #\Space stream)
       (print-arglist arglist stream)))
   (print-end-bullet stream)
-  (with-dislocated-symbols ((list symbol))
+  (with-local-references ((list (make-reference symbol 'type)))
     (maybe-print-docstring symbol 'type stream)))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'type))
@@ -673,7 +677,7 @@
           (print-arglist (mark-up-superclasses superclasses) stream)
           (print-arglist superclasses stream)))
     (print-end-bullet stream)
-    (with-dislocated-symbols ((list symbol))
+    (with-local-references ((list (make-reference symbol 'class)))
       (maybe-print-docstring class t stream))))
 
 (defun mark-up-superclasses (superclasses)
@@ -798,7 +802,7 @@
   (let ((symbol (package-name package)))
     (print-bullet package stream)
     (print-end-bullet stream)
-    (with-dislocated-symbols ((list symbol))
+    (with-local-references ((list (make-reference symbol 'package)))
       (maybe-print-docstring package t stream))))
 
 
@@ -1067,7 +1071,7 @@
     (locate-and-print-bullet 'glossary-term () symbol stream
                              :name (glossary-term-title-or-name glossary-term))
     (print-end-bullet stream)
-    (with-dislocated-symbols ((list symbol))
+    (with-local-references ((list (make-reference symbol 'glossary-term)))
       (let ((docstring (glossary-term-docstring glossary-term)))
         (when docstring
           (format stream "~%~A~%" (massage-docstring docstring)))))))
@@ -1106,7 +1110,7 @@
         (write-char #\Space stream)
         (print-arglist lambda-list stream))
       (print-end-bullet stream)
-      (with-dislocated-symbols ((list symbol))
+      (with-local-references ((list (make-reference symbol 'locative)))
         (maybe-print-docstring method t stream))))
   (format stream "~&"))
 

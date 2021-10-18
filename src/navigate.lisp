@@ -1,3 +1,7 @@
+;;;; TODO:
+;;;;
+;;;; - navigation on DISLOCATED does not work
+
 (in-package :mgl-pax)
 
 (in-readtable pythonic-string-syntax)

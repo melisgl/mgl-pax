@@ -1,8 +1,6 @@
 (in-package :mgl-pax-test)
 
 (defsection @test (:export nil)
-  (foo function)
-  (foo compiler-macro)
   "[*TEST-VARIABLE*][]
   [`*TEST-VARIABLE*`][]
   [*test-variable*][]
@@ -94,16 +92,27 @@
   TEST-GF."
   (foo function)
   (foo compiler-macro)
+  (foo class)
   (foo-a (accessor foo))
+  (bar macro)
+  (bar type)
+  (bar constant)
+  (baz type)
   (*test-variable* variable)
+  (some-restart restart)
   (@test-examples section)
   (@test-other section)
   (test-gf generic-function)
   (test-gf (method () (number)))
   (test-gf (method () ((eql 7))))
+  (some-term glossary-term)
   (@test-section-with-link-to-other-page-in-title section)
   (@test-section-with-link-to-same-page-in-title section)
-  (@test-tricky-title section))
+  (@test-tricky-title section)
+  (@stealing-from-other-package section))
+
+(defsection @stealing-from-other-package (:package (find-package :mgl-pax))
+  (method locative))
 
 (defsection @test-examples (:export nil)
   "example section")
@@ -124,8 +133,16 @@
     (:export nil :title "`CODE` *italic* _italic2_ *bold* [link][sdf] <thing>")
   "backlink @TEST")
 
-(defun foo ()
-  "Docstring of a function."
+(defun foo (baz x)
+  "FOO has args BAZ and X.
+
+  This function FOO is related to compiler-macro FOO.
+
+  Or [foo][compiler-macro], if you prefer.
+
+  Now, [foo][] should link to [foo][compiler-macro] and [foo][class]
+  but not to [foo][function]."
+  (declare (ignore x))
   nil)
 (define-compiler-macro foo ()
   "Docstring of a compiler macro."
@@ -139,20 +156,37 @@
 (defvar foo-c)
 
 (defparameter *test-variable*
-  '(xxx 34))
+  '(xxx 34)
+  "*TEST-VARIABLE* is not a link.")
 
-(defmacro bar ())
-(deftype bar () 'null)
-(defconstant bar 2)
+(define-restart some-restart (arg1)
+  "This is SOME-RESTART with ARG1.")
+
+(defmacro bar (X Y)
+  "BAR has args X and Y."
+  (declare (ignore x y))
+  nil)
+(deftype bar (x &rest r)
+  "BAR has args X and R."
+  (declare (ignore x r))
+  'null)
+(defconstant bar 2
+  "BAR is not a link.")
 
 (defgeneric baz ())
 (defvar baz)
 (defstruct baz
   aaa)
 
-(defgeneric test-gf (x))
-(defmethod test-gf ((x number)))
+(defgeneric test-gf (x)
+  (:documentation "TEST-GF is not a link."))
+(defmethod test-gf ((x number))
+  "TEST-GF links to the generic function. X is not a link."
+  nil)
 (defmethod test-gf ((x (eql 7))))
+
+(define-glossary-term some-term ()
+  "SOME-TERM is not a link.")
 
 (defun ->max ())
 

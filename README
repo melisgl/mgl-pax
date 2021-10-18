@@ -483,9 +483,10 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
 
 - [locative] METHOD METHOD-QUALIFIERS METHOD-SPECIALIZERS
 
-    See CL:FIND-METHOD for the description of the arguments.
-    This DEFSECTION entry refers to the default method of the three
-    argument generic function FOO:
+    See CL:FIND-METHOD for the description of the arguments
+    METHOD-QUALIFIERS and METHOD-SPECIALIZERS. For example, this
+    DEFSECTION entry refers to the default method of the three argument
+    generic function FOO:
     
         (foo (method () (t t t)))
 
@@ -720,7 +721,9 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     See DESCRIBE-OBJECT `(METHOD () (SECTION T))`.
     
     There are quite a few special variables that affect how output is
-    generated, see @MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES.
+    generated, see @MGL-PAX-CODIFICATION, @MGL-PAX-LINKING-TO-CODE,
+    @MGL-PAX-LINKING-TO-SECTIONS, and
+    @MGL-PAX-MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES.
     
     The rest of this description deals with how to generate multiple
     pages.
@@ -915,11 +918,7 @@ strings can be a pain. [Pythonic String
 Reader](https://github.com/smithzvk/pythonic-string-reader) can help
 with that.
 
-### Documentation Printer Variables
-
-Docstrings are assumed to be in markdown format and they are pretty
-much copied verbatim to the documentation subject to a few knobs
-described below.
+### Codification
 
 - [variable] *DOCUMENT-UPPERCASE-IS-CODE* T
 
@@ -952,6 +951,8 @@ described below.
     :ONLY-IN-MARKUP, then if the output format does not support
     markup (e.g. it's :PLAIN), then no downcasing is performed.
 
+### Linking to code
+
 - [variable] *DOCUMENT-LINK-CODE* T
 
     When true, during the process of generating documentation for a
@@ -982,7 +983,7 @@ described below.
     Since symbol names are parsed according to READTABLE-CASE, character
     case rarely matters.
     
-    Now, if `BAR` has references with different locatives:
+    Now, if `BAR` has multiple references with different locatives:
     
     ```commonlisp
     (defsection @foo
@@ -1022,9 +1023,68 @@ described below.
     This last option needs backticks around the locative if it's not a
     single symbol.
     
-    Note that [*DOCUMENT-LINK-CODE*][variable] can be combined with
-    [`*DOCUMENT-UPPERCASE-IS-CODE*`][] to have links generated for
-    uppercase names with no quoting required.
+    Note that *DOCUMENT-LINK-CODE* can be combined with
+    *DOCUMENT-UPPERCASE-IS-CODE* to have links generated for uppercase
+    names with no quoting required.
+
+#### Reference Resolution
+
+Links are generated according to *DOCUMENT-LINK-CODE* in general
+but with some additional heuristics for convenience.
+
+##### Filtering Multiple References
+
+When there are multiple references to link to - as seen in the
+second example in *DOCUMENT-LINK-CODE* - some references are removed
+by the following rules.
+
+- References to ASDF:SYSTEMs are removed if there are other
+  references which are not to ASDF:SYSTEMs. This is because system
+  names often collide with the name of a class or function and are
+  rarely useful to link to. Use explicit links to ASDF:SYSTEMs, if
+  necessary.
+
+- If references include a GENERIC-FUNCTION, then all references of
+  LOCATIVE-TYPE METHOD, ACCESSOR, READER and WRITER are removed to
+  avoid linking to a possibly large number of methods.
+
+
+##### Local References
+
+To unclutter the generated output by reducing the number of
+links, the so-called 'local' references (references to things for
+which documentation is being generated) are treated specially. In
+the following example, there are local references to the function
+FOO and its arguments, so none of them get turned into links:
+
+```common-lisp
+(defun foo (arg1 arg2)
+  "FOO takes two arguments: ARG1 and ARG2.")
+```
+
+If linking was desired one could write `[FOO][function]` or `FOO
+function`, both of which result in a single link. An explicit link
+with an unspecified locative like in `[*DOCUMENT-LINK-CODE*][]`
+generates links to all references involving the *DOCUMENT-LINK-CODE*
+symbol except the local ones.
+
+The exact rules for local references are as follows:
+
+- Unadorned names in code (e.g. `FOO`) do not get any links if there
+  is *any* local reference with the same symbol.
+
+- With a locative specified (e.g. in the explicit link
+  `[FOO][function]` or in the text `the FOO function`), a single
+  link is made irrespective of any local references.
+
+- Explicit links with an unspecified locative (e.g. `[FOO][]`) are
+  linked to all non-local references.
+
+
+### Linking to Sections
+
+The following variables control how to generate section numbering,
+table of contents and navigation links.
 
 - [variable] *DOCUMENT-LINK-SECTIONS* T
 
@@ -1033,6 +1093,36 @@ described below.
     also code-like references to sections (like `@FOO-MANUAL`) to be
     translated to links with the section title being the name of the
     link.
+
+- [variable] *DOCUMENT-MAX-NUMBERING-LEVEL* 3
+
+    A non-negative integer. In their hierarchy, sections on levels less
+    than this value get numbered in the format of `3.1.2`. Setting it to
+    0 turns numbering off.
+
+- [variable] *DOCUMENT-MAX-TABLE-OF-CONTENTS-LEVEL* 3
+
+    A non-negative integer. Top-level sections are given a table of
+    contents, which includes a nested tree of section titles whose depth
+    is limited by this value. Setting it to 0 turns generation of the
+    table of contents off. If *DOCUMENT-LINK-SECTIONS* is true, then the
+    table of contents will link to the sections.
+
+- [variable] *DOCUMENT-TEXT-NAVIGATION* NIL
+
+    If true, then before each heading a line is printed with links to
+    the previous, parent and next section. Needs
+    *DOCUMENT-LINK-SECTIONS* to be on to work.
+
+- [variable] *DOCUMENT-FANCY-HTML-NAVIGATION* T
+
+    If true and the output format is HTML, then headings get a
+    navigation component that consists of links to the previous, parent,
+    next section and a permalink. This component is normally hidden, it
+    is visible only when the mouse is over the heading. Needs
+    *DOCUMENT-LINK-SECTIONS* to be on to work.
+
+### Miscellaneous Variables
 
 - [variable] *DOCUMENT-MIN-LINK-HASH-LENGTH* 4
 
@@ -1068,34 +1158,6 @@ described below.
     
     Also, in HTML `**foo**` will be a link to that very entry and
     `[function]` may turn into a link to sources.
-
-- [variable] *DOCUMENT-MAX-NUMBERING-LEVEL* 3
-
-    A non-negative integer. In their hierarchy, sections on levels less
-    than this value get numbered in the format of `3.1.2`. Setting it to
-    0 turns numbering off.
-
-- [variable] *DOCUMENT-MAX-TABLE-OF-CONTENTS-LEVEL* 3
-
-    A non-negative integer. Top-level sections are given a table of
-    contents, which includes a nested tree of section titles whose depth
-    is limited by this value. Setting it to 0 turns generation of the
-    table of contents off. If *DOCUMENT-LINK-SECTIONS* is true, then the
-    table of contents will link to the sections.
-
-- [variable] *DOCUMENT-TEXT-NAVIGATION* NIL
-
-    If true, then before each heading a line is printed with links to
-    the previous, parent and next section. Needs
-    *DOCUMENT-LINK-SECTIONS* to be on to work.
-
-- [variable] *DOCUMENT-FANCY-HTML-NAVIGATION* T
-
-    If true and the output format is HTML, then headings get a
-    navigation component that consists of links to the previous, parent,
-    next section and a permalink. This component is normally hidden, it
-    is visible only when the mouse is over the heading. Needs
-    *DOCUMENT-LINK-SECTIONS* to be on to work.
 
 - [variable] *DOCUMENT-NORMALIZE-PACKAGES* T
 
@@ -1993,7 +2055,7 @@ of how the VARIABLE locative is defined:
                                             (t value)))
                      stream))
     (print-end-bullet stream)
-    (with-dislocated-symbols ((list symbol))
+    (with-local-references ((list (make-reference symbol 'variable)))
       (maybe-print-docstring symbol locative-type stream))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))
@@ -2131,10 +2193,9 @@ presented.
 - [method] DESCRIBE-OBJECT (SECTION SECTION) STREAM
 
     [SECTION][class] objects are printed by calling DOCUMENT on them
-    with all @MGL-PAX-DOCUMENTATION-PRINTER-VARIABLES, except for
-    *DOCUMENT-NORMALIZE-PACKAGES* turned off to reduce clutter. This
-    method is only defined if MGL-PAX/FULL is loaded to allow non-fancy
-    descriptions to be printed when using CL:DESCRIBE.
+    with *DOCUMENT-NORMALIZE-PACKAGES* turned off to reduce clutter.
+    This method is only defined if MGL-PAX/FULL is loaded to allow
+    non-fancy descriptions to be printed when using CL:DESCRIBE.
 
 * * *
 ###### \[generated by [MGL-PAX](https://github.com/melisgl/mgl-pax)\]
