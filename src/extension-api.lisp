@@ -23,6 +23,7 @@
                          :header-nl "```commonlisp"
                          :footer-nl "```"))
   (define-locative-type macro)
+  (define-locative-alias macro)
   (exportable-locative-type-p generic-function)
   (locate-object generic-function)
   (locate-error function)
@@ -52,6 +53,41 @@
   `(defmethod locative-lambda-list ((symbol (eql ',locative-type)))
      ,@docstring
      ',lambda-list))
+
+(defmacro define-locative-alias (alias locative-type)
+  """Define ALIAS as a locative equivalent to LOCATIVE-TYPE (both
+  SYMBOLs). The following example shows how to make docstrings read
+  more naturally by defining an alias.
+
+  ```common-lisp
+  (defclass my-string ()
+    ())
+
+  (defgeneric my-string (obj)
+    (:documentation "Convert OBJ to MY-STRING."))
+
+  ;;; This version of FOO has a harder to read docstring because
+  ;;; it needs to disambiguate the MY-STRING reference.
+  (defun foo (x)
+    "FOO takes and argument X, a [MY-STRING][class] object.")
+
+  ;;; Define OBJECT as an alias for the CLASS locative.
+  (define-locative-alias object class)
+
+  ;;; Note how no explicit link is needed anymore.
+  (defun foo (x)
+    "FOO takes an argument X, a MY-CLASS object.")
+  ```
+  """
+  `(progn
+     (define-locative-type ,alias ()
+       ,(format nil "An alias for the ~S locative." locative-type))
+     (defmethod locate-object (symbol (locative-type (eql ',alias))
+                               locative-args)
+       (locate-object symbol ',locative-type locative-args))
+     (defmethod canonical-locative ((locative-type (eql ',alias))
+                                    locative-args)
+       (cons ',locative-type locative-args))))
 
 ;;; A somewhat dummy generic function on which the docstring can be
 ;;; hung and which provides a source location. It returns LAMBDA-LIST
@@ -94,6 +130,11 @@
     (locate-error ()
       ;; DISLOCATED ends up here
       reference)))
+
+(defgeneric canonical-locative (locative-type locative-args))
+
+(defmethod canonical-locative (locative-type locative-args)
+  (cons locative-type locative-args))
 
 (defgeneric collect-reachable-objects (object)
   (:documentation "Return a list of objects representing all things

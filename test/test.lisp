@@ -1,5 +1,9 @@
 (in-package :mgl-pax-test)
 
+(mgl-pax:define-locative-alias instance class)
+(mgl-pax:define-locative-alias object class)
+(mgl-pax:define-locative-alias type-of type)
+
 (defsection @test (:export nil)
   "[*TEST-VARIABLE*][]
   [`*TEST-VARIABLE*`][]
@@ -93,7 +97,9 @@
   (foo function)
   (foo compiler-macro)
   (foo class)
+  ;; aliases defined above
   "FOO instance and FOO object"
+  "type-of BAR"
   (foo-a (accessor foo))
   (bar macro)
   (bar type)

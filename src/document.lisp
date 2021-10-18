@@ -993,14 +993,23 @@
 
 (defun equivalent-locative-p (locative reference)
   (or (locative-equal locative (reference-locative reference))
-      (let ((alternative (make-reference (reference-object reference)
-                                         locative))
+      (let ((reference
+              (make-reference (reference-object reference)
+                              (canonical-locative
+                               (locative-type (reference-locative reference))
+                               (locative-args (reference-locative reference)))))
+            (alternative
+              (make-reference (reference-object reference)
+                              (canonical-locative
+                               (locative-type locative)
+                               (locative-args locative))))
             object1
             object2)
-        (and (ignore-errors
-              (setq object1 (resolve alternative :errorp nil)))
-             (setq object2 (resolve reference :errorp nil))
-             (eq object1 object2)))))
+        (or (reference= reference alternative)
+            (and (ignore-errors
+                  (setq object1 (resolve alternative :errorp nil)))
+                 (setq object2 (resolve reference :errorp nil))
+                 (eq object1 object2))))))
 
 
 (defsection @mgl-pax-reference-resolution (:title "Reference Resolution")
