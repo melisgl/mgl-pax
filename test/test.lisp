@@ -93,6 +93,7 @@
   (foo function)
   (foo compiler-macro)
   (foo class)
+  "FOO instance and FOO object"
   (foo-a (accessor foo))
   (bar macro)
   (bar type)

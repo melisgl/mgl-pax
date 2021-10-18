@@ -33,6 +33,8 @@
   (type locative)
   (class locative)
   (condition locative)
+  (instance locative)
+  (object locative)
   (restart locative)
   (define-restart macro)
   (asdf:system locative)
@@ -694,6 +696,25 @@
 
 (defun find-known-reference (reference)
   (find reference *references* :test #'reference=))
+
+
+;;;; INSTANCE locative
+
+(define-locative-type instance ()
+  "An alias for the CLASS locative to allow `This function takes a FOO
+  instance as argument X.` to disambiguate the reference to `FOO`.")
+
+(defmethod locate-object (symbol (locative-type (eql 'instance)) locative-args)
+  (locate-object symbol 'class locative-args))
+
+
+;;;; OBJECT locative
+
+(define-locative-type object ()
+  "Another alias for the CLASS locative much like the INSTANCE locative.")
+
+(defmethod locate-object (symbol (locative-type (eql 'object)) locative-args)
+  (locate-object symbol 'class locative-args))
 
 
 ;;;; RESTART locative

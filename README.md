@@ -466,7 +466,7 @@ Now let's examine the most important pieces in detail.
     `TITLE` is a non-marked-up string or `NIL`. If non-NIL, it determines
     the text of the heading in the generated output. `LINK-TITLE-TO` is a
     reference given as an
-    (`OBJECT` [`LOCATIVE`][12a1]) pair or `NIL`, to which the heading will link when
+    `(OBJECT LOCATIVE)` pair or `NIL`, to which the heading will link when
     generating HTML. If not specified, the heading will link to its own
     anchor.
     
@@ -629,6 +629,19 @@ location and the docstring of the defining form is recorded (see
     
         (foo condition)
 
+
+<a id='x-28MGL-PAX-3AINSTANCE-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
+
+- [locative] **INSTANCE**
+
+    An alias for the [`CLASS`][0208] locative to allow `This function takes a FOO
+    instance as argument X.` to disambiguate the reference to `FOO`.
+
+<a id='x-28MGL-PAX-3AOBJECT-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
+
+- [locative] **OBJECT**
+
+    Another alias for the [`CLASS`][0208] locative much like the [`INSTANCE`][0768] locative.
 
 <a id='x-28RESTART-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
@@ -2450,7 +2463,7 @@ presented.
 - [reader] **SECTION-NAME** *SECTION* *(:NAME)*
 
     The name of the global variable whose value is
-    this `SECTION`([`0`][aee8] [`1`][53a8]) object.
+    this [`SECTION`][aee8] object.
 
 <a id='x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 
@@ -2500,6 +2513,7 @@ presented.
   [0382]: #x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29 "(MGL-PAX:TRANSCRIBE FUNCTION)"
   [0412]: #x-28MGL-PAX-3AREFERENCE-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29 "(MGL-PAX:REFERENCE-OBJECT (MGL-PAX:READER MGL-PAX:REFERENCE))"
   [063a]: #x-28MGL-PAX-3A-40MGL-PAX-GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Generating Documentation"
+  [0768]: #x-28MGL-PAX-3AINSTANCE-20-28MGL-PAX-3ALOCATIVE-29-29 "(MGL-PAX:INSTANCE (MGL-PAX:LOCATIVE))"
   [0785]: #x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax/full\" ASDF/SYSTEM:SYSTEM)"
   [12a1]: #x-28MGL-PAX-3ALOCATIVE-20-28MGL-PAX-3ALOCATIVE-29-29 "(MGL-PAX:LOCATIVE (MGL-PAX:LOCATIVE))"
   [1514]: #x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DISCARD-DOCUMENTATION-P* (VARIABLE))"

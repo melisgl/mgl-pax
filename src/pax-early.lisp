@@ -59,7 +59,7 @@
   TITLE is a non-marked-up string or NIL. If non-NIL, it determines
   the text of the heading in the generated output. LINK-TITLE-TO is a
   reference given as an
-  (OBJECT LOCATIVE) pair or NIL, to which the heading will link when
+  `(OBJECT LOCATIVE)` pair or NIL, to which the heading will link when
   generating HTML. If not specified, the heading will link to its own
   anchor.
 

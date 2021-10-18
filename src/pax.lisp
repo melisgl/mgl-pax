@@ -1,7 +1,5 @@
 ;;;; TODO
 ;;;;
-;;;; - locative aliases for docstrings (object[s] -> class)
-;;;;
 ;;;; - add method-combination locative
 ;;;;
 ;;;; - esrap is slow with allegro cl

@@ -128,6 +128,8 @@ function and its methods, it's resolved in favor if the gf:
 
 - [class] **FOO**
 
+[`FOO`][22be] instance and [`FOO`][22be] object
+
 <a id='x-28MGL-PAX-TEST-3A-3AFOO-A-20-28MGL-PAX-3AACCESSOR-20MGL-PAX-TEST-3A-3AFOO-29-29'></a>
 
 - [accessor] **FOO-A** *FOO*

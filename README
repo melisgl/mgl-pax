@@ -416,7 +416,7 @@ Now let's examine the most important pieces in detail.
     TITLE is a non-marked-up string or NIL. If non-NIL, it determines
     the text of the heading in the generated output. LINK-TITLE-TO is a
     reference given as an
-    (OBJECT LOCATIVE) pair or NIL, to which the heading will link when
+    `(OBJECT LOCATIVE)` pair or NIL, to which the heading will link when
     generating HTML. If not specified, the heading will link to its own
     anchor.
     
@@ -545,6 +545,15 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     
         (foo condition)
 
+
+- [locative] INSTANCE
+
+    An alias for the CLASS locative to allow `This function takes a FOO
+    instance as argument X.` to disambiguate the reference to `FOO`.
+
+- [locative] OBJECT
+
+    Another alias for the CLASS locative much like the INSTANCE locative.
 
 - [locative] RESTART
 
