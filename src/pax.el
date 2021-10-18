@@ -1,33 +1,33 @@
 ;;; MGL-PAX M-. integration
 
-(defun slime-edit-locative-definition (name &optional where)
-  (or (slime-locate-definition name (slime-locative-before))
-      (slime-locate-definition name (slime-locative-after))
-      (slime-locate-definition name (slime-locative-after-in-brackets))
+(defun mgl-pax-edit-locative-definition (name &optional where)
+  (or (mgl-pax-locate-definition name (mgl-pax-locative-before))
+      (mgl-pax-locate-definition name (mgl-pax-locative-after))
+      (mgl-pax-locate-definition name (mgl-pax-locative-after-in-brackets))
       ;; support "foo function" and "function foo" syntax in
       ;; interactive use
       (let ((pos (cl-position ?\s name)))
         (when pos
-          (or (slime-locate-definition (cl-subseq name 0 pos)
+          (or (mgl-pax-locate-definition (cl-subseq name 0 pos)
                                        (cl-subseq name (1+ pos)))
-              (slime-locate-definition (cl-subseq name (1+ pos))
+              (mgl-pax-locate-definition (cl-subseq name (1+ pos))
                                        (cl-subseq name 0 pos)))))
       ;; This catches pluralized symbols without locatives e.g
       ;; (MGL-PAX:SECTIONs).
-      (slime-locate-definition name "")))
+      (mgl-pax-locate-definition name "")))
 
-(defun slime-locative-before ()
+(defun mgl-pax-locative-before ()
   (ignore-errors (save-excursion
                    (slime-beginning-of-symbol)
                    (slime-last-expression))))
 
-(defun slime-locative-after ()
+(defun mgl-pax-locative-after ()
   (ignore-errors (save-excursion
                    (slime-end-of-symbol)
                    (slime-forward-sexp)
                    (slime-last-expression))))
 
-(defun slime-locative-after-in-brackets ()
+(defun mgl-pax-locative-after-in-brackets ()
   (ignore-errors (save-excursion
                    (slime-end-of-symbol)
                    (skip-chars-forward "`" (+ (point) 1))
@@ -38,7 +38,7 @@
                       (progn (search-forward "]" nil (+ (point) 1000))
                              (1- (point))))))))
 
-(defun slime-locate-definition (name locative)
+(defun mgl-pax-locate-definition (name locative)
   (when locative
     (let ((location
            (slime-eval
@@ -56,4 +56,4 @@
          "dummy name"
          where)))))
 
-(add-hook 'slime-edit-definition-hooks 'slime-edit-locative-definition)
+(add-hook 'slime-edit-definition-hooks 'mgl-pax-edit-locative-definition)
