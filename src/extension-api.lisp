@@ -136,7 +136,7 @@
   (:documentation """Like SWANK:FIND-DEFINITION-FOR-THING, but this
   one is a generic function to be extensible. In fact, the default
   implementation simply defers to SWANK:FIND-DEFINITION-FOR-THING.
-  This function is called by LOCATE-DEFINITION-FOR-EMACS, which lies
+  This function is called by LOCATE-DEFINITIONS-FOR-EMACS, which lies
   behind the `M-.` extension (see @MGL-PAX-EMACS-INTEGRATION).
 
   If successful, the return value looks like this:
@@ -276,6 +276,16 @@
   (:documentation "Called by FIND-SOURCE on REFERENCE objects, this
   function has essentially the same purpose as FIND-SOURCE but it has
   different arguments to allow specializing on LOCATIVE-TYPE."))
+
+(defvar *locative-source-search-list* ())
+
+(defun add-locative-to-source-search-list (locative)
+  "Some locatives are implemented in terms of Lisp types, for which
+  Slime's `M-.` finds source code of the corresponding definition out
+  of the box. For example, SECTIONs are simply global variables. To be
+  able to list all definitions that belong to a name, we register
+  locatives to try with ADD-LOCATIVE-TO-SOURCE-SEARCH-LIST."
+  (pushnew locative *locative-source-search-list* :test #'equal))
 
 (defmacro define-symbol-locative-type (locative-type lambda-list
                                        &body docstring)

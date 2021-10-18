@@ -1,7 +1,3 @@
-;;;; TODO:
-;;;;
-;;;; - navigation on DISLOCATED does not work
-
 (in-package :mgl-pax)
 
 (in-readtable pythonic-string-syntax)
@@ -59,8 +55,8 @@
 ;;; function slime-locate-definition. It's like LOCATE but takes
 ;;; string arguments and returns a location suitable for
 ;;; make-slime-xref.
-(defun locate-definition-for-emacs (name locative-string)
-  (let ((locative-string (trim-whitespace locative-string)))
+(defun locate-definitions-for-emacs (name locative-string)
+  (let ((locative-string (string-trim " `" locative-string)))
     (swank-backend::converting-errors-to-error-location
       (swank::with-buffer-syntax ()
         (or
@@ -80,12 +76,38 @@
          (ignore-errors
           (locate-reference-link-definition-for-emacs name))
          ;; [DEFSECTION][]
-         (let* ((swank:*find-definitions-left-trim* "[#:<")
-                (swank:*find-definitions-right-trim* "][,:.>sS")
-                (locations (swank:find-definitions-for-emacs name)))
-           (if (= (length locations) 1)
-               (first (rest (first locations)))
-               nil)))))))
+         (and (equal locative-string "")
+              (locate-all-definitions-for-emacs name)))))))
+
+(defun locate-all-definitions-for-emacs (name)
+  (let* ((swank:*find-definitions-left-trim* "[#:<")
+         (swank:*find-definitions-right-trim* "][,:.>sS"))
+    (append
+     ;; Standard stuff supported by the swank backend.
+     (swank:find-definitions-for-emacs name)
+     ;; For locatives not supported by swank above, we try locatives
+     ;; on *LOCATIVE-SOURCE-SEARCH-LIST* one by one and see if they
+     ;; lead somewhere from NAME.
+     (multiple-value-bind (symbol found)
+         (swank::find-definitions-find-symbol-or-package name)
+       (when found
+         (mapcan (lambda (locative)
+                   (ignore-errors
+                    (let ((thing (locate symbol locative :errorp nil)))
+                      (when thing
+                        (let ((location (find-source thing)))
+                          (list (list (reference-to-dspec
+                                       (canonical-reference thing))
+                                      location)))))))
+                 *locative-source-search-list*))))))
+
+(defun reference-to-dspec (reference)
+  (format nil "~S"
+          (list (reference-object reference)
+                (let ((locative (reference-locative reference)))
+                  (if (and (listp locative) (= (length locative) 1))
+                      (first locative)
+                      locative)))))
 
 ;;; Handle references with quoted or non-quoted symbols and locatives.
 ;;; Since SECTION is both a class and and a documented symbol it
@@ -98,7 +120,10 @@
         (when locative
           (let ((thing (locate symbol locative :errorp nil)))
             (when thing
-              (find-source thing))))))))
+              (let ((location (find-source thing)))
+                (when location
+                  ;; LOCATIVE-STRING acts as Slime's DSPEC.
+                  (list (list locative-string location)))))))))))
 
 (defun read-marked-up-locative-from-string (string)
   (let ((*read-eval* nil)

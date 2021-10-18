@@ -44,7 +44,6 @@
   (locative locative)
   (dislocated locative)
   (argument locative))
-
 
 
 ;;;; Utilities for argument handling
@@ -783,6 +782,8 @@
     (:position 1)
     (:snippet "")))
 
+(add-locative-to-source-search-list 'asdf:system)
+
 (defvar end-of-asdf-example)
 
 
@@ -1118,6 +1119,8 @@
                                    locative-args)
   (declare (ignore locative-args))
   (find-source (locative-lambda-list-method-for-symbol symbol)))
+
+(add-locative-to-source-search-list 'locative)
 
 
 ;;;; DISLOCATED locative
