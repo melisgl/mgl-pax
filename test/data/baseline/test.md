@@ -107,9 +107,9 @@ function and its methods, it's resolved in favor if the gf:
 
 <a id='x-28MGL-PAX-TEST-3A-3AFOO-20FUNCTION-29'></a>
 
-- [function] **FOO** *BAZ X*
+- [function] **FOO** *OOK X*
 
-    `FOO` has args `BAZ` and `X`.
+    `FOO` has args `OOK` and `X`.
     
     This function [`FOO`][4244] is related to compiler-macro [`FOO`][f1a9].
     
@@ -120,7 +120,7 @@ function and its methods, it's resolved in favor if the gf:
 
 <a id='x-28MGL-PAX-TEST-3A-3AFOO-20-28COMPILER-MACRO-29-29'></a>
 
-- [compiler-macro] **FOO** *BAZ X*
+- [compiler-macro] **FOO** *OOK X*
 
     Docstring of a compiler macro.
 

@@ -134,8 +134,8 @@
     (:export nil :title "`CODE` *italic* _italic2_ *bold* [link][sdf] <thing>")
   "backlink @TEST")
 
-(defun foo (baz x)
-  "FOO has args BAZ and X.
+(defun foo (ook x)
+  "FOO has args OOK and X.
 
   This function FOO is related to compiler-macro FOO.
 
@@ -143,7 +143,7 @@
 
   Now, [foo][] should link to [foo][compiler-macro] and [foo][class]
   but not to [foo][function]."
-  (declare (ignore x))
+  (declare (ignore ook x))
   nil)
 (define-compiler-macro foo ()
   "Docstring of a compiler macro."

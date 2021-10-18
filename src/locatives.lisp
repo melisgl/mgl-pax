@@ -1186,4 +1186,3 @@
 (defmethod locate-object (symbol (locative-type (eql 'argument)) locative-args)
   (declare (ignore symbol locative-args))
   (locate-error))
-
