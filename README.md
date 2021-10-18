@@ -18,7 +18,7 @@
         - [8.2.2 Syntax Highlighting][32ac]
         - [8.2.3 MathJax][55dd]
     - [8.3 Codification][3405]
-    - [8.4 Linking to code][8c65]
+    - [8.4 Linking to Code][8c65]
         - [8.4.1 Reference Resolution][d1cf]
     - [8.5 Linking to Sections][505a]
     - [8.6 Miscellaneous Variables][ec16]
@@ -348,34 +348,38 @@ initialization file (or loading `src/pax.el`):
 ```elisp
 ;;; MGL-PAX M-. integration
 
-(defun slime-edit-locative-definition (name &optional where)
-  (or (slime-locate-definition name (slime-locative-before))
-      (slime-locate-definition name (slime-locative-after))
-      (slime-locate-definition name (slime-locative-after-in-brackets))
+(defun mgl-pax-edit-locative-definition (name &optional where)
+  (or (mgl-pax-locate-definition name (mgl-pax-locative-before) where)
+      (mgl-pax-locate-definition name (mgl-pax-locative-after) where)
+      (mgl-pax-locate-definition name (mgl-pax-locative-after-in-brackets)
+                                 where)
       ;; support "foo function" and "function foo" syntax in
       ;; interactive use
       (let ((pos (cl-position ?\s name)))
         (when pos
-          (or (slime-locate-definition (cl-subseq name 0 pos)
-                                       (cl-subseq name (1+ pos)))
-              (slime-locate-definition (cl-subseq name (1+ pos))
-                                       (cl-subseq name 0 pos)))))
+          (or (mgl-pax-locate-definition (cl-subseq name 0 pos)
+                                         (cl-subseq name (1+ pos))
+                                         where)
+              (mgl-pax-locate-definition (cl-subseq name (1+ pos))
+                                         (cl-subseq name 0 pos)
+                                         where))))
       ;; This catches pluralized symbols without locatives e.g
-      ;; (MGL-PAX:SECTIONs).
-      (slime-locate-definition name "")))
+      ;; (MGL-PAX:SECTIONs) and is also responsible for dealing with multiple
+      ;; references.
+      (mgl-pax-locate-definition name "" where)))
 
-(defun slime-locative-before ()
+(defun mgl-pax-locative-before ()
   (ignore-errors (save-excursion
                    (slime-beginning-of-symbol)
                    (slime-last-expression))))
 
-(defun slime-locative-after ()
+(defun mgl-pax-locative-after ()
   (ignore-errors (save-excursion
                    (slime-end-of-symbol)
                    (slime-forward-sexp)
                    (slime-last-expression))))
 
-(defun slime-locative-after-in-brackets ()
+(defun mgl-pax-locative-after-in-brackets ()
   (ignore-errors (save-excursion
                    (slime-end-of-symbol)
                    (skip-chars-forward "`" (+ (point) 1))
@@ -386,25 +390,24 @@ initialization file (or loading `src/pax.el`):
                       (progn (search-forward "]" nil (+ (point) 1000))
                              (1- (point))))))))
 
-(defun slime-locate-definition (name locative)
+(defun mgl-pax-locate-definition (name locative where)
   (when locative
-    (let ((location
+    (let ((locations
            (slime-eval
             ;; Silently fail if mgl-pax is not loaded.
             `(cl:when (cl:find-package :mgl-pax)
                       (cl:funcall
                        (cl:find-symbol
-                        (cl:symbol-name :locate-definition-for-emacs) :mgl-pax)
+                        (cl:symbol-name :locate-definitions-for-emacs) :mgl-pax)
                        ,name ,locative)))))
-      (when (and (consp location)
-                 (not (eq (car location) :error)))
+      (when (and (consp locations)
+                 (not (eq (car locations) :error)))
         (slime-edit-definition-cont
-         (list (make-slime-xref :dspec `(,name)
-                                :location location))
+         (slime-postprocess-xrefs locations)
          "dummy name"
          where)))))
 
-(add-hook 'slime-edit-definition-hooks 'slime-edit-locative-definition)
+(add-hook 'slime-edit-definition-hooks 'mgl-pax-edit-locative-definitions)
 ```
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-BASICS-20MGL-PAX-3ASECTION-29'></a>
@@ -831,7 +834,7 @@ location and the docstring of the defining form is recorded (see
     See [`DESCRIBE-OBJECT`][df39] `(METHOD () (SECTION T))`.
     
     There are quite a few special variables that affect how output is
-    generated, see [Codification][3405], [Linking to code][8c65],
+    generated, see [Codification][3405], [Linking to Code][8c65],
     [Linking to Sections][505a], and
     [Miscellaneous Variables][ec16].
     
@@ -1079,7 +1082,7 @@ with that.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-LINKING-TO-CODE-20MGL-PAX-3ASECTION-29'></a>
 
-### 8.4 Linking to code
+### 8.4 Linking to Code
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20-28VARIABLE-29-29'></a>
 
@@ -2146,6 +2149,8 @@ for [`ASDF:SYSTEM:`][bf8a]
     (:position 1)
     (:snippet "")))
 
+(add-locative-to-source-search-list 'asdf:system)
+
 ```
 
 <a id='x-28MGL-PAX-3ADEFINE-LOCATIVE-TYPE-20-28MGL-PAX-3AMACRO-29-29'></a>
@@ -2258,7 +2263,7 @@ for [`ASDF:SYSTEM:`][bf8a]
     Like `SWANK:FIND-DEFINITION-FOR-THING`, but this
     one is a generic function to be extensible. In fact, the default
     implementation simply defers to `SWANK:FIND-DEFINITION-FOR-THING`.
-    This function is called by `LOCATE-DEFINITION-FOR-EMACS`, which lies
+    This function is called by `LOCATE-DEFINITIONS-FOR-EMACS`, which lies
     behind the `M-.` extension (see [Emacs Integration][eff4]).
     
     If successful, the return value looks like this:
@@ -2269,7 +2274,7 @@ for [`ASDF:SYSTEM:`][bf8a]
     ```
     
     The `NIL` is the source snippet, which is optional. Note that position
-    1 is the first character. If unsuccessful, the return values is
+    1 is the first character. If unsuccessful, the return value is
     like:
     
     ```commonlisp
@@ -2537,7 +2542,7 @@ presented.
   [87c7]: #x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "(MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION))"
   [88d2]: #x-28GENERIC-FUNCTION-20-28MGL-PAX-3ALOCATIVE-29-29 "(GENERIC-FUNCTION (MGL-PAX:LOCATIVE))"
   [8a71]: #x-28MGL-PAX-3ATRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR-20CONDITION-29 "(MGL-PAX:TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR CONDITION)"
-  [8c65]: #x-28MGL-PAX-3A-40MGL-PAX-LINKING-TO-CODE-20MGL-PAX-3ASECTION-29 "Linking to code"
+  [8c65]: #x-28MGL-PAX-3A-40MGL-PAX-LINKING-TO-CODE-20MGL-PAX-3ASECTION-29 "Linking to Code"
   [8ed9]: #x-28MGL-PAX-3A-40MGL-PAX-EXTENSION-API-20MGL-PAX-3ASECTION-29 "Extension API"
   [966a]: #x-28MGL-PAX-3ALOCATIVE-TYPE-20FUNCTION-29 "(MGL-PAX:LOCATIVE-TYPE FUNCTION)"
   [96c5]: #x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29 "(MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION)"
