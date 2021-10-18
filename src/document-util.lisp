@@ -358,7 +358,7 @@
                            (asdf:system-relative-pathname
                             (asdf:component-name (asdf:find-system system))
                             ""))))
-    (if (probe-file git-dir)
+    (if (uiop/filesystem:directory-exists-p git-dir)
         (git-version git-dir)
         nil)))
 
