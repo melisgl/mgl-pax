@@ -158,7 +158,17 @@
   (assert (endp args))
   *standard-output*)
 
-;;;; Hotpatching
+;;;; Hotpatching SWANK
+
+#+abcl
+(swank-backend:defimplementation swank-backend::arglist (f)
+  (multiple-value-bind (arglist foundp) (extensions:arglist f)
+    (cond (foundp arglist)
+          ((typep f 'generic-function)
+           (mop:generic-function-lambda-list f))
+          ((and (symbolp f)
+                (typep (symbol-function f) 'generic-function))
+           (mop:generic-function-lambda-list (symbol-function f))))))
 
 #+allegro
 (progn
@@ -174,6 +184,32 @@
   (unless (get 'find-source-location 'implementation)
     (defimplementation find-source-location (obj)
       (first (rest (first (fspec-definition-locations obj)))))))
+
+
+#+allegro
+(progn
+  swank-backend::
+  (defimplementation arglist (symbol)
+    (handler-case
+        (let ((lambda-expression (ignore-errors
+                                  (function-lambda-expression
+                                   (symbol-function symbol)))))
+          (if lambda-expression
+              (second lambda-expression)
+              (excl:arglist symbol)))
+      (simple-error () :not-available))))
+
+
+#+clisp
+(swank-backend::defimplementation swank-backend::function-name (f)
+  (system::function-name f))
+
+
+(defmacro with-standard-io-syntax* (&body body)
+  `(with-standard-io-syntax
+     ;; With *PRINT-READABLY*, CLISP insists on printing FOO as |FOO|.
+     (let (#+clisp (*print-readably* nil))
+       ,@body)))
 
 
 ;;;; String utilities

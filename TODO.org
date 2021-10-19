@@ -23,3 +23,4 @@ casing up in the docstring.
 * MAYBE transcribe: add inline commands that can change prefixes and such
 * MAYBE transcribe: special comment syntax for the 'narrative'
 to produce something like an ipython notebook.
+* (#<REFERENCE FOO CLASS> #<REFERENCE FOO (COMPILER-MACRO)> #<REFERENCE FOO FUNCTION>)???

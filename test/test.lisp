@@ -1,5 +1,11 @@
 (in-package :mgl-pax-test)
 
+;;; Make Allegro record lambda lists, from which we can extract
+;;; default values of arguments.
+#+allegro
+(eval-when (:compile-toplevel)
+  (declaim (optimize (debug 3))))
+
 (mgl-pax:define-locative-alias instance class)
 (mgl-pax:define-locative-alias object class)
 (mgl-pax:define-locative-alias type-of type)
@@ -117,7 +123,9 @@
   (@test-section-with-link-to-other-page-in-title section)
   (@test-section-with-link-to-same-page-in-title section)
   (@test-tricky-title section)
-  (@stealing-from-other-package section))
+  (@stealing-from-other-package section)
+  (function-with-optional-args function)
+  (function-with-keyword-args function))
 
 (defsection @stealing-from-other-package (:package (find-package :mgl-pax))
   (method locative))
@@ -175,9 +183,9 @@
   (:documentation "This is MY-ERROR."))
 (defun my-error ())
 
-(defmacro bar (X Y)
-  "BAR has args X and Y."
-  (declare (ignore x y))
+(defmacro bar (x y &key (z 7))
+  "BAR has args X, Y and Z."
+  (declare (ignore x y z))
   nil)
 (deftype bar (x &rest r)
   "BAR has args X and R."
@@ -202,6 +210,12 @@
   "SOME-TERM is not a link.")
 
 (defun ->max ())
+
+(defun function-with-optional-args (x &optional o1 (o2 7))
+  (declare (ignore x o1 o2)))
+
+(defun function-with-keyword-args (x &key k1 (k2 14) (k3 21 k3p))
+  (declare (ignore x k1 k2 k3 k3p)))
 
 (defparameter *navigation-test-cases*
   '((foo function (defun foo))
@@ -231,6 +245,8 @@
     ;; Allegro has the location off by one form.
     #-allegro
     (test-gf generic-function (defgeneric test-gf))
+    #+allegro
+    (test-gf generic-function (defmethod test-gf))
     (test-gf (method () (number)) (defmethod test-gf))))
 
 (defun working-locative-p (locative)
@@ -248,21 +264,38 @@
                  (assert (not (eq :error (first location))) ()
                          "Could not find source location for (~S ~S)"
                          symbol locative)
-                 (let* ((file (second (second location)))
-                        (position (1- (second (third location))))
-                        (form (let ((*package* (find-package :mgl-pax-test)))
-                                (read-form-from-file-position file position))))
-                   (assert
-                    (or (alexandria:starts-with-subseq prefix form
-                                                       :test #'equal)
-                        (and alternative-prefix
-                             (alexandria:starts-with-subseq
-                              alternative-prefix form :test #'equal)))
-                    () "Could not find prefix ~S~@[ or ~S~] ~
+                 (multiple-value-bind (file position)
+                     (extract-source-location location)
+                   (let ((form (let ((*package* (find-package :mgl-pax-test)))
+                                 (read-form-from-file-position file position))))
+                     (assert
+                      (or (alexandria:starts-with-subseq prefix form
+                                                         :test #'equal)
+                          (and alternative-prefix
+                               (alexandria:starts-with-subseq
+                                alternative-prefix form :test #'equal)))
+                      () "Could not find prefix ~S~@[ or ~S~] ~
                      at source location~%~S~%for reference (~S ~S).~%~
                      Form found was:~%~S."
-                    prefix alternative-prefix
-                    location symbol locative form)))))))
+                      prefix alternative-prefix
+                      location symbol locative form))))))))
+
+;;; Extract the filename and 3303 from
+;;;     (:LOCATION
+;;;         (:FILE "/home/melisgl/own/mgl-pax/test/test.lisp")
+;;;         (:POSITION 3303) NIL)
+;;; or
+;;;     (:LOCATION
+;;;         (:FILE "/home/melisgl/own/mgl-pax/test/test.lisp")
+;;;         (:OFFSET 1 3303) NIL)
+(defun extract-source-location (location)
+  (let ((file-entry (find :file (rest location) :key #'first))
+        (position-entry (find :position (rest location) :key #'first))
+        (offset-entry (find :offset (rest location) :key #'first)))
+    (values (second file-entry)
+            (1- (if position-entry
+                    (second position-entry)
+                    (third offset-entry))))))
 
 (defun read-form-from-file-position (filename position)
   (with-open-file (stream filename :direction :input)
@@ -303,6 +336,14 @@
   (assert (equal '(x a b c)
                  (mgl-pax::macro-arg-names '((&key (x y)) (a b) &key (c d))))))
 
+(defparameter *baseline-dirname*
+  #-(or abcl allegro ccl clisp ecl) "baseline"
+  #+abcl "abcl-baseline"
+  #+allegro "acl-baseline"
+  #+ccl "ccl-baseline"
+  #+clisp "clisp-baseline"
+  #+ecl "ecl-baseline")
+
 (defun test-document (format)
   (let ((outputs (write-test-document-files
                   (asdf:system-relative-pathname :mgl-pax "test/data/tmp/")
@@ -314,7 +355,7 @@
     (dolist (output outputs)
       (when (pathnamep output)
         (let ((baseline (make-pathname
-                         :directory (substitute "baseline" "tmp"
+                         :directory (substitute *baseline-dirname* "tmp"
                                                 (pathname-directory output)
                                                 :test #'equal)
                          :defaults output)))
@@ -346,15 +387,17 @@
                 :format format))))
 
 (defun update-test-document-baseline (format)
-  (write-test-document-files
-   (asdf:system-relative-pathname :mgl-pax "test/data/baseline/")
-   format))
+  (write-test-document-files (asdf:system-relative-pathname
+                              :mgl-pax
+                              (format nil "test/data/~A/" *baseline-dirname*))
+                             format))
 
 
 (defun test ()
   (test-transcribe)
-  ;; ECL does not provide source locations for most things.
-  #-ecl
+  ;; These implementations do not provide source location information
+  ;; for too many things to make this test worthwile.
+  #-(or abcl clisp ecl)
   (test-navigation)
   (test-codify-and-autolink)
   (test-transform-tree)

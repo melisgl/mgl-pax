@@ -65,7 +65,7 @@
   :mailto "mega@retes.hu"
   :description "Transcription support for MGL-PAX."
   :long-description "Autoloaded by MGL-PAX:TRANSCRIBE and by the Emacs
-  integration (see MGL-PAX:@MGL-PAX-TRANSCRIPT)."
+  integration (see MGL-PAX:@MGL-PAX-TRANSCRIPTS)."
   :depends-on (:mgl-pax)
   :components ((:module "src"
                 :serial t

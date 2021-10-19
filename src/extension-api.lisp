@@ -376,6 +376,7 @@
        (format stream "~&"))
      (defmethod locate-and-find-source
          (symbol (locative-type (eql ',locative-type)) locative-args)
+       (declare (ignore locative-args))
        (find-source (symbol-lambda-list-method symbol ',locative-type)))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)

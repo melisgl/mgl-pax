@@ -1,6 +1,8 @@
 *~
 *.fasl
 *.*fsl
+*.fas
+*.lib
 test/data/tmp/
 world/
 doc/

@@ -265,7 +265,7 @@ definitions tied to symbols. See @MGL-PAX-LOCATIVE-TYPES.
 
 The transcript in the code block tagged with `cl-transcript` is
 automatically checked for up-to-dateness. See
-@MGL-PAX-TRANSCRIPT.
+@MGL-PAX-TRANSCRIPTS.
 
 ## Navigating Sources in Emacs
 
@@ -281,8 +281,10 @@ select one of possible definitions.
 
 *Note that the this feature is implemented in terms of
 SWANK-BACKEND:FIND-SOURCE-LOCATION and
-SWANK-BACKEND:FIND-DEFINITIONS whose support varies across the Lisp
-implementations.*
+SWANK-BACKEND:FIND-DEFINITIONS, whose support varies across the Lisp
+implementations. In particular, ABCL, CLISP and ECL have no or
+rather spotty support for it. Everything works fine on AllegroCL,
+CCL and SBCL.*
 
 In the following examples, pressing `M-.` when the cursor is on one
 of the characters of `FOO` or just after `FOO`, will visit the
@@ -1355,6 +1357,23 @@ For example, this is how PAX registers itself:
     
     If necessary a default page spec is created for every section.
 
+### Document Generation Implementation Notes
+
+Documentation Generation is supported on ABCL, AllegroCL, CLISP,
+CCL, ECL and SBCL, but their outputs may differ due to the lack of
+some introspective capability. SBCL generates complete output.
+Compared to that, the following are not supported:
+
+- COMPILER-MACRO docstrings on ABCL, AllegroCL, CCL, ECL
+
+- DEFTYPE lambda lists on ABCL, AllegroCL, CLISP, CCL, ECL
+
+- Default values in MACRO lambda lists on AllegroCL
+
+- Default values in function lambda lists on CCL (needs `(DEBUG 3)`
+  on AllegroCL).
+
+
 ## Transcripts
 
 What are transcripts for? When writing a tutorial, one often wants
@@ -1405,7 +1424,7 @@ can be enabled with:
 
 - Description: Transcription support for MGL-PAX.
 - Long Description: Autoloaded by MGL-PAX:TRANSCRIBE and by the Emacs
-  integration (see MGL-PAX:@MGL-PAX-TRANSCRIPT).
+  integration (see MGL-PAX:@MGL-PAX-TRANSCRIPTS).
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)

@@ -168,9 +168,11 @@
 (defun copy-css (target-dir)
   (ensure-directories-exist target-dir)
   (loop for file in '("src/jquery.min.js" "src/toc.min.js" "src/style.css")
-        do (uiop:copy-file (asdf:system-relative-pathname :mgl-pax file)
-                           (merge-pathnames (file-namestring file)
-                                            target-dir))))
+        do (let ((target-file (merge-pathnames (file-namestring file)
+                                               target-dir)))
+             (uiop:delete-file-if-exists target-file)
+             (uiop:copy-file (asdf:system-relative-pathname :mgl-pax file)
+                             target-file))))
 
 (defvar *document-html-top-blocks-of-links* ()
   "A list of blocks of links to be display on the sidebar on the left,

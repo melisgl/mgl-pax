@@ -122,8 +122,6 @@ function and its methods, it's resolved in favor if the gf:
 
 - [compiler-macro] **FOO** *OOK X*
 
-    Docstring of a compiler macro.
-
 <a id='x-28MGL-PAX-TEST-3A-3AFOO-20CLASS-29'></a>
 
 - [class] **FOO**
@@ -144,7 +142,7 @@ type-of [`BAR`][6055]
 
 <a id='x-28MGL-PAX-TEST-3A-3ABAR-20-28TYPE-29-29'></a>
 
-- [type] **BAR** *X &REST R*
+- [type] **BAR**
 
     `BAR` has args X and R.
 
@@ -237,11 +235,11 @@ backlink [@TEST][a755]
 
 <a id='x-28MGL-PAX-TEST-3A-3AFUNCTION-WITH-OPTIONAL-ARGS-20FUNCTION-29'></a>
 
-- [function] **FUNCTION-WITH-OPTIONAL-ARGS** *X &OPTIONAL O1 (O2 7)*
+- [function] **FUNCTION-WITH-OPTIONAL-ARGS** *X &OPTIONAL O1 O2*
 
 <a id='x-28MGL-PAX-TEST-3A-3AFUNCTION-WITH-KEYWORD-ARGS-20FUNCTION-29'></a>
 
-- [function] **FUNCTION-WITH-KEYWORD-ARGS** *X &KEY K1 (K2 14) (K3 21 K3P)*
+- [function] **FUNCTION-WITH-KEYWORD-ARGS** *X &KEY K1 K2 K3*
 
   [1dbc]: #x-28MGL-PAX-TEST-3A-40TEST-SECTION-WITH-LINK-TO-OTHER-PAGE-IN-TITLE-20MGL-PAX-3ASECTION-29 "Link to @TEST-OTHER"
   [22be]: #x-28MGL-PAX-TEST-3A-3AFOO-20CLASS-29 "(MGL-PAX-TEST::FOO CLASS)"

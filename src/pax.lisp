@@ -12,7 +12,7 @@
   (@mgl-pax-basics section)
   (@mgl-pax-locative-types section)
   (@mgl-pax-generating-documentation section)
-  (@mgl-pax-transcript section)
+  (@mgl-pax-transcripts section)
   (@mgl-pax-extension-api section))
 
 (defsection @mgl-pax-links (:title "Links")
@@ -248,7 +248,7 @@
 
   The transcript in the code block tagged with `cl-transcript` is
   automatically checked for up-to-dateness. See
-  @MGL-PAX-TRANSCRIPT.""")
+  @MGL-PAX-TRANSCRIPTS.""")
 
 
 (defsection @mgl-pax-basics (:title "Basics")

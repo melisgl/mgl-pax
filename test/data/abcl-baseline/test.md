@@ -122,8 +122,6 @@ function and its methods, it's resolved in favor if the gf:
 
 - [compiler-macro] **FOO** *OOK X*
 
-    Docstring of a compiler macro.
-
 <a id='x-28MGL-PAX-TEST-3A-3AFOO-20CLASS-29'></a>
 
 - [class] **FOO**
@@ -144,9 +142,7 @@ type-of [`BAR`][6055]
 
 <a id='x-28MGL-PAX-TEST-3A-3ABAR-20-28TYPE-29-29'></a>
 
-- [type] **BAR** *X &REST R*
-
-    `BAR` has args X and R.
+- [type] **BAR**
 
 <a id='x-28MGL-PAX-TEST-3A-3ABAR-20-28MGL-PAX-3ACONSTANT-29-29'></a>
 

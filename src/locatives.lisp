@@ -288,7 +288,11 @@
     function))
 
 (defmethod canonical-reference ((function function))
-  (make-reference (swank-backend:function-name function) 'function))
+  (let ((function-name (swank-backend:function-name function)))
+    ;; ABCL has function names like (FOO (SYSTEM::INTERPRETED)).
+    (when (listp function-name)
+      (setq function-name (first function-name)))
+    (make-reference function-name 'function)))
 
 (defmethod canonical-reference ((function generic-function))
   (make-reference (swank-mop:generic-function-name function) 'generic-function))
@@ -297,7 +301,8 @@
   (let ((reference (canonical-reference function)))
     (print-bullet reference stream)
     (write-char #\Space stream)
-    (let ((arglist (swank-backend:arglist function)))
+    (let ((arglist (swank-backend:arglist
+                    (swank-backend:function-name function))))
       (print-arglist arglist stream)
       (print-end-bullet stream)
       (with-local-references ((list reference))
@@ -574,7 +579,9 @@
   contract.")
 
 (defmethod locate-object (symbol (locative-type (eql 'type)) locative-args)
-  (unless (swank-backend:type-specifier-p 'symbol)
+  ;; On some lisps, SWANK-BACKEND:TYPE-SPECIFIER-P is not reliable.
+  #-(or abcl allegro clisp ecl)
+  (unless (swank-backend:type-specifier-p symbol)
     (locate-error))
   (make-reference symbol (cons locative-type locative-args)))
 
@@ -898,6 +905,7 @@
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'include))
                                    locative-args)
+  (declare (ignore symbol))
   (multiple-value-bind (file start) (include-region (first locative-args))
     (assert file)
     `(:location
@@ -907,6 +915,7 @@
 
 (defmethod locate-and-document (symbol (locative-type (eql 'include))
                                 locative-args stream)
+  (declare (ignore symbol))
   (destructuring-bind (source &key (line-prefix "") header footer
                        header-nl footer-nl) locative-args
     (when header
@@ -956,7 +965,7 @@
 ;;;
 ;;;     (:location
 ;;;      (:file "filename")
-;;;      (:position 1)
+;;;      (:position 333) ; or (:offset 1 333)
 ;;;      (:snippet ""))
 (defun check-location (location)
   (assert (listp location) () "Location ~S is not a list." location)
@@ -964,14 +973,20 @@
           "Location ~S does not start with ~S." location :location)
   (assert (and (location-file location)
                (location-position location))
-          () "Location ~S should contain: ~S."
-          location '(:file :position)))
+          () "Location ~S should contain :POSITION or :OFFSET."
+          location))
 
 (defun location-file (location)
   (second (find :file (rest location) :key #'first)))
 
 (defun location-position (location)
-  (1- (second (find :position (rest location) :key #'first))))
+  (let ((position (find :position (rest location) :key #'first)))
+    (if position
+        (1- (second position))
+        (let ((offset (find :offset (rest location) :key #'first)))
+          (if offset
+              (1- (+ (second offset) (third offset)))
+              nil)))))
 
 (defun file-subseq (pathname &optional start end)
   (with-open-file (stream pathname)

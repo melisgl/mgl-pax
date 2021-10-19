@@ -2,7 +2,7 @@
 
 (in-readtable pythonic-string-syntax)
 
-(defsection @mgl-pax-transcript (:title "Transcripts")
+(defsection @mgl-pax-transcripts (:title "Transcripts")
   "What are transcripts for? When writing a tutorial, one often wants
   to include a REPL session with maybe a few defuns and a couple of
   forms whose output or return values are shown. Also, in a function's
@@ -485,6 +485,7 @@
             (file-position (file-position stream)))
         (multiple-value-bind (line missing-newline-p)
             (read-line stream nil nil)
+          (declare (ignorable missing-newline-p))
           (handler-case
               (loop while line do
                 (multiple-value-bind (prefix-id prefix syntax-id)
@@ -495,6 +496,7 @@
                         value
                         n-lines-read
                         file-position-1)
+                    (declare (ignorable n-lines-read))
                     (file-position stream (+ file-position match-length))
                     (multiple-value-setq
                         (value n-lines-read
@@ -754,6 +756,7 @@
        (with-standard-io-syntax
          (let ((*package* ,package)
                (*print-readably* nil)
+               #-clisp
                (*print-pretty* t)
                (*print-right-margin* 72))
            ,@body)))))

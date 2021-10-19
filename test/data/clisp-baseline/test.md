@@ -144,7 +144,7 @@ type-of [`BAR`][6055]
 
 <a id='x-28MGL-PAX-TEST-3A-3ABAR-20-28TYPE-29-29'></a>
 
-- [type] **BAR** *X &REST R*
+- [type] **BAR**
 
     `BAR` has args X and R.
 

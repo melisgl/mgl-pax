@@ -15,8 +15,10 @@
 
   *Note that the this feature is implemented in terms of
   SWANK-BACKEND:FIND-SOURCE-LOCATION and
-  SWANK-BACKEND:FIND-DEFINITIONS whose support varies across the Lisp
-  implementations.*
+  SWANK-BACKEND:FIND-DEFINITIONS, whose support varies across the Lisp
+  implementations. In particular, ABCL, CLISP and ECL have no or
+  rather spotty support for it. Everything works fine on AllegroCL,
+  CCL and SBCL.*
 
   In the following examples, pressing `M-.` when the cursor is on one
   of the characters of `FOO` or just after `FOO`, will visit the

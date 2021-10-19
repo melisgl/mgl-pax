@@ -109,20 +109,11 @@ function and its methods, it's resolved in favor if the gf:
 
 - [function] **FOO** *OOK X*
 
-    `FOO` has args `OOK` and `X`.
-    
-    This function [`FOO`][4244] is related to compiler-macro [`FOO`][f1a9].
-    
-    Or [`foo`][f1a9], if you prefer.
-    
-    Now, `foo`([`0`][f1a9] [`1`][22be]) should link to [`foo`][f1a9] and [`foo`][22be]
-    but not to [`foo`][4244].
+    Docstring of a compiler macro.
 
 <a id='x-28MGL-PAX-TEST-3A-3AFOO-20-28COMPILER-MACRO-29-29'></a>
 
 - [compiler-macro] **FOO** *OOK X*
-
-    Docstring of a compiler macro.
 
 <a id='x-28MGL-PAX-TEST-3A-3AFOO-20CLASS-29'></a>
 
@@ -144,7 +135,7 @@ type-of [`BAR`][6055]
 
 <a id='x-28MGL-PAX-TEST-3A-3ABAR-20-28TYPE-29-29'></a>
 
-- [type] **BAR** *X &REST R*
+- [type] **BAR**
 
     `BAR` has args X and R.
 

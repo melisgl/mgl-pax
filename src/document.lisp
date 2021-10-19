@@ -11,7 +11,8 @@
   (@mgl-pax-linking-to-code section)
   (@mgl-pax-linking-to-sections section)
   (@mgl-pax-miscellaneous-documentation-printer-variables section)
-  (@mgl-pax-documentation-utilities section))
+  (@mgl-pax-documentation-utilities section)
+  (@mgl-pax-document-implementation-notes section))
 
 ;;; A PAGE is basically a single markdown or html file, to where the
 ;;; documentation of some references is written. See the DOCUMENT
@@ -80,7 +81,7 @@
 ;;; HTML-SAFE-NAME.
 (defun reference-to-anchor (reference)
   (let ((reference (canonical-reference reference)))
-    (with-standard-io-syntax
+    (with-standard-io-syntax*
       (prin1-to-string (list (reference-object reference)
                              (reference-locative reference))))))
 
@@ -126,7 +127,7 @@
   `(let ((*references* *references*)
          (*local-references* *local-references*)
          (*links* *links*))
-     (with-standard-io-syntax
+     (with-standard-io-syntax*
        (loop for page in ,pages
              do (dolist (reference (page-references page))
                   (unless (find-link reference)
@@ -1156,7 +1157,7 @@
                      "("
                      ,@(loop
                          for i upfrom 0
-                         for ref in refs
+                         for ref in (sort-references refs)
                          append `(,@(unless (zerop i)
                                       '(" "))
                                   (:reference-link
@@ -1176,6 +1177,15 @@
           (t
            `((:reference-link :label (,(code-fragment (maybe-downcase name)))
                               :definition ,(link-to-reference ref-1)))))))
+
+;;; Order REFERENCES in an implementation independent way. REFERENCES
+;;; are all to the same object.
+(defun sort-references (references)
+  (flet ((locative-string (reference)
+           (with-standard-io-syntax*
+             (prin1-to-string
+              (reference-locative reference)))))
+    (sort (copy-seq references) #'string< :key #'locative-string)))
 
 
 (defsection @mgl-pax-linking-to-sections (:title "Linking to Sections")
@@ -1668,3 +1678,18 @@
         docstring)
     #-sbcl
     docstring))
+
+
+(defsection @mgl-pax-document-implementation-notes
+    (:title "Document Generation Implementation Notes")
+  """Documentation Generation is supported on ABCL, AllegroCL, CLISP,
+  CCL, ECL and SBCL, but their outputs may differ due to the lack of
+  some introspective capability. SBCL generates complete output.
+  Compared to that, the following are not supported:
+
+  - COMPILER-MACRO docstrings on ABCL, AllegroCL, CCL, ECL
+  - DEFTYPE lambda lists on ABCL, AllegroCL, CLISP, CCL, ECL
+  - Default values in MACRO lambda lists on AllegroCL
+  - Default values in function lambda lists on CCL (needs `(DEBUG 3)`
+    on AllegroCL).
+  """)

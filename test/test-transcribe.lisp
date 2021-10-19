@@ -56,10 +56,11 @@
   ())
 
 (defmethod print-object ((bbb bbb) stream)
-  #-ecl
+  #-(or ecl ccl clisp)
   (print-unreadable-object (bbb stream :type t))
   ;; PRINT-UNREADABLE-OBJECT lower-cases the name of the class on ECL.
-  #+ecl
+  ;; On CCL, the space is missing.
+  #+ (or ecl ccl clisp)
   (format stream "#<BBB >"))
 
 (defclass bbb* ()
@@ -318,6 +319,8 @@
                 (when transcript
                   (assert (equal transcript transcript*)))
                 (when output
+                  (unless (equal output output*)
+                    (format t "Expected:~%~S~%Got:~%~S~%" output output*))
                   (assert (equal output output*))))))
           (assert (equal (reverse errors*) errors))
           (assert (equal (reverse output-consistency-errors*)
