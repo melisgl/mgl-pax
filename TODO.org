@@ -1,0 +1,24 @@
+* TODO add METHOD-COMBINATION locative
+* OPT esrap is slow with allegro cl
+* MAYBE link to doc instead of including it if it is referenced multiple times?
+Which one is the master? Heuristically, the references from sections
+in the same package are to be preferred.
+* MAYBE todo/comment locative?
+* defining link ids doesn't work in function docstrings
+because it's translated to a list item
+* MAYBE autolink to the hyperspec?
+* MAYBE port the hyperspec to pax
+Copyright on lispworks' version is restrictive, allegro?
+* MAYBE fake/override documentation for existing stuff
+* TODO pretty print lambda-lists (including default values)
+and values of variables.
+* MAYBE add [link name][(FOO VARIABLE)] kind of link
+Maybe with a retitling-locative? [FOO][(RETITLE "link name" VARIABLE)])
+* *DOCUMENT-DOWNCASE-UPPERCASE-CODE* with noninterned stuff is a bit broken
+Noninterned stuff is not downcased, which leads to having to mix
+casing up in the docstring.
+* MAYBE don't list unexported superclasses?
+* MAYBE include signalled errors in transcript?
+* MAYBE transcribe: add inline commands that can change prefixes and such
+* MAYBE transcribe: special comment syntax for the 'narrative'
+to produce something like an ipython notebook.

@@ -1,16 +1,3 @@
-;;;; TODO
-;;;;
-;;;; - Maybe implement inline commands that can change prefixes and
-;;;;   other parameters.
-;;;;
-;;;; - special comment syntax for the 'narrative' to produce something
-;;;;   like an ipython notebook
-;;;;
-;;;; - special prompt syntax for forms not to be evaluated when a file
-;;;;   is loaded
-;;;;
-;;;; - capture conditions signalled?
-
 (in-package :mgl-pax)
 
 (in-readtable pythonic-string-syntax)
