@@ -1,4 +1,5 @@
 * TODO add METHOD-COMBINATION locative
+* TODO export documentation generation utilities for extensions
 * OPT esrap is slow with allegro cl
 * MAYBE link to doc instead of including it if it is referenced multiple times?
 Which one is the master? Heuristically, the references from sections

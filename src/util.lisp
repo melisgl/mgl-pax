@@ -348,13 +348,13 @@
   (defun _mark-one (array ch)
     (setf (sbit array (char-code ch)) 1)))
 
-(defparameter +first-name-characters+ 
+(defparameter +first-name-characters+
   (let ((array (make-array 255 :element-type 'bit :initial-element 0)))
     (_mark-range array #\a #\z)
     (_mark-range array #\A #\Z)
     array))
 
-(defparameter +name-characters+ 
+(defparameter +name-characters+
   (let ((array (copy-seq +first-name-characters+)))
     (_mark-range array #\0 #\9)
     (_mark-one array #\-)
@@ -384,12 +384,12 @@
                       (write-char char out))
                      (t
                       ;; See http://www.w3.org/TR/html4/types.html#h-6.2
-                      ;; ID and NAME tokens must begin with a letter ([A-Za-z]) 
-                      ;; and may be followed by any number of letters, 
-                      ;; digits ([0-9]), hyphens ("-"), underscores ("_"), 
+                      ;; ID and NAME tokens must begin with a letter ([A-Za-z])
+                      ;; and may be followed by any number of letters,
+                      ;; digits ([0-9]), hyphens ("-"), underscores ("_"),
                       ;; colons (":"), and periods (".").
                       (when first?
-                        (write-char #\x out)) 
+                        (write-char #\x out))
                       (format out "-~:@(~16r~)" code)))
                (setf first? nil)))
     (coerce output 'simple-string)))
