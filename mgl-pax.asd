@@ -51,8 +51,7 @@
   :description "Documentation generation support for MGL-PAX."
   :long-description "Autoloaded by MGL-PAX:DOCUMENT. See
   MGL-PAX:@MGL-PAX-GENERATING-DOCUMENTATION."
-  :depends-on (:mgl-pax/navigate :3bmd :3bmd-ext-code-blocks
-                                 :babel :colorize :ironclad)
+  :depends-on (:mgl-pax/navigate :3bmd :3bmd-ext-code-blocks :colorize :md5)
   :components ((:module "src"
                 :serial t
                 :components ((:file "markdown")

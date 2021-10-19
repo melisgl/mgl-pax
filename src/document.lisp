@@ -1425,14 +1425,24 @@
 
 (defun hash-link (string detect-collision-fn
                   &key (min-n-chars *document-min-link-hash-length*))
-  (let ((hex (ironclad:byte-array-to-hex-string
-              (ironclad:digest-sequence 'ironclad:md5
-                                        (babel:string-to-octets string)))))
+  (let ((hex (byte-array-to-hex-string (md5:md5sum-string string))))
     (loop for i upfrom min-n-chars below 32
           do (let ((hash (subseq hex 0 (min 32 i))))
                (unless (funcall detect-collision-fn hash)
                  (return-from hash-link hash))))
     (assert nil () "MD5 collision collision detected.")))
+
+(defun byte-array-to-hex-string (byte-array)
+  (declare (type (vector (unsigned-byte 8)) byte-array))
+  (let* ((n (length byte-array))
+         (s (make-string (* 2 n) :element-type 'base-char))
+         (hex-digits "0123456789abcdef"))
+    (dotimes (i n)
+      (let ((byte (aref byte-array i)))
+        (multiple-value-bind (div rem) (floor byte 16)
+          (setf (aref s (* 2 i)) (aref hex-digits div))
+          (setf (aref s (1+ (* 2 i))) (aref hex-digits rem)))))
+    s))
 
 
 (defvar *document-mark-up-signatures* t
