@@ -107,6 +107,7 @@
   (baz type)
   (*test-variable* variable)
   (some-restart restart)
+  (my-error condition)
   (@test-examples section)
   (@test-other section)
   (test-gf generic-function)
@@ -169,6 +170,11 @@
 (define-restart some-restart (arg1)
   "This is SOME-RESTART with ARG1.")
 
+(define-condition my-error (error)
+  ()
+  (:documentation "This is MY-ERROR."))
+(defun my-error ())
+
 (defmacro bar (X Y)
   "BAR has args X and Y."
   (declare (ignore x y))
@@ -213,6 +219,9 @@
     (bar constant (defconstant bar))
     (baz generic-function (defgeneric baz))
     (baz variable (defvar baz))
+    (some-restart restart (define-restart some-restart))
+    (my-error condition (define-condition my-error))
+    (my-error type (define-condition my-error))
     (@mgl-pax-manual section (defsection @mgl-pax-manual))
     (baz-aaa structure-accessor (defstruct baz))
     (mgl-pax package

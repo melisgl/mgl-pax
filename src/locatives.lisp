@@ -600,10 +600,12 @@
 ;;;; TYPE locative
 
 (define-locative-type type ()
-  "TYPE can refer to classes as well, but it's better style to use the
-  more specific CLASS locative type for that. Another difference to
-  CLASS is that an attempt is made at printing the arguments of type
-  specifiers.")
+  "This locative can refer to any Lisp type. For types defined with
+  DEFTYPE, an attempt is made at printing the arguments of type
+  specifiers. When TYPE refers to a CL:CLASS, the class is documented
+  as an opaque type: no mention is made of that it is a class or its
+  superclasses. Use the CLASS locative if those things are part of the
+  contract.")
 
 (defmethod locate-object (symbol (locative-type (eql 'type)) locative-args)
   (unless (swank-backend:type-specifier-p 'symbol)
@@ -625,7 +627,7 @@
                                    locative-args)
   (declare (ignore locative-args))
   (find-one-location (swank-backend:find-definitions symbol)
-                     '("type" "class")))
+                     '("type" "class" "condition")))
 
 
 ;;;; CLASS and CONDITION locatives

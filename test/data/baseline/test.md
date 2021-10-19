@@ -170,6 +170,12 @@ type-of [`BAR`][6055]
 
     This is `SOME-RESTART` with `ARG1`.
 
+<a id='x-28MGL-PAX-TEST-3A-3AMY-ERROR-20CONDITION-29'></a>
+
+- [condition] **MY-ERROR** *ERROR*
+
+    This is `MY-ERROR`.
+
 
 
 <a id='x-28MGL-PAX-TEST-3A-3ATEST-GF-20GENERIC-FUNCTION-29'></a>
