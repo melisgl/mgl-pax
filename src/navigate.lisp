@@ -2,7 +2,7 @@
 
 (in-readtable pythonic-string-syntax)
 
-(defsection @mgl-pax-emacs-integration (:title "Emacs Integration")
+(defsection @mgl-pax-navigating-in-emacs (:title "Navigating Sources in Emacs")
   "Integration into SLIME's `M-.` (`slime-edit-definition`) allows one
   to visit the source location of the thing that's identified by a
   symbol and the locative before or after the symbol in a buffer. With
@@ -48,7 +48,22 @@
   The `M-.` extensions can be enabled by adding this to your Emacs
   initialization file (or loading `src/pax.el`):"
   (pax.el (include #.(asdf:system-relative-pathname :mgl-pax "src/pax.el")
-                   :header-nl "```elisp" :footer-nl "```")))
+                   :header-nl "```elisp" :footer-nl "```"))
+  (mgl-pax/navigate asdf:system))
+
+;;; Ensure that some Swank internal facilities (such as
+;;; SWANK::FIND-DEFINITIONS-FIND-SYMBOL-OR-PACKAGE,
+;;; SWANK::WITH-BUFFER-SYNTAX, SWANK::PARSE-SYMBOL) are operational
+;;; even when not running under Slime.
+(defmacro with-swank (() &body body)
+  `(let* ((swank::*buffer-package* (if (boundp 'swank::*buffer-package*)
+                                       swank::*buffer-package*
+                                       *package*))
+          (swank::*buffer-readtable*
+            (if (boundp 'swank::*buffer-readtable*)
+                swank::*buffer-readtable*
+                (swank::guess-buffer-readtable swank::*buffer-package*))))
+     ,@body))
 
 ;;; Return one source location for the thing that can be located with
 ;;; NAME (a string) and LOCATIVE-STRING. Called from the elisp
@@ -56,28 +71,29 @@
 ;;; string arguments and returns a location suitable for
 ;;; make-slime-xref.
 (defun locate-definitions-for-emacs (name locative-string)
-  (let ((locative-string (string-trim " `" locative-string)))
-    (swank-backend::converting-errors-to-error-location
-      (swank::with-buffer-syntax ()
-        (or
-         ;; SECTION class and class SECTION
-         ;; SECTION `class` and `class` SECTION
-         ;; `SECTION` class and class `SECTION`
-         ;; `SECTION` `class` and `class` `SECTION`
-         (ignore-errors
-          (locate-definition-for-emacs-1 name locative-string))
-         ;; [SECTION][(class)] gets here as NAME="[SECTION][",
-         ;; LOCATIVE-STRING="(class)".
-         (ignore-errors
-          (locate-definition-for-emacs-1 (string-trim "[]" name)
-                                         locative-string))
-         ;; [SECTION][class] gets here as NAME="[SECTION][class]",
-         ;; LOCATIVE-STRING=garbage.
-         (ignore-errors
-          (locate-reference-link-definition-for-emacs name))
-         ;; [DEFSECTION][]
-         (and (equal locative-string "")
-              (locate-all-definitions-for-emacs name)))))))
+  (with-swank ()
+    (let ((locative-string (string-trim " `" locative-string)))
+      (swank-backend::converting-errors-to-error-location
+        (swank::with-buffer-syntax ()
+          (or
+           ;; SECTION class and class SECTION
+           ;; SECTION `class` and `class` SECTION
+           ;; `SECTION` class and class `SECTION`
+           ;; `SECTION` `class` and `class` `SECTION`
+           (ignore-errors
+            (locate-definition-for-emacs-1 name locative-string))
+           ;; [SECTION][(class)] gets here as NAME="[SECTION][",
+           ;; LOCATIVE-STRING="(class)".
+           (ignore-errors
+            (locate-definition-for-emacs-1 (string-trim "[]" name)
+                                           locative-string))
+           ;; [SECTION][class] gets here as NAME="[SECTION][class]",
+           ;; LOCATIVE-STRING=garbage.
+           (ignore-errors
+            (locate-reference-link-definition-for-emacs name))
+           ;; [DEFSECTION][]
+           (and (equal locative-string "")
+                (locate-all-definitions-for-emacs name))))))))
 
 (defun locate-all-definitions-for-emacs (name)
   (let* ((swank:*find-definitions-left-trim* "[#:<")
@@ -133,20 +149,6 @@
                     string)))
     (read-locative-from-string string)))
 
-;;; Ensure that some Swank internal facilities (such as
-;;; SWANK::FIND-DEFINITIONS-FIND-SYMBOL-OR-PACKAGE,
-;;; SWANK::WITH-BUFFER-SYNTAX, SWANK::PARSE-SYMBOL) are operational
-;;; even when not running under Slime.
-(defmacro with-swank (() &body body)
-  `(let* ((swank::*buffer-package* (if (boundp 'swank::*buffer-package*)
-                                       swank::*buffer-package*
-                                       *package*))
-          (swank::*buffer-readtable*
-            (if (boundp 'swank::*buffer-readtable*)
-                swank::*buffer-readtable*
-                (swank::guess-buffer-readtable swank::*buffer-package*))))
-     ,@body))
-
 ;;; Like READ-FROM-STRING, but try to avoid interning symbols.
 (defun read-locative-from-string (string)
   (let ((swank::*buffer-package* *package*))
@@ -171,6 +173,10 @@
                     ;; already interned, so let's just read it.
                     (ignore-errors (let ((*read-eval* t))
                                      (read-from-string string))))))))))))
+
+(defun delimiterp (char)
+  (or (whitespacep char)
+      (find char "()'`\"#<")))
 
 (defun locate-reference-link-definition-for-emacs (string)
   (when (and (= 2 (count #\[ string))

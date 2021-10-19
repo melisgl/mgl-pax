@@ -44,7 +44,8 @@
   can be enabled with:
 
       (in-readtable pythonic-string-syntax)"
-  (@mgl-pax-transcript-emacs-integration section)
+  (mgl-pax/transcribe asdf:system)
+  (@mgl-pax-transcribing-with-emacs section)
   (@mgl-pax-transcript-api section))
 
 
@@ -980,8 +981,7 @@
           :message-args message-args))
 
 
-(defsection @mgl-pax-transcript-emacs-integration
-    (:title "Transcribing with Emacs")
+(defsection @mgl-pax-transcribing-with-emacs (:title "Transcribing with Emacs")
   """Typical transcript usage from within Emacs is simple: add a lisp
   form to a docstring or comment at any indentation level. Move the
   cursor right after the end of the form as if you were to evaluate it

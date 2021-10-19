@@ -5,7 +5,7 @@
 (defsection @mgl-pax-generating-documentation
     (:title "Generating Documentation")
   (document function)
-  (mgl-pax/full asdf:system)
+  (mgl-pax/document asdf:system)
   (@mgl-pax-markdown-support section)
   (@mgl-pax-codification section)
   (@mgl-pax-linking-to-code section)
@@ -335,7 +335,6 @@
      :header-fn 'write-html-header
      :footer-fn 'write-html-footer))
   ```"""
-  (asdf:load-system :mgl-pax/full)
   (let ((*format* format)
         (*print-right-margin* (or *print-right-margin* 80))
         (*package* (if *document-normalize-packages*
@@ -344,43 +343,41 @@
         (default-page (translate-page-spec
                        (list :objects (alexandria:ensure-list object)
                              :output (list stream))
-                       format)))
-    (progv (list (symbol-stub "3bmd-code-blocks:*code-blocks*")
-                 (symbol-stub "3bmd-code-blocks:*code-blocks-default-colorize*")
-                 (symbol-stub "3bmd-code-blocks::*colorize-name-map*"))
-        (list t :common-lisp
-              (alexandria:plist-hash-table
-               `("cl-transcript" :common-lisp
-                                 ,@(alexandria:hash-table-plist
-                                    (var-stub
-                                     "3bmd-code-blocks::*colorize-name-map*")))
-               :test #'equal))
-      (with-tracking-pages-created ()
-        (with-pages ((append (translate-page-specs pages format)
-                             (list default-page)))
-          (with-temp-output-to-page (stream default-page)
-            (dolist (object (alexandria:ensure-list object))
-              (with-headings (object)
-                (document-object object stream))))
-          (let ((outputs ()))
-            (do-pages-created (page)
-              (with-temp-output-to-page (stream page)
-                (write-markdown-reference-style-link-definitions stream))
-              (unless (eq format :markdown)
-                (let ((markdown-string (with-temp-input-from-page (stream page)
-                                         (read-stream-into-string stream))))
-                  (delete-stream-spec (page-temp-stream-spec page))
-                  (with-final-output-to-page (stream page)
-                    (when (page-header-fn page)
-                      (funcall (page-header-fn page) stream))
-                    (call-stub "3bmd:parse-string-and-print-to-stream"
-                               markdown-string stream :format format)
-                    (when (page-footer-fn page)
-                      (funcall (page-footer-fn page) stream)))))
-              (push (unmake-stream-spec (page-final-stream-spec page)) outputs))
-            (if (and stream (endp pages))
-                (first outputs)
-                (reverse outputs))))))))
+                       format))
+        (3bmd-code-blocks:*code-blocks* t)
+        (3bmd-code-blocks:*code-blocks-default-colorize* :common-lisp)
+        (3bmd-code-blocks::*colorize-name-map*
+          (alexandria:plist-hash-table
+           `("cl-transcript" :common-lisp
+                             ,@(alexandria:hash-table-plist
+                                3bmd-code-blocks::*colorize-name-map*))
+           :test #'equal)))
+    (with-tracking-pages-created ()
+      (with-pages ((append (translate-page-specs pages format)
+                           (list default-page)))
+        (with-temp-output-to-page (stream default-page)
+          (dolist (object (alexandria:ensure-list object))
+            (with-headings (object)
+              (document-object object stream))))
+        (let ((outputs ()))
+          (do-pages-created (page)
+            (with-temp-output-to-page (stream page)
+              (write-markdown-reference-style-link-definitions stream))
+            (unless (eq format :markdown)
+              (let ((markdown-string (with-temp-input-from-page (stream page)
+                                       (read-stream-into-string stream))))
+                (delete-stream-spec (page-temp-stream-spec page))
+                (with-final-output-to-page (stream page)
+                  (when (page-header-fn page)
+                    (funcall (page-header-fn page) stream))
+                  (3bmd:parse-string-and-print-to-stream markdown-string stream
+                                                         :format format)
+                  (when (page-footer-fn page)
+                    (funcall (page-footer-fn page) stream)))))
+            (push (unmake-stream-spec (page-final-stream-spec page)) outputs))
+          (if (and stream (endp pages))
+              (first outputs)
+              (reverse outputs)))))))
 
 ;;; Emit markdown definitions for links (in *LINKS*) to REFERENCE
 ;;; objects that were linked to on the current page.
@@ -638,12 +635,11 @@
 
 ;;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings and :EMPH
 ;;; (to recognize *VAR*). Also, perform consistency checking of
-;;; cl-transcript code blocks (see
-;;; @MGL-PAX-TRANSCRIPT-EMACS-INTEGRATION).
+;;; cl-transcript code blocks (see @MGL-PAX-TRANSCRIBING-WITH-EMACS).
 (defun codify (string known-references)
   (map-markdown-parse-tree
-   (list :emph (symbol-stub "3bmd-code-blocks::code-block"))
-   '(:code :verbatim (symbol-stub "3bmd-code-blocks::code-block")
+   (list :emph '3bmd-code-blocks::code-block)
+   '(:code :verbatim 3bmd-code-blocks::code-block
      :reference-link :explicit-link :image :mailto)
    t
    (alexandria:rcurry #'translate-to-code known-references)
@@ -664,7 +660,7 @@
                    nil t)))
         ((eq :emph (first tree))
          (translate-emph parent tree known-references))
-        ((eq (symbol-stub "3bmd-code-blocks::code-block") (first tree))
+        ((eq '3bmd-code-blocks::code-block (first tree))
          (translate-code-block parent tree))
         (t
          (error "~@<Unexpected tree type ~S.~:@>" (first tree)))))
@@ -676,7 +672,7 @@
   (declare (ignore parent))
   (let ((lang (getf (rest code-block) :lang)))
     (if (equal lang "cl-transcript")
-        `(,(symbol-stub "3bmd-code-blocks::code-block")
+        `(3bmd-code-blocks::code-block
           :lang ,lang
           :content ,(transcribe (getf (rest code-block) :content) nil
                                 :update-only t :check-consistency t))
@@ -1245,11 +1241,6 @@
 ;;; context.
 (defvar *table-of-contents-page* nil)
 
-(defmacro with-heading ((stream object title &key link-title-to)
-                        &body body)
-  `(call-with-heading ,stream ,object ,title ,link-title-to
-                      (lambda (,stream) ,@body)))
-
 (defun print-table-of-contents-entry (object string stream)
   (loop repeat (* 4 (1- *heading-level*))
         do (write-char #\Space stream))
@@ -1407,10 +1398,6 @@
           (when (<= (1- (length *heading-number*))
                     *document-max-numbering-level*)
             (butlast *heading-number*))))
-
-(defmacro with-nested-headings (() &body body)
-  `(let ((*heading-level* (1+ *heading-level*)))
-     ,@body))
 
 
 (defsection @mgl-pax-miscellaneous-documentation-printer-variables
@@ -1438,11 +1425,9 @@
 
 (defun hash-link (string detect-collision-fn
                   &key (min-n-chars *document-min-link-hash-length*))
-  (let ((hex (call-stub "ironclad:byte-array-to-hex-string"
-                        (call-stub "ironclad:digest-sequence"
-                                   (symbol-stub "ironclad:md5")
-                                   (call-stub "babel:string-to-octets"
-                                              string)))))
+  (let ((hex (ironclad:byte-array-to-hex-string
+              (ironclad:digest-sequence 'ironclad:md5
+                                        (babel:string-to-octets string)))))
     (loop for i upfrom min-n-chars below 32
           do (let ((hash (subseq hex 0 (min 32 i))))
                (unless (funcall detect-collision-fn hash)
@@ -1622,3 +1607,54 @@
                                  (locative-args locative)
                                  stream)))
         (document-object resolved-object stream))))
+
+
+(defmethod describe-object ((section section) stream)
+  "[SECTION][class] objects are printed by calling DOCUMENT on them
+  with *DOCUMENT-NORMALIZE-PACKAGES* turned off to reduce clutter.
+  This method is only defined if MGL-PAX/FULL is loaded to allow
+  non-fancy descriptions to be printed when using CL:DESCRIBE."
+  (let ((*document-uppercase-is-code* nil)
+        (*document-link-code* nil)
+        (*document-link-sections* nil)
+        (*document-mark-up-signatures* nil)
+        (*document-max-numbering-level* 0)
+        (*document-max-table-of-contents-level* 0)
+        (*document-text-navigation* nil)
+        ;; Some Lisps bind it to T in DESCRIBE, some don't.
+        (*print-circle* nil))
+    (document section :stream stream :format :markdown)))
+
+
+;;;; High level printing utilities
+
+;;; Print (DOCUMENTATION OBJECT DOC-TYPE) to STREAM in FORMAT. Clean
+;;; up docstring indentation, then indent it by four spaces.
+;;; Automarkup symbols.
+(defun maybe-print-docstring (object doc-type stream)
+  (let ((docstring (filter-documentation object doc-type)))
+    (when docstring
+      (format stream "~%~A~%" (massage-docstring docstring)))))
+
+(defun massage-docstring (docstring &key (indentation "    "))
+  (if *table-of-contents-stream*
+      ;; The output is going to /dev/null and this is a costly
+      ;; operation, skip it.
+      ""
+      (let ((docstring (strip-docstring-indentation docstring)))
+        (prefix-lines indentation (codify-and-autolink docstring)))))
+
+(defun filter-documentation (symbol doc-type)
+  (let ((docstring (documentation symbol doc-type)))
+    #+sbcl
+    (if (member docstring
+                '("Return whether debug-block represents elsewhere code."
+                  "automatically generated accessor method"
+                  "automatically generated reader method"
+                  "automatically generated writer method")
+                :test #'equal)
+        ;; Discard the garbage docstring.
+        nil
+        docstring)
+    #-sbcl
+    docstring))

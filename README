@@ -6,12 +6,27 @@
 - Version: 0.0.4
 - Description: Exploratory programming tool and documentation
   generator.
+- Long Description: The set of dependencies of the MGL-PAX system is
+  kept light, and its heavier dependencies are autoloaded via ASDF
+  when the relavant functionality is accessed. See the
+  MGL-PAX/NAVIGATE, MGL-PAX/DOCUMENT, MGL-PAX/TRANSCRIBE and
+  MGL-PAX/FULL systems. To keep deployed code small, client systems
+  should declare an ASDF dependency on this system, never on the
+  others, which are intended for autoloading and interactive use.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
 - Homepage: [http://melisgl.github.io/mgl-pax](http://melisgl.github.io/mgl-pax)
 - Bug tracker: [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
 - Source control: [GIT](https://github.com/melisgl/mgl-pax.git)
+
+## MGL-PAX/FULL ASDF System Details
+
+- Description: MGL-PAX with all features preloaded.
+- Licence: MIT, see COPYING.
+- Author: Gábor Melis
+- Mailto: [mega@retes.hu](mailto:mega@retes.hu)
+
 
 ## Links
 
@@ -102,7 +117,7 @@ etc, all of which should probably have their own docstrings.
 
 The primary focus is on making code easily explorable by using
 SLIME's `M-.` (`slime-edit-definition`). See how to enable some
-fanciness in @MGL-PAX-EMACS-INTEGRATION. Generating documentation
+fanciness in @MGL-PAX-NAVIGATING-IN-EMACS. Generating documentation
 from sections and all the referenced items in Markdown or HTML
 format is also implemented.
 
@@ -252,7 +267,7 @@ The transcript in the code block tagged with `cl-transcript` is
 automatically checked for up-to-dateness. See
 @MGL-PAX-TRANSCRIPT.
 
-## Emacs Integration
+## Navigating Sources in Emacs
 
 Integration into SLIME's `M-.` (`slime-edit-definition`) allows one
 to visit the source location of the thing that's identified by a
@@ -302,7 +317,7 @@ initialization file (or loading `src/pax.el`):
 ```elisp
 ;;; MGL-PAX M-. integration
 
-(defun mgl-pax-edit-locative-definition (name &optional where)
+(defun mgl-pax-edit-locative-definitions (name &optional where)
   (or (mgl-pax-locate-definition name (mgl-pax-locative-before) where)
       (mgl-pax-locate-definition name (mgl-pax-locative-after) where)
       (mgl-pax-locate-definition name (mgl-pax-locative-after-in-brackets)
@@ -363,6 +378,16 @@ initialization file (or loading `src/pax.el`):
 
 (add-hook 'slime-edit-definition-hooks 'mgl-pax-edit-locative-definitions)
 ```
+
+### MGL-PAX/NAVIGATE ASDF System Details
+
+- Description: Slime `M-.` support for MGL-PAX.
+- Long Description: Autoloaded by Slime's `M-.` when `src/pax.el` is
+  loaded. See MGL-PAX:@MGL-PAX-NAVIGATING-IN-EMACS.
+- Licence: MIT, see COPYING.
+- Author: Gábor Melis
+- Mailto: [mega@retes.hu](mailto:mega@retes.hu)
+
 
 ## Basics
 
@@ -459,7 +484,7 @@ a unique object as is the case in `(LOCATE 'FOO 'CLASS)` returning
 location and the docstring of the defining form is recorded (see
 LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
 @MGL-PAX-EXTENSION-API), which makes navigating the sources with
-`M-.` (see @MGL-PAX-EMACS-INTEGRATION) and
+`M-.` (see @MGL-PAX-NAVIGATING-IN-EMACS) and
 @MGL-PAX-GENERATING-DOCUMENTATION possible.
 
 - [locative] VARIABLE &OPTIONAL INITFORM
@@ -525,10 +550,12 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
 
 - [locative] TYPE
 
-    TYPE can refer to classes as well, but it's better style to use the
-    more specific CLASS locative type for that. Another difference to
-    CLASS is that an attempt is made at printing the arguments of type
-    specifiers.
+    This locative can refer to any Lisp type. For types defined with
+    DEFTYPE, an attempt is made at printing the arguments of type
+    specifiers. When TYPE refers to a CL:CLASS, the class is documented
+    as an opaque type: no mention is made of that it is a class or its
+    superclasses. Use the CLASS locative if those things are part of the
+    contract.
 
 - [locative] CLASS
 
@@ -615,7 +642,7 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     on `FOO-EXAMPLE` will go to the source location of the `(asdf:system
     locative)` locative.
     
-    When documentation is generated, the entire `pax.el` file is
+    When documentation is generated, the entire `src/pax.el` file is
     included in the markdown surrounded by the strings given as
     HEADER-NL and FOOTER-NL (if any). The trailing newline character is
     assumed implicitly. If that's undesirable, then use HEADER and
@@ -837,13 +864,11 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     ```
 
 
-### MGL-PAX/FULL ASDF System Details
+### MGL-PAX/DOCUMENT ASDF System Details
 
-- Description: MGL-PAX with all dependencies preloaded.
-- Long Description: To ease deployment, the set of dependencies of
-  the MGL-PAX system is kept light and its heavier dependencies are
-  loaded on demand. If this is undesirable, then the MGL-PAX/FULL
-  system can be loaded.
+- Description: Documentation generation support for MGL-PAX.
+- Long Description: Autoloaded by MGL-PAX:DOCUMENT. See
+  MGL-PAX:@MGL-PAX-GENERATING-DOCUMENTATION.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
@@ -1374,6 +1399,16 @@ to work with nested strings with less noise. The triple-quote syntax
 can be enabled with:
 
     (in-readtable pythonic-string-syntax)
+
+
+### MGL-PAX/TRANSCRIBE ASDF System Details
+
+- Description: Transcription support for MGL-PAX.
+- Long Description: Autoloaded by MGL-PAX:TRANSCRIBE and by the Emacs
+  integration (see MGL-PAX:@MGL-PAX-TRANSCRIPT).
+- Licence: MIT, see COPYING.
+- Author: Gábor Melis
+- Mailto: [mega@retes.hu](mailto:mega@retes.hu)
 
 
 ### Transcribing with Emacs
@@ -2039,7 +2074,7 @@ for ASDF:SYSTEM:
     one is a generic function to be extensible. In fact, the default
     implementation simply defers to SWANK:FIND-DEFINITION-FOR-THING.
     This function is called by LOCATE-DEFINITIONS-FOR-EMACS, which lies
-    behind the `M-.` extension (see @MGL-PAX-EMACS-INTEGRATION).
+    behind the `M-.` extension (see @MGL-PAX-NAVIGATING-IN-EMACS).
     
     If successful, the return value looks like this:
     

@@ -5,34 +5,37 @@
 ## Table of Contents
 
 - [1 MGL-PAX ASDF System Details][4918]
-- [2 Links][d7e0]
-- [3 Background][84ee]
-- [4 Tutorial][aa52]
-- [5 Emacs Integration][eff4]
-- [6 Basics][8059]
-- [7 Locative Types][1fbb]
-- [8 Generating Documentation][063a]
-    - [8.1 MGL-PAX/FULL ASDF System Details][0785]
-    - [8.2 Markdown Support][d58f]
-        - [8.2.1 Indentation][4336]
-        - [8.2.2 Syntax Highlighting][32ac]
-        - [8.2.3 MathJax][55dd]
-    - [8.3 Codification][3405]
-    - [8.4 Linking to Code][8c65]
-        - [8.4.1 Reference Resolution][d1cf]
-    - [8.5 Linking to Sections][505a]
-    - [8.6 Miscellaneous Variables][ec16]
-    - [8.7 Utilities for Generating Documentation][97f0]
-        - [8.7.1 Github Workflow][2748]
-        - [8.7.2 PAX World][e65c]
-- [9 Transcripts][7a32]
-    - [9.1 Transcribing with Emacs][c694]
-    - [9.2 Transcript API][bf16]
-- [10 Extension API][8ed9]
-    - [10.1 Locatives and References][d023]
-    - [10.2 Adding New Object Types][5161]
-    - [10.3 Reference Based Extensions][00f0]
-    - [10.4 Sections][be22]
+- [2 MGL-PAX/FULL ASDF System Details][0785]
+- [3 Links][d7e0]
+- [4 Background][84ee]
+- [5 Tutorial][aa52]
+- [6 Navigating Sources in Emacs][3fdc]
+    - [6.1 MGL-PAX/NAVIGATE ASDF System Details][8ea3]
+- [7 Basics][8059]
+- [8 Locative Types][1fbb]
+- [9 Generating Documentation][063a]
+    - [9.1 MGL-PAX/DOCUMENT ASDF System Details][eac6]
+    - [9.2 Markdown Support][d58f]
+        - [9.2.1 Indentation][4336]
+        - [9.2.2 Syntax Highlighting][32ac]
+        - [9.2.3 MathJax][55dd]
+    - [9.3 Codification][3405]
+    - [9.4 Linking to Code][8c65]
+        - [9.4.1 Reference Resolution][d1cf]
+    - [9.5 Linking to Sections][505a]
+    - [9.6 Miscellaneous Variables][ec16]
+    - [9.7 Utilities for Generating Documentation][97f0]
+        - [9.7.1 Github Workflow][2748]
+        - [9.7.2 PAX World][e65c]
+- [10 Transcripts][7a32]
+    - [10.1 MGL-PAX/TRANSCRIBE ASDF System Details][ce29]
+    - [10.2 Transcribing with Emacs][350c]
+    - [10.3 Transcript API][bf16]
+- [11 Extension API][8ed9]
+    - [11.1 Locatives and References][d023]
+    - [11.2 Adding New Object Types][5161]
+    - [11.3 Reference Based Extensions][00f0]
+    - [11.4 Sections][be22]
 
 ###### \[in package MGL-PAX with nicknames PAX\]
 <a id='x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29'></a>
@@ -42,6 +45,13 @@
 - Version: 0.0.4
 - Description: Exploratory programming tool and documentation
   generator.
+- Long Description: The set of dependencies of the [`MGL-PAX`][4918] system is
+  kept light, and its heavier dependencies are autoloaded via `ASDF`
+  when the relavant functionality is accessed. See the
+  [`MGL-PAX/NAVIGATE`][8ea3], [`MGL-PAX/DOCUMENT`][eac6], [`MGL-PAX/TRANSCRIBE`][ce29] and
+  [`MGL-PAX/FULL`][0785] systems. To keep deployed code small, client systems
+  should declare an `ASDF` dependency on this system, never on the
+  others, which are intended for autoloading and interactive use.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
@@ -49,9 +59,19 @@
 - Bug tracker: [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
 - Source control: [GIT](https://github.com/melisgl/mgl-pax.git)
 
+<a id='x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29'></a>
+
+## 2 MGL-PAX/FULL ASDF System Details
+
+- Description: [`MGL-PAX`][4918] with all features preloaded.
+- Licence: MIT, see COPYING.
+- Author: Gábor Melis
+- Mailto: [mega@retes.hu](mailto:mega@retes.hu)
+
+
 <a id='x-28MGL-PAX-3A-40MGL-PAX-LINKS-20MGL-PAX-3ASECTION-29'></a>
 
-## 2 Links
+## 3 Links
 
 Here is the [official
 repository](https://github.com/melisgl/mgl-pax) and the [HTML
@@ -60,7 +80,7 @@ for the latest version.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-BACKGROUND-20MGL-PAX-3ASECTION-29'></a>
 
-## 3 Background
+## 4 Background
 
 As a user, I frequently run into documentation that's incomplete
 and out of date, so I tend to stay in the editor and explore the
@@ -135,7 +155,7 @@ format, and a few thousand lines later `PAX` was born.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-TUTORIAL-20MGL-PAX-3ASECTION-29'></a>
 
-## 4 Tutorial
+## 5 Tutorial
 
 `PAX` provides an extremely poor man's Explorable Programming
 environment. Narrative primarily lives in so called sections that
@@ -144,7 +164,7 @@ etc, all of which should probably have their own docstrings.
 
 The primary focus is on making code easily explorable by using
 SLIME's `M-.` (`slime-edit-definition`). See how to enable some
-fanciness in [Emacs Integration][eff4]. Generating documentation
+fanciness in [Navigating Sources in Emacs][3fdc]. Generating documentation
 from sections and all the referenced items in Markdown or HTML
 format is also implemented.
 
@@ -294,9 +314,9 @@ The transcript in the code block tagged with `cl-transcript` is
 automatically checked for up-to-dateness. See
 [Transcripts][7a32].
 
-<a id='x-28MGL-PAX-3A-40MGL-PAX-EMACS-INTEGRATION-20MGL-PAX-3ASECTION-29'></a>
+<a id='x-28MGL-PAX-3A-40MGL-PAX-NAVIGATING-IN-EMACS-20MGL-PAX-3ASECTION-29'></a>
 
-## 5 Emacs Integration
+## 6 Navigating Sources in Emacs
 
 Integration into SLIME's `M-.` (`slime-edit-definition`) allows one
 to visit the source location of the thing that's identified by a
@@ -343,12 +363,12 @@ possibilities.
 The `M-.` extensions can be enabled by adding this to your Emacs
 initialization file (or loading `src/pax.el`):
 
-<a id='x-28MGL-PAX-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
+<a id='x-28MGL-PAX-3A-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
 
 ```elisp
 ;;; MGL-PAX M-. integration
 
-(defun mgl-pax-edit-locative-definition (name &optional where)
+(defun mgl-pax-edit-locative-definitions (name &optional where)
   (or (mgl-pax-locate-definition name (mgl-pax-locative-before) where)
       (mgl-pax-locate-definition name (mgl-pax-locative-after) where)
       (mgl-pax-locate-definition name (mgl-pax-locative-after-in-brackets)
@@ -410,9 +430,21 @@ initialization file (or loading `src/pax.el`):
 (add-hook 'slime-edit-definition-hooks 'mgl-pax-edit-locative-definitions)
 ```
 
+<a id='x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29'></a>
+
+### 6.1 MGL-PAX/NAVIGATE ASDF System Details
+
+- Description: Slime `M-.` support for [`MGL-PAX`][4918].
+- Long Description: Autoloaded by Slime's `M-.` when `src/pax.el` is
+  loaded. See [Navigating Sources in Emacs][3fdc].
+- Licence: MIT, see COPYING.
+- Author: Gábor Melis
+- Mailto: [mega@retes.hu](mailto:mega@retes.hu)
+
+
 <a id='x-28MGL-PAX-3A-40MGL-PAX-BASICS-20MGL-PAX-3ASECTION-29'></a>
 
-## 6 Basics
+## 7 Basics
 
 Now let's examine the most important pieces in detail.
 
@@ -499,7 +531,7 @@ Now let's examine the most important pieces in detail.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29'></a>
 
-## 7 Locative Types
+## 8 Locative Types
 
 As we have already briefly seen, locatives allow us to refer to,
 document and find the source location of various definitions beyond
@@ -515,7 +547,7 @@ a unique object as is the case in `(LOCATE 'FOO 'CLASS)` returning
 location and the docstring of the defining form is recorded (see
 [`LOCATE-AND-FIND-SOURCE`][e9e9], [`LOCATE-AND-DOCUMENT`][6c17] in the
 [Extension API][8ed9]), which makes navigating the sources with
-`M-.` (see [Emacs Integration][eff4]) and
+`M-.` (see [Navigating Sources in Emacs][3fdc]) and
 [Generating Documentation][063a] possible.
 
 <a id='x-28VARIABLE-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
@@ -605,10 +637,12 @@ location and the docstring of the defining form is recorded (see
 
 - [locative] **TYPE**
 
-    `TYPE` can refer to classes as well, but it's better style to use the
-    more specific [`CLASS`][0208] locative type for that. Another difference to
-    [`CLASS`][0208] is that an attempt is made at printing the arguments of type
-    specifiers.
+    This locative can refer to any Lisp type. For types defined with
+    `DEFTYPE`, an attempt is made at printing the arguments of type
+    specifiers. When `TYPE` refers to a [`CL:CLASS`][0208], the class is documented
+    as an opaque type: no mention is made of that it is a class or its
+    superclasses. Use the [`CLASS`][0208] locative if those things are part of the
+    contract.
 
 <a id='x-28CLASS-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
 
@@ -706,12 +740,12 @@ location and the docstring of the defining form is recorded (see
     ;;; More irrelevant code follows.
     ```
     
-    In the above example, pressing `M-.` on [`PAX.EL`][ff5c] will open the
+    In the above example, pressing `M-.` on [`PAX.EL`][05c6] will open the
     `src/pax.el` file and put the cursor on its first character. `M-.`
     on `FOO-EXAMPLE` will go to the source location of the `(asdf:system
     locative)` locative.
     
-    When documentation is generated, the entire [`pax.el`][ff5c] file is
+    When documentation is generated, the entire `src/pax.el` file is
     included in the markdown surrounded by the strings given as
     `HEADER-NL` and `FOOTER-NL` (if any). The trailing newline character is
     assumed implicitly. If that's undesirable, then use `HEADER` and
@@ -796,7 +830,7 @@ location and the docstring of the defining form is recorded (see
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29'></a>
 
-## 8 Generating Documentation
+## 9 Generating Documentation
 
 <a id='x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29'></a>
 
@@ -947,15 +981,13 @@ location and the docstring of the defining form is recorded (see
     ```
 
 
-<a id='x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29'></a>
+<a id='x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29'></a>
 
-### 8.1 MGL-PAX/FULL ASDF System Details
+### 9.1 MGL-PAX/DOCUMENT ASDF System Details
 
-- Description: [`MGL-PAX`][4918] with all dependencies preloaded.
-- Long Description: To ease deployment, the set of dependencies of
-  the [`MGL-PAX`][4918] system is kept light and its heavier dependencies are
-  loaded on demand. If this is undesirable, then the [`MGL-PAX/FULL`][0785]
-  system can be loaded.
+- Description: Documentation generation support for [`MGL-PAX`][4918].
+- Long Description: Autoloaded by [`MGL-PAX:DOCUMENT`][1eb8]. See
+  [Generating Documentation][063a].
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
@@ -963,14 +995,14 @@ location and the docstring of the defining form is recorded (see
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29'></a>
 
-### 8.2 Markdown Support
+### 9.2 Markdown Support
 
 The [Markdown][markdown] in docstrings is processed with the
 [3BMD][3bmd] library.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29'></a>
 
-#### 8.2.1 Indentation
+#### 9.2.1 Indentation
 
 Docstrings can be indented in any of the usual styles. `PAX`
 normalizes indentation by converting:
@@ -991,7 +1023,7 @@ See [`DOCUMENT-OBJECT`][d7eb] for the details.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29'></a>
 
-#### 8.2.2 Syntax Highlighting
+#### 9.2.2 Syntax Highlighting
 
 For syntax highlighting, github's [fenced code
 blocks][fenced-code-blocks] markdown extension to mark up code
@@ -1018,7 +1050,7 @@ the details.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MATHJAX-20MGL-PAX-3ASECTION-29'></a>
 
-#### 8.2.3 MathJax
+#### 9.2.3 MathJax
 
 Displaying pretty mathematics in TeX format is supported via
 MathJax. It can be done inline with `$` like this:
@@ -1043,7 +1075,7 @@ with that.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-CODIFICATION-20MGL-PAX-3ASECTION-29'></a>
 
-### 8.3 Codification
+### 9.3 Codification
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20-28VARIABLE-29-29'></a>
 
@@ -1082,7 +1114,7 @@ with that.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-LINKING-TO-CODE-20MGL-PAX-3ASECTION-29'></a>
 
-### 8.4 Linking to Code
+### 9.4 Linking to Code
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20-28VARIABLE-29-29'></a>
 
@@ -1162,7 +1194,7 @@ with that.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-REFERENCE-RESOLUTION-20MGL-PAX-3ASECTION-29'></a>
 
-#### 8.4.1 Reference Resolution
+#### 9.4.1 Reference Resolution
 
 Links are generated according to [`*DOCUMENT-LINK-CODE*`][1d4c] in general
 but with some additional heuristics for convenience.
@@ -1222,7 +1254,7 @@ The exact rules for local references are as follows:
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29'></a>
 
-### 8.5 Linking to Sections
+### 9.5 Linking to Sections
 
 The following variables control how to generate section numbering,
 table of contents and navigation links.
@@ -1275,7 +1307,7 @@ table of contents and navigation links.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29'></a>
 
-### 8.6 Miscellaneous Variables
+### 9.6 Miscellaneous Variables
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-MIN-LINK-HASH-LENGTH-2A-20-28VARIABLE-29-29'></a>
 
@@ -1329,7 +1361,7 @@ table of contents and navigation links.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-DOCUMENTATION-UTILITIES-20MGL-PAX-3ASECTION-29'></a>
 
-### 8.7 Utilities for Generating Documentation
+### 9.7 Utilities for Generating Documentation
 
 Two convenience functions are provided to serve the common case of
 having an `ASDF` system with some readmes and a directory with for the
@@ -1409,7 +1441,7 @@ HTML documentation and the default css stylesheet.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29'></a>
 
-#### 8.7.1 Github Workflow
+#### 9.7.1 Github Workflow
 
 It is generally recommended to commit generated readmes (see
 [`UPDATE-ASDF-SYSTEM-READMES`][2e7a]) so that users have something to read
@@ -1465,7 +1497,7 @@ between the repository and the gh-pages site.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-WORLD-20MGL-PAX-3ASECTION-29'></a>
 
-#### 8.7.2 PAX World
+#### 9.7.2 PAX World
 
 `PAX` World is a registry of documents, which can generate
 cross-linked HTML documentation pages for all the registered
@@ -1512,7 +1544,7 @@ For example, this is how `PAX` registers itself:
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-20MGL-PAX-3ASECTION-29'></a>
 
-## 9 Transcripts
+## 10 Transcripts
 
 What are transcripts for? When writing a tutorial, one often wants
 to include a REPL session with maybe a few defuns and a couple of
@@ -1558,9 +1590,21 @@ can be enabled with:
     (in-readtable pythonic-string-syntax)
 
 
-<a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-EMACS-INTEGRATION-20MGL-PAX-3ASECTION-29'></a>
+<a id='x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29'></a>
 
-### 9.1 Transcribing with Emacs
+### 10.1 MGL-PAX/TRANSCRIBE ASDF System Details
+
+- Description: Transcription support for [`MGL-PAX`][4918].
+- Long Description: Autoloaded by [`MGL-PAX:TRANSCRIBE`][0382] and by the Emacs
+  integration (see [Transcripts][7a32]).
+- Licence: MIT, see COPYING.
+- Author: Gábor Melis
+- Mailto: [mega@retes.hu](mailto:mega@retes.hu)
+
+
+<a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIBING-WITH-EMACS-20MGL-PAX-3ASECTION-29'></a>
+
+### 10.2 Transcribing with Emacs
 
 Typical transcript usage from within Emacs is simple: add a lisp
 form to a docstring or comment at any indentation level. Move the
@@ -1647,7 +1691,7 @@ but in comments too:
 Transcription support in emacs can be enabled by adding this to your
 Emacs initialization file (or loading `src/transcribe.el`):
 
-<a id='x-28MGL-PAX-3ATRANSCRIBE-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Ftranscribe-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
+<a id='x-28MGL-PAX-3A-3ATRANSCRIBE-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Ftranscribe-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
 
 ```elisp
 ;;; MGL-PAX transcription
@@ -1715,7 +1759,7 @@ changed."
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-API-20MGL-PAX-3ASECTION-29'></a>
 
-### 9.2 Transcript API
+### 10.3 Transcript API
 
 <a id='x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29'></a>
 
@@ -1972,11 +2016,11 @@ changed."
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-EXTENSION-API-20MGL-PAX-3ASECTION-29'></a>
 
-## 10 Extension API
+## 11 Extension API
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-LOCATIVES-AND-REFERENCES-20MGL-PAX-3ASECTION-29'></a>
 
-### 10.1 Locatives and References
+### 11.1 Locatives and References
 
 While Common Lisp has rather good introspective abilities, not
 everything is first class. For example, there is no object
@@ -2072,7 +2116,7 @@ need to muck with references when there is a perfectly good object.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-NEW-OBJECT-TYPES-20MGL-PAX-3ASECTION-29'></a>
 
-### 10.2 Adding New Object Types
+### 11.2 Adding New Object Types
 
 One may wish to make the [`DOCUMENT`][1eb8] function and `M-.` navigation
 work with new object types. Extending [`DOCUMENT`][1eb8] can be done by
@@ -2293,7 +2337,7 @@ for [`ASDF:SYSTEM:`][bf8a]
     one is a generic function to be extensible. In fact, the default
     implementation simply defers to `SWANK:FIND-DEFINITION-FOR-THING`.
     This function is called by `LOCATE-DEFINITIONS-FOR-EMACS`, which lies
-    behind the `M-.` extension (see [Emacs Integration][eff4]).
+    behind the `M-.` extension (see [Navigating Sources in Emacs][3fdc]).
     
     If successful, the return value looks like this:
     
@@ -2313,7 +2357,7 @@ for [`ASDF:SYSTEM:`][bf8a]
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-REFERENCE-BASED-EXTENSIONS-20MGL-PAX-3ASECTION-29'></a>
 
-### 10.3 Reference Based Extensions
+### 11.3 Reference Based Extensions
 
 Let's see how to extend [`DOCUMENT`][1eb8] and `M-.` navigation if there is
 no first class object to represent the thing of interest. Recall
@@ -2460,7 +2504,7 @@ with symbols in a certain context.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-SECTIONS-20MGL-PAX-3ASECTION-29'></a>
 
-### 10.4 Sections
+### 11.4 Sections
 
 [`Section`][aee8] objects rarely need to be dissected since
 [`DEFSECTION`][b1e7] and [`DOCUMENT`][1eb8] cover most needs. However, it is plausible
@@ -2528,6 +2572,7 @@ presented.
   [0261]: #x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFINE-GLOSSARY-TERM (MGL-PAX:MACRO))"
   [0382]: #x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29 "(MGL-PAX:TRANSCRIBE FUNCTION)"
   [0412]: #x-28MGL-PAX-3AREFERENCE-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29 "(MGL-PAX:REFERENCE-OBJECT (MGL-PAX:READER MGL-PAX:REFERENCE))"
+  [05c6]: #x-28MGL-PAX-3A-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29 "(MGL-PAX::PAX.EL (MGL-PAX:INCLUDE #P\"/home/melisgl/own/mgl-pax/src/pax.el\" :HEADER-NL \"```elisp\" :FOOTER-NL \"```\"))"
   [063a]: #x-28MGL-PAX-3A-40MGL-PAX-GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Generating Documentation"
   [0785]: #x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax/full\" ASDF/SYSTEM:SYSTEM)"
   [12a1]: #x-28MGL-PAX-3ALOCATIVE-20-28MGL-PAX-3ALOCATIVE-29-29 "(MGL-PAX:LOCATIVE (MGL-PAX:LOCATIVE))"
@@ -2547,6 +2592,8 @@ presented.
   [32ac]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29 "Syntax Highlighting"
   [3405]: #x-28MGL-PAX-3A-40MGL-PAX-CODIFICATION-20MGL-PAX-3ASECTION-29 "Codification"
   [34f5]: #x-28MGL-PAX-3ADEFINE-PACKAGE-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFINE-PACKAGE (MGL-PAX:MACRO))"
+  [350c]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIBING-WITH-EMACS-20MGL-PAX-3ASECTION-29 "Transcribing with Emacs"
+  [3fdc]: #x-28MGL-PAX-3A-40MGL-PAX-NAVIGATING-IN-EMACS-20MGL-PAX-3ASECTION-29 "Navigating Sources in Emacs"
   [4336]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29 "Indentation"
   [46ea]: #x-28MGL-PAX-3A-2ADOCUMENT-MARK-UP-SIGNATURES-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DOCUMENT-MARK-UP-SIGNATURES* (VARIABLE))"
   [4918]: #x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax\" ASDF/SYSTEM:SYSTEM)"
@@ -2572,6 +2619,7 @@ presented.
   [88d2]: #x-28GENERIC-FUNCTION-20-28MGL-PAX-3ALOCATIVE-29-29 "(GENERIC-FUNCTION (MGL-PAX:LOCATIVE))"
   [8a71]: #x-28MGL-PAX-3ATRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR-20CONDITION-29 "(MGL-PAX:TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR CONDITION)"
   [8c65]: #x-28MGL-PAX-3A-40MGL-PAX-LINKING-TO-CODE-20MGL-PAX-3ASECTION-29 "Linking to Code"
+  [8ea3]: #x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax/navigate\" ASDF/SYSTEM:SYSTEM)"
   [8ed9]: #x-28MGL-PAX-3A-40MGL-PAX-EXTENSION-API-20MGL-PAX-3ASECTION-29 "Extension API"
   [966a]: #x-28MGL-PAX-3ALOCATIVE-TYPE-20FUNCTION-29 "(MGL-PAX:LOCATIVE-TYPE FUNCTION)"
   [96c5]: #x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29 "(MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION)"
@@ -2597,9 +2645,9 @@ presented.
   [bf16]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-API-20MGL-PAX-3ASECTION-29 "Transcript API"
   [bf8a]: #x-28ASDF-2FSYSTEM-3ASYSTEM-20-28MGL-PAX-3ALOCATIVE-29-29 "(ASDF/SYSTEM:SYSTEM (MGL-PAX:LOCATIVE))"
   [c5f2]: #x-28MGL-PAX-3AREGISTER-DOC-IN-PAX-WORLD-20FUNCTION-29 "(MGL-PAX:REGISTER-DOC-IN-PAX-WORLD FUNCTION)"
-  [c694]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-EMACS-INTEGRATION-20MGL-PAX-3ASECTION-29 "Transcribing with Emacs"
   [cc37]: #x-28MGL-PAX-3AREFERENCE-20CLASS-29 "(MGL-PAX:REFERENCE CLASS)"
   [ce09]: #x-28MGL-PAX-3ADEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE-20-28MGL-PAX-3AMACRO-29-29 "(MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE (MGL-PAX:MACRO))"
+  [ce29]: #x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax/transcribe\" ASDF/SYSTEM:SYSTEM)"
   [d023]: #x-28MGL-PAX-3A-40MGL-PAX-LOCATIVES-AND-REFERENCES-20MGL-PAX-3ASECTION-29 "Locatives and References"
   [d1cf]: #x-28MGL-PAX-3A-40MGL-PAX-REFERENCE-RESOLUTION-20MGL-PAX-3ASECTION-29 "Reference Resolution"
   [d58f]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29 "Markdown Support"
@@ -2609,13 +2657,12 @@ presented.
   [e0d7]: #x-28MGL-PAX-3ARESOLVE-20FUNCTION-29 "(MGL-PAX:RESOLVE FUNCTION)"
   [e65c]: #x-28MGL-PAX-3A-40MGL-PAX-WORLD-20MGL-PAX-3ASECTION-29 "PAX World"
   [e9e9]: #x-28MGL-PAX-3ALOCATE-AND-FIND-SOURCE-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-FIND-SOURCE GENERIC-FUNCTION)"
+  [eac6]: #x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax/document\" ASDF/SYSTEM:SYSTEM)"
   [ec16]: #x-28MGL-PAX-3A-40MGL-PAX-MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29 "Miscellaneous Variables"
-  [eff4]: #x-28MGL-PAX-3A-40MGL-PAX-EMACS-INTEGRATION-20MGL-PAX-3ASECTION-29 "Emacs Integration"
   [f1a0]: #x-28METHOD-20-28MGL-PAX-3ALOCATIVE-29-29 "(METHOD (MGL-PAX:LOCATIVE))"
   [f3b7]: #x-28MGL-PAX-3ALOCATE-ERROR-20FUNCTION-29 "(MGL-PAX:LOCATE-ERROR FUNCTION)"
   [f901]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DOCUMENT-LINK-SECTIONS* (VARIABLE))"
   [fde0]: #x-28MGL-PAX-3A-2ADOCUMENT-MAX-NUMBERING-LEVEL-2A-20-28VARIABLE-29-29 "(MGL-PAX:*DOCUMENT-MAX-NUMBERING-LEVEL* (VARIABLE))"
-  [ff5c]: #x-28MGL-PAX-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29 "(MGL-PAX:PAX.EL (MGL-PAX:INCLUDE #P\"/home/melisgl/own/mgl-pax/src/pax.el\" :HEADER-NL \"```elisp\" :FOOTER-NL \"```\"))"
 
 * * *
 ###### \[generated by [MGL-PAX](https://github.com/melisgl/mgl-pax)\]

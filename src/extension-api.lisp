@@ -178,7 +178,7 @@
   one is a generic function to be extensible. In fact, the default
   implementation simply defers to SWANK:FIND-DEFINITION-FOR-THING.
   This function is called by LOCATE-DEFINITIONS-FOR-EMACS, which lies
-  behind the `M-.` extension (see @MGL-PAX-EMACS-INTEGRATION).
+  behind the `M-.` extension (see @MGL-PAX-NAVIGATING-IN-EMACS).
 
   If successful, the return value looks like this:
 

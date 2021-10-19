@@ -4,10 +4,11 @@
 
 (defsection @mgl-pax-manual (:title "PAX Manual")
   (mgl-pax asdf:system)
+  (mgl-pax/full asdf:system)
   (@mgl-pax-links section)
   (@mgl-pax-background section)
   (@mgl-pax-tutorial section)
-  (@mgl-pax-emacs-integration section)
+  (@mgl-pax-navigating-in-emacs section)
   (@mgl-pax-basics section)
   (@mgl-pax-locative-types section)
   (@mgl-pax-generating-documentation section)
@@ -99,7 +100,7 @@
 
   The primary focus is on making code easily explorable by using
   SLIME's `M-.` (`slime-edit-definition`). See how to enable some
-  fanciness in @MGL-PAX-EMACS-INTEGRATION. Generating documentation
+  fanciness in @MGL-PAX-NAVIGATING-IN-EMACS. Generating documentation
   from sections and all the referenced items in Markdown or HTML
   format is also implemented.
 
@@ -255,10 +256,6 @@
   (defsection macro)
   (*discard-documentation-p* variable)
   (define-package macro))
-
-(defun section-title-or-name (section)
-  (or (section-title section)
-      (maybe-downcase (prin1-to-string (section-name section)))))
 
 (defmacro define-package (package &rest options)
   "This is like CL:DEFPACKAGE but silences warnings and errors

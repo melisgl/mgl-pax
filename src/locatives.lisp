@@ -17,7 +17,7 @@
   location and the docstring of the defining form is recorded (see
   LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
   @MGL-PAX-EXTENSION-API), which makes navigating the sources with
-  `M-.` (see @MGL-PAX-EMACS-INTEGRATION) and
+  `M-.` (see @MGL-PAX-NAVIGATING-IN-EMACS) and
   @MGL-PAX-GENERATING-DOCUMENTATION possible."
   (variable locative)
   (constant locative)
@@ -133,40 +133,6 @@
                            (< (n-leading-spaces line) n-min-indentation))
                    (setq n-min-indentation (n-leading-spaces line))))))
     (or n-min-indentation 0)))
-
-
-;;;; High level printing utilities
-
-;;; Print (DOCUMENTATION OBJECT DOC-TYPE) to STREAM in FORMAT. Clean
-;;; up docstring indentation, then indent it by four spaces.
-;;; Automarkup symbols.
-(defun maybe-print-docstring (object doc-type stream)
-  (let ((docstring (filter-documentation object doc-type)))
-    (when docstring
-      (format stream "~%~A~%" (massage-docstring docstring)))))
-
-(defun massage-docstring (docstring &key (indentation "    "))
-  (if *table-of-contents-stream*
-      ;; The output is going to /dev/null and this is a costly
-      ;; operation, skip it.
-      ""
-      (let ((docstring (strip-docstring-indentation docstring)))
-        (prefix-lines indentation (codify-and-autolink docstring)))))
-
-(defun filter-documentation (symbol doc-type)
-  (let ((docstring (documentation symbol doc-type)))
-    #+sbcl
-    (if (member docstring
-                '("Return whether debug-block represents elsewhere code."
-                  "automatically generated accessor method"
-                  "automatically generated reader method"
-                  "automatically generated writer method")
-                :test #'equal)
-        ;; Discard the garbage docstring.
-        nil
-        docstring)
-    #-sbcl
-    docstring))
 
 
 ;;;; VARIABLE locative
@@ -814,6 +780,10 @@
 (define-locative-type section ()
   "Refers to a section defined by DEFSECTION.")
 
+(defun section-title-or-name (section)
+  (or (section-title section)
+      (maybe-downcase (prin1-to-string (section-name section)))))
+
 (defmethod locate-object (symbol (locative-type (eql 'section))
                           locative-args)
   (declare (ignore locative-args))
@@ -898,7 +868,7 @@
   on `FOO-EXAMPLE` will go to the source location of the `(asdf:system
   locative)` locative.
 
-  When documentation is generated, the entire `pax.el` file is
+  When documentation is generated, the entire `src/pax.el` file is
   included in the markdown surrounded by the strings given as
   HEADER-NL and FOOTER-NL (if any). The trailing newline character is
   assumed implicitly. If that's undesirable, then use HEADER and

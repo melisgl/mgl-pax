@@ -11,10 +11,13 @@
   :source-control (:git "https://github.com/melisgl/mgl-pax.git")
   :description "Exploratory programming tool and documentation
   generator."
-  ;; These are *all* the dependencies as currently only
-  ;; PYTHONIC-STRING-READER has a dependency (on NAMED-READTABLES).
-  ;; All the heavy-weight dependencies are loaded on demand or eagerly
-  ;; by MGL-PAX/FULL.
+  :long-description "The set of dependencies of the MGL-PAX system is
+  kept light, and its heavier dependencies are autoloaded via ASDF
+  when the relavant functionality is accessed. See the
+  MGL-PAX/NAVIGATE, MGL-PAX/DOCUMENT, MGL-PAX/TRANSCRIBE and
+  MGL-PAX/FULL systems. To keep deployed code small, client systems
+  should declare an ASDF dependency on this system, never on the
+  others, which are intended for autoloading and interactive use."
   :depends-on (:alexandria :named-readtables :pythonic-string-reader :swank)
   :components ((:module "src"
                 :serial t
@@ -23,27 +26,59 @@
                              (:file "pax-early")
                              (:file "pax")
                              (:file "extension-api")
-                             (:file "navigate")
-                             (:file "transcribe")
-                             (:file "document")
-                             (:file "document-util")
+                             (:file "document-early")
+                             (:file "autoload")
                              (:file "locatives"))))
+  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
+
+(asdf:defsystem #:mgl-pax/navigate
+  :licence "MIT, see COPYING."
+  :author "Gábor Melis"
+  :mailto "mega@retes.hu"
+  :description "Slime `M-.` support for MGL-PAX."
+  :long-description "Autoloaded by Slime's `M-.` when `src/pax.el` is
+  loaded. See MGL-PAX:@MGL-PAX-NAVIGATING-IN-EMACS."
+  :depends-on (:mgl-pax)
+  :components ((:module "src"
+                :serial t
+                :components ((:file "navigate"))))
+  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
+
+(asdf:defsystem #:mgl-pax/document
+  :licence "MIT, see COPYING."
+  :author "Gábor Melis"
+  :mailto "mega@retes.hu"
+  :description "Documentation generation support for MGL-PAX."
+  :long-description "Autoloaded by MGL-PAX:DOCUMENT. See
+  MGL-PAX:@MGL-PAX-GENERATING-DOCUMENTATION."
+  :depends-on (:mgl-pax/navigate :3bmd :3bmd-ext-code-blocks
+                                 :babel :colorize :ironclad)
+  :components ((:module "src"
+                :serial t
+                :components ((:file "markdown")
+                             (:file "document")
+                             (:file "document-util"))))
+  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
+
+(asdf:defsystem #:mgl-pax/transcribe
+  :licence "MIT, see COPYING."
+  :author "Gábor Melis"
+  :mailto "mega@retes.hu"
+  :description "Transcription support for MGL-PAX."
+  :long-description "Autoloaded by MGL-PAX:TRANSCRIBE and by the Emacs
+  integration (see MGL-PAX:@MGL-PAX-TRANSCRIPT)."
+  :depends-on (:mgl-pax)
+  :components ((:module "src"
+                :serial t
+                :components ((:file "transcribe"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
 (asdf:defsystem #:mgl-pax/full
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
-  :description "MGL-PAX with all dependencies preloaded."
-  :long-description "To ease deployment, the set of dependencies of
-  the MGL-PAX system is kept light and its heavier dependencies are
-  loaded on demand. If this is undesirable, then the MGL-PAX/FULL
-  system can be loaded."
-  :depends-on (:mgl-pax :3bmd :3bmd-ext-code-blocks
-                        :babel :cl-fad :colorize :ironclad)
-  :components ((:module "src"
-                :serial t
-                :components ((:file "describe"))))
+  :description "MGL-PAX with all features preloaded."
+  :depends-on (:mgl-pax/navigate :mgl-pax/document :mgl-pax/transcribe)
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
 (asdf:defsystem mgl-pax/test
@@ -51,7 +86,7 @@
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
   :description "Test system for MGL-PAX."
-  :depends-on (#:mgl-pax)
+  :depends-on (#:mgl-pax/full)
   :components ((:module "test"
                 :serial t
                 :components ((:file "package")
