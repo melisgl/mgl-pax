@@ -66,7 +66,7 @@
   When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
   is true, ENTRIES will not be recorded to save memory."
   ;; Let's check the syntax as early as possible.
-  (transform-entries entries)
+  (transform-entries entries name)
   (transform-link-title-to link-title-to)
   `(progn
      (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -81,7 +81,7 @@
                       :link-title-to (transform-link-title-to ',link-title-to)
                       :entries ,(if discard-documentation-p
                                     ()
-                                    `(transform-entries ',entries))))))
+                                    `(transform-entries ',entries ',name))))))
 
 (defclass reference ()
   ((object :initarg :object :reader reference-object)
@@ -158,26 +158,32 @@
   (equal (alexandria:ensure-list locative-1)
          (alexandria:ensure-list locative-2)))
 
-(defun transform-entries (entries)
+(defun transform-entries (entries section-name)
   (mapcar (lambda (entry)
             (if (stringp entry)
                 entry
-                (entry-to-reference entry)))
+                (entry-to-reference entry section-name)))
           entries))
 
-(defun entry-to-reference (entry)
-  (destructuring-bind (symbol locative &key export) entry
-    (declare (ignore export))
-    (assert (symbolp symbol) ()
-            "~S is not a valid reference its first element is not a ~
-            symbol." entry)
-    (make-reference symbol locative)))
+(defun entry-to-reference (entry section-name)
+  (handler-case
+      (destructuring-bind (symbol locative) entry
+        (assert (symbolp symbol))
+        (make-reference symbol locative))
+    (error ()
+      (error "~@<Malformed entry ~A in the definition of SECTION ~A. ~
+               Entries must be of the form (SYMBOL LOCATIVE).~:@>"
+             ;; Force fully qualified symbols so that M-. works in the
+             ;; Slime debugger.
+             (prin1-to-string/fully-qualified entry)
+             (prin1-to-string/fully-qualified section-name)))))
 
 (defun transform-link-title-to (link-title-to)
   (when link-title-to
     (if (typep link-title-to 'reference)
         link-title-to
         (apply #'make-reference link-title-to))))
+
 
 ;;;; Exporting
 

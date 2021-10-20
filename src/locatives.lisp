@@ -942,8 +942,8 @@
          (values source 0 nil))
         ((and source (listp source))
          (destructuring-bind (&key start end) source
-           (let ((start (find-source (resolve (entry-to-reference start))))
-                 (end (find-source (resolve (entry-to-reference end)))))
+           (let ((start (find-source (resolve (entry-to-reference start nil))))
+                 (end (find-source (resolve (entry-to-reference end nil)))))
              (when start
                (check-location start))
              (when end

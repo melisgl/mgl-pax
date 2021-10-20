@@ -210,6 +210,10 @@
      ;; With *PRINT-READABLY*, CLISP insists on printing FOO as |FOO|.
      (let (#+clisp (*print-readably* nil))
        ,@body)))
+
+(defun prin1-to-string/fully-qualified (object)
+  (let ((*package* (find-package :keyword)))
+    (prin1-to-string object)))
 
 
 ;;;; String utilities
