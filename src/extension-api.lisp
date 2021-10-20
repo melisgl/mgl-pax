@@ -125,7 +125,13 @@
   (handler-case
       (let ((object (resolve reference)))
         (if (typep object 'reference)
-            object
+            ;; If the locative is (COMPILER-MACRO) for example, then
+            ;; turn it into a single symbol.
+            (let ((locative (reference-locative reference)))
+              (if (and (listp locative) (= (length locative) 1))
+                  (make-reference (reference-object reference)
+                                  (first locative))
+                  reference))
             (canonical-reference object)))
     (locate-error ()
       ;; DISLOCATED ends up here

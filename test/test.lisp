@@ -344,6 +344,9 @@
   #+clisp "clisp-baseline"
   #+ecl "ecl-baseline")
 
+;;; set by test.sh
+(defvar *update-baseline* nil)
+
 (defun test-document (format)
   (let ((outputs (write-test-document-files
                   (asdf:system-relative-pathname :mgl-pax "test/data/tmp/")
@@ -361,9 +364,10 @@
                          :defaults output)))
           (unless (string= (alexandria:read-file-into-string baseline)
                            (alexandria:read-file-into-string output))
-            (cerror "Update output file."
-                    "~@<Output ~S ~_differs from baseline ~S.~@:>"
-                    output baseline)
+            (unless *update-baseline*
+              (cerror "Update output file."
+                      "~@<Output ~S ~_differs from baseline ~S.~@:>"
+                      output baseline))
             (update-test-document-baseline format)))))))
 
 (defun write-test-document-files (basedir format)

@@ -1,7 +1,8 @@
 #!/bin/bash
 
-silent="$1"
-stop_on_failure="${2:-yes}"
+silent="${1:-nil}"
+stop_on_failure="${2:-t}"
+update_baseline="${3:-nil}"
 num_passes=
 num_failures=
 
@@ -25,8 +26,10 @@ function run_tests_on_lisp {
   shift
 
   run_test_case "lisp test suite on ${lisp_name}" $@ <<EOF
+(require :asdf)
+(asdf:load-system :mgl-pax/test)
+(setq mgl-pax-test::*update-baseline* ${update_baseline})
 (progn
-  (require :asdf)
   (asdf:test-system :mgl-pax)
   (uiop/image:quit 22))
 EOF
@@ -81,7 +84,7 @@ function run_tests {
   num_failures=0
   num_passes=0
   ros --lisp "${lisp}" run --eval '(ql:quickload :mgl-pax/full)' --quit -- $@
-  if [ $silent ]; then
+  if [ "${silent}" != "nil" ]; then
     run_tests_on_lisp ${lisp} ros --lisp ${lisp} run -- $@ \
       | grep --line-buffered "SHTEST:"
   else

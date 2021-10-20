@@ -12,10 +12,10 @@
 - [6 MGL-PAX-TEST::@STEALING-FROM-OTHER-PACKAGE][a48a]
 
 ###### \[in package MGL-PAX-TEST\]
-[`*TEST-VARIABLE*`][c066]
-[`*TEST-VARIABLE*`][c066]
-[`*test-variable*`][c066]
-[`*test-variable*`][c066]
+[`*TEST-VARIABLE*`][1037]
+[`*TEST-VARIABLE*`][1037]
+[`*test-variable*`][1037]
+[`*test-variable*`][1037]
 [mgl-pax-test:*test-variable*][]
 [`FOO`][4244] function, function [`FOO`][4244],
 [`FOO`][4244] function, function [`FOO`][4244],
@@ -44,7 +44,7 @@
 `->MAX`
 
 Escaped: FOO `FOO` *NAVIGATION-TEST-CASES*
-Non escaped: `FOO`([`0`][f1a9] [`1`][22be] [`2`][4244]) [`*TEST-VARIABLE*`][c066]
+Non escaped: `FOO`([`0`][22be] [`1`][4ded] [`2`][4244]) [`*TEST-VARIABLE*`][1037]
 [test other title][22dd]
 
 This should be no link because the page of `@TEST-EXAMPLES`
@@ -52,30 +52,30 @@ has `:URI-FRAGMENT` `NIL`.
 
 This is code: `T`
 
-Plural uppercase ambiguous symbol: see `FOO`([`0`][f1a9] [`1`][22be] [`2`][4244])s
+Plural uppercase ambiguous symbol: see `FOO`([`0`][22be] [`1`][4ded] [`2`][4244])s
 
 Plural uppercase symbol: [`TEST-GF`][efc1]s
 
 Plural uppercase dislocated symbol: `->MAX`s
 
 See
-[`FOO`][f1a9] compiler-macro
+[`FOO`][4ded] compiler-macro
 
-See [`FOO`][f1a9]
+See [`FOO`][4ded]
 compiler-macro
 
 See
-compiler-macro [`FOO`][f1a9]
+compiler-macro [`FOO`][4ded]
 
 See compiler-macro
-[`FOO`][f1a9]
+[`FOO`][4ded]
 
 See
 compiler-macro 
-[`FOO`][f1a9]
+[`FOO`][4ded]
 
 See
-`FOO`([`0`][f1a9] [`1`][22be] [`2`][4244])
+`FOO`([`0`][22be] [`1`][4ded] [`2`][4244])
 
 ```cl-transcript
 (values (print (1+ 2)) :aaa)
@@ -111,14 +111,14 @@ function and its methods, it's resolved in favor if the gf:
 
     `FOO` has args `OOK` and `X`.
     
-    This function [`FOO`][4244] is related to compiler-macro [`FOO`][f1a9].
+    This function [`FOO`][4244] is related to compiler-macro [`FOO`][4ded].
     
-    Or [`foo`][f1a9], if you prefer.
+    Or [`foo`][4ded], if you prefer.
     
-    Now, `foo`([`0`][f1a9] [`1`][22be]) should link to [`foo`][f1a9] and [`foo`][22be]
+    Now, `foo`([`0`][22be] [`1`][4ded]) should link to [`foo`][4ded] and [`foo`][22be]
     but not to [`foo`][4244].
 
-<a id='x-28MGL-PAX-TEST-3A-3AFOO-20-28COMPILER-MACRO-29-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3AFOO-20COMPILER-MACRO-29'></a>
 
 - [compiler-macro] **FOO** *OOK X*
 
@@ -128,41 +128,41 @@ function and its methods, it's resolved in favor if the gf:
 
 [`FOO`][22be] instance and [`FOO`][22be] object
 
-type-of [`BAR`][6055]
+type-of [`BAR`][cece]
 
 <a id='x-28MGL-PAX-TEST-3A-3AFOO-A-20-28MGL-PAX-3AACCESSOR-20MGL-PAX-TEST-3A-3AFOO-29-29'></a>
 
 - [accessor] **FOO-A** *FOO*
 
-<a id='x-28MGL-PAX-TEST-3A-3ABAR-20-28MGL-PAX-3AMACRO-29-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3ABAR-20MGL-PAX-3AMACRO-29'></a>
 
 - [macro] **BAR** *X Y &KEY Z*
 
     `BAR` has args `X`, `Y` and `Z`.
 
-<a id='x-28MGL-PAX-TEST-3A-3ABAR-20-28TYPE-29-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3ABAR-20TYPE-29'></a>
 
 - [type] **BAR**
 
     `BAR` has args X and R.
 
-<a id='x-28MGL-PAX-TEST-3A-3ABAR-20-28MGL-PAX-3ACONSTANT-29-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3ABAR-20MGL-PAX-3ACONSTANT-29'></a>
 
 - [constant] **BAR** *2*
 
     `BAR` is not a link.
 
-<a id='x-28MGL-PAX-TEST-3A-3ABAZ-20-28TYPE-29-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3ABAZ-20TYPE-29'></a>
 
 - [type] **BAZ**
 
-<a id='x-28MGL-PAX-TEST-3A-3A-2ATEST-VARIABLE-2A-20-28VARIABLE-29-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3A-2ATEST-VARIABLE-2A-20VARIABLE-29'></a>
 
 - [variable] **\*TEST-VARIABLE\*** *(XXX 34)*
 
     `*TEST-VARIABLE*` is not a link.
 
-<a id='x-28MGL-PAX-TEST-3A-3ASOME-RESTART-20-28RESTART-29-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3ASOME-RESTART-20RESTART-29'></a>
 
 - [restart] **SOME-RESTART** *ARG1*
 
@@ -221,7 +221,7 @@ backlink [@TEST][a755]
 ## 6 MGL-PAX-TEST::@STEALING-FROM-OTHER-PACKAGE
 
 ###### \[in package MGL-PAX with nicknames PAX\]
-<a id='x-28METHOD-20-28MGL-PAX-3ALOCATIVE-29-29'></a>
+<a id='x-28METHOD-20MGL-PAX-3ALOCATIVE-29'></a>
 
 - [locative] **METHOD** *METHOD-QUALIFIERS METHOD-SPECIALIZERS*
 
@@ -241,16 +241,16 @@ backlink [@TEST][a755]
 
 - [function] **FUNCTION-WITH-KEYWORD-ARGS** *X &KEY K1 (K2 14) (K3 21 K3P)*
 
+  [1037]: #x-28MGL-PAX-TEST-3A-3A-2ATEST-VARIABLE-2A-20VARIABLE-29 "(MGL-PAX-TEST::*TEST-VARIABLE* VARIABLE)"
   [1dbc]: #x-28MGL-PAX-TEST-3A-40TEST-SECTION-WITH-LINK-TO-OTHER-PAGE-IN-TITLE-20MGL-PAX-3ASECTION-29 "Link to @TEST-OTHER"
   [22be]: #x-28MGL-PAX-TEST-3A-3AFOO-20CLASS-29 "(MGL-PAX-TEST::FOO CLASS)"
   [22dd]: other/test-other.md#x-28MGL-PAX-TEST-3A-3A-40TEST-OTHER-20MGL-PAX-3ASECTION-29 "test other title"
   [2820]: #x-28MGL-PAX-TEST-3A-40TEST-SECTION-WITH-LINK-TO-SAME-PAGE-IN-TITLE-20MGL-PAX-3ASECTION-29 "Link to @TEST"
   [4244]: #x-28MGL-PAX-TEST-3A-3AFOO-20FUNCTION-29 "(MGL-PAX-TEST::FOO FUNCTION)"
-  [6055]: #x-28MGL-PAX-TEST-3A-3ABAR-20-28TYPE-29-29 "(MGL-PAX-TEST::BAR (TYPE))"
+  [4ded]: #x-28MGL-PAX-TEST-3A-3AFOO-20COMPILER-MACRO-29 "(MGL-PAX-TEST::FOO COMPILER-MACRO)"
   [6483]: #x-28MGL-PAX-TEST-3A-3AFOO-A-20-28MGL-PAX-3AACCESSOR-20MGL-PAX-TEST-3A-3AFOO-29-29 "(MGL-PAX-TEST::FOO-A (MGL-PAX:ACCESSOR MGL-PAX-TEST::FOO))"
   [a48a]: #x-28MGL-PAX-TEST-3A-3A-40STEALING-FROM-OTHER-PACKAGE-20MGL-PAX-3ASECTION-29 "MGL-PAX-TEST::@STEALING-FROM-OTHER-PACKAGE"
   [a755]: #x-28MGL-PAX-TEST-3A-3A-40TEST-20MGL-PAX-3ASECTION-29 "MGL-PAX-TEST::@TEST"
-  [c066]: #x-28MGL-PAX-TEST-3A-3A-2ATEST-VARIABLE-2A-20-28VARIABLE-29-29 "(MGL-PAX-TEST::*TEST-VARIABLE* (VARIABLE))"
+  [cece]: #x-28MGL-PAX-TEST-3A-3ABAR-20TYPE-29 "(MGL-PAX-TEST::BAR TYPE)"
   [d484]: #x-28MGL-PAX-TEST-3A-3A-40TEST-TRICKY-TITLE-20MGL-PAX-3ASECTION-29 "`CODE` *italic* _italic2_ *bold* [link][sdf] <thing>"
   [efc1]: #x-28MGL-PAX-TEST-3A-3ATEST-GF-20GENERIC-FUNCTION-29 "(MGL-PAX-TEST::TEST-GF GENERIC-FUNCTION)"
-  [f1a9]: #x-28MGL-PAX-TEST-3A-3AFOO-20-28COMPILER-MACRO-29-29 "(MGL-PAX-TEST::FOO (COMPILER-MACRO))"
