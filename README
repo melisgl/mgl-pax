@@ -40,14 +40,14 @@ for the latest version.
 As a user, I frequently run into documentation that's incomplete
 and out of date, so I tend to stay in the editor and explore the
 code by jumping around with SLIME's [`M-.`][SLIME-M-.]. As a library
-author, I spend a great deal of time polishing code, but precious
+author, I spend a great deal of time polishing code but precious
 little writing documentation.
 
 [SLIME-M-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions 
 
 In fact, I rarely write anything more comprehensive than docstrings
 for exported stuff. Writing docstrings feels easier than writing a
-separate user manual and they are always close at hand during
+separate user manual, and they are always close at hand during
 development. The drawback of this style is that users of the library
 have to piece the big picture together themselves.
 
@@ -117,14 +117,14 @@ etc, all of which should probably have their own docstrings.
 
 The primary focus is on making code easily explorable by using
 SLIME's `M-.` (`slime-edit-definition`). See how to enable some
-fanciness in @MGL-PAX-NAVIGATING-IN-EMACS. Generating documentation
-from sections and all the referenced items in Markdown or HTML
-format is also implemented.
+fanciness in @MGL-PAX-NAVIGATING-IN-EMACS.
+@MGL-PAX-GENERATING-DOCUMENTATION from sections and all the
+referenced items in Markdown or HTML format is also implemented.
 
 With the simplistic tools provided, one may accomplish similar
 effects as with Literate Programming, but documentation is generated
-from code, not vice versa and there is no support for chunking yet.
-Code is first, code must look pretty, documentation is code.
+from code, not vice versa and there is no support for chunking. Code
+is first, code must look pretty, documentation is code.
 
 In typical use, PAX packages have no :EXPORT's defined. Instead the
 DEFINE-PACKAGE form gets a docstring, which may mention section
@@ -252,7 +252,7 @@ of uppercase symbol names found in docstrings, section numbering,
 table of contents, etc is possible by calling the DOCUMENT function.
 
 *One can even generate documentation for different but related
-libraries at the same time with the output going to different files,
+libraries at the same time with the output going to different files
 but with cross-page links being automatically added for symbols
 mentioned in docstrings. See @MGL-PAX-GENERATING-DOCUMENTATION for
 some convenience functions to cover the most common cases.*
