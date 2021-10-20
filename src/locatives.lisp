@@ -274,7 +274,7 @@
   (declare (ignore locative-args))
   (when (macro-function symbol)
     (locate-error "~S is a macro, not a function." symbol))
-  (let ((function (symbol-function symbol)))
+  (let ((function (symbol-function* symbol)))
     (when (typep function 'generic-function)
       (locate-error "~S is a generic function, not a plain function." symbol))
     function))
@@ -282,17 +282,13 @@
 (defmethod locate-object (symbol (locative-type (eql 'generic-function))
                           locative-args)
   (declare (ignore locative-args))
-  (let ((function (symbol-function symbol)))
+  (let ((function (symbol-function* symbol)))
     (unless (typep function 'generic-function)
       (locate-error "#'~S is not a generic function." symbol))
     function))
 
 (defmethod canonical-reference ((function function))
-  (let ((function-name (swank-backend:function-name function)))
-    ;; ABCL has function names like (FOO (SYSTEM::INTERPRETED)).
-    (when (listp function-name)
-      (setq function-name (first function-name)))
-    (make-reference function-name 'function)))
+  (make-reference (function-name function) 'function))
 
 (defmethod canonical-reference ((function generic-function))
   (make-reference (swank-mop:generic-function-name function) 'generic-function))
@@ -301,13 +297,20 @@
   (let ((reference (canonical-reference function)))
     (print-bullet reference stream)
     (write-char #\Space stream)
-    (let ((arglist (swank-backend:arglist
-                    (swank-backend:function-name function))))
+    (let ((arglist (arglist function)))
       (print-arglist arglist stream)
       (print-end-bullet stream)
       (with-local-references ((list reference))
         (with-dislocated-symbols ((function-arg-names arglist))
-          (maybe-print-docstring (reference-object reference) 'function
+          ;; KLUDGE: Some just can't decide where the documentation
+          ;; is. Traced generic functions complicate things.
+          #+(or ccl ecl)
+          (if (documentation function 'function)
+              (maybe-print-docstring function 'function stream)
+              (maybe-print-docstring (function-name function) 'function
+                                     stream))
+          #-(or ccl ecl)
+          (maybe-print-docstring (function-name function) 'function
                                  stream))))))
 
 
@@ -326,7 +329,7 @@
   (assert (= 2 (length locative-args)))
   (destructuring-bind (qualifiers specializers) locative-args
     (or (ignore-errors
-         (find-method (symbol-function symbol) qualifiers
+         (find-method (symbol-function* symbol) qualifiers
                       (loop for specializer in specializers
                             collect (typecase specializer
                                       ;; SPECIALIZER can be a cons
@@ -518,17 +521,17 @@
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'accessor))
                                    locative-args)
-  (find-source (find-method (symbol-function symbol)
+  (find-source (find-method (symbol-function* symbol)
                             '() (list (find-class (first locative-args))))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'reader))
                                    locative-args)
-  (find-source (find-method (symbol-function symbol)
+  (find-source (find-method (symbol-function* symbol)
                             '() (list (find-class (first locative-args))))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'writer))
                                    locative-args)
-  (find-source (find-method (symbol-function symbol)
+  (find-source (find-method (symbol-function* symbol)
                             '() (mapcar #'find-class
                                         (list t (first locative-args))))))
 
@@ -543,7 +546,7 @@
                           (locative-type (eql 'structure-accessor))
                           locative-args)
   ;; Signal an error if it doesn't exist.
-  (or (ignore-errors (symbol-function symbol))
+  (or (ignore-errors (symbol-function* symbol))
       (locate-error))
   (make-reference symbol (cons locative-type locative-args)))
 

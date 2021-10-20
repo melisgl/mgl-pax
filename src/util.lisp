@@ -9,6 +9,74 @@
   #-(or sbcl allegro)
   (ignore-errors (symbol-value symbol)))
 
+;;; Like SYMBOL-FUNCTION*, but sees through encapsulated functions.
+(defun symbol-function* (symbol)
+  #+abcl
+  (or (system::untraced-function symbol)
+      (symbol-function symbol))
+  #+ccl
+  (ccl::find-unencapsulated-definition (symbol-function symbol))
+  #+clisp
+  (or (system::get-traced-definition symbol)
+      (symbol-function symbol))
+  #+ecl
+  (or (find-type-in-sexp (function-lambda-expression (symbol-function symbol))
+                         'function)
+      (symbol-function symbol))
+  #+sbcl
+  (maybe-find-encapsulated-function (symbol-function symbol))
+  #-(or abcl ccl clisp ecl sbcl)
+  (symbol-function symbol))
+
+#+sbcl
+;;; Tracing typically encapsulate a function in a closure. The
+;;; function we need is at the end of the encapsulation chain.
+(defun maybe-find-encapsulated-function (function)
+  (declare (type function function))
+  (if (eq (swank-backend:function-name function) 'sb-impl::encapsulation)
+      (maybe-find-encapsulated-function
+       (sb-impl::encapsulation-info-definition
+        (sb-impl::encapsulation-info function)))
+      function))
+
+#+ecl
+(defun find-type-in-sexp (form type)
+  (dolist (x form)
+    (cond ((listp x)
+           (let ((r (find-type-in-sexp x type)))
+             (when r
+               (return-from find-type-in-sexp r))))
+          ((typep x type)
+           (return-from find-type-in-sexp x))
+          (t
+           nil))))
+
+(defun function-name (function)
+  (let* (#+sbcl
+         (function (maybe-find-encapsulated-function function))
+         (name (swank-backend:function-name function)))
+    ;; ABCL has function names like (FOO (SYSTEM::INTERPRETED)).
+    (if (listp name)
+        (first name)
+        name)))
+
+(defun arglist (function-designator)
+  #+allegro
+  (handler-case
+      (let* ((symbol (if (symbolp function-designator)
+                         function-designator
+                         (function-name function-designator)))
+             (lambda-expression (ignore-errors
+                                 (function-lambda-expression
+                                  (symbol-function symbol)))))
+        (if lambda-expression
+            (second lambda-expression)
+            (excl:arglist symbol)))
+    (simple-error () :not-available))
+  #-allegro
+  (swank-backend:arglist function-designator))
+
+
 (defun read-stream-into-string (stream &key (buffer-size 4096))
   (let ((*print-pretty* nil))
     (with-output-to-string (datum)
@@ -167,8 +235,8 @@
           ((typep f 'generic-function)
            (mop:generic-function-lambda-list f))
           ((and (symbolp f)
-                (typep (symbol-function f) 'generic-function))
-           (mop:generic-function-lambda-list (symbol-function f))))))
+                (typep (symbol-function* f) 'generic-function))
+           (mop:generic-function-lambda-list (symbol-function* f))))))
 
 #+allegro
 (progn
@@ -193,16 +261,26 @@
     (handler-case
         (let ((lambda-expression (ignore-errors
                                   (function-lambda-expression
-                                   (symbol-function symbol)))))
+                                   (mgl-pax::symbol-function* symbol)))))
           (if lambda-expression
               (second lambda-expression)
               (excl:arglist symbol)))
       (simple-error () :not-available))))
 
-
 #+clisp
 (swank-backend::defimplementation swank-backend::function-name (f)
   (system::function-name f))
+
+#+clisp
+(swank-backend:defimplementation swank-backend::arglist (fname)
+  (block nil
+    (or (ignore-errors
+         (return (ext:arglist fname)))
+        (ignore-errors
+         (let ((exp (function-lambda-expression fname)))
+           (and exp (return (second exp)))))
+        :not-available)))
+
 
 
 (defmacro with-standard-io-syntax* (&body body)

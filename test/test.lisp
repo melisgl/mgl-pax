@@ -125,7 +125,9 @@
   (@test-tricky-title section)
   (@stealing-from-other-package section)
   (function-with-optional-args function)
-  (function-with-keyword-args function))
+  (function-with-keyword-args function)
+  (encapsulated-function function)
+  (encapsulated-generic-function generic-function))
 
 (defsection @stealing-from-other-package (:package (find-package :mgl-pax))
   (method locative))
@@ -216,6 +218,16 @@
 
 (defun function-with-keyword-args (x &key k1 (k2 14) (k3 21 k3p))
   (declare (ignore x k1 k2 k3 k3p)))
+
+(defun encapsulated-function (x &rest args)
+  "This may be encapsulated by TRACE."
+  (declare (ignore x args))
+  nil)
+(trace encapsulated-function)
+
+(defgeneric encapsulated-generic-function (x)
+  (:documentation "This may also be encapsulated by TRACE."))
+(trace encapsulated-generic-function)
 
 (defparameter *navigation-test-cases*
   '((foo function (defun foo))
