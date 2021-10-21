@@ -56,22 +56,14 @@
   ())
 
 (defmethod print-object ((bbb bbb) stream)
-  #-(or ecl ccl clisp)
-  (print-unreadable-object (bbb stream :type t))
-  ;; PRINT-UNREADABLE-OBJECT lower-cases the name of the class on ECL.
-  ;; On CCL, the space is missing.
-  #+ (or ecl ccl clisp)
-  (format stream "#<BBB >"))
+  ;; The exact output of PRINT-UNREADABLE-OBJECT is implementation dependent.
+  (format stream "#<BBB>"))
 
 (defclass bbb* ()
   ())
 
 (defmethod print-object ((bbb bbb*) stream)
-  #-ecl
-  (print-unreadable-object (bbb stream :type t)
-    (format stream "~%"))
-  #+ecl
-  (format stream "#<BBB* ~%>"))
+  (format stream "#<BBB*~%>"))
 
 (defparameter *transcribe-test-cases*
   '((:input "1"
@@ -138,29 +130,29 @@
                    (:readable ((1 2) ";; this~%(1~% 2)"))))
      :output "(list 1 2)~%;=> ;; this~%;-> (1~%;->  2)~%"
      :update-only t)
-    (:input "(make-instance 'bbb)~%==> #<BBB >"
+    (:input "(make-instance 'bbb)~%==> #<BBB>"
      :transcript ((((make-instance 'bbb) "(make-instance 'bbb)")
                    :default
-                   (:unreadable "#<BBB >")))
-     :output "(make-instance 'bbb)~%==> #<BBB >~%"
+                   (:unreadable "#<BBB>")))
+     :output "(make-instance 'bbb)~%==> #<BBB>~%"
      :update-only t)
-    (:input "(make-instance 'bbb*)~%==> #<BBB* ~%--> >"
+    (:input "(make-instance 'bbb*)~%==> #<BBB*~%--> >"
      :transcript ((((make-instance 'bbb*) "(make-instance 'bbb*)")
                    :default
-                   (:unreadable "#<BBB* ~%>")))
-     :output "(make-instance 'bbb*)~%==> #<BBB* ~%--> >~%"
+                   (:unreadable "#<BBB*~%>")))
+     :output "(make-instance 'bbb*)~%==> #<BBB*~%--> >~%"
      :update-only t)
-    (:input "(make-instance 'bbb)~%;==> #<BBB >"
+    (:input "(make-instance 'bbb)~%;==> #<BBB>"
      :transcript ((((make-instance 'bbb) "(make-instance 'bbb)")
                    :commented-1
-                   (:unreadable "#<BBB >")))
-     :output "(make-instance 'bbb)~%;==> #<BBB >~%"
+                   (:unreadable "#<BBB>")))
+     :output "(make-instance 'bbb)~%;==> #<BBB>~%"
      :update-only t)
-    (:input "(make-instance 'bbb*)~%;==> #<BBB* ~%;--> >"
+    (:input "(make-instance 'bbb*)~%;==> #<BBB*~%;--> >"
      :transcript ((((make-instance 'bbb*) "(make-instance 'bbb*)")
                    :commented-1
-                   (:unreadable "#<BBB* ~%>")))
-     :output "(make-instance 'bbb*)~%;==> #<BBB* ~%;--> >~%"
+                   (:unreadable "#<BBB*~%>")))
+     :output "(make-instance 'bbb*)~%;==> #<BBB*~%;--> >~%"
      :update-only t)
     (:input "42"
      :output "42~%=> 42~%")
@@ -229,8 +221,8 @@
      :check-consistency t
      :values-consistency-errors (nil))
     ;; unreadable value inconsistency
-    (:input "(make-instance 'bbb)~%==> #<CCC >~%"
-     :output "(make-instance 'bbb)~%==> #<BBB >~%"
+    (:input "(make-instance 'bbb)~%==> #<CCC>~%"
+     :output "(make-instance 'bbb)~%==> #<BBB>~%"
      :check-consistency t :values-consistency-errors (nil))
     ;; commenting of new values with update 1
     (:input "(values 1 2)~%=> 1"

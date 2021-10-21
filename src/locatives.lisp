@@ -583,7 +583,7 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'type)) locative-args)
   ;; On some lisps, SWANK-BACKEND:TYPE-SPECIFIER-P is not reliable.
-  #-(or abcl allegro clisp ecl)
+  #-(or abcl allegro clisp cmucl ecl)
   (unless (swank-backend:type-specifier-p symbol)
     (locate-error))
   (make-reference symbol (cons locative-type locative-args)))
@@ -655,6 +655,9 @@
           (print-arglist superclasses stream)))
     (print-end-bullet stream)
     (with-local-references ((list (make-reference symbol 'class)))
+      #+cmucl
+      (maybe-print-docstring symbol 'type stream)
+      #-cmucl
       (maybe-print-docstring class t stream))))
 
 (defun mark-up-superclasses (superclasses)

@@ -19,13 +19,15 @@
   #+clisp
   (or (system::get-traced-definition symbol)
       (symbol-function symbol))
+  #+cmucl
+  (eval `(function ,symbol))
   #+ecl
   (or (find-type-in-sexp (function-lambda-expression (symbol-function symbol))
                          'function)
       (symbol-function symbol))
   #+sbcl
   (maybe-find-encapsulated-function (symbol-function symbol))
-  #-(or abcl ccl clisp ecl sbcl)
+  #-(or abcl ccl clisp cmucl ecl sbcl)
   (symbol-function symbol))
 
 #+sbcl

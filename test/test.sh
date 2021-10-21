@@ -101,7 +101,12 @@ function run_tests {
   num_failures=0
   num_passes=0
   if [ ${lisp} = "cmu-bin" ]; then
-    ros --lisp "${lisp}" run --eval '(ql:quickload :mgl-pax)' --quit -- $@
+    # While loading ESRAP, some things are redefined that trigger warnings.
+    ros --lisp "${lisp}" run --eval \
+      '(handler-bind
+           ((error (function continue)))
+         (ql:quickload :mgl-pax/full))' \
+      --quit -- $@
   else
     ros --lisp "${lisp}" run --eval '(ql:quickload :mgl-pax/full)' --quit -- $@
   fi
@@ -124,6 +129,7 @@ function run_tests {
 run_tests lisp_tests sbcl --noinform --disable-debugger
 run_tests lisp_tests allegro --batch --backtrace-on-error
 run_tests lisp_tests ccl-bin --batch
+run_tests lisp_tests cmu-bin -batch
 run_tests lisp_tests ecl
 run_tests lisp_tests clisp -on-error exit
 run_tests lisp_tests abcl-bin
@@ -131,7 +137,5 @@ run_tests lisp_tests abcl-bin
 run_tests autoload_tests sbcl --noinform --disable-debugger
 run_tests autoload_tests allegro --batch --backtrace-on-error
 run_tests autoload_tests ccl-bin --batch
+run_tests autoload_tests cmu-bin -batch
 run_tests autoload_tests ecl
-# CMUCL fails to load ESRAP so let's test whether it can load the MGL-PAX
-# without anything interesting.
-run_tests basic_load_tests cmu-bin -batch

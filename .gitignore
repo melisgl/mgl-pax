@@ -1,8 +1,10 @@
 *~
+*.abcl
+*.fas
 *.fasl
 *.*fsl
-*.fas
 *.lib
+*.sse2f
 test/data/tmp/
 world/
 doc/

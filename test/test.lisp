@@ -349,11 +349,12 @@
                  (mgl-pax::macro-arg-names '((&key (x y)) (a b) &key (c d))))))
 
 (defparameter *baseline-dirname*
-  #-(or abcl allegro ccl clisp ecl) "baseline"
+  #-(or abcl allegro ccl clisp cmucl ecl) "baseline"
   #+abcl "abcl-baseline"
   #+allegro "acl-baseline"
   #+ccl "ccl-baseline"
   #+clisp "clisp-baseline"
+  #+cmucl "cmucl-baseline"
   #+ecl "ecl-baseline")
 
 ;;; set by test.sh
@@ -411,9 +412,10 @@
 
 (defun test ()
   (test-transcribe)
-  ;; These implementations do not provide source location information
-  ;; for too many things to make this test worthwile.
-  #-(or abcl clisp ecl)
+  ;; ABCL, CLISP and ECL do not provide source location information
+  ;; for too many things to make this test worthwile. For CMUCL,
+  ;; SWANK-BACKEND:FIND-SOURCE-LOCATION is not implemented.
+  #-(or abcl clisp cmucl ecl)
   (test-navigation)
   (test-codify-and-autolink)
   (test-transform-tree)
