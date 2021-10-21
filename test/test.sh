@@ -21,7 +21,7 @@ function run_test_case {
   fi
 }
 
-function run_tests_on_lisp {
+function lisp_tests {
   local lisp_name="$1"
   shift
 
@@ -33,6 +33,11 @@ function run_tests_on_lisp {
   (asdf:test-system :mgl-pax)
   (uiop/image:quit 22))
 EOF
+}
+
+function autoload_tests {
+  local lisp_name="$1"
+  shift
 
   run_test_case "load mgl-pax/navigate on ${lisp_name}" $@ <<EOF
 (progn
@@ -77,18 +82,34 @@ EOF
 EOF
 }
 
-function run_tests {
-  local lisp="$1"
+function basic_load_tests {
+  local lisp_name="$1"
   shift
-  echo "SHTEST: testing with ${lisp} $@"
+
+  run_test_case "load mgl-pax on ${lisp_name}" $@ <<EOF
+(progn
+  (asdf:load-system :mgl-pax)
+  (uiop/image:quit 22))
+EOF
+}
+
+function run_tests {
+  local test_suite="$1"
+  local lisp="$2"
+  shift; shift
+  echo "SHTEST: running test suite ${test_suite} with ${lisp} $@"
   num_failures=0
   num_passes=0
-  ros --lisp "${lisp}" run --eval '(ql:quickload :mgl-pax/full)' --quit -- $@
+  if [ ${lisp} = "cmu-bin" ]; then
+    ros --lisp "${lisp}" run --eval '(ql:quickload :mgl-pax)' --quit -- $@
+  else
+    ros --lisp "${lisp}" run --eval '(ql:quickload :mgl-pax/full)' --quit -- $@
+  fi
   if [ "${silent}" != "nil" ]; then
-    run_tests_on_lisp ${lisp} ros --lisp ${lisp} run -- $@ \
+    ${test_suite} ${lisp} ros --lisp ${lisp} run -- $@ \
       | grep --line-buffered "SHTEST:"
   else
-    run_tests_on_lisp ${lisp} ros --lisp ${lisp} run -- $@
+    ${test_suite} ${lisp} ros --lisp ${lisp} run -- $@
   fi
   echo "SHTEST: ${lisp}: ${num_failures} failures, ${num_passes} passes."
   if ((num_failures > 0)); then
@@ -98,12 +119,19 @@ function run_tests {
   fi
 }
 
-# These lisps take only 10s or so to run the tests.
-run_tests sbcl --noinform --disable-debugger
-run_tests allegro --batch --backtrace-on-error
-run_tests ccl-bin --batch
-run_tests ecl
-# CLISP takes 4x longer.
-run_tests clisp -on-error exit
-# ABCL is 25x slower.
-run_tests abcl-bin
+# Most lisps take only 10s or so to run the tests. CLISP takes 4x longer. ABCL
+# is 25x slower.
+run_tests lisp_tests sbcl --noinform --disable-debugger
+run_tests lisp_tests allegro --batch --backtrace-on-error
+run_tests lisp_tests ccl-bin --batch
+run_tests lisp_tests ecl
+run_tests lisp_tests clisp -on-error exit
+run_tests lisp_tests abcl-bin
+# We run the autoload tests on the faster ones only.
+run_tests autoload_tests sbcl --noinform --disable-debugger
+run_tests autoload_tests allegro --batch --backtrace-on-error
+run_tests autoload_tests ccl-bin --batch
+run_tests autoload_tests ecl
+# CMUCL fails to load ESRAP so let's test whether it can load the MGL-PAX
+# without anything interesting.
+run_tests basic_load_tests cmu-bin -batch
