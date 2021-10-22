@@ -332,8 +332,8 @@ select one of possible definitions.
 *Note that the this feature is implemented in terms of
 `SWANK-BACKEND:FIND-SOURCE-LOCATION` and
 `SWANK-BACKEND:FIND-DEFINITIONS`, whose support varies across the Lisp
-implementations. In particular, ABCL, CLISP and ECL have no or
-rather spotty support for it. Everything works fine on AllegroCL,
+implementations. In particular, ABCL, CLISP, CMUCL and ECL have no
+or rather spotty support for it. Everything works fine on AllegroCL,
 CCL and SBCL.*
 
 In the following examples, pressing `M-.` when the cursor is on one
@@ -1550,13 +1550,13 @@ For example, this is how `PAX` registers itself:
 ### 9.8 Document Generation Implementation Notes
 
 Documentation Generation is supported on ABCL, AllegroCL, CLISP,
-CCL, ECL and SBCL, but their outputs may differ due to the lack of
-some introspective capability. SBCL generates complete output.
-Compared to that, the following are not supported:
+CCL, CMUCL, ECL and SBCL, but their outputs may differ due to the
+lack of some introspective capability. SBCL generates complete
+output. Compared to that, the following are not supported:
 
 - [`COMPILER-MACRO`][7ed5] docstrings on ABCL, AllegroCL, CCL, ECL
 
-- `DEFTYPE` lambda lists on ABCL, AllegroCL, CLISP, CCL, ECL
+- `DEFTYPE` lambda lists on ABCL, AllegroCL, CLISP, CCL, CMUCL, ECL
 
 - Default values in [`MACRO`][69ba] lambda lists on AllegroCL
 
