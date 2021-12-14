@@ -112,6 +112,7 @@
   (bar constant)
   (baz type)
   (*test-variable* variable)
+  (*some-var* (variable '*needs-markdown-escape*))
   (some-restart restart)
   (my-error condition)
   (@test-examples section)
@@ -176,6 +177,7 @@
 (defparameter *test-variable*
   '(xxx 34)
   "*TEST-VARIABLE* is not a link.")
+(defvar *some-var*)
 
 (define-restart some-restart (arg1)
   "This is SOME-RESTART with ARG1.")

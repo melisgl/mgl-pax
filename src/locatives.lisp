@@ -151,9 +151,9 @@
     (locate-and-print-bullet locative-type locative-args symbol stream)
     (write-char #\Space stream)
     (multiple-value-bind (value unboundp) (symbol-global-value symbol)
-      (print-arglist (prin1-to-string (cond (initformp initform)
-                                            (unboundp "-unbound-")
-                                            (t value)))
+      (print-arglist (prin1-and-escape-markdown (cond (initformp initform)
+                                                      (unboundp "-unbound-")
+                                                      (t value)))
                      stream))
     (print-end-bullet stream)
     (with-local-references ((list (make-reference symbol 'variable)))
@@ -501,7 +501,7 @@
                        ""))
            stream))
         (print-arglist
-         (prin1-to-string
+         (prin1-and-escape-markdown
           `(,@(when (swank-mop:slot-definition-initargs slot-def)
                 (swank-mop:slot-definition-initargs slot-def))
             ,@(when (swank-mop:slot-definition-initfunction slot-def)
