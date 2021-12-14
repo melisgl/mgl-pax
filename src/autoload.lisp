@@ -2,7 +2,7 @@
 
 ;;;; A bit of foreshadowing of MGL-PAX/FULL.
 
-;;;; FIXME: The following should be turned into an doc api.
+;;;; FIXME: The following should be turned into a doc extenstion API.
 
 (declaim (special *references*))
 (declaim (special *local-references*))
