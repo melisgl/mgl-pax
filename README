@@ -1763,14 +1763,14 @@ changed."
     default), the same syntax will be used in the output as in the input
     as much as possible.
 
-- [variable] *SYNTAXES* ((:DEFAULT (:OUTPUT "..") (:NO-VALUE "=> ; No value") (:READABLE "=>")
-  (:UNREADABLE "==>") (:UNREADABLE-CONTINUATION "-->"))
- (:COMMENTED-1 (:OUTPUT ";..") (:NO-VALUE ";=> ; No value")
-  (:READABLE ";=>") (:READABLE-CONTINUATION ";->") (:UNREADABLE ";==>")
-  (:UNREADABLE-CONTINUATION ";-->"))
- (:COMMENTED-2 (:OUTPUT ";;..") (:NO-VALUE ";;=> ; No value")
-  (:READABLE ";;=>") (:READABLE-CONTINUATION ";;->")
-  (:UNREADABLE ";;==>") (:UNREADABLE-CONTINUATION ";;-->")))
+- [variable] *SYNTAXES* ((:DEFAULT (:OUTPUT "..") (:NO-VALUE "=\> ; No value") (:READABLE "=\>")
+  (:UNREADABLE "==\>") (:UNREADABLE-CONTINUATION "--\>"))
+ (:COMMENTED-1 (:OUTPUT ";..") (:NO-VALUE ";=\> ; No value")
+  (:READABLE ";=\>") (:READABLE-CONTINUATION ";-\>") (:UNREADABLE ";==\>")
+  (:UNREADABLE-CONTINUATION ";--\>"))
+ (:COMMENTED-2 (:OUTPUT ";;..") (:NO-VALUE ";;=\> ; No value")
+  (:READABLE ";;=\>") (:READABLE-CONTINUATION ";;-\>")
+  (:UNREADABLE ";;==\>") (:UNREADABLE-CONTINUATION ";;--\>")))
 
     The default syntaxes used by TRANSCRIBE for reading and writing
     lines containing output and values of an evaluated form.
@@ -2136,9 +2136,9 @@ of how the VARIABLE locative is defined:
     (locate-and-print-bullet locative-type locative-args symbol stream)
     (write-char #\Space stream)
     (multiple-value-bind (value unboundp) (symbol-global-value symbol)
-      (print-arglist (prin1-to-string (cond (initformp initform)
-                                            (unboundp "-unbound-")
-                                            (t value)))
+      (print-arglist (prin1-and-escape-markdown (cond (initformp initform)
+                                                      (unboundp "-unbound-")
+                                                      (t value)))
                      stream))
     (print-end-bullet stream)
     (with-local-references ((list (make-reference symbol 'variable)))

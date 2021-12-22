@@ -110,11 +110,11 @@ prototype, which did almost everything I wanted was this:
 Armed with [`DEFSECTION`][2863], I soon found myself organizing code following
 the flow of user level documentation and relegated comments to
 implementational details entirely. However, some portions of
-[`DEFSECTION`][2863] docstrings were just listings of all the functions,
+`DEFSECTION` docstrings were just listings of all the functions,
 macros and variables related to the narrative, and this list was
 effectively repeated in the `DEFPACKAGE` form complete with little
 comments that were like section names. A clear violation of
-[OAOO][oaoo], one of them had to go, so [`DEFSECTION`][2863] got a list of
+[OAOO][oaoo], one of them had to go, so `DEFSECTION` got a list of
 symbols to export.
 
 [oaoo]: http://c2.com/cgi/wiki?OnceAndOnlyOnce 
@@ -141,7 +141,7 @@ everything was good for a while.
 Then I realized that sections could refer to other sections if there
 were a [`SECTION`][2cf1] locative. Going down that path, I soon began to feel
 the urge to generate pretty documentation as all the necessary
-information was manifest in the [`DEFSECTION`][2863] forms. The design
+information was manifest in the `DEFSECTION` forms. The design
 constraint imposed on documentation generation was that following
 the typical style of upcasing symbols in docstrings there should be
 no need to explicitly mark up links: if `M-.` works, then the
@@ -305,10 +305,10 @@ but with cross-page links being automatically added for symbols
 mentioned in docstrings. See [Generating Documentation][063a] for
 some convenience functions to cover the most common cases.*
 
-Note how `(VARIABLE *FOO-STATE*)` in the [`DEFSECTION`][2863] form both
+Note how `(VARIABLE *FOO-STATE*)` in the `DEFSECTION` form both
 exports `*FOO-STATE*` and includes its documentation in
 `@FOO-RANDOM-MANUAL`. The symbols [`VARIABLE`][474c] and [`FUNCTION`][3023] are just two
-instances of 'locatives' which are used in [`DEFSECTION`][2863] to refer to
+instances of 'locatives' which are used in `DEFSECTION` to refer to
 definitions tied to symbols. See [Locative Types][1fbb].
 
 The transcript in the code block tagged with `cl-transcript` is
@@ -529,7 +529,7 @@ Now let's examine the most important pieces in detail.
     variance](http://www.sbcl.org/manual/#Package-Variance) in the SBCL
     manual.
     
-    The bottom line is that if you rely on [`DEFSECTION`][2863] to do the
+    The bottom line is that if you rely on `DEFSECTION` to do the
     exporting, then you'd better use `DEFINE-PACKAGE`.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29'></a>
@@ -940,7 +940,7 @@ location and the docstring of the defining form is recorded (see
     to a file, then it defaults to the name of the file. If `URI-FRAGMENT`
     is `NIL`, then no links will be made to or from that page.
     
-    Finally, `SOURCE-URI-FN` is a function of a single, [`REFERENCE`][cc37]
+    Finally, `SOURCE-URI-FN` is a function of a single, `REFERENCE`
     argument. If it returns a value other than `NIL`, then it must be a
     string representing an URI. If `FORMAT` is `:HTML` and
     [`*DOCUMENT-MARK-UP-SIGNATURES*`][98bc] is true, then the locative as
@@ -1211,9 +1211,9 @@ second example in [`*DOCUMENT-LINK-CODE*`][8082] - some references are removed
 by the following rules.
 
 - References to [`ASDF:SYSTEM`][90f2]s are removed if there are other
-  references which are not to [`ASDF:SYSTEM`][90f2]s. This is because system
+  references which are not to `ASDF:SYSTEM`s. This is because system
   names often collide with the name of a class or function and are
-  rarely useful to link to. Use explicit links to [`ASDF:SYSTEM`][90f2]s, if
+  rarely useful to link to. Use explicit links to `ASDF:SYSTEM`s, if
   necessary.
 
 - If references include a [`GENERIC-FUNCTION`][59dd], then all references of
@@ -1967,14 +1967,14 @@ changed."
 
 <a id='x-28MGL-PAX-3A-2ASYNTAXES-2A-20VARIABLE-29'></a>
 
-- [variable] **\*SYNTAXES\*** *((:DEFAULT (:OUTPUT "..") (:NO-VALUE "=> ; No value") (:READABLE "=>")
-  (:UNREADABLE "==>") (:UNREADABLE-CONTINUATION "-->"))
- (:COMMENTED-1 (:OUTPUT ";..") (:NO-VALUE ";=> ; No value") (:READABLE ";=>")
-  (:READABLE-CONTINUATION ";->") (:UNREADABLE ";==>")
-  (:UNREADABLE-CONTINUATION ";-->"))
- (:COMMENTED-2 (:OUTPUT ";;..") (:NO-VALUE ";;=> ; No value")
-  (:READABLE ";;=>") (:READABLE-CONTINUATION ";;->") (:UNREADABLE ";;==>")
-  (:UNREADABLE-CONTINUATION ";;-->")))*
+- [variable] **\*SYNTAXES\*** *((:DEFAULT (:OUTPUT "..") (:NO-VALUE "=\> ; No value") (:READABLE "=\>")
+  (:UNREADABLE "==\>") (:UNREADABLE-CONTINUATION "--\>"))
+ (:COMMENTED-1 (:OUTPUT ";..") (:NO-VALUE ";=\> ; No value") (:READABLE ";=\>")
+  (:READABLE-CONTINUATION ";-\>") (:UNREADABLE ";==\>")
+  (:UNREADABLE-CONTINUATION ";--\>"))
+ (:COMMENTED-2 (:OUTPUT ";;..") (:NO-VALUE ";;=\> ; No value")
+  (:READABLE ";;=\>") (:READABLE-CONTINUATION ";;-\>") (:UNREADABLE ";;==\>")
+  (:UNREADABLE-CONTINUATION ";;--\>")))*
 
     The default syntaxes used by [`TRANSCRIBE`][0382] for reading and writing
     lines containing output and values of an evaluated form.
@@ -2002,7 +2002,7 @@ changed."
     be prefixed is not empty. Similarly, the first space following the
     prefix discarded when reading.
     
-    See [`TRANSCRIBE`][0382] for how the actual syntax to be used is selected.
+    See `TRANSCRIBE` for how the actual syntax to be used is selected.
 
 <a id='x-28MGL-PAX-3ATRANSCRIPTION-ERROR-20CONDITION-29'></a>
 
@@ -2141,7 +2141,7 @@ need to muck with references when there is a perfectly good object.
 ### 11.2 Adding New Object Types
 
 One may wish to make the [`DOCUMENT`][1eb8] function and `M-.` navigation
-work with new object types. Extending [`DOCUMENT`][1eb8] can be done by
+work with new object types. Extending `DOCUMENT` can be done by
 defining a [`DOCUMENT-OBJECT`][a05e] method. To allow these objects to be
 referenced from [`DEFSECTION`][2863], a [`LOCATE-OBJECT`][acc9] method is to be defined.
 For `M-.` [`FIND-SOURCE`][b417] can be specialized. Finally,
@@ -2274,7 +2274,7 @@ for [`ASDF:SYSTEM:`][90f2]
     [`DEFSECTION`][2863]. The default method returns `T`, while the methods for
     [`PACKAGE`][16ad], [`ASDF:SYSTEM`][90f2] and [`METHOD`][d71c] return `NIL`.
     
-    [`DEFSECTION`][2863] calls this function to decide what symbols to export when
+    `DEFSECTION` calls this function to decide what symbols to export when
     its `EXPORT` argument is true.
 
 <a id='x-28MGL-PAX-3ALOCATE-OBJECT-20GENERIC-FUNCTION-29'></a>
@@ -2406,9 +2406,9 @@ of how the [`VARIABLE`][474c] locative is defined:
     (locate-and-print-bullet locative-type locative-args symbol stream)
     (write-char #\Space stream)
     (multiple-value-bind (value unboundp) (symbol-global-value symbol)
-      (print-arglist (prin1-to-string (cond (initformp initform)
-                                            (unboundp "-unbound-")
-                                            (t value)))
+      (print-arglist (prin1-and-escape-markdown (cond (initformp initform)
+                                                      (unboundp "-unbound-")
+                                                      (t value)))
                      stream))
     (print-end-bullet stream)
     (with-local-references ((list (make-reference symbol 'variable)))
@@ -2461,7 +2461,7 @@ of how the [`VARIABLE`][474c] locative is defined:
 - [generic-function] **LOCATE-AND-DOCUMENT** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS STREAM*
 
     Called by [`DOCUMENT-OBJECT`][a05e] on [`REFERENCE`][cc37] objects,
-    this function has essentially the same purpose as [`DOCUMENT-OBJECT`][a05e]
+    this function has essentially the same purpose as `DOCUMENT-OBJECT`
     but it has different arguments to allow specializing on
     `LOCATIVE-TYPE`.
 
@@ -2478,7 +2478,7 @@ of how the [`VARIABLE`][474c] locative is defined:
 - [generic-function] **LOCATE-AND-FIND-SOURCE** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS*
 
     Called by [`FIND-SOURCE`][b417] on [`REFERENCE`][cc37] objects, this
-    function has essentially the same purpose as [`FIND-SOURCE`][b417] but it has
+    function has essentially the same purpose as `FIND-SOURCE` but it has
     different arguments to allow specializing on `LOCATIVE-TYPE`.
 
 We have covered the basic building blocks of reference based

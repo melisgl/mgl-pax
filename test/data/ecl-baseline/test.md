@@ -13,32 +13,69 @@
 
 ###### \[in package MGL-PAX-TEST\]
 [`*TEST-VARIABLE*`][1037]
+
 [`*TEST-VARIABLE*`][1037]
+
 [`*test-variable*`][1037]
+
 [`*test-variable*`][1037]
+
 [mgl-pax-test:*test-variable*][]
-[`FOO`][4244] function, function [`FOO`][4244],
-[`FOO`][4244] function, function [`FOO`][4244],
-[`FOO`][4244] `function`, `function` [`FOO`][4244],
-[`FOO`][4244] `function`, `function` [`FOO`][4244],
+
+[`FOO`][4244] function,
+
+function [`FOO`][4244],
+
+[`FOO`][4244] function,
+
+function [`FOO`][4244],
+
+[`FOO`][4244] `function`,
+
+`function` [`FOO`][4244],
+
+[`FOO`][4244] `function`,
+
+`function` [`FOO`][4244],
+
 [`foo`][4244],
+
 [`foo`][4244],
-[`FOO`][4244],
-[`FOO`][4244],
-[`foo`][4244],
-[`foo`][4244],
-[`FOO`][4244],
+
 [`FOO`][4244],
 
-[`FOO-A`][6483] `(accessor foo)`, `(accessor foo)` [`FOO-A`][6483],
-[`FOO-A`][6483] `(accessor foo)`, `(accessor foo)` [`FOO-A`][6483],
+[`FOO`][4244],
+
+[`foo`][4244],
+
+[`foo`][4244],
+
+[`FOO`][4244],
+
+[`FOO`][4244],
+
+[`FOO-A`][6483] `(accessor foo)`,
+
+`(accessor foo)` [`FOO-A`][6483],
+
+[`FOO-A`][6483] `(accessor foo)`,
+
+`(accessor foo)` [`FOO-A`][6483],
+
 [`foo-a`][6483],
+
 [`foo-a`][6483],
+
 [`FOO-A`][6483],
+
 [`FOO-A`][6483],
+
 [`foo-a`][6483],
+
 [`foo-a`][6483],
+
 [`FOO-A`][6483],
+
 [`FOO-A`][6483]
 
 `->MAX`
@@ -119,7 +156,9 @@ function and its methods, it's resolved in favor if the gf:
 
 - [class] **FOO**
 
-[`FOO`][22be] instance and [`FOO`][22be] object
+[`FOO`][22be] instance
+
+and [`FOO`][22be] object
 
 type-of [`BAR`][cece]
 

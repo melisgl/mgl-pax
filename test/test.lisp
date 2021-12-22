@@ -11,34 +11,40 @@
 (mgl-pax:define-locative-alias type-of type)
 
 (defsection @test (:export nil)
-  "[*TEST-VARIABLE*][]
-  [`*TEST-VARIABLE*`][]
-  [*test-variable*][]
-  [`*test-variable*`][]
-  [mgl-pax-test:*test-variable*][]
-  FOO function, function FOO,
-  `FOO` function, function `FOO`,
-  FOO `function`, `function` FOO,
-  `FOO` `function`, `function` `FOO`,
-  [foo][function],
-  [foo][FUNCTION],
-  [FOO][function],
-  [FOO][FUNCTION],
-  [`foo`][function],
-  [`foo`][FUNCTION],
-  [`FOO`][function],
-  [`FOO`][FUNCTION],
+  "[*TEST-VARIABLE*][]"
+  "[`*TEST-VARIABLE*`][]"
+  "[*test-variable*][]"
+  "[`*test-variable*`][]"
+  "[mgl-pax-test:*test-variable*][]"
+  "FOO function,"
+  "function FOO,"
+  "`FOO` function,"
+  "function `FOO`,"
+  "FOO `function`,"
+  "`function` FOO,"
+  "`FOO` `function`,"
+  "`function` `FOO`,"
+  "[foo][function],"
+  "[foo][FUNCTION],"
+  "[FOO][function],"
+  "[FOO][FUNCTION],"
+  "[`foo`][function],"
+  "[`foo`][FUNCTION],"
+  "[`FOO`][function],"
+  "[`FOO`][FUNCTION],"
 
-  FOO-A `(accessor foo)`, `(accessor foo)` FOO-A,
-  `FOO-A` `(accessor foo)`, `(accessor foo)` `FOO-A`,
-  [foo-a][(accessor foo)],
-  [foo-a][(ACCESSOR FOO)],
-  [FOO-A][(accessor foo)],
-  [FOO-A][(ACCESSOR FOO)],
-  [`foo-a`][(accessor foo)],
-  [`foo-a`][(ACCESSOR FOO)],
-  [`FOO-A`][(accessor foo)],
-  [`FOO-A`][(ACCESSOR FOO)]
+  "FOO-A `(accessor foo)`,"
+  "`(accessor foo)` FOO-A,"
+  "`FOO-A` `(accessor foo)`,"
+  "`(accessor foo)` `FOO-A`,"
+  "[foo-a][(accessor foo)],"
+  "[foo-a][(ACCESSOR FOO)],"
+  "[FOO-A][(accessor foo)],"
+  "[FOO-A][(ACCESSOR FOO)],"
+  "[`foo-a`][(accessor foo)],"
+  "[`foo-a`][(ACCESSOR FOO)],"
+  "[`FOO-A`][(accessor foo)],"
+  "[`FOO-A`][(ACCESSOR FOO)]
 
   ->MAX
 
@@ -49,34 +55,28 @@
   This should be no link because the page of @TEST-EXAMPLES
   has :URI-FRAGMENT NIL.
 
-  This is code: T
+  This is code: T"
 
-  Plural uppercase ambiguous symbol: see FOOs
+  "Plural uppercase ambiguous symbol: see FOOs"
+  "Plural uppercase symbol: TEST-GFs"
+  "Plural uppercase dislocated symbol: ->MAXs"
 
-  Plural uppercase symbol: TEST-GFs
-
-  Plural uppercase dislocated symbol: ->MAXs
-  
-  See
-  FOO compiler-macro
-
-  See FOO
-  compiler-macro
-
-  See
-  compiler-macro FOO
-
-  See compiler-macro
-  FOO
-
-  See
+  "See
+  FOO compiler-macro"
+  "See FOO
+  compiler-macro"
+  "See
+  compiler-macro FOO"
+  "See compiler-macro
+  FOO"
+  "See
   compiler-macro 
-  FOO
+  FOO"
 
-  See
-  FOO
+  "See
+  FOO"
 
-  ```cl-transcript
+  "```cl-transcript
   (values (print (1+ 2)) :aaa)
   ..
   .. 3 
@@ -104,7 +104,7 @@
   (foo compiler-macro)
   (foo class)
   ;; aliases defined above
-  "FOO instance and FOO object"
+  "FOO instance" "and FOO object"
   "type-of BAR"
   (foo-a (accessor foo))
   (bar macro)

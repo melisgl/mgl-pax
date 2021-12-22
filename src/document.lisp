@@ -832,43 +832,53 @@
 ;;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
 ;;; :REFERENCE-LINK for [symbol][locative]). Don't hurt other links.
 (defun autolink (string known-references)
-  (map-markdown-parse-tree
-   '(:code :reference-link)
-   '(:explicit-link :image :mailto)
-   nil
-   (alexandria:rcurry #'translate-to-links known-references)
-   string))
+  (let ((autolinked (make-hash-table :test #'equal)))
+    (map-markdown-parse-tree
+     '(:code :reference-link)
+     '(:explicit-link :image :mailto)
+     nil
+     (alexandria:rcurry #'translate-to-links known-references autolinked)
+     string)))
 
 ;;; This is the first of the translator functions, which are those
 ;;; passed to MAP-MARKDOWN-PARSE-TREE. This particular translator
 ;;;
 ;;; - handles (:CODE "SOMETHING"), the parse of `SOMETHING`: looks for
-;;;   any KNOW-REFERENCES to "something" (which may name a symbol or a
-;;;   package) and tanslates it to, for example, (:REFERENCE-LINK
+;;;   any KNOWN-REFERENCES to "something" (which may name a symbol or
+;;;   a package) and tanslates it to, for example, (:REFERENCE-LINK
 ;;;   :LABEL ((:CODE "SOMETHING")) :DEFINITION "function") if there is
 ;;;   a single function reference to it. See FORMAT-REFERENCES-TO-NAME
 ;;;   and format-references for all the cases.
 ;;;
-;;;  - handles :REFERENCE-LINK nodes:
+;;; - handles :REFERENCE-LINK nodes:
 ;;;
-;;;    - those with explicit locative given (:REFERENCE-LINK :LABEL
-;;;      ((:CODE "SOMETHING")) :DEFINITION "function"), the parse of
-;;;      [`SOMETHING`][function],
+;;;   - those with explicit locative given (:REFERENCE-LINK :LABEL
+;;;     ((:CODE "SOMETHING")) :DEFINITION "function"), the parse of
+;;;     [`SOMETHING`][function],
 ;;;
-;;;    - and those with no locative (:REFERENCE-LINK :LABEL ((:CODE
-;;;      "SOMETHING")) :TAIL "[]"), the parse of [`SOMETHING`][].
-(defun translate-to-links (parent tree known-references)
+;;;   - and those with no locative (:REFERENCE-LINK :LABEL ((:CODE
+;;;     "SOMETHING")) :TAIL "[]"), the parse of [`SOMETHING`][].
+(defun translate-to-links (parent tree known-references autolinked)
   (cond
     ;; (:CODE "something")
     ((and (eq :code (first tree))
           (= 2 (length tree))
           (stringp (second tree)))
-     (let* ((name (second tree))
-            (references (format-references-to-name parent tree name
-                                                   known-references)))
-       (if references
-           (values references nil t)
-           tree)))
+     (let ((name (second tree)))
+       (multiple-value-bind (formatted-refs refs)
+           (format-references-to-name parent tree name known-references)
+         (let ((autolinked-key (cons name formatted-refs)))
+           (cond ((and formatted-refs
+                       (or (not (gethash autolinked-key autolinked))
+                           ;; Replace references to sections with the
+                           ;; title any number of times.
+                           (and (= (length refs) 1)
+                                (typep (resolve (first refs) :errorp nil)
+                                       'section))))
+                  (setf (gethash autolinked-key autolinked) t)
+                  (values formatted-refs nil t))
+                 (t
+                  tree))))))
     ;; [section][type], [`section`][type], [*var*][variable], [section][]
     ((and (eq :reference-link (first tree)))
      ;; For example, the tree for [`section`][type] is
@@ -923,19 +933,21 @@
   (multiple-value-bind (refs n-chars-read)
       (references-for-similar-names name known-references)
     (when refs
-      ;; If necessary, try to find a locative before or after NAME to
-      ;; disambiguate.
-      (when (and (< 1 (length refs))
-                 (references-for-the-same-symbol-p refs))
-        (let ((reference (find-locative-around parent tree refs)))
-          (when reference
-            (setq refs (list reference))
-            (return-from format-references-to-name
-              (format-references (maybe-downcase (subseq name 0 n-chars-read))
-                                 (filter-references-for-specified-locative
-                                  refs))))))
-      (format-references (maybe-downcase (subseq name 0 n-chars-read))
-                         (filter-references-for-symbol refs)))))
+      (flet ((formatted-refs-and-refs (refs)
+               (let ((refs (filter-references-for-specified-locative refs)))
+                 (values (format-references (maybe-downcase
+                                             (subseq name 0 n-chars-read))
+                                            refs)
+                         refs))))
+        ;; If necessary, try to find a locative before or after NAME
+        ;; to disambiguate.
+        (when (and (< 1 (length refs))
+                   (references-for-the-same-symbol-p refs))
+          (let ((reference (find-locative-around parent tree refs)))
+            (when reference
+              (return-from format-references-to-name
+                (formatted-refs-and-refs (list reference))))))
+        (formatted-refs-and-refs (filter-references-for-symbol refs))))))
 
 ;;; NAME-ELEMENT is a child of TREE. It is the name of the symbol or
 ;;; it contains the name. Find a locative before or after NAME-ELEMENT
