@@ -2,6 +2,31 @@
 
 ;;;; A bit of foreshadowing of MGL-PAX/FULL.
 
+(defvar *document-uppercase-is-code*)
+(export '*document-uppercase-is-code*)
+(defvar *document-link-code*)
+(export '*document-link-code*)
+(defvar *document-link-sections*)
+(export '*document-link-sections*)
+(defvar *document-max-numbering-level*)
+(export '*document-max-numbering-level*)
+(defvar *document-max-table-of-contents-level*)
+(export '*document-max-table-of-contents-level*)
+(defvar *document-text-navigation*)
+(export '*document-text-navigation*)
+(defvar *document-fancy-html-navigation*)
+(export '*document-fancy-html-navigation*)
+(defvar *document-mark-up-signatures*)
+(export '*document-mark-up-signatures*)
+(defvar *document-normalize-packages*)
+(export '*document-normalize-packages*)
+(defvar *document-html-top-blocks-of-links*)
+(export '*document-html-top-blocks-of-links*)
+(defvar *document-html-bottom-blocks-of-links*)
+(export '*document-html-bottom-blocks-of-links*)
+(defvar *document-html-max-navigation-table-of-contents-level*)
+(export '*document-html-max-navigation-table-of-contents-level*)
+
 ;;;; FIXME: The following should be turned into a doc extenstion API.
 
 (declaim (special *references*))
@@ -45,8 +70,8 @@
              (lambda (&rest args)
                (declare (ignore args))
                (error "Autoloading ~S failed." ',name)))
-       ;; FIXME: Silence redefinition warnings for autoload
-       ;; functions only somehow?
+       ;; FIXME: Silence redefinition warnings for autoload functions
+       ;; somehow?
        (asdf:load-system ,asdf-system-name)
        ;; Make sure that the function redefined by LOAD-SYSTEM is
        ;; invoked and not this stub, which could be the case without
