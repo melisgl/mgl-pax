@@ -12,13 +12,16 @@ because it's translated to a list item
 Copyright on lispworks' version is restrictive, allegro?
 * MAYBE fake/override documentation for existing stuff
 * TODO pretty print lambda-lists (including default values)
-and values of variables.
+and values of variables. Unfortunately, there seems to be no way to
+use the lisp pretty printer for this because output also includes
+markup.
 * MAYBE add [link name][(FOO VARIABLE)] kind of link
 Maybe with a retitling-locative? [FOO][(RETITLE "link name" VARIABLE)])
 * *DOCUMENT-DOWNCASE-UPPERCASE-CODE* with noninterned stuff is a bit broken
 Noninterned stuff is not downcased, which leads to having to mix
 casing up in the docstring.
 * MAYBE don't list unexported superclasses?
+This is tricky because the superclass may be exported from another package.
 * MAYBE include signalled errors in transcript?
 * MAYBE transcribe: add inline commands that can change prefixes and such
 * MAYBE transcribe: special comment syntax for the 'narrative'

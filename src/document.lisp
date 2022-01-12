@@ -1554,45 +1554,41 @@
     (let ((seen-special-p nil)
           (*print-pretty* t)
           (*print-right-margin* nil))
-      (labels ((resolve* (object)
-                 (if (and *document-mark-up-signatures*
-                          ;; KLUDGE: github has trouble displaying
-                          ;; things like '`*package*`, so disable
-                          ;; this.
-                          (eq *format* :html))
-                     (codify-and-autolink
-                      (prin1-and-escape-markdown object))
-                     (prin1-and-escape-markdown object)))
-               (foo (arglist level)
-                 (unless (= level 0)
-                   (format out "("))
-                 (loop for i upfrom 0
-                       for arg in arglist
-                       do (unless (zerop i)
-                            (format out " "))
-                          (cond ((member arg '(&key &optional &rest &body))
-                                 (setq seen-special-p t)
-                                 (format out "~A"
-                                         (prin1-and-escape-markdown arg)))
-                                ((symbolp arg)
-                                 (format out "~A"
+      (labels
+          ((resolve* (object)
+             (if (and *document-mark-up-signatures*
+                      ;; KLUDGE: github has trouble displaying things
+                      ;; like '`*package*`, so disable this.
+                      (eq *format* :html))
+                 (codify-and-autolink (prin1-and-escape-markdown object))
+                 (prin1-and-escape-markdown object)))
+           (foo (arglist level)
+             (unless (= level 0)
+               (format out "("))
+             (loop for i upfrom 0
+                   for arg in arglist
+                   do (unless (zerop i)
+                        (format out " "))
+                      (cond ((member arg '(&key &optional &rest &body))
+                             (setq seen-special-p t)
+                             (format out "~A" (prin1-and-escape-markdown arg)))
+                            ((symbolp arg)
+                             (format out "~A" (escape-markdown
+                                               (symbol-name arg))))
+                            ((atom arg)
+                             (format out "~A" (prin1-and-escape-markdown arg)))
+                            (seen-special-p
+                             (if (symbolp (first arg))
+                                 (format out "(~A~{ ~A~})"
                                          (escape-markdown
-                                          (symbol-name arg))))
-                                ((atom arg)
+                                          (symbol-name (first arg)))
+                                         (mapcar #'resolve* (rest arg)))
                                  (format out "~A"
-                                         (prin1-and-escape-markdown arg)))
-                                (seen-special-p
-                                 (if (symbolp (first arg))
-                                     (format out "(~A~{ ~A~})"
-                                             (escape-markdown
-                                              (symbol-name (first arg)))
-                                             (mapcar #'resolve* (rest arg)))
-                                     (format out "~A"
-                                             (prin1-and-escape-markdown arg))))
-                                (t
-                                 (foo arg (1+ level)))))
-                 (unless (= level 0)
-                   (format out ")"))))
+                                         (prin1-and-escape-markdown arg))))
+                            (t
+                             (foo arg (1+ level)))))
+             (unless (= level 0)
+               (format out ")"))))
         (foo arglist 0)))))
 
 
