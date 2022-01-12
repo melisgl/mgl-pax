@@ -21,6 +21,7 @@ Maybe with a retitling-locative? [FOO][(RETITLE "link name" VARIABLE)])
 Noninterned stuff is not downcased, which leads to having to mix
 casing up in the docstring.
 * MAYBE include signalled errors in transcript?
+What about debugger commands?
 * MAYBE transcribe: add inline commands that can change prefixes and such
 * MAYBE transcribe: special comment syntax for the 'narrative'
 to produce something like an ipython notebook.
