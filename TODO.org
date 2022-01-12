@@ -20,8 +20,6 @@ Maybe with a retitling-locative? [FOO][(RETITLE "link name" VARIABLE)])
 * *DOCUMENT-DOWNCASE-UPPERCASE-CODE* with noninterned stuff is a bit broken
 Noninterned stuff is not downcased, which leads to having to mix
 casing up in the docstring.
-* MAYBE don't list unexported superclasses?
-This is tricky because the superclass may be exported from another package.
 * MAYBE include signalled errors in transcript?
 * MAYBE transcribe: add inline commands that can change prefixes and such
 * MAYBE transcribe: special comment syntax for the 'narrative'

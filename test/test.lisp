@@ -166,10 +166,11 @@
 (define-compiler-macro foo ()
   "Docstring of a compiler macro."
   nil)
-(defclass foo ()
+(defclass foo (unexported-class)
   ((a :accessor foo-a)
    (r :reader foo-r)
    (w :writer foo-w)))
+(defclass unexported-class () ())
 (defvar foo-a)
 (defvar foo-b)
 (defvar foo-c)
