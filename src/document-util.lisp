@@ -355,7 +355,8 @@
   (asdf:load-system :mgl-gpr)
   (asdf:load-system :mgl)
   (asdf:load-system :journal)
-  (asdf:load-system :trivial-utf-8/doc))
+  (asdf:load-system :trivial-utf-8/doc)
+  (asdf:load-system :try))
 
 #+nil
 (update-pax-world)
