@@ -257,43 +257,52 @@
      (eval-when (:compile-toplevel :load-toplevel :execute))
      (cl:defpackage))
     (mgl-pax asdf:system ())
-    ;; Allegro has the location off by one form.
-    #-allegro
     (test-gf generic-function (defgeneric test-gf))
-    #+allegro
-    (test-gf generic-function (defmethod test-gf))
     (test-gf (method () (number)) (defmethod test-gf))))
 
 (defun working-locative-p (locative)
   (declare (ignorable locative))
-  ;; AllegroCL doesn't store source location for DEFPACKAGE.
-  #+allegro (not (eq locative 'package))
+  ;; AllegroCL doesn't store source location for DEFPACKAGE and is off
+  ;; by one form for DEFGENERIC.
+  #+allegro (not (member locative '(package generic-function)))
   #-allegro t)
 
-(defun test-navigation ()
-  (loop for test-case in *navigation-test-cases*
-        do (destructuring-bind
-               (symbol locative prefix &optional alternative-prefix) test-case
-             (when (working-locative-p locative)
-               (let ((location (find-source (locate symbol locative))))
-                 (assert (not (eq :error (first location))) ()
-                         "Could not find source location for (~S ~S)"
-                         symbol locative)
-                 (multiple-value-bind (file position)
-                     (extract-source-location location)
-                   (let ((form (let ((*package* (find-package :mgl-pax-test)))
-                                 (read-form-from-file-position file position))))
-                     (assert
-                      (or (alexandria:starts-with-subseq prefix form
-                                                         :test #'equal)
-                          (and alternative-prefix
-                               (alexandria:starts-with-subseq
-                                alternative-prefix form :test #'equal)))
-                      () "Could not find prefix ~S~@[ or ~S~] ~
-                     at source location~%~S~%for reference (~S ~S).~%~
-                     Form found was:~%~S."
-                      prefix alternative-prefix
-                      location symbol locative form))))))))
+(deftest test-navigation ()
+  ;; For CMUCL, SWANK-BACKEND:FIND-SOURCE-LOCATION is not implemented.
+  (when (alexandria:featurep :cmucl)
+    (skip-trial))
+  ;; ABCL, CLISP and ECL do not provide source location information
+  ;; for many things.
+  (with-failure-expected ((alexandria:featurep '(:or :abcl :clisp :ecl)))
+    (dolist (test-case *navigation-test-cases*)
+      (destructuring-bind
+          (symbol locative prefix &optional alternative-prefix) test-case
+        (with-test ((format nil "navigate to (~S ~S)" symbol locative))
+          (when (working-locative-p locative)
+            (let* ((located (locate symbol locative))
+                   (location (ignore-errors (find-source located))))
+              (when (is (and location (not (eq :error (first location))))
+                        :msg `("Source location for (~S ~S) can be found."
+                               ,symbol ,locative))
+                (multiple-value-bind (file position)
+                    (extract-source-location location)
+                  (when (is position)
+                    (let ((form
+                            (let ((*package* (find-package :mgl-pax-test)))
+                              (read-form-from-file-position file position))))
+                      (is (and (listp form)
+                               (or (alexandria:starts-with-subseq
+                                    prefix form :test #'equal)
+                                   (and alternative-prefix
+                                        (alexandria:starts-with-subseq
+                                         alternative-prefix form
+                                         :test #'equal))))
+                          :msg `("Can find prefix ~S~@[ or ~S~] ~
+                                  at source location~%~S~% ~
+                                  for reference (~S ~S).~%~
+                                  Form found was:~%~S."
+                                 prefix alternative-prefix
+                                 location symbol locative form)))))))))))))
 
 ;;; Extract the filename and 3303 from
 ;;;     (:LOCATION
@@ -308,48 +317,49 @@
         (position-entry (find :position (rest location) :key #'first))
         (offset-entry (find :offset (rest location) :key #'first)))
     (values (second file-entry)
-            (1- (if position-entry
-                    (second position-entry)
-                    (third offset-entry))))))
+            (cond (position-entry
+                   (1- (second position-entry)))
+                  (offset-entry
+                   (1- (third offset-entry)))))))
 
 (defun read-form-from-file-position (filename position)
   (with-open-file (stream filename :direction :input)
     (file-position stream position)
     (read stream)))
 
-(defun test-codify-and-autolink ()
-  (assert (string= "`FOO`"
-                   (mgl-pax::codify-and-autolink "`FOO`"
-                                                 :known-references ()))))
+(deftest test-codify-and-autolink ()
+  (is (string= "`FOO`"
+               (mgl-pax::codify-and-autolink "`FOO`"
+                                             :known-references ()))))
 
-(defun test-transform-tree ()
-  (assert (equal '(1)
-                 (mgl-pax::transform-tree (lambda (parent a)
-                                            (declare (ignore parent))
-                                            (values a (listp a) nil))
-                                          '(1))))
+(deftest test-transform-tree ()
+  (is (equal '(1)
+             (mgl-pax::transform-tree (lambda (parent a)
+                                        (declare (ignore parent))
+                                        (values a (listp a) nil))
+                                      '(1))))
 
-  (assert (equal '(2 (3 (4 5)))
-                 (mgl-pax::transform-tree (lambda (parent a)
-                                            (declare (ignore parent))
-                                            (values (if (listp a) a (1+ a))
-                                                    (listp a)
-                                                    nil))
-                                          '(1 (2 (3 4))))))
+  (is (equal '(2 (3 (4 5)))
+             (mgl-pax::transform-tree (lambda (parent a)
+                                        (declare (ignore parent))
+                                        (values (if (listp a) a (1+ a))
+                                                (listp a)
+                                                nil))
+                                      '(1 (2 (3 4))))))
 
-  (assert (equal '(1 2 (2 3 (3 4 4 5)))
-                 (mgl-pax::transform-tree (lambda (parent a)
-                                            (declare (ignore parent))
-                                            (values (if (listp a)
-                                                        a
-                                                        (list a (1+ a)))
-                                                    (listp a)
-                                                    (not (listp a))))
-                                          '(1 (2 (3 4)))))))
+  (is (equal '(1 2 (2 3 (3 4 4 5)))
+             (mgl-pax::transform-tree (lambda (parent a)
+                                        (declare (ignore parent))
+                                        (values (if (listp a)
+                                                    a
+                                                    (list a (1+ a)))
+                                                (listp a)
+                                                (not (listp a))))
+                                      '(1 (2 (3 4)))))))
 
-(defun test-macro-arg-names ()
-  (assert (equal '(x a b c)
-                 (mgl-pax::macro-arg-names '((&key (x y)) (a b) &key (c d))))))
+(deftest test-macro-arg-names ()
+  (is (equal '(x a b c)
+             (mgl-pax::macro-arg-names '((&key (x y)) (a b) &key (c d))))))
 
 (defparameter *baseline-dirname*
   #-(or abcl allegro ccl clisp cmucl ecl) "baseline"
@@ -363,14 +373,14 @@
 ;;; set by test.sh
 (defvar *update-baseline* nil)
 
-(defun test-document (format)
+(deftest test-document (format)
   (let ((outputs (write-test-document-files
                   (asdf:system-relative-pathname :mgl-pax "test/data/tmp/")
                   format)))
-    (assert (= 4 (length outputs)))
+    (is (= 4 (length outputs)))
     ;; the default page corresponding to :STREAM is empty
-    (assert (string= "" (first outputs)))
-    (assert (= 2 (count-if #'pathnamep outputs)))
+    (is (string= "" (first outputs)))
+    (is (= 2 (count-if #'pathnamep outputs)))
     (dolist (output outputs)
       (when (pathnamep output)
         (let ((baseline (make-pathname
@@ -381,9 +391,16 @@
           (unless (string= (alexandria:read-file-into-string baseline)
                            (alexandria:read-file-into-string output))
             (unless *update-baseline*
-              (cerror "Update output file."
-                      "~@<Output ~S ~_differs from baseline ~S.~@:>"
-                      output baseline))
+              (restart-case
+                  ;; KLUDGE: PROGN prevents the restart from being
+                  ;; associated with the condition. Thus the restart
+                  ;; is visible when TRY resignals the condition as
+                  ;; TRY:UNHANDLED-ERROR.
+                  (progn
+                    (error "~@<Output ~S ~_differs from baseline ~S.~@:>"
+                           output baseline))
+                (update-output-file ()
+                  :report "Update output file.")))
             (update-test-document-baseline format)))))))
 
 (defun write-test-document-files (basedir format)
@@ -413,18 +430,24 @@
                              format))
 
 
-(defun test ()
+(deftest test-all ()
   (test-transcribe)
-  ;; ABCL, CLISP and ECL do not provide source location information
-  ;; for too many things to make this test worthwile. For CMUCL,
-  ;; SWANK-BACKEND:FIND-SOURCE-LOCATION is not implemented.
-  #-(or abcl clisp cmucl ecl)
   (test-navigation)
   (test-codify-and-autolink)
   (test-transform-tree)
   (test-macro-arg-names)
   (test-document :markdown)
   (test-document :html))
+
+(defun test (&key (debug nil) (print 'unexpected) (describe 'unexpected))
+  ;; Bind *PACKAGE* so that names of tests printed have package names,
+  ;; and M-. works on them in Slime.
+  (let ((*package* (find-package :common-lisp))
+        (*print-duration* nil)
+        (*print-compactly* nil)
+        (*defer-describe* nil))
+    (warn-on-tests-not-run ((find-package :mgl-pax-test))
+      (print (try 'test-all :debug debug :print print :describe describe)))))
 
 #+nil
 (test)

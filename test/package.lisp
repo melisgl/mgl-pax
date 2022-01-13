@@ -1,3 +1,3 @@
 (mgl-pax:define-package :mgl-pax-test
-  (:use :cl :mgl-pax)
+  (:use #:common-lisp #:mgl-pax #:try)
   (:export #:test))

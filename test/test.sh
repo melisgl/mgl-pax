@@ -1,8 +1,10 @@
 #!/bin/bash
 
-silent="${1:-nil}"
+update_baseline="${1:-nil}"
 stop_on_failure="${2:-t}"
-update_baseline="${3:-nil}"
+debug="${3:-nil}"
+print="${4:-(quote try:unexpected)}"
+describe="${5:-(quote try:unexpected)}"
 num_passes=
 num_failures=
 
@@ -13,10 +15,12 @@ function run_test_case {
   $@
   local retval=$?
   if ((retval == 22)); then
-    echo "SHTEST: ${test_case_name} PASSED"
+    echo
+    echo "SHTEST: ${test_case_name} PASS"
     num_passes=$((num_passes+1))
   else
-    echo "SHTEST: ${test_case_name} FAILED"
+    echo
+    echo "SHTEST: ${test_case_name} FAIL"
     num_failures=$((num_failures+1))
   fi
 }
@@ -29,8 +33,8 @@ function lisp_tests {
 (require :asdf)
 (asdf:load-system :mgl-pax/test)
 (setq mgl-pax-test::*update-baseline* ${update_baseline})
-(progn
-  (asdf:test-system :mgl-pax)
+(when (try:passedp (mgl-pax-test:test :debug ${debug} :print ${print}
+                                      :describe ${describe}))
   (uiop/image:quit 22))
 EOF
 }
@@ -97,6 +101,7 @@ function run_tests {
   local test_suite="$1"
   local lisp="$2"
   shift; shift
+  echo
   echo "SHTEST: running test suite ${test_suite} with ${lisp} $@"
   num_failures=0
   num_passes=0
@@ -110,15 +115,9 @@ function run_tests {
   else
     ros --lisp "${lisp}" run --eval '(ql:quickload :mgl-pax/full)' --quit -- $@
   fi
-  if [ "${silent}" != "nil" ]; then
-    ${test_suite} ${lisp} ros --lisp ${lisp} run -- $@ \
-      | grep --line-buffered "SHTEST:"
-  else
-    ${test_suite} ${lisp} ros --lisp ${lisp} run -- $@
-  fi
-  echo "SHTEST: ${lisp}: ${num_failures} failures, ${num_passes} passes."
+  ${test_suite} ${lisp} ros --lisp ${lisp} run -- $@
   if ((num_failures > 0)); then
-    if [ $stop_on_failure ]; then
+    if [ ${stop_on_failure} = "t" ]; then
       exit 1
     fi
   fi

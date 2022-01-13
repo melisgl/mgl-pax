@@ -1,5 +1,3 @@
-(in-package :mgl-pax-test)
-
 (defclass aaa ()
   ((aaa :initarg :aaa :reader aaa)))
 

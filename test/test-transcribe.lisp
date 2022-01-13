@@ -1,56 +1,51 @@
 (in-package :mgl-pax-test)
 
-(defun test-read-prefixed-lines ()
-  (assert
-   (equal (multiple-value-list
-           (with-input-from-string (stream (format nil ">1"))
-             (mgl-pax::read-prefixed-lines stream ">")))
-          '("1" 1 nil t 2)))
-  (assert
-   (equal (multiple-value-list
-           (with-input-from-string (stream (format nil ">1~%"))
-             (mgl-pax::read-prefixed-lines stream ">")))
-          '("1" 1 nil t 3)))
-  (assert
-   (equal (multiple-value-list
-           (with-input-from-string (stream (format nil ">1~%>"))
-             (mgl-pax::read-prefixed-lines stream ">")))
-          `(,(format nil "1~%") 2 nil t 4)))
-  (assert
-   (equal (multiple-value-list
-           (with-input-from-string (stream (format nil ">1~%>2~%> 3"))
-             (mgl-pax::read-prefixed-lines stream ">")))
-          `(,(format nil "1~%2~%3") 3 nil t 9)))
-  (assert
-   (equal (multiple-value-list
-           (with-input-from-string (stream (format nil ">1~%>2~%> 3~%xy~%"))
-             (mgl-pax::read-prefixed-lines stream ">")))
-          `(,(format nil "1~%2~%3") 3 "xy" nil 10)))
-  (assert
-   (equal (multiple-value-list
-           (with-input-from-string (stream (format nil ">1~%>2~%> 3~%xy"))
-             (mgl-pax::read-prefixed-lines stream ">")))
-          `(,(format nil "1~%2~%3") 3 "xy" t 10)))
-  (assert
-   (equal (multiple-value-list
-           (with-input-from-string (stream (format nil ">1"))
-             (mgl-pax::read-prefixed-lines stream ">" :first-line-prefix "")))
-          '(">1" 1 nil t 2)))
-  (assert
-   (equal (multiple-value-list
-           (with-input-from-string (stream (format nil ">1~%>2~%> 3"))
-             (mgl-pax::read-prefixed-lines stream ">" :first-line-prefix "")))
-          `(,(format nil ">1~%2~%3") 3 nil t 9)))
-  (assert
-   (equal (multiple-value-list
-           (with-input-from-string (stream (format nil ">1~%>2~%> 3~%xy~%"))
-             (mgl-pax::read-prefixed-lines stream ">" :first-line-prefix "")))
-          `(,(format nil ">1~%2~%3") 3 "xy" nil 10)))
-  (assert
-   (equal (multiple-value-list
-           (with-input-from-string (stream (format nil ">1~%>2~%> 3~%xy"))
-             (mgl-pax::read-prefixed-lines stream ">" :first-line-prefix "")))
-          `(,(format nil ">1~%2~%3") 3 "xy" t 10))))
+(deftest test-read-prefixed-lines ()
+  (is (equal (multiple-value-list
+              (with-input-from-string (stream (format nil ">1"))
+                (mgl-pax::read-prefixed-lines stream ">")))
+             '("1" 1 nil t 2)))
+  (is (equal (multiple-value-list
+              (with-input-from-string (stream (format nil ">1~%"))
+                (mgl-pax::read-prefixed-lines stream ">")))
+             '("1" 1 nil t 3)))
+  (is (equal (multiple-value-list
+              (with-input-from-string (stream (format nil ">1~%>"))
+                (mgl-pax::read-prefixed-lines stream ">")))
+             `(,(format nil "1~%") 2 nil t 4)))
+  (is (equal (multiple-value-list
+              (with-input-from-string (stream (format nil ">1~%>2~%> 3"))
+                (mgl-pax::read-prefixed-lines stream ">")))
+             `(,(format nil "1~%2~%3") 3 nil t 9)))
+  (is (equal (multiple-value-list
+              (with-input-from-string (stream
+                                       (format nil ">1~%>2~%> 3~%xy~%"))
+                (mgl-pax::read-prefixed-lines stream ">")))
+             `(,(format nil "1~%2~%3") 3 "xy" nil 10)))
+  (is (equal (multiple-value-list
+              (with-input-from-string (stream (format nil ">1~%>2~%> 3~%xy"))
+                (mgl-pax::read-prefixed-lines stream ">")))
+             `(,(format nil "1~%2~%3") 3 "xy" t 10)))
+  (is (equal (multiple-value-list
+              (with-input-from-string (stream (format nil ">1"))
+                (mgl-pax::read-prefixed-lines stream ">"
+                                              :first-line-prefix "")))
+             '(">1" 1 nil t 2)))
+  (is (equal (multiple-value-list
+              (with-input-from-string (stream (format nil ">1~%>2~%> 3"))
+                (mgl-pax::read-prefixed-lines stream ">"
+                                              :first-line-prefix "")))
+             `(,(format nil ">1~%2~%3") 3 nil t 9)))
+  (is (equal (multiple-value-list
+              (with-input-from-string (stream (format nil ">1~%>2~%> 3~%xy~%"))
+                (mgl-pax::read-prefixed-lines stream ">"
+                                              :first-line-prefix "")))
+             `(,(format nil ">1~%2~%3") 3 "xy" nil 10)))
+  (is (equal (multiple-value-list
+              (with-input-from-string (stream (format nil ">1~%>2~%> 3~%xy"))
+                (mgl-pax::read-prefixed-lines stream ">"
+                                              :first-line-prefix "")))
+             `(,(format nil ">1~%2~%3") 3 "xy" t 10))))
 
 (defclass bbb ()
   ())
@@ -266,10 +261,9 @@
                                  (values node t nil)))
                            tree))
 
-(defun test-read-write-transcript ()
+(deftest test-read-write-transcript ()
   (let ((*package* (find-package :mgl-pax-test)))
     (loop for test-case in *transcribe-test-cases* do
-      (format t "test case: ~S~%" test-case)
       (destructuring-bind (&key input transcript output check-consistency
                            update-only (include-no-output update-only)
                            (include-no-value update-only)
@@ -309,16 +303,16 @@
                         :include-no-value include-no-value
                         :default-syntax default-syntax)))
                 (when transcript
-                  (assert (equal transcript transcript*)))
+                  (is (equal transcript transcript*)))
                 (when output
                   (unless (equal output output*)
                     (format t "Expected:~%~S~%Got:~%~S~%" output output*))
-                  (assert (equal output output*))))))
-          (assert (equal (reverse errors*) errors))
-          (assert (equal (reverse output-consistency-errors*)
-                         output-consistency-errors))
-          (assert (equal (reverse values-consistency-errors*)
-                         values-consistency-errors)))))))
+                  (is (equal output output*))))))
+          (is (equal (reverse errors*) errors))
+          (is (equal (reverse output-consistency-errors*)
+                     output-consistency-errors))
+          (is (equal (reverse values-consistency-errors*)
+                     values-consistency-errors)))))))
 
 (defparameter *transcribe-source-file*
   (asdf:system-relative-pathname
@@ -328,16 +322,18 @@
   (asdf:system-relative-pathname
    :mgl-pax "test/data/baseline/transcribe-transcription.lisp"))
 
-(defun test-transcribe-from-source ()
-  (check-transcription *transcribe-source-file*
-                       *transcribe-transcription-file*
-                       :check-consistency nil))
+(deftest test-transcribe-from-source ()
+  (let ((*package* (find-package :mgl-pax-test)))
+    (check-transcription *transcribe-source-file*
+                         *transcribe-transcription-file*
+                         :check-consistency nil)))
 
 ;;; Check that repeated transcription produces the same results.
-(defun test-transcribe-stability ()
-  (check-transcription *transcribe-transcription-file*
-                       *transcribe-transcription-file*
-                       :check-consistency t))
+(deftest test-transcribe-stability ()
+  (let ((*package* (find-package :mgl-pax-test)))
+    (check-transcription *transcribe-transcription-file*
+                         *transcribe-transcription-file*
+                         :check-consistency t)))
 
 (defun check-transcription (source-file transcription-file
                             &key check-consistency)
@@ -355,7 +351,7 @@
         (transcribe source transcription :update-only t
                     :check-consistency check-consistency)))))
 
-(defun test-transcribe ()
+(deftest test-transcribe ()
   (test-read-prefixed-lines)
   (test-read-write-transcript)
   (test-transcribe-from-source)
