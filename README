@@ -1343,7 +1343,7 @@ For example, this is how PAX registers itself:
 (register-doc-in-pax-world :mgl-pax (pax-sections) (pax-pages))
 ```
 
-- [function] UPDATE-PAX-WORLD &KEY DOCS DIR
+- [function] UPDATE-PAX-WORLD &KEY (DOCS \*REGISTERED-PAX-WORLD-DOCS\*) DIR
 
     Generate HTML documentation for all DOCS. By default, files are
     created in *PAX-WORLD-DIR* or `(asdf:system-relative-pathname

@@ -287,7 +287,7 @@
 
 ;;;; The autoloaded part of @MGL-PAX-WORLD
 
-(defun update-pax-world (&key docs dir)
+(defun update-pax-world (&key (docs *registered-pax-world-docs*) dir)
   "Generate HTML documentation for all DOCS. By default, files are
   created in *PAX-WORLD-DIR* or `(asdf:system-relative-pathname
   :mgl-pax \"world/\")`, if NIL. DOCS is a list of entries of the
@@ -299,10 +299,7 @@
   location specifications (based on the name of the section).
 
   If necessary a default page spec is created for every section."
-  (let ((dir (or dir (asdf:system-relative-pathname :mgl-pax "world/")))
-        (docs (or docs (sort (copy-seq *registered-pax-world-docs*) #'string<
-                             :key (lambda (entry)
-                                    (string (first entry)))))))
+  (let ((dir (or dir (asdf:system-relative-pathname :mgl-pax "world/"))))
     (multiple-value-bind (sections pages) (sections-and-pages docs)
       (create-pax-world sections pages dir t))))
 
@@ -332,10 +329,14 @@
 
 (defun set-pax-world-list (objects)
   (setf (slot-value @mgl-pax-world-dummy 'entries)
-        (list (first (section-entries @mgl-pax-world-dummy))
-              (with-output-to-string (stream)
-                (dolist (object objects)
-                  (format stream "- ~S~%~%" (section-name object)))))))
+        (list
+         ;; This is the docstring of @MGL-PAX-WORLD-DUMMY above.
+         (first (section-entries @mgl-pax-world-dummy))
+         (let ((objects (sort (copy-seq objects) #'string<
+                              :key #'section-title-or-name)))
+           (with-output-to-string (stream)
+             (dolist (object objects)
+               (format stream "- ~S~%~%" (section-name object))))))))
 
 
 ;;;; Generate the READMEs and HTML docs.

@@ -1531,7 +1531,7 @@ For example, this is how `PAX` registers itself:
 
 <a id='x-28MGL-PAX-3AUPDATE-PAX-WORLD-20FUNCTION-29'></a>
 
-- [function] **UPDATE-PAX-WORLD** *&KEY DOCS DIR*
+- [function] **UPDATE-PAX-WORLD** *&KEY (DOCS \*REGISTERED-PAX-WORLD-DOCS\*) DIR*
 
     Generate HTML documentation for all `DOCS`. By default, files are
     created in [`*PAX-WORLD-DIR*`][4bb4] or `(asdf:system-relative-pathname
