@@ -338,25 +338,34 @@
                   (format stream "- ~S~%~%" (section-name object)))))))
 
 
+;;;; Generate the READMEs and HTML docs.
+
 #+nil
 (progn
   (asdf:load-system :mgl-pax/full)
   (update-asdf-system-readmes (pax-sections) :mgl-pax)
   (update-asdf-system-html-docs (pax-sections) :mgl-pax :pages (pax-pages)))
+
 
-;;; KLUDGE: Bind *READTABLE* so that when evaluating in Slime (e.g.
-;;; with C-x C-e) the file's readtable is not used (which leads to a
-;;; reader macro conflict with CL-SYNTAX).
-#+nil
-(let ((*readtable* (named-readtables:find-readtable :standard)))
-  (asdf:load-system :mgl-mat)
-  (asdf:load-system :named-readtables/doc)
-  (asdf:load-system :micmac)
-  (asdf:load-system :mgl-gpr)
-  (asdf:load-system :mgl)
-  (asdf:load-system :journal)
-  (asdf:load-system :trivial-utf-8/doc)
-  (asdf:load-system :try))
+;;; Load systems that use PAX and generate PAX World in
+;;; *PAX-WORLD-DIR* (<asdf-system-dir>/world/ by default). To update
+;;; https://github.com/melisgl/mgl-pax-world, check out its gh-pages
+;;; branch in that directory, update pax world, commit and push the
+;;; changes to github.
+(defun update-pax-world* ()
+  ;; KLUDGE: Bind *READTABLE* so that when evaluating in Slime (e.g.
+  ;; with C-x C-e) the file's readtable is not used (which leads to a
+  ;; reader macro conflict with CL-SYNTAX).
+  (let ((*readtable* (named-readtables:find-readtable :standard)))
+    (asdf:load-system :mgl-mat)
+    (asdf:load-system :named-readtables/doc)
+    (asdf:load-system :micmac)
+    (asdf:load-system :mgl-gpr)
+    (asdf:load-system :mgl)
+    (asdf:load-system :journal)
+    (asdf:load-system :trivial-utf-8/doc)
+    (asdf:load-system :try))
+  (update-pax-world))
 
 #+nil
-(update-pax-world)
+(update-pax-world*)
