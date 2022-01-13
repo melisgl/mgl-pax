@@ -1534,7 +1534,7 @@ For example, this is how `PAX` registers itself:
 - [function] **UPDATE-PAX-WORLD** *&KEY DOCS DIR*
 
     Generate HTML documentation for all `DOCS`. By default, files are
-    created in `*PAX-WORLD-DIR*` or `(asdf:system-relative-pathname
+    created in [`*PAX-WORLD-DIR*`][4bb4] or `(asdf:system-relative-pathname
     :mgl-pax "world/")`, if `NIL`. `DOCS` is a list of entries of the
     form (`NAME` `SECTIONS` `PAGE-SPECS`). The default for `DOCS` is all the
     sections and pages registered with [`REGISTER-DOC-IN-PAX-WORLD`][c5f2].
@@ -1544,6 +1544,18 @@ For example, this is how `PAX` registers itself:
     location specifications (based on the name of the section).
     
     If necessary a default page spec is created for every section.
+
+<a id='x-28MGL-PAX-3A-2APAX-WORLD-DIR-2A-20VARIABLE-29'></a>
+
+- [variable] **\*PAX-WORLD-DIR\*** *NIL*
+
+    The default location to which to write the generated documentation.
+    If `NIL` it defaults to:
+    
+    ```commonlisp
+    (asdf:system-relative-pathname :mgl-pax "world/")
+    ```
+
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29'></a>
 
@@ -2620,6 +2632,7 @@ presented.
   [4336]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29 "Indentation"
   [474c]: #x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29 "(VARIABLE MGL-PAX:LOCATIVE)"
   [4918]: #x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax\" ASDF/SYSTEM:SYSTEM)"
+  [4bb4]: #x-28MGL-PAX-3A-2APAX-WORLD-DIR-2A-20VARIABLE-29 "(MGL-PAX:*PAX-WORLD-DIR* VARIABLE)"
   [4e6e]: #x-28MGL-PAX-3A-40MGL-PAX-DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29 "Document Generation Implementation Notes"
   [4f82]: #x-28MGL-PAX-3AUPDATE-PAX-WORLD-20FUNCTION-29 "(MGL-PAX:UPDATE-PAX-WORLD FUNCTION)"
   [505a]: #x-28MGL-PAX-3A-40MGL-PAX-LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29 "Linking to Sections"
