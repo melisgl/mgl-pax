@@ -35,7 +35,7 @@
 ;;; function we need is at the end of the encapsulation chain.
 (defun maybe-find-encapsulated-function (function)
   (declare (type function function))
-  (if (eq (swank-backend:function-name function) 'sb-impl::encapsulation)
+  (if (eq (sb-impl::%fun-name function) 'sb-impl::encapsulation)
       (maybe-find-encapsulated-function
        (sb-impl::encapsulation-info-definition
         (sb-impl::encapsulation-info function)))
@@ -56,13 +56,25 @@
 (defun function-name (function)
   (let* (#+sbcl
          (function (maybe-find-encapsulated-function function))
-         (name (swank-backend:function-name function)))
+         (name #+clisp (system::function-name function)
+               #-clisp (swank-backend:function-name function)))
     ;; ABCL has function names like (FOO (SYSTEM::INTERPRETED)).
     (if (listp name)
         (first name)
         name)))
 
 (defun arglist (function-designator)
+  #+abcl
+  (multiple-value-bind (arglist foundp)
+      (extensions:arglist function-designator)
+    (cond (foundp arglist)
+          ((typep function-designator 'generic-function)
+           (mop:generic-function-lambda-list function-designator))
+          ((and (symbolp function-designator)
+                (typep (symbol-function* function-designator)
+                       'generic-function))
+           (mop:generic-function-lambda-list
+            (symbol-function* function-designator)))))
   #+allegro
   (handler-case
       (let* ((symbol (if (symbolp function-designator)
@@ -75,7 +87,7 @@
             (second lambda-expression)
             (excl:arglist symbol)))
     (simple-error () :not-available))
-  #-allegro
+  #-(or abcl allegro)
   (swank-backend:arglist function-designator))
 
 
@@ -227,62 +239,6 @@
 (defmethod make-stream-spec ((spec (eql t)) &rest args)
   (assert (endp args))
   *standard-output*)
-
-;;;; Hotpatching SWANK
-
-#+abcl
-(swank-backend:defimplementation swank-backend::arglist (f)
-  (multiple-value-bind (arglist foundp) (extensions:arglist f)
-    (cond (foundp arglist)
-          ((typep f 'generic-function)
-           (mop:generic-function-lambda-list f))
-          ((and (symbolp f)
-                (typep (symbol-function* f) 'generic-function))
-           (mop:generic-function-lambda-list (symbol-function* f))))))
-
-#+allegro
-(progn
-  swank-backend::
-  (unless (get 'function-name 'implementation)
-    (defimplementation function-name (f)
-      (check-type f function)
-      (cross-reference::object-to-function-name f))))
-
-#+allegro
-(progn
-  swank-backend::
-  (unless (get 'find-source-location 'implementation)
-    (defimplementation find-source-location (obj)
-      (first (rest (first (fspec-definition-locations obj)))))))
-
-
-#+allegro
-(progn
-  swank-backend::
-  (defimplementation arglist (symbol)
-    (handler-case
-        (let ((lambda-expression (ignore-errors
-                                  (function-lambda-expression
-                                   (mgl-pax::symbol-function* symbol)))))
-          (if lambda-expression
-              (second lambda-expression)
-              (excl:arglist symbol)))
-      (simple-error () :not-available))))
-
-#+clisp
-(swank-backend::defimplementation swank-backend::function-name (f)
-  (system::function-name f))
-
-#+clisp
-(swank-backend:defimplementation swank-backend::arglist (fname)
-  (block nil
-    (or (ignore-errors
-         (return (ext:arglist fname)))
-        (ignore-errors
-         (let ((exp (function-lambda-expression fname)))
-           (and exp (return (second exp)))))
-        :not-available)))
-
 
 
 (defmacro with-standard-io-syntax* (&body body)
