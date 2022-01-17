@@ -242,9 +242,10 @@
 
   Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
   exports `*FOO-STATE*` and includes its documentation in
-  `@FOO-RANDOM-MANUAL`. The symbols VARIABLE and FUNCTION are just two
-  instances of 'locatives' which are used in DEFSECTION to refer to
-  definitions tied to symbols. See @MGL-PAX-LOCATIVE-TYPES.
+  `@FOO-RANDOM-MANUAL`. The symbols [VARIABLE][locative] and
+  [FUNCTION][locative] are just two instances of 'locatives' which are
+  used in DEFSECTION to refer to definitions tied to symbols. See
+  @MGL-PAX-LOCATIVE-TYPES.
 
   The transcript in the code block tagged with `cl-transcript` is
   automatically checked for up-to-dateness. See

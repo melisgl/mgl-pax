@@ -55,6 +55,7 @@
   :components ((:module "src"
                 :serial t
                 :components ((:file "markdown")
+                             (:file "hyperspec")
                              (:file "document")
                              (:file "document-util"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))

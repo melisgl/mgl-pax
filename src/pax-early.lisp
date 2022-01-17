@@ -121,7 +121,8 @@
     documentation for this section.")
    (title
     :initarg :title :reader section-title
-    :documentation "STRING or NIL. Used in generated documentation.")
+    :documentation "A [STRING][type] or NIL. Used in generated
+    documentation.")
    (link-title-to
     :initform nil
     :initarg :link-title-to :reader section-link-title-to
@@ -130,8 +131,9 @@
     :initarg :entries :reader section-entries
     :documentation "A list of strings and REFERENCE objects in the
     order they occurred in DEFSECTION."))
-  (:documentation "DEFSECTION stores its NAME, TITLE, PACKAGE,
-  READTABLE and ENTRIES in [SECTION][class] objects."))
+  (:documentation "DEFSECTION stores its NAME, TITLE, [PACKAGE][type],
+  [READTABLE][type] and ENTRIES arguments in [SECTION][class]
+  objects."))
 
 (defmethod print-object ((section section) stream)
   (print-unreadable-object (section stream :type t)

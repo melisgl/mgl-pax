@@ -177,7 +177,20 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'constant)) locative-args)
   (assert (<= (length locative-args) 1))
-  (assert (constantp symbol))
+  #-clisp
+  (assert (constantp symbol) () "~S is not CONSTANTP." symbol)
+  ;; KLUDGE: CLISP is non-compliant here and there.
+  #+clisp
+  (unless (member symbol '(least-negative-long-float
+                           least-negative-normalized-long-float
+                           least-positive-long-float
+                           least-positive-normalized-long-float
+                           long-float-epsilon
+                           long-float-negative-epsilon
+                           most-negative-long-float
+                           most-positive-long-float
+                           pi))
+    (assert (constantp symbol) () "~S is not CONSTANTP." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'constant))
@@ -539,8 +552,9 @@
 ;;;; STRUCTURE-ACCESSOR locative
 
 (define-locative-type structure-accessor ()
-  "This is a synonym of FUNCTION with the difference that the often
-  ugly and certainly uninformative lambda list will not be printed.")
+  "This is a synonym of [FUNCTION][locative] with the difference that
+  the often ugly and certainly uninformative lambda list will not be
+  printed.")
 
 (defmethod locate-object ((symbol symbol)
                           (locative-type (eql 'structure-accessor))
@@ -576,10 +590,10 @@
 (define-locative-type type ()
   "This locative can refer to any Lisp type. For types defined with
   DEFTYPE, an attempt is made at printing the arguments of type
-  specifiers. When TYPE refers to a CL:CLASS, the class is documented
-  as an opaque type: no mention is made of that it is a class or its
-  superclasses. Use the CLASS locative if those things are part of the
-  contract.")
+  specifiers. When TYPE refers to a [CL:CLASS][class], the class is
+  documented as an opaque type: no mention is made of that it is a
+  class or its superclasses. Use the CLASS locative if those things
+  are part of the contract.")
 
 (defmethod locate-object (symbol (locative-type (eql 'type)) locative-args)
   ;; On some lisps, SWANK-BACKEND:TYPE-SPECIFIER-P is not reliable.
@@ -698,8 +712,9 @@
   ```
 
   Then `(MY-IGNORE-ERROR RESTART)` refers to the above definition.
-  Note that while there is a CL:RESTART class, there is no
-  corresponding source location or docstring like for CONDITIONs.
+  Note that while there is a CL:RESTART type, there is no
+  corresponding source location or docstring like for
+  [CONDITION][condition]s.
   """)
 
 
@@ -1147,8 +1162,8 @@
 (define-locative-type argument ()
   """An alias for DISLOCATED, so the one can refer to an argument of a
   macro without accidentally linking to a class that has the same name
-  as that argument. In the following example, FORMAT may link to
-  CL:FORMAT (if we generated documentation for it):
+  as that argument. In the following example, [FORMAT][dislocated] may
+  link to CL:FORMAT (if we generated documentation for it):
 
   ```
   "See the FORMAT in DOCUMENT."

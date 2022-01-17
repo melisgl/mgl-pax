@@ -58,9 +58,12 @@
 ;;; REFERENCE may be written to multiple pages). ID is the markdown
 ;;; reference link id and PAGE-TO-N-USES is a hash table that counts
 ;;; how many times this was linked to from each page.
+;;;
+;;; PAGE may also be a string denoting a URL. This is used to link to
+;;; the hyperspec.
 (defstruct link
   reference
-  page
+  (page nil :type (or page string))
   id
   page-to-n-uses)
 
@@ -80,8 +83,10 @@
 
 ;;; Return the unescaped name of the HTML anchor for REFERENCE. See
 ;;; HTML-SAFE-NAME.
-(defun reference-to-anchor (reference)
-  (let ((reference (canonical-reference reference)))
+(defun reference-to-anchor (reference &key canonicalp)
+  (let ((reference (if canonicalp
+                       reference
+                       (canonical-reference reference))))
     (with-standard-io-syntax*
       (prin1-to-string (list (reference-object reference)
                              (reference-locative reference))))))
@@ -92,6 +97,7 @@
   (let ((link (find-link reference)))
     (when (and link
                (or (eq *page* (link-page link))
+                   (stringp (link-page link))
                    (and (page-uri-fragment *page*)
                         (page-uri-fragment (link-page link)))))
       (incf (gethash *page* (link-page-to-n-uses link) 0))
@@ -108,10 +114,7 @@
 ;;; A list of all the references extracted from *LINKS* for
 ;;; convenience.
 (defparameter *references*
-  ;; KLUDGE: Include T explicitly, because it's oft used and would not
-  ;; be recognized without markup because its name is too short (see
-  ;; REFERENCES-FOR-SYMBOL).
-  (list (make-reference t 'dislocated)))
+  ())
 
 ;;; A list of references not to be autolinked. See
 ;;; FILTER-REFERENCES-FOR-SYMBOL,
@@ -128,19 +131,41 @@
   `(let ((*references* *references*)
          (*local-references* *local-references*)
          (*links* *links*))
-     (with-standard-io-syntax*
-       (loop for page in ,pages
-             do (dolist (reference (page-references page))
-                  (unless (find-link reference)
-                    (push reference *references*)
-                    (push (make-link
-                           :reference reference
-                           :page page
-                           :id (hash-link (reference-to-anchor reference)
-                                          #'find-link-by-id)
-                           :page-to-n-uses (make-hash-table))
-                          *links*)))))
+     (initialize-links-and-references ,pages)
      (locally ,@body)))
+
+(declaim (special *document-link-to-hyperspec*))
+
+(defun initialize-links-and-references (pages)
+  (with-standard-io-syntax*
+    (loop for page in pages
+          do (dolist (reference (page-references page))
+               (unless (find-link reference)
+                 (push reference *references*)
+                 (push (make-link
+                        :reference reference
+                        :page page
+                        :id (hash-link (reference-to-anchor reference)
+                                       #'find-link-by-id)
+                        :page-to-n-uses (make-hash-table))
+                       *links*))))
+    (when *document-link-to-hyperspec*
+      (loop for (object locative url) in (hyperspec-external-references)
+            do (let ((reference (make-reference object locative)))
+                 (unless (find-link reference)
+                   (push reference *references*)
+                   (push (make-link
+                          :reference reference
+                          :page url
+                          :id (hash-link
+                               ;; KLUDGE: ABCL fails the
+                               ;; TEST-HYPERSPEC test with a low-level
+                               ;; error without :CANONICALP T.
+                               (reference-to-anchor reference
+                                                    :canonicalp t)
+                               #'find-link-by-id)
+                          :page-to-n-uses (make-hash-table))
+                         *links*)))))))
 
 (defvar *pages-created*)
 
@@ -181,9 +206,10 @@
                            :direction :output)
      ,@body))
 
-;;; Bound by DOCUMENT, this allows markdown output to depend on the
-;;; output format.
 (defvar *format*)
+(setf (documentation '*format* 'variable)
+      "Bound by DOCUMENT, this allows markdown output to depend on the
+       output format.")
 
 (declaim (special *document-normalize-packages*))
 (declaim (special *table-of-contents-stream*))
@@ -392,14 +418,19 @@
         (let ((anchor (reference-to-anchor (link-reference link))))
           ;; The format is [label]: url "title"
           ;; E.g.  [1]: http://example.org/Hobbit#Lifestyle "Hobbit lifestyles"
-          (format stream "  [~A]: ~A#~A ~S~%"
-                  (link-id link)
-                  (relative-page-uri-fragment (link-page link) *page*)
-                  (html-safe-name anchor)
-                  (let ((object (resolve (link-reference link))))
-                    (if (typep object 'section)
-                        (section-title-or-name object)
-                        (princ-to-string anchor)))))))))
+          (if (stringp (link-page link))
+              ;; Link to external page.
+              (format stream "  [~A]: ~A ~S~%" (link-id link)
+                      (link-page link) (princ-to-string anchor))
+              ;; Link to documentation generated in the same run.
+              (format stream "  [~A]: ~A#~A ~S~%"
+                      (link-id link)
+                      (relative-page-uri-fragment (link-page link) *page*)
+                      (html-safe-name anchor)
+                      (let ((object (resolve (link-reference link))))
+                        (if (typep object 'section)
+                            (section-title-or-name object)
+                            (princ-to-string anchor))))))))))
 
 (defun relative-page-uri-fragment (page reference-page)
   (if (eq page reference-page)
@@ -537,10 +568,16 @@
   (*document-downcase-uppercase-code* variable))
 
 (defvar *document-uppercase-is-code* t
-  """When true, words with at least three characters and no lowercase
-  characters naming an interned symbol are assumed to be code as if
-  they were marked up with backticks, which is especially useful when
-  combined with *DOCUMENT-LINK-CODE*. For example, this docstring:
+  """When true, words that
+
+  - have at least 3 characters
+  - have at least one ALPHA-CHAR-P character
+  - have no lowercase characters
+  - name an interned symbol
+
+  are assumed to be code as if they were marked up with backticks,
+  which is especially useful when combined with *DOCUMENT-LINK-CODE*.
+  For example, this docstring:
 
       "`FOO` and FOO."
 
@@ -565,7 +602,8 @@
 ;;; only a single return value: the new tree.
 (defun translate-uppercase-name (parent tree name known-references)
   (declare (ignore parent))
-  (when (no-lowercase-chars-p name)
+  (when (and (no-lowercase-chars-p name)
+             (find-if #'alpha-char-p name))
     (flet ((foo (name)
              (multiple-value-bind (refs n-chars-read)
                  (references-for-similar-names name known-references)
@@ -621,15 +659,16 @@
                              ;; KLUDGE: If the object of REF is
                              ;; replaced with SYMBOL, does it resolve
                              ;; to the same object? This is necessary
-                             ;; to get packages and asdf systems
-                             ;; right, because the object in their
-                             ;; canonical references are strings and
-                             ;; we compare to symbols.
+                             ;; to get packages and asdf systems right
+                             ;; because the objects in their canonical
+                             ;; references are strings and we compare
+                             ;; to symbols.
                              (equalp symbol-name (reference-object ref))))
                        refs)
-        ;; Don't codify A, I and similar.
-        (if (< 2 n-chars-read)
+        (if (or (< 2 n-chars-read)
+                (eq symbol t))
             (list (make-reference symbol 'dislocated))
+            ;; Don't codify A, I and similar.
             ()))))
 
 ;;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings and :EMPH
@@ -752,6 +791,8 @@
 
 (defsection @mgl-pax-linking-to-code (:title "Linking to Code")
   (*document-link-code* variable)
+  (*document-link-to-hyperspec* variable)
+  (*document-hyperspec-root* variable)
   (@mgl-pax-reference-resolution section))
 
 (defvar *document-link-code* t
@@ -827,6 +868,37 @@
   *DOCUMENT-UPPERCASE-IS-CODE* to have links generated for uppercase
   names with no quoting required.""")
 
+(defvar *document-link-to-hyperspec* t
+  "If true, link symbols found in code to the Common Lisp Hyperspec.
+
+  Locatives work as expected (see *DOCUMENT-LINK-CODE*).
+  [FIND-IF][dislocated] links to FIND-IF, [FUNCTION][dislocated] links
+  to FUNCTION and `[FUNCTION][type]` links to [function][type].
+
+  Autolinking to T and NIL is suppressed. If desired, use
+  `[T][]` (that links to [T][]) or `[T][constant]` (that links to
+  [T][constant]).")
+
+(defvar *document-hyperspec-root*
+  "http://www.lispworks.com/documentation/HyperSpec/"
+  "A URL pointing to an installed Common Lisp Hyperspec. The default
+  value of is the canonical location.")
+
+(defun hyperspec-external-references ()
+  (mapcar (lambda (entry)
+            (destructuring-bind (object locative filename) entry
+              (list object (if (eq locative 'operator)
+                               'macro
+                               locative)
+                    (hyperspec-link filename))))
+          *hyperpsec-entries*))
+
+(defun hyperspec-link (name)
+  ;; FIXME: This does not support anchors as in "26_glo_n#nil", but it
+  ;; doesn't matter as long as glossary entries from the hyperspec are
+  ;; not included.
+  (format nil "~ABody/~A.htm" *document-hyperspec-root* name))
+
 ;;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
 ;;; :REFERENCE-LINK for [symbol][locative]). Don't hurt other links.
 (defun autolink (string known-references)
@@ -865,8 +937,12 @@
      (let ((name (second tree)))
        (multiple-value-bind (formatted-refs refs)
            (format-references-to-name parent tree name known-references)
-         (let ((autolinked-key (cons name formatted-refs)))
+         (let ((autolinked-key (cons name formatted-refs))
+               (supressedp (and refs
+                                (let ((symbol (reference-object (first refs))))
+                                  (member symbol '(t nil))))))
            (cond ((and formatted-refs
+                       (not supressedp)
                        (or (not (gethash autolinked-key autolinked))
                            ;; Replace references to sections with the
                            ;; title any number of times.
@@ -882,29 +958,32 @@
      ;; For example, the tree for [`section`][type] is
      ;; (:REFERENCE-LINK :LABEL ((:CODE "SECTION")) :DEFINITION "type")
      (destructuring-bind (&key label definition tail) (rest tree)
-       (let* ((name (extract-name-from-reference-link-label label))
-              (symbol (if name
-                          (find-definitions-find-symbol-or-package name)
-                          nil)))
-         (if (not symbol)
-             tree
-             (let* ((references (remove symbol known-references
-                                        ;; FIXME: EQUAL or EQ?
-                                        :test-not #'eq
-                                        :key #'reference-object))
-                    (references (if (and (zerop (length definition))
-                                         (equal tail "[]"))
-                                    (filter-references-for-unspecified-locative
-                                     references)
-                                    (alexandria:ensure-list
-                                     (find-reference-by-locative-string
-                                      definition
-                                      (filter-references-for-specified-locative
-                                       references)
-                                      :if-dislocated symbol)))))
-               (if references
-                   (values (format-references name references) nil t)
-                   tree))))))
+       (let ((name (extract-name-from-reference-link-label label)))
+         (multiple-value-bind (symbol n-chars-read)
+             (if name
+                 (find-definitions-find-symbol-or-package name)
+                 nil)
+           (if (null n-chars-read)
+               tree
+               (let* ((references
+                        (remove symbol known-references
+                                ;; FIXME: EQUAL or EQ?
+                                :test-not #'eq
+                                :key #'reference-object))
+                      (references
+                        (if (and (zerop (length definition))
+                                 (equal tail "[]"))
+                            (filter-references-for-unspecified-locative
+                             references)
+                            (alexandria:ensure-list
+                             (find-reference-by-locative-string
+                              definition
+                              (filter-references-for-specified-locative
+                               references)
+                              :if-dislocated symbol)))))
+                 (if references
+                     (values (format-references name references) nil t)
+                     tree)))))))
     (t
      tree)))
 
@@ -1037,9 +1116,11 @@
     rarely useful to link to. Use explicit links to ASDF:SYSTEMs, if
     necessary.
 
-  - If references include a GENERIC-FUNCTION, then all references of
-    LOCATIVE-TYPE METHOD, ACCESSOR, READER and WRITER are removed to
-    avoid linking to a possibly large number of methods.""")
+  - If references include a GENERIC-FUNCTION locative, then all
+    references with LOCATIVE-TYPE [METHOD][locative],
+    [ACCESSOR][locative], [READER][locative] and [WRITER][locative]
+    are removed to avoid linking to a possibly large number of
+    methods.""")
 
 (defsection @mgl-pax-local-references (:title "Local References")
   """To unclutter the generated output by reducing the number of
@@ -1148,9 +1229,12 @@
                            (eq *page* page)
                            ;; Else we need to know the URI-FRAGMENT of
                            ;; both pages. See
-                           ;; RELATIVE-PAGE-URI-FRAGMENT.
-                           (and (page-uri-fragment *page*)
-                                (page-uri-fragment page))))))
+                           ;; RELATIVE-PAGE-URI-FRAGMENT. Or PAGE may
+                           ;; also be a string denoted an absolute
+                           ;; URL.
+                           (or (stringp page)
+                               (and (page-uri-fragment *page*)
+                                    (page-uri-fragment page)))))))
                  refs))
 
 ;;; For NAME (a STRING) and some references to it (REFS), return a
@@ -1177,10 +1261,10 @@
                    t))
           ((member (reference-locative-type ref-1) '(dislocated))
            `(,(code-fragment (maybe-downcase name))))
-          ((typep (resolve ref-1) 'section)
+          ((typep (resolve ref-1 :errorp nil) 'section)
            `((:reference-link :label (,(section-title-or-name (resolve ref-1)))
                               :definition ,(link-to-reference ref-1))))
-          ((typep (resolve ref-1) 'glossary-term)
+          ((typep (resolve ref-1 :errorp nil) 'glossary-term)
            `((:reference-link :label (,(glossary-term-title-or-name
                                         (resolve ref-1)))
                               :definition ,(link-to-reference ref-1))))

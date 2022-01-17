@@ -259,9 +259,10 @@ some convenience functions to cover the most common cases.*
 
 Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
 exports `*FOO-STATE*` and includes its documentation in
-`@FOO-RANDOM-MANUAL`. The symbols VARIABLE and FUNCTION are just two
-instances of 'locatives' which are used in DEFSECTION to refer to
-definitions tied to symbols. See @MGL-PAX-LOCATIVE-TYPES.
+`@FOO-RANDOM-MANUAL`. The symbols [VARIABLE][locative] and
+[FUNCTION][locative] are just two instances of 'locatives' which are
+used in DEFSECTION to refer to definitions tied to symbols. See
+@MGL-PAX-LOCATIVE-TYPES.
 
 The transcript in the code block tagged with `cl-transcript` is
 automatically checked for up-to-dateness. See
@@ -547,17 +548,18 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
 
 - [locative] STRUCTURE-ACCESSOR
 
-    This is a synonym of FUNCTION with the difference that the often
-    ugly and certainly uninformative lambda list will not be printed.
+    This is a synonym of [FUNCTION][locative] with the difference that
+    the often ugly and certainly uninformative lambda list will not be
+    printed.
 
 - [locative] TYPE
 
     This locative can refer to any Lisp type. For types defined with
     DEFTYPE, an attempt is made at printing the arguments of type
-    specifiers. When TYPE refers to a CL:CLASS, the class is documented
-    as an opaque type: no mention is made of that it is a class or its
-    superclasses. Use the CLASS locative if those things are part of the
-    contract.
+    specifiers. When TYPE refers to a [CL:CLASS][class], the class is
+    documented as an opaque type: no mention is made of that it is a
+    class or its superclasses. Use the CLASS locative if those things
+    are part of the contract.
 
 - [locative] CLASS
 
@@ -591,8 +593,9 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     ```
     
     Then `(MY-IGNORE-ERROR RESTART)` refers to the above definition.
-    Note that while there is a CL:RESTART class, there is no
-    corresponding source location or docstring like for CONDITIONs.
+    Note that while there is a CL:RESTART type, there is no
+    corresponding source location or docstring like for
+    [CONDITION][condition]s.
 
 - [locative] ASDF/SYSTEM:SYSTEM
 
@@ -703,8 +706,8 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
 
     An alias for DISLOCATED, so the one can refer to an argument of a
     macro without accidentally linking to a class that has the same name
-    as that argument. In the following example, FORMAT may link to
-    CL:FORMAT (if we generated documentation for it):
+    as that argument. In the following example, `FORMAT` may
+    link to CL:FORMAT (if we generated documentation for it):
     
     ```
     "See the FORMAT in DOCUMENT."
@@ -952,10 +955,19 @@ with that.
 
 - [variable] *DOCUMENT-UPPERCASE-IS-CODE* T
 
-    When true, words with at least three characters and no lowercase
-    characters naming an interned symbol are assumed to be code as if
-    they were marked up with backticks, which is especially useful when
-    combined with *DOCUMENT-LINK-CODE*. For example, this docstring:
+    When true, words that
+    
+    - have at least 3 characters
+    
+    - have at least one ALPHA-CHAR-P character
+    
+    - have no lowercase characters
+    
+    - name an interned symbol
+    
+    are assumed to be code as if they were marked up with backticks,
+    which is especially useful when combined with *DOCUMENT-LINK-CODE*.
+    For example, this docstring:
     
         "`FOO` and FOO."
     
@@ -1057,6 +1069,23 @@ with that.
     *DOCUMENT-UPPERCASE-IS-CODE* to have links generated for uppercase
     names with no quoting required.
 
+- [variable] *DOCUMENT-LINK-TO-HYPERSPEC* T
+
+    If true, link symbols found in code to the Common Lisp Hyperspec.
+    
+    Locatives work as expected (see *DOCUMENT-LINK-CODE*).
+    `FIND-IF` links to FIND-IF, `FUNCTION` links
+    to FUNCTION and `[FUNCTION][type]` links to [function][type].
+    
+    Autolinking to T and NIL is suppressed. If desired, use
+    `[T][]` (that links to [T][]) or `[T][constant]` (that links to
+    [T][constant]).
+
+- [variable] *DOCUMENT-HYPERSPEC-ROOT* "http://www.lispworks.com/documentation/HyperSpec/"
+
+    A URL pointing to an installed Common Lisp Hyperspec. The default
+    value of is the canonical location.
+
 #### Reference Resolution
 
 Links are generated according to *DOCUMENT-LINK-CODE* in general
@@ -1074,9 +1103,11 @@ by the following rules.
   rarely useful to link to. Use explicit links to ASDF:SYSTEMs, if
   necessary.
 
-- If references include a GENERIC-FUNCTION, then all references of
-  LOCATIVE-TYPE METHOD, ACCESSOR, READER and WRITER are removed to
-  avoid linking to a possibly large number of methods.
+- If references include a GENERIC-FUNCTION locative, then all
+  references with LOCATIVE-TYPE [METHOD][locative],
+  [ACCESSOR][locative], [READER][locative] and [WRITER][locative]
+  are removed to avoid linking to a possibly large number of
+  methods.
 
 
 ##### Local References
@@ -2040,14 +2071,14 @@ for ASDF:SYSTEM:
 - [generic-function] LOCATE-OBJECT OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
 
     Return the object to which OBJECT and the locative
-    refer. For example, if LOCATIVE-TYPE is the symbol PACKAGE, this
-    returns `(FIND-PACKAGE SYMBOL)`. Signal a LOCATE-ERROR condition by
-    calling the LOCATE-ERROR function if the lookup fails. Signal other
-    errors if the types of the argument are bad, for instance
-    LOCATIVE-ARGS is not the empty list in the package example. If a
-    REFERENCE is returned then it must be canonical in the sense that
-    calling CANONICAL-REFERENCE on it will return the same reference.
-    For extension only, don't call this directly.
+    refer. For example, if LOCATIVE-TYPE is the symbol
+    `PACKAGE`, this returns `(FIND-PACKAGE SYMBOL)`. Signal
+    a LOCATE-ERROR condition by calling the LOCATE-ERROR function if the
+    lookup fails. Signal other errors if the types of the argument are
+    bad, for instance LOCATIVE-ARGS is not the empty list in the package
+    example. If a REFERENCE is returned then it must be canonical in the
+    sense that calling CANONICAL-REFERENCE on it will return the same
+    reference. For extension only, don't call this directly.
 
 - [function] LOCATE-ERROR &REST FORMAT-AND-ARGS
 
@@ -2080,10 +2111,15 @@ for ASDF:SYSTEM:
     This default implementation returns the empty list. This means that
     nothing is reachable from OBJECT.
 
+- [variable] *FORMAT* "-unbound-"
+
+    Bound by DOCUMENT, this allows markdown output to depend on the
+    output format.
+
 - [generic-function] DOCUMENT-OBJECT OBJECT STREAM
 
     Write OBJECT (and its references recursively) in
-    FORMAT to STREAM.
+    *FORMAT* to STREAM.
     
     Add methods specializing on OBJECT to customize how objects of that
     type are presented in the documentation.
@@ -2128,8 +2164,8 @@ no first class object to represent the thing of interest. Recall
 that LOCATE returns a REFERENCE object in this case. DOCUMENT-OBJECT
 and FIND-SOURCE defer to LOCATE-AND-DOCUMENT and
 LOCATE-AND-FIND-SOURCE, which have LOCATIVE-TYPE in their argument
-list for EQL specializing pleasure. Here is a stripped down example
-of how the VARIABLE locative is defined:
+list for [EQL][type] specializing pleasure. Here is a stripped down
+example of how the VARIABLE locative is defined:
 
 ```commonlisp
 (define-locative-type variable (&optional initform)
@@ -2255,8 +2291,9 @@ presented.
 
 - [class] SECTION
 
-    DEFSECTION stores its NAME, TITLE, PACKAGE,
-    READTABLE and ENTRIES in [SECTION][class] objects.
+    DEFSECTION stores its NAME, TITLE, [PACKAGE][type],
+    [READTABLE][type] and ENTRIES arguments in [SECTION][class]
+    objects.
 
 - [reader] SECTION-NAME SECTION (:NAME)
 
@@ -2275,7 +2312,8 @@ presented.
 
 - [reader] SECTION-TITLE SECTION (:TITLE)
 
-    STRING or NIL. Used in generated documentation.
+    A [STRING][type] or NIL. Used in generated
+    documentation.
 
 - [reader] SECTION-LINK-TITLE-TO SECTION (:LINK-TITLE-TO = NIL)
 

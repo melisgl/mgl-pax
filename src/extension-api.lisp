@@ -30,6 +30,7 @@
   (canonical-reference generic-function)
   (collect-reachable-objects generic-function)
   (collect-reachable-objects (method () (t)))
+  (*format* variable)
   (document-object generic-function)
   (document-object (method () (string t)))
   (find-source generic-function))
@@ -96,14 +97,14 @@
 
 (defgeneric locate-object (object locative-type locative-args)
   (:documentation "Return the object to which OBJECT and the locative
-  refer. For example, if LOCATIVE-TYPE is the symbol PACKAGE, this
-  returns `(FIND-PACKAGE SYMBOL)`. Signal a LOCATE-ERROR condition by
-  calling the LOCATE-ERROR function if the lookup fails. Signal other
-  errors if the types of the argument are bad, for instance
-  LOCATIVE-ARGS is not the empty list in the package example. If a
-  REFERENCE is returned then it must be canonical in the sense that
-  calling CANONICAL-REFERENCE on it will return the same reference.
-  For extension only, don't call this directly."))
+  refer. For example, if LOCATIVE-TYPE is the symbol
+  [PACKAGE][dislocated], this returns `(FIND-PACKAGE SYMBOL)`. Signal
+  a LOCATE-ERROR condition by calling the LOCATE-ERROR function if the
+  lookup fails. Signal other errors if the types of the argument are
+  bad, for instance LOCATIVE-ARGS is not the empty list in the package
+  example. If a REFERENCE is returned then it must be canonical in the
+  sense that calling CANONICAL-REFERENCE on it will return the same
+  reference. For extension only, don't call this directly."))
 
 (defun locate-error (&rest format-and-args)
   "Call this function to signal a LOCATE-ERROR condition from a
@@ -160,7 +161,7 @@
 
 (defgeneric document-object (object stream)
   (:documentation "Write OBJECT (and its references recursively) in
-  FORMAT to STREAM.
+  *FORMAT* to STREAM.
 
   Add methods specializing on OBJECT to customize how objects of that
   type are presented in the documentation."))
@@ -254,8 +255,8 @@
   that LOCATE returns a REFERENCE object in this case. DOCUMENT-OBJECT
   and FIND-SOURCE defer to LOCATE-AND-DOCUMENT and
   LOCATE-AND-FIND-SOURCE, which have LOCATIVE-TYPE in their argument
-  list for EQL specializing pleasure. Here is a stripped down example
-  of how the VARIABLE locative is defined:"
+  list for [EQL][type] specializing pleasure. Here is a stripped down
+  example of how the VARIABLE locative is defined:"
   (variable-example (include (:start (variable locative)
                                      :end (end-of-variable-example variable))
                              :header-nl "```commonlisp"

@@ -374,9 +374,10 @@
 (defvar *update-baseline* nil)
 
 (deftest test-document (format)
-  (let ((outputs (write-test-document-files
-                  (asdf:system-relative-pathname :mgl-pax "test/data/tmp/")
-                  format)))
+  (let* ((*document-link-to-hyperspec* nil)
+         (outputs (write-test-document-files
+                   (asdf:system-relative-pathname :mgl-pax "test/data/tmp/")
+                   format)))
     (is (= 4 (length outputs)))
     ;; the default page corresponding to :STREAM is empty
     (is (string= "" (first outputs)))
@@ -430,6 +431,47 @@
                              format))
 
 
+(defsection @hyperspec-test ()
+  "Locatives work as expected (see *DOCUMENT-LINK-CODE*).
+  [FIND-IF][dislocated] links to FIND-IF, [LIST][dislocated] links
+  to LIST and `[LIST][type]` links to [list][type].
+
+  Autolinking to T and NIL is suppressed. If desired, use
+  `[T][]` (that links to [T][]) or `[T][constant]` (that links to
+  [T][constant]).")
+
+(deftest test-hyperspec ()
+  (is
+   (null
+    (mismatch%
+     (let ((*document-hyperspec-root* "CLHS/"))
+       (first (document @hyperspec-test)))
+     "<a id='x-28MGL-PAX-TEST-3A-40HYPERSPEC-TEST-20MGL-PAX-3ASECTION-29'></a>
+
+# @HYPERSPEC-TEST
+
+## Table of Contents
+
+
+###### \\[in package MGL-PAX-TEST\\]
+Locatives work as expected (see `*DOCUMENT-LINK-CODE*`).
+`FIND-IF` links to [`FIND-IF`][badc], `LIST` links
+to `LIST`([`0`][df43] [`1`][7def]) and `[LIST][type]` links to [`list`][7def].
+
+Autolinking to `T` and `NIL` is suppressed. If desired, use
+`[T][]` (that links to `T`([`0`][b743] [`1`][cb19])) or `[T][constant]` (that links to
+[`T`][b743]).
+
+  [7def]: CLHS/Body/t_list.htm \"(LIST TYPE)\"
+  [94b1]: CLHS/Body/t_nil.htm \"(NIL TYPE)\"
+  [9d3a]: CLHS/Body/v_nil.htm \"(NIL MGL-PAX:CONSTANT)\"
+  [b743]: CLHS/Body/v_t.htm \"(T MGL-PAX:CONSTANT)\"
+  [badc]: CLHS/Body/f_find_.htm \"(FIND-IF FUNCTION)\"
+  [cb19]: CLHS/Body/t_t.htm \"(T TYPE)\"
+  [df43]: CLHS/Body/f_list_.htm \"(LIST FUNCTION)\"
+"))))
+
+
 (deftest test-all ()
   (test-transcribe)
   (test-navigation)
@@ -437,7 +479,8 @@
   (test-transform-tree)
   (test-macro-arg-names)
   (test-document :markdown)
-  (test-document :html))
+  (test-document :html)
+  (test-hyperspec))
 
 (defun test (&key (debug nil) (print 'unexpected) (describe 'unexpected))
   ;; Bind *PACKAGE* so that names of tests printed have package names,
