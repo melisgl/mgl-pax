@@ -26,9 +26,10 @@
 ;;; to allow it to
 ;;;
 ;;; - be created lazily so that no stray files are left around and
-;;;   only a small number of fds are needed even for a huge project
+;;;   only a small number of fds are needed even for a huge project,
 ;;;
-;;; - be opened multiple times (which is not given for string streams)
+;;; - be opened multiple times (which is not a given for string
+;;;   streams)
 ;;;
 ;;; So output is generated in markdown format to TEMP-STREAM-SPEC, but
 ;;; before we are done it is converted to the requested output format
@@ -391,12 +392,9 @@
         (let ((anchor (reference-to-anchor (link-reference link))))
           ;; The format is [label]: url "title"
           ;; E.g.  [1]: http://example.org/Hobbit#Lifestyle "Hobbit lifestyles"
-          (format stream "  [~A]: ~@[~A~]#~A ~S~%"
+          (format stream "  [~A]: ~A#~A ~S~%"
                   (link-id link)
-                  (if (link-page link)
-                      (relative-page-uri-fragment (link-page link)
-                                                  *page*)
-                      nil)
+                  (relative-page-uri-fragment (link-page link) *page*)
                   (html-safe-name anchor)
                   (let ((object (resolve (link-reference link))))
                     (if (typep object 'section)
