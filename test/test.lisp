@@ -232,6 +232,17 @@
   (:documentation "This may also be encapsulated by TRACE."))
 (trace encapsulated-generic-function)
 
+(defmacro define-declaration (decl-name (decl-spec env) &body body)
+  #+sbcl
+  `(sb-cltl2:define-declaration ,decl-name (,decl-spec ,env)
+     ,@body)
+  #-sbcl
+  (declare (ignore decl-name decl-spec env body)))
+
+(define-declaration test-declaration (decl-spec env)
+  (declare (ignore env))
+  (values :declare decl-spec))
+
 (defparameter *navigation-test-cases*
   '((foo function (defun foo))
     (foo type (defclass foo))
@@ -258,14 +269,18 @@
      (cl:defpackage))
     (mgl-pax asdf:system ())
     (test-gf generic-function (defgeneric test-gf))
-    (test-gf (method () (number)) (defmethod test-gf))))
+    (test-gf (method () (number)) (defmethod test-gf))
+    (test-declaration declaration (define-declaration test-declaration))))
 
 (defun working-locative-p (locative)
   (declare (ignorable locative))
-  ;; AllegroCL doesn't store source location for DEFPACKAGE and is off
-  ;; by one form for DEFGENERIC.
-  #+allegro (not (member locative '(package generic-function)))
-  #-allegro t)
+  (cond ((eq locative 'declaration)
+         (alexandria:featurep :sbcl))
+        (t
+         ;; AllegroCL doesn't store source location for DEFPACKAGE and
+         ;; is off by one form for DEFGENERIC.
+         #+allegro (not (member locative '(package generic-function)))
+         #-allegro t)))
 
 (deftest test-navigation ()
   ;; For CMUCL, SWANK-BACKEND:FIND-SOURCE-LOCATION is not implemented.
@@ -301,8 +316,9 @@
                                   at source location~%~S~% ~
                                   for reference (~S ~S).~%~
                                   Form found was:~%~S."
-                                 prefix alternative-prefix
-                                 location symbol locative form)))))))))))))
+                                 ,prefix ,alternative-prefix
+                                 ,location ,symbol ,locative
+                                 ,form)))))))))))))
 
 ;;; Extract the filename and 3303 from
 ;;;     (:LOCATION
@@ -495,6 +511,33 @@ Autolinking to `T` and `NIL` is suppressed. If desired, use
 "))))
 
 
+(defsection @declaration-test ()
+  "SAFETY"
+  "SAFETY declaration"
+  "[safety][declaration]")
+
+(deftest test-declaration ()
+  (is
+   (null
+    (mismatch%
+     (let ((*document-max-table-of-contents-level* 0)
+           (*document-max-numbering-level* 0)
+           (*document-text-navigation* nil)
+           (*document-link-sections* nil))
+       (first (document @declaration-test)))
+     "# @DECLARATION-TEST
+
+###### \\[in package MGL-PAX-TEST\\]
+[`SAFETY`][9f0e]
+
+[`SAFETY`][9f0e] declaration
+
+[`safety`][9f0e]
+
+  [9f0e]: http://www.lispworks.com/documentation/HyperSpec/Body/d_optimi.htm \"(SAFETY DECLARATION)\"
+"))))
+
+
 (deftest test-all ()
   (test-transcribe)
   (test-navigation)
@@ -504,7 +547,8 @@ Autolinking to `T` and `NIL` is suppressed. If desired, use
   (test-document :markdown)
   (test-document :html)
   (test-hyperspec)
-  (test-argument))
+  (test-argument)
+  (test-declaration))
 
 (defun test (&key (debug nil) (print 'unexpected) (describe 'unexpected))
   ;; Bind *PACKAGE* so that names of tests printed have package names,

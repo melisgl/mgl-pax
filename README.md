@@ -834,6 +834,26 @@ location and the docstring of the defining form is recorded (see
     ```
 
 
+<a id='x-28DECLARATION-20MGL-PAX-3ALOCATIVE-29'></a>
+
+- [locative] **DECLARATION**
+
+    Refers to a declaration, used in [`DECLARE`][b58a], [`DECLAIM`][33dd] and [`PROCLAIM`][89be].
+    For example, `[DEBUG][declaration]` refers to the standard [`DEBUG`][4944]
+    declaration and links to the hyperspec if
+    [`*DOCUMENT-LINK-TO-HYPERSPEC*`][c1ca] is true.
+    
+    User code may also define new declarations with CLTL2 functionality,
+    but there is no way to provide a docstring.
+    
+    ```
+    (cl-environments:define-declaration my-decl (&rest things)
+      (values :declare (cons 'foo things)))
+    ```
+    
+    Also, `M-.` (see [Navigating Sources in Emacs][3fdc]) on declarations
+    currently only works on SBCL.
+
 <a id='x-28MGL-PAX-3A-40MGL-PAX-GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29'></a>
 
 ## 9 Generating Documentation
@@ -2673,6 +2693,7 @@ presented.
   [3023]: #x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29 "(FUNCTION MGL-PAX:LOCATIVE)"
   [3219]: http://www.lispworks.com/documentation/HyperSpec/Body/f_ensu_1.htm "(ENSURE-DIRECTORIES-EXIST FUNCTION)"
   [32ac]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29 "Syntax Highlighting"
+  [33dd]: http://www.lispworks.com/documentation/HyperSpec/Body/m_declai.htm "(DECLAIM MGL-PAX:MACRO)"
   [3405]: #x-28MGL-PAX-3A-40MGL-PAX-CODIFICATION-20MGL-PAX-3ASECTION-29 "Codification"
   [350c]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIBING-WITH-EMACS-20MGL-PAX-3ASECTION-29 "Transcribing with Emacs"
   [353f]: #x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES* VARIABLE)"
@@ -2688,6 +2709,7 @@ presented.
   [46f7]: http://www.lispworks.com/documentation/HyperSpec/Body/t_class.htm "(CLASS CLASS)"
   [474c]: #x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29 "(VARIABLE MGL-PAX:LOCATIVE)"
   [4918]: #x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax\" ASDF/SYSTEM:SYSTEM)"
+  [4944]: http://www.lispworks.com/documentation/HyperSpec/Body/d_optimi.htm "(DEBUG DECLARATION)"
   [4b40]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "(DEFPACKAGE MGL-PAX:MACRO)"
   [4bb4]: #x-28MGL-PAX-3A-2APAX-WORLD-DIR-2A-20VARIABLE-29 "(MGL-PAX:*PAX-WORLD-DIR* VARIABLE)"
   [4df3]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rest.htm "(REST FUNCTION)"
@@ -2720,6 +2742,7 @@ presented.
   [84ee]: #x-28MGL-PAX-3A-40MGL-PAX-BACKGROUND-20MGL-PAX-3ASECTION-29 "Background"
   [86ef]: http://www.lispworks.com/documentation/HyperSpec/Body/f_car_c.htm "(CAR FUNCTION)"
   [87c7]: #x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "(MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION))"
+  [89be]: http://www.lispworks.com/documentation/HyperSpec/Body/f_procla.htm "(PROCLAIM FUNCTION)"
   [8a71]: #x-28MGL-PAX-3ATRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR-20CONDITION-29 "(MGL-PAX:TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR CONDITION)"
   [8be2]: #x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE* VARIABLE)"
   [8c02]: #x-28MGL-PAX-3AWRITER-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:WRITER MGL-PAX:LOCATIVE)"
@@ -2748,11 +2771,13 @@ presented.
   [b2be]: #x-28MGL-PAX-3ALOCATE-20FUNCTION-29 "(MGL-PAX:LOCATE FUNCTION)"
   [b417]: #x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNCTION-29 "(MGL-PAX:FIND-SOURCE GENERIC-FUNCTION)"
   [b42e]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rst.htm "(RESTART TYPE)"
+  [b58a]: http://www.lispworks.com/documentation/HyperSpec/Body/s_declar.htm "(DECLARE MGL-PAX:MACRO)"
   [b743]: http://www.lispworks.com/documentation/HyperSpec/Body/v_t.htm "(T MGL-PAX:CONSTANT)"
   [badc]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_.htm "(FIND-IF FUNCTION)"
   [be22]: #x-28MGL-PAX-3A-40MGL-PAX-SECTIONS-20MGL-PAX-3ASECTION-29 "Sections"
   [bf16]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-API-20MGL-PAX-3ASECTION-29 "Transcript API"
   [c0cd]: #x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE)"
+  [c1ca]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-LINK-TO-HYPERSPEC* VARIABLE)"
   [c3b1]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rdtabl.htm "(READTABLE TYPE)"
   [c416]: http://www.lispworks.com/documentation/HyperSpec/Body/f_alpha_.htm "(ALPHA-CHAR-P FUNCTION)"
   [c5f2]: #x-28MGL-PAX-3AREGISTER-DOC-IN-PAX-WORLD-20FUNCTION-29 "(MGL-PAX:REGISTER-DOC-IN-PAX-WORLD FUNCTION)"

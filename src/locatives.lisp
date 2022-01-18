@@ -43,7 +43,8 @@
   (define-glossary-term macro)
   (locative locative)
   (dislocated locative)
-  (argument locative))
+  (argument locative)
+  (declaration locative))
 
 
 ;;;; Utilities for argument handling
@@ -1178,3 +1179,56 @@
 (defmethod locate-object (symbol (locative-type (eql 'argument)) locative-args)
   (declare (ignore symbol locative-args))
   (locate-error))
+
+
+;;;; DECLARATION locative
+
+(define-locative-type declaration ()
+  """Refers to a declaration, used in DECLARE, DECLAIM and PROCLAIM.
+  For example, `[DEBUG][declaration]` refers to the standard DEBUG
+  declaration and links to the hyperspec if
+  *DOCUMENT-LINK-TO-HYPERSPEC* is true.
+
+  User code may also define new declarations with CLTL2 functionality,
+  but there is no way to provide a docstring.
+
+  ```
+  (cl-environments:define-declaration my-decl (&rest things)
+    (values :declare (cons 'foo things)))
+  ```
+
+  Also, `M-.` (see @MGL-PAX-NAVIGATING-IN-EMACS) on declarations
+  currently only works on SBCL.
+  """)
+
+(defvar *ansi-declarations*
+  '(compilation-speed debug declaration dynamic-extent ftype ignorable
+    ignore inline notinline optimize safety space special speed type))
+
+#+sbcl
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (require :sb-cltl2))
+
+(defmethod locate-object (symbol (locative-type (eql 'declaration))
+                          locative-args)
+  #+sbcl
+  (unless (or (find symbol *ansi-declarations*)
+              (find symbol (sb-cltl2:declaration-information 'declaration)))
+    (locate-error))
+  (make-reference symbol (cons locative-type locative-args)))
+
+(defmethod locate-and-document (symbol (locative-type (eql 'declaration))
+                                locative-args stream)
+  (let ((reference (canonical-reference (make-reference symbol 'declaration))))
+    (print-bullet reference stream)
+    (print-end-bullet stream)))
+
+(defmethod locate-and-find-source (symbol (locative-type (eql 'declaration))
+                                   locative-args)
+  (declare (ignore locative-args))
+  #+sbcl
+  (find-source (sb-int:info :declaration :known symbol))
+  #-sbcl
+  '(:error "Don't know how find the source location of declarations."))
+
+(add-locative-to-source-search-list 'declaration)

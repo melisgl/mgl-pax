@@ -135,7 +135,7 @@
                   reference))
             (canonical-reference object)))
     (locate-error ()
-      ;; DISLOCATED ends up here
+      ;; DISLOCATED and ARGUMENT end up here
       reference)))
 
 (defgeneric canonical-locative (locative-type locative-args))

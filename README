@@ -720,6 +720,24 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     ```
 
 
+- [locative] DECLARATION
+
+    Refers to a declaration, used in DECLARE, DECLAIM and PROCLAIM.
+    For example, `[DEBUG][declaration]` refers to the standard DEBUG
+    declaration and links to the hyperspec if
+    *DOCUMENT-LINK-TO-HYPERSPEC* is true.
+    
+    User code may also define new declarations with CLTL2 functionality,
+    but there is no way to provide a docstring.
+    
+    ```
+    (cl-environments:define-declaration my-decl (&rest things)
+      (values :declare (cons 'foo things)))
+    ```
+    
+    Also, `M-.` (see @MGL-PAX-NAVIGATING-IN-EMACS) on declarations
+    currently only works on SBCL.
+
 ## Generating Documentation
 
 - [function] DOCUMENT OBJECT &KEY STREAM PAGES (FORMAT :MARKDOWN)
