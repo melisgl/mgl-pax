@@ -944,11 +944,12 @@
            (cond ((and formatted-refs
                        (not supressedp)
                        (or (not (gethash autolinked-key autolinked))
-                           ;; Replace references to sections with the
-                           ;; title any number of times.
+                           ;; Replace references to sections and
+                           ;; glossary terms with their title any
+                           ;; number of times.
                            (and (= (length refs) 1)
                                 (typep (resolve (first refs) :errorp nil)
-                                       'section))))
+                                       '(or section glossary-term)))))
                   (setf (gethash autolinked-key autolinked) t)
                   (values formatted-refs nil t))
                  (t
