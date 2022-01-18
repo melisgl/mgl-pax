@@ -81,8 +81,6 @@
   :depends-on (:mgl-pax/navigate :mgl-pax/document :mgl-pax/transcribe)
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
-;;; FIXME: Reinstate once Try is in quicklisp.
-#+nil
 (asdf:defsystem mgl-pax/test
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
