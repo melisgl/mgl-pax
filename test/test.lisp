@@ -472,6 +472,29 @@ Autolinking to `T` and `NIL` is suppressed. If desired, use
 "))))
 
 
+(defsection @argument-test ()
+  "[PRINT][argument]
+
+   PRINT argument")
+
+(deftest test-argument ()
+  (is
+   (null
+    (mismatch%
+     (let ((*document-max-table-of-contents-level* 0)
+           (*document-max-numbering-level* 0)
+           (*document-text-navigation* nil)
+           (*document-link-sections* nil))
+       (first (document @argument-test)))
+     "# @ARGUMENT-TEST
+
+###### \\[in package MGL-PAX-TEST\\]
+`PRINT`
+
+`PRINT` argument
+"))))
+
+
 (deftest test-all ()
   (test-transcribe)
   (test-navigation)
@@ -480,7 +503,8 @@ Autolinking to `T` and `NIL` is suppressed. If desired, use
   (test-macro-arg-names)
   (test-document :markdown)
   (test-document :html)
-  (test-hyperspec))
+  (test-hyperspec)
+  (test-argument))
 
 (defun test (&key (debug nil) (print 'unexpected) (describe 'unexpected))
   ;; Bind *PACKAGE* so that names of tests printed have package names,

@@ -850,7 +850,7 @@ location and the docstring of the defining form is recorded (see
     Most often, this function is called on section objects
     like `(DOCUMENT @MGL-PAX-MANUAL)`, but it supports all kinds of
     objects for which [`DOCUMENT-OBJECT`][a05e] is defined. To look up the
-    documentation of function `DOCUMENT`:
+    documentation of function [`DOCUMENT`][1eb8]:
     
         (document #'document)
     
@@ -2322,7 +2322,7 @@ for [`ASDF:SYSTEM:`][90f2]
     `PACKAGE`([`0`][16ad] [`1`][4533]), [`ASDF:SYSTEM`][90f2] and `METHOD`([`0`][d71c] [`1`][99c9]) return `NIL`.
     
     `DEFSECTION` calls this function to decide what symbols to export when
-    its [`EXPORT`][4186] argument is true.
+    its `EXPORT` argument is true.
 
 <a id='x-28MGL-PAX-3ALOCATE-OBJECT-20GENERIC-FUNCTION-29'></a>
 

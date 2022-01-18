@@ -1017,9 +1017,9 @@
                                             refs)
                          refs))))
         ;; If necessary, try to find a locative before or after NAME
-        ;; to disambiguate.
-        (when (and (< 1 (length refs))
-                   (references-for-the-same-symbol-p refs))
+        ;; to disambiguate and also to handle the `PRINT argument`
+        ;; case.
+        (when (and refs (references-for-the-same-symbol-p refs))
           (let ((reference (find-locative-around parent tree refs)))
             (when reference
               (return-from format-references-to-name
@@ -1032,34 +1032,38 @@
 ;;; REFERENCE, if found. POSSIBLE-REFERENCES must only contain
 ;;; references to the symbol.
 (defun find-locative-around (tree name-element possible-references)
-  (labels ((try (element)
-             (let ((reference
-                     (cond ((stringp element)
-                            (find-reference-by-locative-string
-                             element possible-references))
-                           ((eq :code (first element))
-                            (find-reference-by-locative-string
-                             (second element) possible-references))
-                           ;; (:REFERENCE-LINK :LABEL ((:CODE
-                           ;; "CLASS")) :DEFINITION "0524")
-                           ((eq :reference-link (first element))
-                            (try (first (third element)))))))
-               (when reference
-                 (return-from find-locative-around reference)))))
-    ;; For example, (:PLAIN "See" "function" " " "FOO")
-    (loop for rest on tree
-          do (when (and (eq (third rest) name-element)
-                        (stringp (second rest))
-                        (blankp (second rest)))
-               (try (first rest))
-               (return)))
-    ;; For example, (:PLAIN "See" "the" "FOO" " " "function")
-    (loop for rest on tree
-          do (when (and (eq (first rest) name-element)
-                        (stringp (second rest))
-                        (blankp (second rest)))
-               (try (third rest))
-               (return)))))
+  (let ((possible-references
+          (cons (make-reference (reference-object (first possible-references))
+                                'argument)
+                possible-references)))
+    (labels ((try (element)
+               (let ((reference
+                       (cond ((stringp element)
+                              (find-reference-by-locative-string
+                               element possible-references))
+                             ((eq :code (first element))
+                              (find-reference-by-locative-string
+                               (second element) possible-references))
+                             ;; (:REFERENCE-LINK :LABEL ((:CODE
+                             ;; "CLASS")) :DEFINITION "0524")
+                             ((eq :reference-link (first element))
+                              (try (first (third element)))))))
+                 (when reference
+                   (return-from find-locative-around reference)))))
+      ;; For example, (:PLAIN "See" "function" " " "FOO")
+      (loop for rest on tree
+            do (when (and (eq (third rest) name-element)
+                          (stringp (second rest))
+                          (blankp (second rest)))
+                 (try (first rest))
+                 (return)))
+      ;; For example, (:PLAIN "See" "the" "FOO" " " "function")
+      (loop for rest on tree
+            do (when (and (eq (first rest) name-element)
+                          (stringp (second rest))
+                          (blankp (second rest)))
+                 (try (third rest))
+                 (return))))))
 
 (defun find-reference-by-locative-string (locative-string possible-references
                                           &key if-dislocated)
@@ -1071,7 +1075,7 @@
       ;; leads to the same object/reference, but there is no sane
       ;; generalization of that to locative-types. Do we need
       ;; something like LOCATIVE-SUBTYPE-P?
-      (if (and if-dislocated (eq locative 'dislocated))
+      (if (and if-dislocated (member locative '(dislocated argument)))
           ;; Handle an explicit [FOO][dislocated] in markdown.
           (make-reference if-dislocated 'dislocated)
           (find locative possible-references
@@ -1224,7 +1228,8 @@
                           (or
                            ;; These have no pages, but won't result in
                            ;; link anyway. Keep them.
-                           (member (reference-locative-type ref) '(dislocated))
+                           (member (reference-locative-type ref)
+                                   '(dislocated argument))
                            ;; Intrapage links always work.
                            (eq *page* page)
                            ;; Else we need to know the URI-FRAGMENT of
@@ -1259,7 +1264,7 @@
                                    :definition ,(link-to-reference ref))))
                      ")")
                    t))
-          ((member (reference-locative-type ref-1) '(dislocated))
+          ((member (reference-locative-type ref-1) '(dislocated argument))
            `(,(code-fragment (maybe-downcase name))))
           ((typep (resolve ref-1 :errorp nil) 'section)
            `((:reference-link :label (,(section-title-or-name (resolve ref-1)))
