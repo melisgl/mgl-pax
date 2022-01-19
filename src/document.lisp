@@ -365,9 +365,6 @@
   ```"""
   (let ((*format* format)
         (*print-right-margin* (or *print-right-margin* 80))
-        (*package* (if *document-normalize-packages*
-                       (find-package :keyword)
-                       *package*))
         (default-page (translate-page-spec
                        (list :objects (alexandria:ensure-list object)
                              :output (list stream))
@@ -1681,12 +1678,13 @@
 
 
 (defvar *document-normalize-packages* t
-  "If true, symbols are printed relative to SECTION-PACKAGE of the
-  innermost containing section or with full package names if there is
-  no containing section. To eliminate ambiguity `[in package ...]`
-  messages are printed right after the section heading if necessary.
-  If false, symbols are always printed relative to the current
-  package.")
+  "Determines what *PACKAGE* and *READTABLE* are when working with
+  generating documentation. If true and documentation is generated for
+  a SECTION (including its SECTION-ENTRIES), then SECTION-PACKAGE and
+  SECTION-READTABLE of the innermost containing section is used. To
+  eliminate ambiguity `[in package ...]` messages are printed right
+  after the section heading if necessary. If false, then *PACKAGE* and
+  *READTABLE* are left at the current values.")
 
 
 ;;;; Basic DOCUMENT-OBJECT and DESCRIBE-OBJECT methods

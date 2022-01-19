@@ -1410,12 +1410,13 @@ table of contents and navigation links.
 
 - [variable] **\*DOCUMENT-NORMALIZE-PACKAGES\*** *T*
 
-    If true, symbols are printed relative to [`SECTION-PACKAGE`][87c7] of the
-    innermost containing section or with full package names if there is
-    no containing section. To eliminate ambiguity `[in package ...]`
-    messages are printed right after the section heading if necessary.
-    If false, symbols are always printed relative to the current
-    package.
+    Determines what [`*PACKAGE*`][1063] and [`*READTABLE*`][e64c] are when working with
+    generating documentation. If true and documentation is generated for
+    a `SECTION`([`0`][aee8] [`1`][2cf1]) (including its [`SECTION-ENTRIES`][1f66]), then [`SECTION-PACKAGE`][87c7] and
+    [`SECTION-READTABLE`][2c0d] of the innermost containing section is used. To
+    eliminate ambiguity `[in package ...]` messages are printed right
+    after the section heading if necessary. If false, then `*PACKAGE*` and
+    `*READTABLE*` are left at the current values.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-DOCUMENTATION-UTILITIES-20MGL-PAX-3ASECTION-29'></a>
 
@@ -2627,14 +2628,15 @@ presented.
 - [reader] **SECTION-PACKAGE** *SECTION* *(:PACKAGE)*
 
     [`*PACKAGE*`][1063] will be bound to this package when
-    generating documentation for this section.
+    generating documentation for this section if
+    [`*DOCUMENT-NORMALIZE-PACKAGES*`][353f].
 
 <a id='x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 
 - [reader] **SECTION-READTABLE** *SECTION* *(:READTABLE)*
 
     [`*READTABLE*`][e64c] will be bound to this when generating
-    documentation for this section.
+    documentation for this section if [`*DOCUMENT-NORMALIZE-PACKAGES*`][353f].
 
 <a id='x-28MGL-PAX-3ASECTION-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29'></a>
 
@@ -2687,6 +2689,7 @@ presented.
   [2748]: #x-28MGL-PAX-3A-40MGL-PAX-GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29 "Github Workflow"
   [2863]: #x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"
   [2904]: #x-28MGL-PAX-3A-2ASYNTAXES-2A-20VARIABLE-29 "(MGL-PAX:*SYNTAXES* VARIABLE)"
+  [2c0d]: #x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "(MGL-PAX:SECTION-READTABLE (MGL-PAX:READER MGL-PAX:SECTION))"
   [2cf1]: #x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:SECTION MGL-PAX:LOCATIVE)"
   [2e47]: http://www.lispworks.com/documentation/HyperSpec/Body/f_docume.htm "(DOCUMENTATION GENERIC-FUNCTION)"
   [2e7a]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29 "(MGL-PAX:UPDATE-ASDF-SYSTEM-READMES FUNCTION)"

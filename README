@@ -1240,12 +1240,13 @@ table of contents and navigation links.
 
 - [variable] *DOCUMENT-NORMALIZE-PACKAGES* T
 
-    If true, symbols are printed relative to SECTION-PACKAGE of the
-    innermost containing section or with full package names if there is
-    no containing section. To eliminate ambiguity `[in package ...]`
-    messages are printed right after the section heading if necessary.
-    If false, symbols are always printed relative to the current
-    package.
+    Determines what *PACKAGE* and *READTABLE* are when working with
+    generating documentation. If true and documentation is generated for
+    a SECTION (including its SECTION-ENTRIES), then SECTION-PACKAGE and
+    SECTION-READTABLE of the innermost containing section is used. To
+    eliminate ambiguity `[in package ...]` messages are printed right
+    after the section heading if necessary. If false, then *PACKAGE* and
+    *READTABLE* are left at the current values.
 
 ### Utilities for Generating Documentation
 
@@ -2321,12 +2322,13 @@ presented.
 - [reader] SECTION-PACKAGE SECTION (:PACKAGE)
 
     *PACKAGE* will be bound to this package when
-    generating documentation for this section.
+    generating documentation for this section if
+    *DOCUMENT-NORMALIZE-PACKAGES*.
 
 - [reader] SECTION-READTABLE SECTION (:READTABLE)
 
     *READTABLE* will be bound to this when generating
-    documentation for this section.
+    documentation for this section if *DOCUMENT-NORMALIZE-PACKAGES*.
 
 - [reader] SECTION-TITLE SECTION (:TITLE)
 

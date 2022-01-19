@@ -114,11 +114,12 @@
    (package
     :initarg :package :reader section-package
     :documentation "*PACKAGE* will be bound to this package when
-    generating documentation for this section.")
+    generating documentation for this section if
+    *DOCUMENT-NORMALIZE-PACKAGES*.")
    (readtable
     :initarg :readtable :reader section-readtable
     :documentation "*READTABLE* will be bound to this when generating
-    documentation for this section.")
+    documentation for this section if *DOCUMENT-NORMALIZE-PACKAGES*.")
    (title
     :initarg :title :reader section-title
     :documentation "A [STRING][type] or NIL. Used in generated

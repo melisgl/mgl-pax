@@ -447,36 +447,31 @@
                              format))
 
 
-(defsection @hyperspec-test ()
+(deftest test-hyperspec ()
   "Locatives work as expected (see *DOCUMENT-LINK-CODE*).
   [FIND-IF][dislocated] links to FIND-IF, [LIST][dislocated] links
   to LIST and `[LIST][type]` links to [list][type].
 
   Autolinking to T and NIL is suppressed. If desired, use
   `[T][]` (that links to [T][]) or `[T][constant]` (that links to
-  [T][constant]).")
-
-(deftest test-hyperspec ()
+  [T][constant])."
   (is
    (null
     (mismatch%
-     (let ((*document-hyperspec-root* "CLHS/"))
-       (first (document @hyperspec-test)))
-     "<a id='x-28MGL-PAX-TEST-3A-40HYPERSPEC-TEST-20MGL-PAX-3ASECTION-29'></a>
+     (let ((*document-hyperspec-root* "CLHS/")
+           (*package* (find-package :mgl-pax-test)))
+       (first (document #'test-hyperspec)))
+     "<a id='x-28MGL-PAX-TEST-3A-3ATEST-HYPERSPEC-20FUNCTION-29'></a>
 
-# @HYPERSPEC-TEST
+- [function] **TEST-HYPERSPEC** *&REST REST*
 
-## Table of Contents
-
-
-###### \\[in package MGL-PAX-TEST\\]
-Locatives work as expected (see `*DOCUMENT-LINK-CODE*`).
-`FIND-IF` links to [`FIND-IF`][badc], `LIST` links
-to `LIST`([`0`][df43] [`1`][7def]) and `[LIST][type]` links to [`list`][7def].
-
-Autolinking to `T` and `NIL` is suppressed. If desired, use
-`[T][]` (that links to `T`([`0`][b743] [`1`][cb19])) or `[T][constant]` (that links to
-[`T`][b743]).
+    Locatives work as expected (see `*DOCUMENT-LINK-CODE*`).
+    `FIND-IF` links to [`FIND-IF`][badc], `LIST` links
+    to `LIST`([`0`][df43] [`1`][7def]) and `[LIST][type]` links to [`list`][7def].
+    
+    Autolinking to `T` and `NIL` is suppressed. If desired, use
+    `[T][]` (that links to `T`([`0`][b743] [`1`][cb19])) or `[T][constant]` (that links to
+    [`T`][b743]).
 
   [7def]: CLHS/Body/t_list.htm \"(LIST TYPE)\"
   [94b1]: CLHS/Body/t_nil.htm \"(NIL TYPE)\"

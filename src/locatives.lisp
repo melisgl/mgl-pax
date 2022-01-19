@@ -837,11 +837,14 @@
 (defvar *section*)
 
 (defmethod document-object ((section section) stream)
-  (let ((same-package (eq *package* (section-package section)))
+  (let ((same-package (and (boundp '*section*)
+                           (eq *package* (section-package section))))
         (*package* (if *document-normalize-packages*
                        (section-package section)
                        *package*))
-        (*readtable* (section-readtable section))
+        (*readtable* (if *document-normalize-packages*
+                         (section-readtable section)
+                         *readtable*))
         (*section* section))
     (with-heading (stream section (section-title-or-name section)
                           :link-title-to (section-link-title-to section))
