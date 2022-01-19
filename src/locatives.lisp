@@ -45,7 +45,8 @@
   (define-glossary-term macro)
   (locative locative)
   (dislocated locative)
-  (argument locative))
+  (argument locative)
+  (clhs locative))
 
 
 ;;;; Utilities for argument handling
@@ -740,8 +741,7 @@
 
 (defun asdf-system-name-p (string)
   (find-if (lambda (reference)
-             (and (eq (locative-type (reference-locative reference))
-                      'asdf:system)
+             (and (eq (reference-locative-type reference) 'asdf:system)
                   (equalp string (reference-object reference))))
            *references*))
 
@@ -829,7 +829,7 @@
 
 (define-locative-type readtable ()
   "Refers to a named READTABLE defined with
-  NAMED-READTABLES:DEFREADTABLE, which associate a global name and a
+  NAMED-READTABLES:DEFREADTABLE, which associates a global name and a
   docstring with the readtable object. Unfortunately, source location
   information is not available.")
 
@@ -1282,3 +1282,57 @@
 (defmethod locate-object (symbol (locative-type (eql 'argument)) locative-args)
   (declare (ignore symbol locative-args))
   (locate-error))
+
+
+;;;; CLHS locative
+
+(define-locative-type clhs ()
+  """Refers to sections in the Common Lisp hyperspec. These have no
+  source location so `M-.` will not work. What works is linking. The
+  following markdown examples all produce a link to CLHS `3.4`, the
+  section 'Lambda Lists', which is in file `03_d.htm`.
+
+  ```
+  CLHS `3.4`
+  `3.4` CLHS
+  [3.4][]
+  [`3.4`][]
+  [3.4][CLHS]
+  [Lambda Lists][clhs]
+  [03_d][clhs]
+  ```
+
+  The generated links are relative to *DOCUMENT-HYPERSPEC-ROOT*.
+
+  The rules of matching are the following. If the object of the
+  reference is STRING= to the section number string (without the
+  trailing dot) or to the name of its file without the `.htm`
+  extension, then the reference refers to that section. Else, if the
+  object is a case-insensitive substring of the title of some section,
+  then the reference refers to the first such section in breadth-first
+  order. To detach the discussion from markdown syntax, let's see
+  these cases through the programmatic interface.
+
+  ```
+  (locate "3.4" 'clhs)
+  ==> #<REFERENCE "3.4" CLHS>
+  (locate "03_d" 'clhs)
+  ==> #<REFERENCE "03_d" CLHS>
+  (locate "lambda" 'clhs)
+  ==> #<REFERENCE "3.4" CLHS>
+  ```
+  """)
+
+(defmethod locate-object (object (locative-type (eql 'clhs)) locative-args)
+  (let ((hyperspec-section (find-hyperspec-section object)))
+    (if hyperspec-section
+        (make-reference (hyperspec-section-number hyperspec-section) 'clhs)
+        (locate-error))))
+
+(defmethod locate-canonical-reference (object (locative-type (eql 'clhs))
+                                       locative-args)
+  (declare (ignore locative-args))
+  (let ((hyperspec-section (find-hyperspec-section object)))
+    (if hyperspec-section
+        (make-reference (hyperspec-section-number hyperspec-section) 'clhs)
+        (locate-error))))

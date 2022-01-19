@@ -104,7 +104,10 @@
   bad, for instance LOCATIVE-ARGS is not the empty list in the package
   example. If a REFERENCE is returned then it must be canonical in the
   sense that calling CANONICAL-REFERENCE on it will return the same
-  reference. For extension only, don't call this directly."))
+  reference. For extension only, don't call this directly.")
+  (:method (object locative-type locative-args)
+    (declare (ignore object locative-args locative-args))
+    (locate-error)))
 
 (defun locate-error (&rest format-and-args)
   "Call this function to signal a LOCATE-ERROR condition from a
@@ -124,21 +127,28 @@
   LOCATE-ERROR if it is not possible to construct a REFERENCE for
   OBJECT."))
 
-(defmethod canonical-reference ((reference reference))
+(defgeneric locate-canonical-reference (object locative-type locative-args))
+
+(defmethod locate-canonical-reference (object locative-type locative-args)
   (handler-case
-      (let ((object (resolve reference)))
-        (if (typep object 'reference)
+      (let ((located (locate-object object locative-type locative-args)))
+        (if (typep located 'reference)
             ;; If the locative is (COMPILER-MACRO) for example, then
             ;; turn it into a single symbol.
-            (let ((locative (reference-locative reference)))
+            (let ((locative (reference-locative located)))
               (if (and (listp locative) (= (length locative) 1))
-                  (make-reference (reference-object reference)
+                  (make-reference (reference-object located)
                                   (first locative))
-                  reference))
-            (canonical-reference object)))
+                  located))
+            (canonical-reference located)))
     (locate-error ()
       ;; DISLOCATED and ARGUMENT end up here
-      reference)))
+      (make-reference object (cons locative-type locative-args)))))
+
+(defmethod canonical-reference ((reference reference))
+  (locate-canonical-reference (reference-object reference)
+                              (reference-locative-type reference)
+                              (reference-locative-args reference)))
 
 (defgeneric canonical-locative (locative-type locative-args))
 

@@ -745,6 +745,44 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     ```
 
 
+- [locative] CLHS
+
+    Refers to sections in the Common Lisp hyperspec. These have no
+    source location so `M-.` will not work. What works is linking. The
+    following markdown examples all produce a link to CLHS `3.4`, the
+    section 'Lambda Lists', which is in file `03_d.htm`.
+    
+    ```
+    CLHS `3.4`
+    `3.4` CLHS
+    [3.4][]
+    [`3.4`][]
+    [3.4][CLHS]
+    [Lambda Lists][clhs]
+    [03_d][clhs]
+    ```
+    
+    The generated links are relative to *DOCUMENT-HYPERSPEC-ROOT*.
+    
+    The rules of matching are the following. If the object of the
+    reference is STRING= to the section number string (without the
+    trailing dot) or to the name of its file without the `.htm`
+    extension, then the reference refers to that section. Else, if the
+    object is a case-insensitive substring of the title of some section,
+    then the reference refers to the first such section in breadth-first
+    order. To detach the discussion from markdown syntax, let's see
+    these cases through the programmatic interface.
+    
+    ```
+    (locate "3.4" 'clhs)
+    ==> #<REFERENCE "3.4" CLHS>
+    (locate "03_d" 'clhs)
+    ==> #<REFERENCE "03_d" CLHS>
+    (locate "lambda" 'clhs)
+    ==> #<REFERENCE "3.4" CLHS>
+    ```
+
+
 ## Generating Documentation
 
 - [function] DOCUMENT OBJECT &KEY STREAM PAGES (FORMAT :MARKDOWN)
@@ -982,7 +1020,13 @@ with that.
 
     When true, words that
     
-    - have at least 3 characters
+    - name an interesting symbol that
+    
+    - is EQ to the object a reference being documented, or
+    
+    - have at least 3 characters, or
+    
+    - name a symbol external to its package
     
     - have at least one ALPHA-CHAR-P character
     
@@ -1105,6 +1149,9 @@ with that.
     Autolinking to T and NIL is suppressed. If desired, use
     `[T][]` (that links to [T][]) or `[T][constant]` (that links to
     [T][constant]).
+    
+    Note that linking to section in the Hyperspec is done with the CLHS
+    locative and is not subject to the value of this variable.
 
 - [variable] *DOCUMENT-HYPERSPEC-ROOT* "http://www.lispworks.com/documentation/HyperSpec/"
 
@@ -1990,8 +2037,7 @@ for ASDF:SYSTEM:
 
 (defun asdf-system-name-p (string)
   (find-if (lambda (reference)
-             (and (eq (locative-type (reference-locative reference))
-                      'asdf:system)
+             (and (eq (reference-locative-type reference) 'asdf:system)
                   (equalp string (reference-object reference))))
            *references*))
 

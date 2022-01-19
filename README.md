@@ -545,9 +545,9 @@ supported out of the box. As all locative types, they are symbols
 and their names should make it obvious what kind of things they
 refer to. Unless otherwise noted, locatives take no arguments.
 
-When there is a corresponding CL type, a locative can be resolved to
+When there is a corresponding `CL` type, a locative can be resolved to
 a unique object as is the case in `(LOCATE 'FOO 'CLASS)` returning
-`#<CLASS FOO>`. Even if there is no such CL type, the source
+`#<CLASS FOO>`. Even if there is no such `CL` type, the source
 location and the docstring of the defining form is recorded (see
 [`LOCATE-AND-FIND-SOURCE`][e9e9], [`LOCATE-AND-DOCUMENT`][6c17] in the
 [Extension API][8ed9]), which makes navigating the sources with
@@ -863,6 +863,46 @@ location and the docstring of the defining form is recorded (see
     ```
 
 
+<a id='x-28MGL-PAX-3ACLHS-20MGL-PAX-3ALOCATIVE-29'></a>
+
+- [locative] **CLHS**
+
+    Refers to sections in the Common Lisp hyperspec. These have no
+    source location so `M-.` will not work. What works is linking. The
+    following markdown examples all produce a link to `CLHS` [`3.4`][76476], the
+    section 'Lambda Lists', which is in file `03_d.htm`.
+    
+    ```
+    CLHS `3.4`
+    `3.4` CLHS
+    [3.4][]
+    [`3.4`][]
+    [3.4][CLHS]
+    [Lambda Lists][clhs]
+    [03_d][clhs]
+    ```
+    
+    The generated links are relative to [`*DOCUMENT-HYPERSPEC-ROOT*`][b0e9].
+    
+    The rules of matching are the following. If the object of the
+    reference is [`STRING=`][cc0e] to the section number string (without the
+    trailing dot) or to the name of its file without the `.htm`
+    extension, then the reference refers to that section. Else, if the
+    object is a case-insensitive substring of the title of some section,
+    then the reference refers to the first such section in breadth-first
+    order. To detach the discussion from markdown syntax, let's see
+    these cases through the programmatic interface.
+    
+    ```
+    (locate "3.4" 'clhs)
+    ==> #<REFERENCE "3.4" CLHS>
+    (locate "03_d" 'clhs)
+    ==> #<REFERENCE "03_d" CLHS>
+    (locate "lambda" 'clhs)
+    ==> #<REFERENCE "3.4" CLHS>
+    ```
+
+
 <a id='x-28MGL-PAX-3A-40MGL-PAX-GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29'></a>
 
 ## 9 Generating Documentation
@@ -1118,7 +1158,13 @@ with that.
 
     When true, words that
     
-    - have at least 3 characters
+    - name an interesting symbol that
+    
+    - is [`EQ`][d921] to the object a reference being documented, or
+    
+    - have at least 3 characters, or
+    
+    - name a symbol external to its package
     
     - have at least one [`ALPHA-CHAR-P`][c416] character
     
@@ -1249,6 +1295,9 @@ with that.
     Autolinking to `T` and `NIL` is suppressed. If desired, use
     `[T][]` (that links to `T`([`0`][b743] [`1`][cb19])) or `[T][constant]` (that links to
     [`T`][b743]).
+    
+    Note that linking to section in the Hyperspec is done with the [`CLHS`][18ca]
+    locative and is not subject to the value of this variable.
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-HYPERSPEC-ROOT-2A-20VARIABLE-29'></a>
 
@@ -2244,8 +2293,7 @@ for [`ASDF:SYSTEM:`][90f2]
 
 (defun asdf-system-name-p (string)
   (find-if (lambda (reference)
-             (and (eq (locative-type (reference-locative reference))
-                      'asdf:system)
+             (and (eq (reference-locative-type reference) 'asdf:system)
                   (equalp string (reference-object reference))))
            *references*))
 
@@ -2701,6 +2749,7 @@ presented.
   [0785]: #x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax/full\" ASDF/SYSTEM:SYSTEM)"
   [1063]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm "(*PACKAGE* VARIABLE)"
   [16ad]: #x-28PACKAGE-20MGL-PAX-3ALOCATIVE-29 "(PACKAGE MGL-PAX:LOCATIVE)"
+  [18ca]: #x-28MGL-PAX-3ACLHS-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:CLHS MGL-PAX:LOCATIVE)"
   [1920]: #x-28MGL-PAX-3ACOLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29 "(MGL-PAX:COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION)"
   [1cc6]: #x-28MGL-PAX-3AMAKE-GITHUB-SOURCE-URI-FN-20FUNCTION-29 "(MGL-PAX:MAKE-GITHUB-SOURCE-URI-FN FUNCTION)"
   [1eb8]: #x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29 "(MGL-PAX:DOCUMENT FUNCTION)"
@@ -2757,6 +2806,7 @@ presented.
   [69ba]: #x-28MGL-PAX-3AMACRO-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:MACRO MGL-PAX:LOCATIVE)"
   [6c17]: #x-28MGL-PAX-3ALOCATE-AND-DOCUMENT-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-DOCUMENT GENERIC-FUNCTION)"
   [6e37]: #x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "(CLASS MGL-PAX:LOCATIVE)"
+  [76476]: http://www.lispworks.com/documentation/HyperSpec/Body/03_d.htm "(\"3.4\" MGL-PAX:CLHS)"
   [76b5]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE)"
   [7738]: http://www.lispworks.com/documentation/HyperSpec/Body/s_fn.htm "(FUNCTION MGL-PAX:MACRO)"
   [7a11]: #x-28MGL-PAX-3ALOCATE-AND-COLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION)"
@@ -2794,6 +2844,7 @@ presented.
   [aa52]: #x-28MGL-PAX-3A-40MGL-PAX-TUTORIAL-20MGL-PAX-3ASECTION-29 "Tutorial"
   [acc9]: #x-28MGL-PAX-3ALOCATE-OBJECT-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-OBJECT GENERIC-FUNCTION)"
   [aee8]: #x-28MGL-PAX-3ASECTION-20CLASS-29 "(MGL-PAX:SECTION CLASS)"
+  [b0e9]: #x-28MGL-PAX-3A-2ADOCUMENT-HYPERSPEC-ROOT-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-HYPERSPEC-ROOT* VARIABLE)"
   [b2be]: #x-28MGL-PAX-3ALOCATE-20FUNCTION-29 "(MGL-PAX:LOCATE FUNCTION)"
   [b417]: #x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNCTION-29 "(MGL-PAX:FIND-SOURCE GENERIC-FUNCTION)"
   [b42e]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rst.htm "(RESTART TYPE)"
@@ -2820,6 +2871,7 @@ presented.
   [d71c]: #x-28METHOD-20MGL-PAX-3ALOCATIVE-29 "(METHOD MGL-PAX:LOCATIVE)"
   [d7e0]: #x-28MGL-PAX-3A-40MGL-PAX-LINKS-20MGL-PAX-3ASECTION-29 "Links"
   [d7eb]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28STRING-20T-29-29-29 "(MGL-PAX:DOCUMENT-OBJECT (METHOD NIL (STRING T)))"
+  [d921]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq.htm "(EQ FUNCTION)"
   [df39]: #x-28DESCRIBE-OBJECT-20-28METHOD-20NIL-20-28MGL-PAX-3ASECTION-20T-29-29-29 "(DESCRIBE-OBJECT (METHOD NIL (MGL-PAX:SECTION T)))"
   [e03d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_m.htm "(FIND-METHOD GENERIC-FUNCTION)"
   [e0d7]: #x-28MGL-PAX-3ARESOLVE-20FUNCTION-29 "(MGL-PAX:RESOLVE FUNCTION)"

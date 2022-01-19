@@ -90,7 +90,13 @@
   to take from an object (REFERENCE-OBJECT)."))
 
 (defun make-reference (object locative)
-  (make-instance 'reference :object object :locative locative))
+  (make-instance 'reference :object object
+                 ;; Canonicalize it a bit for easier comparison. E.g.
+                 ;; (FUNCTION) => FUNCTION.
+                 :locative (if (and (listp locative)
+                                    (null (cdr locative)))
+                               (first locative)
+                               locative)))
 
 (defmethod print-object ((object reference) stream)
   (print-unreadable-object (object stream :type t)
@@ -106,16 +112,21 @@
 ;;; LOCATIVE-TYPE.
 (defun reference-object= (object reference)
   (let ((object-2 (reference-object reference))
-        (locative-type (locative-type (reference-locative reference))))
-    (cond ((eq locative-type 'package)
+        (locative-type (reference-locative-type reference)))
+    (cond ((member locative-type '(package clhs))
            (equal (string object) (string object-2)))
           ((eq locative-type 'asdf:system)
            (equalp (string object) (string object-2)))
           (t
            (eq object object-2)))))
 
+(declaim (inline reference-locative-type))
 (defun reference-locative-type (reference)
   (locative-type (reference-locative reference)))
+
+(declaim (inline reference-locative-args))
+(defun reference-locative-args (reference)
+  (locative-args (reference-locative reference)))
 
 (defclass section ()
   ((name

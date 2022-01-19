@@ -151,20 +151,19 @@
   (when *document-link-to-hyperspec*
     (loop for (object locative url) in (hyperspec-external-references)
           do (let ((reference (make-reference object locative)))
-               (unless (find-link reference)
-                 (push reference *references*)
-                 (push (make-link
-                        :reference reference
-                        :page url
-                        :id (hash-link
-                             ;; KLUDGE: ABCL fails the
-                             ;; TEST-HYPERSPEC test with a low-level
-                             ;; error without :CANONICALP T.
-                             (reference-to-anchor reference
-                                                  :canonicalp t)
-                             #'find-link-by-id)
-                        :page-to-n-uses (make-hash-table))
-                       *links*))))))
+               (push reference *references*)
+               (push (make-link
+                      :reference reference
+                      :page url
+                      :id (hash-link
+                           ;; KLUDGE: ABCL fails the TEST-HYPERSPEC
+                           ;; test with a low-level error without
+                           ;; :CANONICALP T.
+                           (reference-to-anchor reference
+                                                :canonicalp t)
+                           #'find-link-by-id)
+                      :page-to-n-uses (make-hash-table))
+                     *links*)))))
 
 (defvar *pages-created*)
 
@@ -575,7 +574,10 @@
 (defvar *document-uppercase-is-code* t
   """When true, words that
 
-  - have at least 3 characters
+  - name an interesting symbol that
+    - is EQ to the object a reference being documented, or
+    - have at least 3 characters, or
+    - name a symbol external to its package
   - have at least one ALPHA-CHAR-P character
   - have no lowercase characters
   - name an interned symbol
@@ -608,11 +610,11 @@
 (defun translate-uppercase-name (parent tree name known-references)
   (declare (ignore parent))
   (when (and (no-lowercase-chars-p name)
-             (find-if #'alpha-char-p name))
+             (some #'alpha-char-p name))
     (flet ((foo (name)
-             (multiple-value-bind (refs n-chars-read)
-                 (references-for-similar-names name known-references)
-               (when refs
+             (let ((n-chars-read (codify-uppercase-name-p name
+                                                          known-references)))
+               (when n-chars-read
                  (values `(,(code-fragment
                              (maybe-downcase (subseq name 0 n-chars-read))))
                          t n-chars-read)))))
@@ -635,32 +637,30 @@
               (t
                (foo name)))))))
 
-;;; Return the references from REFS which are for the symbol to which
-;;; NAME parses and the number of characters read. Some trimming is
-;;; attempted to handle separators and plurals. Packages and ASDF
-;;; systems are treated somewhat differently because their
-;;; REFERENCE-OBJECTs may be strings.
-;;;
-;;; If a symbol (whose name is longer than 2 characters) is read and
-;;; no references to it are found, then it gets a DISLOCATED reference
-;;; to ensure that it gets codified. FIXME: Should this logic be in
-;;; FORMAT-REFERENCES instead?
-(defun references-for-similar-names (name refs)
-  (multiple-value-bind (object n-chars-read)
-      (find-definitions-find-symbol-or-package name)
+;;; Return the references from REFS which are for the object to which
+;;; NAME parses and the number of characters read. Handle rules laid
+;;; out in *DOCUMENT-UPPERCASE-IS-CODE* not already handled in the
+;;; caller TRANSLATE-UPPERCASE-NAME (FIXME: there is another caller).
+;;; Some trimming is attempted to handle separators and plurals.
+;;; Packages and ASDF systems are treated somewhat differently because
+;;; their REFERENCE-OBJECTs may be strings.
+(defun codify-uppercase-name-p (name refs)
+  (multiple-value-bind (object n-chars-read) (find-candidate-object name)
     (when n-chars-read
-      (values (references-for-object object refs n-chars-read) n-chars-read))))
-
-;;; Return the references from REFS which are for OBJECT
-(defun references-for-object (object refs n-chars-read)
-  (or (remove-if-not (lambda (ref)
-                       (reference-object= object ref))
-                     refs)
-      (if (or (< 2 n-chars-read)
-              (eq object t))
-          (list (make-reference object 'dislocated))
-          ;; Don't codify A, I and similar.
-          ())))
+      (flet ((normal-ref-to-object-p (ref)
+               (and
+                ;; Matching a CLHS section number (e.g. "A.1" and
+                ;; especially "A") must not cause codification of
+                ;; NAME.
+                (not (eq (reference-locative-type ref) 'clhs))
+                (reference-object= object ref))))
+        (when (or (some #'normal-ref-to-object-p refs)
+                  (and (symbolp object)
+                       (or (<= 3 n-chars-read)
+                           (external-symbol-p object)))
+                  (find-package object)
+                  (asdf-system-name-p object))
+          n-chars-read)))))
 
 ;;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings and :EMPH
 ;;; (to recognize *VAR*). Also, perform consistency checking of
@@ -686,8 +686,8 @@
            (values (map-names string
                               (lambda (string start end)
                                 (let ((name (subseq string start end)))
-                                  (translate-uppercase-name parent string name
-                                                            known-references))))
+                                  (translate-uppercase-name
+                                   parent string name known-references))))
                    ;; don't recurse, do slice
                    nil t)))
         ((eq :emph (first tree))
@@ -728,37 +728,34 @@
       (values tree t nil)))
 
 
-(defvar *find-definitions-right-trim* ",:.>")
-(defparameter *find-definitions-right-trim-2* ",:.>sS")
+(defvar *object-name-right-trim* ",:.>")
+(defvar *object-name-right-trim-2* ",:.>sS")
 
-;;; Lifted from SWANK, and tweaked to return the number of characters
-;;; read.
-(defun find-definitions-find-symbol-or-package (name)
+(defun find-candidate-object (name &key locative)
   (flet ((do-find (name n)
-           ;; FIXME: DO-FIND should be a generic function extendable
-           ;; by LOCATIVE-TYPE.
-           (multiple-value-bind (symbol found name)
-               (with-swank ()
-                 (swank::with-buffer-syntax (*package*)
-                   (swank::parse-symbol name)))
-             (cond (found
-                    (return-from find-definitions-find-symbol-or-package
-                      (values symbol n)))
-                   ;; Packages are not named by symbols, so
-                   ;; non-interned symbols can refer to packages.
-                   ((find-package name)
-                    (return-from find-definitions-find-symbol-or-package
-                      (values name n)))
-                   ((asdf-system-name-p name)
-                    (return-from find-definitions-find-symbol-or-package
-                      (values name n)))))))
+           (when (plusp n)
+             ;; FIXME: DO-FIND should be a generic function extendable
+             ;; by LOCATIVE-TYPE.
+             (multiple-value-bind (symbol found)
+                 (with-swank ()
+                   (swank::with-buffer-syntax (*package*)
+                     (swank::parse-symbol name)))
+               (cond (found
+                      (return-from find-candidate-object
+                        (values symbol n)))
+                     ((or (find-package name)
+                          (asdf-system-name-p name)
+                          (hyperspec-section-name-p name)
+                          (and (eq (locative-type locative) 'clhs)
+                               (find-hyperspec-section name)))
+                      (return-from find-candidate-object
+                        (values name n))))))))
     (do-find name (length name))
-    (let* ((right-trimmed
-             (swank::string-right-trim *find-definitions-right-trim* name))
+    (let* ((right-trimmed (string-right-trim *object-name-right-trim* name))
            (right-trimmed-length (length right-trimmed)))
       (do-find right-trimmed right-trimmed-length))
-    (let* ((right-trimmed-2
-             (swank::string-right-trim *find-definitions-right-trim-2* name))
+    (let* ((right-trimmed-2 (string-right-trim *object-name-right-trim-2*
+                                               name))
            (right-trimmed-2-length (length right-trimmed-2)))
       (do-find right-trimmed-2 right-trimmed-2-length))))
 
@@ -785,7 +782,7 @@
   (notany (lambda (char)
             (char/= char (char-upcase char)))
           ;; Allows plurals as in "FRAMEs" and "FRAMEs."
-          (swank::string-right-trim *find-definitions-right-trim-2* string)))
+          (string-right-trim *object-name-right-trim-2* string)))
 
 
 (defsection @mgl-pax-linking-to-code (:title "Linking to Code")
@@ -876,7 +873,10 @@
 
   Autolinking to T and NIL is suppressed. If desired, use
   `[T][]` (that links to [T][]) or `[T][constant]` (that links to
-  [T][constant]).")
+  [T][constant]).
+
+  Note that linking to section in the Hyperspec is done with the CLHS
+  locative and is not subject to the value of this variable.")
 
 (defvar *document-hyperspec-root*
   "http://www.lispworks.com/documentation/HyperSpec/"
@@ -884,13 +884,21 @@
   value of is the canonical location.")
 
 (defun hyperspec-external-references ()
-  (mapcar (lambda (entry)
-            (destructuring-bind (object locative filename) entry
-              (list object (if (eq locative 'operator)
-                               'macro
-                               locative)
-                    (hyperspec-link filename))))
-          *hyperpsec-entries*))
+  (append
+   ;; A list of elements like (FIND-IF FUNCTION "F_FIND_").
+   (mapcar (lambda (entry)
+             (destructuring-bind (object locative filename) entry
+               (list object (if (eq locative 'operator)
+                                'macro
+                                locative)
+                     (hyperspec-link filename))))
+           *hyperpsec-entries*)
+   ;; CLHS section numbers. A list of elements like ("3.4" CLHS "03_d").
+   (mapcar (lambda (entry)
+             (destructuring-bind (filename section-number title) entry
+               (declare (ignore title))
+               (list section-number 'clhs (hyperspec-link filename))))
+           *hyperspec-sections*)))
 
 (defun hyperspec-link (name)
   ;; FIXME: This does not support anchors as in "26_glo_n#nil", but it
@@ -915,8 +923,8 @@
 ;;;   any KNOWN-REFERENCES to "something" (which may name a symbol or
 ;;;   a package) and tanslates it to, for example, (:REFERENCE-LINK
 ;;;   :LABEL ((:CODE "SOMETHING")) :DEFINITION "function") if there is
-;;;   a single function reference to it. See FORMAT-REFERENCES-TO-NAME
-;;;   and format-references for all the cases.
+;;;   a single function reference to it. See
+;;;   MAKE-REFERENCE-LINKS-TO-NAME.
 ;;;
 ;;; - handles :REFERENCE-LINK nodes:
 ;;;
@@ -933,13 +941,13 @@
           (= 2 (length tree))
           (stringp (second tree)))
      (let ((name (second tree)))
-       (multiple-value-bind (formatted-refs refs)
-           (format-references-to-name parent tree name known-references)
-         (let ((autolinked-key (cons name formatted-refs))
+       (multiple-value-bind (reference-links refs)
+           (make-reference-links-to-name parent tree name known-references)
+         (let ((autolinked-key (cons name reference-links))
                (supressedp (and refs
-                                (let ((symbol (reference-object (first refs))))
-                                  (member symbol '(t nil))))))
-           (cond ((and formatted-refs
+                                (let ((object (reference-object (first refs))))
+                                  (member object '(t nil))))))
+           (cond ((and reference-links
                        (not supressedp)
                        (or (not (gethash autolinked-key autolinked))
                            ;; Replace references to sections and
@@ -949,7 +957,7 @@
                                 (typep (resolve (first refs) :errorp nil)
                                        '(or section glossary-term)))))
                   (setf (gethash autolinked-key autolinked) t)
-                  (values formatted-refs nil t))
+                  (values reference-links nil t))
                  (t
                   tree))))))
     ;; [section][type], [`section`][type], [*var*][variable], [section][]
@@ -957,71 +965,82 @@
      ;; For example, the tree for [`section`][type] is
      ;; (:REFERENCE-LINK :LABEL ((:CODE "SECTION")) :DEFINITION "type")
      (destructuring-bind (&key label definition tail) (rest tree)
-       (let ((name (extract-name-from-reference-link-label label)))
-         (multiple-value-bind (symbol n-chars-read)
+       (let ((name (extract-name-from-reference-link-label label))
+             (locative (when definition
+                         (read-locative-from-string definition))))
+         (multiple-value-bind (object n-chars-read)
              (if name
-                 (find-definitions-find-symbol-or-package name)
+                 (find-candidate-object name :locative locative)
                  nil)
            (if (null n-chars-read)
                tree
-               (let* ((references (remove symbol known-references
-                                          :test-not #'reference-object=))
-                      (references
-                        (if (and (zerop (length definition))
-                                 (or (null tail)
-                                     (equal tail "[]")))
-                            (filter-references-for-unspecified-locative
-                             references)
-                            (alexandria:ensure-list
-                             (find-reference-by-locative-string
-                              definition
-                              (filter-references-for-specified-locative
-                               references)
-                              :if-dislocated symbol)))))
+               (let ((references
+                       (if (and (zerop (length definition))
+                                (or (null tail)
+                                    (equal tail "[]")))
+                           (filter-references-for-unspecified-locative
+                            object known-references)
+                           (filter-references-for-specified-locative
+                            object locative known-references))))
                  (if references
-                     (values (format-references name references) nil t)
+                     (values (make-reference-links name references) nil t)
                      tree)))))))
     (t
      tree)))
 
-(defun extract-name-from-reference-link-label (label)
-  (let ((e (first label)))
-    (cond ((stringp e)
-           ;; ("S") -> "S"
-           e)
-          ((and (eq :emph (first e))
-                (= 2 (length e))
-                (stringp (second e)))
-           ;; (:EMPH "S") -> "*S*"
-           (format nil "*~A*" (second e)))
-          ((and (eq :code (first e))
-                (= 2 (length e))
-                (stringp (second e)))
-           ;; (:CODE "S") -> "S"
-           (second e)))))
+(defun extract-name-from-reference-link-label (parse-tree)
+  (labels
+      ((recurse (e)
+         (cond ((stringp e)
+                ;; "S" -> "S"
+                e)
+               ((and (listp e)
+                     (or (stringp (first e))
+                         (listp (first e))))
+                ;; ("mgl-pax-test:" (:EMPH "test-variable")) =>
+                ;; "mgl-pax-test:*test-variable*"
+                (apply #'concatenate 'string (mapcar #'recurse e)))
+               ;; (:EMPH "S") -> "*S*"
+               ((and (listp e) (eq :emph (first e)))
+                (format nil "*~A*" (recurse (rest e))))
+               ;; (:CODE "S") -> "S"
+               ((and (listp e)
+                     (eq :code (first e))
+                     (stringp (second e)))
+                (recurse (rest e)))
+               (t
+                (return-from extract-name-from-reference-link-label
+                  nil)))))
+    (recurse parse-tree)))
 
 ;;; Translate NAME (a string) that's part of TREE (e.g. it's "xxx"
 ;;; from (:CODE "xxx") or from "xxx,yyy"), or it's constructed from
 ;;; TREE (e.g. it's "*SYM*" from (:EMPH "SYM")).
-(defun format-references-to-name (parent tree name known-references)
+(defun make-reference-links-to-name (parent tree name known-references)
   (multiple-value-bind (refs n-chars-read)
-      (references-for-similar-names name known-references)
+      (references-to-a-similar-name name known-references)
     (when refs
-      (flet ((formatted-refs-and-refs (refs)
-               (let ((refs (filter-references-for-specified-locative refs)))
-                 (values (format-references (maybe-downcase
-                                             (subseq name 0 n-chars-read))
-                                            refs)
-                         refs))))
-        ;; If necessary, try to find a locative before or after NAME
-        ;; to disambiguate and also to handle the `PRINT argument`
-        ;; case.
-        (when refs
-          (let ((reference (find-locative-around parent tree refs)))
-            (when reference
-              (return-from format-references-to-name
-                (formatted-refs-and-refs (list reference))))))
-        (formatted-refs-and-refs (filter-references-for-object refs))))))
+      ;; If necessary, try to find a locative before or after NAME to
+      ;; disambiguate and also to handle the `PRINT argument` case.
+      (let* ((ref (find-locative-around parent tree refs))
+             (refs (if ref
+                       (filter-references-for-specified-locative
+                        (reference-object ref) (reference-locative ref)
+                        refs)
+                       (filter-references-for-object refs))))
+        (values (make-reference-links (maybe-downcase
+                                       (subseq name 0 n-chars-read))
+                                      refs)
+                refs)))))
+
+(defun references-to-a-similar-name (name refs)
+  (multiple-value-bind (object n-chars-read) (find-candidate-object name)
+    (when n-chars-read
+      (values (or (remove-if-not (lambda (ref)
+                                   (reference-object= object ref))
+                                 refs)
+                  (list (make-reference object 'dislocated)))
+              n-chars-read))))
 
 ;;; NAME-ELEMENT is a child of TREE. It is the name of the symbol or
 ;;; it contains the name. Find a locative before or after NAME-ELEMENT
@@ -1062,29 +1081,27 @@
                  (try (third rest))
                  (return))))))
 
-(defun find-reference-by-locative-string (locative-string possible-references
-                                          &key if-dislocated)
+(defun find-reference-by-locative-string (locative-string refs)
   (let ((locative (read-locative-from-string locative-string)))
     (when locative
-      ;; This won't find [SECTION][TYPE] because SECTION is a class.
-      ;;
-      ;; Reference lookup could look for a different locative which
-      ;; leads to the same object/reference, but there is no sane
-      ;; generalization of that to locative-types. Do we need
-      ;; something like LOCATIVE-SUBTYPE-P?
-      (if (and if-dislocated (member locative '(dislocated argument)))
-          ;; Handle an explicit [FOO][dislocated] in markdown.
-          (make-reference if-dislocated 'dislocated)
-          (find locative possible-references
-                :test #'equivalent-locative-p)))))
+      (find-reference-by-locative locative refs))))
+
+(defun find-reference-by-locative (locative refs)
+  ;; This won't find [SECTION][TYPE] because SECTION is a class.
+  ;;
+  ;; Reference lookup could look for a different locative which leads
+  ;; to the same object/reference, but there is no sane generalization
+  ;; of that to locative-types. Do we need something like
+  ;; LOCATIVE-SUBTYPE-P?
+  (find locative refs :test #'equivalent-locative-p))
 
 (defun equivalent-locative-p (locative reference)
   (or (locative-equal locative (reference-locative reference))
       (let ((reference
               (make-reference (reference-object reference)
                               (canonical-locative
-                               (locative-type (reference-locative reference))
-                               (locative-args (reference-locative reference)))))
+                               (reference-locative-type reference)
+                               (reference-locative-args reference))))
             (alternative
               (make-reference (reference-object reference)
                               (canonical-locative
@@ -1162,25 +1179,32 @@
       (unless (find object *local-references* :test #'reference-object=)
         (resolve-generic-function-and-methods
          (filter-asdf-system-references
-          (filter-references-by-format refs)))))))
+          (remove-clhs-references
+           (linkable-references refs))))))))
 
 ;;; A reference link like [foo][] will link to all references
-;;; involving FOO (given as REFS) which are not on
-;;; *LOCAL-REFERENCES*.
-(defun filter-references-for-unspecified-locative (refs)
-  (let ((refs (filter-asdf-system-references
-               (filter-references-by-format
-                (set-difference refs *local-references*
-                                ;; FIXME: Should compare canonical
-                                ;; references?
-                                :test #'reference=)))))
-    (resolve-generic-function-and-methods refs)))
+;;; involving FOO (given as REFS) which are not on *LOCAL-REFERENCES*.
+(defun filter-references-for-unspecified-locative (object refs)
+  (resolve-generic-function-and-methods
+   (filter-asdf-system-references
+    (filter-clhs-references
+     (linkable-references
+      (set-difference (remove object refs :test-not #'reference-object=)
+                      *local-references*
+                      ;; FIXME: Should compare canonical references?
+                      :test #'reference=))))))
 
 ;;; A reference link like [foo][function] or text fragment like
 ;;; "function FOO" will link to the function FOO irrespective of
 ;;; *LOCAL-REFERENCES*.
-(defun filter-references-for-specified-locative (refs)
-  (filter-references-by-format refs))
+(defun filter-references-for-specified-locative (object locative refs)
+  (if (member (locative-type locative) '(dislocated argument))
+      ;; Handle an explicit [FOO][dislocated] in markdown.
+      (list (make-reference object 'dislocated))
+      (let ((ref (find (canonical-reference (make-reference object locative))
+                       refs :test #'reference=)))
+        (when (and ref (linkable-ref-p ref))
+          (list ref)))))
 
 ;;; It's rarely useful to link to ASDF systems in an ambiguous
 ;;; situation, so don't.
@@ -1188,6 +1212,14 @@
   (if (< 1 (length refs))
       (remove 'asdf:system refs :key #'reference-locative-type)
       refs))
+
+(defun filter-clhs-references (refs)
+  (if (< 1 (length refs))
+      (remove-clhs-references refs)
+      refs))
+
+(defun remove-clhs-references (refs)
+  (remove 'clhs refs :key #'reference-locative-type))
 
 (defun resolve-generic-function-and-methods (refs)
   (flet ((non-method-refs ()
@@ -1204,35 +1236,33 @@
       (t
        refs))))
 
-(defun filter-references-by-format (refs)
+(defun linkable-references (refs)
+  (remove-if-not #'linkable-ref-p refs))
+
+(defun linkable-ref-p (ref)
   (declare (special *document-link-sections*))
-  (remove-if-not (lambda (ref)
-                   (and (or (and *document-link-sections*
-                                 (typep (resolve ref :errorp nil)
-                                        'section))
-                            *document-link-code*)
-                        (let ((page (reference-page ref)))
-                          (or
-                           ;; These have no pages, but won't result in
-                           ;; link anyway. Keep them.
-                           (member (reference-locative-type ref)
-                                   '(dislocated argument))
-                           ;; Intrapage links always work.
-                           (eq *page* page)
-                           ;; Else we need to know the URI-FRAGMENT of
-                           ;; both pages. See
-                           ;; RELATIVE-PAGE-URI-FRAGMENT. Or PAGE may
-                           ;; also be a string denoted an absolute
-                           ;; URL.
-                           (or (stringp page)
-                               (and (page-uri-fragment *page*)
-                                    (page-uri-fragment page)))))))
-                 refs))
+  (and (or (and *document-link-sections*
+                ;; FIXME: test for REFERENCE-LOCATIVE-TYPE?
+                (typep (resolve ref :errorp nil) 'section))
+           *document-link-code*)
+       (let ((page (reference-page ref)))
+         (or
+          ;; These have no pages, but won't result in link anyway.
+          ;; Keep them.
+          (member (reference-locative-type ref) '(dislocated argument))
+          ;; Intrapage links always work.
+          (eq *page* page)
+          ;; Else we need to know the URI-FRAGMENT of both pages. See
+          ;; RELATIVE-PAGE-URI-FRAGMENT. Or PAGE may also be a string
+          ;; denoted an absolute URL.
+          (or (stringp page)
+              (and (page-uri-fragment *page*)
+                   (page-uri-fragment page)))))))
 
 ;;; For NAME (a STRING) and some references to it (REFS), return a
 ;;; markdown parse tree fragment to be spliced into a markdown parse
 ;;; tree with NAME formatted as :CODE with :REFERENCE-LINKs.
-(defun format-references (name refs)
+(defun make-reference-links (name refs)
   (let ((ref-1 (first refs)))
     (cond ((endp refs)
            ;; all references were filtered out

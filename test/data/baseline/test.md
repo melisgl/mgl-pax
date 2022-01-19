@@ -185,7 +185,7 @@ type-of [`BAR`][cece]
 
 - [type] **BAR** *X &REST R*
 
-    `BAR` has args X and R.
+    `BAR` has args `X` and `R`.
 
 <a id='x-28MGL-PAX-TEST-3A-3ABAR-20MGL-PAX-3ACONSTANT-29'></a>
 

@@ -489,6 +489,57 @@
 "))))
 
 
+(defsection @clhs-test ()
+  "A.1"
+  "`A.1`"
+  "CLHS A.1"
+  "CLHS 3.4"
+  "CLHS `3.4`"
+  "`3.4` CLHS"
+  "[3.4][]"
+  "[`3.4`][]"
+  "[3.4][CLHS]"
+  "[Lambda Lists][clhs]"
+  "[03_d][clhs]")
+
+(deftest test-clhs ()
+  (let ((*document-hyperspec-root* "CLHS/")
+        (*package* (find-package :mgl-pax-test)))
+    (first (document @clhs-test)))
+  "<a id='x-28MGL-PAX-TEST-3A-40CLHS-TEST-20MGL-PAX-3ASECTION-29'></a>
+
+# @CLHS-TEST
+
+## Table of Contents
+
+
+###### \\[in package MGL-PAX-TEST\\]
+A.1
+
+`A.1`
+
+`CLHS` A.1
+
+`CLHS` 3.4
+
+`CLHS` [`3.4`][76476]
+
+[`3.4`][76476] `CLHS`
+
+[`3.4`][76476]
+
+[`3.4`][76476]
+
+[`3.4`][76476]
+
+[`Lambda Lists`][76476]
+
+[`03_d`][76476]
+
+  [76476]: CLHS/Body/03_d.htm \"(\\\"3.4\\\" MGL-PAX:CLHS)\"
+")
+
+
 (defsection @argument-test ()
   "[PRINT][argument]
 
@@ -657,6 +708,7 @@
   (test-document :markdown)
   (test-document :html)
   (test-hyperspec)
+  (test-clhs)
   (test-argument)
   (test-declaration)
   (test-readtable)

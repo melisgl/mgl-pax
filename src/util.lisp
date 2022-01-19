@@ -1,5 +1,9 @@
 (in-package :mgl-pax)
 
+(defun external-symbol-p (symbol)
+  (eq (nth-value 1 (find-symbol (symbol-name symbol) (symbol-package symbol)))
+      :external))
+
 (defun symbol-global-value (symbol)
   #+sbcl
   (ignore-errors (sb-ext:symbol-global-value symbol))
