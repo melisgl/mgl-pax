@@ -23,5 +23,3 @@ What about debugger commands?
 * MAYBE transcribe: special comment syntax for the 'narrative'
 to produce something like an ipython notebook.
 * MAYBE reader macro locative
-* local function locative
-* local macro locative (symbol macro[let]?)

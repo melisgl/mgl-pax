@@ -288,7 +288,9 @@
   (declare (ignore locative-args))
   (when (macro-function symbol)
     (locate-error "~S is a macro, not a function." symbol))
-  (let ((function (symbol-function* symbol)))
+  (let ((function (ignore-errors (symbol-function* symbol))))
+    (unless function
+      (locate-error "~S does not denote function." symbol))
     (when (typep function 'generic-function)
       (locate-error "~S is a generic function, not a plain function." symbol))
     function))

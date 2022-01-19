@@ -188,8 +188,8 @@
     (cadr function "f_car_c")
     (call-arguments-limit constant "v_call_a")
     (call-method macro "m_call_m")
-    ;; FIXME: it is a local function
-    ;; (call-next-method function "f_call_n")
+    ;; This is a local function.
+    (call-next-method function "f_call_n")
     (car function "f_car_c")
     (case macro "m_case_")
     (catch operator "s_catch")
@@ -641,8 +641,8 @@
     (namestring function "f_namest")
     (nbutlast function "f_butlas")
     (nconc function "f_nconc")
-    ;; FIXME: local function
-    ;; (next-method-p function "f_next_m")
+    ;; This is a local function.
+    (next-method-p function "f_next_m")
     (nil constant "v_nil")
     (nil type "t_nil")
     ;;(nil glossary-entry "26_glo_n#nil")
@@ -1002,7 +1002,7 @@
     (values function "f_values")
     (values type "t_values")
     (values-list function "f_vals_l")
-    ;; (variable function "f_docume")
+    ;; (variable symbol "f_docume")
     (vector function "f_vector")
     (vector type "t_vector")
     ;;(vector glossary-entry "26_glo_v#vector")
