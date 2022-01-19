@@ -342,10 +342,11 @@
 ;;;; Generate the READMEs and HTML docs.
 
 #+nil
-(progn
-  (asdf:load-system :mgl-pax/full)
-  (update-asdf-system-readmes (pax-sections) :mgl-pax)
-  (update-asdf-system-html-docs (pax-sections) :mgl-pax :pages (pax-pages)))
+(time
+ (progn
+   (asdf:load-system :mgl-pax/full)
+   (update-asdf-system-readmes (pax-sections) :mgl-pax)
+   (update-asdf-system-html-docs (pax-sections) :mgl-pax :pages (pax-pages))))
 
 
 ;;; Load systems that use PAX and generate PAX World in
@@ -370,4 +371,4 @@
   (update-pax-world))
 
 #+nil
-(update-pax-world*)
+(time (update-pax-world*))

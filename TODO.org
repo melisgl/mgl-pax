@@ -22,3 +22,5 @@ What about debugger commands?
 * MAYBE transcribe: add inline commands that can change prefixes and such
 * MAYBE transcribe: special comment syntax for the 'narrative'
 to produce something like an ipython notebook.
+* add hyperspec sections
+* add hyperspec issues

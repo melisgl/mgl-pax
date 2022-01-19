@@ -689,7 +689,10 @@
    (alexandria:rcurry #'translate-to-code known-references)
    parse-tree))
 
-;;; This is called with with a list TREE whose CAR is :EMPH or
+;;; This is the first of the translator functions, which are those
+;;; passed to MAP-MARKDOWN-PARSE-TREE.
+;;;
+;;; It is called with with a list TREE whose CAR is :EMPH or
 ;;; 3BMD-CODE-BLOCKS::CODE-BLOCK or with TREE being a string (as per
 ;;; the MAP-MARKDOWN-PARSE-TREE above).
 (defun translate-to-code (parent tree known-references)
@@ -916,8 +919,7 @@
      (alexandria:rcurry #'translate-to-links known-references autolinked)
      parse-tree)))
 
-;;; This is the first of the translator functions, which are those
-;;; passed to MAP-MARKDOWN-PARSE-TREE. This particular translator
+;;; This particular translator
 ;;;
 ;;; - handles (:CODE "SOMETHING"), the parse of `SOMETHING`: looks for
 ;;;   any KNOWN-REFERENCES to "something" (which may name a symbol or
