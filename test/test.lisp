@@ -243,6 +243,9 @@
   (declare (ignore env))
   (values :declare decl-spec))
 
+(named-readtables:defreadtable xxx-rt
+  "ddd")
+
 (defparameter *navigation-test-cases*
   '((foo function (defun foo))
     (foo type (defclass foo))
@@ -270,12 +273,15 @@
     (mgl-pax asdf:system ())
     (test-gf generic-function (defgeneric test-gf))
     (test-gf (method () (number)) (defmethod test-gf))
-    (test-declaration declaration (define-declaration test-declaration))))
+    (test-declaration declaration (define-declaration test-declaration))
+    (xxx-rt readtable (defreadtable xxx-rt))))
 
 (defun working-locative-p (locative)
   (declare (ignorable locative))
   (cond ((eq locative 'declaration)
          (alexandria:featurep :sbcl))
+        ((eq locative 'readtable)
+         nil)
         (t
          ;; AllegroCL doesn't store source location for DEFPACKAGE and
          ;; is off by one form for DEFGENERIC.
@@ -533,6 +539,29 @@
 "))))
 
 
+(deftest test-readtable ()
+  "[xxx-rt][readtable]"
+  (is
+   (null
+    (mismatch%
+     (let ((*package* (find-package :mgl-pax-test)))
+       (first (document (list #'test-readtable
+                              (named-readtables:find-readtable 'xxx-rt)))))
+     "<a id='x-28MGL-PAX-TEST-3A-3ATEST-READTABLE-20FUNCTION-29'></a>
+
+- [function] **TEST-READTABLE** *&REST REST*
+
+    [`xxx-rt`][9ac2]
+<a id='x-28MGL-PAX-TEST-3A-3AXXX-RT-20READTABLE-29'></a>
+
+- [readtable] **XXX-RT**
+
+    ddd
+
+  [9ac2]: #x-28MGL-PAX-TEST-3A-3AXXX-RT-20READTABLE-29 \"(MGL-PAX-TEST::XXX-RT READTABLE)\"
+"))))
+
+
 (deftest test-all ()
   (test-transcribe)
   (test-navigation)
@@ -543,7 +572,8 @@
   (test-document :html)
   (test-hyperspec)
   (test-argument)
-  (test-declaration))
+  (test-declaration)
+  (test-readtable))
 
 (defun test (&key (debug nil) (print 'unexpected) (describe 'unexpected))
   ;; Bind *PACKAGE* so that names of tests printed have package names,

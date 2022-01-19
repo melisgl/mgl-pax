@@ -120,7 +120,9 @@
                                     nil)))
 
 (defgeneric canonical-reference (object)
-  (:documentation "Return a REFERENCE that resolves to OBJECT."))
+  (:documentation "Return a REFERENCE that resolves to OBJECT. Signals
+  LOCATE-ERROR if it is not possible to construct a REFERENCE for
+  OBJECT."))
 
 (defmethod canonical-reference ((reference reference))
   (handler-case

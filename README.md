@@ -706,6 +706,34 @@ location and the docstring of the defining form is recorded (see
 
 - [locative] **PACKAGE**
 
+<a id='x-28READTABLE-20MGL-PAX-3ALOCATIVE-29'></a>
+
+- [locative] **READTABLE**
+
+    Refers to a named `READTABLE` defined with
+    `NAMED-READTABLES:DEFREADTABLE`, which associate a global name and a
+    docstring with the readtable object.
+
+<a id='x-28DECLARATION-20MGL-PAX-3ALOCATIVE-29'></a>
+
+- [locative] **DECLARATION**
+
+    Refers to a declaration, used in [`DECLARE`][b58a], [`DECLAIM`][33dd] and [`PROCLAIM`][89be].
+    For example, `[DEBUG][declaration]` refers to the standard [`DEBUG`][4944]
+    declaration and links to the hyperspec if
+    [`*DOCUMENT-LINK-TO-HYPERSPEC*`][c1ca] is true.
+    
+    User code may also define new declarations with CLTL2 functionality,
+    but there is no way to provide a docstring.
+    
+    ```
+    (cl-environments:define-declaration my-decl (&rest things)
+      (values :declare (cons 'foo things)))
+    ```
+    
+    Also, `M-.` (see [Navigating Sources in Emacs][3fdc]) on declarations
+    currently only works on SBCL.
+
 <a id='x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29'></a>
 
 - [locative] **SECTION**
@@ -833,26 +861,6 @@ location and the docstring of the defining form is recorded (see
     "See the FORMAT argument of DOCUMENT."
     ```
 
-
-<a id='x-28DECLARATION-20MGL-PAX-3ALOCATIVE-29'></a>
-
-- [locative] **DECLARATION**
-
-    Refers to a declaration, used in [`DECLARE`][b58a], [`DECLAIM`][33dd] and [`PROCLAIM`][89be].
-    For example, `[DEBUG][declaration]` refers to the standard [`DEBUG`][4944]
-    declaration and links to the hyperspec if
-    [`*DOCUMENT-LINK-TO-HYPERSPEC*`][c1ca] is true.
-    
-    User code may also define new declarations with CLTL2 functionality,
-    but there is no way to provide a docstring.
-    
-    ```
-    (cl-environments:define-declaration my-decl (&rest things)
-      (values :declare (cons 'foo things)))
-    ```
-    
-    Also, `M-.` (see [Navigating Sources in Emacs][3fdc]) on declarations
-    currently only works on SBCL.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29'></a>
 
@@ -2376,7 +2384,9 @@ for [`ASDF:SYSTEM:`][90f2]
 
 - [generic-function] **CANONICAL-REFERENCE** *OBJECT*
 
-    Return a [`REFERENCE`][cc37] that resolves to `OBJECT`.
+    Return a [`REFERENCE`][cc37] that resolves to `OBJECT`. Signals
+    `LOCATE-ERROR`([`0`][2285] [`1`][f3b7]) if it is not possible to construct a `REFERENCE` for
+    `OBJECT`.
 
 <a id='x-28MGL-PAX-3ACOLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29'></a>
 
