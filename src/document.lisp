@@ -553,11 +553,20 @@
 ;;; Return the transformed string.
 (defun codify-and-autolink (string &key (known-references *references*))
   (when string
-    (autolink (codify string
-                      ;; Recognize as code all the things we don't
-                      ;; want to link to.
-                      (append known-references *local-references*))
-              known-references)))
+    (let* ((3bmd-grammar:*smart-quotes* nil)
+           (parse-tree
+             ;; To be able to recognize symbols like FOO* join (...
+             ;; "FOO" "*" ...) to look like (... "FOO*" ...).
+             (join-consecutive-non-blank-strings-in-parse-tree
+              (3bmd-grammar:parse-doc string))))
+      (with-output-to-string (out)
+        (3bmd::print-doc-to-stream-using-format
+         (autolink (codify parse-tree
+                           ;; Recognize as code all the things we don't
+                           ;; want to link to.
+                           (append known-references *local-references*))
+                   known-references)
+         out :markdown)))))
 
 
 (defsection @mgl-pax-codification (:title "Codification")
@@ -671,14 +680,14 @@
 ;;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings and :EMPH
 ;;; (to recognize *VAR*). Also, perform consistency checking of
 ;;; cl-transcript code blocks (see @MGL-PAX-TRANSCRIBING-WITH-EMACS).
-(defun codify (string known-references)
+(defun codify (parse-tree known-references)
   (map-markdown-parse-tree
    (list :emph '3bmd-code-blocks::code-block)
    '(:code :verbatim 3bmd-code-blocks::code-block
      :reference-link :explicit-link :image :mailto)
    t
    (alexandria:rcurry #'translate-to-code known-references)
-   string))
+   parse-tree))
 
 ;;; This is called with with a list TREE whose CAR is :EMPH or
 ;;; 3BMD-CODE-BLOCKS::CODE-BLOCK or with TREE being a string (as per
@@ -898,14 +907,14 @@
 
 ;;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
 ;;; :REFERENCE-LINK for [symbol][locative]). Don't hurt other links.
-(defun autolink (string known-references)
+(defun autolink (parse-tree known-references)
   (let ((autolinked (make-hash-table :test #'equal)))
     (map-markdown-parse-tree
      '(:code :reference-link)
      '(:explicit-link :image :mailto)
      nil
      (alexandria:rcurry #'translate-to-links known-references autolinked)
-     string)))
+     parse-tree)))
 
 ;;; This is the first of the translator functions, which are those
 ;;; passed to MAP-MARKDOWN-PARSE-TREE. This particular translator
@@ -970,7 +979,8 @@
                                 :key #'reference-object))
                       (references
                         (if (and (zerop (length definition))
-                                 (equal tail "[]"))
+                                 (or (null tail)
+                                     (equal tail "[]")))
                             (filter-references-for-unspecified-locative
                              references)
                             (alexandria:ensure-list

@@ -95,20 +95,11 @@
         (t
          (values tree (and tree (listp tree)) nil))))
 
-(defun map-markdown-parse-tree (tags stop-tags handle-strings fn string)
-  (let* ((3bmd-grammar:*smart-quotes* nil)
-         (parse-tree
-           ;; To be able to recognize symbols like FOO* join (...
-           ;; "FOO" "*" ...) to look like (... "FOO*" ...).
-           (join-consecutive-non-blank-strings-in-parse-tree
-            (3bmd-grammar:parse-doc string))))
-    (with-output-to-string (out)
-      (3bmd::print-doc-to-stream-using-format
-       (transform-tree (lambda (parent tree)
-                         (defer-tag-handling tags stop-tags
-                           handle-strings fn parent tree))
-                       parse-tree)
-       out :markdown))))
+(defun map-markdown-parse-tree (tags stop-tags handle-strings fn parse-tree)
+  (transform-tree (lambda (parent tree)
+                    (defer-tag-handling tags stop-tags
+                      handle-strings fn parent tree))
+                  parse-tree))
 
 (defun join-consecutive-non-blank-strings-in-parse-tree (parse-tree)
   (transform-tree
