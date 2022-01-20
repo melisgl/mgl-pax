@@ -320,8 +320,7 @@
   location. If ERRORP, then a LOCATE-ERROR condition is signaled when
   the lookup fails."
   (handler-case
-      (locate-object object (locative-type locative)
-                     (locative-args locative))
+      (locate-object object (locative-type locative) (locative-args locative))
     (locate-error (e)
       (when errorp
         (error 'locate-error :message (locate-error-message e)

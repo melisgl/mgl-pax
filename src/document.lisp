@@ -117,7 +117,7 @@
   ())
 
 ;;; A list of references not to be autolinked. See
-;;; FILTER-REFERENCES-FOR-SYMBOL,
+;;; FILTER-REFERENCES-FOR-OBJECT,
 ;;; FILTER-REFERENCES-FOR-UNSPECIFIED-LOCATIVE, and
 ;;; FILTER-REFERENCES-FOR-SPECIFIED-LOCATIVE. The reference being
 ;;; documented is always on this list. Arguments are typically also
@@ -137,35 +137,34 @@
 (declaim (special *document-link-to-hyperspec*))
 
 (defun initialize-links-and-references (pages)
-  (with-standard-io-syntax*
-    (loop for page in pages
-          do (dolist (reference (page-references page))
+  (loop for page in pages
+        do (dolist (reference (page-references page))
+             (unless (find-link reference)
+               (push reference *references*)
+               (push (make-link
+                      :reference reference
+                      :page page
+                      :id (hash-link (reference-to-anchor reference)
+                                     #'find-link-by-id)
+                      :page-to-n-uses (make-hash-table))
+                     *links*))))
+  (when *document-link-to-hyperspec*
+    (loop for (object locative url) in (hyperspec-external-references)
+          do (let ((reference (make-reference object locative)))
                (unless (find-link reference)
                  (push reference *references*)
                  (push (make-link
                         :reference reference
-                        :page page
-                        :id (hash-link (reference-to-anchor reference)
-                                       #'find-link-by-id)
+                        :page url
+                        :id (hash-link
+                             ;; KLUDGE: ABCL fails the
+                             ;; TEST-HYPERSPEC test with a low-level
+                             ;; error without :CANONICALP T.
+                             (reference-to-anchor reference
+                                                  :canonicalp t)
+                             #'find-link-by-id)
                         :page-to-n-uses (make-hash-table))
-                       *links*))))
-    (when *document-link-to-hyperspec*
-      (loop for (object locative url) in (hyperspec-external-references)
-            do (let ((reference (make-reference object locative)))
-                 (unless (find-link reference)
-                   (push reference *references*)
-                   (push (make-link
-                          :reference reference
-                          :page url
-                          :id (hash-link
-                               ;; KLUDGE: ABCL fails the
-                               ;; TEST-HYPERSPEC test with a low-level
-                               ;; error without :CANONICALP T.
-                               (reference-to-anchor reference
-                                                    :canonicalp t)
-                               #'find-link-by-id)
-                          :page-to-n-uses (make-hash-table))
-                         *links*)))))))
+                       *links*))))))
 
 (defvar *pages-created*)
 
@@ -647,35 +646,21 @@
 ;;; to ensure that it gets codified. FIXME: Should this logic be in
 ;;; FORMAT-REFERENCES instead?
 (defun references-for-similar-names (name refs)
-  (multiple-value-bind (symbol n-chars-read)
+  (multiple-value-bind (object n-chars-read)
       (find-definitions-find-symbol-or-package name)
     (when n-chars-read
-      (values (references-for-symbol symbol refs n-chars-read) n-chars-read))))
+      (values (references-for-object object refs n-chars-read) n-chars-read))))
 
-;;; Return the references from REFS which are for SYMBOL or which are
-;;; for a non-symbol but resolve to the same object with SYMBOL.
-(defun references-for-symbol (symbol refs n-chars-read)
-  (let ((symbol-name (symbol-name symbol)))
-    (or (remove-if-not (lambda (ref)
-                         (or (eq symbol (reference-object ref))
-                             ;; This function is only called when
-                             ;; there is an interned symbol for
-                             ;; something named by a string.
-                             ;;
-                             ;; KLUDGE: If the object of REF is
-                             ;; replaced with SYMBOL, does it resolve
-                             ;; to the same object? This is necessary
-                             ;; to get packages and asdf systems right
-                             ;; because the objects in their canonical
-                             ;; references are strings and we compare
-                             ;; to symbols.
-                             (equalp symbol-name (reference-object ref))))
-                       refs)
-        (if (or (< 2 n-chars-read)
-                (eq symbol t))
-            (list (make-reference symbol 'dislocated))
-            ;; Don't codify A, I and similar.
-            ()))))
+;;; Return the references from REFS which are for OBJECT
+(defun references-for-object (object refs n-chars-read)
+  (or (remove-if-not (lambda (ref)
+                       (reference-object= object ref))
+                     refs)
+      (if (or (< 2 n-chars-read)
+              (eq object t))
+          (list (make-reference object 'dislocated))
+          ;; Don't codify A, I and similar.
+          ())))
 
 ;;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings and :EMPH
 ;;; (to recognize *VAR*). Also, perform consistency checking of
@@ -750,6 +735,8 @@
 ;;; read.
 (defun find-definitions-find-symbol-or-package (name)
   (flet ((do-find (name n)
+           ;; FIXME: DO-FIND should be a generic function extendable
+           ;; by LOCATIVE-TYPE.
            (multiple-value-bind (symbol found name)
                (with-swank ()
                  (swank::with-buffer-syntax (*package*)
@@ -760,6 +747,9 @@
                    ;; Packages are not named by symbols, so
                    ;; non-interned symbols can refer to packages.
                    ((find-package name)
+                    (return-from find-definitions-find-symbol-or-package
+                      (values name n)))
+                   ((asdf-system-name-p name)
                     (return-from find-definitions-find-symbol-or-package
                       (values name n)))))))
     (do-find name (length name))
@@ -974,10 +964,8 @@
                  nil)
            (if (null n-chars-read)
                tree
-               (let* ((references
-                        (remove symbol known-references
-                                :test-not #'reference-object=
-                                :key #'reference-object))
+               (let* ((references (remove symbol known-references
+                                          :test-not #'reference-object=))
                       (references
                         (if (and (zerop (length definition))
                                  (or (null tail)
@@ -1028,12 +1016,12 @@
         ;; If necessary, try to find a locative before or after NAME
         ;; to disambiguate and also to handle the `PRINT argument`
         ;; case.
-        (when (and refs (references-for-the-same-symbol-p refs))
+        (when refs
           (let ((reference (find-locative-around parent tree refs)))
             (when reference
               (return-from format-references-to-name
                 (formatted-refs-and-refs (list reference))))))
-        (formatted-refs-and-refs (filter-references-for-symbol refs))))))
+        (formatted-refs-and-refs (filter-references-for-object refs))))))
 
 ;;; NAME-ELEMENT is a child of TREE. It is the name of the symbol or
 ;;; it contains the name. Find a locative before or after NAME-ELEMENT
@@ -1168,16 +1156,13 @@
 ;;; A symbol in code like `FOO` will link to all references involving
 ;;; FOO (given as REFS) unless any reference with FOO is on
 ;;; *LOCAL-REFERENCES* in which case it will not link to anything.
-(defun filter-references-for-symbol (refs)
+(defun filter-references-for-object (refs)
   (when refs
-    (let ((symbol (reference-object (first refs))))
-      (unless (find symbol *local-references* :key #'reference-object
-                    :test #'equal)
-        (let ((refs (filter-asdf-system-references
-                     (filter-references-by-format refs))))
-          (if (references-for-the-same-symbol-p refs)
-              (resolve-generic-function-and-methods refs)
-              refs))))))
+    (let ((object (reference-object (first refs))))
+      (unless (find object *local-references* :test #'reference-object=)
+        (resolve-generic-function-and-methods
+         (filter-asdf-system-references
+          (filter-references-by-format refs)))))))
 
 ;;; A reference link like [foo][] will link to all references
 ;;; involving FOO (given as REFS) which are not on
@@ -1189,9 +1174,7 @@
                                 ;; FIXME: Should compare canonical
                                 ;; references?
                                 :test #'reference=)))))
-    (if (references-for-the-same-symbol-p refs)
-        (resolve-generic-function-and-methods refs)
-        refs)))
+    (resolve-generic-function-and-methods refs)))
 
 ;;; A reference link like [foo][function] or text fragment like
 ;;; "function FOO" will link to the function FOO irrespective of
@@ -1199,17 +1182,12 @@
 (defun filter-references-for-specified-locative (refs)
   (filter-references-by-format refs))
 
-;;; REFERENCE-OBJECT on a CANONICAL-REFERENCE of ASDF:SYSTEM is a
-;;; string, which makes REFERENCES-FOR-THE-SAME-SYMBOL-P return NIL.
-;;; It's rare to link to ASDF systems in an ambiguous situation, so
-;;; don't.
+;;; It's rarely useful to link to ASDF systems in an ambiguous
+;;; situation, so don't.
 (defun filter-asdf-system-references (refs)
   (if (< 1 (length refs))
       (remove 'asdf:system refs :key #'reference-locative-type)
       refs))
-
-(defun references-for-the-same-symbol-p (refs)
-  (= 1 (length (remove-duplicates (mapcar #'reference-object refs)))))
 
 (defun resolve-generic-function-and-methods (refs)
   (flet ((non-method-refs ()

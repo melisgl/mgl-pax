@@ -711,8 +711,9 @@ location and the docstring of the defining form is recorded (see
 - [locative] **READTABLE**
 
     Refers to a named `READTABLE` defined with
-    `NAMED-READTABLES:DEFREADTABLE`, which associate a global name and a
-    docstring with the readtable object.
+    `NAMED-READTABLES:DEFREADTABLE`, which associates a global name and a
+    docstring with the readtable object. Unfortunately, source location
+    information is not available.
 
 <a id='x-28DECLARATION-20MGL-PAX-3ALOCATIVE-29'></a>
 
@@ -2241,8 +2242,19 @@ for [`ASDF:SYSTEM:`][90f2]
   (or (asdf:find-system symbol nil)
       (locate-error)))
 
+(defun asdf-system-name-p (string)
+  (find-if (lambda (reference)
+             (and (eq (locative-type (reference-locative reference))
+                      'asdf:system)
+                  (equalp string (reference-object reference))))
+           *references*))
+
 (defmethod canonical-reference ((system asdf:system))
-  (make-reference (slot-value system 'asdf::name) 'asdf:system))
+  (make-reference (character-string (slot-value system 'asdf::name))
+                  'asdf:system))
+
+;;; For testing
+(defvar *omit-asdf-slots* nil)
 
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
@@ -2271,19 +2283,20 @@ for [`ASDF:SYSTEM:`][90f2]
                                           :exclude-first-line-p t)))
                    ((nil)
                     (format stream "- ~A: ~A~%" name value)))))))
-      (foo "Version" 'asdf/component:component-version)
-      (foo "Description" 'asdf/system:system-description :type :docstring)
-      (foo "Long Description" 'asdf/system:system-long-description
-           :type :docstring)
-      (foo "Licence" 'asdf/system:system-licence)
-      (foo "Author" 'asdf/system:system-author)
-      (foo "Maintainer" 'asdf/system:system-maintainer)
-      (foo "Mailto" 'asdf/system:system-mailto :type :mailto)
-      (foo "Homepage" 'asdf/system:system-homepage :type :link)
-      (foo "Bug tracker" 'asdf/system:system-bug-tracker :type :link)
-      (foo "Source control" 'asdf/system:system-source-control
-           :type :source-control)
-      (terpri stream))))
+      (unless *omit-asdf-slots*
+        (foo "Version" 'asdf/component:component-version)
+        (foo "Description" 'asdf/system:system-description :type :docstring)
+        (foo "Long Description" 'asdf/system:system-long-description
+             :type :docstring)
+        (foo "Licence" 'asdf/system:system-licence)
+        (foo "Author" 'asdf/system:system-author)
+        (foo "Maintainer" 'asdf/system:system-maintainer)
+        (foo "Mailto" 'asdf/system:system-mailto :type :mailto)
+        (foo "Homepage" 'asdf/system:system-homepage :type :link)
+        (foo "Bug tracker" 'asdf/system:system-bug-tracker :type :link)
+        (foo "Source control" 'asdf/system:system-source-control
+             :type :source-control)
+        (terpri stream)))))
 
 (defmethod find-source ((system asdf:system))
   `(:location

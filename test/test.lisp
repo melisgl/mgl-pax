@@ -606,6 +606,48 @@
 "))))
 
 
+(defsection @test-asdf-system ()
+  "MGL-PAX/FULL"
+  "MGL-PAX/TEST"
+  "[MGL-PAX/TEST][]"
+  "[MGL-PAX/TEST][asdf:system]"
+  (mgl-pax/full asdf:system)
+  (#:mgl-pax/test asdf:system))
+
+(deftest test-asdf-system ()
+  (is (find-symbol (string '#:mgl-pax/full) '#:mgl-pax-test))
+  (is (null (find-symbol (string '#:mgl-pax/test) '#:mgl-pax-test)))
+  (is
+   (null
+    (mismatch%
+     (let ((*document-max-table-of-contents-level* 0)
+           (*document-max-numbering-level* 0)
+           (*document-text-navigation* nil)
+           (*document-link-sections* nil)
+           (mgl-pax::*omit-asdf-slots* t))
+       (first (document @test-asdf-system)))
+     "# @TEST-ASDF-SYSTEM
+
+###### \\[in package MGL-PAX-TEST\\]
+[`MGL-PAX/FULL`][0785]
+
+[`MGL-PAX/TEST`][4b83]
+
+[`MGL-PAX/TEST`][4b83]
+
+[`MGL-PAX/TEST`][4b83]
+
+## MGL-PAX/FULL ASDF System Details
+
+
+## MGL-PAX/TEST ASDF System Details
+
+
+  [0785]: #x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 \"(\\\"mgl-pax/full\\\" ASDF/SYSTEM:SYSTEM)\"
+  [4b83]: #x-28-22mgl-pax-2Ftest-22-20ASDF-2FSYSTEM-3ASYSTEM-29 \"(\\\"mgl-pax/test\\\" ASDF/SYSTEM:SYSTEM)\"
+"))))
+
+
 (deftest test-all ()
   (test-transcribe)
   (test-navigation)
@@ -618,7 +660,8 @@
   (test-argument)
   (test-declaration)
   (test-readtable)
-  (test-package))
+  (test-package)
+  (test-asdf-system))
 
 (defun test (&key (debug nil) (print 'unexpected) (describe 'unexpected))
   ;; Bind *PACKAGE* so that names of tests printed have package names,

@@ -80,12 +80,12 @@
        (apply (symbol-function ',name) args))
      (export ',name)))
 
-(define-autoload-function locate-definitions-for-emacs :mgl-pax/navigate)
-(define-autoload-function document :mgl-pax/document)
-(define-autoload-function update-asdf-system-readmes :mgl-pax/document)
-(define-autoload-function update-asdf-system-html-docs :mgl-pax/document)
+(define-autoload-function locate-definitions-for-emacs '#:mgl-pax/navigate)
+(define-autoload-function document '#:mgl-pax/document)
+(define-autoload-function update-asdf-system-readmes '#:mgl-pax/document)
+(define-autoload-function update-asdf-system-html-docs '#:mgl-pax/document)
 ;;; UPDATE-PAX-WORLD includes PAX itself, so load MGL-PAX/FULL to have
 ;;; all documentation. Otherwise, MGL-PAX/DOCUMENT would be enough.
-(define-autoload-function update-pax-world :mgl-pax/full)
-(define-autoload-function transcribe :mgl-pax/transcribe)
-(define-autoload-function transcribe-for-emacs :mgl-pax/transcribe)
+(define-autoload-function update-pax-world '#:mgl-pax/full)
+(define-autoload-function transcribe '#:mgl-pax/transcribe)
+(define-autoload-function transcribe-for-emacs '#:mgl-pax/transcribe)

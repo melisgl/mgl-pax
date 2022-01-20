@@ -91,6 +91,7 @@
   (swank-backend:arglist function-designator))
 
 
+;;; FIXME: Drop in favour of the one in alexandria.
 (defun read-stream-into-string (stream &key (buffer-size 4096))
   (let ((*print-pretty* nil))
     (with-output-to-string (datum)
@@ -98,6 +99,12 @@
         (loop for bytes-read = (read-sequence buffer stream)
               do (write-sequence buffer datum :start 0 :end bytes-read)
               while (= bytes-read buffer-size))))))
+
+;;; Convert to full width character string. Useful for prettier
+;;; printing and ensuring canonical form.
+(defun character-string (string)
+  (make-array (length string) :element-type 'character
+              :initial-contents string))
 
 (defun subseq* (seq start)
   (subseq seq (min (length seq) start)))
