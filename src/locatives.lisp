@@ -872,8 +872,8 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'declaration))
                           locative-args)
-  #+sbcl
   (unless (or (find symbol *ansi-declarations*)
+              #+sbcl
               (find symbol (sb-cltl2:declaration-information 'declaration)))
     (locate-error))
   (make-reference symbol (cons locative-type locative-args)))
