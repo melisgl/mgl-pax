@@ -222,12 +222,16 @@
 (defun function-with-keyword-args (x &key k1 (k2 14) (k3 21 k3p))
   (declare (ignore x k1 k2 k3 k3p)))
 
+(when (fboundp 'encapsulated-function)
+  (untrace encapsulated-function))
 (defun encapsulated-function (x &rest args)
   "This may be encapsulated by TRACE."
   (declare (ignore x args))
   nil)
 (trace encapsulated-function)
 
+(when (fboundp 'encapsulated-generic-function)
+  (untrace encapsulated-generic-function))
 (defgeneric encapsulated-generic-function (x)
   (:documentation "This may also be encapsulated by TRACE."))
 (trace encapsulated-generic-function)
@@ -243,8 +247,9 @@
   (declare (ignore env))
   (values :declare decl-spec))
 
-(named-readtables:defreadtable xxx-rt
-  "ddd")
+(unless (named-readtables:find-readtable 'xxx-rt)
+  (named-readtables:defreadtable xxx-rt
+    "ddd"))
 
 (defparameter *navigation-test-cases*
   '((foo function (defun foo))
