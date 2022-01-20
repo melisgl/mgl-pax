@@ -98,10 +98,18 @@
             (reference-locative object))))
 
 (defun reference= (reference-1 reference-2)
-  (and (equal (reference-object reference-1)
-              (reference-object reference-2))
+  (and (reference-object= (reference-object reference-1)
+                          (reference-object reference-2))
        (equal (reference-locative reference-1)
               (reference-locative reference-2))))
+
+;;; FIXME: This should also take LOCATIVE-TYPE-2 LOCATIVE-ARGS-2
+;;; arguments and be a generic function.
+(defun reference-object= (object-1 object-2)
+  (if (or (stringp object-1) (stringp object-2))
+      ;; This is for the PACKAGE and ASDF:SYSTEM locatives.
+      (equal (string object-1) (string object-2))
+      (eq object-1 object-2)))
 
 (defun reference-locative-type (reference)
   (locative-type (reference-locative reference)))

@@ -761,7 +761,7 @@
                    ;; non-interned symbols can refer to packages.
                    ((find-package name)
                     (return-from find-definitions-find-symbol-or-package
-                      (values (make-symbol name) n)))))))
+                      (values name n)))))))
     (do-find name (length name))
     (let* ((right-trimmed
              (swank::string-right-trim *find-definitions-right-trim* name))
@@ -976,8 +976,7 @@
                tree
                (let* ((references
                         (remove symbol known-references
-                                ;; FIXME: EQUAL or EQ?
-                                :test-not #'eq
+                                :test-not #'reference-object=
                                 :key #'reference-object))
                       (references
                         (if (and (zerop (length definition))

@@ -562,6 +562,50 @@
 "))))
 
 
+(defsection @test-package ()
+  "INTERNED-PKG-NAME"
+  "NON-INTERNED-PKG-NAME"
+  "[NON-INTERNED-PKG-NAME][]"
+  "[NON-INTERNED-PKG-NAME][package]"
+  (interned-pkg-name package)
+  (#:non-interned-pkg-name package))
+
+(defpackage interned-pkg-name)
+(defpackage #:non-interned-pkg-name)
+
+(deftest test-package ()
+  (is
+   (null
+    (mismatch%
+     (let ((*document-max-table-of-contents-level* 0)
+           (*document-max-numbering-level* 0)
+           (*document-text-navigation* nil)
+           (*document-link-sections* nil))
+       (first (document @test-package)))
+     "# @TEST-PACKAGE
+
+###### \\[in package MGL-PAX-TEST\\]
+[`INTERNED-PKG-NAME`][2509]
+
+[`NON-INTERNED-PKG-NAME`][11d0]
+
+[`NON-INTERNED-PKG-NAME`][11d0]
+
+[`NON-INTERNED-PKG-NAME`][11d0]
+
+<a id='x-28-22INTERNED-PKG-NAME-22-20PACKAGE-29'></a>
+
+- [package] **\"INTERNED-PKG-NAME\"**
+
+<a id='x-28-22NON-INTERNED-PKG-NAME-22-20PACKAGE-29'></a>
+
+- [package] **\"NON-INTERNED-PKG-NAME\"**
+
+  [11d0]: #x-28-22NON-INTERNED-PKG-NAME-22-20PACKAGE-29 \"(\\\"NON-INTERNED-PKG-NAME\\\" PACKAGE)\"
+  [2509]: #x-28-22INTERNED-PKG-NAME-22-20PACKAGE-29 \"(\\\"INTERNED-PKG-NAME\\\" PACKAGE)\"
+"))))
+
+
 (deftest test-all ()
   (test-transcribe)
   (test-navigation)
@@ -573,7 +617,8 @@
   (test-hyperspec)
   (test-argument)
   (test-declaration)
-  (test-readtable))
+  (test-readtable)
+  (test-package))
 
 (defun test (&key (debug nil) (print 'unexpected) (describe 'unexpected))
   ;; Bind *PACKAGE* so that names of tests printed have package names,

@@ -803,7 +803,7 @@
   (or (find-package symbol) (locate-error)))
 
 (defmethod canonical-reference ((package package))
-  (make-reference (package-name package) 'package))
+  (make-reference (character-string (package-name package)) 'package))
 
 (defmethod document-object ((package package) stream)
   (let ((symbol (package-name package)))
