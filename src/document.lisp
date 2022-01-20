@@ -755,7 +755,7 @@
                     (return-from find-definitions-find-symbol-or-package
                       (values symbol n)))
                    ;; Packages are not named by symbols, so
-                   ;; not-interned symbols can refer to packages
+                   ;; non-interned symbols can refer to packages.
                    ((find-package name)
                     (return-from find-definitions-find-symbol-or-package
                       (values (make-symbol name) n)))))))
@@ -1756,14 +1756,15 @@
 ;;; up docstring indentation, then indent it by four spaces.
 ;;; Automarkup symbols.
 (defun maybe-print-docstring (object doc-type stream)
-  (let ((docstring (filter-documentation object doc-type)))
-    (when docstring
-      (format stream "~%~A~%" (massage-docstring docstring)))))
+  ;; If the output is going to /dev/null and this is a costly
+  ;; operation, skip it.
+  (unless *table-of-contents-stream*
+    (let ((docstring (filter-documentation object doc-type)))
+      (when docstring
+        (format stream "~%~A~%" (massage-docstring docstring))))))
 
 (defun massage-docstring (docstring &key (indentation "    "))
   (if *table-of-contents-stream*
-      ;; The output is going to /dev/null and this is a costly
-      ;; operation, skip it.
       ""
       (let ((docstring (strip-docstring-indentation docstring)))
         (prefix-lines indentation (codify-and-autolink docstring)))))
