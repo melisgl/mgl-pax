@@ -104,7 +104,8 @@
   (foo compiler-macro)
   (foo class)
   ;; aliases defined above
-  "FOO instance" "and FOO object"
+  "FOO instance"
+  "and FOO object"
   "type-of BAR"
   (foo-a (accessor foo))
   (bar macro)
@@ -356,9 +357,7 @@
 
 (deftest test-codify-and-autolink ()
   (mgl-pax::with-pages (())
-    (is (string= "`FOO`"
-                 (mgl-pax::codify-and-autolink "`FOO`"
-                                               :known-references ())))))
+    (is (string= "`FOO`" (mgl-pax::codify-and-autolink "`FOO`")))))
 
 (deftest test-transform-tree ()
   (is (equal '(1)
@@ -402,7 +401,8 @@
 (defvar *update-baseline* nil)
 
 (deftest test-document (format)
-  (let* ((*document-link-to-hyperspec* nil)
+  (let* ((*package* (find-package :common-lisp))
+         (*document-link-to-hyperspec* nil)
          (outputs (write-test-document-files
                    (asdf:system-relative-pathname :mgl-pax "test/data/tmp/")
                    format)))
@@ -789,3 +789,6 @@ ISSUE:AREF-1D `CLHS`
 
 #+nil
 (test)
+
+#+nil
+(test-all)

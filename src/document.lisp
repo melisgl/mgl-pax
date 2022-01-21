@@ -81,7 +81,10 @@
     (push reference *references*)
     (push link *links*)
     (setf (gethash (link-id link) *id-to-link*) link)
-    (push link (gethash (reference-object reference) *object-to-links*))))
+    (let ((object (reference-object reference)))
+      (if (member (reference-locative-type reference) '(package asdf:system))
+          (push link (gethash (string object) *object-to-links*))
+          (push link (gethash object *object-to-links*))))))
 
 (defun find-link-by-id (id)
   (gethash id *id-to-link*))
@@ -89,6 +92,31 @@
 (defun find-link (reference)
   (find reference (gethash (reference-object reference) *object-to-links*)
         :key #'link-reference :test #'reference=))
+
+;;; Return a list of all known REFERENCES (those in *REFERENCES*)
+;;; whose REFERENCE-OBJECT matches OBJECT, that is, with OBJECT as
+;;; their REFERENCE-OBJECT they would resolve to the same thing.
+(defun references-to-object (object &key local)
+  (let ((global-refs (global-references object)))
+    (if local
+        (let ((local-refs (remove-if-not (lambda (ref)
+                                           (reference-object= object ref))
+                                         *local-references*)))
+          (if (eq local :include)
+              (append global-refs local-refs)
+              (set-difference global-refs local-refs :test #'reference=)))
+        global-refs)))
+
+(defun global-references (object)
+  (append (loop for link in (gethash object *object-to-links*)
+                for ref = (link-reference link)
+                when (reference-object= object ref)
+                  collect ref)
+          (unless (stringp object)
+            (loop for link in (gethash (string object) *object-to-links*)
+                  for ref = (link-reference link)
+                  when (reference-object= object ref)
+                    collect ref))))
 
 ;;; Return the unescaped name of the HTML anchor for REFERENCE. See
 ;;; HTML-SAFE-NAME.
@@ -125,7 +153,7 @@
 (defvar *references*)
 
 ;;; A list of references not to be autolinked. See
-;;; FILTER-REFERENCES-FOR-OBJECT,
+;;; FILTER-REFERENCES-FOR-AMBIGUOUS-LOCATIVE,
 ;;; FILTER-REFERENCES-FOR-UNSPECIFIED-LOCATIVE, and
 ;;; FILTER-REFERENCES-FOR-SPECIFIED-LOCATIVE. The reference being
 ;;; documented is always on this list. Arguments are typically also
@@ -143,9 +171,9 @@
      (initialize-links ,pages)
      (locally ,@body)))
 
-(declaim (special *document-link-to-hyperspec*))
-
 (defun initialize-links (pages)
+  (declare (special *document-link-to-hyperspec*)
+           (special *document-hyperspec-root*))
   (loop for page in pages
         do (dolist (reference (page-references page))
              (unless (find-link reference)
@@ -548,12 +576,12 @@
 
 ;;;; Automatic markup of symbols
 
-;;; Take a string in markdown format and a list of KNOWN-REFERENCES.
-;;; Markup symbols as code (if *DOCUMENT-UPPERCASE-IS-CODE*), autolink
-;;; (if *DOCUMENT-LINK-SECTIONS*, *DOCUMENT-LINK-CODE*) and always
-;;; handle explicit links with locatives (e.g. [FOO][function]).
-;;; Return the transformed string.
-(defun codify-and-autolink (string &key (known-references *references*))
+;;; Take a string in markdown format. Markup symbols as code (if
+;;; *DOCUMENT-UPPERCASE-IS-CODE*), autolink (if
+;;; *DOCUMENT-LINK-SECTIONS*, *DOCUMENT-LINK-CODE*) and always handle
+;;; explicit links with locatives (e.g. [FOO][function]). Return the
+;;; transformed string.
+(defun codify-and-autolink (string)
   (when string
     (let* ((3bmd-grammar:*smart-quotes* nil)
            (parse-tree
@@ -562,13 +590,8 @@
              (join-consecutive-non-blank-strings-in-parse-tree
               (3bmd-grammar:parse-doc string))))
       (with-output-to-string (out)
-        (3bmd::print-doc-to-stream-using-format
-         (autolink (codify parse-tree
-                           ;; Recognize as code all the things we don't
-                           ;; want to link to.
-                           (append known-references *local-references*))
-                   known-references)
-         out :markdown)))))
+        (3bmd::print-doc-to-stream-using-format (autolink (codify parse-tree))
+                                                out :markdown)))))
 
 
 (defsection @mgl-pax-codification (:title "Codification")
@@ -611,13 +634,12 @@
 ;;; This is called by MAP-NAMES so the return values are NEW-TREE,
 ;;; SLICE, N-CHARS-READ. Also called by TRANSLATE-EMPH that expects
 ;;; only a single return value: the new tree.
-(defun translate-uppercase-name (parent tree name known-references)
+(defun translate-uppercase-name (parent tree name)
   (declare (ignore parent))
   (when (and (no-lowercase-chars-p name)
              (some #'alpha-char-p name))
     (flet ((foo (name)
-             (let ((n-chars-read (codify-uppercase-name-p name
-                                                          known-references)))
+             (let ((n-chars-read (codify-uppercase-name-p name)))
                (when n-chars-read
                  (values `(,(code-fragment
                              (maybe-downcase (subseq name 0 n-chars-read))))
@@ -644,22 +666,20 @@
 ;;; Return the references from REFS which are for the object to which
 ;;; NAME parses and the number of characters read. Handle rules laid
 ;;; out in *DOCUMENT-UPPERCASE-IS-CODE* not already handled in the
-;;; caller TRANSLATE-UPPERCASE-NAME (FIXME: there is another caller).
-;;; Some trimming is attempted to handle separators and plurals.
-;;; Packages and ASDF systems are treated somewhat differently because
-;;; their REFERENCE-OBJECTs may be strings.
-(defun codify-uppercase-name-p (name refs)
+;;; caller TRANSLATE-UPPERCASE-NAME. Some trimming is attempted to
+;;; handle separators and plurals. Packages and ASDF systems are
+;;; treated somewhat differently because their REFERENCE-OBJECTs may
+;;; be strings.
+(defun codify-uppercase-name-p (name)
   (multiple-value-bind (object n-chars-read)
       (find-candidate-object name :codifyingp t)
     (when n-chars-read
-      (flet ((normal-ref-to-object-p (ref)
-               (and
-                ;; Matching a CLHS section number (e.g. "A.1" and
-                ;; especially "A") must not cause codification of
-                ;; NAME.
-                (not (eq (reference-locative-type ref) 'clhs))
-                (reference-object= object ref))))
-        (when (or (some #'normal-ref-to-object-p refs)
+      (flet ((normal-ref-p (ref)
+               ;; Matching a CLHS section number (e.g. "A.1" and
+               ;; especially "A") must not cause codification of NAME.
+               (not (eq (reference-locative-type ref) 'clhs))))
+        (when (or (some #'normal-ref-p
+                        (references-to-object object :local :include))
                   (and (symbolp object)
                        (or (<= 3 n-chars-read)
                            (external-symbol-p object)))
@@ -673,13 +693,13 @@
 ;;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings and :EMPH
 ;;; (to recognize *VAR*). Also, perform consistency checking of
 ;;; cl-transcript code blocks (see @MGL-PAX-TRANSCRIBING-WITH-EMACS).
-(defun codify (parse-tree known-references)
+(defun codify (parse-tree)
   (map-markdown-parse-tree
    (list :emph '3bmd-code-blocks::code-block)
    '(:code :verbatim 3bmd-code-blocks::code-block
      :reference-link :explicit-link :image :mailto)
    t
-   (alexandria:rcurry #'translate-to-code known-references)
+   #'translate-to-code
    parse-tree))
 
 ;;; This is the first of the translator functions, which are those
@@ -688,18 +708,18 @@
 ;;; It is called with with a list TREE whose CAR is :EMPH or
 ;;; 3BMD-CODE-BLOCKS::CODE-BLOCK or with TREE being a string (as per
 ;;; the MAP-MARKDOWN-PARSE-TREE above).
-(defun translate-to-code (parent tree known-references)
+(defun translate-to-code (parent tree)
   (cond ((stringp tree)
          (let ((string tree))
            (values (map-names string
                               (lambda (string start end)
                                 (let ((name (subseq string start end)))
                                   (translate-uppercase-name
-                                   parent string name known-references))))
+                                   parent string name))))
                    ;; don't recurse, do slice
                    nil t)))
         ((eq :emph (first tree))
-         (translate-emph parent tree known-references))
+         (translate-emph parent tree))
         ((eq '3bmd-code-blocks::code-block (first tree))
          (translate-code-block parent tree))
         (t
@@ -719,11 +739,11 @@
         code-block)))
 
 ;;; Undo the :EMPH parsing for code references. E.g. (:EMPH "XXX") ->
-;;; "*XXX*" (if *XXX* is in a REFERENCE-OBJECT KNOWN-REFERENCES).
-(defun translate-emph (parent tree known-references)
+;;; "*XXX*" if "*XXX*" is to be codified according to
+;;; CODIFY-UPPERCASE-NAME-P.
+(defun translate-emph (parent tree)
   (if (= 2 (length tree))
-      (let ((translation (translate-uppercase-name parent tree (second tree)
-                                                   known-references)))
+      (let ((translation (translate-uppercase-name parent tree (second tree))))
         (if translation
             ;; Replace TREE with TRANSLATION, don't process
             ;; TRANSLATION again recursively, slice the return value
@@ -905,20 +925,20 @@
 
 ;;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
 ;;; :REFERENCE-LINK for [symbol][locative]). Don't hurt other links.
-(defun autolink (parse-tree known-references)
+(defun autolink (parse-tree)
   (let ((autolinked (make-hash-table :test #'equal)))
     (map-markdown-parse-tree
      '(:code :reference-link)
      '(:explicit-link :image :mailto)
      nil
-     (alexandria:rcurry #'translate-to-links known-references autolinked)
+     (alexandria:rcurry #'translate-to-links autolinked)
      parse-tree)))
 
 ;;; This particular translator
 ;;;
 ;;; - handles (:CODE "SOMETHING"), the parse of `SOMETHING`: looks for
-;;;   any KNOWN-REFERENCES to "something" (which may name a symbol or
-;;;   a package) and tanslates it to, for example, (:REFERENCE-LINK
+;;;   any references to "SOMETHING" (which may name a symbol or a
+;;;   package) and tanslates it to, for example, (:REFERENCE-LINK
 ;;;   :LABEL ((:CODE "SOMETHING")) :DEFINITION "function") if there is
 ;;;   a single function reference to it. See
 ;;;   MAKE-REFERENCE-LINKS-TO-NAME.
@@ -931,7 +951,7 @@
 ;;;
 ;;;   - and those with no locative (:REFERENCE-LINK :LABEL ((:CODE
 ;;;     "SOMETHING")) :TAIL "[]"), the parse of [`SOMETHING`][].
-(defun translate-to-links (parent tree known-references autolinked)
+(defun translate-to-links (parent tree autolinked)
   (cond
     ;; (:CODE "something")
     ((and (eq :code (first tree))
@@ -939,7 +959,7 @@
           (stringp (second tree)))
      (let ((name (second tree)))
        (multiple-value-bind (reference-links refs)
-           (make-reference-links-to-name parent tree name known-references)
+           (make-reference-links-to-name parent tree name)
          (let ((autolinked-key (cons name reference-links))
                (supressedp (and refs
                                 (let ((object (reference-object (first refs))))
@@ -976,10 +996,9 @@
                        (if (and (zerop (length definition))
                                 (or (null tail)
                                     (equal tail "[]")))
-                           (filter-references-for-unspecified-locative
-                            object known-references)
+                           (filter-references-for-unspecified-locative object)
                            (filter-references-for-specified-locative
-                            object locative known-references))))
+                            object locative))))
                  (if references
                      (values (make-reference-links name references) nil t)
                      tree)))))))
@@ -1014,36 +1033,16 @@
 ;;; Translate NAME (a string) that's part of TREE (e.g. it's "xxx"
 ;;; from (:CODE "xxx") or from "xxx,yyy"), or it's constructed from
 ;;; TREE (e.g. it's "*SYM*" from (:EMPH "SYM")).
-(defun make-reference-links-to-name (parent tree name known-references)
+(defun make-reference-links-to-name (parent tree name)
   (let ((locatives (find-locatives-around parent tree)))
-    (multiple-value-bind (refs n-chars-read)
-        (references-to-a-similar-name name locatives known-references)
-      (when refs
-        (let ((refs
-                (or
-                 ;; Use the first locative found in TREE in the
-                 ;; vicinity of NAME which combines with the object to
-                 ;; a known reference.
-                 (loop for locative in locatives
-                         thereis (filter-references-for-specified-locative
-                                  (reference-object (first refs))
-                                  locative refs))
-                 ;; Fall back on the no locative case.
-                 (filter-references-for-object refs))))
-          (values (make-reference-links (maybe-downcase
-                                         (subseq name 0 n-chars-read))
-                                        refs)
-                  refs))))))
-
-(defun references-to-a-similar-name (name locatives refs)
-  (multiple-value-bind (object n-chars-read)
-      (find-candidate-object name :locatives locatives)
-    (when n-chars-read
-      (values (or (remove-if-not (lambda (ref)
-                                   (reference-object= object ref))
-                                 refs)
-                  (list (make-reference object 'dislocated)))
-              n-chars-read))))
+    (multiple-value-bind (object n-chars-read)
+        (find-candidate-object name :locatives locatives)
+      (when n-chars-read
+        (let ((refs (filter-references-for-ambiguous-locative
+                     object locatives)))
+          (when refs
+            (values (make-reference-links (subseq name 0 n-chars-read) refs)
+                    refs)))))))
 
 ;;; NAME-ELEMENT is a child of TREE. It is the name of the symbol or
 ;;; it contains the name. Find a locative before or after NAME-ELEMENT
@@ -1175,40 +1174,53 @@
   - Explicit links with an unspecified locative (e.g. `[FOO][]`) are
     linked to all non-local references.""")
 
-;;; A symbol in code like `FOO` will link to all references involving
-;;; FOO (given as REFS) unless any reference with FOO is on
-;;; *LOCAL-REFERENCES* in which case it will not link to anything.
-(defun filter-references-for-object (refs)
-  (when refs
-    (let ((object (reference-object (first refs))))
-      (unless (find object *local-references* :test #'reference-object=)
-        (resolve-generic-function-and-methods
-         (filter-asdf-system-references
-          (remove-clhs-references
-           (linkable-references refs))))))))
+;;; A name in markdown code such as `FOO` will behave as [`FOO`][loc]
+;;; if the locative LOC is found nearby by FIND-LOCATIVES-AROUND and
+;;; it matches a known reference. Else, see
+;;; %FILTER-REFERENCES-FOR-OBJECT.
+(defun filter-references-for-ambiguous-locative (object locatives)
+  (or
+   ;; Use the first locative found in TREE in the vicinity of NAME
+   ;; which combines with OBJECT to a known reference.
+   (loop for locative in locatives
+           thereis (filter-references-for-specified-locative object locative))
+   ;; Fall back on the no locative case.
+   (%filter-references-for-object object)))
 
-;;; A reference link like [foo][] will link to all references
-;;; involving FOO (given as REFS) which are not on *LOCAL-REFERENCES*.
-(defun filter-references-for-unspecified-locative (object refs)
+;;; `FOO` without any nearby locatives will link to all known
+;;; references involving FOO unless any reference with FOO is on
+;;; *LOCAL-REFERENCES* in which case it will not link to anything.
+(defun %filter-references-for-object (object)
+  (unless (find object *local-references* :test #'reference-object=)
+    (resolve-generic-function-and-methods
+     (filter-asdf-system-references
+      (remove-clhs-references
+       (linkable-references
+        (references-to-object object)))))))
+
+;;; A markdown reference link with an unspecified locative such as
+;;; [foo][] will link to all references involving FOO (given as REFS)
+;;; which are not on *LOCAL-REFERENCES*.
+(defun filter-references-for-unspecified-locative (object)
   (resolve-generic-function-and-methods
    (filter-asdf-system-references
     (filter-clhs-references
      (linkable-references
-      (set-difference (remove object refs :test-not #'reference-object=)
-                      *local-references*
-                      ;; FIXME: Should compare canonical references?
-                      :test #'reference=))))))
+      (references-to-object object :local :exclude))))))
 
-;;; A reference link like [foo][function] or text fragment like
-;;; "function FOO" will link to the function FOO irrespective of
-;;; *LOCAL-REFERENCES*.
-(defun filter-references-for-specified-locative (object locative refs)
+;;; A markdown reference link with a specified locative such as
+;;; [foo][function] or text fragment like "function FOO" will link to
+;;; the function FOO irrespective of *LOCAL-REFERENCES*.
+(defun filter-references-for-specified-locative (object locative)
   (if (member (locative-type locative) '(dislocated argument))
       ;; Handle an explicit [FOO][dislocated] in markdown, for which
       ;; there is no reference in REFS.
       (list (make-reference object 'dislocated))
-      (let ((ref (find (canonical-reference (make-reference object locative))
-                       refs :test #'reference=)))
+      (let* ((reference (canonical-reference
+                         (make-reference object locative)))
+             (object (reference-object reference))
+             (ref (find reference (references-to-object object)
+                        :test #'reference=)))
         (when (and ref (linkable-ref-p ref))
           (list ref)))))
 
