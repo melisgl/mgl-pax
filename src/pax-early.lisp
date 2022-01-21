@@ -108,6 +108,14 @@
        (equal (reference-locative reference-1)
               (reference-locative reference-2))))
 
+(declaim (inline reference-locative-type))
+(defun reference-locative-type (reference)
+  (locative-type (reference-locative reference)))
+
+(declaim (inline reference-locative-args))
+(defun reference-locative-args (reference)
+  (locative-args (reference-locative reference)))
+
 ;;; FIXME: This should be a generic function dispatching on
 ;;; LOCATIVE-TYPE.
 (defun reference-object= (object reference)
@@ -119,14 +127,6 @@
            (equalp (string object) (string object-2)))
           (t
            (eq object object-2)))))
-
-(declaim (inline reference-locative-type))
-(defun reference-locative-type (reference)
-  (locative-type (reference-locative reference)))
-
-(declaim (inline reference-locative-args))
-(defun reference-locative-args (reference)
-  (locative-args (reference-locative reference)))
 
 (defclass section ()
   ((name

@@ -62,10 +62,10 @@
 ;;; PAGE may also be a string denoting a URL. This is used to link to
 ;;; the hyperspec.
 (defstruct link
-  reference
+  (reference nil :type reference)
   (page nil :type (or page string))
-  id
-  page-to-n-uses)
+  (id nil :type string)
+  (page-to-n-uses (make-hash-table) :type hash-table))
 
 ;;; A list of LINK objects representing all possible things which may
 ;;; be linked to. Bound only once (by WITH-PAGES) after pages are
@@ -73,13 +73,23 @@
 ;;; the objects being documented). If a reference occurs multiple
 ;;; times, earlier links (thus pages earlier in DOCUMENT's PAGES
 ;;; argument) have precedence.
-(defparameter *links* ())
+(defvar *links*)
+(defvar *id-to-link*)
+(defvar *object-to-links*)
+
+(defun add-link (link)
+  (let ((reference (link-reference link)))
+    (push reference *references*)
+    (push link *links*)
+    (setf (gethash (link-id link) *id-to-link*) link)
+    (push link (gethash (reference-object reference) *object-to-links*))))
 
 (defun find-link-by-id (id)
-  (find id *links* :key #'link-id :test #'equal))
+  (gethash id *id-to-link*))
 
 (defun find-link (reference)
-  (find reference *links* :key #'link-reference :test #'reference=))
+  (find reference (gethash (reference-object reference) *object-to-links*)
+        :key #'link-reference :test #'reference=))
 
 ;;; Return the unescaped name of the HTML anchor for REFERENCE. See
 ;;; HTML-SAFE-NAME.
@@ -113,8 +123,7 @@
 
 ;;; A list of all the references extracted from *LINKS* for
 ;;; convenience.
-(defparameter *references*
-  ())
+(defvar *references*)
 
 ;;; A list of references not to be autolinked. See
 ;;; FILTER-REFERENCES-FOR-OBJECT,
@@ -122,48 +131,43 @@
 ;;; FILTER-REFERENCES-FOR-SPECIFIED-LOCATIVE. The reference being
 ;;; documented is always on this list. Arguments are typically also
 ;;; are. Bound by WITH-LOCAL-REFERENCES.
-(defparameter *local-references*
-  ())
+(defvar *local-references*)
 
 ;;; Add a LINK to *LINKS* (and a REFERENCE to *REFERENCES*) for each
 ;;; reference in PAGE-REFERENCES of PAGE.
 (defmacro with-pages ((pages) &body body)
-  `(let ((*references* *references*)
-         (*local-references* *local-references*)
-         (*links* *links*))
-     (initialize-links-and-references ,pages)
+  `(let ((*references* ())
+         (*local-references* ())
+         (*links* ())
+         (*id-to-link* (make-hash-table :test #'equal))
+         (*object-to-links* (make-hash-table :test #'equalp)))
+     (initialize-links ,pages)
      (locally ,@body)))
 
 (declaim (special *document-link-to-hyperspec*))
 
-(defun initialize-links-and-references (pages)
+(defun initialize-links (pages)
   (loop for page in pages
         do (dolist (reference (page-references page))
              (unless (find-link reference)
-               (push reference *references*)
-               (push (make-link
-                      :reference reference
-                      :page page
-                      :id (hash-link (reference-to-anchor reference)
-                                     #'find-link-by-id)
-                      :page-to-n-uses (make-hash-table))
-                     *links*))))
+               (add-link (make-link
+                          :reference reference
+                          :page page
+                          :id (hash-link (reference-to-anchor reference)
+                                         #'find-link-by-id))))))
   (when *document-link-to-hyperspec*
     (loop for (object locative url) in (hyperspec-external-references)
           do (let ((reference (make-reference object locative)))
-               (push reference *references*)
-               (push (make-link
-                      :reference reference
-                      :page url
-                      :id (hash-link
-                           ;; KLUDGE: ABCL fails the TEST-HYPERSPEC
-                           ;; test with a low-level error without
-                           ;; :CANONICALP T.
-                           (reference-to-anchor reference
-                                                :canonicalp t)
-                           #'find-link-by-id)
-                      :page-to-n-uses (make-hash-table))
-                     *links*)))))
+               (add-link (make-link
+                          :reference reference
+                          :page url
+                          :id (hash-link
+                               ;; KLUDGE: ABCL fails the TEST-HYPERSPEC
+                               ;; test with a low-level error without
+                               ;; :CANONICALP T.
+                               (reference-to-anchor reference
+                                                    :canonicalp t)
+                               #'find-link-by-id)))))))
 
 (defvar *pages-created*)
 

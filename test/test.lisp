@@ -355,9 +355,10 @@
     (read stream)))
 
 (deftest test-codify-and-autolink ()
-  (is (string= "`FOO`"
-               (mgl-pax::codify-and-autolink "`FOO`"
-                                             :known-references ()))))
+  (mgl-pax::with-pages (())
+    (is (string= "`FOO`"
+                 (mgl-pax::codify-and-autolink "`FOO`"
+                                               :known-references ())))))
 
 (deftest test-transform-tree ()
   (is (equal '(1)
