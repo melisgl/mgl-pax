@@ -735,32 +735,31 @@
 (defvar *object-name-right-trim-2* ",:.>sS")
 
 (defun find-candidate-object (name &key locative)
-  (flet ((do-find (name n)
-           (when (plusp n)
-             ;; FIXME: DO-FIND should be a generic function extendable
-             ;; by LOCATIVE-TYPE.
-             (multiple-value-bind (symbol found)
-                 (with-swank ()
-                   (swank::with-buffer-syntax (*package*)
-                     (swank::parse-symbol name)))
-               (cond (found
-                      (return-from find-candidate-object
-                        (values symbol n)))
-                     ((or (find-package name)
-                          (asdf-system-name-p name)
-                          (hyperspec-section-name-p name)
-                          (and (eq (locative-type locative) 'clhs)
-                               (find-hyperspec-section name)))
-                      (return-from find-candidate-object
-                        (values name n))))))))
-    (do-find name (length name))
-    (let* ((right-trimmed (string-right-trim *object-name-right-trim* name))
-           (right-trimmed-length (length right-trimmed)))
-      (do-find right-trimmed right-trimmed-length))
-    (let* ((right-trimmed-2 (string-right-trim *object-name-right-trim-2*
-                                               name))
-           (right-trimmed-2-length (length right-trimmed-2)))
-      (do-find right-trimmed-2 right-trimmed-2-length))))
+  (with-swank ()
+    (swank::with-buffer-syntax (*package*)
+      (flet ((do-find (name n)
+               (when (plusp n)
+                 ;; FIXME: DO-FIND should be a generic function extendable
+                 ;; by LOCATIVE-TYPE.
+                 (multiple-value-bind (symbol found) (swank::parse-symbol name)
+                   (cond (found
+                          (return-from find-candidate-object
+                            (values symbol n)))
+                         ((or (find-package name)
+                              (asdf-system-name-p name)
+                              (hyperspec-section-name-p name)
+                              (and (eq (locative-type locative) 'clhs)
+                                   (find-hyperspec-section name)))
+                          (return-from find-candidate-object
+                            (values name n))))))))
+        (do-find name (length name))
+        (let* ((right-trimmed (string-right-trim *object-name-right-trim* name))
+               (right-trimmed-length (length right-trimmed)))
+          (do-find right-trimmed right-trimmed-length))
+        (let* ((right-trimmed-2 (string-right-trim *object-name-right-trim-2*
+                                                   name))
+               (right-trimmed-2-length (length right-trimmed-2)))
+          (do-find right-trimmed-2 right-trimmed-2-length))))))
 
 
 (defvar *document-downcase-uppercase-code* nil
