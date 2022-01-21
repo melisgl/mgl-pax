@@ -44,6 +44,7 @@
 ;;; from that page.
 (defstruct page
   references
+  (used-links (make-hash-table) :type hash-table)
   temp-stream-spec
   final-stream-spec
   uri-fragment
@@ -55,17 +56,15 @@
 (defvar *page* nil)
 
 ;;; This is a possible link to REFERENCE on PAGE (note that the same
-;;; REFERENCE may be written to multiple pages). ID is the markdown
-;;; reference link id and PAGE-TO-N-USES is a hash table that counts
-;;; how many times this was linked to from each page.
+;;; REFERENCE may be written to multiple pages).
 ;;;
 ;;; PAGE may also be a string denoting a URL. This is used to link to
 ;;; the hyperspec.
 (defstruct link
   (reference nil :type reference)
   (page nil :type (or page string))
-  (id nil :type string)
-  (page-to-n-uses (make-hash-table) :type hash-table))
+  ;; The markdown reference link id.
+  (id nil :type string))
 
 ;;; A list of LINK objects representing all possible things which may
 ;;; be linked to. Bound only once (by WITH-PAGES) after pages are
@@ -110,11 +109,11 @@
                    (stringp (link-page link))
                    (and (page-uri-fragment *page*)
                         (page-uri-fragment (link-page link)))))
-      (incf (gethash *page* (link-page-to-n-uses link) 0))
+      (setf (gethash link (page-used-links *page*)) t)
       (format nil "~A" (link-id link)))))
 
 (defun link-used-on-current-page-p (link)
-  (plusp (gethash *page* (link-page-to-n-uses link) 0)))
+  (gethash link (page-used-links *page*)))
 
 (defun reference-page (reference)
   (let ((link (find-link reference)))
@@ -409,7 +408,7 @@
 ;;; Emit markdown definitions for links (in *LINKS*) to REFERENCE
 ;;; objects that were linked to on the current page.
 (defun write-markdown-reference-style-link-definitions (stream)
-  (let ((used-links (sort (remove-if-not #'link-used-on-current-page-p *links*)
+  (let ((used-links (sort (alexandria:hash-table-keys (page-used-links *page*))
                           #'string< :key #'link-id)))
     (when used-links
       (format stream "~%")
