@@ -295,7 +295,7 @@
   (let ((function (ignore-errors (symbol-function* symbol))))
     (unless function
       (locate-error symbol (cons locative-type locative-args)
-                    "~S does not name function." symbol))
+                    "~S does not name a function." symbol))
     (when (typep function 'generic-function)
       (locate-error symbol (cons locative-type locative-args)
                     "~S names a generic function, not a plain function."

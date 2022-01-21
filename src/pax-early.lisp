@@ -91,12 +91,15 @@
 
 (defun make-reference (object locative)
   (make-instance 'reference :object object
-                 ;; Canonicalize it a bit for easier comparison. E.g.
-                 ;; (FUNCTION) => FUNCTION.
-                 :locative (if (and (listp locative)
-                                    (null (cdr locative)))
-                               (first locative)
-                               locative)))
+                 :locative (normalize-locative locative)))
+
+;;; Canonicalize it a bit for easier comparison. E.g. (FUNCTION) =>
+;;; FUNCTION.
+(defun normalize-locative (locative)
+  (if (and (listp locative)
+           (null (cdr locative)))
+      (first locative)
+      locative))
 
 (defmethod print-object ((object reference) stream)
   (print-unreadable-object (object stream :type t)

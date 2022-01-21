@@ -117,7 +117,8 @@
 
   The object and the locative are not specified, they are added by
   LOCATE when it resignals the condition."
-  (error 'locate-error :object object :locative locative
+  (error 'locate-error :object object
+         :locative (normalize-locative locative)
          :message (if format-and-args
                       (apply #'format nil format-and-args)
                       nil)))

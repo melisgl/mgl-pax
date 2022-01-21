@@ -599,18 +599,23 @@
   (*document-downcase-uppercase-code* variable))
 
 (defvar *document-uppercase-is-code* t
-  """When true, words that
+  """When true, certain words are assumed to be code as if they were
+  marked up with backticks. In particular, the words thus codified are
+  those that
 
-  - name an interesting symbol that
-    - is EQ to the object a reference being documented, or
-    - have at least 3 characters, or
-    - name a symbol external to its package
-  - have at least one ALPHA-CHAR-P character
-  - have no lowercase characters
-  - name an interned symbol
+  - have no lowercase characters, and
+  - have at least one ALPHA-CHAR-P character, and
+  - name an interesting symbol, a package, or an asdf system.
 
-  are assumed to be code as if they were marked up with backticks,
-  which is especially useful when combined with *DOCUMENT-LINK-CODE*.
+  A symbol is considered interesting iff it is `INTERN`ed and
+
+  - it is external to its package, or
+  - it is EQ to the object of a reference being documented, or
+  - it has at least 3 characters.
+
+  Symbols are read in the current *PACKAGE*, which is subject to
+  *DOCUMENT-NORMALIZE-PACKAGES*.
+
   For example, this docstring:
 
       "`FOO` and FOO."
@@ -627,7 +632,10 @@
 
   The number of backslashes is doubled above because that's how the
   example looks in a docstring. Note that the backslash is discarded
-  even if *DOCUMENT-UPPERCASE-IS-CODE* is false.""")
+  even if *DOCUMENT-UPPERCASE-IS-CODE* is false.
+
+  Automatically codifying words is especially useful when combined
+  with *DOCUMENT-LINK-CODE*. """)
 
 ;;; The core of the implementation of *DOCUMENT-UPPERCASE-IS-CODE*.
 ;;;
@@ -837,28 +845,47 @@
   every reference that's not to a section. Also, markdown style
   reference links are added when a piece of inline code found in a
   docstring refers to a symbol that's referenced by one of the
-  sections being documented. Assuming `BAR` is defined, the
-  documentation for:
+  sections being documented.
 
   ```commonlisp
-  (defsection @foo
+  (defsection @foo (:export nil)
     (foo function)
     (bar function))
 
   (defun foo (x)
     "Calls `BAR` on `X`."
     (bar x))
+
+  (defun bar (x)
+    x)
   ```
 
-  would look like this:
+  With the above definition the output of `(DOCUMENT @FOO :STREAM T)
+  would include this:
 
-      - [function] FOO X
+  ```
+  .. <a id='x-28MGL-PAX-3AFOO-20FUNCTION-29'></a>
+  .. 
+  .. - [function] **FOO** *X*
+  .. 
+  ..     Calls [`BAR`][e2f2] on `X`.
+  .. 
+  .. <a id='x-28MGL-PAX-3ABAR-20FUNCTION-29'></a>
+  .. 
+  .. - [function] **BAR** *X*
+  .. 
+  ..   [e2f2]: #x-28MGL-PAX-3ABAR-20FUNCTION-29 "(MGL-PAX:BAR FUNCTION)"
+  ```
 
-          Calls [`BAR`][1] on `X`.
-
-  Instead of `BAR`, one can write `[bar][]` or ``[`bar`][]`` as well.
-  Since symbol names are parsed according to READTABLE-CASE, character
-  case rarely matters.
+  This line starting with `[e2f2]:` is the markdown reference link
+  definition with an url and a title. Here the url points to the HTML
+  anchor of the documentation of the function `BAR`, itself an escaped
+  version of the reference `(MGL-PAX:BAR FUNCTION)`, which is also the
+  title.
+  
+  In the docstring of `FOO`, instead of `BAR`, one can write `[bar][]`
+  or ``[`bar`][]`` as well. Since symbol names are parsed according to
+  READTABLE-CASE, character case rarely matters.
 
   Now, if `BAR` has multiple references with different locatives:
 
@@ -899,6 +926,19 @@
 
   This last option needs backticks around the locative if it's not a
   single symbol.
+
+  Within the same docstring, autolinking of code without explicit
+  markdown reference links happens only for the first occurrence of
+  the same object with the same locatives except for SECTIONs and
+  GLOSSARY-TERMs. In the following docstring, only the first `FOO`
+  will be turned into a link.
+
+      "Oh, `FOO` is safe. `FOO` is great."
+
+  On the other hand, if different locatives are found in the vicinity
+  of two occurrences of `FOO`, then both will be linked.
+
+      "Oh, function `FOO` is safe. Macro `FOO` is great."
 
   Note that *DOCUMENT-LINK-CODE* can be combined with
   *DOCUMENT-UPPERCASE-IS-CODE* to have links generated for uppercase
@@ -960,7 +1000,9 @@
      (let ((name (second tree)))
        (multiple-value-bind (reference-links refs)
            (make-reference-links-to-name parent tree name)
-         (let ((autolinked-key (cons name reference-links))
+         (let ((autolinked-key (cons name
+                                     ;; FIXME: sort it
+                                     reference-links))
                (supressedp (and refs
                                 (let ((object (reference-object (first refs))))
                                   (member object '(t nil))))))

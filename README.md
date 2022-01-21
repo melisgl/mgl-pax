@@ -1170,24 +1170,27 @@ with that.
 
 - [variable] **\*DOCUMENT-UPPERCASE-IS-CODE\*** *T*
 
-    When true, words that
+    When true, certain words are assumed to be code as if they were
+    marked up with backticks. In particular, the words thus codified are
+    those that
     
-    - name an interesting symbol that
+    - have no lowercase characters, and
     
-    - is [`EQ`][d921] to the object a reference being documented, or
+    - have at least one [`ALPHA-CHAR-P`][c416] character, and
     
-    - have at least 3 characters, or
+    - name an interesting symbol, a package, or an asdf system.
     
-    - name a symbol external to its package
+    A symbol is considered interesting iff it is [`INTERN`][3bcd]ed and
     
-    - have at least one [`ALPHA-CHAR-P`][c416] character
+    - it is external to its package, or
     
-    - have no lowercase characters
+    - it is [`EQ`][d921] to the object of a reference being documented, or
     
-    - name an interned symbol
+    - it has at least 3 characters.
     
-    are assumed to be code as if they were marked up with backticks,
-    which is especially useful when combined with [`*DOCUMENT-LINK-CODE*`][8082].
+    Symbols are read in the current [`*PACKAGE*`][1063], which is subject to
+    [`*DOCUMENT-NORMALIZE-PACKAGES*`][353f].
+    
     For example, this docstring:
     
         "`FOO` and FOO."
@@ -1205,6 +1208,9 @@ with that.
     The number of backslashes is doubled above because that's how the
     example looks in a docstring. Note that the backslash is discarded
     even if `*DOCUMENT-UPPERCASE-IS-CODE*` is false.
+    
+    Automatically codifying words is especially useful when combined
+    with [`*DOCUMENT-LINK-CODE*`][8082]. 
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-DOWNCASE-UPPERCASE-CODE-2A-20VARIABLE-29'></a>
 
@@ -1229,28 +1235,47 @@ with that.
     every reference that's not to a section. Also, markdown style
     reference links are added when a piece of inline code found in a
     docstring refers to a symbol that's referenced by one of the
-    sections being documented. Assuming `BAR` is defined, the
-    documentation for:
+    sections being documented.
     
     ```commonlisp
-    (defsection @foo
+    (defsection @foo (:export nil)
       (foo function)
       (bar function))
     
     (defun foo (x)
       "Calls `BAR` on `X`."
       (bar x))
+    
+    (defun bar (x)
+      x)
     ```
     
-    would look like this:
+    With the above definition the output of \`([`DOCUMENT`][1eb8] `@FOO` `:STREAM` `T`)
+    would include this:
     
-        - [function] FOO X
-        
-            Calls [`BAR`][1] on `X`.
+    ```
+    .. <a id='x-28MGL-PAX-3AFOO-20FUNCTION-29'></a>
+    .. 
+    .. - [function] **FOO** *X*
+    .. 
+    ..     Calls [`BAR`][e2f2] on `X`.
+    .. 
+    .. <a id='x-28MGL-PAX-3ABAR-20FUNCTION-29'></a>
+    .. 
+    .. - [function] **BAR** *X*
+    .. 
+    ..   [e2f2]: #x-28MGL-PAX-3ABAR-20FUNCTION-29 "(MGL-PAX:BAR FUNCTION)"
+    ```
     
-    Instead of `BAR`, one can write `[bar][]` or ``[`bar`][]`` as well.
-    Since symbol names are parsed according to [`READTABLE-CASE`][9edc], character
-    case rarely matters.
+    This line starting with `[e2f2]:` is the markdown reference link
+    definition with an url and a title. Here the url points to the HTML
+    anchor of the documentation of the function `BAR`, itself an escaped
+    version of the reference `(MGL-PAX:BAR FUNCTION)`, which is also the
+    title.
+    
+    In the docstring of `FOO`, instead of `BAR`, one can write `[bar][]`
+    or ``[`bar`][]`` as well. Since symbol names are parsed according to
+    [`READTABLE-CASE`][9edc], character case rarely matters.
     
     Now, if `BAR` has multiple references with different locatives:
     
@@ -1291,6 +1316,19 @@ with that.
     
     This last option needs backticks around the locative if it's not a
     single symbol.
+    
+    Within the same docstring, autolinking of code without explicit
+    markdown reference links happens only for the first occurrence of
+    the same object with the same locatives except for `SECTIONs` and
+    [`GLOSSARY-TERM`][3f93]s. In the following docstring, only the first `FOO`
+    will be turned into a link.
+    
+        "Oh, `FOO` is safe. `FOO` is great."
+    
+    On the other hand, if different locatives are found in the vicinity
+    of two occurrences of `FOO`, then both will be linked.
+    
+        "Oh, function `FOO` is safe. Macro `FOO` is great."
     
     Note that `*DOCUMENT-LINK-CODE*` can be combined with
     [`*DOCUMENT-UPPERCASE-IS-CODE*`][8be2] to have links generated for uppercase
@@ -2308,9 +2346,6 @@ for [`ASDF:SYSTEM:`][90f2]
       (locate-error name (cons locative-type locative-args)
                     "~S does not name an asdf system." name)))
 
-(defun asdf-system-name-p (string)
-  (not (null (find-link (make-reference string 'asdf:system)))))
-
 (defmethod canonical-reference ((system asdf:system))
   (make-reference (character-string (slot-value system 'asdf::name))
                   'asdf:system))
@@ -2788,8 +2823,10 @@ presented.
   [353f]: #x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES* VARIABLE)"
   [35e5]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "(PRIN1 FUNCTION)"
   [3b21]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "(STRING TYPE)"
+  [3bcd]: http://www.lispworks.com/documentation/HyperSpec/Body/f_intern.htm "(INTERN FUNCTION)"
   [3ca3]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cerror.htm "(CERROR FUNCTION)"
   [3e36]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009_w.htm "(\"ISSUE:AREF-1D\" MGL-PAX:CLHS)"
+  [3f93]: #x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:GLOSSARY-TERM MGL-PAX:LOCATIVE)"
   [3fdc]: #x-28MGL-PAX-3A-40MGL-PAX-NAVIGATING-IN-EMACS-20MGL-PAX-3ASECTION-29 "Navigating Sources in Emacs"
   [3fef]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE)"
   [4186]: http://www.lispworks.com/documentation/HyperSpec/Body/f_export.htm "(EXPORT FUNCTION)"
