@@ -108,11 +108,15 @@
                                     (enough-namestring filename system-dir))))
            (if (and relative-path
                     (uiop/pathname:relative-pathname-p relative-path))
-               (values relative-path
-                       (file-position-to-line-number filename position
-                                                     line-file-position-cache))
-               (warn "Source location for ~S is not below system ~
-                     directory ~S.~%" reference system-dir))))))
+               (let ((line-number (file-position-to-line-number
+                                   filename position
+                                   line-file-position-cache)))
+                 (if line-number
+                     (values relative-path line-number)
+                     (warn "~@<Source location information in file ~S ~
+                            is out of date.~@:>" filename)))
+               (warn "~@<Source location for ~S is not below system ~
+                      directory ~S.~%~@:>" reference system-dir))))))
 
 (defun file-position-to-line-number (filename file-position cache)
   (if (null file-position)
@@ -122,7 +126,7 @@
                                            (line-file-positions filename)))))
         (loop for line-number upfrom 0
               for line-file-position in line-file-positions
-              do (when (< file-position line-file-position)
+              do (when (<= file-position line-file-position)
                    (return line-number))))))
 
 ;;; This is cached because it is determining the line number for a
