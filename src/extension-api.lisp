@@ -106,10 +106,9 @@
   sense that calling CANONICAL-REFERENCE on it will return the same
   reference. For extension only, don't call this directly.")
   (:method (object locative-type locative-args)
-    (declare (ignore object locative-args locative-args))
-    (locate-error)))
+    (locate-error object (cons locative-type locative-args))))
 
-(defun locate-error (&rest format-and-args)
+(defun locate-error (object locative &rest format-and-args)
   "Call this function to signal a LOCATE-ERROR condition from a
   LOCATE-OBJECT method. FORMAT-AND-ARGS contains a format string and
   args suitable for FORMAT from which the LOCATE-ERROR-MESSAGE is
@@ -118,9 +117,10 @@
 
   The object and the locative are not specified, they are added by
   LOCATE when it resignals the condition."
-  (error 'locate-error :message (if format-and-args
-                                    (apply #'format nil format-and-args)
-                                    nil)))
+  (error 'locate-error :object object :locative locative
+         :message (if format-and-args
+                      (apply #'format nil format-and-args)
+                      nil)))
 
 (defgeneric canonical-reference (object)
   (:documentation "Return a REFERENCE that resolves to OBJECT. Signals
@@ -376,7 +376,7 @@
      (defmethod locate-object
          (symbol (locative-type (eql ',locative-type)) locative-args)
        (or (symbol-lambda-list-method symbol ',locative-type)
-           (locate-error))
+           (locate-error symbol (cons ',locative-type locative-args)))
        (make-reference symbol (cons locative-type locative-args)))
      (defmethod locate-and-document
          (symbol (locative-type (eql ',locative-type)) locative-args stream)

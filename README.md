@@ -2300,12 +2300,13 @@ for [`ASDF:SYSTEM:`][90f2]
   serves as an example of a symbol that's not accessible in the
   current package and consequently is not exported.")
 
-(defmethod locate-object (symbol (locative-type (eql 'asdf:system))
+(defmethod locate-object (name (locative-type (eql 'asdf:system))
                           locative-args)
-  (assert (endp locative-args))
-  ;; FIXME: This is slow as hell.
-  (or (asdf:find-system symbol nil)
-      (locate-error)))
+  (or (and (endp locative-args)
+           ;; FIXME: This is slow as hell.
+           (asdf:find-system name nil))
+      (locate-error name (cons locative-type locative-args)
+                    "~S does not name an asdf system." name)))
 
 (defun asdf-system-name-p (string)
   (not (null (find-link (make-reference string 'asdf:system)))))
@@ -2443,7 +2444,7 @@ for [`ASDF:SYSTEM:`][90f2]
 
 <a id='x-28MGL-PAX-3ALOCATE-ERROR-20FUNCTION-29'></a>
 
-- [function] **LOCATE-ERROR** *&REST FORMAT-AND-ARGS*
+- [function] **LOCATE-ERROR** *OBJECT LOCATIVE &REST FORMAT-AND-ARGS*
 
     Call this function to signal a [`LOCATE-ERROR`][2285] condition from a
     [`LOCATE-OBJECT`][acc9] method. `FORMAT-AND-ARGS` contains a format string and

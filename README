@@ -2044,12 +2044,13 @@ for ASDF:SYSTEM:
   serves as an example of a symbol that's not accessible in the
   current package and consequently is not exported.")
 
-(defmethod locate-object (symbol (locative-type (eql 'asdf:system))
+(defmethod locate-object (name (locative-type (eql 'asdf:system))
                           locative-args)
-  (assert (endp locative-args))
-  ;; FIXME: This is slow as hell.
-  (or (asdf:find-system symbol nil)
-      (locate-error)))
+  (or (and (endp locative-args)
+           ;; FIXME: This is slow as hell.
+           (asdf:find-system name nil))
+      (locate-error name (cons locative-type locative-args)
+                    "~S does not name an asdf system." name)))
 
 (defun asdf-system-name-p (string)
   (not (null (find-link (make-reference string 'asdf:system)))))
@@ -2177,7 +2178,7 @@ for ASDF:SYSTEM:
     sense that calling CANONICAL-REFERENCE on it will return the same
     reference. For extension only, don't call this directly.
 
-- [function] LOCATE-ERROR &REST FORMAT-AND-ARGS
+- [function] LOCATE-ERROR OBJECT LOCATIVE &REST FORMAT-AND-ARGS
 
     Call this function to signal a LOCATE-ERROR condition from a
     LOCATE-OBJECT method. FORMAT-AND-ARGS contains a format string and

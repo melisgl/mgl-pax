@@ -319,12 +319,13 @@
   REFERENCE if there is no first class object corresponding to the
   location. If ERRORP, then a LOCATE-ERROR condition is signaled when
   the lookup fails."
-  (handler-case
+  (if errorp
       (locate-object object (locative-type locative) (locative-args locative))
-    (locate-error (e)
-      (when errorp
-        (error 'locate-error :message (locate-error-message e)
-               :object object :locative locative)))))
+      (handler-case
+          (locate-object object (locative-type locative)
+                         (locative-args locative))
+        (locate-error ()
+          nil))))
 
 (define-condition locate-error (error)
   ((message :initarg :message :reader locate-error-message)

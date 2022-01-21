@@ -225,7 +225,8 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'macro)) locative-args)
   (unless (macro-function symbol)
-    (locate-error))
+    (locate-error symbol (cons locative-type locative-args)
+                  "~S does not name a macro." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'macro))
@@ -252,7 +253,8 @@
 (defmethod locate-object (symbol (locative-type (eql 'compiler-macro))
                           locative-args)
   (unless (compiler-macro-function symbol)
-    (locate-error))
+    (locate-error symbol (cons locative-type locative-args)
+                  "~S does not name a compiler macro." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'compiler-macro))
@@ -287,22 +289,25 @@
 (define-locative-type generic-function ())
 
 (defmethod locate-object (symbol (locative-type (eql 'function)) locative-args)
-  (declare (ignore locative-args))
   (when (macro-function symbol)
-    (locate-error "~S is a macro, not a function." symbol))
+    (locate-error symbol (cons locative-type locative-args)
+                  "~S is a macro, not a function." symbol))
   (let ((function (ignore-errors (symbol-function* symbol))))
     (unless function
-      (locate-error "~S does not denote function." symbol))
+      (locate-error symbol (cons locative-type locative-args)
+                    "~S does not name function." symbol))
     (when (typep function 'generic-function)
-      (locate-error "~S is a generic function, not a plain function." symbol))
+      (locate-error symbol (cons locative-type locative-args)
+                    "~S names a generic function, not a plain function."
+                    symbol))
     function))
 
 (defmethod locate-object (symbol (locative-type (eql 'generic-function))
                           locative-args)
-  (declare (ignore locative-args))
   (let ((function (symbol-function* symbol)))
     (unless (typep function 'generic-function)
-      (locate-error "#'~S is not a generic function." symbol))
+      (locate-error symbol (cons locative-type locative-args)
+                    "~S does not name a generic function." symbol))
     function))
 
 (defmethod canonical-reference ((function function))
@@ -345,7 +350,9 @@
 (defmethod locate-object (symbol (locative-type (eql 'method))
                           locative-args)
   (unless (= 2 (length locative-args))
-    (locate-error))
+    (locate-error symbol (cons locative-type locative-args)
+                  "The syntax of the METHOD locative is ~
+                   (METHOD <METHOD-QUALIFIERS> <METHOD-SPECIALIZERS>)."))
   (destructuring-bind (qualifiers specializers) locative-args
     (or (ignore-errors
          (find-method (symbol-function* symbol) qualifiers
@@ -357,7 +364,8 @@
                                       ;; or a type specifier denoting
                                       ;; a class:
                                       (t (find-class specializer))))))
-        (locate-error))))
+        (locate-error symbol (cons locative-type locative-args)
+                      "Method does not exist."))))
 
 (defmethod canonical-reference ((method method))
   (make-reference (swank-mop:generic-function-name
@@ -433,8 +441,10 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'accessor))
                           locative-args)
-  (assert (= 1 (length locative-args)) ()
-          "The syntax of the ACCESSOR locative is (ACCESSOR <CLASS-NAME>).")
+  (unless (= 1 (length locative-args))
+    (locate-error symbol (cons locative-type locative-args)
+                  "The syntax of the ACCESSOR locative is ~
+                   (ACCESSOR <CLASS-NAME>)."))
   (find-accessor-slot-definition symbol (first locative-args))
   (make-reference symbol (cons locative-type locative-args)))
 
@@ -446,13 +456,16 @@
                      (swank-mop:slot-definition-writers slot-def)
                      :test #'equal))
       (return-from find-accessor-slot-definition slot-def)))
-  (locate-error "Could not find accessor ~S for class ~S." accessor-symbol
-                class-symbol))
+  (locate-error accessor-symbol `(accessor ,class-symbol)
+                "Could not find accessor ~S for class ~S."
+                accessor-symbol class-symbol))
 
 (defmethod locate-object (symbol (locative-type (eql 'reader))
                           locative-args)
-  (assert (= 1 (length locative-args)) ()
-          "The syntax of the READER locative is (READER <CLASS-NAME>).")
+  (unless (= 1 (length locative-args))
+    (locate-error symbol (cons locative-type locative-args)
+                  "The syntax of the READER locative is ~
+                   (READER <CLASS-NAME>)."))
   (find-reader-slot-definition symbol (first locative-args))
   (make-reference symbol (cons locative-type locative-args)))
 
@@ -465,8 +478,10 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'writer))
                           locative-args)
-  (assert (= 1 (length locative-args)) ()
-          "The syntax of the WRITER locative is (WRITER <CLASS-NAME>).")
+  (unless (= 1 (length locative-args))
+    (locate-error symbol (cons locative-type locative-args)
+                  "The syntax of the WRITER locative is ~
+                   (WRITER <CLASS-NAME>)."))
   (find-writer-slot-definition symbol (first locative-args))
   (make-reference symbol (cons locative-type locative-args)))
 
@@ -474,8 +489,9 @@
   (dolist (slot-def (swank-mop:class-direct-slots (find-class class-symbol)))
     (when (find accessor-symbol (swank-mop:slot-definition-writers slot-def))
       (return-from find-writer-slot-definition slot-def)))
-  (locate-error "Could not find writer ~S for class ~S." accessor-symbol
-                class-symbol))
+  (locate-error accessor-symbol `(writer ,class-symbol)
+                "Could not find writer ~S for class ~S."
+                accessor-symbol class-symbol))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'accessor))
                                 locative-args stream)
@@ -567,7 +583,8 @@
                           locative-args)
   ;; Signal an error if it doesn't exist.
   (or (ignore-errors (symbol-function* symbol))
-      (locate-error))
+      (locate-error symbol (cons locative-type locative-args)
+                    ""))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defmethod locate-and-document ((symbol symbol)
@@ -602,11 +619,13 @@
   are part of the contract.")
 
 (defmethod locate-object (symbol (locative-type (eql 'type)) locative-args)
-  ;; On some lisps, SWANK-BACKEND:TYPE-SPECIFIER-P is not reliable.
-  #-(or abcl allegro clisp cmucl ecl)
   (unless (and (symbolp symbol)
+               ;; On some lisps, SWANK-BACKEND:TYPE-SPECIFIER-P is not
+               ;; reliable.
+               #-(or abcl allegro clisp cmucl ecl)
                (swank-backend:type-specifier-p symbol))
-    (locate-error))
+    (locate-error symbol (cons locative-args locative-args)
+                  "~S is not a valid type specifier." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'type)) locative-args
@@ -643,16 +662,21 @@
       (foo condition)")
 
 (defmethod locate-object (symbol (locative-type (eql 'class)) locative-args)
-  (declare (ignore locative-args))
-  (or (find-class symbol nil)
-      (locate-error)))
+  (or (and (symbolp symbol)
+           (endp locative-args)
+           (find-class symbol nil))
+      (locate-error symbol (cons locative-type locative-args)
+                    "~S does not name a class." symbol)))
 
 (defmethod locate-object (symbol (locative-type (eql 'condition))
                           locative-args)
-  (assert (= 0 (length locative-args)))
-  (let ((class (find-class symbol :errorp nil)))
-    (unless (subtypep class 'condition)
-      (locate-error))
+  (let ((class (find-class symbol nil)))
+    (unless (and (symbolp symbol)
+                 (endp locative-args)
+                 class
+                 (subtypep class 'condition))
+      (locate-error symbol (cons locative-type locative-args)
+                    "~S does not name a condition class." symbol))
     class))
 
 (defmethod canonical-reference ((class class))
@@ -734,12 +758,13 @@
   serves as an example of a symbol that's not accessible in the
   current package and consequently is not exported.")
 
-(defmethod locate-object (symbol (locative-type (eql 'asdf:system))
+(defmethod locate-object (name (locative-type (eql 'asdf:system))
                           locative-args)
-  (assert (endp locative-args))
-  ;; FIXME: This is slow as hell.
-  (or (asdf:find-system symbol nil)
-      (locate-error)))
+  (or (and (endp locative-args)
+           ;; FIXME: This is slow as hell.
+           (asdf:find-system name nil))
+      (locate-error name (cons locative-type locative-args)
+                    "~S does not name an asdf system." name)))
 
 (defmethod canonical-reference ((system asdf:system))
   (make-reference (character-string (slot-value system 'asdf::name))
@@ -805,10 +830,14 @@
 
 (define-locative-type package ())
 
-(defmethod locate-object (symbol (locative-type (eql 'package))
+(defmethod locate-object (package-designator (locative-type (eql 'package))
                           locative-args)
-  (assert (= 0 (length locative-args)))
-  (or (find-package symbol) (locate-error)))
+  (or (and (endp locative-args)
+           (or (symbolp package-designator)
+               (stringp package-designator))
+           (find-package package-designator))
+      (locate-error package-designator (cons locative-type locative-args)
+                    "~S does not name a package." package-designator)))
 
 (defmethod canonical-reference ((package package))
   (make-reference (character-string (package-name package)) 'package))
@@ -844,7 +873,7 @@
 (defmethod canonical-reference ((readtable readtable))
   (let ((name (readtable-name readtable)))
     (unless name
-      (locate-error))
+      (error "~S is not a NAMED-READTABLE." readtable))
     (make-reference name 'readtable)))
 
 (defmethod find-source ((readtable readtable))
@@ -881,10 +910,13 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'declaration))
                           locative-args)
-  (unless (or (find symbol *ansi-declarations*)
-              #+sbcl
-              (find symbol (sb-cltl2:declaration-information 'declaration)))
-    (locate-error))
+  (unless (and (symbolp symbol)
+               (or (find symbol *ansi-declarations*)
+                   #+sbcl
+                   (find symbol (sb-cltl2:declaration-information
+                                 'declaration))))
+    (locate-error symbol (cons locative-type locative-args)
+                  "~S is not a known declaration." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'declaration))
@@ -1024,18 +1056,16 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'include))
                           locative-args)
-  (when (nth-value
-         1 (ignore-errors
-            (destructuring-bind (source &key line-prefix header footer
-                                 header-nl footer-nl)
-                locative-args
-              (declare (ignore source line-prefix header footer
-                               header-nl footer-nl)))))
-    (locate-error))
-  (destructuring-bind (source &key line-prefix header footer
-                       header-nl footer-nl) locative-args
-    (declare (ignore source line-prefix header footer header-nl footer-nl))
-    (make-reference symbol (cons locative-type locative-args))))
+  (handler-case
+      (destructuring-bind (source &key line-prefix header footer
+                           header-nl footer-nl) locative-args
+        (declare (ignore source line-prefix header footer header-nl footer-nl))
+        (make-reference symbol (cons locative-type locative-args)))
+    (error ()
+      (locate-error symbol (cons locative-type locative-args)
+                    "The lambda list of the INCLUDE locative is ~
+                     (SOURCE &KEY LINE-PREFIX HEADER FOOTER HEADER-NL ~
+                     FOOTER-NL)."))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'include))
                                    locative-args)
@@ -1214,9 +1244,13 @@
   Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.")
 
 (defmethod locate-object (symbol (locative-type (eql 'locative)) locative-args)
-  (assert (endp locative-args))
+  (when locative-args
+    (locate-error symbol (cons locative-type locative-args)
+                  "The syntax of the LOCATIVE locative is ~
+                   (LOCATIVE <LOCATIVE-TYPE>)."))
   (or (ignore-errors (locative-lambda-list-method-for-symbol symbol))
-      (locate-error))
+      (locate-error symbol (cons locative-type locative-args)
+                    "~S is not a valid locative." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defun locative-lambda-list-method-for-symbol (symbol)
@@ -1261,8 +1295,8 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'dislocated))
                           locative-args)
-  (declare (ignore symbol locative-args))
-  (locate-error))
+  (locate-error symbol (cons locative-type locative-args)
+                "DISLOCATED can never be located."))
 
 
 ;;;; ARGUMENT locative
@@ -1284,8 +1318,8 @@
   ```""")
 
 (defmethod locate-object (symbol (locative-type (eql 'argument)) locative-args)
-  (declare (ignore symbol locative-args))
-  (locate-error))
+  (locate-error symbol (cons locative-type locative-args)
+                "ARGUMENT can never be located."))
 
 
 ;;;; CLHS locative
@@ -1341,16 +1375,15 @@
   ```
   """)
 
-(defmethod locate-object (object (locative-type (eql 'clhs)) locative-args)
-  (let ((hyperspec-id (find-hyperspec-id object)))
+(defmethod locate-object (name (locative-type (eql 'clhs)) locative-args)
+  (let ((hyperspec-id (and (endp locative-args)
+                           (stringp name)
+                           (find-hyperspec-id name))))
     (if hyperspec-id
         (make-reference hyperspec-id 'clhs)
-        (locate-error))))
+        (locate-error name (cons locative-type locative-args)
+                      "Cannot find ~S in the CLHS." name))))
 
-(defmethod locate-canonical-reference (object (locative-type (eql 'clhs))
+(defmethod locate-canonical-reference (name (locative-type (eql 'clhs))
                                        locative-args)
-  (declare (ignore locative-args))
-  (let ((hyperspec-id (find-hyperspec-id object)))
-    (if hyperspec-id
-        (make-reference hyperspec-id 'clhs)
-        (locate-error))))
+  (locate-object name locative-type locative-args))
