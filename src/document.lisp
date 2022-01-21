@@ -155,7 +155,8 @@
                           :id (hash-link (reference-to-anchor reference)
                                          #'find-link-by-id))))))
   (when *document-link-to-hyperspec*
-    (loop for (object locative url) in (hyperspec-external-references)
+    (loop for (object locative url) in (hyperspec-external-references
+                                        *document-hyperspec-root*)
           do (let ((reference (make-reference object locative)))
                (add-link (make-link
                           :reference reference
@@ -648,7 +649,8 @@
 ;;; Packages and ASDF systems are treated somewhat differently because
 ;;; their REFERENCE-OBJECTs may be strings.
 (defun codify-uppercase-name-p (name refs)
-  (multiple-value-bind (object n-chars-read) (find-candidate-object name)
+  (multiple-value-bind (object n-chars-read)
+      (find-candidate-object name :codifyingp t)
     (when n-chars-read
       (flet ((normal-ref-to-object-p (ref)
                (and
@@ -664,6 +666,9 @@
                   (find-package object)
                   (asdf-system-name-p object))
           n-chars-read)))))
+
+(defun asdf-system-name-p (string)
+  (not (null (find-link (make-reference string 'asdf:system)))))
 
 ;;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings and :EMPH
 ;;; (to recognize *VAR*). Also, perform consistency checking of
@@ -734,32 +739,45 @@
 (defvar *object-name-right-trim* ",:.>")
 (defvar *object-name-right-trim-2* ",:.>sS")
 
-(defun find-candidate-object (name &key locative)
-  (with-swank ()
-    (swank::with-buffer-syntax (*package*)
-      (flet ((do-find (name n)
+;;; See if NAME looks like a possible REFERENCE-OBJECT (e.g. it names
+;;; and interned symbol, package, asdf system, or something in the
+;;; clhs). If CODIFYINGP, then try to trimming trailing punctuation
+;;; and stuff to find a candidate object. If not CODIFYINGP, then
+;;; allow clhs lookup to match substrings of titles.
+(defun find-candidate-object (name &key locatives codifyingp)
+  (let ((length (length name))
+        (clhs-locative-possible-p
+          (or (null locatives)
+              (find 'clhs locatives :key #'locative-type))))
+    (with-swank ()
+      (swank::with-buffer-syntax (*package*)
+        (flet
+            ((do-find (name n)
                (when (plusp n)
                  ;; FIXME: DO-FIND should be a generic function extendable
                  ;; by LOCATIVE-TYPE.
-                 (multiple-value-bind (symbol found) (swank::parse-symbol name)
+                 (multiple-value-bind (symbol found)
+                     (swank::parse-symbol name)
                    (cond (found
                           (return-from find-candidate-object
                             (values symbol n)))
                          ((or (find-package name)
                               (asdf-system-name-p name)
-                              (hyperspec-section-name-p name)
-                              (and (eq (locative-type locative) 'clhs)
-                                   (find-hyperspec-section name)))
+                              (and clhs-locative-possible-p
+                                   (find-hyperspec-id
+                                    name :substring-match (not codifyingp))))
                           (return-from find-candidate-object
                             (values name n))))))))
-        (do-find name (length name))
-        (let* ((right-trimmed (string-right-trim *object-name-right-trim* name))
-               (right-trimmed-length (length right-trimmed)))
-          (do-find right-trimmed right-trimmed-length))
-        (let* ((right-trimmed-2 (string-right-trim *object-name-right-trim-2*
-                                                   name))
-               (right-trimmed-2-length (length right-trimmed-2)))
-          (do-find right-trimmed-2 right-trimmed-2-length))))))
+          (do-find name length)
+          (when codifyingp
+            (dolist (trimmed (list
+                              (string-right-trim *object-name-right-trim*
+                                                 name)
+                              (string-right-trim *object-name-right-trim-2*
+                                                 name)))
+              (let ((trimmed-length (length trimmed)))
+                (unless (= length trimmed-length)
+                  (do-find trimmed trimmed-length))))))))))
 
 
 (defvar *document-downcase-uppercase-code* nil
@@ -885,29 +903,6 @@
   "A URL pointing to an installed Common Lisp Hyperspec. The default
   value of is the canonical location.")
 
-(defun hyperspec-external-references ()
-  (append
-   ;; A list of elements like (FIND-IF FUNCTION "F_FIND_").
-   (mapcar (lambda (entry)
-             (destructuring-bind (object locative filename) entry
-               (list object (if (eq locative 'operator)
-                                'macro
-                                locative)
-                     (hyperspec-link filename))))
-           *hyperpsec-entries*)
-   ;; CLHS section numbers. A list of elements like ("3.4" CLHS "03_d").
-   (mapcar (lambda (entry)
-             (destructuring-bind (filename section-number title) entry
-               (declare (ignore title))
-               (list section-number 'clhs (hyperspec-link filename))))
-           *hyperspec-sections*)))
-
-(defun hyperspec-link (name)
-  ;; FIXME: This does not support anchors as in "26_glo_n#nil", but it
-  ;; doesn't matter as long as glossary entries from the hyperspec are
-  ;; not included.
-  (format nil "~ABody/~A.htm" *document-hyperspec-root* name))
-
 ;;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
 ;;; :REFERENCE-LINK for [symbol][locative]). Don't hurt other links.
 (defun autolink (parse-tree known-references)
@@ -969,10 +964,11 @@
      (destructuring-bind (&key label definition tail) (rest tree)
        (let ((name (extract-name-from-reference-link-label label))
              (locative (when definition
-                         (read-locative-from-string definition))))
+                         (read-valid-locative definition))))
          (multiple-value-bind (object n-chars-read)
              (if name
-                 (find-candidate-object name :locative locative)
+                 (find-candidate-object name :locatives (alexandria:ensure-list
+                                                         locative))
                  nil)
            (if (null n-chars-read)
                tree
@@ -1019,24 +1015,29 @@
 ;;; from (:CODE "xxx") or from "xxx,yyy"), or it's constructed from
 ;;; TREE (e.g. it's "*SYM*" from (:EMPH "SYM")).
 (defun make-reference-links-to-name (parent tree name known-references)
-  (multiple-value-bind (refs n-chars-read)
-      (references-to-a-similar-name name known-references)
-    (when refs
-      ;; If necessary, try to find a locative before or after NAME to
-      ;; disambiguate and also to handle the `PRINT argument` case.
-      (let* ((ref (find-locative-around parent tree refs))
-             (refs (if ref
-                       (filter-references-for-specified-locative
-                        (reference-object ref) (reference-locative ref)
-                        refs)
-                       (filter-references-for-object refs))))
-        (values (make-reference-links (maybe-downcase
-                                       (subseq name 0 n-chars-read))
-                                      refs)
-                refs)))))
+  (let ((locatives (find-locatives-around parent tree)))
+    (multiple-value-bind (refs n-chars-read)
+        (references-to-a-similar-name name locatives known-references)
+      (when refs
+        (let ((refs
+                (or
+                 ;; Use the first locative found in TREE in the
+                 ;; vicinity of NAME which combines with the object to
+                 ;; a known reference.
+                 (loop for locative in locatives
+                         thereis (filter-references-for-specified-locative
+                                  (reference-object (first refs))
+                                  locative refs))
+                 ;; Fall back on the no locative case.
+                 (filter-references-for-object refs))))
+          (values (make-reference-links (maybe-downcase
+                                         (subseq name 0 n-chars-read))
+                                        refs)
+                  refs))))))
 
-(defun references-to-a-similar-name (name refs)
-  (multiple-value-bind (object n-chars-read) (find-candidate-object name)
+(defun references-to-a-similar-name (name locatives refs)
+  (multiple-value-bind (object n-chars-read)
+      (find-candidate-object name :locatives locatives)
     (when n-chars-read
       (values (or (remove-if-not (lambda (ref)
                                    (reference-object= object ref))
@@ -1048,26 +1049,24 @@
 ;;; it contains the name. Find a locative before or after NAME-ELEMENT
 ;;; with which NAME occurs in POSSIBLE-REFERENCES. Return the matching
 ;;; REFERENCE, if found. POSSIBLE-REFERENCES must only contain
-;;; references to the symbol.
-(defun find-locative-around (tree name-element possible-references)
-  (let ((possible-references
-          (cons (make-reference (reference-object (first possible-references))
-                                'argument)
-                possible-references)))
-    (labels ((try (element)
-               (let ((reference
-                       (cond ((stringp element)
-                              (find-reference-by-locative-string
-                               element possible-references))
-                             ((eq :code (first element))
-                              (find-reference-by-locative-string
-                               (second element) possible-references))
-                             ;; (:REFERENCE-LINK :LABEL ((:CODE
-                             ;; "CLASS")) :DEFINITION "0524")
-                             ((eq :reference-link (first element))
-                              (try (first (third element)))))))
-                 (when reference
-                   (return-from find-locative-around reference)))))
+;;; references to the same object.
+(defun find-locatives-around (tree name-element)
+  (let ((locatives ()))
+    (labels ((try-string (string)
+               (let ((locative (read-valid-locative string)))
+                 (when locative
+                   (push locative locatives))))
+             (try (element)
+               (let ((locative (cond ((stringp element)
+                                      (try-string element))
+                                     ((eq :code (first element))
+                                      (try-string (second element)))
+                                     ;; (:REFERENCE-LINK :LABEL ((:CODE
+                                     ;; "CLASS")) :DEFINITION "0524")
+                                     ((eq :reference-link (first element))
+                                      (try (first (third element)))))))
+                 (when locative
+                   (return-from find-locatives-around locative)))))
       ;; For example, (:PLAIN "See" "function" " " "FOO")
       (loop for rest on tree
             do (when (and (eq (third rest) name-element)
@@ -1081,12 +1080,14 @@
                           (stringp (second rest))
                           (blankp (second rest)))
                  (try (third rest))
-                 (return))))))
+                 (return))))
+    locatives))
 
-(defun find-reference-by-locative-string (locative-string refs)
+(defun read-valid-locative (locative-string)
   (let ((locative (read-locative-from-string locative-string)))
-    (when locative
-      (find-reference-by-locative locative refs))))
+    (when (and locative
+               (locate (locative-type locative) 'locative :errorp nil))
+      locative)))
 
 (defun find-reference-by-locative (locative refs)
   ;; This won't find [SECTION][TYPE] because SECTION is a class.
@@ -1135,6 +1136,8 @@
     names often collide with the name of a class or function and are
     rarely useful to link to. Use explicit links to ASDF:SYSTEMs, if
     necessary.
+
+  - References to the CLHS are filtered similarly.
 
   - If references include a GENERIC-FUNCTION locative, then all
     references with LOCATIVE-TYPE [METHOD][locative],
@@ -1201,7 +1204,8 @@
 ;;; *LOCAL-REFERENCES*.
 (defun filter-references-for-specified-locative (object locative refs)
   (if (member (locative-type locative) '(dislocated argument))
-      ;; Handle an explicit [FOO][dislocated] in markdown.
+      ;; Handle an explicit [FOO][dislocated] in markdown, for which
+      ;; there is no reference in REFS.
       (list (make-reference object 'dislocated))
       (let ((ref (find (canonical-reference (make-reference object locative))
                        refs :test #'reference=)))

@@ -762,16 +762,26 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     [03_d][clhs]
     ```
     
-    The generated links are relative to *DOCUMENT-HYPERSPEC-ROOT*.
-    
-    The rules of matching are the following. If the object of the
-    reference is STRING= to the section number string (without the
+    The rules of matching sections are the following. If the object of
+    the reference is STRING= to the section number string (without the
     trailing dot) or to the name of its file without the `.htm`
     extension, then the reference refers to that section. Else, if the
     object is a case-insensitive substring of the title of some section,
     then the reference refers to the first such section in breadth-first
-    order. To detach the discussion from markdown syntax, let's see
-    these cases through the programmatic interface.
+    order.
+    
+    To link to issue and issue summary pages, all of the above markdown
+    examples work, just make the object of the reference the name of the
+    issue prefixed by `ISSUE:` or `SUMMARY:` as appropriate. For
+    example, to refer to the `AREF-1D` issue use `[ISSUE:AREF-1D][clhs]`
+    and get [ISSUE:AREF-1D][clhs]. Similary, `[SUMMARY:AREF-1D][clhs]`
+    turns into [SUMMARY:AREF-1D][clhs]. Alternatively, matching the name
+    of the file also works (`[iss009][clhs]` renders as [iss009][clhs])
+    
+    The generated links are relative to *DOCUMENT-HYPERSPEC-ROOT*.
+    
+    To detach the discussion from markdown syntax, let's see these cases
+    through the programmatic interface.
     
     ```
     (locate "3.4" 'clhs)
@@ -780,6 +790,10 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     ==> #<REFERENCE "03_d" CLHS>
     (locate "lambda" 'clhs)
     ==> #<REFERENCE "3.4" CLHS>
+    (locate "ISSUE:AREF-1D" 'clhs)
+    ==> #<REFERENCE "ISSUE:AREF-1D" CLHS>
+    (locate "SUMMARY:AREF-1D" 'clhs)
+    ==> #<REFERENCE "SUMMARY:AREF-1D" CLHS>
     ```
 
 
@@ -1174,6 +1188,8 @@ by the following rules.
   names often collide with the name of a class or function and are
   rarely useful to link to. Use explicit links to ASDF:SYSTEMs, if
   necessary.
+
+- References to the CLHS are filtered similarly.
 
 - If references include a GENERIC-FUNCTION locative, then all
   references with LOCATIVE-TYPE [METHOD][locative],

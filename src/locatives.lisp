@@ -344,7 +344,8 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'method))
                           locative-args)
-  (assert (= 2 (length locative-args)))
+  (unless (= 2 (length locative-args))
+    (locate-error))
   (destructuring-bind (qualifiers specializers) locative-args
     (or (ignore-errors
          (find-method (symbol-function* symbol) qualifiers
@@ -603,7 +604,8 @@
 (defmethod locate-object (symbol (locative-type (eql 'type)) locative-args)
   ;; On some lisps, SWANK-BACKEND:TYPE-SPECIFIER-P is not reliable.
   #-(or abcl allegro clisp cmucl ecl)
-  (unless (swank-backend:type-specifier-p symbol)
+  (unless (and (symbolp symbol)
+               (swank-backend:type-specifier-p symbol))
     (locate-error))
   (make-reference symbol (cons locative-type locative-args)))
 
@@ -642,7 +644,7 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'class)) locative-args)
   (declare (ignore locative-args))
-  (or (find-class symbol :errorp nil)
+  (or (find-class symbol nil)
       (locate-error)))
 
 (defmethod locate-object (symbol (locative-type (eql 'condition))
@@ -738,9 +740,6 @@
   ;; FIXME: This is slow as hell.
   (or (asdf:find-system symbol nil)
       (locate-error)))
-
-(defun asdf-system-name-p (string)
-  (not (null (find-link (make-reference string 'asdf:system)))))
 
 (defmethod canonical-reference ((system asdf:system))
   (make-reference (character-string (slot-value system 'asdf::name))
@@ -1025,6 +1024,14 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'include))
                           locative-args)
+  (when (nth-value
+         1 (ignore-errors
+            (destructuring-bind (source &key line-prefix header footer
+                                 header-nl footer-nl)
+                locative-args
+              (declare (ignore source line-prefix header footer
+                               header-nl footer-nl)))))
+    (locate-error))
   (destructuring-bind (source &key line-prefix header footer
                        header-nl footer-nl) locative-args
     (declare (ignore source line-prefix header footer header-nl footer-nl))
@@ -1299,16 +1306,26 @@
   [03_d][clhs]
   ```
 
-  The generated links are relative to *DOCUMENT-HYPERSPEC-ROOT*.
-
-  The rules of matching are the following. If the object of the
-  reference is STRING= to the section number string (without the
+  The rules of matching sections are the following. If the object of
+  the reference is STRING= to the section number string (without the
   trailing dot) or to the name of its file without the `.htm`
   extension, then the reference refers to that section. Else, if the
   object is a case-insensitive substring of the title of some section,
   then the reference refers to the first such section in breadth-first
-  order. To detach the discussion from markdown syntax, let's see
-  these cases through the programmatic interface.
+  order.
+
+  To link to issue and issue summary pages, all of the above markdown
+  examples work, just make the object of the reference the name of the
+  issue prefixed by `ISSUE:` or `SUMMARY:` as appropriate. For
+  example, to refer to the `AREF-1D` issue use `[ISSUE:AREF-1D][clhs]`
+  and get [ISSUE:AREF-1D][clhs]. Similary, `[SUMMARY:AREF-1D][clhs]`
+  turns into [SUMMARY:AREF-1D][clhs]. Alternatively, matching the name
+  of the file also works (`[iss009][clhs]` renders as [iss009][clhs])
+
+  The generated links are relative to *DOCUMENT-HYPERSPEC-ROOT*.
+
+  To detach the discussion from markdown syntax, let's see these cases
+  through the programmatic interface.
 
   ```
   (locate "3.4" 'clhs)
@@ -1317,19 +1334,23 @@
   ==> #<REFERENCE "03_d" CLHS>
   (locate "lambda" 'clhs)
   ==> #<REFERENCE "3.4" CLHS>
+  (locate "ISSUE:AREF-1D" 'clhs)
+  ==> #<REFERENCE "ISSUE:AREF-1D" CLHS>
+  (locate "SUMMARY:AREF-1D" 'clhs)
+  ==> #<REFERENCE "SUMMARY:AREF-1D" CLHS>
   ```
   """)
 
 (defmethod locate-object (object (locative-type (eql 'clhs)) locative-args)
-  (let ((hyperspec-section (find-hyperspec-section object)))
-    (if hyperspec-section
-        (make-reference (hyperspec-section-number hyperspec-section) 'clhs)
+  (let ((hyperspec-id (find-hyperspec-id object)))
+    (if hyperspec-id
+        (make-reference hyperspec-id 'clhs)
         (locate-error))))
 
 (defmethod locate-canonical-reference (object (locative-type (eql 'clhs))
                                        locative-args)
   (declare (ignore locative-args))
-  (let ((hyperspec-section (find-hyperspec-section object)))
-    (if hyperspec-section
-        (make-reference (hyperspec-section-number hyperspec-section) 'clhs)
+  (let ((hyperspec-id (find-hyperspec-id object)))
+    (if hyperspec-id
+        (make-reference hyperspec-id 'clhs)
         (locate-error))))

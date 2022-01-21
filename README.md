@@ -882,16 +882,26 @@ location and the docstring of the defining form is recorded (see
     [03_d][clhs]
     ```
     
-    The generated links are relative to [`*DOCUMENT-HYPERSPEC-ROOT*`][b0e9].
-    
-    The rules of matching are the following. If the object of the
-    reference is [`STRING=`][cc0e] to the section number string (without the
+    The rules of matching sections are the following. If the object of
+    the reference is [`STRING=`][cc0e] to the section number string (without the
     trailing dot) or to the name of its file without the `.htm`
     extension, then the reference refers to that section. Else, if the
     object is a case-insensitive substring of the title of some section,
     then the reference refers to the first such section in breadth-first
-    order. To detach the discussion from markdown syntax, let's see
-    these cases through the programmatic interface.
+    order.
+    
+    To link to issue and issue summary pages, all of the above markdown
+    examples work, just make the object of the reference the name of the
+    issue prefixed by `ISSUE:` or `SUMMARY:` as appropriate. For
+    example, to refer to the `AREF-1D` issue use `[ISSUE:AREF-1D][clhs]`
+    and get [`ISSUE:AREF-1D`][3e36]. Similary, `[SUMMARY:AREF-1D][clhs]`
+    turns into [`SUMMARY:AREF-1D`][eed0]. Alternatively, matching the name
+    of the file also works (`[iss009][clhs]` renders as [`iss009`][eed0])
+    
+    The generated links are relative to [`*DOCUMENT-HYPERSPEC-ROOT*`][b0e9].
+    
+    To detach the discussion from markdown syntax, let's see these cases
+    through the programmatic interface.
     
     ```
     (locate "3.4" 'clhs)
@@ -900,6 +910,10 @@ location and the docstring of the defining form is recorded (see
     ==> #<REFERENCE "03_d" CLHS>
     (locate "lambda" 'clhs)
     ==> #<REFERENCE "3.4" CLHS>
+    (locate "ISSUE:AREF-1D" 'clhs)
+    ==> #<REFERENCE "ISSUE:AREF-1D" CLHS>
+    (locate "SUMMARY:AREF-1D" 'clhs)
+    ==> #<REFERENCE "SUMMARY:AREF-1D" CLHS>
     ```
 
 
@@ -1326,6 +1340,8 @@ by the following rules.
   names often collide with the name of a class or function and are
   rarely useful to link to. Use explicit links to `ASDF:SYSTEM`s, if
   necessary.
+
+- References to the [`CLHS`][18ca] are filtered similarly.
 
 - If references include a [`GENERIC-FUNCTION`][59dd] locative, then all
   references with [`LOCATIVE-TYPE`][966a] [`METHOD`][d71c],
@@ -2772,6 +2788,7 @@ presented.
   [35e5]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "(PRIN1 FUNCTION)"
   [3b21]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "(STRING TYPE)"
   [3ca3]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cerror.htm "(CERROR FUNCTION)"
+  [3e36]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009_w.htm "(\"ISSUE:AREF-1D\" MGL-PAX:CLHS)"
   [3fdc]: #x-28MGL-PAX-3A-40MGL-PAX-NAVIGATING-IN-EMACS-20MGL-PAX-3ASECTION-29 "Navigating Sources in Emacs"
   [3fef]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE)"
   [4186]: http://www.lispworks.com/documentation/HyperSpec/Body/f_export.htm "(EXPORT FUNCTION)"
@@ -2879,6 +2896,7 @@ presented.
   [e9e9]: #x-28MGL-PAX-3ALOCATE-AND-FIND-SOURCE-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-FIND-SOURCE GENERIC-FUNCTION)"
   [eac6]: #x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax/document\" ASDF/SYSTEM:SYSTEM)"
   [ec16]: #x-28MGL-PAX-3A-40MGL-PAX-MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29 "Miscellaneous Variables"
+  [eed0]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009.htm "(\"SUMMARY:AREF-1D\" MGL-PAX:CLHS)"
   [eed2]: http://www.lispworks.com/documentation/HyperSpec/Body/t_symbol.htm "(SYMBOL TYPE)"
   [f3b7]: #x-28MGL-PAX-3ALOCATE-ERROR-20FUNCTION-29 "(MGL-PAX:LOCATE-ERROR FUNCTION)"
   [f4eb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_deftp.htm "(DEFTYPE MGL-PAX:MACRO)"

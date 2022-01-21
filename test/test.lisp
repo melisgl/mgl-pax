@@ -495,7 +495,7 @@
 "))))
 
 
-(defsection @clhs-test ()
+(defsection @clhs-section-test ()
   "A.1"
   "`A.1`"
   "CLHS A.1"
@@ -508,13 +508,16 @@
   "[Lambda Lists][clhs]"
   "[03_d][clhs]")
 
-(deftest test-clhs ()
-  (let ((*document-hyperspec-root* "CLHS/")
-        (*package* (find-package :mgl-pax-test)))
-    (first (document @clhs-test)))
-  "<a id='x-28MGL-PAX-TEST-3A-40CLHS-TEST-20MGL-PAX-3ASECTION-29'></a>
+(deftest test-clhs-section ()
+  (is
+   (null
+    (mismatch%
+     (let ((*document-hyperspec-root* "CLHS/")
+           (*package* (find-package :mgl-pax-test)))
+       (first (document @clhs-section-test)))
+     "<a id='x-28MGL-PAX-TEST-3A-40CLHS-SECTION-TEST-20MGL-PAX-3ASECTION-29'></a>
 
-# @CLHS-TEST
+# @CLHS-SECTION-TEST
 
 ## Table of Contents
 
@@ -543,7 +546,59 @@ A.1
 [`03_d`][76476]
 
   [76476]: CLHS/Body/03_d.htm \"(\\\"3.4\\\" MGL-PAX:CLHS)\"
-")
+"))))
+
+
+(defsection @clhs-issue-test ()
+  "ISSUE:AREF-1D"
+  "`ISSUE:AREF-1D`"
+  "CLHS ISSUE:AREF-1D"
+  "ISSUE:AREF-1D CLHS"
+  "CLHS `ISSUE:AREF-1D`"
+  "`ISSUE:AREF-1D` CLHS"
+  "[ISSUE:AREF-1D][]"
+  "[`ISSUE:AREF-1D`][]"
+  "[ISSUE:AREF-1D][CLHS]"
+  "[iss009][clhs]")
+
+(deftest test-clhs-issue ()
+  (is
+   (null
+    (mismatch%
+     (let ((*document-hyperspec-root* "CLHS/")
+           (*package* (find-package :mgl-pax-test)))
+       (first (document @clhs-issue-test)))
+     "<a id='x-28MGL-PAX-TEST-3A-40CLHS-ISSUE-TEST-20MGL-PAX-3ASECTION-29'></a>
+
+# @CLHS-ISSUE-TEST
+
+## Table of Contents
+
+
+###### \\[in package MGL-PAX-TEST\\]
+ISSUE:AREF-1D
+
+`ISSUE:AREF-1D`
+
+`CLHS` ISSUE:AREF-1D
+
+ISSUE:AREF-1D `CLHS`
+
+`CLHS` [`ISSUE:AREF-1D`][3e36]
+
+[`ISSUE:AREF-1D`][3e36] `CLHS`
+
+[`ISSUE:AREF-1D`][3e36]
+
+[`ISSUE:AREF-1D`][3e36]
+
+[`ISSUE:AREF-1D`][3e36]
+
+[`iss009`][eed0]
+
+  [3e36]: CLHS/Issues/iss009_w.htm \"(\\\"ISSUE:AREF-1D\\\" MGL-PAX:CLHS)\"
+  [eed0]: CLHS/Issues/iss009.htm \"(\\\"SUMMARY:AREF-1D\\\" MGL-PAX:CLHS)\"
+"))))
 
 
 (defsection @argument-test ()
@@ -714,7 +769,8 @@ A.1
   (test-document :markdown)
   (test-document :html)
   (test-hyperspec)
-  (test-clhs)
+  (test-clhs-section)
+  (test-clhs-issue)
   (test-argument)
   (test-declaration)
   (test-readtable)
