@@ -834,6 +834,55 @@
 
 
 (defsection @mgl-pax-linking-to-code (:title "Linking to Code")
+  """Before delving into the details, here is a quick summary of all
+  ways of linking to code.
+
+  ##### Explicit Links
+
+  - `[section][class]` renders as: [section][class]
+    (*object + locative*)
+  - `[see this][section class]` renders as: [see this][section class]
+    (*explicit title + reference*)
+
+  Parsing of symbols relies on the current READTABLE-CASE, so usually
+  their case does not matter.
+
+  ##### Autolinking with *DOCUMENT-UPPERCASE-IS-CODE*
+
+  - `\LOCATE` renders as: LOCATE (*object with a single possible locative*)
+  - `\SECTION` renders as: SECTION (*object with ambiguous locative*)
+  - `SECTION class` renders as: SECTION class (*object followed by locative*)"""
+  ;; If the next example were in the same docstring as the previous,
+  ;; it would not be render as a link because they are the same link.
+  """- `class SECTION` renders as: class SECTION (*object following locative*)
+
+  In these examples, autolinking can be prevented by preventing
+  codification of uppercase symbols (see
+  [*DOCUMENT-UPPERCASE-IS-CODE*][variable]).
+
+  ##### Autolinking in code
+
+  If a single word is enclosed in backticks (i.e. it's code), then it
+  is autolinked. The following examples all render as the previous
+  ones.
+
+  ```
+  `locate`
+  `section`
+  `section` class
+  class `section`
+  ```
+
+  To prevent autolinking in the explicitly quoted case, a backslash
+  can be placed right after the opening backtick.
+
+  ```
+  `\locate`
+  `\section`
+  `\section` class
+  class `\section`
+  ```
+  """
   (*document-link-code* variable)
   (*document-link-to-hyperspec* variable)
   (*document-hyperspec-root* variable)
@@ -860,29 +909,29 @@
     x)
   ```
 
-  With the above definition the output of `(DOCUMENT @FOO :STREAM T)
+  With the above definition the output of `(DOCUMENT @FOO :STREAM T)`
   would include this:
 
   ```
   .. <a id='x-28MGL-PAX-3AFOO-20FUNCTION-29'></a>
-  .. 
+  ..
   .. - [function] **FOO** *X*
-  .. 
+  ..
   ..     Calls [`BAR`][e2f2] on `X`.
-  .. 
+  ..
   .. <a id='x-28MGL-PAX-3ABAR-20FUNCTION-29'></a>
-  .. 
+  ..
   .. - [function] **BAR** *X*
-  .. 
+  ..
   ..   [e2f2]: #x-28MGL-PAX-3ABAR-20FUNCTION-29 "(MGL-PAX:BAR FUNCTION)"
   ```
 
-  This line starting with `[e2f2]:` is the markdown reference link
+  The line starting with `[e2f2]:` is the markdown reference link
   definition with an url and a title. Here the url points to the HTML
   anchor of the documentation of the function `BAR`, itself an escaped
   version of the reference `(MGL-PAX:BAR FUNCTION)`, which is also the
   title.
-  
+
   In the docstring of `FOO`, instead of `BAR`, one can write `[bar][]`
   or ``[`bar`][]`` as well. Since symbol names are parsed according to
   READTABLE-CASE, character case rarely matters.
@@ -998,56 +1047,77 @@
           (= 2 (length tree))
           (stringp (second tree)))
      (let ((name (second tree)))
-       (multiple-value-bind (reference-links refs)
-           (make-reference-links-to-name parent tree name)
-         (let ((autolinked-key (cons name
-                                     ;; FIXME: sort it
-                                     reference-links))
-               (supressedp (and refs
-                                (let ((object (reference-object (first refs))))
-                                  (member object '(t nil))))))
-           (cond ((and reference-links
-                       (not supressedp)
-                       (or (not (gethash autolinked-key autolinked))
-                           ;; Replace references to sections and
-                           ;; glossary terms with their title any
-                           ;; number of times.
-                           (and (= (length refs) 1)
-                                (typep (resolve (first refs) :errorp nil)
-                                       '(or section glossary-term)))))
-                  (setf (gethash autolinked-key autolinked) t)
-                  (values reference-links nil t))
-                 (t
-                  tree))))))
+       (if (alexandria:starts-with #\\ name)
+           `(:code ,(subseq name 1))
+           (multiple-value-bind (reference-links refs)
+               (make-reference-links-to-name parent tree name)
+             (let ((autolinked-key (cons name
+                                         ;; FIXME: sort it
+                                         reference-links))
+                   (supressedp (and refs
+                                    (let ((object (reference-object
+                                                   (first refs))))
+                                      (member object '(t nil))))))
+               (cond ((and reference-links
+                           (not supressedp)
+                           (or (not (gethash autolinked-key autolinked))
+                               ;; Replace references to sections and
+                               ;; glossary terms with their title any
+                               ;; number of times.
+                               (and (= (length refs) 1)
+                                    (typep (resolve (first refs) :errorp nil)
+                                           '(or section glossary-term)))))
+                      (setf (gethash autolinked-key autolinked) t)
+                      (values reference-links nil t))
+                     (t
+                      tree)))))))
     ;; [section][type], [`section`][type], [*var*][variable], [section][]
     ((and (eq :reference-link (first tree)))
-     ;; For example, the tree for [`section`][type] is
-     ;; (:REFERENCE-LINK :LABEL ((:CODE "SECTION")) :DEFINITION "type")
-     (destructuring-bind (&key label definition tail) (rest tree)
-       (let ((name (extract-name-from-reference-link-label label))
-             (locative (when definition
-                         (read-valid-locative definition))))
-         (multiple-value-bind (object n-chars-read)
-             (if name
-                 (find-candidate-object name :locatives (alexandria:ensure-list
-                                                         locative))
-                 nil)
-           (if (null n-chars-read)
-               tree
-               (let ((references
-                       (if (and (zerop (length definition))
-                                (or (null tail)
-                                    (equal tail "[]")))
-                           (filter-references-for-unspecified-locative object)
-                           (filter-references-for-specified-locative
-                            object locative))))
-                 (if references
-                     (values (make-reference-links name references) nil t)
-                     tree)))))))
+     ;; For example, the tree for [`section`][type] is (:REFERENCE-LINK
+     ;; :LABEL ((:CODE "SECTION")) :DEFINITION "type")
+     (multiple-value-bind (label use-label-as-is object locative found)
+         (extract-reference-from-reference-link tree)
+       (if (not found)
+           tree
+           (let ((references (if locative
+                                 (filter-references-for-specified-locative
+                                  object locative)
+                                 (filter-references-for-unspecified-locative
+                                  object))))
+             (if references
+                 (values (make-reference-links label use-label-as-is
+                                               references)
+                         nil t)
+                 tree)))))
     (t
      tree)))
 
-(defun extract-name-from-reference-link-label (parse-tree)
+;;; Return the label, whether to use the returned label in the
+;;; reference link without further transformations, object, the
+;;; locative, whether the object and locative were found.
+(defun extract-reference-from-reference-link (tree)
+  (assert (eq (first tree) :reference-link))
+  (destructuring-bind (&key label definition tail) (rest tree)
+    (let ((empty-definition-p (and (zerop (length definition))
+                                   (or (null tail)
+                                       (equal tail "[]"))))
+          (locative (and definition (read-locative-from-string definition)))
+          (name (unparse-reference-link-definition label)))
+      (if (or empty-definition-p locative)
+          ;; [foo][] or [foo][function]
+          (multiple-value-bind (object n-chars-read)
+              (and name (find-candidate-object
+                         name :locatives (alexandria:ensure-list locative)))
+            (when n-chars-read
+              (values name nil object locative t)))
+          ;; [see this][foo function]
+          (multiple-value-bind (object locative foundp)
+              (and definition (read-reference-from-string
+                               (unparse-reference-link-definition definition)))
+            (when foundp
+              (values label t object locative t)))))))
+
+(defun unparse-reference-link-definition (parse-tree)
   (labels
       ((recurse (e)
          (cond ((stringp e)
@@ -1068,8 +1138,7 @@
                      (stringp (second e)))
                 (recurse (rest e)))
                (t
-                (return-from extract-name-from-reference-link-label
-                  nil)))))
+                (return-from unparse-reference-link-definition nil)))))
     (recurse parse-tree)))
 
 ;;; Translate NAME (a string) that's part of TREE (e.g. it's "xxx"
@@ -1083,7 +1152,7 @@
         (let ((refs (filter-references-for-ambiguous-locative
                      object locatives)))
           (when refs
-            (values (make-reference-links (subseq name 0 n-chars-read) refs)
+            (values (make-reference-links (subseq name 0 n-chars-read) nil refs)
                     refs)))))))
 
 ;;; NAME-ELEMENT is a child of TREE. It is the name of the symbol or
@@ -1094,7 +1163,7 @@
 (defun find-locatives-around (tree name-element)
   (let ((locatives ()))
     (labels ((try-string (string)
-               (let ((locative (read-valid-locative string)))
+               (let ((locative (read-locative-from-string string)))
                  (when locative
                    (push locative locatives))))
              (try (element)
@@ -1123,12 +1192,6 @@
                  (try (third rest))
                  (return))))
     locatives))
-
-(defun read-valid-locative (locative-string)
-  (let ((locative (read-locative-from-string locative-string)))
-    (when (and locative
-               (locate (locative-type locative) 'locative :errorp nil))
-      locative)))
 
 (defun find-reference-by-locative (locative refs)
   ;; This won't find [SECTION][TYPE] because SECTION is a class.
@@ -1319,40 +1382,50 @@
               (and (page-uri-fragment *page*)
                    (page-uri-fragment page)))))))
 
-;;; For NAME (a STRING) and some references to it (REFS), return a
+;;; For LABEL (a STRING) and some references to it (REFS), return a
 ;;; markdown parse tree fragment to be spliced into a markdown parse
-;;; tree with NAME formatted as :CODE with :REFERENCE-LINKs.
-(defun make-reference-links (name refs)
-  (let ((ref-1 (first refs)))
-    (cond ((endp refs)
-           ;; all references were filtered out
-           `(,(code-fragment (maybe-downcase name))))
-          ((< 1 (length refs))
-           ;; `name`([1][link-id-1] [2][link-id-2])
-           (values `(,(code-fragment (maybe-downcase name))
-                     "("
-                     ,@(loop
-                         for i upfrom 0
-                         for ref in (sort-references refs)
-                         append `(,@(unless (zerop i)
-                                      '(" "))
-                                  (:reference-link
-                                   :label (,(code-fragment i))
-                                   :definition ,(link-to-reference ref))))
-                     ")")
-                   t))
-          ((member (reference-locative-type ref-1) '(dislocated argument))
-           `(,(code-fragment (maybe-downcase name))))
-          ((typep (resolve ref-1 :errorp nil) 'section)
-           `((:reference-link :label (,(section-title-or-name (resolve ref-1)))
-                              :definition ,(link-to-reference ref-1))))
-          ((typep (resolve ref-1 :errorp nil) 'glossary-term)
-           `((:reference-link :label (,(glossary-term-title-or-name
-                                        (resolve ref-1)))
-                              :definition ,(link-to-reference ref-1))))
-          (t
-           `((:reference-link :label (,(code-fragment (maybe-downcase name)))
-                              :definition ,(link-to-reference ref-1)))))))
+;;; tree with LABEL formatted as :CODE with :REFERENCE-LINKs.
+(defun make-reference-links (label use-label-as-is refs)
+  (flet ((label* ()
+           (if use-label-as-is
+               label
+               `(,(code-fragment (maybe-downcase label))))))
+    (let ((ref-1 (first refs)))
+      (cond ((endp refs)
+             ;; all references were filtered out
+             (label*))
+            ((< 1 (length refs))
+             ;; `label`([1][link-id-1] [2][link-id-2])
+             (values `(,@(label*)
+                       "("
+                       ,@(loop
+                           for i upfrom 0
+                           for ref in (sort-references refs)
+                           append `(,@(unless (zerop i)
+                                        '(" "))
+                                    (:reference-link
+                                     :label (,(code-fragment i))
+                                     :definition ,(link-to-reference ref))))
+                       ")")
+                     t))
+            ((member (reference-locative-type ref-1) '(dislocated argument))
+             (label*))
+            ((typep (resolve ref-1 :errorp nil) 'section)
+             `((:reference-link
+                :label ,(if use-label-as-is
+                            label
+                            `(,(section-title-or-name (resolve ref-1))))
+                :definition ,(link-to-reference ref-1))))
+            ((typep (resolve ref-1 :errorp nil) 'glossary-term)
+             `((:reference-link
+                :label ,(if use-label-as-is
+                            label
+                            `(,(glossary-term-title-or-name (resolve ref-1))))
+                :definition ,(link-to-reference ref-1))))
+            (t
+             `((:reference-link
+                :label ,(label*)
+                :definition ,(link-to-reference ref-1))))))))
 
 ;;; Order REFERENCES in an implementation independent way. REFERENCES
 ;;; are all to the same object.

@@ -250,6 +250,9 @@
 
 (unless (named-readtables:find-readtable 'xxx-rt)
   (named-readtables:defreadtable xxx-rt
+    ;; KLUDGE: ABCL bundles an older named-readtables version that
+    ;; does not support docstrings.
+    #-abcl
     "ddd"))
 
 (defparameter *navigation-test-cases*
@@ -355,9 +358,45 @@
     (file-position stream position)
     (read stream)))
 
-(deftest test-codify-and-autolink ()
-  (mgl-pax::with-pages (())
-    (is (string= "`FOO`" (mgl-pax::codify-and-autolink "`FOO`")))))
+(deftest test-read-locative-from-string ()
+  (let ((*package* (find-package :mgl-pax-test)))
+    (unintern (read-from-string "non-interned"))
+    (unintern (read-from-string "yyy"))
+    (is (null (mgl-pax::read-locative-from-string "non-interned")))
+    (is (null (find-symbol (string '#:non-interned))))
+    (is (null (mgl-pax::read-locative-from-string "find")))
+    (is (eq (mgl-pax::read-locative-from-string "function") 'function))
+    (is (eq (mgl-pax::read-locative-from-string " function") 'function))
+    (is (eq (mgl-pax::read-locative-from-string "function ") 'function))
+    (is (null (mgl-pax::read-locative-from-string "function junk")))
+    (let ((locative (mgl-pax::read-locative-from-string "(function yyy)")))
+      (is (eq (first locative) 'function))
+      (is (string= (symbol-name (second locative)) (string '#:yyy)))
+      (is (eq (symbol-package (second locative)) *package*)))))
+
+(deftest test-read-reference-from-string ()
+  (let ((*package* (find-package :mgl-pax-test)))
+    (unintern (read-from-string "non-interned"))
+    (unintern (read-from-string "yyy"))
+    (is (null (mgl-pax::read-reference-from-string "yyy non-interned")))
+    (is (null (find-symbol (string '#:non-interned))))
+    (is (null (find-symbol (string '#:yyy))))
+    (is (null (mgl-pax::read-reference-from-string "yyy (non-interned)")))
+    (is (null (find-symbol (string '#:non-interned))))
+    (is (null (find-symbol (string '#:yyy))))
+    (is (null (mgl-pax::read-reference-from-string "yyy find")))
+    (is (null (find-symbol (string '#:yyy))))
+    (is (match-values (mgl-pax::read-reference-from-string "yyy function")
+          (and (string= (symbol-name *) (string '#:yyy))
+               (eq (symbol-package *) *package*))
+          (eq * 'function)
+          (eq * t)))
+    (is (match-values (mgl-pax::read-reference-from-string " yyy  function ")
+          (and (string= (symbol-name *) (string '#:yyy))
+               (eq (symbol-package *) *package*))
+          (eq * 'function)
+          (eq * t)))
+    (is (null (mgl-pax::read-reference-from-string "yyy function junk")))))
 
 (deftest test-transform-tree ()
   (is (equal '(1)
@@ -383,6 +422,61 @@
                                                 (listp a)
                                                 (not (listp a))))
                                       '(1 (2 (3 4)))))))
+
+(deftest test-codify-and-autolink ()
+  (mgl-pax::with-pages (())
+    (is (string= "`FOO`" (mgl-pax::codify-and-autolink "`FOO`")))))
+
+
+(defsection @test-reference-in-link-definition (:export nil)
+  "[see this][foo2 function]"
+  "[`see` *this*][foo2 function]"
+  "[see this][foo2]"
+  "[here][@test-reference-in-link-definition section]"
+  "[there][some-term glossary-term]"
+  (foo2 function)
+  (some-term glossary-term))
+
+(defun foo2 ())
+
+(deftest test-reference-in-link-definition ()
+  (is
+   (null
+    (mismatch%
+     (first (document @test-reference-in-link-definition))
+     "<a id='x-28MGL-PAX-TEST-3A-3A-40TEST-REFERENCE-IN-LINK-DEFINITION-20MGL-PAX-3ASECTION-29'></a>
+
+# @TEST-REFERENCE-IN-LINK-DEFINITION
+
+## Table of Contents
+
+
+###### \\[in package MGL-PAX-TEST\\]
+[see this][4615]
+
+[`see` *this*][4615]
+
+[see this][foo2]
+
+[here][095c]
+
+[there][c111]
+
+<a id='x-28MGL-PAX-TEST-3A-3AFOO2-20FUNCTION-29'></a>
+
+- [function] **FOO2** 
+
+<a id='x-28MGL-PAX-TEST-3A-3ASOME-TERM-20MGL-PAX-3AGLOSSARY-TERM-29'></a>
+
+- [glossary-term] **SOME-TERM**
+
+    `SOME-TERM` is not a link.
+
+  [095c]: #x-28MGL-PAX-TEST-3A-3A-40TEST-REFERENCE-IN-LINK-DEFINITION-20MGL-PAX-3ASECTION-29 \"@TEST-REFERENCE-IN-LINK-DEFINITION\"
+  [4615]: #x-28MGL-PAX-TEST-3A-3AFOO2-20FUNCTION-29 \"(MGL-PAX-TEST::FOO2 FUNCTION)\"
+  [c111]: #x-28MGL-PAX-TEST-3A-3ASOME-TERM-20MGL-PAX-3AGLOSSARY-TERM-29 \"(MGL-PAX-TEST::SOME-TERM MGL-PAX:GLOSSARY-TERM)\"
+"))))
+
 
 (deftest test-macro-arg-names ()
   (is (equal '(x a b c)
@@ -763,9 +857,12 @@ ISSUE:AREF-1D `CLHS`
 (deftest test-all ()
   (test-transcribe)
   (test-navigation)
-  (test-codify-and-autolink)
+  (test-read-locative-from-string)
+  (test-read-reference-from-string)
   (test-transform-tree)
+  (test-codify-and-autolink)
   (test-macro-arg-names)
+  (test-reference-in-link-definition)
   (test-document :markdown)
   (test-document :html)
   (test-hyperspec)

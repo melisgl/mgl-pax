@@ -230,9 +230,11 @@
 
       ```
 
-  More fancy markdown or HTML output with automatic markup and linking
-  of uppercase symbol names found in docstrings, section numbering,
-  table of contents, etc is possible by calling the DOCUMENT function.
+  Fancier markdown or HTML output with [automatic
+  markup][\*document-uppercase-is-code\* variable] and
+  [linking][@mgl-pax-linking-to-code section] of uppercase symbol
+  names found in docstrings, section numbering, table of contents, etc
+  is possible by calling the DOCUMENT function.
 
   *One can even generate documentation for different but related
   libraries at the same time with the output going to different files
@@ -243,9 +245,9 @@
   Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
   exports `*FOO-STATE*` and includes its documentation in
   `@FOO-RANDOM-MANUAL`. The symbols [VARIABLE][locative] and
-  [FUNCTION][locative] are just two instances of 'locatives' which are
-  used in DEFSECTION to refer to definitions tied to symbols. See
-  @MGL-PAX-LOCATIVE-TYPES.
+  [FUNCTION][locative] are just two instances of
+  [locatives][@MGL-PAX-LOCATIVE-TYPES section], which are used in
+  DEFSECTION to refer to definitions tied to symbols.
 
   The transcript in the code block tagged with `cl-transcript` is
   automatically checked for up-to-dateness. See

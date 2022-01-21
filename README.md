@@ -295,9 +295,11 @@ For this example, the generated markdown would look like this:
     
     ```
 
-More fancy markdown or HTML output with automatic markup and linking
-of uppercase symbol names found in docstrings, section numbering,
-table of contents, etc is possible by calling the [`DOCUMENT`][1eb8] function.
+Fancier markdown or HTML output with [automatic
+markup][8be2] and
+[linking][8c65] of uppercase symbol
+names found in docstrings, section numbering, table of contents, etc
+is possible by calling the [`DOCUMENT`][1eb8] function.
 
 *One can even generate documentation for different but related
 libraries at the same time with the output going to different files
@@ -308,9 +310,9 @@ some convenience functions to cover the most common cases.*
 Note how `(VARIABLE *FOO-STATE*)` in the `DEFSECTION` form both
 exports `*FOO-STATE*` and includes its documentation in
 `@FOO-RANDOM-MANUAL`. The symbols [`VARIABLE`][474c] and
-[`FUNCTION`][3023] are just two instances of 'locatives' which are
-used in `DEFSECTION` to refer to definitions tied to symbols. See
-[Locative Types][1fbb].
+[`FUNCTION`][3023] are just two instances of
+[locatives][1fbb], which are used in
+`DEFSECTION` to refer to definitions tied to symbols.
 
 The transcript in the code block tagged with `cl-transcript` is
 automatically checked for up-to-dateness. See
@@ -1226,6 +1228,59 @@ with that.
 
 ### 9.4 Linking to Code
 
+Before delving into the details, here is a quick summary of all
+ways of linking to code.
+
+##### Explicit Links
+
+- `[section][class]` renders as: [`section`][aee8]
+  (*object + locative*)
+
+- `[see this][section class]` renders as: [see this][aee8]
+  (*explicit title + reference*)
+
+Parsing of symbols relies on the current [`READTABLE-CASE`][9edc], so usually
+their case does not matter.
+
+##### Autolinking with [`*DOCUMENT-UPPERCASE-IS-CODE*`][8be2]
+
+- `LOCATE` renders as: [`LOCATE`][b2be] (*object with a single possible locative*)
+
+- `SECTION` renders as: `SECTION`([`0`][aee8] [`1`][2cf1]) (*object with ambiguous locative*)
+
+- `SECTION class` renders as: [`SECTION`][aee8] class (*object followed by locative*)
+
+
+- `class SECTION` renders as: class [`SECTION`][aee8] (*object following locative*)
+
+In these examples, autolinking can be prevented by preventing
+codification of uppercase symbols (see
+[`*DOCUMENT-UPPERCASE-IS-CODE*`][8be2]).
+
+##### Autolinking in code
+
+If a single word is enclosed in backticks (i.e. it's code), then it
+is autolinked. The following examples all render as the previous
+ones.
+
+```
+`locate`
+`section`
+`section` class
+class `section`
+```
+
+To prevent autolinking in the explicitly quoted case, a backslash
+can be placed right after the opening backtick.
+
+```
+`\locate`
+`\section`
+`\section` class
+class `\section`
+```
+
+
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20VARIABLE-29'></a>
 
 - [variable] **\*DOCUMENT-LINK-CODE\*** *T*
@@ -1250,24 +1305,24 @@ with that.
       x)
     ```
     
-    With the above definition the output of \`([`DOCUMENT`][1eb8] `@FOO` `:STREAM` `T`)
+    With the above definition the output of `(DOCUMENT @FOO :STREAM T)`
     would include this:
     
     ```
     .. <a id='x-28MGL-PAX-3AFOO-20FUNCTION-29'></a>
-    .. 
+    ..
     .. - [function] **FOO** *X*
-    .. 
+    ..
     ..     Calls [`BAR`][e2f2] on `X`.
-    .. 
+    ..
     .. <a id='x-28MGL-PAX-3ABAR-20FUNCTION-29'></a>
-    .. 
+    ..
     .. - [function] **BAR** *X*
-    .. 
+    ..
     ..   [e2f2]: #x-28MGL-PAX-3ABAR-20FUNCTION-29 "(MGL-PAX:BAR FUNCTION)"
     ```
     
-    This line starting with `[e2f2]:` is the markdown reference link
+    The line starting with `[e2f2]:` is the markdown reference link
     definition with an url and a title. Here the url points to the HTML
     anchor of the documentation of the function `BAR`, itself an escaped
     version of the reference `(MGL-PAX:BAR FUNCTION)`, which is also the

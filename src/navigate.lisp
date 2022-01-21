@@ -151,17 +151,21 @@
                     string)))
     (read-locative-from-string string)))
 
-;;; Like READ-FROM-STRING, but try to avoid interning symbols.
+;;; Parse "LOCATIVE-TYPE" and "(LOCATIVE-TYPE ...)" like
+;;; READ-FROM-STRING, but only intern stuff if LOCATIVE-TYPE is a
+;;; valid locative.
 (defun read-locative-from-string (string)
   (let ((swank::*buffer-package* *package*))
     (multiple-value-bind (symbol found)
         (with-swank ()
-          (swank::find-definitions-find-symbol-or-package string))
+          (swank::find-definitions-find-symbol-or-package
+           (string-trim *whitespace-chars* string)))
       (if found
-          symbol
+          (when (locate symbol 'locative :errorp nil)
+            symbol)
           (let ((first-char-pos (position-if-not #'whitespacep string)))
             (when (and first-char-pos
-                       (char= #\())
+                       (char= (elt string first-char-pos) #\())
               ;; Looks like a list. The first element must be an
               ;; interned symbol naming a locative.
               (let ((delimiter-pos (position-if #'delimiterp string
@@ -169,12 +173,27 @@
                 (multiple-value-bind (symbol found)
                     (swank::parse-symbol
                      (subseq string (1+ first-char-pos) delimiter-pos))
-                  (declare (ignore symbol))
-                  (when found
-                    ;; The rest of the symbols in the string need not be
-                    ;; already interned, so let's just read it.
-                    (ignore-errors (let ((*read-eval* t))
+                  (when (and found (locate symbol 'locative :errorp nil))
+                    ;; The rest of the symbols in the string need not
+                    ;; be already interned, so let's just read it.
+                    (ignore-errors (let ((*read-eval* nil))
+                                     ;; FIXME: check that there is no
+                                     ;; junk left.
                                      (read-from-string string))))))))))))
+
+;;; Parse "OBJECT LOCATIVE-TYPE" or "OBJECT (LOCATIVE-TYPE ...))" but
+;;; only intern stuff if LOCATIVE-TYPE is a valid locative.
+(defun read-reference-from-string (string)
+  (handler-case
+      ;; Skip whatever OBJECT may be ...
+      (let* ((pos (nth-value 1 (let ((*read-suppress* t))
+                                 (read-from-string string))))
+             ;; ... then just try to parse the locative.
+             (locative (read-locative-from-string (subseq string pos))))
+        (when locative
+          (values (read-from-string string) locative t)))
+    ((or reader-error end-of-file) ()
+      nil)))
 
 (defun delimiterp (char)
   (or (whitespacep char)
