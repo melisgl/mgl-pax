@@ -2459,32 +2459,32 @@
   (sort (copy-seq *hyperspec-sections*) #'hyperspec-section-number<
         :key #'second))
 
-(defun find-hyperspec-section-id (string &key (substring-match t))
-  (second (find-if (lambda (entry)
-                     (or (string= string (first entry))
-                         (string= string (second entry))
-                         (and substring-match
-                              (search (string-downcase string)
-                                      (string-downcase (third entry))))))
-                   *sorted-hyperspec-sections*)))
+(defun make-id-to-hyperspec-id ()
+  (let ((ht (make-hash-table :test #'equal)))
+    (loop for (filename id title) in *hyperspec-sections*
+          do (setf (gethash id ht) id)
+             (setf (gethash filename ht) id))
+    (loop for (id filename) in *hyperspec-issues*
+          do (setf (gethash id ht) id)
+             (setf (gethash filename ht) id))
+    (loop for (id filename) in *hyperspec-issue-summaries*
+          do (setf (gethash id ht) id)
+             (setf (gethash filename ht) id))
+    ht))
 
-(defun hyperspec-section-name-p (string)
-  (not (not (find string *sorted-hyperspec-sections* :key #'second
-                  :test #'equal))))
-
-(defun find-hyperspec-issue-id (string)
-  (flet ((find-it (entries)
-           (find-if (lambda (entry)
-                      (or (string= string (first entry))
-                          (string= string (second entry))))
-                    entries)))
-    (first (or (find-it *hyperspec-issues*)
-               (find-it *hyperspec-issue-summaries*)))))
+(defparameter *id-to-hyperspec-id* (make-id-to-hyperspec-id))
 
 ;;; This is what the CLHS locative uses.
 (defun find-hyperspec-id (string &key (substring-match t))
-  (or (find-hyperspec-issue-id string)
-      (find-hyperspec-section-id string :substring-match substring-match)))
+  (or (gethash string *id-to-hyperspec-id*)
+      (and substring-match
+           (find-hyperspec-section-id string))))
+
+(defun find-hyperspec-section-id (string)
+  (second (find-if (lambda (entry)
+                     (search (string-downcase string)
+                             (string-downcase (third entry))))
+                   *sorted-hyperspec-sections*)))
 
 (defun hyperspec-external-references (hyperspec-root)
   (let ((hyperspec-root (if (alexandria:ends-with #\/ hyperspec-root)
