@@ -2036,10 +2036,7 @@ for ASDF:SYSTEM:
       (locate-error)))
 
 (defun asdf-system-name-p (string)
-  (find-if (lambda (reference)
-             (and (eq (reference-locative-type reference) 'asdf:system)
-                  (equalp string (reference-object reference))))
-           *references*))
+  (not (null (find-link (make-reference string 'asdf:system)))))
 
 (defmethod canonical-reference ((system asdf:system))
   (make-reference (character-string (slot-value system 'asdf::name))
