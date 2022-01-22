@@ -438,7 +438,8 @@
 ;;; objects that were linked to on the current page.
 (defun write-markdown-reference-style-link-definitions (stream)
   (let ((used-links (sort (alexandria:hash-table-keys (page-used-links *page*))
-                          #'string< :key #'link-id)))
+                          #'string< :key #'link-id))
+        (*package* (find-package :keyword)))
     (when used-links
       (format stream "~%")
       (dolist (link used-links)

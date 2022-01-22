@@ -20,7 +20,6 @@ What about debugger commands?
 * MAYBE transcribe: add inline commands that can change prefixes and such
 * MAYBE transcribe: special comment syntax for the 'narrative'
 to produce something like an ipython notebook.
-* what should *PACKAGE* be while printing the markdown reference definitions?
 * support external links
 There are two kinds:
 - object is text (like the CLHS locative)
