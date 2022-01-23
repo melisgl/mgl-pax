@@ -571,8 +571,10 @@
 
   Escaping all those backslashes in TeX fragments embedded in Lisp
   strings can be a pain. [Pythonic String
-  Reader](https://github.com/smithzvk/pythonic-string-reader) can help
-  with that.""")
+  Reader][pythonic-string-reader] can help with that.
+
+    [pythonic-string-reader]: https://github.com/smithzvk/pythonic-string-reader
+  """)
 
 
 ;;;; Automatic markup of symbols

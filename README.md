@@ -529,8 +529,9 @@ Now let's examine the most important pieces in detail.
     are exported by calling [`EXPORT`][4186] (as is the case with [`DEFSECTION`][2863]) as
     opposed to adding `:EXPORT` forms to the [`DEFPACKAGE`][4b40] form and the
     package definition is reevaluated. See the section on [package
-    variance](http://www.sbcl.org/manual/#Package-Variance) in the SBCL
-    manual.
+    variance][package-variance] in the SBCL manual.
+    
+    [package-variance]: http://www.sbcl.org/manual/#Package-Variance 
     
     The bottom line is that if you rely on `DEFSECTION` to do the
     exporting, then you'd better use `DEFINE-PACKAGE`.
@@ -1161,8 +1162,10 @@ with a backslash to scare MathJax off.
 
 Escaping all those backslashes in TeX fragments embedded in Lisp
 strings can be a pain. [Pythonic String
-Reader](https://github.com/smithzvk/pythonic-string-reader) can help
-with that.
+Reader][pythonic-string-reader] can help with that.
+
+[pythonic-string-reader]: https://github.com/smithzvk/pythonic-string-reader 
+
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-CODIFICATION-20MGL-PAX-3ASECTION-29'></a>
 
