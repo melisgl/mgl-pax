@@ -747,13 +747,14 @@ ISSUE:AREF-1D `CLHS`
 
 (deftest test-readtable ()
   "[xxx-rt][readtable]"
-  (is
-   (null
-    (mismatch%
-     (let ((*package* (find-package :mgl-pax-test)))
-       (first (document (list #'test-readtable
-                              (named-readtables:find-readtable 'xxx-rt)))))
-     "<a id='x-28MGL-PAX-TEST-3A-3ATEST-READTABLE-20FUNCTION-29'></a>
+  (with-failure-expected ((alexandria:featurep :abcl))
+    (is
+     (null
+      (mismatch%
+       (let ((*package* (find-package :mgl-pax-test)))
+         (first (document (list #'test-readtable
+                                (named-readtables:find-readtable 'xxx-rt)))))
+       "<a id='x-28MGL-PAX-TEST-3A-3ATEST-READTABLE-20FUNCTION-29'></a>
 
 - [function] **TEST-READTABLE** *&REST REST*
 
@@ -765,7 +766,7 @@ ISSUE:AREF-1D `CLHS`
     ddd
 
   [9ac2]: #x-28MGL-PAX-TEST-3A-3AXXX-RT-20READTABLE-29 \"(MGL-PAX-TEST::XXX-RT READTABLE)\"
-"))))
+")))))
 
 
 (defsection @test-package ()
