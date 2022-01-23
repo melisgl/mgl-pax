@@ -438,7 +438,7 @@
     (function-lambda-expression function "f_fn_lam")
     (functionp function "f_fnp")
     (gcd function "f_gcd")
-    (generic-function type "t_generi")
+    (generic-function class "t_generi")
     (gensym function "f_gensym")
     (gentemp function "f_gentem")
     (get function "f_get")

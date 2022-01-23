@@ -885,6 +885,8 @@
   `\section` class
   class `\section`
   ```
+
+  Alternatively, the DISLOCATED locative may be used.
   """
   (*document-link-code* variable)
   (*document-link-to-hyperspec* variable)

@@ -10,6 +10,7 @@
   (@mgl-pax-tutorial section)
   (@mgl-pax-navigating-in-emacs section)
   (@mgl-pax-basics section)
+  (@mgl-pax-locatives-and-references section)
   (@mgl-pax-locative-types section)
   (@mgl-pax-generating-documentation section)
   (@mgl-pax-transcripts section)
@@ -39,21 +40,21 @@
   That's easy to solve, I thought, let's just put all the narrative
   that holds docstrings together in the code and be a bit like a
   Literate Programming weenie turned inside out. The original
-  prototype, which did almost everything I wanted was this:
+  prototype, which did almost everything I wanted, was this:
 
   ```
   (defmacro defsection (name docstring)
     `(defun ,name () ,docstring))
   ```
 
-  Armed with DEFSECTION, I soon found myself organizing code following
-  the flow of user level documentation and relegated comments to
-  implementational details entirely. However, some portions of
-  DEFSECTION docstrings were just listings of all the functions,
-  macros and variables related to the narrative, and this list was
-  effectively repeated in the DEFPACKAGE form complete with little
-  comments that were like section names. A clear violation of
-  [OAOO][oaoo], one of them had to go, so DEFSECTION got a list of
+  Armed with this `\\DEFSECTION`, I soon found myself organizing code
+  following the flow of user level documentation and relegated
+  comments to implementational details entirely. However, some
+  portions of `\\DEFSECTION` docstrings were just listings of all the
+  functions, macros and variables related to the narrative, and this
+  list was effectively repeated in the DEFPACKAGE form complete with
+  little comments that were like section names. A clear violation of
+  [OAOO][oaoo], one of them had to go, so `\\DEFSECTION` got a list of
   symbols to export.
 
   [oaoo]: http://c2.com/cgi/wiki?OnceAndOnlyOnce
@@ -74,7 +75,7 @@
   ```
 
   After a bit of elisp hacking, `M-.` was smart enough to disambiguate
-  based on the locative found in the vicinity of the symbol and
+  based on the locative found in the vicinity of the symbol, and
   everything was good for a while.
 
   Then I realized that sections could refer to other sections if there
@@ -117,66 +118,12 @@
   functions, etc and you can keep exploring.
 
   Here is an example of how it all works together:
-
-  ```commonlisp
-  (mgl-pax:define-package :foo-random
-    (:documentation "This package provides various utilities for
-    random. See FOO-RANDOM:@FOO-RANDOM-MANUAL.")
-    (:use #:common-lisp #:mgl-pax))
-
-  (in-package :foo-random)
-
-  (defsection @foo-random-manual (:title "Foo Random manual")
-    "Here you describe what's common to all the referenced (and
-    exported) functions that follow. They work with *FOO-STATE*,
-    and have a :RANDOM-STATE keyword arg. Also explain when to
-    choose which."
-    (foo-random-state class)
-    (state (reader foo-random-state))
-    "Hey we can also print states!"
-    (print-object (method () (foo-random-state t)))
-    (*foo-state* variable)
-    (gaussian-random function)
-    (uniform-random function)
-    ;; this is a subsection
-    (@foo-random-examples section))
-
-  (defclass foo-random-state ()
-    ((state :reader state)))
-
-  (defmethod print-object ((object foo-random-state) stream)
-    (print-unreadable-object (object stream :type t)))
-
-  (defvar *foo-state* (make-instance 'foo-random-state)
-    "Much like *RANDOM-STATE* but uses the FOO algorithm.")
-
-  (defun uniform-random (limit &key (random-state *foo-state*))
-    "Return a random number from the between 0 and LIMIT (exclusive)
-    uniform distribution."
-    nil)
-
-  (defun gaussian-random (stddev &key (random-state *foo-state*))
-    "Return a random number from a zero mean normal distribution with
-    STDDEV."
-    nil)
-
-  (defsection @foo-random-examples (:title "Examples")
-    "Let's see the transcript of a real session of someone working
-    with FOO:
-
-    ```cl-transcript
-    (values (princ :hello) (list 1 2))
-    .. HELLO
-    => :HELLO
-    => (1 2)
-
-    (make-instance 'foo-random-state)
-    ==> #<FOO-RANDOM-STATE >
-    ```")
-  ```
-
-  Generating documentation in a very stripped down markdown format is
-  easy:
+  """
+  (foo-random-example (include #.(asdf:system-relative-pathname
+                                  :mgl-pax "src/foo-random-example.lisp")
+                               :header-nl "```common-lisp" :footer-nl "```"))
+  """Generating documentation in a very stripped down markdown format
+  is easy:
 
   ```commonlisp
   (describe @foo-random-manual)
@@ -255,7 +202,7 @@
 
 
 (defsection @mgl-pax-basics (:title "Basics")
-  "Now let's examine the most important pieces in detail."
+  "Now let's examine the most important pieces."
   (defsection macro)
   (*discard-documentation-p* variable)
   (define-package macro))
@@ -267,9 +214,8 @@
   are exported by calling EXPORT (as is the case with DEFSECTION) as
   opposed to adding :EXPORT forms to the DEFPACKAGE form and the
   package definition is reevaluated. See the section on [package
-  variance][package-variance] in the SBCL manual.
-
-    [package-variance]: http://www.sbcl.org/manual/#Package-Variance
+  variance](http://www.sbcl.org/manual/#Package-Variance) in the SBCL
+  manual.
 
   The bottom line is that if you rely on DEFSECTION to do the
   exporting, then you'd better use DEFINE-PACKAGE."
@@ -284,10 +230,55 @@
 
 (defsection @mgl-pax-locatives-and-references
     (:title "Locatives and References")
-  "While Common Lisp has rather good introspective abilities, not
-  everything is first class. For example, there is no object
-  representing the variable defined with `(DEFVAR
-  FOO)`. `(MAKE-REFERENCE 'FOO 'VARIABLE)` constructs a REFERENCE that
+  """To [navigate with `M-.`][@MGL-PAX-NAVIGATING-IN-EMACS section]
+  and to [generate documentation][@MGL-PAX-GENERATING-DOCUMENTATION
+  section] we need to refer to things such as the `FOO` type or the
+  `FOO` function.
+
+  ```
+  (deftype foo ()
+    "type doc"
+    '(or integer real).
+
+  (defun foo ()
+    "function doc"
+    7)
+  ```
+
+  The docstring is available via `(CL:DOCUMENTATION 'FOO 'TYPE)`,
+  where `\TYPE` - called `DOC-TYPE` - is what tells CL:DOCUMENTATION
+  that we want the docstring of the type named `FOO`. This design
+  supports disambiguation and working with things that are not
+  first-class, such as types.
+
+  PAX generalizes `DOC-TYPE` to the concept of _locatives_, which may
+  also take arguments. See the METHOD locative or the LOCATIVE
+  locative for examples of locative types with arguments.
+
+  An object and a locative together are called a _reference_, and they
+  identify a single thing. [`REFERENCE`s][reference class] are actual
+  objects, but often they appear as an `(OBJECT LOCATIVE)` list (see
+  DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
+  @MGL-PAX-LINKING-TO-CODE for the various forms possible).
+
+  ```
+  (defsection @foos ()
+    "We discuss the FOO type and the FOO function."
+    (foo type)
+    (foo function))
+  ```
+
+  A locative in a reference can either be a symbol or it can be a list
+  whose CAR is a symbol. In either case, the symbol is called the
+  _locative type_ while the rest of the elements are the _locative
+  arguments_. See @MGL-PAX-LOCATIVE-TYPES for the list of locative
+  types available out of the box.
+  """)
+
+
+(defsection @mgl-pax-locatives-and-references-api
+    (:title "Locatives and References API")
+  "`(MAKE-REFERENCE 'FOO 'VARIABLE)` constructs a REFERENCE that
   captures the path to take from an object (the symbol FOO) to an
   entity of interest (for example, the documentation of the variable).
   The path is called the locative. A locative can be applied to an

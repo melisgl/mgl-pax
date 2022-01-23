@@ -54,21 +54,21 @@ have to piece the big picture together themselves.
 That's easy to solve, I thought, let's just put all the narrative
 that holds docstrings together in the code and be a bit like a
 Literate Programming weenie turned inside out. The original
-prototype, which did almost everything I wanted was this:
+prototype, which did almost everything I wanted, was this:
 
 ```
 (defmacro defsection (name docstring)
   `(defun ,name () ,docstring))
 ```
 
-Armed with DEFSECTION, I soon found myself organizing code following
-the flow of user level documentation and relegated comments to
-implementational details entirely. However, some portions of
-DEFSECTION docstrings were just listings of all the functions,
-macros and variables related to the narrative, and this list was
-effectively repeated in the DEFPACKAGE form complete with little
-comments that were like section names. A clear violation of
-[OAOO][oaoo], one of them had to go, so DEFSECTION got a list of
+Armed with this `DEFSECTION`, I soon found myself organizing code
+following the flow of user level documentation and relegated
+comments to implementational details entirely. However, some
+portions of `DEFSECTION` docstrings were just listings of all the
+functions, macros and variables related to the narrative, and this
+list was effectively repeated in the DEFPACKAGE form complete with
+little comments that were like section names. A clear violation of
+[OAOO][oaoo], one of them had to go, so `DEFSECTION` got a list of
 symbols to export.
 
 [oaoo]: http://c2.com/cgi/wiki?OnceAndOnlyOnce 
@@ -89,7 +89,7 @@ later generalized into the concept of locatives:
 ```
 
 After a bit of elisp hacking, `M-.` was smart enough to disambiguate
-based on the locative found in the vicinity of the symbol and
+based on the locative found in the vicinity of the symbol, and
 everything was good for a while.
 
 Then I realized that sections could refer to other sections if there
@@ -135,19 +135,19 @@ functions, etc and you can keep exploring.
 
 Here is an example of how it all works together:
 
-```commonlisp
+```common-lisp
 (mgl-pax:define-package :foo-random
-  (:documentation "This package provides various utilities for
-  random. See FOO-RANDOM:@FOO-RANDOM-MANUAL.")
+  (:documentation "This package provides various utilities for random.
+  See FOO-RANDOM:@FOO-RANDOM-MANUAL.")
   (:use #:common-lisp #:mgl-pax))
 
 (in-package :foo-random)
 
 (defsection @foo-random-manual (:title "Foo Random manual")
   "Here you describe what's common to all the referenced (and
-  exported) functions that follow. They work with *FOO-STATE*,
-  and have a :RANDOM-STATE keyword arg. Also explain when to
-  choose which."
+  exported) functions that follow. They work with *FOO-STATE*, and
+  have a :RANDOM-STATE keyword arg. Also explain when to choose
+  which."
   (foo-random-state class)
   (state (reader foo-random-state))
   "Hey we can also print states!"
@@ -192,8 +192,8 @@ Here is an example of how it all works together:
   ```")
 ```
 
-Generating documentation in a very stripped down markdown format is
-easy:
+Generating documentation in a very stripped down markdown format
+is easy:
 
 ```commonlisp
 (describe @foo-random-manual)
@@ -302,7 +302,7 @@ In particular, references in a DEFSECTION form are in (SYMBOL
 LOCATIVE) format so `M-.` will work just fine there.
 
 Just like vanilla `M-.`, this works in comments and docstrings. In
-this example pressing `M-.` on `FOO` will visit `FOO`'s default
+the next example, pressing `M-.` on `FOO` will visit `FOO`'s default
 method:
 
 ```commonlisp
@@ -327,8 +327,8 @@ initialization file (or loading `src/pax.el`):
       (mgl-pax-locate-definition name (mgl-pax-locative-after) where)
       (mgl-pax-locate-definition name (mgl-pax-locative-after-in-brackets)
                                  where)
-      ;; support "foo function" and "function foo" syntax in
-      ;; interactive use
+      ;; Support "foo function" and "function foo" syntax in
+      ;; interactive use.
       (let ((pos (cl-position ?\s name)))
         (when pos
           (or (mgl-pax-locate-definition (cl-subseq name 0 pos)
@@ -396,7 +396,7 @@ initialization file (or loading `src/pax.el`):
 
 ## Basics
 
-Now let's examine the most important pieces in detail.
+Now let's examine the most important pieces.
 
 - [macro] DEFSECTION NAME (&KEY (PACKAGE '\*PACKAGE\*) (READTABLE '\*READTABLE\*) (EXPORT T) TITLE LINK-TITLE-TO (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &BODY ENTRIES
 
@@ -405,35 +405,32 @@ Now let's examine the most important pieces in detail.
     is bound to a [SECTION][class] object. By convention, section names
     start with the character `@`. See @MGL-PAX-TUTORIAL for an example.
     
-    ENTRIES consists of docstrings and references. Docstrings are
-    arbitrary strings in markdown format, references are defined in the
-    form:
+    ##### Entries
     
-        (symbol locative)
+    ENTRIES consists of docstrings and references in any order.
+    Docstrings are arbitrary strings in markdown format.
     
-    For example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
-    SECTION)` says that `@BAR` is a subsection of this
-    one. `(BAZ (METHOD () (T T T)))` refers to the default method of the
-    three argument generic function `BAZ`. `(FOO FUNCTION)` is
-    equivalent to `(FOO (FUNCTION))`.
+    REFERENCES are given in the form `(OBJECT LOCATIVE)`. For example,
+    `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR SECTION)` says
+    that `@BAR` is a subsection of this one. `(BAZ (METHOD () (T T T)))`
+    refers to the default method of the three argument generic function
+    `BAZ`. `(FOO FUNCTION)` is equivalent to `(FOO (FUNCTION))`. See
+    @MGL-PAX-LOCATIVES-AND-REFERENCES for more.
     
-    A locative in a reference can either be a symbol or it can be a list
-    whose CAR is a symbol. In either case, the symbol is the called the
-    type of the locative while the rest of the elements are the locative
-    arguments. See @MGL-PAX-LOCATIVE-TYPES for the list of locative
-    types available out of the box.
-    
-    The same symbol can occur multiple times in a reference, typically
-    with different locatives, but this is not required.
+    The same object may occur in multiple references, typically with
+    different locatives, but this is not required.
     
     The references are not looked up (see RESOLVE in the
     @MGL-PAX-EXTENSION-API) until documentation is generated, so it is
     allowed to refer to things yet to be defined.
     
-    If EXPORT is true (the default), the referenced symbols and NAME are
-    candidates for exporting. A candidate symbol is exported if
+    ##### Exporting
     
-    - it is accessible in PACKAGE (it's not `OTHER-PACKAGE:SOMETHING`)
+    If EXPORT is true (the default), NAME and the objects which are
+    SYMBOLs are candidates for exporting. A candidate symbol is exported
+    if
+    
+    - it is accessible in PACKAGE (it's not `OTHER-PACKAGE:SOMETHING`),
       and
     
     - there is a reference to it in the section being defined with a
@@ -442,6 +439,8 @@ Now let's examine the most important pieces in detail.
     See DEFINE-PACKAGE if you use the export feature. The idea with
     confounding documentation and exporting is to force documentation of
     all exported symbols.
+    
+    ##### Misc
     
     TITLE is a non-marked-up string or NIL. If non-NIL, it determines
     the text of the heading in the generated output. LINK-TITLE-TO is a
@@ -467,22 +466,68 @@ Now let's examine the most important pieces in detail.
     are exported by calling EXPORT (as is the case with DEFSECTION) as
     opposed to adding :EXPORT forms to the DEFPACKAGE form and the
     package definition is reevaluated. See the section on [package
-    variance][package-variance] in the SBCL manual.
-    
-    [package-variance]: http://www.sbcl.org/manual/#Package-Variance 
+    variance](http://www.sbcl.org/manual/#Package-Variance) in the SBCL
+    manual.
     
     The bottom line is that if you rely on DEFSECTION to do the
     exporting, then you'd better use DEFINE-PACKAGE.
 
+## Locatives and References
+
+To [navigate with `M-.`][@MGL-PAX-NAVIGATING-IN-EMACS section]
+and to [generate documentation][@MGL-PAX-GENERATING-DOCUMENTATION
+section] we need to refer to things such as the `FOO` type or the
+`FOO` function.
+
+```
+(deftype foo ()
+  "type doc"
+  '(or integer real).
+
+(defun foo ()
+  "function doc"
+  7)
+```
+
+The docstring is available via `(CL:DOCUMENTATION 'FOO 'TYPE)`,
+where `TYPE` - called `DOC-TYPE` - is what tells CL:DOCUMENTATION
+that we want the docstring of the type named `FOO`. This design
+supports disambiguation and working with things that are not
+first-class, such as types.
+
+PAX generalizes `DOC-TYPE` to the concept of *locatives*, which may
+also take arguments. See the METHOD locative or the LOCATIVE
+locative for examples of locative types with arguments.
+
+An object and a locative together are called a *reference*, and they
+identify a single thing. [`REFERENCE`s][reference class] are actual
+objects, but often they appear as an `(OBJECT LOCATIVE)` list (see
+DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
+@MGL-PAX-LINKING-TO-CODE for the various forms possible).
+
+```
+(defsection @foos ()
+  "We discuss the FOO type and the FOO function."
+  (foo type)
+  (foo function))
+```
+
+A locative in a reference can either be a symbol or it can be a list
+whose CAR is a symbol. In either case, the symbol is called the
+*locative type* while the rest of the elements are the *locative
+arguments*. See @MGL-PAX-LOCATIVE-TYPES for the list of locative
+types available out of the box.
+
 ## Locative Types
 
-As we have already briefly seen, locatives allow us to refer to,
-document and find the source location of various definitions beyond
-what standard Common Lisp offers. See @MGL-PAX-EXTENSION-API for a
-more detailed treatment. The following are the locatives types
-supported out of the box. As all locative types, they are symbols
-and their names should make it obvious what kind of things they
-refer to. Unless otherwise noted, locatives take no arguments.
+As we have already briefly seen in DEFSECTION, locatives allow us
+to refer to, document and find the source location of various
+definitions beyond what standard Common Lisp offers. See
+@MGL-PAX-EXTENSION-API for a more detailed treatment. The following
+are the locatives types supported out of the box. As all locative
+types, they are symbols, and their names should make it obvious what
+kind of things they refer to. Unless otherwise noted, locatives take
+no arguments.
 
 When there is a corresponding CL type, a locative can be resolved to
 a unique object as is the case in `(LOCATE 'FOO 'CLASS)` returning
@@ -497,23 +542,53 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
 
     Refers to a global special variable. INITFORM, or if not specified,
     the global value of the variable is included in the documentation.
+    
+    ```
+    ;;; A REFERENCE is returned because there is no such type as VARIABLE.
+    (locate '*FORMAT* 'variable)
+    ==> #<REFERENCE *FORMAT* VARIABLE>
+    ```
+    
+    For the output of `(DOCUMENT (MAKE-REFERENCE '*FORMAT* 'VARIABLE))`,
+    see *FORMAT*. Note that *FORMAT* is unbound. If the variable is
+    BOUNDP, then its *current* value is included in the documentation.
+    See *DOCUMENT-LINK-CODE* for an example output. To override the
+    current value, `INITFORM` may be provided. This is particulary
+    useful if the value of the variable is something undesirable such as
+    `#<MY-CLASS {100171ED93}>`.
 
 - [locative] CONSTANT &OPTIONAL INITFORM
 
     Refers to a DEFCONSTANT. INITFORM, or if not specified,
-    the value of the constant is included in the documentation.
+    the value of the constant is included in the documentation. The
+    CONSTANT locative is like the VARIABLE locative, but it also checks
+    that its object is CONSTANTP.
 
 - [locative] MACRO
 
+    Refers to a global macro, typically defined with DEFMACRO or a
+    [special operator][SPECIAL-OPERATOR-P FUNCTION]. See the FUNCTION
+    locative for a note on arglists.
+
 - [locative] COMPILER-MACRO
+
+    Refers to a compiler macro, typically defined with
+    DEFINE-COMPILER-MACRO. See the FUNCTION locative for a note on
+    arglists.
 
 - [locative] FUNCTION
 
-    Note that the arglist in the generated documentation depends on
-    the quality of SWANK-BACKEND:ARGLIST. It may be that default
+    Refers to a global function, typically defined with DEFUN.
+    
+    Note that the arglist in the generated documentation depends on the
+    quality of SWANK-BACKEND:ARGLIST. It [may
+    be][@mgl-pax-document-implementation-notes section] that default
     values of optional and keyword arguments are missing.
 
 - [locative] GENERIC-FUNCTION
+
+    Refers to a [GENERIC-FUNCTION][class], typically defined with
+    DEFGENERIC.
 
 - [locative] METHOD METHOD-QUALIFIERS METHOD-SPECIALIZERS
 
@@ -523,7 +598,8 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     generic function FOO:
     
         (foo (method () (t t t)))
-
+    
+    METHOD is not EXPORTABLE-LOCATIVE-TYPE-P.
 
 - [locative] ACCESSOR CLASS-NAME
 
@@ -566,19 +642,23 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
 
 - [locative] CLASS
 
-    Naturally, CL:CLASS is the locative type for classes. To refer to a
-    class named FOO:
+    Naturally, CLASS is the locative type for [CLASS][class]es.
+    To refer to a class named FOO:
     
         (foo class)
-
+    
+    In the generated documention, only superclasses denoted by [external
+    symbols][find-symbol function] are included.
 
 - [locative] CONDITION
 
-    CL:CONDITION is the locative type for condition. To refer to a
-    condition named FOO:
+    CONDITION is the locative type for [CONDITION][condition]s. To
+    refer to a condition named FOO:
     
         (foo condition)
-
+    
+    In the generated documention, only superclasses denoted by [external
+    symbols][find-symbol function] are included.
 
 - [locative] RESTART
 
@@ -606,12 +686,17 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     meta information extracted from the system definition. This also
     serves as an example of a symbol that's not accessible in the
     current package and consequently is not exported.
+    
+    ASDF:SYSTEM is not EXPORTABLE-LOCATIVE-TYPE-P.
 
 - [locative] PACKAGE
 
+    Refers to a [PACKAGE][type], defined by DEFPACKAGE. PACKAGE is not
+    EXPORTABLE-LOCATIVE-TYPE-P.
+
 - [locative] READTABLE
 
-    Refers to a named READTABLE defined with
+    Refers to a named [READTABLE][] defined with
     NAMED-READTABLES:DEFREADTABLE, which associates a global name and a
     docstring with the readtable object. Unfortunately, source location
     information is not available.
@@ -692,6 +777,8 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     Finally, if specified LINE-PREFIX is a string that's prepended to
     each line included in the documentation. For example, a string of
     four spaces makes markdown think it's a code block.
+    
+    INCLUDE is not EXPORTABLE-LOCATIVE-TYPE-P.
 
 - [locative] GLOSSARY-TERM
 
@@ -713,7 +800,7 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
 
     This is the locative for locatives. When `M-.` is pressed on
     `SOME-NAME` in `(SOME-NAME LOCATIVE)`, this is what makes it
-    possible to land at the `(DEFINE-LOCATIVE-TYPE SOME-NAME ...)` form.
+    possible to land at the corresponding DEFINE-LOCATIVE-TYPE form.
     Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.
 
 - [locative] DISLOCATED
@@ -723,12 +810,13 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     
         `FOO`
     
-    will be linked to (if *DOCUMENT-LINK-CODE*) its definition. However,
+    will be linked (if *DOCUMENT-LINK-CODE*) to its definition. However,
     
         [`FOO`][dislocated]
     
     will not be. On a dislocated locative LOCATE always fails with a
-    LOCATE-ERROR condition.
+    LOCATE-ERROR condition. See @MGL-PAX-LINKING-TO-CODE for an
+    alternative method of preventing autolinking.
 
 - [locative] ARGUMENT
 
@@ -1141,6 +1229,7 @@ can be placed right after the opening backtick.
 class `\section`
 ```
 
+Alternatively, the DISLOCATED locative may be used.
 
 - [variable] *DOCUMENT-LINK-CODE* T
 
@@ -2052,12 +2141,9 @@ changed."
 
 ## Extension API
 
-### Locatives and References
+### Locatives and References API
 
-While Common Lisp has rather good introspective abilities, not
-everything is first class. For example, there is no object
-representing the variable defined with `(DEFVAR
-FOO)`. `(MAKE-REFERENCE 'FOO 'VARIABLE)` constructs a REFERENCE that
+`(MAKE-REFERENCE 'FOO 'VARIABLE)` constructs a REFERENCE that
 captures the path to take from an object (the symbol FOO) to an
 entity of interest (for example, the documentation of the variable).
 The path is called the locative. A locative can be applied to an
@@ -2138,15 +2224,16 @@ for ASDF:SYSTEM:
   "Refers to an asdf system. The generated documentation will include
   meta information extracted from the system definition. This also
   serves as an example of a symbol that's not accessible in the
-  current package and consequently is not exported.")
+  current package and consequently is not exported.
+
+  ASDF:SYSTEM is not EXPORTABLE-LOCATIVE-TYPE-P.")
 
 (defmethod locate-object (name (locative-type (eql 'asdf:system))
                           locative-args)
   (or (and (endp locative-args)
            ;; FIXME: This is slow as hell.
            (asdf:find-system name nil))
-      (locate-error name (cons locative-type locative-args)
-                    "~S does not name an asdf system." name)))
+      (locate-error "~S does not name an asdf system." name)))
 
 (defmethod canonical-reference ((system asdf:system))
   (make-reference (character-string (slot-value system 'asdf::name))
@@ -2271,7 +2358,7 @@ for ASDF:SYSTEM:
     sense that calling CANONICAL-REFERENCE on it will return the same
     reference. For extension only, don't call this directly.
 
-- [function] LOCATE-ERROR OBJECT LOCATIVE &REST FORMAT-AND-ARGS
+- [function] LOCATE-ERROR &REST FORMAT-AND-ARGS
 
     Call this function to signal a LOCATE-ERROR condition from a
     LOCATE-OBJECT method. FORMAT-AND-ARGS contains a format string and
@@ -2284,9 +2371,15 @@ for ASDF:SYSTEM:
 
 - [generic-function] CANONICAL-REFERENCE OBJECT
 
-    Return a REFERENCE that resolves to OBJECT. Signals
-    LOCATE-ERROR if it is not possible to construct a REFERENCE for
-    OBJECT.
+    Return a REFERENCE that resolves to OBJECT.
+    
+    If OBJECT is a REFERENCE, then:
+    
+    - if it can be `RESOLVE`d, CANONICAL-REFERENCE is called on the
+      resolved object,
+    
+    - else, an equivalent reference is returned.
+
 
 - [generic-function] COLLECT-REACHABLE-OBJECTS OBJECT
 
@@ -2304,7 +2397,7 @@ for ASDF:SYSTEM:
     This default implementation returns the empty list. This means that
     nothing is reachable from OBJECT.
 
-- [variable] *FORMAT* "-unbound-"
+- [variable] *FORMAT* 
 
     Bound by DOCUMENT, this allows markdown output to depend on the
     output format.
@@ -2362,11 +2455,28 @@ example of how the VARIABLE locative is defined:
 
 ```commonlisp
 (define-locative-type variable (&optional initform)
-  "Refers to a global special variable. INITFORM, or if not specified,
-  the global value of the variable is included in the documentation.")
+  """Refers to a global special variable. INITFORM, or if not specified,
+  the global value of the variable is included in the documentation.
+
+  ```
+  ;;; A REFERENCE is returned because there is no such type as VARIABLE.
+  (locate '*FORMAT* 'variable)
+  ==> #<REFERENCE *FORMAT* VARIABLE>
+  ```
+
+  For the output of `(DOCUMENT (MAKE-REFERENCE '*FORMAT* 'VARIABLE))`,
+  see *FORMAT*. Note that *FORMAT* is unbound. If the variable is
+  BOUNDP, then its _current_ value is included in the documentation.
+  See *DOCUMENT-LINK-CODE* for an example output. To override the
+  current value, `INITFORM` may be provided. This is particulary
+  useful if the value of the variable is something undesirable such as
+  `#<MY-CLASS {100171ED93}>`.
+  """)
 
 (defmethod locate-object (symbol (locative-type (eql 'variable)) locative-args)
-  (assert (<= (length locative-args) 1))
+  (unless (<= (length locative-args) 1)
+    (locate-error "The lambda list of the VARIABLE locative is ~
+                   (&OPTIONAL INITFORM)."))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'variable))
@@ -2375,10 +2485,11 @@ example of how the VARIABLE locative is defined:
     (locate-and-print-bullet locative-type locative-args symbol stream)
     (write-char #\Space stream)
     (multiple-value-bind (value unboundp) (symbol-global-value symbol)
-      (print-arglist (prin1-and-escape-markdown (cond (initformp initform)
-                                                      (unboundp "-unbound-")
-                                                      (t value)))
-                     stream))
+      (when (or initformp (not unboundp))
+        (print-arglist (prin1-and-escape-markdown (if initformp
+                                                      initform
+                                                      value))
+                       stream)))
     (print-end-bullet stream)
     (with-local-references ((list (make-reference symbol 'variable)))
       (maybe-print-docstring symbol locative-type stream))))
@@ -2477,7 +2588,7 @@ with symbols in a certain context.
 
 ### Sections
 
-[Section][class] objects rarely need to be dissected since
+[SECTION][class] objects rarely need to be dissected since
 DEFSECTION and DOCUMENT cover most needs. However, it is plausible
 that one wants to subclass them and maybe redefine how they are
 presented.

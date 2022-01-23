@@ -3,13 +3,14 @@
 (in-readtable pythonic-string-syntax)
 
 (defsection @mgl-pax-locative-types (:title "Locative Types")
-  "As we have already briefly seen, locatives allow us to refer to,
-  document and find the source location of various definitions beyond
-  what standard Common Lisp offers. See @MGL-PAX-EXTENSION-API for a
-  more detailed treatment. The following are the locatives types
-  supported out of the box. As all locative types, they are symbols
-  and their names should make it obvious what kind of things they
-  refer to. Unless otherwise noted, locatives take no arguments.
+  """As we have already briefly seen in DEFSECTION, locatives allow us
+  to refer to, document and find the source location of various
+  definitions beyond what standard Common Lisp offers. See
+  @MGL-PAX-EXTENSION-API for a more detailed treatment. The following
+  are the locatives types supported out of the box. As all locative
+  types, they are symbols, and their names should make it obvious what
+  kind of things they refer to. Unless otherwise noted, locatives take
+  no arguments.
 
   When there is a corresponding CL type, a locative can be resolved to
   a unique object as is the case in `(LOCATE 'FOO 'CLASS)` returning
@@ -18,7 +19,8 @@
   LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
   @MGL-PAX-EXTENSION-API), which makes navigating the sources with
   `M-.` (see @MGL-PAX-NAVIGATING-IN-EMACS) and
-  @MGL-PAX-GENERATING-DOCUMENTATION possible."
+  @MGL-PAX-GENERATING-DOCUMENTATION possible.
+  """
   (variable locative)
   (constant locative)
   (macro locative)
@@ -141,11 +143,28 @@
 ;;;; VARIABLE locative
 
 (define-locative-type variable (&optional initform)
-  "Refers to a global special variable. INITFORM, or if not specified,
-  the global value of the variable is included in the documentation.")
+  """Refers to a global special variable. INITFORM, or if not specified,
+  the global value of the variable is included in the documentation.
+
+  ```
+  ;;; A REFERENCE is returned because there is no such type as VARIABLE.
+  (locate '*FORMAT* 'variable)
+  ==> #<REFERENCE *FORMAT* VARIABLE>
+  ```
+
+  For the output of `(DOCUMENT (MAKE-REFERENCE '*FORMAT* 'VARIABLE))`,
+  see *FORMAT*. Note that *FORMAT* is unbound. If the variable is
+  BOUNDP, then its _current_ value is included in the documentation.
+  See *DOCUMENT-LINK-CODE* for an example output. To override the
+  current value, `INITFORM` may be provided. This is particulary
+  useful if the value of the variable is something undesirable such as
+  `#<MY-CLASS {100171ED93}>`.
+  """)
 
 (defmethod locate-object (symbol (locative-type (eql 'variable)) locative-args)
-  (assert (<= (length locative-args) 1))
+  (unless (<= (length locative-args) 1)
+    (locate-error "The lambda list of the VARIABLE locative is ~
+                   (&OPTIONAL INITFORM)."))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'variable))
@@ -154,10 +173,11 @@
     (locate-and-print-bullet locative-type locative-args symbol stream)
     (write-char #\Space stream)
     (multiple-value-bind (value unboundp) (symbol-global-value symbol)
-      (print-arglist (prin1-and-escape-markdown (cond (initformp initform)
-                                                      (unboundp "-unbound-")
-                                                      (t value)))
-                     stream))
+      (when (or initformp (not unboundp))
+        (print-arglist (prin1-and-escape-markdown (if initformp
+                                                      initform
+                                                      value))
+                       stream)))
     (print-end-bullet stream)
     (with-local-references ((list (make-reference symbol 'variable)))
       (maybe-print-docstring symbol locative-type stream))))
@@ -176,15 +196,20 @@
 
 (define-locative-type constant (&optional initform)
   "Refers to a DEFCONSTANT. INITFORM, or if not specified,
-  the value of the constant is included in the documentation.")
+  the value of the constant is included in the documentation. The
+  CONSTANT locative is like the VARIABLE locative, but it also checks
+  that its object is CONSTANTP.")
 
 (defmethod locate-object (symbol (locative-type (eql 'constant)) locative-args)
-  (assert (<= (length locative-args) 1))
-  #-clisp
-  (assert (constantp symbol) () "~S is not CONSTANTP." symbol)
-  ;; KLUDGE: CLISP is non-compliant here and there.
-  #+clisp
-  (unless (member symbol '(least-negative-long-float
+  (unless (<= (length locative-args) 1)
+    (locate-error "The lambda list of the CONSTANT locative is ~
+                   (&OPTIONAL INITFORM)."))
+  (unless (constantp symbol)
+    (locate-error "~S is not CONSTANTP." symbol))
+  (unless #-clisp (constantp symbol)
+          ;; KLUDGE: CLISP is non-compliant here and there.
+          #+clisp
+          (member symbol '(least-negative-long-float
                            least-negative-normalized-long-float
                            least-positive-long-float
                            least-positive-normalized-long-float
@@ -193,7 +218,7 @@
                            most-negative-long-float
                            most-positive-long-float
                            pi))
-    (assert (constantp symbol) () "~S is not CONSTANTP." symbol))
+          (locate-error "~S is not CONSTANTP." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'constant))
@@ -221,12 +246,15 @@
 
 ;;;; MACRO locative
 
-(define-locative-type macro ())
+(define-locative-type macro ()
+  "Refers to a global macro, typically defined with DEFMACRO or a
+  [special operator][SPECIAL-OPERATOR-P FUNCTION]. See the FUNCTION
+  locative for a note on arglists.")
 
 (defmethod locate-object (symbol (locative-type (eql 'macro)) locative-args)
-  (unless (macro-function symbol)
-    (locate-error symbol (cons locative-type locative-args)
-                  "~S does not name a macro." symbol))
+  (unless (or (macro-function symbol)
+              (special-operator-p symbol))
+    (locate-error "~S does not name a macro." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'macro))
@@ -248,13 +276,15 @@
 
 ;;;; COMPILER-MACRO locative
 
-(define-locative-type compiler-macro ())
+(define-locative-type compiler-macro ()
+  "Refers to a compiler macro, typically defined with
+  DEFINE-COMPILER-MACRO. See the FUNCTION locative for a note on
+  arglists.")
 
 (defmethod locate-object (symbol (locative-type (eql 'compiler-macro))
                           locative-args)
   (unless (compiler-macro-function symbol)
-    (locate-error symbol (cons locative-type locative-args)
-                  "~S does not name a compiler macro." symbol))
+    (locate-error "~S does not name a compiler macro." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'compiler-macro))
@@ -282,23 +312,25 @@
 ;;;; FUNCTION and GENERIC-FUNCTION locatives
 
 (define-locative-type function ()
-  "Note that the arglist in the generated documentation depends on
-  the quality of SWANK-BACKEND:ARGLIST. It may be that default
+  "Refers to a global function, typically defined with DEFUN.
+
+  Note that the arglist in the generated documentation depends on the
+  quality of SWANK-BACKEND:ARGLIST. It [may
+  be][@mgl-pax-document-implementation-notes section] that default
   values of optional and keyword arguments are missing.")
 
-(define-locative-type generic-function ())
+(define-locative-type generic-function ()
+  "Refers to a [GENERIC-FUNCTION][class], typically defined with
+  DEFGENERIC.")
 
 (defmethod locate-object (symbol (locative-type (eql 'function)) locative-args)
   (when (macro-function symbol)
-    (locate-error symbol (cons locative-type locative-args)
-                  "~S is a macro, not a function." symbol))
+    (locate-error "~S is a macro, not a function." symbol))
   (let ((function (ignore-errors (symbol-function* symbol))))
     (unless function
-      (locate-error symbol (cons locative-type locative-args)
-                    "~S does not name a function." symbol))
+      (locate-error "~S does not name a function." symbol))
     (when (typep function 'generic-function)
-      (locate-error symbol (cons locative-type locative-args)
-                    "~S names a generic function, not a plain function."
+      (locate-error "~S names a generic function, not a plain function."
                     symbol))
     function))
 
@@ -306,8 +338,7 @@
                           locative-args)
   (let ((function (symbol-function* symbol)))
     (unless (typep function 'generic-function)
-      (locate-error symbol (cons locative-type locative-args)
-                    "~S does not name a generic function." symbol))
+      (locate-error "~S does not name a generic function." symbol))
     function))
 
 (defmethod canonical-reference ((function function))
@@ -345,13 +376,14 @@
   DEFSECTION entry refers to the default method of the three argument
   generic function FOO:
 
-      (foo (method () (t t t)))")
+      (foo (method () (t t t)))
+
+  METHOD is not EXPORTABLE-LOCATIVE-TYPE-P.")
 
 (defmethod locate-object (symbol (locative-type (eql 'method))
                           locative-args)
   (unless (= 2 (length locative-args))
-    (locate-error symbol (cons locative-type locative-args)
-                  "The syntax of the METHOD locative is ~
+    (locate-error "The syntax of the METHOD locative is ~
                    (METHOD <METHOD-QUALIFIERS> <METHOD-SPECIALIZERS>)."))
   (destructuring-bind (qualifiers specializers) locative-args
     (or (ignore-errors
@@ -364,8 +396,7 @@
                                       ;; or a type specifier denoting
                                       ;; a class:
                                       (t (find-class specializer))))))
-        (locate-error symbol (cons locative-type locative-args)
-                      "Method does not exist."))))
+        (locate-error "Method does not exist."))))
 
 (defmethod canonical-reference ((method method))
   (make-reference (swank-mop:generic-function-name
@@ -442,8 +473,7 @@
 (defmethod locate-object (symbol (locative-type (eql 'accessor))
                           locative-args)
   (unless (= 1 (length locative-args))
-    (locate-error symbol (cons locative-type locative-args)
-                  "The syntax of the ACCESSOR locative is ~
+    (locate-error "The syntax of the ACCESSOR locative is ~
                    (ACCESSOR <CLASS-NAME>)."))
   (find-accessor-slot-definition symbol (first locative-args))
   (make-reference symbol (cons locative-type locative-args)))
@@ -456,15 +486,13 @@
                      (swank-mop:slot-definition-writers slot-def)
                      :test #'equal))
       (return-from find-accessor-slot-definition slot-def)))
-  (locate-error accessor-symbol `(accessor ,class-symbol)
-                "Could not find accessor ~S for class ~S."
+  (locate-error "Could not find accessor ~S for class ~S."
                 accessor-symbol class-symbol))
 
 (defmethod locate-object (symbol (locative-type (eql 'reader))
                           locative-args)
   (unless (= 1 (length locative-args))
-    (locate-error symbol (cons locative-type locative-args)
-                  "The syntax of the READER locative is ~
+    (locate-error "The syntax of the READER locative is ~
                    (READER <CLASS-NAME>)."))
   (find-reader-slot-definition symbol (first locative-args))
   (make-reference symbol (cons locative-type locative-args)))
@@ -479,8 +507,7 @@
 (defmethod locate-object (symbol (locative-type (eql 'writer))
                           locative-args)
   (unless (= 1 (length locative-args))
-    (locate-error symbol (cons locative-type locative-args)
-                  "The syntax of the WRITER locative is ~
+    (locate-error "The syntax of the WRITER locative is ~
                    (WRITER <CLASS-NAME>)."))
   (find-writer-slot-definition symbol (first locative-args))
   (make-reference symbol (cons locative-type locative-args)))
@@ -489,8 +516,7 @@
   (dolist (slot-def (swank-mop:class-direct-slots (find-class class-symbol)))
     (when (find accessor-symbol (swank-mop:slot-definition-writers slot-def))
       (return-from find-writer-slot-definition slot-def)))
-  (locate-error accessor-symbol `(writer ,class-symbol)
-                "Could not find writer ~S for class ~S."
+  (locate-error "Could not find writer ~S for class ~S."
                 accessor-symbol class-symbol))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'accessor))
@@ -583,8 +609,7 @@
                           locative-args)
   ;; Signal an error if it doesn't exist.
   (or (ignore-errors (symbol-function* symbol))
-      (locate-error symbol (cons locative-type locative-args)
-                    ""))
+      (locate-error "~S does not name a function." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defmethod locate-and-document ((symbol symbol)
@@ -624,8 +649,7 @@
                ;; reliable.
                #-(or abcl allegro clisp cmucl ecl)
                (swank-backend:type-specifier-p symbol))
-    (locate-error symbol (cons locative-args locative-args)
-                  "~S is not a valid type specifier." symbol))
+    (locate-error "~S is not a valid type specifier." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'type)) locative-args
@@ -650,23 +674,28 @@
 ;;;; CLASS and CONDITION locatives
 
 (define-locative-type class ()
-  "Naturally, CL:CLASS is the locative type for classes. To refer to a
-  class named FOO:
+  "Naturally, CLASS is the locative type for [CLASS][class]es.
+  To refer to a class named FOO:
 
-      (foo class)")
+      (foo class)
+
+  In the generated documention, only superclasses denoted by [external
+  symbols][find-symbol function] are included.")
 
 (define-locative-type condition ()
-  "CL:CONDITION is the locative type for condition. To refer to a
-  condition named FOO:
+  "CONDITION is the locative type for [CONDITION][condition]s. To
+  refer to a condition named FOO:
 
-      (foo condition)")
+      (foo condition)
+
+  In the generated documention, only superclasses denoted by [external
+  symbols][find-symbol function] are included.")
 
 (defmethod locate-object (symbol (locative-type (eql 'class)) locative-args)
   (or (and (symbolp symbol)
            (endp locative-args)
            (find-class symbol nil))
-      (locate-error symbol (cons locative-type locative-args)
-                    "~S does not name a class." symbol)))
+      (locate-error "~S does not name a class." symbol)))
 
 (defmethod locate-object (symbol (locative-type (eql 'condition))
                           locative-args)
@@ -675,8 +704,7 @@
                  (endp locative-args)
                  class
                  (subtypep class 'condition))
-      (locate-error symbol (cons locative-type locative-args)
-                    "~S does not name a condition class." symbol))
+      (locate-error "~S does not name a condition class." symbol))
     class))
 
 (defmethod canonical-reference ((class class))
@@ -756,15 +784,16 @@
   "Refers to an asdf system. The generated documentation will include
   meta information extracted from the system definition. This also
   serves as an example of a symbol that's not accessible in the
-  current package and consequently is not exported.")
+  current package and consequently is not exported.
+
+  ASDF:SYSTEM is not EXPORTABLE-LOCATIVE-TYPE-P.")
 
 (defmethod locate-object (name (locative-type (eql 'asdf:system))
                           locative-args)
   (or (and (endp locative-args)
            ;; FIXME: This is slow as hell.
            (asdf:find-system name nil))
-      (locate-error name (cons locative-type locative-args)
-                    "~S does not name an asdf system." name)))
+      (locate-error "~S does not name an asdf system." name)))
 
 (defmethod canonical-reference ((system asdf:system))
   (make-reference (character-string (slot-value system 'asdf::name))
@@ -828,7 +857,9 @@
 
 ;;;; PACKAGE locative
 
-(define-locative-type package ())
+(define-locative-type package ()
+  "Refers to a [PACKAGE][type], defined by DEFPACKAGE. PACKAGE is not
+  EXPORTABLE-LOCATIVE-TYPE-P.")
 
 (defmethod locate-object (package-designator (locative-type (eql 'package))
                           locative-args)
@@ -836,8 +867,7 @@
            (or (symbolp package-designator)
                (stringp package-designator))
            (find-package package-designator))
-      (locate-error package-designator (cons locative-type locative-args)
-                    "~S does not name a package." package-designator)))
+      (locate-error "~S does not name a package." package-designator)))
 
 (defmethod canonical-reference ((package package))
   (make-reference (character-string (package-name package)) 'package))
@@ -853,7 +883,7 @@
 ;;;; READTABLE locative
 
 (define-locative-type readtable ()
-  "Refers to a named READTABLE defined with
+  "Refers to a named [READTABLE][] defined with
   NAMED-READTABLES:DEFREADTABLE, which associates a global name and a
   docstring with the readtable object. Unfortunately, source location
   information is not available.")
@@ -915,8 +945,7 @@
                    #+sbcl
                    (find symbol (sb-cltl2:declaration-information
                                  'declaration))))
-    (locate-error symbol (cons locative-type locative-args)
-                  "~S is not a known declaration." symbol))
+    (locate-error "~S is not a known declaration." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'declaration))
@@ -949,18 +978,25 @@
 (defmethod locate-object (symbol (locative-type (eql 'section))
                           locative-args)
   (declare (ignore locative-args))
-  (assert (typep (symbol-value symbol) 'section))
+  (unless (and (symbolp symbol)
+               (boundp symbol)
+               (typep (symbol-value symbol) 'section))
+    (locate-error))
   (symbol-value symbol))
 
 (defmethod canonical-reference ((section section))
   (make-reference (section-name section) 'section))
 
 (defmethod collect-reachable-objects ((section section))
-  (mapcan (lambda (reference)
-            (cons reference (collect-reachable-objects reference)))
-          (remove-if-not (lambda (entry)
-                           (typep entry 'reference))
-                         (section-entries section))))
+  (handler-case
+      (mapcan (lambda (reference)
+                (cons reference (collect-reachable-objects reference)))
+              (remove-if-not (lambda (entry)
+                               (typep entry 'reference))
+                             (section-entries section)))
+    (locate-error (e)
+      (error "~@<SECTION ~S has an undefined reference:~%~A~:@>"
+             (section-name section) e))))
 
 (defvar *section*)
 
@@ -1049,7 +1085,9 @@
 
   Finally, if specified LINE-PREFIX is a string that's prepended to
   each line included in the documentation. For example, a string of
-  four spaces makes markdown think it's a code block.""")
+  four spaces makes markdown think it's a code block.
+  
+  INCLUDE is not EXPORTABLE-LOCATIVE-TYPE-P.""")
 
 (defmethod exportable-locative-type-p ((locative-type (eql 'include)))
   nil)
@@ -1062,8 +1100,7 @@
         (declare (ignore source line-prefix header footer header-nl footer-nl))
         (make-reference symbol (cons locative-type locative-args)))
     (error ()
-      (locate-error symbol (cons locative-type locative-args)
-                    "The lambda list of the INCLUDE locative is ~
+      (locate-error "The lambda list of the INCLUDE locative is ~
                      (SOURCE &KEY LINE-PREFIX HEADER FOOTER HEADER-NL ~
                      FOOTER-NL)."))))
 
@@ -1071,7 +1108,8 @@
                                    locative-args)
   (declare (ignore symbol))
   (multiple-value-bind (file start) (include-region (first locative-args))
-    (assert file)
+    (unless file
+      (locate-error))
     `(:location
       (:file ,(namestring file))
       (:position ,(1+ start))
@@ -1215,7 +1253,8 @@
 (defmethod locate-object (symbol (locative-type (eql 'glossary-term))
                           locative-args)
   (declare (ignore locative-args))
-  (assert (typep (symbol-value symbol) 'glossary-term))
+  (unless (typep (symbol-value symbol) 'glossary-term)
+    (locate-error))
   (symbol-value symbol))
 
 (defmethod document-object ((glossary-term glossary-term) stream)
@@ -1240,17 +1279,15 @@
 (define-locative-type locative (lambda-list)
   "This is the locative for locatives. When `M-.` is pressed on
   `SOME-NAME` in `(SOME-NAME LOCATIVE)`, this is what makes it
-  possible to land at the `(DEFINE-LOCATIVE-TYPE SOME-NAME ...)` form.
+  possible to land at the corresponding DEFINE-LOCATIVE-TYPE form.
   Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.")
 
 (defmethod locate-object (symbol (locative-type (eql 'locative)) locative-args)
   (when locative-args
-    (locate-error symbol (cons locative-type locative-args)
-                  "The syntax of the LOCATIVE locative is ~
+    (locate-error "The syntax of the LOCATIVE locative is ~
                    (LOCATIVE <LOCATIVE-TYPE>)."))
   (or (ignore-errors (locative-lambda-list-method-for-symbol symbol))
-      (locate-error symbol (cons locative-type locative-args)
-                    "~S is not a valid locative." symbol))
+      (locate-error "~S is not a valid locative." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defun locative-lambda-list-method-for-symbol (symbol)
@@ -1286,17 +1323,17 @@
 
       `FOO`
 
-  will be linked to (if *DOCUMENT-LINK-CODE*) its definition. However,
+  will be linked (if *DOCUMENT-LINK-CODE*) to its definition. However,
 
       [`FOO`][dislocated]
 
   will not be. On a dislocated locative LOCATE always fails with a
-  LOCATE-ERROR condition.")
+  LOCATE-ERROR condition. See @MGL-PAX-LINKING-TO-CODE for an
+  alternative method of preventing autolinking.")
 
 (defmethod locate-object (symbol (locative-type (eql 'dislocated))
                           locative-args)
-  (locate-error symbol (cons locative-type locative-args)
-                "DISLOCATED can never be located."))
+  (locate-error "DISLOCATED can never be located."))
 
 
 ;;;; ARGUMENT locative
@@ -1318,8 +1355,7 @@
   ```""")
 
 (defmethod locate-object (symbol (locative-type (eql 'argument)) locative-args)
-  (locate-error symbol (cons locative-type locative-args)
-                "ARGUMENT can never be located."))
+  (locate-error "ARGUMENT can never be located."))
 
 
 ;;;; CLHS locative
@@ -1381,9 +1417,4 @@
                            (find-hyperspec-id name))))
     (if hyperspec-id
         (make-reference hyperspec-id 'clhs)
-        (locate-error name (cons locative-type locative-args)
-                      "Cannot find ~S in the CLHS." name))))
-
-(defmethod locate-canonical-reference (name (locative-type (eql 'clhs))
-                                       locative-args)
-  (locate-object name locative-type locative-args))
+        (locate-error "Cannot find ~S in the CLHS." name))))

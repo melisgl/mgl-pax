@@ -18,35 +18,32 @@
   is bound to a [SECTION][class] object. By convention, section names
   start with the character `@`. See @MGL-PAX-TUTORIAL for an example.
 
-  ENTRIES consists of docstrings and references. Docstrings are
-  arbitrary strings in markdown format, references are defined in the
-  form:
+  ##### Entries
 
-      (symbol locative)
+  ENTRIES consists of docstrings and references in any order.
+  Docstrings are arbitrary strings in markdown format.
 
-  For example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
-  SECTION)` says that `@BAR` is a subsection of this
-  one. `(BAZ (METHOD () (T T T)))` refers to the default method of the
-  three argument generic function `BAZ`. `(FOO FUNCTION)` is
-  equivalent to `(FOO (FUNCTION))`.
+  REFERENCES are given in the form `(OBJECT LOCATIVE)`. For example,
+  `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR SECTION)` says
+  that `@BAR` is a subsection of this one. `(BAZ (METHOD () (T T T)))`
+  refers to the default method of the three argument generic function
+  `BAZ`. `(FOO FUNCTION)` is equivalent to `(FOO (FUNCTION))`. See
+  @MGL-PAX-LOCATIVES-AND-REFERENCES for more.
 
-  A locative in a reference can either be a symbol or it can be a list
-  whose CAR is a symbol. In either case, the symbol is the called the
-  type of the locative while the rest of the elements are the locative
-  arguments. See @MGL-PAX-LOCATIVE-TYPES for the list of locative
-  types available out of the box.
-
-  The same symbol can occur multiple times in a reference, typically
-  with different locatives, but this is not required.
+  The same object may occur in multiple references, typically with
+  different locatives, but this is not required.
 
   The references are not looked up (see RESOLVE in the
   @MGL-PAX-EXTENSION-API) until documentation is generated, so it is
   allowed to refer to things yet to be defined.
 
-  If EXPORT is true (the default), the referenced symbols and NAME are
-  candidates for exporting. A candidate symbol is exported if
+  ##### Exporting
 
-  - it is accessible in PACKAGE (it's not `OTHER-PACKAGE:SOMETHING`)
+  If EXPORT is true (the default), NAME and the objects which are
+  SYMBOLs are candidates for exporting. A candidate symbol is exported
+  if
+
+  - it is accessible in PACKAGE (it's not `OTHER-PACKAGE:SOMETHING`),
     and
 
   - there is a reference to it in the section being defined with a
@@ -55,6 +52,8 @@
   See DEFINE-PACKAGE if you use the export feature. The idea with
   confounding documentation and exporting is to force documentation of
   all exported symbols.
+
+  ##### Misc
 
   TITLE is a non-marked-up string or NIL. If non-NIL, it determines
   the text of the heading in the generated output. LINK-TITLE-TO is a

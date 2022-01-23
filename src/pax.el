@@ -5,8 +5,8 @@
       (mgl-pax-locate-definition name (mgl-pax-locative-after) where)
       (mgl-pax-locate-definition name (mgl-pax-locative-after-in-brackets)
                                  where)
-      ;; support "foo function" and "function foo" syntax in
-      ;; interactive use
+      ;; Support "foo function" and "function foo" syntax in
+      ;; interactive use.
       (let ((pos (cl-position ?\s name)))
         (when pos
           (or (mgl-pax-locate-definition (cl-subseq name 0 pos)

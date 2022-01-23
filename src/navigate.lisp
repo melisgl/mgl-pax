@@ -33,7 +33,7 @@
   LOCATIVE) format so `M-.` will work just fine there.
 
   Just like vanilla `M-.`, this works in comments and docstrings. In
-  this example pressing `M-.` on `FOO` will visit `FOO`'s default
+  the next example, pressing `M-.` on `FOO` will visit `FOO`'s default
   method:
 
   ```commonlisp

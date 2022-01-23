@@ -5,6 +5,8 @@
 Which one is the master? Heuristically, the references from sections
 in the same package are to be preferred.
 * MAYBE todo/comment locative?
+* defining link ids doesn't work in function docstrings
+because it's translated to a list item
 * MAYBE fake/override documentation for existing stuff
 * TODO pretty print lambda-lists (including default values)
 and values of variables. Unfortunately, there seems to be no way to
@@ -25,3 +27,4 @@ There are two kinds:
 * warn on linking failure
 How to recoginize normal reference links? Don't, just warn on any
 linking failure. This should be in 3BMD.
+* break test-document into smaller tests

@@ -3,7 +3,7 @@
 (in-readtable pythonic-string-syntax)
 
 (defsection @mgl-pax-extension-api (:title "Extension API")
-  (@mgl-pax-locatives-and-references section)
+  (@mgl-pax-locatives-and-references-api section)
   (@mgl-pax-new-object-types section)
   (@mgl-pax-reference-based-extensions section)
   (@mgl-pax-sections section))
@@ -95,6 +95,9 @@
 ;;; from DEFINE-LOCATIVE-TYPE.
 (defgeneric locative-lambda-list (symbol))
 
+(defvar *locate-object-object*)
+(defvar *locate-object-locative*)
+
 (defgeneric locate-object (object locative-type locative-args)
   (:documentation "Return the object to which OBJECT and the locative
   refer. For example, if LOCATIVE-TYPE is the symbol
@@ -105,10 +108,14 @@
   example. If a REFERENCE is returned then it must be canonical in the
   sense that calling CANONICAL-REFERENCE on it will return the same
   reference. For extension only, don't call this directly.")
+  (:method :around (object locative-type locative-args)
+    (let ((*locate-object-object* object)
+          (*locate-object-locative* (cons locative-type locative-args)))
+      (call-next-method)))
   (:method (object locative-type locative-args)
-    (locate-error object (cons locative-type locative-args))))
+    (locate-error)))
 
-(defun locate-error (object locative &rest format-and-args)
+(defun locate-error (&rest format-and-args)
   "Call this function to signal a LOCATE-ERROR condition from a
   LOCATE-OBJECT method. FORMAT-AND-ARGS contains a format string and
   args suitable for FORMAT from which the LOCATE-ERROR-MESSAGE is
@@ -117,16 +124,26 @@
 
   The object and the locative are not specified, they are added by
   LOCATE when it resignals the condition."
-  (error 'locate-error :object object
-         :locative (normalize-locative locative)
+  (error 'locate-error :object *locate-object-object*
+         :locative (normalize-locative *locate-object-locative*)
          :message (if format-and-args
                       (apply #'format nil format-and-args)
                       nil)))
 
 (defgeneric canonical-reference (object)
-  (:documentation "Return a REFERENCE that resolves to OBJECT. Signals
-  LOCATE-ERROR if it is not possible to construct a REFERENCE for
-  OBJECT."))
+  (:documentation "Return a REFERENCE that resolves to OBJECT.
+
+  If OBJECT is a REFERENCE, then:
+
+  - if it can be `RESOLVE`d, CANONICAL-REFERENCE is called on the
+    resolved object,
+
+  - else, an equivalent reference is returned."))
+
+(defmethod canonical-reference ((reference reference))
+  (locate-canonical-reference (reference-object reference)
+                              (reference-locative-type reference)
+                              (reference-locative-args reference)))
 
 (defgeneric locate-canonical-reference (object locative-type locative-args))
 
@@ -134,22 +151,11 @@
   (handler-case
       (let ((located (locate-object object locative-type locative-args)))
         (if (typep located 'reference)
-            ;; If the locative is (COMPILER-MACRO) for example, then
-            ;; turn it into a single symbol.
-            (let ((locative (reference-locative located)))
-              (if (and (listp locative) (= (length locative) 1))
-                  (make-reference (reference-object located)
-                                  (first locative))
-                  located))
+            located
             (canonical-reference located)))
     (locate-error ()
-      ;; DISLOCATED and ARGUMENT end up here
+      ;; DISLOCATED, ARGUMENT, and CLHS end up here
       (make-reference object (cons locative-type locative-args)))))
-
-(defmethod canonical-reference ((reference reference))
-  (locate-canonical-reference (reference-object reference)
-                              (reference-locative-type reference)
-                              (reference-locative-args reference)))
 
 (defgeneric canonical-locative (locative-type locative-args))
 
@@ -376,7 +382,7 @@
      (defmethod locate-object
          (symbol (locative-type (eql ',locative-type)) locative-args)
        (or (symbol-lambda-list-method symbol ',locative-type)
-           (locate-error symbol (cons ',locative-type locative-args)))
+           (locate-error))
        (make-reference symbol (cons locative-type locative-args)))
      (defmethod locate-and-document
          (symbol (locative-type (eql ',locative-type)) locative-args stream)
@@ -436,7 +442,7 @@
 
 
 (defsection @mgl-pax-sections (:title "Sections")
-  "[Section][class] objects rarely need to be dissected since
+  "[SECTION][class] objects rarely need to be dissected since
   DEFSECTION and DOCUMENT cover most needs. However, it is plausible
   that one wants to subclass them and maybe redefine how they are
   presented."
