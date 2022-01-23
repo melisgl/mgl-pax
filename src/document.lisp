@@ -1842,9 +1842,14 @@
 
 ;;;; Basic DOCUMENT-OBJECT and DESCRIBE-OBJECT methods
 
+(defvar *objects-being-documented* ())
+
 (defmethod document-object :around (object stream)
-  (loop
-    (return
+  (let ((*objects-being-documented* (cons object *objects-being-documented*)))
+    (handler-bind
+        ((error (lambda (e)
+                  (warn "~@<Error ~A while documenting ~{~S~^ / ~}~:@>"
+                        e (reverse *objects-being-documented*)))))
       (cond ((or (stringp object) (typep object 'reference))
              (call-next-method))
             (t

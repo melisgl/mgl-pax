@@ -186,8 +186,7 @@
   mess up markdown. To handle the most common cases leave the first
   line alone, but from the rest of the lines strip the longest run of
   leading spaces that is common to all non-blank lines."
-  (format stream "~a~%"
-          (massage-docstring string :indentation "")))
+  (format stream "~a~%" (massage-docstring string :indentation "")))
 
 ;;; This is bound to an EQUAL hash table in MAKE-GITHUB-SOURCE-URI-FN
 ;;; to speed up FIND-SOURCE. It's still very slow though.

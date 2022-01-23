@@ -24,3 +24,5 @@ to produce something like an ipython notebook.
 There are two kinds:
 - object is text (like the CLHS locative)
 - normal references with external urls (hyperspec symbol lookup)
+* warn on linking failure
+How to recoginize normal reference links?
