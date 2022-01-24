@@ -9,9 +9,9 @@
   docstring an example call with concrete arguments and return values
   speaks volumes. A transcript is a text that looks like a repl
   session, but which has a light markup for printed output and return
-  values, while no markup (i.e. prompt) for lisp forms. The PAX
+  values, while no markup (i.e. prompt) for Lisp forms. PAX
   transcripts may include output and return values of all forms, or
-  only selected ones. In either case the transcript itself can be
+  only selected ones. In either case, the transcript itself can be
   easily generated from the source code.
 
   The main worry associated with including examples in the
@@ -39,8 +39,8 @@
 
   All in all, transcripts are a handy tool especially when combined
   with the Emacs support to regenerate them and with
-  PYTHONIC-STRING-READER and its triple-quoted strings that allow one
-  to work with nested strings with less noise. The triple-quote syntax
+  PYTHONIC-STRING-READER's triple-quoted strings, that allow one to
+  work with nested strings with less noise. The triple-quote syntax
   can be enabled with:
 
       (in-readtable pythonic-string-syntax)"
@@ -60,11 +60,11 @@
 (defparameter *syntaxes*
   '((:default
      (:output "..")
-     ;; To give precedence to this no value marker, it is listed
+     ;; To give precedence to this no-value marker, it is listed
      ;; before :READABLE.
      (:no-value "=> ; No value")
-     ;; No :READABLE-CONTINUATION which is fine because READ knows
-     ;; where to stop anyway.
+     ;; Note that :READABLE-CONTINUATION is not needed because READ
+     ;; knows where to stop anyway.
      (:readable "=>")
      (:unreadable "==>")
      (:unreadable-continuation "-->"))
@@ -106,7 +106,7 @@
 
   When writing, an extra space is added automatically if the line to
   be prefixed is not empty. Similarly, the first space following the
-  prefix discarded when reading.
+  prefix is discarded when reading.
 
   See TRANSCRIBE for how the actual syntax to be used is selected.")
 
@@ -175,8 +175,8 @@
   => (1 2)
   ```
 
-  With UPDATE-ONLY, printed output of a form is only transcribed if
-  there were output markers in the source. Similarly, with
+  With UPDATE-ONLY, the printed output of a form is only transcribed
+  if there were output markers in the source. Similarly, with
   UPDATE-ONLY, return values are only transcribed if there were value
   markers in the source.
 
@@ -248,8 +248,8 @@
   --> end>
   ```
 
-  where `"==>"` is the :UNREADABLE prefix and `"-->"` is
-  the :UNREADABLE-CONTINUATION prefix. As with outputs, a consistency
+  where `"==>"` is the :UNREADABLE prefix and `"-->"` is the
+  :UNREADABLE-CONTINUATION prefix. As with outputs, a consistency
   check between an unreadable value from the source and the value from
   EVAL is performed with STRING=. That is, the value from EVAL is
   printed to a string and compared to the source value. Hence, any
@@ -381,8 +381,8 @@
   (rest (rest command)))
 
 (defun command-output-capture (command)
-  (let ((captures
-          (remove-if-not #'output-capture-p (command-captures command))))
+  (let ((captures (remove-if-not #'output-capture-p
+                                 (command-captures command))))
     (when (< 1 (length captures))
       (transcription-error* "Multiple output captures found."))
     (first captures)))
@@ -390,10 +390,13 @@
 (defun command-value-captures (command)
   (remove-if-not #'value-capture-p (command-captures command)))
 
+(defun command-error-captures (command)
+  (remove-if-not #'error-capture-p (command-captures command)))
+
 (defun check-command-values (command)
   (when (and (some #'no-value-capture-p (command-captures command))
              (< 1 (count-if #'value-capture-p (command-captures command))))
-    (transcription-error* "Found no-value-marker and other values.")))
+    (transcription-error* "Found both :NO-VALUE marker and other values.")))
 
 (defun capture-id (capture)
   (first capture))
@@ -407,7 +410,7 @@
                  captures))
 
 (defun output-capture-p (capture)
-  (member (capture-id capture) '(:output :commented-output)))
+  (eq (capture-id capture) :output))
 
 (defun output-string (output-capture)
   (assert (output-capture-p output-capture))
@@ -419,10 +422,15 @@
       (unreadable-capture-p capture)))
 
 (defun no-value-capture-p (capture)
-  (member (capture-id capture) '(:no-value :commented-no-value)))
+  (eq (capture-id capture) :no-value))
 
 (defun readable-capture-p (capture)
-  (member (capture-id capture) '(:readable :commented-readable)))
+  (eq (capture-id capture) :readable))
+
+(defun error-capture-p (capture)
+  (or (no-value-capture-p capture)
+      (readable-capture-p capture)
+      (unreadable-capture-p capture)))
 
 (defun readable-object (readable-capture)
   (assert (readable-capture-p readable-capture))
@@ -433,7 +441,7 @@
   (second (capture-value readable-capture)))
 
 (defun unreadable-capture-p (capture)
-  (member (capture-id capture) '(:unreadable :commented-unreadable)))
+  (eq (capture-id capture) :unreadable))
 
 (defun unreadable-string (unreadable-capture)
   (assert (unreadable-capture-p unreadable-capture))
