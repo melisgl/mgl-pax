@@ -93,6 +93,12 @@
            ;; LOCATIVE-STRING=garbage.
            (ignore-errors
             (locate-reference-link-definition-for-emacs name))
+           ;; [title][section class] gets here as
+           ;; NAME="[title][section", LOCATIVE-STRING="class]".
+           (ignore-errors
+            (locate-definition-for-emacs-1
+             (subseq name (1+ (position #\[ name :from-end t)))
+             (string-trim "[]" locative-string)))
            ;; [DEFSECTION][]
            (and (equal locative-string "")
                 (locate-all-definitions-for-emacs name))))))))
