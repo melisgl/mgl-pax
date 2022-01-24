@@ -1373,18 +1373,22 @@
   (declare (ignore symbol))
   (destructuring-bind (source &key (line-prefix "") header footer
                        header-nl footer-nl) locative-args
-    (when header
-      (format stream "~A" header))
-    (when header-nl
-      (format stream "~A~%" header-nl))
-    (format stream "~A"
-            (prefix-lines line-prefix
-                          (multiple-value-call #'file-subseq
-                            (include-region source))))
-    (when footer
-      (format stream "~A" footer))
-    (when footer-nl
-      (format stream "~A~%" footer-nl))))
+    (let ((text (handler-case
+                    (multiple-value-call #'file-subseq
+                      (include-region source))
+                  (error (e)
+                    (warn "~A" e)
+                    (princ-to-string e)))))
+      (when header
+        (format stream "~A" header))
+      (when header-nl
+        (format stream "~A~%" header-nl))
+      (format stream "~A"
+              (prefix-lines line-prefix text))
+      (when footer
+        (format stream "~A" footer))
+      (when footer-nl
+        (format stream "~A~%" footer-nl)))))
 
 ;;; Return the filename and start, end positions of the region to be
 ;;; included.
@@ -1423,13 +1427,14 @@
 ;;;      (:position 333) ; or (:offset 1 333)
 ;;;      (:snippet ""))
 (defun check-location (location)
-  (assert (listp location) () "Location ~S is not a list." location)
-  (assert (eq (first location) :location) ()
-          "Location ~S does not start with ~S." location :location)
-  (assert (and (location-file location)
+  (unless (listp location)
+    (error "Location ~S is not a list." location))
+  (unless (eq (first location) :location)
+    (error "Location ~S does not start with ~S." location :location))
+  (unless (and (location-file location)
                (location-position location))
-          () "Location ~S should contain :POSITION or :OFFSET."
-          location))
+    (error "Location ~S should contain :POSITION or :OFFSET."
+           location)))
 
 (defun location-file (location)
   (second (find :file (rest location) :key #'first)))
