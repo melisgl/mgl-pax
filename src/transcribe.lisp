@@ -259,6 +259,27 @@
   no remedy for that, except for customizing PRINT-OBJECT or not
   transcribing that kind of stuff.
 
+  **Errors**
+
+  If an ERROR condition is signalled, the error is printed to the
+  output and no values are returned.
+
+  ```cl-transcript
+  (progn
+    (print "hello")
+    (error "no greeting"))
+  ..
+  .. "hello" 
+  .. debugger invoked on SIMPLE-ERROR:
+  ..   no greeting
+  ```
+
+  To keep the textual representation somewhat likely to be portable,
+  the printing is done with `(FORMAT T "#<~S ~S>" (TYPE-OF
+  ERROR) (PRINC-TO-STRING ERROR))`. SIMPLE-CONDITIONs are formatted to
+  strings with SIMPLE-CONDITION-FORMAT-CONTROL and
+  SIMPLE-CONDITION-FORMAT-ARGUMENTS.
+
   **Syntaxes**
 
   Finally, a transcript may employ different syntaxes for the output
@@ -707,14 +728,15 @@
             (unless (eq form 'eof)
               (terpri stream)))
           (unless (eq form 'eof)
-            (multiple-value-bind (form-output form-values)
+            (multiple-value-bind (form-output form-values errorp)
                 (eval-and-capture form)
               (let ((output-capture (command-output-capture command)))
                 (when (and check-consistency output-capture)
                   (check-output-consistency
                    nil form-as-string form-output
                    (output-string output-capture)))
-                (transcribe-output stream form-output output-capture
+                (transcribe-output stream form-output
+                                   (or output-capture errorp)
                                    last-syntax-id update-only
                                    include-no-output))
               (let ((value-captures (command-value-captures command)))
@@ -766,6 +788,7 @@
                (*print-readably* nil)
                #-clisp
                (*print-pretty* t)
+               (*print-circle* t)
                (*print-right-margin* 72))
            ,@body)))))
 
@@ -811,22 +834,35 @@
 (defun eval-and-capture (form)
   (let* ((buffer (make-array 0 :element-type 'character
                              :fill-pointer 0 :adjustable t))
-         (values (multiple-value-list
-                  (handler-case
-                      (with-output-to-string (output buffer)
-                        (with-transcription-syntax ()
-                          (let ((*standard-output* output)
-                                (*error-output* output)
-                                (*trace-output* output)
-                                (*debug-io* output)
-                                (*query-io* output)
-                                (*terminal-io* output))
-                            (eval form))))
-                    (error (e)
-                      (transcription-error nil nil form
-                                           "Error while evaluating form.~%~A"
-                                           (princ-to-string e)))))))
+         (values (with-output-to-string (output buffer)
+                   (with-transcription-syntax ()
+                     (let ((*standard-output* output)
+                           (*error-output* output)
+                           (*trace-output* output)
+                           (*debug-io* output)
+                           (*query-io* output)
+                           (*terminal-io* output))
+                       (flet ((handle-error (c)
+                                (print-condition c "debugger invoked on"
+                                                 ":" "")
+                                (return-from eval-and-capture
+                                  (values buffer () t))))
+                         (handler-case
+                             (with-debugger-hook #'handle-error
+                               (multiple-value-list (eval form)))
+                           (error (e)
+                             (handle-error e)))))))))
     (values buffer values)))
+
+(defun print-condition (c prefix midfix suffix)
+  (format t "~&~A ~S~A~%~A~A" prefix (type-of c) midfix
+          (prefix-lines "  "
+                        (if (typep c 'simple-condition)
+                            (apply #'format nil
+                                   (simple-condition-format-control c)
+                                   (simple-condition-format-arguments c))
+                            (princ-to-string c)))
+          suffix))
 
 (defun transcribe-output (stream output capture syntax-id
                           update-only include-no-output)

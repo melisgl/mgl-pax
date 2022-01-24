@@ -1669,9 +1669,9 @@ forms whose output or return values are shown. Also, in a function's
 docstring an example call with concrete arguments and return values
 speaks volumes. A transcript is a text that looks like a repl
 session, but which has a light markup for printed output and return
-values, while no markup (i.e. prompt) for lisp forms. The PAX
+values, while no markup (i.e. prompt) for Lisp forms. PAX
 transcripts may include output and return values of all forms, or
-only selected ones. In either case the transcript itself can be
+only selected ones. In either case, the transcript itself can be
 easily generated from the source code.
 
 The main worry associated with including examples in the
@@ -1700,8 +1700,8 @@ used for writing simple tests in a very readable form. For example:
 
 All in all, transcripts are a handy tool especially when combined
 with the Emacs support to regenerate them and with
-PYTHONIC-STRING-READER and its triple-quoted strings that allow one
-to work with nested strings with less noise. The triple-quote syntax
+PYTHONIC-STRING-READER's triple-quoted strings, that allow one to
+work with nested strings with less noise. The triple-quote syntax
 can be enabled with:
 
     (in-readtable pythonic-string-syntax)
@@ -1868,8 +1868,8 @@ Transcription support in emacs can be enabled by loading
     => (1 2)
     ```
     
-    With UPDATE-ONLY, printed output of a form is only transcribed if
-    there were output markers in the source. Similarly, with
+    With UPDATE-ONLY, the printed output of a form is only transcribed
+    if there were output markers in the source. Similarly, with
     UPDATE-ONLY, return values are only transcribed if there were value
     markers in the source.
     
@@ -1882,8 +1882,6 @@ Transcription support in emacs can be enabled by loading
     
     ```commonlisp
     (values)
-    ..
-    =>
     ```
     
     is transcribed to
@@ -1941,8 +1939,8 @@ Transcription support in emacs can be enabled by loading
     --> end>
     ```
     
-    where `"==>"` is the :UNREADABLE prefix and `"-->"` is
-    the :UNREADABLE-CONTINUATION prefix. As with outputs, a consistency
+    where `"==>"` is the :UNREADABLE prefix and `"-->"` is the
+    :UNREADABLE-CONTINUATION prefix. As with outputs, a consistency
     check between an unreadable value from the source and the value from
     EVAL is performed with STRING=. That is, the value from EVAL is
     printed to a string and compared to the source value. Hence, any
@@ -1951,6 +1949,28 @@ Transcription support in emacs can be enabled by loading
     PRINT-OBJECT method printing the memory address. There is currently
     no remedy for that, except for customizing PRINT-OBJECT or not
     transcribing that kind of stuff.
+    
+    **Errors**
+    
+    If an ERROR condition is signalled, the error is printed to the
+    output and no values are returned.
+    
+    ```cl-transcript
+    (progn
+      (print "hello")
+      (error "no greeting"))
+    ..
+    .. "hello" 
+    .. debugger invoked on SIMPLE-ERROR:
+    ..   no greeting
+    
+    ```
+    
+    To keep the textual representation somewhat likely to be portable,
+    the printing is done with `(FORMAT T "#<~S ~S>" (TYPE-OF
+    ERROR) (PRINC-TO-STRING ERROR))`. SIMPLE-CONDITIONs are formatted to
+    strings with SIMPLE-CONDITION-FORMAT-CONTROL and
+    SIMPLE-CONDITION-FORMAT-ARGUMENTS.
     
     **Syntaxes**
     
@@ -2019,7 +2039,7 @@ Transcription support in emacs can be enabled by loading
     
     When writing, an extra space is added automatically if the line to
     be prefixed is not empty. Similarly, the first space following the
-    prefix discarded when reading.
+    prefix is discarded when reading.
     
     See TRANSCRIBE for how the actual syntax to be used is selected.
 

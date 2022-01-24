@@ -249,9 +249,17 @@
     ;; missing commented readable value
     (:input "(list 1 2)~%;=>"
      :output "(list 1 2)~%;=> (1 2)~%")
-    ;; mixed syntax
+    ;; mixed syntax (the error message makes it sbcl specific)
+    #+sbcl
     (:input "(princ 1)~%;.. 1~%=> 1~%"
-     :errors (nil))))
+     :output "(princ 1)~%~
+              ;.. 1~%~
+              ;=> 1~%~
+              =>~%~
+              ;.. debugger invoked on UNBOUND-VARIABLE:~%~
+              ;..   The variable => is unbound.~%~
+              1~%~
+              ;=> 1~%")))
 
 (defun call-format-on-strings (tree)
   (mgl-pax::transform-tree (lambda (parent node)
@@ -264,55 +272,54 @@
 (deftest test-read-write-transcript ()
   (let ((*package* (find-package :mgl-pax-test)))
     (loop for test-case in *transcribe-test-cases* do
-      (destructuring-bind (&key input transcript output check-consistency
-                           update-only (include-no-output update-only)
-                           (include-no-value update-only)
-                           default-syntax errors output-consistency-errors
-                           values-consistency-errors)
-          test-case
-        (let ((output-consistency-errors* ())
-              (values-consistency-errors* ())
-              (errors* ()))
-          (catch 'here
-            (handler-bind
-                ((transcription-output-consistency-error
-                   (lambda (e)
-                     (push (mgl-pax::transcription-error-file-position e)
-                           output-consistency-errors*)
-                     (continue)))
-                 (transcription-values-consistency-error
-                   (lambda (e)
-                     (push (mgl-pax::transcription-error-file-position e)
-                           values-consistency-errors*)
-                     (continue)))
-                 (transcription-error
-                   (lambda (e)
-                     (push (mgl-pax::transcription-error-file-position e)
-                           errors*)
-                     (throw 'here nil))))
-              (let* ((input (format nil input))
-                     (output (when output (format nil output)))
-                     (transcript (call-format-on-strings transcript))
-                     (transcript* (mgl-pax::read-transcript input))
-                     (output*
-                       (mgl-pax::write-transcript
-                        transcript* nil
-                        :check-consistency check-consistency
-                        :update-only update-only
-                        :include-no-output include-no-output
-                        :include-no-value include-no-value
-                        :default-syntax default-syntax)))
-                (when transcript
-                  (is (equal transcript transcript*)))
-                (when output
-                  (unless (equal output output*)
-                    (format t "Expected:~%~S~%Got:~%~S~%" output output*))
-                  (is (equal output output*))))))
-          (is (equal (reverse errors*) errors))
-          (is (equal (reverse output-consistency-errors*)
-                     output-consistency-errors))
-          (is (equal (reverse values-consistency-errors*)
-                     values-consistency-errors)))))))
+      (with-test (nil :name test-case)
+        (destructuring-bind (&key input transcript output check-consistency
+                             update-only (include-no-output update-only)
+                             (include-no-value update-only)
+                             default-syntax errors output-consistency-errors
+                             values-consistency-errors)
+            test-case
+          (let ((output-consistency-errors* ())
+                (values-consistency-errors* ())
+                (errors* ()))
+            (catch 'here
+              (handler-bind
+                  ((transcription-output-consistency-error
+                     (lambda (e)
+                       (push (mgl-pax::transcription-error-file-position e)
+                             output-consistency-errors*)
+                       (continue)))
+                   (transcription-values-consistency-error
+                     (lambda (e)
+                       (push (mgl-pax::transcription-error-file-position e)
+                             values-consistency-errors*)
+                       (continue)))
+                   (transcription-error
+                     (lambda (e)
+                       (push (mgl-pax::transcription-error-file-position e)
+                             errors*)
+                       (throw 'here nil))))
+                (let* ((input (when input (format nil input)))
+                       (output (when output (format nil output)))
+                       (transcript (call-format-on-strings transcript))
+                       (transcript* (mgl-pax::read-transcript input))
+                       (output*
+                         (mgl-pax::write-transcript
+                          transcript* nil
+                          :check-consistency check-consistency
+                          :update-only update-only
+                          :include-no-output include-no-output
+                          :include-no-value include-no-value
+                          :default-syntax default-syntax)))
+                  (when transcript
+                    (is (equal transcript transcript*)))
+                  (when output
+                    (is (null (mismatch% output output*)))))))
+            (is (equal (reverse errors*) errors))
+            (is (equal (reverse output-consistency-errors*)
+                       output-consistency-errors))
+            (is (equal (reverse values-consistency-errors*)
+                       values-consistency-errors))))))))
 
 (defparameter *transcribe-source-file*
   (asdf:system-relative-pathname

@@ -1903,9 +1903,9 @@ forms whose output or return values are shown. Also, in a function's
 docstring an example call with concrete arguments and return values
 speaks volumes. A transcript is a text that looks like a repl
 session, but which has a light markup for printed output and return
-values, while no markup (i.e. prompt) for lisp forms. The `PAX`
+values, while no markup (i.e. prompt) for Lisp forms. `PAX`
 transcripts may include output and return values of all forms, or
-only selected ones. In either case the transcript itself can be
+only selected ones. In either case, the transcript itself can be
 easily generated from the source code.
 
 The main worry associated with including examples in the
@@ -1934,8 +1934,8 @@ used for writing simple tests in a very readable form. For example:
 
 All in all, transcripts are a handy tool especially when combined
 with the Emacs support to regenerate them and with
-`PYTHONIC-STRING-READER` and its triple-quoted strings that allow one
-to work with nested strings with less noise. The triple-quote syntax
+`PYTHONIC-STRING-READER`'s triple-quoted strings, that allow one to
+work with nested strings with less noise. The triple-quote syntax
 can be enabled with:
 
     (in-readtable pythonic-string-syntax)
@@ -2110,8 +2110,8 @@ Transcription support in emacs can be enabled by loading
     => (1 2)
     ```
     
-    With `UPDATE-ONLY`, printed output of a form is only transcribed if
-    there were output markers in the source. Similarly, with
+    With `UPDATE-ONLY`, the printed output of a form is only transcribed
+    if there were output markers in the source. Similarly, with
     `UPDATE-ONLY`, return values are only transcribed if there were value
     markers in the source.
     
@@ -2124,8 +2124,6 @@ Transcription support in emacs can be enabled by loading
     
     ```commonlisp
     (values)
-    ..
-    =>
     ```
     
     is transcribed to
@@ -2183,8 +2181,8 @@ Transcription support in emacs can be enabled by loading
     --> end>
     ```
     
-    where `"==>"` is the `:UNREADABLE` prefix and `"-->"` is
-    the `:UNREADABLE-CONTINUATION` prefix. As with outputs, a consistency
+    where `"==>"` is the `:UNREADABLE` prefix and `"-->"` is the
+    `:UNREADABLE-CONTINUATION` prefix. As with outputs, a consistency
     check between an unreadable value from the source and the value from
     `EVAL` is performed with [`STRING=`][cc0e]. That is, the value from `EVAL` is
     printed to a string and compared to the source value. Hence, any
@@ -2193,6 +2191,28 @@ Transcription support in emacs can be enabled by loading
     [`PRINT-OBJECT`][9ffc] method printing the memory address. There is currently
     no remedy for that, except for customizing `PRINT-OBJECT` or not
     transcribing that kind of stuff.
+    
+    **Errors**
+    
+    If an [`ERROR`][896c] condition is signalled, the error is printed to the
+    output and no values are returned.
+    
+    ```cl-transcript
+    (progn
+      (print "hello")
+      (error "no greeting"))
+    ..
+    .. "hello" 
+    .. debugger invoked on SIMPLE-ERROR:
+    ..   no greeting
+    
+    ```
+    
+    To keep the textual representation somewhat likely to be portable,
+    the printing is done with `(FORMAT T "#<~S ~S>" (TYPE-OF
+    ERROR) (PRINC-TO-STRING ERROR))`. [`SIMPLE-CONDITION`][9c09]s are formatted to
+    strings with [`SIMPLE-CONDITION-FORMAT-CONTROL`][5ac6] and
+    [`SIMPLE-CONDITION-FORMAT-ARGUMENTS`][0482].
     
     **Syntaxes**
     
@@ -2263,7 +2283,7 @@ Transcription support in emacs can be enabled by loading
     
     When writing, an extra space is added automatically if the line to
     be prefixed is not empty. Similarly, the first space following the
-    prefix discarded when reading.
+    prefix is discarded when reading.
     
     See `TRANSCRIBE` for how the actual syntax to be used is selected.
 
@@ -2898,6 +2918,7 @@ presented.
   [0382]: #x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29 "(MGL-PAX:TRANSCRIBE FUNCTION)"
   [0412]: #x-28MGL-PAX-3AREFERENCE-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29 "(MGL-PAX:REFERENCE-OBJECT (MGL-PAX:READER MGL-PAX:REFERENCE))"
   [0458]: http://www.lispworks.com/documentation/HyperSpec/Body/f_open.htm "(OPEN FUNCTION)"
+  [0482]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "(SIMPLE-CONDITION-FORMAT-ARGUMENTS FUNCTION)"
   [063a]: #x-28MGL-PAX-3A-40MGL-PAX-GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Generating Documentation"
   [074d]: #x-28MGL-PAX-3A-2ADOCUMENT-MAX-NUMBERING-LEVEL-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-MAX-NUMBERING-LEVEL* VARIABLE)"
   [0785]: #x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax/full\" ASDF/SYSTEM:SYSTEM)"
@@ -2963,6 +2984,7 @@ presented.
   [59dd]: #x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "(GENERIC-FUNCTION MGL-PAX:LOCATIVE)"
   [5a2c]: #x-28MGL-PAX-3ATRANSCRIPTION-CONSISTENCY-ERROR-20CONDITION-29 "(MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION)"
   [5a3b]: #x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:READER MGL-PAX:LOCATIVE)"
+  [5ac6]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "(SIMPLE-CONDITION-FORMAT-CONTROL FUNCTION)"
   [5d6e]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defun.htm "(DEFUN MGL-PAX:MACRO)"
   [5faa]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defmac.htm "(DEFMACRO MGL-PAX:MACRO)"
   [60c9]: #x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29 "(MGL-PAX:*FORMAT* VARIABLE)"
@@ -2993,6 +3015,7 @@ presented.
   [84ee]: #x-28MGL-PAX-3A-40MGL-PAX-BACKGROUND-20MGL-PAX-3ASECTION-29 "Background"
   [86ef]: http://www.lispworks.com/documentation/HyperSpec/Body/f_car_c.htm "(CAR FUNCTION)"
   [87c7]: #x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "(MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION))"
+  [896c]: http://www.lispworks.com/documentation/HyperSpec/Body/e_error.htm "(ERROR CONDITION)"
   [89be]: http://www.lispworks.com/documentation/HyperSpec/Body/f_procla.htm "(PROCLAIM FUNCTION)"
   [8a71]: #x-28MGL-PAX-3ATRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR-20CONDITION-29 "(MGL-PAX:TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR CONDITION)"
   [8be2]: #x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE* VARIABLE)"
@@ -3010,6 +3033,7 @@ presented.
   [97fb]: #x-28MGL-PAX-3ADEFINE-RESTART-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-RESTART MGL-PAX:MACRO)"
   [98bc]: #x-28MGL-PAX-3A-2ADOCUMENT-MARK-UP-SIGNATURES-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-MARK-UP-SIGNATURES* VARIABLE)"
   [99c9]: http://www.lispworks.com/documentation/HyperSpec/Body/t_method.htm "(METHOD TYPE)"
+  [9c09]: http://www.lispworks.com/documentation/HyperSpec/Body/e_smp_cn.htm "(SIMPLE-CONDITION CONDITION)"
   [9d3a]: http://www.lispworks.com/documentation/HyperSpec/Body/v_nil.htm "(NIL MGL-PAX:CONSTANT)"
   [9edc]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rdtabl.htm "(READTABLE-CASE FUNCTION)"
   [9ffc]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pr_obj.htm "(PRINT-OBJECT GENERIC-FUNCTION)"

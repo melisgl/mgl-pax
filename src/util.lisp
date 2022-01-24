@@ -95,6 +95,17 @@
   (swank-backend:arglist function-designator))
 
 
+(defmacro with-debugger-hook (fn &body body)
+  (alexandria:with-gensyms (prev-debugger-hook condition this-hook)
+    `(let* ((,prev-debugger-hook *debugger-hook*)
+            (*debugger-hook* (lambda (,condition ,this-hook)
+                               (declare (ignore ,this-hook))
+                               (funcall ,fn ,condition)
+                               (let ((*debugger-hook* ,prev-debugger-hook))
+                                 (invoke-debugger ,condition)))))
+       ,@body)))
+
+
 ;;; FIXME: Drop in favour of the one in alexandria.
 (defun read-stream-into-string (stream &key (buffer-size 4096))
   (let ((*print-pretty* nil))
