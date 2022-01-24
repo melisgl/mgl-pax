@@ -1,4 +1,5 @@
-* TODO add METHOD-COMBINATION locative
+* TODO add symbol-macro locative
+* MAYBE add locatives for sbcl deftransform, defoptimizer, define-vop, define-source-transfrom
 * TODO export documentation generation utilities for extensions
 * OPT esrap is slow with allegro cl
 * MAYBE link to doc instead of including it if it is referenced multiple times?
@@ -12,9 +13,6 @@ because it's translated to a list item
 and values of variables. Unfortunately, there seems to be no way to
 use the lisp pretty printer for this because output also includes
 markup.
-* *DOCUMENT-DOWNCASE-UPPERCASE-CODE* with noninterned stuff is a bit broken
-Noninterned stuff is not downcased, which leads to having to mix
-casing up in the docstring.
 * MAYBE include signalled errors in transcript?
 What about debugger commands?
 * MAYBE transcribe: add inline commands that can change prefixes and such
@@ -30,6 +28,7 @@ reference links or user defined locatives can take care of this case.
 
 The second kind is very easy to implement: it only needs a small
 change in INITIALIZE-LINKS.
+* MAYBE link to MOP
 * warn on linking failure
 How to recoginize normal reference links? Don't, just warn on any
 linking failure. This should be in 3BMD.

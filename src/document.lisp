@@ -1944,9 +1944,10 @@
   lack of some introspective capability. SBCL generates complete
   output. Compared to that, the following are not supported:
 
-  - COMPILER-MACRO docstrings on ABCL, AllegroCL, CCL, ECL
-  - DEFTYPE lambda lists on ABCL, AllegroCL, CLISP, CCL, CMUCL, ECL
-  - Default values in MACRO lambda lists on AllegroCL
-  - Default values in function lambda lists on CCL (needs `(DEBUG 3)`
-    on AllegroCL).
+  - COMPILER-MACRO docstrings on ABCL, AllegroCL, CCL, ECL,
+  - DEFTYPE lambda lists on ABCL, AllegroCL, CLISP, CCL, CMUCL, ECL,
+  - default values in MACRO lambda lists on AllegroCL,
+  - default values in function lambda lists on CCL (needs `(DEBUG 3)`
+    on AllegroCL),
+  - METHOD-COMBINATION docstrings on ABCL, AllegroCL.
   """)

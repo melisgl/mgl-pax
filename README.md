@@ -553,6 +553,13 @@ location and the docstring of the defining form is recorded (see
     
     `METHOD` is not [`EXPORTABLE-LOCATIVE-TYPE-P`][96c5].
 
+<a id='x-28METHOD-COMBINATION-20MGL-PAX-3ALOCATIVE-29'></a>
+
+- [locative] **METHOD-COMBINATION**
+
+    Refers to a [`METHOD-COMBINATION`][63bb], defined with
+    [`DEFINE-METHOD-COMBINATION`][6ec3].
+
 <a id='x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29'></a>
 
 - [locative] **ACCESSOR** *CLASS-NAME*
@@ -1885,14 +1892,16 @@ CCL, CMUCL, ECL and SBCL, but their outputs may differ due to the
 lack of some introspective capability. SBCL generates complete
 output. Compared to that, the following are not supported:
 
-- [`COMPILER-MACRO`][7ed5] docstrings on ABCL, AllegroCL, CCL, ECL
+- [`COMPILER-MACRO`][7ed5] docstrings on ABCL, AllegroCL, CCL, ECL,
 
-- [`DEFTYPE`][f4eb] lambda lists on ABCL, AllegroCL, CLISP, CCL, CMUCL, ECL
+- [`DEFTYPE`][f4eb] lambda lists on ABCL, AllegroCL, CLISP, CCL, CMUCL, ECL,
 
-- Default values in [`MACRO`][69ba] lambda lists on AllegroCL
+- default values in [`MACRO`][69ba] lambda lists on AllegroCL,
 
-- Default values in function lambda lists on CCL (needs `(DEBUG 3)`
-  on AllegroCL).
+- default values in function lambda lists on CCL (needs `(DEBUG 3)`
+  on AllegroCL),
+
+- `METHOD-COMBINATION`([`0`][63bb] [`1`][84c9]) docstrings on ABCL, AllegroCL.
 
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPTS-20MGL-PAX-3ASECTION-29'></a>
@@ -3030,6 +3039,7 @@ presented.
   [5faa]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defmac.htm "(DEFMACRO MGL-PAX:MACRO)"
   [60c9]: #x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29 "(MGL-PAX:*FORMAT* VARIABLE)"
   [62d4]: #x-28MGL-PAX-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-LOCATIVE-TYPE MGL-PAX:MACRO)"
+  [63bb]: http://www.lispworks.com/documentation/HyperSpec/Body/t_meth_1.htm "(METHOD-COMBINATION CLASS)"
   [6580]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "(*STANDARD-OUTPUT* VARIABLE)"
   [68db]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eval.htm "(EVAL FUNCTION)"
   [68e7]: #x-28MGL-PAX-3ADEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO)"
@@ -3038,6 +3048,7 @@ presented.
   [6d0b]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defgen.htm "(DEFGENERIC MGL-PAX:MACRO)"
   [6e30]: http://www.lispworks.com/documentation/HyperSpec/Body/f_boundp.htm "(BOUNDP FUNCTION)"
   [6e37]: #x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "(CLASS MGL-PAX:LOCATIVE)"
+  [6ec3]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_4.htm "(DEFINE-METHOD-COMBINATION MGL-PAX:MACRO)"
   [76476]: http://www.lispworks.com/documentation/HyperSpec/Body/03_d.htm "(\"3.4\" MGL-PAX:CLHS)"
   [76b5]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE)"
   [7738]: http://www.lispworks.com/documentation/HyperSpec/Body/s_fn.htm "(FUNCTION MGL-PAX:MACRO)"
@@ -3048,6 +3059,7 @@ presented.
   [819a]: #x-28MGL-PAX-3AREFERENCE-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29 "(MGL-PAX:REFERENCE-LOCATIVE (MGL-PAX:READER MGL-PAX:REFERENCE))"
   [81be]: #x-28MGL-PAX-3ALOCATE-ERROR-MESSAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29 "(MGL-PAX:LOCATE-ERROR-MESSAGE (MGL-PAX:READER MGL-PAX:LOCATE-ERROR))"
   [849d]: #x-28MGL-PAX-3ACONSTANT-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:CONSTANT MGL-PAX:LOCATIVE)"
+  [84c9]: #x-28METHOD-COMBINATION-20MGL-PAX-3ALOCATIVE-29 "(METHOD-COMBINATION MGL-PAX:LOCATIVE)"
   [84ee]: #x-28MGL-PAX-3A-40MGL-PAX-BACKGROUND-20MGL-PAX-3ASECTION-29 "Background"
   [86ef]: http://www.lispworks.com/documentation/HyperSpec/Body/f_car_c.htm "(CAR FUNCTION)"
   [87c7]: #x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "(MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION))"

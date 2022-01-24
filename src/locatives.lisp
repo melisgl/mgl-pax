@@ -28,6 +28,7 @@
   (function locative)
   (generic-function locative)
   (method locative)
+  (method-combination locative)
   (accessor locative)
   (reader locative)
   (writer locative)
@@ -287,8 +288,9 @@
   (let ((arglist (swank-backend:arglist symbol)))
     (print-arglist arglist stream)
     (print-end-bullet stream)
-    (with-dislocated-symbols ((macro-arg-names arglist))
-      (maybe-print-docstring symbol 'compiler-macro stream))))
+    (with-local-references ((list (make-reference symbol 'compiler-macro)))
+      (with-dislocated-symbols ((macro-arg-names arglist))
+        (maybe-print-docstring symbol 'compiler-macro stream)))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'compiler-macro))
                                    locative-args)
@@ -439,6 +441,36 @@
                  (swank-mop:method-generic-function method)))
           (swank-mop:method-qualifiers method)
           (method-specializers-for-inspect method)))
+
+
+;;;; METHOD-COMBINATION locative
+
+(define-locative-type method-combination ()
+  "Refers to a [METHOD-COMBINATION][class], defined with
+  DEFINE-METHOD-COMBINATION.")
+
+(defmethod locate-object (symbol (locative-type (eql 'method-combination))
+                          locative-args)
+  (when locative-args
+    (locate-error "The METHOD-COMBINATION locative takes no arguments."))
+  (unless (symbolp symbol)
+    (locate-error))
+  ;; There is no portable way to get the actual METHOD-COMBINATION
+  ;; object.
+  (make-reference symbol 'method-combination))
+
+(defmethod locate-and-document
+    (symbol (locative-type (eql 'method-combination)) locative-args stream)
+  (locate-and-print-bullet locative-type locative-args symbol stream)
+  (print-end-bullet stream)
+  (with-local-references ((list (make-reference symbol 'macro)))
+    (maybe-print-docstring symbol 'method-combination stream)))
+
+(defmethod locate-and-find-source
+    (symbol (locative-type (eql 'method-combination)) locative-args)
+  (declare (ignore locative-args))
+  (find-one-location (swank-backend:find-definitions symbol)
+                     '("method-combination")))
 
 
 ;;;; ACCESSOR, READER and WRITER locatives

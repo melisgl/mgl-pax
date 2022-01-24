@@ -477,6 +477,11 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     
     METHOD is not EXPORTABLE-LOCATIVE-TYPE-P.
 
+- [locative] METHOD-COMBINATION
+
+    Refers to a [METHOD-COMBINATION][class], defined with
+    DEFINE-METHOD-COMBINATION.
+
 - [locative] ACCESSOR CLASS-NAME
 
     To refer to an accessor named `FOO-SLOT` of class
@@ -1679,14 +1684,16 @@ CCL, CMUCL, ECL and SBCL, but their outputs may differ due to the
 lack of some introspective capability. SBCL generates complete
 output. Compared to that, the following are not supported:
 
-- COMPILER-MACRO docstrings on ABCL, AllegroCL, CCL, ECL
+- COMPILER-MACRO docstrings on ABCL, AllegroCL, CCL, ECL,
 
-- DEFTYPE lambda lists on ABCL, AllegroCL, CLISP, CCL, CMUCL, ECL
+- DEFTYPE lambda lists on ABCL, AllegroCL, CLISP, CCL, CMUCL, ECL,
 
-- Default values in MACRO lambda lists on AllegroCL
+- default values in MACRO lambda lists on AllegroCL,
 
-- Default values in function lambda lists on CCL (needs `(DEBUG 3)`
-  on AllegroCL).
+- default values in function lambda lists on CCL (needs `(DEBUG 3)`
+  on AllegroCL),
+
+- METHOD-COMBINATION docstrings on ABCL, AllegroCL.
 
 
 ## Transcripts

@@ -553,6 +553,30 @@
                              format))
 
 
+(defsection @test-method-combination ()
+  (my-comb method-combination))
+
+(define-method-combination my-comb :identity-with-one-argument t
+  :documentation "This is MY-COMB.")
+
+(deftest test-method-combination ()
+  (with-failure-expected ((alexandria:featurep '(:or :abcl :allegro)))
+    (is (null (mismatch% (let ((*document-max-table-of-contents-level* 0)
+                               (*document-max-numbering-level* 0)
+                               (*document-text-navigation* nil)
+                               (*document-link-sections* nil))
+                           (first (document @test-method-combination)))
+                         "# @TEST-METHOD-COMBINATION
+
+###### \\[in package MGL-PAX-TEST\\]
+<a id='x-28MGL-PAX-TEST-3AMY-COMB-20METHOD-COMBINATION-29'></a>
+
+- [method-combination] **MY-COMB**
+
+    This is `MY-COMB`.
+")))))
+
+
 (deftest test-hyperspec ()
   "Locatives work as expected (see *DOCUMENT-LINK-CODE*).
   [FIND-IF][dislocated] links to FIND-IF, [LIST][dislocated] links
@@ -866,6 +890,7 @@ ISSUE:AREF-1D `CLHS`
   (test-reference-in-link-definition)
   (test-document :markdown)
   (test-document :html)
+  (test-method-combination)
   (test-hyperspec)
   (test-clhs-section)
   (test-clhs-issue)
