@@ -863,7 +863,7 @@ location and the docstring of the defining form is recorded (see
     ;;; More irrelevant code follows.
     ```
     
-    In the above example, pressing `M-.` on [`PAX.EL`][05c6] will open the
+    In the above example, pressing `M-.` on `PAX.EL` will open the
     `src/pax.el` file and put the cursor on its first character. `M-.`
     on `FOO-EXAMPLE` will go to the source location of the `(asdf:system
     locative)` locative.
@@ -994,75 +994,7 @@ With a prefix argument (`C-u M-.`), one can enter a symbol plus a
 locative separated by whitespace to preselect one of the
 possibilities.
 
-The `M-.` extensions can be enabled by adding this to your Emacs
-initialization file (or loading `src/pax.el`):
-
-<a id='x-28MGL-PAX-3A-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
-
-```elisp
-;;; MGL-PAX M-. integration
-
-(defun mgl-pax-edit-locative-definitions (name &optional where)
-  (or (mgl-pax-locate-definition name (mgl-pax-locative-before) where)
-      (mgl-pax-locate-definition name (mgl-pax-locative-after) where)
-      (mgl-pax-locate-definition name (mgl-pax-locative-after-in-brackets)
-                                 where)
-      ;; Support "foo function" and "function foo" syntax in
-      ;; interactive use.
-      (let ((pos (cl-position ?\s name)))
-        (when pos
-          (or (mgl-pax-locate-definition (cl-subseq name 0 pos)
-                                         (cl-subseq name (1+ pos))
-                                         where)
-              (mgl-pax-locate-definition (cl-subseq name (1+ pos))
-                                         (cl-subseq name 0 pos)
-                                         where))))
-      ;; This catches pluralized symbols without locatives e.g
-      ;; (MGL-PAX:SECTIONs) and is also responsible for dealing with multiple
-      ;; references.
-      (mgl-pax-locate-definition name "" where)))
-
-(defun mgl-pax-locative-before ()
-  (ignore-errors (save-excursion
-                   (slime-beginning-of-symbol)
-                   (slime-last-expression))))
-
-(defun mgl-pax-locative-after ()
-  (ignore-errors (save-excursion
-                   (slime-end-of-symbol)
-                   (slime-forward-sexp)
-                   (slime-last-expression))))
-
-(defun mgl-pax-locative-after-in-brackets ()
-  (ignore-errors (save-excursion
-                   (slime-end-of-symbol)
-                   (skip-chars-forward "`" (+ (point) 1))
-                   (when (and (= 1 (skip-chars-forward "\\]" (+ (point) 1)))
-                              (= 1 (skip-chars-forward "\\[" (+ (point) 1))))
-                     (buffer-substring-no-properties
-                      (point)
-                      (progn (search-forward "]" nil (+ (point) 1000))
-                             (1- (point))))))))
-
-(defun mgl-pax-locate-definition (name locative where)
-  (when locative
-    (let ((locations
-           (slime-eval
-            ;; Silently fail if mgl-pax is not loaded.
-            `(cl:when (cl:find-package :mgl-pax)
-                      (cl:funcall
-                       (cl:find-symbol
-                        (cl:symbol-name :locate-definitions-for-emacs) :mgl-pax)
-                       ,name ,locative)))))
-      (when (and (consp locations)
-                 (not (eq (car locations) :error)))
-        (slime-edit-definition-cont
-         (slime-postprocess-xrefs locations)
-         "dummy name"
-         where)))))
-
-(add-hook 'slime-edit-definition-hooks 'mgl-pax-edit-locative-definitions)
-```
+The `M-.` extensions can be enabled by loading `src/pax.el`.
 
 <a id='x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29'></a>
 
@@ -2107,74 +2039,8 @@ but in comments too:
     ;;;; => :HELLO
     ;;;; => (1 2)
 
-Transcription support in emacs can be enabled by adding this to your
-Emacs initialization file (or loading `src/transcribe.el`):
-
-<a id='x-28MGL-PAX-3A-3ATRANSCRIBE-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Ftranscribe-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29'></a>
-
-```elisp
-;;; MGL-PAX transcription
-
-(defun mgl-pax-transcribe-last-expression ()
-  "A bit like C-u C-x C-e (slime-eval-last-expression) that
-inserts the output and values of the sexp before the point, this
-does the same but with MGL-PAX:TRANSCRIBE. Use a numeric prefix
-argument as in index to select one of the Common Lisp
-MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
-Without a prefix argument, the first syntax is used."
-  (interactive)
-  (insert
-   (save-excursion
-     (let* ((end (point))
-            (start (progn (backward-sexp)
-                          (move-beginning-of-line nil)
-                          (point))))
-       (mgl-pax-transcribe start end (mgl-pax-transcribe-syntax-arg)
-                           nil nil nil)))))
-
-(defun mgl-pax-retranscribe-region (start end)
-  "Updates the transcription in the current region (as in calling
-MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T). Use a numeric prefix
-argument as in index to select one of the Common Lisp
-MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
-Without a prefix argument, the syntax of the input will not be
-changed."
-  (interactive "r")
-  (let* ((point-at-start-p (= (point) start))
-         (point-at-end-p (= (point) end))
-         (transcript (mgl-pax-transcribe start end
-                                         (mgl-pax-transcribe-syntax-arg)
-                                         t t nil)))
-    (if point-at-start-p
-        (save-excursion
-          (goto-char start)
-          (delete-region start end)
-          (insert transcript))
-      (save-excursion
-          (goto-char start)
-          (delete-region start end))
-      (insert transcript))))
-
-(defun mgl-pax-transcribe-syntax-arg ()
-  (if current-prefix-arg
-      (prefix-numeric-value current-prefix-arg)
-    nil))
-
-(defun mgl-pax-transcribe (start end syntax update-only echo
-                                 first-line-special-p)
-  (let ((transcription
-         (slime-eval
-          `(cl:if (cl:find-package :mgl-pax)
-                  (cl:funcall
-                   (cl:find-symbol
-                    (cl:symbol-name :transcribe-for-emacs) :mgl-pax)
-                   ,(buffer-substring-no-properties start end)
-                   ',syntax ',update-only ',echo ',first-line-special-p)
-                  t))))
-    (if (eq transcription t)
-        (error "MGL-PAX is not loaded.")
-      transcription)))
-```
+Transcription support in emacs can be enabled by loading
+`src/transcribe.el`):
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-API-20MGL-PAX-3ASECTION-29'></a>
 
@@ -3032,7 +2898,6 @@ presented.
   [0382]: #x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29 "(MGL-PAX:TRANSCRIBE FUNCTION)"
   [0412]: #x-28MGL-PAX-3AREFERENCE-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29 "(MGL-PAX:REFERENCE-OBJECT (MGL-PAX:READER MGL-PAX:REFERENCE))"
   [0458]: http://www.lispworks.com/documentation/HyperSpec/Body/f_open.htm "(OPEN FUNCTION)"
-  [05c6]: #x-28MGL-PAX-3A-3APAX-2EEL-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Fpax-2Eel-22-20-3AHEADER-NL-20-22-60-60-60elisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29 "(MGL-PAX::PAX.EL (MGL-PAX:INCLUDE #P\"/home/melisgl/own/mgl-pax/src/pax.el\" :HEADER-NL \"```elisp\" :FOOTER-NL \"```\"))"
   [063a]: #x-28MGL-PAX-3A-40MGL-PAX-GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Generating Documentation"
   [074d]: #x-28MGL-PAX-3A-2ADOCUMENT-MAX-NUMBERING-LEVEL-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-MAX-NUMBERING-LEVEL* VARIABLE)"
   [0785]: #x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax/full\" ASDF/SYSTEM:SYSTEM)"

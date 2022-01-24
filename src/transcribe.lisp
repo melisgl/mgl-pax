@@ -1067,12 +1067,8 @@
       ;;;; => :HELLO
       ;;;; => (1 2)
 
-  Transcription support in emacs can be enabled by adding this to your
-  Emacs initialization file (or loading `src/transcribe.el`):"""
-  (transcribe.el (include
-                  #.(asdf:system-relative-pathname :mgl-pax "src/transcribe.el")
-                  :header-nl "```elisp"
-                  :footer-nl "```")))
+  Transcription support in emacs can be enabled by loading
+  `src/transcribe.el`):""")
 
 (defun transcribe-for-emacs (string default-syntax* update-only echo
                              first-line-special-p)

@@ -47,10 +47,7 @@
   locative separated by whitespace to preselect one of the
   possibilities.
 
-  The `M-.` extensions can be enabled by adding this to your Emacs
-  initialization file (or loading `src/pax.el`):"
-  (pax.el (include #.(asdf:system-relative-pathname :mgl-pax "src/pax.el")
-                   :header-nl "```elisp" :footer-nl "```"))
+  The `M-.` extensions can be enabled by loading `src/pax.el`."
   (mgl-pax/navigate asdf:system))
 
 ;;; Ensure that some Swank internal facilities (such as
