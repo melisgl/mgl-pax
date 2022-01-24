@@ -2,6 +2,12 @@
 
 (in-readtable pythonic-string-syntax)
 
+;;; Make Allegro record lambda lists, from which we can extract
+;;; default values of arguments.
+#+allegro
+(eval-when (:compile-toplevel)
+  (declaim (optimize (debug 3))))
+
 (defsection @mgl-pax-manual (:title "PAX Manual")
   (mgl-pax asdf:system)
   (mgl-pax/full asdf:system)

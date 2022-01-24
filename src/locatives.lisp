@@ -2,6 +2,12 @@
 
 (in-readtable pythonic-string-syntax)
 
+;;; Make Allegro record lambda lists, from which we can extract
+;;; default values of arguments.
+#+allegro
+(eval-when (:compile-toplevel)
+  (declaim (optimize (debug 3))))
+
 (defsection @mgl-pax-locative-types (:title "Locative Types")
   """As we have already briefly seen in DEFSECTION, locatives allow us
   to refer to, document and find the source location of various

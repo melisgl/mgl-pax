@@ -2,6 +2,12 @@
 
 (in-readtable pythonic-string-syntax)
 
+;;; Make Allegro record lambda lists, from which we can extract
+;;; default values of arguments.
+#+allegro
+(eval-when (:compile-toplevel)
+  (declaim (optimize (debug 3))))
+
 (defsection @mgl-pax-transcripts (:title "Transcripts")
   "What are transcripts for? When writing a tutorial, one often wants
   to include a REPL session with maybe a few defuns and a couple of
