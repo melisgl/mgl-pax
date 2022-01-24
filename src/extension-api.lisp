@@ -113,6 +113,7 @@
           (*locate-object-locative* (cons locative-type locative-args)))
       (call-next-method)))
   (:method (object locative-type locative-args)
+    (declare (ignore object locative-type locative-args))
     (locate-error)))
 
 (defun locate-error (&rest format-and-args)
@@ -234,8 +235,8 @@
 
 ;;; A utility for writing FIND-SOURCE methods. Try FILTER-STRINGS one
 ;;; by one, and if one matches exactly one of LOCATIONS, then return
-;;; that location. Matching is performed by substring search on the
-;;; stringified first element of the location.
+;;; that location. Matching is a tree search for (EQUALP (STRING NODE)
+;;; FILTER-STRING).
 (defun find-one-location (locations filter-strings)
   (let ((n-matches ()))
     (loop for filter-string in filter-strings
@@ -253,17 +254,28 @@
                         (second (first filtered-locations))))
                      (t
                       (push (length filtered-locations) n-matches)))))
-    (error "~@<Could not find a single location in with filters ~S. ~
+    (error "~@<Could not find a single location with filters ~S. ~
            Number of matches for each filter ~S.~:@>"
            filter-strings n-matches)))
 
 (defun filter-locations (locations filter-string)
   (remove-if-not (lambda (location)
-                   (let ((location-as-string
-                           (prin1-to-string (first location))))
-                     (search filter-string location-as-string
-                             :test #'equalp)))
+                   (find-string-designator-in-tree (first location)
+                                                   filter-string))
                  locations))
+
+(defun find-string-designator-in-tree (tree string)
+  (labels ((recurse (tree)
+             (cond ((symbolp tree)
+                    (when (equalp (string tree) string)
+                      (return-from find-string-designator-in-tree t)))
+                   ((stringp tree)
+                    (when (equalp tree string)
+                      (return-from find-string-designator-in-tree t)))
+                   ((listp tree)
+                    (mapc #'recurse tree)))))
+    (recurse tree)
+    nil))
 
 
 (defsection @mgl-pax-reference-based-extensions

@@ -764,7 +764,8 @@
                                    locative-args)
   (declare (ignore locative-args))
   (find-one-location (swank-backend:find-definitions symbol)
-                     '("type" "class" "condition")))
+                     '("deftype" "type" "defclass" "class"
+                       "define-condition" "condition")))
 
 
 ;;;; CLASS and CONDITION locatives
