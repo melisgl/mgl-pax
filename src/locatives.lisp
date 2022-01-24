@@ -24,6 +24,7 @@
   (variable locative)
   (constant locative)
   (macro locative)
+  (symbol-macro locative)
   (compiler-macro locative)
   (function locative)
   (generic-function locative)
@@ -264,6 +265,51 @@
                                    locative-args)
   (declare (ignore locative-args))
   (find-source (macro-function symbol)))
+
+
+;;;; SYMBOL-MACRO locative
+
+(define-locative-type symbol-macro ()
+  """Refers to a global symbol macro, defined with DEFINE-SYMBOL-MACRO.
+  Note that since DEFINE-SYMBOL-MACRO does not support docstrings, PAX
+  defines methods on the DOCUMENTATION generic function specialized
+  for `DOC-TYPE` SYMBOL-MACRO.
+
+  ```
+  (define-symbol-macro my-mac 42)
+  (setf (documentation 'my-mac 'symbol-macro)
+        "This is MY-MAC.")
+  (documentation 'my-mac 'symbol-macro)
+  ```
+  """)
+
+(defvar *symbol-macro-docstrings* (make-hash-table))
+
+(defmethod documentation ((symbol symbol) (doc-type (eql 'symbol-macro)))
+  (gethash symbol *symbol-macro-docstrings*))
+
+(defmethod (setf documentation) (docstring (symbol symbol)
+                                 (doc-type (eql 'symbol-macro)))
+  (setf (gethash symbol *symbol-macro-docstrings*) docstring))
+
+(defmethod locate-object (symbol (locative-type (eql 'symbol-macro))
+                          locative-args)
+  ;; There is no portable way to test the existence of the symbol
+  ;; macro.
+  (make-reference symbol (cons locative-type locative-args)))
+
+(defmethod locate-and-document (symbol (locative-type (eql 'symbol-macro))
+                                locative-args stream)
+  (locate-and-print-bullet locative-type locative-args symbol stream)
+  (print-end-bullet stream)
+  (with-local-references ((list (make-reference symbol 'symbol-macro)))
+    (maybe-print-docstring symbol 'symbol-macro stream)))
+
+(defmethod locate-and-find-source (symbol (locative-type (eql 'symbol-macro))
+                                   locative-args)
+  (declare (ignore locative-args))
+  (find-one-location (swank-backend:find-definitions symbol)
+                     '("method-combination")))
 
 
 ;;;; COMPILER-MACRO locative

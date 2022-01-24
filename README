@@ -446,6 +446,21 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     [special operator][SPECIAL-OPERATOR-P FUNCTION]. See the FUNCTION
     locative for a note on arglists.
 
+- [locative] SYMBOL-MACRO
+
+    Refers to a global symbol macro, defined with DEFINE-SYMBOL-MACRO.
+    Note that since DEFINE-SYMBOL-MACRO does not support docstrings, PAX
+    defines methods on the DOCUMENTATION generic function specialized
+    for `DOC-TYPE` SYMBOL-MACRO.
+    
+    ```
+    (define-symbol-macro my-mac 42)
+    (setf (documentation 'my-mac 'symbol-macro)
+          "This is MY-MAC.")
+    (documentation 'my-mac 'symbol-macro)
+    ```
+
+
 - [locative] COMPILER-MACRO
 
     Refers to a compiler macro, typically defined with

@@ -1,4 +1,3 @@
-* TODO add symbol-macro locative
 * MAYBE add locatives for sbcl deftransform, defoptimizer, define-vop, define-source-transfrom
 * TODO export documentation generation utilities for extensions
 * OPT esrap is slow with allegro cl

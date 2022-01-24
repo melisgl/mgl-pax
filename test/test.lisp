@@ -553,6 +553,31 @@
                              format))
 
 
+(defsection @test-symbol-macro ()
+  (my-smac symbol-macro))
+
+(define-symbol-macro my-smac 42)
+(setf (documentation 'my-smac 'symbol-macro)
+      "This is MY-SMAC.")
+
+(deftest test-symbol-macro ()
+  (progn;with-failure-expected ((alexandria:featurep '(:or :abcl :allegro)))
+    (is (null (mismatch% (let ((*document-max-table-of-contents-level* 0)
+                               (*document-max-numbering-level* 0)
+                               (*document-text-navigation* nil)
+                               (*document-link-sections* nil))
+                           (first (document @test-symbol-macro)))
+                         "# @TEST-SYMBOL-MACRO
+
+###### \\[in package MGL-PAX-TEST\\]
+<a id='x-28MGL-PAX-TEST-3AMY-SMAC-20MGL-PAX-3ASYMBOL-MACRO-29'></a>
+
+- [symbol-macro] **MY-SMAC**
+
+    This is `MY-SMAC`.
+")))))
+
+
 (defsection @test-method-combination ()
   (my-comb method-combination))
 
@@ -890,6 +915,7 @@ ISSUE:AREF-1D `CLHS`
   (test-reference-in-link-definition)
   (test-document :markdown)
   (test-document :html)
+  (test-symbol-macro)
   (test-method-combination)
   (test-hyperspec)
   (test-clhs-section)

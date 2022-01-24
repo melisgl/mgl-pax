@@ -514,6 +514,23 @@ location and the docstring of the defining form is recorded (see
     [special operator][2f30]. See the [`FUNCTION`][3023]
     locative for a note on arglists.
 
+<a id='x-28MGL-PAX-3ASYMBOL-MACRO-20MGL-PAX-3ALOCATIVE-29'></a>
+
+- [locative] **SYMBOL-MACRO**
+
+    Refers to a global symbol macro, defined with [`DEFINE-SYMBOL-MACRO`][22fb].
+    Note that since `DEFINE-SYMBOL-MACRO` does not support docstrings, `PAX`
+    defines methods on the [`DOCUMENTATION`][2e47] generic function specialized
+    for `DOC-TYPE` `SYMBOL-MACRO`.
+    
+    ```
+    (define-symbol-macro my-mac 42)
+    (setf (documentation 'my-mac 'symbol-macro)
+          "This is MY-MAC.")
+    (documentation 'my-mac 'symbol-macro)
+    ```
+
+
 <a id='x-28COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29'></a>
 
 - [locative] **COMPILER-MACRO**
@@ -2988,6 +3005,7 @@ presented.
   [1f66]: #x-28MGL-PAX-3ASECTION-ENTRIES-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "(MGL-PAX:SECTION-ENTRIES (MGL-PAX:READER MGL-PAX:SECTION))"
   [1fbb]: #x-28MGL-PAX-3A-40MGL-PAX-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29 "Locative Types"
   [2285]: #x-28MGL-PAX-3ALOCATE-ERROR-20CONDITION-29 "(MGL-PAX:LOCATE-ERROR CONDITION)"
+  [22fb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_1.htm "(DEFINE-SYMBOL-MACRO MGL-PAX:MACRO)"
   [24fc]: #x-28MGL-PAX-3ACANONICAL-REFERENCE-20GENERIC-FUNCTION-29 "(MGL-PAX:CANONICAL-REFERENCE GENERIC-FUNCTION)"
   [2682]: #x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-GLOSSARY-TERM MGL-PAX:MACRO)"
   [2748]: #x-28MGL-PAX-3A-40MGL-PAX-GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29 "Github Workflow"
