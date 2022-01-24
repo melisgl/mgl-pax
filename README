@@ -270,130 +270,6 @@ The transcript in the code block tagged with `cl-transcript` is
 automatically checked for up-to-dateness. See
 @MGL-PAX-TRANSCRIPTS.
 
-## Navigating Sources in Emacs
-
-Integration into SLIME's `M-.` (`slime-edit-definition`) allows one
-to visit the source location of the thing that's identified by a
-symbol and the locative before or after the symbol in a buffer. With
-this extension, if a locative is the previous or the next expression
-around the symbol of interest, then `M-.` will go straight to the
-definition which corresponds to the locative. If that fails, `M-.`
-will try to find the definitions in the normal way, which may
-involve popping up an xref buffer and letting the user interactively
-select one of possible definitions.
-
-*Note that the this feature is implemented in terms of
-SWANK-BACKEND:FIND-SOURCE-LOCATION and
-SWANK-BACKEND:FIND-DEFINITIONS, whose support varies across the Lisp
-implementations. In particular, ABCL, CLISP, CMUCL and ECL have no
-or rather spotty support for it. Everything works fine on AllegroCL,
-CCL and SBCL.*
-
-In the following examples, pressing `M-.` when the cursor is on one
-of the characters of `FOO` or just after `FOO`, will visit the
-definition of function `FOO`:
-
-    function foo
-    foo function
-    (function foo)
-    (foo function)
-
-In particular, references in a DEFSECTION form are in (SYMBOL
-LOCATIVE) format so `M-.` will work just fine there.
-
-Just like vanilla `M-.`, this works in comments and docstrings. In
-the next example, pressing `M-.` on `FOO` will visit `FOO`'s default
-method:
-
-```commonlisp
-;;;; See FOO `(method () (t t t))` for how this all works.
-;;;; But if the locative has semicolons inside: FOO `(method
-;;;; () (t t t))`, then it won't, so be wary of line breaks
-;;;; in comments.
-```
-
-With a prefix argument (`C-u M-.`), one can enter a symbol plus a
-locative separated by whitespace to preselect one of the
-possibilities.
-
-The `M-.` extensions can be enabled by adding this to your Emacs
-initialization file (or loading `src/pax.el`):
-
-```elisp
-;;; MGL-PAX M-. integration
-
-(defun mgl-pax-edit-locative-definitions (name &optional where)
-  (or (mgl-pax-locate-definition name (mgl-pax-locative-before) where)
-      (mgl-pax-locate-definition name (mgl-pax-locative-after) where)
-      (mgl-pax-locate-definition name (mgl-pax-locative-after-in-brackets)
-                                 where)
-      ;; Support "foo function" and "function foo" syntax in
-      ;; interactive use.
-      (let ((pos (cl-position ?\s name)))
-        (when pos
-          (or (mgl-pax-locate-definition (cl-subseq name 0 pos)
-                                         (cl-subseq name (1+ pos))
-                                         where)
-              (mgl-pax-locate-definition (cl-subseq name (1+ pos))
-                                         (cl-subseq name 0 pos)
-                                         where))))
-      ;; This catches pluralized symbols without locatives e.g
-      ;; (MGL-PAX:SECTIONs) and is also responsible for dealing with multiple
-      ;; references.
-      (mgl-pax-locate-definition name "" where)))
-
-(defun mgl-pax-locative-before ()
-  (ignore-errors (save-excursion
-                   (slime-beginning-of-symbol)
-                   (slime-last-expression))))
-
-(defun mgl-pax-locative-after ()
-  (ignore-errors (save-excursion
-                   (slime-end-of-symbol)
-                   (slime-forward-sexp)
-                   (slime-last-expression))))
-
-(defun mgl-pax-locative-after-in-brackets ()
-  (ignore-errors (save-excursion
-                   (slime-end-of-symbol)
-                   (skip-chars-forward "`" (+ (point) 1))
-                   (when (and (= 1 (skip-chars-forward "\\]" (+ (point) 1)))
-                              (= 1 (skip-chars-forward "\\[" (+ (point) 1))))
-                     (buffer-substring-no-properties
-                      (point)
-                      (progn (search-forward "]" nil (+ (point) 1000))
-                             (1- (point))))))))
-
-(defun mgl-pax-locate-definition (name locative where)
-  (when locative
-    (let ((locations
-           (slime-eval
-            ;; Silently fail if mgl-pax is not loaded.
-            `(cl:when (cl:find-package :mgl-pax)
-                      (cl:funcall
-                       (cl:find-symbol
-                        (cl:symbol-name :locate-definitions-for-emacs) :mgl-pax)
-                       ,name ,locative)))))
-      (when (and (consp locations)
-                 (not (eq (car locations) :error)))
-        (slime-edit-definition-cont
-         (slime-postprocess-xrefs locations)
-         "dummy name"
-         where)))))
-
-(add-hook 'slime-edit-definition-hooks 'mgl-pax-edit-locative-definitions)
-```
-
-### MGL-PAX/NAVIGATE ASDF System Details
-
-- Description: Slime `M-.` support for MGL-PAX.
-- Long Description: Autoloaded by Slime's `M-.` when `src/pax.el` is
-  loaded. See MGL-PAX:@MGL-PAX-NAVIGATING-IN-EMACS.
-- Licence: MIT, see COPYING.
-- Author: Gábor Melis
-- Mailto: [mega@retes.hu](mailto:mega@retes.hu)
-
-
 ## Basics
 
 Now let's examine the most important pieces.
@@ -886,6 +762,130 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     (locate "SUMMARY:AREF-1D" 'clhs)
     ==> #<REFERENCE "SUMMARY:AREF-1D" CLHS>
     ```
+
+
+## Navigating Sources in Emacs
+
+Integration into SLIME's `M-.` (`slime-edit-definition`) allows one
+to visit the source location of the thing that's identified by a
+symbol and the locative before or after the symbol in a buffer. With
+this extension, if a locative is the previous or the next expression
+around the symbol of interest, then `M-.` will go straight to the
+definition which corresponds to the locative. If that fails, `M-.`
+will try to find the definitions in the normal way, which may
+involve popping up an xref buffer and letting the user interactively
+select one of possible definitions.
+
+*Note that the this feature is implemented in terms of
+SWANK-BACKEND:FIND-SOURCE-LOCATION and
+SWANK-BACKEND:FIND-DEFINITIONS, whose support varies across the Lisp
+implementations. In particular, ABCL, CLISP, CMUCL and ECL have no
+or rather spotty support for it. Everything works fine on AllegroCL,
+CCL and SBCL.*
+
+In the following examples, pressing `M-.` when the cursor is on one
+of the characters of `FOO` or just after `FOO`, will visit the
+definition of function `FOO`:
+
+    function foo
+    foo function
+    (function foo)
+    (foo function)
+
+In particular, references in a DEFSECTION form are in (SYMBOL
+LOCATIVE) format so `M-.` will work just fine there.
+
+Just like vanilla `M-.`, this works in comments and docstrings. In
+the next example, pressing `M-.` on `FOO` will visit `FOO`'s default
+method:
+
+```commonlisp
+;;;; See FOO `(method () (t t t))` for how this all works.
+;;;; But if the locative has semicolons inside: FOO `(method
+;;;; () (t t t))`, then it won't, so be wary of line breaks
+;;;; in comments.
+```
+
+With a prefix argument (`C-u M-.`), one can enter a symbol plus a
+locative separated by whitespace to preselect one of the
+possibilities.
+
+The `M-.` extensions can be enabled by adding this to your Emacs
+initialization file (or loading `src/pax.el`):
+
+```elisp
+;;; MGL-PAX M-. integration
+
+(defun mgl-pax-edit-locative-definitions (name &optional where)
+  (or (mgl-pax-locate-definition name (mgl-pax-locative-before) where)
+      (mgl-pax-locate-definition name (mgl-pax-locative-after) where)
+      (mgl-pax-locate-definition name (mgl-pax-locative-after-in-brackets)
+                                 where)
+      ;; Support "foo function" and "function foo" syntax in
+      ;; interactive use.
+      (let ((pos (cl-position ?\s name)))
+        (when pos
+          (or (mgl-pax-locate-definition (cl-subseq name 0 pos)
+                                         (cl-subseq name (1+ pos))
+                                         where)
+              (mgl-pax-locate-definition (cl-subseq name (1+ pos))
+                                         (cl-subseq name 0 pos)
+                                         where))))
+      ;; This catches pluralized symbols without locatives e.g
+      ;; (MGL-PAX:SECTIONs) and is also responsible for dealing with multiple
+      ;; references.
+      (mgl-pax-locate-definition name "" where)))
+
+(defun mgl-pax-locative-before ()
+  (ignore-errors (save-excursion
+                   (slime-beginning-of-symbol)
+                   (slime-last-expression))))
+
+(defun mgl-pax-locative-after ()
+  (ignore-errors (save-excursion
+                   (slime-end-of-symbol)
+                   (slime-forward-sexp)
+                   (slime-last-expression))))
+
+(defun mgl-pax-locative-after-in-brackets ()
+  (ignore-errors (save-excursion
+                   (slime-end-of-symbol)
+                   (skip-chars-forward "`" (+ (point) 1))
+                   (when (and (= 1 (skip-chars-forward "\\]" (+ (point) 1)))
+                              (= 1 (skip-chars-forward "\\[" (+ (point) 1))))
+                     (buffer-substring-no-properties
+                      (point)
+                      (progn (search-forward "]" nil (+ (point) 1000))
+                             (1- (point))))))))
+
+(defun mgl-pax-locate-definition (name locative where)
+  (when locative
+    (let ((locations
+           (slime-eval
+            ;; Silently fail if mgl-pax is not loaded.
+            `(cl:when (cl:find-package :mgl-pax)
+                      (cl:funcall
+                       (cl:find-symbol
+                        (cl:symbol-name :locate-definitions-for-emacs) :mgl-pax)
+                       ,name ,locative)))))
+      (when (and (consp locations)
+                 (not (eq (car locations) :error)))
+        (slime-edit-definition-cont
+         (slime-postprocess-xrefs locations)
+         "dummy name"
+         where)))))
+
+(add-hook 'slime-edit-definition-hooks 'mgl-pax-edit-locative-definitions)
+```
+
+### MGL-PAX/NAVIGATE ASDF System Details
+
+- Description: Slime `M-.` support for MGL-PAX.
+- Long Description: Autoloaded by Slime's `M-.` when `src/pax.el` is
+  loaded. See MGL-PAX:@MGL-PAX-NAVIGATING-IN-EMACS.
+- Licence: MIT, see COPYING.
+- Author: Gábor Melis
+- Mailto: [mega@retes.hu](mailto:mega@retes.hu)
 
 
 ## Generating Documentation
