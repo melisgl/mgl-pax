@@ -18,7 +18,7 @@
   SWANK-BACKEND:FIND-DEFINITIONS, whose support varies across the Lisp
   implementations. In particular, ABCL, CLISP, CMUCL and ECL have no
   or rather spotty support for it. Everything works fine on AllegroCL,
-  CCL and SBCL.*
+  \\CCL and SBCL.*
 
   In the following examples, pressing `M-.` when the cursor is on one
   of the characters of `FOO` or just after `FOO`, will visit the

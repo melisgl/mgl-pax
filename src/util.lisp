@@ -5,12 +5,15 @@
       :external))
 
 (defun symbol-global-value (symbol)
-  #+sbcl
-  (ignore-errors (sb-ext:symbol-global-value symbol))
   #+allegro
   (multiple-value-bind (value bound) (sys:global-symbol-value symbol)
     (values value (eq bound :unbound)))
-  #-(or sbcl allegro)
+  #+ccl
+  (let ((value (ccl::%sym-global-value symbol)))
+    (values value (eq value (ccl::%unbound-marker))))
+  #+sbcl
+  (ignore-errors (sb-ext:symbol-global-value symbol))
+  #-(or allegro ccl sbcl)
   (ignore-errors (symbol-value symbol)))
 
 ;;; Like SYMBOL-FUNCTION*, but sees through encapsulated functions.
@@ -91,7 +94,19 @@
             (second lambda-expression)
             (excl:arglist symbol)))
     (simple-error () :not-available))
-  #-(or abcl allegro)
+  #+ccl
+  (let ((arglist (swank-backend:arglist function-designator)))
+    (if (listp arglist)
+        ;; &KEY arguments are given as keywords, which screws up
+        ;; WITH-DISLOCATED-SYMBOLS when generating documentation for
+        ;; functions.
+        (mapcar (lambda (x)
+                  (if (keywordp x)
+                      (intern (string x))
+                      x))
+                arglist)
+        arglist))
+  #-(or abcl allegro ccl)
   (swank-backend:arglist function-designator))
 
 

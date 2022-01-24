@@ -1311,7 +1311,7 @@
   ;;; More irrelevant code follows.
   ```
 
-  In the above example, pressing `M-.` on PAX.EL will open the
+  In the above example, pressing `M-.` on `PAX.EL` will open the
   `src/pax.el` file and put the cursor on its first character. `M-.`
   on `FOO-EXAMPLE` will go to the source location of the `(asdf:system
   locative)` locative.
