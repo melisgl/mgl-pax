@@ -1493,13 +1493,13 @@ Alternatively, the [`DISLOCATED`][94e2] locative may be used.
     
     Locatives work as expected (see [`*DOCUMENT-LINK-CODE*`][8082]).
     `FIND-IF` links to [`FIND-IF`][badc], `FUNCTION` links
-    to `FUNCTION`([`0`][3023] [`1`][7738] [`2`][a15a]) and `[FUNCTION][type]` links to [`function`][a15a].
+    to `FUNCTION`([`0`][3023] [`1`][7738] [`2`][a15a]) and `[FUNCTION][type]` links to [`FUNCTION`][a15a].
     
     Autolinking to `T` and `NIL` is suppressed. If desired, use
     `[T][]` (that links to `T`([`0`][b743] [`1`][cb19])) or `[T][constant]` (that links to
     [`T`][b743]).
     
-    Note that linking to section in the Hyperspec is done with the [`CLHS`][18ca]
+    Note that linking to sections in the Hyperspec is done with the [`CLHS`][18ca]
     locative and is not subject to the value of this variable.
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-HYPERSPEC-ROOT-2A-20VARIABLE-29'></a>

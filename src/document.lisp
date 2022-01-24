@@ -1003,13 +1003,13 @@
 
   Locatives work as expected (see *DOCUMENT-LINK-CODE*).
   [FIND-IF][dislocated] links to FIND-IF, [FUNCTION][dislocated] links
-  to FUNCTION and `[FUNCTION][type]` links to [function][type].
+  to FUNCTION and `[FUNCTION][type]` links to [FUNCTION][type].
 
   Autolinking to T and NIL is suppressed. If desired, use
   `[T][]` (that links to [T][]) or `[T][constant]` (that links to
   [T][constant]).
 
-  Note that linking to section in the Hyperspec is done with the CLHS
+  Note that linking to sections in the Hyperspec is done with the CLHS
   locative and is not subject to the value of this variable.")
 
 (defvar *document-hyperspec-root*
