@@ -414,6 +414,8 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
 `M-.` (see @MGL-PAX-NAVIGATING-IN-EMACS) and
 @MGL-PAX-GENERATING-DOCUMENTATION possible.
 
+### Locatives for Variables
+
 - [locative] VARIABLE &OPTIONAL INITFORM
 
     Refers to a global special variable. INITFORM, or if not specified,
@@ -439,6 +441,8 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     the value of the constant is included in the documentation. The
     CONSTANT locative is like the VARIABLE locative, but it also checks
     that its object is CONSTANTP.
+
+### Locatives for Macros
 
 - [locative] MACRO
 
@@ -466,6 +470,8 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     Refers to a compiler macro, typically defined with
     DEFINE-COMPILER-MACRO. See the FUNCTION locative for a note on
     arglists.
+
+### Locatives for Functions
 
 - [locative] FUNCTION
 
@@ -527,6 +533,8 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     the often ugly and certainly uninformative lambda list will not be
     printed.
 
+### Locatives for Types and Declarations
+
 - [locative] TYPE
 
     This locative can refer to any Lisp type. For types defined with
@@ -545,6 +553,26 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     
     In the generated documention, only superclasses denoted by [external
     symbols][find-symbol function] are included.
+
+- [locative] DECLARATION
+
+    Refers to a declaration, used in DECLARE, DECLAIM and PROCLAIM.
+    For example, `[DEBUG][declaration]` refers to the standard DEBUG
+    declaration and links to the hyperspec if
+    *DOCUMENT-LINK-TO-HYPERSPEC* is true.
+    
+    User code may also define new declarations with CLTL2 functionality,
+    but there is no way to provide a docstring.
+    
+    ```
+    (cl-environments:define-declaration my-decl (&rest things)
+      (values :declare (cons 'foo things)))
+    ```
+    
+    Also, `M-.` (see @MGL-PAX-NAVIGATING-IN-EMACS) on declarations
+    currently only works on SBCL.
+
+### Condition System Locatives
 
 - [locative] CONDITION
 
@@ -576,6 +604,8 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     corresponding source location or docstring like for
     [CONDITION][condition]s.
 
+### Locatives for Packages and Readtables
+
 - [locative] ASDF/SYSTEM:SYSTEM
 
     Refers to an asdf system. The generated documentation will include
@@ -597,27 +627,67 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     docstring with the readtable object. Unfortunately, source location
     information is not available.
 
-- [locative] DECLARATION
-
-    Refers to a declaration, used in DECLARE, DECLAIM and PROCLAIM.
-    For example, `[DEBUG][declaration]` refers to the standard DEBUG
-    declaration and links to the hyperspec if
-    *DOCUMENT-LINK-TO-HYPERSPEC* is true.
-    
-    User code may also define new declarations with CLTL2 functionality,
-    but there is no way to provide a docstring.
-    
-    ```
-    (cl-environments:define-declaration my-decl (&rest things)
-      (values :declare (cons 'foo things)))
-    ```
-    
-    Also, `M-.` (see @MGL-PAX-NAVIGATING-IN-EMACS) on declarations
-    currently only works on SBCL.
+### Locatives for PAX Constructs
 
 - [locative] SECTION
 
     Refers to a section defined by DEFSECTION.
+
+- [locative] GLOSSARY-TERM
+
+    Refers to a glossary term defined by DEFINE-GLOSSARY-TERM.
+
+- [macro] DEFINE-GLOSSARY-TERM NAME (&KEY TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) DOCSTRING
+
+    Define a global variable with NAME and set it to a glossary term
+    object. A glossary term is just a symbol to hang a docstring on. It
+    is a bit like a SECTION in that, when linked to, its TITLE will be
+    the link text instead of the name of the symbol. Unlike sections
+    though, glossary terms are not rendered with headings, but in the
+    more lightweight bullet + locative + name/title style.
+    
+    When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
+    is true, DOCSTRING will not be recorded to save memory.
+
+- [locative] LOCATIVE LAMBDA-LIST
+
+    This is the locative for locatives. When `M-.` is pressed on
+    `SOME-NAME` in `(SOME-NAME LOCATIVE)`, this is what makes it
+    possible to land at the corresponding DEFINE-LOCATIVE-TYPE form.
+    Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.
+
+- [locative] DISLOCATED
+
+    Refers to a symbol in a non-specific context. Useful for preventing
+    autolinking. For example, if there is a function called `FOO` then
+    
+        `FOO`
+    
+    will be linked (if *DOCUMENT-LINK-CODE*) to its definition. However,
+    
+        [`FOO`][dislocated]
+    
+    will not be. On a dislocated locative LOCATE always fails with a
+    LOCATE-ERROR condition. See @MGL-PAX-LINKING-TO-CODE for an
+    alternative method of preventing autolinking.
+
+- [locative] ARGUMENT
+
+    An alias for DISLOCATED, so the one can refer to an argument of a
+    macro without accidentally linking to a class that has the same name
+    as that argument. In the following example, `FORMAT` may
+    link to CL:FORMAT (if we generated documentation for it):
+    
+    ```
+    "See the FORMAT in DOCUMENT."
+    ```
+    
+    Since ARGUMENT is a locative, we can prevent that linking by writing:
+    
+    ```
+    "See the FORMAT argument of DOCUMENT."
+    ```
+
 
 - [locative] INCLUDE SOURCE &KEY LINE-PREFIX HEADER FOOTER HEADER-NL FOOTER-NL
 
@@ -676,61 +746,7 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     
     INCLUDE is not EXPORTABLE-LOCATIVE-TYPE-P.
 
-- [locative] GLOSSARY-TERM
-
-    Refers to a glossary term defined by DEFINE-GLOSSARY-TERM.
-
-- [macro] DEFINE-GLOSSARY-TERM NAME (&KEY TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) DOCSTRING
-
-    Define a global variable with NAME and set it to a glossary term
-    object. A glossary term is just a symbol to hang a docstring on. It
-    is a bit like a SECTION in that, when linked to, its TITLE will be
-    the link text instead of the name of the symbol. Unlike sections
-    though, glossary terms are not rendered with headings, but in the
-    more lightweight bullet + locative + name/title style.
-    
-    When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
-    is true, DOCSTRING will not be recorded to save memory.
-
-- [locative] LOCATIVE LAMBDA-LIST
-
-    This is the locative for locatives. When `M-.` is pressed on
-    `SOME-NAME` in `(SOME-NAME LOCATIVE)`, this is what makes it
-    possible to land at the corresponding DEFINE-LOCATIVE-TYPE form.
-    Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.
-
-- [locative] DISLOCATED
-
-    Refers to a symbol in a non-specific context. Useful for preventing
-    autolinking. For example, if there is a function called `FOO` then
-    
-        `FOO`
-    
-    will be linked (if *DOCUMENT-LINK-CODE*) to its definition. However,
-    
-        [`FOO`][dislocated]
-    
-    will not be. On a dislocated locative LOCATE always fails with a
-    LOCATE-ERROR condition. See @MGL-PAX-LINKING-TO-CODE for an
-    alternative method of preventing autolinking.
-
-- [locative] ARGUMENT
-
-    An alias for DISLOCATED, so the one can refer to an argument of a
-    macro without accidentally linking to a class that has the same name
-    as that argument. In the following example, `FORMAT` may
-    link to CL:FORMAT (if we generated documentation for it):
-    
-    ```
-    "See the FORMAT in DOCUMENT."
-    ```
-    
-    Since ARGUMENT is a locative, we can prevent that linking by writing:
-    
-    ```
-    "See the FORMAT argument of DOCUMENT."
-    ```
-
+### External Locatives
 
 - [locative] CLHS
 

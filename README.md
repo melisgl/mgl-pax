@@ -12,6 +12,14 @@
 - [6 Basics][8059]
 - [7 Locatives and References][d023]
 - [8 Locative Types][1fbb]
+    - [8.1 Locatives for Variables][3ef0]
+    - [8.2 Locatives for Macros][2dd1]
+    - [8.3 Locatives for Functions][66c9]
+    - [8.4 Locatives for Types and Declarations][6fcc]
+    - [8.5 Condition System Locatives][f25e]
+    - [8.6 Locatives for Packages and Readtables][170a]
+    - [8.7 Locatives for PAX Constructs][434a]
+    - [8.8 External Locatives][218f]
 - [9 Navigating Sources in Emacs][3fdc]
     - [9.1 MGL-PAX/NAVIGATE ASDF System Details][8ea3]
 - [10 Generating Documentation][063a]
@@ -476,6 +484,10 @@ location and the docstring of the defining form is recorded (see
 `M-.` (see [Navigating Sources in Emacs][3fdc]) and
 [Generating Documentation][063a] possible.
 
+<a id='x-28MGL-PAX-3A-40MGL-PAX-VARIABLELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29'></a>
+
+### 8.1 Locatives for Variables
+
 <a id='x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29'></a>
 
 - [locative] **VARIABLE** *&OPTIONAL INITFORM*
@@ -505,6 +517,10 @@ location and the docstring of the defining form is recorded (see
     the value of the constant is included in the documentation. The
     [`CONSTANT`][849d] locative is like the [`VARIABLE`][474c] locative, but it also checks
     that its object is [`CONSTANTP`][3fdc4].
+
+<a id='x-28MGL-PAX-3A-40MGL-PAX-MACROLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29'></a>
+
+### 8.2 Locatives for Macros
 
 <a id='x-28MGL-PAX-3AMACRO-20MGL-PAX-3ALOCATIVE-29'></a>
 
@@ -538,6 +554,10 @@ location and the docstring of the defining form is recorded (see
     Refers to a compiler macro, typically defined with
     [`DEFINE-COMPILER-MACRO`][f7af]. See the [`FUNCTION`][3023] locative for a note on
     arglists.
+
+<a id='x-28MGL-PAX-3A-40MGL-PAX-FUNCTIONLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29'></a>
+
+### 8.3 Locatives for Functions
 
 <a id='x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29'></a>
 
@@ -615,6 +635,10 @@ location and the docstring of the defining form is recorded (see
     the often ugly and certainly uninformative lambda list will not be
     printed.
 
+<a id='x-28MGL-PAX-3A-40MGL-PAX-TYPELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29'></a>
+
+### 8.4 Locatives for Types and Declarations
+
 <a id='x-28TYPE-20MGL-PAX-3ALOCATIVE-29'></a>
 
 - [locative] **TYPE**
@@ -637,6 +661,30 @@ location and the docstring of the defining form is recorded (see
     
     In the generated documention, only superclasses denoted by [external
     symbols][ce53] are included.
+
+<a id='x-28DECLARATION-20MGL-PAX-3ALOCATIVE-29'></a>
+
+- [locative] **DECLARATION**
+
+    Refers to a declaration, used in [`DECLARE`][b58a], [`DECLAIM`][33dd] and [`PROCLAIM`][89be].
+    For example, `[DEBUG][declaration]` refers to the standard [`DEBUG`][4944]
+    declaration and links to the hyperspec if
+    [`*DOCUMENT-LINK-TO-HYPERSPEC*`][c1ca] is true.
+    
+    User code may also define new declarations with CLTL2 functionality,
+    but there is no way to provide a docstring.
+    
+    ```
+    (cl-environments:define-declaration my-decl (&rest things)
+      (values :declare (cons 'foo things)))
+    ```
+    
+    Also, `M-.` (see [Navigating Sources in Emacs][3fdc]) on declarations
+    currently only works on SBCL.
+
+<a id='x-28MGL-PAX-3A-40MGL-PAX-CONDITION-SYSTEM-LOCATIVES-20MGL-PAX-3ASECTION-29'></a>
+
+### 8.5 Condition System Locatives
 
 <a id='x-28CONDITION-20MGL-PAX-3ALOCATIVE-29'></a>
 
@@ -674,6 +722,10 @@ location and the docstring of the defining form is recorded (see
     corresponding source location or docstring like for
     [`CONDITION`][418f]s.
 
+<a id='x-28MGL-PAX-3A-40MGL-PAX-PACKAGELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29'></a>
+
+### 8.6 Locatives for Packages and Readtables
+
 <a id='x-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29'></a>
 
 - [locative] **ASDF/SYSTEM:SYSTEM**
@@ -701,90 +753,15 @@ location and the docstring of the defining form is recorded (see
     docstring with the readtable object. Unfortunately, source location
     information is not available.
 
-<a id='x-28DECLARATION-20MGL-PAX-3ALOCATIVE-29'></a>
+<a id='x-28MGL-PAX-3A-40MGL-PAX-PAX-LOCATIVES-20MGL-PAX-3ASECTION-29'></a>
 
-- [locative] **DECLARATION**
-
-    Refers to a declaration, used in [`DECLARE`][b58a], [`DECLAIM`][33dd] and [`PROCLAIM`][89be].
-    For example, `[DEBUG][declaration]` refers to the standard [`DEBUG`][4944]
-    declaration and links to the hyperspec if
-    [`*DOCUMENT-LINK-TO-HYPERSPEC*`][c1ca] is true.
-    
-    User code may also define new declarations with CLTL2 functionality,
-    but there is no way to provide a docstring.
-    
-    ```
-    (cl-environments:define-declaration my-decl (&rest things)
-      (values :declare (cons 'foo things)))
-    ```
-    
-    Also, `M-.` (see [Navigating Sources in Emacs][3fdc]) on declarations
-    currently only works on SBCL.
+### 8.7 Locatives for PAX Constructs
 
 <a id='x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29'></a>
 
 - [locative] **SECTION**
 
     Refers to a section defined by [`DEFSECTION`][2863].
-
-<a id='x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29'></a>
-
-- [locative] **INCLUDE** *SOURCE &KEY LINE-PREFIX HEADER FOOTER HEADER-NL FOOTER-NL*
-
-    Refers to a region of a file. `SOURCE` can be a string or a
-    pathname in which case the whole file is being pointed to or it can
-    explicitly supply `START`, `END` locatives. `INCLUDE` is typically used to
-    include non-lisp files in the documentation (say markdown or elisp
-    as in the next example) or regions of lisp source files. This can
-    reduce clutter and duplication.
-    
-    ```commonlisp
-    (defsection example-section ()
-      (pax.el (include #.(asdf:system-relative-pathname :mgl-pax "src/pax.el")
-                       :header-nl "```elisp" :footer-nl "```"))
-      (foo-example (include (:start (foo function)
-                             :end (end-of-foo-example variable))
-                            :header-nl "```commonlisp"
-                            :footer-nl "```"))
-    
-    (defun foo (x)
-      (1+ x))
-    
-    ;;; Since file regions are copied verbatim, comments survive.
-    (defmacro bar ())
-    
-    ;;; This comment is the last thing in FOO-EXAMPLE's
-    ;;; documentation since we use the dummy END-OF-FOO-EXAMPLE
-    ;;; variable to mark the end location.
-    (defvar end-of-foo-example)
-    
-    ;;; More irrelevant code follows.
-    ```
-    
-    In the above example, pressing `M-.` on [`PAX.EL`][05c6] will open the
-    `src/pax.el` file and put the cursor on its first character. `M-.`
-    on `FOO-EXAMPLE` will go to the source location of the `(asdf:system
-    locative)` locative.
-    
-    When documentation is generated, the entire `src/pax.el` file is
-    included in the markdown surrounded by the strings given as
-    `HEADER-NL` and `FOOTER-NL` (if any). The trailing newline character is
-    assumed implicitly. If that's undesirable, then use `HEADER` and
-    `FOOTER` instead. The documentation of `FOO-EXAMPLE` will be the
-    region of the file from the source location of the `START`
-    locative (inclusive) to the source location of the `END`
-    locative (exclusive). `START` and `END` default to the beginning and end
-    of the file, respectively.
-    
-    Note that the file of the source location of `:START` and `:END` must be
-    the same. If `SOURCE` is pathname designator, then it must be absolute
-    so that the locative is context independent.
-    
-    Finally, if specified `LINE-PREFIX` is a string that's prepended to
-    each line included in the documentation. For example, a string of
-    four spaces makes markdown think it's a code block.
-    
-    `INCLUDE` is not [`EXPORTABLE-LOCATIVE-TYPE-P`][96c5].
 
 <a id='x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29'></a>
 
@@ -851,6 +828,69 @@ location and the docstring of the defining form is recorded (see
     "See the FORMAT argument of DOCUMENT."
     ```
 
+
+<a id='x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29'></a>
+
+- [locative] **INCLUDE** *SOURCE &KEY LINE-PREFIX HEADER FOOTER HEADER-NL FOOTER-NL*
+
+    Refers to a region of a file. `SOURCE` can be a string or a
+    pathname in which case the whole file is being pointed to or it can
+    explicitly supply `START`, `END` locatives. `INCLUDE` is typically used to
+    include non-lisp files in the documentation (say markdown or elisp
+    as in the next example) or regions of lisp source files. This can
+    reduce clutter and duplication.
+    
+    ```commonlisp
+    (defsection example-section ()
+      (pax.el (include #.(asdf:system-relative-pathname :mgl-pax "src/pax.el")
+                       :header-nl "```elisp" :footer-nl "```"))
+      (foo-example (include (:start (foo function)
+                             :end (end-of-foo-example variable))
+                            :header-nl "```commonlisp"
+                            :footer-nl "```"))
+    
+    (defun foo (x)
+      (1+ x))
+    
+    ;;; Since file regions are copied verbatim, comments survive.
+    (defmacro bar ())
+    
+    ;;; This comment is the last thing in FOO-EXAMPLE's
+    ;;; documentation since we use the dummy END-OF-FOO-EXAMPLE
+    ;;; variable to mark the end location.
+    (defvar end-of-foo-example)
+    
+    ;;; More irrelevant code follows.
+    ```
+    
+    In the above example, pressing `M-.` on [`PAX.EL`][05c6] will open the
+    `src/pax.el` file and put the cursor on its first character. `M-.`
+    on `FOO-EXAMPLE` will go to the source location of the `(asdf:system
+    locative)` locative.
+    
+    When documentation is generated, the entire `src/pax.el` file is
+    included in the markdown surrounded by the strings given as
+    `HEADER-NL` and `FOOTER-NL` (if any). The trailing newline character is
+    assumed implicitly. If that's undesirable, then use `HEADER` and
+    `FOOTER` instead. The documentation of `FOO-EXAMPLE` will be the
+    region of the file from the source location of the `START`
+    locative (inclusive) to the source location of the `END`
+    locative (exclusive). `START` and `END` default to the beginning and end
+    of the file, respectively.
+    
+    Note that the file of the source location of `:START` and `:END` must be
+    the same. If `SOURCE` is pathname designator, then it must be absolute
+    so that the locative is context independent.
+    
+    Finally, if specified `LINE-PREFIX` is a string that's prepended to
+    each line included in the documentation. For example, a string of
+    four spaces makes markdown think it's a code block.
+    
+    `INCLUDE` is not [`EXPORTABLE-LOCATIVE-TYPE-P`][96c5].
+
+<a id='x-28MGL-PAX-3A-40MGL-PAX-EXTERNAL-LOCATIVES-20MGL-PAX-3ASECTION-29'></a>
+
+### 8.8 External Locatives
 
 <a id='x-28MGL-PAX-3ACLHS-20MGL-PAX-3ALOCATIVE-29'></a>
 
@@ -2998,12 +3038,14 @@ presented.
   [0785]: #x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax/full\" ASDF/SYSTEM:SYSTEM)"
   [1063]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm "(*PACKAGE* VARIABLE)"
   [16ad]: #x-28PACKAGE-20MGL-PAX-3ALOCATIVE-29 "(PACKAGE MGL-PAX:LOCATIVE)"
+  [170a]: #x-28MGL-PAX-3A-40MGL-PAX-PACKAGELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Packages and Readtables"
   [18ca]: #x-28MGL-PAX-3ACLHS-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:CLHS MGL-PAX:LOCATIVE)"
   [1920]: #x-28MGL-PAX-3ACOLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29 "(MGL-PAX:COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION)"
   [1cc6]: #x-28MGL-PAX-3AMAKE-GITHUB-SOURCE-URI-FN-20FUNCTION-29 "(MGL-PAX:MAKE-GITHUB-SOURCE-URI-FN FUNCTION)"
   [1eb8]: #x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29 "(MGL-PAX:DOCUMENT FUNCTION)"
   [1f66]: #x-28MGL-PAX-3ASECTION-ENTRIES-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "(MGL-PAX:SECTION-ENTRIES (MGL-PAX:READER MGL-PAX:SECTION))"
   [1fbb]: #x-28MGL-PAX-3A-40MGL-PAX-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29 "Locative Types"
+  [218f]: #x-28MGL-PAX-3A-40MGL-PAX-EXTERNAL-LOCATIVES-20MGL-PAX-3ASECTION-29 "External Locatives"
   [2285]: #x-28MGL-PAX-3ALOCATE-ERROR-20CONDITION-29 "(MGL-PAX:LOCATE-ERROR CONDITION)"
   [22fb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_1.htm "(DEFINE-SYMBOL-MACRO MGL-PAX:MACRO)"
   [24fc]: #x-28MGL-PAX-3ACANONICAL-REFERENCE-20GENERIC-FUNCTION-29 "(MGL-PAX:CANONICAL-REFERENCE GENERIC-FUNCTION)"
@@ -3013,6 +3055,7 @@ presented.
   [2904]: #x-28MGL-PAX-3A-2ASYNTAXES-2A-20VARIABLE-29 "(MGL-PAX:*SYNTAXES* VARIABLE)"
   [2c0d]: #x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "(MGL-PAX:SECTION-READTABLE (MGL-PAX:READER MGL-PAX:SECTION))"
   [2cf1]: #x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:SECTION MGL-PAX:LOCATIVE)"
+  [2dd1]: #x-28MGL-PAX-3A-40MGL-PAX-MACROLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Macros"
   [2e47]: http://www.lispworks.com/documentation/HyperSpec/Body/f_docume.htm "(DOCUMENTATION GENERIC-FUNCTION)"
   [2e7a]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29 "(MGL-PAX:UPDATE-ASDF-SYSTEM-READMES FUNCTION)"
   [2f30]: http://www.lispworks.com/documentation/HyperSpec/Body/f_specia.htm "(SPECIAL-OPERATOR-P FUNCTION)"
@@ -3028,6 +3071,7 @@ presented.
   [3bcd]: http://www.lispworks.com/documentation/HyperSpec/Body/f_intern.htm "(INTERN FUNCTION)"
   [3ca3]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cerror.htm "(CERROR FUNCTION)"
   [3e36]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009_w.htm "(\"ISSUE:AREF-1D\" MGL-PAX:CLHS)"
+  [3ef0]: #x-28MGL-PAX-3A-40MGL-PAX-VARIABLELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Variables"
   [3f93]: #x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:GLOSSARY-TERM MGL-PAX:LOCATIVE)"
   [3fdc]: #x-28MGL-PAX-3A-40MGL-PAX-NAVIGATING-IN-EMACS-20MGL-PAX-3ASECTION-29 "Navigating Sources in Emacs"
   [3fdc4]: http://www.lispworks.com/documentation/HyperSpec/Body/f_consta.htm "(CONSTANTP FUNCTION)"
@@ -3035,6 +3079,7 @@ presented.
   [4186]: http://www.lispworks.com/documentation/HyperSpec/Body/f_export.htm "(EXPORT FUNCTION)"
   [418f]: http://www.lispworks.com/documentation/HyperSpec/Body/e_cnd.htm "(CONDITION CONDITION)"
   [4336]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29 "Indentation"
+  [434a]: #x-28MGL-PAX-3A-40MGL-PAX-PAX-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for PAX Constructs"
   [4533]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pkg.htm "(PACKAGE TYPE)"
   [46f7]: http://www.lispworks.com/documentation/HyperSpec/Body/t_class.htm "(CLASS CLASS)"
   [474c]: #x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29 "(VARIABLE MGL-PAX:LOCATIVE)"
@@ -3059,6 +3104,7 @@ presented.
   [62d4]: #x-28MGL-PAX-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-LOCATIVE-TYPE MGL-PAX:MACRO)"
   [63bb]: http://www.lispworks.com/documentation/HyperSpec/Body/t_meth_1.htm "(METHOD-COMBINATION CLASS)"
   [6580]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "(*STANDARD-OUTPUT* VARIABLE)"
+  [66c9]: #x-28MGL-PAX-3A-40MGL-PAX-FUNCTIONLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Functions"
   [68db]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eval.htm "(EVAL FUNCTION)"
   [68e7]: #x-28MGL-PAX-3ADEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO)"
   [69ba]: #x-28MGL-PAX-3AMACRO-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:MACRO MGL-PAX:LOCATIVE)"
@@ -3067,6 +3113,7 @@ presented.
   [6e30]: http://www.lispworks.com/documentation/HyperSpec/Body/f_boundp.htm "(BOUNDP FUNCTION)"
   [6e37]: #x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "(CLASS MGL-PAX:LOCATIVE)"
   [6ec3]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_4.htm "(DEFINE-METHOD-COMBINATION MGL-PAX:MACRO)"
+  [6fcc]: #x-28MGL-PAX-3A-40MGL-PAX-TYPELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Types and Declarations"
   [76476]: http://www.lispworks.com/documentation/HyperSpec/Body/03_d.htm "(\"3.4\" MGL-PAX:CLHS)"
   [76b5]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE)"
   [7738]: http://www.lispworks.com/documentation/HyperSpec/Body/s_fn.htm "(FUNCTION MGL-PAX:MACRO)"
@@ -3149,6 +3196,7 @@ presented.
   [ec16]: #x-28MGL-PAX-3A-40MGL-PAX-MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29 "Miscellaneous Variables"
   [eed0]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009.htm "(\"SUMMARY:AREF-1D\" MGL-PAX:CLHS)"
   [eed2]: http://www.lispworks.com/documentation/HyperSpec/Body/t_symbol.htm "(SYMBOL TYPE)"
+  [f25e]: #x-28MGL-PAX-3A-40MGL-PAX-CONDITION-SYSTEM-LOCATIVES-20MGL-PAX-3ASECTION-29 "Condition System Locatives"
   [f3b7]: #x-28MGL-PAX-3ALOCATE-ERROR-20FUNCTION-29 "(MGL-PAX:LOCATE-ERROR FUNCTION)"
   [f4eb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_deftp.htm "(DEFTYPE MGL-PAX:MACRO)"
   [f7af]: http://www.lispworks.com/documentation/HyperSpec/Body/m_define.htm "(DEFINE-COMPILER-MACRO MGL-PAX:MACRO)"

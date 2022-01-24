@@ -1,9 +1,8 @@
+#+SEQ_TODO: TODO(t@) NEXT(n@) STARTED(s@) WAITING(w@) | DONE(d@) OLD(o@) CANCELLED(c@)
+#+TODO: MAYBE(m@) FAILED(f@) LOG(l@) DEFERRED(e@)
 * MAYBE add locatives for sbcl deftransform, defoptimizer, define-vop, define-source-transfrom
 * TODO export documentation generation utilities for extensions
 * OPT esrap is slow with allegro cl
-* MAYBE link to doc instead of including it if it is referenced multiple times?
-Which one is the master? Heuristically, the references from sections
-in the same package are to be preferred.
 * MAYBE todo/comment locative?
 * defining link ids doesn't work in function docstrings
 because it's translated to a list item

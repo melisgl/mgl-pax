@@ -21,11 +21,25 @@
   `M-.` (see @MGL-PAX-NAVIGATING-IN-EMACS) and
   @MGL-PAX-GENERATING-DOCUMENTATION possible.
   """
+  (@mgl-pax-variablelike-locatives section)
+  (@mgl-pax-macrolike-locatives section)
+  (@mgl-pax-functionlike-locatives section)
+  (@mgl-pax-typelike-locatives section)
+  (@mgl-pax-condition-system-locatives section)
+  (@mgl-pax-packagelike-locatives section)
+  (@mgl-pax-pax-locatives section)
+  (@mgl-pax-external-locatives section))
+
+(defsection @mgl-pax-variablelike-locatives (:title "Locatives for Variables")
   (variable locative)
-  (constant locative)
+  (constant locative))
+
+(defsection @mgl-pax-macrolike-locatives (:title "Locatives for Macros")
   (macro locative)
   (symbol-macro locative)
-  (compiler-macro locative)
+  (compiler-macro locative))
+
+(defsection @mgl-pax-functionlike-locatives (:title "Locatives for Functions")
   (function locative)
   (generic-function locative)
   (method locative)
@@ -33,23 +47,36 @@
   (accessor locative)
   (reader locative)
   (writer locative)
-  (structure-accessor locative)
+  (structure-accessor locative))
+
+(defsection @mgl-pax-typelike-locatives
+    (:title "Locatives for Types and Declarations")
   (type locative)
   (class locative)
+  (declaration locative))
+
+(defsection @mgl-pax-condition-system-locatives
+    (:title "Condition System Locatives")
   (condition locative)
   (restart locative)
-  (define-restart macro)
+  (define-restart macro))
+
+(defsection @mgl-pax-packagelike-locatives
+    (:title "Locatives for Packages and Readtables")
   (asdf:system locative)
   (package locative)
-  (readtable locative)
-  (declaration locative)
+  (readtable locative))
+
+(defsection @mgl-pax-pax-locatives (:title "Locatives for PAX Constructs")
   (section locative)
-  (include locative)
   (glossary-term locative)
   (define-glossary-term macro)
   (locative locative)
   (dislocated locative)
   (argument locative)
+  (include locative))
+
+(defsection @mgl-pax-external-locatives (:title "External Locatives")
   (clhs locative))
 
 
@@ -825,6 +852,62 @@
   (find reference *references* :test #'reference=))
 
 
+;;;; DECLARATION locative
+
+(define-locative-type declaration ()
+  """Refers to a declaration, used in DECLARE, DECLAIM and PROCLAIM.
+  For example, `[DEBUG][declaration]` refers to the standard DEBUG
+  declaration and links to the hyperspec if
+  *DOCUMENT-LINK-TO-HYPERSPEC* is true.
+
+  User code may also define new declarations with CLTL2 functionality,
+  but there is no way to provide a docstring.
+
+  ```
+  (cl-environments:define-declaration my-decl (&rest things)
+    (values :declare (cons 'foo things)))
+  ```
+
+  Also, `M-.` (see @MGL-PAX-NAVIGATING-IN-EMACS) on declarations
+  currently only works on SBCL.
+  """)
+
+(defvar *ansi-declarations*
+  '(compilation-speed debug declaration dynamic-extent ftype ignorable
+    ignore inline notinline optimize safety space special speed type))
+
+#+sbcl
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (require :sb-cltl2))
+
+(defmethod locate-object (symbol (locative-type (eql 'declaration))
+                          locative-args)
+  (unless (and (symbolp symbol)
+               (or (find symbol *ansi-declarations*)
+                   #+sbcl
+                   (find symbol (sb-cltl2:declaration-information
+                                 'declaration))))
+    (locate-error "~S is not a known declaration." symbol))
+  (make-reference symbol (cons locative-type locative-args)))
+
+(defmethod locate-and-document (symbol (locative-type (eql 'declaration))
+                                locative-args stream)
+  (declare (ignore locative-args))
+  (let ((reference (canonical-reference (make-reference symbol 'declaration))))
+    (print-bullet reference stream)
+    (print-end-bullet stream)))
+
+(defmethod locate-and-find-source (symbol (locative-type (eql 'declaration))
+                                   locative-args)
+  (declare (ignore #-sbcl symbol locative-args))
+  #+sbcl
+  (find-source (sb-int:info :declaration :known symbol))
+  #-sbcl
+  '(:error "Don't know how find the source location of declarations."))
+
+(add-locative-to-source-search-list 'declaration)
+
+
 ;;;; RESTART locative
 
 (define-symbol-locative-type restart ()
@@ -979,62 +1062,6 @@
   '(:error "Don't know how find the source location of readtables."))
 
 
-;;;; DECLARATION locative
-
-(define-locative-type declaration ()
-  """Refers to a declaration, used in DECLARE, DECLAIM and PROCLAIM.
-  For example, `[DEBUG][declaration]` refers to the standard DEBUG
-  declaration and links to the hyperspec if
-  *DOCUMENT-LINK-TO-HYPERSPEC* is true.
-
-  User code may also define new declarations with CLTL2 functionality,
-  but there is no way to provide a docstring.
-
-  ```
-  (cl-environments:define-declaration my-decl (&rest things)
-    (values :declare (cons 'foo things)))
-  ```
-
-  Also, `M-.` (see @MGL-PAX-NAVIGATING-IN-EMACS) on declarations
-  currently only works on SBCL.
-  """)
-
-(defvar *ansi-declarations*
-  '(compilation-speed debug declaration dynamic-extent ftype ignorable
-    ignore inline notinline optimize safety space special speed type))
-
-#+sbcl
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (require :sb-cltl2))
-
-(defmethod locate-object (symbol (locative-type (eql 'declaration))
-                          locative-args)
-  (unless (and (symbolp symbol)
-               (or (find symbol *ansi-declarations*)
-                   #+sbcl
-                   (find symbol (sb-cltl2:declaration-information
-                                 'declaration))))
-    (locate-error "~S is not a known declaration." symbol))
-  (make-reference symbol (cons locative-type locative-args)))
-
-(defmethod locate-and-document (symbol (locative-type (eql 'declaration))
-                                locative-args stream)
-  (declare (ignore locative-args))
-  (let ((reference (canonical-reference (make-reference symbol 'declaration))))
-    (print-bullet reference stream)
-    (print-end-bullet stream)))
-
-(defmethod locate-and-find-source (symbol (locative-type (eql 'declaration))
-                                   locative-args)
-  (declare (ignore #-sbcl symbol locative-args))
-  #+sbcl
-  (find-source (sb-int:info :declaration :known symbol))
-  #-sbcl
-  '(:error "Don't know how find the source location of declarations."))
-
-(add-locative-to-source-search-list 'declaration)
-
-
 ;;;; SECTION locative
 
 (define-locative-type section ()
@@ -1097,6 +1124,156 @@
 
 (defmethod find-source ((section section))
   (locate-and-find-source (section-name section) 'variable ()))
+
+
+;;;; GLOSSARY-TERM locative
+
+(defclass glossary-term ()
+  ((name
+    :initarg :name :reader glossary-term-name
+    :documentation "The name of the global variable whose value is
+    this GLOSSARY-TERM object.")
+   (title
+    :initarg :title :reader glossary-term-title
+    :documentation "Used in generated documentation.")
+   (docstring
+    :initarg :docstring :reader glossary-term-docstring)))
+
+(defmacro define-glossary-term
+    (name (&key title (discard-documentation-p *discard-documentation-p*))
+     docstring)
+  "Define a global variable with NAME and set it to a glossary term
+  object. A glossary term is just a symbol to hang a docstring on. It
+  is a bit like a SECTION in that, when linked to, its TITLE will be
+  the link text instead of the name of the symbol. Unlike sections
+  though, glossary terms are not rendered with headings, but in the
+  more lightweight bullet + locative + name/title style.
+
+  When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
+  is true, DOCSTRING will not be recorded to save memory."
+  `(defparameter ,name
+     (make-instance 'glossary-term
+                    :name ',name :title ,title
+                    :docstring ,(unless discard-documentation-p
+                                  docstring))))
+
+(defun glossary-term-title-or-name (glossary-term)
+  (or (glossary-term-title glossary-term)
+      (maybe-downcase (prin1-to-string (glossary-term-name glossary-term)))))
+
+(defmethod print-object ((glossary-term glossary-term) stream)
+  (print-unreadable-object (glossary-term stream :type t)
+    (format stream "~a" (glossary-term-name glossary-term))))
+
+(define-locative-type glossary-term ()
+  "Refers to a glossary term defined by DEFINE-GLOSSARY-TERM.")
+
+(defmethod locate-object (symbol (locative-type (eql 'glossary-term))
+                          locative-args)
+  (declare (ignore locative-args))
+  (unless (typep (symbol-value symbol) 'glossary-term)
+    (locate-error))
+  (symbol-value symbol))
+
+(defmethod document-object ((glossary-term glossary-term) stream)
+  (let ((symbol (glossary-term-name glossary-term)))
+    (locate-and-print-bullet 'glossary-term () symbol stream
+                             :name (glossary-term-title-or-name glossary-term))
+    (print-end-bullet stream)
+    (with-local-references ((list (make-reference symbol 'glossary-term)))
+      (let ((docstring (glossary-term-docstring glossary-term)))
+        (when docstring
+          (format stream "~%~A~%" (massage-docstring docstring)))))))
+
+(defmethod canonical-reference ((glossary-term glossary-term))
+  (make-reference (glossary-term-name glossary-term) 'glossary-term))
+
+(defmethod find-source ((glossary-term glossary-term))
+  (locate-and-find-source (glossary-term-name glossary-term) 'variable ()))
+
+
+;;;; LOCATIVE locative
+
+(define-locative-type locative (lambda-list)
+  "This is the locative for locatives. When `M-.` is pressed on
+  `SOME-NAME` in `(SOME-NAME LOCATIVE)`, this is what makes it
+  possible to land at the corresponding DEFINE-LOCATIVE-TYPE form.
+  Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.")
+
+(defmethod locate-object (symbol (locative-type (eql 'locative)) locative-args)
+  (when locative-args
+    (locate-error "The syntax of the LOCATIVE locative is ~
+                   (LOCATIVE <LOCATIVE-TYPE>)."))
+  (or (ignore-errors (locative-lambda-list-method-for-symbol symbol))
+      (locate-error "~S is not a valid locative." symbol))
+  (make-reference symbol (cons locative-type locative-args)))
+
+(defun locative-lambda-list-method-for-symbol (symbol)
+  (find-method #'locative-lambda-list () `((eql ,symbol))))
+
+(defmethod locate-and-document (symbol (locative-type (eql 'locative))
+                                locative-args stream)
+  (let ((method (locative-lambda-list-method-for-symbol symbol))
+        (lambda-list (locative-lambda-list symbol)))
+    (locate-and-print-bullet locative-type locative-args symbol stream)
+    (with-dislocated-symbols ((macro-arg-names lambda-list))
+      (when lambda-list
+        (write-char #\Space stream)
+        (print-arglist lambda-list stream))
+      (print-end-bullet stream)
+      (with-local-references ((list (make-reference symbol 'locative)))
+        (maybe-print-docstring method t stream))))
+  (format stream "~&"))
+
+(defmethod locate-and-find-source (symbol (locative-type (eql 'locative))
+                                   locative-args)
+  (declare (ignore locative-args))
+  (find-source (locative-lambda-list-method-for-symbol symbol)))
+
+(add-locative-to-source-search-list 'locative)
+
+
+;;;; DISLOCATED locative
+
+(define-locative-type dislocated ()
+  "Refers to a symbol in a non-specific context. Useful for preventing
+  autolinking. For example, if there is a function called `FOO` then
+
+      `FOO`
+
+  will be linked (if *DOCUMENT-LINK-CODE*) to its definition. However,
+
+      [`FOO`][dislocated]
+
+  will not be. On a dislocated locative LOCATE always fails with a
+  LOCATE-ERROR condition. See @MGL-PAX-LINKING-TO-CODE for an
+  alternative method of preventing autolinking.")
+
+(defmethod locate-object (symbol (locative-type (eql 'dislocated))
+                          locative-args)
+  (locate-error "DISLOCATED can never be located."))
+
+
+;;;; ARGUMENT locative
+
+(define-locative-type argument ()
+  """An alias for DISLOCATED, so the one can refer to an argument of a
+  macro without accidentally linking to a class that has the same name
+  as that argument. In the following example, [FORMAT][dislocated] may
+  link to CL:FORMAT (if we generated documentation for it):
+
+  ```
+  "See the FORMAT in DOCUMENT."
+  ```
+
+  Since ARGUMENT is a locative, we can prevent that linking by writing:
+
+  ```
+  "See the FORMAT argument of DOCUMENT."
+  ```""")
+
+(defmethod locate-object (symbol (locative-type (eql 'argument)) locative-args)
+  (locate-error "ARGUMENT can never be located."))
 
 
 ;;;; INCLUDE locative
@@ -1275,156 +1452,6 @@
                                         (- end (file-position stream))))
             do (write-sequence buffer datum :start 0 :end bytes-read)
             while (= bytes-read buffer-size)))))))
-
-
-;;;; GLOSSARY-TERM locative
-
-(defclass glossary-term ()
-  ((name
-    :initarg :name :reader glossary-term-name
-    :documentation "The name of the global variable whose value is
-    this GLOSSARY-TERM object.")
-   (title
-    :initarg :title :reader glossary-term-title
-    :documentation "Used in generated documentation.")
-   (docstring
-    :initarg :docstring :reader glossary-term-docstring)))
-
-(defmacro define-glossary-term
-    (name (&key title (discard-documentation-p *discard-documentation-p*))
-     docstring)
-  "Define a global variable with NAME and set it to a glossary term
-  object. A glossary term is just a symbol to hang a docstring on. It
-  is a bit like a SECTION in that, when linked to, its TITLE will be
-  the link text instead of the name of the symbol. Unlike sections
-  though, glossary terms are not rendered with headings, but in the
-  more lightweight bullet + locative + name/title style.
-
-  When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
-  is true, DOCSTRING will not be recorded to save memory."
-  `(defparameter ,name
-     (make-instance 'glossary-term
-                    :name ',name :title ,title
-                    :docstring ,(unless discard-documentation-p
-                                  docstring))))
-
-(defun glossary-term-title-or-name (glossary-term)
-  (or (glossary-term-title glossary-term)
-      (maybe-downcase (prin1-to-string (glossary-term-name glossary-term)))))
-
-(defmethod print-object ((glossary-term glossary-term) stream)
-  (print-unreadable-object (glossary-term stream :type t)
-    (format stream "~a" (glossary-term-name glossary-term))))
-
-(define-locative-type glossary-term ()
-  "Refers to a glossary term defined by DEFINE-GLOSSARY-TERM.")
-
-(defmethod locate-object (symbol (locative-type (eql 'glossary-term))
-                          locative-args)
-  (declare (ignore locative-args))
-  (unless (typep (symbol-value symbol) 'glossary-term)
-    (locate-error))
-  (symbol-value symbol))
-
-(defmethod document-object ((glossary-term glossary-term) stream)
-  (let ((symbol (glossary-term-name glossary-term)))
-    (locate-and-print-bullet 'glossary-term () symbol stream
-                             :name (glossary-term-title-or-name glossary-term))
-    (print-end-bullet stream)
-    (with-local-references ((list (make-reference symbol 'glossary-term)))
-      (let ((docstring (glossary-term-docstring glossary-term)))
-        (when docstring
-          (format stream "~%~A~%" (massage-docstring docstring)))))))
-
-(defmethod canonical-reference ((glossary-term glossary-term))
-  (make-reference (glossary-term-name glossary-term) 'glossary-term))
-
-(defmethod find-source ((glossary-term glossary-term))
-  (locate-and-find-source (glossary-term-name glossary-term) 'variable ()))
-
-
-;;;; LOCATIVE locative
-
-(define-locative-type locative (lambda-list)
-  "This is the locative for locatives. When `M-.` is pressed on
-  `SOME-NAME` in `(SOME-NAME LOCATIVE)`, this is what makes it
-  possible to land at the corresponding DEFINE-LOCATIVE-TYPE form.
-  Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.")
-
-(defmethod locate-object (symbol (locative-type (eql 'locative)) locative-args)
-  (when locative-args
-    (locate-error "The syntax of the LOCATIVE locative is ~
-                   (LOCATIVE <LOCATIVE-TYPE>)."))
-  (or (ignore-errors (locative-lambda-list-method-for-symbol symbol))
-      (locate-error "~S is not a valid locative." symbol))
-  (make-reference symbol (cons locative-type locative-args)))
-
-(defun locative-lambda-list-method-for-symbol (symbol)
-  (find-method #'locative-lambda-list () `((eql ,symbol))))
-
-(defmethod locate-and-document (symbol (locative-type (eql 'locative))
-                                locative-args stream)
-  (let ((method (locative-lambda-list-method-for-symbol symbol))
-        (lambda-list (locative-lambda-list symbol)))
-    (locate-and-print-bullet locative-type locative-args symbol stream)
-    (with-dislocated-symbols ((macro-arg-names lambda-list))
-      (when lambda-list
-        (write-char #\Space stream)
-        (print-arglist lambda-list stream))
-      (print-end-bullet stream)
-      (with-local-references ((list (make-reference symbol 'locative)))
-        (maybe-print-docstring method t stream))))
-  (format stream "~&"))
-
-(defmethod locate-and-find-source (symbol (locative-type (eql 'locative))
-                                   locative-args)
-  (declare (ignore locative-args))
-  (find-source (locative-lambda-list-method-for-symbol symbol)))
-
-(add-locative-to-source-search-list 'locative)
-
-
-;;;; DISLOCATED locative
-
-(define-locative-type dislocated ()
-  "Refers to a symbol in a non-specific context. Useful for preventing
-  autolinking. For example, if there is a function called `FOO` then
-
-      `FOO`
-
-  will be linked (if *DOCUMENT-LINK-CODE*) to its definition. However,
-
-      [`FOO`][dislocated]
-
-  will not be. On a dislocated locative LOCATE always fails with a
-  LOCATE-ERROR condition. See @MGL-PAX-LINKING-TO-CODE for an
-  alternative method of preventing autolinking.")
-
-(defmethod locate-object (symbol (locative-type (eql 'dislocated))
-                          locative-args)
-  (locate-error "DISLOCATED can never be located."))
-
-
-;;;; ARGUMENT locative
-
-(define-locative-type argument ()
-  """An alias for DISLOCATED, so the one can refer to an argument of a
-  macro without accidentally linking to a class that has the same name
-  as that argument. In the following example, [FORMAT][dislocated] may
-  link to CL:FORMAT (if we generated documentation for it):
-
-  ```
-  "See the FORMAT in DOCUMENT."
-  ```
-
-  Since ARGUMENT is a locative, we can prevent that linking by writing:
-
-  ```
-  "See the FORMAT argument of DOCUMENT."
-  ```""")
-
-(defmethod locate-object (symbol (locative-type (eql 'argument)) locative-args)
-  (locate-error "ARGUMENT can never be located."))
 
 
 ;;;; CLHS locative
