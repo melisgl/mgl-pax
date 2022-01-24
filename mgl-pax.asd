@@ -35,6 +35,10 @@
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
+  ;; Prevent inheritance of slot values from the MGL-PAX system.
+  :homepage ""
+  :bug-tracker ""
+  :source-control ""
   :description "Slime `M-.` support for MGL-PAX."
   :long-description "Autoloaded by Slime's `M-.` when `src/pax.el` is
   loaded. See MGL-PAX:@MGL-PAX-NAVIGATING-IN-EMACS."
@@ -48,6 +52,9 @@
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
+  :homepage ""
+  :bug-tracker ""
+  :source-control ""
   :description "Documentation generation support for MGL-PAX."
   :long-description "Autoloaded by MGL-PAX:DOCUMENT. See
   MGL-PAX:@MGL-PAX-GENERATING-DOCUMENTATION."
@@ -64,6 +71,9 @@
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
+  :homepage ""
+  :bug-tracker ""
+  :source-control ""
   :description "Transcription support for MGL-PAX."
   :long-description "Autoloaded by MGL-PAX:TRANSCRIBE and by the Emacs
   integration (see MGL-PAX:@MGL-PAX-TRANSCRIPTS)."
@@ -77,7 +87,11 @@
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
+  :homepage ""
+  :bug-tracker ""
+  :source-control ""
   :description "MGL-PAX with all features preloaded."
+  :long-description ""
   :depends-on (:mgl-pax/navigate :mgl-pax/document :mgl-pax/transcribe)
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
@@ -85,7 +99,11 @@
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
+  :homepage ""
+  :bug-tracker ""
+  :source-control ""
   :description "Test system for MGL-PAX."
+  :long-description ""
   :depends-on (#:mgl-pax/full #:try)
   :components ((:module "test"
                 :serial t

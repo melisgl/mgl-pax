@@ -2461,7 +2461,7 @@ for [`ASDF:SYSTEM:`][90f2]
                                  (slot-value system 'asdf::name))))
     (flet ((foo (name fn &key type)
              (let ((value (funcall fn system)))
-               (when value
+               (when (and value (not (equal value "")))
                  (case type
                    ((:link)
                     (format stream "- ~A: [~A](~A)~%" name value value))
