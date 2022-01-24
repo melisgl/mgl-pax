@@ -20,10 +20,16 @@ What about debugger commands?
 * MAYBE transcribe: add inline commands that can change prefixes and such
 * MAYBE transcribe: special comment syntax for the 'narrative'
 to produce something like an ipython notebook.
-* support external links
+* MAYBE support external links
 There are two kinds:
 - object is text (like the CLHS locative)
 - normal references with external urls (hyperspec symbol lookup)
+
+The first kind is needs no additional support from pax as markdown
+reference links or user defined locatives can take care of this case.
+
+The second kind is very easy to implement: it only needs a small
+change in INITIALIZE-LINKS.
 * warn on linking failure
 How to recoginize normal reference links? Don't, just warn on any
 linking failure. This should be in 3BMD.
