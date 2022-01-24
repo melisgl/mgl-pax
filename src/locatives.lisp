@@ -396,6 +396,7 @@
   DEFGENERIC.")
 
 (defmethod locate-object (symbol (locative-type (eql 'function)) locative-args)
+  (declare (ignore locative-args))
   (when (macro-function symbol)
     (locate-error "~S is a macro, not a function." symbol))
   (let ((function (ignore-errors (symbol-function* symbol))))
@@ -408,6 +409,7 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'generic-function))
                           locative-args)
+  (declare (ignore locative-args))
   (let ((function (symbol-function* symbol)))
     (unless (typep function 'generic-function)
       (locate-error "~S does not name a generic function." symbol))
@@ -1258,6 +1260,7 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'dislocated))
                           locative-args)
+  (declare (ignore symbol locative-type locative-args))
   (locate-error "DISLOCATED can never be located."))
 
 
@@ -1280,6 +1283,7 @@
   ```""")
 
 (defmethod locate-object (symbol (locative-type (eql 'argument)) locative-args)
+  (declare (ignore symbol locative-type locative-args))
   (locate-error "ARGUMENT can never be located."))
 
 
