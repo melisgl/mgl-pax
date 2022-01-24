@@ -206,19 +206,10 @@
                    (&OPTIONAL INITFORM)."))
   (unless (constantp symbol)
     (locate-error "~S is not CONSTANTP." symbol))
-  (unless #-clisp (constantp symbol)
-          ;; KLUDGE: CLISP is non-compliant here and there.
-          #+clisp
-          (member symbol '(least-negative-long-float
-                           least-negative-normalized-long-float
-                           least-positive-long-float
-                           least-positive-normalized-long-float
-                           long-float-epsilon
-                           long-float-negative-epsilon
-                           most-negative-long-float
-                           most-positive-long-float
-                           pi))
-          (locate-error "~S is not CONSTANTP." symbol))
+  ;; KLUDGE: CONSTANTP is non-compliant on CLISP.
+  #-clisp
+  (unless (constantp symbol)
+    (locate-error "~S is not CONSTANTP." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'constant))

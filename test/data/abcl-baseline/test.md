@@ -272,7 +272,8 @@ backlink [@TEST][a755]
     generic function `FOO`:
     
         (foo (method () (t t t)))
-
+    
+    `METHOD` is not `EXPORTABLE-LOCATIVE-TYPE-P`.
 
 <a id='x-28MGL-PAX-TEST-3A-3AFUNCTION-WITH-OPTIONAL-ARGS-20FUNCTION-29'></a>
 
