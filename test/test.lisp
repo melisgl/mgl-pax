@@ -578,6 +578,22 @@
 ")))))
 
 
+(setf (symbol-function 'setfed-function)
+      (lambda ()))
+
+(deftest test-function ()
+  (let ((ref (make-reference 'setfed-function 'function)))
+    (is (mgl-pax::reference= (canonical-reference ref) ref))))
+
+
+(setf (symbol-function 'setfed-generic-function)
+      (lambda ()))
+
+(deftest test-generic-function ()
+  (let ((ref (make-reference 'setfed-generic-function 'function)))
+    (is (mgl-pax::reference= (canonical-reference ref) ref))))
+
+
 (defsection @test-method-combination ()
   (my-comb method-combination))
 
@@ -915,6 +931,8 @@ ISSUE:AREF-1D `CLHS`
   (test-reference-in-link-definition)
   (test-document :markdown)
   (test-document :html)
+  (test-function)
+  (test-generic-function)
   (test-symbol-macro)
   (test-method-combination)
   (test-hyperspec)

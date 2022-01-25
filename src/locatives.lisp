@@ -424,8 +424,20 @@
 (defmethod canonical-reference ((function function))
   (make-reference (function-name function) 'function))
 
+;;; It may be that (NOT (EQ SYMBOL (FUNCTION-NAME (FUNCTION
+;;; SYMBOL)))), perhaps due to (SETF SYMBOL-FUNCTION). Thus if we have
+;;; a REFERENCE, don' resolve it and construct using FUNCTION-NAME.
+(defmethod locate-canonical-reference
+    (object (locative-type (eql 'function)) locative-args)
+  (make-reference object (cons locative-type locative-args)))
+
 (defmethod canonical-reference ((function generic-function))
-  (make-reference (swank-mop:generic-function-name function) 'generic-function))
+  (make-reference (swank-mop:generic-function-name function)
+                  'generic-function))
+
+(defmethod locate-canonical-reference
+    (object (locative-type (eql 'generic-function)) locative-args)
+  (make-reference object (cons locative-type locative-args)))
 
 (defmethod document-object ((function function) stream)
   (let ((reference (canonical-reference function)))
