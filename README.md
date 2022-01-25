@@ -41,6 +41,10 @@
     - [11.1 MGL-PAX/TRANSCRIBE ASDF System Details][ce29]
     - [11.2 Transcribing with Emacs][350c]
     - [11.3 Transcript API][bf16]
+    - [11.4 Transcript Consistency Checking][4ed9]
+        - [11.4.1 Finer-grained Consistency Checks][0b21]
+        - [11.4.2 Controlling the Dynamic Environment][b017]
+        - [11.4.3 Utilities for Consistency Checking][36be]
 - [12 Extension API][8ed9]
     - [12.1 Locatives and References API][c557]
     - [12.2 Adding New Object Types][5161]
@@ -1915,7 +1919,7 @@ documented.
 Going beyond documentation, transcript consistency checks can be
 used for writing simple tests in a very readable form. For example:
 
-```cl-transcript
+```common-lisp
 (+ 1 2)
 => 3
 
@@ -1923,7 +1927,6 @@ used for writing simple tests in a very readable form. For example:
 .. HELLO
 => :HELLO
 => (1 2)
-
 ```
 
 All in all, transcripts are a handy tool especially when combined
@@ -2021,9 +2024,9 @@ Alternatively, `C-u 1 mgl-pax-transcribe` will emit commented markup:
 
 `C-u 0 mgl-pax-retranscribe-region` will turn commented into
 non-commented markup. In general, the numeric prefix argument is the
-index of the syntax to be used in [`MGL-PAX`][4918]:[`*SYNTAXES*`][2904]. Without a
-prefix argument `mgl-pax-retranscribe-region` will not change the
-markup style.
+index of the syntax to be used in [`MGL-PAX`][4918]:[`*TRANSCRIBE-SYNTAXES*`][cf3f].
+Without a prefix argument `mgl-pax-retranscribe-region` will not
+change the markup style.
 
 Finally, not only do both functions work at any indentation level,
 but in comments too:
@@ -2034,7 +2037,7 @@ but in comments too:
     ;;;; => (1 2)
 
 Transcription support in emacs can be enabled by loading
-`src/transcribe.el`):
+`src/transcribe.el`.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-API-20MGL-PAX-3ASECTION-29'></a>
 
@@ -2042,7 +2045,7 @@ Transcription support in emacs can be enabled by loading
 
 <a id='x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29'></a>
 
-- [function] **TRANSCRIBE** *INPUT OUTPUT &KEY UPDATE-ONLY (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) CHECK-CONSISTENCY DEFAULT-SYNTAX (INPUT-SYNTAXES \*SYNTAXES\*) (OUTPUT-SYNTAXES \*SYNTAXES\*)*
+- [function] **TRANSCRIBE** *INPUT OUTPUT &KEY UPDATE-ONLY (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) (CHECK-CONSISTENCY \*TRANSCRIBE-CHECK-CONSISTENCY\*) DEFAULT-SYNTAX (INPUT-SYNTAXES \*TRANSCRIBE-SYNTAXES\*) (OUTPUT-SYNTAXES \*TRANSCRIBE-SYNTAXES\*)*
 
     Read forms from `INPUT` and write them (iff `ECHO`) to `OUTPUT`
     followed by any output and return values produced by calling [`EVAL`][68db] on
@@ -2053,13 +2056,12 @@ Transcription support in emacs can be enabled by loading
     
     A simple example is this:
     
-    ```cl-transcript
+    ```common-lisp
     (transcribe "(princ 42) " nil)
     => "(princ 42)
     .. 42
     => 42
     "
-    
     ```
     
     However, the above may be a bit confusing since this documentation
@@ -2118,6 +2120,8 @@ Transcription support in emacs can be enabled by loading
     
     ```commonlisp
     (values)
+    ..
+    =>
     ```
     
     is transcribed to
@@ -2152,9 +2156,13 @@ Transcription support in emacs can be enabled by loading
     
     ```commonlisp
     (list 1 2)
-    => (1
+    => ;; This is commented, too.
+       (1
+          ;; Funny indent.
           2)
     ```
+    
+    See [Transcript Consistency Checking][4ed9] for the full picture.
     
     **Unreadable Values**
     
@@ -2178,20 +2186,20 @@ Transcription support in emacs can be enabled by loading
     where `"==>"` is the `:UNREADABLE` prefix and `"-->"` is the
     `:UNREADABLE-CONTINUATION` prefix. As with outputs, a consistency
     check between an unreadable value from the source and the value from
-    `EVAL` is performed with [`STRING=`][cc0e]. That is, the value from `EVAL` is
-    printed to a string and compared to the source value. Hence, any
-    change to unreadable values will break consistency checks. This is
-    most troublesome with instances of classes with the default
-    [`PRINT-OBJECT`][9ffc] method printing the memory address. There is currently
-    no remedy for that, except for customizing `PRINT-OBJECT` or not
-    transcribing that kind of stuff.
+    `EVAL` is performed with [`STRING=`][cc0e] by default. That is, the value from
+    `EVAL` is printed to a string and compared to the source value. Hence,
+    any change to unreadable values will break consistency checks. This
+    is most troublesome with instances of classes with the default
+    [`PRINT-OBJECT`][9ffc] method printing the memory address. See @ no remedy for
+    that, except for customizing `PRINT-OBJECT` or not transcribing that
+    kind of stuff.
     
     **Errors**
     
     If an [`ERROR`][896c] condition is signalled, the error is printed to the
     output and no values are returned.
     
-    ```cl-transcript
+    ```common-lisp
     (progn
       (print "hello")
       (error "no greeting"))
@@ -2199,7 +2207,6 @@ Transcription support in emacs can be enabled by loading
     .. "hello" 
     .. debugger invoked on SIMPLE-ERROR:
     ..   no greeting
-    
     ```
     
     To keep the textual representation somewhat likely to be portable,
@@ -2242,9 +2249,15 @@ Transcription support in emacs can be enabled by loading
     default), the same syntax will be used in the output as in the input
     as much as possible.
 
-<a id='x-28MGL-PAX-3A-2ASYNTAXES-2A-20VARIABLE-29'></a>
+<a id='x-28MGL-PAX-3A-2ATRANSCRIBE-CHECK-CONSISTENCY-2A-20VARIABLE-29'></a>
 
-- [variable] **\*SYNTAXES\*** *((:DEFAULT (:OUTPUT "..") (:NO-VALUE "=\> ; No value") (:READABLE "=\>")
+- [variable] **\*TRANSCRIBE-CHECK-CONSISTENCY\*** *NIL*
+
+    The default value of [`TRANSCRIBE`][0382]'s `CHECK-CONSISTENCY` argument.
+
+<a id='x-28MGL-PAX-3A-2ATRANSCRIBE-SYNTAXES-2A-20VARIABLE-29'></a>
+
+- [variable] **\*TRANSCRIBE-SYNTAXES\*** *((:DEFAULT (:OUTPUT "..") (:NO-VALUE "=\> ; No value") (:READABLE "=\>")
   (:UNREADABLE "==\>") (:UNREADABLE-CONTINUATION "--\>"))
  (:COMMENTED-1 (:OUTPUT ";..") (:NO-VALUE ";=\> ; No value") (:READABLE ";=\>")
   (:READABLE-CONTINUATION ";-\>") (:UNREADABLE ";==\>")
@@ -2312,6 +2325,162 @@ Transcription support in emacs can be enabled by loading
     Signaled (with [`CERROR`][3ca3]) by [`TRANSCRIBE`][0382] when invoked
     with `:CHECK-CONSISTENCY` and the values of a form are inconsistent
     with their parsed representation.
+
+<a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-CONISTENCY-CHECKING-20MGL-PAX-3ASECTION-29'></a>
+
+### 11.4 Transcript Consistency Checking
+
+The main use case for consistency checking is detecting
+out-of-date examples in documentation, although using it for writing
+tests is also a possiblity. Here, we focus on the former.
+
+When a markdown code block tagged `cl-transcript` is processed
+during [Generating Documentation][063a], the code in it is replaced
+with the output of with `(TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
+:CHECK-CONSISTENCY T)`. Suppose we have the following example of the
+function `GREET`, that prints `hello` and returns 7.
+
+    ```cl-transcript
+    (greet)
+    .. hello
+    => 7
+    ```
+
+Now, if we change `GREET` to print or return something else, a
+[`TRANSCRIPTION-CONSISTENCY-ERROR`][5a2c] will be signalled during
+documentation generation. Then we may fix the documentation or
+[`CONTINUE`][de3b] from the error.
+
+By default, comparisons of previous to current ouput, readable and
+unreadable return values are performed with [`STRING=`][cc0e], [`EQUAL`][c9d9], and
+`STRING=`, respectively, which is great in the simple case.
+Non-determinism aside, exact matching becomes brittle as soon as the
+notoriously unportable pretty printer is used or when unreadable
+objects are printed with their `#<>` syntax, especially when
+[`PRINT-UNREADABLE-OBJECT`][ae5d] is used with `:IDENTITY T`.
+
+<a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS-20MGL-PAX-3ASECTION-29'></a>
+
+#### 11.4.1 Finer-grained Consistency Checks
+
+To get around this problem, consistency checking of output,
+readable and unreadable values can be customized individually by
+supplying [`TRANSCRIBE`][0382] with a `CHECK-CONSISTENCY` argument
+like `((:OUTPUT <OUTPUT-CHECK>) (:READABLE
+<READABLE-CHECK>) (:UNREADABLE <UNREADABLE-CHECK>))`. In this case,
+`<OUTPUT-CHECK>` may be `NIL`, `T`, or a function designator.
+
+- If it's `NIL` or there is no `:OUTPUT` entry in the list, then the
+  output is not checked for consistency.
+
+- If it's `T`, then the outputs are compared with the default,
+  [`STRING=`][cc0e].
+
+- If it's a function designator, then it's called with two strings
+  and must return whether they are consistent with each other.
+
+The case of `<READABLE-CHECK>` and `<UNREADABLE-CHECK>` is similar.
+
+Code blocks tagged `cl-transcript` can take arguments, which they
+pass on to `TRANSCRIBE`. The following shows how to check only the
+output.
+
+    ```cl-transcript (:check-consistency ((:output t)))
+    (error "Oh, no.")
+    .. debugger invoked on SIMPLE-ERROR:
+    ..   Oh, no.
+    
+    (make-condition 'simple-error)
+    ==> #<SIMPLE-ERROR {1008A81533}>
+
+
+<a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-DYNENV-20MGL-PAX-3ASECTION-29'></a>
+
+#### 11.4.2 Controlling the Dynamic Environment
+
+The dynamic enviroment in which forms in the transcript are
+evaluated can be controlled via the `:DYNENV` argument of
+`cl-transcript`.
+
+    ```cl-transcript (:dynenv my-transcript)
+    ...
+    ```
+
+In this case, instead of calling [`TRANSCRIBE`][0382] directly, the call will
+be wrapped in a function of no arguments and passed to the function
+`MY-TRANSCRIPT`, which establishes the desired dynamic environment
+and calls its argument. The following definition of `MY-TRANSCRIPT`
+simply packages up oft-used settings to `TRANSCRIBE`.
+
+```
+(defun my-transcript (fn)
+  (let ((*transcribe-check-consistency*
+          '((:output my-transcript-output=)
+            (:readable equal)
+            (:unreadable nil))))
+    (funcall fn)))
+
+(defun my-transcript-output= (string1 string2)
+  (string= (my-transcript-normalize-output string1)
+           (my-transcript-normalize-output string2)))
+
+(defun my-transcript-normalize-output (string)
+  (squeeze-whitespace (delete-trailing-whitespace (delete-comments string))))
+```
+
+A more involved solution could rebind global variables set in
+transcripts, unintern symbols created or even create a temporary
+package for evaluation.
+
+<a id='x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29'></a>
+
+#### 11.4.3 Utilities for Consistency Checking
+
+<a id='x-28MGL-PAX-3ASQUEEZE-WHITESPACE-20FUNCTION-29'></a>
+
+- [function] **SQUEEZE-WHITESPACE** *STRING*
+
+    Replace consecutive whitespace characters with a single space in
+    `STRING`. This is useful to do undo the effects of pretty printing
+    when building comparison functions for [`TRANSCRIBE`][0382].
+
+<a id='x-28MGL-PAX-3ADELETE-TRAILING-WHITESPACE-20FUNCTION-29'></a>
+
+- [function] **DELETE-TRAILING-WHITESPACE** *STRING*
+
+    Delete whitespace characters after the last non-whitespace
+    character in each line in `STRING`.
+
+<a id='x-28MGL-PAX-3ADELETE-COMMENTS-20FUNCTION-29'></a>
+
+- [function] **DELETE-COMMENTS** *STRING &KEY (PATTERN ";")*
+
+    For each line in `STRING` delete the rest of the line after and
+    including the first occurrence of `PATTERN`. On changed lines, delete
+    trailing whitespace too. Let's define a comparison function:
+    
+    ```common-lisp
+    (defun string=/no-comments (string1 string2)
+      (string= (delete-comments string1) (delete-comments string2)))
+    ```
+    
+    And use it to check consistency of output:
+    
+        ```cl-transcript (:check-consistency ((:output string=/no-comments)))
+        (format t "hello~%world")
+        .. hello     ; This is the first line.
+        .. world     ; This is the second line.
+        ```
+    
+    Just to make sure the above example works, here it is without the being
+    quoted.
+    
+    ```common-lisp
+    (format t "hello~%world")
+    .. hello     ; This is the first line.
+    .. world     ; This is the second line.
+    ```
+
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-EXTENSION-API-20MGL-PAX-3ASECTION-29'></a>
 
@@ -2936,6 +3105,7 @@ presented.
   [063a]: #x-28MGL-PAX-3A-40MGL-PAX-GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Generating Documentation"
   [074d]: #x-28MGL-PAX-3A-2ADOCUMENT-MAX-NUMBERING-LEVEL-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-MAX-NUMBERING-LEVEL* VARIABLE)"
   [0785]: #x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax/full\" ASDF/SYSTEM:SYSTEM)"
+  [0b21]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS-20MGL-PAX-3ASECTION-29 "Finer-grained Consistency Checks"
   [1063]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm "(*PACKAGE* VARIABLE)"
   [16ad]: #x-28PACKAGE-20MGL-PAX-3ALOCATIVE-29 "(PACKAGE MGL-PAX:LOCATIVE)"
   [170a]: #x-28MGL-PAX-3A-40MGL-PAX-PACKAGELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Packages and Readtables"
@@ -2952,7 +3122,6 @@ presented.
   [2682]: #x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-GLOSSARY-TERM MGL-PAX:MACRO)"
   [2748]: #x-28MGL-PAX-3A-40MGL-PAX-GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29 "Github Workflow"
   [2863]: #x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"
-  [2904]: #x-28MGL-PAX-3A-2ASYNTAXES-2A-20VARIABLE-29 "(MGL-PAX:*SYNTAXES* VARIABLE)"
   [2c0d]: #x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "(MGL-PAX:SECTION-READTABLE (MGL-PAX:READER MGL-PAX:SECTION))"
   [2cf1]: #x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:SECTION MGL-PAX:LOCATIVE)"
   [2dd1]: #x-28MGL-PAX-3A-40MGL-PAX-MACROLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Macros"
@@ -2967,6 +3136,7 @@ presented.
   [350c]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIBING-WITH-EMACS-20MGL-PAX-3ASECTION-29 "Transcribing with Emacs"
   [353f]: #x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES* VARIABLE)"
   [35e5]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "(PRIN1 FUNCTION)"
+  [36be]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Utilities for Consistency Checking"
   [3b21]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "(STRING TYPE)"
   [3bcd]: http://www.lispworks.com/documentation/HyperSpec/Body/f_intern.htm "(INTERN FUNCTION)"
   [3ca3]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cerror.htm "(CERROR FUNCTION)"
@@ -2989,6 +3159,7 @@ presented.
   [4bb4]: #x-28MGL-PAX-3A-2APAX-WORLD-DIR-2A-20VARIABLE-29 "(MGL-PAX:*PAX-WORLD-DIR* VARIABLE)"
   [4df3]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rest.htm "(REST FUNCTION)"
   [4e6e]: #x-28MGL-PAX-3A-40MGL-PAX-DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29 "Document Generation Implementation Notes"
+  [4ed9]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-CONISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Transcript Consistency Checking"
   [4f82]: #x-28MGL-PAX-3AUPDATE-PAX-WORLD-20FUNCTION-29 "(MGL-PAX:UPDATE-PAX-WORLD FUNCTION)"
   [505a]: #x-28MGL-PAX-3A-40MGL-PAX-LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29 "Linking to Sections"
   [5161]: #x-28MGL-PAX-3A-40MGL-PAX-NEW-OBJECT-TYPES-20MGL-PAX-3ASECTION-29 "Adding New Object Types"
@@ -3057,7 +3228,9 @@ presented.
   [a73e]: #x-28MGL-PAX-3ATRANSCRIPTION-VALUES-CONSISTENCY-ERROR-20CONDITION-29 "(MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION)"
   [aa52]: #x-28MGL-PAX-3A-40MGL-PAX-TUTORIAL-20MGL-PAX-3ASECTION-29 "Tutorial"
   [acc9]: #x-28MGL-PAX-3ALOCATE-OBJECT-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-OBJECT GENERIC-FUNCTION)"
+  [ae5d]: http://www.lispworks.com/documentation/HyperSpec/Body/m_pr_unr.htm "(PRINT-UNREADABLE-OBJECT MGL-PAX:MACRO)"
   [aee8]: #x-28MGL-PAX-3ASECTION-20CLASS-29 "(MGL-PAX:SECTION CLASS)"
+  [b017]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-DYNENV-20MGL-PAX-3ASECTION-29 "Controlling the Dynamic Environment"
   [b0e9]: #x-28MGL-PAX-3A-2ADOCUMENT-HYPERSPEC-ROOT-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-HYPERSPEC-ROOT* VARIABLE)"
   [b2be]: #x-28MGL-PAX-3ALOCATE-20FUNCTION-29 "(MGL-PAX:LOCATE FUNCTION)"
   [b417]: #x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNCTION-29 "(MGL-PAX:FIND-SOURCE GENERIC-FUNCTION)"
@@ -3074,11 +3247,13 @@ presented.
   [c557]: #x-28MGL-PAX-3A-40MGL-PAX-LOCATIVES-AND-REFERENCES-API-20MGL-PAX-3ASECTION-29 "Locatives and References API"
   [c5f2]: #x-28MGL-PAX-3AREGISTER-DOC-IN-PAX-WORLD-20FUNCTION-29 "(MGL-PAX:REGISTER-DOC-IN-PAX-WORLD FUNCTION)"
   [c98c]: #x-28MGL-PAX-3ADEFINE-PACKAGE-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-PACKAGE MGL-PAX:MACRO)"
+  [c9d9]: http://www.lispworks.com/documentation/HyperSpec/Body/f_equal.htm "(EQUAL FUNCTION)"
   [cb19]: http://www.lispworks.com/documentation/HyperSpec/Body/t_t.htm "(T TYPE)"
   [cc0e]: http://www.lispworks.com/documentation/HyperSpec/Body/f_stgeq_.htm "(STRING= FUNCTION)"
   [cc37]: #x-28MGL-PAX-3AREFERENCE-20CLASS-29 "(MGL-PAX:REFERENCE CLASS)"
   [ce29]: #x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax/transcribe\" ASDF/SYSTEM:SYSTEM)"
   [ce53]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_s.htm "(FIND-SYMBOL FUNCTION)"
+  [cf3f]: #x-28MGL-PAX-3A-2ATRANSCRIBE-SYNTAXES-2A-20VARIABLE-29 "(MGL-PAX:*TRANSCRIBE-SYNTAXES* VARIABLE)"
   [d003]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defcon.htm "(DEFCONSTANT MGL-PAX:MACRO)"
   [d023]: #x-28MGL-PAX-3A-40MGL-PAX-LOCATIVES-AND-REFERENCES-20MGL-PAX-3ASECTION-29 "Locatives and References"
   [d1cf]: #x-28MGL-PAX-3A-40MGL-PAX-REFERENCE-RESOLUTION-20MGL-PAX-3ASECTION-29 "Reference Resolution"
@@ -3089,6 +3264,7 @@ presented.
   [d7eb]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28STRING-20T-29-29-29 "(MGL-PAX:DOCUMENT-OBJECT (METHOD NIL (STRING T)))"
   [d921]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq.htm "(EQ FUNCTION)"
   [d976]: #x-28MGL-PAX-3AFIND-SOURCE-20-28METHOD-20NIL-20-28MGL-PAX-3AREFERENCE-29-29-29 "(MGL-PAX:FIND-SOURCE (METHOD NIL (MGL-PAX:REFERENCE)))"
+  [de3b]: http://www.lispworks.com/documentation/HyperSpec/Body/r_contin.htm "(CONTINUE RESTART)"
   [df39]: #x-28DESCRIBE-OBJECT-20-28METHOD-20NIL-20-28MGL-PAX-3ASECTION-20T-29-29-29 "(DESCRIBE-OBJECT (METHOD NIL (MGL-PAX:SECTION T)))"
   [e03d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_m.htm "(FIND-METHOD GENERIC-FUNCTION)"
   [e0d7]: #x-28MGL-PAX-3ARESOLVE-20FUNCTION-29 "(MGL-PAX:RESOLVE FUNCTION)"

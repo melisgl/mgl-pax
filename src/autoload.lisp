@@ -3,6 +3,10 @@
 ;;;; A bit of foreshadowing of MGL-PAX/FULL.
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *transcribe-check-consistency*)
+  (export '*transcribe-check-consistency*)
+  (defvar *transcribe-syntaxes*)
+  (export '*transcribe-syntaxes*)
   (defvar *document-uppercase-is-code*)
   (export '*document-uppercase-is-code*)
   (defvar *document-link-code*)
@@ -90,3 +94,6 @@
 (define-autoload-function update-pax-world '#:mgl-pax/full)
 (define-autoload-function transcribe '#:mgl-pax/transcribe)
 (define-autoload-function transcribe-for-emacs '#:mgl-pax/transcribe)
+(define-autoload-function squeeze-whitespace '#:mgl-pax/transcribe)
+(define-autoload-function delete-trailing-whitespace '#:mgl-pax/transcribe)
+(define-autoload-function delete-comments '#:mgl-pax/transcribe)

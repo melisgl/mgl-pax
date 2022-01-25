@@ -748,12 +748,27 @@
 (defun translate-code-block (parent code-block)
   (declare (ignore parent))
   (let ((lang (getf (rest code-block) :lang)))
-    (if (equal lang "cl-transcript")
-        `(3bmd-code-blocks::code-block
-          :lang ,lang
-          :content ,(transcribe (getf (rest code-block) :content) nil
-                                :update-only t :check-consistency t))
+    (if (alexandria:starts-with-subseq "cl-transcript" lang)
+        (let* ((suffix (subseq lang (length "cl-transcript")))
+               (args (read-from-string suffix nil nil))
+               (original (getf (rest code-block) :content)))
+          ;; The possibly manually tweaked (e.g. comments in output)
+          ;; original goes to the output, but retranscribe it just for
+          ;; consistency checking.
+          (transcribe-code-block original args)
+          `(3bmd-code-blocks::code-block :lang "common-lisp"
+                                         :content ,original))
         code-block)))
+
+(defun transcribe-code-block (transcript args)
+  (let ((dynenv (getf args :dynenv))
+        (*transcribe-check-consistency* t))
+    (remf args :dynenv)
+    (flet ((call-it ()
+             (apply #'transcribe transcript nil :update-only t args)))
+      (if dynenv
+          (funcall dynenv #'call-it)
+          (call-it)))))
 
 ;;; Undo the :EMPH parsing for code references. E.g. (:EMPH "XXX") ->
 ;;; "*XXX*" if "*XXX*" is to be codified according to

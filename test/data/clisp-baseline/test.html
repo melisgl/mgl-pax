@@ -120,25 +120,25 @@ compiler-macro
 <code>foo</code>(<a href="#x-28MGL-PAX-TEST-3A-3AFOO-20CLASS-29" title="(MGL-PAX-TEST::FOO CLASS)"><code>0</code></a> <a href="#x-28MGL-PAX-TEST-3A-3AFOO-20COMPILER-MACRO-29" title="(MGL-PAX-TEST::FOO COMPILER-MACRO)"><code>1</code></a> <a href="#x-28MGL-PAX-TEST-3A-3AFOO-20FUNCTION-29" title="(MGL-PAX-TEST::FOO FUNCTION)"><code>2</code></a>)</p>
 
 <pre><code>
-(values (print (1+ 2)) :aaa)
+<span class="code"><span class="paren1">(<span class="code">values <span class="paren2">(<span class="code">print <span class="paren3">(<span class="code">1+ 2</span>)</span></span>)</span> <span class="keyword">:aaa</span></span>)</span>
 ..
 .. 3 
 =&gt; 3
-=&gt; :AAA
-</code></pre>
+=&gt; :AAA</span></code></pre>
 
 <pre><code>
-(values '(1 2) '(3 4))
+<span class="code"><span class="paren1">(<span class="code">values '<span class="paren2">(<span class="code">1 2</span>)</span> '<span class="paren2">(<span class="code">3 4</span>)</span></span>)</span>
+<span class="comment">
 ;=&gt; (1 2)
+</span>
+<span class="comment">
 ;=&gt; (3
-;-&gt;  4)
-</code></pre>
+</span><span class="comment">;-&gt;  4)</span></span></code></pre>
 
 <pre><code>
-(make-array 12 :initial-element 0d0)
-=&gt; #(0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0
-     0.0d0)
-</code></pre>
+<span class="code"><span class="paren1">(<span class="code">make-array 12 <span class="keyword">:initial-element</span> 0d0</span>)</span>
+=&gt; #<span class="paren1">(<span class="code">0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0
+     0.0d0</span>)</span></span></code></pre>
 
 <p>In documentation, when the only ambiguity is between a generic
 function and its methods, it's resolved in favor if the gf:

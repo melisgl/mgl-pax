@@ -1681,7 +1681,7 @@ documented.
 Going beyond documentation, transcript consistency checks can be
 used for writing simple tests in a very readable form. For example:
 
-```cl-transcript
+```common-lisp
 (+ 1 2)
 => 3
 
@@ -1689,7 +1689,6 @@ used for writing simple tests in a very readable form. For example:
 .. HELLO
 => :HELLO
 => (1 2)
-
 ```
 
 All in all, transcripts are a handy tool especially when combined
@@ -1783,9 +1782,9 @@ Alternatively, `C-u 1 mgl-pax-transcribe` will emit commented markup:
 
 `C-u 0 mgl-pax-retranscribe-region` will turn commented into
 non-commented markup. In general, the numeric prefix argument is the
-index of the syntax to be used in MGL-PAX:*SYNTAXES*. Without a
-prefix argument `mgl-pax-retranscribe-region` will not change the
-markup style.
+index of the syntax to be used in MGL-PAX:*TRANSCRIBE-SYNTAXES*.
+Without a prefix argument `mgl-pax-retranscribe-region` will not
+change the markup style.
 
 Finally, not only do both functions work at any indentation level,
 but in comments too:
@@ -1796,11 +1795,11 @@ but in comments too:
     ;;;; => (1 2)
 
 Transcription support in emacs can be enabled by loading
-`src/transcribe.el`):
+`src/transcribe.el`.
 
 ### Transcript API
 
-- [function] TRANSCRIBE INPUT OUTPUT &KEY UPDATE-ONLY (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) CHECK-CONSISTENCY DEFAULT-SYNTAX (INPUT-SYNTAXES \*SYNTAXES\*) (OUTPUT-SYNTAXES \*SYNTAXES\*)
+- [function] TRANSCRIBE INPUT OUTPUT &KEY UPDATE-ONLY (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) (CHECK-CONSISTENCY \*TRANSCRIBE-CHECK-CONSISTENCY\*) DEFAULT-SYNTAX (INPUT-SYNTAXES \*TRANSCRIBE-SYNTAXES\*) (OUTPUT-SYNTAXES \*TRANSCRIBE-SYNTAXES\*)
 
     Read forms from INPUT and write them (iff ECHO) to OUTPUT
     followed by any output and return values produced by calling EVAL on
@@ -1811,13 +1810,12 @@ Transcription support in emacs can be enabled by loading
     
     A simple example is this:
     
-    ```cl-transcript
+    ```common-lisp
     (transcribe "(princ 42) " nil)
     => "(princ 42)
     .. 42
     => 42
     "
-    
     ```
     
     However, the above may be a bit confusing since this documentation
@@ -1876,6 +1874,8 @@ Transcription support in emacs can be enabled by loading
     
     ```commonlisp
     (values)
+    ..
+    =>
     ```
     
     is transcribed to
@@ -1910,9 +1910,13 @@ Transcription support in emacs can be enabled by loading
     
     ```commonlisp
     (list 1 2)
-    => (1
+    => ;; This is commented, too.
+       (1
+          ;; Funny indent.
           2)
     ```
+    
+    See @MGL-PAX-TRANSCRIPT-CONISTENCY-CHECKING for the full picture.
     
     **Unreadable Values**
     
@@ -1936,20 +1940,20 @@ Transcription support in emacs can be enabled by loading
     where `"==>"` is the :UNREADABLE prefix and `"-->"` is the
     :UNREADABLE-CONTINUATION prefix. As with outputs, a consistency
     check between an unreadable value from the source and the value from
-    EVAL is performed with STRING=. That is, the value from EVAL is
-    printed to a string and compared to the source value. Hence, any
-    change to unreadable values will break consistency checks. This is
-    most troublesome with instances of classes with the default
-    PRINT-OBJECT method printing the memory address. There is currently
-    no remedy for that, except for customizing PRINT-OBJECT or not
-    transcribing that kind of stuff.
+    EVAL is performed with STRING= by default. That is, the value from
+    EVAL is printed to a string and compared to the source value. Hence,
+    any change to unreadable values will break consistency checks. This
+    is most troublesome with instances of classes with the default
+    PRINT-OBJECT method printing the memory address. See @ no remedy for
+    that, except for customizing PRINT-OBJECT or not transcribing that
+    kind of stuff.
     
     **Errors**
     
     If an ERROR condition is signalled, the error is printed to the
     output and no values are returned.
     
-    ```cl-transcript
+    ```common-lisp
     (progn
       (print "hello")
       (error "no greeting"))
@@ -1957,7 +1961,6 @@ Transcription support in emacs can be enabled by loading
     .. "hello" 
     .. debugger invoked on SIMPLE-ERROR:
     ..   no greeting
-    
     ```
     
     To keep the textual representation somewhat likely to be portable,
@@ -2000,7 +2003,11 @@ Transcription support in emacs can be enabled by loading
     default), the same syntax will be used in the output as in the input
     as much as possible.
 
-- [variable] *SYNTAXES* ((:DEFAULT (:OUTPUT "..") (:NO-VALUE "=\> ; No value") (:READABLE "=\>")
+- [variable] *TRANSCRIBE-CHECK-CONSISTENCY* NIL
+
+    The default value of TRANSCRIBE's CHECK-CONSISTENCY argument.
+
+- [variable] *TRANSCRIBE-SYNTAXES* ((:DEFAULT (:OUTPUT "..") (:NO-VALUE "=\> ; No value") (:READABLE "=\>")
   (:UNREADABLE "==\>") (:UNREADABLE-CONTINUATION "--\>"))
  (:COMMENTED-1 (:OUTPUT ";..") (:NO-VALUE ";=\> ; No value")
   (:READABLE ";=\>") (:READABLE-CONTINUATION ";-\>") (:UNREADABLE ";==\>")
@@ -2060,6 +2067,148 @@ Transcription support in emacs can be enabled by loading
     Signaled (with CERROR) by TRANSCRIBE when invoked
     with :CHECK-CONSISTENCY and the values of a form are inconsistent
     with their parsed representation.
+
+### Transcript Consistency Checking
+
+The main use case for consistency checking is detecting
+out-of-date examples in documentation, although using it for writing
+tests is also a possiblity. Here, we focus on the former.
+
+When a markdown code block tagged `cl-transcript` is processed
+during @MGL-PAX-GENERATING-DOCUMENTATION, the code in it is replaced
+with the output of with `(TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
+:CHECK-CONSISTENCY T)`. Suppose we have the following example of the
+function `GREET`, that prints `hello` and returns 7.
+
+    ```cl-transcript
+    (greet)
+    .. hello
+    => 7
+    ```
+
+Now, if we change `GREET` to print or return something else, a
+TRANSCRIPTION-CONSISTENCY-ERROR will be signalled during
+documentation generation. Then we may fix the documentation or
+[CONTINUE][restart] from the error.
+
+By default, comparisons of previous to current ouput, readable and
+unreadable return values are performed with STRING=, EQUAL, and
+STRING=, respectively, which is great in the simple case.
+Non-determinism aside, exact matching becomes brittle as soon as the
+notoriously unportable pretty printer is used or when unreadable
+objects are printed with their `#<>` syntax, especially when
+PRINT-UNREADABLE-OBJECT is used with `:IDENTITY T`.
+
+#### Finer-grained Consistency Checks
+
+To get around this problem, consistency checking of output,
+readable and unreadable values can be customized individually by
+supplying TRANSCRIBE with a CHECK-CONSISTENCY argument
+like `((:OUTPUT <OUTPUT-CHECK>) (:READABLE
+<READABLE-CHECK>) (:UNREADABLE <UNREADABLE-CHECK>))`. In this case,
+`<OUTPUT-CHECK>` may be NIL, T, or a function designator.
+
+- If it's NIL or there is no :OUTPUT entry in the list, then the
+  output is not checked for consistency.
+
+- If it's T, then the outputs are compared with the default,
+  STRING=.
+
+- If it's a function designator, then it's called with two strings
+  and must return whether they are consistent with each other.
+
+The case of `<READABLE-CHECK>` and `<UNREADABLE-CHECK>` is similar.
+
+Code blocks tagged `cl-transcript` can take arguments, which they
+pass on to TRANSCRIBE. The following shows how to check only the
+output.
+
+    ```cl-transcript (:check-consistency ((:output t)))
+    (error "Oh, no.")
+    .. debugger invoked on SIMPLE-ERROR:
+    ..   Oh, no.
+    
+    (make-condition 'simple-error)
+    ==> #<SIMPLE-ERROR {1008A81533}>
+
+
+#### Controlling the Dynamic Environment
+
+The dynamic enviroment in which forms in the transcript are
+evaluated can be controlled via the :DYNENV argument of
+`cl-transcript`.
+
+    ```cl-transcript (:dynenv my-transcript)
+    ...
+    ```
+
+In this case, instead of calling TRANSCRIBE directly, the call will
+be wrapped in a function of no arguments and passed to the function
+`MY-TRANSCRIPT`, which establishes the desired dynamic environment
+and calls its argument. The following definition of `MY-TRANSCRIPT`
+simply packages up oft-used settings to TRANSCRIBE.
+
+```
+(defun my-transcript (fn)
+  (let ((*transcribe-check-consistency*
+          '((:output my-transcript-output=)
+            (:readable equal)
+            (:unreadable nil))))
+    (funcall fn)))
+
+(defun my-transcript-output= (string1 string2)
+  (string= (my-transcript-normalize-output string1)
+           (my-transcript-normalize-output string2)))
+
+(defun my-transcript-normalize-output (string)
+  (squeeze-whitespace (delete-trailing-whitespace (delete-comments string))))
+```
+
+A more involved solution could rebind global variables set in
+transcripts, unintern symbols created or even create a temporary
+package for evaluation.
+
+#### Utilities for Consistency Checking
+
+- [function] SQUEEZE-WHITESPACE STRING
+
+    Replace consecutive whitespace characters with a single space in
+    STRING. This is useful to do undo the effects of pretty printing
+    when building comparison functions for TRANSCRIBE.
+
+- [function] DELETE-TRAILING-WHITESPACE STRING
+
+    Delete whitespace characters after the last non-whitespace
+    character in each line in STRING.
+
+- [function] DELETE-COMMENTS STRING &KEY (PATTERN ";")
+
+    For each line in STRING delete the rest of the line after and
+    including the first occurrence of PATTERN. On changed lines, delete
+    trailing whitespace too. Let's define a comparison function:
+    
+    ```common-lisp
+    (defun string=/no-comments (string1 string2)
+      (string= (delete-comments string1) (delete-comments string2)))
+    ```
+    
+    And use it to check consistency of output:
+    
+        ```cl-transcript (:check-consistency ((:output string=/no-comments)))
+        (format t "hello~%world")
+        .. hello     ; This is the first line.
+        .. world     ; This is the second line.
+        ```
+    
+    Just to make sure the above example works, here it is without the being
+    quoted.
+    
+    ```common-lisp
+    (format t "hello~%world")
+    .. hello     ; This is the first line.
+    .. world     ; This is the second line.
+    ```
+
 
 ## Extension API
 

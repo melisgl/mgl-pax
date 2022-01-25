@@ -21,9 +21,9 @@ Without a prefix argument, the first syntax is used."
   "Updates the transcription in the current region (as in calling
 MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T). Use a numeric prefix
 argument as in index to select one of the Common Lisp
-MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
-Without a prefix argument, the syntax of the input will not be
-changed."
+MGL-PAX:*TRANSRIBE-SYNTAXES* as the SYNTAX argument to
+MGL-PAX:TRANSCRIBE. Without a prefix argument, the syntax of the
+input will not be changed."
   (interactive "r")
   (let* ((point-at-start-p (= (point) start))
          (point-at-end-p (= (point) end))

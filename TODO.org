@@ -10,11 +10,10 @@ because it's translated to a list item
 and values of variables. Unfortunately, there seems to be no way to
 use the lisp pretty printer for this because output also includes
 markup.
-* MAYBE include signalled errors in transcript?
-What about debugger commands?
-* MAYBE transcribe: add inline commands that can change prefixes and such
-* MAYBE transcribe: special comment syntax for the 'narrative'
-to produce something like an ipython notebook.
+* MAYBE transcribe: emacs retranscribe should not update if consistent?
+This either relies on the global value of
+*TRANSCRIBE-CHECK-CONSISTENCY* or it needs to see the
+"```cl-transcript (...)" line.
 * MAYBE support external links
 There are two kinds:
 - object is text (like the CLHS locative)
@@ -30,3 +29,4 @@ change in INITIALIZE-LINKS.
 How to recoginize normal reference links? Don't, just warn on any
 linking failure. This should be in 3BMD.
 * break test-document into smaller tests
+* consider CommonDoc from the 40ants fork

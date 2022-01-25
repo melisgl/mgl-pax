@@ -114,28 +114,25 @@ compiler-macro
 See
 `FOO`([`0`][22be] [`1`][4ded] [`2`][4244])
 
-```cl-transcript
+```common-lisp
 (values (print (1+ 2)) :aaa)
 ..
 .. 3 
 => 3
 => :AAA
-
 ```
 
-```cl-transcript
+```common-lisp
 (values '(1 2) '(3 4))
 ;=> (1 2)
 ;=> (3
 ;->  4)
-
 ```
 
-```cl-transcript
+```common-lisp
 (make-array 12 :initial-element 0d0)
 => #(0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0
      0.0d0)
-
 ```
 
 In documentation, when the only ambiguity is between a generic

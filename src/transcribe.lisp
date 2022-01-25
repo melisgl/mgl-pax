@@ -52,18 +52,20 @@
       (in-readtable pythonic-string-syntax)"
   (mgl-pax/transcribe asdf:system)
   (@mgl-pax-transcribing-with-emacs section)
-  (@mgl-pax-transcript-api section))
+  (@mgl-pax-transcript-api section)
+  (@mgl-pax-transcript-conistency-checking section))
 
 
 (defsection @mgl-pax-transcript-api (:title "Transcript API")
   (transcribe function)
-  (*syntaxes* variable)
+  (*transcribe-check-consistency* variable)
+  (*transcribe-syntaxes* variable)
   (transcription-error condition)
   (transcription-consistency-error condition)
   (transcription-output-consistency-error condition)
   (transcription-values-consistency-error condition))
 
-(defparameter *syntaxes*
+(defvar *transcribe-syntaxes*
   '((:default
      (:output "..")
      ;; To give precedence to this no-value marker, it is listed
@@ -116,12 +118,17 @@
 
   See TRANSCRIBE for how the actual syntax to be used is selected.")
 
+(defvar *transcribe-check-consistency* nil
+  "The default value of TRANSCRIBE's CHECK-CONSISTENCY argument.")
+
 (defun transcribe (input output &key update-only
                    (include-no-output update-only)
                    (include-no-value update-only)
-                   (echo t) check-consistency
-                   default-syntax (input-syntaxes *syntaxes*)
-                   (output-syntaxes *syntaxes*))
+                   (echo t)
+                   (check-consistency *transcribe-check-consistency*)
+                   default-syntax
+                   (input-syntaxes *transcribe-syntaxes*)
+                   (output-syntaxes *transcribe-syntaxes*))
   """Read forms from INPUT and write them (iff ECHO) to OUTPUT
   followed by any output and return values produced by calling EVAL on
   the form. INPUT can be a stream or a string, while OUTPUT can be a
@@ -231,10 +238,14 @@
 
   ```commonlisp
   (list 1 2)
-  => (1
+  => ;; This is commented, too.
+     (1
+        ;; Funny indent.
         2)
   ```
 
+  See @MGL-PAX-TRANSCRIPT-CONISTENCY-CHECKING for the full picture.
+  
   **Unreadable Values**
 
   The above scheme involves READ, so consistency of unreadable values
@@ -257,13 +268,13 @@
   where `"==>"` is the :UNREADABLE prefix and `"-->"` is the
   :UNREADABLE-CONTINUATION prefix. As with outputs, a consistency
   check between an unreadable value from the source and the value from
-  EVAL is performed with STRING=. That is, the value from EVAL is
-  printed to a string and compared to the source value. Hence, any
-  change to unreadable values will break consistency checks. This is
-  most troublesome with instances of classes with the default
-  PRINT-OBJECT method printing the memory address. There is currently
-  no remedy for that, except for customizing PRINT-OBJECT or not
-  transcribing that kind of stuff.
+  EVAL is performed with STRING= by default. That is, the value from
+  EVAL is printed to a string and compared to the source value. Hence,
+  any change to unreadable values will break consistency checks. This
+  is most troublesome with instances of classes with the default
+  PRINT-OBJECT method printing the memory address. See @ no remedy for
+  that, except for customizing PRINT-OBJECT or not transcribing that
+  kind of stuff.
 
   **Errors**
 
@@ -333,7 +344,7 @@
 ;;;; Prefix utilities
 
 (defun find-syntax (syntax)
-  (or (find syntax *syntaxes* :key #'first)
+  (or (find syntax *transcribe-syntaxes* :key #'first)
       (error "Cannot find syntax ~S.~%" syntax)))
 
 (defun find-prefix (id syntax &key (errorp t))
@@ -342,7 +353,7 @@
                  (first syntax-definition))))
     (destructuring-bind (prefix syntax) (if syntax
                                             (foo (find-syntax syntax))
-                                            (some #'foo *syntaxes*))
+                                            (some #'foo *transcribe-syntaxes*))
       (when (and (not prefix) errorp)
         (error "Cannot find prefix with id ~S~%" id))
       (values prefix syntax ))))
@@ -361,7 +372,7 @@
                  nil))))
     (values-list (if syntax-id
                      (foo (find-syntax syntax-id))
-                     (some #'foo *syntaxes*)))))
+                     (some #'foo *transcribe-syntaxes*)))))
 
 
 ;;;; READ-TRANSCRIPT constructs a parse tree that's fed into
@@ -509,11 +520,11 @@
             (sb-c::*policy* sb-c::*policy*))
        ,@body)))
 
-(defun read-transcript (input &key (syntaxes *syntaxes*))
+(defun read-transcript (input &key (syntaxes *transcribe-syntaxes*))
   (check-type input (or stream string))
   (with-input-stream (stream input)
     (with-load-environment (stream)
-      (let ((*syntaxes* syntaxes)
+      (let ((*transcribe-syntaxes* syntaxes)
             (transcript ())
             (partial-line-p nil)
             ;; file position of the beginning of LINE
@@ -716,16 +727,20 @@
                          (include-no-output update-only)
                          (include-no-value update-only)
                          (echo t) check-consistency
-                         default-syntax (syntaxes *syntaxes*))
+                         default-syntax (syntaxes *transcribe-syntaxes*))
   (check-type output (or stream null))
   (with-output-stream (stream output)
-    (let ((*syntaxes* syntaxes)
-          (last-syntax-id default-syntax))
+    (let ((*transcribe-syntaxes* syntaxes)
+          (last-syntax-id default-syntax)
+          (output-checker (consistency-checker check-consistency :output))
+          (readable-checker (consistency-checker check-consistency :readable))
+          (unreadable-checker (consistency-checker check-consistency
+                                                   :unreadable)))
       (dolist (command transcript)
         (let ((form (command-form command))
               (form-as-string (command-string command)))
-          ;; When SYNTAX is NIL, we default to the syntax of the this
-          ;; command or the last command with known syntax.
+          ;; When DEFAULT-SYNTAX is NIL, we default to the syntax of
+          ;; this command or the last command with known syntax.
           (setq last-syntax-id (or default-syntax
                                    (command-syntax-id command)
                                    last-syntax-id))
@@ -737,18 +752,20 @@
             (multiple-value-bind (form-output form-values errorp)
                 (eval-and-capture form)
               (let ((output-capture (command-output-capture command)))
-                (when (and check-consistency output-capture)
+                (when (and output-checker output-capture)
                   (check-output-consistency
                    nil form-as-string form-output
-                   (output-string output-capture)))
+                   (output-string output-capture) output-checker))
                 (transcribe-output stream form-output
                                    (or output-capture errorp)
                                    last-syntax-id update-only
                                    include-no-output))
               (let ((value-captures (command-value-captures command)))
-                (when check-consistency
+                (when (or readable-checker unreadable-checker)
                   (check-values-consistency nil form-as-string
-                                            form-values value-captures))
+                                            form-values value-captures
+                                            readable-checker
+                                            unreadable-checker))
                 (transcribe-values stream form-values value-captures
                                    last-syntax-id update-only
                                    include-no-value)))))))))
@@ -758,17 +775,27 @@
    (nth-value 1 (ignore-errors
                  (values (read-from-string (prin1-to-string object)))))))
 
-(defun check-output-consistency (stream form-as-string output captured-output)
+(defun consistency-checker (check-consistency what)
+  (let ((checker (if (listp check-consistency)
+                     (second (find what check-consistency :key #'first))
+                     (not (not check-consistency)))))
+    (cond ((eq checker nil) nil)
+          ((eq checker t) 'equal)
+          (t checker))))
+
+(defun check-output-consistency (stream form-as-string output captured-output
+                                 output-checker)
   (check-type output string)
   (check-type captured-output (or string null))
-  (unless (string= output (or captured-output ""))
+  (unless (funcall output-checker output (or captured-output ""))
     (consistency-error
      'transcription-output-consistency-error
      stream form-as-string
-     "Inconsistent output found.~%~%Source: ~:_~S~%~%Output: ~:_~S~%"
-     captured-output output)))
+     "Outputs not ~S.~%~%Source: ~:_~S~%~%Output: ~:_~S~%"
+     output-checker captured-output output)))
 
-(defun check-values-consistency (stream form-as-string values value-captures)
+(defun check-values-consistency (stream form-as-string values value-captures
+                                 readable-checker unreadable-checker)
   (when value-captures
     (let ((value-captures (if (and (= 1 (length value-captures))
                                    (no-value-capture-p (first value-captures)))
@@ -784,7 +811,9 @@
              (loop for value in values
                    for value-capture in value-captures
                    do (check-value-consistency stream form-as-string
-                                               value value-capture)))))))
+                                               value value-capture
+                                               readable-checker
+                                               unreadable-checker)))))))
 
 (defmacro with-transcription-syntax (() &body body)
   (alexandria:with-gensyms (package)
@@ -798,7 +827,8 @@
                (*print-right-margin* 72))
            ,@body)))))
 
-(defun check-value-consistency (stream form-as-string value value-capture)
+(defun check-value-consistency (stream form-as-string value value-capture
+                                readable-checker unreadable-checker)
   (assert (not (no-value-capture-p value-capture)))
   (flet ((stringify (object)
            (with-transcription-syntax ()
@@ -821,20 +851,26 @@
             ;; At this point we know that both are readable or both are
             ;; unreadable.
             (value-readable-p
-             (unless (string= (stringify value)
-                              (stringify (readable-object value-capture)))
-               (consistency-error
-                'transcription-values-consistency-error
-                stream form-as-string
-                "Readable value ~:_~S ~:_in source does not print the ~
-                same as ~:_~S." (stringify (readable-object value-capture))
-                (stringify value))))
-            ((not (string= (stringify value) (unreadable-string value-capture)))
+             (when readable-checker
+               (let ((readable-value-string (stringify (readable-object
+                                                        value-capture))))
+                 (unless (funcall readable-checker (stringify value)
+                                  readable-value-string)
+                   (consistency-error
+                    'transcription-values-consistency-error
+                    stream form-as-string
+                    "Readable value ~:_~S ~:_in source is not ~S to ~:_~S."
+                    readable-value-string readable-checker
+                    (stringify value))))))
+            ((and unreadable-checker
+                  (not (funcall unreadable-checker (stringify value)
+                                (unreadable-string value-capture))))
              (consistency-error
               'transcription-values-consistency-error
               stream form-as-string
-              "Unreadable value ~:_~S ~:_in source does not print the ~
-              same as ~:_~S." (unreadable-string value-capture)
+              "Unreadable value ~:_~S ~:_in source is not ~S to ~:_~S."
+              (unreadable-string value-capture)
+              unreadable-checker
               (stringify value)))))))
 
 (defun eval-and-capture (form)
@@ -1105,9 +1141,9 @@
 
   `C-u 0 mgl-pax-retranscribe-region` will turn commented into
   non-commented markup. In general, the numeric prefix argument is the
-  index of the syntax to be used in MGL-PAX:*SYNTAXES*. Without a
-  prefix argument `mgl-pax-retranscribe-region` will not change the
-  markup style.
+  index of the syntax to be used in MGL-PAX:*TRANSCRIBE-SYNTAXES*.
+  Without a prefix argument `mgl-pax-retranscribe-region` will not
+  change the markup style.
 
   Finally, not only do both functions work at any indentation level,
   but in comments too:
@@ -1118,12 +1154,13 @@
       ;;;; => (1 2)
 
   Transcription support in emacs can be enabled by loading
-  `src/transcribe.el`):""")
+  `src/transcribe.el`.""")
 
 (defun transcribe-for-emacs (string default-syntax* update-only echo
                              first-line-special-p)
   (let ((default-syntax (cond ((numberp default-syntax*)
-                               (first (elt *syntaxes* default-syntax*)))
+                               (first (elt *transcribe-syntaxes*
+                                           default-syntax*)))
                               ((null default-syntax*)
                                nil)
                               (t (error "Unexpected default syntax ~S."
@@ -1141,3 +1178,178 @@
           (if echo
               transcript
               (format nil "~%~A" transcript)))))))
+
+
+(defsection @mgl-pax-transcript-conistency-checking
+    (:title "Transcript Consistency Checking")
+  """The main use case for consistency checking is detecting
+  out-of-date examples in documentation, although using it for writing
+  tests is also a possiblity. Here, we focus on the former.
+
+  When a markdown code block tagged `cl-transcript` is processed
+  during @MGL-PAX-GENERATING-DOCUMENTATION, the code in it is replaced
+  with the output of with `(TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
+  :CHECK-CONSISTENCY T)`. Suppose we have the following example of the
+  function `GREET`, that prints `hello` and returns 7.
+
+      ```cl-transcript
+      (greet)
+      .. hello
+      => 7
+      ```
+
+  Now, if we change `GREET` to print or return something else, a
+  TRANSCRIPTION-CONSISTENCY-ERROR will be signalled during
+  documentation generation. Then we may fix the documentation or
+  [CONTINUE][restart] from the error.
+
+  By default, comparisons of previous to current ouput, readable and
+  unreadable return values are performed with STRING=, EQUAL, and
+  STRING=, respectively, which is great in the simple case.
+  Non-determinism aside, exact matching becomes brittle as soon as the
+  notoriously unportable pretty printer is used or when unreadable
+  objects are printed with their `#<>` syntax, especially when
+  PRINT-UNREADABLE-OBJECT is used with `:IDENTITY T`.
+  """
+  (@mgl-pax-transcript-finer-grained-consistency-checks section)
+  (@mgl-pax-transcript-dynenv section)
+  (@mgl-pax-transcript-utilities-for-consistency-checking section))
+
+(defsection @mgl-pax-transcript-finer-grained-consistency-checks
+    (:title "Finer-grained Consistency Checks")
+  """To get around this problem, consistency checking of output,
+  readable and unreadable values can be customized individually by
+  supplying TRANSCRIBE with a CHECK-CONSISTENCY argument
+  like `((:OUTPUT <OUTPUT-CHECK>) (:READABLE
+  <READABLE-CHECK>) (:UNREADABLE <UNREADABLE-CHECK>))`. In this case,
+  `<OUTPUT-CHECK>` may be NIL, T, or a function designator.
+
+  - If it's NIL or there is no :OUTPUT entry in the list, then the
+    output is not checked for consistency.
+  - If it's T, then the outputs are compared with the default,
+    STRING=.
+  - If it's a function designator, then it's called with two strings
+    and must return whether they are consistent with each other.
+
+  The case of `<READABLE-CHECK>` and `<UNREADABLE-CHECK>` is similar.
+
+  Code blocks tagged `cl-transcript` can take arguments, which they
+  pass on to TRANSCRIBE. The following shows how to check only the
+  output.
+
+      ```cl-transcript (:check-consistency ((:output t)))
+      (error "Oh, no.")
+      .. debugger invoked on SIMPLE-ERROR:
+      ..   Oh, no.
+
+      (make-condition 'simple-error)
+      ==> #<SIMPLE-ERROR {1008A81533}>
+  """)
+
+(defsection @mgl-pax-transcript-dynenv
+    (:title "Controlling the Dynamic Environment")
+  """The dynamic enviroment in which forms in the transcript are
+  evaluated can be controlled via the :DYNENV argument of
+  `cl-transcript`.
+
+      ```cl-transcript (:dynenv my-transcript)
+      ...
+      ```
+
+  In this case, instead of calling TRANSCRIBE directly, the call will
+  be wrapped in a function of no arguments and passed to the function
+  `MY-TRANSCRIPT`, which establishes the desired dynamic environment
+  and calls its argument. The following definition of `MY-TRANSCRIPT`
+  simply packages up oft-used settings to TRANSCRIBE.
+
+  ```
+  (defun my-transcript (fn)
+    (let ((*transcribe-check-consistency*
+            '((:output my-transcript-output=)
+              (:readable equal)
+              (:unreadable nil))))
+      (funcall fn)))
+
+  (defun my-transcript-output= (string1 string2)
+    (string= (my-transcript-normalize-output string1)
+             (my-transcript-normalize-output string2)))
+
+  (defun my-transcript-normalize-output (string)
+    (squeeze-whitespace (delete-trailing-whitespace (delete-comments string))))
+  ```
+
+  A more involved solution could rebind global variables set in
+  transcripts, unintern symbols created or even create a temporary
+  package for evaluation.
+  """)
+
+
+(defsection @mgl-pax-transcript-utilities-for-consistency-checking
+    (:title "Utilities for Consistency Checking")
+  (squeeze-whitespace function)
+  (delete-trailing-whitespace function)
+  (delete-comments function))
+
+(defun squeeze-whitespace (string)
+  "Replace consecutive whitespace characters with a single space in
+  STRING. This is useful to do undo the effects of pretty printing
+  when building comparison functions for TRANSCRIBE."
+  (with-output-to-string (s)
+    (let ((prev-whitespace-p nil))
+      (loop for char across string
+            do (cond ((whitespacep char)
+                      (unless prev-whitespace-p
+                        (write-char #\Space s)
+                        (setq prev-whitespace-p t)))
+                     (t
+                      (write-char char s)
+                      (setq prev-whitespace-p nil)))))))
+
+(defun delete-trailing-whitespace (string)
+  "Delete whitespace characters after the last non-whitespace
+  character in each line in STRING."
+  (flet ((delete-on-one-line (string)
+           (string-right-trim *whitespace-chars* string)))
+    (with-output-to-string (out)
+      (with-input-from-string (in string)
+        (loop for line = (read-line in nil nil)
+              while line
+              do (write-line (delete-on-one-line line) out))))))
+
+(defun delete-comments (string &key (pattern ";"))
+  """For each line in STRING delete the rest of the line after and
+  including the first occurrence of PATTERN. On changed lines, delete
+  trailing whitespace too. Let's define a comparison function:
+
+  ```cl-transcript
+  (defun string=/no-comments (string1 string2)
+    (string= (delete-comments string1) (delete-comments string2)))
+  ```
+
+  And use it to check consistency of output:
+
+      ```cl-transcript (:check-consistency ((:output string=/no-comments)))
+      (format t "hello~%world")
+      .. hello     ; This is the first line.
+      .. world     ; This is the second line.
+      ```
+
+  Just to make sure the above example works, here it is without the being
+  quoted.
+
+  ```cl-transcript (:check-consistency ((:output string=/no-comments)))
+  (format t "hello~%world")
+  .. hello     ; This is the first line.
+  .. world     ; This is the second line.
+  ```
+  """
+  (flet ((delete-on-one-line (string)
+           (let ((pos (search pattern string)))
+             (if pos
+                 (string-right-trim *whitespace-chars* (subseq string 0 pos))
+                 string))))
+    (with-output-to-string (out)
+      (with-input-from-string (in string)
+        (loop for line = (read-line in nil nil)
+              while line
+              do (write-line (delete-on-one-line line) out))))))
