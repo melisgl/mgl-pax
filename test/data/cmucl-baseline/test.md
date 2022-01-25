@@ -273,11 +273,12 @@ backlink [@TEST][a755]
 - [locative] **METHOD** *METHOD-QUALIFIERS METHOD-SPECIALIZERS*
 
     See `CL:FIND-METHOD` for the description of the arguments
-    `METHOD-QUALIFIERS` and `METHOD-SPECIALIZERS`. For example, this
-    `DEFSECTION` entry refers to the default method of the three argument
-    generic function `FOO`:
+    `METHOD-QUALIFIERS` and `METHOD-SPECIALIZERS`. For example,
+    a `(FOO (METHOD () (T (EQL XXX))))` as a `DEFSECTION` entry refers to
+    this method:
     
-        (foo (method () (t t t)))
+        (defmethod foo (x (y (eql 'xxx)))
+          ...)
     
     `METHOD` is not `EXPORTABLE-LOCATIVE-TYPE-P`.
 

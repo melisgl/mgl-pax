@@ -490,11 +490,12 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
 - [locative] METHOD METHOD-QUALIFIERS METHOD-SPECIALIZERS
 
     See CL:FIND-METHOD for the description of the arguments
-    METHOD-QUALIFIERS and METHOD-SPECIALIZERS. For example, this
-    DEFSECTION entry refers to the default method of the three argument
-    generic function FOO:
+    METHOD-QUALIFIERS and METHOD-SPECIALIZERS. For example,
+    a `(FOO (METHOD () (T (EQL XXX))))` as a DEFSECTION entry refers to
+    this method:
     
-        (foo (method () (t t t)))
+        (defmethod foo (x (y (eql 'xxx)))
+          ...)
     
     METHOD is not EXPORTABLE-LOCATIVE-TYPE-P.
 
@@ -811,13 +812,6 @@ definition which corresponds to the locative. If that fails, `M-.`
 will try to find the definitions in the normal way, which may
 involve popping up an xref buffer and letting the user interactively
 select one of possible definitions.
-
-*Note that the this feature is implemented in terms of
-SWANK-BACKEND:FIND-SOURCE-LOCATION and
-SWANK-BACKEND:FIND-DEFINITIONS, whose support varies across the Lisp
-implementations. In particular, ABCL, CLISP, CMUCL and ECL have no
-or rather spotty support for it. Everything works fine on AllegroCL,
-CCL and SBCL.*
 
 In the following examples, pressing `M-.` when the cursor is on one
 of the characters of `FOO` or just after `FOO`, will visit the
@@ -2349,22 +2343,27 @@ for ASDF:SYSTEM:
 
 - [generic-function] FIND-SOURCE OBJECT
 
-    Like SWANK:FIND-DEFINITION-FOR-THING, but this
-    one is a generic function to be extensible. In fact, the default
-    implementation simply defers to SWANK:FIND-DEFINITION-FOR-THING.
-    This function is called by LOCATE-DEFINITIONS-FOR-EMACS, which lies
-    behind the `M-.` extension (see @MGL-PAX-NAVIGATING-IN-EMACS).
+    Return the Swank source location for OBJECT. It
+    is called by LOCATE-DEFINITIONS-FOR-EMACS, which lies behind the
+    `M-.` extension (see @MGL-PAX-NAVIGATING-IN-EMACS).
     
-    If successful, the return value looks like this:
+    If successful, the return value should look like one of these:
     
     ```commonlisp
-    (:location (:file "/home/mega/own/mgl/pax/test/test.lisp")
-               (:position 24) nil)
+    (:LOCATION
+      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
+      (:POSITION 3303) NIL)
+    (:LOCATION
+      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
+      (:OFFSET 1 3303) NIL)
+    (:LOCATION
+      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
+      (:FUNCTION-NAME "FOO") NIL)
     ```
     
-    The NIL is the source snippet, which is optional. Note that position
-    1 is the first character. If unsuccessful, the return value is
-    like:
+    The NIL above is the source snippet, which is optional. Note that
+    position 1 is the first character in `:FILE`. If unsuccessful, the
+    return value is like:
     
     ```commonlisp
     (:error "Unknown source location for SOMETHING")
@@ -2425,9 +2424,7 @@ example of how the VARIABLE locative is defined:
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-one-location (swank-backend:find-definitions symbol)
-                     '("variable" "defvar" "defparameter"
-                       "special-declaration")))
+  (find-definition symbol (swank-variable-dspecs symbol)))
 
 ```
 
@@ -2463,17 +2460,32 @@ example of how the VARIABLE locative is defined:
     but it has different arguments to allow specializing on
     LOCATIVE-TYPE.
 
-- [method] FIND-SOURCE (REFERENCE REFERENCE)
-
-    If REFERENCE can be resolved to a non-reference, call FIND-SOURCE
-    with it, else call LOCATE-AND-FIND-SOURCE on the object,
-    locative-type, locative-args of REFERENCE
-
 - [generic-function] LOCATE-AND-FIND-SOURCE OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
 
-    Called by FIND-SOURCE on REFERENCE objects, this
-    function has essentially the same purpose as FIND-SOURCE but it has
-    different arguments to allow specializing on LOCATIVE-TYPE.
+    This function serves the same purpose as
+    FIND-SOURCE, but it has different arguments to allow specializing on
+    LOCATIVE-TYPE. Methods defined as extensions must be
+    `EQL`-specialized on a particular locative type and return a Swank
+    `location` as documented in FIND-SOURCE.
+    
+    See FIND-SOURCE `(method () (t))` and
+    FIND-SOURCE `(method () (reference))` for a description of when this
+    function is called. Don't call this function directly.
+
+- [method] FIND-SOURCE OBJECT
+
+    Call LOCATE-AND-FIND-SOURCE with the appropriate parts of
+    CANONICAL-REFERENCE for OBJECT.
+
+- [method] FIND-SOURCE (REFERENCE REFERENCE)
+
+    Call LOCATE-AND-FIND-SOURCE with the appropriate parts of
+    REFERENCE. If there is no method specialized on the [locative
+    type][@mgl-pax-locatives-and-references], then attempt to RESOLVE
+    REFERENCE to a non-`REFERENCE` object and invoke FIND-SOURCE on it.
+    
+    Thus for new locative types, only FIND-SOURCE or
+    LOCATE-AND-FIND-SOURCE needs to be specialized.
 
 We have covered the basic building blocks of reference based
 extensions. Now let's see how the obscure

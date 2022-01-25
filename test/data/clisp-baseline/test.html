@@ -313,11 +313,12 @@ but not to <a href="#x-28MGL-PAX-TEST-3A-3AFOO-20FUNCTION-29" title="(MGL-PAX-TE
 <li><p><span class=reference-bullet><span class=reference><span class="locative-type">[locative]</span> <span class="reference-object"><a href="#x-28METHOD-20MGL-PAX-3ALOCATIVE-29" >METHOD</a></span></span> <span class="locative-args">METHOD-QUALIFIERS METHOD-SPECIALIZERS</span></span></p>
 
 <p>See <code>cl:find-method</code> for the description of the arguments
-<code>method-qualifiers</code> and <code>method-specializers</code>. For example, this
-<code>defsection</code> entry refers to the default method of the three argument
-generic function <code>foo</code>:</p>
+<code>method-qualifiers</code> and <code>method-specializers</code>. For example,
+a <code>(FOO (METHOD () (T (EQL XXX))))</code> as a <code>defsection</code> entry refers to
+this method:</p>
 
-<pre><code>(foo (method () (t t t)))
+<pre><code>(defmethod foo (x (y (eql 'xxx)))
+  ...)
 </code></pre>
 
 <p><code>method</code> is not <code>exportable-locative-type-p</code>.</p></li>

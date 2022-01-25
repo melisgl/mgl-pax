@@ -206,26 +206,32 @@
 (defvar *find-source-cache* nil)
 
 (defgeneric find-source (object)
-  (:documentation """Like SWANK:FIND-DEFINITION-FOR-THING, but this
-  one is a generic function to be extensible. In fact, the default
-  implementation simply defers to SWANK:FIND-DEFINITION-FOR-THING.
-  This function is called by LOCATE-DEFINITIONS-FOR-EMACS, which lies
-  behind the `M-.` extension (see @MGL-PAX-NAVIGATING-IN-EMACS).
+  (:documentation """Return the Swank source location for OBJECT. It
+  is called by LOCATE-DEFINITIONS-FOR-EMACS, which lies behind the
+  `M-.` extension (see @MGL-PAX-NAVIGATING-IN-EMACS).
 
-  If successful, the return value looks like this:
+  If successful, the return value should look like one of these:
 
   ```commonlisp
-  (:location (:file "/home/mega/own/mgl/pax/test/test.lisp")
-             (:position 24) nil)
+  (:LOCATION
+    (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
+    (:POSITION 3303) NIL)
+  (:LOCATION
+    (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
+    (:OFFSET 1 3303) NIL)
+  (:LOCATION
+    (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
+    (:FUNCTION-NAME "FOO") NIL)
   ```
 
-  The NIL is the source snippet, which is optional. Note that position
-  1 is the first character. If unsuccessful, the return value is
-  like:
+  The NIL above is the source snippet, which is optional. Note that
+  position 1 is the first character in `:FILE`. If unsuccessful, the
+  return value is like:
 
   ```commonlisp
   (:error "Unknown source location for SOMETHING")
-  ```""")
+  ```
+  """)
   (:method :around (object)
     (if *find-source-cache*
         (let ((key (if (typep object 'reference)
@@ -235,53 +241,7 @@
           (or (gethash key *find-source-cache*)
               (setf (gethash key *find-source-cache*)
                     (call-next-method))))
-        (call-next-method)))
-  (:method (object)
-    (swank:find-definition-for-thing object)))
-
-;;; A utility for writing FIND-SOURCE methods. Try FILTER-STRINGS one
-;;; by one, and if one matches exactly one of LOCATIONS, then return
-;;; that location. Matching is a tree search for (EQUALP (STRING NODE)
-;;; FILTER-STRING).
-(defun find-one-location (locations filter-strings)
-  (let ((n-matches ()))
-    (loop for filter-string in filter-strings
-          do (let ((filtered-locations
-                     (filter-locations locations filter-string)))
-               (cond ((= 1 (length filtered-locations))
-                      ;; A location looks like this in SBCL:
-                      ;;
-                      ;; ((DEFVAR *FOO*)
-                      ;;  (:LOCATION
-                      ;;   (:BUFFER-AND-FILE "pax.lisp"
-                      ;;    "/home/mega/own/mgl/pax/src/pax.lisp")
-                      ;;   (:OFFSET 106 0) (:SNIPPET "(defvar *foo*)")))
-                      (return-from find-one-location
-                        (second (first filtered-locations))))
-                     (t
-                      (push (length filtered-locations) n-matches)))))
-    (error "~@<Could not find a single location with filters ~S. ~
-           Number of matches for each filter ~S.~:@>"
-           filter-strings n-matches)))
-
-(defun filter-locations (locations filter-string)
-  (remove-if-not (lambda (location)
-                   (find-string-designator-in-tree (first location)
-                                                   filter-string))
-                 locations))
-
-(defun find-string-designator-in-tree (tree string)
-  (labels ((recurse (tree)
-             (cond ((symbolp tree)
-                    (when (equalp (string tree) string)
-                      (return-from find-string-designator-in-tree t)))
-                   ((stringp tree)
-                    (when (equalp tree string)
-                      (return-from find-string-designator-in-tree t)))
-                   ((listp tree)
-                    (mapc #'recurse tree)))))
-    (recurse tree)
-    nil))
+        (call-next-method))))
 
 
 (defsection @mgl-pax-reference-based-extensions
@@ -302,8 +262,9 @@
   (locate-and-collect-reachable-objects (method () (t t t)))
   (document-object (method () (reference t)))
   (locate-and-document generic-function)
-  (find-source (method () (reference)))
   (locate-and-find-source generic-function)
+  (find-source (method () (t)))
+  (find-source (method () (reference)))
   "We have covered the basic building blocks of reference based
   extensions. Now let's see how the obscure
   DEFINE-SYMBOL-LOCATIVE-TYPE and
@@ -347,19 +308,46 @@
   but it has different arguments to allow specializing on
   LOCATIVE-TYPE."))
 
-(defmethod find-source ((reference reference))
-  "If REFERENCE can be resolved to a non-reference, call FIND-SOURCE
-  with it, else call LOCATE-AND-FIND-SOURCE on the object,
-  locative-type, locative-args of REFERENCE"
-  (let ((locative (reference-locative reference)))
-    (locate-and-find-source (reference-object reference)
-                            (locative-type locative)
-                            (locative-args locative))))
-
 (defgeneric locate-and-find-source (object locative-type locative-args)
-  (:documentation "Called by FIND-SOURCE on REFERENCE objects, this
-  function has essentially the same purpose as FIND-SOURCE but it has
-  different arguments to allow specializing on LOCATIVE-TYPE."))
+  (:documentation "This function serves the same purpose as
+  FIND-SOURCE, but it has different arguments to allow specializing on
+  LOCATIVE-TYPE. Methods defined as extensions must be
+  `EQL`-specialized on a particular locative type and return a Swank
+  `location` as documented in FIND-SOURCE.
+
+  See FIND-SOURCE `(method () (t))` and
+  FIND-SOURCE `(method () (reference))` for a description of when this
+  function is called. Don't call this function directly.")
+  (:method (object locative-type locative-args)
+    (declare (ignore object locative-type locative-args))
+    nil))
+
+(defmethod find-source (object)
+  "Call LOCATE-AND-FIND-SOURCE with the appropriate parts of
+  CANONICAL-REFERENCE for OBJECT."
+  (let ((ref (canonical-reference object)))
+    (or (locate-and-find-source (reference-object ref)
+                                (reference-locative-type ref)
+                                (reference-locative-args ref))
+        `(:error "Cannot find source location."))))
+
+(defmethod find-source ((reference reference))
+  "Call LOCATE-AND-FIND-SOURCE with the appropriate parts of
+  REFERENCE. If there is no method specialized on the [locative
+  type][@mgl-pax-locatives-and-references], then attempt to RESOLVE
+  REFERENCE to a non-`REFERENCE` object and invoke FIND-SOURCE on it.
+
+  Thus for new locative types, only FIND-SOURCE or
+  LOCATE-AND-FIND-SOURCE needs to be specialized."
+  ;; Only the default method of LOCATE-AND-FIND-SOURCE returns NIL.
+  (or (locate-and-find-source
+       (reference-object reference)
+       (reference-locative-type reference)
+       (reference-locative-args reference))
+      (let ((located (resolve reference :errorp nil)))
+        (if (and located (not (typep located 'reference)))
+            (find-source located)
+            `(:error "Cannot find source location.")))))
 
 (defvar *locative-source-search-list* ())
 
@@ -410,17 +398,23 @@
          (with-local-references ((list (make-reference symbol
                                                        (cons locative-type
                                                              locative-args))))
-             (with-dislocated-symbols ((macro-arg-names lambda-list))
-               (when lambda-list
-                 (write-char #\Space stream)
-                 (print-arglist lambda-list stream))
-               (print-end-bullet stream)
-               (maybe-print-docstring method t stream))))
+           (with-dislocated-symbols ((macro-arg-names lambda-list))
+             (when lambda-list
+               (write-char #\Space stream)
+               (print-arglist lambda-list stream))
+             (print-end-bullet stream)
+             (maybe-print-docstring method t stream))))
        (format stream "~&"))
      (defmethod locate-and-find-source
          (symbol (locative-type (eql ',locative-type)) locative-args)
        (declare (ignore locative-args))
-       (find-source (symbol-lambda-list-method symbol ',locative-type)))))
+       (find-definition*
+        (symbol-lambda-list-method symbol ',locative-type)
+        'symbol-lambda-list
+        (swank-method-dspecs 'symbol-lambda-list
+                             ()
+                             `((eql ,symbol)
+                               (eql ,locative-type)))))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun check-body-docstring (docstring)
@@ -429,15 +423,15 @@
                      (string (first docstring)))))))
 
 ;;; A somewhat dummy generic function whose methods are
-;;; eql-specialized on SYMBOL and LOCATIVE-TYPE. The appropriate
+;;; EQL-specialized on SYMBOL and LOCATIVE-TYPE. The appropriate
 ;;; method's docstring is the docstring of SYMBOL as LOCATIVE-TYPE. As
 ;;; an afterthought, this method also returns the LAMBDA-LIST given in
 ;;; the definition.
 (defgeneric symbol-lambda-list (symbol locative-type))
 
 (defun symbol-lambda-list-method (symbol locative-type)
-  (find-method #'symbol-lambda-list () `((eql ,symbol) (eql ,locative-type))
-               nil))
+  (find-method* #'symbol-lambda-list () `((eql ,symbol) (eql ,locative-type))
+                nil))
 
 (defmacro define-definer-for-symbol-locative-type
     (name locative-type &body docstring)

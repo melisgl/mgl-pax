@@ -582,11 +582,12 @@ location and the docstring of the defining form is recorded (see
 - [locative] **METHOD** *METHOD-QUALIFIERS METHOD-SPECIALIZERS*
 
     See [`CL:FIND-METHOD`][e03d] for the description of the arguments
-    `METHOD-QUALIFIERS` and `METHOD-SPECIALIZERS`. For example, this
-    [`DEFSECTION`][2863] entry refers to the default method of the three argument
-    generic function `FOO`:
+    `METHOD-QUALIFIERS` and `METHOD-SPECIALIZERS`. For example,
+    a `(FOO (METHOD () (T (EQL XXX))))` as a [`DEFSECTION`][2863] entry refers to
+    this method:
     
-        (foo (method () (t t t)))
+        (defmethod foo (x (y (eql 'xxx)))
+          ...)
     
     `METHOD` is not [`EXPORTABLE-LOCATIVE-TYPE-P`][96c5].
 
@@ -959,13 +960,6 @@ definition which corresponds to the locative. If that fails, `M-.`
 will try to find the definitions in the normal way, which may
 involve popping up an xref buffer and letting the user interactively
 select one of possible definitions.
-
-*Note that the this feature is implemented in terms of
-`SWANK-BACKEND:FIND-SOURCE-LOCATION` and
-`SWANK-BACKEND:FIND-DEFINITIONS`, whose support varies across the Lisp
-implementations. In particular, ABCL, CLISP, CMUCL and ECL have no
-or rather spotty support for it. Everything works fine on AllegroCL,
-CCL and SBCL.*
 
 In the following examples, pressing `M-.` when the cursor is on one
 of the characters of `FOO` or just after `FOO`, will visit the
@@ -2657,22 +2651,27 @@ for [`ASDF:SYSTEM:`][90f2]
 
 - [generic-function] **FIND-SOURCE** *OBJECT*
 
-    Like `SWANK:FIND-DEFINITION-FOR-THING`, but this
-    one is a generic function to be extensible. In fact, the default
-    implementation simply defers to `SWANK:FIND-DEFINITION-FOR-THING`.
-    This function is called by `LOCATE-DEFINITIONS-FOR-EMACS`, which lies
-    behind the `M-.` extension (see [Navigating Sources in Emacs][3fdc]).
+    Return the Swank source location for `OBJECT`. It
+    is called by `LOCATE-DEFINITIONS-FOR-EMACS`, which lies behind the
+    `M-.` extension (see [Navigating Sources in Emacs][3fdc]).
     
-    If successful, the return value looks like this:
+    If successful, the return value should look like one of these:
     
     ```commonlisp
-    (:location (:file "/home/mega/own/mgl/pax/test/test.lisp")
-               (:position 24) nil)
+    (:LOCATION
+      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
+      (:POSITION 3303) NIL)
+    (:LOCATION
+      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
+      (:OFFSET 1 3303) NIL)
+    (:LOCATION
+      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
+      (:FUNCTION-NAME "FOO") NIL)
     ```
     
-    The `NIL` is the source snippet, which is optional. Note that position
-    1 is the first character. If unsuccessful, the return value is
-    like:
+    The `NIL` above is the source snippet, which is optional. Note that
+    position 1 is the first character in `:FILE`. If unsuccessful, the
+    return value is like:
     
     ```commonlisp
     (:error "Unknown source location for SOMETHING")
@@ -2737,9 +2736,7 @@ example of how the [`VARIABLE`][474c] locative is defined:
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-one-location (swank-backend:find-definitions symbol)
-                     '("variable" "defvar" "defparameter"
-                       "special-declaration")))
+  (find-definition symbol (swank-variable-dspecs symbol)))
 
 ```
 
@@ -2785,21 +2782,38 @@ example of how the [`VARIABLE`][474c] locative is defined:
     but it has different arguments to allow specializing on
     `LOCATIVE-TYPE`.
 
-<a id='x-28MGL-PAX-3AFIND-SOURCE-20-28METHOD-20NIL-20-28MGL-PAX-3AREFERENCE-29-29-29'></a>
-
-- [method] **FIND-SOURCE** *(REFERENCE REFERENCE)*
-
-    If `REFERENCE` can be resolved to a non-reference, call [`FIND-SOURCE`][b417]
-    with it, else call [`LOCATE-AND-FIND-SOURCE`][e9e9] on the object,
-    locative-type, locative-args of `REFERENCE`
-
 <a id='x-28MGL-PAX-3ALOCATE-AND-FIND-SOURCE-20GENERIC-FUNCTION-29'></a>
 
 - [generic-function] **LOCATE-AND-FIND-SOURCE** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS*
 
-    Called by [`FIND-SOURCE`][b417] on [`REFERENCE`][cc37] objects, this
-    function has essentially the same purpose as `FIND-SOURCE` but it has
-    different arguments to allow specializing on `LOCATIVE-TYPE`.
+    This function serves the same purpose as
+    [`FIND-SOURCE`][b417], but it has different arguments to allow specializing on
+    `LOCATIVE-TYPE`. Methods defined as extensions must be
+    `EQL`([`0`][f283] [`1`][e4da])-specialized on a particular locative type and return a Swank
+    `location` as documented in `FIND-SOURCE`.
+    
+    See [`FIND-SOURCE`][62c4] `(method () (t))` and
+    [`FIND-SOURCE`][d976] `(method () (reference))` for a description of when this
+    function is called. Don't call this function directly.
+
+<a id='x-28MGL-PAX-3AFIND-SOURCE-20-28METHOD-20NIL-20-28T-29-29-29'></a>
+
+- [method] **FIND-SOURCE** *OBJECT*
+
+    Call [`LOCATE-AND-FIND-SOURCE`][e9e9] with the appropriate parts of
+    [`CANONICAL-REFERENCE`][24fc] for `OBJECT`.
+
+<a id='x-28MGL-PAX-3AFIND-SOURCE-20-28METHOD-20NIL-20-28MGL-PAX-3AREFERENCE-29-29-29'></a>
+
+- [method] **FIND-SOURCE** *(REFERENCE REFERENCE)*
+
+    Call [`LOCATE-AND-FIND-SOURCE`][e9e9] with the appropriate parts of
+    `REFERENCE`. If there is no method specialized on the [locative
+    type][@mgl-pax-locatives-and-references], then attempt to [`RESOLVE`][e0d7]
+    `REFERENCE` to a non-`REFERENCE` object and invoke [`FIND-SOURCE`][b417] on it.
+    
+    Thus for new locative types, only `FIND-SOURCE` or
+    `LOCATE-AND-FIND-SOURCE` needs to be specialized.
 
 We have covered the basic building blocks of reference based
 extensions. Now let's see how the obscure
@@ -2988,6 +3002,7 @@ presented.
   [5d6e]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defun.htm "(DEFUN MGL-PAX:MACRO)"
   [5faa]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defmac.htm "(DEFMACRO MGL-PAX:MACRO)"
   [60c9]: #x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29 "(MGL-PAX:*FORMAT* VARIABLE)"
+  [62c4]: #x-28MGL-PAX-3AFIND-SOURCE-20-28METHOD-20NIL-20-28T-29-29-29 "(MGL-PAX:FIND-SOURCE (METHOD NIL (T)))"
   [62d4]: #x-28MGL-PAX-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-LOCATIVE-TYPE MGL-PAX:MACRO)"
   [63bb]: http://www.lispworks.com/documentation/HyperSpec/Body/t_meth_1.htm "(METHOD-COMBINATION CLASS)"
   [6580]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "(*STANDARD-OUTPUT* VARIABLE)"
@@ -3073,6 +3088,7 @@ presented.
   [d7e0]: #x-28MGL-PAX-3A-40MGL-PAX-LINKS-20MGL-PAX-3ASECTION-29 "Links"
   [d7eb]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28STRING-20T-29-29-29 "(MGL-PAX:DOCUMENT-OBJECT (METHOD NIL (STRING T)))"
   [d921]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq.htm "(EQ FUNCTION)"
+  [d976]: #x-28MGL-PAX-3AFIND-SOURCE-20-28METHOD-20NIL-20-28MGL-PAX-3AREFERENCE-29-29-29 "(MGL-PAX:FIND-SOURCE (METHOD NIL (MGL-PAX:REFERENCE)))"
   [df39]: #x-28DESCRIBE-OBJECT-20-28METHOD-20NIL-20-28MGL-PAX-3ASECTION-20T-29-29-29 "(DESCRIBE-OBJECT (METHOD NIL (MGL-PAX:SECTION T)))"
   [e03d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_m.htm "(FIND-METHOD GENERIC-FUNCTION)"
   [e0d7]: #x-28MGL-PAX-3ARESOLVE-20FUNCTION-29 "(MGL-PAX:RESOLVE FUNCTION)"
@@ -3086,6 +3102,7 @@ presented.
   [eed0]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009.htm "(\"SUMMARY:AREF-1D\" MGL-PAX:CLHS)"
   [eed2]: http://www.lispworks.com/documentation/HyperSpec/Body/t_symbol.htm "(SYMBOL TYPE)"
   [f25e]: #x-28MGL-PAX-3A-40MGL-PAX-CONDITION-SYSTEM-LOCATIVES-20MGL-PAX-3ASECTION-29 "Condition System Locatives"
+  [f283]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eql.htm "(EQL FUNCTION)"
   [f3b7]: #x-28MGL-PAX-3ALOCATE-ERROR-20FUNCTION-29 "(MGL-PAX:LOCATE-ERROR FUNCTION)"
   [f4eb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_deftp.htm "(DEFTYPE MGL-PAX:MACRO)"
   [f7af]: http://www.lispworks.com/documentation/HyperSpec/Body/m_define.htm "(DEFINE-COMPILER-MACRO MGL-PAX:MACRO)"

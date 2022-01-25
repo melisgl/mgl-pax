@@ -13,13 +13,6 @@
   involve popping up an xref buffer and letting the user interactively
   select one of possible definitions.
 
-  *Note that the this feature is implemented in terms of
-  SWANK-BACKEND:FIND-SOURCE-LOCATION and
-  SWANK-BACKEND:FIND-DEFINITIONS, whose support varies across the Lisp
-  implementations. In particular, ABCL, CLISP, CMUCL and ECL have no
-  or rather spotty support for it. Everything works fine on AllegroCL,
-  \\CCL and SBCL.*
-
   In the following examples, pressing `M-.` when the cursor is on one
   of the characters of `FOO` or just after `FOO`, will visit the
   definition of function `FOO`:
@@ -69,6 +62,11 @@
 ;;; function slime-locate-definition. It's like LOCATE but takes
 ;;; string arguments and returns a location suitable for
 ;;; make-slime-xref.
+;;;
+;;; Handle references with quoted or non-quoted symbols and locatives.
+;;;
+;;; Since SECTION is both a class and a locative, it serves as a good
+;;; example.
 (defun locate-definitions-for-emacs (name locative-string)
   (with-swank ()
     (let ((locative-string (string-trim " `" locative-string)))
@@ -130,21 +128,16 @@
                       (first locative)
                       locative)))))
 
-;;; Handle references with quoted or non-quoted symbols and locatives.
-;;; Since SECTION is both a class and and a documented symbol it
-;;; serves as a good example.
 (defun locate-definition-for-emacs-1 (name locative-string)
   (multiple-value-bind (symbol found)
       (swank::find-definitions-find-symbol-or-package name)
     (when found
       (let ((locative (read-marked-up-locative-from-string locative-string)))
         (when locative
-          (let ((thing (locate symbol locative :errorp nil)))
-            (when thing
-              (let ((location (find-source thing)))
-                (when location
-                  ;; LOCATIVE-STRING acts as Slime's DSPEC.
-                  (list (list locative-string location)))))))))))
+          (let ((location (find-source (make-reference symbol locative))))
+            (when (eq (first location) :location)
+              ;; LOCATIVE-STRING acts as Slime's DSPEC.
+              (list (list locative-string location)))))))))
 
 (defun read-marked-up-locative-from-string (string)
   (let ((*read-eval* nil)

@@ -153,6 +153,9 @@
     (:export nil :title "`CODE` *italic* _italic2_ *bold* [link][sdf] <thing>")
   "backlink @TEST")
 
+(define-locative-type my-loc ()
+  "This is MY-LOC.")
+
 (defun foo (ook x)
   "FOO has args OOK and X.
 
@@ -201,7 +204,9 @@
   "BAR is not a link.")
 
 (defgeneric baz ())
-(defvar baz)
+;; KLUDGE: CMUCL clobbers the DEFVAR's source location with that of
+;; the DEFSTRUCT if they have the same name.
+(defvar bazz)
 (defstruct baz
   aaa)
 
@@ -256,102 +261,127 @@
     "ddd"))
 
 (defparameter *navigation-test-cases*
-  '((foo function (defun foo))
-    (foo type (defclass foo))
-    (foo class (defclass foo))
-    (foo compiler-macro (define-compiler-macro foo))
-    (foo-a (accessor foo) (defclass foo) (a :accessor foo-a))
-    (foo-r (reader foo) (defclass foo) (r :reader foo-r))
-    (foo-w (writer foo) (defclass foo) (w :writer foo-w))
+  '(;; @MGL-PAX-VARIABLELIKE-LOCATIVES
     (foo-a variable (defvar foo-a))
     (foo-b variable (defvar foo-b))
     (foo-c variable (defvar foo-c))
-    (bar macro (defmacro bar))
-    (bar type (deftype bar))
     (bar constant (defconstant bar))
-    (baz generic-function (defgeneric baz))
-    (baz variable (defvar baz))
-    (some-restart restart (define-restart some-restart))
-    (my-error condition (define-condition my-error))
-    (my-error type (define-condition my-error))
-    (@mgl-pax-manual section (defsection @mgl-pax-manual))
+    ;; @MGL-PAX-MACROLIKE-LOCATIVES
+    (bar macro (defmacro bar))
+    (my-smac symbol-macro (define-symbol-macro my-smac))
+    (foo compiler-macro (define-compiler-macro foo))
+    ;; @MGL-PAX-FUNCTIONLIKE-LOCATIVES
+    (foo function (defun foo))
+    (test-gf generic-function (defgeneric test-gf))
+    (test-gf (method () (number)) (defmethod test-gf))
+    (my-comb method-combination (define-method-combination my-comb))
+    (foo-a (accessor foo) (defclass foo) (a :accessor foo-a))
+    (foo-r (reader foo) (defclass foo) (r :reader foo-r))
+    (foo-w (writer foo) (defclass foo) (w :writer foo-w))
     (baz-aaa structure-accessor (defstruct baz))
+    ;; @MGL-PAX-TYPELIKE-LOCATIVES
+    (bar type (deftype bar))
+    (foo type (defclass foo))
+    (my-error type (define-condition my-error))
+    (foo class (defclass foo))
+    (test-declaration declaration (define-declaration test-declaration))
+    ;; @MGL-PAX-CONDITION-SYSTEM-LOCATIVES
+    (my-error condition (define-condition my-error))
+    (some-restart restart (define-restart some-restart))
+    ;; @MGL-PAX-PACKAGELIKE-LOCATIVES
+    (mgl-pax asdf:system ())
     (mgl-pax package
      (eval-when (:compile-toplevel :load-toplevel :execute))
      (cl:defpackage))
-    (mgl-pax asdf:system ())
-    (test-gf generic-function (defgeneric test-gf))
-    (test-gf (method () (number)) (defmethod test-gf))
-    (test-declaration declaration (define-declaration test-declaration))
-    (xxx-rt readtable (defreadtable xxx-rt))))
+    (xxx-rt readtable (defreadtable xxx-rt))
+    ;; @MGL-PAX-PAX-LOCATIVES
+    (@mgl-pax-manual section (defsection @mgl-pax-manual))
+    (some-term glossary-term (define-glossary-term some-term))
+    (my-loc locative (define-locative-type my-loc))))
 
 (defun working-locative-p (locative)
-  (declare (ignorable locative))
-  (cond ((eq locative 'declaration)
-         (alexandria:featurep :sbcl))
-        ((eq locative 'readtable)
-         nil)
-        (t
-         ;; AllegroCL doesn't store source location for DEFPACKAGE and
-         ;; is off by one form for DEFGENERIC.
-         #+allegro (not (member locative '(package generic-function)))
-         #-allegro t)))
+  (let ((type (locative-type locative)))
+    (cond ((and (alexandria:featurep :abcl)
+                (member type '(variable constant method type restart
+                               section locative glossary-term)))
+           nil)
+          ((alexandria:featurep :clisp)
+           nil)
+          ((eq type 'symbol-macro)
+           (alexandria:featurep '(:not :ccl)))
+          ((eq type 'declaration)
+           (alexandria:featurep :sbcl))
+          ((eq type 'readtable)
+           nil)
+          ((eq type 'generic-function)
+           ;; AllegroCL is off by one form.
+           (alexandria:featurep '(:not :allegro)))
+          ((eq type 'method-combination)
+           (alexandria:featurep '(:not (:or :abcl :cmucl :ecl))))
+          ((member type '(reader writer accessor))
+           (alexandria:featurep '(:not (:or :abcl :cmucl :ecl))))
+          ((eq type 'structure-accessor)
+           (alexandria:featurep '(:not (:or :abcl :ecl))))
+          ((eq type 'type)
+           (alexandria:featurep '(:not :ecl)))
+          ((eq type 'package)
+           (alexandria:featurep '(:not (:or :abcl :allegro :clisp :cmucl
+                                        :ecl))))
+          (t
+           t))))
 
 (deftest test-navigation ()
-  ;; For CMUCL, SWANK-BACKEND:FIND-SOURCE-LOCATION is not implemented.
-  (when (alexandria:featurep :cmucl)
-    (skip-trial))
-  ;; ABCL, CLISP and ECL do not provide source location information
-  ;; for many things.
-  (with-failure-expected ((alexandria:featurep '(:or :abcl :clisp :ecl)))
-    (dolist (test-case *navigation-test-cases*)
-      (destructuring-bind
-          (symbol locative prefix &optional alternative-prefix) test-case
-        (with-test ((format nil "navigate to (~S ~S)" symbol locative))
-          (when (working-locative-p locative)
-            (let* ((located (locate symbol locative))
-                   (location (ignore-errors (find-source located))))
-              (when (is (and location (not (eq :error (first location))))
-                        :msg `("Source location for (~S ~S) can be found."
-                               ,symbol ,locative))
-                (multiple-value-bind (file position)
-                    (extract-source-location location)
-                  (when (is position)
-                    (let ((form
-                            (let ((*package* (find-package :mgl-pax-test)))
-                              (read-form-from-file-position file position))))
-                      (is (and (listp form)
-                               (or (alexandria:starts-with-subseq
-                                    prefix form :test #'equal)
-                                   (and alternative-prefix
-                                        (alexandria:starts-with-subseq
-                                         alternative-prefix form
-                                         :test #'equal))))
-                          :msg `("Can find prefix ~S~@[ or ~S~] ~
-                                  at source location~%~S~% ~
-                                  for reference (~S ~S).~%~
-                                  Form found was:~%~S."
-                                 ,prefix ,alternative-prefix
-                                 ,location ,symbol ,locative
-                                 ,form)))))))))))))
+  (dolist (test-case *navigation-test-cases*)
+    (destructuring-bind
+        (symbol locative prefix &optional alternative-prefix) test-case
+      (let* ((ref (make-reference symbol locative))
+             (located (resolve ref)))
+        ;; Test FIND-SOURCE with a REFERENCE and a resolved object if
+        ;; there is one.
+        (dolist (target (if (and (typep located 'reference)
+                                 (mgl-pax::reference= located ref))
+                            (list ref)
+                            (list ref located)))
+          (with-test ((format nil "navigate to ~S" target))
+            (with-failure-expected ((not (working-locative-p locative)))
+              (let ((location (ignore-errors (find-source target))))
+                (when (is (and location (not (eq :error (first location))))
+                          :msg `("Find source location for (~S ~S)."
+                                 ,symbol ,locative))
+                  (multiple-value-bind (file position function-name)
+                      (extract-source-location location)
+                    (is (or position function-name))
+                    (when position
+                      (let ((form
+                              (let ((*package* (find-package :mgl-pax-test)))
+                                (read-form-from-file-position file position))))
+                        (is (and (listp form)
+                                 (or (alexandria:starts-with-subseq
+                                      prefix form :test #'equal)
+                                     (and alternative-prefix
+                                          (alexandria:starts-with-subseq
+                                           alternative-prefix form
+                                           :test #'equal))))
+                            :msg `("Find prefix ~S~@[ or ~S~] ~
+                                    at source location~%~S~% ~
+                                    for reference (~S ~S).~%~
+                                    Form found was:~%~S."
+                                   ,prefix ,alternative-prefix
+                                   ,location ,symbol ,locative
+                                   ,form))))))))))))))
 
-;;; Extract the filename and 3303 from
-;;;     (:LOCATION
-;;;         (:FILE "/home/melisgl/own/mgl-pax/test/test.lisp")
-;;;         (:POSITION 3303) NIL)
-;;; or
-;;;     (:LOCATION
-;;;         (:FILE "/home/melisgl/own/mgl-pax/test/test.lisp")
-;;;         (:OFFSET 1 3303) NIL)
 (defun extract-source-location (location)
   (let ((file-entry (find :file (rest location) :key #'first))
         (position-entry (find :position (rest location) :key #'first))
-        (offset-entry (find :offset (rest location) :key #'first)))
+        (offset-entry (find :offset (rest location) :key #'first))
+        (function-name-entry (find :function-name (rest location)
+                                   :key #'first)))
     (values (second file-entry)
             (cond (position-entry
                    (1- (second position-entry)))
                   (offset-entry
-                   (1- (third offset-entry)))))))
+                   (1- (third offset-entry))))
+            (second function-name-entry))))
 
 (defun read-form-from-file-position (filename position)
   (with-open-file (stream filename :direction :input)
@@ -566,7 +596,8 @@
     (is (mgl-pax::reference= (canonical-reference ref) ref))))
 
 (defmacro macro-with-fancy-args (x &optional (o 1) &key (k 2 kp))
-  (declare (ignore x o k kp))
+  (declare #+sbcl (sb-ext:muffle-conditions style-warning)
+           (ignore x o k kp))
   ())
 
 (deftest test-macro/arglist ()
@@ -614,7 +645,8 @@
     (is (mgl-pax::reference= (canonical-reference ref) ref))))
 
 (defun function-with-fancy-args (x &optional (o 1) &key (k 2 kp))
-  (declare (ignore x o k kp))
+  (declare #+sbcl (sb-ext:muffle-conditions style-warning)
+           (ignore x o k kp))
   nil)
 
 (deftest test-function/arglist ()

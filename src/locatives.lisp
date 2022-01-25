@@ -220,9 +220,7 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-one-location (swank-backend:find-definitions symbol)
-                     '("variable" "defvar" "defparameter"
-                       "special-declaration")))
+  (find-definition symbol (swank-variable-dspecs symbol)))
 
 (defvar end-of-variable-example)
 
@@ -266,8 +264,7 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'constant))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-one-location (swank-backend:find-definitions symbol)
-                     '("defconstant" "constant" "variable")))
+  (find-definition symbol (swank-constant-dspecs symbol)))
 
 
 ;;;; MACRO locative
@@ -297,13 +294,8 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'macro))
                                    locative-args)
   (declare (ignore locative-args))
-  ;; Some implementations can not find the source location of the
-  ;; accessor function, so fall back on FIND-ONE-LOCATION.
-  (let ((location (find-source (macro-function symbol))))
-    (if (eq :error (first location))
-        (find-one-location (swank-backend:find-definitions symbol)
-                           '("defmacro" "macro"))
-        location)))
+  (find-definition* (macro-function symbol) symbol
+                    (swank-macro-dspecs symbol)))
 
 
 ;;;; SYMBOL-MACRO locative
@@ -347,8 +339,7 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'symbol-macro))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-one-location (swank-backend:find-definitions symbol)
-                     '("method-combination")))
+  (find-definition symbol (swank-symbol-macro-dspecs symbol)))
 
 
 ;;;; COMPILER-MACRO locative
@@ -380,11 +371,8 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'compiler-macro))
                                    locative-args)
   (declare (ignore locative-args))
-  #-(or allegro cmucl)
-  (find-source (compiler-macro-function symbol))
-  #+(or allegro cmucl)
-  (find-one-location (swank-backend:find-definitions symbol)
-                     '("define-compiler-macro" "compiler-macro")))
+  (find-definition* (compiler-macro-function symbol)
+                    symbol (swank-compiler-macro-dspecs symbol)))
 
 
 ;;;; FUNCTION and GENERIC-FUNCTION locatives
@@ -458,17 +446,30 @@
           #-(or ccl ecl)
           (maybe-print-docstring (function-name function) 'function
                                  stream))))))
+
+(defmethod locate-and-find-source
+    (symbol (locative-type (eql 'function)) locative-args)
+  (declare (ignore locative-args))
+  (find-definition* (symbol-function symbol)
+                    symbol (swank-function-dspecs symbol)))
+
+(defmethod locate-and-find-source
+    (symbol (locative-type (eql 'generic-function)) locative-args)
+  (declare (ignore locative-args))
+  (find-definition* (symbol-function symbol)
+                    symbol (swank-generic-function-dspecs symbol)))
 
 
 ;;;; METHOD locative
 
 (define-locative-type method (method-qualifiers method-specializers)
   "See CL:FIND-METHOD for the description of the arguments
-  METHOD-QUALIFIERS and METHOD-SPECIALIZERS. For example, this
-  DEFSECTION entry refers to the default method of the three argument
-  generic function FOO:
+  METHOD-QUALIFIERS and METHOD-SPECIALIZERS. For example,
+  a `(FOO (METHOD () (T (EQL XXX))))` as a DEFSECTION entry refers to
+  this method:
 
-      (foo (method () (t t t)))
+      (defmethod foo (x (y (eql 'xxx)))
+        ...)
 
   METHOD is not EXPORTABLE-LOCATIVE-TYPE-P.")
 
@@ -478,16 +479,7 @@
     (locate-error "The syntax of the METHOD locative is ~
                    (METHOD <METHOD-QUALIFIERS> <METHOD-SPECIALIZERS>)."))
   (destructuring-bind (qualifiers specializers) locative-args
-    (or (ignore-errors
-         (find-method (symbol-function* symbol) qualifiers
-                      (loop for specializer in specializers
-                            collect (typecase specializer
-                                      ;; SPECIALIZER can be a cons
-                                      ;; like (:EQL :SOME-VALUE) ...
-                                      (cons specializer)
-                                      ;; or a type specifier denoting
-                                      ;; a class:
-                                      (t (find-class specializer))))))
+    (or (ignore-errors (find-method* symbol qualifiers specializers))
         (locate-error "Method does not exist."))))
 
 (defmethod canonical-reference ((method method))
@@ -540,6 +532,15 @@
                  (swank-mop:method-generic-function method)))
           (swank-mop:method-qualifiers method)
           (method-specializers-for-inspect method)))
+
+(defmethod locate-and-find-source
+    (symbol (locative-type (eql 'method)) locative-args)
+  ;; FIND-DEFINITION* would be faster on SBCL, but then we need to
+  ;; implement dealing EQL specialier objects.
+  (find-definition* (find-method* symbol (first locative-args)
+                                  (second locative-args))
+                    symbol (swank-method-dspecs symbol (first locative-args)
+                                                (second locative-args))))
 
 
 ;;;; METHOD-COMBINATION locative
@@ -568,8 +569,7 @@
 (defmethod locate-and-find-source
     (symbol (locative-type (eql 'method-combination)) locative-args)
   (declare (ignore locative-args))
-  (find-one-location (swank-backend:find-definitions symbol)
-                     '("method-combination")))
+  (find-definition symbol (swank-method-combination-dspecs symbol)))
 
 
 ;;;; ACCESSOR, READER and WRITER locatives
@@ -601,15 +601,21 @@
   (make-reference symbol (cons locative-type locative-args)))
 
 (defun find-accessor-slot-definition (accessor-symbol class-symbol)
-  (dolist (slot-def (swank-mop:class-direct-slots (find-class class-symbol)))
-    (when (and (find accessor-symbol
-                     (swank-mop:slot-definition-readers slot-def))
-               (find `(setf ,accessor-symbol)
-                     (swank-mop:slot-definition-writers slot-def)
-                     :test #'equal))
-      (return-from find-accessor-slot-definition slot-def)))
-  (locate-error "Could not find accessor ~S for class ~S."
-                accessor-symbol class-symbol))
+  (when (class-slots-supported-p class-symbol)
+    (dolist (slot-def (swank-mop:class-direct-slots (find-class class-symbol)))
+      (when (and (find accessor-symbol
+                       (swank-mop:slot-definition-readers slot-def))
+                 (find `(setf ,accessor-symbol)
+                       (swank-mop:slot-definition-writers slot-def)
+                       :test #'equal))
+        (return-from find-accessor-slot-definition slot-def)))
+    (locate-error "Could not find accessor ~S for class ~S."
+                  accessor-symbol class-symbol)))
+
+(defun class-slots-supported-p (class)
+  #-cmucl (declare (ignore class))
+  #-cmucl t
+  #+cmucl (not (subtypep class 'condition)))
 
 (defmethod locate-object (symbol (locative-type (eql 'reader))
                           locative-args)
@@ -619,12 +625,13 @@
   (find-reader-slot-definition symbol (first locative-args))
   (make-reference symbol (cons locative-type locative-args)))
 
-(defun find-reader-slot-definition (accessor-symbol class-symbol)
-  (dolist (slot-def (swank-mop:class-direct-slots (find-class class-symbol)))
-    (when (find accessor-symbol (swank-mop:slot-definition-readers slot-def))
-      (return-from find-reader-slot-definition slot-def)))
-  (locate-error "Could not find reader ~S for class ~S." accessor-symbol
-                class-symbol))
+(defun find-reader-slot-definition (reader-symbol class-symbol)
+  (when (class-slots-supported-p class-symbol)
+    (dolist (slot-def (swank-mop:class-direct-slots (find-class class-symbol)))
+      (when (find reader-symbol (swank-mop:slot-definition-readers slot-def))
+        (return-from find-reader-slot-definition slot-def)))
+    (locate-error "Could not find reader ~S for class ~S." reader-symbol
+                  class-symbol)))
 
 (defmethod locate-object (symbol (locative-type (eql 'writer))
                           locative-args)
@@ -635,11 +642,12 @@
   (make-reference symbol (cons locative-type locative-args)))
 
 (defun find-writer-slot-definition (accessor-symbol class-symbol)
-  (dolist (slot-def (swank-mop:class-direct-slots (find-class class-symbol)))
-    (when (find accessor-symbol (swank-mop:slot-definition-writers slot-def))
-      (return-from find-writer-slot-definition slot-def)))
-  (locate-error "Could not find writer ~S for class ~S."
-                accessor-symbol class-symbol))
+  (when (class-slots-supported-p class-symbol)
+    (dolist (slot-def (swank-mop:class-direct-slots (find-class class-symbol)))
+      (when (find accessor-symbol (swank-mop:slot-definition-writers slot-def))
+        (return-from find-writer-slot-definition slot-def)))
+    (locate-error "Could not find writer ~S for class ~S."
+                  accessor-symbol class-symbol)))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'accessor))
                                 locative-args stream)
@@ -664,8 +672,9 @@
   (locate-and-print-bullet locative-type locative-args symbol stream)
   (write-char #\Space stream)
   (print-arglist locative-args stream)
-  (when (or (swank-mop:slot-definition-initargs slot-def)
-            (swank-mop:slot-definition-initfunction slot-def))
+  (when (and slot-def
+             (or (swank-mop:slot-definition-initargs slot-def)
+                 (swank-mop:slot-definition-initfunction slot-def)))
     (write-char #\Space stream)
     (if (and *document-mark-up-signatures* (eq *format* :html))
         (let ((initarg-strings
@@ -704,19 +713,21 @@
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'accessor))
                                    locative-args)
-  (find-source (find-method (symbol-function* symbol)
-                            '() (list (find-class (first locative-args))))))
+  (find-definition* (find-method* symbol () (list (first locative-args)))
+                    symbol (swank-accessor-dspecs symbol (first locative-args)
+                                                  nil)))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'reader))
                                    locative-args)
-  (find-source (find-method (symbol-function* symbol)
-                            '() (list (find-class (first locative-args))))))
+  (find-definition* (find-method* symbol () (list (first locative-args)))
+                    symbol (swank-accessor-dspecs symbol (first locative-args)
+                                                  nil)))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'writer))
                                    locative-args)
-  (find-source (find-method (symbol-function* symbol)
-                            '() (mapcar #'find-class
-                                        (list t (first locative-args))))))
+  (find-definition* (find-method* symbol () (list t (first locative-args)))
+                    symbol (swank-accessor-dspecs symbol (first locative-args)
+                                                  t)))
 
 
 ;;;; STRUCTURE-ACCESSOR locative
@@ -746,11 +757,8 @@
                                    (locative-type (eql 'structure-accessor))
                                    locative-args)
   (declare (ignore locative-args))
-  (let ((location (find-source (symbol-function symbol))))
-    (if (eq :error (first location))
-        (find-one-location (swank-backend:find-definitions symbol)
-                           '("function" "operator"))
-        location)))
+  (find-definition* (symbol-function symbol)
+                    symbol (swank-function-dspecs symbol)))
 
 
 ;;;; TYPE locative
@@ -787,9 +795,9 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'type))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-one-location (swank-backend:find-definitions symbol)
-                     '("deftype" "type" "defclass" "class"
-                       "define-condition" "condition")))
+  (find-definition symbol (append (swank-type-dspecs symbol)
+                                  (swank-class-dspecs symbol)
+                                  (swank-condition-dspecs symbol))))
 
 
 ;;;; CLASS and CONDITION locatives
@@ -875,6 +883,18 @@
 
 (defun find-known-reference (reference)
   (find reference *references* :test #'reference=))
+
+(defmethod locate-and-find-source
+    (symbol (locative-type (eql 'class)) locative-args)
+  (declare (ignore locative-args))
+  (find-definition* (find-class symbol)
+                    symbol (swank-class-dspecs symbol)))
+
+(defmethod locate-and-find-source
+    (symbol (locative-type (eql 'condition)) locative-args)
+  (declare (ignore locative-args))
+  (find-definition* (find-class symbol)
+                    symbol (swank-condition-dspecs symbol)))
 
 
 ;;;; DECLARATION locative
@@ -909,9 +929,9 @@
                           locative-args)
   (unless (and (symbolp symbol)
                (or (find symbol *ansi-declarations*)
-                   #+sbcl
-                   (find symbol (sb-cltl2:declaration-information
-                                 'declaration))))
+                   #-sbcl t
+                   #+sbcl (find symbol (sb-cltl2:declaration-information
+                                        'declaration))))
     (locate-error "~S is not a known declaration." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
@@ -926,10 +946,14 @@
                                    locative-args)
   (declare (ignore #-sbcl symbol locative-args))
   #+sbcl
-  (find-source (sb-int:info :declaration :known symbol))
+  (swank-backend:find-source-location (sb-int:info :declaration :known symbol))
   #-sbcl
-  '(:error "Don't know how find the source location of declarations."))
+  '(:error "Don't know how to find the source location of declarations."))
 
+;;; Lacking DECLARATION-INFORMATION form CLTL2 on Lisps other than
+;;; SBCL, LOCATE-OBJECT always succeeds, which leads to M-. thinking
+;;; that there is a declaration if it's in the search list.
+#+sbcl
 (add-locative-to-source-search-list 'declaration)
 
 
@@ -1055,6 +1079,15 @@
     (print-end-bullet stream)
     (with-local-references ((list (make-reference symbol 'package)))
       (maybe-print-docstring package t stream))))
+
+(defmethod locate-and-find-source
+    (name (locative-type (eql 'package)) locative-args)
+  (declare (ignore locative-args))
+  (find-definition* (find-package name)
+                    (if (stringp name)
+                        (make-symbol name)
+                        name)
+                    (swank-package-dspecs name)))
 
 
 ;;;; READTABLE locative
@@ -1116,7 +1149,7 @@
                                (typep entry 'reference))
                              (section-entries section)))
     (locate-error (e)
-      (error "~@<SECTION ~S has an undefined reference:~%~A~:@>"
+      (error "~@<SECTION ~S has an unresolvable reference:~%~A~:@>"
              (section-name section) e))))
 
 (defvar *section*)
@@ -1147,8 +1180,10 @@
           (with-nested-headings ()
             (document-object entry stream)))))))
 
-(defmethod find-source ((section section))
-  (locate-and-find-source (section-name section) 'variable ()))
+(defmethod locate-and-find-source (symbol (locative-type (eql 'section))
+                                   locative-args)
+  (declare (ignore locative-args))
+  (find-definition symbol (swank-variable-dspecs symbol)))
 
 
 ;;;; GLOSSARY-TERM locative
@@ -1234,7 +1269,7 @@
   (make-reference symbol (cons locative-type locative-args)))
 
 (defun locative-lambda-list-method-for-symbol (symbol)
-  (find-method #'locative-lambda-list () `((eql ,symbol))))
+  (find-method* #'locative-lambda-list () `((eql ,symbol))))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'locative))
                                 locative-args stream)
@@ -1253,7 +1288,10 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'locative))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-source (locative-lambda-list-method-for-symbol symbol)))
+  (find-definition* (locative-lambda-list-method-for-symbol symbol)
+                    'locative-lambda-list
+                    (swank-method-dspecs 'locative-lambda-list ()
+                                         `((eql ,symbol)))))
 
 (add-locative-to-source-search-list 'locative)
 
@@ -1276,7 +1314,7 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'dislocated))
                           locative-args)
-  (declare (ignore symbol locative-type locative-args))
+  (declare (ignore symbol locative-args))
   (locate-error "DISLOCATED can never be located."))
 
 
@@ -1299,7 +1337,7 @@
   ```""")
 
 (defmethod locate-object (symbol (locative-type (eql 'argument)) locative-args)
-  (declare (ignore symbol locative-type locative-args))
+  (declare (ignore symbol locative-args))
   (locate-error "ARGUMENT can never be located."))
 
 
@@ -1421,8 +1459,8 @@
          (values source 0 nil))
         ((and source (listp source))
          (destructuring-bind (&key start end) source
-           (let ((start (find-source (resolve (entry-to-reference start nil))))
-                 (end (find-source (resolve (entry-to-reference end nil)))))
+           (let ((start (find-source (entry-to-reference start nil)))
+                 (end (find-source (entry-to-reference end nil))))
              (when start
                (check-location start))
              (when end

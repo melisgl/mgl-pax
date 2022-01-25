@@ -60,8 +60,7 @@
           (lambda (reference)
             (let ((*find-source-cache* find-source-cache))
               (multiple-value-bind (relative-path line-number)
-                  (convert-source-location (find-source
-                                            (resolve reference))
+                  (convert-source-location (find-source reference)
                                            system-dir reference
                                            line-file-position-cache)
                 (when relative-path
