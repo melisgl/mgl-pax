@@ -553,6 +553,30 @@
                              format))
 
 
+(deftest test-macro ()
+  (test-macro/canonical-reference)
+  (test-macro/arglist))
+
+(setf (macro-function 'setfed-macro)
+      (lambda (whole env)
+        (declare (ignore whole env))))
+
+(deftest test-macro/canonical-reference ()
+  (let ((ref (make-reference 'setfed-macro 'macro)))
+    (is (mgl-pax::reference= (canonical-reference ref) ref))))
+
+(defmacro macro-with-fancy-args (x &optional (o 1) &key (k 2 kp))
+  (declare (ignore x o k kp))
+  ())
+
+(deftest test-macro/arglist ()
+  (with-failure-expected ((alexandria:featurep '(:or :allegro)))
+    (is (or (equal (% (mgl-pax::arglist 'macro-with-fancy-args))
+                   '(x &optional (o 1) &key (k 2 kp)))
+            (equal (mgl-pax::arglist 'macro-with-fancy-args)
+                   '(x &optional (o 1) &key (k 2)))))))
+
+
 (defsection @test-symbol-macro ()
   (my-smac symbol-macro))
 
@@ -578,12 +602,25 @@
 ")))))
 
 
+(deftest test-function ()
+  (test-function/canonical-reference)
+  (test-function/arglist))
+
 (setf (symbol-function 'setfed-function)
       (lambda ()))
 
-(deftest test-function ()
+(deftest test-function/canonical-reference ()
   (let ((ref (make-reference 'setfed-function 'function)))
     (is (mgl-pax::reference= (canonical-reference ref) ref))))
+
+(defun function-with-fancy-args (x &optional (o 1) &key (k 2 kp))
+  (declare (ignore x o k kp))
+  nil)
+
+(deftest test-function/arglist ()
+  (with-failure-expected ((alexandria:featurep :ccl))
+    (is (equal (mgl-pax::arglist 'function-with-fancy-args)
+               '(x &optional (o 1) &key (k 2 kp))))))
 
 
 (setf (symbol-function 'setfed-generic-function)
@@ -933,6 +970,7 @@ ISSUE:AREF-1D `CLHS`
   (test-document :html)
   (test-function)
   (test-generic-function)
+  (test-macro)
   (test-symbol-macro)
   (test-method-combination)
   (test-hyperspec)
@@ -944,13 +982,13 @@ ISSUE:AREF-1D `CLHS`
   (test-package)
   (test-asdf-system))
 
-(defun test (&key (debug nil) (print 'unexpected) (describe 'unexpected))
+(defun test (&key (debug nil) (print 't) (describe *describe*))
   ;; Bind *PACKAGE* so that names of tests printed have package names,
   ;; and M-. works on them in Slime.
   (let ((*package* (find-package :common-lisp))
         (*print-duration* nil)
-        (*print-compactly* nil)
-        (*defer-describe* nil))
+        (*print-compactly* t)
+        (*defer-describe* t))
     (warn-on-tests-not-run ((find-package :mgl-pax-test))
       (print (try 'test-all :debug debug :print print :describe describe)))))
 
