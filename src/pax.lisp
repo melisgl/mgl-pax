@@ -335,8 +335,8 @@
   is true.")
   (:report (lambda (condition stream)
              (format stream "~@<Could not locate ~A ~A.~@[ ~A~]~:@>"
-                     (locate-error-locative condition)
                      (locate-error-object condition)
+                     (locate-error-locative condition)
                      (locate-error-message condition)))))
 
 (defun resolve (reference &key (errorp t))

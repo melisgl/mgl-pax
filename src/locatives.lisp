@@ -297,7 +297,13 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'macro))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-source (macro-function symbol)))
+  ;; Some implementations can not find the source location of the
+  ;; accessor function, so fall back on FIND-ONE-LOCATION.
+  (let ((location (find-source (macro-function symbol))))
+    (if (eq :error (first location))
+        (find-one-location (swank-backend:find-definitions symbol)
+                           '("defmacro" "macro"))
+        location)))
 
 
 ;;;; SYMBOL-MACRO locative
@@ -374,11 +380,11 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'compiler-macro))
                                    locative-args)
   (declare (ignore locative-args))
-  #-allegro
+  #-(or allegro cmucl)
   (find-source (compiler-macro-function symbol))
-  #+allegro
+  #+(or allegro cmucl)
   (find-one-location (swank-backend:find-definitions symbol)
-                     '("compiler-macro")))
+                     '("define-compiler-macro" "compiler-macro")))
 
 
 ;;;; FUNCTION and GENERIC-FUNCTION locatives
@@ -728,8 +734,6 @@
                                    (locative-type (eql 'structure-accessor))
                                    locative-args)
   (declare (ignore locative-args))
-  ;; Some implementations can not find the source location of the
-  ;; accessor function, so fall back on FIND-ONE-LOCATION.
   (let ((location (find-source (symbol-function symbol))))
     (if (eq :error (first location))
         (find-one-location (swank-backend:find-definitions symbol)
