@@ -1,5 +1,20 @@
 (in-package :mgl-pax)
 
+(defmacro with-standard-io-syntax* (&body body)
+  `(with-standard-io-syntax
+     ;; With *PRINT-READABLY*, CLISP insists on printing FOO as |FOO|.
+     (let (#+clisp (*print-readably* nil))
+       ,@body)))
+
+(defun prin1-to-string/fully-qualified (object)
+  (let ((*package* (find-package :keyword)))
+    (prin1-to-string object)))
+
+(defun find-package* (name)
+  ;; On AllegroCL, FIND-PACKAGE will signal an error if a relative
+  ;; package name has too many leading dots.
+  (ignore-errors (find-package name)))
+
 (defun external-symbol-p (symbol)
   (eq (nth-value 1 (find-symbol (symbol-name symbol) (symbol-package symbol)))
       :external))
@@ -468,17 +483,6 @@
 (defmethod make-stream-spec ((spec (eql t)) &rest args)
   (assert (endp args))
   *standard-output*)
-
-
-(defmacro with-standard-io-syntax* (&body body)
-  `(with-standard-io-syntax
-     ;; With *PRINT-READABLY*, CLISP insists on printing FOO as |FOO|.
-     (let (#+clisp (*print-readably* nil))
-       ,@body)))
-
-(defun prin1-to-string/fully-qualified (object)
-  (let ((*package* (find-package :keyword)))
-    (prin1-to-string object)))
 
 
 ;;;; String utilities

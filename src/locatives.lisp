@@ -1067,7 +1067,7 @@
   (or (and (endp locative-args)
            (or (symbolp package-designator)
                (stringp package-designator))
-           (find-package package-designator))
+           (find-package* package-designator))
       (locate-error "~S does not name a package." package-designator)))
 
 (defmethod canonical-reference ((package package))
@@ -1083,7 +1083,7 @@
 (defmethod locate-and-find-source
     (name (locative-type (eql 'package)) locative-args)
   (declare (ignore locative-args))
-  (find-definition* (find-package name)
+  (find-definition* (find-package* name)
                     (if (stringp name)
                         (make-symbol name)
                         name)

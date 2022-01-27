@@ -700,7 +700,7 @@
                   (and (symbolp object)
                        (or (<= 3 n-chars-read)
                            (external-symbol-p object)))
-                  (find-package object)
+                  (find-package* object)
                   (asdf-system-name-p object))
           n-chars-read)))))
 
@@ -813,7 +813,7 @@
                    (cond (found
                           (return-from find-candidate-object
                             (values symbol n)))
-                         ((or (find-package name)
+                         ((or (find-package* name)
                               (asdf-system-name-p name)
                               (and clhs-locative-possible-p
                                    (find-hyperspec-id
