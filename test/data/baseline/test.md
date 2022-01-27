@@ -20,7 +20,7 @@
 
 [`*test-variable*`][1037]
 
-[mgl-pax-test:*test-variable*][]
+[`mgl-pax-test::*test-variable*`][1037]
 
 [`FOO`][4244] function,
 

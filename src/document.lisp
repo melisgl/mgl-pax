@@ -704,9 +704,6 @@
                   (asdf-system-name-p object))
           n-chars-read)))))
 
-(defun asdf-system-name-p (string)
-  (not (null (find-link (make-reference string 'asdf:system)))))
-
 ;;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings and :EMPH
 ;;; (to recognize *VAR*). Also, perform consistency checking of
 ;;; cl-transcript code blocks (see @MGL-PAX-TRANSCRIBING-WITH-EMACS).
@@ -786,50 +783,6 @@
       ;; Tell MAP-MARKDOWN-PARSE-TREE to leave TREE unchanged,
       ;; recurse, don't slice.
       (values tree t nil)))
-
-
-(defvar *object-name-right-trim* ",:.>")
-(defvar *object-name-right-trim-2* ",:.>sS")
-
-;;; See if NAME looks like a possible REFERENCE-OBJECT (e.g. it names
-;;; and interned symbol, package, asdf system, or something in the
-;;; clhs). If CODIFYINGP, then try to trimming trailing punctuation
-;;; and stuff to find a candidate object. If not CODIFYINGP, then
-;;; allow clhs lookup to match substrings of titles.
-(defun find-candidate-object (name &key locatives codifyingp)
-  (let ((length (length name))
-        (clhs-locative-possible-p
-          (or (null locatives)
-              (find 'clhs locatives :key #'locative-type))))
-    (with-swank ()
-      (swank::with-buffer-syntax (*package*)
-        (flet
-            ((do-find (name n)
-               (when (plusp n)
-                 ;; FIXME: DO-FIND should be a generic function extendable
-                 ;; by LOCATIVE-TYPE.
-                 (multiple-value-bind (symbol found)
-                     (swank::parse-symbol name)
-                   (cond (found
-                          (return-from find-candidate-object
-                            (values symbol n)))
-                         ((or (find-package* name)
-                              (asdf-system-name-p name)
-                              (and clhs-locative-possible-p
-                                   (find-hyperspec-id
-                                    name :substring-match (not codifyingp))))
-                          (return-from find-candidate-object
-                            (values name n))))))))
-          (do-find name length)
-          (when codifyingp
-            (dolist (trimmed (list
-                              (string-right-trim *object-name-right-trim*
-                                                 name)
-                              (string-right-trim *object-name-right-trim-2*
-                                                 name)))
-              (let ((trimmed-length (length trimmed)))
-                (unless (= length trimmed-length)
-                  (do-find trimmed trimmed-length))))))))))
 
 
 (defvar *document-downcase-uppercase-code* nil

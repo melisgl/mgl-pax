@@ -57,95 +57,76 @@
                 (swank::guess-buffer-readtable swank::*buffer-package*))))
      ,@body))
 
-;;; Return one source location for the thing that can be located with
-;;; NAME (a string) and LOCATIVE-STRING. Called from the elisp
-;;; function slime-locate-definition. It's like LOCATE but takes
-;;; string arguments and returns a location suitable for
-;;; make-slime-xref.
+;;; List Swank source locations (suitable for make-slime-xref) for the
+;;; things that the Elisp side considers possible around the point
+;;; when M-. is invoked. NAME-AND-LOCATIVES-LIST is a list like
 ;;;
-;;; Handle references with quoted or non-quoted symbols and locatives.
+;;; (("[section][" ("junk-before" "class"))
+;;;  ("section" ("class")))
 ;;;
-;;; Since SECTION is both a class and a locative, it serves as a good
-;;; example.
-(defun locate-definitions-for-emacs (name locative-string)
+;;; where each element in the list is a consist of a NAME and a list
+;;; of possible locatives found next to it. All strings may need to be
+;;; trimmed of punctuation characters, but [ and ] are dealt with by
+;;; providing two possiblities as in the above example.
+;;;
+;;; If none of the resulting references cannot be resolved (including
+;;; if no locatives are specified), then list all possible
+;;; definitions.
+(defun locate-definitions-for-emacs (name-and-locatives-list)
   (with-swank ()
-    (let ((locative-string (string-trim " `" locative-string)))
-      (swank-backend::converting-errors-to-error-location
-        (swank::with-buffer-syntax ()
-          (or
-           ;; SECTION class and class SECTION
-           ;; SECTION `class` and `class` SECTION
-           ;; `SECTION` class and class `SECTION`
-           ;; `SECTION` `class` and `class` `SECTION`
-           (ignore-errors
-            (locate-definition-for-emacs-1 name locative-string))
-           ;; [SECTION][(class)] gets here as NAME="[SECTION][",
-           ;; LOCATIVE-STRING="(class)".
-           (ignore-errors
-            (locate-definition-for-emacs-1 (string-trim "[]" name)
-                                           locative-string))
-           ;; [SECTION][class] gets here as NAME="[SECTION][class]",
-           ;; LOCATIVE-STRING=garbage.
-           (ignore-errors
-            (locate-reference-link-definition-for-emacs name))
-           ;; [title][section class] gets here as
-           ;; NAME="[title][section", LOCATIVE-STRING="class]".
-           (ignore-errors
-            (locate-definition-for-emacs-1
-             (subseq name (1+ (position #\[ name :from-end t)))
-             (string-trim "[]" locative-string)))
-           ;; [DEFSECTION][]
-           (and (equal locative-string "")
-                (locate-all-definitions-for-emacs name))))))))
+    (swank-backend::converting-errors-to-error-location
+      (swank::with-buffer-syntax ()
+        (stringify-dspec
+         (or (loop for (name locative-strings) in name-and-locatives-list
+                   append (loop for locative-string in locative-strings
+                                append (ignore-errors
+                                        (locate-definition-for-emacs-1
+                                         name locative-string))))
+             (loop for entry in name-and-locatives-list
+                   append (ignore-errors
+                           (locate-all-definitions-for-emacs
+                            (first entry))))))))))
+
+(defun stringify-dspec (dspec-and-location-list)
+  (loop for entry in dspec-and-location-list
+        collect `(,(prin1-to-string (first entry)) ,(second entry))))
 
 (defun locate-all-definitions-for-emacs (name)
-  (let* ((swank:*find-definitions-left-trim* "[#:<")
-         (swank:*find-definitions-right-trim* "][,:.>sS"))
-    (append
-     ;; Standard stuff supported by the swank backend.
-     (swank:find-definitions-for-emacs name)
-     ;; For locatives not supported by swank above, we try locatives
-     ;; on *LOCATIVE-SOURCE-SEARCH-LIST* one by one and see if they
-     ;; lead somewhere from NAME.
-     (multiple-value-bind (symbol found)
-         (swank::find-definitions-find-symbol-or-package name)
-       (when found
-         (mapcan (lambda (locative)
-                   (ignore-errors
-                    (let ((thing (locate symbol locative :errorp nil)))
-                      (when thing
-                        (let ((location (find-source thing)))
-                          (list (list (reference-to-dspec
-                                       (canonical-reference thing))
-                                      location)))))))
-                 *locative-source-search-list*))))))
+  ;; For locatives not supported by Swank, we try locatives on
+  ;; *LOCATIVE-SOURCE-SEARCH-LIST* one by one and see if they lead
+  ;; somewhere from NAME.
+  (loop for object in (find-candidate-objects name)
+        thereis (append
+                ;; Standard stuff supported by Swank.
+                (swank-backend:find-definitions object)
+                (mapcan (lambda (locative)
+                          (ignore-errors
+                           (let ((thing (locate object locative :errorp nil)))
+                             (when thing
+                               (let ((location (find-source thing)))
+                                 `((,(reference-to-dspec
+                                      (canonical-reference thing))
+                                    ,location)))))))
+                        *locative-source-search-list*))))
 
 (defun reference-to-dspec (reference)
-  (format nil "~S"
-          (list (reference-object reference)
-                (let ((locative (reference-locative reference)))
-                  (if (and (listp locative) (= (length locative) 1))
-                      (first locative)
-                      locative)))))
+  (list (reference-object reference) (reference-locative reference)))
 
 (defun locate-definition-for-emacs-1 (name locative-string)
-  (multiple-value-bind (symbol found)
-      (swank::find-definitions-find-symbol-or-package name)
-    (when found
-      (let ((locative (read-marked-up-locative-from-string locative-string)))
-        (when locative
-          (let ((location (find-source (make-reference symbol locative))))
-            (when (eq (first location) :location)
-              ;; LOCATIVE-STRING acts as Slime's DSPEC.
-              (list (list locative-string location)))))))))
+  (let ((locative (read-locative-from-markdown locative-string)))
+    (when locative
+      (loop for object in (find-candidate-objects name)
+            thereis (let* ((ref (make-reference object locative))
+                          (location (find-source ref)))
+                     (when (eq (first location) :location)
+                       ;; List of one Swank dspec and location.
+                       `((,(reference-to-dspec ref) ,location))))))))
 
-(defun read-marked-up-locative-from-string (string)
-  (let ((*read-eval* nil)
-        (string (if (or (alexandria:starts-with #\` string)
-                        (alexandria:starts-with #\' string))
-                    (subseq string 1)
-                    string)))
-    (read-locative-from-string string)))
+(defun read-locative-from-markdown (string)
+  (read-locative-from-string
+   ;; It is assumed that names of locative types are not funny, and we
+   ;; can trim aggressively.
+   (string-trim ":`',." string)))
 
 ;;; Parse "LOCATIVE-TYPE" and "(LOCATIVE-TYPE ...)" like
 ;;; READ-FROM-STRING, but only intern stuff if LOCATIVE-TYPE is a
@@ -154,8 +135,7 @@
   (let ((swank::*buffer-package* *package*))
     (multiple-value-bind (symbol found)
         (with-swank ()
-          (swank::find-definitions-find-symbol-or-package
-           (string-trim *whitespace-chars* string)))
+          (swank::parse-symbol (string-trim *whitespace-chars* string)))
       (if found
           (when (locate symbol 'locative :errorp nil)
             symbol)
@@ -192,17 +172,109 @@
       nil)))
 
 (defun delimiterp (char)
-  (or (whitespacep char)
-      (find char "()'`\"#<")))
+  (or (whitespacep char) (find char "()'`\"")))
+
 
-(defun locate-reference-link-definition-for-emacs (string)
-  (when (and (= 2 (count #\[ string))
-             (= 2 (count #\] string)))
-    (let ((first-open (position #\[ string))
-          (first-close (position #\] string))
-          (second-open (position #\[ string :from-end t))
-          (second-close (position #\] string :from-end t)))
-      (when (< first-open first-close second-open second-close)
-        (locate-definition-for-emacs-1
-         (string-trim "`" (subseq string (1+ first-open) first-close))
-         (subseq string (1+ second-open) second-close))))))
+;;; If CODIFYINGP, then try trimming trailing punctuation and
+;;; stuff to find a candidate object. If not CODIFYINGP, then allow
+;;; clhs lookup to match substrings of titles.
+
+
+;;; If not, try trimming from the right with the character bag
+;;; LEFT-TRIM, then trimming right with RIGHT-TRIM, finally try
+;;; trimming left and right.
+(defun find-candidate-objects (name &key clhs-substring-match)
+  (let ((left-trim swank::*find-definitions-left-trim*)
+        (right-trim swank::*find-definitions-right-trim*)
+        (objects ()))
+    (with-swank ()
+      (swank::with-buffer-syntax (*package*)
+        (flet ((find-it (name &optional untrimmed)
+                 (when (and (plusp (length name))
+                            ;; No point if nothing was trimmed.
+                            (not (equalp name untrimmed)))
+                   (multiple-value-bind (object found)
+                       (candidate-object-p name clhs-substring-match)
+                     (when found
+                       (push object objects))))))
+          (find-it name)
+          (let* ((left-trimmed (string-left-trim left-trim name))
+                 (right-trimmed (string-right-trim right-trim name))
+                 (both-trimmed (string-right-trim left-trim left-trimmed)))
+            (find-it left-trimmed name)
+            (find-it right-trimmed name)
+            (find-it both-trimmed left-trimmed)
+            (dolist (depluralized (strip-plural both-trimmed))
+              (find-it depluralized both-trimmed)))))
+      objects)))
+
+(defun strip-plural (string)
+  ;; Mostly following https://www.grammarly.com/blog/plural-nouns/
+  (let ((l (length string))
+        (r ()))
+    (labels ((suffixp (suffix)
+               (alexandria:ends-with-subseq suffix string :test #'char-equal))
+             (%desuffix (suffix)
+               (subseq string 0 (- l (length suffix))))
+             (desuffix (suffix)
+               (when (suffixp suffix)
+                 (push (%desuffix suffix) r)))
+             (replace-suffix (old new)
+               (when (suffixp old)
+                 (push (format nil "~A~A" (%desuffix old) new) r))))
+      ;; cars -> car
+      (desuffix "s")
+      ;; buses -> bus
+      (desuffix "es")
+      ;; analyses -> analysis
+      (replace-suffix "es" "is")
+      ;; cities -> city
+      (replace-suffix "ies" "y")
+      ;; gasses -> gas
+      (desuffix "ses")
+      ;; fezzes -> fez
+      (desuffix "zes")
+      ;; phenomena -> phenomenon, criteria -> criterion
+      (replace-suffix "on" "a")
+      ;; indices -> index
+      (replace-suffix "ces" "x")
+      ;; women -> woman
+      (replace-suffix "men" "man")
+      ;; wives -> wife
+      (replace-suffix "ves" "fe")
+      ;; elves -> elf
+      (replace-suffix "ves" "f")
+      (replace-suffix "children" "child")
+      (replace-suffix "geese" "goose")
+      (replace-suffix "teeth" "tooth")
+      (replace-suffix "feet" "foot")
+      (replace-suffix "mice" "mouse")
+      (replace-suffix "people" "person")
+      r)))
+
+;;; See if NAME looks like a possible REFERENCE-OBJECT (e.g. it names
+;;; an interned symbol, package, asdf system, or something in the
+;;; CLHS).
+;;;
+;;; FIXME: This should be a generic function extensible by
+;;; LOCATIVE-TYPE.
+(defun candidate-object-p (name clhs-substring-match)
+  (multiple-value-bind (symbol found) (swank::parse-symbol name)
+    (cond (found
+           (values symbol t))
+          ((or (find-package* name)
+               (asdf-system-name-p name)
+               (find-hyperspec-id
+                name :substring-match clhs-substring-match))
+           (values name t)))))
+
+(defun asdf-system-name-p (string)
+  (declare (special *object-to-links*))
+  (let ((ref (make-reference string 'asdf:system)))
+    ;; KLUDGE: While generating documentation, we only consider
+    ;; references to asdf systems being documented because
+    ;; ASDF:FIND-SYSTEM, that's behind RESOLVE below, is very
+    ;; expensive.
+    (if (boundp '*object-to-links*)
+        (not (null (find-link ref)))
+        (resolve ref :errorp nil))))

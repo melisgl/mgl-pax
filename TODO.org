@@ -30,3 +30,4 @@ How to recoginize normal reference links? Don't, just warn on any
 linking failure. This should be in 3BMD.
 * break test-document into smaller tests
 * consider CommonDoc from the 40ants fork
+* MAYBE split transcription off into a separate library?

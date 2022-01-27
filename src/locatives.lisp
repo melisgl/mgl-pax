@@ -993,7 +993,7 @@
                           locative-args)
   (or (and (endp locative-args)
            ;; FIXME: This is slow as hell.
-           (asdf:find-system name nil))
+           (asdf:find-system (string-downcase (string name)) nil))
       (locate-error "~S does not name an asdf system." name)))
 
 (defmethod canonical-reference ((system asdf:system))

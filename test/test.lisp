@@ -15,7 +15,7 @@
   "[`*TEST-VARIABLE*`][]"
   "[*test-variable*][]"
   "[`*test-variable*`][]"
-  "[mgl-pax-test:*test-variable*][]"
+  "[mgl-pax-test::*test-variable*][]"
   "FOO function,"
   "function FOO,"
   "`FOO` function,"
