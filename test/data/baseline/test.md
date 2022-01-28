@@ -16,11 +16,11 @@
 
 [`*TEST-VARIABLE*`][1037]
 
-[`*test-variable*`][1037]
+[*test-variable*][]
 
 [`*test-variable*`][1037]
 
-[`mgl-pax-test::*test-variable*`][1037]
+[mgl-pax-test::*test-variable*][]
 
 [`FOO`][4244] function,
 
@@ -38,9 +38,9 @@ function [`FOO`][4244],
 
 `function` [`FOO`][4244],
 
-[`foo`][4244],
+[foo][4244],
 
-[`foo`][4244],
+[foo][4244],
 
 [`FOO`][4244],
 
@@ -62,9 +62,9 @@ function [`FOO`][4244],
 
 `(accessor foo)` [`FOO-A`][6483],
 
-[`foo-a`][6483],
+[foo-a][6483],
 
-[`foo-a`][6483],
+[foo-a][6483],
 
 [`FOO-A`][6483],
 
@@ -147,10 +147,10 @@ function and its methods, it's resolved in favor if the gf:
     
     This function [`FOO`][4244] is related to compiler-macro [`FOO`][4ded].
     
-    Or [`foo`][4ded], if you prefer.
+    Or [foo][4ded], if you prefer.
     
-    Now, `foo`([`0`][22be] [`1`][4ded]) should link to [`foo`][4ded] and [`foo`][22be]
-    but not to [`foo`][4244].
+    Now, foo([`0`][22be] [`1`][4ded]) should link to [foo][4ded] and [foo][22be]
+    but not to [foo][4244].
 
 <a id='x-28MGL-PAX-TEST-3A-3AFOO-20COMPILER-MACRO-29'></a>
 
@@ -250,13 +250,13 @@ Same link in docstring to [test other title][22dd].
 
 ## 4 Link to @TEST
 
-Same link in docstring to [@TEST][a755].
+Same link in docstring to [`@TEST`][a755].
 
 <a id='x-28MGL-PAX-TEST-3A-3A-40TEST-TRICKY-TITLE-20MGL-PAX-3ASECTION-29'></a>
 
 ## 5 \`CODE\` \*italic\* \_italic2\_ \*bold\* \[link\]\[sdf\] \<thing\>
 
-backlink [@TEST][a755]
+backlink [`@TEST`][a755]
 
 <a id='x-28MGL-PAX-TEST-3A-3A-40STEALING-FROM-OTHER-PACKAGE-20MGL-PAX-3ASECTION-29'></a>
 

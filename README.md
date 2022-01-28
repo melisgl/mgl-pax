@@ -353,7 +353,7 @@ Now let's examine the most important pieces.
     `ENTRIES` consists of docstrings and references in any order.
     Docstrings are arbitrary strings in markdown format.
     
-    `REFERENCES` are given in the form `(OBJECT LOCATIVE)`. For example,
+    [`REFERENCES`][cc37] are given in the form `(OBJECT LOCATIVE)`. For example,
     `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR SECTION)` says
     that `@BAR` is a subsection of this one. `(BAZ (METHOD () (T T T)))`
     refers to the default method of the three argument generic function
@@ -370,7 +370,7 @@ Now let's examine the most important pieces.
     ##### Exporting
     
     If `EXPORT` is true (the default), `NAME` and the objects which are
-    `SYMBOLs` are candidates for exporting. A candidate symbol is exported
+    [`SYMBOLs`][eed2] are candidates for exporting. A candidate symbol is exported
     if
     
     - it is accessible in `PACKAGE` (it's not `OTHER-PACKAGE:SOMETHING`),
@@ -411,7 +411,7 @@ Now let's examine the most important pieces.
     signaled when the redefined package is at variance with the current
     state of the package. Typically this situation occurs when symbols
     are exported by calling [`EXPORT`][4186] (as is the case with [`DEFSECTION`][2863]) as
-    opposed to adding `:EXPORT` forms to the [`DEFPACKAGE`][4b40] form and the
+    opposed to adding `:EXPORT` forms to the `DEFPACKAGE` form and the
     package definition is reevaluated. See the section on [package
     variance](http://www.sbcl.org/manual/#Package-Variance) in the SBCL
     manual.
@@ -928,9 +928,9 @@ location and the docstring of the defining form is recorded (see
     examples work, just make the object of the reference the name of the
     issue prefixed by `ISSUE:` or `SUMMARY:` as appropriate. For
     example, to refer to the `AREF-1D` issue use `[ISSUE:AREF-1D][clhs]`
-    and get [`ISSUE:AREF-1D`][3e36]. Similary, `[SUMMARY:AREF-1D][clhs]`
-    turns into [`SUMMARY:AREF-1D`][eed0]. Alternatively, matching the name
-    of the file also works (`[iss009][clhs]` renders as [`iss009`][eed0])
+    and get [ISSUE:AREF-1D][3e36]. Similary, `[SUMMARY:AREF-1D][clhs]`
+    turns into [SUMMARY:AREF-1D][eed0]. Alternatively, matching the name
+    of the file also works (`[iss009][clhs]` renders as [iss009][eed0])
     
     The generated links are relative to [`*DOCUMENT-HYPERSPEC-ROOT*`][b0e9].
     
@@ -1015,7 +1015,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
 - [function] **DOCUMENT** *OBJECT &KEY STREAM PAGES (FORMAT :MARKDOWN)*
 
     Write `OBJECT` in `FORMAT` to `STREAM` diverting some output to `PAGES`.
-    `FORMAT` can be anything [3BMD][3bmd] supports, which is currently
+    `FORMAT` can be anything [`3BMD`][3bmd] supports, which is currently
     `:MARKDOWN`, `:HTML` and `:PLAIN`. `STREAM` may be a stream object, `T` or `NIL`
     as with `CL:FORMAT`.
     
@@ -1062,8 +1062,8 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     
     When documentation for an object is generated, the first matching
     page spec is used, where the object matches the page spec if it is
-    contained in one of its `:OBJECTS` in the sense of
-    [`COLLECT-REACHABLE-OBJECTS`][1920].
+    [reachable][1920] from one of
+    its `:OBJECTS`.
     
     `OUTPUT` can be a number things:
     
@@ -1176,7 +1176,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
 ### 10.2 Markdown Support
 
 The [Markdown][markdown] in docstrings is processed with the
-[3BMD][3bmd] library.
+[`3BMD`][3bmd] library.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29'></a>
 
@@ -1216,7 +1216,7 @@ to get syntactically marked up HTML output. Copy `src/style.css`
 from `PAX` and you are set. The language tag, `elisp` in this example,
 is optional and defaults to `common-lisp`.
 
-See the documentation of [3BMD][3bmd] and [colorize][colorize] for
+See the documentation of [`3BMD`][3bmd] and [colorize][colorize] for
 the details.
 
 [3bmd]: https://github.com/3b/3bmd 
@@ -1261,47 +1261,64 @@ Reader][pythonic-string-reader] can help with that.
 
 - [variable] **\*DOCUMENT-UPPERCASE-IS-CODE\*** *T*
 
-    When true, certain words are assumed to be code as if they were
-    marked up with backticks. In particular, the words thus codified are
-    those that
+    When true, *codifiable* and *interesting* words are assumed to be
+    code as if they were marked up with backticks. For example, this
+    docstring
     
-    - have no lowercase characters, and
-    
-    - have at least one [`ALPHA-CHAR-P`][c416] character, and
-    
-    - name an interesting symbol, a package, or an asdf system.
-    
-    A symbol is considered interesting iff it is [`INTERN`][3bcd]ed and
-    
-    - it is external to its package, or
-    
-    - it is [`EQ`][d921] to the object of a reference being documented, or
-    
-    - it has at least 3 characters.
-    
-    Symbols are read in the current [`*PACKAGE*`][1063], which is subject to
-    [`*DOCUMENT-NORMALIZE-PACKAGES*`][353f].
-    
-    For example, this docstring:
-    
-        "`FOO` and FOO."
+        "T PRINT CLASSes SECTION *PACKAGE* MGL-PAX ASDF
+        CaMeL Capital"
     
     is equivalent to this:
     
-        "`FOO` and `FOO`."
+        "`T` `PRINT` `CLASS`es `SECTION` `*PACKAGE*` `MGL-PAX` `ASDF`
+        CaMel Capital"
     
-    iff `FOO` is an interned symbol. To suppress this behavior, add a
-    backslash to the beginning of the symbol or right after the leading
-    \* if it would otherwise be parsed as markdown emphasis:
+    and renders as
     
-        "\\MGL-PAX *\\DOCUMENT-NORMALIZE-PACKAGES*"
+    `T` [`PRINT`][3acc] `CLASS`([`0`][46f7] [`1`][6e37])es `SECTION`([`0`][aee8] [`1`][2cf1]) [`MGL-PAX`][4918] `ASDF` CaMel Capital
+    
+    where the links are added due to [`*DOCUMENT-LINK-CODE*`][8082].
+    
+    To suppress this behavior, add a backslash to the beginning of the
+    symbol or right after the leading `\*` if it would otherwise be
+    parsed as markdown emphasis:
+    
+        "\\SECTION *\\PACKAGE*"
     
     The number of backslashes is doubled above because that's how the
     example looks in a docstring. Note that the backslash is discarded
     even if `*DOCUMENT-UPPERCASE-IS-CODE*` is false.
     
-    Automatically codifying words is especially useful when combined
-    with [`*DOCUMENT-LINK-CODE*`][8082]. 
+    Now, some definitions. A word is **codifiable** iff
+    
+    - it has at least one uppercase character (e.g. not [`<`][c741], [`<=`][ebc9] or
+      [`///`][2b10]), and
+    
+    - it has no lowercase characters (e.g. `T`, `*PRINT-LENGTH*`) or
+      all lowercase characters immediately follow at least two
+      consecutive uppercase characters (e.g. `CLASSes` but not
+      `Capital`).
+    
+    A word is **interesting** iff
+    
+    - it *names* a known reference, or
+    
+    - it is at least 3 characters long and names a package or a symbol
+      external to its package.
+    
+    Finally, we say that a word **names** a known reference if the word
+    matches the name of a thing being documented, or it is in the
+    hyperspec and `*DOCUMENT-UPPERCASE-IS-CODE*` is true, or more
+    precisely,
+    
+    - if the word matches [the object of a reference][REFERENCE-OBJECT
+      reader] being documented (see [`DOCUMENT`][1eb8] and
+      [`COLLECT-REACHABLE-OBJECTS`][1920]), or
+    
+    - the a name in the hyperspec if [`*DOCUMENT-LINK-TO-HYPERSPEC*`][c1ca].
+    
+    Symbols are read in the current [`*PACKAGE*`][1063], which is subject to
+    [`*DOCUMENT-NORMALIZE-PACKAGES*`][353f].
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-DOWNCASE-UPPERCASE-CODE-2A-20VARIABLE-29'></a>
 
@@ -1322,7 +1339,7 @@ ways of linking to code.
 
 ##### Explicit Links
 
-- `[section][class]` renders as: [`section`][aee8]
+- `[SECTION][class]` renders as: [`SECTION`][aee8]
   (*object + locative*)
 
 - `[see this][section class]` renders as: [see this][aee8]
@@ -1849,7 +1866,7 @@ For example, this is how `PAX` registers itself:
     Generate HTML documentation for all `DOCS`. By default, files are
     created in [`*PAX-WORLD-DIR*`][4bb4] or `(asdf:system-relative-pathname
     :mgl-pax "world/")`, if `NIL`. `DOCS` is a list of entries of the
-    form (`NAME` `SECTIONS` `PAGE-SPECS`). The default for `DOCS` is all the
+    form (`NAME` `SECTIONS`([`0`][aee8] [`1`][2cf1]) `PAGE-SPECS`). The default for `DOCS` is all the
     sections and pages registered with [`REGISTER-DOC-IN-PAX-WORLD`][c5f2].
     
     In the absence of `:HEADER-FN` `:FOOTER-FN`, `:OUTPUT`, every spec in
@@ -2607,7 +2624,7 @@ for [`ASDF:SYSTEM:`][90f2]
                           locative-args)
   (or (and (endp locative-args)
            ;; FIXME: This is slow as hell.
-           (asdf:find-system name nil))
+           (asdf:find-system (string-downcase (string name)) nil))
       (locate-error "~S does not name an asdf system." name)))
 
 (defmethod canonical-reference ((system asdf:system))
@@ -2691,7 +2708,7 @@ for [`ASDF:SYSTEM:`][90f2]
 - [macro] **DEFINE-LOCATIVE-ALIAS** *ALIAS LOCATIVE-TYPE*
 
     Define `ALIAS` as a locative equivalent to `LOCATIVE-TYPE` (both
-    `SYMBOLs`). The following example shows how to make docstrings read
+    [`SYMBOLs`][eed2]). The following example shows how to make docstrings read
     more naturally by defining an alias.
     
     ```common-lisp
@@ -2773,7 +2790,7 @@ for [`ASDF:SYSTEM:`][90f2]
 - [generic-function] **COLLECT-REACHABLE-OBJECTS** *OBJECT*
 
     Return a list of objects representing all things
-    that would be documented in a ([`DOCUMENT`][1eb8] `OBJECT`) call. For sections
+    that would be documented in a ([`DOCUMENT`][1eb8] `OBJECT`) call. For `SECTIONS`([`0`][aee8] [`1`][2cf1])
     this is simply the union of references reachable from references in
     [`SECTION-ENTRIES`][1f66]. The returned objects can be anything provided that
     [`CANONICAL-REFERENCE`][24fc] works on them. The list need not include `OBJECT`
@@ -3122,6 +3139,7 @@ presented.
   [2682]: #x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-GLOSSARY-TERM MGL-PAX:MACRO)"
   [2748]: #x-28MGL-PAX-3A-40MGL-PAX-GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29 "Github Workflow"
   [2863]: #x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFSECTION MGL-PAX:MACRO)"
+  [2b10]: http://www.lispworks.com/documentation/HyperSpec/Body/v_sl_sls.htm "(/// VARIABLE)"
   [2c0d]: #x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "(MGL-PAX:SECTION-READTABLE (MGL-PAX:READER MGL-PAX:SECTION))"
   [2cf1]: #x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:SECTION MGL-PAX:LOCATIVE)"
   [2dd1]: #x-28MGL-PAX-3A-40MGL-PAX-MACROLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Macros"
@@ -3137,8 +3155,8 @@ presented.
   [353f]: #x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES* VARIABLE)"
   [35e5]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "(PRIN1 FUNCTION)"
   [36be]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Utilities for Consistency Checking"
+  [3acc]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "(PRINT FUNCTION)"
   [3b21]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "(STRING TYPE)"
-  [3bcd]: http://www.lispworks.com/documentation/HyperSpec/Body/f_intern.htm "(INTERN FUNCTION)"
   [3ca3]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cerror.htm "(CERROR FUNCTION)"
   [3e36]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009_w.htm "(\"ISSUE:AREF-1D\" MGL-PAX:CLHS)"
   [3ef0]: #x-28MGL-PAX-3A-40MGL-PAX-VARIABLELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Variables"
@@ -3243,9 +3261,9 @@ presented.
   [c0cd]: #x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE)"
   [c1ca]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-LINK-TO-HYPERSPEC* VARIABLE)"
   [c3b1]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rdtabl.htm "(READTABLE TYPE)"
-  [c416]: http://www.lispworks.com/documentation/HyperSpec/Body/f_alpha_.htm "(ALPHA-CHAR-P FUNCTION)"
   [c557]: #x-28MGL-PAX-3A-40MGL-PAX-LOCATIVES-AND-REFERENCES-API-20MGL-PAX-3ASECTION-29 "Locatives and References API"
   [c5f2]: #x-28MGL-PAX-3AREGISTER-DOC-IN-PAX-WORLD-20FUNCTION-29 "(MGL-PAX:REGISTER-DOC-IN-PAX-WORLD FUNCTION)"
+  [c741]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq_sle.htm "(< FUNCTION)"
   [c98c]: #x-28MGL-PAX-3ADEFINE-PACKAGE-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-PACKAGE MGL-PAX:MACRO)"
   [c9d9]: http://www.lispworks.com/documentation/HyperSpec/Body/f_equal.htm "(EQUAL FUNCTION)"
   [cb19]: http://www.lispworks.com/documentation/HyperSpec/Body/t_t.htm "(T TYPE)"
@@ -3262,7 +3280,6 @@ presented.
   [d71c]: #x-28METHOD-20MGL-PAX-3ALOCATIVE-29 "(METHOD MGL-PAX:LOCATIVE)"
   [d7e0]: #x-28MGL-PAX-3A-40MGL-PAX-LINKS-20MGL-PAX-3ASECTION-29 "Links"
   [d7eb]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28STRING-20T-29-29-29 "(MGL-PAX:DOCUMENT-OBJECT (METHOD NIL (STRING T)))"
-  [d921]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq.htm "(EQ FUNCTION)"
   [d976]: #x-28MGL-PAX-3AFIND-SOURCE-20-28METHOD-20NIL-20-28MGL-PAX-3AREFERENCE-29-29-29 "(MGL-PAX:FIND-SOURCE (METHOD NIL (MGL-PAX:REFERENCE)))"
   [de3b]: http://www.lispworks.com/documentation/HyperSpec/Body/r_contin.htm "(CONTINUE RESTART)"
   [df39]: #x-28DESCRIBE-OBJECT-20-28METHOD-20NIL-20-28MGL-PAX-3ASECTION-20T-29-29-29 "(DESCRIBE-OBJECT (METHOD NIL (MGL-PAX:SECTION T)))"
@@ -3274,6 +3291,7 @@ presented.
   [e9bd]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPTS-20MGL-PAX-3ASECTION-29 "Transcripts"
   [e9e9]: #x-28MGL-PAX-3ALOCATE-AND-FIND-SOURCE-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-FIND-SOURCE GENERIC-FUNCTION)"
   [eac6]: #x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax/document\" ASDF/SYSTEM:SYSTEM)"
+  [ebc9]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq_sle.htm "(<= FUNCTION)"
   [ec16]: #x-28MGL-PAX-3A-40MGL-PAX-MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29 "Miscellaneous Variables"
   [eed0]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009.htm "(\"SUMMARY:AREF-1D\" MGL-PAX:CLHS)"
   [eed2]: http://www.lispworks.com/documentation/HyperSpec/Body/t_symbol.htm "(SYMBOL TYPE)"

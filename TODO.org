@@ -31,3 +31,13 @@ linking failure. This should be in 3BMD.
 * break test-document into smaller tests
 * consider CommonDoc from the 40ants fork
 * MAYBE split transcription off into a separate library?
+* some autolink names -> linkify
+* linkify and codify in on map-markdown-parse-tree?
+* no autolinking if any explicit linking was done previously?
+* allow lowercase only in the last "word" of the name
+* *document-downcase-uppercase-code* is still broken
+- Not everything in backticks is lisp code.
+- `(PRINT "hello")` is not getting downcased.
+* describe-object or document-object?
+* remove some markup in :PLAIN format?
+* allow markdown in titles?

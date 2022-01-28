@@ -1127,7 +1127,10 @@
 
 (defun section-title-or-name (section)
   (or (section-title section)
-      (maybe-downcase (prin1-to-string (section-name section)))))
+      (funcall (if (downcasingp)
+                   #'string-downcase
+                   #'identity)
+               (prin1-to-string (section-name section)))))
 
 (defmethod locate-object (symbol (locative-type (eql 'section))
                           locative-args)
@@ -1219,7 +1222,7 @@
 
 (defun glossary-term-title-or-name (glossary-term)
   (or (glossary-term-title glossary-term)
-      (maybe-downcase (prin1-to-string (glossary-term-name glossary-term)))))
+      (prin1-to-string (glossary-term-name glossary-term))))
 
 (defmethod print-object ((glossary-term glossary-term) stream)
   (print-unreadable-object (glossary-term stream :type t)

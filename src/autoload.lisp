@@ -86,6 +86,7 @@
 
 (define-autoload-function locate-definitions-for-emacs '#:mgl-pax/navigate)
 (define-autoload-function find-hyperspec-id '#:mgl-pax/document)
+(define-autoload-function downcasingp '#:mgl-pax/document)
 (define-autoload-function document '#:mgl-pax/document)
 (define-autoload-function update-asdf-system-readmes '#:mgl-pax/document)
 (define-autoload-function update-asdf-system-html-docs '#:mgl-pax/document)

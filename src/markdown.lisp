@@ -45,6 +45,14 @@
 
 ;;;; Parse tree based markdown fragments
 
+(declaim (inline parse-tree-tag-p))
+(defun parse-tree-p (parse-tree tag)
+  (and (listp parse-tree)
+       (eq (first parse-tree) tag)))
+
+(defmacro pt-get (parse-tree attr)
+  `(getf (rest ,parse-tree) ,attr))
+
 (defun code-fragment (name)
   `(:code ,(princ-to-string name)))
 
@@ -53,8 +61,8 @@
 
 ;;; Perform a depth first traversal of TREE. Call FN with the parent
 ;;; of each node and the node itself. FN returns three values: a new
-;;; tree to be substituted for the node, a recurse and slice flag. If
-;;; slice, then the new tree is sliced into parent. If recurse (and
+;;; tree to be substituted for the node, a recurse and a slice flag.
+;;; If slice, then the new tree is sliced into parent. If recurse (and
 ;;; the new tree is not a leaf), then traversal recurses into the new
 ;;; tree.
 (defun transform-tree (fn tree)
@@ -122,25 +130,31 @@
           (push element result)))
     (reverse result)))
 
-;;; Call FN with STRING and START, END indices of consecutive
-;;; DELIMETERP characters. FN must return three values: a replacement
-;;; markdown parse tree fragment (or NIL, if the subseq shall not be
-;;; replaced), whether the replacement shall be sliced into the result
-;;; list, and the number of characters replaced (may be less than (-
-;;; END START). MAP-NAMES returns a parse tree fragment that's a list
-;;; of non-replaced parts of STRING and replacements (maybe sliced).
-;;; Consecutive strings are concatenated.
+;;; Call FN with STRING and START, END indices. END always points to
+;;; the next DELIMETERP character after START or to end of the string
+;;; if there are no delimiters left. START starts at 0, then advances
+;;; to FIXME
+;;;
+;;; FN must return three values: a replacement markdown parse tree
+;;; fragment (or NIL, if the subseq shall not be replaced), whether
+;;; the replacement shall be sliced into the result list, and the
+;;; number of characters replaced (may be less than (- END START),
+;;; which is assumed if this value is NIL). MAP-NAMES returns a parse
+;;; tree fragment that's a list of non-replaced parts of STRING and
+;;; replacements (maybe sliced). Consecutive strings are concatenated.
 (defun map-names (string fn)
   (let ((translated ())
         (i 0)
         (n (length string))
+        ;; FIXME
         (prev nil))
     (flet ((add (a)
              (if (and (stringp a)
                       (stringp (first translated)))
+                 ;; FIXME: optimize this
                  (setf (first translated)
                        (concatenate 'string (first translated) a))
-                 (push a translated ))))
+                 (push a translated))))
       (loop while (< i n)
             do (let ((char (aref string i))
                      (replacement nil)
@@ -157,11 +171,13 @@
                            (dolist (a replacement)
                              (add a))
                            (add replacement))
-                       (if n-chars-replaced
-                           (incf i n-chars-replaced)
-                           (setq i end)))))
+                       (cond (n-chars-replaced
+                              (assert (plusp n-chars-replaced))
+                              (incf i n-chars-replaced))
+                             (t
+                              (setq i end))))))
                  (unless replacement
                    (add (string char))
                    (incf i))
                  (setq prev char))))
-    (reverse translated)))
+    (nreverse translated)))

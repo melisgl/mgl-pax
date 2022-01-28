@@ -676,7 +676,7 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
 
     An alias for DISLOCATED, so the one can refer to an argument of a
     macro without accidentally linking to a class that has the same name
-    as that argument. In the following example, `FORMAT` may
+    as that argument. In the following example, FORMAT may
     link to CL:FORMAT (if we generated documentation for it):
     
     ```
@@ -904,8 +904,8 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     
     When documentation for an object is generated, the first matching
     page spec is used, where the object matches the page spec if it is
-    contained in one of its :OBJECTS in the sense of
-    COLLECT-REACHABLE-OBJECTS.
+    [reachable][COLLECT-REACHABLE-OBJECTS generic-function] from one of
+    its :OBJECTS.
     
     `OUTPUT` can be a number things:
     
@@ -1089,47 +1089,64 @@ Reader][pythonic-string-reader] can help with that.
 
 - [variable] *DOCUMENT-UPPERCASE-IS-CODE* T
 
-    When true, certain words are assumed to be code as if they were
-    marked up with backticks. In particular, the words thus codified are
-    those that
+    When true, *codifiable* and *interesting* words are assumed to be
+    code as if they were marked up with backticks. For example, this
+    docstring
     
-    - have no lowercase characters, and
-    
-    - have at least one ALPHA-CHAR-P character, and
-    
-    - name an interesting symbol, a package, or an asdf system.
-    
-    A symbol is considered interesting iff it is `INTERN`ed and
-    
-    - it is external to its package, or
-    
-    - it is EQ to the object of a reference being documented, or
-    
-    - it has at least 3 characters.
-    
-    Symbols are read in the current *PACKAGE*, which is subject to
-    *DOCUMENT-NORMALIZE-PACKAGES*.
-    
-    For example, this docstring:
-    
-        "`FOO` and FOO."
+        "T PRINT CLASSes SECTION *PACKAGE* MGL-PAX ASDF
+        CaMeL Capital"
     
     is equivalent to this:
     
-        "`FOO` and `FOO`."
+        "`T` `PRINT` `CLASS`es `SECTION` `*PACKAGE*` `MGL-PAX` `ASDF`
+        CaMel Capital"
     
-    iff `FOO` is an interned symbol. To suppress this behavior, add a
-    backslash to the beginning of the symbol or right after the leading
-    \* if it would otherwise be parsed as markdown emphasis:
+    and renders as
     
-        "\\MGL-PAX *\\DOCUMENT-NORMALIZE-PACKAGES*"
+    `T` `PRINT` `CLASS`es `SECTION` `MGL-PAX` `ASDF` CaMel Capital
+    
+    where the links are added due to *DOCUMENT-LINK-CODE*.
+    
+    To suppress this behavior, add a backslash to the beginning of the
+    symbol or right after the leading `\*` if it would otherwise be
+    parsed as markdown emphasis:
+    
+        "\\SECTION *\\PACKAGE*"
     
     The number of backslashes is doubled above because that's how the
     example looks in a docstring. Note that the backslash is discarded
     even if *DOCUMENT-UPPERCASE-IS-CODE* is false.
     
-    Automatically codifying words is especially useful when combined
-    with *DOCUMENT-LINK-CODE*. 
+    Now, some definitions. A word is **codifiable** iff
+    
+    - it has at least one uppercase character (e.g. not `<`, `<=` or
+      `///`), and
+    
+    - it has no lowercase characters (e.g. `T`, `*PRINT-LENGTH*`) or
+      all lowercase characters immediately follow at least two
+      consecutive uppercase characters (e.g. `CLASSes` but not
+      `Capital`).
+    
+    A word is **interesting** iff
+    
+    - it *names* a known reference, or
+    
+    - it is at least 3 characters long and names a package or a symbol
+      external to its package.
+    
+    Finally, we say that a word **names** a known reference if the word
+    matches the name of a thing being documented, or it is in the
+    hyperspec and *DOCUMENT-UPPERCASE-IS-CODE* is true, or more
+    precisely,
+    
+    - if the word matches [the object of a reference][REFERENCE-OBJECT
+      reader] being documented (see DOCUMENT and
+      COLLECT-REACHABLE-OBJECTS), or
+    
+    - the a name in the hyperspec if *DOCUMENT-LINK-TO-HYPERSPEC*.
+    
+    Symbols are read in the current *PACKAGE*, which is subject to
+    *DOCUMENT-NORMALIZE-PACKAGES*.
 
 - [variable] *DOCUMENT-DOWNCASE-UPPERCASE-CODE* NIL
 
@@ -1146,7 +1163,7 @@ ways of linking to code.
 
 ##### Explicit Links
 
-- `[section][class]` renders as: [section][class]
+- `[SECTION][class]` renders as: [SECTION][class]
   (*object + locative*)
 
 - `[see this][section class]` renders as: [see this][section class]
@@ -1306,7 +1323,7 @@ Alternatively, the DISLOCATED locative may be used.
     If true, link symbols found in code to the Common Lisp Hyperspec.
     
     Locatives work as expected (see *DOCUMENT-LINK-CODE*).
-    `FIND-IF` links to FIND-IF, `FUNCTION` links
+    FIND-IF links to FIND-IF, FUNCTION links
     to FUNCTION and `[FUNCTION][type]` links to [FUNCTION][type].
     
     Autolinking to T and NIL is suppressed. If desired, use
@@ -2303,7 +2320,7 @@ for ASDF:SYSTEM:
                           locative-args)
   (or (and (endp locative-args)
            ;; FIXME: This is slow as hell.
-           (asdf:find-system name nil))
+           (asdf:find-system (string-downcase (string name)) nil))
       (locate-error "~S does not name an asdf system." name)))
 
 (defmethod canonical-reference ((system asdf:system))
@@ -2421,7 +2438,7 @@ for ASDF:SYSTEM:
 
     Return the object to which OBJECT and the locative
     refer. For example, if LOCATIVE-TYPE is the symbol
-    `PACKAGE`, this returns `(FIND-PACKAGE SYMBOL)`. Signal
+    PACKAGE, this returns `(FIND-PACKAGE SYMBOL)`. Signal
     a LOCATE-ERROR condition by calling the LOCATE-ERROR function if the
     lookup fails. Signal other errors if the types of the argument are
     bad, for instance LOCATIVE-ARGS is not the empty list in the package
@@ -2455,7 +2472,7 @@ for ASDF:SYSTEM:
 - [generic-function] COLLECT-REACHABLE-OBJECTS OBJECT
 
     Return a list of objects representing all things
-    that would be documented in a (DOCUMENT OBJECT) call. For sections
+    that would be documented in a (DOCUMENT OBJECT) call. For SECTIONS
     this is simply the union of references reachable from references in
     SECTION-ENTRIES. The returned objects can be anything provided that
     CANONICAL-REFERENCE works on them. The list need not include OBJECT

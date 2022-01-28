@@ -175,41 +175,62 @@
   (or (whitespacep char) (find char "()'`\"")))
 
 
-;;; If CODIFYINGP, then try trimming trailing punctuation and
-;;; stuff to find a candidate object. If not CODIFYINGP, then allow
-;;; clhs lookup to match substrings of titles.
-
-
-;;; If not, try trimming from the right with the character bag
-;;; LEFT-TRIM, then trimming right with RIGHT-TRIM, finally try
-;;; trimming left and right.
-(defun find-candidate-objects (name &key clhs-substring-match)
-  (let ((left-trim swank::*find-definitions-left-trim*)
-        (right-trim swank::*find-definitions-right-trim*)
-        (objects ()))
+;;; Collect slight variations on NAME which are CANDIDATE-OBJECT-P.
+;;; Return a list of candidate objects and a list of minimal
+;;; substrings (under CHAR-EQUAL, punctuations trimmed, depluralized)
+;;; of NAME in which the objects can be found again with
+;;; FIND-CANDIDATE-OBJECTS.
+;;;
+;;; Start with NAME, then try trimming punctuation from it from the
+;;; left, then trimming from the right, finally try trimming left and
+;;; right. Then try depluralizing this left/right trimmed NAME.
+(defun find-candidate-objects (name &key (trim t) (depluralize t) only-one
+                               clhs-substring-match)
+  (let ((left-trim "#<")
+        (right-trim ",:.>")
+        (objects ())
+        (substrings ()))
     (with-swank ()
       (swank::with-buffer-syntax (*package*)
-        (flet ((find-it (name &optional untrimmed)
-                 (when (and (plusp (length name))
+        (flet ((find-it (substring &optional created-from)
+                 (when (and (plusp (length substring))
                             ;; No point if nothing was trimmed.
-                            (not (equalp name untrimmed)))
+                            (not (equalp substring created-from)))
                    (multiple-value-bind (object found)
-                       (candidate-object-p name clhs-substring-match)
+                       (candidate-object-p substring clhs-substring-match)
+                     ;; FIXME: (SWANK::PARSE-SYMBOL "PAX:SECTION:") is
+                     ;; broken. Only add if the _string_ read is
+                     ;; shorter than the one we may already have for
+                     ;; OBJECT in SUBSTRINGS.
                      (when found
-                       (push object objects))))))
+                       (cond (only-one
+                              (when (funcall only-one object)
+                                (return-from find-candidate-objects
+                                  (values object substring))))
+                             (t
+                              (push object objects)
+                              (push substring substrings))))))))
           (find-it name)
-          (let* ((left-trimmed (string-left-trim left-trim name))
-                 (right-trimmed (string-right-trim right-trim name))
-                 (both-trimmed (string-right-trim left-trim left-trimmed)))
-            (find-it left-trimmed name)
-            (find-it right-trimmed name)
-            (find-it both-trimmed left-trimmed)
-            (dolist (depluralized (strip-plural both-trimmed))
-              (find-it depluralized both-trimmed)))))
-      objects)))
+          (if trim
+              (let* ((left-trimmed (string-left-trim left-trim name))
+                     (right-trimmed (string-right-trim right-trim name))
+                     (both-trimmed (string-right-trim right-trim left-trimmed)))
+                (find-it left-trimmed name)
+                (find-it right-trimmed name)
+                (find-it both-trimmed left-trimmed)
+                (when depluralize
+                  (dolist (depluralized (strip-plural both-trimmed))
+                    (find-it depluralized both-trimmed))))
+              (when depluralize
+                (dolist (depluralized (strip-plural name))
+                  (find-it depluralized name))))))
+      (unless only-one
+        (values (nreverse objects) (nreverse substrings))))))
 
 (defun strip-plural (string)
-  ;; Mostly following https://www.grammarly.com/blog/plural-nouns/
+  ;; Mostly following https://www.grammarly.com/blog/plural-nouns/ but
+  ;; keeping only the rules that remove suffixes (e.g. cities -> city
+  ;; is not allowed).
   (let ((l (length string))
         (r ()))
     (labels ((suffixp (suffix)
@@ -218,38 +239,17 @@
                (subseq string 0 (- l (length suffix))))
              (desuffix (suffix)
                (when (suffixp suffix)
-                 (push (%desuffix suffix) r)))
-             (replace-suffix (old new)
-               (when (suffixp old)
-                 (push (format nil "~A~A" (%desuffix old) new) r))))
+                 (push (%desuffix suffix) r))))
       ;; cars -> car
       (desuffix "s")
       ;; buses -> bus
       (desuffix "es")
-      ;; analyses -> analysis
-      (replace-suffix "es" "is")
-      ;; cities -> city
-      (replace-suffix "ies" "y")
       ;; gasses -> gas
       (desuffix "ses")
       ;; fezzes -> fez
       (desuffix "zes")
-      ;; phenomena -> phenomenon, criteria -> criterion
-      (replace-suffix "on" "a")
-      ;; indices -> index
-      (replace-suffix "ces" "x")
-      ;; women -> woman
-      (replace-suffix "men" "man")
-      ;; wives -> wife
-      (replace-suffix "ves" "fe")
-      ;; elves -> elf
-      (replace-suffix "ves" "f")
-      (replace-suffix "children" "child")
-      (replace-suffix "geese" "goose")
-      (replace-suffix "teeth" "tooth")
-      (replace-suffix "feet" "foot")
-      (replace-suffix "mice" "mouse")
-      (replace-suffix "people" "person")
+      (when (equalp string "children")
+        (desuffix "ren"))
       r)))
 
 ;;; See if NAME looks like a possible REFERENCE-OBJECT (e.g. it names

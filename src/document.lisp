@@ -99,21 +99,25 @@
   (find reference (gethash (reference-object reference) *object-to-links*)
         :key #'link-reference :test #'reference=))
 
-;;; Return a list of all known REFERENCES (those in *REFERENCES*)
-;;; whose REFERENCE-OBJECT matches OBJECT, that is, with OBJECT as
-;;; their REFERENCE-OBJECT they would resolve to the same thing.
+;;; Return a list of all REFERENCES whose REFERENCE-OBJECT matches
+;;; OBJECT, that is, with OBJECT as their REFERENCE-OBJECT they would
+;;; resolve to the same thing.
+;;;
+;;; If LOCAL is NIL, only those global references (*REFERENCES*) which
+;;; are not on *LOCAL-REFERENCES* are considered for matching. If
+;;; LOCAL is T, then only the local references are considered. If
+;;; LOCAL is :INCLUDE then both global and local references are
+;;; considered.
 (defun references-to-object (object &key local)
-  (let ((global-refs (global-references object)))
+  (let ((global-refs (global-references-to-object object)))
     (if local
-        (let ((local-refs (remove-if-not (lambda (ref)
-                                           (reference-object= object ref))
-                                         *local-references*)))
+        (let ((local-refs (local-references-to-object object)))
           (if (eq local :include)
               (append global-refs local-refs)
               (set-difference global-refs local-refs :test #'reference=)))
         global-refs)))
 
-(defun global-references (object)
+(defun global-references-to-object (object)
   (append (loop for link in (gethash object *object-to-links*)
                 for ref = (link-reference link)
                 when (reference-object= object ref)
@@ -123,6 +127,27 @@
                   for ref = (link-reference link)
                   when (reference-object= object ref)
                     collect ref))))
+
+(defun has-global-reference-p (object)
+  (or (loop for link in (gethash object *object-to-links*)
+            for ref = (link-reference link)
+              thereis (reference-object= object ref))
+      (unless (stringp object)
+        (loop for link in (gethash (string object) *object-to-links*)
+              for ref = (link-reference link)
+                thereis (reference-object= object ref)))))
+
+(defun local-references-to-object (object)
+  (remove-if-not (lambda (ref)
+                   (reference-object= object ref))
+                 *local-references*))
+
+(defun has-local-reference-p (object)
+  (find object *local-references* :test #'reference-object=))
+
+(defun has-reference-p (object)
+  (or (has-global-reference-p object)
+      (has-local-reference-p object)))
 
 ;;; Return the unescaped name of the HTML anchor for REFERENCE. See
 ;;; HTML-SAFE-NAME.
@@ -304,9 +329,9 @@
 
   When documentation for an object is generated, the first matching
   page spec is used, where the object matches the page spec if it is
-  contained in one of its :OBJECTS in the sense of
-  COLLECT-REACHABLE-OBJECTS.
-
+  [reachable][COLLECT-REACHABLE-OBJECTS generic-function] from one of
+  its :OBJECTS.
+  
   `OUTPUT` can be a number things:
 
   - If it's a list whose first element is a string or a pathname, then
@@ -609,43 +634,98 @@
   (*document-downcase-uppercase-code* variable))
 
 (defvar *document-uppercase-is-code* t
-  """When true, certain words are assumed to be code as if they were
-  marked up with backticks. In particular, the words thus codified are
-  those that
+  """When true, _codifiable_ and _interesting_ words are assumed to be
+  code as if they were marked up with backticks. For example, this
+  docstring
 
-  - have no lowercase characters, and
-  - have at least one ALPHA-CHAR-P character, and
-  - name an interesting symbol, a package, or an asdf system.
-
-  A symbol is considered interesting iff it is `INTERN`ed and
-
-  - it is external to its package, or
-  - it is EQ to the object of a reference being documented, or
-  - it has at least 3 characters.
-
-  Symbols are read in the current *PACKAGE*, which is subject to
-  *DOCUMENT-NORMALIZE-PACKAGES*.
-
-  For example, this docstring:
-
-      "`FOO` and FOO."
+      "T PRINT CLASSes SECTION *PACKAGE* MGL-PAX ASDF
+      CaMeL Capital"
 
   is equivalent to this:
 
-      "`FOO` and `FOO`."
+      "`T` `PRINT` `CLASS`es `SECTION` `*PACKAGE*` `MGL-PAX` `ASDF`
+      CaMel Capital"
 
-  iff `FOO` is an interned symbol. To suppress this behavior, add a
-  backslash to the beginning of the symbol or right after the leading
-  * if it would otherwise be parsed as markdown emphasis:
+  and renders as
 
-      "\\MGL-PAX *\\DOCUMENT-NORMALIZE-PACKAGES*"
+  `T` `PRINT` `CLASS`es `SECTION` `MGL-PAX` `ASDF` CaMel Capital
+
+  where the links are added due to *DOCUMENT-LINK-CODE*.
+
+  To suppress this behavior, add a backslash to the beginning of the
+  symbol or right after the leading `\\*` if it would otherwise be
+  parsed as markdown emphasis:
+
+      "\\SECTION *\\PACKAGE*"
 
   The number of backslashes is doubled above because that's how the
   example looks in a docstring. Note that the backslash is discarded
   even if *DOCUMENT-UPPERCASE-IS-CODE* is false.
 
-  Automatically codifying words is especially useful when combined
-  with *DOCUMENT-LINK-CODE*. """)
+  Now, some definitions. A word is **codifiable** iff
+
+  - it has at least one uppercase character (e.g. not `<`, `<=` or
+    `///`), and
+  - it has no lowercase characters (e.g. `\T`, `\*PRINT-LENGTH*`) or
+    all lowercase characters immediately follow at least two
+    consecutive uppercase characters (e.g. `\CLASSes` but not
+    `Capital`).
+
+  A word is **interesting** iff
+
+  - it _names_ a known reference, or
+  - it is at least 3 characters long and names a package or a symbol
+    external to its package.
+
+  Finally, we say that a word **names** a known reference if the word
+  matches the name of a thing being documented, or it is in the
+  hyperspec and *DOCUMENT-UPPERCASE-IS-CODE* is true, or more
+  precisely,
+
+  - if the word matches [the object of a reference][REFERENCE-OBJECT
+    reader] being documented (see DOCUMENT and
+    COLLECT-REACHABLE-OBJECTS), or
+  - the a name in the hyperspec if *DOCUMENT-LINK-TO-HYPERSPEC*.
+
+  Symbols are read in the current *PACKAGE*, which is subject to
+  *DOCUMENT-NORMALIZE-PACKAGES*.
+  """)
+
+(defun codifiable-name-p (name)
+  ;; OPT
+  (and (notany #'whitespacep name)
+       (lowercase-only-in-suffixes-p name)
+       (some #'upper-case-p name)))
+
+(defun lowercase-only-in-suffixes-p (string)
+  (let ((prev-case nil))
+    (loop for char across string
+          do (cond ((upper-case-p char)
+                    (when (eq prev-case :lower)
+                      (return nil))
+                    (if (member prev-case '(:upper :upper-2))
+                        (setq prev-case :upper-2)
+                        (setq prev-case :upper)))
+                   ((lower-case-p char)
+                    (unless (member prev-case '(:upper-2 :lower))
+                      (return nil))
+                    (setq prev-case :lower))
+                   (t
+                    (setq prev-case nil)))
+          finally (return t))))
+
+(defun interesting-object-p (object name)
+  (flet ((normal-ref-p (ref)
+           ;; Matching a CLHS section number (e.g. "A.1" and
+           ;; especially "A") must not cause codification of NAME.
+           (not (eq (reference-locative-type ref) 'clhs))))
+    (or (some #'normal-ref-p
+              (references-to-object object :local :include))
+        (and (symbolp object)
+             (or (<= 3 (length name))
+                 (external-symbol-p object)))
+        (find-package* object)
+        (asdf-system-name-p object))))
 
 ;;; The core of the implementation of *DOCUMENT-UPPERCASE-IS-CODE*.
 ;;;
@@ -654,65 +734,62 @@
 ;;; only a single return value: the new tree.
 (defun translate-uppercase-name (parent tree name)
   (declare (ignore parent))
-  (when (and (no-lowercase-chars-p name)
-             (some #'alpha-char-p name))
-    (flet ((foo (name)
-             (let ((n-chars-read (codify-uppercase-name-p name)))
-               (when n-chars-read
-                 (values `(,(code-fragment
-                             (maybe-downcase (subseq name 0 n-chars-read))))
-                         t n-chars-read)))))
-      (let ((emph (and (listp tree) (eq :emph (first tree)))))
-        ;; *DOCUMENT-UPPERCASE-IS-CODE* escaping
-        (cond ((and emph (eql #\\ (alexandria:first-elt name)))
-               ;; E.g. "*\\DOCUMENT-NORMALIZE-PACKAGES*"
-               ;; -> (:EMPH "DOCUMENT-NORMALIZE-PACKAGES")
-               (values (list `(:emph ,(maybe-downcase (subseq name 1))))
-                       t (length name)))
-              ((eql #\\ (alexandria:first-elt name))
-               ;; Discard the leading backslash escape.
-               ;; E.g. "\\MGL-PAX" -> "MGL-PAX"
-               (values (list (maybe-downcase (subseq name 1))) t (length name)))
-              ((not *document-uppercase-is-code*)
-               ;; Don't change anything.
-               nil)
-              (emph
-               (foo (format nil "*~A*" name)))
-              (t
-               (foo name)))))))
+  (let ((emph (and (listp tree) (eq :emph (first tree)))))
+    ;; *DOCUMENT-UPPERCASE-IS-CODE* escaping
+    (cond ((and emph (eql #\\ (alexandria:first-elt name)))
+           ;; E.g. "*\\DOCUMENT-NORMALIZE-PACKAGES*"
+           ;; -> (:EMPH "DOCUMENT-NORMALIZE-PACKAGES")
+           (values (list `(:emph ,(subseq name 1))) t (length name)))
+          ((eql #\\ (alexandria:first-elt name))
+           ;; Discard the leading backslash escape.
+           ;; E.g. "\\MGL-PAX" -> "MGL-PAX"
+           (values (list (subseq name 1)) t (length name)))
+          ((or (not *document-uppercase-is-code*)
+               (not (codifiable-name-p name)))
+           ;; Don't change anything.
+           nil)
+          (emph
+           (codify-uppercase-name (format nil "*~A*" name)))
+          (t
+           (codify-uppercase-name name)))))
 
-;;; Return the references from REFS which are for the object to which
-;;; NAME parses and the number of characters read. Handle rules laid
-;;; out in *DOCUMENT-UPPERCASE-IS-CODE* not already handled in the
-;;; caller TRANSLATE-UPPERCASE-NAME. Some trimming is attempted to
-;;; handle separators and plurals. Packages and ASDF systems are
-;;; treated somewhat differently because their REFERENCE-OBJECTs may
-;;; be strings.
-(defun codify-uppercase-name-p (name)
-  (multiple-value-bind (object n-chars-read)
-      (find-candidate-object name :codifyingp t)
-    (when n-chars-read
-      (flet ((normal-ref-p (ref)
-               ;; Matching a CLHS section number (e.g. "A.1" and
-               ;; especially "A") must not cause codification of NAME.
-               (not (eq (reference-locative-type ref) 'clhs))))
-        (when (or (some #'normal-ref-p
-                        (references-to-object object :local :include))
-                  (and (symbolp object)
-                       (or (<= 3 n-chars-read)
-                           (external-symbol-p object)))
-                  (find-package* object)
-                  (asdf-system-name-p object))
-          n-chars-read)))))
+;;; Find the [approximately] longest substring of NAME that's
+;;; CANDIDATE-OBJECT-P. Return a 3bmd parse tree fragment with that
+;;; substring marked up as code.
+;;;
+;;; Handles the rules laid out in *DOCUMENT-UPPERCASE-IS-CODE* not
+;;; already handled in the caller TRANSLATE-UPPERCASE-NAME. Trims
+;;; separators and depluralizes.
+(defun codify-uppercase-name (name)
+  (multiple-value-bind (object object-name)
+      (find-candidate-objects name :trim t :depluralize t
+                              :only-one (constantly t))
+    (when (and object-name (interesting-object-p object object-name))
+      (let* ((substring (longest-substring object-name name))
+             (pos (search substring name :test #'char-equal)))
+        (when pos
+          (values `(,@(when (plusp pos)
+                        `(,(subseq name 0 pos)))
+                    (:code ,(maybe-downcase substring))
+                    ,@(let ((tail-pos (+ pos (length substring))))
+                        (when (< tail-pos (length name))
+                          ;; CLASSES -> `CLASS`es
+                          `(,(string-downcase (subseq name tail-pos))))))
+                  t (length name)))))))
+
+(defun longest-substring (almost-substring string)
+  (loop for end1 downfrom (length almost-substring) downto 0
+        do (when (search almost-substring string :end1 end1)
+             (return (subseq almost-substring 0 end1)))))
 
 ;;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings and :EMPH
 ;;; (to recognize *VAR*). Also, perform consistency checking of
 ;;; cl-transcript code blocks (see @MGL-PAX-TRANSCRIBING-WITH-EMACS).
 (defun codify (parse-tree)
   (map-markdown-parse-tree
-   (list :emph '3bmd-code-blocks::code-block)
+   (list :emph '3bmd-code-blocks::code-block :reference-link :code)
    '(:code :verbatim 3bmd-code-blocks::code-block
-     :reference-link :explicit-link :image :mailto)
+     :explicit-link :image :mailto)
    t
    #'translate-to-code
    parse-tree))
@@ -733,10 +810,20 @@
                                    parent string name))))
                    ;; don't recurse, do slice
                    nil t)))
-        ((eq :emph (first tree))
+        ((parse-tree-p tree :emph)
          (translate-emph parent tree))
-        ((eq '3bmd-code-blocks::code-block (first tree))
+        ((parse-tree-p tree '3bmd-code-blocks::code-block)
          (translate-code-block parent tree))
+        ((parse-tree-p tree :reference-link)
+         (let ((replacement (copy-list tree)))
+           (setf (pt-get replacement :label) (codify (pt-get tree :label)))
+           replacement))
+        ((parse-tree-p tree :code)
+         (let ((string (second tree)))
+           (if (eql #\\ (alexandria:first-elt string))
+               tree
+               ;; FIXME: downcase entire code block?
+               `(:code ,(maybe-downcase (second tree))))))
         (t
          (error "~@<Unexpected tree type ~S.~:@>" (first tree)))))
 
@@ -793,22 +880,18 @@
   :ONLY-IN-MARKUP, then if the output format does not support
   markup (e.g. it's :PLAIN), then no downcasing is performed.")
 
+(defun downcasingp ()
+  (or (and *document-downcase-uppercase-code*
+           (not (eq *document-downcase-uppercase-code*
+                    :only-in-markup)))
+      (and (eq *document-downcase-uppercase-code*
+               :only-in-markup)
+           (not (eq *format* :plain)))))
+
 (defun maybe-downcase (string)
-  (if (and (or (and *document-downcase-uppercase-code*
-                    (not (eq *document-downcase-uppercase-code*
-                             :only-in-markup)))
-               (and (eq *document-downcase-uppercase-code*
-                        :only-in-markup)
-                    (not (eq *format* :plain))))
-           (no-lowercase-chars-p string))
+  (if (downcasingp)
       (string-downcase string)
       string))
-
-(defun no-lowercase-chars-p (string)
-  (notany (lambda (char)
-            (char/= char (char-upcase char)))
-          ;; Allows plurals as in "FRAMEs" and "FRAMEs."
-          (string-right-trim *object-name-right-trim-2* string)))
 
 
 (defsection @mgl-pax-linking-to-code (:title "Linking to Code")
@@ -817,7 +900,7 @@
 
   ##### Explicit Links
 
-  - `[section][class]` renders as: [section][class]
+  - `[SECTION][class]` renders as: [SECTION][class]
     (*object + locative*)
   - `[see this][section class]` renders as: [see this][section class]
     (*explicit title + reference*)
@@ -1031,9 +1114,9 @@
            `(:code ,(subseq name 1))
            (multiple-value-bind (reference-links refs)
                (make-reference-links-to-name parent tree name)
-             (let ((autolinked-key (cons name
-                                         ;; FIXME: sort it
-                                         reference-links))
+             (let ((autolinked-key
+                     ;; FIXME: sort it
+                     refs)
                    (supressedp (and refs
                                     (let ((object (reference-object
                                                    (first refs))))
@@ -1055,7 +1138,7 @@
     ((and (eq :reference-link (first tree)))
      ;; For example, the tree for [`section`][type] is (:REFERENCE-LINK
      ;; :LABEL ((:CODE "SECTION")) :DEFINITION "type")
-     (multiple-value-bind (label use-label-as-is object locative found)
+     (multiple-value-bind (label explicit-label-p object locative found)
          (extract-reference-from-reference-link tree)
        (if (not found)
            tree
@@ -1065,12 +1148,12 @@
                                  (filter-references-for-unspecified-locative
                                   object))))
              (if references
-                 (values (make-reference-links label use-label-as-is
+                 (values (make-reference-links label explicit-label-p
                                                references)
                          nil t)
                  tree)))))
     (t
-     tree)))
+     (assert nil))))
 
 ;;; Return the label, whether to use the returned label in the
 ;;; reference link without further transformations, object, the
@@ -1081,23 +1164,38 @@
     (let ((empty-definition-p (and (zerop (length definition))
                                    (or (null tail)
                                        (equal tail "[]"))))
-          (locative (and definition (read-locative-from-string definition)))
-          (name (unparse-reference-link-definition label)))
+          (locative (and definition (read-locative-from-markdown definition)))
+          (name (parse-tree-to-text label :deemph nil)))
       (if (or empty-definition-p locative)
           ;; [foo][] or [foo][function]
-          (multiple-value-bind (object n-chars-read)
-              (and name (find-candidate-object
-                         name :locatives (alexandria:ensure-list locative)))
-            (when n-chars-read
-              (values name nil object locative t)))
+          (multiple-value-bind (object substring)
+              (and name (find-candidate-objects
+                         name :trim nil :depluralize t
+                         :only-one (lambda (object)
+                                     (if (eq locative 'clhs)
+                                         (find-hyperspec-id object
+                                                            :substring-match t)
+                                         (has-reference-p object)))
+                         :clhs-substring-match (eq locative 'clhs)))
+            (when substring
+              (values label nil object locative t)))
           ;; [see this][foo function]
           (multiple-value-bind (object locative foundp)
               (and definition (read-reference-from-string
-                               (unparse-reference-link-definition definition)))
+                               (parse-tree-to-text definition :deemph t)))
             (when foundp
               (values label t object locative t)))))))
 
-(defun unparse-reference-link-definition (parse-tree)
+(defun label-has-code-p (label)
+  (labels ((recurse (e)
+             (unless (atom e)
+               (when (eq (first e) :code)
+                 (return-from label-has-code-p t))
+               (mapc #'recurse e))))
+    (recurse label)
+    nil))
+
+(defun parse-tree-to-text (parse-tree &key deemph)
   (labels
       ((recurse (e)
          (cond ((stringp e)
@@ -1109,8 +1207,11 @@
                 ;; ("mgl-pax-test:" (:EMPH "test-variable")) =>
                 ;; "mgl-pax-test:*test-variable*"
                 (apply #'concatenate 'string (mapcar #'recurse e)))
+               ;; Recurse into (:PLAIN ...)
+               ((and (listp e) (eq :plain (first e)))
+                (format nil "~A" (recurse (rest e))))
                ;; (:EMPH "S") -> "*S*"
-               ((and (listp e) (eq :emph (first e)))
+               ((and deemph (listp e) (eq :emph (first e)))
                 (format nil "*~A*" (recurse (rest e))))
                ;; (:CODE "S") -> "S"
                ((and (listp e)
@@ -1118,22 +1219,19 @@
                      (stringp (second e)))
                 (recurse (rest e)))
                (t
-                (return-from unparse-reference-link-definition nil)))))
+                (return-from parse-tree-to-text nil)))))
     (recurse parse-tree)))
 
 ;;; Translate NAME (a string) that's part of TREE (e.g. it's "xxx"
 ;;; from (:CODE "xxx") or from "xxx,yyy"), or it's constructed from
 ;;; TREE (e.g. it's "*SYM*" from (:EMPH "SYM")).
 (defun make-reference-links-to-name (parent tree name)
-  (let ((locatives (find-locatives-around parent tree)))
-    (multiple-value-bind (object n-chars-read)
-        (find-candidate-object name :locatives locatives)
-      (when n-chars-read
-        (let ((refs (filter-references-for-ambiguous-locative
-                     object locatives)))
-          (when refs
-            (values (make-reference-links (subseq name 0 n-chars-read) nil refs)
-                    refs)))))))
+  (let ((refs (filter-references-for-ambiguous-locative
+               (find-candidate-objects name :trim nil
+                                       :depluralize t)
+               (find-locatives-around parent tree))))
+    (when refs
+      (values (make-reference-links `(,tree) nil refs) refs))))
 
 ;;; NAME-ELEMENT is a child of TREE. It is the name of the symbol or
 ;;; it contains the name. Find a locative before or after NAME-ELEMENT
@@ -1143,7 +1241,7 @@
 (defun find-locatives-around (tree name-element)
   (let ((locatives ()))
     (labels ((try-string (string)
-               (let ((locative (read-locative-from-string string)))
+               (let ((locative (read-locative-from-markdown string)))
                  (when locative
                    (push locative locatives))))
              (try (element)
@@ -1262,26 +1360,35 @@
 ;;; A name in markdown code such as `FOO` will behave as [`FOO`][loc]
 ;;; if the locative LOC is found nearby by FIND-LOCATIVES-AROUND and
 ;;; it matches a known reference. Else, see
-;;; %FILTER-REFERENCES-FOR-OBJECT.
-(defun filter-references-for-ambiguous-locative (object locatives)
+;;; %FILTER-REFERENCES-FOR-OBJECT. FIXME: rename?
+(defun filter-references-for-ambiguous-locative (objects locatives)
   (or
-   ;; Use the first locative found in TREE in the vicinity of NAME
-   ;; which combines with OBJECT to a known reference.
-   (loop for locative in locatives
-           thereis (filter-references-for-specified-locative object locative))
-   ;; Fall back on the no locative case.
-   (%filter-references-for-object object)))
+   ;; Use the first locative found which combines with OBJECT to a
+   ;; known reference.
+   (loop for object in objects
+           thereis (loop for locative in locatives
+                           thereis (filter-references-for-specified-locative
+                                    object locative)))
+   ;; Fall back on the no-locative case.
+   (loop for object in objects
+           thereis (%filter-references-for-object objects)
+         until (references-to-object object :local :include))))
 
 ;;; `FOO` without any nearby locatives will link to all known
 ;;; references involving FOO unless any reference with FOO is on
 ;;; *LOCAL-REFERENCES* in which case it will not link to anything.
-(defun %filter-references-for-object (object)
-  (unless (find object *local-references* :test #'reference-object=)
-    (resolve-generic-function-and-methods
-     (filter-asdf-system-references
-      (remove-clhs-references
-       (linkable-references
-        (references-to-object object)))))))
+(defun %filter-references-for-object (objects)
+  (loop for object in objects
+        ;; The UNTIL heuristic is intended to prevent substrings of
+        ;; the name of an argument of a function from getting links.
+        ;; This relies on FIND-CANDIDATE-OBJECTS returning longer
+        ;; matches first.
+        until (has-local-reference-p object)
+        append (resolve-generic-function-and-methods
+                (filter-asdf-system-references
+                 (remove-clhs-references
+                  (linkable-references
+                   (references-to-object object)))))))
 
 ;;; A markdown reference link with an unspecified locative such as
 ;;; [foo][] will link to all references involving FOO (given as REFS)
@@ -1362,50 +1469,50 @@
               (and (page-uri-fragment *page*)
                    (page-uri-fragment page)))))))
 
-;;; For LABEL (a STRING) and some references to it (REFS), return a
-;;; markdown parse tree fragment to be spliced into a markdown parse
-;;; tree with LABEL formatted as :CODE with :REFERENCE-LINKs.
-(defun make-reference-links (label use-label-as-is refs)
-  (flet ((label* ()
-           (if use-label-as-is
-               label
-               `(,(code-fragment (maybe-downcase label))))))
-    (let ((ref-1 (first refs)))
-      (cond ((endp refs)
-             ;; all references were filtered out
-             (label*))
-            ((< 1 (length refs))
-             ;; `label`([1][link-id-1] [2][link-id-2])
-             (values `(,@(label*)
-                       "("
-                       ,@(loop
-                           for i upfrom 0
-                           for ref in (sort-references refs)
-                           append `(,@(unless (zerop i)
-                                        '(" "))
-                                    (:reference-link
-                                     :label (,(code-fragment i))
-                                     :definition ,(link-to-reference ref))))
-                       ")")
-                     t))
-            ((member (reference-locative-type ref-1) '(dislocated argument))
-             (label*))
-            ((typep (resolve ref-1 :errorp nil) 'section)
-             `((:reference-link
-                :label ,(if use-label-as-is
-                            label
-                            `(,(section-title-or-name (resolve ref-1))))
-                :definition ,(link-to-reference ref-1))))
-            ((typep (resolve ref-1 :errorp nil) 'glossary-term)
-             `((:reference-link
-                :label ,(if use-label-as-is
-                            label
-                            `(,(glossary-term-title-or-name (resolve ref-1))))
-                :definition ,(link-to-reference ref-1))))
-            (t
-             `((:reference-link
-                :label ,(label*)
-                :definition ,(link-to-reference ref-1))))))))
+;;; For LABEL (a parse tree fragment) and some references to it
+;;; (REFS), return a markdown parse tree fragment to be spliced into a
+;;; markdown parse tree.
+(defun make-reference-links (label explicit-label-p refs)
+  (let ((ref-1 (first refs))
+        (located nil))
+    (cond ((endp refs)
+           ;; all references were filtered out
+           label)
+          ((< 1 (length refs))
+           ;; `label`([1][link-id-1] [2][link-id-2])
+           (values `(,@label
+                     "("
+                     ,@(loop
+                         for i upfrom 0
+                         for ref in (sort-references refs)
+                         append `(,@(unless (zerop i)
+                                      '(" "))
+                                  (:reference-link
+                                   :label (,(code-fragment i))
+                                   :definition ,(link-to-reference ref))))
+                     ")")
+                   t))
+          ((member (reference-locative-type ref-1) '(dislocated argument))
+           label)
+          ;; FIXME: TITLE should be a generic function.
+          ((typep (setq located (resolve ref-1 :errorp nil)) 'section)
+           `((:reference-link
+              :label ,(if (or explicit-label-p
+                              (null (section-title located)))
+                          label
+                          `(,(section-title located)))
+              :definition ,(link-to-reference ref-1))))
+          ((typep located 'glossary-term)
+           `((:reference-link
+              :label ,(if (or explicit-label-p
+                              (null (glossary-term-title located)))
+                          label
+                          `(,(glossary-term-title located)))
+              :definition ,(link-to-reference ref-1))))
+          (t
+           `((:reference-link
+              :label ,label
+              :definition ,(link-to-reference ref-1)))))))
 
 ;;; Order REFERENCES in an implementation independent way. REFERENCES
 ;;; are all to the same object.
