@@ -507,8 +507,9 @@
 
 (defun reachable-canonical-references (objects)
   (mapcan (lambda (object)
-            (mapcar #'canonical-reference
-                    (cons object (collect-reachable-objects object))))
+            (loop for object in (cons object (collect-reachable-objects object))
+                  unless (stringp object)
+                    collect (canonical-reference object)))
           objects))
 
 
