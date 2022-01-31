@@ -473,8 +473,7 @@
 
   METHOD is not EXPORTABLE-LOCATIVE-TYPE-P.")
 
-(defmethod locate-object (symbol (locative-type (eql 'method))
-                          locative-args)
+(defmethod locate-object (symbol (locative-type (eql 'method)) locative-args)
   (unless (= 2 (length locative-args))
     (locate-error "The syntax of the METHOD locative is ~
                    (METHOD <METHOD-QUALIFIERS> <METHOD-SPECIALIZERS>)."))
@@ -686,7 +685,7 @@
                    (if (swank-mop:slot-definition-initfunction slot-def)
                        (format nil "~A= ~A"
                                (if initarg-strings " " "")
-                               (codify-and-autolink
+                               (codify-and-link
                                 (prin1-and-escape-markdown
                                  (swank-mop:slot-definition-initform
                                   slot-def))))
@@ -1025,7 +1024,7 @@
                             ;; Like MASSAGE-DOCSTRING but without
                             ;; indenting.
                             (prefix-lines "  "
-                                          (codify-and-autolink
+                                          (codify-and-link
                                            (strip-docstring-indentation value))
                                           :exclude-first-line-p t)))
                    ((nil)

@@ -1354,7 +1354,8 @@ their case does not matter.
 
 - `SECTION` renders as: `SECTION`([`0`][aee8] [`1`][2cf1]) (*object with ambiguous locative*)
 
-- `SECTION class` renders as: [`SECTION`][aee8] class (*object followed by locative*)
+- `SECTION class` renders as: [`SECTION`][aee8] class (*object followed by
+  locative*)
 
 
 - `class SECTION` renders as: class [`SECTION`][aee8] (*object following locative*)
@@ -2656,7 +2657,7 @@ for [`ASDF:SYSTEM:`][90f2]
                             ;; Like MASSAGE-DOCSTRING but without
                             ;; indenting.
                             (prefix-lines "  "
-                                          (codify-and-autolink
+                                          (codify-and-link
                                            (strip-docstring-indentation value))
                                           :exclude-first-line-p t)))
                    ((nil)

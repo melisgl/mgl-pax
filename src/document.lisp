@@ -79,8 +79,31 @@
 ;;; times, earlier links (thus pages earlier in DOCUMENT's PAGES
 ;;; argument) have precedence.
 (defvar *links*)
+
+;;; A list of all the references extracted from *LINKS* for
+;;; convenience.
+(defvar *references*)
 (defvar *id-to-link*)
 (defvar *object-to-links*)
+
+;;; A list of references not to be autolinked. See
+;;; REFERENCES-FOR-AMBIGUOUS-LOCATIVE,
+;;; REFERENCES-FOR-UNSPECIFIED-LOCATIVE, and
+;;; REFERENCES-FOR-SPECIFIED-LOCATIVE. The reference being documented
+;;; is always on this list. Arguments are typically also are. Bound by
+;;; WITH-LOCAL-REFERENCES.
+(defvar *local-references*)
+
+;;; Add a LINK to *LINKS* (and a REFERENCE to *REFERENCES*) for each
+;;; reference in PAGE-REFERENCES of PAGE.
+(defmacro with-pages ((pages) &body body)
+  `(let ((*references* ())
+         (*local-references* ())
+         (*links* ())
+         (*id-to-link* (make-hash-table :test #'equal))
+         (*object-to-links* (make-hash-table :test #'equalp)))
+     (initialize-links ,pages)
+     (locally ,@body)))
 
 (defun add-link (link)
   (let ((reference (link-reference link)))
@@ -98,6 +121,9 @@
 (defun find-link (reference)
   (find reference (gethash (reference-object reference) *object-to-links*)
         :key #'link-reference :test #'reference=))
+
+
+;;;; Querying global and local references
 
 ;;; Return a list of all REFERENCES whose REFERENCE-OBJECT matches
 ;;; OBJECT, that is, with OBJECT as their REFERENCE-OBJECT they would
@@ -148,6 +174,7 @@
 (defun has-reference-p (object)
   (or (has-global-reference-p object)
       (has-local-reference-p object)))
+
 
 ;;; Return the unescaped name of the HTML anchor for REFERENCE. See
 ;;; HTML-SAFE-NAME.
@@ -178,29 +205,6 @@
   (let ((link (find-link reference)))
     (when link
       (link-page link))))
-
-;;; A list of all the references extracted from *LINKS* for
-;;; convenience.
-(defvar *references*)
-
-;;; A list of references not to be autolinked. See
-;;; FILTER-REFERENCES-FOR-AMBIGUOUS-LOCATIVE,
-;;; FILTER-REFERENCES-FOR-UNSPECIFIED-LOCATIVE, and
-;;; FILTER-REFERENCES-FOR-SPECIFIED-LOCATIVE. The reference being
-;;; documented is always on this list. Arguments are typically also
-;;; are. Bound by WITH-LOCAL-REFERENCES.
-(defvar *local-references*)
-
-;;; Add a LINK to *LINKS* (and a REFERENCE to *REFERENCES*) for each
-;;; reference in PAGE-REFERENCES of PAGE.
-(defmacro with-pages ((pages) &body body)
-  `(let ((*references* ())
-         (*local-references* ())
-         (*links* ())
-         (*id-to-link* (make-hash-table :test #'equal))
-         (*object-to-links* (make-hash-table :test #'equalp)))
-     (initialize-links ,pages)
-     (locally ,@body)))
 
 (defun initialize-links (pages)
   (declare (special *document-link-to-hyperspec*)
@@ -616,7 +620,7 @@
 ;;; *DOCUMENT-LINK-SECTIONS*, *DOCUMENT-LINK-CODE*) and always handle
 ;;; explicit links with locatives (e.g. [FOO][function]). Return the
 ;;; transformed string.
-(defun codify-and-autolink (string)
+(defun codify-and-link (string)
   (when string
     (let* ((3bmd-grammar:*smart-quotes* nil)
            (parse-tree
@@ -625,7 +629,7 @@
              (join-consecutive-non-blank-strings-in-parse-tree
               (3bmd-grammar:parse-doc string))))
       (with-output-to-string (out)
-        (3bmd::print-doc-to-stream-using-format (autolink (codify parse-tree))
+        (3bmd::print-doc-to-stream-using-format (link (codify parse-tree))
                                                 out :markdown)))))
 
 
@@ -912,7 +916,8 @@
 
   - `\LOCATE` renders as: LOCATE (*object with a single possible locative*)
   - `\SECTION` renders as: SECTION (*object with ambiguous locative*)
-  - `SECTION class` renders as: SECTION class (*object followed by locative*)"""
+  - `SECTION class` renders as: SECTION class (*object followed by
+    locative*)"""
   ;; If the next example were in the same docstring as the previous,
   ;; it would not be render as a link because they are the same link.
   """- `class SECTION` renders as: class SECTION (*object following locative*)
@@ -1077,7 +1082,7 @@
 
 ;;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
 ;;; :REFERENCE-LINK for [symbol][locative]). Don't hurt other links.
-(defun autolink (parse-tree)
+(defun link (parse-tree)
   (let ((autolinked (make-hash-table :test #'equal)))
     (map-markdown-parse-tree
      '(:code :reference-link)
@@ -1086,80 +1091,127 @@
      (alexandria:rcurry #'translate-to-links autolinked)
      parse-tree)))
 
-;;; This particular translator
+;;; This translator
 ;;;
 ;;; - handles (:CODE "SOMETHING"), the parse of `SOMETHING`: looks for
 ;;;   any references to "SOMETHING" (which may name a symbol or a
 ;;;   package) and tanslates it to, for example, (:REFERENCE-LINK
 ;;;   :LABEL ((:CODE "SOMETHING")) :DEFINITION "function") if there is
-;;;   a single function reference to it. See
-;;;   MAKE-REFERENCE-LINKS-TO-NAME.
+;;;   a single function reference to it.
 ;;;
-;;; - handles :REFERENCE-LINK nodes:
+;;; - handles :REFERENCE-LINK nodes
 ;;;
-;;;   - those with explicit locative given (:REFERENCE-LINK :LABEL
+;;;   - those with an explicit locative (:REFERENCE-LINK :LABEL
 ;;;     ((:CODE "SOMETHING")) :DEFINITION "function"), the parse of
 ;;;     [`SOMETHING`][function],
 ;;;
 ;;;   - and those with no locative (:REFERENCE-LINK :LABEL ((:CODE
 ;;;     "SOMETHING")) :TAIL "[]"), the parse of [`SOMETHING`][].
 (defun translate-to-links (parent tree autolinked)
-  (cond
-    ;; (:CODE "something")
-    ((and (eq :code (first tree))
-          (= 2 (length tree))
-          (stringp (second tree)))
-     (let ((name (second tree)))
-       (if (alexandria:starts-with #\\ name)
-           `(:code ,(subseq name 1))
-           (multiple-value-bind (reference-links refs)
-               (make-reference-links-to-name parent tree name)
-             (let ((autolinked-key
-                     ;; FIXME: sort it
-                     refs)
-                   (supressedp (and refs
-                                    (let ((object (reference-object
-                                                   (first refs))))
-                                      (member object '(t nil))))))
-               (cond ((and reference-links
-                           (not supressedp)
-                           (or (not (gethash autolinked-key autolinked))
-                               ;; Replace references to sections and
-                               ;; glossary terms with their title any
-                               ;; number of times.
-                               (and (= (length refs) 1)
-                                    (typep (resolve (first refs) :errorp nil)
-                                           '(or section glossary-term)))))
-                      (setf (gethash autolinked-key autolinked) t)
-                      (values reference-links nil t))
-                     (t
-                      tree)))))))
-    ;; [section][type], [`section`][type], [*var*][variable], [section][]
-    ((and (eq :reference-link (first tree)))
-     ;; For example, the tree for [`section`][type] is (:REFERENCE-LINK
-     ;; :LABEL ((:CODE "SECTION")) :DEFINITION "type")
-     (multiple-value-bind (label explicit-label-p object locative found)
-         (extract-reference-from-reference-link tree)
-       (if (not found)
-           tree
-           (let ((references (if locative
-                                 (filter-references-for-specified-locative
-                                  object locative)
-                                 (filter-references-for-unspecified-locative
-                                  object))))
-             (if references
-                 (values (make-reference-links label explicit-label-p
-                                               references)
-                         nil t)
-                 tree)))))
-    (t
-     (assert nil))))
+  (cond ((parse-tree-p tree :code)
+         (let ((name (second tree)))
+           (if (alexandria:starts-with #\\ name)
+               `(:code ,(subseq name 1))
+               (autolink parent tree name autolinked))))
+        ((and (eq :reference-link (first tree)))
+         (resolve-reflink tree))
+        (t
+         (assert nil))))
+
+(defun autolink (parent tree name autolinked)
+  (multiple-value-bind (reflinks refs)
+      (make-reflinks-to-name parent tree name)
+    (let ((autolinked-key
+            ;; FIXME: sort it
+            refs)
+          (supressedp (and refs (let ((object (reference-object
+                                               (first refs))))
+                                  (member object '(t nil))))))
+      (cond ((and reflinks
+                  (not supressedp)
+                  (or (not (gethash autolinked-key autolinked))
+                      ;; Replace references to sections and glossary
+                      ;; terms with their title any number of times.
+                      (and (= (length refs) 1)
+                           (typep (resolve (first refs) :errorp nil)
+                                  '(or section glossary-term)))))
+             (setf (gethash autolinked-key autolinked) t)
+             (values reflinks nil t))
+            (t
+             tree)))))
+
+;;; Translate NAME (a string) that's part of TREE (e.g. it's "xxx"
+;;; from (:CODE "xxx") or from "xxx,yyy"), or it's constructed from
+;;; TREE (e.g. it's "*SYM*" from (:EMPH "SYM")).
+(defun make-reflinks-to-name (parent tree name)
+  (let ((refs (references-for-ambiguous-locative
+               (find-candidate-objects name :trim nil :depluralize t)
+               (find-locatives-around parent tree))))
+    (when refs
+      (values (make-reflinks `(,tree) nil refs) refs))))
+
+;;; Find a locative before or after NAME in PARENT with which NAME
+;;; occurs in POSSIBLE-REFERENCES.
+
+;;; NAME-ELEMENT is a child of TREE. It is the name of the object or
+;;; it contains the name.  Return the matching
+;;; REFERENCE, if found. POSSIBLE-REFERENCES must only contain
+;;; references to the same object.
+(defun find-locatives-around (tree name-element)
+  (let ((locatives ()))
+    (labels ((try-string (string)
+               (let ((locative (read-locative-from-markdown string)))
+                 (when locative
+                   (push locative locatives))))
+             (try (element)
+               (let ((locative (cond ((stringp element)
+                                      (try-string element))
+                                     ((eq :code (first element))
+                                      (try-string (second element)))
+                                     ;; (:REFERENCE-LINK :LABEL ((:CODE
+                                     ;; "CLASS")) :DEFINITION "0524")
+                                     ((eq :reference-link (first element))
+                                      (try (first (third element)))))))
+                 (when locative
+                   (return-from find-locatives-around locative)))))
+      ;; For example, (:PLAIN "See" "function" " " "FOO")
+      (loop for rest on parent
+            do (when (and (eq (third rest) name)
+                          (stringp (second rest))
+                          (blankp (second rest)))
+                 (try (first rest))
+                 (return)))
+      ;; For example, (:PLAIN "See" "the" "FOO" " " "function")
+      (loop for rest on parent
+            do (when (and (eq (first rest) name)
+                          (stringp (second rest))
+                          (blankp (second rest)))
+                 (try (third rest))
+                 (return))))
+    locatives))
+
+(defun resolve-reflink (reflink)
+  ;; Markdown to handle: [section][type], [`section`][type],
+  ;; [*var*][variable], [section][]. For example, the tree for
+  ;; [`section`][type] is (:REFERENCE-LINK :LABEL ((:CODE "SECTION"))
+  ;; :DEFINITION "type").
+  (multiple-value-bind (label explicit-label-p object locative found)
+      (extract-reference-from-reflink reflink)
+    (if (not found)
+        reflink
+        (let ((refs (if locative
+                        (references-for-specified-locative object locative)
+                        (references-for-unspecified-locative object))))
+          (if refs
+              (values (make-reflinks label explicit-label-p refs) nil t)
+              reflink)))))
 
 ;;; Return the label, whether to use the returned label in the
-;;; reference link without further transformations, object, the
-;;; locative, whether the object and locative were found.
-(defun extract-reference-from-reference-link (tree)
-  (assert (eq (first tree) :reference-link))
+;;; reference link without further transformations (e.g. replace it
+;;; with SECTION-TITLE), object, the locative, whether the object and
+;;; locative were found.
+(defun extract-reference-from-reflink (tree)
+  (assert (parse-tree-p tree :reference-link))
   (destructuring-bind (&key label definition tail) (rest tree)
     (let ((empty-definition-p (and (zerop (length definition))
                                    (or (null tail)
@@ -1208,97 +1260,17 @@
                 ;; "mgl-pax-test:*test-variable*"
                 (apply #'concatenate 'string (mapcar #'recurse e)))
                ;; Recurse into (:PLAIN ...)
-               ((and (listp e) (eq :plain (first e)))
+               ((parse-tree-p e :plain)
                 (format nil "~A" (recurse (rest e))))
                ;; (:EMPH "S") -> "*S*"
-               ((and deemph (listp e) (eq :emph (first e)))
+               ((and deemph (parse-tree-p e :emph))
                 (format nil "*~A*" (recurse (rest e))))
                ;; (:CODE "S") -> "S"
-               ((and (listp e)
-                     (eq :code (first e))
-                     (stringp (second e)))
+               ((parse-tree-p e :code)
                 (recurse (rest e)))
                (t
                 (return-from parse-tree-to-text nil)))))
     (recurse parse-tree)))
-
-;;; Translate NAME (a string) that's part of TREE (e.g. it's "xxx"
-;;; from (:CODE "xxx") or from "xxx,yyy"), or it's constructed from
-;;; TREE (e.g. it's "*SYM*" from (:EMPH "SYM")).
-(defun make-reference-links-to-name (parent tree name)
-  (let ((refs (filter-references-for-ambiguous-locative
-               (find-candidate-objects name :trim nil
-                                       :depluralize t)
-               (find-locatives-around parent tree))))
-    (when refs
-      (values (make-reference-links `(,tree) nil refs) refs))))
-
-;;; NAME-ELEMENT is a child of TREE. It is the name of the symbol or
-;;; it contains the name. Find a locative before or after NAME-ELEMENT
-;;; with which NAME occurs in POSSIBLE-REFERENCES. Return the matching
-;;; REFERENCE, if found. POSSIBLE-REFERENCES must only contain
-;;; references to the same object.
-(defun find-locatives-around (tree name-element)
-  (let ((locatives ()))
-    (labels ((try-string (string)
-               (let ((locative (read-locative-from-markdown string)))
-                 (when locative
-                   (push locative locatives))))
-             (try (element)
-               (let ((locative (cond ((stringp element)
-                                      (try-string element))
-                                     ((eq :code (first element))
-                                      (try-string (second element)))
-                                     ;; (:REFERENCE-LINK :LABEL ((:CODE
-                                     ;; "CLASS")) :DEFINITION "0524")
-                                     ((eq :reference-link (first element))
-                                      (try (first (third element)))))))
-                 (when locative
-                   (return-from find-locatives-around locative)))))
-      ;; For example, (:PLAIN "See" "function" " " "FOO")
-      (loop for rest on tree
-            do (when (and (eq (third rest) name-element)
-                          (stringp (second rest))
-                          (blankp (second rest)))
-                 (try (first rest))
-                 (return)))
-      ;; For example, (:PLAIN "See" "the" "FOO" " " "function")
-      (loop for rest on tree
-            do (when (and (eq (first rest) name-element)
-                          (stringp (second rest))
-                          (blankp (second rest)))
-                 (try (third rest))
-                 (return))))
-    locatives))
-
-(defun find-reference-by-locative (locative refs)
-  ;; This won't find [SECTION][TYPE] because SECTION is a class.
-  ;;
-  ;; Reference lookup could look for a different locative which leads
-  ;; to the same object/reference, but there is no sane generalization
-  ;; of that to locative-types. Do we need something like
-  ;; LOCATIVE-SUBTYPE-P?
-  (find locative refs :test #'equivalent-locative-p))
-
-(defun equivalent-locative-p (locative reference)
-  (or (locative-equal locative (reference-locative reference))
-      (let ((reference
-              (make-reference (reference-object reference)
-                              (canonical-locative
-                               (reference-locative-type reference)
-                               (reference-locative-args reference))))
-            (alternative
-              (make-reference (reference-object reference)
-                              (canonical-locative
-                               (locative-type locative)
-                               (locative-args locative))))
-            object1
-            object2)
-        (or (reference= reference alternative)
-            (and (ignore-errors
-                  (setq object1 (resolve alternative :errorp nil)))
-                 (setq object2 (resolve reference :errorp nil))
-                 (eq object1 object2))))))
 
 
 (defsection @mgl-pax-reference-resolution (:title "Reference Resolution")
@@ -1359,25 +1331,25 @@
 
 ;;; A name in markdown code such as `FOO` will behave as [`FOO`][loc]
 ;;; if the locative LOC is found nearby by FIND-LOCATIVES-AROUND and
-;;; it matches a known reference. Else, see
-;;; %FILTER-REFERENCES-FOR-OBJECT. FIXME: rename?
-(defun filter-references-for-ambiguous-locative (objects locatives)
+;;; it matches a known reference. Else, see %REFERENCES-FOR-OBJECT.
+;;; All returned REFERENCES are for the same object.
+(defun references-for-ambiguous-locative (objects locatives)
   (or
    ;; Use the first locative found which combines with OBJECT to a
    ;; known reference.
    (loop for object in objects
            thereis (loop for locative in locatives
-                           thereis (filter-references-for-specified-locative
+                           thereis (references-for-specified-locative
                                     object locative)))
    ;; Fall back on the no-locative case.
    (loop for object in objects
-           thereis (%filter-references-for-object objects)
+           thereis (%references-for-object objects)
          until (references-to-object object :local :include))))
 
 ;;; `FOO` without any nearby locatives will link to all known
 ;;; references involving FOO unless any reference with FOO is on
 ;;; *LOCAL-REFERENCES* in which case it will not link to anything.
-(defun %filter-references-for-object (objects)
+(defun %references-for-object (objects)
   (loop for object in objects
         ;; The UNTIL heuristic is intended to prevent substrings of
         ;; the name of an argument of a function from getting links.
@@ -1393,7 +1365,7 @@
 ;;; A markdown reference link with an unspecified locative such as
 ;;; [foo][] will link to all references involving FOO (given as REFS)
 ;;; which are not on *LOCAL-REFERENCES*.
-(defun filter-references-for-unspecified-locative (object)
+(defun references-for-unspecified-locative (object)
   (resolve-generic-function-and-methods
    (filter-asdf-system-references
     (filter-clhs-references
@@ -1403,7 +1375,7 @@
 ;;; A markdown reference link with a specified locative such as
 ;;; [foo][function] or text fragment like "function FOO" will link to
 ;;; the function FOO irrespective of *LOCAL-REFERENCES*.
-(defun filter-references-for-specified-locative (object locative)
+(defun references-for-specified-locative (object locative)
   (if (member (locative-type locative) '(dislocated argument))
       ;; Handle an explicit [FOO][dislocated] in markdown, for which
       ;; there is no reference in REFS.
@@ -1452,8 +1424,7 @@
 (defun linkable-ref-p (ref)
   (declare (special *document-link-sections*))
   (and (or (and *document-link-sections*
-                ;; FIXME: test for REFERENCE-LOCATIVE-TYPE?
-                (typep (resolve ref :errorp nil) 'section))
+                (eq (reference-locative-type ref) 'section))
            *document-link-code*)
        (let ((page (reference-page ref)))
          (or
@@ -1472,26 +1443,25 @@
 ;;; For LABEL (a parse tree fragment) and some references to it
 ;;; (REFS), return a markdown parse tree fragment to be spliced into a
 ;;; markdown parse tree.
-(defun make-reference-links (label explicit-label-p refs)
+(defun make-reflinks (label explicit-label-p refs)
   (let ((ref-1 (first refs))
         (located nil))
     (cond ((endp refs)
-           ;; all references were filtered out
+           ;; All references were filtered out.
            label)
           ((< 1 (length refs))
            ;; `label`([1][link-id-1] [2][link-id-2])
-           (values `(,@label
-                     "("
-                     ,@(loop
-                         for i upfrom 0
-                         for ref in (sort-references refs)
-                         append `(,@(unless (zerop i)
-                                      '(" "))
-                                  (:reference-link
-                                   :label (,(code-fragment i))
-                                   :definition ,(link-to-reference ref))))
-                     ")")
-                   t))
+           `(,@label
+             "("
+             ,@(loop
+                 for i upfrom 0
+                 for ref in (sort-references refs)
+                 append `(,@(unless (zerop i)
+                              '(" "))
+                          (:reference-link
+                           :label (,(code-fragment i))
+                           :definition ,(link-to-reference ref))))
+             ")"))
           ((member (reference-locative-type ref-1) '(dislocated argument))
            label)
           ;; FIXME: TITLE should be a generic function.
@@ -1884,7 +1854,7 @@
                       ;; KLUDGE: github has trouble displaying things
                       ;; like '`*package*`, so disable this.
                       (eq *format* :html))
-                 (codify-and-autolink (prin1-and-escape-markdown object))
+                 (codify-and-link (prin1-and-escape-markdown object))
                  (prin1-and-escape-markdown object)))
            (foo (arglist level)
              (unless (= level 0)
@@ -2001,7 +1971,7 @@
   (if *table-of-contents-stream*
       ""
       (let ((docstring (strip-docstring-indentation docstring)))
-        (prefix-lines indentation (codify-and-autolink docstring)))))
+        (prefix-lines indentation (codify-and-link docstring)))))
 
 (defun filter-documentation (symbol doc-type)
   (let ((docstring (documentation symbol doc-type)))

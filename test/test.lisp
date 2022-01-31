@@ -734,7 +734,21 @@
     (check-one-liner docstring expected)))
 
 
-(deftest test-reflink ()
+(deftest test-link ()
+  (test-autolink)
+  (test-resolve-reflink)
+  (test-explicit-label))
+
+
+(deftest test-autolink ()
+  (check-one-liner (list "`TEST-GF` `(method t (number))`"
+                         (make-reference 'test-gf '(method () (number))))
+                   "[`TEST-GF`][ba01] `(method t (number))`")
+  (check-one-liner (list "`(method t (number))` `TEST-GF`"
+                         (make-reference 'test-gf '(method () (number))))
+                   "`(method t (number))` [`TEST-GF`][ba01]"))
+
+(deftest test-resolve-reflink ()
   (with-test ("label is a single name")
     (check-one-liner "[*package*][]" "[*package*][]")
     (check-one-liner "[*emphasized*][normaldef]" "[*emphasized*][normaldef]")
@@ -1049,8 +1063,7 @@
   (test-codify)
   (test-plural)
   (test-downcase-uppercase)
-  (test-reflink)
-  (test-explicit-label)
+  (test-link)
   (test-macro-arg-names)
   (test-document :markdown)
   (test-document :html)
