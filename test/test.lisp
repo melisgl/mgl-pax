@@ -617,7 +617,7 @@
 (defvar *q*)
 
 
-(deftest test-plural ()
+(deftest test-names ()
   (with-test ("Uppercase name with uppercase plural.")
     (check-one-liner "CARS" "[`CAR`][86ef]s")
     (check-one-liner "CARS." "[`CAR`][86ef]s.")
@@ -657,7 +657,10 @@
     (check-one-liner "[`CAR`s][]" "[`CAR`s][86ef]")
     (check-one-liner "[`CAR`s.][]" "[`CAR`s.][]")
     (check-one-liner "[`CLASS`es][]" "[`CLASS`es][46f7]")
-    (check-one-liner "[`CLASS`es.][]" "[`CLASS`es.][]")))
+    (check-one-liner "[`CLASS`es.][]" "[`CLASS`es.][]"))
+  (with-test ("Trimming")
+    (check-one-liner "`#<CLASS>`" "`#<CLASS>`")
+    (check-one-liner "#\\<CLASS>" "#<[`CLASS`][46f7]>")))
 
 
 (deftest test-downcasing ()
@@ -1150,7 +1153,7 @@ This is [Self-referencing][ca46].
   (test-transform-tree)
   (test-macro-arg-names)
   (test-codify)
-  (test-plural)
+  (test-names)
   (test-downcasing)
   (test-link)
   (test-document :markdown)
@@ -1184,10 +1187,6 @@ This is [Self-referencing][ca46].
 
 #+nil
 (test-all)
-
-(deftest test-trimming ()
-  (check-one-liner "`#<CLASS>`" "`#<CLASS>`")
-  (check-one-liner "#<CLASS>" "#<[`CLASS`][46f7]>"))
 
 #+nil
 (is (equal

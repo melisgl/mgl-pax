@@ -175,16 +175,31 @@
   (or (whitespacep char) (find char "()'`\"")))
 
 
-"""
-  ##### Trimming
+(define-glossary-term @word (:title "word")
+  "Disregarding markup for a minute, a _word_ is a non-empty string
+  between whitespace characters in a docstring.")
 
-  At first approximation, words are the non-empty strings between
-  whitespace characters. If a word begins or ends with punctuation
-  characters, then those may be trimmed from it in an effort to find
+(define-glossary-term @name (:title "name")
+  """A _name_ is a string that names an `INTERN`ed SYMBOL,
+  a PACKAGE, or an ASDF:SYSTEM, that is, a possible @OBJECT. Names are
+  constructed from @WORDs by possibly trimming leading and trailing
+  punctuation symbols and removing certain plural suffixes.
 
-  ##### Depluralization
+  For example, in `"X and Y must be LISTs."`, although the word is
+  `"LISTs."`, it gets trimmed to `"LISTs"`, then the plural suffix
+  `"s"` is removed to get `"LIST"`. Out of the three candidates for
+  names, `"LISTs."`, `"LISTs"`, and `"LIST"`, the ones that name
+  interned symbols and such are retained for purposes for
+  [Navigating][@mgl-pax-navigating-in-emacs section] and
+  @MGL-PAX-GENERATING-DOCUMENTATION.
 
-"""
+  The punctuation characters for left and right trimming are `#<` and
+  `,:.>`, respectively. The plural suffixes considered are `s`, `es`,
+  `ses`, `zes`, and `ren` (all case insensitive).
+
+  Thus `"CHILDREN"` and `"BUSES"` may have the names `"CHILD"` and
+  `"BUS"` in them.
+  """)
 
 ;;; Collect slight variations on NAME which are CANDIDATE-OBJECT-P.
 ;;; Return a list of candidate objects and a list of minimal
