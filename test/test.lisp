@@ -11,7 +11,7 @@
                          (first (document object)))
                        output))))
 
-(defun check-one-liner (input expected &key (format :markdown))
+(defun check-one-liner (input expected &key (format :markdown) msg)
   (let* ((*package* (find-package :mgl-pax-test))
          (*document-hyperspec-root* "CLHS/")
          (full-output (first (document input :format format)))
@@ -741,12 +741,32 @@
 
 
 (deftest test-autolink ()
-  (check-one-liner (list "`TEST-GF` `(method t (number))`"
-                         (make-reference 'test-gf '(method () (number))))
-                   "[`TEST-GF`][ba01] `(method t (number))`")
-  (check-one-liner (list "`(method t (number))` `TEST-GF`"
-                         (make-reference 'test-gf '(method () (number))))
-                   "`(method t (number))` [`TEST-GF`][ba01]"))
+  (with-test ("object with multiple refs")
+    (check-one-liner (list "macro BAR function"
+                           (make-reference 'bar 'type)
+                           (make-reference 'bar 'macro))
+                     ;; "9119" is the id of the macro.
+                     "macro [`BAR`][9119] function"
+                     :msg "locative before, irrelavant locative after")
+    (check-one-liner (list "function BAR macro"
+                           (make-reference 'bar 'type)
+                           (make-reference 'bar 'macro))
+                     "function [`BAR`][9119] macro"
+                     :msg "locative after, irrelavant locative before")
+    (check-one-liner (list "macro BAR type"
+                           (make-reference 'bar 'type)
+                           (make-reference 'bar 'macro)
+                           (make-reference 'bar 'constant))
+                     ;; "cece" is the the id of the type.
+                     "macro `BAR`([`0`][9119] [`1`][cece]) type"
+                     :msg "ambiguous locative"))
+  (with-test ("locative in code")
+    (check-one-liner (list "`TEST-GF` `(method t (number))`"
+                           (make-reference 'test-gf '(method () (number))))
+                     "[`TEST-GF`][ba01] `(method t (number))`")
+    (check-one-liner (list "`(method t (number))` `TEST-GF`"
+                           (make-reference 'test-gf '(method () (number))))
+                     "`(method t (number))` [`TEST-GF`][ba01]")))
 
 (deftest test-resolve-reflink ()
   (with-test ("label is a single name")

@@ -1150,31 +1150,27 @@
     (when refs
       (values (make-reflinks `(,tree) nil refs) refs))))
 
-;;; Find a locative before or after NAME in PARENT with which NAME
-;;; occurs in POSSIBLE-REFERENCES.
-
-;;; NAME-ELEMENT is a child of TREE. It is the name of the object or
-;;; it contains the name.  Return the matching
-;;; REFERENCE, if found. POSSIBLE-REFERENCES must only contain
-;;; references to the same object.
-(defun find-locatives-around (tree name-element)
+;;; Find locatives just before or after NAME in PARENT. For example,
+;;; PARENT is (:PLAIN "See" "function" " " (:CODE "FOO")), and NAME is
+;;; (:CODE "FOO").
+(defun find-locatives-around (parent name)
   (let ((locatives ()))
     (labels ((try-string (string)
                (let ((locative (read-locative-from-markdown string)))
                  (when locative
                    (push locative locatives))))
              (try (element)
-               (let ((locative (cond ((stringp element)
-                                      (try-string element))
-                                     ((eq :code (first element))
-                                      (try-string (second element)))
-                                     ;; (:REFERENCE-LINK :LABEL ((:CODE
-                                     ;; "CLASS")) :DEFINITION "0524")
-                                     ((eq :reference-link (first element))
-                                      (try (first (third element)))))))
-                 (when locative
-                   (return-from find-locatives-around locative)))))
-      ;; For example, (:PLAIN "See" "function" " " "FOO")
+               (cond ((stringp element)
+                      (try-string element))
+                     ((eq :code (first element))
+                      (try-string (second element)))
+                     ;; (:REFERENCE-LINK :LABEL ((:CODE
+                     ;; "CLASS")) :DEFINITION "0524")
+                     ((eq :reference-link (first element))
+                      (try (first (third element)))))))
+      ;; Note that (EQ (THIRD REST) NAME) may be true multiple times,
+      ;; for example if strings are interned and "FOO" occurs multiple
+      ;; times in PARENT.
       (loop for rest on parent
             do (when (and (eq (third rest) name)
                           (stringp (second rest))
@@ -1335,12 +1331,12 @@
 ;;; All returned REFERENCES are for the same object.
 (defun references-for-ambiguous-locative (objects locatives)
   (or
-   ;; Use the first locative found which combines with OBJECT to a
-   ;; known reference.
+   ;; Use the first object from OBJECTS with which some LOCATIVES form
+   ;; known references.
    (loop for object in objects
            thereis (loop for locative in locatives
-                           thereis (references-for-specified-locative
-                                    object locative)))
+                         append (references-for-specified-locative
+                                 object locative)))
    ;; Fall back on the no-locative case.
    (loop for object in objects
            thereis (%references-for-object objects)
