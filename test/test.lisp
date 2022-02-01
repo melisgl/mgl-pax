@@ -11,17 +11,22 @@
                   (first (document object)))))
     (is (null (mismatch% output expected)))))
 
-(defun check-one-liner (input expected &key (format :markdown) msg)
+(defun check-head (input expected &key (format :markdown) msg (n-lines 1))
   (let* ((*package* (find-package :mgl-pax-test))
          (*document-hyperspec-root* "CLHS/")
          (full-output (first (document input :format format)))
-         (got (first-line full-output)))
+         (got (first-n-lines full-output n-lines))
+         (expected (format nil expected)))
     (is (equal got expected)
-        :ctx ("Input:~S~%Full output:~%~S" input full-output))))
+        :ctx ("Input: ~S~%Full output:~%~S" input full-output))))
 
-(defun first-line (string)
-  (with-input-from-string (s string)
-    (read-line s nil nil)))
+(defun first-n-lines (string n)
+  (with-output-to-string (out)
+    (with-input-from-string (in string)
+      (loop for i below n do
+        (if (< i (1- n))
+            (write-line (read-line in nil nil) out)
+            (write-string (read-line in nil nil) out))))))
 
 (defun internedp (name)
   (find-symbol (string name) :mgl-pax-test))
@@ -555,61 +560,61 @@
     (with-test ("uninterned")
       (with-test ("len=1")
         (is (not (internedp "U")))
-        (check-one-liner "U" "U")
-        (check-one-liner "\\U" "U")
-        (check-one-liner "-" "-"))
+        (check-head "U" "U")
+        (check-head "\\U" "U")
+        (check-head "-" "-"))
       (with-test ("len=2")
         (is (not (internedp "UN")))
-        (check-one-liner "UN" "UN")
-        (check-one-liner "\\UN" "UN")
-        (check-one-liner "/=" "/="))
+        (check-head "UN" "UN")
+        (check-head "\\UN" "UN")
+        (check-head "/=" "/="))
       (with-test ("len=3")
         (is (not (internedp "UNI")))
-        (check-one-liner "UNI" "UNI")
-        (check-one-liner "\\UNI" "UNI")
+        (check-head "UNI" "UNI")
+        (check-head "\\UNI" "UNI")
         (is (not (internedp "*U*")))
-        (check-one-liner "*U*" "*U*")
-        (check-one-liner "*\\U*" "*U*")
-        (check-one-liner "///" "///")
-        (check-one-liner "Uni" "Uni")
-        (check-one-liner "UnI" "UnI")))
+        (check-head "*U*" "*U*")
+        (check-head "*\\U*" "*U*")
+        (check-head "///" "///")
+        (check-head "Uni" "Uni")
+        (check-head "UnI" "UnI")))
     (with-test ("internal")
       (with-test ("len=1")
         (is (not (mgl-pax::external-symbol-p 'q)))
-        (check-one-liner "Q" "Q")
-        (check-one-liner "\\Q" "Q"))
+        (check-head "Q" "Q")
+        (check-head "\\Q" "Q"))
       (with-test ("len=2")
         (is (not (mgl-pax::external-symbol-p 'qq)))
-        (check-one-liner "QQ" "QQ")
-        (check-one-liner "\\QQ" "QQ"))
+        (check-head "QQ" "QQ")
+        (check-head "\\QQ" "QQ"))
       (with-test ("len=3")
         (is (not (mgl-pax::external-symbol-p 'qqq)))
-        (check-one-liner "QQQ" "`QQQ`")
-        (check-one-liner "\\QQQ" "QQQ")
+        (check-head "QQQ" "`QQQ`")
+        (check-head "\\QQQ" "QQQ")
         (is (not (mgl-pax::external-symbol-p '*q*)))
-        (check-one-liner "*Q*" "`*Q*`")
-        (check-one-liner "*\\Q*" "*Q*")))
+        (check-head "*Q*" "`*Q*`")
+        (check-head "*\\Q*" "*Q*")))
     (with-test ("external")
       (let ((*document-link-to-hyperspec* nil))
-        (check-one-liner "T" "`T`")
-        (check-one-liner "\\T" "T")
-        (check-one-liner "DO" "`DO`")
-        (check-one-liner "\\DO" "DO")
-        (check-one-liner "COS" "`COS`")
-        (check-one-liner "\\COS" "COS")))
+        (check-head "T" "`T`")
+        (check-head "\\T" "T")
+        (check-head "DO" "`DO`")
+        (check-head "\\DO" "DO")
+        (check-head "COS" "`COS`")
+        (check-head "\\COS" "COS")))
     (with-test ("external with ref")
       ;; T is not autolinked.
-      (check-one-liner "T" "`T`")
-      (check-one-liner "\\T" "T")
-      (check-one-liner "DO" "[`DO`][be20]")
-      (check-one-liner "\\DO" "DO")
-      (check-one-liner "COS" "[`COS`][90ce]")
-      (check-one-liner "\\COS" "COS")))
+      (check-head "T" "`T`")
+      (check-head "\\T" "T")
+      (check-head "DO" "[`DO`][be20]")
+      (check-head "\\DO" "DO")
+      (check-head "COS" "[`COS`][90ce]")
+      (check-head "\\COS" "COS")))
   ;; FIXME
   (with-test ("reflink")
     (with-test ("no refs")
-      (check-one-liner "[U]" "[U][]")
-      (check-one-liner "[FORMAT][dislocated]" "`FORMAT`"))))
+      (check-head "[U]" "[U][]")
+      (check-head "[FORMAT][dislocated]" "`FORMAT`"))))
 
 (defun q ())
 (defun qq ())
@@ -619,48 +624,48 @@
 
 (deftest test-names ()
   (with-test ("Uppercase name with uppercase plural.")
-    (check-one-liner "CARS" "[`CAR`][86ef]s")
-    (check-one-liner "CARS." "[`CAR`][86ef]s.")
-    (check-one-liner "CLASSES" "[`CLASS`][46f7]es")
-    (check-one-liner "CLASSES." "[`CLASS`][46f7]es."))
+    (check-head "CARS" "[`CAR`][86ef]s")
+    (check-head "CARS." "[`CAR`][86ef]s.")
+    (check-head "CLASSES" "[`CLASS`][46f7]es")
+    (check-head "CLASSES." "[`CLASS`][46f7]es."))
   (with-test ("Uppercase name with lowercase plural.")
-    (check-one-liner "CARs" "[`CAR`][86ef]s")
-    (check-one-liner "CARs." "[`CAR`][86ef]s.")
-    (check-one-liner "CLASSes" "[`CLASS`][46f7]es")
-    (check-one-liner "CLASSes." "[`CLASS`][46f7]es."))
+    (check-head "CARs" "[`CAR`][86ef]s")
+    (check-head "CARs." "[`CAR`][86ef]s.")
+    (check-head "CLASSes" "[`CLASS`][46f7]es")
+    (check-head "CLASSes." "[`CLASS`][46f7]es."))
   (with-test ("Uppercase code + lowercase plural.")
-    (check-one-liner "`CAR`s" "[`CAR`][86ef]s")
-    (check-one-liner "`CAR`s." "[`CAR`][86ef]s.")
-    (check-one-liner "`CLASS`es" "[`CLASS`][46f7]es")
-    (check-one-liner "`CLASS`es." "[`CLASS`][46f7]es."))
+    (check-head "`CAR`s" "[`CAR`][86ef]s")
+    (check-head "`CAR`s." "[`CAR`][86ef]s.")
+    (check-head "`CLASS`es" "[`CLASS`][46f7]es")
+    (check-head "`CLASS`es." "[`CLASS`][46f7]es."))
   (with-test ("Lowercase code + lowercase plural.")
-    (check-one-liner "`car`s" "[`car`][86ef]s")
-    (check-one-liner "`car`s." "[`car`][86ef]s.")
-    (check-one-liner "`class`es" "[`class`][46f7]es")
-    (check-one-liner "`class`es." "[`class`][46f7]es."))
+    (check-head "`car`s" "[`car`][86ef]s")
+    (check-head "`car`s." "[`car`][86ef]s.")
+    (check-head "`class`es" "[`class`][46f7]es")
+    (check-head "`class`es." "[`class`][46f7]es."))
   (with-test ("Lowercase code with lowercase plural.")
-    (check-one-liner "`cars`" "[`cars`][86ef]")
-    (check-one-liner "`cars.`" "`cars.`")
-    (check-one-liner "`classes`" "[`classes`][46f7]")
-    (check-one-liner "`classes.`" "`classes.`"))
+    (check-head "`cars`" "[`cars`][86ef]")
+    (check-head "`cars.`" "`cars.`")
+    (check-head "`classes`" "[`classes`][46f7]")
+    (check-head "`classes.`" "`classes.`"))
   (with-test ("Uppercase name with uppercase plural in reflink.")
-    (check-one-liner "[CARS][]" "[`CAR`s][86ef]")
-    (check-one-liner "[CARS.][]" "[`CAR`s.][]")
-    (check-one-liner "[CLASSES][]" "[`CLASS`es][46f7]")
-    (check-one-liner "[CLASSES.][]" "[`CLASS`es.][]"))
+    (check-head "[CARS][]" "[`CAR`s][86ef]")
+    (check-head "[CARS.][]" "[`CAR`s.][]")
+    (check-head "[CLASSES][]" "[`CLASS`es][46f7]")
+    (check-head "[CLASSES.][]" "[`CLASS`es.][]"))
   (with-test ("Uppercase name with lowercase plural in reflink.")
-    (check-one-liner "[CARs][]" "[`CAR`s][86ef]")
-    (check-one-liner "[CARs.][]" "[`CAR`s.][]")
-    (check-one-liner "[CLASSes][]" "[`CLASS`es][46f7]")
-    (check-one-liner "[CLASSes.][]" "[`CLASS`es.][]"))
+    (check-head "[CARs][]" "[`CAR`s][86ef]")
+    (check-head "[CARs.][]" "[`CAR`s.][]")
+    (check-head "[CLASSes][]" "[`CLASS`es][46f7]")
+    (check-head "[CLASSes.][]" "[`CLASS`es.][]"))
   (with-test ("Uppercase code + lowercase plural in reflink.")
-    (check-one-liner "[`CAR`s][]" "[`CAR`s][86ef]")
-    (check-one-liner "[`CAR`s.][]" "[`CAR`s.][]")
-    (check-one-liner "[`CLASS`es][]" "[`CLASS`es][46f7]")
-    (check-one-liner "[`CLASS`es.][]" "[`CLASS`es.][]"))
+    (check-head "[`CAR`s][]" "[`CAR`s][86ef]")
+    (check-head "[`CAR`s.][]" "[`CAR`s.][]")
+    (check-head "[`CLASS`es][]" "[`CLASS`es][46f7]")
+    (check-head "[`CLASS`es.][]" "[`CLASS`es.][]"))
   (with-test ("Trimming")
-    (check-one-liner "`#<CLASS>`" "`#<CLASS>`")
-    (check-one-liner "#\\<CLASS>" "#<[`CLASS`][46f7]>")))
+    (check-head "`#<CLASS>`" "`#<CLASS>`")
+    (check-head "#\\<CLASS>" "#<[`CLASS`][46f7]>")))
 
 
 (deftest test-downcasing ()
@@ -761,7 +766,7 @@
 
 (defun check-downcasing (docstring expected)
   (let ((*document-downcase-uppercase-code* t))
-    (check-one-liner docstring expected)))
+    (check-head docstring expected)))
 
 
 (deftest test-link ()
@@ -773,41 +778,41 @@
 
 (deftest test-autolink ()
   (with-test ("object with multiple refs")
-    (check-one-liner (list "macro BAR function"
-                           (make-reference 'bar 'type)
-                           (make-reference 'bar 'macro))
-                     ;; "9119" is the id of the macro.
-                     "macro [`BAR`][9119] function"
-                     :msg "locative before, irrelavant locative after")
-    (check-one-liner (list "function BAR macro"
-                           (make-reference 'bar 'type)
-                           (make-reference 'bar 'macro))
-                     "function [`BAR`][9119] macro"
-                     :msg "locative after, irrelavant locative before")
-    (check-one-liner (list "macro BAR type"
-                           (make-reference 'bar 'type)
-                           (make-reference 'bar 'macro)
-                           (make-reference 'bar 'constant))
-                     ;; "cece" is the the id of the type.
-                     "macro `BAR`([`0`][9119] [`1`][cece]) type"
-                     :msg "ambiguous locative"))
+    (check-head (list "macro BAR function"
+                      (make-reference 'bar 'type)
+                      (make-reference 'bar 'macro))
+                ;; "9119" is the id of the macro.
+                "macro [`BAR`][9119] function"
+                :msg "locative before, irrelavant locative after")
+    (check-head (list "function BAR macro"
+                      (make-reference 'bar 'type)
+                      (make-reference 'bar 'macro))
+                "function [`BAR`][9119] macro"
+                :msg "locative after, irrelavant locative before")
+    (check-head (list "macro BAR type"
+                      (make-reference 'bar 'type)
+                      (make-reference 'bar 'macro)
+                      (make-reference 'bar 'constant))
+                ;; "cece" is the the id of the type.
+                "macro `BAR`([`0`][9119] [`1`][cece]) type"
+                :msg "ambiguous locative"))
   (with-test ("locative in code")
-    (check-one-liner (list "`TEST-GF` `(method t (number))`"
-                           (make-reference 'test-gf '(method () (number))))
-                     "[`TEST-GF`][ba01] `(method t (number))`")
-    (check-one-liner (list "`(method t (number))` `TEST-GF`"
-                           (make-reference 'test-gf '(method () (number))))
-                     "`(method t (number))` [`TEST-GF`][ba01]")))
+    (check-head (list "`TEST-GF` `(method t (number))`"
+                      (make-reference 'test-gf '(method () (number))))
+                "[`TEST-GF`][ba01] `(method t (number))`")
+    (check-head (list "`(method t (number))` `TEST-GF`"
+                      (make-reference 'test-gf '(method () (number))))
+                "`(method t (number))` [`TEST-GF`][ba01]")))
 
 (deftest test-resolve-reflink ()
   (with-test ("label is a single name")
-    (check-one-liner "[*package*][]" "[*package*][]")
-    (check-one-liner "[*emphasized*][normaldef]" "[*emphasized*][normaldef]")
-    (check-one-liner "[*format*][]" "[*format*][]"))
+    (check-head "[*package*][]" "[*package*][]")
+    (check-head "[*emphasized*][normaldef]" "[*emphasized*][normaldef]")
+    (check-head "[*format*][]" "[*format*][]"))
   (with-test ("definition is a reference")
-    (check-one-liner "[see this][car function]" "[see this][86ef]")
-    (check-one-liner "[`see` *this*][car function]" "[`see` *this*][86ef]")
-    (check-one-liner "[see this][foo2]" "[see this][foo2]")))
+    (check-head "[see this][car function]" "[see this][86ef]")
+    (check-head "[`see` *this*][car function]" "[`see` *this*][86ef]")
+    (check-head "[see this][foo2]" "[see this][foo2]")))
 
 
 (defsection @section-with-title (:title "My Title"))
@@ -834,6 +839,24 @@
                       "[My Title][cf05]")))
 
 
+(deftest test-suppressed-links ()
+  (test-t-and-nil-links)
+  (test-repeated-links)
+  (test-self-referencing-links))
+
+(deftest test-t-and-nil-links ()
+  (check-head "T" "`T`")
+  (check-head "NIL" "`NIL`"))
+
+(deftest test-repeated-links ()
+  (check-head "PRINT PRINT" "[`PRINT`][3acc] `PRINT`")
+  (check-head (list "PRINT" "PRINT") "[`PRINT`][3acc]~%[`PRINT`][3acc]"
+              :n-lines 2)
+  (check-head "[STRING][function] STRING" "[`STRING`][8d40] `STRING`")
+  (check-head "[STRING][dislocated] STRING" "`STRING` `STRING`")
+  (check-head "[STRING][function] STRING function"
+              "[`STRING`][8d40] [`STRING`][8d40] function"))
+
 (defun self-referencing ()
   "This is SELF-REFERENCING."
   ())
@@ -844,7 +867,7 @@
 (defsection @self-referencing (:title "Self-referencing")
   "This is @SELF-REFERENCING.")
 
-(deftest test-suppressed-links ()
+(deftest test-self-referencing-links ()
   (check-document #'self-referencing
                   "<a id='x-28MGL-PAX-TEST-3A-3ASELF-REFERENCING-20FUNCTION-29'></a>
 
@@ -979,41 +1002,41 @@ This is [Self-referencing][ca46].
 
 
 (deftest test-hyperspec ()
-  (check-one-liner "FIND-IF" "[`FIND-IF`][badc]")
-  (check-one-liner "LIST" "`LIST`([`0`][df43] [`1`][7def])")
-  (check-one-liner "[LIST][type]" "[`LIST`][7def]")
-  (check-one-liner "T" "`T`")
-  (check-one-liner "NIL" "`NIL`")
-  (check-one-liner "[T][]" "`T`([`0`][b743] [`1`][cb19])")
-  (check-one-liner "[T][constant]" "[`T`][b743]"))
+  (check-head "FIND-IF" "[`FIND-IF`][badc]")
+  (check-head "LIST" "`LIST`([`0`][df43] [`1`][7def])")
+  (check-head "[LIST][type]" "[`LIST`][7def]")
+  (check-head "T" "`T`")
+  (check-head "NIL" "`NIL`")
+  (check-head "[T][]" "`T`([`0`][b743] [`1`][cb19])")
+  (check-head "[T][constant]" "[`T`][b743]"))
 
 
 (deftest test-clhs-section ()
   ;; "A.1" and "3.4" are section names in the CLHS.
-  (check-one-liner "A.1" "A.1")
-  (check-one-liner "`A.1`" "`A.1`")
-  (check-one-liner "CLHS A.1" "`CLHS` A.1")
-  (check-one-liner "CLHS 3.4" "`CLHS` 3.4")
-  (check-one-liner "CLHS `3.4`" "`CLHS` [`3.4`][76476]")
-  (check-one-liner "`3.4` CLHS" "[`3.4`][76476] `CLHS`")
-  (check-one-liner "[3.4][]" "[3.4][76476]")
-  (check-one-liner "[`3.4`][]" "[`3.4`][76476]")
-  (check-one-liner "[3.4][CLHS]" "[3.4][76476]")
-  (check-one-liner "[Lambda Lists][clhs]" "[Lambda Lists][76476]")
-  (check-one-liner "[03_d][clhs]" "[03\\_d][76476]"))
+  (check-head "A.1" "A.1")
+  (check-head "`A.1`" "`A.1`")
+  (check-head "CLHS A.1" "`CLHS` A.1")
+  (check-head "CLHS 3.4" "`CLHS` 3.4")
+  (check-head "CLHS `3.4`" "`CLHS` [`3.4`][76476]")
+  (check-head "`3.4` CLHS" "[`3.4`][76476] `CLHS`")
+  (check-head "[3.4][]" "[3.4][76476]")
+  (check-head "[`3.4`][]" "[`3.4`][76476]")
+  (check-head "[3.4][CLHS]" "[3.4][76476]")
+  (check-head "[Lambda Lists][clhs]" "[Lambda Lists][76476]")
+  (check-head "[03_d][clhs]" "[03\\_d][76476]"))
 
 
 (deftest test-clhs-issue ()
-  (check-one-liner "ISSUE:AREF-1D" "ISSUE:AREF-1D")
-  (check-one-liner "`ISSUE:AREF-1D`" "`ISSUE:AREF-1D`")
-  (check-one-liner "CLHS ISSUE:AREF-1D" "`CLHS` ISSUE:AREF-1D")
-  (check-one-liner "ISSUE:AREF-1D CLHS" "ISSUE:AREF-1D `CLHS`")
-  (check-one-liner "CLHS `ISSUE:AREF-1D`" "`CLHS` [`ISSUE:AREF-1D`][3e36]")
-  (check-one-liner "`ISSUE:AREF-1D` CLHS" "[`ISSUE:AREF-1D`][3e36] `CLHS`")
-  (check-one-liner "[ISSUE:AREF-1D][]" "[ISSUE:AREF-1D][3e36]")
-  (check-one-liner "[`ISSUE:AREF-1D`][]" "[`ISSUE:AREF-1D`][3e36]")
-  (check-one-liner "[ISSUE:AREF-1D][CLHS]" "[ISSUE:AREF-1D][3e36]")
-  (check-one-liner "[iss009][clhs]" "[iss009][eed0]"))
+  (check-head "ISSUE:AREF-1D" "ISSUE:AREF-1D")
+  (check-head "`ISSUE:AREF-1D`" "`ISSUE:AREF-1D`")
+  (check-head "CLHS ISSUE:AREF-1D" "`CLHS` ISSUE:AREF-1D")
+  (check-head "ISSUE:AREF-1D CLHS" "ISSUE:AREF-1D `CLHS`")
+  (check-head "CLHS `ISSUE:AREF-1D`" "`CLHS` [`ISSUE:AREF-1D`][3e36]")
+  (check-head "`ISSUE:AREF-1D` CLHS" "[`ISSUE:AREF-1D`][3e36] `CLHS`")
+  (check-head "[ISSUE:AREF-1D][]" "[ISSUE:AREF-1D][3e36]")
+  (check-head "[`ISSUE:AREF-1D`][]" "[`ISSUE:AREF-1D`][3e36]")
+  (check-head "[ISSUE:AREF-1D][CLHS]" "[ISSUE:AREF-1D][3e36]")
+  (check-head "[iss009][clhs]" "[iss009][eed0]"))
 
 
 (defsection @argument-test ()
@@ -1040,9 +1063,9 @@ This is [Self-referencing][ca46].
 
 
 (deftest test-declaration ()
-  (check-one-liner "SAFETY" "[`SAFETY`][9f0e]")
-  (check-one-liner "SAFETY declaration" "[`SAFETY`][9f0e] declaration")
-  (check-one-liner "[safety][declaration]" "[safety][9f0e]"))
+  (check-head "SAFETY" "[`SAFETY`][9f0e]")
+  (check-head "SAFETY declaration" "[`SAFETY`][9f0e] declaration")
+  (check-head "[safety][declaration]" "[safety][9f0e]"))
 
 
 (deftest test-readtable ()
@@ -1054,9 +1077,9 @@ This is [Self-referencing][ca46].
 
     ddd
 "))
-  (check-one-liner (list "[XXX-RT][readtable]"
-                         (named-readtables:find-readtable 'xxx-rt))
-                   "[`XXX-RT`][9ac2]"))
+  (check-head (list "[XXX-RT][readtable]"
+                    (named-readtables:find-readtable 'xxx-rt))
+              "[`XXX-RT`][9ac2]"))
 
 
 (defsection @test-package ()

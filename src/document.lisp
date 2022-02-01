@@ -1082,12 +1082,13 @@
 ;;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
 ;;; :REFERENCE-LINK for [symbol][locative]). Don't hurt other links.
 (defun link (parse-tree)
-  (let ((autolinked (make-hash-table :test #'equal)))
+  (let ((linked-refs (make-array 0 :fill-pointer t :adjustable t
+                                 :element-type 'reference)))
     (map-markdown-parse-tree
      '(:code :reference-link)
      '(:explicit-link :image :mailto)
      nil
-     (alexandria:rcurry #'translate-to-links autolinked)
+     (alexandria:rcurry #'translate-to-links linked-refs)
      parse-tree)))
 
 ;;; This translator
@@ -1106,50 +1107,35 @@
 ;;;
 ;;;   - and those with no locative (:REFERENCE-LINK :LABEL ((:CODE
 ;;;     "SOMETHING")) :TAIL "[]"), the parse of [`SOMETHING`][].
-(defun translate-to-links (parent tree autolinked)
+(defun translate-to-links (parent tree linked-refs)
   (cond ((parse-tree-p tree :code)
          (let ((string (second tree)))
            (if (alexandria:starts-with #\\ string)
                `(:code ,(subseq string 1))
-               (autolink parent tree string autolinked))))
+               (autolink parent tree string linked-refs))))
         ((and (eq :reference-link (first tree)))
-         (resolve-reflink tree))
+         (resolve-reflink tree linked-refs))
         (t
          (assert nil))))
 
-(defun autolink (parent tree word autolinked)
+(defun autolink (parent tree word linked-refs)
   (multiple-value-bind (reflinks refs)
-      (make-reflinks-to-word parent tree word)
-    (let ((autolinked-key
-            ;; FIXME: sort it
-            refs))
-      (cond ((and reflinks
-                  (not (suppressed-link-p refs autolinked-key autolinked)))
-             (setf (gethash autolinked-key autolinked) t)
-             (values reflinks nil t))
-            (t
-             tree)))))
-
-(defun suppressed-link-p (refs autolinked-key autolinked)
-  (when refs
-    ;; Relying on REFS being for the same object (see
-    ;; REFERENCES-FOR-AMBIGUOUS-LOCATIVE).
-    (let ((object (reference-object (first refs))))
-      (or (member object '(t nil))
-          (and (gethash autolinked-key autolinked)
-               ;; Replace references to sections and glossary terms
-               ;; with their title any number of times.
-               (not (and (= (length refs) 1)
-                         (typep (resolve (first refs) :errorp nil)
-                                '(or section glossary-term)))))))))
+      (make-reflinks-to-word parent tree word linked-refs)
+    (cond (reflinks
+           (dolist (ref refs)
+             (vector-push-extend ref linked-refs))
+           (values reflinks nil t))
+          (t
+           tree))))
 
 ;;; Translate WORD that's part of TREE (e.g. it's "xxx" from (:CODE
 ;;; "xxx") or from "xxx,yyy"), or it's constructed from TREE (e.g.
 ;;; it's "*SYM*" from (:EMPH "SYM")).
-(defun make-reflinks-to-word (parent tree word)
+(defun make-reflinks-to-word (parent tree word linked-refs)
   (let ((refs (references-for-ambiguous-locative
                (parse-word word :trim nil :depluralize t)
-               (find-locatives-around parent tree))))
+               (find-locatives-around parent tree)
+               linked-refs)))
     (when refs
       (values (make-reflinks `(,tree) nil refs) refs))))
 
@@ -1189,7 +1175,7 @@
                  (return))))
     locatives))
 
-(defun resolve-reflink (reflink)
+(defun resolve-reflink (reflink linked-refs)
   ;; Markdown to handle: [section][type], [`section`][type],
   ;; [*var*][variable], [section][]. For example, the tree for
   ;; [`section`][type] is (:REFERENCE-LINK :LABEL ((:CODE "SECTION"))
@@ -1201,9 +1187,12 @@
         (let ((refs (if locative
                         (references-for-specified-locative object locative)
                         (references-for-unspecified-locative object))))
-          (if refs
-              (values (make-reflinks label explicit-label-p refs) nil t)
-              reflink)))))
+          (cond (refs
+                 (dolist (ref refs)
+                   (vector-push-extend ref linked-refs))
+                 (values (make-reflinks label explicit-label-p refs) nil t))
+                (t
+                 reflink))))))
 
 ;;; Return the label, whether to use the returned label in the
 ;;; reference link without further transformations (e.g. replace it
@@ -1333,7 +1322,7 @@
 ;;; LOC is found nearby `FOO` by FIND-LOCATIVES-AROUND and it matches
 ;;; a known reference. Else, see %REFERENCES-FOR-OBJECT. All returned
 ;;; REFERENCES are for the same object.
-(defun references-for-ambiguous-locative (objects locatives)
+(defun references-for-ambiguous-locative (objects locatives linked-refs)
   (or
    ;; Use the first object from OBJECTS with which some LOCATIVES form
    ;; known references.
@@ -1343,8 +1332,24 @@
                                  object locative)))
    ;; Fall back on the no-locative case.
    (loop for object in objects
-           thereis (%references-for-object objects)
+         for refs = (%references-for-object objects)
+         until (suppressed-link-p refs linked-refs)
+           thereis refs
          until (references-to-object object :local :include))))
+
+(defun suppressed-link-p (refs linked-refs)
+  (when refs
+    ;; Relying on REFS being for the same object (see
+    ;; REFERENCES-FOR-AMBIGUOUS-LOCATIVE).
+    (let ((object (reference-object (first refs))))
+      (or (member object '(t nil))
+          (and (loop for ref across linked-refs
+                       thereis (reference-object= object ref))
+               ;; Replace references to sections and glossary terms
+               ;; with their title any number of times.
+               (not (and (= (length refs) 1)
+                         (typep (resolve (first refs) :errorp nil)
+                                '(or section glossary-term)))))))))
 
 ;;; `FOO` without any nearby locatives will link to all known
 ;;; references involving FOO unless any reference with FOO is on

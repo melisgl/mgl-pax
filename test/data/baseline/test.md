@@ -81,7 +81,7 @@ function [`FOO`][4244],
 `->MAX`
 
 Escaped: FOO `FOO` *NAVIGATION-TEST-CASES*
-Non escaped: `FOO`([`0`][22be] [`1`][4ded] [`2`][4244]) [`*TEST-VARIABLE*`][1037]
+Non escaped: `FOO` [`*TEST-VARIABLE*`][1037]
 [test other title][22dd]
 
 This should be no link because the page of `@TEST-EXAMPLES`
