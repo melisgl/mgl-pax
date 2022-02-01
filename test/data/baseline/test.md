@@ -228,7 +228,7 @@ type-of [`BAR`][cece]
 
 - [method] **TEST-GF** *(X NUMBER)*
 
-    [`TEST-GF`][efc1] links to the generic function. `X` is not a link.
+    `TEST-GF` is not a link. `X` is not a link.
 
 <a id='x-28MGL-PAX-TEST-3A-3ATEST-GF-20-28METHOD-20NIL-20-28-28EQL-207-29-29-29-29'></a>
 

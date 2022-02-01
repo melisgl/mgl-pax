@@ -234,7 +234,7 @@
 (defgeneric test-gf (x)
   (:documentation "TEST-GF is not a link."))
 (defmethod test-gf ((x number))
-  "TEST-GF links to the generic function. X is not a link."
+  "TEST-GF is not a link. X is not a link."
   nil)
 (defmethod test-gf ((x (eql 7))))
 

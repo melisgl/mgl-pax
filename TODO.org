@@ -41,16 +41,6 @@ linking failure. This should be in 3BMD.
 * describe-object or document-object?
 * remove some markup in :PLAIN format?
 * allow markdown in titles?
-* link in method docstring is to itself?!
-<a id='x-28MGL-PAX-TEST-3A-3ATEST-GF-20-28METHOD-20NIL-20-28NUMBER-29-29-29'></a>
-
-- [method] **TEST-GF** *(X NUMBER)*
-
-    [`TEST-GF`][ba01] links to the generic function. `X` is not a link.
-
-  [ba01]: #x-28MGL-PAX-TEST-3A-3ATEST-GF-20-28METHOD-20NIL-20-28NUMBER-29-29-29 \"(MGL-PAX-TEST::TEST-GF (METHOD NIL (NUMBER)))\"
-"
-* in html add a slight background color to inline code?
 * add symbol as an alias for dislocated?
 * add source locative
 That is, link to github, without documenting anything. Useful for code

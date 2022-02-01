@@ -503,8 +503,9 @@
     (write-char #\Space stream)
     (print-arglist arglist stream)
     (print-end-bullet stream)
-    (with-dislocated-symbols ((function-arg-names arglist))
-      (maybe-print-docstring method t stream))))
+    (with-local-references ((list (canonical-reference method)))
+      (with-dislocated-symbols ((function-arg-names arglist))
+        (maybe-print-docstring method t stream)))))
 
 ;;;; These were lifted from the fancy inspector contrib and then
 ;;;; tweaked.
