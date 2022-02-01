@@ -443,14 +443,11 @@ that we want the docstring of the type named `FOO`. This design
 supports disambiguation and working with things that are not
 first-class, such as types.
 
-`PAX` generalizes `DOC-TYPE` to the concept of *locatives*, which may
-also take arguments. See the [`METHOD`][d71c] locative or the [`LOCATIVE`][76b5]
-locative for examples of locative types with arguments.
-
-An object and a locative together are called a *reference*, and they
-identify a single thing. [`REFERENCE`s][cc37] are actual
-objects, but often they appear as an `(OBJECT LOCATIVE)` list (see
-[`DEFSECTION`][2863]) or as `"OBJECT LOCATIVE"` in docstrings (see
+`PAX` generalizes `DOC-TYPE` to the concept of [locative][c493]s, which may
+also take arguments. An [object][c00c] and a [locative][c493] together are called
+a [reference][7136], and they identify a single thing. [`REFERENCEs`][cc37] are
+actual objects, but often they appear as an `(OBJECT LOCATIVE)`
+list (see [`DEFSECTION`][2863]) or as `"OBJECT LOCATIVE"` in docstrings (see
 [Linking to Code][8c65] for the various forms possible).
 
 ```
@@ -460,24 +457,56 @@ objects, but often they appear as an `(OBJECT LOCATIVE)` list (see
   (foo function))
 ```
 
-A locative in a reference can either be a symbol or it can be a list
-whose [`CAR`][86ef] is a symbol. In either case, the symbol is called the
-*locative type* while the rest of the elements are the *locative
-arguments*. See [Locative Types][1fbb] for the list of locative
-types available out of the box.
+
+<a id='x-28MGL-PAX-3A-40REFERENCE-20MGL-PAX-3AGLOSSARY-TERM-29'></a>
+
+- [glossary-term] **reference**
+
+    A `@REFERENCE` is an [object][c00c] plus a [locative][c493], and it identifies a
+    definition. For example, the symbol `FOO` as the object and the
+    symbol [`FUNCTION`][3023] as the locative together refer to the
+    global definition of the function `FOO`.
+    
+    [`REFERENCE`][cc37] objects can be represented as an `(OBJECT LOCATIVE)` list
+    as in [`DEFSECTION`][2863] entries, or textually as `"FOO function"` where
+    `FOO` is a `@NAME` or similar (see [Codification][3405] and
+    [Linking to Code][8c65]).
+
+<a id='x-28MGL-PAX-3A-40OBJECT-20MGL-PAX-3AGLOSSARY-TERM-29'></a>
+
+- [glossary-term] **object**
+
+    `@OBJECT`s are symbols or strings which name [functions][3023],
+    [types][d8db], [packages][16ad], etc. Together
+    with [locative][c493]s, they form [reference][7136]s.
+
+<a id='x-28MGL-PAX-3A-40LOCATIVE-20MGL-PAX-3AGLOSSARY-TERM-29'></a>
+
+- [glossary-term] **locative**
+
+    `@LOCATIVE`s specify a *type* of definition such as
+    [`FUNCTION`][3023] or [`VARIABLE`][474c] and together with
+    [object][c00c]s form [reference][7136]s.
+    
+    A locative can be a symbol or a list whose [`CAR`][86ef] is a symbol. In
+    either case, the symbol is called the [locative
+    type][1fbb] while the rest of the
+    elements are the *locative arguments*. See the [`METHOD`][d71c] locative or
+    the [`LOCATIVE`][76b5] locative for examples of locative types with
+    arguments.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29'></a>
 
 ## 8 Locative Types
 
-As we have already briefly seen in [`DEFSECTION`][2863], locatives allow us
-to refer to, document and find the source location of various
-definitions beyond what standard Common Lisp offers. See
-[Extension API][8ed9] for a more detailed treatment. The following
-are the locatives types supported out of the box. As all locative
-types, they are symbols, and their names should make it obvious what
-kind of things they refer to. Unless otherwise noted, locatives take
-no arguments.
+As we have already briefly seen in [`DEFSECTION`][2863] and
+[Locatives and References][d023], locatives allow us to refer to,
+document and find the source location of various definitions beyond
+what standard Common Lisp offers. See [Extension API][8ed9] for a
+more detailed treatment. The following are the locatives types
+supported out of the box. As all locative types, they are symbols,
+and their names should make it obvious what kind of things they
+refer to. Unless otherwise noted, locatives take no arguments.
 
 When there is a corresponding `CL` type, a locative can be resolved to
 a unique object as is the case in `(LOCATE 'FOO 'CLASS)` returning
@@ -3206,6 +3235,7 @@ presented.
   [6e37]: #x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "(CLASS MGL-PAX:LOCATIVE)"
   [6ec3]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_4.htm "(DEFINE-METHOD-COMBINATION MGL-PAX:MACRO)"
   [6fcc]: #x-28MGL-PAX-3A-40MGL-PAX-TYPELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Types and Declarations"
+  [7136]: #x-28MGL-PAX-3A-40REFERENCE-20MGL-PAX-3AGLOSSARY-TERM-29 "(MGL-PAX:@REFERENCE MGL-PAX:GLOSSARY-TERM)"
   [76476]: http://www.lispworks.com/documentation/HyperSpec/Body/03_d.htm "(\"3.4\" MGL-PAX:CLHS)"
   [76b5]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE)"
   [7738]: http://www.lispworks.com/documentation/HyperSpec/Body/s_fn.htm "(FUNCTION MGL-PAX:MACRO)"
@@ -3259,9 +3289,11 @@ presented.
   [badc]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_.htm "(FIND-IF FUNCTION)"
   [be22]: #x-28MGL-PAX-3A-40MGL-PAX-SECTIONS-20MGL-PAX-3ASECTION-29 "Sections"
   [bf16]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-API-20MGL-PAX-3ASECTION-29 "Transcript API"
+  [c00c]: #x-28MGL-PAX-3A-40OBJECT-20MGL-PAX-3AGLOSSARY-TERM-29 "(MGL-PAX:@OBJECT MGL-PAX:GLOSSARY-TERM)"
   [c0cd]: #x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE)"
   [c1ca]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-LINK-TO-HYPERSPEC* VARIABLE)"
   [c3b1]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rdtabl.htm "(READTABLE TYPE)"
+  [c493]: #x-28MGL-PAX-3A-40LOCATIVE-20MGL-PAX-3AGLOSSARY-TERM-29 "(MGL-PAX:@LOCATIVE MGL-PAX:GLOSSARY-TERM)"
   [c557]: #x-28MGL-PAX-3A-40MGL-PAX-LOCATIVES-AND-REFERENCES-API-20MGL-PAX-3ASECTION-29 "Locatives and References API"
   [c5f2]: #x-28MGL-PAX-3AREGISTER-DOC-IN-PAX-WORLD-20FUNCTION-29 "(MGL-PAX:REGISTER-DOC-IN-PAX-WORLD FUNCTION)"
   [c741]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq_sle.htm "(< FUNCTION)"
@@ -3281,6 +3313,7 @@ presented.
   [d71c]: #x-28METHOD-20MGL-PAX-3ALOCATIVE-29 "(METHOD MGL-PAX:LOCATIVE)"
   [d7e0]: #x-28MGL-PAX-3A-40MGL-PAX-LINKS-20MGL-PAX-3ASECTION-29 "Links"
   [d7eb]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28STRING-20T-29-29-29 "(MGL-PAX:DOCUMENT-OBJECT (METHOD NIL (STRING T)))"
+  [d8db]: #x-28TYPE-20MGL-PAX-3ALOCATIVE-29 "(TYPE MGL-PAX:LOCATIVE)"
   [d976]: #x-28MGL-PAX-3AFIND-SOURCE-20-28METHOD-20NIL-20-28MGL-PAX-3AREFERENCE-29-29-29 "(MGL-PAX:FIND-SOURCE (METHOD NIL (MGL-PAX:REFERENCE)))"
   [de3b]: http://www.lispworks.com/documentation/HyperSpec/Body/r_contin.htm "(CONTINUE RESTART)"
   [df39]: #x-28DESCRIBE-OBJECT-20-28METHOD-20NIL-20-28MGL-PAX-3ASECTION-20T-29-29-29 "(DESCRIBE-OBJECT (METHOD NIL (MGL-PAX:SECTION T)))"

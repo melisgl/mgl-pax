@@ -9,14 +9,14 @@
   (declaim (optimize (debug 3))))
 
 (defsection @mgl-pax-locative-types (:title "Locative Types")
-  """As we have already briefly seen in DEFSECTION, locatives allow us
-  to refer to, document and find the source location of various
-  definitions beyond what standard Common Lisp offers. See
-  @MGL-PAX-EXTENSION-API for a more detailed treatment. The following
-  are the locatives types supported out of the box. As all locative
-  types, they are symbols, and their names should make it obvious what
-  kind of things they refer to. Unless otherwise noted, locatives take
-  no arguments.
+  """As we have already briefly seen in DEFSECTION and
+  @MGL-PAX-LOCATIVES-AND-REFERENCES, locatives allow us to refer to,
+  document and find the source location of various definitions beyond
+  what standard Common Lisp offers. See @MGL-PAX-EXTENSION-API for a
+  more detailed treatment. The following are the locatives types
+  supported out of the box. As all locative types, they are symbols,
+  and their names should make it obvious what kind of things they
+  refer to. Unless otherwise noted, locatives take no arguments.
 
   When there is a corresponding CL type, a locative can be resolved to
   a unique object as is the case in `(LOCATE 'FOO 'CLASS)` returning

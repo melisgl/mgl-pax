@@ -175,6 +175,17 @@
   (or (whitespacep char) (find char "()'`\"")))
 
 
+"""
+  ##### Trimming
+
+  At first approximation, words are the non-empty strings between
+  whitespace characters. If a word begins or ends with punctuation
+  characters, then those may be trimmed from it in an effort to find
+
+  ##### Depluralization
+
+"""
+
 ;;; Collect slight variations on NAME which are CANDIDATE-OBJECT-P.
 ;;; Return a list of candidate objects and a list of minimal
 ;;; substrings (under CHAR-EQUAL, punctuations trimmed, depluralized)

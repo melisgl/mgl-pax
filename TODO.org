@@ -33,7 +33,7 @@ linking failure. This should be in 3BMD.
 * MAYBE split transcription off into a separate library?
 * linkify and codify in one map-markdown-parse-tree?
 * no autolinking if any explicit linking was done previously?
-* allow lowercase only in the last "word" of the name
+* MAYBE allow lowercase only in the last "word" of the name
 * *document-downcase-uppercase-code* is still broken
 - Not everything in backticks is lisp code.
 - `(PRINT "hello")` is not getting downcased.
@@ -51,3 +51,5 @@ linking failure. This should be in 3BMD.
 
   [ba01]: #x-28MGL-PAX-TEST-3A-3ATEST-GF-20-28METHOD-20NIL-20-28NUMBER-29-29-29 \"(MGL-PAX-TEST::TEST-GF (METHOD NIL (NUMBER)))\"
 "
+* in html add a slight background color to inline code?
+* add symbol as an alias for dislocated?
