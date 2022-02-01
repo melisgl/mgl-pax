@@ -660,9 +660,13 @@
     (check-one-liner "[`CLASS`es.][]" "[`CLASS`es.][]")))
 
 
+(deftest test-downcasing ()
+  (test-downcasing-in-docstrings)
+  (test-downcasing-of-section-names))
+
 (defsection @section-without-title ())
 
-(deftest test-downcase-uppercase ()
+(deftest test-downcasing-in-docstrings ()
   (with-test ("unadorned")
     (check-downcasing "NOT-INTERNED" "NOT-INTERNED")
     ;; has no refs
@@ -728,6 +732,29 @@
       (check-downcasing "XXX" "XXX")
       (check-downcasing "`XXX`" "`xxx`")
       (check-downcasing "`(PRINT \"hello\")`" "`(print \"hello\")`"))))
+
+(defsection @parent-section-without-title ()
+  (@section-without-title section))
+
+(deftest test-downcasing-of-section-names ()
+  (let ((*document-downcase-uppercase-code* t))
+    (check-document @parent-section-without-title
+                    "<a id='x-28MGL-PAX-TEST-3A-40PARENT-SECTION-WITHOUT-TITLE-20MGL-PAX-3ASECTION-29'></a>
+
+# @parent-section-without-title
+
+## Table of Contents
+
+- [1 @section-without-title][9a4b]
+
+###### \\[in package MGL-PAX-TEST\\]
+<a id='x-28MGL-PAX-TEST-3A-40SECTION-WITHOUT-TITLE-20MGL-PAX-3ASECTION-29'></a>
+
+## 1 @section-without-title
+
+
+  [9a4b]: #x-28MGL-PAX-TEST-3A-40SECTION-WITHOUT-TITLE-20MGL-PAX-3ASECTION-29 \"mgl-pax-test:@section-without-title\"
+")))
 
 (defun check-downcasing (docstring expected)
   (let ((*document-downcase-uppercase-code* t))
@@ -1080,11 +1107,11 @@
   (test-read-locative-from-string)
   (test-read-reference-from-string)
   (test-transform-tree)
+  (test-macro-arg-names)
   (test-codify)
   (test-plural)
-  (test-downcase-uppercase)
+  (test-downcasing)
   (test-link)
-  (test-macro-arg-names)
   (test-document :markdown)
   (test-document :html)
   (test-function)
