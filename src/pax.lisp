@@ -53,15 +53,15 @@
     `(defun ,name () ,docstring))
   ```
 
-  Armed with this `\\DEFSECTION`, I soon found myself organizing code
-  following the flow of user level documentation and relegated
-  comments to implementational details entirely. However, some
-  portions of `\\DEFSECTION` docstrings were just listings of all the
-  functions, macros and variables related to the narrative, and this
-  list was effectively repeated in the DEFPACKAGE form complete with
-  little comments that were like section names. A clear violation of
-  [OAOO][oaoo], one of them had to go, so `\\DEFSECTION` got a list of
-  symbols to export.
+  Armed with this [`DEFSECTION`][dislocated], I soon found myself
+  organizing code following the flow of user level documentation and
+  relegated comments to implementational details entirely. However,
+  some portions of [`DEFSECTION`][dislocated] docstrings were just
+  listings of all the functions, macros and variables related to the
+  narrative, and this list was effectively repeated in the DEFPACKAGE
+  form complete with little comments that were like section names. A
+  clear violation of [OAOO][oaoo], one of them had to go, so
+  [`DEFSECTION`][dislocated] got a list of symbols to export.
 
   [oaoo]: http://c2.com/cgi/wiki?OnceAndOnlyOnce
 
