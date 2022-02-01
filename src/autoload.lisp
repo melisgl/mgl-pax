@@ -41,7 +41,7 @@
 (declaim (special *document-normalize-packages*))
 (declaim (special *reference-being-documented*))
 (declaim (ftype function link-to-reference))
-(declaim (ftype function codify-and-autolink))
+(declaim (ftype function codify-and-link))
 (declaim (ftype function locate-and-print-bullet))
 (declaim (ftype function print-arglist))
 (declaim (ftype function print-bullet))

@@ -31,13 +31,21 @@
         - [9.2.3 MathJax][55dd]
     - [9.3 Codification][3405]
     - [9.4 Linking to Code][8c65]
-        - [9.4.1 Reference Resolution][d1cf]
-    - [9.5 Linking to Sections][505a]
-    - [9.6 Miscellaneous Variables][ec16]
-    - [9.7 Utilities for Generating Documentation][97f0]
-        - [9.7.1 Github Workflow][2748]
-        - [9.7.2 PAX World][e65c]
-    - [9.8 Document Generation Implementation Notes][4e6e]
+        - [9.4.1 Specified Locative][d539]
+        - [9.4.2 Unambiguous Unspecified Locative][e75e]
+        - [9.4.3 Ambiguous Unspecified Locative][7066]
+        - [9.4.4 Explicit and Autolinking][f6cb]
+        - [9.4.5 Preventing Autolinking][508d]
+        - [9.4.6 Suppressed Links][5707]
+        - [9.4.7 Filtering Ambiguous References][58f7]
+        - [9.4.8 Local References][d162]
+    - [9.5 Linking to the Hyperspec][1210]
+    - [9.6 Linking to Sections][505a]
+    - [9.7 Miscellaneous Variables][ec16]
+    - [9.8 Utilities for Generating Documentation][97f0]
+        - [9.8.1 Github Workflow][2748]
+        - [9.8.2 PAX World][e65c]
+    - [9.9 Document Generation Implementation Notes][4e6e]
 - [10 Transcripts][e9bd]
     - [10.1 MGL-PAX/TRANSCRIBE ASDF System Details][ce29]
     - [10.2 Transcribing with Emacs][350c]
@@ -157,7 +165,7 @@ everything was good for a while.
 Then I realized that sections could refer to other sections if there
 were a [`SECTION`][2cf1] locative. Going down that path, I soon began to feel
 the urge to generate pretty documentation as all the necessary
-information was manifest in the [`DEFSECTION`][2863] forms. The design
+information was manifest in the `DEFSECTION` forms. The design
 constraint imposed on documentation generation was that following
 the typical style of upcasing symbols in docstrings there should be
 no need to explicitly mark up links: if `M-.` works, then the
@@ -872,7 +880,8 @@ location and the docstring of the defining form is recorded (see
 - [locative] **DISLOCATED**
 
     Refers to a symbol in a non-specific context. Useful for preventing
-    autolinking. For example, if there is a function called `FOO` then
+    [autolinking][f6cb]. For example, if
+    there is a function called `FOO` then
     
         `FOO`
     
@@ -880,9 +889,8 @@ location and the docstring of the defining form is recorded (see
     
         [`FOO`][dislocated]
     
-    will not be. On a dislocated locative [`LOCATE`][b2be] always fails with a
-    [`LOCATE-ERROR`][2285] condition. See [Linking to Code][8c65] for an
-    alternative method of preventing autolinking.
+    will not be. With a dislocated locative, [`LOCATE`][b2be] always fails with a
+    [`LOCATE-ERROR`][2285] condition. Also see [Preventing Autolinking][508d].
 
 <a id='x-28MGL-PAX-3AARGUMENT-20MGL-PAX-3ALOCATIVE-29'></a>
 
@@ -891,7 +899,7 @@ location and the docstring of the defining form is recorded (see
     An alias for [`DISLOCATED`][94e2], so the one can refer to an argument of a
     macro without accidentally linking to a class that has the same name
     as that argument. In the following example, `FORMAT` may
-    link to [`CL:FORMAT`][0178] (if we generated documentation for it):
+    link to `CL:FORMAT` (if we generated documentation for it):
     
     ```
     "See the FORMAT in DOCUMENT."
@@ -1414,208 +1422,168 @@ Reader][pythonic-string-reader] can help with that.
 
 ### 9.4 Linking to Code
 
-Before delving into the details, here is a quick summary of all
-ways of linking to code.
+In this section, we describe of all ways of linking to code
+available when [`*DOCUMENT-UPPERCASE-IS-CODE*`][8be2] is true.
 
-##### Explicit Links
-
-- `[SECTION][class]` renders as: [`SECTION`][aee8]
-  (*object + locative*)
-
-- `[see this][section class]` renders as: [see this][aee8]
-  (*explicit title + reference*)
-
-Parsing of symbols relies on the current [`READTABLE-CASE`][9edc], so usually
-their case does not matter.
-
-##### Autolinking with [`*DOCUMENT-UPPERCASE-IS-CODE*`][8be2]
-
-- `LOCATE` renders as: [`LOCATE`][b2be] (*object with a single possible locative*)
-
-- `SECTION` renders as: `SECTION`([`0`][aee8] [`1`][2cf1]) (*object with ambiguous locative*)
-
-- `SECTION class` renders as: [`SECTION`][aee8] class (*object followed by
-  locative*)
-
-
-- `class SECTION` renders as: class [`SECTION`][aee8] (*object following locative*)
-
-In these examples, autolinking can be prevented by preventing
-codification of uppercase symbols (see
-[`*DOCUMENT-UPPERCASE-IS-CODE*`][8be2]).
-
-##### Autolinking in code
-
-If a single word is enclosed in backticks (i.e. it's code), then it
-is autolinked. The following examples all render as the previous
-ones except for the character case, which need not be uppercase in
-this case.
-
-```
-`locate`
-`section`
-`section` class
-class `section`
-```
-
-To prevent autolinking in the explicitly quoted case, a backslash
-can be placed right after the opening backtick.
-
-```
-`\locate`
-`\section`
-`\section` class
-class `\section`
-```
-
-Alternatively, the [`DISLOCATED`][94e2] locative may be used.
+*Note that invoking [`M-.`][3fdc] on
+the [object][36da] of any of the following links will disambiguate based
+the textual context, determining the locative. In a nutshell, if
+`M-.` works without popping up a list of choices, then the
+documentation will contain a single link.*
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20VARIABLE-29'></a>
 
 - [variable] **\*DOCUMENT-LINK-CODE\*** *T*
 
-    When true, during the process of generating documentation for a
-    [`SECTION`][aee8], HTML anchors are added before the documentation of
-    every reference that's not to a section. Also, markdown style
-    reference links are added when a piece of inline code found in a
-    docstring refers to a symbol that's referenced by one of the
-    sections being documented.
+    Enable the various forms of links in docstrings described in
+    [Linking to Code][8c65].
     
-    ```commonlisp
-    (defsection @foo (:export nil)
-      (foo function)
-      (bar function))
+    Let's understand the generated Markdown.
     
+    ```
     (defun foo (x)
-      "Calls `BAR` on `X`."
-      (bar x))
+      "Calls BAR."
+      (bar (x)))
     
     (defun bar (x)
-      x)
+      (1+ x))
+    
+    (document (list #'foo #'bar))
+    => ("<a id='x-28MGL-PAX-3A-3AFOO-20FUNCTION-29'></a>
+    
+    - [function] **FOO** *X*
+    
+        Calls [`BAR`][6b98].
+    <a id='x-28MGL-PAX-3A-3ABAR-20FUNCTION-29'></a>
+    
+    - [function] **BAR** *X*
+    
+      [6b98]: #x-28MGL-PAX-3A-3ABAR-20FUNCTION-29 \"(MGL-PAX::BAR FUNCTION)\"
+    ")
     ```
     
-    With the above definition the output of `(DOCUMENT @FOO :STREAM T)`
-    would include this:
-    
-    ```
-    .. <a id='x-28MGL-PAX-3AFOO-20FUNCTION-29'></a>
-    ..
-    .. - [function] **FOO** *X*
-    ..
-    ..     Calls [`BAR`][e2f2] on `X`.
-    ..
-    .. <a id='x-28MGL-PAX-3ABAR-20FUNCTION-29'></a>
-    ..
-    .. - [function] **BAR** *X*
-    ..
-    ..   [e2f2]: #x-28MGL-PAX-3ABAR-20FUNCTION-29 "(MGL-PAX:BAR FUNCTION)"
-    ```
-    
-    The line starting with `[e2f2]:` is the markdown reference link
-    definition with an url and a title. Here the url points to the HTML
+    The line starting with `[6b98]:` is the markdown reference link
+    definition with a `URL` and a title. Here the `URL` points to the HTML
     anchor of the documentation of the function `BAR`, itself an escaped
     version of the reference `(MGL-PAX:BAR FUNCTION)`, which is also the
     title.
     
-    In the docstring of `FOO`, instead of `BAR`, one can write `[bar][]`
-    or ``[`bar`][]`` as well. Since symbol names are parsed according to
-    [`READTABLE-CASE`][9edc], character case rarely matters.
-    
-    Now, if `BAR` has multiple references with different locatives:
-    
-    ```commonlisp
-    (defsection @foo
-      (foo function)
-      (bar function)
-      (bar type))
-    
-    (defun foo (x)
-      "Calls `BAR` on `X`."
-      (bar x))
-    ```
-    
-    then documentation would link to all interpretations:
-    
-        - [function] FOO X
-        
-            Calls `BAR`([`1`][link-id-1] [`2`][link-id-2]) on `X`.
-    
-    This situation occurs in `PAX` with `SECTION`([`0`][aee8] [`1`][2cf1]), which is both a
-    class (see [`SECTION`][aee8]) and a locative type denoted by a
-    symbol (see [`SECTION`][2cf1]). Back in the example above,
-    clearly, there is no reason to link to type `BAR`, so one may wish
-    to select the function locative. There are two ways to do that. One
-    is to specify the locative explicitly as the id of a reference link:
-    
-        "Calls [BAR][function] on X."
-    
-    However, if in the text there is a locative immediately before or
-    after the symbol, then that locative is used to narrow down the
-    range of possibilities. This is similar to what the `M-.` extension
-    does. In a nutshell, if `M-.` works without questions then the
-    documentation will contain a single link. So this also works without
-    any markup:
-    
-        "Calls function `BAR` on X."
-    
-    This last option needs backticks around the locative if it's not a
-    single symbol.
-    
-    Within the same docstring, autolinking of code without explicit
-    markdown reference links happens only for the first occurrence of
-    the same object with the same locatives except for `SECTIONs` and
-    [`GLOSSARY-TERM`][3f93]s. In the following docstring, only the first `FOO`
-    will be turned into a link.
-    
-        "Oh, `FOO` is safe. `FOO` is great."
-    
-    On the other hand, if different locatives are found in the vicinity
-    of two occurrences of `FOO`, then both will be linked.
-    
-        "Oh, function `FOO` is safe. Macro `FOO` is great."
-    
-    Note that `*DOCUMENT-LINK-CODE*` can be combined with
-    [`*DOCUMENT-UPPERCASE-IS-CODE*`][8be2] to have links generated for uppercase
-    words with no quoting required.
+    See the following sections for a description of how to use linking.
 
-<a id='x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29'></a>
+<a id='x-28MGL-PAX-3A-40MGL-PAX-SPECIFIED-LOCATIVE-20MGL-PAX-3ASECTION-29'></a>
 
-- [variable] **\*DOCUMENT-LINK-TO-HYPERSPEC\*** *T*
+#### 9.4.1 Specified Locative
 
-    If true, link symbols found in code to the Common Lisp Hyperspec.
-    
-    Locatives work as expected (see [`*DOCUMENT-LINK-CODE*`][8082]).
-    `FIND-IF` links to [`FIND-IF`][badc], `FUNCTION` links
-    to `FUNCTION`([`0`][3023] [`1`][7738] [`2`][a15a]) and `[FUNCTION][type]` links to [`FUNCTION`][a15a].
-    
-    Autolinking to `T` and `NIL` is suppressed. If desired, use
-    `[T][]` (that links to `T`([`0`][b743] [`1`][cb19])) or `[T][constant]` (that links to
-    [`T`][b743]).
-    
-    Note that linking to sections in the Hyperspec is done with the [`CLHS`][18ca]
-    locative and is not subject to the value of this variable.
+The following examples all render as [`DOCUMENT`][1eb8].
 
-<a id='x-28MGL-PAX-3A-2ADOCUMENT-HYPERSPEC-ROOT-2A-20VARIABLE-29'></a>
+- `[DOCUMENT][function]` (*object + locative, explicit link*)
 
-- [variable] **\*DOCUMENT-HYPERSPEC-ROOT\*** *"http://www.lispworks.com/documentation/HyperSpec/"*
+- `DOCUMENT function` (*object + locative, autolink*)
 
-    A `URL` pointing to an installed Common Lisp Hyperspec. The default
-    value of is the canonical location.
+- `function DOCUMENT` (*locative + object, autolink*)
 
-<a id='x-28MGL-PAX-3A-40MGL-PAX-REFERENCE-RESOLUTION-20MGL-PAX-3ASECTION-29'></a>
+The Markdown link definition (i.e. `function` between the second
+set of brackets above) needs no backticks to mark it as code.
 
-#### 9.4.1 Reference Resolution
+Here and below, the [object][36da] (`DOCUMENT`) is uppercased, and we rely
+on [`*DOCUMENT-UPPERCASE-IS-CODE*`][8be2] being true. Alternatively, the
+[object][36da] could be explicitly marked up as code with a pair of
+backticks, and then its character case would likely not
+matter (subject to [`READTABLE-CASE`][9edc]).
 
-Links are generated according to [`*DOCUMENT-LINK-CODE*`][8082] in general
-but with some additional heuristics for convenience.
+The link text in the above examples is `DOCUMENT`. To override it,
+this form may be used:
 
-<a id='x-28MGL-PAX-3A-40MGL-PAX-FILTERING-MULTIPLE-REFERENCES-20MGL-PAX-3ASECTION-29'></a>
+- `[see this][document function]` renders as: [see this][1eb8] (*title + object + locative, explicit link*)
 
-##### Filtering Multiple References
 
-When there are multiple references to link to - as seen in the
-second example in [`*DOCUMENT-LINK-CODE*`][8082] - some references are removed
-by the following rules.
+<a id='x-28MGL-PAX-3A-40MGL-PAX-UNAMBIGUOUS-LOCATIVE-20MGL-PAX-3ASECTION-29'></a>
+
+#### 9.4.2 Unambiguous Unspecified Locative
+
+In the following examples, although no locative is specified,
+`DOCUMENT` names a single [object][36da] being documented, so they all
+render as [`DOCUMENT`][1eb8].
+
+- `[DOCUMENT][]` (*object, explicit link*),
+
+- `DOCUMENT` (*object, autolink*).
+
+
+<a id='x-28MGL-PAX-3A-40MGL-PAX-AMBIGUOUS-LOCATIVE-20MGL-PAX-3ASECTION-29'></a>
+
+#### 9.4.3 Ambiguous Unspecified Locative
+
+These examples all render as `SECTION`([`0`][aee8] [`1`][2cf1]), linking to both
+definitions of the [object][36da] `SECTION`, the `CLASS` and the
+`LOCATIVE`.
+
+- `[SECTION][]` (*object, explicit link*)
+
+- `SECTION` (*object, autolink*)
+
+
+<a id='x-28MGL-PAX-3A-40MGL-PAX-EXPLICIT-AND-AUTOLINKING-20MGL-PAX-3ASECTION-29'></a>
+
+#### 9.4.4 Explicit and Autolinking
+
+The examples in the previous sections are marked with *explicit
+link* or *autolink*. Explicit links are those with a Markdown
+reference link spelled out explicitly, while autolinks are those
+without.
+
+<a id='x-28MGL-PAX-3A-40MGL-PAX-PREVENTING-AUTOLINKING-20MGL-PAX-3ASECTION-29'></a>
+
+#### 9.4.5 Preventing Autolinking
+
+In the common case, when [`*DOCUMENT-UPPERCASE-IS-CODE*`][8be2] is true,
+prefixing the uppercase [word][ed87] with a backslash prevents it from
+being codified and thus also prevents
+[autolinking][f6cb] form
+kicking in. For example, `\DOCUMENT` renders as DOCUMENT. If it
+should be marked up as code but not autolinked, the backslash must
+be within backticks like this:
+
+```
+`\DOCUMENT`
+```
+
+This renders as `DOCUMENT`. Alternatively, the [`DISLOCATED`][94e2] or the
+[`ARGUMENT`][5f4b] locative may be used as in `[DOCUMENT][dislocated]`.
+
+<a id='x-28MGL-PAX-3A-40MGL-PAX-SUPPRESSED-LINKS-20MGL-PAX-3ASECTION-29'></a>
+
+#### 9.4.6 Suppressed Links
+
+Within the same docstring,
+[autolinking][f6cb] of
+code (i.e. of something like `FOO`) is suppressed if the same
+[object][36da] was already linked to in any way. In the following
+docstring, only the first `FOO` will be turned into a link.
+
+    "`FOO` is safe. `FOO` is great."
+
+However if a [locative][6d8f] was specified or found near the [object][36da], then
+a link is always made. In the following, in both docstrings, both
+occurrences `FOO` produce links.
+
+    "`FOO` is safe. [`FOO`][macro] is great."
+    "`FOO` is safe. Macro `FOO` is great."
+
+As an exception, links with [specified][d539] and [unambiguous][e75e]
+locatives to `SECTIONs`([`0`][aee8] [`1`][2cf1]) and [`GLOSSARY-TERM`][3f93]s always produce a link to
+allow their titles to be displayed properly.
+
+Finally, [autolinking][f6cb] to
+`T` or `NIL` is suppressed (see [`*DOCUMENT-LINK-TO-HYPERSPEC*`][c1ca]).
+
+<a id='x-28MGL-PAX-3A-40MGL-PAX-FILTERING-AMBIGUOUS-REFERENCES-20MGL-PAX-3ASECTION-29'></a>
+
+#### 9.4.7 Filtering Ambiguous References
+
+When there are multiple references to link to - as seen in
+[Ambiguous Unspecified Locative][7066] - some references are removed by the
+following rules.
 
 - References to [`ASDF:SYSTEM`][90f2]s are removed if there are other
   references which are not to `ASDF:SYSTEM`s. This is because system
@@ -1634,29 +1602,32 @@ by the following rules.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-LOCAL-REFERENCES-20MGL-PAX-3ASECTION-29'></a>
 
-##### Local References
+#### 9.4.8 Local References
 
 To unclutter the generated output by reducing the number of
-links, the so-called 'local' references (references to things for
-which documentation is being generated) are treated specially. In
-the following example, there are local references to the function
-`FOO` and its arguments, so none of them get turned into links:
+links, the so-called 'local' references (e.g. references to the very
+definition for which documentation is being generated) are treated
+specially. In the following example, there are local references to
+the function `FOO` and its arguments, so none of them get turned into
+links:
 
 ```common-lisp
 (defun foo (arg1 arg2)
-  "FOO takes two arguments: ARG1 and ARG2.")
+  "FOO takes two arguments: ARG1 and ARG2."
+  t)
 ```
 
-If linking was desired one could write `[FOO][function]` or `FOO
-function`, both of which result in a single link. An explicit link
-with an unspecified locative like in `[*DOCUMENT-LINK-CODE*][]`
-generates links to all references involving the [`*DOCUMENT-LINK-CODE*`][8082]
-symbol except the local ones.
+If linking was desired one could use a
+[Specified Locative][d539] (e.g. `[FOO][function]` or `FOO
+function`), which results in a single link. An explicit link with an
+unspecified locative like `[FOO][]` generates links to all
+references involving the `FOO` symbol except the local ones.
 
 The exact rules for local references are as follows:
 
-- Unadorned names in code (e.g. `FOO`) do not get any links if there
-  is *any* local reference with the same symbol.
+- Unless a locative is [specified][d539], no [autolinking][f6cb] is performed for [object][36da]s for which there are local
+  references. For example, `FOO` does not get any links if there is
+  *any* local reference with the same [object][36da].
 
 - With a locative specified (e.g. in the explicit link
   `[FOO][function]` or in the text `the FOO function`), a single
@@ -1666,9 +1637,37 @@ The exact rules for local references are as follows:
   linked to all non-local references.
 
 
+<a id='x-28MGL-PAX-3A-40MGL-PAX-LINKING-TO-THE-HYPERSPEC-20MGL-PAX-3ASECTION-29'></a>
+
+### 9.5 Linking to the Hyperspec
+
+<a id='x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29'></a>
+
+- [variable] **\*DOCUMENT-LINK-TO-HYPERSPEC\*** *T*
+
+    If true, link symbols found in code to the Common Lisp Hyperspec.
+    
+    Locatives work as expected (see [`*DOCUMENT-LINK-CODE*`][8082]).
+    `FIND-IF` links to `FIND-IF`, `FUNCTION` links
+    to `FUNCTION` and `[FUNCTION][type]` links to [`FUNCTION`][a15a].
+    
+    [Autolinking][f6cb] to `T` and
+    `NIL` is suppressed. If desired, use `[T][]` (that links to `T`([`0`][b743] [`1`][cb19])) or
+    `[T][constant]` (that links to [`T`][b743]).
+    
+    Note that linking to sections in the Hyperspec is done with the [`CLHS`][18ca]
+    locative and is not subject to the value of this variable.
+
+<a id='x-28MGL-PAX-3A-2ADOCUMENT-HYPERSPEC-ROOT-2A-20VARIABLE-29'></a>
+
+- [variable] **\*DOCUMENT-HYPERSPEC-ROOT\*** *"http://www.lispworks.com/documentation/HyperSpec/"*
+
+    A `URL` pointing to an installed Common Lisp Hyperspec. The default
+    value of is the canonical location.
+
 <a id='x-28MGL-PAX-3A-40MGL-PAX-LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29'></a>
 
-### 9.5 Linking to Sections
+### 9.6 Linking to Sections
 
 The following variables control how to generate section numbering,
 table of contents and navigation links.
@@ -1721,7 +1720,7 @@ table of contents and navigation links.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29'></a>
 
-### 9.6 Miscellaneous Variables
+### 9.7 Miscellaneous Variables
 
 <a id='x-28MGL-PAX-3A-2ADOCUMENT-MIN-LINK-HASH-LENGTH-2A-20VARIABLE-29'></a>
 
@@ -1776,7 +1775,7 @@ table of contents and navigation links.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-DOCUMENTATION-UTILITIES-20MGL-PAX-3ASECTION-29'></a>
 
-### 9.7 Utilities for Generating Documentation
+### 9.8 Utilities for Generating Documentation
 
 Two convenience functions are provided to serve the common case of
 having an `ASDF` system with some readmes and a directory with for the
@@ -1789,12 +1788,12 @@ HTML documentation and the default css stylesheet.
     Convenience function to generate two readme files in the directory
     holding the `ASDF-SYSTEM` definition.
     
-    README.md has anchors, links, inline code, and other markup added.
+    `README.md` has anchors, links, inline code, and other markup added.
     Not necessarily the easiest on the eye in an editor, but looks good
     on github.
     
-    README is optimized for reading in text format. Has no links and
-    cluttery markup.
+    `README` is optimized for reading in text format. Has no links and
+    less cluttery markup.
     
     Example usage:
     
@@ -1856,7 +1855,7 @@ HTML documentation and the default css stylesheet.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29'></a>
 
-#### 9.7.1 Github Workflow
+#### 9.8.1 Github Workflow
 
 It is generally recommended to commit generated readmes (see
 [`UPDATE-ASDF-SYSTEM-READMES`][2e7a]) so that users have something to read
@@ -1912,7 +1911,7 @@ between the repository and the gh-pages site.
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-WORLD-20MGL-PAX-3ASECTION-29'></a>
 
-#### 9.7.2 PAX World
+#### 9.8.2 PAX World
 
 `PAX` World is a registry of documents, which can generate
 cross-linked HTML documentation pages for all the registered
@@ -1971,7 +1970,7 @@ For example, this is how `PAX` registers itself:
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29'></a>
 
-### 9.8 Document Generation Implementation Notes
+### 9.9 Document Generation Implementation Notes
 
 Documentation Generation is supported on ABCL, AllegroCL, CLISP,
 CCL, CMUCL, ECL and SBCL, but their outputs may differ due to the
@@ -3206,6 +3205,7 @@ presented.
   [0785]: #x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax/full\" ASDF/SYSTEM:SYSTEM)"
   [0b21]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS-20MGL-PAX-3ASECTION-29 "Finer-grained Consistency Checks"
   [1063]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm "(*PACKAGE* VARIABLE)"
+  [1210]: #x-28MGL-PAX-3A-40MGL-PAX-LINKING-TO-THE-HYPERSPEC-20MGL-PAX-3ASECTION-29 "Linking to the Hyperspec"
   [16ad]: #x-28PACKAGE-20MGL-PAX-3ALOCATIVE-29 "(PACKAGE MGL-PAX:LOCATIVE)"
   [170a]: #x-28MGL-PAX-3A-40MGL-PAX-PACKAGELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Packages and Readtables"
   [18ca]: #x-28MGL-PAX-3ACLHS-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:CLHS MGL-PAX:LOCATIVE)"
@@ -3267,16 +3267,20 @@ presented.
   [4ed9]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-CONISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Transcript Consistency Checking"
   [4f82]: #x-28MGL-PAX-3AUPDATE-PAX-WORLD-20FUNCTION-29 "(MGL-PAX:UPDATE-PAX-WORLD FUNCTION)"
   [505a]: #x-28MGL-PAX-3A-40MGL-PAX-LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29 "Linking to Sections"
+  [508d]: #x-28MGL-PAX-3A-40MGL-PAX-PREVENTING-AUTOLINKING-20MGL-PAX-3ASECTION-29 "Preventing Autolinking"
   [5161]: #x-28MGL-PAX-3A-40MGL-PAX-NEW-OBJECT-TYPES-20MGL-PAX-3ASECTION-29 "Adding New Object Types"
   [551b]: http://www.lispworks.com/documentation/HyperSpec/Body/f_descri.htm "(DESCRIBE FUNCTION)"
   [55dd]: #x-28MGL-PAX-3A-40MGL-PAX-MATHJAX-20MGL-PAX-3ASECTION-29 "MathJax"
+  [5707]: #x-28MGL-PAX-3A-40MGL-PAX-SUPPRESSED-LINKS-20MGL-PAX-3ASECTION-29 "Suppressed Links"
   [57cb]: #x-28MGL-PAX-3ADEFINE-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "(MGL-PAX:DEFINE-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO)"
+  [58f7]: #x-28MGL-PAX-3A-40MGL-PAX-FILTERING-AMBIGUOUS-REFERENCES-20MGL-PAX-3ASECTION-29 "Filtering Ambiguous References"
   [59dd]: #x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "(GENERIC-FUNCTION MGL-PAX:LOCATIVE)"
   [5a2c]: #x-28MGL-PAX-3ATRANSCRIPTION-CONSISTENCY-ERROR-20CONDITION-29 "(MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION)"
   [5a3b]: #x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:READER MGL-PAX:LOCATIVE)"
   [5aaf]: #x-28MGL-PAX-3A-40MGL-PAX-PARSING-20MGL-PAX-3ASECTION-29 "Parsing"
   [5ac6]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "(SIMPLE-CONDITION-FORMAT-CONTROL FUNCTION)"
   [5d6e]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defun.htm "(DEFUN MGL-PAX:MACRO)"
+  [5f4b]: #x-28MGL-PAX-3AARGUMENT-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:ARGUMENT MGL-PAX:LOCATIVE)"
   [5faa]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defmac.htm "(DEFMACRO MGL-PAX:MACRO)"
   [60c9]: #x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29 "(MGL-PAX:*FORMAT* VARIABLE)"
   [62c4]: #x-28MGL-PAX-3AFIND-SOURCE-20-28METHOD-20NIL-20-28T-29-29-29 "(MGL-PAX:FIND-SOURCE (METHOD NIL (T)))"
@@ -3294,9 +3298,9 @@ presented.
   [6e37]: #x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "(CLASS MGL-PAX:LOCATIVE)"
   [6ec3]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_4.htm "(DEFINE-METHOD-COMBINATION MGL-PAX:MACRO)"
   [6fcc]: #x-28MGL-PAX-3A-40MGL-PAX-TYPELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Types and Declarations"
+  [7066]: #x-28MGL-PAX-3A-40MGL-PAX-AMBIGUOUS-LOCATIVE-20MGL-PAX-3ASECTION-29 "Ambiguous Unspecified Locative"
   [76476]: http://www.lispworks.com/documentation/HyperSpec/Body/03_d.htm "(\"3.4\" MGL-PAX:CLHS)"
   [76b5]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE)"
-  [7738]: http://www.lispworks.com/documentation/HyperSpec/Body/s_fn.htm "(FUNCTION MGL-PAX:MACRO)"
   [7a11]: #x-28MGL-PAX-3ALOCATE-AND-COLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION)"
   [7ed5]: #x-28COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29 "(COMPILER-MACRO MGL-PAX:LOCATIVE)"
   [8059]: #x-28MGL-PAX-3A-40MGL-PAX-BASICS-20MGL-PAX-3ASECTION-29 "Basics"
@@ -3318,7 +3322,6 @@ presented.
   [8ed9]: #x-28MGL-PAX-3A-40MGL-PAX-EXTENSION-API-20MGL-PAX-3ASECTION-29 "Extension API"
   [8f14]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_rd.htm "(READ FUNCTION)"
   [90f2]: #x-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29 "(ASDF/SYSTEM:SYSTEM MGL-PAX:LOCATIVE)"
-  [94b1]: http://www.lispworks.com/documentation/HyperSpec/Body/t_nil.htm "(NIL TYPE)"
   [94e2]: #x-28MGL-PAX-3ADISLOCATED-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:DISLOCATED MGL-PAX:LOCATIVE)"
   [966a]: #x-28MGL-PAX-3ALOCATIVE-TYPE-20FUNCTION-29 "(MGL-PAX:LOCATIVE-TYPE FUNCTION)"
   [96c5]: #x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29 "(MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION)"
@@ -3327,7 +3330,6 @@ presented.
   [98bc]: #x-28MGL-PAX-3A-2ADOCUMENT-MARK-UP-SIGNATURES-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-MARK-UP-SIGNATURES* VARIABLE)"
   [99c9]: http://www.lispworks.com/documentation/HyperSpec/Body/t_method.htm "(METHOD TYPE)"
   [9c09]: http://www.lispworks.com/documentation/HyperSpec/Body/e_smp_cn.htm "(SIMPLE-CONDITION CONDITION)"
-  [9d3a]: http://www.lispworks.com/documentation/HyperSpec/Body/v_nil.htm "(NIL MGL-PAX:CONSTANT)"
   [9edc]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rdtabl.htm "(READTABLE-CASE FUNCTION)"
   [9ffc]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pr_obj.htm "(PRINT-OBJECT GENERIC-FUNCTION)"
   [a05e]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-20GENERIC-FUNCTION-29 "(MGL-PAX:DOCUMENT-OBJECT GENERIC-FUNCTION)"
@@ -3344,7 +3346,6 @@ presented.
   [b42e]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rst.htm "(RESTART TYPE)"
   [b58a]: http://www.lispworks.com/documentation/HyperSpec/Body/s_declar.htm "(DECLARE MGL-PAX:MACRO)"
   [b743]: http://www.lispworks.com/documentation/HyperSpec/Body/v_t.htm "(T MGL-PAX:CONSTANT)"
-  [badc]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_.htm "(FIND-IF FUNCTION)"
   [be22]: #x-28MGL-PAX-3A-40MGL-PAX-SECTIONS-20MGL-PAX-3ASECTION-29 "Sections"
   [bf16]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPT-API-20MGL-PAX-3ASECTION-29 "Transcript API"
   [c0cd]: #x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE)"
@@ -3364,8 +3365,9 @@ presented.
   [cf3f]: #x-28MGL-PAX-3A-2ATRANSCRIBE-SYNTAXES-2A-20VARIABLE-29 "(MGL-PAX:*TRANSCRIBE-SYNTAXES* VARIABLE)"
   [d003]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defcon.htm "(DEFCONSTANT MGL-PAX:MACRO)"
   [d023]: #x-28MGL-PAX-3A-40MGL-PAX-LOCATIVES-AND-REFERENCES-20MGL-PAX-3ASECTION-29 "Locatives and References"
-  [d1cf]: #x-28MGL-PAX-3A-40MGL-PAX-REFERENCE-RESOLUTION-20MGL-PAX-3ASECTION-29 "Reference Resolution"
+  [d162]: #x-28MGL-PAX-3A-40MGL-PAX-LOCAL-REFERENCES-20MGL-PAX-3ASECTION-29 "Local References"
   [d259]: #x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20VARIABLE-29 "(MGL-PAX:*DISCARD-DOCUMENTATION-P* VARIABLE)"
+  [d539]: #x-28MGL-PAX-3A-40MGL-PAX-SPECIFIED-LOCATIVE-20MGL-PAX-3ASECTION-29 "Specified Locative"
   [d58f]: #x-28MGL-PAX-3A-40MGL-PAX-MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29 "Markdown Support"
   [d71c]: #x-28METHOD-20MGL-PAX-3ALOCATIVE-29 "(METHOD MGL-PAX:LOCATIVE)"
   [d7e0]: #x-28MGL-PAX-3A-40MGL-PAX-LINKS-20MGL-PAX-3ASECTION-29 "Links"
@@ -3379,6 +3381,7 @@ presented.
   [e4da]: http://www.lispworks.com/documentation/HyperSpec/Body/t_eql.htm "(EQL TYPE)"
   [e64c]: http://www.lispworks.com/documentation/HyperSpec/Body/v_rdtabl.htm "(*READTABLE* VARIABLE)"
   [e65c]: #x-28MGL-PAX-3A-40MGL-PAX-WORLD-20MGL-PAX-3ASECTION-29 "PAX World"
+  [e75e]: #x-28MGL-PAX-3A-40MGL-PAX-UNAMBIGUOUS-LOCATIVE-20MGL-PAX-3ASECTION-29 "Unambiguous Unspecified Locative"
   [e9bd]: #x-28MGL-PAX-3A-40MGL-PAX-TRANSCRIPTS-20MGL-PAX-3ASECTION-29 "Transcripts"
   [e9e9]: #x-28MGL-PAX-3ALOCATE-AND-FIND-SOURCE-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-FIND-SOURCE GENERIC-FUNCTION)"
   [eac6]: #x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "(\"mgl-pax/document\" ASDF/SYSTEM:SYSTEM)"
@@ -3392,6 +3395,7 @@ presented.
   [f283]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eql.htm "(EQL FUNCTION)"
   [f3b7]: #x-28MGL-PAX-3ALOCATE-ERROR-20FUNCTION-29 "(MGL-PAX:LOCATE-ERROR FUNCTION)"
   [f4eb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_deftp.htm "(DEFTYPE MGL-PAX:MACRO)"
+  [f6cb]: #x-28MGL-PAX-3A-40MGL-PAX-EXPLICIT-AND-AUTOLINKING-20MGL-PAX-3ASECTION-29 "Explicit and Autolinking"
   [f7af]: http://www.lispworks.com/documentation/HyperSpec/Body/m_define.htm "(DEFINE-COMPILER-MACRO MGL-PAX:MACRO)"
   [ffb2]: #x-28MGL-PAX-3A-2ADOCUMENT-HTML-TOP-BLOCKS-OF-LINKS-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* VARIABLE)"
 

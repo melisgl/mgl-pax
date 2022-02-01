@@ -15,6 +15,7 @@
   (@mgl-pax-markdown-support section)
   (@mgl-pax-codification section)
   (@mgl-pax-linking-to-code section)
+  (@mgl-pax-linking-to-the-hyperspec section)
   (@mgl-pax-linking-to-sections section)
   (@mgl-pax-miscellaneous-documentation-printer-variables section)
   (@mgl-pax-documentation-utilities section)
@@ -86,11 +87,9 @@
 (defvar *id-to-link*)
 (defvar *object-to-links*)
 
-;;; A list of references not to be autolinked. See
-;;; REFERENCES-FOR-AMBIGUOUS-LOCATIVE,
-;;; REFERENCES-FOR-UNSPECIFIED-LOCATIVE, and
-;;; REFERENCES-FOR-SPECIFIED-LOCATIVE. The reference being documented
-;;; is always on this list. Arguments are typically also are. Bound by
+;;; A list of references with special rules for linking (see
+;;; @MGL-PAX-LOCAL-REFERENCES). The reference being documented is
+;;; always on this list. Arguments are typically also are. Bound by
 ;;; WITH-LOCAL-REFERENCES.
 (defvar *local-references*)
 
@@ -205,18 +204,33 @@
   (let ((link (find-link reference)))
     (when link
       (link-page link))))
+
 
-(defun initialize-links (pages)
-  (declare (special *document-link-to-hyperspec*)
-           (special *document-hyperspec-root*))
-  (loop for page in pages
-        do (dolist (reference (page-references page))
-             (unless (find-link reference)
-               (add-link (make-link
-                          :reference reference
-                          :page page
-                          :id (hash-link (reference-to-anchor reference)
-                                         #'find-link-by-id))))))
+(defsection @mgl-pax-linking-to-the-hyperspec
+    (:title "Linking to the Hyperspec")
+  (*document-link-to-hyperspec* variable)
+  (*document-hyperspec-root* variable))
+
+(defvar *document-link-to-hyperspec* t
+  "If true, link symbols found in code to the Common Lisp Hyperspec.
+
+  Locatives work as expected (see *DOCUMENT-LINK-CODE*).
+  [FIND-IF][dislocated] links to FIND-IF, [FUNCTION][dislocated] links
+  to FUNCTION and `[FUNCTION][type]` links to [FUNCTION][type].
+
+  [Autolinking][@mgl-pax-explicit-and-autolinking section] to T and
+  NIL is suppressed. If desired, use `[T][]` (that links to [T][]) or
+  `[T][constant]` (that links to [T][constant]).
+
+  Note that linking to sections in the Hyperspec is done with the CLHS
+  locative and is not subject to the value of this variable.")
+
+(defvar *document-hyperspec-root*
+  "http://www.lispworks.com/documentation/HyperSpec/"
+  "A URL pointing to an installed Common Lisp Hyperspec. The default
+  value of is the canonical location.")
+
+(defun maybe-add-links-to-hyperspec ()
   (when *document-link-to-hyperspec*
     (loop for (object locative url) in (hyperspec-external-references
                                         *document-hyperspec-root*)
@@ -231,6 +245,20 @@
                                (reference-to-anchor reference
                                                     :canonicalp t)
                                #'find-link-by-id)))))))
+
+
+(defun initialize-links (pages)
+  (declare (special *document-link-to-hyperspec*)
+           (special *document-hyperspec-root*))
+  (loop for page in pages
+        do (dolist (reference (page-references page))
+             (unless (find-link reference)
+               (add-link (make-link
+                          :reference reference
+                          :page page
+                          :id (hash-link (reference-to-anchor reference)
+                                         #'find-link-by-id))))))
+  (maybe-add-links-to-hyperspec))
 
 (defvar *pages-created*)
 
@@ -897,187 +925,128 @@
 
 
 (defsection @mgl-pax-linking-to-code (:title "Linking to Code")
-  """Before delving into the details, here is a quick summary of all
-  ways of linking to code.
+  """In this section, we describe of all ways of linking to code
+  available when *DOCUMENT-UPPERCASE-IS-CODE* is true.
 
-  ##### Explicit Links
-
-  - `[SECTION][class]` renders as: [SECTION][class]
-    (*object + locative*)
-  - `[see this][section class]` renders as: [see this][section class]
-    (*explicit title + reference*)
-
-  Parsing of symbols relies on the current READTABLE-CASE, so usually
-  their case does not matter.
-
-  ##### Autolinking with *DOCUMENT-UPPERCASE-IS-CODE*
-
-  - `\LOCATE` renders as: LOCATE (*object with a single possible locative*)
-  - `\SECTION` renders as: SECTION (*object with ambiguous locative*)
-  - `SECTION class` renders as: SECTION class (*object followed by
-    locative*)"""
-  ;; If the next example were in the same docstring as the previous,
-  ;; it would not be render as a link because they are the same link.
-  """- `class SECTION` renders as: class SECTION (*object following locative*)
-
-  In these examples, autolinking can be prevented by preventing
-  codification of uppercase symbols (see
-  [*DOCUMENT-UPPERCASE-IS-CODE*][variable]).
-
-  ##### Autolinking in code
-
-  If a single word is enclosed in backticks (i.e. it's code), then it
-  is autolinked. The following examples all render as the previous
-  ones except for the character case, which need not be uppercase in
-  this case.
-
-  ```
-  `locate`
-  `section`
-  `section` class
-  class `section`
-  ```
-
-  To prevent autolinking in the explicitly quoted case, a backslash
-  can be placed right after the opening backtick.
-
-  ```
-  `\locate`
-  `\section`
-  `\section` class
-  class `\section`
-  ```
-
-  Alternatively, the DISLOCATED locative may be used.
+  _Note that invoking [`M-.`][@mgl-pax-navigating-in-emacs section] on
+  the @OBJECT of any of the following links will disambiguate based
+  the textual context, determining the locative. In a nutshell, if
+  `M-.` works without popping up a list of choices, then the
+  documentation will contain a single link._
   """
   (*document-link-code* variable)
-  (*document-link-to-hyperspec* variable)
-  (*document-hyperspec-root* variable)
-  (@mgl-pax-reference-resolution section))
+  (@mgl-pax-specified-locative section)
+  (@mgl-pax-unambiguous-locative section)
+  (@mgl-pax-ambiguous-locative section)
+  (@mgl-pax-explicit-and-autolinking section)
+  (@mgl-pax-preventing-autolinking section)
+  (@mgl-pax-suppressed-links section)
+  (@mgl-pax-filtering-ambiguous-references section)
+  (@mgl-pax-local-references section))
+
+(defsection @mgl-pax-specified-locative (:title "Specified Locative")
+  """The following examples all render as [DOCUMENT][function].
+
+  - `\[DOCUMENT][function]` (*object + locative, explicit link*)
+  - `DOCUMENT function` (*object + locative, autolink*)
+  - `function DOCUMENT` (*locative + object, autolink*)
+
+  The Markdown link definition (i.e. `\function` between the second
+  set of brackets above) needs no backticks to mark it as code.
+
+  Here and below, the @OBJECT (`\DOCUMENT`) is uppercased, and we rely
+  on *DOCUMENT-UPPERCASE-IS-CODE* being true. Alternatively, the
+  @OBJECT could be explicitly marked up as code with a pair of
+  backticks, and then its character case would likely not
+  matter (subject to READTABLE-CASE).
+
+  The link text in the above examples is `\DOCUMENT`. To override it,
+  this form may be used:
+
+  - `[see this][document function]` renders as: [see this][document
+    function] (*title + object + locative, explicit link*)
+  """)
+
+(defsection @mgl-pax-unambiguous-locative
+    (:title "Unambiguous Unspecified Locative")
+  """In the following examples, although no locative is specified,
+  `\DOCUMENT` names a single @OBJECT being documented, so they all
+  render as [DOCUMENT][function].
+
+  - `\[DOCUMENT][]` (*object, explicit link*),
+  - `DOCUMENT` (*object, autolink*).
+  """)
+
+(defsection @mgl-pax-ambiguous-locative
+    (:title "Ambiguous Unspecified Locative")
+  """These examples all render as [SECTION][], linking to both
+  definitions of the @OBJECT `\SECTION`, the `\CLASS` and the
+  `\LOCATIVE`.
+
+  - `[SECTION][]` (*object, explicit link*)
+  - `\SECTION` (*object, autolink*)
+  """)
+
+(defsection @mgl-pax-explicit-and-autolinking
+    (:title "Explicit and Autolinking")
+  "The examples in the previous sections are marked with *explicit
+  link* or *autolink*. Explicit links are those with a Markdown
+  reference link spelled out explicitly, while autolinks are those
+  without.")
+
+(defsection @mgl-pax-preventing-autolinking (:title "Preventing Autolinking")
+  """In the common case, when [*DOCUMENT-UPPERCASE-IS-CODE*][] is true,
+  prefixing the uppercase @WORD with a backslash prevents it from
+  being codified and thus also prevents
+  [autolinking][@mgl-pax-explicit-and-autolinking section] form
+  kicking in. For example, `\\DOCUMENT` renders as \DOCUMENT. If it
+  should be marked up as code but not autolinked, the backslash must
+  be within backticks like this:
+
+  ```
+  `\DOCUMENT`
+  ```
+
+  This renders as `\DOCUMENT`. Alternatively, the DISLOCATED or the
+  ARGUMENT locative may be used as in `[DOCUMENT][dislocated]`.
+  """)
 
 (defvar *document-link-code* t
-  """When true, during the process of generating documentation for a
-  [SECTION][class], HTML anchors are added before the documentation of
-  every reference that's not to a section. Also, markdown style
-  reference links are added when a piece of inline code found in a
-  docstring refers to a symbol that's referenced by one of the
-  sections being documented.
+  """Enable the various forms of links in docstrings described in
+  @MGL-PAX-LINKING-TO-CODE.
 
-  ```commonlisp
-  (defsection @foo (:export nil)
-    (foo function)
-    (bar function))
+  Let's understand the generated Markdown.
 
+  ```
   (defun foo (x)
-    "Calls `BAR` on `X`."
-    (bar x))
+    "Calls BAR."
+    (bar (x)))
 
   (defun bar (x)
-    x)
+    (1+ x))
+
+  (document (list #'foo #'bar))
+  => ("<a id='x-28MGL-PAX-3A-3AFOO-20FUNCTION-29'></a>
+  
+  - [function] **FOO** *X*
+  
+      Calls [`BAR`][6b98].
+  <a id='x-28MGL-PAX-3A-3ABAR-20FUNCTION-29'></a>
+  
+  - [function] **BAR** *X*
+  
+    [6b98]: #x-28MGL-PAX-3A-3ABAR-20FUNCTION-29 \"(MGL-PAX::BAR FUNCTION)\"
+  ")
   ```
 
-  With the above definition the output of `(DOCUMENT @FOO :STREAM T)`
-  would include this:
-
-  ```
-  .. <a id='x-28MGL-PAX-3AFOO-20FUNCTION-29'></a>
-  ..
-  .. - [function] **FOO** *X*
-  ..
-  ..     Calls [`BAR`][e2f2] on `X`.
-  ..
-  .. <a id='x-28MGL-PAX-3ABAR-20FUNCTION-29'></a>
-  ..
-  .. - [function] **BAR** *X*
-  ..
-  ..   [e2f2]: #x-28MGL-PAX-3ABAR-20FUNCTION-29 "(MGL-PAX:BAR FUNCTION)"
-  ```
-
-  The line starting with `[e2f2]:` is the markdown reference link
-  definition with an url and a title. Here the url points to the HTML
+  The line starting with `[6b98]:` is the markdown reference link
+  definition with a URL and a title. Here the URL points to the HTML
   anchor of the documentation of the function `BAR`, itself an escaped
   version of the reference `(MGL-PAX:BAR FUNCTION)`, which is also the
   title.
 
-  In the docstring of `FOO`, instead of `BAR`, one can write `[bar][]`
-  or ``[`bar`][]`` as well. Since symbol names are parsed according to
-  READTABLE-CASE, character case rarely matters.
-
-  Now, if `BAR` has multiple references with different locatives:
-
-  ```commonlisp
-  (defsection @foo
-    (foo function)
-    (bar function)
-    (bar type))
-
-  (defun foo (x)
-    "Calls `BAR` on `X`."
-    (bar x))
-  ```
-
-  then documentation would link to all interpretations:
-
-      - [function] FOO X
-
-          Calls `BAR`([`1`][link-id-1] [`2`][link-id-2]) on `X`.
-
-  This situation occurs in PAX with SECTION, which is both a
-  class (see [SECTION][class]) and a locative type denoted by a
-  symbol (see [SECTION][locative]). Back in the example above,
-  clearly, there is no reason to link to type `BAR`, so one may wish
-  to select the function locative. There are two ways to do that. One
-  is to specify the locative explicitly as the id of a reference link:
-
-      "Calls [BAR][function] on X."
-
-  However, if in the text there is a locative immediately before or
-  after the symbol, then that locative is used to narrow down the
-  range of possibilities. This is similar to what the `M-.` extension
-  does. In a nutshell, if `M-.` works without questions then the
-  documentation will contain a single link. So this also works without
-  any markup:
-
-      "Calls function `BAR` on X."
-
-  This last option needs backticks around the locative if it's not a
-  single symbol.
-
-  Within the same docstring, autolinking of code without explicit
-  markdown reference links happens only for the first occurrence of
-  the same object with the same locatives except for SECTIONs and
-  GLOSSARY-TERMs. In the following docstring, only the first `FOO`
-  will be turned into a link.
-
-      "Oh, `FOO` is safe. `FOO` is great."
-
-  On the other hand, if different locatives are found in the vicinity
-  of two occurrences of `FOO`, then both will be linked.
-
-      "Oh, function `FOO` is safe. Macro `FOO` is great."
-
-  Note that *DOCUMENT-LINK-CODE* can be combined with
-  *DOCUMENT-UPPERCASE-IS-CODE* to have links generated for uppercase
-  words with no quoting required.""")
-
-(defvar *document-link-to-hyperspec* t
-  "If true, link symbols found in code to the Common Lisp Hyperspec.
-
-  Locatives work as expected (see *DOCUMENT-LINK-CODE*).
-  [FIND-IF][dislocated] links to FIND-IF, [FUNCTION][dislocated] links
-  to FUNCTION and `[FUNCTION][type]` links to [FUNCTION][type].
-
-  Autolinking to T and NIL is suppressed. If desired, use
-  `[T][]` (that links to [T][]) or `[T][constant]` (that links to
-  [T][constant]).
-
-  Note that linking to sections in the Hyperspec is done with the CLHS
-  locative and is not subject to the value of this variable.")
-
-(defvar *document-hyperspec-root*
-  "http://www.lispworks.com/documentation/HyperSpec/"
-  "A URL pointing to an installed Common Lisp Hyperspec. The default
-  value of is the canonical location.")
+  See the following sections for a description of how to use linking.
+  """)
 
 ;;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
 ;;; :REFERENCE-LINK for [symbol][locative]). Don't hurt other links.
@@ -1132,7 +1101,7 @@
 ;;; "xxx") or from "xxx,yyy"), or it's constructed from TREE (e.g.
 ;;; it's "*SYM*" from (:EMPH "SYM")).
 (defun make-reflinks-to-word (parent tree word linked-refs)
-  (let ((refs (references-for-ambiguous-locative
+  (let ((refs (references-for-autolink
                (parse-word word :trim nil :depluralize t)
                (find-locatives-around parent tree)
                linked-refs)))
@@ -1186,7 +1155,8 @@
         reflink
         (let ((refs (if locative
                         (references-for-specified-locative object locative)
-                        (references-for-unspecified-locative object))))
+                        (references-for-explicitly-unspecified-locative
+                         object))))
           (cond (refs
                  (dolist (ref refs)
                    (vector-push-extend ref linked-refs))
@@ -1260,190 +1230,6 @@
                (t
                 (return-from parse-tree-to-text nil)))))
     (recurse parse-tree)))
-
-
-(defsection @mgl-pax-reference-resolution (:title "Reference Resolution")
-  """Links are generated according to *DOCUMENT-LINK-CODE* in general
-  but with some additional heuristics for convenience."""
-  (@mgl-pax-filtering-multiple-references section)
-  (@mgl-pax-local-references section))
-
-(defsection @mgl-pax-filtering-multiple-references
-    (:title "Filtering Multiple References")
-  """When there are multiple references to link to - as seen in the
-  second example in *DOCUMENT-LINK-CODE* - some references are removed
-  by the following rules.
-
-  - References to ASDF:SYSTEMs are removed if there are other
-    references which are not to ASDF:SYSTEMs. This is because system
-    names often collide with the name of a class or function and are
-    rarely useful to link to. Use explicit links to ASDF:SYSTEMs, if
-    necessary.
-
-  - References to the CLHS are filtered similarly.
-
-  - If references include a GENERIC-FUNCTION locative, then all
-    references with LOCATIVE-TYPE [METHOD][locative],
-    [ACCESSOR][locative], [READER][locative] and [WRITER][locative]
-    are removed to avoid linking to a possibly large number of
-    methods.""")
-
-(defsection @mgl-pax-local-references (:title "Local References")
-  """To unclutter the generated output by reducing the number of
-  links, the so-called 'local' references (references to things for
-  which documentation is being generated) are treated specially. In
-  the following example, there are local references to the function
-  FOO and its arguments, so none of them get turned into links:
-
-  ```common-lisp
-  (defun foo (arg1 arg2)
-    "FOO takes two arguments: ARG1 and ARG2.")
-  ```
-
-  If linking was desired one could write `[FOO][function]` or `FOO
-  function`, both of which result in a single link. An explicit link
-  with an unspecified locative like in `[*DOCUMENT-LINK-CODE*][]`
-  generates links to all references involving the *DOCUMENT-LINK-CODE*
-  symbol except the local ones.
-
-  The exact rules for local references are as follows:
-
-  - Unadorned names in code (e.g. `FOO`) do not get any links if there
-    is _any_ local reference with the same symbol.
-
-  - With a locative specified (e.g. in the explicit link
-    `[FOO][function]` or in the text `the FOO function`), a single
-    link is made irrespective of any local references.
-
-  - Explicit links with an unspecified locative (e.g. `[FOO][]`) are
-    linked to all non-local references.""")
-
-;;; Markdown such as `FOO` will behave as [`FOO`][loc] if the locative
-;;; LOC is found nearby `FOO` by FIND-LOCATIVES-AROUND and it matches
-;;; a known reference. Else, see %REFERENCES-FOR-OBJECT. All returned
-;;; REFERENCES are for the same object.
-(defun references-for-ambiguous-locative (objects locatives linked-refs)
-  (or
-   ;; Use the first object from OBJECTS with which some LOCATIVES form
-   ;; known references.
-   (loop for object in objects
-           thereis (loop for locative in locatives
-                         append (references-for-specified-locative
-                                 object locative)))
-   ;; Fall back on the no-locative case.
-   (loop for object in objects
-         for refs = (%references-for-object objects)
-         until (suppressed-link-p refs linked-refs)
-           thereis refs
-         until (references-to-object object :local :include))))
-
-(defun suppressed-link-p (refs linked-refs)
-  (when refs
-    ;; Relying on REFS being for the same object (see
-    ;; REFERENCES-FOR-AMBIGUOUS-LOCATIVE).
-    (let ((object (reference-object (first refs))))
-      (or (member object '(t nil))
-          (and (loop for ref across linked-refs
-                       thereis (reference-object= object ref))
-               ;; Replace references to sections and glossary terms
-               ;; with their title any number of times.
-               (not (and (= (length refs) 1)
-                         (typep (resolve (first refs) :errorp nil)
-                                '(or section glossary-term)))))))))
-
-;;; `FOO` without any nearby locatives will link to all known
-;;; references involving FOO unless any reference with FOO is on
-;;; *LOCAL-REFERENCES* in which case it will not link to anything.
-(defun %references-for-object (objects)
-  (loop for object in objects
-        ;; The UNTIL heuristic is intended to prevent substrings of
-        ;; the name of an argument of a function from getting links.
-        ;; This relies on FIND-CANDIDATE-OBJECTS returning longer
-        ;; matches first.
-        until (has-local-reference-p object)
-        append (resolve-generic-function-and-methods
-                (filter-asdf-system-references
-                 (remove-clhs-references
-                  (linkable-references
-                   (references-to-object object)))))))
-
-;;; A markdown reference link with an unspecified locative such as
-;;; [foo][] will link to all references involving FOO (given as REFS)
-;;; which are not on *LOCAL-REFERENCES*.
-(defun references-for-unspecified-locative (object)
-  (resolve-generic-function-and-methods
-   (filter-asdf-system-references
-    (filter-clhs-references
-     (linkable-references
-      (references-to-object object :local :exclude))))))
-
-;;; A markdown reference link with a specified locative such as
-;;; [foo][function] or text fragment like "function FOO" will link to
-;;; the function FOO irrespective of *LOCAL-REFERENCES*.
-(defun references-for-specified-locative (object locative)
-  (if (member (locative-type locative) '(dislocated argument))
-      ;; Handle an explicit [FOO][dislocated] in markdown, for which
-      ;; there is no reference in REFS.
-      (list (make-reference object 'dislocated))
-      (let* ((reference (canonical-reference
-                         (make-reference object locative)))
-             (object (reference-object reference))
-             (ref (find reference (references-to-object object)
-                        :test #'reference=)))
-        (when (and ref (linkable-ref-p ref))
-          (list ref)))))
-
-;;; It's rarely useful to link to ASDF systems in an ambiguous
-;;; situation, so don't.
-(defun filter-asdf-system-references (refs)
-  (if (< 1 (length refs))
-      (remove 'asdf:system refs :key #'reference-locative-type)
-      refs))
-
-(defun filter-clhs-references (refs)
-  (if (< 1 (length refs))
-      (remove-clhs-references refs)
-      refs))
-
-(defun remove-clhs-references (refs)
-  (remove 'clhs refs :key #'reference-locative-type))
-
-(defun resolve-generic-function-and-methods (refs)
-  (flet ((non-method-refs ()
-           (remove-if (lambda (ref)
-                        (member (reference-locative-type ref)
-                                '(accessor reader writer method)))
-                      refs)))
-    (cond
-      ;; If in doubt, prefer the generic function to methods.
-      ((find 'generic-function refs :key #'reference-locative-type)
-       (non-method-refs))
-      ;; No generic function, prefer non-methods to methods.
-      ((non-method-refs))
-      (t
-       refs))))
-
-(defun linkable-references (refs)
-  (remove-if-not #'linkable-ref-p refs))
-
-(defun linkable-ref-p (ref)
-  (declare (special *document-link-sections*))
-  (and (or (and *document-link-sections*
-                (eq (reference-locative-type ref) 'section))
-           *document-link-code*)
-       (let ((page (reference-page ref)))
-         (or
-          ;; These have no pages, but won't result in link anyway.
-          ;; Keep them.
-          (member (reference-locative-type ref) '(dislocated argument))
-          ;; Intrapage links always work.
-          (eq *page* page)
-          ;; Else we need to know the URI-FRAGMENT of both pages. See
-          ;; RELATIVE-PAGE-URI-FRAGMENT. Or PAGE may also be a string
-          ;; denoted an absolute URL.
-          (or (stringp page)
-              (and (page-uri-fragment *page*)
-                   (page-uri-fragment page)))))))
 
 ;;; For LABEL (a parse tree fragment) and some references to it
 ;;; (REFS), return a markdown parse tree fragment to be spliced into a
@@ -1497,6 +1283,203 @@
              (prin1-to-string
               (reference-locative reference)))))
     (sort (copy-seq references) #'string< :key #'locative-string)))
+
+
+(defsection @mgl-pax-suppressed-links (:title "Suppressed Links")
+  """Within the same docstring,
+  [autolinking][@mgl-pax-explicit-and-autolinking section] of
+  code (i.e. of something like `FOO`) is suppressed if the same
+  @OBJECT was already linked to in any way. In the following
+  docstring, only the first `FOO` will be turned into a link.
+
+      "`FOO` is safe. `FOO` is great."
+
+  However if a @LOCATIVE was specified or found near the @OBJECT, then
+  a link is always made. In the following, in both docstrings, both
+  occurrences `FOO` produce links.
+
+      "`FOO` is safe. [`FOO`][macro] is great."
+      "`FOO` is safe. Macro `FOO` is great."
+
+  As an exception, links with [specified][@mgl-pax-specified-locative
+  section] and [unambiguous][@mgl-pax-unambiguous-locative section]
+  locatives to SECTIONs and GLOSSARY-TERMs always produce a link to
+  allow their titles to be displayed properly.
+
+  Finally, [autolinking][@mgl-pax-explicit-and-autolinking section] to
+  T or NIL is suppressed (see *DOCUMENT-LINK-TO-HYPERSPEC*).
+  """)
+
+(defun suppressed-link-p (refs linked-refs)
+  (when refs
+    ;; Relying on REFS being for the same object (see
+    ;; REFERENCES-FOR-AMBIGUOUS-LOCATIVE).
+    (let ((object (reference-object (first refs))))
+      (or (member object '(t nil))
+          (and (loop for ref across linked-refs
+                       thereis (reference-object= object ref))
+               ;; Replace references to sections and glossary terms
+               ;; with their title any number of times.
+               (not (and (= (length refs) 1)
+                         (typep (resolve (first refs) :errorp nil)
+                                '(or section glossary-term)))))))))
+
+
+(defsection @mgl-pax-local-references (:title "Local References")
+  """To unclutter the generated output by reducing the number of
+  links, the so-called 'local' references (e.g. references to the very
+  definition for which documentation is being generated) are treated
+  specially. In the following example, there are local references to
+  the function FOO and its arguments, so none of them get turned into
+  links:
+
+  ```common-lisp
+  (defun foo (arg1 arg2)
+    "FOO takes two arguments: ARG1 and ARG2."
+    t)
+  ```
+
+  If linking was desired one could use a
+  @MGL-PAX-SPECIFIED-LOCATIVE (e.g. `[FOO][function]` or `FOO
+  function`), which results in a single link. An explicit link with an
+  unspecified locative like `[FOO][]` generates links to all
+  references involving the `FOO` symbol except the local ones.
+
+  The exact rules for local references are as follows:
+
+  - Unless a locative is [specified][ @mgl-pax-specified-locative
+    section], no [autolinking][ @mgl-pax-explicit-and-autolinking
+    section] is performed for @OBJECTS for which there are local
+    references. For example, `FOO` does not get any links if there is
+    _any_ local reference with the same @OBJECT.
+
+  - With a locative specified (e.g. in the explicit link
+    `[FOO][function]` or in the text `the FOO function`), a single
+    link is made irrespective of any local references.
+
+  - Explicit links with an unspecified locative (e.g. `[FOO][]`) are
+    linked to all non-local references.""")
+
+(defun references-for-specified-locative (object locative)
+  (if (member (locative-type locative) '(dislocated argument))
+      ;; Handle an explicit [FOO][dislocated] in markdown, for which
+      ;; there is no reference in REFS.
+      (list (make-reference object 'dislocated))
+      (let* ((reference (canonical-reference
+                         (make-reference object locative)))
+             (object (reference-object reference))
+             (ref (find reference (references-to-object object)
+                        :test #'reference=)))
+        (when (and ref (linkable-ref-p ref))
+          (list ref)))))
+
+(defun references-for-explicitly-unspecified-locative (object)
+  (resolve-generic-function-and-methods
+   (filter-asdf-system-references
+    (filter-clhs-references
+     (linkable-references
+      (references-to-object object :local :exclude))))))
+
+;;; All returned REFERENCES are for the same object.
+(defun references-for-autolink (objects locatives linked-refs)
+  (or
+   ;; Use the first object from OBJECTS with which some LOCATIVES form
+   ;; known references.
+   (loop for object in objects
+           thereis (loop for locative in locatives
+                         append (references-for-specified-locative
+                                 object locative)))
+   ;; Fall back on the no-locative case.
+   (loop for object in objects
+         for refs = (references-for-autolink-with-unspecified-locative objects)
+         until (suppressed-link-p refs linked-refs)
+           thereis refs
+         until (references-to-object object :local :include))))
+
+(defun references-for-autolink-with-unspecified-locative (objects)
+  (loop for object in objects
+        ;; The UNTIL heuristic is intended to prevent substrings of
+        ;; the name of an argument of a function from getting links.
+        ;; This relies on PARSE-WORD returning longer matches first.
+        until (has-local-reference-p object)
+        append (resolve-generic-function-and-methods
+                (filter-asdf-system-references
+                 (remove-clhs-references
+                  (linkable-references
+                   (references-to-object object)))))))
+
+(defun linkable-references (refs)
+  (remove-if-not #'linkable-ref-p refs))
+
+(defun linkable-ref-p (ref)
+  (declare (special *document-link-sections*))
+  (and (or (and *document-link-sections*
+                (eq (reference-locative-type ref) 'section))
+           *document-link-code*)
+       (let ((page (reference-page ref)))
+         (or
+          ;; These have no pages, but won't result in link anyway.
+          ;; Keep them.
+          (member (reference-locative-type ref) '(dislocated argument))
+          ;; Intrapage links always work.
+          (eq *page* page)
+          ;; Else we need to know the URI-FRAGMENT of both pages. See
+          ;; RELATIVE-PAGE-URI-FRAGMENT. Or PAGE may also be a string
+          ;; denoted an absolute URL.
+          (or (stringp page)
+              (and (page-uri-fragment *page*)
+                   (page-uri-fragment page)))))))
+
+
+(defsection @mgl-pax-filtering-ambiguous-references
+    (:title "Filtering Ambiguous References")
+  """When there are multiple references to link to - as seen in
+  @MGL-PAX-AMBIGUOUS-LOCATIVE - some references are removed by the
+  following rules.
+
+  - References to ASDF:SYSTEMs are removed if there are other
+    references which are not to ASDF:SYSTEMs. This is because system
+    names often collide with the name of a class or function and are
+    rarely useful to link to. Use explicit links to ASDF:SYSTEMs, if
+    necessary.
+
+  - References to the CLHS are filtered similarly.
+
+  - If references include a GENERIC-FUNCTION locative, then all
+    references with LOCATIVE-TYPE [METHOD][locative],
+    [ACCESSOR][locative], [READER][locative] and [WRITER][locative]
+    are removed to avoid linking to a possibly large number of
+    methods.""")
+
+;;; It's rarely useful to link to ASDF systems in an ambiguous
+;;; situation, so don't.
+(defun filter-asdf-system-references (refs)
+  (if (< 1 (length refs))
+      (remove 'asdf:system refs :key #'reference-locative-type)
+      refs))
+
+(defun filter-clhs-references (refs)
+  (if (< 1 (length refs))
+      (remove-clhs-references refs)
+      refs))
+
+(defun remove-clhs-references (refs)
+  (remove 'clhs refs :key #'reference-locative-type))
+
+(defun resolve-generic-function-and-methods (refs)
+  (flet ((non-method-refs ()
+           (remove-if (lambda (ref)
+                        (member (reference-locative-type ref)
+                                '(accessor reader writer method)))
+                      refs)))
+    (cond
+      ;; If in doubt, prefer the generic function to methods.
+      ((find 'generic-function refs :key #'reference-locative-type)
+       (non-method-refs))
+      ;; No generic function, prefer non-methods to methods.
+      ((non-method-refs))
+      (t
+       refs))))
 
 
 (defsection @mgl-pax-linking-to-sections (:title "Linking to Sections")

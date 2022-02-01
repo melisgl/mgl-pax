@@ -30,12 +30,12 @@
   "Convenience function to generate two readme files in the directory
   holding the ASDF-SYSTEM definition.
 
-  README.md has anchors, links, inline code, and other markup added.
+  `README.md` has anchors, links, inline code, and other markup added.
   Not necessarily the easiest on the eye in an editor, but looks good
   on github.
 
-  README is optimized for reading in text format. Has no links and
-  cluttery markup.
+  `README` is optimized for reading in text format. Has no links and
+  less cluttery markup.
 
   Example usage:
 

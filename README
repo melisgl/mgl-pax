@@ -717,7 +717,8 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
 - [locative] DISLOCATED
 
     Refers to a symbol in a non-specific context. Useful for preventing
-    autolinking. For example, if there is a function called `FOO` then
+    [autolinking][@mgl-pax-explicit-and-autolinking section]. For example, if
+    there is a function called `FOO` then
     
         `FOO`
     
@@ -725,9 +726,8 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     
         [`FOO`][dislocated]
     
-    will not be. On a dislocated locative LOCATE always fails with a
-    LOCATE-ERROR condition. See @MGL-PAX-LINKING-TO-CODE for an
-    alternative method of preventing autolinking.
+    will not be. With a dislocated locative, LOCATE always fails with a
+    LOCATE-ERROR condition. Also see @MGL-PAX-PREVENTING-AUTOLINKING.
 
 - [locative] ARGUMENT
 
@@ -1174,20 +1174,6 @@ Reader][pythonic-string-reader] can help with that.
     The number of backslashes is doubled above because that's how the
     example looks in a docstring. Note that the backslash is discarded
     even if *DOCUMENT-UPPERCASE-IS-CODE* is false.
-    
-    Finally, we say that a word **names** a known reference if the word
-    matches the name of a thing being documented, or it is in the
-    hyperspec and *DOCUMENT-UPPERCASE-IS-CODE* is true, or more
-    precisely,
-    
-    - if the word matches [the object of a reference][REFERENCE-OBJECT
-      reader] being documented (see DOCUMENT and
-      COLLECT-REACHABLE-OBJECTS), or
-    
-    - the a name in the hyperspec if *DOCUMENT-LINK-TO-HYPERSPEC*.
-    
-    Symbols are read in the current *PACKAGE*, which is subject to
-    *DOCUMENT-NORMALIZE-PACKAGES*.
 
 - [glossary-term] codifiable
 
@@ -1210,7 +1196,20 @@ Reader][pythonic-string-reader] can help with that.
     
     - it is at least 3 characters long and names a package or a symbol
       external to its package.
-
+    
+    Where we say that a word **names** a known reference if the word
+    matches the name of a thing being documented, or it is in the
+    hyperspec and *DOCUMENT-UPPERCASE-IS-CODE* is true, or more
+    precisely,
+    
+    - if the word matches [the object of a reference][REFERENCE-OBJECT
+      reader] being documented (see DOCUMENT and
+      COLLECT-REACHABLE-OBJECTS), or
+    
+    - the a name in the hyperspec if *DOCUMENT-LINK-TO-HYPERSPEC*.
+    
+    Symbols are read in the current *PACKAGE*, which is subject to
+    *DOCUMENT-NORMALIZE-PACKAGES*.
 
 - [variable] *DOCUMENT-DOWNCASE-UPPERCASE-CODE* NIL
 
@@ -1222,198 +1221,154 @@ Reader][pythonic-string-reader] can help with that.
 
 ### Linking to Code
 
-Before delving into the details, here is a quick summary of all
-ways of linking to code.
+In this section, we describe of all ways of linking to code
+available when *DOCUMENT-UPPERCASE-IS-CODE* is true.
 
-##### Explicit Links
-
-- `[SECTION][class]` renders as: [SECTION][class]
-  (*object + locative*)
-
-- `[see this][section class]` renders as: [see this][section class]
-  (*explicit title + reference*)
-
-Parsing of symbols relies on the current READTABLE-CASE, so usually
-their case does not matter.
-
-##### Autolinking with *DOCUMENT-UPPERCASE-IS-CODE*
-
-- `LOCATE` renders as: LOCATE (*object with a single possible locative*)
-
-- `SECTION` renders as: SECTION (*object with ambiguous locative*)
-
-- `SECTION class` renders as: SECTION class (*object followed by
-  locative*)
-
-
-- `class SECTION` renders as: class SECTION (*object following locative*)
-
-In these examples, autolinking can be prevented by preventing
-codification of uppercase symbols (see
-[*DOCUMENT-UPPERCASE-IS-CODE*][variable]).
-
-##### Autolinking in code
-
-If a single word is enclosed in backticks (i.e. it's code), then it
-is autolinked. The following examples all render as the previous
-ones except for the character case, which need not be uppercase in
-this case.
-
-```
-`locate`
-`section`
-`section` class
-class `section`
-```
-
-To prevent autolinking in the explicitly quoted case, a backslash
-can be placed right after the opening backtick.
-
-```
-`\locate`
-`\section`
-`\section` class
-class `\section`
-```
-
-Alternatively, the DISLOCATED locative may be used.
+*Note that invoking [`M-.`][@mgl-pax-navigating-in-emacs section] on
+the @OBJECT of any of the following links will disambiguate based
+the textual context, determining the locative. In a nutshell, if
+`M-.` works without popping up a list of choices, then the
+documentation will contain a single link.*
 
 - [variable] *DOCUMENT-LINK-CODE* T
 
-    When true, during the process of generating documentation for a
-    [SECTION][class], HTML anchors are added before the documentation of
-    every reference that's not to a section. Also, markdown style
-    reference links are added when a piece of inline code found in a
-    docstring refers to a symbol that's referenced by one of the
-    sections being documented.
+    Enable the various forms of links in docstrings described in
+    @MGL-PAX-LINKING-TO-CODE.
     
-    ```commonlisp
-    (defsection @foo (:export nil)
-      (foo function)
-      (bar function))
+    Let's understand the generated Markdown.
     
+    ```
     (defun foo (x)
-      "Calls `BAR` on `X`."
-      (bar x))
+      "Calls BAR."
+      (bar (x)))
     
     (defun bar (x)
-      x)
+      (1+ x))
+    
+    (document (list #'foo #'bar))
+    => ("<a id='x-28MGL-PAX-3A-3AFOO-20FUNCTION-29'></a>
+    
+    - [function] **FOO** *X*
+    
+        Calls [`BAR`][6b98].
+    <a id='x-28MGL-PAX-3A-3ABAR-20FUNCTION-29'></a>
+    
+    - [function] **BAR** *X*
+    
+      [6b98]: #x-28MGL-PAX-3A-3ABAR-20FUNCTION-29 \"(MGL-PAX::BAR FUNCTION)\"
+    ")
     ```
     
-    With the above definition the output of `(DOCUMENT @FOO :STREAM T)`
-    would include this:
-    
-    ```
-    .. <a id='x-28MGL-PAX-3AFOO-20FUNCTION-29'></a>
-    ..
-    .. - [function] **FOO** *X*
-    ..
-    ..     Calls [`BAR`][e2f2] on `X`.
-    ..
-    .. <a id='x-28MGL-PAX-3ABAR-20FUNCTION-29'></a>
-    ..
-    .. - [function] **BAR** *X*
-    ..
-    ..   [e2f2]: #x-28MGL-PAX-3ABAR-20FUNCTION-29 "(MGL-PAX:BAR FUNCTION)"
-    ```
-    
-    The line starting with `[e2f2]:` is the markdown reference link
-    definition with an url and a title. Here the url points to the HTML
+    The line starting with `[6b98]:` is the markdown reference link
+    definition with a URL and a title. Here the URL points to the HTML
     anchor of the documentation of the function `BAR`, itself an escaped
     version of the reference `(MGL-PAX:BAR FUNCTION)`, which is also the
     title.
     
-    In the docstring of `FOO`, instead of `BAR`, one can write `[bar][]`
-    or ``[`bar`][]`` as well. Since symbol names are parsed according to
-    READTABLE-CASE, character case rarely matters.
-    
-    Now, if `BAR` has multiple references with different locatives:
-    
-    ```commonlisp
-    (defsection @foo
-      (foo function)
-      (bar function)
-      (bar type))
-    
-    (defun foo (x)
-      "Calls `BAR` on `X`."
-      (bar x))
-    ```
-    
-    then documentation would link to all interpretations:
-    
-        - [function] FOO X
-        
-            Calls `BAR`([`1`][link-id-1] [`2`][link-id-2]) on `X`.
-    
-    This situation occurs in PAX with SECTION, which is both a
-    class (see [SECTION][class]) and a locative type denoted by a
-    symbol (see [SECTION][locative]). Back in the example above,
-    clearly, there is no reason to link to type `BAR`, so one may wish
-    to select the function locative. There are two ways to do that. One
-    is to specify the locative explicitly as the id of a reference link:
-    
-        "Calls [BAR][function] on X."
-    
-    However, if in the text there is a locative immediately before or
-    after the symbol, then that locative is used to narrow down the
-    range of possibilities. This is similar to what the `M-.` extension
-    does. In a nutshell, if `M-.` works without questions then the
-    documentation will contain a single link. So this also works without
-    any markup:
-    
-        "Calls function `BAR` on X."
-    
-    This last option needs backticks around the locative if it's not a
-    single symbol.
-    
-    Within the same docstring, autolinking of code without explicit
-    markdown reference links happens only for the first occurrence of
-    the same object with the same locatives except for SECTIONs and
-    GLOSSARY-TERMs. In the following docstring, only the first `FOO`
-    will be turned into a link.
-    
-        "Oh, `FOO` is safe. `FOO` is great."
-    
-    On the other hand, if different locatives are found in the vicinity
-    of two occurrences of `FOO`, then both will be linked.
-    
-        "Oh, function `FOO` is safe. Macro `FOO` is great."
-    
-    Note that *DOCUMENT-LINK-CODE* can be combined with
-    *DOCUMENT-UPPERCASE-IS-CODE* to have links generated for uppercase
-    words with no quoting required.
+    See the following sections for a description of how to use linking.
 
-- [variable] *DOCUMENT-LINK-TO-HYPERSPEC* T
+#### Specified Locative
 
-    If true, link symbols found in code to the Common Lisp Hyperspec.
-    
-    Locatives work as expected (see *DOCUMENT-LINK-CODE*).
-    FIND-IF links to FIND-IF, FUNCTION links
-    to FUNCTION and `[FUNCTION][type]` links to [FUNCTION][type].
-    
-    Autolinking to T and NIL is suppressed. If desired, use
-    `[T][]` (that links to [T][]) or `[T][constant]` (that links to
-    [T][constant]).
-    
-    Note that linking to sections in the Hyperspec is done with the CLHS
-    locative and is not subject to the value of this variable.
+The following examples all render as [DOCUMENT][function].
 
-- [variable] *DOCUMENT-HYPERSPEC-ROOT* "http://www.lispworks.com/documentation/HyperSpec/"
+- `[DOCUMENT][function]` (*object + locative, explicit link*)
 
-    A URL pointing to an installed Common Lisp Hyperspec. The default
-    value of is the canonical location.
+- `DOCUMENT function` (*object + locative, autolink*)
 
-#### Reference Resolution
+- `function DOCUMENT` (*locative + object, autolink*)
 
-Links are generated according to *DOCUMENT-LINK-CODE* in general
-but with some additional heuristics for convenience.
+The Markdown link definition (i.e. `function` between the second
+set of brackets above) needs no backticks to mark it as code.
 
-##### Filtering Multiple References
+Here and below, the @OBJECT (`DOCUMENT`) is uppercased, and we rely
+on *DOCUMENT-UPPERCASE-IS-CODE* being true. Alternatively, the
+@OBJECT could be explicitly marked up as code with a pair of
+backticks, and then its character case would likely not
+matter (subject to READTABLE-CASE).
 
-When there are multiple references to link to - as seen in the
-second example in *DOCUMENT-LINK-CODE* - some references are removed
-by the following rules.
+The link text in the above examples is `DOCUMENT`. To override it,
+this form may be used:
+
+- `[see this][document function]` renders as: [see this][document
+  function] (*title + object + locative, explicit link*)
+
+
+#### Unambiguous Unspecified Locative
+
+In the following examples, although no locative is specified,
+`DOCUMENT` names a single @OBJECT being documented, so they all
+render as [DOCUMENT][function].
+
+- `[DOCUMENT][]` (*object, explicit link*),
+
+- `DOCUMENT` (*object, autolink*).
+
+
+#### Ambiguous Unspecified Locative
+
+These examples all render as [SECTION][], linking to both
+definitions of the @OBJECT `SECTION`, the `CLASS` and the
+`LOCATIVE`.
+
+- `[SECTION][]` (*object, explicit link*)
+
+- `SECTION` (*object, autolink*)
+
+
+#### Explicit and Autolinking
+
+The examples in the previous sections are marked with *explicit
+link* or *autolink*. Explicit links are those with a Markdown
+reference link spelled out explicitly, while autolinks are those
+without.
+
+#### Preventing Autolinking
+
+In the common case, when [*DOCUMENT-UPPERCASE-IS-CODE*][] is true,
+prefixing the uppercase @WORD with a backslash prevents it from
+being codified and thus also prevents
+[autolinking][@mgl-pax-explicit-and-autolinking section] form
+kicking in. For example, `\DOCUMENT` renders as DOCUMENT. If it
+should be marked up as code but not autolinked, the backslash must
+be within backticks like this:
+
+```
+`\DOCUMENT`
+```
+
+This renders as `DOCUMENT`. Alternatively, the DISLOCATED or the
+ARGUMENT locative may be used as in `[DOCUMENT][dislocated]`.
+
+#### Suppressed Links
+
+Within the same docstring,
+[autolinking][@mgl-pax-explicit-and-autolinking section] of
+code (i.e. of something like `FOO`) is suppressed if the same
+@OBJECT was already linked to in any way. In the following
+docstring, only the first `FOO` will be turned into a link.
+
+    "`FOO` is safe. `FOO` is great."
+
+However if a @LOCATIVE was specified or found near the @OBJECT, then
+a link is always made. In the following, in both docstrings, both
+occurrences `FOO` produce links.
+
+    "`FOO` is safe. [`FOO`][macro] is great."
+    "`FOO` is safe. Macro `FOO` is great."
+
+As an exception, links with [specified][@mgl-pax-specified-locative
+section] and [unambiguous][@mgl-pax-unambiguous-locative section]
+locatives to SECTIONs and GLOSSARY-TERMs always produce a link to
+allow their titles to be displayed properly.
+
+Finally, [autolinking][@mgl-pax-explicit-and-autolinking section] to
+T or NIL is suppressed (see *DOCUMENT-LINK-TO-HYPERSPEC*).
+
+#### Filtering Ambiguous References
+
+When there are multiple references to link to - as seen in
+@MGL-PAX-AMBIGUOUS-LOCATIVE - some references are removed by the
+following rules.
 
 - References to ASDF:SYSTEMs are removed if there are other
   references which are not to ASDF:SYSTEMs. This is because system
@@ -1430,29 +1385,34 @@ by the following rules.
   methods.
 
 
-##### Local References
+#### Local References
 
 To unclutter the generated output by reducing the number of
-links, the so-called 'local' references (references to things for
-which documentation is being generated) are treated specially. In
-the following example, there are local references to the function
-FOO and its arguments, so none of them get turned into links:
+links, the so-called 'local' references (e.g. references to the very
+definition for which documentation is being generated) are treated
+specially. In the following example, there are local references to
+the function FOO and its arguments, so none of them get turned into
+links:
 
 ```common-lisp
 (defun foo (arg1 arg2)
-  "FOO takes two arguments: ARG1 and ARG2.")
+  "FOO takes two arguments: ARG1 and ARG2."
+  t)
 ```
 
-If linking was desired one could write `[FOO][function]` or `FOO
-function`, both of which result in a single link. An explicit link
-with an unspecified locative like in `[*DOCUMENT-LINK-CODE*][]`
-generates links to all references involving the *DOCUMENT-LINK-CODE*
-symbol except the local ones.
+If linking was desired one could use a
+@MGL-PAX-SPECIFIED-LOCATIVE (e.g. `[FOO][function]` or `FOO
+function`), which results in a single link. An explicit link with an
+unspecified locative like `[FOO][]` generates links to all
+references involving the `FOO` symbol except the local ones.
 
 The exact rules for local references are as follows:
 
-- Unadorned names in code (e.g. `FOO`) do not get any links if there
-  is *any* local reference with the same symbol.
+- Unless a locative is [specified][ @mgl-pax-specified-locative
+  section], no [autolinking][ @mgl-pax-explicit-and-autolinking
+  section] is performed for @OBJECTS for which there are local
+  references. For example, `FOO` does not get any links if there is
+  *any* local reference with the same @OBJECT.
 
 - With a locative specified (e.g. in the explicit link
   `[FOO][function]` or in the text `the FOO function`), a single
@@ -1461,6 +1421,28 @@ The exact rules for local references are as follows:
 - Explicit links with an unspecified locative (e.g. `[FOO][]`) are
   linked to all non-local references.
 
+
+### Linking to the Hyperspec
+
+- [variable] *DOCUMENT-LINK-TO-HYPERSPEC* T
+
+    If true, link symbols found in code to the Common Lisp Hyperspec.
+    
+    Locatives work as expected (see *DOCUMENT-LINK-CODE*).
+    FIND-IF links to FIND-IF, FUNCTION links
+    to FUNCTION and `[FUNCTION][type]` links to [FUNCTION][type].
+    
+    [Autolinking][@mgl-pax-explicit-and-autolinking section] to T and
+    NIL is suppressed. If desired, use `[T][]` (that links to [T][]) or
+    `[T][constant]` (that links to [T][constant]).
+    
+    Note that linking to sections in the Hyperspec is done with the CLHS
+    locative and is not subject to the value of this variable.
+
+- [variable] *DOCUMENT-HYPERSPEC-ROOT* "http://www.lispworks.com/documentation/HyperSpec/"
+
+    A URL pointing to an installed Common Lisp Hyperspec. The default
+    value of is the canonical location.
 
 ### Linking to Sections
 
@@ -1561,12 +1543,12 @@ HTML documentation and the default css stylesheet.
     Convenience function to generate two readme files in the directory
     holding the ASDF-SYSTEM definition.
     
-    README.md has anchors, links, inline code, and other markup added.
+    `README.md` has anchors, links, inline code, and other markup added.
     Not necessarily the easiest on the eye in an editor, but looks good
     on github.
     
-    README is optimized for reading in text format. Has no links and
-    cluttery markup.
+    `README` is optimized for reading in text format. Has no links and
+    less cluttery markup.
     
     Example usage:
     

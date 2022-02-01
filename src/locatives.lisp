@@ -1275,7 +1275,8 @@
 
 (define-locative-type dislocated ()
   "Refers to a symbol in a non-specific context. Useful for preventing
-  autolinking. For example, if there is a function called `FOO` then
+  [autolinking][@mgl-pax-explicit-and-autolinking section]. For example, if
+  there is a function called `FOO` then
 
       `FOO`
 
@@ -1283,9 +1284,8 @@
 
       [`FOO`][dislocated]
 
-  will not be. On a dislocated locative LOCATE always fails with a
-  LOCATE-ERROR condition. See @MGL-PAX-LINKING-TO-CODE for an
-  alternative method of preventing autolinking.")
+  will not be. With a dislocated locative, LOCATE always fails with a
+  LOCATE-ERROR condition. Also see @MGL-PAX-PREVENTING-AUTOLINKING.")
 
 (defmethod locate-object (symbol (locative-type (eql 'dislocated))
                           locative-args)

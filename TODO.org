@@ -46,3 +46,8 @@ Need escaping.
 That is, link to github, without documenting anything. Useful for code
 examples without actually INCLUDEing them.
 * MAYBE desuffix all lowercase suffixes?
+* don't export sections and glossary-terms?
+- We wouldn't need to worry about conflicts and prefix everything with
+  `mgl-pax-`.
+- Less clutter in pax:<TAB>
+- pax::@<tab> can still be used
