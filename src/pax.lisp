@@ -30,11 +30,12 @@
 (defsection @mgl-pax-background (:export nil :title "Background")
   "As a user, I frequently run into documentation that's incomplete
   and out of date, so I tend to stay in the editor and explore the
-  code by jumping around with SLIME's [`M-.`][SLIME-M-.]. As a library
-  author, I spend a great deal of time polishing code but precious
-  little writing documentation.
+  code by jumping around with [SLIME][slime]'s [`M-.`][slime-m-.]. As
+  a library author, I spend a great deal of time polishing code but
+  precious little writing documentation.
 
-  [SLIME-M-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions
+  [slime]: https://slime.common-lisp.dev/
+  [slime-m-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions
 
   In fact, I rarely write anything more comprehensive than docstrings
   for exported stuff. Writing docstrings feels easier than writing a
@@ -105,8 +106,8 @@
   etc, all of which should probably have their own docstrings.
 
   The primary focus is on making code easily explorable by using
-  SLIME's `M-.` (`slime-edit-definition`). See how to enable some
-  fanciness in @MGL-PAX-NAVIGATING-IN-EMACS.
+  [SLIME's `M-.`][slime-m-.] (`slime-edit-definition`). See how to
+  enable some fanciness in @MGL-PAX-NAVIGATING-IN-EMACS.
   @MGL-PAX-GENERATING-DOCUMENTATION from sections and all the
   referenced items in Markdown or HTML format is also implemented.
 

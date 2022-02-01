@@ -353,10 +353,11 @@
 
 (defun add-locative-to-source-search-list (locative)
   "Some locatives are implemented in terms of Lisp types, for which
-  Slime's `M-.` finds source code of the corresponding definition out
-  of the box. For example, SECTIONs are simply global variables. To be
-  able to list all definitions that belong to a name, we register
-  locatives to try with ADD-LOCATIVE-TO-SOURCE-SEARCH-LIST."
+  [SLIME's `M-.`][slime-m-.] finds source code of the corresponding
+  definition out of the box. For example, SECTIONs are simply global
+  variables. To be able to list all definitions that belong to a name,
+  we register locatives to try with
+  ADD-LOCATIVE-TO-SOURCE-SEARCH-LIST."
   (pushnew locative *locative-source-search-list* :test #'equal))
 
 (defmacro define-symbol-locative-type (locative-type lambda-list

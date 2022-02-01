@@ -53,4 +53,3 @@ linking failure. This should be in 3BMD.
 "
 * in html add a slight background color to inline code?
 * add symbol as an alias for dislocated?
-* uppercase SLIME, link to it

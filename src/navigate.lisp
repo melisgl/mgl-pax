@@ -3,15 +3,16 @@
 (in-readtable pythonic-string-syntax)
 
 (defsection @mgl-pax-navigating-in-emacs (:title "Navigating Sources in Emacs")
-  "Integration into SLIME's `M-.` (`slime-edit-definition`) allows one
-  to visit the source location of the thing that's identified by
-  `slime-symbol-at-point` parsed as a @WORD and the locative before or
-  after the symbol in a buffer. With this extension, if a locative is
-  the previous or the next expression around the symbol of interest,
-  then `M-.` will go straight to the definition which corresponds to
-  the locative. If that fails, `M-.` will try to find the definitions
-  in the normal way, which may involve popping up an xref buffer and
-  letting the user interactively select one of possible definitions.
+  "Integration into [SLIME's `M-.`][slime-m-.]
+  (`slime-edit-definition`) allows one to visit the source location of
+  the thing that's identified by `slime-symbol-at-point` parsed as a
+  @WORD and the locative before or after the symbol in a buffer. With
+  this extension, if a locative is the previous or the next expression
+  around the symbol of interest, then `M-.` will go straight to the
+  definition which corresponds to the locative. If that fails, `M-.`
+  will try to find the definitions in the normal way, which may
+  involve popping up an xref buffer and letting the user interactively
+  select one of possible definitions.
 
   In the following examples, when the cursor is on one of the
   characters of `FOO` or just after `FOO`, pressing `M-.` will visit

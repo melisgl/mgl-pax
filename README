@@ -39,11 +39,13 @@ for the latest version.
 
 As a user, I frequently run into documentation that's incomplete
 and out of date, so I tend to stay in the editor and explore the
-code by jumping around with SLIME's [`M-.`][SLIME-M-.]. As a library
-author, I spend a great deal of time polishing code but precious
-little writing documentation.
+code by jumping around with [SLIME][slime]'s [`M-.`][slime-m-.]. As
+a library author, I spend a great deal of time polishing code but
+precious little writing documentation.
 
-[SLIME-M-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions 
+[slime]: https://slime.common-lisp.dev/ 
+
+[slime-m-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions 
 
 In fact, I rarely write anything more comprehensive than docstrings
 for exported stuff. Writing docstrings feels easier than writing a
@@ -116,8 +118,8 @@ mix markdown docstrings with references to functions, variables,
 etc, all of which should probably have their own docstrings.
 
 The primary focus is on making code easily explorable by using
-SLIME's `M-.` (`slime-edit-definition`). See how to enable some
-fanciness in @MGL-PAX-NAVIGATING-IN-EMACS.
+[SLIME's `M-.`][slime-m-.] (`slime-edit-definition`). See how to
+enable some fanciness in @MGL-PAX-NAVIGATING-IN-EMACS.
 @MGL-PAX-GENERATING-DOCUMENTATION from sections and all the
 referenced items in Markdown or HTML format is also implemented.
 
@@ -858,15 +860,16 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
 
 ## Navigating Sources in Emacs
 
-Integration into SLIME's `M-.` (`slime-edit-definition`) allows one
-to visit the source location of the thing that's identified by
-`slime-symbol-at-point` parsed as a @WORD and the locative before or
-after the symbol in a buffer. With this extension, if a locative is
-the previous or the next expression around the symbol of interest,
-then `M-.` will go straight to the definition which corresponds to
-the locative. If that fails, `M-.` will try to find the definitions
-in the normal way, which may involve popping up an xref buffer and
-letting the user interactively select one of possible definitions.
+Integration into [SLIME's `M-.`][slime-m-.]
+(`slime-edit-definition`) allows one to visit the source location of
+the thing that's identified by `slime-symbol-at-point` parsed as a
+@WORD and the locative before or after the symbol in a buffer. With
+this extension, if a locative is the previous or the next expression
+around the symbol of interest, then `M-.` will go straight to the
+definition which corresponds to the locative. If that fails, `M-.`
+will try to find the definitions in the normal way, which may
+involve popping up an xref buffer and letting the user interactively
+select one of possible definitions.
 
 In the following examples, when the cursor is on one of the
 characters of `FOO` or just after `FOO`, pressing `M-.` will visit
