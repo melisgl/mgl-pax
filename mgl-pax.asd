@@ -45,7 +45,8 @@
   :depends-on (:mgl-pax)
   :components ((:module "src"
                 :serial t
-                :components ((:file "navigate"))))
+                :components ((:file "parse")
+                             (:file "navigate"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
 (asdf:defsystem #:mgl-pax/document

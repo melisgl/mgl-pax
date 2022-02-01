@@ -61,15 +61,15 @@ prototype, which did almost everything I wanted, was this:
   `(defun ,name () ,docstring))
 ```
 
-Armed with this `DEFSECTION`, I soon found myself organizing code
-following the flow of user level documentation and relegated
-comments to implementational details entirely. However, some
-portions of `DEFSECTION` docstrings were just listings of all the
-functions, macros and variables related to the narrative, and this
-list was effectively repeated in the DEFPACKAGE form complete with
-little comments that were like section names. A clear violation of
-[OAOO][oaoo], one of them had to go, so `DEFSECTION` got a list of
-symbols to export.
+Armed with this `DEFSECTION`, I soon found myself
+organizing code following the flow of user level documentation and
+relegated comments to implementational details entirely. However,
+some portions of `DEFSECTION` docstrings were just
+listings of all the functions, macros and variables related to the
+narrative, and this list was effectively repeated in the DEFPACKAGE
+form complete with little comments that were like section names. A
+clear violation of [OAOO][oaoo], one of them had to go, so
+`DEFSECTION` got a list of symbols to export.
 
 [oaoo]: http://c2.com/cgi/wiki?OnceAndOnlyOnce 
 
@@ -348,7 +348,7 @@ Now let's examine the most important pieces.
     The bottom line is that if you rely on DEFSECTION to do the
     exporting, then you'd better use DEFINE-PACKAGE.
 
-## Locatives and References
+### Locatives and References
 
 To [navigate with `M-.`][@MGL-PAX-NAVIGATING-IN-EMACS section]
 and to [generate documentation][@MGL-PAX-GENERATING-DOCUMENTATION
@@ -416,6 +416,38 @@ list (see DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
     elements are the *locative arguments*. See the METHOD locative or
     the LOCATIVE locative for examples of locative types with
     arguments.
+
+### Parsing
+
+- [glossary-term] word
+
+    A *word* is a string from which we want to extract an @OBJECT. When
+    [Navigating][@mgl-pax-navigating-in-emacs section], the word is
+    `slime-symbol-at-point`, when @MGL-PAX-GENERATING-DOCUMENTATION, it
+    is a non-empty string between whitespace characters in a
+    docstring.
+
+- [glossary-term] name
+
+    A *name* is a string that names an `INTERN`ed SYMBOL,
+    a PACKAGE, or an ASDF:SYSTEM, that is, a possible @OBJECT. Names are
+    constructed from @WORDs by possibly trimming leading and trailing
+    punctuation symbols and removing certain plural suffixes.
+    
+    For example, in `"X and Y must be LISTs."`, although the word is
+    `"LISTs."`, it gets trimmed to `"LISTs"`, then the plural suffix
+    `"s"` is removed to get `"LIST"`. Out of the three candidates for
+    names, `"LISTs."`, `"LISTs"`, and `"LIST"`, the ones that name
+    interned symbols and such are retained for purposes for
+    [Navigating][@mgl-pax-navigating-in-emacs section] and
+    @MGL-PAX-GENERATING-DOCUMENTATION.
+    
+    The punctuation characters for left and right trimming are `#<` and
+    `,:.>`, respectively. The plural suffixes considered are `s`, `es`,
+    `ses`, `zes`, and `ren` (all case insensitive).
+    
+    Thus `"CHILDREN"` and `"BUSES"` may have the names `"CHILD"` and
+    `"BUS"` in them.
 
 ## Locative Types
 
@@ -827,18 +859,18 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
 ## Navigating Sources in Emacs
 
 Integration into SLIME's `M-.` (`slime-edit-definition`) allows one
-to visit the source location of the thing that's identified by a
-symbol and the locative before or after the symbol in a buffer. With
-this extension, if a locative is the previous or the next expression
-around the symbol of interest, then `M-.` will go straight to the
-definition which corresponds to the locative. If that fails, `M-.`
-will try to find the definitions in the normal way, which may
-involve popping up an xref buffer and letting the user interactively
-select one of possible definitions.
+to visit the source location of the thing that's identified by
+`slime-symbol-at-point` parsed as a @WORD and the locative before or
+after the symbol in a buffer. With this extension, if a locative is
+the previous or the next expression around the symbol of interest,
+then `M-.` will go straight to the definition which corresponds to
+the locative. If that fails, `M-.` will try to find the definitions
+in the normal way, which may involve popping up an xref buffer and
+letting the user interactively select one of possible definitions.
 
-In the following examples, pressing `M-.` when the cursor is on one
-of the characters of `FOO` or just after `FOO`, will visit the
-definition of function `FOO`:
+In the following examples, when the cursor is on one of the
+characters of `FOO` or just after `FOO`, pressing `M-.` will visit
+the definition of function `FOO`:
 
     function foo
     foo function
@@ -1112,9 +1144,9 @@ Reader][pythonic-string-reader] can help with that.
 
 - [variable] *DOCUMENT-UPPERCASE-IS-CODE* T
 
-    When true, *codifiable* and *interesting* words are assumed to be
-    code as if they were marked up with backticks. For example, this
-    docstring
+    When true, @MGL-PAX-CODIFIABLE and @MGL-PAX-INTERESTING @WORDs
+    are assumed to be code as if they were marked up with backticks. For
+    example, this docstring
     
         "T PRINT CLASSes SECTION *PACKAGE* MGL-PAX ASDF
         CaMeL Capital"
@@ -1140,23 +1172,6 @@ Reader][pythonic-string-reader] can help with that.
     example looks in a docstring. Note that the backslash is discarded
     even if *DOCUMENT-UPPERCASE-IS-CODE* is false.
     
-    Now, some definitions. A word is **codifiable** iff
-    
-    - it has at least one uppercase character (e.g. not `<`, `<=` or
-      `///`), and
-    
-    - it has no lowercase characters (e.g. `T`, `*PRINT-LENGTH*`) or
-      all lowercase characters immediately follow at least two
-      consecutive uppercase characters (e.g. `CLASSes` but not
-      `Capital`).
-    
-    A word is **interesting** iff
-    
-    - it *names* a known reference, or
-    
-    - it is at least 3 characters long and names a package or a symbol
-      external to its package.
-    
     Finally, we say that a word **names** a known reference if the word
     matches the name of a thing being documented, or it is in the
     hyperspec and *DOCUMENT-UPPERCASE-IS-CODE* is true, or more
@@ -1170,6 +1185,29 @@ Reader][pythonic-string-reader] can help with that.
     
     Symbols are read in the current *PACKAGE*, which is subject to
     *DOCUMENT-NORMALIZE-PACKAGES*.
+
+- [glossary-term] codifiable
+
+    A @WORD is *codifiable* iff
+    
+    - it has at least one uppercase character (e.g. not `<`, `<=` or
+      `///`), and
+    
+    - it has no lowercase characters (e.g. `T`, `*PRINT-LENGTH*`) or
+      all lowercase characters immediately follow at least two
+      consecutive uppercase characters (e.g. `CLASSes` but not
+      `Capital`).
+
+
+- [glossary-term] interesting
+
+    A @WORD is *interesting* iff
+    
+    - it *names* a known reference, or
+    
+    - it is at least 3 characters long and names a package or a symbol
+      external to its package.
+
 
 - [variable] *DOCUMENT-DOWNCASE-UPPERCASE-CODE* NIL
 
@@ -1341,7 +1379,7 @@ Alternatively, the DISLOCATED locative may be used.
     
     Note that *DOCUMENT-LINK-CODE* can be combined with
     *DOCUMENT-UPPERCASE-IS-CODE* to have links generated for uppercase
-    names with no quoting required.
+    words with no quoting required.
 
 - [variable] *DOCUMENT-LINK-TO-HYPERSPEC* T
 

@@ -15,7 +15,6 @@
   (@mgl-pax-background section)
   (@mgl-pax-tutorial section)
   (@mgl-pax-basics section)
-  (@mgl-pax-locatives-and-references section)
   (@mgl-pax-locative-types section)
   (@mgl-pax-navigating-in-emacs section)
   (@mgl-pax-generating-documentation section)
@@ -211,7 +210,9 @@
   "Now let's examine the most important pieces."
   (defsection macro)
   (*discard-documentation-p* variable)
-  (define-package macro))
+  (define-package macro)
+  (@mgl-pax-locatives-and-references section)
+  (@mgl-pax-parsing section))
 
 (defmacro define-package (package &rest options)
   "This is like CL:DEFPACKAGE but silences warnings and errors
@@ -235,7 +236,7 @@
 
 
 (defsection @mgl-pax-locatives-and-references
-    (:title "Locatives and References")
+    (:title "Locatives and References" :export nil)
   """To [navigate with `M-.`][@MGL-PAX-NAVIGATING-IN-EMACS section]
   and to [generate documentation][@MGL-PAX-GENERATING-DOCUMENTATION
   section] we need to refer to things such as the `FOO` type or the

@@ -635,12 +635,14 @@
 
 (defsection @mgl-pax-codification (:title "Codification")
   (*document-uppercase-is-code* variable)
+  (@mgl-pax-codifiable glossary-term)
+  (@mgl-pax-interesting glossary-term)
   (*document-downcase-uppercase-code* variable))
 
 (defvar *document-uppercase-is-code* t
-  """When true, _codifiable_ and _interesting_ words are assumed to be
-  code as if they were marked up with backticks. For example, this
-  docstring
+  """When true, @MGL-PAX-CODIFIABLE and @MGL-PAX-INTERESTING @WORDs
+  are assumed to be code as if they were marked up with backticks. For
+  example, this docstring
 
       "T PRINT CLASSes SECTION *PACKAGE* MGL-PAX ASDF
       CaMeL Capital"
@@ -665,23 +667,26 @@
   The number of backslashes is doubled above because that's how the
   example looks in a docstring. Note that the backslash is discarded
   even if *DOCUMENT-UPPERCASE-IS-CODE* is false.
+  """)
 
-  Now, some definitions. A word is **codifiable** iff
+(define-glossary-term @mgl-pax-codifiable (:title "codifiable")
+  "A @WORD is _codifiable_ iff
 
   - it has at least one uppercase character (e.g. not `<`, `<=` or
     `///`), and
   - it has no lowercase characters (e.g. `\T`, `\*PRINT-LENGTH*`) or
     all lowercase characters immediately follow at least two
     consecutive uppercase characters (e.g. `\CLASSes` but not
-    `Capital`).
+    `Capital`).")
 
-  A word is **interesting** iff
+(define-glossary-term @mgl-pax-interesting (:title "interesting")
+  "A @WORD is _interesting_ iff
 
   - it _names_ a known reference, or
   - it is at least 3 characters long and names a package or a symbol
     external to its package.
 
-  Finally, we say that a word **names** a known reference if the word
+  Where we say that a word **names** a known reference if the word
   matches the name of a thing being documented, or it is in the
   hyperspec and *DOCUMENT-UPPERCASE-IS-CODE* is true, or more
   precisely,
@@ -692,14 +697,13 @@
   - the a name in the hyperspec if *DOCUMENT-LINK-TO-HYPERSPEC*.
 
   Symbols are read in the current *PACKAGE*, which is subject to
-  *DOCUMENT-NORMALIZE-PACKAGES*.
-  """)
+  *DOCUMENT-NORMALIZE-PACKAGES*.")
 
-(defun codifiable-name-p (name)
+(defun codifiable-word-p (word)
   ;; OPT
-  (and (notany #'whitespacep name)
-       (lowercase-only-in-suffixes-p name)
-       (some #'upper-case-p name)))
+  (and (notany #'whitespacep word)
+       (lowercase-only-in-suffixes-p word)
+       (some #'upper-case-p word)))
 
 (defun lowercase-only-in-suffixes-p (string)
   (let ((prev-case nil))
@@ -733,58 +737,51 @@
 
 ;;; The core of the implementation of *DOCUMENT-UPPERCASE-IS-CODE*.
 ;;;
-;;; This is called by MAP-NAMES so the return values are NEW-TREE,
+;;; This is called by MAP-WORDS so the return values are NEW-TREE,
 ;;; SLICE, N-CHARS-READ. Also called by TRANSLATE-EMPH that expects
 ;;; only a single return value: the new tree.
-(defun translate-uppercase-name (parent tree name)
+(defun translate-uppercase-word (parent tree word)
   (declare (ignore parent))
   (let ((emph (and (listp tree) (eq :emph (first tree)))))
     ;; *DOCUMENT-UPPERCASE-IS-CODE* escaping
-    (cond ((and emph (eql #\\ (alexandria:first-elt name)))
+    (cond ((and emph (eql #\\ (alexandria:first-elt word)))
            ;; E.g. "*\\DOCUMENT-NORMALIZE-PACKAGES*"
            ;; -> (:EMPH "DOCUMENT-NORMALIZE-PACKAGES")
-           (values (list `(:emph ,(subseq name 1))) t (length name)))
-          ((eql #\\ (alexandria:first-elt name))
+           (values (list `(:emph ,(subseq word 1))) t (length word)))
+          ((eql #\\ (alexandria:first-elt word))
            ;; Discard the leading backslash escape.
            ;; E.g. "\\MGL-PAX" -> "MGL-PAX"
-           (values (list (subseq name 1)) t (length name)))
+           (values (list (subseq word 1)) t (length word)))
           ((or (not *document-uppercase-is-code*)
-               (not (codifiable-name-p name)))
+               (not (codifiable-word-p word)))
            ;; Don't change anything.
            nil)
           (emph
-           (codify-uppercase-name (format nil "*~A*" name)))
+           (codify-uppercase-word (format nil "*~A*" word)))
           (t
-           (codify-uppercase-name name)))))
+           (codify-uppercase-word word)))))
 
-;;; Find the [approximately] longest substring of NAME that's
-;;; CANDIDATE-OBJECT-P. Return a 3bmd parse tree fragment with that
-;;; substring marked up as code.
+;;; Find the [approximately] longest @NAME in WORD. Return a 3bmd
+;;; parse tree fragment with that substring marked up as code and the
+;;; suffixes downcased (so that CLASSES turns into `CLASS`es).
 ;;;
 ;;; Handles the rules laid out in *DOCUMENT-UPPERCASE-IS-CODE* not
-;;; already handled in the caller TRANSLATE-UPPERCASE-NAME. Trims
+;;; already handled in the caller TRANSLATE-UPPERCASE-WORD. Trims
 ;;; separators and depluralizes.
-(defun codify-uppercase-name (name)
-  (multiple-value-bind (object object-name)
-      (find-candidate-objects name :trim t :depluralize t
-                              :only-one (constantly t))
-    (when (and object-name (interesting-object-p object object-name))
-      (let* ((substring (longest-substring object-name name))
-             (pos (search substring name :test #'char-equal)))
-        (when pos
-          (values `(,@(when (plusp pos)
-                        `(,(subseq name 0 pos)))
-                    (:code ,(maybe-downcase substring))
-                    ,@(let ((tail-pos (+ pos (length substring))))
-                        (when (< tail-pos (length name))
-                          ;; CLASSES -> `CLASS`es
-                          `(,(string-downcase (subseq name tail-pos))))))
-                  t (length name)))))))
-
-(defun longest-substring (almost-substring string)
-  (loop for end1 downfrom (length almost-substring) downto 0
-        do (when (search almost-substring string :end1 end1)
-             (return (subseq almost-substring 0 end1)))))
+(defun codify-uppercase-word (word)
+  (multiple-value-bind (object name)
+      (parse-word word :trim t :depluralize t :only-one (constantly t))
+    (when (and name (interesting-object-p object name))
+      (let ((pos (search name word :test #'char-equal)))
+        (assert pos)
+        (values `(,@(when (plusp pos)
+                      `(,(subseq word 0 pos)))
+                  (:code ,(maybe-downcase name))
+                  ,@(let ((tail-pos (+ pos (length name))))
+                      (when (< tail-pos (length word))
+                        ;; CLASSES -> `CLASS`es
+                        `(,(string-downcase (subseq word tail-pos))))))
+                t (length word))))))
 
 ;;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings and :EMPH
 ;;; (to recognize *VAR*). Also, perform consistency checking of
@@ -807,11 +804,11 @@
 (defun translate-to-code (parent tree)
   (cond ((stringp tree)
          (let ((string tree))
-           (values (map-names string
+           (values (map-words string
                               (lambda (string start end)
-                                (let ((name (subseq string start end)))
-                                  (translate-uppercase-name
-                                   parent string name))))
+                                (let ((word (subseq string start end)))
+                                  (translate-uppercase-word
+                                   parent string word))))
                    ;; don't recurse, do slice
                    nil t)))
         ((parse-tree-p tree :emph)
@@ -861,10 +858,10 @@
 
 ;;; Undo the :EMPH parsing for code references. E.g. (:EMPH "XXX") ->
 ;;; "*XXX*" if "*XXX*" is to be codified according to
-;;; CODIFY-UPPERCASE-NAME-P.
+;;; CODIFY-UPPERCASE-WORD-P.
 (defun translate-emph (parent tree)
   (if (= 2 (length tree))
-      (let ((translation (translate-uppercase-name parent tree (second tree))))
+      (let ((translation (translate-uppercase-word parent tree (second tree))))
         (if translation
             ;; Replace TREE with TRANSLATION, don't process
             ;; TRANSLATION again recursively, slice the return value
@@ -878,6 +875,7 @@
 
 
 (defvar *document-downcase-uppercase-code* nil
+  ;; FIXME
   "If true, then the names of symbols recognized as code (including
   those found if *DOCUMENT-UPPERCASE-IS-CODE*) are downcased in the
   output if they only consist of uppercase characters. If it is
@@ -1060,7 +1058,7 @@
 
   Note that *DOCUMENT-LINK-CODE* can be combined with
   *DOCUMENT-UPPERCASE-IS-CODE* to have links generated for uppercase
-  names with no quoting required.""")
+  words with no quoting required.""")
 
 (defvar *document-link-to-hyperspec* t
   "If true, link symbols found in code to the Common Lisp Hyperspec.
@@ -1110,18 +1108,18 @@
 ;;;     "SOMETHING")) :TAIL "[]"), the parse of [`SOMETHING`][].
 (defun translate-to-links (parent tree autolinked)
   (cond ((parse-tree-p tree :code)
-         (let ((name (second tree)))
-           (if (alexandria:starts-with #\\ name)
-               `(:code ,(subseq name 1))
-               (autolink parent tree name autolinked))))
+         (let ((string (second tree)))
+           (if (alexandria:starts-with #\\ string)
+               `(:code ,(subseq string 1))
+               (autolink parent tree string autolinked))))
         ((and (eq :reference-link (first tree)))
          (resolve-reflink tree))
         (t
          (assert nil))))
 
-(defun autolink (parent tree name autolinked)
+(defun autolink (parent tree word autolinked)
   (multiple-value-bind (reflinks refs)
-      (make-reflinks-to-name parent tree name)
+      (make-reflinks-to-word parent tree word)
     (let ((autolinked-key
             ;; FIXME: sort it
             refs))
@@ -1145,20 +1143,20 @@
                          (typep (resolve (first refs) :errorp nil)
                                 '(or section glossary-term)))))))))
 
-;;; Translate NAME (a string) that's part of TREE (e.g. it's "xxx"
-;;; from (:CODE "xxx") or from "xxx,yyy"), or it's constructed from
-;;; TREE (e.g. it's "*SYM*" from (:EMPH "SYM")).
-(defun make-reflinks-to-name (parent tree name)
+;;; Translate WORD that's part of TREE (e.g. it's "xxx" from (:CODE
+;;; "xxx") or from "xxx,yyy"), or it's constructed from TREE (e.g.
+;;; it's "*SYM*" from (:EMPH "SYM")).
+(defun make-reflinks-to-word (parent tree word)
   (let ((refs (references-for-ambiguous-locative
-               (find-candidate-objects name :trim nil :depluralize t)
+               (parse-word word :trim nil :depluralize t)
                (find-locatives-around parent tree))))
     (when refs
       (values (make-reflinks `(,tree) nil refs) refs))))
 
-;;; Find locatives just before or after NAME in PARENT. For example,
-;;; PARENT is (:PLAIN "See" "function" " " (:CODE "FOO")), and NAME is
+;;; Find locatives just before or after TREE in PARENT. For example,
+;;; PARENT is (:PLAIN "See" "function" " " (:CODE "FOO")), and TREE is
 ;;; (:CODE "FOO").
-(defun find-locatives-around (parent name)
+(defun find-locatives-around (parent tree)
   (let ((locatives ()))
     (labels ((try-string (string)
                (let ((locative (read-locative-from-markdown string)))
@@ -1173,18 +1171,18 @@
                      ;; "CLASS")) :DEFINITION "0524")
                      ((eq :reference-link (first element))
                       (try (first (third element)))))))
-      ;; Note that (EQ (THIRD REST) NAME) may be true multiple times,
+      ;; Note that (EQ (THIRD REST) TREE) may be true multiple times,
       ;; for example if strings are interned and "FOO" occurs multiple
       ;; times in PARENT.
       (loop for rest on parent
-            do (when (and (eq (third rest) name)
+            do (when (and (eq (third rest) tree)
                           (stringp (second rest))
                           (blankp (second rest)))
                  (try (first rest))
                  (return)))
       ;; For example, (:PLAIN "See" "the" "FOO" " " "function")
       (loop for rest on parent
-            do (when (and (eq (first rest) name)
+            do (when (and (eq (first rest) tree)
                           (stringp (second rest))
                           (blankp (second rest)))
                  (try (third rest))
@@ -1218,18 +1216,19 @@
                                    (or (null tail)
                                        (equal tail "[]"))))
           (locative (and definition (read-locative-from-markdown definition)))
-          (name (parse-tree-to-text label :deemph nil)))
+          (label-string (parse-tree-to-text label :deemph nil)))
       (if (or empty-definition-p locative)
           ;; [foo][] or [foo][function]
           (multiple-value-bind (object substring)
-              (and name (find-candidate-objects
-                         name :trim nil :depluralize t
-                         :only-one (lambda (object)
-                                     (if (eq locative 'clhs)
-                                         (find-hyperspec-id object
-                                                            :substring-match t)
-                                         (has-reference-p object)))
-                         :clhs-substring-match (eq locative 'clhs)))
+              (and label-string
+                   (parse-word
+                    label-string :trim nil :depluralize t
+                    :only-one (lambda (object)
+                                (if (eq locative 'clhs)
+                                    (find-hyperspec-id object
+                                                       :substring-match t)
+                                    (has-reference-p object)))
+                    :clhs-substring-match (eq locative 'clhs)))
             (when substring
               (values label nil object locative t)))
           ;; [see this][foo function]
@@ -1330,10 +1329,10 @@
   - Explicit links with an unspecified locative (e.g. `[FOO][]`) are
     linked to all non-local references.""")
 
-;;; A name in markdown code such as `FOO` will behave as [`FOO`][loc]
-;;; if the locative LOC is found nearby by FIND-LOCATIVES-AROUND and
-;;; it matches a known reference. Else, see %REFERENCES-FOR-OBJECT.
-;;; All returned REFERENCES are for the same object.
+;;; Markdown such as `FOO` will behave as [`FOO`][loc] if the locative
+;;; LOC is found nearby `FOO` by FIND-LOCATIVES-AROUND and it matches
+;;; a known reference. Else, see %REFERENCES-FOR-OBJECT. All returned
+;;; REFERENCES are for the same object.
 (defun references-for-ambiguous-locative (objects locatives)
   (or
    ;; Use the first object from OBJECTS with which some LOCATIVES form

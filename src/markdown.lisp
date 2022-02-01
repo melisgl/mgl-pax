@@ -53,8 +53,8 @@
 (defmacro pt-get (parse-tree attr)
   `(getf (rest ,parse-tree) ,attr))
 
-(defun code-fragment (name)
-  `(:code ,(princ-to-string name)))
+(defun code-fragment (string)
+  `(:code ,(princ-to-string string)))
 
 
 ;;;; Markdown parse tree transformation
@@ -139,10 +139,10 @@
 ;;; fragment (or NIL, if the subseq shall not be replaced), whether
 ;;; the replacement shall be sliced into the result list, and the
 ;;; number of characters replaced (may be less than (- END START),
-;;; which is assumed if this value is NIL). MAP-NAMES returns a parse
+;;; which is assumed if this value is NIL). MAP-WORDS returns a parse
 ;;; tree fragment that's a list of non-replaced parts of STRING and
 ;;; replacements (maybe sliced). Consecutive strings are concatenated.
-(defun map-names (string fn)
+(defun map-words (string fn)
   (let ((translated ())
         (i 0)
         (n (length string))
