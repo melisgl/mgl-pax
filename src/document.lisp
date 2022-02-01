@@ -1123,22 +1123,26 @@
       (make-reflinks-to-name parent tree name)
     (let ((autolinked-key
             ;; FIXME: sort it
-            refs)
-          (supressedp (and refs (let ((object (reference-object
-                                               (first refs))))
-                                  (member object '(t nil))))))
+            refs))
       (cond ((and reflinks
-                  (not supressedp)
-                  (or (not (gethash autolinked-key autolinked))
-                      ;; Replace references to sections and glossary
-                      ;; terms with their title any number of times.
-                      (and (= (length refs) 1)
-                           (typep (resolve (first refs) :errorp nil)
-                                  '(or section glossary-term)))))
+                  (not (suppressed-link-p refs autolinked-key autolinked)))
              (setf (gethash autolinked-key autolinked) t)
              (values reflinks nil t))
             (t
              tree)))))
+
+(defun suppressed-link-p (refs autolinked-key autolinked)
+  (when refs
+    ;; Relying on REFS being for the same object (see
+    ;; REFERENCES-FOR-AMBIGUOUS-LOCATIVE).
+    (let ((object (reference-object (first refs))))
+      (or (member object '(t nil))
+          (and (gethash autolinked-key autolinked)
+               ;; Replace references to sections and glossary terms
+               ;; with their title any number of times.
+               (not (and (= (length refs) 1)
+                         (typep (resolve (first refs) :errorp nil)
+                                '(or section glossary-term)))))))))
 
 ;;; Translate NAME (a string) that's part of TREE (e.g. it's "xxx"
 ;;; from (:CODE "xxx") or from "xxx,yyy"), or it's constructed from

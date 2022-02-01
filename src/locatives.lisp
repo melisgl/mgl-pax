@@ -1242,10 +1242,11 @@
     (locate-and-print-bullet 'glossary-term () symbol stream
                              :name (glossary-term-title-or-name glossary-term))
     (print-end-bullet stream)
-    (with-local-references ((list (make-reference symbol 'glossary-term)))
-      (let ((docstring (glossary-term-docstring glossary-term)))
-        (when docstring
-          (format stream "~%~A~%" (massage-docstring docstring)))))))
+    ;; Don't add a local reference for this because GLOSSARY-TERMs
+    ;; must link any number of times.
+    (let ((docstring (glossary-term-docstring glossary-term)))
+      (when docstring
+        (format stream "~%~A~%" (massage-docstring docstring))))))
 
 (defmethod canonical-reference ((glossary-term glossary-term))
   (make-reference (glossary-term-name glossary-term) 'glossary-term))

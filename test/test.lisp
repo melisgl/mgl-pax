@@ -6,10 +6,10 @@
 (eval-when (:compile-toplevel)
   (declaim (optimize (debug 3))))
 
-(defun check-document (object output)
-  (is (null (mismatch% (let ((*package* (find-package :mgl-pax-test)))
-                         (first (document object)))
-                       output))))
+(defun check-document (object expected)
+  (let ((output (let ((*package* (find-package :mgl-pax-test)))
+                  (first (document object)))))
+    (is (null (mismatch% output expected)))))
 
 (defun check-one-liner (input expected &key (format :markdown) msg)
   (let* ((*package* (find-package :mgl-pax-test))
@@ -239,7 +239,7 @@
 (defmethod test-gf ((x (eql 7))))
 
 (define-glossary-term some-term ()
-  "SOME-TERM is not a link.")
+  "SOME-TERM is a link.")
 
 (defun ->max ())
 
@@ -764,7 +764,8 @@
 (deftest test-link ()
   (test-autolink)
   (test-resolve-reflink)
-  (test-explicit-label))
+  (test-explicit-label)
+  (test-suppressed-links))
 
 
 (deftest test-autolink ()
@@ -828,6 +829,46 @@
                       "[My Title][cf05]")
     (check-downcasing (list "[`@GT-WITH-TITLE`][]" @gt-with-title)
                       "[My Title][cf05]")))
+
+
+(defun self-referencing ()
+  "This is SELF-REFERENCING."
+  ())
+
+(define-glossary-term @self-referencing-term (:title "Self-referencing Term")
+  "This is @SELF-REFERENCING-TERM.")
+
+(defsection @self-referencing (:title "Self-referencing")
+  "This is @SELF-REFERENCING.")
+
+(deftest test-suppressed-links ()
+  (check-document #'self-referencing
+                  "<a id='x-28MGL-PAX-TEST-3A-3ASELF-REFERENCING-20FUNCTION-29'></a>
+
+- [function] **SELF-REFERENCING** 
+
+    This is `SELF-REFERENCING`.
+")
+  (check-document @self-referencing-term
+                  "<a id='x-28MGL-PAX-TEST-3A-3A-40SELF-REFERENCING-TERM-20MGL-PAX-3AGLOSSARY-TERM-29'></a>
+
+- [glossary-term] **Self-referencing Term**
+
+    This is [Self-referencing Term][97fa].
+
+  [97fa]: #x-28MGL-PAX-TEST-3A-3A-40SELF-REFERENCING-TERM-20MGL-PAX-3AGLOSSARY-TERM-29 \"(MGL-PAX-TEST::@SELF-REFERENCING-TERM MGL-PAX:GLOSSARY-TERM)\"
+")
+  (let ((*document-max-table-of-contents-level* 0))
+    (check-document @self-referencing
+                    "<a id='x-28MGL-PAX-TEST-3A-40SELF-REFERENCING-20MGL-PAX-3ASECTION-29'></a>
+
+# Self-referencing
+
+###### \\[in package MGL-PAX-TEST\\]
+This is [Self-referencing][ca46].
+
+  [ca46]: #x-28MGL-PAX-TEST-3A-40SELF-REFERENCING-20MGL-PAX-3ASECTION-29 \"Self-referencing\"
+")))
 
 
 (deftest test-macro ()
