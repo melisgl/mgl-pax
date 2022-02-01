@@ -1215,7 +1215,8 @@ codification of uppercase symbols (see
 
 If a single word is enclosed in backticks (i.e. it's code), then it
 is autolinked. The following examples all render as the previous
-ones.
+ones except for the character case, which need not be uppercase in
+this case.
 
 ```
 `locate`
@@ -2527,8 +2528,8 @@ for ASDF:SYSTEM:
     Print STRING verbatim to STREAM after cleaning up indentation.
     
     Docstrings in sources are indented in various ways, which can easily
-    mess up markdown. To handle the most common cases leave the first
-    line alone, but from the rest of the lines strip the longest run of
+    mess up markdown. To handle the most common cases leave, the first
+    line alone but from the rest of the lines strip the longest run of
     leading spaces that is common to all non-blank lines.
 
 - [generic-function] FIND-SOURCE OBJECT

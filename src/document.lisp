@@ -930,7 +930,8 @@
 
   If a single word is enclosed in backticks (i.e. it's code), then it
   is autolinked. The following examples all render as the previous
-  ones.
+  ones except for the character case, which need not be uppercase in
+  this case.
 
   ```
   `locate`

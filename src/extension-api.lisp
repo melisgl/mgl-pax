@@ -196,8 +196,8 @@
   "Print STRING verbatim to STREAM after cleaning up indentation.
 
   Docstrings in sources are indented in various ways, which can easily
-  mess up markdown. To handle the most common cases leave the first
-  line alone, but from the rest of the lines strip the longest run of
+  mess up markdown. To handle the most common cases leave, the first
+  line alone but from the rest of the lines strip the longest run of
   leading spaces that is common to all non-blank lines."
   (format stream "~a~%" (massage-docstring string :indentation "")))
 

@@ -257,14 +257,11 @@
   supports disambiguation and working with things that are not
   first-class, such as types.
 
-  PAX generalizes `DOC-TYPE` to the concept of _locatives_, which may
-  also take arguments. See the METHOD locative or the LOCATIVE
-  locative for examples of locative types with arguments.
-
-  An object and a locative together are called a _reference_, and they
-  identify a single thing. [`REFERENCE`s][reference class] are actual
-  objects, but often they appear as an `(OBJECT LOCATIVE)` list (see
-  DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
+  PAX generalizes `DOC-TYPE` to the concept of @LOCATIVEs, which may
+  also take arguments. An @OBJECT and a @LOCATIVE together are called
+  a @REFERENCE, and they identify a single thing. REFERENCEs are
+  actual objects, but often they appear as an `(OBJECT LOCATIVE)`
+  list (see DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
   @MGL-PAX-LINKING-TO-CODE for the various forms possible).
 
   ```
@@ -273,13 +270,38 @@
     (foo type)
     (foo function))
   ```
+  """
+  (@reference glossary-term)
+  (@object glossary-term)
+  (@locative glossary-term))
 
-  A locative in a reference can either be a symbol or it can be a list
-  whose CAR is a symbol. In either case, the symbol is called the
-  _locative type_ while the rest of the elements are the _locative
-  arguments_. See @MGL-PAX-LOCATIVE-TYPES for the list of locative
-  types available out of the box.
-  """)
+(define-glossary-term @reference (:title "reference")
+  """A @REFERENCE is an @OBJECT plus a @LOCATIVE, and it identifies a
+  definition. For example, the symbol `FOO` as the object and the
+  symbol [`FUNCTION`][locative] as the locative together refer to the
+  global definition of the function `FOO`.
+
+  REFERENCE objects can be represented as an `(OBJECT LOCATIVE)` list
+  as in DEFSECTION entries, or textually as `"FOO function"` where
+  `FOO` is a @NAME or similar (see @MGL-PAX-CODIFICATION and
+  @MGL-PAX-LINKING-TO-CODE).""")
+
+(define-glossary-term @object (:title "object")
+  "@OBJECTs are symbols or strings which name [functions][function locative],
+  [types][type locative], [packages][package locative], etc. Together
+  with @LOCATIVEs, they form @REFERENCEs.")
+
+(define-glossary-term @locative (:title "locative")
+  "@LOCATIVEs specify a _type_ of definition such as
+  [FUNCTION][locative] or [VARIABLE][locative] and together with
+  @OBJECTs form @REFERENCEs.
+
+  A locative can be a symbol or a list whose CAR is a symbol. In
+  either case, the symbol is called the [locative
+  type][@mgl-pax-locative-types section] while the rest of the
+  elements are the _locative arguments_. See the METHOD locative or
+  the LOCATIVE locative for examples of locative types with
+  arguments.")
 
 
 (defsection @mgl-pax-locatives-and-references-api

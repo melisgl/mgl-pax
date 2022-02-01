@@ -462,7 +462,7 @@ list (see [`DEFSECTION`][2863]) or as `"OBJECT LOCATIVE"` in docstrings (see
 
 - [glossary-term] **reference**
 
-    A `@REFERENCE` is an [object][c00c] plus a [locative][c493], and it identifies a
+    A [reference][7136] is an [object][c00c] plus a [locative][c493], and it identifies a
     definition. For example, the symbol `FOO` as the object and the
     symbol [`FUNCTION`][3023] as the locative together refer to the
     global definition of the function `FOO`.
@@ -476,7 +476,7 @@ list (see [`DEFSECTION`][2863]) or as `"OBJECT LOCATIVE"` in docstrings (see
 
 - [glossary-term] **object**
 
-    `@OBJECT`s are symbols or strings which name [functions][3023],
+    [object][c00c]s are symbols or strings which name [functions][3023],
     [types][d8db], [packages][16ad], etc. Together
     with [locative][c493]s, they form [reference][7136]s.
 
@@ -484,7 +484,7 @@ list (see [`DEFSECTION`][2863]) or as `"OBJECT LOCATIVE"` in docstrings (see
 
 - [glossary-term] **locative**
 
-    `@LOCATIVE`s specify a *type* of definition such as
+    [locative][c493]s specify a *type* of definition such as
     [`FUNCTION`][3023] or [`VARIABLE`][474c] and together with
     [object][c00c]s form [reference][7136]s.
     
@@ -1397,7 +1397,8 @@ codification of uppercase symbols (see
 
 If a single word is enclosed in backticks (i.e. it's code), then it
 is autolinked. The following examples all render as the previous
-ones.
+ones except for the character case, which need not be uppercase in
+this case.
 
 ```
 `locate`
@@ -2859,8 +2860,8 @@ for [`ASDF:SYSTEM:`][90f2]
     Print `STRING` verbatim to `STREAM` after cleaning up indentation.
     
     Docstrings in sources are indented in various ways, which can easily
-    mess up markdown. To handle the most common cases leave the first
-    line alone, but from the rest of the lines strip the longest run of
+    mess up markdown. To handle the most common cases leave, the first
+    line alone but from the rest of the lines strip the longest run of
     leading spaces that is common to all non-blank lines.
 
 <a id='x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNCTION-29'></a>
