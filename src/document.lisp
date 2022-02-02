@@ -110,6 +110,7 @@
     (push link *links*)
     (setf (gethash (link-id link) *id-to-link*) link)
     (let ((object (reference-object reference)))
+      ;; OPT: separate hash table for string objects?
       (if (member (reference-locative-type reference) '(package asdf:system))
           (push link (gethash (string object) *object-to-links*))
           (push link (gethash object *object-to-links*))))))
@@ -138,20 +139,20 @@
     (if local
         (let ((local-refs (local-references-to-object object)))
           (if (eq local :include)
-              (append global-refs local-refs)
+              (nconc global-refs local-refs)
               (set-difference global-refs local-refs :test #'reference=)))
         global-refs)))
 
 (defun global-references-to-object (object)
-  (append (loop for link in (gethash object *object-to-links*)
-                for ref = (link-reference link)
-                when (reference-object= object ref)
-                  collect ref)
-          (unless (stringp object)
-            (loop for link in (gethash (string object) *object-to-links*)
-                  for ref = (link-reference link)
-                  when (reference-object= object ref)
-                    collect ref))))
+  (nconc (loop for link in (gethash object *object-to-links*)
+               for ref = (link-reference link)
+               when (reference-object= object ref)
+                 collect ref)
+         (unless (stringp object)
+           (loop for link in (gethash (string object) *object-to-links*)
+                 for ref = (link-reference link)
+                 when (reference-object= object ref)
+                   collect ref))))
 
 (defun has-global-reference-p (object)
   (or (loop for link in (gethash object *object-to-links*)
@@ -230,26 +231,50 @@
   "A URL pointing to an installed Common Lisp Hyperspec. The default
   value of is the canonical location.")
 
+(defvar *last-hyperspec-root-and-links* nil)
+
 (defun maybe-add-links-to-hyperspec ()
+  ;; Precomputing link ids assumes that new collisions are not
+  ;; possible.
+  (assert (endp *links*))
   (when *document-link-to-hyperspec*
-    (loop for (object locative url) in (hyperspec-external-references
-                                        *document-hyperspec-root*)
-          do (let ((reference (make-reference object locative)))
-               (add-link (make-link
-                          :reference reference
-                          :page url
-                          :id (hash-link
-                               ;; KLUDGE: ABCL fails the TEST-HYPERSPEC
-                               ;; test with a low-level error without
-                               ;; :CANONICALP T.
-                               (reference-to-anchor reference
-                                                    :canonicalp t)
-                               #'find-link-by-id)))))))
+    (cond ((equal (first *last-hyperspec-root-and-links*)
+                  *document-hyperspec-root*)
+           (destructuring-bind (root links references
+                                id-to-link object-to-links)
+               *last-hyperspec-root-and-links*
+             (declare (ignore root))
+             (setq *links* links
+                   *references* references
+                   ;; FIXME: COPY-HASH-TABLE is still awfully
+                   ;; expensive for short tests.
+                   *id-to-link* (alexandria:copy-hash-table id-to-link)
+                   *object-to-links* (alexandria:copy-hash-table
+                                      object-to-links))))
+          (t
+           (loop for (object locative url) in (hyperspec-external-references
+                                               *document-hyperspec-root*)
+                 do (let ((reference (make-reference object locative)))
+                      (add-link (make-link
+                                 :reference reference
+                                 :page url
+                                 :id (hash-link
+                                      ;; KLUDGE: ABCL fails the TEST-HYPERSPEC
+                                      ;; test with a low-level error without
+                                      ;; :CANONICALP T.
+                                      (reference-to-anchor reference
+                                                           :canonicalp t)
+                                      #'find-link-by-id)))))
+           (setq *last-hyperspec-root-and-links*
+                 (list *document-hyperspec-root* *links* *references*
+                       (alexandria:copy-hash-table *id-to-link*)
+                       (alexandria:copy-hash-table *object-to-links*)))))))
 
 
 (defun initialize-links (pages)
   (declare (special *document-link-to-hyperspec*)
            (special *document-hyperspec-root*))
+  (maybe-add-links-to-hyperspec)
   (loop for page in pages
         do (dolist (reference (page-references page))
              (unless (find-link reference)
@@ -257,8 +282,7 @@
                           :reference reference
                           :page page
                           :id (hash-link (reference-to-anchor reference)
-                                         #'find-link-by-id))))))
-  (maybe-add-links-to-hyperspec))
+                                         #'find-link-by-id)))))))
 
 (defvar *pages-created*)
 
@@ -1739,7 +1763,7 @@
           do (let ((hash (subseq hex 0 (min 32 i))))
                (unless (funcall detect-collision-fn hash)
                  (return-from hash-link hash))))
-    (assert nil () "MD5 collision collision detected.")))
+    (assert nil () "MD5 collision detected.")))
 
 (defun byte-array-to-hex-string (byte-array)
   (declare (type (vector (unsigned-byte 8)) byte-array))

@@ -7,7 +7,8 @@
   (declaim (optimize (debug 3))))
 
 (defun check-document (input expected)
-  (let ((output (let ((*package* (find-package :mgl-pax-test)))
+  (let ((output (let ((*package* (find-package :mgl-pax-test))
+                      (*document-hyperspec-root* "CLHS/"))
                   (first (document input)))))
     (is (null (mismatch% output expected))
         :ctx ("Input: ~S" input))))
