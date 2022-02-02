@@ -259,7 +259,6 @@
                              :footer-nl "```"))
   (collect-reachable-objects (method () (reference)))
   (locate-and-collect-reachable-objects generic-function)
-  (locate-and-collect-reachable-objects (method () (t t t)))
   (document-object (method () (reference t)))
   (locate-and-document generic-function)
   (locate-and-find-source generic-function)
@@ -275,17 +274,20 @@
   (define-definer-for-symbol-locative-type macro))
 
 (defmethod collect-reachable-objects ((reference reference))
-  "If REFERENCE can be resolved to a non-reference, call
-  COLLECT-REACHABLE-OBJECTS with it, else call
-  LOCATE-AND-COLLECT-REACHABLE-OBJECTS on the object, locative-type,
-  locative-args of REFERENCE"
-  (let ((object (resolve reference)))
-    (if (typep object 'reference)
-        (let ((locative (reference-locative reference)))
-          (locate-and-collect-reachable-objects (reference-object reference)
-                                                (locative-type locative)
-                                                (locative-args locative)))
-        (collect-reachable-objects object))))
+  "Call LOCATE-AND-COLLECT-REACHABLE-OBJECTS on the object, locative-type,
+  locative-args of REFERENCE. If there is a specialized method for it,
+  then return what it returns. If not and REFERENCE can be resolved to
+  a non-reference, call COLLECT-REACHABLE-OBJECTS with it, else return
+  NIL."
+  (let ((objects (locate-and-collect-reachable-objects
+                  (reference-object reference)
+                  (reference-locative-type reference)
+                  (reference-locative-args reference))))
+    (if (eq objects 'no-such-method)
+        (let ((object (resolve reference)))
+          (if (typep object 'reference)
+              ()
+              (collect-reachable-objects object))))))
 
 (defgeneric locate-and-collect-reachable-objects (object locative-type
                                                   locative-args)
@@ -296,10 +298,8 @@
 
 (defmethod locate-and-collect-reachable-objects (object locative-type
                                                  locative-args)
-  "This default implementation returns the empty list. This means that
-  nothing is reachable from the reference."
   (declare (ignore object locative-type locative-args))
-  ())
+  'no-such-method)
 
 (defgeneric locate-and-document (object locative-type locative-args
                                  stream)

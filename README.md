@@ -3011,10 +3011,11 @@ example of how the [`VARIABLE`][474c] locative is defined:
 
 - [method] **COLLECT-REACHABLE-OBJECTS** *(REFERENCE REFERENCE)*
 
-    If `REFERENCE` can be resolved to a non-reference, call
-    `COLLECT-REACHABLE-OBJECTS` with it, else call
-    [`LOCATE-AND-COLLECT-REACHABLE-OBJECTS`][7a11] on the object, locative-type,
-    locative-args of `REFERENCE`
+    Call [`LOCATE-AND-COLLECT-REACHABLE-OBJECTS`][7a11] on the object, locative-type,
+    locative-args of `REFERENCE`. If there is a specialized method for it,
+    then return what it returns. If not and `REFERENCE` can be resolved to
+    a non-reference, call `COLLECT-REACHABLE-OBJECTS` with it, else return
+    `NIL`.
 
 <a id='x-28MGL-PAX-3ALOCATE-AND-COLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29'></a>
 
@@ -3024,13 +3025,6 @@ example of how the [`VARIABLE`][474c] locative is defined:
     objects, this function has essentially the same purpose as its
     caller but it has different arguments to allow specializing on
     `LOCATIVE-TYPE`.
-
-<a id='x-28MGL-PAX-3ALOCATE-AND-COLLECT-REACHABLE-OBJECTS-20-28METHOD-20NIL-20-28T-20T-20T-29-29-29'></a>
-
-- [method] **LOCATE-AND-COLLECT-REACHABLE-OBJECTS** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS*
-
-    This default implementation returns the empty list. This means that
-    nothing is reachable from the reference.
 
 <a id='x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28MGL-PAX-3AREFERENCE-20T-29-29-29'></a>
 

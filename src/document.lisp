@@ -520,9 +520,10 @@
                       (link-id link)
                       (relative-page-uri-fragment (link-page link) *page*)
                       (html-safe-name anchor)
-                      (let ((object (resolve (link-reference link))))
-                        (if (typep object 'section)
-                            (section-title-or-name object)
+                      (let* ((ref (link-reference link))
+                             (locative-type (reference-locative-type ref)))
+                        (if (eq locative-type 'section)
+                            (section-title-or-name (resolve ref))
                             (princ-to-string anchor))))))))))
 
 (defun relative-page-uri-fragment (page reference-page)
@@ -1238,8 +1239,7 @@
 ;;; (REFS), return a markdown parse tree fragment to be spliced into a
 ;;; markdown parse tree.
 (defun make-reflinks (label explicit-label-p refs)
-  (let ((ref-1 (first refs))
-        (located nil))
+  (let ((ref-1 (first refs)))
     (cond ((endp refs)
            ;; All references were filtered out.
            label)
@@ -1259,20 +1259,22 @@
           ((member (reference-locative-type ref-1) '(dislocated argument))
            label)
           ;; FIXME: TITLE should be a generic function.
-          ((typep (setq located (resolve ref-1 :errorp nil)) 'section)
-           `((:reference-link
-              :label ,(if (or explicit-label-p
-                              (null (section-title located)))
-                          label
-                          `(,(section-title located)))
-              :definition ,(link-to-reference ref-1))))
-          ((typep located 'glossary-term)
-           `((:reference-link
-              :label ,(if (or explicit-label-p
-                              (null (glossary-term-title located)))
-                          label
-                          `(,(glossary-term-title located)))
-              :definition ,(link-to-reference ref-1))))
+          ((eq (reference-locative-type ref-1) 'section)
+           (let ((section (resolve ref-1 :errorp nil)))
+             `((:reference-link
+                :label ,(if (or explicit-label-p
+                                (null (section-title section)))
+                            label
+                            `(,(section-title section)))
+                :definition ,(link-to-reference ref-1)))))
+          ((eq (reference-locative-type ref-1) 'glossary-term)
+           (let ((glossary-term (resolve ref-1 :errorp nil)))
+             `((:reference-link
+                :label ,(if (or explicit-label-p
+                                (null (glossary-term-title glossary-term)))
+                            label
+                            `(,(glossary-term-title glossary-term)))
+                :definition ,(link-to-reference ref-1)))))
           (t
            `((:reference-link
               :label ,label
@@ -1902,7 +1904,6 @@
             (t
              (let* ((reference (canonical-reference object))
                     (*reference-being-documented* reference))
-               (assert (eq object (resolve reference)))
                (with-temp-output-to-page (stream (reference-page reference))
                  (when (and *document-link-code*
                             (not (typep object 'section))

@@ -2644,10 +2644,11 @@ example of how the VARIABLE locative is defined:
 
 - [method] COLLECT-REACHABLE-OBJECTS (REFERENCE REFERENCE)
 
-    If REFERENCE can be resolved to a non-reference, call
-    COLLECT-REACHABLE-OBJECTS with it, else call
-    LOCATE-AND-COLLECT-REACHABLE-OBJECTS on the object, locative-type,
-    locative-args of REFERENCE
+    Call LOCATE-AND-COLLECT-REACHABLE-OBJECTS on the object, locative-type,
+    locative-args of REFERENCE. If there is a specialized method for it,
+    then return what it returns. If not and REFERENCE can be resolved to
+    a non-reference, call COLLECT-REACHABLE-OBJECTS with it, else return
+    NIL.
 
 - [generic-function] LOCATE-AND-COLLECT-REACHABLE-OBJECTS OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
 
@@ -2655,11 +2656,6 @@ example of how the VARIABLE locative is defined:
     objects, this function has essentially the same purpose as its
     caller but it has different arguments to allow specializing on
     LOCATIVE-TYPE.
-
-- [method] LOCATE-AND-COLLECT-REACHABLE-OBJECTS OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
-
-    This default implementation returns the empty list. This means that
-    nothing is reachable from the reference.
 
 - [method] DOCUMENT-OBJECT (REFERENCE REFERENCE) STREAM
 

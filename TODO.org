@@ -45,6 +45,8 @@ Need escaping.
 * add source locative
 That is, link to github, without documenting anything. Useful for code
 examples without actually INCLUDEing them.
+* make it possible to include docstrings without documenting their owner
+This should bring us closer to literate programming.
 * MAYBE desuffix all lowercase suffixes?
 * don't export sections and glossary-terms?
 - We wouldn't need to worry about conflicts and prefix everything with

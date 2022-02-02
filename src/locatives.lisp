@@ -1054,6 +1054,20 @@
 (add-locative-to-source-search-list 'asdf:system)
 
 (defvar end-of-asdf-example)
+
+;;; In addition to the CANONICAL-REFERENCE method above, define this
+;;; as well to prevent LOCATE-CANONICAL-REFERENCE `(METHOD () (T T
+;;; T))` from trying to LOCATE the reference. This is all because
+;;; ASDF:FIND-SYSTEM is so slow.
+(defmethod locate-canonical-reference (name (locative-type (eql 'asdf:system))
+                                       locative-args)
+  (make-reference (character-string (string-downcase (string name)))
+                  'asdf:system))
+
+;; By a similar rationale, let's specialize this too.
+(defmethod locate-and-collect-reachable-objects
+    (name (locative-type (eql 'asdf:system)) locative-args)
+  ())
 
 
 ;;;; PACKAGE locative
