@@ -143,11 +143,9 @@
 ;;; tree fragment that's a list of non-replaced parts of STRING and
 ;;; replacements (maybe sliced). Consecutive strings are concatenated.
 (defun map-words (string fn)
+  (declare (type string string))
   (let ((translated ())
-        (i 0)
-        (n (length string))
-        ;; FIXME
-        (prev nil))
+        (n (length string)))
     (flet ((add (a)
              (if (and (stringp a)
                       (stringp (first translated)))
@@ -155,31 +153,26 @@
                  (setf (first translated)
                        (concatenate 'string (first translated) a))
                  (push a translated))))
-      (loop while (< i n)
-            do (let ((char (aref string i))
-                     (replacement nil)
-                     (n-chars-replaced nil)
-                     (slice nil))
-                 (when (and (not (delimiterp char))
-                            (or (null prev) (delimiterp prev)))
-                   (let ((end (or (position-if #'delimiterp string :start i)
-                                  (length string))))
-                     (multiple-value-setq (replacement slice n-chars-replaced)
-                       (funcall fn string i end))
-                     (when replacement
-                       (if slice
-                           (dolist (a replacement)
-                             (add a))
-                           (add replacement))
-                       (cond (n-chars-replaced
-                              (assert (plusp n-chars-replaced))
-                              (incf i n-chars-replaced))
-                             (t
-                              (setq i end))))))
-                 (unless replacement
-                   (add (string char))
-                   (incf i))
-                 (setq prev char))))
+      (loop for start = 0 then end
+            while (< start n)
+            for at-delimiter-p = (delimiterp (aref string start))
+            for end = (or (if at-delimiter-p
+                              (position-if-not #'delimiterp string
+                                               :start start)
+                              (position-if #'delimiterp string
+                                           :start start))
+                          n)
+            do (if at-delimiter-p
+                   (add (subseq string start end))
+                   (multiple-value-bind (replacement slice)
+                       (funcall fn string start end)
+                     (cond ((null replacement)
+                            (add (subseq string start end)))
+                           (slice
+                            (dolist (a replacement)
+                              (add a)))
+                           (t
+                            (add replacement)))))))
     (nreverse translated)))
 
 (defmacro with-colorize-silenced (() &body body)
