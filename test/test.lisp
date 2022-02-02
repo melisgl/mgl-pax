@@ -6,10 +6,11 @@
 (eval-when (:compile-toplevel)
   (declaim (optimize (debug 3))))
 
-(defun check-document (object expected)
+(defun check-document (input expected)
   (let ((output (let ((*package* (find-package :mgl-pax-test)))
-                  (first (document object)))))
-    (is (null (mismatch% output expected)))))
+                  (first (document input)))))
+    (is (null (mismatch% output expected))
+        :ctx ("Input: ~S" input))))
 
 (defun check-head (input expected &key (format :markdown) msg (n-lines 1))
   (let* ((*package* (find-package :mgl-pax-test))
@@ -31,131 +32,6 @@
 (defun internedp (name)
   (find-symbol (string name) :mgl-pax-test))
 
-
-(mgl-pax:define-locative-alias instance class)
-(mgl-pax:define-locative-alias object class)
-(mgl-pax:define-locative-alias type-of type)
-
-(defsection @test (:export nil)
-  "[*TEST-VARIABLE*][]"
-  "[`*TEST-VARIABLE*`][]"
-  "[*test-variable*][]"
-  "[`*test-variable*`][]"
-  "[mgl-pax-test::*test-variable*][]"
-  "FOO function,"
-  "function FOO,"
-  "`FOO` function,"
-  "function `FOO`,"
-  "FOO `function`,"
-  "`function` FOO,"
-  "`FOO` `function`,"
-  "`function` `FOO`,"
-  "[foo][function],"
-  "[foo][FUNCTION],"
-  "[FOO][function],"
-  "[FOO][FUNCTION],"
-  "[`foo`][function],"
-  "[`foo`][FUNCTION],"
-  "[`FOO`][function],"
-  "[`FOO`][FUNCTION],"
-
-  "FOO-A `(accessor foo)`,"
-  "`(accessor foo)` FOO-A,"
-  "`FOO-A` `(accessor foo)`,"
-  "`(accessor foo)` `FOO-A`,"
-  "[foo-a][(accessor foo)],"
-  "[foo-a][(ACCESSOR FOO)],"
-  "[FOO-A][(accessor foo)],"
-  "[FOO-A][(ACCESSOR FOO)],"
-  "[`foo-a`][(accessor foo)],"
-  "[`foo-a`][(ACCESSOR FOO)],"
-  "[`FOO-A`][(accessor foo)],"
-  "[`FOO-A`][(ACCESSOR FOO)]
-
-  ->MAX
-
-  Escaped: \\FOO [`FOO`][dislocated] *\\NAVIGATION-TEST-CASES*
-  Non escaped: FOO *TEST-VARIABLE*
-  @TEST-OTHER
-
-  This should be no link because the page of @TEST-EXAMPLES
-  has :URI-FRAGMENT NIL.
-
-  This is code: T"
-
-  "Plural uppercase ambiguous symbol: see FOOs"
-  "Plural uppercase symbol: TEST-GFs"
-  "Plural uppercase dislocated symbol: ->MAXs"
-
-  "See
-  FOO compiler-macro"
-  "See FOO
-  compiler-macro"
-  "See
-  compiler-macro FOO"
-  "See compiler-macro
-  FOO"
-  "See
-  compiler-macro 
-  FOO"
-
-  "See
-  FOO"
-
-  "```cl-transcript
-  (values (print (1+ 2)) :aaa)
-  ..
-  .. 3 
-  => 3
-  => :AAA
-  ```
-
-  ```cl-transcript
-  (values '(1 2) '(3 4))
-  ;=> (1 2)
-  ;=> (3
-  ;->  4)
-  ```
-
-  ```cl-transcript
-  (make-array 12 :initial-element 0d0)
-  => #(0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0 0.0d0
-       0.0d0)
-  ```
-
-  In documentation, when the only ambiguity is between a generic
-  function and its methods, it's resolved in favor if the gf:
-  TEST-GF."
-  (foo function)
-  (foo compiler-macro)
-  (foo class)
-  ;; aliases defined above
-  "FOO instance"
-  "and FOO object"
-  "type-of BAR"
-  (foo-a (accessor foo))
-  (bar macro)
-  (bar type)
-  (bar constant)
-  (baz type)
-  (*test-variable* variable)
-  (*some-var* (variable '*needs-markdown-escape*))
-  (some-restart restart)
-  (my-error condition)
-  (@test-examples section)
-  (@test-other section)
-  (test-gf generic-function)
-  (test-gf (method () (number)))
-  (test-gf (method () ((eql 7))))
-  (some-term glossary-term)
-  (@test-section-with-link-to-other-page-in-title section)
-  (@test-section-with-link-to-same-page-in-title section)
-  (@test-tricky-title section)
-  (@stealing-from-other-package section)
-  (function-with-optional-args function)
-  (function-with-keyword-args function)
-  (encapsulated-function function)
-  (encapsulated-generic-function generic-function))
 
 (defsection @stealing-from-other-package (:package (find-package :mgl-pax))
   (method locative))
@@ -202,8 +78,8 @@
    (w :writer foo-w)))
 (defclass unexported-class () ())
 (defvar foo-a)
-(defvar foo-b)
-(defvar foo-c)
+(defvar foo-r)
+(defvar foo-w)
 
 (defparameter *test-variable*
   '(xxx 34)
@@ -248,26 +124,6 @@
 
 (defun ->max ())
 
-(defun function-with-optional-args (x &optional o1 (o2 7))
-  (declare (ignore x o1 o2)))
-
-(defun function-with-keyword-args (x &key k1 (k2 14) (k3 21 k3p))
-  (declare (ignore x k1 k2 k3 k3p)))
-
-(when (fboundp 'encapsulated-function)
-  (untrace encapsulated-function))
-(defun encapsulated-function (x &rest args)
-  "This may be encapsulated by TRACE."
-  (declare (ignore x args))
-  nil)
-(trace encapsulated-function)
-
-(when (fboundp 'encapsulated-generic-function)
-  (untrace encapsulated-generic-function))
-(defgeneric encapsulated-generic-function (x)
-  (:documentation "This may also be encapsulated by TRACE."))
-(trace encapsulated-generic-function)
-
 (defmacro define-declaration (decl-name (decl-spec env) &body body)
   #+sbcl
   `(sb-cltl2:define-declaration ,decl-name (,decl-spec ,env)
@@ -289,8 +145,8 @@
 (defparameter *navigation-test-cases*
   '(;; @MGL-PAX-VARIABLELIKE-LOCATIVES
     (foo-a variable (defvar foo-a))
-    (foo-b variable (defvar foo-b))
-    (foo-c variable (defvar foo-c))
+    (foo-r variable (defvar foo-r))
+    (foo-w variable (defvar foo-w))
     (bar constant (defconstant bar))
     ;; @MGL-PAX-MACROLIKE-LOCATIVES
     (bar macro (defmacro bar))
@@ -482,77 +338,6 @@
 (deftest test-macro-arg-names ()
   (is (equal '(x a b c)
              (mgl-pax::macro-arg-names '((&key (x y)) (a b) &key (c d))))))
-
-
-(defparameter *baseline-dirname*
-  #-(or abcl allegro ccl clisp cmucl ecl) "baseline"
-  #+abcl "abcl-baseline"
-  #+allegro "acl-baseline"
-  #+ccl "ccl-baseline"
-  #+clisp "clisp-baseline"
-  #+cmucl "cmucl-baseline"
-  #+ecl "ecl-baseline")
-
-;;; set by test.sh
-(defvar *update-baseline* nil)
-
-(deftest test-document (format)
-  (let* ((*package* (find-package :common-lisp))
-         (*document-link-to-hyperspec* nil)
-         (outputs (write-test-document-files
-                   (asdf:system-relative-pathname :mgl-pax "test/data/tmp/")
-                   format)))
-    (is (= 4 (length outputs)))
-    ;; the default page corresponding to :STREAM is empty
-    (is (string= "" (first outputs)))
-    (is (= 2 (count-if #'pathnamep outputs)))
-    (dolist (output outputs)
-      (when (pathnamep output)
-        (let ((baseline (make-pathname
-                         :directory (substitute *baseline-dirname* "tmp"
-                                                (pathname-directory output)
-                                                :test #'equal)
-                         :defaults output)))
-          (unless (string= (alexandria:read-file-into-string baseline)
-                           (alexandria:read-file-into-string output))
-            (unless *update-baseline*
-              (restart-case
-                  ;; KLUDGE: PROGN prevents the restart from being
-                  ;; associated with the condition. Thus the restart
-                  ;; is visible when TRY resignals the condition as
-                  ;; TRY:UNHANDLED-ERROR.
-                  (progn
-                    (error "~@<Output ~S ~_differs from baseline ~S.~@:>"
-                           output baseline))
-                (update-output-file ()
-                  :report "Update output file.")))
-            (update-test-document-baseline format)))))))
-
-(defun write-test-document-files (basedir format)
-  (flet ((rebase (pathname)
-           (merge-pathnames pathname
-                            (make-pathname
-                             :type (if (eq format :markdown) "md" "html")
-                             :directory (pathname-directory basedir)))))
-    (let ((open-args '(:if-exists :supersede :ensure-directories-exist t))
-          (*document-downcase-uppercase-code* (eq format :html)))
-      (document @test
-                :pages `((:objects
-                          ,(list @test-examples)
-                          :output (nil))
-                         (:objects
-                          ,(list @test-other)
-                          :output (,(rebase "other/test-other") ,@open-args))
-                         (:objects
-                          ,(list @test)
-                          :output (,(rebase "test") ,@open-args)))
-                :format format))))
-
-(defun update-test-document-baseline (format)
-  (write-test-document-files (asdf:system-relative-pathname
-                              :mgl-pax
-                              (format nil "test/data/~A/" *baseline-dirname*))
-                             format))
 
 
 (deftest test-codify ()
@@ -930,26 +715,19 @@ This is [Self-referencing][ca46].
       "This is MY-SMAC.")
 
 (deftest test-symbol-macro ()
-  (progn;with-failure-expected ((alexandria:featurep '(:or :abcl :allegro)))
-    (is (null (mismatch% (let ((*document-max-table-of-contents-level* 0)
-                               (*document-max-numbering-level* 0)
-                               (*document-text-navigation* nil)
-                               (*document-link-sections* nil))
-                           (first (document @test-symbol-macro)))
-                         "# @TEST-SYMBOL-MACRO
-
-###### \\[in package MGL-PAX-TEST\\]
-<a id='x-28MGL-PAX-TEST-3AMY-SMAC-20MGL-PAX-3ASYMBOL-MACRO-29'></a>
+  (check-document (make-reference 'my-smac 'symbol-macro)
+                  "<a id='x-28MGL-PAX-TEST-3AMY-SMAC-20MGL-PAX-3ASYMBOL-MACRO-29'></a>
 
 - [symbol-macro] **MY-SMAC**
 
     This is `MY-SMAC`.
-")))))
+"))
 
 
 (deftest test-function ()
   (test-function/canonical-reference)
-  (test-function/arglist))
+  (test-function/arglist)
+  (test-function/encapsulated))
 
 (setf (symbol-function 'setfed-function)
       (lambda ()))
@@ -967,6 +745,43 @@ This is [Self-referencing][ca46].
   (with-failure-expected ((alexandria:featurep :ccl))
     (is (equal (mgl-pax::arglist 'function-with-fancy-args)
                '(x &optional (o 1) &key (k 2 kp))))))
+
+(when (fboundp 'encapsulated-function)
+  (untrace encapsulated-function))
+(defun encapsulated-function (x &rest args)
+  "This may be encapsulated."
+  (declare (ignore x args))
+  nil)
+(trace encapsulated-function)
+
+(when (fboundp 'encapsulated-generic-function)
+  (untrace encapsulated-generic-function))
+(defgeneric encapsulated-generic-function (x)
+  (:documentation "This may be encapsulated."))
+(trace encapsulated-generic-function)
+
+(deftest test-function/encapsulated ()
+  (let ((expected "<a id='x-28MGL-PAX-TEST-3A-3AENCAPSULATED-FUNCTION-20FUNCTION-29'></a>
+
+- [function] **ENCAPSULATED-FUNCTION** *X &REST ARGS*
+
+    This may be encapsulated.
+"))
+    (with-failure-expected ((alexandria:featurep :ecl))
+      (check-document (make-reference 'encapsulated-function 'function)
+                      expected)
+      (check-document #'encapsulated-function expected)))
+  (let ((expected "<a id='x-28MGL-PAX-TEST-3A-3AENCAPSULATED-GENERIC-FUNCTION-20GENERIC-FUNCTION-29'></a>
+
+- [generic-function] **ENCAPSULATED-GENERIC-FUNCTION** *X*
+
+    This may be encapsulated.
+"))
+    (check-document (make-reference 'encapsulated-generic-function
+                                    'generic-function)
+                    expected)
+    (with-failure-expected ((alexandria:featurep '(:or :cmucl :ecl)))
+      (check-document #'encapsulated-generic-function expected))))
 
 
 (setf (symbol-function 'setfed-generic-function)
@@ -977,6 +792,25 @@ This is [Self-referencing][ca46].
     (is (mgl-pax::reference= (canonical-reference ref) ref))))
 
 
+(deftest test-accessor ()
+  (check-head (list "FOO-A `(accessor foo)`"
+                    (make-reference 'foo-a '(accessor foo))
+                    (make-reference 'foo-a 'variable))
+              "[`FOO-A`][6483] `(accessor foo)`"))
+
+(deftest test-reader ()
+  (check-head (list "FOO-R `(reader foo)`"
+                    (make-reference 'foo-r '(reader foo))
+                    (make-reference 'foo-r 'variable))
+              "[`FOO-R`][0aab] `(reader foo)`"))
+
+(deftest test-writer ()
+  (check-head (list "FOO-W `(writer foo)`"
+                    (make-reference 'foo-w '(writer foo))
+                    (make-reference 'foo-w 'variable))
+              "[`FOO-W`][f90e] `(writer foo)`"))
+
+
 (defsection @test-method-combination ()
   (my-comb method-combination))
 
@@ -985,20 +819,13 @@ This is [Self-referencing][ca46].
 
 (deftest test-method-combination ()
   (with-failure-expected ((alexandria:featurep '(:or :abcl :allegro)))
-    (is (null (mismatch% (let ((*document-max-table-of-contents-level* 0)
-                               (*document-max-numbering-level* 0)
-                               (*document-text-navigation* nil)
-                               (*document-link-sections* nil))
-                           (first (document @test-method-combination)))
-                         "# @TEST-METHOD-COMBINATION
-
-###### \\[in package MGL-PAX-TEST\\]
-<a id='x-28MGL-PAX-TEST-3AMY-COMB-20METHOD-COMBINATION-29'></a>
+    (check-document (make-reference 'my-comb 'method-combination)
+                    "<a id='x-28MGL-PAX-TEST-3AMY-COMB-20METHOD-COMBINATION-29'></a>
 
 - [method-combination] **MY-COMB**
 
     This is `MY-COMB`.
-")))))
+")))
 
 
 (deftest test-hyperspec ()
@@ -1039,27 +866,8 @@ This is [Self-referencing][ca46].
   (check-head "[iss009][clhs]" "[iss009][eed0]"))
 
 
-(defsection @argument-test ()
-  "[PRINT][argument]
-
-   PRINT argument")
-
 (deftest test-argument ()
-  (is
-   (null
-    (mismatch%
-     (let ((*document-max-table-of-contents-level* 0)
-           (*document-max-numbering-level* 0)
-           (*document-text-navigation* nil)
-           (*document-link-sections* nil))
-       (first (document @argument-test)))
-     "# @ARGUMENT-TEST
-
-###### \\[in package MGL-PAX-TEST\\]
-`PRINT`
-
-`PRINT` argument
-"))))
+  (check-head "[PRINT][argument]" "`PRINT`"))
 
 
 (deftest test-declaration ()
@@ -1082,94 +890,65 @@ This is [Self-referencing][ca46].
               "[`XXX-RT`][9ac2]"))
 
 
-(defsection @test-package ()
-  "INTERNED-PKG-NAME"
-  "NON-INTERNED-PKG-NAME"
-  "[NON-INTERNED-PKG-NAME][]"
-  "[NON-INTERNED-PKG-NAME][package]"
-  (interned-pkg-name package)
-  (#:non-interned-pkg-name package))
-
 (defpackage interned-pkg-name)
 (defpackage #:non-interned-pkg-name)
 
 (deftest test-package ()
-  (is
-   (null
-    (mismatch%
-     (let ((*document-max-table-of-contents-level* 0)
-           (*document-max-numbering-level* 0)
-           (*document-text-navigation* nil)
-           (*document-link-sections* nil))
-       (first (document @test-package)))
-     "# @TEST-PACKAGE
-
-###### \\[in package MGL-PAX-TEST\\]
-[`INTERNED-PKG-NAME`][2509]
-
-[`NON-INTERNED-PKG-NAME`][11d0]
-
-[`NON-INTERNED-PKG-NAME`][11d0]
-
-[`NON-INTERNED-PKG-NAME`][11d0]
-
-<a id='x-28-22INTERNED-PKG-NAME-22-20PACKAGE-29'></a>
-
-- [package] **\"INTERNED-PKG-NAME\"**
-
-<a id='x-28-22NON-INTERNED-PKG-NAME-22-20PACKAGE-29'></a>
-
-- [package] **\"NON-INTERNED-PKG-NAME\"**
-
-  [11d0]: #x-28-22NON-INTERNED-PKG-NAME-22-20PACKAGE-29 \"(\\\"NON-INTERNED-PKG-NAME\\\" PACKAGE)\"
-  [2509]: #x-28-22INTERNED-PKG-NAME-22-20PACKAGE-29 \"(\\\"INTERNED-PKG-NAME\\\" PACKAGE)\"
-"))))
+  (check-head (list "INTERNED-PKG-NAME"
+                    (make-reference 'interned-pkg-name 'package))
+              "[`INTERNED-PKG-NAME`][2509]")
+  (check-head (list "NON-INTERNED-PKG-NAME"
+                    (make-reference '#:non-interned-pkg-name 'package))
+              "[`NON-INTERNED-PKG-NAME`][11d0]"))
 
-
-(defsection @test-asdf-system ()
-  "MGL-PAX/FULL"
-  "MGL-PAX/TEST"
-  "[MGL-PAX/TEST][]"
-  "[MGL-PAX/TEST][asdf:system]"
-  (mgl-pax/full asdf:system)
-  (#:mgl-pax/test asdf:system))
 
 (deftest test-asdf-system ()
   (is (find-symbol (string '#:mgl-pax/full) '#:mgl-pax-test))
   (is (null (find-symbol (string '#:mgl-pax/test) '#:mgl-pax-test)))
-  (is
-   (null
-    (mismatch%
-     (let ((*document-max-table-of-contents-level* 0)
-           (*document-max-numbering-level* 0)
-           (*document-text-navigation* nil)
-           (*document-link-sections* nil)
-           (mgl-pax::*omit-asdf-slots* t))
-       (first (document @test-asdf-system)))
-     "# @TEST-ASDF-SYSTEM
+  (check-head (list "MGL-PAX/FULL"
+                    (make-reference 'mgl-pax/full 'asdf:system))
+              "[`MGL-PAX/FULL`][0785]")
+  (check-head (list "MGL-PAX/TEST"
+                    (make-reference "mgl-pax/test" 'asdf:system))
+              "[`MGL-PAX/TEST`][4b83]"))
+
 
-###### \\[in package MGL-PAX-TEST\\]
-[`MGL-PAX/FULL`][0785]
+(mgl-pax:define-locative-alias instance class)
 
-[`MGL-PAX/TEST`][4b83]
+(deftest test-define-locative-alias ()
+  (check-head (list "SECTION instance"
+                    (make-reference 'section 'class)
+                    (make-reference 'section 'locative))
+              "[`SECTION`][aee8] instance"))
+
 
-[`MGL-PAX/TEST`][4b83]
+(deftest test-cl-transcript ()
+  (let ((input "```cl-transcript
+(print :hello)
+..
+.. :HELLO 
+=> :HELLO
+```")
+        (expected "```common-lisp
+(print :hello)
+..
+.. :HELLO 
+=> :HELLO
+```
 
-[`MGL-PAX/TEST`][4b83]
+"))
+    (check-document input expected)
+    (signals (transcription-consistency-error)
+      (document "```cl-transcript
+(print :hello)
+..
+.. :WORLD
+=> :HELLO
+```"))))
 
-## MGL-PAX/FULL ASDF System Details
-
-
-## MGL-PAX/TEST ASDF System Details
-
-
-  [0785]: #x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 \"(\\\"mgl-pax/full\\\" ASDF/SYSTEM:SYSTEM)\"
-  [4b83]: #x-28-22mgl-pax-2Ftest-22-20ASDF-2FSYSTEM-3ASYSTEM-29 \"(\\\"mgl-pax/test\\\" ASDF/SYSTEM:SYSTEM)\"
-"))))
 
 
 (deftest test-all ()
-  (test-transcribe)
   (test-navigation)
   (test-read-locative-from-string)
   (test-read-reference-from-string)
@@ -1179,10 +958,11 @@ This is [Self-referencing][ca46].
   (test-names)
   (test-downcasing)
   (test-link)
-  (test-document :markdown)
-  (test-document :html)
   (test-function)
   (test-generic-function)
+  (test-accessor)
+  (test-reader)
+  (test-writer)
   (test-macro)
   (test-symbol-macro)
   (test-method-combination)
@@ -1193,7 +973,10 @@ This is [Self-referencing][ca46].
   (test-declaration)
   (test-readtable)
   (test-package)
-  (test-asdf-system))
+  (test-asdf-system)
+  (test-define-locative-alias)
+  (test-transcribe)
+  (test-cl-transcript))
 
 (defun test (&key (debug nil) (print 't) (describe *describe*))
   ;; Bind *PACKAGE* so that names of tests printed have package names,
@@ -1210,57 +993,3 @@ This is [Self-referencing][ca46].
 
 #+nil
 (test-all)
-
-#+nil
-(is (equal
-     (let ((delimiteds ()))
-       (is (equal
-            (mgl-pax::map-names "hello world"
-                                (lambda (string start end)
-                                  (push (subseq string start end) delimiteds)
-                                  nil))
-            '("hello world")))
-       (reverse delimiteds))
-     '("hello" "world")))
-
-#+nil
-(is (equal
-     (mgl-pax::map-names "hello world"
-                         (lambda (string start end)
-                           (if (zerop start)
-                               (values "hi" nil nil)
-                               nil)))
-     '("hi world")))
-
-#+nil
-(is (equal
-     (mgl-pax::map-names "hello world"
-                         (lambda (string start end)
-                           (let ((word (subseq string start end)))
-                             (when (string= word "hello")
-                               (values "hi" nil 2)))))
-     '("hillo world")))
-
-#+nil
-(let ((words ()))
-  (is (equal
-       (mgl-pax::map-names "hello world"
-                           (lambda (string start end)
-                             (let ((word (subseq string start end)))
-                               (push word words)
-                               (when (string= word "hello")
-                                 (values "hi" nil 2)))))
-       '("hillo world")))
-  (is (equal (reverse words) '("hello" "world"))))
-
-#+nil
-(let ((words ()))
-  (is (equal
-       (mgl-pax::map-names "hello world"
-                           (lambda (string start end)
-                             (let ((word (subseq string start end)))
-                               (push word words)
-                               (when (string= word "hello")
-                                 (values "hi " nil 2)))))
-       '("hi llo world")))
-  (is (equal (reverse words) '("hello" "llo" "world"))))

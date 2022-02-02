@@ -1,10 +1,9 @@
 #!/bin/bash
 
-update_baseline="${1:-nil}"
-stop_on_failure="${2:-t}"
-debug="${3:-nil}"
-print="${4:-(quote try:unexpected)}"
-describe="${5:-(quote try:unexpected)}"
+stop_on_failure="${1:-t}"
+debug="${2:-nil}"
+print="${3:-(quote try:unexpected)}"
+describe="${4:-(quote try:unexpected)}"
 num_passes=
 num_failures=
 
@@ -32,7 +31,6 @@ function lisp_tests {
   run_test_case "lisp test suite on ${lisp_name}" $@ <<EOF
 (require :asdf)
 (asdf:load-system :mgl-pax/test)
-(setq mgl-pax-test::*update-baseline* ${update_baseline})
 (when (try:passedp (mgl-pax-test:test :debug ${debug} :print ${print}
                                       :describe ${describe}))
   (uiop/image:quit 22))

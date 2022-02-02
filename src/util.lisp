@@ -33,24 +33,18 @@
 
 ;;; Like SYMBOL-FUNCTION*, but sees through encapsulated functions.
 (defun symbol-function* (symbol)
-  #+abcl
-  (or (system::untraced-function symbol)
-      (symbol-function symbol))
-  #+ccl
-  (ccl::find-unencapsulated-definition (symbol-function symbol))
-  #+clisp
-  (or (system::get-traced-definition symbol)
-      (symbol-function symbol))
   #+cmucl
   (eval `(function ,symbol))
-  #+ecl
-  (or (find-type-in-sexp (function-lambda-expression (symbol-function symbol))
-                         'function)
-      (symbol-function symbol))
-  #+sbcl
-  (maybe-find-encapsulated-function (symbol-function symbol))
-  #-(or abcl ccl clisp cmucl ecl sbcl)
-  (symbol-function symbol))
+  #-cmucl
+  (unencapsulated-function (symbol-function symbol)))
+
+(defun unencapsulated-function (function)
+  (or #+abcl (system::untraced-function function)
+      #+ccl (ccl::find-unencapsulated-definition function)
+      #+clisp (system::get-traced-definition function)
+      #+ecl (find-type-in-sexp (function-lambda-expression function) 'function)
+      #+sbcl (maybe-find-encapsulated-function function)
+      function))
 
 #+sbcl
 ;;; Tracing typically encapsulate a function in a closure. The
@@ -76,8 +70,7 @@
            nil))))
 
 (defun function-name (function)
-  (let* (#+sbcl
-         (function (maybe-find-encapsulated-function function))
+  (let* ((function (unencapsulated-function function))
          (name #+clisp (system::function-name function)
                #-clisp (swank-backend:function-name function)))
     ;; ABCL has function names like (FOO (SYSTEM::INTERPRETED)).
@@ -86,43 +79,47 @@
         name)))
 
 (defun arglist (function-designator)
-  #+abcl
-  (multiple-value-bind (arglist foundp)
-      (extensions:arglist function-designator)
-    (cond (foundp arglist)
-          ((typep function-designator 'generic-function)
-           (mop:generic-function-lambda-list function-designator))
-          ((and (symbolp function-designator)
-                (typep (symbol-function* function-designator)
-                       'generic-function))
-           (mop:generic-function-lambda-list
-            (symbol-function* function-designator)))))
-  #+allegro
-  (handler-case
-      (let* ((symbol (if (symbolp function-designator)
-                         function-designator
-                         (function-name function-designator)))
-             (lambda-expression (ignore-errors
-                                 (function-lambda-expression
-                                  (symbol-function symbol)))))
-        (if lambda-expression
-            (second lambda-expression)
-            (excl:arglist symbol)))
-    (simple-error () :not-available))
-  #+ccl
-  (let ((arglist (swank-backend:arglist function-designator)))
-    (if (listp arglist)
-        ;; &KEY arguments are given as keywords, which screws up
-        ;; WITH-DISLOCATED-SYMBOLS when generating documentation for
-        ;; functions.
-        (mapcar (lambda (x)
-                  (if (keywordp x)
-                      (intern (string x))
-                      x))
-                arglist)
-        arglist))
-  #-(or abcl allegro ccl)
-  (swank-backend:arglist function-designator))
+  (let ((function-designator
+          (if (symbolp function-designator)
+              function-designator
+              (unencapsulated-function function-designator))))
+    #+abcl
+    (multiple-value-bind (arglist foundp)
+        (extensions:arglist function-designator)
+      (cond (foundp arglist)
+            ((typep function-designator 'generic-function)
+             (mop:generic-function-lambda-list function-designator))
+            ((and (symbolp function-designator)
+                  (typep (symbol-function* function-designator)
+                         'generic-function))
+             (mop:generic-function-lambda-list
+              (symbol-function* function-designator)))))
+    #+allegro
+    (handler-case
+        (let* ((symbol (if (symbolp function-designator)
+                           function-designator
+                           (function-name function-designator)))
+               (lambda-expression (ignore-errors
+                                   (function-lambda-expression
+                                    (symbol-function symbol)))))
+          (if lambda-expression
+              (second lambda-expression)
+              (excl:arglist symbol)))
+      (simple-error () :not-available))
+    #+ccl
+    (let ((arglist (swank-backend:arglist function-designator)))
+      (if (listp arglist)
+          ;; &KEY arguments are given as keywords, which screws up
+          ;; WITH-DISLOCATED-SYMBOLS when generating documentation for
+          ;; functions.
+          (mapcar (lambda (x)
+                    (if (keywordp x)
+                        (intern (string x))
+                        x))
+                  arglist)
+          arglist))
+    #-(or abcl allegro ccl)
+    (swank-backend:arglist function-designator)))
 
 
 (defmacro find-definition* (object name dspecs)

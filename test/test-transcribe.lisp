@@ -323,11 +323,11 @@
 
 (defparameter *transcribe-source-file*
   (asdf:system-relative-pathname
-   :mgl-pax "test/data/baseline/transcribe-source.lisp"))
+   :mgl-pax "test/data/transcribe-source.lisp"))
 
 (defparameter *transcribe-transcription-file*
   (asdf:system-relative-pathname
-   :mgl-pax "test/data/baseline/transcribe-transcription.lisp"))
+   :mgl-pax "test/data/transcribe-transcription.lisp"))
 
 (deftest test-transcribe-from-source ()
   (let ((*package* (find-package :mgl-pax-test)))

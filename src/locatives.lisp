@@ -414,7 +414,7 @@
 
 ;;; It may be that (NOT (EQ SYMBOL (FUNCTION-NAME (FUNCTION
 ;;; SYMBOL)))), perhaps due to (SETF SYMBOL-FUNCTION). Thus if we have
-;;; a REFERENCE, don' resolve it and construct using FUNCTION-NAME.
+;;; a REFERENCE, don't resolve it and construct using FUNCTION-NAME.
 (defmethod locate-canonical-reference
     (object (locative-type (eql 'function)) locative-args)
   (make-reference object (cons locative-type locative-args)))
@@ -428,7 +428,8 @@
   (make-reference object (cons locative-type locative-args)))
 
 (defmethod document-object ((function function) stream)
-  (let ((reference (canonical-reference function)))
+  (let* ((function (unencapsulated-function function))
+         (reference (canonical-reference function)))
     (print-bullet reference stream)
     (write-char #\Space stream)
     (let ((arglist (arglist function)))
@@ -1061,12 +1062,14 @@
 ;;; ASDF:FIND-SYSTEM is so slow.
 (defmethod locate-canonical-reference (name (locative-type (eql 'asdf:system))
                                        locative-args)
+  (declare (ignore locative-args))
   (make-reference (character-string (string-downcase (string name)))
                   'asdf:system))
 
 ;; By a similar rationale, let's specialize this too.
 (defmethod locate-and-collect-reachable-objects
     (name (locative-type (eql 'asdf:system)) locative-args)
+  (declare (ignore name locative-args))
   ())
 
 

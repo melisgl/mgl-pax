@@ -1895,21 +1895,17 @@
 
 (defmethod document-object :around (object stream)
   (let ((*objects-being-documented* (cons object *objects-being-documented*)))
-    (handler-bind
-        ((error (lambda (e)
-                  (warn "~@<Error ~A while documenting ~{~S~^ / ~}~:@>"
-                        e (reverse *objects-being-documented*)))))
-      (cond ((or (stringp object) (typep object 'reference))
-             (call-next-method))
-            (t
-             (let* ((reference (canonical-reference object))
-                    (*reference-being-documented* reference))
-               (with-temp-output-to-page (stream (reference-page reference))
-                 (when (and *document-link-code*
-                            (not (typep object 'section))
-                            (not (typep object 'asdf:system)))
-                   (anchor (reference-to-anchor reference) stream))
-                 (call-next-method object stream))))))))
+    (cond ((or (stringp object) (typep object 'reference))
+           (call-next-method))
+          (t
+           (let* ((reference (canonical-reference object))
+                  (*reference-being-documented* reference))
+             (with-temp-output-to-page (stream (reference-page reference))
+               (when (and *document-link-code*
+                          (not (typep object 'section))
+                          (not (typep object 'asdf:system)))
+                 (anchor (reference-to-anchor reference) stream))
+               (call-next-method object stream)))))))
 
 (defmethod document-object ((reference reference) stream)
   "If REFERENCE can be resolved to a non-reference, call
