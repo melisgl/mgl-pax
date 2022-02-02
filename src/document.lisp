@@ -488,8 +488,10 @@
                 (with-final-output-to-page (stream page)
                   (when (page-header-fn page)
                     (funcall (page-header-fn page) stream))
-                  (3bmd:parse-string-and-print-to-stream markdown-string stream
-                                                         :format format)
+                  (with-colorize-silenced ()
+                    (3bmd:parse-string-and-print-to-stream markdown-string
+                                                           stream
+                                                           :format format))
                   (when (page-footer-fn page)
                     (funcall (page-footer-fn page) stream)))))
             (push (unmake-stream-spec (page-final-stream-spec page)) outputs))
@@ -657,8 +659,9 @@
              (join-consecutive-non-blank-strings-in-parse-tree
               (3bmd-grammar:parse-doc string))))
       (with-output-to-string (out)
-        (3bmd::print-doc-to-stream-using-format (link (codify parse-tree))
-                                                out :markdown)))))
+        (with-colorize-silenced ()
+          (3bmd::print-doc-to-stream-using-format (link (codify parse-tree))
+                                                  out :markdown))))))
 
 
 (defsection @mgl-pax-codification (:title "Codification")

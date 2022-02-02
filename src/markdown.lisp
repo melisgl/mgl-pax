@@ -181,3 +181,7 @@
                    (incf i))
                  (setq prev char))))
     (nreverse translated)))
+
+(defmacro with-colorize-silenced (() &body body)
+  `(let ((*trace-output* (make-broadcast-stream)))
+     ,@body))
