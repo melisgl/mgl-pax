@@ -767,7 +767,7 @@ This is [Self-referencing][ca46].
 
     This may be encapsulated.
 "))
-    (with-failure-expected ((alexandria:featurep :ecl))
+    (with-failure-expected ((alexandria:featurep '(:or :abcl :clisp :ecl)))
       (check-document (make-reference 'encapsulated-function 'function)
                       expected)
       (check-document #'encapsulated-function expected)))
@@ -777,10 +777,12 @@ This is [Self-referencing][ca46].
 
     This may be encapsulated.
 "))
-    (check-document (make-reference 'encapsulated-generic-function
-                                    'generic-function)
-                    expected)
-    (with-failure-expected ((alexandria:featurep '(:or :cmucl :ecl)))
+    (with-failure-expected ((alexandria:featurep '(:or :abcl :clisp)))
+      (check-document (make-reference 'encapsulated-generic-function
+                                      'generic-function)
+                      expected))
+    (with-failure-expected ((alexandria:featurep
+                             '(:or :abcl :clisp :cmucl :ecl)))
       (check-document #'encapsulated-generic-function expected))))
 
 

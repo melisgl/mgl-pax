@@ -33,15 +33,19 @@
 
 ;;; Like SYMBOL-FUNCTION*, but sees through encapsulated functions.
 (defun symbol-function* (symbol)
+  #+abcl
+  (or (system::untraced-function symbol)
+      (symbol-function symbol))
+  #+clisp
+  (or (system::get-traced-definition symbol)
+      (symbol-function symbol))
   #+cmucl
   (eval `(function ,symbol))
-  #-cmucl
+  #-(or abcl cmucl clisp)
   (unencapsulated-function (symbol-function symbol)))
 
 (defun unencapsulated-function (function)
-  (or #+abcl (system::untraced-function function)
-      #+ccl (ccl::find-unencapsulated-definition function)
-      #+clisp (system::get-traced-definition function)
+  (or #+ccl (ccl::find-unencapsulated-definition function)
       #+ecl (find-type-in-sexp (function-lambda-expression function) 'function)
       #+sbcl (maybe-find-encapsulated-function function)
       function))

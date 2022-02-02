@@ -2,7 +2,7 @@
 
 stop_on_failure="${1:-t}"
 debug="${2:-nil}"
-print="${3:-(quote try:unexpected)}"
+print="${3:-(quote t)}"
 describe="${4:-(quote try:unexpected)}"
 num_passes=
 num_failures=
@@ -62,7 +62,7 @@ EOF
   run_test_case "autoload mgl-pax/navigate on ${lisp_name}" $@ <<EOF
 (asdf:load-system :mgl-pax)
 (progn
-  (mgl-pax:locate-definitions-for-emacs "mgl-pax:section" "class")
+  (mgl-pax:locate-definitions-for-emacs ())
   (uiop/image:quit 22))
 EOF
 
@@ -116,6 +116,8 @@ function run_tests {
   ${test_suite} ${lisp} ros --lisp ${lisp} run -- $@
   if ((num_failures > 0)); then
     if [ ${stop_on_failure} = "t" ]; then
+      echo "SHTEST: Aborting with ${num_failures} failures,"\
+           "${num_passes} passes."
       exit 1
     fi
   fi
@@ -123,16 +125,18 @@ function run_tests {
 
 # Most lisps take only 10s or so to run the tests. CLISP takes 4x longer. ABCL
 # is 25x slower.
-run_tests lisp_tests sbcl --noinform --disable-debugger
-run_tests lisp_tests allegro --batch --backtrace-on-error
-run_tests lisp_tests ccl-bin --batch
-run_tests lisp_tests cmu-bin -batch
-run_tests lisp_tests ecl
-run_tests lisp_tests clisp -on-error exit
-run_tests lisp_tests abcl-bin
+# run_tests lisp_tests sbcl --noinform --disable-debugger
+# run_tests lisp_tests allegro --batch --backtrace-on-error
+# run_tests lisp_tests ccl-bin --batch
+# run_tests lisp_tests cmu-bin -batch
+# run_tests lisp_tests ecl
+# run_tests lisp_tests clisp -on-error exit
+# run_tests lisp_tests abcl-bin
 # We run the autoload tests on the faster ones only.
 run_tests autoload_tests sbcl --noinform --disable-debugger
 run_tests autoload_tests allegro --batch --backtrace-on-error
 run_tests autoload_tests ccl-bin --batch
 run_tests autoload_tests cmu-bin -batch
 run_tests autoload_tests ecl
+
+echo "SHTEST: ${num_failures} failures, ${num_passes} passes."

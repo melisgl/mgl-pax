@@ -145,7 +145,8 @@
 (defun map-words (string fn)
   (declare (type string string))
   (let ((translated ())
-        (n (length string)))
+        (n (length string))
+        (start 0))
     (flet ((add (a)
              (if (and (stringp a)
                       (stringp (first translated)))
@@ -153,26 +154,26 @@
                  (setf (first translated)
                        (concatenate 'string (first translated) a))
                  (push a translated))))
-      (loop for start = 0 then end
-            while (< start n)
-            for at-delimiter-p = (delimiterp (aref string start))
-            for end = (or (if at-delimiter-p
-                              (position-if-not #'delimiterp string
-                                               :start start)
-                              (position-if #'delimiterp string
-                                           :start start))
-                          n)
-            do (if at-delimiter-p
-                   (add (subseq string start end))
-                   (multiple-value-bind (replacement slice)
-                       (funcall fn string start end)
-                     (cond ((null replacement)
-                            (add (subseq string start end)))
-                           (slice
-                            (dolist (a replacement)
-                              (add a)))
-                           (t
-                            (add replacement)))))))
+      (loop while (< start n)
+            do (let* ((at-delimiter-p (delimiterp (aref string start)))
+                      (end (or (if at-delimiter-p
+                                   (position-if-not #'delimiterp string
+                                                    :start start)
+                                   (position-if #'delimiterp string
+                                                :start start))
+                               n)))
+                 (if at-delimiter-p
+                     (add (subseq string start end))
+                     (multiple-value-bind (replacement slice)
+                         (funcall fn string start end)
+                       (cond ((null replacement)
+                              (add (subseq string start end)))
+                             (slice
+                              (dolist (a replacement)
+                                (add a)))
+                             (t
+                              (add replacement)))))
+                 (setq start end))))
     (nreverse translated)))
 
 (defmacro with-colorize-silenced (() &body body)

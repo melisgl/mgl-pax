@@ -55,3 +55,4 @@ This should bring us closer to literate programming.
 - Less clutter in pax:<TAB>
 - pax::@<tab> can still be used
 * get variable initforms from source?
+* test navigation from the emacs side
