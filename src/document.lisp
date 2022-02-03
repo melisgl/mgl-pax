@@ -91,7 +91,7 @@
   `(let ((*local-references* ())
          (*link-to-id* (make-hash-table))
          (*id-to-link* (make-hash-table :test #'equal))
-         (*object-to-links* (make-hash-table :test #'equalp)))
+         (*object-to-links* (make-hash-table :test #'equal)))
      (initialize-links ,pages)
      (locally ,@body)))
 
@@ -100,7 +100,7 @@
          (object (reference-object reference)))
     ;; OPT: separate hash table for string objects?
     (if (member (reference-locative-type reference) '(package asdf:system))
-        (push link (gethash (string object) *object-to-links*))
+        (push link (gethash (string-upcase (string object)) *object-to-links*))
         (push link (gethash object *object-to-links*)))))
 
 
@@ -133,7 +133,8 @@
                when (reference-object= object ref)
                  collect ref)
          (unless (stringp object)
-           (loop for link in (gethash (string object) *object-to-links*)
+           (loop for link in (gethash (string-upcase (string object))
+                                      *object-to-links*)
                  for ref = (link-reference link)
                  when (reference-object= object ref)
                    collect ref))))
