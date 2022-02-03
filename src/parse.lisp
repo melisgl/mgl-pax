@@ -59,10 +59,8 @@
         (names ()))
     (with-swank ()
       (swank::with-buffer-syntax (*package*)
-        (flet ((find-it (name &optional created-from)
-                 (when (and (plusp (length name))
-                            ;; No point if nothing was trimmed.
-                            (not (equalp name created-from)))
+        (flet ((find-it (name)
+                 (when (plusp (length name))
                    (multiple-value-bind (object found)
                        (namep name clhs-substring-match)
                      ;; FIXME: (SWANK::PARSE-SYMBOL "PAX:SECTION:") is
@@ -81,15 +79,21 @@
               (let* ((left-trimmed (string-left-trim left-trim word))
                      (right-trimmed (string-right-trim right-trim word))
                      (both-trimmed (string-right-trim right-trim left-trimmed)))
-                (find-it left-trimmed word)
-                (find-it right-trimmed word)
-                (find-it both-trimmed left-trimmed)
+                (unless (string= left-trimmed word)
+                  (find-it left-trimmed))
+                (unless (string= right-trimmed word)
+                  (find-it right-trimmed))
+                (unless (or (string= both-trimmed left-trimmed)
+                            (string= both-trimmed right-trimmed))
+                  (find-it both-trimmed))
                 (when depluralize
                   (dolist (depluralized (strip-plural both-trimmed))
-                    (find-it depluralized both-trimmed))))
+                    (unless (string= depluralized both-trimmed)
+                      (find-it depluralized)))))
               (when depluralize
                 (dolist (depluralized (strip-plural word))
-                  (find-it depluralized word))))))
+                  (unless (string= depluralized word)
+                    (find-it depluralized)))))))
       (unless only-one
         (values (nreverse objects) (nreverse names))))))
 
