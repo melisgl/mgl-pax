@@ -598,7 +598,7 @@ location and the docstring of the defining form is recorded (see
     Refers to a [`DEFCONSTANT`][d003]. `INITFORM`, or if not specified,
     the value of the constant is included in the documentation. The
     [`CONSTANT`][849d] locative is like the [`VARIABLE`][474c] locative, but it also checks
-    that its object is [`CONSTANTP`][3fdc4].
+    that its object is [`CONSTANTP`][3fdc].
 
 <a id='x-28MGL-PAX-3A-40MGL-PAX-MACROLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29'></a>
 
@@ -981,7 +981,7 @@ location and the docstring of the defining form is recorded (see
 
     Refers to sections in the Common Lisp hyperspec. These have no
     source location so `M-.` will not work. What works is linking. The
-    following markdown examples all produce a link to `CLHS` [`3.4`][76476], the
+    following markdown examples all produce a link to `CLHS` [`3.4`][7647], the
     section 'Lambda Lists', which is in file `03_d.htm`.
     
     ```
@@ -3241,8 +3241,8 @@ presented.
   [3e36]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009_w.htm "(\"ISSUE:AREF-1D\" MGL-PAX:CLHS)"
   [3ef0]: #x-28MGL-PAX-3A-40MGL-PAX-VARIABLELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Variables"
   [3f93]: #x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:GLOSSARY-TERM MGL-PAX:LOCATIVE)"
+  [3fdc]: http://www.lispworks.com/documentation/HyperSpec/Body/f_consta.htm "(CONSTANTP FUNCTION)"
   [3fdc]: #x-28MGL-PAX-3A-40MGL-PAX-NAVIGATING-IN-EMACS-20MGL-PAX-3ASECTION-29 "Navigating Sources in Emacs"
-  [3fdc4]: http://www.lispworks.com/documentation/HyperSpec/Body/f_consta.htm "(CONSTANTP FUNCTION)"
   [3fef]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20VARIABLE-29 "(MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE)"
   [4186]: http://www.lispworks.com/documentation/HyperSpec/Body/f_export.htm "(EXPORT FUNCTION)"
   [418f]: http://www.lispworks.com/documentation/HyperSpec/Body/e_cnd.htm "(CONDITION CONDITION)"
@@ -3293,7 +3293,7 @@ presented.
   [6ec3]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_4.htm "(DEFINE-METHOD-COMBINATION MGL-PAX:MACRO)"
   [6fcc]: #x-28MGL-PAX-3A-40MGL-PAX-TYPELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Types and Declarations"
   [7066]: #x-28MGL-PAX-3A-40MGL-PAX-AMBIGUOUS-LOCATIVE-20MGL-PAX-3ASECTION-29 "Ambiguous Unspecified Locative"
-  [76476]: http://www.lispworks.com/documentation/HyperSpec/Body/03_d.htm "(\"3.4\" MGL-PAX:CLHS)"
+  [7647]: http://www.lispworks.com/documentation/HyperSpec/Body/03_d.htm "(\"3.4\" MGL-PAX:CLHS)"
   [76b5]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "(MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE)"
   [7a11]: #x-28MGL-PAX-3ALOCATE-AND-COLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29 "(MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION)"
   [7ed5]: #x-28COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29 "(COMPILER-MACRO MGL-PAX:LOCATIVE)"

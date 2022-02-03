@@ -73,18 +73,15 @@
   ;; The markdown reference link id.
   (id nil :type string))
 
-;;; A list of LINK objects representing all possible things which may
-;;; be linked to. Bound only once (by WITH-PAGES) after pages are
-;;; created (to the list of links to all reachable references from all
-;;; the objects being documented). If a reference occurs multiple
-;;; times, earlier links (thus pages earlier in DOCUMENT's PAGES
-;;; argument) have precedence.
-(defvar *links*)
-
-;;; A list of all the references extracted from *LINKS* for
-;;; convenience.
-(defvar *references*)
+;;; A LINK-ID to LINK hash table representing all possible things
+;;; which may be linked to. Bound only once (by WITH-PAGES) after
+;;; pages are created (to the list of links to all reachable
+;;; references from all the objects being documented). If a reference
+;;; occurs multiple times, earlier links (thus pages earlier in
+;;; DOCUMENT's PAGES argument) have precedence.
 (defvar *id-to-link*)
+
+;; A hash table to support GLOBAL-REFERENCES-TO-OBJECT.
 (defvar *object-to-links*)
 
 ;;; A list of references with special rules for linking (see
@@ -93,12 +90,10 @@
 ;;; WITH-LOCAL-REFERENCES.
 (defvar *local-references*)
 
-;;; Add a LINK to *LINKS* (and a REFERENCE to *REFERENCES*) for each
-;;; reference in PAGE-REFERENCES of PAGE.
+;;; Add a LINK to *ID-TO-LINK* and *OBJECT-TO-LINKS* for each
+;;; reference in PAGE-REFERENCES of PAGES.
 (defmacro with-pages ((pages) &body body)
-  `(let ((*references* ())
-         (*local-references* ())
-         (*links* ())
+  `(let ((*local-references* ())
          (*id-to-link* (make-hash-table :test #'equal))
          (*object-to-links* (make-hash-table :test #'equalp)))
      (initialize-links ,pages)
@@ -106,8 +101,6 @@
 
 (defun add-link (link)
   (let ((reference (link-reference link)))
-    (push reference *references*)
-    (push link *links*)
     (setf (gethash (link-id link) *id-to-link*) link)
     (let ((object (reference-object reference)))
       ;; OPT: separate hash table for string objects?
@@ -129,11 +122,10 @@
 ;;; OBJECT, that is, with OBJECT as their REFERENCE-OBJECT they would
 ;;; resolve to the same thing.
 ;;;
-;;; If LOCAL is NIL, only those global references (*REFERENCES*) which
-;;; are not on *LOCAL-REFERENCES* are considered for matching. If
-;;; LOCAL is T, then only the local references are considered. If
-;;; LOCAL is :INCLUDE then both global and local references are
-;;; considered.
+;;; If LOCAL is NIL, only those global references which are not on
+;;; *LOCAL-REFERENCES* are considered for matching. If LOCAL is T,
+;;; then only the local references are considered. If LOCAL is
+;;; :INCLUDE then both global and local references are considered.
 (defun references-to-object (object &key local)
   (let ((global-refs (global-references-to-object object)))
     (if local
@@ -162,6 +154,16 @@
         (loop for link in (gethash (string object) *object-to-links*)
               for ref = (link-reference link)
                 thereis (reference-object= object ref)))))
+
+(defun global-reference-p (reference)
+  (let ((object (reference-object reference)))
+    (or (loop for link in (gethash object *object-to-links*)
+              for ref = (link-reference link)
+                thereis (reference= reference ref))
+        (unless (stringp object)
+          (loop for link in (gethash (string object) *object-to-links*)
+                for ref = (link-reference link)
+                  thereis (reference= reference ref))))))
 
 (defun local-references-to-object (object)
   (remove-if-not (lambda (ref)
@@ -236,19 +238,16 @@
 (defun maybe-add-links-to-hyperspec ()
   ;; Precomputing link ids assumes that new collisions are not
   ;; possible.
-  (assert (endp *links*))
+  (assert (zerop (hash-table-count *id-to-link*)))
   (when *document-link-to-hyperspec*
     (cond ((equal (first *last-hyperspec-root-and-links*)
                   *document-hyperspec-root*)
-           (destructuring-bind (root links references
-                                id-to-link object-to-links)
+           (destructuring-bind (root id-to-link object-to-links)
                *last-hyperspec-root-and-links*
              (declare (ignore root))
-             (setq *links* links
-                   *references* references
-                   ;; FIXME: COPY-HASH-TABLE is still awfully
-                   ;; expensive for short tests.
-                   *id-to-link* (alexandria:copy-hash-table id-to-link)
+             ;; FIXME: COPY-HASH-TABLE is still awfully expensive for
+             ;; short tests.
+             (setq *id-to-link* (alexandria:copy-hash-table id-to-link)
                    *object-to-links* (alexandria:copy-hash-table
                                       object-to-links))))
           (t
@@ -266,7 +265,7 @@
                                                            :canonicalp t)
                                       #'find-link-by-id)))))
            (setq *last-hyperspec-root-and-links*
-                 (list *document-hyperspec-root* *links* *references*
+                 (list *document-hyperspec-root*
                        (alexandria:copy-hash-table *id-to-link*)
                        (alexandria:copy-hash-table *object-to-links*)))))))
 

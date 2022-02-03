@@ -877,13 +877,10 @@
                (let ((name (escape-markdown (prin1-to-string class))))
                  (unless (zerop i)
                    (format stream " "))
-                 (if (find-known-reference reference)
+                 (if (global-reference-p reference)
                      (format stream "[~A][~A]" name
                              (link-to-reference reference))
                      (format stream "~A" name)))))))
-
-(defun find-known-reference (reference)
-  (find reference *references* :test #'reference=))
 
 (defmethod locate-and-find-source
     (symbol (locative-type (eql 'class)) locative-args)
