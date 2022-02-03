@@ -847,13 +847,13 @@ This is [Self-referencing][ca46].
   (check-head "`A.1`" "`A.1`")
   (check-head "CLHS A.1" "`CLHS` A.1")
   (check-head "CLHS 3.4" "`CLHS` 3.4")
-  (check-head "CLHS `3.4`" "`CLHS` [`3.4`][76476]")
-  (check-head "`3.4` CLHS" "[`3.4`][76476] `CLHS`")
-  (check-head "[3.4][]" "[3.4][76476]")
-  (check-head "[`3.4`][]" "[`3.4`][76476]")
-  (check-head "[3.4][CLHS]" "[3.4][76476]")
-  (check-head "[Lambda Lists][clhs]" "[Lambda Lists][76476]")
-  (check-head "[03_d][clhs]" "[03\\_d][76476]"))
+  (check-head "CLHS `3.4`" "`CLHS` [`3.4`][7647]")
+  (check-head "`3.4` CLHS" "[`3.4`][7647] `CLHS`")
+  (check-head "[3.4][]" "[3.4][7647]")
+  (check-head "[`3.4`][]" "[`3.4`][7647]")
+  (check-head "[3.4][CLHS]" "[3.4][7647]")
+  (check-head "[Lambda Lists][clhs]" "[Lambda Lists][7647]")
+  (check-head "[03_d][clhs]" "[03\\_d][7647]"))
 
 
 (deftest test-clhs-issue ()

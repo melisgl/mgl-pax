@@ -69,19 +69,14 @@
 ;;; the hyperspec.
 (defstruct link
   (reference nil :type reference)
-  (page nil :type (or page string))
-  ;; The markdown reference link id.
-  (id nil :type string))
+  (page nil :type (or page string)))
 
-;;; A LINK-ID to LINK hash table representing all possible things
-;;; which may be linked to. Bound only once (by WITH-PAGES) after
-;;; pages are created (to the list of links to all reachable
-;;; references from all the objects being documented). If a reference
-;;; occurs multiple times, earlier links (thus pages earlier in
-;;; DOCUMENT's PAGES argument) have precedence.
-(defvar *id-to-link*)
-
-;; A hash table to support GLOBAL-REFERENCES-TO-OBJECT.
+;;; A hash table mapping REFERENCE-OBJECTs to LINKs, representing all
+;;; possible things which may be linked to. Bound only once (by
+;;; WITH-PAGES) after pages are created (to the list of links to all
+;;; reachable references from all the objects being documented). If a
+;;; reference occurs multiple times, earlier links (thus pages earlier
+;;; in DOCUMENT's PAGES argument) have precedence.
 (defvar *object-to-links*)
 
 ;;; A list of references with special rules for linking (see
@@ -90,33 +85,30 @@
 ;;; WITH-LOCAL-REFERENCES.
 (defvar *local-references*)
 
-;;; Add a LINK to *ID-TO-LINK* and *OBJECT-TO-LINKS* for each
-;;; reference in PAGE-REFERENCES of PAGES.
+;;; Add a LINK to *OBJECT-TO-LINKS* for each reference in
+;;; PAGE-REFERENCES of PAGES.
 (defmacro with-pages ((pages) &body body)
   `(let ((*local-references* ())
+         (*link-to-id* (make-hash-table))
          (*id-to-link* (make-hash-table :test #'equal))
          (*object-to-links* (make-hash-table :test #'equalp)))
      (initialize-links ,pages)
      (locally ,@body)))
 
 (defun add-link (link)
-  (let ((reference (link-reference link)))
-    (setf (gethash (link-id link) *id-to-link*) link)
-    (let ((object (reference-object reference)))
-      ;; OPT: separate hash table for string objects?
-      (if (member (reference-locative-type reference) '(package asdf:system))
-          (push link (gethash (string object) *object-to-links*))
-          (push link (gethash object *object-to-links*))))))
+  (let* ((reference (link-reference link))
+         (object (reference-object reference)))
+    ;; OPT: separate hash table for string objects?
+    (if (member (reference-locative-type reference) '(package asdf:system))
+        (push link (gethash (string object) *object-to-links*))
+        (push link (gethash object *object-to-links*)))))
+
 
-(defun find-link-by-id (id)
-  (gethash id *id-to-link*))
+;;;; Querying global and local references
 
 (defun find-link (reference)
   (find reference (gethash (reference-object reference) *object-to-links*)
         :key #'link-reference :test #'reference=))
-
-
-;;;; Querying global and local references
 
 ;;; Return a list of all REFERENCES whose REFERENCE-OBJECT matches
 ;;; OBJECT, that is, with OBJECT as their REFERENCE-OBJECT they would
@@ -180,10 +172,8 @@
 
 ;;; Return the unescaped name of the HTML anchor for REFERENCE. See
 ;;; HTML-SAFE-NAME.
-(defun reference-to-anchor (reference &key canonicalp)
-  (let ((reference (if canonicalp
-                       reference
-                       (canonical-reference reference))))
+(defun reference-to-anchor (reference)
+  (let ((reference (canonical-reference reference)))
     (with-standard-io-syntax*
       (prin1-to-string (list (reference-object reference)
                              (reference-locative reference))))))
@@ -198,7 +188,27 @@
                    (and (page-uri-fragment *page*)
                         (page-uri-fragment (link-page link)))))
       (setf (gethash link (page-used-links *page*)) t)
-      (format nil "~A" (link-id link)))))
+      (format nil "~A" (ensure-link-id link)))))
+
+;;; Link ids are short hashes, and they go into markdown reference
+;;; links. Due to possible collisions they are context dependent, so
+;;; to keep LINKs immutable ids are in this hash table.
+(defvar *link-to-id*)
+;;; A LINK-ID to LINK hash table for MD5 collision detection.
+(defvar *id-to-link*)
+
+(defun link-id (link)
+  (gethash link *link-to-id*))
+
+(defun ensure-link-id (link)
+  (or (gethash link *link-to-id*)
+      (let ((id (hash-link (reference-to-anchor (link-reference link))
+                           #'find-link-by-id)))
+        (setf (gethash id *id-to-link*) link)
+        (setf (gethash link *link-to-id*) id))))
+
+(defun find-link-by-id (id)
+  (gethash id *id-to-link*))
 
 (defun link-used-on-current-page-p (link)
   (gethash link (page-used-links *page*)))
@@ -238,35 +248,25 @@
 (defun maybe-add-links-to-hyperspec ()
   ;; Precomputing link ids assumes that new collisions are not
   ;; possible.
-  (assert (zerop (hash-table-count *id-to-link*)))
+  (assert (zerop (hash-table-count *object-to-links*)))
   (when *document-link-to-hyperspec*
     (cond ((equal (first *last-hyperspec-root-and-links*)
                   *document-hyperspec-root*)
-           (destructuring-bind (root id-to-link object-to-links)
+           (destructuring-bind (root object-to-links)
                *last-hyperspec-root-and-links*
              (declare (ignore root))
              ;; FIXME: COPY-HASH-TABLE is still awfully expensive for
              ;; short tests.
-             (setq *id-to-link* (alexandria:copy-hash-table id-to-link)
-                   *object-to-links* (alexandria:copy-hash-table
+             (setq *object-to-links* (alexandria:copy-hash-table
                                       object-to-links))))
           (t
            (loop for (object locative url) in (hyperspec-external-references
                                                *document-hyperspec-root*)
                  do (let ((reference (make-reference object locative)))
-                      (add-link (make-link
-                                 :reference reference
-                                 :page url
-                                 :id (hash-link
-                                      ;; KLUDGE: ABCL fails the TEST-HYPERSPEC
-                                      ;; test with a low-level error without
-                                      ;; :CANONICALP T.
-                                      (reference-to-anchor reference
-                                                           :canonicalp t)
-                                      #'find-link-by-id)))))
+                      (add-link (make-link :reference reference
+                                           :page url))))
            (setq *last-hyperspec-root-and-links*
                  (list *document-hyperspec-root*
-                       (alexandria:copy-hash-table *id-to-link*)
                        (alexandria:copy-hash-table *object-to-links*)))))))
 
 
@@ -277,11 +277,8 @@
   (loop for page in pages
         do (dolist (reference (page-references page))
              (unless (find-link reference)
-               (add-link (make-link
-                          :reference reference
-                          :page page
-                          :id (hash-link (reference-to-anchor reference)
-                                         #'find-link-by-id)))))))
+               (add-link (make-link :reference reference
+                                    :page page))))))
 
 (defvar *pages-created*)
 
