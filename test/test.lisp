@@ -926,7 +926,8 @@ This is [Self-referencing][ca46].
 
 
 (deftest test-cl-transcript ()
-  (let ((input "```cl-transcript
+  (let ((*document-hyperspec-root* "CLHS/")
+        (input "```cl-transcript
 (print :hello)
 ..
 .. :HELLO 

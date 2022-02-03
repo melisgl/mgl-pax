@@ -71,13 +71,25 @@
   (reference nil :type reference)
   (page nil :type (or page string)))
 
-;;; A hash table mapping REFERENCE-OBJECTs to LINKs, representing all
-;;; possible things which may be linked to. Bound only once (by
-;;; WITH-PAGES) after pages are created (to the list of links to all
-;;; reachable references from all the objects being documented). If a
-;;; reference occurs multiple times, earlier links (thus pages earlier
-;;; in DOCUMENT's PAGES argument) have precedence.
-(defvar *object-to-links*)
+;;; A list of hash tables mapping REFERENCE-OBJECTs to LINKs,
+;;; representing all possible things which may be linked to. Bound
+;;; only once (by WITH-PAGES) after pages are created (to the list of
+;;; links to all reachable references from all the objects being
+;;; documented). If a reference occurs multiple times, earlier links
+;;; (thus pages earlier in DOCUMENT's PAGES argument) have precedence.
+(defvar *object-to-links-maps*)
+;;; A list of EQ hash tables for symbol objects.
+(defvar *symbol-to-links-maps*)
+
+(defun guaranteed-links (object)
+  (and (symbolp object)
+       (loop for symbol-to-links in *symbol-to-links-maps*
+             append (gethash object symbol-to-links))))
+
+(defun possible-links (object)
+  (let ((key (string-upcase (string object))))
+    (loop for object-to-links in *object-to-links-maps*
+          append (gethash key object-to-links))))
 
 ;;; A list of references with special rules for linking (see
 ;;; @MGL-PAX-LOCAL-REFERENCES). The reference being documented is
@@ -85,30 +97,35 @@
 ;;; WITH-LOCAL-REFERENCES.
 (defvar *local-references*)
 
-;;; Add a LINK to *OBJECT-TO-LINKS* for each reference in
+;;; Add a LINK to *OBJECT-TO-LINKS-MAPS* for each reference in
 ;;; PAGE-REFERENCES of PAGES.
 (defmacro with-pages ((pages) &body body)
-  `(let ((*local-references* ())
+  `(let ((*object-to-links-maps* (list (make-hash-table :test #'equal)))
+         (*symbol-to-links-maps* (list (make-hash-table)))
+         (*local-references* ())
          (*link-to-id* (make-hash-table))
-         (*id-to-link* (make-hash-table :test #'equal))
-         (*object-to-links* (make-hash-table :test #'equal)))
+         (*id-to-link* (make-hash-table :test #'equal)))
      (initialize-links ,pages)
      (locally ,@body)))
 
 (defun add-link (link)
   (let* ((reference (link-reference link))
          (object (reference-object reference)))
-    ;; OPT: separate hash table for string objects?
-    (if (member (reference-locative-type reference) '(package asdf:system))
-        (push link (gethash (string-upcase (string object)) *object-to-links*))
-        (push link (gethash object *object-to-links*)))))
+    (if (or (member (reference-locative-type reference) '(package asdf:system))
+            (not (symbolp object)))
+        (push link (gethash (string-upcase (string object))
+                            (first *object-to-links-maps*)))
+        (push link (gethash object (first *symbol-to-links-maps*))))))
 
 
 ;;;; Querying global and local references
 
 (defun find-link (reference)
-  (find reference (gethash (reference-object reference) *object-to-links*)
-        :key #'link-reference :test #'reference=))
+  (let ((object (reference-object reference)))
+    (or (find reference (guaranteed-links object)
+              :key #'link-reference :test #'reference=)
+        (find reference (possible-links object)
+              :key #'link-reference :test #'reference=))))
 
 ;;; Return a list of all REFERENCES whose REFERENCE-OBJECT matches
 ;;; OBJECT, that is, with OBJECT as their REFERENCE-OBJECT they would
@@ -128,35 +145,28 @@
         global-refs)))
 
 (defun global-references-to-object (object)
-  (nconc (loop for link in (gethash object *object-to-links*)
-               for ref = (link-reference link)
-               when (reference-object= object ref)
-                 collect ref)
-         (unless (stringp object)
-           (loop for link in (gethash (string-upcase (string object))
-                                      *object-to-links*)
-                 for ref = (link-reference link)
-                 when (reference-object= object ref)
-                   collect ref))))
+  (loop for link in (append (guaranteed-links object)
+                            (possible-links object))
+        for ref = (link-reference link)
+        when (reference-object= object ref)
+          collect ref))
 
 (defun has-global-reference-p (object)
-  (or (loop for link in (gethash object *object-to-links*)
+  (or (loop for link in (guaranteed-links object)
             for ref = (link-reference link)
               thereis (reference-object= object ref))
-      (unless (stringp object)
-        (loop for link in (gethash (string object) *object-to-links*)
-              for ref = (link-reference link)
-                thereis (reference-object= object ref)))))
+      (loop for link in (possible-links object)
+            for ref = (link-reference link)
+              thereis (reference-object= object ref))))
 
 (defun global-reference-p (reference)
   (let ((object (reference-object reference)))
-    (or (loop for link in (gethash object *object-to-links*)
+    (or (loop for link in (guaranteed-links object)
               for ref = (link-reference link)
                 thereis (reference= reference ref))
-        (unless (stringp object)
-          (loop for link in (gethash (string object) *object-to-links*)
-                for ref = (link-reference link)
-                  thereis (reference= reference ref))))))
+        (loop for link in (possible-links object)
+              for ref = (link-reference link)
+                thereis (reference= reference ref)))))
 
 (defun local-references-to-object (object)
   (remove-if-not (lambda (ref)
@@ -247,28 +257,26 @@
 (defvar *last-hyperspec-root-and-links* nil)
 
 (defun maybe-add-links-to-hyperspec ()
-  ;; Precomputing link ids assumes that new collisions are not
-  ;; possible.
-  (assert (zerop (hash-table-count *object-to-links*)))
   (when *document-link-to-hyperspec*
-    (cond ((equal (first *last-hyperspec-root-and-links*)
-                  *document-hyperspec-root*)
-           (destructuring-bind (root object-to-links)
-               *last-hyperspec-root-and-links*
-             (declare (ignore root))
-             ;; FIXME: COPY-HASH-TABLE is still awfully expensive for
-             ;; short tests.
-             (setq *object-to-links* (alexandria:copy-hash-table
-                                      object-to-links))))
-          (t
-           (loop for (object locative url) in (hyperspec-external-references
-                                               *document-hyperspec-root*)
-                 do (let ((reference (make-reference object locative)))
-                      (add-link (make-link :reference reference
-                                           :page url))))
-           (setq *last-hyperspec-root-and-links*
-                 (list *document-hyperspec-root*
-                       (alexandria:copy-hash-table *object-to-links*)))))))
+    (unless (equal (first *last-hyperspec-root-and-links*)
+                   *document-hyperspec-root*)
+      (let ((*object-to-links-maps* (list (make-hash-table :test #'equal)))
+            (*symbol-to-links-maps* (list (make-hash-table))))
+        (loop for (object locative url) in (hyperspec-external-references
+                                            *document-hyperspec-root*)
+              do (let ((reference (make-reference object locative)))
+                   (add-link (make-link :reference reference
+                                        :page url))))
+        (setq *last-hyperspec-root-and-links* (list *document-hyperspec-root*
+                                                    *object-to-links-maps*
+                                                    *symbol-to-links-maps*))))
+    (destructuring-bind (root object-to-links-maps symbol-to-links-maps)
+        *last-hyperspec-root-and-links*
+      (declare (ignore root))
+      (setq *object-to-links-maps* (append *object-to-links-maps*
+                                           object-to-links-maps))
+      (setq *symbol-to-links-maps* (append *symbol-to-links-maps*
+                                           symbol-to-links-maps)))))
 
 
 (defun initialize-links (pages)
@@ -681,9 +689,9 @@
              (join-consecutive-non-blank-strings-in-parse-tree
               (3bmd-grammar:parse-doc string))))
       (with-output-to-string (out)
-        (with-colorize-silenced ()
-          (3bmd::print-doc-to-stream-using-format (link (codify parse-tree))
-                                                  out :markdown))))))
+        (let ((tree (link (codify parse-tree))))
+          (with-colorize-silenced ()
+            (3bmd::print-doc-to-stream-using-format tree out :markdown)))))))
 
 
 (defsection @mgl-pax-codification (:title "Codification")

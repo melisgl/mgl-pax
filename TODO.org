@@ -54,5 +54,6 @@ This should bring us closer to literate programming.
   `mgl-pax-`.
 - Less clutter in pax:<TAB>
 - pax::@<tab> can still be used
-* get variable initforms from source?
+* MAYBE get variable initforms from source?
+Or fall back on this for deficient ARGLISTs. Will be really slow.
 * test navigation from the emacs side
