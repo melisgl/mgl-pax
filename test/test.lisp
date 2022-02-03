@@ -311,6 +311,12 @@
           (eq * t)))
     (is (null (mgl-pax::read-reference-from-string "yyy function junk")))))
 
+(deftest test-urlencode ()
+  (is (equal (mgl-pax::urlencode "hello") "hello"))
+  (is (equal (mgl-pax::urlencode "@hello section") "@hello%20section"))
+  (is (equal (mgl-pax::urlencode "\"") "%22"))
+  (is (equal (mgl-pax::urlencode "á") "%E1")))
+
 (deftest test-transform-tree ()
   (is (equal '(1)
              (mgl-pax::transform-tree (lambda (parent a)
@@ -392,9 +398,9 @@
       ;; T is not autolinked.
       (check-head "T" "`T`")
       (check-head "\\T" "T")
-      (check-head "DO" "[`DO`][be20]")
+      (check-head "DO" "[`DO`][a95c]")
       (check-head "\\DO" "DO")
-      (check-head "COS" "[`COS`][90ce]")
+      (check-head "COS" "[`COS`][3164]")
       (check-head "\\COS" "COS")))
   ;; FIXME
   (with-test ("reflink")
@@ -410,48 +416,48 @@
 
 (deftest test-names ()
   (with-test ("Uppercase name with uppercase plural.")
-    (check-head "CARS" "[`CAR`][86ef]s")
-    (check-head "CARS." "[`CAR`][86ef]s.")
-    (check-head "CLASSES" "[`CLASS`][46f7]es")
-    (check-head "CLASSES." "[`CLASS`][46f7]es."))
+    (check-head "CARS" "[`CAR`][8c99]s")
+    (check-head "CARS." "[`CAR`][8c99]s.")
+    (check-head "CLASSES" "[`CLASS`][7e58]es")
+    (check-head "CLASSES." "[`CLASS`][7e58]es."))
   (with-test ("Uppercase name with lowercase plural.")
-    (check-head "CARs" "[`CAR`][86ef]s")
-    (check-head "CARs." "[`CAR`][86ef]s.")
-    (check-head "CLASSes" "[`CLASS`][46f7]es")
-    (check-head "CLASSes." "[`CLASS`][46f7]es."))
+    (check-head "CARs" "[`CAR`][8c99]s")
+    (check-head "CARs." "[`CAR`][8c99]s.")
+    (check-head "CLASSes" "[`CLASS`][7e58]es")
+    (check-head "CLASSes." "[`CLASS`][7e58]es."))
   (with-test ("Uppercase code + lowercase plural.")
-    (check-head "`CAR`s" "[`CAR`][86ef]s")
-    (check-head "`CAR`s." "[`CAR`][86ef]s.")
-    (check-head "`CLASS`es" "[`CLASS`][46f7]es")
-    (check-head "`CLASS`es." "[`CLASS`][46f7]es."))
+    (check-head "`CAR`s" "[`CAR`][8c99]s")
+    (check-head "`CAR`s." "[`CAR`][8c99]s.")
+    (check-head "`CLASS`es" "[`CLASS`][7e58]es")
+    (check-head "`CLASS`es." "[`CLASS`][7e58]es."))
   (with-test ("Lowercase code + lowercase plural.")
-    (check-head "`car`s" "[`car`][86ef]s")
-    (check-head "`car`s." "[`car`][86ef]s.")
-    (check-head "`class`es" "[`class`][46f7]es")
-    (check-head "`class`es." "[`class`][46f7]es."))
+    (check-head "`car`s" "[`car`][8c99]s")
+    (check-head "`car`s." "[`car`][8c99]s.")
+    (check-head "`class`es" "[`class`][7e58]es")
+    (check-head "`class`es." "[`class`][7e58]es."))
   (with-test ("Lowercase code with lowercase plural.")
-    (check-head "`cars`" "[`cars`][86ef]")
+    (check-head "`cars`" "[`cars`][8c99]")
     (check-head "`cars.`" "`cars.`")
-    (check-head "`classes`" "[`classes`][46f7]")
+    (check-head "`classes`" "[`classes`][7e58]")
     (check-head "`classes.`" "`classes.`"))
   (with-test ("Uppercase name with uppercase plural in reflink.")
-    (check-head "[CARS][]" "[`CAR`s][86ef]")
+    (check-head "[CARS][]" "[`CAR`s][8c99]")
     (check-head "[CARS.][]" "[`CAR`s.][]")
-    (check-head "[CLASSES][]" "[`CLASS`es][46f7]")
+    (check-head "[CLASSES][]" "[`CLASS`es][7e58]")
     (check-head "[CLASSES.][]" "[`CLASS`es.][]"))
   (with-test ("Uppercase name with lowercase plural in reflink.")
-    (check-head "[CARs][]" "[`CAR`s][86ef]")
+    (check-head "[CARs][]" "[`CAR`s][8c99]")
     (check-head "[CARs.][]" "[`CAR`s.][]")
-    (check-head "[CLASSes][]" "[`CLASS`es][46f7]")
+    (check-head "[CLASSes][]" "[`CLASS`es][7e58]")
     (check-head "[CLASSes.][]" "[`CLASS`es.][]"))
   (with-test ("Uppercase code + lowercase plural in reflink.")
-    (check-head "[`CAR`s][]" "[`CAR`s][86ef]")
+    (check-head "[`CAR`s][]" "[`CAR`s][8c99]")
     (check-head "[`CAR`s.][]" "[`CAR`s.][]")
-    (check-head "[`CLASS`es][]" "[`CLASS`es][46f7]")
+    (check-head "[`CLASS`es][]" "[`CLASS`es][7e58]")
     (check-head "[`CLASS`es.][]" "[`CLASS`es.][]"))
   (with-test ("Trimming")
     (check-head "`#<CLASS>`" "`#<CLASS>`")
-    (check-head "#\\<CLASS>" "#<[`CLASS`][46f7]>")))
+    (check-head "#\\<CLASS>" "#<[`CLASS`][7e58]>")))
 
 
 (deftest test-downcasing ()
@@ -466,14 +472,14 @@
     ;; has no refs
     (check-downcasing "TEST" "`test`")
     ;; has refs
-    (check-downcasing "CLASS" "[`class`][46f7]")
+    (check-downcasing "CLASS" "[`class`][7e58]")
     ;; has no refs
     (check-downcasing "*FORMAT*" "`*format*`")
     ;; has refs
-    (check-downcasing "*PACKAGE*" "[`*package*`][1063]")
+    (check-downcasing "*PACKAGE*" "[`*package*`][d2c1]")
     ;; section with refs
     (check-downcasing (list "@SECTION-WITHOUT-TITLE" @section-without-title)
-                      "[`@section-without-title`][9353]"))
+                      "[`@section-without-title`][445a]"))
   (with-test ("escaped unadorned")
     (check-downcasing "\\NOT-INTERNED" "NOT-INTERNED")
     (check-downcasing "\\TEST" "TEST")
@@ -485,11 +491,11 @@
   (with-test ("code")
     (check-downcasing "`NOT-INTERNED`" "`not-interned`")
     (check-downcasing "`TEST`" "`test`")
-    (check-downcasing "`CLASS`" "[`class`][46f7]")
+    (check-downcasing "`CLASS`" "[`class`][7e58]")
     (check-downcasing "`*FORMAT*`" "`*format*`")
-    (check-downcasing "`*PACKAGE*`" "[`*package*`][1063]")
+    (check-downcasing "`*PACKAGE*`" "[`*package*`][d2c1]")
     (check-downcasing (list "`@SECTION-WITHOUT-TITLE`" @section-without-title)
-                      "[`@section-without-title`][9353]"))
+                      "[`@section-without-title`][445a]"))
   (with-test ("escaped code")
     (check-downcasing "`\\NOT-INTERNED`" "`NOT-INTERNED`")
     (check-downcasing "`\\TEST`" "`TEST`")
@@ -502,21 +508,21 @@
   (with-test ("reflink unadorned")
     (check-downcasing "[NOT-INTERNED][]" "[NOT-INTERNED][]")
     (check-downcasing "[TEST][]" "[`test`][]")
-    (check-downcasing "[CLASS][]" "[`class`][46f7]")
+    (check-downcasing "[CLASS][]" "[`class`][7e58]")
     (check-downcasing "[*FORMAT*][]" "[`*format*`][]")
-    (check-downcasing "[*PACKAGE*][]" "[`*package*`][1063]")
+    (check-downcasing "[*PACKAGE*][]" "[`*package*`][d2c1]")
     (check-downcasing (list "[@SECTION-WITHOUT-TITLE][]"
                             @section-without-title)
-                      "[`@section-without-title`][9353]"))
+                      "[`@section-without-title`][445a]"))
   (with-test ("reflink code")
     (check-downcasing "[`NOT-INTERNED`][]" "[`not-interned`][]")
     (check-downcasing "[`TEST`][]" "[`test`][]")
-    (check-downcasing "[`CLASS`][]" "[`class`][46f7]")
+    (check-downcasing "[`CLASS`][]" "[`class`][7e58]")
     (check-downcasing "[`*FORMAT*`][]" "[`*format*`][]")
-    (check-downcasing "[`*PACKAGE*`][]" "[`*package*`][1063]")
+    (check-downcasing "[`*PACKAGE*`][]" "[`*package*`][d2c1]")
     (check-downcasing (list "[`@SECTION-WITHOUT-TITLE`][]"
                             @section-without-title)
-                      "[`@section-without-title`][9353]"))
+                      "[`@section-without-title`][445a]"))
   (with-test ("multiple symbols")
     (check-downcasing "`(LIST :XXX 'PRINT)`" "`(list :xxx 'print)`")
     (with-failure-expected (t)
@@ -533,21 +539,21 @@
 (deftest test-downcasing-of-section-names ()
   (let ((*document-downcase-uppercase-code* t))
     (check-document @parent-section-without-title
-                    "<a id='x-28MGL-PAX-TEST-3A-3A-40PARENT-SECTION-WITHOUT-TITLE-20MGL-PAX-3ASECTION-29'></a>
+                    "<a id=\"MGL-PAX-TEST::@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
 
 # @parent-section-without-title
 
 ## Table of Contents
 
-- [1 @section-without-title][9353]
+- [1 @section-without-title][445a]
 
 ###### \\[in package MGL-PAX-TEST\\]
-<a id='x-28MGL-PAX-TEST-3A-3A-40SECTION-WITHOUT-TITLE-20MGL-PAX-3ASECTION-29'></a>
+<a id=\"MGL-PAX-TEST::@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
 
 ## 1 @section-without-title
 
 
-  [9353]: #x-28MGL-PAX-TEST-3A-3A-40SECTION-WITHOUT-TITLE-20MGL-PAX-3ASECTION-29 \"mgl-pax-test::@section-without-title\"
+  [445a]: #MGL-PAX-TEST::@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"mgl-pax-test::@section-without-title\"
 ")))
 
 (defun check-downcasing (docstring expected)
@@ -567,28 +573,28 @@
     (check-head (list "macro BAR function"
                       (make-reference 'bar 'type)
                       (make-reference 'bar 'macro))
-                ;; "9119" is the id of the macro.
-                "macro [`BAR`][9119] function"
+                ;; "8201" is the id of the macro.
+                "macro [`BAR`][8201] function"
                 :msg "locative before, irrelavant locative after")
     (check-head (list "function BAR macro"
                       (make-reference 'bar 'type)
                       (make-reference 'bar 'macro))
-                "function [`BAR`][9119] macro"
+                "function [`BAR`][8201] macro"
                 :msg "locative after, irrelavant locative before")
     (check-head (list "macro BAR type"
                       (make-reference 'bar 'type)
                       (make-reference 'bar 'macro)
                       (make-reference 'bar 'constant))
-                ;; "cece" is the the id of the type.
-                "macro `BAR`([`0`][9119] [`1`][cece]) type"
+                ;; "feed" is the the id of the type.
+                "macro `BAR`([`0`][8201] [`1`][feed]) type"
                 :msg "ambiguous locative"))
   (with-test ("locative in code")
     (check-head (list "`TEST-GF` `(method t (number))`"
                       (make-reference 'test-gf '(method () (number))))
-                "[`TEST-GF`][ba01] `(method t (number))`")
+                "[`TEST-GF`][ed29] `(method t (number))`")
     (check-head (list "`(method t (number))` `TEST-GF`"
                       (make-reference 'test-gf '(method () (number))))
-                "`(method t (number))` [`TEST-GF`][ba01]")))
+                "`(method t (number))` [`TEST-GF`][ed29]")))
 
 (deftest test-resolve-reflink ()
   (with-test ("label is a single name")
@@ -596,8 +602,8 @@
     (check-head "[*emphasized*][normaldef]" "[*emphasized*][normaldef]")
     (check-head "[*format*][]" "[*format*][]"))
   (with-test ("definition is a reference")
-    (check-head "[see this][car function]" "[see this][86ef]")
-    (check-head "[`see` *this*][car function]" "[`see` *this*][86ef]")
+    (check-head "[see this][car function]" "[see this][8c99]")
+    (check-head "[`see` *this*][car function]" "[`see` *this*][8c99]")
     (check-head "[see this][foo2]" "[see this][foo2]")))
 
 
@@ -607,22 +613,22 @@
 (deftest test-explicit-label ()
   (with-test ("section")
     (check-downcasing (list "@SECTION-WITH-TITLE" @section-with-title)
-                      "[My Title][e824]")
+                      "[My Title][6513]")
     (check-downcasing (list "`@SECTION-WITH-TITLE`" @section-with-title)
-                      "[My Title][e824]")
+                      "[My Title][6513]")
     (check-downcasing (list "[@SECTION-WITH-TITLE][]" @section-with-title)
-                      "[My Title][e824]")
+                      "[My Title][6513]")
     (check-downcasing (list "[`@SECTION-WITH-TITLE`][]" @section-with-title)
-                      "[My Title][e824]"))
+                      "[My Title][6513]"))
   (with-test ("glossary-term")
     (check-downcasing (list "@GT-WITH-TITLE" @gt-with-title)
-                      "[My Title][cf05]")
+                      "[My Title][3ec7]")
     (check-downcasing (list "`@GT-WITH-TITLE`" @gt-with-title)
-                      "[My Title][cf05]")
+                      "[My Title][3ec7]")
     (check-downcasing (list "[@GT-WITH-TITLE][]" @gt-with-title)
-                      "[My Title][cf05]")
+                      "[My Title][3ec7]")
     (check-downcasing (list "[`@GT-WITH-TITLE`][]" @gt-with-title)
-                      "[My Title][cf05]")))
+                      "[My Title][3ec7]")))
 
 
 (deftest test-suppressed-links ()
@@ -635,13 +641,13 @@
   (check-head "NIL" "`NIL`"))
 
 (deftest test-repeated-links ()
-  (check-head "PRINT PRINT" "[`PRINT`][3acc] `PRINT`")
-  (check-head (list "PRINT" "PRINT") "[`PRINT`][3acc]~%[`PRINT`][3acc]"
+  (check-head "PRINT PRINT" "[`PRINT`][fdd1] `PRINT`")
+  (check-head (list "PRINT" "PRINT") "[`PRINT`][fdd1]~%[`PRINT`][fdd1]"
               :n-lines 2)
-  (check-head "[STRING][function] STRING" "[`STRING`][8d40] `STRING`")
+  (check-head "[STRING][function] STRING" "[`STRING`][7bd4] `STRING`")
   (check-head "[STRING][dislocated] STRING" "`STRING` `STRING`")
   (check-head "[STRING][function] STRING function"
-              "[`STRING`][8d40] [`STRING`][8d40] function"))
+              "[`STRING`][7bd4] [`STRING`][7bd4] function"))
 
 (defun self-referencing ()
   "This is SELF-REFERENCING."
@@ -655,31 +661,31 @@
 
 (deftest test-self-referencing-links ()
   (check-document #'self-referencing
-                  "<a id='x-28MGL-PAX-TEST-3A-3ASELF-REFERENCING-20FUNCTION-29'></a>
+                  "<a id=\"MGL-PAX-TEST::SELF-REFERENCING%20FUNCTION\"></a>
 
 - [function] **SELF-REFERENCING** 
 
     This is `SELF-REFERENCING`.
 ")
   (check-document @self-referencing-term
-                  "<a id='x-28MGL-PAX-TEST-3A-3A-40SELF-REFERENCING-TERM-20MGL-PAX-3AGLOSSARY-TERM-29'></a>
+                  "<a id=\"MGL-PAX-TEST::@SELF-REFERENCING-TERM%20MGL-PAX:GLOSSARY-TERM\"></a>
 
 - [glossary-term] **Self-referencing Term**
 
-    This is [Self-referencing Term][97fa].
+    This is [Self-referencing Term][3160].
 
-  [97fa]: #x-28MGL-PAX-TEST-3A-3A-40SELF-REFERENCING-TERM-20MGL-PAX-3AGLOSSARY-TERM-29 \"(MGL-PAX-TEST::@SELF-REFERENCING-TERM MGL-PAX:GLOSSARY-TERM)\"
+  [3160]: #MGL-PAX-TEST::@SELF-REFERENCING-TERM%20MGL-PAX:GLOSSARY-TERM \"MGL-PAX-TEST::@SELF-REFERENCING-TERM MGL-PAX:GLOSSARY-TERM\"
 ")
   (let ((*document-max-table-of-contents-level* 0))
     (check-document @self-referencing
-                    "<a id='x-28MGL-PAX-TEST-3A-3A-40SELF-REFERENCING-20MGL-PAX-3ASECTION-29'></a>
+                    "<a id=\"MGL-PAX-TEST::@SELF-REFERENCING%20MGL-PAX:SECTION\"></a>
 
 # Self-referencing
 
 ###### \\[in package MGL-PAX-TEST\\]
-This is [Self-referencing][cacd].
+This is [Self-referencing][5c9b].
 
-  [cacd]: #x-28MGL-PAX-TEST-3A-3A-40SELF-REFERENCING-20MGL-PAX-3ASECTION-29 \"Self-referencing\"
+  [5c9b]: #MGL-PAX-TEST::@SELF-REFERENCING%20MGL-PAX:SECTION \"Self-referencing\"
 ")))
 
 
@@ -717,7 +723,7 @@ This is [Self-referencing][cacd].
 
 (deftest test-symbol-macro ()
   (check-document (make-reference 'my-smac 'symbol-macro)
-                  "<a id='x-28MGL-PAX-TEST-3AMY-SMAC-20MGL-PAX-3ASYMBOL-MACRO-29'></a>
+                  "<a id=\"MGL-PAX-TEST:MY-SMAC%20MGL-PAX:SYMBOL-MACRO\"></a>
 
 - [symbol-macro] **MY-SMAC**
 
@@ -762,7 +768,7 @@ This is [Self-referencing][cacd].
 (trace encapsulated-generic-function)
 
 (deftest test-function/encapsulated ()
-  (let ((expected "<a id='x-28MGL-PAX-TEST-3A-3AENCAPSULATED-FUNCTION-20FUNCTION-29'></a>
+  (let ((expected "<a id=\"MGL-PAX-TEST::ENCAPSULATED-FUNCTION%20FUNCTION\"></a>
 
 - [function] **ENCAPSULATED-FUNCTION** *X &REST ARGS*
 
@@ -772,7 +778,7 @@ This is [Self-referencing][cacd].
       (check-document (make-reference 'encapsulated-function 'function)
                       expected)
       (check-document #'encapsulated-function expected)))
-  (let ((expected "<a id='x-28MGL-PAX-TEST-3A-3AENCAPSULATED-GENERIC-FUNCTION-20GENERIC-FUNCTION-29'></a>
+  (let ((expected "<a id=\"MGL-PAX-TEST::ENCAPSULATED-GENERIC-FUNCTION%20GENERIC-FUNCTION\"></a>
 
 - [generic-function] **ENCAPSULATED-GENERIC-FUNCTION** *X*
 
@@ -799,19 +805,19 @@ This is [Self-referencing][cacd].
   (check-head (list "FOO-A `(accessor foo)`"
                     (make-reference 'foo-a '(accessor foo))
                     (make-reference 'foo-a 'variable))
-              "[`FOO-A`][6483] `(accessor foo)`"))
+              "[`FOO-A`][0259] `(accessor foo)`"))
 
 (deftest test-reader ()
   (check-head (list "FOO-R `(reader foo)`"
                     (make-reference 'foo-r '(reader foo))
                     (make-reference 'foo-r 'variable))
-              "[`FOO-R`][0aab] `(reader foo)`"))
+              "[`FOO-R`][cad5] `(reader foo)`"))
 
 (deftest test-writer ()
   (check-head (list "FOO-W `(writer foo)`"
                     (make-reference 'foo-w '(writer foo))
                     (make-reference 'foo-w 'variable))
-              "[`FOO-W`][f90e] `(writer foo)`"))
+              "[`FOO-W`][3d42] `(writer foo)`"))
 
 
 (defsection @test-method-combination ()
@@ -823,7 +829,7 @@ This is [Self-referencing][cacd].
 (deftest test-method-combination ()
   (with-failure-expected ((alexandria:featurep '(:or :abcl :allegro)))
     (check-document (make-reference 'my-comb 'method-combination)
-                    "<a id='x-28MGL-PAX-TEST-3AMY-COMB-20METHOD-COMBINATION-29'></a>
+                    "<a id=\"MGL-PAX-TEST:MY-COMB%20METHOD-COMBINATION\"></a>
 
 - [method-combination] **MY-COMB**
 
@@ -832,13 +838,13 @@ This is [Self-referencing][cacd].
 
 
 (deftest test-hyperspec ()
-  (check-head "FIND-IF" "[`FIND-IF`][badc]")
-  (check-head "LIST" "`LIST`([`0`][df43] [`1`][7def])")
-  (check-head "[LIST][type]" "[`LIST`][7def]")
+  (check-head "FIND-IF" "[`FIND-IF`][750e]")
+  (check-head "LIST" "`LIST`([`0`][592c] [`1`][98f9])")
+  (check-head "[LIST][type]" "[`LIST`][98f9]")
   (check-head "T" "`T`")
   (check-head "NIL" "`NIL`")
-  (check-head "[T][]" "`T`([`0`][b743] [`1`][cb19])")
-  (check-head "[T][constant]" "[`T`][b743]"))
+  (check-head "[T][]" "`T`([`0`][08f7] [`1`][26cf])")
+  (check-head "[T][constant]" "[`T`][08f7]"))
 
 
 (deftest test-clhs-section ()
@@ -847,13 +853,13 @@ This is [Self-referencing][cacd].
   (check-head "`A.1`" "`A.1`")
   (check-head "CLHS A.1" "`CLHS` A.1")
   (check-head "CLHS 3.4" "`CLHS` 3.4")
-  (check-head "CLHS `3.4`" "`CLHS` [`3.4`][7647]")
-  (check-head "`3.4` CLHS" "[`3.4`][7647] `CLHS`")
-  (check-head "[3.4][]" "[3.4][7647]")
-  (check-head "[`3.4`][]" "[`3.4`][7647]")
-  (check-head "[3.4][CLHS]" "[3.4][7647]")
-  (check-head "[Lambda Lists][clhs]" "[Lambda Lists][7647]")
-  (check-head "[03_d][clhs]" "[03\\_d][7647]"))
+  (check-head "CLHS `3.4`" "`CLHS` [`3.4`][f945]")
+  (check-head "`3.4` CLHS" "[`3.4`][f945] `CLHS`")
+  (check-head "[3.4][]" "[3.4][f945]")
+  (check-head "[`3.4`][]" "[`3.4`][f945]")
+  (check-head "[3.4][CLHS]" "[3.4][f945]")
+  (check-head "[Lambda Lists][clhs]" "[Lambda Lists][f945]")
+  (check-head "[03_d][clhs]" "[03\\_d][f945]"))
 
 
 (deftest test-clhs-issue ()
@@ -861,12 +867,12 @@ This is [Self-referencing][cacd].
   (check-head "`ISSUE:AREF-1D`" "`ISSUE:AREF-1D`")
   (check-head "CLHS ISSUE:AREF-1D" "`CLHS` ISSUE:AREF-1D")
   (check-head "ISSUE:AREF-1D CLHS" "ISSUE:AREF-1D `CLHS`")
-  (check-head "CLHS `ISSUE:AREF-1D`" "`CLHS` [`ISSUE:AREF-1D`][3e36]")
-  (check-head "`ISSUE:AREF-1D` CLHS" "[`ISSUE:AREF-1D`][3e36] `CLHS`")
-  (check-head "[ISSUE:AREF-1D][]" "[ISSUE:AREF-1D][3e36]")
-  (check-head "[`ISSUE:AREF-1D`][]" "[`ISSUE:AREF-1D`][3e36]")
-  (check-head "[ISSUE:AREF-1D][CLHS]" "[ISSUE:AREF-1D][3e36]")
-  (check-head "[iss009][clhs]" "[iss009][eed0]"))
+  (check-head "CLHS `ISSUE:AREF-1D`" "`CLHS` [`ISSUE:AREF-1D`][6786]")
+  (check-head "`ISSUE:AREF-1D` CLHS" "[`ISSUE:AREF-1D`][6786] `CLHS`")
+  (check-head "[ISSUE:AREF-1D][]" "[ISSUE:AREF-1D][6786]")
+  (check-head "[`ISSUE:AREF-1D`][]" "[`ISSUE:AREF-1D`][6786]")
+  (check-head "[ISSUE:AREF-1D][CLHS]" "[ISSUE:AREF-1D][6786]")
+  (check-head "[iss009][clhs]" "[iss009][e256]"))
 
 
 (deftest test-argument ()
@@ -874,15 +880,15 @@ This is [Self-referencing][cacd].
 
 
 (deftest test-declaration ()
-  (check-head "SAFETY" "[`SAFETY`][9f0e]")
-  (check-head "SAFETY declaration" "[`SAFETY`][9f0e] declaration")
-  (check-head "[safety][declaration]" "[safety][9f0e]"))
+  (check-head "SAFETY" "[`SAFETY`][0273]")
+  (check-head "SAFETY declaration" "[`SAFETY`][0273] declaration")
+  (check-head "[safety][declaration]" "[safety][0273]"))
 
 
 (deftest test-readtable ()
   (with-failure-expected ((alexandria:featurep :abcl))
     (check-document (named-readtables:find-readtable 'xxx-rt)
-                    "<a id='x-28MGL-PAX-TEST-3A-3AXXX-RT-20READTABLE-29'></a>
+                    "<a id=\"MGL-PAX-TEST::XXX-RT%20READTABLE\"></a>
 
 - [readtable] **XXX-RT**
 
@@ -890,7 +896,7 @@ This is [Self-referencing][cacd].
 "))
   (check-head (list "[XXX-RT][readtable]"
                     (named-readtables:find-readtable 'xxx-rt))
-              "[`XXX-RT`][9ac2]"))
+              "[`XXX-RT`][2b3b]"))
 
 
 (defpackage interned-pkg-name)
@@ -899,10 +905,10 @@ This is [Self-referencing][cacd].
 (deftest test-package ()
   (check-head (list "INTERNED-PKG-NAME"
                     (make-reference 'interned-pkg-name 'package))
-              "[`INTERNED-PKG-NAME`][2509]")
+              "[`INTERNED-PKG-NAME`][0651]")
   (check-head (list "NON-INTERNED-PKG-NAME"
                     (make-reference '#:non-interned-pkg-name 'package))
-              "[`NON-INTERNED-PKG-NAME`][11d0]"))
+              "[`NON-INTERNED-PKG-NAME`][5a00]"))
 
 
 (deftest test-asdf-system ()
@@ -910,10 +916,10 @@ This is [Self-referencing][cacd].
   (is (null (find-symbol (string '#:mgl-pax/test) '#:mgl-pax-test)))
   (check-head (list "MGL-PAX/FULL"
                     (make-reference 'mgl-pax/full 'asdf:system))
-              "[`MGL-PAX/FULL`][0785]")
+              "[`MGL-PAX/FULL`][d761]")
   (check-head (list "MGL-PAX/TEST"
                     (make-reference "mgl-pax/test" 'asdf:system))
-              "[`MGL-PAX/TEST`][4b83]"))
+              "[`MGL-PAX/TEST`][69db]"))
 
 
 (mgl-pax:define-locative-alias instance class)
@@ -922,7 +928,7 @@ This is [Self-referencing][cacd].
   (check-head (list "SECTION instance"
                     (make-reference 'section 'class)
                     (make-reference 'section 'locative))
-              "[`SECTION`][aee8] instance"))
+              "[`SECTION`][5fac] instance"))
 
 
 (deftest test-cl-transcript ()
@@ -956,6 +962,7 @@ This is [Self-referencing][cacd].
   (test-navigation)
   (test-read-locative-from-string)
   (test-read-reference-from-string)
+  (test-urlencode)
   (test-transform-tree)
   (test-macro-arg-names)
   (test-codify)

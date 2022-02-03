@@ -5,7 +5,7 @@
 ;;;; Text based HTML fragments
 
 (defun anchor (anchor stream)
-  (format stream "<a id='~A'></a>~%~%" (html-safe-name anchor)))
+  (format stream "<a id=~S></a>~%~%" (urlencode anchor)))
 
 
 ;;;; Text based markdown fragments

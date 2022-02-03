@@ -634,48 +634,41 @@
   (defun _mark-one (array ch)
     (setf (sbit array (char-code ch)) 1)))
 
-(defparameter +first-name-characters+
+(defparameter +unreserved-url-characters+
   (let ((array (make-array 255 :element-type 'bit :initial-element 0)))
+    ;; RFC3986 unreserved characters
     (_mark-range array #\a #\z)
     (_mark-range array #\A #\Z)
-    array))
-
-(defparameter +name-characters+
-  (let ((array (copy-seq +first-name-characters+)))
     (_mark-range array #\0 #\9)
     (_mark-one array #\-)
-    ;; Encode these as well to work around github markdown bug which
-    ;; would otherwise break links.
-    #+nil (_mark-one array #\_)
-    #+nil (_mark-one array #\.)
-    #+nil (_mark-one array #\:)
+    (_mark-one array #\_)
+    (_mark-one array #\.)
+    (_mark-one array #\~)
+    ;; Include some reserved characters used by major sites
+    ;; (https://stackoverflow.com/a/42287988/532597), which violates
+    ;; RFC3986.
+    (_mark-one array #\:)
+    (_mark-one array #\@)
+    (_mark-one array #\+)
+    (_mark-one array #\*)
     array))
 
-(defun html-safe-name (name)
-  ;; Copied from HTML-Encode
-  ;;?? this is very consy
-  ;;?? crappy name
-  (declare (type simple-string name))
-  (let ((output (make-array (truncate (length name) 2/3)
+;;; This is adapted from HTML-Encode. Note that we also use this as it
+;;; in html <a id="...">, which is valid in HTML5 because there is no
+;;; space in it.
+(defun urlencode (string)
+  (declare (type string string))
+  (let ((output (make-array (truncate (length string) 2/3)
                             :element-type 'character
                             :adjustable t
-                            :fill-pointer 0))
-	(first? t))
+                            :fill-pointer 0)))
     (with-output-to-string (out output)
-      (loop for char across name
+      (loop for char across string
             for code = (char-code char)
-            for valid = +first-name-characters+ then +name-characters+
+            for valid = +unreserved-url-characters+
             do (cond ((and (< code 255)
                            (= (sbit valid code) 1))
                       (write-char char out))
                      (t
-                      ;; See http://www.w3.org/TR/html4/types.html#h-6.2
-                      ;; ID and NAME tokens must begin with a letter ([A-Za-z])
-                      ;; and may be followed by any number of letters,
-                      ;; digits ([0-9]), hyphens ("-"), underscores ("_"),
-                      ;; colons (":"), and periods (".").
-                      (when first?
-                        (write-char #\x out))
-                      (format out "-~:@(~16r~)" code)))
-               (setf first? nil)))
+                      (format out "%~:@(~16r~)" code)))))
     (coerce output 'simple-string)))

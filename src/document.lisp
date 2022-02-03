@@ -182,12 +182,12 @@
 
 
 ;;; Return the unescaped name of the HTML anchor for REFERENCE. See
-;;; HTML-SAFE-NAME.
+;;; URLENCODE.
 (defun reference-to-anchor (reference)
   (let ((reference (canonical-reference reference)))
     (with-standard-io-syntax*
-      (prin1-to-string (list (reference-object reference)
-                             (reference-locative reference))))))
+      (format nil "~S ~S" (reference-object reference)
+              (reference-locative reference)))))
 
 ;;; For the link to REFERENCE, increment the link counter for the
 ;;; current page and return the link id.
@@ -548,7 +548,7 @@
               (format stream "  [~A]: ~A#~A ~S~%"
                       (link-id link)
                       (relative-page-uri-fragment (link-page link) *page*)
-                      (html-safe-name anchor)
+                      (urlencode anchor)
                       (let* ((ref (link-reference link))
                              (locative-type (reference-locative-type ref)))
                         (if (eq locative-type 'section)
@@ -1616,7 +1616,7 @@
                                     (heading-number) title
                                     (link-to-reference link-title-to))
                             (format stream " <a href=\"#~A\">~A~A</a>~%~%"
-                                    (html-safe-name anchor)
+                                    (urlencode anchor)
                                     (heading-number)
                                     (escape-markdown title)))
                         (format stream " ~A~A~%~%" (heading-number)
@@ -1824,7 +1824,7 @@
                         <span class=\"reference-object\">[~A](#~A)</span>~
                         </span>"
                         source-uri locative-type source-uri name
-                        (html-safe-name (reference-to-anchor reference))))
+                        (urlencode (reference-to-anchor reference))))
               (format stream "- [~A] ~A" locative-type (bold name nil))))
         (format stream "- [~A] ~A" locative-type name))))
 
