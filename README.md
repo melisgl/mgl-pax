@@ -2734,12 +2734,8 @@ for [`ASDF:SYSTEM:`][c097]
                             name (first value) (second value)))
                    ((:docstring)
                     (format stream "- ~A: ~A~%" name
-                            ;; Like MASSAGE-DOCSTRING but without
-                            ;; indenting.
-                            (prefix-lines "  "
-                                          (codify-and-link
-                                           (strip-docstring-indentation value))
-                                          :exclude-first-line-p t)))
+                            (massage-docstring value :indentation "  "
+                                               :exclude-first-line-p t)))
                    ((nil)
                     (format stream "- ~A: ~A~%" name value)))))))
       (unless *omit-asdf-slots*

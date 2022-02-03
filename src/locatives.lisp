@@ -129,51 +129,6 @@
      ,@body))
 
 
-;;;; Indentation utilities
-
-;;; Normalize indentation of docstrings as it's described in
-;;; (METHOD () (STRING T)) DOCUMENT-OBJECT.
-(defun strip-docstring-indentation (docstring &key (first-line-special-p t))
-  (let ((indentation
-          (docstring-indentation docstring
-                                 :first-line-special-p first-line-special-p)))
-    (values (with-output-to-string (out)
-              (with-input-from-string (s docstring)
-                (loop for i upfrom 0
-                      do (multiple-value-bind (line missing-newline-p)
-                             (read-line s nil nil)
-                           (unless line
-                             (return))
-                           (if (and first-line-special-p (zerop i))
-                               (write-string line out)
-                               (write-string (subseq* line indentation) out))
-                           (unless missing-newline-p
-                             (terpri out))))))
-            indentation)))
-
-(defun n-leading-spaces (line)
-  (let ((n 0))
-    (loop for i below (length line)
-          while (char= (aref line i) #\Space)
-          do (incf n))
-    n))
-
-;;; Return the minimum number of leading spaces in non-blank lines
-;;; after the first.
-(defun docstring-indentation (docstring &key (first-line-special-p t))
-  (let ((n-min-indentation nil))
-    (with-input-from-string (s docstring)
-      (loop for i upfrom 0
-            for line = (read-line s nil nil)
-            while line
-            do (when (and (or (not first-line-special-p) (plusp i))
-                          (not (blankp line)))
-                 (when (or (null n-min-indentation)
-                           (< (n-leading-spaces line) n-min-indentation))
-                   (setq n-min-indentation (n-leading-spaces line))))))
-    (or n-min-indentation 0)))
-
-
 ;;;; VARIABLE locative
 
 (define-locative-type variable (&optional initform)
@@ -686,6 +641,7 @@
                    (if (swank-mop:slot-definition-initfunction slot-def)
                        (format nil "~A= ~A"
                                (if initarg-strings " " "")
+                               ;; FIXME
                                (codify-and-link
                                 (prin1-and-escape-markdown
                                  (swank-mop:slot-definition-initform
@@ -1019,12 +975,8 @@
                             name (first value) (second value)))
                    ((:docstring)
                     (format stream "- ~A: ~A~%" name
-                            ;; Like MASSAGE-DOCSTRING but without
-                            ;; indenting.
-                            (prefix-lines "  "
-                                          (codify-and-link
-                                           (strip-docstring-indentation value))
-                                          :exclude-first-line-p t)))
+                            (massage-docstring value :indentation "  "
+                                               :exclude-first-line-p t)))
                    ((nil)
                     (format stream "- ~A: ~A~%" name value)))))))
       (unless *omit-asdf-slots*
@@ -1431,8 +1383,7 @@
         (format stream "~A" header))
       (when header-nl
         (format stream "~A~%" header-nl))
-      (format stream "~A"
-              (prefix-lines line-prefix text))
+      (format stream "~A" (prefix-lines line-prefix text))
       (when footer
         (format stream "~A" footer))
       (when footer-nl

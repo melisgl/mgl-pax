@@ -2,6 +2,117 @@
 
 (in-readtable pythonic-string-syntax)
 
+;;;; Utilities
+
+(defun strip-longest-common-prefix (string chars &key (first-line-special-p t))
+  (let ((prefix (longest-common-prefix
+                 string chars :first-line-special-p first-line-special-p)))
+    (values
+     (with-output-to-string (output)
+       (with-input-from-string (s string)
+         (loop for i upfrom 0
+               for line = (read-line s nil nil)
+               while line
+               do (if (and first-line-special-p (zerop i))
+                      (write-line line output)
+                      (write-line (subseq line (length prefix)) output)))))
+     prefix)))
+
+;;; Return the longest common prefix of lines of STRING, where the
+;;; prefix is made of CHARS.
+(defun longest-common-prefix (string chars &key (first-line-special-p t))
+  (let ((longest-prefix nil))
+    (with-input-from-string (s string)
+      (loop for i upfrom 0
+            for line = (read-line s nil nil)
+            while line
+            do (when (or (not first-line-special-p) (plusp i))
+                 (let ((prefix (matching-prefix line chars)))
+                   (setq longest-prefix
+                         (if longest-prefix
+                             (subseq longest-prefix
+                                     0 (or (mismatch longest-prefix prefix)
+                                           (length longest-prefix)))
+                             prefix))))))
+    longest-prefix))
+
+(defun matching-prefix (string chars)
+  (let ((position (position-if-not (lambda (char)
+                                     (find char chars))
+                                   string)))
+    (if position
+        (subseq string 0 position)
+        string)))
+
+;;; Read as many consucutive lines starting with PREFIX from STREAM as
+;;; possible. From each mathing line, strip the prefix and join them
+;;; into a non-prefixed string conserving the newlines. As the second
+;;; value, return the number of lines read.
+;;;
+;;; As the third value, return the first non-matching line (without
+;;; the newline) or NIL at eof. The fourth value is whether the first
+;;; non-matching line returned as the thrid value had a missing
+;;; newline. The fifth value is file position of the start of the line
+;;; returned as the third value.
+;;;
+;;; Note that reading (with prefix "..")
+;;;
+;;;     .. 1
+;;;     .. 2
+;;;
+;;; gives "1~%2". If you want to end with a newline, then:
+;;;
+;;;     .. 1
+;;;     .. 2
+;;;     ..
+(defun read-prefixed-lines (stream prefix &key (first-line-prefix prefix)
+                            (eat-one-space-p t))
+  (with-output-to-string (output)
+    (loop for n-lines-read upfrom 0 do
+      (multiple-value-bind (line missing-newline-p file-position)
+          (read-line* stream nil nil)
+        (let ((prefix (if (zerop n-lines-read) first-line-prefix prefix)))
+          (when (or (null line)
+                    (not (alexandria:starts-with-subseq prefix line)))
+            (return-from read-prefixed-lines
+              (values (get-output-stream-string output) n-lines-read
+                      line missing-newline-p file-position)))
+          (unless (zerop n-lines-read)
+            (terpri output))
+          (let ((line (subseq line (length prefix))))
+            (format output "~A" (if (and eat-one-space-p
+                                         (plusp (length line))
+                                         (char= (aref line 0) #\Space))
+                                    (subseq line 1)
+                                    line))))))))
+
+(defun read-line* (stream &optional (eof-error-p t) eof-value)
+  (let ((file-position (file-position stream)))
+    (multiple-value-bind (line missing-newline-p)
+        (read-line stream eof-error-p eof-value)
+      (values line missing-newline-p file-position))))
+
+;;; The inverse of READ-PREFIXED-LINES. If ADD-ONE-SPACE-P, a space
+;;; character is printed after the prefix if the line is zero length.
+(defun write-prefixed-lines (string prefix stream &key (add-one-space-p t)
+                             (first-line-prefix prefix))
+  (let ((last-newline-missing-p nil))
+    (with-input-from-string (s string)
+      (loop for n-lines-read upfrom 0 do
+        (multiple-value-bind (line missing-newline-p) (read-line s nil nil)
+          (unless line
+            (return))
+          (setq last-newline-missing-p missing-newline-p)
+          (if (zerop (length line))
+              (write-line prefix stream)
+              (format stream "~A~A~A~%"
+                      (if (zerop n-lines-read) first-line-prefix prefix)
+                      (if add-one-space-p " " "")
+                      line)))))
+    (unless last-newline-missing-p
+      (write-line prefix stream))))
+
+
 ;;; Make Allegro record lambda lists, from which we can extract
 ;;; default values of arguments.
 #+allegro
@@ -498,7 +609,8 @@
          ;; There is no way to guarantee that FILE-POSITION will work
          ;; on a stream so let's just read the entire INPUT into a
          ;; string.
-         (with-input-from-string (stream (read-stream-into-string input))
+         (with-input-from-string (stream (alexandria:read-file-into-string
+                                          input))
            (funcall fn stream)))
         ((stringp input)
          (with-input-from-string (input input)

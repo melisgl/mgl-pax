@@ -8,6 +8,56 @@
   (format stream "<a id=~S></a>~%~%" (urlencode anchor)))
 
 
+;;;; Escaping of URLs and HTML ID
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun _mark-range (array start end)
+    (loop for a from (char-code start) to (char-code end) do
+      (setf (sbit array a) 1)))
+
+  (defun _mark-one (array ch)
+    (setf (sbit array (char-code ch)) 1)))
+
+(defparameter +unreserved-url-characters+
+  (let ((array (make-array 255 :element-type 'bit :initial-element 0)))
+    ;; RFC3986 unreserved characters
+    (_mark-range array #\a #\z)
+    (_mark-range array #\A #\Z)
+    (_mark-range array #\0 #\9)
+    (_mark-one array #\-)
+    (_mark-one array #\_)
+    (_mark-one array #\.)
+    (_mark-one array #\~)
+    ;; Include some reserved characters used by major sites
+    ;; (https://stackoverflow.com/a/42287988/532597), which violates
+    ;; RFC3986.
+    (_mark-one array #\:)
+    (_mark-one array #\@)
+    (_mark-one array #\+)
+    (_mark-one array #\*)
+    array))
+
+;;; This is adapted from HTML-Encode. Note that we also use this as it
+;;; in html <a id="...">, which is valid in HTML5 because there is no
+;;; space in it.
+(defun urlencode (string)
+  (declare (type string string))
+  (let ((output (make-array (truncate (length string) 2/3)
+                            :element-type 'character
+                            :adjustable t
+                            :fill-pointer 0)))
+    (with-output-to-string (out output)
+      (loop for char across string
+            for code = (char-code char)
+            for valid = +unreserved-url-characters+
+            do (cond ((and (< code 255)
+                           (= (sbit valid code) 1))
+                      (write-char char out))
+                     (t
+                      (format out "%~:@(~16r~)" code)))))
+    (coerce output 'simple-string)))
+
+
 ;;;; Text based markdown fragments
 
 (defun heading (level stream)

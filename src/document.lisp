@@ -511,8 +511,9 @@
             (with-temp-output-to-page (stream page)
               (write-markdown-reference-style-link-definitions stream))
             (unless (eq format :markdown)
-              (let ((markdown-string (with-temp-input-from-page (stream page)
-                                       (read-stream-into-string stream))))
+              (let ((markdown-string
+                      (with-temp-input-from-page (stream page)
+                        (alexandria:read-stream-content-into-string stream))))
                 (delete-stream-spec (page-temp-stream-spec page))
                 (with-final-output-to-page (stream page)
                   (when (page-header-fn page)
@@ -1969,41 +1970,6 @@
         ;; Some Lisps bind it to T in DESCRIBE, some don't.
         (*print-circle* nil))
     (document section :stream stream :format :markdown)))
-
-
-;;;; High level printing utilities
-
-;;; Print (DOCUMENTATION OBJECT DOC-TYPE) to STREAM in FORMAT. Clean
-;;; up docstring indentation, then indent it by four spaces.
-;;; Automarkup symbols.
-(defun maybe-print-docstring (object doc-type stream)
-  ;; If the output is going to /dev/null and this is a costly
-  ;; operation, skip it.
-  (unless *table-of-contents-stream*
-    (let ((docstring (filter-documentation object doc-type)))
-      (when docstring
-        (format stream "~%~A~%" (massage-docstring docstring))))))
-
-(defun massage-docstring (docstring &key (indentation "    "))
-  (if *table-of-contents-stream*
-      ""
-      (let ((docstring (strip-docstring-indentation docstring)))
-        (prefix-lines indentation (codify-and-link docstring)))))
-
-(defun filter-documentation (symbol doc-type)
-  (let ((docstring (documentation symbol doc-type)))
-    #+sbcl
-    (if (member docstring
-                '("Return whether debug-block represents elsewhere code."
-                  "automatically generated accessor method"
-                  "automatically generated reader method"
-                  "automatically generated writer method")
-                :test #'equal)
-        ;; Discard the garbage docstring.
-        nil
-        docstring)
-    #-sbcl
-    docstring))
 
 
 (defsection @document-implementation-notes

@@ -23,6 +23,7 @@
                 :serial t
                 :components ((:file "package")
                              (:file "util")
+                             (:file "find-definition")
                              (:file "pax-early")
                              (:file "pax")
                              (:file "extension-api")
@@ -63,6 +64,8 @@
   :components ((:module "src"
                 :serial t
                 :components ((:file "markdown")
+                             (:file "stream-spec")
+                             (:file "docstring")
                              (:file "hyperspec")
                              (:file "document")
                              (:file "document-util"))))
