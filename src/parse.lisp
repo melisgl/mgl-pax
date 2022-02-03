@@ -2,16 +2,15 @@
 
 (in-readtable pythonic-string-syntax)
 
-(defsection @mgl-pax-parsing (:title "Parsing" :export nil)
+(defsection @parsing (:title "Parsing" :export nil)
   (@word glossary-term)
   (@name glossary-term))
 
 (define-glossary-term @word (:title "word")
   "A _word_ is a string from which we want to extract an @OBJECT. When
-  [Navigating][@mgl-pax-navigating-in-emacs section], the word is
-  `slime-symbol-at-point`, when @MGL-PAX-GENERATING-DOCUMENTATION, it
-  is a non-empty string between whitespace characters in a
-  docstring.")
+  [Navigating][@navigating-in-emacs section], the word is
+  `slime-symbol-at-point`, when @GENERATING-DOCUMENTATION, it is a
+  non-empty string between whitespace characters in a docstring.")
 
 (define-glossary-term @name (:title "name")
   """A _name_ is a string that names an `INTERN`ed SYMBOL,
@@ -24,8 +23,8 @@
   `"s"` is removed to get `"LIST"`. Out of the three candidates for
   names, `"LISTs."`, `"LISTs"`, and `"LIST"`, the ones that name
   interned symbols and such are retained for purposes for
-  [Navigating][@mgl-pax-navigating-in-emacs section] and
-  @MGL-PAX-GENERATING-DOCUMENTATION.
+  [Navigating][@navigating-in-emacs section] and
+  @GENERATING-DOCUMENTATION.
 
   The punctuation characters for left and right trimming are `#<` and
   `,:.>`, respectively. The plural suffixes considered are `s`, `es`,

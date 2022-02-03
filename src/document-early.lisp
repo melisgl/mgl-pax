@@ -2,7 +2,7 @@
 
 (in-readtable pythonic-string-syntax)
 
-(defsection @mgl-pax-github-workflow (:title "Github Workflow")
+(defsection @github-workflow (:title "Github Workflow")
   "It is generally recommended to commit generated readmes (see
   UPDATE-ASDF-SYSTEM-READMES) so that users have something to read
   without reading the code and sites like github can display them.
@@ -28,8 +28,8 @@
 
   This way the HTML documentation will be available at
   `http://<username>.github.io/<repo-name>`. It is probably a good
-  idea to add section like the @MGL-PAX-LINKS section to allow jumping
-  between the repository and the gh-pages site."
+  idea to add section like the @LINKS section to allow jumping between
+  the repository and the gh-pages site."
   (make-github-source-uri-fn function))
 
 (defun make-github-source-uri-fn (asdf-system github-uri &key git-version)
@@ -140,7 +140,7 @@
           collect (file-position stream))))
 
 
-(defsection @mgl-pax-world (:title "PAX World")
+(defsection @pax-world (:title "PAX World")
   "PAX World is a registry of documents, which can generate
   cross-linked HTML documentation pages for all the registered
   documents."
@@ -164,10 +164,10 @@
 
 ;;; Register PAX itself.
 (defun pax-sections ()
-  (list @mgl-pax-manual))
+  (list @manual))
 (defun pax-pages ()
   `((:objects
-     (,mgl-pax:@mgl-pax-manual)
+     (, @manual)
      :source-uri-fn ,(make-github-source-uri-fn
                       :mgl-pax
                       "https://github.com/melisgl/mgl-pax"))))

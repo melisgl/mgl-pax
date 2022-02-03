@@ -8,18 +8,18 @@
 (eval-when (:compile-toplevel)
   (declaim (optimize (debug 3))))
 
-(defsection @mgl-pax-generating-documentation
+(defsection @generating-documentation
     (:title "Generating Documentation")
   (document function)
   (mgl-pax/document asdf:system)
-  (@mgl-pax-markdown-support section)
-  (@mgl-pax-codification section)
-  (@mgl-pax-linking-to-code section)
-  (@mgl-pax-linking-to-the-hyperspec section)
-  (@mgl-pax-linking-to-sections section)
-  (@mgl-pax-miscellaneous-documentation-printer-variables section)
-  (@mgl-pax-documentation-utilities section)
-  (@mgl-pax-document-implementation-notes section))
+  (@markdown-support section)
+  (@codification section)
+  (@linking-to-code section)
+  (@linking-to-the-hyperspec section)
+  (@linking-to-sections section)
+  (@miscellaneous-documentation-printer-variables section)
+  (@documentation-utilities section)
+  (@document-implementation-notes section))
 
 ;;; A PAGE is basically a single markdown or html file, to where the
 ;;; documentation of some references is written. See the DOCUMENT
@@ -92,8 +92,8 @@
           append (gethash key object-to-links))))
 
 ;;; A list of references with special rules for linking (see
-;;; @MGL-PAX-LOCAL-REFERENCES). The reference being documented is
-;;; always on this list. Arguments are typically also are. Bound by
+;;; @LOCAL-REFERENCES). The reference being documented is always on
+;;; this list. Arguments are typically also are. Bound by
 ;;; WITH-LOCAL-REFERENCES.
 (defvar *local-references*)
 
@@ -230,7 +230,7 @@
       (link-page link))))
 
 
-(defsection @mgl-pax-linking-to-the-hyperspec
+(defsection @linking-to-the-hyperspec
     (:title "Linking to the Hyperspec")
   (*document-link-to-hyperspec* variable)
   (*document-hyperspec-root* variable))
@@ -242,8 +242,8 @@
   [FIND-IF][dislocated] links to FIND-IF, [FUNCTION][dislocated] links
   to FUNCTION and `[FUNCTION][type]` links to [FUNCTION][type].
 
-  [Autolinking][@mgl-pax-explicit-and-autolinking section] to T and
-  NIL is suppressed. If desired, use `[T][]` (that links to [T][]) or
+  [Autolinking][@explicit-and-autolinking section] to T and NIL is
+  suppressed. If desired, use `[T][]` (that links to [T][]) or
   `[T][constant]` (that links to [T][constant]).
 
   Note that linking to sections in the Hyperspec is done with the CLHS
@@ -348,9 +348,9 @@
   as with CL:FORMAT.
 
   Most often, this function is called on section objects
-  like `(DOCUMENT @MGL-PAX-MANUAL)`, but it supports all kinds of
-  objects for which DOCUMENT-OBJECT is defined. To look up the
-  documentation of function DOCUMENT:
+  like `(DOCUMENT @MANUAL)`, but it supports all kinds of objects for
+  which DOCUMENT-OBJECT is defined. To look up the documentation of
+  function DOCUMENT:
 
       (document #'document)
 
@@ -374,9 +374,9 @@
   See DESCRIBE-OBJECT `(METHOD () (SECTION T))`.
 
   There are quite a few special variables that affect how output is
-  generated, see @MGL-PAX-CODIFICATION, @MGL-PAX-LINKING-TO-CODE,
-  @MGL-PAX-LINKING-TO-SECTIONS, and
-  @MGL-PAX-MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES.
+  generated, see @CODIFICATION, @LINKING-TO-CODE,
+  @LINKING-TO-SECTIONS, and
+  @MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES.
 
   The rest of this description deals with how to generate multiple
   pages.
@@ -454,15 +454,15 @@
 
   ```commonlisp
   `((;; The section about SECTIONs and everything below it ...
-     :objects (, @mgl-pax-sections)
+     :objects (, @sections)
      ;; ... is so boring that it's not worth the disk space, so
      ;; send it to a string.
      :output (nil)
      ;; Explicitly tell other pages not to link to these guys.
      :uri-fragment nil)
-    ;; Send the @MGL-PAX-EXTENSION-API section and everything reachable
+    ;; Send the @EXTENSION-API section and everything reachable
     ;; from it ...
-    (:objects (, @mgl-pax-extension-api)
+    (:objects (, @extension-api)
      ;; ... to build/tmp/pax-extension-api.html.
      :output ("build/tmp/pax-extension-api.html")
      ;; However, on the web server html files will be at this
@@ -475,7 +475,7 @@
      :footer-fn 'write-html-footer)
     ;; Catch the reference that were not reachable from the above. It
     ;; is important for this page spec to be last.
-    (:objects (, @mgl-pax-manual)
+    (:objects (, @manual)
      :output ("build/tmp/manual.html")
      ;; Links from the extension api page to the manual page will
      ;; be to ../user/pax-manual#<anchor>, while links going to
@@ -602,14 +602,14 @@
           objects))
 
 
-(defsection @mgl-pax-markdown-support (:title "Markdown Support")
+(defsection @markdown-support (:title "Markdown Support")
   "The [Markdown][markdown] in docstrings is processed with the
   [3BMD][3bmd] library."
-  (@mgl-pax-markdown-indentation section)
-  (@mgl-pax-markdown-syntax-highlighting section)
-  (@mgl-pax-mathjax section))
+  (@markdown-indentation section)
+  (@markdown-syntax-highlighting section)
+  (@mathjax section))
 
-(defsection @mgl-pax-markdown-indentation (:title "Indentation")
+(defsection @markdown-indentation (:title "Indentation")
   """Docstrings can be indented in any of the usual styles. PAX
   normalizes indentation by converting:
 
@@ -627,7 +627,7 @@
 
   See [DOCUMENT-OBJECT][(method () (string t))] for the details.""")
 
-(defsection @mgl-pax-markdown-syntax-highlighting (:title "Syntax Highlighting")
+(defsection @markdown-syntax-highlighting (:title "Syntax Highlighting")
   "For syntax highlighting, github's [fenced code
   blocks][fenced-code-blocks] markdown extension to mark up code
   blocks with triple backticks is enabled so all you need to do is
@@ -648,7 +648,7 @@
   [colorize]: https://github.com/redline6561/colorize/
   [fenced-code-blocks]: https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks")
 
-(defsection @mgl-pax-mathjax (:title "MathJax")
+(defsection @mathjax (:title "MathJax")
   """Displaying pretty mathematics in TeX format is supported via
   MathJax. It can be done inline with `$` like this:
 
@@ -694,16 +694,16 @@
             (3bmd::print-doc-to-stream-using-format tree out :markdown)))))))
 
 
-(defsection @mgl-pax-codification (:title "Codification")
+(defsection @codification (:title "Codification")
   (*document-uppercase-is-code* variable)
-  (@mgl-pax-codifiable glossary-term)
-  (@mgl-pax-interesting glossary-term)
+  (@codifiable glossary-term)
+  (@interesting glossary-term)
   (*document-downcase-uppercase-code* variable))
 
 (defvar *document-uppercase-is-code* t
-  """When true, @MGL-PAX-CODIFIABLE and @MGL-PAX-INTERESTING @WORDs
-  are assumed to be code as if they were marked up with backticks. For
-  example, this docstring
+  """When true, @CODIFIABLE and @INTERESTING @WORDs are assumed to be
+  code as if they were marked up with backticks. For example, this
+  docstring
 
       "T PRINT CLASSes SECTION *PACKAGE* MGL-PAX ASDF
       CaMeL Capital"
@@ -730,7 +730,7 @@
   even if *DOCUMENT-UPPERCASE-IS-CODE* is false.
   """)
 
-(define-glossary-term @mgl-pax-codifiable (:title "codifiable")
+(define-glossary-term @codifiable (:title "codifiable")
   "A @WORD is _codifiable_ iff
 
   - it has at least one uppercase character (e.g. not `<`, `<=` or
@@ -740,7 +740,7 @@
     consecutive uppercase characters (e.g. `\CLASSes` but not
     `Capital`).")
 
-(define-glossary-term @mgl-pax-interesting (:title "interesting")
+(define-glossary-term @interesting (:title "interesting")
   "A @WORD is _interesting_ iff
 
   - it _names_ a known reference, or
@@ -846,7 +846,7 @@
 
 ;;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings and :EMPH
 ;;; (to recognize *VAR*). Also, perform consistency checking of
-;;; cl-transcript code blocks (see @MGL-PAX-TRANSCRIBING-WITH-EMACS).
+;;; cl-transcript code blocks (see @TRANSCRIBING-WITH-EMACS).
 (defun codify (parse-tree)
   (map-markdown-parse-tree
    (list :emph '3bmd-code-blocks::code-block :reference-link :code)
@@ -957,27 +957,27 @@
       string))
 
 
-(defsection @mgl-pax-linking-to-code (:title "Linking to Code")
+(defsection @linking-to-code (:title "Linking to Code")
   """In this section, we describe of all ways of linking to code
   available when *DOCUMENT-UPPERCASE-IS-CODE* is true.
 
-  _Note that invoking [`M-.`][@mgl-pax-navigating-in-emacs section] on
-  the @OBJECT of any of the following links will disambiguate based
-  the textual context, determining the locative. In a nutshell, if
-  `M-.` works without popping up a list of choices, then the
-  documentation will contain a single link._
+  _Note that invoking [`M-.`][@navigating-in-emacs section] on the
+  @OBJECT of any of the following links will disambiguate based the
+  textual context, determining the locative. In a nutshell, if `M-.`
+  works without popping up a list of choices, then the documentation
+  will contain a single link._
   """
   (*document-link-code* variable)
-  (@mgl-pax-specified-locative section)
-  (@mgl-pax-unambiguous-locative section)
-  (@mgl-pax-ambiguous-locative section)
-  (@mgl-pax-explicit-and-autolinking section)
-  (@mgl-pax-preventing-autolinking section)
-  (@mgl-pax-suppressed-links section)
-  (@mgl-pax-filtering-ambiguous-references section)
-  (@mgl-pax-local-references section))
+  (@specified-locative section)
+  (@unambiguous-locative section)
+  (@ambiguous-locative section)
+  (@explicit-and-autolinking section)
+  (@preventing-autolinking section)
+  (@suppressed-links section)
+  (@filtering-ambiguous-references section)
+  (@local-references section))
 
-(defsection @mgl-pax-specified-locative (:title "Specified Locative")
+(defsection @specified-locative (:title "Specified Locative")
   """The following examples all render as [DOCUMENT][function].
 
   - `\[DOCUMENT][function]` (*object + locative, explicit link*)
@@ -1000,7 +1000,7 @@
     function] (*title + object + locative, explicit link*)
   """)
 
-(defsection @mgl-pax-unambiguous-locative
+(defsection @unambiguous-locative
     (:title "Unambiguous Unspecified Locative")
   """In the following examples, although no locative is specified,
   `\DOCUMENT` names a single @OBJECT being documented, so they all
@@ -1010,7 +1010,7 @@
   - `DOCUMENT` (*object, autolink*).
   """)
 
-(defsection @mgl-pax-ambiguous-locative
+(defsection @ambiguous-locative
     (:title "Ambiguous Unspecified Locative")
   """These examples all render as [SECTION][], linking to both
   definitions of the @OBJECT `\SECTION`, the `\CLASS` and the
@@ -1020,18 +1020,18 @@
   - `\SECTION` (*object, autolink*)
   """)
 
-(defsection @mgl-pax-explicit-and-autolinking
+(defsection @explicit-and-autolinking
     (:title "Explicit and Autolinking")
   "The examples in the previous sections are marked with *explicit
   link* or *autolink*. Explicit links are those with a Markdown
   reference link spelled out explicitly, while autolinks are those
   without.")
 
-(defsection @mgl-pax-preventing-autolinking (:title "Preventing Autolinking")
+(defsection @preventing-autolinking (:title "Preventing Autolinking")
   """In the common case, when [*DOCUMENT-UPPERCASE-IS-CODE*][] is true,
   prefixing the uppercase @WORD with a backslash prevents it from
   being codified and thus also prevents
-  [autolinking][@mgl-pax-explicit-and-autolinking section] form
+  [autolinking][@explicit-and-autolinking section] form
   kicking in. For example, `\\DOCUMENT` renders as \DOCUMENT. If it
   should be marked up as code but not autolinked, the backslash must
   be within backticks like this:
@@ -1046,7 +1046,7 @@
 
 (defvar *document-link-code* t
   """Enable the various forms of links in docstrings described in
-  @MGL-PAX-LINKING-TO-CODE.
+  @LINKING-TO-CODE.
 
   Let's understand the generated Markdown.
 
@@ -1319,12 +1319,12 @@
     (sort (copy-seq references) #'string< :key #'locative-string)))
 
 
-(defsection @mgl-pax-suppressed-links (:title "Suppressed Links")
+(defsection @suppressed-links (:title "Suppressed Links")
   """Within the same docstring,
-  [autolinking][@mgl-pax-explicit-and-autolinking section] of
-  code (i.e. of something like `FOO`) is suppressed if the same
-  @OBJECT was already linked to in any way. In the following
-  docstring, only the first `FOO` will be turned into a link.
+  [autolinking][@explicit-and-autolinking section] of code (i.e. of
+  something like `FOO`) is suppressed if the same @OBJECT was already
+  linked to in any way. In the following docstring, only the first
+  `FOO` will be turned into a link.
 
       "`FOO` is safe. `FOO` is great."
 
@@ -1335,12 +1335,12 @@
       "`FOO` is safe. [`FOO`][macro] is great."
       "`FOO` is safe. Macro `FOO` is great."
 
-  As an exception, links with [specified][@mgl-pax-specified-locative
-  section] and [unambiguous][@mgl-pax-unambiguous-locative section]
-  locatives to SECTIONs and GLOSSARY-TERMs always produce a link to
-  allow their titles to be displayed properly.
+  As an exception, links with [specified][@specified-locative section]
+  and [unambiguous][@unambiguous-locative section] locatives to
+  SECTIONs and GLOSSARY-TERMs always produce a link to allow their
+  titles to be displayed properly.
 
-  Finally, [autolinking][@mgl-pax-explicit-and-autolinking section] to
+  Finally, [autolinking][@explicit-and-autolinking section] to
   T or NIL is suppressed (see *DOCUMENT-LINK-TO-HYPERSPEC*).
   """)
 
@@ -1359,7 +1359,7 @@
                                 '(or section glossary-term)))))))))
 
 
-(defsection @mgl-pax-local-references (:title "Local References")
+(defsection @local-references (:title "Local References")
   """To unclutter the generated output by reducing the number of
   links, the so-called 'local' references (e.g. references to the very
   definition for which documentation is being generated) are treated
@@ -1373,19 +1373,19 @@
     t)
   ```
 
-  If linking was desired one could use a
-  @MGL-PAX-SPECIFIED-LOCATIVE (e.g. `[FOO][function]` or `FOO
-  function`), which results in a single link. An explicit link with an
-  unspecified locative like `[FOO][]` generates links to all
-  references involving the `FOO` symbol except the local ones.
+  If linking was desired one could use a @SPECIFIED-LOCATIVE (e.g.
+  `[FOO][function]` or `FOO function`), which results in a single
+  link. An explicit link with an unspecified locative like `[FOO][]`
+  generates links to all references involving the `FOO` symbol except
+  the local ones.
 
   The exact rules for local references are as follows:
 
-  - Unless a locative is [specified][ @mgl-pax-specified-locative
-    section], no [autolinking][ @mgl-pax-explicit-and-autolinking
-    section] is performed for @OBJECTS for which there are local
-    references. For example, `FOO` does not get any links if there is
-    _any_ local reference with the same @OBJECT.
+  - Unless a locative is [specified][ @specified-locative section], no
+    [autolinking][ @explicit-and-autolinking section] is performed for
+    @OBJECTS for which there are local references. For example, `FOO`
+    does not get any links if there is _any_ local reference with the
+    same @OBJECT.
 
   - With a locative specified (e.g. in the explicit link
     `[FOO][function]` or in the text `the FOO function`), a single
@@ -1465,11 +1465,11 @@
                    (page-uri-fragment page)))))))
 
 
-(defsection @mgl-pax-filtering-ambiguous-references
+(defsection @filtering-ambiguous-references
     (:title "Filtering Ambiguous References")
   """When there are multiple references to link to - as seen in
-  @MGL-PAX-AMBIGUOUS-LOCATIVE - some references are removed by the
-  following rules.
+  @AMBIGUOUS-LOCATIVE - some references are removed by the following
+  rules.
 
   - References to ASDF:SYSTEMs are removed if there are other
     references which are not to ASDF:SYSTEMs. This is because system
@@ -1516,7 +1516,7 @@
        refs))))
 
 
-(defsection @mgl-pax-linking-to-sections (:title "Linking to Sections")
+(defsection @linking-to-sections (:title "Linking to Sections")
   "The following variables control how to generate section numbering,
   table of contents and navigation links."
   (*document-link-sections* variable)
@@ -1738,7 +1738,7 @@
             (butlast *heading-number*))))
 
 
-(defsection @mgl-pax-miscellaneous-documentation-printer-variables
+(defsection @miscellaneous-documentation-printer-variables
     (:title "Miscellaneous Variables")
   (*document-min-link-hash-length* variable)
   (*document-mark-up-signatures* variable)
@@ -2006,7 +2006,7 @@
     docstring))
 
 
-(defsection @mgl-pax-document-implementation-notes
+(defsection @document-implementation-notes
     (:title "Document Generation Implementation Notes")
   """Documentation Generation is supported on ABCL, AllegroCL, CLISP,
   \CCL, CMUCL, ECL and SBCL, but their outputs may differ due to the

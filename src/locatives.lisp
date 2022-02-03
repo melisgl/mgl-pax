@@ -8,44 +8,43 @@
 (eval-when (:compile-toplevel)
   (declaim (optimize (debug 3))))
 
-(defsection @mgl-pax-locative-types (:title "Locative Types")
+(defsection @locative-types (:title "Locative Types")
   """As we have already briefly seen in DEFSECTION and
-  @MGL-PAX-LOCATIVES-AND-REFERENCES, locatives allow us to refer to,
-  document and find the source location of various definitions beyond
-  what standard Common Lisp offers. See @MGL-PAX-EXTENSION-API for a
-  more detailed treatment. The following are the locatives types
-  supported out of the box. As all locative types, they are symbols,
-  and their names should make it obvious what kind of things they
-  refer to. Unless otherwise noted, locatives take no arguments.
+  @LOCATIVES-AND-REFERENCES, locatives allow us to refer to, document
+  and find the source location of various definitions beyond what
+  standard Common Lisp offers. See @EXTENSION-API for a more detailed
+  treatment. The following are the locatives types supported out of
+  the box. As all locative types, they are symbols, and their names
+  should make it obvious what kind of things they refer to. Unless
+  otherwise noted, locatives take no arguments.
 
   When there is a corresponding CL type, a locative can be resolved to
   a unique object as is the case in `(LOCATE 'FOO 'CLASS)` returning
   `#<CLASS FOO>`. Even if there is no such CL type, the source
   location and the docstring of the defining form is recorded (see
-  LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
-  @MGL-PAX-EXTENSION-API), which makes navigating the sources with
-  `M-.` (see @MGL-PAX-NAVIGATING-IN-EMACS) and
-  @MGL-PAX-GENERATING-DOCUMENTATION possible.
+  LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the @EXTENSION-API),
+  which makes navigating the sources with `M-.` (see
+  @NAVIGATING-IN-EMACS) and @GENERATING-DOCUMENTATION possible.
   """
-  (@mgl-pax-variablelike-locatives section)
-  (@mgl-pax-macrolike-locatives section)
-  (@mgl-pax-functionlike-locatives section)
-  (@mgl-pax-typelike-locatives section)
-  (@mgl-pax-condition-system-locatives section)
-  (@mgl-pax-packagelike-locatives section)
-  (@mgl-pax-pax-locatives section)
-  (@mgl-pax-external-locatives section))
+  (@variablelike-locatives section)
+  (@macrolike-locatives section)
+  (@functionlike-locatives section)
+  (@typelike-locatives section)
+  (@condition-system-locatives section)
+  (@packagelike-locatives section)
+  (@pax-locatives section)
+  (@external-locatives section))
 
-(defsection @mgl-pax-variablelike-locatives (:title "Locatives for Variables")
+(defsection @variablelike-locatives (:title "Locatives for Variables")
   (variable locative)
   (constant locative))
 
-(defsection @mgl-pax-macrolike-locatives (:title "Locatives for Macros")
+(defsection @macrolike-locatives (:title "Locatives for Macros")
   (macro locative)
   (symbol-macro locative)
   (compiler-macro locative))
 
-(defsection @mgl-pax-functionlike-locatives (:title "Locatives for Functions")
+(defsection @functionlike-locatives (:title "Locatives for Functions")
   (function locative)
   (generic-function locative)
   (method locative)
@@ -55,25 +54,25 @@
   (writer locative)
   (structure-accessor locative))
 
-(defsection @mgl-pax-typelike-locatives
+(defsection @typelike-locatives
     (:title "Locatives for Types and Declarations")
   (type locative)
   (class locative)
   (declaration locative))
 
-(defsection @mgl-pax-condition-system-locatives
+(defsection @condition-system-locatives
     (:title "Condition System Locatives")
   (condition locative)
   (restart locative)
   (define-restart macro))
 
-(defsection @mgl-pax-packagelike-locatives
+(defsection @packagelike-locatives
     (:title "Locatives for Packages and Readtables")
   (asdf:system locative)
   (package locative)
   (readtable locative))
 
-(defsection @mgl-pax-pax-locatives (:title "Locatives for PAX Constructs")
+(defsection @pax-locatives (:title "Locatives for PAX Constructs")
   (section locative)
   (glossary-term locative)
   (define-glossary-term macro)
@@ -82,7 +81,7 @@
   (argument locative)
   (include locative))
 
-(defsection @mgl-pax-external-locatives (:title "External Locatives")
+(defsection @external-locatives (:title "External Locatives")
   (clhs locative))
 
 
@@ -381,9 +380,9 @@
   "Refers to a global function, typically defined with DEFUN.
 
   Note that the arglist in the generated documentation depends on the
-  quality of SWANK-BACKEND:ARGLIST. It [may
-  be][@mgl-pax-document-implementation-notes section] that default
-  values of optional and keyword arguments are missing.")
+  quality of SWANK-BACKEND:ARGLIST. It [may be][
+  @document-implementation-notes section] that default values of
+  optional and keyword arguments are missing.")
 
 (define-locative-type generic-function ()
   "Refers to a [GENERIC-FUNCTION][class], typically defined with
@@ -911,7 +910,7 @@
     (values :declare (cons 'foo things)))
   ```
 
-  Also, `M-.` (see @MGL-PAX-NAVIGATING-IN-EMACS) on declarations
+  Also, `M-.` (see @NAVIGATING-IN-EMACS) on declarations
   currently only works on SBCL.
   """)
 
@@ -1137,7 +1136,9 @@
 ;;;; SECTION locative
 
 (define-locative-type section ()
-  "Refers to a section defined by DEFSECTION.")
+  "Refers to a section defined by DEFSECTION.
+
+  SECTION is not EXPORTABLE-LOCATIVE-TYPE-P.")
 
 (defun section-title-or-name (section)
   (or (section-title section)
@@ -1289,7 +1290,7 @@
 
 (define-locative-type dislocated ()
   "Refers to a symbol in a non-specific context. Useful for preventing
-  [autolinking][@mgl-pax-explicit-and-autolinking section]. For example, if
+  [autolinking][@explicit-and-autolinking section]. For example, if
   there is a function called `FOO` then
 
       `FOO`
@@ -1299,7 +1300,7 @@
       [`FOO`][dislocated]
 
   will not be. With a dislocated locative, LOCATE always fails with a
-  LOCATE-ERROR condition. Also see @MGL-PAX-PREVENTING-AUTOLINKING.")
+  LOCATE-ERROR condition. Also see @PREVENTING-AUTOLINKING.")
 
 (defmethod locate-object (symbol (locative-type (eql 'dislocated))
                           locative-args)

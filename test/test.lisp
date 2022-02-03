@@ -144,16 +144,16 @@
     "ddd"))
 
 (defparameter *navigation-test-cases*
-  '(;; @MGL-PAX-VARIABLELIKE-LOCATIVES
+  '(;; @VARIABLELIKE-LOCATIVES
     (foo-a variable (defvar foo-a))
     (foo-r variable (defvar foo-r))
     (foo-w variable (defvar foo-w))
     (bar constant (defconstant bar))
-    ;; @MGL-PAX-MACROLIKE-LOCATIVES
+    ;; @MACROLIKE-LOCATIVES
     (bar macro (defmacro bar))
     (my-smac symbol-macro (define-symbol-macro my-smac))
     (foo compiler-macro (define-compiler-macro foo))
-    ;; @MGL-PAX-FUNCTIONLIKE-LOCATIVES
+    ;; @FUNCTIONLIKE-LOCATIVES
     (foo function (defun foo))
     (test-gf generic-function (defgeneric test-gf))
     (test-gf (method () (number)) (defmethod test-gf))
@@ -162,23 +162,23 @@
     (foo-r (reader foo) (defclass foo) (r :reader foo-r))
     (foo-w (writer foo) (defclass foo) (w :writer foo-w))
     (baz-aaa structure-accessor (defstruct baz))
-    ;; @MGL-PAX-TYPELIKE-LOCATIVES
+    ;; @TYPELIKE-LOCATIVES
     (bar type (deftype bar))
     (foo type (defclass foo))
     (my-error type (define-condition my-error))
     (foo class (defclass foo))
     (test-declaration declaration (define-declaration test-declaration))
-    ;; @MGL-PAX-CONDITION-SYSTEM-LOCATIVES
+    ;; @CONDITION-SYSTEM-LOCATIVES
     (my-error condition (define-condition my-error))
     (some-restart restart (define-restart some-restart))
-    ;; @MGL-PAX-PACKAGELIKE-LOCATIVES
+    ;; @PACKAGELIKE-LOCATIVES
     (mgl-pax asdf:system ())
     (mgl-pax package
      (eval-when (:compile-toplevel :load-toplevel :execute))
      (cl:defpackage))
     (xxx-rt readtable (defreadtable xxx-rt))
-    ;; @MGL-PAX-PAX-LOCATIVES
-    (@mgl-pax-manual section (defsection @mgl-pax-manual))
+    ;; @PAX-LOCATIVES
+    (mgl-pax::@manual section (defsection @manual))
     (some-term glossary-term (define-glossary-term some-term))
     (my-loc locative (define-locative-type my-loc))))
 
@@ -473,7 +473,7 @@
     (check-downcasing "*PACKAGE*" "[`*package*`][1063]")
     ;; section with refs
     (check-downcasing (list "@SECTION-WITHOUT-TITLE" @section-without-title)
-                      "[`@section-without-title`][9a4b]"))
+                      "[`@section-without-title`][9353]"))
   (with-test ("escaped unadorned")
     (check-downcasing "\\NOT-INTERNED" "NOT-INTERNED")
     (check-downcasing "\\TEST" "TEST")
@@ -489,7 +489,7 @@
     (check-downcasing "`*FORMAT*`" "`*format*`")
     (check-downcasing "`*PACKAGE*`" "[`*package*`][1063]")
     (check-downcasing (list "`@SECTION-WITHOUT-TITLE`" @section-without-title)
-                      "[`@section-without-title`][9a4b]"))
+                      "[`@section-without-title`][9353]"))
   (with-test ("escaped code")
     (check-downcasing "`\\NOT-INTERNED`" "`NOT-INTERNED`")
     (check-downcasing "`\\TEST`" "`TEST`")
@@ -507,7 +507,7 @@
     (check-downcasing "[*PACKAGE*][]" "[`*package*`][1063]")
     (check-downcasing (list "[@SECTION-WITHOUT-TITLE][]"
                             @section-without-title)
-                      "[`@section-without-title`][9a4b]"))
+                      "[`@section-without-title`][9353]"))
   (with-test ("reflink code")
     (check-downcasing "[`NOT-INTERNED`][]" "[`not-interned`][]")
     (check-downcasing "[`TEST`][]" "[`test`][]")
@@ -516,7 +516,7 @@
     (check-downcasing "[`*PACKAGE*`][]" "[`*package*`][1063]")
     (check-downcasing (list "[`@SECTION-WITHOUT-TITLE`][]"
                             @section-without-title)
-                      "[`@section-without-title`][9a4b]"))
+                      "[`@section-without-title`][9353]"))
   (with-test ("multiple symbols")
     (check-downcasing "`(LIST :XXX 'PRINT)`" "`(list :xxx 'print)`")
     (with-failure-expected (t)
@@ -533,21 +533,21 @@
 (deftest test-downcasing-of-section-names ()
   (let ((*document-downcase-uppercase-code* t))
     (check-document @parent-section-without-title
-                    "<a id='x-28MGL-PAX-TEST-3A-40PARENT-SECTION-WITHOUT-TITLE-20MGL-PAX-3ASECTION-29'></a>
+                    "<a id='x-28MGL-PAX-TEST-3A-3A-40PARENT-SECTION-WITHOUT-TITLE-20MGL-PAX-3ASECTION-29'></a>
 
 # @parent-section-without-title
 
 ## Table of Contents
 
-- [1 @section-without-title][9a4b]
+- [1 @section-without-title][9353]
 
 ###### \\[in package MGL-PAX-TEST\\]
-<a id='x-28MGL-PAX-TEST-3A-40SECTION-WITHOUT-TITLE-20MGL-PAX-3ASECTION-29'></a>
+<a id='x-28MGL-PAX-TEST-3A-3A-40SECTION-WITHOUT-TITLE-20MGL-PAX-3ASECTION-29'></a>
 
 ## 1 @section-without-title
 
 
-  [9a4b]: #x-28MGL-PAX-TEST-3A-40SECTION-WITHOUT-TITLE-20MGL-PAX-3ASECTION-29 \"mgl-pax-test:@section-without-title\"
+  [9353]: #x-28MGL-PAX-TEST-3A-3A-40SECTION-WITHOUT-TITLE-20MGL-PAX-3ASECTION-29 \"mgl-pax-test::@section-without-title\"
 ")))
 
 (defun check-downcasing (docstring expected)
@@ -607,13 +607,13 @@
 (deftest test-explicit-label ()
   (with-test ("section")
     (check-downcasing (list "@SECTION-WITH-TITLE" @section-with-title)
-                      "[My Title][224f]")
+                      "[My Title][e824]")
     (check-downcasing (list "`@SECTION-WITH-TITLE`" @section-with-title)
-                      "[My Title][224f]")
+                      "[My Title][e824]")
     (check-downcasing (list "[@SECTION-WITH-TITLE][]" @section-with-title)
-                      "[My Title][224f]")
+                      "[My Title][e824]")
     (check-downcasing (list "[`@SECTION-WITH-TITLE`][]" @section-with-title)
-                      "[My Title][224f]"))
+                      "[My Title][e824]"))
   (with-test ("glossary-term")
     (check-downcasing (list "@GT-WITH-TITLE" @gt-with-title)
                       "[My Title][cf05]")
@@ -672,14 +672,14 @@
 ")
   (let ((*document-max-table-of-contents-level* 0))
     (check-document @self-referencing
-                    "<a id='x-28MGL-PAX-TEST-3A-40SELF-REFERENCING-20MGL-PAX-3ASECTION-29'></a>
+                    "<a id='x-28MGL-PAX-TEST-3A-3A-40SELF-REFERENCING-20MGL-PAX-3ASECTION-29'></a>
 
 # Self-referencing
 
 ###### \\[in package MGL-PAX-TEST\\]
-This is [Self-referencing][ca46].
+This is [Self-referencing][cacd].
 
-  [ca46]: #x-28MGL-PAX-TEST-3A-40SELF-REFERENCING-20MGL-PAX-3ASECTION-29 \"Self-referencing\"
+  [cacd]: #x-28MGL-PAX-TEST-3A-3A-40SELF-REFERENCING-20MGL-PAX-3ASECTION-29 \"Self-referencing\"
 ")))
 
 

@@ -8,7 +8,7 @@
 (eval-when (:compile-toplevel)
   (declaim (optimize (debug 3))))
 
-(defsection @mgl-pax-documentation-utilities
+(defsection @documentation-utilities
     (:title "Utilities for Generating Documentation")
   "Two convenience functions are provided to serve the common case of
   having an ASDF system with some readmes and a directory with for the
@@ -18,8 +18,8 @@
   (*document-html-max-navigation-table-of-contents-level* variable)
   (*document-html-top-blocks-of-links* variable)
   (*document-html-bottom-blocks-of-links* variable)
-  (@mgl-pax-github-workflow section)
-  (@mgl-pax-world section))
+  (@github-workflow section)
+  (@pax-world section))
 
 (defparameter *default-output-options*
   '(:if-does-not-exist :create
@@ -40,7 +40,7 @@
   Example usage:
 
   ```
-  (update-asdf-system-readmes @mgl-pax-manual :mgl-pax)
+  (update-asdf-system-readmes @manual :mgl-pax)
   ```"
   (with-open-file (stream (asdf:system-relative-pathname
                            asdf-system "README.md")
@@ -92,17 +92,17 @@
   sheet to TARGET-DIR, as well. Example usage:
 
   ```commonlisp
-  (update-asdf-system-html-docs @mgl-pax-manual :mgl-pax)
+  (update-asdf-system-html-docs @manual :mgl-pax)
   ```
 
   The same, linking to the sources on github:
 
   ```commonlisp
   (update-asdf-system-html-docs
-    @mgl-pax-manual :mgl-pax
+    @manual :mgl-pax
     :pages
     `((:objects
-      (,mgl-pax:@mgl-pax-manual)
+      (,mgl-pax::@manual)
       :source-uri-fn ,(make-github-source-uri-fn
                        :mgl-pax
                        \"https://github.com/melisgl/mgl-pax\"))))
@@ -291,7 +291,7 @@
                   collect (format nil "h~S" i)))))
 
 
-;;;; The autoloaded part of @MGL-PAX-WORLD
+;;;; The autoloaded part of @PAX-WORLD
 
 (defun update-pax-world (&key (docs *registered-pax-world-docs*) dir)
   "Generate HTML documentation for all DOCS. By default, files are
@@ -316,7 +316,7 @@
 ;;; This section is not in the documentation of PAX-WORLD itself. It
 ;;; is dynamically extended with the list of sections for which
 ;;; UPDATE-PAX-WORLD was called. FIXME: this is not thread-safe.
-(defsection @mgl-pax-world-dummy (:title "PAX World")
+(defsection @pax-world-dummy (:title "PAX World")
   "This is a list of documents generated with MGL-PAX in the default
   style. The documents are cross-linked: links to other documents are
   added automatically when a reference is found. Note that clicking on
@@ -325,19 +325,19 @@
 
 (defun create-pax-world (sections page-specs dir update-css-p)
   (set-pax-world-list sections)
-  (document-html (cons @mgl-pax-world-dummy sections)
+  (document-html (cons @pax-world-dummy sections)
                  (cons `(:objects
-                         ,(list @mgl-pax-world-dummy)
+                         ,(list @pax-world-dummy)
                          :output (,(merge-pathnames "index.html" dir)
                                   ,@*default-output-options*))
                        page-specs)
                  dir update-css-p t))
 
 (defun set-pax-world-list (objects)
-  (setf (slot-value @mgl-pax-world-dummy 'entries)
+  (setf (slot-value @pax-world-dummy 'entries)
         (list
-         ;; This is the docstring of @MGL-PAX-WORLD-DUMMY above.
-         (first (section-entries @mgl-pax-world-dummy))
+         ;; This is the docstring of @PAX-WORLD-DUMMY above.
+         (first (section-entries @pax-world-dummy))
          (let ((objects (sort (copy-seq objects) #'string<
                               :key #'section-title-or-name)))
            (with-output-to-string (stream)

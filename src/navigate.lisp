@@ -2,7 +2,7 @@
 
 (in-readtable pythonic-string-syntax)
 
-(defsection @mgl-pax-navigating-in-emacs (:title "Navigating Sources in Emacs")
+(defsection @navigating-in-emacs (:title "Navigating Sources in Emacs")
   "Integration into [SLIME's `M-.`][slime-m-.]
   (`slime-edit-definition`) allows one to visit the source location of
   the thing that's identified by `slime-symbol-at-point` parsed as a

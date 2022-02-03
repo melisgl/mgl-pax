@@ -8,26 +8,26 @@
 (eval-when (:compile-toplevel)
   (declaim (optimize (debug 3))))
 
-(defsection @mgl-pax-manual (:title "PAX Manual")
+(defsection @manual (:title "PAX Manual")
   (mgl-pax asdf:system)
   (mgl-pax/full asdf:system)
-  (@mgl-pax-links section)
-  (@mgl-pax-background section)
-  (@mgl-pax-tutorial section)
-  (@mgl-pax-basics section)
-  (@mgl-pax-locative-types section)
-  (@mgl-pax-navigating-in-emacs section)
-  (@mgl-pax-generating-documentation section)
-  (@mgl-pax-transcripts section)
-  (@mgl-pax-extension-api section))
+  (@links section)
+  (@background section)
+  (@tutorial section)
+  (@basics section)
+  (@locative-types section)
+  (@navigating-in-emacs section)
+  (@generating-documentation section)
+  (@transcripts section)
+  (@extension-api section))
 
-(defsection @mgl-pax-links (:title "Links")
+(defsection @links (:title "Links")
   "Here is the [official
   repository](https://github.com/melisgl/mgl-pax) and the [HTML
   documentation](http://melisgl.github.io/mgl-pax-world/mgl-pax-manual.html)
   for the latest version.")
 
-(defsection @mgl-pax-background (:export nil :title "Background")
+(defsection @background (:export nil :title "Background")
   "As a user, I frequently run into documentation that's incomplete
   and out of date, so I tend to stay in the editor and explore the
   code by jumping around with [SLIME][slime]'s [`M-.`][slime-m-.]. As
@@ -74,7 +74,7 @@
   later generalized into the concept of locatives:
 
   ```commonlisp
-  (defsection @mgl-pax-introduction ()
+  (defsection @introduction ()
     \"A single line for one man ...\"
     (foo class)
     (bar function))
@@ -99,7 +99,7 @@
 
   [markdown]: https://daringfireball.net/projects/markdown/")
 
-(defsection @mgl-pax-tutorial (:title "Tutorial")
+(defsection @tutorial (:title "Tutorial")
   """PAX provides an extremely poor man's Explorable Programming
   environment. Narrative primarily lives in so called sections that
   mix markdown docstrings with references to functions, variables,
@@ -107,9 +107,9 @@
 
   The primary focus is on making code easily explorable by using
   [SLIME's `M-.`][slime-m-.] (`slime-edit-definition`). See how to
-  enable some fanciness in @MGL-PAX-NAVIGATING-IN-EMACS.
-  @MGL-PAX-GENERATING-DOCUMENTATION from sections and all the
-  referenced items in Markdown or HTML format is also implemented.
+  enable some fanciness in @NAVIGATING-IN-EMACS.
+  @GENERATING-DOCUMENTATION from sections and all the referenced items
+  in Markdown or HTML format is also implemented.
 
   With the simplistic tools provided, one may accomplish similar
   effects as with Literate Programming, but documentation is generated
@@ -184,36 +184,35 @@
       ```
 
   Fancier markdown or HTML output with [automatic
-  markup][\*document-uppercase-is-code\* variable] and
-  [linking][@mgl-pax-linking-to-code section] of uppercase symbol
-  names found in docstrings, section numbering, table of contents, etc
-  is possible by calling the DOCUMENT function.
+  markup][\*document-uppercase-is-code\* variable] and [linking][
+  @linking-to-code section] of uppercase symbol names found in
+  docstrings, section numbering, table of contents, etc is possible by
+  calling the DOCUMENT function.
 
   *One can even generate documentation for different but related
   libraries at the same time with the output going to different files
   but with cross-page links being automatically added for symbols
-  mentioned in docstrings. See @MGL-PAX-GENERATING-DOCUMENTATION for
-  some convenience functions to cover the most common cases.*
+  mentioned in docstrings. See @GENERATING-DOCUMENTATION for some
+  convenience functions to cover the most common cases.*
 
   Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
   exports `*FOO-STATE*` and includes its documentation in
   `@FOO-RANDOM-MANUAL`. The symbols [VARIABLE][locative] and
   [FUNCTION][locative] are just two instances of
-  [locatives][@MGL-PAX-LOCATIVE-TYPES section], which are used in
-  DEFSECTION to refer to definitions tied to symbols.
+  [locatives][@LOCATIVE-TYPES section], which are used in DEFSECTION
+  to refer to definitions tied to symbols.
 
   The transcript in the code block tagged with `cl-transcript` is
-  automatically checked for up-to-dateness. See
-  @MGL-PAX-TRANSCRIPTS.""")
+  automatically checked for up-to-dateness. See @TRANSCRIPTS.""")
 
 
-(defsection @mgl-pax-basics (:title "Basics")
+(defsection @basics (:title "Basics")
   "Now let's examine the most important pieces."
   (defsection macro)
   (*discard-documentation-p* variable)
   (define-package macro)
-  (@mgl-pax-locatives-and-references section)
-  (@mgl-pax-parsing section))
+  (@locatives-and-references section)
+  (@parsing section))
 
 (defmacro define-package (package &rest options)
   "This is like CL:DEFPACKAGE but silences warnings and errors
@@ -236,12 +235,11 @@
          (cl:defpackage ,package ,@options)))))
 
 
-(defsection @mgl-pax-locatives-and-references
+(defsection @locatives-and-references
     (:title "Locatives and References" :export nil)
-  """To [navigate with `M-.`][@MGL-PAX-NAVIGATING-IN-EMACS section]
-  and to [generate documentation][@MGL-PAX-GENERATING-DOCUMENTATION
-  section] we need to refer to things such as the `FOO` type or the
-  `FOO` function.
+  """To [navigate with `M-.`][@NAVIGATING-IN-EMACS section] and to
+  [generate documentation][@GENERATING-DOCUMENTATION section] we need
+  to refer to things such as the `FOO` type or the `FOO` function.
 
   ```
   (deftype foo ()
@@ -264,7 +262,7 @@
   a @REFERENCE, and they identify a single thing. REFERENCEs are
   actual objects, but often they appear as an `(OBJECT LOCATIVE)`
   list (see DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
-  @MGL-PAX-LINKING-TO-CODE for the various forms possible).
+  @LINKING-TO-CODE for the various forms possible).
 
   ```
   (defsection @foos ()
@@ -285,8 +283,8 @@
 
   REFERENCE objects can be represented as an `(OBJECT LOCATIVE)` list
   as in DEFSECTION entries, or textually as `"FOO function"` where
-  `FOO` is a @NAME or similar (see @MGL-PAX-CODIFICATION and
-  @MGL-PAX-LINKING-TO-CODE).""")
+  `FOO` is a @NAME or similar (see @CODIFICATION and
+  @LINKING-TO-CODE).""")
 
 (define-glossary-term @object (:title "object")
   "@OBJECTs are symbols or strings which name [functions][function locative],
@@ -299,14 +297,13 @@
   @OBJECTs form @REFERENCEs.
 
   A locative can be a symbol or a list whose CAR is a symbol. In
-  either case, the symbol is called the [locative
-  type][@mgl-pax-locative-types section] while the rest of the
-  elements are the _locative arguments_. See the METHOD locative or
-  the LOCATIVE locative for examples of locative types with
-  arguments.")
+  either case, the symbol is called the [locative type][
+  @locative-types section] while the rest of the elements are the
+  _locative arguments_. See the METHOD locative or the LOCATIVE
+  locative for examples of locative types with arguments.")
 
 
-(defsection @mgl-pax-locatives-and-references-api
+(defsection @locatives-and-references-api
     (:title "Locatives and References API")
   "`(MAKE-REFERENCE 'FOO 'VARIABLE)` constructs a REFERENCE that
   captures the path to take from an object (the symbol FOO) to an

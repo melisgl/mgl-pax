@@ -49,11 +49,6 @@ examples without actually INCLUDEing them.
 * make it possible to include docstrings without documenting their owner
 This should bring us closer to literate programming.
 * MAYBE desuffix all lowercase suffixes?
-* don't export sections and glossary-terms?
-- We wouldn't need to worry about conflicts and prefix everything with
-  `mgl-pax-`.
-- Less clutter in pax:<TAB>
-- pax::@<tab> can still be used
 * MAYBE get variable initforms from source?
 Or fall back on this for deficient ARGLISTs. Will be really slow.
 * test navigation from the emacs side

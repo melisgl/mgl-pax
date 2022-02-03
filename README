@@ -84,7 +84,7 @@ birds to kill, and the symbol got accompanied by a type, which was
 later generalized into the concept of locatives:
 
 ```commonlisp
-(defsection @mgl-pax-introduction ()
+(defsection @introduction ()
   "A single line for one man ..."
   (foo class)
   (bar function))
@@ -119,9 +119,9 @@ etc, all of which should probably have their own docstrings.
 
 The primary focus is on making code easily explorable by using
 [SLIME's `M-.`][slime-m-.] (`slime-edit-definition`). See how to
-enable some fanciness in @MGL-PAX-NAVIGATING-IN-EMACS.
-@MGL-PAX-GENERATING-DOCUMENTATION from sections and all the
-referenced items in Markdown or HTML format is also implemented.
+enable some fanciness in @NAVIGATING-IN-EMACS.
+@GENERATING-DOCUMENTATION from sections and all the referenced items
+in Markdown or HTML format is also implemented.
 
 With the simplistic tools provided, one may accomplish similar
 effects as with Literate Programming, but documentation is generated
@@ -250,27 +250,26 @@ For this example, the generated markdown would look like this:
     ```
 
 Fancier markdown or HTML output with [automatic
-markup][*document-uppercase-is-code* variable] and
-[linking][@mgl-pax-linking-to-code section] of uppercase symbol
-names found in docstrings, section numbering, table of contents, etc
-is possible by calling the DOCUMENT function.
+markup][*document-uppercase-is-code* variable] and [linking][
+@linking-to-code section] of uppercase symbol names found in
+docstrings, section numbering, table of contents, etc is possible by
+calling the DOCUMENT function.
 
 *One can even generate documentation for different but related
 libraries at the same time with the output going to different files
 but with cross-page links being automatically added for symbols
-mentioned in docstrings. See @MGL-PAX-GENERATING-DOCUMENTATION for
-some convenience functions to cover the most common cases.*
+mentioned in docstrings. See @GENERATING-DOCUMENTATION for some
+convenience functions to cover the most common cases.*
 
 Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
 exports `*FOO-STATE*` and includes its documentation in
 `@FOO-RANDOM-MANUAL`. The symbols [VARIABLE][locative] and
 [FUNCTION][locative] are just two instances of
-[locatives][@MGL-PAX-LOCATIVE-TYPES section], which are used in
-DEFSECTION to refer to definitions tied to symbols.
+[locatives][@LOCATIVE-TYPES section], which are used in DEFSECTION
+to refer to definitions tied to symbols.
 
 The transcript in the code block tagged with `cl-transcript` is
-automatically checked for up-to-dateness. See
-@MGL-PAX-TRANSCRIPTS.
+automatically checked for up-to-dateness. See @TRANSCRIPTS.
 
 ## Basics
 
@@ -281,7 +280,7 @@ Now let's examine the most important pieces.
     Define a documentation section and maybe export referenced symbols.
     A bit behind the scenes, a global variable with NAME is defined and
     is bound to a [SECTION][class] object. By convention, section names
-    start with the character `@`. See @MGL-PAX-TUTORIAL for an example.
+    start with the character `@`. See @TUTORIAL for an example.
     
     ##### Entries
     
@@ -293,14 +292,14 @@ Now let's examine the most important pieces.
     that `@BAR` is a subsection of this one. `(BAZ (METHOD () (T T T)))`
     refers to the default method of the three argument generic function
     `BAZ`. `(FOO FUNCTION)` is equivalent to `(FOO (FUNCTION))`. See
-    @MGL-PAX-LOCATIVES-AND-REFERENCES for more.
+    @LOCATIVES-AND-REFERENCES for more.
     
     The same object may occur in multiple references, typically with
     different locatives, but this is not required.
     
-    The references are not looked up (see RESOLVE in the
-    @MGL-PAX-EXTENSION-API) until documentation is generated, so it is
-    allowed to refer to things yet to be defined.
+    The references are not looked up (see RESOLVE in the @EXTENSION-API)
+    until documentation is generated, so it is allowed to refer to
+    things yet to be defined.
     
     ##### Exporting
     
@@ -352,10 +351,9 @@ Now let's examine the most important pieces.
 
 ### Locatives and References
 
-To [navigate with `M-.`][@MGL-PAX-NAVIGATING-IN-EMACS section]
-and to [generate documentation][@MGL-PAX-GENERATING-DOCUMENTATION
-section] we need to refer to things such as the `FOO` type or the
-`FOO` function.
+To [navigate with `M-.`][@NAVIGATING-IN-EMACS section] and to
+[generate documentation][@GENERATING-DOCUMENTATION section] we need
+to refer to things such as the `FOO` type or the `FOO` function.
 
 ```
 (deftype foo ()
@@ -378,7 +376,7 @@ also take arguments. An @OBJECT and a @LOCATIVE together are called
 a @REFERENCE, and they identify a single thing. REFERENCEs are
 actual objects, but often they appear as an `(OBJECT LOCATIVE)`
 list (see DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
-@MGL-PAX-LINKING-TO-CODE for the various forms possible).
+@LINKING-TO-CODE for the various forms possible).
 
 ```
 (defsection @foos ()
@@ -397,8 +395,8 @@ list (see DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
     
     REFERENCE objects can be represented as an `(OBJECT LOCATIVE)` list
     as in DEFSECTION entries, or textually as `"FOO function"` where
-    `FOO` is a @NAME or similar (see @MGL-PAX-CODIFICATION and
-    @MGL-PAX-LINKING-TO-CODE).
+    `FOO` is a @NAME or similar (see @CODIFICATION and
+    @LINKING-TO-CODE).
 
 - [glossary-term] object
 
@@ -413,21 +411,19 @@ list (see DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
     @OBJECTs form @REFERENCEs.
     
     A locative can be a symbol or a list whose CAR is a symbol. In
-    either case, the symbol is called the [locative
-    type][@mgl-pax-locative-types section] while the rest of the
-    elements are the *locative arguments*. See the METHOD locative or
-    the LOCATIVE locative for examples of locative types with
-    arguments.
+    either case, the symbol is called the [locative type][
+    @locative-types section] while the rest of the elements are the
+    *locative arguments*. See the METHOD locative or the LOCATIVE
+    locative for examples of locative types with arguments.
 
 ### Parsing
 
 - [glossary-term] word
 
     A *word* is a string from which we want to extract an @OBJECT. When
-    [Navigating][@mgl-pax-navigating-in-emacs section], the word is
-    `slime-symbol-at-point`, when @MGL-PAX-GENERATING-DOCUMENTATION, it
-    is a non-empty string between whitespace characters in a
-    docstring.
+    [Navigating][@navigating-in-emacs section], the word is
+    `slime-symbol-at-point`, when @GENERATING-DOCUMENTATION, it is a
+    non-empty string between whitespace characters in a docstring.
 
 - [glossary-term] name
 
@@ -441,8 +437,8 @@ list (see DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
     `"s"` is removed to get `"LIST"`. Out of the three candidates for
     names, `"LISTs."`, `"LISTs"`, and `"LIST"`, the ones that name
     interned symbols and such are retained for purposes for
-    [Navigating][@mgl-pax-navigating-in-emacs section] and
-    @MGL-PAX-GENERATING-DOCUMENTATION.
+    [Navigating][@navigating-in-emacs section] and
+    @GENERATING-DOCUMENTATION.
     
     The punctuation characters for left and right trimming are `#<` and
     `,:.>`, respectively. The plural suffixes considered are `s`, `es`,
@@ -454,22 +450,21 @@ list (see DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
 ## Locative Types
 
 As we have already briefly seen in DEFSECTION and
-@MGL-PAX-LOCATIVES-AND-REFERENCES, locatives allow us to refer to,
-document and find the source location of various definitions beyond
-what standard Common Lisp offers. See @MGL-PAX-EXTENSION-API for a
-more detailed treatment. The following are the locatives types
-supported out of the box. As all locative types, they are symbols,
-and their names should make it obvious what kind of things they
-refer to. Unless otherwise noted, locatives take no arguments.
+@LOCATIVES-AND-REFERENCES, locatives allow us to refer to, document
+and find the source location of various definitions beyond what
+standard Common Lisp offers. See @EXTENSION-API for a more detailed
+treatment. The following are the locatives types supported out of
+the box. As all locative types, they are symbols, and their names
+should make it obvious what kind of things they refer to. Unless
+otherwise noted, locatives take no arguments.
 
 When there is a corresponding CL type, a locative can be resolved to
 a unique object as is the case in `(LOCATE 'FOO 'CLASS)` returning
 `#<CLASS FOO>`. Even if there is no such CL type, the source
 location and the docstring of the defining form is recorded (see
-LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
-@MGL-PAX-EXTENSION-API), which makes navigating the sources with
-`M-.` (see @MGL-PAX-NAVIGATING-IN-EMACS) and
-@MGL-PAX-GENERATING-DOCUMENTATION possible.
+LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the @EXTENSION-API),
+which makes navigating the sources with `M-.` (see
+@NAVIGATING-IN-EMACS) and @GENERATING-DOCUMENTATION possible.
 
 ### Locatives for Variables
 
@@ -535,9 +530,9 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     Refers to a global function, typically defined with DEFUN.
     
     Note that the arglist in the generated documentation depends on the
-    quality of SWANK-BACKEND:ARGLIST. It [may
-    be][@mgl-pax-document-implementation-notes section] that default
-    values of optional and keyword arguments are missing.
+    quality of SWANK-BACKEND:ARGLIST. It [may be][
+    @document-implementation-notes section] that default values of
+    optional and keyword arguments are missing.
 
 - [locative] GENERIC-FUNCTION
 
@@ -627,7 +622,7 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
       (values :declare (cons 'foo things)))
     ```
     
-    Also, `M-.` (see @MGL-PAX-NAVIGATING-IN-EMACS) on declarations
+    Also, `M-.` (see @NAVIGATING-IN-EMACS) on declarations
     currently only works on SBCL.
 
 ### Condition System Locatives
@@ -690,6 +685,8 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
 - [locative] SECTION
 
     Refers to a section defined by DEFSECTION.
+    
+    SECTION is not EXPORTABLE-LOCATIVE-TYPE-P.
 
 - [locative] GLOSSARY-TERM
 
@@ -706,6 +703,8 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
     
     When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
     is true, DOCSTRING will not be recorded to save memory.
+    
+    GLOSSARY-TERM is not EXPORTABLE-LOCATIVE-TYPE-P.
 
 - [locative] LOCATIVE LAMBDA-LIST
 
@@ -717,7 +716,7 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
 - [locative] DISLOCATED
 
     Refers to a symbol in a non-specific context. Useful for preventing
-    [autolinking][@mgl-pax-explicit-and-autolinking section]. For example, if
+    [autolinking][@explicit-and-autolinking section]. For example, if
     there is a function called `FOO` then
     
         `FOO`
@@ -727,7 +726,7 @@ LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the
         [`FOO`][dislocated]
     
     will not be. With a dislocated locative, LOCATE always fails with a
-    LOCATE-ERROR condition. Also see @MGL-PAX-PREVENTING-AUTOLINKING.
+    LOCATE-ERROR condition. Also see @PREVENTING-AUTOLINKING.
 
 - [locative] ARGUMENT
 
@@ -920,9 +919,9 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     as with CL:FORMAT.
     
     Most often, this function is called on section objects
-    like `(DOCUMENT @MGL-PAX-MANUAL)`, but it supports all kinds of
-    objects for which DOCUMENT-OBJECT is defined. To look up the
-    documentation of function DOCUMENT:
+    like `(DOCUMENT @MANUAL)`, but it supports all kinds of objects for
+    which DOCUMENT-OBJECT is defined. To look up the documentation of
+    function DOCUMENT:
     
         (document #'document)
     
@@ -946,9 +945,9 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     See DESCRIBE-OBJECT `(METHOD () (SECTION T))`.
     
     There are quite a few special variables that affect how output is
-    generated, see @MGL-PAX-CODIFICATION, @MGL-PAX-LINKING-TO-CODE,
-    @MGL-PAX-LINKING-TO-SECTIONS, and
-    @MGL-PAX-MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES.
+    generated, see @CODIFICATION, @LINKING-TO-CODE,
+    @LINKING-TO-SECTIONS, and
+    @MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES.
     
     The rest of this description deals with how to generate multiple
     pages.
@@ -1026,15 +1025,15 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     
     ```commonlisp
     `((;; The section about SECTIONs and everything below it ...
-       :objects (, @mgl-pax-sections)
+       :objects (, @sections)
        ;; ... is so boring that it's not worth the disk space, so
        ;; send it to a string.
        :output (nil)
        ;; Explicitly tell other pages not to link to these guys.
        :uri-fragment nil)
-      ;; Send the @MGL-PAX-EXTENSION-API section and everything reachable
+      ;; Send the @EXTENSION-API section and everything reachable
       ;; from it ...
-      (:objects (, @mgl-pax-extension-api)
+      (:objects (, @extension-api)
        ;; ... to build/tmp/pax-extension-api.html.
        :output ("build/tmp/pax-extension-api.html")
        ;; However, on the web server html files will be at this
@@ -1047,7 +1046,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
        :footer-fn 'write-html-footer)
       ;; Catch the reference that were not reachable from the above. It
       ;; is important for this page spec to be last.
-      (:objects (, @mgl-pax-manual)
+      (:objects (, @manual)
        :output ("build/tmp/manual.html")
        ;; Links from the extension api page to the manual page will
        ;; be to ../user/pax-manual#<anchor>, while links going to
@@ -1147,9 +1146,9 @@ Reader][pythonic-string-reader] can help with that.
 
 - [variable] *DOCUMENT-UPPERCASE-IS-CODE* T
 
-    When true, @MGL-PAX-CODIFIABLE and @MGL-PAX-INTERESTING @WORDs
-    are assumed to be code as if they were marked up with backticks. For
-    example, this docstring
+    When true, @CODIFIABLE and @INTERESTING @WORDs are assumed to be
+    code as if they were marked up with backticks. For example, this
+    docstring
     
         "T PRINT CLASSes SECTION *PACKAGE* MGL-PAX ASDF
         CaMeL Capital"
@@ -1224,16 +1223,16 @@ Reader][pythonic-string-reader] can help with that.
 In this section, we describe of all ways of linking to code
 available when *DOCUMENT-UPPERCASE-IS-CODE* is true.
 
-*Note that invoking [`M-.`][@mgl-pax-navigating-in-emacs section] on
-the @OBJECT of any of the following links will disambiguate based
-the textual context, determining the locative. In a nutshell, if
-`M-.` works without popping up a list of choices, then the
-documentation will contain a single link.*
+*Note that invoking [`M-.`][@navigating-in-emacs section] on the
+@OBJECT of any of the following links will disambiguate based the
+textual context, determining the locative. In a nutshell, if `M-.`
+works without popping up a list of choices, then the documentation
+will contain a single link.*
 
 - [variable] *DOCUMENT-LINK-CODE* T
 
     Enable the various forms of links in docstrings described in
-    @MGL-PAX-LINKING-TO-CODE.
+    @LINKING-TO-CODE.
     
     Let's understand the generated Markdown.
     
@@ -1327,7 +1326,7 @@ without.
 In the common case, when [*DOCUMENT-UPPERCASE-IS-CODE*][] is true,
 prefixing the uppercase @WORD with a backslash prevents it from
 being codified and thus also prevents
-[autolinking][@mgl-pax-explicit-and-autolinking section] form
+[autolinking][@explicit-and-autolinking section] form
 kicking in. For example, `\DOCUMENT` renders as DOCUMENT. If it
 should be marked up as code but not autolinked, the backslash must
 be within backticks like this:
@@ -1342,10 +1341,10 @@ ARGUMENT locative may be used as in `[DOCUMENT][dislocated]`.
 #### Suppressed Links
 
 Within the same docstring,
-[autolinking][@mgl-pax-explicit-and-autolinking section] of
-code (i.e. of something like `FOO`) is suppressed if the same
-@OBJECT was already linked to in any way. In the following
-docstring, only the first `FOO` will be turned into a link.
+[autolinking][@explicit-and-autolinking section] of code (i.e. of
+something like `FOO`) is suppressed if the same @OBJECT was already
+linked to in any way. In the following docstring, only the first
+`FOO` will be turned into a link.
 
     "`FOO` is safe. `FOO` is great."
 
@@ -1356,19 +1355,19 @@ occurrences `FOO` produce links.
     "`FOO` is safe. [`FOO`][macro] is great."
     "`FOO` is safe. Macro `FOO` is great."
 
-As an exception, links with [specified][@mgl-pax-specified-locative
-section] and [unambiguous][@mgl-pax-unambiguous-locative section]
-locatives to SECTIONs and GLOSSARY-TERMs always produce a link to
-allow their titles to be displayed properly.
+As an exception, links with [specified][@specified-locative section]
+and [unambiguous][@unambiguous-locative section] locatives to
+SECTIONs and GLOSSARY-TERMs always produce a link to allow their
+titles to be displayed properly.
 
-Finally, [autolinking][@mgl-pax-explicit-and-autolinking section] to
+Finally, [autolinking][@explicit-and-autolinking section] to
 T or NIL is suppressed (see *DOCUMENT-LINK-TO-HYPERSPEC*).
 
 #### Filtering Ambiguous References
 
 When there are multiple references to link to - as seen in
-@MGL-PAX-AMBIGUOUS-LOCATIVE - some references are removed by the
-following rules.
+@AMBIGUOUS-LOCATIVE - some references are removed by the following
+rules.
 
 - References to ASDF:SYSTEMs are removed if there are other
   references which are not to ASDF:SYSTEMs. This is because system
@@ -1400,19 +1399,19 @@ links:
   t)
 ```
 
-If linking was desired one could use a
-@MGL-PAX-SPECIFIED-LOCATIVE (e.g. `[FOO][function]` or `FOO
-function`), which results in a single link. An explicit link with an
-unspecified locative like `[FOO][]` generates links to all
-references involving the `FOO` symbol except the local ones.
+If linking was desired one could use a @SPECIFIED-LOCATIVE (e.g.
+`[FOO][function]` or `FOO function`), which results in a single
+link. An explicit link with an unspecified locative like `[FOO][]`
+generates links to all references involving the `FOO` symbol except
+the local ones.
 
 The exact rules for local references are as follows:
 
-- Unless a locative is [specified][ @mgl-pax-specified-locative
-  section], no [autolinking][ @mgl-pax-explicit-and-autolinking
-  section] is performed for @OBJECTS for which there are local
-  references. For example, `FOO` does not get any links if there is
-  *any* local reference with the same @OBJECT.
+- Unless a locative is [specified][ @specified-locative section], no
+  [autolinking][ @explicit-and-autolinking section] is performed for
+  @OBJECTS for which there are local references. For example, `FOO`
+  does not get any links if there is *any* local reference with the
+  same @OBJECT.
 
 - With a locative specified (e.g. in the explicit link
   `[FOO][function]` or in the text `the FOO function`), a single
@@ -1432,8 +1431,8 @@ The exact rules for local references are as follows:
     FIND-IF links to FIND-IF, FUNCTION links
     to FUNCTION and `[FUNCTION][type]` links to [FUNCTION][type].
     
-    [Autolinking][@mgl-pax-explicit-and-autolinking section] to T and
-    NIL is suppressed. If desired, use `[T][]` (that links to [T][]) or
+    [Autolinking][@explicit-and-autolinking section] to T and NIL is
+    suppressed. If desired, use `[T][]` (that links to [T][]) or
     `[T][constant]` (that links to [T][constant]).
     
     Note that linking to sections in the Hyperspec is done with the CLHS
@@ -1553,7 +1552,7 @@ HTML documentation and the default css stylesheet.
     Example usage:
     
     ```
-    (update-asdf-system-readmes @mgl-pax-manual :mgl-pax)
+    (update-asdf-system-readmes @manual :mgl-pax)
     ```
 
 
@@ -1564,17 +1563,17 @@ HTML documentation and the default css stylesheet.
     sheet to TARGET-DIR, as well. Example usage:
     
     ```commonlisp
-    (update-asdf-system-html-docs @mgl-pax-manual :mgl-pax)
+    (update-asdf-system-html-docs @manual :mgl-pax)
     ```
     
     The same, linking to the sources on github:
     
     ```commonlisp
     (update-asdf-system-html-docs
-      @mgl-pax-manual :mgl-pax
+      @manual :mgl-pax
       :pages
       `((:objects
-        (,mgl-pax:@mgl-pax-manual)
+        (,mgl-pax:@manual)
         :source-uri-fn ,(make-github-source-uri-fn
                          :mgl-pax
                          "https://github.com/melisgl/mgl-pax"))))
@@ -1627,8 +1626,8 @@ Two commits needed still, but it is somewhat less painful.
 
 This way the HTML documentation will be available at
 `http://<username>.github.io/<repo-name>`. It is probably a good
-idea to add section like the @MGL-PAX-LINKS section to allow jumping
-between the repository and the gh-pages site.
+idea to add section like the @LINKS section to allow jumping between
+the repository and the gh-pages site.
 
 - [function] MAKE-GITHUB-SOURCE-URI-FN ASDF-SYSTEM GITHUB-URI &KEY GIT-VERSION
 
@@ -1667,10 +1666,10 @@ For example, this is how PAX registers itself:
 
 ```commonlisp
 (defun pax-sections ()
-  (list @mgl-pax-manual))
+  (list @manual))
 (defun pax-pages ()
   `((:objects
-     (,mgl-pax:@mgl-pax-manual)
+     (,mgl-pax:@manual)
      :source-uri-fn ,(make-github-source-uri-fn
                       :mgl-pax
                       "https://github.com/melisgl/mgl-pax"))))
@@ -1981,7 +1980,7 @@ Transcription support in emacs can be enabled by loading
           2)
     ```
     
-    See @MGL-PAX-TRANSCRIPT-CONISTENCY-CHECKING for the full picture.
+    See @TRANSCRIPT-CONISTENCY-CHECKING for the full picture.
     
     **Unreadable Values**
     
@@ -2140,8 +2139,8 @@ out-of-date examples in documentation, although using it for writing
 tests is also a possiblity. Here, we focus on the former.
 
 When a markdown code block tagged `cl-transcript` is processed
-during @MGL-PAX-GENERATING-DOCUMENTATION, the code in it is replaced
-with the output of with `(TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
+during @GENERATING-DOCUMENTATION, the code in it is replaced with
+the output of with `(TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
 :CHECK-CONSISTENCY T)`. Suppose we have the following example of the
 function `GREET`, that prints `hello` and returns 7.
 
@@ -2477,7 +2476,8 @@ for ASDF:SYSTEM:
     Return true iff symbols in references with
     LOCATIVE-TYPE are to be exported by default when they occur in a
     DEFSECTION. The default method returns T, while the methods for
-    PACKAGE, ASDF:SYSTEM and METHOD return NIL.
+    SECTION, GLOSSARY-TERM, PACKAGE, ASDF:SYSTEM, METHOD and INCLUDE
+    return NIL.
     
     DEFSECTION calls this function to decide what symbols to export when
     its EXPORT argument is true.
@@ -2559,7 +2559,7 @@ for ASDF:SYSTEM:
 
     Return the Swank source location for OBJECT. It
     is called by LOCATE-DEFINITIONS-FOR-EMACS, which lies behind the
-    `M-.` extension (see @MGL-PAX-NAVIGATING-IN-EMACS).
+    `M-.` extension (see @NAVIGATING-IN-EMACS).
     
     If successful, the return value should look like one of these:
     
@@ -2691,8 +2691,8 @@ example of how the VARIABLE locative is defined:
 
     Call LOCATE-AND-FIND-SOURCE with the appropriate parts of
     REFERENCE. If there is no method specialized on the [locative
-    type][@mgl-pax-locatives-and-references], then attempt to RESOLVE
-    REFERENCE to a non-`REFERENCE` object and invoke FIND-SOURCE on it.
+    type][@locatives-and-references], then attempt to RESOLVE REFERENCE
+    to a non-`REFERENCE` object and invoke FIND-SOURCE on it.
     
     Thus for new locative types, only FIND-SOURCE or
     LOCATE-AND-FIND-SOURCE needs to be specialized.

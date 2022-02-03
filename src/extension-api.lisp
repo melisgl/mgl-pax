@@ -8,14 +8,14 @@
 (eval-when (:compile-toplevel)
   (declaim (optimize (debug 3))))
 
-(defsection @mgl-pax-extension-api (:title "Extension API")
-  (@mgl-pax-locatives-and-references-api section)
-  (@mgl-pax-new-object-types section)
-  (@mgl-pax-reference-based-extensions section)
-  (@mgl-pax-sections section))
+(defsection @extension-api (:title "Extension API")
+  (@locatives-and-references-api section)
+  (@new-object-types section)
+  (@reference-based-extensions section)
+  (@sections section))
 
 
-(defsection @mgl-pax-new-object-types (:title "Adding New Object Types")
+(defsection @new-object-types (:title "Adding New Object Types")
   "One may wish to make the DOCUMENT function and `M-.` navigation
   work with new object types. Extending DOCUMENT can be done by
   defining a DOCUMENT-OBJECT method. To allow these objects to be
@@ -208,7 +208,7 @@
 (defgeneric find-source (object)
   (:documentation """Return the Swank source location for OBJECT. It
   is called by LOCATE-DEFINITIONS-FOR-EMACS, which lies behind the
-  `M-.` extension (see @MGL-PAX-NAVIGATING-IN-EMACS).
+  `M-.` extension (see @NAVIGATING-IN-EMACS).
 
   If successful, the return value should look like one of these:
 
@@ -244,7 +244,7 @@
         (call-next-method))))
 
 
-(defsection @mgl-pax-reference-based-extensions
+(defsection @reference-based-extensions
     (:title "Reference Based Extensions")
   "Let's see how to extend DOCUMENT and `M-.` navigation if there is
   no first class object to represent the thing of interest. Recall
@@ -334,8 +334,8 @@
 (defmethod find-source ((reference reference))
   "Call LOCATE-AND-FIND-SOURCE with the appropriate parts of
   REFERENCE. If there is no method specialized on the [locative
-  type][@mgl-pax-locatives-and-references], then attempt to RESOLVE
-  REFERENCE to a non-`REFERENCE` object and invoke FIND-SOURCE on it.
+  type][@locatives-and-references], then attempt to RESOLVE REFERENCE
+  to a non-`REFERENCE` object and invoke FIND-SOURCE on it.
 
   Thus for new locative types, only FIND-SOURCE or
   LOCATE-AND-FIND-SOURCE needs to be specialized."
@@ -454,7 +454,7 @@
      ',lambda-list))
 
 
-(defsection @mgl-pax-sections (:title "Sections")
+(defsection @sections (:title "Sections")
   "[SECTION][class] objects rarely need to be dissected since
   DEFSECTION and DOCUMENT cover most needs. However, it is plausible
   that one wants to subclass them and maybe redefine how they are

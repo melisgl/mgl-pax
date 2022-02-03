@@ -22,7 +22,7 @@
   "Define a documentation section and maybe export referenced symbols.
   A bit behind the scenes, a global variable with NAME is defined and
   is bound to a [SECTION][class] object. By convention, section names
-  start with the character `@`. See @MGL-PAX-TUTORIAL for an example.
+  start with the character `@`. See @TUTORIAL for an example.
 
   ##### Entries
 
@@ -34,14 +34,14 @@
   that `@BAR` is a subsection of this one. `(BAZ (METHOD () (T T T)))`
   refers to the default method of the three argument generic function
   `BAZ`. `(FOO FUNCTION)` is equivalent to `(FOO (FUNCTION))`. See
-  @MGL-PAX-LOCATIVES-AND-REFERENCES for more.
+  @LOCATIVES-AND-REFERENCES for more.
 
   The same object may occur in multiple references, typically with
   different locatives, but this is not required.
 
-  The references are not looked up (see RESOLVE in the
-  @MGL-PAX-EXTENSION-API) until documentation is generated, so it is
-  allowed to refer to things yet to be defined.
+  The references are not looked up (see RESOLVE in the @EXTENSION-API)
+  until documentation is generated, so it is allowed to refer to
+  things yet to be defined.
 
   ##### Exporting
 
@@ -221,7 +221,8 @@
 ;;;; Exporting
 
 (defun export-some-symbols (name entries package)
-  (when (symbol-accessible-in-package-p name package)
+  (when (and (exportable-locative-type-p 'section)
+             (symbol-accessible-in-package-p name package))
     (export name package))
   (dolist (entry entries)
     (when (listp entry)
@@ -237,7 +238,8 @@
   (:documentation "Return true iff symbols in references with
   LOCATIVE-TYPE are to be exported by default when they occur in a
   DEFSECTION. The default method returns T, while the methods for
-  PACKAGE, ASDF:SYSTEM and METHOD return NIL.
+  SECTION, GLOSSARY-TERM, PACKAGE, ASDF:SYSTEM, METHOD and INCLUDE
+  return NIL.
 
   DEFSECTION calls this function to decide what symbols to export when
   its EXPORT argument is true.")
@@ -255,6 +257,9 @@
   nil)
 
 (defmethod exportable-locative-type-p ((locative-type (eql 'method)))
+  nil)
+
+(defmethod exportable-locative-type-p ((locative-type (eql 'section)))
   nil)
 
 
@@ -280,9 +285,14 @@
   more lightweight bullet + locative + name/title style.
 
   When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
-  is true, DOCSTRING will not be recorded to save memory."
+  is true, DOCSTRING will not be recorded to save memory.
+
+  GLOSSARY-TERM is not EXPORTABLE-LOCATIVE-TYPE-P."
   `(defparameter ,name
      (make-instance 'glossary-term
                     :name ',name :title ,title
                     :docstring ,(unless discard-documentation-p
                                   docstring))))
+
+(defmethod exportable-locative-type-p ((locative-type (eql 'glossary-term)))
+  nil)

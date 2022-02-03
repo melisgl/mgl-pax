@@ -1,6 +1,6 @@
 ;;;; -*- mode: Lisp -*-
 
-;;; See MGL-PAX:@MGL-PAX-MANUAL for the user guide.
+;;; See MGL-PAX::@MANUAL for the user guide.
 (asdf:defsystem #:mgl-pax
   :licence "MIT, see COPYING."
   :version "0.0.4"
@@ -41,7 +41,7 @@
   :source-control ""
   :description "Slime `M-.` support for MGL-PAX."
   :long-description "Autoloaded by Slime's `M-.` when `src/pax.el` is
-  loaded. See MGL-PAX:@MGL-PAX-NAVIGATING-IN-EMACS."
+  loaded. See MGL-PAX::@NAVIGATING-IN-EMACS."
   :depends-on (:mgl-pax)
   :components ((:module "src"
                 :serial t
@@ -58,7 +58,7 @@
   :source-control ""
   :description "Documentation generation support for MGL-PAX."
   :long-description "Autoloaded by MGL-PAX:DOCUMENT. See
-  MGL-PAX:@MGL-PAX-GENERATING-DOCUMENTATION."
+  MGL-PAX::@GENERATING-DOCUMENTATION."
   :depends-on (:mgl-pax/navigate :3bmd :3bmd-ext-code-blocks :colorize :md5)
   :components ((:module "src"
                 :serial t
@@ -77,7 +77,7 @@
   :source-control ""
   :description "Transcription support for MGL-PAX."
   :long-description "Autoloaded by MGL-PAX:TRANSCRIBE and by the Emacs
-  integration (see MGL-PAX:@MGL-PAX-TRANSCRIPTS)."
+  integration (see MGL-PAX::@TRANSCRIPTS)."
   :depends-on (:mgl-pax)
   :components ((:module "src"
                 :serial t

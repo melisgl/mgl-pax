@@ -8,7 +8,7 @@
 (eval-when (:compile-toplevel)
   (declaim (optimize (debug 3))))
 
-(defsection @mgl-pax-transcripts (:title "Transcripts")
+(defsection @transcripts (:title "Transcripts")
   "What are transcripts for? When writing a tutorial, one often wants
   to include a REPL session with maybe a few defuns and a couple of
   forms whose output or return values are shown. Also, in a function's
@@ -51,12 +51,12 @@
 
       (in-readtable pythonic-string-syntax)"
   (mgl-pax/transcribe asdf:system)
-  (@mgl-pax-transcribing-with-emacs section)
-  (@mgl-pax-transcript-api section)
-  (@mgl-pax-transcript-conistency-checking section))
+  (@transcribing-with-emacs section)
+  (@transcript-api section)
+  (@transcript-conistency-checking section))
 
 
-(defsection @mgl-pax-transcript-api (:title "Transcript API")
+(defsection @transcript-api (:title "Transcript API")
   (transcribe function)
   (*transcribe-check-consistency* variable)
   (*transcribe-syntaxes* variable)
@@ -244,7 +244,7 @@
         2)
   ```
 
-  See @MGL-PAX-TRANSCRIPT-CONISTENCY-CHECKING for the full picture.
+  See @TRANSCRIPT-CONISTENCY-CHECKING for the full picture.
   
   **Unreadable Values**
 
@@ -1070,7 +1070,7 @@
           :message-args message-args))
 
 
-(defsection @mgl-pax-transcribing-with-emacs (:title "Transcribing with Emacs")
+(defsection @transcribing-with-emacs (:title "Transcribing with Emacs")
   """Typical transcript usage from within Emacs is simple: add a lisp
   form to a docstring or comment at any indentation level. Move the
   cursor right after the end of the form as if you were to evaluate it
@@ -1180,15 +1180,15 @@
               (format nil "~%~A" transcript)))))))
 
 
-(defsection @mgl-pax-transcript-conistency-checking
+(defsection @transcript-conistency-checking
     (:title "Transcript Consistency Checking")
   """The main use case for consistency checking is detecting
   out-of-date examples in documentation, although using it for writing
   tests is also a possiblity. Here, we focus on the former.
 
   When a markdown code block tagged `cl-transcript` is processed
-  during @MGL-PAX-GENERATING-DOCUMENTATION, the code in it is replaced
-  with the output of with `(TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
+  during @GENERATING-DOCUMENTATION, the code in it is replaced with
+  the output of with `(TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
   :CHECK-CONSISTENCY T)`. Suppose we have the following example of the
   function `GREET`, that prints `hello` and returns 7.
 
@@ -1211,11 +1211,11 @@
   objects are printed with their `#<>` syntax, especially when
   PRINT-UNREADABLE-OBJECT is used with `:IDENTITY T`.
   """
-  (@mgl-pax-transcript-finer-grained-consistency-checks section)
-  (@mgl-pax-transcript-dynenv section)
-  (@mgl-pax-transcript-utilities-for-consistency-checking section))
+  (@transcript-finer-grained-consistency-checks section)
+  (@transcript-dynenv section)
+  (@transcript-utilities-for-consistency-checking section))
 
-(defsection @mgl-pax-transcript-finer-grained-consistency-checks
+(defsection @transcript-finer-grained-consistency-checks
     (:title "Finer-grained Consistency Checks")
   """To get around this problem, consistency checking of output,
   readable and unreadable values can be customized individually by
@@ -1246,7 +1246,7 @@
       ==> #<SIMPLE-ERROR {1008A81533}>
   """)
 
-(defsection @mgl-pax-transcript-dynenv
+(defsection @transcript-dynenv
     (:title "Controlling the Dynamic Environment")
   """The dynamic enviroment in which forms in the transcript are
   evaluated can be controlled via the :DYNENV argument of
@@ -1284,7 +1284,7 @@
   """)
 
 
-(defsection @mgl-pax-transcript-utilities-for-consistency-checking
+(defsection @transcript-utilities-for-consistency-checking
     (:title "Utilities for Consistency Checking")
   (squeeze-whitespace function)
   (delete-trailing-whitespace function)
