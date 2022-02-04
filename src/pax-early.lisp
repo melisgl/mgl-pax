@@ -49,11 +49,10 @@
   SYMBOLs are candidates for exporting. A candidate symbol is exported
   if
 
-  - it is accessible in PACKAGE (it's not `OTHER-PACKAGE:SOMETHING`),
-    and
+  - it is [accessible][find-symbol] in PACKAGE, and
 
-  - there is a reference to it in the section being defined with a
-    locative whose type is approved by EXPORTABLE-LOCATIVE-TYPE-P.
+  - there is a reference to it in the section being defined which is
+    approved by EXPORTABLE-REFERENCE-P.
 
   See DEFINE-PACKAGE if you use the export feature. The idea with
   confounding documentation and exporting is to force documentation of
@@ -63,10 +62,9 @@
 
   TITLE is a non-marked-up string or NIL. If non-NIL, it determines
   the text of the heading in the generated output. LINK-TITLE-TO is a
-  reference given as an
-  `(OBJECT LOCATIVE)` pair or NIL, to which the heading will link when
-  generating HTML. If not specified, the heading will link to its own
-  anchor.
+  reference given as an `(OBJECT LOCATIVE)` pair or NIL, to which the
+  heading will link when generating HTML. If not specified, the
+  heading will link to its own anchor.
 
   When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
   is true, ENTRIES will not be recorded to save memory."
@@ -221,18 +219,54 @@
 ;;;; Exporting
 
 (defun export-some-symbols (name entries package)
-  (when (and (exportable-locative-type-p 'section)
-             (symbol-accessible-in-package-p name package))
+  (when (exportablep package name 'section)
     (export name package))
   (dolist (entry entries)
     (when (listp entry)
       (destructuring-bind (symbol locative) entry
-        (when (and (symbol-accessible-in-package-p symbol package)
-                   (exportable-locative-type-p (locative-type locative)))
+        (when (exportablep package symbol locative)
           (export symbol package))))))
+
+(defun exportablep (package symbol locative)
+  (and (symbol-accessible-in-package-p symbol package)
+       (exportable-reference-p package symbol (locative-type locative)
+                               (locative-args locative))))
 
 (defun symbol-accessible-in-package-p (symbol package)
   (eq symbol (find-symbol (symbol-name symbol) package)))
+
+(defgeneric exportable-reference-p (package symbol locative-type locative-args)
+  (:documentation "Return true iff SYMBOL is to be exported from
+  PACKAGE when it occurs in a DEFSECTION as a reference with
+  LOCATIVE-TYPE and LOCATIVE-ARGS. SYMBOL is [accessible][find-symbol]
+  in PACKAGE.
+
+  The default method ignores calls EXPORTABLE-LOCATIVE-TYPE-P with
+  LOCATIVE-TYPE and ignores the other arguments.
+
+  For example, to not export SECTIONs from MGL-PAX the following
+  method is defined.
+
+  ```
+  (defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
+                                     symbol (locative-type (eql 'section))
+                                     locative-args)
+    nil)
+  ```
+  ")
+  (:method (package symbol locative-type locative-args)
+    (declare (ignore package symbol locative-args))
+    (exportable-locative-type-p locative-type)))
+
+(defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
+                                   symbol (locative-type (eql 'section))
+                                   locative-args)
+  nil)
+
+(defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
+                                   symbol (locative-type (eql 'glossary-term))
+                                   locative-args)
+  nil)
 
 (defgeneric exportable-locative-type-p (locative-type)
   (:documentation "Return true iff symbols in references with
@@ -257,9 +291,6 @@
   nil)
 
 (defmethod exportable-locative-type-p ((locative-type (eql 'method)))
-  nil)
-
-(defmethod exportable-locative-type-p ((locative-type (eql 'section)))
   nil)
 
 
@@ -293,6 +324,3 @@
                     :name ',name :title ,title
                     :docstring ,(unless discard-documentation-p
                                   docstring))))
-
-(defmethod exportable-locative-type-p ((locative-type (eql 'glossary-term)))
-  nil)

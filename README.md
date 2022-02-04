@@ -391,11 +391,10 @@ Now let's examine the most important pieces.
     [`SYMBOLs`][7f9f] are candidates for exporting. A candidate symbol is exported
     if
     
-    - it is accessible in `PACKAGE` (it's not `OTHER-PACKAGE:SOMETHING`),
-      and
+    - it is [accessible][e077] in `PACKAGE`, and
     
-    - there is a reference to it in the section being defined with a
-      locative whose type is approved by [`EXPORTABLE-LOCATIVE-TYPE-P`][c930].
+    - there is a reference to it in the section being defined which is
+      approved by [`EXPORTABLE-REFERENCE-P`][e51f].
     
     See [`DEFINE-PACKAGE`][63f3] if you use the export feature. The idea with
     confounding documentation and exporting is to force documentation of
@@ -405,10 +404,9 @@ Now let's examine the most important pieces.
     
     `TITLE` is a non-marked-up string or `NIL`. If non-NIL, it determines
     the text of the heading in the generated output. `LINK-TITLE-TO` is a
-    reference given as an
-    `(OBJECT LOCATIVE)` pair or `NIL`, to which the heading will link when
-    generating HTML. If not specified, the heading will link to its own
-    anchor.
+    reference given as an `(OBJECT LOCATIVE)` pair or `NIL`, to which the
+    heading will link when generating HTML. If not specified, the
+    heading will link to its own anchor.
     
     When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][730f])
     is true, `ENTRIES` will not be recorded to save memory.
@@ -2985,6 +2983,30 @@ for [`ASDF:SYSTEM:`][c097]
     ```
 
 
+<a id="x-28MGL-PAX-3AEXPORTABLE-REFERENCE-P-20GENERIC-FUNCTION-29"></a>
+<a id="MGL-PAX:EXPORTABLE-REFERENCE-P%20GENERIC-FUNCTION"></a>
+
+- [generic-function] **EXPORTABLE-REFERENCE-P** *PACKAGE SYMBOL LOCATIVE-TYPE LOCATIVE-ARGS*
+
+    Return true iff `SYMBOL` is to be exported from
+    `PACKAGE` when it occurs in a [`DEFSECTION`][72b4] as a reference with
+    `LOCATIVE-TYPE` and `LOCATIVE-ARGS`. `SYMBOL` is [accessible][e077]
+    in `PACKAGE`.
+    
+    The default method ignores calls [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] with
+    `LOCATIVE-TYPE` and ignores the other arguments.
+    
+    For example, to not export `SECTIONs`([`0`][5fac] [`1`][672f]) from [`MGL-PAX`][6fdb] the following
+    method is defined.
+    
+    ```
+    (defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
+                                       symbol (locative-type (eql 'section))
+                                       locative-args)
+      nil)
+    ```
+
+
 <a id="x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29"></a>
 <a id="MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P%20GENERIC-FUNCTION"></a>
 
@@ -3570,6 +3592,7 @@ presented.
   [e2e8]: #MGL-PAX:@SUPPRESSED-LINKS%20MGL-PAX:SECTION "Suppressed Links"
   [e391]: #MGL-PAX:DISLOCATED%20MGL-PAX:LOCATIVE "MGL-PAX:DISLOCATED MGL-PAX:LOCATIVE"
   [e4b0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_ensu_1.htm "ENSURE-DIRECTORIES-EXIST FUNCTION"
+  [e51f]: #MGL-PAX:EXPORTABLE-REFERENCE-P%20GENERIC-FUNCTION "MGL-PAX:EXPORTABLE-REFERENCE-P GENERIC-FUNCTION"
   [e548]: #MGL-PAX:WRITER%20MGL-PAX:LOCATIVE "MGL-PAX:WRITER MGL-PAX:LOCATIVE"
   [eafc]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pr_obj.htm "PRINT-OBJECT GENERIC-FUNCTION"
   [ebd3]: #MGL-PAX:*TRANSCRIBE-SYNTAXES*%20VARIABLE "MGL-PAX:*TRANSCRIBE-SYNTAXES* VARIABLE"

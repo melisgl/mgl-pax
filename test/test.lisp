@@ -37,7 +37,8 @@
   (find-symbol (string name) :mgl-pax-test))
 
 
-(defsection @stealing-from-other-package (:package (find-package :mgl-pax))
+(defsection @stealing-from-other-package (:package (find-package :mgl-pax)
+                                                   :export nil)
   (method locative))
 
 (defsection @test-examples (:export nil)
@@ -47,12 +48,13 @@
   "backlink @TEST")
 
 (defsection @test-section-with-link-to-other-page-in-title
-    (:title "Link to @TEST-OTHER"
-            :link-title-to (@test-other section))
+    (:title "Link to @TEST-OTHER" :link-title-to (@test-other section)
+             :export nil)
   "Same link in docstring to @TEST-OTHER.")
 
 (defsection @test-section-with-link-to-same-page-in-title
-    (:title "Link to @TEST" :link-title-to (@test section))
+    (:title "Link to @TEST" :link-title-to (@test section)
+            :export nil)
   "Same link in docstring to @TEST.")
 
 (defsection @test-tricky-title
@@ -467,7 +469,7 @@
   (test-downcasing-in-docstrings)
   (test-downcasing-of-section-names))
 
-(defsection @section-without-title ())
+(defsection @section-without-title (:export nil))
 
 (deftest test-downcasing-in-docstrings ()
   (with-test ("unadorned")
@@ -536,7 +538,7 @@
       (check-downcasing "`XXX`" "`xxx`")
       (check-downcasing "`(PRINT \"hello\")`" "`(print \"hello\")`"))))
 
-(defsection @parent-section-without-title ()
+(defsection @parent-section-without-title (:export nil)
   (@section-without-title section))
 
 (deftest test-downcasing-of-section-names ()

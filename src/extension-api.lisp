@@ -30,6 +30,7 @@
                          :footer-nl "```"))
   (define-locative-type macro)
   (define-locative-alias macro)
+  (exportable-reference-p generic-function)
   (exportable-locative-type-p generic-function)
   (locate-object generic-function)
   (locate-error function)
