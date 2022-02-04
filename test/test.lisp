@@ -20,6 +20,7 @@
          (got (first-n-lines full-output n-lines))
          (expected (format nil expected)))
     (is (equal got expected)
+        :msg msg
         :ctx ("Input: ~S~%Full output:~%~S" input full-output))))
 
 (defun first-n-lines (string n)
