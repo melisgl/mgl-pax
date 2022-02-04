@@ -997,32 +997,39 @@
   The link text in the above examples is `\DOCUMENT`. To override it,
   this form may be used:
 
-  - `[see this][document function]` renders as: [see this][document
-    function] (*title + object + locative, explicit link*)
+  - `[see this][document function]` (*title + object + locative,
+    explicit link*) renders as: [see this][document function].
   """)
 
-(defsection @unambiguous-locative
-    (:title "Unambiguous Unspecified Locative")
+(defsection @unambiguous-locative (:title "Unambiguous Unspecified Locative")
   """In the following examples, although no locative is specified,
   `\DOCUMENT` names a single @OBJECT being documented, so they all
   render as [DOCUMENT][function].
 
   - `\[DOCUMENT][]` (*object, explicit link*),
   - `DOCUMENT` (*object, autolink*).
+
+  To override the title:
+
+  - `\[see this][document]` (*title + object, explicit link*) renders
+    as: [see this][document].
   """)
 
-(defsection @ambiguous-locative
-    (:title "Ambiguous Unspecified Locative")
+(defsection @ambiguous-locative (:title "Ambiguous Unspecified Locative")
   """These examples all render as [SECTION][], linking to both
   definitions of the @OBJECT `\SECTION`, the `\CLASS` and the
   `\LOCATIVE`.
 
   - `[SECTION][]` (*object, explicit link*)
   - `\SECTION` (*object, autolink*)
+
+  To override the title:
+
+  - `\[see this][section]` (*title + object, explicit link*) renders
+    as: [see this][section].
   """)
 
-(defsection @explicit-and-autolinking
-    (:title "Explicit and Autolinking")
+(defsection @explicit-and-autolinking (:title "Explicit and Autolinking")
   "The examples in the previous sections are marked with *explicit
   link* or *autolink*. Explicit links are those with a Markdown
   reference link spelled out explicitly, while autolinks are those
@@ -1179,10 +1186,10 @@
     locatives))
 
 (defun resolve-reflink (reflink linked-refs)
-  ;; Markdown to handle: [section][type], [`section`][type],
-  ;; [*var*][variable], [section][]. For example, the tree for
-  ;; [`section`][type] is (:REFERENCE-LINK :LABEL ((:CODE "SECTION"))
-  ;; :DEFINITION "type").
+  ;; Markdown to handle: [`SECTION`][class], [`SECTION`][], [see
+  ;; this][section class], [see this][section]. For example, the tree
+  ;; for [`SECTION`][class] is (:REFERENCE-LINK :LABEL ((:CODE
+  ;; "SECTION")) :DEFINITION "class").
   (multiple-value-bind (label explicit-label-p object locative found)
       (extract-reference-from-reflink reflink)
     (if (not found)
@@ -1205,31 +1212,38 @@
 (defun extract-reference-from-reflink (tree)
   (assert (parse-tree-p tree :reference-link))
   (destructuring-bind (&key label definition tail) (rest tree)
-    (let ((empty-definition-p (and (zerop (length definition))
-                                   (or (null tail)
-                                       (equal tail "[]"))))
-          (locative (and definition (read-locative-from-markdown definition)))
-          (label-string (parse-tree-to-text label :deemph nil)))
-      (if (or empty-definition-p locative)
-          ;; [foo][] or [foo][function]
-          (multiple-value-bind (object substring)
-              (and label-string
-                   (parse-word
-                    label-string :trim nil :depluralize t
-                    :only-one (lambda (object)
-                                (if (eq locative 'clhs)
-                                    (find-hyperspec-id object
-                                                       :substring-match t)
-                                    (has-reference-p object)))
-                    :clhs-substring-match (eq locative 'clhs)))
-            (when substring
-              (values label nil object locative t)))
-          ;; [see this][foo function]
-          (multiple-value-bind (object locative foundp)
-              (and definition (read-reference-from-string
-                               (parse-tree-to-text definition :deemph t)))
-            (when foundp
-              (values label t object locative t)))))))
+    (let* ((empty-definition-p (and (zerop (length definition))
+                                    (or (null tail)
+                                        (equal tail "[]"))))
+           (definition (parse-tree-to-text definition :deemph t))
+           (locative (and definition (read-locative-from-markdown definition)))
+           (label-string (parse-tree-to-text label :deemph nil)))
+      (alexandria:nth-value-or 0
+        (and (or empty-definition-p locative)
+             ;; [foo][] or [foo][function]
+             (multiple-value-bind (object substring)
+                 (and label-string
+                      (parse-word
+                       label-string :trim nil :depluralize t
+                       :only-one (lambda (object)
+                                   (if (eq locative 'clhs)
+                                       (find-hyperspec-id object
+                                                          :substring-match t)
+                                       (has-reference-p object)))
+                       :clhs-substring-match (eq locative 'clhs)))
+               (when substring
+                 (values label nil object locative t))))
+        ;; [see this][foo]
+        (multiple-value-bind (object name)
+            (parse-word definition :trim nil :depluralize nil
+                        :only-one (constantly t))
+          (when name
+            (values label t object nil t)))
+        ;; [see this][foo function]
+        (multiple-value-bind (object locative foundp)
+            (and definition (read-reference-from-string definition))
+          (when foundp
+            (values label t object locative t)))))))
 
 (defun label-has-code-p (label)
   (labels ((recurse (e)

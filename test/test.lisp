@@ -603,8 +603,16 @@
     (check-head "[*format*][]" "[*format*][]"))
   (with-test ("definition is a reference")
     (check-head "[see this][car function]" "[see this][8c99]")
-    (check-head "[`see` *this*][car function]" "[`see` *this*][8c99]")
-    (check-head "[see this][foo2]" "[see this][foo2]")))
+    (check-head "[`see` *this*][car function]" "[`see` *this*][8c99]"))
+  (with-test ("definition is an object")
+    (check-head "[see this][print]" "[see this][fdd1]")
+    (check-head "[see this][\\*package*]" "[see this][d2c1]")
+    (check-head "[see this][nil]" "see this([`0`][7058] [`1`][78ef])"))
+  (with-test ("definition is both a locative and an object")
+    (check-head (list "[see this][section]"
+                      (make-reference 'section 'class)
+                      (make-reference 'section 'locative))
+                "see this([`0`][5fac] [`1`][672f])")))
 
 
 (defsection @section-with-title (:title "My Title"))

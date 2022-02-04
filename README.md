@@ -1491,7 +1491,8 @@ matter (subject to [`READTABLE-CASE`][a328]).
 The link text in the above examples is `DOCUMENT`. To override it,
 this form may be used:
 
-- `[see this][document function]` renders as: [see this][432c] (*title + object + locative, explicit link*)
+- `[see this][document function]` (*title + object + locative,
+  explicit link*) renders as: [see this][432c].
 
 
 <a id="MGL-PAX::@UNAMBIGUOUS-LOCATIVE%20MGL-PAX:SECTION"></a>
@@ -1506,6 +1507,11 @@ render as [`DOCUMENT`][432c].
 
 - `DOCUMENT` (*object, autolink*).
 
+To override the title:
+
+- `[see this][document]` (*title + object, explicit link*) renders
+  as: [see this][432c].
+
 
 <a id="MGL-PAX::@AMBIGUOUS-LOCATIVE%20MGL-PAX:SECTION"></a>
 
@@ -1518,6 +1524,11 @@ definitions of the [object][51a8] `SECTION`, the `CLASS` and the
 - `[SECTION][]` (*object, explicit link*)
 
 - `SECTION` (*object, autolink*)
+
+To override the title:
+
+- `[see this][section]` (*title + object, explicit link*) renders
+  as: see this([`0`][5fac] [`1`][672f]).
 
 
 <a id="MGL-PAX::@EXPLICIT-AND-AUTOLINKING%20MGL-PAX:SECTION"></a>
@@ -3067,7 +3078,7 @@ example of how the [`VARIABLE`][6c83] locative is defined:
 
     Call [`LOCATE-AND-FIND-SOURCE`][d6a4] with the appropriate parts of
     `REFERENCE`. If there is no method specialized on the [locative
-    type][@locatives-and-references], then attempt to [`RESOLVE`][cd9e] `REFERENCE`
+    type][d444], then attempt to [`RESOLVE`][cd9e] `REFERENCE`
     to a non-`REFERENCE` object and invoke `FIND-SOURCE` on it.
     
     Thus for new locative types, only `FIND-SOURCE` or

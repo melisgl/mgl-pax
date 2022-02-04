@@ -53,5 +53,3 @@ This should bring us closer to literate programming.
 Or fall back on this for deficient ARGLISTs. Will be really slow.
 * test navigation from the emacs side
 * some link titles have \" in them
-* support unspecified locative with title
-[see this][@some-section]

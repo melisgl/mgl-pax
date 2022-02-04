@@ -1288,8 +1288,8 @@ matter (subject to READTABLE-CASE).
 The link text in the above examples is `DOCUMENT`. To override it,
 this form may be used:
 
-- `[see this][document function]` renders as: [see this][document
-  function] (*title + object + locative, explicit link*)
+- `[see this][document function]` (*title + object + locative,
+  explicit link*) renders as: [see this][document function].
 
 
 #### Unambiguous Unspecified Locative
@@ -1302,6 +1302,11 @@ render as [DOCUMENT][function].
 
 - `DOCUMENT` (*object, autolink*).
 
+To override the title:
+
+- `[see this][document]` (*title + object, explicit link*) renders
+  as: [see this][document].
+
 
 #### Ambiguous Unspecified Locative
 
@@ -1312,6 +1317,11 @@ definitions of the @OBJECT `SECTION`, the `CLASS` and the
 - `[SECTION][]` (*object, explicit link*)
 
 - `SECTION` (*object, autolink*)
+
+To override the title:
+
+- `[see this][section]` (*title + object, explicit link*) renders
+  as: [see this][section].
 
 
 #### Explicit and Autolinking

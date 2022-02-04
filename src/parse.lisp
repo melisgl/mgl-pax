@@ -49,7 +49,8 @@
      ,@body))
 
 ;;; Return a list of @OBJECTs and a list of @NAMEs naming them in
-;;; WORD.
+;;; WORD. If ONLY-ONE matches, then return only a single object and a
+;;; single name.
 (defun parse-word (word &key (trim t) (depluralize t) only-one
                    clhs-substring-match)
   (let ((left-trim "#<")
