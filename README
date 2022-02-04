@@ -1220,7 +1220,7 @@ Reader][pythonic-string-reader] can help with that.
 
 ### Linking to Code
 
-In this section, we describe of all ways of linking to code
+In this section, we describe all ways of linking to code
 available when *DOCUMENT-UPPERCASE-IS-CODE* is true.
 
 *Note that invoking [`M-.`][@navigating-in-emacs section] on the
@@ -1232,39 +1232,8 @@ will contain a single link.*
 - [variable] *DOCUMENT-LINK-CODE* T
 
     Enable the various forms of links in docstrings described in
-    @LINKING-TO-CODE.
-    
-    Let's understand the generated Markdown.
-    
-    ```
-    (defun foo (x)
-      "Calls BAR."
-      (bar (x)))
-    
-    (defun bar (x)
-      (1+ x))
-    
-    (document (list #'foo #'bar))
-    => ("<a id='x-28MGL-PAX-3A-3AFOO-20FUNCTION-29'></a>
-    
-    - [function] **FOO** *X*
-    
-        Calls [`BAR`][6b98].
-    <a id='x-28MGL-PAX-3A-3ABAR-20FUNCTION-29'></a>
-    
-    - [function] **BAR** *X*
-    
-      [6b98]: #x-28MGL-PAX-3A-3ABAR-20FUNCTION-29 \"(MGL-PAX::BAR FUNCTION)\"
-    ")
-    ```
-    
-    The line starting with `[6b98]:` is the markdown reference link
-    definition with a URL and a title. Here the URL points to the HTML
-    anchor of the documentation of the function `BAR`, itself an escaped
-    version of the reference `(MGL-PAX:BAR FUNCTION)`, which is also the
-    title.
-    
-    See the following sections for a description of how to use linking.
+    @LINKING-TO-CODE. See the following sections for a description of
+    how to use linking.
 
 #### Specified Locative
 
@@ -1495,6 +1464,55 @@ table of contents and navigation links.
     *DOCUMENT-LINK-SECTIONS* to be on to work.
 
 ### Miscellaneous Variables
+
+- [variable] *DOCUMENT-URL-VERSIONS* (1)
+
+    A list of versions of PAX [URL][dislocated] formats to support in
+    the generated documenation in addition to the latest one.
+    
+    PAX emits HTML anchors before the documentation of SECTIONs
+    (see @LINKING-TO-SECTIONS) and other things (see @LINKING-TO-CODE).
+    For the function `FOO`, in the current version (version 2), the
+    anchor is `<a id="MGL-PAX:FOO%20FUNCTION">` and its URL will end
+    with `#MGL-PAX:FOO%20FUNCTION`.
+    
+    *Note that to make the URL independent of whether a symbol is
+    [internal or external][find-symbol] to their SYMBOL-PACKAGE, single
+    colon is printed where a double colon would be expected. Package and
+    symbol names are both printed verbatim except for escaping colons
+    and spaces with a backslash. For exported symbols with no funny
+    characters, this coincides with how PRIN1 would print the symbol,
+    while having the benefit of making the URL independent of the Lisp
+    printer's escaping strategy and producing human-readable output for
+    mixed-case symbols. No such promises are made for non-ASCII
+    characters, and their URLs may change in future versions. Locatives
+    are printed with PRIN1.*
+    
+    Version 1 was based on the more strict HTML4 standard and the id of
+    `FOO` was `"x-28MGL-PAX-3A-3AFOO-20FUNCTION-29"`. V2 has minimal
+    clutter and is obviously preferred. However, in order not to break
+    external links, by default, both anchors are generated.
+    
+    Let's understand the generated Markdown.
+    
+    ```
+    (defun foo (x))
+    
+    (document #'foo)
+    => ("<a id=\"x-28MGL-PAX-3AFOO-20FUNCTION-29\"></a>
+    <a id=\"MGL-PAX:FOO%20FUNCTION\"></a>
+    
+    - [function] **FOO** *X*
+    ")
+    
+    (let ((*document-url-versions* '()))
+      (document #'foo))
+    => ("<a id=\"MGL-PAX:FOO%20FUNCTION\"></a>
+    
+    - [function] **FOO** *X*
+    ")
+    ```
+
 
 - [variable] *DOCUMENT-MIN-LINK-HASH-LENGTH* 4
 

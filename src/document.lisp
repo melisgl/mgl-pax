@@ -181,14 +181,6 @@
       (has-local-reference-p object)))
 
 
-;;; Return the unescaped name of the HTML anchor for REFERENCE. See
-;;; URLENCODE.
-(defun reference-to-anchor (reference)
-  (let ((reference (canonical-reference reference)))
-    (with-standard-io-syntax*
-      (format nil "~S ~S" (reference-object reference)
-              (reference-locative reference)))))
-
 ;;; For the link to REFERENCE, increment the link counter for the
 ;;; current page and return the link id.
 (defun link-to-reference (reference)
@@ -959,7 +951,7 @@
 
 
 (defsection @linking-to-code (:title "Linking to Code")
-  """In this section, we describe of all ways of linking to code
+  """In this section, we describe all ways of linking to code
   available when *DOCUMENT-UPPERCASE-IS-CODE* is true.
 
   _Note that invoking [`M-.`][@navigating-in-emacs section] on the
@@ -1054,40 +1046,8 @@
 
 (defvar *document-link-code* t
   """Enable the various forms of links in docstrings described in
-  @LINKING-TO-CODE.
-
-  Let's understand the generated Markdown.
-
-  ```
-  (defun foo (x)
-    "Calls BAR."
-    (bar (x)))
-
-  (defun bar (x)
-    (1+ x))
-
-  (document (list #'foo #'bar))
-  => ("<a id='x-28MGL-PAX-3A-3AFOO-20FUNCTION-29'></a>
-  
-  - [function] **FOO** *X*
-  
-      Calls [`BAR`][6b98].
-  <a id='x-28MGL-PAX-3A-3ABAR-20FUNCTION-29'></a>
-  
-  - [function] **BAR** *X*
-  
-    [6b98]: #x-28MGL-PAX-3A-3ABAR-20FUNCTION-29 \"(MGL-PAX::BAR FUNCTION)\"
-  ")
-  ```
-
-  The line starting with `[6b98]:` is the markdown reference link
-  definition with a URL and a title. Here the URL points to the HTML
-  anchor of the documentation of the function `BAR`, itself an escaped
-  version of the reference `(MGL-PAX:BAR FUNCTION)`, which is also the
-  title.
-
-  See the following sections for a description of how to use linking.
-  """)
+  @LINKING-TO-CODE. See the following sections for a description of
+  how to use linking.""")
 
 ;;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
 ;;; :REFERENCE-LINK for [symbol][locative]). Don't hurt other links.
@@ -1619,27 +1579,26 @@
                                                *table-of-contents-stream*)
                 (funcall fn (make-broadcast-stream))))
              (t
-              (if *document-link-sections*
-                  (let ((anchor (reference-to-anchor object)))
-                    (anchor anchor stream)
-                    (navigation-link object stream)
-                    (format stream "~A" (fancy-navigation object))
-                    (heading *heading-level* stream)
-                    (if (eq *format* :html)
-                        (if link-title-to
-                            (format stream " [~A~A][~A]~%~%"
-                                    (heading-number) title
-                                    (link-to-reference link-title-to))
-                            (format stream " <a href=\"#~A\">~A~A</a>~%~%"
-                                    (urlencode anchor)
-                                    (heading-number)
-                                    (escape-markdown title)))
-                        (format stream " ~A~A~%~%" (heading-number)
-                                (escape-markdown title))))
-                  (progn
-                    (heading *heading-level* stream)
-                    (format stream " ~A~A~%~%"
-                            (heading-number) (escape-markdown title))))
+              (cond (*document-link-sections*
+                     (anchor object stream)
+                     (navigation-link object stream)
+                     (format stream "~A" (fancy-navigation object))
+                     (heading *heading-level* stream)
+                     (if (eq *format* :html)
+                         (if link-title-to
+                             (format stream " [~A~A][~A]~%~%"
+                                     (heading-number) title
+                                     (link-to-reference link-title-to))
+                             (format stream " <a href=\"#~A\">~A~A</a>~%~%"
+                                     (urlencode (reference-to-anchor object))
+                                     (heading-number)
+                                     (escape-markdown title)))
+                         (format stream " ~A~A~%~%" (heading-number)
+                                 (escape-markdown title))))
+                    (t
+                     (heading *heading-level* stream)
+                     (format stream " ~A~A~%~%"
+                             (heading-number) (escape-markdown title))))
               (when (and (zerop *heading-level*)
                          (plusp *document-max-table-of-contents-level*))
                 (heading (1+ *heading-level*) stream)
@@ -1755,12 +1714,111 @@
 
 (defsection @miscellaneous-documentation-printer-variables
     (:title "Miscellaneous Variables")
+  (*document-url-versions* variable)
   (*document-min-link-hash-length* variable)
   (*document-mark-up-signatures* variable)
   (*document-normalize-packages* variable))
 
 
-(defparameter *document-min-link-hash-length* 4
+(defvar *document-url-versions* '(1)
+  """A list of versions of PAX [URL][dislocated] formats to support in
+  the generated documenation in addition to the latest one.
+
+  PAX emits HTML anchors before the documentation of SECTIONs
+  (see @LINKING-TO-SECTIONS) and other things (see @LINKING-TO-CODE).
+  For the function `FOO`, in the current version (version 2), the
+  anchor is `<a id="MGL-PAX:FOO%20FUNCTION">` and its URL will end
+  with `#MGL-PAX:FOO%20FUNCTION`.
+
+  _Note that to make the URL independent of whether a symbol is
+  [internal or external][find-symbol] to their SYMBOL-PACKAGE, single
+  colon is printed where a double colon would be expected. Package and
+  symbol names are both printed verbatim except for escaping colons
+  and spaces with a backslash. For exported symbols with no funny
+  characters, this coincides with how PRIN1 would print the symbol,
+  while having the benefit of making the URL independent of the Lisp
+  printer's escaping strategy and producing human-readable output for
+  mixed-case symbols. No such promises are made for non-ASCII
+  characters, and their URLs may change in future versions. Locatives
+  are printed with PRIN1._
+
+  Version 1 was based on the more strict HTML4 standard and the id of
+  `FOO` was `"x-28MGL-PAX-3A-3AFOO-20FUNCTION-29"`. V2 has minimal
+  clutter and is obviously preferred. However, in order not to break
+  external links, by default, both anchors are generated.
+
+  Let's understand the generated Markdown.
+
+  ```
+  (defun foo (x))
+
+  (document #'foo)
+  => ("<a id=\"x-28MGL-PAX-3AFOO-20FUNCTION-29\"></a>
+  <a id=\"MGL-PAX:FOO%20FUNCTION\"></a>
+  
+  - [function] **FOO** *X*
+  ")
+
+  (let ((*document-url-versions* '()))
+    (document #'foo))
+  => ("<a id=\"MGL-PAX:FOO%20FUNCTION\"></a>
+  
+  - [function] **FOO** *X*
+  ")
+  ```
+  """)
+
+(defun anchor (object stream)
+  (when (member 1 *document-url-versions*)
+    (format stream "<a id=~S></a>~%"
+            (html4-safe-name (reference-to-anchor-v1 object))))
+  (format stream "<a id=~S></a>~%~%"
+          (urlencode (reference-to-anchor object))))
+
+;;; Return the unescaped name of the HTML anchor for REFERENCE. See
+;;; URLENCODE.
+(defun reference-to-anchor (object)
+  (let ((reference (canonical-reference object)))
+    (with-standard-io-syntax*
+      (format nil "~A ~S" (object-to-url-part (reference-object reference))
+              (reference-locative reference)))))
+
+(defun reference-to-anchor-v1 (object)
+  (let ((reference (canonical-reference object)))
+    (with-standard-io-syntax*
+      (format nil "(~A ~S)"
+              (object-to-url-part (reference-object reference))
+              (reference-locative reference)))))
+
+(defun object-to-url-part (object)
+  (if (symbolp object)
+      (let* ((package (symbol-package object))
+             (name (symbol-name object))
+             (name-url (print-name-for-url name))
+             (cl-package (symbol-package 'print)))
+        (cond ((or (eq package cl-package)
+                   (multiple-value-bind (cl-symbol status)
+                       (find-symbol name cl-package)
+                     (and (eq cl-symbol object)
+                          (eq status :external))))
+               (format nil "~A" name-url))
+              ((eq package (symbol-package :if-exists))
+               (format nil ":~A" name-url))
+              (t
+               (format nil "~A:~A"
+                       (print-name-for-url (package-name package))
+                       name-url))))
+      (prin1-to-string object)))
+
+(defun print-name-for-url (string)
+  (with-output-to-string (s)
+    (loop for char across string
+          do (when (or (eql char #\:) (eql char #\Space))
+               (write-char #\\ s))
+             (write-char char s))))
+
+
+(defvar *document-min-link-hash-length* 4
   "Recall that markdown reference style links (like `[label][id]`) are
   used for linking to sections and code. It is desirable to have ids
   that are short to maintain legibility of the generated markdown, but
@@ -1948,7 +2006,7 @@
                (when (and *document-link-code*
                           (not (typep object 'section))
                           (not (typep object 'asdf:system)))
-                 (anchor (reference-to-anchor reference) stream))
+                 (anchor reference stream))
                (call-next-method object stream)))))))
 
 (defmethod document-object ((reference reference) stream)
@@ -1960,7 +2018,7 @@
     (if (typep resolved-object 'reference)
         (with-temp-output-to-page (stream (reference-page reference))
           (when *document-link-code*
-            (anchor (reference-to-anchor reference) stream))
+            (anchor reference stream))
           (let ((locative (reference-locative reference)))
             (locate-and-document (reference-object reference)
                                  (locative-type locative)

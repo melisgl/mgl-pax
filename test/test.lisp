@@ -8,7 +8,8 @@
 
 (defun check-document (input expected)
   (let ((output (let ((*package* (find-package :mgl-pax-test))
-                      (*document-hyperspec-root* "CLHS/"))
+                      (*document-hyperspec-root* "CLHS/")
+                      (*document-url-versions* '(2)))
                   (first (document input)))))
     (is (null (mismatch% output expected))
         :ctx ("Input: ~S" input))))
@@ -16,6 +17,7 @@
 (defun check-head (input expected &key (format :markdown) msg (n-lines 1))
   (let* ((*package* (find-package :mgl-pax-test))
          (*document-hyperspec-root* "CLHS/")
+         (*document-url-versions* '(2))
          (full-output (first (document input :format format)))
          (got (first-n-lines full-output n-lines))
          (expected (format nil expected)))
@@ -480,7 +482,7 @@
     (check-downcasing "*PACKAGE*" "[`*package*`][d2c1]")
     ;; section with refs
     (check-downcasing (list "@SECTION-WITHOUT-TITLE" @section-without-title)
-                      "[`@section-without-title`][445a]"))
+                      "[`@section-without-title`][eeac]"))
   (with-test ("escaped unadorned")
     (check-downcasing "\\NOT-INTERNED" "NOT-INTERNED")
     (check-downcasing "\\TEST" "TEST")
@@ -496,7 +498,7 @@
     (check-downcasing "`*FORMAT*`" "`*format*`")
     (check-downcasing "`*PACKAGE*`" "[`*package*`][d2c1]")
     (check-downcasing (list "`@SECTION-WITHOUT-TITLE`" @section-without-title)
-                      "[`@section-without-title`][445a]"))
+                      "[`@section-without-title`][eeac]"))
   (with-test ("escaped code")
     (check-downcasing "`\\NOT-INTERNED`" "`NOT-INTERNED`")
     (check-downcasing "`\\TEST`" "`TEST`")
@@ -514,7 +516,7 @@
     (check-downcasing "[*PACKAGE*][]" "[`*package*`][d2c1]")
     (check-downcasing (list "[@SECTION-WITHOUT-TITLE][]"
                             @section-without-title)
-                      "[`@section-without-title`][445a]"))
+                      "[`@section-without-title`][eeac]"))
   (with-test ("reflink code")
     (check-downcasing "[`NOT-INTERNED`][]" "[`not-interned`][]")
     (check-downcasing "[`TEST`][]" "[`test`][]")
@@ -523,7 +525,7 @@
     (check-downcasing "[`*PACKAGE*`][]" "[`*package*`][d2c1]")
     (check-downcasing (list "[`@SECTION-WITHOUT-TITLE`][]"
                             @section-without-title)
-                      "[`@section-without-title`][445a]"))
+                      "[`@section-without-title`][eeac]"))
   (with-test ("multiple symbols")
     (check-downcasing "`(LIST :XXX 'PRINT)`" "`(list :xxx 'print)`")
     (with-failure-expected (t)
@@ -540,21 +542,21 @@
 (deftest test-downcasing-of-section-names ()
   (let ((*document-downcase-uppercase-code* t))
     (check-document @parent-section-without-title
-                    "<a id=\"MGL-PAX-TEST::@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
+                    "<a id=\"MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
 
 # @parent-section-without-title
 
 ## Table of Contents
 
-- [1 @section-without-title][445a]
+- [1 @section-without-title][eeac]
 
 ###### \\[in package MGL-PAX-TEST\\]
-<a id=\"MGL-PAX-TEST::@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
+<a id=\"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
 
 ## 1 @section-without-title
 
 
-  [445a]: #MGL-PAX-TEST::@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"mgl-pax-test::@section-without-title\"
+  [eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"mgl-pax-test::@section-without-title\"
 ")))
 
 (defun check-downcasing (docstring expected)
@@ -574,28 +576,28 @@
     (check-head (list "macro BAR function"
                       (make-reference 'bar 'type)
                       (make-reference 'bar 'macro))
-                ;; "8201" is the id of the macro.
-                "macro [`BAR`][8201] function"
+                ;; "3e5e" is the id of the macro.
+                "macro [`BAR`][3e5e] function"
                 :msg "locative before, irrelavant locative after")
     (check-head (list "function BAR macro"
                       (make-reference 'bar 'type)
                       (make-reference 'bar 'macro))
-                "function [`BAR`][8201] macro"
+                "function [`BAR`][3e5e] macro"
                 :msg "locative after, irrelavant locative before")
     (check-head (list "macro BAR type"
                       (make-reference 'bar 'type)
                       (make-reference 'bar 'macro)
                       (make-reference 'bar 'constant))
-                ;; "feed" is the the id of the type.
-                "macro `BAR`([`0`][8201] [`1`][feed]) type"
+                ;; "e2a5" is the the id of the type.
+                "macro `BAR`([`0`][3e5e] [`1`][e2a5]) type"
                 :msg "ambiguous locative"))
   (with-test ("locative in code")
     (check-head (list "`TEST-GF` `(method t (number))`"
                       (make-reference 'test-gf '(method () (number))))
-                "[`TEST-GF`][ed29] `(method t (number))`")
+                "[`TEST-GF`][044a] `(method t (number))`")
     (check-head (list "`(method t (number))` `TEST-GF`"
                       (make-reference 'test-gf '(method () (number))))
-                "`(method t (number))` [`TEST-GF`][ed29]")))
+                "`(method t (number))` [`TEST-GF`][044a]")))
 
 (deftest test-resolve-reflink ()
   (with-test ("label is a single name")
@@ -622,22 +624,22 @@
 (deftest test-explicit-label ()
   (with-test ("section")
     (check-downcasing (list "@SECTION-WITH-TITLE" @section-with-title)
-                      "[My Title][6513]")
+                      "[My Title][619a]")
     (check-downcasing (list "`@SECTION-WITH-TITLE`" @section-with-title)
-                      "[My Title][6513]")
+                      "[My Title][619a]")
     (check-downcasing (list "[@SECTION-WITH-TITLE][]" @section-with-title)
-                      "[My Title][6513]")
+                      "[My Title][619a]")
     (check-downcasing (list "[`@SECTION-WITH-TITLE`][]" @section-with-title)
-                      "[My Title][6513]"))
+                      "[My Title][619a]"))
   (with-test ("glossary-term")
     (check-downcasing (list "@GT-WITH-TITLE" @gt-with-title)
-                      "[My Title][3ec7]")
+                      "[My Title][fecf]")
     (check-downcasing (list "`@GT-WITH-TITLE`" @gt-with-title)
-                      "[My Title][3ec7]")
+                      "[My Title][fecf]")
     (check-downcasing (list "[@GT-WITH-TITLE][]" @gt-with-title)
-                      "[My Title][3ec7]")
+                      "[My Title][fecf]")
     (check-downcasing (list "[`@GT-WITH-TITLE`][]" @gt-with-title)
-                      "[My Title][3ec7]")))
+                      "[My Title][fecf]")))
 
 
 (deftest test-suppressed-links ()
@@ -670,31 +672,31 @@
 
 (deftest test-self-referencing-links ()
   (check-document #'self-referencing
-                  "<a id=\"MGL-PAX-TEST::SELF-REFERENCING%20FUNCTION\"></a>
+                  "<a id=\"MGL-PAX-TEST:SELF-REFERENCING%20FUNCTION\"></a>
 
 - [function] **SELF-REFERENCING** 
 
     This is `SELF-REFERENCING`.
 ")
   (check-document @self-referencing-term
-                  "<a id=\"MGL-PAX-TEST::@SELF-REFERENCING-TERM%20MGL-PAX:GLOSSARY-TERM\"></a>
+                  "<a id=\"MGL-PAX-TEST:@SELF-REFERENCING-TERM%20MGL-PAX:GLOSSARY-TERM\"></a>
 
 - [glossary-term] **Self-referencing Term**
 
-    This is [Self-referencing Term][3160].
+    This is [Self-referencing Term][a79b].
 
-  [3160]: #MGL-PAX-TEST::@SELF-REFERENCING-TERM%20MGL-PAX:GLOSSARY-TERM \"MGL-PAX-TEST::@SELF-REFERENCING-TERM MGL-PAX:GLOSSARY-TERM\"
+  [a79b]: #MGL-PAX-TEST:@SELF-REFERENCING-TERM%20MGL-PAX:GLOSSARY-TERM \"MGL-PAX-TEST:@SELF-REFERENCING-TERM MGL-PAX:GLOSSARY-TERM\"
 ")
   (let ((*document-max-table-of-contents-level* 0))
     (check-document @self-referencing
-                    "<a id=\"MGL-PAX-TEST::@SELF-REFERENCING%20MGL-PAX:SECTION\"></a>
+                    "<a id=\"MGL-PAX-TEST:@SELF-REFERENCING%20MGL-PAX:SECTION\"></a>
 
 # Self-referencing
 
 ###### \\[in package MGL-PAX-TEST\\]
-This is [Self-referencing][5c9b].
+This is [Self-referencing][e042].
 
-  [5c9b]: #MGL-PAX-TEST::@SELF-REFERENCING%20MGL-PAX:SECTION \"Self-referencing\"
+  [e042]: #MGL-PAX-TEST:@SELF-REFERENCING%20MGL-PAX:SECTION \"Self-referencing\"
 ")))
 
 
@@ -777,7 +779,7 @@ This is [Self-referencing][5c9b].
 (trace encapsulated-generic-function)
 
 (deftest test-function/encapsulated ()
-  (let ((expected "<a id=\"MGL-PAX-TEST::ENCAPSULATED-FUNCTION%20FUNCTION\"></a>
+  (let ((expected "<a id=\"MGL-PAX-TEST:ENCAPSULATED-FUNCTION%20FUNCTION\"></a>
 
 - [function] **ENCAPSULATED-FUNCTION** *X &REST ARGS*
 
@@ -787,7 +789,7 @@ This is [Self-referencing][5c9b].
       (check-document (make-reference 'encapsulated-function 'function)
                       expected)
       (check-document #'encapsulated-function expected)))
-  (let ((expected "<a id=\"MGL-PAX-TEST::ENCAPSULATED-GENERIC-FUNCTION%20GENERIC-FUNCTION\"></a>
+  (let ((expected "<a id=\"MGL-PAX-TEST:ENCAPSULATED-GENERIC-FUNCTION%20GENERIC-FUNCTION\"></a>
 
 - [generic-function] **ENCAPSULATED-GENERIC-FUNCTION** *X*
 
@@ -814,19 +816,19 @@ This is [Self-referencing][5c9b].
   (check-head (list "FOO-A `(accessor foo)`"
                     (make-reference 'foo-a '(accessor foo))
                     (make-reference 'foo-a 'variable))
-              "[`FOO-A`][0259] `(accessor foo)`"))
+              "[`FOO-A`][dbec] `(accessor foo)`"))
 
 (deftest test-reader ()
   (check-head (list "FOO-R `(reader foo)`"
                     (make-reference 'foo-r '(reader foo))
                     (make-reference 'foo-r 'variable))
-              "[`FOO-R`][cad5] `(reader foo)`"))
+              "[`FOO-R`][618a] `(reader foo)`"))
 
 (deftest test-writer ()
   (check-head (list "FOO-W `(writer foo)`"
                     (make-reference 'foo-w '(writer foo))
                     (make-reference 'foo-w 'variable))
-              "[`FOO-W`][3d42] `(writer foo)`"))
+              "[`FOO-W`][2b65] `(writer foo)`"))
 
 
 (defsection @test-method-combination ()
@@ -897,7 +899,7 @@ This is [Self-referencing][5c9b].
 (deftest test-readtable ()
   (with-failure-expected ((alexandria:featurep :abcl))
     (check-document (named-readtables:find-readtable 'xxx-rt)
-                    "<a id=\"MGL-PAX-TEST::XXX-RT%20READTABLE\"></a>
+                    "<a id=\"MGL-PAX-TEST:XXX-RT%20READTABLE\"></a>
 
 - [readtable] **XXX-RT**
 
@@ -905,7 +907,7 @@ This is [Self-referencing][5c9b].
 "))
   (check-head (list "[XXX-RT][readtable]"
                     (named-readtables:find-readtable 'xxx-rt))
-              "[`XXX-RT`][2b3b]"))
+              "[`XXX-RT`][ec74]"))
 
 
 (defpackage interned-pkg-name)

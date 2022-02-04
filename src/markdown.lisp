@@ -2,13 +2,7 @@
 
 (in-readtable pythonic-string-syntax)
 
-;;;; Text based HTML fragments
-
-(defun anchor (anchor stream)
-  (format stream "<a id=~S></a>~%~%" (urlencode anchor)))
-
-
-;;;; Escaping of URLs and HTML ID
+;;;; Escaping V2 of URLs and HTML ID (for HTML5)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun _mark-range (array start end)
@@ -55,6 +49,53 @@
                       (write-char char out))
                      (t
                       (format out "%~:@(~16r~)" code)))))
+    (coerce output 'simple-string)))
+
+
+;;;; Escaping V1 of URLs and HTML IDs (for HTML4)
+
+(defparameter +html4-first-name-characters+
+  (let ((array (make-array 255 :element-type 'bit :initial-element 0)))
+    (_mark-range array #\a #\z)
+    (_mark-range array #\A #\Z)
+    array))
+
+(defparameter +html4-name-characters+
+  (let ((array (copy-seq +html4-first-name-characters+)))
+    (_mark-range array #\0 #\9)
+    (_mark-one array #\-)
+    ;; Encode these as well to work around github markdown bug which
+    ;; would otherwise break links.
+    #+nil (_mark-one array #\_)
+    #+nil (_mark-one array #\.)
+    #+nil (_mark-one array #\:)
+    array))
+
+(defun html4-safe-name (name)
+  (declare (type simple-string name))
+  (let ((output (make-array (truncate (length name) 2/3)
+                            :element-type 'character
+                            :adjustable t
+                            :fill-pointer 0))
+	(first? t))
+    (with-output-to-string (out output)
+      (loop for char across name
+            for code = (char-code char)
+            for valid = +html4-first-name-characters+
+              then +html4-name-characters+
+            do (cond ((and (< code 255)
+                           (= (sbit valid code) 1))
+                      (write-char char out))
+                     (t
+                      ;; See http://www.w3.org/TR/html4/types.html#h-6.2
+                      ;; ID and NAME tokens must begin with a letter ([A-Za-z])
+                      ;; and may be followed by any number of letters,
+                      ;; digits ([0-9]), hyphens ("-"), underscores ("_"),
+                      ;; colons (":"), and periods (".").
+                      (when first?
+                        (write-char #\x out))
+                      (format out "-~:@(~16r~)" code)))
+               (setf first? nil)))
     (coerce output 'simple-string)))
 
 
