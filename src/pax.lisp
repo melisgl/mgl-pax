@@ -28,10 +28,10 @@
   for the latest version.")
 
 (defsection @background (:export nil :title "Background")
-  "As a user, I frequently run into documentation that's incomplete
+  """As a user, I frequently run into documentation that's incomplete
   and out of date, so I tend to stay in the editor and explore the
-  code by jumping around with [SLIME][slime]'s [`M-.`][slime-m-.]. As
-  a library author, I spend a great deal of time polishing code but
+  code by jumping around with [SLIME][slime]'s [`\\M-.`][slime-m-.].
+  As a library author, I spend a great deal of time polishing code but
   precious little writing documentation.
 
   [slime]: https://slime.common-lisp.dev/
@@ -69,20 +69,20 @@
   ambiguous if, for example, a function, a compiler macro and a class
   are named by the same symbol. This did not concern exporting, of
   course, but it didn't help readability. Distractingly, on such
-  symbols, `M-.` was popping up selection dialogs. There were two
+  symbols, `\\M-.` was popping up selection dialogs. There were two
   birds to kill, and the symbol got accompanied by a type, which was
   later generalized into the concept of locatives:
 
   ```commonlisp
   (defsection @introduction ()
-    \"A single line for one man ...\"
+    "A single line for one man ..."
     (foo class)
     (bar function))
   ```
 
-  After a bit of elisp hacking, `M-.` was smart enough to disambiguate
-  based on the locative found in the vicinity of the symbol, and
-  everything was good for a while.
+  After a bit of elisp hacking, `\\M-.` was smart enough to
+  disambiguate based on the locative found in the vicinity of the
+  symbol, and everything was good for a while.
 
   Then I realized that sections could refer to other sections if there
   were a SECTION locative. Going down that path, I soon began to feel
@@ -90,23 +90,23 @@
   information was manifest in the DEFSECTION forms. The design
   constraint imposed on documentation generation was that following
   the typical style of upcasing symbols in docstrings there should be
-  no need to explicitly mark up links: if `M-.` works, then the
+  no need to explicitly mark up links: if `\\M-.` works, then the
   documentation generator shall also be able find out what's being
   referred to.
 
   I settled on [Markdown][markdown] as a reasonably non-intrusive
-  format, and a few thousand lines later PAX was born.
+  format, and a few thousand lines later \PAX was born.
 
-  [markdown]: https://daringfireball.net/projects/markdown/")
+  [markdown]: https://daringfireball.net/projects/markdown/""")
 
 (defsection @tutorial (:title "Tutorial")
-  """PAX provides an extremely poor man's Explorable Programming
+  """\PAX provides an extremely poor man's Explorable Programming
   environment. Narrative primarily lives in so called sections that
   mix markdown docstrings with references to functions, variables,
   etc, all of which should probably have their own docstrings.
 
   The primary focus is on making code easily explorable by using
-  [SLIME's `M-.`][slime-m-.] (`slime-edit-definition`). See how to
+  [SLIME's `\\M-.`][slime-m-.] (`slime-edit-definition`). See how to
   enable some fanciness in @NAVIGATING-IN-EMACS.
   @GENERATING-DOCUMENTATION from sections and all the referenced items
   in Markdown or HTML format is also implemented.
@@ -116,15 +116,14 @@
   from code, not vice versa and there is no support for chunking. Code
   is first, code must look pretty, documentation is code.
 
-  In typical use, PAX packages have no :EXPORT's defined. Instead the
+  In typical use, \PAX packages have no :EXPORT's defined. Instead the
   DEFINE-PACKAGE form gets a docstring, which may mention section
   names (defined with DEFSECTION). When the code is loaded into the
-  lisp, pressing `M-.` in SLIME on the name of the section will take
+  lisp, pressing `\\M-.` in SLIME on the name of the section will take
   you there. Sections can also refer to other sections, packages,
   functions, etc and you can keep exploring.
 
-  Here is an example of how it all works together:
-  """
+  Here is an example of how it all works together:"""
   (foo-random-example (include #.(asdf:system-relative-pathname
                                   :mgl-pax "src/foo-random-example.lisp")
                                :header-nl "```common-lisp" :footer-nl "```"))
@@ -237,9 +236,9 @@
 
 (defsection @locatives-and-references
     (:title "Locatives and References" :export nil)
-  """To [navigate with `M-.`][@NAVIGATING-IN-EMACS section] and to
-  [generate documentation][@GENERATING-DOCUMENTATION section] we need
-  to refer to things such as the `FOO` type or the `FOO` function.
+  """To [navigate with `\\M-.`][@NAVIGATING-IN-EMACS] and to [generate
+  documentation][@GENERATING-DOCUMENTATION] we need to refer to things
+  such as the `FOO` type or the `FOO` function.
 
   ```
   (deftype foo ()
@@ -257,7 +256,7 @@
   supports disambiguation and working with things that are not
   first-class, such as types.
 
-  PAX generalizes `DOC-TYPE` to the concept of @LOCATIVEs, which may
+  \PAX generalizes `DOC-TYPE` to the concept of @LOCATIVEs, which may
   also take arguments. An @OBJECT and a @LOCATIVE together are called
   a @REFERENCE, and they identify a single thing. REFERENCEs are
   actual objects, but often they appear as an `(OBJECT LOCATIVE)`

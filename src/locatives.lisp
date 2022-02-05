@@ -23,7 +23,7 @@
   `#<CLASS FOO>`. Even if there is no such CL type, the source
   location and the docstring of the defining form is recorded (see
   LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the @EXTENSION-API),
-  which makes navigating the sources with `M-.` (see
+  which makes navigating the sources with `\\M-.` (see
   @NAVIGATING-IN-EMACS) and @GENERATING-DOCUMENTATION possible.
   """
   (@variablelike-locatives section)
@@ -147,7 +147,7 @@
   See *DOCUMENT-LINK-CODE* for an example output. To override the
   current value, `INITFORM` may be provided. This is particulary
   useful if the value of the variable is something undesirable such as
-  `#<MY-CLASS {100171ED93}>`.
+  `\\#<MY-CLASS {100171ED93}>`.
   """)
 
 (defmethod locate-object (symbol (locative-type (eql 'variable)) locative-args)
@@ -204,12 +204,12 @@
   (destructuring-bind (&optional (initform nil initformp)) locative-args
     (locate-and-print-bullet locative-type locative-args symbol stream)
     (write-char #\Space stream)
-    (print-arglist (prin1-to-string (cond (initformp
-                                           initform)
-                                          ((boundp symbol)
-                                           (symbol-value symbol))
-                                          (t
-                                           "<unbound>")))
+    (print-arglist (prin1-and-escape-markdown (cond (initformp
+                                                     initform)
+                                                    ((boundp symbol)
+                                                     (symbol-value symbol))
+                                                    (t
+                                                     "<unbound>")))
                    stream)
     (print-end-bullet stream)
     (with-local-references ((list (make-reference symbol 'constant)))
@@ -256,9 +256,9 @@
 
 (define-locative-type symbol-macro ()
   """Refers to a global symbol macro, defined with DEFINE-SYMBOL-MACRO.
-  Note that since DEFINE-SYMBOL-MACRO does not support docstrings, PAX
-  defines methods on the DOCUMENTATION generic function specialized
-  for `DOC-TYPE` SYMBOL-MACRO.
+  Note that since DEFINE-SYMBOL-MACRO does not support docstrings,
+  \PAX defines methods on the DOCUMENTATION generic function
+  specialized for `DOC-TYPE` SYMBOL-MACRO.
 
   ```
   (define-symbol-macro my-mac 42)
@@ -829,7 +829,7 @@
     (loop for class in superclasses
           for i upfrom 0
           do (let ((reference (make-reference class 'class)))
-               (let ((name (escape-markdown (prin1-to-string class))))
+               (let ((name (prin1-and-escape-markdown class)))
                  (unless (zerop i)
                    (format stream " "))
                  (if (global-reference-p reference)
@@ -866,9 +866,8 @@
     (values :declare (cons 'foo things)))
   ```
 
-  Also, `M-.` (see @NAVIGATING-IN-EMACS) on declarations
-  currently only works on SBCL.
-  """)
+  Also, `\\M-.` (see @NAVIGATING-IN-EMACS) on declarations currently
+  only works on SBCL.""")
 
 (defvar *ansi-declarations*
   '(compilation-speed debug declaration dynamic-extent ftype ignorable
@@ -1197,10 +1196,10 @@
 ;;;; LOCATIVE locative
 
 (define-locative-type locative (lambda-list)
-  "This is the locative for locatives. When `M-.` is pressed on
+  """This is the locative for locatives. When `\\M-.` is pressed on
   `SOME-NAME` in `(SOME-NAME LOCATIVE)`, this is what makes it
   possible to land at the corresponding DEFINE-LOCATIVE-TYPE form.
-  Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.")
+  Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.""")
 
 (defmethod locate-object (symbol (locative-type (eql 'locative)) locative-args)
   (when locative-args
@@ -1317,8 +1316,8 @@
   ;;; More irrelevant code follows.
   ```
 
-  In the above example, pressing `M-.` on `PAX.EL` will open the
-  `src/pax.el` file and put the cursor on its first character. `M-.`
+  In the above example, pressing `\\M-.` on `PAX.EL` will open the
+  `src/pax.el` file and put the cursor on its first character. `\\M-.`
   on `FOO-EXAMPLE` will go to the source location of the `(asdf:system
   locative)` locative.
 
@@ -1469,7 +1468,7 @@
 
 (define-locative-type clhs ()
   """Refers to sections in the Common Lisp hyperspec. These have no
-  source location so `M-.` will not work. What works is linking. The
+  source location so `\\M-.` will not work. What works is linking. The
   following markdown examples all produce a link to CLHS `3.4`, the
   section 'Lambda Lists', which is in file `03_d.htm`.
 

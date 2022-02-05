@@ -16,14 +16,14 @@
 
 
 (defsection @new-object-types (:title "Adding New Object Types")
-  "One may wish to make the DOCUMENT function and `M-.` navigation
+  """One may wish to make the DOCUMENT function and `\\M-.` navigation
   work with new object types. Extending DOCUMENT can be done by
   defining a DOCUMENT-OBJECT method. To allow these objects to be
   referenced from DEFSECTION, a LOCATE-OBJECT method is to be defined.
-  For `M-.` FIND-SOURCE can be specialized. Finally,
+  For `\\M-.` FIND-SOURCE can be specialized. Finally,
   EXPORTABLE-LOCATIVE-TYPE-P may be overridden if exporting does not
   makes sense. Here is a stripped down example of how all this is done
-  for ASDF:SYSTEM:"
+  for ASDF:SYSTEM:"""
   (asdf-example (include (:start (asdf:system locative)
                           :end (end-of-asdf-example variable))
                          :header-nl "```commonlisp"
@@ -209,7 +209,7 @@
 (defgeneric find-source (object)
   (:documentation """Return the Swank source location for OBJECT. It
   is called by LOCATE-DEFINITIONS-FOR-EMACS, which lies behind the
-  `M-.` extension (see @NAVIGATING-IN-EMACS).
+  `\\M-.` extension (see @NAVIGATING-IN-EMACS).
 
   If successful, the return value should look like one of these:
 
@@ -247,13 +247,13 @@
 
 (defsection @reference-based-extensions
     (:title "Reference Based Extensions")
-  "Let's see how to extend DOCUMENT and `M-.` navigation if there is
+  """Let's see how to extend DOCUMENT and `\\M-.` navigation if there is
   no first class object to represent the thing of interest. Recall
   that LOCATE returns a REFERENCE object in this case. DOCUMENT-OBJECT
   and FIND-SOURCE defer to LOCATE-AND-DOCUMENT and
   LOCATE-AND-FIND-SOURCE, which have LOCATIVE-TYPE in their argument
   list for [EQL][type] specializing pleasure. Here is a stripped down
-  example of how the VARIABLE locative is defined:"
+  example of how the VARIABLE locative is defined:"""
   (variable-example (include (:start (variable locative)
                                      :end (end-of-variable-example variable))
                              :header-nl "```commonlisp"
@@ -353,12 +353,12 @@
 (defvar *locative-source-search-list* ())
 
 (defun add-locative-to-source-search-list (locative)
-  "Some locatives are implemented in terms of Lisp types, for which
-  [SLIME's `M-.`][slime-m-.] finds source code of the corresponding
+  """Some locatives are implemented in terms of Lisp types, for which
+  [SLIME's `\\M-.`][slime-m-.] finds source code of the corresponding
   definition out of the box. For example, SECTIONs are simply global
   variables. To be able to list all definitions that belong to a name,
   we register locatives to try with
-  ADD-LOCATIVE-TO-SOURCE-SEARCH-LIST."
+  ADD-LOCATIVE-TO-SOURCE-SEARCH-LIST."""
   (pushnew locative *locative-source-search-list* :test #'equal))
 
 (defmacro define-symbol-locative-type (locative-type lambda-list

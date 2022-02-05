@@ -112,8 +112,8 @@ for the latest version.
 
 As a user, I frequently run into documentation that's incomplete
 and out of date, so I tend to stay in the editor and explore the
-code by jumping around with [SLIME][slime]'s [`M-.`][slime-m-.]. As
-a library author, I spend a great deal of time polishing code but
+code by jumping around with [SLIME][slime]'s [`M-.`][slime-m-.].
+As a library author, I spend a great deal of time polishing code but
 precious little writing documentation.
 
 [slime]: https://slime.common-lisp.dev/ 
@@ -163,9 +163,9 @@ later generalized into the concept of locatives:
   (bar function))
 ```
 
-After a bit of elisp hacking, `M-.` was smart enough to disambiguate
-based on the locative found in the vicinity of the symbol, and
-everything was good for a while.
+After a bit of elisp hacking, `M-.` was smart enough to
+disambiguate based on the locative found in the vicinity of the
+symbol, and everything was good for a while.
 
 Then I realized that sections could refer to other sections if there
 were a [`SECTION`][672f] locative. Going down that path, I soon began to feel
@@ -178,7 +178,7 @@ documentation generator shall also be able find out what's being
 referred to.
 
 I settled on [Markdown][markdown] as a reasonably non-intrusive
-format, and a few thousand lines later `PAX` was born.
+format, and a few thousand lines later PAX was born.
 
 [markdown]: https://daringfireball.net/projects/markdown/ 
 
@@ -188,7 +188,7 @@ format, and a few thousand lines later `PAX` was born.
 
 ## 5 Tutorial
 
-`PAX` provides an extremely poor man's Explorable Programming
+PAX provides an extremely poor man's Explorable Programming
 environment. Narrative primarily lives in so called sections that
 mix markdown docstrings with references to functions, variables,
 etc, all of which should probably have their own docstrings.
@@ -204,7 +204,7 @@ effects as with Literate Programming, but documentation is generated
 from code, not vice versa and there is no support for chunking. Code
 is first, code must look pretty, documentation is code.
 
-In typical use, `PAX` packages have no `:EXPORT`'s defined. Instead the
+In typical use, PAX packages have no `:EXPORT`'s defined. Instead the
 [`DEFINE-PACKAGE`][63f3] form gets a docstring, which may mention section
 names (defined with [`DEFSECTION`][72b4]). When the code is loaded into the
 lisp, pressing `M-.` in SLIME on the name of the section will take
@@ -442,9 +442,9 @@ Now let's examine the most important pieces.
 
 ### 6.1 Locatives and References
 
-To [navigate with `M-.`][3386] and to
-[generate documentation][2c93] we need
-to refer to things such as the `FOO` type or the `FOO` function.
+To [navigate with `M-.`][3386] and to [generate
+documentation][2c93] we need to refer to things
+such as the `FOO` type or the `FOO` function.
 
 ```
 (deftype foo ()
@@ -462,7 +462,7 @@ that we want the docstring of the type named `FOO`. This design
 supports disambiguation and working with things that are not
 first-class, such as types.
 
-`PAX` generalizes `DOC-TYPE` to the concept of [locative][4d92]s, which may
+PAX generalizes `DOC-TYPE` to the concept of [locative][4d92]s, which may
 also take arguments. An [object][75ce] and a [locative][4d92] together are called
 a [reference][80cd], and they identify a single thing. [`REFERENCEs`][1cea] are
 actual objects, but often they appear as an `(OBJECT LOCATIVE)`
@@ -634,9 +634,9 @@ which makes navigating the sources with `M-.` (see
 - [locative] **SYMBOL-MACRO**
 
     Refers to a global symbol macro, defined with [`DEFINE-SYMBOL-MACRO`][72fd].
-    Note that since `DEFINE-SYMBOL-MACRO` does not support docstrings, `PAX`
-    defines methods on the [`DOCUMENTATION`][68f1] generic function specialized
-    for `DOC-TYPE` `SYMBOL-MACRO`.
+    Note that since `DEFINE-SYMBOL-MACRO` does not support docstrings,
+    PAX defines methods on the [`DOCUMENTATION`][68f1] generic function
+    specialized for `DOC-TYPE` `SYMBOL-MACRO`.
     
     ```
     (define-symbol-macro my-mac 42)
@@ -792,8 +792,8 @@ which makes navigating the sources with `M-.` (see
       (values :declare (cons 'foo things)))
     ```
     
-    Also, `M-.` (see [Navigating Sources in Emacs][3386]) on declarations
-    currently only works on SBCL.
+    Also, `M-.` (see [Navigating Sources in Emacs][3386]) on declarations currently
+    only works on SBCL.
 
 <a id="x-28MGL-PAX-3A-40CONDITION-SYSTEM-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 <a id="MGL-PAX:@CONDITION-SYSTEM-LOCATIVES%20MGL-PAX:SECTION"></a>
@@ -1110,8 +1110,8 @@ In particular, references in a [`DEFSECTION`][72b4] form are in ([`SYMBOL`][7f9f
 [`LOCATIVE`][0b3a]) format so `M-.` will work just fine there.
 
 Just like vanilla `M-.`, this works in comments and docstrings. In
-the next example, pressing `M-.` on `FOO` will visit `FOO`'s default
-method:
+the next example, pressing `M-.` on `FOO` will visit `FOO`'s
+default method:
 
 ```commonlisp
 ;;;; See FOO `(method () (t t t))` for how this all works.
@@ -1320,7 +1320,7 @@ The [Markdown][markdown] in docstrings is processed with the
 
 #### 9.2.1 Indentation
 
-Docstrings can be indented in any of the usual styles. `PAX`
+Docstrings can be indented in any of the usual styles. PAX
 normalizes indentation by converting:
 
     (defun foo ()
@@ -1352,8 +1352,8 @@ write:
     ```
 
 to get syntactically marked up HTML output. Copy `src/style.css`
-from `PAX` and you are set. The language tag, `elisp` in this example,
-is optional and defaults to `common-lisp`.
+from `PAX` and you are set. The language tag, `elisp` in this
+example, is optional and defaults to `common-lisp`.
 
 See the documentation of [`3BMD`][3bmd] and [colorize][colorize] for
 the details.
@@ -1422,7 +1422,7 @@ Reader][pythonic-string-reader] can help with that.
     where the links are added due to [`*DOCUMENT-LINK-CODE*`][d9ee].
     
     To suppress this behavior, add a backslash to the beginning of the
-    symbol or right after the leading `\*` if it would otherwise be
+    symbol or right after the leading `*` if it would otherwise be
     parsed as markdown emphasis:
     
         "\\SECTION *\\PACKAGE*"
@@ -1478,11 +1478,26 @@ Reader][pythonic-string-reader] can help with that.
 
 - [variable] **\*DOCUMENT-DOWNCASE-UPPERCASE-CODE\*** *NIL*
 
-    If true, then the names of symbols recognized as code (including
-    those found if [`*DOCUMENT-UPPERCASE-IS-CODE*`][f25f]) are downcased in the
-    output if they only consist of uppercase characters. If it is
-    `:ONLY-IN-MARKUP`, then if the output format does not support
-    markup (e.g. it's `:PLAIN`), then no downcasing is performed.
+    If true, then all Markdown inline code (that is, `stuff between
+    backticks`, including those found if [`*DOCUMENT-UPPERCASE-IS-CODE*`][f25f])
+    which has no lowercase characters is downcased in the output.
+    Characters of literal strings in the code may be of any case. If
+    this variable is `:ONLY-IN-MARKUP` and the output format does not
+    support markup (e.g. it's `:PLAIN`), then no downcasing is performed.
+    For example,
+    
+        `(PRINT "Hello")`
+    
+    is downcased to
+    
+        `(print "Hello")`
+    
+    If the first two characters are backslashes, then no downcasing is
+    performed, in addition to [Preventing Autolinking][8c16]. Use this to mark
+    inline code that's not Lisp.
+    
+        Press `\\M-.` in Emacs.
+
 
 <a id="x-28MGL-PAX-3A-40LINKING-TO-CODE-20MGL-PAX-3ASECTION-29"></a>
 <a id="MGL-PAX:@LINKING-TO-CODE%20MGL-PAX:SECTION"></a>
@@ -1591,15 +1606,14 @@ without.
 
 In the common case, when [`*DOCUMENT-UPPERCASE-IS-CODE*`][f25f] is true,
 prefixing the uppercase [word][d7b0] with a backslash prevents it from
-being codified and thus also prevents
-[autolinking][b3cc] form
-kicking in. For example, `\DOCUMENT` renders as DOCUMENT. If it
-should be marked up as code but not autolinked, the backslash must
-be within backticks like this:
+being codified and thus also prevents [autolinking][b3cc] form kicking in. For example,
 
-```
-`\DOCUMENT`
-```
+    \DOCUMENT
+
+renders as DOCUMENT. If it should be marked up as code but not
+autolinked, the backslash must be within backticks like this:
+
+    `\DOCUMENT`
 
 This renders as `DOCUMENT`. Alternatively, the [`DISLOCATED`][e391] or the
 [`ARGUMENT`][8710] locative may be used as in `[DOCUMENT][dislocated]`.
@@ -1609,11 +1623,10 @@ This renders as `DOCUMENT`. Alternatively, the [`DISLOCATED`][e391] or the
 
 #### 9.4.6 Suppressed Links
 
-Within the same docstring,
-[autolinking][b3cc] of code (i.e. of
-something like `FOO`) is suppressed if the same [object][75ce] was already
-linked to in any way. In the following docstring, only the first
-`FOO` will be turned into a link.
+Within the same docstring, [autolinking][b3cc] of code (i.e. of something like
+`FOO`) is suppressed if the same [object][75ce] was already linked to in
+any way. In the following docstring, only the first `FOO` will be
+turned into a link.
 
     "`FOO` is safe. `FOO` is great."
 
@@ -1629,8 +1642,8 @@ and [unambiguous][5c74] locatives to
 `SECTIONs`([`0`][5fac] [`1`][672f]) and [`GLOSSARY-TERM`][5119]s always produce a link to allow their
 titles to be displayed properly.
 
-Finally, [autolinking][b3cc] to
-`T` or `NIL` is suppressed (see [`*DOCUMENT-LINK-TO-HYPERSPEC*`][875e]).
+Finally, [autolinking][b3cc] to `T` or
+`NIL` is suppressed (see [`*DOCUMENT-LINK-TO-HYPERSPEC*`][875e]).
 
 <a id="x-28MGL-PAX-3A-40FILTERING-AMBIGUOUS-REFERENCES-20MGL-PAX-3ASECTION-29"></a>
 <a id="MGL-PAX:@FILTERING-AMBIGUOUS-REFERENCES%20MGL-PAX:SECTION"></a>
@@ -1724,7 +1737,7 @@ The exact rules for local references are as follows:
 
 - [variable] **\*DOCUMENT-HYPERSPEC-ROOT\*** *"http://www.lispworks.com/documentation/HyperSpec/"*
 
-    A `URL` pointing to an installed Common Lisp Hyperspec. The default
+    A URL pointing to an installed Common Lisp Hyperspec. The default
     value of is the canonical location.
 
 <a id="x-28MGL-PAX-3A-40LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29"></a>
@@ -1796,25 +1809,25 @@ table of contents and navigation links.
 
 - [variable] **\*DOCUMENT-URL-VERSIONS\*** *(1)*
 
-    A list of versions of `PAX` [`URL`][e391] formats to support in
-    the generated documenation in addition to the latest one.
+    A list of versions of PAX URL formats to support in the
+    generated documenation in addition to the latest one.
     
-    `PAX` emits HTML anchors before the documentation of `SECTIONs`([`0`][5fac] [`1`][672f])
+    PAX emits HTML anchors before the documentation of `SECTIONs`([`0`][5fac] [`1`][672f])
     (see [Linking to Sections][22c2]) and other things (see [Linking to Code][1865]).
     For the function `FOO`, in the current version (version 2), the
-    anchor is `<a id="MGL-PAX:FOO%20FUNCTION">` and its `URL` will end
+    anchor is `<a id="MGL-PAX:FOO%20FUNCTION">` and its URL will end
     with `#MGL-PAX:FOO%20FUNCTION`.
     
-    *Note that to make the `URL` independent of whether a symbol is
+    *Note that to make the URL independent of whether a symbol is
     [internal or external][e077] to their [`SYMBOL-PACKAGE`][964b], single
     colon is printed where a double colon would be expected. Package and
     symbol names are both printed verbatim except for escaping colons
     and spaces with a backslash. For exported symbols with no funny
     characters, this coincides with how [`PRIN1`][1aee] would print the symbol,
-    while having the benefit of making the `URL` independent of the Lisp
+    while having the benefit of making the URL independent of the Lisp
     printer's escaping strategy and producing human-readable output for
     mixed-case symbols. No such promises are made for non-ASCII
-    characters, and their `URL`s may change in future versions. Locatives
+    characters, and their URLs may change in future versions. Locatives
     are printed with `PRIN1`.*
     
     Version 1 was based on the more strict HTML4 standard and the id of
@@ -2205,8 +2218,8 @@ with `C-x C-e`. The cursor is marked by `#\^`:
     ```
 
 Note that the use of fenced code blocks with the language tag
-`cl-transcript` is only to tell `PAX` to perform consistency checks at
-documentation generation time.
+`cl-transcript` is only to tell PAX to perform consistency checks
+at documentation generation time.
 
 Now invoke the elisp function `mgl-pax-transcribe` where the cursor
 is and the fenced code block from the docstring becomes:
@@ -3018,8 +3031,9 @@ for [`ASDF:SYSTEM:`][c097]
     `SECTION`([`0`][5fac] [`1`][672f]), [`GLOSSARY-TERM`][5119], `PACKAGE`([`0`][4dd7] [`1`][5fb9]), [`ASDF:SYSTEM`][c097], `METHOD`([`0`][172e] [`1`][6831]) and [`INCLUDE`][5cd7]
     return `NIL`.
     
-    `DEFSECTION` calls this function to decide what symbols to export when
-    its `EXPORT` argument is true.
+    This function is called by the default method of
+    [`EXPORTABLE-REFERENCE-P`][e51f] to decide what symbols `DEFSECTION` shall
+    export when its `EXPORT` argument is true.
 
 <a id="x-28MGL-PAX-3ALOCATE-OBJECT-20GENERIC-FUNCTION-29"></a>
 <a id="MGL-PAX:LOCATE-OBJECT%20GENERIC-FUNCTION"></a>
@@ -3183,7 +3197,7 @@ example of how the [`VARIABLE`][6c83] locative is defined:
   See *DOCUMENT-LINK-CODE* for an example output. To override the
   current value, `INITFORM` may be provided. This is particulary
   useful if the value of the variable is something undesirable such as
-  `#<MY-CLASS {100171ED93}>`.
+  `\\#<MY-CLASS {100171ED93}>`.
   """)
 
 (defmethod locate-object (symbol (locative-type (eql 'variable)) locative-args)

@@ -8,8 +8,7 @@
 (eval-when (:compile-toplevel)
   (declaim (optimize (debug 3))))
 
-(defsection @generating-documentation
-    (:title "Generating Documentation")
+(defsection @generating-documentation (:title "Generating Documentation")
   (document function)
   (mgl-pax/document asdf:system)
   (@markdown-support section)
@@ -222,8 +221,7 @@
       (link-page link))))
 
 
-(defsection @linking-to-the-hyperspec
-    (:title "Linking to the Hyperspec")
+(defsection @linking-to-the-hyperspec (:title "Linking to the Hyperspec")
   (*document-link-to-hyperspec* variable)
   (*document-hyperspec-root* variable))
 
@@ -243,8 +241,8 @@
 
 (defvar *document-hyperspec-root*
   "http://www.lispworks.com/documentation/HyperSpec/"
-  "A URL pointing to an installed Common Lisp Hyperspec. The default
-  value of is the canonical location.")
+  """A \URL pointing to an installed Common Lisp Hyperspec. The default
+  value of is the canonical location.""")
 
 (defvar *last-hyperspec-root-and-links* nil)
 
@@ -603,7 +601,7 @@
   (@mathjax section))
 
 (defsection @markdown-indentation (:title "Indentation")
-  """Docstrings can be indented in any of the usual styles. PAX
+  """Docstrings can be indented in any of the usual styles. \PAX
   normalizes indentation by converting:
 
       (defun foo ()
@@ -631,8 +629,8 @@
       ```
 
   to get syntactically marked up HTML output. Copy `src/style.css`
-  from PAX and you are set. The language tag, `elisp` in this example,
-  is optional and defaults to `common-lisp`.
+  from \PAX and you are set. The language tag, `elisp` in this
+  example, is optional and defaults to `common-lisp`.
 
   See the documentation of [3BMD][3bmd] and [colorize][colorize] for
   the details.
@@ -733,26 +731,6 @@
     consecutive uppercase characters (e.g. `\CLASSes` but not
     `Capital`).")
 
-(define-glossary-term @interesting (:title "interesting")
-  "A @WORD is _interesting_ iff
-
-  - it _names_ a known reference, or
-  - it is at least 3 characters long and names a package or a symbol
-    external to its package.
-
-  Where we say that a word **names** a known reference if the word
-  matches the name of a thing being documented, or it is in the
-  hyperspec and *DOCUMENT-UPPERCASE-IS-CODE* is true, or more
-  precisely,
-
-  - if the word matches [the object of a reference][REFERENCE-OBJECT
-    reader] being documented (see DOCUMENT and
-    COLLECT-REACHABLE-OBJECTS), or
-  - the a name in the hyperspec if *DOCUMENT-LINK-TO-HYPERSPEC*.
-
-  Symbols are read in the current *PACKAGE*, which is subject to
-  *DOCUMENT-NORMALIZE-PACKAGES*.")
-
 (defun codifiable-word-p (word)
   ;; OPT
   (and (notany #'whitespacep word)
@@ -775,6 +753,26 @@
                    (t
                     (setq prev-case nil)))
           finally (return t))))
+
+(define-glossary-term @interesting (:title "interesting")
+  "A @WORD is _interesting_ iff
+
+  - it _names_ a known reference, or
+  - it is at least 3 characters long and names a package or a symbol
+    external to its package.
+
+  Where we say that a word **names** a known reference if the word
+  matches the name of a thing being documented, or it is in the
+  hyperspec and *DOCUMENT-UPPERCASE-IS-CODE* is true, or more
+  precisely,
+
+  - if the word matches [the object of a reference][REFERENCE-OBJECT
+    reader] being documented (see DOCUMENT and
+    COLLECT-REACHABLE-OBJECTS), or
+  - the a name in the hyperspec if *DOCUMENT-LINK-TO-HYPERSPEC*.
+
+  Symbols are read in the current *PACKAGE*, which is subject to
+  *DOCUMENT-NORMALIZE-PACKAGES*.")
 
 (defun interesting-object-p (object name)
   (flet ((normal-ref-p (ref)
@@ -849,6 +847,8 @@
    #'translate-to-code
    parse-tree))
 
+(defvar *translating-reference-link* nil)
+
 ;;; This is the first of the translator functions, which are those
 ;;; passed to MAP-MARKDOWN-PARSE-TREE.
 ;;;
@@ -871,14 +871,12 @@
          (translate-code-block parent tree))
         ((parse-tree-p tree :reference-link)
          (let ((replacement (copy-list tree)))
-           (setf (pt-get replacement :label) (codify (pt-get tree :label)))
+           (setf (pt-get replacement :label)
+                 (let ((*translating-reference-link* t))
+                   (codify (pt-get tree :label))))
            replacement))
         ((parse-tree-p tree :code)
-         (let ((string (second tree)))
-           (if (eql #\\ (alexandria:first-elt string))
-               tree
-               ;; FIXME: downcase entire code block?
-               `(:code ,(maybe-downcase (second tree))))))
+         `(:code ,(maybe-downcase (second tree))))
         (t
          (error "~@<Unexpected tree type ~S.~:@>" (first tree)))))
 
@@ -929,12 +927,32 @@
 
 
 (defvar *document-downcase-uppercase-code* nil
-  ;; FIXME
-  "If true, then the names of symbols recognized as code (including
-  those found if *DOCUMENT-UPPERCASE-IS-CODE*) are downcased in the
-  output if they only consist of uppercase characters. If it is
-  :ONLY-IN-MARKUP, then if the output format does not support
-  markup (e.g. it's :PLAIN), then no downcasing is performed.")
+  """If true, then all Markdown inline code (that is, `stuff between
+  backticks`, including those found if *DOCUMENT-UPPERCASE-IS-CODE*)
+  which has no lowercase characters is downcased in the output.
+  Characters of literal strings in the code may be of any case. If
+  this variable is :ONLY-IN-MARKUP and the output format does not
+  support markup (e.g. it's :PLAIN), then no downcasing is performed.
+  For example,
+
+      `(PRINT "Hello")`
+
+  is downcased to
+
+      `(print "Hello")`
+
+  because it only contains uppercase characters outside the string.
+  However,
+
+     `MiXed "RESULTS"`
+
+  is not altered because it has lowercase characters.
+
+  If the first two characters are backslashes, then no downcasing is
+  performed, in addition to @PREVENTING-AUTOLINKING. Use this to mark
+  inline code that's not Lisp.
+
+      Press `\\M-.` in Emacs.""")
 
 (defun downcasingp ()
   (or (and *document-downcase-uppercase-code*
@@ -944,19 +962,65 @@
                :only-in-markup)
            (not (eq *format* :plain)))))
 
+(defun prin1-to-string* (object)
+  (let ((*print-case* (if (downcasingp)
+                          :downcase
+                          :upcase)))
+    (prin1-to-string object)))
+
 (defun maybe-downcase (string)
+  (if (alexandria:starts-with-subseq "\\\\" string)
+      ;; Leave one backslash to escape linking in TRANSLATE-TO-LINKS
+      ;; unless we are in a reference link, where linking cannot be
+      ;; escaped.
+      (if *translating-reference-link*
+          (subseq string 2)
+          (subseq string 1))
+      (if (downcasingp)
+          (downcase-all-uppercase-code string)
+          string)))
+
+(defun maybe-downcase-all-uppercase-code (string)
   (if (downcasingp)
-      (string-downcase string)
+      (downcase-all-uppercase-code string)
       string))
+
+(defun downcase-all-uppercase-code (string)
+  (with-output-to-string (s)
+    (map-code-chars (lambda (char escaped in-string)
+                      (when (and (not in-string)
+                                 (lower-case-p char))
+                        (return-from downcase-all-uppercase-code string))
+                      (when escaped
+                        (write-char #\\ s))
+                      (if in-string
+                          (write-char char s)
+                          (write-char (char-downcase char) s)))
+                    string)))
+
+(defun map-code-chars (fn string)
+  (let ((in-string nil)
+        (escaped nil))
+    (loop for char across string
+          do (cond (escaped
+                    (funcall fn char t in-string)
+                    (setq escaped nil))
+                   ((eq char #\\)
+                    (setq escaped t))
+                   ((eq char #\")
+                    (funcall fn char nil in-string)
+                    (setq in-string (not in-string)))
+                   (t
+                    (funcall fn char nil in-string))))))
 
 
 (defsection @linking-to-code (:title "Linking to Code")
   """In this section, we describe all ways of linking to code
   available when *DOCUMENT-UPPERCASE-IS-CODE* is true.
 
-  _Note that invoking [`M-.`][@navigating-in-emacs section] on the
+  _Note that invoking [`\\M-.`][@navigating-in-emacs section] on the
   @OBJECT of any of the following links will disambiguate based the
-  textual context, determining the locative. In a nutshell, if `M-.`
+  textual context, determining the locative. In a nutshell, if `\\M-.`
   works without popping up a list of choices, then the documentation
   will contain a single link._
   """
@@ -1030,19 +1094,18 @@
 (defsection @preventing-autolinking (:title "Preventing Autolinking")
   """In the common case, when [*DOCUMENT-UPPERCASE-IS-CODE*][] is true,
   prefixing the uppercase @WORD with a backslash prevents it from
-  being codified and thus also prevents
-  [autolinking][@explicit-and-autolinking section] form
-  kicking in. For example, `\\DOCUMENT` renders as \DOCUMENT. If it
-  should be marked up as code but not autolinked, the backslash must
-  be within backticks like this:
+  being codified and thus also prevents [autolinking][
+  @explicit-and-autolinking section] form kicking in. For example,
 
-  ```
-  `\DOCUMENT`
-  ```
+      \DOCUMENT
+
+  renders as \DOCUMENT. If it should be marked up as code but not
+  autolinked, the backslash must be within backticks like this:
+
+      `\DOCUMENT`
 
   This renders as `\DOCUMENT`. Alternatively, the DISLOCATED or the
-  ARGUMENT locative may be used as in `[DOCUMENT][dislocated]`.
-  """)
+  ARGUMENT locative may be used as in `[DOCUMENT][dislocated]`.""")
 
 (defvar *document-link-code* t
   """Enable the various forms of links in docstrings described in
@@ -1234,7 +1297,13 @@
                 (format nil "*~A*" (recurse (rest e))))
                ;; (:CODE "S") -> "S"
                ((parse-tree-p e :code)
-                (recurse (rest e)))
+                (let ((string (second e)))
+                  (cond ((alexandria:starts-with-subseq "\\\\" string)
+                         (recurse (subseq string 2)))
+                        ((alexandria:starts-with-subseq "\\" string)
+                         (recurse (subseq string 1)))
+                        (t
+                         (recurse string)))))
                (t
                 (return-from parse-tree-to-text nil)))))
     (recurse parse-tree)))
@@ -1289,17 +1358,16 @@
 (defun sort-references (references)
   (flet ((locative-string (reference)
            (with-standard-io-syntax*
-             (prin1-to-string
-              (reference-locative reference)))))
+             (prin1-to-string (reference-locative reference)))))
     (sort (copy-seq references) #'string< :key #'locative-string)))
 
 
 (defsection @suppressed-links (:title "Suppressed Links")
-  """Within the same docstring,
-  [autolinking][@explicit-and-autolinking section] of code (i.e. of
-  something like `FOO`) is suppressed if the same @OBJECT was already
-  linked to in any way. In the following docstring, only the first
-  `FOO` will be turned into a link.
+  """Within the same docstring, [autolinking]
+  [@explicit-and-autolinking section] of code (i.e. of something like
+  `FOO`) is suppressed if the same @OBJECT was already linked to in
+  any way. In the following docstring, only the first `FOO` will be
+  turned into a link.
 
       "`FOO` is safe. `FOO` is great."
 
@@ -1315,9 +1383,8 @@
   SECTIONs and GLOSSARY-TERMs always produce a link to allow their
   titles to be displayed properly.
 
-  Finally, [autolinking][@explicit-and-autolinking section] to
-  T or NIL is suppressed (see *DOCUMENT-LINK-TO-HYPERSPEC*).
-  """)
+  Finally, [autolinking][@explicit-and-autolinking section] to T or
+  NIL is suppressed (see *DOCUMENT-LINK-TO-HYPERSPEC*).""")
 
 (defun suppressed-link-p (refs linked-refs)
   (when refs
@@ -1721,25 +1788,25 @@
 
 
 (defvar *document-url-versions* '(1)
-  """A list of versions of PAX [URL][dislocated] formats to support in
-  the generated documenation in addition to the latest one.
+  """A list of versions of \PAX \URL formats to support in the
+  generated documenation in addition to the latest one.
 
-  PAX emits HTML anchors before the documentation of SECTIONs
+  \PAX emits HTML anchors before the documentation of SECTIONs
   (see @LINKING-TO-SECTIONS) and other things (see @LINKING-TO-CODE).
   For the function `FOO`, in the current version (version 2), the
-  anchor is `<a id="MGL-PAX:FOO%20FUNCTION">` and its URL will end
-  with `#MGL-PAX:FOO%20FUNCTION`.
+  anchor is `<a id="MGL-PAX:FOO%20FUNCTION">` and its \URL will end
+  with `\\#MGL-PAX:FOO%20FUNCTION`.
 
-  _Note that to make the URL independent of whether a symbol is
+  _Note that to make the \URL independent of whether a symbol is
   [internal or external][find-symbol] to their SYMBOL-PACKAGE, single
   colon is printed where a double colon would be expected. Package and
   symbol names are both printed verbatim except for escaping colons
   and spaces with a backslash. For exported symbols with no funny
   characters, this coincides with how PRIN1 would print the symbol,
-  while having the benefit of making the URL independent of the Lisp
+  while having the benefit of making the \URL independent of the Lisp
   printer's escaping strategy and producing human-readable output for
   mixed-case symbols. No such promises are made for non-ASCII
-  characters, and their URLs may change in future versions. Locatives
+  characters, and their \URLs may change in future versions. Locatives
   are printed with PRIN1._
 
   Version 1 was based on the more strict HTML4 standard and the id of
@@ -1881,7 +1948,7 @@
 (defun print-reference-bullet (reference stream &key name)
   (let ((locative-type (string-downcase
                         (reference-locative-type reference)))
-        (name (or name (prin1-to-string (reference-object reference)))))
+        (name (or name (prin1-to-string* (reference-object reference)))))
     (if *document-mark-up-signatures*
         ;; insert self links in HTML
         (let ((locative-type (escape-markdown locative-type))
@@ -1936,6 +2003,9 @@
             (italic string stream))
         (format stream "~A" string))))
 
+(defun prin1-and-escape-markdown (object)
+  (escape-markdown (prin1-to-string* object)))
+
 ;;; Print arg names without the package prefix to a string. The
 ;;; default value with prefix. Works for macro arglists too.
 (defun arglist-to-string (arglist)
@@ -1962,15 +2032,18 @@
                              (setq seen-special-p t)
                              (format out "~A" (prin1-and-escape-markdown arg)))
                             ((symbolp arg)
-                             (format out "~A" (escape-markdown
-                                               (symbol-name arg))))
+                             (format out "~A"
+                                     (escape-markdown
+                                      (maybe-downcase-all-uppercase-code
+                                       (symbol-name arg)))))
                             ((atom arg)
                              (format out "~A" (prin1-and-escape-markdown arg)))
                             (seen-special-p
                              (if (symbolp (first arg))
                                  (format out "(~A~{ ~A~})"
                                          (escape-markdown
-                                          (symbol-name (first arg)))
+                                          (maybe-downcase-all-uppercase-code
+                                           (symbol-name (first arg))))
                                          (mapcar #'resolve* (rest arg)))
                                  (format out "~A"
                                          (prin1-and-escape-markdown arg))))

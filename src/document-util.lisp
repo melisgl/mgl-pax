@@ -352,7 +352,8 @@
  (progn
    (asdf:load-system :mgl-pax/full)
    (update-asdf-system-readmes (pax-sections) :mgl-pax)
-   (update-asdf-system-html-docs (pax-sections) :mgl-pax :pages (pax-pages))))
+   (let ((*document-downcase-uppercase-code* t))
+     (update-asdf-system-html-docs (pax-sections) :mgl-pax :pages (pax-pages)))))
 
 
 ;;; Load systems that use PAX and generate PAX World in

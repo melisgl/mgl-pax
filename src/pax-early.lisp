@@ -275,8 +275,9 @@
   SECTION, GLOSSARY-TERM, PACKAGE, ASDF:SYSTEM, METHOD and INCLUDE
   return NIL.
 
-  DEFSECTION calls this function to decide what symbols to export when
-  its EXPORT argument is true.")
+  This function is called by the default method of
+  EXPORTABLE-REFERENCE-P to decide what symbols DEFSECTION shall
+  export when its EXPORT argument is true.")
   (:method (locative-type)
     (declare (ignore locative-type))
     t))

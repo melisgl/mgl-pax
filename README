@@ -39,8 +39,8 @@ for the latest version.
 
 As a user, I frequently run into documentation that's incomplete
 and out of date, so I tend to stay in the editor and explore the
-code by jumping around with [SLIME][slime]'s [`M-.`][slime-m-.]. As
-a library author, I spend a great deal of time polishing code but
+code by jumping around with [SLIME][slime]'s [`M-.`][slime-m-.].
+As a library author, I spend a great deal of time polishing code but
 precious little writing documentation.
 
 [slime]: https://slime.common-lisp.dev/ 
@@ -90,9 +90,9 @@ later generalized into the concept of locatives:
   (bar function))
 ```
 
-After a bit of elisp hacking, `M-.` was smart enough to disambiguate
-based on the locative found in the vicinity of the symbol, and
-everything was good for a while.
+After a bit of elisp hacking, `M-.` was smart enough to
+disambiguate based on the locative found in the vicinity of the
+symbol, and everything was good for a while.
 
 Then I realized that sections could refer to other sections if there
 were a SECTION locative. Going down that path, I soon began to feel
@@ -349,9 +349,9 @@ Now let's examine the most important pieces.
 
 ### Locatives and References
 
-To [navigate with `M-.`][@NAVIGATING-IN-EMACS section] and to
-[generate documentation][@GENERATING-DOCUMENTATION section] we need
-to refer to things such as the `FOO` type or the `FOO` function.
+To [navigate with `M-.`][@NAVIGATING-IN-EMACS] and to [generate
+documentation][@GENERATING-DOCUMENTATION] we need to refer to things
+such as the `FOO` type or the `FOO` function.
 
 ```
 (deftype foo ()
@@ -503,9 +503,9 @@ which makes navigating the sources with `M-.` (see
 - [locative] SYMBOL-MACRO
 
     Refers to a global symbol macro, defined with DEFINE-SYMBOL-MACRO.
-    Note that since DEFINE-SYMBOL-MACRO does not support docstrings, PAX
-    defines methods on the DOCUMENTATION generic function specialized
-    for `DOC-TYPE` SYMBOL-MACRO.
+    Note that since DEFINE-SYMBOL-MACRO does not support docstrings,
+    PAX defines methods on the DOCUMENTATION generic function
+    specialized for `DOC-TYPE` SYMBOL-MACRO.
     
     ```
     (define-symbol-macro my-mac 42)
@@ -620,8 +620,8 @@ which makes navigating the sources with `M-.` (see
       (values :declare (cons 'foo things)))
     ```
     
-    Also, `M-.` (see @NAVIGATING-IN-EMACS) on declarations
-    currently only works on SBCL.
+    Also, `M-.` (see @NAVIGATING-IN-EMACS) on declarations currently
+    only works on SBCL.
 
 ### Condition System Locatives
 
@@ -881,8 +881,8 @@ In particular, references in a DEFSECTION form are in (SYMBOL
 LOCATIVE) format so `M-.` will work just fine there.
 
 Just like vanilla `M-.`, this works in comments and docstrings. In
-the next example, pressing `M-.` on `FOO` will visit `FOO`'s default
-method:
+the next example, pressing `M-.` on `FOO` will visit `FOO`'s
+default method:
 
 ```commonlisp
 ;;;; See FOO `(method () (t t t))` for how this all works.
@@ -1102,8 +1102,8 @@ write:
     ```
 
 to get syntactically marked up HTML output. Copy `src/style.css`
-from PAX and you are set. The language tag, `elisp` in this example,
-is optional and defaults to `common-lisp`.
+from PAX and you are set. The language tag, `elisp` in this
+example, is optional and defaults to `common-lisp`.
 
 See the documentation of [3BMD][3bmd] and [colorize][colorize] for
 the details.
@@ -1163,7 +1163,7 @@ Reader][pythonic-string-reader] can help with that.
     where the links are added due to *DOCUMENT-LINK-CODE*.
     
     To suppress this behavior, add a backslash to the beginning of the
-    symbol or right after the leading `\*` if it would otherwise be
+    symbol or right after the leading `*` if it would otherwise be
     parsed as markdown emphasis:
     
         "\\SECTION *\\PACKAGE*"
@@ -1210,11 +1210,26 @@ Reader][pythonic-string-reader] can help with that.
 
 - [variable] *DOCUMENT-DOWNCASE-UPPERCASE-CODE* NIL
 
-    If true, then the names of symbols recognized as code (including
-    those found if *DOCUMENT-UPPERCASE-IS-CODE*) are downcased in the
-    output if they only consist of uppercase characters. If it is
-    :ONLY-IN-MARKUP, then if the output format does not support
-    markup (e.g. it's :PLAIN), then no downcasing is performed.
+    If true, then all Markdown inline code (that is, `stuff between
+    backticks`, including those found if *DOCUMENT-UPPERCASE-IS-CODE*)
+    which has no lowercase characters is downcased in the output.
+    Characters of literal strings in the code may be of any case. If
+    this variable is :ONLY-IN-MARKUP and the output format does not
+    support markup (e.g. it's :PLAIN), then no downcasing is performed.
+    For example,
+    
+        `(PRINT "Hello")`
+    
+    is downcased to
+    
+        `(print "Hello")`
+    
+    If the first two characters are backslashes, then no downcasing is
+    performed, in addition to @PREVENTING-AUTOLINKING. Use this to mark
+    inline code that's not Lisp.
+    
+        Press `\\M-.` in Emacs.
+
 
 ### Linking to Code
 
@@ -1302,26 +1317,25 @@ without.
 
 In the common case, when [*DOCUMENT-UPPERCASE-IS-CODE*][] is true,
 prefixing the uppercase @WORD with a backslash prevents it from
-being codified and thus also prevents
-[autolinking][@explicit-and-autolinking section] form
-kicking in. For example, `\DOCUMENT` renders as DOCUMENT. If it
-should be marked up as code but not autolinked, the backslash must
-be within backticks like this:
+being codified and thus also prevents [autolinking][
+@explicit-and-autolinking section] form kicking in. For example,
 
-```
-`\DOCUMENT`
-```
+    \DOCUMENT
+
+renders as DOCUMENT. If it should be marked up as code but not
+autolinked, the backslash must be within backticks like this:
+
+    `\DOCUMENT`
 
 This renders as `DOCUMENT`. Alternatively, the DISLOCATED or the
 ARGUMENT locative may be used as in `[DOCUMENT][dislocated]`.
 
 #### Suppressed Links
 
-Within the same docstring,
-[autolinking][@explicit-and-autolinking section] of code (i.e. of
-something like `FOO`) is suppressed if the same @OBJECT was already
-linked to in any way. In the following docstring, only the first
-`FOO` will be turned into a link.
+Within the same docstring, [autolinking][@explicit-and-autolinking section] of code (i.e. of something like
+`FOO`) is suppressed if the same @OBJECT was already linked to in
+any way. In the following docstring, only the first `FOO` will be
+turned into a link.
 
     "`FOO` is safe. `FOO` is great."
 
@@ -1337,8 +1351,8 @@ and [unambiguous][@unambiguous-locative section] locatives to
 SECTIONs and GLOSSARY-TERMs always produce a link to allow their
 titles to be displayed properly.
 
-Finally, [autolinking][@explicit-and-autolinking section] to
-T or NIL is suppressed (see *DOCUMENT-LINK-TO-HYPERSPEC*).
+Finally, [autolinking][@explicit-and-autolinking section] to T or
+NIL is suppressed (see *DOCUMENT-LINK-TO-HYPERSPEC*).
 
 #### Filtering Ambiguous References
 
@@ -1465,8 +1479,8 @@ table of contents and navigation links.
 
 - [variable] *DOCUMENT-URL-VERSIONS* (1)
 
-    A list of versions of PAX [URL][dislocated] formats to support in
-    the generated documenation in addition to the latest one.
+    A list of versions of PAX URL formats to support in the
+    generated documenation in addition to the latest one.
     
     PAX emits HTML anchors before the documentation of SECTIONs
     (see @LINKING-TO-SECTIONS) and other things (see @LINKING-TO-CODE).
@@ -1814,8 +1828,8 @@ with `C-x C-e`. The cursor is marked by `#\^`:
     ```
 
 Note that the use of fenced code blocks with the language tag
-`cl-transcript` is only to tell PAX to perform consistency checks at
-documentation generation time.
+`cl-transcript` is only to tell PAX to perform consistency checks
+at documentation generation time.
 
 Now invoke the elisp function `mgl-pax-transcribe` where the cursor
 is and the fenced code block from the docstring becomes:
@@ -2522,8 +2536,9 @@ for ASDF:SYSTEM:
     SECTION, GLOSSARY-TERM, PACKAGE, ASDF:SYSTEM, METHOD and INCLUDE
     return NIL.
     
-    DEFSECTION calls this function to decide what symbols to export when
-    its EXPORT argument is true.
+    This function is called by the default method of
+    EXPORTABLE-REFERENCE-P to decide what symbols DEFSECTION shall
+    export when its EXPORT argument is true.
 
 - [generic-function] LOCATE-OBJECT OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
 
@@ -2654,7 +2669,7 @@ example of how the VARIABLE locative is defined:
   See *DOCUMENT-LINK-CODE* for an example output. To override the
   current value, `INITFORM` may be provided. This is particulary
   useful if the value of the variable is something undesirable such as
-  `#<MY-CLASS {100171ED93}>`.
+  `\\#<MY-CLASS {100171ED93}>`.
   """)
 
 (defmethod locate-object (symbol (locative-type (eql 'variable)) locative-args)

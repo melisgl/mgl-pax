@@ -4,11 +4,11 @@
 deftransform, defoptimizer, define-vop, define-source-transfrom
 * TODO export documentation generation utilities for extensions
 * OPT esrap is slow with allegro cl
-* OPT parse and print markdown once when *format* is :html
+* OPT parse and print markdown once when *format* is :html?
 * MAYBE todo/comment locative?
 * defining link ids doesn't work in function docstrings
 because it's translated to a list item
-* TODO pretty print lambda-lists (including default values)
+* MAYBE pretty print lambda-lists (including default values)
 and values of variables. Unfortunately, there seems to be no way to
 use the lisp pretty printer for this because output also includes
 markup.
@@ -30,15 +30,9 @@ change in INITIALIZE-LINKS.
 * warn on linking failure
 How to recoginize normal reference links? Don't, just warn on any
 linking failure. This should be in 3BMD.
-* consider CommonDoc from the 40ants fork
+* MAYBE consider CommonDoc from the 40ants fork
 * MAYBE split transcription off into a separate library?
 * MAYBE allow lowercase only in the last "word" of the name
-* *document-downcase-uppercase-code* is still broken
-- Not everything in backticks is lisp code.
-- `(PRINT "hello")` is not getting downcased.
-
-Need escaping.
-* MAYBE downcase objects and arglists?
 * describe-object or document-object?
 * MAYBE remove some markup in :PLAIN format?
 * MAYBE allow markdown in titles?
@@ -52,4 +46,5 @@ This should bring us closer to literate programming.
 * MAYBE get variable initforms from source?
 Or fall back on this for deficient ARGLISTs. Will be really slow.
 * test navigation from the emacs side
-* some link titles have \" in them
+* asdf:system link titles have \" in them
+* create mgl-pax/minimal?

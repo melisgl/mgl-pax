@@ -410,8 +410,7 @@
   ;; FIXME
   (with-test ("reflink")
     (with-test ("no refs")
-      (check-head "[U]" "[U][]")
-      (check-head "[FORMAT][dislocated]" "`FORMAT`"))))
+      (check-head "[U]" "[U][]"))))
 
 (defun q ())
 (defun qq ())
@@ -474,6 +473,7 @@
 (deftest test-downcasing-in-docstrings ()
   (with-test ("unadorned")
     (check-downcasing "NOT-INTERNED" "NOT-INTERNED")
+    (check-downcasing "MIXed" "MIXed")
     ;; has no refs
     (check-downcasing "TEST" "`test`")
     ;; has refs
@@ -487,6 +487,7 @@
                       "[`@section-without-title`][eeac]"))
   (with-test ("escaped unadorned")
     (check-downcasing "\\NOT-INTERNED" "NOT-INTERNED")
+    (check-downcasing "\\MIXed" "MIXed")
     (check-downcasing "\\TEST" "TEST")
     (check-downcasing "\\CLASS" "CLASS")
     (check-downcasing "*\\FORMAT*" "*FORMAT*")
@@ -495,6 +496,7 @@
                       "@SECTION-WITHOUT-TITLE"))
   (with-test ("code")
     (check-downcasing "`NOT-INTERNED`" "`not-interned`")
+    (check-downcasing "`MIXed`" "`MIXed`")
     (check-downcasing "`TEST`" "`test`")
     (check-downcasing "`CLASS`" "[`class`][7e58]")
     (check-downcasing "`*FORMAT*`" "`*format*`")
@@ -502,16 +504,28 @@
     (check-downcasing (list "`@SECTION-WITHOUT-TITLE`" @section-without-title)
                       "[`@section-without-title`][eeac]"))
   (with-test ("escaped code")
-    (check-downcasing "`\\NOT-INTERNED`" "`NOT-INTERNED`")
-    (check-downcasing "`\\TEST`" "`TEST`")
-    (check-downcasing "`\\CLASS`" "`CLASS`")
-    (check-downcasing "`\\*FORMAT*`" "`*FORMAT*`")
-    (check-downcasing "`\\*PACKAGE*`" "`*PACKAGE*`")
+    (check-downcasing "`\\NOT-INTERNED`" "`not-interned`")
+    (check-downcasing "`\\MIXed`" "`MIXed`")
+    (check-downcasing "`\\TEST`" "`test`")
+    (check-downcasing "`\\CLASS`" "`class`")
+    (check-downcasing "`\\*FORMAT*`" "`*format*`")
+    (check-downcasing "`\\*PACKAGE*`" "`*package*`")
     (check-downcasing (list "`\\@SECTION-WITHOUT-TITLE`"
+                            @section-without-title)
+                      "`@section-without-title`"))
+  (with-test ("doubly escaped code")
+    (check-downcasing "`\\\\NOT-INTERNED`" "`NOT-INTERNED`")
+    (check-downcasing "`\\\\MIXed`" "`MIXed`")
+    (check-downcasing "`\\\\TEST`" "`TEST`")
+    (check-downcasing "`\\\\CLASS`" "`CLASS`")
+    (check-downcasing "`\\\\*FORMAT*`" "`*FORMAT*`")
+    (check-downcasing "`\\\\*PACKAGE*`" "`*PACKAGE*`")
+    (check-downcasing (list "`\\\\@SECTION-WITHOUT-TITLE`"
                             @section-without-title)
                       "`@SECTION-WITHOUT-TITLE`"))
   (with-test ("reflink unadorned")
     (check-downcasing "[NOT-INTERNED][]" "[NOT-INTERNED][]")
+    (check-downcasing "[MIXed][]" "[MIXed][]")
     (check-downcasing "[TEST][]" "[`test`][]")
     (check-downcasing "[CLASS][]" "[`class`][7e58]")
     (check-downcasing "[*FORMAT*][]" "[`*format*`][]")
@@ -521,6 +535,7 @@
                       "[`@section-without-title`][eeac]"))
   (with-test ("reflink code")
     (check-downcasing "[`NOT-INTERNED`][]" "[`not-interned`][]")
+    (check-downcasing "[`MIXed`][]" "[`MIXed`][]")
     (check-downcasing "[`TEST`][]" "[`test`][]")
     (check-downcasing "[`CLASS`][]" "[`class`][7e58]")
     (check-downcasing "[`*FORMAT*`][]" "[`*format*`][]")
@@ -528,10 +543,20 @@
     (check-downcasing (list "[`@SECTION-WITHOUT-TITLE`][]"
                             @section-without-title)
                       "[`@section-without-title`][eeac]"))
+  (with-test ("reflink escaped code")
+    (check-downcasing "[`\\\\NOT-INTERNED`][]" "[`NOT-INTERNED`][]")
+    (check-downcasing "[`\\\\MIXed`][]" "[`MIXed`][]")
+    (check-downcasing "[`\\\\TEST`][]" "[`TEST`][]")
+    (check-downcasing "[`\\\\CLASS`][]" "[`CLASS`][7e58]")
+    (check-downcasing "[`\\\\*FORMAT*`][]" "[`*FORMAT*`][]")
+    (check-downcasing "[`\\\\*PACKAGE*`][]" "[`*PACKAGE*`][d2c1]")
+    (check-downcasing (list "[`\\\\@SECTION-WITHOUT-TITLE`][]"
+                            @section-without-title)
+                      "[`@SECTION-WITHOUT-TITLE`][eeac]"))
   (with-test ("multiple symbols")
     (check-downcasing "`(LIST :XXX 'PRINT)`" "`(list :xxx 'print)`")
-    (with-failure-expected (t)
-      (check-downcasing "`(PRINT \"hello\")`" "`(print \"hello\")`")))
+    (check-downcasing "`(PRINT \"hello\")`" "`(print \"hello\")`")
+    (check-downcasing "`(PRINT '\\\"hello\\\")`" "`(PRINT '\\\"hello\\\")`"))
   (with-test ("no-uppercase-is-code")
     (let ((*document-uppercase-is-code* nil))
       (check-downcasing "XXX" "XXX")
@@ -593,13 +618,15 @@
                 ;; "e2a5" is the the id of the type.
                 "macro `BAR`([`0`][3e5e] [`1`][e2a5]) type"
                 :msg "ambiguous locative"))
-  (with-test ("locative in code")
+  (with-test ("locative in backticks")
     (check-head (list "`TEST-GF` `(method t (number))`"
                       (make-reference 'test-gf '(method () (number))))
                 "[`TEST-GF`][044a] `(method t (number))`")
     (check-head (list "`(method t (number))` `TEST-GF`"
                       (make-reference 'test-gf '(method () (number))))
-                "`(method t (number))` [`TEST-GF`][044a]")))
+                "`(method t (number))` [`TEST-GF`][044a]"))
+  (with-test ("escaped autolinking")
+    (check-head "`\\PRINT`" "`PRINT`")))
 
 (deftest test-resolve-reflink ()
   (with-test ("label is a single name")
@@ -617,7 +644,16 @@
     (check-head (list "[see this][section]"
                       (make-reference 'section 'class)
                       (make-reference 'section 'locative))
-                "see this([`0`][5fac] [`1`][672f])")))
+                "see this([`0`][5fac] [`1`][672f])")
+    (check-head (list "[FORMAT][dislocated]"
+                      (make-reference 'dislocated 'locative))
+                "`FORMAT`")
+    (check-head (list "[NOT-CODE][dislocated]"
+                      (make-reference 'dislocated 'locative))
+                "[NOT-CODE][e391]")
+    (check-head (list "[`SOME-CODE`][dislocated]"
+                      (make-reference 'dislocated 'locative))
+                "[`SOME-CODE`][e391]")))
 
 
 (defsection @section-with-title (:title "My Title"))

@@ -126,7 +126,7 @@
   docstring an example call with concrete arguments and return values
   speaks volumes. A transcript is a text that looks like a repl
   session, but which has a light markup for printed output and return
-  values, while no markup (i.e. prompt) for Lisp forms. PAX
+  values, while no markup (i.e. prompt) for Lisp forms. \PAX
   transcripts may include output and return values of all forms, or
   only selected ones. In either case, the transcript itself can be
   easily generated from the source code.
@@ -135,7 +135,7 @@
   documentation is that they tend to get out-of-sync with the code.
   This is solved by being able to parse back and update transcripts.
   In fact, this is exactly what happens during documentation
-  generation with PAX. Code sections tagged `cl-transcript` are
+  generation with \PAX. Code sections tagged `cl-transcript` are
   retranscribed and checked for inconsistency (that is, any difference
   in output or return values). If the consistency check fails, an
   error is signalled that includes a reference to the object being
@@ -1195,8 +1195,8 @@
       ```
 
   Note that the use of fenced code blocks with the language tag
-  `cl-transcript` is only to tell PAX to perform consistency checks at
-  documentation generation time.
+  `cl-transcript` is only to tell \PAX to perform consistency checks
+  at documentation generation time.
 
   Now invoke the elisp function `mgl-pax-transcribe` where the cursor
   is and the fenced code block from the docstring becomes:

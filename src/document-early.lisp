@@ -141,11 +141,11 @@
 
 
 (defsection @pax-world (:title "PAX World")
-  "PAX World is a registry of documents, which can generate
+  "\PAX World is a registry of documents, which can generate
   cross-linked HTML documentation pages for all the registered
   documents."
   (register-doc-in-pax-world function)
-  "For example, this is how PAX registers itself:"
+  "For example, this is how \PAX registers itself:"
   (register-doc-example (include (:start (pax-sections function)
                                   :end (end-of-register-doc-example variable))
                                  :header-nl "```commonlisp"
@@ -156,7 +156,7 @@
 (defvar *registered-pax-world-docs* ())
 
 (defun register-doc-in-pax-world (name sections page-specs)
-  "Register SECTIONS and PAGE-SPECS under NAME in PAX World. By
+  "Register SECTIONS and PAGE-SPECS under NAME in \PAX World. By
   default, UPDATE-PAX-WORLD generates documentation for all of these."
   (setq *registered-pax-world-docs*
         (remove name *registered-pax-world-docs* :key #'first))
