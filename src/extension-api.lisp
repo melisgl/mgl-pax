@@ -194,7 +194,9 @@
   type are presented in the documentation."))
 
 (defmethod document-object ((string string) stream)
-  "Print STRING verbatim to STREAM after cleaning up indentation.
+  "Print STRING to STREAM as a docstring. That is, [clean up
+  indentation][@markdown-indentation], perform @CODIFICATION, and
+  linking (see @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
 
   Docstrings in sources are indented in various ways, which can easily
   mess up markdown. To handle the most common cases leave, the first

@@ -272,12 +272,12 @@
 (defun initialize-links (pages)
   (declare (special *document-link-to-hyperspec*)
            (special *document-hyperspec-root*))
-  (maybe-add-links-to-hyperspec)
   (loop for page in pages
         do (dolist (reference (page-references page))
              (unless (find-link reference)
                (add-link (make-link :reference reference
-                                    :page page))))))
+                                    :page page)))))
+  (maybe-add-links-to-hyperspec))
 
 (defvar *pages-created*)
 

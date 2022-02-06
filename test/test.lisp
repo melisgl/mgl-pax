@@ -25,6 +25,15 @@
         :msg msg
         :ctx ("Input: ~S~%Full output:~%~S" input full-output))))
 
+(defun check-pred (input pred &key msg)
+  (let* ((*package* (find-package :mgl-pax-test))
+         (*document-hyperspec-root* "CLHS/")
+         (*document-url-versions* '(2))
+         (full-output (first (document input))))
+    (is (funcall pred full-output)
+        :msg msg
+        :ctx ("Input: ~S~%Full output:~%~S" input full-output))))
+
 (defun first-n-lines (string n)
   (with-output-to-string (out)
     (with-input-from-string (in string)
@@ -893,7 +902,9 @@ This is [Self-referencing][e042].
   (check-head "T" "`T`")
   (check-head "NIL" "`NIL`")
   (check-head "[T][]" "`T`([`0`][08f7] [`1`][26cf])")
-  (check-head "[T][constant]" "[`T`][08f7]"))
+  (check-head "[T][constant]" "[`T`][08f7]")
+  (check-pred #'print (lambda (output)
+                        (search "- [function] **PRINT**" output))))
 
 
 (deftest test-clhs-section ()
