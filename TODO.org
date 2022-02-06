@@ -48,5 +48,3 @@ Or fall back on this for deficient ARGLISTs. Will be really slow.
 * test navigation from the emacs side
 * asdf:system link titles have \" in them
 * create mgl-pax/minimal?
-* add overview of all escaping
-* (mgl-pax:document #'append) links to LIST

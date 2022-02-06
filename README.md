@@ -46,7 +46,8 @@
     - [9.8 Utilities for Generating Documentation][1b1b]
         - [9.8.1 Github Workflow][dff6]
         - [9.8.2 PAX World][1281]
-    - [9.9 Document Generation Implementation Notes][d1ca]
+    - [9.9 Overview of Escaping][2634]
+    - [9.10 Document Generation Implementation Notes][d1ca]
 - [10 Transcripts][6300]
     - [10.1 MGL-PAX/TRANSCRIBE ASDF System Details][5825]
     - [10.2 Transcribing with Emacs][f5bd]
@@ -240,9 +241,9 @@ of `(mgl-pax:document #'abort)`. Note that the docstring of the
 - [function] **ABORT** *&OPTIONAL CONDITION*
 
     Transfer control to a restart named `ABORT`, signalling a
-    [`\CONTROL-ERROR`][6bc0] if none exists.
+    [`CONTROL-ERROR`][6bc0] if none exists.
 
-[6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "CONTROL-ERROR CONDITION"
+[6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\\CONTROL-ERROR \\CONDITION"
 
 ##### A Complete Example
 
@@ -2160,10 +2161,51 @@ For example, this is how `PAX` registers itself:
     ```
 
 
+<a id="x-28MGL-PAX-3A-40OVERVIEW-OF-ESCAPING-20MGL-PAX-3ASECTION-29"></a>
+<a id="MGL-PAX:@OVERVIEW-OF-ESCAPING%20MGL-PAX:SECTION"></a>
+
+### 9.9 Overview of Escaping
+
+Let's recap how escaping [Codification][f1ab],
+[downcasing][a5ee], and
+[Linking to Code][1865] works.
+
+- One backslash in front of a [word][d7b0] turns codification off. Use this
+  to prevent codification words such as PAX, which is all uppercase
+  hence [codifiable][b89a] and it names a package hence it is [interesting][7445].
+
+- One backslash right after an opening backtick turns autolinking
+  off.
+
+- Two backslashes right after an opening backtick turns autolinking
+  and downcasing off. Use this for things that are not Lisp code but
+  which need to be in a monospace font.
+
+
+In the following examples capital C/D/A letters mark the presence,
+and a/b/c the absence of codification, downcasing, and autolinking
+assuming all these features are enabled by
+[`*DOCUMENT-UPPERCASE-IS-CODE*`][f25f]. [`*DOCUMENT-DOWNCASE-UPPERCASE-CODE*`][a5ee],
+and [`*DOCUMENT-LINK-CODE*`][d9ee].
+
+    DOCUMENT                => [`document`][1234]    (CDA)
+    \DOCUMENT               => DOCUMENT              (cda)
+    `\DOCUMENT`             => `document`            (CDa)
+    `\\DOCUMENT`            => `DOCUMENT`            (CdA)
+    [DOCUMENT][]            => [`document`][1234]    (CDA)
+    [\DOCUMENT][]           => [DOCUMENT][1234]      (cdA)
+    [`\DOCUMENT`][]         => [`document`][1234]    (CDA) *
+    [`\\DOCUMENT`][]        => [`DOCUMENT`][1234]    (CdA)
+    [DOCUMENT][dislocated]  => `document`            (CDa)
+
+Note that in the example marked with `*`, the single backslash,
+that would normally turn autolinking off, is ignored because it is
+in an explicit link.
+
 <a id="x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29"></a>
 <a id="MGL-PAX:@DOCUMENT-IMPLEMENTATION-NOTES%20MGL-PAX:SECTION"></a>
 
-### 9.9 Document Generation Implementation Notes
+### 9.10 Document Generation Implementation Notes
 
 Documentation Generation is supported on ABCL, AllegroCL, CLISP,
 CCL, CMUCL, ECL and SBCL, but their outputs may differ due to the
@@ -3497,6 +3539,7 @@ presented.
   [22c2]: #MGL-PAX:@LINKING-TO-SECTIONS%20MGL-PAX:SECTION "Linking to Sections"
   [238c]: #MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR%20CONDITION "MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION"
   [248b]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rdtabl.htm "READTABLE TYPE"
+  [2634]: #MGL-PAX:@OVERVIEW-OF-ESCAPING%20MGL-PAX:SECTION "Overview of Escaping"
   [2645]: #MGL-PAX:@AMBIGUOUS-LOCATIVE%20MGL-PAX:SECTION "Ambiguous Unspecified Locative"
   [26cf]: http://www.lispworks.com/documentation/HyperSpec/Body/t_t.htm "T TYPE"
   [292a]: #MGL-PAX:@PAX-LOCATIVES%20MGL-PAX:SECTION "Locatives for PAX Constructs"
@@ -3605,6 +3648,7 @@ presented.
   [a328]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rdtabl.htm "READTABLE-CASE FUNCTION"
   [a5b1]: #MGL-PAX:SECTION-PACKAGE%20%28MGL-PAX:READER%20MGL-PAX:SECTION%29 "MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION)"
   [a5de]: http://www.lispworks.com/documentation/HyperSpec/Body/m_define.htm "DEFINE-COMPILER-MACRO MGL-PAX:MACRO"
+  [a5ee]: #MGL-PAX:*DOCUMENT-DOWNCASE-UPPERCASE-CODE*%20VARIABLE "MGL-PAX:*DOCUMENT-DOWNCASE-UPPERCASE-CODE* VARIABLE"
   [a668]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "SIMPLE-CONDITION-FORMAT-ARGUMENTS FUNCTION"
   [a85e]: #MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE%20MGL-PAX:MACRO "MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO"
   [a916]: http://www.lispworks.com/documentation/HyperSpec/Body/v_rdtabl.htm "*READTABLE* VARIABLE"

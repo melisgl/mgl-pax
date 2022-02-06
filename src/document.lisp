@@ -18,6 +18,7 @@
   (@linking-to-sections section)
   (@miscellaneous-documentation-printer-variables section)
   (@documentation-utilities section)
+  (@overview-of-escaping section)
   (@document-implementation-notes section))
 
 ;;; A PAGE is basically a single markdown or html file, to where the
@@ -969,16 +970,26 @@
     (prin1-to-string object)))
 
 (defun maybe-downcase (string)
-  (if (alexandria:starts-with-subseq "\\\\" string)
-      ;; Leave one backslash to escape linking in TRANSLATE-TO-LINKS
-      ;; unless we are in a reference link, where linking cannot be
-      ;; escaped.
-      (if *translating-reference-link*
-          (subseq string 2)
-          (subseq string 1))
-      (if (downcasingp)
-          (downcase-all-uppercase-code string)
-          string)))
+  (if *translating-reference-link*
+      (cond ((alexandria:starts-with-subseq "\\\\" string)
+             (subseq string 2))
+            ((alexandria:starts-with-subseq "\\" string)
+             (if (downcasingp)
+                 (downcase-all-uppercase-code (subseq string 1))
+                 (subseq string 1)))
+            (t
+             (if (downcasingp)
+                 (downcase-all-uppercase-code string)
+                 string)))
+      (cond ((alexandria:starts-with-subseq "\\\\" string)
+             ;; Leave one backslash to escape linking in
+             ;; TRANSLATE-TO-LINKS unless we are in a reference link,
+             ;; where linking cannot be escaped.
+             (subseq string 1))
+            ((downcasingp)
+             (downcase-all-uppercase-code string))
+            (t
+             string))))
 
 (defun maybe-downcase-all-uppercase-code (string)
   (if (downcasingp)
@@ -2115,6 +2126,42 @@
         ;; Some Lisps bind it to T in DESCRIBE, some don't.
         (*print-circle* nil))
     (document section :stream stream :format :markdown)))
+
+
+(defsection @overview-of-escaping (:title "Overview of Escaping")
+  """Let's recap how escaping @CODIFICATION,
+  [downcasing][\*document-downcase-uppercase-code*], and
+  @LINKING-TO-CODE works.
+
+  - One backslash in front of a @WORD turns codification off. Use this
+    to prevent codification words such as \PAX, which is all uppercase
+    hence @CODIFIABLE and it names a package hence it is @INTERESTING.
+
+  - One backslash right after an opening backtick turns autolinking
+    off.
+
+  - Two backslashes right after an opening backtick turns autolinking
+    and downcasing off. Use this for things that are not Lisp code but
+    which need to be in a monospace font."""
+  """In the following examples capital C/D/A letters mark the presence,
+  and a/b/c the absence of codification, downcasing, and autolinking
+  assuming all these features are enabled by
+  *DOCUMENT-UPPERCASE-IS-CODE*. *DOCUMENT-DOWNCASE-UPPERCASE-CODE*,
+  and *DOCUMENT-LINK-CODE*.
+
+      DOCUMENT                => [`document`][1234]    (CDA)
+      \DOCUMENT               => DOCUMENT              (cda)
+      `\DOCUMENT`             => `document`            (CDa)
+      `\\DOCUMENT`            => `DOCUMENT`            (CdA)
+      [DOCUMENT][]            => [`document`][1234]    (CDA)
+      [\DOCUMENT][]           => [DOCUMENT][1234]      (cdA)
+      [`\DOCUMENT`][]         => [`document`][1234]    (CDA) *
+      [`\\DOCUMENT`][]        => [`DOCUMENT`][1234]    (CdA)
+      [DOCUMENT][dislocated]  => `document`            (CDa)
+
+  Note that in the example marked with `\*`, the single backslash,
+  that would normally turn autolinking off, is ignored because it is
+  in an explicit link.""")
 
 
 (defsection @document-implementation-notes

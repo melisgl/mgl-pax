@@ -164,9 +164,9 @@ ABORT function was not written with PAX in mind.
 - [function] **ABORT** *&OPTIONAL CONDITION*
 
     Transfer control to a restart named `ABORT`, signalling a
-    [`\CONTROL-ERROR`][6bc0] if none exists.
+    [`CONTROL-ERROR`][6bc0] if none exists.
 
-[6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "CONTROL-ERROR CONDITION"
+[6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\\CONTROL-ERROR \\CONDITION"
 
 ##### A Complete Example
 
@@ -1781,6 +1781,44 @@ For example, this is how PAX registers itself:
     (asdf:system-relative-pathname :mgl-pax "world/")
     ```
 
+
+### Overview of Escaping
+
+Let's recap how escaping @CODIFICATION,
+[downcasing][*document-downcase-uppercase-code*], and
+@LINKING-TO-CODE works.
+
+- One backslash in front of a @WORD turns codification off. Use this
+  to prevent codification words such as PAX, which is all uppercase
+  hence @CODIFIABLE and it names a package hence it is @INTERESTING.
+
+- One backslash right after an opening backtick turns autolinking
+  off.
+
+- Two backslashes right after an opening backtick turns autolinking
+  and downcasing off. Use this for things that are not Lisp code but
+  which need to be in a monospace font.
+
+
+In the following examples capital C/D/A letters mark the presence,
+and a/b/c the absence of codification, downcasing, and autolinking
+assuming all these features are enabled by
+*DOCUMENT-UPPERCASE-IS-CODE*. *DOCUMENT-DOWNCASE-UPPERCASE-CODE*,
+and *DOCUMENT-LINK-CODE*.
+
+    DOCUMENT                => [`document`][1234]    (CDA)
+    \DOCUMENT               => DOCUMENT              (cda)
+    `\DOCUMENT`             => `document`            (CDa)
+    `\\DOCUMENT`            => `DOCUMENT`            (CdA)
+    [DOCUMENT][]            => [`document`][1234]    (CDA)
+    [\DOCUMENT][]           => [DOCUMENT][1234]      (cdA)
+    [`\DOCUMENT`][]         => [`document`][1234]    (CDA) *
+    [`\\DOCUMENT`][]        => [`DOCUMENT`][1234]    (CdA)
+    [DOCUMENT][dislocated]  => `document`            (CDa)
+
+Note that in the example marked with `*`, the single backslash,
+that would normally turn autolinking off, is ignored because it is
+in an explicit link.
 
 ### Document Generation Implementation Notes
 
