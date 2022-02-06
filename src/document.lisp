@@ -842,7 +842,7 @@
   (map-markdown-parse-tree
    (list :emph '3bmd-code-blocks::code-block :reference-link :code)
    '(:code :verbatim 3bmd-code-blocks::code-block
-     :explicit-link :image :mailto)
+     :explicit-link :image :mailto :reference)
    t
    #'translate-to-code
    parse-tree))

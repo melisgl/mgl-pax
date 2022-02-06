@@ -416,10 +416,20 @@
       (check-head "\\DO" "DO")
       (check-head "COS" "[`COS`][3164]")
       (check-head "\\COS" "COS")))
-  ;; FIXME
   (with-test ("reflink")
     (with-test ("no refs")
-      (check-head "[U]" "[U][]"))))
+      (check-head "[U]" "[U][]")))
+  (with-test ("in :REFERENCE")
+    (check-document "xxx
+xxx
+
+  [some]: PRINT \"DO\""
+                    "xxx
+xxx
+
+[some]: PRINT \"DO\"
+
+")))
 
 (defun q ())
 (defun qq ())
