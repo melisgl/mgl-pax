@@ -711,16 +711,15 @@
 
   where the links are added due to *DOCUMENT-LINK-CODE*.
 
-  To suppress this behavior, add a backslash to the beginning of the
-  symbol or right after the leading `\\*` if it would otherwise be
-  parsed as markdown emphasis:
+  To suppress this behavior, add a backslash to the beginning of the a
+  @CODIFIABLE word or right after the leading `\\*` if it would
+  otherwise be parsed as markdown emphasis:
 
       "\\SECTION *\\PACKAGE*"
 
   The number of backslashes is doubled above because that's how the
   example looks in a docstring. Note that the backslash is discarded
-  even if *DOCUMENT-UPPERCASE-IS-CODE* is false.
-  """)
+  even if *DOCUMENT-UPPERCASE-IS-CODE* is false.""")
 
 (define-glossary-term @codifiable (:title "codifiable")
   "A @WORD is _codifiable_ iff
@@ -795,13 +794,14 @@
 ;;; only a single return value: the new tree.
 (defun translate-uppercase-word (parent tree word)
   (declare (ignore parent))
-  (let ((emph (and (listp tree) (eq :emph (first tree)))))
+  (let ((emph (and (listp tree) (eq :emph (first tree))))
+        (codifiablep (codifiable-word-p word)))
     ;; *DOCUMENT-UPPERCASE-IS-CODE* escaping
-    (cond ((and emph (eql #\\ (alexandria:first-elt word)))
+    (cond ((and emph codifiablep (eql #\\ (alexandria:first-elt word)))
            ;; E.g. "*\\DOCUMENT-NORMALIZE-PACKAGES*"
            ;; -> (:EMPH "DOCUMENT-NORMALIZE-PACKAGES")
            (values (list `(:emph ,(subseq word 1))) t (length word)))
-          ((eql #\\ (alexandria:first-elt word))
+          ((and codifiablep (eql #\\ (alexandria:first-elt word)))
            ;; Discard the leading backslash escape.
            ;; E.g. "\\MGL-PAX" -> "MGL-PAX"
            (values (list (subseq word 1)) t (length word)))

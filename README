@@ -1197,9 +1197,9 @@ Reader][pythonic-string-reader] can help with that.
     
     where the links are added due to *DOCUMENT-LINK-CODE*.
     
-    To suppress this behavior, add a backslash to the beginning of the
-    symbol or right after the leading `*` if it would otherwise be
-    parsed as markdown emphasis:
+    To suppress this behavior, add a backslash to the beginning of the a
+    @CODIFIABLE word or right after the leading `*` if it would
+    otherwise be parsed as markdown emphasis:
     
         "\\SECTION *\\PACKAGE*"
     
