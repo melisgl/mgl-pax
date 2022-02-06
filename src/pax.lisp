@@ -123,6 +123,41 @@
   you there. Sections can also refer to other sections, packages,
   functions, etc and you can keep exploring.
 
+  ##### Docstrings
+
+  \PAX's automatically recognizes and [marks up code][@codification]
+  with backticks, and [links code][@linking-to-code] to their
+  definitions.
+
+  ```
+  (document "&KEY arguments such as :IF-EXISTS are common.")
+  => ("`&KEY` arguments such as `:IF-EXISTS` are common.
+  ")
+
+  (document "AND denotes a macro and a type specifier.
+            Here we focus on the macro AND.")
+  => ("`AND`([`0`][4954] [`1`][330f]) denotes a macro and a type specifier.
+  Here we focus on the macro [`AND`][4954].
+
+    [330f]: http://www.lispworks.com/documentation/HyperSpec/Body/t_and.htm \"AND TYPE\"
+    [4954]: http://www.lispworks.com/documentation/HyperSpec/Body/m_and.htm \"AND MGL-PAX:MACRO\"
+  ")
+  ```
+
+  These features are designed to handle a common style of docstrings
+  with minimal additional markup. The following is the output
+  of `(mgl-pax:document #'abort)`. Note that the docstring of the
+  ABORT function was not written with \PAX in mind.
+
+  - \[function\] **\ABORT** *\&OPTIONAL \CONDITION*
+
+      Transfer control to a restart named `ABORT`, signalling a
+      [`\CONTROL-ERROR`][6bc0] if none exists.
+
+    [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\CONTROL-ERROR \CONDITION"
+
+  ##### A Complete Example
+
   Here is an example of how it all works together:"""
   (foo-random-example (include #.(asdf:system-relative-pathname
                                   :mgl-pax "src/foo-random-example.lisp")

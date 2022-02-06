@@ -211,6 +211,41 @@ lisp, pressing `M-.` in SLIME on the name of the section will take
 you there. Sections can also refer to other sections, packages,
 functions, etc and you can keep exploring.
 
+##### Docstrings
+
+PAX's automatically recognizes and [marks up code][f1ab]
+with backticks, and [links code][1865] to their
+definitions.
+
+```
+(document "&KEY arguments such as :IF-EXISTS are common.")
+=> ("`&KEY` arguments such as `:IF-EXISTS` are common.
+")
+
+(document "AND denotes a macro and a type specifier.
+          Here we focus on the macro AND.")
+=> ("`AND`([`0`][4954] [`1`][330f]) denotes a macro and a type specifier.
+Here we focus on the macro [`AND`][4954].
+
+  [330f]: http://www.lispworks.com/documentation/HyperSpec/Body/t_and.htm \"AND TYPE\"
+  [4954]: http://www.lispworks.com/documentation/HyperSpec/Body/m_and.htm \"AND MGL-PAX:MACRO\"
+")
+```
+
+These features are designed to handle a common style of docstrings
+with minimal additional markup. The following is the output
+of `(mgl-pax:document #'abort)`. Note that the docstring of the
+[`ABORT`][1102] function was not written with PAX in mind.
+
+- [function] **ABORT** *&OPTIONAL CONDITION*
+
+    Transfer control to a restart named `ABORT`, signalling a
+    [`\CONTROL-ERROR`][6bc0] if none exists.
+
+[6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "CONTROL-ERROR CONDITION"
+
+##### A Complete Example
+
 Here is an example of how it all works together:
 
 <a id="x-28MGL-PAX-3AFOO-RANDOM-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Ffoo-random-example-2Elisp-22-20-3AHEADER-NL-20-22-60-60-60common-lisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29"></a>
@@ -1491,6 +1526,13 @@ Reader][pythonic-string-reader] can help with that.
     is downcased to
     
         `(print "Hello")`
+    
+    because it only contains uppercase characters outside the string.
+    However,
+    
+    `MiXed "RESULTS"`
+    
+    is not altered because it has lowercase characters.
     
     If the first two characters are backslashes, then no downcasing is
     performed, in addition to [Preventing Autolinking][8c16]. Use this to mark
@@ -3125,7 +3167,9 @@ for [`ASDF:SYSTEM:`][c097]
 
 - [method] **DOCUMENT-OBJECT** *(STRING STRING) STREAM*
 
-    Print `STRING` verbatim to `STREAM` after cleaning up indentation.
+    Print `STRING` to `STREAM` as a docstring. That is, [clean up
+    indentation][718f], perform [Codification][f1ab], and
+    linking (see [Linking to Code][1865], [Linking to the Hyperspec][7cc3]).
     
     Docstrings in sources are indented in various ways, which can easily
     mess up markdown. To handle the most common cases leave, the first
@@ -3434,6 +3478,7 @@ presented.
   [06a9]: #MGL-PAX:@CONDITION-SYSTEM-LOCATIVES%20MGL-PAX:SECTION "Condition System Locatives"
   [08f7]: http://www.lispworks.com/documentation/HyperSpec/Body/v_t.htm "T MGL-PAX:CONSTANT"
   [0b3a]: #MGL-PAX:LOCATIVE%20MGL-PAX:LOCATIVE "MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE"
+  [1102]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "ABORT FUNCTION"
   [117a]: http://www.lispworks.com/documentation/HyperSpec/Body/f_open.htm "OPEN FUNCTION"
   [1281]: #MGL-PAX:@PAX-WORLD%20MGL-PAX:SECTION "PAX World"
   [13a9]: #MGL-PAX:UPDATE-ASDF-SYSTEM-READMES%20FUNCTION "MGL-PAX:UPDATE-ASDF-SYSTEM-READMES FUNCTION"
