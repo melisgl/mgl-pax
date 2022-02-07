@@ -109,6 +109,16 @@
       ""
       (format nil "`~A`" string)))
 
+(defun bold (string stream)
+  (if (zerop (length string))
+      ""
+      (format stream "**~A**" string)))
+
+(defun italic (string stream)
+  (if (zerop (length string))
+      ""
+      (format stream "*~A*" string)))
+
 (defun markdown-special-char-p (char)
   (member char '(#\* #\_ #\` #\< #\> #\[ #\])))
 
@@ -120,15 +130,17 @@
           (write-char #\\ stream))
         (write-char char stream)))))
 
-(defun bold (string stream)
-  (if (zerop (length string))
-      ""
-      (format stream "**~A**" string)))
-
-(defun italic (string stream)
-  (if (zerop (length string))
-      ""
-      (format stream "*~A*" string)))
+;;; This is workaround for "\"mgl-pax\" ASFD:SYSTEM" being displayed
+;;; with the backslashes.
+(defun escape-markdown-reflink-definition-title (string)
+  (cond ((not (find #\" string))
+         (format nil "~S" string))
+        ((not (find #\' string))
+         (format nil "'~A'" string))
+        ((not (find #\) string))
+         (format nil "(~A)" string))
+        (t
+         (format nil "~S" string))))
 
 
 ;;;; Parse tree based markdown fragments

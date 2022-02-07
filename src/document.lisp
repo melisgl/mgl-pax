@@ -534,18 +534,20 @@
           ;; E.g.  [1]: http://example.org/Hobbit#Lifestyle "Hobbit lifestyles"
           (if (stringp (link-page link))
               ;; Link to external page.
-              (format stream "  [~A]: ~A ~S~%" (link-id link)
-                      (link-page link) (princ-to-string anchor))
+              (format stream "  [~A]: ~A ~A~%" (link-id link) (link-page link)
+                      (escape-markdown-reflink-definition-title
+                       (princ-to-string anchor)))
               ;; Link to documentation generated in the same run.
-              (format stream "  [~A]: ~A#~A ~S~%"
+              (format stream "  [~A]: ~A#~A ~A~%"
                       (link-id link)
                       (relative-page-uri-fragment (link-page link) *page*)
                       (urlencode anchor)
-                      (let* ((ref (link-reference link))
-                             (locative-type (reference-locative-type ref)))
-                        (if (eq locative-type 'section)
-                            (section-title-or-name (resolve ref))
-                            (princ-to-string anchor))))))))))
+                      (escape-markdown-reflink-definition-title
+                       (let* ((ref (link-reference link))
+                              (locative-type (reference-locative-type ref)))
+                         (if (eq locative-type 'section)
+                             (section-title-or-name (resolve ref))
+                             (princ-to-string anchor)))))))))))
 
 (defun relative-page-uri-fragment (page reference-page)
   (if (eq page reference-page)

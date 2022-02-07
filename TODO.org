@@ -46,5 +46,4 @@ This should bring us closer to literate programming.
 * MAYBE get variable initforms from source?
 Or fall back on this for deficient ARGLISTs. Will be really slow.
 * test navigation from the emacs side
-* asdf:system link titles have \" in them
 * create mgl-pax/minimal?
