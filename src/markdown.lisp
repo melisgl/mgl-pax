@@ -101,6 +101,21 @@
 
 ;;;; Text based markdown fragments
 
+(defun parse-markdown (string)
+  (let ((3bmd-grammar:*smart-quotes* nil))
+    ;; To be able to recognize symbols like FOO* join (... "FOO" "*"
+    ;; ...) to look like (... "FOO*" ...).
+    (join-consecutive-non-blank-strings-in-parse-tree
+     (3bmd-grammar:parse-doc string))))
+
+(defmacro with-colorize-silenced (() &body body)
+  `(let ((*trace-output* (make-broadcast-stream)))
+     ,@body))
+
+(defun print-markdown (parse-tree stream)
+  (with-colorize-silenced ()
+    (3bmd::print-doc-to-stream-using-format parse-tree stream :markdown)))
+
 (defun heading (level stream)
   (loop repeat (1+ level) do (write-char #\# stream)))
 
@@ -275,7 +290,3 @@
                               (add replacement)))))
                  (setq start end))))
     (nreverse translated)))
-
-(defmacro with-colorize-silenced (() &body body)
-  `(let ((*trace-output* (make-broadcast-stream)))
-     ,@body))

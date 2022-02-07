@@ -107,7 +107,9 @@
 (define-condition my-error (error)
   ()
   (:documentation "This is MY-ERROR."))
-(defun my-error ())
+(defun my-error ()
+  "This is MY-ERROR."
+  t)
 
 (defmacro bar (x y &key (z 7))
   "BAR has args X, Y and Z."
@@ -880,6 +882,23 @@ This is [Self-referencing][e042].
     (is (mgl-pax::reference= (canonical-reference ref) ref))))
 
 
+(defsection @test-method-combination ()
+  (my-comb method-combination))
+
+(define-method-combination my-comb :identity-with-one-argument t
+  :documentation "This is MY-COMB.")
+
+(deftest test-method-combination ()
+  (with-failure-expected ((alexandria:featurep '(:or :abcl :allegro)))
+    (check-document (make-reference 'my-comb 'method-combination)
+                    "<a id=\"MGL-PAX-TEST:MY-COMB%20METHOD-COMBINATION\"></a>
+
+- [method-combination] **MY-COMB**
+
+    This is `MY-COMB`.
+")))
+
+
 (deftest test-accessor ()
   (check-head (list "FOO-A `(accessor foo)`"
                     (make-reference 'foo-a '(accessor foo))
@@ -899,71 +918,33 @@ This is [Self-referencing][e042].
               "[`FOO-W`][2b65] `(writer foo)`"))
 
 
-(defsection @test-method-combination ()
-  (my-comb method-combination))
-
-(define-method-combination my-comb :identity-with-one-argument t
-  :documentation "This is MY-COMB.")
-
-(deftest test-method-combination ()
-  (with-failure-expected ((alexandria:featurep '(:or :abcl :allegro)))
-    (check-document (make-reference 'my-comb 'method-combination)
-                    "<a id=\"MGL-PAX-TEST:MY-COMB%20METHOD-COMBINATION\"></a>
-
-- [method-combination] **MY-COMB**
-
-    This is `MY-COMB`.
-")))
-
-
-(deftest test-hyperspec ()
-  (check-head "FIND-IF" "[`FIND-IF`][750e]")
-  (check-head "LIST" "`LIST`([`0`][592c] [`1`][98f9])")
-  (check-head "[LIST][type]" "[`LIST`][98f9]")
-  (check-head "T" "`T`")
-  (check-head "NIL" "`NIL`")
-  (check-head "[T][]" "`T`([`0`][08f7] [`1`][26cf])")
-  (check-head "[T][constant]" "[`T`][08f7]")
-  (check-pred #'print (lambda (output)
-                        (search "- [function] **PRINT**" output))))
-
-
-(deftest test-clhs-section ()
-  ;; "A.1" and "3.4" are section names in the CLHS.
-  (check-head "A.1" "A.1")
-  (check-head "`A.1`" "`A.1`")
-  (check-head "CLHS A.1" "`CLHS` A.1")
-  (check-head "CLHS 3.4" "`CLHS` 3.4")
-  (check-head "CLHS `3.4`" "`CLHS` [`3.4`][f945]")
-  (check-head "`3.4` CLHS" "[`3.4`][f945] `CLHS`")
-  (check-head "[3.4][]" "[3.4][f945]")
-  (check-head "[`3.4`][]" "[`3.4`][f945]")
-  (check-head "[3.4][CLHS]" "[3.4][f945]")
-  (check-head "[Lambda Lists][clhs]" "[Lambda Lists][f945]")
-  (check-head "[03_d][clhs]" "[03\\_d][f945]"))
-
-
-(deftest test-clhs-issue ()
-  (check-head "ISSUE:AREF-1D" "ISSUE:AREF-1D")
-  (check-head "`ISSUE:AREF-1D`" "`ISSUE:AREF-1D`")
-  (check-head "CLHS ISSUE:AREF-1D" "`CLHS` ISSUE:AREF-1D")
-  (check-head "ISSUE:AREF-1D CLHS" "ISSUE:AREF-1D `CLHS`")
-  (check-head "CLHS `ISSUE:AREF-1D`" "`CLHS` [`ISSUE:AREF-1D`][6786]")
-  (check-head "`ISSUE:AREF-1D` CLHS" "[`ISSUE:AREF-1D`][6786] `CLHS`")
-  (check-head "[ISSUE:AREF-1D][]" "[ISSUE:AREF-1D][6786]")
-  (check-head "[`ISSUE:AREF-1D`][]" "[`ISSUE:AREF-1D`][6786]")
-  (check-head "[ISSUE:AREF-1D][CLHS]" "[ISSUE:AREF-1D][6786]")
-  (check-head "[iss009][clhs]" "[iss009][e256]"))
-
-
-(deftest test-argument ()
-  (check-head "[PRINT][argument]" "`PRINT`"))
-
-
 (deftest test-declaration ()
   (check-head "SAFETY" "[`SAFETY`][0273]")
   (check-head "SAFETY declaration" "[`SAFETY`][0273] declaration")
   (check-head "[safety][declaration]" "[safety][0273]"))
+
+
+(deftest test-asdf-system ()
+  (is (find-symbol (string '#:mgl-pax/full) '#:mgl-pax-test))
+  (is (null (find-symbol (string '#:mgl-pax/test) '#:mgl-pax-test)))
+  (check-head (list "MGL-PAX/FULL"
+                    (make-reference 'mgl-pax/full 'asdf:system))
+              "[`MGL-PAX/FULL`][d761]")
+  (check-head (list "MGL-PAX/TEST"
+                    (make-reference "mgl-pax/test" 'asdf:system))
+              "[`MGL-PAX/TEST`][69db]"))
+
+
+(defpackage interned-pkg-name)
+(defpackage #:non-interned-pkg-name)
+
+(deftest test-package ()
+  (check-head (list "INTERNED-PKG-NAME"
+                    (make-reference 'interned-pkg-name 'package))
+              "[`INTERNED-PKG-NAME`][0651]")
+  (check-head (list "NON-INTERNED-PKG-NAME"
+                    (make-reference '#:non-interned-pkg-name 'package))
+              "[`NON-INTERNED-PKG-NAME`][5a00]"))
 
 
 (deftest test-readtable ()
@@ -980,28 +961,53 @@ This is [Self-referencing][e042].
               "[`XXX-RT`][ec74]"))
 
 
-(defpackage interned-pkg-name)
-(defpackage #:non-interned-pkg-name)
+;;;; PAX::@PAX-LOCATIVES
 
-(deftest test-package ()
-  (check-head (list "INTERNED-PKG-NAME"
-                    (make-reference 'interned-pkg-name 'package))
-              "[`INTERNED-PKG-NAME`][0651]")
-  (check-head (list "NON-INTERNED-PKG-NAME"
-                    (make-reference '#:non-interned-pkg-name 'package))
-              "[`NON-INTERNED-PKG-NAME`][5a00]"))
-
+(deftest test-docstring ()
+  (check-head "[BAR CONSTANT][docstring]" "`BAR` is not a link.")
+  (check-head (list "[BAR CONSTANT][docstring]"
+                    (make-reference 'bar 'constant))
+              "[`BAR`][f3f4] is not a link."))
 
-(deftest test-asdf-system ()
-  (is (find-symbol (string '#:mgl-pax/full) '#:mgl-pax-test))
-  (is (null (find-symbol (string '#:mgl-pax/test) '#:mgl-pax-test)))
-  (check-head (list "MGL-PAX/FULL"
-                    (make-reference 'mgl-pax/full 'asdf:system))
-              "[`MGL-PAX/FULL`][d761]")
-  (check-head (list "MGL-PAX/TEST"
-                    (make-reference "mgl-pax/test" 'asdf:system))
-              "[`MGL-PAX/TEST`][69db]"))
-
+(deftest test-hyperspec ()
+  (check-head "FIND-IF" "[`FIND-IF`][750e]")
+  (check-head "LIST" "`LIST`([`0`][592c] [`1`][98f9])")
+  (check-head "[LIST][type]" "[`LIST`][98f9]")
+  (check-head "T" "`T`")
+  (check-head "NIL" "`NIL`")
+  (check-head "[T][]" "`T`([`0`][08f7] [`1`][26cf])")
+  (check-head "[T][constant]" "[`T`][08f7]")
+  (check-pred #'print (lambda (output)
+                        (search "- [function] **PRINT**" output))))
+
+(deftest test-clhs-section ()
+  ;; "A.1" and "3.4" are section names in the CLHS.
+  (check-head "A.1" "A.1")
+  (check-head "`A.1`" "`A.1`")
+  (check-head "CLHS A.1" "`CLHS` A.1")
+  (check-head "CLHS 3.4" "`CLHS` 3.4")
+  (check-head "CLHS `3.4`" "`CLHS` [`3.4`][f945]")
+  (check-head "`3.4` CLHS" "[`3.4`][f945] `CLHS`")
+  (check-head "[3.4][]" "[3.4][f945]")
+  (check-head "[`3.4`][]" "[`3.4`][f945]")
+  (check-head "[3.4][CLHS]" "[3.4][f945]")
+  (check-head "[Lambda Lists][clhs]" "[Lambda Lists][f945]")
+  (check-head "[03_d][clhs]" "[03\\_d][f945]"))
+
+(deftest test-clhs-issue ()
+  (check-head "ISSUE:AREF-1D" "ISSUE:AREF-1D")
+  (check-head "`ISSUE:AREF-1D`" "`ISSUE:AREF-1D`")
+  (check-head "CLHS ISSUE:AREF-1D" "`CLHS` ISSUE:AREF-1D")
+  (check-head "ISSUE:AREF-1D CLHS" "ISSUE:AREF-1D `CLHS`")
+  (check-head "CLHS `ISSUE:AREF-1D`" "`CLHS` [`ISSUE:AREF-1D`][6786]")
+  (check-head "`ISSUE:AREF-1D` CLHS" "[`ISSUE:AREF-1D`][6786] `CLHS`")
+  (check-head "[ISSUE:AREF-1D][]" "[ISSUE:AREF-1D][6786]")
+  (check-head "[`ISSUE:AREF-1D`][]" "[`ISSUE:AREF-1D`][6786]")
+  (check-head "[ISSUE:AREF-1D][CLHS]" "[ISSUE:AREF-1D][6786]")
+  (check-head "[iss009][clhs]" "[iss009][e256]"))
+
+(deftest test-argument ()
+  (check-head "[PRINT][argument]" "`PRINT`"))
 
 (mgl-pax:define-locative-alias instance class)
 
@@ -1050,23 +1056,30 @@ This is [Self-referencing][e042].
   (test-names)
   (test-downcasing)
   (test-link)
+  ;; PAX::@MACROLIKE-LOCATIVES
+  (test-macro)
+  (test-symbol-macro)
+    ;; PAX::@FUNCTIONLIKE-LOCATIVES
   (test-function)
   (test-generic-function)
+  (test-method-combination)
   (test-accessor)
   (test-reader)
   (test-writer)
-  (test-macro)
-  (test-symbol-macro)
-  (test-method-combination)
+  ;; PAX::@TYPELIKE-LOCATIVES
+  (test-declaration)
+  ;; PAX::@PACKAGELIKE-LOCATIVES
+  (test-asdf-system)
+  (test-package)
+  (test-readtable)
+  ;; PAX::@PAX-LOCATIVES
+  (test-docstring)
   (test-hyperspec)
   (test-clhs-section)
   (test-clhs-issue)
   (test-argument)
-  (test-declaration)
-  (test-readtable)
-  (test-package)
-  (test-asdf-system)
   (test-define-locative-alias)
+  ;; Transcripts
   (test-transcribe)
   (test-cl-transcript))
 

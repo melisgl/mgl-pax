@@ -79,7 +79,8 @@
   (locative locative)
   (dislocated locative)
   (argument locative)
-  (include locative))
+  (include locative)
+  (docstring locative))
 
 (defsection @external-locatives (:title "External Locatives")
   (clhs locative))
@@ -169,7 +170,12 @@
                        stream)))
     (print-end-bullet stream)
     (with-local-references ((list (make-reference symbol 'variable)))
-      (maybe-print-docstring symbol locative-type stream))))
+      (maybe-print-docstring symbol 'variable stream))))
+
+(defmethod locate-docstring (symbol (locative-type (eql 'variable))
+                             locative-args)
+  (declare (ignore locative-args))
+  (documentation* symbol 'variable))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))
                                    locative-args)
@@ -215,6 +221,11 @@
     (with-local-references ((list (make-reference symbol 'constant)))
       (maybe-print-docstring symbol 'variable stream))))
 
+(defmethod locate-docstring (symbol (locative-type (eql 'constant))
+                             locative-args)
+  (declare (ignore locative-args))
+  (documentation* symbol 'variable))
+
 (defmethod locate-and-find-source (symbol (locative-type (eql 'constant))
                                    locative-args)
   (declare (ignore locative-args))
@@ -244,6 +255,11 @@
     (with-local-references ((list (make-reference symbol 'macro)))
       (with-dislocated-symbols ((macro-arg-names arglist))
         (maybe-print-docstring symbol 'function stream)))))
+
+(defmethod locate-docstring (symbol (locative-type (eql 'macro))
+                             locative-args)
+  (declare (ignore locative-args))
+  (documentation* symbol 'function))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'macro))
                                    locative-args)
@@ -290,6 +306,11 @@
   (with-local-references ((list (make-reference symbol 'symbol-macro)))
     (maybe-print-docstring symbol 'symbol-macro stream)))
 
+(defmethod locate-docstring (symbol (locative-type (eql 'symbol-macro))
+                             locative-args)
+  (declare (ignore locative-args))
+  (documentation* symbol 'symbol-macro))
+
 (defmethod locate-and-find-source (symbol (locative-type (eql 'symbol-macro))
                                    locative-args)
   (declare (ignore locative-args))
@@ -321,6 +342,11 @@
     (with-local-references ((list (make-reference symbol 'compiler-macro)))
       (with-dislocated-symbols ((macro-arg-names arglist))
         (maybe-print-docstring symbol 'compiler-macro stream)))))
+
+(defmethod locate-docstring (symbol (locative-type (eql 'compiler-macro))
+                             locative-args)
+  (declare (ignore locative-args))
+  (documentation* symbol 'compiler-macro))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'compiler-macro))
                                    locative-args)
@@ -391,16 +417,16 @@
       (print-end-bullet stream)
       (with-local-references ((list reference))
         (with-dislocated-symbols ((function-arg-names arglist))
-          ;; KLUDGE: Some just can't decide where the documentation
-          ;; is. Traced generic functions complicate things.
-          #+(or ccl ecl)
-          (if (documentation function 'function)
-              (maybe-print-docstring function 'function stream)
-              (maybe-print-docstring (function-name function) 'function
-                                     stream))
-          #-(or ccl ecl)
-          (maybe-print-docstring (function-name function) 'function
-                                 stream))))))
+          (maybe-print-docstring function 'function stream))))))
+
+(defmethod locate-docstring (symbol (locative-type (eql 'function))
+                             locative-args)
+  (declare (ignore locative-args))
+  (documentation* symbol 'function))
+
+(defmethod locate-docstring (symbol (locative-type (eql 'generic-function))
+                             locative-args)
+  (locate-docstring symbol 'function locative-args))
 
 (defmethod locate-and-find-source
     (symbol (locative-type (eql 'function)) locative-args)
@@ -488,6 +514,9 @@
           (swank-mop:method-qualifiers method)
           (method-specializers-for-inspect method)))
 
+(defmethod docstring ((method method))
+  (documentation* method t))
+
 (defmethod locate-and-find-source
     (symbol (locative-type (eql 'method)) locative-args)
   ;; FIND-DEFINITION* would be faster on SBCL, but then we need to
@@ -520,6 +549,10 @@
   (print-end-bullet stream)
   (with-local-references ((list (make-reference symbol 'macro)))
     (maybe-print-docstring symbol 'method-combination stream)))
+
+(defmethod locate-docstring (symbol (locative-type (eql 'method-combination))
+                             locative-args)
+  (documentation* symbol 'method-combination))
 
 (defmethod locate-and-find-source
     (symbol (locative-type (eql 'method-combination)) locative-args)
@@ -667,6 +700,21 @@
         (when docstring
           (format stream "~%~A~%" (massage-docstring docstring)))))))
 
+(defmethod locate-docstring (symbol (locative-type (eql 'accessor))
+                             locative-args)
+  (swank-mop:slot-definition-documentation
+   (find-accessor-slot-definition symbol (first locative-args))))
+
+(defmethod locate-docstring (symbol (locative-type (eql 'reader))
+                             locative-args)
+  (swank-mop:slot-definition-documentation
+   (find-reader-slot-definition symbol (first locative-args))))
+
+(defmethod locate-docstring (symbol (locative-type (eql 'writer))
+                             locative-args)
+  (swank-mop:slot-definition-documentation
+   (find-writer-slot-definition symbol (first locative-args))))
+
 (defmethod locate-and-find-source (symbol (locative-type (eql 'accessor))
                                    locative-args)
   (find-definition* (find-method* symbol () (list (first locative-args)))
@@ -709,6 +757,11 @@
   (with-local-references ((list (make-reference symbol 'structure-accessor)))
     (maybe-print-docstring symbol 'function stream)))
 
+(defmethod locate-docstring (symbol (locative-type (eql 'structure-accessor))
+                             locative-args)
+  (declare (ignore locative-args))
+  (documentation* symbol 'function))
+
 (defmethod locate-and-find-source (symbol
                                    (locative-type (eql 'structure-accessor))
                                    locative-args)
@@ -747,6 +800,11 @@
     (with-local-references ((list (make-reference symbol 'type)))
       (with-dislocated-symbols ((function-arg-names arglist))
         (maybe-print-docstring symbol 'type stream)))))
+
+(defmethod locate-docstring (symbol (locative-type (eql 'type))
+                             locative-args)
+  (declare (ignore locative-args))
+  (documentation* symbol 'type))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'type))
                                    locative-args)
@@ -819,9 +877,6 @@
           (print-arglist superclasses stream)))
     (print-end-bullet stream)
     (with-local-references ((list (make-reference symbol 'class)))
-      #+cmucl
-      (maybe-print-docstring symbol 'type stream)
-      #-cmucl
       (maybe-print-docstring class t stream))))
 
 (defun mark-up-superclasses (superclasses)
@@ -836,6 +891,9 @@
                      (format stream "[~A][~A]" name
                              (link-to-reference reference))
                      (format stream "~A" name)))))))
+
+(defmethod docstring ((class class))
+  (documentation* class t))
 
 (defmethod locate-and-find-source
     (symbol (locative-type (eql 'class)) locative-args)
@@ -893,6 +951,11 @@
   (let ((reference (canonical-reference (make-reference symbol 'declaration))))
     (print-bullet reference stream)
     (print-end-bullet stream)))
+
+(defmethod locate-docstring (symbol (locative-type (eql 'declaration))
+                             locative-args)
+  (declare (ignore locative-args))
+  nil)
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'declaration))
                                    locative-args)
@@ -993,6 +1056,9 @@
              :type :source-control)
         (terpri stream)))))
 
+(defmethod docstring ((system asdf:system))
+  nil)
+
 (defmethod find-source ((system asdf:system))
   `(:location
     (:file ,(namestring (asdf/system:system-source-file system)))
@@ -1044,6 +1110,9 @@
     (with-local-references ((list (make-reference symbol 'package)))
       (maybe-print-docstring package t stream))))
 
+(defmethod docstring ((package package))
+  (documentation* package t))
+
 (defmethod locate-and-find-source
     (name (locative-type (eql 'package)) locative-args)
   (declare (ignore locative-args))
@@ -1073,6 +1142,9 @@
     (print-end-bullet stream)
     (with-local-references ((list (make-reference symbol 'readtable)))
       (maybe-print-docstring symbol 'readtable stream))))
+
+(defmethod docstring ((readtable readtable))
+  (documentation* (readtable-name readtable) 'readtable))
 
 (defmethod canonical-reference ((readtable readtable))
   (let ((name (readtable-name readtable)))
@@ -1149,6 +1221,9 @@
           (with-nested-headings ()
             (document-object entry stream)))))))
 
+(defmethod docstring ((section section))
+  nil)
+
 (defmethod locate-and-find-source (symbol (locative-type (eql 'section))
                                    locative-args)
   (declare (ignore locative-args))
@@ -1185,6 +1260,9 @@
     (let ((docstring (glossary-term-docstring glossary-term)))
       (when docstring
         (format stream "~%~A~%" (massage-docstring docstring))))))
+
+(defmethod docstring ((glossary-term glossary-term))
+  (glossary-term-docstring glossary-term))
 
 (defmethod canonical-reference ((glossary-term glossary-term))
   (make-reference (glossary-term-name glossary-term) 'glossary-term))
@@ -1225,6 +1303,12 @@
       (with-local-references ((list (make-reference symbol 'locative)))
         (maybe-print-docstring method t stream))))
   (format stream "~&"))
+
+(defmethod locate-docstring (symbol (locative-type (eql 'locative))
+                             locative-args)
+  (declare (ignore locative-args))
+  (let ((method (locative-lambda-list-method-for-symbol symbol)))
+    (documentation* method t)))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'locative))
                                    locative-args)
@@ -1280,6 +1364,13 @@
 (defmethod locate-object (symbol (locative-type (eql 'argument)) locative-args)
   (declare (ignore symbol locative-args))
   (locate-error "ARGUMENT can never be located."))
+
+
+;;;; DOCSTRING
+
+(define-locative-type docstring ()
+  "[translate-docstring-links function][docstring]")
+
 
 
 ;;;; INCLUDE locative

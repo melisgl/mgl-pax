@@ -1003,6 +1003,31 @@ which makes navigating the sources with `M-.` (see
     
     `INCLUDE` is not [`EXPORTABLE-LOCATIVE-TYPE-P`][c930].
 
+<a id="x-28MGL-PAX-3ADOCSTRING-20MGL-PAX-3ALOCATIVE-29"></a>
+<a id="MGL-PAX:DOCSTRING%20MGL-PAX:LOCATIVE"></a>
+
+- [locative] **DOCSTRING**
+
+    `DOCSTRING` is a pseudo locative for including the parse tree of
+    the markdown [`DOCSTRING`][e2bb] of a definition in the
+    parse tree of a docstring when generating documentation. It has no
+    source location information and only works as an explicit link. This
+    construct is intended to allow docstrings live closer to their
+    implementation, which typically involves a non-exported definition.
+    
+    ```
+    (defun div2 (x)
+      "X must be an [even type][docstring]."
+      (/ x 2))
+    
+    (deftype even ()
+      "an even integer"
+      '(satisfies oddp))
+    ```
+    
+    In the output of `(DOCUMENT #'DIV2)`, we have that `X must be an an
+    even integer`.
+
 <a id="x-28MGL-PAX-3A-40EXTERNAL-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 <a id="MGL-PAX:@EXTERNAL-LOCATIVES%20MGL-PAX:SECTION"></a>
 
@@ -2968,6 +2993,9 @@ for [`ASDF:SYSTEM:`][c097]
              :type :source-control)
         (terpri stream)))))
 
+(defmethod docstring ((system asdf:system))
+  nil)
+
 (defmethod find-source ((system asdf:system))
   `(:location
     (:file ,(namestring (asdf/system:system-source-file system)))
@@ -3164,6 +3192,19 @@ for [`ASDF:SYSTEM:`][c097]
     line alone but from the rest of the lines strip the longest run of
     leading spaces that is common to all non-blank lines.
 
+<a id="x-28MGL-PAX-3ADOCSTRING-20GENERIC-FUNCTION-29"></a>
+<a id="MGL-PAX:DOCSTRING%20GENERIC-FUNCTION"></a>
+
+- [generic-function] **DOCSTRING** *OBJECT*
+
+    Return the docstring from the definition of
+    `OBJECT` (which may be a [`REFERENCE`][1cea]). This is a generalization of
+    [`CL:DOCUMENTATION`][68f1].
+    
+    `DOCSTRING` is used in the implementation of the [`DOCSTRING`][ce75] locative.
+    Some things such as [`ASDF:SYSTEM`][c097]s and `DECLARATION`([`0`][47a3] [`1`][6e04])s have no
+    docstrings. Notably `SECTIONs`([`0`][5fac] [`1`][672f]) don't provide access to docstrings.
+
 <a id="x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNCTION-29"></a>
 <a id="MGL-PAX:FIND-SOURCE%20GENERIC-FUNCTION"></a>
 
@@ -3201,13 +3242,14 @@ for [`ASDF:SYSTEM:`][c097]
 
 ### 11.3 Reference Based Extensions
 
-Let's see how to extend [`DOCUMENT`][432c] and `M-.` navigation if there is
-no first class object to represent the thing of interest. Recall
-that [`LOCATE`][ee94] returns a [`REFERENCE`][1cea] object in this case. [`DOCUMENT-OBJECT`][bacc]
-and [`FIND-SOURCE`][4355] defer to [`LOCATE-AND-DOCUMENT`][6611] and
-[`LOCATE-AND-FIND-SOURCE`][d6a4], which have [`LOCATIVE-TYPE`][3200] in their argument
-list for [`EQL`][01e5] specializing pleasure. Here is a stripped down
-example of how the [`VARIABLE`][6c83] locative is defined:
+Let's see how to extend [`DOCUMENT`][432c] and `M-.` navigation if there
+is no first class object to represent the thing of interest. Recall
+that [`LOCATE`][ee94] returns a [`REFERENCE`][1cea] object in this case.
+[`DOCUMENT-OBJECT`][bacc], [`DOCSTRING`][e2bb], and [`FIND-SOURCE`][4355]
+defer to [`LOCATE-AND-DOCUMENT`][6611], [`LOCATE-DOCSTRING`][5c39] and
+[`LOCATE-AND-FIND-SOURCE`][d6a4], respectively, which have [`LOCATIVE-TYPE`][3200] in
+their argument list for [`EQL`][01e5] specializing pleasure. Here is
+how the [`VARIABLE`][6c83] locative is defined:
 
 <a id="x-28MGL-PAX-3AVARIABLE-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-28-3ASTART-20-28VARIABLE-20MGL-PAX-3ALOCATIVE-29-20-3AEND-20-28MGL-PAX-3A-3AEND-OF-VARIABLE-EXAMPLE-20VARIABLE-29-29-20-3AHEADER-NL-20-22-60-60-60commonlisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29"></a>
 <a id="MGL-PAX:VARIABLE-EXAMPLE%20%28MGL-PAX:INCLUDE%20%28:START%20%28VARIABLE%20MGL-PAX:LOCATIVE%29%20:END%20%28MGL-PAX::END-OF-VARIABLE-EXAMPLE%20VARIABLE%29%29%20:HEADER-NL%20%22%60%60%60commonlisp%22%20:FOOTER-NL%20%22%60%60%60%22%29"></a>
@@ -3251,7 +3293,12 @@ example of how the [`VARIABLE`][6c83] locative is defined:
                        stream)))
     (print-end-bullet stream)
     (with-local-references ((list (make-reference symbol 'variable)))
-      (maybe-print-docstring symbol locative-type stream))))
+      (maybe-print-docstring symbol 'variable stream))))
+
+(defmethod locate-docstring (symbol (locative-type (eql 'variable))
+                             locative-args)
+  (declare (ignore locative-args))
+  (documentation* symbol 'variable))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))
                                    locative-args)
@@ -3287,7 +3334,7 @@ example of how the [`VARIABLE`][6c83] locative is defined:
 - [method] **DOCUMENT-OBJECT** *(REFERENCE REFERENCE) STREAM*
 
     If `REFERENCE` can be resolved to a non-reference, call
-    `DOCUMENT-OBJECT` with it, else call LOCATE-AND-DOCUMENT-OBJECT on the
+    `DOCUMENT-OBJECT` with it, else call [`LOCATE-AND-DOCUMENT`][6611] on the
     object, locative-type, locative-args of `REFERENCE`
 
 <a id="x-28MGL-PAX-3ALOCATE-AND-DOCUMENT-20GENERIC-FUNCTION-29"></a>
@@ -3296,9 +3343,27 @@ example of how the [`VARIABLE`][6c83] locative is defined:
 - [generic-function] **LOCATE-AND-DOCUMENT** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS STREAM*
 
     Called by [`DOCUMENT-OBJECT`][bacc] on [`REFERENCE`][1cea] objects,
-    this function has essentially the same purpose as `DOCUMENT-OBJECT`
+    this function has essentially the same purpose as `DOCUMENT-OBJECT`,
     but it has different arguments to allow specializing on
     `LOCATIVE-TYPE`.
+
+<a id="x-28MGL-PAX-3ADOCSTRING-20-28METHOD-20NIL-20-28MGL-PAX-3AREFERENCE-29-29-29"></a>
+<a id="MGL-PAX:DOCSTRING%20%28METHOD%20NIL%20%28MGL-PAX:REFERENCE%29%29"></a>
+
+- [method] **DOCSTRING** *(REFERENCE REFERENCE)*
+
+    Call [`LOCATE-DOCSTRING`][5c39] on the object, locative-type,
+    locative-args of `REFERENCE`. If that returns `NIL` and `REFERENCE` can be
+    [`RESOLVE`][cd9e]d to a non-reference, then call `DOCSTRING` with it.
+
+<a id="x-28MGL-PAX-3ALOCATE-DOCSTRING-20GENERIC-FUNCTION-29"></a>
+<a id="MGL-PAX:LOCATE-DOCSTRING%20GENERIC-FUNCTION"></a>
+
+- [generic-function] **LOCATE-DOCSTRING** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS*
+
+    Called by `DOCSTRING`([`0`][e2bb] [`1`][ce75]) on [`REFERENCE`][1cea] objects, this
+    function has essentially the same purpose as `DOCSTRING`, but it has
+    different arguments to allow specializing on `LOCATIVE-TYPE`.
 
 <a id="x-28MGL-PAX-3ALOCATE-AND-FIND-SOURCE-20GENERIC-FUNCTION-29"></a>
 <a id="MGL-PAX:LOCATE-AND-FIND-SOURCE%20GENERIC-FUNCTION"></a>
@@ -3499,6 +3564,7 @@ presented.
   [4355]: #MGL-PAX:FIND-SOURCE%20GENERIC-FUNCTION "MGL-PAX:FIND-SOURCE GENERIC-FUNCTION"
   [440e]: #MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES*%20VARIABLE "MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES* VARIABLE"
   [46ec]: #MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS%20GENERIC-FUNCTION "MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION"
+  [47a3]: http://www.lispworks.com/documentation/HyperSpec/Body/d_declar.htm "DECLARATION DECLARATION"
   [493e]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "SIMPLE-CONDITION-FORMAT-CONTROL FUNCTION"
   [496d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_desc_1.htm "DESCRIBE-OBJECT FUNCTION"
   [4b78]: #MGL-PAX:@EXTERNAL-LOCATIVES%20MGL-PAX:SECTION "External Locatives"
@@ -3513,6 +3579,7 @@ presented.
   [5825]: #%22mgl-pax%2Ftranscribe%22%20ASDF%2FSYSTEM:SYSTEM '"mgl-pax/transcribe" ASDF/SYSTEM:SYSTEM'
   [5875]: #GENERIC-FUNCTION%20MGL-PAX:LOCATIVE "GENERIC-FUNCTION MGL-PAX:LOCATIVE"
   [5908]: #MGL-PAX:FIND-SOURCE%20%28METHOD%20NIL%20%28T%29%29 "MGL-PAX:FIND-SOURCE (METHOD NIL (T))"
+  [5c39]: #MGL-PAX:LOCATE-DOCSTRING%20GENERIC-FUNCTION "MGL-PAX:LOCATE-DOCSTRING GENERIC-FUNCTION"
   [5c74]: #MGL-PAX:@UNAMBIGUOUS-LOCATIVE%20MGL-PAX:SECTION "Unambiguous Unspecified Locative"
   [5cd7]: #MGL-PAX:INCLUDE%20MGL-PAX:LOCATIVE "MGL-PAX:INCLUDE MGL-PAX:LOCATIVE"
   [5fac]: #MGL-PAX:SECTION%20CLASS "MGL-PAX:SECTION CLASS"
@@ -3532,6 +3599,7 @@ presented.
   [6b59]: #MGL-PAX:@TRANSCRIPT-DYNENV%20MGL-PAX:SECTION "Controlling the Dynamic Environment"
   [6c1f]: http://www.lispworks.com/documentation/HyperSpec/Body/e_smp_cn.htm "SIMPLE-CONDITION CONDITION"
   [6c83]: #VARIABLE%20MGL-PAX:LOCATIVE "VARIABLE MGL-PAX:LOCATIVE"
+  [6e04]: #DECLARATION%20MGL-PAX:LOCATIVE "DECLARATION MGL-PAX:LOCATIVE"
   [6e18]: #MGL-PAX:@TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS%20MGL-PAX:SECTION "Finer-grained Consistency Checks"
   [6fdb]: #%22mgl-pax%22%20ASDF%2FSYSTEM:SYSTEM '"mgl-pax" ASDF/SYSTEM:SYSTEM'
   [718f]: #MGL-PAX:@MARKDOWN-INDENTATION%20MGL-PAX:SECTION "Indentation"
@@ -3613,6 +3681,7 @@ presented.
   [cc04]: #MGL-PAX:READER%20MGL-PAX:LOCATIVE "MGL-PAX:READER MGL-PAX:LOCATIVE"
   [cd9e]: #MGL-PAX:RESOLVE%20FUNCTION "MGL-PAX:RESOLVE FUNCTION"
   [ce02]: http://www.lispworks.com/documentation/HyperSpec/Body/s_declar.htm "DECLARE MGL-PAX:MACRO"
+  [ce75]: #MGL-PAX:DOCSTRING%20MGL-PAX:LOCATIVE "MGL-PAX:DOCSTRING MGL-PAX:LOCATIVE"
   [cfbb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_pr_unr.htm "PRINT-UNREADABLE-OBJECT MGL-PAX:MACRO"
   [d1ca]: #MGL-PAX:@DOCUMENT-IMPLEMENTATION-NOTES%20MGL-PAX:SECTION "Document Generation Implementation Notes"
   [d2c1]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm "*PACKAGE* VARIABLE"
@@ -3628,6 +3697,7 @@ presented.
   [e216]: #MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS*%20VARIABLE "MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* VARIABLE"
   [e248]: #MGL-PAX:@FUNCTIONLIKE-LOCATIVES%20MGL-PAX:SECTION "Locatives for Functions"
   [e256]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009.htm '"SUMMARY:AREF-1D" MGL-PAX:CLHS'
+  [e2bb]: #MGL-PAX:DOCSTRING%20GENERIC-FUNCTION "MGL-PAX:DOCSTRING GENERIC-FUNCTION"
   [e2e8]: #MGL-PAX:@SUPPRESSED-LINKS%20MGL-PAX:SECTION "Suppressed Links"
   [e391]: #MGL-PAX:DISLOCATED%20MGL-PAX:LOCATIVE "MGL-PAX:DISLOCATED MGL-PAX:LOCATIVE"
   [e4b0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_ensu_1.htm "ENSURE-DIRECTORIES-EXIST FUNCTION"

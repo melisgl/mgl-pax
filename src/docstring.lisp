@@ -9,7 +9,7 @@
   ;; If the output is going to /dev/null and this is a costly
   ;; operation, skip it.
   (unless *table-of-contents-stream*
-    (let ((docstring (filter-documentation object doc-type)))
+    (let ((docstring (documentation* object doc-type)))
       (when docstring
         (format stream "~%~A~%" (massage-docstring docstring))))))
 
@@ -64,17 +64,32 @@
     (or n-min-indentation 0)))
 
 
-(defun filter-documentation (symbol doc-type)
-  (let ((docstring (documentation symbol doc-type)))
+(defun documentation* (object doc-type)
+  ;; KLUDGE: Some just can't decide where the documentation is. Traced
+  ;; generic functions complicate things.
+  (when (functionp object)
+    #+(or ccl ecl)
+    (when (and (eq doc-type 'function)
+               (null (documentation object 'function)))
+      (setq object (function-name object)))
+    #+cmucl
+    (setq object (function-name object)))
+  #+cmucl
+  (when (typep object 'class)
+    (setq object (class-name object)
+          doc-type 'type))
+  (let ((docstring (documentation object doc-type)))
     #+sbcl
-    (if (member docstring
-                '("Return whether debug-block represents elsewhere code."
-                  "automatically generated accessor method"
-                  "automatically generated reader method"
-                  "automatically generated writer method")
-                :test #'equal)
-        ;; Discard the garbage docstring.
-        nil
-        docstring)
-    #-sbcl
+    (setq docstring (filter-junk-docstrings docstring))
     docstring))
+
+#+sbcl
+(defun filter-junk-docstrings (docstring)
+  (if (member docstring
+              '("Return whether debug-block represents elsewhere code."
+                "automatically generated accessor method"
+                "automatically generated reader method"
+                "automatically generated writer method")
+              :test #'equal)
+      nil
+      docstring))

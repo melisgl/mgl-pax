@@ -676,16 +676,53 @@
 ;;; transformed string.
 (defun codify-and-link (string)
   (when string
-    (let* ((3bmd-grammar:*smart-quotes* nil)
-           (parse-tree
-             ;; To be able to recognize symbols like FOO* join (...
-             ;; "FOO" "*" ...) to look like (... "FOO*" ...).
-             (join-consecutive-non-blank-strings-in-parse-tree
-              (3bmd-grammar:parse-doc string))))
-      (with-output-to-string (out)
-        (let ((tree (link (codify parse-tree))))
-          (with-colorize-silenced ()
-            (3bmd::print-doc-to-stream-using-format tree out :markdown)))))))
+    (with-output-to-string (out)
+      (print-markdown (link (codify (include-docstrings
+                                     (parse-markdown string))))
+                      out))))
+
+
+(defun include-docstrings (parse-tree)
+  (map-markdown-parse-tree (list :reference-link) () nil
+                           #'translate-docstring-links parse-tree))
+
+;;; FIXME: Circular includes are hard to detect because the 'recurse'
+;;; return value is handled in the caller of this function.
+(defun translate-docstring-links (parent tree)
+  """DOCSTRING is a pseudo locative for including the parse tree of
+  the markdown [DOCSTRING][generic-function] of a definition in the
+  parse tree of a docstring when generating documentation. It has no
+  source location information and only works as an explicit link. This
+  construct is intended to allow docstrings live closer to their
+  implementation, which typically involves a non-exported definition.
+
+  ```
+  (defun div2 (x)
+    "X must be an [even type][docstring]."
+    (/ x 2))
+
+  (deftype even ()
+    "an even integer"
+    '(satisfies oddp))
+  ```
+
+  In the output of `(DOCUMENT #'DIV2)`, we have that `X must be an an
+  even integer`."""
+  (declare (ignore parent))
+  (assert (parse-tree-p tree :reference-link))
+  (let ((label (pt-get tree :label))
+        (definition (pt-get tree :definition)))
+    (alexandria:nth-value-or 0
+      (when (eq (read-locative-from-markdown definition) 'docstring)
+        (multiple-value-bind (object locative foundp)
+            (read-reference-from-string (parse-tree-to-text label))
+          (when foundp
+            (let ((docstring (docstring (locate object locative))))
+              (when docstring
+                (values (parse-markdown
+                         (strip-docstring-indentation docstring))
+                        t t))))))
+      tree)))
 
 
 (defsection @codification (:title "Codification")
@@ -852,12 +889,12 @@
 
 (defvar *translating-reference-link* nil)
 
-;;; This is the first of the translator functions, which are those
-;;; passed to MAP-MARKDOWN-PARSE-TREE.
+;;; This is the first (FIXME) of the translator functions, which are
+;;; those passed to MAP-MARKDOWN-PARSE-TREE.
 ;;;
 ;;; It is called with with a list TREE whose CAR is :EMPH or
-;;; 3BMD-CODE-BLOCKS::CODE-BLOCK or with TREE being a string (as per
-;;; the MAP-MARKDOWN-PARSE-TREE above).
+;;; 3BMD-CODE-BLOCKS::CODE-BLOCK (FIXME) or with TREE being a string
+;;; (as per the MAP-MARKDOWN-PARSE-TREE above (FIXME)).
 (defun translate-to-code (parent tree)
   (cond ((stringp tree)
          (let ((string tree))
@@ -2077,7 +2114,7 @@
   *READTABLE* are left at the current values.")
 
 
-;;;; Basic DOCUMENT-OBJECT and DESCRIBE-OBJECT methods
+;;;; Basic DOCUMENT-OBJECT methods
 
 (defvar *objects-being-documented* ())
 
@@ -2097,7 +2134,7 @@
 
 (defmethod document-object ((reference reference) stream)
   "If REFERENCE can be resolved to a non-reference, call
-  DOCUMENT-OBJECT with it, else call LOCATE-AND-DOCUMENT-OBJECT on the
+  DOCUMENT-OBJECT with it, else call LOCATE-AND-DOCUMENT on the
   object, locative-type, locative-args of REFERENCE"
   (let* ((reference (canonical-reference reference))
          (resolved-object (resolve reference)))

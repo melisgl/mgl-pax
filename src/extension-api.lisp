@@ -40,6 +40,7 @@
   (*format* variable)
   (document-object generic-function)
   (document-object (method () (string t)))
+  (docstring generic-function)
   (find-source generic-function))
 
 (defmacro define-locative-type (locative-type lambda-list &body docstring)
@@ -204,6 +205,15 @@
   leading spaces that is common to all non-blank lines."
   (format stream "~a~%" (massage-docstring string :indentation "")))
 
+(defgeneric docstring (object)
+  (:documentation "Return the docstring from the definition of
+  OBJECT (which may be a REFERENCE). This is a generalization of
+  CL:DOCUMENTATION.
+
+  DOCSTRING is used in the implementation of the DOCSTRING locative.
+  Some things such as ASDF:SYSTEMS and DECLARATIONs have no
+  docstrings. Notably SECTIONs don't provide access to docstrings."))
+
 ;;; This is bound to an EQUAL hash table in MAKE-GITHUB-SOURCE-URI-FN
 ;;; to speed up FIND-SOURCE. It's still very slow though.
 (defvar *find-source-cache* nil)
@@ -249,13 +259,14 @@
 
 (defsection @reference-based-extensions
     (:title "Reference Based Extensions")
-  """Let's see how to extend DOCUMENT and `\\M-.` navigation if there is
-  no first class object to represent the thing of interest. Recall
-  that LOCATE returns a REFERENCE object in this case. DOCUMENT-OBJECT
-  and FIND-SOURCE defer to LOCATE-AND-DOCUMENT and
-  LOCATE-AND-FIND-SOURCE, which have LOCATIVE-TYPE in their argument
-  list for [EQL][type] specializing pleasure. Here is a stripped down
-  example of how the VARIABLE locative is defined:"""
+  """Let's see how to extend DOCUMENT and `\\M-.` navigation if there
+  is no first class object to represent the thing of interest. Recall
+  that LOCATE returns a REFERENCE object in this case.
+  DOCUMENT-OBJECT, [DOCSTRING][generic-function], and FIND-SOURCE
+  defer to LOCATE-AND-DOCUMENT, LOCATE-DOCSTRING and
+  LOCATE-AND-FIND-SOURCE, respectively, which have LOCATIVE-TYPE in
+  their argument list for [EQL][type] specializing pleasure. Here is
+  how the VARIABLE locative is defined:"""
   (variable-example (include (:start (variable locative)
                                      :end (end-of-variable-example variable))
                              :header-nl "```commonlisp"
@@ -264,6 +275,8 @@
   (locate-and-collect-reachable-objects generic-function)
   (document-object (method () (reference t)))
   (locate-and-document generic-function)
+  (docstring (method () (reference)))
+  (locate-docstring generic-function)
   (locate-and-find-source generic-function)
   (find-source (method () (t)))
   (find-source (method () (reference)))
@@ -307,9 +320,35 @@
 (defgeneric locate-and-document (object locative-type locative-args
                                  stream)
   (:documentation "Called by DOCUMENT-OBJECT on REFERENCE objects,
-  this function has essentially the same purpose as DOCUMENT-OBJECT
+  this function has essentially the same purpose as DOCUMENT-OBJECT,
   but it has different arguments to allow specializing on
   LOCATIVE-TYPE."))
+
+(defgeneric locate-docstring (object locative-type locative-args)
+  (:documentation "Called by DOCSTRING on REFERENCE objects, this
+  function has essentially the same purpose as DOCSTRING, but it has
+  different arguments to allow specializing on LOCATIVE-TYPE."))
+
+(defmethod docstring (object)
+  "Call LOCATE-DOCSTRING with the appropriate parts of
+  CANONICAL-REFERENCE for OBJECT."
+  (let ((ref (canonical-reference object)))
+    (locate-docstring (reference-object ref)
+                      (reference-locative-type ref)
+                      (reference-locative-args ref))))
+
+(defmethod docstring ((reference reference))
+  "Call LOCATE-DOCSTRING on the object, locative-type,
+  locative-args of REFERENCE. If that returns NIL and REFERENCE can be
+  `RESOLVE`d to a non-reference, then call DOCSTRING with it."
+  (or (locate-docstring
+       (reference-object reference)
+       (reference-locative-type reference)
+       (reference-locative-args reference))
+      (let ((located (resolve reference :errorp nil)))
+        (if (and located (not (typep located 'reference)))
+            (docstring located)
+            nil))))
 
 (defgeneric locate-and-find-source (object locative-type locative-args)
   (:documentation "This function serves the same purpose as
@@ -409,6 +448,10 @@
              (print-end-bullet stream)
              (maybe-print-docstring method t stream))))
        (format stream "~&"))
+     (defmethod locate-docstring
+         (symbol (locative-type (eql ',locative-type)) locative-args)
+       (let ((method (symbol-lambda-list-method symbol ',locative-type)))
+         (documentation method t)))
      (defmethod locate-and-find-source
          (symbol (locative-type (eql ',locative-type)) locative-args)
        (declare (ignore locative-args))

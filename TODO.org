@@ -40,8 +40,30 @@ linking failure. This should be in 3BMD.
 * add source locative
 That is, link to github, without documenting anything. Useful for code
 examples without actually INCLUDEing them.
-* make it possible to include docstrings without documenting their owner
-This should bring us closer to literate programming.
+* reorder source definitions
+* autoinclude docstrings
+(with-implementation
+  (defvar *document-uppercase-is-code* t
+    "First line.")
+  (defun foo ()
+    "Second line.")
+  "3rd line with narrative"
+  (defvar saf
+    "more"))
+
+expands to
+
+(defvar *document-uppercase-is-code* t
+  "First line"
+  "[foo function][docstring]"
+  "3rd line with narrative"
+  "more")
+
+(defun foo ()
+  "Second line.")
+
+(defvar saf
+  "more")
 * MAYBE desuffix all lowercase suffixes?
 * MAYBE get variable initforms from source?
 Or fall back on this for deficient ARGLISTs. Will be really slow.

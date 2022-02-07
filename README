@@ -782,6 +782,28 @@ which makes navigating the sources with `M-.` (see
     
     INCLUDE is not EXPORTABLE-LOCATIVE-TYPE-P.
 
+- [locative] DOCSTRING
+
+    DOCSTRING is a pseudo locative for including the parse tree of
+    the markdown [DOCSTRING][generic-function] of a definition in the
+    parse tree of a docstring when generating documentation. It has no
+    source location information and only works as an explicit link. This
+    construct is intended to allow docstrings live closer to their
+    implementation, which typically involves a non-exported definition.
+    
+    ```
+    (defun div2 (x)
+      "X must be an [even type][docstring]."
+      (/ x 2))
+    
+    (deftype even ()
+      "an even integer"
+      '(satisfies oddp))
+    ```
+    
+    In the output of `(DOCUMENT #'DIV2)`, we have that `X must be an an
+    even integer`.
+
 ### External Locatives
 
 - [locative] CLHS
@@ -2481,6 +2503,9 @@ for ASDF:SYSTEM:
              :type :source-control)
         (terpri stream)))))
 
+(defmethod docstring ((system asdf:system))
+  nil)
+
 (defmethod find-source ((system asdf:system))
   `(:location
     (:file ,(namestring (asdf/system:system-source-file system)))
@@ -2641,6 +2666,16 @@ for ASDF:SYSTEM:
     line alone but from the rest of the lines strip the longest run of
     leading spaces that is common to all non-blank lines.
 
+- [generic-function] DOCSTRING OBJECT
+
+    Return the docstring from the definition of
+    OBJECT (which may be a REFERENCE). This is a generalization of
+    CL:DOCUMENTATION.
+    
+    DOCSTRING is used in the implementation of the DOCSTRING locative.
+    Some things such as ASDF:SYSTEMS and DECLARATIONs have no
+    docstrings. Notably SECTIONs don't provide access to docstrings.
+
 - [generic-function] FIND-SOURCE OBJECT
 
     Return the Swank source location for OBJECT. It
@@ -2672,13 +2707,14 @@ for ASDF:SYSTEM:
 
 ### Reference Based Extensions
 
-Let's see how to extend DOCUMENT and `M-.` navigation if there is
-no first class object to represent the thing of interest. Recall
-that LOCATE returns a REFERENCE object in this case. DOCUMENT-OBJECT
-and FIND-SOURCE defer to LOCATE-AND-DOCUMENT and
-LOCATE-AND-FIND-SOURCE, which have LOCATIVE-TYPE in their argument
-list for [EQL][type] specializing pleasure. Here is a stripped down
-example of how the VARIABLE locative is defined:
+Let's see how to extend DOCUMENT and `M-.` navigation if there
+is no first class object to represent the thing of interest. Recall
+that LOCATE returns a REFERENCE object in this case.
+DOCUMENT-OBJECT, [DOCSTRING][generic-function], and FIND-SOURCE
+defer to LOCATE-AND-DOCUMENT, LOCATE-DOCSTRING and
+LOCATE-AND-FIND-SOURCE, respectively, which have LOCATIVE-TYPE in
+their argument list for [EQL][type] specializing pleasure. Here is
+how the VARIABLE locative is defined:
 
 ```commonlisp
 (define-locative-type variable (&optional initform)
@@ -2719,7 +2755,12 @@ example of how the VARIABLE locative is defined:
                        stream)))
     (print-end-bullet stream)
     (with-local-references ((list (make-reference symbol 'variable)))
-      (maybe-print-docstring symbol locative-type stream))))
+      (maybe-print-docstring symbol 'variable stream))))
+
+(defmethod locate-docstring (symbol (locative-type (eql 'variable))
+                             locative-args)
+  (declare (ignore locative-args))
+  (documentation* symbol 'variable))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))
                                    locative-args)
@@ -2746,15 +2787,27 @@ example of how the VARIABLE locative is defined:
 - [method] DOCUMENT-OBJECT (REFERENCE REFERENCE) STREAM
 
     If REFERENCE can be resolved to a non-reference, call
-    DOCUMENT-OBJECT with it, else call LOCATE-AND-DOCUMENT-OBJECT on the
+    DOCUMENT-OBJECT with it, else call LOCATE-AND-DOCUMENT on the
     object, locative-type, locative-args of REFERENCE
 
 - [generic-function] LOCATE-AND-DOCUMENT OBJECT LOCATIVE-TYPE LOCATIVE-ARGS STREAM
 
     Called by DOCUMENT-OBJECT on REFERENCE objects,
-    this function has essentially the same purpose as DOCUMENT-OBJECT
+    this function has essentially the same purpose as DOCUMENT-OBJECT,
     but it has different arguments to allow specializing on
     LOCATIVE-TYPE.
+
+- [method] DOCSTRING (REFERENCE REFERENCE)
+
+    Call LOCATE-DOCSTRING on the object, locative-type,
+    locative-args of REFERENCE. If that returns NIL and REFERENCE can be
+    `RESOLVE`d to a non-reference, then call DOCSTRING with it.
+
+- [generic-function] LOCATE-DOCSTRING OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
+
+    Called by DOCSTRING on REFERENCE objects, this
+    function has essentially the same purpose as DOCSTRING, but it has
+    different arguments to allow specializing on LOCATIVE-TYPE.
 
 - [generic-function] LOCATE-AND-FIND-SOURCE OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
 
