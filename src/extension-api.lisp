@@ -468,5 +468,4 @@
   (section-readtable (reader section))
   (section-title (reader section))
   (section-link-title-to (reader section))
-  (section-entries (reader section))
-  (describe-object (method () (section t))))
+  (section-entries (reader section)))

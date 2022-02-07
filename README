@@ -229,73 +229,6 @@ Here is an example of how it all works together:
   ```")
 ```
 
-Generating documentation in a very stripped down markdown format
-is easy:
-
-```commonlisp
-(describe @foo-random-manual)
-```
-
-For this example, the generated markdown would look like this:
-
-    # Foo Random manual
-    
-    ###### \[in package FOO-RANDOM\]
-    Here you describe what's common to all the referenced (and
-    exported) functions that follow. They work with *FOO-STATE*,
-    and have a :RANDOM-STATE keyword arg. Also explain when to
-    choose which.
-    
-    - [class] FOO-RANDOM-STATE
-    
-    - [reader] STATE FOO-RANDOM-STATE
-    
-    Hey we can also print states!
-    
-    - [method] PRINT-OBJECT (OBJECT FOO-RANDOM-STATE) STREAM
-    
-    - [variable] *FOO-STATE* #<FOO-RANDOM-STATE >
-    
-        Much like *RANDOM-STATE* but uses the FOO algorithm.
-    
-    - [function] GAUSSIAN-RANDOM STDDEV &KEY (RANDOM-STATE *FOO-STATE*)
-    
-        Return a random number from a zero mean normal distribution with
-        STDDEV.
-    
-    - [function] UNIFORM-RANDOM LIMIT &KEY (RANDOM-STATE *FOO-STATE*)
-    
-        Return a random number from the between 0 and LIMIT (exclusive)
-        uniform distribution.
-    
-    ## Examples
-    
-    Let's see the transcript of a real session of someone working
-    with FOO:
-    
-    ```cl-transcript
-    (values (princ :hello) (list 1 2))
-    .. HELLO
-    => :HELLO
-    => (1 2)
-    
-    (make-instance 'foo-random-state)
-    ==> #<FOO-RANDOM-STATE >
-    
-    ```
-
-Fancier markdown or HTML output with [automatic
-markup][*document-uppercase-is-code* variable] and [linking][
-@linking-to-code section] of uppercase symbol names found in
-docstrings, section numbering, table of contents, etc is possible by
-calling the DOCUMENT function.
-
-*One can even generate documentation for different but related
-libraries at the same time with the output going to different files
-but with cross-page links being automatically added for symbols
-mentioned in docstrings. See @GENERATING-DOCUMENTATION for some
-convenience functions to cover the most common cases.*
-
 Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
 exports `*FOO-STATE*` and includes its documentation in
 `@FOO-RANDOM-MANUAL`. The symbols [VARIABLE][locative] and
@@ -303,8 +236,21 @@ exports `*FOO-STATE*` and includes its documentation in
 [locatives][@LOCATIVE-TYPES section], which are used in DEFSECTION
 to refer to definitions tied to symbols.
 
+Generating fancy markdown or HTML output with [automatic
+markup][*document-uppercase-is-code* variable] and [linking][
+@linking-to-code section] of uppercase symbol names found in
+docstrings, section numbering, table of contents, etc is possible by
+with `(DOCUMENT @FOO-RANDOM-MANUAL)`.
+
+One can even generate documentation for different but related
+libraries at the same time with the output going to different files
+but with cross-page links being automatically added for symbols
+mentioned in docstrings. See @GENERATING-DOCUMENTATION for some
+convenience functions to cover the most common cases.
+
 The transcript in the code block tagged with `cl-transcript` is
-automatically checked for up-to-dateness. See @TRANSCRIPTS.
+automatically checked for up-to-dateness when documentation is
+generated. See @TRANSCRIPTS.
 
 ## Basics
 
@@ -951,7 +897,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     :MARKDOWN, :HTML and :PLAIN. STREAM may be a stream object, T or NIL
     as with CL:FORMAT.
     
-    Most often, this function is called on section objects
+    Most often, this function is called on SECTION objects
     like `(DOCUMENT @MANUAL)`, but it supports all kinds of objects for
     which DOCUMENT-OBJECT is defined. To look up the documentation of
     function DOCUMENT:
@@ -1619,10 +1565,10 @@ Two convenience functions are provided to serve the common case of
 having an ASDF system with some readmes and a directory with for the
 HTML documentation and the default css stylesheet.
 
-- [function] UPDATE-ASDF-SYSTEM-READMES SECTIONS ASDF-SYSTEM
+- [function] UPDATE-ASDF-SYSTEM-READMES OBJECT ASDF-SYSTEM
 
     Convenience function to generate two readme files in the directory
-    holding the ASDF-SYSTEM definition.
+    holding the ASDF-SYSTEM definition. OBJECT is passed on to DOCUMENT.
     
     `README.md` has anchors, links, inline code, and other markup added.
     Not necessarily the easiest on the eye in an editor, but looks good
@@ -2193,12 +2139,12 @@ Transcription support in emacs can be enabled by loading
 
 - [variable] *TRANSCRIBE-SYNTAXES* ((:DEFAULT (:OUTPUT "..") (:NO-VALUE "=\> ; No value") (:READABLE "=\>")
   (:UNREADABLE "==\>") (:UNREADABLE-CONTINUATION "--\>"))
- (:COMMENTED-1 (:OUTPUT ";..") (:NO-VALUE ";=\> ; No value")
-  (:READABLE ";=\>") (:READABLE-CONTINUATION ";-\>") (:UNREADABLE ";==\>")
+ (:COMMENTED-1 (:OUTPUT ";..") (:NO-VALUE ";=\> ; No value") (:READABLE ";=\>")
+  (:READABLE-CONTINUATION ";-\>") (:UNREADABLE ";==\>")
   (:UNREADABLE-CONTINUATION ";--\>"))
  (:COMMENTED-2 (:OUTPUT ";;..") (:NO-VALUE ";;=\> ; No value")
-  (:READABLE ";;=\>") (:READABLE-CONTINUATION ";;-\>")
-  (:UNREADABLE ";;==\>") (:UNREADABLE-CONTINUATION ";;--\>")))
+  (:READABLE ";;=\>") (:READABLE-CONTINUATION ";;-\>") (:UNREADABLE ";;==\>")
+  (:UNREADABLE-CONTINUATION ";;--\>")))
 
     The default syntaxes used by TRANSCRIBE for reading and writing
     lines containing output and values of an evaluated form.
@@ -2918,13 +2864,6 @@ presented.
 
     A list of strings and REFERENCE objects in the
     order they occurred in DEFSECTION.
-
-- [method] DESCRIBE-OBJECT (SECTION SECTION) STREAM
-
-    [SECTION][class] objects are printed by calling DOCUMENT on them
-    with *DOCUMENT-NORMALIZE-PACKAGES* turned off to reduce clutter.
-    This method is only defined if MGL-PAX/FULL is loaded to allow
-    non-fancy descriptions to be printed when using CL:DESCRIBE.
 
 * * *
 ###### \[generated by [MGL-PAX](https://github.com/melisgl/mgl-pax)\]

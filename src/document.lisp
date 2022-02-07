@@ -338,7 +338,7 @@
   :MARKDOWN, :HTML and :PLAIN. STREAM may be a stream object, T or NIL
   as with CL:FORMAT.
 
-  Most often, this function is called on section objects
+  Most often, this function is called on SECTION objects
   like `(DOCUMENT @MANUAL)`, but it supports all kinds of objects for
   which DOCUMENT-OBJECT is defined. To look up the documentation of
   function DOCUMENT:
@@ -2111,23 +2111,6 @@
                                  (locative-args locative)
                                  stream)))
         (document-object resolved-object stream))))
-
-
-(defmethod describe-object ((section section) stream)
-  "[SECTION][class] objects are printed by calling DOCUMENT on them
-  with *DOCUMENT-NORMALIZE-PACKAGES* turned off to reduce clutter.
-  This method is only defined if MGL-PAX/FULL is loaded to allow
-  non-fancy descriptions to be printed when using CL:DESCRIBE."
-  (let ((*document-uppercase-is-code* nil)
-        (*document-link-code* nil)
-        (*document-link-sections* nil)
-        (*document-mark-up-signatures* nil)
-        (*document-max-numbering-level* 0)
-        (*document-max-table-of-contents-level* 0)
-        (*document-text-navigation* nil)
-        ;; Some Lisps bind it to T in DESCRIBE, some don't.
-        (*print-circle* nil))
-    (document section :stream stream :format :markdown)))
 
 
 (defsection @overview-of-escaping (:title "Overview of Escaping")

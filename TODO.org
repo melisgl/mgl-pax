@@ -5,6 +5,7 @@ deftransform, defoptimizer, define-vop, define-source-transfrom
 * TODO export documentation generation utilities for extensions
 * OPT esrap is slow with allegro cl
 * OPT parse and print markdown once when *format* is :html?
+This would involve rewriting everything to emit parse tree fragments.
 * MAYBE todo/comment locative?
 * defining link ids doesn't work in function docstrings
 because it's translated to a list item
@@ -33,7 +34,6 @@ linking failure. This should be in 3BMD.
 * MAYBE consider CommonDoc from the 40ants fork
 * MAYBE split transcription off into a separate library?
 * MAYBE allow lowercase only in the last "word" of the name
-* describe-object or document-object?
 * MAYBE remove some markup in :PLAIN format?
 * MAYBE allow markdown in titles?
 * add symbol as an alias for dislocated?

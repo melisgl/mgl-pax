@@ -162,82 +162,28 @@
   (foo-random-example (include #.(asdf:system-relative-pathname
                                   :mgl-pax "src/foo-random-example.lisp")
                                :header-nl "```common-lisp" :footer-nl "```"))
-  """Generating documentation in a very stripped down markdown format
-  is easy:
-
-  ```commonlisp
-  (describe @foo-random-manual)
-  ```
-
-  For this example, the generated markdown would look like this:
-
-      # Foo Random manual
-
-      ###### \[in package FOO-RANDOM\]
-      Here you describe what's common to all the referenced (and
-      exported) functions that follow. They work with *FOO-STATE*,
-      and have a :RANDOM-STATE keyword arg. Also explain when to
-      choose which.
-
-      - [class] FOO-RANDOM-STATE
-
-      - [reader] STATE FOO-RANDOM-STATE
-
-      Hey we can also print states!
-
-      - [method] PRINT-OBJECT (OBJECT FOO-RANDOM-STATE) STREAM
-
-      - [variable] *FOO-STATE* #<FOO-RANDOM-STATE >
-
-          Much like *RANDOM-STATE* but uses the FOO algorithm.
-
-      - [function] GAUSSIAN-RANDOM STDDEV &KEY (RANDOM-STATE *FOO-STATE*)
-
-          Return a random number from a zero mean normal distribution with
-          STDDEV.
-
-      - [function] UNIFORM-RANDOM LIMIT &KEY (RANDOM-STATE *FOO-STATE*)
-
-          Return a random number from the between 0 and LIMIT (exclusive)
-          uniform distribution.
-
-      ## Examples
-
-      Let's see the transcript of a real session of someone working
-      with FOO:
-
-      ```cl-transcript
-      (values (princ :hello) (list 1 2))
-      .. HELLO
-      => :HELLO
-      => (1 2)
-
-      (make-instance 'foo-random-state)
-      ==> #<FOO-RANDOM-STATE >
-
-      ```
-
-  Fancier markdown or HTML output with [automatic
-  markup][\*document-uppercase-is-code\* variable] and [linking][
-  @linking-to-code section] of uppercase symbol names found in
-  docstrings, section numbering, table of contents, etc is possible by
-  calling the DOCUMENT function.
-
-  *One can even generate documentation for different but related
-  libraries at the same time with the output going to different files
-  but with cross-page links being automatically added for symbols
-  mentioned in docstrings. See @GENERATING-DOCUMENTATION for some
-  convenience functions to cover the most common cases.*
-
-  Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
+  """Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
   exports `*FOO-STATE*` and includes its documentation in
   `@FOO-RANDOM-MANUAL`. The symbols [VARIABLE][locative] and
   [FUNCTION][locative] are just two instances of
   [locatives][@LOCATIVE-TYPES section], which are used in DEFSECTION
   to refer to definitions tied to symbols.
 
+  Generating fancy markdown or HTML output with [automatic
+  markup][\*document-uppercase-is-code\* variable] and [linking][
+  @linking-to-code section] of uppercase symbol names found in
+  docstrings, section numbering, table of contents, etc is possible by
+  with `(DOCUMENT @FOO-RANDOM-MANUAL)`.
+
+  One can even generate documentation for different but related
+  libraries at the same time with the output going to different files
+  but with cross-page links being automatically added for symbols
+  mentioned in docstrings. See @GENERATING-DOCUMENTATION for some
+  convenience functions to cover the most common cases.
+
   The transcript in the code block tagged with `cl-transcript` is
-  automatically checked for up-to-dateness. See @TRANSCRIPTS.""")
+  automatically checked for up-to-dateness when documentation is
+  generated. See @TRANSCRIPTS.""")
 
 
 (defsection @basics (:title "Basics")

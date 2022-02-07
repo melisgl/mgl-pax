@@ -26,9 +26,9 @@
     :if-exists :supersede
     :ensure-directories-exist t))
 
-(defun update-asdf-system-readmes (sections asdf-system)
+(defun update-asdf-system-readmes (object asdf-system)
   "Convenience function to generate two readme files in the directory
-  holding the ASDF-SYSTEM definition.
+  holding the ASDF-SYSTEM definition. OBJECT is passed on to DOCUMENT.
 
   `README.md` has anchors, links, inline code, and other markup added.
   Not necessarily the easiest on the eye in an editor, but looks good
@@ -47,35 +47,24 @@
                           :direction :output
                           :if-does-not-exist :create
                           :if-exists :supersede)
-    (document sections :stream stream)
+    (document object :stream stream)
     (print-markdown-footer stream))
   (with-open-file (stream (asdf:system-relative-pathname
                            asdf-system "README")
                           :direction :output
                           :if-does-not-exist :create
                           :if-exists :supersede)
-    (loop for section in (alexandria:ensure-list sections) do
-      (describe section stream))
+    (let ((*document-uppercase-is-code* nil)
+          (*document-link-code* nil)
+          (*document-link-sections* nil)
+          (*document-mark-up-signatures* nil)
+          (*document-max-numbering-level* 0)
+          (*document-max-table-of-contents-level* 0)
+          (*document-text-navigation* nil)
+          ;; Some Lisps bind it to T in DESCRIBE, some don't.
+          (*print-circle* nil))
+      (document object :stream stream))
     (print-markdown-footer stream)))
-
-(defun add-markdown-defaults-to-page-specs (sections page-specs dir)
-  (flet ((section-has-page-spec-p (section)
-           (some (lambda (page-spec)
-                   (member section (getf page-spec :objects)))
-                 page-specs)))
-    (mapcar (lambda (page-spec)
-              (add-markdown-defaults-to-page-spec page-spec dir))
-            (append page-specs
-                    (mapcar (lambda (section)
-                              `(:objects (,section)))
-                            (remove-if #'section-has-page-spec-p sections))))))
-
-(defun add-markdown-defaults-to-page-spec (page-spec filename)
-  `(,@page-spec
-    ,@(unless (getf page-spec :output)
-        `(:output (,filename ,@*default-output-options*)))
-    ,@(unless (getf page-spec :footer-fn)
-        `(:footer-fn ,#'print-markdown-footer))))
 
 (defun print-markdown-footer (stream)
   (format stream "~%* * *~%")

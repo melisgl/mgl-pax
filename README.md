@@ -309,72 +309,6 @@ Here is an example of how it all works together:
   ```")
 ```
 
-Generating documentation in a very stripped down markdown format
-is easy:
-
-```commonlisp
-(describe @foo-random-manual)
-```
-
-For this example, the generated markdown would look like this:
-
-    # Foo Random manual
-    
-    ###### \[in package FOO-RANDOM\]
-    Here you describe what's common to all the referenced (and
-    exported) functions that follow. They work with *FOO-STATE*,
-    and have a :RANDOM-STATE keyword arg. Also explain when to
-    choose which.
-    
-    - [class] FOO-RANDOM-STATE
-    
-    - [reader] STATE FOO-RANDOM-STATE
-    
-    Hey we can also print states!
-    
-    - [method] PRINT-OBJECT (OBJECT FOO-RANDOM-STATE) STREAM
-    
-    - [variable] *FOO-STATE* #<FOO-RANDOM-STATE >
-    
-        Much like *RANDOM-STATE* but uses the FOO algorithm.
-    
-    - [function] GAUSSIAN-RANDOM STDDEV &KEY (RANDOM-STATE *FOO-STATE*)
-    
-        Return a random number from a zero mean normal distribution with
-        STDDEV.
-    
-    - [function] UNIFORM-RANDOM LIMIT &KEY (RANDOM-STATE *FOO-STATE*)
-    
-        Return a random number from the between 0 and LIMIT (exclusive)
-        uniform distribution.
-    
-    ## Examples
-    
-    Let's see the transcript of a real session of someone working
-    with FOO:
-    
-    ```cl-transcript
-    (values (princ :hello) (list 1 2))
-    .. HELLO
-    => :HELLO
-    => (1 2)
-    
-    (make-instance 'foo-random-state)
-    ==> #<FOO-RANDOM-STATE >
-    
-    ```
-
-Fancier markdown or HTML output with [automatic
-markup][f25f] and [linking][1865] of uppercase symbol names found in
-docstrings, section numbering, table of contents, etc is possible by
-calling the [`DOCUMENT`][432c] function.
-
-*One can even generate documentation for different but related
-libraries at the same time with the output going to different files
-but with cross-page links being automatically added for symbols
-mentioned in docstrings. See [Generating Documentation][2c93] for some
-convenience functions to cover the most common cases.*
-
 Note how `(VARIABLE *FOO-STATE*)` in the [`DEFSECTION`][72b4] form both
 exports `*FOO-STATE*` and includes its documentation in
 `@FOO-RANDOM-MANUAL`. The symbols [`VARIABLE`][6c83] and
@@ -382,8 +316,20 @@ exports `*FOO-STATE*` and includes its documentation in
 [locatives][6121], which are used in `DEFSECTION`
 to refer to definitions tied to symbols.
 
+Generating fancy markdown or HTML output with [automatic
+markup][f25f] and [linking][1865] of uppercase symbol names found in
+docstrings, section numbering, table of contents, etc is possible by
+with `(DOCUMENT @FOO-RANDOM-MANUAL)`.
+
+One can even generate documentation for different but related
+libraries at the same time with the output going to different files
+but with cross-page links being automatically added for symbols
+mentioned in docstrings. See [Generating Documentation][2c93] for some
+convenience functions to cover the most common cases.
+
 The transcript in the code block tagged with `cl-transcript` is
-automatically checked for up-to-dateness. See [Transcripts][6300].
+automatically checked for up-to-dateness when documentation is
+generated. See [Transcripts][6300].
 
 <a id="x-28MGL-PAX-3A-40BASICS-20MGL-PAX-3ASECTION-29"></a>
 <a id="MGL-PAX:@BASICS%20MGL-PAX:SECTION"></a>
@@ -1190,7 +1136,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     `:MARKDOWN`, `:HTML` and `:PLAIN`. `STREAM` may be a stream object, `T` or `NIL`
     as with `CL:FORMAT`.
     
-    Most often, this function is called on section objects
+    Most often, this function is called on `SECTION`([`0`][5fac] [`1`][672f]) objects
     like `(DOCUMENT @MANUAL)`, but it supports all kinds of objects for
     which [`DOCUMENT-OBJECT`][bacc] is defined. To look up the documentation of
     function [`DOCUMENT`][432c]:
@@ -1214,7 +1160,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     
     One can call [`DESCRIBE`][38a0] on [`SECTION`][5fac] objects to get
     documentation in markdown format with less markup than the default.
-    See [`DESCRIBE-OBJECT`][af96] `(METHOD () (SECTION T))`.
+    See [`DESCRIBE-OBJECT`][496d] `(METHOD () (SECTION T))`.
     
     There are quite a few special variables that affect how output is
     generated, see [Codification][f1ab], [Linking to Code][1865],
@@ -1965,10 +1911,10 @@ HTML documentation and the default css stylesheet.
 <a id="x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29"></a>
 <a id="MGL-PAX:UPDATE-ASDF-SYSTEM-READMES%20FUNCTION"></a>
 
-- [function] **UPDATE-ASDF-SYSTEM-READMES** *SECTIONS ASDF-SYSTEM*
+- [function] **UPDATE-ASDF-SYSTEM-READMES** *OBJECT ASDF-SYSTEM*
 
     Convenience function to generate two readme files in the directory
-    holding the `ASDF-SYSTEM` definition.
+    holding the `ASDF-SYSTEM` definition. `OBJECT` is passed on to [`DOCUMENT`][432c].
     
     `README.md` has anchors, links, inline code, and other markup added.
     Not necessarily the easiest on the eye in an editor, but looks good
@@ -3502,227 +3448,217 @@ presented.
     A list of strings and [`REFERENCE`][1cea] objects in the
     order they occurred in [`DEFSECTION`][72b4].
 
-<a id="x-28DESCRIBE-OBJECT-20-28METHOD-20NIL-20-28MGL-PAX-3ASECTION-20T-29-29-29"></a>
-<a id="DESCRIBE-OBJECT%20%28METHOD%20NIL%20%28MGL-PAX:SECTION%20T%29%29"></a>
-
-- [method] **DESCRIBE-OBJECT** *(SECTION SECTION) STREAM*
-
-    [`SECTION`][5fac] objects are printed by calling [`DOCUMENT`][432c] on them
-    with [`*DOCUMENT-NORMALIZE-PACKAGES*`][440e] turned off to reduce clutter.
-    This method is only defined if [`MGL-PAX/FULL`][d761] is loaded to allow
-    non-fancy descriptions to be printed when using [`CL:DESCRIBE`][38a0].
-
-  [0019]: #MGL-PAX:LOCATE-ERROR%20FUNCTION 'MGL-PAX:LOCATE-ERROR FUNCTION'
-  [00d4]: #MGL-PAX:ACCESSOR%20MGL-PAX:LOCATIVE 'MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE'
-  [01e5]: http://www.lispworks.com/documentation/HyperSpec/Body/t_eql.htm 'EQL TYPE'
-  [0225]: #MGL-PAX:DOCUMENT-OBJECT%20%28METHOD%20NIL%20%28STRING%20T%29%29 'MGL-PAX:DOCUMENT-OBJECT (METHOD NIL (STRING T))'
-  [02de]: #MGL-PAX:REFERENCE-LOCATIVE%20%28MGL-PAX:READER%20MGL-PAX:REFERENCE%29 'MGL-PAX:REFERENCE-LOCATIVE (MGL-PAX:READER MGL-PAX:REFERENCE)'
-  [06a9]: #MGL-PAX:@CONDITION-SYSTEM-LOCATIVES%20MGL-PAX:SECTION 'Condition System Locatives'
-  [08f7]: http://www.lispworks.com/documentation/HyperSpec/Body/v_t.htm 'T MGL-PAX:CONSTANT'
-  [0b3a]: #MGL-PAX:LOCATIVE%20MGL-PAX:LOCATIVE 'MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE'
-  [1102]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm 'ABORT FUNCTION'
-  [117a]: http://www.lispworks.com/documentation/HyperSpec/Body/f_open.htm 'OPEN FUNCTION'
-  [1281]: #MGL-PAX:@PAX-WORLD%20MGL-PAX:SECTION 'PAX World'
-  [13a9]: #MGL-PAX:UPDATE-ASDF-SYSTEM-READMES%20FUNCTION 'MGL-PAX:UPDATE-ASDF-SYSTEM-READMES FUNCTION'
-  [172e]: #METHOD%20MGL-PAX:LOCATIVE 'METHOD MGL-PAX:LOCATIVE'
-  [185d]: #MGL-PAX:LOCATE-OBJECT%20GENERIC-FUNCTION 'MGL-PAX:LOCATE-OBJECT GENERIC-FUNCTION'
-  [1864]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm '*STANDARD-OUTPUT* VARIABLE'
-  [1865]: #MGL-PAX:@LINKING-TO-CODE%20MGL-PAX:SECTION 'Linking to Code'
-  [1895]: http://www.lispworks.com/documentation/HyperSpec/Body/e_error.htm 'ERROR CONDITION'
-  [1aee]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm 'PRIN1 FUNCTION'
-  [1b1b]: #MGL-PAX:@DOCUMENTATION-UTILITIES%20MGL-PAX:SECTION 'Utilities for Generating Documentation'
-  [1b28]: #MGL-PAX:*DOCUMENT-LINK-SECTIONS*%20VARIABLE 'MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE'
-  [1cea]: #MGL-PAX:REFERENCE%20CLASS 'MGL-PAX:REFERENCE CLASS'
-  [1f28]: http://www.lispworks.com/documentation/HyperSpec/Body/f_format.htm 'FORMAT FUNCTION'
-  [2060]: #CLASS%20MGL-PAX:LOCATIVE 'CLASS MGL-PAX:LOCATIVE'
-  [21f5]: #MGL-PAX:@MACROLIKE-LOCATIVES%20MGL-PAX:SECTION 'Locatives for Macros'
-  [22c2]: #MGL-PAX:@LINKING-TO-SECTIONS%20MGL-PAX:SECTION 'Linking to Sections'
-  [238c]: #MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR%20CONDITION 'MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION'
-  [248b]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rdtabl.htm 'READTABLE TYPE'
-  [2634]: #MGL-PAX:@OVERVIEW-OF-ESCAPING%20MGL-PAX:SECTION 'Overview of Escaping'
-  [2645]: #MGL-PAX:@AMBIGUOUS-LOCATIVE%20MGL-PAX:SECTION 'Ambiguous Unspecified Locative'
-  [26cf]: http://www.lispworks.com/documentation/HyperSpec/Body/t_t.htm 'T TYPE'
-  [292a]: #MGL-PAX:@PAX-LOCATIVES%20MGL-PAX:SECTION 'Locatives for PAX Constructs'
-  [2c93]: #MGL-PAX:@GENERATING-DOCUMENTATION%20MGL-PAX:SECTION 'Generating Documentation'
-  [2ce2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_consta.htm 'CONSTANTP FUNCTION'
-  [2d9d]: #MGL-PAX:DEFINE-RESTART%20MGL-PAX:MACRO 'MGL-PAX:DEFINE-RESTART MGL-PAX:MACRO'
-  [3200]: #MGL-PAX:LOCATIVE-TYPE%20FUNCTION 'MGL-PAX:LOCATIVE-TYPE FUNCTION'
-  [32f5]: #MGL-PAX:CANONICAL-REFERENCE%20GENERIC-FUNCTION 'MGL-PAX:CANONICAL-REFERENCE GENERIC-FUNCTION'
-  [3386]: #MGL-PAX:@NAVIGATING-IN-EMACS%20MGL-PAX:SECTION 'Navigating Sources in Emacs'
-  [378f]: #MGL-PAX:@PARSING%20MGL-PAX:SECTION 'Parsing'
-  [38a0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_descri.htm 'DESCRIBE FUNCTION'
-  [3ae8]: http://www.lispworks.com/documentation/HyperSpec/Body/r_contin.htm 'CONTINUE RESTART'
-  [3d3c]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_rd.htm 'READ FUNCTION'
-  [3da8]: #MGL-PAX:*FORMAT*%20VARIABLE 'MGL-PAX:*FORMAT* VARIABLE'
-  [3de5]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm 'FUNCTION TYPE'
-  [3f15]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rest.htm 'REST FUNCTION'
-  [41fd]: #COMPILER-MACRO%20MGL-PAX:LOCATIVE 'COMPILER-MACRO MGL-PAX:LOCATIVE'
-  [4267]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm 'STRING TYPE'
-  [42d7]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm 'DEFPACKAGE MGL-PAX:MACRO'
-  [432c]: #MGL-PAX:DOCUMENT%20FUNCTION 'MGL-PAX:DOCUMENT FUNCTION'
-  [4355]: #MGL-PAX:FIND-SOURCE%20GENERIC-FUNCTION 'MGL-PAX:FIND-SOURCE GENERIC-FUNCTION'
-  [440e]: #MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES*%20VARIABLE 'MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES* VARIABLE'
-  [46ec]: #MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS%20GENERIC-FUNCTION 'MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION'
-  [493e]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm 'SIMPLE-CONDITION-FORMAT-CONTROL FUNCTION'
-  [4b78]: #MGL-PAX:@EXTERNAL-LOCATIVES%20MGL-PAX:SECTION 'External Locatives'
+  [0019]: #MGL-PAX:LOCATE-ERROR%20FUNCTION "MGL-PAX:LOCATE-ERROR FUNCTION"
+  [00d4]: #MGL-PAX:ACCESSOR%20MGL-PAX:LOCATIVE "MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE"
+  [01e5]: http://www.lispworks.com/documentation/HyperSpec/Body/t_eql.htm "EQL TYPE"
+  [0225]: #MGL-PAX:DOCUMENT-OBJECT%20%28METHOD%20NIL%20%28STRING%20T%29%29 "MGL-PAX:DOCUMENT-OBJECT (METHOD NIL (STRING T))"
+  [02de]: #MGL-PAX:REFERENCE-LOCATIVE%20%28MGL-PAX:READER%20MGL-PAX:REFERENCE%29 "MGL-PAX:REFERENCE-LOCATIVE (MGL-PAX:READER MGL-PAX:REFERENCE)"
+  [06a9]: #MGL-PAX:@CONDITION-SYSTEM-LOCATIVES%20MGL-PAX:SECTION "Condition System Locatives"
+  [08f7]: http://www.lispworks.com/documentation/HyperSpec/Body/v_t.htm "T MGL-PAX:CONSTANT"
+  [0b3a]: #MGL-PAX:LOCATIVE%20MGL-PAX:LOCATIVE "MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE"
+  [1102]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "ABORT FUNCTION"
+  [117a]: http://www.lispworks.com/documentation/HyperSpec/Body/f_open.htm "OPEN FUNCTION"
+  [1281]: #MGL-PAX:@PAX-WORLD%20MGL-PAX:SECTION "PAX World"
+  [13a9]: #MGL-PAX:UPDATE-ASDF-SYSTEM-READMES%20FUNCTION "MGL-PAX:UPDATE-ASDF-SYSTEM-READMES FUNCTION"
+  [172e]: #METHOD%20MGL-PAX:LOCATIVE "METHOD MGL-PAX:LOCATIVE"
+  [185d]: #MGL-PAX:LOCATE-OBJECT%20GENERIC-FUNCTION "MGL-PAX:LOCATE-OBJECT GENERIC-FUNCTION"
+  [1864]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*STANDARD-OUTPUT* VARIABLE"
+  [1865]: #MGL-PAX:@LINKING-TO-CODE%20MGL-PAX:SECTION "Linking to Code"
+  [1895]: http://www.lispworks.com/documentation/HyperSpec/Body/e_error.htm "ERROR CONDITION"
+  [1aee]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRIN1 FUNCTION"
+  [1b1b]: #MGL-PAX:@DOCUMENTATION-UTILITIES%20MGL-PAX:SECTION "Utilities for Generating Documentation"
+  [1b28]: #MGL-PAX:*DOCUMENT-LINK-SECTIONS*%20VARIABLE "MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE"
+  [1cea]: #MGL-PAX:REFERENCE%20CLASS "MGL-PAX:REFERENCE CLASS"
+  [1f28]: http://www.lispworks.com/documentation/HyperSpec/Body/f_format.htm "FORMAT FUNCTION"
+  [2060]: #CLASS%20MGL-PAX:LOCATIVE "CLASS MGL-PAX:LOCATIVE"
+  [21f5]: #MGL-PAX:@MACROLIKE-LOCATIVES%20MGL-PAX:SECTION "Locatives for Macros"
+  [22c2]: #MGL-PAX:@LINKING-TO-SECTIONS%20MGL-PAX:SECTION "Linking to Sections"
+  [238c]: #MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR%20CONDITION "MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION"
+  [248b]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rdtabl.htm "READTABLE TYPE"
+  [2634]: #MGL-PAX:@OVERVIEW-OF-ESCAPING%20MGL-PAX:SECTION "Overview of Escaping"
+  [2645]: #MGL-PAX:@AMBIGUOUS-LOCATIVE%20MGL-PAX:SECTION "Ambiguous Unspecified Locative"
+  [26cf]: http://www.lispworks.com/documentation/HyperSpec/Body/t_t.htm "T TYPE"
+  [292a]: #MGL-PAX:@PAX-LOCATIVES%20MGL-PAX:SECTION "Locatives for PAX Constructs"
+  [2c93]: #MGL-PAX:@GENERATING-DOCUMENTATION%20MGL-PAX:SECTION "Generating Documentation"
+  [2ce2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_consta.htm "CONSTANTP FUNCTION"
+  [2d9d]: #MGL-PAX:DEFINE-RESTART%20MGL-PAX:MACRO "MGL-PAX:DEFINE-RESTART MGL-PAX:MACRO"
+  [3200]: #MGL-PAX:LOCATIVE-TYPE%20FUNCTION "MGL-PAX:LOCATIVE-TYPE FUNCTION"
+  [32f5]: #MGL-PAX:CANONICAL-REFERENCE%20GENERIC-FUNCTION "MGL-PAX:CANONICAL-REFERENCE GENERIC-FUNCTION"
+  [3386]: #MGL-PAX:@NAVIGATING-IN-EMACS%20MGL-PAX:SECTION "Navigating Sources in Emacs"
+  [378f]: #MGL-PAX:@PARSING%20MGL-PAX:SECTION "Parsing"
+  [38a0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_descri.htm "DESCRIBE FUNCTION"
+  [3ae8]: http://www.lispworks.com/documentation/HyperSpec/Body/r_contin.htm "CONTINUE RESTART"
+  [3d3c]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_rd.htm "READ FUNCTION"
+  [3da8]: #MGL-PAX:*FORMAT*%20VARIABLE "MGL-PAX:*FORMAT* VARIABLE"
+  [3de5]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm "FUNCTION TYPE"
+  [3f15]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rest.htm "REST FUNCTION"
+  [41fd]: #COMPILER-MACRO%20MGL-PAX:LOCATIVE "COMPILER-MACRO MGL-PAX:LOCATIVE"
+  [4267]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "STRING TYPE"
+  [42d7]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "DEFPACKAGE MGL-PAX:MACRO"
+  [432c]: #MGL-PAX:DOCUMENT%20FUNCTION "MGL-PAX:DOCUMENT FUNCTION"
+  [4355]: #MGL-PAX:FIND-SOURCE%20GENERIC-FUNCTION "MGL-PAX:FIND-SOURCE GENERIC-FUNCTION"
+  [440e]: #MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES*%20VARIABLE "MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES* VARIABLE"
+  [46ec]: #MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS%20GENERIC-FUNCTION "MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION"
+  [493e]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "SIMPLE-CONDITION-FORMAT-CONTROL FUNCTION"
+  [496d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_desc_1.htm "DESCRIBE-OBJECT FUNCTION"
+  [4b78]: #MGL-PAX:@EXTERNAL-LOCATIVES%20MGL-PAX:SECTION "External Locatives"
   [4bb8]: #%22mgl-pax%2Fdocument%22%20ASDF%2FSYSTEM:SYSTEM '"mgl-pax/document" ASDF/SYSTEM:SYSTEM'
-  [4c48]: #MGL-PAX:@VARIABLELIKE-LOCATIVES%20MGL-PAX:SECTION 'Locatives for Variables'
-  [4c5e]: #MGL-PAX:@FILTERING-AMBIGUOUS-REFERENCES%20MGL-PAX:SECTION 'Filtering Ambiguous References'
-  [4c96]: #MGL-PAX:@LOCAL-REFERENCES%20MGL-PAX:SECTION 'Local References'
-  [4d92]: #MGL-PAX:@LOCATIVE%20MGL-PAX:GLOSSARY-TERM 'MGL-PAX:@LOCATIVE MGL-PAX:GLOSSARY-TERM'
-  [4dd7]: #PACKAGE%20MGL-PAX:LOCATIVE 'PACKAGE MGL-PAX:LOCATIVE'
-  [5119]: #MGL-PAX:GLOSSARY-TERM%20MGL-PAX:LOCATIVE 'MGL-PAX:GLOSSARY-TERM MGL-PAX:LOCATIVE'
-  [5800]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq_sle.htm '< FUNCTION'
+  [4c48]: #MGL-PAX:@VARIABLELIKE-LOCATIVES%20MGL-PAX:SECTION "Locatives for Variables"
+  [4c5e]: #MGL-PAX:@FILTERING-AMBIGUOUS-REFERENCES%20MGL-PAX:SECTION "Filtering Ambiguous References"
+  [4c96]: #MGL-PAX:@LOCAL-REFERENCES%20MGL-PAX:SECTION "Local References"
+  [4d92]: #MGL-PAX:@LOCATIVE%20MGL-PAX:GLOSSARY-TERM "MGL-PAX:@LOCATIVE MGL-PAX:GLOSSARY-TERM"
+  [4dd7]: #PACKAGE%20MGL-PAX:LOCATIVE "PACKAGE MGL-PAX:LOCATIVE"
+  [5119]: #MGL-PAX:GLOSSARY-TERM%20MGL-PAX:LOCATIVE "MGL-PAX:GLOSSARY-TERM MGL-PAX:LOCATIVE"
+  [5800]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq_sle.htm "< FUNCTION"
   [5825]: #%22mgl-pax%2Ftranscribe%22%20ASDF%2FSYSTEM:SYSTEM '"mgl-pax/transcribe" ASDF/SYSTEM:SYSTEM'
-  [5875]: #GENERIC-FUNCTION%20MGL-PAX:LOCATIVE 'GENERIC-FUNCTION MGL-PAX:LOCATIVE'
-  [5908]: #MGL-PAX:FIND-SOURCE%20%28METHOD%20NIL%20%28T%29%29 'MGL-PAX:FIND-SOURCE (METHOD NIL (T))'
-  [5c74]: #MGL-PAX:@UNAMBIGUOUS-LOCATIVE%20MGL-PAX:SECTION 'Unambiguous Unspecified Locative'
-  [5cd7]: #MGL-PAX:INCLUDE%20MGL-PAX:LOCATIVE 'MGL-PAX:INCLUDE MGL-PAX:LOCATIVE'
-  [5fac]: #MGL-PAX:SECTION%20CLASS 'MGL-PAX:SECTION CLASS'
-  [5fb9]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pkg.htm 'PACKAGE TYPE'
-  [6121]: #MGL-PAX:@LOCATIVE-TYPES%20MGL-PAX:SECTION 'Locative Types'
-  [6300]: #MGL-PAX:@TRANSCRIPTS%20MGL-PAX:SECTION 'Transcripts'
-  [63f3]: #MGL-PAX:DEFINE-PACKAGE%20MGL-PAX:MACRO 'MGL-PAX:DEFINE-PACKAGE MGL-PAX:MACRO'
-  [660b]: #MGL-PAX:DEFINE-LOCATIVE-TYPE%20MGL-PAX:MACRO 'MGL-PAX:DEFINE-LOCATIVE-TYPE MGL-PAX:MACRO'
-  [6611]: #MGL-PAX:LOCATE-AND-DOCUMENT%20GENERIC-FUNCTION 'MGL-PAX:LOCATE-AND-DOCUMENT GENERIC-FUNCTION'
-  [672f]: #MGL-PAX:SECTION%20MGL-PAX:LOCATIVE 'MGL-PAX:SECTION MGL-PAX:LOCATIVE'
+  [5875]: #GENERIC-FUNCTION%20MGL-PAX:LOCATIVE "GENERIC-FUNCTION MGL-PAX:LOCATIVE"
+  [5908]: #MGL-PAX:FIND-SOURCE%20%28METHOD%20NIL%20%28T%29%29 "MGL-PAX:FIND-SOURCE (METHOD NIL (T))"
+  [5c74]: #MGL-PAX:@UNAMBIGUOUS-LOCATIVE%20MGL-PAX:SECTION "Unambiguous Unspecified Locative"
+  [5cd7]: #MGL-PAX:INCLUDE%20MGL-PAX:LOCATIVE "MGL-PAX:INCLUDE MGL-PAX:LOCATIVE"
+  [5fac]: #MGL-PAX:SECTION%20CLASS "MGL-PAX:SECTION CLASS"
+  [5fb9]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pkg.htm "PACKAGE TYPE"
+  [6121]: #MGL-PAX:@LOCATIVE-TYPES%20MGL-PAX:SECTION "Locative Types"
+  [6300]: #MGL-PAX:@TRANSCRIPTS%20MGL-PAX:SECTION "Transcripts"
+  [63f3]: #MGL-PAX:DEFINE-PACKAGE%20MGL-PAX:MACRO "MGL-PAX:DEFINE-PACKAGE MGL-PAX:MACRO"
+  [660b]: #MGL-PAX:DEFINE-LOCATIVE-TYPE%20MGL-PAX:MACRO "MGL-PAX:DEFINE-LOCATIVE-TYPE MGL-PAX:MACRO"
+  [6611]: #MGL-PAX:LOCATE-AND-DOCUMENT%20GENERIC-FUNCTION "MGL-PAX:LOCATE-AND-DOCUMENT GENERIC-FUNCTION"
+  [672f]: #MGL-PAX:SECTION%20MGL-PAX:LOCATIVE "MGL-PAX:SECTION MGL-PAX:LOCATIVE"
   [6786]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009_w.htm '"ISSUE:AREF-1D" MGL-PAX:CLHS'
-  [6831]: http://www.lispworks.com/documentation/HyperSpec/Body/t_method.htm 'METHOD TYPE'
-  [6887]: #MGL-PAX:LOCATE-ERROR%20CONDITION 'MGL-PAX:LOCATE-ERROR CONDITION'
-  [68f1]: http://www.lispworks.com/documentation/HyperSpec/Body/f_docume.htm 'DOCUMENTATION GENERIC-FUNCTION'
-  [69b7]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cerror.htm 'CERROR FUNCTION'
-  [69f7]: #MGL-PAX:@REFERENCE-BASED-EXTENSIONS%20MGL-PAX:SECTION 'Reference Based Extensions'
-  [6b59]: #MGL-PAX:@TRANSCRIPT-DYNENV%20MGL-PAX:SECTION 'Controlling the Dynamic Environment'
-  [6c1f]: http://www.lispworks.com/documentation/HyperSpec/Body/e_smp_cn.htm 'SIMPLE-CONDITION CONDITION'
-  [6c83]: #VARIABLE%20MGL-PAX:LOCATIVE 'VARIABLE MGL-PAX:LOCATIVE'
-  [6e18]: #MGL-PAX:@TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS%20MGL-PAX:SECTION 'Finer-grained Consistency Checks'
+  [6831]: http://www.lispworks.com/documentation/HyperSpec/Body/t_method.htm "METHOD TYPE"
+  [6887]: #MGL-PAX:LOCATE-ERROR%20CONDITION "MGL-PAX:LOCATE-ERROR CONDITION"
+  [68f1]: http://www.lispworks.com/documentation/HyperSpec/Body/f_docume.htm "DOCUMENTATION GENERIC-FUNCTION"
+  [69b7]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cerror.htm "CERROR FUNCTION"
+  [69f7]: #MGL-PAX:@REFERENCE-BASED-EXTENSIONS%20MGL-PAX:SECTION "Reference Based Extensions"
+  [6b59]: #MGL-PAX:@TRANSCRIPT-DYNENV%20MGL-PAX:SECTION "Controlling the Dynamic Environment"
+  [6c1f]: http://www.lispworks.com/documentation/HyperSpec/Body/e_smp_cn.htm "SIMPLE-CONDITION CONDITION"
+  [6c83]: #VARIABLE%20MGL-PAX:LOCATIVE "VARIABLE MGL-PAX:LOCATIVE"
+  [6e18]: #MGL-PAX:@TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS%20MGL-PAX:SECTION "Finer-grained Consistency Checks"
   [6fdb]: #%22mgl-pax%22%20ASDF%2FSYSTEM:SYSTEM '"mgl-pax" ASDF/SYSTEM:SYSTEM'
-  [718f]: #MGL-PAX:@MARKDOWN-INDENTATION%20MGL-PAX:SECTION 'Indentation'
-  [727b]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_lev.htm '*PRINT-LENGTH* VARIABLE'
-  [72b4]: #MGL-PAX:DEFSECTION%20MGL-PAX:MACRO 'MGL-PAX:DEFSECTION MGL-PAX:MACRO'
-  [72fd]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_1.htm 'DEFINE-SYMBOL-MACRO MGL-PAX:MACRO'
-  [730f]: #MGL-PAX:*DISCARD-DOCUMENTATION-P*%20VARIABLE 'MGL-PAX:*DISCARD-DOCUMENTATION-P* VARIABLE'
-  [7445]: #MGL-PAX:@INTERESTING%20MGL-PAX:GLOSSARY-TERM 'MGL-PAX:@INTERESTING MGL-PAX:GLOSSARY-TERM'
-  [7584]: #MGL-PAX:DEFINE-SYMBOL-LOCATIVE-TYPE%20MGL-PAX:MACRO 'MGL-PAX:DEFINE-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO'
-  [75ce]: #MGL-PAX:@OBJECT%20MGL-PAX:GLOSSARY-TERM 'MGL-PAX:@OBJECT MGL-PAX:GLOSSARY-TERM'
-  [7c82]: #MGL-PAX:@MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES%20MGL-PAX:SECTION 'Miscellaneous Variables'
-  [7cc3]: #MGL-PAX:@LINKING-TO-THE-HYPERSPEC%20MGL-PAX:SECTION 'Linking to the Hyperspec'
-  [7da5]: #MGL-PAX:LOCATE-ERROR-MESSAGE%20%28MGL-PAX:READER%20MGL-PAX:LOCATE-ERROR%29 'MGL-PAX:LOCATE-ERROR-MESSAGE (MGL-PAX:READER MGL-PAX:LOCATE-ERROR)'
-  [7e58]: http://www.lispworks.com/documentation/HyperSpec/Body/t_class.htm 'CLASS CLASS'
-  [7f9f]: http://www.lispworks.com/documentation/HyperSpec/Body/t_symbol.htm 'SYMBOL TYPE'
-  [804d]: http://www.lispworks.com/documentation/HyperSpec/Body/m_declai.htm 'DECLAIM MGL-PAX:MACRO'
-  [80cd]: #MGL-PAX:@REFERENCE%20MGL-PAX:GLOSSARY-TERM 'MGL-PAX:@REFERENCE MGL-PAX:GLOSSARY-TERM'
-  [82e0]: #METHOD-COMBINATION%20MGL-PAX:LOCATIVE 'METHOD-COMBINATION MGL-PAX:LOCATIVE'
-  [8423]: #MGL-PAX:@TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING%20MGL-PAX:SECTION 'Utilities for Consistency Checking'
-  [8492]: #MGL-PAX:TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR%20CONDITION 'MGL-PAX:TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR CONDITION'
-  [8517]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eql.htm 'EQL FUNCTION'
-  [8710]: #MGL-PAX:ARGUMENT%20MGL-PAX:LOCATIVE 'MGL-PAX:ARGUMENT MGL-PAX:LOCATIVE'
-  [875e]: #MGL-PAX:*DOCUMENT-LINK-TO-HYPERSPEC*%20VARIABLE 'MGL-PAX:*DOCUMENT-LINK-TO-HYPERSPEC* VARIABLE'
-  [889e]: http://www.lispworks.com/documentation/HyperSpec/Body/v_sl_sls.htm '/// VARIABLE'
-  [88a7]: #MGL-PAX:SECTION-READTABLE%20%28MGL-PAX:READER%20MGL-PAX:SECTION%29 'MGL-PAX:SECTION-READTABLE (MGL-PAX:READER MGL-PAX:SECTION)'
-  [88cf]: #MGL-PAX:@NAME%20MGL-PAX:GLOSSARY-TERM 'MGL-PAX:@NAME MGL-PAX:GLOSSARY-TERM'
-  [8996]: #MGL-PAX:@SPECIFIED-LOCATIVE%20MGL-PAX:SECTION 'Specified Locative'
-  [89d0]: http://www.lispworks.com/documentation/HyperSpec/Body/m_deftp.htm 'DEFTYPE MGL-PAX:MACRO'
-  [8a58]: #MGL-PAX:@SECTIONS%20MGL-PAX:SECTION 'Sections'
-  [8beb]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_m.htm 'FIND-METHOD GENERIC-FUNCTION'
-  [8c16]: #MGL-PAX:@PREVENTING-AUTOLINKING%20MGL-PAX:SECTION 'Preventing Autolinking'
-  [8c3e]: #MGL-PAX:@TUTORIAL%20MGL-PAX:SECTION 'Tutorial'
-  [8c40]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defgen.htm 'DEFGENERIC MGL-PAX:MACRO'
-  [8c7d]: #MGL-PAX:REFERENCE-OBJECT%20%28MGL-PAX:READER%20MGL-PAX:REFERENCE%29 'MGL-PAX:REFERENCE-OBJECT (MGL-PAX:READER MGL-PAX:REFERENCE)'
-  [8c95]: #MGL-PAX:COLLECT-REACHABLE-OBJECTS%20GENERIC-FUNCTION 'MGL-PAX:COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION'
-  [8c99]: http://www.lispworks.com/documentation/HyperSpec/Body/f_car_c.htm 'CAR FUNCTION'
-  [8d65]: http://www.lispworks.com/documentation/HyperSpec/Body/t_generi.htm 'GENERIC-FUNCTION CLASS'
-  [8ece]: #MGL-PAX:DEFINE-GLOSSARY-TERM%20MGL-PAX:MACRO 'MGL-PAX:DEFINE-GLOSSARY-TERM MGL-PAX:MACRO'
-  [8fb6]: #MGL-PAX:*DOCUMENT-MARK-UP-SIGNATURES*%20VARIABLE 'MGL-PAX:*DOCUMENT-MARK-UP-SIGNATURES* VARIABLE'
-  [91fd]: http://www.lispworks.com/documentation/HyperSpec/Body/f_stgeq_.htm 'STRING= FUNCTION'
-  [926d]: #TYPE%20MGL-PAX:LOCATIVE 'TYPE MGL-PAX:LOCATIVE'
-  [9450]: #MGL-PAX:SECTION-ENTRIES%20%28MGL-PAX:READER%20MGL-PAX:SECTION%29 'MGL-PAX:SECTION-ENTRIES (MGL-PAX:READER MGL-PAX:SECTION)'
-  [94c7]: #MGL-PAX:@BASICS%20MGL-PAX:SECTION 'Basics'
-  [964b]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_3.htm 'SYMBOL-PACKAGE FUNCTION'
-  [9674]: http://www.lispworks.com/documentation/HyperSpec/Body/f_procla.htm 'PROCLAIM FUNCTION'
-  [96d0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_equal.htm 'EQUAL FUNCTION'
-  [9717]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defun.htm 'DEFUN MGL-PAX:MACRO'
-  [9dbc]: #MGL-PAX:@TRANSCRIPT-API%20MGL-PAX:SECTION 'Transcript API'
-  [a17d]: #MGL-PAX:@MATHJAX%20MGL-PAX:SECTION 'MathJax'
-  [a249]: #MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR%20CONDITION 'MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION'
-  [a328]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rdtabl.htm 'READTABLE-CASE FUNCTION'
-  [a5b1]: #MGL-PAX:SECTION-PACKAGE%20%28MGL-PAX:READER%20MGL-PAX:SECTION%29 'MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION)'
-  [a5de]: http://www.lispworks.com/documentation/HyperSpec/Body/m_define.htm 'DEFINE-COMPILER-MACRO MGL-PAX:MACRO'
-  [a5ee]: #MGL-PAX:*DOCUMENT-DOWNCASE-UPPERCASE-CODE*%20VARIABLE 'MGL-PAX:*DOCUMENT-DOWNCASE-UPPERCASE-CODE* VARIABLE'
-  [a668]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm 'SIMPLE-CONDITION-FORMAT-ARGUMENTS FUNCTION'
-  [a85e]: #MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE%20MGL-PAX:MACRO 'MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO'
-  [a916]: http://www.lispworks.com/documentation/HyperSpec/Body/v_rdtabl.htm '*READTABLE* VARIABLE'
-  [ad91]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rst.htm 'RESTART TYPE'
-  [af96]: #DESCRIBE-OBJECT%20%28METHOD%20NIL%20%28MGL-PAX:SECTION%20T%29%29 'DESCRIBE-OBJECT (METHOD NIL (MGL-PAX:SECTION T))'
-  [b1ce]: #MGL-PAX:FIND-SOURCE%20%28METHOD%20NIL%20%28MGL-PAX:REFERENCE%29%29 'MGL-PAX:FIND-SOURCE (METHOD NIL (MGL-PAX:REFERENCE))'
-  [b3cc]: #MGL-PAX:@EXPLICIT-AND-AUTOLINKING%20MGL-PAX:SECTION 'Explicit and Autolinking'
-  [b89a]: #MGL-PAX:@CODIFIABLE%20MGL-PAX:GLOSSARY-TERM 'MGL-PAX:@CODIFIABLE MGL-PAX:GLOSSARY-TERM'
-  [ba62]: #FUNCTION%20MGL-PAX:LOCATIVE 'FUNCTION MGL-PAX:LOCATIVE'
-  [ba74]: #MGL-PAX:@LINKS%20MGL-PAX:SECTION 'Links'
-  [bacc]: #MGL-PAX:DOCUMENT-OBJECT%20GENERIC-FUNCTION 'MGL-PAX:DOCUMENT-OBJECT GENERIC-FUNCTION'
-  [bb77]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq_sle.htm '<= FUNCTION'
-  [bbf2]: #MGL-PAX:@NEW-OBJECT-TYPES%20MGL-PAX:SECTION 'Adding New Object Types'
-  [bc83]: #MGL-PAX:@MARKDOWN-SYNTAX-HIGHLIGHTING%20MGL-PAX:SECTION 'Syntax Highlighting'
-  [bcd2]: http://www.lispworks.com/documentation/HyperSpec/Body/d_optimi.htm 'DEBUG DECLARATION'
-  [bdf2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_boundp.htm 'BOUNDP FUNCTION'
-  [be47]: #MGL-PAX:@TYPELIKE-LOCATIVES%20MGL-PAX:SECTION 'Locatives for Types and Declarations'
-  [bf07]: http://www.lispworks.com/documentation/HyperSpec/Body/f_export.htm 'EXPORT FUNCTION'
-  [c097]: #ASDF%2FSYSTEM:SYSTEM%20MGL-PAX:LOCATIVE 'ASDF/SYSTEM:SYSTEM MGL-PAX:LOCATIVE'
-  [c1eb]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eval.htm 'EVAL FUNCTION'
-  [c2d3]: #MGL-PAX:@MARKDOWN-SUPPORT%20MGL-PAX:SECTION 'Markdown Support'
-  [c35d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_intern.htm 'INTERN FUNCTION'
-  [c4ce]: #MGL-PAX:@EXTENSION-API%20MGL-PAX:SECTION 'Extension API'
-  [c819]: #MGL-PAX:CONSTANT%20MGL-PAX:LOCATIVE 'MGL-PAX:CONSTANT MGL-PAX:LOCATIVE'
-  [c930]: #MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P%20GENERIC-FUNCTION 'MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION'
-  [cc04]: #MGL-PAX:READER%20MGL-PAX:LOCATIVE 'MGL-PAX:READER MGL-PAX:LOCATIVE'
-  [cd9e]: #MGL-PAX:RESOLVE%20FUNCTION 'MGL-PAX:RESOLVE FUNCTION'
-  [ce02]: http://www.lispworks.com/documentation/HyperSpec/Body/s_declar.htm 'DECLARE MGL-PAX:MACRO'
-  [cfbb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_pr_unr.htm 'PRINT-UNREADABLE-OBJECT MGL-PAX:MACRO'
-  [d1ca]: #MGL-PAX:@DOCUMENT-IMPLEMENTATION-NOTES%20MGL-PAX:SECTION 'Document Generation Implementation Notes'
-  [d2c1]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm '*PACKAGE* VARIABLE'
-  [d684]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defcon.htm 'DEFCONSTANT MGL-PAX:MACRO'
-  [d6a4]: #MGL-PAX:LOCATE-AND-FIND-SOURCE%20GENERIC-FUNCTION 'MGL-PAX:LOCATE-AND-FIND-SOURCE GENERIC-FUNCTION'
+  [718f]: #MGL-PAX:@MARKDOWN-INDENTATION%20MGL-PAX:SECTION "Indentation"
+  [727b]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_lev.htm "*PRINT-LENGTH* VARIABLE"
+  [72b4]: #MGL-PAX:DEFSECTION%20MGL-PAX:MACRO "MGL-PAX:DEFSECTION MGL-PAX:MACRO"
+  [72fd]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_1.htm "DEFINE-SYMBOL-MACRO MGL-PAX:MACRO"
+  [730f]: #MGL-PAX:*DISCARD-DOCUMENTATION-P*%20VARIABLE "MGL-PAX:*DISCARD-DOCUMENTATION-P* VARIABLE"
+  [7445]: #MGL-PAX:@INTERESTING%20MGL-PAX:GLOSSARY-TERM "MGL-PAX:@INTERESTING MGL-PAX:GLOSSARY-TERM"
+  [7584]: #MGL-PAX:DEFINE-SYMBOL-LOCATIVE-TYPE%20MGL-PAX:MACRO "MGL-PAX:DEFINE-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO"
+  [75ce]: #MGL-PAX:@OBJECT%20MGL-PAX:GLOSSARY-TERM "MGL-PAX:@OBJECT MGL-PAX:GLOSSARY-TERM"
+  [7c82]: #MGL-PAX:@MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES%20MGL-PAX:SECTION "Miscellaneous Variables"
+  [7cc3]: #MGL-PAX:@LINKING-TO-THE-HYPERSPEC%20MGL-PAX:SECTION "Linking to the Hyperspec"
+  [7da5]: #MGL-PAX:LOCATE-ERROR-MESSAGE%20%28MGL-PAX:READER%20MGL-PAX:LOCATE-ERROR%29 "MGL-PAX:LOCATE-ERROR-MESSAGE (MGL-PAX:READER MGL-PAX:LOCATE-ERROR)"
+  [7e58]: http://www.lispworks.com/documentation/HyperSpec/Body/t_class.htm "CLASS CLASS"
+  [7f9f]: http://www.lispworks.com/documentation/HyperSpec/Body/t_symbol.htm "SYMBOL TYPE"
+  [804d]: http://www.lispworks.com/documentation/HyperSpec/Body/m_declai.htm "DECLAIM MGL-PAX:MACRO"
+  [80cd]: #MGL-PAX:@REFERENCE%20MGL-PAX:GLOSSARY-TERM "MGL-PAX:@REFERENCE MGL-PAX:GLOSSARY-TERM"
+  [82e0]: #METHOD-COMBINATION%20MGL-PAX:LOCATIVE "METHOD-COMBINATION MGL-PAX:LOCATIVE"
+  [8423]: #MGL-PAX:@TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING%20MGL-PAX:SECTION "Utilities for Consistency Checking"
+  [8492]: #MGL-PAX:TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR%20CONDITION "MGL-PAX:TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR CONDITION"
+  [8517]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eql.htm "EQL FUNCTION"
+  [8710]: #MGL-PAX:ARGUMENT%20MGL-PAX:LOCATIVE "MGL-PAX:ARGUMENT MGL-PAX:LOCATIVE"
+  [875e]: #MGL-PAX:*DOCUMENT-LINK-TO-HYPERSPEC*%20VARIABLE "MGL-PAX:*DOCUMENT-LINK-TO-HYPERSPEC* VARIABLE"
+  [889e]: http://www.lispworks.com/documentation/HyperSpec/Body/v_sl_sls.htm "/// VARIABLE"
+  [88a7]: #MGL-PAX:SECTION-READTABLE%20%28MGL-PAX:READER%20MGL-PAX:SECTION%29 "MGL-PAX:SECTION-READTABLE (MGL-PAX:READER MGL-PAX:SECTION)"
+  [88cf]: #MGL-PAX:@NAME%20MGL-PAX:GLOSSARY-TERM "MGL-PAX:@NAME MGL-PAX:GLOSSARY-TERM"
+  [8996]: #MGL-PAX:@SPECIFIED-LOCATIVE%20MGL-PAX:SECTION "Specified Locative"
+  [89d0]: http://www.lispworks.com/documentation/HyperSpec/Body/m_deftp.htm "DEFTYPE MGL-PAX:MACRO"
+  [8a58]: #MGL-PAX:@SECTIONS%20MGL-PAX:SECTION "Sections"
+  [8beb]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_m.htm "FIND-METHOD GENERIC-FUNCTION"
+  [8c16]: #MGL-PAX:@PREVENTING-AUTOLINKING%20MGL-PAX:SECTION "Preventing Autolinking"
+  [8c3e]: #MGL-PAX:@TUTORIAL%20MGL-PAX:SECTION "Tutorial"
+  [8c40]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defgen.htm "DEFGENERIC MGL-PAX:MACRO"
+  [8c7d]: #MGL-PAX:REFERENCE-OBJECT%20%28MGL-PAX:READER%20MGL-PAX:REFERENCE%29 "MGL-PAX:REFERENCE-OBJECT (MGL-PAX:READER MGL-PAX:REFERENCE)"
+  [8c95]: #MGL-PAX:COLLECT-REACHABLE-OBJECTS%20GENERIC-FUNCTION "MGL-PAX:COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION"
+  [8c99]: http://www.lispworks.com/documentation/HyperSpec/Body/f_car_c.htm "CAR FUNCTION"
+  [8d65]: http://www.lispworks.com/documentation/HyperSpec/Body/t_generi.htm "GENERIC-FUNCTION CLASS"
+  [8ece]: #MGL-PAX:DEFINE-GLOSSARY-TERM%20MGL-PAX:MACRO "MGL-PAX:DEFINE-GLOSSARY-TERM MGL-PAX:MACRO"
+  [8fb6]: #MGL-PAX:*DOCUMENT-MARK-UP-SIGNATURES*%20VARIABLE "MGL-PAX:*DOCUMENT-MARK-UP-SIGNATURES* VARIABLE"
+  [91fd]: http://www.lispworks.com/documentation/HyperSpec/Body/f_stgeq_.htm "STRING= FUNCTION"
+  [926d]: #TYPE%20MGL-PAX:LOCATIVE "TYPE MGL-PAX:LOCATIVE"
+  [9450]: #MGL-PAX:SECTION-ENTRIES%20%28MGL-PAX:READER%20MGL-PAX:SECTION%29 "MGL-PAX:SECTION-ENTRIES (MGL-PAX:READER MGL-PAX:SECTION)"
+  [94c7]: #MGL-PAX:@BASICS%20MGL-PAX:SECTION "Basics"
+  [964b]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_3.htm "SYMBOL-PACKAGE FUNCTION"
+  [9674]: http://www.lispworks.com/documentation/HyperSpec/Body/f_procla.htm "PROCLAIM FUNCTION"
+  [96d0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_equal.htm "EQUAL FUNCTION"
+  [9717]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defun.htm "DEFUN MGL-PAX:MACRO"
+  [9dbc]: #MGL-PAX:@TRANSCRIPT-API%20MGL-PAX:SECTION "Transcript API"
+  [a17d]: #MGL-PAX:@MATHJAX%20MGL-PAX:SECTION "MathJax"
+  [a249]: #MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR%20CONDITION "MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION"
+  [a328]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rdtabl.htm "READTABLE-CASE FUNCTION"
+  [a5b1]: #MGL-PAX:SECTION-PACKAGE%20%28MGL-PAX:READER%20MGL-PAX:SECTION%29 "MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION)"
+  [a5de]: http://www.lispworks.com/documentation/HyperSpec/Body/m_define.htm "DEFINE-COMPILER-MACRO MGL-PAX:MACRO"
+  [a5ee]: #MGL-PAX:*DOCUMENT-DOWNCASE-UPPERCASE-CODE*%20VARIABLE "MGL-PAX:*DOCUMENT-DOWNCASE-UPPERCASE-CODE* VARIABLE"
+  [a668]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "SIMPLE-CONDITION-FORMAT-ARGUMENTS FUNCTION"
+  [a85e]: #MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE%20MGL-PAX:MACRO "MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO"
+  [a916]: http://www.lispworks.com/documentation/HyperSpec/Body/v_rdtabl.htm "*READTABLE* VARIABLE"
+  [ad91]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rst.htm "RESTART TYPE"
+  [b1ce]: #MGL-PAX:FIND-SOURCE%20%28METHOD%20NIL%20%28MGL-PAX:REFERENCE%29%29 "MGL-PAX:FIND-SOURCE (METHOD NIL (MGL-PAX:REFERENCE))"
+  [b3cc]: #MGL-PAX:@EXPLICIT-AND-AUTOLINKING%20MGL-PAX:SECTION "Explicit and Autolinking"
+  [b89a]: #MGL-PAX:@CODIFIABLE%20MGL-PAX:GLOSSARY-TERM "MGL-PAX:@CODIFIABLE MGL-PAX:GLOSSARY-TERM"
+  [ba62]: #FUNCTION%20MGL-PAX:LOCATIVE "FUNCTION MGL-PAX:LOCATIVE"
+  [ba74]: #MGL-PAX:@LINKS%20MGL-PAX:SECTION "Links"
+  [bacc]: #MGL-PAX:DOCUMENT-OBJECT%20GENERIC-FUNCTION "MGL-PAX:DOCUMENT-OBJECT GENERIC-FUNCTION"
+  [bb77]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq_sle.htm "<= FUNCTION"
+  [bbf2]: #MGL-PAX:@NEW-OBJECT-TYPES%20MGL-PAX:SECTION "Adding New Object Types"
+  [bc83]: #MGL-PAX:@MARKDOWN-SYNTAX-HIGHLIGHTING%20MGL-PAX:SECTION "Syntax Highlighting"
+  [bcd2]: http://www.lispworks.com/documentation/HyperSpec/Body/d_optimi.htm "DEBUG DECLARATION"
+  [bdf2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_boundp.htm "BOUNDP FUNCTION"
+  [be47]: #MGL-PAX:@TYPELIKE-LOCATIVES%20MGL-PAX:SECTION "Locatives for Types and Declarations"
+  [bf07]: http://www.lispworks.com/documentation/HyperSpec/Body/f_export.htm "EXPORT FUNCTION"
+  [c097]: #ASDF%2FSYSTEM:SYSTEM%20MGL-PAX:LOCATIVE "ASDF/SYSTEM:SYSTEM MGL-PAX:LOCATIVE"
+  [c1eb]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eval.htm "EVAL FUNCTION"
+  [c2d3]: #MGL-PAX:@MARKDOWN-SUPPORT%20MGL-PAX:SECTION "Markdown Support"
+  [c35d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_intern.htm "INTERN FUNCTION"
+  [c4ce]: #MGL-PAX:@EXTENSION-API%20MGL-PAX:SECTION "Extension API"
+  [c819]: #MGL-PAX:CONSTANT%20MGL-PAX:LOCATIVE "MGL-PAX:CONSTANT MGL-PAX:LOCATIVE"
+  [c930]: #MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P%20GENERIC-FUNCTION "MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION"
+  [cc04]: #MGL-PAX:READER%20MGL-PAX:LOCATIVE "MGL-PAX:READER MGL-PAX:LOCATIVE"
+  [cd9e]: #MGL-PAX:RESOLVE%20FUNCTION "MGL-PAX:RESOLVE FUNCTION"
+  [ce02]: http://www.lispworks.com/documentation/HyperSpec/Body/s_declar.htm "DECLARE MGL-PAX:MACRO"
+  [cfbb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_pr_unr.htm "PRINT-UNREADABLE-OBJECT MGL-PAX:MACRO"
+  [d1ca]: #MGL-PAX:@DOCUMENT-IMPLEMENTATION-NOTES%20MGL-PAX:SECTION "Document Generation Implementation Notes"
+  [d2c1]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm "*PACKAGE* VARIABLE"
+  [d684]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defcon.htm "DEFCONSTANT MGL-PAX:MACRO"
+  [d6a4]: #MGL-PAX:LOCATE-AND-FIND-SOURCE%20GENERIC-FUNCTION "MGL-PAX:LOCATE-AND-FIND-SOURCE GENERIC-FUNCTION"
   [d761]: #%22mgl-pax%2Ffull%22%20ASDF%2FSYSTEM:SYSTEM '"mgl-pax/full" ASDF/SYSTEM:SYSTEM'
-  [d7b0]: #MGL-PAX:@WORD%20MGL-PAX:GLOSSARY-TERM 'MGL-PAX:@WORD MGL-PAX:GLOSSARY-TERM'
-  [d9ee]: #MGL-PAX:*DOCUMENT-LINK-CODE*%20VARIABLE 'MGL-PAX:*DOCUMENT-LINK-CODE* VARIABLE'
-  [dc76]: http://www.lispworks.com/documentation/HyperSpec/Body/e_cnd.htm 'CONDITION CONDITION'
-  [dfe3]: #MGL-PAX:*PAX-WORLD-DIR*%20VARIABLE 'MGL-PAX:*PAX-WORLD-DIR* VARIABLE'
-  [dff6]: #MGL-PAX:@GITHUB-WORKFLOW%20MGL-PAX:SECTION 'Github Workflow'
-  [e077]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_s.htm 'FIND-SYMBOL FUNCTION'
-  [e216]: #MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS*%20VARIABLE 'MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* VARIABLE'
-  [e248]: #MGL-PAX:@FUNCTIONLIKE-LOCATIVES%20MGL-PAX:SECTION 'Locatives for Functions'
+  [d7b0]: #MGL-PAX:@WORD%20MGL-PAX:GLOSSARY-TERM "MGL-PAX:@WORD MGL-PAX:GLOSSARY-TERM"
+  [d9ee]: #MGL-PAX:*DOCUMENT-LINK-CODE*%20VARIABLE "MGL-PAX:*DOCUMENT-LINK-CODE* VARIABLE"
+  [dc76]: http://www.lispworks.com/documentation/HyperSpec/Body/e_cnd.htm "CONDITION CONDITION"
+  [dfe3]: #MGL-PAX:*PAX-WORLD-DIR*%20VARIABLE "MGL-PAX:*PAX-WORLD-DIR* VARIABLE"
+  [dff6]: #MGL-PAX:@GITHUB-WORKFLOW%20MGL-PAX:SECTION "Github Workflow"
+  [e077]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_s.htm "FIND-SYMBOL FUNCTION"
+  [e216]: #MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS*%20VARIABLE "MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* VARIABLE"
+  [e248]: #MGL-PAX:@FUNCTIONLIKE-LOCATIVES%20MGL-PAX:SECTION "Locatives for Functions"
   [e256]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009.htm '"SUMMARY:AREF-1D" MGL-PAX:CLHS'
-  [e2e8]: #MGL-PAX:@SUPPRESSED-LINKS%20MGL-PAX:SECTION 'Suppressed Links'
-  [e391]: #MGL-PAX:DISLOCATED%20MGL-PAX:LOCATIVE 'MGL-PAX:DISLOCATED MGL-PAX:LOCATIVE'
-  [e4b0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_ensu_1.htm 'ENSURE-DIRECTORIES-EXIST FUNCTION'
-  [e51f]: #MGL-PAX:EXPORTABLE-REFERENCE-P%20GENERIC-FUNCTION 'MGL-PAX:EXPORTABLE-REFERENCE-P GENERIC-FUNCTION'
-  [e548]: #MGL-PAX:WRITER%20MGL-PAX:LOCATIVE 'MGL-PAX:WRITER MGL-PAX:LOCATIVE'
-  [eafc]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pr_obj.htm 'PRINT-OBJECT GENERIC-FUNCTION'
-  [ebd3]: #MGL-PAX:*TRANSCRIBE-SYNTAXES*%20VARIABLE 'MGL-PAX:*TRANSCRIBE-SYNTAXES* VARIABLE'
-  [ed5f]: #MGL-PAX:CLHS%20MGL-PAX:LOCATIVE 'MGL-PAX:CLHS MGL-PAX:LOCATIVE'
-  [ee51]: #MGL-PAX:UPDATE-PAX-WORLD%20FUNCTION 'MGL-PAX:UPDATE-PAX-WORLD FUNCTION'
-  [ee94]: #MGL-PAX:LOCATE%20FUNCTION 'MGL-PAX:LOCATE FUNCTION'
-  [f12d]: #MGL-PAX:*DOCUMENT-MAX-NUMBERING-LEVEL*%20VARIABLE 'MGL-PAX:*DOCUMENT-MAX-NUMBERING-LEVEL* VARIABLE'
+  [e2e8]: #MGL-PAX:@SUPPRESSED-LINKS%20MGL-PAX:SECTION "Suppressed Links"
+  [e391]: #MGL-PAX:DISLOCATED%20MGL-PAX:LOCATIVE "MGL-PAX:DISLOCATED MGL-PAX:LOCATIVE"
+  [e4b0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_ensu_1.htm "ENSURE-DIRECTORIES-EXIST FUNCTION"
+  [e51f]: #MGL-PAX:EXPORTABLE-REFERENCE-P%20GENERIC-FUNCTION "MGL-PAX:EXPORTABLE-REFERENCE-P GENERIC-FUNCTION"
+  [e548]: #MGL-PAX:WRITER%20MGL-PAX:LOCATIVE "MGL-PAX:WRITER MGL-PAX:LOCATIVE"
+  [eafc]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pr_obj.htm "PRINT-OBJECT GENERIC-FUNCTION"
+  [ebd3]: #MGL-PAX:*TRANSCRIBE-SYNTAXES*%20VARIABLE "MGL-PAX:*TRANSCRIBE-SYNTAXES* VARIABLE"
+  [ed5f]: #MGL-PAX:CLHS%20MGL-PAX:LOCATIVE "MGL-PAX:CLHS MGL-PAX:LOCATIVE"
+  [ee51]: #MGL-PAX:UPDATE-PAX-WORLD%20FUNCTION "MGL-PAX:UPDATE-PAX-WORLD FUNCTION"
+  [ee94]: #MGL-PAX:LOCATE%20FUNCTION "MGL-PAX:LOCATE FUNCTION"
+  [f12d]: #MGL-PAX:*DOCUMENT-MAX-NUMBERING-LEVEL*%20VARIABLE "MGL-PAX:*DOCUMENT-MAX-NUMBERING-LEVEL* VARIABLE"
   [f155]: #%22mgl-pax%2Fnavigate%22%20ASDF%2FSYSTEM:SYSTEM '"mgl-pax/navigate" ASDF/SYSTEM:SYSTEM'
-  [f1ab]: #MGL-PAX:@CODIFICATION%20MGL-PAX:SECTION 'Codification'
-  [f1f0]: #MGL-PAX:TRANSCRIBE%20FUNCTION 'MGL-PAX:TRANSCRIBE FUNCTION'
-  [f25f]: #MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE*%20VARIABLE 'MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE* VARIABLE'
-  [f389]: #MGL-PAX:@LOCATIVES-AND-REFERENCES-API%20MGL-PAX:SECTION 'Locatives and References API'
-  [f3cc]: #MGL-PAX:MACRO%20MGL-PAX:LOCATIVE 'MGL-PAX:MACRO MGL-PAX:LOCATIVE'
-  [f47d]: #MGL-PAX:@TRANSCRIPT-CONISTENCY-CHECKING%20MGL-PAX:SECTION 'Transcript Consistency Checking'
-  [f4de]: http://www.lispworks.com/documentation/HyperSpec/Body/f_specia.htm 'SPECIAL-OPERATOR-P FUNCTION'
-  [f4fd]: #MGL-PAX:REGISTER-DOC-IN-PAX-WORLD%20FUNCTION 'MGL-PAX:REGISTER-DOC-IN-PAX-WORLD FUNCTION'
-  [f585]: #MGL-PAX:*DOCUMENT-HYPERSPEC-ROOT*%20VARIABLE 'MGL-PAX:*DOCUMENT-HYPERSPEC-ROOT* VARIABLE'
-  [f5bd]: #MGL-PAX:@TRANSCRIBING-WITH-EMACS%20MGL-PAX:SECTION 'Transcribing with Emacs'
-  [f74b]: #MGL-PAX:@BACKGROUND%20MGL-PAX:SECTION 'Background'
+  [f1ab]: #MGL-PAX:@CODIFICATION%20MGL-PAX:SECTION "Codification"
+  [f1f0]: #MGL-PAX:TRANSCRIBE%20FUNCTION "MGL-PAX:TRANSCRIBE FUNCTION"
+  [f25f]: #MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE*%20VARIABLE "MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE* VARIABLE"
+  [f389]: #MGL-PAX:@LOCATIVES-AND-REFERENCES-API%20MGL-PAX:SECTION "Locatives and References API"
+  [f3cc]: #MGL-PAX:MACRO%20MGL-PAX:LOCATIVE "MGL-PAX:MACRO MGL-PAX:LOCATIVE"
+  [f47d]: #MGL-PAX:@TRANSCRIPT-CONISTENCY-CHECKING%20MGL-PAX:SECTION "Transcript Consistency Checking"
+  [f4de]: http://www.lispworks.com/documentation/HyperSpec/Body/f_specia.htm "SPECIAL-OPERATOR-P FUNCTION"
+  [f4fd]: #MGL-PAX:REGISTER-DOC-IN-PAX-WORLD%20FUNCTION "MGL-PAX:REGISTER-DOC-IN-PAX-WORLD FUNCTION"
+  [f585]: #MGL-PAX:*DOCUMENT-HYPERSPEC-ROOT*%20VARIABLE "MGL-PAX:*DOCUMENT-HYPERSPEC-ROOT* VARIABLE"
+  [f5bd]: #MGL-PAX:@TRANSCRIBING-WITH-EMACS%20MGL-PAX:SECTION "Transcribing with Emacs"
+  [f74b]: #MGL-PAX:@BACKGROUND%20MGL-PAX:SECTION "Background"
   [f945]: http://www.lispworks.com/documentation/HyperSpec/Body/03_d.htm '"3.4" MGL-PAX:CLHS'
-  [f960]: #MGL-PAX:MAKE-GITHUB-SOURCE-URI-FN%20FUNCTION 'MGL-PAX:MAKE-GITHUB-SOURCE-URI-FN FUNCTION'
-  [f9d2]: #MGL-PAX:@PACKAGELIKE-LOCATIVES%20MGL-PAX:SECTION 'Locatives for Packages and Readtables'
-  [fc18]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defmac.htm 'DEFMACRO MGL-PAX:MACRO'
-  [fc7b]: http://www.lispworks.com/documentation/HyperSpec/Body/t_meth_1.htm 'METHOD-COMBINATION CLASS'
-  [fd7c]: #MGL-PAX:@LOCATIVES-AND-REFERENCES%20MGL-PAX:SECTION 'Locatives and References'
-  [fdd1]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm 'PRINT FUNCTION'
-  [fe2b]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_4.htm 'DEFINE-METHOD-COMBINATION MGL-PAX:MACRO'
+  [f960]: #MGL-PAX:MAKE-GITHUB-SOURCE-URI-FN%20FUNCTION "MGL-PAX:MAKE-GITHUB-SOURCE-URI-FN FUNCTION"
+  [f9d2]: #MGL-PAX:@PACKAGELIKE-LOCATIVES%20MGL-PAX:SECTION "Locatives for Packages and Readtables"
+  [fc18]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defmac.htm "DEFMACRO MGL-PAX:MACRO"
+  [fc7b]: http://www.lispworks.com/documentation/HyperSpec/Body/t_meth_1.htm "METHOD-COMBINATION CLASS"
+  [fd7c]: #MGL-PAX:@LOCATIVES-AND-REFERENCES%20MGL-PAX:SECTION "Locatives and References"
+  [fdd1]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRINT FUNCTION"
+  [fe2b]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_4.htm "DEFINE-METHOD-COMBINATION MGL-PAX:MACRO"
 
 * * *
 ###### \[generated by [MGL-PAX](https://github.com/melisgl/mgl-pax)\]
