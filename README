@@ -395,6 +395,88 @@ list (see DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
     *locative arguments*. See the METHOD locative or the LOCATIVE
     locative for examples of locative types with arguments.
 
+#### Locatives and References API
+
+`(MAKE-REFERENCE 'FOO 'VARIABLE)` constructs a REFERENCE that
+captures the path to take from an object (the symbol FOO) to an
+entity of interest (for example, the documentation of the variable).
+The path is called the locative. A locative can be applied to an
+object like this:
+
+```
+(locate 'foo 'variable)
+```
+
+which will return the same reference as `(MAKE-REFERENCE 'FOO
+'VARIABLE)`. Operations need to know how to deal with references,
+which we will see in the @EXTENSION-API.
+
+Naturally, `(LOCATE 'FOO 'FUNCTION)` will simply return `#'FOO`, no
+need to muck with references when there is a perfectly good object.
+
+- [function] LOCATE OBJECT LOCATIVE &KEY (ERRORP T)
+
+    Follow LOCATIVE from OBJECT and return the object it leads to or a
+    REFERENCE if there is no first class object corresponding to the
+    location. Depending on ERRORP, a LOCATE-ERROR condition is signaled
+    or NIL is returned if the lookup fails.
+    
+    ```
+    (locate 'locate 'function)
+    ==> #<FUNCTION LOCATE>
+    
+    (locate 'no-such-function 'function)
+    .. debugger invoked on LOCATE-ERROR:
+    ..   Could not locate NO-SUCH-FUNCTION FUNCTION.
+    ..   NO-SUCH-FUNCTION does not name a function.
+    
+    (locate 'locate-object 'method)
+    .. debugger invoked on LOCATE-ERROR:
+    ..   Could not locate LOCATE-OBJECT METHOD.
+    ..   The syntax of the METHOD locative is (METHOD <METHOD-QUALIFIERS> <METHOD-SPECIALIZERS>).
+    ```
+
+
+- [condition] LOCATE-ERROR ERROR
+
+    Signaled by LOCATE when the lookup fails and ERRORP
+    is true.
+
+- [reader] LOCATE-ERROR-MESSAGE LOCATE-ERROR (:MESSAGE)
+
+- [reader] LOCATE-ERROR-OBJECT LOCATE-ERROR (:OBJECT)
+
+- [reader] LOCATE-ERROR-LOCATIVE LOCATE-ERROR (:LOCATIVE)
+
+- [function] RESOLVE REFERENCE &KEY (ERRORP T)
+
+    A convenience function to LOCATE REFERENCE's object with its
+    locative.
+
+- [class] REFERENCE
+
+    A REFERENCE represents a path (REFERENCE-LOCATIVE)
+    to take from an object (REFERENCE-OBJECT).
+
+- [reader] REFERENCE-OBJECT REFERENCE (:OBJECT)
+
+- [reader] REFERENCE-LOCATIVE REFERENCE (:LOCATIVE)
+
+- [function] MAKE-REFERENCE OBJECT LOCATIVE
+
+- [function] LOCATIVE-TYPE LOCATIVE
+
+    The first element of LOCATIVE if it's a list. If it's a symbol then
+    it's that symbol itself. Typically, methods of generic functions
+    working with locatives take locative type and locative args as
+    separate arguments to allow methods have eql specializers on the
+    type symbol.
+
+- [function] LOCATIVE-ARGS LOCATIVE
+
+    The REST of LOCATIVE if it's a list. If it's a symbol then
+    it's ().
+
 ### Parsing
 
 - [glossary-term] word
@@ -1092,6 +1174,17 @@ to
     differently")
 
 See [DOCUMENT-OBJECT][(method () (string t))] for the details.
+
+- [method] DOCUMENT-OBJECT (STRING STRING) STREAM
+
+    Print STRING to STREAM as a docstring. That is, [clean up
+    indentation][@markdown-indentation], perform @CODIFICATION, and
+    linking (see @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
+    
+    Docstrings in sources are indented in various ways, which can easily
+    mess up markdown. To handle the most common cases leave the first
+    line alone, but from the rest of the lines strip the longest run of
+    leading spaces that is common to all non-blank lines.
 
 #### Syntax Highlighting
 
@@ -2361,89 +2454,7 @@ package for evaluation.
     ```
 
 
-## Extension API
-
-### Locatives and References API
-
-`(MAKE-REFERENCE 'FOO 'VARIABLE)` constructs a REFERENCE that
-captures the path to take from an object (the symbol FOO) to an
-entity of interest (for example, the documentation of the variable).
-The path is called the locative. A locative can be applied to an
-object like this:
-
-```
-(locate 'foo 'variable)
-```
-
-which will return the same reference as `(MAKE-REFERENCE 'FOO
-'VARIABLE)`. Operations need to know how to deal with references,
-which we will see in the @EXTENSION-API.
-
-Naturally, `(LOCATE 'FOO 'FUNCTION)` will simply return `#'FOO`, no
-need to muck with references when there is a perfectly good object.
-
-- [function] LOCATE OBJECT LOCATIVE &KEY (ERRORP T)
-
-    Follow LOCATIVE from OBJECT and return the object it leads to or a
-    REFERENCE if there is no first class object corresponding to the
-    location. Depending on ERRORP, a LOCATE-ERROR condition is signaled
-    or NIL is returned if the lookup fails.
-    
-    ```
-    (locate 'locate 'function)
-    ==> #<FUNCTION LOCATE>
-    
-    (locate 'no-such-function 'function)
-    .. debugger invoked on LOCATE-ERROR:
-    ..   Could not locate NO-SUCH-FUNCTION FUNCTION.
-    ..   NO-SUCH-FUNCTION does not name a function.
-    
-    (locate 'locate-object 'method)
-    .. debugger invoked on LOCATE-ERROR:
-    ..   Could not locate LOCATE-OBJECT METHOD.
-    ..   The syntax of the METHOD locative is (METHOD <METHOD-QUALIFIERS> <METHOD-SPECIALIZERS>).
-    ```
-
-
-- [condition] LOCATE-ERROR ERROR
-
-    Signaled by LOCATE when the lookup fails and ERRORP
-    is true.
-
-- [reader] LOCATE-ERROR-MESSAGE LOCATE-ERROR (:MESSAGE)
-
-- [reader] LOCATE-ERROR-OBJECT LOCATE-ERROR (:OBJECT)
-
-- [reader] LOCATE-ERROR-LOCATIVE LOCATE-ERROR (:LOCATIVE)
-
-- [function] RESOLVE REFERENCE &KEY (ERRORP T)
-
-    A convenience function to LOCATE REFERENCE's object with its
-    locative.
-
-- [class] REFERENCE
-
-    A REFERENCE represents a path (REFERENCE-LOCATIVE)
-    to take from an object (REFERENCE-OBJECT).
-
-- [reader] REFERENCE-OBJECT REFERENCE (:OBJECT)
-
-- [reader] REFERENCE-LOCATIVE REFERENCE (:LOCATIVE)
-
-- [function] MAKE-REFERENCE OBJECT LOCATIVE
-
-- [function] LOCATIVE-TYPE LOCATIVE
-
-    The first element of LOCATIVE if it's a list. If it's a symbol then
-    it's that symbol itself. Typically, methods of generic functions
-    working with locatives take locative type and locative args as
-    separate arguments to allow methods have eql specializers on the
-    type symbol.
-
-- [function] LOCATIVE-ARGS LOCATIVE
-
-    The REST of LOCATIVE if it's a list. If it's a symbol then
-    it's ().
+## Writing Extensions
 
 ### Adding New Object Types
 
@@ -2623,17 +2634,6 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
     *FORMAT* to STREAM. Add methods specializing on OBJECT to customize
     the output of DOCUMENT. Its @REFERENCE-DELEGATE is
     LOCATE-AND-DOCUMENT.
-
-- [method] DOCUMENT-OBJECT (STRING STRING) STREAM
-
-    Print STRING to STREAM as a docstring. That is, [clean up
-    indentation][@markdown-indentation], perform @CODIFICATION, and
-    linking (see @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
-    
-    Docstrings in sources are indented in various ways, which can easily
-    mess up markdown. To handle the most common cases leave, the first
-    line alone but from the rest of the lines strip the longest run of
-    leading spaces that is common to all non-blank lines.
 
 - [generic-function] DOCSTRING OBJECT
 

@@ -18,18 +18,16 @@
   MGL-PAX/FULL systems. To keep deployed code small, client systems
   should declare an ASDF dependency on this system, never on the
   others, which are intended for autoloading and interactive use."
-  :depends-on (:alexandria :named-readtables :pythonic-string-reader :swank)
-  :components ((:module "src"
+  :depends-on ("named-readtables" "pythonic-string-reader")
+  :components ((:module "src/base/"
                 :serial t
                 :components ((:file "package")
-                             (:file "util")
-                             (:file "find-definition")
                              (:file "pax-early")
                              (:file "pax")
                              (:file "extension-api")
                              (:file "document-early")
-                             (:file "autoload")
-                             (:file "locatives"))))
+                             (:file "locatives-early")
+                             (:file "autoload"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
 (asdf:defsystem #:mgl-pax/navigate
@@ -43,10 +41,13 @@
   :description "Slime `M-.` support for MGL-PAX."
   :long-description "Autoloaded by Slime's `M-.` when `src/pax.el` is
   loaded. See MGL-PAX::@NAVIGATING-IN-EMACS."
-  :depends-on (:mgl-pax)
-  :components ((:module "src"
+  :depends-on ("alexandria" "mgl-pax" "swank")
+  :components ((:module "src/navigate/"
                 :serial t
-                :components ((:file "parse")
+                :components ((:file "util")
+                             (:file "find-definition")
+                             (:file "locatives")
+                             (:file "parse")
                              (:file "navigate"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
@@ -60,8 +61,9 @@
   :description "Documentation generation support for MGL-PAX."
   :long-description "Autoloaded by MGL-PAX:DOCUMENT. See
   MGL-PAX::@GENERATING-DOCUMENTATION."
-  :depends-on (:mgl-pax/navigate :3bmd :3bmd-ext-code-blocks :colorize :md5)
-  :components ((:module "src"
+  :depends-on ("3bmd" "3bmd-ext-code-blocks" "colorize" "md5"
+                      "mgl-pax/navigate")
+  :components ((:module "src/document/"
                 :serial t
                 :components ((:file "markdown")
                              (:file "stream-spec")
@@ -81,8 +83,8 @@
   :description "Transcription support for MGL-PAX."
   :long-description "Autoloaded by MGL-PAX:TRANSCRIBE and by the Emacs
   integration (see MGL-PAX::@TRANSCRIPTS)."
-  :depends-on (:mgl-pax)
-  :components ((:module "src"
+  :depends-on ("mgl-pax")
+  :components ((:module "src/transcribe/"
                 :serial t
                 :components ((:file "transcribe"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
@@ -96,7 +98,7 @@
   :source-control ""
   :description "MGL-PAX with all features preloaded."
   :long-description ""
-  :depends-on (:mgl-pax/navigate :mgl-pax/document :mgl-pax/transcribe)
+  :depends-on ("mgl-pax/navigate" "mgl-pax/document" "mgl-pax/transcribe")
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
 (asdf:defsystem #:mgl-pax/test
@@ -108,7 +110,7 @@
   :source-control ""
   :description "Test system for MGL-PAX."
   :long-description ""
-  :depends-on (#:mgl-pax/full #:try)
+  :depends-on ("mgl-pax/full" "try")
   :components ((:module "test"
                 :serial t
                 :components ((:file "package")

@@ -6,10 +6,6 @@
      (let (#+clisp (*print-readably* nil))
        ,@body)))
 
-(defun prin1-to-string/fully-qualified (object)
-  (let ((*package* (find-package :keyword)))
-    (prin1-to-string object)))
-
 (defun find-package* (name)
   ;; On AllegroCL, FIND-PACKAGE will signal an error if a relative
   ;; package name has too many leading dots.

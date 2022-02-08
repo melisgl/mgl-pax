@@ -160,7 +160,7 @@
 
   Here is an example of how it all works together:"""
   (foo-random-example (include #.(asdf:system-relative-pathname
-                                  :mgl-pax "src/foo-random-example.lisp")
+                                  :mgl-pax "src/base/foo-random-example.lisp")
                                :header-nl "```common-lisp" :footer-nl "```"))
   """Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
   exports `*FOO-STATE*` and includes its documentation in
@@ -253,7 +253,8 @@
   """
   (@reference glossary-term)
   (@object glossary-term)
-  (@locative glossary-term))
+  (@locative glossary-term)
+  (@locatives-and-references-api section))
 
 (define-glossary-term @reference (:title "reference")
   """A @REFERENCE is an @OBJECT plus a @LOCATIVE, and it identifies a
@@ -313,6 +314,8 @@
   (make-reference function)
   (locative-type function)
   (locative-args function))
+
+(declaim (ftype function locate-object))
 
 (defun locate (object locative &key (errorp t))
   "Follow LOCATIVE from OBJECT and return the object it leads to or a

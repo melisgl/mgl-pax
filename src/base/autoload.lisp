@@ -30,20 +30,16 @@
   (defvar *document-html-bottom-blocks-of-links*)
   (export '*document-html-bottom-blocks-of-links*)
   (defvar *document-html-max-navigation-table-of-contents-level*)
-  (export '*document-html-max-navigation-table-of-contents-level*))
+  (export '*document-html-max-navigation-table-of-contents-level*)
+  (defvar *format*)
+  (export '*format*))
 
-;;;; FIXME: The following should be turned into a doc extenstion API.
+;;;; FIXME: The following should be turned into a doc extension API.
 
-(declaim (special *references*))
+;;; FIXME: Need the macros instead.
 (declaim (special *local-references*))
-(declaim (special *document-mark-up-signatures*))
-(declaim (special *format*))
-(declaim (special *document-normalize-packages*))
 (declaim (special *reference-being-documented*))
-(declaim (ftype function global-reference-p))
-(declaim (ftype function find-link))
-(declaim (ftype function link-to-reference))
-(declaim (ftype function codify-and-link))
+
 (declaim (ftype function locate-and-print-bullet))
 (declaim (ftype function print-arglist))
 (declaim (ftype function print-bullet))
@@ -53,7 +49,13 @@
 (declaim (ftype function documentation*))
 (declaim (ftype function escape-markdown))
 (declaim (ftype function prin1-and-escape-markdown))
+
 
+;;; These are used only by the DOCUMENT-OBJECT for CLASSes.
+(declaim (ftype function global-reference-p))
+(declaim (ftype function link-to-reference))
+
+;;; And these by DOCUMENT-OBJECT for SECTIONs.
 (defmacro with-heading ((stream object title &key link-title-to)
                         &body body)
   `(call-with-heading ,stream ,object ,title ,link-title-to
@@ -66,11 +68,11 @@
 (declaim (special *heading-level*))
 
 
-(defmacro define-autoload-function (name asdf-system-name &key (export t))
+(defmacro defun/autoload (name asdf-system-name &key (export t))
   `(unless (fboundp ',name)
      (declaim (notinline ,name))
      (defun ,name (&rest args)
-       ;; Prevent infinite recursion which would happen the loaded
+       ;; Prevent infinite recursion which would happen if the loaded
        ;; system doesn't redefine the function.
        (setf (symbol-function ',name)
              (lambda (&rest args)
@@ -86,18 +88,17 @@
      ,@(when export
          `((export ',name)))))
 
-(define-autoload-function locate-definitions-for-emacs '#:mgl-pax/navigate
-  :export nil)
-(define-autoload-function find-hyperspec-id '#:mgl-pax/document :export nil)
-(define-autoload-function downcasingp '#:mgl-pax/document :export nil)
-(define-autoload-function document '#:mgl-pax/document)
-(define-autoload-function update-asdf-system-readmes '#:mgl-pax/document)
-(define-autoload-function update-asdf-system-html-docs '#:mgl-pax/document)
+(defun/autoload locate-definitions-for-emacs '#:mgl-pax/navigate :export nil)
+(defun/autoload find-hyperspec-id '#:mgl-pax/document :export nil)
+(defun/autoload downcasingp '#:mgl-pax/document :export nil)
+(defun/autoload document '#:mgl-pax/document)
+(defun/autoload update-asdf-system-readmes '#:mgl-pax/document)
+(defun/autoload update-asdf-system-html-docs '#:mgl-pax/document)
 ;;; UPDATE-PAX-WORLD includes PAX itself, so load MGL-PAX/FULL to have
 ;;; all documentation. Otherwise, MGL-PAX/DOCUMENT would be enough.
-(define-autoload-function update-pax-world '#:mgl-pax/full)
-(define-autoload-function transcribe '#:mgl-pax/transcribe)
-(define-autoload-function transcribe-for-emacs '#:mgl-pax/transcribe)
-(define-autoload-function squeeze-whitespace '#:mgl-pax/transcribe)
-(define-autoload-function delete-trailing-whitespace '#:mgl-pax/transcribe)
-(define-autoload-function delete-comments '#:mgl-pax/transcribe)
+(defun/autoload update-pax-world '#:mgl-pax/full)
+(defun/autoload transcribe '#:mgl-pax/transcribe)
+(defun/autoload transcribe-for-emacs '#:mgl-pax/transcribe)
+(defun/autoload squeeze-whitespace '#:mgl-pax/transcribe)
+(defun/autoload delete-trailing-whitespace '#:mgl-pax/transcribe)
+(defun/autoload delete-comments '#:mgl-pax/transcribe)

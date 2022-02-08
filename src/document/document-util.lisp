@@ -168,7 +168,9 @@
 
 (defun copy-css (target-dir)
   (ensure-directories-exist target-dir)
-  (loop for file in '("src/jquery.min.js" "src/toc.min.js" "src/style.css")
+  (loop for file in '("src/document/jquery.min.js"
+                      "src/document/toc.min.js"
+                      "src/document/style.css")
         do (let ((target-file (merge-pathnames (file-namestring file)
                                                target-dir)))
              (uiop:delete-file-if-exists target-file)

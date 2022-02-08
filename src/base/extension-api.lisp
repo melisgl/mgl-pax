@@ -8,8 +8,7 @@
 (eval-when (:compile-toplevel)
   (declaim (optimize (debug 3))))
 
-(defsection @extension-api (:title "Extension API")
-  (@locatives-and-references-api section)
+(defsection @extension-api (:title "Writing Extensions")
   (@new-object-types section)
   (@reference-based-extensions section)
   (@sections section))
@@ -38,7 +37,6 @@
   (collect-reachable-objects generic-function)
   (*format* variable)
   (document-object generic-function)
-  (document-object (method () (string t)))
   (docstring generic-function)
   (find-source generic-function)
   (exportable-reference-p generic-function)
@@ -167,17 +165,6 @@
   *FORMAT* to STREAM. Add methods specializing on OBJECT to customize
   the output of DOCUMENT. Its @REFERENCE-DELEGATE is
   LOCATE-AND-DOCUMENT."))
-
-(defmethod document-object ((string string) stream)
-  "Print STRING to STREAM as a docstring. That is, [clean up
-  indentation][@markdown-indentation], perform @CODIFICATION, and
-  linking (see @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
-
-  Docstrings in sources are indented in various ways, which can easily
-  mess up markdown. To handle the most common cases leave, the first
-  line alone but from the rest of the lines strip the longest run of
-  leading spaces that is common to all non-blank lines."
-  (format stream "~a~%" (massage-docstring string :indentation "")))
 
 (defgeneric docstring (object)
   (:documentation "Return the docstring from the definition of OBJECT
@@ -383,6 +370,10 @@
   ADD-LOCATIVE-TO-SOURCE-SEARCH-LIST."""
   (pushnew locative *locative-source-search-list* :test #'equal))
 
+(defmacro symbol-lambda-list-method (symbol locative-type)
+  `(find-method* #'symbol-lambda-list () `((eql ,,symbol) (eql ,,locative-type))
+                 nil))
+
 (defmacro define-symbol-locative-type (locative-type lambda-list
                                        &body docstring)
   """Similar to DEFINE-LOCATIVE-TYPE but it assumes that all things
@@ -456,10 +447,6 @@
 ;;; an afterthought, this method also returns the LAMBDA-LIST given in
 ;;; the definition.
 (defgeneric symbol-lambda-list (symbol locative-type))
-
-(defun symbol-lambda-list-method (symbol locative-type)
-  (find-method* #'symbol-lambda-list () `((eql ,symbol) (eql ,locative-type))
-                nil))
 
 (defmacro define-definer-for-symbol-locative-type
     (name locative-type &body docstring)

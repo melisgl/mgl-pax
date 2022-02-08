@@ -185,9 +185,14 @@
       (rest locative)
       ()))
 
+(defun ensure-list (object)
+  (if (listp object)
+      object
+      (list object)))
+
 (defun locative-equal (locative-1 locative-2)
-  (equal (alexandria:ensure-list locative-1)
-         (alexandria:ensure-list locative-2)))
+  (equal (ensure-list locative-1)
+         (ensure-list locative-2)))
 
 (defun transform-entries (entries section-name)
   (mapcar (lambda (entry)
@@ -195,6 +200,10 @@
                 entry
                 (entry-to-reference entry section-name)))
           entries))
+
+(defun prin1-to-string/fully-qualified (object)
+  (let ((*package* (find-package :keyword)))
+    (prin1-to-string object)))
 
 (defun entry-to-reference (entry section-name)
   (handler-case

@@ -620,7 +620,19 @@
       indented
       differently")
 
-  See [DOCUMENT-OBJECT][(method () (string t))] for the details.""")
+  See [DOCUMENT-OBJECT][(method () (string t))] for the details."""
+  (document-object (method () (string t))))
+
+(defmethod document-object ((string string) stream)
+  "Print STRING to STREAM as a docstring. That is, [clean up
+  indentation][@markdown-indentation], perform @CODIFICATION, and
+  linking (see @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
+
+  Docstrings in sources are indented in various ways, which can easily
+  mess up markdown. To handle the most common cases leave the first
+  line alone, but from the rest of the lines strip the longest run of
+  leading spaces that is common to all non-blank lines."
+  (format stream "~a~%" (massage-docstring string :indentation "")))
 
 (defsection @markdown-syntax-highlighting (:title "Syntax Highlighting")
   "For syntax highlighting, github's [fenced code
@@ -2006,9 +2018,9 @@
 
 ;;; PRINT REFERENCE to STREAM as:
 ;;;
-;;;     - [locative-type] symbol
+;;;     - [locative-type] object
 ;;;
-;;; When generating HTML, link SYMBOL to its own anchor.
+;;; When generating HTML, link OBJECT to the anchor of REFERENCE.
 (defun print-reference-bullet (reference stream &key name)
   (let ((locative-type (string-downcase
                         (reference-locative-type reference)))

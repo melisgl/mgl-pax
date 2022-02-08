@@ -10,6 +10,7 @@
 - [5 Tutorial][8c3e]
 - [6 Basics][94c7]
     - [6.1 Locatives and References][fd7c]
+        - [6.1.1 Locatives and References API][f389]
     - [6.2 Parsing][378f]
 - [7 Locative Types][6121]
     - [7.1 Locatives for Variables][4c48]
@@ -54,11 +55,10 @@
         - [10.4.1 Finer-grained Consistency Checks][6e18]
         - [10.4.2 Controlling the Dynamic Environment][6b59]
         - [10.4.3 Utilities for Consistency Checking][8423]
-- [11 Extension API][c4ce]
-    - [11.1 Locatives and References API][f389]
-    - [11.2 Adding New Object Types][bbf2]
-    - [11.3 Reference Based Extensions][69f7]
-    - [11.4 Sections][8a58]
+- [11 Writing Extensions][c4ce]
+    - [11.1 Adding New Object Types][bbf2]
+    - [11.2 Reference Based Extensions][69f7]
+    - [11.3 Sections][8a58]
 
 ###### \[in package MGL-PAX with nicknames PAX\]
 <a id="x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
@@ -237,7 +237,7 @@ of `(mgl-pax:document #'abort)`. Note that the docstring of the
 
 Here is an example of how it all works together:
 
-<a id="x-28MGL-PAX-3AFOO-RANDOM-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Ffoo-random-example-2Elisp-22-20-3AHEADER-NL-20-22-60-60-60common-lisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29"></a>
+<a id="x-28MGL-PAX-3AFOO-RANDOM-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Fbase-2Ffoo-random-example-2Elisp-22-20-3AHEADER-NL-20-22-60-60-60common-lisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29"></a>
 ```common-lisp
 (mgl-pax:define-package :foo-random
   (:documentation "This package provides various utilities for random.
@@ -345,7 +345,7 @@ Now let's examine the most important pieces.
     The same object may occur in multiple references, typically with
     different locatives, but this is not required.
     
-    The references are not looked up (see [`RESOLVE`][cd9e] in the [Extension API][c4ce])
+    The references are not looked up (see [`RESOLVE`][cd9e] in the [Writing Extensions][c4ce])
     until documentation is generated, so it is allowed to refer to
     things yet to be defined.
     
@@ -467,6 +467,101 @@ list (see [`DEFSECTION`][72b4]) or as `"OBJECT LOCATIVE"` in docstrings (see
     *locative arguments*. See the [`METHOD`][172e] locative or the [`LOCATIVE`][0b3a]
     locative for examples of locative types with arguments.
 
+<a id="x-28MGL-PAX-3A-40LOCATIVES-AND-REFERENCES-API-20MGL-PAX-3ASECTION-29"></a>
+#### 6.1.1 Locatives and References API
+
+`(MAKE-REFERENCE 'FOO 'VARIABLE)` constructs a [`REFERENCE`][1cea] that
+captures the path to take from an object (the symbol `FOO`) to an
+entity of interest (for example, the documentation of the variable).
+The path is called the locative. A locative can be applied to an
+object like this:
+
+```
+(locate 'foo 'variable)
+```
+
+which will return the same reference as `(MAKE-REFERENCE 'FOO
+'VARIABLE)`. Operations need to know how to deal with references,
+which we will see in the [Writing Extensions][c4ce].
+
+Naturally, `(LOCATE 'FOO 'FUNCTION)` will simply return `#'FOO`, no
+need to muck with references when there is a perfectly good object.
+
+<a id="x-28MGL-PAX-3ALOCATE-20FUNCTION-29"></a>
+- [function] **LOCATE** *OBJECT LOCATIVE &KEY (ERRORP T)*
+
+    Follow `LOCATIVE` from `OBJECT` and return the object it leads to or a
+    [`REFERENCE`][1cea] if there is no first class object corresponding to the
+    location. Depending on `ERRORP`, a [`LOCATE-ERROR`][6887] condition is signaled
+    or `NIL` is returned if the lookup fails.
+    
+    ```
+    (locate 'locate 'function)
+    ==> #<FUNCTION LOCATE>
+    
+    (locate 'no-such-function 'function)
+    .. debugger invoked on LOCATE-ERROR:
+    ..   Could not locate NO-SUCH-FUNCTION FUNCTION.
+    ..   NO-SUCH-FUNCTION does not name a function.
+    
+    (locate 'locate-object 'method)
+    .. debugger invoked on LOCATE-ERROR:
+    ..   Could not locate LOCATE-OBJECT METHOD.
+    ..   The syntax of the METHOD locative is (METHOD <METHOD-QUALIFIERS> <METHOD-SPECIALIZERS>).
+    ```
+
+
+<a id="x-28MGL-PAX-3ALOCATE-ERROR-20CONDITION-29"></a>
+- [condition] **LOCATE-ERROR** *ERROR*
+
+    Signaled by [`LOCATE`][ee94] when the lookup fails and `ERRORP`
+    is true.
+
+<a id="x-28MGL-PAX-3ALOCATE-ERROR-MESSAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29"></a>
+- [reader] **LOCATE-ERROR-MESSAGE** *LOCATE-ERROR* *(:MESSAGE)*
+
+<a id="x-28MGL-PAX-3ALOCATE-ERROR-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29"></a>
+- [reader] **LOCATE-ERROR-OBJECT** *LOCATE-ERROR* *(:OBJECT)*
+
+<a id="x-28MGL-PAX-3ALOCATE-ERROR-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29"></a>
+- [reader] **LOCATE-ERROR-LOCATIVE** *LOCATE-ERROR* *(:LOCATIVE)*
+
+<a id="x-28MGL-PAX-3ARESOLVE-20FUNCTION-29"></a>
+- [function] **RESOLVE** *REFERENCE &KEY (ERRORP T)*
+
+    A convenience function to [`LOCATE`][ee94] `REFERENCE`'s object with its
+    locative.
+
+<a id="x-28MGL-PAX-3AREFERENCE-20CLASS-29"></a>
+- [class] **REFERENCE**
+
+    A `REFERENCE` represents a path ([`REFERENCE-LOCATIVE`][02de])
+    to take from an object ([`REFERENCE-OBJECT`][8c7d]).
+
+<a id="x-28MGL-PAX-3AREFERENCE-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29"></a>
+- [reader] **REFERENCE-OBJECT** *REFERENCE* *(:OBJECT)*
+
+<a id="x-28MGL-PAX-3AREFERENCE-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29"></a>
+- [reader] **REFERENCE-LOCATIVE** *REFERENCE* *(:LOCATIVE)*
+
+<a id="x-28MGL-PAX-3AMAKE-REFERENCE-20FUNCTION-29"></a>
+- [function] **MAKE-REFERENCE** *OBJECT LOCATIVE*
+
+<a id="x-28MGL-PAX-3ALOCATIVE-TYPE-20FUNCTION-29"></a>
+- [function] **LOCATIVE-TYPE** *LOCATIVE*
+
+    The first element of `LOCATIVE` if it's a list. If it's a symbol then
+    it's that symbol itself. Typically, methods of generic functions
+    working with locatives take locative type and locative args as
+    separate arguments to allow methods have eql specializers on the
+    type symbol.
+
+<a id="x-28MGL-PAX-3ALOCATIVE-ARGS-20FUNCTION-29"></a>
+- [function] **LOCATIVE-ARGS** *LOCATIVE*
+
+    The [`REST`][3f15] of `LOCATIVE` if it's a list. If it's a symbol then
+    it's ().
+
 <a id="x-28MGL-PAX-3A-40PARSING-20MGL-PAX-3ASECTION-29"></a>
 ### 6.2 Parsing
 
@@ -507,7 +602,7 @@ list (see [`DEFSECTION`][72b4]) or as `"OBJECT LOCATIVE"` in docstrings (see
 As we have already briefly seen in [`DEFSECTION`][72b4] and
 [Locatives and References][fd7c], locatives allow us to refer to, document
 and find the source location of various definitions beyond what
-standard Common Lisp offers. See [Extension API][c4ce] for a more detailed
+standard Common Lisp offers. See [Writing Extensions][c4ce] for a more detailed
 treatment. The following are the locatives types supported out of
 the box. As all locative types, they are symbols, and their names
 should make it obvious what kind of things they refer to. Unless
@@ -517,7 +612,7 @@ When there is a corresponding `CL` type, a locative can be resolved to
 a unique object as is the case in `(LOCATE 'FOO 'CLASS)` returning
 `#<CLASS FOO>`. Even if there is no such `CL` type, the source
 location and the docstring of the defining form is recorded (see
-[`LOCATE-AND-FIND-SOURCE`][d6a4], [`LOCATE-AND-DOCUMENT`][6611] in the [Extension API][c4ce]),
+[`LOCATE-AND-FIND-SOURCE`][d6a4], [`LOCATE-AND-DOCUMENT`][6611] in the [Writing Extensions][c4ce]),
 which makes navigating the sources with `M-.` (see
 [Navigating Sources in Emacs][3386]) and [Generating Documentation][2c93] possible.
 
@@ -1213,6 +1308,18 @@ to
     differently")
 
 See [`DOCUMENT-OBJECT`][0225] for the details.
+
+<a id="x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28STRING-20T-29-29-29"></a>
+- [method] **DOCUMENT-OBJECT** *(STRING STRING) STREAM*
+
+    Print `STRING` to `STREAM` as a docstring. That is, [clean up
+    indentation][718f], perform [Codification][f1ab], and
+    linking (see [Linking to Code][1865], [Linking to the Hyperspec][7cc3]).
+    
+    Docstrings in sources are indented in various ways, which can easily
+    mess up markdown. To handle the most common cases leave the first
+    line alone, but from the rest of the lines strip the longest run of
+    leading spaces that is common to all non-blank lines.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29"></a>
 #### 9.2.2 Syntax Highlighting
@@ -2545,105 +2652,10 @@ package for evaluation.
 
 
 <a id="x-28MGL-PAX-3A-40EXTENSION-API-20MGL-PAX-3ASECTION-29"></a>
-## 11 Extension API
-
-<a id="x-28MGL-PAX-3A-40LOCATIVES-AND-REFERENCES-API-20MGL-PAX-3ASECTION-29"></a>
-### 11.1 Locatives and References API
-
-`(MAKE-REFERENCE 'FOO 'VARIABLE)` constructs a [`REFERENCE`][1cea] that
-captures the path to take from an object (the symbol `FOO`) to an
-entity of interest (for example, the documentation of the variable).
-The path is called the locative. A locative can be applied to an
-object like this:
-
-```
-(locate 'foo 'variable)
-```
-
-which will return the same reference as `(MAKE-REFERENCE 'FOO
-'VARIABLE)`. Operations need to know how to deal with references,
-which we will see in the [Extension API][c4ce].
-
-Naturally, `(LOCATE 'FOO 'FUNCTION)` will simply return `#'FOO`, no
-need to muck with references when there is a perfectly good object.
-
-<a id="x-28MGL-PAX-3ALOCATE-20FUNCTION-29"></a>
-- [function] **LOCATE** *OBJECT LOCATIVE &KEY (ERRORP T)*
-
-    Follow `LOCATIVE` from `OBJECT` and return the object it leads to or a
-    [`REFERENCE`][1cea] if there is no first class object corresponding to the
-    location. Depending on `ERRORP`, a [`LOCATE-ERROR`][6887] condition is signaled
-    or `NIL` is returned if the lookup fails.
-    
-    ```
-    (locate 'locate 'function)
-    ==> #<FUNCTION LOCATE>
-    
-    (locate 'no-such-function 'function)
-    .. debugger invoked on LOCATE-ERROR:
-    ..   Could not locate NO-SUCH-FUNCTION FUNCTION.
-    ..   NO-SUCH-FUNCTION does not name a function.
-    
-    (locate 'locate-object 'method)
-    .. debugger invoked on LOCATE-ERROR:
-    ..   Could not locate LOCATE-OBJECT METHOD.
-    ..   The syntax of the METHOD locative is (METHOD <METHOD-QUALIFIERS> <METHOD-SPECIALIZERS>).
-    ```
-
-
-<a id="x-28MGL-PAX-3ALOCATE-ERROR-20CONDITION-29"></a>
-- [condition] **LOCATE-ERROR** *ERROR*
-
-    Signaled by [`LOCATE`][ee94] when the lookup fails and `ERRORP`
-    is true.
-
-<a id="x-28MGL-PAX-3ALOCATE-ERROR-MESSAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29"></a>
-- [reader] **LOCATE-ERROR-MESSAGE** *LOCATE-ERROR* *(:MESSAGE)*
-
-<a id="x-28MGL-PAX-3ALOCATE-ERROR-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29"></a>
-- [reader] **LOCATE-ERROR-OBJECT** *LOCATE-ERROR* *(:OBJECT)*
-
-<a id="x-28MGL-PAX-3ALOCATE-ERROR-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29"></a>
-- [reader] **LOCATE-ERROR-LOCATIVE** *LOCATE-ERROR* *(:LOCATIVE)*
-
-<a id="x-28MGL-PAX-3ARESOLVE-20FUNCTION-29"></a>
-- [function] **RESOLVE** *REFERENCE &KEY (ERRORP T)*
-
-    A convenience function to [`LOCATE`][ee94] `REFERENCE`'s object with its
-    locative.
-
-<a id="x-28MGL-PAX-3AREFERENCE-20CLASS-29"></a>
-- [class] **REFERENCE**
-
-    A `REFERENCE` represents a path ([`REFERENCE-LOCATIVE`][02de])
-    to take from an object ([`REFERENCE-OBJECT`][8c7d]).
-
-<a id="x-28MGL-PAX-3AREFERENCE-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29"></a>
-- [reader] **REFERENCE-OBJECT** *REFERENCE* *(:OBJECT)*
-
-<a id="x-28MGL-PAX-3AREFERENCE-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29"></a>
-- [reader] **REFERENCE-LOCATIVE** *REFERENCE* *(:LOCATIVE)*
-
-<a id="x-28MGL-PAX-3AMAKE-REFERENCE-20FUNCTION-29"></a>
-- [function] **MAKE-REFERENCE** *OBJECT LOCATIVE*
-
-<a id="x-28MGL-PAX-3ALOCATIVE-TYPE-20FUNCTION-29"></a>
-- [function] **LOCATIVE-TYPE** *LOCATIVE*
-
-    The first element of `LOCATIVE` if it's a list. If it's a symbol then
-    it's that symbol itself. Typically, methods of generic functions
-    working with locatives take locative type and locative args as
-    separate arguments to allow methods have eql specializers on the
-    type symbol.
-
-<a id="x-28MGL-PAX-3ALOCATIVE-ARGS-20FUNCTION-29"></a>
-- [function] **LOCATIVE-ARGS** *LOCATIVE*
-
-    The [`REST`][3f15] of `LOCATIVE` if it's a list. If it's a symbol then
-    it's ().
+## 11 Writing Extensions
 
 <a id="x-28MGL-PAX-3A-40NEW-OBJECT-TYPES-20MGL-PAX-3ASECTION-29"></a>
-### 11.2 Adding New Object Types
+### 11.1 Adding New Object Types
 
 One may wish to make the [`DOCUMENT`][432c] function and `M-.` navigation
 work with new object types. Extending `DOCUMENT` can be done by
@@ -2831,18 +2843,6 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
     the output of [`DOCUMENT`][432c]. Its [reference delegate][e403] is
     [`LOCATE-AND-DOCUMENT`][6611].
 
-<a id="x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28STRING-20T-29-29-29"></a>
-- [method] **DOCUMENT-OBJECT** *(STRING STRING) STREAM*
-
-    Print `STRING` to `STREAM` as a docstring. That is, [clean up
-    indentation][718f], perform [Codification][f1ab], and
-    linking (see [Linking to Code][1865], [Linking to the Hyperspec][7cc3]).
-    
-    Docstrings in sources are indented in various ways, which can easily
-    mess up markdown. To handle the most common cases leave, the first
-    line alone but from the rest of the lines strip the longest run of
-    leading spaces that is common to all non-blank lines.
-
 <a id="x-28MGL-PAX-3ADOCSTRING-20GENERIC-FUNCTION-29"></a>
 - [generic-function] **DOCSTRING** *OBJECT*
 
@@ -2922,7 +2922,7 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
     export when its `EXPORT` argument is true.
 
 <a id="x-28MGL-PAX-3A-40REFERENCE-BASED-EXTENSIONS-20MGL-PAX-3ASECTION-29"></a>
-### 11.3 Reference Based Extensions
+### 11.2 Reference Based Extensions
 
 Let's see how to extend [`DOCUMENT`][432c] and `M-.` navigation if there
 is no first class object to represent the thing of interest. Recall
@@ -3071,7 +3071,7 @@ with symbols in a certain context.
     with [`DEFINE-SYMBOL-LOCATIVE-TYPE`][7584].
 
 <a id="x-28MGL-PAX-3A-40SECTIONS-20MGL-PAX-3ASECTION-29"></a>
-### 11.4 Sections
+### 11.3 Sections
 
 [`SECTION`][5fac] objects rarely need to be dissected since
 [`DEFSECTION`][72b4] and [`DOCUMENT`][432c] cover most needs. However, it is plausible
@@ -3284,7 +3284,7 @@ presented.
   [c267]: #x-28MGL-PAX-3ALOCATE-CANONICAL-REFERENCE-20GENERIC-FUNCTION-29 "MGL-PAX:LOCATE-CANONICAL-REFERENCE GENERIC-FUNCTION"
   [c2d3]: #x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29 "Markdown Support"
   [c35d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_intern.htm "INTERN FUNCTION"
-  [c4ce]: #x-28MGL-PAX-3A-40EXTENSION-API-20MGL-PAX-3ASECTION-29 "Extension API"
+  [c4ce]: #x-28MGL-PAX-3A-40EXTENSION-API-20MGL-PAX-3ASECTION-29 "Writing Extensions"
   [c819]: #x-28MGL-PAX-3ACONSTANT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CONSTANT MGL-PAX:LOCATIVE"
   [c930]: #x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29 "MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION"
   [cc04]: #x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:READER MGL-PAX:LOCATIVE"

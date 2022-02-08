@@ -5,6 +5,5 @@
 *.*fsl
 *.lib
 *.sse2f
-test/data/tmp/
 world/
 doc/
