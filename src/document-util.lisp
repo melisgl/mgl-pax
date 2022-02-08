@@ -365,7 +365,8 @@
     (asdf:load-system :trivial-utf-8/doc)
     (asdf:load-system :try/doc)
     (asdf:load-system :lmdb))
-  (update-pax-world))
+  (let ((*document-downcase-uppercase-code* t))
+    (update-pax-world)))
 
 #+nil
 (time (update-pax-world*))
