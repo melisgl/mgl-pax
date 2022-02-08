@@ -1,5 +1,5 @@
-<a id="x-28MGL-PAX-3A-40MANUAL-20MGL-PAX-3ASECTION-29"></a>
-<a id="MGL-PAX:@MANUAL%20MGL-PAX:SECTION"></a>
+<a id="x-28MGL-PAX-3A-40PAX-MANUAL-20MGL-PAX-3ASECTION-29"></a>
+<a id="MGL-PAX:@PAX-MANUAL%20MGL-PAX:SECTION"></a>
 
 # PAX Manual
 
@@ -1158,13 +1158,13 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
 
     Write `OBJECT` in `FORMAT` to `STREAM` diverting some output to `PAGES`.
     `FORMAT` can be anything [`3BMD`][3bmd] supports, which is currently
-    `:MARKDOWN`, `:HTML` and `:PLAIN`. `STREAM` may be a stream object, `T` or `NIL`
-    as with `CL:FORMAT`.
+    `:MARKDOWN`, `:HTML` and `:PLAIN`. `STREAM` may be a [`STREAM`][class] object,
+    `T` or `NIL` as with `CL:FORMAT`.
     
-    Most often, this function is called on `SECTION`([`0`][5fac] [`1`][672f]) objects
-    like `(DOCUMENT @MANUAL)`, but it supports all kinds of objects for
-    which [`DOCUMENT-OBJECT`][bacc] is defined. To look up the documentation of
-    function [`DOCUMENT`][432c]:
+    Most often, this function is called on `SECTION`([`0`][5fac] [`1`][672f]) objects like
+    `(DOCUMENT @MANUAL)`, but it supports all kinds of objects for which
+    [`DOCUMENT-OBJECT`][bacc] is defined. To look up the documentation of function
+    [`DOCUMENT`][432c]:
     
         (document #'document)
     
@@ -1175,11 +1175,11 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     
     Note that not only first class objects can have documentation. For
     instance, variables and deftypes are not represented by objects.
-    That's why [`CL:DOCUMENTATION`][68f1] has a `DOC-TYPE` argument. `DOCUMENT` does
-    not have anything like that, instead it relies on [`REFERENCE`][1cea] objects
-    to carry the extra information. We are going to see later how
-    references and locatives work. Until then, here is an example on how
-    to look up the documentation of type `FOO`:
+    That's why [`CL:DOCUMENTATION`][68f1] has a `DOC-TYPE` argument. `DOCUMENT`
+    instead relies on [`REFERENCE`][1cea] objects to carry the extra information.
+    We are going to see later how references and locatives work. Until
+    then, here is an example on how to look up the documentation of type
+    `FOO`:
     
         (document (locate 'foo 'type))
     
@@ -1200,14 +1200,14 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     list of page specification elements. A page spec is a plist with
     keys `:OBJECTS`, `:OUTPUT`, `:URI-FRAGMENT`, `:SOURCE-URI-FN`, `:HEADER-FN`
     and `:FOOTER-FN`. `OBJECTS` is a list of objects (references are allowed
-    but not required) whose documentation is to be sent to `OUTPUT`.
+    but not required) whose documentation is to be sent to `:OUTPUT`.
     
     When documentation for an object is generated, the first matching
     page spec is used, where the object matches the page spec if it is
     [reachable][8c95] from one of
     its `:OBJECTS`.
     
-    `OUTPUT` can be a number things:
+    `:OUTPUT` can be a number things:
     
     - If it's a list whose first element is a string or a pathname, then
       output will be sent to the file denoted by that and the rest of
@@ -1223,7 +1223,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     - If it's a stream, then output will be sent to that stream.
     
     If some pages are specified, `DOCUMENT` returns a list of designators
-    for generated output. If a page whose `OUTPUT` refers to a file that
+    for generated output. If a page whose `:OUTPUT` refers to a file that
     was created (which doesn't happen if nothing would be written to
     it), then the corresponding pathname is included in the list. For
     strings the string itself, while for streams the stream object is
@@ -1232,32 +1232,32 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     was created. The output designators in the returned list are ordered
     by creation time.
     
-    If no `PAGES` are specified, `DOCUMENT` returns a single pathname,
-    string or stream object according to the value of the `STREAM`
-    argument.
+    If no `PAGES` are specified, `DOCUMENT` returns a single
+    [`PATHNAME`][241f], [`STRING`][4267] or `STREAM` object according to the
+    value of the `STREAM` argument.
     
-    Note that even if `PAGES` is specified, `STREAM` acts as a catch all
+    Note that even if `PAGES` is specified, `STREAM` acts as a catch all,
     taking the generated documentation for references not claimed by any
     pages. Also, the filename, string or stream corresponding to `STREAM`
-    is always the first element in list of generated things that is the
-    return value.
+    is always the first element in the list of generated things, that is
+    the return value.
     
-    `HEADER-FN`, if not `NIL`, is a function of a single stream argument,
+    `:HEADER-FN`, if not `NIL`, is a function of a single stream argument,
     which is called just before the first write to the page. Since
     `:FORMAT` `:HTML` only generates HTML fragments, this makes it possible
     to print arbitrary headers, typically setting the title, css
     stylesheet, or charset.
     
-    `FOOTER-FN` is similar to `HEADER-FN`, but it's called after the last
+    `:FOOTER-FN` is similar to `:HEADER-FN`, but it's called after the last
     write to the page. For HTML, it typically just closes the body.
     
-    `URI-FRAGMENT` is a string such as `"doc/manual.html"` that specifies
+    `:URI-FRAGMENT` is a string such as `"doc/manual.html"` that specifies
     where the page will be deployed on a webserver. It defines how links
-    between pages will look. If it's not specified and `OUTPUT` refers
-    to a file, then it defaults to the name of the file. If `URI-FRAGMENT`
+    between pages will look. If it's not specified and `:OUTPUT` refers to
+    a file, then it defaults to the name of the file. If `:URI-FRAGMENT`
     is `NIL`, then no links will be made to or from that page.
     
-    Finally, `SOURCE-URI-FN` is a function of a single, `REFERENCE`
+    Finally, `:SOURCE-URI-FN` is a function of a single, `REFERENCE`
     argument. If it returns a value other than `NIL`, then it must be a
     string representing an URI. If `FORMAT` is `:HTML` and
     [`*DOCUMENT-MARK-UP-SIGNATURES*`][8fb6] is true, then the locative as
@@ -2097,14 +2097,14 @@ For example, this is how `PAX` registers itself:
 
 ```commonlisp
 (defun pax-sections ()
-  (list @manual))
+  (list @pax-manual))
 (defun pax-pages ()
   `((:objects
-     (, @manual)
+     (, @pax-manual)
      :source-uri-fn ,(make-github-source-uri-fn
                       :mgl-pax
                       "https://github.com/melisgl/mgl-pax"))))
-(register-doc-in-pax-world :mgl-pax (pax-sections) (pax-pages))
+(register-doc-in-pax-world :pax (pax-sections) (pax-pages))
 ```
 
 <a id="x-28MGL-PAX-3AUPDATE-PAX-WORLD-20FUNCTION-29"></a>
@@ -2112,11 +2112,11 @@ For example, this is how `PAX` registers itself:
 
 - [function] **UPDATE-PAX-WORLD** *&KEY (DOCS \*REGISTERED-PAX-WORLD-DOCS\*) DIR*
 
-    Generate HTML documentation for all `DOCS`. By default, files are
-    created in [`*PAX-WORLD-DIR*`][dfe3] or `(asdf:system-relative-pathname
-    :mgl-pax "world/")`, if `NIL`. `DOCS` is a list of entries of the
-    form (`NAME` `SECTIONS`([`0`][5fac] [`1`][672f]) `PAGE-SPECS`). The default for `DOCS` is all the
-    sections and pages registered with [`REGISTER-DOC-IN-PAX-WORLD`][f4fd].
+    Generate HTML documentation for all `DOCS`. Files are created in
+    `DIR` (`(asdf:system-relative-pathname :mgl-pax "world/")` by
+    default if `DIR` is `NIL`). `DOCS` is a list of entries of the form (`NAME`
+    `SECTIONS`([`0`][5fac] [`1`][672f]) `PAGE-SPECS`). The default for `DOCS` is all the sections and
+    pages registered with [`REGISTER-DOC-IN-PAX-WORLD`][f4fd].
     
     In the absence of `:HEADER-FN` `:FOOTER-FN`, `:OUTPUT`, every spec in
     `PAGE-SPECS` is augmented with HTML headers, footers and output
@@ -3505,6 +3505,7 @@ presented.
   [21f5]: #MGL-PAX:@MACROLIKE-LOCATIVES%20MGL-PAX:SECTION "Locatives for Macros"
   [22c2]: #MGL-PAX:@LINKING-TO-SECTIONS%20MGL-PAX:SECTION "Linking to Sections"
   [238c]: #MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR%20CONDITION "MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION"
+  [241f]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pn.htm "PATHNAME TYPE"
   [248b]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rdtabl.htm "READTABLE TYPE"
   [2634]: #MGL-PAX:@OVERVIEW-OF-ESCAPING%20MGL-PAX:SECTION "Overview of Escaping"
   [2645]: #MGL-PAX:@AMBIGUOUS-LOCATIVE%20MGL-PAX:SECTION "Ambiguous Unspecified Locative"
@@ -3657,7 +3658,6 @@ presented.
   [d7b0]: #MGL-PAX:@WORD%20MGL-PAX:GLOSSARY-TERM "MGL-PAX:@WORD MGL-PAX:GLOSSARY-TERM"
   [d9ee]: #MGL-PAX:*DOCUMENT-LINK-CODE*%20VARIABLE "MGL-PAX:*DOCUMENT-LINK-CODE* VARIABLE"
   [dc76]: http://www.lispworks.com/documentation/HyperSpec/Body/e_cnd.htm "CONDITION CONDITION"
-  [dfe3]: #MGL-PAX:*PAX-WORLD-DIR*%20VARIABLE "MGL-PAX:*PAX-WORLD-DIR* VARIABLE"
   [dff6]: #MGL-PAX:@GITHUB-WORKFLOW%20MGL-PAX:SECTION "Github Workflow"
   [e077]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_s.htm "FIND-SYMBOL FUNCTION"
   [e216]: #MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS*%20VARIABLE "MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* VARIABLE"

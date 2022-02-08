@@ -283,11 +283,11 @@
 ;;;; The autoloaded part of @PAX-WORLD
 
 (defun update-pax-world (&key (docs *registered-pax-world-docs*) dir)
-  "Generate HTML documentation for all DOCS. By default, files are
-  created in *PAX-WORLD-DIR* or `(asdf:system-relative-pathname
-  :mgl-pax \"world/\")`, if NIL. DOCS is a list of entries of the
-  form (NAME SECTIONS PAGE-SPECS). The default for DOCS is all the
-  sections and pages registered with REGISTER-DOC-IN-PAX-WORLD.
+  "Generate HTML documentation for all DOCS. Files are created in
+  DIR (`(asdf:system-relative-pathname :mgl-pax \"world/\")` by
+  default if DIR is NIL). DOCS is a list of entries of the form (NAME
+  SECTIONS PAGE-SPECS). The default for DOCS is all the sections and
+  pages registered with REGISTER-DOC-IN-PAX-WORLD.
 
   In the absence of :HEADER-FN :FOOTER-FN, :OUTPUT, every spec in
   PAGE-SPECS is augmented with HTML headers, footers and output
@@ -347,7 +347,7 @@
 
 
 ;;; Load systems that use PAX and generate PAX World in
-;;; *PAX-WORLD-DIR* (<asdf-system-dir>/world/ by default). To update
+;;; <mgl-pax-asdf-system-dir>/world/. To update
 ;;; https://github.com/melisgl/mgl-pax-world, check out its gh-pages
 ;;; branch in that directory, update pax world, commit and push the
 ;;; changes to github.
