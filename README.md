@@ -2826,8 +2826,7 @@ object like this:
 
 which will return the same reference as `(MAKE-REFERENCE 'FOO
 'VARIABLE)`. Operations need to know how to deal with references,
-which we will see in [`LOCATE-AND-COLLECT-REACHABLE-OBJECTS`][46ec],
-[`LOCATE-AND-DOCUMENT`][6611] and [`LOCATE-AND-FIND-SOURCE`][d6a4].
+which we will see in the [Extension API][c4ce].
 
 Naturally, `(LOCATE 'FOO 'FUNCTION)` will simply return `#'FOO`, no
 need to muck with references when there is a perfectly good object.
@@ -2839,8 +2838,24 @@ need to muck with references when there is a perfectly good object.
 
     Follow `LOCATIVE` from `OBJECT` and return the object it leads to or a
     [`REFERENCE`][1cea] if there is no first class object corresponding to the
-    location. If `ERRORP`, then a [`LOCATE-ERROR`][6887] condition is signaled when
-    the lookup fails.
+    location. Depending on `ERRORP`, a [`LOCATE-ERROR`][6887] condition is signaled
+    or `NIL` is returned if the lookup fails.
+    
+    ```
+    (locate 'locate 'function)
+    ==> #<FUNCTION LOCATE>
+    
+    (locate 'no-such-function 'function)
+    .. debugger invoked on LOCATE-ERROR:
+    ..   Could not locate NO-SUCH-FUNCTION FUNCTION.
+    ..   NO-SUCH-FUNCTION does not name a function.
+    
+    (locate 'locate-object 'method)
+    .. debugger invoked on LOCATE-ERROR:
+    ..   Could not locate LOCATE-OBJECT METHOD.
+    ..   The syntax of the METHOD locative is (METHOD <METHOD-QUALIFIERS> <METHOD-SPECIALIZERS>).
+    ```
+
 
 <a id="x-28MGL-PAX-3ALOCATE-ERROR-20CONDITION-29"></a>
 <a id="MGL-PAX:LOCATE-ERROR%20CONDITION"></a>
@@ -2923,11 +2938,13 @@ need to muck with references when there is a perfectly good object.
 One may wish to make the [`DOCUMENT`][432c] function and `M-.` navigation
 work with new object types. Extending `DOCUMENT` can be done by
 defining a [`DOCUMENT-OBJECT`][bacc] method. To allow these objects to be
-referenced from [`DEFSECTION`][72b4], a [`LOCATE-OBJECT`][185d] method is to be defined.
-For `M-.` [`FIND-SOURCE`][4355] can be specialized. Finally,
+referenced from [`DEFSECTION`][72b4], [`LOCATE-OBJECT`][185d] method is to be defined.
+If there are multiple equivalent references possible for the same
+thing, then [`CANONICAL-REFERENCE`][32f5] must be specialized. For the
+[`DOCSTRING`][ce75] locative to work on the new type, a `DOCSTRING` method is
+needed. For `M-.` [`FIND-SOURCE`][4355] can be specialized. Finally,
 [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] may be overridden if exporting does not
-makes sense. Here is a stripped down example of how all this is done
-for [`ASDF:SYSTEM:`][c097]
+makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
 
 <a id="x-28MGL-PAX-3AASDF-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-28-3ASTART-20-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29-20-3AEND-20-28MGL-PAX-3A-3AEND-OF-ASDF-EXAMPLE-20VARIABLE-29-29-20-3AHEADER-NL-20-22-60-60-60commonlisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29"></a>
 <a id="MGL-PAX:ASDF-EXAMPLE%20%28MGL-PAX:INCLUDE%20%28:START%20%28ASDF%2FSYSTEM:SYSTEM%20MGL-PAX:LOCATIVE%29%20:END%20%28MGL-PAX::END-OF-ASDF-EXAMPLE%20VARIABLE%29%29%20:HEADER-NL%20%22%60%60%60commonlisp%22%20:FOOTER-NL%20%22%60%60%60%22%29"></a>
@@ -2944,7 +2961,7 @@ for [`ASDF:SYSTEM:`][c097]
 (defmethod locate-object (name (locative-type (eql 'asdf:system))
                           locative-args)
   (or (and (endp locative-args)
-           ;; FIXME: This is slow as hell.
+           ;; ASDF:FIND-SYSTEM is slow as hell.
            (asdf:find-system (string-downcase (string name)) nil))
       (locate-error "~S does not name an asdf system." name)))
 
@@ -3054,6 +3071,135 @@ for [`ASDF:SYSTEM:`][c097]
     ```
 
 
+<a id="x-28MGL-PAX-3ALOCATE-OBJECT-20GENERIC-FUNCTION-29"></a>
+<a id="MGL-PAX:LOCATE-OBJECT%20GENERIC-FUNCTION"></a>
+
+- [generic-function] **LOCATE-OBJECT** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS*
+
+    Return the object to which `OBJECT` and the locative
+    refer. Signal a [`LOCATE-ERROR`][6887] condition by calling the [`LOCATE-ERROR`][0019]
+    function if the lookup fails. If a [`REFERENCE`][1cea] is returned, then it
+    must be canonical in the sense that calling [`CANONICAL-REFERENCE`][32f5] on
+    it will return the same reference. Don't call this function
+    directly. It serves only to extend [`LOCATE`][ee94].
+
+<a id="x-28MGL-PAX-3ALOCATE-ERROR-20FUNCTION-29"></a>
+<a id="MGL-PAX:LOCATE-ERROR%20FUNCTION"></a>
+
+- [function] **LOCATE-ERROR** *&REST FORMAT-AND-ARGS*
+
+    Call this function to signal a [`LOCATE-ERROR`][6887] condition from a
+    [`LOCATE-OBJECT`][185d] method. `FORMAT-AND-ARGS` contains a format string and
+    args suitable for [`FORMAT`][1f28] from which the [`LOCATE-ERROR-MESSAGE`][7da5] is
+    constructed. If `FORMAT-AND-ARGS` is `NIL`, then the message will be `NIL`
+    too.
+    
+    [`LOCATE-ERROR-OBJECT`][7b2c] and [`LOCATE-ERROR-LOCATIVE`][9974] are populated
+    automatically.
+
+<a id="x-28MGL-PAX-3ACANONICAL-REFERENCE-20GENERIC-FUNCTION-29"></a>
+<a id="MGL-PAX:CANONICAL-REFERENCE%20GENERIC-FUNCTION"></a>
+
+- [generic-function] **CANONICAL-REFERENCE** *OBJECT*
+
+    Return a [`REFERENCE`][1cea] that [`RESOLVE`][cd9e]s to `OBJECT`, or
+    return `NIL` if this operation is not defined for `OBJECT`. Its
+    [reference delegate][e403] is [`LOCATE-CANONICAL-REFERENCE`][c267].
+
+<a id="x-28MGL-PAX-3ACOLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29"></a>
+<a id="MGL-PAX:COLLECT-REACHABLE-OBJECTS%20GENERIC-FUNCTION"></a>
+
+- [generic-function] **COLLECT-REACHABLE-OBJECTS** *OBJECT*
+
+    Return a list of objects representing all things to
+    be documented in a `(DOCUMENT OBJECT)` call. For `SECTIONS`([`0`][5fac] [`1`][672f]) this is
+    simply the union of references reachable from references in
+    [`SECTION-ENTRIES`][9450]. The returned objects can be anything provided that
+    [`CANONICAL-REFERENCE`][32f5] works on them. The list need not include `OBJECT`
+    itself.
+    
+    One only has to specialize this for new container-like objects. Its
+    [reference delegate][e403] is [`LOCATE-AND-COLLECT-REACHABLE-OBJECTS`][46ec].
+
+<a id="x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29"></a>
+<a id="MGL-PAX:*FORMAT*%20VARIABLE"></a>
+
+- [variable] **\*FORMAT\*** 
+
+    Bound by [`DOCUMENT`][432c], this allows markdown output to depend on the
+    output format.
+
+<a id="x-28MGL-PAX-3ADOCUMENT-OBJECT-20GENERIC-FUNCTION-29"></a>
+<a id="MGL-PAX:DOCUMENT-OBJECT%20GENERIC-FUNCTION"></a>
+
+- [generic-function] **DOCUMENT-OBJECT** *OBJECT STREAM*
+
+    Write `OBJECT` (and its references recursively) in
+    [`*FORMAT*`][3da8] to `STREAM`. Add methods specializing on `OBJECT` to customize
+    the output of [`DOCUMENT`][432c]. Its [reference delegate][e403] is
+    [`LOCATE-AND-DOCUMENT`][6611].
+
+<a id="x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28STRING-20T-29-29-29"></a>
+<a id="MGL-PAX:DOCUMENT-OBJECT%20%28METHOD%20NIL%20%28STRING%20T%29%29"></a>
+
+- [method] **DOCUMENT-OBJECT** *(STRING STRING) STREAM*
+
+    Print `STRING` to `STREAM` as a docstring. That is, [clean up
+    indentation][718f], perform [Codification][f1ab], and
+    linking (see [Linking to Code][1865], [Linking to the Hyperspec][7cc3]).
+    
+    Docstrings in sources are indented in various ways, which can easily
+    mess up markdown. To handle the most common cases leave, the first
+    line alone but from the rest of the lines strip the longest run of
+    leading spaces that is common to all non-blank lines.
+
+<a id="x-28MGL-PAX-3ADOCSTRING-20GENERIC-FUNCTION-29"></a>
+<a id="MGL-PAX:DOCSTRING%20GENERIC-FUNCTION"></a>
+
+- [generic-function] **DOCSTRING** *OBJECT*
+
+    Return the docstring from the definition of `OBJECT`
+    with [leading indentation stripped][718f]. This
+    function serves a similar purpose as [`CL:DOCUMENTATION`][68f1], but it works
+    `OBJECTs` and [`REFERENCEs`][1cea]. Its [reference delegate][e403] is [`LOCATE-DOCSTRING`][5c39].
+    
+    `DOCSTRING` is used in the implementation of the [`DOCSTRING`][ce75] locative.
+    Some things such as [`ASDF:SYSTEM`][c097]s and `DECLARATIONs`([`0`][47a3] [`1`][6e04]) have no
+    docstrings. Notably `SECTIONs`([`0`][5fac] [`1`][672f]) don't provide access to docstrings.
+
+<a id="x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNCTION-29"></a>
+<a id="MGL-PAX:FIND-SOURCE%20GENERIC-FUNCTION"></a>
+
+- [generic-function] **FIND-SOURCE** *OBJECT*
+
+    Return the Swank source location for `OBJECT`. It
+    is called by `LOCATE-DEFINITIONS-FOR-EMACS`, which lies behind the
+    `M-.` extension (see [Navigating Sources in Emacs][3386]). Its
+    [reference delegate][e403] is [`LOCATE-AND-FIND-SOURCE`][d6a4].
+    
+    If successful, the return value should look like one of these:
+    
+    ```commonlisp
+    (:LOCATION
+      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
+      (:POSITION 3303) NIL)
+    (:LOCATION
+      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
+      (:OFFSET 1 3303) NIL)
+    (:LOCATION
+      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
+      (:FUNCTION-NAME "FOO") NIL)
+    ```
+    
+    The `NIL` above is the source snippet, which is optional. Note that
+    position 1 is the first character in `:FILE`. If unsuccessful, the
+    return value is like:
+    
+    ```commonlisp
+    (:error "Unknown source location for SOMETHING")
+    ```
+
+
 <a id="x-28MGL-PAX-3AEXPORTABLE-REFERENCE-P-20GENERIC-FUNCTION-29"></a>
 <a id="MGL-PAX:EXPORTABLE-REFERENCE-P%20GENERIC-FUNCTION"></a>
 
@@ -3093,150 +3239,6 @@ for [`ASDF:SYSTEM:`][c097]
     [`EXPORTABLE-REFERENCE-P`][e51f] to decide what symbols `DEFSECTION` shall
     export when its `EXPORT` argument is true.
 
-<a id="x-28MGL-PAX-3ALOCATE-OBJECT-20GENERIC-FUNCTION-29"></a>
-<a id="MGL-PAX:LOCATE-OBJECT%20GENERIC-FUNCTION"></a>
-
-- [generic-function] **LOCATE-OBJECT** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS*
-
-    Return the object to which `OBJECT` and the locative
-    refer. For example, if `LOCATIVE-TYPE` is the symbol
-    `PACKAGE`, this returns `(FIND-PACKAGE SYMBOL)`. Signal
-    a [`LOCATE-ERROR`][6887] condition by calling the [`LOCATE-ERROR`][0019] function if the
-    lookup fails. Signal other errors if the types of the argument are
-    bad, for instance `LOCATIVE-ARGS` is not the empty list in the package
-    example. If a [`REFERENCE`][1cea] is returned then it must be canonical in the
-    sense that calling [`CANONICAL-REFERENCE`][32f5] on it will return the same
-    reference. For extension only, don't call this directly.
-
-<a id="x-28MGL-PAX-3ALOCATE-ERROR-20FUNCTION-29"></a>
-<a id="MGL-PAX:LOCATE-ERROR%20FUNCTION"></a>
-
-- [function] **LOCATE-ERROR** *&REST FORMAT-AND-ARGS*
-
-    Call this function to signal a [`LOCATE-ERROR`][6887] condition from a
-    [`LOCATE-OBJECT`][185d] method. `FORMAT-AND-ARGS` contains a format string and
-    args suitable for [`FORMAT`][1f28] from which the [`LOCATE-ERROR-MESSAGE`][7da5] is
-    constructed. If `FORMAT-AND-ARGS` is `NIL`, then the message will be `NIL`
-    too.
-    
-    The object and the locative are not specified, they are added by
-    [`LOCATE`][ee94] when it resignals the condition.
-
-<a id="x-28MGL-PAX-3ACANONICAL-REFERENCE-20GENERIC-FUNCTION-29"></a>
-<a id="MGL-PAX:CANONICAL-REFERENCE%20GENERIC-FUNCTION"></a>
-
-- [generic-function] **CANONICAL-REFERENCE** *OBJECT*
-
-    Return a [`REFERENCE`][1cea] that resolves to `OBJECT`.
-    
-    If `OBJECT` is a `REFERENCE`, then:
-    
-    - if it can be [`RESOLVE`][cd9e]d, `CANONICAL-REFERENCE` is called on the
-      resolved object,
-    
-    - else, an equivalent reference is returned.
-
-
-<a id="x-28MGL-PAX-3ACOLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29"></a>
-<a id="MGL-PAX:COLLECT-REACHABLE-OBJECTS%20GENERIC-FUNCTION"></a>
-
-- [generic-function] **COLLECT-REACHABLE-OBJECTS** *OBJECT*
-
-    Return a list of objects representing all things
-    that would be documented in a ([`DOCUMENT`][432c] `OBJECT`) call. For `SECTIONS`([`0`][5fac] [`1`][672f])
-    this is simply the union of references reachable from references in
-    [`SECTION-ENTRIES`][9450]. The returned objects can be anything provided that
-    [`CANONICAL-REFERENCE`][32f5] works on them. The list need not include `OBJECT`
-    itself.
-    
-    One only has to specialize this for new container-like objects.
-
-<a id="x-28MGL-PAX-3ACOLLECT-REACHABLE-OBJECTS-20-28METHOD-20NIL-20-28T-29-29-29"></a>
-<a id="MGL-PAX:COLLECT-REACHABLE-OBJECTS%20%28METHOD%20NIL%20%28T%29%29"></a>
-
-- [method] **COLLECT-REACHABLE-OBJECTS** *OBJECT*
-
-    This default implementation returns the empty list. This means that
-    nothing is reachable from `OBJECT`.
-
-<a id="x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29"></a>
-<a id="MGL-PAX:*FORMAT*%20VARIABLE"></a>
-
-- [variable] **\*FORMAT\*** 
-
-    Bound by [`DOCUMENT`][432c], this allows markdown output to depend on the
-    output format.
-
-<a id="x-28MGL-PAX-3ADOCUMENT-OBJECT-20GENERIC-FUNCTION-29"></a>
-<a id="MGL-PAX:DOCUMENT-OBJECT%20GENERIC-FUNCTION"></a>
-
-- [generic-function] **DOCUMENT-OBJECT** *OBJECT STREAM*
-
-    Write `OBJECT` (and its references recursively) in
-    [`*FORMAT*`][3da8] to `STREAM`.
-    
-    Add methods specializing on `OBJECT` to customize how objects of that
-    type are presented in the documentation.
-
-<a id="x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28STRING-20T-29-29-29"></a>
-<a id="MGL-PAX:DOCUMENT-OBJECT%20%28METHOD%20NIL%20%28STRING%20T%29%29"></a>
-
-- [method] **DOCUMENT-OBJECT** *(STRING STRING) STREAM*
-
-    Print `STRING` to `STREAM` as a docstring. That is, [clean up
-    indentation][718f], perform [Codification][f1ab], and
-    linking (see [Linking to Code][1865], [Linking to the Hyperspec][7cc3]).
-    
-    Docstrings in sources are indented in various ways, which can easily
-    mess up markdown. To handle the most common cases leave, the first
-    line alone but from the rest of the lines strip the longest run of
-    leading spaces that is common to all non-blank lines.
-
-<a id="x-28MGL-PAX-3ADOCSTRING-20GENERIC-FUNCTION-29"></a>
-<a id="MGL-PAX:DOCSTRING%20GENERIC-FUNCTION"></a>
-
-- [generic-function] **DOCSTRING** *OBJECT*
-
-    Return the docstring from the definition of
-    `OBJECT` (which may be a [`REFERENCE`][1cea]). This is a generalization of
-    [`CL:DOCUMENTATION`][68f1].
-    
-    `DOCSTRING` is used in the implementation of the [`DOCSTRING`][ce75] locative.
-    Some things such as [`ASDF:SYSTEM`][c097]s and `DECLARATION`([`0`][47a3] [`1`][6e04])s have no
-    docstrings. Notably `SECTIONs`([`0`][5fac] [`1`][672f]) don't provide access to docstrings.
-
-<a id="x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNCTION-29"></a>
-<a id="MGL-PAX:FIND-SOURCE%20GENERIC-FUNCTION"></a>
-
-- [generic-function] **FIND-SOURCE** *OBJECT*
-
-    Return the Swank source location for `OBJECT`. It
-    is called by `LOCATE-DEFINITIONS-FOR-EMACS`, which lies behind the
-    `M-.` extension (see [Navigating Sources in Emacs][3386]).
-    
-    If successful, the return value should look like one of these:
-    
-    ```commonlisp
-    (:LOCATION
-      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
-      (:POSITION 3303) NIL)
-    (:LOCATION
-      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
-      (:OFFSET 1 3303) NIL)
-    (:LOCATION
-      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
-      (:FUNCTION-NAME "FOO") NIL)
-    ```
-    
-    The `NIL` above is the source snippet, which is optional. Note that
-    position 1 is the first character in `:FILE`. If unsuccessful, the
-    return value is like:
-    
-    ```commonlisp
-    (:error "Unknown source location for SOMETHING")
-    ```
-
-
 <a id="x-28MGL-PAX-3A-40REFERENCE-BASED-EXTENSIONS-20MGL-PAX-3ASECTION-29"></a>
 <a id="MGL-PAX:@REFERENCE-BASED-EXTENSIONS%20MGL-PAX:SECTION"></a>
 
@@ -3244,12 +3246,10 @@ for [`ASDF:SYSTEM:`][c097]
 
 Let's see how to extend [`DOCUMENT`][432c] and `M-.` navigation if there
 is no first class object to represent the thing of interest. Recall
-that [`LOCATE`][ee94] returns a [`REFERENCE`][1cea] object in this case.
-[`DOCUMENT-OBJECT`][bacc], [`DOCSTRING`][e2bb], and [`FIND-SOURCE`][4355]
-defer to [`LOCATE-AND-DOCUMENT`][6611], [`LOCATE-DOCSTRING`][5c39] and
-[`LOCATE-AND-FIND-SOURCE`][d6a4], respectively, which have [`LOCATIVE-TYPE`][3200] in
-their argument list for [`EQL`][01e5] specializing pleasure. Here is
-how the [`VARIABLE`][6c83] locative is defined:
+that [`LOCATE`][ee94] returns a [`REFERENCE`][1cea] object in this case. The generic
+functions that we have specialized in [Adding New Object Types][bbf2] have
+[reference delegate][e403]s, which can be specialized based on
+[`LOCATIVE-TYPE`][3200]. Here is how the [`VARIABLE`][6c83] locative is defined:
 
 <a id="x-28MGL-PAX-3AVARIABLE-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-28-3ASTART-20-28VARIABLE-20MGL-PAX-3ALOCATIVE-29-20-3AEND-20-28MGL-PAX-3A-3AEND-OF-VARIABLE-EXAMPLE-20VARIABLE-29-29-20-3AHEADER-NL-20-22-60-60-60commonlisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29"></a>
 <a id="MGL-PAX:VARIABLE-EXAMPLE%20%28MGL-PAX:INCLUDE%20%28:START%20%28VARIABLE%20MGL-PAX:LOCATIVE%29%20:END%20%28MGL-PAX::END-OF-VARIABLE-EXAMPLE%20VARIABLE%29%29%20:HEADER-NL%20%22%60%60%60commonlisp%22%20:FOOTER-NL%20%22%60%60%60%22%29"></a>
@@ -3307,99 +3307,61 @@ how the [`VARIABLE`][6c83] locative is defined:
 
 ```
 
-<a id="x-28MGL-PAX-3ACOLLECT-REACHABLE-OBJECTS-20-28METHOD-20NIL-20-28MGL-PAX-3AREFERENCE-29-29-29"></a>
-<a id="MGL-PAX:COLLECT-REACHABLE-OBJECTS%20%28METHOD%20NIL%20%28MGL-PAX:REFERENCE%29%29"></a>
+<a id="x-28MGL-PAX-3A-40REFERENCE-DELEGATE-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+<a id="MGL-PAX:@REFERENCE-DELEGATE%20MGL-PAX:GLOSSARY-TERM"></a>
 
-- [method] **COLLECT-REACHABLE-OBJECTS** *(REFERENCE REFERENCE)*
+- [glossary-term] **reference delegate**
 
-    Call [`LOCATE-AND-COLLECT-REACHABLE-OBJECTS`][46ec] on the object, locative-type,
-    locative-args of `REFERENCE`. If there is a specialized method for it,
-    then return what it returns. If not and `REFERENCE` can be resolved to
-    a non-reference, call `COLLECT-REACHABLE-OBJECTS` with it, else return
-    `NIL`.
+    [`CANONICAL-REFERENCE`][32f5], [`COLLECT-REACHABLE-OBJECTS`][8c95], [`DOCUMENT-OBJECT`][bacc],
+    [`DOCSTRING`][e2bb], and [`FIND-SOURCE`][4355] delegate dealing with
+    [`REFERENCES`][1cea] to another generic function, one each, which is called
+    their reference delegate. Each of these delegator functions invokes
+    its delegate when a `REFERENCE` is passed it (as its `OBJECT` argument),
+    or there is no method specialized for its arguments, in which case
+    it uses the `CANONICAL-REFERENCE`.
+    
+    The net effect is that is that it is sufficient to specialize either
+    the delegator or the delegate for a new locative type.
+
+<a id="x-28MGL-PAX-3ALOCATE-CANONICAL-REFERENCE-20GENERIC-FUNCTION-29"></a>
+<a id="MGL-PAX:LOCATE-CANONICAL-REFERENCE%20GENERIC-FUNCTION"></a>
+
+- [generic-function] **LOCATE-CANONICAL-REFERENCE** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS*
+
+    This is the [reference delegate][e403] of
+    [`CANONICAL-REFERENCE`][32f5]. The default method calls [`LOCATE-OBJECT`][185d] with the
+    three arguments. If `LOCATE-OBJECT` returns a [`REFERENCE`][1cea], then that's
+    taken to be the canonical reference and is returned, else
+    `CANONICAL-REFERENCE` is invoked with the returned object.
 
 <a id="x-28MGL-PAX-3ALOCATE-AND-COLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29"></a>
 <a id="MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS%20GENERIC-FUNCTION"></a>
 
 - [generic-function] **LOCATE-AND-COLLECT-REACHABLE-OBJECTS** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS*
 
-    Called by [`COLLECT-REACHABLE-OBJECTS`][8c95] on [`REFERENCE`][1cea]
-    objects, this function has essentially the same purpose as its
-    caller but it has different arguments to allow specializing on
-    `LOCATIVE-TYPE`.
-
-<a id="x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28MGL-PAX-3AREFERENCE-20T-29-29-29"></a>
-<a id="MGL-PAX:DOCUMENT-OBJECT%20%28METHOD%20NIL%20%28MGL-PAX:REFERENCE%20T%29%29"></a>
-
-- [method] **DOCUMENT-OBJECT** *(REFERENCE REFERENCE) STREAM*
-
-    If `REFERENCE` can be resolved to a non-reference, call
-    `DOCUMENT-OBJECT` with it, else call [`LOCATE-AND-DOCUMENT`][6611] on the
-    object, locative-type, locative-args of `REFERENCE`
+    This is the [reference delegate][e403] of
+    [`COLLECT-REACHABLE-OBJECTS`][8c95].
 
 <a id="x-28MGL-PAX-3ALOCATE-AND-DOCUMENT-20GENERIC-FUNCTION-29"></a>
 <a id="MGL-PAX:LOCATE-AND-DOCUMENT%20GENERIC-FUNCTION"></a>
 
 - [generic-function] **LOCATE-AND-DOCUMENT** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS STREAM*
 
-    Called by [`DOCUMENT-OBJECT`][bacc] on [`REFERENCE`][1cea] objects,
-    this function has essentially the same purpose as `DOCUMENT-OBJECT`,
-    but it has different arguments to allow specializing on
-    `LOCATIVE-TYPE`.
-
-<a id="x-28MGL-PAX-3ADOCSTRING-20-28METHOD-20NIL-20-28MGL-PAX-3AREFERENCE-29-29-29"></a>
-<a id="MGL-PAX:DOCSTRING%20%28METHOD%20NIL%20%28MGL-PAX:REFERENCE%29%29"></a>
-
-- [method] **DOCSTRING** *(REFERENCE REFERENCE)*
-
-    Call [`LOCATE-DOCSTRING`][5c39] on the object, locative-type,
-    locative-args of `REFERENCE`. If that returns `NIL` and `REFERENCE` can be
-    [`RESOLVE`][cd9e]d to a non-reference, then call `DOCSTRING` with it.
+    This is the [reference delegate][e403] of [`DOCUMENT`][432c].
 
 <a id="x-28MGL-PAX-3ALOCATE-DOCSTRING-20GENERIC-FUNCTION-29"></a>
 <a id="MGL-PAX:LOCATE-DOCSTRING%20GENERIC-FUNCTION"></a>
 
 - [generic-function] **LOCATE-DOCSTRING** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS*
 
-    Called by `DOCSTRING`([`0`][e2bb] [`1`][ce75]) on [`REFERENCE`][1cea] objects, this
-    function has essentially the same purpose as `DOCSTRING`, but it has
-    different arguments to allow specializing on `LOCATIVE-TYPE`.
+    This is the [reference delegate][e403] of [`DOCSTRING`][e2bb].
 
 <a id="x-28MGL-PAX-3ALOCATE-AND-FIND-SOURCE-20GENERIC-FUNCTION-29"></a>
 <a id="MGL-PAX:LOCATE-AND-FIND-SOURCE%20GENERIC-FUNCTION"></a>
 
 - [generic-function] **LOCATE-AND-FIND-SOURCE** *OBJECT LOCATIVE-TYPE LOCATIVE-ARGS*
 
-    This function serves the same purpose as
-    [`FIND-SOURCE`][4355], but it has different arguments to allow specializing on
-    `LOCATIVE-TYPE`. Methods defined as extensions must be
-    `EQL`([`0`][8517] [`1`][01e5])-specialized on a particular locative type and return a Swank
-    `location` as documented in `FIND-SOURCE`.
-    
-    See [`FIND-SOURCE`][5908] `(method () (t))` and
-    [`FIND-SOURCE`][b1ce] `(method () (reference))` for a description of when this
-    function is called. Don't call this function directly.
-
-<a id="x-28MGL-PAX-3AFIND-SOURCE-20-28METHOD-20NIL-20-28T-29-29-29"></a>
-<a id="MGL-PAX:FIND-SOURCE%20%28METHOD%20NIL%20%28T%29%29"></a>
-
-- [method] **FIND-SOURCE** *OBJECT*
-
-    Call [`LOCATE-AND-FIND-SOURCE`][d6a4] with the appropriate parts of
-    [`CANONICAL-REFERENCE`][32f5] for `OBJECT`.
-
-<a id="x-28MGL-PAX-3AFIND-SOURCE-20-28METHOD-20NIL-20-28MGL-PAX-3AREFERENCE-29-29-29"></a>
-<a id="MGL-PAX:FIND-SOURCE%20%28METHOD%20NIL%20%28MGL-PAX:REFERENCE%29%29"></a>
-
-- [method] **FIND-SOURCE** *(REFERENCE REFERENCE)*
-
-    Call [`LOCATE-AND-FIND-SOURCE`][d6a4] with the appropriate parts of
-    `REFERENCE`. If there is no method specialized on the [locative
-    type][fd7c], then attempt to [`RESOLVE`][cd9e] `REFERENCE`
-    to a non-`REFERENCE` object and invoke `FIND-SOURCE` on it.
-    
-    Thus for new locative types, only `FIND-SOURCE` or
-    `LOCATE-AND-FIND-SOURCE` needs to be specialized.
+    This is the [reference delegate][e403] of [`FIND-SOURCE`][4355].
 
 We have covered the basic building blocks of reference based
 extensions. Now let's see how the obscure
@@ -3515,7 +3477,6 @@ presented.
 
   [0019]: #MGL-PAX:LOCATE-ERROR%20FUNCTION "MGL-PAX:LOCATE-ERROR FUNCTION"
   [00d4]: #MGL-PAX:ACCESSOR%20MGL-PAX:LOCATIVE "MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE"
-  [01e5]: http://www.lispworks.com/documentation/HyperSpec/Body/t_eql.htm "EQL TYPE"
   [0225]: #MGL-PAX:DOCUMENT-OBJECT%20%28METHOD%20NIL%20%28STRING%20T%29%29 "MGL-PAX:DOCUMENT-OBJECT (METHOD NIL (STRING T))"
   [02de]: #MGL-PAX:REFERENCE-LOCATIVE%20%28MGL-PAX:READER%20MGL-PAX:REFERENCE%29 "MGL-PAX:REFERENCE-LOCATIVE (MGL-PAX:READER MGL-PAX:REFERENCE)"
   [06a9]: #MGL-PAX:@CONDITION-SYSTEM-LOCATIVES%20MGL-PAX:SECTION "Condition System Locatives"
@@ -3578,7 +3539,6 @@ presented.
   [5800]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq_sle.htm "< FUNCTION"
   [5825]: #%22mgl-pax%2Ftranscribe%22%20ASDF%2FSYSTEM:SYSTEM '"mgl-pax/transcribe" ASDF/SYSTEM:SYSTEM'
   [5875]: #GENERIC-FUNCTION%20MGL-PAX:LOCATIVE "GENERIC-FUNCTION MGL-PAX:LOCATIVE"
-  [5908]: #MGL-PAX:FIND-SOURCE%20%28METHOD%20NIL%20%28T%29%29 "MGL-PAX:FIND-SOURCE (METHOD NIL (T))"
   [5c39]: #MGL-PAX:LOCATE-DOCSTRING%20GENERIC-FUNCTION "MGL-PAX:LOCATE-DOCSTRING GENERIC-FUNCTION"
   [5c74]: #MGL-PAX:@UNAMBIGUOUS-LOCATIVE%20MGL-PAX:SECTION "Unambiguous Unspecified Locative"
   [5cd7]: #MGL-PAX:INCLUDE%20MGL-PAX:LOCATIVE "MGL-PAX:INCLUDE MGL-PAX:LOCATIVE"
@@ -3610,6 +3570,7 @@ presented.
   [7445]: #MGL-PAX:@INTERESTING%20MGL-PAX:GLOSSARY-TERM "MGL-PAX:@INTERESTING MGL-PAX:GLOSSARY-TERM"
   [7584]: #MGL-PAX:DEFINE-SYMBOL-LOCATIVE-TYPE%20MGL-PAX:MACRO "MGL-PAX:DEFINE-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO"
   [75ce]: #MGL-PAX:@OBJECT%20MGL-PAX:GLOSSARY-TERM "MGL-PAX:@OBJECT MGL-PAX:GLOSSARY-TERM"
+  [7b2c]: #MGL-PAX:LOCATE-ERROR-OBJECT%20%28MGL-PAX:READER%20MGL-PAX:LOCATE-ERROR%29 "MGL-PAX:LOCATE-ERROR-OBJECT (MGL-PAX:READER MGL-PAX:LOCATE-ERROR)"
   [7c82]: #MGL-PAX:@MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES%20MGL-PAX:SECTION "Miscellaneous Variables"
   [7cc3]: #MGL-PAX:@LINKING-TO-THE-HYPERSPEC%20MGL-PAX:SECTION "Linking to the Hyperspec"
   [7da5]: #MGL-PAX:LOCATE-ERROR-MESSAGE%20%28MGL-PAX:READER%20MGL-PAX:LOCATE-ERROR%29 "MGL-PAX:LOCATE-ERROR-MESSAGE (MGL-PAX:READER MGL-PAX:LOCATE-ERROR)"
@@ -3620,7 +3581,6 @@ presented.
   [82e0]: #METHOD-COMBINATION%20MGL-PAX:LOCATIVE "METHOD-COMBINATION MGL-PAX:LOCATIVE"
   [8423]: #MGL-PAX:@TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING%20MGL-PAX:SECTION "Utilities for Consistency Checking"
   [8492]: #MGL-PAX:TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR%20CONDITION "MGL-PAX:TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR CONDITION"
-  [8517]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eql.htm "EQL FUNCTION"
   [8710]: #MGL-PAX:ARGUMENT%20MGL-PAX:LOCATIVE "MGL-PAX:ARGUMENT MGL-PAX:LOCATIVE"
   [875e]: #MGL-PAX:*DOCUMENT-LINK-TO-HYPERSPEC*%20VARIABLE "MGL-PAX:*DOCUMENT-LINK-TO-HYPERSPEC* VARIABLE"
   [889e]: http://www.lispworks.com/documentation/HyperSpec/Body/v_sl_sls.htm "/// VARIABLE"
@@ -3647,6 +3607,7 @@ presented.
   [9674]: http://www.lispworks.com/documentation/HyperSpec/Body/f_procla.htm "PROCLAIM FUNCTION"
   [96d0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_equal.htm "EQUAL FUNCTION"
   [9717]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defun.htm "DEFUN MGL-PAX:MACRO"
+  [9974]: #MGL-PAX:LOCATE-ERROR-LOCATIVE%20%28MGL-PAX:READER%20MGL-PAX:LOCATE-ERROR%29 "MGL-PAX:LOCATE-ERROR-LOCATIVE (MGL-PAX:READER MGL-PAX:LOCATE-ERROR)"
   [9dbc]: #MGL-PAX:@TRANSCRIPT-API%20MGL-PAX:SECTION "Transcript API"
   [a17d]: #MGL-PAX:@MATHJAX%20MGL-PAX:SECTION "MathJax"
   [a249]: #MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR%20CONDITION "MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION"
@@ -3658,7 +3619,6 @@ presented.
   [a85e]: #MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE%20MGL-PAX:MACRO "MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO"
   [a916]: http://www.lispworks.com/documentation/HyperSpec/Body/v_rdtabl.htm "*READTABLE* VARIABLE"
   [ad91]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rst.htm "RESTART TYPE"
-  [b1ce]: #MGL-PAX:FIND-SOURCE%20%28METHOD%20NIL%20%28MGL-PAX:REFERENCE%29%29 "MGL-PAX:FIND-SOURCE (METHOD NIL (MGL-PAX:REFERENCE))"
   [b3cc]: #MGL-PAX:@EXPLICIT-AND-AUTOLINKING%20MGL-PAX:SECTION "Explicit and Autolinking"
   [b89a]: #MGL-PAX:@CODIFIABLE%20MGL-PAX:GLOSSARY-TERM "MGL-PAX:@CODIFIABLE MGL-PAX:GLOSSARY-TERM"
   [ba62]: #FUNCTION%20MGL-PAX:LOCATIVE "FUNCTION MGL-PAX:LOCATIVE"
@@ -3673,6 +3633,7 @@ presented.
   [bf07]: http://www.lispworks.com/documentation/HyperSpec/Body/f_export.htm "EXPORT FUNCTION"
   [c097]: #ASDF%2FSYSTEM:SYSTEM%20MGL-PAX:LOCATIVE "ASDF/SYSTEM:SYSTEM MGL-PAX:LOCATIVE"
   [c1eb]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eval.htm "EVAL FUNCTION"
+  [c267]: #MGL-PAX:LOCATE-CANONICAL-REFERENCE%20GENERIC-FUNCTION "MGL-PAX:LOCATE-CANONICAL-REFERENCE GENERIC-FUNCTION"
   [c2d3]: #MGL-PAX:@MARKDOWN-SUPPORT%20MGL-PAX:SECTION "Markdown Support"
   [c35d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_intern.htm "INTERN FUNCTION"
   [c4ce]: #MGL-PAX:@EXTENSION-API%20MGL-PAX:SECTION "Extension API"
@@ -3700,6 +3661,7 @@ presented.
   [e2bb]: #MGL-PAX:DOCSTRING%20GENERIC-FUNCTION "MGL-PAX:DOCSTRING GENERIC-FUNCTION"
   [e2e8]: #MGL-PAX:@SUPPRESSED-LINKS%20MGL-PAX:SECTION "Suppressed Links"
   [e391]: #MGL-PAX:DISLOCATED%20MGL-PAX:LOCATIVE "MGL-PAX:DISLOCATED MGL-PAX:LOCATIVE"
+  [e403]: #MGL-PAX:@REFERENCE-DELEGATE%20MGL-PAX:GLOSSARY-TERM "MGL-PAX:@REFERENCE-DELEGATE MGL-PAX:GLOSSARY-TERM"
   [e4b0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_ensu_1.htm "ENSURE-DIRECTORIES-EXIST FUNCTION"
   [e51f]: #MGL-PAX:EXPORTABLE-REFERENCE-P%20GENERIC-FUNCTION "MGL-PAX:EXPORTABLE-REFERENCE-P GENERIC-FUNCTION"
   [e548]: #MGL-PAX:WRITER%20MGL-PAX:LOCATIVE "MGL-PAX:WRITER MGL-PAX:LOCATIVE"

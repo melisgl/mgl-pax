@@ -1007,7 +1007,7 @@
 (defmethod locate-object (name (locative-type (eql 'asdf:system))
                           locative-args)
   (or (and (endp locative-args)
-           ;; FIXME: This is slow as hell.
+           ;; ASDF:FIND-SYSTEM is slow as hell.
            (asdf:find-system (string-downcase (string name)) nil))
       (locate-error "~S does not name an asdf system." name)))
 
@@ -1079,7 +1079,7 @@
   (make-reference (character-string (string-downcase (string name)))
                   'asdf:system))
 
-;; By a similar rationale, let's specialize this too.
+;;; By a similar rationale, let's specialize this too.
 (defmethod locate-and-collect-reachable-objects
     (name (locative-type (eql 'asdf:system)) locative-args)
   (declare (ignore name locative-args))

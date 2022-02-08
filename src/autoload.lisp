@@ -50,6 +50,7 @@
 (declaim (ftype function print-end-bullet))
 (declaim (ftype function massage-docstring))
 (declaim (ftype function maybe-print-docstring))
+(declaim (ftype function documentation*))
 (declaim (ftype function escape-markdown))
 (declaim (ftype function prin1-and-escape-markdown))
 

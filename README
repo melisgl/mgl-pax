@@ -2378,8 +2378,7 @@ object like this:
 
 which will return the same reference as `(MAKE-REFERENCE 'FOO
 'VARIABLE)`. Operations need to know how to deal with references,
-which we will see in LOCATE-AND-COLLECT-REACHABLE-OBJECTS,
-LOCATE-AND-DOCUMENT and LOCATE-AND-FIND-SOURCE.
+which we will see in the @EXTENSION-API.
 
 Naturally, `(LOCATE 'FOO 'FUNCTION)` will simply return `#'FOO`, no
 need to muck with references when there is a perfectly good object.
@@ -2388,8 +2387,24 @@ need to muck with references when there is a perfectly good object.
 
     Follow LOCATIVE from OBJECT and return the object it leads to or a
     REFERENCE if there is no first class object corresponding to the
-    location. If ERRORP, then a LOCATE-ERROR condition is signaled when
-    the lookup fails.
+    location. Depending on ERRORP, a LOCATE-ERROR condition is signaled
+    or NIL is returned if the lookup fails.
+    
+    ```
+    (locate 'locate 'function)
+    ==> #<FUNCTION LOCATE>
+    
+    (locate 'no-such-function 'function)
+    .. debugger invoked on LOCATE-ERROR:
+    ..   Could not locate NO-SUCH-FUNCTION FUNCTION.
+    ..   NO-SUCH-FUNCTION does not name a function.
+    
+    (locate 'locate-object 'method)
+    .. debugger invoked on LOCATE-ERROR:
+    ..   Could not locate LOCATE-OBJECT METHOD.
+    ..   The syntax of the METHOD locative is (METHOD <METHOD-QUALIFIERS> <METHOD-SPECIALIZERS>).
+    ```
+
 
 - [condition] LOCATE-ERROR ERROR
 
@@ -2436,11 +2451,13 @@ need to muck with references when there is a perfectly good object.
 One may wish to make the DOCUMENT function and `M-.` navigation
 work with new object types. Extending DOCUMENT can be done by
 defining a DOCUMENT-OBJECT method. To allow these objects to be
-referenced from DEFSECTION, a LOCATE-OBJECT method is to be defined.
-For `M-.` FIND-SOURCE can be specialized. Finally,
+referenced from DEFSECTION, LOCATE-OBJECT method is to be defined.
+If there are multiple equivalent references possible for the same
+thing, then CANONICAL-REFERENCE must be specialized. For the
+DOCSTRING locative to work on the new type, a DOCSTRING method is
+needed. For `M-.` FIND-SOURCE can be specialized. Finally,
 EXPORTABLE-LOCATIVE-TYPE-P may be overridden if exporting does not
-makes sense. Here is a stripped down example of how all this is done
-for ASDF:SYSTEM:
+makes sense. Here is how all this is done for ASDF:SYSTEM:
 
 ```commonlisp
 (define-locative-type asdf:system ()
@@ -2454,7 +2471,7 @@ for ASDF:SYSTEM:
 (defmethod locate-object (name (locative-type (eql 'asdf:system))
                           locative-args)
   (or (and (endp locative-args)
-           ;; FIXME: This is slow as hell.
+           ;; ASDF:FIND-SYSTEM is slow as hell.
            (asdf:find-system (string-downcase (string name)) nil))
       (locate-error "~S does not name an asdf system." name)))
 
@@ -2558,6 +2575,108 @@ for ASDF:SYSTEM:
     ```
 
 
+- [generic-function] LOCATE-OBJECT OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
+
+    Return the object to which OBJECT and the locative
+    refer. Signal a LOCATE-ERROR condition by calling the LOCATE-ERROR
+    function if the lookup fails. If a REFERENCE is returned, then it
+    must be canonical in the sense that calling CANONICAL-REFERENCE on
+    it will return the same reference. Don't call this function
+    directly. It serves only to extend LOCATE.
+
+- [function] LOCATE-ERROR &REST FORMAT-AND-ARGS
+
+    Call this function to signal a LOCATE-ERROR condition from a
+    LOCATE-OBJECT method. FORMAT-AND-ARGS contains a format string and
+    args suitable for FORMAT from which the LOCATE-ERROR-MESSAGE is
+    constructed. If FORMAT-AND-ARGS is NIL, then the message will be NIL
+    too.
+    
+    LOCATE-ERROR-OBJECT and LOCATE-ERROR-LOCATIVE are populated
+    automatically.
+
+- [generic-function] CANONICAL-REFERENCE OBJECT
+
+    Return a REFERENCE that RESOLVEs to OBJECT, or
+    return NIL if this operation is not defined for OBJECT. Its
+    @REFERENCE-DELEGATE is LOCATE-CANONICAL-REFERENCE.
+
+- [generic-function] COLLECT-REACHABLE-OBJECTS OBJECT
+
+    Return a list of objects representing all things to
+    be documented in a `(DOCUMENT OBJECT)` call. For SECTIONS this is
+    simply the union of references reachable from references in
+    SECTION-ENTRIES. The returned objects can be anything provided that
+    CANONICAL-REFERENCE works on them. The list need not include OBJECT
+    itself.
+    
+    One only has to specialize this for new container-like objects. Its
+    @REFERENCE-DELEGATE is LOCATE-AND-COLLECT-REACHABLE-OBJECTS.
+
+- [variable] *FORMAT* 
+
+    Bound by DOCUMENT, this allows markdown output to depend on the
+    output format.
+
+- [generic-function] DOCUMENT-OBJECT OBJECT STREAM
+
+    Write OBJECT (and its references recursively) in
+    *FORMAT* to STREAM. Add methods specializing on OBJECT to customize
+    the output of DOCUMENT. Its @REFERENCE-DELEGATE is
+    LOCATE-AND-DOCUMENT.
+
+- [method] DOCUMENT-OBJECT (STRING STRING) STREAM
+
+    Print STRING to STREAM as a docstring. That is, [clean up
+    indentation][@markdown-indentation], perform @CODIFICATION, and
+    linking (see @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
+    
+    Docstrings in sources are indented in various ways, which can easily
+    mess up markdown. To handle the most common cases leave, the first
+    line alone but from the rest of the lines strip the longest run of
+    leading spaces that is common to all non-blank lines.
+
+- [generic-function] DOCSTRING OBJECT
+
+    Return the docstring from the definition of OBJECT
+    with [leading indentation stripped][@markdown-indentation]. This
+    function serves a similar purpose as CL:DOCUMENTATION, but it works
+    OBJECTs and REFERENCEs. Its @REFERENCE-DELEGATE is LOCATE-DOCSTRING.
+    
+    DOCSTRING is used in the implementation of the DOCSTRING locative.
+    Some things such as ASDF:SYSTEMS and DECLARATIONs have no
+    docstrings. Notably SECTIONs don't provide access to docstrings.
+
+- [generic-function] FIND-SOURCE OBJECT
+
+    Return the Swank source location for OBJECT. It
+    is called by LOCATE-DEFINITIONS-FOR-EMACS, which lies behind the
+    `M-.` extension (see @NAVIGATING-IN-EMACS). Its
+    @REFERENCE-DELEGATE is LOCATE-AND-FIND-SOURCE.
+    
+    If successful, the return value should look like one of these:
+    
+    ```commonlisp
+    (:LOCATION
+      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
+      (:POSITION 3303) NIL)
+    (:LOCATION
+      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
+      (:OFFSET 1 3303) NIL)
+    (:LOCATION
+      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
+      (:FUNCTION-NAME "FOO") NIL)
+    ```
+    
+    The NIL above is the source snippet, which is optional. Note that
+    position 1 is the first character in `:FILE`. If unsuccessful, the
+    return value is like:
+    
+    ```commonlisp
+    (:error "Unknown source location for SOMETHING")
+    ```
+
+
 - [generic-function] EXPORTABLE-REFERENCE-P PACKAGE SYMBOL LOCATIVE-TYPE LOCATIVE-ARGS
 
     Return true iff SYMBOL is to be exported from
@@ -2591,130 +2710,14 @@ for ASDF:SYSTEM:
     EXPORTABLE-REFERENCE-P to decide what symbols DEFSECTION shall
     export when its EXPORT argument is true.
 
-- [generic-function] LOCATE-OBJECT OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
-
-    Return the object to which OBJECT and the locative
-    refer. For example, if LOCATIVE-TYPE is the symbol
-    PACKAGE, this returns `(FIND-PACKAGE SYMBOL)`. Signal
-    a LOCATE-ERROR condition by calling the LOCATE-ERROR function if the
-    lookup fails. Signal other errors if the types of the argument are
-    bad, for instance LOCATIVE-ARGS is not the empty list in the package
-    example. If a REFERENCE is returned then it must be canonical in the
-    sense that calling CANONICAL-REFERENCE on it will return the same
-    reference. For extension only, don't call this directly.
-
-- [function] LOCATE-ERROR &REST FORMAT-AND-ARGS
-
-    Call this function to signal a LOCATE-ERROR condition from a
-    LOCATE-OBJECT method. FORMAT-AND-ARGS contains a format string and
-    args suitable for FORMAT from which the LOCATE-ERROR-MESSAGE is
-    constructed. If FORMAT-AND-ARGS is NIL, then the message will be NIL
-    too.
-    
-    The object and the locative are not specified, they are added by
-    LOCATE when it resignals the condition.
-
-- [generic-function] CANONICAL-REFERENCE OBJECT
-
-    Return a REFERENCE that resolves to OBJECT.
-    
-    If OBJECT is a REFERENCE, then:
-    
-    - if it can be `RESOLVE`d, CANONICAL-REFERENCE is called on the
-      resolved object,
-    
-    - else, an equivalent reference is returned.
-
-
-- [generic-function] COLLECT-REACHABLE-OBJECTS OBJECT
-
-    Return a list of objects representing all things
-    that would be documented in a (DOCUMENT OBJECT) call. For SECTIONS
-    this is simply the union of references reachable from references in
-    SECTION-ENTRIES. The returned objects can be anything provided that
-    CANONICAL-REFERENCE works on them. The list need not include OBJECT
-    itself.
-    
-    One only has to specialize this for new container-like objects.
-
-- [method] COLLECT-REACHABLE-OBJECTS OBJECT
-
-    This default implementation returns the empty list. This means that
-    nothing is reachable from OBJECT.
-
-- [variable] *FORMAT* 
-
-    Bound by DOCUMENT, this allows markdown output to depend on the
-    output format.
-
-- [generic-function] DOCUMENT-OBJECT OBJECT STREAM
-
-    Write OBJECT (and its references recursively) in
-    *FORMAT* to STREAM.
-    
-    Add methods specializing on OBJECT to customize how objects of that
-    type are presented in the documentation.
-
-- [method] DOCUMENT-OBJECT (STRING STRING) STREAM
-
-    Print STRING to STREAM as a docstring. That is, [clean up
-    indentation][@markdown-indentation], perform @CODIFICATION, and
-    linking (see @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
-    
-    Docstrings in sources are indented in various ways, which can easily
-    mess up markdown. To handle the most common cases leave, the first
-    line alone but from the rest of the lines strip the longest run of
-    leading spaces that is common to all non-blank lines.
-
-- [generic-function] DOCSTRING OBJECT
-
-    Return the docstring from the definition of
-    OBJECT (which may be a REFERENCE). This is a generalization of
-    CL:DOCUMENTATION.
-    
-    DOCSTRING is used in the implementation of the DOCSTRING locative.
-    Some things such as ASDF:SYSTEMS and DECLARATIONs have no
-    docstrings. Notably SECTIONs don't provide access to docstrings.
-
-- [generic-function] FIND-SOURCE OBJECT
-
-    Return the Swank source location for OBJECT. It
-    is called by LOCATE-DEFINITIONS-FOR-EMACS, which lies behind the
-    `M-.` extension (see @NAVIGATING-IN-EMACS).
-    
-    If successful, the return value should look like one of these:
-    
-    ```commonlisp
-    (:LOCATION
-      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
-      (:POSITION 3303) NIL)
-    (:LOCATION
-      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
-      (:OFFSET 1 3303) NIL)
-    (:LOCATION
-      (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
-      (:FUNCTION-NAME "FOO") NIL)
-    ```
-    
-    The NIL above is the source snippet, which is optional. Note that
-    position 1 is the first character in `:FILE`. If unsuccessful, the
-    return value is like:
-    
-    ```commonlisp
-    (:error "Unknown source location for SOMETHING")
-    ```
-
-
 ### Reference Based Extensions
 
 Let's see how to extend DOCUMENT and `M-.` navigation if there
 is no first class object to represent the thing of interest. Recall
-that LOCATE returns a REFERENCE object in this case.
-DOCUMENT-OBJECT, [DOCSTRING][generic-function], and FIND-SOURCE
-defer to LOCATE-AND-DOCUMENT, LOCATE-DOCSTRING and
-LOCATE-AND-FIND-SOURCE, respectively, which have LOCATIVE-TYPE in
-their argument list for [EQL][type] specializing pleasure. Here is
-how the VARIABLE locative is defined:
+that LOCATE returns a REFERENCE object in this case. The generic
+functions that we have specialized in @NEW-OBJECT-TYPES have
+@REFERENCE-DELEGATEs, which can be specialized based on
+LOCATIVE-TYPE. Here is how the VARIABLE locative is defined:
 
 ```commonlisp
 (define-locative-type variable (&optional initform)
@@ -2769,72 +2772,44 @@ how the VARIABLE locative is defined:
 
 ```
 
-- [method] COLLECT-REACHABLE-OBJECTS (REFERENCE REFERENCE)
+- [glossary-term] reference delegate
 
-    Call LOCATE-AND-COLLECT-REACHABLE-OBJECTS on the object, locative-type,
-    locative-args of REFERENCE. If there is a specialized method for it,
-    then return what it returns. If not and REFERENCE can be resolved to
-    a non-reference, call COLLECT-REACHABLE-OBJECTS with it, else return
-    NIL.
+    CANONICAL-REFERENCE, COLLECT-REACHABLE-OBJECTS, DOCUMENT-OBJECT,
+    [DOCSTRING][generic-function], and FIND-SOURCE delegate dealing with
+    REFERENCES to another generic function, one each, which is called
+    their reference delegate. Each of these delegator functions invokes
+    its delegate when a REFERENCE is passed it (as its OBJECT argument),
+    or there is no method specialized for its arguments, in which case
+    it uses the CANONICAL-REFERENCE.
+    
+    The net effect is that is that it is sufficient to specialize either
+    the delegator or the delegate for a new locative type.
+
+- [generic-function] LOCATE-CANONICAL-REFERENCE OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
+
+    This is the @REFERENCE-DELEGATE of
+    CANONICAL-REFERENCE. The default method calls LOCATE-OBJECT with the
+    three arguments. If LOCATE-OBJECT returns a REFERENCE, then that's
+    taken to be the canonical reference and is returned, else
+    CANONICAL-REFERENCE is invoked with the returned object.
 
 - [generic-function] LOCATE-AND-COLLECT-REACHABLE-OBJECTS OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
 
-    Called by COLLECT-REACHABLE-OBJECTS on REFERENCE
-    objects, this function has essentially the same purpose as its
-    caller but it has different arguments to allow specializing on
-    LOCATIVE-TYPE.
-
-- [method] DOCUMENT-OBJECT (REFERENCE REFERENCE) STREAM
-
-    If REFERENCE can be resolved to a non-reference, call
-    DOCUMENT-OBJECT with it, else call LOCATE-AND-DOCUMENT on the
-    object, locative-type, locative-args of REFERENCE
+    This is the @REFERENCE-DELEGATE of
+    COLLECT-REACHABLE-OBJECTS.
 
 - [generic-function] LOCATE-AND-DOCUMENT OBJECT LOCATIVE-TYPE LOCATIVE-ARGS STREAM
 
-    Called by DOCUMENT-OBJECT on REFERENCE objects,
-    this function has essentially the same purpose as DOCUMENT-OBJECT,
-    but it has different arguments to allow specializing on
-    LOCATIVE-TYPE.
-
-- [method] DOCSTRING (REFERENCE REFERENCE)
-
-    Call LOCATE-DOCSTRING on the object, locative-type,
-    locative-args of REFERENCE. If that returns NIL and REFERENCE can be
-    `RESOLVE`d to a non-reference, then call DOCSTRING with it.
+    This is the @REFERENCE-DELEGATE of DOCUMENT.
 
 - [generic-function] LOCATE-DOCSTRING OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
 
-    Called by DOCSTRING on REFERENCE objects, this
-    function has essentially the same purpose as DOCSTRING, but it has
-    different arguments to allow specializing on LOCATIVE-TYPE.
+    This is the @REFERENCE-DELEGATE of [DOCSTRING][
+    generic-function].
 
 - [generic-function] LOCATE-AND-FIND-SOURCE OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
 
-    This function serves the same purpose as
-    FIND-SOURCE, but it has different arguments to allow specializing on
-    LOCATIVE-TYPE. Methods defined as extensions must be
-    `EQL`-specialized on a particular locative type and return a Swank
-    `location` as documented in FIND-SOURCE.
-    
-    See FIND-SOURCE `(method () (t))` and
-    FIND-SOURCE `(method () (reference))` for a description of when this
-    function is called. Don't call this function directly.
-
-- [method] FIND-SOURCE OBJECT
-
-    Call LOCATE-AND-FIND-SOURCE with the appropriate parts of
-    CANONICAL-REFERENCE for OBJECT.
-
-- [method] FIND-SOURCE (REFERENCE REFERENCE)
-
-    Call LOCATE-AND-FIND-SOURCE with the appropriate parts of
-    REFERENCE. If there is no method specialized on the [locative
-    type][@locatives-and-references], then attempt to RESOLVE REFERENCE
-    to a non-`REFERENCE` object and invoke FIND-SOURCE on it.
-    
-    Thus for new locative types, only FIND-SOURCE or
-    LOCATE-AND-FIND-SOURCE needs to be specialized.
+    This is the @REFERENCE-DELEGATE of FIND-SOURCE.
 
 We have covered the basic building blocks of reference based
 extensions. Now let's see how the obscure

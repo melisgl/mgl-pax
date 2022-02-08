@@ -19,29 +19,30 @@
   """One may wish to make the DOCUMENT function and `\\M-.` navigation
   work with new object types. Extending DOCUMENT can be done by
   defining a DOCUMENT-OBJECT method. To allow these objects to be
-  referenced from DEFSECTION, a LOCATE-OBJECT method is to be defined.
-  For `\\M-.` FIND-SOURCE can be specialized. Finally,
+  referenced from DEFSECTION, LOCATE-OBJECT method is to be defined.
+  If there are multiple equivalent references possible for the same
+  thing, then CANONICAL-REFERENCE must be specialized. For the
+  DOCSTRING locative to work on the new type, a DOCSTRING method is
+  needed. For `\\M-.` FIND-SOURCE can be specialized. Finally,
   EXPORTABLE-LOCATIVE-TYPE-P may be overridden if exporting does not
-  makes sense. Here is a stripped down example of how all this is done
-  for ASDF:SYSTEM:"""
+  makes sense. Here is how all this is done for ASDF:SYSTEM:"""
   (asdf-example (include (:start (asdf:system locative)
                           :end (end-of-asdf-example variable))
                          :header-nl "```commonlisp"
                          :footer-nl "```"))
   (define-locative-type macro)
   (define-locative-alias macro)
-  (exportable-reference-p generic-function)
-  (exportable-locative-type-p generic-function)
   (locate-object generic-function)
   (locate-error function)
   (canonical-reference generic-function)
   (collect-reachable-objects generic-function)
-  (collect-reachable-objects (method () (t)))
   (*format* variable)
   (document-object generic-function)
   (document-object (method () (string t)))
   (docstring generic-function)
-  (find-source generic-function))
+  (find-source generic-function)
+  (exportable-reference-p generic-function)
+  (exportable-locative-type-p generic-function))
 
 (defmacro define-locative-type (locative-type lambda-list &body docstring)
   """Declare LOCATIVE-TYPE as a [LOCATIVE][locative]. One gets two
@@ -108,14 +109,11 @@
 
 (defgeneric locate-object (object locative-type locative-args)
   (:documentation "Return the object to which OBJECT and the locative
-  refer. For example, if LOCATIVE-TYPE is the symbol
-  [PACKAGE][dislocated], this returns `(FIND-PACKAGE SYMBOL)`. Signal
-  a LOCATE-ERROR condition by calling the LOCATE-ERROR function if the
-  lookup fails. Signal other errors if the types of the argument are
-  bad, for instance LOCATIVE-ARGS is not the empty list in the package
-  example. If a REFERENCE is returned then it must be canonical in the
-  sense that calling CANONICAL-REFERENCE on it will return the same
-  reference. For extension only, don't call this directly.")
+  refer. Signal a LOCATE-ERROR condition by calling the LOCATE-ERROR
+  function if the lookup fails. If a REFERENCE is returned, then it
+  must be canonical in the sense that calling CANONICAL-REFERENCE on
+  it will return the same reference. Don't call this function
+  directly. It serves only to extend LOCATE.")
   (:method :around (object locative-type locative-args)
     (let ((*locate-object-object* object)
           (*locate-object-locative* (cons locative-type locative-args)))
@@ -131,8 +129,8 @@
   constructed. If FORMAT-AND-ARGS is NIL, then the message will be NIL
   too.
 
-  The object and the locative are not specified, they are added by
-  LOCATE when it resignals the condition."
+  LOCATE-ERROR-OBJECT and LOCATE-ERROR-LOCATIVE are populated
+  automatically."
   (error 'locate-error :object *locate-object-object*
          :locative (normalize-locative *locate-object-locative*)
          :message (if format-and-args
@@ -140,59 +138,35 @@
                       nil)))
 
 (defgeneric canonical-reference (object)
-  (:documentation "Return a REFERENCE that resolves to OBJECT.
+  (:documentation "Return a REFERENCE that RESOLVEs to OBJECT, or
+  return NIL if this operation is not defined for OBJECT. Its
+  @REFERENCE-DELEGATE is LOCATE-CANONICAL-REFERENCE.")
+  (:method (object)
+    (declare (ignore object))
+    nil))
 
-  If OBJECT is a REFERENCE, then:
-
-  - if it can be `RESOLVE`d, CANONICAL-REFERENCE is called on the
-    resolved object,
-
-  - else, an equivalent reference is returned."))
-
-(defmethod canonical-reference ((reference reference))
-  (locate-canonical-reference (reference-object reference)
-                              (reference-locative-type reference)
-                              (reference-locative-args reference)))
-
-(defgeneric locate-canonical-reference (object locative-type locative-args))
-
-(defmethod locate-canonical-reference (object locative-type locative-args)
-  (handler-case
-      (let ((located (locate-object object locative-type locative-args)))
-        (if (typep located 'reference)
-            located
-            (canonical-reference located)))
-    (locate-error ()
-      ;; DISLOCATED, ARGUMENT, and CLHS end up here
-      (make-reference object (cons locative-type locative-args)))))
-
+;;; FIXME
 (defgeneric canonical-locative (locative-type locative-args))
 
 (defmethod canonical-locative (locative-type locative-args)
   (cons locative-type locative-args))
 
 (defgeneric collect-reachable-objects (object)
-  (:documentation "Return a list of objects representing all things
-  that would be documented in a (DOCUMENT OBJECT) call. For SECTIONS
-  this is simply the union of references reachable from references in
+  (:documentation "Return a list of objects representing all things to
+  be documented in a `(DOCUMENT OBJECT)` call. For SECTIONS this is
+  simply the union of references reachable from references in
   SECTION-ENTRIES. The returned objects can be anything provided that
   CANONICAL-REFERENCE works on them. The list need not include OBJECT
   itself.
 
-  One only has to specialize this for new container-like objects."))
-
-(defmethod collect-reachable-objects (object)
-  "This default implementation returns the empty list. This means that
-  nothing is reachable from OBJECT."
-  (declare (ignore object))
-  ())
+  One only has to specialize this for new container-like objects. Its
+  @REFERENCE-DELEGATE is LOCATE-AND-COLLECT-REACHABLE-OBJECTS."))
 
 (defgeneric document-object (object stream)
   (:documentation "Write OBJECT (and its references recursively) in
-  *FORMAT* to STREAM.
-
-  Add methods specializing on OBJECT to customize how objects of that
-  type are presented in the documentation."))
+  *FORMAT* to STREAM. Add methods specializing on OBJECT to customize
+  the output of DOCUMENT. Its @REFERENCE-DELEGATE is
+  LOCATE-AND-DOCUMENT."))
 
 (defmethod document-object ((string string) stream)
   "Print STRING to STREAM as a docstring. That is, [clean up
@@ -206,9 +180,10 @@
   (format stream "~a~%" (massage-docstring string :indentation "")))
 
 (defgeneric docstring (object)
-  (:documentation "Return the docstring from the definition of
-  OBJECT (which may be a REFERENCE). This is a generalization of
-  CL:DOCUMENTATION.
+  (:documentation "Return the docstring from the definition of OBJECT
+  with [leading indentation stripped][@markdown-indentation]. This
+  function serves a similar purpose as CL:DOCUMENTATION, but it works
+  OBJECTs and REFERENCEs. Its @REFERENCE-DELEGATE is LOCATE-DOCSTRING.
 
   DOCSTRING is used in the implementation of the DOCSTRING locative.
   Some things such as ASDF:SYSTEMS and DECLARATIONs have no
@@ -221,7 +196,8 @@
 (defgeneric find-source (object)
   (:documentation """Return the Swank source location for OBJECT. It
   is called by LOCATE-DEFINITIONS-FOR-EMACS, which lies behind the
-  `\\M-.` extension (see @NAVIGATING-IN-EMACS).
+  `\\M-.` extension (see @NAVIGATING-IN-EMACS). Its
+  @REFERENCE-DELEGATE is LOCATE-AND-FIND-SOURCE.
 
   If successful, the return value should look like one of these:
 
@@ -261,25 +237,20 @@
     (:title "Reference Based Extensions")
   """Let's see how to extend DOCUMENT and `\\M-.` navigation if there
   is no first class object to represent the thing of interest. Recall
-  that LOCATE returns a REFERENCE object in this case.
-  DOCUMENT-OBJECT, [DOCSTRING][generic-function], and FIND-SOURCE
-  defer to LOCATE-AND-DOCUMENT, LOCATE-DOCSTRING and
-  LOCATE-AND-FIND-SOURCE, respectively, which have LOCATIVE-TYPE in
-  their argument list for [EQL][type] specializing pleasure. Here is
-  how the VARIABLE locative is defined:"""
+  that LOCATE returns a REFERENCE object in this case. The generic
+  functions that we have specialized in @NEW-OBJECT-TYPES have
+  @REFERENCE-DELEGATEs, which can be specialized based on
+  LOCATIVE-TYPE. Here is how the VARIABLE locative is defined:"""
   (variable-example (include (:start (variable locative)
                                      :end (end-of-variable-example variable))
                              :header-nl "```commonlisp"
                              :footer-nl "```"))
-  (collect-reachable-objects (method () (reference)))
+  (@reference-delegate glossary-term)
+  (locate-canonical-reference generic-function)
   (locate-and-collect-reachable-objects generic-function)
-  (document-object (method () (reference t)))
   (locate-and-document generic-function)
-  (docstring (method () (reference)))
   (locate-docstring generic-function)
-  (locate-and-find-source generic-function)
-  (find-source (method () (t)))
-  (find-source (method () (reference)))
+  (locate-and-find-source generic-function) 
   "We have covered the basic building blocks of reference based
   extensions. Now let's see how the obscure
   DEFINE-SYMBOL-LOCATIVE-TYPE and
@@ -289,107 +260,117 @@
   (define-symbol-locative-type macro)
   (define-definer-for-symbol-locative-type macro))
 
+(define-glossary-term @reference-delegate (:title "reference delegate")
+  """CANONICAL-REFERENCE, COLLECT-REACHABLE-OBJECTS, DOCUMENT-OBJECT,
+  [DOCSTRING][generic-function], and FIND-SOURCE delegate dealing with
+  REFERENCES to another generic function, one each, which is called
+  their reference delegate. Each of these delegator functions invokes
+  its delegate when a REFERENCE is passed it (as its OBJECT argument),
+  or there is no method specialized for its arguments, in which case
+  it uses the CANONICAL-REFERENCE.
+
+  The net effect is that is that it is sufficient to specialize either
+  the delegator or the delegate for a new locative type.""")
+
+(defun delegate-reference (delegate reference &key delegator defaults)
+  (if (null reference)
+      (values-list defaults)
+      (let ((values (multiple-value-list
+                     (funcall delegate (reference-object reference)
+                              (reference-locative-type reference)
+                              (reference-locative-args reference)))))
+        (if (equal values '(no-delegate))
+            (if delegator
+                (let ((object (resolve reference)))
+                  (if (typep object 'reference)
+                      (values-list defaults)
+                      (funcall delegator object)))
+                (values-list defaults))
+            (values-list values)))))
+
+
+;;;; LOCATE-CANONICAL-REFERENCE
+
+(defmethod canonical-reference ((reference reference))
+  (delegate-reference 'locate-canonical-reference reference))
+
+(defgeneric locate-canonical-reference (object locative-type locative-args)
+  (:documentation "This is the @REFERENCE-DELEGATE of
+  CANONICAL-REFERENCE. The default method calls LOCATE-OBJECT with the
+  three arguments. If LOCATE-OBJECT returns a REFERENCE, then that's
+  taken to be the canonical reference and is returned, else
+  CANONICAL-REFERENCE is invoked with the returned object.")
+  (:method (object locative-type locative-args)
+    (handler-case
+        (let ((located (locate-object object locative-type locative-args)))
+          (if (typep located 'reference)
+              located
+              (canonical-reference located)))
+      (locate-error ()
+        ;; DISLOCATED, ARGUMENT, and CLHS end up here
+        (make-reference object (cons locative-type locative-args))))))
+
+
+;;;; LOCATE-AND-COLLECT-REACHABLE-OBJECTS
+
+(defmethod collect-reachable-objects (object)
+  (delegate-reference 'locate-and-collect-reachable-objects
+                      (canonical-reference object)))
+
 (defmethod collect-reachable-objects ((reference reference))
-  "Call LOCATE-AND-COLLECT-REACHABLE-OBJECTS on the object, locative-type,
-  locative-args of REFERENCE. If there is a specialized method for it,
-  then return what it returns. If not and REFERENCE can be resolved to
-  a non-reference, call COLLECT-REACHABLE-OBJECTS with it, else return
-  NIL."
-  (let ((objects (locate-and-collect-reachable-objects
-                  (reference-object reference)
-                  (reference-locative-type reference)
-                  (reference-locative-args reference))))
-    (if (eq objects 'no-such-method)
-        (let ((object (resolve reference)))
-          (if (typep object 'reference)
-              ()
-              (collect-reachable-objects object))))))
+  (delegate-reference 'locate-and-collect-reachable-objects
+                      reference :delegator 'collect-reachable-objects))
 
 (defgeneric locate-and-collect-reachable-objects (object locative-type
                                                   locative-args)
-  (:documentation "Called by COLLECT-REACHABLE-OBJECTS on REFERENCE
-  objects, this function has essentially the same purpose as its
-  caller but it has different arguments to allow specializing on
-  LOCATIVE-TYPE."))
+  (:documentation "This is the @REFERENCE-DELEGATE of
+  COLLECT-REACHABLE-OBJECTS.")
+  (:method (object locative-type locative-args)
+    (declare (ignore object locative-type locative-args))
+    'no-delegate))
+
 
-(defmethod locate-and-collect-reachable-objects (object locative-type
-                                                 locative-args)
-  (declare (ignore object locative-type locative-args))
-  'no-such-method)
+;;;; LOCATE-AND-DOCUMENT
 
 (defgeneric locate-and-document (object locative-type locative-args
                                  stream)
-  (:documentation "Called by DOCUMENT-OBJECT on REFERENCE objects,
-  this function has essentially the same purpose as DOCUMENT-OBJECT,
-  but it has different arguments to allow specializing on
-  LOCATIVE-TYPE."))
+  (:documentation "This is the @REFERENCE-DELEGATE of DOCUMENT."))
+
 
-(defgeneric locate-docstring (object locative-type locative-args)
-  (:documentation "Called by DOCSTRING on REFERENCE objects, this
-  function has essentially the same purpose as DOCSTRING, but it has
-  different arguments to allow specializing on LOCATIVE-TYPE."))
+;;;; LOCATE-DOCSTRING
 
 (defmethod docstring (object)
-  "Call LOCATE-DOCSTRING with the appropriate parts of
-  CANONICAL-REFERENCE for OBJECT."
-  (let ((ref (canonical-reference object)))
-    (locate-docstring (reference-object ref)
-                      (reference-locative-type ref)
-                      (reference-locative-args ref))))
+  (delegate-reference 'locate-docstring (canonical-reference object)))
 
 (defmethod docstring ((reference reference))
-  "Call LOCATE-DOCSTRING on the object, locative-type,
-  locative-args of REFERENCE. If that returns NIL and REFERENCE can be
-  `RESOLVE`d to a non-reference, then call DOCSTRING with it."
-  (or (locate-docstring
-       (reference-object reference)
-       (reference-locative-type reference)
-       (reference-locative-args reference))
-      (let ((located (resolve reference :errorp nil)))
-        (if (and located (not (typep located 'reference)))
-            (docstring located)
-            nil))))
+  (delegate-reference 'locate-docstring reference :delegator 'docstring))
 
-(defgeneric locate-and-find-source (object locative-type locative-args)
-  (:documentation "This function serves the same purpose as
-  FIND-SOURCE, but it has different arguments to allow specializing on
-  LOCATIVE-TYPE. Methods defined as extensions must be
-  `EQL`-specialized on a particular locative type and return a Swank
-  `location` as documented in FIND-SOURCE.
-
-  See FIND-SOURCE `(method () (t))` and
-  FIND-SOURCE `(method () (reference))` for a description of when this
-  function is called. Don't call this function directly.")
+(defgeneric locate-docstring (object locative-type locative-args)
+  (:documentation "This is the @REFERENCE-DELEGATE of [DOCSTRING][
+  generic-function].")
   (:method (object locative-type locative-args)
     (declare (ignore object locative-type locative-args))
-    nil))
+    'no-delegate))
+
+
+;;;; LOCATE-AND-FIND-SOURCE
 
 (defmethod find-source (object)
-  "Call LOCATE-AND-FIND-SOURCE with the appropriate parts of
-  CANONICAL-REFERENCE for OBJECT."
-  (let ((ref (canonical-reference object)))
-    (or (locate-and-find-source (reference-object ref)
-                                (reference-locative-type ref)
-                                (reference-locative-args ref))
-        `(:error "Cannot find source location."))))
+  (delegate-reference 'locate-and-find-source
+                      (canonical-reference object)
+                      :defaults `((:error "Cannot find source location."))))
 
 (defmethod find-source ((reference reference))
-  "Call LOCATE-AND-FIND-SOURCE with the appropriate parts of
-  REFERENCE. If there is no method specialized on the [locative
-  type][@locatives-and-references], then attempt to RESOLVE REFERENCE
-  to a non-`REFERENCE` object and invoke FIND-SOURCE on it.
+  (delegate-reference 'locate-and-find-source reference
+                      :delegator 'find-source
+                      :defaults `((:error "Cannot find source location."))))
 
-  Thus for new locative types, only FIND-SOURCE or
-  LOCATE-AND-FIND-SOURCE needs to be specialized."
-  ;; Only the default method of LOCATE-AND-FIND-SOURCE returns NIL.
-  (or (locate-and-find-source
-       (reference-object reference)
-       (reference-locative-type reference)
-       (reference-locative-args reference))
-      (let ((located (resolve reference :errorp nil)))
-        (if (and located (not (typep located 'reference)))
-            (find-source located)
-            `(:error "Cannot find source location.")))))
+(defgeneric locate-and-find-source (object locative-type locative-args)
+  (:documentation "This is the @REFERENCE-DELEGATE of FIND-SOURCE.")
+  (:method (object locative-type locative-args)
+    (declare (ignore object locative-type locative-args))
+    'no-delegate))
+
 
 (defvar *locative-source-search-list* ())
 

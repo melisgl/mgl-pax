@@ -297,8 +297,7 @@
 
   which will return the same reference as `(MAKE-REFERENCE 'FOO
   'VARIABLE)`. Operations need to know how to deal with references,
-  which we will see in LOCATE-AND-COLLECT-REACHABLE-OBJECTS,
-  LOCATE-AND-DOCUMENT and LOCATE-AND-FIND-SOURCE.
+  which we will see in the @EXTENSION-API.
 
   Naturally, `(LOCATE 'FOO 'FUNCTION)` will simply return `#'FOO`, no
   need to muck with references when there is a perfectly good object."
@@ -318,8 +317,23 @@
 (defun locate (object locative &key (errorp t))
   "Follow LOCATIVE from OBJECT and return the object it leads to or a
   REFERENCE if there is no first class object corresponding to the
-  location. If ERRORP, then a LOCATE-ERROR condition is signaled when
-  the lookup fails."
+  location. Depending on ERRORP, a LOCATE-ERROR condition is signaled
+  or NIL is returned if the lookup fails.
+
+  ```
+  (locate 'locate 'function)
+  ==> #<FUNCTION LOCATE>
+
+  (locate 'no-such-function 'function)
+  .. debugger invoked on LOCATE-ERROR:
+  ..   Could not locate NO-SUCH-FUNCTION FUNCTION.
+  ..   NO-SUCH-FUNCTION does not name a function.
+
+  (locate 'locate-object 'method)
+  .. debugger invoked on LOCATE-ERROR:
+  ..   Could not locate LOCATE-OBJECT METHOD.
+  ..   The syntax of the METHOD locative is (METHOD <METHOD-QUALIFIERS> <METHOD-SPECIALIZERS>).
+  ```"
   (if errorp
       (locate-object object (locative-type locative) (locative-args locative))
       (handler-case

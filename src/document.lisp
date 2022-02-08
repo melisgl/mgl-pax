@@ -591,8 +591,9 @@
 (defun reachable-canonical-references (objects)
   (mapcan (lambda (object)
             (loop for object in (cons object (collect-reachable-objects object))
-                  unless (stringp object)
-                    collect (canonical-reference object)))
+                  for ref = (canonical-reference object)
+                  when ref
+                    collect ref))
           objects))
 
 
