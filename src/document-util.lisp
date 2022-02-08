@@ -26,7 +26,8 @@
     :if-exists :supersede
     :ensure-directories-exist t))
 
-(defun update-asdf-system-readmes (object asdf-system)
+(defun update-asdf-system-readmes (object asdf-system &key
+                                   (url-versions '(1)))
   "Convenience function to generate two readme files in the directory
   holding the ASDF-SYSTEM definition. OBJECT is passed on to DOCUMENT.
 
@@ -41,13 +42,18 @@
 
   ```
   (update-asdf-system-readmes @manual :mgl-pax)
-  ```"
+  ```
+
+  Note that *DOCUMENT-URL-VERSIONS* is bound to URL-VERSIONS, that
+  defaults to using the uglier version 1 style of URL for the sake of
+  github."
   (with-open-file (stream (asdf:system-relative-pathname
                            asdf-system "README.md")
                           :direction :output
                           :if-does-not-exist :create
                           :if-exists :supersede)
-    (document object :stream stream)
+    (let ((*document-url-versions* url-versions))
+      (document object :stream stream))
     (print-markdown-footer stream))
   (with-open-file (stream (asdf:system-relative-pathname
                            asdf-system "README")

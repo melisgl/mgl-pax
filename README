@@ -1492,10 +1492,11 @@ table of contents and navigation links.
 
 ### Miscellaneous Variables
 
-- [variable] *DOCUMENT-URL-VERSIONS* (1)
+- [variable] *DOCUMENT-URL-VERSIONS* (2 1)
 
     A list of versions of PAX URL formats to support in the
-    generated documenation in addition to the latest one.
+    generated documenation in addition. The first in the list is used to
+    generate links.
     
     PAX emits HTML anchors before the documentation of SECTIONs
     (see @LINKING-TO-SECTIONS) and other things (see @LINKING-TO-CODE).
@@ -1515,10 +1516,11 @@ table of contents and navigation links.
     characters, and their URLs may change in future versions. Locatives
     are printed with PRIN1.*
     
-    Version 1 was based on the more strict HTML4 standard and the id of
-    `FOO` was `"x-28MGL-PAX-3A-3AFOO-20FUNCTION-29"`. V2 has minimal
-    clutter and is obviously preferred. However, in order not to break
-    external links, by default, both anchors are generated.
+    Version 1 is based on the more strict HTML4 standard and the id of
+    `FOO` is `"x-28MGL-PAX-3A-3AFOO-20FUNCTION-29"`. This is supported
+    by Github flavoured Markdown. Version 2 has minimal clutter and is
+    obviously preferred. However, in order not to break external links,
+    by default, both anchors are generated.
     
     Let's understand the generated Markdown.
     
@@ -1532,10 +1534,9 @@ table of contents and navigation links.
     - [function] **FOO** *X*
     ")
     
-    (let ((*document-url-versions* '()))
+    (let ((*document-url-versions* '(1)))
       (document #'foo))
-    => ("<a id=\"MGL-PAX:FOO%20FUNCTION\"></a>
-    
+    => ("<a id=\"x-28MGL-PAX-3AFOO-20FUNCTION-29\"></a>
     - [function] **FOO** *X*
     ")
     ```
@@ -1592,7 +1593,7 @@ Two convenience functions are provided to serve the common case of
 having an ASDF system with some readmes and a directory with for the
 HTML documentation and the default css stylesheet.
 
-- [function] UPDATE-ASDF-SYSTEM-READMES OBJECT ASDF-SYSTEM
+- [function] UPDATE-ASDF-SYSTEM-READMES OBJECT ASDF-SYSTEM &KEY (URL-VERSIONS '(1))
 
     Convenience function to generate two readme files in the directory
     holding the ASDF-SYSTEM definition. OBJECT is passed on to DOCUMENT.
@@ -1609,7 +1610,10 @@ HTML documentation and the default css stylesheet.
     ```
     (update-asdf-system-readmes @manual :mgl-pax)
     ```
-
+    
+    Note that *DOCUMENT-URL-VERSIONS* is bound to URL-VERSIONS, that
+    defaults to using the uglier version 1 style of URL for the sake of
+    github.
 
 - [function] UPDATE-ASDF-SYSTEM-HTML-DOCS SECTIONS ASDF-SYSTEM &KEY PAGES (TARGET-DIR (ASDF/SYSTEM:SYSTEM-RELATIVE-PATHNAME ASDF-SYSTEM "doc/")) (UPDATE-CSS-P T)
 

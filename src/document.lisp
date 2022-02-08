@@ -541,7 +541,9 @@
               (format stream "  [~A]: ~A#~A ~A~%"
                       (link-id link)
                       (relative-page-uri-fragment (link-page link) *page*)
-                      (urlencode anchor)
+                      (if (= (first *document-url-versions*) 1)
+                          (html4-safe-name anchor)
+                          (urlencode anchor))
                       (escape-markdown-reflink-definition-title
                        (let* ((ref (link-reference link))
                               (locative-type (reference-locative-type ref)))
@@ -1844,9 +1846,10 @@
   (*document-normalize-packages* variable))
 
 
-(defvar *document-url-versions* '(1)
+(defvar *document-url-versions* '(2 1)
   """A list of versions of \PAX \URL formats to support in the
-  generated documenation in addition to the latest one.
+  generated documenation in addition. The first in the list is used to
+  generate links.
 
   \PAX emits HTML anchors before the documentation of SECTIONs
   (see @LINKING-TO-SECTIONS) and other things (see @LINKING-TO-CODE).
@@ -1866,10 +1869,11 @@
   characters, and their \URLs may change in future versions. Locatives
   are printed with PRIN1._
 
-  Version 1 was based on the more strict HTML4 standard and the id of
-  `FOO` was `"x-28MGL-PAX-3A-3AFOO-20FUNCTION-29"`. V2 has minimal
-  clutter and is obviously preferred. However, in order not to break
-  external links, by default, both anchors are generated.
+  Version 1 is based on the more strict HTML4 standard and the id of
+  `FOO` is `"x-28MGL-PAX-3A-3AFOO-20FUNCTION-29"`. This is supported
+  by Github flavoured Markdown. Version 2 has minimal clutter and is
+  obviously preferred. However, in order not to break external links,
+  by default, both anchors are generated.
 
   Let's understand the generated Markdown.
 
@@ -1883,10 +1887,9 @@
   - [function] **FOO** *X*
   ")
 
-  (let ((*document-url-versions* '()))
+  (let ((*document-url-versions* '(1)))
     (document #'foo))
-  => ("<a id=\"MGL-PAX:FOO%20FUNCTION\"></a>
-  
+  => ("<a id=\"x-28MGL-PAX-3AFOO-20FUNCTION-29\"></a>
   - [function] **FOO** *X*
   ")
   ```
@@ -1896,8 +1899,9 @@
   (when (member 1 *document-url-versions*)
     (format stream "<a id=~S></a>~%"
             (html4-safe-name (reference-to-anchor-v1 object))))
-  (format stream "<a id=~S></a>~%~%"
-          (urlencode (reference-to-anchor object))))
+  (when (member 2 *document-url-versions*)
+    (format stream "<a id=~S></a>~%~%"
+            (urlencode (reference-to-anchor object)))))
 
 ;;; Return the unescaped name of the HTML anchor for REFERENCE. See
 ;;; URLENCODE.
