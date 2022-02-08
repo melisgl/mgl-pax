@@ -164,14 +164,14 @@
 
 ;;; Register PAX itself.
 (defun pax-sections ()
-  (list @manual))
+  (list @pax-manual))
 (defun pax-pages ()
   `((:objects
-     (, @manual)
+     (, @pax-manual)
      :source-uri-fn ,(make-github-source-uri-fn
                       :mgl-pax
                       "https://github.com/melisgl/mgl-pax"))))
-(register-doc-in-pax-world :mgl-pax (pax-sections) (pax-pages))
+(register-doc-in-pax-world :pax (pax-sections) (pax-pages))
 (defvar end-of-register-doc-example)
 
 (defvar *pax-world-dir* nil

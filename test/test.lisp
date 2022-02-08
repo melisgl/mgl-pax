@@ -194,7 +194,7 @@
      (cl:defpackage))
     (xxx-rt readtable (defreadtable xxx-rt))
     ;; @PAX-LOCATIVES
-    (mgl-pax::@manual section (defsection @manual))
+    (mgl-pax::@pax-manual section (defsection @pax-manual))
     (some-term glossary-term (define-glossary-term some-term))
     (my-loc locative (define-locative-type my-loc))))
 

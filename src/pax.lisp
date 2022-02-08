@@ -8,7 +8,7 @@
 (eval-when (:compile-toplevel)
   (declaim (optimize (debug 3))))
 
-(defsection @manual (:title "PAX Manual")
+(defsection @pax-manual (:title "PAX Manual")
   (mgl-pax asdf:system)
   (mgl-pax/full asdf:system)
   (@links section)
