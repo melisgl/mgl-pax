@@ -1846,8 +1846,8 @@
 
 (defvar *document-url-versions* '(2 1)
   """A list of versions of \PAX \URL formats to support in the
-  generated documenation in addition. The first in the list is used to
-  generate links.
+  generated documenation. The first in the list is used to generate
+  links.
 
   \PAX emits HTML anchors before the documentation of SECTIONs
   (see @LINKING-TO-SECTIONS) and other things (see @LINKING-TO-CODE).
