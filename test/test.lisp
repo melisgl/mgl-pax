@@ -690,7 +690,7 @@ xxx
                 "[`SOME-CODE`][e391]")))
 
 
-(defsection @section-with-title (:title "My Title"))
+(defsection @section-with-title (:title "My Title" :export nil))
 (define-glossary-term @gt-with-title (:title "My Title") "")
 
 (deftest test-explicit-label ()
@@ -739,7 +739,7 @@ xxx
 (define-glossary-term @self-referencing-term (:title "Self-referencing Term")
   "This is @SELF-REFERENCING-TERM.")
 
-(defsection @self-referencing (:title "Self-referencing")
+(defsection @self-referencing (:export nil :title "Self-referencing")
   "This is @SELF-REFERENCING.")
 
 (deftest test-self-referencing-links ()
@@ -797,7 +797,7 @@ This is [Self-referencing][e042].
                    '(x &optional (o 1) &key (k 2)))))))
 
 
-(defsection @test-symbol-macro ()
+(defsection @test-symbol-macro (:export nil)
   (my-smac symbol-macro))
 
 (define-symbol-macro my-smac 42)
@@ -884,7 +884,7 @@ This is [Self-referencing][e042].
     (is (mgl-pax::reference= (canonical-reference ref) ref))))
 
 
-(defsection @test-method-combination ()
+(defsection @test-method-combination (:export nil)
   (my-comb method-combination))
 
 (define-method-combination my-comb :identity-with-one-argument t

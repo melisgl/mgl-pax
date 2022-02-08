@@ -1432,9 +1432,6 @@
   
   INCLUDE is not EXPORTABLE-LOCATIVE-TYPE-P.""")
 
-(defmethod exportable-locative-type-p ((locative-type (eql 'include)))
-  nil)
-
 (defmethod locate-object (symbol (locative-type (eql 'include))
                           locative-args)
   (handler-case

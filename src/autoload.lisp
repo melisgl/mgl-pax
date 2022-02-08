@@ -66,7 +66,7 @@
 (declaim (special *heading-level*))
 
 
-(defmacro define-autoload-function (name asdf-system-name)
+(defmacro define-autoload-function (name asdf-system-name &key (export t))
   `(unless (fboundp ',name)
      (declaim (notinline ,name))
      (defun ,name (&rest args)
@@ -83,11 +83,13 @@
        ;; invoked and not this stub, which could be the case without
        ;; the SYMBOL-FUNCTION call.
        (apply (symbol-function ',name) args))
-     (export ',name)))
+     ,@(when export
+         `((export ',name)))))
 
-(define-autoload-function locate-definitions-for-emacs '#:mgl-pax/navigate)
-(define-autoload-function find-hyperspec-id '#:mgl-pax/document)
-(define-autoload-function downcasingp '#:mgl-pax/document)
+(define-autoload-function locate-definitions-for-emacs '#:mgl-pax/navigate
+  :export nil)
+(define-autoload-function find-hyperspec-id '#:mgl-pax/document :export nil)
+(define-autoload-function downcasingp '#:mgl-pax/document :export nil)
 (define-autoload-function document '#:mgl-pax/document)
 (define-autoload-function update-asdf-system-readmes '#:mgl-pax/document)
 (define-autoload-function update-asdf-system-html-docs '#:mgl-pax/document)
