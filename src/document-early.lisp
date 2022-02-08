@@ -150,8 +150,7 @@
                                   :end (end-of-register-doc-example variable))
                                  :header-nl "```commonlisp"
                                  :footer-nl "```"))
-  (update-pax-world function)
-  (*pax-world-dir* variable))
+  (update-pax-world function))
 
 (defvar *registered-pax-world-docs* ())
 
@@ -173,11 +172,3 @@
                       "https://github.com/melisgl/mgl-pax"))))
 (register-doc-in-pax-world :pax (pax-sections) (pax-pages))
 (defvar end-of-register-doc-example)
-
-(defvar *pax-world-dir* nil
-  "The default location to which to write the generated documentation.
-  If NIL it defaults to:
-
-  ```commonlisp
-  (asdf:system-relative-pathname :mgl-pax \"world/\")
-  ```")

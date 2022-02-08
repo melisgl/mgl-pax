@@ -1749,16 +1749,6 @@ For example, this is how PAX registers itself:
     
     If necessary a default page spec is created for every section.
 
-- [variable] *PAX-WORLD-DIR* NIL
-
-    The default location to which to write the generated documentation.
-    If NIL it defaults to:
-    
-    ```commonlisp
-    (asdf:system-relative-pathname :mgl-pax "world/")
-    ```
-
-
 ### Overview of Escaping
 
 Let's recap how escaping @CODIFICATION,

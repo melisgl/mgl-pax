@@ -1912,17 +1912,6 @@ For example, this is how `PAX` registers itself:
     
     If necessary a default page spec is created for every section.
 
-<a id="x-28MGL-PAX-3A-2APAX-WORLD-DIR-2A-20VARIABLE-29"></a>
-- [variable] **\*PAX-WORLD-DIR\*** *NIL*
-
-    The default location to which to write the generated documentation.
-    If `NIL` it defaults to:
-    
-    ```commonlisp
-    (asdf:system-relative-pathname :mgl-pax "world/")
-    ```
-
-
 <a id="x-28MGL-PAX-3A-40OVERVIEW-OF-ESCAPING-20MGL-PAX-3ASECTION-29"></a>
 ### 9.9 Overview of Escaping
 
