@@ -795,11 +795,13 @@
           finally (return t))))
 
 (define-glossary-term @interesting (:title "interesting")
-  "A @WORD is _interesting_ iff
+  "A @WORD is _interesting_ iff it _names_
 
-  - it _names_ a known reference, or
-  - it is at least 3 characters long and names a package or a symbol
-    external to its package.
+  - a known reference, or
+  - an ASDF system, or
+  - a package, or
+  - a symbol external to its package, or
+  - it is at least 3 characters long and names an interned symbol.
 
   Where we say that a word **names** a known reference if the word
   matches the name of a thing being documented, or it is in the
@@ -863,7 +865,10 @@
 ;;; separators and depluralizes.
 (defun codify-uppercase-word (word)
   (multiple-value-bind (object name)
-      (parse-word word :trim t :depluralize t :only-one (constantly t))
+      (parse-word word :trim t :depluralize t
+                  :only-one (lambda (object name)
+                              (declare (ignore object))
+                              (notany #'lower-case-p name)))
     (when (and name (interesting-object-p object name))
       (let ((pos (search name word :test #'char-equal)))
         (assert pos)
@@ -985,7 +990,7 @@
   because it only contains uppercase characters outside the string.
   However,
 
-     `MiXed "RESULTS"`
+      `MiXed "RESULTS"`
 
   is not altered because it has lowercase characters.
 
@@ -1299,7 +1304,8 @@
                  (and label-string
                       (parse-word
                        label-string :trim nil :depluralize t
-                       :only-one (lambda (object)
+                       :only-one (lambda (object name)
+                                   (declare (ignore name))
                                    (if (eq locative 'clhs)
                                        (find-hyperspec-id object
                                                           :substring-match t)

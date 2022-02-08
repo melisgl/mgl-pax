@@ -69,7 +69,7 @@
                      ;; OBJECT in NAMES.
                      (when found
                        (cond (only-one
-                              (when (funcall only-one object)
+                              (when (funcall only-one object name)
                                 (return-from parse-word (values object name))))
                              (t
                               (push object objects)

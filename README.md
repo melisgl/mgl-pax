@@ -370,7 +370,7 @@ Now let's examine the most important pieces.
     ##### Exporting
     
     If `EXPORT` is true (the default), `NAME` and the objects which are
-    [`SYMBOLs`][7f9f] are candidates for exporting. A candidate symbol is exported
+    [`SYMBOL`][7f9f]s are candidates for exporting. A candidate symbol is exported
     if
     
     - it is [accessible][e077] in `PACKAGE`, and
@@ -446,7 +446,7 @@ first-class, such as types.
 
 PAX generalizes `DOC-TYPE` to the concept of [locative][4d92]s, which may
 also take arguments. An [object][75ce] and a [locative][4d92] together are called
-a [reference][80cd], and they identify a single thing. [`REFERENCEs`][1cea] are
+a [reference][80cd], and they identify a single thing. [`REFERENCE`][1cea]s are
 actual objects, but often they appear as an `(OBJECT LOCATIVE)`
 list (see [`DEFSECTION`][72b4]) or as `"OBJECT LOCATIVE"` in docstrings (see
 [Linking to Code][1865] for the various forms possible).
@@ -1459,12 +1459,17 @@ Reader][pythonic-string-reader] can help with that.
 
 - [glossary-term] **interesting**
 
-    A [word][d7b0] is *interesting* iff
+    A [word][d7b0] is *interesting* iff it *names*
     
-    - it *names* a known reference, or
+    - a known reference, or
     
-    - it is at least 3 characters long and names a package or a symbol
-      external to its package.
+    - an `ASDF` system, or
+    
+    - a package, or
+    
+    - a symbol external to its package, or
+    
+    - it is at least 3 characters long and names an interned symbol.
     
     Where we say that a word **names** a known reference if the word
     matches the name of a thing being documented, or it is in the
@@ -1502,7 +1507,7 @@ Reader][pythonic-string-reader] can help with that.
     because it only contains uppercase characters outside the string.
     However,
     
-    `MiXed "RESULTS"`
+        `MiXed "RESULTS"`
     
     is not altered because it has lowercase characters.
     
@@ -1653,7 +1658,7 @@ occurrences `FOO` produce links.
 
 As an exception, links with [specified][8996]
 and [unambiguous][5c74] locatives to
-`SECTIONs`([`0`][5fac] [`1`][672f]) and [`GLOSSARY-TERM`][5119]s always produce a link to allow their
+`SECTION`([`0`][5fac] [`1`][672f])s and [`GLOSSARY-TERM`][5119]s always produce a link to allow their
 titles to be displayed properly.
 
 Finally, [autolinking][b3cc] to `T` or
@@ -1826,7 +1831,7 @@ table of contents and navigation links.
     A list of versions of PAX URL formats to support in the
     generated documenation in addition to the latest one.
     
-    PAX emits HTML anchors before the documentation of `SECTIONs`([`0`][5fac] [`1`][672f])
+    PAX emits HTML anchors before the documentation of `SECTION`([`0`][5fac] [`1`][672f])s
     (see [Linking to Sections][22c2]) and other things (see [Linking to Code][1865]).
     For the function `FOO`, in the current version (version 2), the
     anchor is `<a id="MGL-PAX:FOO%20FUNCTION">` and its URL will end
@@ -3047,7 +3052,7 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
 - [macro] **DEFINE-LOCATIVE-ALIAS** *ALIAS LOCATIVE-TYPE*
 
     Define `ALIAS` as a locative equivalent to `LOCATIVE-TYPE` (both
-    [`SYMBOLs`][7f9f]). The following example shows how to make docstrings read
+    [`SYMBOL`][7f9f]s). The following example shows how to make docstrings read
     more naturally by defining an alias.
     
     ```common-lisp
@@ -3161,11 +3166,11 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
     Return the docstring from the definition of `OBJECT`
     with [leading indentation stripped][718f]. This
     function serves a similar purpose as [`CL:DOCUMENTATION`][68f1], but it works
-    `OBJECTs` and [`REFERENCEs`][1cea]. Its [reference delegate][e403] is [`LOCATE-DOCSTRING`][5c39].
+    `OBJECT`s and [`REFERENCE`][1cea]s. Its [reference delegate][e403] is [`LOCATE-DOCSTRING`][5c39].
     
     `DOCSTRING` is used in the implementation of the [`DOCSTRING`][ce75] locative.
-    Some things such as [`ASDF:SYSTEM`][c097]s and `DECLARATIONs`([`0`][47a3] [`1`][6e04]) have no
-    docstrings. Notably `SECTIONs`([`0`][5fac] [`1`][672f]) don't provide access to docstrings.
+    Some things such as [`ASDF:SYSTEM`][c097]s and `DECLARATION`([`0`][47a3] [`1`][6e04])s have no
+    docstrings. Notably `SECTION`([`0`][5fac] [`1`][672f])s don't provide access to docstrings.
 
 <a id="x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNCTION-29"></a>
 <a id="MGL-PAX:FIND-SOURCE%20GENERIC-FUNCTION"></a>
@@ -3213,7 +3218,7 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
     The default method ignores calls [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] with
     `LOCATIVE-TYPE` and ignores the other arguments.
     
-    For example, to not export `SECTIONs`([`0`][5fac] [`1`][672f]) from [`MGL-PAX`][6fdb] the following
+    For example, to not export `SECTION`([`0`][5fac] [`1`][672f])s from [`MGL-PAX`][6fdb] the following
     method is defined.
     
     ```

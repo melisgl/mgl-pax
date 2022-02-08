@@ -1190,12 +1190,17 @@ Reader][pythonic-string-reader] can help with that.
 
 - [glossary-term] interesting
 
-    A @WORD is *interesting* iff
+    A @WORD is *interesting* iff it *names*
     
-    - it *names* a known reference, or
+    - a known reference, or
     
-    - it is at least 3 characters long and names a package or a symbol
-      external to its package.
+    - an ASDF system, or
+    
+    - a package, or
+    
+    - a symbol external to its package, or
+    
+    - it is at least 3 characters long and names an interned symbol.
     
     Where we say that a word **names** a known reference if the word
     matches the name of a thing being documented, or it is in the
@@ -1230,7 +1235,7 @@ Reader][pythonic-string-reader] can help with that.
     because it only contains uppercase characters outside the string.
     However,
     
-    `MiXed "RESULTS"`
+        `MiXed "RESULTS"`
     
     is not altered because it has lowercase characters.
     

@@ -431,7 +431,9 @@ xxx
 
 [some]: PRINT \"DO\"
 
-")))
+"))
+  (is (internedp 'references))
+  (check-head "REFERENCEs" "`REFERENCE`s" :msg "interned lowercase plural"))
 
 (defun q ())
 (defun qq ())
