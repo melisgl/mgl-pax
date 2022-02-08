@@ -1,6 +1,6 @@
 ;;;; -*- mode: Lisp -*-
 
-;;; See MGL-PAX::@MANUAL for the user guide.
+;;; See MGL-PAX::@PAX-MANUAL for the user guide.
 (asdf:defsystem #:mgl-pax
   :licence "MIT, see COPYING."
   :version "0.0.4"

@@ -41,7 +41,7 @@
   Example usage:
 
   ```
-  (update-asdf-system-readmes @manual :mgl-pax)
+  (update-asdf-system-readmes @pax-manual :mgl-pax)
   ```
 
   Note that *DOCUMENT-URL-VERSIONS* is bound to URL-VERSIONS, that
@@ -87,17 +87,17 @@
   sheet to TARGET-DIR, as well. Example usage:
 
   ```commonlisp
-  (update-asdf-system-html-docs @manual :mgl-pax)
+  (update-asdf-system-html-docs @pax-manual :mgl-pax)
   ```
 
   The same, linking to the sources on github:
 
   ```commonlisp
   (update-asdf-system-html-docs
-    @manual :mgl-pax
+    @pax-manual :mgl-pax
     :pages
     `((:objects
-      (,mgl-pax::@manual)
+      (,mgl-pax::@pax-manual)
       :source-uri-fn ,(make-github-source-uri-fn
                        :mgl-pax
                        \"https://github.com/melisgl/mgl-pax\"))))

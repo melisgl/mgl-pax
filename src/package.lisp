@@ -7,6 +7,6 @@
     (handler-bind
         (#+sbcl (sb-kernel::package-at-variance #'muffle-warning))
       (cl:defpackage :mgl-pax
-        (:documentation "See MGL-PAX::@MANUAL.")
+        (:documentation "See MGL-PAX::@PAX-MANUAL.")
         (:use #:common-lisp #:named-readtables #:pythonic-string-reader)
         (:nicknames #:pax)))))

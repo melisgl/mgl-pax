@@ -1038,9 +1038,9 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     `T` or `NIL` as with `CL:FORMAT`.
     
     Most often, this function is called on `SECTION`([`0`][5fac] [`1`][672f]) objects like
-    `(DOCUMENT @MANUAL)`, but it supports all kinds of objects for which
-    [`DOCUMENT-OBJECT`][bacc] is defined. To look up the documentation of function
-    [`DOCUMENT`][432c]:
+    `(DOCUMENT @PAX-MANUAL)`, but it supports all kinds of objects for
+    which [`DOCUMENT-OBJECT`][bacc] is defined. To look up the documentation of
+    function [`DOCUMENT`][432c]:
     
         (document #'document)
     
@@ -1165,7 +1165,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
        :footer-fn 'write-html-footer)
       ;; Catch the reference that were not reachable from the above. It
       ;; is important for this page spec to be last.
-      (:objects (, @manual)
+      (:objects (, @pax-manual)
        :output ("build/tmp/manual.html")
        ;; Links from the extension api page to the manual page will
        ;; be to ../user/pax-manual#<anchor>, while links going to
@@ -1643,8 +1643,8 @@ table of contents and navigation links.
 - [variable] **\*DOCUMENT-URL-VERSIONS\*** *(2 1)*
 
     A list of versions of PAX URL formats to support in the
-    generated documenation in addition. The first in the list is used to
-    generate links.
+    generated documenation. The first in the list is used to generate
+    links.
     
     PAX emits HTML anchors before the documentation of `SECTION`([`0`][5fac] [`1`][672f])s
     (see [Linking to Sections][22c2]) and other things (see [Linking to Code][1865]).
@@ -1761,7 +1761,7 @@ HTML documentation and the default css stylesheet.
     Example usage:
     
     ```
-    (update-asdf-system-readmes @manual :mgl-pax)
+    (update-asdf-system-readmes @pax-manual :mgl-pax)
     ```
     
     Note that [`*DOCUMENT-URL-VERSIONS*`][17e0] is bound to `URL-VERSIONS`, that
@@ -1776,17 +1776,17 @@ HTML documentation and the default css stylesheet.
     sheet to `TARGET-DIR`, as well. Example usage:
     
     ```commonlisp
-    (update-asdf-system-html-docs @manual :mgl-pax)
+    (update-asdf-system-html-docs @pax-manual :mgl-pax)
     ```
     
     The same, linking to the sources on github:
     
     ```commonlisp
     (update-asdf-system-html-docs
-      @manual :mgl-pax
+      @pax-manual :mgl-pax
       :pages
       `((:objects
-        (,mgl-pax::@manual)
+        (,mgl-pax::@pax-manual)
         :source-uri-fn ,(make-github-source-uri-fn
                          :mgl-pax
                          "https://github.com/melisgl/mgl-pax"))))

@@ -339,9 +339,9 @@
   T or NIL as with CL:FORMAT.
 
   Most often, this function is called on SECTION objects like
-  `(DOCUMENT @MANUAL)`, but it supports all kinds of objects for which
-  DOCUMENT-OBJECT is defined. To look up the documentation of function
-  DOCUMENT:
+  `(DOCUMENT @PAX-MANUAL)`, but it supports all kinds of objects for
+  which DOCUMENT-OBJECT is defined. To look up the documentation of
+  function DOCUMENT:
 
       (document #'document)
 
@@ -466,7 +466,7 @@
      :footer-fn 'write-html-footer)
     ;; Catch the reference that were not reachable from the above. It
     ;; is important for this page spec to be last.
-    (:objects (, @manual)
+    (:objects (, @pax-manual)
      :output ("build/tmp/manual.html")
      ;; Links from the extension api page to the manual page will
      ;; be to ../user/pax-manual#<anchor>, while links going to
