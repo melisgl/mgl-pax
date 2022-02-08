@@ -541,9 +541,7 @@
               (format stream "  [~A]: ~A#~A ~A~%"
                       (link-id link)
                       (relative-page-uri-fragment (link-page link) *page*)
-                      (if (= (first *document-url-versions*) 1)
-                          (html4-safe-name anchor)
-                          (urlencode anchor))
+                      (anchor-id (link-reference link))
                       (escape-markdown-reflink-definition-title
                        (let* ((ref (link-reference link))
                               (locative-type (reference-locative-type ref)))
@@ -1902,6 +1900,11 @@
   (when (member 2 *document-url-versions*)
     (format stream "<a id=~S></a>~%~%"
             (urlencode (reference-to-anchor object)))))
+
+(defun anchor-id (object)
+  (if (= (first *document-url-versions*) 1)
+      (html4-safe-name (reference-to-anchor-v1 object))
+      (urlencode (reference-to-anchor object))))
 
 ;;; Return the unescaped name of the HTML anchor for REFERENCE. See
 ;;; URLENCODE.
