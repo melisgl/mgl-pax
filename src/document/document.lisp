@@ -1316,9 +1316,11 @@
     (let* ((empty-definition-p (and (zerop (length definition))
                                     (or (null tail)
                                         (equal tail "[]"))))
-           (definition (parse-tree-to-text definition :deemph t))
+           (definition (trim-whitespace
+                        (parse-tree-to-text definition :deemph t)))
            (locative (and definition (read-locative-from-markdown definition)))
-           (label-string (parse-tree-to-text label :deemph nil)))
+           (label-string (trim-whitespace
+                          (parse-tree-to-text label :deemph nil))))
       (alexandria:nth-value-or 0
         (and (or empty-definition-p locative)
              ;; [foo][] or [foo][function]
