@@ -33,39 +33,6 @@
   (export '*document-html-max-navigation-table-of-contents-level*)
   (defvar *format*)
   (export '*format*))
-
-;;;; FIXME: The following should be turned into a doc extension API.
-
-;;; FIXME: Need the macros instead.
-(declaim (special *local-references*))
-(declaim (special *reference-being-documented*))
-
-(declaim (ftype function locate-and-print-bullet))
-(declaim (ftype function print-arglist))
-(declaim (ftype function print-bullet))
-(declaim (ftype function print-end-bullet))
-(declaim (ftype function massage-docstring))
-(declaim (ftype function maybe-print-docstring))
-(declaim (ftype function documentation*))
-(declaim (ftype function escape-markdown))
-(declaim (ftype function prin1-and-escape-markdown))
-
-
-;;; These are used only by the DOCUMENT-OBJECT for CLASSes.
-(declaim (ftype function global-reference-p))
-(declaim (ftype function link-to-reference))
-
-;;; And these by DOCUMENT-OBJECT for SECTIONs.
-(defmacro with-heading ((stream object title &key link-title-to)
-                        &body body)
-  `(call-with-heading ,stream ,object ,title ,link-title-to
-                      (lambda (,stream) ,@body)))
-(declaim (ftype function call-with-heading))
-
-(defmacro with-nested-headings (() &body body)
-  `(let ((*heading-level* (1+ *heading-level*)))
-     ,@body))
-(declaim (special *heading-level*))
 
 
 (defmacro defun/autoload (name asdf-system-name &key (export t))

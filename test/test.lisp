@@ -746,7 +746,7 @@ xxx
   (check-document #'self-referencing
                   "<a id=\"MGL-PAX-TEST:SELF-REFERENCING%20FUNCTION\"></a>
 
-- [function] **SELF-REFERENCING** 
+- [function] **SELF-REFERENCING**
 
     This is `SELF-REFERENCING`.
 ")

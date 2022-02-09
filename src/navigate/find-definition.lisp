@@ -1,25 +1,22 @@
 (in-package :mgl-pax)
 
-(defmacro find-definition* (object name dspecs)
-  `(or (find-source-location ,object)
-       (find-definition ,name ,dspecs)))
+(defsection @extending-find-source (:title "Extending FIND-SOURCE")
+  "The following utilities are for writing new FIND-SOURCE and
+  LOCATE-AND-FIND-SOURCE methods."
+  (find-definition function)
+  (find-definition* function))
 
-;;; SWANK-BACKEND:FIND-SOURCE-LOCATION is much faster than
-;;; SWANK-BACKEND:FIND-DEFINITIONS, but it is not widely supported.
-(defun find-source-location (object)
-  (when object
-    (let ((location (swank-backend:find-source-location object)))
-      (when (and (listp location)
-                 (eq (first location) :location))
-        location))))
-
-
-;;; Return a definition among (SWANK-BACKEND:FIND-DEFINITIONS NAME)
-;;; that matches one of DSPECS. Normally there should be at most one
-;;; anyway.
-(defun find-definition (name dspecs)
-  (let* ((dspec-and-location-list (ignore-errors
-                                   (swank-backend:find-definitions name)))
+(defun find-definition (object &rest locatives)
+  "Return a source location for a definition of OBJECT. Try forming
+  @REFERENCEs with OBJECT and one of LOCATIVES. Stop at the first
+  locative with which a definition is found and return its location.
+  If no location was found, then return the usual Swank `(:ERROR
+  ...)`. The implementation is based on the rather expensive
+  SWANK-BACKEND:FIND-DEFINITIONS function."
+  (let* ((dspecs (loop for locative in locatives
+                       append (reference-to-dspecs object locative)))
+         (dspec-and-location-list (ignore-errors
+                                   (swank-backend:find-definitions object)))
          (entry (loop for dspec in dspecs
                         thereis (find dspec dspec-and-location-list
                                       :key #'first :test #'match-dspec))))
@@ -27,6 +24,43 @@
         (second entry)
         `(:error (format nil "Could not find source location for ~S."
                          dspecs)))))
+
+(defun find-definition* (object reference-object &rest locatives)
+  "Like FIND-DEFINITION, but tries to get the definition of
+  OBJECT (for example a FUNCTION or METHOD object) with the fast but
+  not widely supported SWANK-BACKEND:FIND-SOURCE-LOCATION before
+  calling the much slower but more complete
+  SWANK-BACKEND:FIND-DEFINITIONS."
+  (or (find-source-location object)
+      (apply #'find-definition reference-object locatives)))
+
+(defun find-source-location (object)
+  (when object
+    (let ((location (swank-backend:find-source-location object)))
+      (when (and (listp location)
+                 (eq (first location) :location))
+        location))))
+
+(defun reference-to-dspecs (object locative)
+  (let ((type (locative-type locative))
+        (args (locative-args locative)))
+    (ecase type
+      (variable (swank-variable-dspecs object))
+      (constant (swank-constant-dspecs object))
+      (macro (swank-macro-dspecs object))
+      (compiler-macro (swank-compiler-macro-dspecs object))
+      (symbol-macro (swank-symbol-macro-dspecs object))
+      (function (swank-function-dspecs object))
+      (generic-function (swank-generic-function-dspecs object))
+      (method (swank-method-dspecs object (first args) (second args)))
+      (method-combination (swank-method-combination-dspecs object))
+      (accessor (swank-accessor-dspecs object (first args) t))
+      (reader (swank-accessor-dspecs object (first args) nil))
+      (writer (swank-accessor-dspecs object (first args) t))
+      (type (swank-type-dspecs object))
+      (class (swank-class-dspecs object))
+      (condition (swank-condition-dspecs object))
+      (package (swank-package-dspecs object)))))
 
 (defmacro define-dspecs (name lambda-list &body body)
   (multiple-value-bind (clauses declarations) (alexandria:parse-body body)

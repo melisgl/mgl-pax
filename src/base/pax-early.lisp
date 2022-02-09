@@ -92,17 +92,18 @@
   (:documentation "A REFERENCE represents a path (REFERENCE-LOCATIVE)
   to take from an object (REFERENCE-OBJECT)."))
 
-(defun make-reference (object locative)
-  (make-instance 'reference :object object
-                 :locative (normalize-locative locative)))
-
 ;;; Canonicalize it a bit for easier comparison. E.g. (FUNCTION) =>
 ;;; FUNCTION.
+(declaim (inline normalize-locative))
 (defun normalize-locative (locative)
   (if (and (listp locative)
            (null (cdr locative)))
       (first locative)
       locative))
+
+(defun make-reference (object locative)
+  (make-instance 'reference :object object
+                 :locative (normalize-locative locative)))
 
 (defmethod print-object ((object reference) stream)
   (print-unreadable-object (object stream :type t)

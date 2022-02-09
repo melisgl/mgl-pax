@@ -11,6 +11,8 @@
 (defsection @extension-api (:title "Writing Extensions")
   (@new-object-types section)
   (@reference-based-extensions section)
+  (@extending-document section)
+  (@extending-find-source section)
   (@sections section))
 
 
@@ -35,7 +37,6 @@
   (locate-error function)
   (canonical-reference generic-function)
   (collect-reachable-objects generic-function)
-  (*format* variable)
   (document-object generic-function)
   (docstring generic-function)
   (find-source generic-function)
@@ -162,9 +163,9 @@
 
 (defgeneric document-object (object stream)
   (:documentation "Write OBJECT (and its references recursively) in
-  *FORMAT* to STREAM. Add methods specializing on OBJECT to customize
-  the output of DOCUMENT. Its @REFERENCE-DELEGATE is
-  LOCATE-AND-DOCUMENT."))
+  *FORMAT* to STREAM in markdown format. Add methods specializing on
+  OBJECT to customize the output of DOCUMENT. Its @REFERENCE-DELEGATE
+  is LOCATE-AND-DOCUMENT."))
 
 (defgeneric docstring (object)
   (:documentation "Return the docstring from the definition of OBJECT
@@ -409,17 +410,9 @@
          (symbol (locative-type (eql ',locative-type)) locative-args stream)
        (let ((method (symbol-lambda-list-method symbol ',locative-type))
              (lambda-list (symbol-lambda-list symbol ',locative-type)))
-         (locate-and-print-bullet locative-type locative-args symbol stream)
-         (with-local-references ((list (make-reference symbol
-                                                       (cons locative-type
-                                                             locative-args))))
-           (with-dislocated-symbols ((macro-arg-names lambda-list))
-             (when lambda-list
-               (write-char #\Space stream)
-               (print-arglist lambda-list stream))
-             (print-end-bullet stream)
-             (maybe-print-docstring method t stream))))
-       (format stream "~&"))
+         (documenting-reference (stream :arglist lambda-list)
+           (with-dislocated-objects (macro-arg-names lambda-list)
+             (document-docstring (documentation* method t) stream)))))
      (defmethod locate-docstring
          (symbol (locative-type (eql ',locative-type)) locative-args)
        (let ((method (symbol-lambda-list-method symbol ',locative-type)))

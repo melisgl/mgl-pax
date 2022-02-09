@@ -68,16 +68,6 @@
                                    (foo arg)))))))
         (foo arglist))
       (reverse names))))
-
-(defmacro with-local-references ((refs) &body body)
-  `(let ((*local-references* (append ,refs *local-references*)))
-     ,@body))
-
-(defmacro with-dislocated-symbols ((symbols) &body body)
-  `(with-local-references ((mapcar (lambda (symbol)
-                                (make-reference symbol 'dislocated))
-                              ,symbols))
-     ,@body))
 
 
 ;;;; VARIABLE locative
@@ -110,17 +100,14 @@
 (defmethod locate-and-document (symbol (locative-type (eql 'variable))
                                 locative-args stream)
   (destructuring-bind (&optional (initform nil initformp)) locative-args
-    (locate-and-print-bullet locative-type locative-args symbol stream)
-    (write-char #\Space stream)
-    (multiple-value-bind (value unboundp) (symbol-global-value symbol)
-      (when (or initformp (not unboundp))
-        (print-arglist (prin1-and-escape-markdown (if initformp
-                                                      initform
-                                                      value))
-                       stream)))
-    (print-end-bullet stream)
-    (with-local-references ((list (make-reference symbol 'variable)))
-      (maybe-print-docstring symbol 'variable stream))))
+    (let ((arglist (multiple-value-bind (value unboundp)
+                       (symbol-global-value symbol)
+                     (when (or initformp (not unboundp))
+                       (prin1-to-markdown (if initformp
+                                              initform
+                                              value))))))
+      (documenting-reference (stream :arglist arglist)
+        (document-docstring (documentation* symbol 'variable) stream)))))
 
 (defmethod locate-docstring (symbol (locative-type (eql 'variable))
                              locative-args)
@@ -130,7 +117,7 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-definition symbol (swank-variable-dspecs symbol)))
+  (find-definition symbol 'variable))
 
 (defvar end-of-variable-example)
 
@@ -158,18 +145,14 @@
 (defmethod locate-and-document (symbol (locative-type (eql 'constant))
                                 locative-args stream)
   (destructuring-bind (&optional (initform nil initformp)) locative-args
-    (locate-and-print-bullet locative-type locative-args symbol stream)
-    (write-char #\Space stream)
-    (print-arglist (prin1-and-escape-markdown (cond (initformp
-                                                     initform)
-                                                    ((boundp symbol)
-                                                     (symbol-value symbol))
-                                                    (t
-                                                     "<unbound>")))
-                   stream)
-    (print-end-bullet stream)
-    (with-local-references ((list (make-reference symbol 'constant)))
-      (maybe-print-docstring symbol 'variable stream))))
+    (let ((arglist (prin1-to-markdown (cond (initformp
+                                             initform)
+                                            ((boundp symbol)
+                                             (symbol-value symbol))
+                                            (t
+                                             "<unbound>")))))
+      (documenting-reference (stream :arglist arglist)
+        (document-docstring (documentation* symbol 'variable) stream)))))
 
 (defmethod locate-docstring (symbol (locative-type (eql 'constant))
                              locative-args)
@@ -179,7 +162,7 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'constant))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-definition symbol (swank-constant-dspecs symbol)))
+  (find-definition symbol 'constant))
 
 
 ;;;; MACRO locative
@@ -197,14 +180,10 @@
 
 (defmethod locate-and-document (symbol (locative-type (eql 'macro))
                                 locative-args stream)
-  (locate-and-print-bullet locative-type locative-args symbol stream)
-  (write-char #\Space stream)
   (let ((arglist (swank-backend:arglist symbol)))
-    (print-arglist arglist stream)
-    (print-end-bullet stream)
-    (with-local-references ((list (make-reference symbol 'macro)))
-      (with-dislocated-symbols ((macro-arg-names arglist))
-        (maybe-print-docstring symbol 'function stream)))))
+    (documenting-reference (stream :arglist arglist)
+      (with-dislocated-objects (macro-arg-names arglist)
+        (document-docstring (documentation* symbol 'function) stream)))))
 
 (defmethod locate-docstring (symbol (locative-type (eql 'macro))
                              locative-args)
@@ -214,8 +193,7 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'macro))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-definition* (macro-function symbol) symbol
-                    (swank-macro-dspecs symbol)))
+  (find-definition* (macro-function symbol) symbol 'macro))
 
 
 ;;;; SYMBOL-MACRO locative
@@ -251,10 +229,8 @@
 
 (defmethod locate-and-document (symbol (locative-type (eql 'symbol-macro))
                                 locative-args stream)
-  (locate-and-print-bullet locative-type locative-args symbol stream)
-  (print-end-bullet stream)
-  (with-local-references ((list (make-reference symbol 'symbol-macro)))
-    (maybe-print-docstring symbol 'symbol-macro stream)))
+  (documenting-reference (stream)
+    (document-docstring (documentation* symbol 'symbol-macro) stream)))
 
 (defmethod locate-docstring (symbol (locative-type (eql 'symbol-macro))
                              locative-args)
@@ -264,7 +240,7 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'symbol-macro))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-definition symbol (swank-symbol-macro-dspecs symbol)))
+  (find-definition symbol 'symbol-macro))
 
 
 ;;;; COMPILER-MACRO locative
@@ -282,16 +258,12 @@
 
 (defmethod locate-and-document (symbol (locative-type (eql 'compiler-macro))
                                 locative-args stream)
-  (locate-and-print-bullet locative-type locative-args symbol stream)
-  (write-char #\Space stream)
-  ;; FIXME: This is the arglist of the function, not the compiler
-  ;; macro.
-  (let ((arglist (swank-backend:arglist symbol)))
-    (print-arglist arglist stream)
-    (print-end-bullet stream)
-    (with-local-references ((list (make-reference symbol 'compiler-macro)))
-      (with-dislocated-symbols ((macro-arg-names arglist))
-        (maybe-print-docstring symbol 'compiler-macro stream)))))
+  (let (;; FIXME: This is the arglist of the function, not the
+        ;; compiler macro.
+        (arglist (swank-backend:arglist symbol)))
+    (documenting-reference (stream :arglist arglist)
+      (with-dislocated-objects (macro-arg-names arglist)
+        (document-docstring (documentation* symbol 'compiler-macro) stream)))))
 
 (defmethod locate-docstring (symbol (locative-type (eql 'compiler-macro))
                              locative-args)
@@ -301,8 +273,7 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'compiler-macro))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-definition* (compiler-macro-function symbol)
-                    symbol (swank-compiler-macro-dspecs symbol)))
+  (find-definition* (compiler-macro-function symbol) symbol 'compiler-macro))
 
 
 ;;;; FUNCTION and GENERIC-FUNCTION locatives
@@ -359,15 +330,10 @@
 
 (defmethod document-object ((function function) stream)
   (let* ((function (unencapsulated-function function))
-         (reference (canonical-reference function)))
-    (print-bullet reference stream)
-    (write-char #\Space stream)
-    (let ((arglist (arglist function)))
-      (print-arglist arglist stream)
-      (print-end-bullet stream)
-      (with-local-references ((list reference))
-        (with-dislocated-symbols ((function-arg-names arglist))
-          (maybe-print-docstring function 'function stream))))))
+         (arglist (arglist function)))
+    (documenting-reference (stream :arglist arglist)
+      (with-dislocated-objects (function-arg-names arglist)
+        (document-docstring (documentation* function 'function) stream)))))
 
 (defmethod locate-docstring (symbol (locative-type (eql 'function))
                              locative-args)
@@ -381,14 +347,12 @@
 (defmethod locate-and-find-source
     (symbol (locative-type (eql 'function)) locative-args)
   (declare (ignore locative-args))
-  (find-definition* (symbol-function symbol)
-                    symbol (swank-function-dspecs symbol)))
+  (find-definition* (symbol-function symbol) symbol 'function))
 
 (defmethod locate-and-find-source
     (symbol (locative-type (eql 'generic-function)) locative-args)
   (declare (ignore locative-args))
-  (find-definition* (symbol-function symbol)
-                    symbol (swank-generic-function-dspecs symbol)))
+  (find-definition* (symbol-function symbol) symbol 'generic-function))
 
 
 ;;;; METHOD locative
@@ -430,13 +394,9 @@
 
 (defmethod document-object ((method method) stream)
   (let ((arglist (rest (method-for-inspect-value method))))
-    (print-bullet method stream)
-    (write-char #\Space stream)
-    (print-arglist arglist stream)
-    (print-end-bullet stream)
-    (with-local-references ((list (canonical-reference method)))
-      (with-dislocated-symbols ((function-arg-names arglist))
-        (maybe-print-docstring method t stream)))))
+    (documenting-reference (stream :arglist arglist)
+      (with-dislocated-objects (function-arg-names arglist)
+        (document-docstring (documentation* method t) stream)))))
 
 ;;;; These were lifted from the fancy inspector contrib and then
 ;;;; tweaked.
@@ -473,8 +433,7 @@
   ;; implement dealing EQL specialier objects.
   (find-definition* (find-method* symbol (first locative-args)
                                   (second locative-args))
-                    symbol (swank-method-dspecs symbol (first locative-args)
-                                                (second locative-args))))
+                    symbol `(method ,@locative-args)))
 
 
 ;;;; METHOD-COMBINATION locative
@@ -495,10 +454,8 @@
 
 (defmethod locate-and-document
     (symbol (locative-type (eql 'method-combination)) locative-args stream)
-  (locate-and-print-bullet locative-type locative-args symbol stream)
-  (print-end-bullet stream)
-  (with-local-references ((list (make-reference symbol 'macro)))
-    (maybe-print-docstring symbol 'method-combination stream)))
+  (documenting-reference (stream)
+    (document-docstring (documentation* symbol 'method-combination) stream)))
 
 (defmethod locate-docstring (symbol (locative-type (eql 'method-combination))
                              locative-args)
@@ -507,7 +464,7 @@
 (defmethod locate-and-find-source
     (symbol (locative-type (eql 'method-combination)) locative-args)
   (declare (ignore locative-args))
-  (find-definition symbol (swank-method-combination-dspecs symbol)))
+  (find-definition symbol 'method-combination))
 
 
 ;;;; ACCESSOR, READER and WRITER locatives
@@ -590,63 +547,54 @@
 (defmethod locate-and-document (symbol (locative-type (eql 'accessor))
                                 locative-args stream)
   (generate-documentation-for-slot-definition
-   symbol (find-accessor-slot-definition symbol (first locative-args))
-   locative-type locative-args stream))
+   (find-accessor-slot-definition symbol (first locative-args))
+   (first locative-args) stream))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'reader))
                                 locative-args stream)
   (generate-documentation-for-slot-definition
-   symbol (find-reader-slot-definition symbol (first locative-args))
-   locative-type locative-args stream))
+   (find-reader-slot-definition symbol (first locative-args))
+   (first locative-args) stream))
 
 (defmethod locate-and-document (symbol (locative-type (eql 'writer))
                                 locative-args stream)
   (generate-documentation-for-slot-definition
-   symbol (find-writer-slot-definition symbol (first locative-args))
-   locative-type locative-args stream))
+   (find-writer-slot-definition symbol (first locative-args))
+   (first locative-args) stream))
 
-(defun generate-documentation-for-slot-definition
-    (symbol slot-def locative-type locative-args stream)
-  (locate-and-print-bullet locative-type locative-args symbol stream)
-  (write-char #\Space stream)
-  (print-arglist locative-args stream)
+(defun generate-documentation-for-slot-definition (slot-def class stream)
+  (let ((arglist (format nil "~A ~A" (prin1-to-markdown class)
+                         (slot-def-to-string slot-def))))
+    (documenting-reference (stream :arglist arglist)
+      ;; There is no documentation for condition accessors, and some
+      ;; implementations signal warnings.
+      (unless (subtypep (find-class class) 'condition)
+        (document-docstring (swank-mop:slot-definition-documentation slot-def)
+                            stream)))))
+
+(defun slot-def-to-string (slot-def)
   (when (and slot-def
              (or (swank-mop:slot-definition-initargs slot-def)
                  (swank-mop:slot-definition-initfunction slot-def)))
-    (write-char #\Space stream)
     (if (and *document-mark-up-signatures* (eq *format* :html))
         (let ((initarg-strings
                 (when (swank-mop:slot-definition-initargs slot-def)
-                  (mapcar #'prin1-and-escape-markdown
+                  (mapcar #'prin1-to-markdown
                           (swank-mop:slot-definition-initargs slot-def)))))
-          (print-arglist
-           (format nil "(~{~A~^ ~}~A)" initarg-strings
-                   (if (swank-mop:slot-definition-initfunction slot-def)
-                       (format nil "~A= ~A"
-                               (if initarg-strings " " "")
-                               (prin1-and-escape-markdown
-                                (swank-mop:slot-definition-initform
-                                 slot-def)))
-                       ""))
-           stream))
-        (print-arglist
-         (prin1-and-escape-markdown
-          `(,@(when (swank-mop:slot-definition-initargs slot-def)
-                (swank-mop:slot-definition-initargs slot-def))
-            ,@(when (swank-mop:slot-definition-initfunction slot-def)
-                `(=
-                  ,(swank-mop:slot-definition-initform slot-def)))))
-         stream)))
-  (print-end-bullet stream)
-  ;; No documentation for condition accessors, and some
-  ;; implementations signal warnings.
-  (with-local-references ((list (make-reference symbol
-                                                (cons locative-type
-                                                      locative-args))))
-    (unless (subtypep (find-class (first locative-args)) 'condition)
-      (let ((docstring (swank-mop:slot-definition-documentation slot-def)))
-        (when docstring
-          (format stream "~%~A~%" (massage-docstring docstring)))))))
+          (format nil "(~{~A~^ ~}~A)" initarg-strings
+                  (if (swank-mop:slot-definition-initfunction slot-def)
+                      (format nil "~A= ~A"
+                              (if initarg-strings " " "")
+                              (prin1-to-markdown
+                               (swank-mop:slot-definition-initform
+                                slot-def)))
+                      "")))
+        (prin1-to-markdown
+         `(,@(when (swank-mop:slot-definition-initargs slot-def)
+               (swank-mop:slot-definition-initargs slot-def))
+           ,@(when (swank-mop:slot-definition-initfunction slot-def)
+               `(=
+                 ,(swank-mop:slot-definition-initform slot-def))))))))
 
 (defmethod locate-docstring (symbol (locative-type (eql 'accessor))
                              locative-args)
@@ -666,20 +614,17 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'accessor))
                                    locative-args)
   (find-definition* (find-method* symbol () (list (first locative-args)))
-                    symbol (swank-accessor-dspecs symbol (first locative-args)
-                                                  nil)))
+                    symbol `(accessor ,(first locative-args))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'reader))
                                    locative-args)
   (find-definition* (find-method* symbol () (list (first locative-args)))
-                    symbol (swank-accessor-dspecs symbol (first locative-args)
-                                                  nil)))
+                    symbol `(reader ,(first locative-args))))
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'writer))
                                    locative-args)
   (find-definition* (find-method* symbol () (list t (first locative-args)))
-                    symbol (swank-accessor-dspecs symbol (first locative-args)
-                                                  t)))
+                    symbol `(writer ,(first locative-args))))
 
 
 ;;;; STRUCTURE-ACCESSOR locative
@@ -700,10 +645,8 @@
 (defmethod locate-and-document ((symbol symbol)
                                 (locative-type (eql 'structure-accessor))
                                 locative-args stream)
-  (locate-and-print-bullet locative-type locative-args symbol stream)
-  (print-end-bullet stream)
-  (with-local-references ((list (make-reference symbol 'structure-accessor)))
-    (maybe-print-docstring symbol 'function stream)))
+  (documenting-reference (stream)
+    (document-docstring (documentation* symbol 'function) stream)))
 
 (defmethod locate-docstring (symbol (locative-type (eql 'structure-accessor))
                              locative-args)
@@ -714,8 +657,7 @@
                                    (locative-type (eql 'structure-accessor))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-definition* (symbol-function symbol)
-                    symbol (swank-function-dspecs symbol)))
+  (find-definition* (symbol-function symbol) symbol 'function))
 
 
 ;;;; TYPE locative
@@ -737,17 +679,12 @@
     (locate-error "~S is not a valid type specifier." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
-(defmethod locate-and-document (symbol (locative-type (eql 'type)) locative-args
-                                stream)
-  (locate-and-print-bullet locative-type locative-args symbol stream)
+(defmethod locate-and-document (symbol (locative-type (eql 'type))
+                                locative-args stream)
   (let ((arglist (swank-backend:type-specifier-arglist symbol)))
-    (when (and arglist (not (eq arglist :not-available)))
-      (write-char #\Space stream)
-      (print-arglist arglist stream))
-    (print-end-bullet stream)
-    (with-local-references ((list (make-reference symbol 'type)))
-      (with-dislocated-symbols ((function-arg-names arglist))
-        (maybe-print-docstring symbol 'type stream)))))
+    (documenting-reference (stream :arglist arglist)
+      (with-dislocated-objects (function-arg-names arglist)
+        (document-docstring (documentation* symbol 'type) stream)))))
 
 (defmethod locate-docstring (symbol (locative-type (eql 'type))
                              locative-args)
@@ -757,9 +694,7 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'type))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-definition symbol (append (swank-type-dspecs symbol)
-                                  (swank-class-dspecs symbol)
-                                  (swank-condition-dspecs symbol))))
+  (find-definition symbol 'type 'class 'condition))
 
 
 ;;;; CLASS and CONDITION locatives
@@ -805,7 +740,6 @@
 
 (defmethod document-object ((class class) stream)
   (let* ((conditionp (subtypep class 'condition))
-         (symbol (class-name class))
          (superclasses
            (remove-if (lambda (name)
                         (or (eq name 'standard-object)
@@ -816,23 +750,20 @@
                                                      (symbol-package name)))
                                      :external))))
                       (mapcar #'class-name
-                              (swank-mop:class-direct-superclasses class)))))
-    (print-bullet class stream)
-    (when superclasses
-      (write-char #\Space stream)
-      (if *document-mark-up-signatures*
-          (print-arglist (mark-up-superclasses superclasses) stream)
-          (print-arglist superclasses stream)))
-    (print-end-bullet stream)
-    (with-local-references ((list (make-reference symbol 'class)))
-      (maybe-print-docstring class t stream))))
+                              (swank-mop:class-direct-superclasses class))))
+         (arglist (when superclasses
+                    (if *document-mark-up-signatures*
+                        (mark-up-superclasses superclasses)
+                        superclasses))))
+    (documenting-reference (stream :arglist arglist)
+      (document-docstring (documentation* class t) stream))))
 
 (defun mark-up-superclasses (superclasses)
   (with-output-to-string (stream)
     (loop for class in superclasses
           for i upfrom 0
           do (let ((reference (make-reference class 'class)))
-               (let ((name (prin1-and-escape-markdown class)))
+               (let ((name (prin1-to-markdown class)))
                  (unless (zerop i)
                    (format stream " "))
                  (if (global-reference-p reference)
@@ -846,14 +777,12 @@
 (defmethod locate-and-find-source
     (symbol (locative-type (eql 'class)) locative-args)
   (declare (ignore locative-args))
-  (find-definition* (find-class symbol)
-                    symbol (swank-class-dspecs symbol)))
+  (find-definition* (find-class symbol) symbol 'class))
 
 (defmethod locate-and-find-source
     (symbol (locative-type (eql 'condition)) locative-args)
   (declare (ignore locative-args))
-  (find-definition* (find-class symbol)
-                    symbol (swank-condition-dspecs symbol)))
+  (find-definition* (find-class symbol) symbol 'condition))
 
 
 ;;;; DECLARATION locative
@@ -895,10 +824,8 @@
 
 (defmethod locate-and-document (symbol (locative-type (eql 'declaration))
                                 locative-args stream)
-  (declare (ignore locative-args))
-  (let ((reference (canonical-reference (make-reference symbol 'declaration))))
-    (print-bullet reference stream)
-    (print-end-bullet stream)))
+  (declare (ignore symbol locative-args))
+  (documenting-reference (stream)))
 
 (defmethod locate-docstring (symbol (locative-type (eql 'declaration))
                              locative-args)
@@ -969,9 +896,12 @@
                     (format stream "- ~A: [~A](~A)"
                             name (first value) (second value)))
                    ((:docstring)
-                    (format stream "- ~A: ~A~%" name
-                            (massage-docstring value :indentation "  "
-                                               :exclude-first-line-p t)))
+                    (format stream "- ~A: " name)
+                    (document-docstring value stream
+                                        :indentation "  "
+                                        :exclude-first-line-p t
+                                        :paragraphp nil)
+                    (terpri stream))
                    ((nil)
                     (format stream "- ~A: ~A~%" name value)))))))
       (unless *omit-asdf-slots*
@@ -1037,11 +967,8 @@
   (make-reference (character-string (package-name package)) 'package))
 
 (defmethod document-object ((package package) stream)
-  (let ((symbol (package-name package)))
-    (print-bullet package stream)
-    (print-end-bullet stream)
-    (with-local-references ((list (make-reference symbol 'package)))
-      (maybe-print-docstring package t stream))))
+  (documenting-reference (stream)
+    (document-docstring (documentation* package t) stream)))
 
 (defmethod docstring ((package package))
   (documentation* package t))
@@ -1053,7 +980,7 @@
                     (if (stringp name)
                         (make-symbol name)
                         name)
-                    (swank-package-dspecs name)))
+                    'package))
 
 
 ;;;; READTABLE locative
@@ -1070,11 +997,9 @@
   (named-readtables:find-readtable symbol))
 
 (defmethod document-object ((readtable readtable) stream)
-  (let ((symbol (readtable-name readtable)))
-    (locate-and-print-bullet 'readtable () symbol stream)
-    (print-end-bullet stream)
-    (with-local-references ((list (make-reference symbol 'readtable)))
-      (maybe-print-docstring symbol 'readtable stream))))
+  (let* ((symbol (readtable-name readtable)))
+    (documenting-reference (stream)
+      (document-docstring (documentation* symbol 'readtable) stream))))
 
 (defmethod docstring ((readtable readtable))
   (documentation* (readtable-name readtable) 'readtable))
@@ -1151,8 +1076,7 @@
           (if firstp
               (setq firstp nil)
               (terpri stream))
-          (with-nested-headings ()
-            (document-object entry stream)))))))
+          (document-object entry stream))))))
 
 (defmethod docstring ((section section))
   nil)
@@ -1160,7 +1084,7 @@
 (defmethod locate-and-find-source (symbol (locative-type (eql 'section))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-definition symbol (swank-variable-dspecs symbol)))
+  (find-definition symbol 'variable))
 
 
 ;;;; GLOSSARY-TERM locative
@@ -1184,15 +1108,9 @@
   (symbol-value symbol))
 
 (defmethod document-object ((glossary-term glossary-term) stream)
-  (let ((symbol (glossary-term-name glossary-term)))
-    (locate-and-print-bullet 'glossary-term () symbol stream
-                             :name (glossary-term-title-or-name glossary-term))
-    (print-end-bullet stream)
-    ;; Don't add a local reference for this because GLOSSARY-TERMs
-    ;; must link any number of times.
-    (let ((docstring (glossary-term-docstring glossary-term)))
-      (when docstring
-        (format stream "~%~A~%" (massage-docstring docstring))))))
+  (let ((name (glossary-term-title-or-name glossary-term)))
+    (documenting-reference (stream :name name)
+      (document-docstring (glossary-term-docstring glossary-term) stream))))
 
 (defmethod docstring ((glossary-term glossary-term))
   (glossary-term-docstring glossary-term))
@@ -1227,15 +1145,9 @@
                                 locative-args stream)
   (let ((method (locative-lambda-list-method-for-symbol symbol))
         (lambda-list (locative-lambda-list symbol)))
-    (locate-and-print-bullet locative-type locative-args symbol stream)
-    (with-dislocated-symbols ((macro-arg-names lambda-list))
-      (when lambda-list
-        (write-char #\Space stream)
-        (print-arglist lambda-list stream))
-      (print-end-bullet stream)
-      (with-local-references ((list (make-reference symbol 'locative)))
-        (maybe-print-docstring method t stream))))
-  (format stream "~&"))
+    (documenting-reference (stream :arglist lambda-list)
+      (with-dislocated-objects (macro-arg-names lambda-list)
+        (document-docstring (documentation* method t) stream)))))
 
 (defmethod locate-docstring (symbol (locative-type (eql 'locative))
                              locative-args)
@@ -1247,9 +1159,7 @@
                                    locative-args)
   (declare (ignore locative-args))
   (find-definition* (locative-lambda-list-method-for-symbol symbol)
-                    'locative-lambda-list
-                    (swank-method-dspecs 'locative-lambda-list ()
-                                         `((eql ,symbol)))))
+                    'locative-lambda-list `(method () ((eql ,symbol)))))
 
 (add-locative-to-source-search-list 'locative)
 

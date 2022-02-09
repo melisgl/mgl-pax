@@ -61,8 +61,8 @@
   :description "Documentation generation support for MGL-PAX."
   :long-description "Autoloaded by MGL-PAX:DOCUMENT. See
   MGL-PAX::@GENERATING-DOCUMENTATION."
-  :depends-on ("3bmd" "3bmd-ext-code-blocks" "colorize" "md5"
-                      "mgl-pax/navigate")
+  :depends-on ("alexandria" "3bmd" "3bmd-ext-code-blocks" "colorize" "md5"
+                            "mgl-pax/navigate")
   :components ((:module "src/document/"
                 :serial t
                 :components ((:file "markdown")
@@ -83,7 +83,7 @@
   :description "Transcription support for MGL-PAX."
   :long-description "Autoloaded by MGL-PAX:TRANSCRIBE and by the Emacs
   integration (see MGL-PAX::@TRANSCRIPTS)."
-  :depends-on ("mgl-pax")
+  :depends-on ("alexandria" "mgl-pax/navigate")
   :components ((:module "src/transcribe/"
                 :serial t
                 :components ((:file "transcribe"))))

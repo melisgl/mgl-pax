@@ -58,7 +58,9 @@
 - [11 Writing Extensions][c4ce]
     - [11.1 Adding New Object Types][bbf2]
     - [11.2 Reference Based Extensions][69f7]
-    - [11.3 Sections][8a58]
+    - [11.3 Extending DOCUMENT][574a]
+    - [11.4 Extending FIND-SOURCE][3eb4]
+    - [11.5 Sections][8a58]
 
 ###### \[in package MGL-PAX with nicknames PAX\]
 <a id="x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
@@ -518,13 +520,13 @@ need to muck with references when there is a perfectly good object.
     is true.
 
 <a id="x-28MGL-PAX-3ALOCATE-ERROR-MESSAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29"></a>
-- [reader] **LOCATE-ERROR-MESSAGE** *LOCATE-ERROR* *(:MESSAGE)*
+- [reader] **LOCATE-ERROR-MESSAGE** *LOCATE-ERROR (:MESSAGE)*
 
 <a id="x-28MGL-PAX-3ALOCATE-ERROR-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29"></a>
-- [reader] **LOCATE-ERROR-OBJECT** *LOCATE-ERROR* *(:OBJECT)*
+- [reader] **LOCATE-ERROR-OBJECT** *LOCATE-ERROR (:OBJECT)*
 
 <a id="x-28MGL-PAX-3ALOCATE-ERROR-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29"></a>
-- [reader] **LOCATE-ERROR-LOCATIVE** *LOCATE-ERROR* *(:LOCATIVE)*
+- [reader] **LOCATE-ERROR-LOCATIVE** *LOCATE-ERROR (:LOCATIVE)*
 
 <a id="x-28MGL-PAX-3ARESOLVE-20FUNCTION-29"></a>
 - [function] **RESOLVE** *REFERENCE &KEY (ERRORP T)*
@@ -539,10 +541,10 @@ need to muck with references when there is a perfectly good object.
     to take from an object ([`REFERENCE-OBJECT`][8c7d]).
 
 <a id="x-28MGL-PAX-3AREFERENCE-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29"></a>
-- [reader] **REFERENCE-OBJECT** *REFERENCE* *(:OBJECT)*
+- [reader] **REFERENCE-OBJECT** *REFERENCE (:OBJECT)*
 
 <a id="x-28MGL-PAX-3AREFERENCE-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29"></a>
-- [reader] **REFERENCE-LOCATIVE** *REFERENCE* *(:LOCATIVE)*
+- [reader] **REFERENCE-LOCATIVE** *REFERENCE (:LOCATIVE)*
 
 <a id="x-28MGL-PAX-3AMAKE-REFERENCE-20FUNCTION-29"></a>
 - [function] **MAKE-REFERENCE** *OBJECT LOCATIVE*
@@ -1129,7 +1131,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
 
     Write `OBJECT` in `FORMAT` to `STREAM` diverting some output to `PAGES`.
     `FORMAT` can be anything [`3BMD`][3bmd] supports, which is currently
-    `:MARKDOWN`, `:HTML` and `:PLAIN`. `STREAM` may be a [`STREAM`][class] object,
+    `:MARKDOWN`, `:HTML` and `:PLAIN`. `STREAM` may be a [`STREAM`][cbf2] object,
     `T` or `NIL` as with `CL:FORMAT`.
     
     Most often, this function is called on `SECTION`([`0`][5fac] [`1`][672f]) objects like
@@ -1705,8 +1707,8 @@ table of contents and navigation links.
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20VARIABLE-29"></a>
 - [variable] **\*DOCUMENT-LINK-SECTIONS\*** *T*
 
-    When true, HTML anchors are generated before the heading of
-    sections, which allows the table of contents to contain links and
+    When true, HTML anchors are generated before the headings (e.g. of
+    sections), which allows the table of contents to contain links and
     also code-like references to sections (like `@FOO-MANUAL`) to be
     translated to links with the section title being the name of the
     link.
@@ -2710,9 +2712,12 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
                     (format stream "- ~A: [~A](~A)"
                             name (first value) (second value)))
                    ((:docstring)
-                    (format stream "- ~A: ~A~%" name
-                            (massage-docstring value :indentation "  "
-                                               :exclude-first-line-p t)))
+                    (format stream "- ~A: " name)
+                    (document-docstring value stream
+                                        :indentation "  "
+                                        :exclude-first-line-p t
+                                        :paragraphp nil)
+                    (terpri stream))
                    ((nil)
                     (format stream "- ~A: ~A~%" name value)))))))
       (unless *omit-asdf-slots*
@@ -2829,19 +2834,13 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
     One only has to specialize this for new container-like objects. Its
     [reference delegate][e403] is [`LOCATE-AND-COLLECT-REACHABLE-OBJECTS`][46ec].
 
-<a id="x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29"></a>
-- [variable] **\*FORMAT\*** 
-
-    Bound by [`DOCUMENT`][432c], this allows markdown output to depend on the
-    output format.
-
 <a id="x-28MGL-PAX-3ADOCUMENT-OBJECT-20GENERIC-FUNCTION-29"></a>
 - [generic-function] **DOCUMENT-OBJECT** *OBJECT STREAM*
 
     Write `OBJECT` (and its references recursively) in
-    [`*FORMAT*`][3da8] to `STREAM`. Add methods specializing on `OBJECT` to customize
-    the output of [`DOCUMENT`][432c]. Its [reference delegate][e403] is
-    [`LOCATE-AND-DOCUMENT`][6611].
+    [`*FORMAT*`][3da8] to `STREAM` in markdown format. Add methods specializing on
+    `OBJECT` to customize the output of [`DOCUMENT`][432c]. Its [reference delegate][e403]
+    is [`LOCATE-AND-DOCUMENT`][6611].
 
 <a id="x-28MGL-PAX-3ADOCSTRING-20GENERIC-FUNCTION-29"></a>
 - [generic-function] **DOCSTRING** *OBJECT*
@@ -2961,17 +2960,14 @@ functions that we have specialized in [Adding New Object Types][bbf2] have
 (defmethod locate-and-document (symbol (locative-type (eql 'variable))
                                 locative-args stream)
   (destructuring-bind (&optional (initform nil initformp)) locative-args
-    (locate-and-print-bullet locative-type locative-args symbol stream)
-    (write-char #\Space stream)
-    (multiple-value-bind (value unboundp) (symbol-global-value symbol)
-      (when (or initformp (not unboundp))
-        (print-arglist (prin1-and-escape-markdown (if initformp
-                                                      initform
-                                                      value))
-                       stream)))
-    (print-end-bullet stream)
-    (with-local-references ((list (make-reference symbol 'variable)))
-      (maybe-print-docstring symbol 'variable stream))))
+    (let ((arglist (multiple-value-bind (value unboundp)
+                       (symbol-global-value symbol)
+                     (when (or initformp (not unboundp))
+                       (prin1-to-markdown (if initformp
+                                              initform
+                                              value))))))
+      (documenting-reference (stream :arglist arglist)
+        (document-docstring (documentation* symbol 'variable) stream)))))
 
 (defmethod locate-docstring (symbol (locative-type (eql 'variable))
                              locative-args)
@@ -2981,7 +2977,7 @@ functions that we have specialized in [Adding New Object Types][bbf2] have
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-definition symbol (swank-variable-dspecs symbol)))
+  (find-definition symbol 'variable))
 
 ```
 
@@ -3070,8 +3066,106 @@ with symbols in a certain context.
     `&OPTIONAL` `DOCSTRING`). `LOCATIVE-TYPE` is assumed to have been defined
     with [`DEFINE-SYMBOL-LOCATIVE-TYPE`][7584].
 
+<a id="x-28MGL-PAX-3A-40EXTENDING-DOCUMENT-20MGL-PAX-3ASECTION-29"></a>
+### 11.3 Extending DOCUMENT
+
+The following utilities are for writing new [`DOCUMENT-OBJECT`][bacc] and
+[`LOCATE-AND-DOCUMENT`][6611] methods, which emit markdown.
+
+<a id="x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29"></a>
+- [variable] **\*FORMAT\***
+
+    Bound by [`DOCUMENT`][432c], this allows markdown output to depend on the
+    output format.
+
+<a id="x-28MGL-PAX-3AWITH-HEADING-20MGL-PAX-3AMACRO-29"></a>
+- [macro] **WITH-HEADING** *(STREAM OBJECT TITLE &KEY LINK-TITLE-TO) &BODY BODY*
+
+    Write a markdown heading with `TITLE` to `STREAM`. Nested `WITH-HEADING`s
+    produce nested headings. If [`*DOCUMENT-LINK-SECTIONS*`][1b28], generate
+    anchors based on the [`CANONICAL-REFERENCE`][32f5] of `OBJECT`. `LINK-TITLE-TO`
+    behaves like the `LINK-TITLE-TO` argument of [`DEFSECTION`][72b4].
+
+<a id="x-28MGL-PAX-3ADOCUMENTING-REFERENCE-20MGL-PAX-3AMACRO-29"></a>
+- [macro] **DOCUMENTING-REFERENCE** *(STREAM &KEY REFERENCE ARGLIST NAME) &BODY BODY*
+
+    Write `REFERENCE` to `STREAM` as described in
+    [`*DOCUMENT-MARK-UP-SIGNATURES*`][8fb6], and establish `REFERENCE` as a [local
+    reference][4c96]. Unless `ARGLIST` is `NIL` or
+    `:NOT-AVAILABLE`, it is printed after the name of object of `REFERENCE`.
+    
+    If `ARGLIST` is a list, then it is must be a [lambda list][f945] and
+    is printed without the outermost parens and with the package names
+    removed from the argument names.
+    
+    If `ARGLIST` is a string, then it is printed without [`ESCAPE-MARKDOWN`][3026].
+
+<a id="x-28MGL-PAX-3AWITH-DISLOCATED-OBJECTS-20MGL-PAX-3AMACRO-29"></a>
+- [macro] **WITH-DISLOCATED-OBJECTS** *OBJECTS &BODY BODY*
+
+    For each `OBJECT` in `OBJECTS`, establish a [local
+    reference][4c96] with the [`DISLOCATED`][e391] locative, which
+    [prevents autolinking][8c16].
+
+<a id="x-28MGL-PAX-3ADOCUMENT-DOCSTRING-20FUNCTION-29"></a>
+- [function] **DOCUMENT-DOCSTRING** *DOCSTRING STREAM &KEY (INDENTATION "    ") EXCLUDE-FIRST-LINE-P (PARAGRAPHP T)*
+
+    Process and `DOCSTRING` to `STREAM`, [stripping
+    indentation][718f] from it, performing
+    [Codification][f1ab] and [Linking to Code][1865], finally prefixing each line with
+    `INDENTATION`. The prefix is not added to the first line if
+    `EXCLUDE-FIRST-LINE-P`. If `PARAGRAPHP`, then add a newline before and
+    after the output.
+
+<a id="x-28MGL-PAX-3ADOCUMENTATION-2A-20FUNCTION-29"></a>
+- [function] **DOCUMENTATION\*** *OBJECT DOC-TYPE*
+
+    A small wrapper around [`CL:DOCUMENTATION`][68f1] to smooth over differences
+    between implementations.
+
+<a id="x-28MGL-PAX-3AESCAPE-MARKDOWN-20FUNCTION-29"></a>
+- [function] **ESCAPE-MARKDOWN** *STRING*
+
+    Construct a new string from `STRING` by adding a backslash before
+    each special markdown character:
+    
+        *_`<>[]
+
+
+<a id="x-28MGL-PAX-3APRIN1-TO-MARKDOWN-20FUNCTION-29"></a>
+- [function] **PRIN1-TO-MARKDOWN** *OBJECT*
+
+    Like [`PRIN1-TO-STRING`][8bee], but bind [`*PRINT-CASE*`][a39d] depending on
+    [`*DOCUMENT-DOWNCASE-UPPERCASE-CODE*`][a5ee] and [`*FORMAT*`][3da8], and
+    [`ESCAPE-MARKDOWN`][3026].
+
+<a id="x-28MGL-PAX-3A-40EXTENDING-FIND-SOURCE-20MGL-PAX-3ASECTION-29"></a>
+### 11.4 Extending FIND-SOURCE
+
+The following utilities are for writing new [`FIND-SOURCE`][4355] and
+[`LOCATE-AND-FIND-SOURCE`][d6a4] methods.
+
+<a id="x-28MGL-PAX-3AFIND-DEFINITION-20FUNCTION-29"></a>
+- [function] **FIND-DEFINITION** *OBJECT &REST LOCATIVES*
+
+    Return a source location for a definition of `OBJECT`. Try forming
+    [reference][80cd]s with `OBJECT` and one of `LOCATIVES`. Stop at the first
+    locative with which a definition is found and return its location.
+    If no location was found, then return the usual Swank `(:ERROR
+    ...)`. The implementation is based on the rather expensive
+    `SWANK-BACKEND:FIND-DEFINITIONS` function.
+
+<a id="x-28MGL-PAX-3AFIND-DEFINITION-2A-20FUNCTION-29"></a>
+- [function] **FIND-DEFINITION\*** *OBJECT REFERENCE-OBJECT &REST LOCATIVES*
+
+    Like [`FIND-DEFINITION`][ff68], but tries to get the definition of
+    `OBJECT` (for example a `FUNCTION`([`0`][ba62] [`1`][2d97] [`2`][3de5]) or `METHOD`([`0`][172e] [`1`][6831]) object) with the fast but
+    not widely supported `SWANK-BACKEND:FIND-SOURCE-LOCATION` before
+    calling the much slower but more complete
+    `SWANK-BACKEND:FIND-DEFINITIONS`.
+
 <a id="x-28MGL-PAX-3A-40SECTIONS-20MGL-PAX-3ASECTION-29"></a>
-### 11.3 Sections
+### 11.5 Sections
 
 [`SECTION`][5fac] objects rarely need to be dissected since
 [`DEFSECTION`][72b4] and [`DOCUMENT`][432c] cover most needs. However, it is plausible
@@ -3086,37 +3180,37 @@ presented.
     objects.
 
 <a id="x-28MGL-PAX-3ASECTION-NAME-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
-- [reader] **SECTION-NAME** *SECTION* *(:NAME)*
+- [reader] **SECTION-NAME** *SECTION (:NAME)*
 
     The name of the global variable whose value is
     this `SECTION`([`0`][5fac] [`1`][672f]) object.
 
 <a id="x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
-- [reader] **SECTION-PACKAGE** *SECTION* *(:PACKAGE)*
+- [reader] **SECTION-PACKAGE** *SECTION (:PACKAGE)*
 
     [`*PACKAGE*`][d2c1] will be bound to this package when
     generating documentation for this section if
     [`*DOCUMENT-NORMALIZE-PACKAGES*`][440e].
 
 <a id="x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
-- [reader] **SECTION-READTABLE** *SECTION* *(:READTABLE)*
+- [reader] **SECTION-READTABLE** *SECTION (:READTABLE)*
 
     [`*READTABLE*`][a916] will be bound to this when generating
     documentation for this section if [`*DOCUMENT-NORMALIZE-PACKAGES*`][440e].
 
 <a id="x-28MGL-PAX-3ASECTION-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
-- [reader] **SECTION-TITLE** *SECTION* *(:TITLE)*
+- [reader] **SECTION-TITLE** *SECTION (:TITLE)*
 
     A [`STRING`][4267] or `NIL`. Used in generated
     documentation.
 
 <a id="x-28MGL-PAX-3ASECTION-LINK-TITLE-TO-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
-- [reader] **SECTION-LINK-TITLE-TO** *SECTION* *(:LINK-TITLE-TO = NIL)*
+- [reader] **SECTION-LINK-TITLE-TO** *SECTION (:LINK-TITLE-TO = NIL)*
 
     A [`REFERENCE`][1cea] or `NIL`. Used in generated documentation.
 
 <a id="x-28MGL-PAX-3ASECTION-ENTRIES-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
-- [reader] **SECTION-ENTRIES** *SECTION* *(:ENTRIES)*
+- [reader] **SECTION-ENTRIES** *SECTION (:ENTRIES)*
 
     A list of strings and [`REFERENCE`][1cea] objects in the
     order they occurred in [`DEFSECTION`][72b4].
@@ -3155,7 +3249,9 @@ presented.
   [292a]: #x-28MGL-PAX-3A-40PAX-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for PAX Constructs"
   [2c93]: #x-28MGL-PAX-3A-40GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Generating Documentation"
   [2ce2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_consta.htm "CONSTANTP FUNCTION"
+  [2d97]: http://www.lispworks.com/documentation/HyperSpec/Body/s_fn.htm "FUNCTION MGL-PAX:MACRO"
   [2d9d]: #x-28MGL-PAX-3ADEFINE-RESTART-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-RESTART MGL-PAX:MACRO"
+  [3026]: #x-28MGL-PAX-3AESCAPE-MARKDOWN-20FUNCTION-29 "MGL-PAX:ESCAPE-MARKDOWN FUNCTION"
   [3200]: #x-28MGL-PAX-3ALOCATIVE-TYPE-20FUNCTION-29 "MGL-PAX:LOCATIVE-TYPE FUNCTION"
   [32f5]: #x-28MGL-PAX-3ACANONICAL-REFERENCE-20GENERIC-FUNCTION-29 "MGL-PAX:CANONICAL-REFERENCE GENERIC-FUNCTION"
   [3386]: #x-28MGL-PAX-3A-40NAVIGATING-IN-EMACS-20MGL-PAX-3ASECTION-29 "Navigating Sources in Emacs"
@@ -3165,6 +3261,7 @@ presented.
   [3d3c]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_rd.htm "READ FUNCTION"
   [3da8]: #x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29 "MGL-PAX:*FORMAT* VARIABLE"
   [3de5]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm "FUNCTION TYPE"
+  [3eb4]: #x-28MGL-PAX-3A-40EXTENDING-FIND-SOURCE-20MGL-PAX-3ASECTION-29 "Extending FIND-SOURCE"
   [3f15]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rest.htm "REST FUNCTION"
   [41fd]: #x-28COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29 "COMPILER-MACRO MGL-PAX:LOCATIVE"
   [4267]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "STRING TYPE"
@@ -3184,6 +3281,7 @@ presented.
   [4d92]: #x-28MGL-PAX-3A-40LOCATIVE-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@LOCATIVE MGL-PAX:GLOSSARY-TERM"
   [4dd7]: #x-28PACKAGE-20MGL-PAX-3ALOCATIVE-29 "PACKAGE MGL-PAX:LOCATIVE"
   [5119]: #x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:GLOSSARY-TERM MGL-PAX:LOCATIVE"
+  [574a]: #x-28MGL-PAX-3A-40EXTENDING-DOCUMENT-20MGL-PAX-3ASECTION-29 "Extending DOCUMENT"
   [5800]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq_sle.htm "< FUNCTION"
   [5825]: #x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/transcribe" ASDF/SYSTEM:SYSTEM'
   [5875]: #x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "GENERIC-FUNCTION MGL-PAX:LOCATIVE"
@@ -3238,6 +3336,7 @@ presented.
   [89d0]: http://www.lispworks.com/documentation/HyperSpec/Body/m_deftp.htm "DEFTYPE MGL-PAX:MACRO"
   [8a58]: #x-28MGL-PAX-3A-40SECTIONS-20MGL-PAX-3ASECTION-29 "Sections"
   [8beb]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_m.htm "FIND-METHOD GENERIC-FUNCTION"
+  [8bee]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_to_.htm "PRIN1-TO-STRING FUNCTION"
   [8c16]: #x-28MGL-PAX-3A-40PREVENTING-AUTOLINKING-20MGL-PAX-3ASECTION-29 "Preventing Autolinking"
   [8c3e]: #x-28MGL-PAX-3A-40TUTORIAL-20MGL-PAX-3ASECTION-29 "Tutorial"
   [8c40]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defgen.htm "DEFGENERIC MGL-PAX:MACRO"
@@ -3260,6 +3359,7 @@ presented.
   [a17d]: #x-28MGL-PAX-3A-40MATHJAX-20MGL-PAX-3ASECTION-29 "MathJax"
   [a249]: #x-28MGL-PAX-3ATRANSCRIPTION-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION"
   [a328]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rdtabl.htm "READTABLE-CASE FUNCTION"
+  [a39d]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_cas.htm "*PRINT-CASE* VARIABLE"
   [a5b1]: #x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION)"
   [a5de]: http://www.lispworks.com/documentation/HyperSpec/Body/m_define.htm "DEFINE-COMPILER-MACRO MGL-PAX:MACRO"
   [a5ee]: #x-28MGL-PAX-3A-2ADOCUMENT-DOWNCASE-UPPERCASE-CODE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-DOWNCASE-UPPERCASE-CODE* VARIABLE"
@@ -3287,6 +3387,7 @@ presented.
   [c4ce]: #x-28MGL-PAX-3A-40EXTENSION-API-20MGL-PAX-3ASECTION-29 "Writing Extensions"
   [c819]: #x-28MGL-PAX-3ACONSTANT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CONSTANT MGL-PAX:LOCATIVE"
   [c930]: #x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29 "MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION"
+  [cbf2]: http://www.lispworks.com/documentation/HyperSpec/Body/t_stream.htm "STREAM TYPE"
   [cc04]: #x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:READER MGL-PAX:LOCATIVE"
   [cd9e]: #x-28MGL-PAX-3ARESOLVE-20FUNCTION-29 "MGL-PAX:RESOLVE FUNCTION"
   [ce02]: http://www.lispworks.com/documentation/HyperSpec/Body/s_declar.htm "DECLARE MGL-PAX:MACRO"
@@ -3338,6 +3439,7 @@ presented.
   [fd7c]: #x-28MGL-PAX-3A-40LOCATIVES-AND-REFERENCES-20MGL-PAX-3ASECTION-29 "Locatives and References"
   [fdd1]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRINT FUNCTION"
   [fe2b]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_4.htm "DEFINE-METHOD-COMBINATION MGL-PAX:MACRO"
+  [ff68]: #x-28MGL-PAX-3AFIND-DEFINITION-20FUNCTION-29 "MGL-PAX:FIND-DEFINITION FUNCTION"
 
 * * *
 ###### \[generated by [MGL-PAX](https://github.com/melisgl/mgl-pax)\]

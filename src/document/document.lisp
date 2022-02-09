@@ -319,11 +319,6 @@
                            :direction :output)
      ,@body))
 
-(defvar *format*)
-(setf (documentation '*format* 'variable)
-      "Bound by DOCUMENT, this allows markdown output to depend on the
-       output format.")
-
 (declaim (special *document-normalize-packages*))
 (declaim (special *table-of-contents-stream*))
 (declaim (special *headings*))
@@ -335,7 +330,7 @@
 (defun document (object &key stream pages (format :markdown))
   """Write OBJECT in FORMAT to STREAM diverting some output to PAGES.
   FORMAT can be anything [3BMD][3bmd] supports, which is currently
-  :MARKDOWN, :HTML and :PLAIN. STREAM may be a [STREAM][class] object,
+  :MARKDOWN, :HTML and :PLAIN. STREAM may be a [STREAM][type] object,
   T or NIL as with CL:FORMAT.
 
   Most often, this function is called on SECTION objects like
@@ -632,7 +627,8 @@
   mess up markdown. To handle the most common cases leave the first
   line alone, but from the rest of the lines strip the longest run of
   leading spaces that is common to all non-blank lines."
-  (format stream "~a~%" (massage-docstring string :indentation "")))
+  (document-docstring string stream :indentation "" :paragraphp nil)
+  (terpri stream))
 
 (defsection @markdown-syntax-highlighting (:title "Syntax Highlighting")
   "For syntax highlighting, github's [fenced code
@@ -1637,8 +1633,8 @@
   (*document-fancy-html-navigation* variable))
 
 (defvar *document-link-sections* t
-  "When true, HTML anchors are generated before the heading of
-  sections, which allows the table of contents to contain links and
+  "When true, HTML anchors are generated before the headings (e.g. of
+  sections), which allows the table of contents to contain links and
   also code-like references to sections (like `@FOO-MANUAL`) to be
   translated to links with the section title being the name of the
   link.")
@@ -2056,30 +2052,21 @@
         (funcall fn reference)
         nil)))
 
-(defun locate-and-print-bullet (locative-type locative-args symbol stream
-                                &key name)
-  (let ((reference
-          (canonical-reference (make-reference
-                                symbol (cons locative-type locative-args)))))
-    (print-reference-bullet reference stream :name name)))
-
-(defun print-bullet (object stream)
-  (print-reference-bullet (canonical-reference object) stream))
-
 (defun print-arglist (arglist stream)
-  (let ((string (cond ((stringp arglist)
-                       ;; must be escaped markdown
-                       arglist)
-                      ((eq arglist :not-available)
-                       "")
-                      (t (arglist-to-string arglist)))))
+  (let ((string (if (stringp arglist)
+                    ;; must be escaped markdown
+                    arglist
+                    (arglist-to-string arglist))))
     (if *document-mark-up-signatures*
         (if (eq *format* :html)
             (format stream "<span class=\"locative-args\">~A</span>" string)
             (italic string stream))
         (format stream "~A" string))))
 
-(defun prin1-and-escape-markdown (object)
+(defun prin1-to-markdown (object)
+  "Like PRIN1-TO-STRING, but bind *PRINT-CASE* depending on
+  *DOCUMENT-DOWNCASE-UPPERCASE-CODE* and *FORMAT*, and
+  ESCAPE-MARKDOWN."
   (escape-markdown (prin1-to-string* object)))
 
 ;;; Print arg names without the package prefix to a string. The
@@ -2095,8 +2082,8 @@
                       ;; KLUDGE: github has trouble displaying things
                       ;; like '`*package*`, so disable this.
                       (eq *format* :html))
-                 (codify-and-link (prin1-and-escape-markdown object))
-                 (prin1-and-escape-markdown object)))
+                 (codify-and-link (prin1-to-markdown object))
+                 (prin1-to-markdown object)))
            (foo (arglist level)
              (unless (= level 0)
                (format out "("))
@@ -2106,14 +2093,14 @@
                         (format out " "))
                       (cond ((member arg '(&key &optional &rest &body))
                              (setq seen-special-p t)
-                             (format out "~A" (prin1-and-escape-markdown arg)))
+                             (format out "~A" (prin1-to-markdown arg)))
                             ((symbolp arg)
                              (format out "~A"
                                      (escape-markdown
                                       (maybe-downcase-all-uppercase-code
                                        (symbol-name arg)))))
                             ((atom arg)
-                             (format out "~A" (prin1-and-escape-markdown arg)))
+                             (format out "~A" (prin1-to-markdown arg)))
                             (seen-special-p
                              (if (symbolp (first arg))
                                  (format out "(~A~{ ~A~})"
@@ -2122,7 +2109,7 @@
                                            (symbol-name (first arg))))
                                          (mapcar #'resolve* (rest arg)))
                                  (format out "~A"
-                                         (prin1-and-escape-markdown arg))))
+                                         (prin1-to-markdown arg))))
                             (t
                              (foo arg (1+ level)))))
              (unless (= level 0)
@@ -2142,12 +2129,14 @@
 
 ;;;; Basic DOCUMENT-OBJECT methods
 
-(defvar *objects-being-documented* ())
-
 (defmethod document-object :around (object stream)
   (let ((*objects-being-documented* (cons object *objects-being-documented*)))
-    (cond ((or (stringp object) (typep object 'reference))
-           (call-next-method))
+    (cond ((stringp object)
+           (let ((*reference-being-documented* nil))
+             (call-next-method)))
+          ((typep object 'reference)
+           (let ((*reference-being-documented* object))
+             (call-next-method)))
           (t
            (let* ((reference (canonical-reference object))
                   (*reference-being-documented* reference))

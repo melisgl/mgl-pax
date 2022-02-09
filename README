@@ -998,7 +998,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
 
     Write OBJECT in FORMAT to STREAM diverting some output to PAGES.
     FORMAT can be anything [3BMD][3bmd] supports, which is currently
-    :MARKDOWN, :HTML and :PLAIN. STREAM may be a [STREAM][class] object,
+    :MARKDOWN, :HTML and :PLAIN. STREAM may be a [STREAM][type] object,
     T or NIL as with CL:FORMAT.
     
     Most often, this function is called on SECTION objects like
@@ -1549,8 +1549,8 @@ table of contents and navigation links.
 
 - [variable] *DOCUMENT-LINK-SECTIONS* T
 
-    When true, HTML anchors are generated before the heading of
-    sections, which allows the table of contents to contain links and
+    When true, HTML anchors are generated before the headings (e.g. of
+    sections), which allows the table of contents to contain links and
     also code-like references to sections (like `@FOO-MANUAL`) to be
     translated to links with the section title being the name of the
     link.
@@ -2510,9 +2510,12 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
                     (format stream "- ~A: [~A](~A)"
                             name (first value) (second value)))
                    ((:docstring)
-                    (format stream "- ~A: ~A~%" name
-                            (massage-docstring value :indentation "  "
-                                               :exclude-first-line-p t)))
+                    (format stream "- ~A: " name)
+                    (document-docstring value stream
+                                        :indentation "  "
+                                        :exclude-first-line-p t
+                                        :paragraphp nil)
+                    (terpri stream))
                    ((nil)
                     (format stream "- ~A: ~A~%" name value)))))))
       (unless *omit-asdf-slots*
@@ -2623,17 +2626,12 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
     One only has to specialize this for new container-like objects. Its
     @REFERENCE-DELEGATE is LOCATE-AND-COLLECT-REACHABLE-OBJECTS.
 
-- [variable] *FORMAT* 
-
-    Bound by DOCUMENT, this allows markdown output to depend on the
-    output format.
-
 - [generic-function] DOCUMENT-OBJECT OBJECT STREAM
 
     Write OBJECT (and its references recursively) in
-    *FORMAT* to STREAM. Add methods specializing on OBJECT to customize
-    the output of DOCUMENT. Its @REFERENCE-DELEGATE is
-    LOCATE-AND-DOCUMENT.
+    *FORMAT* to STREAM in markdown format. Add methods specializing on
+    OBJECT to customize the output of DOCUMENT. Its @REFERENCE-DELEGATE
+    is LOCATE-AND-DOCUMENT.
 
 - [generic-function] DOCSTRING OBJECT
 
@@ -2747,17 +2745,14 @@ LOCATIVE-TYPE. Here is how the VARIABLE locative is defined:
 (defmethod locate-and-document (symbol (locative-type (eql 'variable))
                                 locative-args stream)
   (destructuring-bind (&optional (initform nil initformp)) locative-args
-    (locate-and-print-bullet locative-type locative-args symbol stream)
-    (write-char #\Space stream)
-    (multiple-value-bind (value unboundp) (symbol-global-value symbol)
-      (when (or initformp (not unboundp))
-        (print-arglist (prin1-and-escape-markdown (if initformp
-                                                      initform
-                                                      value))
-                       stream)))
-    (print-end-bullet stream)
-    (with-local-references ((list (make-reference symbol 'variable)))
-      (maybe-print-docstring symbol 'variable stream))))
+    (let ((arglist (multiple-value-bind (value unboundp)
+                       (symbol-global-value symbol)
+                     (when (or initformp (not unboundp))
+                       (prin1-to-markdown (if initformp
+                                              initform
+                                              value))))))
+      (documenting-reference (stream :arglist arglist)
+        (document-docstring (documentation* symbol 'variable) stream)))))
 
 (defmethod locate-docstring (symbol (locative-type (eql 'variable))
                              locative-args)
@@ -2767,7 +2762,7 @@ LOCATIVE-TYPE. Here is how the VARIABLE locative is defined:
 (defmethod locate-and-find-source (symbol (locative-type (eql 'variable))
                                    locative-args)
   (declare (ignore locative-args))
-  (find-definition symbol (swank-variable-dspecs symbol)))
+  (find-definition symbol 'variable))
 
 ```
 
@@ -2848,6 +2843,92 @@ with symbols in a certain context.
     LOCATIVE-TYPE. The defined macro's arglist is (SYMBOL LAMBDA-LIST
     &OPTIONAL DOCSTRING). LOCATIVE-TYPE is assumed to have been defined
     with DEFINE-SYMBOL-LOCATIVE-TYPE.
+
+### Extending DOCUMENT
+
+The following utilities are for writing new DOCUMENT-OBJECT and
+LOCATE-AND-DOCUMENT methods, which emit markdown.
+
+- [variable] *FORMAT*
+
+    Bound by DOCUMENT, this allows markdown output to depend on the
+    output format.
+
+- [macro] WITH-HEADING (STREAM OBJECT TITLE &KEY LINK-TITLE-TO) &BODY BODY
+
+    Write a markdown heading with TITLE to STREAM. Nested WITH-HEADINGs
+    produce nested headings. If *DOCUMENT-LINK-SECTIONS*, generate
+    anchors based on the CANONICAL-REFERENCE of OBJECT. LINK-TITLE-TO
+    behaves like the LINK-TITLE-TO argument of DEFSECTION.
+
+- [macro] DOCUMENTING-REFERENCE (STREAM &KEY REFERENCE ARGLIST NAME) &BODY BODY
+
+    Write REFERENCE to STREAM as described in
+    *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a [local
+    reference][@LOCAL-REFERENCES]. Unless ARGLIST is NIL or
+    :NOT-AVAILABLE, it is printed after the name of object of REFERENCE.
+    
+    If ARGLIST is a list, then it is must be a [lambda list][clhs] and
+    is printed without the outermost parens and with the package names
+    removed from the argument names.
+    
+    If ARGLIST is a string, then it is printed without ESCAPE-MARKDOWN.
+
+- [macro] WITH-DISLOCATED-OBJECTS OBJECTS &BODY BODY
+
+    For each OBJECT in OBJECTS, establish a [local
+    reference][@local-references] with the DISLOCATED locative, which
+    [prevents autolinking][@preventing-autolinking].
+
+- [function] DOCUMENT-DOCSTRING DOCSTRING STREAM &KEY (INDENTATION "    ") EXCLUDE-FIRST-LINE-P (PARAGRAPHP T)
+
+    Process and DOCSTRING to STREAM, [stripping
+    indentation][@markdown-indentation] from it, performing
+    @CODIFICATION and @LINKING-TO-CODE, finally prefixing each line with
+    INDENTATION. The prefix is not added to the first line if
+    EXCLUDE-FIRST-LINE-P. If PARAGRAPHP, then add a newline before and
+    after the output.
+
+- [function] DOCUMENTATION* OBJECT DOC-TYPE
+
+    A small wrapper around CL:DOCUMENTATION to smooth over differences
+    between implementations.
+
+- [function] ESCAPE-MARKDOWN STRING
+
+    Construct a new string from STRING by adding a backslash before
+    each special markdown character:
+    
+        *_`<>[]
+
+
+- [function] PRIN1-TO-MARKDOWN OBJECT
+
+    Like PRIN1-TO-STRING, but bind *PRINT-CASE* depending on
+    *DOCUMENT-DOWNCASE-UPPERCASE-CODE* and *FORMAT*, and
+    ESCAPE-MARKDOWN.
+
+### Extending FIND-SOURCE
+
+The following utilities are for writing new FIND-SOURCE and
+LOCATE-AND-FIND-SOURCE methods.
+
+- [function] FIND-DEFINITION OBJECT &REST LOCATIVES
+
+    Return a source location for a definition of OBJECT. Try forming
+    @REFERENCEs with OBJECT and one of LOCATIVES. Stop at the first
+    locative with which a definition is found and return its location.
+    If no location was found, then return the usual Swank `(:ERROR
+    ...)`. The implementation is based on the rather expensive
+    SWANK-BACKEND:FIND-DEFINITIONS function.
+
+- [function] FIND-DEFINITION* OBJECT REFERENCE-OBJECT &REST LOCATIVES
+
+    Like FIND-DEFINITION, but tries to get the definition of
+    OBJECT (for example a FUNCTION or METHOD object) with the fast but
+    not widely supported SWANK-BACKEND:FIND-SOURCE-LOCATION before
+    calling the much slower but more complete
+    SWANK-BACKEND:FIND-DEFINITIONS.
 
 ### Sections
 

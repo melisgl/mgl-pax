@@ -2,7 +2,6 @@
 #+TODO: MAYBE(m@) FAILED(f@) LOG(l@) DEFERRED(e@)
 * MAYBE add locatives for sbcl internals
 deftransform, defoptimizer, define-vop, define-source-transfrom
-* TODO export documentation generation utilities for extensions
 * OPT esrap is slow with allegro cl
 * OPT parse and print markdown once when *format* is :html?
 This would involve rewriting everything to emit parse tree fragments.
@@ -12,7 +11,7 @@ because it's translated to a list item
 * MAYBE pretty print lambda-lists (including default values)
 and values of variables. Unfortunately, there seems to be no way to
 use the lisp pretty printer for this because output also includes
-markup.
+markup. We could get the original indentation from the sources.
 * MAYBE transcribe: emacs retranscribe should not update if consistent?
 This either relies on the global value of
 *TRANSCRIBE-CHECK-CONSISTENCY* or it needs to see the
@@ -37,7 +36,7 @@ linking failure. This should be in 3BMD.
 RED-OBJECTs but not REDs-OBJECT
 * MAYBE remove some markup in :PLAIN format?
 * MAYBE allow markdown in titles?
-* add symbol as an alias for dislocated?
+* add SYMBOL as an alias for dislocated?
 * add source locative
 That is, link to github, without documenting anything. Useful for code
 examples without actually INCLUDEing them.
@@ -70,4 +69,3 @@ e.g. RESOLVEd
 * MAYBE get variable initforms from source?
 Or fall back on this for deficient ARGLISTs. Will be really slow.
 * test navigation from the emacs side
-* create mgl-pax/minimal?

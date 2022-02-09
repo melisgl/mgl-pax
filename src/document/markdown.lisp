@@ -138,6 +138,10 @@
   (member char '(#\* #\_ #\` #\< #\> #\[ #\])))
 
 (defun escape-markdown (string)
+  "Construct a new string from STRING by adding a backslash before
+  each special markdown character:
+
+      *_`<>[]"
   (with-output-to-string (stream)
     (dotimes (i (length string))
       (let ((char (aref string i)))

@@ -2,24 +2,24 @@
 
 (declaim (special *table-of-contents-stream*))
 
-;;; Print (DOCUMENTATION OBJECT DOC-TYPE) to STREAM in FORMAT. Clean
-;;; up docstring indentation, then indent it by four spaces.
-;;; Automarkup symbols.
-(defun maybe-print-docstring (object doc-type stream)
+(defun document-docstring (docstring stream &key (indentation "    ")
+                           exclude-first-line-p (paragraphp t))
+  "Process and DOCSTRING to STREAM, [stripping
+  indentation][@markdown-indentation] from it, performing
+  @CODIFICATION and @LINKING-TO-CODE, finally prefixing each line with
+  INDENTATION. The prefix is not added to the first line if
+  EXCLUDE-FIRST-LINE-P. If PARAGRAPHP, then add a newline before and
+  after the output."
   ;; If the output is going to /dev/null and this is a costly
   ;; operation, skip it.
-  (unless *table-of-contents-stream*
-    (let ((docstring (documentation* object doc-type)))
-      (when docstring
-        (format stream "~%~A~%" (massage-docstring docstring))))))
-
-(defun massage-docstring (docstring &key (indentation "    ")
-                          exclude-first-line-p)
-  (if *table-of-contents-stream*
-      ""
-      (let ((docstring (strip-docstring-indentation docstring)))
-        (prefix-lines indentation (codify-and-link docstring)
-                      :exclude-first-line-p exclude-first-line-p))))
+  (when (and docstring (null *table-of-contents-stream*))
+    (let* ((docstring (strip-docstring-indentation docstring))
+           (reindented (prefix-lines
+                        indentation (codify-and-link docstring)
+                        :exclude-first-line-p exclude-first-line-p)))
+      (if paragraphp
+          (format stream "~%~A~%" reindented)
+          (format stream "~A" reindented)))))
 
 ;;; Normalize indentation of docstrings as it's described in
 ;;; (METHOD () (STRING T)) DOCUMENT-OBJECT.
@@ -65,6 +65,8 @@
 
 
 (defun documentation* (object doc-type)
+  "A small wrapper around CL:DOCUMENTATION to smooth over differences
+  between implementations."
   ;; KLUDGE: Some just can't decide where the documentation is. Traced
   ;; generic functions complicate things.
   (when (functionp object)

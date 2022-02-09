@@ -2,6 +2,103 @@
 
 (in-readtable pythonic-string-syntax)
 
+(defsection @extending-document (:title "Extending DOCUMENT")
+  "The following utilities are for writing new DOCUMENT-OBJECT and
+  LOCATE-AND-DOCUMENT methods, which emit markdown."
+  (*format* variable)
+  (with-heading macro)
+  (documenting-reference macro)
+  (with-dislocated-objects macro)
+  (document-docstring function)
+  (documentation* function)
+  (escape-markdown function)
+  (prin1-to-markdown function))
+
+(defvar *format*)
+(setf (documentation '*format* 'variable)
+      "Bound by DOCUMENT, this allows markdown output to depend on the
+       output format.")
+
+(declaim (special *heading-level*))
+(declaim (ftype function call-with-heading))
+(defmacro with-heading ((stream object title &key link-title-to)
+                        &body body)
+  "Write a markdown heading with TITLE to STREAM. Nested WITH-HEADINGs
+  produce nested headings. If *DOCUMENT-LINK-SECTIONS*, generate
+  anchors based on the CANONICAL-REFERENCE of OBJECT. LINK-TITLE-TO
+  behaves like the LINK-TITLE-TO argument of DEFSECTION."
+  `(call-with-heading ,stream ,object ,title ,link-title-to
+                      (lambda (,stream)
+                        (let ((*heading-level* (1+ *heading-level*)))
+                          ,@body))))
+
+(declaim (ftype function print-reference-bullet))
+(declaim (ftype function print-arglist))
+(declaim (ftype function print-end-bullet))
+(defmacro documenting-reference ((stream &key reference arglist name)
+                                 &body body)
+  "Write REFERENCE to STREAM as described in
+  *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a [local
+  reference][@LOCAL-REFERENCES]. Unless ARGLIST is NIL or
+  :NOT-AVAILABLE, it is printed after the name of object of REFERENCE.
+
+  If ARGLIST is a list, then it is must be a [lambda list][clhs] and
+  is printed without the outermost parens and with the package names
+  removed from the argument names.
+
+  If ARGLIST is a string, then it is printed without ESCAPE-MARKDOWN."
+  (let ((%stream (gensym))
+        (%reference (gensym))
+        (%arglist (gensym))
+        (%name (gensym)))
+    `(let ((,%stream ,stream)
+           (,%reference (or ,reference *reference-being-documented*))
+           (,%arglist ,arglist)
+           (,%name ,name))
+       (print-reference-bullet ,%reference ,%stream :name ,%name)
+       (when (and ,%arglist (not (eq ,%arglist :not-available)))
+         (write-char #\Space ,%stream)
+         (print-arglist ,%arglist ,%stream))
+       (print-end-bullet ,%stream)
+       (with-local-references (if (member (reference-locative-type ,%reference)
+                                          '(section glossary-term))
+                                  ;; See @SUPPRESSED-LINKS.
+                                  ()
+                                  ,%reference)
+         ,@body))))
+
+(declaim (special *local-references*))
+(defmacro with-local-references (refs &body body)
+  `(let ((*local-references* (append (ensure-list ,refs) *local-references*)))
+     ,@body))
+
+(defmacro with-dislocated-objects (objects &body body)
+  "For each OBJECT in OBJECTS, establish a [local
+  reference][@local-references] with the DISLOCATED locative, which
+  [prevents autolinking][@preventing-autolinking]."
+  `(with-local-references (mapcar (lambda (object)
+                                    (make-reference object 'dislocated))
+                                  (ensure-list ,objects))
+     ,@body))
+
+(declaim (ftype function document-docstring))
+(declaim (ftype function documentation*))
+(declaim (ftype function escape-markdown))
+(declaim (ftype function prin1-to-markdown))
+
+
+;;;; Early non-exported definitions
+
+;;; These are used only by the DOCUMENT-OBJECT for CLASSes.
+(declaim (ftype function global-reference-p))
+(declaim (ftype function link-to-reference))
+
+;;; We need this for more informative TRANSCRIBE-ERRORs ...
+(defvar *reference-being-documented* nil)
+;;; ... and this for detecting whether we are in a DOCUMENT call.
+(defvar *objects-being-documented* ())
+
+
 (defsection @github-workflow (:title "Github Workflow")
   "It is generally recommended to commit generated readmes (see
   UPDATE-ASDF-SYSTEM-READMES) so that users have something to read

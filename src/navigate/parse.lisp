@@ -139,12 +139,11 @@
            (values string t)))))
 
 (defun asdf-system-name-p (string)
-  (declare (special *object-to-links-maps*))
   (let ((ref (make-reference string 'asdf:system)))
     ;; KLUDGE: While generating documentation, we only consider
     ;; references to asdf systems being documented because
     ;; ASDF:FIND-SYSTEM, that's behind RESOLVE below, is very
     ;; expensive.
-    (if (boundp '*object-to-links-maps*)
-        (not (null (find-link ref)))
+    (if *objects-being-documented*
+        (not (null (global-reference-p ref)))
         (resolve ref :errorp nil))))
