@@ -2475,7 +2475,7 @@
 (defparameter *id-to-hyperspec-id* (make-id-to-hyperspec-id))
 
 ;;; This is what the CLHS locative uses.
-(defun find-hyperspec-id (string &key (substring-match t))
+(defun/autoloaded find-hyperspec-id (string &key (substring-match t))
   (or (gethash string *id-to-hyperspec-id*)
       (and substring-match
            (find-hyperspec-section-id string))))

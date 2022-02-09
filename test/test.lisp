@@ -1,11 +1,5 @@
 (in-package :mgl-pax-test)
 
-;;; Make Allegro record lambda lists, from which we can extract
-;;; default values of arguments.
-#+allegro
-(eval-when (:compile-toplevel)
-  (declaim (optimize (debug 3))))
-
 (defun check-document (input expected)
   (let ((output (let ((*package* (find-package :mgl-pax-test))
                       (*document-hyperspec-root* "CLHS/")

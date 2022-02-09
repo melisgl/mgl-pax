@@ -1,12 +1,6 @@
 (in-package :mgl-pax)
 
-(defsection @extending-find-source (:title "Extending FIND-SOURCE")
-  "The following utilities are for writing new FIND-SOURCE and
-  LOCATE-AND-FIND-SOURCE methods."
-  (find-definition function)
-  (find-definition* function))
-
-(defun find-definition (object &rest locatives)
+(defun/autoloaded find-definition (object &rest locatives)
   "Return a source location for a definition of OBJECT. Try forming
   @REFERENCEs with OBJECT and one of LOCATIVES. Stop at the first
   locative with which a definition is found and return its location.
@@ -25,7 +19,7 @@
         `(:error (format nil "Could not find source location for ~S."
                          dspecs)))))
 
-(defun find-definition* (object reference-object &rest locatives)
+(defun/autoloaded find-definition* (object reference-object &rest locatives)
   "Like FIND-DEFINITION, but tries to get the definition of
   OBJECT (for example a FUNCTION or METHOD object) with the fast but
   not widely supported SWANK-BACKEND:FIND-SOURCE-LOCATION before

@@ -2,6 +2,12 @@
 
 (in-readtable pythonic-string-syntax)
 
+(defvar *navigate-loaded* nil)
+
+(defun/autoloaded ensure-navigate-loaded ()
+  (prog1 *navigate-loaded*
+    (setq *navigate-loaded* t)))
+
 (defsection @navigating-in-emacs (:title "Navigating Sources in Emacs")
   """Integration into [SLIME's `\\M-.`][slime-m-.]
   (`slime-edit-definition`) allows one to visit the source location of
@@ -59,7 +65,7 @@
 ;;; If none of the resulting references cannot be resolved (including
 ;;; if no locatives are specified), then list all possible
 ;;; definitions.
-(defun locate-definitions-for-emacs (object-and-locatives-list)
+(defun/autoloaded locate-definitions-for-emacs (object-and-locatives-list)
   (with-swank ()
     (swank-backend::converting-errors-to-error-location
       (swank::with-buffer-syntax ()

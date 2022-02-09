@@ -2,25 +2,6 @@
 
 (declaim (special *table-of-contents-stream*))
 
-(defun document-docstring (docstring stream &key (indentation "    ")
-                           exclude-first-line-p (paragraphp t))
-  "Process and DOCSTRING to STREAM, [stripping
-  indentation][@markdown-indentation] from it, performing
-  @CODIFICATION and @LINKING-TO-CODE, finally prefixing each line with
-  INDENTATION. The prefix is not added to the first line if
-  EXCLUDE-FIRST-LINE-P. If PARAGRAPHP, then add a newline before and
-  after the output."
-  ;; If the output is going to /dev/null and this is a costly
-  ;; operation, skip it.
-  (when (and docstring (null *table-of-contents-stream*))
-    (let* ((docstring (strip-docstring-indentation docstring))
-           (reindented (prefix-lines
-                        indentation (codify-and-link docstring)
-                        :exclude-first-line-p exclude-first-line-p)))
-      (if paragraphp
-          (format stream "~%~A~%" reindented)
-          (format stream "~A" reindented)))))
-
 ;;; Normalize indentation of docstrings as it's described in
 ;;; (METHOD () (STRING T)) DOCUMENT-OBJECT.
 (defun strip-docstring-indentation (docstring &key (first-line-special-p t))
@@ -64,7 +45,7 @@
     (or n-min-indentation 0)))
 
 
-(defun documentation* (object doc-type)
+(defun/autoloaded documentation* (object doc-type)
   "A small wrapper around CL:DOCUMENTATION to smooth over differences
   between implementations."
   ;; KLUDGE: Some just can't decide where the documentation is. Traced

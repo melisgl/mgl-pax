@@ -2,12 +2,6 @@
 
 (in-readtable pythonic-string-syntax)
 
-;;; Make Allegro record lambda lists, from which we can extract
-;;; default values of arguments.
-#+allegro
-(eval-when (:compile-toplevel)
-  (declaim (optimize (debug 3))))
-
 (defsection @generating-documentation (:title "Generating Documentation")
   (document function)
   (mgl-pax/document asdf:system)
@@ -327,7 +321,7 @@
   `(let ((*headings* (collect-headings ,object)))
      ,@body))
 
-(defun document (object &key stream pages (format :markdown))
+(defun/autoloaded document (object &key stream pages (format :markdown))
   """Write OBJECT in FORMAT to STREAM diverting some output to PAGES.
   FORMAT can be anything [3BMD][3bmd] supports, which is currently
   :MARKDOWN, :HTML and :PLAIN. STREAM may be a [STREAM][type] object,
@@ -629,6 +623,26 @@
   leading spaces that is common to all non-blank lines."
   (document-docstring string stream :indentation "" :paragraphp nil)
   (terpri stream))
+
+(defun/autoloaded document-docstring
+    (docstring stream &key (indentation "    ")
+               exclude-first-line-p (paragraphp t))
+  "Process and DOCSTRING to STREAM, [stripping
+  indentation][@markdown-indentation] from it, performing
+  @CODIFICATION and @LINKING-TO-CODE, finally prefixing each line with
+  INDENTATION. The prefix is not added to the first line if
+  EXCLUDE-FIRST-LINE-P. If PARAGRAPHP, then add a newline before and
+  after the output."
+  ;; If the output is going to /dev/null and this is a costly
+  ;; operation, skip it.
+  (when (and docstring (null *table-of-contents-stream*))
+    (let* ((docstring (strip-docstring-indentation docstring))
+           (reindented (prefix-lines
+                        indentation (codify-and-link docstring)
+                        :exclude-first-line-p exclude-first-line-p)))
+      (if paragraphp
+          (format stream "~%~A~%" reindented)
+          (format stream "~A" reindented)))))
 
 (defsection @markdown-syntax-highlighting (:title "Syntax Highlighting")
   "For syntax highlighting, github's [fenced code
@@ -1008,7 +1022,7 @@
 
       Press `\\M-.` in Emacs.""")
 
-(defun downcasingp ()
+(defun/autoloaded downcasingp ()
   (or (and *document-downcase-uppercase-code*
            (not (eq *document-downcase-uppercase-code*
                     :only-in-markup)))
@@ -1697,7 +1711,7 @@
         (format stream "- ~A~A" (heading-number) string)))
   (terpri stream))
 
-(defun call-with-heading (stream object title link-title-to fn)
+(defun/autoloaded call-with-heading (stream object title link-title-to fn)
   (flet ((foo ()
            ;; Arrange for all output to go to /dev/null
            ;; (MAKE-BROADCAST-STREAM) except for the headings when we
@@ -2017,7 +2031,7 @@
 ;;;     - [locative-type] object
 ;;;
 ;;; When generating HTML, link OBJECT to the anchor of REFERENCE.
-(defun print-reference-bullet (reference stream &key name)
+(defun/autoloaded print-reference-bullet (reference stream &key name)
   (let ((locative-type (string-downcase
                         (reference-locative-type reference)))
         (name (or name (prin1-to-string* (reference-object reference)))))
@@ -2063,7 +2077,7 @@
             (italic string stream))
         (format stream "~A" string))))
 
-(defun prin1-to-markdown (object)
+(defun/autoloaded prin1-to-markdown (object)
   "Like PRIN1-TO-STRING, but bind *PRINT-CASE* depending on
   *DOCUMENT-DOWNCASE-UPPERCASE-CODE* and *FORMAT*, and
   ESCAPE-MARKDOWN."

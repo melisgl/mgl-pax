@@ -137,7 +137,7 @@
 (defun markdown-special-char-p (char)
   (member char '(#\* #\_ #\` #\< #\> #\[ #\])))
 
-(defun escape-markdown (string)
+(defun/autoloaded escape-markdown (string)
   "Construct a new string from STRING by adding a backslash before
   each special markdown character:
 

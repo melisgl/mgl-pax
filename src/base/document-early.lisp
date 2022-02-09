@@ -2,6 +2,43 @@
 
 (in-readtable pythonic-string-syntax)
 
+(defvar *document-uppercase-is-code*)
+(export '*document-uppercase-is-code*)
+(defvar *document-link-code*)
+(export '*document-link-code*)
+(defvar *document-link-sections*)
+(export '*document-link-sections*)
+(defvar *document-max-numbering-level*)
+(export '*document-max-numbering-level*)
+(defvar *document-max-table-of-contents-level*)
+(export '*document-max-table-of-contents-level*)
+(defvar *document-text-navigation*)
+(export '*document-text-navigation*)
+(defvar *document-fancy-html-navigation*)
+(export '*document-fancy-html-navigation*)
+(defvar *document-mark-up-signatures*)
+(export '*document-mark-up-signatures*)
+(defvar *document-normalize-packages*)
+(export '*document-normalize-packages*)
+(defvar *document-html-top-blocks-of-links*)
+(export '*document-html-top-blocks-of-links*)
+(defvar *document-html-bottom-blocks-of-links*)
+(export '*document-html-bottom-blocks-of-links*)
+(defvar *document-html-max-navigation-table-of-contents-level*)
+(export '*document-html-max-navigation-table-of-contents-level*)
+(defvar *format*)
+(export '*format*)
+
+(autoload find-hyperspec-id '#:mgl-pax/document :export nil)
+(autoload downcasingp '#:mgl-pax/document :export nil)
+(autoload document '#:mgl-pax/document)
+(autoload update-asdf-system-readmes '#:mgl-pax/document)
+(autoload update-asdf-system-html-docs '#:mgl-pax/document)
+;;; UPDATE-PAX-WORLD includes PAX itself, so load MGL-PAX/FULL to have
+;;; all documentation. Otherwise, MGL-PAX/DOCUMENT would be enough.
+(autoload update-pax-world '#:mgl-pax/full)
+
+
 (defsection @extending-document (:title "Extending DOCUMENT")
   "The following utilities are for writing new DOCUMENT-OBJECT and
   LOCATE-AND-DOCUMENT methods, which emit markdown."
@@ -19,8 +56,6 @@
       "Bound by DOCUMENT, this allows markdown output to depend on the
        output format.")
 
-(declaim (special *heading-level*))
-(declaim (ftype function call-with-heading))
 (defmacro with-heading ((stream object title &key link-title-to)
                         &body body)
   "Write a markdown heading with TITLE to STREAM. Nested WITH-HEADINGs
@@ -31,10 +66,9 @@
                       (lambda (,stream)
                         (let ((*heading-level* (1+ *heading-level*)))
                           ,@body))))
+(autoload call-with-heading '#:mgl-pax/document :export nil)
+(declaim (special *heading-level*))
 
-(declaim (ftype function print-reference-bullet))
-(declaim (ftype function print-arglist))
-(declaim (ftype function print-end-bullet))
 (defmacro documenting-reference ((stream &key reference arglist name)
                                  &body body)
   "Write REFERENCE to STREAM as described in
@@ -66,6 +100,9 @@
                                   ()
                                   ,%reference)
          ,@body))))
+(autoload print-reference-bullet '#:mgl-pax/document :export nil)
+(declaim (ftype function print-arglist))
+(declaim (ftype function print-end-bullet))
 
 (declaim (special *local-references*))
 (defmacro with-local-references (refs &body body)
@@ -81,10 +118,10 @@
                                   (ensure-list ,objects))
      ,@body))
 
-(declaim (ftype function document-docstring))
-(declaim (ftype function documentation*))
-(declaim (ftype function escape-markdown))
-(declaim (ftype function prin1-to-markdown))
+(autoload document-docstring '#:mgl-pax/document)
+(autoload documentation* '#:mgl-pax/document)
+(autoload escape-markdown '#:mgl-pax/document)
+(autoload prin1-to-markdown '#:mgl-pax/document)
 
 
 ;;;; Early non-exported definitions

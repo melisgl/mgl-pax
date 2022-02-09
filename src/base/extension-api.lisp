@@ -2,12 +2,6 @@
 
 (in-readtable pythonic-string-syntax)
 
-;;; Make Allegro record lambda lists, from which we can extract
-;;; default values of arguments.
-#+allegro
-(eval-when (:compile-toplevel)
-  (declaim (optimize (debug 3))))
-
 (defsection @extension-api (:title "Writing Extensions")
   (@new-object-types section)
   (@reference-based-extensions section)
@@ -93,10 +87,7 @@
        ,(format nil "An alias for the ~S locative." locative-type))
      (defmethod locate-object (symbol (locative-type (eql ',alias))
                                locative-args)
-       (locate-object symbol ',locative-type locative-args))
-     (defmethod canonical-locative ((locative-type (eql ',alias))
-                                    locative-args)
-       (cons ',locative-type locative-args))))
+       (locate-object symbol ',locative-type locative-args))))
 
 ;;; A somewhat dummy generic function on which the docstring can be
 ;;; hung and which provides a source location. It returns LAMBDA-LIST
@@ -140,15 +131,13 @@
   (:documentation "Return a REFERENCE that RESOLVEs to OBJECT, or
   return NIL if this operation is not defined for OBJECT. Its
   @REFERENCE-DELEGATE is LOCATE-CANONICAL-REFERENCE.")
+  (:method :around (object)
+    (if (ensure-navigate-loaded)
+        (call-next-method)
+        (canonical-reference object)))
   (:method (object)
     (declare (ignore object))
     nil))
-
-;;; FIXME
-(defgeneric canonical-locative (locative-type locative-args))
-
-(defmethod canonical-locative (locative-type locative-args)
-  (cons locative-type locative-args))
 
 (defgeneric collect-reachable-objects (object)
   (:documentation "Return a list of objects representing all things to
@@ -159,13 +148,18 @@
   itself.
 
   One only has to specialize this for new container-like objects. Its
-  @REFERENCE-DELEGATE is LOCATE-AND-COLLECT-REACHABLE-OBJECTS."))
+  @REFERENCE-DELEGATE is LOCATE-AND-COLLECT-REACHABLE-OBJECTS.")
+  (:method :around (object)
+    (if (ensure-navigate-loaded)
+        (call-next-method)
+        (collect-reachable-objects object))))
 
 (defgeneric document-object (object stream)
   (:documentation "Write OBJECT (and its references recursively) in
   *FORMAT* to STREAM in markdown format. Add methods specializing on
   OBJECT to customize the output of DOCUMENT. Its @REFERENCE-DELEGATE
-  is LOCATE-AND-DOCUMENT."))
+  is LOCATE-AND-DOCUMENT. This function is for extension, don't call
+  it directly."))
 
 (defgeneric docstring (object)
   (:documentation "Return the docstring from the definition of OBJECT
@@ -175,7 +169,11 @@
 
   DOCSTRING is used in the implementation of the DOCSTRING locative.
   Some things such as ASDF:SYSTEMS and DECLARATIONs have no
-  docstrings. Notably SECTIONs don't provide access to docstrings."))
+  docstrings. Notably SECTIONs don't provide access to docstrings.")
+  (:method :around (object)
+    (if (ensure-navigate-loaded)
+        (call-next-method)
+        (docstring object))))
 
 ;;; This is bound to an EQUAL hash table in MAKE-GITHUB-SOURCE-URI-FN
 ;;; to speed up FIND-SOURCE. It's still very slow though.
@@ -210,15 +208,17 @@
   ```
   """)
   (:method :around (object)
-    (if *find-source-cache*
-        (let ((key (if (typep object 'reference)
-                       (list (reference-object object)
-                             (reference-locative object))
-                       object)))
-          (or (gethash key *find-source-cache*)
-              (setf (gethash key *find-source-cache*)
-                    (call-next-method))))
-        (call-next-method))))
+    (if (ensure-navigate-loaded)
+        (if *find-source-cache*
+            (let ((key (if (typep object 'reference)
+                           (list (reference-object object)
+                                 (reference-locative object))
+                           object)))
+              (or (gethash key *find-source-cache*)
+                  (setf (gethash key *find-source-cache*)
+                        (call-next-method))))
+            (call-next-method))
+        (find-source object))))
 
 
 (defsection @reference-based-extensions
@@ -422,11 +422,8 @@
        (declare (ignore locative-args))
        (find-definition*
         (symbol-lambda-list-method symbol ',locative-type)
-        'symbol-lambda-list
-        (swank-method-dspecs 'symbol-lambda-list
-                             ()
-                             `((eql ,symbol)
-                               (eql ,locative-type)))))))
+        'symbol-lambda-list `(method () ((eql ,symbol)
+                                         (eql ,locative-type)))))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun check-body-docstring (docstring)

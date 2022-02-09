@@ -2631,7 +2631,8 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
     Write OBJECT (and its references recursively) in
     *FORMAT* to STREAM in markdown format. Add methods specializing on
     OBJECT to customize the output of DOCUMENT. Its @REFERENCE-DELEGATE
-    is LOCATE-AND-DOCUMENT.
+    is LOCATE-AND-DOCUMENT. This function is for extension, don't call
+    it directly.
 
 - [generic-function] DOCSTRING OBJECT
 

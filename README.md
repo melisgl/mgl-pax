@@ -2840,7 +2840,8 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
     Write `OBJECT` (and its references recursively) in
     [`*FORMAT*`][3da8] to `STREAM` in markdown format. Add methods specializing on
     `OBJECT` to customize the output of [`DOCUMENT`][432c]. Its [reference delegate][e403]
-    is [`LOCATE-AND-DOCUMENT`][6611].
+    is [`LOCATE-AND-DOCUMENT`][6611]. This function is for extension, don't call
+    it directly.
 
 <a id="x-28MGL-PAX-3ADOCSTRING-20GENERIC-FUNCTION-29"></a>
 - [generic-function] **DOCSTRING** *OBJECT*

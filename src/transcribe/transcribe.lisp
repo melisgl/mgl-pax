@@ -113,12 +113,6 @@
       (write-line prefix stream))))
 
 
-;;; Make Allegro record lambda lists, from which we can extract
-;;; default values of arguments.
-#+allegro
-(eval-when (:compile-toplevel)
-  (declaim (optimize (debug 3))))
-
 (defsection @transcripts (:title "Transcripts")
   "What are transcripts for? When writing a tutorial, one often wants
   to include a REPL session with maybe a few defuns and a couple of
@@ -232,14 +226,12 @@
 (defvar *transcribe-check-consistency* nil
   "The default value of TRANSCRIBE's CHECK-CONSISTENCY argument.")
 
-(defun transcribe (input output &key update-only
-                   (include-no-output update-only)
-                   (include-no-value update-only)
-                   (echo t)
-                   (check-consistency *transcribe-check-consistency*)
-                   default-syntax
-                   (input-syntaxes *transcribe-syntaxes*)
-                   (output-syntaxes *transcribe-syntaxes*))
+(defun/autoloaded transcribe
+    (input output &key update-only (include-no-output update-only)
+           (include-no-value update-only) (echo t)
+           (check-consistency *transcribe-check-consistency*)
+           default-syntax (input-syntaxes *transcribe-syntaxes*)
+           (output-syntaxes *transcribe-syntaxes*))
   """Read forms from INPUT and write them (iff ECHO) to OUTPUT
   followed by any output and return values produced by calling EVAL on
   the form. INPUT can be a stream or a string, while OUTPUT can be a
@@ -1265,8 +1257,8 @@
   Transcription support in emacs can be enabled by loading
   `src/transcribe.el`.""")
 
-(defun transcribe-for-emacs (string default-syntax* update-only echo
-                             first-line-special-p)
+(defun/autoloaded transcribe-for-emacs (string default-syntax* update-only echo
+                                               first-line-special-p)
   (let ((default-syntax (cond ((numberp default-syntax*)
                                (first (elt *transcribe-syntaxes*
                                            default-syntax*)))
@@ -1399,7 +1391,7 @@
   (delete-trailing-whitespace function)
   (delete-comments function))
 
-(defun squeeze-whitespace (string)
+(defun/autoloaded squeeze-whitespace (string)
   "Replace consecutive whitespace characters with a single space in
   STRING. This is useful to do undo the effects of pretty printing
   when building comparison functions for TRANSCRIBE."
@@ -1414,7 +1406,7 @@
                       (write-char char s)
                       (setq prev-whitespace-p nil)))))))
 
-(defun delete-trailing-whitespace (string)
+(defun/autoloaded delete-trailing-whitespace (string)
   "Delete whitespace characters after the last non-whitespace
   character in each line in STRING."
   (flet ((delete-on-one-line (string)
@@ -1425,7 +1417,7 @@
               while line
               do (write-line (delete-on-one-line line) out))))))
 
-(defun delete-comments (string &key (pattern ";"))
+(defun/autoloaded delete-comments (string &key (pattern ";"))
   """For each line in STRING delete the rest of the line after and
   including the first occurrence of PATTERN. On changed lines, delete
   trailing whitespace too. Let's define a comparison function:

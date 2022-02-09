@@ -2,12 +2,6 @@
 
 (in-readtable pythonic-string-syntax)
 
-;;; Make Allegro record lambda lists, from which we can extract
-;;; default values of arguments.
-#+allegro
-(eval-when (:compile-toplevel)
-  (declaim (optimize (debug 3))))
-
 (defsection @pax-manual (:title "PAX Manual")
   (mgl-pax asdf:system)
   (mgl-pax/full asdf:system)
@@ -315,6 +309,10 @@
   (locative-type function)
   (locative-args function))
 
+;;; This gets clobbered with an empty function when MGL-PAX/NAVIGATE
+;;; is loaded.
+(autoload ensure-navigate-loaded '#:mgl-pax/navigate)
+
 (declaim (ftype function locate-object))
 
 (defun locate (object locative &key (errorp t))
@@ -337,6 +335,7 @@
   ..   Could not locate LOCATE-OBJECT METHOD.
   ..   The syntax of the METHOD locative is (METHOD <METHOD-QUALIFIERS> <METHOD-SPECIALIZERS>).
   ```"
+  (ensure-navigate-loaded)
   (if errorp
       (locate-object object (locative-type locative) (locative-args locative))
       (handler-case

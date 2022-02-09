@@ -41,45 +41,45 @@ function autoload_tests {
   local lisp_name="$1"
   shift
 
-  run_test_case "load mgl-pax/navigate on ${lisp_name}" $@ <<EOF
-(progn
-  (asdf:load-system :mgl-pax/navigate)
+  run_test_case "test-locate-autoload on ${lisp_name}" $@ <<EOF
+(asdf:load-system :mgl-pax/test-extension)
+(in-package :mgl-pax-test-extension)
+(when (passedp (try 'test-locate-autoload))
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "load mgl-pax/navigate on ${lisp_name}" $@ <<EOF
-(progn
-  (asdf:load-system :mgl-pax/document)
+  run_test_case "test-canonical-reference-autoload on ${lisp_name}" $@ <<EOF
+(asdf:load-system :mgl-pax/test-extension)
+(in-package :mgl-pax-test-extension)
+(when (passedp (try 'test-canonical-reference-autoload))
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "load mgl-pax/transcribe on ${lisp_name}" $@ <<EOF
-(progn
-  (asdf:load-system :mgl-pax/transcribe)
+  run_test_case "test-collect-reachable-objects-autoload on ${lisp_name}" $@ <<EOF
+(asdf:load-system :mgl-pax/test-extension)
+(in-package :mgl-pax-test-extension)
+(when (passedp (try 'test-collect-reachable-objects-autoload))
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "autoload mgl-pax/navigate on ${lisp_name}" $@ <<EOF
-(asdf:load-system :mgl-pax)
-(progn
-  (mgl-pax:locate-definitions-for-emacs ())
+  run_test_case "test-document-autoload on ${lisp_name}" $@ <<EOF
+(asdf:load-system :mgl-pax/test-extension)
+(in-package :mgl-pax-test-extension)
+(when (passedp (try 'test-document-autoload))
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "autoload mgl-pax/document on ${lisp_name}" $@ <<EOF
-(asdf:load-system :mgl-pax)
-(progn
-  (defun foo ()
-    "docstring"
-    nil)
-  (mgl-pax:document #'foo)
+  run_test_case "test-docstring-autoload on ${lisp_name}" $@ <<EOF
+(asdf:load-system :mgl-pax/test-extension)
+(in-package :mgl-pax-test-extension)
+(when (passedp (try 'test-docstring-autoload))
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "autoload mgl-pax/transcribe on ${lisp_name}" $@ <<EOF
-(asdf:load-system :mgl-pax)
-(progn
-  (mgl-pax:transcribe "*print-level*" nil)
+  run_test_case "test-find-source-autoload on ${lisp_name}" $@ <<EOF
+(asdf:load-system :mgl-pax/test-extension)
+(in-package :mgl-pax-test-extension)
+(when (passedp (try 'test-find-source-autoload))
   (uiop/image:quit 22))
 EOF
 }

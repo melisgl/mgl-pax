@@ -2,12 +2,6 @@
 
 (in-readtable pythonic-string-syntax)
 
-;;; Make Allegro record lambda lists, from which we can extract
-;;; default values of arguments.
-#+allegro
-(eval-when (:compile-toplevel)
-  (declaim (optimize (debug 3))))
-
 (defsection @documentation-utilities
     (:title "Utilities for Generating Documentation")
   "Two convenience functions are provided to serve the common case of
@@ -26,7 +20,7 @@
     :if-exists :supersede
     :ensure-directories-exist t))
 
-(defun update-asdf-system-readmes (object asdf-system &key
+(defun/autoloaded update-asdf-system-readmes (object asdf-system &key
                                    (url-versions '(1)))
   "Convenience function to generate two readme files in the directory
   holding the ASDF-SYSTEM definition. OBJECT is passed on to DOCUMENT.
@@ -78,10 +72,11 @@
                  [MGL-PAX](https://github.com/melisgl/mgl-pax)\\]~%"))
 
 
-(defun update-asdf-system-html-docs (sections asdf-system &key pages
-                                     (target-dir (asdf:system-relative-pathname
-                                                  asdf-system "doc/"))
-                                     (update-css-p t))
+(defun/autoloaded update-asdf-system-html-docs
+    (sections asdf-system &key pages
+              (target-dir (asdf:system-relative-pathname
+                           asdf-system "doc/"))
+              (update-css-p t))
   "Generate pretty HTML documentation for a single ASDF system,
   possibly linking to github. If UPDATE-CSS-P, copy the CSS style
   sheet to TARGET-DIR, as well. Example usage:
@@ -290,7 +285,8 @@
 
 ;;;; The autoloaded part of @PAX-WORLD
 
-(defun update-pax-world (&key (docs *registered-pax-world-docs*) dir)
+(defun/autoloaded update-pax-world (&key (docs *registered-pax-world-docs*)
+                                         dir)
   "Generate HTML documentation for all DOCS. Files are created in
   DIR (`(asdf:system-relative-pathname :mgl-pax \"world/\")` by
   default if DIR is NIL). DOCS is a list of entries of the form (NAME

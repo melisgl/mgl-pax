@@ -3,12 +3,6 @@
 
 (in-package :mgl-pax)
 
-;;; Make Allegro record lambda lists, from which we can extract
-;;; default values of arguments.
-#+allegro
-(eval-when (:compile-toplevel)
-  (declaim (optimize (debug 3))))
-
 ;;; Should this remove docstrings of referenced things?
 (defvar *discard-documentation-p* nil
   "The default value of DEFSECTION's DISCARD-DOCUMENTATION-P argument.

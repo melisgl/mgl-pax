@@ -19,15 +19,19 @@
   should declare an ASDF dependency on this system, never on the
   others, which are intended for autoloading and interactive use."
   :depends-on ("named-readtables" "pythonic-string-reader")
+  :defsystem-depends-on ("mgl-pax.asdf")
+  :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/base/"
                 :serial t
                 :components ((:file "package")
                              (:file "pax-early")
+                             (:file "autoload")
                              (:file "pax")
                              (:file "extension-api")
+                             (:file "navigate-early")
                              (:file "document-early")
-                             (:file "locatives-early")
-                             (:file "autoload"))))
+                             (:file "transcribe-early")
+                             (:file "locatives-early"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
 (asdf:defsystem #:mgl-pax/navigate
@@ -42,6 +46,8 @@
   :long-description "Autoloaded by Slime's `M-.` when `src/pax.el` is
   loaded. See MGL-PAX::@NAVIGATING-IN-EMACS."
   :depends-on ("alexandria" "mgl-pax" "swank")
+  :defsystem-depends-on ("mgl-pax.asdf")
+  :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/navigate/"
                 :serial t
                 :components ((:file "util")
@@ -63,6 +69,8 @@
   MGL-PAX::@GENERATING-DOCUMENTATION."
   :depends-on ("alexandria" "3bmd" "3bmd-ext-code-blocks" "colorize" "md5"
                             "mgl-pax/navigate")
+  :defsystem-depends-on ("mgl-pax.asdf")
+  :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/document/"
                 :serial t
                 :components ((:file "markdown")
@@ -84,6 +92,8 @@
   :long-description "Autoloaded by MGL-PAX:TRANSCRIBE and by the Emacs
   integration (see MGL-PAX::@TRANSCRIPTS)."
   :depends-on ("alexandria" "mgl-pax/navigate")
+  :defsystem-depends-on ("mgl-pax.asdf")
+  :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/transcribe/"
                 :serial t
                 :components ((:file "transcribe"))))
@@ -111,6 +121,8 @@
   :description "Test system for MGL-PAX."
   :long-description ""
   :depends-on ("mgl-pax/full" "try")
+  :defsystem-depends-on ("mgl-pax.asdf")
+  :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "test"
                 :serial t
                 :components ((:file "package")
@@ -118,3 +130,21 @@
                              (:file "test"))))
   :perform (asdf:test-op (o s)
              (uiop:symbol-call '#:mgl-pax-test '#:test)))
+
+(asdf:defsystem #:mgl-pax/test-extension
+  :licence "MIT, see COPYING."
+  :author "Gábor Melis"
+  :mailto "mega@retes.hu"
+  :homepage ""
+  :bug-tracker ""
+  :source-control ""
+  :description "Test system for MGL-PAX extensions."
+  :long-description ""
+  :depends-on ("mgl-pax" "try")
+  :defsystem-depends-on ("mgl-pax.asdf")
+  :around-compile "mgl-pax.asdf:compile-pax"
+  :components ((:module "test"
+                :serial t
+                :components ((:file "test-extension"))))
+  :perform (asdf:test-op (o s)
+             (uiop:symbol-call '#:mgl-pax-test-extension '#:test)))
