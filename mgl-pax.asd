@@ -126,6 +126,9 @@
   :components ((:module "test"
                 :serial t
                 :components ((:file "package")
+                             (:file "test-defs")
+                             (:file "test-navigate")
+                             (:file "test-document")
                              (:file "test-transcribe")
                              (:file "test"))))
   :perform (asdf:test-op (o s)
