@@ -32,8 +32,9 @@
 (autoload document '#:mgl-pax/document)
 (autoload update-asdf-system-readmes '#:mgl-pax/document)
 (autoload update-asdf-system-html-docs '#:mgl-pax/document)
-;;; UPDATE-PAX-WORLD includes PAX itself, so load MGL-PAX/FULL to have
-;;; all documentation. Otherwise, MGL-PAX/DOCUMENT would be enough.
+;;; UPDATE-PAX-WORLD generates documentation for PAX itself, so load
+;;; MGL-PAX/FULL to have all documentation. Otherwise,
+;;; MGL-PAX/DOCUMENT would be enough.
 (autoload update-pax-world '#:mgl-pax/full)
 
 
@@ -107,8 +108,13 @@
   `(let ((*local-references* (append (ensure-list ,refs) *local-references*)))
      ,@body))
 
+(defun ensure-list (object)
+  (if (listp object)
+      object
+      (list object)))
+
 (defmacro with-dislocated-objects (objects &body body)
-  "For each OBJECT in OBJECTS, establish a [local
+  "For each object in OBJECTS, establish a [local
   reference][@local-references] with the DISLOCATED locative, which
   [prevents autolinking][@preventing-autolinking]."
   `(with-local-references (mapcar (lambda (object)
@@ -136,14 +142,14 @@
 
 (defsection @github-workflow (:title "Github Workflow")
   "It is generally recommended to commit generated readmes (see
-  UPDATE-ASDF-SYSTEM-READMES) so that users have something to read
+  UPDATE-ASDF-SYSTEM-READMES), so that users have something to read
   without reading the code and sites like github can display them.
 
   HTML documentation can also be committed, but there is an issue with
   that: when linking to the sources (see MAKE-GITHUB-SOURCE-URI-FN),
   the commit id is in the link. This means that code changes need to
-  be committed first, then HTML documentation regenerated and
-  committed in a followup commit.
+  be committed first, and only then can HTML documentation be
+  regenerated and committed in a followup commit.
 
   The second issue is that github is not very good at serving HTMLs
   files from the repository itself (and
@@ -152,7 +158,7 @@
 
   The recommended workflow is to use
   [gh-pages](https://pages.github.com/), which can be made relatively
-  painless with the `git workflow` command. The gist of it is to make
+  painless with the `git worktree` command. The gist of it is to make
   the `doc/` directory a checkout of the branch named `gh-pages`. A
   good description of this process is
   [http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html](http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html).
@@ -160,8 +166,8 @@
 
   This way the HTML documentation will be available at
   `http://<username>.github.io/<repo-name>`. It is probably a good
-  idea to add section like the @LINKS section to allow jumping between
-  the repository and the gh-pages site."
+  idea to add sections like the @LINKS section to allow jumping
+  between the repository and the gh-pages site."
   (make-github-source-uri-fn function))
 
 (defun make-github-source-uri-fn (asdf-system github-uri &key git-version)
@@ -262,7 +268,7 @@
 
 ;;; This is cached because it is determining the line number for a
 ;;; given file position would need to traverse the file, which is
-;;; extremely expesive. Note that position 0 is not included, but
+;;; extremely expensive. Note that position 0 is not included, but
 ;;; FILE-LENGTH is.
 (defun line-file-positions (filename)
   (with-open-file (stream filename)

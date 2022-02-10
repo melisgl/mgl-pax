@@ -12,18 +12,18 @@
 
 (defsection @new-object-types (:title "Adding New Object Types")
   """One may wish to make the DOCUMENT function and `\\M-.` navigation
-  work with new object types. Extending DOCUMENT can be done by
-  defining a DOCUMENT-OBJECT method. To allow these objects to be
-  referenced from DEFSECTION, LOCATE-OBJECT method is to be defined.
-  If there are multiple equivalent references possible for the same
-  thing, then CANONICAL-REFERENCE must be specialized. For the
-  DOCSTRING locative to work on the new type, a DOCSTRING method is
-  needed. For `\\M-.` FIND-SOURCE can be specialized. Finally,
+  work with new object types. DOCUMENT can be extended by defining a
+  DOCUMENT-OBJECT method specialized on that type. To allow these
+  objects to be referenced from DEFSECTION, LOCATE-OBJECT method is to
+  be defined. If there are multiple equivalent references possible for
+  the same thing, then CANONICAL-REFERENCE must be specialized. For
+  the DOCSTRING locative to work on the new type, a DOCSTRING method
+  is needed. For `\\M-.` FIND-SOURCE can be specialized. Finally,
   EXPORTABLE-LOCATIVE-TYPE-P may be overridden if exporting does not
   makes sense. Here is how all this is done for ASDF:SYSTEM:"""
   (asdf-example (include (:start (asdf:system locative)
                           :end (end-of-asdf-example variable))
-                         :header-nl "```commonlisp"
+                         :header-nl "```"
                          :footer-nl "```"))
   (define-locative-type macro)
   (define-locative-alias macro)
@@ -44,7 +44,7 @@
   being able to reference `(LOCATIVE-TYPE LOCATIVE)`. For example, if
   you have:
 
-  ```common-lisp
+  ```
   (define-locative-type variable (&optional initform)
     "Dummy docstring.")
   ```
@@ -62,7 +62,7 @@
   SYMBOLs). The following example shows how to make docstrings read
   more naturally by defining an alias.
 
-  ```common-lisp
+  ```
   (defclass my-string ()
     ())
 
@@ -80,8 +80,7 @@
   ;;; Note how no explicit link is needed anymore.
   (defun foo (x)
     "FOO takes an argument X, a MY-CLASS object.")
-  ```
-  """
+  ```"""
   `(progn
      (define-locative-type ,alias ()
        ,(format nil "An alias for the ~S locative." locative-type))
@@ -90,7 +89,7 @@
        (locate-object symbol ',locative-type locative-args))))
 
 ;;; A somewhat dummy generic function on which the docstring can be
-;;; hung and which provides a source location. It returns LAMBDA-LIST
+;;; hung, and which provides a source location. It returns LAMBDA-LIST
 ;;; from DEFINE-LOCATIVE-TYPE.
 (defgeneric locative-lambda-list (symbol))
 
@@ -141,8 +140,8 @@
 
 (defgeneric collect-reachable-objects (object)
   (:documentation "Return a list of objects representing all things to
-  be documented in a `(DOCUMENT OBJECT)` call. For SECTIONS this is
-  simply the union of references reachable from references in
+  be documented in a `(DOCUMENT OBJECT)` call. For a SECTION this is
+  simply the union of references reachable from references in its
   SECTION-ENTRIES. The returned objects can be anything provided that
   CANONICAL-REFERENCE works on them. The list need not include OBJECT
   itself.
@@ -165,7 +164,9 @@
   (:documentation "Return the docstring from the definition of OBJECT
   with [leading indentation stripped][@markdown-indentation]. This
   function serves a similar purpose as CL:DOCUMENTATION, but it works
-  OBJECTs and REFERENCEs. Its @REFERENCE-DELEGATE is LOCATE-DOCSTRING.
+  with first-class objects when there is one for the corresponding
+  definition, and with REFERENCEs when there is not. Its
+  @REFERENCE-DELEGATE is LOCATE-DOCSTRING.
 
   DOCSTRING is used in the implementation of the DOCSTRING locative.
   Some things such as ASDF:SYSTEMS and DECLARATIONs have no
@@ -176,7 +177,8 @@
         (docstring object))))
 
 ;;; This is bound to an EQUAL hash table in MAKE-GITHUB-SOURCE-URI-FN
-;;; to speed up FIND-SOURCE. It's still very slow though.
+;;; to speed up FIND-SOURCE. It's still very slow because some
+;;; underlying Swank calls involve reading in the whole source file.
 (defvar *find-source-cache* nil)
 
 (defgeneric find-source (object)
@@ -203,7 +205,7 @@
   position 1 is the first character in `:FILE`. If unsuccessful, the
   return value is like:
 
-  ```commonlisp
+  ```
   (:error "Unknown source location for SOMETHING")
   ```
   """)
@@ -221,17 +223,16 @@
         (find-source object))))
 
 
-(defsection @reference-based-extensions
-    (:title "Reference Based Extensions")
+(defsection @reference-based-extensions (:title "Reference Based Extensions")
   """Let's see how to extend DOCUMENT and `\\M-.` navigation if there
-  is no first class object to represent the thing of interest. Recall
-  that LOCATE returns a REFERENCE object in this case. The generic
-  functions that we have specialized in @NEW-OBJECT-TYPES have
+  is no first-class object to represent the definition of interest.
+  Recall that LOCATE returns a REFERENCE object in this case. The
+  generic functions that we have specialized in @NEW-OBJECT-TYPES have
   @REFERENCE-DELEGATEs, which can be specialized based on
   LOCATIVE-TYPE. Here is how the VARIABLE locative is defined:"""
   (variable-example (include (:start (variable locative)
                                      :end (end-of-variable-example variable))
-                             :header-nl "```commonlisp"
+                             :header-nl "```"
                              :footer-nl "```"))
   (@reference-delegate glossary-term)
   (locate-canonical-reference generic-function)
@@ -253,12 +254,13 @@
   [DOCSTRING][generic-function], and FIND-SOURCE delegate dealing with
   REFERENCES to another generic function, one each, which is called
   their reference delegate. Each of these delegator functions invokes
-  its delegate when a REFERENCE is passed it (as its OBJECT argument),
-  or there is no method specialized for its arguments, in which case
-  it uses the CANONICAL-REFERENCE.
+  its delegate when a REFERENCE is passed to it (as its OBJECT
+  argument), or there is no method specialized for its arguments, in
+  which case it uses the CANONICAL-REFERENCE.
 
   The net effect is that is that it is sufficient to specialize either
-  the delegator or the delegate for a new locative type.""")
+  the delegator for a first-class object or the delegate for a new
+  locative type.""")
 
 (defun delegate-reference (delegate reference &key delegator defaults)
   (if (null reference)
@@ -363,12 +365,11 @@
 (defvar *locative-source-search-list* ())
 
 (defun add-locative-to-source-search-list (locative)
-  """Some locatives are implemented in terms of Lisp types, for which
-  [SLIME's `\\M-.`][slime-m-.] finds source code of the corresponding
-  definition out of the box. For example, SECTIONs are simply global
-  variables. To be able to list all definitions that belong to a name,
-  we register locatives to try with
-  ADD-LOCATIVE-TO-SOURCE-SEARCH-LIST."""
+  """Some locatives are implemented in terms of Lisp defintions, for
+  which [SLIME's `\\M-.`][slime-m-.] finds source code of the box. For
+  example, DEFSECTIONs are global variables. To be able to list all
+  definitions that belong to an @OBJECT, we register locatives to try
+  with ADD-LOCATIVE-TO-SOURCE-SEARCH-LIST."""
   (pushnew locative *locative-source-search-list* :test #'equal))
 
 (defmacro symbol-lambda-list-method (symbol locative-type)
@@ -383,7 +384,7 @@
   It is useful to attach documentation and source location to symbols
   in a particular context. An example will make everything clear:
 
-  ```commonlisp
+  ```
   (define-symbol-locative-type direction ()
     "A direction is a symbol. (After this `M-.` on `DIRECTION LOCATIVE`
     works and it can also be included in DEFSECTION forms.)")

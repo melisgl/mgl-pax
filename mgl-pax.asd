@@ -1,7 +1,7 @@
 ;;;; -*- mode: Lisp -*-
 
 ;;; See MGL-PAX::@PAX-MANUAL for the user guide.
-(asdf:defsystem #:mgl-pax
+(asdf:defsystem "mgl-pax"
   :licence "MIT, see COPYING."
   :version "0.0.4"
   :author "Gábor Melis"
@@ -24,8 +24,8 @@
   :components ((:module "src/base/"
                 :serial t
                 :components ((:file "package")
-                             (:file "pax-early")
                              (:file "autoload")
+                             (:file "pax-early")
                              (:file "pax")
                              (:file "extension-api")
                              (:file "navigate-early")
@@ -34,7 +34,7 @@
                              (:file "locatives-early"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
-(asdf:defsystem #:mgl-pax/navigate
+(asdf:defsystem "mgl-pax/navigate"
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
@@ -51,13 +51,13 @@
   :components ((:module "src/navigate/"
                 :serial t
                 :components ((:file "util")
+                             (:file "parse")
                              (:file "find-definition")
                              (:file "locatives")
-                             (:file "parse")
                              (:file "navigate"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
-(asdf:defsystem #:mgl-pax/document
+(asdf:defsystem "mgl-pax/document"
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
@@ -81,7 +81,7 @@
                              (:file "document-util"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
-(asdf:defsystem #:mgl-pax/transcribe
+(asdf:defsystem "mgl-pax/transcribe"
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
@@ -99,7 +99,7 @@
                 :components ((:file "transcribe"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
-(asdf:defsystem #:mgl-pax/full
+(asdf:defsystem "mgl-pax/full"
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
@@ -142,12 +142,10 @@
   :bug-tracker ""
   :source-control ""
   :description "Test system for MGL-PAX extensions."
-  :long-description ""
+  :long-description "Runnable by test/test.sh only."
   :depends-on ("mgl-pax" "try")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "test"
                 :serial t
-                :components ((:file "test-extension"))))
-  :perform (asdf:test-op (o s)
-             (uiop:symbol-call '#:mgl-pax-test-extension '#:test)))
+                :components ((:file "test-extension")))))

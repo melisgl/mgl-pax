@@ -4,11 +4,11 @@
 
 (defsection @locative-types (:title "Locative Types")
   """As we have already briefly seen in DEFSECTION and
-  @LOCATIVES-AND-REFERENCES, locatives allow us to refer to, document
+  @LOCATIVES-AND-REFERENCES, locatives allow us to refer to, document,
   and find the source location of various definitions beyond what
   standard Common Lisp offers. See @EXTENSION-API for a more detailed
   treatment. The following are the locatives types supported out of
-  the box. As all locative types, they are symbols, and their names
+  the box. As all locative types, they are named by symbols, which
   should make it obvious what kind of things they refer to. Unless
   otherwise noted, locatives take no arguments.
 
@@ -18,8 +18,7 @@
   location and the docstring of the defining form is recorded (see
   LOCATE-AND-FIND-SOURCE, LOCATE-AND-DOCUMENT in the @EXTENSION-API),
   which makes navigating the sources with `\\M-.` (see
-  @NAVIGATING-IN-EMACS) and @GENERATING-DOCUMENTATION possible.
-  """
+  @NAVIGATING-IN-EMACS) and @GENERATING-DOCUMENTATION possible."""
   (@variablelike-locatives section)
   (@macrolike-locatives section)
   (@functionlike-locatives section)
@@ -82,8 +81,7 @@
   See *DOCUMENT-LINK-CODE* for an example output. To override the
   current value, `INITFORM` may be provided. This is particulary
   useful if the value of the variable is something undesirable such as
-  `\\#<MY-CLASS {100171ED93}>`.
-  """)
+  `\\#<MY-CLASS {100171ED93}>`.""")
 
 (defmethod locate-object (symbol (locative-type (eql 'variable)) locative-args)
   (unless (<= (length locative-args) 1)
@@ -119,10 +117,10 @@
 ;;;; CONSTANT locative
 
 (define-locative-type constant (&optional initform)
-  "Refers to a DEFCONSTANT. INITFORM, or if not specified,
-  the value of the constant is included in the documentation. The
-  CONSTANT locative is like the VARIABLE locative, but it also checks
-  that its object is CONSTANTP.")
+  "Refers to a variable defined with DEFCONSTANT. INITFORM, or if not
+  specified, the value of the constant is included in the
+  documentation. The CONSTANT locative is like the VARIABLE locative,
+  but it also checks that its object is CONSTANTP.")
 
 (defmethod locate-object (symbol (locative-type (eql 'constant)) locative-args)
   (unless (<= (length locative-args) 1)
@@ -204,8 +202,8 @@
   (setf (documentation 'my-mac 'symbol-macro)
         "This is MY-MAC.")
   (documentation 'my-mac 'symbol-macro)
-  ```
-  """)
+  => "This is MY-MAC."
+  ```""")
 
 (defvar *symbol-macro-docstrings* (make-hash-table))
 
@@ -312,7 +310,8 @@
 
 ;;; It may be that (NOT (EQ SYMBOL (FUNCTION-NAME (FUNCTION
 ;;; SYMBOL)))), perhaps due to (SETF SYMBOL-FUNCTION). Thus if we have
-;;; a REFERENCE, don't resolve it and construct using FUNCTION-NAME.
+;;; a REFERENCE, don't resolve it and construct a new reference using
+;;; FUNCTION-NAME.
 (defmethod locate-canonical-reference
     (object (locative-type (eql 'function)) locative-args)
   (make-reference object (cons locative-type locative-args)))
@@ -356,8 +355,8 @@
 
 (define-locative-type method (method-qualifiers method-specializers)
   "See CL:FIND-METHOD for the description of the arguments
-  METHOD-QUALIFIERS and METHOD-SPECIALIZERS. For example,
-  a `(FOO (METHOD () (T (EQL XXX))))` as a DEFSECTION entry refers to
+  METHOD-QUALIFIERS and METHOD-SPECIALIZERS. For example, a
+  `(FOO (METHOD () (T (EQL XXX))))` as a DEFSECTION entry refers to
   this method:
 
       (defmethod foo (x (y (eql 'xxx)))
@@ -398,10 +397,10 @@
 ;;;; These were lifted from the fancy inspector contrib and then
 ;;;; tweaked.
 
+;;; Return a "pretty" list of the method's specializers. Normal
+;;; specializers are replaced by the name of the class, eql
+;;; specializers are replaced by `(EQL ,OBJECT).
 (defun method-specializers-for-inspect (method)
-  """Return a "pretty" list of the method's specializers. Normal
-  specializers are replaced by the name of the class, eql specializers
-  are replaced by `(eql ,object)."""
   (mapcar (lambda (name spec)
             (let ((name (if (listp name) (first name) name)))
               (if (eq spec t)
@@ -410,12 +409,12 @@
           (swank-mop:method-lambda-list method)
           (method-specializers-list method)))
 
+;;; Returns a "pretty" list describing METHOD. The first element of
+;;; the list is the name of generic-function method is specialized on,
+;;; the second element is the method qualifiers, the rest of the list
+;;; is the method's specializers (as per
+;;; METHOD-SPECIALIZERS-FOR-INSPECT).
 (defun method-for-inspect-value (method)
-  """Returns a "pretty" list describing METHOD. The first element of
-  the list is the name of generic-function method is specialized on,
-  the second element is the method qualifiers, the rest of the list is
-  the method's specialiazers (as per
-  METHOD-SPECIALIZERS-FOR-INSPECT)."""
   (append (list (swank-mop:generic-function-name
                  (swank-mop:method-generic-function method)))
           (swank-mop:method-qualifiers method)
@@ -934,8 +933,8 @@
 (defvar end-of-asdf-example)
 
 ;;; In addition to the CANONICAL-REFERENCE method above, define this
-;;; as well to prevent LOCATE-CANONICAL-REFERENCE `(METHOD () (T T
-;;; T))` from trying to LOCATE the reference. This is all because
+;;; as well to prevent LOCATE-CANONICAL-REFERENCE `(METHOD () (T T T))`
+;;; from trying to LOCATE the reference. This is all because
 ;;; ASDF:FIND-SYSTEM is so slow.
 (defmethod locate-canonical-reference (name (locative-type (eql 'asdf:system))
                                        locative-args)
@@ -1191,13 +1190,14 @@
 ;;;; ARGUMENT locative
 
 (define-locative-type argument ()
-  """An alias for DISLOCATED, so the one can refer to an argument of a
-  macro without accidentally linking to a class that has the same name
-  as that argument. In the following example, [FORMAT][dislocated] may
-  link to CL:FORMAT (if we generated documentation for it):
+  """An alias for DISLOCATED, so that one can refer to an argument of
+  a macro without accidentally linking to a class that has the same
+  name as that argument. In the following example,
+  [FORMAT][dislocated] may link to CL:FORMAT (if we generated
+  documentation for it):
 
   ```
-  "See the FORMAT in DOCUMENT."
+  "See FORMAT in DOCUMENT."
   ```
 
   Since ARGUMENT is a locative, we can prevent that linking by writing:
@@ -1222,20 +1222,21 @@
 
 (define-locative-type include (source &key line-prefix header footer
                                       header-nl footer-nl)
-  """Refers to a region of a file. SOURCE can be a string or a
-  pathname in which case the whole file is being pointed to or it can
-  explicitly supply START, END locatives. INCLUDE is typically used to
-  include non-lisp files in the documentation (say markdown or elisp
-  as in the next example) or regions of lisp source files. This can
-  reduce clutter and duplication.
+  """This pseudolocative refers to a region of a file. SOURCE can be a
+  [STRING][type] or a [PATHNAME][type] in which case the whole file is
+  being pointed to, or it can explicitly supply START, END locatives.
+  INCLUDE is typically used to include non-lisp files in the
+  documentation (say markdown or elisp as in the next example) or
+  regions of lisp source files. This can reduce clutter and
+  duplication.
 
-  ```commonlisp
+  ```
   (defsection example-section ()
     (pax.el (include #.(asdf:system-relative-pathname :mgl-pax "src/pax.el")
                      :header-nl "```elisp" :footer-nl "```"))
     (foo-example (include (:start (foo function)
                            :end (end-of-foo-example variable))
-                          :header-nl "```commonlisp"
+                          :header-nl "```"
                           :footer-nl "```"))
 
   (defun foo (x)
@@ -1268,10 +1269,10 @@
   of the file, respectively.
 
   Note that the file of the source location of :START and :END must be
-  the same. If SOURCE is pathname designator, then it must be absolute
-  so that the locative is context independent.
+  the same. If SOURCE is a pathname designator, then it must be
+  absolute so that the locative is context independent.
 
-  Finally, if specified LINE-PREFIX is a string that's prepended to
+  Finally, if specified, LINE-PREFIX is a string that's prepended to
   each line included in the documentation. For example, a string of
   four spaces makes markdown think it's a code block.
   

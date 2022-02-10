@@ -1,12 +1,23 @@
 (in-package :mgl-pax)
 
+(defsection @extending-find-source (:title "Extending FIND-SOURCE")
+  "The following utilities are for writing new FIND-SOURCE and
+  LOCATE-AND-FIND-SOURCE methods. Their locative arguments are
+  translated to Swank `dspecs`, and it is an error if there is no
+  translation. In general, Swank supports Common Lisp
+  definitions (hence the VARIABLE and FUNCTION locatives, for example)
+  but not the \PAX and user defined additions (e.g. SECTION,
+  ASDF:SYSTEM)."
+  (find-definition function)
+  (find-definition* function))
+
 (defun/autoloaded find-definition (object &rest locatives)
-  "Return a source location for a definition of OBJECT. Try forming
-  @REFERENCEs with OBJECT and one of LOCATIVES. Stop at the first
-  locative with which a definition is found and return its location.
-  If no location was found, then return the usual Swank `(:ERROR
-  ...)`. The implementation is based on the rather expensive
-  SWANK-BACKEND:FIND-DEFINITIONS function."
+  "Return a Swank source location for a definition of OBJECT. Try
+  forming @REFERENCEs with OBJECT and one of LOCATIVES. Stop at the
+  first locative with which a definition is found, and return its
+  location. If no location was found, then return the usual
+  Swank `(:ERROR ...)`. The implementation is based on the rather
+  expensive SWANK-BACKEND:FIND-DEFINITIONS function."
   (let* ((dspecs (loop for locative in locatives
                        append (reference-to-dspecs object locative)))
          (dspec-and-location-list (ignore-errors

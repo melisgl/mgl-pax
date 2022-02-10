@@ -33,15 +33,15 @@
   The same object may occur in multiple references, typically with
   different locatives, but this is not required.
 
-  The references are not looked up (see RESOLVE in the @EXTENSION-API)
-  until documentation is generated, so it is allowed to refer to
-  things yet to be defined.
+  The references are not looked up (see RESOLVE in the
+  @LOCATIVES-AND-REFERENCES-API) until documentation is generated, so
+  it is allowed to refer to things yet to be defined.
 
   ##### Exporting
 
-  If EXPORT is true (the default), NAME and the objects which are
-  SYMBOLs are candidates for exporting. A candidate symbol is exported
-  if
+  If EXPORT is true (the default), NAME and the @OBJECTs of references
+  among ENTRIES which are SYMBOLs are candidates for exporting. A
+  candidate symbol is exported if
 
   - it is [accessible][find-symbol] in PACKAGE, and
 
@@ -79,6 +79,7 @@
                       :entries ,(if discard-documentation-p
                                     ()
                                     `(transform-entries ',entries ',name))))))
+
 
 (defclass reference ()
   ((object :initarg :object :reader reference-object)
@@ -117,8 +118,8 @@
 (defun reference-locative-args (reference)
   (locative-args (reference-locative reference)))
 
-;;; FIXME: This should be a generic function dispatching on
-;;; LOCATIVE-TYPE.
+;;; This could eventually be turned into a generic function
+;;; dispatching on LOCATIVE-TYPE.
 (defun reference-object= (object reference)
   (let ((object-2 (reference-object reference))
         (locative-type (reference-locative-type reference)))
@@ -128,6 +129,21 @@
            (equalp (string object) (string object-2)))
           (t
            (eq object object-2)))))
+
+(defun locative-type (locative)
+  "Return the first element of LOCATIVE if it's a list. If it's a symbol,
+  then return that symbol itself."
+  (if (listp locative)
+      (first locative)
+      locative))
+
+(defun locative-args (locative)
+  "The REST of LOCATIVE if it's a list. If it's a symbol then it's
+  NIL."
+  (if (listp locative)
+      (rest locative)
+      ()))
+
 
 (defclass section ()
   ((name
@@ -163,32 +179,6 @@
   (print-unreadable-object (section stream :type t)
     (format stream "~S" (section-name section))))
 
-(defun locative-type (locative)
-  "The first element of LOCATIVE if it's a list. If it's a symbol then
-  it's that symbol itself. Typically, methods of generic functions
-  working with locatives take locative type and locative args as
-  separate arguments to allow methods have eql specializers on the
-  type symbol."
-  (if (listp locative)
-      (first locative)
-      locative))
-
-(defun locative-args (locative)
-  "The REST of LOCATIVE if it's a list. If it's a symbol then
-  it's ()."
-  (if (listp locative)
-      (rest locative)
-      ()))
-
-(defun ensure-list (object)
-  (if (listp object)
-      object
-      (list object)))
-
-(defun locative-equal (locative-1 locative-2)
-  (equal (ensure-list locative-1)
-         (ensure-list locative-2)))
-
 (defun transform-entries (entries section-name)
   (mapcar (lambda (entry)
             (if (stringp entry)
@@ -196,15 +186,10 @@
                 (entry-to-reference entry section-name)))
           entries))
 
-(defun prin1-to-string/fully-qualified (object)
-  (let ((*package* (find-package :keyword)))
-    (prin1-to-string object)))
-
 (defun entry-to-reference (entry section-name)
   (handler-case
-      (destructuring-bind (symbol locative) entry
-        (assert (symbolp symbol))
-        (make-reference symbol locative))
+      (destructuring-bind (object locative) entry
+        (make-reference object locative))
     (error ()
       (error "~@<Malformed entry ~A in the definition of SECTION ~A. ~
                Entries must be of the form (SYMBOL LOCATIVE).~:@>"
@@ -212,6 +197,10 @@
              ;; Slime debugger.
              (prin1-to-string/fully-qualified entry)
              (prin1-to-string/fully-qualified section-name)))))
+
+(defun prin1-to-string/fully-qualified (object)
+  (let ((*package* (find-package :keyword)))
+    (prin1-to-string object)))
 
 (defun transform-link-title-to (link-title-to)
   (when link-title-to
@@ -227,9 +216,10 @@
     (export name package))
   (dolist (entry entries)
     (when (listp entry)
-      (destructuring-bind (symbol locative) entry
-        (when (exportablep package symbol locative)
-          (export symbol package))))))
+      (destructuring-bind (object locative) entry
+        (when (and (symbolp object)
+                   (exportablep package object locative))
+          (export object package))))))
 
 (defun exportablep (package symbol locative)
   (and (symbol-accessible-in-package-p symbol package)
@@ -245,19 +235,18 @@
   LOCATIVE-TYPE and LOCATIVE-ARGS. SYMBOL is [accessible][find-symbol]
   in PACKAGE.
 
-  The default method ignores calls EXPORTABLE-LOCATIVE-TYPE-P with
+  The default method calls EXPORTABLE-LOCATIVE-TYPE-P with
   LOCATIVE-TYPE and ignores the other arguments.
 
-  For example, to not export SECTIONs from MGL-PAX the following
-  method is defined.
+  For example, to prevent SECTIONs from being export from the MGL-PAX
+  package, the following method is defined.
 
   ```
   (defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
                                      symbol (locative-type (eql 'section))
                                      locative-args)
     nil)
-  ```
-  ")
+  ```")
   (:method (package symbol locative-type locative-args)
     (declare (ignore package symbol locative-args))
     (exportable-locative-type-p locative-type)))
@@ -318,12 +307,13 @@
 (defmacro define-glossary-term
     (name (&key title (discard-documentation-p *discard-documentation-p*))
      docstring)
-  "Define a global variable with NAME and set it to a glossary term
-  object. A glossary term is just a symbol to hang a docstring on. It
-  is a bit like a SECTION in that, when linked to, its TITLE will be
-  the link text instead of the name of the symbol. Unlike sections
-  though, glossary terms are not rendered with headings, but in the
-  more lightweight bullet + locative + name/title style.
+  "Define a global variable with NAME and set it to a
+  [GLOSSARY-TERM][class] object. A glossary term is just a symbol to
+  hang a docstring on. It is a bit like a SECTION in that, when linked
+  to, its TITLE will be the link text instead of the name of the
+  symbol. Unlike sections though, glossary terms are not rendered with
+  headings, but in the more lightweight bullet + locative + name/title
+  style.
 
   When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
   is true, DOCSTRING will not be recorded to save memory.

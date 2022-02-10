@@ -17,7 +17,7 @@
   (*foo-state* variable)
   (gaussian-random function)
   (uniform-random function)
-  ;; this is a subsection
+  ;; This is a subsection.
   (@foo-random-examples section))
 
 (defclass foo-random-state ()

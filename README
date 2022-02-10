@@ -3,7 +3,7 @@
 ###### \[in package MGL-PAX with nicknames PAX\]
 ## MGL-PAX ASDF System Details
 
-- Version: 0.0.4
+- Version: 0.1.0
 - Description: Exploratory programming tool and documentation
   generator.
 - Long Description: The set of dependencies of the MGL-PAX system is
@@ -55,23 +55,23 @@ have to piece the big picture together themselves.
 
 That's easy to solve, I thought, let's just put all the narrative
 that holds docstrings together in the code and be a bit like a
-Literate Programming weenie turned inside out. The original
-prototype, which did almost everything I wanted, was this:
+Literate Programmer turned inside out. The original prototype, which
+did almost everything I wanted, was this:
 
 ```
 (defmacro defsection (name docstring)
   `(defun ,name () ,docstring))
 ```
 
-Armed with this `DEFSECTION`, I soon found myself
-organizing code following the flow of user level documentation and
-relegated comments to implementational details entirely. However,
-some portions of `DEFSECTION` docstrings were just
-listings of all the functions, macros and variables related to the
-narrative, and this list was effectively repeated in the DEFPACKAGE
-form complete with little comments that were like section names. A
-clear violation of [OAOO][oaoo], one of them had to go, so
-`DEFSECTION` got a list of symbols to export.
+Armed with this DEFSECTION, I soon found myself
+organizing code following the flow of user-level documentation and
+relegated comments to implementation details entirely. However, some
+parts of `DEFSECTION` docstrings were just listings of
+all the functions, macros and variables related to the narrative,
+and this list was repeated in the DEFPACKAGE form complete with
+little comments that were like section names. A clear violation of
+[OAOO][oaoo], one of them had to go, so DEFSECTION got
+a list of symbols to export.
 
 [oaoo]: http://c2.com/cgi/wiki?OnceAndOnlyOnce 
 
@@ -83,7 +83,7 @@ symbols, `M-.` was popping up selection dialogs. There were two
 birds to kill, and the symbol got accompanied by a type, which was
 later generalized into the concept of locatives:
 
-```commonlisp
+```
 (defsection @introduction ()
   "A single line for one man ..."
   (foo class)
@@ -128,17 +128,10 @@ effects as with Literate Programming, but documentation is generated
 from code, not vice versa and there is no support for chunking. Code
 is first, code must look pretty, documentation is code.
 
-In typical use, PAX packages have no :EXPORT's defined. Instead the
-DEFINE-PACKAGE form gets a docstring, which may mention section
-names (defined with DEFSECTION). When the code is loaded into the
-lisp, pressing `M-.` in SLIME on the name of the section will take
-you there. Sections can also refer to other sections, packages,
-functions, etc and you can keep exploring.
-
 ##### Docstrings
 
 PAX's automatically recognizes and [marks up code][@codification]
-with backticks, and [links code][@linking-to-code] to their
+with backticks and [links code][@linking-to-code] to their
 definitions.
 
 ```
@@ -161,7 +154,7 @@ with minimal additional markup. The following is the output
 of `(mgl-pax:document #'abort)`. Note that the docstring of the
 ABORT function was not written with PAX in mind.
 
-- [function] **ABORT** *&OPTIONAL CONDITION*
+- \[function\] **ABORT** *&OPTIONAL CONDITION*
 
     Transfer control to a restart named `ABORT`, signalling a
     [`CONTROL-ERROR`][6bc0] if none exists.
@@ -192,7 +185,7 @@ Here is an example of how it all works together:
   (*foo-state* variable)
   (gaussian-random function)
   (uniform-random function)
-  ;; this is a subsection
+  ;; This is a subsection.
   (@foo-random-examples section))
 
 (defclass foo-random-state ()
@@ -232,15 +225,14 @@ Here is an example of how it all works together:
 Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
 exports `*FOO-STATE*` and includes its documentation in
 `@FOO-RANDOM-MANUAL`. The symbols [VARIABLE][locative] and
-[FUNCTION][locative] are just two instances of
-[locatives][@LOCATIVE-TYPES section], which are used in DEFSECTION
-to refer to definitions tied to symbols.
+[FUNCTION][locative] are just two instances of @LOCATIVEs, which are
+used in DEFSECTION to refer to definitions tied to symbols.
 
-Generating fancy markdown or HTML output with [automatic
-markup][*document-uppercase-is-code* variable] and [linking][
-@linking-to-code section] of uppercase symbol names found in
-docstrings, section numbering, table of contents, etc is possible by
-with `(DOCUMENT @FOO-RANDOM-MANUAL)`.
+`(DOCUMENT @FOO-RANDOM-MANUAL)` generates fancy markdown or HTML
+output with [automatic markup][*document-uppercase-is-code*
+variable] and [autolinks][@linking-to-code section] uppercase @WORDs
+found in docstrings, numbers sections, and creates a table of
+contents.
 
 One can even generate documentation for different but related
 libraries at the same time with the output going to different files
@@ -248,9 +240,9 @@ but with cross-page links being automatically added for symbols
 mentioned in docstrings. See @GENERATING-DOCUMENTATION for some
 convenience functions to cover the most common cases.
 
-The transcript in the code block tagged with `cl-transcript` is
-automatically checked for up-to-dateness when documentation is
-generated. See @TRANSCRIPTS.
+The [transcript][@transcripts] in the code block tagged with
+`cl-transcript` is automatically checked for up-to-dateness when
+documentation is generated.
 
 ## Basics
 
@@ -278,15 +270,15 @@ Now let's examine the most important pieces.
     The same object may occur in multiple references, typically with
     different locatives, but this is not required.
     
-    The references are not looked up (see RESOLVE in the @EXTENSION-API)
-    until documentation is generated, so it is allowed to refer to
-    things yet to be defined.
+    The references are not looked up (see RESOLVE in the
+    @LOCATIVES-AND-REFERENCES-API) until documentation is generated, so
+    it is allowed to refer to things yet to be defined.
     
     ##### Exporting
     
-    If EXPORT is true (the default), NAME and the objects which are
-    SYMBOLs are candidates for exporting. A candidate symbol is exported
-    if
+    If EXPORT is true (the default), NAME and the @OBJECTs of references
+    among ENTRIES which are SYMBOLs are candidates for exporting. A
+    candidate symbol is exported if
     
     - it is [accessible][find-symbol] in PACKAGE, and
     
@@ -321,9 +313,9 @@ Now let's examine the most important pieces.
     state of the package. Typically this situation occurs when symbols
     are exported by calling EXPORT (as is the case with DEFSECTION) as
     opposed to adding :EXPORT forms to the DEFPACKAGE form and the
-    package definition is reevaluated. See the section on [package
-    variance](http://www.sbcl.org/manual/#Package-Variance) in the SBCL
-    manual.
+    package definition is subsequently reevaluated. See the section on
+    [package variance](http://www.sbcl.org/manual/#Package-Variance) in
+    the SBCL manual.
     
     The bottom line is that if you rely on DEFSECTION to do the
     exporting, then you'd better use DEFINE-PACKAGE.
@@ -352,9 +344,9 @@ first-class, such as types.
 
 PAX generalizes `DOC-TYPE` to the concept of @LOCATIVEs, which may
 also take arguments. An @OBJECT and a @LOCATIVE together are called
-a @REFERENCE, and they identify a single thing. REFERENCEs are
-actual objects, but often they appear as an `(OBJECT LOCATIVE)`
-list (see DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
+a @REFERENCE, and they identify a definition. REFERENCEs are actual
+objects, but often they appear as an `(OBJECT LOCATIVE)` list (see
+DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
 @LINKING-TO-CODE for the various forms possible).
 
 ```
@@ -379,9 +371,9 @@ list (see DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
 
 - [glossary-term] object
 
-    @OBJECTs are symbols or strings which name [functions][function locative],
-    [types][type locative], [packages][package locative], etc. Together
-    with @LOCATIVEs, they form @REFERENCEs.
+    @OBJECTs are symbols or strings which name [functions][function
+    locative], [types][type locative], [packages][package locative],
+    etc. Together with @LOCATIVEs, they form @REFERENCEs.
 
 - [glossary-term] locative
 
@@ -398,9 +390,9 @@ list (see DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
 #### Locatives and References API
 
 `(MAKE-REFERENCE 'FOO 'VARIABLE)` constructs a REFERENCE that
-captures the path to take from an object (the symbol FOO) to an
+captures the path to take from an @OBJECT (the symbol `FOO`) to an
 entity of interest (for example, the documentation of the variable).
-The path is called the locative. A locative can be applied to an
+The path is called the @LOCATIVE. A locative can be applied to an
 object like this:
 
 ```
@@ -414,10 +406,31 @@ which we will see in the @EXTENSION-API.
 Naturally, `(LOCATE 'FOO 'FUNCTION)` will simply return `#'FOO`, no
 need to muck with references when there is a perfectly good object.
 
+- [class] REFERENCE
+
+    A REFERENCE represents a path (REFERENCE-LOCATIVE)
+    to take from an object (REFERENCE-OBJECT).
+
+- [reader] REFERENCE-OBJECT REFERENCE (:OBJECT)
+
+- [reader] REFERENCE-LOCATIVE REFERENCE (:LOCATIVE)
+
+- [function] MAKE-REFERENCE OBJECT LOCATIVE
+
+- [function] LOCATIVE-TYPE LOCATIVE
+
+    Return the first element of LOCATIVE if it's a list. If it's a symbol,
+    then return that symbol itself.
+
+- [function] LOCATIVE-ARGS LOCATIVE
+
+    The REST of LOCATIVE if it's a list. If it's a symbol then it's
+    NIL.
+
 - [function] LOCATE OBJECT LOCATIVE &KEY (ERRORP T)
 
     Follow LOCATIVE from OBJECT and return the object it leads to or a
-    REFERENCE if there is no first class object corresponding to the
+    REFERENCE if there is no first-class object corresponding to the
     location. Depending on ERRORP, a LOCATE-ERROR condition is signaled
     or NIL is returned if the lookup fails.
     
@@ -453,30 +466,6 @@ need to muck with references when there is a perfectly good object.
     A convenience function to LOCATE REFERENCE's object with its
     locative.
 
-- [class] REFERENCE
-
-    A REFERENCE represents a path (REFERENCE-LOCATIVE)
-    to take from an object (REFERENCE-OBJECT).
-
-- [reader] REFERENCE-OBJECT REFERENCE (:OBJECT)
-
-- [reader] REFERENCE-LOCATIVE REFERENCE (:LOCATIVE)
-
-- [function] MAKE-REFERENCE OBJECT LOCATIVE
-
-- [function] LOCATIVE-TYPE LOCATIVE
-
-    The first element of LOCATIVE if it's a list. If it's a symbol then
-    it's that symbol itself. Typically, methods of generic functions
-    working with locatives take locative type and locative args as
-    separate arguments to allow methods have eql specializers on the
-    type symbol.
-
-- [function] LOCATIVE-ARGS LOCATIVE
-
-    The REST of LOCATIVE if it's a list. If it's a symbol then
-    it's ().
-
 ### Parsing
 
 - [glossary-term] word
@@ -511,11 +500,11 @@ need to muck with references when there is a perfectly good object.
 ## Locative Types
 
 As we have already briefly seen in DEFSECTION and
-@LOCATIVES-AND-REFERENCES, locatives allow us to refer to, document
+@LOCATIVES-AND-REFERENCES, locatives allow us to refer to, document,
 and find the source location of various definitions beyond what
 standard Common Lisp offers. See @EXTENSION-API for a more detailed
 treatment. The following are the locatives types supported out of
-the box. As all locative types, they are symbols, and their names
+the box. As all locative types, they are named by symbols, which
 should make it obvious what kind of things they refer to. Unless
 otherwise noted, locatives take no arguments.
 
@@ -550,10 +539,10 @@ which makes navigating the sources with `M-.` (see
 
 - [locative] CONSTANT &OPTIONAL INITFORM
 
-    Refers to a DEFCONSTANT. INITFORM, or if not specified,
-    the value of the constant is included in the documentation. The
-    CONSTANT locative is like the VARIABLE locative, but it also checks
-    that its object is CONSTANTP.
+    Refers to a variable defined with DEFCONSTANT. INITFORM, or if not
+    specified, the value of the constant is included in the
+    documentation. The CONSTANT locative is like the VARIABLE locative,
+    but it also checks that its object is CONSTANTP.
 
 ### Locatives for Macros
 
@@ -575,6 +564,7 @@ which makes navigating the sources with `M-.` (see
     (setf (documentation 'my-mac 'symbol-macro)
           "This is MY-MAC.")
     (documentation 'my-mac 'symbol-macro)
+    => "This is MY-MAC."
     ```
 
 
@@ -603,8 +593,8 @@ which makes navigating the sources with `M-.` (see
 - [locative] METHOD METHOD-QUALIFIERS METHOD-SPECIALIZERS
 
     See CL:FIND-METHOD for the description of the arguments
-    METHOD-QUALIFIERS and METHOD-SPECIALIZERS. For example,
-    a `(FOO (METHOD () (T (EQL XXX))))` as a DEFSECTION entry refers to
+    METHOD-QUALIFIERS and METHOD-SPECIALIZERS. For example, a
+    `(FOO (METHOD () (T (EQL XXX))))` as a DEFSECTION entry refers to
     this method:
     
         (defmethod foo (x (y (eql 'xxx)))
@@ -755,12 +745,13 @@ which makes navigating the sources with `M-.` (see
 
 - [macro] DEFINE-GLOSSARY-TERM NAME (&KEY TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) DOCSTRING
 
-    Define a global variable with NAME and set it to a glossary term
-    object. A glossary term is just a symbol to hang a docstring on. It
-    is a bit like a SECTION in that, when linked to, its TITLE will be
-    the link text instead of the name of the symbol. Unlike sections
-    though, glossary terms are not rendered with headings, but in the
-    more lightweight bullet + locative + name/title style.
+    Define a global variable with NAME and set it to a
+    [GLOSSARY-TERM][class] object. A glossary term is just a symbol to
+    hang a docstring on. It is a bit like a SECTION in that, when linked
+    to, its TITLE will be the link text instead of the name of the
+    symbol. Unlike sections though, glossary terms are not rendered with
+    headings, but in the more lightweight bullet + locative + name/title
+    style.
     
     When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
     is true, DOCSTRING will not be recorded to save memory.
@@ -791,13 +782,14 @@ which makes navigating the sources with `M-.` (see
 
 - [locative] ARGUMENT
 
-    An alias for DISLOCATED, so the one can refer to an argument of a
-    macro without accidentally linking to a class that has the same name
-    as that argument. In the following example, FORMAT may
-    link to CL:FORMAT (if we generated documentation for it):
+    An alias for DISLOCATED, so that one can refer to an argument of
+    a macro without accidentally linking to a class that has the same
+    name as that argument. In the following example,
+    FORMAT may link to CL:FORMAT (if we generated
+    documentation for it):
     
     ```
-    "See the FORMAT in DOCUMENT."
+    "See FORMAT in DOCUMENT."
     ```
     
     Since ARGUMENT is a locative, we can prevent that linking by writing:
@@ -809,20 +801,21 @@ which makes navigating the sources with `M-.` (see
 
 - [locative] INCLUDE SOURCE &KEY LINE-PREFIX HEADER FOOTER HEADER-NL FOOTER-NL
 
-    Refers to a region of a file. SOURCE can be a string or a
-    pathname in which case the whole file is being pointed to or it can
-    explicitly supply START, END locatives. INCLUDE is typically used to
-    include non-lisp files in the documentation (say markdown or elisp
-    as in the next example) or regions of lisp source files. This can
-    reduce clutter and duplication.
+    This pseudolocative refers to a region of a file. SOURCE can be a
+    [STRING][type] or a [PATHNAME][type] in which case the whole file is
+    being pointed to, or it can explicitly supply START, END locatives.
+    INCLUDE is typically used to include non-lisp files in the
+    documentation (say markdown or elisp as in the next example) or
+    regions of lisp source files. This can reduce clutter and
+    duplication.
     
-    ```commonlisp
+    ```
     (defsection example-section ()
       (pax.el (include #.(asdf:system-relative-pathname :mgl-pax "src/pax.el")
                        :header-nl "```elisp" :footer-nl "```"))
       (foo-example (include (:start (foo function)
                              :end (end-of-foo-example variable))
-                            :header-nl "```commonlisp"
+                            :header-nl "```"
                             :footer-nl "```"))
     
     (defun foo (x)
@@ -855,10 +848,10 @@ which makes navigating the sources with `M-.` (see
     of the file, respectively.
     
     Note that the file of the source location of :START and :END must be
-    the same. If SOURCE is pathname designator, then it must be absolute
-    so that the locative is context independent.
+    the same. If SOURCE is a pathname designator, then it must be
+    absolute so that the locative is context independent.
     
-    Finally, if specified LINE-PREFIX is a string that's prepended to
+    Finally, if specified, LINE-PREFIX is a string that's prepended to
     each line included in the documentation. For example, a string of
     four spaces makes markdown think it's a code block.
     
@@ -866,10 +859,10 @@ which makes navigating the sources with `M-.` (see
 
 - [locative] DOCSTRING
 
-    DOCSTRING is a pseudo locative for including the parse tree of
-    the markdown [DOCSTRING][generic-function] of a definition in the
-    parse tree of a docstring when generating documentation. It has no
-    source location information and only works as an explicit link. This
+    DOCSTRING is a pseudolocative for including the parse tree of the
+    markdown [DOCSTRING][generic-function] of a definition in the parse
+    tree of a docstring when generating documentation. It has no source
+    location information and only works as an explicit link. This
     construct is intended to allow docstrings live closer to their
     implementation, which typically involves a non-exported definition.
     
@@ -1300,9 +1293,8 @@ Reader][pythonic-string-reader] can help with that.
     hyperspec and *DOCUMENT-UPPERCASE-IS-CODE* is true, or more
     precisely,
     
-    - if the word matches [the object of a reference][REFERENCE-OBJECT
-      reader] being documented (see DOCUMENT and
-      COLLECT-REACHABLE-OBJECTS), or
+    - if the word matches [the object of a reference][REFERENCE-OBJECT]
+      being documented (see DOCUMENT and COLLECT-REACHABLE-OBJECTS), or
     
     - the a name in the hyperspec if *DOCUMENT-LINK-TO-HYPERSPEC*.
     
@@ -1754,14 +1746,14 @@ HTML documentation and the default css stylesheet.
 #### Github Workflow
 
 It is generally recommended to commit generated readmes (see
-UPDATE-ASDF-SYSTEM-READMES) so that users have something to read
+UPDATE-ASDF-SYSTEM-READMES), so that users have something to read
 without reading the code and sites like github can display them.
 
 HTML documentation can also be committed, but there is an issue with
 that: when linking to the sources (see MAKE-GITHUB-SOURCE-URI-FN),
 the commit id is in the link. This means that code changes need to
-be committed first, then HTML documentation regenerated and
-committed in a followup commit.
+be committed first, and only then can HTML documentation be
+regenerated and committed in a followup commit.
 
 The second issue is that github is not very good at serving HTMLs
 files from the repository itself (and
@@ -1770,7 +1762,7 @@ on links to the sources).
 
 The recommended workflow is to use
 [gh-pages](https://pages.github.com/), which can be made relatively
-painless with the `git workflow` command. The gist of it is to make
+painless with the `git worktree` command. The gist of it is to make
 the `doc/` directory a checkout of the branch named `gh-pages`. A
 good description of this process is
 [http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html](http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html).
@@ -1778,8 +1770,8 @@ Two commits needed still, but it is somewhat less painful.
 
 This way the HTML documentation will be available at
 `http://<username>.github.io/<repo-name>`. It is probably a good
-idea to add section like the @LINKS section to allow jumping between
-the repository and the gh-pages site.
+idea to add sections like the @LINKS section to allow jumping
+between the repository and the gh-pages site.
 
 - [function] MAKE-GITHUB-SOURCE-URI-FN ASDF-SYSTEM GITHUB-URI &KEY GIT-VERSION
 
@@ -2459,17 +2451,17 @@ package for evaluation.
 ### Adding New Object Types
 
 One may wish to make the DOCUMENT function and `M-.` navigation
-work with new object types. Extending DOCUMENT can be done by
-defining a DOCUMENT-OBJECT method. To allow these objects to be
-referenced from DEFSECTION, LOCATE-OBJECT method is to be defined.
-If there are multiple equivalent references possible for the same
-thing, then CANONICAL-REFERENCE must be specialized. For the
-DOCSTRING locative to work on the new type, a DOCSTRING method is
-needed. For `M-.` FIND-SOURCE can be specialized. Finally,
+work with new object types. DOCUMENT can be extended by defining a
+DOCUMENT-OBJECT method specialized on that type. To allow these
+objects to be referenced from DEFSECTION, LOCATE-OBJECT method is to
+be defined. If there are multiple equivalent references possible for
+the same thing, then CANONICAL-REFERENCE must be specialized. For
+the DOCSTRING locative to work on the new type, a DOCSTRING method
+is needed. For `M-.` FIND-SOURCE can be specialized. Finally,
 EXPORTABLE-LOCATIVE-TYPE-P may be overridden if exporting does not
 makes sense. Here is how all this is done for ASDF:SYSTEM:
 
-```commonlisp
+```
 (define-locative-type asdf:system ()
   "Refers to an asdf system. The generated documentation will include
   meta information extracted from the system definition. This also
@@ -2554,7 +2546,7 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
     being able to reference `(LOCATIVE-TYPE LOCATIVE)`. For example, if
     you have:
     
-    ```common-lisp
+    ```
     (define-locative-type variable (&optional initform)
       "Dummy docstring.")
     ```
@@ -2567,7 +2559,7 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
     SYMBOLs). The following example shows how to make docstrings read
     more naturally by defining an alias.
     
-    ```common-lisp
+    ```
     (defclass my-string ()
       ())
     
@@ -2617,8 +2609,8 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
 - [generic-function] COLLECT-REACHABLE-OBJECTS OBJECT
 
     Return a list of objects representing all things to
-    be documented in a `(DOCUMENT OBJECT)` call. For SECTIONS this is
-    simply the union of references reachable from references in
+    be documented in a `(DOCUMENT OBJECT)` call. For a SECTION this is
+    simply the union of references reachable from references in its
     SECTION-ENTRIES. The returned objects can be anything provided that
     CANONICAL-REFERENCE works on them. The list need not include OBJECT
     itself.
@@ -2639,7 +2631,9 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
     Return the docstring from the definition of OBJECT
     with [leading indentation stripped][@markdown-indentation]. This
     function serves a similar purpose as CL:DOCUMENTATION, but it works
-    OBJECTs and REFERENCEs. Its @REFERENCE-DELEGATE is LOCATE-DOCSTRING.
+    with first-class objects when there is one for the corresponding
+    definition, and with REFERENCEs when there is not. Its
+    @REFERENCE-DELEGATE is LOCATE-DOCSTRING.
     
     DOCSTRING is used in the implementation of the DOCSTRING locative.
     Some things such as ASDF:SYSTEMS and DECLARATIONs have no
@@ -2670,7 +2664,7 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
     position 1 is the first character in `:FILE`. If unsuccessful, the
     return value is like:
     
-    ```commonlisp
+    ```
     (:error "Unknown source location for SOMETHING")
     ```
 
@@ -2682,11 +2676,11 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
     LOCATIVE-TYPE and LOCATIVE-ARGS. SYMBOL is [accessible][find-symbol]
     in PACKAGE.
     
-    The default method ignores calls EXPORTABLE-LOCATIVE-TYPE-P with
+    The default method calls EXPORTABLE-LOCATIVE-TYPE-P with
     LOCATIVE-TYPE and ignores the other arguments.
     
-    For example, to not export SECTIONs from MGL-PAX the following
-    method is defined.
+    For example, to prevent SECTIONs from being export from the MGL-PAX
+    package, the following method is defined.
     
     ```
     (defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
@@ -2711,13 +2705,13 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
 ### Reference Based Extensions
 
 Let's see how to extend DOCUMENT and `M-.` navigation if there
-is no first class object to represent the thing of interest. Recall
-that LOCATE returns a REFERENCE object in this case. The generic
-functions that we have specialized in @NEW-OBJECT-TYPES have
+is no first-class object to represent the definition of interest.
+Recall that LOCATE returns a REFERENCE object in this case. The
+generic functions that we have specialized in @NEW-OBJECT-TYPES have
 @REFERENCE-DELEGATEs, which can be specialized based on
 LOCATIVE-TYPE. Here is how the VARIABLE locative is defined:
 
-```commonlisp
+```
 (define-locative-type variable (&optional initform)
   """Refers to a global special variable. INITFORM, or if not specified,
   the global value of the variable is included in the documentation.
@@ -2734,8 +2728,7 @@ LOCATIVE-TYPE. Here is how the VARIABLE locative is defined:
   See *DOCUMENT-LINK-CODE* for an example output. To override the
   current value, `INITFORM` may be provided. This is particulary
   useful if the value of the variable is something undesirable such as
-  `\\#<MY-CLASS {100171ED93}>`.
-  """)
+  `\\#<MY-CLASS {100171ED93}>`.""")
 
 (defmethod locate-object (symbol (locative-type (eql 'variable)) locative-args)
   (unless (<= (length locative-args) 1)
@@ -2773,12 +2766,13 @@ LOCATIVE-TYPE. Here is how the VARIABLE locative is defined:
     [DOCSTRING][generic-function], and FIND-SOURCE delegate dealing with
     REFERENCES to another generic function, one each, which is called
     their reference delegate. Each of these delegator functions invokes
-    its delegate when a REFERENCE is passed it (as its OBJECT argument),
-    or there is no method specialized for its arguments, in which case
-    it uses the CANONICAL-REFERENCE.
+    its delegate when a REFERENCE is passed to it (as its OBJECT
+    argument), or there is no method specialized for its arguments, in
+    which case it uses the CANONICAL-REFERENCE.
     
     The net effect is that is that it is sufficient to specialize either
-    the delegator or the delegate for a new locative type.
+    the delegator for a first-class object or the delegate for a new
+    locative type.
 
 - [generic-function] LOCATE-CANONICAL-REFERENCE OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
 
@@ -2821,7 +2815,7 @@ with symbols in a certain context.
     It is useful to attach documentation and source location to symbols
     in a particular context. An example will make everything clear:
     
-    ```commonlisp
+    ```
     (define-symbol-locative-type direction ()
       "A direction is a symbol. (After this `M-.` on `DIRECTION LOCATIVE`
       works and it can also be included in DEFSECTION forms.)")
@@ -2877,7 +2871,7 @@ LOCATE-AND-DOCUMENT methods, which emit markdown.
 
 - [macro] WITH-DISLOCATED-OBJECTS OBJECTS &BODY BODY
 
-    For each OBJECT in OBJECTS, establish a [local
+    For each object in OBJECTS, establish a [local
     reference][@local-references] with the DISLOCATED locative, which
     [prevents autolinking][@preventing-autolinking].
 
@@ -2912,16 +2906,21 @@ LOCATE-AND-DOCUMENT methods, which emit markdown.
 ### Extending FIND-SOURCE
 
 The following utilities are for writing new FIND-SOURCE and
-LOCATE-AND-FIND-SOURCE methods.
+LOCATE-AND-FIND-SOURCE methods. Their locative arguments are
+translated to Swank `dspecs`, and it is an error if there is no
+translation. In general, Swank supports Common Lisp
+definitions (hence the VARIABLE and FUNCTION locatives, for example)
+but not the PAX and user defined additions (e.g. SECTION,
+ASDF:SYSTEM).
 
 - [function] FIND-DEFINITION OBJECT &REST LOCATIVES
 
-    Return a source location for a definition of OBJECT. Try forming
-    @REFERENCEs with OBJECT and one of LOCATIVES. Stop at the first
-    locative with which a definition is found and return its location.
-    If no location was found, then return the usual Swank `(:ERROR
-    ...)`. The implementation is based on the rather expensive
-    SWANK-BACKEND:FIND-DEFINITIONS function.
+    Return a Swank source location for a definition of OBJECT. Try
+    forming @REFERENCEs with OBJECT and one of LOCATIVES. Stop at the
+    first locative with which a definition is found, and return its
+    location. If no location was found, then return the usual
+    Swank `(:ERROR ...)`. The implementation is based on the rather
+    expensive SWANK-BACKEND:FIND-DEFINITIONS function.
 
 - [function] FIND-DEFINITION* OBJECT REFERENCE-OBJECT &REST LOCATIVES
 

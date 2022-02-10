@@ -27,9 +27,6 @@ reference links or user defined locatives can take care of this case.
 The second kind is very easy to implement: it only needs a small
 change in INITIALIZE-LINKS.
 * MAYBE link to MOP
-* warn on linking failure
-How to recoginize normal reference links? Don't, just warn on any
-linking failure. This should be in 3BMD.
 * MAYBE consider CommonDoc from the 40ants fork
 * MAYBE split transcription off into a separate library?
 * MAYBE allow lowercase only in the last "word" of the name
@@ -69,3 +66,8 @@ e.g. RESOLVEd
 * MAYBE get variable initforms from source?
 Or fall back on this for deficient ARGLISTs. Will be really slow.
 * test navigation from the emacs side
+* fix navigation on ("mgl-pax" asdf:system)
+* document glossary-term class and slots?
+* move @sections section elsewhere?
+* fix navigation on include locatives
+the locative is not parsed right by the elisp side

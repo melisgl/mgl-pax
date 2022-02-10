@@ -712,10 +712,10 @@
 ;;; FIXME: Circular includes are hard to detect because the 'recurse'
 ;;; return value is handled in the caller of this function.
 (defun translate-docstring-links (parent tree)
-  """DOCSTRING is a pseudo locative for including the parse tree of
-  the markdown [DOCSTRING][generic-function] of a definition in the
-  parse tree of a docstring when generating documentation. It has no
-  source location information and only works as an explicit link. This
+  """DOCSTRING is a pseudolocative for including the parse tree of the
+  markdown [DOCSTRING][generic-function] of a definition in the parse
+  tree of a docstring when generating documentation. It has no source
+  location information and only works as an explicit link. This
   construct is intended to allow docstrings live closer to their
   implementation, which typically involves a non-exported definition.
 
@@ -830,9 +830,8 @@
   hyperspec and *DOCUMENT-UPPERCASE-IS-CODE* is true, or more
   precisely,
 
-  - if the word matches [the object of a reference][REFERENCE-OBJECT
-    reader] being documented (see DOCUMENT and
-    COLLECT-REACHABLE-OBJECTS), or
+  - if the word matches [the object of a reference][REFERENCE-OBJECT]
+    being documented (see DOCUMENT and COLLECT-REACHABLE-OBJECTS), or
   - the a name in the hyperspec if *DOCUMENT-LINK-TO-HYPERSPEC*.
 
   Symbols are read in the current *PACKAGE*, which is subject to
