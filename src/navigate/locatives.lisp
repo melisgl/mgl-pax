@@ -174,6 +174,7 @@
 
 (defmethod locate-and-document (symbol (locative-type (eql 'macro))
                                 locative-args stream)
+  (declare (ignore locative-args))
   (let ((arglist (swank-backend:arglist symbol)))
     (documenting-reference (stream :arglist arglist)
       (with-dislocated-objects (macro-arg-names arglist)
@@ -223,6 +224,7 @@
 
 (defmethod locate-and-document (symbol (locative-type (eql 'symbol-macro))
                                 locative-args stream)
+  (declare (ignore locative-args))
   (documenting-reference (stream)
     (document-docstring (documentation* symbol 'symbol-macro) stream)))
 
@@ -252,6 +254,7 @@
 
 (defmethod locate-and-document (symbol (locative-type (eql 'compiler-macro))
                                 locative-args stream)
+  (declare (ignore locative-args))
   (let (;; FIXME: This is the arglist of the function, not the
         ;; compiler macro.
         (arglist (swank-backend:arglist symbol)))
@@ -448,11 +451,13 @@
 
 (defmethod locate-and-document
     (symbol (locative-type (eql 'method-combination)) locative-args stream)
+  (declare (ignore locative-args))
   (documenting-reference (stream)
     (document-docstring (documentation* symbol 'method-combination) stream)))
 
 (defmethod locate-docstring (symbol (locative-type (eql 'method-combination))
                              locative-args)
+  (declare (ignore locative-args))
   (documentation* symbol 'method-combination))
 
 (defmethod locate-and-find-source
@@ -639,6 +644,7 @@
 (defmethod locate-and-document ((symbol symbol)
                                 (locative-type (eql 'structure-accessor))
                                 locative-args stream)
+  (declare (ignore locative-args))
   (documenting-reference (stream)
     (document-docstring (documentation* symbol 'function) stream)))
 
@@ -675,6 +681,7 @@
 
 (defmethod locate-and-document (symbol (locative-type (eql 'type))
                                 locative-args stream)
+  (declare (ignore locative-args))
   (let ((arglist (swank-backend:type-specifier-arglist symbol)))
     (documenting-reference (stream :arglist arglist)
       (with-dislocated-objects (function-arg-names arglist)
@@ -823,7 +830,7 @@
 
 (defmethod locate-docstring (symbol (locative-type (eql 'declaration))
                              locative-args)
-  (declare (ignore locative-args))
+  (declare (ignore symbol locative-args))
   nil)
 
 (defmethod locate-and-find-source (symbol (locative-type (eql 'declaration))
@@ -1137,6 +1144,7 @@
 
 (defmethod locate-and-document (symbol (locative-type (eql 'locative))
                                 locative-args stream)
+  (declare (ignore locative-args))
   (let ((method (locative-lambda-list-method-for-symbol symbol))
         (lambda-list (locative-lambda-list symbol)))
     (documenting-reference (stream :arglist lambda-list)

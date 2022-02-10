@@ -26,8 +26,6 @@
 (export '*document-html-bottom-blocks-of-links*)
 (defvar *document-html-max-navigation-table-of-contents-level*)
 (export '*document-html-max-navigation-table-of-contents-level*)
-(defvar *format*)
-(export '*format*)
 
 (autoload find-hyperspec-id '#:mgl-pax/document :export nil)
 (autoload downcasingp '#:mgl-pax/document :export nil)

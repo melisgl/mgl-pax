@@ -408,6 +408,7 @@
        (make-reference symbol (cons locative-type locative-args)))
      (defmethod locate-and-document
          (symbol (locative-type (eql ',locative-type)) locative-args stream)
+       (declare (ignore locative-args))
        (let ((method (symbol-lambda-list-method symbol ',locative-type))
              (lambda-list (symbol-lambda-list symbol ',locative-type)))
          (documenting-reference (stream :arglist lambda-list)
@@ -415,6 +416,7 @@
              (document-docstring (documentation* method t) stream)))))
      (defmethod locate-docstring
          (symbol (locative-type (eql ',locative-type)) locative-args)
+       (declare (ignore locative-args))
        (let ((method (symbol-lambda-list-method symbol ',locative-type)))
          (documentation method t)))
      (defmethod locate-and-find-source

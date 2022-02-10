@@ -21,8 +21,13 @@
         (excl:*load-source-debug-info* t))
     (funcall continuation)))
 
+(defun compile-without-some-warnings (continuation)
+  (let (#+allegro (compiler:*cltl1-compile-file-toplevel-compatibility-p* nil))
+    (funcall continuation)))
+
 (defun compile-pax (continuation)
-  (call-with-wrappers '(compile-per-file compile-with-source-info)
+  (call-with-wrappers '(compile-per-file compile-with-source-info
+                        compile-without-some-warnings)
                       continuation))
 
 (defun call-with-wrappers (wrappers fn)

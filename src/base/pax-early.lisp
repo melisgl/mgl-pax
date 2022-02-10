@@ -265,11 +265,13 @@
 (defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
                                    symbol (locative-type (eql 'section))
                                    locative-args)
+  (declare (ignore symbol locative-args))
   nil)
 
 (defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
                                    symbol (locative-type (eql 'glossary-term))
                                    locative-args)
+  (declare (ignore symbol locative-args))
   nil)
 
 (defgeneric exportable-locative-type-p (locative-type)
