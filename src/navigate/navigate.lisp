@@ -92,7 +92,10 @@
   (loop for object in (parse-word word)
           thereis (append
                    ;; Standard stuff supported by Swank.
-                   (swank-backend:find-definitions object)
+                   (cond ((stringp object)
+                          (swank-backend:find-definitions (make-symbol object)))
+                         ((symbolp object)
+                          (swank-backend:find-definitions object)))
                    (mapcan (lambda (locative)
                              (ignore-errors
                               (let ((thing (locate object locative

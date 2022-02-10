@@ -1,4 +1,4 @@
-;;; This is is basically MGL-PAX:DEFINE-PACKAGE but we don't have it
+;;; This is is basically MGL-PAX:DEFINE-PACKAGE, but we don't have it
 ;;; defined yet.
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (locally
