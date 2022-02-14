@@ -663,7 +663,12 @@ This is [Self-referencing][e042].
   (check-head (list "FOO-R `(reader foo)`"
                     (make-reference 'foo-r '(reader foo))
                     (make-reference 'foo-r 'variable))
-              "[`FOO-R`][618a] `(reader foo)`"))
+              "[`FOO-R`][618a] `(reader foo)`")
+  (check-document (make-reference 'foo-r '(reader foo))
+                  "<a id=\"MGL-PAX-TEST:FOO-R%20%28MGL-PAX:READER%20MGL-PAX-TEST::FOO%29\"></a>
+
+- [reader] **FOO-R** *FOO*
+"))
 
 (deftest test-writer ()
   (check-head (list "FOO-W `(writer foo)`"

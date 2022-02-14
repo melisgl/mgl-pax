@@ -561,7 +561,7 @@
    (first locative-args) stream))
 
 (defun generate-documentation-for-slot-definition (slot-def class stream)
-  (let ((arglist (format nil "~A ~A" (prin1-to-markdown class)
+  (let ((arglist (format nil "~A~@[ ~A~]" (prin1-to-markdown class)
                          (slot-def-to-string slot-def))))
     (documenting-reference (stream :arglist arglist)
       ;; There is no documentation for condition accessors, and some
