@@ -87,7 +87,7 @@
   (ignore-errors
     (save-excursion
       (goto-char point)
-      (skip-chars-forward "[];` \n\t")
+      (skip-chars-forward "[];`\" \n\t")
       (if (equal (string (char-after)) "(")
           ;; [FOO][(function)]
           (save-excursion
