@@ -880,7 +880,7 @@
 
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
-                        (format nil "~A ASDF System Details"
+                        (format nil "~A \\ASDF System"
                                 (string-upcase
                                  (slot-value system 'asdf::name))))
     (flet ((foo (name fn &key type)
@@ -1023,10 +1023,7 @@
 
 (defun section-title-or-name (section)
   (or (section-title section)
-      (funcall (if (downcasingp)
-                   #'string-downcase
-                   #'identity)
-               (prin1-to-string (section-name section)))))
+      (prin1-to-string (section-name section))))
 
 (defmethod locate-object (symbol (locative-type (eql 'section))
                           locative-args)

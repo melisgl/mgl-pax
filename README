@@ -1,7 +1,7 @@
 # PAX Manual
 
 ###### \[in package MGL-PAX with nicknames PAX\]
-## MGL-PAX ASDF System Details
+## MGL-PAX ASDF System
 
 - Version: 0.0.4
 - Description: Exploratory programming tool and documentation
@@ -20,7 +20,7 @@
 - Bug tracker: [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
 - Source control: [GIT](https://github.com/melisgl/mgl-pax.git)
 
-## MGL-PAX/FULL ASDF System Details
+## MGL-PAX/FULL ASDF System
 
 - Description: MGL-PAX with all features preloaded.
 - Licence: MIT, see COPYING.
@@ -975,7 +975,7 @@ possibilities.
 
 The `M-.` extensions can be enabled by loading `src/pax.el`.
 
-### MGL-PAX/NAVIGATE ASDF System Details
+### MGL-PAX/NAVIGATE ASDF System
 
 - Description: Slime `M-.` support for MGL-PAX.
 - Long Description: Autoloaded by Slime's `M-.` when `src/pax.el` is
@@ -1128,7 +1128,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     ```
 
 
-### MGL-PAX/DOCUMENT ASDF System Details
+### MGL-PAX/DOCUMENT ASDF System
 
 - Description: Documentation generation support for MGL-PAX.
 - Long Description: Autoloaded by MGL-PAX:DOCUMENT. See
@@ -1930,7 +1930,7 @@ can be enabled with:
     (in-readtable pythonic-string-syntax)
 
 
-### MGL-PAX/TRANSCRIBE ASDF System Details
+### MGL-PAX/TRANSCRIBE ASDF System
 
 - Description: Transcription support for MGL-PAX.
 - Long Description: Autoloaded by MGL-PAX:TRANSCRIBE and by the Emacs
@@ -2480,7 +2480,7 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
 
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
-                        (format nil "~A ASDF System Details"
+                        (format nil "~A \\ASDF System"
                                 (string-upcase
                                  (slot-value system 'asdf::name))))
     (flet ((foo (name fn &key type)

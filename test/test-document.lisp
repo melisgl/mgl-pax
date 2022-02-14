@@ -351,19 +351,19 @@ xxx
     (check-document @parent-section-without-title
                     "<a id=\"MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
 
-# @parent-section-without-title
+# `@parent-section-without-title`
 
 ## Table of Contents
 
-- [1 @section-without-title][eeac]
+- [1 `@section-without-title`][eeac]
 
 ###### \\[in package MGL-PAX-TEST\\]
 <a id=\"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
 
-## 1 @section-without-title
+## 1 `@section-without-title`
 
 
-  [eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"mgl-pax-test::@section-without-title\"
+  [eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"`mgl-pax-test::@section-without-title`\"
 ")))
 
 (defun check-downcasing (docstring expected)
@@ -442,28 +442,28 @@ xxx
                 "[`SOME-CODE`][e391]")))
 
 
-(defsection @section-with-title (:title "My Title" :export nil))
-(define-glossary-term @gt-with-title (:title "My Title") "")
+(defsection @section-with-title (:title "My `Title`" :export nil))
+(define-glossary-term @gt-with-title (:title "My `Title`") "")
 
 (deftest test-explicit-label ()
   (with-test ("section")
     (check-downcasing (list "@SECTION-WITH-TITLE" @section-with-title)
-                      "[My Title][619a]")
+                      "[My `Title`][619a]")
     (check-downcasing (list "`@SECTION-WITH-TITLE`" @section-with-title)
-                      "[My Title][619a]")
+                      "[My `Title`][619a]")
     (check-downcasing (list "[@SECTION-WITH-TITLE][]" @section-with-title)
-                      "[My Title][619a]")
+                      "[My `Title`][619a]")
     (check-downcasing (list "[`@SECTION-WITH-TITLE`][]" @section-with-title)
-                      "[My Title][619a]"))
+                      "[My `Title`][619a]"))
   (with-test ("glossary-term")
     (check-downcasing (list "@GT-WITH-TITLE" @gt-with-title)
-                      "[My Title][fecf]")
+                      "[My `Title`][fecf]")
     (check-downcasing (list "`@GT-WITH-TITLE`" @gt-with-title)
-                      "[My Title][fecf]")
+                      "[My `Title`][fecf]")
     (check-downcasing (list "[@GT-WITH-TITLE][]" @gt-with-title)
-                      "[My Title][fecf]")
+                      "[My `Title`][fecf]")
     (check-downcasing (list "[`@GT-WITH-TITLE`][]" @gt-with-title)
-                      "[My Title][fecf]")))
+                      "[My `Title`][fecf]")))
 
 
 (deftest test-suppressed-links ()

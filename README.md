@@ -3,8 +3,8 @@
 
 ## Table of Contents
 
-- [1 MGL-PAX ASDF System Details][6fdb]
-- [2 MGL-PAX/FULL ASDF System Details][d761]
+- [1 `MGL-PAX` ASDF System][6fdb]
+- [2 `MGL-PAX/FULL` ASDF System][d761]
 - [3 Links][ba74]
 - [4 Background][f74b]
 - [5 Tutorial][8c3e]
@@ -22,9 +22,9 @@
     - [7.7 Locatives for PAX Constructs][292a]
     - [7.8 External Locatives][4b78]
 - [8 Navigating Sources in Emacs][3386]
-    - [8.1 MGL-PAX/NAVIGATE ASDF System Details][f155]
+    - [8.1 `MGL-PAX/NAVIGATE` ASDF System][f155]
 - [9 Generating Documentation][2c93]
-    - [9.1 MGL-PAX/DOCUMENT ASDF System Details][4bb8]
+    - [9.1 `MGL-PAX/DOCUMENT` ASDF System][4bb8]
     - [9.2 Markdown Support][c2d3]
         - [9.2.1 Indentation][718f]
         - [9.2.2 Syntax Highlighting][bc83]
@@ -48,7 +48,7 @@
     - [9.9 Overview of Escaping][2634]
     - [9.10 Document Generation Implementation Notes][d1ca]
 - [10 Transcripts][6300]
-    - [10.1 MGL-PAX/TRANSCRIBE ASDF System Details][5825]
+    - [10.1 `MGL-PAX/TRANSCRIBE` ASDF System][5825]
     - [10.2 Transcribing with Emacs][f5bd]
     - [10.3 Transcript API][9dbc]
     - [10.4 Transcript Consistency Checking][f47d]
@@ -58,13 +58,13 @@
 - [11 Writing Extensions][c4ce]
     - [11.1 Adding New Object Types][bbf2]
     - [11.2 Reference Based Extensions][69f7]
-    - [11.3 Extending DOCUMENT][574a]
-    - [11.4 Extending FIND-SOURCE][3eb4]
+    - [11.3 Extending `DOCUMENT`][574a]
+    - [11.4 Extending `FIND-SOURCE`][3eb4]
     - [11.5 Sections][8a58]
 
 ###### \[in package MGL-PAX with nicknames PAX\]
 <a id="x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-## 1 MGL-PAX ASDF System Details
+## 1 `MGL-PAX` ASDF System
 
 - Version: 0.0.4
 - Description: Exploratory programming tool and documentation
@@ -84,7 +84,7 @@
 - Source control: [GIT](https://github.com/melisgl/mgl-pax.git)
 
 <a id="x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-## 2 MGL-PAX/FULL ASDF System Details
+## 2 `MGL-PAX/FULL` ASDF System
 
 - Description: [`MGL-PAX`][6fdb] with all features preloaded.
 - Licence: MIT, see COPYING.
@@ -1105,7 +1105,7 @@ possibilities.
 The `M-.` extensions can be enabled by loading `src/pax.el`.
 
 <a id="x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-### 8.1 MGL-PAX/NAVIGATE ASDF System Details
+### 8.1 `MGL-PAX/NAVIGATE` ASDF System
 
 - Description: Slime `M-.` support for [`MGL-PAX`][6fdb].
 - Long Description: Autoloaded by Slime's `M-.` when `src/pax.el` is
@@ -1261,7 +1261,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
 
 
 <a id="x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-### 9.1 MGL-PAX/DOCUMENT ASDF System Details
+### 9.1 `MGL-PAX/DOCUMENT` ASDF System
 
 - Description: Documentation generation support for [`MGL-PAX`][6fdb].
 - Long Description: Autoloaded by [`MGL-PAX:DOCUMENT`][432c]. See
@@ -2112,7 +2112,7 @@ can be enabled with:
 
 
 <a id="x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-### 10.1 MGL-PAX/TRANSCRIBE ASDF System Details
+### 10.1 `MGL-PAX/TRANSCRIBE` ASDF System
 
 - Description: Transcription support for [`MGL-PAX`][6fdb].
 - Long Description: Autoloaded by [`MGL-PAX:TRANSCRIBE`][f1f0] and by the Emacs
@@ -2681,7 +2681,7 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
 
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
-                        (format nil "~A ASDF System Details"
+                        (format nil "~A \\ASDF System"
                                 (string-upcase
                                  (slot-value system 'asdf::name))))
     (flet ((foo (name fn &key type)
@@ -3055,7 +3055,7 @@ with symbols in a certain context.
     with [`DEFINE-SYMBOL-LOCATIVE-TYPE`][7584].
 
 <a id="x-28MGL-PAX-3A-40EXTENDING-DOCUMENT-20MGL-PAX-3ASECTION-29"></a>
-### 11.3 Extending DOCUMENT
+### 11.3 Extending `DOCUMENT`
 
 The following utilities are for writing new [`DOCUMENT-OBJECT`][bacc] and
 [`LOCATE-AND-DOCUMENT`][6611] methods, which emit markdown.
@@ -3128,7 +3128,7 @@ The following utilities are for writing new [`DOCUMENT-OBJECT`][bacc] and
     [`ESCAPE-MARKDOWN`][3026].
 
 <a id="x-28MGL-PAX-3A-40EXTENDING-FIND-SOURCE-20MGL-PAX-3ASECTION-29"></a>
-### 11.4 Extending FIND-SOURCE
+### 11.4 Extending `FIND-SOURCE`
 
 The following utilities are for writing new [`FIND-SOURCE`][4355] and
 [`LOCATE-AND-FIND-SOURCE`][d6a4] methods. Their locative arguments are
@@ -3253,7 +3253,7 @@ presented.
   [3d3c]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_rd.htm "READ FUNCTION"
   [3da8]: #x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29 "MGL-PAX:*FORMAT* VARIABLE"
   [3de5]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm "FUNCTION TYPE"
-  [3eb4]: #x-28MGL-PAX-3A-40EXTENDING-FIND-SOURCE-20MGL-PAX-3ASECTION-29 "Extending FIND-SOURCE"
+  [3eb4]: #x-28MGL-PAX-3A-40EXTENDING-FIND-SOURCE-20MGL-PAX-3ASECTION-29 "Extending `FIND-SOURCE`"
   [3f15]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rest.htm "REST FUNCTION"
   [41fd]: #x-28COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29 "COMPILER-MACRO MGL-PAX:LOCATIVE"
   [4267]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "STRING TYPE"
@@ -3272,7 +3272,7 @@ presented.
   [4d92]: #x-28MGL-PAX-3A-40LOCATIVE-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@LOCATIVE MGL-PAX:GLOSSARY-TERM"
   [4dd7]: #x-28PACKAGE-20MGL-PAX-3ALOCATIVE-29 "PACKAGE MGL-PAX:LOCATIVE"
   [5119]: #x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:GLOSSARY-TERM MGL-PAX:LOCATIVE"
-  [574a]: #x-28MGL-PAX-3A-40EXTENDING-DOCUMENT-20MGL-PAX-3ASECTION-29 "Extending DOCUMENT"
+  [574a]: #x-28MGL-PAX-3A-40EXTENDING-DOCUMENT-20MGL-PAX-3ASECTION-29 "Extending `DOCUMENT`"
   [5800]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq_sle.htm "< FUNCTION"
   [5825]: #x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/transcribe" ASDF/SYSTEM:SYSTEM'
   [5875]: #x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "GENERIC-FUNCTION MGL-PAX:LOCATIVE"

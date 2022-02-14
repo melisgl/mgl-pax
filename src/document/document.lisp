@@ -528,9 +528,16 @@
                       (escape-markdown-reflink-definition-title
                        (let* ((ref (link-reference link))
                               (locative-type (reference-locative-type ref)))
-                         (if (eq locative-type 'section)
-                             (section-title-or-name (resolve ref))
-                             (princ-to-string anchor)))))))))))
+                         (if (not (eq locative-type 'section))
+                             (princ-to-string anchor)
+                             (let ((section (resolve ref)))
+                               (if (section-title section)
+                                   (let ((*package* (section-package section)))
+                                     (unescape-markdown
+                                      (process-title (section-title section))))
+                                   (process-title
+                                    (prin1-to-string (section-name
+                                                      section)))))))))))))))
 
 (defun relative-page-uri-fragment (page reference-page)
   (if (eq page reference-page)
@@ -1405,7 +1412,7 @@
                 :label ,(if (or explicit-label-p
                                 (null (section-title section)))
                             label
-                            `(,(section-title section)))
+                            (codify (parse-markdown (section-title section))))
                 :definition ,(link-to-reference ref-1)))))
           ((eq (reference-locative-type ref-1) 'glossary-term)
            (let ((glossary-term (resolve ref-1 :errorp nil)))
@@ -1413,7 +1420,8 @@
                 :label ,(if (or explicit-label-p
                                 (null (glossary-term-title glossary-term)))
                             label
-                            `(,(glossary-term-title glossary-term)))
+                            (codify (parse-markdown (glossary-term-title
+                                                     glossary-term))))
                 :definition ,(link-to-reference ref-1)))))
           (t
            `((:reference-link
@@ -1692,14 +1700,14 @@
   (loop repeat (* 4 (1- *heading-level*))
         do (write-char #\Space stream))
   (let ((link-id (let ((*page* *table-of-contents-page*))
-                   (link-to-reference (canonical-reference object))))
-        (string (escape-markdown string)))
+                   (link-to-reference (canonical-reference object)))))
     (if (and *document-link-sections* link-id)
         (format stream "- [~A~A][~A]" (heading-number) string link-id)
         (format stream "- ~A~A" (heading-number) string)))
   (terpri stream))
 
 (defun/autoloaded call-with-heading (stream object title link-title-to fn)
+  (setq title (process-title title))
   (flet ((foo ()
            ;; Arrange for all output to go to /dev/null
            ;; (MAKE-BROADCAST-STREAM) except for the headings when we
@@ -1725,14 +1733,11 @@
                                      (link-to-reference link-title-to))
                              (format stream " <a href=\"#~A\">~A~A</a>~%~%"
                                      (urlencode (reference-to-anchor object))
-                                     (heading-number)
-                                     (escape-markdown title)))
-                         (format stream " ~A~A~%~%" (heading-number)
-                                 (escape-markdown title))))
+                                     (heading-number) title))
+                         (format stream " ~A~A~%~%" (heading-number) title)))
                     (t
                      (heading *heading-level* stream)
-                     (format stream " ~A~A~%~%"
-                             (heading-number) (escape-markdown title))))
+                     (format stream " ~A~A~%~%" (heading-number) title)))
               (when (and (zerop *heading-level*)
                          (plusp *document-max-table-of-contents-level*))
                 (heading (1+ *heading-level*) stream)
@@ -1756,6 +1761,10 @@
                                              (length *heading-number*)))
                             collect 0))))
         (foo)))))
+
+(defun process-title (string)
+  (with-output-to-string (out)
+    (print-markdown (codify (parse-markdown string)) out)))
 
 (defun fancy-navigation (object)
   (if (and *document-fancy-html-navigation*

@@ -31,7 +31,6 @@ change in INITIALIZE-LINKS.
 * MAYBE allow lowercase only in the last "word" of the name
 RED-OBJECTs but not REDs-OBJECT
 * MAYBE remove some markup in :PLAIN format?
-* MAYBE allow markdown in titles?
 * MAYBE desuffix all lowercase suffixes?
 e.g. RESOLVEd
 * MAYBE get variable initforms from source?
@@ -39,7 +38,7 @@ Or fall back on this for deficient ARGLISTs. Will be really slow.
 * test navigation from the emacs side
 * MAYBE document glossary-term class and slots?
 * MAYBE support linking to hyperspec glossary entries?
-* moving towards literate programming
+* move towards literate programming
 ** MAYBE todo/comment locative?
 ** add SYMBOL as an alias for dislocated?
 ** add source locative

@@ -130,14 +130,14 @@
                            (typep (first objects) 'section))
                       (first objects)
                       nil))
-         (title (if section
-                    (section-title section)
-                    nil))
          (filename (sections-to-filename objects dir)))
     (flet ((header (stream)
-             (html-header stream :title title
-                          :stylesheet "style.css" :charset "UTF-8"
-                          :link-to-pax-world-p link-to-pax-world-p))
+             (let ((title (if section
+                              (process-title (section-title section))
+                              nil)))
+               (html-header stream :title title
+                                   :stylesheet "style.css" :charset "UTF-8"
+                                   :link-to-pax-world-p link-to-pax-world-p)))
            (footer (stream)
              (html-footer stream)))
       `(,@page-spec
@@ -309,12 +309,12 @@
 ;;; This section is not in the documentation of PAX-WORLD itself. It
 ;;; is dynamically extended with the list of sections for which
 ;;; UPDATE-PAX-WORLD was called. FIXME: this is not thread-safe.
-(defsection @pax-world-dummy (:title "PAX World")
-  "This is a list of documents generated with MGL-PAX in the default
-  style. The documents are cross-linked: links to other documents are
-  added automatically when a reference is found. Note that clicking on
-  the locative type (e.g. `[function]`) will take you to the sources
-  on github if possible.")
+(defsection @pax-world-dummy (:title "\\PAX World")
+  "This is a list of documents generated with [MGL-PAX][@pax-manual]
+  in the default style. The documents are cross-linked: links to other
+  documents are added automatically when a reference is found. Note
+  that clicking on the locative type (e.g. `[function]`) will take you
+  to the sources on github if possible.")
 
 (defun create-pax-world (sections page-specs dir update-css-p)
   (set-pax-world-list sections)

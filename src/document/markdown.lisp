@@ -149,6 +149,19 @@
           (write-char #\\ stream))
         (write-char char stream)))))
 
+(defun unescape-markdown (string)
+  (let ((escaping nil))
+    (with-output-to-string (stream)
+      (dotimes (i (length string))
+        (let ((char (aref string i)))
+          (cond (escaping
+                 (setq escaping nil)
+                 (write-char char stream))
+                ((eql char #\\)
+                 (setq escaping t))
+                (t
+                 (write-char char stream))))))))
+
 ;;; This is workaround for "\"mgl-pax\" ASFD:SYSTEM" being displayed
 ;;; with the backslashes.
 (defun escape-markdown-reflink-definition-title (string)
