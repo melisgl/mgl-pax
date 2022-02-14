@@ -148,7 +148,7 @@
   Here is an example of how it all works together:"""
   (foo-random-example (include #.(asdf:system-relative-pathname
                                   :mgl-pax "src/base/foo-random-example.lisp")
-                               :header-nl "```common-lisp" :footer-nl "```"))
+                               :header-nl "```" :footer-nl "```"))
   """Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
   exports `*FOO-STATE*` and includes its documentation in
   `@FOO-RANDOM-MANUAL`. The symbols [VARIABLE][locative] and

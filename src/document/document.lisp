@@ -223,7 +223,7 @@
 (defvar *document-link-to-hyperspec* t
   "If true, link symbols found in code to the Common Lisp Hyperspec.
 
-  Locatives work as expected (see *DOCUMENT-LINK-CODE*).
+  Locatives work as expected (see *DOCUMENT-LINK-CODE*):
   [FIND-IF][dislocated] links to FIND-IF, [FUNCTION][dislocated] links
   to FUNCTION and `[FUNCTION][type]` links to [FUNCTION][type].
 
@@ -339,19 +339,11 @@
 
       (document (list @cube-manual @mat-manual))
 
-  Note that not only first class objects can have documentation. For
-  instance, variables and deftypes are not represented by objects.
-  That's why CL:DOCUMENTATION has a DOC-TYPE argument. DOCUMENT
-  instead relies on REFERENCE objects to carry the extra information.
-  We are going to see later how references and locatives work. Until
-  then, here is an example on how to look up the documentation of type
-  `FOO`:
+  Note that not only first-class objects can have documentation:
 
       (document (locate 'foo 'type))
 
-  One can call DESCRIBE on [SECTION][class] objects to get
-  documentation in markdown format with less markup than the default.
-  See DESCRIBE-OBJECT `(METHOD () (SECTION T))`.
+  See @LOCATIVES-AND-REFERENCES for more.
 
   There are quite a few special variables that affect how output is
   generated, see @CODIFICATION, @LINKING-TO-CODE,
@@ -360,6 +352,8 @@
 
   The rest of this description deals with how to generate multiple
   pages.
+
+  ##### Pages
 
   The PAGES argument is to create multi-page documents by routing some
   of the generated output to files, strings or streams. PAGES is a
@@ -377,10 +371,10 @@
 
   - If it's a list whose first element is a string or a pathname, then
     output will be sent to the file denoted by that and the rest of
-    the elements of the list are passed on as arguments to CL:OPEN.
-    One extra keyword argument is :ENSURE-DIRECTORIES-EXIST. If it's
-    true, ENSURE-DIRECTORIES-EXIST will be called on the pathname
-    before it's opened.
+    the elements of the list are passed on to CL:OPEN. One extra
+    keyword argument is :ENSURE-DIRECTORIES-EXIST. If it's true,
+    ENSURE-DIRECTORIES-EXIST will be called on the pathname before
+    it's opened.
 
   - If it's NIL, then output will be collected in a string.
 
@@ -432,7 +426,7 @@
 
   PAGES may look something like this:
 
-  ```commonlisp
+  ```
   `((;; The section about SECTIONs and everything below it ...
      :objects (, @sections)
      ;; ... is so boring that it's not worth the disk space, so
@@ -709,6 +703,9 @@
   (map-markdown-parse-tree (list :reference-link) () nil
                            #'translate-docstring-links parse-tree))
 
+;;; This is the first of the translator functions, which are those
+;;; passed to MAP-MARKDOWN-PARSE-TREE.
+;;;
 ;;; FIXME: Circular includes are hard to detect because the 'recurse'
 ;;; return value is handled in the caller of this function.
 (defun translate-docstring-links (parent tree)
@@ -786,12 +783,12 @@
 (define-glossary-term @codifiable (:title "codifiable")
   "A @WORD is _codifiable_ iff
 
-  - it has at least one uppercase character (e.g. not `<`, `<=` or
-    `///`), and
-  - it has no lowercase characters (e.g. `\T`, `\*PRINT-LENGTH*`) or
-    all lowercase characters immediately follow at least two
-    consecutive uppercase characters (e.g. `\CLASSes` but not
-    `Capital`).")
+  - it has at least one uppercase character (e.g. it's not `<`, `<=`
+    or `///`), and
+  - it has no lowercase characters (e.g. it's `\T`, or
+    `\*PRINT-LENGTH*`) or all lowercase characters immediately follow
+    at least two consecutive uppercase characters (e.g. in `\CLASSes`
+    but in not `Capital`).")
 
 (defun codifiable-word-p (word)
   ;; OPT
@@ -827,12 +824,12 @@
 
   Where we say that a word **names** a known reference if the word
   matches the name of a thing being documented, or it is in the
-  hyperspec and *DOCUMENT-UPPERCASE-IS-CODE* is true, or more
-  precisely,
+  hyperspec and *DOCUMENT-LINK-TO-HYPERSPEC* is true. More
+  precisely, a word names a known reference, if it matches
 
-  - if the word matches [the object of a reference][REFERENCE-OBJECT]
-    being documented (see DOCUMENT and COLLECT-REACHABLE-OBJECTS), or
-  - the a name in the hyperspec if *DOCUMENT-LINK-TO-HYPERSPEC*.
+  - [the object of a reference][REFERENCE-OBJECT] being
+    documented (see DOCUMENT and COLLECT-REACHABLE-OBJECTS), or
+  - a name in the hyperspec if *DOCUMENT-LINK-TO-HYPERSPEC*.
 
   Symbols are read in the current *PACKAGE*, which is subject to
   *DOCUMENT-NORMALIZE-PACKAGES*.")
@@ -853,8 +850,8 @@
 ;;; The core of the implementation of *DOCUMENT-UPPERCASE-IS-CODE*.
 ;;;
 ;;; This is called by MAP-WORDS so the return values are NEW-TREE,
-;;; SLICE, N-CHARS-READ. Also called by TRANSLATE-EMPH that expects
-;;; only a single return value: the new tree.
+;;; SLICE. Also called by TRANSLATE-EMPH that expects only a single
+;;; return value: the new tree.
 (defun translate-uppercase-word (parent tree word)
   (declare (ignore parent))
   (let ((emph (and (listp tree) (eq :emph (first tree))))
@@ -863,11 +860,11 @@
     (cond ((and emph codifiablep (eql #\\ (alexandria:first-elt word)))
            ;; E.g. "*\\DOCUMENT-NORMALIZE-PACKAGES*"
            ;; -> (:EMPH "DOCUMENT-NORMALIZE-PACKAGES")
-           (values (list `(:emph ,(subseq word 1))) t (length word)))
+           (values (list `(:emph ,(subseq word 1))) t))
           ((and codifiablep (eql #\\ (alexandria:first-elt word)))
            ;; Discard the leading backslash escape.
            ;; E.g. "\\MGL-PAX" -> "MGL-PAX"
-           (values (list (subseq word 1)) t (length word)))
+           (values (list (subseq word 1)) t))
           ((or (not *document-uppercase-is-code*)
                (not (codifiable-word-p word)))
            ;; Don't change anything.
@@ -887,9 +884,9 @@
 (defun codify-uppercase-word (word)
   (multiple-value-bind (object name)
       (parse-word word :trim t :depluralize t
-                  :only-one (lambda (object name)
-                              (declare (ignore object))
-                              (notany #'lower-case-p name)))
+                       :only-one (lambda (object name)
+                                   (declare (ignore object))
+                                   (notany #'lower-case-p name)))
     (when (and name (interesting-object-p object name))
       (let ((pos (search name word :test #'char-equal)))
         (assert pos)
@@ -900,7 +897,7 @@
                       (when (< tail-pos (length word))
                         ;; CLASSES -> `CLASS`es
                         `(,(string-downcase (subseq word tail-pos))))))
-                t (length word))))))
+                t)))))
 
 ;;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings and :EMPH
 ;;; (to recognize *VAR*). Also, perform consistency checking of
@@ -916,12 +913,6 @@
 
 (defvar *translating-reference-link* nil)
 
-;;; This is the first (FIXME) of the translator functions, which are
-;;; those passed to MAP-MARKDOWN-PARSE-TREE.
-;;;
-;;; It is called with with a list TREE whose CAR is :EMPH or
-;;; 3BMD-CODE-BLOCKS::CODE-BLOCK (FIXME) or with TREE being a string
-;;; (as per the MAP-MARKDOWN-PARSE-TREE above (FIXME)).
 (defun translate-to-code (parent tree)
   (cond ((stringp tree)
          (let ((string tree))
@@ -1099,8 +1090,7 @@
   @OBJECT of any of the following links will disambiguate based the
   textual context, determining the locative. In a nutshell, if `\\M-.`
   works without popping up a list of choices, then the documentation
-  will contain a single link._
-  """
+  will contain a single link._"""
   (*document-link-code* variable)
   (@specified-locative section)
   (@unambiguous-locative section)
@@ -1131,8 +1121,7 @@
   this form may be used:
 
   - `[see this][document function]` (*title + object + locative,
-    explicit link*) renders as: [see this][document function].
-  """)
+    explicit link*) renders as: [see this][document function].""")
 
 (defsection @unambiguous-locative (:title "Unambiguous Unspecified Locative")
   """In the following examples, although no locative is specified,
@@ -1145,8 +1134,7 @@
   To override the title:
 
   - `\[see this][document]` (*title + object, explicit link*) renders
-    as: [see this][document].
-  """)
+    as: [see this][document].""")
 
 (defsection @ambiguous-locative (:title "Ambiguous Unspecified Locative")
   """These examples all render as [SECTION][], linking to both
@@ -1159,8 +1147,7 @@
   To override the title:
 
   - `\[see this][section]` (*title + object, explicit link*) renders
-    as: [see this][section].
-  """)
+    as: [see this][section].""")
 
 (defsection @explicit-and-autolinking (:title "Explicit and Autolinking")
   "The examples in the previous sections are marked with *explicit
@@ -1489,13 +1476,13 @@
   the function FOO and its arguments, so none of them get turned into
   links:
 
-  ```common-lisp
+  ```
   (defun foo (arg1 arg2)
     "FOO takes two arguments: ARG1 and ARG2."
     t)
   ```
 
-  If linking was desired one could use a @SPECIFIED-LOCATIVE (e.g.
+  If linking was desired, one could use a @SPECIFIED-LOCATIVE (e.g.
   `[FOO][function]` or `FOO function`), which results in a single
   link. An explicit link with an unspecified locative like `[FOO][]`
   generates links to all references involving the `FOO` symbol except
@@ -2163,9 +2150,6 @@
                (call-next-method object stream)))))))
 
 (defmethod document-object ((reference reference) stream)
-  "If REFERENCE can be resolved to a non-reference, call
-  DOCUMENT-OBJECT with it, else call LOCATE-AND-DOCUMENT on the
-  object, locative-type, locative-args of REFERENCE"
   (let* ((reference (canonical-reference reference))
          (resolved-object (resolve reference)))
     (if (typep resolved-object 'reference)
@@ -2228,5 +2212,4 @@
   - default values in MACRO lambda lists on AllegroCL,
   - default values in function lambda lists on \CCL (needs `(DEBUG 3)`
     on AllegroCL),
-  - METHOD-COMBINATION docstrings on ABCL, AllegroCL.
-  """)
+  - METHOD-COMBINATION docstrings on ABCL, AllegroCL.""")

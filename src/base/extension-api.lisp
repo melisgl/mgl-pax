@@ -189,7 +189,7 @@
 
   If successful, the return value should look like one of these:
 
-  ```commonlisp
+  ```
   (:LOCATION
     (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
     (:POSITION 3303) NIL)

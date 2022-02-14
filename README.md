@@ -232,8 +232,8 @@ of `(mgl-pax:document #'abort)`. Note that the docstring of the
 
 Here is an example of how it all works together:
 
-<a id="x-28MGL-PAX-3AFOO-RANDOM-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Fbase-2Ffoo-random-example-2Elisp-22-20-3AHEADER-NL-20-22-60-60-60common-lisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29"></a>
-```common-lisp
+<a id="x-28MGL-PAX-3AFOO-RANDOM-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-23P-22-2Fhome-2Fmelisgl-2Fown-2Fmgl-pax-2Fsrc-2Fbase-2Ffoo-random-example-2Elisp-22-20-3AHEADER-NL-20-22-60-60-60-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29"></a>
+```
 (mgl-pax:define-package :foo-random
   (:documentation "This package provides various utilities for random.
   See FOO-RANDOM:@FOO-RANDOM-MANUAL.")
@@ -560,7 +560,7 @@ need to muck with references when there is a perfectly good object.
 
     A *word* is a string from which we want to extract an [object][75ce]. When
     [Navigating][3386], the word is
-    `slime-symbol-at-point`, when [Generating Documentation][2c93], it is a
+    `slime-symbol-at-point`. When [Generating Documentation][2c93], it is a
     non-empty string between whitespace characters in a docstring.
 
 <a id="x-28MGL-PAX-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
@@ -1066,14 +1066,14 @@ which makes navigating the sources with `M-.` (see
 
 Integration into [SLIME's `M-.`][slime-m-.]
 (`slime-edit-definition`) allows one to visit the source location of
-the thing that's identified by `slime-symbol-at-point` parsed as a
-[word][d7b0] and the locative before or after the symbol in a buffer. With
-this extension, if a locative is the previous or the next expression
-around the symbol of interest, then `M-.` will go straight to the
-definition which corresponds to the locative. If that fails, `M-.`
-will try to find the definitions in the normal way, which may
-involve popping up an xref buffer and letting the user interactively
-select one of possible definitions.
+the definition that's identified by `slime-symbol-at-point` parsed
+as a [word][d7b0] and the locative before or after the symbol in a buffer.
+With this extension, if a locative is the previous or the next
+expression around the symbol of interest, then `M-.` will go
+straight to the definition which corresponds to the locative. If
+that fails, `M-.` will try to find the definitions in the normal
+way, which may involve popping up an xref buffer and letting the
+user interactively select one of possible definitions.
 
 In the following examples, when the cursor is on one of the
 characters of `FOO` or just after `FOO`, pressing `M-.` will visit
@@ -1091,7 +1091,7 @@ Just like vanilla `M-.`, this works in comments and docstrings. In
 the next example, pressing `M-.` on `FOO` will visit `FOO`'s
 default method:
 
-```commonlisp
+```
 ;;;; See FOO `(method () (t t t))` for how this all works.
 ;;;; But if the locative has semicolons inside: FOO `(method
 ;;;; () (t t t))`, then it won't, so be wary of line breaks
@@ -1138,19 +1138,11 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     
         (document (list @cube-manual @mat-manual))
     
-    Note that not only first class objects can have documentation. For
-    instance, variables and deftypes are not represented by objects.
-    That's why [`CL:DOCUMENTATION`][68f1] has a `DOC-TYPE` argument. `DOCUMENT`
-    instead relies on [`REFERENCE`][1cea] objects to carry the extra information.
-    We are going to see later how references and locatives work. Until
-    then, here is an example on how to look up the documentation of type
-    `FOO`:
+    Note that not only first-class objects can have documentation:
     
         (document (locate 'foo 'type))
     
-    One can call [`DESCRIBE`][38a0] on [`SECTION`][5fac] objects to get
-    documentation in markdown format with less markup than the default.
-    See [`DESCRIBE-OBJECT`][496d] `(METHOD () (SECTION T))`.
+    See [Locatives and References][fd7c] for more.
     
     There are quite a few special variables that affect how output is
     generated, see [Codification][f1ab], [Linking to Code][1865],
@@ -1159,6 +1151,8 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     
     The rest of this description deals with how to generate multiple
     pages.
+    
+    ##### Pages
     
     The `PAGES` argument is to create multi-page documents by routing some
     of the generated output to files, strings or streams. `PAGES` is a
@@ -1176,10 +1170,10 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     
     - If it's a list whose first element is a string or a pathname, then
       output will be sent to the file denoted by that and the rest of
-      the elements of the list are passed on as arguments to [`CL:OPEN`][117a].
-      One extra keyword argument is `:ENSURE-DIRECTORIES-EXIST`. If it's
-      true, [`ENSURE-DIRECTORIES-EXIST`][e4b0] will be called on the pathname
-      before it's opened.
+      the elements of the list are passed on to [`CL:OPEN`][117a]. One extra
+      keyword argument is `:ENSURE-DIRECTORIES-EXIST`. If it's true,
+      [`ENSURE-DIRECTORIES-EXIST`][e4b0] will be called on the pathname before
+      it's opened.
     
     - If it's `NIL`, then output will be collected in a string.
     
@@ -1231,7 +1225,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     
     `PAGES` may look something like this:
     
-    ```commonlisp
+    ```
     `((;; The section about SECTIONs and everything below it ...
        :objects (, @sections)
        ;; ... is so boring that it's not worth the disk space, so
@@ -1406,13 +1400,13 @@ Reader][pythonic-string-reader] can help with that.
 
     A [word][d7b0] is *codifiable* iff
     
-    - it has at least one uppercase character (e.g. not [`<`][5800], [`<=`][bb77] or
-      [`///`][889e]), and
+    - it has at least one uppercase character (e.g. it's not [`<`][5800], [`<=`][bb77]
+      or [`///`][889e]), and
     
-    - it has no lowercase characters (e.g. `T`, [`*PRINT-LENGTH*`][727b]) or
-      all lowercase characters immediately follow at least two
-      consecutive uppercase characters (e.g. `CLASSes`([`0`][7e58] [`1`][2060]) but not
-      `Capital`).
+    - it has no lowercase characters (e.g. it's `T`, or
+      [`*PRINT-LENGTH*`][727b]) or all lowercase characters immediately follow
+      at least two consecutive uppercase characters (e.g. in `CLASSes`([`0`][7e58] [`1`][2060])
+      but in not `Capital`).
 
 
 <a id="x-28MGL-PAX-3A-40INTERESTING-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
@@ -1432,13 +1426,13 @@ Reader][pythonic-string-reader] can help with that.
     
     Where we say that a word **names** a known reference if the word
     matches the name of a thing being documented, or it is in the
-    hyperspec and [`*DOCUMENT-UPPERCASE-IS-CODE*`][f25f] is true, or more
-    precisely,
+    hyperspec and [`*DOCUMENT-LINK-TO-HYPERSPEC*`][875e] is true. More
+    precisely, a word names a known reference, if it matches
     
-    - if the word matches [the object of a reference][8c7d]
-      being documented (see [`DOCUMENT`][432c] and [`COLLECT-REACHABLE-OBJECTS`][8c95]), or
+    - [the object of a reference][8c7d] being
+      documented (see [`DOCUMENT`][432c] and [`COLLECT-REACHABLE-OBJECTS`][8c95]), or
     
-    - the a name in the hyperspec if [`*DOCUMENT-LINK-TO-HYPERSPEC*`][875e].
+    - a name in the hyperspec if `*DOCUMENT-LINK-TO-HYPERSPEC*`.
     
     Symbols are read in the current [`*PACKAGE*`][d2c1], which is subject to
     [`*DOCUMENT-NORMALIZE-PACKAGES*`][440e].
@@ -1636,13 +1630,13 @@ specially. In the following example, there are local references to
 the function `FOO` and its arguments, so none of them get turned into
 links:
 
-```common-lisp
+```
 (defun foo (arg1 arg2)
   "FOO takes two arguments: ARG1 and ARG2."
   t)
 ```
 
-If linking was desired one could use a [Specified Locative][8996] (e.g.
+If linking was desired, one could use a [Specified Locative][8996] (e.g.
 `[FOO][function]` or `FOO function`), which results in a single
 link. An explicit link with an unspecified locative like `[FOO][]`
 generates links to all references involving the `FOO` symbol except
@@ -1672,7 +1666,7 @@ The exact rules for local references are as follows:
 
     If true, link symbols found in code to the Common Lisp Hyperspec.
     
-    Locatives work as expected (see [`*DOCUMENT-LINK-CODE*`][d9ee]).
+    Locatives work as expected (see [`*DOCUMENT-LINK-CODE*`][d9ee]):
     `FIND-IF` links to `FIND-IF`, `FUNCTION` links
     to `FUNCTION` and `[FUNCTION][type]` links to [`FUNCTION`][3de5].
     
@@ -1875,13 +1869,13 @@ HTML documentation and the default css stylesheet.
     possibly linking to github. If `UPDATE-CSS-P`, copy the CSS style
     sheet to `TARGET-DIR`, as well. Example usage:
     
-    ```commonlisp
+    ```
     (update-asdf-system-html-docs @pax-manual :mgl-pax)
     ```
     
     The same, linking to the sources on github:
     
-    ```commonlisp
+    ```
     (update-asdf-system-html-docs
       @pax-manual :mgl-pax
       :pages
@@ -1972,20 +1966,20 @@ between the repository and the gh-pages site.
 <a id="x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29"></a>
 #### 9.8.2 PAX World
 
-`PAX` World is a registry of documents, which can generate
+PAX World is a registry of documents, which can generate
 cross-linked HTML documentation pages for all the registered
 documents.
 
 <a id="x-28MGL-PAX-3AREGISTER-DOC-IN-PAX-WORLD-20FUNCTION-29"></a>
 - [function] **REGISTER-DOC-IN-PAX-WORLD** *NAME SECTIONS PAGE-SPECS*
 
-    Register `SECTIONS` and `PAGE-SPECS` under `NAME` in `PAX` World. By
+    Register `SECTIONS` and `PAGE-SPECS` under `NAME` in PAX World. By
     default, [`UPDATE-PAX-WORLD`][ee51] generates documentation for all of these.
 
-For example, this is how `PAX` registers itself:
+For example, this is how PAX registers itself:
 
-<a id="x-28MGL-PAX-3AREGISTER-DOC-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-28-3ASTART-20-28MGL-PAX-3A-3APAX-SECTIONS-20FUNCTION-29-20-3AEND-20-28MGL-PAX-3A-3AEND-OF-REGISTER-DOC-EXAMPLE-20VARIABLE-29-29-20-3AHEADER-NL-20-22-60-60-60commonlisp-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29"></a>
-```commonlisp
+<a id="x-28MGL-PAX-3AREGISTER-DOC-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-28-3ASTART-20-28MGL-PAX-3A-3APAX-SECTIONS-20FUNCTION-29-20-3AEND-20-28MGL-PAX-3A-3AEND-OF-REGISTER-DOC-EXAMPLE-20VARIABLE-29-29-20-3AHEADER-NL-20-22-60-60-60-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29"></a>
+```
 (defun pax-sections ()
   (list @pax-manual))
 (defun pax-pages ()
@@ -2243,13 +2237,13 @@ Transcription support in emacs can be enabled by loading
     uses `TRANSCRIBE` markup syntax in this very example, so let's do it
     differently. If we have a file with these contents:
     
-    ```commonlisp
+    ```
     (values (princ 42) (list 1 2))
     ```
     
     it is transcribed to:
     
-    ```commonlisp
+    ```
     (values (princ 42) (list 1 2))
     .. 42
     => 42
@@ -2268,14 +2262,14 @@ Transcription support in emacs can be enabled by loading
     all output markers, leave only a placeholder value marker and
     pass `:UPDATE-ONLY` `T` with source:
     
-    ```commonlisp
+    ```
     (values (princ 42) (list 1 2))
     =>
     ```
     
     we get this:
     
-    ```commonlisp
+    ```
     (values (princ 42) (list 1 2))
     => 42
     => (1 2)
@@ -2293,7 +2287,7 @@ Transcription support in emacs can be enabled by loading
     `INCLUDE-NO-OUTPUT` and `INCLUDE-NO-VALUE`, respectively. By default,
     neither is on so:
     
-    ```commonlisp
+    ```
     (values)
     ..
     =>
@@ -2301,7 +2295,7 @@ Transcription support in emacs can be enabled by loading
     
     is transcribed to
     
-    ```commonlisp
+    ```
     (values)
     ```
     
@@ -2310,7 +2304,7 @@ Transcription support in emacs can be enabled by loading
     `UPDATE-ONLY`, `INCLUDE-NO-OUTPUT` and `INCLUDE-NO-VALUE` default to true.
     So with `UPDATE-ONLY` the above example is transcribed to:
     
-    ```commonlisp
+    ```
     (values)
     ..
     => ; No value
@@ -2329,7 +2323,7 @@ Transcription support in emacs can be enabled by loading
     This allows readable values to be hand-indented without failing
     consistency checks:
     
-    ```commonlisp
+    ```
     (list 1 2)
     => ;; This is commented, too.
        (1
@@ -2345,7 +2339,7 @@ Transcription support in emacs can be enabled by loading
     cannot be treated the same. In fact, unreadable values must even be
     printed differently for transcribe to be able to read them back:
     
-    ```commonlisp
+    ```
     (defclass some-class () ())
     
     (defmethod print-object ((obj some-class) stream)
@@ -2408,7 +2402,7 @@ Transcription support in emacs can be enabled by loading
     To produce a transcript that's executable Lisp code,
     use `:DEFAULT-SYNTAX` `:COMMENTED-1:`
     
-    ```commonlisp
+    ```
     (make-instance 'some-class)
     ;==> #<SOME-CLASS
     ;-->
@@ -2446,7 +2440,7 @@ Transcription support in emacs can be enabled by loading
     `PREFIXES` is a list of `(PREFIX-ID PREFIX-STRING)` elements. For
     example the syntax `:COMMENTED-1` looks like this:
     
-    ```commonlisp
+    ```
     (:commented-1
      (:output ";..")
      (:no-value ";=>  No value")
@@ -2858,7 +2852,7 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
     
     If successful, the return value should look like one of these:
     
-    ```commonlisp
+    ```
     (:LOCATION
       (:FILE "/home/melisgl/own/mgl-pax/src/pax.lisp")
       (:POSITION 3303) NIL)
@@ -3141,7 +3135,7 @@ The following utilities are for writing new [`FIND-SOURCE`][4355] and
 translated to Swank `dspecs`, and it is an error if there is no
 translation. In general, Swank supports Common Lisp
 definitions (hence the [`VARIABLE`][6c83] and `FUNCTION`([`0`][ba62] [`1`][2d97] [`2`][3de5]) locatives, for example)
-but not the `PAX` and user defined additions (e.g. `SECTION`([`0`][5fac] [`1`][672f]),
+but not PAX- and user-defined additions (e.g. `SECTION`([`0`][5fac] [`1`][672f]),
 [`ASDF:SYSTEM`][c097]).
 
 <a id="x-28MGL-PAX-3AFIND-DEFINITION-20FUNCTION-29"></a>
@@ -3255,7 +3249,6 @@ presented.
   [32f5]: #x-28MGL-PAX-3ACANONICAL-REFERENCE-20GENERIC-FUNCTION-29 "MGL-PAX:CANONICAL-REFERENCE GENERIC-FUNCTION"
   [3386]: #x-28MGL-PAX-3A-40NAVIGATING-IN-EMACS-20MGL-PAX-3ASECTION-29 "Navigating Sources in Emacs"
   [378f]: #x-28MGL-PAX-3A-40PARSING-20MGL-PAX-3ASECTION-29 "Parsing"
-  [38a0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_descri.htm "DESCRIBE FUNCTION"
   [3ae8]: http://www.lispworks.com/documentation/HyperSpec/Body/r_contin.htm "CONTINUE RESTART"
   [3d3c]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_rd.htm "READ FUNCTION"
   [3da8]: #x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29 "MGL-PAX:*FORMAT* VARIABLE"
@@ -3271,7 +3264,6 @@ presented.
   [46ec]: #x-28MGL-PAX-3ALOCATE-AND-COLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29 "MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION"
   [47a3]: http://www.lispworks.com/documentation/HyperSpec/Body/d_declar.htm "DECLARATION DECLARATION"
   [493e]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "SIMPLE-CONDITION-FORMAT-CONTROL FUNCTION"
-  [496d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_desc_1.htm "DESCRIBE-OBJECT FUNCTION"
   [4b78]: #x-28MGL-PAX-3A-40EXTERNAL-LOCATIVES-20MGL-PAX-3ASECTION-29 "External Locatives"
   [4bb8]: #x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/document" ASDF/SYSTEM:SYSTEM'
   [4c48]: #x-28MGL-PAX-3A-40VARIABLELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Variables"

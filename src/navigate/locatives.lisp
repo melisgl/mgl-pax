@@ -1448,8 +1448,7 @@
   ==> #<REFERENCE "ISSUE:AREF-1D" CLHS>
   (locate "SUMMARY:AREF-1D" 'clhs)
   ==> #<REFERENCE "SUMMARY:AREF-1D" CLHS>
-  ```
-  """)
+  ```""")
 
 (defmethod locate-object (name (locative-type (eql 'clhs)) locative-args)
   (let ((hyperspec-id (and (endp locative-args)

@@ -249,18 +249,14 @@
           (push element result)))
     (reverse result)))
 
-;;; Call FN with STRING and START, END indices. END always points to
-;;; the next DELIMETERP character after START or to end of the string
-;;; if there are no delimiters left. START starts at 0, then advances
-;;; to FIXME
+;;; Call FN with STRING and START, END indices of @WORDS.
 ;;;
-;;; FN must return three values: a replacement markdown parse tree
+;;; FN must return two values: a replacement markdown parse tree
 ;;; fragment (or NIL, if the subseq shall not be replaced), whether
-;;; the replacement shall be sliced into the result list, and the
-;;; number of characters replaced (may be less than (- END START),
-;;; which is assumed if this value is NIL). MAP-WORDS returns a parse
-;;; tree fragment that's a list of non-replaced parts of STRING and
-;;; replacements (maybe sliced). Consecutive strings are concatenated.
+;;; the replacement shall be sliced into the result list. MAP-WORDS
+;;; returns a parse tree fragment that's a list of non-replaced parts
+;;; of STRING and replacements (maybe sliced). Consecutive strings are
+;;; concatenated.
 (defun map-words (string fn)
   (declare (type string string))
   (let ((translated ())
@@ -269,7 +265,6 @@
     (flet ((add (a)
              (if (and (stringp a)
                       (stringp (first translated)))
-                 ;; FIXME: optimize this
                  (setf (first translated)
                        (concatenate 'string (first translated) a))
                  (push a translated))))

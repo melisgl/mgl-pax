@@ -11,14 +11,14 @@
 (defsection @navigating-in-emacs (:title "Navigating Sources in Emacs")
   """Integration into [SLIME's `\\M-.`][slime-m-.]
   (`slime-edit-definition`) allows one to visit the source location of
-  the thing that's identified by `slime-symbol-at-point` parsed as a
-  @WORD and the locative before or after the symbol in a buffer. With
-  this extension, if a locative is the previous or the next expression
-  around the symbol of interest, then `\\M-.` will go straight to the
-  definition which corresponds to the locative. If that fails, `\\M-.`
-  will try to find the definitions in the normal way, which may
-  involve popping up an xref buffer and letting the user interactively
-  select one of possible definitions.
+  the definition that's identified by `slime-symbol-at-point` parsed
+  as a @WORD and the locative before or after the symbol in a buffer.
+  With this extension, if a locative is the previous or the next
+  expression around the symbol of interest, then `\\M-.` will go
+  straight to the definition which corresponds to the locative. If
+  that fails, `\\M-.` will try to find the definitions in the normal
+  way, which may involve popping up an xref buffer and letting the
+  user interactively select one of possible definitions.
 
   In the following examples, when the cursor is on one of the
   characters of `FOO` or just after `FOO`, pressing `\\M-.` will visit
@@ -36,7 +36,7 @@
   the next example, pressing `\\M-.` on `FOO` will visit `FOO`'s
   default method:
 
-  ```commonlisp
+  ```
   ;;;; See FOO `(method () (t t t))` for how this all works.
   ;;;; But if the locative has semicolons inside: FOO `(method
   ;;;; () (t t t))`, then it won't, so be wary of line breaks
@@ -151,7 +151,8 @@
                     ;; The rest of the symbols in the string need not
                     ;; be already interned, so let's just read it.
                     (ignore-errors
-                     ;; FIXME: check that there is no junk left.
+                     ;; There may be unread junk left, but we don't
+                     ;; care.
                      (read-from-string string)))))))))))
 
 ;;; Parse "OBJECT LOCATIVE-TYPE" or "OBJECT (LOCATIVE-TYPE ...))" but

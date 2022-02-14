@@ -81,13 +81,13 @@
   possibly linking to github. If UPDATE-CSS-P, copy the CSS style
   sheet to TARGET-DIR, as well. Example usage:
 
-  ```commonlisp
+  ```
   (update-asdf-system-html-docs @pax-manual :mgl-pax)
   ```
 
   The same, linking to the sources on github:
 
-  ```commonlisp
+  ```
   (update-asdf-system-html-docs
     @pax-manual :mgl-pax
     :pages

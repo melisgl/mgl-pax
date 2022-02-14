@@ -9,7 +9,7 @@
 (define-glossary-term @word (:title "word")
   "A _word_ is a string from which we want to extract an @OBJECT. When
   [Navigating][@navigating-in-emacs section], the word is
-  `slime-symbol-at-point`, when @GENERATING-DOCUMENTATION, it is a
+  `slime-symbol-at-point`. When @GENERATING-DOCUMENTATION, it is a
   non-empty string between whitespace characters in a docstring.")
 
 (define-glossary-term @name (:title "name")
@@ -31,8 +31,7 @@
   `ses`, `zes`, and `ren` (all case insensitive).
 
   Thus `"CHILDREN"` and `"BUSES"` may have the names `"CHILD"` and
-  `"BUS"` in them.
-  """)
+  `"BUS"` in them.""")
 
 ;;; Ensure that some Swank internal facilities (such as
 ;;; SWANK::FIND-DEFINITIONS-FIND-SYMBOL-OR-PACKAGE,

@@ -60,7 +60,7 @@
 ;;;     .. 1
 ;;;     .. 2
 ;;;
-;;; gives "1~%2". If you want to end with a newline, then:
+;;; gives "1~%2". If you want it to end with a newline, then:
 ;;;
 ;;;     .. 1
 ;;;     .. 2
@@ -202,7 +202,7 @@
   `PREFIXES` is a list of `(PREFIX-ID PREFIX-STRING)` elements. For
   example the syntax :COMMENTED-1 looks like this:
 
-  ```commonlisp
+  ```
   (:commented-1
    (:output \";..\")
    (:no-value \";=>  No value\")
@@ -253,13 +253,13 @@
   uses TRANSCRIBE markup syntax in this very example, so let's do it
   differently. If we have a file with these contents:
 
-  ```commonlisp
+  ```
   (values (princ 42) (list 1 2))
   ```
 
   it is transcribed to:
 
-  ```commonlisp
+  ```
   (values (princ 42) (list 1 2))
   .. 42
   => 42
@@ -278,14 +278,14 @@
   all output markers, leave only a placeholder value marker and
   pass :UPDATE-ONLY T with source:
 
-  ```commonlisp
+  ```
   (values (princ 42) (list 1 2))
   =>
   ```
 
   we get this:
 
-  ```commonlisp
+  ```
   (values (princ 42) (list 1 2))
   => 42
   => (1 2)
@@ -303,7 +303,7 @@
   INCLUDE-NO-OUTPUT and INCLUDE-NO-VALUE, respectively. By default,
   neither is on so:
 
-  ```commonlisp
+  ```
   (values)
   ..
   =>
@@ -311,7 +311,7 @@
 
   is transcribed to
 
-  ```commonlisp
+  ```
   (values)
   ```
 
@@ -320,7 +320,7 @@
   UPDATE-ONLY, INCLUDE-NO-OUTPUT and INCLUDE-NO-VALUE default to true.
   So with UPDATE-ONLY the above example is transcribed to:
 
-  ```commonlisp
+  ```
   (values)
   ..
   => ; No value
@@ -339,7 +339,7 @@
   This allows readable values to be hand-indented without failing
   consistency checks:
 
-  ```commonlisp
+  ```
   (list 1 2)
   => ;; This is commented, too.
      (1
@@ -355,7 +355,7 @@
   cannot be treated the same. In fact, unreadable values must even be
   printed differently for transcribe to be able to read them back:
 
-  ```commonlisp
+  ```
   (defclass some-class () ())
   
   (defmethod print-object ((obj some-class) stream)
@@ -418,7 +418,7 @@
   To produce a transcript that's executable Lisp code,
   use :DEFAULT-SYNTAX :COMMENTED-1:
 
-  ```commonlisp
+  ```
   (make-instance 'some-class)
   ;==> #<SOME-CLASS
   ;-->

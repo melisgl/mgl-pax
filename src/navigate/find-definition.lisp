@@ -6,7 +6,7 @@
   translated to Swank `dspecs`, and it is an error if there is no
   translation. In general, Swank supports Common Lisp
   definitions (hence the VARIABLE and FUNCTION locatives, for example)
-  but not the \PAX and user defined additions (e.g. SECTION,
+  but not \PAX- and user-defined additions (e.g. SECTION,
   ASDF:SYSTEM)."
   (find-definition function)
   (find-definition* function))
