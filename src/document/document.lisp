@@ -636,7 +636,9 @@
   after the output."
   ;; If the output is going to /dev/null and this is a costly
   ;; operation, skip it.
-  (when (and docstring (null *table-of-contents-stream*))
+  (when (and docstring
+             (not (equal docstring ""))
+             (null *table-of-contents-stream*))
     (let* ((docstring (strip-docstring-indentation docstring))
            (reindented (prefix-lines
                         indentation (codify-and-link docstring)
