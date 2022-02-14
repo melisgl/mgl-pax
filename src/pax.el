@@ -87,21 +87,24 @@
   (ignore-errors
     (save-excursion
       (goto-char point)
-      ;; [FOO][function], [`FOO`][function], [FOO ][function],
-      ;; [FOO][(function)]
       (skip-chars-forward "[];` \n\t")
-      ;; Find the first ?\] or ?`.
-      (let ((end-pos+1 (save-excursion
-                         (search-forward-regexp "\\(\\]\\|`\\)"
-                                                (+ (point) 1000)
-                                                t))))
-        (if end-pos+1
-            (save-restriction
-              (narrow-to-region (point) (1- end-pos+1))
-              (slime-forward-sexp)
-              (slime-last-expression))
-          (slime-forward-sexp)
-          (slime-last-expression))))))
+      (if (equal (string (char-after)) "(")
+          ;; [FOO][(function)]
+          (save-excursion
+            (slime-forward-sexp)
+            (slime-last-expression))
+        ;; [FOO][function], [`FOO`][function], [FOO ][function]
+        (let ((end-pos+1 (save-excursion
+                           (search-forward-regexp "\\(\\]\\|`\\)"
+                                                  (+ (point) 1000)
+                                                  t))))
+          (if end-pos+1
+              (save-restriction
+                (narrow-to-region (point) (1- end-pos+1))
+                (slime-forward-sexp)
+                (slime-last-expression))
+            (slime-forward-sexp)
+            (slime-last-expression)))))))
 
 (defun mgl-pax-locate-definitions (name-and-locatives-list where)
   (let ((locations (mgl-pax-call-locate-definitions-for-emacs

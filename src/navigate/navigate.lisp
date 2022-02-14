@@ -150,10 +150,9 @@
                   (when (and found (locate symbol 'locative :errorp nil))
                     ;; The rest of the symbols in the string need not
                     ;; be already interned, so let's just read it.
-                    (ignore-errors (let ((*read-eval* nil))
-                                     ;; FIXME: check that there is no
-                                     ;; junk left.
-                                     (read-from-string string))))))))))))
+                    (ignore-errors
+                     ;; FIXME: check that there is no junk left.
+                     (read-from-string string)))))))))))
 
 ;;; Parse "OBJECT LOCATIVE-TYPE" or "OBJECT (LOCATIVE-TYPE ...))" but
 ;;; only intern stuff if LOCATIVE-TYPE is a valid locative.
