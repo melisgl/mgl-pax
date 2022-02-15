@@ -333,10 +333,10 @@
   :MARKDOWN, :HTML and :PLAIN. STREAM may be a [STREAM][type] object,
   T or NIL as with CL:FORMAT.
 
-  Most often, this function is called on SECTION objects like
+  Most often, this function is called on SECTION objects as in
   `(DOCUMENT @PAX-MANUAL)`, but it supports all kinds of objects for
   which DOCUMENT-OBJECT is defined. To look up the documentation of
-  function DOCUMENT:
+  the DOCUMENT function itself:
 
       (document #'document)
 

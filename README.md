@@ -1127,10 +1127,10 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     `:MARKDOWN`, `:HTML` and `:PLAIN`. `STREAM` may be a [`STREAM`][cbf2] object,
     `T` or `NIL` as with `CL:FORMAT`.
     
-    Most often, this function is called on `SECTION`([`0`][5fac] [`1`][672f]) objects like
+    Most often, this function is called on `SECTION`([`0`][5fac] [`1`][672f]) objects as in
     `(DOCUMENT @PAX-MANUAL)`, but it supports all kinds of objects for
     which [`DOCUMENT-OBJECT`][bacc] is defined. To look up the documentation of
-    function [`DOCUMENT`][432c]:
+    the [`DOCUMENT`][432c] function itself:
     
         (document #'document)
     
