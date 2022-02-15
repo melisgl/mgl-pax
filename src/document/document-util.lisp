@@ -54,15 +54,7 @@
                           :direction :output
                           :if-does-not-exist :create
                           :if-exists :supersede)
-    (let ((*document-uppercase-is-code* nil)
-          (*document-link-code* nil)
-          (*document-link-sections* nil)
-          (*document-mark-up-signatures* nil)
-          (*document-max-numbering-level* 0)
-          (*document-max-table-of-contents-level* 0)
-          (*document-text-navigation* nil))
-      (handler-bind ((unresolvable-reflink #'output-label))
-        (document object :stream stream)))
+    (document object :stream stream :format :plain)
     (print-markdown-footer stream)))
 
 (defun print-markdown-footer (stream)

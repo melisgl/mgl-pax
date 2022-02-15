@@ -997,6 +997,10 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     
         (document #'document)
     
+    The same without fancy markup:
+    
+        (document #'document :format :plain)
+    
     To generate the documentation for separate libraries with automatic
     cross-links:
     

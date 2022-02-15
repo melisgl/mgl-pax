@@ -321,6 +321,12 @@
   `(let ((*headings* (collect-headings ,object)))
      ,@body))
 
+(defmacro with-format ((format) &body body)
+  (alexandria:with-gensyms (fn)
+    `(flet ((,fn ()
+              ,@body))
+       (call-with-format ,format #',fn))))
+
 (defun/autoloaded document (object &key stream pages (format :markdown))
   """Write OBJECT in FORMAT to STREAM diverting some output to PAGES.
   FORMAT can be anything [3BMD][3bmd] supports, which is currently
@@ -333,6 +339,10 @@
   function DOCUMENT:
 
       (document #'document)
+
+  The same without fancy markup:
+
+      (document #'document :format :plain)
 
   To generate the documentation for separate libraries with automatic
   cross-links:
@@ -459,49 +469,68 @@
      :header-fn 'write-html-header
      :footer-fn 'write-html-footer))
   ```"""
-  (let ((*format* format)
-        (*print-right-margin* (or *print-right-margin* 80))
-        (default-page (translate-page-spec
-                       (list :objects (alexandria:ensure-list object)
-                             :output (list stream))
-                       format))
-        (3bmd-code-blocks:*code-blocks* t)
-        (3bmd-code-blocks:*code-blocks-default-colorize* :common-lisp)
-        (3bmd-code-blocks::*colorize-name-map*
-          (alexandria:plist-hash-table
-           `("cl-transcript" :common-lisp
-                             ,@(alexandria:hash-table-plist
-                                3bmd-code-blocks::*colorize-name-map*))
-           :test #'equal)))
-    (with-tracking-pages-created ()
-      (with-pages ((append (translate-page-specs pages format)
-                           (list default-page)))
-        (with-temp-output-to-page (stream default-page)
-          (dolist (object (alexandria:ensure-list object))
-            (with-headings (object)
-              (document-object object stream))))
-        (let ((outputs ()))
-          (do-pages-created (page)
-            (with-temp-output-to-page (stream page)
-              (write-markdown-reference-style-link-definitions stream))
-            (unless (eq format :markdown)
-              (let ((markdown-string
-                      (with-temp-input-from-page (stream page)
-                        (alexandria:read-stream-content-into-string stream))))
-                (delete-stream-spec (page-temp-stream-spec page))
-                (with-final-output-to-page (stream page)
-                  (when (page-header-fn page)
-                    (funcall (page-header-fn page) stream))
-                  (with-colorize-silenced ()
-                    (3bmd:parse-string-and-print-to-stream markdown-string
-                                                           stream
-                                                           :format format))
-                  (when (page-footer-fn page)
-                    (funcall (page-footer-fn page) stream)))))
-            (push (unmake-stream-spec (page-final-stream-spec page)) outputs))
-          (if (and stream (endp pages))
-              (first outputs)
-              (reverse outputs)))))))
+  (with-format (format)
+    (let ((*print-right-margin* (or *print-right-margin* 80))
+          (default-page (translate-page-spec
+                         (list :objects (alexandria:ensure-list object)
+                               :output (list stream))
+                         *format*))
+          (3bmd-code-blocks:*code-blocks* t)
+          (3bmd-code-blocks:*code-blocks-default-colorize* :common-lisp)
+          (3bmd-code-blocks::*colorize-name-map*
+            (alexandria:plist-hash-table
+             `("cl-transcript" :common-lisp
+                               ,@(alexandria:hash-table-plist
+                                  3bmd-code-blocks::*colorize-name-map*))
+             :test #'equal)))
+      (with-tracking-pages-created ()
+        (with-pages ((append (translate-page-specs pages *format*)
+                             (list default-page)))
+          (with-temp-output-to-page (stream default-page)
+            (dolist (object (alexandria:ensure-list object))
+              (with-headings (object)
+                (document-object object stream))))
+          (let ((outputs ()))
+            (do-pages-created (page)
+              (with-temp-output-to-page (stream page)
+                (write-markdown-reference-style-link-definitions stream))
+              (unless (eq *format* :markdown)
+                (let ((markdown-string
+                        (with-temp-input-from-page (stream page)
+                          (alexandria:read-stream-content-into-string
+                           stream))))
+                  (delete-stream-spec (page-temp-stream-spec page))
+                  (with-final-output-to-page (stream page)
+                    (when (page-header-fn page)
+                      (funcall (page-header-fn page) stream))
+                    (with-colorize-silenced ()
+                      (3bmd:parse-string-and-print-to-stream
+                       markdown-string stream :format *format*))
+                    (when (page-footer-fn page)
+                      (funcall (page-footer-fn page) stream)))))
+              (push (unmake-stream-spec (page-final-stream-spec page))
+                    outputs))
+            (if (and stream (endp pages))
+                (first outputs)
+                (reverse outputs))))))))
+
+(defun call-with-format (format fn)
+  (if (eq format :plain)
+      ;; 3BMD's :PLAIN is very broken. Take matters into our hands,
+      ;; and make :PLAIN equivalent to :MARKDOWN without all the bells
+      ;; and whistles.
+      (let ((*format* :markdown)
+            (*document-uppercase-is-code* nil)
+            (*document-link-code* nil)
+            (*document-link-sections* nil)
+            (*document-mark-up-signatures* nil)
+            (*document-max-numbering-level* 0)
+            (*document-max-table-of-contents-level* 0)
+            (*document-text-navigation* nil))
+        (handler-bind ((unresolvable-reflink #'output-label))
+          (funcall fn)))
+      (let ((*format* format))
+        (funcall fn))))
 
 ;;; Emit markdown definitions for links (in *LINKS*) to REFERENCE
 ;;; objects that were linked to on the current page.
