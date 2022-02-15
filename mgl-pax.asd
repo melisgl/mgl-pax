@@ -111,7 +111,7 @@
   :depends-on ("mgl-pax/navigate" "mgl-pax/document" "mgl-pax/transcribe")
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
-(asdf:defsystem #:mgl-pax/test
+(asdf:defsystem "mgl-pax/test"
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
@@ -134,7 +134,7 @@
   :perform (asdf:test-op (o s)
              (uiop:symbol-call '#:mgl-pax-test '#:test)))
 
-(asdf:defsystem #:mgl-pax/test-extension
+(asdf:defsystem "mgl-pax/test-extension"
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
   :mailto "mega@retes.hu"

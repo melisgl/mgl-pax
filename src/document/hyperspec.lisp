@@ -2538,9 +2538,11 @@
 
 (defun make-id-to-hyperspec-id ()
   (let ((ht (make-hash-table :test #'equal)))
-    (loop for (filename id title) in *hyperspec-sections*
-          do (setf (gethash id ht) id)
-             (setf (gethash filename ht) id))
+    (loop for entry in *hyperspec-sections*
+          do (destructuring-bind (filename id title) entry
+               (declare (ignore title))
+               (setf (gethash id ht) id)
+               (setf (gethash filename ht) id)))
     (loop for (id filename) in *hyperspec-issues*
           do (setf (gethash id ht) id)
              (setf (gethash filename ht) id))
