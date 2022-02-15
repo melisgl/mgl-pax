@@ -47,7 +47,7 @@
                           :if-does-not-exist :create
                           :if-exists :supersede)
     (let ((*document-url-versions* url-versions))
-      (document object :stream stream))
+      (document object :stream stream :format :markdown))
     (print-markdown-footer stream))
   (with-open-file (stream (asdf:system-relative-pathname
                            asdf-system "README")

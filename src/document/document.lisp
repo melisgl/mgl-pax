@@ -327,7 +327,7 @@
               ,@body))
        (call-with-format ,format #',fn))))
 
-(defun/autoloaded document (object &key stream pages (format :markdown))
+(defun/autoloaded document (object &key (stream t) pages (format :plain))
   """Write OBJECT in FORMAT to STREAM diverting some output to PAGES.
   FORMAT can be anything [3BMD][3bmd] supports, which is currently
   :MARKDOWN, :HTML and :PLAIN. STREAM may be a [STREAM][type] object,
@@ -340,14 +340,16 @@
 
       (document #'document)
 
-  The same without fancy markup:
+  The same with fancy markup:
 
-      (document #'document :format :plain)
+      (document #'document :format :markdown)
 
   To generate the documentation for separate libraries with automatic
   cross-links:
 
-      (document (list @cube-manual @mat-manual))
+      (document (list @cube-manual @mat-manual) :format :markdown)
+
+  See @DOCUMENTATION-UTILITIES for more.
 
   Note that not only first-class objects can have documentation:
 
@@ -360,8 +362,10 @@
   @LINKING-TO-SECTIONS, and
   @MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES.
 
-  The rest of this description deals with how to generate multiple
-  pages.
+  If PAGES is NIL and STREAM is NIL, then DOCUMENT returns the output
+  as a string. If PAGES is NIL but STREAM is not, then DOCUMENT
+  returns NIL. The rest of this description deals with how to generate
+  multiple pages.
 
   ##### Pages
 
@@ -401,10 +405,6 @@
   files and some to strings and have the return value indicate what
   was created. The output designators in the returned list are ordered
   by creation time.
-
-  If no PAGES are specified, DOCUMENT returns a single
-  [PATHNAME][type], [STRING][type] or STREAM object according to the
-  value of the STREAM argument.
 
   Note that even if PAGES is specified, STREAM acts as a catch all,
   taking the generated documentation for references not claimed by any
@@ -510,9 +510,12 @@
                       (funcall (page-footer-fn page) stream)))))
               (push (unmake-stream-spec (page-final-stream-spec page))
                     outputs))
-            (if (and stream (endp pages))
-                (first outputs)
-                (reverse outputs))))))))
+            (cond (pages
+                   (reverse outputs))
+                  ((null stream)
+                   (first outputs))
+                  (t
+                   nil))))))))
 
 (defun call-with-format (format fn)
   (if (eq format :plain)

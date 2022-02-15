@@ -4,7 +4,7 @@
   (let ((output (let ((*package* (find-package :mgl-pax-test))
                       (*document-hyperspec-root* "CLHS/")
                       (*document-url-versions* '(2)))
-                  (first (document input)))))
+                  (document input :stream nil :format :markdown))))
     (is (null (mismatch% output expected))
         :ctx ("Input: ~S" input))))
 
@@ -13,7 +13,7 @@
     (handler-bind ((warning (lambda (w)
                               (push (princ-to-string w) warnings)
                               (muffle-warning w))))
-      (values (first (document object :format format))
+      (values (document object :stream nil :format format)
               warnings))))
 
 (defun check-head (input expected &key (format :markdown) msg (n-lines 1)
@@ -36,7 +36,7 @@
   (let* ((*package* (find-package :mgl-pax-test))
          (*document-hyperspec-root* "CLHS/")
          (*document-url-versions* '(2))
-         (full-output (first (document input))))
+         (full-output (document input :stream nil :format :markdown)))
     (is (funcall pred full-output)
         :msg msg
         :ctx ("Input: ~S~%Full output:~%~S" input full-output))))

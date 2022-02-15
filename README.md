@@ -1120,7 +1120,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
 ## 9 Generating Documentation
 
 <a id="x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29"></a>
-- [function] **DOCUMENT** *OBJECT &KEY STREAM PAGES (FORMAT :MARKDOWN)*
+- [function] **DOCUMENT** *OBJECT &KEY (STREAM T) PAGES (FORMAT :PLAIN)*
 
     Write `OBJECT` in `FORMAT` to `STREAM` diverting some output to `PAGES`.
     `FORMAT` can be anything [`3BMD`][3bmd] supports, which is currently
@@ -1134,14 +1134,16 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     
         (document #'document)
     
-    The same without fancy markup:
+    The same with fancy markup:
     
-        (document #'document :format :plain)
+        (document #'document :format :markdown)
     
     To generate the documentation for separate libraries with automatic
     cross-links:
     
-        (document (list @cube-manual @mat-manual))
+        (document (list @cube-manual @mat-manual) :format :markdown)
+    
+    See [Utilities for Generating Documentation][1b1b] for more.
     
     Note that not only first-class objects can have documentation:
     
@@ -1154,8 +1156,10 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     [Linking to Sections][22c2], and
     [Miscellaneous Variables][7c82].
     
-    The rest of this description deals with how to generate multiple
-    pages.
+    If `PAGES` is `NIL` and `STREAM` is `NIL`, then `DOCUMENT` returns the output
+    as a string. If `PAGES` is `NIL` but `STREAM` is not, then `DOCUMENT`
+    returns `NIL`. The rest of this description deals with how to generate
+    multiple pages.
     
     ##### Pages
     
@@ -1195,10 +1199,6 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     files and some to strings and have the return value indicate what
     was created. The output designators in the returned list are ordered
     by creation time.
-    
-    If no `PAGES` are specified, `DOCUMENT` returns a single
-    [`PATHNAME`][241f], [`STRING`][4267] or `STREAM` object according to the
-    value of the `STREAM` argument.
     
     Note that even if `PAGES` is specified, `STREAM` acts as a catch all,
     taking the generated documentation for references not claimed by any
