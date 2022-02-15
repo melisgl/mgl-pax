@@ -36,9 +36,10 @@
         - [9.4.3 Ambiguous Unspecified Locative][2645]
         - [9.4.4 Explicit and Autolinking][b3cc]
         - [9.4.5 Preventing Autolinking][8c16]
-        - [9.4.6 Suppressed Links][e2e8]
-        - [9.4.7 Filtering Ambiguous References][4c5e]
-        - [9.4.8 Local References][4c96]
+        - [9.4.6 Unresolvable Links][b372]
+        - [9.4.7 Suppressed Links][e2e8]
+        - [9.4.8 Filtering Ambiguous References][4c5e]
+        - [9.4.9 Local References][4c96]
     - [9.5 Linking to the Hyperspec][7cc3]
     - [9.6 Linking to Sections][22c2]
     - [9.7 Miscellaneous Variables][7c82]
@@ -867,7 +868,7 @@ which makes navigating the sources with `M-.` (see
 - [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) DOCSTRING*
 
     Define a global variable with `NAME` and set it to a
-    [`GLOSSARY-TERM`][class] object. A glossary term is just a symbol to
+    `GLOSSARY-TERM` object. A glossary term is just a symbol to
     hang a docstring on. It is a bit like a `SECTION`([`0`][5fac] [`1`][672f]) in that, when linked
     to, its `TITLE` will be the link text instead of the name of the
     symbol. Unlike sections though, glossary terms are not rendered with
@@ -1573,8 +1574,41 @@ autolinked, the backslash must be within backticks like this:
 This renders as `DOCUMENT`. Alternatively, the [`DISLOCATED`][e391] or the
 [`ARGUMENT`][8710] locative may be used as in `[DOCUMENT][dislocated]`.
 
+<a id="x-28MGL-PAX-3A-40UNRESOLVABLE-REFLINKS-20MGL-PAX-3ASECTION-29"></a>
+#### 9.4.6 Unresolvable Links
+
+<a id="x-28MGL-PAX-3AUNRESOLVABLE-REFLINK-20CONDITION-29"></a>
+- [condition] **UNRESOLVABLE-REFLINK** *WARNING*
+
+    When [`DOCUMENT`][432c] encounters an [explicit
+    link][b3cc] such as `[NONEXISTENT][function]`
+    that looks like a PAX construct but cannot be resolved, it signals
+    and `UNRESOLVABLE-REFLINK` warning.
+    
+    - If the [`OUTPUT-REFLINK`][2ca9] restart is invoked, then no warning is
+      printed and the markdown link is left unchanged. `MUFFLE-WARNING`([`0`][6dd5] [`1`][8263]) is
+      equivalent to `OUTPUT-REFLINK`.
+    
+    - If the [`OUTPUT-LABEL`][c818] restart is invoked, then no warning is printed
+      and the markdown link is replaced by its label. For example,
+      `[NONEXISTENT][function]` becomes `NONEXISTENT`.
+    
+    - If the warning is not handled, then it is printed to
+      [`*ERROR-OUTPUT*`][7f37]. Otherwise, it behaves as `OUTPUT-REFLINK`.
+
+
+<a id="x-28MGL-PAX-3AOUTPUT-REFLINK-20FUNCTION-29"></a>
+- [function] **OUTPUT-REFLINK** *&OPTIONAL CONDITION*
+
+    Invoke the `OUTPUT-REFLINK` restart.
+
+<a id="x-28MGL-PAX-3AOUTPUT-LABEL-20FUNCTION-29"></a>
+- [function] **OUTPUT-LABEL** *&OPTIONAL CONDITION*
+
+    Invoke the OUTPUT-L restart.
+
 <a id="x-28MGL-PAX-3A-40SUPPRESSED-LINKS-20MGL-PAX-3ASECTION-29"></a>
-#### 9.4.6 Suppressed Links
+#### 9.4.7 Suppressed Links
 
 Within the same docstring, [autolinking][b3cc] of code (i.e. of something like
 `FOO`) is suppressed if the same [object][75ce] was already linked to in
@@ -1599,7 +1633,7 @@ Finally, [autolinking][b3cc] to `T` or
 `NIL` is suppressed (see [`*DOCUMENT-LINK-TO-HYPERSPEC*`][875e]).
 
 <a id="x-28MGL-PAX-3A-40FILTERING-AMBIGUOUS-REFERENCES-20MGL-PAX-3ASECTION-29"></a>
-#### 9.4.7 Filtering Ambiguous References
+#### 9.4.8 Filtering Ambiguous References
 
 When there are multiple references to link to - as seen in
 [Ambiguous Unspecified Locative][2645] - some references are removed by the following
@@ -1621,7 +1655,7 @@ rules.
 
 
 <a id="x-28MGL-PAX-3A-40LOCAL-REFERENCES-20MGL-PAX-3ASECTION-29"></a>
-#### 9.4.8 Local References
+#### 9.4.9 Local References
 
 To unclutter the generated output by reducing the number of
 links, the so-called 'local' references (e.g. references to the very
@@ -3241,6 +3275,7 @@ presented.
   [26cf]: http://www.lispworks.com/documentation/HyperSpec/Body/t_t.htm "T TYPE"
   [292a]: #x-28MGL-PAX-3A-40PAX-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for PAX Constructs"
   [2c93]: #x-28MGL-PAX-3A-40GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Generating Documentation"
+  [2ca9]: #x-28MGL-PAX-3AOUTPUT-REFLINK-20FUNCTION-29 "MGL-PAX:OUTPUT-REFLINK FUNCTION"
   [2ce2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_consta.htm "CONSTANTP FUNCTION"
   [2d97]: http://www.lispworks.com/documentation/HyperSpec/Body/s_fn.htm "FUNCTION MGL-PAX:MACRO"
   [2d9d]: #x-28MGL-PAX-3ADEFINE-RESTART-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-RESTART MGL-PAX:MACRO"
@@ -3296,6 +3331,7 @@ presented.
   [6b59]: #x-28MGL-PAX-3A-40TRANSCRIPT-DYNENV-20MGL-PAX-3ASECTION-29 "Controlling the Dynamic Environment"
   [6c1f]: http://www.lispworks.com/documentation/HyperSpec/Body/e_smp_cn.htm "SIMPLE-CONDITION CONDITION"
   [6c83]: #x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29 "VARIABLE MGL-PAX:LOCATIVE"
+  [6dd5]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "MUFFLE-WARNING FUNCTION"
   [6e04]: #x-28DECLARATION-20MGL-PAX-3ALOCATIVE-29 "DECLARATION MGL-PAX:LOCATIVE"
   [6e18]: #x-28MGL-PAX-3A-40TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS-20MGL-PAX-3ASECTION-29 "Finer-grained Consistency Checks"
   [6fdb]: #x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax" ASDF/SYSTEM:SYSTEM'
@@ -3312,9 +3348,11 @@ presented.
   [7cc3]: #x-28MGL-PAX-3A-40LINKING-TO-THE-HYPERSPEC-20MGL-PAX-3ASECTION-29 "Linking to the Hyperspec"
   [7da5]: #x-28MGL-PAX-3ALOCATE-ERROR-MESSAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29 "MGL-PAX:LOCATE-ERROR-MESSAGE (MGL-PAX:READER MGL-PAX:LOCATE-ERROR)"
   [7e58]: http://www.lispworks.com/documentation/HyperSpec/Body/t_class.htm "CLASS CLASS"
+  [7f37]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*ERROR-OUTPUT* VARIABLE"
   [7f9f]: http://www.lispworks.com/documentation/HyperSpec/Body/t_symbol.htm "SYMBOL TYPE"
   [804d]: http://www.lispworks.com/documentation/HyperSpec/Body/m_declai.htm "DECLAIM MGL-PAX:MACRO"
   [80cd]: #x-28MGL-PAX-3A-40REFERENCE-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@REFERENCE MGL-PAX:GLOSSARY-TERM"
+  [8263]: http://www.lispworks.com/documentation/HyperSpec/Body/r_muffle.htm "MUFFLE-WARNING RESTART"
   [82e0]: #x-28METHOD-COMBINATION-20MGL-PAX-3ALOCATIVE-29 "METHOD-COMBINATION MGL-PAX:LOCATIVE"
   [8423]: #x-28MGL-PAX-3A-40TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Utilities for Consistency Checking"
   [8492]: #x-28MGL-PAX-3ATRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR CONDITION"
@@ -3358,6 +3396,7 @@ presented.
   [a85e]: #x-28MGL-PAX-3ADEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO"
   [a916]: http://www.lispworks.com/documentation/HyperSpec/Body/v_rdtabl.htm "*READTABLE* VARIABLE"
   [ad91]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rst.htm "RESTART TYPE"
+  [b372]: #x-28MGL-PAX-3A-40UNRESOLVABLE-REFLINKS-20MGL-PAX-3ASECTION-29 "Unresolvable Links"
   [b3cc]: #x-28MGL-PAX-3A-40EXPLICIT-AND-AUTOLINKING-20MGL-PAX-3ASECTION-29 "Explicit and Autolinking"
   [b89a]: #x-28MGL-PAX-3A-40CODIFIABLE-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@CODIFIABLE MGL-PAX:GLOSSARY-TERM"
   [ba62]: #x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29 "FUNCTION MGL-PAX:LOCATIVE"
@@ -3376,6 +3415,7 @@ presented.
   [c2d3]: #x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29 "Markdown Support"
   [c35d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_intern.htm "INTERN FUNCTION"
   [c4ce]: #x-28MGL-PAX-3A-40EXTENSION-API-20MGL-PAX-3ASECTION-29 "Writing Extensions"
+  [c818]: #x-28MGL-PAX-3AOUTPUT-LABEL-20FUNCTION-29 "MGL-PAX:OUTPUT-LABEL FUNCTION"
   [c819]: #x-28MGL-PAX-3ACONSTANT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CONSTANT MGL-PAX:LOCATIVE"
   [c930]: #x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29 "MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION"
   [cbf2]: http://www.lispworks.com/documentation/HyperSpec/Body/t_stream.htm "STREAM TYPE"

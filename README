@@ -130,8 +130,8 @@ is first, code must look pretty, documentation is code.
 
 ##### Docstrings
 
-PAX's automatically recognizes and [marks up code][@codification]
-with backticks and [links code][@linking-to-code] to their
+PAX's automatically recognizes and marks up code
+with backticks and links code to their
 definitions.
 
 ```
@@ -224,13 +224,12 @@ Here is an example of how it all works together:
 
 Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
 exports `*FOO-STATE*` and includes its documentation in
-`@FOO-RANDOM-MANUAL`. The symbols [VARIABLE][locative] and
-[FUNCTION][locative] are just two instances of @LOCATIVEs, which are
+`@FOO-RANDOM-MANUAL`. The symbols VARIABLE and
+FUNCTION are just two instances of @LOCATIVEs, which are
 used in DEFSECTION to refer to definitions tied to symbols.
 
 `(DOCUMENT @FOO-RANDOM-MANUAL)` generates fancy markdown or HTML
-output with [automatic markup][*document-uppercase-is-code*
-variable] and [autolinks][@linking-to-code section] uppercase @WORDs
+output with automatic markup and autolinks uppercase @WORDs
 found in docstrings, numbers sections, and creates a table of
 contents.
 
@@ -240,7 +239,7 @@ but with cross-page links being automatically added for symbols
 mentioned in docstrings. See @GENERATING-DOCUMENTATION for some
 convenience functions to cover the most common cases.
 
-The [transcript][@transcripts] in the code block tagged with
+The transcript in the code block tagged with
 `cl-transcript` is automatically checked for up-to-dateness when
 documentation is generated.
 
@@ -252,7 +251,7 @@ Now let's examine the most important pieces.
 
     Define a documentation section and maybe export referenced symbols.
     A bit behind the scenes, a global variable with NAME is defined and
-    is bound to a [SECTION][class] object. By convention, section names
+    is bound to a SECTION object. By convention, section names
     start with the character `@`. See @TUTORIAL for an example.
     
     ##### Entries
@@ -280,7 +279,7 @@ Now let's examine the most important pieces.
     among ENTRIES which are SYMBOLs are candidates for exporting. A
     candidate symbol is exported if
     
-    - it is [accessible][find-symbol] in PACKAGE, and
+    - it is accessible in PACKAGE, and
     
     - there is a reference to it in the section being defined which is
       approved by EXPORTABLE-REFERENCE-P.
@@ -322,8 +321,8 @@ Now let's examine the most important pieces.
 
 ### Locatives and References
 
-To [navigate with `M-.`][@NAVIGATING-IN-EMACS] and to [generate
-documentation][@GENERATING-DOCUMENTATION] we need to refer to things
+To navigate with `M-.` and to generate
+documentation we need to refer to things
 such as the `FOO` type or the `FOO` function.
 
 ```
@@ -361,7 +360,7 @@ DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
 
     A @REFERENCE is an @OBJECT plus a @LOCATIVE, and it identifies a
     definition. For example, the symbol `FOO` as the object and the
-    symbol [`FUNCTION`][locative] as the locative together refer to the
+    symbol `FUNCTION` as the locative together refer to the
     global definition of the function `FOO`.
     
     REFERENCE objects can be represented as an `(OBJECT LOCATIVE)` list
@@ -371,19 +370,17 @@ DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
 
 - [glossary-term] object
 
-    @OBJECTs are symbols or strings which name [functions][function
-    locative], [types][type locative], [packages][package locative],
+    @OBJECTs are symbols or strings which name functions, types, packages,
     etc. Together with @LOCATIVEs, they form @REFERENCEs.
 
 - [glossary-term] locative
 
     @LOCATIVEs specify a *type* of definition such as
-    [FUNCTION][locative] or [VARIABLE][locative] and together with
+    FUNCTION or VARIABLE and together with
     @OBJECTs form @REFERENCEs.
     
     A locative can be a symbol or a list whose CAR is a symbol. In
-    either case, the symbol is called the [locative type][
-    @locative-types section] while the rest of the elements are the
+    either case, the symbol is called the locative type while the rest of the elements are the
     *locative arguments*. See the METHOD locative or the LOCATIVE
     locative for examples of locative types with arguments.
 
@@ -471,7 +468,7 @@ need to muck with references when there is a perfectly good object.
 - [glossary-term] word
 
     A *word* is a string from which we want to extract an @OBJECT. When
-    [Navigating][@navigating-in-emacs section], the word is
+    Navigating, the word is
     `slime-symbol-at-point`. When @GENERATING-DOCUMENTATION, it is a
     non-empty string between whitespace characters in a docstring.
 
@@ -487,7 +484,7 @@ need to muck with references when there is a perfectly good object.
     `"s"` is removed to get `"LIST"`. Out of the three candidates for
     names, `"LISTs."`, `"LISTs"`, and `"LIST"`, the ones that name
     interned symbols and such are retained for purposes for
-    [Navigating][@navigating-in-emacs section] and
+    Navigating and
     @GENERATING-DOCUMENTATION.
     
     The punctuation characters for left and right trimming are `#<` and
@@ -549,7 +546,7 @@ which makes navigating the sources with `M-.` (see
 - [locative] MACRO
 
     Refers to a global macro, typically defined with DEFMACRO or a
-    [special operator][SPECIAL-OPERATOR-P FUNCTION]. See the FUNCTION
+    special operator. See the FUNCTION
     locative for a note on arglists.
 
 - [locative] SYMBOL-MACRO
@@ -581,13 +578,12 @@ which makes navigating the sources with `M-.` (see
     Refers to a global function, typically defined with DEFUN.
     
     Note that the arglist in the generated documentation depends on the
-    quality of SWANK-BACKEND:ARGLIST. It [may be][
-    @document-implementation-notes section] that default values of
+    quality of SWANK-BACKEND:ARGLIST. It may be that default values of
     optional and keyword arguments are missing.
 
 - [locative] GENERIC-FUNCTION
 
-    Refers to a [GENERIC-FUNCTION][class], typically defined with
+    Refers to a GENERIC-FUNCTION, typically defined with
     DEFGENERIC.
 
 - [locative] METHOD METHOD-QUALIFIERS METHOD-SPECIALIZERS
@@ -604,7 +600,7 @@ which makes navigating the sources with `M-.` (see
 
 - [locative] METHOD-COMBINATION
 
-    Refers to a [METHOD-COMBINATION][class], defined with
+    Refers to a METHOD-COMBINATION, defined with
     DEFINE-METHOD-COMBINATION.
 
 - [locative] ACCESSOR CLASS-NAME
@@ -633,7 +629,7 @@ which makes navigating the sources with `M-.` (see
 
 - [locative] STRUCTURE-ACCESSOR
 
-    This is a synonym of [FUNCTION][locative] with the difference that
+    This is a synonym of FUNCTION with the difference that
     the often ugly and certainly uninformative lambda list will not be
     printed.
 
@@ -643,20 +639,20 @@ which makes navigating the sources with `M-.` (see
 
     This locative can refer to any Lisp type. For types defined with
     DEFTYPE, an attempt is made at printing the arguments of type
-    specifiers. When TYPE refers to a [CL:CLASS][class], the class is
+    specifiers. When TYPE refers to a CL:CLASS, the class is
     documented as an opaque type: no mention is made of that it is a
     class or its superclasses. Use the CLASS locative if those things
     are part of the contract.
 
 - [locative] CLASS
 
-    Naturally, CLASS is the locative type for [CLASS][class]es.
+    Naturally, CLASS is the locative type for CLASSes.
     To refer to a class named FOO:
     
         (foo class)
     
-    In the generated documention, only superclasses denoted by [external
-    symbols][find-symbol function] are included.
+    In the generated documention, only superclasses denoted by external
+    symbols are included.
 
 - [locative] DECLARATION
 
@@ -680,13 +676,13 @@ which makes navigating the sources with `M-.` (see
 
 - [locative] CONDITION
 
-    CONDITION is the locative type for [CONDITION][condition]s. To
+    CONDITION is the locative type for CONDITIONs. To
     refer to a condition named FOO:
     
         (foo condition)
     
-    In the generated documention, only superclasses denoted by [external
-    symbols][find-symbol function] are included.
+    In the generated documention, only superclasses denoted by external
+    symbols are included.
 
 - [locative] RESTART
 
@@ -706,7 +702,7 @@ which makes navigating the sources with `M-.` (see
     Then `(MY-IGNORE-ERROR RESTART)` refers to the above definition.
     Note that while there is a CL:RESTART type, there is no
     corresponding source location or docstring like for
-    [CONDITION][condition]s.
+    CONDITIONs.
 
 ### Locatives for Packages and Readtables
 
@@ -721,12 +717,12 @@ which makes navigating the sources with `M-.` (see
 
 - [locative] PACKAGE
 
-    Refers to a [PACKAGE][type], defined by DEFPACKAGE. PACKAGE is not
+    Refers to a PACKAGE, defined by DEFPACKAGE. PACKAGE is not
     EXPORTABLE-LOCATIVE-TYPE-P.
 
 - [locative] READTABLE
 
-    Refers to a named [READTABLE][] defined with
+    Refers to a named READTABLE defined with
     NAMED-READTABLES:DEFREADTABLE, which associates a global name and a
     docstring with the readtable object. Unfortunately, source location
     information is not available.
@@ -746,7 +742,7 @@ which makes navigating the sources with `M-.` (see
 - [macro] DEFINE-GLOSSARY-TERM NAME (&KEY TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) DOCSTRING
 
     Define a global variable with NAME and set it to a
-    [GLOSSARY-TERM][class] object. A glossary term is just a symbol to
+    GLOSSARY-TERM object. A glossary term is just a symbol to
     hang a docstring on. It is a bit like a SECTION in that, when linked
     to, its TITLE will be the link text instead of the name of the
     symbol. Unlike sections though, glossary terms are not rendered with
@@ -768,7 +764,7 @@ which makes navigating the sources with `M-.` (see
 - [locative] DISLOCATED
 
     Refers to a symbol in a non-specific context. Useful for preventing
-    [autolinking][@explicit-and-autolinking section]. For example, if
+    autolinking. For example, if
     there is a function called `FOO` then
     
         `FOO`
@@ -802,7 +798,7 @@ which makes navigating the sources with `M-.` (see
 - [locative] INCLUDE SOURCE &KEY LINE-PREFIX HEADER FOOTER HEADER-NL FOOTER-NL
 
     This pseudolocative refers to a region of a file. SOURCE can be a
-    [STRING][type] or a [PATHNAME][type] in which case the whole file is
+    STRING or a PATHNAME in which case the whole file is
     being pointed to, or it can explicitly supply START, END locatives.
     INCLUDE is typically used to include non-lisp files in the
     documentation (say markdown or elisp as in the next example) or
@@ -860,7 +856,7 @@ which makes navigating the sources with `M-.` (see
 - [locative] DOCSTRING
 
     DOCSTRING is a pseudolocative for including the parse tree of the
-    markdown [DOCSTRING][generic-function] of a definition in the parse
+    markdown DOCSTRING of a definition in the parse
     tree of a docstring when generating documentation. It has no source
     location information and only works as an explicit link. This
     construct is intended to allow docstrings live closer to their
@@ -910,9 +906,9 @@ which makes navigating the sources with `M-.` (see
     examples work, just make the object of the reference the name of the
     issue prefixed by `ISSUE:` or `SUMMARY:` as appropriate. For
     example, to refer to the `AREF-1D` issue use `[ISSUE:AREF-1D][clhs]`
-    and get [ISSUE:AREF-1D][clhs]. Similary, `[SUMMARY:AREF-1D][clhs]`
-    turns into [SUMMARY:AREF-1D][clhs]. Alternatively, matching the name
-    of the file also works (`[iss009][clhs]` renders as [iss009][clhs])
+    and get ISSUE:AREF-1D. Similary, `[SUMMARY:AREF-1D][clhs]`
+    turns into SUMMARY:AREF-1D. Alternatively, matching the name
+    of the file also works (`[iss009][clhs]` renders as iss009)
     
     The generated links are relative to *DOCUMENT-HYPERSPEC-ROOT*.
     
@@ -991,7 +987,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
 
     Write OBJECT in FORMAT to STREAM diverting some output to PAGES.
     FORMAT can be anything [3BMD][3bmd] supports, which is currently
-    :MARKDOWN, :HTML and :PLAIN. STREAM may be a [STREAM][type] object,
+    :MARKDOWN, :HTML and :PLAIN. STREAM may be a STREAM object,
     T or NIL as with CL:FORMAT.
     
     Most often, this function is called on SECTION objects like
@@ -1031,7 +1027,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     
     When documentation for an object is generated, the first matching
     page spec is used, where the object matches the page spec if it is
-    [reachable][COLLECT-REACHABLE-OBJECTS generic-function] from one of
+    reachable from one of
     its :OBJECTS.
     
     :OUTPUT can be a number things:
@@ -1060,7 +1056,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     by creation time.
     
     If no PAGES are specified, DOCUMENT returns a single
-    [PATHNAME][type], [STRING][type] or STREAM object according to the
+    PATHNAME, STRING or STREAM object according to the
     value of the STREAM argument.
     
     Note that even if PAGES is specified, STREAM acts as a catch all,
@@ -1160,12 +1156,12 @@ to
     indented
     differently")
 
-See [DOCUMENT-OBJECT][(method () (string t))] for the details.
+See DOCUMENT-OBJECT for the details.
 
 - [method] DOCUMENT-OBJECT (STRING STRING) STREAM
 
-    Print STRING to STREAM as a docstring. That is, [clean up
-    indentation][@markdown-indentation], perform @CODIFICATION, and
+    Print STRING to STREAM as a docstring. That is, clean up
+    indentation, perform @CODIFICATION, and
     linking (see @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
     
     Docstrings in sources are indented in various ways, which can easily
@@ -1287,7 +1283,7 @@ Reader][pythonic-string-reader] can help with that.
     hyperspec and *DOCUMENT-LINK-TO-HYPERSPEC* is true. More
     precisely, a word names a known reference, if it matches
     
-    - [the object of a reference][REFERENCE-OBJECT] being
+    - the object of a reference being
       documented (see DOCUMENT and COLLECT-REACHABLE-OBJECTS), or
     
     - a name in the hyperspec if *DOCUMENT-LINK-TO-HYPERSPEC*.
@@ -1330,7 +1326,7 @@ Reader][pythonic-string-reader] can help with that.
 In this section, we describe all ways of linking to code
 available when *DOCUMENT-UPPERCASE-IS-CODE* is true.
 
-*Note that invoking [`M-.`][@navigating-in-emacs section] on the
+*Note that invoking `M-.` on the
 @OBJECT of any of the following links will disambiguate based the
 textual context, determining the locative. In a nutshell, if `M-.`
 works without popping up a list of choices, then the documentation
@@ -1344,7 +1340,7 @@ will contain a single link.*
 
 #### Specified Locative
 
-The following examples all render as [DOCUMENT][function].
+The following examples all render as DOCUMENT.
 
 - `[DOCUMENT][function]` (*object + locative, explicit link*)
 
@@ -1365,14 +1361,14 @@ The link text in the above examples is `DOCUMENT`. To override it,
 this form may be used:
 
 - `[see this][document function]` (*title + object + locative,
-  explicit link*) renders as: [see this][document function].
+  explicit link*) renders as: see this.
 
 
 #### Unambiguous Unspecified Locative
 
 In the following examples, although no locative is specified,
 `DOCUMENT` names a single @OBJECT being documented, so they all
-render as [DOCUMENT][function].
+render as DOCUMENT.
 
 - `[DOCUMENT][]` (*object, explicit link*),
 
@@ -1381,12 +1377,12 @@ render as [DOCUMENT][function].
 To override the title:
 
 - `[see this][document]` (*title + object, explicit link*) renders
-  as: [see this][document].
+  as: see this.
 
 
 #### Ambiguous Unspecified Locative
 
-These examples all render as [SECTION][], linking to both
+These examples all render as SECTION, linking to both
 definitions of the @OBJECT `SECTION`, the `CLASS` and the
 `LOCATIVE`.
 
@@ -1397,7 +1393,7 @@ definitions of the @OBJECT `SECTION`, the `CLASS` and the
 To override the title:
 
 - `[see this][section]` (*title + object, explicit link*) renders
-  as: [see this][section].
+  as: see this.
 
 
 #### Explicit and Autolinking
@@ -1409,10 +1405,9 @@ without.
 
 #### Preventing Autolinking
 
-In the common case, when [*DOCUMENT-UPPERCASE-IS-CODE*][] is true,
+In the common case, when *DOCUMENT-UPPERCASE-IS-CODE* is true,
 prefixing the uppercase @WORD with a backslash prevents it from
-being codified and thus also prevents [autolinking][
-@explicit-and-autolinking section] form kicking in. For example,
+being codified and thus also prevents autolinking form kicking in. For example,
 
     \DOCUMENT
 
@@ -1424,9 +1419,38 @@ autolinked, the backslash must be within backticks like this:
 This renders as `DOCUMENT`. Alternatively, the DISLOCATED or the
 ARGUMENT locative may be used as in `[DOCUMENT][dislocated]`.
 
+#### Unresolvable Links
+
+- [condition] UNRESOLVABLE-REFLINK WARNING
+
+    When DOCUMENT encounters an explicit
+    link such as `[NONEXISTENT][function]`
+    that looks like a PAX construct but cannot be resolved, it signals
+    and UNRESOLVABLE-REFLINK warning.
+    
+    - If the OUTPUT-REFLINK restart is invoked, then no warning is
+      printed and the markdown link is left unchanged. MUFFLE-WARNING is
+      equivalent to OUTPUT-REFLINK.
+    
+    - If the OUTPUT-LABEL restart is invoked, then no warning is printed
+      and the markdown link is replaced by its label. For example,
+      `[NONEXISTENT][function]` becomes `NONEXISTENT`.
+    
+    - If the warning is not handled, then it is printed to
+      *ERROR-OUTPUT*. Otherwise, it behaves as OUTPUT-REFLINK.
+
+
+- [function] OUTPUT-REFLINK &OPTIONAL CONDITION
+
+    Invoke the OUTPUT-REFLINK restart.
+
+- [function] OUTPUT-LABEL &OPTIONAL CONDITION
+
+    Invoke the OUTPUT-L restart.
+
 #### Suppressed Links
 
-Within the same docstring, [autolinking][@explicit-and-autolinking section] of code (i.e. of something like
+Within the same docstring, autolinking of code (i.e. of something like
 `FOO`) is suppressed if the same @OBJECT was already linked to in
 any way. In the following docstring, only the first `FOO` will be
 turned into a link.
@@ -1440,12 +1464,12 @@ occurrences `FOO` produce links.
     "`FOO` is safe. [`FOO`][macro] is great."
     "`FOO` is safe. Macro `FOO` is great."
 
-As an exception, links with [specified][@specified-locative section]
-and [unambiguous][@unambiguous-locative section] locatives to
+As an exception, links with specified
+and unambiguous locatives to
 SECTIONs and GLOSSARY-TERMs always produce a link to allow their
 titles to be displayed properly.
 
-Finally, [autolinking][@explicit-and-autolinking section] to T or
+Finally, autolinking to T or
 NIL is suppressed (see *DOCUMENT-LINK-TO-HYPERSPEC*).
 
 #### Filtering Ambiguous References
@@ -1463,8 +1487,8 @@ rules.
 - References to the CLHS are filtered similarly.
 
 - If references include a GENERIC-FUNCTION locative, then all
-  references with LOCATIVE-TYPE [METHOD][locative],
-  [ACCESSOR][locative], [READER][locative] and [WRITER][locative]
+  references with LOCATIVE-TYPE METHOD,
+  ACCESSOR, READER and WRITER
   are removed to avoid linking to a possibly large number of
   methods.
 
@@ -1492,8 +1516,8 @@ the local ones.
 
 The exact rules for local references are as follows:
 
-- Unless a locative is [specified][ @specified-locative section], no
-  [autolinking][ @explicit-and-autolinking section] is performed for
+- Unless a locative is specified, no
+  autolinking is performed for
   @OBJECTS for which there are local references. For example, `FOO`
   does not get any links if there is *any* local reference with the
   same @OBJECT.
@@ -1514,11 +1538,11 @@ The exact rules for local references are as follows:
     
     Locatives work as expected (see *DOCUMENT-LINK-CODE*):
     FIND-IF links to FIND-IF, FUNCTION links
-    to FUNCTION and `[FUNCTION][type]` links to [FUNCTION][type].
+    to FUNCTION and `[FUNCTION][type]` links to FUNCTION.
     
-    [Autolinking][@explicit-and-autolinking section] to T and NIL is
-    suppressed. If desired, use `[T][]` (that links to [T][]) or
-    `[T][constant]` (that links to [T][constant]).
+    Autolinking to T and NIL is
+    suppressed. If desired, use `[T][]` (that links to T) or
+    `[T][constant]` (that links to T).
     
     Note that linking to sections in the Hyperspec is done with the CLHS
     locative and is not subject to the value of this variable.
@@ -1584,7 +1608,7 @@ table of contents and navigation links.
     with `#MGL-PAX:FOO%20FUNCTION`.
     
     *Note that to make the URL independent of whether a symbol is
-    [internal or external][find-symbol] to their SYMBOL-PACKAGE, single
+    internal or external to their SYMBOL-PACKAGE, single
     colon is printed where a double colon would be expected. Package and
     symbol names are both printed verbatim except for escaping colons
     and spaces with a backslash. For exported symbols with no funny
@@ -1831,7 +1855,7 @@ For example, this is how PAX registers itself:
 ### Overview of Escaping
 
 Let's recap how escaping @CODIFICATION,
-[downcasing][*document-downcase-uppercase-code*], and
+downcasing, and
 @LINKING-TO-CODE works.
 
 - One backslash in front of a @WORD turns codification off. Use this
@@ -2319,7 +2343,7 @@ function `GREET`, that prints `hello` and returns 7.
 Now, if we change `GREET` to print or return something else, a
 TRANSCRIPTION-CONSISTENCY-ERROR will be signalled during
 documentation generation. Then we may fix the documentation or
-[CONTINUE][restart] from the error.
+CONTINUE from the error.
 
 By default, comparisons of previous to current ouput, readable and
 unreadable return values are performed with STRING=, EQUAL, and
@@ -2534,7 +2558,7 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
 
 - [macro] DEFINE-LOCATIVE-TYPE LOCATIVE-TYPE LAMBDA-LIST &BODY DOCSTRING
 
-    Declare LOCATIVE-TYPE as a [LOCATIVE][locative]. One gets two
+    Declare LOCATIVE-TYPE as a LOCATIVE. One gets two
     things in return: first, a place to document the format and
     semantics of LOCATIVE-TYPE (in LAMBDA-LIST and DOCSTRING); second,
     being able to reference `(LOCATIVE-TYPE LOCATIVE)`. For example, if
@@ -2623,7 +2647,7 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
 - [generic-function] DOCSTRING OBJECT
 
     Return the docstring from the definition of OBJECT
-    with [leading indentation stripped][@markdown-indentation]. This
+    with leading indentation stripped. This
     function serves a similar purpose as CL:DOCUMENTATION, but it works
     with first-class objects when there is one for the corresponding
     definition, and with REFERENCEs when there is not. Its
@@ -2667,7 +2691,7 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
 
     Return true iff SYMBOL is to be exported from
     PACKAGE when it occurs in a DEFSECTION as a reference with
-    LOCATIVE-TYPE and LOCATIVE-ARGS. SYMBOL is [accessible][find-symbol]
+    LOCATIVE-TYPE and LOCATIVE-ARGS. SYMBOL is accessible
     in PACKAGE.
     
     The default method calls EXPORTABLE-LOCATIVE-TYPE-P with
@@ -2757,7 +2781,7 @@ LOCATIVE-TYPE. Here is how the VARIABLE locative is defined:
 - [glossary-term] reference delegate
 
     CANONICAL-REFERENCE, COLLECT-REACHABLE-OBJECTS, DOCUMENT-OBJECT,
-    [DOCSTRING][generic-function], and FIND-SOURCE delegate dealing with
+    DOCSTRING, and FIND-SOURCE delegate dealing with
     REFERENCES to another generic function, one each, which is called
     their reference delegate. Each of these delegator functions invokes
     its delegate when a REFERENCE is passed to it (as its OBJECT
@@ -2787,8 +2811,7 @@ LOCATIVE-TYPE. Here is how the VARIABLE locative is defined:
 
 - [generic-function] LOCATE-DOCSTRING OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
 
-    This is the @REFERENCE-DELEGATE of [DOCSTRING][
-    generic-function].
+    This is the @REFERENCE-DELEGATE of DOCSTRING.
 
 - [generic-function] LOCATE-AND-FIND-SOURCE OBJECT LOCATIVE-TYPE LOCATIVE-ARGS
 
@@ -2853,11 +2876,11 @@ LOCATE-AND-DOCUMENT methods, which emit markdown.
 - [macro] DOCUMENTING-REFERENCE (STREAM &KEY REFERENCE ARGLIST NAME) &BODY BODY
 
     Write REFERENCE to STREAM as described in
-    *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a [local
-    reference][@LOCAL-REFERENCES]. Unless ARGLIST is NIL or
+    *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a local
+    reference. Unless ARGLIST is NIL or
     :NOT-AVAILABLE, it is printed after the name of object of REFERENCE.
     
-    If ARGLIST is a list, then it is must be a [lambda list][clhs] and
+    If ARGLIST is a list, then it is must be a lambda list and
     is printed without the outermost parens and with the package names
     removed from the argument names.
     
@@ -2865,14 +2888,14 @@ LOCATE-AND-DOCUMENT methods, which emit markdown.
 
 - [macro] WITH-DISLOCATED-OBJECTS OBJECTS &BODY BODY
 
-    For each object in OBJECTS, establish a [local
-    reference][@local-references] with the DISLOCATED locative, which
-    [prevents autolinking][@preventing-autolinking].
+    For each object in OBJECTS, establish a local
+    reference with the DISLOCATED locative, which
+    prevents autolinking.
 
 - [function] DOCUMENT-DOCSTRING DOCSTRING STREAM &KEY (INDENTATION "    ") EXCLUDE-FIRST-LINE-P (PARAGRAPHP T)
 
-    Process and DOCSTRING to STREAM, [stripping
-    indentation][@markdown-indentation] from it, performing
+    Process and DOCSTRING to STREAM, stripping
+    indentation from it, performing
     @CODIFICATION and @LINKING-TO-CODE, finally prefixing each line with
     INDENTATION. The prefix is not added to the first line if
     EXCLUDE-FIRST-LINE-P. If PARAGRAPHP, then add a newline before and
@@ -2926,15 +2949,15 @@ ASDF:SYSTEM).
 
 ### Sections
 
-[SECTION][class] objects rarely need to be dissected since
+SECTION objects rarely need to be dissected since
 DEFSECTION and DOCUMENT cover most needs. However, it is plausible
 that one wants to subclass them and maybe redefine how they are
 presented.
 
 - [class] SECTION
 
-    DEFSECTION stores its NAME, TITLE, [PACKAGE][type],
-    [READTABLE][type] and ENTRIES arguments in [SECTION][class]
+    DEFSECTION stores its NAME, TITLE, PACKAGE,
+    READTABLE and ENTRIES arguments in SECTION
     objects.
 
 - [reader] SECTION-NAME SECTION (:NAME)
@@ -2955,7 +2978,7 @@ presented.
 
 - [reader] SECTION-TITLE SECTION (:TITLE)
 
-    A [STRING][type] or NIL. Used in generated
+    A STRING or NIL. Used in generated
     documentation.
 
 - [reader] SECTION-LINK-TITLE-TO SECTION (:LINK-TITLE-TO = NIL)

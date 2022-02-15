@@ -1106,6 +1106,7 @@
   (@ambiguous-locative section)
   (@explicit-and-autolinking section)
   (@preventing-autolinking section)
+  (@unresolvable-reflinks section)
   (@suppressed-links section)
   (@filtering-ambiguous-references section)
   (@local-references section))
@@ -1286,25 +1287,33 @@
   ;; this][section class], [see this][section]. For example, the tree
   ;; for [`SECTION`][class] is (:REFERENCE-LINK :LABEL ((:CODE
   ;; "SECTION")) :DEFINITION "class").
-  (multiple-value-bind (label explicit-label-p object locative found)
+  (multiple-value-bind (label explicit-label-p object locative pax-link-p)
       (extract-reference-from-reflink reflink)
-    (if (not found)
+    (if (not pax-link-p)
+        ;; [something][user-defined-id]
         reflink
-        (let ((refs (if locative
-                        (references-for-specified-locative object locative)
-                        (references-for-explicitly-unspecified-locative
-                         object))))
-          (cond (refs
+        (let* ((refs (unless (eq object 'not-found)
+                       (if locative
+                           (references-for-specified-locative object locative)
+                           (references-for-explicitly-unspecified-locative
+                            object))))
+               (linkable-refs (linkable-references refs)))
+          (cond (linkable-refs
                  (dolist (ref refs)
                    (vector-push-extend ref linked-refs))
                  (values (make-reflinks label explicit-label-p refs) nil t))
                 (t
-                 reflink))))))
+                 (values (if refs
+                             label
+                             (signal-unresolvable-reflink reflink object
+                                                          locative))
+                         nil t)))))))
 
 ;;; Return the label, whether to use the returned label in the
 ;;; reference link without further transformations (e.g. replace it
-;;; with SECTION-TITLE), object, the locative, whether the object and
-;;; locative were found.
+;;; with SECTION-TITLE), object, the locative, whether the reflink
+;;; looks like something we should resolve (as opposed to a
+;;; user-defined one).
 (defun extract-reference-from-reflink (tree)
   (assert (parse-tree-p tree :reference-link))
   (destructuring-bind (&key label definition tail) (rest tree)
@@ -1313,45 +1322,57 @@
                                         (equal tail "[]"))))
            (definition (trim-whitespace
                         (parse-tree-to-text definition :deemph t)))
-           (locative (and definition (read-locative-from-markdown definition)))
+           (locative-from-def
+             (and definition (read-locative-from-markdown definition)))
            (label-string (trim-whitespace
                           (parse-tree-to-text label :deemph nil))))
       (alexandria:nth-value-or 0
-        (and (or empty-definition-p locative)
+        (and (or empty-definition-p locative-from-def)
+             label-string
              ;; [foo][] or [foo][function]
-             (multiple-value-bind (object substring)
-                 (and label-string
-                      (parse-word
-                       label-string :trim nil :depluralize t
-                       :only-one (lambda (object name)
-                                   (declare (ignore name))
-                                   (if (eq locative 'clhs)
-                                       (find-hyperspec-id object
-                                                          :substring-match t)
-                                       (has-reference-p object)))
-                       :clhs-substring-match (eq locative 'clhs)))
-               (when substring
-                 (values label nil object locative t))))
+             (multiple-value-bind (object name)
+                 (parse-label-string label-string locative-from-def)
+               (when name
+                 (values label nil object locative-from-def t))))
         ;; [see this][foo]
         (multiple-value-bind (object name)
             (parse-word definition :trim nil :depluralize nil
-                        :only-one (constantly t))
+                                   :only-one (constantly t))
           (when name
             (values label t object nil t)))
         ;; [see this][foo function]
         (multiple-value-bind (object locative foundp)
             (and definition (read-reference-from-string definition))
           (when foundp
-            (values label t object locative t)))))))
+            (values label t object locative t)))
+        (values label nil 'not-found locative-from-def
+                (or empty-definition-p locative-from-def))))))
 
-(defun label-has-code-p (label)
-  (labels ((recurse (e)
-             (unless (atom e)
-               (when (eq (first e) :code)
-                 (return-from label-has-code-p t))
-               (mapc #'recurse e))))
-    (recurse label)
-    nil))
+(defun parse-label-string (label-string locative)
+  (let ((interesting-object nil)
+        (interesting-name nil))
+    (flet ((good-parse-p (object name)
+             (cond ((eq locative 'clhs)
+                    (find-hyperspec-id object :substring-match t))
+                   ((has-reference-p object)
+                    t)
+                   (t
+                    ;; Remember the first interesting object ...
+                    (when (and (null interesting-name)
+                               (interesting-object-p object name))
+                      (setq interesting-object object
+                            interesting-name name)
+                      ;; ... but don't stop looking for a known
+                      ;; reference.
+                      nil)))))
+      (alexandria:nth-value-or 1
+        (parse-word label-string
+                    :trim nil :depluralize t
+                    :only-one #'good-parse-p
+                    :clhs-substring-match (eq locative 'clhs))
+        ;; Only consider merely interesting objects if there were no
+        ;; objects with known references.
+        (values interesting-object interesting-name)))))
 
 (defun parse-tree-to-text (parse-tree &key deemph)
   (labels
@@ -1439,6 +1460,98 @@
     (sort (copy-seq references) #'string< :key #'locative-string)))
 
 
+(defsection @unresolvable-reflinks (:title "Unresolvable Links")
+  (unresolvable-reflink condition)
+  (output-reflink function)
+  (output-label function))
+
+(define-condition unresolvable-reflink (warning)
+  ((reflink :initarg :reflink :reader unresolvable-reflink-string)
+   (object :initarg :object :reader unresolvable-reflink-object)
+   (locative :initarg :locative :reader unresolvable-reflink-locative))
+  (:report print-unresolvable-reflink)
+  (:documentation """When DOCUMENT encounters an [explicit
+  link][@explicit-and-autolinking] such as `[NONEXISTENT][function]`
+  that looks like a \\PAX construct but cannot be resolved, it signals
+  and UNRESOLVABLE-REFLINK warning.
+
+  - If the OUTPUT-REFLINK restart is invoked, then no warning is
+    printed and the markdown link is left unchanged. MUFFLE-WARNING is
+    equivalent to OUTPUT-REFLINK.
+
+  - If the OUTPUT-LABEL restart is invoked, then no warning is printed
+    and the markdown link is replaced by its label. For example,
+    `[NONEXISTENT][function]` becomes `NONEXISTENT`.
+
+  - If the warning is not handled, then it is printed to
+    *ERROR-OUTPUT*. Otherwise, it behaves as OUTPUT-REFLINK."""))
+
+(defun print-unresolvable-reflink (unresolvable-reflink stream)
+  (let* ((c unresolvable-reflink)
+         (reflink (unresolvable-reflink-string c))
+         (object #-cmucl (if (slot-boundp c 'object)
+                             (unresolvable-reflink-object c)
+                             'not-found)
+                 #+cmucl (or (ignore-errors
+                              (unresolvable-reflink-object c))
+                             'not-found))
+         (locative #-cmucl (if (slot-boundp c 'locative)
+                               (unresolvable-reflink-locative c)
+                               nil)
+                   #+cmucl (or (ignore-errors
+                                (unresolvable-reflink-locative c))
+                               'not-found)))
+    (cond ((and (not (eq object 'not-found)) locative)
+           (format stream "~@<~S cannot be resolved although ~S looks ~
+                           like an ~S and ~S like a ~S.~:@>"
+                   reflink object '@object locative '@locative))
+          ((not (eq object 'not-found))
+           (format stream "~@<~S cannot be resolved although ~S looks ~
+                           like an ~S.~:@>"
+                   reflink object '@object))
+          (locative
+           (format stream "~@<~S cannot be resolved although ~S looks ~
+                           like a ~S.~:@>"
+                   reflink locative '@locative))
+          (t
+           (format stream "~@<~S cannot be resolved.~:@>" reflink)))))
+
+(defun signal-unresolvable-reflink (reflink object locative)
+  (restart-case
+      (let ((string (reflink-to-string reflink)))
+        (cond ((and (not (eq object 'not-found)) locative)
+               (warn 'unresolvable-reflink
+                     :reflink string :object object :locative locative))
+              ((not (eq object 'not-found))
+               (warn 'unresolvable-reflink :reflink string :object object))
+              (locative
+               (warn 'unresolvable-reflink :reflink string
+                                           :locative locative))
+              (t
+               (warn 'unresolvable-reflink :reflink string)))
+        (pt-get reflink :label))
+    (output-label ()
+      :report "Output only the label."
+      (pt-get reflink :label))
+    (output-reflink ()
+      :report "Output the whole reflink."
+      reflink)))
+
+(defun output-reflink (&optional condition)
+  "Invoke the OUTPUT-REFLINK restart."
+  (declare (ignore condition))
+  (invoke-restart 'output-reflink))
+
+(defun output-label (&optional condition)
+  "Invoke the OUTPUT-L restart."
+  (declare (ignore condition))
+  (invoke-restart 'output-label))
+
+(defun reflink-to-string (tree)
+  (with-output-to-string (stream)
+    (print-markdown (list tree) stream)))
+
+
 (defsection @suppressed-links (:title "Suppressed Links")
   """Within the same docstring, [autolinking]
   [@explicit-and-autolinking section] of code (i.e. of something like
@@ -1523,15 +1636,14 @@
              (object (reference-object reference))
              (ref (find reference (references-to-object object)
                         :test #'reference=)))
-        (when (and ref (linkable-ref-p ref))
+        (when ref
           (list ref)))))
 
 (defun references-for-explicitly-unspecified-locative (object)
   (resolve-generic-function-and-methods
    (filter-asdf-system-references
     (filter-clhs-references
-     (linkable-references
-      (references-to-object object :local :exclude))))))
+     (references-to-object object :local :exclude)))))
 
 ;;; All returned REFERENCES are for the same object.
 (defun references-for-autolink (objects locatives linked-refs)
@@ -1540,8 +1652,9 @@
    ;; known references.
    (loop for object in objects
            thereis (loop for locative in locatives
-                         append (references-for-specified-locative
-                                 object locative)))
+                         append (linkable-references
+                                 (references-for-specified-locative
+                                  object locative))))
    ;; Fall back on the no-locative case.
    (loop for object in objects
          for refs = (references-for-autolink-with-unspecified-locative objects)

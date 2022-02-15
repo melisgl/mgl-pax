@@ -21,7 +21,7 @@
     :ensure-directories-exist t))
 
 (defun/autoloaded update-asdf-system-readmes (object asdf-system &key
-                                   (url-versions '(1)))
+                                                     (url-versions '(1)))
   "Convenience function to generate two readme files in the directory
   holding the ASDF-SYSTEM definition. OBJECT is passed on to DOCUMENT.
 
@@ -60,10 +60,9 @@
           (*document-mark-up-signatures* nil)
           (*document-max-numbering-level* 0)
           (*document-max-table-of-contents-level* 0)
-          (*document-text-navigation* nil)
-          ;; Some Lisps bind it to T in DESCRIBE, some don't.
-          (*print-circle* nil))
-      (document object :stream stream))
+          (*document-text-navigation* nil))
+      (handler-bind ((unresolvable-reflink #'output-label))
+        (document object :stream stream)))
     (print-markdown-footer stream)))
 
 (defun print-markdown-footer (stream)
