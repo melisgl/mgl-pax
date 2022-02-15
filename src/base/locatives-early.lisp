@@ -37,7 +37,7 @@
   (package locative)
   (readtable locative))
 
-(defsection @pax-locatives (:title "Locatives for \\PAX Constructs")
+(defsection @pax-locatives (:title "Locatives for PAX Constructs")
   (section locative)
   (glossary-term locative)
   (define-glossary-term macro)

@@ -300,7 +300,7 @@
 ;;; This section is not in the documentation of PAX-WORLD itself. It
 ;;; is dynamically extended with the list of sections for which
 ;;; UPDATE-PAX-WORLD was called. FIXME: this is not thread-safe.
-(defsection @pax-world-dummy (:title "\\PAX World")
+(defsection @pax-world-dummy (:title "PAX World")
   "This is a list of documents generated with [MGL-PAX][@pax-manual]
   in the default style. The documents are cross-linked: links to other
   documents are added automatically when a reference is found. Note

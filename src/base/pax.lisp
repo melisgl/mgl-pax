@@ -2,7 +2,7 @@
 
 (in-readtable pythonic-string-syntax)
 
-(defsection @pax-manual (:title "\\PAX Manual")
+(defsection @pax-manual (:title "PAX Manual")
   ("mgl-pax" asdf:system)
   ("mgl-pax/full" asdf:system)
   (@links section)

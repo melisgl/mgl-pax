@@ -858,8 +858,6 @@
   "A @WORD is _interesting_ iff it _names_
 
   - a known reference, or
-  - an ASDF system, or
-  - a package, or
   - a symbol external to its package, or
   - it is at least 3 characters long and names an interned symbol.
 
@@ -884,9 +882,7 @@
               (references-to-object object :local :include))
         (and (symbolp object)
              (or (<= 3 (length name))
-                 (external-symbol-p object)))
-        (find-package* object)
-        (asdf-system-name-p object))))
+                 (external-symbol-p object))))))
 
 ;;; The core of the implementation of *DOCUMENT-UPPERCASE-IS-CODE*.
 ;;;
@@ -1504,7 +1500,7 @@
   (:report print-unresolvable-reflink)
   (:documentation """When DOCUMENT encounters an [explicit
   link][@explicit-and-autolinking] such as `[NONEXISTENT][function]`
-  that looks like a \\PAX construct but cannot be resolved, it signals
+  that looks like a PAX construct but cannot be resolved, it signals
   and UNRESOLVABLE-REFLINK warning.
 
   - If the OUTPUT-REFLINK restart is invoked, then no warning is

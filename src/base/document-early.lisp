@@ -278,7 +278,7 @@
           collect (file-position stream))))
 
 
-(defsection @pax-world (:title "\\PAX World")
+(defsection @pax-world (:title "PAX World")
   """\PAX World is a registry of documents, which can generate
   cross-linked HTML documentation pages for all the registered
   documents."""

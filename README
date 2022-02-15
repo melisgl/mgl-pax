@@ -1278,10 +1278,6 @@ Reader][pythonic-string-reader] can help with that.
     
     - a known reference, or
     
-    - an ASDF system, or
-    
-    - a package, or
-    
     - a symbol external to its package, or
     
     - it is at least 3 characters long and names an interned symbol.

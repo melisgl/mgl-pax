@@ -72,11 +72,11 @@
 - Description: Exploratory programming tool and documentation
   generator.
 - Long Description: The set of dependencies of the [`MGL-PAX`][6fdb] system is
-  kept light, and its heavier dependencies are autoloaded via `ASDF`
+  kept light, and its heavier dependencies are autoloaded via ASDF
   when the relavant functionality is accessed. See the
   [`MGL-PAX/NAVIGATE`][f155], [`MGL-PAX/DOCUMENT`][4bb8], [`MGL-PAX/TRANSCRIBE`][5825] and
   [`MGL-PAX/FULL`][d761] systems. To keep deployed code small, client systems
-  should declare an `ASDF` dependency on this system, never on the
+  should declare an ASDF dependency on this system, never on the
   others, which are intended for autoloading and interactive use.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
@@ -600,9 +600,9 @@ the box. As all locative types, they are named by symbols, which
 should make it obvious what kind of things they refer to. Unless
 otherwise noted, locatives take no arguments.
 
-When there is a corresponding `CL` type, a locative can be resolved to
+When there is a corresponding CL type, a locative can be resolved to
 a unique object as is the case in `(LOCATE 'FOO 'CLASS)` returning
-`#<CLASS FOO>`. Even if there is no such `CL` type, the source
+`#<CLASS FOO>`. Even if there is no such CL type, the source
 location and the docstring of the defining form is recorded (see
 [`LOCATE-AND-FIND-SOURCE`][d6a4], [`LOCATE-AND-DOCUMENT`][6611] in the [Writing Extensions][c4ce]),
 which makes navigating the sources with `M-.` (see
@@ -1128,7 +1128,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
 - [function] **DOCUMENT** *OBJECT &KEY (STREAM T) PAGES (FORMAT :PLAIN)*
 
     Write `OBJECT` in `FORMAT` to `STREAM` diverting some output to `PAGES`.
-    `FORMAT` can be anything [`3BMD`][3bmd] supports, which is currently
+    `FORMAT` can be anything [3BMD][3bmd] supports, which is currently
     `:MARKDOWN`, `:HTML` and `:PLAIN`. `STREAM` may be a [`STREAM`][cbf2] object,
     `T` or `NIL` as with `CL:FORMAT`.
     
@@ -1285,7 +1285,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
 ### 9.2 Markdown Support
 
 The [Markdown][markdown] in docstrings is processed with the
-[`3BMD`][3bmd] library.
+[3BMD][3bmd] library.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29"></a>
 #### 9.2.1 Indentation
@@ -1332,10 +1332,10 @@ write:
     ```
 
 to get syntactically marked up HTML output. Copy `src/style.css`
-from `PAX` and you are set. The language tag, `elisp` in this
+from PAX and you are set. The language tag, `elisp` in this
 example, is optional and defaults to `common-lisp`.
 
-See the documentation of [`3BMD`][3bmd] and [colorize][colorize] for
+See the documentation of [3BMD][3bmd] and [colorize][colorize] for
 the details.
 
 [3bmd]: https://github.com/3b/3bmd 
@@ -1425,10 +1425,6 @@ Reader][pythonic-string-reader] can help with that.
     A [word][d7b0] is *interesting* iff it *names*
     
     - a known reference, or
-    
-    - an `ASDF` system, or
-    
-    - a package, or
     
     - a symbol external to its package, or
     
@@ -1879,7 +1875,7 @@ table of contents and navigation links.
 ### 9.8 Utilities for Generating Documentation
 
 Two convenience functions are provided to serve the common case of
-having an `ASDF` system with some readmes and a directory with for the
+having an ASDF system with some readmes and a directory with for the
 HTML documentation and the default css stylesheet.
 
 <a id="x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29"></a>
@@ -1908,7 +1904,7 @@ HTML documentation and the default css stylesheet.
 <a id="x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-HTML-DOCS-20FUNCTION-29"></a>
 - [function] **UPDATE-ASDF-SYSTEM-HTML-DOCS** *SECTIONS ASDF-SYSTEM &KEY PAGES (TARGET-DIR (ASDF/SYSTEM:SYSTEM-RELATIVE-PATHNAME ASDF-SYSTEM "doc/")) (UPDATE-CSS-P T)*
 
-    Generate pretty HTML documentation for a single `ASDF` system,
+    Generate pretty HTML documentation for a single ASDF system,
     possibly linking to github. If `UPDATE-CSS-P`, copy the CSS style
     sheet to `TARGET-DIR`, as well. Example usage:
     
@@ -2117,7 +2113,7 @@ forms whose output or return values are shown. Also, in a function's
 docstring an example call with concrete arguments and return values
 speaks volumes. A transcript is a text that looks like a repl
 session, but which has a light markup for printed output and return
-values, while no markup (i.e. prompt) for Lisp forms. `PAX`
+values, while no markup (i.e. prompt) for Lisp forms. PAX
 transcripts may include output and return values of all forms, or
 only selected ones. In either case, the transcript itself can be
 easily generated from the source code.
@@ -2126,7 +2122,7 @@ The main worry associated with including examples in the
 documentation is that they tend to get out-of-sync with the code.
 This is solved by being able to parse back and update transcripts.
 In fact, this is exactly what happens during documentation
-generation with `PAX`. Code sections tagged `cl-transcript` are
+generation with PAX. Code sections tagged `cl-transcript` are
 retranscribed and checked for inconsistency (that is, any difference
 in output or return values). If the consistency check fails, an
 error is signalled that includes a reference to the object being
@@ -2147,7 +2143,7 @@ used for writing simple tests in a very readable form. For example:
 
 All in all, transcripts are a handy tool especially when combined
 with the Emacs support to regenerate them and with
-`PYTHONIC-STRING-READER`'s triple-quoted strings, that allow one to
+PYTHONIC-STRING-READER's triple-quoted strings, that allow one to
 work with nested strings with less noise. The triple-quote syntax
 can be enabled with:
 
