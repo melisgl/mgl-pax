@@ -302,9 +302,9 @@
     :initarg :title :reader glossary-term-title
     :documentation "A markdown string or NIL. Used in generated
     documentation.")
-   (docstring
-    :initarg :docstring :reader glossary-term-docstring
-    :documentation "A markdown docstring or NIL.")))
+   (docstring :initarg :docstring :reader glossary-term-docstring))
+  (:documentation "DEFINE-GLOSSARY-TERM instantiates a GLOSSARY-TERM
+  with its NAME and TITLE arguments."))
 
 (defmacro define-glossary-term
     (name (&key title (discard-documentation-p *discard-documentation-p*))

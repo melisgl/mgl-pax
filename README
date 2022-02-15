@@ -3003,6 +3003,9 @@ they are presented.
 
 - [class] GLOSSARY-TERM
 
+    DEFINE-GLOSSARY-TERM instantiates a GLOSSARY-TERM
+    with its NAME and TITLE arguments.
+
 - [reader] GLOSSARY-TERM-NAME GLOSSARY-TERM (:NAME)
 
     The name of the global variable whose value is

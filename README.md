@@ -3258,6 +3258,9 @@ they are presented.
 <a id="x-28MGL-PAX-3AGLOSSARY-TERM-20CLASS-29"></a>
 - [class] **GLOSSARY-TERM**
 
+    [`DEFINE-GLOSSARY-TERM`][8ece] instantiates a `GLOSSARY-TERM`
+    with its `NAME` and `TITLE` arguments.
+
 <a id="x-28MGL-PAX-3AGLOSSARY-TERM-NAME-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29"></a>
 - [reader] **GLOSSARY-TERM-NAME** *GLOSSARY-TERM (:NAME)*
 
