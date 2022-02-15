@@ -62,6 +62,7 @@
     - [11.3 Extending `DOCUMENT`][574a]
     - [11.4 Extending `FIND-SOURCE`][3eb4]
     - [11.5 Sections][8a58]
+    - [11.6 Glossary Terms][d1dc]
 
 ###### \[in package MGL-PAX with nicknames PAX\]
 <a id="x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
@@ -361,11 +362,11 @@ Now let's examine the most important pieces.
     
     ##### Misc
     
-    `TITLE` is a non-marked-up string or `NIL`. If non-NIL, it determines
-    the text of the heading in the generated output. `LINK-TITLE-TO` is a
-    reference given as an `(OBJECT LOCATIVE)` pair or `NIL`, to which the
-    heading will link when generating HTML. If not specified, the
-    heading will link to its own anchor.
+    `TITLE` is a string containing markdown or `NIL`. If non-NIL, it
+    determines the text of the heading in the generated output.
+    `LINK-TITLE-TO` is a reference given as an `(OBJECT LOCATIVE)` pair or
+    `NIL`, to which the heading will link when generating HTML. If not
+    specified, the heading will link to its own anchor.
     
     When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][730f])
     is true, `ENTRIES` will not be recorded to save memory.
@@ -855,30 +856,34 @@ which makes navigating the sources with `M-.` (see
 <a id="x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **SECTION**
 
-    Refers to a section defined by [`DEFSECTION`][72b4].
+    Refers to a [`SECTION`][5fac] defined by [`DEFSECTION`][72b4].
     
     `SECTION` is not [`EXPORTABLE-LOCATIVE-TYPE-P`][c930].
 
 <a id="x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **GLOSSARY-TERM**
 
-    Refers to a glossary term defined by [`DEFINE-GLOSSARY-TERM`][8ece].
+    Refers to a [`GLOSSARY-TERM`][8251] defined by
+    [`DEFINE-GLOSSARY-TERM`][8ece].
 
 <a id="x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20MGL-PAX-3AMACRO-29"></a>
 - [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) DOCSTRING*
 
     Define a global variable with `NAME` and set it to a
-    `GLOSSARY-TERM` object. A glossary term is just a symbol to
+    [`GLOSSARY-TERM`][8251] object. A glossary term is just a symbol to
     hang a docstring on. It is a bit like a `SECTION`([`0`][5fac] [`1`][672f]) in that, when linked
     to, its `TITLE` will be the link text instead of the name of the
-    symbol. Unlike sections though, glossary terms are not rendered with
+    symbol. Also as with sections, both `TITLE` and `DOCSTRING` are markdown
+    strings or `NIL`.
+    
+    Unlike sections though, glossary terms are not rendered with
     headings, but in the more lightweight bullet + locative + name/title
-    style.
+    style. See the glossary entry [name][88cf] for an example.
     
     When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][730f])
     is true, `DOCSTRING` will not be recorded to save memory.
     
-    [`GLOSSARY-TERM`][5119] is not [`EXPORTABLE-LOCATIVE-TYPE-P`][c930].
+    `GLOSSARY-TERM` is not [`EXPORTABLE-LOCATIVE-TYPE-P`][c930].
 
 <a id="x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **LOCATIVE** *LAMBDA-LIST*
@@ -1630,7 +1635,7 @@ occurrences `FOO` produce links.
 
 As an exception, links with [specified][8996]
 and [unambiguous][5c74] locatives to
-`SECTION`([`0`][5fac] [`1`][672f])s and [`GLOSSARY-TERM`][5119]s always produce a link to allow their
+`SECTION`([`0`][5fac] [`1`][672f])s and `GLOSSARY-TERM`([`0`][8251] [`1`][5119])s always produce a link to allow their
 titles to be displayed properly.
 
 Finally, [autolinking][b3cc] to `T` or
@@ -2939,7 +2944,7 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
     Return true iff symbols in references with
     `LOCATIVE-TYPE` are to be exported by default when they occur in a
     [`DEFSECTION`][72b4]. The default method returns `T`, while the methods for
-    `SECTION`([`0`][5fac] [`1`][672f]), [`GLOSSARY-TERM`][5119], `PACKAGE`([`0`][4dd7] [`1`][5fb9]), [`ASDF:SYSTEM`][c097], `METHOD`([`0`][172e] [`1`][6831]) and [`INCLUDE`][5cd7]
+    `SECTION`([`0`][5fac] [`1`][672f]), `GLOSSARY-TERM`([`0`][8251] [`1`][5119]), `PACKAGE`([`0`][4dd7] [`1`][5fb9]), [`ASDF:SYSTEM`][c097], `METHOD`([`0`][172e] [`1`][6831]) and [`INCLUDE`][5cd7]
     return `NIL`.
     
     This function is called by the default method of
@@ -3232,7 +3237,7 @@ presented.
 <a id="x-28MGL-PAX-3ASECTION-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
 - [reader] **SECTION-TITLE** *SECTION (:TITLE)*
 
-    A [`STRING`][4267] or `NIL`. Used in generated
+    A markdown string or `NIL`. Used in generated
     documentation.
 
 <a id="x-28MGL-PAX-3ASECTION-LINK-TITLE-TO-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
@@ -3243,8 +3248,31 @@ presented.
 <a id="x-28MGL-PAX-3ASECTION-ENTRIES-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
 - [reader] **SECTION-ENTRIES** *SECTION (:ENTRIES)*
 
-    A list of strings and [`REFERENCE`][1cea] objects in the
-    order they occurred in [`DEFSECTION`][72b4].
+    A list of markdown docstrings and [`REFERENCE`][1cea]
+    objects in the order they occurred in [`DEFSECTION`][72b4].
+
+<a id="x-28MGL-PAX-3A-40GLOSSARY-TERMS-20MGL-PAX-3ASECTION-29"></a>
+### 11.6 Glossary Terms
+
+[`GLOSSARY-TERM`][8251] objects rarely need to be dissected since
+[`DEFINE-GLOSSARY-TERM`][8ece] and [`DOCUMENT`][432c] cover most needs. However, it is
+plausible that one wants to subclass them and maybe redefine how
+they are presented.
+
+<a id="x-28MGL-PAX-3AGLOSSARY-TERM-20CLASS-29"></a>
+- [class] **GLOSSARY-TERM**
+
+<a id="x-28MGL-PAX-3AGLOSSARY-TERM-NAME-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29"></a>
+- [reader] **GLOSSARY-TERM-NAME** *GLOSSARY-TERM (:NAME)*
+
+    The name of the global variable whose value is
+    this `GLOSSARY-TERM`([`0`][8251] [`1`][5119]) object.
+
+<a id="x-28MGL-PAX-3AGLOSSARY-TERM-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29"></a>
+- [reader] **GLOSSARY-TERM-TITLE** *GLOSSARY-TERM (:TITLE)*
+
+    A markdown string or `NIL`. Used in generated
+    documentation.
 
   [0019]: #x-28MGL-PAX-3ALOCATE-ERROR-20FUNCTION-29 "MGL-PAX:LOCATE-ERROR FUNCTION"
   [00d4]: #x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE"
@@ -3356,6 +3384,7 @@ presented.
   [7f9f]: http://www.lispworks.com/documentation/HyperSpec/Body/t_symbol.htm "SYMBOL TYPE"
   [804d]: http://www.lispworks.com/documentation/HyperSpec/Body/m_declai.htm "DECLAIM MGL-PAX:MACRO"
   [80cd]: #x-28MGL-PAX-3A-40REFERENCE-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@REFERENCE MGL-PAX:GLOSSARY-TERM"
+  [8251]: #x-28MGL-PAX-3AGLOSSARY-TERM-20CLASS-29 "MGL-PAX:GLOSSARY-TERM CLASS"
   [8263]: http://www.lispworks.com/documentation/HyperSpec/Body/r_muffle.htm "MUFFLE-WARNING RESTART"
   [82e0]: #x-28METHOD-COMBINATION-20MGL-PAX-3ALOCATIVE-29 "METHOD-COMBINATION MGL-PAX:LOCATIVE"
   [8423]: #x-28MGL-PAX-3A-40TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Utilities for Consistency Checking"
@@ -3429,6 +3458,7 @@ presented.
   [ce75]: #x-28MGL-PAX-3ADOCSTRING-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:DOCSTRING MGL-PAX:LOCATIVE"
   [cfbb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_pr_unr.htm "PRINT-UNREADABLE-OBJECT MGL-PAX:MACRO"
   [d1ca]: #x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29 "Document Generation Implementation Notes"
+  [d1dc]: #x-28MGL-PAX-3A-40GLOSSARY-TERMS-20MGL-PAX-3ASECTION-29 "Glossary Terms"
   [d2c1]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm "*PACKAGE* VARIABLE"
   [d684]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defcon.htm "DEFCONSTANT MGL-PAX:MACRO"
   [d6a4]: #x-28MGL-PAX-3ALOCATE-AND-FIND-SOURCE-20GENERIC-FUNCTION-29 "MGL-PAX:LOCATE-AND-FIND-SOURCE GENERIC-FUNCTION"

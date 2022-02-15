@@ -7,7 +7,8 @@
   (@reference-based-extensions section)
   (@extending-document section)
   (@extending-find-source section)
-  (@sections section))
+  (@sections section)
+  (@glossary-terms section))
 
 
 (defsection @new-object-types (:title "Adding New Object Types")
@@ -473,3 +474,13 @@
   (section-title (reader section))
   (section-link-title-to (reader section))
   (section-entries (reader section)))
+
+
+(defsection @glossary-terms (:title "Glossary Terms")
+  "[GLOSSARY-TERM][class] objects rarely need to be dissected since
+  DEFINE-GLOSSARY-TERM and DOCUMENT cover most needs. However, it is
+  plausible that one wants to subclass them and maybe redefine how
+  they are presented."
+  (glossary-term class)
+  (glossary-term-name (reader glossary-term))
+  (glossary-term-title (reader glossary-term)))

@@ -1017,7 +1017,7 @@
 ;;;; SECTION locative
 
 (define-locative-type section ()
-  "Refers to a section defined by DEFSECTION.
+  "Refers to a [SECTION][class] defined by DEFSECTION.
 
   SECTION is not EXPORTABLE-LOCATIVE-TYPE-P.")
 
@@ -1095,7 +1095,8 @@
     (format stream "~a" (glossary-term-name glossary-term))))
 
 (define-locative-type glossary-term ()
-  "Refers to a glossary term defined by DEFINE-GLOSSARY-TERM.")
+  "Refers to a [GLOSSARY-TERM][class] defined by
+  DEFINE-GLOSSARY-TERM.")
 
 (defmethod locate-object (symbol (locative-type (eql 'glossary-term))
                           locative-args)

@@ -54,11 +54,11 @@
 
   ##### Misc
 
-  TITLE is a non-marked-up string or NIL. If non-NIL, it determines
-  the text of the heading in the generated output. LINK-TITLE-TO is a
-  reference given as an `(OBJECT LOCATIVE)` pair or NIL, to which the
-  heading will link when generating HTML. If not specified, the
-  heading will link to its own anchor.
+  TITLE is a string containing markdown or NIL. If non-NIL, it
+  determines the text of the heading in the generated output.
+  LINK-TITLE-TO is a reference given as an `(OBJECT LOCATIVE)` pair or
+  NIL, to which the heading will link when generating HTML. If not
+  specified, the heading will link to its own anchor.
 
   When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
   is true, ENTRIES will not be recorded to save memory."
@@ -161,7 +161,7 @@
     documentation for this section if *DOCUMENT-NORMALIZE-PACKAGES*.")
    (title
     :initarg :title :reader section-title
-    :documentation "A [STRING][type] or NIL. Used in generated
+    :documentation "A markdown string or NIL. Used in generated
     documentation.")
    (link-title-to
     :initform nil
@@ -169,8 +169,8 @@
     :documentation "A REFERENCE or NIL. Used in generated documentation.")
    (entries
     :initarg :entries :reader section-entries
-    :documentation "A list of strings and REFERENCE objects in the
-    order they occurred in DEFSECTION."))
+    :documentation "A list of markdown docstrings and REFERENCE
+    objects in the order they occurred in DEFSECTION."))
   (:documentation "DEFSECTION stores its NAME, TITLE, [PACKAGE][type],
   [READTABLE][type] and ENTRIES arguments in [SECTION][class]
   objects."))
@@ -300,9 +300,11 @@
     this GLOSSARY-TERM object.")
    (title
     :initarg :title :reader glossary-term-title
-    :documentation "Used in generated documentation.")
+    :documentation "A markdown string or NIL. Used in generated
+    documentation.")
    (docstring
-    :initarg :docstring :reader glossary-term-docstring)))
+    :initarg :docstring :reader glossary-term-docstring
+    :documentation "A markdown docstring or NIL.")))
 
 (defmacro define-glossary-term
     (name (&key title (discard-documentation-p *discard-documentation-p*))
@@ -311,9 +313,12 @@
   [GLOSSARY-TERM][class] object. A glossary term is just a symbol to
   hang a docstring on. It is a bit like a SECTION in that, when linked
   to, its TITLE will be the link text instead of the name of the
-  symbol. Unlike sections though, glossary terms are not rendered with
+  symbol. Also as with sections, both TITLE and DOCSTRING are markdown
+  strings or NIL.
+
+  Unlike sections though, glossary terms are not rendered with
   headings, but in the more lightweight bullet + locative + name/title
-  style.
+  style. See the glossary entry @NAME for an example.
 
   When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
   is true, DOCSTRING will not be recorded to save memory.
