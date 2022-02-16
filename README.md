@@ -68,7 +68,7 @@
 <a id="x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 ## 1 `MGL-PAX` ASDF System
 
-- Version: 0.0.4
+- Version: 0.1.0
 - Description: Exploratory programming tool and documentation
   generator.
 - Long Description: The set of dependencies of the [`MGL-PAX`][6fdb] system is

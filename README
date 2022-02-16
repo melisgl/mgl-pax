@@ -3,7 +3,7 @@
 ###### \[in package MGL-PAX with nicknames PAX\]
 ## MGL-PAX ASDF System
 
-- Version: 0.0.4
+- Version: 0.1.0
 - Description: Exploratory programming tool and documentation
   generator.
 - Long Description: The set of dependencies of the MGL-PAX system is
