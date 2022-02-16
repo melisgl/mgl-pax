@@ -23,12 +23,13 @@
            `((export ',name))))))
 
 (defmacro without-redefinition-warnings (&body body)
+  #+sbcl
   `(locally
-       (declare #+sbcl
-                (sb-ext:muffle-conditions sb-kernel:redefinition-warning))
-     (handler-bind
-         (#+sbcl (sb-kernel:redefinition-warning #'muffle-warning))
-       ,@body)))
+       (declare (sb-ext:muffle-conditions sb-kernel:redefinition-warning))
+     (handler-bind ((sb-kernel:redefinition-warning #'muffle-warning))
+       ,@body))
+  #-sbcl
+  `(progn ,@body))
 
 ;;; Like DEFUN, but silences redefinition warnings. We could also
 ;;; remember autoloaded functions (in an :AROUND-COMPILE in the ASDF

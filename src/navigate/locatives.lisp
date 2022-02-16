@@ -307,7 +307,10 @@
     function))
 
 (defmethod canonical-reference ((function function))
-  (make-reference (function-name function) 'function))
+  (let ((name (function-name function)))
+    (unless name
+      (locate-error "~S has no name." function))
+    (make-reference name 'function)))
 
 ;;; It may be that (NOT (EQ SYMBOL (FUNCTION-NAME (FUNCTION
 ;;; SYMBOL)))), perhaps due to (SETF SYMBOL-FUNCTION). Thus if we have
