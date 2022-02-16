@@ -2098,9 +2098,6 @@ output. Compared to that, the following are not supported:
 
 - default values in [`MACRO`][f3cc] lambda lists on AllegroCL,
 
-- default values in function lambda lists on CCL (needs `(DEBUG 3)`
-  on AllegroCL),
-
 - `METHOD-COMBINATION`([`0`][fc7b] [`1`][82e0]) docstrings on ABCL, AllegroCL.
 
 
@@ -2989,9 +2986,10 @@ generic functions that we have specialized in [Adding New Object Types][bbf2] ha
     (let ((arglist (multiple-value-bind (value unboundp)
                        (symbol-global-value symbol)
                      (when (or initformp (not unboundp))
-                       (prin1-to-markdown (if initformp
-                                              initform
-                                              value))))))
+                       (let ((*print-pretty* t))
+                         (prin1-to-markdown (if initformp
+                                                initform
+                                                value)))))))
       (documenting-reference (stream :arglist arglist)
         (document-docstring (documentation* symbol 'variable) stream)))))
 

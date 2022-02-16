@@ -1907,9 +1907,6 @@ output. Compared to that, the following are not supported:
 
 - default values in MACRO lambda lists on AllegroCL,
 
-- default values in function lambda lists on CCL (needs `(DEBUG 3)`
-  on AllegroCL),
-
 - METHOD-COMBINATION docstrings on ABCL, AllegroCL.
 
 
@@ -2764,9 +2761,10 @@ LOCATIVE-TYPE. Here is how the VARIABLE locative is defined:
     (let ((arglist (multiple-value-bind (value unboundp)
                        (symbol-global-value symbol)
                      (when (or initformp (not unboundp))
-                       (prin1-to-markdown (if initformp
-                                              initform
-                                              value))))))
+                       (let ((*print-pretty* t))
+                         (prin1-to-markdown (if initformp
+                                                initform
+                                                value)))))))
       (documenting-reference (stream :arglist arglist)
         (document-docstring (documentation* symbol 'variable) stream)))))
 

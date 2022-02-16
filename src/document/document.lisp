@@ -2229,7 +2229,7 @@
   (with-output-to-string (out)
     (let ((seen-special-p nil)
           (*print-pretty* t)
-          (*print-right-margin* nil))
+          (*print-right-margin* 80))
       (labels
           ((resolve* (object)
              (if (and *document-mark-up-signatures*
@@ -2362,6 +2362,4 @@
   - COMPILER-MACRO docstrings on ABCL, AllegroCL, \CCL, ECL,
   - DEFTYPE lambda lists on ABCL, AllegroCL, CLISP, \CCL, CMUCL, ECL,
   - default values in MACRO lambda lists on AllegroCL,
-  - default values in function lambda lists on \CCL (needs `(DEBUG 3)`
-    on AllegroCL),
   - METHOD-COMBINATION docstrings on ABCL, AllegroCL.""")

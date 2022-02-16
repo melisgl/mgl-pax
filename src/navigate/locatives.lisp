@@ -95,9 +95,10 @@
     (let ((arglist (multiple-value-bind (value unboundp)
                        (symbol-global-value symbol)
                      (when (or initformp (not unboundp))
-                       (prin1-to-markdown (if initformp
-                                              initform
-                                              value))))))
+                       (let ((*print-pretty* t))
+                         (prin1-to-markdown (if initformp
+                                                initform
+                                                value)))))))
       (documenting-reference (stream :arglist arglist)
         (document-docstring (documentation* symbol 'variable) stream)))))
 

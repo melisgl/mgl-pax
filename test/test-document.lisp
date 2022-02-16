@@ -619,9 +619,8 @@ This is [Self-referencing][e042].
   nil)
 
 (deftest test-function/arglist ()
-  (with-failure-expected ((alexandria:featurep :ccl))
-    (is (equal (mgl-pax::arglist 'function-with-fancy-args)
-               '(x &optional (o 1) &key (k 2 kp))))))
+  (is (equal (mgl-pax::arglist 'function-with-fancy-args)
+             '(x &optional (o 1) &key (k 2 kp)))))
 
 (when (fboundp 'encapsulated-function)
   (untrace encapsulated-function))

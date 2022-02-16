@@ -108,18 +108,50 @@
       (simple-error () :not-available))
     #+ccl
     (let ((arglist (swank-backend:arglist function-designator)))
-      (if (listp arglist)
-          ;; &KEY arguments are given as keywords, which screws up
-          ;; WITH-DISLOCATED-SYMBOLS when generating documentation for
-          ;; functions.
-          (mapcar (lambda (x)
-                    (if (keywordp x)
-                        (intern (string x))
-                        x))
-                  arglist)
-          arglist))
+      ;; Function arglist don't have the default values of &KEY and
+      ;; &OPTIONAL arguments. Get those from CCL:FUNCTION-SOURCE-NOTE.
+      (or (and (or (find '&key arglist) (find '&optional arglist))
+               (function-arglist-from-source-note function-designator))
+          (if (listp arglist)
+              ;; &KEY arguments are given as keywords, which screws up
+              ;; WITH-DISLOCATED-SYMBOLS when generating documentation
+              ;; for functions.
+              (mapcar (lambda (x)
+                        (if (keywordp x)
+                            (intern (string x))
+                            x))
+                      arglist)
+              arglist)))
     #-(or abcl allegro ccl)
     (swank-backend:arglist function-designator)))
+
+#+ccl
+(defun function-arglist-from-source-note (function-designator)
+  (multiple-value-bind (function-name function)
+      (if (functionp function-designator)
+          (values (function-name function-designator) function-designator)
+          (values function-designator (fdefinition function-designator)))
+    (when function
+      (let ((source-note (ccl:function-source-note function)))
+        (when source-note
+          (let ((text (ccl:source-note-text source-note)))
+            (when text
+              (lambda-list-from-source-note-text text function-name))))))))
+
+;;; Extract the lambda list from TEXT, which is like "(defun foo (x
+;;; &optional (o 1)) ...".
+#+ccl
+(defun lambda-list-from-source-note-text (text symbol)
+  ;; This is a heuristic. It is impossible to determine what *PACKAGE*
+  ;; was when the definition form was read.
+  (let ((*package* (symbol-package symbol)))
+    (with-input-from-string (s text)
+      (when (eql (read-char s nil) #\()
+        ;; Skip DEFUN and the name.
+        (let ((*read-suppress* t))
+          (read s nil)
+          (read s nil))
+        (ignore-errors (read s))))))
 
 
 (defun find-method* (function-designator qualifiers specializers
