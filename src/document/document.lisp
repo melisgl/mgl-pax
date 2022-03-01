@@ -568,8 +568,9 @@
                                      (unescape-markdown
                                       (process-title (section-title section))))
                                    (process-title
-                                    (prin1-to-string (section-name
-                                                      section)))))))))))))))
+                                    (let ((*print-case* :upcase))
+                                      (prin1-to-string (section-name
+                                                        section))))))))))))))))
 
 (defun relative-page-uri-fragment (page reference-page)
   (if (eq page reference-page)

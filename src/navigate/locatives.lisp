@@ -1027,7 +1027,8 @@
 
 (defun section-title-or-name (section)
   (or (section-title section)
-      (prin1-to-string (section-name section))))
+      (let ((*print-case* :upcase))
+        (prin1-to-string (section-name section)))))
 
 (defmethod locate-object (symbol (locative-type (eql 'section))
                           locative-args)
