@@ -146,7 +146,7 @@
   without reading the code and sites like github can display them.
 
   HTML documentation can also be committed, but there is an issue with
-  that: when linking to the sources (see MAKE-GITHUB-SOURCE-URI-FN),
+  that: when linking to the sources (see MAKE-GIT-SOURCE-URI-FN),
   the commit id is in the link. This means that code changes need to
   be committed first, and only then can HTML documentation be
   regenerated and committed in a followup commit.
@@ -168,15 +168,16 @@
   `http://<username>.github.io/<repo-name>`. It is probably a good
   idea to add sections like the @LINKS section to allow jumping
   between the repository and the gh-pages site."
-  (make-github-source-uri-fn function))
+  (make-git-source-uri-fn function))
 
-(defun make-github-source-uri-fn (asdf-system github-uri &key git-version)
+(defun make-git-source-uri-fn (asdf-system git-forge-uri &key git-version
+                               (uri-format-string "~A/blob/~A/~A#L~S"))
   "Return a function suitable as :SOURCE-URI-FN of a page spec (see
-  the PAGES argument of DOCUMENT). The function looks the source
+  the PAGES argument of DOCUMENT). The function looks at the source
   location of the reference passed to it, and if the location is
   found, the path is made relative to the root directory of
-  ASDF-SYSTEM and finally an URI pointing to github is returned. The
-  URI looks like this:
+  ASDF-SYSTEM and finally an URI pointing to your git forge is returned.
+  The URI looks like this:
 
       https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
 
@@ -189,7 +190,12 @@
 
   A separate warning is signalled whenever source location lookup
   fails or if the source location points to a directory not below the
-  directory of ASDF-SYSTEM."
+  directory of ASDF-SYSTEM.
+
+  If using a non-standard git forge, such as Sourcehut or Gitlab,
+  simply pass a suitable URI-FORMAT-STRING matching the URI scheme
+  of your forge. It should have placeholders for the GIT-FORGE-URI,
+  the GIT-VERSION, the relative path to your reference, and the line number."
   (let* ((git-version (or git-version (asdf-system-git-version asdf-system)))
          (system-dir (asdf:system-relative-pathname asdf-system "")))
     (if git-version
@@ -202,10 +208,10 @@
                                            system-dir reference
                                            line-file-position-cache)
                 (when relative-path
-                  (format nil "~A/blob/~A/~A#L~S" github-uri git-version
+                  (format nil uri-format-string git-forge-uri git-version
                           relative-path (1+ line-number)))))))
         (warn "No GIT-VERSION given and can't find .git directory ~
-              for ASDF system~% ~A. Links to github will not be generated."
+              for ASDF system~% ~A. Links to git forge will not be generated."
               (asdf:component-name (asdf:find-system asdf-system))))))
 
 (defun asdf-system-git-version (system)
@@ -305,7 +311,7 @@
 (defun pax-pages ()
   `((:objects
      (, @pax-manual)
-     :source-uri-fn ,(make-github-source-uri-fn
+     :source-uri-fn ,(make-git-source-uri-fn
                       :mgl-pax
                       "https://github.com/melisgl/mgl-pax"))))
 (register-doc-in-pax-world :pax (pax-sections) (pax-pages))

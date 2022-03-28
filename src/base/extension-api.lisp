@@ -177,7 +177,7 @@
         (call-next-method)
         (docstring object))))
 
-;;; This is bound to an EQUAL hash table in MAKE-GITHUB-SOURCE-URI-FN
+;;; This is bound to an EQUAL hash table in MAKE-GIT-SOURCE-URI-FN
 ;;; to speed up FIND-SOURCE. It's still very slow because some
 ;;; underlying Swank calls involve reading in the whole source file.
 (defvar *find-source-cache* nil)
