@@ -174,7 +174,7 @@
 (defun make-github-source-uri-fn (asdf-system github-uri &key git-version)
   "This function is a trivial wrapper around MAKE-GIT-SOURCE-URI-FN. It is
    present to avoid breaking backwards compatibility with systems already
-   dependent on MAKE-GITHUB-SOURCE-URI-FN which MAKE-GIT-SOURCE-URI-FN =
+   dependent on MAKE-GITHUB-SOURCE-URI-FN which MAKE-GIT-SOURCE-URI-FN
    supersedes."
   (make-git-source-uri-fn asdf-system github-uri :git-version git-version))
 
