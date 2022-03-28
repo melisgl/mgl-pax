@@ -168,7 +168,15 @@
   `http://<username>.github.io/<repo-name>`. It is probably a good
   idea to add sections like the @LINKS section to allow jumping
   between the repository and the gh-pages site."
+  (make-github-source-uri-fn function)
   (make-git-source-uri-fn function))
+
+(defun make-github-source-uri-fn (asdf-system github-uri &key git-version)
+  "This function is a trivial wrapper around MAKE-GIT-SOURCE-URI-FN. It is
+   present to avoid breaking backwards compatibility with systems already
+   dependent on MAKE-GITHUB-SOURCE-URI-FN which MAKE-GIT-SOURCE-URI-FN =
+   supersedes."
+  (make-git-source-uri-fn asdf-system github-uri :git-version git-version))
 
 (defun make-git-source-uri-fn (asdf-system git-forge-uri &key git-version
                                (uri-format-string "~A/blob/~A/~A#L~S"))
