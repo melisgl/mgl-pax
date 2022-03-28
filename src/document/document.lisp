@@ -432,7 +432,7 @@
   string representing an URI. If FORMAT is :HTML and
   *DOCUMENT-MARK-UP-SIGNATURES* is true, then the locative as
   displayed in the signature will be a link to this uri. See
-  MAKE-GITHUB-SOURCE-URI-FN.
+  MAKE-GIT-SOURCE-URI-FN.
 
   PAGES may look something like this:
 

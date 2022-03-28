@@ -1231,7 +1231,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     string representing an URI. If `FORMAT` is `:HTML` and
     [`*DOCUMENT-MARK-UP-SIGNATURES*`][8fb6] is true, then the locative as
     displayed in the signature will be a link to this uri. See
-    [`MAKE-GITHUB-SOURCE-URI-FN`][f960].
+    [`MAKE-GIT-SOURCE-URI-FN`][587f].
     
     `PAGES` may look something like this:
     
@@ -1920,7 +1920,7 @@ HTML documentation and the default css stylesheet.
       :pages
       `((:objects
         (,mgl-pax::@pax-manual)
-        :source-uri-fn ,(make-github-source-uri-fn
+        :source-uri-fn ,(make-git-source-uri-fn
                          :mgl-pax
                          "https://github.com/melisgl/mgl-pax"))))
     ```
@@ -1956,10 +1956,10 @@ It is generally recommended to commit generated readmes (see
 without reading the code and sites like github can display them.
 
 HTML documentation can also be committed, but there is an issue with
-that: when linking to the sources (see [`MAKE-GITHUB-SOURCE-URI-FN`][f960]),
-the commit id is in the link. This means that code changes need to
-be committed first, and only then can HTML documentation be
-regenerated and committed in a followup commit.
+that: when linking to the sources (see [`MAKE-GIT-SOURCE-URI-FN`][587f]), the
+commit id is in the link. This means that code changes need to be
+committed first, and only then can HTML documentation be regenerated
+and committed in a followup commit.
 
 The second issue is that github is not very good at serving HTMLs
 files from the repository itself (and
@@ -1982,25 +1982,46 @@ between the repository and the gh-pages site.
 <a id="x-28MGL-PAX-3AMAKE-GITHUB-SOURCE-URI-FN-20FUNCTION-29"></a>
 - [function] **MAKE-GITHUB-SOURCE-URI-FN** *ASDF-SYSTEM GITHUB-URI &KEY GIT-VERSION*
 
+    This function is a backward-compatibility wrapper around
+    [`MAKE-GIT-SOURCE-URI-FN`][587f], which supersedes `MAKE-GITHUB-SOURCE-URI-FN`.
+    All arguments are passed on to `MAKE-GIT-SOURCE-URI-FN`, leaving
+    `URI-FORMAT-STRING` at its default, which is suitable for github.
+
+<a id="x-28MGL-PAX-3AMAKE-GIT-SOURCE-URI-FN-20FUNCTION-29"></a>
+- [function] **MAKE-GIT-SOURCE-URI-FN** *ASDF-SYSTEM GIT-FORGE-URI &KEY GIT-VERSION (URI-FORMAT-STRING "~A/blob/~A/~A#L~S")*
+
     Return a function suitable as `:SOURCE-URI-FN` of a page spec (see
-    the `PAGES` argument of [`DOCUMENT`][432c]). The function looks the source
-    location of the reference passed to it, and if the location is
+    the `PAGES` argument of [`DOCUMENT`][432c]). The function looks at the source
+    location of the [`REFERENCE`][1cea] passed to it, and if the location is
     found, the path is made relative to the root directory of
-    `ASDF-SYSTEM` and finally an URI pointing to github is returned. The
-    URI looks like this:
+    `ASDF-SYSTEM` and finally an URI pointing to your git forge (such as
+    github) is returned. A warning is signalled whenever the source
+    location lookup fails or if the source location points to a
+    directory not below the directory of `ASDF-SYSTEM`.
+    
+    If GIT-FORE-URI is `"https://github.com/melisgl/mgl-pax/"` and
+    `GIT-VERSION` is `"master"`, then the returned URI may look like this:
     
         https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
-    
-    "master" in the above link comes from `GIT-VERSION`.
     
     If `GIT-VERSION` is `NIL`, then an attempt is made to determine to
     current commit id from the `.git` in the directory holding
     `ASDF-SYSTEM`. If no `.git` directory is found, then no links to
-    github will be generated.
+    the git forge will be generated.
     
-    A separate warning is signalled whenever source location lookup
-    fails or if the source location points to a directory not below the
-    directory of `ASDF-SYSTEM`.
+    `URI-FORMAT-STRING` is a [`CL:FORMAT`][1f28] control string for four arguments:
+    
+    - `GIT-FORGE-URI`,
+    
+    - `GIT-VERSION`,
+    
+    - the relative path to the file of the source location of the reference,
+    
+    - and the line number.
+    
+    The default value of `URI-FORMAT-STRING` is for github. If using a
+    non-standard git forge, such as Sourcehut or Gitlab, simply pass a
+    suitable `URI-FORMAT-STRING` matching the URI scheme of your forge.
 
 <a id="x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29"></a>
 #### 9.8.2 PAX World
@@ -2024,7 +2045,7 @@ For example, this is how PAX registers itself:
 (defun pax-pages ()
   `((:objects
      (, @pax-manual)
-     :source-uri-fn ,(make-github-source-uri-fn
+     :source-uri-fn ,(make-git-source-uri-fn
                       :mgl-pax
                       "https://github.com/melisgl/mgl-pax"))))
 (register-doc-in-pax-world :pax (pax-sections) (pax-pages))
@@ -3340,6 +3361,7 @@ they are presented.
   [5800]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq_sle.htm "< FUNCTION"
   [5825]: #x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/transcribe" ASDF/SYSTEM:SYSTEM'
   [5875]: #x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "GENERIC-FUNCTION MGL-PAX:LOCATIVE"
+  [587f]: #x-28MGL-PAX-3AMAKE-GIT-SOURCE-URI-FN-20FUNCTION-29 "MGL-PAX:MAKE-GIT-SOURCE-URI-FN FUNCTION"
   [5c39]: #x-28MGL-PAX-3ALOCATE-DOCSTRING-20GENERIC-FUNCTION-29 "MGL-PAX:LOCATE-DOCSTRING GENERIC-FUNCTION"
   [5c74]: #x-28MGL-PAX-3A-40UNAMBIGUOUS-LOCATIVE-20MGL-PAX-3ASECTION-29 "Unambiguous Unspecified Locative"
   [5cd7]: #x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:INCLUDE MGL-PAX:LOCATIVE"
@@ -3494,7 +3516,6 @@ they are presented.
   [f5bd]: #x-28MGL-PAX-3A-40TRANSCRIBING-WITH-EMACS-20MGL-PAX-3ASECTION-29 "Transcribing with Emacs"
   [f74b]: #x-28MGL-PAX-3A-40BACKGROUND-20MGL-PAX-3ASECTION-29 "Background"
   [f945]: http://www.lispworks.com/documentation/HyperSpec/Body/03_d.htm '"3.4" MGL-PAX:CLHS'
-  [f960]: #x-28MGL-PAX-3AMAKE-GITHUB-SOURCE-URI-FN-20FUNCTION-29 "MGL-PAX:MAKE-GITHUB-SOURCE-URI-FN FUNCTION"
   [f9d2]: #x-28MGL-PAX-3A-40PACKAGELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Packages and Readtables"
   [fc18]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defmac.htm "DEFMACRO MGL-PAX:MACRO"
   [fc7b]: http://www.lispworks.com/documentation/HyperSpec/Body/t_meth_1.htm "METHOD-COMBINATION CLASS"

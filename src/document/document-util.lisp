@@ -84,7 +84,7 @@
     :pages
     `((:objects
       (,mgl-pax::@pax-manual)
-      :source-uri-fn ,(make-github-source-uri-fn
+      :source-uri-fn ,(make-git-source-uri-fn
                        :mgl-pax
                        \"https://github.com/melisgl/mgl-pax\"))))
   ```"
