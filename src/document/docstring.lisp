@@ -2,8 +2,8 @@
 
 (declaim (special *table-of-contents-stream*))
 
-;;; Normalize indentation of docstrings as it's described in
-;;; (METHOD () (STRING T)) DOCUMENT-OBJECT.
+;;; Normalize indentation of docstrings as described in (METHOD ()
+;;; (STRING T)) DOCUMENT-OBJECT.
 (defun strip-docstring-indentation (docstring &key (first-line-special-p t))
   (let ((indentation
           (docstring-indentation docstring

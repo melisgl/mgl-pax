@@ -193,8 +193,8 @@
     (error ()
       (error "~@<Malformed entry ~A in the definition of SECTION ~A. ~
                Entries must be of the form (SYMBOL LOCATIVE).~:@>"
-             ;; Force fully qualified symbols so that M-. works in the
-             ;; Slime debugger.
+             ;; Force symbols to be fully qualified so that M-. works
+             ;; in the Slime debugger.
              (prin1-to-string/fully-qualified entry)
              (prin1-to-string/fully-qualified section-name)))))
 

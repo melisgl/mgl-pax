@@ -31,7 +31,7 @@
   #-sbcl
   `(progn ,@body))
 
-;;; Like DEFUN, but silences redefinition warnings. We could also
+;;; Like DEFUN but silences redefinition warnings. We could also
 ;;; remember autoloaded functions (in an :AROUND-COMPILE in the ASDF
 ;;; system definition) and generate autoload definitions.
 (defmacro defun/autoloaded (name lambda-list &body body)

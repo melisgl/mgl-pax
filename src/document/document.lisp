@@ -189,7 +189,7 @@
 
 ;;; Link ids are short hashes, and they go into markdown reference
 ;;; links. Due to possible collisions they are context dependent, so
-;;; to keep LINKs immutable ids are in this hash table.
+;;; to keep LINKs immutable, ids are in this hash table.
 (defvar *link-to-id*)
 ;;; A LINK-ID to LINK hash table for MD5 collision detection.
 (defvar *id-to-link*)
@@ -833,7 +833,6 @@
     but in not `Capital`).")
 
 (defun codifiable-word-p (word)
-  ;; OPT
   (and (notany #'whitespacep word)
        (lowercase-only-in-suffixes-p word)
        (some #'upper-case-p word)))

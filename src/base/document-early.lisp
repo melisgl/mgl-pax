@@ -285,10 +285,10 @@
               do (when (<= file-position line-file-position)
                    (return line-number))))))
 
-;;; This is cached because it is determining the line number for a
-;;; given file position would need to traverse the file, which is
-;;; extremely expensive. Note that position 0 is not included, but
-;;; FILE-LENGTH is.
+;;; This is cached because determining the line number for a given
+;;; file position would need to traverse the file, which is extremely
+;;; expensive. Note that position 0 is not included, but FILE-LENGTH
+;;; is.
 (defun line-file-positions (filename)
   (with-open-file (stream filename)
     (loop for line = (read-line stream nil nil)

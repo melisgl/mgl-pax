@@ -7,6 +7,15 @@ deftransform, defoptimizer, define-vop, define-source-transfrom
 This would involve rewriting everything to emit parse tree fragments.
 * defining link ids doesn't work in function docstrings
 because it's translated to a list item
+
+(3BMD:PARSE-STRING-AND-PRINT-TO-STREAM "
+- xxx
+
+    [link][aaaa]
+    
+    [aaaa]: https://example.com
+
+" *standard-output* :FORMAT :HTML)
 * MAYBE pretty print lambda-lists (including default values)
 and values of variables. Unfortunately, there seems to be no way to
 use the lisp pretty printer for this because output also includes
@@ -28,8 +37,6 @@ change in INITIALIZE-LINKS.
 * MAYBE link to MOP
 * MAYBE consider CommonDoc from the 40ants fork
 * MAYBE split transcription off into a separate library?
-* MAYBE allow lowercase only in the last "word" of the name
-RED-OBJECTs but not REDs-OBJECT
 * MAYBE remove some markup in :PLAIN format?
 * MAYBE desuffix all lowercase suffixes?
 e.g. RESOLVEd
@@ -68,3 +75,9 @@ expands to
 
 (defvar saf
   "more")
+** local functions?
+** named one-off local functions?
+(defun foo (x)
+  ;; Just for the name, really. Maybe control what it can close over?
+  (subfoo ()
+   ))

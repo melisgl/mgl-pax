@@ -90,7 +90,7 @@
   ```"
   (document-html sections pages target-dir update-css-p nil))
 
-;;; Generate with the default HTML look
+;;; Generate with the default HTML look.
 (defun document-html (sections page-specs target-dir update-css-p
                       link-to-pax-world-p)
   (when update-css-p
@@ -164,7 +164,7 @@
                              target-file))))
 
 (defvar *document-html-top-blocks-of-links* ()
-  "A list of blocks of links to be display on the sidebar on the left,
+  "A list of blocks of links to be displayed on the sidebar on the left,
   above the table of contents. A block is of the form `(&KEY TITLE ID
   LINKS)`, where TITLE will be displayed at the top of the block in a
   HTML `DIV` with `ID`, followed by the links. LINKS is a list
