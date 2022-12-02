@@ -10,6 +10,7 @@
   (update-asdf-system-readmes function)
   (update-asdf-system-html-docs function)
   (*document-html-max-navigation-table-of-contents-level* variable)
+  (*document-html-head* variable)
   (*document-html-top-blocks-of-links* variable)
   (*document-html-bottom-blocks-of-links* variable)
   (@github-workflow section)
@@ -163,6 +164,10 @@
              (uiop:copy-file (asdf:system-relative-pathname :mgl-pax file)
                              target-file))))
 
+(defvar *document-html-head* nil
+  "NIL or a STRING that's going to be included in the <head> of the
+  generated html.")
+
 (defvar *document-html-top-blocks-of-links* ()
   "A list of blocks of links to be displayed on the sidebar on the left,
   above the table of contents. A block is of the form `(&KEY TITLE ID
@@ -177,6 +182,7 @@
 (defun html-header
     (stream &key title stylesheet (charset "UTF-8")
      link-to-pax-world-p
+     (head *document-html-head*)
      (top-blocks-of-links *document-html-top-blocks-of-links*)
      (bottom-blocks-of-links *document-html-bottom-blocks-of-links*))
   (format
@@ -202,6 +208,7 @@
    <script type="text/javascript" async
      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
    </script>
+   ~@[~A~]~%~
    </head>~%~
    <body>~%~
    <div id="content-container">~%~
@@ -218,7 +225,7 @@
        </div>~%~
      </div>~%~
      <div id="content">~%"""
-   title stylesheet charset
+   title stylesheet charset head
    (blocks-of-links-to-html-string top-blocks-of-links)
    link-to-pax-world-p
    (blocks-of-links-to-html-string bottom-blocks-of-links)))

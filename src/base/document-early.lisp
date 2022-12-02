@@ -20,6 +20,8 @@
 (export '*document-mark-up-signatures*)
 (defvar *document-normalize-packages*)
 (export '*document-normalize-packages*)
+(defvar *document-html-head*)
+(export '*document-html-head*)
 (defvar *document-html-top-blocks-of-links*)
 (export '*document-html-top-blocks-of-links*)
 (defvar *document-html-bottom-blocks-of-links*)

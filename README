@@ -1752,6 +1752,11 @@ HTML documentation and the default css stylesheet.
     *DOCUMENT-MAX-NUMBERING-LEVEL* in dynamic HTML table of contents on
     the left of the page.
 
+- [variable] *DOCUMENT-HTML-HEAD* NIL
+
+    NIL or a STRING that's going to be included in the <head> of the
+    generated html.
+
 - [variable] *DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* NIL
 
     A list of blocks of links to be displayed on the sidebar on the left,
