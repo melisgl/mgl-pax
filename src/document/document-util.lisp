@@ -6,13 +6,9 @@
     (:title "Utilities for Generating Documentation")
   "Two convenience functions are provided to serve the common case of
   having an ASDF system with some readmes and a directory with for the
-  HTML documentation and the default css stylesheet."
+  HTML documentation and the default CSS stylesheet."
   (update-asdf-system-readmes function)
-  (update-asdf-system-html-docs function)
-  (*document-html-max-navigation-table-of-contents-level* variable)
-  (*document-html-head* variable)
-  (*document-html-top-blocks-of-links* variable)
-  (*document-html-bottom-blocks-of-links* variable)
+  (@html-output section)
   (@github-workflow section)
   (@pax-world section))
 
@@ -27,11 +23,12 @@
   holding the ASDF-SYSTEM definition. OBJECT is passed on to DOCUMENT.
 
   `README.md` has anchors, links, inline code, and other markup added.
-  Not necessarily the easiest on the eye in an editor, but looks good
+  Not necessarily the easiest on the eye in an editor but looks good
   on github.
 
-  `README` is optimized for reading in text format. Has no links and
-  less cluttery markup.
+  `README` is optimized for reading in text format. It has less
+  cluttery markup and no [autolinking][@explicit-and-autolinking
+  section].
 
   Example usage:
 
@@ -39,8 +36,8 @@
   (update-asdf-system-readmes @pax-manual :mgl-pax)
   ```
 
-  Note that *DOCUMENT-URL-VERSIONS* is bound to URL-VERSIONS, that
-  defaults to using the uglier version 1 style of URL for the sake of
+  Note that *DOCUMENT-URL-VERSIONS* is bound to URL-VERSIONS, which
+  defaults to using the uglier, version 1 style of URL for the sake of
   github."
   (with-open-file (stream (asdf:system-relative-pathname
                            asdf-system "README.md")
@@ -64,6 +61,15 @@
                  [MGL-PAX](https://github.com/melisgl/mgl-pax)\\]~%"))
 
 
+(defsection @html-output (:title "HTML Output")
+  (update-asdf-system-html-docs function)
+  "See the following variables, which control HTML generation."
+  (*document-html-max-navigation-table-of-contents-level* variable)
+  (*document-html-head* variable)
+  (*document-html-sidebar* variable)
+  (*document-html-top-blocks-of-links* variable)
+  (*document-html-bottom-blocks-of-links* variable))
+
 (defun/autoloaded update-asdf-system-html-docs
     (sections asdf-system &key pages
               (target-dir (asdf:system-relative-pathname
@@ -71,7 +77,7 @@
               (update-css-p t))
   "Generate pretty HTML documentation for a single ASDF system,
   possibly linking to github. If UPDATE-CSS-P, copy the CSS style
-  sheet to TARGET-DIR, as well. Example usage:
+  sheet to TARGET-DIR as well. Example usage:
 
   ```
   (update-asdf-system-html-docs @pax-manual :mgl-pax)
@@ -165,15 +171,36 @@
                              target-file))))
 
 (defvar *document-html-head* nil
-  "NIL or a STRING that's going to be included in the <head> of the
-  generated html.")
+  "Stuff to be included in the `<head>` of the generated HTML.
+
+  - If NIL, nothing is included.
+
+  - If a STRING, then it is written to the HTML output as is without
+    any escaping.
+
+  - If a function designator, then it is called with a single
+    argument, the HTML stream, where it must write the output.")
+
+(defvar *document-html-sidebar* nil
+  "Stuff to be included in the HTML sidebar.
+
+  - If NIL, a default sidebar is generated, with
+    *DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS*, followed by the dynamic table
+    of contents, and *DOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS*.
+
+  - If a STRING, then it is written to the HTML output as is without
+    any escaping.
+
+  - If a function designator, then it is called with a single
+    argument, the HTML stream, where it must write the output.")
 
 (defvar *document-html-top-blocks-of-links* ()
   "A list of blocks of links to be displayed on the sidebar on the left,
   above the table of contents. A block is of the form `(&KEY TITLE ID
   LINKS)`, where TITLE will be displayed at the top of the block in a
-  HTML `DIV` with `ID`, followed by the links. LINKS is a list
-  of `(URI LABEL) elements.`")
+  HTML `DIV` with `ID` followed by the links. LINKS is a list of `(URI
+  LABEL)` elements, where `URI` maybe a string or an object being
+  `DOCUMENT`ed or a REFERENCE thereof.")
 
 (defvar *document-html-bottom-blocks-of-links* ()
   "Like *DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS*, only it is displayed
@@ -181,20 +208,21 @@
 
 (defun html-header
     (stream &key title stylesheet (charset "UTF-8")
-     link-to-pax-world-p
-     (head *document-html-head*)
-     (top-blocks-of-links *document-html-top-blocks-of-links*)
-     (bottom-blocks-of-links *document-html-bottom-blocks-of-links*))
+              link-to-pax-world-p
+              (head *document-html-head*)
+              (sidebar *document-html-sidebar*)
+              (top-blocks-of-links *document-html-top-blocks-of-links*)
+              (bottom-blocks-of-links *document-html-bottom-blocks-of-links*))
   (format
    stream
    """<!DOCTYPE html>~%~
    <html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>~%~
    <head>~%~
    ~@[<title>~A</title>~]~%~
-   ~@[<link type='text/css' href='~A' rel='stylesheet'/>~]~%~
-   ~@[<meta http-equiv="Content-Type" ~
-            content="text/html; ~
-   charset=~A"/>~]~%~
+   ~@[<link type='text/css' href='~A' rel='stylesheet'>~]~%~
+   ~@[<meta http-equiv="Content-Type" content="text/html; ~
+   charset=~A">~]~%~
+   <meta name="viewport" content="width=device-width">
    <script src="jquery.min.js"></script>~%~
    <script src="toc.min.js"></script>~%~
    <script type="text/x-mathjax-config">
@@ -205,14 +233,32 @@
        }
      });
    </script>
-   <script type="text/javascript" async
-     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+   <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
    </script>
    ~@[~A~]~%~
    </head>~%~
    <body>~%~
-   <div id="content-container">~%~
-     <div id="toc">~%~
+   <div id="content-container">~%"""
+   title stylesheet charset
+   (etypecase head
+     ((or null string)
+      head)
+     ((or symbol function)
+      (with-output-to-string (stream)
+        (funcall head stream)))))
+  (etypecase sidebar
+    (null
+     (generate-sidebar stream top-blocks-of-links link-to-pax-world-p
+                       bottom-blocks-of-links))
+    (string
+     (write sidebar :stream stream))
+    ((or symbol function)
+     (funcall sidebar stream)))
+  (format stream """<div id="content">~%"""))
+
+(defun generate-sidebar (stream top-blocks-of-links link-to-pax-world-p
+                         bottom-blocks-of-links)
+  (format stream """<div id="toc">~%~
        ~A~
        ~:[~;<div id="toc-header"><ul><li><a href="index.html">~
             PAX World</a></li></ul></div>~%~]~
@@ -223,32 +269,51 @@
          <ul><li><a href="https://github.com/melisgl/mgl-pax">[generated ~
              by MGL-PAX]</a></li></ul>~
        </div>~%~
-     </div>~%~
-     <div id="content">~%"""
-   title stylesheet charset head
+     </div>~%"""
    (blocks-of-links-to-html-string top-blocks-of-links)
    link-to-pax-world-p
    (blocks-of-links-to-html-string bottom-blocks-of-links)))
 
 (defun blocks-of-links-to-html-string (blocks-of-links)
-  (format nil "~{~A~}" (mapcar #'block-of-links-to-html-string
-                               blocks-of-links)))
+  (if (listp blocks-of-links)
+      (format nil "~{~A~}" (mapcar #'block-of-links-to-html-string
+                                   blocks-of-links))
+      (funcall blocks-of-links)))
 
 (defun block-of-links-to-html-string (block-of-links)
-  (destructuring-bind (&key title id links) block-of-links
+  (destructuring-bind (&key title id uri links) block-of-links
     (with-output-to-string (stream)
       (format stream "<div class=\"menu-block\"")
       (when id
         (format stream " id=\"~A\"" id))
       (format stream ">")
       (when title
-        (format stream "<span class=\"menu-block-title\">~A</span>" title))
+        (format stream "<span class=\"menu-block-title\">")
+        (if uri
+            (format stream "<a href=~A>~A</a>"
+                    (if (stringp uri)
+                        uri
+                        (object-to-uri uri))
+                    title)
+            (format stream "~A" title))
+        (format stream "</span>"))
       (format stream "<ul>")
       (dolist (link links)
-        (format stream "<li><a href=\"~A\">~A</a></li>"
-                (first link)
-                (second link)))
+        (format stream "<li>~A</li>" (link-in-block-to-html link)))
       (princ "</ul></div>" stream))))
+
+(defun link-in-block-to-html (link-in-block)
+  (destructuring-bind (url text) link-in-block
+    (if (stringp url)
+        (format nil "<a href=\"~A\">~A</a>" url text)
+        (let ((uri (object-to-uri url)))
+          (if uri
+              (format nil "<a href=\"~A\">~A</a>" uri text)
+              ;; KLUDGE: It's not strictly a reflink, but close enough.
+              (signal-unresolvable-reflink
+               `(:reference-link :label (,text)
+                                 :definition (,(princ-to-string url)))
+               text url))))))
 
 (defvar *google-analytics-id* nil)
 
@@ -270,8 +335,8 @@
 
 (defvar *document-html-max-navigation-table-of-contents-level* nil
   "NIL or a non-negative integer. If non-NIL, it overrides
-  *DOCUMENT-MAX-NUMBERING-LEVEL* in dynamic HTML table of contents on
-  the left of the page.")
+  *DOCUMENT-MAX-NUMBERING-LEVEL* in the dynamic HTML table of contents
+  on the left of the page.")
 
 (defun toc-options ()
   (let ((max-level (or *document-html-max-navigation-table-of-contents-level*

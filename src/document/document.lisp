@@ -311,7 +311,10 @@
 (defmacro with-final-output-to-page ((stream page) &body body)
   `(with-open-stream-spec (,stream (page-final-stream-spec ,page)
                            :direction :output)
-     ,@body))
+     ;; This allows HEADER-FN and FOOTER-FN to support linking
+     ;; references with LINK-TO-URI.
+     (let ((*page* ,page))
+       ,@body)))
 
 (declaim (special *document-normalize-packages*))
 (declaim (special *table-of-contents-stream*))
@@ -429,7 +432,7 @@
 
   Finally, :SOURCE-URI-FN is a function of a single, REFERENCE
   argument. If it returns a value other than NIL, then it must be a
-  string representing an URI. If FORMAT is :HTML and
+  string representing an \URI. If FORMAT is :HTML and
   *DOCUMENT-MARK-UP-SIGNATURES* is true, then the locative as
   displayed in the signature will be a link to this uri. See
   MAKE-GIT-SOURCE-URI-FN.
@@ -571,6 +574,16 @@
                                     (let ((*print-case* :upcase))
                                       (prin1-to-string (section-name
                                                         section))))))))))))))))
+
+
+;;;; URIs of stuff
+
+(defun object-to-uri (object)
+  (let ((reference (canonical-reference object)))
+    (when reference
+      (let ((link (find-link reference)))
+        (when link
+          (link-to-uri link))))))
 
 (defun relative-page-uri-fragment (page reference-page)
   (if (eq page reference-page)

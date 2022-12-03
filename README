@@ -1698,7 +1698,7 @@ table of contents and navigation links.
 
 Two convenience functions are provided to serve the common case of
 having an ASDF system with some readmes and a directory with for the
-HTML documentation and the default css stylesheet.
+HTML documentation and the default CSS stylesheet.
 
 - [function] UPDATE-ASDF-SYSTEM-READMES OBJECT ASDF-SYSTEM &KEY (URL-VERSIONS '(1))
 
@@ -1706,11 +1706,11 @@ HTML documentation and the default css stylesheet.
     holding the ASDF-SYSTEM definition. OBJECT is passed on to DOCUMENT.
     
     `README.md` has anchors, links, inline code, and other markup added.
-    Not necessarily the easiest on the eye in an editor, but looks good
+    Not necessarily the easiest on the eye in an editor but looks good
     on github.
     
-    `README` is optimized for reading in text format. Has no links and
-    less cluttery markup.
+    `README` is optimized for reading in text format. It has less
+    cluttery markup and no autolinking.
     
     Example usage:
     
@@ -1718,15 +1718,17 @@ HTML documentation and the default css stylesheet.
     (update-asdf-system-readmes @pax-manual :mgl-pax)
     ```
     
-    Note that *DOCUMENT-URL-VERSIONS* is bound to URL-VERSIONS, that
-    defaults to using the uglier version 1 style of URL for the sake of
+    Note that *DOCUMENT-URL-VERSIONS* is bound to URL-VERSIONS, which
+    defaults to using the uglier, version 1 style of URL for the sake of
     github.
+
+#### HTML Output
 
 - [function] UPDATE-ASDF-SYSTEM-HTML-DOCS SECTIONS ASDF-SYSTEM &KEY PAGES (TARGET-DIR (ASDF/SYSTEM:SYSTEM-RELATIVE-PATHNAME ASDF-SYSTEM "doc/")) (UPDATE-CSS-P T)
 
     Generate pretty HTML documentation for a single ASDF system,
     possibly linking to github. If UPDATE-CSS-P, copy the CSS style
-    sheet to TARGET-DIR, as well. Example usage:
+    sheet to TARGET-DIR as well. Example usage:
     
     ```
     (update-asdf-system-html-docs @pax-manual :mgl-pax)
@@ -1746,24 +1748,50 @@ HTML documentation and the default css stylesheet.
     ```
 
 
+See the following variables, which control HTML generation.
+
 - [variable] *DOCUMENT-HTML-MAX-NAVIGATION-TABLE-OF-CONTENTS-LEVEL* NIL
 
     NIL or a non-negative integer. If non-NIL, it overrides
-    *DOCUMENT-MAX-NUMBERING-LEVEL* in dynamic HTML table of contents on
-    the left of the page.
+    *DOCUMENT-MAX-NUMBERING-LEVEL* in the dynamic HTML table of contents
+    on the left of the page.
 
 - [variable] *DOCUMENT-HTML-HEAD* NIL
 
-    NIL or a STRING that's going to be included in the <head> of the
-    generated html.
+    Stuff to be included in the `<head>` of the generated HTML.
+    
+    - If NIL, nothing is included.
+    
+    - If a STRING, then it is written to the HTML output as is without
+      any escaping.
+    
+    - If a function designator, then it is called with a single
+      argument, the HTML stream, where it must write the output.
+
+
+- [variable] *DOCUMENT-HTML-SIDEBAR* NIL
+
+    Stuff to be included in the HTML sidebar.
+    
+    - If NIL, a default sidebar is generated, with
+      *DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS*, followed by the dynamic table
+      of contents, and *DOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS*.
+    
+    - If a STRING, then it is written to the HTML output as is without
+      any escaping.
+    
+    - If a function designator, then it is called with a single
+      argument, the HTML stream, where it must write the output.
+
 
 - [variable] *DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* NIL
 
     A list of blocks of links to be displayed on the sidebar on the left,
     above the table of contents. A block is of the form `(&KEY TITLE ID
     LINKS)`, where TITLE will be displayed at the top of the block in a
-    HTML `DIV` with `ID`, followed by the links. LINKS is a list
-    of `(URI LABEL) elements.`
+    HTML `DIV` with `ID` followed by the links. LINKS is a list of `(URI
+    LABEL)` elements, where `URI` maybe a string or an object being
+    `DOCUMENT`ed or a REFERENCE thereof.
 
 - [variable] *DOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS* NIL
 
@@ -1809,8 +1837,8 @@ between the repository and the gh-pages site.
 
 - [function] MAKE-GIT-SOURCE-URI-FN ASDF-SYSTEM GIT-FORGE-URI &KEY GIT-VERSION (URI-FORMAT-STRING "~A/blob/~A/~A#L~S")
 
-    Return a function suitable as :SOURCE-URI-FN of a page spec (see
-    the PAGES argument of DOCUMENT). The function looks at the source
+    Return a function suitable as :SOURCE-URI-FN of a page spec (see the
+    PAGES argument of DOCUMENT). The function looks at the source
     location of the REFERENCE passed to it, and if the location is
     found, the path is made relative to the root directory of
     ASDF-SYSTEM and finally an URI pointing to your git forge (such as

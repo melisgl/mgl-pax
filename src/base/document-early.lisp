@@ -182,17 +182,17 @@
 
 (defun make-git-source-uri-fn (asdf-system git-forge-uri &key git-version
                                (uri-format-string "~A/blob/~A/~A#L~S"))
-  """Return a function suitable as :SOURCE-URI-FN of a page spec (see
-  the PAGES argument of DOCUMENT). The function looks at the source
+  """Return a function suitable as :SOURCE-URI-FN of a page spec (see the
+  PAGES argument of DOCUMENT). The function looks at the source
   location of the REFERENCE passed to it, and if the location is
   found, the path is made relative to the root directory of
-  ASDF-SYSTEM and finally an URI pointing to your git forge (such as
+  ASDF-SYSTEM and finally an \URI pointing to your git forge (such as
   github) is returned. A warning is signalled whenever the source
   location lookup fails or if the source location points to a
   directory not below the directory of ASDF-SYSTEM.
 
   If GIT-FORE-URI is `"https://github.com/melisgl/mgl-pax/"` and
-  GIT-VERSION is `"master"`, then the returned URI may look like this:
+  GIT-VERSION is `"master"`, then the returned \URI may look like this:
 
       https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
 
@@ -210,7 +210,7 @@
 
   The default value of URI-FORMAT-STRING is for github. If using a
   non-standard git forge, such as Sourcehut or Gitlab, simply pass a
-  suitable URI-FORMAT-STRING matching the URI scheme of your forge."""
+  suitable URI-FORMAT-STRING matching the \URI scheme of your forge."""
   (let* ((git-version (or git-version (asdf-system-git-version asdf-system)))
          (system-dir (asdf:system-relative-pathname asdf-system "")))
     (if git-version

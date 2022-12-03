@@ -44,8 +44,9 @@
     - [9.6 Linking to Sections][22c2]
     - [9.7 Miscellaneous Variables][7c82]
     - [9.8 Utilities for Generating Documentation][1b1b]
-        - [9.8.1 Github Workflow][dff6]
-        - [9.8.2 PAX World][1281]
+        - [9.8.1 HTML Output][36e1]
+        - [9.8.2 Github Workflow][dff6]
+        - [9.8.3 PAX World][1281]
     - [9.9 Overview of Escaping][2634]
     - [9.10 Document Generation Implementation Notes][d1ca]
 - [10 Transcripts][6300]
@@ -1876,7 +1877,7 @@ table of contents and navigation links.
 
 Two convenience functions are provided to serve the common case of
 having an ASDF system with some readmes and a directory with for the
-HTML documentation and the default css stylesheet.
+HTML documentation and the default CSS stylesheet.
 
 <a id="x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29"></a>
 - [function] **UPDATE-ASDF-SYSTEM-READMES** *OBJECT ASDF-SYSTEM &KEY (URL-VERSIONS '(1))*
@@ -1885,11 +1886,11 @@ HTML documentation and the default css stylesheet.
     holding the `ASDF-SYSTEM` definition. `OBJECT` is passed on to [`DOCUMENT`][432c].
     
     `README.md` has anchors, links, inline code, and other markup added.
-    Not necessarily the easiest on the eye in an editor, but looks good
+    Not necessarily the easiest on the eye in an editor but looks good
     on github.
     
-    `README` is optimized for reading in text format. Has no links and
-    less cluttery markup.
+    `README` is optimized for reading in text format. It has less
+    cluttery markup and no [autolinking][b3cc].
     
     Example usage:
     
@@ -1897,16 +1898,19 @@ HTML documentation and the default css stylesheet.
     (update-asdf-system-readmes @pax-manual :mgl-pax)
     ```
     
-    Note that [`*DOCUMENT-URL-VERSIONS*`][17e0] is bound to `URL-VERSIONS`, that
-    defaults to using the uglier version 1 style of `URL` for the sake of
+    Note that [`*DOCUMENT-URL-VERSIONS*`][17e0] is bound to `URL-VERSIONS`, which
+    defaults to using the uglier, version 1 style of `URL` for the sake of
     github.
+
+<a id="x-28MGL-PAX-3A-40HTML-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
+#### 9.8.1 HTML Output
 
 <a id="x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-HTML-DOCS-20FUNCTION-29"></a>
 - [function] **UPDATE-ASDF-SYSTEM-HTML-DOCS** *SECTIONS ASDF-SYSTEM &KEY PAGES (TARGET-DIR (ASDF/SYSTEM:SYSTEM-RELATIVE-PATHNAME ASDF-SYSTEM "doc/")) (UPDATE-CSS-P T)*
 
     Generate pretty HTML documentation for a single ASDF system,
     possibly linking to github. If `UPDATE-CSS-P`, copy the CSS style
-    sheet to `TARGET-DIR`, as well. Example usage:
+    sheet to `TARGET-DIR` as well. Example usage:
     
     ```
     (update-asdf-system-html-docs @pax-manual :mgl-pax)
@@ -1926,18 +1930,44 @@ HTML documentation and the default css stylesheet.
     ```
 
 
+See the following variables, which control HTML generation.
+
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-HTML-MAX-NAVIGATION-TABLE-OF-CONTENTS-LEVEL-2A-20VARIABLE-29"></a>
 - [variable] **\*DOCUMENT-HTML-MAX-NAVIGATION-TABLE-OF-CONTENTS-LEVEL\*** *NIL*
 
     `NIL` or a non-negative integer. If non-NIL, it overrides
-    [`*DOCUMENT-MAX-NUMBERING-LEVEL*`][f12d] in dynamic HTML table of contents on
-    the left of the page.
+    [`*DOCUMENT-MAX-NUMBERING-LEVEL*`][f12d] in the dynamic HTML table of contents
+    on the left of the page.
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-HTML-HEAD-2A-20VARIABLE-29"></a>
 - [variable] **\*DOCUMENT-HTML-HEAD\*** *NIL*
 
-    `NIL` or a `STRING`([`0`][7bd4] [`1`][4267]) that's going to be included in the <head> of the
-    generated html.
+    Stuff to be included in the `<head>` of the generated HTML.
+    
+    - If `NIL`, nothing is included.
+    
+    - If a `STRING`([`0`][7bd4] [`1`][4267]), then it is written to the HTML output as is without
+      any escaping.
+    
+    - If a function designator, then it is called with a single
+      argument, the HTML stream, where it must write the output.
+
+
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-HTML-SIDEBAR-2A-20VARIABLE-29"></a>
+- [variable] **\*DOCUMENT-HTML-SIDEBAR\*** *NIL*
+
+    Stuff to be included in the HTML sidebar.
+    
+    - If `NIL`, a default sidebar is generated, with
+      [`*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS*`][e216], followed by the dynamic table
+      of contents, and [`*DOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS*`][0ef0].
+    
+    - If a `STRING`([`0`][7bd4] [`1`][4267]), then it is written to the HTML output as is without
+      any escaping.
+    
+    - If a function designator, then it is called with a single
+      argument, the HTML stream, where it must write the output.
+
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-HTML-TOP-BLOCKS-OF-LINKS-2A-20VARIABLE-29"></a>
 - [variable] **\*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS\*** *NIL*
@@ -1945,8 +1975,9 @@ HTML documentation and the default css stylesheet.
     A list of blocks of links to be displayed on the sidebar on the left,
     above the table of contents. A block is of the form `(&KEY TITLE ID
     LINKS)`, where `TITLE` will be displayed at the top of the block in a
-    HTML `DIV` with `ID`, followed by the links. `LINKS` is a list
-    of `(URI LABEL) elements.`
+    HTML `DIV` with `ID` followed by the links. `LINKS` is a list of `(URI
+    LABEL)` elements, where `URI` maybe a string or an object being
+    [`DOCUMENT`][432c]ed or a [`REFERENCE`][1cea] thereof.
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS-2A-20VARIABLE-29"></a>
 - [variable] **\*DOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS\*** *NIL*
@@ -1955,7 +1986,7 @@ HTML documentation and the default css stylesheet.
     below the table of contents.
 
 <a id="x-28MGL-PAX-3A-40GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29"></a>
-#### 9.8.1 Github Workflow
+#### 9.8.2 Github Workflow
 
 It is generally recommended to commit generated readmes (see
 [`UPDATE-ASDF-SYSTEM-READMES`][13a9]), so that users have something to read
@@ -1996,8 +2027,8 @@ between the repository and the gh-pages site.
 <a id="x-28MGL-PAX-3AMAKE-GIT-SOURCE-URI-FN-20FUNCTION-29"></a>
 - [function] **MAKE-GIT-SOURCE-URI-FN** *ASDF-SYSTEM GIT-FORGE-URI &KEY GIT-VERSION (URI-FORMAT-STRING "~A/blob/~A/~A#L~S")*
 
-    Return a function suitable as `:SOURCE-URI-FN` of a page spec (see
-    the `PAGES` argument of [`DOCUMENT`][432c]). The function looks at the source
+    Return a function suitable as `:SOURCE-URI-FN` of a page spec (see the
+    `PAGES` argument of [`DOCUMENT`][432c]). The function looks at the source
     location of the [`REFERENCE`][1cea] passed to it, and if the location is
     found, the path is made relative to the root directory of
     `ASDF-SYSTEM` and finally an URI pointing to your git forge (such as
@@ -2030,7 +2061,7 @@ between the repository and the gh-pages site.
     suitable `URI-FORMAT-STRING` matching the URI scheme of your forge.
 
 <a id="x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29"></a>
-#### 9.8.2 PAX World
+#### 9.8.3 PAX World
 
 PAX World is a registry of documents, which can generate
 cross-linked HTML documentation pages for all the registered
@@ -3305,6 +3336,7 @@ they are presented.
   [06a9]: #x-28MGL-PAX-3A-40CONDITION-SYSTEM-LOCATIVES-20MGL-PAX-3ASECTION-29 "Condition System Locatives"
   [08f7]: http://www.lispworks.com/documentation/HyperSpec/Body/v_t.htm "T MGL-PAX:CONSTANT"
   [0b3a]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE"
+  [0ef0]: #x-28MGL-PAX-3A-2ADOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS* VARIABLE"
   [1102]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "ABORT FUNCTION"
   [117a]: http://www.lispworks.com/documentation/HyperSpec/Body/f_open.htm "OPEN FUNCTION"
   [1281]: #x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29 "PAX World"
@@ -3339,6 +3371,7 @@ they are presented.
   [3200]: #x-28MGL-PAX-3ALOCATIVE-TYPE-20FUNCTION-29 "MGL-PAX:LOCATIVE-TYPE FUNCTION"
   [32f5]: #x-28MGL-PAX-3ACANONICAL-REFERENCE-20GENERIC-FUNCTION-29 "MGL-PAX:CANONICAL-REFERENCE GENERIC-FUNCTION"
   [3386]: #x-28MGL-PAX-3A-40NAVIGATING-IN-EMACS-20MGL-PAX-3ASECTION-29 "Navigating Sources in Emacs"
+  [36e1]: #x-28MGL-PAX-3A-40HTML-OUTPUT-20MGL-PAX-3ASECTION-29 "HTML Output"
   [378f]: #x-28MGL-PAX-3A-40PARSING-20MGL-PAX-3ASECTION-29 "Parsing"
   [3ae8]: http://www.lispworks.com/documentation/HyperSpec/Body/r_contin.htm "CONTINUE RESTART"
   [3d3c]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_rd.htm "READ FUNCTION"
