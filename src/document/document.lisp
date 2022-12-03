@@ -556,10 +556,9 @@
                       (escape-markdown-reflink-definition-title
                        (princ-to-string anchor)))
               ;; Link to documentation generated in the same run.
-              (format stream "  [~A]: ~A#~A ~A~%"
+              (format stream "  [~A]: ~A ~A~%"
                       (link-id link)
-                      (relative-page-uri-fragment (link-page link) *page*)
-                      (anchor-id (link-reference link))
+                      (link-to-uri link)
                       (escape-markdown-reflink-definition-title
                        (let* ((ref (link-reference link))
                               (locative-type (reference-locative-type ref)))
@@ -585,13 +584,31 @@
         (when link
           (link-to-uri link))))))
 
+(defun link-to-uri (link)
+  (let* ((target-page (link-page link))
+         (target-page-references (page-references target-page))
+         (target-page-uri-fragment (page-uri-fragment target-page)))
+    ;; Don't generate anchors when linking to the first reference on
+    ;; the page (COLLECT-REACHABLE-OBJECTS).
+    (if (and (reference= (link-reference link) (first target-page-references))
+             target-page-uri-fragment)
+        (if (eq target-page *page*)
+            ;; "xxx.html"
+            (format nil "~A.~A" (pathname-name target-page-uri-fragment)
+                    (pathname-type target-page-uri-fragment))
+            ;; "../xxx.html"
+            (relative-page-uri-fragment target-page *page*))
+        (format nil "~A#~A"
+                (if (eq target-page *page*)
+                    ""
+                    (relative-page-uri-fragment target-page *page*))
+                (anchor-id (link-reference link))))))
+
 (defun relative-page-uri-fragment (page reference-page)
-  (if (eq page reference-page)
-      ""
-      (let ((fragment (page-uri-fragment page))
-            (reference-fragment (page-uri-fragment reference-page)))
-        (assert (and fragment reference-fragment))
-        (relativize-pathname fragment reference-fragment))))
+  (let ((fragment (page-uri-fragment page))
+        (reference-fragment (page-uri-fragment reference-page)))
+    (assert (and fragment reference-fragment))
+    (relativize-pathname fragment reference-fragment)))
 
 
 ;;;; Page specs
@@ -1877,23 +1894,7 @@
                                                *table-of-contents-stream*)
                 (funcall fn (make-broadcast-stream))))
              (t
-              (cond (*document-link-sections*
-                     (anchor object stream)
-                     (navigation-link object stream)
-                     (format stream "~A" (fancy-navigation object))
-                     (heading *heading-level* stream)
-                     (if (eq *format* :html)
-                         (if link-title-to
-                             (format stream " [~A~A][~A]~%~%"
-                                     (heading-number) title
-                                     (link-to-reference link-title-to))
-                             (format stream " <a href=\"#~A\">~A~A</a>~%~%"
-                                     (urlencode (reference-to-anchor object))
-                                     (heading-number) title))
-                         (format stream " ~A~A~%~%" (heading-number) title)))
-                    (t
-                     (heading *heading-level* stream)
-                     (format stream " ~A~A~%~%" (heading-number) title)))
+              (print-section-title stream object title link-title-to)
               (when (and (zerop *heading-level*)
                          (plusp *document-max-table-of-contents-level*))
                 (heading (1+ *heading-level*) stream)
@@ -1921,6 +1922,28 @@
 (defun process-title (string)
   (with-output-to-string (out)
     (print-markdown (codify (parse-markdown string)) out)))
+
+(defun print-section-title (stream section title link-title-to)
+  (when *document-link-sections*
+    (anchor section stream)
+    (navigation-link section stream)
+    (format stream "~A" (fancy-navigation section)))
+  (heading *heading-level* stream)
+  (if (and *document-link-sections*
+           (eq *format* :html))
+      (print-section-title-link stream section title link-title-to)
+      (format stream " ~A~A~%~%" (heading-number) title)))
+
+(defun print-section-title-link (stream section title link-title-to)
+  (if link-title-to
+      ;; Hovering over the section title will show the title of
+      ;; LINK-TITLE-TO from the markdown reference link definition.
+      (format stream " [~A~A][~A]~%~%"
+              (heading-number) title
+              (link-to-reference link-title-to))
+      (format stream " <a href=\"~A\">~A~A</a>~%~%"
+              (object-to-uri section)
+              (heading-number) title)))
 
 (defun fancy-navigation (object)
   (if (and *document-fancy-html-navigation*
