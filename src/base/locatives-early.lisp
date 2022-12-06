@@ -66,7 +66,7 @@
   """)
 
 
-;;;; These must be available even if just the base mgl-pax system is
+;;;; These must be available even if only the base mgl-pax system is
 ;;;; loaded.
 
 (defvar *symbol-macro-docstrings* (make-hash-table))
@@ -77,4 +77,3 @@
 (defmethod (setf documentation) (docstring (symbol symbol)
                                  (doc-type (eql 'symbol-macro)))
   (setf (gethash symbol *symbol-macro-docstrings*) docstring))
-

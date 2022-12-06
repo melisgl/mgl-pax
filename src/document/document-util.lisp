@@ -131,7 +131,7 @@
          (filename (sections-to-filename objects dir)))
     (flet ((header (stream)
              (let ((title (if section
-                              (process-title (section-title section))
+                              (section-title section)
                               nil)))
                (html-header stream :title title
                                    :stylesheet "style.css" :charset "UTF-8"
