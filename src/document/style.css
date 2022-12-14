@@ -12,22 +12,27 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 a {
+  text-decoration: none;
   border-bottom: none;
 }
 
 h2 a {
+  text-decoration: none;
   border-bottom: none;
 }
 
 h3 a {
+  text-decoration: none;
   border-bottom: none;
 }
 
 h4 a {
+  text-decoration: none;
   border-bottom: none;
 }
 
 h5 a {
+  text-decoration: none;
   border-bottom: none;
 }
 
@@ -103,8 +108,8 @@ code {
 
 a {
   color: #222222;
-  text-decoration: none;
-  border-bottom: 1px solid;
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.15em;
 }
 
 h6 a {
@@ -116,7 +121,9 @@ a:hover {
 }
 
 img {
-  max-width:100%;
+  display: block;
+  max-width: 90%;
+  margin: auto;
 }
 
 .reference-bullet {
@@ -141,6 +148,7 @@ img {
 }
 
 .reference-object a {
+  text-decoration: none;
   border-bottom: none;
 }
 
@@ -276,6 +284,7 @@ a.symbol:hover { color : #229955; background-color : transparent; text-decoratio
 }
 
 #toc a {
+  text-decoration: none;
   border-bottom: none;
 }
 
