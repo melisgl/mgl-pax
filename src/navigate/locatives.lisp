@@ -206,15 +206,6 @@
   => "This is MY-MAC."
   ```""")
 
-(defvar *symbol-macro-docstrings* (make-hash-table))
-
-(defmethod documentation ((symbol symbol) (doc-type (eql 'symbol-macro)))
-  (gethash symbol *symbol-macro-docstrings*))
-
-(defmethod (setf documentation) (docstring (symbol symbol)
-                                 (doc-type (eql 'symbol-macro)))
-  (setf (gethash symbol *symbol-macro-docstrings*) docstring))
-
 (defmethod locate-object (symbol (locative-type (eql 'symbol-macro))
                           locative-args)
   ;; There is no portable way to test the existence of the symbol

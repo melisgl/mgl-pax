@@ -64,3 +64,17 @@
   corresponding source location or docstring like for
   [CONDITION][condition]s.
   """)
+
+
+;;;; These must be available even if just the base mgl-pax system is
+;;;; loaded.
+
+(defvar *symbol-macro-docstrings* (make-hash-table))
+
+(defmethod documentation ((symbol symbol) (doc-type (eql 'symbol-macro)))
+  (gethash symbol *symbol-macro-docstrings*))
+
+(defmethod (setf documentation) (docstring (symbol symbol)
+                                 (doc-type (eql 'symbol-macro)))
+  (setf (gethash symbol *symbol-macro-docstrings*) docstring))
+
