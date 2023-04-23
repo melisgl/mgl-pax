@@ -1353,12 +1353,12 @@ MathJax. It can be done inline with `$` like this:
 
     $\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$
 
-which is diplayed as $\int\_0^\infty e^{-x^2}
-dx=\frac{\sqrt{\pi}}{2}$, or it can be delimited by `$$` like this:
+which is diplayed as $\int\_0^\infty e^\{-x^2\}
+dx=\frac\{\sqrt\{\pi\}\}\{2\}$, or it can be delimited by `$$` like this:
 
     $$\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
 
-to get: $$\int\_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
+to get: $$\int\_0^\infty e^\{-x^2\} dx=\frac\{\sqrt\{\pi\}\}\{2\}$$
 
 MathJax will leave code blocks (including those inline with
 backticks) alone. Outside code blocks, escape `$` by prefixing it
