@@ -112,7 +112,7 @@
 
   ##### Docstrings
 
-  \PAX's automatically recognizes and [marks up code][@codification]
+  \PAX automatically recognizes and [marks up code][@codification]
   with backticks and [links code][@linking-to-code] to their
   definitions.
 

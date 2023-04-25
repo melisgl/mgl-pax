@@ -200,7 +200,7 @@ is first, code must look pretty, documentation is code.
 
 ##### Docstrings
 
-PAX's automatically recognizes and [marks up code][f1ab]
+PAX automatically recognizes and [marks up code][f1ab]
 with backticks and [links code][1865] to their
 definitions.
 
@@ -883,8 +883,6 @@ which makes navigating the sources with `M-.` (see
     
     When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][730f])
     is true, `DOCSTRING` will not be recorded to save memory.
-    
-    `GLOSSARY-TERM` is not [`EXPORTABLE-LOCATIVE-TYPE-P`][c930].
 
 <a id="x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **LOCATIVE** *LAMBDA-LIST*
@@ -2978,14 +2976,15 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
     The default method calls [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] with
     `LOCATIVE-TYPE` and ignores the other arguments.
     
-    For example, to prevent `SECTION`([`0`][5fac] [`1`][672f])s from being export from the [`MGL-PAX`][6fdb]
-    package, the following method is defined.
+    By default, `SECTION`([`0`][5fac] [`1`][672f])s and `GLOSSARY-TERM`([`0`][8251] [`1`][5119])s are not exported although
+    they are `EXPORTABLE-LOCATIVE-TYPE-P`. To export symbols naming
+    section from [`MGL-PAX`][6fdb], the following method could be added:
     
     ```
     (defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
                                        symbol (locative-type (eql 'section))
                                        locative-args)
-      nil)
+      t)
     ```
 
 

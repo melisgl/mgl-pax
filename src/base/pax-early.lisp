@@ -238,27 +238,28 @@
   The default method calls EXPORTABLE-LOCATIVE-TYPE-P with
   LOCATIVE-TYPE and ignores the other arguments.
 
-  For example, to prevent SECTIONs from being export from the MGL-PAX
-  package, the following method is defined.
+  By default, SECTIONs and GLOSSARY-TERMs are not exported although
+  they are EXPORTABLE-LOCATIVE-TYPE-P. To export symbols naming
+  section from MGL-PAX, the following method could be added:
 
   ```
   (defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
                                      symbol (locative-type (eql 'section))
                                      locative-args)
-    nil)
+    t)
   ```")
   (:method (package symbol locative-type locative-args)
     (declare (ignore package symbol locative-args))
     (exportable-locative-type-p locative-type)))
 
-(defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
-                                   symbol (locative-type (eql 'section))
+(defmethod exportable-reference-p (package symbol
+                                   (locative-type (eql 'section))
                                    locative-args)
   (declare (ignore symbol locative-args))
   nil)
 
-(defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
-                                   symbol (locative-type (eql 'glossary-term))
+(defmethod exportable-reference-p (package symbol
+                                   (locative-type (eql 'glossary-term))
                                    locative-args)
   (declare (ignore symbol locative-args))
   nil)
@@ -321,9 +322,7 @@
   style. See the glossary entry @NAME for an example.
 
   When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
-  is true, DOCSTRING will not be recorded to save memory.
-
-  GLOSSARY-TERM is not EXPORTABLE-LOCATIVE-TYPE-P."
+  is true, DOCSTRING will not be recorded to save memory."
   `(defparameter ,name
      (make-instance 'glossary-term
                     :name ',name :title ,title
