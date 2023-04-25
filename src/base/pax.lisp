@@ -305,6 +305,18 @@
 
 (declaim (ftype function locate-object))
 
+(define-condition locate-error (error)
+  ((message :initarg :message :reader locate-error-message)
+   (object :initarg :object :reader locate-error-object)
+   (locative :initarg :locative :reader locate-error-locative))
+  (:documentation "Signaled by LOCATE when the lookup fails and ERRORP
+  is true.")
+  (:report (lambda (condition stream)
+             (format stream "~@<Could not locate ~A ~A.~@[ ~A~]~:@>"
+                     (locate-error-object condition)
+                     (locate-error-locative condition)
+                     (locate-error-message condition)))))
+
 (defun locate (object locative &key (errorp t))
   "Follow LOCATIVE from OBJECT and return the object it leads to or a
   REFERENCE if there is no first-class object corresponding to the
@@ -333,18 +345,6 @@
                          (locative-args locative))
         (locate-error ()
           nil))))
-
-(define-condition locate-error (error)
-  ((message :initarg :message :reader locate-error-message)
-   (object :initarg :object :reader locate-error-object)
-   (locative :initarg :locative :reader locate-error-locative))
-  (:documentation "Signaled by LOCATE when the lookup fails and ERRORP
-  is true.")
-  (:report (lambda (condition stream)
-             (format stream "~@<Could not locate ~A ~A.~@[ ~A~]~:@>"
-                     (locate-error-object condition)
-                     (locate-error-locative condition)
-                     (locate-error-message condition)))))
 
 (defun resolve (reference &key (errorp t))
   "A convenience function to LOCATE REFERENCE's object with its

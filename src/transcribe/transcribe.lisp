@@ -624,6 +624,9 @@
             (sb-c::*policy* sb-c::*policy*))
        ,@body)))
 
+;;; Silence SBCL compiler note.
+(define-condition transcription-error (error) ())
+
 (defun read-transcript (input &key (syntaxes *transcribe-syntaxes*))
   (check-type input (or stream string))
   (with-input-stream (stream input)

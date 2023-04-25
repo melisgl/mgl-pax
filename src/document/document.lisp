@@ -520,6 +520,9 @@
                   (t
                    nil))))))))
 
+;;; Silence SBCL compiler note.
+(define-condition unresolvable-reflink (warning) ())
+
 (defun call-with-format (format fn)
   (if (eq format :plain)
       ;; 3BMD's :PLAIN is very broken. Take matters into our hands,
