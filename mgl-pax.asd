@@ -42,7 +42,7 @@
   :homepage ""
   :bug-tracker ""
   :source-control ""
-  :description "Slime `M-.` support for MGL-PAX."
+  :description "Slime `\\M-.` support for MGL-PAX."
   :long-description "Autoloaded by Slime's `M-.` when `src/pax.el` is
   loaded. See MGL-PAX::@NAVIGATING-IN-EMACS."
   :depends-on ("alexandria" "mgl-pax" "swank")
@@ -68,7 +68,7 @@
   :long-description "Autoloaded by MGL-PAX:DOCUMENT. See
   MGL-PAX::@GENERATING-DOCUMENTATION."
   :depends-on ("alexandria" "3bmd" "3bmd-ext-code-blocks" "colorize" "md5"
-                            "mgl-pax/navigate")
+               "mgl-pax/navigate")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/document/"

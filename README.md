@@ -54,7 +54,7 @@
     - [10.2 Transcribing with Emacs][f5bd]
     - [10.3 Transcript API][9dbc]
     - [10.4 Transcript Consistency Checking][f47d]
-        - [10.4.1 Finer-grained Consistency Checks][6e18]
+        - [10.4.1 Finer-Grained Consistency Checks][6e18]
         - [10.4.2 Controlling the Dynamic Environment][6b59]
         - [10.4.3 Utilities for Consistency Checking][8423]
 - [11 Writing Extensions][c4ce]
@@ -2034,7 +2034,7 @@ between the repository and the gh-pages site.
     location lookup fails or if the source location points to a
     directory not below the directory of `ASDF-SYSTEM`.
     
-    If GIT-FORE-URI is `"https://github.com/melisgl/mgl-pax/"` and
+    If `GIT-FORGE-URI` is `"https://github.com/melisgl/mgl-pax/"` and
     `GIT-VERSION` is `"master"`, then the returned URI may look like this:
     
         https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
@@ -2614,7 +2614,7 @@ objects are printed with their `#<>` syntax, especially when
 [`PRINT-UNREADABLE-OBJECT`][cfbb] is used with `:IDENTITY T`.
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS-20MGL-PAX-3ASECTION-29"></a>
-#### 10.4.1 Finer-grained Consistency Checks
+#### 10.4.1 Finer-Grained Consistency Checks
 
 To get around this problem, consistency checking of output,
 readable and unreadable values can be customized individually by
@@ -3422,7 +3422,7 @@ they are presented.
   [6c83]: #x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29 "VARIABLE MGL-PAX:LOCATIVE"
   [6dd5]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "MUFFLE-WARNING FUNCTION"
   [6e04]: #x-28DECLARATION-20MGL-PAX-3ALOCATIVE-29 "DECLARATION MGL-PAX:LOCATIVE"
-  [6e18]: #x-28MGL-PAX-3A-40TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS-20MGL-PAX-3ASECTION-29 "Finer-grained Consistency Checks"
+  [6e18]: #x-28MGL-PAX-3A-40TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS-20MGL-PAX-3ASECTION-29 "Finer-Grained Consistency Checks"
   [6fdb]: #x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax" ASDF/SYSTEM:SYSTEM'
   [718f]: #x-28MGL-PAX-3A-40MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29 "Indentation"
   [727b]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_lev.htm "*PRINT-LENGTH* VARIABLE"

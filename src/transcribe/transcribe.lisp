@@ -1320,7 +1320,7 @@
   (@transcript-utilities-for-consistency-checking section))
 
 (defsection @transcript-finer-grained-consistency-checks
-    (:title "Finer-grained Consistency Checks")
+    (:title "Finer-Grained Consistency Checks")
   """To get around this problem, consistency checking of output,
   readable and unreadable values can be customized individually by
   supplying TRANSCRIBE with a CHECK-CONSISTENCY argument

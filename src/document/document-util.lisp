@@ -363,7 +363,7 @@
   If necessary a default page spec is created for every section."
   (let ((dir (or dir (asdf:system-relative-pathname :mgl-pax "world/"))))
     (multiple-value-bind (sections pages) (sections-and-pages docs)
-      (create-pax-world sections pages dir t))))
+      (create-pax-world sections pages dir nil))))
 
 (defun sections-and-pages (registered-docs)
   (values (apply #'append (mapcar #'second registered-docs))

@@ -191,7 +191,7 @@
   location lookup fails or if the source location points to a
   directory not below the directory of ASDF-SYSTEM.
 
-  If GIT-FORE-URI is `"https://github.com/melisgl/mgl-pax/"` and
+  If GIT-FORGE-URI is `"https://github.com/melisgl/mgl-pax/"` and
   GIT-VERSION is `"master"`, then the returned \URI may look like this:
 
       https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
