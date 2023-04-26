@@ -161,15 +161,18 @@
   The recommended workflow is to use
   [gh-pages](https://pages.github.com/), which can be made relatively
   painless with the `git worktree` command. The gist of it is to make
-  the `doc/` directory a checkout of the branch named `gh-pages`. A
-  good description of this process is
-  [http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html](http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html).
-  Two commits needed still, but it is somewhat less painful.
+  the `doc/` directory a checkout of the branch named `gh-pages`.
+  There is a [good
+  description](http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html)
+  of this general process. Two commits are needed still, but it is
+  somewhat less painful.
 
   This way the HTML documentation will be available at
-  `http://<username>.github.io/<repo-name>`. It is probably a good
-  idea to add sections like the @LINKS section to allow jumping
-  between the repository and the gh-pages site."
+
+      http://<username>.github.io/<repo-name>
+
+  It is probably a good idea to add sections like the @LINKS section
+  to allow jumping between the repository and the gh-pages site."
   (make-github-source-uri-fn function)
   (make-git-source-uri-fn function))
 

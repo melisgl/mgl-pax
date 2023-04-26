@@ -875,7 +875,7 @@
 
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
-                        (format nil "~A \\ASDF System"
+                        (format nil "The ~A \\ASDF System"
                                 (string-upcase
                                  (slot-value system 'asdf::name))))
     (flet ((foo (name fn &key type)

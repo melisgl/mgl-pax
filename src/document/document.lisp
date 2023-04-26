@@ -2392,7 +2392,7 @@
 
 
 (defsection @document-implementation-notes
-    (:title "Document Generation Implementation Notes")
+    (:title "Documentation Generation Implementation Notes")
   """Documentation Generation is supported on ABCL, AllegroCL, CLISP,
   \CCL, CMUCL, ECL and SBCL, but their outputs may differ due to the
   lack of some introspective capability. SBCL generates complete

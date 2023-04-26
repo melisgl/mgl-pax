@@ -1,7 +1,7 @@
 # PAX Manual
 
 ###### \[in package MGL-PAX with nicknames PAX\]
-## MGL-PAX ASDF System
+## The MGL-PAX ASDF System
 
 - Version: 0.1.0
 - Description: Exploratory programming tool and documentation
@@ -20,7 +20,7 @@
 - Bug tracker: [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
 - Source control: [GIT](https://github.com/melisgl/mgl-pax.git)
 
-## MGL-PAX/FULL ASDF System
+## The MGL-PAX/FULL ASDF System
 
 - Description: MGL-PAX with all features preloaded.
 - Licence: MIT, see COPYING.
@@ -973,7 +973,7 @@ possibilities.
 
 The `M-.` extensions can be enabled by loading `src/pax.el`.
 
-### MGL-PAX/NAVIGATE ASDF System
+### The MGL-PAX/NAVIGATE ASDF System
 
 - Description: Slime `M-.` support for MGL-PAX.
 - Long Description: Autoloaded by Slime's `M-.` when `src/pax.el` is
@@ -1130,7 +1130,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     ```
 
 
-### MGL-PAX/DOCUMENT ASDF System
+### The MGL-PAX/DOCUMENT ASDF System
 
 - Description: Documentation generation support for MGL-PAX.
 - Long Description: Autoloaded by MGL-PAX:DOCUMENT. See
@@ -1816,15 +1816,18 @@ on links to the sources).
 The recommended workflow is to use
 [gh-pages](https://pages.github.com/), which can be made relatively
 painless with the `git worktree` command. The gist of it is to make
-the `doc/` directory a checkout of the branch named `gh-pages`. A
-good description of this process is
-[http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html](http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html).
-Two commits needed still, but it is somewhat less painful.
+the `doc/` directory a checkout of the branch named `gh-pages`.
+There is a [good
+description](http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html)
+of this general process. Two commits are needed still, but it is
+somewhat less painful.
 
 This way the HTML documentation will be available at
-`http://<username>.github.io/<repo-name>`. It is probably a good
-idea to add sections like the @LINKS section to allow jumping
-between the repository and the gh-pages site.
+
+    http://<username>.github.io/<repo-name>
+
+It is probably a good idea to add sections like the @LINKS section
+to allow jumping between the repository and the gh-pages site.
 
 - [function] MAKE-GITHUB-SOURCE-URI-FN ASDF-SYSTEM GITHUB-URI &KEY GIT-VERSION
 
@@ -1945,7 +1948,7 @@ Note that in the example marked with `*`, the single backslash,
 that would normally turn autolinking off, is ignored because it is
 in an explicit link.
 
-### Document Generation Implementation Notes
+### Documentation Generation Implementation Notes
 
 Documentation Generation is supported on ABCL, AllegroCL, CLISP,
 CCL, CMUCL, ECL and SBCL, but their outputs may differ due to the
@@ -2006,7 +2009,7 @@ can be enabled with:
     (in-readtable pythonic-string-syntax)
 
 
-### MGL-PAX/TRANSCRIBE ASDF System
+### The MGL-PAX/TRANSCRIBE ASDF System
 
 - Description: Transcription support for MGL-PAX.
 - Long Description: Autoloaded by MGL-PAX:TRANSCRIBE and by the Emacs
@@ -2556,7 +2559,7 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
 
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
-                        (format nil "~A \\ASDF System"
+                        (format nil "The ~A \\ASDF System"
                                 (string-upcase
                                  (slot-value system 'asdf::name))))
     (flet ((foo (name fn &key type)

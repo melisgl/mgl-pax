@@ -3,8 +3,8 @@
 
 ## Table of Contents
 
-- [1 `MGL-PAX` ASDF System][6fdb]
-- [2 `MGL-PAX/FULL` ASDF System][d761]
+- [1 The `MGL-PAX` ASDF System][6fdb]
+- [2 The `MGL-PAX/FULL` ASDF System][d761]
 - [3 Links][ba74]
 - [4 Background][f74b]
 - [5 Tutorial][8c3e]
@@ -22,9 +22,9 @@
     - [7.7 Locatives for PAX Constructs][292a]
     - [7.8 External Locatives][4b78]
 - [8 Navigating Sources in Emacs][3386]
-    - [8.1 `MGL-PAX/NAVIGATE` ASDF System][f155]
+    - [8.1 The `MGL-PAX/NAVIGATE` ASDF System][f155]
 - [9 Generating Documentation][2c93]
-    - [9.1 `MGL-PAX/DOCUMENT` ASDF System][4bb8]
+    - [9.1 The `MGL-PAX/DOCUMENT` ASDF System][4bb8]
     - [9.2 Markdown Support][c2d3]
         - [9.2.1 Indentation][718f]
         - [9.2.2 Syntax Highlighting][bc83]
@@ -48,9 +48,9 @@
         - [9.8.2 Github Workflow][dff6]
         - [9.8.3 PAX World][1281]
     - [9.9 Overview of Escaping][2634]
-    - [9.10 Document Generation Implementation Notes][d1ca]
+    - [9.10 Documentation Generation Implementation Notes][d1ca]
 - [10 Transcripts][6300]
-    - [10.1 `MGL-PAX/TRANSCRIBE` ASDF System][5825]
+    - [10.1 The `MGL-PAX/TRANSCRIBE` ASDF System][5825]
     - [10.2 Transcribing with Emacs][f5bd]
     - [10.3 Transcript API][9dbc]
     - [10.4 Transcript Consistency Checking][f47d]
@@ -67,7 +67,7 @@
 
 ###### \[in package MGL-PAX with nicknames PAX\]
 <a id="x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-## 1 `MGL-PAX` ASDF System
+## 1 The `MGL-PAX` ASDF System
 
 - Version: 0.1.0
 - Description: Exploratory programming tool and documentation
@@ -87,7 +87,7 @@
 - Source control: [GIT](https://github.com/melisgl/mgl-pax.git)
 
 <a id="x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-## 2 `MGL-PAX/FULL` ASDF System
+## 2 The `MGL-PAX/FULL` ASDF System
 
 - Description: [`MGL-PAX`][6fdb] with all features preloaded.
 - Licence: MIT, see COPYING.
@@ -1110,7 +1110,7 @@ possibilities.
 The `M-.` extensions can be enabled by loading `src/pax.el`.
 
 <a id="x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-### 8.1 `MGL-PAX/NAVIGATE` ASDF System
+### 8.1 The `MGL-PAX/NAVIGATE` ASDF System
 
 - Description: Slime `M-.` support for [`MGL-PAX`][6fdb].
 - Long Description: Autoloaded by Slime's `M-.` when `src/pax.el` is
@@ -1270,7 +1270,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
 
 
 <a id="x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-### 9.1 `MGL-PAX/DOCUMENT` ASDF System
+### 9.1 The `MGL-PAX/DOCUMENT` ASDF System
 
 - Description: Documentation generation support for [`MGL-PAX`][6fdb].
 - Long Description: Autoloaded by [`MGL-PAX:DOCUMENT`][432c]. See
@@ -2004,15 +2004,18 @@ on links to the sources).
 The recommended workflow is to use
 [gh-pages](https://pages.github.com/), which can be made relatively
 painless with the `git worktree` command. The gist of it is to make
-the `doc/` directory a checkout of the branch named `gh-pages`. A
-good description of this process is
-[http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html](http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html).
-Two commits needed still, but it is somewhat less painful.
+the `doc/` directory a checkout of the branch named `gh-pages`.
+There is a [good
+description](http://sangsoonam.github.io/2019/02/08/using-git-worktree-to-deploy-github-pages.html)
+of this general process. Two commits are needed still, but it is
+somewhat less painful.
 
 This way the HTML documentation will be available at
-`http://<username>.github.io/<repo-name>`. It is probably a good
-idea to add sections like the [Links][ba74] section to allow jumping
-between the repository and the gh-pages site.
+
+    http://<username>.github.io/<repo-name>
+
+It is probably a good idea to add sections like the [Links][ba74] section
+to allow jumping between the repository and the gh-pages site.
 
 <a id="x-28MGL-PAX-3AMAKE-GITHUB-SOURCE-URI-FN-20FUNCTION-29"></a>
 - [function] **MAKE-GITHUB-SOURCE-URI-FN** *ASDF-SYSTEM GITHUB-URI &KEY GIT-VERSION*
@@ -2141,7 +2144,7 @@ that would normally turn autolinking off, is ignored because it is
 in an explicit link.
 
 <a id="x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29"></a>
-### 9.10 Document Generation Implementation Notes
+### 9.10 Documentation Generation Implementation Notes
 
 Documentation Generation is supported on ABCL, AllegroCL, CLISP,
 CCL, CMUCL, ECL and SBCL, but their outputs may differ due to the
@@ -2204,7 +2207,7 @@ can be enabled with:
 
 
 <a id="x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-### 10.1 `MGL-PAX/TRANSCRIBE` ASDF System
+### 10.1 The `MGL-PAX/TRANSCRIBE` ASDF System
 
 - Description: Transcription support for [`MGL-PAX`][6fdb].
 - Long Description: Autoloaded by [`MGL-PAX:TRANSCRIBE`][f1f0] and by the Emacs
@@ -2773,7 +2776,7 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
 
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
-                        (format nil "~A \\ASDF System"
+                        (format nil "The ~A \\ASDF System"
                                 (string-upcase
                                  (slot-value system 'asdf::name))))
     (flet ((foo (name fn &key type)
@@ -3515,7 +3518,7 @@ they are presented.
   [ce02]: http://www.lispworks.com/documentation/HyperSpec/Body/s_declar.htm "DECLARE MGL-PAX:MACRO"
   [ce75]: #x-28MGL-PAX-3ADOCSTRING-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:DOCSTRING MGL-PAX:LOCATIVE"
   [cfbb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_pr_unr.htm "PRINT-UNREADABLE-OBJECT MGL-PAX:MACRO"
-  [d1ca]: #x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29 "Document Generation Implementation Notes"
+  [d1ca]: #x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29 "Documentation Generation Implementation Notes"
   [d1dc]: #x-28MGL-PAX-3A-40GLOSSARY-TERMS-20MGL-PAX-3ASECTION-29 "Glossary Terms"
   [d2c1]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm "*PACKAGE* VARIABLE"
   [d684]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defcon.htm "DEFCONSTANT MGL-PAX:MACRO"
