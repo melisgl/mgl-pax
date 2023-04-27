@@ -31,7 +31,7 @@
 ;;;   only a small number of fds are needed even for a huge project;
 ;;;
 ;;; - be opened multiple times (which is not a given for string
-;;;   streams)
+;;;   streams).
 ;;;
 ;;; So, output is written in markdown format to PAGE-TEMP-STREAM-SPEC,
 ;;; but before we are done, it is converted to the requested output
@@ -57,8 +57,9 @@
 ;;; The current page where output is being sent.
 (defvar *page* nil)
 
-;;; This is a possible link to REFERENCE on PAGE (note that the same
-;;; REFERENCE may be written to multiple pages).
+;;; A LINK (a possible link target, really) is a REFERENCE that
+;;; resides on PAGE (note that the same REFERENCE may be written to
+;;; multiple pages).
 ;;;
 ;;; PAGE may also be a string denoting a URL. This is used to link to
 ;;; the hyperspec.
@@ -66,22 +67,22 @@
   (reference nil :type reference)
   (page nil :type (or page string)))
 
-;;; A list of hash tables mapping REFERENCE-OBJECTs to LINKs,
-;;; representing all possible things which may be linked to. Bound
-;;; only once (by WITH-PAGES) after pages are created (to the list of
-;;; links to all reachable references from all the objects being
+;;; A list of hash tables mapping REFERENCE-OBJECTs to lists of LINKs,
+;;; representing all possible things that may be linked to. Bound only
+;;; once (by WITH-PAGES) after pages are created (to the list of links
+;;; to all reachable references from all the objects being
 ;;; documented). If a reference occurs multiple times, earlier links
 ;;; (thus pages earlier in DOCUMENT's PAGES argument) have precedence.
 (defvar *object-to-links-maps*)
 ;;; A list of EQ hash tables for symbol objects.
 (defvar *symbol-to-links-maps*)
 
-(defun guaranteed-links (object)
+(defun eq-links (object)
   (and (symbolp object)
        (loop for symbol-to-links in *symbol-to-links-maps*
              append (gethash object symbol-to-links))))
 
-(defun possible-links (object)
+(defun equal-links (object)
   (let ((key (string-upcase (string object))))
     (loop for object-to-links in *object-to-links-maps*
           append (gethash key object-to-links))))
@@ -103,6 +104,14 @@
      (initialize-links ,pages)
      (locally ,@body)))
 
+(defun initialize-links (pages)
+  (loop for page in pages
+        do (dolist (reference (page-references page))
+             (unless (find-link reference)
+               (add-link (make-link :reference reference
+                                    :page page)))))
+  (maybe-add-links-to-hyperspec))
+
 (defun add-link (link)
   (let* ((reference (link-reference link))
          (object (reference-object reference)))
@@ -117,19 +126,19 @@
 
 (defun find-link (reference)
   (let ((object (reference-object reference)))
-    (or (find reference (guaranteed-links object)
+    (or (find reference (eq-links object)
               :key #'link-reference :test #'reference=)
-        (find reference (possible-links object)
+        (find reference (equal-links object)
               :key #'link-reference :test #'reference=))))
 
 ;;; Return a list of all REFERENCES whose REFERENCE-OBJECT matches
 ;;; OBJECT, that is, with OBJECT as their REFERENCE-OBJECT they would
 ;;; resolve to the same thing.
 ;;;
-;;; If LOCAL is NIL, only those global references which are not on
-;;; *LOCAL-REFERENCES* are considered for matching. If LOCAL is T,
-;;; then only the local references are considered. If LOCAL is
-;;; :INCLUDE then both global and local references are considered.
+;;; If LOCAL is NIL, only global references are considered for
+;;; matching. If LOCAL is :EXCLUDE, then only those global references
+;;; which are not local references are considered. If LOCAL is
+;;; :INCLUDE, then both global and local references are considered.
 (defun references-to-object (object &key local)
   (let ((global-refs (global-references-to-object object)))
     (if local
@@ -140,26 +149,26 @@
         global-refs)))
 
 (defun global-references-to-object (object)
-  (loop for link in (append (guaranteed-links object)
-                            (possible-links object))
+  (loop for link in (append (eq-links object)
+                            (equal-links object))
         for ref = (link-reference link)
         when (reference-object= object ref)
           collect ref))
 
 (defun has-global-reference-p (object)
-  (or (loop for link in (guaranteed-links object)
+  (or (loop for link in (eq-links object)
             for ref = (link-reference link)
               thereis (reference-object= object ref))
-      (loop for link in (possible-links object)
+      (loop for link in (equal-links object)
             for ref = (link-reference link)
               thereis (reference-object= object ref))))
 
 (defun global-reference-p (reference)
   (let ((object (reference-object reference)))
-    (or (loop for link in (guaranteed-links object)
+    (or (loop for link in (eq-links object)
               for ref = (link-reference link)
                 thereis (reference= reference ref))
-        (loop for link in (possible-links object)
+        (loop for link in (equal-links object)
               for ref = (link-reference link)
                 thereis (reference= reference ref)))))
 
@@ -264,16 +273,6 @@
       (setq *symbol-to-links-maps* (append *symbol-to-links-maps*
                                            symbol-to-links-maps)))))
 
-
-(defun initialize-links (pages)
-  (declare (special *document-link-to-hyperspec*)
-           (special *document-hyperspec-root*))
-  (loop for page in pages
-        do (dolist (reference (page-references page))
-             (unless (find-link reference)
-               (add-link (make-link :reference reference
-                                    :page page)))))
-  (maybe-add-links-to-hyperspec))
 
 (defvar *pages-created*)
 
