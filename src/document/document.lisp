@@ -77,15 +77,22 @@
 ;;; A list of EQ hash tables for symbol objects.
 (defvar *symbol-to-links-maps*)
 
-(defun eq-links (object)
-  (and (symbolp object)
-       (loop for symbol-to-links in *symbol-to-links-maps*
-             append (gethash object symbol-to-links))))
-
-(defun equal-links (object)
-  (let ((key (string-upcase (string object))))
-    (loop for object-to-links in *object-to-links-maps*
-          append (gethash key object-to-links))))
+(defmacro do-links ((link object) &body body)
+  (alexandria:with-gensyms (symbol-to-links object-to-links key)
+    (alexandria:once-only (object)
+      `(block nil
+         (when (symbolp ,object)
+           (loop named %hidden
+                 for ,symbol-to-links in *symbol-to-links-maps*
+                 do (loop named %hidden
+                          for ,link in (gethash ,object ,symbol-to-links)
+                          do ,@body)))
+         (let ((,key (string-upcase (string ,object))))
+           (loop named %hidden
+                 for ,object-to-links in *object-to-links-maps*
+                 do (loop named %hidden
+                          for ,link in (gethash ,key ,object-to-links)
+                          do ,@body)))))))
 
 ;;; A list of references with special rules for linking (see
 ;;; @LOCAL-REFERENCES). The reference being documented is always on
@@ -126,10 +133,9 @@
 
 (defun find-link (reference)
   (let ((object (reference-object reference)))
-    (or (find reference (eq-links object)
-              :key #'link-reference :test #'reference=)
-        (find reference (equal-links object)
-              :key #'link-reference :test #'reference=))))
+    (do-links (link object)
+      (when (reference= (link-reference link) reference)
+        (return link)))))
 
 ;;; Return a list of all REFERENCES whose REFERENCE-OBJECT matches
 ;;; OBJECT, that is, with OBJECT as their REFERENCE-OBJECT they would
@@ -149,28 +155,23 @@
         global-refs)))
 
 (defun global-references-to-object (object)
-  (loop for link in (append (eq-links object)
-                            (equal-links object))
-        for ref = (link-reference link)
-        when (reference-object= object ref)
-          collect ref))
+  (let ((result ()))
+    (do-links (link object)
+      (let ((ref (link-reference link)))
+        (when (reference-object= object ref)
+          (push ref result))))
+    result))
 
 (defun has-global-reference-p (object)
-  (or (loop for link in (eq-links object)
-            for ref = (link-reference link)
-              thereis (reference-object= object ref))
-      (loop for link in (equal-links object)
-            for ref = (link-reference link)
-              thereis (reference-object= object ref))))
+  (do-links (link object)
+    (when (reference-object= object (link-reference link))
+      (return t))))
 
 (defun global-reference-p (reference)
   (let ((object (reference-object reference)))
-    (or (loop for link in (eq-links object)
-              for ref = (link-reference link)
-                thereis (reference= reference ref))
-        (loop for link in (equal-links object)
-              for ref = (link-reference link)
-                thereis (reference= reference ref)))))
+    (do-links (link object)
+      (when (reference= (link-reference link) reference)
+        (return t)))))
 
 (defun local-references-to-object (object)
   (remove-if-not (lambda (ref)
