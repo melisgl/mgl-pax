@@ -310,7 +310,7 @@
 (defmacro define-glossary-term
     (name (&key title (discard-documentation-p *discard-documentation-p*))
      docstring)
-  "Define a global variable with NAME and set it to a
+  "Define a global variable with NAME, and set it to a
   [GLOSSARY-TERM][class] object. A glossary term is just a symbol to
   hang a docstring on. It is a bit like a SECTION in that, when linked
   to, its TITLE will be the link text instead of the name of the

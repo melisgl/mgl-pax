@@ -171,7 +171,7 @@
 
   DOCSTRING is used in the implementation of the DOCSTRING locative.
   Some things such as ASDF:SYSTEMS and DECLARATIONs have no
-  docstrings. Notably SECTIONs don't provide access to docstrings.")
+  docstrings. Notably, SECTIONs don't provide access to docstrings.")
   (:method :around (object)
     (if (ensure-navigate-loaded)
         (call-next-method)
@@ -256,8 +256,8 @@
   REFERENCES to another generic function, one each, which is called
   their reference delegate. Each of these delegator functions invokes
   its delegate when a REFERENCE is passed to it (as its OBJECT
-  argument), or there is no method specialized for its arguments, in
-  which case it uses the CANONICAL-REFERENCE.
+  argument), or when there is no method specialized for its arguments,
+  in which case it uses the CANONICAL-REFERENCE.
 
   The net effect is that is that it is sufficient to specialize either
   the delegator for a first-class object or the delegate for a new
@@ -366,7 +366,7 @@
 (defvar *locative-source-search-list* ())
 
 (defun add-locative-to-source-search-list (locative)
-  """Some locatives are implemented in terms of Lisp defintions, for
+  """Some locatives are implemented in terms of Lisp definitions, for
   which [SLIME's `\\M-.`][slime-m-.] finds source code of the box. For
   example, DEFSECTIONs are global variables. To be able to list all
   definitions that belong to an @OBJECT, we register locatives to try

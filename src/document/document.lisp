@@ -15,7 +15,7 @@
   (@overview-of-escaping section)
   (@document-implementation-notes section))
 
-;;; A PAGE is basically a single markdown or html file, to where the
+;;; A PAGE is basically a single markdown or html file to where the
 ;;; documentation of some references is written. See the DOCUMENT
 ;;; function.
 ;;;
@@ -23,19 +23,20 @@
 ;;; output is redirected to different stream if it is for a reference
 ;;; on the current page (see COLLECT-REACHABLE-OBJECTS,
 ;;; PAGE-REFERENCES). This stream - to which the temporary markdown
-;;; output written - is given by TEMP-STREAM-SPEC that's a stream spec
-;;; to allow it to
+;;; output written - is given by PAGE-TEMP-STREAM-SPEC, that's a
+;;; stream spec (see WITH-OPEN-STREAM-SPEC) to allow the temporary
+;;; stream to
 ;;;
 ;;; - be created lazily so that no stray files are left around and
-;;;   only a small number of fds are needed even for a huge project,
+;;;   only a small number of fds are needed even for a huge project;
 ;;;
 ;;; - be opened multiple times (which is not a given for string
 ;;;   streams)
 ;;;
-;;; So output is generated in markdown format to TEMP-STREAM-SPEC, but
-;;; before we are done it is converted to the requested output format
-;;; and HEADER-FN, FOOTER-FN are called to write arbitrary leading and
-;;; trailing content to the final stream.
+;;; So, output is written in markdown format to PAGE-TEMP-STREAM-SPEC,
+;;; but before we are done, it is converted to the requested output
+;;; format, and HEADER-FN, FOOTER-FN are called to write arbitrary
+;;; leading and trailing content to the final stream.
 ;;;
 ;;; Finally, URI-FRAGMENT is a string such as "doc/manual.html" that
 ;;; specifies where the page will be deployed on a webserver. It
@@ -489,14 +490,20 @@
       (with-tracking-pages-created ()
         (with-pages ((append (translate-page-specs pages *format*)
                              (list default-page)))
+          ;; Write output to DEFAULT-PAGE until a DOCUMENT-OBJECT
+          ;; finds a reference that should got to another PAGE.
           (with-temp-output-to-page (stream default-page)
             (dolist (object (alexandria:ensure-list object))
               (with-headings (object)
                 (document-object object stream))))
           (let ((outputs ()))
             (do-pages-created (page)
+              ;; Add the markdown reference link definitions for all
+              ;; PAGE-USED-LINKS on PAGE.
               (with-temp-output-to-page (stream page)
                 (write-markdown-reference-style-link-definitions stream))
+              ;; Now that markdown output for this PAGE is complete,
+              ;; we may want to convert it to the requested *FORMAT*.
               (unless (eq *format* :markdown)
                 (let ((markdown-string
                         (with-temp-input-from-page (stream page)
@@ -860,10 +867,10 @@
 
   - it has at least one uppercase character (e.g. it's not `<`, `<=`
     or `///`), and
-  - it has no lowercase characters (e.g. it's `\T`, or
-    `\*PRINT-LENGTH*`) or all lowercase characters immediately follow
-    at least two consecutive uppercase characters (e.g. in `\CLASSes`
-    but in not `Capital`).")
+  - it has no lowercase characters (e.g. it's `T`, or
+    `*PRINT-LENGTH*`) or all lowercase characters immediately follow
+    at least two consecutive uppercase characters (e.g. in `CLASSes`
+    but in not `Classes`).")
 
 (defun codifiable-word-p (word)
   (and (notany #'whitespacep word)
@@ -2398,7 +2405,7 @@
   lack of some introspective capability. SBCL generates complete
   output. Compared to that, the following are not supported:
 
-  - COMPILER-MACRO docstrings on ABCL, AllegroCL, \CCL, ECL,
-  - DEFTYPE lambda lists on ABCL, AllegroCL, CLISP, \CCL, CMUCL, ECL,
-  - default values in MACRO lambda lists on AllegroCL,
+  - COMPILER-MACRO docstrings on ABCL, AllegroCL, \CCL, ECL;
+  - DEFTYPE lambda lists on ABCL, AllegroCL, CLISP, \CCL, CMUCL, ECL;
+  - default values in MACRO lambda lists on AllegroCL;
   - METHOD-COMBINATION docstrings on ABCL, AllegroCL.""")

@@ -74,14 +74,20 @@
                                  &body body)
   "Write REFERENCE to STREAM as described in
   *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a [local
-  reference][@LOCAL-REFERENCES]. Unless ARGLIST is NIL or
-  :NOT-AVAILABLE, it is printed after the name of object of REFERENCE.
+  reference][@LOCAL-REFERENCES] followed by ARGLIST.
 
-  If ARGLIST is a list, then it is must be a [lambda list][clhs] and
-  is printed without the outermost parens and with the package names
-  removed from the argument names.
+  - REFERENCE defaults to the reference being documented.
 
-  If ARGLIST is a string, then it is printed without ESCAPE-MARKDOWN."
+  - NAME defaults to `(REFERENCE-OBJECT REFERENCE)` and is printed
+    after the LOCATIVE-TYPE.
+
+  - If ARGLIST is NIL or :NOT-AVAILABLE, then it is not printed.
+
+  - If ARGLIST is a list, then it is must be a [lambda list][clhs] and
+    is printed without the outermost parens and with the package names
+    removed from the argument names.
+
+  - If ARGLIST is a string, then it must be valid markdown."
   (let ((%stream (gensym))
         (%reference (gensym))
         (%arglist (gensym))
@@ -185,8 +191,8 @@
 
 (defun make-git-source-uri-fn (asdf-system git-forge-uri &key git-version
                                (uri-format-string "~A/blob/~A/~A#L~S"))
-  """Return a function suitable as :SOURCE-URI-FN of a page spec (see the
-  PAGES argument of DOCUMENT). The function looks at the source
+  """Return a function suitable as :SOURCE-URI-FN of a page spec (see
+  the PAGES argument of DOCUMENT). The function looks at the source
   location of the REFERENCE passed to it, and if the location is
   found, the path is made relative to the root directory of
   ASDF-SYSTEM and finally an \URI pointing to your git forge (such as
@@ -305,7 +311,8 @@
 (defsection @pax-world (:title "PAX World")
   """\PAX World is a registry of documents, which can generate
   cross-linked HTML documentation pages for all the registered
-  documents."""
+  documents. There is an official [PAX
+  World](https://melisgl.github.io/mgl-pax-world/)."""
   (register-doc-in-pax-world function)
   """For example, this is how \PAX registers itself:"""
   (register-doc-example (include (:start (pax-sections function)

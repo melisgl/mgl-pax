@@ -26,7 +26,7 @@
   Not necessarily the easiest on the eye in an editor but looks good
   on github.
 
-  `README` is optimized for reading in text format. It has less
+  `\\\\README` is optimized for reading in text format. It has less
   cluttery markup and no [autolinking][@explicit-and-autolinking
   section].
 
@@ -420,7 +420,7 @@
 ;;; changes to github.
 (defun update-pax-world* ()
   ;; KLUDGE: Bind *READTABLE* so that when evaluating in Slime (e.g.
-  ;; with C-x C-e) the file's readtable is not used (which leads to a
+  ;; with C-x C-e), the file's readtable is not used (which leads to a
   ;; reader macro conflict with CL-SYNTAX).
   (let ((*readtable* (named-readtables:find-readtable :standard)))
     (asdf:load-system :mgl-mat)

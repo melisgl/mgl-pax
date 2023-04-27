@@ -24,9 +24,10 @@
 (defsection @background (:title "Background")
   """As a user, I frequently run into documentation that's incomplete
   and out of date, so I tend to stay in the editor and explore the
-  code by jumping around with [SLIME][slime]'s [`\\M-.`][slime-m-.].
-  As a library author, I spend a great deal of time polishing code but
-  precious little writing documentation.
+  code by jumping around with [SLIME][slime]'s
+  [`\\M-.`][slime-m-.] (`slime-edit-definition`). As a library author,
+  I spend a great deal of time polishing code but precious little
+  writing documentation.
 
   [slime]: https://slime.common-lisp.dev/
   [slime-m-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions
@@ -61,7 +62,7 @@
 
   That was great, but soon I found that the listing of symbols is
   ambiguous if, for example, a function, a compiler macro and a class
-  are named by the same symbol. This did not concern exporting, of
+  were named by the same symbol. This did not concern exporting, of
   course, but it didn't help readability. Distractingly, on such
   symbols, `\\M-.` was popping up selection dialogs. There were two
   birds to kill, and the symbol got accompanied by a type, which was
@@ -78,14 +79,14 @@
   disambiguate based on the locative found in the vicinity of the
   symbol, and everything was good for a while.
 
-  Then I realized that sections could refer to other sections if there
-  were a SECTION locative. Going down that path, I soon began to feel
-  the urge to generate pretty documentation as all the necessary
-  information was manifest in the DEFSECTION forms. The design
+  Then, I realized that sections could refer to other sections if
+  there were a SECTION locative. Going down that path, I soon began to
+  feel the urge to generate pretty documentation as all the necessary
+  information was available in the DEFSECTION forms. The design
   constraint imposed on documentation generation was that following
-  the typical style of upcasing symbols in docstrings there should be
+  the typical style of upcasing symbols in docstrings, there should be
   no need to explicitly mark up links: if `\\M-.` works, then the
-  documentation generator shall also be able find out what's being
+  documentation generator shall also be able figure out what's being
   referred to.
 
   I settled on [Markdown][markdown] as a reasonably non-intrusive
@@ -95,9 +96,9 @@
 
 (defsection @tutorial (:title "Tutorial")
   """\PAX provides an extremely poor man's Explorable Programming
-  environment. Narrative primarily lives in so called sections that
+  environment. Narrative primarily lives in so-called sections, which
   mix markdown docstrings with references to functions, variables,
-  etc, all of which should probably have their own docstrings.
+  etc; all of which probably have their own docstrings.
 
   The primary focus is on making code easily explorable by using
   [SLIME's `\\M-.`][slime-m-.] (`slime-edit-definition`). See how to
@@ -107,8 +108,8 @@
 
   With the simplistic tools provided, one may accomplish similar
   effects as with Literate Programming, but documentation is generated
-  from code, not vice versa and there is no support for chunking. Code
-  is first, code must look pretty, documentation is code.
+  from code, not vice versa, and there is no support for chunking.
+  _Code is first, code must look pretty, documentation is code_.
 
   ##### Docstrings
 
@@ -131,10 +132,19 @@
   ")
   ```
 
-  These features are designed to handle a common style of docstrings
-  with minimal additional markup. The following is the output
-  of `(mgl-pax:document #'abort)`. Note that the docstring of the
-  ABORT function was not written with \PAX in mind.
+  These features are designed to handle the most common style of
+  docstrings with minimal additional markup. The following is the
+  output of `(mgl-pax:document #'abort :format :markdown)`.
+
+      - \[function\] **\ABORT** *\&OPTIONAL \CONDITION*
+
+          Transfer control to a restart named `ABORT`, signalling a
+          [`\CONTROL-ERROR`][6bc0] if none exists.
+
+        [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\CONTROL-ERROR \CONDITION"
+
+  Note that the docstring of the ABORT function was not written with
+  \PAX in mind. The above markdown is rendered as
 
   - \[function\] **\ABORT** *\&OPTIONAL \CONDITION*
 
@@ -164,8 +174,9 @@
   One can even generate documentation for different but related
   libraries at the same time with the output going to different files
   but with cross-page links being automatically added for symbols
-  mentioned in docstrings. See @GENERATING-DOCUMENTATION for some
-  convenience functions to cover the most common cases.
+  mentioned in docstrings. In fact, this is what @PAX-WORLD does. See
+  @GENERATING-DOCUMENTATION for some convenience functions to cover
+  the most common cases.
 
   The [transcript][@transcripts] in the code block tagged with
   `cl-transcript` is automatically checked for up-to-dateness when
@@ -309,8 +320,8 @@
   ((message :initarg :message :reader locate-error-message)
    (object :initarg :object :reader locate-error-object)
    (locative :initarg :locative :reader locate-error-locative))
-  (:documentation "Signaled by LOCATE when the lookup fails and ERRORP
-  is true.")
+  (:documentation "Signalled by LOCATE when the lookup fails and
+  ERRORP is true.")
   (:report (lambda (condition stream)
              (format stream "~@<Could not locate ~A ~A.~@[ ~A~]~:@>"
                      (locate-error-object condition)

@@ -108,9 +108,10 @@ for the latest version.
 
 As a user, I frequently run into documentation that's incomplete
 and out of date, so I tend to stay in the editor and explore the
-code by jumping around with [SLIME][slime]'s [`M-.`][slime-m-.].
-As a library author, I spend a great deal of time polishing code but
-precious little writing documentation.
+code by jumping around with [SLIME][slime]'s
+[`M-.`][slime-m-.] (`slime-edit-definition`). As a library author,
+I spend a great deal of time polishing code but precious little
+writing documentation.
 
 [slime]: https://slime.common-lisp.dev/ 
 
@@ -146,7 +147,7 @@ a list of symbols to export.
 
 That was great, but soon I found that the listing of symbols is
 ambiguous if, for example, a function, a compiler macro and a class
-are named by the same symbol. This did not concern exporting, of
+were named by the same symbol. This did not concern exporting, of
 course, but it didn't help readability. Distractingly, on such
 symbols, `M-.` was popping up selection dialogs. There were two
 birds to kill, and the symbol got accompanied by a type, which was
@@ -163,14 +164,14 @@ After a bit of elisp hacking, `M-.` was smart enough to
 disambiguate based on the locative found in the vicinity of the
 symbol, and everything was good for a while.
 
-Then I realized that sections could refer to other sections if there
-were a [`SECTION`][672f] locative. Going down that path, I soon began to feel
-the urge to generate pretty documentation as all the necessary
-information was manifest in the `DEFSECTION` forms. The design
+Then, I realized that sections could refer to other sections if
+there were a [`SECTION`][672f] locative. Going down that path, I soon began to
+feel the urge to generate pretty documentation as all the necessary
+information was available in the `DEFSECTION` forms. The design
 constraint imposed on documentation generation was that following
-the typical style of upcasing symbols in docstrings there should be
+the typical style of upcasing symbols in docstrings, there should be
 no need to explicitly mark up links: if `M-.` works, then the
-documentation generator shall also be able find out what's being
+documentation generator shall also be able figure out what's being
 referred to.
 
 I settled on [Markdown][markdown] as a reasonably non-intrusive
@@ -183,9 +184,9 @@ format, and a few thousand lines later PAX was born.
 ## 5 Tutorial
 
 PAX provides an extremely poor man's Explorable Programming
-environment. Narrative primarily lives in so called sections that
+environment. Narrative primarily lives in so-called sections, which
 mix markdown docstrings with references to functions, variables,
-etc, all of which should probably have their own docstrings.
+etc; all of which probably have their own docstrings.
 
 The primary focus is on making code easily explorable by using
 [SLIME's `M-.`][slime-m-.] (`slime-edit-definition`). See how to
@@ -195,8 +196,8 @@ in Markdown or HTML format is also implemented.
 
 With the simplistic tools provided, one may accomplish similar
 effects as with Literate Programming, but documentation is generated
-from code, not vice versa and there is no support for chunking. Code
-is first, code must look pretty, documentation is code.
+from code, not vice versa, and there is no support for chunking.
+*Code is first, code must look pretty, documentation is code*.
 
 ##### Docstrings
 
@@ -219,10 +220,19 @@ Here we focus on the macro [`AND`][4954].
 ")
 ```
 
-These features are designed to handle a common style of docstrings
-with minimal additional markup. The following is the output
-of `(mgl-pax:document #'abort)`. Note that the docstring of the
-[`ABORT`][1102] function was not written with PAX in mind.
+These features are designed to handle the most common style of
+docstrings with minimal additional markup. The following is the
+output of `(mgl-pax:document #'abort :format :markdown)`.
+
+    - \[function\] **\ABORT** *\&OPTIONAL \CONDITION*
+    
+        Transfer control to a restart named `ABORT`, signalling a
+        [`\CONTROL-ERROR`][6bc0] if none exists.
+    
+      [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\CONTROL-ERROR \CONDITION"
+
+Note that the docstring of the [`ABORT`][1102] function was not written with
+PAX in mind. The above markdown is rendered as
 
 - \[function\] **ABORT** *&OPTIONAL CONDITION*
 
@@ -307,8 +317,9 @@ contents.
 One can even generate documentation for different but related
 libraries at the same time with the output going to different files
 but with cross-page links being automatically added for symbols
-mentioned in docstrings. See [Generating Documentation][2c93] for some
-convenience functions to cover the most common cases.
+mentioned in docstrings. In fact, this is what [PAX World][1281] does. See
+[Generating Documentation][2c93] for some convenience functions to cover
+the most common cases.
 
 The [transcript][6300] in the code block tagged with
 `cl-transcript` is automatically checked for up-to-dateness when
@@ -537,8 +548,8 @@ need to muck with references when there is a perfectly good object.
 <a id="x-28MGL-PAX-3ALOCATE-ERROR-20CONDITION-29"></a>
 - [condition] **LOCATE-ERROR** *ERROR*
 
-    Signaled by [`LOCATE`][ee94] when the lookup fails and `ERRORP`
-    is true.
+    Signalled by [`LOCATE`][ee94] when the lookup fails and
+    `ERRORP` is true.
 
 <a id="x-28MGL-PAX-3ALOCATE-ERROR-MESSAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29"></a>
 - [reader] **LOCATE-ERROR-MESSAGE** *LOCATE-ERROR (:MESSAGE)*
@@ -870,7 +881,7 @@ which makes navigating the sources with `M-.` (see
 <a id="x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20MGL-PAX-3AMACRO-29"></a>
 - [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) DOCSTRING*
 
-    Define a global variable with `NAME` and set it to a
+    Define a global variable with `NAME`, and set it to a
     [`GLOSSARY-TERM`][8251] object. A glossary term is just a symbol to
     hang a docstring on. It is a bit like a `SECTION`([`0`][5fac] [`1`][672f]) in that, when linked
     to, its `TITLE` will be the link text instead of the name of the
@@ -1415,7 +1426,7 @@ Reader][pythonic-string-reader] can help with that.
     - it has no lowercase characters (e.g. it's `T`, or
       [`*PRINT-LENGTH*`][727b]) or all lowercase characters immediately follow
       at least two consecutive uppercase characters (e.g. in `CLASSes`([`0`][7e58] [`1`][2060])
-      but in not `Capital`).
+      but in not `Classes`).
 
 
 <a id="x-28MGL-PAX-3A-40INTERESTING-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
@@ -2028,8 +2039,8 @@ to allow jumping between the repository and the gh-pages site.
 <a id="x-28MGL-PAX-3AMAKE-GIT-SOURCE-URI-FN-20FUNCTION-29"></a>
 - [function] **MAKE-GIT-SOURCE-URI-FN** *ASDF-SYSTEM GIT-FORGE-URI &KEY GIT-VERSION (URI-FORMAT-STRING "~A/blob/~A/~A#L~S")*
 
-    Return a function suitable as `:SOURCE-URI-FN` of a page spec (see the
-    `PAGES` argument of [`DOCUMENT`][432c]). The function looks at the source
+    Return a function suitable as `:SOURCE-URI-FN` of a page spec (see
+    the `PAGES` argument of [`DOCUMENT`][432c]). The function looks at the source
     location of the [`REFERENCE`][1cea] passed to it, and if the location is
     found, the path is made relative to the root directory of
     `ASDF-SYSTEM` and finally an URI pointing to your git forge (such as
@@ -2066,7 +2077,8 @@ to allow jumping between the repository and the gh-pages site.
 
 PAX World is a registry of documents, which can generate
 cross-linked HTML documentation pages for all the registered
-documents.
+documents. There is an official [PAX
+World](https://melisgl.github.io/mgl-pax-world/).
 
 <a id="x-28MGL-PAX-3AREGISTER-DOC-IN-PAX-WORLD-20FUNCTION-29"></a>
 - [function] **REGISTER-DOC-IN-PAX-WORLD** *NAME SECTIONS PAGE-SPECS*
@@ -2151,11 +2163,11 @@ CCL, CMUCL, ECL and SBCL, but their outputs may differ due to the
 lack of some introspective capability. SBCL generates complete
 output. Compared to that, the following are not supported:
 
-- [`COMPILER-MACRO`][41fd] docstrings on ABCL, AllegroCL, CCL, ECL,
+- [`COMPILER-MACRO`][41fd] docstrings on ABCL, AllegroCL, CCL, ECL;
 
-- [`DEFTYPE`][89d0] lambda lists on ABCL, AllegroCL, CLISP, CCL, CMUCL, ECL,
+- [`DEFTYPE`][89d0] lambda lists on ABCL, AllegroCL, CLISP, CCL, CMUCL, ECL;
 
-- default values in [`MACRO`][f3cc] lambda lists on AllegroCL,
+- default values in [`MACRO`][f3cc] lambda lists on AllegroCL;
 
 - `METHOD-COMBINATION`([`0`][fc7b] [`1`][82e0]) docstrings on ABCL, AllegroCL.
 
@@ -2935,7 +2947,7 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
     
     `DOCSTRING` is used in the implementation of the [`DOCSTRING`][ce75] locative.
     Some things such as [`ASDF:SYSTEM`][c097]s and `DECLARATION`([`0`][47a3] [`1`][6e04])s have no
-    docstrings. Notably `SECTION`([`0`][5fac] [`1`][672f])s don't provide access to docstrings.
+    docstrings. Notably, `SECTION`([`0`][5fac] [`1`][672f])s don't provide access to docstrings.
 
 <a id="x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNCTION-29"></a>
 - [generic-function] **FIND-SOURCE** *OBJECT*
@@ -3073,8 +3085,8 @@ generic functions that we have specialized in [Adding New Object Types][bbf2] ha
     [`REFERENCES`][1cea] to another generic function, one each, which is called
     their reference delegate. Each of these delegator functions invokes
     its delegate when a `REFERENCE` is passed to it (as its `OBJECT`
-    argument), or there is no method specialized for its arguments, in
-    which case it uses the `CANONICAL-REFERENCE`.
+    argument), or when there is no method specialized for its arguments,
+    in which case it uses the `CANONICAL-REFERENCE`.
     
     The net effect is that is that it is sufficient to specialize either
     the delegator for a first-class object or the delegate for a new
@@ -3176,14 +3188,21 @@ The following utilities are for writing new [`DOCUMENT-OBJECT`][bacc] and
 
     Write `REFERENCE` to `STREAM` as described in
     [`*DOCUMENT-MARK-UP-SIGNATURES*`][8fb6], and establish `REFERENCE` as a [local
-    reference][4c96]. Unless `ARGLIST` is `NIL` or
-    `:NOT-AVAILABLE`, it is printed after the name of object of `REFERENCE`.
+    reference][4c96] followed by `ARGLIST`.
     
-    If `ARGLIST` is a list, then it is must be a [lambda list][f945] and
-    is printed without the outermost parens and with the package names
-    removed from the argument names.
+    - `REFERENCE` defaults to the reference being documented.
     
-    If `ARGLIST` is a string, then it is printed without [`ESCAPE-MARKDOWN`][3026].
+    - `NAME` defaults to `(REFERENCE-OBJECT REFERENCE)` and is printed
+      after the [`LOCATIVE-TYPE`][3200].
+    
+    - If `ARGLIST` is `NIL` or `:NOT-AVAILABLE`, then it is not printed.
+    
+    - If `ARGLIST` is a list, then it is must be a [lambda list][f945] and
+      is printed without the outermost parens and with the package names
+      removed from the argument names.
+    
+    - If `ARGLIST` is a string, then it must be valid markdown.
+
 
 <a id="x-28MGL-PAX-3AWITH-DISLOCATED-OBJECTS-20MGL-PAX-3AMACRO-29"></a>
 - [macro] **WITH-DISLOCATED-OBJECTS** *OBJECTS &BODY BODY*

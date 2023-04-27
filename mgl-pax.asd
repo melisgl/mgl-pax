@@ -42,8 +42,8 @@
   :homepage ""
   :bug-tracker ""
   :source-control ""
-  :description "Slime `\\M-.` support for MGL-PAX."
-  :long-description "Autoloaded by Slime's `M-.` when `src/pax.el` is
+  :description "Slime `\\\\M-.` support for MGL-PAX."
+  :long-description "Autoloaded by Slime's `\\\\M-.` when `src/pax.el` is
   loaded. See MGL-PAX::@NAVIGATING-IN-EMACS."
   :depends-on ("alexandria" "mgl-pax" "swank")
   :defsystem-depends-on ("mgl-pax.asdf")

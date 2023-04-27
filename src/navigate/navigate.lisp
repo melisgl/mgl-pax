@@ -102,12 +102,15 @@
                                                    :errorp nil)))
                                 (when thing
                                   (let ((location (find-source thing)))
-                                    `((,(reference-to-dspec
+                                    `((,(reference-to-fake-dspec
                                          (canonical-reference thing))
                                        ,location)))))))
                            *locative-source-search-list*))))
 
-(defun reference-to-dspec (reference)
+;;; The returned dspec is fake because its doesn't match what
+;;; SWANK/BACKEND:FIND-DEFINITIONS would produce, but it doesn't
+;;; matter because it's only used as a label to show to the user.
+(defun reference-to-fake-dspec (reference)
   (list (reference-object reference) (reference-locative reference)))
 
 (defun locate-definition-for-emacs-1 (word locative-string)
@@ -118,7 +121,7 @@
                              (location (find-source ref)))
                         (when (eq (first location) :location)
                           ;; List of one Swank dspec and location.
-                          `((,(reference-to-dspec ref) ,location))))))))
+                          `((,(reference-to-fake-dspec ref) ,location))))))))
 
 (defun read-locative-from-markdown (string)
   (read-locative-from-string
