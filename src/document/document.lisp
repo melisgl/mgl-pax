@@ -1906,7 +1906,10 @@
              (t
               (print-section-title stream object title link-title-to)
               (when (and (zerop *heading-level*)
-                         (plusp *document-max-table-of-contents-level*))
+                         (plusp *document-max-table-of-contents-level*)
+                         ;; Don't generate a table of contents if it's
+                         ;; empty.
+                         (cdr *headings*))
                 (heading (1+ *heading-level*) stream)
                 (format stream " Table of Contents~%~%")
                 (let ((*table-of-contents-stream* stream)
