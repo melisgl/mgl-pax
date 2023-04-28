@@ -2,103 +2,6 @@
 
 (in-readtable pythonic-string-syntax)
 
-;;;; Escaping V2 of URLs and HTML ID (for HTML5)
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defun _mark-range (array start end)
-    (loop for a from (char-code start) to (char-code end) do
-      (setf (sbit array a) 1)))
-
-  (defun _mark-one (array ch)
-    (setf (sbit array (char-code ch)) 1)))
-
-(defparameter +unreserved-url-characters+
-  (let ((array (make-array 255 :element-type 'bit :initial-element 0)))
-    ;; RFC3986 unreserved characters
-    (_mark-range array #\a #\z)
-    (_mark-range array #\A #\Z)
-    (_mark-range array #\0 #\9)
-    (_mark-one array #\-)
-    (_mark-one array #\_)
-    (_mark-one array #\.)
-    (_mark-one array #\~)
-    ;; Include some reserved characters used by major sites
-    ;; (https://stackoverflow.com/a/42287988/532597), which violates
-    ;; RFC3986.
-    (_mark-one array #\:)
-    (_mark-one array #\@)
-    (_mark-one array #\+)
-    (_mark-one array #\*)
-    array))
-
-;;; This is adapted from HTML-Encode. Note that we also use this as it
-;;; in html <a id="...">, which is valid in HTML5 because there is no
-;;; space in it.
-(defun urlencode (string)
-  (declare (type string string))
-  (let ((output (make-array (truncate (length string) 2/3)
-                            :element-type 'character
-                            :adjustable t
-                            :fill-pointer 0)))
-    (with-output-to-string (out output)
-      (loop for char across string
-            for code = (char-code char)
-            for valid = +unreserved-url-characters+
-            do (cond ((and (< code 255)
-                           (= (sbit valid code) 1))
-                      (write-char char out))
-                     (t
-                      (format out "%~:@(~16r~)" code)))))
-    (coerce output 'simple-string)))
-
-
-;;;; Escaping V1 of URLs and HTML IDs (for HTML4)
-
-(defparameter +html4-first-name-characters+
-  (let ((array (make-array 255 :element-type 'bit :initial-element 0)))
-    (_mark-range array #\a #\z)
-    (_mark-range array #\A #\Z)
-    array))
-
-(defparameter +html4-name-characters+
-  (let ((array (copy-seq +html4-first-name-characters+)))
-    (_mark-range array #\0 #\9)
-    (_mark-one array #\-)
-    ;; Encode these as well to work around github markdown bug which
-    ;; would otherwise break links.
-    #+nil (_mark-one array #\_)
-    #+nil (_mark-one array #\.)
-    #+nil (_mark-one array #\:)
-    array))
-
-(defun html4-safe-name (name)
-  (declare (type simple-string name))
-  (let ((output (make-array (truncate (length name) 2/3)
-                            :element-type 'character
-                            :adjustable t
-                            :fill-pointer 0))
-	(first? t))
-    (with-output-to-string (out output)
-      (loop for char across name
-            for code = (char-code char)
-            for valid = +html4-first-name-characters+
-              then +html4-name-characters+
-            do (cond ((and (< code 255)
-                           (= (sbit valid code) 1))
-                      (write-char char out))
-                     (t
-                      ;; See http://www.w3.org/TR/html4/types.html#h-6.2
-                      ;; ID and NAME tokens must begin with a letter ([A-Za-z])
-                      ;; and may be followed by any number of letters,
-                      ;; digits ([0-9]), hyphens ("-"), underscores ("_"),
-                      ;; colons (":"), and periods (".").
-                      (when first?
-                        (write-char #\x out))
-                      (format out "-~:@(~16r~)" code)))
-               (setf first? nil)))
-    (coerce output 'simple-string)))
-
-
 ;;;; Text based markdown fragments
 
 (defun parse-markdown (string)
@@ -106,15 +9,31 @@
     ;; To be able to recognize symbols like FOO* join (... "FOO" "*"
     ;; ...) to look like (... "FOO*" ...).
     (join-consecutive-non-blank-strings-in-parse-tree
-     (3bmd-grammar:parse-doc string))))
+     (parse-markdown-fast string))))
+
+(defun parse-markdown-fast (string)
+  (if (< (length string) 1000)
+      (3bmd-grammar:parse-doc string)
+      ;; This is 3BMD-GRAMMAR:PARSE-DOC's currently commented out
+      ;; alternative implementation that's much faster on long strings
+      ;; but perhaps slower on short strings.
+      (loop
+        for start = 0 then pos
+        for (%block pos) = (multiple-value-list
+                            (esrap:parse '3bmd-grammar::%block
+                                         string :start start
+                                         :junk-allowed t))
+        while %block
+        collect %block
+        while pos)))
 
 (defmacro with-colorize-silenced (() &body body)
   `(let ((*trace-output* (make-broadcast-stream)))
      ,@body))
 
-(defun print-markdown (parse-tree stream)
+(defun print-markdown (parse-tree stream &key (format :markdown))
   (with-colorize-silenced ()
-    (3bmd::print-doc-to-stream-using-format parse-tree stream :markdown)))
+    (3bmd::print-doc-to-stream-using-format parse-tree stream format)))
 
 (defun heading (level stream)
   (loop repeat (1+ level) do (write-char #\# stream)))
@@ -187,6 +106,17 @@
 
 (defun code-fragment (string)
   `(:code ,(princ-to-string string)))
+
+(defun indent-verbatim (tree)
+  (assert (eq (first tree) :verbatim))
+  `(:verbatim ,(prefix-lines "  " (second tree))))
+
+(defun indent-code-block (tree)
+  (assert (eq (first tree) '3bmd-code-blocks::code-block))
+  (let ((tree (copy-list tree)))
+    (setf (pt-get tree :content)
+          (prefix-lines "  " (pt-get tree :content)))
+    tree))
 
 
 ;;;; Markdown parse tree transformation

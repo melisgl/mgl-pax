@@ -625,6 +625,7 @@
        ,@body)))
 
 ;;; Silence SBCL compiler note.
+#+sbcl
 (define-condition transcription-error (error) ())
 
 (defun read-transcript (input &key (syntaxes *transcribe-syntaxes*))

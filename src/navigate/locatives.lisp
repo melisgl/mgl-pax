@@ -168,7 +168,7 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'macro)) locative-args)
   (unless (or (macro-function symbol)
-              (special-operator-p symbol))
+              (special-operator-p* symbol))
     (locate-error "~S does not name a macro." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
@@ -879,10 +879,10 @@
                           locative-args)
   (or (and (endp locative-args)
            (let ((name (string-downcase (string name))))
-             #+ecl
+             #+(or allegro clisp ecl)
              (when (member name (asdf:registered-systems) :test #'string=)
                (asdf:find-system name))
-             #-ecl
+             #-(or allegro clisp ecl)
              (asdf:registered-system name)))
       (locate-error "~S does not name an ASDF:SYSTEM." name)))
 
@@ -1077,19 +1077,23 @@
                          *readtable*))
         (*section* section))
     (with-heading (stream section (section-title-or-name section)
-                          :link-title-to (section-link-title-to section))
+                   :link-title-to (section-link-title-to section))
       (when (and *document-normalize-packages* (not same-package))
-        (format stream "###### \\[in package ~A~A\\]~%" (package-name *package*)
-                (if (package-nicknames *package*)
-                    (format nil " with nicknames ~{~A~^, ~}"
-                            (package-nicknames *package*))
-                    "")))
+        (format-in-package *package* stream))
       (let ((firstp t))
         (dolist (entry (section-entries section))
           (if firstp
               (setq firstp nil)
               (terpri stream))
           (document-object entry stream))))))
+
+(defun format-in-package (package stream)
+  (format stream "###### \\[in package ~A~A\\]~%"
+          (escape-markdown (package-name package))
+          (if (package-nicknames *package*)
+              (format nil " with nicknames ~{~A~^, ~}"
+                      (mapcar #'escape-markdown (package-nicknames package)))
+              "")))
 
 (defmethod docstring ((section section))
   nil)

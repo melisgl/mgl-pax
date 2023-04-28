@@ -610,7 +610,7 @@
     (member-if-not function "f_mem_m")
     (merge function "f_merge")
     (merge-pathnames function "f_merge_")
-    (method type "t_method")
+    (method class "t_method")
     ;;(method-combination symbol "f_docume")
     (method-combination class "t_meth_1")
     (method-combination-error function "f_meth_1")

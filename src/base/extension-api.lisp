@@ -272,8 +272,8 @@
                               (reference-locative-args reference)))))
         (if (equal values '(no-delegate))
             (if delegator
-                (let ((object (resolve reference)))
-                  (if (typep object 'reference)
+                (let ((object (resolve reference :errorp nil)))
+                  (if (or (null object) (typep object 'reference))
                       (values-list defaults)
                       (funcall delegator object)))
                 (values-list defaults))

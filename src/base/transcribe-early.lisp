@@ -10,3 +10,7 @@
 (autoload squeeze-whitespace '#:mgl-pax/transcribe)
 (autoload delete-trailing-whitespace '#:mgl-pax/transcribe)
 (autoload delete-comments '#:mgl-pax/transcribe)
+
+(defsection @transcripts (:title "Transcripts")
+  "This is a placeholder until MGL-PAX/TRANSCRIBE is loaded."
+  (mgl-pax/transcribe asdf:system))

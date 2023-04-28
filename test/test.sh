@@ -69,6 +69,13 @@ EOF
   (uiop/image:quit 22))
 EOF
 
+  run_test_case "test-document-autoload on ${lisp_name}" $@ <<EOF
+(asdf:load-system :mgl-pax/test-extension)
+(in-package :mgl-pax-test-extension)
+(when (passedp (try 'test-document-for-emacs-autoload))
+  (uiop/image:quit 22))
+EOF
+
   run_test_case "test-docstring-autoload on ${lisp_name}" $@ <<EOF
 (asdf:load-system :mgl-pax/test-extension)
 (in-package :mgl-pax-test-extension)
@@ -115,13 +122,15 @@ function run_tests {
   fi
   ${test_suite} ${lisp} ros --lisp ${lisp} run -- $@
   if ((num_failures > 0)); then
-    if [ ${stop_on_failure} = "t" ]; then
+    if [ "${stop_on_failure}" = "t" ]; then
       echo "SHTEST: Aborting with ${num_failures} failures,"\
            "${num_passes} passes."
       exit 1
     fi
   fi
 }
+
+export LC_ALL=en_US.UTF-8
 
 # Most lisps take only 10s or so to run the tests. CLISP takes 4x longer. ABCL
 # is 25x slower.

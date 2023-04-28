@@ -52,8 +52,8 @@
 ;;; single name.
 (defun parse-word (word &key (trim t) (depluralize t) only-one
                    clhs-substring-match)
-  (let ((left-trim "#<")
-        (right-trim ",:.>")
+  (let ((left-trim "#<\"")
+        (right-trim ",:.>\"")
         (objects ())
         (names ()))
     (with-swank ()

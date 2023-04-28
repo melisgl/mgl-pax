@@ -6,14 +6,39 @@
      (let (#+clisp (*print-readably* nil))
        ,@body)))
 
+(defparameter *utf-8-external-format*
+  #+abcl :utf-8
+  #+clisp charset:utf-8
+  #-(or abcl clisp) :default)
+
 (defun find-package* (name)
   ;; On AllegroCL, FIND-PACKAGE will signal an error if a relative
   ;; package name has too many leading dots.
-  (ignore-errors (find-package name)))
+  #+allegro
+  (ignore-errors (find-package name))
+  #-allegro
+  (find-package name))
 
 (defun external-symbol-p (symbol)
   (eq (nth-value 1 (find-symbol (symbol-name symbol) (symbol-package symbol)))
       :external))
+
+(defun special-operator-p* (name)
+  (or (special-operator-p name)
+      ;; KLUDGE: CCL is mistaken about DECLARE.
+      #+ccl (eq name 'declare)))
+
+(defun valid-type-specifier-p (type)
+  (and
+   ;; Avoid "WARNING: * is not permitted as a type specifier" on SBCL.
+   (not (eq type '*))
+   (handler-case
+       (null (nth-value 1 (ignore-errors (typep nil type))))
+     ;; Silence compiler notes on SBCL when run via ASDF:TEST-SYSTEM.
+     #+sbcl
+     (sb-kernel:parse-unknown-type ())
+     #+cmucl
+     (sys::parse-unknown-type ()))))
 
 (defun symbol-global-value (symbol)
   #+allegro
@@ -167,6 +192,10 @@
   #-(or allegro ccl clisp) specializers
   #+(or allegro ccl clisp) (mapcar #'specializer-to-object specializers))
 
+(defun objects-to-specializers (objects)
+  #-(or allegro ccl clisp) objects
+  #+(or allegro ccl clisp) (mapcar #'object-to-specializer objects))
+
 #+(or allegro ccl clisp)
 (defun specializer-to-object (specializer)
   (cond ((symbolp specializer)
@@ -178,6 +207,15 @@
          #+ccl (ccl:intern-eql-specializer (second specializer))
          #+clisp specializer)
         (t specializer)))
+
+#+(or allegro ccl clisp)
+(defun object-to-specializer (object)
+  (cond ((typep object 'class)
+         (class-name object))
+        #+ccl
+        ((typep object 'ccl:eql-specializer)
+         `(eql ,(ccl:eql-specializer-object object)))
+        (t object)))
 
 
 (defmacro with-debugger-hook (fn &body body)
@@ -259,3 +297,29 @@
               (format out "~a~a" prefix line))
           (unless missing-newline-p
             (terpri out)))))))
+
+(defun first-lines (string &optional (n-lines 1))
+  (with-output-to-string (out)
+    (with-input-from-string (in string)
+      (loop for i below n-lines do
+        (let ((line (read-line in nil nil)))
+          (when line
+            (cond ((< i (1- n-lines))
+                   (write-line line out))
+                  ((= i (1- n-lines))
+                   (write-string line out)))))))))
+
+(defun shorten-string (string &key n-lines n-chars ellipsis)
+  (let ((shortened string))
+    (when n-lines
+      (setq shortened (first-lines shortened n-lines)))
+    (when (and n-chars (< n-chars (length shortened)))
+      (setq shortened (subseq shortened 0 n-chars)))
+    (if (and ellipsis (< (length shortened) (length string)))
+        (concatenate 'string shortened ellipsis)
+        shortened)))
+
+
+(declaim (inline hashash))
+(defun hashash (key hash-table)
+  (nth-value 1 (gethash key hash-table)))

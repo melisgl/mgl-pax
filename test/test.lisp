@@ -5,7 +5,7 @@
   (test-document)
   (test-transcribe))
 
-(defun test (&key (debug nil) (print 't) (describe *describe*))
+(defun test (&key (debug nil) (print 'unexpected) (describe *describe*))
   ;; Bind *PACKAGE* so that names of tests printed have package names,
   ;; and M-. works on them in Slime.
   (let ((*package* (find-package :common-lisp))

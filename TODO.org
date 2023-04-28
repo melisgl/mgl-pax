@@ -1,10 +1,10 @@
 #+SEQ_TODO: TODO(t@) NEXT(n@) STARTED(s@) WAITING(w@) | DONE(d@) OLD(o@) CANCELLED(c@)
-#+TODO: MAYBE(m@) FAILED(f@) LOG(l@) DEFERRED(e@)
+#+TODO: MAYBE(m@) FAILED(f@) LOG(l@) DEFERRED(e@) BUG(b@)
 * MAYBE add locatives for sbcl internals
 deftransform, defoptimizer, define-vop, define-source-transfrom
 * OPT esrap is slow with allegro cl
 * OPT parse and print markdown once when *format* is :html?
-This would involve rewriting everything to emit parse tree fragments.
+This would involve rewriting everything to emit parse tree fragments or be able to produce html directly. Either way, it is not without cost.
 * defining link ids doesn't work in function docstrings
 because it's translated to a list item
 
@@ -85,3 +85,9 @@ expands to
 https://github.com/40ants/doc/commit/c3bf89fa88ab70074466aa07358caad159d45008
 * MAYBE autodoc?
 https://github.com/40ants/doc/commit/d638135b784c2fd7e0199c829157644da197fdb7
+* BUG "FUNCTION locative" docstring processed in wrong package
+Because the actual definition is in (SYMBOL-PACKAGE 'FUNCTION).
+* BUG class/type/condition confusion 
+* TODO support local functions, macros OTHERWISE, CALL-NEXT-METHOD
+* TODO support symbols in a context
+E.g. LOOP's WITH, or OTHERWISE in CASE.

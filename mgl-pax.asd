@@ -68,12 +68,13 @@
   :long-description "Autoloaded by MGL-PAX:DOCUMENT. See
   MGL-PAX::@GENERATING-DOCUMENTATION."
   :depends-on ("alexandria" "3bmd" "3bmd-ext-code-blocks" "colorize" "md5"
-               "mgl-pax/navigate")
+               "mgl-pax/navigate" "trivial-utf-8")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/document/"
                 :serial t
-                :components ((:file "markdown")
+                :components ((:file "url")
+                             (:file "markdown")
                              (:file "stream-spec")
                              (:file "docstring")
                              (:file "hyperspec")

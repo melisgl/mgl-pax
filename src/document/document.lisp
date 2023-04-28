@@ -5,6 +5,7 @@
 (defsection @generating-documentation (:title "Generating Documentation")
   (document function)
   (mgl-pax/document asdf:system)
+  (@documenting-in-emacs section)
   (@markdown-support section)
   (@codification section)
   (@linking-to-code section)
@@ -61,11 +62,12 @@
 ;;; resides on PAGE (note that the same REFERENCE may be written to
 ;;; multiple pages).
 ;;;
-;;; PAGE may also be a string denoting a URL. This is used to link to
-;;; the hyperspec.
+;;; String PAGEs denote a URL. This is used to link to the hyperspec.
+;;;
+;;; Null PAGEs are to support "pax:" URLs.
 (defstruct link
   (reference nil :type reference)
-  (page nil :type (or page string)))
+  (page nil :type (or page string null)))
 
 ;;; A list of hash tables mapping REFERENCE-OBJECTs to lists of LINKs,
 ;;; representing all possible things that may be linked to. Bound only
@@ -73,14 +75,20 @@
 ;;; to all reachable references from all the objects being
 ;;; documented). If a reference occurs multiple times, earlier links
 ;;; (thus pages earlier in DOCUMENT's PAGES argument) have precedence.
-(defvar *object-to-links-maps*)
-;;; A list of EQ hash tables for symbol objects.
+
+;;; A list of EQ hash tables for symbol @OBJECTs.
 (defvar *symbol-to-links-maps*)
+;;; A list of EQUAL hash tables for non-symbol @OBJECTs.
+(defvar *object-to-links-maps*)
+
+(declaim (special *document-open-ended-linking*))
 
 (defmacro do-links ((link object) &body body)
   (alexandria:with-gensyms (symbol-to-links object-to-links key)
     (alexandria:once-only (object)
       `(block nil
+         (when *document-open-ended-linking*
+           (ensure-open-ended-links ,object))
          (when (symbolp ,object)
            (loop named %hidden
                  for ,symbol-to-links in *symbol-to-links-maps*
@@ -103,8 +111,8 @@
 ;;; Add a LINK to *OBJECT-TO-LINKS-MAPS* for each reference in
 ;;; PAGE-REFERENCES of PAGES.
 (defmacro with-pages ((pages) &body body)
-  `(let ((*object-to-links-maps* (list (make-hash-table :test #'equal)))
-         (*symbol-to-links-maps* (list (make-hash-table)))
+  `(let ((*symbol-to-links-maps* (list (make-hash-table)))
+         (*object-to-links-maps* (list (make-hash-table :test #'equal)))
          (*local-references* ())
          (*link-to-id* (make-hash-table))
          (*id-to-link* (make-hash-table :test #'equal)))
@@ -112,20 +120,24 @@
      (locally ,@body)))
 
 (defun initialize-links (pages)
-  (loop for page in pages
-        do (dolist (reference (page-references page))
-             (unless (find-link reference)
-               (add-link (make-link :reference reference
-                                    :page page)))))
-  (maybe-add-links-to-hyperspec))
+  (let ((*document-open-ended-linking* nil))
+    (loop for page in pages
+          do (dolist (reference (page-references page))
+               (unless (find-link reference)
+                 (add-link (make-link :reference reference
+                                      :page page))))))
+  (maybe-add-links-to-hyperspec)
+  ;; This must be done last.
+  (initialize-open-ended-links))
 
-(defun add-link (link)
+(defun add-link (link &optional symbol-only object)
   (let* ((reference (link-reference link))
-         (object (reference-object reference)))
+         (object (or object (reference-object reference))))
     (if (or (member (reference-locative-type reference) '(package asdf:system))
             (not (symbolp object)))
-        (push link (gethash (string-upcase (string object))
-                            (first *object-to-links-maps*)))
+        (unless symbol-only
+          (push link (gethash (string-upcase (string object))
+                              (first *object-to-links-maps*))))
         (push link (gethash object (first *symbol-to-links-maps*))))))
 
 
@@ -191,10 +203,12 @@
 (defun link-to-reference (reference)
   (let ((link (find-link reference)))
     (when (and link
-               (or (eq *page* (link-page link))
-                   (stringp (link-page link))
-                   (and (page-uri-fragment *page*)
-                        (page-uri-fragment (link-page link)))))
+               (let ((page (link-page link)))
+                 (or (null page)
+                     (eq *page* page)
+                     (stringp page)
+                     (and (page-uri-fragment *page*)
+                          (page-uri-fragment page)))))
       (setf (gethash link (page-used-links *page*)) t)
       (format nil "~A" (ensure-link-id link)))))
 
@@ -254,25 +268,30 @@
 
 (defun maybe-add-links-to-hyperspec ()
   (when *document-link-to-hyperspec*
-    (unless (equal (first *last-hyperspec-root-and-links*)
-                   *document-hyperspec-root*)
-      (let ((*object-to-links-maps* (list (make-hash-table :test #'equal)))
-            (*symbol-to-links-maps* (list (make-hash-table))))
-        (loop for (object locative url) in (hyperspec-external-references
-                                            *document-hyperspec-root*)
-              do (let ((reference (make-reference object locative)))
-                   (add-link (make-link :reference reference
-                                        :page url))))
-        (setq *last-hyperspec-root-and-links* (list *document-hyperspec-root*
-                                                    *object-to-links-maps*
-                                                    *symbol-to-links-maps*))))
     (destructuring-bind (root object-to-links-maps symbol-to-links-maps)
-        *last-hyperspec-root-and-links*
+        (hyperspec-root-and-links)
       (declare (ignore root))
       (setq *object-to-links-maps* (append *object-to-links-maps*
                                            object-to-links-maps))
       (setq *symbol-to-links-maps* (append *symbol-to-links-maps*
                                            symbol-to-links-maps)))))
+
+(defun hyperspec-root-and-links ()
+  (if (equal (first *last-hyperspec-root-and-links*)
+             *document-hyperspec-root*)
+      *last-hyperspec-root-and-links*
+      (let ((*object-to-links-maps* (list (make-hash-table :test #'equal)))
+            (*symbol-to-links-maps* (list (make-hash-table)))
+            (*document-open-ended-linking* nil))
+        (loop for (object locative url) in (hyperspec-external-references
+                                            *document-hyperspec-root*)
+              do (let ((reference (make-reference object locative)))
+                   (add-link (make-link :reference reference
+                                        :page url))))
+        (setq *last-hyperspec-root-and-links*
+              (list *document-hyperspec-root*
+                    *object-to-links-maps*
+                    *symbol-to-links-maps*)))))
 
 
 (defvar *pages-created*)
@@ -330,6 +349,8 @@
     `(flet ((,fn ()
               ,@body))
        (call-with-format ,format #',fn))))
+
+(defvar *html-subformat* nil)
 
 (defun/autoloaded document (object &key (stream t) pages (format :plain))
   """Write OBJECT in FORMAT to STREAM diverting some output to PAGES.
@@ -480,22 +501,30 @@
                                :output (list stream))
                          *format*))
           (3bmd-code-blocks:*code-blocks* t)
-          (3bmd-code-blocks:*code-blocks-default-colorize* :common-lisp)
+          (3bmd-code-blocks:*code-blocks-default-colorize*
+            (and (not (eq *html-subformat* :w3m))
+                 :common-lisp))
           (3bmd-code-blocks::*colorize-name-map*
-            (alexandria:plist-hash-table
-             `("cl-transcript" :common-lisp
-                               ,@(alexandria:hash-table-plist
-                                  3bmd-code-blocks::*colorize-name-map*))
-             :test #'equal)))
+            (if (eq *html-subformat* :w3m)
+                (make-hash-table)
+                (alexandria:plist-hash-table
+                 `("cl-transcript" :common-lisp
+                   ,@(alexandria:hash-table-plist
+                      3bmd-code-blocks::*colorize-name-map*))
+                 :test #'equal))))
       (with-tracking-pages-created ()
         (with-pages ((append (translate-page-specs pages *format*)
                              (list default-page)))
           ;; Write output to DEFAULT-PAGE until a DOCUMENT-OBJECT
           ;; finds a reference that should got to another PAGE.
           (with-temp-output-to-page (stream default-page)
-            (dolist (object (alexandria:ensure-list object))
-              (with-headings (object)
-                (document-object object stream))))
+            (loop for object1 in (alexandria:ensure-list object)
+                  for first = t then nil
+                  do (with-headings (object1)
+                       (unless first
+                         (terpri stream))
+                       (let ((*package* (guess-package object1)))
+                         (document-object object1 stream)))))
           (let ((outputs ()))
             (do-pages-created (page)
               ;; Add the markdown reference link definitions for all
@@ -513,9 +542,9 @@
                   (with-final-output-to-page (stream page)
                     (when (page-header-fn page)
                       (funcall (page-header-fn page) stream))
-                    (with-colorize-silenced ()
-                      (3bmd:parse-string-and-print-to-stream
-                       markdown-string stream :format *format*))
+                    (print-markdown (maybe-for-w3m (parse-markdown-fast
+                                                    markdown-string))
+                                    stream :format *format*)
                     (when (page-footer-fn page)
                       (funcall (page-footer-fn page) stream)))))
               (push (unmake-stream-spec (page-final-stream-spec page))
@@ -527,7 +556,23 @@
                   (t
                    nil))))))))
 
+(defun guess-package (object)
+  (let ((reference (canonical-reference object)))
+    (if (null reference)
+        *package*
+        (let ((object (reference-object reference))
+              (locative-type (reference-locative-type reference)))
+          (cond ((eq locative-type 'section)
+                 ;; SECTIONs have their own logic
+                 ;; see (DOCUMENT-OBJECT (METHOD () (SECTION T)))).
+                 *package*)
+                ((symbolp object)
+                 (symbol-package object))
+                (t
+                 *package*))))))
+
 ;;; Silence SBCL compiler note.
+#+sbcl
 (define-condition unresolvable-reflink (warning) ())
 
 (defun call-with-format (format fn)
@@ -562,7 +607,8 @@
           ;; E.g.  [1]: http://example.org/Hobbit#Lifestyle "Hobbit lifestyles"
           (if (stringp (link-page link))
               ;; Link to external page.
-              (format stream "  [~A]: ~A ~A~%" (link-id link) (link-page link)
+              (format stream "  [~A]: ~A ~A~%" (link-id link)
+                      (link-page link)
                       (escape-markdown-reflink-definition-title
                        (princ-to-string anchor)))
               ;; Link to documentation generated in the same run.
@@ -574,15 +620,15 @@
                               (locative-type (reference-locative-type ref)))
                          (if (not (eq locative-type 'section))
                              (princ-to-string anchor)
-                             (let ((section (resolve ref)))
-                               (if (section-title section)
-                                   (let ((*package* (section-package section)))
-                                     (unescape-markdown
-                                      (process-title (section-title section))))
-                                   (process-title
-                                    (let ((*print-case* :upcase))
-                                      (prin1-to-string (section-name
-                                                        section))))))))))))))))
+                             (markdown-section-title ref)))))))))))
+
+(defun markdown-section-title (ref)
+  (let ((section (resolve ref :errorp (not *document-open-ended-linking*))))
+    (if (and section (section-title section))
+        (let ((*package* (section-package section)))
+          (unescape-markdown (process-title (section-title section))))
+        (process-title (let ((*print-case* :upcase))
+                         (prin1-to-string (reference-object ref)))))))
 
 
 ;;;; URIs of stuff
@@ -595,24 +641,27 @@
           (link-to-uri link))))))
 
 (defun link-to-uri (link)
-  (let* ((target-page (link-page link))
-         (target-page-references (page-references target-page))
-         (target-page-uri-fragment (page-uri-fragment target-page)))
-    ;; Don't generate anchors when linking to the first reference on
-    ;; the page (COLLECT-REACHABLE-OBJECTS).
-    (if (and (reference= (link-reference link) (first target-page-references))
-             target-page-uri-fragment)
-        (if (eq target-page *page*)
-            ;; "xxx.html"
-            (format nil "~A.~A" (pathname-name target-page-uri-fragment)
-                    (pathname-type target-page-uri-fragment))
-            ;; "../xxx.html"
-            (relative-page-uri-fragment target-page *page*))
-        (format nil "~A#~A"
-                (if (eq target-page *page*)
-                    ""
-                    (relative-page-uri-fragment target-page *page*))
-                (anchor-id (link-reference link))))))
+  (let ((target-page (link-page link)))
+    (if (null target-page)
+        (urlencode (reference-to-pax-url (link-reference link)))
+        (let ((target-page-references (page-references target-page))
+              (target-page-uri-fragment (page-uri-fragment target-page)))
+          ;; Don't generate anchors when linking to the first
+          ;; reference on the page (COLLECT-REACHABLE-OBJECTS).
+          (if (and (reference= (link-reference link)
+                               (first target-page-references))
+                   target-page-uri-fragment)
+              (if (eq target-page *page*)
+                  ;; "xxx.html"
+                  (format nil "~A.~A" (pathname-name target-page-uri-fragment)
+                          (pathname-type target-page-uri-fragment))
+                  ;; "../xxx.html"
+                  (relative-page-uri-fragment target-page *page*))
+              (format nil "~A#~A"
+                      (if (eq target-page *page*)
+                          ""
+                          (relative-page-uri-fragment target-page *page*))
+                      (anchor-id (link-reference link))))))))
 
 (defun relative-page-uri-fragment (page reference-page)
   (let ((fragment (page-uri-fragment page))
@@ -698,6 +747,8 @@
   (document-docstring string stream :indentation "" :paragraphp nil)
   (terpri stream))
 
+(defvar *document-docstring-key* nil)
+
 (defun/autoloaded document-docstring
     (docstring stream &key (indentation "    ")
                exclude-first-line-p (paragraphp t))
@@ -707,18 +758,21 @@
   INDENTATION. The prefix is not added to the first line if
   EXCLUDE-FIRST-LINE-P. If PARAGRAPHP, then add a newline before and
   after the output."
-  ;; If the output is going to /dev/null and this is a costly
-  ;; operation, skip it.
   (when (and docstring
              (not (equal docstring ""))
+             ;; If the output is going to /dev/null and this is a
+             ;; costly operation, skip it.
              (null *table-of-contents-stream*))
-    (let* ((docstring (strip-docstring-indentation docstring))
-           (reindented (prefix-lines
-                        indentation (codify-and-link docstring)
-                        :exclude-first-line-p exclude-first-line-p)))
-      (if paragraphp
-          (format stream "~%~A~%" reindented)
-          (format stream "~A" reindented)))))
+    (let ((docstring (funcall (or *document-docstring-key* #'identity)
+                              docstring)))
+      (when docstring
+        (let* ((docstring (strip-docstring-indentation docstring))
+               (reindented (prefix-lines
+                            indentation (codify-and-link docstring)
+                            :exclude-first-line-p exclude-first-line-p)))
+          (if paragraphp
+              (format stream "~%~A~%" reindented)
+              (format stream "~A" reindented)))))))
 
 (defsection @markdown-syntax-highlighting (:title "Syntax Highlighting")
   "For syntax highlighting, github's [fenced code
@@ -779,6 +833,28 @@
       (print-markdown (link (codify (include-docstrings
                                      (parse-markdown string))))
                       out))))
+
+
+;;;; Post-process the markdown parse tree to make it prettier on w3m.
+
+(defun maybe-for-w3m (parse-tree)
+  (if (eq *html-subformat* :w3m)
+      (flet ((translate (parent tree)
+               (declare (ignore parent))
+               (cond ((eq (first tree) :code)
+                      `(:strong ,tree))
+                     ((eq (first tree) :verbatim)
+                      (values `((:RAW-HTML #.(format nil "<i>~%"))
+                                ,(indent-verbatim tree) (:RAW-HTML "</i>"))
+                              nil t))
+                     (t
+                      (values `((:RAW-HTML #.(format nil "<i>~%"))
+                                ,(indent-code-block tree)
+                                (:RAW-HTML "</i>"))
+                              nil t)))))
+        (map-markdown-parse-tree '(:code :verbatim 3bmd-code-blocks::code-block)
+                                 '() nil #'translate parse-tree))
+      parse-tree))
 
 
 (defun include-docstrings (parse-tree)
@@ -1490,18 +1566,23 @@
            ;; All references were filtered out.
            label)
           ((< 1 (length refs))
-           ;; `label`([1][link-id-1] [2][link-id-2])
-           `(,@label
-             "("
-             ,@(loop
-                 for i upfrom 0
-                 for ref in (sort-references refs)
-                 append `(,@(unless (zerop i)
-                              '(" "))
-                          (:reference-link
-                           :label (,(code-fragment i))
-                           :definition ,(link-to-reference ref))))
-             ")"))
+           (if *document-open-ended-linking*
+               ;; [`label`](pax:object)
+               `((:explicit-link
+                  :label ,label
+                  :source ,(urlencode (reference-to-ambiguous-pax-url ref-1))))
+               ;; `label`([1][link-id-1] [2][link-id-2])
+               `(,@label
+                 "("
+                 ,@(loop
+                     for i upfrom 0
+                     for ref in (sort-references refs)
+                     append `(,@(unless (zerop i)
+                                  '(" "))
+                              (:reference-link
+                               :label (,(code-fragment i))
+                               :definition ,(link-to-reference ref))))
+                 ")")))
           ((member (reference-locative-type ref-1) '(dislocated argument))
            label)
           ;; FIXME: TITLE should be a generic function.
@@ -1527,13 +1608,21 @@
               :label ,label
               :definition ,(link-to-reference ref-1)))))))
 
-;;; Order REFERENCES in an implementation independent way. REFERENCES
-;;; are all to the same object.
+;;; Order REFERENCES in an implementation independent way.
 (defun sort-references (references)
-  (flet ((locative-string (reference)
+  (flet ((key (reference)
            (with-standard-io-syntax*
-             (prin1-to-string (reference-locative reference)))))
-    (sort (copy-seq references) #'string< :key #'locative-string)))
+             (format nil "~S ~S"
+                     (reference-object reference)
+                     (ensure-list (reference-locative reference))))))
+    (sort-list-with-precomputed-key references #'string< :key #'key)))
+
+;;; Only compute the key for each element once.
+(defun sort-list-with-precomputed-key (list pred &key key)
+  (map 'list #'car (sort (map 'vector (lambda (x)
+                                        (cons x (funcall key x)))
+                              list)
+                         pred :key #'cdr)))
 
 
 (defsection @unresolvable-reflinks (:title "Unresolvable Links")
@@ -1590,7 +1679,10 @@
                            like a ~S.~:@>"
                    reflink locative '@locative))
           (t
-           (format stream "~@<~S cannot be resolved.~:@>" reflink)))))
+           (format stream "~@<~S cannot be resolved.~:@>" reflink)))
+    (when *reference-being-documented*
+      (format stream "~%~@<(while documenting ~S)~:@>"
+              *reference-being-documented*))))
 
 (defun signal-unresolvable-reflink (reflink object locative)
   (restart-case
@@ -1759,14 +1851,17 @@
           ;; These have no pages, but won't result in link anyway.
           ;; Keep them.
           (member (reference-locative-type ref) '(dislocated argument))
+          ;; Pax URLs are always linkable.
+          (null page)
           ;; Intrapage links always work.
           (eq *page* page)
-          ;; Else we need to know the URI-FRAGMENT of both pages. See
-          ;; RELATIVE-PAGE-URI-FRAGMENT. Or PAGE may also be a string
-          ;; denoted an absolute URL.
-          (or (stringp page)
-              (and (page-uri-fragment *page*)
-                   (page-uri-fragment page)))))))
+          ;; PAGE may also be a string denoted an absolute URL.
+          (stringp page)
+          ;; PAGE is a PAGE structure. We need to know the
+          ;; URI-FRAGMENT of both pages. See
+          ;; RELATIVE-PAGE-URI-FRAGMENT.
+          (and (page-uri-fragment *page*)
+               (page-uri-fragment page))))))
 
 
 (defsection @filtering-ambiguous-references
@@ -2136,6 +2231,19 @@
               (object-to-url-part (reference-object reference))
               (reference-locative reference)))))
 
+(defun reference-to-pax-url (reference)
+  (let ((reference (canonical-reference reference)))
+    (with-standard-io-syntax*
+      (format nil "pax:~A ~S"
+              (object-to-url-part (reference-object reference))
+              (reference-locative reference)))))
+
+(defun reference-to-ambiguous-pax-url (reference)
+  (let ((reference (canonical-reference reference)))
+    (with-standard-io-syntax*
+      (format nil "pax:~A"
+              (object-to-url-part (reference-object reference))))))
+
 (defun object-to-url-part (object)
   (if (symbolp object)
       (let* ((package (symbol-package object))
@@ -2234,24 +2342,31 @@
               (name (escape-markdown name)))
           (if (eq *format* :html)
               (let ((source-uri (source-uri reference)))
-                (format stream
-                        "- <span class=reference-bullet>~
+                (if (eq *html-subformat* :w3m)
+                    (format stream "- **\\[~A]** [~A](~A) <i>"
+                            locative-type name
+                            (urlencode (reference-to-pax-url reference)))
+                    (format stream
+                            "- <span class=reference-bullet>~
                            <span class=reference>~
                            <span class=\"locative-type\">~
                            ~@[<a href=\"~A\">~]\\[~A]~:[~;</a>~]~
                            </span> ~
                         <span class=\"reference-object\">[~A](#~A)</span>~
                         </span>"
-                        source-uri locative-type source-uri name
-                        (urlencode (reference-to-anchor reference))))
+                            source-uri locative-type source-uri name
+                            (urlencode (reference-to-anchor reference)))))
               (format stream "- [~A] ~A" locative-type (bold name nil))))
         (format stream "- [~A] ~A" locative-type name))))
 
 (defun print-end-bullet (stream)
-  (if (eq *format* :html)
-      ;; end "reference-bullet" span
-      (format stream "</span>~%")
-      (format stream "~%")))
+  (cond ((eq *html-subformat* :w3m)
+         (format stream "</i>~%"))
+        ((eq *format* :html)
+         ;; end "reference-bullet" span
+         (format stream "</span>~%"))
+        (t
+         (format stream "~%"))))
 
 (defun source-uri (reference)
   (let ((fn (page-source-uri-fn *page*)))
@@ -2259,11 +2374,16 @@
         (funcall fn reference)
         nil)))
 
+(defvar *print-arglist-key* nil)
+
 (defun print-arglist (arglist stream)
-  (let ((string (if (stringp arglist)
-                    ;; must be escaped markdown
-                    arglist
-                    (arglist-to-string arglist))))
+  (let* ((string (if (stringp arglist)
+                     ;; must be escaped markdown
+                     arglist
+                     (arglist-to-string arglist)))
+         (string (if *print-arglist-key*
+                     (funcall *print-arglist-key* string)
+                     string)))
     (if *document-mark-up-signatures*
         (if (eq *format* :html)
             (format stream "<span class=\"locative-args\">~A</span>" string)
@@ -2360,25 +2480,34 @@
            (let* ((reference (canonical-reference object))
                   (*reference-being-documented* reference))
              (with-temp-output-to-page (stream (reference-page reference))
-               (when (and *document-link-code*
-                          (not (typep object 'section))
-                          (not (typep object 'asdf:system)))
-                 (anchor reference stream))
                (call-next-method object stream)))))))
 
 (defmethod document-object ((reference reference) stream)
   (let* ((reference (canonical-reference reference))
-         (resolved-object (resolve reference)))
-    (if (typep resolved-object 'reference)
-        (with-temp-output-to-page (stream (reference-page reference))
-          (when *document-link-code*
-            (anchor reference stream))
-          (let ((locative (reference-locative reference)))
-            (locate-and-document (reference-object reference)
-                                 (locative-type locative)
-                                 (locative-args locative)
-                                 stream)))
-        (document-object resolved-object stream))))
+         (warn-if-unresolvable
+           (and *document-open-ended-linking*
+                ;; It is an error for explicit arguments to
+                ;; DOCUMENT to be unresolvable (so that
+                ;; `mgl-pax-document' produces errors when it
+                ;; must), but we want to document what we can even
+                ;; if a section contains unresolvable stuff.
+                (boundp '*section*)))
+         (resolved-object (resolve reference
+                                   :errorp (not warn-if-unresolvable))))
+    ;; We are fine because RESOLVE probably never returns NIL because
+    ;; (RESOLVE (MAKE-REFERENCE NIL 'CONSTANT)) returns a REFERENCE.
+    (if (and warn-if-unresolvable
+             (null resolved-object))
+        (warn "~@<Not documenting unresolvable ~S~@[ in ~S.~]~:@>"
+              reference (second *objects-being-documented*))
+        (if (typep resolved-object 'reference)
+            (with-temp-output-to-page (stream (reference-page reference))
+              (let ((locative (reference-locative reference)))
+                (locate-and-document (reference-object reference)
+                                     (locative-type locative)
+                                     (locative-args locative)
+                                     stream)))
+            (document-object resolved-object stream)))))
 
 
 (defsection @overview-of-escaping (:title "Overview of Escaping")
@@ -2427,4 +2556,515 @@
   - COMPILER-MACRO docstrings on ABCL, AllegroCL, \CCL, ECL;
   - DEFTYPE lambda lists on ABCL, AllegroCL, CLISP, \CCL, CMUCL, ECL;
   - default values in MACRO lambda lists on AllegroCL;
-  - METHOD-COMBINATION docstrings on ABCL, AllegroCL.""")
+  - METHOD-COMBINATION docstrings on ABCL, AllegroCL.
+
+  In addition, CLISP does not support the ambiguous case of @PAX-URLS
+  for @DOCUMENTING-IN-EMACS because the current implementation relies
+  on Swank to list definitions of symbols (as VARIABLE,
+  [FUNCTION][locative], etc), and that simply doesn't work.""")
+
+
+;;;; Open-ended linking
+;;;;
+;;;; Not exported. Only used via the elisp function
+;;;; `mgl-pax-document', through DOCUMENT-FOR-EMACS.
+
+;;; When true, via ENSURE-OPEN-ENDED-LINKS
+(defvar *document-open-ended-linking* nil)
+
+(defun initialize-open-ended-links ()
+  (when *document-open-ended-linking*
+    ;; ENSURE-OPEN-ENDED-LINKS relies on these hash table being first.
+    (push (make-hash-table) *symbol-to-links-maps*)
+    (push (make-hash-table :test #'equal) *object-to-links-maps*)))
+
+;;; Gather all possible references to OBJECT, and add the
+;;; corresponding links.
+(defun ensure-open-ended-links (object)
+  ;; This relies on INITIALIZE-LINKS putting the hash tables for
+  ;; open-ended links first on *SYMBOL-TO-LINKS-MAPS* and
+  ;; *OBJECT-TO-LINKS-MAPS*.
+  (let ((symbol-to-links-map (first *symbol-to-links-maps*))
+        (object-to-links-map (first *object-to-links-maps*)))
+    (if (symbolp object)
+        (let ((registered-as-symbol (hashash object symbol-to-links-map)))
+          ;; REGISTERED-AS-SYMBOL implies REGISTERED-AS-OBJECT.
+          (unless registered-as-symbol
+            (let* ((string (string-upcase (string object)))
+                   (registered-as-object (hashash string object-to-links-map)))
+              (setf (gethash object symbol-to-links-map) ())
+              (unless registered-as-object
+                (setf (gethash object object-to-links-map) ()))
+              (add-open-ended-links-for-definitions object
+                                                    registered-as-object))))
+        (let* ((string (string-upcase (string object)))
+               (registered-as-object (hashash string object-to-links-map)))
+          (unless registered-as-object
+            (setf (gethash object object-to-links-map) ())
+            (add-open-ended-links-for-definitions object nil))))))
+
+(defun add-open-ended-links-for-definitions (object registered-as-object)
+  (let ((references (definitions-as-references object))
+        ;; Avoid infinite recursion through FIND-LINK below.
+        (*document-open-ended-linking* nil))
+    (dolist (reference references)
+      (unless (find-link reference)
+        (add-link (make-link :reference reference :page nil)
+                  registered-as-object
+                  ;; We register the links for OBJECT not for
+                  ;; (REFERENCE-OBJECT REFERENCE), which may miss
+                  ;; links. See
+                  ;; MGL-PAX-TEST::TEST-DOCUMENT/W3M/OBJECT.
+                  object)))))
+
+;;; Return all canonical definitions of OBJECT as a list of
+;;; REFERENCEs. REFERENCE-OBJECTs may not be the same as OBJECT (for
+;;; example, when OBJECT is a package nickname).
+(defun definitions-as-references (object)
+  (unless (keywordp object)
+    (remove-duplicates
+     (append (loop for dspec in (find-dspecs (if (stringp object)
+                                                 (make-symbol object)
+                                                 object))
+                   for ref = (dspec-to-reference dspec object)
+                   when ref
+                     collect (canonical-reference ref))
+             (mapcan (lambda (locative)
+                       (let ((thing (locate object locative :errorp nil)))
+                         (when thing
+                           `(,(canonical-reference thing)))))
+                     *locative-source-search-list*))
+     :test #'reference=)))
+
+
+(defsection @documenting-in-emacs (:title "Documenting in Emacs")
+  """Documentation can be viewed live in Emacs with
+  [w3m](https://emacs-w3m.github.io/info/emacs-w3m.html). Docstrings
+  of all kinds of Lisp definitions and documentation from \\PAX
+  SECTIONs is generated on the fly, complete with @CODIFICATION and
+  [links][@LINKING-TO-CODE].
+
+  If `src/pax.el` is loaded into Emacs, the elisp function
+  `mgl-pax-document` can be used to generate documentation for a \PAX
+  URL. The documentation is a single HTML page generated by PAX via
+  Slime documenting the definitions given by PAX-URL. If necessary, a
+  disambiguation page is generated with the documentation of all
+  possible references. The HTML page is opened in the w3m browser
+  within Emacs. For example, to view the documentation of this very
+  [SECTION][class], one can do:
+
+      M-x mgl-pax-document
+      View Documentation of: pax::@documenting-in-emacs
+
+  Coincidentally, this is the default when the empty string is entered
+  and there is no w3m buffer. If there is a w3m buffer, then the
+  entering the empty string displays that buffer.
+
+  If we enter `\MGL-PAX` instead, then a [disambiguation
+  page](pax:MGL-PAX) (note that this and other `pax:` links only work
+  in Emacs) will be shown with the documentation of the MGL-PAX
+  package and the MGL-PAX asdf:system. One may then follow the links
+  on the page to navigate to a page with the documentation the desired
+  definition. Alternatively, a @LOCATIVE may be specified as in
+  `MGL-PAX package`
+
+      M-x mgl-pax-document
+      View Documentation of: MGL-PAX package
+
+  which gives [this result](pax:MGL-PAX%20package). Finally, to
+  [view](pax:pax::@pax-manual#pax:defsection%20pax:macro) the
+  definition of DEFSECTION in the page documenting the entire
+  @PAX-MANUAL:
+
+      M-x mgl-pax-document
+      View Documentation of: pax::@pax-manual#pax:defsection pax:macro
+
+  In interactive use of `mgl-pax-document`, the \PAX URL will default
+  to `slime-symbol-at-point'.
+
+  The suggested key binding is `C-.` to parallel `M-.`:
+
+      (global-set-key (kbd "C-.") 'mgl-pax-document)
+  """
+  (@pax-urls section)
+  (@navigation-in-w3m section))
+
+(defsection @pax-urls (:title "PAX URLs")
+  """A \PAX URL consists of a \REFERENCE and an optional FRAGMENT
+  part:
+
+      URL = [REFERENCE] ["#" FRAGMENT]
+
+  where \REFERENCE names either
+
+  - a complete @REFERENCE (e.g. `"PAX:SECTION CLASS"`),
+
+  - or the @OBJECT of a reference (e.g. `"PAX:SECTION"`), which
+    possibly makes what to document ambiguous.""")
+
+(defsection @navigation-in-w3m (:title "Navigating the Documentation in W3M")
+  """With w3m's default [key bindings][w3m-key-bindings], moving the
+  cursor between links involves `TAB` and `S-TAB` (or `<up>` and
+  `<down>`). `RET` and `<right>` follow a link, while `B` and `<left>`
+  go back in history.
+
+    [w3m-key-bindings]: https://emacs-w3m.github.io/info/emacs-w3m_10.html#Key-Binding
+
+  In addition, the following PAX-specific key bindings are available:
+
+  - `M-.` visits the source location of the definition corresponding
+    to the link under the point.
+
+  - `n` moves to the next \PAX definition on the page.
+
+  - `p` moves to the previous \PAX definition on the page.
+
+  - `u` follows the first `Up:` link (to the first containing
+    [SECTION][class]) if any.
+
+  - `U` is like `u` but positions the cursor at the top of the page.
+
+  - `v` visits the source location of the current definition (the one
+    under the cursor or the first one above it).
+
+  - `V` visits the source location of the first definition on the
+    page.
+  """)
+
+;;; Document PAX-URL in a `.html' file directly below DIRNAME, both
+;;; STRINGs. Return the namestring of the file written as (:FILENAME
+;;; <FILENAME>) or (:ERROR <STRING>).
+(defun/autoloaded document-for-emacs (pax-url dirname)
+  (swank::converting-errors-to-error-location
+    (swank::with-buffer-syntax ()
+      `(:file-url ,(document-for-emacs-1 pax-url dirname)))))
+
+(defun document-for-emacs-1 (pax-url dirname)
+  (multiple-value-bind (scheme authority path fragment) (parse-url pax-url)
+    (declare (ignore authority))
+    (unless (equal scheme "pax")
+      (error "~S doesn't have pax: scheme." pax-url))
+    (unless path
+      (error "Nothing to document."))
+    (let ((filename (document-pax-url-path path dirname)))
+      (if fragment
+          (format nil "~A#~A" (pathname-to-file-url filename)
+                  (canonicalize-pax-url-fragment fragment))
+          (pathname-to-file-url filename)))))
+
+(defun document-pax-url-path (path dirname)
+  (multiple-value-bind (object locative foundp locative-junk)
+      (read-reference-from-string path)
+    (cond (foundp
+           (document-for-emacs/reference (pax:make-reference object locative)
+                                         dirname))
+          (locative-junk
+           (error "Unknown locative ~S." locative-junk))
+          (t
+           (let ((references (definitions-as-references (read-from-string path))))
+             (cond ((endp references)
+                    (error "Could not find definitions for ~S." path))
+                   ((= (length references) 1)
+                    (document-for-emacs/reference (first references) dirname))
+                   (t
+                    (document-for-emacs/ambiguous references path dirname))))))))
+
+(defun document-for-emacs/reference (reference dirname)
+  (let* ((stuff ())
+         (filename (when dirname
+                     (merge-pathnames
+                      (make-pathname :name (pax-url-path-to-file-name
+                                            (reference-to-anchor
+                                             reference))
+                                     :type "html")
+                      dirname)))
+         (all-sections (list-all-sections))
+         (sections (sections-that-contain all-sections reference))
+         (packagep (packagep (resolve reference :errorp nil)))
+         (*package* (if packagep
+                        (resolve reference :errorp nil)
+                        *package*))
+         (*print-arglist-key*
+           (and packagep (alexandria:rcurry 'shorten-arglist reference)))
+         (*document-docstring-key*
+           (and packagep (alexandria:rcurry 'shorten-docstring reference))))
+    (alexandria:appendf stuff (format-up-links sections reference))
+    (alexandria:appendf stuff (list reference))
+    (alexandria:appendf stuff (format-also-see reference))
+    (alexandria:appendf stuff (format-package-contents reference all-sections))
+    (if filename
+        (with-open-file (stream (ensure-directories-exist filename)
+                                :direction :output
+                                :if-does-not-exist :create
+                                :if-exists :supersede
+                                :external-format *utf-8-external-format*)
+          (document/w3m (remove nil stuff) :stream stream))
+        (document/w3m (remove nil stuff)))
+    filename))
+
+(defun shorten-arglist (string &optional except-reference)
+  (let* ((reference *reference-being-documented*)
+         (n-chars (- 64 (length (prin1-to-string
+                                 (reference-locative-type reference)))
+                     (length (prin1-to-string
+                              (reference-object reference))))))
+    (if (and except-reference
+             (reference= *reference-being-documented* except-reference))
+        string
+        (shorten-string string :n-lines 1 :n-chars n-chars :ellipsis "..."))))
+
+(defun shorten-docstring (docstring &optional except-reference)
+  (if (or (stringp (first *objects-being-documented*))
+          (and *reference-being-documented* except-reference
+               (reference= *reference-being-documented* except-reference)))
+      docstring
+      (shorten-string docstring :n-lines 1 :n-chars 68 :ellipsis "...")))
+
+(defun find-hyperspec-link (reference)
+  (destructuring-bind (root object-to-links-maps symbol-to-links-maps)
+      (hyperspec-root-and-links)
+    (declare (ignore root))
+    (let ((*object-to-links-maps* object-to-links-maps)
+          (*symbol-to-links-maps* symbol-to-links-maps))
+      (let ((link (find-link reference)))
+        (when link
+          (assert (stringp (link-page link)))
+          link)))))
+
+(defun format-also-see (reference)
+  (let ((entries ()))
+    (flet ((emit (control &rest args)
+             (push (cons control args) entries)))
+      (let ((hyperspec-link (find-hyperspec-link reference)))
+        (when hyperspec-link
+          (emit "the [Hyperspec](~A)" (link-page hyperspec-link))))
+      (let ((generic-function-name
+              (and (eq (reference-locative-type reference) 'method)
+                   (reference-object reference))))
+        (when generic-function-name
+          (emit "the generic-function `~A`"
+                (prin1-to-markdown generic-function-name))))
+      (when (< 1 (length (definitions-as-references
+                          (reference-object reference))))
+        (emit "the [disambiguation page](~A)"
+              (urlencode (reference-to-ambiguous-pax-url reference))))
+      (let ((package (find-reference-package reference)))
+        (when package
+          (emit "the package `~A`" (escape-markdown (package-name package))))))
+    (when entries
+      (list
+       (let ((n-entries (length entries)))
+         (with-output-to-string (out)
+           (format out "Also, see")
+           (loop for entry in (reverse entries)
+                 for i upfrom 0
+                 do (format out (if (and (< 2 n-entries) (plusp i))
+                                    ", "
+                                    " "))
+                    (when (and (< 1 n-entries)
+                               (= i (1- n-entries)))
+                      (format out "and "))
+                    (apply #'format out entry))
+           (format out ".~%")))))))
+
+(defun find-reference-package (reference)
+  (let ((object (reference-object reference)))
+    (when (symbolp object)
+      (symbol-package object))))
+
+(defun format-package-contents (reference all-sections)
+  (when (eq (reference-locative-type reference) 'package)
+    (let ((package (resolve reference :errorp nil)))
+      (when package
+        (cons
+         (with-output-to-string (out)
+           (let ((top-level-sections (top-level-sections-in-package
+                                      package all-sections)))
+             (when top-level-sections
+               (format out "## Top-level \\PAX sections~%~%")
+               (dolist (section top-level-sections)
+                 (format out "- ~S~%" (section-name section)))))
+           (format out "## External Definitions~%~%"))
+         (let ((reference-lists ()))
+           (do-external-symbols (symbol package)
+             (push (definitions-as-references symbol) reference-lists))
+           (sort-references
+            (remove-if-not (lambda (reference)
+                             (symbolp (reference-object reference)))
+                           (apply #'append reference-lists)))))))))
+
+(defun top-level-sections-in-package (package all-sections)
+  (flet ((section-in-package-p (section)
+           (eq (symbol-package (section-name section)) package)))
+    (loop for section in all-sections
+          when (and (section-in-package-p section)
+                    (notany #'section-in-package-p
+                            (sections-that-contain
+                             all-sections
+                             (make-reference (section-name section)
+                                             'section))))
+            collect section)))
+
+(defun document-for-emacs/ambiguous (references pax-url-path dirname)
+  (assert (< 1 (length references)))
+  (let ((filename (merge-pathnames
+                   (make-pathname :name (pax-url-path-to-file-name pax-url-path)
+                                  :type "html")
+                   dirname)))
+    (with-open-file (stream (ensure-directories-exist filename)
+                            :direction :output
+                            :if-does-not-exist :create
+                            :if-exists :supersede
+                            :external-format *utf-8-external-format*)
+      (document/w3m
+       (cons (format nil "# Disambiguation for [`~A`][pax:dislocated]"
+                     pax-url-path)
+             references)
+       :stream stream))
+    filename))
+
+(defun document/w3m (&rest args)
+  (let ((*html-subformat* :w3m)
+        ;; If this were on, then @OBJECTs with a single
+        ;; DEFINITIONS-AS-REFERENCES would be linked to the Hyperspec,
+        ;; but with multiple definitions, they are linked to a
+        ;; disambiguation page. The conceptual problem is that the
+        ;; same reference may be in both the Hyperspec and the running
+        ;; system, but the documentation is not the same. Trusting
+        ;; that there is a definition for all CL things, we turn this
+        ;; off and let FORMAT-ALSO-SEE link to the Hyperspec.
+        (*document-link-to-hyperspec* nil)
+        (*document-open-ended-linking* t)
+        (*document-fancy-html-navigation* nil)
+        (*document-normalize-packages* t)
+        (*document-url-versions* '(2)))
+    (handler-bind ((error
+                     (lambda (condition)
+                       (warn 'simple-warning
+                             :format-control "~@<Error in ~S: ~A~:@>"
+                             :format-arguments (list'document condition))
+                       (continue condition))))
+      (apply #'document (append args (list :format :html))))))
+
+(defun canonicalize-pax-url-fragment (fragment)
+  (multiple-value-bind (object locative foundp)
+      (read-reference-from-string fragment)
+    (urlencode
+     (if foundp
+         (reference-to-anchor (canonical-reference
+                               (make-reference object locative)))
+         fragment))))
+
+;;; This is slow but fast enough not to bother with a SECTION-NAME to
+;;; SECTION weak hash table.
+(defun list-all-sections ()
+  (let ((sections ()))
+    (do-all-symbols (symbol sections)
+      (when (boundp symbol)
+        (let ((value (symbol-value symbol)))
+          (when (and (typep value 'section)
+                     ;; Filter out normal variables with SECTION values.
+                     (eq (section-name value) symbol))
+            (pushnew value sections)))))))
+
+(defun sections-that-contain (sections reference)
+  (remove-if-not (lambda (section)
+                   (find-if (lambda (entry)
+                              (and (typep entry 'reference)
+                                   (reference= reference entry)))
+                            (section-entries section)))
+                 sections))
+
+;;; As a heuristic to find the "home" section, move sections whose
+;;; name is closer to the package of OBJECT to the front.
+(defun sort-by-proximity (sections reference)
+  (let ((object (reference-object reference)))
+    (if (symbolp object)
+        (let ((package-name (package-name (symbol-package object))))
+          (sort (copy-list sections) #'>
+                :key (lambda (section)
+                       (or (mismatch package-name
+                                     (package-name
+                                      (symbol-package
+                                       (section-name section))))
+                           most-positive-fixnum))))
+        sections)))
+
+(defun format-up-links (sections reference)
+  (when sections
+    (with-standard-io-syntax*
+      (list
+       (with-output-to-string (s)
+         (format s "Up: ")
+         (dolist (section (sort-by-proximity sections reference))
+           (format s "<a href='~A#~A'>~A</a> "
+                   (urlencode (reference-to-pax-url
+                               (canonical-reference section)))
+                   (urlencode (reference-to-anchor reference))
+                   (section-title-or-name section))))))))
+
+(defun/autoloaded redocument-for-emacs (file-url dirname)
+  (swank::converting-errors-to-error-location
+    (multiple-value-bind (scheme authority path fragment) (parse-url file-url)
+      (declare (ignore authority))
+      (when (equal scheme "file")
+        (assert (null fragment))
+        (let ((dir (make-pathname :name nil :type nil :defaults path)))
+          (when (string= (namestring dir) dirname)
+            (let ((new-file-url (document-for-emacs-1
+                                 (format nil "pax:~A"
+                                         (pax-url-path-from-file-name
+                                          (pathname-name path)))
+                                 dir)))
+              (assert (string= new-file-url file-url)))))))
+    (values)))
+
+;;; Same as *UNRESERVED-URL-CHARACTERS*, but with #\* reserved. Make
+;;; that #\: reserved, too, for CCL to be happy.
+(defparameter *unreserved-pax-url-file-name-characters*
+  (let ((array (make-array 256 :element-type 'bit :initial-element 0)))
+    (_mark-range array #\a #\z)
+    (_mark-range array #\A #\Z)
+    (_mark-range array #\0 #\9)
+    (_mark-one array #\-)
+    (_mark-one array #\_)
+    (_mark-one array #\.)
+    (_mark-one array #\@)
+    (_mark-one array #\+)
+    array))
+
+;;; A PAX URL is like pax:PATH[#FRAGMENT]. When the documentation is
+;;; written to a file, special characters in PATH must be somehow
+;;; escaped so that the result is a valid file name. Also, since w3m's
+;;; url history is buggy with regards to URL encoding and decoding,
+;;; the encoded PATH must have no #\% in it.
+(defun pax-url-path-to-file-name (pax-url-path)
+  (let ((*unreserved-url-characters* *unreserved-pax-url-file-name-characters*)
+        (*url-escape-char* #\x))
+    (urlencode pax-url-path)))
+
+(defun pax-url-path-from-file-name (filename)
+  (let ((*unreserved-url-characters* *unreserved-pax-url-file-name-characters*)
+        (*url-escape-char* #\x))
+    (urldecode filename)))
+
+
+;;; Locate the path component. Ignore the fragment. This is what M-.
+;;; in a w3m PAX doc buffer does.
+(defun/autoloaded locate-pax-url-for-emacs (pax-url)
+  (with-swank ()
+    (swank::converting-errors-to-error-location
+      (swank::with-buffer-syntax ()
+        (multiple-value-bind (scheme authority path) (parse-url pax-url)
+          (declare (ignore authority))
+          (unless (equal scheme "pax")
+            (error "~S doesn't have pax: scheme." pax-url))
+          (multiple-value-bind (object locative foundp)
+              (read-reference-from-string path)
+            (unless foundp
+              (error "Could not parse ~S as a reference." path))
+            (let* ((ref (make-reference object locative))
+                   (location (find-source ref)))
+              (when (eq (first location) :location)
+                ;; List of one Swank dspec and location.
+                `((,(reference-to-fake-dspec ref) ,location))))))))))

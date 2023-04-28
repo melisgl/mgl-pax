@@ -38,6 +38,9 @@
 ;;; MGL-PAX/FULL to have all documentation. Otherwise,
 ;;; MGL-PAX/DOCUMENT would be enough.
 (autoload update-pax-world '#:mgl-pax/full)
+(autoload document-for-emacs '#:mgl-pax/document :export nil)
+(autoload redocument-for-emacs '#:mgl-pax/document :export nil)
+(autoload locate-pax-url-for-emacs '#:mgl-pax/document :export nil)
 
 
 (defsection @extending-document (:title "Extending DOCUMENT")
@@ -96,6 +99,8 @@
            (,%reference (or ,reference *reference-being-documented*))
            (,%arglist ,arglist)
            (,%name ,name))
+       (when *document-link-code*
+         (anchor ,%reference ,%stream))
        (print-reference-bullet ,%reference ,%stream :name ,%name)
        (when (and ,%arglist (not (eq ,%arglist :not-available)))
          (write-char #\Space ,%stream)

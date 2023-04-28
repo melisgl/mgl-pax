@@ -8,23 +8,26 @@
     (is (null (mismatch% output expected))
         :ctx ("Input: ~S" input))))
 
-(defun document* (object &key (format :markdown))
+(defun document* (object &key (format :markdown) w3m)
   (let ((warnings ()))
     (handler-bind ((warning (lambda (w)
                               (push (princ-to-string w) warnings)
                               (muffle-warning w))))
-      (values (document object :stream nil :format format)
+      (values (funcall (if w3m
+                           #'pax::document/w3m
+                           #'document)
+                       object :stream nil :format format)
               warnings))))
 
 (defun check-head (input expected &key (format :markdown) msg (n-lines 1)
-                                    (warnings 0) package)
+                                    (warnings 0) package w3m)
   (let* ((*package* (or package (find-package :mgl-pax-test)))
          (*document-hyperspec-root* "CLHS/")
          (*document-url-versions* '(2))
          (n-expected-warnings warnings))
     (multiple-value-bind (full-output warnings)
-        (document* input :format format)
-      (let ((got (first-n-lines full-output n-lines))
+        (document* input :format format :w3m w3m)
+      (let ((got (mgl-pax::first-lines full-output n-lines))
             (expected (format nil expected)))
         (is (equal got expected)
             :msg msg
@@ -40,14 +43,6 @@
     (is (funcall pred full-output)
         :msg msg
         :ctx ("Input: ~S~%Full output:~%~S" input full-output))))
-
-(defun first-n-lines (string n)
-  (with-output-to-string (out)
-    (with-input-from-string (in string)
-      (loop for i below n do
-        (if (< i (1- n))
-            (write-line (read-line in nil nil) out)
-            (write-string (read-line in nil nil) out))))))
 
 (defun internedp (name)
   (find-symbol (string name) :mgl-pax-test))
@@ -84,13 +79,14 @@
   (test-clhs-issue)
   (test-argument)
   (test-define-locative-alias)
-  (test-cl-transcript))
+  (test-cl-transcript)
+  (test-document/w3m))
 
 (deftest test-urlencode ()
   (is (equal (mgl-pax::urlencode "hello") "hello"))
   (is (equal (mgl-pax::urlencode "@hello section") "@hello%20section"))
   (is (equal (mgl-pax::urlencode "\"") "%22"))
-  (is (equal (mgl-pax::urlencode "á") "%E1")))
+  (is (equal (mgl-pax::urlencode "á") "%C3%A1")))
 
 (deftest test-transform-tree ()
   (is (equal '(1)
@@ -532,8 +528,8 @@ xxx
 
 (deftest test-repeated-links ()
   (check-head "PRINT PRINT" "[`PRINT`][fdd1] `PRINT`")
-  (check-head (list "PRINT" "PRINT") "[`PRINT`][fdd1]~%[`PRINT`][fdd1]"
-              :n-lines 2)
+  (check-head (list "PRINT" "PRINT") "[`PRINT`][fdd1]~%~%[`PRINT`][fdd1]"
+              :n-lines 3)
   (check-head "[STRING][function] STRING" "[`STRING`][7bd4] `STRING`")
   (check-head "[STRING][dislocated] STRING" "`STRING` `STRING`")
   (check-head "[STRING][function] STRING function"
@@ -596,11 +592,6 @@ This is [Self-referencing][e042].
            (ignore x o k kp))
   ())
 
-(defmacro macro-with-whole-and-dot (&whole form name . args)
-  (declare #+sbcl (sb-ext:muffle-conditions style-warning)
-           (ignore form name args))
-  ())
-
 (deftest test-macro/arglist ()
   (with-failure-expected ((alexandria:featurep '(:or :allegro)))
     (is (or (equal (% (mgl-pax::arglist 'macro-with-fancy-args))
@@ -608,8 +599,6 @@ This is [Self-referencing][e042].
             (equal (mgl-pax::arglist 'macro-with-fancy-args)
                    '(x &optional (o 1) &key (k 2))))))
   (with-test ("macro-with-whole-and-dot")
-    (is (equal (mgl-pax::arglist 'macro-with-whole-and-dot)
-               '(name . args)))
     (is (equal (mgl-pax::arglist-to-string '(name . args))
                "NAME . ARGS"))
     (is (equal (mgl-pax::macro-arg-names '(name . args))
@@ -806,6 +795,13 @@ This is [Self-referencing][e042].
                         (search "- [function] **PRINT**" output))))
 
 (deftest test-clhs-section ()
+  (let ((*document-link-to-hyperspec* t))
+    (test-clhs-section-1))
+  (with-failure-expected ()
+    (let ((*document-link-to-hyperspec* nil))
+      (test-clhs-section-1))))
+
+(defun test-clhs-section-1 ()
   ;; "A.1" and "3.4" are section names in the CLHS.
   (check-head "A.1" "A.1")
   (check-head "`A.1`" "`A.1`")
@@ -820,6 +816,13 @@ This is [Self-referencing][e042].
   (check-head "[03_d][clhs]" "[03\\_d][f945]"))
 
 (deftest test-clhs-issue ()
+  (let ((*document-link-to-hyperspec* t))
+    (test-clhs-issue-1))
+  (with-failure-expected ()
+    (let ((*document-link-to-hyperspec* nil))
+      (test-clhs-issue-1))))
+
+(defun test-clhs-issue-1 ()
   (check-head "ISSUE:AREF-1D" "ISSUE:AREF-1D")
   (check-head "`ISSUE:AREF-1D`" "`ISSUE:AREF-1D`")
   (check-head "CLHS ISSUE:AREF-1D" "`CLHS` ISSUE:AREF-1D")
@@ -867,3 +870,55 @@ This is [Self-referencing][e042].
 .. :WORLD
 => :HELLO
 ```"))))
+
+
+(deftest test-document/w3m ()
+  (with-test ("no link duplication for objects being documented")
+    (check-head (list "PAX:LOCATIVE"
+                      (pax:make-reference 'pax:locative 'pax:locative))
+                "[`PAX:LOCATIVE`][0b3a]"
+                :w3m t))
+  (with-failure-expected ((alexandria:featurep :clisp))
+    (with-test ("simplified ambiguous links")
+      (check-head "AMBI" "[`AMBI`](pax:MGL-PAX-TEST:AMBI)" :w3m t))
+    (is (find 'package (pax::definitions-as-references 'cl)
+              :key #'pax::reference-locative-type))
+    (with-test ("escaping of non-ambiguous")
+      (check-head "`foo<>&`"
+                  "<p><a href=\"pax:MGL-PAX-TEST:FOO%3C%3E%26%20FUNCTION\" title=\"MGL-PAX-TEST:FOO&lt;&gt;&amp; FUNCTION\"><strong><code>foo&lt;&gt;&amp;</code></strong></a></p>"
+                  :w3m t :format :html))
+    (with-test ("escaping of ambiguous")
+      (check-head "`ambi<>&`"
+                  "<a href=\"pax:MGL-PAX-TEST:AMBI%3C%3E%26\" ><strong><code>ambi&lt;&gt;&amp;</code></strong></a>"
+                  :w3m t :format :html)))
+  (let ((*error-output* (make-broadcast-stream)))
+    (check-head (make-reference 'foo-with-bad-transcript 'function)
+                "<a id=\"MGL-PAX-TEST:FOO-WITH-BAD-TRANSCRIPT%20FUNCTION\"></a>
+
+- [function] **FOO-WITH-BAD-TRANSCRIPT**</i>
+
+    ```common-lisp
+    (1+ 2)
+    => 7
+    ```"
+                :n-lines 8 :warnings 1 :w3m t))
+  (test-document/w3m/object))
+
+(deftest test-document/w3m/object ()
+  (with-failure-expected ()
+    (check-head "[PAX][package] [MGL-PAX][package] [`mgl-pax`][asdf:system]"
+                "[`PAX`][97b3] [`MGL-PAX`][97b3] [`mgl-pax`][6fdb]"
+                :w3m t)))
+
+(defun ambi ())
+(defclass ambi () ())
+(defun foo<>& ())
+(defun ambi<>& ())
+(defclass ambi<>& () ())
+
+(defun foo-with-bad-transcript ()
+  "```cl-transcript
+  (1+ 2)
+  => 7
+  ```"
+  nil)

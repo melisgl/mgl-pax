@@ -43,7 +43,8 @@
                            asdf-system "README.md")
                           :direction :output
                           :if-does-not-exist :create
-                          :if-exists :supersede)
+                          :if-exists :supersede
+                          :external-format *utf-8-external-format*)
     (let ((*document-url-versions* url-versions))
       (document object :stream stream :format :markdown))
     (print-markdown-footer stream))
@@ -51,7 +52,8 @@
                            asdf-system "README")
                           :direction :output
                           :if-does-not-exist :create
-                          :if-exists :supersede)
+                          :if-exists :supersede
+                          :external-format *utf-8-external-format*)
     (document object :stream stream :format :plain)
     (print-markdown-footer stream)))
 
