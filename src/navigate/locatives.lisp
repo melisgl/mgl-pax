@@ -485,7 +485,12 @@
   (unless (= 1 (length locative-args))
     (locate-error "The syntax of the ACCESSOR locative is ~
                    (ACCESSOR <CLASS-NAME>)."))
-  (find-accessor-slot-definition symbol (first locative-args))
+  (multiple-value-bind (value error)
+      (ignore-errors
+       (values (find-accessor-slot-definition symbol (first locative-args))))
+    (declare (ignore value))
+    (when error
+      (locate-error "Error in FIND-ACCESSOR-SLOT-DEFINITION: ~A." error)))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defun find-accessor-slot-definition (accessor-symbol class-symbol)
@@ -510,7 +515,12 @@
   (unless (= 1 (length locative-args))
     (locate-error "The syntax of the READER locative is ~
                    (READER <CLASS-NAME>)."))
-  (find-reader-slot-definition symbol (first locative-args))
+  (multiple-value-bind (value error)
+      (ignore-errors
+       (values (find-reader-slot-definition symbol (first locative-args))))
+    (declare (ignore value))
+    (when error
+      (locate-error "Error in FIND-READER-SLOT-DEFINITION: ~A." error)))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defun find-reader-slot-definition (reader-symbol class-symbol)
@@ -526,7 +536,12 @@
   (unless (= 1 (length locative-args))
     (locate-error "The syntax of the WRITER locative is ~
                    (WRITER <CLASS-NAME>)."))
-  (find-writer-slot-definition symbol (first locative-args))
+  (multiple-value-bind (value error)
+      (ignore-errors
+       (values (find-writer-slot-definition symbol (first locative-args))))
+    (declare (ignore value))
+    (when error
+      (locate-error "Error in FIND-WRITER-SLOT-DEFINITION: ~A." error)))
   (make-reference symbol (cons locative-type locative-args)))
 
 (defun find-writer-slot-definition (accessor-symbol class-symbol)
@@ -1097,7 +1112,9 @@
 (defmethod locate-object (symbol (locative-type (eql 'glossary-term))
                           locative-args)
   (declare (ignore locative-args))
-  (unless (typep (symbol-value symbol) 'glossary-term)
+  (unless (and (symbolp symbol)
+               (boundp symbol)
+               (typep (symbol-value symbol) 'glossary-term))
     (locate-error))
   (symbol-value symbol))
 
