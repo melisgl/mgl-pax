@@ -1357,25 +1357,31 @@
   ;; "SECTION")) :DEFINITION "class").
   (multiple-value-bind (label explicit-label-p object locative pax-link-p)
       (extract-reference-from-reflink reflink)
-    (if (not pax-link-p)
-        ;; [something][user-defined-id]
-        reflink
-        (let* ((refs (unless (eq object 'not-found)
-                       (if locative
-                           (references-for-specified-locative object locative)
-                           (references-for-explicitly-unspecified-locative
-                            object))))
-               (linkable-refs (linkable-references refs)))
-          (cond (linkable-refs
-                 (dolist (ref refs)
-                   (vector-push-extend ref linked-refs))
-                 (values (make-reflinks label explicit-label-p refs) nil t))
-                (t
-                 (values (if refs
-                             label
-                             (signal-unresolvable-reflink reflink object
-                                                          locative))
-                         nil t)))))))
+    (cond ((not pax-link-p)
+           ;; [something][user-defined-id]
+           reflink)
+          ((and (eq object 'not-found)
+                (member locative '(dislocated argument)))
+           ;; [not code][dislocated]
+           (values label nil t))
+          (t
+           (let* ((refs (unless (eq object 'not-found)
+                          (if locative
+                              (references-for-specified-locative object
+                                                                 locative)
+                              (references-for-explicitly-unspecified-locative
+                               object))))
+                  (linkable-refs (linkable-references refs)))
+             (cond (linkable-refs
+                    (dolist (ref refs)
+                      (vector-push-extend ref linked-refs))
+                    (values (make-reflinks label explicit-label-p refs) nil t))
+                   (t
+                    (values (if refs
+                                label
+                                (signal-unresolvable-reflink reflink object
+                                                             locative))
+                            nil t))))))))
 
 ;;; Return the label, whether to use the returned label in the
 ;;; reference link without further transformations (e.g. replace it
@@ -1402,6 +1408,8 @@
                  (parse-label-string label-string locative-from-def)
                (when name
                  (values label nil object locative-from-def t))))
+        (and (member locative-from-def '(dislocated argument))
+             (values label t 'not-found locative-from-def t))
         ;; [see this][foo]
         (multiple-value-bind (object name)
             (parse-word definition :trim nil :depluralize nil

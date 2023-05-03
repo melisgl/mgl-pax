@@ -454,13 +454,13 @@ xxx
                       (make-reference 'dislocated 'locative)
                       (make-reference 'pax::@explicit-and-autolinking
                                       'section))
-                "[NOT-CODE][e391]"
+                "NOT-CODE"
                 :package (find-package '#:mgl-pax))
     (check-head (list "[`SOME-CODE`][dislocated]"
                       (make-reference 'dislocated 'locative)
                       (make-reference 'pax::@explicit-and-autolinking
                                       'section))
-                "[`SOME-CODE`][e391]"
+                "`SOME-CODE`"
                 :package (find-package '#:mgl-pax))
     (check-head "[locative][dislocated]" "locative")
     (check-head "[LOCATIVE][dislocated]" "`LOCATIVE`"))
