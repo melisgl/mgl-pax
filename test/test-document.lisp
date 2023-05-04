@@ -578,12 +578,24 @@ This is [Self-referencing][e042].
            (ignore x o k kp))
   ())
 
+(defmacro macro-with-whole-and-dot (&whole form name . args)
+  (declare #+sbcl (sb-ext:muffle-conditions style-warning)
+           (ignore form name args))
+  ())
+
 (deftest test-macro/arglist ()
   (with-failure-expected ((alexandria:featurep '(:or :allegro)))
     (is (or (equal (% (mgl-pax::arglist 'macro-with-fancy-args))
                    '(x &optional (o 1) &key (k 2 kp)))
             (equal (mgl-pax::arglist 'macro-with-fancy-args)
-                   '(x &optional (o 1) &key (k 2)))))))
+                   '(x &optional (o 1) &key (k 2))))))
+  (with-test ("macro-with-whole-and-dot")
+    (is (equal (mgl-pax::arglist 'macro-with-whole-and-dot)
+               '(name . args)))
+    (is (equal (mgl-pax::arglist-to-string '(name . args))
+               "NAME . ARGS"))
+    (is (equal (mgl-pax::macro-arg-names '(name . args))
+               '(name args)))))
 
 
 (defsection @test-symbol-macro (:export nil)

@@ -2302,7 +2302,9 @@
                    for arg in arglist
                    do (unless (zerop i)
                         (format out " "))
-                      (cond ((member arg '(&key &optional &rest &body))
+                      (cond ((eq arg '|.|)
+                             (format out "."))
+                            ((member arg '(&key &optional &rest &body))
                              (setq seen-special-p t)
                              (format out "~A" (prin1-to-markdown arg)))
                             ((symbolp arg)
@@ -2325,7 +2327,17 @@
                              (foo arg (1+ level)))))
              (unless (= level 0)
                (format out ")"))))
-        (foo arglist 0)))))
+        (foo (sanitize-arglist arglist) 0)))))
+
+;;; Arglists like (&WHOLE FORM NAME . ARGS) can be improper. Just make
+;;; the dot a normal list element.
+(defun sanitize-arglist (arglist)
+  (if (alexandria:proper-list-p arglist)
+      arglist
+      (let ((last (last arglist)))
+        (if (cdr last)
+            (append (butlast arglist) (list (car last) '|.| (cdr last)))
+            arglist))))
 
 
 (defvar *document-normalize-packages* t
