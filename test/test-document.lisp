@@ -419,7 +419,9 @@ xxx
                       (make-reference 'test-gf '(method () (number))))
                 "`(method t (number))` [`TEST-GF`][044a]"))
   (with-test ("escaped autolinking")
-    (check-head "`\\PRINT`" "`PRINT`")))
+    (check-head "`\\PRINT`" "`PRINT`"))
+  (with-test ("used to fail")
+    (check-head " :KEY xxx" " `:KEY` xxx")))
 
 (deftest test-resolve-reflink ()
   (with-test ("label is a single name")

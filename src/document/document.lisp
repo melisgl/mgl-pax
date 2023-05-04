@@ -1335,14 +1335,14 @@
       ;; Note that (EQ (THIRD REST) TREE) may be true multiple times,
       ;; for example if strings are interned and "FOO" occurs multiple
       ;; times in PARENT.
-      (loop for rest on parent
+      (loop for rest on (rest parent)
             do (when (and (eq (third rest) tree)
                           (stringp (second rest))
                           (blankp (second rest)))
                  (try (first rest))
                  (return)))
       ;; For example, (:PLAIN "See" "the" "FOO" " " "function")
-      (loop for rest on parent
+      (loop for rest on (rest parent)
             do (when (and (eq (first rest) tree)
                           (stringp (second rest))
                           (blankp (second rest)))
