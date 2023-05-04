@@ -126,7 +126,7 @@
                (unless (find-link reference)
                  (add-link (make-link :reference reference
                                       :page page))))))
-  (maybe-add-links-to-hyperspec)
+  (add-links-to-hyperspec)
   ;; This must be done last.
   (initialize-open-ended-links))
 
@@ -264,34 +264,42 @@
   """A \URL pointing to an installed Common Lisp Hyperspec. The default
   value of is the canonical location.""")
 
+;;; ((ROOT LINK-TO-HYPERSPEC) OBJECT-TO-LINK-MAPS SYMBOL-TO-LINKS-MAPS)
+;;;
+;;; Even if LINK-TO-HYPERSPEC is NIL, the maps contain the links to
+;;; the hyperspec sections, issues and summaries to make the CLHS
+;;; locative work as documented there.
 (defvar *last-hyperspec-root-and-links* nil)
 
-(defun maybe-add-links-to-hyperspec ()
-  (when *document-link-to-hyperspec*
-    (destructuring-bind (root object-to-links-maps symbol-to-links-maps)
-        (hyperspec-root-and-links)
-      (declare (ignore root))
-      (setq *object-to-links-maps* (append *object-to-links-maps*
-                                           object-to-links-maps))
-      (setq *symbol-to-links-maps* (append *symbol-to-links-maps*
-                                           symbol-to-links-maps)))))
+(defun add-links-to-hyperspec ()
+  (multiple-value-bind (object-to-links-maps symbol-to-links-maps)
+      (hyperspec-link-maps)
+    (setq *object-to-links-maps* (append *object-to-links-maps*
+                                         object-to-links-maps))
+    (setq *symbol-to-links-maps* (append *symbol-to-links-maps*
+                                         symbol-to-links-maps))))
 
-(defun hyperspec-root-and-links ()
+(defun hyperspec-link-maps ()
   (if (equal (first *last-hyperspec-root-and-links*)
-             *document-hyperspec-root*)
-      *last-hyperspec-root-and-links*
+             (list *document-hyperspec-root*
+                   *document-link-to-hyperspec*))
+      (values (second *last-hyperspec-root-and-links*)
+              (third *last-hyperspec-root-and-links*))
       (let ((*object-to-links-maps* (list (make-hash-table :test #'equal)))
             (*symbol-to-links-maps* (list (make-hash-table)))
             (*document-open-ended-linking* nil))
         (loop for (object locative url) in (hyperspec-external-references
-                                            *document-hyperspec-root*)
+                                            *document-hyperspec-root*
+                                            *document-link-to-hyperspec*)
               do (let ((reference (make-reference object locative)))
                    (add-link (make-link :reference reference
                                         :page url))))
         (setq *last-hyperspec-root-and-links*
-              (list *document-hyperspec-root*
+              (list (list *document-hyperspec-root*
+                          *document-link-to-hyperspec*)
                     *object-to-links-maps*
-                    *symbol-to-links-maps*)))))
+                    *symbol-to-links-maps*))
+        (values *object-to-links-maps* *symbol-to-links-maps*))))
 
 
 (defvar *pages-created*)
@@ -2821,9 +2829,8 @@
       (shorten-string docstring :n-lines 1 :n-chars 68 :ellipsis "...")))
 
 (defun find-hyperspec-link (reference)
-  (destructuring-bind (root object-to-links-maps symbol-to-links-maps)
-      (hyperspec-root-and-links)
-    (declare (ignore root))
+  (multiple-value-bind (object-to-links-maps symbol-to-links-maps)
+      (hyperspec-link-maps)
     (let ((*object-to-links-maps* object-to-links-maps)
           (*symbol-to-links-maps* symbol-to-links-maps))
       (let ((link (find-link reference)))

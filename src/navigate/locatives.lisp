@@ -1452,7 +1452,8 @@
   turns into [SUMMARY:AREF-1D][clhs]. Alternatively, matching the name
   of the file also works (`[iss009][clhs]` renders as [iss009][clhs])
 
-  The generated links are relative to *DOCUMENT-HYPERSPEC-ROOT*.
+  The generated links are relative to *DOCUMENT-HYPERSPEC-ROOT* and
+  work even if *DOCUMENT-LINK-TO-HYPERSPEC* is NIL.
 
   To detach the discussion from markdown syntax, let's see these cases
   through the programmatic interface.

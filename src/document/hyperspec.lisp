@@ -2565,19 +2565,20 @@
                              (string-downcase (third entry))))
                    *sorted-hyperspec-sections*)))
 
-(defun hyperspec-external-references (hyperspec-root)
+(defun hyperspec-external-references (hyperspec-root include-lisp-definitions)
   (let ((hyperspec-root (if (alexandria:ends-with #\/ hyperspec-root)
                             hyperspec-root
                             (format nil "~A/" hyperspec-root))))
     (append
      ;; A list of elements like (FIND-IF FUNCTION "F_FIND_").
-     (mapcar (lambda (entry)
-               (destructuring-bind (object locative filename) entry
-                 (list object (if (eq locative 'operator)
-                                  'macro
-                                  locative)
-                       (hyperspec-link hyperspec-root "Body/" filename))))
-             *hyperpsec-entries*)
+     (when include-lisp-definitions
+       (mapcar (lambda (entry)
+                 (destructuring-bind (object locative filename) entry
+                   (list object (if (eq locative 'operator)
+                                    'macro
+                                    locative)
+                         (hyperspec-link hyperspec-root "Body/" filename))))
+               *hyperpsec-entries*))
      ;; CLHS section numbers. A list of elements like ("3.4" CLHS
      ;; "03_d").
      (mapcar (lambda (entry)

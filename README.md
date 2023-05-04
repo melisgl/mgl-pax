@@ -1060,7 +1060,8 @@ which makes navigating the sources with `M-.` (see
     turns into [SUMMARY:AREF-1D][e256]. Alternatively, matching the name
     of the file also works (`[iss009][clhs]` renders as [iss009][e256])
     
-    The generated links are relative to [`*DOCUMENT-HYPERSPEC-ROOT*`][f585].
+    The generated links are relative to [`*DOCUMENT-HYPERSPEC-ROOT*`][f585] and
+    work even if [`*DOCUMENT-LINK-TO-HYPERSPEC*`][875e] is `NIL`.
     
     To detach the discussion from markdown syntax, let's see these cases
     through the programmatic interface.
