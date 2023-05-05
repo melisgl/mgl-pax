@@ -1655,7 +1655,7 @@
 (defun suppressed-link-p (refs linked-refs)
   (when refs
     ;; Relying on REFS being for the same object (see
-    ;; REFERENCES-FOR-AMBIGUOUS-LOCATIVE).
+    ;; REFERENCES-FOR-AUTOLINK).
     (let ((object (reference-object (first refs))))
       (or (member object '(t nil))
           (and (loop for ref across linked-refs
@@ -1733,22 +1733,18 @@
                                   object locative))))
    ;; Fall back on the no-locative case.
    (loop for object in objects
-         for refs = (references-for-autolink-with-unspecified-locative objects)
-         until (suppressed-link-p refs linked-refs)
+         for refs = (references-for-autolink-with-unspecified-locative object)
+         until (or (suppressed-link-p refs linked-refs)
+                   (has-local-reference-p object))
            thereis refs
          until (references-to-object object :local :include))))
 
-(defun references-for-autolink-with-unspecified-locative (objects)
-  (loop for object in objects
-        ;; The UNTIL heuristic is intended to prevent substrings of
-        ;; the name of an argument of a function from getting links.
-        ;; This relies on PARSE-WORD returning longer matches first.
-        until (has-local-reference-p object)
-        append (resolve-generic-function-and-methods
-                (filter-asdf-system-references
-                 (remove-clhs-references
-                  (linkable-references
-                   (references-to-object object)))))))
+(defun references-for-autolink-with-unspecified-locative (object)
+  (resolve-generic-function-and-methods
+   (filter-asdf-system-references
+    (remove-clhs-references
+     (linkable-references
+      (references-to-object object))))))
 
 (defun linkable-references (refs)
   (remove-if-not #'linkable-ref-p refs))
