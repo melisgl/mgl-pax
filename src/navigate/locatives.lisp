@@ -879,8 +879,12 @@
                           locative-args)
   (or (and (endp locative-args)
            ;; ASDF:FIND-SYSTEM is slow as hell.
-           (asdf:find-system (string-downcase (string name)) nil))
-      (locate-error "~S does not name an asdf system." name)))
+           (ignore-errors
+            ;; Silence stuff about compilation units, e.g. with
+            ;; (ASDF:FIND-SYSTEM '///).
+            (let ((*error-output* (make-broadcast-stream)))
+              (asdf:find-system (string-downcase (string name)) nil))))
+      (locate-error "~S does not name an ASDF:SYSTEM." name)))
 
 (defmethod canonical-reference ((system asdf:system))
   (make-reference (character-string (slot-value system 'asdf::name))
