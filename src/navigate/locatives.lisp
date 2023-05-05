@@ -868,22 +868,22 @@
 ;;;; ASDF:SYSTEM locative
 
 (define-locative-type asdf:system ()
-  "Refers to an asdf system. The generated documentation will include
-  meta information extracted from the system definition. This also
-  serves as an example of a symbol that's not accessible in the
-  current package and consequently is not exported.
+  "Refers to a registered ASDF:SYSTEM. The generated documentation
+  will include meta information extracted from the system definition.
+  This also serves as an example of a symbol that's not accessible in
+  the current package and consequently is not exported.
 
   ASDF:SYSTEM is not EXPORTABLE-LOCATIVE-TYPE-P.")
 
 (defmethod locate-object (name (locative-type (eql 'asdf:system))
                           locative-args)
   (or (and (endp locative-args)
-           ;; ASDF:FIND-SYSTEM is slow as hell.
-           (ignore-errors
-            ;; Silence stuff about compilation units, e.g. with
-            ;; (ASDF:FIND-SYSTEM '///).
-            (let ((*error-output* (make-broadcast-stream)))
-              (asdf:find-system (string-downcase (string name)) nil))))
+           (let ((name (string-downcase (string name))))
+             #+ecl
+             (when (member name (asdf:registered-systems) :test #'string=)
+               (asdf:find-system name))
+             #-ecl
+             (asdf:registered-system name)))
       (locate-error "~S does not name an ASDF:SYSTEM." name)))
 
 (defmethod canonical-reference ((system asdf:system))

@@ -841,10 +841,10 @@ which makes navigating the sources with `M-.` (see
 <a id="x-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **ASDF/SYSTEM:SYSTEM**
 
-    Refers to an asdf system. The generated documentation will include
-    meta information extracted from the system definition. This also
-    serves as an example of a symbol that's not accessible in the
-    current package and consequently is not exported.
+    Refers to a registered `ASDF:SYSTEM`. The generated documentation
+    will include meta information extracted from the system definition.
+    This also serves as an example of a symbol that's not accessible in
+    the current package and consequently is not exported.
     
     `ASDF:SYSTEM` is not [`EXPORTABLE-LOCATIVE-TYPE-P`][c930].
 
@@ -2765,22 +2765,22 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
 <a id="x-28MGL-PAX-3AASDF-EXAMPLE-20-28MGL-PAX-3AINCLUDE-20-28-3ASTART-20-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29-20-3AEND-20-28MGL-PAX-3A-3AEND-OF-ASDF-EXAMPLE-20VARIABLE-29-29-20-3AHEADER-NL-20-22-60-60-60-22-20-3AFOOTER-NL-20-22-60-60-60-22-29-29"></a>
 ```
 (define-locative-type asdf:system ()
-  "Refers to an asdf system. The generated documentation will include
-  meta information extracted from the system definition. This also
-  serves as an example of a symbol that's not accessible in the
-  current package and consequently is not exported.
+  "Refers to a registered ASDF:SYSTEM. The generated documentation
+  will include meta information extracted from the system definition.
+  This also serves as an example of a symbol that's not accessible in
+  the current package and consequently is not exported.
 
   ASDF:SYSTEM is not EXPORTABLE-LOCATIVE-TYPE-P.")
 
 (defmethod locate-object (name (locative-type (eql 'asdf:system))
                           locative-args)
   (or (and (endp locative-args)
-           ;; ASDF:FIND-SYSTEM is slow as hell.
-           (ignore-errors
-            ;; Silence stuff about compilation units, e.g. with
-            ;; (ASDF:FIND-SYSTEM '///).
-            (let ((*error-output* (make-broadcast-stream)))
-              (asdf:find-system (string-downcase (string name)) nil))))
+           (let ((name (string-downcase (string name))))
+             #+(or allegro clisp ecl)
+             (when (member name (asdf:registered-systems) :test #'string=)
+               (asdf:find-system name))
+             #-(or allegro clisp ecl)
+             (asdf:registered-system name)))
       (locate-error "~S does not name an ASDF:SYSTEM." name)))
 
 (defmethod canonical-reference ((system asdf:system))
