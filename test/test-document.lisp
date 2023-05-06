@@ -592,12 +592,23 @@ This is [Self-referencing][e042].
            (ignore x o k kp))
   ())
 
+(defmacro macro-with-local-key ((&key a) (b print))
+  (declare #+sbcl (sb-ext:muffle-conditions style-warning)
+           (ignore a b print))
+  ())
+
 (deftest test-macro/arglist ()
   (with-failure-expected ((alexandria:featurep '(:or :allegro)))
     (is (or (equal (% (mgl-pax::arglist 'macro-with-fancy-args))
                    '(x &optional (o 1) &key (k 2 kp)))
             (equal (mgl-pax::arglist 'macro-with-fancy-args)
                    '(x &optional (o 1) &key (k 2))))))
+  ;; C is a parameter. If it were treated as a default value, then
+  ;; *DOCUMENT-MARK-UP-SIGNATURES* would be accessed, and this would
+  ;; fail.
+  (progv (list '*document-mark-up-signatures*) ()
+    (is (equal (mgl-pax::arglist-to-string '((&key a) (b c)))
+               "(&KEY A) (B C)")))
   (with-test ("macro-with-whole-and-dot")
     (is (equal (mgl-pax::arglist-to-string '(name . args))
                "NAME . ARGS"))

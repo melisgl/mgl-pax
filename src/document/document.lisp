@@ -2408,9 +2408,10 @@
 ;;; default value with prefix. Works for macro arglists too.
 (defun arglist-to-string (arglist)
   (with-output-to-string (out)
-    (let ((seen-special-p nil)
+    (let ((*seen-special-p* nil)
           (*print-pretty* t)
           (*print-right-margin* 80))
+      (declare (special *seen-special-p*))
       (labels
           ((resolve* (object)
              (if (and *document-mark-up-signatures*
@@ -2419,49 +2420,45 @@
                       (eq *format* :html))
                  (codify-and-link (prin1-to-markdown object))
                  (prin1-to-markdown object)))
+           (print-arg (arg level)
+             (cond ((member arg '(&key &optional &rest &body))
+                    (setq *seen-special-p* t)
+                    (format out "~A" (prin1-to-markdown arg)))
+                   ((symbolp arg)
+                    (format out "~A"
+                            (escape-markdown
+                             (maybe-downcase-all-uppercase-code
+                              (symbol-name arg)))))
+                   ((atom arg)
+                    (format out "~A" (prin1-to-markdown arg)))
+                   (*seen-special-p*
+                    (if (symbolp (first arg))
+                        (format out "(~A~{ ~A~})"
+                                (escape-markdown
+                                 (maybe-downcase-all-uppercase-code
+                                  (symbol-name (first arg))))
+                                (mapcar #'resolve* (rest arg)))
+                        (format out "~A"
+                                (prin1-to-markdown arg))))
+                   (t
+                    (foo arg (1+ level)))))
            (foo (arglist level)
-             (unless (= level 0)
-               (format out "("))
-             (loop for i upfrom 0
-                   for arg in arglist
-                   do (unless (zerop i)
-                        (format out " "))
-                      (cond ((eq arg '|.|)
-                             (format out "."))
-                            ((member arg '(&key &optional &rest &body))
-                             (setq seen-special-p t)
-                             (format out "~A" (prin1-to-markdown arg)))
-                            ((symbolp arg)
-                             (format out "~A"
-                                     (escape-markdown
-                                      (maybe-downcase-all-uppercase-code
-                                       (symbol-name arg)))))
-                            ((atom arg)
-                             (format out "~A" (prin1-to-markdown arg)))
-                            (seen-special-p
-                             (if (symbolp (first arg))
-                                 (format out "(~A~{ ~A~})"
-                                         (escape-markdown
-                                          (maybe-downcase-all-uppercase-code
-                                           (symbol-name (first arg))))
-                                         (mapcar #'resolve* (rest arg)))
-                                 (format out "~A"
-                                         (prin1-to-markdown arg))))
-                            (t
-                             (foo arg (1+ level)))))
+             (let ((*seen-special-p* nil))
+               (declare (special *seen-special-p*))
+               (unless (= level 0)
+                 (format out "("))
+               (loop for i upfrom 0
+                     for rest on arglist
+                     do (unless (zerop i)
+                          (format out " "))
+                        (print-arg (car rest) level)
+                        ;; There are arglists like (&WHOLE FORM NAME . ARGS).
+                        (unless (listp (cdr rest))
+                          (format out " . ")
+                          (print-arg (cdr rest) level))))
              (unless (= level 0)
                (format out ")"))))
-        (foo (sanitize-arglist arglist) 0)))))
-
-;;; Arglists like (&WHOLE FORM NAME . ARGS) can be improper. Just make
-;;; the dot a normal list element.
-(defun sanitize-arglist (arglist)
-  (if (alexandria:proper-list-p arglist)
-      arglist
-      (let ((last (last arglist)))
-        (if (cdr last)
-            (append (butlast arglist) (list (car last) '|.| (cdr last)))
-            arglist))))
+        (foo arglist 0)))))
 
 
 (defvar *document-normalize-packages* t

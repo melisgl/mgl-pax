@@ -49,18 +49,20 @@
     (let ((names ()))
       (labels ((foo (arglist)
                  (let ((seen-special-p nil))
-                   (loop for arg in arglist
-                         do (cond ((eq arg '|.|))
-                                  ((member arg '(&key &optional &rest &body))
-                                   (setq seen-special-p t))
-                                  ((symbolp arg)
-                                   (push arg names))
-                                  (seen-special-p
-                                   (when (symbolp (first arg))
-                                     (push (first arg) names)))
-                                  (t
-                                   (foo arg)))))))
-        (foo (sanitize-arglist arglist)))
+                   (loop for rest on arglist
+                         do (let ((arg (car rest)))
+                              (cond ((member arg '(&key &optional &rest &body))
+                                     (setq seen-special-p t))
+                                    ((symbolp arg)
+                                     (push arg names))
+                                    (seen-special-p
+                                     (when (symbolp (first arg))
+                                       (push (first arg) names)))
+                                    (t
+                                     (foo arg))))
+                            (unless (listp (cdr rest))
+                              (push (cdr rest) names))))))
+        (foo arglist))
       (reverse names))))
 
 
@@ -578,7 +580,8 @@
       ;; There is no documentation for condition accessors, and some
       ;; implementations signal warnings.
       (unless (subtypep (find-class class) 'condition)
-        (document-docstring (swank-mop:slot-definition-documentation slot-def)
+        (document-docstring (ignore-errors
+                             (swank-mop:slot-definition-documentation slot-def))
                             stream)))))
 
 (defun slot-def-to-string (slot-def)
