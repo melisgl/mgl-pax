@@ -996,8 +996,12 @@
                         (make-symbol name)
                         name)
                     'package))
-
 
+;;; (SWANK-BACKEND:FIND-DEFINITIONS "COMMON-LISP") is NIL on some
+;;; Lisps.
+#+(or abcl allegro ccl clisp cmucl ecl)
+(add-locative-to-source-search-list 'package)
+
 ;;;; READTABLE locative
 
 (define-locative-type readtable ()
