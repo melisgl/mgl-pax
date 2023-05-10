@@ -866,6 +866,25 @@
 (define-symbol-locative-type restart ()
   "A locative to refer to the definition of a restart defined by
   DEFINE-RESTART.")
+
+;;; Provide definitions for standard CL restarts.
+(define-restart use-value (value)
+  "This is the name of the RESTART to which [USE-VALUE][function]
+  transfers control.")
+(define-restart store-value (value)
+  "This is the name of the RESTART to which [STORE-VALUE][function]
+  transfers control.")
+(define-restart muffle-warning ()
+  "This is the name of the RESTART to which [MUFFLE-WARNING][function]
+  transfers control.")
+(define-restart continue ()
+  "This is the name of the RESTART to which [CONTINUE][function]
+  transfers control.")
+(define-restart abort ()
+  "This is the name of the RESTART to which [ABORT][function]
+  transfers control.")
+
+(add-locative-to-source-search-list 'restart)
 
 
 ;;;; ASDF:SYSTEM locative

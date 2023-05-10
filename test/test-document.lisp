@@ -68,6 +68,8 @@
   (test-writer)
   ;; PAX::@TYPELIKE-LOCATIVES
   (test-declaration)
+  ;; PAX::@CONDITION-SYSTEM-LOCATIVES
+  (test-restart)
   ;; PAX::@PACKAGELIKE-LOCATIVES
   (test-asdf-system)
   (test-package)
@@ -747,6 +749,20 @@ This is [Self-referencing][e042].
   (check-head "SAFETY" "[`SAFETY`][0273]")
   (check-head "SAFETY declaration" "[`SAFETY`][0273] declaration")
   (check-head "[safety][declaration]" "[safety][0273]"))
+
+(deftest test-restart ()
+  (check-head "ABORT restart" "[`ABORT`][fc8b] restart")
+  (check-document (make-reference 'use-value 'restart)
+                  "<a id=\"USE-VALUE%20RESTART\"></a>
+
+- [restart] **USE-VALUE** *VALUE*
+
+    This is the name of the [`RESTART`][ad91] to which [`USE-VALUE`][a197]
+    transfers control.
+
+  [a197]: CLHS/Body/f_abortc.htm \"USE-VALUE FUNCTION\"
+  [ad91]: CLHS/Body/t_rst.htm \"RESTART TYPE\"
+"))
 
 
 (deftest test-asdf-system ()
