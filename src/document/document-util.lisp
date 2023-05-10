@@ -433,7 +433,7 @@
     (asdf:load-system :mgl)
     (asdf:load-system :journal)
     (asdf:load-system :trivial-utf-8/doc)
-    (asdf:load-system :try/doc)
+    (asdf:load-system :try)
     (asdf:load-system :lmdb))
   (let ((*document-downcase-uppercase-code* t))
     (update-pax-world)))
