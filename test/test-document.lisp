@@ -701,7 +701,11 @@ This is [Self-referencing][e042].
 
 (deftest test-generic-function ()
   (let ((ref (make-reference 'setfed-generic-function 'function)))
-    (is (mgl-pax::reference= (canonical-reference ref) ref))))
+    (is (mgl-pax::reference= (canonical-reference ref) ref)))
+  ;; Referring to a GENERIC-FUNCTION as FUNCTION
+  (let ((ref (make-reference 'locate-object 'function)))
+    (is (mgl-pax::reference= (canonical-reference ref) ref))
+    (check-head ref "<a id=\"MGL-PAX:LOCATE-OBJECT%20GENERIC-FUNCTION\"></a>")))
 
 
 (defsection @test-method-combination (:export nil)

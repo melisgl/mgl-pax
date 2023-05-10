@@ -269,7 +269,8 @@
 ;;;; FUNCTION and GENERIC-FUNCTION locatives
 
 (define-locative-type function ()
-  "Refers to a global function, typically defined with DEFUN.
+  "Refers to a global function, typically defined with DEFUN. It is
+  also allowed to reference GENERIC-FUNCTIONs as FUNCTIONs.
 
   Note that the arglist in the generated documentation depends on the
   quality of SWANK-BACKEND:ARGLIST. It [may be][
@@ -287,15 +288,12 @@
   (let ((function (ignore-errors (symbol-function* symbol))))
     (unless function
       (locate-error "~S does not name a function." symbol))
-    (when (typep function 'generic-function)
-      (locate-error "~S names a generic function, not a plain function."
-                    symbol))
     function))
 
 (defmethod locate-object (symbol (locative-type (eql 'generic-function))
                           locative-args)
   (declare (ignore locative-args))
-  (let ((function (symbol-function* symbol)))
+  (let ((function (ignore-errors (symbol-function* symbol))))
     (unless (typep function 'generic-function)
       (locate-error "~S does not name a generic function." symbol))
     function))

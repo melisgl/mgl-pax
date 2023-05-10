@@ -586,7 +586,8 @@ which makes navigating the sources with `M-.` (see
 
 - [locative] FUNCTION
 
-    Refers to a global function, typically defined with DEFUN.
+    Refers to a global function, typically defined with DEFUN. It is
+    also allowed to reference GENERIC-FUNCTIONs as FUNCTIONs.
     
     Note that the arglist in the generated documentation depends on the
     quality of SWANK-BACKEND:ARGLIST. It may be that default values of

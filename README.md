@@ -693,7 +693,8 @@ which makes navigating the sources with `M-.` (see
 <a id="x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **FUNCTION**
 
-    Refers to a global function, typically defined with [`DEFUN`][9717].
+    Refers to a global function, typically defined with [`DEFUN`][9717]. It is
+    also allowed to reference `GENERIC-FUNCTION`([`0`][8d65] [`1`][5875])s as `FUNCTION`s.
     
     Note that the arglist in the generated documentation depends on the
     quality of `SWANK-BACKEND:ARGLIST`. It [may be][d1ca] that default values of
