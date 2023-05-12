@@ -28,6 +28,7 @@
     - [9.2 Documenting in Emacs][7199]
         - [9.2.1 PAX `URL`s][1e80]
         - [9.2.2 Navigating the Documentation in W3M][796d]
+        - [9.2.3 PAX Apropos][b7fc]
     - [9.3 Markdown Support][c2d3]
         - [9.3.1 Indentation][718f]
         - [9.3.2 Syntax Highlighting][bc83]
@@ -1393,6 +1394,55 @@ In addition, the following PAX-specific key bindings are available:
 - `V` visits the source location of the first definition on the
   page.
 
+
+<a id="x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29"></a>
+#### 9.2.3 PAX Apropos
+
+[`PAX-APROPOS`][33fd] is similar to [`CL:APROPOS-LIST`][d289], but it supports more
+flexible matching – especially filtering by [Locative Types][6121] – and
+returns [`REFERENCE`][1cea]s.
+
+On the Emacs side, `mgl-pax-apropos`, `mgl-pax-apropos-all`, and
+`mgl-pax-apropos-package` can be used to view the results in the
+[documentation browser][ef7f]. These parallel the
+functionality of `slime-apropos`, `slime-apropos-all`, and
+`slime-apropos-package`.
+
+<a id="x-28MGL-PAX-3APAX-APROPOS-20FUNCTION-29"></a>
+- [function] **PAX-APROPOS** *NAME &KEY PACKAGE EXTERNAL-ONLY CASE-SENSITIVE LOCATIVE-TYPES*
+
+    Return a list of [`REFERENCE`][1cea]s corresponding to definitions of symbols
+    matching various arguments. As the second value, return another list
+    of `REFERENCE`s that correspond to definitions named by string such as
+    `PACKAGE`s and [`ASDF:SYSTEM`][c097]s.
+    
+    First, from the set of all interned symbols, the set of matching
+    [object][75ce]s are determined:
+    
+    - `NAME` is `NIL` (matches everything), a [`SYMBOL`][7f9f] (matches the same
+      [`SYMBOL-NAME`][0e20]), or a `STRING`([`0`][7bd4] [`1`][4267]) (matches a sybmol if it's a substring of
+      `SYMBOL-NAME` subject to `CASE-SENSITIVE`).
+    
+    - `PACKAGE` is `NIL` (matches everything), a `SYMBOL` (matches the same
+      [`PACKAGE-NAME`][b622] or a nickname), or a `PACKAGE` (matches a
+      symbol if it's a substring of the name of [`SYMBOL-PACKAGE`][964b]).
+    
+    - `EXTERNAL-ONLY` is `NIL` (matches everything), or `T` (matches only
+      symbols which are external in their home package).
+    
+    Then, for all matching [object][75ce]s, their known definitions are
+    collected as a single list of `REFERENCE`s. If `LOCATIVE-TYPES` is not
+    `NIL`, then `REFERENCE`s whose [`LOCATIVE-TYPE`][3200] is not in `LOCATIVE-TYPES`
+    are removed from the list. Finally, the list is sorted preferring
+    symbols accessible in the current package, alphabetically earlier
+    package names, and alphabetically earlier symbol names, in that
+    order.
+    
+    For the second list, names of registered `ASDF:SYSTEM`s and `PACKAGE`s
+    are matched against `NAME`, the `PACKAGE` and `EXTERNAL-ONLY` arguments
+    are ignored. This list is also filtered by `LOCATIVE-TYPES` and sorted
+    alphabetically by `LOCATIVE-TYPE` name. This is list always empty if
+    `PACKAGE`.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29"></a>
 ### 9.3 Markdown Support
@@ -3465,6 +3515,7 @@ they are presented.
   [06a9]: #x-28MGL-PAX-3A-40CONDITION-SYSTEM-LOCATIVES-20MGL-PAX-3ASECTION-29 "Condition System Locatives"
   [08f7]: http://www.lispworks.com/documentation/HyperSpec/Body/v_t.htm "T MGL-PAX:CONSTANT"
   [0b3a]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE"
+  [0e20]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_2.htm "SYMBOL-NAME FUNCTION"
   [0ef0]: #x-28MGL-PAX-3A-2ADOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS* VARIABLE"
   [1102]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "ABORT FUNCTION"
   [117a]: http://www.lispworks.com/documentation/HyperSpec/Body/f_open.htm "OPEN FUNCTION"
@@ -3502,6 +3553,7 @@ they are presented.
   [3200]: #x-28MGL-PAX-3ALOCATIVE-TYPE-20FUNCTION-29 "MGL-PAX:LOCATIVE-TYPE FUNCTION"
   [32f5]: #x-28MGL-PAX-3ACANONICAL-REFERENCE-20GENERIC-FUNCTION-29 "MGL-PAX:CANONICAL-REFERENCE GENERIC-FUNCTION"
   [3386]: #x-28MGL-PAX-3A-40NAVIGATING-IN-EMACS-20MGL-PAX-3ASECTION-29 "Navigating Sources in Emacs"
+  [33fd]: #x-28MGL-PAX-3APAX-APROPOS-20FUNCTION-29 "MGL-PAX:PAX-APROPOS FUNCTION"
   [36e1]: #x-28MGL-PAX-3A-40HTML-OUTPUT-20MGL-PAX-3ASECTION-29 "HTML Output"
   [378f]: #x-28MGL-PAX-3A-40PARSING-20MGL-PAX-3ASECTION-29 "Parsing"
   [3ae8]: http://www.lispworks.com/documentation/HyperSpec/Body/r_contin.htm "CONTINUE RESTART"
@@ -3622,6 +3674,8 @@ they are presented.
   [ad91]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rst.htm "RESTART TYPE"
   [b372]: #x-28MGL-PAX-3A-40UNRESOLVABLE-REFLINKS-20MGL-PAX-3ASECTION-29 "Unresolvable Links"
   [b3cc]: #x-28MGL-PAX-3A-40EXPLICIT-AND-AUTOLINKING-20MGL-PAX-3ASECTION-29 "Explicit and Autolinking"
+  [b622]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pkg_na.htm "PACKAGE-NAME FUNCTION"
+  [b7fc]: #x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29 "PAX Apropos"
   [b89a]: #x-28MGL-PAX-3A-40CODIFIABLE-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@CODIFIABLE MGL-PAX:GLOSSARY-TERM"
   [ba62]: #x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29 "FUNCTION MGL-PAX:LOCATIVE"
   [ba74]: #x-28MGL-PAX-3A-40LINKS-20MGL-PAX-3ASECTION-29 "Links"
@@ -3650,6 +3704,7 @@ they are presented.
   [cfbb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_pr_unr.htm "PRINT-UNREADABLE-OBJECT MGL-PAX:MACRO"
   [d1ca]: #x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29 "Documentation Generation Implementation Notes"
   [d1dc]: #x-28MGL-PAX-3A-40GLOSSARY-TERMS-20MGL-PAX-3ASECTION-29 "Glossary Terms"
+  [d289]: http://www.lispworks.com/documentation/HyperSpec/Body/f_apropo.htm "APROPOS-LIST FUNCTION"
   [d2c1]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm "*PACKAGE* VARIABLE"
   [d562]: http://www.lispworks.com/documentation/HyperSpec/Body/t_method.htm "METHOD CLASS"
   [d684]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defcon.htm "DEFCONSTANT MGL-PAX:MACRO"

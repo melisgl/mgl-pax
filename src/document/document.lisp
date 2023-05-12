@@ -359,6 +359,7 @@
        (call-with-format ,format #',fn))))
 
 (defvar *html-subformat* nil)
+(defvar *document-tight* nil)
 
 (defun/autoloaded document (object &key (stream t) pages (format :plain))
   """Write OBJECT in FORMAT to STREAM diverting some output to PAGES.
@@ -526,13 +527,22 @@
           ;; Write output to DEFAULT-PAGE until a DOCUMENT-OBJECT
           ;; finds a reference that should got to another PAGE.
           (with-temp-output-to-page (stream default-page)
-            (loop for object1 in (alexandria:ensure-list object)
-                  for first = t then nil
-                  do (with-headings (object1)
-                       (unless first
-                         (terpri stream))
-                       (let ((*package* (guess-package object1)))
-                         (document-object object1 stream)))))
+            ;; Call DOCUMENT-OBJECT on each stuff to be documented in
+            ;; OBJECT, and keep track of where to add extra newlines.
+            (let ((firstp t)
+                  (add-blank-p nil))
+              (map-object-args
+               (lambda (object1)
+                 (with-headings (object1)
+                   (when (or add-blank-p
+                             (and (not firstp)
+                                  (not *document-tight*)))
+                     (terpri stream))
+                   (setq firstp nil)
+                   (let ((*package* (guess-package object1)))
+                     (document-object object1 stream))
+                   (setq add-blank-p (not *document-tight*))))
+               object)))
           (let ((outputs ()))
             (do-pages-created (page)
               ;; Add the markdown reference link definitions for all
@@ -563,6 +573,27 @@
                    (first outputs))
                   (t
                    nil))))))))
+
+;;; Call FN with each thing within OBJECT (an argument of the same
+;;; name of DOCUMENT). Handle special PROGV forms, which allow
+;;; controlling the dynamic environment around DOCUMENT-OBJECT calls.
+;;; This is only used by PAX-APROPOS* and is not part of DOCUMENT's
+;;; contract.
+(defun map-object-args (fn object)
+  (cond ((not (listp object))
+         (funcall fn object))
+        ;; ((progv <symbols-form> <values-form>)
+        ;;  <reference> <string> ...)
+        ((and (listp (first object))
+              (eq (caar object) 'progv))
+         (destructuring-bind (symbols-form values-form) (rest (first object))
+           (progv (eval symbols-form) (eval values-form)
+             (map-object-args fn (rest object)))))
+        (t
+         (dolist (element object)
+           (if (atom element)
+               (funcall fn element)
+               (map-object-args fn element))))))
 
 (defun guess-package (object)
   (let ((reference (canonical-reference object)))
@@ -2351,7 +2382,7 @@
           (if (eq *format* :html)
               (let ((source-uri (source-uri reference)))
                 (if (eq *html-subformat* :w3m)
-                    (format stream "- **\\[~A]** [~A](~A) <i>"
+                    (format stream "- **\\[~A]** [~A](~A)"
                             locative-type name
                             (urlencode (reference-to-pax-url reference)))
                     (format stream
@@ -2369,7 +2400,7 @@
 
 (defun print-end-bullet (stream)
   (cond ((eq *html-subformat* :w3m)
-         (format stream "</i>~%"))
+         (format stream "~%"))
         ((eq *format* :html)
          ;; end "reference-bullet" span
          (format stream "</span>~%"))
@@ -2393,7 +2424,8 @@
                      (funcall *print-arglist-key* string)
                      string)))
     (if *document-mark-up-signatures*
-        (if (eq *format* :html)
+        (if (and (eq *format* :html)
+                 (not (eq *html-subformat* :w3m)))
             (format stream "<span class=\"locative-args\">~A</span>" string)
             (italic string stream))
         (format stream "~A" string))))
@@ -2487,32 +2519,39 @@
              (with-temp-output-to-page (stream (reference-page reference))
                (call-next-method object stream)))))))
 
+(defvar *document-do-not-resolve-references* nil)
+
 (defmethod document-object ((reference reference) stream)
-  (let* ((reference (canonical-reference reference))
-         (warn-if-unresolvable
-           (and *document-open-ended-linking*
+  (if *document-do-not-resolve-references*
+      (documenting-reference (stream
+                              :reference reference
+                              :arglist (reference-locative-args reference)))
+      (let* ((reference (canonical-reference reference))
+             (warn-if-unresolvable
+               (and *document-open-ended-linking*
                 ;; It is an error for explicit arguments to
                 ;; DOCUMENT to be unresolvable (so that
                 ;; `mgl-pax-document' produces errors when it
                 ;; must), but we want to document what we can even
                 ;; if a section contains unresolvable stuff.
                 (boundp '*section*)))
-         (resolved-object (resolve reference
-                                   :errorp (not warn-if-unresolvable))))
-    ;; We are fine because RESOLVE probably never returns NIL because
-    ;; (RESOLVE (MAKE-REFERENCE NIL 'CONSTANT)) returns a REFERENCE.
-    (if (and warn-if-unresolvable
-             (null resolved-object))
-        (warn "~@<Not documenting unresolvable ~S~@[ in ~S.~]~:@>"
-              reference (second *objects-being-documented*))
-        (if (typep resolved-object 'reference)
-            (with-temp-output-to-page (stream (reference-page reference))
-              (let ((locative (reference-locative reference)))
-                (locate-and-document (reference-object reference)
-                                     (locative-type locative)
-                                     (locative-args locative)
-                                     stream)))
-            (document-object resolved-object stream)))))
+             (resolved-object (resolve reference
+                                       :errorp (not warn-if-unresolvable))))
+        ;; We are fine because RESOLVE probably never returns NIL
+        ;; because (RESOLVE (MAKE-REFERENCE NIL 'CONSTANT)) returns a
+        ;; REFERENCE.
+        (if (and warn-if-unresolvable
+                 (null resolved-object))
+            (warn "~@<Not documenting unresolvable ~S~@[ in ~S.~]~:@>"
+                  reference (second *objects-being-documented*))
+            (if (typep resolved-object 'reference)
+                (with-temp-output-to-page (stream (reference-page reference))
+                  (let ((locative (reference-locative reference)))
+                    (locate-and-document (reference-object reference)
+                                         (locative-type locative)
+                                         (locative-args locative)
+                                         stream)))
+                (document-object resolved-object stream))))))
 
 
 (defsection @overview-of-escaping (:title "Overview of Escaping")
@@ -2643,56 +2682,44 @@
 
 
 (defsection @documenting-in-emacs (:title "Documenting in Emacs")
-  """Documentation can be viewed live in Emacs with
-  [w3m](https://emacs-w3m.github.io/info/emacs-w3m.html). Docstrings
-  of all kinds of Lisp definitions and documentation from \\PAX
-  SECTIONs is generated on the fly, complete with @CODIFICATION and
-  [links][@LINKING-TO-CODE].
+  """Documentation can be viewed live in Emacs with the
+  [w3m](https://emacs-w3m.github.io/info/emacs-w3m.html) browser. HTML
+  documentation, complete with @CODIFICATION and
+  [links][@LINKING-TO-CODE], is generated from docstrings of all kinds
+  of Lisp definitions and \\PAX SECTIONs.
 
-  If `src/pax.el` is loaded into Emacs, the elisp function
-  `mgl-pax-document` can be used to generate documentation for a \PAX
-  URL. The documentation is a single HTML page generated by PAX via
-  Slime documenting the definitions given by PAX-URL. If necessary, a
-  disambiguation page is generated with the documentation of all
-  possible references. The HTML page is opened in the w3m browser
-  within Emacs. For example, to view the documentation of this very
-  [SECTION][class], one can do:
+  If `src/pax.el` is loaded into Emacs, the Elisp function
+  `mgl-pax-document` displays documentation as a single HTML page
+  generated by PAX via Slime. For example, to view the documentation
+  of this very SECTION, one can do:
 
       M-x mgl-pax-document
       View Documentation of: pax::@documenting-in-emacs
 
-  Coincidentally, this is the default when the empty string is entered
-  and there is no w3m buffer. If there is a w3m buffer, then the
+  Coincidentally, this is the default when the empty string is
+  entered, and there is no w3m buffer. If there is a w3m buffer, then
   entering the empty string displays that buffer.
 
-  If we enter `\MGL-PAX` instead, then a [disambiguation
-  page](pax:MGL-PAX) (note that this and other `pax:` links only work
-  in Emacs) will be shown with the documentation of the MGL-PAX
-  package and the MGL-PAX asdf:system. One may then follow the links
-  on the page to navigate to a page with the documentation the desired
-  definition. Alternatively, a @LOCATIVE may be specified as in
-  `MGL-PAX package`
+  If we enter `\function` instead, then a [disambiguation
+  page](pax:function) (note that this and other `pax:` links only work
+  in Emacs) will be shown with the documentation of the FUNCTION class
+  and the FUNCTION locative. One may then follow the links on the page
+  to navigate to a page with the documentation the desired definition.
 
-      M-x mgl-pax-document
-      View Documentation of: MGL-PAX package
+  Alternatively, a @LOCATIVE may be entered as part of the argument to
+  `mgl-pax-document` as in `\function class`, which gives [this
+  result](pax:function%20class). Finally, the definition of DEFSECTION
+  in the context of a single-page @PAX-MANUAL can be
+  [viewed](pax:pax::@pax-manual#pax:defsection%20pax:macro) by
+  entering `pax::@pax-manual#pax:defsection pax:macro`.
 
-  which gives [this result](pax:MGL-PAX%20package). Finally, to
-  [view](pax:pax::@pax-manual#pax:defsection%20pax:macro) the
-  definition of DEFSECTION in the page documenting the entire
-  @PAX-MANUAL:
-
-      M-x mgl-pax-document
-      View Documentation of: pax::@pax-manual#pax:defsection pax:macro
-
-  In interactive use of `mgl-pax-document`, the \PAX URL will default
-  to `slime-symbol-at-point'.
-
-  The suggested key binding is `C-.` to parallel `M-.`:
-
-      (global-set-key (kbd "C-.") 'mgl-pax-document)
+  In interactive use, `mgl-pax-document` defaults to documenting
+  `slime-symbol-at-point', possilby with a nearby locative the same
+  way as in @NAVIGATING-IN-EMACS.
   """
   (@pax-urls section)
-  (@navigation-in-w3m section))
+  (@apropos section)
+  (@documentation-key-bindings section))
 
 (defsection @pax-urls (:title "PAX URLs")
   """A \PAX URL consists of a \REFERENCE and an optional FRAGMENT
@@ -2702,10 +2729,34 @@
 
   where \REFERENCE names either
 
-  - a complete @REFERENCE (e.g. `"PAX:SECTION CLASS"`),
+  - a complete @REFERENCE (e.g. `"pax:section class"`),
 
-  - or the @OBJECT of a reference (e.g. `"PAX:SECTION"`), which
+  - or the @OBJECT of a reference (e.g. `"pax:section"`), which
     possibly makes what to document ambiguous.""")
+
+(defsection @documentation-key-bindings (:title "Documentation Key Bindings")
+  """The Elisp function `mgl-pax-hijack-slime-doc-keys`
+  helps with the common case of binding keys.
+
+       If both `w3m' and `slime' are available, replace `slime-apropos',
+      `slime-apropos-all', `slime-apropos-package' with
+      `mgl-pax-apropos', `mgl-pax-apropos-all',
+      `mgl-pax-apropos-package', and replace both
+      `slime-describe-symbol' and `slime-describe-function' with
+      `mgl-pax-document'.
+
+      In addition, because it can be almost as useful as `M-.', one
+      may want to give `mgl-pax-document' a more convenient binding
+      such as `C-.' or `s-.' if you have a Super key. For example, to
+      bind `C-.' in all Slime buffers:
+
+          (slime-bind-keys slime-parent-map nil '((\"C-.\" mgl-pax-document)))
+
+      To bind `C-.' globally:
+
+          (global-set-key (kbd \"C-.\") 'mgl-pax-document)
+  """
+  (@navigation-in-w3m section))
 
 (defsection @navigation-in-w3m (:title "Navigating the Documentation in W3M")
   """With w3m's default [key bindings][w3m-key-bindings], moving the
@@ -2736,15 +2787,43 @@
     page.
   """)
 
-;;; Document PAX-URL in a `.html' file directly below DIRNAME, both
-;;; STRINGs. Return the namestring of the file written as (:FILENAME
-;;; <FILENAME>) or (:ERROR <STRING>).
-(defun/autoloaded document-for-emacs (pax-url dirname)
-  (swank::converting-errors-to-error-location
+;;; Document a `pax:' or `pax-eval:' URL in a `.html' file directly
+;;; below DIRNAME, both STRINGs. Return the namestring of the file
+;;; written as (:FILENAME <FILENAME>) or (:ERROR <STRING>).
+(defun/autoloaded document-for-emacs (url dirname)
+  (progn                   ;swank::converting-errors-to-error-location
     (swank::with-buffer-syntax ()
-      `(:file-url ,(document-for-emacs-1 pax-url dirname)))))
+      `(:file-url ,(document-for-emacs-1 url dirname)))))
 
-(defun document-for-emacs-1 (pax-url dirname)
+(defun document-for-emacs-1 (url dirname)
+  (if (alexandria:starts-with-subseq "pax-eval:" url)
+      (document-pax-eval-url-for-emacs url dirname)
+      (document-pax-url-for-emacs url dirname)))
+
+(defun document-pax-eval-url-for-emacs (pax-eval-url dirname)
+  (multiple-value-bind (scheme authority path) (parse-url pax-eval-url)
+    (declare (ignore authority))
+    (unless (equal scheme "pax-eval")
+      (error "~S doesn't have pax-eval: scheme." pax-eval-url))
+    (let* ((sexp (read-from-string (urldecode path)))
+           (stuff (eval sexp))
+           (filename (merge-pathnames
+                      (make-pathname
+                       :name (pax-url-to-file-name
+                              (format nil "pax-eval:~A"
+                                      (urlencode
+                                       (with-standard-io-syntax*
+                                         (prin1-to-string sexp)))))
+                       :type "html")
+                      dirname)))
+      (document/w3m/file filename stuff)
+      (pathname-to-file-url filename))))
+
+(defun make-pax-eval-url (form)
+  (format nil "pax-eval:~A" (urlencode (with-standard-io-syntax*
+                                       (prin1-to-string form)))))
+
+(defun document-pax-url-for-emacs (pax-url dirname)
   (multiple-value-bind (scheme authority path fragment) (parse-url pax-url)
     (declare (ignore authority))
     (unless (equal scheme "pax")
@@ -2766,21 +2845,25 @@
           (locative-junk
            (error "Unknown locative ~S." locative-junk))
           (t
-           (let ((references (definitions-as-references (read-from-string path))))
+           (let ((references (definitions-as-references
+                              (read-from-string path))))
              (cond ((endp references)
                     (error "Could not find definitions for ~S." path))
                    ((= (length references) 1)
                     (document-for-emacs/reference (first references) dirname))
                    (t
-                    (document-for-emacs/ambiguous references path dirname))))))))
+                    (document-for-emacs/ambiguous references path
+                                                  dirname))))))))
 
 (defun document-for-emacs/reference (reference dirname)
   (let* ((stuff ())
          (filename (when dirname
                      (merge-pathnames
-                      (make-pathname :name (pax-url-path-to-file-name
-                                            (reference-to-anchor
-                                             reference))
+                      (make-pathname :name (pax-url-to-file-name
+                                            (format nil "pax:~A"
+                                                    (urlencode
+                                                     (reference-to-anchor
+                                                      reference))))
                                      :type "html")
                       dirname)))
          (all-sections (list-all-sections))
@@ -2789,24 +2872,21 @@
          (*package* (if packagep
                         (resolve reference :errorp nil)
                         *package*))
+         #+nil
          (*print-arglist-key*
            (and packagep (alexandria:rcurry 'shorten-arglist reference)))
+         #+nil
          (*document-docstring-key*
            (and packagep (alexandria:rcurry 'shorten-docstring reference))))
     (alexandria:appendf stuff (format-up-links sections reference))
     (alexandria:appendf stuff (list reference))
     (alexandria:appendf stuff (format-also-see reference))
-    (alexandria:appendf stuff (format-package-contents reference all-sections))
     (if filename
-        (with-open-file (stream (ensure-directories-exist filename)
-                                :direction :output
-                                :if-does-not-exist :create
-                                :if-exists :supersede
-                                :external-format *utf-8-external-format*)
-          (document/w3m (remove nil stuff) :stream stream))
+        (document/w3m/file filename (remove nil stuff))
         (document/w3m (remove nil stuff)))
     filename))
 
+#+nil
 (defun shorten-arglist (string &optional except-reference)
   (let* ((reference *reference-being-documented*)
          (n-chars (- 64 (length (prin1-to-string
@@ -2818,6 +2898,7 @@
         string
         (shorten-string string :n-lines 1 :n-chars n-chars :ellipsis "..."))))
 
+#+nil
 (defun shorten-docstring (docstring &optional except-reference)
   (if (or (stringp (first *objects-being-documented*))
           (and *reference-being-documented* except-reference
@@ -2836,7 +2917,9 @@
           link)))))
 
 (defun format-also-see (reference)
-  (let ((entries ()))
+  (let ((entries ())
+        ;; This will stringify reference @OBJECTs for e.g. PACKAGEs.
+        (reference (canonical-reference reference)))
     (flet ((emit (control &rest args)
              (push (cons control args) entries)))
       (let ((hyperspec-link (find-hyperspec-link reference)))
@@ -2852,9 +2935,18 @@
                           (reference-object reference))))
         (emit "the [disambiguation page](~A)"
               (urlencode (reference-to-ambiguous-pax-url reference))))
-      (let ((package (find-reference-package reference)))
-        (when package
-          (emit "the package `~A`" (escape-markdown (package-name package))))))
+      (unless (eq (reference-locative-type reference) 'section)
+        (let ((package (find-reference-package reference)))
+          (when package
+            (emit "the package `~A`"
+                  (escape-markdown (package-name package))))))
+      (let ((resolved (resolve reference :errorp nil)))
+        (when (packagep resolved)
+          (let ((name (make-symbol (package-name resolved))))
+            (emit "see the package [apropos](~A), ~
+                   maybe [with internal symbols](~A) included"
+                  (make-pax-eval-url `(pax-apropos* nil t ',name t))
+                  (make-pax-eval-url `(pax-apropos* nil nil ',name t)))))))
     (when entries
       (list
        (let ((n-entries (length entries)))
@@ -2876,56 +2968,27 @@
     (when (symbolp object)
       (symbol-package object))))
 
-(defun format-package-contents (reference all-sections)
-  (when (eq (reference-locative-type reference) 'package)
-    (let ((package (resolve reference :errorp nil)))
-      (when package
-        (cons
-         (with-output-to-string (out)
-           (let ((top-level-sections (top-level-sections-in-package
-                                      package all-sections)))
-             (when top-level-sections
-               (format out "## Top-level \\PAX sections~%~%")
-               (dolist (section top-level-sections)
-                 (format out "- ~S~%" (section-name section)))))
-           (format out "## External Definitions~%~%"))
-         (let ((reference-lists ()))
-           (do-external-symbols (symbol package)
-             (push (definitions-as-references symbol) reference-lists))
-           (sort-references
-            (remove-if-not (lambda (reference)
-                             (symbolp (reference-object reference)))
-                           (apply #'append reference-lists)))))))))
-
-(defun top-level-sections-in-package (package all-sections)
-  (flet ((section-in-package-p (section)
-           (eq (symbol-package (section-name section)) package)))
-    (loop for section in all-sections
-          when (and (section-in-package-p section)
-                    (notany #'section-in-package-p
-                            (sections-that-contain
-                             all-sections
-                             (make-reference (section-name section)
-                                             'section))))
-            collect section)))
-
 (defun document-for-emacs/ambiguous (references pax-url-path dirname)
   (assert (< 1 (length references)))
   (let ((filename (merge-pathnames
-                   (make-pathname :name (pax-url-path-to-file-name pax-url-path)
+                   (make-pathname :name (pax-url-to-file-name
+                                         (format nil "pax:~A"
+                                                 (urlencode pax-url-path)))
                                   :type "html")
                    dirname)))
-    (with-open-file (stream (ensure-directories-exist filename)
-                            :direction :output
-                            :if-does-not-exist :create
-                            :if-exists :supersede
-                            :external-format *utf-8-external-format*)
-      (document/w3m
-       (cons (format nil "# Disambiguation for [`~A`][pax:dislocated]"
-                     pax-url-path)
-             references)
-       :stream stream))
+    (document/w3m/file
+     filename (cons (format nil "# Disambiguation for [`~A`][pax:dislocated]"
+                            pax-url-path)
+                    references))
     filename))
+
+(defun document/w3m/file (filename &rest args)
+  (with-open-file (stream (ensure-directories-exist filename)
+                          :direction :output
+                          :if-does-not-exist :create
+                          :if-exists :supersede
+                          :external-format *utf-8-external-format*)
+    (apply #'document/w3m (append args `(:stream ,stream)))))
 
 (defun document/w3m (&rest args)
   (let ((*html-subformat* :w3m)
@@ -2958,12 +3021,25 @@
          (reference-to-anchor (canonical-reference
                                (make-reference object locative)))
          fragment))))
+
+
+;;;; Listing SECTIONs
 
 ;;; This is slow but fast enough not to bother with a SECTION-NAME to
 ;;; SECTION weak hash table.
 (defun list-all-sections ()
   (let ((sections ()))
     (do-all-symbols (symbol sections)
+      (when (boundp symbol)
+        (let ((value (symbol-value symbol)))
+          (when (and (typep value 'section)
+                     ;; Filter out normal variables with SECTION values.
+                     (eq (section-name value) symbol))
+            (pushnew value sections)))))))
+
+(defun list-sections-in-package (package)
+  (let ((sections ()))
+    (do-symbols (symbol package sections)
       (when (boundp symbol)
         (let ((value (symbol-value symbol)))
           (when (and (typep value 'section)
@@ -2978,6 +3054,12 @@
                                    (reference= reference entry)))
                             (section-entries section)))
                  sections))
+
+(defun entry-point-sections (sections)
+  (loop for section in sections
+        for ref = (make-reference (section-name section) 'section)
+        unless (sections-that-contain sections ref)
+          collect ref))
 
 ;;; As a heuristic to find the "home" section, move sections whose
 ;;; name is closer to the package of OBJECT to the front.
@@ -3006,6 +3088,7 @@
                                (canonical-reference section)))
                    (urlencode (reference-to-anchor reference))
                    (section-title-or-name section))))))))
+
 
 (defun/autoloaded redocument-for-emacs (file-url dirname)
   (swank::converting-errors-to-error-location
@@ -3016,9 +3099,8 @@
         (let ((dir (make-pathname :name nil :type nil :defaults path)))
           (when (string= (namestring dir) dirname)
             (let ((new-file-url (document-for-emacs-1
-                                 (format nil "pax:~A"
-                                         (pax-url-path-from-file-name
-                                          (pathname-name path)))
+                                 (pax-url-from-file-name
+                                  (pathname-name path))
                                  dir)))
               (assert (string= new-file-url file-url)))))))
     (values)))
@@ -3040,14 +3122,14 @@
 ;;; A PAX URL is like pax:PATH[#FRAGMENT]. When the documentation is
 ;;; written to a file, special characters in PATH must be somehow
 ;;; escaped so that the result is a valid file name. Also, since w3m's
-;;; url history is buggy with regards to URL encoding and decoding,
+;;; URL history is buggy with regards to URL encoding and decoding,
 ;;; the encoded PATH must have no #\% in it.
-(defun pax-url-path-to-file-name (pax-url-path)
+(defun pax-url-to-file-name (pax-url)
   (let ((*unreserved-url-characters* *unreserved-pax-url-file-name-characters*)
         (*url-escape-char* #\x))
-    (urlencode pax-url-path)))
+    (urlencode pax-url)))
 
-(defun pax-url-path-from-file-name (filename)
+(defun pax-url-from-file-name (filename)
   (let ((*unreserved-url-characters* *unreserved-pax-url-file-name-characters*)
         (*url-escape-char* #\x))
     (urldecode filename)))
@@ -3072,3 +3154,213 @@
               (when (eq (first location) :location)
                 ;; List of one Swank dspec and location.
                 `((,(reference-to-fake-dspec ref) ,location))))))))))
+
+
+(defsection @apropos (:title "PAX Apropos")
+  "PAX-APROPOS is similar to CL:APROPOS-LIST, but it supports more
+  flexible matching – especially filtering by @LOCATIVE-TYPES – and
+  returns REFERENCEs.
+
+  On the Emacs side, `mgl-pax-apropos`, `mgl-pax-apropos-all`, and
+  `mgl-pax-apropos-package` can be used to view the results in the
+  [documentation browser][@documenting-in-emacs]. These parallel the
+  functionality of `slime-apropos`, `slime-apropos-all`, and
+  `slime-apropos-package`."
+  (pax-apropos function))
+
+(defun pax-apropos (name &key package external-only case-sensitive
+                           locative-types)
+  "Return a list of REFERENCEs corresponding to definitions of symbols
+  matching various arguments. As the second value, return another list
+  of REFERENCEs that correspond to definitions named by string such as
+  PACKAGEs and ASDF:SYSTEMs.
+
+  First, from the set of all interned symbols, the set of matching
+  @OBJECTs are determined:
+
+  - NAME is NIL (matches everything), a SYMBOL (matches the same
+    SYMBOL-NAME), or a STRING (matches a sybmol if it's a substring of
+    SYMBOL-NAME subject to CASE-SENSITIVE).
+
+  - PACKAGE is NIL (matches everything), a SYMBOL (matches the same
+    PACKAGE-NAME or a nickname), or a [PACKAGE][class] (matches a
+    symbol if it's a substring of the name of SYMBOL-PACKAGE).
+
+  - EXTERNAL-ONLY is NIL (matches everything), or T (matches only
+    symbols which are external in their home package).
+
+  Then, for all matching @OBJECTS, their known definitions are
+  collected as a single list of REFERENCEs. If LOCATIVE-TYPES is not
+  NIL, then REFERENCEs whose LOCATIVE-TYPE is not in LOCATIVE-TYPES
+  are removed from the list. Finally, the list is sorted preferring
+  symbols accessible in the current package, alphabetically earlier
+  package names, and alphabetically earlier symbol names, in that
+  order.
+
+  For the second list, names of registered ASDF:SYSTEMs and PACKAGEs
+  are matched against NAME, the PACKAGE and EXTERNAL-ONLY arguments
+  are ignored. This list is also filtered by LOCATIVE-TYPES and sorted
+  alphabetically by LOCATIVE-TYPE name. This is list always empty if
+  PACKAGE."
+  (let ((test (if case-sensitive #'char= #'char-equal))
+        (matching-symbols (make-hash-table))
+        (asdf-definitions ())
+        (package-definitions ()))
+    (labels ((matching-package-p (package-1)
+               (or (null package)
+                   (and (symbolp package)
+                        (find (symbol-name package)
+                              (cons (package-name package-1)
+                                    (package-nicknames package-1))
+                              :test (if case-sensitive
+                                        #'string=
+                                        #'string-equal)))
+                   (and (stringp package)
+                        (find-if (lambda (package-name-1)
+                                   (search package package-name-1 :test test))
+                                 (cons (package-name package-1)
+                                       (package-nicknames package-1))))
+                   (and (packagep package)
+                        (eq package-1 package))))
+             (matching-name-p (name-1)
+               (or (null name)
+                   (and (symbolp name)
+                        (if case-sensitive
+                            (string= (symbol-name name) name-1)
+                            (string-equal (symbol-name name) name-1)))
+                   (and (stringp name)
+                        (search name name-1 :test test))))
+             (matching-symbol-reference-p (reference)
+               (let ((locative-type (reference-locative-type reference)))
+                 (and (or (null locative-types)
+                          (member locative-type locative-types))
+                      (not (member locative-type '(package asdf:system))))))
+             (consider (symbol)
+               (when (matching-name-p (symbol-name symbol))
+                 (setf (gethash symbol matching-symbols) t))))
+      ;; Collect matching symbols, but only if we are going to use
+      ;; them.
+      (when (or (null locative-types)
+                (remove 'asdf:system (remove 'package locative-types)))
+        (dolist (package-1 (remove (find-package :keyword)
+                                   (list-all-packages)))
+          (when (matching-package-p package-1)
+            (if external-only
+                (with-package-iterator (next package-1 :external)
+                  (loop (multiple-value-bind (morep symbol) (next)
+                          (if morep
+                              (consider symbol)
+                              (return)))))
+                (with-package-iterator (next package-1 :external :internal)
+                  (loop (multiple-value-bind (morep symbol) (next)
+                          (if morep
+                              (consider symbol)
+                              (return)))))))))
+      ;; FIXME: Add a generic function to enumerate possible
+      ;; non-symbol @OBJECTs for a given LOCATIVE-TYPE?
+      (unless package
+        ;; ASDF:SYSTEM locative
+        (when (or (null locative-types)
+                  (member 'asdf:system locative-types))
+          (dolist (system-name (asdf:registered-systems))
+            (when (matching-name-p system-name)
+              (push (make-reference system-name 'asdf:system)
+                    asdf-definitions))))
+        ;; PACKAGE locative
+        (when (or (null locative-types)
+                  (member 'package locative-types))
+          (dolist (package-1 (list-all-packages))
+            (when (matching-name-p (package-name package-1))
+              (push (canonical-reference package-1) package-definitions)))))
+      (values (remove-if-not #'matching-symbol-reference-p
+                             (mapcan #'definitions-as-references
+                                     (sort (alexandria:hash-table-keys
+                                            matching-symbols)
+                                           #'swank::present-symbol-before-p)))
+              (append (sort asdf-definitions #'string<
+                            :key #'reference-object)
+                      (sort package-definitions #'string<
+                            :key #'reference-object))))))
+
+;;; `mgl-pax-apropos' calls DOCUMENT-FOR-EMACS with a `pax-eval:' URL
+;;; that evaluates a call to this function. NAME, PACKAGE and
+;;; LOCATIVE-TYPES are strings, EXTERNAL-ONLY and CASE-SENSITIVE are
+;;; boolean.
+(defun pax-apropos* (name &optional external-only package case-sensitive
+                            locative-types)
+  (flet ((parse-nil-symbol-or-string (string)
+           (cond ((string= string "")
+                  nil)
+                 ((alexandria:starts-with #\' string)
+                  (make-symbol (subseq string 1)))
+                 (t
+                  string))))
+    (let ((name (parse-nil-symbol-or-string name))
+          (package (parse-nil-symbol-or-string package))
+          (locative-types (when locative-types
+                            (read-from-string
+                             (format nil "(~A)" locative-types)))))
+      (multiple-value-bind (symbol-definitions non-symbol-definitions)
+          (pax-apropos name :external-only external-only
+                            :package package
+                            :case-sensitive case-sensitive
+                            :locative-types locative-types)
+        (let ((asdf-definitions
+                (remove 'asdf:system non-symbol-definitions
+                        :key #'reference-locative-type :test-not 'eq))
+              (package-definitions
+                (remove 'package non-symbol-definitions
+                        :key #'reference-locative-type :test-not 'eq))
+              (non-symbol-definitions
+                (remove 'package (remove 'asdf:system non-symbol-definitions
+                                         :key #'reference-locative-type)
+                        :key #'reference-locative-type))
+              (pax-entry-points
+                (when (and (symbolp package)
+                           case-sensitive
+                           (find-package package))
+                  (entry-point-sections (list-sections-in-package
+                                         (find-package package))))))
+          `((progv '(*document-do-not-resolve-references*) '(t))
+            (,(format nil "# Results for `~A`"
+                      (let ((current-package *package*))
+                        ;; Don't break lines.
+                        (with-standard-io-syntax*
+                          (let ((*package* current-package)
+                                (*print-readably* nil))
+                            (prin1-to-markdown
+                             `(pax-apropos
+                               ,(if (and name (symbolp name))
+                                    `(quote ,name)
+                                    name)
+                               :external-only ,external-only
+                               :package ,(if (and package (symbolp package))
+                                             `(quote ,package)
+                                             package)
+                               :case-sensitive ,case-sensitive
+                               :locative-types ,(if locative-types
+                                                    `(quote ,locative-types)
+                                                    nil)))))))
+             ,@(when asdf-definitions
+                 (list "## \\ASDF systems"
+                       `((progv '(*document-tight*) '(t))
+                         ,@asdf-definitions)))
+             ,@(when package-definitions
+                 (list "## Packages"
+                       `((progv '(*document-tight*) '(t))
+                         ,@package-definitions)))
+             ,@(when non-symbol-definitions
+                 (list "## Non-symbol definitions"
+                       `((progv '(*document-tight*) '(t))
+                         ,@non-symbol-definitions)))
+             ,@(when pax-entry-points
+                 (list "## PAX Entry Points"
+                       `((progv '(*document-tight*) '(t))
+                         ,@(loop for ref in pax-entry-points
+                                 collect (format nil "- [~A][pax:section]"
+                                                 (prin1-to-markdown
+                                                  (reference-object ref)))))))
+             ,@(when symbol-definitions
+                 (list "## Symbol definitions"
+                       `((progv '(*document-tight*) '(t))
+                         ,@symbol-definitions))))))))))

@@ -20,8 +20,10 @@
   (find-package name))
 
 (defun external-symbol-p (symbol)
-  (eq (nth-value 1 (find-symbol (symbol-name symbol) (symbol-package symbol)))
-      :external))
+  (let ((package (symbol-package symbol)))
+    (and package
+         (eq (nth-value 1 (find-symbol (symbol-name symbol) package))
+             :external))))
 
 (defun special-operator-p* (name)
   (or (special-operator-p name)

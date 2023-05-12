@@ -90,4 +90,14 @@ Because the actual definition is in (SYMBOL-PACKAGE 'FUNCTION).
 * BUG class/type/condition confusion 
 * TODO support local functions, macros OTHERWISE, CALL-NEXT-METHOD
 * TODO support symbols in a context
-E.g. LOOP's WITH, or OTHERWISE in CASE.
+E.g. LOOP's WITH, or OTHERWISE in CASE, CALL-NEXT-METHOD
+* BUG method dpsec parsing is incorrect
+e.g. SB-PCL::MAKE-SPECIALIZER-FORM-USING-CLASS One cannot tell method
+qualifiers from specializers in the dspec without actually consulting
+the definition.
+* BUG C-. differs from M-. on "type FOO function"
+C-.'s disambiguation page lists all definitions of FOO, while M-. pops
+up only the TYPE and FUNCTION dspecs.
+
+* MAYBE if no docstring, get the comment just above the definition?
+Or go to the source.

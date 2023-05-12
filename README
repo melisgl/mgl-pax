@@ -1249,6 +1249,53 @@ In addition, the following PAX-specific key bindings are available:
   page.
 
 
+#### PAX Apropos
+
+PAX-APROPOS is similar to CL:APROPOS-LIST, but it supports more
+flexible matching – especially filtering by @LOCATIVE-TYPES – and
+returns REFERENCEs.
+
+On the Emacs side, `mgl-pax-apropos`, `mgl-pax-apropos-all`, and
+`mgl-pax-apropos-package` can be used to view the results in the
+documentation browser. These parallel the
+functionality of `slime-apropos`, `slime-apropos-all`, and
+`slime-apropos-package`.
+
+- [function] PAX-APROPOS NAME &KEY PACKAGE EXTERNAL-ONLY CASE-SENSITIVE LOCATIVE-TYPES
+
+    Return a list of REFERENCEs corresponding to definitions of symbols
+    matching various arguments. As the second value, return another list
+    of REFERENCEs that correspond to definitions named by string such as
+    PACKAGEs and ASDF:SYSTEMs.
+    
+    First, from the set of all interned symbols, the set of matching
+    @OBJECTs are determined:
+    
+    - NAME is NIL (matches everything), a SYMBOL (matches the same
+      SYMBOL-NAME), or a STRING (matches a sybmol if it's a substring of
+      SYMBOL-NAME subject to CASE-SENSITIVE).
+    
+    - PACKAGE is NIL (matches everything), a SYMBOL (matches the same
+      PACKAGE-NAME or a nickname), or a PACKAGE (matches a
+      symbol if it's a substring of the name of SYMBOL-PACKAGE).
+    
+    - EXTERNAL-ONLY is NIL (matches everything), or T (matches only
+      symbols which are external in their home package).
+    
+    Then, for all matching @OBJECTS, their known definitions are
+    collected as a single list of REFERENCEs. If LOCATIVE-TYPES is not
+    NIL, then REFERENCEs whose LOCATIVE-TYPE is not in LOCATIVE-TYPES
+    are removed from the list. Finally, the list is sorted preferring
+    symbols accessible in the current package, alphabetically earlier
+    package names, and alphabetically earlier symbol names, in that
+    order.
+    
+    For the second list, names of registered ASDF:SYSTEMs and PACKAGEs
+    are matched against NAME, the PACKAGE and EXTERNAL-ONLY arguments
+    are ignored. This list is also filtered by LOCATIVE-TYPES and sorted
+    alphabetically by LOCATIVE-TYPE name. This is list always empty if
+    PACKAGE.
+
 ### Markdown Support
 
 The [Markdown][markdown] in docstrings is processed with the

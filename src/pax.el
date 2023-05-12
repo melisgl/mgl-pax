@@ -14,11 +14,50 @@
 ;;;;   `mgl-pax-document' does. Bind it to `C-.' to parallel `M-.'.
 ;;;;   See the documentation in MGL-PAX::@DOCUMENTING-IN-EMACS (e.g.
 ;;;;   by pressing `C-.' with point over this section name).
+;;;;
+;;;; - `mgl-pax-apropos', `mgl-pax-apropos-all' and
+;;;;   `mgl-pax-apropos-package' are replacements for `slime-apropos'
+;;;;   `slime-apropos-all' and `slime-apropos-package', respectively.
+;;;;   They are built on top of `mgl-pax-document'.
 
 (eval-and-compile
   (require 'cl-lib nil t)
   ;; For emacs 23, look for bundled version
   (require 'cl-lib "lib/cl-lib"))
+
+
+(defun mgl-pax-hijack-slime-doc-keys ()
+  "If both `w3m' and `slime' are available, replace `slime-apropos',
+`slime-apropos-all', `slime-apropos-package' with
+`mgl-pax-apropos', `mgl-pax-apropos-all',
+`mgl-pax-apropos-package', and replace both
+`slime-describe-symbol' and `slime-describe-function' with
+`mgl-pax-document'.
+
+In addition, because it can be almost as useful as `M-.', one may
+want to give `mgl-pax-document' a more convenient binding such as
+`C-.' or `s-.' if you have a Super key. For example, to bind
+`C-.' in all Slime buffers:
+
+    (slime-bind-keys slime-parent-map nil '((\"C-.\" mgl-pax-document)))
+
+To bind `C-.' globally:
+
+    (global-set-key (kbd \"C-.\") 'mgl-pax-document)"
+  (cond ((not (require 'w3m nil t))
+         (message "Requiring w3m failed.")
+         nil)
+        ((not (require 'slime nil t))
+         (message "Requiring slime failed.")
+         nil)
+        (t
+         (slime-bind-keys slime-doc-map t
+                          '((?a mgl-pax-apropos)
+                            (?z mgl-pax-apropos-all)
+                            (?p mgl-pax-apropos-package)
+                            (?d mgl-pax-document)
+                            (?f mgl-pax-document)))
+         t)))
 
 
 ;;;; Autoloading of MGL-PAX on the Common Lisp side
@@ -265,9 +304,19 @@ The suggested key binding is `C-.' to parallel `M-.'."
                          object)))))))))))
 
 (defun mgl-pax-prompt-and-document ()
-  (mgl-pax-document-pax-url
-   (mgl-pax-urllike-to-url
-    (slime-read-from-minibuffer "View Documentation of: "))))
+  (catch 'exit
+    (mgl-pax-document-pax-url
+     (mgl-pax-urllike-to-url
+      (let ((done nil))
+        (unwind-protect
+            (prog1
+                (slime-read-from-minibuffer "View Documentation of: ")
+              (setq done t))
+          (unless done
+            ;; Cancel the non-local exit to avoid "error in process
+            ;; filter" message and the subsequent delay when this
+            ;; function is called by `slime-async-eval'.
+            (throw 'exit nil))))))))
 
 (defun mgl-pax-references-at-point (cont)
   (mgl-pax-locate-definitions (mgl-pax-object-and-locatives-list-at-point)
@@ -291,16 +340,15 @@ The suggested key binding is `C-.' to parallel `M-.'."
               (let ((doc-dir (buffer-local-value 'mgl-pax-doc-dir doc-buffer)))
                 (mgl-pax-call-document-for-emacs
                  pax-url doc-dir
-                 ;; ok-cont
-                 (lambda (file-url)
-                   ;; Maybe pop to a pax doc buffer.
-                   (when (and (not (mgl-pax-in-doc-buffer-p))
-                              mgl-pax-doc-buffers)
-                     (let ((package (slime-current-package)))
-                       (pop-to-buffer (cl-first mgl-pax-doc-buffers))
-                       (setq slime-buffer-package package)))
-                   (w3m-goto-url file-url :reload)
-                   (mgl-pax-set-up-doc-buffer doc-dir)))))
+                 :ok-cont (lambda (file-url)
+                            ;; Maybe pop to a pax doc buffer.
+                            (when (and (not (mgl-pax-in-doc-buffer-p))
+                                       mgl-pax-doc-buffers)
+                              (let ((package (slime-current-package)))
+                                (pop-to-buffer (cl-first mgl-pax-doc-buffers))
+                                (setq slime-buffer-package package)))
+                            (w3m-goto-url file-url :reload)
+                            (mgl-pax-set-up-doc-buffer doc-dir)))))
           ;; Display the docs of this very documentation browser if
           ;; the input is the empty string.
           (when (string= pax-url "pax:")
@@ -310,13 +358,11 @@ The suggested key binding is `C-.' to parallel `M-.'."
           (let ((doc-dir (file-name-as-directory (make-temp-file "pax-doc" t))))
             (mgl-pax-call-document-for-emacs
              pax-url doc-dir
-             ;; ok-cont
-             (lambda (file-url)
-               (w3m-goto-url file-url :reload)
-               (mgl-pax-set-up-doc-buffer doc-dir))
-             ;; abort-cont
-             (lambda (condition)
-               (mgl-pax-delete-doc-dir doc-dir)))))))))
+             :ok-cont (lambda (file-url)
+                        (w3m-goto-url file-url :reload)
+                        (mgl-pax-set-up-doc-buffer doc-dir))
+             :abort-cont (lambda (condition)
+                           (mgl-pax-delete-doc-dir doc-dir)))))))))
 
 (defun mgl-pax-in-doc-buffer-p ()
   (buffer-local-value 'mgl-pax-doc-dir (current-buffer)))
@@ -332,6 +378,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
   ;; `M-.' visits the source when pressed on a "pax:" link.
   (local-set-key (kbd "M-.") 'slime-edit-definition)
   (local-set-key (kbd "M-,") 'slime-pop-find-definition-stack)
+  (local-set-key (kbd "C-c C-d") 'slime-doc-map)
   ;; Make reloading regenerate the documentation.
   (local-set-key (kbd "R") 'mgl-pax-doc-reload)
   (local-set-key (kbd "n") 'mgl-pax-doc-next-definition)
@@ -373,7 +420,8 @@ The suggested key binding is `C-.' to parallel `M-.'."
       (list url nil))))
 
 (defun mgl-pax-w3m-goto-url (oldfun url &rest args)
-  (if (not (string-prefix-p "pax:" url))
+  (if (not (or (string-prefix-p "pax:" url)
+               (string-prefix-p "pax-eval:" url)))
       (apply oldfun url args)
     ;; Set up pax e.g. when the user starts w3m, then presses g and
     ;; enters a pax url.
@@ -382,6 +430,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
        (file-name-as-directory (make-temp-file "pax-doc" t))))
     (let ((buffer (current-buffer)))
       (mgl-pax-call-document-for-emacs url mgl-pax-doc-dir
+                                       :ok-cont
                                        (lambda (file-url)
                                          (pop-to-buffer buffer)
                                          (apply oldfun file-url args))))))
@@ -399,8 +448,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
          (funcall abort-cont condition)
        (message "Evaluation aborted on %s." condition)))))
 
-(defun mgl-pax-call-document-for-emacs (pax-url dir ok-cont
-                                                &optional abort-cont)
+(cl-defun mgl-pax-call-document-for-emacs (url dir &key ok-cont abort-cont)
   (mgl-pax-maybe-autoload
    (lambda (loadedp)
      (if (not loadedp)
@@ -408,7 +456,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
        (mgl-pax-eval-async
         `(cl:funcall (cl:find-symbol (cl:symbol-name :document-for-emacs)
                                      :mgl-pax)
-                     ',pax-url ',dir)
+                     ',url ',dir)
         (lambda (values)
           (if (eq (cl-first values) :file-url)
               (apply ok-cont (cl-rest values))
@@ -460,8 +508,12 @@ Use it in a PAX doc buffer (see `mgl-pax-document')."
     (if (and start (< (point) start))
         (goto-char start)
       (let ((next (mgl-pax-doc-next-definition-start)))
-        (when next
-          (goto-char next))))))
+        (if next
+            (goto-char next)
+          (unless start
+            ;; There are no PAX definitions at all. Just move to the
+            ;; next link.
+            (w3m-next-anchor)))))))
 
 (defun mgl-pax-doc-previous-definition ()
   "Move point to the previous PAX definition.
@@ -471,8 +523,10 @@ Use it in a PAX doc buffer (see `mgl-pax-document')."
     (if (and start (< start (point)))
         (goto-char start)
       (let ((prev (mgl-pax-doc-prev-definition-start)))
-        (when prev
-          (goto-char prev))))))
+        (if prev
+            (goto-char prev)
+          (unless start
+            (w3m-previous-anchor)))))))
 
 ;;; Return the buffer position of the first character of the link
 ;;; corresponding to the current definition.
@@ -602,6 +656,50 @@ the beginning of the buffer."
              (concat "pax:" fragment))))))
 
 (add-hook 'slime-edit-definition-hooks 'mgl-pax-doc-edit-definition)
+
+
+;;; Apropos
+
+(defun mgl-pax-apropos (string &optional external-only package
+                               case-sensitive locative-types)
+  "Show all PAX definitions that match the arguments.
+See MGL-PAX:PAX-APROPOS for details. With a prefix arg, you're
+interactively asked for parameters of the search. Without a
+prefix arg, EXTERNAL-ONLY defaults to T, packages and locative
+types are not filtered, and case does not matter.
+
+If STRING or PACKAGE starts with `?'', then only exact matches
+with a symbol or package name are accepted.
+
+Also, see `mgl-pax-apropos-all'."
+  (interactive
+   (if current-prefix-arg
+       (list (slime-read-from-minibuffer "PAX Apropos: ")
+             (y-or-n-p "External symbols only? ")
+             (slime-read-package-name "Package: ")
+             (y-or-n-p "Case-sensitive? ")
+             (slime-read-from-minibuffer "Locative types: "))
+     (list (read-string "PAX Apropos: ") t "" nil "")))
+  (mgl-pax-document
+   (concat "pax-eval:"
+           (w3m-url-encode-string
+            (prin1-to-string
+             `(mgl-pax::pax-apropos* ,string ,external-only
+                                     ,package ,case-sensitive
+                                     ,locative-types))))))
+
+(defun mgl-pax-apropos-all (string)
+  "Shortcut for invoking `mgl-pax-apropos` with EXTERNAL-ONLY NIL."
+  (interactive (list (slime-read-from-minibuffer "PAX Apropos: ")))
+  (mgl-pax-apropos string nil "" nil ""))
+
+(defun mgl-pax-apropos-package (package &optional internal)
+  "Show apropos listing for symbols in PACKAGE.
+With prefix argument include internal symbols."
+  (interactive (list (let ((pkg (slime-read-package-name "Package: ")))
+                       (if (string= pkg "") (slime-current-package) pkg))
+                     current-prefix-arg))
+  (mgl-pax-apropos nil (not internal) (concat "'" package) t nil))
 
 
 (provide 'mgl-pax)

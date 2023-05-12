@@ -99,7 +99,10 @@
            (,%reference (or ,reference *reference-being-documented*))
            (,%arglist ,arglist)
            (,%name ,name))
-       (when *document-link-code*
+       (when (and *document-link-code*
+                  ;; Anchors are not used in this case, and with large
+                  ;; HTML pages, we stress w3m less this way.
+                  (not *document-do-not-resolve-references*))
          (anchor ,%reference ,%stream))
        (print-reference-bullet ,%reference ,%stream :name ,%name)
        (when (and ,%arglist (not (eq ,%arglist :not-available)))
@@ -115,6 +118,8 @@
 (autoload print-reference-bullet '#:mgl-pax/document :export nil)
 (declaim (ftype function print-arglist))
 (declaim (ftype function print-end-bullet))
+(declaim (ftype function anchor))
+(declaim (special *document-do-not-resolve-references*))
 
 (declaim (special *local-references*))
 (defmacro with-local-references (refs &body body)

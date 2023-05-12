@@ -82,7 +82,9 @@
   (test-argument)
   (test-define-locative-alias)
   (test-cl-transcript)
-  (test-document/w3m))
+  (test-document/w3m)
+  (test-pax-apropos)
+  (test-map-object-args))
 
 (deftest test-urlencode ()
   (is (equal (mgl-pax::urlencode "hello") "hello"))
@@ -926,7 +928,7 @@ This is [Self-referencing][e042].
     (check-head (make-reference 'foo-with-bad-transcript 'function)
                 "<a id=\"MGL-PAX-TEST:FOO-WITH-BAD-TRANSCRIPT%20FUNCTION\"></a>
 
-- [function] **FOO-WITH-BAD-TRANSCRIPT**</i>
+- [function] **FOO-WITH-BAD-TRANSCRIPT**
 
     ```common-lisp
     (1+ 2)
@@ -953,3 +955,129 @@ This is [Self-referencing][e042].
   => 7
   ```"
   nil)
+
+
+(defun mgl-pax::%test9jwern% ())
+(defun %test9jwern% ())
+
+(deftest test-pax-apropos ()
+  (let ((swank::*buffer-package* (find-package :mgl-pax-test)))
+    (with-test ("NAME is NIL")
+      (is (match-values (pax-apropos nil :package :mgl-pax-test
+                                         :external-only t)
+            (reflist= * '((mgl-pax-test:test function)))
+            (reflist= * ()))))
+    (with-test ("NAME is SYMBOL")
+      (with-test (":PACKAGE is a symbol")
+        (is (match-values (pax-apropos '%test9jwern% :package :mgl-pax)
+              (reflist= * '((mgl-pax::%test9jwern% function)))
+              (reflist= * ()))))
+      (with-test (":PACKAGE is a symbol matching a nickname")
+        (is (match-values (pax-apropos '%test9jwern% :package :pax)
+              (reflist= * '((mgl-pax::%test9jwern% function)))
+              (reflist= * ()))))
+      (with-test ("NAME is a lower-case symbol")
+        (is (match-values (pax-apropos '#:|%test9jwern%| :package :mgl-pax)
+              (reflist= * '((mgl-pax::%test9jwern% function)))
+              (reflist= * ())))))
+    (with-test ("NAME is STRING")
+      (with-test ("full match")
+        (is (match-values (pax-apropos "test" :package :mgl-pax-test
+                                              :external-only t)
+              (reflist= * '((mgl-pax-test:test function)))
+              (reflist= * ()))))
+      (with-test ("partial match")
+        (is (match-values (pax-apropos "es" :package :mgl-pax-test
+                                            :external-only t)
+              (reflist= * '((mgl-pax-test:test function)))
+              (reflist= * ()))))
+      (with-test ("case-sensitive")
+        (with-test ("no match")
+          (is (match-values (pax-apropos "es" :package :mgl-pax-test
+                                              :external-only t
+                                              :case-sensitive t)
+                (reflist= * ())
+                (reflist= * ()))))
+        (with-test ("match")
+          (is (match-values (pax-apropos "ES" :package :mgl-pax-test
+                                              :external-only t
+                                              :case-sensitive t)
+                (reflist= * '((mgl-pax-test:test function)))
+                (reflist= * ()))))))
+    (with-test (":PACKAGE is NIL")
+      (is (match-values (pax-apropos '%test9jwern%)
+            ;; Symbols accessible in the current package are first.
+            (reflist= * '((mgl-pax-test::%test9jwern% function)
+                          (mgl-pax::%test9jwern% function)))
+            (reflist= * ()))))
+    (with-test (":PACKAGE is STRING")
+      (with-test ("full match")
+        (is (match-values (pax-apropos '%test9jwern% :package "mgl-pax-test")
+              (reflist= * '((mgl-pax-test::%test9jwern% function)))
+              (reflist= * ()))))
+      (with-test ("partial match")
+        (is (match-values (pax-apropos '%test9jwern% :package "mgl-pax")
+              (reflist= * '((mgl-pax-test::%test9jwern% function)
+                            (mgl-pax::%test9jwern% function)))
+              (reflist= * ()))))
+      (with-test ("case-sensitive")
+        (with-test ("no match")
+          (is (match-values (pax-apropos '%test9jwern% :package "mgl-pax"
+                                                       :case-sensitive t)
+                (reflist= * ())
+                (reflist= * ()))))
+        (with-test ("match")
+          (is (match-values (pax-apropos '%test9jwern% :package "MGL-PAX"
+                                                       :case-sensitive t)
+                (reflist= * '((mgl-pax-test::%test9jwern% function)
+                              (mgl-pax::%test9jwern% function)))
+                (reflist= * ()))))))
+    (with-test (":LOCATIVE-TYPES")
+      (with-test ("only asdf systems")
+        (is (match-values (pax-apropos nil :locative-types '(asdf:system))
+              (endp *)
+              (= (length *) (length (asdf:registered-systems))))))
+      (with-test ("only packages")
+        (is (match-values (pax-apropos nil :locative-types '(package))
+              (endp *)
+              (= (length *) (length (list-all-packages))))))
+      (with-test ("asdf systems and packages")
+        (is (match-values (pax-apropos nil
+                                       :locative-types '(asdf:system package))
+              (endp *)
+              (= (length *) (+ (length (asdf:registered-systems))
+                               (length (list-all-packages))))))))))
+
+(defun reflist= (references objects-and-locatives)
+  (equal (mapcar (lambda (reference)
+                   (list (reference-object reference)
+                         (reference-locative reference)))
+                 references)
+         objects-and-locatives))
+
+
+(deftest test-map-object-args ()
+  (is (equal (with-output-to-string (*standard-output*)
+               (mgl-pax::map-object-args 'princ 1))
+             "1"))
+  (is (equal (with-output-to-string (*standard-output*)
+               (mgl-pax::map-object-args 'princ nil))
+             ""))
+  (is (equal (with-output-to-string (*standard-output*)
+               (mgl-pax::map-object-args 'princ '(nil)))
+             "NIL"))
+  (is (equal (with-output-to-string (*standard-output*)
+               (mgl-pax::map-object-args 'princ '(1 2 3)))
+             "123"))
+  (is (equal (with-output-to-string (*standard-output*)
+               (mgl-pax::map-object-args 'princ '((progv '(*print-base*) '(2))
+                                                  1 2 3)))
+             "11011"))
+  (with-failure-expected ((alexandria:featurep :ecl))
+    (is (equal (with-output-to-string (*standard-output*)
+                 (mgl-pax::map-object-args 'princ
+                                           '(2
+                                             ((progv '(*print-base*) '(2))
+                                              3)
+                                             4)))
+               "2114"))))
