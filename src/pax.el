@@ -359,7 +359,9 @@ The suggested key binding is `C-.' to parallel `M-.'."
             (mgl-pax-call-document-for-emacs
              pax-url doc-dir
              :ok-cont (lambda (file-url)
-                        (w3m-goto-url file-url :reload)
+                        (let ((package (slime-current-package)))
+                          (w3m-goto-url file-url :reload)
+                          (setq slime-buffer-package package))
                         (mgl-pax-set-up-doc-buffer doc-dir))
              :abort-cont (lambda (condition)
                            (mgl-pax-delete-doc-dir doc-dir)))))))))

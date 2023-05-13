@@ -1,7 +1,8 @@
 (in-package :mgl-pax-test)
 
-(defun check-document (input expected)
-  (let ((output (let ((*package* (find-package :mgl-pax-test))
+(defun check-document (input expected
+                       &key (package (find-package :mgl-pax-test)))
+  (let ((output (let ((*package* package)
                       (*document-hyperspec-root* "CLHS/")
                       (*document-url-versions* '(2)))
                   (document input :stream nil :format :markdown))))
@@ -75,6 +76,7 @@
   (test-package)
   (test-readtable)
   ;; PAX::@PAX-LOCATIVES
+  (test-locative)
   (test-docstring)
   (test-hyperspec)
   (test-clhs-section)
@@ -809,6 +811,15 @@ This is [Self-referencing][e042].
 
 
 ;;;; PAX::@PAX-LOCATIVES
+
+(deftest test-locative ()
+  (check-document (make-reference 'pax::funny-loc 'locative)
+                  "<a id=\"MGL-PAX:FUNNY-LOC%20MGL-PAX:LOCATIVE\"></a>
+
+- [locative] **MGL-PAX::FUNNY-LOC** *SOME-ARG*
+
+    This is `SOME-ARG`.
+" :package (find-package :cl)))
 
 (deftest test-docstring ()
   (check-head "[BAR CONSTANT][docstring]" "`BAR` is not a link.")

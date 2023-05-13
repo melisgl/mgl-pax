@@ -344,7 +344,6 @@
      (let ((*page* ,page))
        ,@body)))
 
-(declaim (special *document-normalize-packages*))
 (declaim (special *table-of-contents-stream*))
 (declaim (special *headings*))
 
@@ -502,7 +501,15 @@
      :uri-fragment "doc/user/pax-manual.html"
      :header-fn 'write-html-header
      :footer-fn 'write-html-footer))
-  ```"""
+  ```
+
+  ##### Packages
+
+  While generating the documentation, symbols may be read (e.g. from
+  docstrings) or printed according, which is affected by the values of
+  *PACKAGE* and *READTABLE*. See *DOCUMENT-NORMALIZE-PACKAGES* for the
+  details.
+  """
   (with-format (format)
     (let ((*print-right-margin* (or *print-right-margin* 80))
           (default-page (translate-page-spec
@@ -539,8 +546,7 @@
                                   (not *document-tight*)))
                      (terpri stream))
                    (setq firstp nil)
-                   (let ((*package* (guess-package object1)))
-                     (document-object object1 stream))
+                   (document-object object1 stream)
                    (setq add-blank-p (not *document-tight*))))
                object)))
           (let ((outputs ()))
@@ -595,20 +601,13 @@
                (funcall fn element)
                (map-object-args fn element))))))
 
-(defun guess-package (object)
-  (let ((reference (canonical-reference object)))
-    (if (null reference)
-        *package*
-        (let ((object (reference-object reference))
-              (locative-type (reference-locative-type reference)))
-          (cond ((eq locative-type 'section)
-                 ;; SECTIONs have their own logic
-                 ;; see (DOCUMENT-OBJECT (METHOD () (SECTION T)))).
-                 *package*)
-                ((symbolp object)
-                 (symbol-package object))
-                (t
-                 *package*))))))
+(defun guess-package (reference)
+  (if (and (not (and (boundp '*section*)
+                     *document-normalize-packages*))
+           reference
+           (symbolp (reference-object reference)))
+      (symbol-package (reference-object reference))
+      *package*))
 
 ;;; Silence SBCL compiler note.
 #+sbcl
@@ -2494,13 +2493,36 @@
 
 
 (defvar *document-normalize-packages* t
-  "Determines what *PACKAGE* and *READTABLE* are when working with
-  generating documentation. If true and documentation is generated for
-  a SECTION (including its SECTION-ENTRIES), then SECTION-PACKAGE and
-  SECTION-READTABLE of the innermost containing section is used. To
-  eliminate ambiguity `[in package ...]` messages are printed right
-  after the section heading if necessary. If false, then *PACKAGE* and
-  *READTABLE* are left at the current values.")
+  "Determines what *PACKAGE* and *READTABLE* are when generating
+  documentation.
+
+  - When documentation is generated for a SECTION (including its
+    SECTION-ENTRIES), then *PACKAGE* and *READTABLE* will be bound to
+    SECTION-PACKAGE and SECTION-READTABLE. To eliminate ambiguity `[in
+    package ...]` messages are printed right after the section heading
+    if necessary.
+
+  - When documenting a SECTION's SECTION-ENTRIES, the bindings
+    established by the section are in effect if
+    *DOCUMENT-NORMALIZE-PACKAGES* is true.
+
+  - In all other cases (i.e. when *DOCUMENT-NORMALIZE-PACKAGES* is
+    false or we are not documenting a SECTION nor its
+    SECTION-ENTRIES), documenting most other kinds of definitions
+    attached to a symbol (e.g. a function), prints the symbol itself
+    normally, then binds *PACKAGE* to SYMBOL-PACKAGE for the printing
+    of the arglist and the docstring.
+
+            CL-USER> (pax:document #'pax:resolve)
+            - [function] MGL-PAX:RESOLVE <!> REFERENCE &KEY (ERRORP T)
+
+                A convenience function to LOCATE REFERENCE's object with its
+                locative.
+
+        In the above, the `<!>` marks the place where *PACKAGE* is
+        bound to `(SYMBOL-PACKAGE 'PAX:RESOLVE)`. See
+        DOCUMENTING-REFERENCE from @EXTENDING-DOCUMENT for the gory
+        details.")
 
 
 ;;;; Basic DOCUMENT-OBJECT methods
@@ -2791,8 +2813,8 @@
 ;;; below DIRNAME, both STRINGs. Return the namestring of the file
 ;;; written as (:FILENAME <FILENAME>) or (:ERROR <STRING>).
 (defun/autoloaded document-for-emacs (url dirname)
-  (progn                   ;swank::converting-errors-to-error-location
-    (swank::with-buffer-syntax ()
+  (swank::converting-errors-to-error-location
+    (swank::with-buffer-syntax (swank::*buffer-package*)
       `(:file-url ,(document-for-emacs-1 url dirname)))))
 
 (defun document-for-emacs-1 (url dirname)
@@ -3092,17 +3114,18 @@
 
 (defun/autoloaded redocument-for-emacs (file-url dirname)
   (swank::converting-errors-to-error-location
-    (multiple-value-bind (scheme authority path fragment) (parse-url file-url)
-      (declare (ignore authority))
-      (when (equal scheme "file")
-        (assert (null fragment))
-        (let ((dir (make-pathname :name nil :type nil :defaults path)))
-          (when (string= (namestring dir) dirname)
-            (let ((new-file-url (document-for-emacs-1
-                                 (pax-url-from-file-name
-                                  (pathname-name path))
-                                 dir)))
-              (assert (string= new-file-url file-url)))))))
+    (swank::with-buffer-syntax (swank::*buffer-package*)
+      (multiple-value-bind (scheme authority path fragment) (parse-url file-url)
+        (declare (ignore authority))
+        (when (equal scheme "file")
+          (assert (null fragment))
+          (let ((dir (make-pathname :name nil :type nil :defaults path)))
+            (when (string= (namestring dir) dirname)
+              (let ((new-file-url (document-for-emacs-1
+                                   (pax-url-from-file-name
+                                    (pathname-name path))
+                                   dir)))
+                (assert (string= new-file-url file-url))))))))
     (values)))
 
 ;;; Same as *UNRESERVED-URL-CHARACTERS*, but with #\* reserved. Make

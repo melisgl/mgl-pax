@@ -27,6 +27,10 @@
 (define-locative-type my-loc ()
   "This is MY-LOC.")
 
+;;; LOCATIVE whose name is a symbol in another package.
+(define-locative-type pax::funny-loc (some-arg)
+  "This is SOME-ARG.")
+
 (defun foo (ook x)
   "FOO has args OOK and X.
 

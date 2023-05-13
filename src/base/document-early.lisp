@@ -73,7 +73,7 @@
 (autoload call-with-heading '#:mgl-pax/document :export nil)
 (declaim (special *heading-level*))
 
-(defmacro documenting-reference ((stream &key reference arglist name)
+(defmacro documenting-reference ((stream &key reference arglist name package)
                                  &body body)
   "Write REFERENCE to STREAM as described in
   *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a [local
@@ -90,7 +90,14 @@
     is printed without the outermost parens and with the package names
     removed from the argument names.
 
-  - If ARGLIST is a string, then it must be valid markdown."
+  - If ARGLIST is a string, then it must be valid markdown.
+
+  - Unless REFERENCE is documented as part of a SECTION (being on its
+    SECTION-ENTRIES), then after the locative type and the name are
+    printed, *PACKAGE* is bound to PACKAGE, which affects how symbols
+    in ARGLIST and during the processing of BODY are printed. When
+    REFERENCE's @OBJECT is a symbol, PACKAGE defaults to the package
+    of that symbol, else to *PACKAGE*."
   (let ((%stream (gensym))
         (%reference (gensym))
         (%arglist (gensym))
@@ -105,19 +112,22 @@
                   (not *document-do-not-resolve-references*))
          (anchor ,%reference ,%stream))
        (print-reference-bullet ,%reference ,%stream :name ,%name)
-       (when (and ,%arglist (not (eq ,%arglist :not-available)))
-         (write-char #\Space ,%stream)
-         (print-arglist ,%arglist ,%stream))
-       (print-end-bullet ,%stream)
-       (with-local-references (if (member (reference-locative-type ,%reference)
-                                          '(section glossary-term))
-                                  ;; See @SUPPRESSED-LINKS.
-                                  ()
-                                  ,%reference)
-         ,@body))))
+       (let ((*package* (or ,package (guess-package ,%reference))))
+         (when (and ,%arglist (not (eq ,%arglist :not-available)))
+           (write-char #\Space ,%stream)
+           (print-arglist ,%arglist ,%stream))
+         (print-end-bullet ,%stream)
+         (with-local-references
+             (if (member (reference-locative-type ,%reference)
+                         '(section glossary-term))
+                 ;; See @SUPPRESSED-LINKS.
+                 ()
+                 ,%reference)
+           ,@body)))))
 (autoload print-reference-bullet '#:mgl-pax/document :export nil)
 (declaim (ftype function print-arglist))
 (declaim (ftype function print-end-bullet))
+(declaim (ftype function guess-package))
 (declaim (ftype function anchor))
 (declaim (special *document-do-not-resolve-references*))
 

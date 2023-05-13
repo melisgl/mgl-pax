@@ -85,8 +85,6 @@ expands to
 https://github.com/40ants/doc/commit/c3bf89fa88ab70074466aa07358caad159d45008
 * MAYBE autodoc?
 https://github.com/40ants/doc/commit/d638135b784c2fd7e0199c829157644da197fdb7
-* BUG "FUNCTION locative" docstring processed in wrong package
-Because the actual definition is in (SYMBOL-PACKAGE 'FUNCTION).
 * BUG class/type/condition confusion 
 * TODO support local functions, macros OTHERWISE, CALL-NEXT-METHOD
 * TODO support symbols in a context

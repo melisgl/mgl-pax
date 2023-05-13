@@ -56,7 +56,7 @@
                    (string (first docstring)))))
   `(defmethod locative-lambda-list ((symbol (eql ',locative-type)))
      ,@docstring
-     ',lambda-list))
+     (values ',lambda-list ,*package*)))
 
 (defmacro define-locative-alias (alias locative-type)
   """Define ALIAS as a locative equivalent to LOCATIVE-TYPE (both
@@ -91,7 +91,8 @@
 
 ;;; A somewhat dummy generic function on which the docstring can be
 ;;; hung, and which provides a source location. It returns LAMBDA-LIST
-;;; from DEFINE-LOCATIVE-TYPE.
+;;; from DEFINE-LOCATIVE-TYPE and *PACKAGE* in effect at its
+;;; definition.
 (defgeneric locative-lambda-list (symbol))
 
 (defvar *locate-object-object*)
