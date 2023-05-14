@@ -102,34 +102,34 @@
 
   The primary focus is on making code easily explorable by using
   [SLIME's `\\M-.`][slime-m-.] (`slime-edit-definition`). See how to
-  enable some fanciness in @NAVIGATING-IN-EMACS.
-  @GENERATING-DOCUMENTATION from sections and all the referenced items
-  in Markdown or HTML format is also implemented.
+  enable some fanciness in @NAVIGATING-IN-EMACS and
+  @DOCUMENTING-IN-EMACS. @GENERATING-DOCUMENTATION from sections and
+  all the referenced items in Markdown or HTML format is also
+  implemented.
 
-  With the simplistic tools provided, one may accomplish similar
-  effects as with Literate Programming, but documentation is generated
-  from code, not vice versa, and there is no support for chunking.
-  _Code is first, code must look pretty, documentation is code_.
+  With the simplistic tools provided, one may emphasize the narrative
+  as with Literate Programming, but documentation is generated from
+  code, not vice versa, and there is no support for chunking. _Code is
+  first, code must look pretty, documentation is code_.
 
   ##### Docstrings
 
   \PAX automatically recognizes and [marks up code][@codification]
   with backticks and [links code][@linking-to-code] to their
-  definitions.
+  definitions. The following @TRANSCRIPTS show the lines of the
+  output (prefixed with ` ..`) generated:
 
   ```
-  (document "&KEY arguments such as :IF-EXISTS are common.")
-  => ("`&KEY` arguments such as `:IF-EXISTS` are common.
-  ")
+  (document "&KEY arguments such as :IF-EXISTS are common." :format :markdown)
+  .. `&KEY` arguments such as `:IF-EXISTS` are common.
 
   (document "AND denotes a macro and a type specifier.
-            Here we focus on the macro AND.")
-  => ("`AND`([`0`][4954] [`1`][330f]) denotes a macro and a type specifier.
-  Here we focus on the macro [`AND`][4954].
-
-    [330f]: http://www.lispworks.com/documentation/HyperSpec/Body/t_and.htm \"AND TYPE\"
-    [4954]: http://www.lispworks.com/documentation/HyperSpec/Body/m_and.htm \"AND MGL-PAX:MACRO\"
-  ")
+            Here we focus on the macro AND." :format :markdown)
+  .. `AND`([`0`][4954] [`1`][330f]) denotes a macro and a type specifier.
+  .. Here we focus on the macro [`AND`][4954].
+  ..
+  ..   [330f]: http://www.lispworks.com/documentation/HyperSpec/Body/t_and.htm "AND TYPE"
+  ..   [4954]: http://www.lispworks.com/documentation/HyperSpec/Body/m_and.htm "AND MGL-PAX:MACRO"
   ```
 
   These features are designed to handle the most common style of

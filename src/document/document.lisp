@@ -2768,8 +2768,8 @@
     possibly makes what to document ambiguous.""")
 
 (defsection @documentation-key-bindings (:title "Documentation Key Bindings")
-  """The Elisp function `mgl-pax-hijack-slime-doc-keys`
-  helps with the common case of binding keys.
+  """Evaluating `(mgl-pax-hijack-slime-doc-keys)` in Emacs handles
+  the common case of binding keys. Its docstring is reproduced here:
 
        If both `w3m' and `slime' are available, replace `slime-apropos',
       `slime-apropos-all', `slime-apropos-package' with
