@@ -683,9 +683,9 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'type)) locative-args)
   (unless (and (symbolp symbol)
-               ;; On some Lisps, SWANK-BACKEND:TYPE-SPECIFIER-P is not
+               ;; On most Lisps, SWANK-BACKEND:TYPE-SPECIFIER-P is not
                ;; reliable.
-               #-(or abcl allegro clisp cmucl ecl)
+               #-(or abcl allegro clisp cmucl ecl sbcl)
                (swank-backend:type-specifier-p symbol))
     (locate-error "~S is not a valid type specifier." symbol))
   (make-reference symbol (cons locative-type locative-args)))

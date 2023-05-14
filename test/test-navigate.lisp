@@ -5,7 +5,8 @@
   (test-read-locative-from-string)
   (test-read-reference-from-string)
   (test-locate-definitions-for-emacs)
-  (test-navigation-to-source))
+  (test-navigation-to-source)
+  (test-misc))
 
 (deftest test-read-locative-from-string ()
   (let ((*package* (find-package :mgl-pax-test)))
@@ -336,3 +337,12 @@
                           :external-format pax::*utf-8-external-format*)
     (file-position stream position)
     (read stream)))
+
+
+(deftest test-misc ()
+  ;; This is a primitive object, that (SWANK-BACKEND:FIND-DEFINITIONS
+  ;; 'SB-C::CATCH-BLOCK) returns as a TYPE.
+  #+sbcl
+  (signals-not (locate-error)
+    (map nil #'resolve
+         (pax::definitions-as-references 'sb-c::catch-block))))
