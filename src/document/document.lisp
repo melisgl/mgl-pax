@@ -2259,22 +2259,27 @@
 (defun reference-to-anchor (object)
   (let ((reference (canonical-reference object)))
     (with-standard-io-syntax*
-      (format nil "~A ~S" (object-to-url-part (reference-object reference))
-              (reference-locative reference)))))
+      ;; The locative may not be readable (e.g. methods with EQL
+      ;; specializers with unreadable stuff).
+      (let ((*print-readably* nil))
+        (format nil "~A ~S" (object-to-url-part (reference-object reference))
+                (reference-locative reference))))))
 
 (defun reference-to-anchor-v1 (object)
   (let ((reference (canonical-reference object)))
     (with-standard-io-syntax*
-      (format nil "(~A ~S)"
-              (object-to-url-part (reference-object reference))
-              (reference-locative reference)))))
+      (let ((*print-readably* nil))
+        (format nil "(~A ~S)"
+                (object-to-url-part (reference-object reference))
+                (reference-locative reference))))))
 
 (defun reference-to-pax-url (reference)
   (let ((reference (canonical-reference reference)))
     (with-standard-io-syntax*
-      (format nil "pax:~A ~S"
-              (object-to-url-part (reference-object reference))
-              (reference-locative reference)))))
+      (let ((*print-readably* nil))
+        (format nil "pax:~A ~S"
+                (object-to-url-part (reference-object reference))
+                (reference-locative reference))))))
 
 (defun reference-to-ambiguous-pax-url (reference)
   (let ((reference (canonical-reference reference)))
@@ -2282,26 +2287,32 @@
       (format nil "pax:~A"
               (object-to-url-part (reference-object reference))))))
 
+;;; If OBJECT is a symbol, then print it almost as PRIN1 would with
+;;; *PACKAGE* were the CL package. Differences:
+;;;
+;;; - For symbols in other packages, a single #\: is printed even if
+;;;   it is an internal symbol.
+;;;
+;;; - Package and symbol names are printed without the || syntax but
+;;;   #\: and #\Space are escaped with backslashes.
 (defun object-to-url-part (object)
   (if (symbolp object)
       (let* ((package (symbol-package object))
              (name (symbol-name object))
              (name-url (print-name-for-url name))
              (cl-package (symbol-package 'print)))
-        (cond ((or (eq package cl-package)
-                   (multiple-value-bind (cl-symbol status)
-                       (find-symbol name cl-package)
-                     (and (eq cl-symbol object)
-                          (eq status :external))))
-               (format nil "~A" name-url))
-              ((eq package (symbol-package :if-exists))
-               (format nil ":~A" name-url))
-              (t
-               (format nil "~A:~A"
-                       (print-name-for-url (package-name package))
-                       name-url))))
+        (cond
+          ((eq package cl-package)
+           (format nil "~A" name-url))
+          ((eq package (symbol-package :if-exists))
+           (format nil ":~A" name-url))
+          (t
+           ;; Note the single #\:.
+           (format nil "~A:~A" (print-name-for-url (package-name package))
+                   name-url))))
       (prin1-to-string object)))
 
+;;; Escape #\: and #\Space with a backslash.
 (defun print-name-for-url (string)
   (with-output-to-string (s)
     (loop for char across string

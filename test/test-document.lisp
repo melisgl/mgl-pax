@@ -64,6 +64,7 @@
   (test-function)
   (test-generic-function)
   (test-method-combination)
+  (test-method)
   (test-accessor)
   (test-reader)
   (test-writer)
@@ -728,6 +729,14 @@ This is [Self-referencing][e042].
     This is `MY-COMB`.
 ")))
 
+
+(deftest test-method ()
+  (signals-not (error)
+    (document (make-reference 'test-gf
+                              '(method () ((eql #.(find-package :cl)))))
+              :stream nil))
+  (is (equal (pax::urldecode "MGL-PAX-TEST:TEST-GF%20%28METHOD%20NIL%20%28%28EQL%20%23%3CPACKAGE%20%22COMMON-LISP%22%3E%29%29%29")
+             "MGL-PAX-TEST:TEST-GF (METHOD NIL ((EQL #<PACKAGE \"COMMON-LISP\">)))")))
 
 (deftest test-accessor ()
   (check-head (list "FOO-A `(accessor foo)`"

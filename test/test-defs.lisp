@@ -93,6 +93,7 @@
   "TEST-GF is not a link. X is not a link."
   nil)
 (defmethod test-gf ((x (eql 7))))
+(defmethod test-gf ((x (eql #.(find-package :common-lisp)))))
 
 (define-glossary-term some-term ()
   "SOME-TERM is a link.")
