@@ -1401,9 +1401,9 @@ Reader][pythonic-string-reader] can help with that.
 
 - [variable] *DOCUMENT-UPPERCASE-IS-CODE* T
 
-    When true, @CODIFIABLE and @INTERESTING @WORDs are assumed to be
-    code as if they were marked up with backticks. For example, this
-    docstring
+    When true, @INTERESTING @NAMEs extracted from @CODIFIABLE @WORDs
+    are assumed to be code as if they were marked up with backticks. For
+    example, this docstring
     
         "T PRINT CLASSes SECTION *PACKAGE* MGL-PAX ASDF
         CaMeL Capital"
@@ -1444,23 +1444,13 @@ Reader][pythonic-string-reader] can help with that.
 
 - [glossary-term] interesting
 
-    A @WORD is *interesting* iff it *names*
+    A @NAME is *interesting* iff
     
-    - a known reference, or
+    - it names a symbol external to its package, or
     
-    - a symbol external to its package, or
+    - it is at least 3 characters long and names an interned symbol, or
     
-    - it is at least 3 characters long and names an interned symbol.
-    
-    Where we say that a word **names** a known reference if the word
-    matches the name of a thing being documented, or it is in the
-    hyperspec and *DOCUMENT-LINK-TO-HYPERSPEC* is true. More
-    precisely, a word names a known reference, if it matches
-    
-    - the object of a reference being
-      documented (see DOCUMENT and COLLECT-REACHABLE-OBJECTS), or
-    
-    - a name in the hyperspec if *DOCUMENT-LINK-TO-HYPERSPEC*.
+    - it names a local reference.
     
     Symbols are read in the current *PACKAGE*, which is subject to
     *DOCUMENT-NORMALIZE-PACKAGES*.
@@ -2114,8 +2104,9 @@ downcasing, and
 @LINKING-TO-CODE works.
 
 - One backslash in front of a @WORD turns codification off. Use this
-  to prevent codification words such as PAX, which is all uppercase
-  hence @CODIFIABLE and it names a package hence it is @INTERESTING.
+  to prevent codification words such as DOCUMENT, which is all
+  uppercase hence @CODIFIABLE, and it names an exported symbol hence
+  it is @INTERESTING.
 
 - One backslash right after an opening backtick turns autolinking
   off.

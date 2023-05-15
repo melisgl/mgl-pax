@@ -4,7 +4,7 @@
 
 (defsection @pax-manual (:title "PAX Manual")
   ("mgl-pax" asdf:system)
-  ("mgl-pax/full" asdf:system)
+  (mgl-pax/full asdf:system)
   (@links section)
   (@background section)
   (@tutorial section)

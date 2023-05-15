@@ -31,15 +31,13 @@
 (define-locative-type pax::funny-loc (some-arg)
   "This is SOME-ARG.")
 
+(defun foo2 (ook x)
+  "FOO2 has args OOK and X."
+  (declare (ignore ook x))
+  nil)
+
 (defun foo (ook x)
-  "FOO has args OOK and X.
-
-  This function FOO is related to compiler-macro FOO.
-
-  Or [foo][compiler-macro], if you prefer.
-
-  Now, [foo][] should link to [foo][compiler-macro] and [foo][class]
-  but not to [foo][function]."
+  "FOO has args OOK and X."
   (declare (ignore ook x))
   nil)
 (define-compiler-macro foo ()

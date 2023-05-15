@@ -707,6 +707,13 @@
                                    locative-args)
   (declare (ignore locative-args))
   (find-definition symbol 'type 'class 'condition))
+
+(defmethod locate-canonical-reference (name (locative-type (eql 'type))
+                                       locative-args)
+  (let ((class (find-class name nil)))
+    (if class
+        (canonical-reference class)
+        (make-reference name `(type ,@locative-args)))))
 
 
 ;;;; CLASS and CONDITION locatives
@@ -774,7 +781,8 @@
   (with-output-to-string (stream)
     (loop for class in superclasses
           for i upfrom 0
-          do (let ((reference (make-reference class 'class)))
+          do (let ((reference (canonical-reference
+                               (make-reference class 'class))))
                (let ((name (prin1-to-markdown class)))
                  (unless (zerop i)
                    (format stream " "))
@@ -1033,7 +1041,9 @@
 (defmethod locate-object (symbol (locative-type (eql 'readtable))
                           locative-args)
   (declare (ignore locative-args))
-  (named-readtables:find-readtable symbol))
+  (if (symbolp symbol)
+      (named-readtables:find-readtable symbol)
+      (locate-error "~S is not a symbol." symbol)))
 
 (defmethod document-object ((readtable readtable) stream)
   (let* ((symbol (readtable-name readtable)))
@@ -1051,6 +1061,8 @@
 
 (defmethod find-source ((readtable readtable))
   '(:error "Don't know how find the source location of readtables."))
+
+(add-locative-to-source-search-list 'readtable)
 
 
 ;;;; SECTION locative

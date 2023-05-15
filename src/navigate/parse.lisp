@@ -51,50 +51,59 @@
 ;;; WORD. If ONLY-ONE matches, then return only a single object and a
 ;;; single name.
 (defun parse-word (word &key (trim t) (depluralize t) only-one
-                   clhs-substring-match)
-  (let ((left-trim "#<\"")
-        (right-trim ",:.>\"")
-        (objects ())
-        (names ()))
-    (with-swank ()
-      (swank::with-buffer-syntax (*package*)
-        (flet ((find-it (name)
-                 (when (plusp (length name))
-                   (multiple-value-bind (object found)
-                       (namep name clhs-substring-match)
-                     ;; FIXME: (SWANK::PARSE-SYMBOL "PAX:SECTION:") is
-                     ;; broken. Only add if the _string_ read is
-                     ;; shorter than the one we may already have for
-                     ;; OBJECT in NAMES.
-                     (when found
-                       (cond (only-one
-                              (when (funcall only-one object name)
-                                (return-from parse-word (values object name))))
-                             (t
-                              (push object objects)
-                              (push name names))))))))
-          (find-it word)
-          (if trim
-              (let* ((left-trimmed (string-left-trim left-trim word))
-                     (right-trimmed (string-right-trim right-trim word))
-                     (both-trimmed (string-right-trim right-trim left-trimmed)))
-                (unless (string= left-trimmed word)
-                  (find-it left-trimmed))
-                (unless (string= right-trimmed word)
-                  (find-it right-trimmed))
-                (unless (or (string= both-trimmed left-trimmed)
-                            (string= both-trimmed right-trimmed))
-                  (find-it both-trimmed))
+                          clhs-substring-match)
+  (with-swank ()
+    (swank::with-buffer-syntax (*package*)
+      (let ((left-trim "#<\"")
+            (right-trim ",:.>\"")
+            (objects ())
+            (names ()))
+        (flet ((consider (object name)
+                 (cond (only-one
+                        (when (funcall only-one object name)
+                          (return-from parse-word (values object name))))
+                       (t
+                        (push object objects)
+                        (push name names)))))
+          (flet ((find-it (name)
+                   (when (plusp (length name))
+                     (multiple-value-bind (object found)
+                         (swank::parse-symbol name)
+                       ;; FIXME: (SWANK::PARSE-SYMBOL "PAX:SECTION:")
+                       ;; is broken. Only add if the _string_ read is
+                       ;; shorter than the one we may already have for
+                       ;; OBJECT in NAMES.
+                       (when found
+                         (consider object name)))
+                     (when (or (find-package* name)
+                               (locate (string-downcase name) 'asdf:system
+                                       :errorp nil)
+                               (find-hyperspec-id
+                                name :substring-match clhs-substring-match))
+                       (consider name name)))))
+            (find-it word)
+            (if trim
+                (let* ((left-trimmed (string-left-trim left-trim word))
+                       (right-trimmed (string-right-trim right-trim word))
+                       (both-trimmed
+                         (string-right-trim right-trim left-trimmed)))
+                  (unless (string= left-trimmed word)
+                    (find-it left-trimmed))
+                  (unless (string= right-trimmed word)
+                    (find-it right-trimmed))
+                  (unless (or (string= both-trimmed left-trimmed)
+                              (string= both-trimmed right-trimmed))
+                    (find-it both-trimmed))
+                  (when depluralize
+                    (dolist (depluralized (strip-plural both-trimmed))
+                      (unless (string= depluralized both-trimmed)
+                        (find-it depluralized)))))
                 (when depluralize
-                  (dolist (depluralized (strip-plural both-trimmed))
-                    (unless (string= depluralized both-trimmed)
-                      (find-it depluralized)))))
-              (when depluralize
-                (dolist (depluralized (strip-plural word))
-                  (unless (string= depluralized word)
-                    (find-it depluralized)))))))
-      (unless only-one
-        (values (nreverse objects) (nreverse names))))))
+                  (dolist (depluralized (strip-plural word))
+                    (unless (string= depluralized word)
+                      (find-it depluralized))))))
+          (unless only-one
+            (values (nreverse objects) (nreverse names))))))))
 
 (defun strip-plural (string)
   ;; Mostly following https://www.grammarly.com/blog/plural-nouns/ but
@@ -120,29 +129,3 @@
       (when (equalp string "children")
         (desuffix "ren"))
       r)))
-
-;;; See if STRING looks like a possible REFERENCE-OBJECT (e.g. it
-;;; names an interned symbol, package, asdf system, or something in
-;;; the CLHS).
-;;;
-;;; FIXME: This should be a generic function extensible by
-;;; LOCATIVE-TYPE.
-(defun namep (string clhs-substring-match)
-  (multiple-value-bind (symbol found) (swank::parse-symbol string)
-    (cond (found
-           (values symbol t))
-          ((or (find-package* string)
-               (asdf-system-name-p string)
-               (find-hyperspec-id
-                string :substring-match clhs-substring-match))
-           (values string t)))))
-
-(defun asdf-system-name-p (string)
-  (let ((ref (make-reference string 'asdf:system)))
-    ;; KLUDGE: While generating documentation, we only consider
-    ;; references to asdf systems being documented because
-    ;; ASDF:FIND-SYSTEM, that's behind RESOLVE below, is very
-    ;; expensive.
-    (if *objects-being-documented*
-        (not (null (global-reference-p ref)))
-        (resolve ref :errorp nil))))

@@ -71,6 +71,7 @@
   ;; PAX::@TYPELIKE-LOCATIVES
   (test-declaration)
   ;; PAX::@CONDITION-SYSTEM-LOCATIVES
+  (test-condition)
   (test-restart)
   ;; PAX::@PACKAGELIKE-LOCATIVES
   (test-asdf-system)
@@ -656,9 +657,19 @@ This is [Self-referencing][e042].
 
 
 (deftest test-function ()
+  (test-function-args)
   (test-function/canonical-reference)
   (test-function/arglist)
   (test-function/encapsulated))
+
+(deftest test-function-args ()
+  (with-failure-expected ((alexandria:featurep :clisp))
+    (check-document #'foo2 "<a id=\"MGL-PAX-TEST:FOO2%20FUNCTION\"></a>
+
+- [function] **FOO2** *OOK X*
+
+    `FOO2` has args `OOK` and `X`.
+")))
 
 (setf (symbol-function 'setfed-function)
       (lambda ()))
@@ -782,6 +793,35 @@ This is [Self-referencing][e042].
   (check-head "SAFETY declaration" "[`SAFETY`][0273] declaration")
   (check-head "[safety][declaration]" "[safety][0273]"))
 
+
+(deftest test-condition ()
+  (check-document
+   (list (pax:make-reference 'transcription-values-consistency-error
+                             'condition)
+         (pax:make-reference 'transcription-consistency-error
+                             'condition))
+   "<a id=\"MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR%20CONDITION\"></a>
+
+- [condition] **TRANSCRIPTION-VALUES-CONSISTENCY-ERROR** *[TRANSCRIPTION-CONSISTENCY-ERROR][a249]*
+
+    Signaled (with [`CERROR`][69b7]) by `TRANSCRIBE` when invoked
+    with `:CHECK-CONSISTENCY` and the values of a form are inconsistent
+    with their parsed representation.
+
+<a id=\"MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR%20CONDITION\"></a>
+
+- [condition] **TRANSCRIPTION-CONSISTENCY-ERROR** *TRANSCRIPTION-ERROR*
+
+    A common superclass for
+    `TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR` and
+    [`TRANSCRIPTION-VALUES-CONSISTENCY-ERROR`][238c].
+
+  [238c]: #MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR%20CONDITION \"MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION\"
+  [69b7]: CLHS/Body/f_cerror.htm \"CERROR FUNCTION\"
+  [a249]: #MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR%20CONDITION \"MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION\"
+"))
+
+
 (deftest test-restart ()
   (check-head "ABORT restart" "[`ABORT`][fc8b] restart")
   (check-document (make-reference 'use-value 'restart)
@@ -789,23 +829,40 @@ This is [Self-referencing][e042].
 
 - [restart] **USE-VALUE** *VALUE*
 
-    This is the name of the [`RESTART`][ad91] to which [`USE-VALUE`][a197]
+    This is the name of the [`RESTART`][570b] to which [`USE-VALUE`][a197]
     transfers control.
 
+  [570b]: CLHS/Body/t_rst.htm \"RESTART CLASS\"
   [a197]: CLHS/Body/f_abortc.htm \"USE-VALUE FUNCTION\"
-  [ad91]: CLHS/Body/t_rst.htm \"RESTART TYPE\"
 "))
 
 
 (deftest test-asdf-system ()
-  (is (find-symbol (string '#:mgl-pax/full) '#:mgl-pax-test))
-  (is (null (find-symbol (string '#:mgl-pax/test) '#:mgl-pax-test)))
-  (check-head (list "MGL-PAX/FULL"
-                    (make-reference 'mgl-pax/full 'asdf:system))
-              "[`MGL-PAX/FULL`][d761]")
-  (check-head (list "MGL-PAX/TEST"
-                    (make-reference "mgl-pax/test" 'asdf:system))
-              "[`MGL-PAX/TEST`][69db]"))
+  (with-test ("name is a symbol accessible in the current package")
+    (is (find-symbol (string '#:mgl-pax/full) '#:mgl-pax-test))
+    (check-head (list "MGL-PAX/FULL"
+                      (make-reference :mgl-pax/full 'asdf:system))
+                "[`MGL-PAX/FULL`][d761]")
+    (check-head (list "MGL-PAX/FULL asdf:system"
+                      (make-reference 'mgl-pax/full 'asdf:system))
+                "[`MGL-PAX/FULL`][d761] asdf:system")
+    (check-head (list "[MGL-PAX/FULL][asdf:system]"
+                      (make-reference 'mgl-pax/full 'asdf:system))
+                "[`MGL-PAX/FULL`][d761]"))
+  (with-test ("name is not a symbol accessible in the current package")
+    (is (null (find-symbol (string '#:mgl-pax/test) '#:mgl-pax-test)))
+    (check-head (list "MGL-PAX/TEST"
+                      (make-reference "mgl-pax/test" 'asdf:system))
+                "MGL-PAX/TEST")
+    (check-head (list "MGL-PAX/TEST asdf:system"
+                      (make-reference "mgl-pax/test" 'asdf:system))
+                "MGL-PAX/TEST asdf:system")
+    (check-head (list "`MGL-PAX/TEST` asdf:system"
+                      (make-reference "mgl-pax/test" 'asdf:system))
+                "[`MGL-PAX/TEST`][69db] asdf:system")
+    (check-head (list "[MGL-PAX/TEST][asdf:system]"
+                      (make-reference "mgl-pax/test" 'asdf:system))
+                "[MGL-PAX/TEST][69db]")))
 
 
 (defpackage interned-pkg-name)
@@ -815,9 +872,23 @@ This is [Self-referencing][e042].
   (check-head (list "INTERNED-PKG-NAME"
                     (make-reference 'interned-pkg-name 'package))
               "[`INTERNED-PKG-NAME`][0651]")
+  (check-head (list "INTERNED-PKG-NAME package"
+                    (make-reference 'interned-pkg-name 'package))
+              "[`INTERNED-PKG-NAME`][0651] package")
+  (check-head (list "[INTERNED-PKG-NAME][package]"
+                    (make-reference 'interned-pkg-name 'package))
+              "[`INTERNED-PKG-NAME`][0651]")
+  (let ((*package* (find-package :mgl-pax-test)))
+    (is (not (internedp '#:non-interned-pkg-name))))
   (check-head (list "NON-INTERNED-PKG-NAME"
                     (make-reference '#:non-interned-pkg-name 'package))
-              "[`NON-INTERNED-PKG-NAME`][5a00]"))
+              "NON-INTERNED-PKG-NAME")
+  (check-head (list "NON-INTERNED-PKG-NAME package"
+                    (make-reference '#:non-interned-pkg-name 'package))
+              "NON-INTERNED-PKG-NAME package")
+  (check-head (list "[NON-INTERNED-PKG-NAME][package]"
+                    (make-reference '#:non-interned-pkg-name 'package))
+              "[NON-INTERNED-PKG-NAME][5a00]"))
 
 
 (deftest test-readtable ()
@@ -853,11 +924,11 @@ This is [Self-referencing][e042].
 
 (deftest test-hyperspec ()
   (check-head "FIND-IF" "[`FIND-IF`][750e]")
-  (check-head "LIST" "`LIST`([`0`][592c] [`1`][98f9])")
-  (check-head "[LIST][type]" "[`LIST`][98f9]")
+  (check-head "LIST" "`LIST`([`0`][6c26] [`1`][592c])")
+  (check-head "[LIST][type]" "[`LIST`][6c26]")
   (check-head "T" "`T`")
   (check-head "NIL" "`NIL`")
-  (check-head "[T][]" "`T`([`0`][08f7] [`1`][26cf])")
+  (check-head "[T][]" "`T`([`0`][26df] [`1`][08f7])")
   (check-head "[T][constant]" "[`T`][08f7]")
   (check-pred #'print (lambda (output)
                         (search "- [function] **PRINT**" output))))
@@ -975,7 +1046,7 @@ This is [Self-referencing][e042].
 (deftest test-document/w3m/object ()
   (with-failure-expected ()
     (check-head "[PAX][package] [MGL-PAX][package] [`mgl-pax`][asdf:system]"
-                "[`PAX`][97b3] [`MGL-PAX`][97b3] [`mgl-pax`][6fdb]"
+                "[PAX][97b3] [`MGL-PAX`][97b3] [`mgl-pax`][6fdb]"
                 :w3m t)))
 
 (defun ambi ())

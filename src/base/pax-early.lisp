@@ -118,17 +118,18 @@
 (defun reference-locative-args (reference)
   (locative-args (reference-locative reference)))
 
+;;; Check whether OBJECT plus the locative of REFERENCE would resolve
+;;; to the same thing as REFERENCE, but do so without actually
+;;; resolving anything for performance reasons.
+;;;
 ;;; This could eventually be turned into a generic function
 ;;; dispatching on LOCATIVE-TYPE.
 (defun reference-object= (object reference)
   (let ((object-2 (reference-object reference))
         (locative-type (reference-locative-type reference)))
-    (cond ((member locative-type '(package clhs))
-           (equal (string object) (string object-2)))
-          ((eq locative-type 'asdf:system)
-           (equalp (string object) (string object-2)))
-          (t
-           (eq object object-2)))))
+    (if (eq locative-type 'asdf:system)
+        (equalp (string object) (string object-2))
+        (equal object object-2))))
 
 (defun locative-type (locative)
   "Return the first element of LOCATIVE if it's a list. If it's a symbol,
