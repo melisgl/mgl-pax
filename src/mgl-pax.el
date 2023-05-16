@@ -723,12 +723,14 @@ Without a prefix argument, the first syntax is used."
    (lambda (loadedp)
      (if (not loadedp)
          (message "MGL-PAX is not loaded. See the variable mgl-pax-autoload.")
-       (insert
-        (save-excursion
-          (let* ((end (point))
-                 (start (progn (backward-sexp)
-                               (move-beginning-of-line nil)
-                               (point))))
+       (save-excursion
+         (let* ((start (progn (backward-sexp)
+                              (move-beginning-of-line nil)
+                              (point)))
+                (end (progn (forward-sexp)
+                            (point))))
+           (goto-char end)
+           (insert
             (mgl-pax-transcribe start end (mgl-pax-transcribe-syntax-arg)
                                 nil nil nil))))))))
 
