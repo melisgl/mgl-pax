@@ -665,10 +665,10 @@ This is [Self-referencing][e042].
   ;; *DOCUMENT-MARK-UP-SIGNATURES* would be accessed, and this would
   ;; fail.
   (progv (list '*document-mark-up-signatures*) ()
-    (is (equal (mgl-pax::arglist-to-string '((&key a) (b c)))
+    (is (equal (mgl-pax::arglist-to-markdown '((&key a) (b c)))
                "(&KEY A) (B C)")))
   (with-test ("macro-with-whole-and-dot")
-    (is (equal (mgl-pax::arglist-to-string '(name . args))
+    (is (equal (mgl-pax::arglist-to-markdown '(name . args))
                "NAME . ARGS"))
     (is (equal (mgl-pax::macro-arg-names '(name . args))
                '(name args)))))

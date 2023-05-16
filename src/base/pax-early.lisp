@@ -16,7 +16,7 @@
   "Define a documentation section and maybe export referenced symbols.
   A bit behind the scenes, a global variable with NAME is defined and
   is bound to a [SECTION][class] object. By convention, section names
-  start with the character `@`. See @TUTORIAL for an example.
+  start with the character `@`. See @INTRODUCTION for an example.
 
   ##### Entries
 
@@ -105,10 +105,21 @@
     (format stream "~S ~S" (reference-object object)
             (reference-locative object))))
 
+;;; This assumes that references are in canonical form (see
+;;; CANONICAL-REFERENCE), so they can be compared this dumbly.
+(declaim (inline reference=))
 (defun reference= (reference-1 reference-2)
-  (and (reference-object= (reference-object reference-1) reference-2)
+  (and (equal (reference-object reference-1)
+              (reference-object reference-2))
        (equal (reference-locative reference-1)
               (reference-locative reference-2))))
+
+;;; This also checks for EQUALness and not whether OBJECT is
+;;; equivalent to the REFERENCE-OBJECT of REFERENCE (as in it would
+;;; resolve to the same thing with the locative).
+(declaim (inline reference-object=))
+(defun reference-object= (object reference)
+  (equal object (reference-object reference)))
 
 (declaim (inline reference-locative-type))
 (defun reference-locative-type (reference)
@@ -117,19 +128,6 @@
 (declaim (inline reference-locative-args))
 (defun reference-locative-args (reference)
   (locative-args (reference-locative reference)))
-
-;;; Check whether OBJECT plus the locative of REFERENCE would resolve
-;;; to the same thing as REFERENCE, but do so without actually
-;;; resolving anything for performance reasons.
-;;;
-;;; This could eventually be turned into a generic function
-;;; dispatching on LOCATIVE-TYPE.
-(defun reference-object= (object reference)
-  (let ((object-2 (reference-object reference))
-        (locative-type (reference-locative-type reference)))
-    (if (eq locative-type 'asdf:system)
-        (equalp (string object) (string object-2))
-        (equal object object-2))))
 
 (defun locative-type (locative)
   "Return the first element of LOCATIVE if it's a list. If it's a symbol,

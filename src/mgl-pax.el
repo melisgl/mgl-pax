@@ -28,11 +28,12 @@
 (eval-and-compile
   (require 'cl-lib nil t)
   ;; For emacs 23, look for bundled version
-  (require 'cl-lib "lib/cl-lib"))
+  (require 'cl-lib "lib/cl-lib")
+  (require 'slime))
 
 
 (defun mgl-pax-hijack-slime-doc-keys ()
-  "If both `w3m' and `slime' are available, replace `slime-apropos',
+  "If `w3m' is available, replace `slime-apropos',
 `slime-apropos-all', `slime-apropos-package' with
 `mgl-pax-apropos', `mgl-pax-apropos-all',
 `mgl-pax-apropos-package', and replace both
@@ -49,20 +50,14 @@ want to give `mgl-pax-document' a more convenient binding such as
 To bind `C-.' globally:
 
     (global-set-key (kbd \"C-.\") 'mgl-pax-document)"
-  (cond ((not (require 'w3m nil t))
-         (message "Requiring w3m failed.")
-         nil)
-        ((not (require 'slime nil t))
-         (message "Requiring slime failed.")
-         nil)
-        (t
-         (slime-bind-keys slime-doc-map t
-                          '((?a mgl-pax-apropos)
-                            (?z mgl-pax-apropos-all)
-                            (?p mgl-pax-apropos-package)
-                            (?d mgl-pax-document)
-                            (?f mgl-pax-document)))
-         t)))
+  (if (not (require 'w3m nil t))
+      (message "Requiring w3m failed.")
+    (slime-bind-keys slime-doc-map t
+                     '((?a mgl-pax-apropos)
+                       (?z mgl-pax-apropos-all)
+                       (?p mgl-pax-apropos-package)
+                       (?d mgl-pax-document)
+                       (?f mgl-pax-document)))))
 
 
 ;;;; Autoloading of MGL-PAX on the Common Lisp side
@@ -74,6 +69,8 @@ other mgl-pax commands."
   :type 'boolean
   :group 'mgl-pax)
 
+(defvar mgl-pax-version '(0 2 0))
+
 (defun mgl-pax-maybe-autoload (cont)
   (if mgl-pax-autoload
       (slime-eval-async
@@ -82,6 +79,7 @@ other mgl-pax commands."
                        (cl:format t ";; Autoloading MGL-PAX for Emacs ~
                                      (mgl-pax-autoload is t).~%")
                        (asdf:load-system "mgl-pax")
+                       (mgl-pax::check-pax-elisp-version ',mgl-pax-version)
                        (cl:format t ";; Done autoloading MGL-PAX for Emacs~%"))
             (cl:not (cl:not (cl:find-package :mgl-pax))))
         cont)

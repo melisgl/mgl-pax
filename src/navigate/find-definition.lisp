@@ -281,16 +281,13 @@
                    (when (subtypep name 'condition)
                      (setq locative-type 'condition)))
                  (return-from lazy-wasteful-parsing
-                   (actualize-reference
+                   (actualize-swank-reference
                     (make-reference name locative-type)))))
       (method-dspec-to-reference dspec)))
 
 ;;; From SWANK-BACKEND:FIND-DEFINITIONS, we get SECTIONs and
-;;; GLOSSARY-TERMs as VARIABLEs. FIXME: Maybe we should do this (and
-;;; other similar things) in CANONICAL-REFERENCE? Not quite because
-;;; here we want to change the locative type, and we cannot override
-;;; the user's wish to document a class as a TYPE, for example.
-(defun actualize-reference (reference)
+;;; GLOSSARY-TERMs as VARIABLEs. FIXME: This is not extensible.
+(defun actualize-swank-reference (reference)
   (let ((object (reference-object reference))
         (locative-type (reference-locative-type reference)))
     (case locative-type

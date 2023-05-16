@@ -1277,13 +1277,14 @@
   being pointed to, or it can explicitly supply START, END locatives.
   INCLUDE is typically used to include non-lisp files in the
   documentation (say markdown or elisp as in the next example) or
-  regions of lisp source files. This can reduce clutter and
+  regions of Lisp source files. This can reduce clutter and
   duplication.
 
   ```
   (defsection example-section ()
-    (pax.el (include #.(asdf:system-relative-pathname :mgl-pax "src/pax.el")
-                     :header-nl "```elisp" :footer-nl "```"))
+    (mgl-pax.el (include #.(asdf:system-relative-pathname :mgl-pax
+                                                          "src/mgl-pax.el")
+                         :header-nl "```elisp" :footer-nl "```"))
     (foo-example (include (:start (foo function)
                            :end (end-of-foo-example variable))
                           :header-nl "```"
@@ -1304,11 +1305,11 @@
   ```
 
   In the above example, pressing `\\M-.` on `PAX.EL` will open the
-  `src/pax.el` file and put the cursor on its first character. `\\M-.`
-  on `FOO-EXAMPLE` will go to the source location of the `(asdf:system
-  locative)` locative.
+  `src/mgl-pax.el` file and put the cursor on its first character.
+  `\\M-.` on `FOO-EXAMPLE` will go to the source location of
+  the `(asdf:system locative)` locative.
 
-  When documentation is generated, the entire `src/pax.el` file is
+  When documentation is generated, the entire `src/mgl-pax.el` file is
   included in the markdown surrounded by the strings given as
   HEADER-NL and FOOTER-NL (if any). The trailing newline character is
   assumed implicitly. If that's undesirable, then use HEADER and

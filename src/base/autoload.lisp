@@ -1,8 +1,10 @@
 (in-package :mgl-pax)
 
-;;; DEFUN name to be a function that loads ASDF-SYSTEM-NAME then calls
+;;; Define a function with NAME that loads ASDF-SYSTEM-NAME then calls
 ;;; the function of the same name (presumed to have been redefined by
-;;; the loaded system).
+;;; the loaded system). If not redefined, then an error will be
+;;; signalled and all subsequent calls to the function will produce
+;;; the same error without attempting to load the system again.
 (defmacro autoload (name asdf-system-name &key (export t))
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (unless (fboundp ',name)

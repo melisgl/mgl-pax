@@ -231,14 +231,12 @@
 
 (defun has-global-reference-p (object)
   (do-links (link object)
-    (declare (ignore link))
-    (return t)))
+    (return link)))
 
 (defun global-reference-p (reference)
   (let ((object (reference-object reference)))
     (do-links (link object)
-      (declare (ignore link))
-      (return t))))
+      (return link))))
 
 (defun local-references-to-object (object)
   (remove-if-not (lambda (ref)
@@ -307,9 +305,9 @@
   [FIND-IF][dislocated] links to FIND-IF, [FUNCTION][dislocated] links
   to FUNCTION and `[FUNCTION][type]` links to [FUNCTION][type].
 
-  [Autolinking][@explicit-and-autolinking section] to T and NIL is
-  suppressed. If desired, use `[T][]` (that links to [T][]) or
-  `[T][constant]` (that links to [T][constant]).
+  [Autolinking][ @explicit-and-autolinking section] to T and NIL is
+  [suppressed][ @suppressed-links]. If desired, use `[T][]` (that
+  links to [T][]) or `[T][constant]` (that links to [T][constant]).
 
   Note that linking to sections in the Hyperspec is done with the CLHS
   locative and is not subject to the value of this variable.")
@@ -907,11 +905,11 @@
 
 ;;;; Automatic markup of symbols
 
-;;; Take a string in markdown format. Markup symbols as code (if
-;;; *DOCUMENT-UPPERCASE-IS-CODE*), autolink (if
-;;; *DOCUMENT-LINK-SECTIONS*, *DOCUMENT-LINK-CODE*) and always handle
-;;; explicit links with locatives (e.g. [FOO][function]). Return the
-;;; transformed string.
+;;; Take a string in markdown format. Handle the DOCSTRING locative,
+;;; markup symbols as code (if *DOCUMENT-UPPERCASE-IS-CODE*), autolink
+;;; (if *DOCUMENT-LINK-SECTIONS*, *DOCUMENT-LINK-CODE*) and always
+;;; handle explicit links with locatives (e.g. [FOO][function]).
+;;; Return the transformed string.
 (defun codify-and-link (string)
   (when string
     (with-output-to-string (out)
@@ -1075,7 +1073,7 @@
 ;;;
 ;;; This is called by MAP-WORDS so the return values are NEW-TREE,
 ;;; SLICE. Also called by TRANSLATE-EMPH that expects only a single
-;;; return value: the new tree.
+;;; return value, the new tree.
 (defun translate-uppercase-word (parent tree word)
   (declare (ignore parent))
   (let ((emph (and (listp tree) (eq :emph (first tree))))
@@ -1324,6 +1322,59 @@
   (@suppressed-links section)
   (@local-references section))
 
+(defvar *document-link-code* t
+  """Enable the various forms of links in docstrings described in
+  @LINKING-TO-CODE. See the following sections for a description of
+  how to use linking.""")
+
+;;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
+;;; :REFERENCE-LINK for [symbol][locative]). Don't hurt other links.
+(defun link (parse-tree)
+  (let ((linked-refs (make-array 0 :fill-pointer t :adjustable t
+                                 :element-type 'reference)))
+    (map-markdown-parse-tree
+     '(:code :reference-link)
+     '(:explicit-link :image :mailto)
+     nil
+     (alexandria:rcurry #'translate-to-links linked-refs)
+     parse-tree)))
+
+(defun translate-to-links (parent tree linked-refs)
+  (alexandria:nth-value-or 0
+    (maybe-unescape-or-autolink parent tree linked-refs)
+    (maybe-translate-explicit-link tree linked-refs)
+    (assert nil)))
+
+;;; Check if we are in a position to link to REF and that we are
+;;; allowed to.
+(defun linkable-ref-p (ref &key page)
+  (declare (special *document-link-sections*))
+  (and (or (and *document-link-sections*
+                (eq (reference-locative-type ref) 'section))
+           *document-link-code*)
+       (let ((page (or page (reference-page ref))))
+         (or
+          ;; These have no pages, but won't result in link anyway.
+          ;; Keep them.
+          (member (reference-locative-type ref) '(dislocated argument))
+          ;; Pax URLs are always linkable.
+          (null page)
+          ;; Intrapage links always work.
+          (eq *page* page)
+          ;; Absolute URLs always work.
+          (stringp page)
+          ;; PAGE is a PAGE structure. We need to know the
+          ;; URI-FRAGMENT of both pages. See
+          ;; RELATIVE-PAGE-URI-FRAGMENT.
+          (and (page-uri-fragment *page*)
+               (page-uri-fragment page))))))
+
+(defun linkablep (link)
+  (linkable-ref-p (link-reference link) :page (link-page link)))
+
+(defun linkable-references (refs)
+  (remove-if-not #'linkable-ref-p refs))
+
 (defsection @specified-locative (:title "Specified Locative")
   """The following examples all render as [DOCUMENT][function].
 
@@ -1346,12 +1397,30 @@
   - `[see this][document function]` (*title + object + locative,
     explicit link*) renders as: [see this][document function].""")
 
+(defun linkables-for-specified-locative (object locative)
+  "With a locative specified (e.g. in the explicit link
+  `[FOO][function]` or in the text `the FOO function`), a single link
+   is made irrespective of any local references."
+  (if (member (locative-type locative) '(dislocated argument))
+      ;; Handle an explicit [FOO][dislocated] in markdown. This is
+      ;; always LINKABLE-REF-P.
+      (list (make-reference object 'dislocated))
+      (alexandria:when-let (link (find-link (canonical-reference
+                                             (make-reference object locative))))
+        (when (linkablep link)
+          (list (link-reference link))))))
+
 (defsection @unspecified-locative (:title "Unspecified Locative")
   "[filter-string-based-references function][docstring]
 
   [filter-method-references function][docstring]"
   (@unambiguous-unspecificed-locative section)
   (@ambiguous-unspecified-locative section))
+
+(defun linkables-for-unspecified-locative (object &key local)
+  (filter-method-references
+   (filter-string-based-references
+    (linkable-references (references-to-object object :local local)))))
 
 (defun filter-string-based-references (refs)
   "When only an @OBJECT is provided without a locative, all
@@ -1421,48 +1490,44 @@
   reference link spelled out explicitly, while autolinks are those
   without.")
 
-(defsection @preventing-autolinking (:title "Preventing Autolinking")
-  """In the common case, when [*DOCUMENT-UPPERCASE-IS-CODE*][] is true,
-  prefixing the uppercase @WORD with a backslash prevents it from
-  being codified and thus also prevents [autolinking][
-  @explicit-and-autolinking section] form kicking in. For example,
+(defun linkables-for-explicitly-unspecified-locative (object)
+  "Explicit links with an unspecified locative (e.g. `[FOO][]`) are
+  linked to all non-local references."
+  (linkables-for-unspecified-locative object :local :exclude))
 
-      \DOCUMENT
+(defun linkables-for-autolink-with-unspecified-locative (object)
+  "Unless a locative is [specified][ @specified-locative section], no
+  [autolinking][ @explicit-and-autolinking section] is performed for
+  @OBJECTS for which there are local references. For example, `FOO`
+  does not get any links if there is _any_ local reference with the
+  same @OBJECT."
+  (linkables-for-unspecified-locative object))
 
-  renders as \DOCUMENT. If it should be marked up as code but not
-  autolinked, the backslash must be within backticks like this:
+;;; All returned REFERENCES are for the same object.
+(defun linkables-for-autolink (objects locatives linked-refs)
+  (or
+   ;; Use the first object from OBJECTS with which some LOCATIVES form
+   ;; known references.
+   (loop for object in objects
+           thereis (loop for locative in locatives
+                         append (linkables-for-specified-locative
+                                 object locative)))
+   ;; Fall back on the no-locative case.
+   (loop for object in objects
+         for refs = (linkables-for-autolink-with-unspecified-locative object)
+         until (or (suppressed-link-p object refs linked-refs)
+                   (has-local-reference-p object))
+           thereis refs
+         until (references-to-object object :local :include))))
+
 
-      `\DOCUMENT`
+;;;; Explicit links
 
-  This renders as `\DOCUMENT`. Alternatively, the DISLOCATED or the
-  ARGUMENT locative may be used as in `[DOCUMENT][dislocated]`.""")
+(defun maybe-translate-explicit-link (tree linked-refs)
+  (when (eq :reference-link (first tree))
+    (translate-explicit-link tree linked-refs)))
 
-(defvar *document-link-code* t
-  """Enable the various forms of links in docstrings described in
-  @LINKING-TO-CODE. See the following sections for a description of
-  how to use linking.""")
-
-;;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
-;;; :REFERENCE-LINK for [symbol][locative]). Don't hurt other links.
-(defun link (parse-tree)
-  (let ((linked-refs (make-array 0 :fill-pointer t :adjustable t
-                                 :element-type 'reference)))
-    (map-markdown-parse-tree
-     '(:code :reference-link)
-     '(:explicit-link :image :mailto)
-     nil
-     (alexandria:rcurry #'translate-to-links linked-refs)
-     parse-tree)))
-
-;;; This translator
-;;;
-;;; - handles (:CODE "SOMETHING"), the parse of `SOMETHING`: looks for
-;;;   any references to "SOMETHING" (which may name a symbol or a
-;;;   package) and tanslates it to, for example, (:REFERENCE-LINK
-;;;   :LABEL ((:CODE "SOMETHING")) :DEFINITION "function") if there is
-;;;   a single function reference to it.
-;;;
-;;; - handles :REFERENCE-LINK nodes
+;;; This translator handles :REFERENCE-LINK nodes:
 ;;;
 ;;;   - those with an explicit locative (:REFERENCE-LINK :LABEL
 ;;;     ((:CODE "SOMETHING")) :DEFINITION "function"), the parse of
@@ -1470,37 +1535,124 @@
 ;;;
 ;;;   - and those with no locative (:REFERENCE-LINK :LABEL ((:CODE
 ;;;     "SOMETHING")) :TAIL "[]"), the parse of [`SOMETHING`][].
-(defun translate-to-links (parent tree linked-refs)
-  (cond ((parse-tree-p tree :code)
-         (let ((string (second tree)))
-           (if (alexandria:starts-with #\\ string)
-               `(:code ,(subseq string 1))
-               (autolink parent tree string linked-refs))))
-        ((and (eq :reference-link (first tree)))
-         (resolve-reflink tree linked-refs))
-        (t
-         (assert nil))))
-
-(defun autolink (parent tree word linked-refs)
-  (multiple-value-bind (reflinks refs)
-      (make-reflinks-to-word parent tree word linked-refs)
-    (cond (reflinks
-           (dolist (ref refs)
-             (vector-push-extend ref linked-refs))
-           (values reflinks nil t))
+(defun translate-explicit-link (reflink linked-refs)
+  ;; Markdown to handle: [`SECTION`][class], [`SECTION`][], [see
+  ;; this][section class], [see this][section]. For example, the tree
+  ;; for [`SECTION`][class] is (:REFERENCE-LINK :LABEL ((:CODE
+  ;; "SECTION")) :DEFINITION "class").
+  (multiple-value-bind (label explicit-label-p object locative pax-link-p)
+      (dissect-reflink reflink)
+    (cond ((not pax-link-p)
+           ;; [something][user-defined-id]
+           reflink)
+          ((and (eq object 'not-found)
+                (member locative '(dislocated argument)))
+           ;; [not code][dislocated]
+           (values label nil t))
           (t
-           tree))))
+           (let ((refs (unless (eq object 'not-found)
+                         (if locative
+                             (linkables-for-specified-locative object locative)
+                             (linkables-for-explicitly-unspecified-locative
+                              object)))))
+             (cond (refs
+                    (dolist (ref refs)
+                      (vector-push-extend ref linked-refs))
+                    (values (make-reflinks label explicit-label-p refs) nil t))
+                   (t
+                    (values (if (stringp object)
+                                label
+                                (signal-unresolvable-reflink reflink object
+                                                             locative))
+                            nil t))))))))
 
-;;; Translate WORD that's part of TREE (e.g. it's "xxx" from (:CODE
-;;; "xxx") or from "xxx,yyy"), or it's constructed from TREE (e.g.
-;;; it's "*SYM*" from (:EMPH "SYM")).
-(defun make-reflinks-to-word (parent tree word linked-refs)
-  (let ((refs (references-for-autolink
+;;; Return 1. the label, 2. whether to use the returned label in the
+;;; reference link without further transformations (e.g. replace it
+;;; with SECTION-TITLE), 3. object, 4. the locative, 5. whether the
+;;; reflink looks like something we should resolve (as opposed to a
+;;; user-defined one).
+(defun dissect-reflink (tree)
+  (assert (parse-tree-p tree :reference-link))
+  (destructuring-bind (&key label definition tail) (rest tree)
+    (let* ((empty-definition-p (and (zerop (length definition))
+                                    (or (null tail)
+                                        (equal tail "[]"))))
+           (definition (trim-whitespace
+                        (parse-tree-to-text definition :deemph t)))
+           (locative-from-def
+             (and definition (read-locative-from-markdown definition)))
+           (label-string (trim-whitespace
+                          (parse-tree-to-text label :deemph nil))))
+      (alexandria:nth-value-or 0
+        (and (or empty-definition-p locative-from-def)
+             label-string
+             ;; [foo][] or [foo][function]
+             (multiple-value-bind (object name)
+                 (parse-reflink-label-string label-string locative-from-def)
+               (when name
+                 (values label nil object locative-from-def t))))
+        (and (member locative-from-def '(dislocated argument))
+             (values label t 'not-found locative-from-def t))
+        ;; [see this][foo]
+        (multiple-value-bind (object name)
+            (parse-word definition :trim nil :depluralize nil
+                                   :only-one (constantly t))
+          (when name
+            (values label t object nil t)))
+        ;; [see this][foo function]
+        (multiple-value-bind (object locative foundp)
+            (and definition (read-reference-from-string definition))
+          (when foundp
+            (values label t object locative t)))
+        (values label nil 'not-found locative-from-def
+                (or empty-definition-p locative-from-def))))))
+
+(defun parse-reflink-label-string (label-string locative)
+  (let ((interesting-object nil)
+        (interesting-name nil))
+    (flet ((good-parse-p (object name)
+             (cond ((eq locative 'clhs)
+                    (find-hyperspec-id object :substring-match t))
+                   ((has-reference-p object)
+                    t)
+                   (t
+                    ;; Remember the first interesting object ...
+                    (when (and (null interesting-name)
+                               (interesting-object-p object name))
+                      (setq interesting-object object
+                            interesting-name name)
+                      ;; ... but don't stop looking for a known
+                      ;; reference.
+                      nil)))))
+      (alexandria:nth-value-or 1
+        (parse-word label-string
+                    :trim nil :depluralize t
+                    :only-one #'good-parse-p
+                    :clhs-substring-match (eq locative 'clhs))
+        ;; Only consider merely interesting objects if there were no
+        ;; objects with known references.
+        (values interesting-object interesting-name)))))
+
+
+;;;; Autolinking
+
+;;; This translator handles (:CODE "SOMETHING"), the parse of
+;;; `SOMETHING`: looks for any references to "SOMETHING" and tanslates
+;;; it to, for example, (:REFERENCE-LINK :LABEL ((:CODE "SOMETHING"))
+;;; :DEFINITION "function") if there is a single function reference to
+;;; it.
+(defun autolink (parent tree word linked-refs)
+  (let ((refs (linkables-for-autolink
                (parse-word word :trim nil :depluralize t)
                (find-locatives-around parent tree)
                linked-refs)))
-    (when refs
-      (values (make-reflinks `(,tree) nil refs) refs))))
+    (cond (refs
+           (let ((reflinks (make-reflinks `(,tree) nil refs)))
+             (dolist (ref refs)
+               (vector-push-extend ref linked-refs))
+             (values reflinks nil t)))
+          (t
+           tree))))
 
 ;;; Find locatives just before or after TREE in PARENT. For example,
 ;;; PARENT is (:PLAIN "See" "function" " " (:CODE "FOO")), and TREE is
@@ -1537,137 +1689,33 @@
                  (try (third rest))
                  (return))))
     locatives))
+
 
-(defun resolve-reflink (reflink linked-refs)
-  ;; Markdown to handle: [`SECTION`][class], [`SECTION`][], [see
-  ;; this][section class], [see this][section]. For example, the tree
-  ;; for [`SECTION`][class] is (:REFERENCE-LINK :LABEL ((:CODE
-  ;; "SECTION")) :DEFINITION "class").
-  (multiple-value-bind (label explicit-label-p object locative pax-link-p)
-      (extract-reference-from-reflink reflink)
-    (cond ((not pax-link-p)
-           ;; [something][user-defined-id]
-           reflink)
-          ((and (eq object 'not-found)
-                (member locative '(dislocated argument)))
-           ;; [not code][dislocated]
-           (values label nil t))
-          (t
-           (let* ((refs (unless (eq object 'not-found)
-                          (if locative
-                              (references-for-specified-locative object
-                                                                 locative)
-                              (references-for-explicitly-unspecified-locative
-                               object))))
-                  (linkable-refs (linkable-references refs)))
-             (cond (linkable-refs
-                    (dolist (ref refs)
-                      (vector-push-extend ref linked-refs))
-                    (values (make-reflinks label explicit-label-p refs) nil t))
-                   (t
-                    (values (if (or refs (stringp object))
-                                label
-                                (signal-unresolvable-reflink reflink object
-                                                             locative))
-                            nil t))))))))
+(defsection @preventing-autolinking (:title "Preventing Autolinking")
+  """In the common case, when [*DOCUMENT-UPPERCASE-IS-CODE*][] is true,
+  prefixing an uppercase @WORD with a backslash prevents it from being
+  codified and thus also prevents [autolinking][
+  @explicit-and-autolinking section] form kicking in. For example,
 
-;;; Return the label, whether to use the returned label in the
-;;; reference link without further transformations (e.g. replace it
-;;; with SECTION-TITLE), object, the locative, whether the reflink
-;;; looks like something we should resolve (as opposed to a
-;;; user-defined one).
-(defun extract-reference-from-reflink (tree)
-  (assert (parse-tree-p tree :reference-link))
-  (destructuring-bind (&key label definition tail) (rest tree)
-    (let* ((empty-definition-p (and (zerop (length definition))
-                                    (or (null tail)
-                                        (equal tail "[]"))))
-           (definition (trim-whitespace
-                        (parse-tree-to-text definition :deemph t)))
-           (locative-from-def
-             (and definition (read-locative-from-markdown definition)))
-           (label-string (trim-whitespace
-                          (parse-tree-to-text label :deemph nil))))
-      (alexandria:nth-value-or 0
-        (and (or empty-definition-p locative-from-def)
-             label-string
-             ;; [foo][] or [foo][function]
-             (multiple-value-bind (object name)
-                 (parse-label-string label-string locative-from-def)
-               (when name
-                 (values label nil object locative-from-def t))))
-        (and (member locative-from-def '(dislocated argument))
-             (values label t 'not-found locative-from-def t))
-        ;; [see this][foo]
-        (multiple-value-bind (object name)
-            (parse-word definition :trim nil :depluralize nil
-                                   :only-one (constantly t))
-          (when name
-            (values label t object nil t)))
-        ;; [see this][foo function]
-        (multiple-value-bind (object locative foundp)
-            (and definition (read-reference-from-string definition))
-          (when foundp
-            (values label t object locative t)))
-        (values label nil 'not-found locative-from-def
-                (or empty-definition-p locative-from-def))))))
+      \DOCUMENT
 
-(defun parse-label-string (label-string locative)
-  (let ((interesting-object nil)
-        (interesting-name nil))
-    (flet ((good-parse-p (object name)
-             (cond ((eq locative 'clhs)
-                    (find-hyperspec-id object :substring-match t))
-                   ((has-reference-p object)
-                    t)
-                   (t
-                    ;; Remember the first interesting object ...
-                    (when (and (null interesting-name)
-                               (interesting-object-p object name))
-                      (setq interesting-object object
-                            interesting-name name)
-                      ;; ... but don't stop looking for a known
-                      ;; reference.
-                      nil)))))
-      (alexandria:nth-value-or 1
-        (parse-word label-string
-                    :trim nil :depluralize t
-                    :only-one #'good-parse-p
-                    :clhs-substring-match (eq locative 'clhs))
-        ;; Only consider merely interesting objects if there were no
-        ;; objects with known references.
-        (values interesting-object interesting-name)))))
+  renders as \DOCUMENT. If it should be marked up as code but not
+  autolinked, the backslash must be within backticks like this:
 
-(defun parse-tree-to-text (parse-tree &key deemph)
-  (labels
-      ((recurse (e)
-         (cond ((stringp e)
-                ;; "S" -> "S"
-                e)
-               ((and (listp e)
-                     (or (stringp (first e))
-                         (listp (first e))))
-                ;; ("mgl-pax-test:" (:EMPH "test-variable")) =>
-                ;; "mgl-pax-test:*test-variable*"
-                (apply #'concatenate 'string (mapcar #'recurse e)))
-               ;; Recurse into (:PLAIN ...)
-               ((parse-tree-p e :plain)
-                (format nil "~A" (recurse (rest e))))
-               ;; (:EMPH "S") -> "*S*"
-               ((and deemph (parse-tree-p e :emph))
-                (format nil "*~A*" (recurse (rest e))))
-               ;; (:CODE "S") -> "S"
-               ((parse-tree-p e :code)
-                (let ((string (second e)))
-                  (cond ((alexandria:starts-with-subseq "\\\\" string)
-                         (recurse (subseq string 2)))
-                        ((alexandria:starts-with-subseq "\\" string)
-                         (recurse (subseq string 1)))
-                        (t
-                         (recurse string)))))
-               (t
-                (return-from parse-tree-to-text nil)))))
-    (recurse parse-tree)))
+      `\DOCUMENT`
+
+  This renders as `\DOCUMENT`. Alternatively, the DISLOCATED or the
+  ARGUMENT locative may be used as in `[DOCUMENT][dislocated]`.""")
+
+(defun maybe-unescape-or-autolink (parent tree linked-refs)
+  (when (parse-tree-p tree :code)
+    (let ((string (second tree)))
+      (if (alexandria:starts-with #\\ string)
+          `(:code ,(subseq string 1))
+          (autolink parent tree string linked-refs)))))
+
+
+;;;; Common code for @EXPLICIT-AND-AUTOLINKING
 
 ;;; For LABEL (a parse tree fragment) and some references to it
 ;;; (REFS), return a markdown parse tree fragment to be spliced into a
@@ -1833,17 +1881,16 @@
 
 
 (defsection @suppressed-links (:title "Suppressed Links")
-  """Within the same docstring, [autolinking]
-  [@explicit-and-autolinking section] of code (i.e. of something like
-  `FOO`) is suppressed if the same @OBJECT was already linked to in
-  any way. In the following docstring, only the first `FOO` will be
-  turned into a link.
+  """[Autolinking][ @explicit-and-autolinking section] of code (i.e.
+  of something like `FOO`) is suppressed if it would create a link
+  that was already made within the same docstring. In the following
+  docstring, only the first `FOO` will be turned into a link.
 
       "`FOO` is safe. `FOO` is great."
 
-  However if a @LOCATIVE was specified or found near the @OBJECT, then
-  a link is always made. In the following, in both docstrings, both
-  occurrences `FOO` produce links.
+  However, explicit links (when a @LOCATIVE was specified or found
+  near the @OBJECT) are never suppressed. In the following, in both
+  docstrings, both occurrences `FOO` produce links.
 
       "`FOO` is safe. [`FOO`][macro] is great."
       "`FOO` is safe. Macro `FOO` is great."
@@ -1859,19 +1906,22 @@
 (defun suppressed-link-p (object refs linked-refs)
   (when refs
     (or (member object '(t nil))
-        (and (loop for ref in refs
-                     thereis (find (reference-object ref) linked-refs
-                                   :test #'reference-object=))
-             ;; Replace references to sections and glossary terms with
-             ;; their title any number of times.
-             (not (and (= (length refs) 1)
-                       (typep (resolve (first refs) :errorp nil)
-                              '(or section glossary-term))))))))
+        (and
+         ;; See if OBJECT would be linked to any previously linked-to
+         ;; reference.
+         (loop for ref in refs
+                 thereis (find (reference-object ref) linked-refs
+                               :test #'reference-object=))
+         ;; Replace references to sections and glossary terms with
+         ;; their title any number of times.
+         (not (and (= (length refs) 1)
+                   (typep (resolve (first refs) :errorp nil)
+                          '(or section glossary-term))))))))
 
 
 (defsection @local-references (:title "Local References")
   """To unclutter the generated output by reducing the number of
-  links, the so-called 'local' references (e.g. references to the very
+  links, the so-called local references (e.g. references to the very
   definition for which documentation is being generated) are treated
   specially. In the following example, there are local references to
   the function FOO and its arguments, so none of them get turned into
@@ -1891,85 +1941,12 @@
 
   The exact rules for local references are as follows:
 
-  - Unless a locative is [specified][ @specified-locative section], no
-    [autolinking][ @explicit-and-autolinking section] is performed for
-    @OBJECTS for which there are local references. For example, `FOO`
-    does not get any links if there is _any_ local reference with the
-    same @OBJECT.
+  - [linkables-for-autolink-with-unspecified-locative function][docstring]
 
-  - With a locative specified (e.g. in the explicit link
-    `[FOO][function]` or in the text `the FOO function`), a single
-    link is made irrespective of any local references.
+  - [linkables-for-specified-locative function][docstring]
 
-  - Explicit links with an unspecified locative (e.g. `[FOO][]`) are
-    linked to all non-local references.""")
-
-(defun references-for-specified-locative (object locative)
-  (if (member (locative-type locative) '(dislocated argument))
-      ;; Handle an explicit [FOO][dislocated] in markdown, for which
-      ;; there is no reference in REFS.
-      (list (make-reference object 'dislocated))
-      (let* ((reference (canonical-reference
-                         (make-reference object locative)))
-             (object (reference-object reference))
-             (ref (find reference (references-to-object object)
-                        :test #'reference=)))
-        (when ref
-          (list ref)))))
-
-(defun references-for-explicitly-unspecified-locative (object)
-  (filter-method-references
-   (filter-string-based-references
-    (references-to-object object :local :exclude))))
-
-;;; All returned REFERENCES are for the same object.
-(defun references-for-autolink (objects locatives linked-refs)
-  (or
-   ;; Use the first object from OBJECTS with which some LOCATIVES form
-   ;; known references.
-   (loop for object in objects
-           thereis (loop for locative in locatives
-                         append (linkable-references
-                                 (references-for-specified-locative
-                                  object locative))))
-   ;; Fall back on the no-locative case.
-   (loop for object in objects
-         for refs = (references-for-autolink-with-unspecified-locative object)
-         until (or (suppressed-link-p object refs linked-refs)
-                   (has-local-reference-p object))
-           thereis refs
-         until (references-to-object object :local :include))))
-
-(defun references-for-autolink-with-unspecified-locative (object)
-  (filter-method-references
-   (filter-string-based-references
-    (linkable-references
-     (references-to-object object)))))
-
-(defun linkable-references (refs)
-  (remove-if-not #'linkable-ref-p refs))
-
-(defun linkable-ref-p (ref)
-  (declare (special *document-link-sections*))
-  (and (or (and *document-link-sections*
-                (eq (reference-locative-type ref) 'section))
-           *document-link-code*)
-       (let ((page (reference-page ref)))
-         (or
-          ;; These have no pages, but won't result in link anyway.
-          ;; Keep them.
-          (member (reference-locative-type ref) '(dislocated argument))
-          ;; Pax URLs are always linkable.
-          (null page)
-          ;; Intrapage links always work.
-          (eq *page* page)
-          ;; PAGE may also be a string denoted an absolute URL.
-          (stringp page)
-          ;; PAGE is a PAGE structure. We need to know the
-          ;; URI-FRAGMENT of both pages. See
-          ;; RELATIVE-PAGE-URI-FRAGMENT.
-          (and (page-uri-fragment *page*)
-               (page-uri-fragment page))))))
+  - [linkables-for-explicitly-unspecified-locative function][docstring]
+  """)
 
 
 (defsection @linking-to-sections (:title "Linking to Sections")
@@ -2448,7 +2425,7 @@
   (let* ((string (if (stringp arglist)
                      ;; must be escaped markdown
                      arglist
-                     (arglist-to-string arglist)))
+                     (arglist-to-markdown arglist)))
          (string (if *print-arglist-key*
                      (funcall *print-arglist-key* string)
                      string)))
@@ -2467,7 +2444,7 @@
 
 ;;; Print arg names without the package prefix to a string. The
 ;;; default value with prefix. Works for macro arglists too.
-(defun arglist-to-string (arglist)
+(defun arglist-to-markdown (arglist)
   (with-output-to-string (out)
     (let ((*seen-special-p* nil)
           (*print-pretty* t)
@@ -2668,10 +2645,10 @@
   [links][@LINKING-TO-CODE], is generated from docstrings of all kinds
   of Lisp definitions and \\PAX SECTIONs.
 
-  If `src/pax.el` is loaded into Emacs, the Elisp function
-  `mgl-pax-document` displays documentation as a single HTML page
-  generated by PAX via Slime. For example, to view the documentation
-  of this very SECTION, one can do:
+  If @EMACS-SETUP has been done, the Elisp function `mgl-pax-document`
+  displays documentation as a single HTML page generated by PAX via
+  Slime. For example, to view the documentation of this very SECTION,
+  one can do:
 
       M-x mgl-pax-document
       View Documentation of: pax::@documenting-in-emacs
@@ -2718,17 +2695,17 @@
   """Evaluating `(mgl-pax-hijack-slime-doc-keys)` in Emacs handles
   the common case of binding keys. Its docstring is reproduced here:
 
-       If both `w3m' and `slime' are available, replace `slime-apropos',
+      If `w3m' is available, replace `slime-apropos',
       `slime-apropos-all', `slime-apropos-package' with
       `mgl-pax-apropos', `mgl-pax-apropos-all',
       `mgl-pax-apropos-package', and replace both
       `slime-describe-symbol' and `slime-describe-function' with
       `mgl-pax-document'.
 
-      In addition, because it can be almost as useful as `M-.', one
-      may want to give `mgl-pax-document' a more convenient binding
-      such as `C-.' or `s-.' if you have a Super key. For example, to
-      bind `C-.' in all Slime buffers:
+      In addition, because it can be almost as useful as `M-.', one may
+      want to give `mgl-pax-document' a more convenient binding such as
+      `C-.' or `s-.' if you have a Super key. For example, to bind
+      `C-.' in all Slime buffers:
 
           (slime-bind-keys slime-parent-map nil '((\"C-.\" mgl-pax-document)))
 

@@ -6,10 +6,9 @@
 (in-package :foo-random)
 
 (defsection @foo-random-manual (:title "Foo Random manual")
-  "Here you describe what's common to all the referenced (and
-  exported) functions that follow. They work with *FOO-STATE*, and
-  have a :RANDOM-STATE keyword arg. Also explain when to choose
-  which."
+  "FOO-RANDOM is a random number generator library inspired by CL:RANDOM.
+  Functions such as UNIFORM-RANDOM use *FOO-STATE* and have a
+  :RANDOM-STATE keyword arg."
   (foo-random-state class)
   (state (reader foo-random-state))
   "Hey we can also print states!"

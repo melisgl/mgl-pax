@@ -47,7 +47,8 @@
   locative separated by whitespace to preselect one of the
   possibilities.
 
-  The `\\M-.` extensions can be enabled by loading `src/pax.el`."""
+  The `\\M-.` extensions can be enabled by loading `src/mgl-pax.el`.
+  See @EMACS-SETUP."""
   (mgl-pax/navigate asdf:system))
 
 ;;; List Swank source locations (suitable for `make-slime-xref') for

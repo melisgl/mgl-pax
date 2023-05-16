@@ -1,9 +1,212 @@
 # PAX Manual
 
 ###### \[in package MGL-PAX with nicknames PAX\]
-## The mgl-pax ASDF System
+## Introduction
 
-- Version: 0.1.0
+*What if documentation really lived in the code?*
+
+Docstrings are already there. If some narrative glued them together,
+we'd be able develop and explore the code along with the
+documentation due to their physical proximity. The main tool that
+PAX provides for this is DEFSECTION:
+
+```
+(defsection @foo-random-manual (:title "Foo Random manual")
+  "Foo Random is a random number generator library."
+  (foo-random-state class)
+  (uniform-random function)
+  (@foo-random-examples section))
+```
+
+Like this one, sections can have docstrings and references to
+definitions (e.g. `(UNIFORM-RANDOM FUNCTION)`). These docstrings and
+references are the glue. To support interactive development, PAX
+
+- makes [SLIME's `M-.`][slime-m-.] work with references and
+
+- adds a documentation browser.
+
+See @EMACS-SETUP.
+
+[slime]: https://slime.common-lisp.dev/ 
+
+[slime-m-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions 
+
+Beyond interactive workflows, @GENERATING-DOCUMENTATION from
+sections and all the referenced items in Markdown or HTML format is
+also implemented.
+
+With the simplistic tools provided, one may emphasize the narrative
+as with Literate Programming, but documentation is generated from
+code, not vice versa, and there is no support for chunking.
+
+*Code is first, code must look pretty, documentation is code*.
+
+##### Docstrings
+
+PAX automatically recognizes and marks up code with
+backticks and links code to their definitions.
+The following @TRANSCRIPTS show the lines of the output (prefixed
+with `..`) generated:
+
+```
+(document "&KEY arguments such as :IF-EXISTS are common." :format :markdown)
+.. `&KEY` arguments such as `:IF-EXISTS` are common.
+
+(document "AND denotes a macro and a type specifier.
+Here we focus on the macro AND." :format :markdown)
+.. `AND`([`0`][4954] [`1`][330f]) denotes a macro and a type specifier.
+.. Here we focus on the macro [`AND`][4954].
+..
+..   [330f]: http://www.lispworks.com/documentation/HyperSpec/Body/t_and.htm "AND TYPE"
+..   [4954]: http://www.lispworks.com/documentation/HyperSpec/Body/m_and.htm "AND MGL-PAX:MACRO"
+```
+
+These features are designed to handle the most common style of
+docstrings with minimal additional markup. The following is the
+output of `(mgl-pax:document #'abort :format :markdown)`.
+
+    - \[function\] **\ABORT** *\&OPTIONAL \CONDITION*
+    
+        Transfer control to a restart named `ABORT`, signalling a
+        [`\CONTROL-ERROR`][6bc0] if none exists.
+    
+      [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\CONTROL-ERROR \CONDITION"
+
+Note that the docstring of the ABORT function was not written with
+PAX in mind. The above markdown is rendered as
+
+- \[function\] **ABORT** *&OPTIONAL CONDITION*
+
+    Transfer control to a restart named `ABORT`, signalling a
+    [`CONTROL-ERROR`][6bc0] if none exists.
+
+[6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\\CONTROL-ERROR \\CONDITION"
+
+##### A Complete Example
+
+Here is an example of how it all works together:
+
+```
+(mgl-pax:define-package :foo-random
+  (:documentation "This package provides various utilities for random.
+  See FOO-RANDOM:@FOO-RANDOM-MANUAL.")
+  (:use #:common-lisp #:mgl-pax))
+
+(in-package :foo-random)
+
+(defsection @foo-random-manual (:title "Foo Random manual")
+  "FOO-RANDOM is a random number generator library inspired by CL:RANDOM.
+  Functions such as UNIFORM-RANDOM use *FOO-STATE* and have a
+  :RANDOM-STATE keyword arg."
+  (foo-random-state class)
+  (state (reader foo-random-state))
+  "Hey we can also print states!"
+  (print-object (method () (foo-random-state t)))
+  (*foo-state* variable)
+  (gaussian-random function)
+  (uniform-random function)
+  ;; This is a subsection.
+  (@foo-random-examples section))
+
+(defclass foo-random-state ()
+  ((state :reader state)))
+
+(defmethod print-object ((object foo-random-state) stream)
+  (print-unreadable-object (object stream :type t)))
+
+(defvar *foo-state* (make-instance 'foo-random-state)
+  "Much like *RANDOM-STATE* but uses the FOO algorithm.")
+
+(defun uniform-random (limit &key (random-state *foo-state*))
+  "Return a random number from the between 0 and LIMIT (exclusive)
+  uniform distribution."
+  nil)
+
+(defun gaussian-random (stddev &key (random-state *foo-state*))
+  "Return a random number from a zero mean normal distribution with
+  STDDEV."
+  nil)
+
+(defsection @foo-random-examples (:title "Examples")
+  "Let's see the transcript of a real session of someone working
+  with FOO:
+
+  ```cl-transcript
+  (values (princ :hello) (list 1 2))
+  .. HELLO
+  => :HELLO
+  => (1 2)
+
+  (make-instance 'foo-random-state)
+  ==> #<FOO-RANDOM-STATE >
+  ```")
+```
+
+Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
+exports `*FOO-STATE*` and includes its documentation in
+`@FOO-RANDOM-MANUAL`. The symbols VARIABLE and
+FUNCTION are just two instances of @LOCATIVEs, which are
+used in DEFSECTION to refer to definitions tied to symbols.
+
+`(DOCUMENT @FOO-RANDOM-MANUAL)` generates fancy markdown or HTML
+output with automatic markup and autolinks uppercase @WORDs
+found in docstrings, numbers sections, and creates a table of
+contents.
+
+One can even generate documentation for different but related
+libraries at the same time with the output going to different files
+but with cross-page links being automatically added for symbols
+mentioned in docstrings. In fact, this is what @PAX-WORLD does. See
+@GENERATING-DOCUMENTATION for some convenience functions to cover
+the most common cases.
+
+The transcript in the code block tagged with
+`cl-transcript` is automatically checked for up-to-dateness when
+documentation is generated.
+
+## Emacs Setup
+
+Load `src/mgl-pax.el` in Emacs and maybe set up some key bindings.
+
+- To be able to browse the documentation, make sure the w3m binary
+  and the w3m Emacs package are both installed. On Debian, simply
+  install the `w3m-el` package.
+
+- If you installed PAX with Quicklisp, the location of `mgl-pax.el`
+  may change with updates, and you may want to copy the current
+  version of `mgl-pax.el` to a stable location:
+
+    (mgl-pax:install-elisp "~/quicklisp/")
+
+Then, assuming the Elisp file is in the quicklisp directory, add
+something like this to your `.emacs`:
+
+```elisp
+(load "~/quicklisp/mgl-pax.el")
+(mgl-pax-hijack-slime-doc-keys)
+(global-set-key (kbd "C-.") 'mgl-pax-document)
+(global-set-key (kbd "s-x t") 'mgl-pax-transcribe-last-expression)
+(global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
+```
+
+See @NAVIGATING-IN-EMACS, @DOCUMENTING-IN-EMACS and
+@TRANSCRIBING-WITH-EMACS for how to use the relevant features.
+
+- [function] INSTALL-ELISP TARGET-DIR
+
+    Copy `mgl-pax.el` distributed with this package to TARGET-DIR.
+
+## Links and Systems
+
+Here is the [official
+repository](https://github.com/melisgl/mgl-pax) and the [HTML
+documentation](http://melisgl.github.io/mgl-pax-world/mgl-pax-manual.html)
+for the latest version.
+
+### The mgl-pax ASDF System
+
+- Version: 0.2.0
 - Description: Exploratory programming tool and documentation
   generator.
 - Long Description: The set of dependencies of the MGL-PAX system is
@@ -20,20 +223,13 @@
 - Bug tracker: [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
 - Source control: [GIT](https://github.com/melisgl/mgl-pax.git)
 
-## The mgl-pax/full ASDF System
+### The mgl-pax/full ASDF System
 
 - Description: MGL-PAX with all features preloaded.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
 
-
-## Links
-
-Here is the [official
-repository](https://github.com/melisgl/mgl-pax) and the [HTML
-documentation](http://melisgl.github.io/mgl-pax-world/mgl-pax-manual.html)
-for the latest version.
 
 ## Background
 
@@ -111,149 +307,6 @@ format, and a few thousand lines later PAX was born.
 [markdown]: https://daringfireball.net/projects/markdown/ 
 
 
-## Tutorial
-
-PAX provides an extremely poor man's Explorable Programming
-environment. Narrative primarily lives in so-called sections, which
-mix markdown docstrings with references to functions, variables,
-etc; all of which probably have their own docstrings.
-
-The primary focus is on making code easily explorable by using
-[SLIME's `M-.`][slime-m-.] (`slime-edit-definition`). See how to
-enable some fanciness in @NAVIGATING-IN-EMACS and
-@DOCUMENTING-IN-EMACS. @GENERATING-DOCUMENTATION from sections and
-all the referenced items in Markdown or HTML format is also
-implemented.
-
-With the simplistic tools provided, one may emphasize the narrative
-as with Literate Programming, but documentation is generated from
-code, not vice versa, and there is no support for chunking. *Code is
-first, code must look pretty, documentation is code*.
-
-##### Docstrings
-
-PAX automatically recognizes and marks up code
-with backticks and links code to their
-definitions. The following @TRANSCRIPTS show the lines of the
-output (prefixed with `..`) generated:
-
-```
-(document "&KEY arguments such as :IF-EXISTS are common." :format :markdown)
-.. `&KEY` arguments such as `:IF-EXISTS` are common.
-
-(document "AND denotes a macro and a type specifier.
-          Here we focus on the macro AND." :format :markdown)
-.. `AND`([`0`][4954] [`1`][330f]) denotes a macro and a type specifier.
-.. Here we focus on the macro [`AND`][4954].
-..
-..   [330f]: http://www.lispworks.com/documentation/HyperSpec/Body/t_and.htm "AND TYPE"
-..   [4954]: http://www.lispworks.com/documentation/HyperSpec/Body/m_and.htm "AND MGL-PAX:MACRO"
-```
-
-These features are designed to handle the most common style of
-docstrings with minimal additional markup. The following is the
-output of `(mgl-pax:document #'abort :format :markdown)`.
-
-    - \[function\] **\ABORT** *\&OPTIONAL \CONDITION*
-    
-        Transfer control to a restart named `ABORT`, signalling a
-        [`\CONTROL-ERROR`][6bc0] if none exists.
-    
-      [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\CONTROL-ERROR \CONDITION"
-
-Note that the docstring of the ABORT function was not written with
-PAX in mind. The above markdown is rendered as
-
-- \[function\] **ABORT** *&OPTIONAL CONDITION*
-
-    Transfer control to a restart named `ABORT`, signalling a
-    [`CONTROL-ERROR`][6bc0] if none exists.
-
-[6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\\CONTROL-ERROR \\CONDITION"
-
-##### A Complete Example
-
-Here is an example of how it all works together:
-
-```
-(mgl-pax:define-package :foo-random
-  (:documentation "This package provides various utilities for random.
-  See FOO-RANDOM:@FOO-RANDOM-MANUAL.")
-  (:use #:common-lisp #:mgl-pax))
-
-(in-package :foo-random)
-
-(defsection @foo-random-manual (:title "Foo Random manual")
-  "Here you describe what's common to all the referenced (and
-  exported) functions that follow. They work with *FOO-STATE*, and
-  have a :RANDOM-STATE keyword arg. Also explain when to choose
-  which."
-  (foo-random-state class)
-  (state (reader foo-random-state))
-  "Hey we can also print states!"
-  (print-object (method () (foo-random-state t)))
-  (*foo-state* variable)
-  (gaussian-random function)
-  (uniform-random function)
-  ;; This is a subsection.
-  (@foo-random-examples section))
-
-(defclass foo-random-state ()
-  ((state :reader state)))
-
-(defmethod print-object ((object foo-random-state) stream)
-  (print-unreadable-object (object stream :type t)))
-
-(defvar *foo-state* (make-instance 'foo-random-state)
-  "Much like *RANDOM-STATE* but uses the FOO algorithm.")
-
-(defun uniform-random (limit &key (random-state *foo-state*))
-  "Return a random number from the between 0 and LIMIT (exclusive)
-  uniform distribution."
-  nil)
-
-(defun gaussian-random (stddev &key (random-state *foo-state*))
-  "Return a random number from a zero mean normal distribution with
-  STDDEV."
-  nil)
-
-(defsection @foo-random-examples (:title "Examples")
-  "Let's see the transcript of a real session of someone working
-  with FOO:
-
-  ```cl-transcript
-  (values (princ :hello) (list 1 2))
-  .. HELLO
-  => :HELLO
-  => (1 2)
-
-  (make-instance 'foo-random-state)
-  ==> #<FOO-RANDOM-STATE >
-  ```")
-```
-
-Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
-exports `*FOO-STATE*` and includes its documentation in
-`@FOO-RANDOM-MANUAL`. The symbols VARIABLE and
-FUNCTION are just two instances of @LOCATIVEs, which are
-used in DEFSECTION to refer to definitions tied to symbols.
-
-`(DOCUMENT @FOO-RANDOM-MANUAL)` generates fancy markdown or HTML
-output with automatic markup and autolinks uppercase @WORDs
-found in docstrings, numbers sections, and creates a table of
-contents.
-
-One can even generate documentation for different but related
-libraries at the same time with the output going to different files
-but with cross-page links being automatically added for symbols
-mentioned in docstrings. In fact, this is what @PAX-WORLD does. See
-@GENERATING-DOCUMENTATION for some convenience functions to cover
-the most common cases.
-
-The transcript in the code block tagged with
-`cl-transcript` is automatically checked for up-to-dateness when
-documentation is generated.
-
 ## Basics
 
 Now let's examine the most important pieces.
@@ -263,7 +316,7 @@ Now let's examine the most important pieces.
     Define a documentation section and maybe export referenced symbols.
     A bit behind the scenes, a global variable with NAME is defined and
     is bound to a SECTION object. By convention, section names
-    start with the character `@`. See @TUTORIAL for an example.
+    start with the character `@`. See @INTRODUCTION for an example.
     
     ##### Entries
     
@@ -816,13 +869,14 @@ which makes navigating the sources with `M-.` (see
     being pointed to, or it can explicitly supply START, END locatives.
     INCLUDE is typically used to include non-lisp files in the
     documentation (say markdown or elisp as in the next example) or
-    regions of lisp source files. This can reduce clutter and
+    regions of Lisp source files. This can reduce clutter and
     duplication.
     
     ```
     (defsection example-section ()
-      (pax.el (include #.(asdf:system-relative-pathname :mgl-pax "src/pax.el")
-                       :header-nl "```elisp" :footer-nl "```"))
+      (mgl-pax.el (include #.(asdf:system-relative-pathname :mgl-pax
+                                                            "src/mgl-pax.el")
+                           :header-nl "```elisp" :footer-nl "```"))
       (foo-example (include (:start (foo function)
                              :end (end-of-foo-example variable))
                             :header-nl "```"
@@ -843,11 +897,11 @@ which makes navigating the sources with `M-.` (see
     ```
     
     In the above example, pressing `M-.` on `PAX.EL` will open the
-    `src/pax.el` file and put the cursor on its first character. `M-.`
-    on `FOO-EXAMPLE` will go to the source location of the `(asdf:system
-    locative)` locative.
+    `src/mgl-pax.el` file and put the cursor on its first character.
+    `M-.` on `FOO-EXAMPLE` will go to the source location of
+    the `(asdf:system locative)` locative.
     
-    When documentation is generated, the entire `src/pax.el` file is
+    When documentation is generated, the entire `src/mgl-pax.el` file is
     included in the markdown surrounded by the strings given as
     HEADER-NL and FOOTER-NL (if any). The trailing newline character is
     assumed implicitly. If that's undesirable, then use HEADER and
@@ -984,7 +1038,8 @@ With a prefix argument (`C-u M-.`), one can enter a symbol plus a
 locative separated by whitespace to preselect one of the
 possibilities.
 
-The `M-.` extensions can be enabled by loading `src/pax.el`.
+The `M-.` extensions can be enabled by loading `src/mgl-pax.el`.
+See @EMACS-SETUP.
 
 ### The mgl-pax/navigate ASDF System
 
@@ -1167,10 +1222,10 @@ documentation, complete with @CODIFICATION and
 links, is generated from docstrings of all kinds
 of Lisp definitions and PAX SECTIONs.
 
-If `src/pax.el` is loaded into Emacs, the Elisp function
-`mgl-pax-document` displays documentation as a single HTML page
-generated by PAX via Slime. For example, to view the documentation
-of this very SECTION, one can do:
+If @EMACS-SETUP has been done, the Elisp function `mgl-pax-document`
+displays documentation as a single HTML page generated by PAX via
+Slime. For example, to view the documentation of this very SECTION,
+one can do:
 
     M-x mgl-pax-document
     View Documentation of: pax::@documenting-in-emacs
@@ -1263,17 +1318,17 @@ functionality of `slime-apropos`, `slime-apropos-all`, and
 Evaluating `(mgl-pax-hijack-slime-doc-keys)` in Emacs handles
 the common case of binding keys. Its docstring is reproduced here:
 
-     If both `w3m' and `slime' are available, replace `slime-apropos',
+    If `w3m' is available, replace `slime-apropos',
     `slime-apropos-all', `slime-apropos-package' with
     `mgl-pax-apropos', `mgl-pax-apropos-all',
     `mgl-pax-apropos-package', and replace both
     `slime-describe-symbol' and `slime-describe-function' with
     `mgl-pax-document'.
     
-    In addition, because it can be almost as useful as `M-.', one
-    may want to give `mgl-pax-document' a more convenient binding
-    such as `C-.' or `s-.' if you have a Super key. For example, to
-    bind `C-.' in all Slime buffers:
+    In addition, because it can be almost as useful as `M-.', one may
+    want to give `mgl-pax-document' a more convenient binding such as
+    `C-.' or `s-.' if you have a Super key. For example, to bind
+    `C-.' in all Slime buffers:
     
         (slime-bind-keys slime-parent-map nil '((\"C-.\" mgl-pax-document)))
     
@@ -1585,8 +1640,8 @@ without.
 #### Preventing Autolinking
 
 In the common case, when *DOCUMENT-UPPERCASE-IS-CODE* is true,
-prefixing the uppercase @WORD with a backslash prevents it from
-being codified and thus also prevents autolinking form kicking in. For example,
+prefixing an uppercase @WORD with a backslash prevents it from being
+codified and thus also prevents autolinking form kicking in. For example,
 
     \DOCUMENT
 
@@ -1629,16 +1684,16 @@ ARGUMENT locative may be used as in `[DOCUMENT][dislocated]`.
 
 #### Suppressed Links
 
-Within the same docstring, autolinking of code (i.e. of something like
-`FOO`) is suppressed if the same @OBJECT was already linked to in
-any way. In the following docstring, only the first `FOO` will be
-turned into a link.
+Autolinking of code (i.e.
+of something like `FOO`) is suppressed if it would create a link
+that was already made within the same docstring. In the following
+docstring, only the first `FOO` will be turned into a link.
 
     "`FOO` is safe. `FOO` is great."
 
-However if a @LOCATIVE was specified or found near the @OBJECT, then
-a link is always made. In the following, in both docstrings, both
-occurrences `FOO` produce links.
+However, explicit links (when a @LOCATIVE was specified or found
+near the @OBJECT) are never suppressed. In the following, in both
+docstrings, both occurrences `FOO` produce links.
 
     "`FOO` is safe. [`FOO`][macro] is great."
     "`FOO` is safe. Macro `FOO` is great."
@@ -1654,7 +1709,7 @@ NIL is suppressed (see *DOCUMENT-LINK-TO-HYPERSPEC*).
 #### Local References
 
 To unclutter the generated output by reducing the number of
-links, the so-called 'local' references (e.g. references to the very
+links, the so-called local references (e.g. references to the very
 definition for which documentation is being generated) are treated
 specially. In the following example, there are local references to
 the function FOO and its arguments, so none of them get turned into
@@ -1675,17 +1730,17 @@ the local ones.
 The exact rules for local references are as follows:
 
 - Unless a locative is specified, no
-  autolinking is performed for
-  @OBJECTS for which there are local references. For example, `FOO`
-  does not get any links if there is *any* local reference with the
-  same @OBJECT.
+autolinking is performed for
+@OBJECTS for which there are local references. For example, `FOO`
+does not get any links if there is *any* local reference with the
+same @OBJECT.
 
 - With a locative specified (e.g. in the explicit link
-  `[FOO][function]` or in the text `the FOO function`), a single
-  link is made irrespective of any local references.
+`[FOO][function]` or in the text `the FOO function`), a single link
+ is made irrespective of any local references.
 
 - Explicit links with an unspecified locative (e.g. `[FOO][]`) are
-  linked to all non-local references.
+linked to all non-local references.
 
 
 ### Linking to the Hyperspec
@@ -1699,8 +1754,8 @@ The exact rules for local references are as follows:
     to FUNCTION and `[FUNCTION][type]` links to FUNCTION.
     
     Autolinking to T and NIL is
-    suppressed. If desired, use `[T][]` (that links to T) or
-    `[T][constant]` (that links to T).
+    suppressed. If desired, use `[T][]` (that
+    links to T) or `[T][constant]` (that links to T).
     
     Note that linking to sections in the Hyperspec is done with the CLHS
     locative and is not subject to the value of this variable.
@@ -2293,7 +2348,7 @@ but in comments too:
     ;;;; => (1 2)
 
 Transcription support in Emacs can be enabled by loading
-`src/pax.el`.
+`src/mgl-pax.el`. See @EMACS-SETUP.
 
 ### Transcript API
 

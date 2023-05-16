@@ -1,3 +1,4 @@
+#+STARTUP: overview
 #+SEQ_TODO: TODO(t@) NEXT(n@) STARTED(s@) WAITING(w@) | DONE(d@) OLD(o@) CANCELLED(c@)
 #+TODO: MAYBE(m@) FAILED(f@) LOG(l@) DEFERRED(e@) BUG(b@)
 * MAYBE add locatives for sbcl internals
@@ -42,10 +43,10 @@ change in INITIALIZE-LINKS.
 e.g. RESOLVEd
 * MAYBE get variable initforms from source?
 Or fall back on this for deficient ARGLISTs. Will be really slow.
-* test navigation from the emacs side
+* TODO test the elisp code
 * MAYBE document glossary-term class and slots?
 * MAYBE support linking to hyperspec glossary entries?
-* move towards literate programming
+* MAYBE move towards literate programming
 ** MAYBE todo/comment locative?
 ** add SYMBOL as an alias for dislocated?
 ** add source locative
@@ -85,7 +86,6 @@ expands to
 https://github.com/40ants/doc/commit/c3bf89fa88ab70074466aa07358caad159d45008
 * MAYBE autodoc?
 https://github.com/40ants/doc/commit/d638135b784c2fd7e0199c829157644da197fdb7
-* TODO support local functions, macros OTHERWISE, CALL-NEXT-METHOD
 * TODO support symbols in a context
 E.g. LOOP's WITH, or OTHERWISE in CASE, CALL-NEXT-METHOD
 * BUG method dpsec parsing is incorrect
@@ -98,3 +98,11 @@ up only the TYPE and FUNCTION dspecs.
 
 * MAYBE if no docstring, get the comment just above the definition?
 Or go to the source.
+* MAYBE use SECTION-PACKAGE from "first" enclosing section?
+That is, when generating documentation for something that's referenced
+by one or more sections. See PAX::SECTIONS-THAT-CONTAIN and
+PAX::SORT-BY-PROXIMITY.
+* MAYBE locative-types in the first argument of mgl-pax-apropos
+It would make life easier to be able to do
+
+    PAX Apropos: "" package

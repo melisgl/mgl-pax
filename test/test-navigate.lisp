@@ -52,7 +52,7 @@
 
 ;;; We have no Emacs based tests. This tests the CL side of `M-.' when
 ;;; it's invoked with point on FOO in the test cases below. The actual
-;;; OBJECT-AND-LOCATIVES-LIST argument that pax.el would send it
+;;; OBJECT-AND-LOCATIVES-LIST argument that mgl-pax.el would send is
 ;;; reproduced explicitly.
 (deftest test-locate-definitions-for-emacs ()
   (let ((*package* (find-package '#:mgl-pax-test)))

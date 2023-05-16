@@ -1259,7 +1259,7 @@
       ;;;; => (1 2)
 
   Transcription support in Emacs can be enabled by loading
-  `src/pax.el`.""")
+  `src/mgl-pax.el`. See @EMACS-SETUP.""")
 
 (defun/autoloaded transcribe-for-emacs (string default-syntax* update-only echo
                                                first-line-special-p)
