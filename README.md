@@ -2719,13 +2719,13 @@ Transcription support in emacs can be enabled by loading
     The default value of [`TRANSCRIBE`][f1f0]'s `CHECK-CONSISTENCY` argument.
 
 <a id="x-28MGL-PAX-3A-2ATRANSCRIBE-SYNTAXES-2A-20VARIABLE-29"></a>
-- [variable] **\*TRANSCRIBE-SYNTAXES\*** *((:DEFAULT (:OUTPUT "..") (:NO-VALUE "=\> ; No value") (:READABLE "=\>")
-  (:UNREADABLE "==\>") (:UNREADABLE-CONTINUATION "--\>"))
- (:COMMENTED-1 (:OUTPUT ";..") (:NO-VALUE ";=\> ; No value") (:READABLE ";=\>")
-  (:READABLE-CONTINUATION ";-\>") (:UNREADABLE ";==\>")
-  (:UNREADABLE-CONTINUATION ";--\>"))
- (:COMMENTED-2 (:OUTPUT ";;..") (:NO-VALUE ";;=\> ; No value")
-  (:READABLE ";;=\>") (:READABLE-CONTINUATION ";;-\>") (:UNREADABLE ";;==\>")
+- [variable] **\*TRANSCRIBE-SYNTAXES\*** *((:DEFAULT (:OUTPUT "..") (:NO-VALUE "=\> ; No value") (:READABLE "=\>")\
+  (:UNREADABLE "==\>") (:UNREADABLE-CONTINUATION "--\>"))\
+ (:COMMENTED-1 (:OUTPUT ";..") (:NO-VALUE ";=\> ; No value") (:READABLE ";=\>")\
+  (:READABLE-CONTINUATION ";-\>") (:UNREADABLE ";==\>")\
+  (:UNREADABLE-CONTINUATION ";--\>"))\
+ (:COMMENTED-2 (:OUTPUT ";;..") (:NO-VALUE ";;=\> ; No value")\
+  (:READABLE ";;=\>") (:READABLE-CONTINUATION ";;-\>") (:UNREADABLE ";;==\>")\
   (:UNREADABLE-CONTINUATION ";;--\>")))*
 
     The default syntaxes used by [`TRANSCRIBE`][f1f0] for reading and writing
@@ -3428,10 +3428,11 @@ The following utilities are for writing new [`DOCUMENT-OBJECT`][bacc] and
 - [function] **ESCAPE-MARKDOWN** *STRING*
 
     Construct a new string from `STRING` by adding a backslash before
-    each special markdown character:
+    special markdowns character
     
         *_`<>[]
-
+    
+    and newline.
 
 <a id="x-28MGL-PAX-3APRIN1-TO-MARKDOWN-20FUNCTION-29"></a>
 - [function] **PRIN1-TO-MARKDOWN** *OBJECT*

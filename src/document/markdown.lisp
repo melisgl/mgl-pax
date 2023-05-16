@@ -54,13 +54,15 @@
       (format stream "*~A*" string)))
 
 (defun markdown-special-char-p (char)
-  (member char '(#\* #\_ #\` #\< #\> #\[ #\])))
+  (member char '(#\* #\_ #\` #\< #\> #\[ #\] #\Newline)))
 
 (defun/autoloaded escape-markdown (string)
   "Construct a new string from STRING by adding a backslash before
-  each special markdown character:
+  special markdowns character
 
-      *_`<>[]"
+      *_`<>[]
+
+  and newline."
   (with-output-to-string (stream)
     (dotimes (i (length string))
       (let ((char (aref string i)))

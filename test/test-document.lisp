@@ -57,6 +57,8 @@
   (test-names)
   (test-downcasing)
   (test-link)
+  ;; PAX::@VARIABLELIKE-LOCATIVES
+  (test-variable)
   ;; PAX::@MACROLIKE-LOCATIVES
   (test-macro)
   (test-symbol-macro)
@@ -595,6 +597,22 @@ xxx
 This is [Self-referencing][e042].
 
   [e042]: #MGL-PAX-TEST:@SELF-REFERENCING%20MGL-PAX:SECTION \"Self-referencing\"
+")))
+
+
+(defparameter *nasty-var* (format nil "~%~%")
+  "docstring")
+
+(deftest test-variable ()
+  (with-failure-expected ((alexandria:featurep :clisp))
+    (check-document (make-reference '*nasty-var* 'variable)
+                    "<a id=\"MGL-PAX-TEST:*NASTY-VAR*%20VARIABLE\"></a>
+
+- [variable] **\\*NASTY-VAR\\*** *\"\\
+\\
+\"*
+
+    docstring
 ")))
 
 
