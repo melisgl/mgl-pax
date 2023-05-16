@@ -1258,8 +1258,8 @@
       ;;;; => :HELLO
       ;;;; => (1 2)
 
-  Transcription support in emacs can be enabled by loading
-  `src/transcribe.el`.""")
+  Transcription support in Emacs can be enabled by loading
+  `src/pax.el`.""")
 
 (defun/autoloaded transcribe-for-emacs (string default-syntax* update-only echo
                                                first-line-special-p)

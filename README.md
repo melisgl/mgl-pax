@@ -2502,8 +2502,8 @@ but in comments too:
     ;;;; => :HELLO
     ;;;; => (1 2)
 
-Transcription support in emacs can be enabled by loading
-`src/transcribe.el`.
+Transcription support in Emacs can be enabled by loading
+`src/pax.el`.
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-API-20MGL-PAX-3ASECTION-29"></a>
 ### 10.3 Transcript API
