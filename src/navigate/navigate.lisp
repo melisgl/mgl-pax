@@ -80,8 +80,7 @@
 
 (defun locate-definitions-for-emacs-1 (object-and-locatives-list &key as-ref)
   (convert-for-emacs
-   (or (loop for (object-word locative-strings)
-               in object-and-locatives-list
+   (or (loop for (object-word locative-strings) in object-and-locatives-list
              append (loop for locative-string in locative-strings
                           append (locate-word-definition-for-emacs
                                   object-word locative-string
@@ -123,7 +122,12 @@
                                            (reference-for-emacs reference)
                                            (ambiguous-reference-for-emacs
                                             object))
-                                       dspec location))))
+                                       (if reference
+                                           ;; Replace (DEFCLASS FOO)
+                                           ;; with (FOO CLASS).
+                                           (reference-to-fake-dspec reference)
+                                           dspec)
+                                       location))))
                            (swank-find-definitions-for-object object))
                    (mapcan (lambda (locative)
                              (let ((thing (locate object locative
