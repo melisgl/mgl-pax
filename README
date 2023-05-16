@@ -1,7 +1,7 @@
 # PAX Manual
 
 ###### \[in package MGL-PAX with nicknames PAX\]
-## The MGL-PAX ASDF System
+## The mgl-pax ASDF System
 
 - Version: 0.1.0
 - Description: Exploratory programming tool and documentation
@@ -20,7 +20,7 @@
 - Bug tracker: [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
 - Source control: [GIT](https://github.com/melisgl/mgl-pax.git)
 
-## The MGL-PAX/FULL ASDF System
+## The mgl-pax/full ASDF System
 
 - Description: MGL-PAX with all features preloaded.
 - Licence: MIT, see COPYING.
@@ -986,7 +986,7 @@ possibilities.
 
 The `M-.` extensions can be enabled by loading `src/pax.el`.
 
-### The MGL-PAX/NAVIGATE ASDF System
+### The mgl-pax/navigate ASDF System
 
 - Description: Slime `M-.` support for MGL-PAX.
 - Long Description: Autoloaded by Slime's `M-.` when `src/pax.el` is
@@ -1001,7 +1001,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
 - [function] DOCUMENT OBJECT &KEY (STREAM T) PAGES (FORMAT :PLAIN)
 
     Write OBJECT in FORMAT to STREAM diverting some output to PAGES.
-    FORMAT can be anything [3BMD][3bmd] supports, which is currently
+    FORMAT can be anything 3BMD supports, which is currently
     :MARKDOWN, :HTML and :PLAIN. STREAM may be a STREAM object,
     T or NIL as with CL:FORMAT.
     
@@ -1149,7 +1149,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     *PACKAGE* and *READTABLE*. See *DOCUMENT-NORMALIZE-PACKAGES* for the
     details.
 
-### The MGL-PAX/DOCUMENT ASDF System
+### The mgl-pax/document ASDF System
 
 - Description: Documentation generation support for MGL-PAX.
 - Long Description: Autoloaded by MGL-PAX:DOCUMENT. See
@@ -1315,7 +1315,7 @@ In addition, the following PAX-specific key bindings are available:
 ### Markdown Support
 
 The [Markdown][markdown] in docstrings is processed with the
-[3BMD][3bmd] library.
+3BMD library.
 
 #### Indentation
 
@@ -1362,7 +1362,7 @@ to get syntactically marked up HTML output. Copy `src/style.css`
 from PAX and you are set. The language tag, `elisp` in this
 example, is optional and defaults to `common-lisp`.
 
-See the documentation of [3BMD][3bmd] and [colorize][colorize] for
+See the documentation of 3BMD and colorize for
 the details.
 
 [3bmd]: https://github.com/3b/3bmd 
@@ -1391,8 +1391,8 @@ backticks) alone. Outside code blocks, escape `$` by prefixing it
 with a backslash to scare MathJax off.
 
 Escaping all those backslashes in TeX fragments embedded in Lisp
-strings can be a pain. [Pythonic String
-Reader][pythonic-string-reader] can help with that.
+strings can be a pain. Pythonic String
+Reader can help with that.
 
 [pythonic-string-reader]: https://github.com/smithzvk/pythonic-string-reader 
 
@@ -2201,7 +2201,7 @@ can be enabled with:
     (in-readtable pythonic-string-syntax)
 
 
-### The MGL-PAX/TRANSCRIBE ASDF System
+### The mgl-pax/transcribe ASDF System
 
 - Description: Transcription support for MGL-PAX.
 - Long Description: Autoloaded by MGL-PAX:TRANSCRIBE and by the Emacs
@@ -2755,9 +2755,8 @@ makes sense. Here is how all this is done for ASDF:SYSTEM:
 
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
-                        (format nil "The ~A \\ASDF System"
-                                (string-upcase
-                                 (slot-value system 'asdf::name))))
+                 (format nil "The ~A \\ASDF System"
+                         (escape-markdown (slot-value system 'asdf::name))))
     (flet ((foo (name fn &key type)
              (let ((value (funcall fn system)))
                (when (and value (not (equal value "")))

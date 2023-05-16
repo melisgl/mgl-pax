@@ -923,9 +923,8 @@
 
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
-                        (format nil "The ~A \\ASDF System"
-                                (string-upcase
-                                 (slot-value system 'asdf::name))))
+                 (format nil "The ~A \\ASDF System"
+                         (escape-markdown (slot-value system 'asdf::name))))
     (flet ((foo (name fn &key type)
              (let ((value (funcall fn system)))
                (when (and value (not (equal value "")))

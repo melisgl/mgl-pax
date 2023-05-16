@@ -3,8 +3,8 @@
 
 ## Table of Contents
 
-- [1 The MGL-PAX ASDF System][6fdb]
-- [2 The `MGL-PAX/FULL` ASDF System][d761]
+- [1 The mgl-pax ASDF System][6fdb]
+- [2 The mgl-pax/full ASDF System][d761]
 - [3 Links][ba74]
 - [4 Background][f74b]
 - [5 Tutorial][8c3e]
@@ -22,9 +22,9 @@
     - [7.7 Locatives for PAX Constructs][292a]
     - [7.8 External Locatives][4b78]
 - [8 Navigating Sources in Emacs][3386]
-    - [8.1 The `MGL-PAX/NAVIGATE` ASDF System][f155]
+    - [8.1 The mgl-pax/navigate ASDF System][f155]
 - [9 Generating Documentation][2c93]
-    - [9.1 The `MGL-PAX/DOCUMENT` ASDF System][4bb8]
+    - [9.1 The mgl-pax/document ASDF System][4bb8]
     - [9.2 Documenting in Emacs][7199]
         - [9.2.1 PAX `URL`s][1e80]
         - [9.2.2 PAX Apropos][b7fc]
@@ -54,7 +54,7 @@
     - [9.10 Overview of Escaping][2634]
     - [9.11 Documentation Generation Implementation Notes][d1ca]
 - [10 Transcripts][6300]
-    - [10.1 The `MGL-PAX/TRANSCRIBE` ASDF System][5825]
+    - [10.1 The mgl-pax/transcribe ASDF System][5825]
     - [10.2 Transcribing with Emacs][f5bd]
     - [10.3 Transcript API][9dbc]
     - [10.4 Transcript Consistency Checking][f47d]
@@ -71,7 +71,7 @@
 
 ###### \[in package MGL-PAX with nicknames PAX\]
 <a id="x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-## 1 The MGL-PAX ASDF System
+## 1 The mgl-pax ASDF System
 
 - Version: 0.1.0
 - Description: Exploratory programming tool and documentation
@@ -91,7 +91,7 @@
 - Source control: [GIT](https://github.com/melisgl/mgl-pax.git)
 
 <a id="x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-## 2 The `MGL-PAX/FULL` ASDF System
+## 2 The mgl-pax/full ASDF System
 
 - Description: MGL-PAX with all features preloaded.
 - Licence: MIT, see COPYING.
@@ -1126,7 +1126,7 @@ possibilities.
 The `M-.` extensions can be enabled by loading `src/pax.el`.
 
 <a id="x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-### 8.1 The `MGL-PAX/NAVIGATE` ASDF System
+### 8.1 The mgl-pax/navigate ASDF System
 
 - Description: Slime `M-.` support for MGL-PAX.
 - Long Description: Autoloaded by Slime's `M-.` when `src/pax.el` is
@@ -1143,7 +1143,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
 - [function] **DOCUMENT** *OBJECT &KEY (STREAM T) PAGES (FORMAT :PLAIN)*
 
     Write `OBJECT` in `FORMAT` to `STREAM` diverting some output to `PAGES`.
-    `FORMAT` can be anything [3BMD][3bmd] supports, which is currently
+    `FORMAT` can be anything 3BMD supports, which is currently
     `:MARKDOWN`, `:HTML` and `:PLAIN`. `STREAM` may be a [`STREAM`][6b46] object,
     `T` or `NIL` as with `CL:FORMAT`.
     
@@ -1292,7 +1292,7 @@ The `M-.` extensions can be enabled by loading `src/pax.el`.
     details.
 
 <a id="x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-### 9.1 The `MGL-PAX/DOCUMENT` ASDF System
+### 9.1 The mgl-pax/document ASDF System
 
 - Description: Documentation generation support for MGL-PAX.
 - Long Description: Autoloaded by [`MGL-PAX:DOCUMENT`][432c]. See
@@ -1465,7 +1465,7 @@ In addition, the following PAX-specific key bindings are available:
 ### 9.3 Markdown Support
 
 The [Markdown][markdown] in docstrings is processed with the
-[3BMD][3bmd] library.
+3BMD library.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29"></a>
 #### 9.3.1 Indentation
@@ -1515,7 +1515,7 @@ to get syntactically marked up HTML output. Copy `src/style.css`
 from PAX and you are set. The language tag, `elisp` in this
 example, is optional and defaults to `common-lisp`.
 
-See the documentation of [3BMD][3bmd] and [colorize][colorize] for
+See the documentation of 3BMD and colorize for
 the details.
 
 [3bmd]: https://github.com/3b/3bmd 
@@ -1545,8 +1545,8 @@ backticks) alone. Outside code blocks, escape `$` by prefixing it
 with a backslash to scare MathJax off.
 
 Escaping all those backslashes in TeX fragments embedded in Lisp
-strings can be a pain. [Pythonic String
-Reader][pythonic-string-reader] can help with that.
+strings can be a pain. Pythonic String
+Reader can help with that.
 
 [pythonic-string-reader]: https://github.com/smithzvk/pythonic-string-reader 
 
@@ -2407,7 +2407,7 @@ can be enabled with:
 
 
 <a id="x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-### 10.1 The `MGL-PAX/TRANSCRIBE` ASDF System
+### 10.1 The mgl-pax/transcribe ASDF System
 
 - Description: Transcription support for MGL-PAX.
 - Long Description: Autoloaded by [`MGL-PAX:TRANSCRIBE`][f1f0] and by the Emacs
@@ -2979,9 +2979,8 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
 
 (defmethod document-object ((system asdf:system) stream)
   (with-heading (stream system
-                        (format nil "The ~A \\ASDF System"
-                                (string-upcase
-                                 (slot-value system 'asdf::name))))
+                 (format nil "The ~A \\ASDF System"
+                         (escape-markdown (slot-value system 'asdf::name))))
     (flet ((foo (name fn &key type)
              (let ((value (funcall fn system)))
                (when (and value (not (equal value "")))
