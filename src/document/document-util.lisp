@@ -17,45 +17,49 @@
     :if-exists :supersede
     :ensure-directories-exist t))
 
-(defun/autoloaded update-asdf-system-readmes (object asdf-system &key
-                                                     (url-versions '(1)))
-  "Convenience function to generate two readme files in the directory
-  holding the ASDF-SYSTEM definition. OBJECT is passed on to DOCUMENT.
+(defun/autoloaded update-asdf-system-readmes
+    (object asdf-system &key (url-versions '(1)) (formats '(:markdown)))
+  "Convenience function to generate up to two readme files in the
+  directory holding the ASDF-SYSTEM definition. OBJECT is passed on to
+  DOCUMENT.
 
-  `README.md` has anchors, links, inline code, and other markup added.
-  Not necessarily the easiest on the eye in an editor but looks good
-  on github.
+  If :MARKDOWN is in FORMATS, then `README.md` is generated with
+  anchors, links, inline code, and other markup added. Not necessarily
+  the easiest on the eye in an editor but looks good on github.
 
-  `\\\\README` is optimized for reading in text format. It has less
-  cluttery markup and no [autolinking][@explicit-and-autolinking
-  section].
+  If :PLAIN is in FORMATS, then `\\\\README` is generated, which is
+  optimized for reading in text format. It has less cluttery markup
+  and no [autolinking][@explicit-and-autolinking section].
 
   Example usage:
 
   ```
-  (update-asdf-system-readmes @pax-manual :mgl-pax)
+  (update-asdf-system-readmes @pax-manual :mgl-pax
+                              :formats '(:markdown :plain))
   ```
 
   Note that *DOCUMENT-URL-VERSIONS* is bound to URL-VERSIONS, which
   defaults to using the uglier, version 1 style of URL for the sake of
   github."
-  (with-open-file (stream (asdf:system-relative-pathname
-                           asdf-system "README.md")
-                          :direction :output
-                          :if-does-not-exist :create
-                          :if-exists :supersede
-                          :external-format *utf-8-external-format*)
-    (let ((*document-url-versions* url-versions))
-      (document object :stream stream :format :markdown))
-    (print-markdown-footer stream))
-  (with-open-file (stream (asdf:system-relative-pathname
-                           asdf-system "README")
-                          :direction :output
-                          :if-does-not-exist :create
-                          :if-exists :supersede
-                          :external-format *utf-8-external-format*)
-    (document object :stream stream :format :plain)
-    (print-markdown-footer stream)))
+  (when (member :markdown formats)
+    (with-open-file (stream (asdf:system-relative-pathname
+                             asdf-system "README.md")
+                            :direction :output
+                            :if-does-not-exist :create
+                            :if-exists :supersede
+                            :external-format *utf-8-external-format*)
+      (let ((*document-url-versions* url-versions))
+        (document object :stream stream :format :markdown))
+      (print-markdown-footer stream)))
+  (when (member :plain formats)
+    (with-open-file (stream (asdf:system-relative-pathname
+                             asdf-system "README")
+                            :direction :output
+                            :if-does-not-exist :create
+                            :if-exists :supersede
+                            :external-format *utf-8-external-format*)
+      (document object :stream stream :format :plain)
+      (print-markdown-footer stream))))
 
 (defun print-markdown-footer (stream)
   (format stream "~%* * *~%")
@@ -410,7 +414,8 @@
   (asdf:load-system :mgl-pax/full)
   (time
    (progn
-     (update-asdf-system-readmes (pax-sections) :mgl-pax)
+     (update-asdf-system-readmes (pax-sections) :mgl-pax
+                                 :formats '(:markdown :plain))
      (let ((*document-downcase-uppercase-code* t))
        (update-asdf-system-html-docs (pax-sections)
                                      :mgl-pax :pages (pax-pages))))))

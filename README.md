@@ -2073,22 +2073,25 @@ having an ASDF system with some readmes and a directory with for the
 HTML documentation and the default CSS stylesheet.
 
 <a id="x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29"></a>
-- [function] **UPDATE-ASDF-SYSTEM-READMES** *OBJECT ASDF-SYSTEM &KEY (URL-VERSIONS '(1))*
+- [function] **UPDATE-ASDF-SYSTEM-READMES** *OBJECT ASDF-SYSTEM &KEY (URL-VERSIONS '(1)) (FORMATS '(:MARKDOWN))*
 
-    Convenience function to generate two readme files in the directory
-    holding the `ASDF-SYSTEM` definition. `OBJECT` is passed on to [`DOCUMENT`][432c].
+    Convenience function to generate up to two readme files in the
+    directory holding the `ASDF-SYSTEM` definition. `OBJECT` is passed on to
+    [`DOCUMENT`][432c].
     
-    `README.md` has anchors, links, inline code, and other markup added.
-    Not necessarily the easiest on the eye in an editor but looks good
-    on github.
+    If `:MARKDOWN` is in `FORMATS`, then `README.md` is generated with
+    anchors, links, inline code, and other markup added. Not necessarily
+    the easiest on the eye in an editor but looks good on github.
     
-    `README` is optimized for reading in text format. It has less
-    cluttery markup and no [autolinking][b3cc].
+    If `:PLAIN` is in `FORMATS`, then `README` is generated, which is
+    optimized for reading in text format. It has less cluttery markup
+    and no [autolinking][b3cc].
     
     Example usage:
     
     ```
-    (update-asdf-system-readmes @pax-manual :mgl-pax)
+    (update-asdf-system-readmes @pax-manual :mgl-pax
+                                :formats '(:markdown :plain))
     ```
     
     Note that [`*DOCUMENT-URL-VERSIONS*`][17e0] is bound to `URL-VERSIONS`, which
