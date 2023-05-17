@@ -1317,13 +1317,11 @@
   will contain a single link._"""
   (*document-link-code* variable)
   (@specified-locative section)
-  (@unambiguous-locative section)
-  (@ambiguous-locative section)
+  (@unspecified-locative section)
   (@explicit-and-autolinking section)
   (@preventing-autolinking section)
   (@unresolvable-reflinks section)
   (@suppressed-links section)
-  (@filtering-ambiguous-references section)
   (@local-references section))
 
 (defsection @specified-locative (:title "Specified Locative")
@@ -1348,7 +1346,49 @@
   - `[see this][document function]` (*title + object + locative,
     explicit link*) renders as: [see this][document function].""")
 
-(defsection @unambiguous-locative (:title "Unambiguous Unspecified Locative")
+(defsection @unspecified-locative (:title "Unspecified Locative")
+  "[filter-string-based-references function][docstring]
+
+  [filter-method-references function][docstring]"
+  (@unambiguous-unspecificed-locative section)
+  (@ambiguous-unspecified-locative section))
+
+(defun filter-string-based-references (refs)
+  "When only an @OBJECT is provided without a locative, all
+  definitions of the object are considered as possible link targets.
+  Then, definitions that are not symbol-based (i.e. whose
+  REFERENCE-OBJECT is not a symbol) are filtered out to prevent
+  unrelated PACKAGEs and ASDF:SYSTEMs from cluttering the
+  documentation without the control provided by importing symbols."
+  (remove-if #'string-based-reference-p refs))
+
+(defun string-based-reference-p (reference)
+  ;; We assume that REFERENCE is canonical and only look at the
+  ;; object.
+  (stringp (reference-object reference)))
+
+(defun filter-method-references (refs)
+  "To further reduce clutter, if the definitions include a
+  GENERIC-FUNCTION locative, then all references with LOCATIVE-TYPE
+  [METHOD][locative], [ACCESSOR][locative], [READER][locative] and
+  [WRITER][locative] are removed to avoid linking to a possibly large
+  number of methods."
+  (flet ((non-method-refs ()
+           (remove-if (lambda (ref)
+                        (member (reference-locative-type ref)
+                                '(accessor reader writer method)))
+                      refs)))
+    (cond
+      ;; If in doubt, prefer the generic function to methods.
+      ((find 'generic-function refs :key #'reference-locative-type)
+       (non-method-refs))
+      ;; No generic function, prefer non-methods to methods.
+      ((non-method-refs))
+      (t
+       refs))))
+
+(defsection @unambiguous-unspecificed-locative
+    (:title "Unambiguous Unspecified Locative")
   """In the following examples, although no locative is specified,
   `\DOCUMENT` names a single @OBJECT being documented, so they all
   render as [DOCUMENT][function].
@@ -1361,7 +1401,8 @@
   - `\[see this][document]` (*title + object, explicit link*) renders
     as: [see this][document].""")
 
-(defsection @ambiguous-locative (:title "Ambiguous Unspecified Locative")
+(defsection @ambiguous-unspecified-locative
+    (:title "Ambiguous Unspecified Locative")
   """These examples all render as [SECTION][], linking to both
   definitions of the @OBJECT `\SECTION`, the `\CLASS` and the
   `\LOCATIVE`.
@@ -1808,9 +1849,9 @@
       "`FOO` is safe. Macro `FOO` is great."
 
   As an exception, links with [specified][@specified-locative section]
-  and [unambiguous][@unambiguous-locative section] locatives to
-  SECTIONs and GLOSSARY-TERMs always produce a link to allow their
-  titles to be displayed properly.
+  and [unambiguous][ @unambiguous-unspecificed-locative section]
+  locatives to SECTIONs and GLOSSARY-TERMs always produce a link to
+  allow their titles to be displayed properly.
 
   Finally, [autolinking][@explicit-and-autolinking section] to T or
   NIL is suppressed (see *DOCUMENT-LINK-TO-HYPERSPEC*).""")
@@ -1877,10 +1918,9 @@
           (list ref)))))
 
 (defun references-for-explicitly-unspecified-locative (object)
-  (resolve-generic-function-and-methods
-   (filter-asdf-system-references
-    (filter-clhs-references
-     (references-to-object object :local :exclude)))))
+  (filter-method-references
+   (filter-string-based-references
+    (references-to-object object :local :exclude))))
 
 ;;; All returned REFERENCES are for the same object.
 (defun references-for-autolink (objects locatives linked-refs)
@@ -1901,11 +1941,10 @@
          until (references-to-object object :local :include))))
 
 (defun references-for-autolink-with-unspecified-locative (object)
-  (resolve-generic-function-and-methods
-   (filter-asdf-system-references
-    (remove-clhs-references
-     (linkable-references
-      (references-to-object object))))))
+  (filter-method-references
+   (filter-string-based-references
+    (linkable-references
+     (references-to-object object)))))
 
 (defun linkable-references (refs)
   (remove-if-not #'linkable-ref-p refs))
@@ -1931,57 +1970,6 @@
           ;; RELATIVE-PAGE-URI-FRAGMENT.
           (and (page-uri-fragment *page*)
                (page-uri-fragment page))))))
-
-
-(defsection @filtering-ambiguous-references
-    (:title "Filtering Ambiguous References")
-  """When there are multiple references to link to - as seen in
-  @AMBIGUOUS-LOCATIVE - some references are removed by the following
-  rules.
-
-  - References to ASDF:SYSTEMs are removed if there are other
-    references which are not to ASDF:SYSTEMs. This is because system
-    names often collide with the name of a class or function and are
-    rarely useful to link to. Use explicit links to ASDF:SYSTEMs, if
-    necessary.
-
-  - References to the CLHS are filtered similarly.
-
-  - If references include a GENERIC-FUNCTION locative, then all
-    references with LOCATIVE-TYPE [METHOD][locative],
-    [ACCESSOR][locative], [READER][locative] and [WRITER][locative]
-    are removed to avoid linking to a possibly large number of
-    methods.""")
-
-;;; It's rarely useful to link to ASDF systems in an ambiguous
-;;; situation, so don't.
-(defun filter-asdf-system-references (refs)
-  (if (< 1 (length refs))
-      (remove 'asdf:system refs :key #'reference-locative-type)
-      refs))
-
-(defun filter-clhs-references (refs)
-  (if (< 1 (length refs))
-      (remove-clhs-references refs)
-      refs))
-
-(defun remove-clhs-references (refs)
-  (remove 'clhs refs :key #'reference-locative-type))
-
-(defun resolve-generic-function-and-methods (refs)
-  (flet ((non-method-refs ()
-           (remove-if (lambda (ref)
-                        (member (reference-locative-type ref)
-                                '(accessor reader writer method)))
-                      refs)))
-    (cond
-      ;; If in doubt, prefer the generic function to methods.
-      ((find 'generic-function refs :key #'reference-locative-type)
-       (non-method-refs))
-      ;; No generic function, prefer non-methods to methods.
-      ((non-method-refs))
-      (t
-       refs))))
 
 
 (defsection @linking-to-sections (:title "Linking to Sections")

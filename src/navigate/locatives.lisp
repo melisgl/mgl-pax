@@ -1266,7 +1266,6 @@
 
 (define-locative-type docstring ()
   "[translate-docstring-links function][docstring]")
-
 
 
 ;;;; INCLUDE locative

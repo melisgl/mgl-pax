@@ -877,7 +877,7 @@ This is [Self-referencing][e042].
     (is (find-symbol (string '#:mgl-pax/full) '#:mgl-pax-test))
     (check-head (list "MGL-PAX/FULL"
                       (make-reference :mgl-pax/full 'asdf:system))
-                "[`MGL-PAX/FULL`][d761]")
+                "`MGL-PAX/FULL`")
     (check-head (list "MGL-PAX/FULL asdf:system"
                       (make-reference 'mgl-pax/full 'asdf:system))
                 "[`MGL-PAX/FULL`][d761] asdf:system")
@@ -906,7 +906,7 @@ This is [Self-referencing][e042].
 (deftest test-package ()
   (check-head (list "INTERNED-PKG-NAME"
                     (make-reference 'interned-pkg-name 'package))
-              "[`INTERNED-PKG-NAME`][0651]")
+              "`INTERNED-PKG-NAME`")
   (check-head (list "INTERNED-PKG-NAME package"
                     (make-reference 'interned-pkg-name 'package))
               "[`INTERNED-PKG-NAME`][0651] package")
@@ -983,8 +983,8 @@ This is [Self-referencing][e042].
   (check-head "CLHS 3.4" "`CLHS` 3.4")
   (check-head "CLHS `3.4`" "`CLHS` [`3.4`][f945]")
   (check-head "`3.4` CLHS" "[`3.4`][f945] `CLHS`")
-  (check-head "[3.4][]" "[3.4][f945]")
-  (check-head "[`3.4`][]" "[`3.4`][f945]")
+  (check-head "[3.4][]" "3.4")
+  (check-head "[`3.4`][]" "`3.4`")
   (check-head "[3.4][CLHS]" "[3.4][f945]")
   (check-head "[Lambda Lists][clhs]" "[Lambda Lists][f945]")
   (check-head "[03_d][clhs]" "[03\\_d][f945]"))
@@ -1003,8 +1003,8 @@ This is [Self-referencing][e042].
   (check-head "ISSUE:AREF-1D CLHS" "ISSUE:AREF-1D `CLHS`")
   (check-head "CLHS `ISSUE:AREF-1D`" "`CLHS` [`ISSUE:AREF-1D`][6786]")
   (check-head "`ISSUE:AREF-1D` CLHS" "[`ISSUE:AREF-1D`][6786] `CLHS`")
-  (check-head "[ISSUE:AREF-1D][]" "[ISSUE:AREF-1D][6786]")
-  (check-head "[`ISSUE:AREF-1D`][]" "[`ISSUE:AREF-1D`][6786]")
+  (check-head "[ISSUE:AREF-1D][]" "ISSUE:AREF-1D")
+  (check-head "[`ISSUE:AREF-1D`][]" "`ISSUE:AREF-1D`")
   (check-head "[ISSUE:AREF-1D][CLHS]" "[ISSUE:AREF-1D][6786]")
   (check-head "[iss009][clhs]" "[iss009][e256]"))
 

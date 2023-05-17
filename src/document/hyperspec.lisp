@@ -1039,7 +1039,7 @@
     (zerop function "f_zerop")))
 
 (defparameter *hyperspec-sections*
-  '(("00_" NIL "Credits")
+  '(("00_" "0" "Credits")
     ("01_" "1" "Introduction")
     ("01_a" "1.1" "Scope, Purpose, and History")
     ("01_aa" "1.1.1" "Scope and Purpose")

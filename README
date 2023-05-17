@@ -1528,7 +1528,22 @@ this form may be used:
   explicit link*) renders as: see this.
 
 
-#### Unambiguous Unspecified Locative
+#### Unspecified Locative
+
+When only an @OBJECT is provided without a locative, all
+definitions of the object are considered as possible link targets.
+Then, definitions that are not symbol-based (i.e. whose
+REFERENCE-OBJECT is not a symbol) are filtered out to prevent
+unrelated PACKAGEs and ASDF:SYSTEMs from cluttering the
+documentation without the control provided by importing symbols.
+
+To further reduce clutter, if the definitions include a
+GENERIC-FUNCTION locative, then all references with LOCATIVE-TYPE
+METHOD, ACCESSOR, READER and
+WRITER are removed to avoid linking to a possibly large
+number of methods.
+
+##### Unambiguous Unspecified Locative
 
 In the following examples, although no locative is specified,
 `DOCUMENT` names a single @OBJECT being documented, so they all
@@ -1544,7 +1559,7 @@ To override the title:
   as: see this.
 
 
-#### Ambiguous Unspecified Locative
+##### Ambiguous Unspecified Locative
 
 These examples all render as SECTION, linking to both
 definitions of the @OBJECT `SECTION`, the `CLASS` and the
@@ -1629,33 +1644,12 @@ occurrences `FOO` produce links.
     "`FOO` is safe. Macro `FOO` is great."
 
 As an exception, links with specified
-and unambiguous locatives to
-SECTIONs and GLOSSARY-TERMs always produce a link to allow their
-titles to be displayed properly.
+and unambiguous
+locatives to SECTIONs and GLOSSARY-TERMs always produce a link to
+allow their titles to be displayed properly.
 
 Finally, autolinking to T or
 NIL is suppressed (see *DOCUMENT-LINK-TO-HYPERSPEC*).
-
-#### Filtering Ambiguous References
-
-When there are multiple references to link to - as seen in
-@AMBIGUOUS-LOCATIVE - some references are removed by the following
-rules.
-
-- References to ASDF:SYSTEMs are removed if there are other
-  references which are not to ASDF:SYSTEMs. This is because system
-  names often collide with the name of a class or function and are
-  rarely useful to link to. Use explicit links to ASDF:SYSTEMs, if
-  necessary.
-
-- References to the CLHS are filtered similarly.
-
-- If references include a GENERIC-FUNCTION locative, then all
-  references with LOCATIVE-TYPE METHOD,
-  ACCESSOR, READER and WRITER
-  are removed to avoid linking to a possibly large number of
-  methods.
-
 
 #### Local References
 

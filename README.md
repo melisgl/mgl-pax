@@ -36,14 +36,12 @@
     - [9.4 Codification][f1ab]
     - [9.5 Linking to Code][1865]
         - [9.5.1 Specified Locative][8996]
-        - [9.5.2 Unambiguous Unspecified Locative][5c74]
-        - [9.5.3 Ambiguous Unspecified Locative][2645]
-        - [9.5.4 Explicit and Autolinking][b3cc]
-        - [9.5.5 Preventing Autolinking][8c16]
-        - [9.5.6 Unresolvable Links][b372]
-        - [9.5.7 Suppressed Links][e2e8]
-        - [9.5.8 Filtering Ambiguous References][4c5e]
-        - [9.5.9 Local References][4c96]
+        - [9.5.2 Unspecified Locative][524e]
+        - [9.5.3 Explicit and Autolinking][b3cc]
+        - [9.5.4 Preventing Autolinking][8c16]
+        - [9.5.5 Unresolvable Links][b372]
+        - [9.5.6 Suppressed Links][e2e8]
+        - [9.5.7 Local References][4c96]
     - [9.6 Linking to the Hyperspec][7cc3]
     - [9.7 Linking to Sections][22c2]
     - [9.8 Miscellaneous Variables][7c82]
@@ -79,8 +77,8 @@
 - Long Description: The set of dependencies of the MGL-PAX system is
   kept light, and its heavier dependencies are autoloaded via ASDF
   when the relavant functionality is accessed. See the
-  [`MGL-PAX/NAVIGATE`][f155], [`MGL-PAX/DOCUMENT`][4bb8], [`MGL-PAX/TRANSCRIBE`][5825] and
-  [`MGL-PAX/FULL`][d761] systems. To keep deployed code small, client systems
+  `MGL-PAX/NAVIGATE`, `MGL-PAX/DOCUMENT`, `MGL-PAX/TRANSCRIBE` and
+  `MGL-PAX/FULL` systems. To keep deployed code small, client systems
   should declare an ASDF dependency on this system, never on the
   others, which are intended for autoloading and interactive use.
 - Licence: MIT, see COPYING.
@@ -1571,7 +1569,7 @@ Reader can help with that.
     
     and renders as
     
-    `T` [`PRINT`][fdd1] `CLASS`([`0`][7e58] [`1`][2060])es `SECTION`([`0`][5fac] [`1`][672f]) [`MGL-PAX`][6fdb] `ASDF` CaMel Capital
+    `T` [`PRINT`][fdd1] `CLASS`([`0`][7e58] [`1`][2060])es `SECTION`([`0`][5fac] [`1`][672f]) `MGL-PAX` `ASDF` CaMel Capital
     
     where the links are added due to [`*DOCUMENT-LINK-CODE*`][d9ee].
     
@@ -1690,8 +1688,24 @@ this form may be used:
   explicit link*) renders as: [see this][432c].
 
 
-<a id="x-28MGL-PAX-3A-40UNAMBIGUOUS-LOCATIVE-20MGL-PAX-3ASECTION-29"></a>
-#### 9.5.2 Unambiguous Unspecified Locative
+<a id="x-28MGL-PAX-3A-40UNSPECIFIED-LOCATIVE-20MGL-PAX-3ASECTION-29"></a>
+#### 9.5.2 Unspecified Locative
+
+When only an [object][75ce] is provided without a locative, all
+definitions of the object are considered as possible link targets.
+Then, definitions that are not symbol-based (i.e. whose
+[`REFERENCE-OBJECT`][8c7d] is not a symbol) are filtered out to prevent
+unrelated `PACKAGE`([`0`][97eb] [`1`][4dd7])s and [`ASDF:SYSTEM`][c097]s from cluttering the
+documentation without the control provided by importing symbols.
+
+To further reduce clutter, if the definitions include a
+[`GENERIC-FUNCTION`][5875] locative, then all references with [`LOCATIVE-TYPE`][3200]
+[`METHOD`][172e], [`ACCESSOR`][00d4], [`READER`][cc04] and
+[`WRITER`][e548] are removed to avoid linking to a possibly large
+number of methods.
+
+<a id="x-28MGL-PAX-3A-40UNAMBIGUOUS-UNSPECIFICED-LOCATIVE-20MGL-PAX-3ASECTION-29"></a>
+##### Unambiguous Unspecified Locative
 
 In the following examples, although no locative is specified,
 `DOCUMENT` names a single [object][75ce] being documented, so they all
@@ -1707,8 +1721,8 @@ To override the title:
   as: [see this][432c].
 
 
-<a id="x-28MGL-PAX-3A-40AMBIGUOUS-LOCATIVE-20MGL-PAX-3ASECTION-29"></a>
-#### 9.5.3 Ambiguous Unspecified Locative
+<a id="x-28MGL-PAX-3A-40AMBIGUOUS-UNSPECIFIED-LOCATIVE-20MGL-PAX-3ASECTION-29"></a>
+##### Ambiguous Unspecified Locative
 
 These examples all render as `SECTION`([`0`][5fac] [`1`][672f]), linking to both
 definitions of the [object][75ce] `SECTION`, the `CLASS` and the
@@ -1725,7 +1739,7 @@ To override the title:
 
 
 <a id="x-28MGL-PAX-3A-40EXPLICIT-AND-AUTOLINKING-20MGL-PAX-3ASECTION-29"></a>
-#### 9.5.4 Explicit and Autolinking
+#### 9.5.3 Explicit and Autolinking
 
 The examples in the previous sections are marked with *explicit
 link* or *autolink*. Explicit links are those with a Markdown
@@ -1733,7 +1747,7 @@ reference link spelled out explicitly, while autolinks are those
 without.
 
 <a id="x-28MGL-PAX-3A-40PREVENTING-AUTOLINKING-20MGL-PAX-3ASECTION-29"></a>
-#### 9.5.5 Preventing Autolinking
+#### 9.5.4 Preventing Autolinking
 
 In the common case, when [`*DOCUMENT-UPPERCASE-IS-CODE*`][f25f] is true,
 prefixing the uppercase [word][d7b0] with a backslash prevents it from
@@ -1750,7 +1764,7 @@ This renders as `DOCUMENT`. Alternatively, the [`DISLOCATED`][e391] or the
 [`ARGUMENT`][8710] locative may be used as in `[DOCUMENT][dislocated]`.
 
 <a id="x-28MGL-PAX-3A-40UNRESOLVABLE-REFLINKS-20MGL-PAX-3ASECTION-29"></a>
-#### 9.5.6 Unresolvable Links
+#### 9.5.5 Unresolvable Links
 
 <a id="x-28MGL-PAX-3AUNRESOLVABLE-REFLINK-20CONDITION-29"></a>
 - [condition] **UNRESOLVABLE-REFLINK** *[WARNING][c5b8]*
@@ -1783,7 +1797,7 @@ This renders as `DOCUMENT`. Alternatively, the [`DISLOCATED`][e391] or the
     Invoke the OUTPUT-L restart.
 
 <a id="x-28MGL-PAX-3A-40SUPPRESSED-LINKS-20MGL-PAX-3ASECTION-29"></a>
-#### 9.5.7 Suppressed Links
+#### 9.5.6 Suppressed Links
 
 Within the same docstring, [autolinking][b3cc] of code (i.e. of something like
 `FOO`) is suppressed if the same [object][75ce] was already linked to in
@@ -1800,37 +1814,15 @@ occurrences `FOO` produce links.
     "`FOO` is safe. Macro `FOO` is great."
 
 As an exception, links with [specified][8996]
-and [unambiguous][5c74] locatives to
-`SECTION`([`0`][5fac] [`1`][672f])s and `GLOSSARY-TERM`([`0`][8251] [`1`][5119])s always produce a link to allow their
-titles to be displayed properly.
+and [unambiguous][ad94]
+locatives to `SECTION`([`0`][5fac] [`1`][672f])s and `GLOSSARY-TERM`([`0`][8251] [`1`][5119])s always produce a link to
+allow their titles to be displayed properly.
 
 Finally, [autolinking][b3cc] to `T` or
 `NIL` is suppressed (see [`*DOCUMENT-LINK-TO-HYPERSPEC*`][875e]).
 
-<a id="x-28MGL-PAX-3A-40FILTERING-AMBIGUOUS-REFERENCES-20MGL-PAX-3ASECTION-29"></a>
-#### 9.5.8 Filtering Ambiguous References
-
-When there are multiple references to link to - as seen in
-[Ambiguous Unspecified Locative][2645] - some references are removed by the following
-rules.
-
-- References to [`ASDF:SYSTEM`][c097]s are removed if there are other
-  references which are not to `ASDF:SYSTEM`s. This is because system
-  names often collide with the name of a class or function and are
-  rarely useful to link to. Use explicit links to `ASDF:SYSTEM`s, if
-  necessary.
-
-- References to the [`CLHS`][ed5f] are filtered similarly.
-
-- If references include a [`GENERIC-FUNCTION`][5875] locative, then all
-  references with [`LOCATIVE-TYPE`][3200] [`METHOD`][172e],
-  [`ACCESSOR`][00d4], [`READER`][cc04] and [`WRITER`][e548]
-  are removed to avoid linking to a possibly large number of
-  methods.
-
-
 <a id="x-28MGL-PAX-3A-40LOCAL-REFERENCES-20MGL-PAX-3ASECTION-29"></a>
-#### 9.5.9 Local References
+#### 9.5.7 Local References
 
 To unclutter the generated output by reducing the number of
 links, the so-called 'local' references (e.g. references to the very
@@ -3580,7 +3572,6 @@ they are presented.
   [238c]: #x-28MGL-PAX-3ATRANSCRIPTION-VALUES-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION"
   [2415]: #x-28MGL-PAX-3A-40PAX-MANUAL-20MGL-PAX-3ASECTION-29 "PAX Manual"
   [2634]: #x-28MGL-PAX-3A-40OVERVIEW-OF-ESCAPING-20MGL-PAX-3ASECTION-29 "Overview of Escaping"
-  [2645]: #x-28MGL-PAX-3A-40AMBIGUOUS-LOCATIVE-20MGL-PAX-3ASECTION-29 "Ambiguous Unspecified Locative"
   [26df]: http://www.lispworks.com/documentation/HyperSpec/Body/t_t.htm "T CLASS"
   [28bb]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "STRING CLASS"
   [292a]: #x-28MGL-PAX-3A-40PAX-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for PAX Constructs"
@@ -3615,11 +3606,11 @@ they are presented.
   [4b78]: #x-28MGL-PAX-3A-40EXTERNAL-LOCATIVES-20MGL-PAX-3ASECTION-29 "External Locatives"
   [4bb8]: #x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/document" ASDF/SYSTEM:SYSTEM'
   [4c48]: #x-28MGL-PAX-3A-40VARIABLELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Variables"
-  [4c5e]: #x-28MGL-PAX-3A-40FILTERING-AMBIGUOUS-REFERENCES-20MGL-PAX-3ASECTION-29 "Filtering Ambiguous References"
   [4c96]: #x-28MGL-PAX-3A-40LOCAL-REFERENCES-20MGL-PAX-3ASECTION-29 "Local References"
   [4d92]: #x-28MGL-PAX-3A-40LOCATIVE-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@LOCATIVE MGL-PAX:GLOSSARY-TERM"
   [4dd7]: #x-28PACKAGE-20MGL-PAX-3ALOCATIVE-29 "PACKAGE MGL-PAX:LOCATIVE"
   [5119]: #x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:GLOSSARY-TERM MGL-PAX:LOCATIVE"
+  [524e]: #x-28MGL-PAX-3A-40UNSPECIFIED-LOCATIVE-20MGL-PAX-3ASECTION-29 "Unspecified Locative"
   [570b]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rst.htm "RESTART CLASS"
   [574a]: #x-28MGL-PAX-3A-40EXTENDING-DOCUMENT-20MGL-PAX-3ASECTION-29 "Extending `DOCUMENT`"
   [5800]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq_sle.htm "< FUNCTION"
@@ -3627,7 +3618,6 @@ they are presented.
   [5875]: #x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "GENERIC-FUNCTION MGL-PAX:LOCATIVE"
   [587f]: #x-28MGL-PAX-3AMAKE-GIT-SOURCE-URI-FN-20FUNCTION-29 "MGL-PAX:MAKE-GIT-SOURCE-URI-FN FUNCTION"
   [5c39]: #x-28MGL-PAX-3ALOCATE-DOCSTRING-20GENERIC-FUNCTION-29 "MGL-PAX:LOCATE-DOCSTRING GENERIC-FUNCTION"
-  [5c74]: #x-28MGL-PAX-3A-40UNAMBIGUOUS-LOCATIVE-20MGL-PAX-3ASECTION-29 "Unambiguous Unspecified Locative"
   [5cd7]: #x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:INCLUDE MGL-PAX:LOCATIVE"
   [5fac]: #x-28MGL-PAX-3ASECTION-20CLASS-29 "MGL-PAX:SECTION CLASS"
   [6121]: #x-28MGL-PAX-3A-40LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29 "Locative Types"
@@ -3712,6 +3702,7 @@ they are presented.
   [a668]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "SIMPLE-CONDITION-FORMAT-ARGUMENTS FUNCTION"
   [a85e]: #x-28MGL-PAX-3ADEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO"
   [a916]: http://www.lispworks.com/documentation/HyperSpec/Body/v_rdtabl.htm "*READTABLE* VARIABLE"
+  [ad94]: #x-28MGL-PAX-3A-40UNAMBIGUOUS-UNSPECIFICED-LOCATIVE-20MGL-PAX-3ASECTION-29 "Unambiguous Unspecified Locative"
   [b372]: #x-28MGL-PAX-3A-40UNRESOLVABLE-REFLINKS-20MGL-PAX-3ASECTION-29 "Unresolvable Links"
   [b3cc]: #x-28MGL-PAX-3A-40EXPLICIT-AND-AUTOLINKING-20MGL-PAX-3ASECTION-29 "Explicit and Autolinking"
   [b622]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pkg_na.htm "PACKAGE-NAME FUNCTION"
