@@ -515,7 +515,24 @@ xxx
                 "[`SECTION`s][5fac]")
     (check-head (list "[SECTION][class]"
                       (make-reference 'section 'class))
-                "[`SECTION`][5fac]")))
+                "[`SECTION`][5fac]"))
+  (with-test ("normal markdown reference link")
+    (with-test ("simple")
+      (check-head "[see this][ddd]
+
+  [ddd]: #ttt"
+                  "[see this][ddd]"))
+    (with-test ("definition is also an interned symbol")
+      (is (internedp 'references))
+      (check-head "[see this][references]
+
+  [references]: #ttt"
+                  "see this" :warnings 1))
+    (with-test ("definition is an interned symbol with a definition")
+      (check-head "[see this][print]
+
+  [print]: #ttt"
+                  "[see this][fdd1]"))))
 
 
 (defsection @section-with-title (:title "My `Title`" :export nil))

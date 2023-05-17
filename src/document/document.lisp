@@ -1524,7 +1524,7 @@
                       (vector-push-extend ref linked-refs))
                     (values (make-reflinks label explicit-label-p refs) nil t))
                    (t
-                    (values (if refs
+                    (values (if (or refs (stringp object))
                                 label
                                 (signal-unresolvable-reflink reflink object
                                                              locative))
