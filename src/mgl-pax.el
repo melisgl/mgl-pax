@@ -79,11 +79,21 @@ other mgl-pax commands."
                        (cl:format t ";; Autoloading MGL-PAX for Emacs ~
                                      (mgl-pax-autoload is t).~%")
                        (asdf:load-system "mgl-pax")
-                       (mgl-pax::check-pax-elisp-version ',mgl-pax-version)
                        (cl:format t ";; Done autoloading MGL-PAX for Emacs~%"))
-            (cl:not (cl:not (cl:find-package :mgl-pax))))
+            (cl:and (cl:find-package :mgl-pax)
+                    (cl:funcall (cl:find-symbol
+                                 (cl:string '#:check-pax-elisp-version)
+                                 (cl:find-package :mgl-pax))
+                                ',mgl-pax-version)
+                    t))
         cont)
-    (slime-eval-async `(cl:not (cl:not (cl:find-package :mgl-pax))) cont)))
+    (slime-eval-async
+        `(cl:and (cl:find-package :mgl-pax)
+                 (cl:funcall (cl:find-symbol
+                              (cl:string '#:check-pax-elisp-version)
+                              (cl:find-package :mgl-pax))
+                             ',mgl-pax-version)
+                 t))))
 
 
 ;;;; Find possible objects and locatives at point
@@ -211,9 +221,9 @@ other mgl-pax commands."
      (when loadedp
        (slime-eval-async
            `(cl:when (cl:find-package :mgl-pax)
-                     (cl:funcall (cl:find-symbol (cl:symbol-name
-                                                  :locate-definitions-for-emacs)
-                                                 :mgl-pax)
+                     (cl:funcall (cl:find-symbol
+                                  (cl:string '#:locate-definitions-for-emacs)
+                                  :mgl-pax)
                                  ',name-and-locatives-list
                                  :as-ref ,as-ref))
          cont)))))
@@ -460,7 +470,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
      (if (not loadedp)
          (message "MGL-PAX is not loaded. See the variable mgl-pax-autoload.")
        (mgl-pax-eval-async
-        `(cl:funcall (cl:find-symbol (cl:symbol-name :document-for-emacs)
+        `(cl:funcall (cl:find-symbol (cl:string '#:document-for-emacs)
                                      :mgl-pax)
                      ',url ',dir)
         (lambda (values)
@@ -488,9 +498,8 @@ if the current page was generated from a PAX URL."
 (defun mgl-pax-call-redocument-for-emacs (file-url dir cont)
   (slime-eval-async
       `(cl:if (cl:find-package :mgl-pax)
-              (cl:funcall (cl:find-symbol
-                           (cl:symbol-name :redocument-for-emacs)
-                           :mgl-pax)
+              (cl:funcall (cl:find-symbol (cl:string '#:redocument-for-emacs)
+                                          :mgl-pax)
                           ',file-url ',dir)
               '(:error "MGL-PAX is not loaded."))
     (lambda (values)
@@ -648,8 +657,8 @@ the beginning of the buffer."
         ;; Silently fail if MGL-PAX is not loaded.
         `(cl:when (cl:find-package :mgl-pax)
                   (cl:funcall
-                   (cl:find-symbol
-                    (cl:symbol-name :locate-pax-url-for-emacs) :mgl-pax)
+                   (cl:find-symbol (cl:string '#:locate-pax-url-for-emacs)
+                                   :mgl-pax)
                    ',pax-url))
       'mgl-pax-visit-locations)))
 
@@ -768,8 +777,7 @@ input will not be changed."
 (defun mgl-pax-transcribe (start end syntax update-only echo
                                  first-line-special-p)
   (slime-eval
-   `(cl:funcall (cl:find-symbol
-                 (cl:symbol-name :transcribe-for-emacs) :mgl-pax)
+   `(cl:funcall (cl:find-symbol (cl:string '#:transcribe-for-emacs) :mgl-pax)
                 ,(buffer-substring-no-properties start end)
                 ',syntax ',update-only ',echo ',first-line-special-p)))
 

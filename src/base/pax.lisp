@@ -161,7 +161,8 @@
 
 ;;; For now, everything is compatible.
 (defun check-pax-elisp-version (version)
-  (declare (ignore version)))
+  (declare (ignore version))
+  t)
 
 (defsection @links (:title "Links and Systems")
   "Here is the [official
