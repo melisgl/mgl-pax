@@ -591,17 +591,25 @@ the names of the SYMBOL-PACKAGEs of their names."
 
 (defun mgl-pax-doc-up-definition-and-beginning-of-buffer ()
   "Like `mgl-pax-doc-up-definition', but also move point to
-the beginning of the buffer."
+the beginning of the buffer. If there is no \"Up:\" link, then
+move point to the beginning of the buffer."
   (interactive)
-  (when (mgl-pax-doc-up-definition)
-    (beginning-of-buffer)))
+  (let ((url (mgl-pax-doc-url-up t)))
+    (if (null url)
+        (beginning-of-buffer)
+      (w3m-goto-url url)
+      t)))
 
-(defun mgl-pax-doc-url-up ()
+(defun mgl-pax-doc-url-up (&optional strip-fragment-p)
   (when (mgl-pax-doc-has-up-line-p)
     (save-excursion
       (beginning-of-buffer)
       (w3m-next-anchor)
-      (w3m-anchor))))
+      (let ((url (w3m-anchor)))
+        (when url
+          (if strip-fragment-p
+              (w3m-url-strip-fragment url)
+            url))))))
 
 (defun mgl-pax-doc-has-up-line-p ()
   (save-excursion
