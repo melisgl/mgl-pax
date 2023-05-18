@@ -93,7 +93,8 @@ other mgl-pax commands."
                               (cl:string '#:check-pax-elisp-version)
                               (cl:find-package :mgl-pax))
                              ',mgl-pax-version)
-                 t))))
+                 t)
+      cont)))
 
 
 ;;;; Find possible objects and locatives at point
@@ -213,12 +214,13 @@ other mgl-pax commands."
       (mgl-pax-locate-definitions `((,string ()))
                                   'mgl-pax-visit-locations))))
 
-(cl-defun mgl-pax-locate-definitions (name-and-locatives-list
-                                      cont &key as-ref)
+(cl-defun mgl-pax-locate-definitions (name-and-locatives-list cont &key as-ref)
   (mgl-pax-maybe-autoload
    (lambda (loadedp)
-     ;; Keep silent if MGL-PAX is not loaded.
-     (when loadedp
+     (if (not loadedp)
+         ;; Do not be annoying in the M-. case.
+         (when as-ref
+           (mgl-pax-not-loaded))
        (slime-eval-async
            `(cl:when (cl:find-package :mgl-pax)
                      (cl:funcall (cl:find-symbol
@@ -227,6 +229,9 @@ other mgl-pax commands."
                                  ',name-and-locatives-list
                                  :as-ref ,as-ref))
          cont)))))
+
+(defun mgl-pax-not-loaded ()
+  (message "MGL-PAX is not loaded. See the variable mgl-pax-autoload."))
 
 (defun mgl-pax-visit-locations (locations)
   (when (consp locations)
@@ -468,7 +473,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
   (mgl-pax-maybe-autoload
    (lambda (loadedp)
      (if (not loadedp)
-         (message "MGL-PAX is not loaded. See the variable mgl-pax-autoload.")
+         (mgl-pax-not-loaded)
        (mgl-pax-eval-async
         `(cl:funcall (cl:find-symbol (cl:string '#:document-for-emacs)
                                      :mgl-pax)
@@ -759,7 +764,7 @@ Without a prefix argument, the first syntax is used."
   (mgl-pax-maybe-autoload
    (lambda (loadedp)
      (if (not loadedp)
-         (message "MGL-PAX is not loaded. See the variable mgl-pax-autoload.")
+         (mgl-pax-not-loaded)
        (save-excursion
          (let* ((start (progn (backward-sexp)
                               (move-beginning-of-line nil)
@@ -782,7 +787,7 @@ input will not be changed."
   (mgl-pax-maybe-autoload
    (lambda (loadedp)
      (if (not loadedp)
-         (message "MGL-PAX is not loaded. See the variable mgl-pax-autoload.")
+         (mgl-pax-not-loaded)
        (let* ((point-at-start-p (= (point) start))
               (point-at-end-p (= (point) end))
               (transcript (mgl-pax-transcribe start end
