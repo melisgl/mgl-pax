@@ -31,16 +31,17 @@
       #+ccl (eq name 'declare)))
 
 (defun valid-type-specifier-p (type)
-  (and
-   ;; Avoid "WARNING: * is not permitted as a type specifier" on SBCL.
-   (not (eq type '*))
-   (handler-case
-       (null (nth-value 1 (ignore-errors (typep nil type))))
-     ;; Silence compiler notes on SBCL when run via ASDF:TEST-SYSTEM.
-     #+sbcl
-     (sb-kernel:parse-unknown-type ())
-     #+cmucl
-     (sys::parse-unknown-type ()))))
+  (handler-case
+      (null (nth-value 1 (ignore-errors (typep nil type))))
+    ;; Avoid "WARNING: * is not permitted as a type specifier" on
+    ;; SBCL.
+    #+sbcl
+    (warning (c) (ignore-errors (muffle-warning c)))
+    ;; Silence compiler notes on SBCL when run via ASDF:TEST-SYSTEM.
+    #+sbcl
+    (sb-kernel:parse-unknown-type ())
+    #+cmucl
+    (sys::parse-unknown-type ())))
 
 (defun symbol-global-value (symbol)
   #+allegro
