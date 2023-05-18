@@ -798,12 +798,16 @@ which makes navigating the sources with `M-.` (see
 
     Refers to a SECTION defined by DEFSECTION.
     
-    SECTION is not EXPORTABLE-LOCATIVE-TYPE-P.
+    SECTION is EXPORTABLE-LOCATIVE-TYPE-P but not exported by default (see
+    EXPORTABLE-REFERENCE-P).
 
 - [locative] GLOSSARY-TERM
 
     Refers to a GLOSSARY-TERM defined by
-    DEFINE-GLOSSARY-TERM.
+      DEFINE-GLOSSARY-TERM.
+    
+    GLOSSARY-TERM is EXPORTABLE-LOCATIVE-TYPE-P but not exported by
+    default (see EXPORTABLE-REFERENCE-P).
 
 - [macro] DEFINE-GLOSSARY-TERM NAME (&KEY TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) DOCSTRING
 

@@ -928,13 +928,17 @@ which makes navigating the sources with `M-.` (see
 
     Refers to a [`SECTION`][5fac] defined by [`DEFSECTION`][72b4].
     
-    `SECTION` is not [`EXPORTABLE-LOCATIVE-TYPE-P`][c930].
+    `SECTION` is [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] but not exported by default (see
+    [`EXPORTABLE-REFERENCE-P`][e51f]).
 
 <a id="x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **GLOSSARY-TERM**
 
     Refers to a [`GLOSSARY-TERM`][8251] defined by
-    [`DEFINE-GLOSSARY-TERM`][8ece].
+      [`DEFINE-GLOSSARY-TERM`][8ece].
+    
+    `GLOSSARY-TERM` is [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] but not exported by
+    default (see [`EXPORTABLE-REFERENCE-P`][e51f]).
 
 <a id="x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20MGL-PAX-3AMACRO-29"></a>
 - [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) DOCSTRING*

@@ -1069,7 +1069,8 @@
 (define-locative-type section ()
   "Refers to a [SECTION][class] defined by DEFSECTION.
 
-  SECTION is not EXPORTABLE-LOCATIVE-TYPE-P.")
+SECTION is EXPORTABLE-LOCATIVE-TYPE-P but not exported by default (see
+EXPORTABLE-REFERENCE-P).")
 
 (defun section-title-or-name (section)
   (or (section-title section)
@@ -1147,7 +1148,10 @@
 
 (define-locative-type glossary-term ()
   "Refers to a [GLOSSARY-TERM][class] defined by
-  DEFINE-GLOSSARY-TERM.")
+  DEFINE-GLOSSARY-TERM.
+
+GLOSSARY-TERM is EXPORTABLE-LOCATIVE-TYPE-P but not exported by
+default (see EXPORTABLE-REFERENCE-P).")
 
 (defmethod locate-object (symbol (locative-type (eql 'glossary-term))
                           locative-args)
