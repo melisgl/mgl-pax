@@ -2773,7 +2773,7 @@
                                          (prin1-to-string sexp)))))
                        :type "html")
                       dirname)))
-      (document/w3m/file filename stuff)
+      (document/w3m/file filename stuff :title path)
       (pathname-to-file-url filename))))
 
 (defun make-pax-eval-url (form)
@@ -2839,7 +2839,10 @@
     (alexandria:appendf stuff (list reference))
     (alexandria:appendf stuff (format-also-see reference))
     (if filename
-        (document/w3m/file filename (remove nil stuff))
+        (document/w3m/file filename (remove nil stuff)
+                           :title (format nil "~A ~A"
+                                          (reference-object reference)
+                                          (reference-locative reference)))
         (document/w3m (remove nil stuff)))
     filename))
 
@@ -2933,16 +2936,19 @@
     (document/w3m/file
      filename (cons (format nil "# Disambiguation for [`~A`][pax:dislocated]"
                             pax-url-path)
-                    references))
+                    references)
+     :title pax-url-path)
     filename))
 
-(defun document/w3m/file (filename &rest args)
+(defun document/w3m/file (filename stuff &key title)
   (with-open-file (stream (ensure-directories-exist filename)
                           :direction :output
                           :if-does-not-exist :create
                           :if-exists :supersede
                           :external-format *utf-8-external-format*)
-    (apply #'document/w3m (append args `(:stream ,stream)))))
+    (when title
+      (format stream "<title>~A</title>~%" (escape-html title)))
+    (document/w3m stuff :stream stream)))
 
 (defun document/w3m (&rest args)
   (let ((*html-subformat* :w3m)

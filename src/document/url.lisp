@@ -136,6 +136,16 @@
     (coerce output 'simple-string)))
 
 
+(defun escape-html (string)
+  (with-output-to-string (out)
+    (loop for char across string
+          do (format out "~A" (case char
+                                ((#\<) "&lt;")
+                                ((#\>) "&gt;")
+                                ((#\&) "&amp;")
+                                (t char))))))
+
+
 (defun parse-url (string)
   (let ((scheme-end (position #\: string))
         (pos 0)
