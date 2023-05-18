@@ -684,15 +684,38 @@ move point to the beginning of the buffer."
 ;;;; Apropos
 
 (defun mgl-pax-apropos (string &optional external-only package
-                               case-sensitive locative-types)
+                               case-sensitive)
   "Show all PAX definitions that match the arguments.
-See MGL-PAX:PAX-APROPOS for details. With a prefix arg, you're
-interactively asked for parameters of the search. Without a
-prefix arg, EXTERNAL-ONLY defaults to T, packages and locative
-types are not filtered, and case does not matter.
+This is a wrapper around MGL-PAX:PAX-APROPOS. STRING is basically
+NAME and LOCATIVE-TYPES concatenated with a space in between. If
+STRING or PACKAGE starts with `?'', then only exact matches with
+a symbol or package name are accepted.
 
-If STRING or PACKAGE starts with `?'', then only exact matches
-with a symbol or package name are accepted.
+- \"print\" matches definitions whose names contain \"print\" as
+  a substring.
+
+- \"'print\" matches definitions whose names are \"print\" (still
+  subject to CASE-SENSITIVE).
+
+- \"print function\" matches functions whose names contain
+  \"print\" (e.g. CL:PRINT and CL:PPRINT).
+
+- \"'print function\" is like the previous example but with exact
+  name match.
+
+- \"print variable\" matches for example *PRINT-ESCAPE*.
+
+- \"print variable function\" matches all variables and functions
+  with \"print\" in their names.
+
+- \" pax:section\" (note the leading space) matches all PAX
+  sections (note that EXTERNAL-ONLY NIL is necessary to see most
+  of them).
+
+With a prefix arg, you're interactively asked for parameters of
+the search. Without a prefix arg, EXTERNAL-ONLY defaults to T,
+packages and locative types are not filtered, and case does not
+matter.
 
 Also, see `mgl-pax-apropos-all'."
   (interactive
@@ -700,29 +723,27 @@ Also, see `mgl-pax-apropos-all'."
        (list (slime-read-from-minibuffer "PAX Apropos: ")
              (y-or-n-p "External symbols only? ")
              (slime-read-package-name "Package: ")
-             (y-or-n-p "Case-sensitive? ")
-             (slime-read-from-minibuffer "Locative types: "))
-     (list (read-string "PAX Apropos: ") t "" nil "")))
+             (y-or-n-p "Case-sensitive? "))
+     (list (slime-read-from-minibuffer "PAX Apropos: ") t "" nil)))
   (mgl-pax-document
    (concat "pax-eval:"
            (w3m-url-encode-string
             (prin1-to-string
              `(mgl-pax::pax-apropos* ,string ,external-only
-                                     ,package ,case-sensitive
-                                     ,locative-types))))))
+                                     ,package ,case-sensitive))))))
 
 (defun mgl-pax-apropos-all (string)
   "Shortcut for invoking `mgl-pax-apropos` with EXTERNAL-ONLY NIL."
   (interactive (list (slime-read-from-minibuffer "PAX Apropos: ")))
-  (mgl-pax-apropos string nil "" nil ""))
+  (mgl-pax-apropos string nil "" nil))
 
 (defun mgl-pax-apropos-package (package &optional internal)
   "Show apropos listing for symbols in PACKAGE.
 With prefix argument include internal symbols."
-  (interactive (list (let ((pkg (slime-read-package-name "Package: ")))
+  (interactive (list (let ((pkg (slime-read-package-name "Package:")))
                        (if (string= pkg "") (slime-current-package) pkg))
                      current-prefix-arg))
-  (mgl-pax-apropos nil (not internal) (concat "'" package) t nil))
+  (mgl-pax-apropos nil (not internal) (concat "'" package) t))
 
 
 ;;;; Transcribe

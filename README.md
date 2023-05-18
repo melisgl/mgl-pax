@@ -1441,7 +1441,7 @@ functionality of `slime-apropos`, `slime-apropos-all`, and
     [object][75ce]s are determined:
     
     - `NAME` is `NIL` (matches everything), a [`SYMBOL`][4b12] (matches the same
-      [`SYMBOL-NAME`][0e20]), or a `STRING`([`0`][28bb] [`1`][7bd4]) (matches a sybmol if it's a substring of
+      [`SYMBOL-NAME`][0e20]), or a `STRING`([`0`][28bb] [`1`][7bd4]) (matches a symbol if it's a substring of
       `SYMBOL-NAME` subject to `CASE-SENSITIVE`).
     
     - `PACKAGE` is `NIL` (matches everything), a `SYMBOL` (matches the same

@@ -3140,7 +3140,7 @@
   @OBJECTs are determined:
 
   - NAME is NIL (matches everything), a SYMBOL (matches the same
-    SYMBOL-NAME), or a STRING (matches a sybmol if it's a substring of
+    SYMBOL-NAME), or a STRING (matches a symbol if it's a substring of
     SYMBOL-NAME subject to CASE-SENSITIVE).
 
   - PACKAGE is NIL (matches everything), a SYMBOL (matches the same
@@ -3244,84 +3244,92 @@
                             :key #'reference-object))))))
 
 ;;; `mgl-pax-apropos' calls DOCUMENT-FOR-EMACS with a `pax-eval:' URL
-;;; that evaluates a call to this function. NAME, PACKAGE and
-;;; LOCATIVE-TYPES are strings, EXTERNAL-ONLY and CASE-SENSITIVE are
-;;; boolean.
-(defun pax-apropos* (name &optional external-only package case-sensitive
-                            locative-types)
-  (flet ((parse-nil-symbol-or-string (string)
+;;; that evaluates a call to this function. NAME and PACKAGE are
+;;; strings, EXTERNAL-ONLY and CASE-SENSITIVE are boolean.
+(defun pax-apropos* (name &optional external-only package case-sensitive)
+  (flet ((parse-name (string)
+           (let* ((tail-pos (position #\Space string))
+                  (tail (and tail-pos (subseq string (1+ tail-pos))))
+                  (string (subseq string 0 tail-pos)))
+             (values (cond ((string= string "") nil)
+                           ((alexandria:starts-with #\' string)
+                            (make-symbol (subseq string 1 tail-pos)))
+                           (t
+                            (subseq string 0 tail-pos)))
+                     tail)))
+         (parse-nil-symbol-or-string (string)
            (cond ((string= string "")
                   nil)
                  ((alexandria:starts-with #\' string)
                   (make-symbol (subseq string 1)))
                  (t
                   string))))
-    (let ((name (parse-nil-symbol-or-string name))
-          (package (parse-nil-symbol-or-string package))
-          (locative-types (when locative-types
-                            (read-from-string
-                             (format nil "(~A)" locative-types)))))
-      (multiple-value-bind (symbol-definitions non-symbol-definitions)
-          (pax-apropos name :external-only external-only
-                            :package package
-                            :case-sensitive case-sensitive
-                            :locative-types locative-types)
-        (let ((asdf-definitions
-                (remove 'asdf:system non-symbol-definitions
-                        :key #'reference-locative-type :test-not 'eq))
-              (package-definitions
-                (remove 'package non-symbol-definitions
-                        :key #'reference-locative-type :test-not 'eq))
-              (non-symbol-definitions
-                (remove 'package (remove 'asdf:system non-symbol-definitions
-                                         :key #'reference-locative-type)
-                        :key #'reference-locative-type))
-              (pax-entry-points
-                (when (and (symbolp package)
-                           case-sensitive
-                           (find-package package))
-                  (entry-point-sections (list-sections-in-package
-                                         (find-package package))))))
-          `((progv '(*document-do-not-resolve-references*) '(t))
-            (,(format nil "# Results for `~A`"
-                      (let ((current-package *package*))
-                        ;; Don't break lines.
-                        (with-standard-io-syntax*
-                          (let ((*package* current-package)
-                                (*print-readably* nil))
-                            (prin1-to-markdown
-                             `(pax-apropos
-                               ,(if (and name (symbolp name))
-                                    `(quote ,name)
-                                    name)
-                               :external-only ,external-only
-                               :package ,(if (and package (symbolp package))
-                                             `(quote ,package)
-                                             package)
-                               :case-sensitive ,case-sensitive
-                               :locative-types ,(if locative-types
-                                                    `(quote ,locative-types)
-                                                    nil)))))))
-             ,@(when asdf-definitions
-                 (list "## \\ASDF systems"
-                       `((progv '(*document-tight*) '(t))
-                         ,@asdf-definitions)))
-             ,@(when package-definitions
-                 (list "## Packages"
-                       `((progv '(*document-tight*) '(t))
-                         ,@package-definitions)))
-             ,@(when non-symbol-definitions
-                 (list "## Non-symbol definitions"
-                       `((progv '(*document-tight*) '(t))
-                         ,@non-symbol-definitions)))
-             ,@(when pax-entry-points
-                 (list "## PAX Entry Points"
-                       `((progv '(*document-tight*) '(t))
-                         ,@(loop for ref in pax-entry-points
-                                 collect (format nil "- [~A][pax:section]"
-                                                 (prin1-to-markdown
-                                                  (reference-object ref)))))))
-             ,@(when symbol-definitions
-                 (list "## Symbol definitions"
-                       `((progv '(*document-tight*) '(t))
-                         ,@symbol-definitions))))))))))
+    (multiple-value-bind (name locative-types) (parse-name name)
+      (let ((package (parse-nil-symbol-or-string package))
+            (locative-types (when locative-types
+                              (read-from-string
+                               (format nil "(~A)" locative-types)))))
+        (multiple-value-bind (symbol-definitions non-symbol-definitions)
+            (pax-apropos name :external-only external-only
+                              :package package
+                              :case-sensitive case-sensitive
+                              :locative-types locative-types)
+          (let ((asdf-definitions
+                  (remove 'asdf:system non-symbol-definitions
+                          :key #'reference-locative-type :test-not 'eq))
+                (package-definitions
+                  (remove 'package non-symbol-definitions
+                          :key #'reference-locative-type :test-not 'eq))
+                (non-symbol-definitions
+                  (remove 'package (remove 'asdf:system non-symbol-definitions
+                                           :key #'reference-locative-type)
+                          :key #'reference-locative-type))
+                (pax-entry-points
+                  (when (and (symbolp package)
+                             case-sensitive
+                             (find-package package))
+                    (entry-point-sections (list-sections-in-package
+                                           (find-package package))))))
+            `((progv '(*document-do-not-resolve-references*) '(t))
+              (,(format nil "# Results for `~A`"
+                        (let ((current-package *package*))
+                          ;; Don't break lines.
+                          (with-standard-io-syntax*
+                            (let ((*package* current-package)
+                                  (*print-readably* nil))
+                              (prin1-to-markdown
+                               `(pax-apropos
+                                 ,(if (and name (symbolp name))
+                                      `(quote ,name)
+                                      name)
+                                 :external-only ,external-only
+                                 :package ,(if (and package (symbolp package))
+                                               `(quote ,package)
+                                               package)
+                                 :case-sensitive ,case-sensitive
+                                 :locative-types ,(if locative-types
+                                                      `(quote ,locative-types)
+                                                      nil)))))))
+               ,@(when asdf-definitions
+                   (list "## \\ASDF systems"
+                         `((progv '(*document-tight*) '(t))
+                           ,@asdf-definitions)))
+               ,@(when package-definitions
+                   (list "## Packages"
+                         `((progv '(*document-tight*) '(t))
+                           ,@package-definitions)))
+               ,@(when non-symbol-definitions
+                   (list "## Non-symbol definitions"
+                         `((progv '(*document-tight*) '(t))
+                           ,@non-symbol-definitions)))
+               ,@(when pax-entry-points
+                   (list "## PAX Entry Points"
+                         `((progv '(*document-tight*) '(t))
+                           ,@(loop for ref in pax-entry-points
+                                   collect (format nil "- [~A][pax:section]"
+                                                   (prin1-to-markdown
+                                                    (reference-object ref)))))))
+               ,@(when symbol-definitions
+                   (list "## Symbol definitions"
+                         `((progv '(*document-tight*) '(t))
+                           ,@symbol-definitions)))))))))))

@@ -1293,7 +1293,7 @@ functionality of `slime-apropos`, `slime-apropos-all`, and
     @OBJECTs are determined:
     
     - NAME is NIL (matches everything), a SYMBOL (matches the same
-      SYMBOL-NAME), or a STRING (matches a sybmol if it's a substring of
+      SYMBOL-NAME), or a STRING (matches a symbol if it's a substring of
       SYMBOL-NAME subject to CASE-SENSITIVE).
     
     - PACKAGE is NIL (matches everything), a SYMBOL (matches the same

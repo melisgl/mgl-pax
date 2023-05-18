@@ -102,7 +102,3 @@ Or go to the source.
 That is, when generating documentation for something that's referenced
 by one or more sections. See PAX::SECTIONS-THAT-CONTAIN and
 PAX::SORT-BY-PROXIMITY.
-* MAYBE locative-types in the first argument of mgl-pax-apropos
-It would make life easier to be able to do
-
-    PAX Apropos: "" package
