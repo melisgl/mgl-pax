@@ -100,7 +100,10 @@
 (defun reference-for-emacs (reference)
   (with-standard-io-syntax*
     (list (prin1-to-string (reference-object reference))
-          (prin1-to-string (reference-locative reference)))))
+          ;; The locative may not be readable (e.g. methods with EQL
+          ;; specializers with unreadable stuff).
+          (let ((*print-readably* nil))
+            (prin1-to-string (reference-locative reference))))))
 
 (defun ambiguous-reference-for-emacs (object)
   (with-standard-io-syntax*

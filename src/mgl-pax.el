@@ -219,12 +219,13 @@ other mgl-pax commands."
          cont)))))
 
 (defun mgl-pax-visit-locations (locations)
-  (when (and (consp locations)
-             (not (eq (car locations) :error)))
-    (slime-edit-definition-cont
-     (slime-postprocess-xrefs locations)
-     "dummy name"
-     nil)))
+  (when (consp locations)
+    (if (eq (car locations) :error)
+        (message "%s" (cl-second locations))
+      (slime-edit-definition-cont
+       (slime-postprocess-xrefs locations)
+       "dummy name"
+       nil))))
 
 (add-hook 'slime-edit-definition-hooks 'mgl-pax-edit-definitions)
 

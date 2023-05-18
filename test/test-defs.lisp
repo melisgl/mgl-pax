@@ -115,3 +115,9 @@
     ;; does not support docstrings.
     #-abcl
     "ddd"))
+
+(defmethod exportable-reference-p
+    ((package (eql (find-package '#:mgl-pax-test))) symbol
+     locative-type locative-args)
+  (declare (ignore symbol locative-type locative-args))
+  nil)

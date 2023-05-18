@@ -216,6 +216,10 @@
     (foo function (defun foo))
     (test-gf generic-function (defgeneric test-gf))
     (test-gf (method () (number)) (defmethod test-gf))
+    (exportable-reference-p
+     (method nil ((eql #.(find-package '#:mgl-pax-test)) T T T))
+     (defmethod exportable-reference-p) (defmethod exportable-reference-p)
+     #.(alexandria:featurep :ecl))
     (my-comb method-combination (define-method-combination my-comb))
     (foo-a (accessor foo) (defclass foo) (a :accessor foo-a))
     (foo-r (reader foo) (defclass foo) (r :reader foo-r))
@@ -281,7 +285,8 @@
           (t
            t))))
 
-(defun check-navigation (symbol locative prefix &optional alternative-prefix)
+(defun check-navigation (symbol locative prefix &optional alternative-prefix
+                                                  failure-expected-p)
   (let* ((ref (make-reference symbol locative))
          (located (resolve ref)))
     ;; Test FIND-SOURCE with a REFERENCE and a resolved object if
@@ -291,7 +296,8 @@
                         (list ref)
                         (list ref located)))
       (with-test ((format nil "navigate to ~S" target))
-        (with-failure-expected ((not (working-locative-p locative)))
+        (with-failure-expected ((or (not (working-locative-p locative))
+                                    failure-expected-p))
           (let ((location (ignore-errors (find-source target))))
             (when (is (and location (not (eq :error (first location))))
                       :msg `("Find source location for (~S ~S)."
