@@ -739,13 +739,14 @@ Also, see `mgl-pax-apropos-all'."
 
 (defun mgl-pax-apropos-all (string)
   "Shortcut for invoking `mgl-pax-apropos` with EXTERNAL-ONLY NIL."
-  (interactive (list (slime-read-from-minibuffer "PAX Apropos: ")))
+  (interactive (list (slime-read-from-minibuffer "PAX Apropos All: ")))
   (mgl-pax-apropos string nil "" nil))
 
 (defun mgl-pax-apropos-package (package &optional internal)
   "Show apropos listing for symbols in PACKAGE.
 With prefix argument include internal symbols."
-  (interactive (list (let ((pkg (slime-read-package-name "Package:")))
+  (interactive (list (let ((pkg (slime-read-package-name
+                                 "PAX Apropos for Package: ")))
                        (if (string= pkg "") (slime-current-package) pkg))
                      current-prefix-arg))
   (mgl-pax-apropos nil (not internal) (concat "'" package) t))
