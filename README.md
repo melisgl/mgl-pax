@@ -247,7 +247,7 @@ Load `src/mgl-pax.el` in Emacs and maybe set up some key bindings.
   may change with updates, and you may want to copy the current
   version of `mgl-pax.el` to a stable location:
 
-    (mgl-pax:install-elisp "~/quicklisp/")
+    (mgl-pax:install-pax-elisp "~/quicklisp/")
 
 Then, assuming the Elisp file is in the quicklisp directory, add
 something like this to your `.emacs`:
@@ -263,8 +263,8 @@ something like this to your `.emacs`:
 See [Navigating Sources in Emacs][3386], [Documenting in Emacs][7199] and
 [Transcribing with Emacs][f5bd] for how to use the relevant features.
 
-<a id="x-28MGL-PAX-3AINSTALL-ELISP-20FUNCTION-29"></a>
-- [function] **INSTALL-ELISP** *TARGET-DIR*
+<a id="x-28MGL-PAX-3AINSTALL-PAX-ELISP-20FUNCTION-29"></a>
+- [function] **INSTALL-PAX-ELISP** *TARGET-DIR*
 
     Copy `mgl-pax.el` distributed with this package to `TARGET-DIR`.
 

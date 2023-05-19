@@ -177,7 +177,7 @@ Load `src/mgl-pax.el` in Emacs and maybe set up some key bindings.
   may change with updates, and you may want to copy the current
   version of `mgl-pax.el` to a stable location:
 
-    (mgl-pax:install-elisp "~/quicklisp/")
+    (mgl-pax:install-pax-elisp "~/quicklisp/")
 
 Then, assuming the Elisp file is in the quicklisp directory, add
 something like this to your `.emacs`:
@@ -193,7 +193,7 @@ something like this to your `.emacs`:
 See @NAVIGATING-IN-EMACS, @DOCUMENTING-IN-EMACS and
 @TRANSCRIBING-WITH-EMACS for how to use the relevant features.
 
-- [function] INSTALL-ELISP TARGET-DIR
+- [function] INSTALL-PAX-ELISP TARGET-DIR
 
     Copy `mgl-pax.el` distributed with this package to TARGET-DIR.
 

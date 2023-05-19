@@ -134,7 +134,7 @@
     may change with updates, and you may want to copy the current
     version of `mgl-pax.el` to a stable location:
 
-        (mgl-pax:install-elisp "~/quicklisp/")
+        (mgl-pax:install-pax-elisp "~/quicklisp/")
 
   Then, assuming the Elisp file is in the quicklisp directory, add
   something like this to your `.emacs`:
@@ -150,9 +150,9 @@
   See @NAVIGATING-IN-EMACS, @DOCUMENTING-IN-EMACS and
   @TRANSCRIBING-WITH-EMACS for how to use the relevant features.
   """
-  (install-elisp function))
+  (install-pax-elisp function))
 
-(defun install-elisp (target-dir)
+(defun install-pax-elisp (target-dir)
   "Copy `mgl-pax.el` distributed with this package to TARGET-DIR."
   (uiop:copy-file (asdf:system-relative-pathname "mgl-pax" "src/mgl-pax.el")
                   (merge-pathnames "mgl-pax.el"
