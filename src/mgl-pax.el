@@ -121,9 +121,10 @@ other mgl-pax commands."
          (bounds (slime-bounds-of-symbol-at-point))
          (locatives (mgl-pax-find-locatives bounds))
          (reflink-name-and-locatives (mgl-pax-parse-reflink bounds)))
-    (remove nil `((,name ,locatives)
-                  ;; This may be nil.
-                  ,reflink-name-and-locatives))))
+    (append (and name `((,name ,locatives)))
+            (if reflink-name-and-locatives
+                (list reflink-name-and-locatives)
+              ()))))
 
 ;;; Return the sexps before and after (slime-symbol-at-point),
 ;;; skipping some markup.
