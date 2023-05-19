@@ -538,25 +538,57 @@ need to muck with references when there is a perfectly good object.
 
 - [glossary-term] name
 
-    A *name* is a string that names an `INTERN`ed SYMBOL,
-    a PACKAGE, or an ASDF:SYSTEM, that is, a possible @OBJECT. Names are
-    constructed from @WORDs by possibly trimming leading and trailing
-    punctuation symbols and removing certain plural suffixes.
+    A *name* is a string that names a possible @OBJECT
+    (e.g. an INTERNed SYMBOL, a PACKAGE, or an ASDF:SYSTEM). Names are
+    constructed from @WORDs by trimming some prefixes and suffixes. For
+    a given word, multiple candidate names are considered in the
+    following order.
     
-    For example, in `"X and Y must be LISTs."`, although the word is
-    `"LISTs."`, it gets trimmed to `"LISTs"`, then the plural suffix
-    `"s"` is removed to get `"LIST"`. Out of the three candidates for
-    names, `"LISTs."`, `"LISTs"`, and `"LIST"`, the ones that name
-    interned symbols and such are retained for purposes for
-    Navigating and
-    @GENERATING-DOCUMENTATION.
+    1. The entire word.
     
-    The punctuation characters for left and right trimming are `#<` and
-    `,:.>`, respectively. The plural suffixes considered are `s`, `es`,
-    `ses`, `zes`, and `ren` (all case insensitive).
+    2. Trimming the characters `#<\"` from the left of the word.
     
-    Thus `"CHILDREN"` and `"BUSES"` may have the names `"CHILD"` and
-    `"BUS"` in them.
+    3. Trimming the characters `,:.>\"` from the right of the word.
+    
+    4. Trimming both of the previous two at the same time.
+    
+    5. From the result of 4., further removing some plural markers.
+    
+    6. From the result of 4., further removing non-uppercase prefixes
+       and suffixes.
+    
+    For example, when `M-.` is pressed while point is over
+    `nonREADable.`, the last word of the sentence `It may be
+    nonREADable.`, the following names are considered until one is found
+    with a definition:
+    
+    1. The entire word, `"nonREADable."`.
+    
+    2. Trimming left does not produce a new word.
+    
+    3. Trimming right removes the dot and gives `"nonREADable"`.
+    
+    4. Trimming both is the same as trimming right.
+    
+    5. No plural markers are found.
+    
+    6. The lowercase prefix and suffix is removed around the uppercase
+       core, giving `"READ"`. This has a definition, which \`M-.' will
+       visit.
+    
+    The exact rules for steps 5. and 6. are the following.
+    
+    - If a @WORD ends with what looks like a plural marker, then a @NAME
+    is created by removing it. For example, from the @WORD `BUSES` the
+    plural marker `ES` is removed to produce the @NAME `BUS`. The list
+    of plural markers considered is `S` (e.g. `CARS`), `ES` (e.g.
+    `BUSES`), `SES` (e.g. `GASSES`), `ZES` (e.g. `FEZZES`), and
+    `REN` (e.g. `CHILDREN`).
+    
+    - From a @CODIFIABLE @WORD, a @NAME is created by removing the prefix
+    before the first and the suffix after the last uppercase character
+    if they contain at least one lowercase character.
+
 
 ## Locative Types
 
@@ -1492,13 +1524,12 @@ Reader can help with that.
 
     A @WORD is *codifiable* iff
     
-    - it has at least one uppercase character (e.g. it's not `<`, `<=`
-      or `///`), and
+    - it has a single uppercase character (e.g. it's `T`) and no
+      lowercase characters at all, or
     
-    - it has no lowercase characters (e.g. it's `T`, or
-      `*PRINT-LENGTH*`) or all lowercase characters immediately follow
-      at least two consecutive uppercase characters (e.g. in `CLASSes`
-      but in not `Classes`).
+    - there is more than one uppercase character and no lowercase
+      characters between them (e.g. CLASSes, nonREADable, CLASS-NAMEs
+      but not `Classes` or `aTe`.
 
 
 - [glossary-term] interesting
@@ -2031,7 +2062,7 @@ See the following variables, which control HTML generation.
     LINKS)`, where TITLE will be displayed at the top of the block in a
     HTML `DIV` with `ID` followed by the links. LINKS is a list of `(URI
     LABEL)` elements, where `URI` maybe a string or an object being
-    `DOCUMENT`ed or a REFERENCE thereof.
+    DOCUMENTed or a REFERENCE thereof.
 
 - [variable] *DOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS* NIL
 

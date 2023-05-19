@@ -12,26 +12,55 @@
   `slime-symbol-at-point`. When @GENERATING-DOCUMENTATION, it is a
   non-empty string between whitespace characters in a docstring.")
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter *name-left-trim* "#<\"")
+  (defparameter *name-right-trim* ",:.>\""))
+
 (define-glossary-term @name (:title "name")
-  """A _name_ is a string that names an `INTERN`ed SYMBOL,
-  a PACKAGE, or an ASDF:SYSTEM, that is, a possible @OBJECT. Names are
-  constructed from @WORDs by possibly trimming leading and trailing
-  punctuation symbols and removing certain plural suffixes.
+  #.(format nil """A _name_ is a string that names a possible @OBJECT
+  (e.g. an INTERNed SYMBOL, a PACKAGE, or an ASDF:SYSTEM). Names are
+  constructed from @WORDs by trimming some prefixes and suffixes. For
+  a given word, multiple candidate names are considered in the
+  following order.
 
-  For example, in `"X and Y must be LISTs."`, although the word is
-  `"LISTs."`, it gets trimmed to `"LISTs"`, then the plural suffix
-  `"s"` is removed to get `"LIST"`. Out of the three candidates for
-  names, `"LISTs."`, `"LISTs"`, and `"LIST"`, the ones that name
-  interned symbols and such are retained for purposes for
-  [Navigating][@navigating-in-emacs section] and
-  @GENERATING-DOCUMENTATION.
+  1. The entire word.
 
-  The punctuation characters for left and right trimming are `#<` and
-  `,:.>`, respectively. The plural suffixes considered are `s`, `es`,
-  `ses`, `zes`, and `ren` (all case insensitive).
+  2. Trimming the characters `~A` from the left of the word.
 
-  Thus `"CHILDREN"` and `"BUSES"` may have the names `"CHILD"` and
-  `"BUS"` in them.""")
+  3. Trimming the characters `~A` from the right of the word.
+
+  4. Trimming both of the previous two at the same time.
+
+  5. From the result of 4., further removing some plural markers.
+
+  6. From the result of 4., further removing non-uppercase prefixes
+     and suffixes.
+
+  For example, when `\M-.` is pressed while point is over
+  `nonREADable.`, the last word of the sentence `It may be
+  nonREADable.`, the following names are considered until one is found
+  with a definition:
+
+  1. The entire word, `"nonREADable."`.
+
+  2. Trimming left does not produce a new word.
+
+  3. Trimming right removes the dot and gives `"nonREADable"`.
+
+  4. Trimming both is the same as trimming right.
+
+  5. No plural markers are found.
+
+  6. The lowercase prefix and suffix is removed around the uppercase
+     core, giving `"READ"`. This has a definition, which `\M-.' will
+     visit.
+
+  The exact rules for steps 5. and 6. are the following.
+
+  - [depluralize function][docstring]
+
+  - [trim-uppercase-core function][docstring]
+  """ *name-left-trim* *name-right-trim*))
 
 ;;; Ensure that some Swank internal facilities (such as
 ;;; SWANK::FIND-DEFINITIONS-FIND-SYMBOL-OR-PACKAGE,
@@ -50,12 +79,17 @@
 ;;; Return a list of @OBJECTs and a list of @NAMEs naming them in
 ;;; WORD. If ONLY-ONE matches, then return only a single object and a
 ;;; single name.
+;;;
+;;; We trim only in CODIFY-UPPERCASE-WORD. Within markdown :CODE (see
+;;; AUTOLINK) and :REFLINK :LABEL (see PARSE-REFLINK-LABEL-STRING), we
+;;; only depluralize to catch the common mistake of writing "CLASSES"
+;;; instead of "CLASSes".
 (defun parse-word (word &key (trim t) (depluralize t) only-one
                           clhs-substring-match)
   (with-swank ()
     (swank::with-buffer-syntax (*package*)
-      (let ((left-trim "#<\"")
-            (right-trim ",:.>\"")
+      (let ((left-trim *name-left-trim*)
+            (right-trim *name-right-trim*)
             (objects ())
             (names ()))
         (flet ((consider (object name)
@@ -95,20 +129,30 @@
                               (string= both-trimmed right-trimmed))
                     (find-it both-trimmed))
                   (when depluralize
-                    (dolist (depluralized (strip-plural both-trimmed))
+                    (dolist (depluralized (depluralize both-trimmed))
                       (unless (string= depluralized both-trimmed)
-                        (find-it depluralized)))))
+                        (find-it depluralized))))
+                  (alexandria:when-let (trimmed (trim-uppercase-core
+                                                 both-trimmed))
+                    (find-it trimmed)))
                 (when depluralize
-                  (dolist (depluralized (strip-plural word))
+                  (dolist (depluralized (depluralize word))
                     (unless (string= depluralized word)
                       (find-it depluralized))))))
           (unless only-one
             (values (nreverse objects) (nreverse names))))))))
 
-(defun strip-plural (string)
+(defun depluralize (string)
+  "If a @WORD ends with what looks like a plural
+  marker (case-insensitive), then a @NAME is created by removing it.
+  For example, from the @WORD `BUSES` the plural marker `ES` is
+  removed to produce the @NAME `BUS`. The list of plural markers
+  considered is `S` (e.g. `CARS`), `ES` (e.g. `BUSES`), `SES` (e.g.
+  `GASSES`), `ZES` (e.g. `FEZZES`), and `REN` (e.g. `CHILDREN`)."
   ;; Mostly following https://www.grammarly.com/blog/plural-nouns/ but
   ;; keeping only the rules that remove suffixes (e.g. cities -> city
-  ;; is not allowed).
+  ;; is not allowed) because that would result in `CITY`s, which looks
+  ;; bad.
   (let ((l (length string))
         (r ()))
     (labels ((suffixp (suffix)
@@ -118,14 +162,37 @@
              (desuffix (suffix)
                (when (suffixp suffix)
                  (push (%desuffix suffix) r))))
-      ;; cars -> car
       (desuffix "s")
-      ;; buses -> bus
       (desuffix "es")
-      ;; gasses -> gas
       (desuffix "ses")
-      ;; fezzes -> fez
       (desuffix "zes")
-      (when (equalp string "children")
-        (desuffix "ren"))
+      (desuffix "ren")
       r)))
+
+(defun uppercase-core-bounds (string)
+  (let* ((first-uppercase-pos (position-if #'upper-case-p string))
+         (last-uppercase-pos (position-if #'upper-case-p string
+                                          :from-end t)))
+    (when (and first-uppercase-pos
+               (if (= last-uppercase-pos first-uppercase-pos)
+                   (notany #'lower-case-p string)
+                   (not (find-if #'lower-case-p string
+                                 :start (1+ first-uppercase-pos)
+                                 :end last-uppercase-pos))))
+      (values first-uppercase-pos (1+ last-uppercase-pos)))))
+
+(defun trim-uppercase-core (string)
+  "From a @CODIFIABLE @WORD, a @NAME is created by removing the prefix
+  before the first and the suffix after the last uppercase character
+  if they contain at least one lowercase character."
+  (multiple-value-bind (uppercase-start uppercase-end)
+      (uppercase-core-bounds string)
+    (when uppercase-start
+      ;; If there is no lowercase character before the first, then
+      ;; don't trim anything. This prevents %FOO -> FOO.
+      (unless (find-if #'lower-case-p string :end uppercase-start)
+        (setq uppercase-start 0))
+      (unless (find-if #'lower-case-p string :start uppercase-end)
+        (setq uppercase-end nil))
+      (when (or (plusp uppercase-start) uppercase-end)
+        (subseq string uppercase-start uppercase-end)))))

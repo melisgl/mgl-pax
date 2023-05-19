@@ -1024,40 +1024,26 @@
 (define-glossary-term @codifiable (:title "codifiable")
   "A @WORD is _codifiable_ iff
 
-  - it has at least one uppercase character (e.g. it's not `<`, `<=`
-    or `///`), and
-  - it has no lowercase characters (e.g. it's `T`, or
-    `*PRINT-LENGTH*`) or all lowercase characters immediately follow
-    at least two consecutive uppercase characters (e.g. in `CLASSes`
-    but in not `Classes`).")
+  - it has a single uppercase character (e.g. it's `T`) and no
+    lowercase characters at all, or
 
-(defun codifiable-word-p (word)
-  (and (notany #'whitespacep word)
-       (lowercase-only-in-suffixes-p word)
-       (some #'upper-case-p word)))
+  - there is more than one uppercase character and no lowercase
+    characters between them (e.g. CLASSes, nonREADable, CLASS-NAMEs
+    but not `Classes` or `aTe`.")
 
-(defun lowercase-only-in-suffixes-p (string)
-  (let ((prev-case nil))
-    (loop for char across string
-          do (cond ((upper-case-p char)
-                    (when (eq prev-case :lower)
-                      (return nil))
-                    (if (member prev-case '(:upper :upper-2))
-                        (setq prev-case :upper-2)
-                        (setq prev-case :upper)))
-                   ((lower-case-p char)
-                    (unless (member prev-case '(:upper-2 :lower))
-                      (return nil))
-                    (setq prev-case :lower))
-                   (t
-                    (setq prev-case nil)))
-          finally (return t))))
+(defun codifiable-word-p (string)
+  (and
+   ;; Check that it's a @WORD too.
+   (notany #'whitespacep string)
+   (uppercase-core-bounds string)))
 
 (define-glossary-term @interesting (:title "interesting")
   "A @NAME is _interesting_ iff
 
   - it names a symbol external to its package, or
+
   - it is at least 3 characters long and names an interned symbol, or
+
   - it names a [local reference][@LOCAL-REFERENCES].
 
   Symbols are read in the current *PACKAGE*, which is subject to

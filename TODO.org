@@ -39,8 +39,6 @@ change in INITIALIZE-LINKS.
 * MAYBE consider CommonDoc from the 40ants fork
 * MAYBE split transcription off into a separate library?
 * MAYBE remove some markup in :PLAIN format?
-* MAYBE desuffix all lowercase suffixes?
-e.g. RESOLVEd
 * MAYBE get variable initforms from source?
 Or fall back on this for deficient ARGLISTs. Will be really slow.
 * TODO test the elisp code

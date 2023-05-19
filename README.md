@@ -431,7 +431,7 @@ Now let's examine the most important pieces.
     
     ##### Misc
     
-    `TITLE` is a string containing markdown or `NIL`. If non-NIL, it
+    `TITLE` is a string containing markdown or `NIL`. If non-`NIL`, it
     determines the text of the heading in the generated output.
     `LINK-TITLE-TO` is a reference given as an `(OBJECT LOCATIVE)` pair or
     `NIL`, to which the heading will link when generating HTML. If not
@@ -637,25 +637,57 @@ need to muck with references when there is a perfectly good object.
 <a id="x-28MGL-PAX-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
 - [glossary-term] **name**
 
-    A *name* is a string that names an [`INTERN`][c35d]ed [`SYMBOL`][4b12],
-    a `PACKAGE`([`0`][97eb] [`1`][4dd7]), or an [`ASDF:SYSTEM`][c097], that is, a possible [object][75ce]. Names are
-    constructed from [word][d7b0]s by possibly trimming leading and trailing
-    punctuation symbols and removing certain plural suffixes.
+    A *name* is a string that names a possible [object][75ce]
+    (e.g. an [`INTERN`][c35d]ed [`SYMBOL`][4b12], a `PACKAGE`([`0`][97eb] [`1`][4dd7]), or an [`ASDF:SYSTEM`][c097]). Names are
+    constructed from [word][d7b0]s by trimming some prefixes and suffixes. For
+    a given word, multiple candidate names are considered in the
+    following order.
     
-    For example, in `"X and Y must be LISTs."`, although the word is
-    `"LISTs."`, it gets trimmed to `"LISTs"`, then the plural suffix
-    `"s"` is removed to get `"LIST"`. Out of the three candidates for
-    names, `"LISTs."`, `"LISTs"`, and `"LIST"`, the ones that name
-    interned symbols and such are retained for purposes for
-    [Navigating][3386] and
-    [Generating Documentation][2c93].
+    1. The entire word.
     
-    The punctuation characters for left and right trimming are `#<` and
-    `,:.>`, respectively. The plural suffixes considered are `s`, `es`,
-    `ses`, `zes`, and `ren` (all case insensitive).
+    2. Trimming the characters `#<\"` from the left of the word.
     
-    Thus `"CHILDREN"` and `"BUSES"` may have the names `"CHILD"` and
-    `"BUS"` in them.
+    3. Trimming the characters `,:.>\"` from the right of the word.
+    
+    4. Trimming both of the previous two at the same time.
+    
+    5. From the result of 4., further removing some plural markers.
+    
+    6. From the result of 4., further removing non-uppercase prefixes
+       and suffixes.
+    
+    For example, when `M-.` is pressed while point is over
+    `nonREADable.`, the last word of the sentence `It may be
+    nonREADable.`, the following names are considered until one is found
+    with a definition:
+    
+    1. The entire word, `"nonREADable."`.
+    
+    2. Trimming left does not produce a new word.
+    
+    3. Trimming right removes the dot and gives `"nonREADable"`.
+    
+    4. Trimming both is the same as trimming right.
+    
+    5. No plural markers are found.
+    
+    6. The lowercase prefix and suffix is removed around the uppercase
+       core, giving `"READ"`. This has a definition, which \`M-.' will
+       visit.
+    
+    The exact rules for steps 5. and 6. are the following.
+    
+    - If a [word][d7b0] ends with what looks like a plural marker, then a [name][88cf]
+    is created by removing it. For example, from the [word][d7b0] `BUSES` the
+    plural marker `ES` is removed to produce the [name][88cf] `BUS`. The list
+    of plural markers considered is `S` (e.g. [`CARS`][8c99]), `ES` (e.g.
+    `BUSES`), `SES` (e.g. `GASSES`), `ZES` (e.g. `FEZZES`), and
+    `REN` (e.g. `CHILDREN`).
+    
+    - From a [codifiable][b89a] [word][d7b0], a [name][88cf] is created by removing the prefix
+    before the first and the suffix after the last uppercase character
+    if they contain at least one lowercase character.
+
 
 <a id="x-28MGL-PAX-3A-40LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29"></a>
 ## 6 Locative Types
@@ -1650,13 +1682,12 @@ Reader can help with that.
 
     A [word][d7b0] is *codifiable* iff
     
-    - it has at least one uppercase character (e.g. it's not [`<`][5800], [`<=`][bb77]
-      or [`///`][889e]), and
+    - it has a single uppercase character (e.g. it's `T`) and no
+      lowercase characters at all, or
     
-    - it has no lowercase characters (e.g. it's `T`, or
-      [`*PRINT-LENGTH*`][727b]) or all lowercase characters immediately follow
-      at least two consecutive uppercase characters (e.g. in `CLASSes`([`0`][7e58] [`1`][2060])
-      but in not `Classes`).
+    - there is more than one uppercase character and no lowercase
+      characters between them (e.g. `CLASS`([`0`][7e58] [`1`][2060])es, non[`READ`][3d3c]able, [`CLASS-NAME`][a1a2]s
+      but not `Classes` or `aTe`.
 
 
 <a id="x-28MGL-PAX-3A-40INTERESTING-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
@@ -2185,7 +2216,7 @@ See the following variables, which control HTML generation.
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-HTML-MAX-NAVIGATION-TABLE-OF-CONTENTS-LEVEL-2A-20VARIABLE-29"></a>
 - [variable] **\*DOCUMENT-HTML-MAX-NAVIGATION-TABLE-OF-CONTENTS-LEVEL\*** *NIL*
 
-    `NIL` or a non-negative integer. If non-NIL, it overrides
+    `NIL` or a non-negative integer. If non-`NIL`, it overrides
     [`*DOCUMENT-MAX-NUMBERING-LEVEL*`][f12d] in the dynamic HTML table of contents
     on the left of the page.
 
@@ -3675,7 +3706,6 @@ they are presented.
   [524e]: #x-28MGL-PAX-3A-40UNSPECIFIED-LOCATIVE-20MGL-PAX-3ASECTION-29 "Unspecified Locative"
   [570b]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rst.htm "RESTART CLASS"
   [574a]: #x-28MGL-PAX-3A-40EXTENDING-DOCUMENT-20MGL-PAX-3ASECTION-29 "Extending `DOCUMENT`"
-  [5800]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq_sle.htm "< FUNCTION"
   [5825]: #x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/transcribe" ASDF/SYSTEM:SYSTEM'
   [5875]: #x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "GENERIC-FUNCTION MGL-PAX:LOCATIVE"
   [587f]: #x-28MGL-PAX-3AMAKE-GIT-SOURCE-URI-FN-20FUNCTION-29 "MGL-PAX:MAKE-GIT-SOURCE-URI-FN FUNCTION"
@@ -3704,7 +3734,6 @@ they are presented.
   [6fdb]: #x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax" ASDF/SYSTEM:SYSTEM'
   [718f]: #x-28MGL-PAX-3A-40MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29 "Indentation"
   [7199]: #x-28MGL-PAX-3A-40DOCUMENTING-IN-EMACS-20MGL-PAX-3ASECTION-29 "Documenting in Emacs"
-  [727b]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_lev.htm "*PRINT-LENGTH* VARIABLE"
   [72b4]: #x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFSECTION MGL-PAX:MACRO"
   [72fd]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_1.htm "DEFINE-SYMBOL-MACRO MGL-PAX:MACRO"
   [730f]: #x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20VARIABLE-29 "MGL-PAX:*DISCARD-DOCUMENTATION-P* VARIABLE"
@@ -3728,7 +3757,6 @@ they are presented.
   [8541]: #x-28MGL-PAX-3A-40EMACS-SETUP-20MGL-PAX-3ASECTION-29 "Emacs Setup"
   [8710]: #x-28MGL-PAX-3AARGUMENT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:ARGUMENT MGL-PAX:LOCATIVE"
   [875e]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-TO-HYPERSPEC* VARIABLE"
-  [889e]: http://www.lispworks.com/documentation/HyperSpec/Body/v_sl_sls.htm "/// VARIABLE"
   [88a7]: #x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "MGL-PAX:SECTION-READTABLE (MGL-PAX:READER MGL-PAX:SECTION)"
   [88cf]: #x-28MGL-PAX-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@NAME MGL-PAX:GLOSSARY-TERM"
   [8996]: #x-28MGL-PAX-3A-40SPECIFIED-LOCATIVE-20MGL-PAX-3ASECTION-29 "Specified Locative"
@@ -3756,6 +3784,7 @@ they are presented.
   [9974]: #x-28MGL-PAX-3ALOCATE-ERROR-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29 "MGL-PAX:LOCATE-ERROR-LOCATIVE (MGL-PAX:READER MGL-PAX:LOCATE-ERROR)"
   [9dbc]: #x-28MGL-PAX-3A-40TRANSCRIPT-API-20MGL-PAX-3ASECTION-29 "Transcript API"
   [a17d]: #x-28MGL-PAX-3A-40MATHJAX-20MGL-PAX-3ASECTION-29 "MathJax"
+  [a1a2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_class_.htm "CLASS-NAME GENERIC-FUNCTION"
   [a249]: #x-28MGL-PAX-3ATRANSCRIPTION-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION"
   [a328]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rdtabl.htm "READTABLE-CASE FUNCTION"
   [a39d]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_cas.htm "*PRINT-CASE* VARIABLE"
@@ -3776,7 +3805,6 @@ they are presented.
   [ba62]: #x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29 "FUNCTION MGL-PAX:LOCATIVE"
   [ba74]: #x-28MGL-PAX-3A-40LINKS-20MGL-PAX-3ASECTION-29 "Links and Systems"
   [bacc]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-20GENERIC-FUNCTION-29 "MGL-PAX:DOCUMENT-OBJECT GENERIC-FUNCTION"
-  [bb77]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq_sle.htm "<= FUNCTION"
   [bbf2]: #x-28MGL-PAX-3A-40NEW-OBJECT-TYPES-20MGL-PAX-3ASECTION-29 "Adding New Object Types"
   [bc83]: #x-28MGL-PAX-3A-40MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29 "Syntax Highlighting"
   [bcd2]: http://www.lispworks.com/documentation/HyperSpec/Body/d_optimi.htm "DEBUG DECLARATION"
