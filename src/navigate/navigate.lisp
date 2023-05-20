@@ -51,6 +51,20 @@
   See @EMACS-SETUP."""
   (mgl-pax/navigate asdf:system))
 
+;;; Ensure that some Swank internal facilities (such as
+;;; SWANK::FIND-DEFINITIONS-FIND-SYMBOL-OR-PACKAGE,
+;;; SWANK::WITH-BUFFER-SYNTAX, SWANK::PARSE-SYMBOL) are operational
+;;; even when not running under Slime.
+(defmacro with-swank (() &body body)
+  `(let* ((swank::*buffer-package* (if (boundp 'swank::*buffer-package*)
+                                       swank::*buffer-package*
+                                       *package*))
+          (swank::*buffer-readtable*
+            (if (boundp 'swank::*buffer-readtable*)
+                swank::*buffer-readtable*
+                (swank::guess-buffer-readtable swank::*buffer-package*))))
+     ,@body))
+
 ;;; List Swank source locations (suitable for `make-slime-xref') for
 ;;; the things that the Elisp side considers possible around the point
 ;;; when M-. is invoked. OBJECT-AND-LOCATIVES-LIST is a list like

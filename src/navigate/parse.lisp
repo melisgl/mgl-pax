@@ -62,20 +62,6 @@
   - [trim-uppercase-core function][docstring]
   """ *name-left-trim* *name-right-trim*))
 
-;;; Ensure that some Swank internal facilities (such as
-;;; SWANK::FIND-DEFINITIONS-FIND-SYMBOL-OR-PACKAGE,
-;;; SWANK::WITH-BUFFER-SYNTAX, SWANK::PARSE-SYMBOL) are operational
-;;; even when not running under Slime.
-(defmacro with-swank (() &body body)
-  `(let* ((swank::*buffer-package* (if (boundp 'swank::*buffer-package*)
-                                       swank::*buffer-package*
-                                       *package*))
-          (swank::*buffer-readtable*
-            (if (boundp 'swank::*buffer-readtable*)
-                swank::*buffer-readtable*
-                (swank::guess-buffer-readtable swank::*buffer-package*))))
-     ,@body))
-
 ;;; Return a list of @OBJECTs and a list of @NAMEs naming them in
 ;;; WORD. If ONLY-ONE matches, then return only a single object and a
 ;;; single name.
@@ -86,61 +72,59 @@
 ;;; instead of "CLASSes".
 (defun parse-word (word &key (trim t) (depluralize t) only-one
                           clhs-substring-match)
-  (with-swank ()
-    (swank::with-buffer-syntax (*package*)
-      (let ((left-trim *name-left-trim*)
-            (right-trim *name-right-trim*)
-            (objects ())
-            (names ()))
-        (flet ((consider (object name)
-                 (cond (only-one
-                        (when (funcall only-one object name)
-                          (return-from parse-word (values object name))))
-                       (t
-                        (push object objects)
-                        (push name names)))))
-          (flet ((find-it (name)
-                   (when (plusp (length name))
-                     (multiple-value-bind (object found)
-                         (swank::parse-symbol name)
-                       ;; FIXME: (SWANK::PARSE-SYMBOL "PAX:SECTION:")
-                       ;; is broken. Only add if the _string_ read is
-                       ;; shorter than the one we may already have for
-                       ;; OBJECT in NAMES.
-                       (when found
-                         (consider object name)))
-                     (when (or (find-package* name)
-                               (locate (string-downcase name) 'asdf:system
-                                       :errorp nil)
-                               (find-hyperspec-id
-                                name :substring-match clhs-substring-match))
-                       (consider name name)))))
-            (find-it word)
-            (if trim
-                (let* ((left-trimmed (string-left-trim left-trim word))
-                       (right-trimmed (string-right-trim right-trim word))
-                       (both-trimmed
-                         (string-right-trim right-trim left-trimmed)))
-                  (unless (string= left-trimmed word)
-                    (find-it left-trimmed))
-                  (unless (string= right-trimmed word)
-                    (find-it right-trimmed))
-                  (unless (or (string= both-trimmed left-trimmed)
-                              (string= both-trimmed right-trimmed))
-                    (find-it both-trimmed))
-                  (when depluralize
-                    (dolist (depluralized (depluralize both-trimmed))
-                      (unless (string= depluralized both-trimmed)
-                        (find-it depluralized))))
-                  (alexandria:when-let (trimmed (trim-uppercase-core
-                                                 both-trimmed))
-                    (find-it trimmed)))
-                (when depluralize
-                  (dolist (depluralized (depluralize word))
-                    (unless (string= depluralized word)
-                      (find-it depluralized))))))
-          (unless only-one
-            (values (nreverse objects) (nreverse names))))))))
+  (let ((left-trim *name-left-trim*)
+        (right-trim *name-right-trim*)
+        (objects ())
+        (names ()))
+    (flet ((consider (object name)
+             (cond (only-one
+                    (when (funcall only-one object name)
+                      (return-from parse-word (values object name))))
+                   (t
+                    (push object objects)
+                    (push name names)))))
+      (flet ((find-it (name)
+               (when (plusp (length name))
+                 (multiple-value-bind (object found)
+                     (swank::parse-symbol name)
+                   ;; FIXME: (SWANK::PARSE-SYMBOL "PAX:SECTION:")
+                   ;; is broken. Only add if the _string_ read is
+                   ;; shorter than the one we may already have for
+                   ;; OBJECT in NAMES.
+                   (when found
+                     (consider object name)))
+                 (when (or (find-package* name)
+                           (locate (string-downcase name) 'asdf:system
+                                   :errorp nil)
+                           (find-hyperspec-id
+                            name :substring-match clhs-substring-match))
+                   (consider name name)))))
+        (find-it word)
+        (if trim
+            (let* ((left-trimmed (string-left-trim left-trim word))
+                   (right-trimmed (string-right-trim right-trim word))
+                   (both-trimmed
+                     (string-right-trim right-trim left-trimmed)))
+              (unless (string= left-trimmed word)
+                (find-it left-trimmed))
+              (unless (string= right-trimmed word)
+                (find-it right-trimmed))
+              (unless (or (string= both-trimmed left-trimmed)
+                          (string= both-trimmed right-trimmed))
+                (find-it both-trimmed))
+              (when depluralize
+                (dolist (depluralized (depluralize both-trimmed))
+                  (unless (string= depluralized both-trimmed)
+                    (find-it depluralized))))
+              (alexandria:when-let (trimmed (trim-uppercase-core
+                                             both-trimmed))
+                (find-it trimmed)))
+            (when depluralize
+              (dolist (depluralized (depluralize word))
+                (unless (string= depluralized word)
+                  (find-it depluralized))))))
+      (unless only-one
+        (values (nreverse objects) (nreverse names))))))
 
 (defun depluralize (string)
   "If a @WORD ends with what looks like a plural
