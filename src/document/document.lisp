@@ -2664,8 +2664,8 @@
   (@apropos section)
   (@documentation-key-bindings section))
 
-(defsection @pax-urls (:title "PAX URLs")
-  """A \PAX URL consists of a \REFERENCE and an optional FRAGMENT
+(defsection @pax-urls (:title "PAX \\URLs")
+  """A PAX \\URL consists of a \REFERENCE and an optional FRAGMENT
   part:
 
       URL = [REFERENCE] ["#" FRAGMENT]

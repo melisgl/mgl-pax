@@ -100,3 +100,5 @@ Or go to the source.
 That is, when generating documentation for something that's referenced
 by one or more sections. See PAX::SECTIONS-THAT-CONTAIN and
 PAX::SORT-BY-PROXIMITY.
+* make (CLHS FUNCTION) work?
+E.g. print (clhs function)

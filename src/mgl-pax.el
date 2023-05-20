@@ -781,7 +781,7 @@ Without a prefix argument, the first syntax is used."
 (defun mgl-pax-retranscribe-region (start end)
   "Updates the transcription in the current region (as in calling
 MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T). Use a numeric prefix
-argument as in index to select one of the Common Lisp
+argument as an index to select one of the Common Lisp
 MGL-PAX:*TRANSRIBE-SYNTAXES* as the SYNTAX argument to
 MGL-PAX:TRANSCRIBE. Without a prefix argument, the syntax of the
 input will not be changed."

@@ -27,7 +27,7 @@
 - [8 Generating Documentation][2c93]
     - [8.1 The mgl-pax/document ASDF System][4bb8]
     - [8.2 Documenting in Emacs][7199]
-        - [8.2.1 PAX `URL`s][1e80]
+        - [8.2.1 PAX URLs][1e80]
         - [8.2.2 PAX Apropos][b7fc]
         - [8.2.3 Documentation Key Bindings][e0d7]
     - [8.3 Markdown Support][c2d3]
@@ -677,12 +677,12 @@ need to muck with references when there is a perfectly good object.
     
     The exact rules for steps 5. and 6. are the following.
     
-    - If a [word][d7b0] ends with what looks like a plural marker, then a [name][88cf]
-    is created by removing it. For example, from the [word][d7b0] `BUSES` the
-    plural marker `ES` is removed to produce the [name][88cf] `BUS`. The list
-    of plural markers considered is `S` (e.g. [`CARS`][8c99]), `ES` (e.g.
-    `BUSES`), `SES` (e.g. `GASSES`), `ZES` (e.g. `FEZZES`), and
-    `REN` (e.g. `CHILDREN`).
+    - If a [word][d7b0] ends with what looks like a plural
+    marker (case-insensitive), then a [name][88cf] is created by removing it.
+    For example, from the [word][d7b0] `BUSES` the plural marker `ES` is
+    removed to produce the [name][88cf] `BUS`. The list of plural markers
+    considered is `S` (e.g. [`CARS`][8c99]), `ES` (e.g. `BUSES`), `SES` (e.g.
+    `GASSES`), `ZES` (e.g. `FEZZES`), and `REN` (e.g. `CHILDREN`).
     
     - From a [codifiable][b89a] [word][d7b0], a [name][88cf] is created by removing the prefix
     before the first and the suffix after the last uppercase character
@@ -1433,9 +1433,9 @@ In interactive use, `mgl-pax-document` defaults to documenting
 way as in [Navigating Sources in Emacs][3386].
 
 <a id="x-28MGL-PAX-3A-40PAX-URLS-20MGL-PAX-3ASECTION-29"></a>
-#### 8.2.1 PAX `URL`s
+#### 8.2.1 PAX URLs
 
-A PAX `URL` consists of a REFERENCE and an optional `FRAGMENT`
+A PAX URL consists of a REFERENCE and an optional `FRAGMENT`
 part:
 
     URL = [REFERENCE] ["#" FRAGMENT]
@@ -2443,7 +2443,7 @@ output. Compared to that, the following are not supported:
 
 - `METHOD-COMBINATION`([`0`][fc7b] [`1`][82e0]) docstrings on ABCL, AllegroCL.
 
-In addition, CLISP does not support the ambiguous case of [PAX `URL`s][1e80]
+In addition, CLISP does not support the ambiguous case of [PAX URLs][1e80]
 for [Documenting in Emacs][7199] because the current implementation relies
 on Swank to list definitions of symbols (as [`VARIABLE`][6c83],
 [`FUNCTION`][ba62], etc), and that simply doesn't work.
@@ -2941,7 +2941,7 @@ output.
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-DYNENV-20MGL-PAX-3ASECTION-29"></a>
 #### 9.4.2 Controlling the Dynamic Environment
 
-The dynamic enviroment in which forms in the transcript are
+The dynamic environment in which forms in the transcript are
 evaluated can be controlled via the `:DYNENV` argument of
 `cl-transcript`.
 
@@ -3657,7 +3657,7 @@ they are presented.
   [1b1b]: #x-28MGL-PAX-3A-40DOCUMENTATION-UTILITIES-20MGL-PAX-3ASECTION-29 "Utilities for Generating Documentation"
   [1b28]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE"
   [1cea]: #x-28MGL-PAX-3AREFERENCE-20CLASS-29 "MGL-PAX:REFERENCE CLASS"
-  [1e80]: #x-28MGL-PAX-3A-40PAX-URLS-20MGL-PAX-3ASECTION-29 "PAX `URL`s"
+  [1e80]: #x-28MGL-PAX-3A-40PAX-URLS-20MGL-PAX-3ASECTION-29 "PAX URLs"
   [1f28]: http://www.lispworks.com/documentation/HyperSpec/Body/f_format.htm "FORMAT FUNCTION"
   [2060]: #x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "CLASS MGL-PAX:LOCATIVE"
   [21f5]: #x-28MGL-PAX-3A-40MACROLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Macros"

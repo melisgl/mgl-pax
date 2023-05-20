@@ -578,12 +578,12 @@ need to muck with references when there is a perfectly good object.
     
     The exact rules for steps 5. and 6. are the following.
     
-    - If a @WORD ends with what looks like a plural marker, then a @NAME
-    is created by removing it. For example, from the @WORD `BUSES` the
-    plural marker `ES` is removed to produce the @NAME `BUS`. The list
-    of plural markers considered is `S` (e.g. `CARS`), `ES` (e.g.
-    `BUSES`), `SES` (e.g. `GASSES`), `ZES` (e.g. `FEZZES`), and
-    `REN` (e.g. `CHILDREN`).
+    - If a @WORD ends with what looks like a plural
+    marker (case-insensitive), then a @NAME is created by removing it.
+    For example, from the @WORD `BUSES` the plural marker `ES` is
+    removed to produce the @NAME `BUS`. The list of plural markers
+    considered is `S` (e.g. `CARS`), `ES` (e.g. `BUSES`), `SES` (e.g.
+    `GASSES`), `ZES` (e.g. `FEZZES`), and `REN` (e.g. `CHILDREN`).
     
     - From a @CODIFIABLE @WORD, a @NAME is created by removing the prefix
     before the first and the suffix after the last uppercase character
@@ -2722,7 +2722,7 @@ output.
 
 #### Controlling the Dynamic Environment
 
-The dynamic enviroment in which forms in the transcript are
+The dynamic environment in which forms in the transcript are
 evaluated can be controlled via the :DYNENV argument of
 `cl-transcript`.
 

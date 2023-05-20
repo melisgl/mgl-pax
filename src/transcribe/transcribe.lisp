@@ -1353,7 +1353,7 @@
 
 (defsection @transcript-dynenv
     (:title "Controlling the Dynamic Environment")
-  """The dynamic enviroment in which forms in the transcript are
+  """The dynamic environment in which forms in the transcript are
   evaluated can be controlled via the :DYNENV argument of
   `cl-transcript`.
 
