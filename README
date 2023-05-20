@@ -546,9 +546,9 @@ need to muck with references when there is a perfectly good object.
     
     1. The entire word.
     
-    2. Trimming the characters `#<\"` from the left of the word.
+    2. Trimming the characters `#<;"` from the left of the word.
     
-    3. Trimming the characters `,:.>\"` from the right of the word.
+    3. Trimming the characters `,;:.>"` from the right of the word.
     
     4. Trimming both of the previous two at the same time.
     

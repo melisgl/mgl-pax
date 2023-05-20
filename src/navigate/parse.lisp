@@ -13,8 +13,8 @@
   non-empty string between whitespace characters in a docstring.")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defparameter *name-left-trim* "#<\"")
-  (defparameter *name-right-trim* ",:.>\""))
+  (defparameter *name-left-trim* "#<;\"")
+  (defparameter *name-right-trim* ",;:.>\""))
 
 (define-glossary-term @name (:title "name")
   #.(format nil """A _name_ is a string that names a possible @OBJECT
