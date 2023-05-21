@@ -117,14 +117,15 @@ other mgl-pax commands."
 ;;; addition, we also look up definitions for the symbol whose name
 ;;; has the parts beyond [] cut off.
 (defun mgl-pax-object-and-locatives-list-at-point ()
-  (let* ((name (slime-symbol-at-point))
-         (bounds (slime-bounds-of-symbol-at-point))
-         (locatives (mgl-pax-find-locatives bounds))
-         (reflink-name-and-locatives (mgl-pax-parse-reflink bounds)))
-    (append (and name `((,name ,locatives)))
-            (if reflink-name-and-locatives
-                (list reflink-name-and-locatives)
-              ()))))
+  (let ((name (slime-symbol-at-point))
+        (bounds (slime-bounds-of-symbol-at-point)))
+    (when bounds
+      (let ((locatives (mgl-pax-find-locatives bounds))
+            (reflink-name-and-locatives (mgl-pax-parse-reflink bounds)))
+        (append (and name `((,name ,locatives)))
+                (if reflink-name-and-locatives
+                    (list reflink-name-and-locatives)
+                  ()))))))
 
 ;;; Return the sexps before and after (slime-symbol-at-point),
 ;;; skipping some markup.
@@ -134,34 +135,45 @@ other mgl-pax commands."
                     (mgl-pax-locative-after (cdr bounds)))))
 
 (cl-defun mgl-pax-locative-before (&optional (point (point)))
-  (ignore-errors
-    (save-excursion
-      (goto-char (1- point))
-      (skip-chars-backward ";` \n\t")
-      (slime-last-expression))))
+  (save-excursion
+    (goto-char (1- point))
+    (skip-chars-backward ";` \n\t")
+    (let ((sexp (slime-last-expression)))
+      (unless (equal sexp "")
+        sexp))))
 
 (cl-defun mgl-pax-locative-after (&optional (point (point)))
-  (ignore-errors
+  (save-excursion
+    (goto-char point)
+    (skip-chars-forward "[];`\" \n\t")
+    (if (and (char-after)
+             (equal (string (char-after)) "("))
+        ;; [FOO][(function)]
+        (mgl-pax-next-sexp)
+      ;; [FOO][function], [`FOO`][function], [FOO ][function]
+      (let ((end-pos+1 (save-excursion
+                         (search-forward-regexp "\\(\\]\\|`\\)"
+                                                (+ (point) 1000)
+                                                t))))
+        (if end-pos+1
+            (save-restriction
+              (narrow-to-region (point) (1- end-pos+1))
+              (mgl-pax-next-sexp))
+          (mgl-pax-next-sexp))))))
+
+(defun mgl-pax-next-sexp ()
+  (save-excursion
+    (when (mgl-pax-forward-sexp)
+      (ignore-errors (slime-last-expression)))))
+
+;;; Like forward-sexp, but don't signal errors and return t if
+;;; something other than whitespace was skipped over.
+(defun mgl-pax-forward-sexp ()
+  (let ((point (point)))
+    (ignore-errors (forward-sexp))
     (save-excursion
-      (goto-char point)
-      (skip-chars-forward "[];`\" \n\t")
-      (if (equal (string (char-after)) "(")
-          ;; [FOO][(function)]
-          (save-excursion
-            (slime-forward-sexp)
-            (slime-last-expression))
-        ;; [FOO][function], [`FOO`][function], [FOO ][function]
-        (let ((end-pos+1 (save-excursion
-                           (search-forward-regexp "\\(\\]\\|`\\)"
-                                                  (+ (point) 1000)
-                                                  t))))
-          (if end-pos+1
-              (save-restriction
-                (narrow-to-region (point) (1- end-pos+1))
-                (slime-forward-sexp)
-                (slime-last-expression))
-            (slime-forward-sexp)
-            (slime-last-expression)))))))
+      (ignore-errors (backward-sexp))
+      (<= point (point)))))
 
 ;;; With point on FOO or just after, parse "[FOO][function]" as a
 ;;; Markdown reference link. Return the name and the locative string
