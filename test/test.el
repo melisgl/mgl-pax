@@ -22,6 +22,24 @@
    (should (equal (mgl-pax-object-and-locatives-list-at-point)
                   '(("sym" ("xxx" "function")))))))
 
+;;; xxx (FOO) yyy
+(ert-deftest test-mgl-pax-object-and-locatives-list-at-point/simple-2 ()
+  (with-temp-lisp-buffer
+   (insert "xxx (foo")
+   (save-excursion
+     (insert ") yyy"))
+   (should (equal (mgl-pax-object-and-locatives-list-at-point)
+                  '(("foo" ()))))))
+
+;;; xxx ((FOO)) yyy
+(ert-deftest test-mgl-pax-object-and-locatives-list-at-point/simple-3 ()
+  (with-temp-lisp-buffer
+   (insert "xxx ((foo")
+   (save-excursion
+     (insert ")) yyy"))
+   (should (equal (mgl-pax-object-and-locatives-list-at-point)
+                  '(("foo" ()))))))
+
 ;;; xxx [FOO][function] yyy
 (ert-deftest test-mgl-pax-object-and-locatives-list-at-point/reflink-1 ()
   (with-temp-lisp-buffer

@@ -102,3 +102,5 @@ by one or more sections. See PAX::SECTIONS-THAT-CONTAIN and
 PAX::SORT-BY-PROXIMITY.
 * make (CLHS FUNCTION) work?
 E.g. print (clhs function)
+* html page title has markup
+E.g \\, maybe **.

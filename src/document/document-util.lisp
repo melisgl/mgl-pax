@@ -438,6 +438,7 @@
   ;; with C-x C-e), the file's readtable is not used (which leads to a
   ;; reader macro conflict with CL-SYNTAX).
   (let ((*readtable* (named-readtables:find-readtable :standard)))
+    (asdf:load-system :mgl-pax/full)
     (asdf:load-system :mgl-mat)
     (asdf:load-system :named-readtables/doc)
     (asdf:load-system :micmac)

@@ -147,10 +147,11 @@ other mgl-pax commands."
 (cl-defun mgl-pax-locative-before (&optional (point (point)))
   (save-excursion
     (goto-char (1- point))
-    (skip-chars-backward ";` \n\t")
-    (let ((sexp (slime-last-expression)))
-      (unless (equal sexp "")
-        sexp))))
+    (unless (looking-at "(")
+      (skip-chars-backward ";` \n\t")
+      (let ((sexp (ignore-errors (slime-last-expression))))
+        (unless (equal sexp "")
+          sexp)))))
 
 (cl-defun mgl-pax-locative-after (&optional (point (point)))
   (save-excursion
