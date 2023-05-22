@@ -69,7 +69,7 @@ other mgl-pax commands."
   :type 'boolean
   :group 'mgl-pax)
 
-(defvar mgl-pax-version '(0 2 0))
+(defvar mgl-pax-version '(0 2 1))
 
 (defun mgl-pax-maybe-autoload (cont)
   (if mgl-pax-autoload
@@ -95,6 +95,16 @@ other mgl-pax commands."
                              ',mgl-pax-version)
                  t)
       cont)))
+
+(defvar mgl-pax-file-name)
+(setq mgl-pax-file-name load-file-name)
+
+(defun mgl-pax-reload ()
+  "Reload mgl-pax.el. This may be necessary after upgrading MGL-PAX."
+  (interactive)
+  (let ((sourcefile (concat (file-name-sans-extension mgl-pax-file-name)
+                            ".el")))
+    (load-file sourcefile)))
 
 
 ;;;; Find possible objects and locatives at point
@@ -780,15 +790,16 @@ Without a prefix argument, the first syntax is used."
      (if (not loadedp)
          (mgl-pax-not-loaded)
        (save-excursion
-         (let* ((start (progn (backward-sexp)
-                              (move-beginning-of-line nil)
-                              (point)))
-                (end (progn (forward-sexp)
-                            (point))))
-           (goto-char end)
-           (insert
-            (mgl-pax-transcribe start end (mgl-pax-transcribe-syntax-arg)
-                                nil nil nil))))))))
+         (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
+           (let* ((start (progn (backward-sexp)
+                                (move-beginning-of-line nil)
+                                (point)))
+                  (end (progn (forward-sexp)
+                              (point))))
+             (goto-char end)
+             (insert
+              (mgl-pax-transcribe start end (mgl-pax-transcribe-syntax-arg)
+                                  nil nil nil dynenv)))))))))
 
 (defun mgl-pax-retranscribe-region (start end)
   "Updates the transcription in the current region (as in calling
@@ -802,31 +813,48 @@ input will not be changed."
    (lambda (loadedp)
      (if (not loadedp)
          (mgl-pax-not-loaded)
-       (let* ((point-at-start-p (= (point) start))
-              (point-at-end-p (= (point) end))
-              (transcript (mgl-pax-transcribe start end
-                                              (mgl-pax-transcribe-syntax-arg)
-                                              t t nil)))
-         (if point-at-start-p
+       (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
+         (let* ((point-at-start-p (= (point) start))
+                (point-at-end-p (= (point) end))
+                (transcript (mgl-pax-transcribe start end
+                                                (mgl-pax-transcribe-syntax-arg)
+                                                t t nil dynenv)))
+           (if point-at-start-p
+               (save-excursion
+                 (goto-char start)
+                 (delete-region start end)
+                 (insert transcript))
              (save-excursion
                (goto-char start)
-               (delete-region start end)
-               (insert transcript))
-           (save-excursion
-             (goto-char start)
-             (delete-region start end))
-           (insert transcript)))))))
+               (delete-region start end))
+             (insert transcript))))))))
 
 (defun mgl-pax-transcribe-syntax-arg ()
   (if current-prefix-arg
       (prefix-numeric-value current-prefix-arg)
     nil))
 
+(defun mgl-pax-find-cl-transcript-dynenv ()
+  "Within the current defun, find the first occurrence of
+  \"```\" backwards from point, and if it is followed by
+  \"cl-transcript\", return its dynenv argument."
+  (save-excursion
+    (save-restriction
+      (narrow-to-defun)
+      (when (search-backward "```")
+        (when (looking-at "```cl-transcript")
+          (save-restriction
+            (narrow-to-region (point) (save-excursion
+                                        (end-of-line)
+                                        (point)))
+            (when (search-forward ":dynenv" nil t)
+              (mgl-pax-next-sexp))))))))
+
 (defun mgl-pax-transcribe (start end syntax update-only echo
-                                 first-line-special-p)
+                                 first-line-special-p dynenv)
   (slime-eval
    `(cl:funcall (cl:find-symbol (cl:string '#:transcribe-for-emacs) :mgl-pax)
                 ,(buffer-substring-no-properties start end)
-                ',syntax ',update-only ',echo ',first-line-special-p)))
+                ',syntax ',update-only ',echo ',first-line-special-p ,dynenv)))
 
 (provide 'mgl-pax)

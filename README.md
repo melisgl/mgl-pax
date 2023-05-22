@@ -279,7 +279,7 @@ for the latest version.
 <a id="x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 ### 3.1 The mgl-pax ASDF System
 
-- Version: 0.2.0
+- Version: 0.2.1
 - Description: Exploratory programming tool and documentation
   generator.
 - Long Description: The set of dependencies of the MGL-PAX system is
@@ -2590,6 +2590,10 @@ but in comments too:
     ;;;; => :HELLO
     ;;;; => (1 2)
 
+The dynamic environment of the transcription is determined by the
+`:DYNENV` argument of the enclosing cl-transcript code block (see
+[Controlling the Dynamic Environment][6b59]).
+
 Transcription support in Emacs can be enabled by loading
 `src/mgl-pax.el`. See [Emacs Setup][8541].
 
@@ -2597,7 +2601,7 @@ Transcription support in Emacs can be enabled by loading
 ### 9.3 Transcript API
 
 <a id="x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29"></a>
-- [function] **TRANSCRIBE** *INPUT OUTPUT &KEY UPDATE-ONLY (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) (CHECK-CONSISTENCY \*TRANSCRIBE-CHECK-CONSISTENCY\*) DEFAULT-SYNTAX (INPUT-SYNTAXES \*TRANSCRIBE-SYNTAXES\*) (OUTPUT-SYNTAXES \*TRANSCRIBE-SYNTAXES\*)*
+- [function] **TRANSCRIBE** *INPUT OUTPUT &KEY UPDATE-ONLY (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) (CHECK-CONSISTENCY \*TRANSCRIBE-CHECK-CONSISTENCY\*) DEFAULT-SYNTAX (INPUT-SYNTAXES \*TRANSCRIBE-SYNTAXES\*) (OUTPUT-SYNTAXES \*TRANSCRIBE-SYNTAXES\*) DYNENV*
 
     Read forms from `INPUT` and write them (iff `ECHO`) to `OUTPUT`
     followed by any output and return values produced by calling [`EVAL`][c1eb] on
@@ -2800,6 +2804,13 @@ Transcription support in Emacs can be enabled by loading
     use `:DEFAULT-SYNTAX` `:DEFAULT`. If `DEFAULT-SYNTAX` is `NIL` (the
     default), the same syntax will be used in the output as in the input
     as much as possible.
+    
+    **Dynamic Environment**
+    
+    If `DYNENV` is non-`NIL`, then it must be a function that establishes
+    the dynamic environment in which transcription shall take place. It
+    is called with a single argument: a thunk (a function of no
+    arguments). See [Controlling the Dynamic Environment][6b59] for an example.
 
 <a id="x-28MGL-PAX-3A-2ATRANSCRIBE-CHECK-CONSISTENCY-2A-20VARIABLE-29"></a>
 - [variable] **\*TRANSCRIBE-CHECK-CONSISTENCY\*** *NIL*

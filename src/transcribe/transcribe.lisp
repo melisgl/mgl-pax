@@ -231,7 +231,8 @@
            (include-no-value update-only) (echo t)
            (check-consistency *transcribe-check-consistency*)
            default-syntax (input-syntaxes *transcribe-syntaxes*)
-           (output-syntaxes *transcribe-syntaxes*))
+           (output-syntaxes *transcribe-syntaxes*)
+           dynenv)
   """Read forms from INPUT and write them (iff ECHO) to OUTPUT
   followed by any output and return values produced by calling EVAL on
   the form. INPUT can be a stream or a string, while OUTPUT can be a
@@ -432,16 +433,28 @@
   To translate the above to uncommented syntax,
   use :DEFAULT-SYNTAX :DEFAULT. If DEFAULT-SYNTAX is NIL (the
   default), the same syntax will be used in the output as in the input
-  as much as possible."""
-  (write-transcript (read-transcript input :syntaxes input-syntaxes)
-                    output
-                    :update-only update-only
-                    :check-consistency check-consistency
-                    :include-no-output include-no-output
-                    :include-no-value include-no-value
-                    :echo echo
-                    :default-syntax default-syntax
-                    :syntaxes output-syntaxes))
+  as much as possible.
+
+  **Dynamic Environment**
+
+  If DYNENV is non-NIL, then it must be a function that establishes
+  the dynamic environment in which transcription shall take place. It
+  is called with a single argument: a thunk (a function of no
+  arguments). See @TRANSCRIPT-DYNENV for an example.
+  """
+  (flet ((do-it ()
+           (write-transcript (read-transcript input :syntaxes input-syntaxes)
+                             output
+                             :update-only update-only
+                             :check-consistency check-consistency
+                             :include-no-output include-no-output
+                             :include-no-value include-no-value
+                             :echo echo
+                             :default-syntax default-syntax
+                             :syntaxes output-syntaxes)))
+    (if dynenv
+        (funcall dynenv #'do-it)
+        (do-it))))
 
 
 ;;;; Prefix utilities
@@ -1258,19 +1271,27 @@
       ;;;; => :HELLO
       ;;;; => (1 2)
 
+  The dynamic environment of the transcription is determined by the
+  :DYNENV argument of the enclosing cl-transcript code block (see
+  @TRANSCRIPT-DYNENV).
+
   Transcription support in Emacs can be enabled by loading
   `src/mgl-pax.el`. See @EMACS-SETUP.""")
 
 (defun/autoloaded transcribe-for-emacs (string default-syntax* update-only echo
-                                               first-line-special-p)
-  (let ((default-syntax (cond ((numberp default-syntax*)
-                               (first (elt *transcribe-syntaxes*
-                                           default-syntax*)))
-                              ((null default-syntax*)
-                               nil)
-                              (t (error "Unexpected default syntax ~S."
-                                        default-syntax*)))))
-    (swank::with-buffer-syntax ()
+                                               first-line-special-p dynenv)
+  (swank::with-buffer-syntax ()
+    (let ((default-syntax (cond ((numberp default-syntax*)
+                                 (first (elt *transcribe-syntaxes*
+                                             default-syntax*)))
+                                ((null default-syntax*)
+                                 nil)
+                                (t (error "Unexpected default syntax ~S."
+                                          default-syntax*))))
+          (dynenv (and dynenv (read-from-string dynenv))))
+      (when (and dynenv (or (not (symbolp dynenv))
+                            (not (fboundp dynenv))))
+        (error ":dynenv ~S does not name a function." dynenv))
       (multiple-value-bind (string prefix)
           (strip-longest-common-prefix
            string "; " :first-line-special-p first-line-special-p)
@@ -1278,7 +1299,8 @@
                 (prefix-lines prefix
                               (transcribe string nil
                                           :default-syntax default-syntax
-                                          :update-only update-only :echo echo)
+                                          :update-only update-only :echo echo
+                                          :dynenv dynenv)
                               :exclude-first-line-p first-line-special-p)))
           (if echo
               transcript
