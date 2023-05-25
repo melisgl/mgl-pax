@@ -113,7 +113,10 @@
 
 (defun reference-for-emacs (reference)
   (with-standard-io-syntax*
-    (list (prin1-to-string (reference-object reference))
+    (list (let ((object (reference-object reference)))
+            (if (stringp object)
+                object
+                (prin1-to-string object)))
           ;; The locative may not be readable (e.g. methods with EQL
           ;; specializers with unreadable stuff).
           (let ((*print-readably* nil))

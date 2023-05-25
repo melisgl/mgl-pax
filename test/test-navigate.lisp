@@ -85,7 +85,10 @@
                     ("foo" ("xxx")))
                   '(("MGL-PAX-TEST::FOO" "COMPILER-MACRO")
                     ("MGL-PAX-TEST::FOO" "FUNCTION")
-                    ("MGL-PAX-TEST::FOO" "CLASS"))))))
+                    ("MGL-PAX-TEST::FOO" "CLASS"))))
+    ;; pax
+    (check-ldfe '(("pax" ()))
+                '(("pax" "PACKAGE")))))
 
 (defun check-ldfe (object-and-locatives-list expected-emacsrefs)
   (let ((emacsrefs (sort-emacsrefs
