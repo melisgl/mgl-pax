@@ -135,11 +135,15 @@ export LC_ALL=en_US.UTF-8
 # Most lisps take only 10s or so to run the tests. CLISP takes 4x longer. ABCL
 # is 25x slower.
 run_tests lisp_tests sbcl --noinform --disable-debugger
+
+export LC_ALL=C
 run_tests lisp_tests allegro --batch --backtrace-on-error
+export LC_ALL=en_US.UTF-8
+
 run_tests lisp_tests ccl-bin --batch
 run_tests lisp_tests cmu-bin -batch
 run_tests lisp_tests ecl
-run_tests lisp_tests clisp -on-error exit
+run_tests lisp_tests clisp -on-error exit;
 run_tests lisp_tests abcl-bin
 # We run the autoload tests on the faster ones only.
 run_tests autoload_tests sbcl --noinform --disable-debugger

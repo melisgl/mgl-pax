@@ -142,7 +142,7 @@ output of `(mgl-pax:document #'abort :format :markdown)`.
     
       [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\CONTROL-ERROR \CONDITION"
 
-Note that the docstring of the [`ABORT`][1102] function was not written with
+Note that the docstring of the [`ABORT`][479a] function was not written with
 PAX in mind. The above markdown is rendered as
 
 - \[function\] **ABORT** *&OPTIONAL CONDITION*
@@ -340,7 +340,7 @@ organizing code following the flow of user-level documentation and
 relegated comments to implementation details entirely. However, some
 parts of `DEFSECTION` docstrings were just listings of
 all the functions, macros and variables related to the narrative,
-and this list was repeated in the [`DEFPACKAGE`][42d7] form complete with
+and this list was repeated in the [`DEFPACKAGE`][9b43] form complete with
 little comments that were like section names. A clear violation of
 [OAOO][oaoo], one of them had to go, so `DEFSECTION` got
 a list of symbols to export.
@@ -417,10 +417,10 @@ Now let's examine the most important pieces.
     ##### Exporting
     
     If `EXPORT` is true (the default), `NAME` and the [object][75ce]s of references
-    among `ENTRIES` which are [`SYMBOL`][4b12]s are candidates for exporting. A
+    among `ENTRIES` which are [`SYMBOL`][e5af]s are candidates for exporting. A
     candidate symbol is exported if
     
-    - it is [accessible][e077] in `PACKAGE`, and
+    - it is [accessible][3473] in `PACKAGE`, and
     
     - there is a reference to it in the section being defined which is
       approved by [`EXPORTABLE-REFERENCE-P`][e51f].
@@ -450,10 +450,10 @@ Now let's examine the most important pieces.
 <a id="x-28MGL-PAX-3ADEFINE-PACKAGE-20MGL-PAX-3AMACRO-29"></a>
 - [macro] **DEFINE-PACKAGE** *PACKAGE &REST OPTIONS*
 
-    This is like [`CL:DEFPACKAGE`][42d7] but silences warnings and errors
+    This is like [`CL:DEFPACKAGE`][9b43] but silences warnings and errors
     signaled when the redefined package is at variance with the current
     state of the package. Typically this situation occurs when symbols
-    are exported by calling [`EXPORT`][bf07] (as is the case with [`DEFSECTION`][72b4]) as
+    are exported by calling [`EXPORT`][0c4f] (as is the case with [`DEFSECTION`][72b4]) as
     opposed to adding `:EXPORT` forms to the `DEFPACKAGE` form and the
     package definition is subsequently reevaluated. See the section on
     [package variance](http://www.sbcl.org/manual/#Package-Variance) in
@@ -480,7 +480,7 @@ such as the `FOO` type or the `FOO` function.
 ```
 
 The docstring is available via `(CL:DOCUMENTATION 'FOO 'TYPE)`,
-where `TYPE` – called `DOC-TYPE` – is what tells [`CL:DOCUMENTATION`][68f1]
+where `TYPE` – called `DOC-TYPE` – is what tells [`CL:DOCUMENTATION`][c5ae]
 that we want the docstring of the type named `FOO`. This design
 supports disambiguation and working with things that are not
 first-class, such as types.
@@ -526,7 +526,7 @@ objects, but often they appear as an `(OBJECT LOCATIVE)` list (see
     [`FUNCTION`][ba62] or [`VARIABLE`][6c83] and together with
     [object][75ce]s form [reference][80cd]s.
     
-    A locative can be a symbol or a list whose [`CAR`][8c99] is a symbol. In
+    A locative can be a symbol or a list whose [`CAR`][d5a2] is a symbol. In
     either case, the symbol is called the [locative type][6121] while the rest of the elements are the
     *locative arguments*. See the [`METHOD`][172e] locative or the [`LOCATIVE`][0b3a]
     locative for examples of locative types with arguments.
@@ -575,7 +575,7 @@ need to muck with references when there is a perfectly good object.
 <a id="x-28MGL-PAX-3ALOCATIVE-ARGS-20FUNCTION-29"></a>
 - [function] **LOCATIVE-ARGS** *LOCATIVE*
 
-    The [`REST`][3f15] of `LOCATIVE` if it's a list. If it's a symbol then it's
+    The [`REST`][fe9f] of `LOCATIVE` if it's a list. If it's a symbol then it's
     `NIL`.
 
 <a id="x-28MGL-PAX-3ALOCATE-20FUNCTION-29"></a>
@@ -603,7 +603,7 @@ need to muck with references when there is a perfectly good object.
 
 
 <a id="x-28MGL-PAX-3ALOCATE-ERROR-20CONDITION-29"></a>
-- [condition] **LOCATE-ERROR** *[ERROR][1895]*
+- [condition] **LOCATE-ERROR** *[ERROR][d162]*
 
     Signalled by [`LOCATE`][ee94] when the lookup fails and
     `ERRORP` is true.
@@ -638,7 +638,7 @@ need to muck with references when there is a perfectly good object.
 - [glossary-term] **name**
 
     A *name* is a string that names a possible [object][75ce]
-    (e.g. an [`INTERN`][c35d]ed [`SYMBOL`][4b12], a `PACKAGE`([`0`][97eb] [`1`][4dd7]), or an [`ASDF:SYSTEM`][c097]). Names are
+    (e.g. an [`INTERN`][b4f0]ed [`SYMBOL`][e5af], a `PACKAGE`([`0`][1d5a] [`1`][4dd7]), or an [`ASDF:SYSTEM`][c097]). Names are
     constructed from [word][d7b0]s by trimming some prefixes and suffixes. For
     a given word, multiple candidate names are considered in the
     following order.
@@ -681,7 +681,7 @@ need to muck with references when there is a perfectly good object.
     marker (case-insensitive), then a [name][88cf] is created by removing it.
     For example, from the [word][d7b0] `BUSES` the plural marker `ES` is
     removed to produce the [name][88cf] `BUS`. The list of plural markers
-    considered is `S` (e.g. [`CARS`][8c99]), `ES` (e.g. `BUSES`), `SES` (e.g.
+    considered is `S` (e.g. [`CARS`][d5a2]), `ES` (e.g. `BUSES`), `SES` (e.g.
     `GASSES`), `ZES` (e.g. `FEZZES`), and `REN` (e.g. `CHILDREN`).
     
     - From a [codifiable][b89a] [word][d7b0], a [name][88cf] is created by removing the prefix
@@ -726,7 +726,7 @@ which makes navigating the sources with `M-.` (see
     
     For the output of `(DOCUMENT (MAKE-REFERENCE '*FORMAT* 'VARIABLE))`,
     see [`*FORMAT*`][3da8]. Note that `*FORMAT*` is unbound. If the variable is
-    [`BOUNDP`][bdf2], then its *current* value is included in the documentation.
+    [`BOUNDP`][6c37], then its *current* value is included in the documentation.
     See [`*DOCUMENT-LINK-CODE*`][d9ee] for an example output. To override the
     current value, `INITFORM` may be provided. This is particulary
     useful if the value of the variable is something undesirable such as
@@ -735,10 +735,10 @@ which makes navigating the sources with `M-.` (see
 <a id="x-28MGL-PAX-3ACONSTANT-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **CONSTANT** *&OPTIONAL INITFORM*
 
-    Refers to a variable defined with [`DEFCONSTANT`][d684]. `INITFORM`, or if not
+    Refers to a variable defined with [`DEFCONSTANT`][8934]. `INITFORM`, or if not
     specified, the value of the constant is included in the
     documentation. The [`CONSTANT`][c819] locative is like the [`VARIABLE`][6c83] locative,
-    but it also checks that its object is [`CONSTANTP`][2ce2].
+    but it also checks that its object is [`CONSTANTP`][a26f].
 
 <a id="x-28MGL-PAX-3A-40MACROLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 ### 6.2 Locatives for Macros
@@ -746,16 +746,16 @@ which makes navigating the sources with `M-.` (see
 <a id="x-28MGL-PAX-3AMACRO-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **MACRO**
 
-    Refers to a global macro, typically defined with [`DEFMACRO`][fc18] or a
-    [special operator][f4de]. See the [`FUNCTION`][ba62]
+    Refers to a global macro, typically defined with [`DEFMACRO`][14cb] or a
+    [special operator][9a71]. See the [`FUNCTION`][ba62]
     locative for a note on arglists.
 
 <a id="x-28MGL-PAX-3ASYMBOL-MACRO-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **SYMBOL-MACRO**
 
-    Refers to a global symbol macro, defined with [`DEFINE-SYMBOL-MACRO`][72fd].
+    Refers to a global symbol macro, defined with [`DEFINE-SYMBOL-MACRO`][46c0].
     Note that since `DEFINE-SYMBOL-MACRO` does not support docstrings,
-    PAX defines methods on the [`DOCUMENTATION`][68f1] generic function
+    PAX defines methods on the [`DOCUMENTATION`][c5ae] generic function
     specialized for `DOC-TYPE` `SYMBOL-MACRO`.
     
     ```
@@ -771,7 +771,7 @@ which makes navigating the sources with `M-.` (see
 - [locative] **COMPILER-MACRO**
 
     Refers to a compiler macro, typically defined with
-    [`DEFINE-COMPILER-MACRO`][a5de]. See the [`FUNCTION`][ba62] locative for a note on
+    [`DEFINE-COMPILER-MACRO`][23d5]. See the [`FUNCTION`][ba62] locative for a note on
     arglists.
 
 <a id="x-28MGL-PAX-3A-40FUNCTIONLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
@@ -780,8 +780,8 @@ which makes navigating the sources with `M-.` (see
 <a id="x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **FUNCTION**
 
-    Refers to a global function, typically defined with [`DEFUN`][9717]. It is
-    also allowed to reference `GENERIC-FUNCTION`([`0`][8d65] [`1`][5875])s as `FUNCTION`s.
+    Refers to a global function, typically defined with [`DEFUN`][f472]. It is
+    also allowed to reference `GENERIC-FUNCTION`([`0`][efe2] [`1`][5875])s as `FUNCTION`s.
     
     Note that the arglist in the generated documentation depends on the
     quality of `SWANK-BACKEND:ARGLIST`. It [may be][d1ca] that default values of
@@ -790,13 +790,13 @@ which makes navigating the sources with `M-.` (see
 <a id="x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **GENERIC-FUNCTION**
 
-    Refers to a [`GENERIC-FUNCTION`][8d65], typically defined with
-    [`DEFGENERIC`][8c40].
+    Refers to a [`GENERIC-FUNCTION`][efe2], typically defined with
+    [`DEFGENERIC`][c7f7].
 
 <a id="x-28METHOD-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **METHOD** *METHOD-QUALIFIERS METHOD-SPECIALIZERS*
 
-    See [`CL:FIND-METHOD`][8beb] for the description of the arguments
+    See [`CL:FIND-METHOD`][6d46] for the description of the arguments
     `METHOD-QUALIFIERS` and `METHOD-SPECIALIZERS`. For example, a
     `(FOO (METHOD () (T (EQL XXX))))` as a [`DEFSECTION`][72b4] entry refers to
     this method:
@@ -809,8 +809,8 @@ which makes navigating the sources with `M-.` (see
 <a id="x-28METHOD-COMBINATION-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **METHOD-COMBINATION**
 
-    Refers to a [`METHOD-COMBINATION`][fc7b], defined with
-    [`DEFINE-METHOD-COMBINATION`][fe2b].
+    Refers to a [`METHOD-COMBINATION`][9b70], defined with
+    [`DEFINE-METHOD-COMBINATION`][006c].
 
 <a id="x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **ACCESSOR** *CLASS-NAME*
@@ -853,8 +853,8 @@ which makes navigating the sources with `M-.` (see
 - [locative] **TYPE**
 
     This locative can refer to any Lisp type. For types defined with
-    [`DEFTYPE`][89d0], an attempt is made at printing the arguments of type
-    specifiers. When `TYPE` refers to a [`CL:CLASS`][7e58], the class is
+    [`DEFTYPE`][7f9a], an attempt is made at printing the arguments of type
+    specifiers. When `TYPE` refers to a [`CL:CLASS`][1f37], the class is
     documented as an opaque type: no mention is made of that it is a
     class or its superclasses. Use the [`CLASS`][2060] locative if those things
     are part of the contract.
@@ -862,20 +862,20 @@ which makes navigating the sources with `M-.` (see
 <a id="x-28CLASS-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **CLASS**
 
-    Naturally, `CLASS` is the locative type for [`CLASS`][7e58]es.
+    Naturally, `CLASS` is the locative type for [`CLASS`][1f37]es.
     To refer to a class named `FOO`:
     
         (foo class)
     
     In the generated documention, only superclasses denoted by [external
-    symbols][e077] are included.
+    symbols][3473] are included.
 
 <a id="x-28DECLARATION-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **DECLARATION**
 
-    Refers to a declaration, used in [`DECLARE`][ce02], [`DECLAIM`][804d] and [`PROCLAIM`][9674].
-    For example, `[DEBUG][declaration]` refers to the standard [`DEBUG`][bcd2]
-    declaration and links to the hyperspec if
+    Refers to a declaration, used in [`DECLARE`][1574], [`DECLAIM`][ebea] and [`PROCLAIM`][d3e1].
+    For example, `[DEBUG][declaration]` refers to the standard [`DEBUG`][5df9]
+    declaration and links to the Hyperspec if
     [`*DOCUMENT-LINK-TO-HYPERSPEC*`][875e] is true.
     
     User code may also define new declarations with CLTL2 functionality,
@@ -895,13 +895,13 @@ which makes navigating the sources with `M-.` (see
 <a id="x-28CONDITION-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **CONDITION**
 
-    `CONDITION` is the locative type for [`CONDITION`][dc76]s. To
+    `CONDITION` is the locative type for [`CONDITION`][83e1]s. To
     refer to a condition named `FOO`:
     
         (foo condition)
     
     In the generated documention, only superclasses denoted by [external
-    symbols][e077] are included.
+    symbols][3473] are included.
 
 <a id="x-28RESTART-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **RESTART**
@@ -921,9 +921,9 @@ which makes navigating the sources with `M-.` (see
     ```
     
     Then `(MY-IGNORE-ERROR RESTART)` refers to the above definition.
-    Note that while there is a [`CL:RESTART`][570b] type, there is no
+    Note that while there is a [`CL:RESTART`][38e4] type, there is no
     corresponding source location or docstring like for
-    [`CONDITION`][dc76]s.
+    [`CONDITION`][83e1]s.
 
 <a id="x-28MGL-PAX-3A-40PACKAGELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 ### 6.6 Locatives for Packages and Readtables
@@ -941,13 +941,13 @@ which makes navigating the sources with `M-.` (see
 <a id="x-28PACKAGE-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **PACKAGE**
 
-    Refers to a [`PACKAGE`][97eb], defined by [`DEFPACKAGE`][42d7]. `PACKAGE` is not
+    Refers to a [`PACKAGE`][1d5a], defined by [`DEFPACKAGE`][9b43]. `PACKAGE` is not
     [`EXPORTABLE-LOCATIVE-TYPE-P`][c930].
 
 <a id="x-28READTABLE-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **READTABLE**
 
-    Refers to a named [`READTABLE`][4022] defined with
+    Refers to a named [`READTABLE`][d646] defined with
     `NAMED-READTABLES:DEFREADTABLE`, which associates a global name and a
     docstring with the readtable object. Unfortunately, source location
     information is not available.
@@ -1037,7 +1037,7 @@ which makes navigating the sources with `M-.` (see
 - [locative] **INCLUDE** *SOURCE &KEY LINE-PREFIX HEADER FOOTER HEADER-NL FOOTER-NL*
 
     This pseudolocative refers to a region of a file. `SOURCE` can be a
-    [`STRING`][28bb] or a [`PATHNAME`][e531] in which case the whole file is
+    [`STRING`][b93c] or a [`PATHNAME`][0317] in which case the whole file is
     being pointed to, or it can explicitly supply `START`, `END` locatives.
     `INCLUDE` is typically used to include non-lisp files in the
     documentation (say markdown or elisp as in the next example) or
@@ -1120,58 +1120,65 @@ which makes navigating the sources with `M-.` (see
 ### 6.8 External Locatives
 
 <a id="x-28MGL-PAX-3ACLHS-20MGL-PAX-3ALOCATIVE-29"></a>
-- [locative] **CLHS**
+- [locative] **CLHS** *&OPTIONAL NESTED-LOCATIVE*
 
-    Refers to sections in the Common Lisp hyperspec. These have no
-    source location so `M-.` will not work. What works is linking. The
-    following markdown examples all produce a link to `CLHS` [`3.4`][f945], the
-    section 'Lambda Lists', which is in file `03_d.htm`.
+    Refers to sections or definitions in the Common Lisp Hyperspec.
+    These have no source location so `M-.` will not work. What works
+    is linking in documentation, including [Documenting in Emacs][7199]. The
+    generated links are relative to [`*DOCUMENT-HYPERSPEC-ROOT*`][f585] and work
+    even if [`*DOCUMENT-LINK-TO-HYPERSPEC*`][875e] is `NIL`.
     
-    ```
-    CLHS `3.4`
-    `3.4` CLHS
-    [3.4][]
-    [`3.4`][]
-    [3.4][CLHS]
-    [Lambda Lists][clhs]
-    [03_d][clhs]
-    ```
+    - *definitions*: These are typically unnecessary as [`DOCUMENT`][432c] will
+      produce the same link for e.g. `PPRINT`, `[PPRINT][function]`,
+      or `[PPRINT][]` if `*DOCUMENT-LINK-TO-HYPERSPEC*` is non-`NIL` and the
+      [`PPRINT`][6af6] function in the running Lisp is not being documented. In
+      the [Emacs documentation browser][7199], a
+      slight difference is that everything is being documented, so using
+      the `CLHS` link bypasses the page with the definition in the running
+      Lisp.
     
-    The rules of matching sections are the following. If the object of
-    the reference is [`STRING=`][91fd] to the section number string (without the
-    trailing dot) or to the name of its file without the `.htm`
-    extension, then the reference refers to that section. Else, if the
-    object is a case-insensitive substring of the title of some section,
-    then the reference refers to the first such section in breadth-first
-    order.
+        - *unambiguous*: `[pprint][clhs]` ([pprint][6af6])
     
-    To link to issue and issue summary pages, all of the above markdown
-    examples work, just make the object of the reference the name of the
-    issue prefixed by `ISSUE:` or `SUMMARY:` as appropriate. For
-    example, to refer to the `AREF-1D` issue use `[ISSUE:AREF-1D][clhs]`
-    and get [ISSUE:AREF-1D][6786]. Similary, `[SUMMARY:AREF-1D][clhs]`
-    turns into [SUMMARY:AREF-1D][e256]. Alternatively, matching the name
-    of the file also works (`[iss009][clhs]` renders as [iss009][e256])
+        - *ambiguous*: `[function][clhs]` ([function][aeb6])
     
-    The generated links are relative to [`*DOCUMENT-HYPERSPEC-ROOT*`][f585] and
-    work even if [`*DOCUMENT-LINK-TO-HYPERSPEC*`][875e] is `NIL`.
+        - *explicit*: `[function][(clhs class)]` ([function][119e])
     
-    To detach the discussion from markdown syntax, let's see these cases
-    through the programmatic interface.
+    - *glossary terms* (case-insensitive): [lambda list][98ff]
     
-    ```
-    (locate "3.4" 'clhs)
-    ==> #<REFERENCE "3.4" CLHS>
-    (locate "03_d" 'clhs)
-    ==> #<REFERENCE "03_d" CLHS>
-    (locate "lambda" 'clhs)
-    ==> #<REFERENCE "3.4" CLHS>
-    (locate "ISSUE:AREF-1D" 'clhs)
-    ==> #<REFERENCE "ISSUE:AREF-1D" CLHS>
-    (locate "SUMMARY:AREF-1D" 'clhs)
-    ==> #<REFERENCE "SUMMARY:AREF-1D" CLHS>
-    ```
-
+    - *issues*: `[ISSUE:AREF-1D][clhs]` or `[ISSUE:AREF-1D][(clhs
+       section)]` ([ISSUE:AREF-1D][63ef])
+    
+    - *issue summaries*: `[SUMMARY:CHARACTER-PROPOSAL:2-6-5][clhs]` or
+       `[SUMMARY:CHARACTER-PROPOSAL:2-6-5][(clhs
+       section)]` ([SUMMARY:CHARACTER-PROPOSAL:2-6-5][935f])
+    
+    - *sections*:
+    
+        - *by section number*: `[3.4][clhs]` or `[3.4][(clhs
+        section)]` ([3.4][e442])
+    
+        - *by section title* (case-insensitive, substring match):
+        `[lambda lists][clhs]` or `[lambda lists][(clhs
+        section)]` ([lambda lists][e442])
+    
+        - *by filename*: `[03_d][clhs]` or `[03_d][(clhs
+        section)]` ([03\_d][e442])
+    
+    As the above examples show, the `NESTED-LOCATIVE` argument of the [`CLHS`][ed5f]
+    locative may be omitted. In that case, definitions, glossary terms,
+    issues, issue summaries, and sections are considered in that order.
+    Sections are considered last because a substring of a section title
+    can be matched by chance easily.
+    
+    All examples so far used [explicit][b3cc]
+    links. Autolinking also works if the [object][75ce] is marked up as code or
+    is [codified][f1ab] (e.g. in `PPRINT clhs` (`PPRINT` clhs).
+    
+    As mentioned above, `M-.` does not do anything over `CLHS`
+    references. Slightly more usefully, the [Emacs documentation
+    browser][7199] understands `CLHS` links so one can
+    enter inputs like `3.4 clhs`, `"lambda list" clhs` or `error (clhs
+    function)`.
 
 <a id="x-28MGL-PAX-3A-40NAVIGATING-IN-EMACS-20MGL-PAX-3ASECTION-29"></a>
 ## 7 Navigating Sources in Emacs
@@ -1196,7 +1203,7 @@ the definition of function `FOO`:
     (function foo)
     (foo function)
 
-In particular, references in a [`DEFSECTION`][72b4] form are in ([`SYMBOL`][4b12]
+In particular, references in a [`DEFSECTION`][72b4] form are in ([`SYMBOL`][e5af]
 [`LOCATIVE`][0b3a]) format so `M-.` will work just fine there.
 
 Just like vanilla `M-.`, this works in comments and docstrings. In
@@ -1236,7 +1243,7 @@ See [Emacs Setup][8541].
 
     Write `OBJECT` in `FORMAT` to `STREAM` diverting some output to `PAGES`.
     `FORMAT` can be anything 3BMD supports, which is currently
-    `:MARKDOWN`, `:HTML` and `:PLAIN`. `STREAM` may be a [`STREAM`][6b46] object,
+    `:MARKDOWN`, `:HTML` and `:PLAIN`. `STREAM` may be a [`STREAM`][d5a9] object,
     `T` or `NIL` as with `CL:FORMAT`.
     
     Most often, this function is called on `SECTION`([`0`][5fac] [`1`][672f]) objects as in
@@ -1291,14 +1298,14 @@ See [Emacs Setup][8541].
     
     - If it's a list whose first element is a string or a pathname, then
       output will be sent to the file denoted by that and the rest of
-      the elements of the list are passed on to [`CL:OPEN`][117a]. One extra
+      the elements of the list are passed on to [`CL:OPEN`][6547]. One extra
       keyword argument is `:ENSURE-DIRECTORIES-EXIST`. If it's true,
-      [`ENSURE-DIRECTORIES-EXIST`][e4b0] will be called on the pathname before
+      [`ENSURE-DIRECTORIES-EXIST`][876d] will be called on the pathname before
       it's opened.
     
     - If it's `NIL`, then output will be collected in a string.
     
-    - If it's `T`, then output will be sent to [`*STANDARD-OUTPUT*`][1864].
+    - If it's `T`, then output will be sent to [`*STANDARD-OUTPUT*`][e7ee].
     
     - If it's a stream, then output will be sent to that stream.
     
@@ -1380,7 +1387,7 @@ See [Emacs Setup][8541].
     
     While generating the documentation, symbols may be read (e.g. from
     docstrings) or printed according, which is affected by the values of
-    [`*PACKAGE*`][d2c1] and [`*READTABLE*`][a916]. See [`*DOCUMENT-NORMALIZE-PACKAGES*`][440e] for the
+    [`*PACKAGE*`][5ed1] and [`*READTABLE*`][b79a]. See [`*DOCUMENT-NORMALIZE-PACKAGES*`][440e] for the
     details.
 
 <a id="x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
@@ -1417,7 +1424,7 @@ buffer, then entering the empty string displays that buffer.
 
 If we enter `function` instead, then a [disambiguation
 page](pax:function) (note that this and other `pax:` links only work
-in Emacs) will be shown with the documentation of the [`FUNCTION`][2d31] class
+in Emacs) will be shown with the documentation of the [`FUNCTION`][119e] class
 and the [`FUNCTION`][ba62] locative. One may then follow the links on the page
 to navigate to a page with the documentation the desired definition.
 
@@ -1451,7 +1458,7 @@ where REFERENCE names either
 <a id="x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29"></a>
 #### 8.2.2 PAX Apropos
 
-[`PAX-APROPOS`][33fd] is similar to [`CL:APROPOS-LIST`][d289], but it supports more
+[`PAX-APROPOS`][33fd] is similar to [`CL:APROPOS-LIST`][7328], but it supports more
 flexible matching – especially filtering by [Locative Types][6121] – and
 returns [`REFERENCE`][1cea]s.
 
@@ -1472,13 +1479,13 @@ functionality of `slime-apropos`, `slime-apropos-all`, and
     First, from the set of all interned symbols, the set of matching
     [object][75ce]s are determined:
     
-    - `NAME` is `NIL` (matches everything), a [`SYMBOL`][4b12] (matches the same
-      [`SYMBOL-NAME`][0e20]), or a `STRING`([`0`][28bb] [`1`][7bd4]) (matches a symbol if it's a substring of
+    - `NAME` is `NIL` (matches everything), a [`SYMBOL`][e5af] (matches the same
+      [`SYMBOL-NAME`][0d07]), or a `STRING`([`0`][b93c] [`1`][dae6]) (matches a symbol if it's a substring of
       `SYMBOL-NAME` subject to `CASE-SENSITIVE`).
     
     - `PACKAGE` is `NIL` (matches everything), a `SYMBOL` (matches the same
-      [`PACKAGE-NAME`][b622] or a nickname), or a [`PACKAGE`][97eb] (matches a
-      symbol if it's a substring of the name of [`SYMBOL-PACKAGE`][964b]).
+      [`PACKAGE-NAME`][db68] or a nickname), or a [`PACKAGE`][1d5a] (matches a
+      symbol if it's a substring of the name of [`SYMBOL-PACKAGE`][e5ab]).
     
     - `EXTERNAL-ONLY` is `NIL` (matches everything), or `T` (matches only
       symbols which are external in their home package).
@@ -1666,7 +1673,7 @@ Reader can help with that.
     
     and renders as
     
-    `T` [`PRINT`][fdd1] `CLASS`([`0`][7e58] [`1`][2060])es `SECTION`([`0`][5fac] [`1`][672f]) `MGL-PAX` `ASDF` CaMel Capital
+    `T` [`PRINT`][d451] `CLASS`([`0`][1f37] [`1`][2060])es `SECTION`([`0`][5fac] [`1`][672f]) `MGL-PAX` `ASDF` CaMel Capital
     
     where the links are added due to [`*DOCUMENT-LINK-CODE*`][d9ee].
     
@@ -1689,7 +1696,7 @@ Reader can help with that.
       lowercase characters at all, or
     
     - there is more than one uppercase character and no lowercase
-      characters between them (e.g. `CLASS`([`0`][7e58] [`1`][2060])es, non[`READ`][3d3c]able, [`CLASS-NAME`][a1a2]s
+      characters between them (e.g. `CLASS`([`0`][1f37] [`1`][2060])es, non[`READ`][fe58]able, [`CLASS-NAME`][03fa]s
       but not `Classes` or `aTe`.
 
 
@@ -1704,7 +1711,7 @@ Reader can help with that.
     
     - it names a [local reference][4c96].
     
-    Symbols are read in the current [`*PACKAGE*`][d2c1], which is subject to
+    Symbols are read in the current [`*PACKAGE*`][5ed1], which is subject to
     [`*DOCUMENT-NORMALIZE-PACKAGES*`][440e].
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-DOWNCASE-UPPERCASE-CODE-2A-20VARIABLE-29"></a>
@@ -1775,7 +1782,7 @@ Here and below, the [object][75ce] (`DOCUMENT`) is uppercased, and we rely
 on [`*DOCUMENT-UPPERCASE-IS-CODE*`][f25f] being true. Alternatively, the
 [object][75ce] could be explicitly marked up as code with a pair of
 backticks, and then its character case would likely not
-matter (subject to [`READTABLE-CASE`][a328]).
+matter (subject to [`READTABLE-CASE`][48f1]).
 
 The link text in the above examples is `DOCUMENT`. To override it,
 this form may be used:
@@ -1791,7 +1798,7 @@ When only an [object][75ce] is provided without a locative, all
 definitions of the object are considered as possible link targets.
 Then, definitions that are not symbol-based (i.e. whose
 [`REFERENCE-OBJECT`][8c7d] is not a symbol) are filtered out to prevent
-unrelated `PACKAGE`([`0`][97eb] [`1`][4dd7])s and [`ASDF:SYSTEM`][c097]s from cluttering the
+unrelated `PACKAGE`([`0`][1d5a] [`1`][4dd7])s and [`ASDF:SYSTEM`][c097]s from cluttering the
 documentation without the control provided by importing symbols.
 
 To further reduce clutter, if the definitions include a
@@ -1863,7 +1870,7 @@ This renders as `DOCUMENT`. Alternatively, the [`DISLOCATED`][e391] or the
 #### 8.5.5 Unresolvable Links
 
 <a id="x-28MGL-PAX-3AUNRESOLVABLE-REFLINK-20CONDITION-29"></a>
-- [condition] **UNRESOLVABLE-REFLINK** *[WARNING][c5b8]*
+- [condition] **UNRESOLVABLE-REFLINK** *[WARNING][bcb6]*
 
     When [`DOCUMENT`][432c] encounters an [explicit
     link][b3cc] such as `[NONEXISTENT][function]`
@@ -1871,7 +1878,7 @@ This renders as `DOCUMENT`. Alternatively, the [`DISLOCATED`][e391] or the
     and `UNRESOLVABLE-REFLINK` warning.
     
     - If the [`OUTPUT-REFLINK`][2ca9] restart is invoked, then no warning is
-      printed and the markdown link is left unchanged. `MUFFLE-WARNING`([`0`][6dd5] [`1`][8263]) is
+      printed and the markdown link is left unchanged. `MUFFLE-WARNING`([`0`][b8b4] [`1`][6f51]) is
       equivalent to `OUTPUT-REFLINK`.
     
     - If the [`OUTPUT-LABEL`][c818] restart is invoked, then no warning is printed
@@ -1879,7 +1886,7 @@ This renders as `DOCUMENT`. Alternatively, the [`DISLOCATED`][e391] or the
       `[NONEXISTENT][function]` becomes `NONEXISTENT`.
     
     - If the warning is not handled, then it is printed to
-      [`*ERROR-OUTPUT*`][7f37]. Otherwise, it behaves as `OUTPUT-REFLINK`.
+      [`*ERROR-OUTPUT*`][66c6]. Otherwise, it behaves as `OUTPUT-REFLINK`.
 
 
 <a id="x-28MGL-PAX-3AOUTPUT-REFLINK-20FUNCTION-29"></a>
@@ -1961,24 +1968,27 @@ linked to all non-local references.
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29"></a>
 - [variable] **\*DOCUMENT-LINK-TO-HYPERSPEC\*** *T*
 
-    If true, link symbols found in code to the Common Lisp Hyperspec.
+    If true, link symbols found in code to the Common Lisp Hyperspec
+    unless there is a definition in the running Lisp that is being
+    documented.
     
     Locatives work as expected (see [`*DOCUMENT-LINK-CODE*`][d9ee]):
     `FIND-IF` links to `FIND-IF`, `FUNCTION` links
-    to `FUNCTION` and `[FUNCTION][type]` links to [`FUNCTION`][2d31].
+    to `FUNCTION` and `[FUNCTION][type]` links to [`FUNCTION`][119e].
     
     [Autolinking][b3cc] to `T` and `NIL` is
     [suppressed][e2e8]. If desired, use `[T][]` (that
-    links to `T`([`0`][26df] [`1`][08f7])) or `[T][constant]` (that links to [`T`][08f7]).
+    links to `T`([`0`][9172] [`1`][fe21])) or `[T][constant]` (that links to [`T`][fe21]).
     
-    Note that linking to sections in the Hyperspec is done with the [`CLHS`][ed5f]
-    locative and is not subject to the value of this variable.
+    Note that linking explicitly with the [`CLHS`][ed5f] locative is not subject
+    to the value of this variable.
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-HYPERSPEC-ROOT-2A-20VARIABLE-29"></a>
 - [variable] **\*DOCUMENT-HYPERSPEC-ROOT\*** *"http://www.lispworks.com/documentation/HyperSpec/"*
 
-    A URL pointing to an installed Common Lisp Hyperspec. The default
-    value of is the canonical location.
+    A URL of the Common Lisp Hyperspec. The default value
+    is the canonical location. When [invoked from Emacs][7199], the Elisp variable
+    `common-lisp-hyperspec-root` is in effect.
 
 <a id="x-28MGL-PAX-3A-40LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29"></a>
 ### 8.7 Linking to Sections
@@ -2044,11 +2054,11 @@ table of contents and navigation links.
     with `#MGL-PAX:FOO%20FUNCTION`.
     
     *Note that to make the URL independent of whether a symbol is
-    [internal or external][e077] to their [`SYMBOL-PACKAGE`][964b], single
+    [internal or external][3473] to their [`SYMBOL-PACKAGE`][e5ab], single
     colon is printed where a double colon would be expected. Package and
     symbol names are both printed verbatim except for escaping colons
     and spaces with a backslash. For exported symbols with no funny
-    characters, this coincides with how [`PRIN1`][1aee] would print the symbol,
+    characters, this coincides with how [`PRIN1`][6384] would print the symbol,
     while having the benefit of making the URL independent of the Lisp
     printer's escaping strategy and producing human-readable output for
     mixed-case symbols. No such promises are made for non-ASCII
@@ -2121,7 +2131,7 @@ table of contents and navigation links.
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20VARIABLE-29"></a>
 - [variable] **\*DOCUMENT-NORMALIZE-PACKAGES\*** *T*
 
-    Determines what [`*PACKAGE*`][d2c1] and [`*READTABLE*`][a916] are when generating
+    Determines what [`*PACKAGE*`][5ed1] and [`*READTABLE*`][b79a] are when generating
     documentation.
     
     - When documentation is generated for a `SECTION`([`0`][5fac] [`1`][672f]) (including its
@@ -2138,7 +2148,7 @@ table of contents and navigation links.
       false or we are not documenting a `SECTION` nor its
       `SECTION-ENTRIES`), documenting most other kinds of definitions
       attached to a symbol (e.g. a function), prints the symbol itself
-      normally, then binds `*PACKAGE*` to [`SYMBOL-PACKAGE`][964b] for the printing
+      normally, then binds `*PACKAGE*` to [`SYMBOL-PACKAGE`][e5ab] for the printing
       of the arglist and the docstring.
     
               CL-USER> (pax:document #'pax:resolve)
@@ -2230,7 +2240,7 @@ See the following variables, which control HTML generation.
     
     - If `NIL`, nothing is included.
     
-    - If a `STRING`([`0`][28bb] [`1`][7bd4]), then it is written to the HTML output as is without
+    - If a `STRING`([`0`][b93c] [`1`][dae6]), then it is written to the HTML output as is without
       any escaping.
     
     - If a function designator, then it is called with a single
@@ -2246,7 +2256,7 @@ See the following variables, which control HTML generation.
       [`*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS*`][e216], followed by the dynamic table
       of contents, and [`*DOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS*`][0ef0].
     
-    - If a `STRING`([`0`][28bb] [`1`][7bd4]), then it is written to the HTML output as is without
+    - If a `STRING`([`0`][b93c] [`1`][dae6]), then it is written to the HTML output as is without
       any escaping.
     
     - If a function designator, then it is called with a single
@@ -2333,7 +2343,7 @@ to allow jumping between the repository and the gh-pages site.
     `ASDF-SYSTEM`. If no `.git` directory is found, then no links to
     the git forge will be generated.
     
-    `URI-FORMAT-STRING` is a [`CL:FORMAT`][1f28] control string for four arguments:
+    `URI-FORMAT-STRING` is a [`CL:FORMAT`][ad78] control string for four arguments:
     
     - `GIT-FORGE-URI`,
     
@@ -2440,11 +2450,11 @@ output. Compared to that, the following are not supported:
 
 - [`COMPILER-MACRO`][41fd] docstrings on ABCL, AllegroCL, CCL, ECL;
 
-- [`DEFTYPE`][89d0] lambda lists on ABCL, AllegroCL, CLISP, CCL, CMUCL, ECL;
+- [`DEFTYPE`][7f9a] lambda lists on ABCL, AllegroCL, CLISP, CCL, CMUCL, ECL;
 
 - default values in [`MACRO`][f3cc] lambda lists on AllegroCL;
 
-- `METHOD-COMBINATION`([`0`][fc7b] [`1`][82e0]) docstrings on ABCL, AllegroCL.
+- `METHOD-COMBINATION`([`0`][9b70] [`1`][82e0]) docstrings on ABCL, AllegroCL.
 
 In addition, CLISP does not support the ambiguous case of [PAX URLs][1e80]
 for [Documenting in Emacs][7199] because the current implementation relies
@@ -2607,7 +2617,7 @@ Transcription support in Emacs can be enabled by loading
 - [function] **TRANSCRIBE** *INPUT OUTPUT &KEY UPDATE-ONLY (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) (CHECK-CONSISTENCY \*TRANSCRIBE-CHECK-CONSISTENCY\*) DEFAULT-SYNTAX (INPUT-SYNTAXES \*TRANSCRIBE-SYNTAXES\*) (OUTPUT-SYNTAXES \*TRANSCRIBE-SYNTAXES\*) DYNENV*
 
     Read forms from `INPUT` and write them (iff `ECHO`) to `OUTPUT`
-    followed by any output and return values produced by calling [`EVAL`][c1eb] on
+    followed by any output and return values produced by calling [`EVAL`][0d6e] on
     the form. `INPUT` can be a stream or a string, while `OUTPUT` can be a
     stream or `NIL` in which case transcription goes into a string. The
     return value is the `OUTPUT` stream or the string that was
@@ -2725,7 +2735,7 @@ Transcription support in Emacs can be enabled by loading
     
     **Unreadable Values**
     
-    The above scheme involves [`READ`][3d3c], so consistency of unreadable values
+    The above scheme involves [`READ`][fe58], so consistency of unreadable values
     cannot be treated the same. In fact, unreadable values must even be
     printed differently for transcribe to be able to read them back:
     
@@ -2745,17 +2755,17 @@ Transcription support in Emacs can be enabled by loading
     where `"==>"` is the `:UNREADABLE` prefix and `"-->"` is the
     `:UNREADABLE-CONTINUATION` prefix. As with outputs, a consistency
     check between an unreadable value from the source and the value from
-    `EVAL` is performed with [`STRING=`][91fd] by default. That is, the value from
+    `EVAL` is performed with [`STRING=`][4143] by default. That is, the value from
     `EVAL` is printed to a string and compared to the source value. Hence,
     any change to unreadable values will break consistency checks. This
     is most troublesome with instances of classes with the default
-    [`PRINT-OBJECT`][eafc] method printing the memory address. See @ no remedy for
+    [`PRINT-OBJECT`][3f2e] method printing the memory address. See @ no remedy for
     that, except for customizing `PRINT-OBJECT` or not transcribing that
     kind of stuff.
     
     **Errors**
     
-    If an [`ERROR`][1895] condition is signalled, the error is printed to the
+    If an [`ERROR`][d162] condition is signalled, the error is printed to the
     output and no values are returned.
     
     ```common-lisp
@@ -2770,9 +2780,9 @@ Transcription support in Emacs can be enabled by loading
     
     To keep the textual representation somewhat likely to be portable,
     the printing is done with `(FORMAT T "#<~S ~S>" (TYPE-OF
-    ERROR) (PRINC-TO-STRING ERROR))`. [`SIMPLE-CONDITION`][6c1f]s are formatted to
-    strings with [`SIMPLE-CONDITION-FORMAT-CONTROL`][493e] and
-    [`SIMPLE-CONDITION-FORMAT-ARGUMENTS`][a668].
+    ERROR) (PRINC-TO-STRING ERROR))`. [`SIMPLE-CONDITION`][f2f5]s are formatted to
+    strings with [`SIMPLE-CONDITION-FORMAT-CONTROL`][4841] and
+    [`SIMPLE-CONDITION-FORMAT-ARGUMENTS`][da14].
     
     **Syntaxes**
     
@@ -2849,8 +2859,8 @@ Transcription support in Emacs can be enabled by loading
     
     All of the above prefixes must be defined for every syntax except
     for `:READABLE-CONTINUATION`. If that's missing (as in the `:DEFAULT`
-    syntax), then the following value is read with [`READ`][3d3c] and printed with
-    [`PRIN1`][1aee] (hence no need to mark up the following lines).
+    syntax), then the following value is read with [`READ`][fe58] and printed with
+    [`PRIN1`][6384] (hence no need to mark up the following lines).
     
     When writing, an extra space is added automatically if the line to
     be prefixed is not empty. Similarly, the first space following the
@@ -2859,7 +2869,7 @@ Transcription support in Emacs can be enabled by loading
     See `TRANSCRIBE` for how the actual syntax to be used is selected.
 
 <a id="x-28MGL-PAX-3ATRANSCRIPTION-ERROR-20CONDITION-29"></a>
-- [condition] **TRANSCRIPTION-ERROR** *[ERROR][1895]*
+- [condition] **TRANSCRIPTION-ERROR** *[ERROR][d162]*
 
     Represents syntactic errors in the `SOURCE` argument
     of [`TRANSCRIBE`][f1f0] and also serves as the superclass of
@@ -2875,14 +2885,14 @@ Transcription support in Emacs can be enabled by loading
 <a id="x-28MGL-PAX-3ATRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR-20CONDITION-29"></a>
 - [condition] **TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR** *[TRANSCRIPTION-CONSISTENCY-ERROR][a249]*
 
-    Signaled (with [`CERROR`][69b7]) by [`TRANSCRIBE`][f1f0] when invoked
+    Signaled (with [`CERROR`][4317]) by [`TRANSCRIBE`][f1f0] when invoked
     with `:CHECK-CONSISTENCY` and the output of a form is not the same as
     what was parsed.
 
 <a id="x-28MGL-PAX-3ATRANSCRIPTION-VALUES-CONSISTENCY-ERROR-20CONDITION-29"></a>
 - [condition] **TRANSCRIPTION-VALUES-CONSISTENCY-ERROR** *[TRANSCRIPTION-CONSISTENCY-ERROR][a249]*
 
-    Signaled (with [`CERROR`][69b7]) by [`TRANSCRIBE`][f1f0] when invoked
+    Signaled (with [`CERROR`][4317]) by [`TRANSCRIBE`][f1f0] when invoked
     with `:CHECK-CONSISTENCY` and the values of a form are inconsistent
     with their parsed representation.
 
@@ -2908,15 +2918,15 @@ function `GREET`, that prints `hello` and returns 7.
 Now, if we change `GREET` to print or return something else, a
 [`TRANSCRIPTION-CONSISTENCY-ERROR`][a249] will be signalled during
 documentation generation. Then we may fix the documentation or
-[`CONTINUE`][3ae8] from the error.
+[`CONTINUE`][1867] from the error.
 
 By default, comparisons of previous to current ouput, readable and
-unreadable return values are performed with [`STRING=`][91fd], [`EQUAL`][96d0], and
+unreadable return values are performed with [`STRING=`][4143], [`EQUAL`][3fb5], and
 `STRING=`, respectively, which is great in the simple case.
 Non-determinism aside, exact matching becomes brittle as soon as the
 notoriously unportable pretty printer is used or when unreadable
 objects are printed with their `#<>` syntax, especially when
-[`PRINT-UNREADABLE-OBJECT`][cfbb] is used with `:IDENTITY T`.
+[`PRINT-UNREADABLE-OBJECT`][9439] is used with `:IDENTITY T`.
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS-20MGL-PAX-3ASECTION-29"></a>
 #### 9.4.1 Finer-Grained Consistency Checks
@@ -2932,7 +2942,7 @@ like `((:OUTPUT <OUTPUT-CHECK>) (:READABLE
   output is not checked for consistency.
 
 - If it's `T`, then the outputs are compared with the default,
-  [`STRING=`][91fd].
+  [`STRING=`][4143].
 
 - If it's a function designator, then it's called with two strings
   and must return whether they are consistent with each other.
@@ -3152,7 +3162,7 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
 - [macro] **DEFINE-LOCATIVE-ALIAS** *ALIAS LOCATIVE-TYPE*
 
     Define `ALIAS` as a locative equivalent to `LOCATIVE-TYPE` (both
-    [`SYMBOL`][4b12]s). The following example shows how to make docstrings read
+    [`SYMBOL`][e5af]s). The following example shows how to make docstrings read
     more naturally by defining an alias.
     
     ```
@@ -3191,7 +3201,7 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
 
     Call this function to signal a [`LOCATE-ERROR`][6887] condition from a
     [`LOCATE-OBJECT`][185d] method. `FORMAT-AND-ARGS` contains a format string and
-    args suitable for [`FORMAT`][1f28] from which the [`LOCATE-ERROR-MESSAGE`][7da5] is
+    args suitable for [`FORMAT`][ad78] from which the [`LOCATE-ERROR-MESSAGE`][7da5] is
     constructed. If `FORMAT-AND-ARGS` is `NIL`, then the message will be `NIL`
     too.
     
@@ -3201,9 +3211,22 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
 <a id="x-28MGL-PAX-3ACANONICAL-REFERENCE-20GENERIC-FUNCTION-29"></a>
 - [generic-function] **CANONICAL-REFERENCE** *OBJECT*
 
-    Return a [`REFERENCE`][1cea] that [`RESOLVE`][cd9e]s to `OBJECT`, or
-    return `NIL` if this operation is not defined for `OBJECT`. Its
-    [reference delegate][e403] is [`LOCATE-CANONICAL-REFERENCE`][c267].
+    Return the canonical reference to `OBJECT`, or
+    return `NIL` if this operation is not defined for `OBJECT`.
+    
+    - If `OBJECT` is a [`REFERENCE`][1cea], then its canonical reference must denote
+      the same thing as `OBJECT`. If it does not denote anything (i.e.
+      [`RESOLVE`][cd9e] signals a `LOCATE-ERROR`([`0`][6887] [`1`][0019])), then the canonical reference can
+      be anything.
+    
+    - If `OBJECT` is not a `REFERENCE`, the canonical reference is a
+      `REFERENCE` that `RESOLVE`s to `OBJECT`.
+    
+    - Two canonical references denote the same thing if and only if
+      their [`REFERENCE-OBJECT`][8c7d]s and [`REFERENCE-LOCATIVE`][02de]s are [`EQUAL`][3fb5].
+    
+    The [reference delegate][e403] of `CANONICAL-REFERENCE` is
+    [`LOCATE-CANONICAL-REFERENCE`][c267].
 
 <a id="x-28MGL-PAX-3ACOLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29"></a>
 - [generic-function] **COLLECT-REACHABLE-OBJECTS** *OBJECT*
@@ -3232,13 +3255,13 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
 
     Return the docstring from the definition of `OBJECT`
     with [leading indentation stripped][718f]. This
-    function serves a similar purpose as [`CL:DOCUMENTATION`][68f1], but it works
+    function serves a similar purpose as [`CL:DOCUMENTATION`][c5ae], but it works
     with first-class objects when there is one for the corresponding
     definition, and with [`REFERENCE`][1cea]s when there is not. Its
     [reference delegate][e403] is [`LOCATE-DOCSTRING`][5c39].
     
     `DOCSTRING` is used in the implementation of the [`DOCSTRING`][ce75] locative.
-    Some things such as [`ASDF:SYSTEM`][c097]s and `DECLARATION`([`0`][47a3] [`1`][6e04])s have no
+    Some things such as [`ASDF:SYSTEM`][c097]s and `DECLARATION`([`0`][d07c] [`1`][6e04])s have no
     docstrings. Notably, `SECTION`([`0`][5fac] [`1`][672f])s don't provide access to docstrings.
 
 <a id="x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNCTION-29"></a>
@@ -3277,7 +3300,7 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
 
     Return true iff `SYMBOL` is to be exported from
     `PACKAGE` when it occurs in a [`DEFSECTION`][72b4] as a reference with
-    `LOCATIVE-TYPE` and `LOCATIVE-ARGS`. `SYMBOL` is [accessible][e077]
+    `LOCATIVE-TYPE` and `LOCATIVE-ARGS`. `SYMBOL` is [accessible][3473]
     in `PACKAGE`.
     
     The default method calls [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] with
@@ -3301,7 +3324,7 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
     Return true iff symbols in references with
     `LOCATIVE-TYPE` are to be exported by default when they occur in a
     [`DEFSECTION`][72b4]. The default method returns `T`, while the methods for
-    `SECTION`([`0`][5fac] [`1`][672f]), `GLOSSARY-TERM`([`0`][8251] [`1`][5119]), `PACKAGE`([`0`][97eb] [`1`][4dd7]), [`ASDF:SYSTEM`][c097], `METHOD`([`0`][d562] [`1`][172e]) and [`INCLUDE`][5cd7]
+    `SECTION`([`0`][5fac] [`1`][672f]), `GLOSSARY-TERM`([`0`][8251] [`1`][5119]), `PACKAGE`([`0`][1d5a] [`1`][4dd7]), [`ASDF:SYSTEM`][c097], `METHOD`([`0`][51c3] [`1`][172e]) and [`INCLUDE`][5cd7]
     return `NIL`.
     
     This function is called by the default method of
@@ -3450,7 +3473,7 @@ with symbols in a certain context.
 
     Define a macro with `NAME` which can be used to attach documentation,
     a lambda-list and source location to a symbol in the context of
-    `LOCATIVE-TYPE`. The defined macro's arglist is ([`SYMBOL`][4b12] `LAMBDA-LIST`
+    `LOCATIVE-TYPE`. The defined macro's arglist is ([`SYMBOL`][e5af] `LAMBDA-LIST`
     `&OPTIONAL` `DOCSTRING`). `LOCATIVE-TYPE` is assumed to have been defined
     with [`DEFINE-SYMBOL-LOCATIVE-TYPE`][7584].
 
@@ -3488,7 +3511,7 @@ The following utilities are for writing new [`DOCUMENT-OBJECT`][bacc] and
     
     - If `ARGLIST` is `NIL` or `:NOT-AVAILABLE`, then it is not printed.
     
-    - If `ARGLIST` is a list, then it is must be a [lambda list][f945] and
+    - If `ARGLIST` is a list, then it is must be a [lambda list][98ff] and
       is printed without the outermost parens and with the package names
       removed from the argument names.
     
@@ -3496,7 +3519,7 @@ The following utilities are for writing new [`DOCUMENT-OBJECT`][bacc] and
     
     - Unless `REFERENCE` is documented as part of a `SECTION`([`0`][5fac] [`1`][672f]) (being on its
       [`SECTION-ENTRIES`][9450]), then after the locative type and the name are
-      printed, [`*PACKAGE*`][d2c1] is bound to `PACKAGE`, which affects how symbols
+      printed, [`*PACKAGE*`][5ed1] is bound to `PACKAGE`, which affects how symbols
       in `ARGLIST` and during the processing of `BODY` are printed. When
       `REFERENCE`'s [object][75ce] is a symbol, `PACKAGE` defaults to the package
       of that symbol, else to `*PACKAGE*`.
@@ -3522,7 +3545,7 @@ The following utilities are for writing new [`DOCUMENT-OBJECT`][bacc] and
 <a id="x-28MGL-PAX-3ADOCUMENTATION-2A-20FUNCTION-29"></a>
 - [function] **DOCUMENTATION\*** *OBJECT DOC-TYPE*
 
-    A small wrapper around [`CL:DOCUMENTATION`][68f1] to smooth over differences
+    A small wrapper around [`CL:DOCUMENTATION`][c5ae] to smooth over differences
     between implementations.
 
 <a id="x-28MGL-PAX-3AESCAPE-MARKDOWN-20FUNCTION-29"></a>
@@ -3538,7 +3561,7 @@ The following utilities are for writing new [`DOCUMENT-OBJECT`][bacc] and
 <a id="x-28MGL-PAX-3APRIN1-TO-MARKDOWN-20FUNCTION-29"></a>
 - [function] **PRIN1-TO-MARKDOWN** *OBJECT*
 
-    Like [`PRIN1-TO-STRING`][8bee], but bind [`*PRINT-CASE*`][a39d] depending on
+    Like [`PRIN1-TO-STRING`][18e1], but bind [`*PRINT-CASE*`][443b] depending on
     [`*DOCUMENT-DOWNCASE-UPPERCASE-CODE*`][a5ee] and [`*FORMAT*`][3da8], and
     [`ESCAPE-MARKDOWN`][3026].
 
@@ -3549,7 +3572,7 @@ The following utilities are for writing new [`FIND-SOURCE`][4355] and
 [`LOCATE-AND-FIND-SOURCE`][d6a4] methods. Their locative arguments are
 translated to Swank `dspecs`, and it is an error if there is no
 translation. In general, Swank supports Common Lisp
-definitions (hence the [`VARIABLE`][6c83] and `FUNCTION`([`0`][2d31] [`1`][ba62] [`2`][2d97]) locatives, for example)
+definitions (hence the [`VARIABLE`][6c83] and `FUNCTION`([`0`][119e] [`1`][ba62] [`2`][81f7]) locatives, for example)
 but not PAX- and user-defined additions (e.g. `SECTION`([`0`][5fac] [`1`][672f]),
 [`ASDF:SYSTEM`][c097]).
 
@@ -3567,7 +3590,7 @@ but not PAX- and user-defined additions (e.g. `SECTION`([`0`][5fac] [`1`][672f])
 - [function] **FIND-DEFINITION\*** *OBJECT REFERENCE-OBJECT &REST LOCATIVES*
 
     Like [`FIND-DEFINITION`][ff68], but tries to get the definition of
-    `OBJECT` (for example a `FUNCTION`([`0`][2d31] [`1`][ba62] [`2`][2d97]) or `METHOD`([`0`][d562] [`1`][172e]) object) with the fast but
+    `OBJECT` (for example a `FUNCTION`([`0`][119e] [`1`][ba62] [`2`][81f7]) or `METHOD`([`0`][51c3] [`1`][172e]) object) with the fast but
     not widely supported `SWANK-BACKEND:FIND-SOURCE-LOCATION` before
     calling the much slower but more complete
     `SWANK-BACKEND:FIND-DEFINITIONS`.
@@ -3583,8 +3606,8 @@ presented.
 <a id="x-28MGL-PAX-3ASECTION-20CLASS-29"></a>
 - [class] **SECTION**
 
-    [`DEFSECTION`][72b4] stores its `NAME`, `TITLE`, [`PACKAGE`][97eb],
-    [`READTABLE`][4022] and `ENTRIES` arguments in [`SECTION`][5fac]
+    [`DEFSECTION`][72b4] stores its `NAME`, `TITLE`, [`PACKAGE`][1d5a],
+    [`READTABLE`][d646] and `ENTRIES` arguments in [`SECTION`][5fac]
     objects.
 
 <a id="x-28MGL-PAX-3ASECTION-NAME-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
@@ -3596,13 +3619,13 @@ presented.
 <a id="x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
 - [reader] **SECTION-PACKAGE** *SECTION (:PACKAGE)*
 
-    [`*PACKAGE*`][d2c1] will be bound to this package when
+    [`*PACKAGE*`][5ed1] will be bound to this package when
     generating documentation for this section.
 
 <a id="x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
 - [reader] **SECTION-READTABLE** *SECTION (:READTABLE)*
 
-    [`*READTABLE*`][a916] will be bound to this when generating
+    [`*READTABLE*`][b79a] will be bound to this when generating
     documentation for this section.
 
 <a id="x-28MGL-PAX-3ASECTION-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
@@ -3649,67 +3672,71 @@ they are presented.
     documentation.
 
   [0019]: #x-28MGL-PAX-3ALOCATE-ERROR-20FUNCTION-29 "MGL-PAX:LOCATE-ERROR FUNCTION"
+  [006c]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_4.htm "DEFINE-METHOD-COMBINATION (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [00d4]: #x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE"
   [0225]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-20-28METHOD-20NIL-20-28STRING-20T-29-29-29 "MGL-PAX:DOCUMENT-OBJECT (METHOD NIL (STRING T))"
   [02de]: #x-28MGL-PAX-3AREFERENCE-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29 "MGL-PAX:REFERENCE-LOCATIVE (MGL-PAX:READER MGL-PAX:REFERENCE)"
+  [0317]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pn.htm "PATHNAME (MGL-PAX:CLHS CLASS)"
+  [03fa]: http://www.lispworks.com/documentation/HyperSpec/Body/f_class_.htm "CLASS-NAME (MGL-PAX:CLHS GENERIC-FUNCTION)"
   [06a9]: #x-28MGL-PAX-3A-40CONDITION-SYSTEM-LOCATIVES-20MGL-PAX-3ASECTION-29 "Condition System Locatives"
-  [08f7]: http://www.lispworks.com/documentation/HyperSpec/Body/v_t.htm "T MGL-PAX:CONSTANT"
   [0b3a]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE"
-  [0e20]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_2.htm "SYMBOL-NAME FUNCTION"
+  [0c4f]: http://www.lispworks.com/documentation/HyperSpec/Body/f_export.htm "EXPORT (MGL-PAX:CLHS FUNCTION)"
+  [0d07]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_2.htm "SYMBOL-NAME (MGL-PAX:CLHS FUNCTION)"
+  [0d6e]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eval.htm "EVAL (MGL-PAX:CLHS FUNCTION)"
   [0ef0]: #x-28MGL-PAX-3A-2ADOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS* VARIABLE"
-  [1102]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "ABORT FUNCTION"
-  [117a]: http://www.lispworks.com/documentation/HyperSpec/Body/f_open.htm "OPEN FUNCTION"
+  [119e]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm "FUNCTION (MGL-PAX:CLHS CLASS)"
   [1281]: #x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29 "PAX World"
   [13a9]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29 "MGL-PAX:UPDATE-ASDF-SYSTEM-READMES FUNCTION"
+  [14cb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defmac.htm "DEFMACRO (MGL-PAX:CLHS MGL-PAX:MACRO)"
+  [1574]: http://www.lispworks.com/documentation/HyperSpec/Body/s_declar.htm "DECLARE (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [172e]: #x-28METHOD-20MGL-PAX-3ALOCATIVE-29 "METHOD MGL-PAX:LOCATIVE"
   [17e0]: #x-28MGL-PAX-3A-2ADOCUMENT-URL-VERSIONS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-URL-VERSIONS* VARIABLE"
   [185d]: #x-28MGL-PAX-3ALOCATE-OBJECT-20GENERIC-FUNCTION-29 "MGL-PAX:LOCATE-OBJECT GENERIC-FUNCTION"
-  [1864]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*STANDARD-OUTPUT* VARIABLE"
   [1865]: #x-28MGL-PAX-3A-40LINKING-TO-CODE-20MGL-PAX-3ASECTION-29 "Linking to Code"
-  [1895]: http://www.lispworks.com/documentation/HyperSpec/Body/e_error.htm "ERROR CONDITION"
-  [1aee]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRIN1 FUNCTION"
+  [1867]: http://www.lispworks.com/documentation/HyperSpec/Body/r_contin.htm "CONTINUE (MGL-PAX:CLHS RESTART)"
+  [18e1]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_to_.htm "PRIN1-TO-STRING (MGL-PAX:CLHS FUNCTION)"
   [1b1b]: #x-28MGL-PAX-3A-40DOCUMENTATION-UTILITIES-20MGL-PAX-3ASECTION-29 "Utilities for Generating Documentation"
   [1b28]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE"
   [1cea]: #x-28MGL-PAX-3AREFERENCE-20CLASS-29 "MGL-PAX:REFERENCE CLASS"
+  [1d5a]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pkg.htm "PACKAGE (MGL-PAX:CLHS CLASS)"
   [1e80]: #x-28MGL-PAX-3A-40PAX-URLS-20MGL-PAX-3ASECTION-29 "PAX URLs"
-  [1f28]: http://www.lispworks.com/documentation/HyperSpec/Body/f_format.htm "FORMAT FUNCTION"
+  [1f37]: http://www.lispworks.com/documentation/HyperSpec/Body/t_class.htm "CLASS (MGL-PAX:CLHS CLASS)"
   [2060]: #x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "CLASS MGL-PAX:LOCATIVE"
   [21f5]: #x-28MGL-PAX-3A-40MACROLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Macros"
   [22c2]: #x-28MGL-PAX-3A-40LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29 "Linking to Sections"
   [238c]: #x-28MGL-PAX-3ATRANSCRIPTION-VALUES-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION"
+  [23d5]: http://www.lispworks.com/documentation/HyperSpec/Body/m_define.htm "DEFINE-COMPILER-MACRO (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [2415]: #x-28MGL-PAX-3A-40PAX-MANUAL-20MGL-PAX-3ASECTION-29 "PAX Manual"
   [2634]: #x-28MGL-PAX-3A-40OVERVIEW-OF-ESCAPING-20MGL-PAX-3ASECTION-29 "Overview of Escaping"
-  [26df]: http://www.lispworks.com/documentation/HyperSpec/Body/t_t.htm "T CLASS"
-  [28bb]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "STRING CLASS"
   [292a]: #x-28MGL-PAX-3A-40PAX-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for PAX Constructs"
   [2c93]: #x-28MGL-PAX-3A-40GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Generating Documentation"
   [2ca9]: #x-28MGL-PAX-3AOUTPUT-REFLINK-20FUNCTION-29 "MGL-PAX:OUTPUT-REFLINK FUNCTION"
-  [2ce2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_consta.htm "CONSTANTP FUNCTION"
-  [2d31]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm "FUNCTION CLASS"
-  [2d97]: http://www.lispworks.com/documentation/HyperSpec/Body/s_fn.htm "FUNCTION MGL-PAX:MACRO"
   [2d9d]: #x-28MGL-PAX-3ADEFINE-RESTART-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-RESTART MGL-PAX:MACRO"
   [3026]: #x-28MGL-PAX-3AESCAPE-MARKDOWN-20FUNCTION-29 "MGL-PAX:ESCAPE-MARKDOWN FUNCTION"
   [3200]: #x-28MGL-PAX-3ALOCATIVE-TYPE-20FUNCTION-29 "MGL-PAX:LOCATIVE-TYPE FUNCTION"
   [32f5]: #x-28MGL-PAX-3ACANONICAL-REFERENCE-20GENERIC-FUNCTION-29 "MGL-PAX:CANONICAL-REFERENCE GENERIC-FUNCTION"
   [3386]: #x-28MGL-PAX-3A-40NAVIGATING-IN-EMACS-20MGL-PAX-3ASECTION-29 "Navigating Sources in Emacs"
   [33fd]: #x-28MGL-PAX-3APAX-APROPOS-20FUNCTION-29 "MGL-PAX:PAX-APROPOS FUNCTION"
+  [3473]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_s.htm "FIND-SYMBOL (MGL-PAX:CLHS FUNCTION)"
   [36e1]: #x-28MGL-PAX-3A-40HTML-OUTPUT-20MGL-PAX-3ASECTION-29 "HTML Output"
   [378f]: #x-28MGL-PAX-3A-40PARSING-20MGL-PAX-3ASECTION-29 "Parsing"
-  [3ae8]: http://www.lispworks.com/documentation/HyperSpec/Body/r_contin.htm "CONTINUE RESTART"
-  [3d3c]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_rd.htm "READ FUNCTION"
+  [38e4]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rst.htm "RESTART (MGL-PAX:CLHS CLASS)"
   [3da8]: #x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29 "MGL-PAX:*FORMAT* VARIABLE"
   [3eb4]: #x-28MGL-PAX-3A-40EXTENDING-FIND-SOURCE-20MGL-PAX-3ASECTION-29 "Extending `FIND-SOURCE`"
-  [3f15]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rest.htm "REST FUNCTION"
-  [4022]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rdtabl.htm "READTABLE CLASS"
+  [3f2e]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pr_obj.htm "PRINT-OBJECT (MGL-PAX:CLHS GENERIC-FUNCTION)"
+  [3fb5]: http://www.lispworks.com/documentation/HyperSpec/Body/f_equal.htm "EQUAL (MGL-PAX:CLHS FUNCTION)"
+  [4143]: http://www.lispworks.com/documentation/HyperSpec/Body/f_stgeq_.htm "STRING= (MGL-PAX:CLHS FUNCTION)"
   [41fd]: #x-28COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29 "COMPILER-MACRO MGL-PAX:LOCATIVE"
-  [42d7]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "DEFPACKAGE MGL-PAX:MACRO"
+  [4317]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cerror.htm "CERROR (MGL-PAX:CLHS FUNCTION)"
   [432c]: #x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29 "MGL-PAX:DOCUMENT FUNCTION"
   [4355]: #x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNCTION-29 "MGL-PAX:FIND-SOURCE GENERIC-FUNCTION"
   [440e]: #x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES* VARIABLE"
+  [443b]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_cas.htm "*PRINT-CASE* (MGL-PAX:CLHS VARIABLE)"
+  [46c0]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_1.htm "DEFINE-SYMBOL-MACRO (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [46ec]: #x-28MGL-PAX-3ALOCATE-AND-COLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29 "MGL-PAX:LOCATE-AND-COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION"
-  [47a3]: http://www.lispworks.com/documentation/HyperSpec/Body/d_declar.htm "DECLARATION DECLARATION"
-  [493e]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "SIMPLE-CONDITION-FORMAT-CONTROL FUNCTION"
-  [4b12]: http://www.lispworks.com/documentation/HyperSpec/Body/t_symbol.htm "SYMBOL CLASS"
+  [479a]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "ABORT (MGL-PAX:CLHS FUNCTION)"
+  [4841]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "SIMPLE-CONDITION-FORMAT-CONTROL (MGL-PAX:CLHS FUNCTION)"
+  [48f1]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rdtabl.htm "READTABLE-CASE (MGL-PAX:CLHS FUNCTION)"
   [4b78]: #x-28MGL-PAX-3A-40EXTERNAL-LOCATIVES-20MGL-PAX-3ASECTION-29 "External Locatives"
   [4bb8]: #x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/document" ASDF/SYSTEM:SYSTEM'
   [4c48]: #x-28MGL-PAX-3A-40VARIABLELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Variables"
@@ -3717,179 +3744,178 @@ they are presented.
   [4d92]: #x-28MGL-PAX-3A-40LOCATIVE-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@LOCATIVE MGL-PAX:GLOSSARY-TERM"
   [4dd7]: #x-28PACKAGE-20MGL-PAX-3ALOCATIVE-29 "PACKAGE MGL-PAX:LOCATIVE"
   [5119]: #x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:GLOSSARY-TERM MGL-PAX:LOCATIVE"
+  [51c3]: http://www.lispworks.com/documentation/HyperSpec/Body/t_method.htm "METHOD (MGL-PAX:CLHS CLASS)"
   [524e]: #x-28MGL-PAX-3A-40UNSPECIFIED-LOCATIVE-20MGL-PAX-3ASECTION-29 "Unspecified Locative"
-  [570b]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rst.htm "RESTART CLASS"
   [574a]: #x-28MGL-PAX-3A-40EXTENDING-DOCUMENT-20MGL-PAX-3ASECTION-29 "Extending `DOCUMENT`"
   [5825]: #x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/transcribe" ASDF/SYSTEM:SYSTEM'
   [5875]: #x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "GENERIC-FUNCTION MGL-PAX:LOCATIVE"
   [587f]: #x-28MGL-PAX-3AMAKE-GIT-SOURCE-URI-FN-20FUNCTION-29 "MGL-PAX:MAKE-GIT-SOURCE-URI-FN FUNCTION"
   [5c39]: #x-28MGL-PAX-3ALOCATE-DOCSTRING-20GENERIC-FUNCTION-29 "MGL-PAX:LOCATE-DOCSTRING GENERIC-FUNCTION"
   [5cd7]: #x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:INCLUDE MGL-PAX:LOCATIVE"
+  [5df9]: http://www.lispworks.com/documentation/HyperSpec/Body/d_optimi.htm "DEBUG (MGL-PAX:CLHS DECLARATION)"
+  [5ed1]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm "*PACKAGE* (MGL-PAX:CLHS VARIABLE)"
   [5fac]: #x-28MGL-PAX-3ASECTION-20CLASS-29 "MGL-PAX:SECTION CLASS"
   [6121]: #x-28MGL-PAX-3A-40LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29 "Locative Types"
   [6300]: #x-28MGL-PAX-3A-40TRANSCRIPTS-20MGL-PAX-3ASECTION-29 "Transcripts"
+  [6384]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRIN1 (MGL-PAX:CLHS FUNCTION)"
+  [63ef]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009_w.htm '"ISSUE:AREF-1D" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [63f3]: #x-28MGL-PAX-3ADEFINE-PACKAGE-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-PACKAGE MGL-PAX:MACRO"
+  [6547]: http://www.lispworks.com/documentation/HyperSpec/Body/f_open.htm "OPEN (MGL-PAX:CLHS FUNCTION)"
   [660b]: #x-28MGL-PAX-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-LOCATIVE-TYPE MGL-PAX:MACRO"
   [6611]: #x-28MGL-PAX-3ALOCATE-AND-DOCUMENT-20GENERIC-FUNCTION-29 "MGL-PAX:LOCATE-AND-DOCUMENT GENERIC-FUNCTION"
+  [66c6]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*ERROR-OUTPUT* (MGL-PAX:CLHS VARIABLE)"
   [672f]: #x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:SECTION MGL-PAX:LOCATIVE"
-  [6786]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009_w.htm '"ISSUE:AREF-1D" MGL-PAX:CLHS'
   [685e]: #x-28MGL-PAX-3A-40INTRODUCTION-20MGL-PAX-3ASECTION-29 "Introduction"
   [6887]: #x-28MGL-PAX-3ALOCATE-ERROR-20CONDITION-29 "MGL-PAX:LOCATE-ERROR CONDITION"
-  [68f1]: http://www.lispworks.com/documentation/HyperSpec/Body/f_docume.htm "DOCUMENTATION GENERIC-FUNCTION"
-  [69b7]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cerror.htm "CERROR FUNCTION"
   [69f7]: #x-28MGL-PAX-3A-40REFERENCE-BASED-EXTENSIONS-20MGL-PAX-3ASECTION-29 "Reference Based Extensions"
-  [6b46]: http://www.lispworks.com/documentation/HyperSpec/Body/t_stream.htm "STREAM CLASS"
+  [6af6]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PPRINT (MGL-PAX:CLHS FUNCTION)"
   [6b59]: #x-28MGL-PAX-3A-40TRANSCRIPT-DYNENV-20MGL-PAX-3ASECTION-29 "Controlling the Dynamic Environment"
-  [6c1f]: http://www.lispworks.com/documentation/HyperSpec/Body/e_smp_cn.htm "SIMPLE-CONDITION CONDITION"
+  [6c37]: http://www.lispworks.com/documentation/HyperSpec/Body/f_boundp.htm "BOUNDP (MGL-PAX:CLHS FUNCTION)"
   [6c83]: #x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29 "VARIABLE MGL-PAX:LOCATIVE"
-  [6dd5]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "MUFFLE-WARNING FUNCTION"
+  [6d46]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_m.htm "FIND-METHOD (MGL-PAX:CLHS GENERIC-FUNCTION)"
   [6e04]: #x-28DECLARATION-20MGL-PAX-3ALOCATIVE-29 "DECLARATION MGL-PAX:LOCATIVE"
   [6e18]: #x-28MGL-PAX-3A-40TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS-20MGL-PAX-3ASECTION-29 "Finer-Grained Consistency Checks"
+  [6f51]: http://www.lispworks.com/documentation/HyperSpec/Body/r_muffle.htm "MUFFLE-WARNING (MGL-PAX:CLHS RESTART)"
   [6fdb]: #x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax" ASDF/SYSTEM:SYSTEM'
   [718f]: #x-28MGL-PAX-3A-40MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29 "Indentation"
   [7199]: #x-28MGL-PAX-3A-40DOCUMENTING-IN-EMACS-20MGL-PAX-3ASECTION-29 "Documenting in Emacs"
   [72b4]: #x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFSECTION MGL-PAX:MACRO"
-  [72fd]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_1.htm "DEFINE-SYMBOL-MACRO MGL-PAX:MACRO"
   [730f]: #x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20VARIABLE-29 "MGL-PAX:*DISCARD-DOCUMENTATION-P* VARIABLE"
+  [7328]: http://www.lispworks.com/documentation/HyperSpec/Body/f_apropo.htm "APROPOS-LIST (MGL-PAX:CLHS FUNCTION)"
   [7445]: #x-28MGL-PAX-3A-40INTERESTING-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@INTERESTING MGL-PAX:GLOSSARY-TERM"
   [7584]: #x-28MGL-PAX-3ADEFINE-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO"
   [75ce]: #x-28MGL-PAX-3A-40OBJECT-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@OBJECT MGL-PAX:GLOSSARY-TERM"
   [7b2c]: #x-28MGL-PAX-3ALOCATE-ERROR-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29 "MGL-PAX:LOCATE-ERROR-OBJECT (MGL-PAX:READER MGL-PAX:LOCATE-ERROR)"
-  [7bd4]: http://www.lispworks.com/documentation/HyperSpec/Body/f_string.htm "STRING FUNCTION"
   [7c82]: #x-28MGL-PAX-3A-40MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29 "Miscellaneous Variables"
   [7cc3]: #x-28MGL-PAX-3A-40LINKING-TO-THE-HYPERSPEC-20MGL-PAX-3ASECTION-29 "Linking to the Hyperspec"
   [7da5]: #x-28MGL-PAX-3ALOCATE-ERROR-MESSAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29 "MGL-PAX:LOCATE-ERROR-MESSAGE (MGL-PAX:READER MGL-PAX:LOCATE-ERROR)"
-  [7e58]: http://www.lispworks.com/documentation/HyperSpec/Body/t_class.htm "CLASS CLASS"
-  [7f37]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*ERROR-OUTPUT* VARIABLE"
-  [804d]: http://www.lispworks.com/documentation/HyperSpec/Body/m_declai.htm "DECLAIM MGL-PAX:MACRO"
+  [7f9a]: http://www.lispworks.com/documentation/HyperSpec/Body/m_deftp.htm "DEFTYPE (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [80cd]: #x-28MGL-PAX-3A-40REFERENCE-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@REFERENCE MGL-PAX:GLOSSARY-TERM"
+  [81f7]: http://www.lispworks.com/documentation/HyperSpec/Body/s_fn.htm "FUNCTION (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [8251]: #x-28MGL-PAX-3AGLOSSARY-TERM-20CLASS-29 "MGL-PAX:GLOSSARY-TERM CLASS"
-  [8263]: http://www.lispworks.com/documentation/HyperSpec/Body/r_muffle.htm "MUFFLE-WARNING RESTART"
   [82e0]: #x-28METHOD-COMBINATION-20MGL-PAX-3ALOCATIVE-29 "METHOD-COMBINATION MGL-PAX:LOCATIVE"
+  [83e1]: http://www.lispworks.com/documentation/HyperSpec/Body/e_cnd.htm "CONDITION (MGL-PAX:CLHS CONDITION)"
   [8423]: #x-28MGL-PAX-3A-40TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Utilities for Consistency Checking"
   [8492]: #x-28MGL-PAX-3ATRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR CONDITION"
   [8541]: #x-28MGL-PAX-3A-40EMACS-SETUP-20MGL-PAX-3ASECTION-29 "Emacs Setup"
   [8710]: #x-28MGL-PAX-3AARGUMENT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:ARGUMENT MGL-PAX:LOCATIVE"
   [875e]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-TO-HYPERSPEC* VARIABLE"
+  [876d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_ensu_1.htm "ENSURE-DIRECTORIES-EXIST (MGL-PAX:CLHS FUNCTION)"
   [88a7]: #x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "MGL-PAX:SECTION-READTABLE (MGL-PAX:READER MGL-PAX:SECTION)"
   [88cf]: #x-28MGL-PAX-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@NAME MGL-PAX:GLOSSARY-TERM"
+  [8934]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defcon.htm "DEFCONSTANT (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [8996]: #x-28MGL-PAX-3A-40SPECIFIED-LOCATIVE-20MGL-PAX-3ASECTION-29 "Specified Locative"
-  [89d0]: http://www.lispworks.com/documentation/HyperSpec/Body/m_deftp.htm "DEFTYPE MGL-PAX:MACRO"
   [8a58]: #x-28MGL-PAX-3A-40SECTIONS-20MGL-PAX-3ASECTION-29 "Sections"
-  [8beb]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_m.htm "FIND-METHOD GENERIC-FUNCTION"
-  [8bee]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_to_.htm "PRIN1-TO-STRING FUNCTION"
   [8c16]: #x-28MGL-PAX-3A-40PREVENTING-AUTOLINKING-20MGL-PAX-3ASECTION-29 "Preventing Autolinking"
-  [8c40]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defgen.htm "DEFGENERIC MGL-PAX:MACRO"
   [8c7d]: #x-28MGL-PAX-3AREFERENCE-OBJECT-20-28MGL-PAX-3AREADER-20MGL-PAX-3AREFERENCE-29-29 "MGL-PAX:REFERENCE-OBJECT (MGL-PAX:READER MGL-PAX:REFERENCE)"
   [8c95]: #x-28MGL-PAX-3ACOLLECT-REACHABLE-OBJECTS-20GENERIC-FUNCTION-29 "MGL-PAX:COLLECT-REACHABLE-OBJECTS GENERIC-FUNCTION"
-  [8c99]: http://www.lispworks.com/documentation/HyperSpec/Body/f_car_c.htm "CAR FUNCTION"
-  [8d65]: http://www.lispworks.com/documentation/HyperSpec/Body/t_generi.htm "GENERIC-FUNCTION CLASS"
   [8ece]: #x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-GLOSSARY-TERM MGL-PAX:MACRO"
   [8fb6]: #x-28MGL-PAX-3A-2ADOCUMENT-MARK-UP-SIGNATURES-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-MARK-UP-SIGNATURES* VARIABLE"
-  [91fd]: http://www.lispworks.com/documentation/HyperSpec/Body/f_stgeq_.htm "STRING= FUNCTION"
+  [9172]: http://www.lispworks.com/documentation/HyperSpec/Body/t_t.htm "T (MGL-PAX:CLHS CLASS)"
   [926d]: #x-28TYPE-20MGL-PAX-3ALOCATIVE-29 "TYPE MGL-PAX:LOCATIVE"
+  [935f]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss045.htm '"SUMMARY:CHARACTER-PROPOSAL:2-6-5" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [9439]: http://www.lispworks.com/documentation/HyperSpec/Body/m_pr_unr.htm "PRINT-UNREADABLE-OBJECT (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [9450]: #x-28MGL-PAX-3ASECTION-ENTRIES-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "MGL-PAX:SECTION-ENTRIES (MGL-PAX:READER MGL-PAX:SECTION)"
   [94c7]: #x-28MGL-PAX-3A-40BASICS-20MGL-PAX-3ASECTION-29 "Basics"
-  [964b]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_3.htm "SYMBOL-PACKAGE FUNCTION"
-  [9674]: http://www.lispworks.com/documentation/HyperSpec/Body/f_procla.htm "PROCLAIM FUNCTION"
-  [96d0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_equal.htm "EQUAL FUNCTION"
-  [9717]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defun.htm "DEFUN MGL-PAX:MACRO"
-  [97eb]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pkg.htm "PACKAGE CLASS"
+  [98ff]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_l.htm#lambda_list '"lambda list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [9974]: #x-28MGL-PAX-3ALOCATE-ERROR-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29 "MGL-PAX:LOCATE-ERROR-LOCATIVE (MGL-PAX:READER MGL-PAX:LOCATE-ERROR)"
+  [9a71]: http://www.lispworks.com/documentation/HyperSpec/Body/f_specia.htm "SPECIAL-OPERATOR-P (MGL-PAX:CLHS FUNCTION)"
+  [9b43]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "DEFPACKAGE (MGL-PAX:CLHS MGL-PAX:MACRO)"
+  [9b70]: http://www.lispworks.com/documentation/HyperSpec/Body/t_meth_1.htm "METHOD-COMBINATION (MGL-PAX:CLHS CLASS)"
   [9dbc]: #x-28MGL-PAX-3A-40TRANSCRIPT-API-20MGL-PAX-3ASECTION-29 "Transcript API"
   [a17d]: #x-28MGL-PAX-3A-40MATHJAX-20MGL-PAX-3ASECTION-29 "MathJax"
-  [a1a2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_class_.htm "CLASS-NAME GENERIC-FUNCTION"
   [a249]: #x-28MGL-PAX-3ATRANSCRIPTION-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION"
-  [a328]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rdtabl.htm "READTABLE-CASE FUNCTION"
-  [a39d]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_cas.htm "*PRINT-CASE* VARIABLE"
+  [a26f]: http://www.lispworks.com/documentation/HyperSpec/Body/f_consta.htm "CONSTANTP (MGL-PAX:CLHS FUNCTION)"
   [a5b1]: #x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION)"
-  [a5de]: http://www.lispworks.com/documentation/HyperSpec/Body/m_define.htm "DEFINE-COMPILER-MACRO MGL-PAX:MACRO"
   [a5ee]: #x-28MGL-PAX-3A-2ADOCUMENT-DOWNCASE-UPPERCASE-CODE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-DOWNCASE-UPPERCASE-CODE* VARIABLE"
-  [a668]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "SIMPLE-CONDITION-FORMAT-ARGUMENTS FUNCTION"
   [a85e]: #x-28MGL-PAX-3ADEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO"
-  [a916]: http://www.lispworks.com/documentation/HyperSpec/Body/v_rdtabl.htm "*READTABLE* VARIABLE"
+  [ad78]: http://www.lispworks.com/documentation/HyperSpec/Body/f_format.htm "FORMAT (MGL-PAX:CLHS FUNCTION)"
   [ad94]: #x-28MGL-PAX-3A-40UNAMBIGUOUS-UNSPECIFICED-LOCATIVE-20MGL-PAX-3ASECTION-29 "Unambiguous Unspecified Locative"
+  [aeb6]: http://www.lispworks.com/documentation/HyperSpec/Body/a_fn.htm "FUNCTION MGL-PAX:CLHS"
   [b372]: #x-28MGL-PAX-3A-40UNRESOLVABLE-REFLINKS-20MGL-PAX-3ASECTION-29 "Unresolvable Links"
   [b3cc]: #x-28MGL-PAX-3A-40EXPLICIT-AND-AUTOLINKING-20MGL-PAX-3ASECTION-29 "Explicit and Autolinking"
-  [b622]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pkg_na.htm "PACKAGE-NAME FUNCTION"
+  [b4f0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_intern.htm "INTERN (MGL-PAX:CLHS FUNCTION)"
+  [b79a]: http://www.lispworks.com/documentation/HyperSpec/Body/v_rdtabl.htm "*READTABLE* (MGL-PAX:CLHS VARIABLE)"
   [b7fc]: #x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29 "PAX Apropos"
   [b81d]: #x-28MGL-PAX-3ATRANSCRIPTION-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-ERROR CONDITION"
   [b89a]: #x-28MGL-PAX-3A-40CODIFIABLE-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@CODIFIABLE MGL-PAX:GLOSSARY-TERM"
   [b8a8]: #x-28MGL-PAX-3ADOCUMENTING-REFERENCE-20MGL-PAX-3AMACRO-29 "MGL-PAX:DOCUMENTING-REFERENCE MGL-PAX:MACRO"
+  [b8b4]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "MUFFLE-WARNING (MGL-PAX:CLHS FUNCTION)"
+  [b93c]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "STRING (MGL-PAX:CLHS CLASS)"
   [ba62]: #x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29 "FUNCTION MGL-PAX:LOCATIVE"
   [ba74]: #x-28MGL-PAX-3A-40LINKS-20MGL-PAX-3ASECTION-29 "Links and Systems"
   [bacc]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-20GENERIC-FUNCTION-29 "MGL-PAX:DOCUMENT-OBJECT GENERIC-FUNCTION"
   [bbf2]: #x-28MGL-PAX-3A-40NEW-OBJECT-TYPES-20MGL-PAX-3ASECTION-29 "Adding New Object Types"
   [bc83]: #x-28MGL-PAX-3A-40MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29 "Syntax Highlighting"
-  [bcd2]: http://www.lispworks.com/documentation/HyperSpec/Body/d_optimi.htm "DEBUG DECLARATION"
-  [bdf2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_boundp.htm "BOUNDP FUNCTION"
+  [bcb6]: http://www.lispworks.com/documentation/HyperSpec/Body/e_warnin.htm "WARNING (MGL-PAX:CLHS CONDITION)"
   [be47]: #x-28MGL-PAX-3A-40TYPELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Types and Declarations"
-  [bf07]: http://www.lispworks.com/documentation/HyperSpec/Body/f_export.htm "EXPORT FUNCTION"
   [c097]: #x-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29 "ASDF/SYSTEM:SYSTEM MGL-PAX:LOCATIVE"
-  [c1eb]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eval.htm "EVAL FUNCTION"
   [c267]: #x-28MGL-PAX-3ALOCATE-CANONICAL-REFERENCE-20GENERIC-FUNCTION-29 "MGL-PAX:LOCATE-CANONICAL-REFERENCE GENERIC-FUNCTION"
   [c2d3]: #x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29 "Markdown Support"
-  [c35d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_intern.htm "INTERN FUNCTION"
   [c4ce]: #x-28MGL-PAX-3A-40EXTENSION-API-20MGL-PAX-3ASECTION-29 "Writing Extensions"
-  [c5b8]: http://www.lispworks.com/documentation/HyperSpec/Body/e_warnin.htm "WARNING CONDITION"
+  [c5ae]: http://www.lispworks.com/documentation/HyperSpec/Body/f_docume.htm "DOCUMENTATION (MGL-PAX:CLHS GENERIC-FUNCTION)"
+  [c7f7]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defgen.htm "DEFGENERIC (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [c818]: #x-28MGL-PAX-3AOUTPUT-LABEL-20FUNCTION-29 "MGL-PAX:OUTPUT-LABEL FUNCTION"
   [c819]: #x-28MGL-PAX-3ACONSTANT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CONSTANT MGL-PAX:LOCATIVE"
   [c930]: #x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29 "MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION"
   [cc04]: #x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:READER MGL-PAX:LOCATIVE"
   [cd9e]: #x-28MGL-PAX-3ARESOLVE-20FUNCTION-29 "MGL-PAX:RESOLVE FUNCTION"
-  [ce02]: http://www.lispworks.com/documentation/HyperSpec/Body/s_declar.htm "DECLARE MGL-PAX:MACRO"
   [ce75]: #x-28MGL-PAX-3ADOCSTRING-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:DOCSTRING MGL-PAX:LOCATIVE"
-  [cfbb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_pr_unr.htm "PRINT-UNREADABLE-OBJECT MGL-PAX:MACRO"
+  [d07c]: http://www.lispworks.com/documentation/HyperSpec/Body/d_declar.htm "DECLARATION (MGL-PAX:CLHS DECLARATION)"
+  [d162]: http://www.lispworks.com/documentation/HyperSpec/Body/e_error.htm "ERROR (MGL-PAX:CLHS CONDITION)"
   [d1ca]: #x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29 "Documentation Generation Implementation Notes"
   [d1dc]: #x-28MGL-PAX-3A-40GLOSSARY-TERMS-20MGL-PAX-3ASECTION-29 "Glossary Terms"
-  [d289]: http://www.lispworks.com/documentation/HyperSpec/Body/f_apropo.htm "APROPOS-LIST FUNCTION"
-  [d2c1]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm "*PACKAGE* VARIABLE"
-  [d562]: http://www.lispworks.com/documentation/HyperSpec/Body/t_method.htm "METHOD CLASS"
-  [d684]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defcon.htm "DEFCONSTANT MGL-PAX:MACRO"
+  [d3e1]: http://www.lispworks.com/documentation/HyperSpec/Body/f_procla.htm "PROCLAIM (MGL-PAX:CLHS FUNCTION)"
+  [d451]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRINT (MGL-PAX:CLHS FUNCTION)"
+  [d5a2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_car_c.htm "CAR (MGL-PAX:CLHS FUNCTION)"
+  [d5a9]: http://www.lispworks.com/documentation/HyperSpec/Body/t_stream.htm "STREAM (MGL-PAX:CLHS CLASS)"
+  [d646]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rdtabl.htm "READTABLE (MGL-PAX:CLHS CLASS)"
   [d6a4]: #x-28MGL-PAX-3ALOCATE-AND-FIND-SOURCE-20GENERIC-FUNCTION-29 "MGL-PAX:LOCATE-AND-FIND-SOURCE GENERIC-FUNCTION"
   [d761]: #x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/full" ASDF/SYSTEM:SYSTEM'
   [d7b0]: #x-28MGL-PAX-3A-40WORD-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@WORD MGL-PAX:GLOSSARY-TERM"
   [d9ee]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-CODE* VARIABLE"
-  [dc76]: http://www.lispworks.com/documentation/HyperSpec/Body/e_cnd.htm "CONDITION CONDITION"
+  [da14]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "SIMPLE-CONDITION-FORMAT-ARGUMENTS (MGL-PAX:CLHS FUNCTION)"
+  [dae6]: http://www.lispworks.com/documentation/HyperSpec/Body/f_string.htm "STRING (MGL-PAX:CLHS FUNCTION)"
+  [db68]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pkg_na.htm "PACKAGE-NAME (MGL-PAX:CLHS FUNCTION)"
   [dff6]: #x-28MGL-PAX-3A-40GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29 "Github Workflow"
-  [e077]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_s.htm "FIND-SYMBOL FUNCTION"
   [e0d7]: #x-28MGL-PAX-3A-40DOCUMENTATION-KEY-BINDINGS-20MGL-PAX-3ASECTION-29 "Documentation Key Bindings"
   [e216]: #x-28MGL-PAX-3A-2ADOCUMENT-HTML-TOP-BLOCKS-OF-LINKS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* VARIABLE"
   [e248]: #x-28MGL-PAX-3A-40FUNCTIONLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Functions"
-  [e256]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009.htm '"SUMMARY:AREF-1D" MGL-PAX:CLHS'
   [e2bb]: #x-28MGL-PAX-3ADOCSTRING-20GENERIC-FUNCTION-29 "MGL-PAX:DOCSTRING GENERIC-FUNCTION"
   [e2e8]: #x-28MGL-PAX-3A-40SUPPRESSED-LINKS-20MGL-PAX-3ASECTION-29 "Suppressed Links"
   [e391]: #x-28MGL-PAX-3ADISLOCATED-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:DISLOCATED MGL-PAX:LOCATIVE"
   [e403]: #x-28MGL-PAX-3A-40REFERENCE-DELEGATE-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@REFERENCE-DELEGATE MGL-PAX:GLOSSARY-TERM"
-  [e4b0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_ensu_1.htm "ENSURE-DIRECTORIES-EXIST FUNCTION"
+  [e442]: http://www.lispworks.com/documentation/HyperSpec/Body/03_d.htm '"3.4" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [e51f]: #x-28MGL-PAX-3AEXPORTABLE-REFERENCE-P-20GENERIC-FUNCTION-29 "MGL-PAX:EXPORTABLE-REFERENCE-P GENERIC-FUNCTION"
-  [e531]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pn.htm "PATHNAME CLASS"
   [e548]: #x-28MGL-PAX-3AWRITER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:WRITER MGL-PAX:LOCATIVE"
-  [eafc]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pr_obj.htm "PRINT-OBJECT GENERIC-FUNCTION"
+  [e5ab]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_3.htm "SYMBOL-PACKAGE (MGL-PAX:CLHS FUNCTION)"
+  [e5af]: http://www.lispworks.com/documentation/HyperSpec/Body/t_symbol.htm "SYMBOL (MGL-PAX:CLHS CLASS)"
+  [e7ee]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*STANDARD-OUTPUT* (MGL-PAX:CLHS VARIABLE)"
   [ebd3]: #x-28MGL-PAX-3A-2ATRANSCRIBE-SYNTAXES-2A-20VARIABLE-29 "MGL-PAX:*TRANSCRIBE-SYNTAXES* VARIABLE"
+  [ebea]: http://www.lispworks.com/documentation/HyperSpec/Body/m_declai.htm "DECLAIM (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [ed5f]: #x-28MGL-PAX-3ACLHS-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CLHS MGL-PAX:LOCATIVE"
   [ee51]: #x-28MGL-PAX-3AUPDATE-PAX-WORLD-20FUNCTION-29 "MGL-PAX:UPDATE-PAX-WORLD FUNCTION"
   [ee94]: #x-28MGL-PAX-3ALOCATE-20FUNCTION-29 "MGL-PAX:LOCATE FUNCTION"
+  [efe2]: http://www.lispworks.com/documentation/HyperSpec/Body/t_generi.htm "GENERIC-FUNCTION (MGL-PAX:CLHS CLASS)"
   [f12d]: #x-28MGL-PAX-3A-2ADOCUMENT-MAX-NUMBERING-LEVEL-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-MAX-NUMBERING-LEVEL* VARIABLE"
   [f155]: #x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/navigate" ASDF/SYSTEM:SYSTEM'
   [f1ab]: #x-28MGL-PAX-3A-40CODIFICATION-20MGL-PAX-3ASECTION-29 "Codification"
   [f1f0]: #x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29 "MGL-PAX:TRANSCRIBE FUNCTION"
   [f25f]: #x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE* VARIABLE"
+  [f2f5]: http://www.lispworks.com/documentation/HyperSpec/Body/e_smp_cn.htm "SIMPLE-CONDITION (MGL-PAX:CLHS CONDITION)"
   [f389]: #x-28MGL-PAX-3A-40LOCATIVES-AND-REFERENCES-API-20MGL-PAX-3ASECTION-29 "Locatives and References API"
   [f3cc]: #x-28MGL-PAX-3AMACRO-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:MACRO MGL-PAX:LOCATIVE"
+  [f472]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defun.htm "DEFUN (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [f47d]: #x-28MGL-PAX-3A-40TRANSCRIPT-CONISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Transcript Consistency Checking"
-  [f4de]: http://www.lispworks.com/documentation/HyperSpec/Body/f_specia.htm "SPECIAL-OPERATOR-P FUNCTION"
   [f4fd]: #x-28MGL-PAX-3AREGISTER-DOC-IN-PAX-WORLD-20FUNCTION-29 "MGL-PAX:REGISTER-DOC-IN-PAX-WORLD FUNCTION"
   [f585]: #x-28MGL-PAX-3A-2ADOCUMENT-HYPERSPEC-ROOT-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HYPERSPEC-ROOT* VARIABLE"
   [f5bd]: #x-28MGL-PAX-3A-40TRANSCRIBING-WITH-EMACS-20MGL-PAX-3ASECTION-29 "Transcribing with Emacs"
   [f74b]: #x-28MGL-PAX-3A-40BACKGROUND-20MGL-PAX-3ASECTION-29 "Background"
-  [f945]: http://www.lispworks.com/documentation/HyperSpec/Body/03_d.htm '"3.4" MGL-PAX:CLHS'
   [f9d2]: #x-28MGL-PAX-3A-40PACKAGELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Packages and Readtables"
-  [fc18]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defmac.htm "DEFMACRO MGL-PAX:MACRO"
-  [fc7b]: http://www.lispworks.com/documentation/HyperSpec/Body/t_meth_1.htm "METHOD-COMBINATION CLASS"
   [fd7c]: #x-28MGL-PAX-3A-40LOCATIVES-AND-REFERENCES-20MGL-PAX-3ASECTION-29 "Locatives and References"
-  [fdd1]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRINT FUNCTION"
-  [fe2b]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_4.htm "DEFINE-METHOD-COMBINATION MGL-PAX:MACRO"
+  [fe21]: http://www.lispworks.com/documentation/HyperSpec/Body/v_t.htm "T (MGL-PAX:CLHS MGL-PAX:CONSTANT)"
+  [fe58]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_rd.htm "READ (MGL-PAX:CLHS FUNCTION)"
+  [fe9f]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rest.htm "REST (MGL-PAX:CLHS FUNCTION)"
   [ff68]: #x-28MGL-PAX-3AFIND-DEFINITION-20FUNCTION-29 "MGL-PAX:FIND-DEFINITION FUNCTION"
 
 * * *

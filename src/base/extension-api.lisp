@@ -129,9 +129,22 @@
                       nil)))
 
 (defgeneric canonical-reference (object)
-  (:documentation "Return a REFERENCE that RESOLVEs to OBJECT, or
-  return NIL if this operation is not defined for OBJECT. Its
-  @REFERENCE-DELEGATE is LOCATE-CANONICAL-REFERENCE.")
+  (:documentation "Return the canonical reference to OBJECT, or
+  return NIL if this operation is not defined for OBJECT.
+
+  - If OBJECT is a REFERENCE, then its canonical reference must denote
+    the same thing as OBJECT. If it does not denote anything (i.e.
+    RESOLVE signals a LOCATE-ERROR), then the canonical reference can
+    be anything.
+
+  - If OBJECT is not a REFERENCE, the canonical reference is a
+    REFERENCE that RESOLVEs to OBJECT.
+
+  - Two canonical references denote the same thing if and only if
+    their REFERENCE-OBJECTs and REFERENCE-LOCATIVEs are EQUAL.
+
+  The @REFERENCE-DELEGATE of CANONICAL-REFERENCE is
+  LOCATE-CANONICAL-REFERENCE.")
   (:method :around (object)
     (if (ensure-navigate-loaded)
         (call-next-method)

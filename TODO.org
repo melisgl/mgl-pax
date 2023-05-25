@@ -26,15 +26,8 @@ This either relies on the global value of
 *TRANSCRIBE-CHECK-CONSISTENCY* or it needs to see the
 "```cl-transcript (...)" line.
 * MAYBE support external links
-There are two kinds:
-- object is text (like the CLHS locative)
-- normal references with external urls (hyperspec symbol lookup)
-
-The first kind is needs no additional support from pax as markdown
-reference links or user defined locatives can take care of this case.
-
-The second kind is very easy to implement: it only needs a small
-change in INITIALIZE-LINKS.
+This is partially done. CLHS is mostly implemented as an external
+link. See EXTERNAL-LOCATIVE-P and co.
 * MAYBE link to MOP
 * MAYBE consider CommonDoc from the 40ants fork
 * MAYBE split transcription off into a separate library?
@@ -43,7 +36,9 @@ change in INITIALIZE-LINKS.
 Or fall back on this for deficient ARGLISTs. Will be really slow.
 * TODO test the elisp code
 * MAYBE document glossary-term class and slots?
-* MAYBE support linking to hyperspec glossary entries?
+* MAYBE add format control character locative?
+* MAYBE add loop keyword locative?
+* MAYBE support SETF locative?
 * MAYBE move towards literate programming
 ** MAYBE todo/comment locative?
 ** add SYMBOL as an alias for dislocated?
@@ -100,7 +95,9 @@ Or go to the source.
 That is, when generating documentation for something that's referenced
 by one or more sections. See PAX::SECTIONS-THAT-CONTAIN and
 PAX::SORT-BY-PROXIMITY.
-* make (CLHS FUNCTION) work?
-E.g. print (clhs function)
-* html page title has markup
+* BUG html page title has markup
 E.g \\, maybe **.
+* BUG (3BMD-GRAMMAR:PARSE-DOC "[l][*x*]") fails
+* BUG C-. on [lambda lists][clhs] confused by the space
+* MAYBE autoload documentation when needed?
+E.g. for named-readtables, which has its docs in named-readtables/doc.

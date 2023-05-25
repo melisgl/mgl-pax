@@ -241,7 +241,8 @@
 
 (defmethod locate-object (symbol (locative-type (eql 'compiler-macro))
                           locative-args)
-  (unless (compiler-macro-function symbol)
+  (unless (and (symbolp symbol)
+               (compiler-macro-function symbol))
     (locate-error "~S does not name a compiler macro." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
@@ -810,7 +811,7 @@
 (define-locative-type declaration ()
   """Refers to a declaration, used in DECLARE, DECLAIM and PROCLAIM.
   For example, `[DEBUG][declaration]` refers to the standard DEBUG
-  declaration and links to the hyperspec if
+  declaration and links to the Hyperspec if
   *DOCUMENT-LINK-TO-HYPERSPEC* is true.
 
   User code may also define new declarations with CLTL2 functionality,
@@ -1455,61 +1456,101 @@ default (see EXPORTABLE-REFERENCE-P).")
 
 ;;;; CLHS locative
 
-(define-locative-type clhs ()
-  """Refers to sections in the Common Lisp hyperspec. These have no
-  source location so `\\M-.` will not work. What works is linking. The
-  following markdown examples all produce a link to CLHS `3.4`, the
-  section 'Lambda Lists', which is in file `03_d.htm`.
+(define-locative-type clhs (&optional nested-locative)
+  """Refers to sections or definitions in the Common Lisp Hyperspec.
+  These have no source location so `\\M-.` will not work. What works
+  is linking in documentation, including @DOCUMENTING-IN-EMACS. The
+  generated links are relative to *DOCUMENT-HYPERSPEC-ROOT* and work
+  even if *DOCUMENT-LINK-TO-HYPERSPEC* is NIL.
 
-  ```
-  CLHS `3.4`
-  `3.4` CLHS
-  [3.4][]
-  [`3.4`][]
-  [3.4][CLHS]
-  [Lambda Lists][clhs]
-  [03_d][clhs]
-  ```
+  - *definitions*: These are typically unnecessary as DOCUMENT will
+    produce the same link for e.g. `\\PPRINT`, `[PPRINT][function]`,
+    or `[PPRINT][]` if *DOCUMENT-LINK-TO-HYPERSPEC* is non-NIL and the
+    PPRINT function in the running Lisp is not being documented. In
+    the [Emacs documentation browser][ @documenting-in-emacs], a
+    slight difference is that everything is being documented, so using
+    the CLHS link bypasses the page with the definition in the running
+    Lisp.
 
-  The rules of matching sections are the following. If the object of
-  the reference is STRING= to the section number string (without the
-  trailing dot) or to the name of its file without the `.htm`
-  extension, then the reference refers to that section. Else, if the
-  object is a case-insensitive substring of the title of some section,
-  then the reference refers to the first such section in breadth-first
-  order.
+      - *unambiguous*: `[pprint][clhs]` ([pprint][clhs])
 
-  To link to issue and issue summary pages, all of the above markdown
-  examples work, just make the object of the reference the name of the
-  issue prefixed by `ISSUE:` or `SUMMARY:` as appropriate. For
-  example, to refer to the `AREF-1D` issue use `[ISSUE:AREF-1D][clhs]`
-  and get [ISSUE:AREF-1D][clhs]. Similary, `[SUMMARY:AREF-1D][clhs]`
-  turns into [SUMMARY:AREF-1D][clhs]. Alternatively, matching the name
-  of the file also works (`[iss009][clhs]` renders as [iss009][clhs])
+      - *ambiguous*: `[function][clhs]` ([function][clhs])
 
-  The generated links are relative to *DOCUMENT-HYPERSPEC-ROOT* and
-  work even if *DOCUMENT-LINK-TO-HYPERSPEC* is NIL.
+      - *explicit*: `[function][(clhs class)]` ([function][(clhs class)])
 
-  To detach the discussion from markdown syntax, let's see these cases
-  through the programmatic interface.
+  - *glossary terms* (case-insensitive): [lambda list][(clhs glossary-term)]
 
-  ```
-  (locate "3.4" 'clhs)
-  ==> #<REFERENCE "3.4" CLHS>
-  (locate "03_d" 'clhs)
-  ==> #<REFERENCE "03_d" CLHS>
-  (locate "lambda" 'clhs)
-  ==> #<REFERENCE "3.4" CLHS>
-  (locate "ISSUE:AREF-1D" 'clhs)
-  ==> #<REFERENCE "ISSUE:AREF-1D" CLHS>
-  (locate "SUMMARY:AREF-1D" 'clhs)
-  ==> #<REFERENCE "SUMMARY:AREF-1D" CLHS>
-  ```""")
+  - *issues*: `[ISSUE:AREF-1D][clhs]` or `[ISSUE:AREF-1D][(clhs
+     section)]` ([ISSUE:AREF-1D][clhs])
+
+  - *issue summaries*: `[SUMMARY:CHARACTER-PROPOSAL:2-6-5][clhs]` or
+     `[SUMMARY:CHARACTER-PROPOSAL:2-6-5][(clhs
+     section)]` ([SUMMARY:CHARACTER-PROPOSAL:2-6-5][clhs])
+
+  - *sections*:
+
+       - *by section number*: `[3.4][clhs]` or `[3.4][(clhs
+          section)]` ([3.4][clhs])
+
+       - *by section title* (case-insensitive, substring match):
+          `[lambda lists][clhs]` or `[lambda lists][(clhs
+          section)]` ([lambda lists][clhs])
+
+       - *by filename*: `[03_d][clhs]` or `[03_d][(clhs
+          section)]` ([03_d][clhs])
+
+  As the above examples show, the NESTED-LOCATIVE argument of the CLHS
+  locative may be omitted. In that case, definitions, glossary terms,
+  issues, issue summaries, and sections are considered in that order.
+  Sections are considered last because a substring of a section title
+  can be matched by chance easily.
+
+  All examples so far used [explicit][ @explicit-and-autolinking]
+  links. Autolinking also works if the @OBJECT is marked up as code or
+  is [codified][ @codification] (e.g. in `PPRINT clhs` (PPRINT clhs).
+
+  As mentioned above, `\M-.` does not do anything over CLHS
+  references. Slightly more usefully, the [Emacs documentation
+  browser][ @documenting-in-emacs] understands CLHS links so one can
+  enter inputs like `3.4 clhs`, `"lambda list" clhs` or `error (clhs
+  function)`.
+  """)
+
+(defparameter *clhs-substring-match* t)
 
 (defmethod locate-object (name (locative-type (eql 'clhs)) locative-args)
-  (let ((hyperspec-id (and (endp locative-args)
-                           (stringp name)
-                           (find-hyperspec-id name))))
-    (if hyperspec-id
-        (make-reference hyperspec-id 'clhs)
-        (locate-error "Cannot find ~S in the CLHS." name))))
+  (or (let ((name-string (if (stringp name)
+                             name
+                             (princ-to-string name))))
+        (flet ((glossary-term? ()
+                 (when (find-hyperspec-glossary-entry-url name-string)
+                   (make-reference name-string '(clhs glossary-term))))
+               (issue-or-section? ()
+                 (or (let ((id (find-hyperspec-issue-id name-string)))
+                       (when id
+                         (make-reference id '(clhs section))))
+                     (let ((id (find-hyperspec-section-id
+                                name-string
+                                :substring-match *clhs-substring-match*)))
+                       (when id
+                         (make-reference id '(clhs section))))))
+               (definition? ()
+                 (multiple-value-bind (url nested-locative)
+                     (find-hyperspec-definition-url name locative-args)
+                   (when url
+                     (make-reference name (if nested-locative
+                                              `(clhs ,nested-locative)
+                                              'clhs))))))
+          (cond ((equal locative-args '(glossary-term))
+                 (glossary-term?))
+                ((equal locative-args '(section))
+                 (issue-or-section?))
+                ((endp locative-args)
+                 (or (definition?) (glossary-term?) (issue-or-section?)))
+                (t
+                 (definition?)))))
+      (locate-error)))
+
+(defmethod locate-and-document (name (locative-type (eql 'clhs)) locative-args
+                                stream)
+  (documenting-reference (stream :arglist locative-args)))

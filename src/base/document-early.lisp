@@ -29,7 +29,12 @@
 (defvar *document-html-max-navigation-table-of-contents-level*)
 (export '*document-html-max-navigation-table-of-contents-level*)
 
-(autoload find-hyperspec-id '#:mgl-pax/document :export nil)
+(autoload find-hyperspec-definition-url '#:mgl-pax/document :export nil)
+(autoload find-hyperspec-section-id '#:mgl-pax/document :export nil)
+(autoload find-hyperspec-section-url '#:mgl-pax/document :export nil)
+(autoload find-hyperspec-glossary-entry-url '#:mgl-pax/document :export nil)
+(autoload find-hyperspec-issue-id '#:mgl-pax/document :export nil)
+(autoload find-hyperspec-issue-url '#:mgl-pax/document :export nil)
 (autoload downcasingp '#:mgl-pax/document :export nil)
 (autoload document '#:mgl-pax/document)
 (autoload update-asdf-system-readmes '#:mgl-pax/document)

@@ -351,4 +351,4 @@
   #+sbcl
   (signals-not (locate-error)
     (map nil #'resolve
-         (pax::definitions-as-references 'sb-c::catch-block))))
+         (pax::definitions-of 'sb-c::catch-block))))

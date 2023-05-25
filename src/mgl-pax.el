@@ -501,7 +501,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
        (mgl-pax-eval-async
         `(cl:funcall (cl:find-symbol (cl:string '#:document-for-emacs)
                                      :mgl-pax)
-                     ',url ',dir)
+                     ',url ',dir ',common-lisp-hyperspec-root)
         (lambda (values)
           (if (eq (cl-first values) :file-url)
               (apply ok-cont (cl-rest values))
@@ -529,7 +529,7 @@ if the current page was generated from a PAX URL."
       `(cl:if (cl:find-package :mgl-pax)
               (cl:funcall (cl:find-symbol (cl:string '#:redocument-for-emacs)
                                           :mgl-pax)
-                          ',file-url ',dir)
+                          ',file-url ',dir ',common-lisp-hyperspec-root)
               '(:error "MGL-PAX is not loaded."))
     (lambda (values)
       (if (eq (cl-first values) :error)

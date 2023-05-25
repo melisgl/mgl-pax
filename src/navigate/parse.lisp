@@ -70,8 +70,8 @@
 ;;; AUTOLINK) and :REFLINK :LABEL (see PARSE-REFLINK-LABEL-STRING), we
 ;;; only depluralize to catch the common mistake of writing "CLASSES"
 ;;; instead of "CLASSes".
-(defun parse-word (word &key (trim t) (depluralize t) only-one
-                          clhs-substring-match)
+(defun parse-word (word &key (trim t) (depluralize t)
+                          clhs-substring-match only-one)
   (let ((left-trim *name-left-trim*)
         (right-trim *name-right-trim*)
         (objects ())
@@ -96,8 +96,9 @@
                  (when (or (find-package* name)
                            (locate (string-downcase name) 'asdf:system
                                    :errorp nil)
-                           (find-hyperspec-id
-                            name :substring-match clhs-substring-match))
+                           (let ((*clhs-substring-match* clhs-substring-match))
+                             (declare (special *clhs-substring-match*))
+                             (locate name 'clhs :errorp nil)))
                    (consider name name)))))
         (find-it word)
         (if trim

@@ -1,6 +1,9 @@
 (in-package :mgl-pax)
 
-(defparameter *hyperpsec-entries*
+;;;; Low-level interface to Hyperspec Lisp definitions
+
+(defparameter *hyperspec-definitions*
+  ;; (SYMBOL LOCATIVE FILENAME)
   '(;;&allow-other-keys 03_da
     ;;&aux 03_da
     ;;&body 03_dd
@@ -98,7 +101,7 @@
     (arithmetic-error condition "e_arithm")
     (arithmetic-error-operands function "f_arithm")
     (arithmetic-error-operation function "f_arithm")
-    (array type "t_array")
+    (array class "t_array")
     (array-dimension function "f_ar_dim")
     (array-dimension-limit constant "v_ar_dim")
     (array-dimensions function "f_ar_d_1")
@@ -123,13 +126,11 @@
     (atanh function "f_sinh_")
     (atom function "f_atom")
     (atom type "t_atom")
-    ;; (atom glossary-entry "26_glo_a#atom")
     (base-char type "t_base_c")
     (base-string type "t_base_s")
     (bignum type "t_bignum")
     (bit function "f_bt_sb")
     (bit type "t_bit")
-    ;; (bit glossary-entry "26_glo_b#bit")
     (bit-and function "f_bt_and")
     (bit-andc1 function "f_bt_and")
     (bit-andc2 function "f_bt_and")
@@ -140,7 +141,7 @@
     (bit-not function "f_bt_and")
     (bit-orc1 function "f_bt_and")
     (bit-orc2 function "f_bt_and")
-    (bit-vector type "t_bt_vec")
+    (bit-vector class "t_bt_vec")
     (bit-vector-p function "f_bt_vec")
     (bit-xor function "f_bt_and")
     (block operator "s_block")
@@ -165,9 +166,9 @@
     (both-case-p function "f_upper_")
     (boundp function "f_boundp")
     (break function "f_break")
-    (broadcast-stream type "t_broadc")
+    (broadcast-stream class "t_broadc")
     (broadcast-stream-streams function "f_broadc")
-    (built-in-class type "t_built_")
+    (built-in-class class "t_built_")
     (butlast function "f_butlas")
     (byte function "f_by_by")
     (byte-position function "f_by_by")
@@ -235,7 +236,6 @@
     (char>= function "f_chareq")
     (character function "f_ch")
     (character class "t_ch")
-    ;;(character glossary-entry "character")
     (characterp function "f_chp")
     (check-type macro "m_check_")
     (cis function "f_cis")
@@ -259,19 +259,17 @@
     (complement function "f_comple")
     (complex function "f_comp_2")
     (complex class "t_comple")
-    ;;(complex glossary-entry "26_glo_c#complex")
     (complexp function "f_comp_3")
     (compute-applicable-methods generic-function "f_comput")
     (compute-restarts function "f_comp_1")
     (concatenate function "f_concat")
-    (concatenated-stream type "t_concat")
+    (concatenated-stream class "t_concat")
     (concatenated-stream-streams function "f_conc_1")
     (cond macro "m_cond")
     (condition condition "e_cnd")
     (conjugate function "f_conjug")
     (cons function "f_cons")
-    (cons type "t_cons")
-    ;;(cons glossary-entry "26_glo_c#cons")
+    (cons class "t_cons")
     (consp function "f_consp")
     (constantly function "f_cons_1")
     (constantp function "f_consta")
@@ -349,7 +347,7 @@
     (dribble function "f_dribbl")
     (dynamic-extent declaration "d_dynami")
     (ecase macro "m_case_")
-    (echo-stream type "t_echo_s")
+    (echo-stream class "t_echo_s")
     (echo-stream-input-stream function "f_echo_s")
     (echo-stream-output-stream function "f_echo_s")
     (ed function "f_ed")
@@ -368,7 +366,6 @@
     (equalp function "f_equalp")
     (error condition "e_error")
     (error function "f_error")
-    ;;(error glossary-entry "26_glo_e#error")
     (etypecase macro "m_tpcase")
     (eval function "f_eval")
     (eval-when operator "s_eval_w")
@@ -389,7 +386,7 @@
     (file-length function "f_file_l")
     (file-namestring function "f_namest")
     (file-position function "f_file_p")
-    (file-stream type "t_file_s")
+    (file-stream class "t_file_s")
     (file-string-length function "f_file_s")
     (file-write-date function "f_file_w")
     (fill function "f_fill")
@@ -408,8 +405,7 @@
     (fixnum type "t_fixnum")
     (flet operator "s_flet_")
     (float function "f_float")
-    (float type "t_float")
-    ;;(float glossary-entry "26_glo_f@float")
+    (float class "t_float")
     (float-digits function "f_dec_fl")
     (float-precision function "f_dec_fl")
     (float-radix function "f_dec_fl")
@@ -432,8 +428,7 @@
     (funcall function "f_funcal")
     (function operator "s_fn")
     ;;(function symbol "f_document")
-    (function type "t_fn")
-    ;;(function glossary-entry "26_glo_f#function")
+    (function class "t_fn")
     (function-keywords generic-function "f_fn_kwd")
     (function-lambda-expression function "f_fn_lam")
     (functionp function "f_fnp")
@@ -457,7 +452,7 @@
     (graphic-char-p function "f_graphi")
     (handler-bind macro "m_handle")
     (handler-case macro "m_hand_1")
-    (hash-table type "t_hash_t")
+    (hash-table class "t_hash_t")
     (hash-table-count function "f_hash_1")
     (hash-table-p function "f_hash_t")
     (hash-table-rehash-size function "f_hash_2")
@@ -479,7 +474,7 @@
     (inline declaration "d_inline")
     (input-stream-p function "f_in_stm")
     (inspect function "f_inspec")
-    (integer type "t_intege")
+    (integer class "t_intege")
     (integer-decode-float function "f_dec_fl")
     (integer-length function "f_intege")
     (integerp function "f_inte_1")
@@ -526,8 +521,7 @@
     (lisp-implementation-type function "f_lisp_i")
     (lisp-implementation-version function "f_lisp_i")
     (list function "f_list_")
-    (list type "t_list")
-    ;;(list glossary-entry "26_glo_l#list")
+    (list class "t_list")
     (list* function "f_list_")
     (list-all-packages function "f_list_a")
     (list-length function "f_list_l")
@@ -545,7 +539,7 @@
     (logcount function "f_logcou")
     (logeqv function "f_logand")
     (logical-pathname function "f_logi_1")
-    (logical-pathname type "t_logica")
+    (logical-pathname class "t_logica")
     (logical-pathname-translations function "f_logica")
     (logior function "f_logand")
     (lognand function "f_logand")
@@ -646,7 +640,6 @@
     (next-method-p function "f_next_m")
     (nil constant "v_nil")
     (nil type "t_nil")
-    ;;(nil glossary-entry "26_glo_n#nil")
     (nintersection function "f_isec_")
     (ninth function "f_firstc")
     (no-applicable-method generic-function "f_no_app")
@@ -675,8 +668,7 @@
     (nthcdr function "f_nthcdr")
     (null function "f_null")
     (null type "t_null")
-    ;;(null glossary-entry "26_glo_n#null")
-    (number type "t_number")
+    (number class "t_number")
     (numberp function "f_nump")
     (numerator function "f_numera")
     (nunion function "f_unionc")
@@ -688,7 +680,7 @@
     (or type "t_or")
     (otherwise macro "m_case_")
     (output-stream-p function "f_in_stm")
-    (package type "t_pkg")
+    (package class "t_pkg")
     (package-error condition "e_pkg_er")
     (package-error-package function "f_pkg_er")
     (package-name function "f_pkg_na")
@@ -702,8 +694,7 @@
     (parse-integer function "f_parse_")
     (parse-namestring function "f_pars_1")
     (pathname function "f_pn")
-    (pathname type "t_pn")
-    ;;(pathname glossary-entry "26_glo_p#pathname")
+    (pathname class "t_pn")
     (pathname-device function "f_pn_hos")
     (pathname-directory function "f_pn_hos")
     (pathname-host function "f_pn_hos")
@@ -756,15 +747,14 @@
     (pushnew macro "m_pshnew")
     (quote operator "s_quote")
     (random function "f_random")
-    (random-state type "t_rnd_st")
+    (random-state class "t_rnd_st")
     (random-state-p function "f_rnd_st")
     (rassoc function "f_rassoc")
     (rassoc-if function "f_rassoc")
     (rassoc-if-not function "f_rassoc")
-    (ratio type "t_ratio")
+    (ratio class "t_ratio")
     (rational function "f_ration")
-    (rational type "t_ration")
-    ;;(rational glossary-entry "26_glo_r#rational")
+    (rational class "t_ration")
     (rationalize function "f_ration")
     (rationalp function "f_rati_1")
     (read function "f_rd_rd")
@@ -777,10 +767,10 @@
     (read-preserving-whitespace function "f_rd_rd")
     (read-sequence function "f_rd_seq")
     (reader-error condition "e_rder_e")
-    (readtable type "t_rdtabl")
+    (readtable class "t_rdtabl")
     (readtable-case function "f_rdtabl")
     (readtablep function "f_rdta_1")
-    (real type "t_real")
+    (real class "t_real")
     (realp function "f_realp")
     (realpart function "f_realpa")
     (reduce function "f_reduce")
@@ -799,7 +789,7 @@
     (replace function "f_replac")
     (require function "f_provid")
     (rest function "f_rest")
-    (restart type "t_rst")
+    (restart class "t_rst")
     (restart-bind macro "m_rst_bi")
     (restart-case macro "m_rst_ca")
     (restart-name function "f_rst_na")
@@ -820,7 +810,7 @@
     (schar function "f_char_")
     (search function "f_search")
     (second function "f_firstc")
-    (sequence type "t_seq")
+    (sequence class "t_seq")
     (serious-condition condition "e_seriou")
     (set function "f_set")
     (set-difference function "f_set_di")
@@ -883,23 +873,22 @@
     (stable-sort function "f_sort_")
     (standard-char type "t_std_ch")
     (standard-char-p function "f_std_ch")
-    (standard-class type "t_std_cl")
-    (standard-generic-function type "t_std_ge")
-    (standard-method type "t_std_me")
-    (standard-object type "t_std_ob")
+    (standard-class class "t_std_cl")
+    (standard-generic-function class "t_std_ge")
+    (standard-method class "t_std_me")
+    (standard-object class "t_std_ob")
     (step macro "m_step")
     (storage-condition condition "e_storag")
     (store-value function "f_abortc")
     (store-value restart "r_store")
-    (stream type "t_stream")
+    (stream class "t_stream")
     (stream-element-type function "f_stm_el")
     (stream-error condition "e_stm_er")
     (stream-error-stream function "f_stm_er")
     (stream-external-format function "f_stm_ex")
     (streamp function "f_stmp")
     (string function "f_string")
-    (string type "t_string")
-    ;;(string glossary-entry "26_glo_s#string")
+    (string class "t_string")
     (string-capitalize function "f_stg_up")
     (string-downcase function "f_stg_up")
     (string-equal function "f_stgeq_")
@@ -910,7 +899,7 @@
     (string-not-greaterp function "f_stgeq_")
     (string-not-lessp function "f_stgeq_")
     (string-right-trim function "f_stg_tr")
-    (string-stream type "t_stg_st")
+    (string-stream class "t_stg_st")
     (string-trim function "f_stg_tr")
     (string-upcase function "f_stg_up")
     (string/= function "f_stgeq_")
@@ -921,8 +910,8 @@
     (string>= function "f_stgeq_")
     (stringp function "f_stgp")
     ;;(structure symbol "f_docume")
-    (structure-class type "t_stu_cl")
-    (structure-object type "t_stu_ob")
+    (structure-class class "t_stu_cl")
+    (structure-object class "t_stu_ob")
     (style-warning condition "e_style_")
     (sublis function "f_sublis")
     (subseq function "f_subseq")
@@ -936,7 +925,7 @@
     (subtypep function "f_subtpp")
     (svref function "f_svref")
     (sxhash function "f_sxhash")
-    (symbol type "t_symbol")
+    (symbol class "t_symbol")
     (symbol-function function "f_symb_1")
     (symbol-macrolet operator "s_symbol")
     (symbol-name function "f_symb_2")
@@ -944,12 +933,11 @@
     (symbol-plist function "f_symb_4")
     (symbol-value function "f_symb_5")
     (symbolp function "f_symbol")
-    (synonym-stream type "t_syn_st")
+    (synonym-stream class "t_syn_st")
     (synonym-stream-symbol function "f_syn_st")
     (t constant "v_t")
     ;;(t symbol "f_docume")
-    (t type "t_t")
-    ;;(t glossary-entry "26_glo_t#t")
+    (t class "t_t")
     (tagbody operator "s_tagbod")
     (tailp function "f_ldiffc")
     (tan function "f_sin_c")
@@ -966,12 +954,11 @@
     (tree-equal function "f_tree_e")
     (truename function "f_tn")
     (truncate function "f_floorc")
-    (two-way-stream type "t_two_wa")
+    (two-way-stream class "t_two_wa")
     (two-way-stream-input-stream function "f_two_wa")
     (two-way-stream-output-stream function "f_two_wa")
     (type declaration "d_type")
     ;;(type symbol "f_docume")
-    ;;(type glossary-entry "26_glo_t#type")
     (type-error condition "e_tp_err")
     (type-error-datum function "f_tp_err")
     (type-error-expected-type function "f_tp_err")
@@ -1005,8 +992,7 @@
     (values-list function "f_vals_l")
     ;; (variable symbol "f_docume")
     (vector function "f_vector")
-    (vector type "t_vector")
-    ;;(vector glossary-entry "26_glo_v#vector")
+    (vector class "t_vector")
     (vector-pop function "f_vec_po")
     (vector-push function "f_vec_ps")
     (vector-push-extend function "f_vec_ps")
@@ -1038,7 +1024,100 @@
     (yes-or-no-p function "f_y_or_n")
     (zerop function "f_zerop")))
 
+(defparameter *hyperspec-disambiguations*
+  ;; (SYMBOL FILENAME)
+  '((* "a_st")
+    (+ "a_pl")
+    (- "a__")
+    (/ "a_sl")
+    (abort "a_abort")
+    (and "a_and")
+    (atom "a_atom")
+    (bit "a_bit")
+    (character "a_ch")
+    (complex "a_comple")
+    (cons "a_cons")
+    (continue "a_contin")
+    (eql "a_eql")
+    (error "a_error")
+    (float "a_float")
+    (function "a_fn")
+    (lambda "a_lambda")
+    (list "a_list")
+    (logical-pathname "a_logica")
+    (member "a_member")
+    (method-combination "a_method")
+    (mod "a_mod")
+    (muffle-warning "a_muffle")
+    (nil "a_nil")
+    (not "a_not")
+    (null "a_null")
+    (or "a_or")
+    (pathname "a_pn")
+    (rational "a_ration")
+    (setf "a_setf")
+    (store-value "a_store_")
+    (string "a_string")
+    (t "a_t")
+    (type "a_type")
+    (use-value "a_use_va")
+    (values "a_values")
+    (vector "a_vector")))
+
+(defun make-hyperspec-object-to-locatives ()
+  (let ((map (make-hash-table)))
+    (loop for (object locative filename) in *hyperspec-definitions*
+          do (push (list (if (eq locative 'operator)
+                             'macro
+                             locative)
+                         (format nil "~A.htm" filename))
+                   (gethash object map)))
+    (loop for (object filename) in *hyperspec-disambiguations*
+          do ;; KLUDGE: LAMBDA has two pages, but one of them is a
+             ;; "symbol" page, which we don't have.
+             (unless (eq object 'lambda)
+               (assert (<= 1 (length (gethash object map)))))
+             (push (list nil (format nil "~A.htm" filename))
+                   (gethash object map)))
+    map))
+
+(defparameter *hyperspec-object-to-locatives*
+  (make-hyperspec-object-to-locatives))
+
+;;; Find stuff in *HYPERSPEC-DEFINITIONS* and
+;;; *HYPERSPEC-DISAMBIGUATIONS*. Return the URL corresponding to
+;;; OBJECT and LOCATIVE. As a special case, LOCATIVE NIL refers to the
+;;; disambiguation page.
+(defun/autoloaded find-hyperspec-definition-url
+    (object locative &optional hyperspec-root)
+  (declare (special *hyperspec-object-to-locatives*))
+  (let* ((entries (gethash object *hyperspec-object-to-locatives*))
+         (entry (if locative
+                    ;; UNLIST1 is to (FUNCTION) -> FUNCTION.
+                    (find (unlist1 locative) entries :key #'first)
+                    ;; The disambiguation page is first, else there is
+                    ;; only one entry anyway.
+                    (first entries))))
+    (when entry
+      (destructuring-bind (locative filename) entry
+        (values (hyperspec-link hyperspec-root "Body/" filename)
+                locative)))))
+
+(defun unlist1 (obj)
+  (if (and (listp obj) (= (length obj) 1))
+      (first obj)
+      obj))
+
+(defun hyperspec-locatives-for-object (object)
+  (loop for (locative filename)
+          in (gethash object *hyperspec-object-to-locatives*)
+        collect locative))
+
+
+;;;; Low-level interface to Hyperspec sections
+
 (defparameter *hyperspec-sections*
+  ;; (FILENAME TITLE SECTION-ID)
   '(("00_" "0" "Credits")
     ("01_" "1" "Introduction")
     ("01_a" "1.1" "Scope, Purpose, and History")
@@ -1090,7 +1169,8 @@
     ("01_ddk" "1.4.4.11" "The ``Initial Value'' Section of a Dictionary Entry")
     ("01_ddl" "1.4.4.12"
      "The ``Argument Precedence Order'' Section of a Dictionary Entry")
-    ("01_ddm" "1.4.4.13" "The ``Method Signature'' Section of a Dictionary Entry")
+    ("01_ddm" "1.4.4.13"
+     "The ``Method Signature'' Section of a Dictionary Entry")
     ("01_ddn" "1.4.4.14" "The ``Name'' Section of a Dictionary Entry")
     ("01_ddo" "1.4.4.15" "The ``Notes'' Section of a Dictionary Entry")
     ("01_ddp" "1.4.4.16" "The ``Pronunciation'' Section of a Dictionary Entry")
@@ -1104,7 +1184,8 @@
     ("01_ddtc" "1.4.4.20.3"
      "Requiring Non-Null Rest Parameters in the ``Syntax'' Section")
     ("01_ddtd" "1.4.4.20.4" "Return values in the ``Syntax'' Section")
-    ("01_ddtda" "1.4.4.20.4.1" "No Arguments or Values in the ``Syntax'' Section")
+    ("01_ddtda"
+     "1.4.4.20.4.1" "No Arguments or Values in the ``Syntax'' Section")
     ("01_ddtdb" "1.4.4.20.4.2"
      "Unconditional Transfer of Control in the ``Syntax'' Section")
     ("01_ddu" "1.4.4.21" "The ``Valid Context'' Section of a Dictionary Entry")
@@ -1225,7 +1306,8 @@
     ("03_abaaa" "3.1.2.1.1.1" "Lexical Variables")
     ("03_abaab" "3.1.2.1.1.2" "Dynamic Variables")
     ("03_abaac" "3.1.2.1.1.3" "Constant Variables")
-    ("03_abaad" "3.1.2.1.1.4" "Symbols Naming Both Lexical and Dynamic Variables")
+    ("03_abaad" "3.1.2.1.1.4"
+     "Symbols Naming Both Lexical and Dynamic Variables")
     ("03_abab" "3.1.2.1.2" "Conses as Forms")
     ("03_ababa" "3.1.2.1.2.1" "Special Forms")
     ("03_ababb" "3.1.2.1.2.2" "Macro Forms")
@@ -1245,7 +1327,8 @@
     ("03_bbaa" "3.2.2.1.1" "Purpose of Compiler Macros")
     ("03_bbab" "3.2.2.1.2" "Naming of Compiler Macros")
     ("03_bbac" "3.2.2.1.3" "When Compiler Macros Are Used")
-    ("03_bbaca" "3.2.2.1.3.1" "Notes about the Implementation of Compiler Macros")
+    ("03_bbaca" "3.2.2.1.3.1"
+     "Notes about the Implementation of Compiler Macros")
     ("03_bbb" "3.2.2.2" "Minimal Compilation")
     ("03_bbc" "3.2.2.3" "Semantic Constraints")
     ("03_bc" "3.2.3" "File Compilation")
@@ -1274,7 +1357,8 @@
     ("03_dac" "3.4.1.3" "A specifier for a rest parameter")
     ("03_dad" "3.4.1.4" "Specifiers for keyword parameters")
     ("03_dada" "3.4.1.4.1" "Suppressing Keyword Argument Checking")
-    ("03_dadaa" "3.4.1.4.1.1" "Examples of Suppressing Keyword Argument Checking")
+    ("03_dadaa" "3.4.1.4.1.1"
+     "Examples of Suppressing Keyword Argument Checking")
     ("03_dae" "3.4.1.5" "Specifiers for &amp;aux variables")
     ("03_daf" "3.4.1.6" "Examples of Ordinary Lambda Lists")
     ("03_db" "3.4.2" "Generic Function Lambda Lists")
@@ -1458,11 +1542,13 @@
     ("09_aba" "9.1.2.1" "Condition Designators")
     ("09_ac" "9.1.3" "Printing Conditions")
     ("09_aca" "9.1.3.1" "Recommended Style in Condition Reporting")
-    ("09_acaa" "9.1.3.1.1" "Capitalization and Punctuation in Condition Reports")
+    ("09_acaa" "9.1.3.1.1"
+     "Capitalization and Punctuation in Condition Reports")
     ("09_acab" "9.1.3.1.2" "Leading and Trailing Newlines in Condition Reports")
     ("09_acac" "9.1.3.1.3" "Embedded Newlines in Condition Reports")
     ("09_acad" "9.1.3.1.4" "Note about Tabs in Condition Reports")
-    ("09_acae" "9.1.3.1.5" "Mentioning Containing Function in Condition Reports")
+    ("09_acae" "9.1.3.1.5"
+     "Mentioning Containing Function in Condition Reports")
     ("09_ad" "9.1.4" "Signaling and Handling Conditions")
     ("09_ada" "9.1.4.1" "Signaling")
     ("09_adaa" "9.1.4.1.1" "Resignaling a Condition")
@@ -1501,7 +1587,8 @@
     ("12_" "12" "Numbers")
     ("12_a" "12.1" "Number Concepts")
     ("12_aa" "12.1.1" "Numeric Operations")
-    ("12_aaa" "12.1.1.1" "Associativity and Commutativity in Numeric Operations")
+    ("12_aaa" "12.1.1.1"
+     "Associativity and Commutativity in Numeric Operations")
     ("12_aaaa" "12.1.1.1.1"
      "Examples of Associativity and Commutativity in Numeric Operations")
     ("12_aab" "12.1.1.2" "Contagion in Numeric Operations")
@@ -1522,7 +1609,8 @@
     ("12_ae" "12.1.5" "Complex Computations")
     ("12_aea" "12.1.5.1" "Rule of Complex Substitutability")
     ("12_aeb" "12.1.5.2" "Rule of Complex Contagion")
-    ("12_aec" "12.1.5.3" "Rule of Canonical Representation for Complex Rationals")
+    ("12_aec" "12.1.5.3"
+     "Rule of Canonical Representation for Complex Rationals")
     ("12_aeca" "12.1.5.3.1"
      "Examples of Rule of Canonical Representation for Complex Rationals")
     ("12_aed" "12.1.5.4" "Principal Values and Branch Cuts")
@@ -1555,11 +1643,13 @@
     ("14_" "14" "Conses")
     ("14_a" "14.1" "Cons Concepts")
     ("14_aa" "14.1.1" "Conses as Trees")
-    ("14_aaa" "14.1.1.1" "General Restrictions on Parameters that must be Trees")
+    ("14_aaa" "14.1.1.1"
+     "General Restrictions on Parameters that must be Trees")
     ("14_ab" "14.1.2" "Conses as Lists")
     ("14_aba" "14.1.2.1" "Lists as Association Lists")
     ("14_abb" "14.1.2.2" "Lists as Sets")
-    ("14_abc" "14.1.2.3" "General Restrictions on Parameters that must be Lists")
+    ("14_abc" "14.1.2.3"
+     "General Restrictions on Parameters that must be Lists")
     ("15_" "15" "Arrays")
     ("15_a" "15.1" "Array Concepts")
     ("15_aa" "15.1.1" "Array Elements")
@@ -1582,7 +1672,8 @@
     ("16_ab" "16.1.2" "Subtypes of STRING")
     ("17_" "17" "Sequences")
     ("17_a" "17.1" "Sequence Concepts")
-    ("17_aa" "17.1.1" "General Restrictions on Parameters that must be Sequences")
+    ("17_aa" "17.1.1"
+     "General Restrictions on Parameters that must be Sequences")
     ("17_b" "17.2" "Rules about Test Functions")
     ("17_ba" "17.2.1" "Satisfying a Two-Argument Test")
     ("17_baa" "17.2.1.1" "Examples of Satisfying a Two-Argument Test")
@@ -1594,12 +1685,14 @@
     ("18_ab" "18.1.2" "Modifying Hash Table Keys")
     ("18_aba" "18.1.2.1"
      "Visible Modification of Objects with respect to EQ and EQL")
-    ("18_abb" "18.1.2.2" "Visible Modification of Objects with respect to EQUAL")
+    ("18_abb" "18.1.2.2"
+     "Visible Modification of Objects with respect to EQUAL")
     ("18_abba" "18.1.2.2.1"
      "Visible Modification of Conses with respect to EQUAL")
     ("18_abbb" "18.1.2.2.2"
      "Visible Modification of Bit Vectors and Strings with respect to EQUAL")
-    ("18_abc" "18.1.2.3" "Visible Modification of Objects with respect to EQUALP")
+    ("18_abc" "18.1.2.3"
+     "Visible Modification of Objects with respect to EQUALP")
     ("18_abca" "18.1.2.3.1"
      "Visible Modification of Structures with respect to EQUALP")
     ("18_abcb" "18.1.2.3.2"
@@ -1634,15 +1727,18 @@
      "Relation between component values NIL and :UNSPECIFIC")
     ("19_bbc" "19.2.2.3" "Restrictions on Wildcard Pathnames")
     ("19_bbd" "19.2.2.4" "Restrictions on Examining Pathname Components")
-    ("19_bbda" "19.2.2.4.1" "Restrictions on Examining a Pathname Host Component")
+    ("19_bbda" "19.2.2.4.1"
+     "Restrictions on Examining a Pathname Host Component")
     ("19_bbdb" "19.2.2.4.2"
      "Restrictions on Examining a Pathname Device Component")
     ("19_bbdc" "19.2.2.4.3"
      "Restrictions on Examining a Pathname Directory Component")
     ("19_bbdca" "19.2.2.4.3.1"
      "Directory Components in Non-Hierarchical File Systems")
-    ("19_bbdd" "19.2.2.4.4" "Restrictions on Examining a Pathname Name Component")
-    ("19_bbde" "19.2.2.4.5" "Restrictions on Examining a Pathname Type Component")
+    ("19_bbdd" "19.2.2.4.4"
+     "Restrictions on Examining a Pathname Name Component")
+    ("19_bbde" "19.2.2.4.5"
+     "Restrictions on Examining a Pathname Type Component")
     ("19_bbdf" "19.2.2.4.6"
      "Restrictions on Examining a Pathname Version Component")
     ("19_bbdg" "19.2.2.4.7" "Notes about the Pathname Version Component")
@@ -1655,11 +1751,13 @@
      "Additional Information about Parsing Logical Pathname Namestrings")
     ("19_caaa" "19.3.1.1.1" "The Host part of a Logical Pathname Namestring")
     ("19_caab" "19.3.1.1.2" "The Device part of a Logical Pathname Namestring")
-    ("19_caac" "19.3.1.1.3" "The Directory part of a Logical Pathname Namestring")
+    ("19_caac" "19.3.1.1.3"
+     "The Directory part of a Logical Pathname Namestring")
     ("19_caad" "19.3.1.1.4" "The Type part of a Logical Pathname Namestring")
     ("19_caae" "19.3.1.1.5" "The Version part of a Logical Pathname Namestring")
     ("19_caaf" "19.3.1.1.6" "Wildcard Words in a Logical Pathname Namestring")
-    ("19_caag" "19.3.1.1.7" "Lowercase Letters in a Logical Pathname Namestring")
+    ("19_caag" "19.3.1.1.7"
+     "Lowercase Letters in a Logical Pathname Namestring")
     ("19_caah" "19.3.1.1.8" "Other Syntax in a Logical Pathname Namestring")
     ("19_cb" "19.3.2" "Logical Pathname Components")
     ("19_cba" "19.3.2.1" "Unspecific Components of a Logical Pathname")
@@ -1812,7 +1910,279 @@
     ("27_af" "A.1.6" "Removed Reader Syntax")
     ("27_ag" "A.1.7" "Packages No Longer Required")))
 
+(defun parse-hyperspec-section-number (section-number)
+  (declare (type (or string null) section-number))
+  (let ((list (uiop/utility:split-string section-number :separator '(#\.))))
+    (mapcar (lambda (x)
+              (cond ((null x) 0)
+                    ((equal x "A") 999999)
+                    (t (parse-integer x))))
+            list)))
+
+(defun hyperspec-section-number< (sn1 sn2)
+  (let ((sn1 (parse-hyperspec-section-number sn1))
+        (sn2 (parse-hyperspec-section-number sn2)))
+    (or (< (length sn1) (length sn2))
+        (and (= (length sn1) (length sn2))
+             (loop for c1 in sn1
+                   for c2 in sn2
+                   when (/= c1 c2)
+                     do (return (< c1 c2)))))))
+
+;;; A breadth-first listing of sections.
+(defparameter *sorted-hyperspec-sections*
+  (sort (copy-seq *hyperspec-sections*) #'hyperspec-section-number<
+        :key #'second))
+
+(defun make-hyperspec-section-map ()
+  (let ((ht (make-hash-table :test #'equal)))
+    (loop for entry in *hyperspec-sections*
+          do (destructuring-bind (filename id title) entry
+               (declare (ignore title))
+               (let ((value (list id filename)))
+                 (setf (gethash id ht) value)
+                 (setf (gethash filename ht) value))))
+    ht))
+
+(defparameter *hyperspec-section-map* (make-hyperspec-section-map))
+
+;;; Return the first section in *SORTED-HYPERSPEC-SECTIONS* whose
+;;; title contains STRING.
+(defun find-hyperspec-section (string)
+  (find-if (lambda (entry)
+             (search (string-downcase string)
+                     (string-downcase (third entry))))
+           *sorted-hyperspec-sections*))
+
+(defun/autoloaded find-hyperspec-section-id (string &key (substring-match t))
+  (or (first (gethash string *hyperspec-section-map*))
+      (second (and substring-match (find-hyperspec-section string)))))
+
+(defun/autoloaded find-hyperspec-section-url
+    (string hyperspec-root &key (substring-match t))
+  (let ((filename (or (second (gethash string *hyperspec-section-map*))
+                      (first (and substring-match
+                                  (find-hyperspec-section string))))))
+    (when filename
+      (hyperspec-link hyperspec-root "Body/" filename ".htm"))))
+
+
+;;;; Low-level interface to Hyperspec glossary entries
+
+(defparameter *hyperspec-glossary-entries*
+  ;; TITLE
+  '("()"
+    "absolute" "absolute" "access" "accessibility" "accessible" "accessor"
+    "active" "actual adjustability" "actual argument"
+    "actual array element type" "actual complex part type" "actual parameter"
+    "actually adjustable" "adjustability" "adjustable" "after method" "alist"
+    "alphabetic" "alphanumeric" "ampersand" "anonymous"
+    "apparently uninterned" "applicable" "applicable handler"
+    "applicable method" "applicable restart" "apply" "argument"
+    "argument evaluation order" "argument precedence order" "around method"
+    "array" "array element type" "array total size" "assign"
+    "association list" "asterisk" "at-sign" "atom" "atomic"
+    "atomic type specifier" "attribute" "aux variable" "auxiliary method"
+    "backquote" "backslash" "base character" "base string" "before method"
+    "bidirectional" "binary" "bind" "binding" "bit" "bit array" "bit vector"
+    "bit-wise logical operation specifier" "block" "block tag"
+    "boa lambda list" "body parameter" "boolean" "boolean equivalent" "bound"
+    "bound declaration" "bounded" "bounding index"
+    "bounding index designator" "break loop" "broadcast stream"
+    "built-in class" "built-in type" "byte" "byte specifier"
+    "cadr" "call" "captured initialization form" "car" "case"
+    "case sensitivity mode" "catch" "catch tag" "cddr" "cdr" "cell"
+    "character" "character code" "character designator" "circular"
+    "circular list" "class" "class designator" "class precedence list"
+    "close" "closed" "closure" "coalesce" "code" "coerce" "colon" "comma"
+    "compilation" "compilation environment" "compilation unit" "compile"
+    "compile time" "compile-time definition" "compiled code" "compiled file"
+    "compiled function" "compiler" "compiler macro"
+    "compiler macro expansion" "compiler macro form"
+    "compiler macro function" "complex" "complex float" "complex part type"
+    "complex rational" "complex single float" "composite stream"
+    "compound form" "compound type specifier" "concatenated stream"
+    "condition" "condition designator" "condition handler"
+    "condition reporter" "conditional newline" "conformance"
+    "conforming code" "conforming implementation" "conforming processor"
+    "conforming program" "congruent" "cons" "constant" "constant form"
+    "constant object" "constant variable" "constituent" "constituent trait"
+    "constructed stream" "contagion" "continuable" "control form" "copy"
+    "correctable" "current input base" "current logical block"
+    "current output base" "current package" "current pprint dispatch table"
+    "current random state" "current readtable"
+    "data type" "debug I/O" "debugger" "declaration" "declaration identifier"
+    "declaration specifier" "declare" "decline" "decoded time"
+    "default method" "defaulted initialization argument list"
+    "define-method-combination arguments lambda list"
+    "define-modify-macro lambda list" "defined name" "defining form"
+    "defsetf lambda list" "deftype lambda list" "denormalized"
+    "derived type" "derived type specifier" "designator" "destructive"
+    "destructuring lambda list" "different" "digit" "dimension"
+    "direct instance" "direct subclass" "direct superclass" "disestablish"
+    "disjoint" "dispatching macro character" "displaced array" "distinct"
+    "documentation string" "dot" "dotted list" "dotted pair" "double float"
+    "double-quote" "dynamic binding" "dynamic environment" "dynamic extent"
+    "dynamic scope" "dynamic variable"
+    "echo stream" "effective method" "element" "element type" "em"
+    "empty list" "empty type" "end of file" "environment"
+    "environment object" "environment parameter" "error" "error output"
+    "escape" "establish" "evaluate" "evaluation" "evaluation environment"
+    "execute" "execution time" "exhaustive partition" "exhaustive union"
+    "exit point" "explicit return" "explicit use" "exponent marker" "export"
+    "exported" "expressed adjustability" "expressed array element type"
+    "expressed complex part type" "expression" "expressly adjustable"
+    "extended character" "extended function designator"
+    "extended lambda list" "extension" "extent" "external file format"
+    "external file format designator" "external symbol"
+    "externalizable object"
+    "false" "fbound" "feature" "feature expression" "features list" "file"
+    "file compiler" "file position" "file position designator" "file stream"
+    "file system" "filename" "fill pointer" "finite" "fixnum" "float"
+    "for-value" "form" "formal argument" "formal parameter" "format"
+    "format argument" "format control" "format directive" "format string"
+    "free declaration" "fresh" "freshline" "funbound" "function"
+    "function block name" "function cell" "function designator"
+    "function form" "function name" "functional evaluation"
+    "functional value" "further compilation"
+    "general" "generalized boolean" "generalized instance"
+    "generalized reference" "generalized synonym stream" "generic function"
+    "generic function lambda list" "gensym" "global declaration"
+    "global environment" "global variable" "glyph" "go" "go point" "go tag"
+    "graphic"
+    "handle" "handler" "hash table" "home package"
+    "I/O customization variable" "identical" "identifier" "immutable"
+    "implementation" "implementation limit" "implementation-defined"
+    "implementation-dependent" "implementation-independent" "implicit block"
+    "implicit compilation" "implicit progn" "implicit tagbody" "import"
+    "improper list" "inaccessible" "indefinite extent" "indefinite scope"
+    "indicator" "indirect instance" "inherit" "initial pprint dispatch table"
+    "initial readtable" "initialization argument list" "initialization form"
+    "input" "instance" "integer" "interactive stream" "intern"
+    "internal symbol" "internal time" "internal time unit" "interned"
+    "interpreted function" "interpreted implementation" "interval designator"
+    "invalid" "iteration form" "iteration variable"
+    "key" "keyword" "keyword parameter" "keyword/value pair"
+    "lambda combination" "lambda expression" "lambda form" "lambda list"
+    "lambda list keyword" "lambda variable" "leaf" "leap seconds"
+    "left-parenthesis" "length" "lexical binding" "lexical closure"
+    "lexical environment" "lexical scope" "lexical variable" "Lisp image"
+    "Lisp printer" "Lisp read-eval-print loop" "Lisp reader" "list"
+    "list designator" "list structure" "literal" "load" "load time"
+    "load time value" "loader" "local declaration" "local precedence order"
+    "local slot" "logical block" "logical host" "logical host designator"
+    "logical pathname" "long float" "loop keyword" "lowercase"
+    "macro" "macro character" "macro expansion" "macro form" "macro function"
+    "macro lambda list" "macro name" "macroexpand hook" "mapping" "metaclass"
+    "Metaobject Protocol" "method" "method combination" "method-defining form"
+    "method-defining operator" "minimal compilation" "modified lambda list"
+    "most recent" "multiple escape" "multiple values"
+    "name" "named constant" "namespace" "namestring" "newline" "next method"
+    "nickname" "nil" "non-atomic" "non-constant variable" "non-correctable"
+    "non-empty" "non-generic function" "non-graphic" "non-list"
+    "non-local exit" "non-nil" "non-null lexical environment" "non-simple"
+    "non-terminating" "non-top-level form" "normal return" "normalized"
+    "null" "null lexical environment" "number" "numeric"
+    "object" "object-traversing" "open" "operator" "optimize quality"
+    "optional parameter" "ordinary function" "ordinary lambda list"
+    "otherwise inaccessible part" "output"
+    "package" "package cell" "package designator" "package marker"
+    "package prefix" "package registry" "pairwise" "parallel" "parameter"
+    "parameter specializer" "parameter specializer name" "pathname"
+    "pathname designator" "physical pathname" "place" "plist" "portable"
+    "potential copy" "potential number" "pprint dispatch table" "predicate"
+    "present" "pretty print" "pretty printer" "pretty printing stream"
+    "primary method" "primary value" "principal" "print name"
+    "printer control variable" "printer escaping" "printing" "process"
+    "processor" "proclaim" "proclamation" "prog tag" "program" "programmer"
+    "programmer code" "proper list" "proper name" "proper sequence"
+    "proper subtype" "property" "property indicator" "property list"
+    "property value" "purports to conform"
+    "qualified method" "qualifier" "query I/O" "quoted object"
+    "radix" "random state" "rank" "ratio" "ratio marker" "rational" "read"
+    "readably" "reader" "reader macro" "reader macro function" "readtable"
+    "readtable case" "readtable designator" "recognizable subtype" "reference"
+    "registered package" "relative" "repertoire" "report" "report message"
+    "required parameter" "rest list" "rest parameter" "restart"
+    "restart designator" "restart function" "return" "return value"
+    "right-parenthesis" "run time" "run-time compiler" "run-time definition"
+    "run-time environment"
+    "safe" "safe call" "same" "satisfy the test" "scope" "script"
+    "secondary value" "section" "self-evaluating object" "semi-standard"
+    "semicolon" "sequence" "sequence function" "sequential" "sequentially"
+    "serious condition" "session" "set" "setf expander" "setf expansion"
+    "setf function" "setf function name" "shadow" "shadowing symbol"
+    "shadowing symbols list" "shared slot" "sharpsign" "short float" "sign"
+    "signal" "signature" "similar" "similarity" "simple" "simple array"
+    "simple bit array" "simple bit vector" "simple condition"
+    "simple general vector" "simple string" "simple vector" "single escape"
+    "single float" "single-quote" "singleton" "situation" "slash" "slot"
+    "slot specifier" "source code" "source file" "space" "special form"
+    "special operator" "special variable" "specialize" "specialized"
+    "specialized lambda list" "spreadable argument list designator"
+    "stack allocate" "stack-allocated" "standard character" "standard class"
+    "standard generic function" "standard input" "standard method combination"
+    "standard object" "standard output" "standard pprint dispatch table"
+    "standard readtable" "standard syntax" "standardized" "startup environment"
+    "step" "stream" "stream associated with a file" "stream designator"
+    "stream element type" "stream variable" "stream variable designator"
+    "string" "string designator" "string equal" "string stream" "structure"
+    "structure class" "structure name" "style warning" "subclass"
+    "subexpression" "subform" "subrepertoire" "subtype" "superclass"
+    "supertype" "supplied-p parameter" "symbol" "symbol macro" "synonym stream"
+    "synonym stream symbol" "syntax type" "system class" "system code"
+    "t" "tag" "tail" "target" "terminal I/O" "terminating" "tertiary value"
+    "throw" "tilde" "time" "time zone" "token" "top level form" "trace output"
+    "tree" "tree structure" "true" "truename" "two-way stream" "type"
+    "type declaration" "type equivalent" "type expand" "type specifier"
+    "unbound" "unbound variable" "undefined function" "unintern" "uninterned"
+    "universal time" "unqualified method" "unregistered package" "unsafe"
+    "unsafe call" "upgrade" "upgraded array element type"
+    "upgraded complex part type" "uppercase" "use" "use list" "user"
+    "valid array dimension" "valid array index" "valid array row-major index"
+    "valid fill pointer" "valid logical pathname host" "valid pathname device"
+    "valid pathname directory" "valid pathname host" "valid pathname name"
+    "valid pathname type" "valid pathname version"
+    "valid physical pathname host" "valid sequence index" "value" "value cell"
+    "variable" "vector" "vertical-bar"
+    "whitespace" "wild" "write" "writer"
+    "yield"))
+
+(defun make-hyperspec-glossary-entry-map ()
+  (let ((ht (make-hash-table :test #'equalp)))
+    (loop for title in *hyperspec-glossary-entries*
+          do (setf (gethash title ht)
+                   (list title
+                         (format nil "~A.htm#~A"
+                                 (hyperspec-glossary-entry-filename-part title)
+                                 (hyperspec-glossary-entry-anchor title)))))
+    ht))
+
+(defun hyperspec-glossary-entry-anchor (title)
+  (if (string= title "()")
+      "OPCP"
+      (string-downcase (substitute #\_ #\- (substitute #\_ #\Space title)))))
+
+(defun hyperspec-glossary-entry-filename-part (title)
+  (let ((char (aref title 0)))
+    (if (alpha-char-p char)
+        (char-downcase char)
+        #\9)))
+
+(defparameter *hyperspec-glossary-entry-map*
+  (make-hyperspec-glossary-entry-map))
+
+(defun/autoloaded find-hyperspec-glossary-entry-url
+    (name &optional hyperspec-root)
+  (let ((filename (second (gethash name *hyperspec-glossary-entry-map*))))
+    (when filename
+      (hyperspec-link hyperspec-root "Body/26_glo_" filename))))
+
+
+;;;; Low-level interface to Hyperspec issues and issue summaries
+
 (defparameter *hyperspec-issue-summaries*
+  ;; (TITLE FILENAME)
   '(("SUMMARY:&ENVIRONMENT-BINDING-ORDER:FIRST" "iss001")
     ("SUMMARY:ACCESS-ERROR-NAME" "iss002")
     ("SUMMARY:ADJUST-ARRAY-DISPLACEMENT" "iss003")
@@ -2185,6 +2555,7 @@
     ("SUMMARY:WITH-STANDARD-IO-SYNTAX-READTABLE:X3J13-MAR-91" "iss365")))
 
 (defparameter *hyperspec-issues*
+  ;; (TITLE FILENAME)
   '(("ISSUE:&ENVIRONMENT-BINDING-ORDER" "iss001_w")
     ("ISSUE:ACCESS-ERROR-NAME" "iss002_w")
     ("ISSUE:ADJUST-ARRAY-DISPLACEMENT" "iss003_w")
@@ -2512,92 +2883,29 @@
     ("ISSUE:WITH-OUTPUT-TO-STRING-APPEND-STYLE" "iss364_w")
     ("ISSUE:WITH-STANDARD-IO-SYNTAX-READTABLE" "iss365_w")))
 
-(defun parse-hyperspec-section-number (section-number)
-  (declare (type (or string null) section-number))
-  (let ((list (uiop/utility:split-string section-number :separator '(#\.))))
-    (mapcar (lambda (x)
-              (cond ((null x) 0)
-                    ((equal x "A") 999999)
-                    (t (parse-integer x))))
-            list)))
-
-(defun hyperspec-section-number< (sn1 sn2)
-  (let ((sn1 (parse-hyperspec-section-number sn1))
-        (sn2 (parse-hyperspec-section-number sn2)))
-    (or (< (length sn1) (length sn2))
-        (and (= (length sn1) (length sn2))
-             (loop for c1 in sn1
-                   for c2 in sn2
-                   when (/= c1 c2)
-                     do (return (< c1 c2)))))))
-
-;;; A breadth-first listing of sections.
-(defparameter *sorted-hyperspec-sections*
-  (sort (copy-seq *hyperspec-sections*) #'hyperspec-section-number<
-        :key #'second))
-
-(defun make-id-to-hyperspec-id ()
+(defun make-hyperspec-issue-map ()
   (let ((ht (make-hash-table :test #'equal)))
-    (loop for entry in *hyperspec-sections*
-          do (destructuring-bind (filename id title) entry
-               (declare (ignore title))
-               (setf (gethash id ht) id)
-               (setf (gethash filename ht) id)))
-    (loop for (id filename) in *hyperspec-issues*
-          do (setf (gethash id ht) id)
-             (setf (gethash filename ht) id))
-    (loop for (id filename) in *hyperspec-issue-summaries*
-          do (setf (gethash id ht) id)
-             (setf (gethash filename ht) id))
+    (loop for entry in *hyperspec-issues*
+          do (destructuring-bind (id filename) entry
+               (setf (gethash id ht) entry)
+               (setf (gethash filename ht) entry)))
+    (loop for entry in *hyperspec-issue-summaries*
+          do (destructuring-bind (id filename) entry
+               (setf (gethash id ht) entry)
+               (setf (gethash filename ht) entry)))
     ht))
 
-(defparameter *id-to-hyperspec-id* (make-id-to-hyperspec-id))
+(defparameter *hyperspec-issue-map* (make-hyperspec-issue-map))
 
-;;; This is what the CLHS locative uses.
-(defun/autoloaded find-hyperspec-id (string &key (substring-match t))
-  (or (gethash string *id-to-hyperspec-id*)
-      (and substring-match
-           (find-hyperspec-section-id string))))
+(defun/autoloaded find-hyperspec-issue-id (name)
+  (first (gethash name *hyperspec-issue-map*)))
 
-(defun find-hyperspec-section-id (string)
-  (second (find-if (lambda (entry)
-                     (search (string-downcase string)
-                             (string-downcase (third entry))))
-                   *sorted-hyperspec-sections*)))
+(defun/autoloaded find-hyperspec-issue-url
+    (name &optional hyperspec-root)
+  (let ((filename (second (gethash name *hyperspec-issue-map*))))
+    (when filename
+      (hyperspec-link hyperspec-root "Issues/" filename ".htm"))))
+
 
-(defun hyperspec-external-references (hyperspec-root include-lisp-definitions)
-  (let ((hyperspec-root (if (alexandria:ends-with #\/ hyperspec-root)
-                            hyperspec-root
-                            (format nil "~A/" hyperspec-root))))
-    (append
-     ;; A list of elements like (FIND-IF FUNCTION "F_FIND_").
-     (when include-lisp-definitions
-       (mapcar (lambda (entry)
-                 (destructuring-bind (object locative filename) entry
-                   (list object (if (eq locative 'operator)
-                                    'macro
-                                    locative)
-                         (hyperspec-link hyperspec-root "Body/" filename))))
-               *hyperpsec-entries*))
-     ;; CLHS section numbers. A list of elements like ("3.4" CLHS
-     ;; "03_d").
-     (mapcar (lambda (entry)
-               (destructuring-bind (filename section-number title) entry
-                 (declare (ignore title))
-                 (list section-number 'clhs
-                       (hyperspec-link hyperspec-root "Body/" filename))))
-             *hyperspec-sections*)
-     ;; CLHS issues and issue summaries. A list of elements like
-     ;; ("ISSUE:AREF-1D" CLHS "iss009_w") or ("SUMMARY:AREF-1D" CLHS
-     ;; "iss009"), respectively.
-     (mapcar (lambda (entry)
-               (destructuring-bind (name filename) entry
-                 (list name 'clhs
-                       (hyperspec-link hyperspec-root "Issues/" filename))))
-             (append *hyperspec-issues* *hyperspec-issue-summaries*)))))
-
-(defun hyperspec-link (root dir name)
-  ;; FIXME: This does not support anchors as in "26_glo_n#nil", but it
-  ;; doesn't matter as long as glossary entries from the hyperspec are
-  ;; not included.
-  (format nil "~A~A~A.htm" root dir name))
+(defun hyperspec-link (root dir name &optional more)
+  (format nil "~@[~A~]~A~A~@[~A~]" root dir name more))

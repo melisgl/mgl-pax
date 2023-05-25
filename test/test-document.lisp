@@ -1,5 +1,10 @@
 (in-package :mgl-pax-test)
 
+(defun check-ref (reference object locative)
+  (when (is reference)
+    (is (equal (reference-object reference) object))
+    (is (equal (reference-locative reference) locative))))
+
 (defun check-document (input expected
                        &key (package (find-package :mgl-pax-test)))
   (let ((output (let ((*package* package)
@@ -83,7 +88,9 @@
   (test-locative)
   (test-docstring)
   (test-hyperspec)
+  (test-clhs-definitions)
   (test-clhs-section)
+  (test-clhs-glossary-entries)
   (test-clhs-issue)
   (test-argument)
   (test-define-locative-alias)
@@ -179,9 +186,9 @@
       ;; T is not autolinked.
       (check-head "T" "`T`")
       (check-head "\\T" "T")
-      (check-head "DO" "[`DO`][a95c]")
+      (check-head "DO" "[`DO`][5d2b]")
       (check-head "\\DO" "DO")
-      (check-head "COS" "[`COS`][3164]")
+      (check-head "COS" "[`COS`][c4a3]")
       (check-head "\\COS" "COS")))
   (with-test ("reflink")
     (with-test ("no refs")
@@ -208,87 +215,87 @@ xxx
 
 (deftest test-names ()
   (with-test ("Uppercase name with uppercase plural.")
-    (check-head "CARS" "[`CAR`][8c99]s")
-    (check-head "CARS." "[`CAR`][8c99]s.")
+    (check-head "CARS" "[`CAR`][d5a2]s")
+    (check-head "CARS." "[`CAR`][d5a2]s.")
     (with-failure-expected ((alexandria:featurep :clisp))
-      (check-head "CLASSES" "[`CLASS`][7e58]es")
-      (check-head "CLASSES." "[`CLASS`][7e58]es."))
-    (check-head "ARRAY-DIMENSIONS" "[`ARRAY-DIMENSIONS`][b956]")
-    (check-head "ARRAY-DIMENSIONS." "[`ARRAY-DIMENSIONS`][b956]."))
+      (check-head "CLASSES" "[`CLASS`][1f37]es")
+      (check-head "CLASSES." "[`CLASS`][1f37]es."))
+    (check-head "ARRAY-DIMENSIONS" "[`ARRAY-DIMENSIONS`][b315]")
+    (check-head "ARRAY-DIMENSIONS." "[`ARRAY-DIMENSIONS`][b315]."))
   (with-test ("Uppercase name with lowercase plural.")
-    (check-head "CARs" "[`CAR`][8c99]s")
-    (check-head "CARs." "[`CAR`][8c99]s.")
+    (check-head "CARs" "[`CAR`][d5a2]s")
+    (check-head "CARs." "[`CAR`][d5a2]s.")
     (with-failure-expected ((alexandria:featurep :clisp))
-      (check-head "CLASSes" "[`CLASS`][7e58]es")
-      (check-head "CLASSes." "[`CLASS`][7e58]es."))
-    (check-head "ARRAY-DIMENSIONs" "[`ARRAY-DIMENSION`][046b]s")
-    (check-head "ARRAY-DIMENSIONs." "[`ARRAY-DIMENSION`][046b]s."))
+      (check-head "CLASSes" "[`CLASS`][1f37]es")
+      (check-head "CLASSes." "[`CLASS`][1f37]es."))
+    (check-head "ARRAY-DIMENSIONs" "[`ARRAY-DIMENSION`][6c28]s")
+    (check-head "ARRAY-DIMENSIONs." "[`ARRAY-DIMENSION`][6c28]s."))
   (with-test ("Uppercase code + lowercase plural.")
-    (check-head "`CAR`s" "[`CAR`][8c99]s")
-    (check-head "`CAR`s." "[`CAR`][8c99]s.")
+    (check-head "`CAR`s" "[`CAR`][d5a2]s")
+    (check-head "`CAR`s." "[`CAR`][d5a2]s.")
     (with-failure-expected ((alexandria:featurep :clisp))
-      (check-head "`CLASS`es" "[`CLASS`][7e58]es")
-      (check-head "`CLASS`es." "[`CLASS`][7e58]es."))
-    (check-head "`ARRAY-DIMENSION`s" "[`ARRAY-DIMENSION`][046b]s")
-    (check-head "`ARRAY-DIMENSION`s." "[`ARRAY-DIMENSION`][046b]s."))
+      (check-head "`CLASS`es" "[`CLASS`][1f37]es")
+      (check-head "`CLASS`es." "[`CLASS`][1f37]es."))
+    (check-head "`ARRAY-DIMENSION`s" "[`ARRAY-DIMENSION`][6c28]s")
+    (check-head "`ARRAY-DIMENSION`s." "[`ARRAY-DIMENSION`][6c28]s."))
   (with-test ("Lowercase code + lowercase plural.")
-    (check-head "`car`s" "[`car`][8c99]s")
-    (check-head "`car`s." "[`car`][8c99]s.")
+    (check-head "`car`s" "[`car`][d5a2]s")
+    (check-head "`car`s." "[`car`][d5a2]s.")
     (with-failure-expected ((alexandria:featurep :clisp))
-      (check-head "`class`es" "[`class`][7e58]es")
-      (check-head "`class`es." "[`class`][7e58]es."))
-    (check-head "`array-dimension`s" "[`array-dimension`][046b]s")
-    (check-head "`array-dimension`s." "[`array-dimension`][046b]s."))
+      (check-head "`class`es" "[`class`][1f37]es")
+      (check-head "`class`es." "[`class`][1f37]es."))
+    (check-head "`array-dimension`s" "[`array-dimension`][6c28]s")
+    (check-head "`array-dimension`s." "[`array-dimension`][6c28]s."))
   (with-test ("Lowercase code with lowercase plural.")
-    (check-head "`cars`" "[`cars`][8c99]")
+    (check-head "`cars`" "[`cars`][d5a2]")
     (check-head "`cars.`" "`cars.`")
     (with-failure-expected ((alexandria:featurep :clisp))
-      (check-head "`classes`" "[`classes`][7e58]"))
+      (check-head "`classes`" "[`classes`][1f37]"))
     (check-head "`classes.`" "`classes.`")
-    (check-head "`array-dimensions`" "[`array-dimensions`][b956]")
+    (check-head "`array-dimensions`" "[`array-dimensions`][b315]")
     (check-head "`array-dimensions.`" "`array-dimensions.`"))
   (with-test ("Uppercase name with uppercase plural in reflink.")
-    (check-head "[CARS][]" "[`CAR`s][8c99]")
+    (check-head "[CARS][]" "[`CAR`s][d5a2]")
     (check-head "[CARS.][]" "`CAR`s." :warnings 1)
     (with-failure-expected ((alexandria:featurep :clisp))
-      (check-head "[CLASSES][]" "[`CLASS`es][7e58]"))
+      (check-head "[CLASSES][]" "[`CLASS`es][1f37]"))
     (check-head "[CLASSES.][]" "`CLASS`es." :warnings 1)
-    (check-head "[ARRAY-DIMENSIONS][]" "[`ARRAY-DIMENSIONS`][b956]")
+    (check-head "[ARRAY-DIMENSIONS][]" "[`ARRAY-DIMENSIONS`][b315]")
     (check-head "[ARRAY-DIMENSIONS.][]" "`ARRAY-DIMENSIONS`." :warnings 1))
   (with-test ("Uppercase name with lowercase plural in reflink.")
-    (check-head "[CARs][]" "[`CAR`s][8c99]")
+    (check-head "[CARs][]" "[`CAR`s][d5a2]")
     (check-head "[CARs.][]" "`CAR`s." :warnings 1)
     (with-failure-expected ((alexandria:featurep :clisp))
-      (check-head "[CLASSes][]" "[`CLASS`es][7e58]"))
+      (check-head "[CLASSes][]" "[`CLASS`es][1f37]"))
     (check-head "[CLASSes.][]" "`CLASS`es." :warnings 1)
     ;; Somewhat surprisingly, the ARRAY-DIMENSIONS is to be linked as
     ;; the PAX::@OBJECT is determined by PARSE-TREE-TO-TEXT.
-    (check-head "[ARRAY-DIMENSIONs][]" "[`ARRAY-DIMENSION`s][b956]")
+    (check-head "[ARRAY-DIMENSIONs][]" "[`ARRAY-DIMENSION`s][b315]")
     (check-head "[ARRAY-DIMENSIONs.][]" "`ARRAY-DIMENSION`s." :warnings 1))
   (with-test ("Uppercase code + lowercase plural in reflink.")
-    (check-head "[`CAR`s][]" "[`CAR`s][8c99]")
+    (check-head "[`CAR`s][]" "[`CAR`s][d5a2]")
     (check-head "[`CAR`s.][]" "`CAR`s." :warnings 1)
     (with-failure-expected ((alexandria:featurep :clisp))
-      (check-head "[`CLASS`es][]" "[`CLASS`es][7e58]"))
+      (check-head "[`CLASS`es][]" "[`CLASS`es][1f37]"))
     (check-head "[`CLASS`es.][]" "`CLASS`es." :warnings 1)
-    (check-head "[`ARRAY-DIMENSION`s][]" "[`ARRAY-DIMENSION`s][b956]")
+    (check-head "[`ARRAY-DIMENSION`s][]" "[`ARRAY-DIMENSION`s][b315]")
     (check-head "[`ARRAY-DIMENSION`s.][]" "`ARRAY-DIMENSION`s." :warnings 1))
   (with-test ("Trimming")
     (check-head "`#<CLASS>`" "`#<CLASS>`")
     (with-failure-expected ((alexandria:featurep :clisp))
-      (check-head "#\\<CLASS>" "#<[`CLASS`][7e58]>")))
-  (check-head "*PRINT-LENGTH*s" "[`*PRINT-LENGTH*`][727b]s")
+      (check-head "#\\<CLASS>" "#<[`CLASS`][1f37]>")))
+  (check-head "*PRINT-LENGTH*s" "[`*PRINT-LENGTH*`][8f7a]s")
   (check-head "\\Delta" "\\Delta" :msg "mathjax")
   (check-head "T." "`T`.")
   (check-head "`doc/`" "`doc/`")
   (check-head "non-NIL" "non-`NIL`")
   (check-head "nonNIL" "non`NIL`")
   (with-test ("READable")
-    (check-head "READable" "[`READ`][3d3c]able")
+    (check-head "READable" "[`READ`][fe58]able")
     (check-head "[READable][]" "`READ`able" :warnings 1)
     (check-head "[`READ`able][]" "`READ`able" :warnings 1))
   (with-test ("nonREADable")
-    (check-head "nonREADable" "non[`READ`][3d3c]able")
+    (check-head "nonREADable" "non[`READ`][fe58]able")
     (check-head "[nonREADable][]" "non`READ`able" :warnings 1)
     (check-head "[non`READ`able][]" "non`READ`able" :warnings 1))
   (with-test ("non-NIL")
@@ -305,7 +312,7 @@ xxx
     (check-head "T=3" "T=3"))
   (check-head "Classes" "Classes")
   (with-failure-expected ((alexandria:featurep :clisp))
-    (check-head "`Classes`" "[`Classes`][7e58]"))
+    (check-head "`Classes`" "[`Classes`][1f37]"))
   (check-head "`\"=>\"`" "`\"=>\"`")
   (with-test ("no uppercase")
     (check-head "non-nil" "non-nil"))
@@ -327,11 +334,11 @@ xxx
     (check-downcasing "TEST" "`test`")
     ;; has refs
     (with-failure-expected ((alexandria:featurep :clisp))
-      (check-downcasing "CLASS" "[`class`][7e58]"))
+      (check-downcasing "CLASS" "[`class`][1f37]"))
     ;; has no refs
     (check-downcasing "*FORMAT*" "`*format*`")
     ;; has refs
-    (check-downcasing "*PACKAGE*" "[`*package*`][d2c1]")
+    (check-downcasing "*PACKAGE*" "[`*package*`][5ed1]")
     ;; section with refs
     (check-downcasing (list "@SECTION-WITHOUT-TITLE" @section-without-title)
                       "[`@section-without-title`][eeac]"))
@@ -350,9 +357,9 @@ xxx
     (check-downcasing "`CaMeL`" "`CaMeL`")
     (check-downcasing "`TEST`" "`test`")
     (with-failure-expected ((alexandria:featurep :clisp))
-      (check-downcasing "`CLASS`" "[`class`][7e58]"))
+      (check-downcasing "`CLASS`" "[`class`][1f37]"))
     (check-downcasing "`*FORMAT*`" "`*format*`")
-    (check-downcasing "`*PACKAGE*`" "[`*package*`][d2c1]")
+    (check-downcasing "`*PACKAGE*`" "[`*package*`][5ed1]")
     (check-downcasing (list "`@SECTION-WITHOUT-TITLE`" @section-without-title)
                       "[`@section-without-title`][eeac]"))
   (with-test ("escaped code")
@@ -380,9 +387,9 @@ xxx
     (check-downcasing "[CaMeL][]" "CaMeL" :warnings 1)
     (check-downcasing "[TEST][]" "`test`" :warnings 1)
     (with-failure-expected ((alexandria:featurep :clisp))
-      (check-downcasing "[CLASS][]" "[`class`][7e58]"))
+      (check-downcasing "[CLASS][]" "[`class`][1f37]"))
     (check-downcasing "[*FORMAT*][]" "`*format*`" :warnings 1)
-    (check-downcasing "[*PACKAGE*][]" "[`*package*`][d2c1]")
+    (check-downcasing "[*PACKAGE*][]" "[`*package*`][5ed1]")
     (check-downcasing (list "[@SECTION-WITHOUT-TITLE][]"
                             @section-without-title)
                       "[`@section-without-title`][eeac]"))
@@ -391,9 +398,9 @@ xxx
     (check-downcasing "[`CaMeL`][]" "`CaMeL`" :warnings 1)
     (check-downcasing "[`TEST`][]" "`test`" :warnings 1)
     (with-failure-expected ((alexandria:featurep :clisp))
-      (check-downcasing "[`CLASS`][]" "[`class`][7e58]"))
+      (check-downcasing "[`CLASS`][]" "[`class`][1f37]"))
     (check-downcasing "[`*FORMAT*`][]" "`*format*`" :warnings 1)
-    (check-downcasing "[`*PACKAGE*`][]" "[`*package*`][d2c1]")
+    (check-downcasing "[`*PACKAGE*`][]" "[`*package*`][5ed1]")
     (check-downcasing (list "[`@SECTION-WITHOUT-TITLE`][]"
                             @section-without-title)
                       "[`@section-without-title`][eeac]"))
@@ -402,9 +409,9 @@ xxx
     (check-downcasing "[`\\CaMeL`][]" "`CaMeL`" :warnings 1)
     (check-downcasing "[`\\TEST`][]" "`test`" :warnings 1)
     (with-failure-expected ((alexandria:featurep :clisp))
-      (check-downcasing "[`\\CLASS`][]" "[`class`][7e58]"))
+      (check-downcasing "[`\\CLASS`][]" "[`class`][1f37]"))
     (check-downcasing "[`\\*FORMAT*`][]" "`*format*`" :warnings 1)
-    (check-downcasing "[`\\*PACKAGE*`][]" "[`*package*`][d2c1]")
+    (check-downcasing "[`\\*PACKAGE*`][]" "[`*package*`][5ed1]")
     (check-downcasing (list "[`\\@SECTION-WITHOUT-TITLE`][]"
                             @section-without-title)
                       "[`@section-without-title`][eeac]"))
@@ -413,9 +420,9 @@ xxx
     (check-downcasing "[`\\\\CaMeL`][]" "`CaMeL`" :warnings 1)
     (check-downcasing "[`\\\\TEST`][]" "`TEST`" :warnings 1)
     (with-failure-expected ((alexandria:featurep :clisp))
-      (check-downcasing "[`\\\\CLASS`][]" "[`CLASS`][7e58]"))
+      (check-downcasing "[`\\\\CLASS`][]" "[`CLASS`][1f37]"))
     (check-downcasing "[`\\\\*FORMAT*`][]" "`*FORMAT*`" :warnings 1)
-    (check-downcasing "[`\\\\*PACKAGE*`][]" "[`*PACKAGE*`][d2c1]")
+    (check-downcasing "[`\\\\*PACKAGE*`][]" "[`*PACKAGE*`][5ed1]")
     (check-downcasing (list "[`\\\\@SECTION-WITHOUT-TITLE`][]"
                             @section-without-title)
                       "[`@SECTION-WITHOUT-TITLE`][eeac]"))
@@ -498,22 +505,22 @@ xxx
 
 (deftest test-resolve-reflink ()
   (with-test ("label is a single name")
-    (check-head "[*PACKAGE*][]" "[`*PACKAGE*`][d2c1]")
-    (check-head "[*PACKAGE*][variable]" "[`*PACKAGE*`][d2c1]")
-    (check-head "[ *PACKAGE*][]" "[ `*PACKAGE*`][d2c1]")
-    (check-head "[*PACKAGE*][ variable]" "[`*PACKAGE*`][d2c1]")
-    (check-head "[*PACKAGE*]" "[`*PACKAGE*`][d2c1]")
+    (check-head "[*PACKAGE*][]" "[`*PACKAGE*`][5ed1]")
+    (check-head "[*PACKAGE*][variable]" "[`*PACKAGE*`][5ed1]")
+    (check-head "[ *PACKAGE*][]" "[ `*PACKAGE*`][5ed1]")
+    (check-head "[*PACKAGE*][ variable]" "[`*PACKAGE*`][5ed1]")
+    (check-head "[*PACKAGE*]" "[`*PACKAGE*`][5ed1]")
     (check-head "[*PACKAGE*][normaldef]" "[`*PACKAGE*`][normaldef]")
     (check-head "[*FORMAT*][]" "`*FORMAT*`" :warnings 1))
   (with-test ("definition is a reference")
-    (check-head "[see this][car function]" "[see this][8c99]")
-    (check-head "[`see` *this*][car function]" "[`see` *this*][8c99]"))
+    (check-head "[see this][car function]" "[see this][d5a2]")
+    (check-head "[`see` *this*][car function]" "[`see` *this*][d5a2]"))
   (with-test ("definition is an object")
-    (check-head "[see this][print]" "[see this][fdd1]")
-    (check-head "[ see this ][print]" "[ see this ][fdd1]")
-    (check-head "[see this][ print]" "[see this][fdd1]")
-    (check-head "[see this][\\*package*]" "[see this][d2c1]")
-    (check-head "[see this][nil]" "see this([`0`][7058] [`1`][78ef])"))
+    (check-head "[see this][print]" "[see this][d451]")
+    (check-head "[ see this ][print]" "[ see this ][d451]")
+    (check-head "[see this][ print]" "[see this][d451]")
+    (check-head "[see this][\\*package*]" "[see this][5ed1]")
+    (check-head "[see this][nil]" "see this([`0`][9990] [`1`][4df2])"))
   (with-test ("definition is both a locative and an object")
     (check-head (list "[see this][section]"
                       (make-reference 'section 'class)
@@ -561,12 +568,12 @@ xxx
       (check-head "[see this][references]
 
   [references]: #ttt"
-                  "see this" :warnings 1))
+                  "see this"))
     (with-test ("definition is an interned symbol with a definition")
       (check-head "[see this][print]
 
   [print]: #ttt"
-                  "[see this][fdd1]"))))
+                  "[see this][d451]"))))
 
 
 (defsection @section-with-title (:title "My `Title`" :export nil))
@@ -603,13 +610,13 @@ xxx
   (check-head "NIL" "`NIL`"))
 
 (deftest test-repeated-links ()
-  (check-head "PRINT PRINT" "[`PRINT`][fdd1] `PRINT`")
-  (check-head (list "PRINT" "PRINT") "[`PRINT`][fdd1]~%~%[`PRINT`][fdd1]"
+  (check-head "PRINT PRINT" "[`PRINT`][d451] `PRINT`")
+  (check-head (list "PRINT" "PRINT") "[`PRINT`][d451]~%~%[`PRINT`][d451]"
               :n-lines 3)
-  (check-head "[STRING][function] STRING" "[`STRING`][7bd4] `STRING`")
+  (check-head "[STRING][function] STRING" "[`STRING`][dae6] `STRING`")
   (check-head "[STRING][dislocated] STRING" "`STRING` `STRING`")
   (check-head "[STRING][function] STRING function"
-              "[`STRING`][7bd4] [`STRING`][7bd4] function"))
+              "[`STRING`][dae6] [`STRING`][dae6] function"))
 
 (defun self-referencing ()
   "This is SELF-REFERENCING."
@@ -858,9 +865,9 @@ This is [Self-referencing][e042].
 
 
 (deftest test-declaration ()
-  (check-head "SAFETY" "[`SAFETY`][0273]")
-  (check-head "SAFETY declaration" "[`SAFETY`][0273] declaration")
-  (check-head "[safety][declaration]" "[safety][0273]"))
+  (check-head "SAFETY" "[`SAFETY`][f384]")
+  (check-head "SAFETY declaration" "[`SAFETY`][f384] declaration")
+  (check-head "[safety][declaration]" "[safety][f384]"))
 
 
 (deftest test-condition ()
@@ -873,7 +880,7 @@ This is [Self-referencing][e042].
 
 - [condition] **TRANSCRIPTION-VALUES-CONSISTENCY-ERROR** *[TRANSCRIPTION-CONSISTENCY-ERROR][a249]*
 
-    Signaled (with [`CERROR`][69b7]) by `TRANSCRIBE` when invoked
+    Signaled (with [`CERROR`][4317]) by `TRANSCRIBE` when invoked
     with `:CHECK-CONSISTENCY` and the values of a form are inconsistent
     with their parsed representation.
 
@@ -886,23 +893,23 @@ This is [Self-referencing][e042].
     [`TRANSCRIPTION-VALUES-CONSISTENCY-ERROR`][238c].
 
   [238c]: #MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR%20CONDITION \"MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION\"
-  [69b7]: CLHS/Body/f_cerror.htm \"CERROR FUNCTION\"
+  [4317]: CLHS/Body/f_cerror.htm \"CERROR (MGL-PAX:CLHS FUNCTION)\"
   [a249]: #MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR%20CONDITION \"MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION\"
 "))
 
 
 (deftest test-restart ()
-  (check-head "ABORT restart" "[`ABORT`][fc8b] restart")
+  (check-head "ABORT restart" "[`ABORT`][ae44] restart")
   (check-document (make-reference 'use-value 'restart)
                   "<a id=\"USE-VALUE%20RESTART\"></a>
 
 - [restart] **USE-VALUE** *VALUE*
 
-    This is the name of the [`RESTART`][570b] to which [`USE-VALUE`][a197]
+    This is the name of the [`RESTART`][38e4] to which [`USE-VALUE`][5406]
     transfers control.
 
-  [570b]: CLHS/Body/t_rst.htm \"RESTART CLASS\"
-  [a197]: CLHS/Body/f_abortc.htm \"USE-VALUE FUNCTION\"
+  [38e4]: CLHS/Body/t_rst.htm \"RESTART (MGL-PAX:CLHS CLASS)\"
+  [5406]: CLHS/Body/f_abortc.htm \"USE-VALUE (MGL-PAX:CLHS FUNCTION)\"
 "))
 
 
@@ -992,15 +999,56 @@ This is [Self-referencing][e042].
               "[`BAR`][f3f4] is not a link."))
 
 (deftest test-hyperspec ()
-  (check-head "FIND-IF" "[`FIND-IF`][750e]")
-  (check-head "LIST" "`LIST`([`0`][6c26] [`1`][592c])")
-  (check-head "[LIST][type]" "[`LIST`][6c26]")
+  (check-head "FIND-IF" "[`FIND-IF`][5884]")
+  (check-head "LIST" "`LIST`([`0`][79d8] [`1`][6d9f])")
+  (check-head "[LIST][type]" "[`LIST`][79d8]")
   (check-head "T" "`T`")
   (check-head "NIL" "`NIL`")
-  (check-head "[T][]" "`T`([`0`][26df] [`1`][08f7])")
-  (check-head "[T][constant]" "[`T`][08f7]")
+  (check-head "[T][]" "`T`([`0`][9172] [`1`][fe21])")
+  (check-head "[T][constant]" "[`T`][fe21]")
   (check-pred #'print (lambda (output)
                         (search "- [function] **PRINT**" output))))
+
+(deftest test-clhs-definitions ()
+  (check-ref (locate 'function '(clhs class) :errorp nil)
+             'function '(clhs class))
+  (check-ref (locate 'function '(clhs macro) :errorp nil)
+             'function '(clhs macro))
+  (is (null (locate 'function '(clhs xxx) :errorp nil)))
+  (is (null (locate 'xxx '(clhs function) :errorp nil)))
+  (with-test ("disambiguation paged preferred to section and glossary entry")
+    (check-ref (locate 'function 'clhs :errorp nil)
+               'function 'clhs))
+  (check-head "[function][(clhs class)]" "[function][119e]")
+  (check-head "[function][(clhs macro)]" "[function][81f7]")
+  (with-test ("disambiguation page")
+    (check-head "[function][clhs]" "[function][aeb6]"))
+  (check-head "[PRINT][clhs]" "[`PRINT`][d451]")
+  (with-test ("clhs entry does not clutter disambiguations")
+    (check-document (list "[PRINT][clhs]" "PRINT")
+                    "[`PRINT`][d451]
+
+[`PRINT`][d451]
+
+  [d451]: CLHS/Body/f_wr_pr.htm \"PRINT (MGL-PAX:CLHS FUNCTION)\"
+")
+    (check-document (list "PRINT" "[PRINT][clhs]")
+                    "[`PRINT`][d451]
+
+[`PRINT`][d451]
+
+  [d451]: CLHS/Body/f_wr_pr.htm \"PRINT (MGL-PAX:CLHS FUNCTION)\"
+"))
+  (with-test ("prefer live definition to CLHS")
+    (with-failure-expected ((alexandria:featurep '(:or :abcl :allegro :ecl)))
+      (check-head (list "[PRINT][function]" #'print) "[`PRINT`][fdd1]"))
+    (with-failure-expected ((alexandria:featurep
+                             '(:or :abcl :allegro :ccl :clisp :cmucl)))
+      (check-head (list "[DOCUMENTATION][generic-function]" #'documentation)
+                  "[`DOCUMENTATION`][68f1]")))
+  (when (null (locate 'otherwise 'macro :errorp nil))
+    (with-test ("if no live definition, then link to CLHS")
+      (check-head "[otherwise][macro]" "[otherwise][c9ce]"))))
 
 (deftest test-clhs-section ()
   (let ((*document-link-to-hyperspec* t))
@@ -1010,18 +1058,32 @@ This is [Self-referencing][e042].
       (test-clhs-section-1))))
 
 (defun test-clhs-section-1 ()
-  ;; "A.1" and "3.4" are section names in the CLHS.
+  ;; "A.1" and "3.4" are section ids in the CLHS.
+  (check-ref (locate "A.1" '(clhs section) :errorp nil)
+             "A.1" '(clhs section))
+  (is (null (locate "a.1" '(clhs section) :errorp nil)))
+  (check-ref (locate "lambda lists" '(clhs section) :errorp nil)
+             "3.4" '(clhs section))
+  (check-ref (locate "Lambda Lists" '(clhs section) :errorp nil)
+             "3.4" '(clhs section))
   (check-head "A.1" "A.1")
   (check-head "`A.1`" "`A.1`")
   (check-head "CLHS A.1" "`CLHS` A.1")
   (check-head "CLHS 3.4" "`CLHS` 3.4")
-  (check-head "CLHS `3.4`" "`CLHS` [`3.4`][f945]")
-  (check-head "`3.4` CLHS" "[`3.4`][f945] `CLHS`")
-  (check-head "[3.4][]" "3.4")
-  (check-head "[`3.4`][]" "`3.4`")
-  (check-head "[3.4][CLHS]" "[3.4][f945]")
-  (check-head "[Lambda Lists][clhs]" "[Lambda Lists][f945]")
-  (check-head "[03_d][clhs]" "[03\\_d][f945]"))
+  (check-head "CLHS `3.4`" "`CLHS` [`3.4`][e442]")
+  (check-head "`3.4` CLHS" "[`3.4`][e442] `CLHS`")
+  (check-head "[3.4][]" "3.4" :warnings 1)
+  (check-head "[`3.4`][]" "`3.4`" :warnings 1)
+  (check-head "[3.4][CLHS]" "[3.4][e442]")
+  (check-head "[Lambda Lists][clhs]" "[Lambda Lists][e442]")
+  (check-head "[03_d][clhs]" "[03\\_d][e442]"))
+
+(deftest test-clhs-glossary-entries ()
+  (check-head "[readably][(clhs glossary-term)]" "[readably][278a]")
+  (check-document "[non-local exit][clhs]" "[non-local exit][b815]
+
+  [b815]: CLHS/Body/26_glo_n.htm#non_local_exit '\"non-local exit\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+"))
 
 (deftest test-clhs-issue ()
   (let ((*document-link-to-hyperspec* t))
@@ -1031,16 +1093,20 @@ This is [Self-referencing][e042].
       (test-clhs-issue-1))))
 
 (defun test-clhs-issue-1 ()
+  (check-ref (locate "ISSUE:AREF-1D" 'clhs :errorp nil)
+             '"ISSUE:AREF-1D" '(clhs section))
+  (check-ref (locate "iss009" 'clhs :errorp nil)
+             '"SUMMARY:AREF-1D" '(clhs section))
   (check-head "ISSUE:AREF-1D" "ISSUE:AREF-1D")
   (check-head "`ISSUE:AREF-1D`" "`ISSUE:AREF-1D`")
   (check-head "CLHS ISSUE:AREF-1D" "`CLHS` ISSUE:AREF-1D")
   (check-head "ISSUE:AREF-1D CLHS" "ISSUE:AREF-1D `CLHS`")
-  (check-head "CLHS `ISSUE:AREF-1D`" "`CLHS` [`ISSUE:AREF-1D`][6786]")
-  (check-head "`ISSUE:AREF-1D` CLHS" "[`ISSUE:AREF-1D`][6786] `CLHS`")
-  (check-head "[ISSUE:AREF-1D][]" "ISSUE:AREF-1D")
-  (check-head "[`ISSUE:AREF-1D`][]" "`ISSUE:AREF-1D`")
-  (check-head "[ISSUE:AREF-1D][CLHS]" "[ISSUE:AREF-1D][6786]")
-  (check-head "[iss009][clhs]" "[iss009][e256]"))
+  (check-head "CLHS `ISSUE:AREF-1D`" "`CLHS` [`ISSUE:AREF-1D`][63ef]")
+  (check-head "`ISSUE:AREF-1D` CLHS" "[`ISSUE:AREF-1D`][63ef] `CLHS`")
+  (check-head "[ISSUE:AREF-1D][]" "ISSUE:AREF-1D" :warnings 1)
+  (check-head "[`ISSUE:AREF-1D`][]" "`ISSUE:AREF-1D`" :warnings 1)
+  (check-head "[ISSUE:AREF-1D][CLHS]" "[ISSUE:AREF-1D][63ef]")
+  (check-head "[iss009][clhs]" "[iss009][e357]"))
 
 (deftest test-argument ()
   (check-head "[PRINT][argument]" "`PRINT`"))
@@ -1089,7 +1155,7 @@ This is [Self-referencing][e042].
   (with-failure-expected ((alexandria:featurep :clisp))
     (with-test ("simplified ambiguous links")
       (check-head "AMBI" "[`AMBI`](pax:MGL-PAX-TEST:AMBI)" :w3m t))
-    (is (find 'package (pax::definitions-as-references 'cl)
+    (is (find 'package (pax::definitions-of 'cl)
               :key #'pax::reference-locative-type))
     (with-test ("escaping of non-ambiguous")
       (check-head "`foo<>&`"
@@ -1110,13 +1176,55 @@ This is [Self-referencing][e042].
     => 7
     ```"
                 :n-lines 8 :warnings 1 :w3m t))
-  (test-document/w3m/object))
+  (test-references-to-document-for-path)
+  (test-document/w3m/live-vs-static)
+  (test-document/w3m/object)
+  (test-document/w3m/clhs))
+
+(deftest test-references-to-document-for-path ()
+  ;; This test relies on what is and what is not available through
+  ;; SWANK-BACKEND:FIND-DEFINITIONS in a given implementation.
+  #+sbcl
+  (is (endp (different-elements
+             (pax::sort-references (pax::references-to-document-for-path "nil"))
+             (list (make-reference "NIL" '(clhs glossary-term))
+                   (make-reference :common-lisp 'readtable)
+                   (make-reference 'nil '(clhs constant))
+                   (make-reference 'nil '(clhs type))
+                   (make-reference 'nil 'clhs)
+                   (make-reference 'nil 'constant))
+             :pred #'pax::reference=))))
+
+(deftest test-document/w3m/live-vs-static ()
+  (with-test ("prefer live definition to CLHS")
+    (with-failure-expected
+        ((alexandria:featurep '(:or :abcl :allegro :clisp :ecl)))
+      (check-head "[PRINT][function]" "[`PRINT`][fdd1]" :w3m t))
+    (with-failure-expected ((alexandria:featurep
+                             '(:or :abcl :allegro :ccl :clisp :cmucl)))
+      (check-head "[DOCUMENTATION][generic-function]" "[`DOCUMENTATION`][68f1]"
+                  :w3m t)))
+  (when (null (locate 'otherwise 'macro :errorp nil))
+    (with-test ("if no live definition, then link to CLHS")
+      (check-head "[otherwise][macro]" "[otherwise][c9ce]" :w3m t))))
 
 (deftest test-document/w3m/object ()
   (with-failure-expected ()
     (check-head "[PAX][package] [MGL-PAX][package] [`mgl-pax`][asdf:system]"
                 "[PAX][97b3] [`MGL-PAX`][97b3] [`mgl-pax`][6fdb]"
                 :w3m t)))
+
+(deftest test-document/w3m/clhs ()
+  (let ((*document-hyperspec-root* "CLHS/"))
+    (loop for (object locative) in '((print function)
+                                     (single-float type))
+          do (let ((reference (make-reference object `(clhs ,locative))))
+               (signals-not (error :msg ("REFERENCE=~S" reference))
+                 (let ((url (let ((*standard-output* (make-broadcast-stream)))
+                              (pax::document-for-emacs/reference reference
+                                                                 nil))))
+                   (is (stringp url))
+                   (is (alexandria:starts-with-subseq "CLHS/" url))))))))
 
 (defun ambi ())
 (defclass ambi () ())
