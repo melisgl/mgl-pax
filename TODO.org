@@ -86,7 +86,7 @@ https://github.com/40ants/doc/commit/c3bf89fa88ab70074466aa07358caad159d45008
 https://github.com/40ants/doc/commit/d638135b784c2fd7e0199c829157644da197fdb7
 * TODO support symbols in a context
 E.g. LOOP's WITH, or OTHERWISE in CASE, CALL-NEXT-METHOD
-* BUG method dpsec parsing is incorrect
+* BUG method dspec parsing is incorrect
 e.g. SB-PCL::MAKE-SPECIALIZER-FORM-USING-CLASS One cannot tell method
 qualifiers from specializers in the dspec without actually consulting
 the definition.

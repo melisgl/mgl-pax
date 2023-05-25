@@ -480,7 +480,7 @@ such as the `FOO` type or the `FOO` function.
 ```
 
 The docstring is available via `(CL:DOCUMENTATION 'FOO 'TYPE)`,
-where `TYPE` - called `DOC-TYPE` - is what tells [`CL:DOCUMENTATION`][68f1]
+where `TYPE` – called `DOC-TYPE` – is what tells [`CL:DOCUMENTATION`][68f1]
 that we want the docstring of the type named `FOO`. This design
 supports disambiguation and working with things that are not
 first-class, such as types.
@@ -1412,8 +1412,8 @@ one can do:
     View Documentation of: pax::@documenting-in-emacs
 
 Coincidentally, this is the default when the empty string is
-entered, and there is no w3m buffer. If there is a w3m buffer, then
-entering the empty string displays that buffer.
+entered, and there is no existing w3m buffer. If there is a w3m
+buffer, then entering the empty string displays that buffer.
 
 If we enter `function` instead, then a [disambiguation
 page](pax:function) (note that this and other `pax:` links only work
@@ -1536,6 +1536,9 @@ In addition, the following PAX-specific key bindings are available:
 
 - `M-.` visits the source location of the definition corresponding
   to the link under the point.
+
+- Invoking `mgl-pax-document` on a section title link will that
+  section on its own page.
 
 - `n` moves to the next PAX definition on the page.
 

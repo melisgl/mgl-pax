@@ -2640,8 +2640,8 @@
       View Documentation of: pax::@documenting-in-emacs
 
   Coincidentally, this is the default when the empty string is
-  entered, and there is no w3m buffer. If there is a w3m buffer, then
-  entering the empty string displays that buffer.
+  entered, and there is no existing w3m buffer. If there is a w3m
+  buffer, then entering the empty string displays that buffer.
 
   If we enter `\function` instead, then a [disambiguation
   page](pax:function) (note that this and other `pax:` links only work
@@ -2714,9 +2714,12 @@
   - `M-.` visits the source location of the definition corresponding
     to the link under the point.
 
-  - `n` moves to the next \PAX definition on the page.
+  - Invoking `mgl-pax-document` on a section title link will that
+    section on its own page.
 
-  - `p` moves to the previous \PAX definition on the page.
+  - `n` moves to the next PAX definition on the page.
+
+  - `p` moves to the previous PAX definition on the page.
 
   - `u` follows the first `Up:` link (to the first containing
     [SECTION][class]) if any.

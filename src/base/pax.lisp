@@ -304,7 +304,7 @@
   ```
 
   The docstring is available via `(CL:DOCUMENTATION 'FOO 'TYPE)`,
-  where `\TYPE` - called `DOC-TYPE` - is what tells CL:DOCUMENTATION
+  where `\TYPE` – called `DOC-TYPE` – is what tells CL:DOCUMENTATION
   that we want the docstring of the type named `FOO`. This design
   supports disambiguation and working with things that are not
   first-class, such as types.
