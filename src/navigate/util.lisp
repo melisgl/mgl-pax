@@ -6,6 +6,13 @@
      (let (#+clisp (*print-readably* nil))
        ,@body)))
 
+(defun adjust-string-case (string)
+  (ecase (readtable-case *readtable*)
+    ((:upcase) (string-upcase string))
+    ((:downcase) (string-downcase string))
+    ;; We don't care about convenience with :INVERT.
+    ((:preserve :invert) string)))
+
 (defparameter *utf-8-external-format*
   #+abcl :utf-8
   #+clisp charset:utf-8

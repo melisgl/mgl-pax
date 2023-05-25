@@ -125,9 +125,6 @@
 
 ;;; Return a list of (EMACSREF DSPEC LOCATION) objects.
 (defun locate-all-definitions-for-emacs (word)
-  ;; For locatives not supported by Swank, we try locatives on
-  ;; *LOCATIVE-SOURCE-SEARCH-LIST* one by one and see if they lead
-  ;; somewhere from the @NAMEs in WORD.
   (loop for object in (parse-word word)
           thereis (append
                    ;; Standard stuff supported by Swank.
@@ -147,6 +144,10 @@
                                            dspec)
                                        location))))
                            (swank-find-definitions-for-object object))
+                   ;; For locatives not supported by Swank, we try
+                   ;; locatives on *LOCATIVE-SOURCE-SEARCH-LIST* one
+                   ;; by one and see if they lead somewhere from the
+                   ;; @NAMEs in WORD.
                    (mapcan (lambda (locative)
                              (let ((thing (locate object locative
                                                   :errorp nil)))
@@ -161,7 +162,8 @@
 (defun swank-find-definitions-for-object (object)
   (cond ((stringp object)
          ;; E.g. to find the package when OBJECT is "MGL-PAX".
-         (swank-backend:find-definitions (make-symbol object)))
+         (swank-backend:find-definitions
+          (make-symbol (adjust-string-case object))))
         ((symbolp object)
          (swank-backend:find-definitions object))))
 
@@ -224,7 +226,8 @@
              ;; ... then just try to parse the locative.
              (locative (read-locative-from-string (subseq string pos))))
         (if locative
-            (values (read-object-from-string string) locative t)
+            (values (read-object-from-string (subseq string 0 pos))
+                    locative t)
             (values nil nil nil
                     (let ((locstring (string-trim *whitespace-chars*
                                                   (subseq string pos))))
@@ -235,14 +238,17 @@
       nil)))
 
 (defun read-object-from-string (string)
-  ;; Make "PAX:@PAX-MANUAL SECTION" work with a single colon even
-  ;; though @PAX-MANUAL is an internal symbol.
-  #-sbcl
-  (or (ignore-errors (read-from-string string))
-      (read-from-string (double-first-colon string)))
-  #+sbcl
-  (handler-bind ((reader-error #'continue))
-    (read-from-string string)))
+  (let ((string (string-trim *whitespace-chars* string)))
+    (if (alexandria:starts-with #\" string)
+        (read-from-string string)
+        (multiple-value-bind (symbol found)
+            (swank::parse-symbol
+             ;; Make "PAX:@PAX-MANUAL SECTION" work with a single
+             ;; colon even though @PAX-MANUAL is an internal symbol.
+             (double-first-colon string))
+          (if found
+              symbol
+              (adjust-string-case string))))))
 
 (defun double-first-colon (string)
   (let ((pos (position #\: string)))

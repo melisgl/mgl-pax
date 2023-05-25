@@ -93,7 +93,7 @@
                    ;; OBJECT in NAMES.
                    (when found
                      (consider object name)))
-                 (when (or (find-package* name)
+                 (when (or (find-package* (adjust-string-case name))
                            (locate (string-downcase name) 'asdf:system
                                    :errorp nil)
                            (let ((*clhs-substring-match* clhs-substring-match))

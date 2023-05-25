@@ -2881,7 +2881,7 @@
           (locative-junk
            (error "Unknown locative ~S." locative-junk))
           (t
-           (let ((references (references-to-document-for-path path)))
+           (let ((references (references-to-document-for-name path)))
              (cond ((endp references)
                     (error "Could not find definitions for ~S." path))
                    ((= (length references) 1)
@@ -2890,11 +2890,12 @@
                     (document-for-emacs/ambiguous references path
                                                   dirname))))))))
 
-(defun references-to-document-for-path (path)
+(defun references-to-document-for-name (name)
   (mapcar #'link-reference
-          (remove-duplicates (mapcar #'unaliased-link
-                                     (let ((*document-open-linking* t))
-                                       (links-of (read-from-string path)))))))
+          (remove-duplicates
+           (mapcar #'unaliased-link
+                   (let ((*document-open-linking* t))
+                     (links-of (read-object-from-string name)))))))
 
 ;;; See if (DOCUMENT REFERENCE) with *DOCUMENT-OPEN-LINKING* T would
 ;;; try to document an external reference, and return it.

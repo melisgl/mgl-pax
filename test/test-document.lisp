@@ -1186,7 +1186,7 @@ This is [Self-referencing][e042].
   ;; SWANK-BACKEND:FIND-DEFINITIONS in a given implementation.
   #+sbcl
   (is (endp (different-elements
-             (pax::sort-references (pax::references-to-document-for-path "nil"))
+             (pax::sort-references (pax::references-to-document-for-name "nil"))
              (list (make-reference "NIL" '(clhs glossary-term))
                    (make-reference :common-lisp 'readtable)
                    (make-reference 'nil '(clhs constant))
