@@ -284,7 +284,7 @@ for the latest version.
   generator.
 - Long Description: The set of dependencies of the MGL-PAX system is
   kept light, and its heavier dependencies are autoloaded via ASDF
-  when the relavant functionality is accessed. See the
+  when the relevant functionality is accessed. See the
   `MGL-PAX/NAVIGATE`, `MGL-PAX/DOCUMENT`, `MGL-PAX/TRANSCRIBE` and
   `MGL-PAX/FULL` systems. To keep deployed code small, client systems
   should declare an ASDF dependency on this system, never on the
@@ -451,7 +451,7 @@ Now let's examine the most important pieces.
 - [macro] **DEFINE-PACKAGE** *PACKAGE &REST OPTIONS*
 
     This is like [`CL:DEFPACKAGE`][9b43] but silences warnings and errors
-    signaled when the redefined package is at variance with the current
+    signalled when the redefined package is at variance with the current
     state of the package. Typically this situation occurs when symbols
     are exported by calling [`EXPORT`][0c4f] (as is the case with [`DEFSECTION`][72b4]) as
     opposed to adding `:EXPORT` forms to the `DEFPACKAGE` form and the
@@ -583,7 +583,7 @@ need to muck with references when there is a perfectly good object.
 
     Follow `LOCATIVE` from `OBJECT` and return the object it leads to or a
     [`REFERENCE`][1cea] if there is no first-class object corresponding to the
-    location. Depending on `ERRORP`, a [`LOCATE-ERROR`][6887] condition is signaled
+    location. Depending on `ERRORP`, a [`LOCATE-ERROR`][6887] condition is signalled
     or `NIL` is returned if the lookup fails.
     
     ```
@@ -728,7 +728,7 @@ which makes navigating the sources with `M-.` (see
     see [`*FORMAT*`][3da8]. Note that `*FORMAT*` is unbound. If the variable is
     [`BOUNDP`][6c37], then its *current* value is included in the documentation.
     See [`*DOCUMENT-LINK-CODE*`][d9ee] for an example output. To override the
-    current value, `INITFORM` may be provided. This is particulary
+    current value, `INITFORM` may be provided. This is particularly
     useful if the value of the variable is something undesirable such as
     `#<MY-CLASS {100171ED93}>`.
 
@@ -867,8 +867,8 @@ which makes navigating the sources with `M-.` (see
     
         (foo class)
     
-    In the generated documention, only superclasses denoted by [external
-    symbols][3473] are included.
+    In the generated documentation, only superclasses denoted by
+    [external symbols][3473] are included.
 
 <a id="x-28DECLARATION-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **DECLARATION**
@@ -900,8 +900,8 @@ which makes navigating the sources with `M-.` (see
     
         (foo condition)
     
-    In the generated documention, only superclasses denoted by [external
-    symbols][3473] are included.
+    In the generated documentation, only superclasses denoted by
+    [external symbols][3473] are included.
 
 <a id="x-28RESTART-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **RESTART**
@@ -1284,10 +1284,11 @@ See [Emacs Setup][8541].
     
     The `PAGES` argument is to create multi-page documents by routing some
     of the generated output to files, strings or streams. `PAGES` is a
-    list of page specification elements. A page spec is a plist with
-    keys `:OBJECTS`, `:OUTPUT`, `:URI-FRAGMENT`, `:SOURCE-URI-FN`, `:HEADER-FN`
-    and `:FOOTER-FN`. `OBJECTS` is a list of objects (references are allowed
-    but not required) whose documentation is to be sent to `:OUTPUT`.
+    list of page specification elements. A page spec is a [property
+    list][ed5f] with keys `:OBJECTS`, `:OUTPUT`, `:URI-FRAGMENT`,
+    `:SOURCE-URI-FN`, `:HEADER-FN` and `:FOOTER-FN`. `OBJECTS` is a list of
+    objects (references are allowed but not required) whose
+    documentation is to be sent to `:OUTPUT`.
     
     When documentation for an object is generated, the first matching
     page spec is used, where the object matches the page spec if it is
@@ -1328,7 +1329,7 @@ See [Emacs Setup][8541].
     `:HEADER-FN`, if not `NIL`, is a function of a single stream argument,
     which is called just before the first write to the page. Since
     `:FORMAT` `:HTML` only generates HTML fragments, this makes it possible
-    to print arbitrary headers, typically setting the title, css
+    to print arbitrary headers, typically setting the title, CSS
     stylesheet, or charset.
     
     `:FOOTER-FN` is similar to `:HEADER-FN`, but it's called after the last
@@ -1344,7 +1345,7 @@ See [Emacs Setup][8541].
     argument. If it returns a value other than `NIL`, then it must be a
     string representing an URI. If `FORMAT` is `:HTML` and
     [`*DOCUMENT-MARK-UP-SIGNATURES*`][8fb6] is true, then the locative as
-    displayed in the signature will be a link to this uri. See
+    displayed in the signature will be a link to this `URI`. See
     [`MAKE-GIT-SOURCE-URI-FN`][587f].
     
     `PAGES` may look something like this:
@@ -1436,7 +1437,7 @@ in the context of a single-page [PAX Manual][2415] can be
 entering `pax::@pax-manual#pax:defsection pax:macro`.
 
 In interactive use, `mgl-pax-document` defaults to documenting
-\`slime-symbol-at-point', possilby with a nearby locative the same
+`slime-symbol-at-point`, possibly with a nearby locative the same
 way as in [Navigating Sources in Emacs][3386].
 
 <a id="x-28MGL-PAX-3A-40PAX-URLS-20MGL-PAX-3ASECTION-29"></a>
@@ -1604,7 +1605,7 @@ See [`DOCUMENT-OBJECT`][0225] for the details.
 <a id="x-28MGL-PAX-3A-40MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29"></a>
 #### 8.3.2 Syntax Highlighting
 
-For syntax highlighting, github's [fenced code
+For syntax highlighting, Github's [fenced code
 blocks][fenced-code-blocks] markdown extension to mark up code
 blocks with triple backticks is enabled so all you need to do is
 write:
@@ -1635,7 +1636,7 @@ MathJax. It can be done inline with `$` like this:
 
     $\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$
 
-which is diplayed as $\int\_0^\infty e^\{-x^2\}
+which is displayed as $\int\_0^\infty e^\{-x^2\}
 dx=\frac\{\sqrt\{\pi\}\}\{2\}$, or it can be delimited by `$$` like this:
 
     $$\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
@@ -1677,8 +1678,8 @@ Reader can help with that.
     
     where the links are added due to [`*DOCUMENT-LINK-CODE*`][d9ee].
     
-    To suppress this behavior, add a backslash to the beginning of the a
-    [codifiable][b89a] word or right after the leading `*` if it would
+    To suppress this behaviour, add a backslash to the beginning of the
+    a [codifiable][b89a] word or right after the leading `*` if it would
     otherwise be parsed as markdown emphasis:
     
         "\\SECTION *\\PACKAGE*"
@@ -1927,7 +1928,7 @@ Finally, [autolinking][b3cc] to `T` or
 <a id="x-28MGL-PAX-3A-40LOCAL-REFERENCES-20MGL-PAX-3ASECTION-29"></a>
 #### 8.5.7 Local References
 
-To unclutter the generated output by reducing the number of
+To declutter the generated output by reducing the number of
 links, the so-called local references (e.g. references to the very
 definition for which documentation is being generated) are treated
 specially. In the following example, there are local references to
@@ -2044,7 +2045,7 @@ table of contents and navigation links.
 - [variable] **\*DOCUMENT-URL-VERSIONS\*** *(2 1)*
 
     A list of versions of PAX URL formats to support in the
-    generated documenation. The first in the list is used to generate
+    generated documentation. The first in the list is used to generate
     links.
     
     PAX emits HTML anchors before the documentation of `SECTION`([`0`][5fac] [`1`][672f])s
@@ -2067,7 +2068,7 @@ table of contents and navigation links.
     
     Version 1 is based on the more strict HTML4 standard and the id of
     `FOO` is `"x-28MGL-PAX-3A-3AFOO-20FUNCTION-29"`. This is supported
-    by Github flavoured Markdown. Version 2 has minimal clutter and is
+    by Github-flavoured Markdown. Version 2 has minimal clutter and is
     obviously preferred. However, in order not to break external links,
     by default, both anchors are generated.
     
@@ -2101,7 +2102,7 @@ table of contents and navigation links.
     documentation, which can be a pain in a version control system.
     
     Clearly, there is a tradeoff here. This variable controls how many
-    characters of the md5 sum of the full link id (the reference as a
+    characters of the MD5 sum of the full link id (the reference as a
     string) are retained. If collisions are found due to the low number
     of characters, then the length of the hash of the colliding
     reference is increased.
@@ -2292,7 +2293,7 @@ commit id is in the link. This means that code changes need to be
 committed first, and only then can HTML documentation be regenerated
 and committed in a followup commit.
 
-The second issue is that github is not very good at serving HTMLs
+The second issue is that github is not very good at serving HTML
 files from the repository itself (and
 [http://htmlpreview.github.io](http://htmlpreview.github.io) chokes
 on links to the sources).
@@ -2468,7 +2469,7 @@ What are transcripts for? When writing a tutorial, one often wants
 to include a REPL session with maybe a few defuns and a couple of
 forms whose output or return values are shown. Also, in a function's
 docstring an example call with concrete arguments and return values
-speaks volumes. A transcript is a text that looks like a repl
+speaks volumes. A transcript is a text that looks like a REPL
 session, but which has a light markup for printed output and return
 values, while no markup (i.e. prompt) for Lisp forms. PAX
 transcripts may include output and return values of all forms, or
@@ -2717,7 +2718,7 @@ Transcription support in Emacs can be enabled by loading
     If `CHECK-CONSISTENCY` is true, then `TRANSCRIBE` signals a continuable
     [`TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR`][8492] whenever a form's output as a
     string is different from what was in `INPUT`, provided that `INPUT`
-    contained the output. Similary, for values, a continuable
+    contained the output. Similarly, for values, a continuable
     [`TRANSCRIPTION-VALUES-CONSISTENCY-ERROR`][238c] is signalled if a value read
     from the source does not print as the as the value returned by `EVAL`.
     This allows readable values to be hand-indented without failing
@@ -2885,14 +2886,14 @@ Transcription support in Emacs can be enabled by loading
 <a id="x-28MGL-PAX-3ATRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR-20CONDITION-29"></a>
 - [condition] **TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR** *[TRANSCRIPTION-CONSISTENCY-ERROR][a249]*
 
-    Signaled (with [`CERROR`][4317]) by [`TRANSCRIBE`][f1f0] when invoked
+    Signalled (with [`CERROR`][4317]) by [`TRANSCRIBE`][f1f0] when invoked
     with `:CHECK-CONSISTENCY` and the output of a form is not the same as
     what was parsed.
 
 <a id="x-28MGL-PAX-3ATRANSCRIPTION-VALUES-CONSISTENCY-ERROR-20CONDITION-29"></a>
 - [condition] **TRANSCRIPTION-VALUES-CONSISTENCY-ERROR** *[TRANSCRIPTION-CONSISTENCY-ERROR][a249]*
 
-    Signaled (with [`CERROR`][4317]) by [`TRANSCRIBE`][f1f0] when invoked
+    Signalled (with [`CERROR`][4317]) by [`TRANSCRIBE`][f1f0] when invoked
     with `:CHECK-CONSISTENCY` and the values of a form are inconsistent
     with their parsed representation.
 
@@ -2901,7 +2902,7 @@ Transcription support in Emacs can be enabled by loading
 
 The main use case for consistency checking is detecting
 out-of-date examples in documentation, although using it for writing
-tests is also a possiblity. Here, we focus on the former.
+tests is also a possibility. Here, we focus on the former.
 
 When a markdown code block tagged `cl-transcript` is processed
 during [Generating Documentation][2c93], the code in it is replaced with
@@ -2920,7 +2921,7 @@ Now, if we change `GREET` to print or return something else, a
 documentation generation. Then we may fix the documentation or
 [`CONTINUE`][1867] from the error.
 
-By default, comparisons of previous to current ouput, readable and
+By default, comparisons of previous to current output, readable and
 unreadable return values are performed with [`STRING=`][4143], [`EQUAL`][3fb5], and
 `STRING=`, respectively, which is great in the simple case.
 Non-determinism aside, exact matching becomes brittle as soon as the
@@ -3356,7 +3357,7 @@ generic functions that we have specialized in [Adding New Object Types][bbf2] ha
   see *FORMAT*. Note that *FORMAT* is unbound. If the variable is
   BOUNDP, then its _current_ value is included in the documentation.
   See *DOCUMENT-LINK-CODE* for an example output. To override the
-  current value, `INITFORM` may be provided. This is particulary
+  current value, `INITFORM` may be provided. This is particularly
   useful if the value of the variable is something undesirable such as
   `\\#<MY-CLASS {100171ED93}>`.""")
 

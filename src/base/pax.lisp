@@ -269,7 +269,7 @@
 
 (defmacro define-package (package &rest options)
   "This is like CL:DEFPACKAGE but silences warnings and errors
-  signaled when the redefined package is at variance with the current
+  signalled when the redefined package is at variance with the current
   state of the package. Typically this situation occurs when symbols
   are exported by calling EXPORT (as is the case with DEFSECTION) as
   opposed to adding :EXPORT forms to the DEFPACKAGE form and the
@@ -407,7 +407,7 @@
 (defun locate (object locative &key (errorp t))
   "Follow LOCATIVE from OBJECT and return the object it leads to or a
   REFERENCE if there is no first-class object corresponding to the
-  location. Depending on ERRORP, a LOCATE-ERROR condition is signaled
+  location. Depending on ERRORP, a LOCATE-ERROR condition is signalled
   or NIL is returned if the lookup fails.
 
   ```

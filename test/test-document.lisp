@@ -880,7 +880,7 @@ This is [Self-referencing][e042].
 
 - [condition] **TRANSCRIPTION-VALUES-CONSISTENCY-ERROR** *[TRANSCRIPTION-CONSISTENCY-ERROR][a249]*
 
-    Signaled (with [`CERROR`][4317]) by `TRANSCRIBE` when invoked
+    Signalled (with [`CERROR`][4317]) by `TRANSCRIBE` when invoked
     with `:CHECK-CONSISTENCY` and the values of a form are inconsistent
     with their parsed representation.
 

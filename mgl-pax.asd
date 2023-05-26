@@ -13,7 +13,7 @@
   generator."
   :long-description "The set of dependencies of the MGL-PAX system is
   kept light, and its heavier dependencies are autoloaded via ASDF
-  when the relavant functionality is accessed. See the
+  when the relevant functionality is accessed. See the
   MGL-PAX/NAVIGATE, MGL-PAX/DOCUMENT, MGL-PAX/TRANSCRIBE and
   MGL-PAX/FULL systems. To keep deployed code small, client systems
   should declare an ASDF dependency on this system, never on the

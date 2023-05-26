@@ -82,7 +82,7 @@
   see *FORMAT*. Note that *FORMAT* is unbound. If the variable is
   BOUNDP, then its _current_ value is included in the documentation.
   See *DOCUMENT-LINK-CODE* for an example output. To override the
-  current value, `INITFORM` may be provided. This is particulary
+  current value, `INITFORM` may be provided. This is particularly
   useful if the value of the variable is something undesirable such as
   `\\#<MY-CLASS {100171ED93}>`.""")
 
@@ -725,8 +725,8 @@
 
       (foo class)
 
-  In the generated documention, only superclasses denoted by [external
-  symbols][find-symbol function] are included.")
+  In the generated documentation, only superclasses denoted by
+  [external symbols][find-symbol function] are included.")
 
 (define-locative-type condition ()
   "CONDITION is the locative type for [CONDITION][condition]s. To
@@ -734,8 +734,8 @@
 
       (foo condition)
 
-  In the generated documention, only superclasses denoted by [external
-  symbols][find-symbol function] are included.")
+  In the generated documentation, only superclasses denoted by
+  [external symbols][find-symbol function] are included.")
 
 (defmethod locate-object (symbol (locative-type (eql 'class)) locative-args)
   (or (and (symbolp symbol)

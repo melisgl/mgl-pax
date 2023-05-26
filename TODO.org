@@ -17,6 +17,13 @@ because it's translated to a list item
     [aaaa]: https://example.com
 
 " *standard-output* :FORMAT :HTML)
+
+But there is not good place to define them, so we'll something like a
+symbol based definition:
+
+(defmdtarget markdown "http://exxx")
+
+which is maybe an external link.
 * MAYBE pretty print lambda-lists (including default values)
 and values of variables. Unfortunately, there seems to be no way to
 use the lisp pretty printer for this because output also includes
@@ -25,7 +32,7 @@ markup. We could get the original indentation from the sources.
 This either relies on the global value of
 *TRANSCRIBE-CHECK-CONSISTENCY* or it needs to see the
 "```cl-transcript (...)" line.
-* MAYBE support external links
+* TODO support external links
 This is partially done. CLHS is mostly implemented as an external
 link. See EXTERNAL-LOCATIVE-P and co.
 * MAYBE link to MOP

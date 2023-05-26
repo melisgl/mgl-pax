@@ -525,10 +525,11 @@
 
   The PAGES argument is to create multi-page documents by routing some
   of the generated output to files, strings or streams. PAGES is a
-  list of page specification elements. A page spec is a plist with
-  keys :OBJECTS, :OUTPUT, :URI-FRAGMENT, :SOURCE-URI-FN, :HEADER-FN
-  and :FOOTER-FN. OBJECTS is a list of objects (references are allowed
-  but not required) whose documentation is to be sent to :OUTPUT.
+  list of page specification elements. A page spec is a [property
+  list][clhs] with keys :OBJECTS, :OUTPUT, :URI-FRAGMENT,
+  :SOURCE-URI-FN, :HEADER-FN and :FOOTER-FN. OBJECTS is a list of
+  objects (references are allowed but not required) whose
+  documentation is to be sent to :OUTPUT.
 
   When documentation for an object is generated, the first matching
   page spec is used, where the object matches the page spec if it is
@@ -569,7 +570,7 @@
   :HEADER-FN, if not NIL, is a function of a single stream argument,
   which is called just before the first write to the page. Since
   :FORMAT :HTML only generates HTML fragments, this makes it possible
-  to print arbitrary headers, typically setting the title, css
+  to print arbitrary headers, typically setting the title, CSS
   stylesheet, or charset.
 
   :FOOTER-FN is similar to :HEADER-FN, but it's called after the last
@@ -585,7 +586,7 @@
   argument. If it returns a value other than NIL, then it must be a
   string representing an \URI. If FORMAT is :HTML and
   *DOCUMENT-MARK-UP-SIGNATURES* is true, then the locative as
-  displayed in the signature will be a link to this uri. See
+  displayed in the signature will be a link to this URI. See
   MAKE-GIT-SOURCE-URI-FN.
 
   PAGES may look something like this:
@@ -935,7 +936,7 @@
               (format stream "~A" reindented)))))))
 
 (defsection @markdown-syntax-highlighting (:title "Syntax Highlighting")
-  "For syntax highlighting, github's [fenced code
+  "For syntax highlighting, Github's [fenced code
   blocks][fenced-code-blocks] markdown extension to mark up code
   blocks with triple backticks is enabled so all you need to do is
   write:
@@ -961,7 +962,7 @@
 
       $\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$
 
-  which is diplayed as $\int_0^\infty e^{-x^2}
+  which is displayed as $\int_0^\infty e^{-x^2}
   dx=\frac{\sqrt{\pi}}{2}$, or it can be delimited by `$$` like this:
 
       $$\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
@@ -1088,8 +1089,8 @@
 
   where the links are added due to *DOCUMENT-LINK-CODE*.
 
-  To suppress this behavior, add a backslash to the beginning of the a
-  @CODIFIABLE word or right after the leading `\\*` if it would
+  To suppress this behaviour, add a backslash to the beginning of the
+  a @CODIFIABLE word or right after the leading `\\*` if it would
   otherwise be parsed as markdown emphasis:
 
       "\\SECTION *\\PACKAGE*"
@@ -1993,7 +1994,7 @@
 
 
 (defsection @local-references (:title "Local References")
-  """To unclutter the generated output by reducing the number of
+  """To declutter the generated output by reducing the number of
   links, the so-called local references (e.g. references to the very
   definition for which documentation is being generated) are treated
   specially. In the following example, there are local references to
@@ -2263,7 +2264,7 @@
 
 (defvar *document-url-versions* '(2 1)
   """A list of versions of \PAX \URL formats to support in the
-  generated documenation. The first in the list is used to generate
+  generated documentation. The first in the list is used to generate
   links.
 
   \PAX emits HTML anchors before the documentation of SECTIONs
@@ -2286,7 +2287,7 @@
 
   Version 1 is based on the more strict HTML4 standard and the id of
   `FOO` is `"x-28MGL-PAX-3A-3AFOO-20FUNCTION-29"`. This is supported
-  by Github flavoured Markdown. Version 2 has minimal clutter and is
+  by Github-flavoured Markdown. Version 2 has minimal clutter and is
   obviously preferred. However, in order not to break external links,
   by default, both anchors are generated.
 
@@ -2398,7 +2399,7 @@
   documentation, which can be a pain in a version control system.
 
   Clearly, there is a tradeoff here. This variable controls how many
-  characters of the md5 sum of the full link id (the reference as a
+  characters of the MD5 sum of the full link id (the reference as a
   string) are retained. If collisions are found due to the low number
   of characters, then the length of the hash of the colliding
   reference is increased.
@@ -2526,7 +2527,7 @@
       (labels
           ((resolve* (object)
              (if (and *document-mark-up-signatures*
-                      ;; KLUDGE: github has trouble displaying things
+                      ;; KLUDGE: Github has trouble displaying things
                       ;; like '`*package*`, so disable this.
                       (eq *format* :html))
                  (codify-and-link (prin1-to-markdown object))
@@ -2744,7 +2745,7 @@
   entering `pax::@pax-manual#pax:defsection pax:macro`.
 
   In interactive use, `mgl-pax-document` defaults to documenting
-  `slime-symbol-at-point', possilby with a nearby locative the same
+  `slime-symbol-at-point`, possibly with a nearby locative the same
   way as in @NAVIGATING-IN-EMACS.
   """
   (@pax-urls section)

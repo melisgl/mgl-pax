@@ -118,7 +118,7 @@
   to include a REPL session with maybe a few defuns and a couple of
   forms whose output or return values are shown. Also, in a function's
   docstring an example call with concrete arguments and return values
-  speaks volumes. A transcript is a text that looks like a repl
+  speaks volumes. A transcript is a text that looks like a REPL
   session, but which has a light markup for printed output and return
   values, while no markup (i.e. prompt) for Lisp forms. \PAX
   transcripts may include output and return values of all forms, or
@@ -334,7 +334,7 @@
   If CHECK-CONSISTENCY is true, then TRANSCRIBE signals a continuable
   TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR whenever a form's output as a
   string is different from what was in INPUT, provided that INPUT
-  contained the output. Similary, for values, a continuable
+  contained the output. Similarly, for values, a continuable
   TRANSCRIPTION-VALUES-CONSISTENCY-ERROR is signalled if a value read
   from the source does not print as the as the value returned by EVAL.
   This allows readable values to be hand-indented without failing
@@ -1163,14 +1163,14 @@
 (define-condition transcription-output-consistency-error
     (transcription-consistency-error)
   ()
-  (:documentation "Signaled (with CERROR) by TRANSCRIBE when invoked
+  (:documentation "Signalled (with CERROR) by TRANSCRIBE when invoked
   with :CHECK-CONSISTENCY and the output of a form is not the same as
   what was parsed."))
 
 (define-condition transcription-values-consistency-error
     (transcription-consistency-error)
   ()
-  (:documentation "Signaled (with CERROR) by TRANSCRIBE when invoked
+  (:documentation "Signalled (with CERROR) by TRANSCRIBE when invoked
   with :CHECK-CONSISTENCY and the values of a form are inconsistent
   with their parsed representation."))
 
@@ -1311,7 +1311,7 @@
     (:title "Transcript Consistency Checking")
   """The main use case for consistency checking is detecting
   out-of-date examples in documentation, although using it for writing
-  tests is also a possiblity. Here, we focus on the former.
+  tests is also a possibility. Here, we focus on the former.
 
   When a markdown code block tagged `cl-transcript` is processed
   during @GENERATING-DOCUMENTATION, the code in it is replaced with
@@ -1330,7 +1330,7 @@
   documentation generation. Then we may fix the documentation or
   [CONTINUE][restart] from the error.
 
-  By default, comparisons of previous to current ouput, readable and
+  By default, comparisons of previous to current output, readable and
   unreadable return values are performed with STRING=, EQUAL, and
   STRING=, respectively, which is great in the simple case.
   Non-determinism aside, exact matching becomes brittle as soon as the

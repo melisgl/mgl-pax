@@ -184,7 +184,7 @@
   committed first, and only then can HTML documentation be regenerated
   and committed in a followup commit.
 
-  The second issue is that github is not very good at serving HTMLs
+  The second issue is that github is not very good at serving HTML
   files from the repository itself (and
   [http://htmlpreview.github.io](http://htmlpreview.github.io) chokes
   on links to the sources).
