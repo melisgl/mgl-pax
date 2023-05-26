@@ -13,6 +13,22 @@
     ;; We don't care about convenience with :INVERT.
     ((:preserve :invert) string)))
 
+;;; Return the number of characters that would be read by
+;;; READ-FROM-STRING. May signal READER-ERROR or END-OF-FILE.
+(defun n-chars-would-read (string)
+  (nth-value 1 (let ((*read-suppress* t))
+                 (read-from-string string))))
+
+(defun read-interned-symbol-from-string (string)
+  (let ((pos (n-chars-would-read string)))
+    (multiple-value-bind (symbol foundp)
+        (swank::parse-symbol (string-trim *whitespace-chars*
+                                          (subseq string 0 pos)))
+      (when foundp
+        (multiple-value-bind (symbol2 pos) (read-from-string string)
+          (assert (eq symbol symbol2))
+          (values symbol2 pos))))))
+
 (defparameter *utf-8-external-format*
   #+abcl :utf-8
   #+clisp charset:utf-8

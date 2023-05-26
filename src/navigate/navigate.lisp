@@ -191,54 +191,77 @@
    (string-trim ":`',." string)))
 
 ;;; Parse "LOCATIVE-TYPE" and "(LOCATIVE-TYPE ...)" like
-;;; READ-FROM-STRING, but only intern stuff if LOCATIVE-TYPE is a
-;;; valid locative.
-(defun read-locative-from-string (string)
-  (let ((swank::*buffer-package* *package*))
-    (multiple-value-bind (symbol found)
-        (with-swank ()
-          (swank::parse-symbol (string-trim *whitespace-chars* string)))
-      (if found
-          (when (locate symbol 'locative :errorp nil)
-            symbol)
-          (let ((first-char-pos (position-if-not #'whitespacep string)))
-            (when (and first-char-pos
-                       (char= (elt string first-char-pos) #\())
-              ;; Looks like a list. The first element must be an
-              ;; interned symbol naming a locative.
-              (let ((delimiter-pos (position-if #'delimiterp string
-                                                :start (1+ first-char-pos))))
-                (multiple-value-bind (symbol found)
-                    (swank::parse-symbol
-                     (subseq string (1+ first-char-pos) delimiter-pos))
-                  (when (and found (locate symbol 'locative :errorp nil))
-                    ;; The rest of the symbols in the string need not
-                    ;; be already interned, so let's just read it.
-                    (ignore-errors
-                     ;; There may be unread junk left, but we don't
-                     ;; care.
-                     (read-from-string string)))))))))))
-
-;;; Parse "OBJECT LOCATIVE-TYPE" or "OBJECT (LOCATIVE-TYPE ...))" but
-;;; only intern stuff if LOCATIVE-TYPE is a valid locative.
-(defun read-reference-from-string (string)
+;;; READ-FROM-STRING, but try to minimize the chance of interning
+;;; junk. That is, don't intern LOCATIVE-TYPE (it must be already) or
+;;; anything in "..." if LOCATIVE-TYPE is not a valid locative type.
+(defun read-locative-from-string (string &key junk-allowed)
   (handler-case
-      ;; Skip whatever OBJECT may be ...
-      (let* ((pos (nth-value 1 (let ((*read-suppress* t))
-                                 (read-from-string string))))
-             ;; ... then just try to parse the locative.
-             (locative (read-locative-from-string (subseq string pos))))
-        (if locative
-            (values (read-object-from-string (subseq string 0 pos))
-                    locative t)
-            (values nil nil nil
-                    (let ((locstring (string-trim *whitespace-chars*
-                                                  (subseq string pos))))
-                      (if (zerop (length locstring))
-                          nil
-                          locstring)))))
+      (multiple-value-bind (symbol pos)
+          (read-interned-symbol-from-string string)
+        (if pos
+            (when (and (or junk-allowed
+                           (not (find-if-not #'whitespacep string :start pos)))
+                       (locate symbol 'locative :errorp nil))
+              (values symbol pos))
+            (let ((first-char-pos (position-if-not #'whitespacep string)))
+              (when (and first-char-pos (char= (elt string first-char-pos) #\())
+                ;; Looks like a list. The first element must be an
+                ;; interned symbol naming a locative.
+                (let ((delimiter-pos (position-if #'delimiterp string
+                                                  :start (1+ first-char-pos))))
+                  (multiple-value-bind (symbol found)
+                      (swank::parse-symbol
+                       (subseq string (1+ first-char-pos) delimiter-pos))
+                    (when (and found (locate symbol 'locative :errorp nil))
+                      ;; The rest of the symbols in the string need not be
+                      ;; already interned, so let's just READ.
+                      (multiple-value-bind (locative position)
+                          (ignore-errors (read-from-string string))
+                        (when locative
+                          (values locative position))))))))))
     ((or reader-error end-of-file) ()
       nil)))
+
+(defun read-locatives-from-string (string)
+  (let ((locatives ())
+        (start 0))
+    (loop
+      (multiple-value-bind (locative pos)
+          (read-locative-from-string (subseq string start) :junk-allowed t)
+        (cond (locative
+               (push locative locatives)
+               (incf start pos))
+              (t
+               (return)))))
+    (values (reverse locatives) start)))
+
+;;; Parse "OBJECT LOCATIVE-TYPE" or "OBJECT (LOCATIVE-TYPE ...))", but
+;;; only intern stuff if LOCATIVE-TYPE is interned. Return 1. object,
+;;; 2. locative, 3. whether at least one locative was found, 4. the
+;;; unparsable junk if any unread non-whitespace characters are left.
+(defun read-reference-from-string (string &key multiple-locatives-p)
+  (flet ((maybe-junk (start)
+           (let ((locstring (string-trim *whitespace-chars*
+                                         (subseq string start))))
+             (if (zerop (length locstring))
+                 nil
+                 locstring))))
+    (handler-case
+        ;; Skip whatever OBJECT may be ...
+        (let ((object-end-pos (n-chars-would-read string)))
+          ;; ... then just try to parse the locative.
+          (multiple-value-bind (one-or-more-locatives pos)
+              (if multiple-locatives-p
+                  (read-locatives-from-string (subseq string object-end-pos))
+                  (read-locative-from-string (subseq string object-end-pos)))
+            (if one-or-more-locatives
+                (values (read-object-from-string
+                         (subseq string 0 object-end-pos))
+                        one-or-more-locatives t
+                        (maybe-junk (+ object-end-pos pos)))
+                (values nil nil nil (maybe-junk object-end-pos)))))
+      ((or reader-error end-of-file) ()
+        nil))))
 
 (defun read-object-from-string (string)
   (let ((string (string-trim *whitespace-chars* string)))
@@ -248,14 +271,14 @@
             (swank::parse-symbol
              ;; Make "PAX:@PAX-MANUAL SECTION" work with a single
              ;; colon even though @PAX-MANUAL is an internal symbol.
-             (double-first-colon string))
+             (double-single-colon string))
           (if found
               symbol
               (adjust-string-case string))))))
 
-(defun double-first-colon (string)
+(defun double-single-colon (string)
   (let ((pos (position #\: string)))
-    (if pos
+    (if (and pos (not (search "::" string)))
         (concatenate 'string (subseq string 0 pos) ":" (subseq string pos))
         string)))
 

@@ -992,9 +992,9 @@ which makes navigating the sources with `M-.` (see
     - *definitions*: These are typically unnecessary as DOCUMENT will
       produce the same link for e.g. `PPRINT`, `[PPRINT][function]`,
       or `[PPRINT][]` if *DOCUMENT-LINK-TO-HYPERSPEC* is non-NIL and the
-      PPRINT function in the running Lisp is not being documented. In
+      PPRINT function in the running Lisp is not being DOCUMENTed. In
       the Emacs documentation browser, a
-      slight difference is that everything is being documented, so using
+      slight difference is that everything is being DOCUMENTed, so using
       the CLHS link bypasses the page with the definition in the running
       Lisp.
     
@@ -1646,7 +1646,7 @@ number of methods.
 ##### Unambiguous Unspecified Locative
 
 In the following examples, although no locative is specified,
-`DOCUMENT` names a single @OBJECT being documented, so they all
+`DOCUMENT` names a single @OBJECT being DOCUMENTed, so they all
 render as DOCUMENT.
 
 - `[DOCUMENT][]` (*object, explicit link*),
@@ -1794,7 +1794,7 @@ linked to all non-local references.
 
     If true, link symbols found in code to the Common Lisp Hyperspec
     unless there is a definition in the running Lisp that is being
-    documented.
+    DOCUMENTed.
     
     Locatives work as expected (see *DOCUMENT-LINK-CODE*):
     FIND-IF links to FIND-IF, FUNCTION links
@@ -3255,7 +3255,7 @@ LOCATE-AND-DOCUMENT methods, which emit markdown.
     *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a local
     reference followed by ARGLIST.
     
-    - REFERENCE defaults to the reference being documented.
+    - REFERENCE defaults to the reference being DOCUMENTed.
     
     - NAME defaults to `(REFERENCE-OBJECT REFERENCE)` and is printed
       after the LOCATIVE-TYPE.

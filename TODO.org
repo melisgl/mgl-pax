@@ -81,23 +81,38 @@ https://github.com/40ants/doc/commit/c3bf89fa88ab70074466aa07358caad159d45008
 https://github.com/40ants/doc/commit/d638135b784c2fd7e0199c829157644da197fdb7
 * TODO support symbols in a context
 E.g. LOOP's WITH, or OTHERWISE in CASE, CALL-NEXT-METHOD
-* BUG method dspec parsing is incorrect
+* BUG (low) method dspec parsing is incorrect
 e.g. SB-PCL::MAKE-SPECIALIZER-FORM-USING-CLASS One cannot tell method
 qualifiers from specializers in the dspec without actually consulting
 the definition.
-* BUG C-. differs from M-. on "type FOO function"
-C-.'s disambiguation page lists all definitions of FOO, while M-. pops
-up only the TYPE and FUNCTION dspecs.
+* BUG (low) C-. differs from M-. on "type FOO function"
+- C-. goes to the disambiguation page of FOO, which lists all definitions
+- M-. pops up only the TYPE and FUNCTION dspecs
+- "type FOO function" links to (foo type) and (foo function)
 
+One way to fix this would be to allow multiple locatives in pax urls
+(parsing is implemened with :MULTIPLE-LOCATIVES-P in
+READ-REFERENCE-FROM-STRING), but then pax-urls could link to 2 or 3
+references while that is currently not possible from the documentation
+(only 1 or all).
 * MAYBE if no docstring, get the comment just above the definition?
 Or go to the source.
 * MAYBE use SECTION-PACKAGE from "first" enclosing section?
 That is, when generating documentation for something that's referenced
 by one or more sections. See PAX::SECTIONS-THAT-CONTAIN and
 PAX::SORT-BY-PROXIMITY.
-* BUG html page title has markup
+* BUG (low) html page title has markup
 E.g \\, maybe **.
-* BUG (3BMD-GRAMMAR:PARSE-DOC "[l][*x*]") fails
-* BUG C-. on [lambda lists][clhs] confused by the space
+* BUG (low) (3BMD-GRAMMAR:PARSE-DOC "[l][*x*]") fails
+* BUG (low) C-. on [lambda lists][clhs] confused by the space
 * MAYBE autoload documentation when needed?
 E.g. for named-readtables, which has its docs in named-readtables/doc.
+* BUG (low) C-. history depends on current package
+E.g. 'clhs' works in a package where pax used but not elsewhere.
+
+But so does M-.'s history.
+* TODO documentation browser through a web server
+Instead of w3m, use `browse-url-browser-function' and a CL web server
+generating and serving pax pages. Maybe even hijack clicking on the
+locative, which normally goes to github, to act like 'v' in w3m (i.e.
+make Emacs visit the source).

@@ -1466,9 +1466,9 @@ default (see EXPORTABLE-REFERENCE-P).")
   - *definitions*: These are typically unnecessary as DOCUMENT will
     produce the same link for e.g. `\\PPRINT`, `[PPRINT][function]`,
     or `[PPRINT][]` if *DOCUMENT-LINK-TO-HYPERSPEC* is non-NIL and the
-    PPRINT function in the running Lisp is not being documented. In
+    PPRINT function in the running Lisp is not being DOCUMENTed. In
     the [Emacs documentation browser][ @documenting-in-emacs], a
-    slight difference is that everything is being documented, so using
+    slight difference is that everything is being DOCUMENTed, so using
     the CLHS link bypasses the page with the definition in the running
     Lisp.
 

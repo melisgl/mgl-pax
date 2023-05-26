@@ -3,6 +3,7 @@
 (deftest test-navigate ()
   (test-dspecs)
   (test-read-locative-from-string)
+  (test-read-object-from-string)
   (test-read-reference-from-string)
   (test-locate-definitions-for-emacs)
   (test-navigation-to-source)
@@ -15,14 +16,32 @@
     (is (null (mgl-pax::read-locative-from-string "non-interned")))
     (is (null (find-symbol (string '#:non-interned))))
     (is (null (mgl-pax::read-locative-from-string "find")))
-    (is (eq (mgl-pax::read-locative-from-string "function") 'function))
-    (is (eq (mgl-pax::read-locative-from-string " function") 'function))
-    (is (eq (mgl-pax::read-locative-from-string "function ") 'function))
-    (is (null (mgl-pax::read-locative-from-string "function junk")))
+    (is (null (mgl-pax::read-locative-from-string "")))
+    (is (match-values (mgl-pax::read-locative-from-string "function")
+          (eq * 'function)
+          (= * 8)))
+    (is (match-values (mgl-pax::read-locative-from-string " function")
+          (eq *'function)
+          (= * 9)))
+    (is (match-values (mgl-pax::read-locative-from-string "function ")
+          (eq * 'function)
+          (= * 9)))
+    (is (match-values (mgl-pax::read-locative-from-string "function junk")
+          (null *)))
+    (is (match-values (mgl-pax::read-locative-from-string "function junk"
+                                                          :junk-allowed t)
+          (eq * 'function)
+          (= * 9)))
     (let ((locative (mgl-pax::read-locative-from-string "(function yyy)")))
       (is (eq (first locative) 'function))
       (is (string= (symbol-name (second locative)) (string '#:yyy)))
       (is (eq (symbol-package (second locative)) *package*)))))
+
+(defun test-read-object-from-string ()
+  (let ((*package* (find-package :mgl-pax-test)))
+    (is (eq (mgl-pax::read-object-from-string "deftest") 'deftest))
+    (is (eq (mgl-pax::read-object-from-string "MGL-PAX::@CODIFIABLE")
+            'mgl-pax::@codifiable))))
 
 (deftest test-read-reference-from-string ()
   (let ((*package* (find-package :mgl-pax-test)))
@@ -39,14 +58,43 @@
     (is (match-values (mgl-pax::read-reference-from-string "yyy function")
           (string= * "YYY")
           (eq * 'function)
-          (eq * t)))
+          (eq * t)
+          (null *)))
     (is (match-values (mgl-pax::read-reference-from-string " yyy  function ")
           (string= * "YYY")
           (eq * 'function)
-          (eq * t)))
-    (is (null (mgl-pax::read-reference-from-string "yyy function junk")))
+          (eq * t)
+          (null *)))
+    (is (match-values
+            (mgl-pax::read-reference-from-string " yyy  function  xxx ")
+          (null *)
+          (null *)
+          (null *)
+          (string= * "function  xxx")))
     (is (mgl-pax::read-reference-from-string "mgl-pax:@codification section")
-        :msg "internal symbol with single :")))
+        :msg "internal symbol with single :")
+    (with-test ("multiple locatives")
+      (is (match-values
+              (mgl-pax::read-reference-from-string "foo function type"
+                                                   :multiple-locatives-p t)
+            (eq * 'foo)
+            (equal * '(function type))
+            (eq * t)
+            (null *)))
+      (is (match-values
+              (mgl-pax::read-reference-from-string "foo function xxx"
+                                                   :multiple-locatives-p t)
+            (eq * 'foo)
+            (equal * '(function))
+            (eq * t)
+            (string= * "xxx")))
+      (is (match-values
+              (mgl-pax::read-reference-from-string "foo xxx type"
+                                                   :multiple-locatives-p t)
+            (eq * nil)
+            (equal * '())
+            (eq * nil)
+            (string= * "xxx type"))))))
 
 ;;; We have no Emacs based tests. This tests the CL side of `M-.' when
 ;;; it's invoked with point on FOO in the test cases below. The actual
@@ -87,8 +135,10 @@
                     ("MGL-PAX-TEST::FOO" "FUNCTION")
                     ("MGL-PAX-TEST::FOO" "CLASS"))))
     ;; pax
-    (check-ldfe '(("pax" ()))
-                '(("pax" "PACKAGE")))))
+    (with-failure-expected ((alexandria:featurep '(:or :abcl :allegro :ccl
+                                                   :clisp :cmucl :ecl)))
+      (check-ldfe '(("pax" ()))
+                  '(("pax" "PACKAGE"))))))
 
 (defun check-ldfe (object-and-locatives-list expected-emacsrefs)
   (let ((emacsrefs (sort-emacsrefs

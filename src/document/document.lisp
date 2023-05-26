@@ -177,7 +177,7 @@
     (push link (gethash object olmap))))
 
 ;;; A list of references with special rules for linking (see
-;;; @LOCAL-REFERENCES). The reference being documented is always on
+;;; @LOCAL-REFERENCES). The reference being DOCUMENTed is always on
 ;;; this list. Arguments are typically also are. Bound by
 ;;; WITH-LOCAL-REFERENCES.
 (defvar *local-references*)
@@ -315,7 +315,7 @@
 (defvar *document-link-to-hyperspec* t
   "If true, link symbols found in code to the Common Lisp Hyperspec
   unless there is a definition in the running Lisp that is being
-  documented.
+  DOCUMENTed.
 
   Locatives work as expected (see *DOCUMENT-LINK-CODE*):
   [FIND-IF][dislocated] links to FIND-IF, [FUNCTION][dislocated] links
@@ -1525,7 +1525,7 @@
 (defsection @unambiguous-unspecificed-locative
     (:title "Unambiguous Unspecified Locative")
   """In the following examples, although no locative is specified,
-  `\DOCUMENT` names a single @OBJECT being documented, so they all
+  `\DOCUMENT` names a single @OBJECT being DOCUMENTed, so they all
   render as [DOCUMENT][function].
 
   - `\[DOCUMENT][]` (*object, explicit link*),
@@ -2906,6 +2906,7 @@
         (when (external-locative-p (reference-locative reference))
           reference)))))
 
+;;; E.g. "pax:foo function"
 (defun document-for-emacs/reference (reference dirname)
   (alexandria:if-let (external-reference (open-reference-if-external
                                           reference))
@@ -3021,6 +3022,7 @@
     (when (symbolp object)
       (symbol-package object))))
 
+;;; E.g. "pax:foo"
 (defun document-for-emacs/ambiguous (references pax-url-path dirname)
   (assert (< 1 (length references)))
   (let ((filename (merge-pathnames

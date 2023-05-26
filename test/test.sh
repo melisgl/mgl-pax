@@ -2,7 +2,7 @@
 
 stop_on_failure="${1:-t}"
 debug="${2:-nil}"
-print="${3:-(quote t)}"
+print="${3:-(quote try:unexpected)}"
 describe="${4:-(quote try:unexpected)}"
 num_passes=
 num_failures=

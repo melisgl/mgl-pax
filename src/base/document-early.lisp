@@ -84,7 +84,7 @@
   *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a [local
   reference][@LOCAL-REFERENCES] followed by ARGLIST.
 
-  - REFERENCE defaults to the reference being documented.
+  - REFERENCE defaults to the reference being DOCUMENTed.
 
   - NAME defaults to `(REFERENCE-OBJECT REFERENCE)` and is printed
     after the LOCATIVE-TYPE.
