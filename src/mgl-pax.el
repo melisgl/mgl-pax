@@ -842,7 +842,7 @@ input will not be changed."
   (save-excursion
     (save-restriction
       (narrow-to-defun)
-      (when (search-backward "```")
+      (when (search-backward "```" nil t)
         (when (looking-at "```cl-transcript")
           (save-restriction
             (narrow-to-region (point) (save-excursion
