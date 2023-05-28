@@ -123,3 +123,4 @@ Instead of w3m, use `browse-url-browser-function' and a CL web server
 generating and serving pax pages. Maybe even hijack clicking on the
 locative, which normally goes to github, to act like 'v' in w3m (i.e.
 make Emacs visit the source).
+* BUG SBCL traced function location is wrong

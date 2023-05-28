@@ -907,7 +907,7 @@
 (defmethod locate-object (name (locative-type (eql 'asdf:system))
                           locative-args)
   (or (and (endp locative-args)
-           (let ((name (string-downcase (string name))))
+           (let ((name (ignore-errors (string-downcase (string name)))))
              #+(or allegro clisp ecl)
              (when (member name (asdf:registered-systems) :test #'string=)
                (asdf:find-system name))
@@ -1030,6 +1030,7 @@
 #+(or abcl allegro ccl clisp cmucl ecl)
 (add-locative-to-source-search-list 'package)
 
+
 ;;;; READTABLE locative
 
 (define-locative-type readtable ()
@@ -1425,16 +1426,24 @@ default (see EXPORTABLE-REFERENCE-P).")
            location)))
 
 (defun location-file (location)
-  (second (find :file (rest location) :key #'first)))
+  (or (second (find :file (rest location) :key #'first))
+      (third (find :buffer-and-file (rest location) :key #'first))))
 
-(defun location-position (location)
+(defun location-buffer (location)
+  (or (second (find :buffer (rest location) :key #'first))
+      (second (find :buffer-and-file (rest location) :key #'first))))
+
+(defun location-position (location &key (adjustment -1))
   (let ((position (find :position (rest location) :key #'first)))
     (if position
-        (1- (second position))
+        (+ (second position) adjustment)
         (let ((offset (find :offset (rest location) :key #'first)))
           (if offset
-              (1- (+ (second offset) (third offset)))
+              (+ (second offset) (third offset) adjustment)
               nil)))))
+
+(defun location-snippet (location)
+  (second (find :snippet (rest location) :key #'first)))
 
 (defun file-subseq (pathname &optional start end)
   (with-open-file (stream pathname)

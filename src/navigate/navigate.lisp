@@ -48,7 +48,10 @@
   possibilities.
 
   The `\\M-.` extensions can be enabled by loading `src/mgl-pax.el`.
-  See @EMACS-SETUP."""
+  See @EMACS-SETUP. In addition, the Elisp command
+  `mgl-pax-edit-parent-section` visits the source location of the
+  section containing the definition with `point` in it. See
+  @DOCUMENTATION-KEY-BINDINGS."""
   (mgl-pax/navigate asdf:system))
 
 ;;; Ensure that some Swank internal facilities (such as
@@ -290,3 +293,166 @@
 ;;; matter because it's only used as a label to show to the user.
 (defun reference-to-fake-dspec (reference)
   (list (reference-object reference) (reference-locative reference)))
+
+
+;;;; Utilities for listing SECTIONs
+
+;;; This is slow but fast enough not to bother with a SECTION-NAME to
+;;; SECTION weak hash table.
+(defun list-all-sections ()
+  (let ((sections ()))
+    (do-all-symbols (symbol sections)
+      (when (boundp symbol)
+        (let ((value (symbol-value symbol)))
+          (when (and (typep value 'section)
+                     ;; Filter out normal variables with SECTION values.
+                     (eq (section-name value) symbol))
+            (pushnew value sections)))))))
+
+(defun sections-that-contain (sections reference)
+  (remove-if-not (lambda (section)
+                   (find-if (lambda (entry)
+                              (and (typep entry 'reference)
+                                   (reference= reference entry)))
+                            (section-entries section)))
+                 sections))
+
+;;; As a heuristic to find the "home" section, move sections whose
+;;; name is closer to the package of OBJECT to the front.
+(defun sort-by-proximity (sections reference)
+  (let ((object (reference-object reference)))
+    (if (symbolp object)
+        (let ((package-name (package-name (symbol-package object))))
+          (sort (copy-list sections) #'>
+                :key (lambda (section)
+                       (or (mismatch package-name
+                                     (package-name
+                                      (symbol-package
+                                       (section-name section))))
+                           most-positive-fixnum))))
+        sections)))
+
+(defun find-parent-sections (reference)
+  (let ((sections (sections-that-contain (list-all-sections) reference)))
+    (sort-by-proximity sections reference)))
+
+
+;;;; The Common Lisp side of mgl-pax-find-parent-section
+
+(defun/autoloaded find-parent-section-for-emacs (buffer filename possibilities)
+  (with-swank ()
+    (swank::converting-errors-to-error-location
+      (swank::with-buffer-syntax ()
+        (let ((reference (find-current-definition buffer filename
+                                                  possibilities)))
+          (if (not reference)
+              '(:error "Cannot determine current definition.")
+              (let ((sections (find-parent-sections reference)))
+                (if sections
+                    (loop for section in sections
+                          collect (dspec-and-source-location-for-emacs
+                                   (canonical-reference section)))
+                    `(:error ,(format nil "Cannot find parent section of ~S ~S."
+                                      (reference-object reference)
+                                      (reference-locative reference)))))))))))
+
+(defun dspec-and-source-location-for-emacs (reference)
+  (let ((location (ignore-errors (find-source reference))))
+    (if (null location)
+        `(,(prin1-to-string (reference-for-emacs reference))
+          (:error "No source location."))
+        `(,(prin1-to-string (reference-for-emacs reference))
+          ,location))))
+
+;;; This is also used by CURRENT-DEFINITION-PAX-URL-FOR-EMACS.
+(defun find-current-definition (buffer filename possibilities)
+  (loop for (name snippet pos) in possibilities
+        for object = (ignore-errors (read-from-string name))
+          thereis (and object (guess-current-definition
+                               object buffer
+                               filename snippet
+                               pos))))
+
+;;; Return the definition of OBJECT in BUFFER (a string) and FILE (a
+;;; string or NIL) whose source location information from FIND-SOURCE
+;;; matches SNIPPET or is otherwise closest to buffer positions POS
+;;; (1-based indexing).
+(defun guess-current-definition (object buffer file snippet pos)
+  (flet ((snippets-match (loc-snippet)
+           (or (null loc-snippet)
+               ;; E.g. ASDF:SYSTEMs on SBCL
+               (equal loc-snippet "")
+               (< (2nd-whitespace-position snippet)
+                  (or (mismatch loc-snippet snippet)
+                      (1+ (length snippet)))))))
+    ;; The following algorithm is heuristic.
+    (let ((closest-definition nil)
+          ;; Limit the chance of finding an unrelated definition just
+          ;; because its @OBJECT is used as the first arg of some form
+          ;; by not accepting position-based matches farther than 2000
+          ;; characters from POS.
+          (closest-pos 2000))
+      (dolist (reference (definitions-of object))
+        (let ((location (ignore-errors (find-source reference))))
+          (if (eq (first location) :location)
+              (let ((loc-file (location-file location))
+                    (loc-buffer (location-buffer location))
+                    (loc-pos (location-position location :adjustment 0))
+                    (loc-snippet (location-snippet location)))
+                (when (and
+                       ;; The files must always match (even if NIL).
+                       (equal file loc-file)
+                       ;; The buffers must match, but LOC-BUFFER may be
+                       ;; NIL (e.g. if the file wasn't compiled via
+                       ;; Slime).
+                       (or (null loc-buffer) (equal buffer loc-buffer))
+                       ;; A match in LOCATION-SNIPPET is most
+                       ;; trustworthy, but it's not always available.
+                       (if loc-snippet
+                           (snippets-match loc-snippet)
+                           (<= (abs (- loc-pos pos))
+                               (abs (- closest-pos pos)))))
+                  (setq closest-definition reference
+                        closest-pos loc-pos)))
+              ;; No source location
+              (when (reference-and-snippet-match-p reference snippet)
+                (setq closest-definition reference
+                      closest-pos pos)))))
+      closest-definition)))
+
+(defun 2nd-whitespace-position (string)
+  (or (alexandria:when-let (pos (position-if #'whitespacep string))
+        (position-if #'whitespacep string :start (1+ pos)))
+      (length string)))
+
+;;; This could use macroexpanded form instead of the snippet and a
+;;; generic function specialized on the locative type, but since it's
+;;; a fallback mechanism for the no-source-location case, that may be
+;;; an overkill.
+(defun reference-and-snippet-match-p (reference snippet)
+  (let ((patterns (case (reference-locative-type reference)
+                    ((variable) '("defvar" "defparameter"))
+                    ((constant) '("defconstant" "define-constant"))
+                    ((macro) '("defmacro"))
+                    ((symbol-macro '("define-symbol-macro")))
+                    ((compiler-macro '("define-compiler-macro")))
+                    ((function) '("defun"))
+                    ((generic-function) '("defgeneric"))
+                    ;; Can't find :METHOD in DEFGENERIC.
+                    ((method) '("defmethod"))
+                    ((method-combination '("define-method-combination")))
+                    ;; Can't find :READER, :WRITER, :ACCESSOR in DEFCLASS.
+                    ;; Can't find STRUCTURE-ACCESSOR.
+                    ((type) '("deftype"))
+                    ((class) '("defclass"))
+                    ((condition) '("define-condition"))
+                    ((declaration) '("define-declaration"))
+                    ((restart) '("define-restart"))
+                    ((asdf:system) '("defsystem"))
+                    ((package) '("defpackage" "define-package"))
+                    ((readtable) '("defreadtable"))
+                    ((section) '("defsection"))
+                    ((glossary-term) '("define-glossary-term"))
+                    ((locative) '("define-locative-type")))))
+    (loop for pattern in patterns
+            thereis (search pattern snippet :test #'char-equal))))

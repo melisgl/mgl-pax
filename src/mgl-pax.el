@@ -33,12 +33,19 @@
 
 
 (defun mgl-pax-hijack-slime-doc-keys ()
-  "If `w3m' is available, replace `slime-apropos',
-`slime-apropos-all', `slime-apropos-package' with
-`mgl-pax-apropos', `mgl-pax-apropos-all',
-`mgl-pax-apropos-package', and replace both
-`slime-describe-symbol' and `slime-describe-function' with
-`mgl-pax-document'.
+  "If `w3m' is available, then make the following changes to
+`slime-doc-map' (assuming it's bound to `C-c C-d').
+
+- `C-c C-d a': `mgl-pax-apropos' (replaces `slime-apropos')
+- `C-c C-d z': `mgl-pax-aproposa-all' (replaces `slime-apropos-all')
+- `C-c C-d p': `mgl-pax-apropos-package' (replaces `slime-apropos-package')
+- `C-c C-d d': `mgl-pax-document' (replaces `slime-describe-symbol')
+- `C-c C-d f': `mgl-pax-document' (replaces `slime-describe-function')
+- `C-c C-d c': `mgl-pax-document-current-definition'
+
+Also, regardless of whether `w3m' is available, add this:
+
+- `C-c C-d u': `mgl-pax-edit-parent-section'
 
 In addition, because it can be almost as useful as `M-.', one may
 want to give `mgl-pax-document' a more convenient binding such as
@@ -50,6 +57,7 @@ want to give `mgl-pax-document' a more convenient binding such as
 To bind `C-.' globally:
 
     (global-set-key (kbd \"C-.\") 'mgl-pax-document)"
+  (interactive)
   (if (not (require 'w3m nil t))
       (message "Requiring w3m failed.")
     (slime-bind-keys slime-doc-map t
@@ -57,7 +65,10 @@ To bind `C-.' globally:
                        (?z mgl-pax-apropos-all)
                        (?p mgl-pax-apropos-package)
                        (?d mgl-pax-document)
-                       (?f mgl-pax-document)))))
+                       (?f mgl-pax-document)
+                       (?c mgl-pax-document-current-definition))))
+  (slime-bind-keys slime-doc-map t
+                   '((?u mgl-pax-edit-parent-section))))
 
 
 ;;;; Autoloading of MGL-PAX on the Common Lisp side
@@ -172,6 +183,7 @@ other mgl-pax commands."
               (mgl-pax-next-sexp))
           (mgl-pax-next-sexp))))))
 
+;;; Return the next sexp as a string or nil.
 (defun mgl-pax-next-sexp ()
   (save-excursion
     (when (mgl-pax-forward-sexp)
@@ -708,6 +720,96 @@ move point to the beginning of the buffer."
              (concat "pax:" fragment))))))
 
 (add-hook 'slime-edit-definition-hooks 'mgl-pax-doc-edit-definition)
+
+
+;;;; Determining the current definition
+
+(defun mgl-pax-current-definition-possible-names ()
+  (save-excursion
+    (when (looking-at "(")
+      (ignore-errors (down-list)))
+    (cl-loop for name-snippet-and-pos
+             = (mgl-pax-current-sexp-first-arg-snippet-and-pos)
+             when name-snippet-and-pos
+             collect name-snippet-and-pos
+             while (ignore-errors (backward-up-list 1 t t)
+                                  t))))
+
+;;; Return 1. the first argument of the current sexp if it's a symbol,
+;;; 2. the Slime source location :SNIPPET, 3. the start position of
+;;; the sexp. If any movement fails or the first argument is not a
+;;; symbol, then return nil.
+(defun mgl-pax-current-sexp-first-arg-snippet-and-pos ()
+  (ignore-errors
+    (save-excursion
+      (backward-up-list 1 t t)
+      (let ((snippet (mgl-pax-next-sexp))
+            (pos (point)))
+        (when (< 200 (length snippet))
+          (setq snippet (cl-subseq snippet 0 200)))
+        (down-list)
+        (slime-forward-sexp)
+        (forward-char)
+        ;; `name' can be a symbol or a string ...
+        (let ((name (mgl-pax-next-sexp)))
+          ;; ... but currently never a list.
+          (unless (string-prefix-p "(" name)
+            (list name snippet pos)))))))
+
+
+(defun mgl-pax-document-current-definition ()
+  "Document the definition `point' is in with `mgl-pax-document'."
+  (interactive)
+  (mgl-pax-current-definition-pax-url
+   (lambda (pax-url)
+     (message "%S" pax-url)
+     (mgl-pax-document pax-url))))
+
+(defun mgl-pax-current-definition-pax-url (cont)
+  (mgl-pax-maybe-autoload
+   (lambda (loadedp)
+     (if (not loadedp)
+         (mgl-pax-not-loaded)
+       (slime-eval-async
+           `(cl:if (cl:find-package :mgl-pax)
+                   (cl:funcall
+                    (cl:find-symbol (cl:string
+                                     '#:current-definition-pax-url-for-emacs)
+                                    :mgl-pax)
+                    ',(buffer-name)
+                    ',(buffer-file-name)
+                    ',(mgl-pax-current-definition-possible-names))
+                   '(:error "MGL-PAX is not loaded."))
+         (lambda (values)
+           (if (eq (cl-first values) :error)
+               (message "%s" (cl-second values))
+             (apply cont (cl-rest values)))))))))
+
+
+(defun mgl-pax-edit-parent-section ()
+  "Look up the definition of parent section of the definition
+  `point' is in as if with `M-.' (`slime-edit-definition'). If
+  there are multiple containing sections, then pop up a selection
+  buffer."
+  (interactive)
+  (mgl-pax-find-parent-section #'mgl-pax-visit-locations))
+
+(defun mgl-pax-find-parent-section (cont)
+  (mgl-pax-maybe-autoload
+   (lambda (loadedp)
+     (if (not loadedp)
+         (mgl-pax-not-loaded)
+       (slime-eval-async
+           `(cl:if (cl:find-package :mgl-pax)
+                   (cl:funcall
+                    (cl:find-symbol (cl:string
+                                     '#:find-parent-section-for-emacs)
+                                    :mgl-pax)
+                    ',(buffer-name)
+                    ',(buffer-file-name)
+                    ',(mgl-pax-current-definition-possible-names))
+                   '(:error "MGL-PAX is not loaded."))
+         cont)))))
 
 
 ;;;; Apropos

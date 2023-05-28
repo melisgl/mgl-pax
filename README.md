@@ -1222,7 +1222,10 @@ locative separated by whitespace to preselect one of the
 possibilities.
 
 The `M-.` extensions can be enabled by loading `src/mgl-pax.el`.
-See [Emacs Setup][8541].
+See [Emacs Setup][8541]. In addition, the Elisp command
+`mgl-pax-edit-parent-section` visits the source location of the
+section containing the definition with `point` in it. See
+[Documentation Key Bindings][e0d7].
 
 <a id="x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 ### 7.1 The mgl-pax/navigate ASDF System
@@ -1438,7 +1441,9 @@ entering `pax::@pax-manual#pax:defsection pax:macro`.
 
 In interactive use, `mgl-pax-document` defaults to documenting
 `slime-symbol-at-point`, possibly with a nearby locative the same
-way as in [Navigating Sources in Emacs][3386].
+way as in [Navigating Sources in Emacs][3386]. The convenience function
+`mgl-pax-document-current-definition` documents the definition with
+point in it.
 
 <a id="x-28MGL-PAX-3A-40PAX-URLS-20MGL-PAX-3ASECTION-29"></a>
 #### 8.2.1 PAX URLs
@@ -1511,21 +1516,29 @@ functionality of `slime-apropos`, `slime-apropos-all`, and
 Evaluating `(mgl-pax-hijack-slime-doc-keys)` in Emacs handles
 the common case of binding keys. Its docstring is reproduced here:
 
-    If `w3m' is available, replace `slime-apropos',
-    `slime-apropos-all', `slime-apropos-package' with
-    `mgl-pax-apropos', `mgl-pax-apropos-all',
-    `mgl-pax-apropos-package', and replace both
-    `slime-describe-symbol' and `slime-describe-function' with
-    `mgl-pax-document'.
+    If `w3m' is available, then make the following changes to
+    `slime-doc-map' (assuming it's bound to `C-c C-d').
     
-    In addition, because it can be almost as useful as `M-.', one may
-    want to give `mgl-pax-document' a more convenient binding such as
-    `C-.' or `s-.' if you have a Super key. For example, to bind
-    `C-.' in all Slime buffers:
+    - `C-c C-d a`: `mgl-pax-apropos` (replaces `slime-apropos`)
+    - `C-c C-d z`: `mgl-pax-aproposa-all` (replaces `slime-apropos-all`)
+    - `C-c C-d p`: `mgl-pax-apropos-package` (replaces
+      `slime-apropos-package`)
+    - `C-c C-d d`: `mgl-pax-document` (replaces `slime-describe-symbol`)
+    - `C-c C-d f`: `mgl-pax-document` (replaces `slime-describe-function`)
+    - `C-c C-d c`: `mgl-pax-document-current-definition`
+    
+    Also, regardless of whether `w3m` is available, add this:
+    
+    - `C-c C-d u`: `mgl-pax-edit-parent-section`
+    
+    In addition, because it can be almost as useful as `M-.`, one may
+    want to give `mgl-pax-document` a more convenient binding such as
+    `C-.` or `s-.` if you have a Super key. For example, to bind
+    `C-.` in all Slime buffers:
     
         (slime-bind-keys slime-parent-map nil '((\"C-.\" mgl-pax-document)))
     
-    To bind `C-.' globally:
+    To bind `C-.` globally:
     
         (global-set-key (kbd \"C-.\") 'mgl-pax-document)
 
@@ -3075,7 +3088,7 @@ makes sense. Here is how all this is done for [`ASDF:SYSTEM:`][c097]
 (defmethod locate-object (name (locative-type (eql 'asdf:system))
                           locative-args)
   (or (and (endp locative-args)
-           (let ((name (string-downcase (string name))))
+           (let ((name (ignore-errors (string-downcase (string name)))))
              #+(or allegro clisp ecl)
              (when (member name (asdf:registered-systems) :test #'string=)
                (asdf:find-system name))

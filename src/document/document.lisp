@@ -92,21 +92,24 @@
 ;;; canonical REFERENCEs. REFERENCE-OBJECTs may not be the same as
 ;;; OBJECT (for example, when OBJECT is a package nickname).
 (defun definitions-of (object)
-  (unless (keywordp object)
-    (remove-duplicates
-     (append (loop for dspec in (find-dspecs (if (stringp object)
+  (remove-duplicates
+   (append (when (or (symbolp object) (stringp object))
+             (loop for dspec in (find-dspecs (if (stringp object)
                                                  (make-symbol object)
                                                  object))
                    for ref = (dspec-to-reference dspec object)
-                   when ref
-                     collect (canonical-reference ref))
-             (mapcan (lambda (locative)
-                       (let ((thing (locate object locative
-                                            :errorp nil)))
-                         (when thing
-                           `(,(canonical-reference thing)))))
-                     *locative-source-search-list*))
-     :test #'reference=)))
+                   when (and ref
+                             (not (and (keywordp object)
+                                       (eq (reference-locative-type ref)
+                                           'constant))))
+                     collect (canonical-reference ref)))
+           (mapcan (lambda (locative)
+                     (let ((thing (locate object locative
+                                          :errorp nil)))
+                       (when thing
+                         `(,(canonical-reference thing)))))
+                   *locative-source-search-list*))
+   :test #'reference=))
 
 ;;; Return all possible LINKs for OBJECT in the order of linking
 ;;; preference when there are duplicate LINK-REFERENCEs (e.g CLHS
@@ -2746,7 +2749,9 @@
 
   In interactive use, `mgl-pax-document` defaults to documenting
   `slime-symbol-at-point`, possibly with a nearby locative the same
-  way as in @NAVIGATING-IN-EMACS.
+  way as in @NAVIGATING-IN-EMACS. The convenience function
+  `mgl-pax-document-current-definition` documents the definition with
+  point in it.
   """
   (@pax-urls section)
   (@apropos section)
@@ -2769,21 +2774,29 @@
   """Evaluating `(mgl-pax-hijack-slime-doc-keys)` in Emacs handles
   the common case of binding keys. Its docstring is reproduced here:
 
-      If `w3m' is available, replace `slime-apropos',
-      `slime-apropos-all', `slime-apropos-package' with
-      `mgl-pax-apropos', `mgl-pax-apropos-all',
-      `mgl-pax-apropos-package', and replace both
-      `slime-describe-symbol' and `slime-describe-function' with
-      `mgl-pax-document'.
+      If `w3m' is available, then make the following changes to
+      `slime-doc-map' (assuming it's bound to `C-c C-d').
 
-      In addition, because it can be almost as useful as `M-.', one may
-      want to give `mgl-pax-document' a more convenient binding such as
-      `C-.' or `s-.' if you have a Super key. For example, to bind
-      `C-.' in all Slime buffers:
+      - `C-c C-d a`: `mgl-pax-apropos` (replaces `slime-apropos`)
+      - `C-c C-d z`: `mgl-pax-aproposa-all` (replaces `slime-apropos-all`)
+      - `C-c C-d p`: `mgl-pax-apropos-package` (replaces
+        `slime-apropos-package`)
+      - `C-c C-d d`: `mgl-pax-document` (replaces `slime-describe-symbol`)
+      - `C-c C-d f`: `mgl-pax-document` (replaces `slime-describe-function`)
+      - `C-c C-d c`: `mgl-pax-document-current-definition`
+
+      Also, regardless of whether `w3m` is available, add this:
+
+      - `C-c C-d u`: `mgl-pax-edit-parent-section`
+
+      In addition, because it can be almost as useful as `M-.`, one may
+      want to give `mgl-pax-document` a more convenient binding such as
+      `C-.` or `s-.` if you have a Super key. For example, to bind
+      `C-.` in all Slime buffers:
 
           (slime-bind-keys slime-parent-map nil '((\"C-.\" mgl-pax-document)))
 
-      To bind `C-.' globally:
+      To bind `C-.` globally:
 
           (global-set-key (kbd \"C-.\") 'mgl-pax-document)
   """
@@ -3075,18 +3088,6 @@
 
 ;;;; Listing SECTIONs
 
-;;; This is slow but fast enough not to bother with a SECTION-NAME to
-;;; SECTION weak hash table.
-(defun list-all-sections ()
-  (let ((sections ()))
-    (do-all-symbols (symbol sections)
-      (when (boundp symbol)
-        (let ((value (symbol-value symbol)))
-          (when (and (typep value 'section)
-                     ;; Filter out normal variables with SECTION values.
-                     (eq (section-name value) symbol))
-            (pushnew value sections)))))))
-
 (defun list-sections-in-package (package)
   (let ((sections ()))
     (do-symbols (symbol package sections)
@@ -3097,34 +3098,11 @@
                      (eq (section-name value) symbol))
             (pushnew value sections)))))))
 
-(defun sections-that-contain (sections reference)
-  (remove-if-not (lambda (section)
-                   (find-if (lambda (entry)
-                              (and (typep entry 'reference)
-                                   (reference= reference entry)))
-                            (section-entries section)))
-                 sections))
-
 (defun entry-point-sections (sections)
   (loop for section in sections
         for ref = (make-reference (section-name section) 'section)
         unless (sections-that-contain sections ref)
           collect ref))
-
-;;; As a heuristic to find the "home" section, move sections whose
-;;; name is closer to the package of OBJECT to the front.
-(defun sort-by-proximity (sections reference)
-  (let ((object (reference-object reference)))
-    (if (symbolp object)
-        (let ((package-name (package-name (symbol-package object))))
-          (sort (copy-list sections) #'>
-                :key (lambda (section)
-                       (or (mismatch package-name
-                                     (package-name
-                                      (symbol-package
-                                       (section-name section))))
-                           most-positive-fixnum))))
-        sections)))
 
 (defun format-up-links (sections reference)
   (when sections
@@ -3424,3 +3402,14 @@
                    (list "## Symbol definitions"
                          `((progv '(*document-tight*) '(t))
                            ,@symbol-definitions)))))))))))
+
+
+(defun current-definition-pax-url-for-emacs (buffer filename possibilities)
+  (with-swank ()
+    (swank::converting-errors-to-error-location
+      (swank::with-buffer-syntax ()
+        (let ((reference (find-current-definition buffer filename
+                                                  possibilities)))
+          (if reference
+              `(:pax-url ,(reference-to-pax-url reference))
+              '(:error "Cannot determine current definition.")))))))
