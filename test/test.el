@@ -8,7 +8,7 @@
      ,@body))
 
 
-;;;; test `mgl-pax-object-and-locatives-list-at-point'
+;;;; Test `mgl-pax-object-and-locatives-list-at-point'
 
 (ert-deftest test-mgl-pax-object-and-locatives-list-at-point/simple-1 ()
   (with-temp-lisp-buffer
@@ -103,7 +103,7 @@
                     ("foo" ("function")))))))
 
 
-;;;; test `mgl-pax-current-definition-possible-names'
+;;;; Test `mgl-pax-current-definition-possible-names'
 
 (ert-deftest test-mgl-pax-current-definition-possible-names/simple ()
   (with-temp-lisp-buffer
@@ -153,3 +153,41 @@
    (goto-char 30)
    (should (equal (mgl-pax-current-definition-possible-names)
                   '(("foo" "(defun foo () t)" 29))))))
+
+
+;;;; Test `mgl-pax-transcribe-last-expression'
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/simple-1 ()
+  (with-temp-lisp-buffer
+   (insert "(1+ 2)")
+   (should (equal (point) 7))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (point) 7))
+   (should (equal (buffer-string) "(1+ 2)\n=> 3\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/simple-2 ()
+  (with-temp-lisp-buffer
+   (insert "(1+ 2)\n")
+   (should (equal (point) 8))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (point) 13))
+   (should (equal (buffer-string) "(1+ 2)\n=> 3\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/output-1 ()
+  (with-temp-lisp-buffer
+   (insert "(princ 'xxx)")
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (point) 13))
+   (should (equal (buffer-string) "(princ 'xxx)\n.. XXX\n=> XXX\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/comment ()
+  (with-temp-lisp-buffer
+   (insert ";; (1+ 2)")
+   (save-excursion (insert "\nxxx\n"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (point) 10))
+   (should (equal (buffer-string) ";; (1+ 2)\n;; => 3\nxxx\n"))))

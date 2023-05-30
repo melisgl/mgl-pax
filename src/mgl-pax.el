@@ -895,14 +895,22 @@ Without a prefix argument, the first syntax is used."
        (save-excursion
          (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
            (let* ((start (progn (backward-sexp)
-                                (move-beginning-of-line nil)
-                                (point)))
+                                ;; If the last expression is in a
+                                ;; comment, we need this for
+                                ;; forward-sexp below.
+                                (save-excursion
+                                  (move-beginning-of-line nil)
+                                  (point))))
                   (end (progn (forward-sexp)
                               (point))))
              (goto-char end)
              (insert
               (mgl-pax-transcribe start end (mgl-pax-transcribe-syntax-arg)
-                                  nil nil nil dynenv)))))))))
+                                  nil nil nil dynenv))
+             ;; The transcript ends with a newline. Delete it if it
+             ;; would result in a blank line.
+             (when (looking-at "\n")
+               (delete-char 1)))))))))
 
 (defun mgl-pax-retranscribe-region (start end)
   "Updates the transcription in the current region (as in calling
@@ -937,10 +945,10 @@ input will not be changed."
       (prefix-numeric-value current-prefix-arg)
     nil))
 
+;;; Within the current defun, find the first occurrence of "```"
+;;; backwards from point, and if it is followed by "cl-transcript",
+;;; return its dynenv argument."
 (defun mgl-pax-find-cl-transcript-dynenv ()
-  "Within the current defun, find the first occurrence of
-  \"```\" backwards from point, and if it is followed by
-  \"cl-transcript\", return its dynenv argument."
   (save-excursion
     (save-restriction
       (narrow-to-defun)
