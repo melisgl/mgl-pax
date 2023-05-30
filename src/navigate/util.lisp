@@ -98,7 +98,7 @@
       function))
 
 #+sbcl
-;;; Tracing typically encapsulate a function in a closure. The
+;;; Tracing typically encapsulates a function in a closure. The
 ;;; function we need is at the end of the encapsulation chain.
 (defun maybe-find-encapsulated-function (function)
   (declare (type function function))

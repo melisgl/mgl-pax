@@ -265,6 +265,7 @@
     (foo compiler-macro (define-compiler-macro foo))
     ;; @FUNCTIONLIKE-LOCATIVES
     (foo function (defun foo))
+    (traced-foo function (defun traced-foo))
     (test-gf generic-function (defgeneric test-gf))
     (test-gf (method () (number)) (defmethod test-gf))
     (exportable-reference-p

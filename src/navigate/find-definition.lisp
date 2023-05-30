@@ -45,7 +45,10 @@
 
 (defun find-source-location (object)
   (when object
-    (let ((location (swank-backend:find-source-location object)))
+    (let ((location (swank-backend:find-source-location
+                     (if (functionp object)
+                         (unencapsulated-function object)
+                         object))))
       (when (and (listp location)
                  (eq (first location) :location))
         location))))

@@ -36,6 +36,10 @@
   (declare (ignore ook x))
   nil)
 
+(defun traced-foo (x)
+  "XXX"
+  x)
+(trace traced-foo)
 (defun foo (ook x)
   "FOO has args OOK and X."
   (declare (ignore ook x))
