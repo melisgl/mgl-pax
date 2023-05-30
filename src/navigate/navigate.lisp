@@ -131,47 +131,49 @@
 
 ;;; Return a list of (EMACSREF DSPEC LOCATION) objects.
 (defun locate-all-definitions-for-emacs (word)
-  (loop for object in (parse-word word)
-          thereis (append
-                   ;; Standard stuff supported by Swank.
-                   (mapcar (lambda (dspec-and-location)
-                             (destructuring-bind (dspec location)
-                                 dspec-and-location
-                               (let ((reference (dspec-to-reference dspec
-                                                                    object)))
-                                 (list (if reference
-                                           (reference-for-emacs reference)
-                                           (ambiguous-reference-for-emacs
-                                            object))
-                                       (if reference
-                                           ;; Replace (DEFCLASS FOO)
-                                           ;; with (FOO CLASS).
-                                           (reference-to-fake-dspec reference)
-                                           dspec)
-                                       location))))
-                           (swank-find-definitions-for-object object))
-                   ;; For locatives not supported by Swank, we try
-                   ;; locatives on *LOCATIVE-SOURCE-SEARCH-LIST* one
-                   ;; by one and see if they lead somewhere from the
-                   ;; @NAMEs in WORD.
-                   (mapcan (lambda (locative)
-                             (let ((thing (locate object locative
-                                                  :errorp nil)))
-                               (when thing
-                                 (let ((location (find-source thing))
-                                       (ref (canonical-reference thing)))
-                                   `((,(reference-for-emacs ref)
-                                      ,(reference-to-fake-dspec ref)
-                                      ,location))))))
-                           *locative-source-search-list*))))
+  (loop
+    for object in (parse-word word)
+      thereis (append
+               ;; Standard stuff supported by Swank.
+               (loop for dspec-and-location
+                       in (swank-find-definitions object)
+                     for edl = (emacsref-dspec-and-location
+                                object dspec-and-location
+                                ;; SWANK-BACKEND::FIND-DEFINITIONS'
+                                ;; support for :MGL-PAX, PAX, "PAX" is
+                                ;; uneven across implementations.
+                                :filter '(package))
+                     when edl
+                       collect edl)
+               ;; For locatives not supported by Swank, we try
+               ;; locatives on *LOCATIVE-SOURCE-SEARCH-LIST* one by
+               ;; one and see if they lead somewhere from the @NAMEs
+               ;; in WORD.
+               (mapcan (lambda (locative)
+                         (let ((thing (locate object locative
+                                              :errorp nil)))
+                           (when thing
+                             (let ((location (find-source thing))
+                                   (ref (canonical-reference thing)))
+                               `((,(reference-for-emacs ref)
+                                  ,(reference-to-fake-dspec ref)
+                                  ,location))))))
+                       *locative-source-search-list*))))
 
-(defun swank-find-definitions-for-object (object)
-  (cond ((stringp object)
-         ;; E.g. to find the package when OBJECT is "MGL-PAX".
-         (swank-backend:find-definitions
-          (make-symbol (adjust-string-case object))))
-        ((symbolp object)
-         (swank-backend:find-definitions object))))
+(defun emacsref-dspec-and-location (object dspec-and-location &key filter)
+  (destructuring-bind (dspec location) dspec-and-location
+    (let ((reference (dspec-to-reference dspec object)))
+      (unless (and reference
+                   (member (reference-locative-type reference) filter))
+        (list (if reference
+                  (reference-for-emacs reference)
+                  (ambiguous-reference-for-emacs
+                   object))
+              (if reference
+                  ;; Replace (DEFCLASS FOO) with (FOO CLASS).
+                  (reference-to-fake-dspec reference)
+                  dspec)
+              location)))))
 
 (defun locate-word-definition-for-emacs (word locative-string
                                          &key include-no-source)
@@ -419,6 +421,29 @@
                 (setq closest-definition reference
                       closest-pos pos)))))
       closest-definition)))
+
+;;; Return all definitions of OBJECT in the running Lisp as a list of
+;;; canonical REFERENCEs. REFERENCE-OBJECTs may not be the same as
+;;; OBJECT (for example, when OBJECT is a package nickname).
+(defun definitions-of (object)
+  (remove-duplicates
+   (append (when (or (symbolp object) (stringp object))
+             (loop for dspec in (find-dspecs (if (stringp object)
+                                                 (make-symbol object)
+                                                 object))
+                   for ref = (dspec-to-reference dspec object)
+                   when (and ref
+                             (not (and (keywordp object)
+                                       (eq (reference-locative-type ref)
+                                           'constant))))
+                     collect (canonical-reference ref)))
+           (mapcan (lambda (locative)
+                     (let ((thing (locate object locative
+                                          :errorp nil)))
+                       (when thing
+                         `(,(canonical-reference thing)))))
+                   *locative-source-search-list*))
+   :test #'reference=))
 
 (defun 2nd-whitespace-position (string)
   (or (alexandria:when-let (pos (position-if #'whitespacep string))

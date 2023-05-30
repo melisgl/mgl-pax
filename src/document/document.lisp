@@ -88,29 +88,6 @@
 ;;; support generating documentation for Emacs.
 (defvar *document-open-linking* nil)
 
-;;; Return all definitions of OBJECT in the running Lisp as a list of
-;;; canonical REFERENCEs. REFERENCE-OBJECTs may not be the same as
-;;; OBJECT (for example, when OBJECT is a package nickname).
-(defun definitions-of (object)
-  (remove-duplicates
-   (append (when (or (symbolp object) (stringp object))
-             (loop for dspec in (find-dspecs (if (stringp object)
-                                                 (make-symbol object)
-                                                 object))
-                   for ref = (dspec-to-reference dspec object)
-                   when (and ref
-                             (not (and (keywordp object)
-                                       (eq (reference-locative-type ref)
-                                           'constant))))
-                     collect (canonical-reference ref)))
-           (mapcan (lambda (locative)
-                     (let ((thing (locate object locative
-                                          :errorp nil)))
-                       (when thing
-                         `(,(canonical-reference thing)))))
-                   *locative-source-search-list*))
-   :test #'reference=))
-
 ;;; Return all possible LINKs for OBJECT in the order of linking
 ;;; preference when there are duplicate LINK-REFERENCEs (e.g CLHS
 ;;; aliases).

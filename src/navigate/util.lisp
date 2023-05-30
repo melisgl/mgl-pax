@@ -205,6 +205,42 @@
         (ignore-errors (read s))))))
 
 
+;;; Like SWANK-BACKEND::FIND-DEFINITIONS, but OBJECT may be a STRING
+;;; or a SYMBOL (including keyword symbols), and if ERRORP is NIL (the
+;;; default), then errors treated as the empty list.
+(defun swank-find-definitions (object &key errorp)
+  (if errorp
+      (swank-find-definitions-1 object)
+      (error-location-to-nil (ignore-errors
+                              (swank-find-definitions-1 object)))))
+
+(defun swank-find-definitions-1 (object)
+  (cond ((stringp object)
+         ;; E.g. to find the package when OBJECT is "MGL-PAX".
+         (swank-backend:find-definitions
+          (make-symbol (adjust-string-case object))))
+        ((keywordp object)
+         ;; E.g. to find the package when OBJECT is :MGL-PAX.
+         ;; On SBCL, SWANK-BACKEND:FIND-DEFINITIONS barfs on
+         ;; keywords.
+         (swank-backend:find-definitions
+          (make-symbol (symbol-name object))))
+        ((symbolp object)
+         (swank-backend:find-definitions object))))
+
+(defun error-location-to-nil (dspec-and-locations)
+  (if (eq (first dspec-and-locations) :error)
+      ()
+      #+allegro
+      ;; (swank-backend::find-definitions :xxx)
+      ;; => ((:XXX (:ERROR "Unknown source location for :XXX")))
+      (remove-if (lambda (dspec-and-location)
+             (not (listp (first dspec-and-location))))
+           dspec-and-locations)
+      #-allegro
+      dspec-and-locations))
+
+
 (defun find-method* (function-designator qualifiers specializers
                      &optional (errorp t))
   (find-method (if (symbolp function-designator)

@@ -134,11 +134,22 @@
                   '(("MGL-PAX-TEST::FOO" "COMPILER-MACRO")
                     ("MGL-PAX-TEST::FOO" "FUNCTION")
                     ("MGL-PAX-TEST::FOO" "CLASS"))))
-    ;; pax
-    (with-failure-expected ((alexandria:featurep '(:or :abcl :allegro :ccl
-                                                   :clisp :cmucl :ecl)))
+    (with-failure-expected ((alexandria:featurep :abcl))
+      ;; pax
       (check-ldfe '(("pax" ()))
-                  '(("pax" "PACKAGE"))))))
+                  '(("MGL-PAX" "PACKAGE")))
+      ;; "MGL-PAX"
+      (check-ldfe '(("\"MGL-PAX\"" ()))
+                  '(("MGL-PAX" "PACKAGE")
+                    ("mgl-pax" "ASDF/SYSTEM:SYSTEM")))
+      ;; MGL-PAX
+      (check-ldfe '(("MGL-PAX" ()))
+                  '(("MGL-PAX" "PACKAGE")
+                    ("mgl-pax" "ASDF/SYSTEM:SYSTEM")))
+      ;; :MGL-PAX
+      (check-ldfe '((":MGL-PAX" ()))
+                  '(("MGL-PAX" "PACKAGE")
+                    ("mgl-pax" "ASDF/SYSTEM:SYSTEM"))))))
 
 (defun check-ldfe (object-and-locatives-list expected-emacsrefs)
   (let ((emacsrefs (sort-emacsrefs

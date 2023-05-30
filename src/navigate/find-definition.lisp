@@ -24,8 +24,7 @@
            (mapcar (lambda (dspec-and-location)
                      (list (normalize-dspec (first dspec-and-location))
                            (second dspec-and-location)))
-                   (ignore-errors
-                    (swank-backend:find-definitions object))))
+                   (swank-find-definitions object)))
          (entry (loop for dspec in dspecs
                         thereis (find dspec dspec-and-location-list
                                       :key #'first :test #'match-dspec))))
@@ -105,7 +104,7 @@
 (defun normalize-dspec (dspec)
   ;; (DEFVAR *FOO*) without a global binding is a
   ;; :SPECIAL-DECLARATION.
-  (if (eq (first dspec) :special-declaration)
+  (if (and (listp dspec) (eq (first dspec) :special-declaration))
       (cons :variable (rest dspec))
       dspec))
 
@@ -445,12 +444,8 @@
                    (if (eq (first dspec-and-location) :primitive)
                        '(function)
                        (first dspec-and-location)))
-          ;; Some SWANK-BACKEND:FIND-DEFINITIONS implementations are
-          ;; buggy.
-          #+(or abcl cmucl ecl)
-          (ignore-errors (swank-backend:find-definitions name))
-          #-(or abcl cmucl ecl)
-          (swank-backend:find-definitions name)))
+          (swank-find-definitions name)))
+
 #+sbcl
 (defun find-dspecs (name)
   (loop for type in swank/sbcl::*definition-types* by #'cddr
