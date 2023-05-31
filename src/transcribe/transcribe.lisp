@@ -4,29 +4,34 @@
 
 ;;;; Utilities
 
-(defun strip-longest-common-prefix (string chars &key (first-line-special-p t))
+(defun strip-longest-common-prefix (string chars &key (first-line-special-p t)
+                                                   (ignore-blank-lines-p t))
   (let ((prefix (longest-common-prefix
-                 string chars :first-line-special-p first-line-special-p)))
+                 string chars :first-line-special-p first-line-special-p
+                 :ignore-blank-lines-p t)))
     (values
      (with-output-to-string (output)
        (with-input-from-string (s string)
          (loop for i upfrom 0
                for line = (read-line s nil nil)
                while line
-               do (if (and first-line-special-p (zerop i))
+               do (if (or (and first-line-special-p (zerop i))
+                          (and ignore-blank-lines-p (blankp line)))
                       (write-line line output)
                       (write-line (subseq line (length prefix)) output)))))
      prefix)))
 
 ;;; Return the longest common prefix of lines of STRING, where the
 ;;; prefix is made of CHARS.
-(defun longest-common-prefix (string chars &key (first-line-special-p t))
+(defun longest-common-prefix (string chars &key (first-line-special-p t)
+                                             (ignore-blank-lines-p t))
   (let ((longest-prefix nil))
     (with-input-from-string (s string)
       (loop for i upfrom 0
             for line = (read-line s nil nil)
             while line
-            do (when (or (not first-line-special-p) (plusp i))
+            do (unless (or (and first-line-special-p (zerop i))
+                           (and ignore-blank-lines-p (blankp line)))
                  (let ((prefix (matching-prefix line chars)))
                    (setq longest-prefix
                          (if longest-prefix

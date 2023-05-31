@@ -497,4 +497,25 @@ Symbol definitions
    (should (equal (buffer-string) ";; (1+ 2)\n;; => 3\nxxx\n"))))
 
 
+;;;; Test `mgl-pax-retranscribe-region'
+
+(ert-deftest test-mgl-pax-retranscribe-region/simple ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "(1+ 2)\n=> 7\n")
+   (mark-whole-buffer)
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "(1+ 2)\n=> 3\n"))))
+
+(ert-deftest test-mgl-pax-retranscribe-region/blank-line ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "  (1+ 2)\n  => 7\n\n")
+   (mark-whole-buffer)
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "  (1+ 2)\n  => 3\n  \n"))))
+
+
 (provide 'mgl-pax-tests)
