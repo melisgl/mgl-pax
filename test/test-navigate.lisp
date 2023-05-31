@@ -264,6 +264,8 @@
           :ctx ("REFERENCE = ~S~%DPSEC = ~S" reference dspec)))))
 
 
+;;; Keep this and `mgl-pax-edit-definitions/test-defs' in test.el in
+;;; sync.
 (defparameter *navigation-test-cases*
   '(;; @VARIABLELIKE-LOCATIVES
     (foo-a variable (defvar foo-a))

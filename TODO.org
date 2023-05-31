@@ -41,7 +41,6 @@ link. See EXTERNAL-LOCATIVE-P and co.
 * MAYBE remove some markup in :PLAIN format?
 * MAYBE get variable initforms from source?
 Or fall back on this for deficient ARGLISTs. Will be really slow.
-* TODO test the elisp code
 * MAYBE document glossary-term class and slots?
 * MAYBE add format control character locative?
 * MAYBE add loop keyword locative?
@@ -121,3 +120,5 @@ Instead of w3m, use `browse-url-browser-function' and a CL web server
 generating and serving pax pages. Maybe even hijack clicking on the
 locative, which normally goes to github, to act like 'v' in w3m (i.e.
 make Emacs visit the source).
+* MAYBE make C-. parse symbols in non-lisp buffers
+E.g. it doesn't work here on PAX::@PAX-MANUAL.

@@ -867,6 +867,8 @@ Also, see `mgl-pax-apropos-all'."
              (slime-read-package-name "Package: ")
              (y-or-n-p "Case-sensitive? "))
      (list (slime-read-from-minibuffer "PAX Apropos: ") t "" nil)))
+  (unless (require 'w3m nil t)
+    (error "PAX requires w3m but it cannot be loaded. Please install it."))
   (mgl-pax-document
    (concat "pax-eval:"
            (w3m-url-encode-string
