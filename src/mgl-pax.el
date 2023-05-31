@@ -1,74 +1,46 @@
 ;; -*- lexical-binding: t -*-
 
-;;;; MGL-PAX Emacs integration of navigating, documenting, and
-;;;; transcribing
+;;;; MGL-PAX Emacs integration
 ;;;;
-;;;; - Making `M-.' (`slime-edit-definition') support new kinds of
-;;;;   definitions (e.g. of ASDF/SYSTEMs) and disambiguate based on
+;;;; SETUP
+;;;;
+;;;; - `mgl-pax-autoload'
+;;;;
+;;;; - `mgl-pax-hijack-slime-doc-keys'
+;;;;
+;;;; NAVIGATE (see MGL-PAX::@NAVIGATING-IN-EMACS (press `C-.' on this))
+;;;;
+;;;; - `M-.' (`slime-edit-definition') supports new kinds of
+;;;;   definitions (e.g. of ASDF/SYSTEMs) and disambiguates based on
 ;;;;   nearby locatives. Just by loading this file, `M-.' shall be
 ;;;;   able to recognize disambiguate based on locatives near point as
-;;;;   in "function FOO". See the documentation in
-;;;;   MGL-PAX::@NAVIGATING-IN-EMACS.
+;;;;   in "function FOO".
 ;;;;
-;;;; - Browsing documentation of definitions in the running Lisp live
-;;;;   without explicitly generating documentation. This is what
-;;;;   `mgl-pax-document' does. Bind it to `C-.' to parallel `M-.'.
-;;;;   See the documentation in MGL-PAX::@DOCUMENTING-IN-EMACS (e.g.
-;;;;   by pressing `C-.' with point over this section name).
+;;;; - Also, see `mgl-pax-edit-parent-section'.
+;;;;
+;;;; DOCUMENT (see MGL-PAX::@DOCUMENTING-IN-EMACS)
+;;;;
+;;;; - Browse documentation of definitions in the running Lisp live
+;;;;   without explicitly generating documentation with
+;;;;   `mgl-pax-document'. Bind it to `C-.' to parallel `M-.'.
+;;;;
+;;;; - Also, see `mgl-pax-document-current-definition'.
 ;;;;
 ;;;; - `mgl-pax-apropos', `mgl-pax-apropos-all' and
 ;;;;   `mgl-pax-apropos-package' are replacements for `slime-apropos'
 ;;;;   `slime-apropos-all' and `slime-apropos-package', respectively.
-;;;;   They are built on top of `mgl-pax-document'.
+;;;;   They are all built on top of `mgl-pax-document'.
+;;;;
+;;;; TRANSCRIBE (see MGL-PAX::@TRANSCRIBING-WITH-EMACS)
 ;;;;
 ;;;; - For `mgl-pax-transcribe-last-expression' and
-;;;;   `mgl-pax-retranscribe-region', see
-;;;;   MGL-PAX::@TRANSCRIBING-WITH-EMACS.
+;;;;   `mgl-pax-retranscribe-region'.
 
 (eval-and-compile
   (require 'cl-lib nil t)
   ;; For emacs 23, look for bundled version
   (require 'cl-lib "lib/cl-lib")
   (require 'slime))
-
-
-(defun mgl-pax-hijack-slime-doc-keys ()
-  "If `w3m' is available, then make the following changes to
-`slime-doc-map' (assuming it's bound to `C-c C-d').
-
-- `C-c C-d a': `mgl-pax-apropos' (replaces `slime-apropos')
-- `C-c C-d z': `mgl-pax-aproposa-all' (replaces `slime-apropos-all')
-- `C-c C-d p': `mgl-pax-apropos-package' (replaces `slime-apropos-package')
-- `C-c C-d d': `mgl-pax-document' (replaces `slime-describe-symbol')
-- `C-c C-d f': `mgl-pax-document' (replaces `slime-describe-function')
-- `C-c C-d c': `mgl-pax-document-current-definition'
-
-Also, regardless of whether `w3m' is available, add this:
-
-- `C-c C-d u': `mgl-pax-edit-parent-section'
-
-In addition, because it can be almost as useful as `M-.', one may
-want to give `mgl-pax-document' a more convenient binding such as
-`C-.' or `s-.' if you have a Super key. For example, to bind
-`C-.' in all Slime buffers:
-
-    (slime-bind-keys slime-parent-map nil '((\"C-.\" mgl-pax-document)))
-
-To bind `C-.' globally:
-
-    (global-set-key (kbd \"C-.\") 'mgl-pax-document)"
-  (interactive)
-  (if (not (require 'w3m nil t))
-      (message "Requiring w3m failed.")
-    (slime-bind-keys slime-doc-map t
-                     '((?a mgl-pax-apropos)
-                       (?z mgl-pax-apropos-all)
-                       (?p mgl-pax-apropos-package)
-                       (?d mgl-pax-document)
-                       (?f mgl-pax-document)
-                       (?c mgl-pax-document-current-definition))))
-  (slime-bind-keys slime-doc-map t
-                   '((?u mgl-pax-edit-parent-section))))
 
 
 ;;;; Autoloading of MGL-PAX on the Common Lisp side
@@ -116,6 +88,45 @@ other mgl-pax commands."
   (let ((sourcefile (concat (file-name-sans-extension mgl-pax-file-name)
                             ".el")))
     (load-file sourcefile)))
+
+
+(defun mgl-pax-hijack-slime-doc-keys ()
+  "If `w3m' is available, then make the following changes to
+`slime-doc-map' (assuming it's bound to `C-c C-d').
+
+- `C-c C-d a': `mgl-pax-apropos' (replaces `slime-apropos')
+- `C-c C-d z': `mgl-pax-aproposa-all' (replaces `slime-apropos-all')
+- `C-c C-d p': `mgl-pax-apropos-package' (replaces `slime-apropos-package')
+- `C-c C-d d': `mgl-pax-document' (replaces `slime-describe-symbol')
+- `C-c C-d f': `mgl-pax-document' (replaces `slime-describe-function')
+- `C-c C-d c': `mgl-pax-document-current-definition'
+
+Also, regardless of whether `w3m' is available, add this:
+
+- `C-c C-d u': `mgl-pax-edit-parent-section'
+
+In addition, because it can be almost as useful as `M-.', one may
+want to give `mgl-pax-document' a more convenient binding such as
+`C-.' or `s-.' if you have a Super key. For example, to bind
+`C-.' in all Slime buffers:
+
+    (slime-bind-keys slime-parent-map nil '((\"C-.\" mgl-pax-document)))
+
+To bind `C-.' globally:
+
+    (global-set-key (kbd \"C-.\") 'mgl-pax-document)"
+  (interactive)
+  (if (not (require 'w3m nil t))
+      (message "Requiring w3m failed.")
+    (slime-bind-keys slime-doc-map t
+                     '((?a mgl-pax-apropos)
+                       (?z mgl-pax-apropos-all)
+                       (?p mgl-pax-apropos-package)
+                       (?d mgl-pax-document)
+                       (?f mgl-pax-document)
+                       (?c mgl-pax-document-current-definition))))
+  (slime-bind-keys slime-doc-map t
+                   '((?u mgl-pax-edit-parent-section))))
 
 
 ;;;; Find possible objects and locatives at point
@@ -387,9 +398,9 @@ The suggested key binding is `C-.' to parallel `M-.'."
                              (current-buffer)
                            (cl-first mgl-pax-doc-buffers))))
         (if doc-buffer
-            ;; Just show the latest doc buffer if the input is the
-            ;; empty string.
             (if (string= pax-url "pax:")
+                ;; Just show the latest doc buffer if the input is the
+                ;; empty string.
                 (pop-to-buffer doc-buffer)
               ;; Reuse doc-buffer and its doc dir.
               (let ((doc-dir (buffer-local-value 'mgl-pax-doc-dir doc-buffer)))
@@ -788,9 +799,9 @@ move point to the beginning of the buffer."
 
 (defun mgl-pax-edit-parent-section ()
   "Look up the definition of parent section of the definition
-  `point' is in as if with `M-.' (`slime-edit-definition'). If
-  there are multiple containing sections, then pop up a selection
-  buffer."
+`point' is in as if with `M-.' (`slime-edit-definition'). If
+there are multiple containing sections, then pop up a selection
+buffer."
   (interactive)
   (mgl-pax-find-parent-section #'mgl-pax-visit-locations))
 
@@ -916,7 +927,7 @@ Without a prefix argument, the first syntax is used."
   "Updates the transcription in the current region (as in calling
 MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T). Use a numeric prefix
 argument as an index to select one of the Common Lisp
-MGL-PAX:*TRANSRIBE-SYNTAXES* as the SYNTAX argument to
+MGL-PAX:*TRANSCRIBE-SYNTAXES* as the SYNTAX argument to
 MGL-PAX:TRANSCRIBE. Without a prefix argument, the syntax of the
 input will not be changed."
   (interactive "r")

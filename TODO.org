@@ -102,8 +102,6 @@ One way to fix this would be to allow multiple locatives in pax urls
 READ-REFERENCE-FROM-STRING), but then pax-urls could link to 2 or 3
 references while that is currently not possible from the documentation
 (only 1 or all).
-* MAYBE if no docstring, get the comment just above the definition?
-Or go to the source.
 * MAYBE use SECTION-PACKAGE from "first" enclosing section?
 That is, when generating documentation for something that's referenced
 by one or more sections. See PAX::SECTIONS-THAT-CONTAIN and
@@ -118,7 +116,7 @@ E.g. for named-readtables, which has its docs in named-readtables/doc.
 E.g. 'clhs' works in a package where pax used but not elsewhere.
 
 But so does M-.'s history.
-* TODO documentation browser through a web server
+* MAYBE documentation browser through a web server
 Instead of w3m, use `browse-url-browser-function' and a CL web server
 generating and serving pax pages. Maybe even hijack clicking on the
 locative, which normally goes to github, to act like 'v' in w3m (i.e.
