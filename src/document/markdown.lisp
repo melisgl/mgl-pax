@@ -15,14 +15,17 @@
   (if (< (length string) 1000)
       (3bmd-grammar:parse-doc string)
       ;; This is 3BMD-GRAMMAR:PARSE-DOC's currently commented out
-      ;; alternative implementation that's much faster on long strings
-      ;; but perhaps slower on short strings.
+      ;; alternative implementation, which is much faster on long
+      ;; strings but perhaps slower on short strings.
       (loop
         for start = 0 then pos
         for (%block pos) = (multiple-value-list
-                            (esrap:parse '3bmd-grammar::%block
-                                         string :start start
-                                         :junk-allowed t))
+                            (esrap:parse
+                             (if (esrap:find-rule '3bmd-grammar::%block)
+                                 '3bmd-grammar::%block
+                                 ;; Make it work with old 3BMD.
+                                 '3bmd-grammar::block)
+                             string :start start :junk-allowed t))
         while %block
         collect %block
         while pos)))
