@@ -1,8 +1,6 @@
 #+STARTUP: overview
 #+SEQ_TODO: TODO(t@) NEXT(n@) STARTED(s@) WAITING(w@) | DONE(d@) OLD(o@) CANCELLED(c@)
 #+TODO: MAYBE(m@) FAILED(f@) LOG(l@) DEFERRED(e@) BUG(b@)
-* MAYBE add locatives for sbcl internals
-deftransform, defoptimizer, define-vop, define-source-transfrom
 * OPT esrap is slow with allegro cl
 * OPT parse and print markdown once when *format* is :html?
 This would involve rewriting everything to emit parse tree fragments or be able to produce html directly. Either way, it is not without cost.
@@ -18,8 +16,8 @@ because it's translated to a list item
 
 " *standard-output* :FORMAT :HTML)
 
-But there is not good place to define them, so we'll something like a
-symbol based definition:
+But there is not good place to define them, so we'll need something
+like a symbol based definition:
 
 (defmdtarget markdown "http://exxx")
 
@@ -85,22 +83,10 @@ expands to
 https://github.com/40ants/doc/commit/c3bf89fa88ab70074466aa07358caad159d45008
 * MAYBE autodoc?
 https://github.com/40ants/doc/commit/d638135b784c2fd7e0199c829157644da197fdb7
-* TODO support symbols in a context
-E.g. LOOP's WITH, or OTHERWISE in CASE, CALL-NEXT-METHOD
 * BUG (low) method dspec parsing is incorrect
 e.g. SB-PCL::MAKE-SPECIALIZER-FORM-USING-CLASS One cannot tell method
 qualifiers from specializers in the dspec without actually consulting
 the definition.
-* BUG (low) C-. differs from M-. on "type FOO function"
-- C-. goes to the disambiguation page of FOO, which lists all definitions
-- M-. pops up only the TYPE and FUNCTION dspecs
-- "type FOO function" links to (foo type) and (foo function)
-
-One way to fix this would be to allow multiple locatives in pax urls
-(parsing is implemened with :MULTIPLE-LOCATIVES-P in
-READ-REFERENCE-FROM-STRING), but then pax-urls could link to 2 or 3
-references while that is currently not possible from the documentation
-(only 1 or all).
 * MAYBE use SECTION-PACKAGE from "first" enclosing section?
 That is, when generating documentation for something that's referenced
 by one or more sections. See PAX::SECTIONS-THAT-CONTAIN and
@@ -108,6 +94,7 @@ PAX::SORT-BY-PROXIMITY.
 * BUG (low) html page title has markup
 E.g \\, maybe **.
 * BUG (low) (3BMD-GRAMMAR:PARSE-DOC "[l][*x*]") fails
+https://github.com/3b/3bmd/issues/55
 * BUG (low) C-. on [lambda lists][clhs] confused by the space
 * MAYBE autoload documentation when needed?
 E.g. for named-readtables, which has its docs in named-readtables/doc.
@@ -122,3 +109,8 @@ locative, which normally goes to github, to act like 'v' in w3m (i.e.
 make Emacs visit the source).
 * MAYBE make C-. parse symbols in non-lisp buffers
 E.g. it doesn't work here on PAX::@PAX-MANUAL.
+* MAYBE heuristically detect code blocks?
+C-. on ALEXANDRIA:DESTRUCTURING-CASE
+* BUG make explict clhs links work with *document-link-to-hyperspec* nil
+(let ((pax::*document-link-to-hyperspec* nil))
+  (pax::document "[XXX][print pax:clhs]" :format :markdown))

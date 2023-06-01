@@ -42,6 +42,7 @@
   (glossary-term locative)
   (define-glossary-term macro)
   (locative locative)
+  (go locative)
   (dislocated locative)
   (argument locative)
   (include locative)

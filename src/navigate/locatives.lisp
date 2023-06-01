@@ -1219,6 +1219,70 @@ default (see EXPORTABLE-REFERENCE-P).")
 (add-locative-to-source-search-list 'locative)
 
 
+;;;;; GO locative
+
+(define-locative-type go ((object locative) &optional xxx)
+  "Redirect to a definition in the context of the @REFERENCE
+  designated by OBJECT and LOCATIVE. This pseudolocative is intended
+  for things that have no explicit global definition. Because of this,
+  GO often points to macros or sections. For example,
+
+  - `(CALL-NEXT-METHOD (GO (DEFMETHOD MACRO)))` refers to the symbol
+    CALL-NEXT-METHOD as it may be used in DEFMETHOD,
+
+  - `(&KEY (GO (3.4.1 CLHS))` refers to &KEY as described in section
+    3.4.1 of the CLHS.
+
+  GO behaves as described below.
+
+  - LOCATEing a GO reference needs OBJECT with LOCATIVE to be
+    LOCATEable.
+
+  - The DOCSTRING of a GO reference is a terse \"See OBJECT LOCATIVE\"
+    message, which cannot be overridden.
+
+  - DOCUMENTing a GO reference produces the usual bulleted list
+    item (like `- [go] CALL-NEXT-METHOD (DEFMETHOD MACRO)`) followed
+    by its DOCSTRING.
+
+  Use DEFSECTION to both document and export symbols with GO
+  references.")
+
+(defmethod locate-object (object (locative-type (eql 'go)) locative-args)
+  (if (and (<= (length locative-args) 2)
+           (= (length (first locative-args)) 2))
+      (destructuring-bind ((go-object go-locative) &optional xxx) locative-args
+        (let ((reference (canonical-reference (locate go-object go-locative))))
+          (make-reference object `(go (,(reference-object reference)
+                                       ,(reference-locative reference))
+                                      ,@xxx))))
+      (locate-error "The syntax of the ~S locative is ~
+                    (~S (<OBJECT> <LOCATIVE>))." 'go 'go)))
+
+(defmethod locate-and-document (object (locative-type (eql 'go))
+                                locative-args stream)
+  (documenting-reference (stream :arglist (if (rest locative-args)
+                                              (rest locative-args)
+                                              locative-args))
+    (document-docstring (locate-docstring object locative-type locative-args)
+                        stream)))
+
+(defmethod locate-docstring (object (locative-type (eql 'go)) locative-args)
+  (declare (ignore object))
+  (format nil "See ~A." (apply #'md-reflink-from (first locative-args))))
+
+(defun md-reflink-from (object locative)
+  (format nil "[~A][~A]" (if (stringp object)
+                             (escape-markdown object)
+                             (prin1-to-markdown object))
+          (let ((*print-readably* nil))
+            (prin1-to-markdown locative))))
+
+(defmethod locate-and-find-source (symbol (locative-type (eql 'go))
+                                   locative-args)
+  (find-source (apply #'locate (first locative-args))))
+
+
 ;;;; DISLOCATED locative
 
 (define-locative-type dislocated ()
@@ -1560,3 +1624,29 @@ default (see EXPORTABLE-REFERENCE-P).")
 (defmethod locate-and-document (name (locative-type (eql 'clhs)) locative-args
                                 stream)
   (documenting-reference (stream :arglist locative-args)))
+
+
+;;;; DSPEC pseudolocative
+;;;;
+;;;; This is not public. It is used to represent Swank dspecs as
+;;;; references.
+
+(define-locative-type dspec (&rest unknown))
+
+(defmethod locate-object (name (locative-type (eql 'dspec)) locative-args)
+  (make-reference name `(dspec ,@locative-args)))
+
+(defmethod locate-and-find-source (name (locative-type (eql 'dspec))
+                                   locative-args)
+  (let ((dspec-and-location-list (swank-find-definitions name))
+        (dspec (first locative-args)))
+    (second (find dspec dspec-and-location-list :key #'first :test #'equal))))
+
+(defmethod locate-and-document (name (locative-type (eql 'dspec))
+                                locative-args stream)
+  (documenting-reference (stream :arglist
+                          (escape-markdown
+                           (with-standard-io-syntax*
+                             ;; Are dspecs readable?
+                             (let ((*print-readably* nil))
+                               (prin1-to-string (first locative-args))))))))

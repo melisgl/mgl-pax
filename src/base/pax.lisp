@@ -333,7 +333,7 @@
   symbol [`FUNCTION`][locative] as the locative together refer to the
   global definition of the function `FOO`.
 
-  REFERENCE objects can be represented as an `(OBJECT LOCATIVE)` list
+  REFERENCE objects can be designated by an `(OBJECT LOCATIVE)` list
   as in DEFSECTION entries, or textually as `"FOO function"` where
   `FOO` is a @NAME or similar (see @CODIFICATION and
   @LINKING-TO-CODE).""")

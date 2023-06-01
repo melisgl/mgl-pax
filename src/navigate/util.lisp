@@ -22,8 +22,7 @@
 (defun read-interned-symbol-from-string (string)
   (let ((pos (n-chars-would-read string)))
     (multiple-value-bind (symbol foundp)
-        (swank::parse-symbol (string-trim *whitespace-chars*
-                                          (subseq string 0 pos)))
+        (swank::parse-symbol (trim-whitespace (subseq string 0 pos)))
       (when foundp
         (multiple-value-bind (symbol2 pos) (read-from-string string)
           (assert (eq symbol symbol2))
@@ -215,18 +214,23 @@
                               (swank-find-definitions-1 object)))))
 
 (defun swank-find-definitions-1 (object)
+  (swank-backend::find-definitions (object-to-swank-name object)))
+
+;;; Turn OBJECT into a symbol suitable as an argument to
+;;; SWANK-BACKEND:FIND-DEFINITIONS.
+(defun object-to-swank-name (object)
   (cond ((stringp object)
          ;; E.g. to find the package when OBJECT is "MGL-PAX".
-         (swank-backend:find-definitions
-          (make-symbol (adjust-string-case object))))
+         (make-symbol (adjust-string-case object)))
         ((keywordp object)
          ;; E.g. to find the package when OBJECT is :MGL-PAX.
          ;; On SBCL, SWANK-BACKEND:FIND-DEFINITIONS barfs on
          ;; keywords.
-         (swank-backend:find-definitions
-          (make-symbol (symbol-name object))))
+         (make-symbol (symbol-name object)))
         ((symbolp object)
-         (swank-backend:find-definitions object))))
+         object)
+        (t
+         (assert nil))))
 
 (defun error-location-to-nil (dspec-and-locations)
   (if (eq (first dspec-and-locations) :error)
@@ -235,8 +239,8 @@
       ;; (swank-backend::find-definitions :xxx)
       ;; => ((:XXX (:ERROR "Unknown source location for :XXX")))
       (remove-if (lambda (dspec-and-location)
-             (not (listp (first dspec-and-location))))
-           dspec-and-locations)
+                   (not (listp (first dspec-and-location))))
+                 dspec-and-locations)
       #-allegro
       dspec-and-locations))
 

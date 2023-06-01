@@ -8,6 +8,74 @@
   (prog1 *navigate-loaded*
     (setq *navigate-loaded* t)))
 
+;;; Return all definitions of OBJECT in the running Lisp as a list of
+;;; canonical REFERENCEs. REFERENCE-OBJECTs may not be the same as
+;;; OBJECT (for example, when OBJECT is a package nickname).
+(defun definitions-of (object &key (allow-dspec t))
+  (remove-duplicates
+   (append (when (or (symbolp object) (stringp object))
+             (loop for dspec in (find-dspecs (if (stringp object)
+                                                 (make-symbol object)
+                                                 object))
+                   for ref = (dspec-to-reference dspec object)
+                   for locative-type = (reference-locative-type ref)
+                   when (and (or allow-dspec
+                                 (not (eq locative-type 'dspec)))
+                             ;; (:XXX CONSTANT) is trivial.
+                             (not (and (keywordp object)
+                                       (eq locative-type 'constant)))
+                             ;; SWANK-BACKEND::FIND-DEFINITIONS'
+                             ;; support for :MGL-PAX, PAX, "PAX" is
+                             ;; uneven across implementations.
+                             (not (eq locative-type 'package)))
+                     collect (canonical-reference ref)))
+           ;; For locatives not supported by Swank, we try locatives
+           ;; on *LOCATIVE-SOURCE-SEARCH-LIST* one by one.
+           (mapcan (lambda (locative)
+                     (let ((thing (locate object locative :errorp nil)))
+                       (when thing
+                         `(,(canonical-reference thing)))))
+                   *locative-source-search-list*))
+   :test #'reference=))
+
+;;; An acronym for Word-And-Locatives-List. This is what
+;;; `mgl-pax-object-and-locatives-list-at-point' returns. It may look
+;;; like this:
+;;;
+;;;     (("[section][" ("junk-before" "class"))
+;;;      ("section" ("class")))
+(deftype wall () 'list)
+
+(defvar *definitions-of-fn*)
+
+;;; List all definitions (as REFERENCEs) of WALL. Specify
+;;; DEFINITIONS-OF (a function designator) to change how the
+;;; no-locative case is handled.
+(defun definitions-of-wall (wall &key (definitions-of 'definitions-of))
+  (let ((*definitions-of-fn* definitions-of))
+    (or
+     ;; First, try with the given locatives.
+     (loop for (word locative-strings) in wall
+           append (loop for locative-string in locative-strings
+                        append (definitions-of-word-with-locative
+                                word locative-string)))
+     ;; Then, fall back on the no locative case.
+     (loop for entry in wall
+           append (definitions-of-word (first entry))))))
+
+(defun definitions-of-word-with-locative (word locative-string)
+  (let ((locative (read-locative-from-markdown locative-string)))
+    (when locative
+      (loop for object in (parse-word word)
+              thereis (alexandria:when-let
+                          (ref (locate object locative :errorp nil))
+                        (list (canonical-reference ref)))))))
+
+(defun definitions-of-word (word)
+  (loop for object in (parse-word word)
+          thereis (funcall *definitions-of-fn* object)))
+
+
 (defsection @navigating-in-emacs (:title "Navigating Sources in Emacs")
   """Integration into [SLIME's `\\M-.`][slime-m-.]
   (`slime-edit-definition`) allows one to visit the source location of
@@ -70,10 +138,7 @@
 
 ;;; List Swank source locations (suitable for `make-slime-xref') for
 ;;; the things that the Elisp side considers possible around the point
-;;; when M-. is invoked. OBJECT-AND-LOCATIVES-LIST is a list like
-;;;
-;;; (("[section][" ("junk-before" "class"))
-;;;  ("section" ("class")))
+;;; when M-. is invoked.
 ;;;
 ;;; where each element in the list is a consist of a @WORD and a list
 ;;; of possible @LOCATIVEs found next to it. All strings may need to
@@ -83,218 +148,20 @@
 ;;; If none of the resulting references can be resolved (including if
 ;;; no locatives are specified), then list all possible definitions.
 ;;;
-;;; Return (DSPEC LOCATION) (with DSPEC as a string). If AS-REF, then
-;;; return a list of (OBJECT LOCATIVE) elements (both strings), where
-;;; LOCATIVE is NIL when a dspec returned by
-;;; SWANK-BACKEND:FIND-DEFINITIONS cannot be converted to a reference
-;;; with DSPEC-TO-REFERENCE.
-(defun/autoloaded locate-definitions-for-emacs (object-and-locatives-list
-                                                &key as-ref)
+;;; Return a list of (DSPEC LOCATION) elements (with DSPEC as a
+;;; string).
+(defun/autoloaded locate-definitions-for-emacs (wall)
   (with-swank ()
     (swank::converting-errors-to-error-location
       (swank::with-buffer-syntax ()
-        (locate-definitions-for-emacs-1 object-and-locatives-list
-                                        :as-ref as-ref)))))
+        (locate-definitions-for-emacs-1 wall)))))
 
-(defun locate-definitions-for-emacs-1 (object-and-locatives-list &key as-ref)
-  (convert-for-emacs
-   (or (loop for (object-word locative-strings) in object-and-locatives-list
-             append (loop for locative-string in locative-strings
-                          append (locate-word-definition-for-emacs
-                                  object-word locative-string
-                                  :include-no-source as-ref)))
-       (loop for entry in object-and-locatives-list
-             append (locate-all-definitions-for-emacs (first entry))))
-   :as-ref as-ref))
-
-(defun convert-for-emacs (emacsref-dspec-and-location-list &key as-ref)
-  (if as-ref
-      (loop for (emacsref dspec location) in emacsref-dspec-and-location-list
-            collect emacsref)
-      (loop for (emacsref dspec location) in emacsref-dspec-and-location-list
-            collect `(,(prin1-to-string dspec) ,location))))
-
-(defun reference-for-emacs (reference)
-  (with-standard-io-syntax*
-    (list (let ((object (reference-object reference)))
-            (if (stringp object)
-                object
-                (prin1-to-string object)))
-          ;; The locative may not be readable (e.g. methods with EQL
-          ;; specializers with unreadable stuff).
-          (let ((*print-readably* nil))
-            (prin1-to-string (reference-locative reference))))))
-
-(defun ambiguous-reference-for-emacs (object)
-  (with-standard-io-syntax*
-    (list (prin1-to-string object) nil)))
-
-;;; Return a list of (EMACSREF DSPEC LOCATION) objects.
-(defun locate-all-definitions-for-emacs (word)
-  (loop
-    for object in (parse-word word)
-      thereis (append
-               ;; Standard stuff supported by Swank.
-               (loop for dspec-and-location
-                       in (swank-find-definitions object)
-                     for edl = (emacsref-dspec-and-location
-                                object dspec-and-location
-                                ;; SWANK-BACKEND::FIND-DEFINITIONS'
-                                ;; support for :MGL-PAX, PAX, "PAX" is
-                                ;; uneven across implementations.
-                                :filter '(package))
-                     when edl
-                       collect edl)
-               ;; For locatives not supported by Swank, we try
-               ;; locatives on *LOCATIVE-SOURCE-SEARCH-LIST* one by
-               ;; one and see if they lead somewhere from the @NAMEs
-               ;; in WORD.
-               (mapcan (lambda (locative)
-                         (let ((thing (locate object locative
-                                              :errorp nil)))
-                           (when thing
-                             (let ((location (find-source thing))
-                                   (ref (canonical-reference thing)))
-                               `((,(reference-for-emacs ref)
-                                  ,(reference-to-fake-dspec ref)
-                                  ,location))))))
-                       *locative-source-search-list*))))
-
-(defun emacsref-dspec-and-location (object dspec-and-location &key filter)
-  (destructuring-bind (dspec location) dspec-and-location
-    (let ((reference (dspec-to-reference dspec object)))
-      (unless (and reference
-                   (member (reference-locative-type reference) filter))
-        (list (if reference
-                  (reference-for-emacs reference)
-                  (ambiguous-reference-for-emacs
-                   object))
-              (if reference
-                  ;; Replace (DEFCLASS FOO) with (FOO CLASS).
-                  (reference-to-fake-dspec reference)
-                  dspec)
-              location)))))
-
-(defun locate-word-definition-for-emacs (word locative-string
-                                         &key include-no-source)
-  (let ((locative (read-locative-from-markdown locative-string)))
-    (when locative
-      (loop for object in (parse-word word)
-              thereis (let* ((ref (make-reference object locative))
-                             ;; See MGL-PAX-TEST::TEST-NAVIGATION-TO-SOURCE.
-                             (location (ignore-errors (find-source ref))))
-                        (when (or include-no-source
-                                  (eq (first location) :location))
-                          `((,(reference-for-emacs ref)
-                             ,(reference-to-fake-dspec ref)
-                             ,location))))))))
-
-(defun read-locative-from-markdown (string)
-  (read-locative-from-string
-   ;; It is assumed that names of locative types are not funny, and we
-   ;; can trim aggressively.
-   (string-trim ":`',." string)))
-
-;;; Parse "LOCATIVE-TYPE" and "(LOCATIVE-TYPE ...)" like
-;;; READ-FROM-STRING, but try to minimize the chance of interning
-;;; junk. That is, don't intern LOCATIVE-TYPE (it must be already) or
-;;; anything in "..." if LOCATIVE-TYPE is not a valid locative type.
-(defun read-locative-from-string (string &key junk-allowed)
-  (handler-case
-      (multiple-value-bind (symbol pos)
-          (read-interned-symbol-from-string string)
-        (if pos
-            (when (and (or junk-allowed
-                           (not (find-if-not #'whitespacep string :start pos)))
-                       (locate symbol 'locative :errorp nil))
-              (values symbol pos))
-            (let ((first-char-pos (position-if-not #'whitespacep string)))
-              (when (and first-char-pos (char= (elt string first-char-pos) #\())
-                ;; Looks like a list. The first element must be an
-                ;; interned symbol naming a locative.
-                (let ((delimiter-pos (position-if #'delimiterp string
-                                                  :start (1+ first-char-pos))))
-                  (multiple-value-bind (symbol found)
-                      (swank::parse-symbol
-                       (subseq string (1+ first-char-pos) delimiter-pos))
-                    (when (and found (locate symbol 'locative :errorp nil))
-                      ;; The rest of the symbols in the string need not be
-                      ;; already interned, so let's just READ.
-                      (multiple-value-bind (locative position)
-                          (ignore-errors (read-from-string string))
-                        (when locative
-                          (values locative position))))))))))
-    ((or reader-error end-of-file) ()
-      nil)))
-
-(defun read-locatives-from-string (string)
-  (let ((locatives ())
-        (start 0))
-    (loop
-      (multiple-value-bind (locative pos)
-          (read-locative-from-string (subseq string start) :junk-allowed t)
-        (cond (locative
-               (push locative locatives)
-               (incf start pos))
-              (t
-               (return)))))
-    (values (reverse locatives) start)))
-
-;;; Parse "OBJECT LOCATIVE-TYPE" or "OBJECT (LOCATIVE-TYPE ...))", but
-;;; only intern stuff if LOCATIVE-TYPE is interned. Return 1. object,
-;;; 2. locative, 3. whether at least one locative was found, 4. the
-;;; unparsable junk if any unread non-whitespace characters are left.
-(defun read-reference-from-string (string &key multiple-locatives-p)
-  (flet ((maybe-junk (start)
-           (let ((locstring (string-trim *whitespace-chars*
-                                         (subseq string start))))
-             (if (zerop (length locstring))
-                 nil
-                 locstring))))
-    (handler-case
-        ;; Skip whatever OBJECT may be ...
-        (let ((object-end-pos (n-chars-would-read string)))
-          ;; ... then just try to parse the locative.
-          (multiple-value-bind (one-or-more-locatives pos)
-              (if multiple-locatives-p
-                  (read-locatives-from-string (subseq string object-end-pos))
-                  (read-locative-from-string (subseq string object-end-pos)))
-            (if one-or-more-locatives
-                (values (read-object-from-string
-                         (subseq string 0 object-end-pos))
-                        one-or-more-locatives t
-                        (maybe-junk (+ object-end-pos pos)))
-                (values nil nil nil (maybe-junk object-end-pos)))))
-      ((or reader-error end-of-file) ()
-        nil))))
-
-(defun read-object-from-string (string)
-  (let ((string (string-trim *whitespace-chars* string)))
-    (if (alexandria:starts-with #\" string)
-        (read-from-string string)
-        (multiple-value-bind (symbol found)
-            (swank::parse-symbol
-             ;; Make "PAX:@PAX-MANUAL SECTION" work with a single
-             ;; colon even though @PAX-MANUAL is an internal symbol.
-             (double-single-colon string))
-          (if found
-              symbol
-              (adjust-string-case string))))))
-
-(defun double-single-colon (string)
-  (let ((pos (position #\: string)))
-    (if (and pos (not (search "::" string)))
-        (concatenate 'string (subseq string 0 pos) ":" (subseq string pos))
-        string)))
-
-(defun delimiterp (char)
-  (or (whitespacep char) (find char "()'`\"")))
-
-;;; The returned dspec is fake because it doesn't necessarily match
-;;; what SWANK/BACKEND:FIND-DEFINITIONS would produce, but it doesn't
-;;; matter because it's only used as a label to show to the user.
-(defun reference-to-fake-dspec (reference)
-  (list (reference-object reference) (reference-locative reference)))
+(defun locate-definitions-for-emacs-1 (wall)
+  (loop for definition in (definitions-of-wall wall)
+        for location = (ignore-errors (find-source definition))
+        unless (eq (first location) :error)
+          collect `(,(prin1-to-string (reference-to-dspec definition))
+                    ,location)))
 
 
 ;;;; Utilities for listing SECTIONs
@@ -360,11 +227,10 @@
 
 (defun dspec-and-source-location-for-emacs (reference)
   (let ((location (ignore-errors (find-source reference))))
-    (if (null location)
-        `(,(prin1-to-string (reference-for-emacs reference))
-          (:error "No source location."))
-        `(,(prin1-to-string (reference-for-emacs reference))
-          ,location))))
+    `(,(prin1-to-string (reference-to-dspec reference))
+      ,(if (null location)
+           '(:error "No source location.")
+           location))))
 
 ;;; This is also used by CURRENT-DEFINITION-PAX-URL-FOR-EMACS.
 (defun find-current-definition (buffer filename possibilities)
@@ -421,29 +287,6 @@
                 (setq closest-definition reference
                       closest-pos pos)))))
       closest-definition)))
-
-;;; Return all definitions of OBJECT in the running Lisp as a list of
-;;; canonical REFERENCEs. REFERENCE-OBJECTs may not be the same as
-;;; OBJECT (for example, when OBJECT is a package nickname).
-(defun definitions-of (object)
-  (remove-duplicates
-   (append (when (or (symbolp object) (stringp object))
-             (loop for dspec in (find-dspecs (if (stringp object)
-                                                 (make-symbol object)
-                                                 object))
-                   for ref = (dspec-to-reference dspec object)
-                   when (and ref
-                             (not (and (keywordp object)
-                                       (eq (reference-locative-type ref)
-                                           'constant))))
-                     collect (canonical-reference ref)))
-           (mapcan (lambda (locative)
-                     (let ((thing (locate object locative
-                                          :errorp nil)))
-                       (when thing
-                         `(,(canonical-reference thing)))))
-                   *locative-source-search-list*))
-   :test #'reference=))
 
 (defun 2nd-whitespace-position (string)
   (or (alexandria:when-let (pos (position-if #'whitespacep string))

@@ -59,7 +59,7 @@
 (defun reference-to-dspec* (name locative)
   (let ((type (locative-type locative))
         (args (locative-args locative)))
-    (ecase type
+    (case type
       (variable (swank-variable-dspec name))
       (constant (swank-constant-dspec name))
       (macro (swank-macro-dspec name))
@@ -75,7 +75,15 @@
       (type (swank-type-dspec name))
       (class (swank-class-dspec name))
       (condition (swank-condition-dspec name))
-      (package (swank-package-dspec name)))))
+      (package (swank-package-dspec name))
+      ;; Reverse DSPEC-TO-REFERENCE's catch-all mechanism.
+      (dspec (first args))
+      (t
+       ;; Maybe it's a PAX locative. Fake a dspec. It won't matter
+       ;; that it's fake (i.e. it cannot be produced by
+       ;; SWANK/BACKEND:FIND-DEFINITIONS) because it's only used as a
+       ;; label to show to the user.
+       (list name locative)))))
 
 (defmacro define-dspec (name lambda-list &body body)
   (multiple-value-bind (clauses declarations) (alexandria:parse-body body)
@@ -285,7 +293,9 @@
                  (return-from lazy-wasteful-parsing
                    (actualize-swank-reference
                     (make-reference name locative-type)))))
-      (method-dspec-to-reference dspec)))
+      (method-dspec-to-reference dspec)
+      ;; Stuff unknown dspecs into a REFERENCE.
+      (make-reference name `(dspec ,dspec))))
 
 ;;; From SWANK-BACKEND:FIND-DEFINITIONS, we get SECTIONs and
 ;;; GLOSSARY-TERMs as VARIABLEs. FIXME: This is not extensible.
@@ -439,21 +449,24 @@
 ;;; buffers.
 #-sbcl
 (defun find-dspecs (name)
-  (mapcar #-abcl #'first
-          #+abcl (lambda (dspec-and-location)
-                   (if (eq (first dspec-and-location) :primitive)
-                       '(function)
-                       (first dspec-and-location)))
-          (swank-find-definitions name)))
+  (let ((name (object-to-swank-name name)))
+    (mapcar #-abcl #'first
+            #+abcl (lambda (dspec-and-location)
+                     (if (eq (first dspec-and-location) :primitive)
+                         '(function)
+                         (first dspec-and-location)))
+            (swank-find-definitions name))))
 
 #+sbcl
 (defun find-dspecs (name)
-  (loop for type in swank/sbcl::*definition-types* by #'cddr
-        for defsrcs = (sb-introspect:find-definition-sources-by-name name type)
-        for filtered-defsrcs
-          = (if (eq type :generic-function)
-                (remove :invalid defsrcs
-                        :key #'swank/sbcl::categorize-definition-source)
-                defsrcs)
-        append (loop for defsrc in filtered-defsrcs
-                     collect (swank/sbcl::make-dspec type name defsrc))))
+  (let ((name (object-to-swank-name name)))
+    (loop for type in swank/sbcl::*definition-types* by #'cddr
+          for defsrcs = (sb-introspect:find-definition-sources-by-name
+                         name type)
+          for filtered-defsrcs
+            = (if (eq type :generic-function)
+                  (remove :invalid defsrcs
+                          :key #'swank/sbcl::categorize-definition-source)
+                  defsrcs)
+          append (loop for defsrc in filtered-defsrcs
+                       collect (swank/sbcl::make-dspec type name defsrc)))))

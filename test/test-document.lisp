@@ -86,6 +86,7 @@
   (test-readtable)
   ;; PAX::@PAX-LOCATIVES
   (test-locative)
+  (test-go)
   (test-docstring)
   (test-hyperspec)
   (test-clhs-definitions)
@@ -992,6 +993,17 @@ This is [Self-referencing][e042].
     This is `SOME-ARG`.
 " :package (find-package :cl)))
 
+(deftest test-go ()
+  (with-test ("canonicalize GO target")
+    (check-ref (locate 'xxx '(go (stream type))) 'xxx '(go (stream class))))
+  (check-head "[XXX][(go (3.4.1 clhs))]" "[`XXX`][4336]")
+  (check-head "[&KEY][(go (3.4.1 clhs))]" "[`&KEY`][4336]")
+  (check-head "&KEY" "[`&KEY`][4336]")
+  (check-head "XXX `(go (3.4.1 clhs))`" "[`XXX`][4336] `(go (3.4.1 clhs))`")
+  (check-head "&KEY `(go (1 clhs))`" "[`&KEY`][81be] `(go (1 clhs))`")
+  (with-test ("accidental GO with no arguments")
+    (check-head "PRINT go" "[`PRINT`][d451] go")))
+
 (deftest test-docstring ()
   (check-head "[BAR CONSTANT][docstring]" "`BAR` is not a link.")
   (check-head (list "[BAR CONSTANT][docstring]"
@@ -1176,17 +1188,17 @@ This is [Self-referencing][e042].
     => 7
     ```"
                 :n-lines 8 :warnings 1 :w3m t))
-  (test-references-to-document-for-path)
+  (test-documentables-of)
   (test-document/w3m/live-vs-static)
   (test-document/w3m/object)
   (test-document/w3m/clhs))
 
-(deftest test-references-to-document-for-path ()
+(deftest test-documentables-of ()
   ;; This test relies on what is and what is not available through
   ;; SWANK-BACKEND:FIND-DEFINITIONS in a given implementation.
   #+sbcl
   (is (endp (different-elements
-             (pax::sort-references (pax::references-to-document-for-name "nil"))
+             (pax::sort-references (pax::documentables-of nil))
              (list (make-reference "NIL" '(clhs glossary-term))
                    (make-reference :common-lisp 'readtable)
                    (make-reference 'nil '(clhs constant))

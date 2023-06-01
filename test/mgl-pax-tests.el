@@ -44,97 +44,97 @@
      (apply #',fname ',input)))
 
 
-;;;; Test `mgl-pax-object-and-locatives-list-at-point'
+;;;; Test `mgl-pax-wall-at-point'
 
-(ert-deftest test-mgl-pax-object-and-locatives-list-at-point/simple-1 ()
+(ert-deftest test-mgl-pax-wall-at-point/simple-1 ()
   (with-temp-lisp-buffer
-   (should (equal (mgl-pax-object-and-locatives-list-at-point)
+   (should (equal (mgl-pax-wall-at-point)
                   '()))
    (insert "xxx")
-   (should (equal (mgl-pax-object-and-locatives-list-at-point)
+   (should (equal (mgl-pax-wall-at-point)
                   '(("xxx" ()))))
    (insert " sym")
-   (should (equal (mgl-pax-object-and-locatives-list-at-point)
+   (should (equal (mgl-pax-wall-at-point)
                   '(("sym" ("xxx")))))
    (save-excursion
      (insert " function"))
-   (should (equal (mgl-pax-object-and-locatives-list-at-point)
+   (should (equal (mgl-pax-wall-at-point)
                   '(("sym" ("xxx" "function")))))))
 
 ;;; xxx (FOO) yyy
-(ert-deftest test-mgl-pax-object-and-locatives-list-at-point/simple-2 ()
+(ert-deftest test-mgl-pax-wall-at-point/simple-2 ()
   (with-temp-lisp-buffer
    (insert "xxx (foo")
    (save-excursion
      (insert ") yyy"))
-   (should (equal (mgl-pax-object-and-locatives-list-at-point)
+   (should (equal (mgl-pax-wall-at-point)
                   '(("foo" ()))))))
 
 ;;; xxx ((FOO)) yyy
-(ert-deftest test-mgl-pax-object-and-locatives-list-at-point/simple-3 ()
+(ert-deftest test-mgl-pax-wall-at-point/simple-3 ()
   (with-temp-lisp-buffer
    (insert "xxx ((foo")
    (save-excursion
      (insert ")) yyy"))
-   (should (equal (mgl-pax-object-and-locatives-list-at-point)
+   (should (equal (mgl-pax-wall-at-point)
                   '(("foo" ()))))))
 
 ;;; xxx [FOO][function] yyy
-(ert-deftest test-mgl-pax-object-and-locatives-list-at-point/reflink-1 ()
+(ert-deftest test-mgl-pax-wall-at-point/reflink-1 ()
   (with-temp-lisp-buffer
    (insert "xxx [foo")
    (save-excursion
      (insert "][function] yyy"))
-   (should (equal (mgl-pax-object-and-locatives-list-at-point)
+   (should (equal (mgl-pax-wall-at-point)
                   '(("[foo][function]" ("xxx" "yyy"))
                     ("foo" ("function")))))))
 
 ;;; xxx [FOO][(function)] yyy
-(ert-deftest test-mgl-pax-object-and-locatives-list-at-point/reflink-2 ()
+(ert-deftest test-mgl-pax-wall-at-point/reflink-2 ()
   (with-temp-lisp-buffer
    (insert "xxx [foo")
    (save-excursion
      (insert "][(function)] yyy"))
-   (should (equal (mgl-pax-object-and-locatives-list-at-point)
+   (should (equal (mgl-pax-wall-at-point)
                   '(("[foo][" ("xxx" "(function)"))
                     ("foo" ("(function)")))))))
 
 ;;; xxx [`FOO`][function] yyy
-(ert-deftest test-mgl-pax-object-and-locatives-list-at-point/reflink-3 ()
+(ert-deftest test-mgl-pax-wall-at-point/reflink-3 ()
   (with-temp-lisp-buffer
    (insert "xxx [`foo")
    (save-excursion
      (insert "`][function] yyy"))
-   (should (equal (mgl-pax-object-and-locatives-list-at-point)
+   (should (equal (mgl-pax-wall-at-point)
                   '(("foo" ("[" "function")))))))
 
 ;;; xxx [FOO ][function] yyy
-(ert-deftest test-mgl-pax-object-and-locatives-list-at-point/reflink-4 ()
+(ert-deftest test-mgl-pax-wall-at-point/reflink-4 ()
   (with-temp-lisp-buffer
    (insert "xxx [foo")
    (save-excursion
      (insert " ][function] yyy"))
-   (should (equal (mgl-pax-object-and-locatives-list-at-point)
+   (should (equal (mgl-pax-wall-at-point)
                   '(("[foo" ("xxx" "function"))
                     ("foo" ("function")))))))
 
 ;;; xxx [FOO][ function] yyy
-(ert-deftest test-mgl-pax-object-and-locatives-list-at-point/reflink-5 ()
+(ert-deftest test-mgl-pax-wall-at-point/reflink-5 ()
   (with-temp-lisp-buffer
    (insert "xxx [foo")
    (save-excursion
      (insert "][ function] yyy"))
-   (should (equal (mgl-pax-object-and-locatives-list-at-point)
+   (should (equal (mgl-pax-wall-at-point)
                   '(("[foo][" ("xxx" "function"))
                     ("foo" ("function")))))))
 
 ;;; xxx [see also][FOO function] zzz
-(ert-deftest test-mgl-pax-object-and-locatives-list-at-point/reflink-6 ()
+(ert-deftest test-mgl-pax-wall-at-point/reflink-6 ()
   (with-temp-lisp-buffer
    (insert "xxx [see also][foo")
    (save-excursion
      (insert " function] yyy"))
-   (should (equal (mgl-pax-object-and-locatives-list-at-point)
+   (should (equal (mgl-pax-wall-at-point)
                   '(("also][foo" ("[see" "function"))
                     ("foo" ("function")))))))
 
@@ -383,6 +383,87 @@ Also, see the package COMMON-LISP-USER.
 
 "))
    (kill-buffer)))
+
+(ert-deftest test-mgl-pax-document/simple2 ()
+  (with-temp-lisp-buffer
+   (insert "(defun foo-simple () \"docstring\" t)")
+   (slime-compile-defun)
+   (slime-sync-to-top-level 1)
+   ;; Explicit call
+   (unwind-protect
+       (progn
+         (mgl-pax-document "pax:foo-simple")
+         (slime-sync-to-top-level 1)
+         (sync-current-buffer)
+         (should (eq major-mode 'w3m-mode))
+         (should (string= (w3m-contents)
+                          "  * [function] FOO-SIMPLE
+   
+    docstring
+   
+Also, see the package COMMON-LISP-USER.
+
+")))
+     (when (eq major-mode 'w3m-mode)
+       (kill-buffer)))))
+
+(ert-deftest test-mgl-pax-document/external ()
+  (unwind-protect
+      (progn
+        (mgl-pax-document "pax:readably")
+        (slime-sync-to-top-level 1)
+        (sync-current-buffer)
+        (should (eq major-mode 'w3m-mode))
+        ;; Wait for 5 seconds for the page to load and render.
+        (cl-loop repeat 50
+                 until (looking-at "readably adv.")
+                 do (sit-for 0.1))
+        (should (looking-at "readably adv."))))
+  (when (eq major-mode 'w3m-mode)
+    (kill-buffer)))
+
+(ert-deftest test-mgl-pax-document/external/context ()
+  (with-temp-lisp-buffer
+   (insert "readably")
+   (unwind-protect
+       (progn
+         (call-interactively 'mgl-pax-document)
+         (slime-sync-to-top-level 1)
+         (sync-current-buffer)
+         (should (eq major-mode 'w3m-mode))
+         ;; Wait for 5 seconds for the page to load and render.
+         (cl-loop repeat 50
+                  until (looking-at "readably adv.")
+                  do (sit-for 0.1))
+         (should (looking-at "readably adv."))))
+   (when (eq major-mode 'w3m-mode)
+     (kill-buffer))))
+
+(ert-deftest test-mgl-pax-document/go ()
+  (unwind-protect
+      (progn
+        (mgl-pax-document (concat "pax:"
+                                  (w3m-url-encode-string
+                                   "defun (go (print function))")))
+        (slime-sync-to-top-level 1)
+        (sync-current-buffer)
+        (should (eq major-mode 'w3m-mode))
+        (should (string-prefix-p "  * [function] PRINT" (w3m-contents))))
+    (when (eq major-mode 'w3m-mode)
+      (kill-buffer))))
+
+(ert-deftest test-mgl-pax-document/go/context ()
+  (with-temp-lisp-buffer
+   (unwind-protect
+       (progn
+         (insert "(go (print function)) defun")
+         (call-interactively 'mgl-pax-document)
+         (slime-sync-to-top-level 1)
+         (sync-current-buffer)
+         (should (eq major-mode 'w3m-mode))
+         (should (string-prefix-p "  * [function] PRINT" (w3m-contents))))
+     (when (eq major-mode 'w3m-mode)
+       (kill-buffer)))))
 
 (defun w3m-contents ()
   (save-excursion

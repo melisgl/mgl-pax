@@ -129,11 +129,11 @@ To bind `C-.' globally:
                    '((?u mgl-pax-edit-parent-section))))
 
 
-;;;; Find possible objects and locatives at point
+;;;; Find possible objects and locatives at point (see MGL-PAX::WALL).
 
 ;;; Return a list of of things like (object (locative1 locative2 ...))
 ;;; representing the possible references (object locative1), (object
-;;; locative2), and so on. MGL-PAX::LOCATE-DEFINITION-FOR-EMACS and
+;;; locative2), and so on. MGL-PAX::LOCATE-DEFINITIONS-FOR-EMACS and
 ;;; MGL-PAX::DOCUMENT-FOR-EMACS take such lists.
 ;;;
 ;;; `slime-symbol-at-point' works fine in code, but in printed
@@ -148,7 +148,7 @@ To bind `C-.' globally:
 ;;; name, so we definitely want to look up definitions for it. In
 ;;; addition, we also look up definitions for the symbol whose name
 ;;; has the parts beyond [] cut off.
-(defun mgl-pax-object-and-locatives-list-at-point ()
+(defun mgl-pax-wall-at-point ()
   (let ((name (slime-symbol-at-point))
         (bounds (slime-bounds-of-symbol-at-point)))
     (when bounds
@@ -245,7 +245,7 @@ To bind `C-.' globally:
       (mgl-pax-edit-interactive-definitions name where))))
 
 (defun mgl-pax-edit-buffer-definitions ()
-  (mgl-pax-locate-definitions (mgl-pax-object-and-locatives-list-at-point)
+  (mgl-pax-locate-definitions (mgl-pax-wall-at-point)
                               'mgl-pax-visit-locations))
 
 (defun mgl-pax-edit-interactive-definitions (string &optional where)
@@ -261,20 +261,16 @@ To bind `C-.' globally:
       (mgl-pax-locate-definitions `((,string ()))
                                   'mgl-pax-visit-locations))))
 
-(cl-defun mgl-pax-locate-definitions (name-and-locatives-list cont &key as-ref)
+(defun mgl-pax-locate-definitions (name-and-locatives-list cont)
   (mgl-pax-maybe-autoload
    (lambda (loadedp)
-     (if (not loadedp)
-         ;; Do not be annoying in the M-. case.
-         (when as-ref
-           (mgl-pax-not-loaded))
+     (when loadedp
        (slime-eval-async
            `(cl:when (cl:find-package :mgl-pax)
                      (cl:funcall (cl:find-symbol
                                   (cl:string '#:locate-definitions-for-emacs)
                                   :mgl-pax)
-                                 ',name-and-locatives-list
-                                 :as-ref ,as-ref))
+                                 ',name-and-locatives-list))
          cont)))))
 
 (defun mgl-pax-not-loaded ()
@@ -348,26 +344,18 @@ The suggested key binding is `C-.' to parallel `M-.'."
         (current-prefix-arg
          (mgl-pax-prompt-and-document))
         ;; interactive without prefix arg, point over a pax URL
-        ((and (mgl-pax-in-doc-buffer-p)
+        ((and (null current-prefix-arg)
+              (mgl-pax-in-doc-buffer-p)
               (mgl-pax-doc-pax-url (w3m-anchor)))
          (mgl-pax-document-pax-url (mgl-pax-doc-pax-url (w3m-anchor))))
         ;; interactive without prefix arg, point not over a pax URL
         (t
-         (mgl-pax-references-at-point
-          (lambda (references)
-            (cond ((eq (cl-first references) :error)
-                   (message (cl-second references)))
-                  ((cl-endp references)
-                   (mgl-pax-prompt-and-document))
-                  (t
-                   (cl-destructuring-bind (object locative)
-                       (cl-first references)
-                     (mgl-pax-document-pax-url
-                      (mgl-pax-urllike-to-url
-                       (if (= (length references) 1)
-                           (concat object " " locative)
-                         ;; Go to the disambiguation page.
-                         object)))))))))))
+         (let ((wall (mgl-pax-wall-at-point)))
+           (if wall
+               (mgl-pax-document-pax-url
+                (concat "pax-wall:" (w3m-url-encode-string
+                                     (format "%S" wall))))
+             (mgl-pax-prompt-and-document))))))
 
 (defun mgl-pax-prompt-and-document ()
   (catch 'exit
@@ -383,10 +371,6 @@ The suggested key binding is `C-.' to parallel `M-.'."
             ;; filter" message and the subsequent delay when this
             ;; function is called by `slime-async-eval'.
             (throw 'exit nil))))))))
-
-(defun mgl-pax-references-at-point (cont)
-  (mgl-pax-locate-definitions (mgl-pax-object-and-locatives-list-at-point)
-                              cont :as-ref t))
 
 (defun mgl-pax-document-pax-url (pax-url)
   (unless (and (mgl-pax-in-doc-buffer-p) (string= pax-url "pax:"))
@@ -407,14 +391,16 @@ The suggested key binding is `C-.' to parallel `M-.'."
                 (mgl-pax-call-document-for-emacs
                  pax-url doc-dir
                  :ok-cont (lambda (file-url)
-                            ;; Maybe pop to a pax doc buffer.
-                            (when (and (not (mgl-pax-in-doc-buffer-p))
-                                       mgl-pax-doc-buffers)
-                              (let ((package (slime-current-package)))
-                                (pop-to-buffer (cl-first mgl-pax-doc-buffers))
-                                (setq slime-buffer-package package)))
-                            (w3m-goto-url file-url :reload)
-                            (mgl-pax-set-up-doc-buffer doc-dir)))))
+                            (if (null file-url)
+                                (mgl-pax-prompt-and-document)
+                              ;; Maybe pop to a pax doc buffer.
+                              (when (and (not (mgl-pax-in-doc-buffer-p))
+                                         mgl-pax-doc-buffers)
+                                (let ((package (slime-current-package)))
+                                  (pop-to-buffer (cl-first mgl-pax-doc-buffers))
+                                  (setq slime-buffer-package package)))
+                              (w3m-goto-url file-url :reload)
+                              (mgl-pax-set-up-doc-buffer doc-dir))))))
           ;; Display the docs of this very documentation browser if
           ;; the input is the empty string.
           (when (string= pax-url "pax:")
@@ -425,10 +411,12 @@ The suggested key binding is `C-.' to parallel `M-.'."
             (mgl-pax-call-document-for-emacs
              pax-url doc-dir
              :ok-cont (lambda (file-url)
-                        (let ((package (slime-current-package)))
-                          (w3m-goto-url file-url :reload)
-                          (setq slime-buffer-package package))
-                        (mgl-pax-set-up-doc-buffer doc-dir))
+                        (if (null file-url)
+                            (mgl-pax-prompt-and-document)
+                          (let ((package (slime-current-package)))
+                            (w3m-goto-url file-url :reload)
+                            (setq slime-buffer-package package))
+                          (mgl-pax-set-up-doc-buffer doc-dir)))
              :abort-cont (lambda (condition)
                            (mgl-pax-delete-doc-dir doc-dir)))))))))
 
@@ -489,7 +477,8 @@ The suggested key binding is `C-.' to parallel `M-.'."
 
 (defun mgl-pax-w3m-goto-url (oldfun url &rest args)
   (if (not (or (string-prefix-p "pax:" url)
-               (string-prefix-p "pax-eval:" url)))
+               (string-prefix-p "pax-eval:" url)
+               (string-prefix-p "pax-wall:" url)))
       (apply oldfun url args)
     ;; Set up pax e.g. when the user starts w3m, then presses g and
     ;; enters a pax url.
@@ -500,8 +489,9 @@ The suggested key binding is `C-.' to parallel `M-.'."
       (mgl-pax-call-document-for-emacs url mgl-pax-doc-dir
                                        :ok-cont
                                        (lambda (file-url)
-                                         (pop-to-buffer buffer)
-                                         (apply oldfun file-url args))))))
+                                         (when file-url
+                                           (pop-to-buffer buffer)
+                                           (apply oldfun file-url args)))))))
 
 ;;; Like slime-eval-async, but call abort-cont on :abort.
 (defun mgl-pax-eval-async (sexp ok-cont &optional abort-cont package)

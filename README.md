@@ -508,7 +508,7 @@ objects, but often they appear as an `(OBJECT LOCATIVE)` list (see
     symbol [`FUNCTION`][ba62] as the locative together refer to the
     global definition of the function `FOO`.
     
-    [`REFERENCE`][1cea] objects can be represented as an `(OBJECT LOCATIVE)` list
+    [`REFERENCE`][1cea] objects can be designated by an `(OBJECT LOCATIVE)` list
     as in [`DEFSECTION`][72b4] entries, or textually as `"FOO function"` where
     `FOO` is a [name][88cf] or similar (see [Codification][f1ab] and
     [Linking to Code][1865]).
@@ -996,6 +996,35 @@ which makes navigating the sources with `M-.` (see
     `SOME-NAME` in `(SOME-NAME LOCATIVE)`, this is what makes it
     possible to land at the corresponding [`DEFINE-LOCATIVE-TYPE`][660b] form.
     Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.
+
+<a id="x-28GO-20MGL-PAX-3ALOCATIVE-29"></a>
+- [locative] **GO** *(OBJECT LOCATIVE) &OPTIONAL XXX*
+
+    Redirect to a definition in the context of the [reference][80cd]
+    designated by `OBJECT` and `LOCATIVE`. This pseudolocative is intended
+    for things that have no explicit global definition. Because of this,
+    `GO` often points to macros or sections. For example,
+    
+    - `(CALL-NEXT-METHOD (GO (DEFMETHOD MACRO)))` refers to the symbol
+      [`CALL-NEXT-METHOD`][6832] as it may be used in `DEFMETHOD`,
+    
+    - `(&KEY (GO (3.4.1 CLHS))` refers to [`&KEY`][4336] as described in section
+      3.4.1 of the [`CLHS`][ed5f].
+    
+    `GO` behaves as described below.
+    
+    - [`LOCATE`][ee94]ing a `GO` reference needs `OBJECT` with `LOCATIVE` to be
+      `LOCATE`able.
+    
+    - The `DOCSTRING`([`0`][e2bb] [`1`][ce75]) of a `GO` reference is a terse "See `OBJECT` `LOCATIVE`"
+      message, which cannot be overridden.
+    
+    - [`DOCUMENT`][432c]ing a `GO` reference produces the usual bulleted list
+      item (like `- [go] CALL-NEXT-METHOD (DEFMETHOD MACRO)`) followed
+      by its `DOCSTRING`.
+    
+    Use [`DEFSECTION`][72b4] to both document and export symbols with `GO`
+    references.
 
 <a id="x-28MGL-PAX-3ADISLOCATED-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **DISLOCATED**
@@ -1986,9 +2015,9 @@ linked to all non-local references.
     unless there is a definition in the running Lisp that is being
     [`DOCUMENT`][432c]ed.
     
-    Locatives work as expected (see [`*DOCUMENT-LINK-CODE*`][d9ee]):
-    `FIND-IF` links to `FIND-IF`, `FUNCTION` links
-    to `FUNCTION` and `[FUNCTION][type]` links to [`FUNCTION`][119e].
+    Locatives work as expected (see [`*DOCUMENT-LINK-CODE*`][d9ee]): `FIND-IF`
+    links to [`FIND-IF`][5884], `FUNCTION` links to `FUNCTION`([`0`][119e] [`1`][ba62] [`2`][81f7]), and
+    `[FUNCTION][type]` links to [`FUNCTION`][119e].
     
     [Autolinking][b3cc] to `T` and `NIL` is
     [suppressed][e2e8]. If desired, use `[T][]` (that
@@ -3487,8 +3516,8 @@ with symbols in a certain context.
 
     Define a macro with `NAME` which can be used to attach documentation,
     a lambda-list and source location to a symbol in the context of
-    `LOCATIVE-TYPE`. The defined macro's arglist is ([`SYMBOL`][e5af] `LAMBDA-LIST`
-    `&OPTIONAL` `DOCSTRING`). `LOCATIVE-TYPE` is assumed to have been defined
+    `LOCATIVE-TYPE`. The defined macro's arglist is `(SYMBOL LAMBDA-LIST
+    &OPTIONAL DOCSTRING)`. `LOCATIVE-TYPE` is assumed to have been defined
     with [`DEFINE-SYMBOL-LOCATIVE-TYPE`][7584].
 
 <a id="x-28MGL-PAX-3A-40EXTENDING-DOCUMENT-20MGL-PAX-3ASECTION-29"></a>
@@ -3743,6 +3772,7 @@ they are presented.
   [41fd]: #x-28COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29 "COMPILER-MACRO MGL-PAX:LOCATIVE"
   [4317]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cerror.htm "CERROR (MGL-PAX:CLHS FUNCTION)"
   [432c]: #x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29 "MGL-PAX:DOCUMENT FUNCTION"
+  [4336]: http://www.lispworks.com/documentation/HyperSpec/Body/03_da.htm '"3.4.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [4355]: #x-28MGL-PAX-3AFIND-SOURCE-20GENERIC-FUNCTION-29 "MGL-PAX:FIND-SOURCE GENERIC-FUNCTION"
   [440e]: #x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES* VARIABLE"
   [443b]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_cas.htm "*PRINT-CASE* (MGL-PAX:CLHS VARIABLE)"
@@ -3764,6 +3794,7 @@ they are presented.
   [5825]: #x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/transcribe" ASDF/SYSTEM:SYSTEM'
   [5875]: #x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "GENERIC-FUNCTION MGL-PAX:LOCATIVE"
   [587f]: #x-28MGL-PAX-3AMAKE-GIT-SOURCE-URI-FN-20FUNCTION-29 "MGL-PAX:MAKE-GIT-SOURCE-URI-FN FUNCTION"
+  [5884]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_.htm "FIND-IF (MGL-PAX:CLHS FUNCTION)"
   [5c39]: #x-28MGL-PAX-3ALOCATE-DOCSTRING-20GENERIC-FUNCTION-29 "MGL-PAX:LOCATE-DOCSTRING GENERIC-FUNCTION"
   [5cd7]: #x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:INCLUDE MGL-PAX:LOCATIVE"
   [5df9]: http://www.lispworks.com/documentation/HyperSpec/Body/d_optimi.htm "DEBUG (MGL-PAX:CLHS DECLARATION)"
@@ -3779,6 +3810,7 @@ they are presented.
   [6611]: #x-28MGL-PAX-3ALOCATE-AND-DOCUMENT-20GENERIC-FUNCTION-29 "MGL-PAX:LOCATE-AND-DOCUMENT GENERIC-FUNCTION"
   [66c6]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*ERROR-OUTPUT* (MGL-PAX:CLHS VARIABLE)"
   [672f]: #x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:SECTION MGL-PAX:LOCATIVE"
+  [6832]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defmet.htm "DEFMETHOD (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [685e]: #x-28MGL-PAX-3A-40INTRODUCTION-20MGL-PAX-3ASECTION-29 "Introduction"
   [6887]: #x-28MGL-PAX-3ALOCATE-ERROR-20CONDITION-29 "MGL-PAX:LOCATE-ERROR CONDITION"
   [69f7]: #x-28MGL-PAX-3A-40REFERENCE-BASED-EXTENSIONS-20MGL-PAX-3ASECTION-29 "Reference Based Extensions"

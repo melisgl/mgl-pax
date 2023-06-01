@@ -460,8 +460,8 @@
     (name locative-type &body docstring)
   "Define a macro with NAME which can be used to attach documentation,
   a lambda-list and source location to a symbol in the context of
-  LOCATIVE-TYPE. The defined macro's arglist is (SYMBOL LAMBDA-LIST
-  &OPTIONAL DOCSTRING). LOCATIVE-TYPE is assumed to have been defined
+  LOCATIVE-TYPE. The defined macro's arglist is `(SYMBOL LAMBDA-LIST
+  &OPTIONAL DOCSTRING)`. LOCATIVE-TYPE is assumed to have been defined
   with DEFINE-SYMBOL-LOCATIVE-TYPE."
   `(defmacro ,name (symbol lambda-list &body docstring)
      ,@docstring

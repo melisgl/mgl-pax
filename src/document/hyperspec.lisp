@@ -4,14 +4,14 @@
 
 (defparameter *hyperspec-definitions*
   ;; (SYMBOL LOCATIVE FILENAME)
-  '(;;&allow-other-keys 03_da
-    ;;&aux 03_da
-    ;;&body 03_dd
-    ;;&environment 03_dd
-    ;;&key 03_da
-    ;;&optional 03_da
-    ;;&rest 03_da
-    ;;&whole 03_dd
+  '((&allow-other-keys (go ("3.4.1" clhs)) "03_da")
+    (&aux (go ("3.4.1" clhs)) "03_da")
+    (&body (go ("3.4.4" clhs)) "03_dd")
+    (&environment (go ("3.4.4" clhs)) "03_dd")
+    (&key (go ("3.4.1" clhs)) "03_da")
+    (&optional (go ("3.4.1" clhs)) "03_da")
+    (&rest (go ("3.4.1" clhs)) "03_da")
+    (&whole (go ("3.4.4" clhs)) "03_dd")
     (* function "f_st")
     (* variable "v_stst")
     (** variable "v__stst")
@@ -189,8 +189,7 @@
     (cadr function "f_car_c")
     (call-arguments-limit constant "v_call_a")
     (call-method macro "m_call_m")
-    ;; This is a local function.
-    (call-next-method function "f_call_n")
+    (call-next-method (go (defmethod macro)) "f_call_n")
     (car function "f_car_c")
     (case macro "m_case_")
     (catch operator "s_catch")
@@ -254,7 +253,10 @@
     (compile-file-pathname function "f_cmp__1")
     (compiled-function type "t_cmpd_f")
     (compiled-function-p function "f_cmpd_f")
-    ;;(compiler-macro symbol "f_docume")
+    ;; Adding symbols that CL:DOCUMENTATION specializes on leads to
+    ;; lots of ambiguous links in the documentation.
+    #+nil
+    (compiler-macro (go (documentation (clhs generic-function))) "f_docume")
     (compiler-macro-function function "f_cmp_ma")
     (complement function "f_comple")
     (complex function "f_comp_2")
@@ -427,7 +429,8 @@
     (ftype declaration "d_ftype")
     (funcall function "f_funcal")
     (function operator "s_fn")
-    ;;(function symbol "f_document")
+    #+nil
+    (function (go (documentation (clhs generic-function))) "f_document")
     (function class "t_fn")
     (function-keywords generic-function "f_fn_kwd")
     (function-lambda-expression function "f_fn_lam")
@@ -491,7 +494,7 @@
     (keywordp function "f_kwdp")
     (labels operator "s_flet_")
     (lambda macro "m_lambda")
-    ;;(lambda symbol "s_lambda")
+    (lambda (go ("s_lambda" (clhs section))) "s_lambda")
     (lambda-list-keywords constant "v_lambda")
     (lambda-parameters-limit constant "v_lamb_1")
     (last function "f_last")
@@ -605,7 +608,8 @@
     (merge function "f_merge")
     (merge-pathnames function "f_merge_")
     (method class "t_method")
-    ;;(method-combination symbol "f_docume")
+    #+nil
+    (method-combination (go (documentation (clhs generic-function))) "f_docume")
     (method-combination class "t_meth_1")
     (method-combination-error function "f_meth_1")
     (method-qualifiers generic-function "f_method")
@@ -636,8 +640,7 @@
     (namestring function "f_namest")
     (nbutlast function "f_butlas")
     (nconc function "f_nconc")
-    ;; This is a local function.
-    (next-method-p function "f_next_m")
+    (next-method-p (go (defmethod clhs)) "f_next_m")
     (nil constant "v_nil")
     (nil type "t_nil")
     (nintersection function "f_isec_")
@@ -820,7 +823,8 @@
     (set-pprint-dispatch function "f_set_pp")
     (set-syntax-from-char function "f_set_sy")
     (setf macro "m_setf")
-    ;;(setf symbol "f_docume")
+    #+nil
+    (setf (go (documentation (clhs generic-function))) "f_docume")
     (setq operator "s_setq")
     (seventh function "f_firstc")
     (shadow function "f_shadow")
@@ -909,7 +913,8 @@
     (string> function "f_stgeq_")
     (string>= function "f_stgeq_")
     (stringp function "f_stgp")
-    ;;(structure symbol "f_docume")
+    #+nil
+    (structure (go (documentation (clhs generic-function))) "f_docume")
     (structure-class class "t_stu_cl")
     (structure-object class "t_stu_ob")
     (style-warning condition "e_style_")
@@ -936,7 +941,8 @@
     (synonym-stream class "t_syn_st")
     (synonym-stream-symbol function "f_syn_st")
     (t constant "v_t")
-    ;;(t symbol "f_docume")
+    #+nil
+    (t (go (documentation (clhs generic-function))) "f_docume")
     (t class "t_t")
     (tagbody operator "s_tagbod")
     (tailp function "f_ldiffc")
@@ -958,7 +964,8 @@
     (two-way-stream-input-stream function "f_two_wa")
     (two-way-stream-output-stream function "f_two_wa")
     (type declaration "d_type")
-    ;;(type symbol "f_docume")
+    #+nil
+    (type (go (documentation (clhs generic-function))) "f_docume")
     (type-error condition "e_tp_err")
     (type-error-datum function "f_tp_err")
     (type-error-expected-type function "f_tp_err")
@@ -990,7 +997,8 @@
     (values function "f_values")
     (values type "t_values")
     (values-list function "f_vals_l")
-    ;; (variable symbol "f_docume")
+    #+nil
+    (variable (documentation (clhs generic-function)) "f_docume")
     (vector function "f_vector")
     (vector class "t_vector")
     (vector-pop function "f_vec_po")
@@ -1942,6 +1950,14 @@
                (let ((value (list id filename)))
                  (setf (gethash id ht) value)
                  (setf (gethash filename ht) value))))
+    (loop for entry in *hyperspec-definitions*
+          do (destructuring-bind (symbol locative filename) entry
+               (declare (ignore symbol locative))
+               (setf (gethash filename ht) (list filename filename))))
+    (loop for entry in *hyperspec-disambiguations*
+          do (destructuring-bind (symbol filename) entry
+               (declare (ignore symbol))
+               (setf (gethash filename ht) (list filename filename))))
     ht))
 
 (defparameter *hyperspec-section-map* (make-hyperspec-section-map))

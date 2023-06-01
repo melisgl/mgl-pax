@@ -427,7 +427,7 @@ DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
     symbol `FUNCTION` as the locative together refer to the
     global definition of the function `FOO`.
     
-    REFERENCE objects can be represented as an `(OBJECT LOCATIVE)` list
+    REFERENCE objects can be designated by an `(OBJECT LOCATIVE)` list
     as in DEFSECTION entries, or textually as `"FOO function"` where
     `FOO` is a @NAME or similar (see @CODIFICATION and
     @LINKING-TO-CODE).
@@ -863,6 +863,34 @@ which makes navigating the sources with `M-.` (see
     `SOME-NAME` in `(SOME-NAME LOCATIVE)`, this is what makes it
     possible to land at the corresponding DEFINE-LOCATIVE-TYPE form.
     Similarly, `(LOCATIVE LOCATIVE)` leads to this very definition.
+
+- [locative] GO (OBJECT LOCATIVE) &OPTIONAL XXX
+
+    Redirect to a definition in the context of the @REFERENCE
+    designated by OBJECT and LOCATIVE. This pseudolocative is intended
+    for things that have no explicit global definition. Because of this,
+    GO often points to macros or sections. For example,
+    
+    - `(CALL-NEXT-METHOD (GO (DEFMETHOD MACRO)))` refers to the symbol
+      CALL-NEXT-METHOD as it may be used in DEFMETHOD,
+    
+    - `(&KEY (GO (3.4.1 CLHS))` refers to &KEY as described in section
+      3.4.1 of the CLHS.
+    
+    GO behaves as described below.
+    
+    - LOCATEing a GO reference needs OBJECT with LOCATIVE to be
+      LOCATEable.
+    
+    - The DOCSTRING of a GO reference is a terse "See OBJECT LOCATIVE"
+      message, which cannot be overridden.
+    
+    - DOCUMENTing a GO reference produces the usual bulleted list
+      item (like `- [go] CALL-NEXT-METHOD (DEFMETHOD MACRO)`) followed
+      by its DOCSTRING.
+    
+    Use DEFSECTION to both document and export symbols with GO
+    references.
 
 - [locative] DISLOCATED
 
@@ -1810,9 +1838,9 @@ linked to all non-local references.
     unless there is a definition in the running Lisp that is being
     DOCUMENTed.
     
-    Locatives work as expected (see *DOCUMENT-LINK-CODE*):
-    FIND-IF links to FIND-IF, FUNCTION links
-    to FUNCTION and `[FUNCTION][type]` links to FUNCTION.
+    Locatives work as expected (see *DOCUMENT-LINK-CODE*): `FIND-IF`
+    links to FIND-IF, `FUNCTION` links to FUNCTION, and
+    `[FUNCTION][type]` links to FUNCTION.
     
     Autolinking to T and NIL is
     suppressed. If desired, use `[T][]` (that
@@ -3242,8 +3270,8 @@ with symbols in a certain context.
 
     Define a macro with NAME which can be used to attach documentation,
     a lambda-list and source location to a symbol in the context of
-    LOCATIVE-TYPE. The defined macro's arglist is (SYMBOL LAMBDA-LIST
-    &OPTIONAL DOCSTRING). LOCATIVE-TYPE is assumed to have been defined
+    LOCATIVE-TYPE. The defined macro's arglist is `(SYMBOL LAMBDA-LIST
+    &OPTIONAL DOCSTRING)`. LOCATIVE-TYPE is assumed to have been defined
     with DEFINE-SYMBOL-LOCATIVE-TYPE.
 
 ### Extending DOCUMENT
