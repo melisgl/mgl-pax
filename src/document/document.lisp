@@ -389,10 +389,6 @@
 (defun external-reference-p (reference)
   (external-locative-p (reference-locative reference)))
 
-(defun first-link-to (reference)
-  (find reference (links-of reference) :key #'link-reference
-                                       :test #'reference=))
-
 (defun external-reference-url (reference)
   (find-clhs-url (resolve reference)))
 
@@ -1553,8 +1549,8 @@
 ;;; All returned REFERENCES are for the same object.
 (defun linkables-for-autolink (objects locatives linked-refs)
   (or
-   ;; Use the first object from OBJECTS with which some LOCATIVES form
-   ;; known references.
+   ;; Use the first of OBJECTS with which some LOCATIVES form known
+   ;; references.
    (loop for object in objects
            thereis (loop for locative in locatives
                          append (linkables-for-specified-locative
@@ -2892,10 +2888,9 @@
 ;;; try to document an external reference, and return it.
 (defun open-reference-if-external (reference)
   (let ((*document-open-linking* t))
-    (alexandria:when-let (link (first-link-to (canonical-reference reference)))
-      (let ((reference (link-reference (unaliased-link link))))
-        (when (external-locative-p (reference-locative reference))
-          reference)))))
+    (let ((reference (canonical-reference reference)))
+      (when (external-locative-p (reference-locative reference))
+        (resolve reference)))))
 
 ;;; E.g. "pax:foo function"
 (defun document-for-emacs/reference (reference dirname)
