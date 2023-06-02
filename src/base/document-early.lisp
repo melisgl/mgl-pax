@@ -64,6 +64,7 @@
 (setf (documentation '*format* 'variable)
       "Bound by DOCUMENT, this allows markdown output to depend on the
        output format.")
+(declaim (special *html-subformat*))
 
 (defmacro with-heading ((stream object title &key link-title-to)
                         &body body)

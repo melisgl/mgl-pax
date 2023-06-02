@@ -2592,15 +2592,7 @@
   "Determines what *PACKAGE* and *READTABLE* are when generating
   documentation.
 
-  - When documentation is generated for a SECTION (including its
-    SECTION-ENTRIES), then *PACKAGE* and *READTABLE* will be bound to
-    SECTION-PACKAGE and SECTION-READTABLE. To eliminate ambiguity `[in
-    package ...]` messages are printed right after the section heading
-    if necessary.
-
-  - When documenting a SECTION's SECTION-ENTRIES, the bindings
-    established by the section are in effect if
-    *DOCUMENT-NORMALIZE-PACKAGES* is true.
+  [documenting-section macro][docstring]
 
   - In all other cases (i.e. when *DOCUMENT-NORMALIZE-PACKAGES* is
     false or we are not documenting a SECTION nor its

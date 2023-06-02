@@ -1101,22 +1101,38 @@ EXPORTABLE-REFERENCE-P).")
 
 (defvar *section*)
 
+(defmacro documenting-section ((section stream) &body body)
+  "- When documentation is generated for a SECTION (including its
+     SECTION-ENTRIES), then *PACKAGE* and *READTABLE* will be bound to
+     SECTION-PACKAGE and SECTION-READTABLE. To eliminate ambiguity
+     `[in package ...]` messages are printed right after the section
+     heading if necessary.
+
+   - When documenting a SECTION's SECTION-ENTRIES, the bindings
+     established by the section are in effect if
+     *DOCUMENT-NORMALIZE-PACKAGES* is true."
+  (alexandria:with-gensyms (same-package)
+    (alexandria:once-only (section)
+      `(let ((,same-package (and (eq *package* (section-package ,section))
+                                 (or (boundp '*section*)
+                                     (eq *html-subformat* :w3m))))
+             (*package* (section-package ,section))
+             (*readtable* (section-readtable ,section))
+             (*section* ,section))
+         (with-heading (,stream ,section (section-title-or-name ,section)
+                        :link-title-to (section-link-title-to ,section))
+           (when (not ,same-package)
+             (format-in-package *package* ,stream))
+           ,@body)))))
+
 (defmethod document-object ((section section) stream)
-  (let ((same-package (and (boundp '*section*)
-                           (eq *package* (section-package section))))
-        (*package* (section-package section))
-        (*readtable* (section-readtable section))
-        (*section* section))
-    (with-heading (stream section (section-title-or-name section)
-                   :link-title-to (section-link-title-to section))
-      (unless same-package
-        (format-in-package *package* stream))
-      (let ((firstp t))
-        (dolist (entry (section-entries section))
-          (if firstp
-              (setq firstp nil)
-              (terpri stream))
-          (document-object entry stream))))))
+  (documenting-section (section stream)
+    (let ((firstp t))
+      (dolist (entry (section-entries section))
+        (if firstp
+            (setq firstp nil)
+            (terpri stream))
+        (document-object entry stream)))))
 
 (defun format-in-package (package stream)
   (format stream "###### \\[in package ~A~A\\]~%"

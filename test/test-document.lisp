@@ -41,11 +41,11 @@
         (is (= (length (% warnings)) n-expected-warnings)
             :ctx ("Input: ~S~%Full output:~%~S" input full-output))))))
 
-(defun check-pred (input pred &key msg)
+(defun check-pred (input pred &key msg w3m)
   (let* ((*package* (find-package :mgl-pax-test))
          (*document-hyperspec-root* "CLHS/")
          (*document-url-versions* '(2))
-         (full-output (document input :stream nil :format :markdown)))
+         (full-output (document* input :format :markdown :w3m w3m)))
     (is (funcall pred full-output)
         :msg msg
         :ctx ("Input: ~S~%Full output:~%~S" input full-output))))
@@ -1188,6 +1188,11 @@ This is [Self-referencing][e042].
     => 7
     ```"
                 :n-lines 8 :warnings 1 :w3m t))
+  (with-test ("[in package]")
+    (let ((*package* (find-package '#:mgl-pax-test)))
+      (check-pred @test-examples (lambda (output)
+                                   (not (search "in package" output)))
+                  :w3m t)))
   (test-documentables-of)
   (test-document/w3m/live-vs-static)
   (test-document/w3m/object)
