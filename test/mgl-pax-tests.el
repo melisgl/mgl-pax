@@ -472,9 +472,9 @@ Also, see the package COMMON-LISP-USER.
     (buffer-substring-no-properties (point) (point-max))))
 
 
-;;;; Test `mgl-pax-document-current-definition'
+;;;; Test `mgl-pax-current-definition-toggle-view'
 
-(ert-deftest test-mgl-pax-document-current-definition ()
+(ert-deftest test-mgl-pax-current-definition-toggle-view ()
   (with-temp-lisp-buffer
    (let ((tmpbuffer (current-buffer)))
      (insert "(defun foo-simple () \"docstring\" t)")
@@ -482,7 +482,7 @@ Also, see the package COMMON-LISP-USER.
      (slime-eval-last-expression)
      (slime-sync-to-top-level 1)
      (backward-char)
-     (mgl-pax-document-current-definition)
+     (mgl-pax-current-definition-toggle-view)
      (slime-sync-to-top-level 1)
      (sync-current-buffer)
      (should (eq major-mode 'w3m-mode))
@@ -500,7 +500,7 @@ Also, see the package COMMON-LISP-USER.
      ;; Compiled
      (slime-compile-defun)
      (slime-sync-to-top-level 1)
-     (mgl-pax-document-current-definition)
+     (mgl-pax-current-definition-toggle-view)
      (slime-sync-to-top-level 1)
      (sync-current-buffer)
      (should (eq major-mode 'w3m-mode))

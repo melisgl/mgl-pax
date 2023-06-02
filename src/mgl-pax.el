@@ -1,14 +1,19 @@
 ;; -*- lexical-binding: t -*-
 
 ;;;; MGL-PAX Emacs integration
+;;;; =========================
 ;;;;
-;;;; SETUP
+;;;; SETUP (see MGL-PAX::@EMACS-SETUP)
+;;;; ---------------------------------
 ;;;;
 ;;;; - `mgl-pax-autoload'
 ;;;;
 ;;;; - `mgl-pax-hijack-slime-doc-keys'
 ;;;;
-;;;; NAVIGATE (see MGL-PAX::@NAVIGATING-IN-EMACS (press `C-.' on this))
+;;;; - `mgl-pax-reload'
+;;;;
+;;;; NAVIGATE (see MGL-PAX::@NAVIGATING-IN-EMACS)
+;;;; --------------------------------------------
 ;;;;
 ;;;; - `M-.' (`slime-edit-definition') supports new kinds of
 ;;;;   definitions (e.g. of ASDF/SYSTEMs) and disambiguates based on
@@ -19,19 +24,21 @@
 ;;;; - Also, see `mgl-pax-edit-parent-section'.
 ;;;;
 ;;;; DOCUMENT (see MGL-PAX::@DOCUMENTING-IN-EMACS)
+;;;; ---------------------------------------------
 ;;;;
 ;;;; - Browse documentation of definitions in the running Lisp live
 ;;;;   without explicitly generating documentation with
 ;;;;   `mgl-pax-document'. Bind it to `C-.' to parallel `M-.'.
 ;;;;
-;;;; - Also, see `mgl-pax-document-current-definition'.
+;;;; - Also, see `mgl-pax-current-definition-toggle-view'.
 ;;;;
 ;;;; - `mgl-pax-apropos', `mgl-pax-apropos-all' and
 ;;;;   `mgl-pax-apropos-package' are replacements for `slime-apropos'
 ;;;;   `slime-apropos-all' and `slime-apropos-package', respectively.
 ;;;;   They are all built on top of `mgl-pax-document'.
 ;;;;
-;;;; TRANSCRIBE (see MGL-PAX::@TRANSCRIBING-WITH-EMACS)
+;;;; TRANSCRIBE (see MGL-PAX::@TRANSCRIBING-WITH-EMACS (press `C-.' on this))
+;;;; ------------------------------------------------------------------------
 ;;;;
 ;;;; - For `mgl-pax-transcribe-last-expression' and
 ;;;;   `mgl-pax-retranscribe-region'.
@@ -52,7 +59,8 @@ other mgl-pax commands."
   :type 'boolean
   :group 'mgl-pax)
 
-(defvar mgl-pax-version '(0 2 1))
+(defvar mgl-pax-version)
+(setq mgl-pax-version  '(0 2 2))
 
 (defun mgl-pax-maybe-autoload (cont)
   (if mgl-pax-autoload
@@ -83,7 +91,8 @@ other mgl-pax commands."
 (setq mgl-pax-file-name load-file-name)
 
 (defun mgl-pax-reload ()
-  "Reload mgl-pax.el. This may be necessary after upgrading MGL-PAX."
+  "Reload mgl-pax.el. This may be necessary after upgrading MGL-PAX.
+See MGL-PAX::@EMACS-SETUP."
   (interactive)
   (let ((sourcefile (concat (file-name-sans-extension mgl-pax-file-name)
                             ".el")))
@@ -99,7 +108,7 @@ other mgl-pax commands."
 - `C-c C-d p': `mgl-pax-apropos-package' (replaces `slime-apropos-package')
 - `C-c C-d d': `mgl-pax-document' (replaces `slime-describe-symbol')
 - `C-c C-d f': `mgl-pax-document' (replaces `slime-describe-function')
-- `C-c C-d c': `mgl-pax-document-current-definition'
+- `C-c C-d c': `mgl-pax-current-definition-toggle-view'
 
 Also, regardless of whether `w3m' is available, add this:
 
@@ -124,7 +133,7 @@ To bind `C-.' globally:
                        (?p mgl-pax-apropos-package)
                        (?d mgl-pax-document)
                        (?f mgl-pax-document)
-                       (?c mgl-pax-document-current-definition))))
+                       (?c mgl-pax-current-definition-toggle-view))))
   (slime-bind-keys slime-doc-map t
                    '((?u mgl-pax-edit-parent-section))))
 
@@ -336,6 +345,7 @@ browse documentation in Emacs is shown.
 
 The suggested key binding is `C-.' to parallel `M-.'."
   (interactive (list nil))
+  (slime-check-connected)
   ;; Handle the interactive defaults here because it involves async
   ;; calls.
   (cond (pax-url
@@ -758,13 +768,14 @@ move point to the beginning of the buffer."
             (list name snippet pos)))))))
 
 
-(defun mgl-pax-document-current-definition ()
-  "Document the definition `point' is in with `mgl-pax-document'."
+(defun mgl-pax-current-definition-toggle-view ()
+  "Document the definition `point' is in with `mgl-pax-document'.
+In a PAX doc buffer, it's equivalent to pressing `v'
+(`mgl-pax-doc-edit-current-definition')."
   (interactive)
-  (mgl-pax-current-definition-pax-url
-   (lambda (pax-url)
-     (message "%S" pax-url)
-     (mgl-pax-document pax-url))))
+  (if (mgl-pax-in-doc-buffer-p)
+      (mgl-pax-doc-edit-current-definition)
+    (mgl-pax-current-definition-pax-url 'mgl-pax-document)))
 
 (defun mgl-pax-current-definition-pax-url (cont)
   (mgl-pax-maybe-autoload

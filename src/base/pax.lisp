@@ -160,12 +160,13 @@
                                     target-dir))))
 
 (defun check-pax-elisp-version (version)
-  (let ((required-version '(0 2 1)))
-    (unless (version<= required-version version)
-      (cerror "~@<In Emacs, mgl-pax-version is ~S, ~
+  (let ((min-required-version '(0 2 2)))
+    (unless (version<= min-required-version version)
+      (cerror "Ignore version mismatch."
+              "~@<In Emacs, mgl-pax-version is ~S, ~
               which is lower than the required ~S. ~
               You may need to M-x mgl-pax-reload.~:@>"
-              version required-version '@emacs-setup)))
+              version min-required-version '@emacs-setup)))
   t)
 
 (defun version<= (version1 version2)
