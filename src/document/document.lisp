@@ -1065,15 +1065,7 @@
 
   where the links are added due to *DOCUMENT-LINK-CODE*.
 
-  To suppress this behaviour, add a backslash to the beginning of the
-  a @CODIFIABLE word or right after the leading `\\*` if it would
-  otherwise be parsed as markdown emphasis:
-
-      "\\SECTION *\\PACKAGE*"
-
-  The number of backslashes is doubled above because that's how the
-  example looks in a docstring. Note that the backslash is discarded
-  even if *DOCUMENT-UPPERCASE-IS-CODE* is false.""")
+  [handle-codification-escapes function][docstring]""")
 
 (define-glossary-term @codifiable (:title "codifiable")
   "A @WORD is _codifiable_ iff
@@ -1118,23 +1110,35 @@
   (declare (ignore parent))
   (let ((emph (and (listp tree) (eq :emph (first tree))))
         (codifiablep (codifiable-word-p word)))
-    ;; *DOCUMENT-UPPERCASE-IS-CODE* escaping
-    (cond ((and emph codifiablep (eql #\\ (alexandria:first-elt word)))
-           ;; E.g. "*\\DOCUMENT-NORMALIZE-PACKAGES*"
-           ;; -> (:EMPH "DOCUMENT-NORMALIZE-PACKAGES")
-           (values (list `(:emph ,(subseq word 1))) t))
-          ((and codifiablep (eql #\\ (alexandria:first-elt word)))
-           ;; Discard the leading backslash escape.
-           ;; E.g. "\\MGL-PAX" -> "MGL-PAX"
-           (values (list (subseq word 1)) t))
-          ((or (not *document-uppercase-is-code*)
-               (not codifiablep))
-           ;; Don't change anything.
-           nil)
-          (emph
-           (codify-uppercase-word (format nil "*~A*" word)))
-          (t
-           (codify-uppercase-word word)))))
+    (alexandria:nth-value-or 0
+      (handle-codification-escapes emph codifiablep word)
+      (cond ((or (not *document-uppercase-is-code*)
+                 (not codifiablep))
+             ;; Don't change anything.
+             nil)
+            (emph
+             (codify-uppercase-word (format nil "*~A*" word)))
+            (t
+             (codify-uppercase-word word))))))
+
+(defun handle-codification-escapes (emph codifiablep word)
+  """To suppress codification, add a backslash to the beginning of the
+  a @CODIFIABLE word or right after the leading `\\*` if it would
+  otherwise be parsed as markdown emphasis:
+
+      "\\SECTION *\\PACKAGE*"
+
+  The number of backslashes is doubled above because that's how the
+  example looks in a docstring. Note that the backslash is discarded
+  even if *DOCUMENT-UPPERCASE-IS-CODE* is false."""
+  (cond ((and emph codifiablep (eql #\\ (alexandria:first-elt word)))
+         ;; E.g. "*\\DOCUMENT-NORMALIZE-PACKAGES*"
+         ;; -> (:EMPH "DOCUMENT-NORMALIZE-PACKAGES")
+         (values (list `(:emph ,(subseq word 1))) t))
+        ((and codifiablep (eql #\\ (alexandria:first-elt word)))
+         ;; Discard the leading backslash escape.
+         ;; E.g. "\\MGL-PAX" -> "MGL-PAX"
+         (values (list (subseq word 1)) t))))
 
 ;;; Find the [approximately] longest @NAME in WORD. Return a 3bmd
 ;;; parse tree fragment with that substring marked up as code and the

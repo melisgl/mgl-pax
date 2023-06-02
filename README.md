@@ -1720,7 +1720,7 @@ Reader can help with that.
     
     where the links are added due to [`*DOCUMENT-LINK-CODE*`][d9ee].
     
-    To suppress this behaviour, add a backslash to the beginning of the
+    To suppress codification, add a backslash to the beginning of the
     a [codifiable][b89a] word or right after the leading `*` if it would
     otherwise be parsed as markdown emphasis:
     
@@ -2182,9 +2182,9 @@ table of contents and navigation links.
     
     - When documentation is generated for a [`SECTION`][5fac] (including its
       [`SECTION-ENTRIES`][9450]), then `*PACKAGE*` and `*READTABLE*` will be bound to
-      [`SECTION-PACKAGE`][a5b1] and [`SECTION-READTABLE`][88a7]. To eliminate ambiguity `[in
-      package ...]` messages are printed right after the section heading
-      if necessary.
+      [`SECTION-PACKAGE`][a5b1] and [`SECTION-READTABLE`][88a7]. To eliminate ambiguity
+      `[in package ...]` messages are printed right after the section
+      heading if necessary.
     
     - When documenting a `SECTION`'s `SECTION-ENTRIES`, the bindings
       established by the section are in effect if
