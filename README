@@ -1685,6 +1685,9 @@ METHOD, ACCESSOR, READER and
 WRITER are removed to avoid linking to a possibly large
 number of methods.
 
+Furthermore, filter out all references with LOCATIVE-TYPE
+LOCATIVE if there are references with other LOCATIVE-TYPEs.
+
 ##### Unambiguous Unspecified Locative
 
 In the following examples, although no locative is specified,

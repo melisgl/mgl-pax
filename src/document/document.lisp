@@ -1458,17 +1458,20 @@
 (defsection @unspecified-locative (:title "Unspecified Locative")
   "[filter-string-based-references function][docstring]
 
-  [filter-method-references function][docstring]"
+  [filter-method-references function][docstring]
+
+  [filter-locative-references function][docstring]"
   (@unambiguous-unspecificed-locative section)
   (@ambiguous-unspecified-locative section))
 
 (defun linkables-for-unspecified-locative (object &key local)
-  (filter-method-references
-   (replace-go-targets
-    (filter-external-references
-     (filter-string-based-references
-      (linkable-references
-       (references-to-object object :local local)))))))
+  (filter-locative-references
+   (filter-method-references
+    (replace-go-targets
+     (filter-external-references
+      (filter-string-based-references
+       (linkable-references
+        (references-to-object object :local local))))))))
 
 (defun replace-go-targets (references)
   (mapcar #'replace-go-target references))
@@ -1515,6 +1518,12 @@
       ((non-method-refs))
       (t
        refs))))
+
+(defun filter-locative-references (refs)
+  "Furthermore, filter out all references with LOCATIVE-TYPE
+  LOCATIVE if there are references with other LOCATIVE-TYPEs."
+  (or (remove 'locative refs :key #'reference-locative-type)
+      refs))
 
 (defsection @unambiguous-unspecificed-locative
     (:title "Unambiguous Unspecified Locative")

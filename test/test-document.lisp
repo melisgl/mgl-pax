@@ -526,7 +526,7 @@ xxx
     (check-head (list "[see this][section]"
                       (make-reference 'section 'class)
                       (make-reference 'section 'locative))
-                "see this([`0`][5fac] [`1`][672f])")
+                "[see this][5fac]")
     (check-head (list "[FORMAT][dislocated]"
                       (make-reference 'dislocated 'locative)
                       (make-reference 'pax::@explicit-and-autolinking
