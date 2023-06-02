@@ -197,9 +197,9 @@
 
 (define-locative-type symbol-macro ()
   """Refers to a global symbol macro, defined with DEFINE-SYMBOL-MACRO.
-  Note that since DEFINE-SYMBOL-MACRO does not support docstrings,
-  \PAX defines methods on the DOCUMENTATION generic function
-  specialized for `DOC-TYPE` SYMBOL-MACRO.
+  Note that since DEFINE-SYMBOL-MACRO does not support docstrings, PAX
+  defines methods on the DOCUMENTATION generic function specialized
+  for `DOC-TYPE` SYMBOL-MACRO.
 
   ```
   (define-symbol-macro my-mac 42)

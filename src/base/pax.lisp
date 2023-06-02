@@ -85,7 +85,7 @@
         [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\CONTROL-ERROR \CONDITION"
 
   Note that the docstring of the ABORT function was not written with
-  \PAX in mind. The above markdown is rendered as
+  PAX in mind. The above markdown is rendered as
 
   - \[function\] **\ABORT** *\&OPTIONAL \CONDITION*
 
@@ -254,7 +254,7 @@
   referred to.
 
   I settled on [Markdown][markdown] as a reasonably non-intrusive
-  format, and a few thousand lines later \PAX was born.
+  format, and a few thousand lines later PAX was born.
 
   [markdown]: https://daringfireball.net/projects/markdown/""")
 
@@ -309,7 +309,7 @@
   supports disambiguation and working with things that are not
   first-class, such as types.
 
-  \PAX generalizes `DOC-TYPE` to the concept of @LOCATIVEs, which may
+  PAX generalizes `DOC-TYPE` to the concept of @LOCATIVEs, which may
   also take arguments. An @OBJECT and a @LOCATIVE together are called
   a @REFERENCE, and they identify a definition. REFERENCEs are actual
   objects, but often they appear as an `(OBJECT LOCATIVE)` list (see

@@ -854,7 +854,7 @@
   (@mathjax section))
 
 (defsection @markdown-indentation (:title "Indentation")
-  """Docstrings can be indented in any of the usual styles. \PAX
+  """Docstrings can be indented in any of the usual styles. PAX
   normalizes indentation by converting:
 
       (defun foo ()
@@ -922,8 +922,8 @@
       ```
 
   to get syntactically marked up HTML output. Copy `src/style.css`
-  from \PAX and you are set. The language tag, `elisp` in this
-  example, is optional and defaults to `common-lisp`.
+  from PAX and you are set. The language tag, `elisp` in this example,
+  is optional and defaults to `common-lisp`.
 
   See the documentation of [3BMD][3bmd] and [colorize][colorize] for
   the details.
@@ -2278,11 +2278,11 @@
 
 
 (defvar *document-url-versions* '(2 1)
-  """A list of versions of \PAX \URL formats to support in the
+  """A list of versions of PAX \URL formats to support in the
   generated documentation. The first in the list is used to generate
   links.
 
-  \PAX emits HTML anchors before the documentation of SECTIONs
+  PAX emits HTML anchors before the documentation of SECTIONs
   (see @LINKING-TO-SECTIONS) and other things (see @LINKING-TO-CODE).
   For the function `FOO`, in the current version (version 2), the
   anchor is `<a id="MGL-PAX:FOO%20FUNCTION">` and its \URL will end

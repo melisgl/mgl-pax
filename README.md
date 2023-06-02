@@ -754,9 +754,9 @@ which makes navigating the sources with `M-.` (see
 - [locative] **SYMBOL-MACRO**
 
     Refers to a global symbol macro, defined with [`DEFINE-SYMBOL-MACRO`][46c0].
-    Note that since `DEFINE-SYMBOL-MACRO` does not support docstrings,
-    PAX defines methods on the [`DOCUMENTATION`][c5ae] generic function
-    specialized for `DOC-TYPE` `SYMBOL-MACRO`.
+    Note that since `DEFINE-SYMBOL-MACRO` does not support docstrings, PAX
+    defines methods on the [`DOCUMENTATION`][c5ae] generic function specialized
+    for `DOC-TYPE` `SYMBOL-MACRO`.
     
     ```
     (define-symbol-macro my-mac 42)
@@ -1657,8 +1657,8 @@ write:
     ```
 
 to get syntactically marked up HTML output. Copy `src/style.css`
-from PAX and you are set. The language tag, `elisp` in this
-example, is optional and defaults to `common-lisp`.
+from PAX and you are set. The language tag, `elisp` in this example,
+is optional and defaults to `common-lisp`.
 
 See the documentation of 3BMD and colorize for
 the details.
@@ -2579,8 +2579,8 @@ with `C-x C-e`. The cursor is marked by `#\^`:
     ```
 
 Note that the use of fenced code blocks with the language tag
-`cl-transcript` is only to tell PAX to perform consistency checks
-at documentation generation time.
+`cl-transcript` is only to tell PAX to perform consistency checks at
+documentation generation time.
 
 Now invoke the elisp function `mgl-pax-transcribe` where the cursor
 is and the fenced code block from the docstring becomes:
@@ -3619,8 +3619,7 @@ The following utilities are for writing new [`FIND-SOURCE`][4355] and
 translated to Swank `dspecs`, and it is an error if there is no
 translation. In general, Swank supports Common Lisp
 definitions (hence the [`VARIABLE`][6c83] and `FUNCTION`([`0`][119e] [`1`][81f7]) locatives, for example)
-but not PAX- and user-defined additions (e.g. [`SECTION`][5fac],
-[`ASDF:SYSTEM`][c097]).
+but not PAX- and user-defined additions (e.g. [`SECTION`][5fac], [`ASDF:SYSTEM`][c097]).
 
 <a id="x-28MGL-PAX-3AFIND-DEFINITION-20FUNCTION-29"></a>
 - [function] **FIND-DEFINITION** *OBJECT &REST LOCATIVES*
