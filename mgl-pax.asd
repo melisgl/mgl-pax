@@ -79,8 +79,8 @@
                              (:file "docstring")
                              (:file "hyperspec")
                              (:file "document")
-                             (:file "browse")
-                             (:file "document-util"))))
+                             (:file "document-util")
+                             (:file "browse"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
 (asdf:defsystem "mgl-pax/transcribe"

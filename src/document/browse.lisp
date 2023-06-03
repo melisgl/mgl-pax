@@ -17,8 +17,8 @@
       M-x mgl-pax-document
       View Documentation of: pax::@documenting-in-emacs
 
-  Coincidentally, this is the default when the empty string is
-  entered, and there is no existing w3m buffer. If there is a w3m
+  If the empty string is entered, and there is no existing w3m buffer,
+  then sections registered in @PAX-WORLD are listed. If there is a w3m
   buffer, then entering the empty string displays that buffer.
 
   If we enter `\function` instead, then a [disambiguation
@@ -718,15 +718,26 @@
                            ,@non-symbol-definitions)))
                ,@(when pax-entry-points
                    (list "## PAX Entry Points"
-                         `((progv '(*document-tight*) '(t))
-                           ,@(loop for ref in pax-entry-points
-                                   collect (format nil "- [~A][pax:section]"
-                                                   (prin1-to-markdown
-                                                    (reference-object ref)))))))
+                         (sections-tightly pax-entry-points)))
                ,@(when symbol-definitions
                    (list "## Symbol definitions"
                          `((progv '(*document-tight*) '(t))
                            ,@symbol-definitions)))))))))))
+
+(defun sections-tightly (section-refs)
+  `((progv '(*document-tight*) '(t))
+    ,@(loop for ref in section-refs
+            collect (format nil "- [~A][pax:section]"
+                            (prin1-to-markdown
+                             (reference-object ref))))))
+
+(defun pax-document-home-page ()
+  `((progv '(*package*) (list ,(find-package '#:mgl-pax)))
+    ,@(list "## Documentation registered in @PAX-WORLD"
+            (sections-tightly
+             (mapcar #'canonical-reference (sections-registered-in-pax-world)))
+            "See @DOCUMENTING-IN-EMACS for how to use this
+        documentation browser.")))
 
 
 (defun current-definition-pax-url-for-emacs (buffer filename possibilities)

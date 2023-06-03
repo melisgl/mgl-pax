@@ -306,6 +306,10 @@ To bind `C-.' globally:
 
 (defvar mgl-pax-doc-buffers ())
 
+(defun mgl-pax-require-w3m ()
+  (unless (require 'w3m nil t)
+    (error "PAX requires w3m but it cannot be loaded. Please install it.")))
+
 (defun mgl-pax-document (pax-url)
   "Browse the documentation of CL definitions for PAX-URL.
 
@@ -346,6 +350,7 @@ browse documentation in Emacs is shown.
 The suggested key binding is `C-.' to parallel `M-.'."
   (interactive (list nil))
   (slime-check-connected)
+  (mgl-pax-require-w3m)
   ;; Handle the interactive defaults here because it involves async
   ;; calls.
   (cond (pax-url
@@ -414,8 +419,8 @@ The suggested key binding is `C-.' to parallel `M-.'."
           ;; Display the docs of this very documentation browser if
           ;; the input is the empty string.
           (when (string= pax-url "pax:")
-            (setq pax-url (mgl-pax-urllike-to-url
-                           "pax::@documenting-in-emacs pax:section")))
+            (setq pax-url (mgl-pax-make-pax-eval-url
+                           '(mgl-pax::pax-document-home-page))))
           ;; No doc buffer. Create a new dir.
           (let ((doc-dir (file-name-as-directory (make-temp-file "pax-doc" t))))
             (mgl-pax-call-document-for-emacs
@@ -468,8 +473,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
       (delete-directory doc-dir nil nil))))
 
 (defun mgl-pax-urllike-to-url (schemeless-pax-url)
-  (unless (require 'w3m nil t)
-    (error "PAX requires w3m but it cannot be loaded. Please install it."))
+  (mgl-pax-require-w3m)
   (cl-destructuring-bind (reference fragment)
       (mgl-pax-parse-path-and-fragment schemeless-pax-url)
     (if fragment
@@ -868,14 +872,14 @@ Also, see `mgl-pax-apropos-all'."
              (slime-read-package-name "Package: ")
              (y-or-n-p "Case-sensitive? "))
      (list (slime-read-from-minibuffer "PAX Apropos: ") t "" nil)))
-  (unless (require 'w3m nil t)
-    (error "PAX requires w3m but it cannot be loaded. Please install it."))
   (mgl-pax-document
-   (concat "pax-eval:"
-           (w3m-url-encode-string
-            (prin1-to-string
-             `(mgl-pax::pax-apropos* ,string ,external-only
-                                     ,package ,case-sensitive))))))
+   (mgl-pax-make-pax-eval-url
+    `(mgl-pax::pax-apropos* ,string ,external-only
+                            ,package ,case-sensitive))))
+
+(defun mgl-pax-make-pax-eval-url (sexp)
+  (mgl-pax-require-w3m)
+  (concat "pax-eval:" (w3m-url-encode-string (prin1-to-string sexp))))
 
 (defun mgl-pax-apropos-all (string)
   "Shortcut for invoking `mgl-pax-apropos` with EXTERNAL-ONLY NIL."

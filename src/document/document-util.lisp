@@ -412,6 +412,11 @@
            (with-output-to-string (stream)
              (dolist (object objects)
                (format stream "- ~S~%~%" (section-name object))))))))
+
+(defun sections-registered-in-pax-world ()
+  (sort (loop for doc in *registered-pax-world-docs*
+              append (second doc))
+        #'string< :key #'section-title-or-name))
 
 
 ;;;; Generate the READMEs and HTML docs.
