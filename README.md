@@ -1451,8 +1451,8 @@ one can do:
     M-x mgl-pax-document
     View Documentation of: pax::@documenting-in-emacs
 
-Coincidentally, this is the default when the empty string is
-entered, and there is no existing w3m buffer. If there is a w3m
+If the empty string is entered, and there is no existing w3m buffer,
+then sections registered in [PAX World][1281] are listed. If there is a w3m
 buffer, then entering the empty string displays that buffer.
 
 If we enter `function` instead, then a [disambiguation
