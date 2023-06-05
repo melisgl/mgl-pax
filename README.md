@@ -26,10 +26,12 @@
     - [7.1 The mgl-pax/navigate ASDF System][f155]
 - [8 Generating Documentation][2c93]
     - [8.1 The mgl-pax/document ASDF System][4bb8]
-    - [8.2 Documenting in Emacs][7199]
+    - [8.2 Browsing Live Documentation][a595]
         - [8.2.1 PAX URLs][1e80]
         - [8.2.2 PAX Apropos][b7fc]
-        - [8.2.3 Documentation Key Bindings][e0d7]
+        - [8.2.3 Emacs Setup for Browsing][9a7b]
+        - [8.2.4 Browsing with w3m][83d5]
+        - [8.2.5 Browsing with Other Browsers][c434]
     - [8.3 Markdown Support][c2d3]
         - [8.3.1 Indentation][718f]
         - [8.3.2 Syntax Highlighting][bc83]
@@ -237,15 +239,11 @@ documentation is generated.
 <a id="x-28MGL-PAX-3A-40EMACS-SETUP-20MGL-PAX-3ASECTION-29"></a>
 ## 2 Emacs Setup
 
-Load `src/mgl-pax.el` in Emacs and maybe set up some key bindings.
+Load `src/mgl-pax.el` in Emacs, and maybe set up some key bindings.
 
-- To be able to browse the documentation, make sure the w3m binary
-  and the w3m Emacs package are both installed. On Debian, simply
-  install the `w3m-el` package.
-
-- If you installed PAX with Quicklisp, the location of `mgl-pax.el`
-  may change with updates, and you may want to copy the current
-  version of `mgl-pax.el` to a stable location:
+If you installed PAX with Quicklisp, the location of `mgl-pax.el`
+may change with updates, and you may want to copy the current
+version of `mgl-pax.el` to a stable location:
 
     (mgl-pax:install-pax-elisp "~/quicklisp/")
 
@@ -260,7 +258,15 @@ something like this to your `.emacs`:
 (global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
 ```
 
-See [Navigating Sources in Emacs][3386], [Documenting in Emacs][7199] and
+For [Browsing Live Documentation][a595], `mgl-pax-browser-function` can be
+customized in Elisp. To browse within Emacs, choose
+`w3m-browse-url` (see
+[w3m](https://emacs-w3m.github.io/info/emacs-w3m.html)), and make
+sure both the w3m binary and the w3m Emacs package are installed. On
+Debian, simply install the `w3m-el` package. With other browser
+functions, a [HUNCHENTOOT][1d5a] web server is started.
+
+See [Navigating Sources in Emacs][3386], [Generating Documentation][2c93] and
 [Transcribing with Emacs][f5bd] for how to use the relevant features.
 
 <a id="x-28MGL-PAX-3AINSTALL-PAX-ELISP-20FUNCTION-29"></a>
@@ -279,7 +285,7 @@ for the latest version.
 <a id="x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 ### 3.1 The mgl-pax ASDF System
 
-- Version: 0.2.2
+- Version: 0.2.3
 - Description: Exploratory programming tool and documentation
   generator.
 - Long Description: The set of dependencies of the MGL-PAX system is
@@ -299,7 +305,7 @@ for the latest version.
 <a id="x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 ### 3.2 The mgl-pax/full ASDF System
 
-- Description: MGL-PAX with all features preloaded.
+- Description: MGL-PAX with most features preloaded.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
@@ -1153,18 +1159,17 @@ which makes navigating the sources with `M-.` (see
 
     Refers to sections or definitions in the Common Lisp Hyperspec.
     These have no source location so `M-.` will not work. What works
-    is linking in documentation, including [Documenting in Emacs][7199]. The
-    generated links are relative to [`*DOCUMENT-HYPERSPEC-ROOT*`][f585] and work
-    even if [`*DOCUMENT-LINK-TO-HYPERSPEC*`][875e] is `NIL`.
+    is linking in documentation, including [Browsing Live Documentation][a595].
+    The generated links are relative to [`*DOCUMENT-HYPERSPEC-ROOT*`][f585] and
+    work even if [`*DOCUMENT-LINK-TO-HYPERSPEC*`][875e] is `NIL`.
     
     - *definitions*: These are typically unnecessary as [`DOCUMENT`][432c] will
       produce the same link for e.g. `PPRINT`, `[PPRINT][function]`,
       or `[PPRINT][]` if `*DOCUMENT-LINK-TO-HYPERSPEC*` is non-`NIL` and the
-      [`PPRINT`][6af6] function in the running Lisp is not being `DOCUMENT`ed. In
-      the [Emacs documentation browser][7199], a
-      slight difference is that everything is being `DOCUMENT`ed, so using
-      the `CLHS` link bypasses the page with the definition in the running
-      Lisp.
+      [`PPRINT`][6af6] function in the running Lisp is not being `DOCUMENT`ed. When
+      [Browsing Live Documentation][a595], a slight difference is that
+      everything is being `DOCUMENT`ed, so using the `CLHS` link bypasses
+      the page with the definition in the running Lisp.
     
         - *unambiguous*: `[pprint][clhs]` ([pprint][6af6])
     
@@ -1204,9 +1209,9 @@ which makes navigating the sources with `M-.` (see
     is [codified][f1ab] (e.g. in `PPRINT clhs` (`PPRINT` clhs).
     
     As mentioned above, `M-.` does not do anything over `CLHS`
-    references. Slightly more usefully, the [Emacs documentation
-    browser][7199] understands `CLHS` links so one can
-    enter inputs like `3.4 clhs`, `"lambda list" clhs` or `error (clhs
+    references. Slightly more usefully, the [live documentation
+    browser][a595] understands `CLHS` links so one
+    can enter inputs like `3.4 clhs`, `"lambda list" clhs` or `error (clhs
     function)`.
 
 <a id="x-28MGL-PAX-3A-40NAVIGATING-IN-EMACS-20MGL-PAX-3ASECTION-29"></a>
@@ -1254,7 +1259,7 @@ The `M-.` extensions can be enabled by loading `src/mgl-pax.el`.
 See [Emacs Setup][8541]. In addition, the Elisp command
 `mgl-pax-edit-parent-section` visits the source location of the
 section containing the definition with `point` in it. See
-[Documentation Key Bindings][e0d7].
+[Browsing with w3m][83d5].
 
 <a id="x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 ### 7.1 The mgl-pax/navigate ASDF System
@@ -1271,9 +1276,9 @@ section containing the definition with `point` in it. See
 ## 8 Generating Documentation
 
 <a id="x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29"></a>
-- [function] **DOCUMENT** *OBJECT &KEY (STREAM T) PAGES (FORMAT :PLAIN)*
+- [function] **DOCUMENT** *DOCUMENTABLE &KEY (STREAM T) PAGES (FORMAT :PLAIN)*
 
-    Write `OBJECT` in `FORMAT` to `STREAM` diverting some output to `PAGES`.
+    Write `DOCUMENTABLE` in `FORMAT` to `STREAM` diverting some output to `PAGES`.
     `FORMAT` can be anything 3BMD supports, which is currently
     `:MARKDOWN`, `:HTML` and `:PLAIN`. `STREAM` may be a [`STREAM`][d5a9] object,
     `T` or `NIL` as with `CL:FORMAT`.
@@ -1434,12 +1439,11 @@ section containing the definition with `point` in it. See
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
 
 
-<a id="x-28MGL-PAX-3A-40DOCUMENTING-IN-EMACS-20MGL-PAX-3ASECTION-29"></a>
-### 8.2 Documenting in Emacs
+<a id="x-28MGL-PAX-3A-40BROWSING-LIVE-DOCUMENTATION-20MGL-PAX-3ASECTION-29"></a>
+### 8.2 Browsing Live Documentation
 
-Documentation can be viewed live in Emacs with the
-[w3m](https://emacs-w3m.github.io/info/emacs-w3m.html) browser. HTML
-documentation, complete with [Codification][f1ab] and
+Documentation can be browsed live in Emacs or with an external
+browser. HTML documentation, complete with [Codification][f1ab] and
 [links][1865], is generated from docstrings of all kinds
 of Lisp definitions and PAX [`SECTION`][5fac]s.
 
@@ -1449,11 +1453,12 @@ Slime. For example, to view the documentation of this very `SECTION`,
 one can do:
 
     M-x mgl-pax-document
-    View Documentation of: pax::@documenting-in-emacs
+    View Documentation of: pax::@browsing-live-documentation
 
-If the empty string is entered, and there is no existing w3m buffer,
-then sections registered in [PAX World][1281] are listed. If there is a w3m
-buffer, then entering the empty string displays that buffer.
+If the empty string is entered, and there is no existing w3m buffer
+or w3m is not used, then sections registered in [PAX World][1281] are
+listed. If there is a w3m buffer, then entering the empty string
+displays that buffer.
 
 If we enter `function` instead, then a [disambiguation
 page](pax:function) (note that this and other `pax:` links only work
@@ -1499,9 +1504,9 @@ returns [`REFERENCE`][1cea]s.
 
 On the Emacs side, `mgl-pax-apropos`, `mgl-pax-apropos-all`, and
 `mgl-pax-apropos-package` can be used to view the results in the
-[documentation browser][7199]. These parallel the
-functionality of `slime-apropos`, `slime-apropos-all`, and
-`slime-apropos-package`.
+[documentation browser][a595]. These
+parallel the functionality of `slime-apropos`, `slime-apropos-all`,
+and `slime-apropos-package`.
 
 <a id="x-28MGL-PAX-3APAX-APROPOS-20FUNCTION-29"></a>
 - [function] **PAX-APROPOS** *NAME &KEY PACKAGE EXTERNAL-ONLY CASE-SENSITIVE LOCATIVE-TYPES*
@@ -1539,14 +1544,21 @@ functionality of `slime-apropos`, `slime-apropos-all`, and
     alphabetically by `LOCATIVE-TYPE` name. This is list always empty if
     `PACKAGE`.
 
-<a id="x-28MGL-PAX-3A-40DOCUMENTATION-KEY-BINDINGS-20MGL-PAX-3ASECTION-29"></a>
-#### 8.2.3 Documentation Key Bindings
+<a id="x-28MGL-PAX-3A-40EMACS-SETUP-FOR-BROWSING-20MGL-PAX-3ASECTION-29"></a>
+#### 8.2.3 Emacs Setup for Browsing
 
-Evaluating `(mgl-pax-hijack-slime-doc-keys)` in Emacs handles
-the common case of binding keys. Its docstring is reproduced here:
+Make sure [Emacs Setup][8541] has been done. In particular, set
+`mgl-pax-browser-function` to choose between browsing documentation
+with [w3m](https://emacs-w3m.github.io/info/emacs-w3m.html) in an
+Emacs buffer, or with an external browser plus a web server in the
+Lisp image.
 
-    If `w3m' is available, then make the following changes to
-    `slime-doc-map' (assuming it's bound to `C-c C-d').
+In [Emacs Setup][8541], `(mgl-pax-hijack-slime-doc-keys)` was evaluated,
+which handles the common case of binding keys. Its docstring is
+reproduced here:
+
+    Make the following changes to `slime-doc-map' (assuming it's
+    bound to `C-c C-d').
     
     - `C-c C-d a`: `mgl-pax-apropos` (replaces `slime-apropos`)
     - `C-c C-d z`: `mgl-pax-aproposa-all` (replaces `slime-apropos-all`)
@@ -1572,8 +1584,8 @@ the common case of binding keys. Its docstring is reproduced here:
         (global-set-key (kbd \"C-.\") 'mgl-pax-document)
 
 
-<a id="x-28MGL-PAX-3A-40NAVIGATION-IN-W3M-20MGL-PAX-3ASECTION-29"></a>
-##### Navigating the Documentation in W3M
+<a id="x-28MGL-PAX-3A-40BROWSING-WITH-W3M-20MGL-PAX-3ASECTION-29"></a>
+#### 8.2.4 Browsing with w3m
 
 With w3m's default [key bindings][w3m-key-bindings], moving the
 cursor between links involves `TAB` and `S-TAB` (or `<up>` and
@@ -1587,8 +1599,8 @@ In addition, the following PAX-specific key bindings are available:
 - `M-.` visits the source location of the definition corresponding
   to the link under the point.
 
-- Invoking `mgl-pax-document` on a section title link will that
-  section on its own page.
+- Invoking `mgl-pax-document` on a section title link will show the
+  documentation of that section on its own page.
 
 - `n` moves to the next PAX definition on the page.
 
@@ -1605,6 +1617,29 @@ In addition, the following PAX-specific key bindings are available:
 - `V` visits the source location of the first definition on the
   page.
 
+
+<a id="x-28MGL-PAX-3A-40BROWSING-WITH-OTHER-BROWSERS-20MGL-PAX-3ASECTION-29"></a>
+#### 8.2.5 Browsing with Other Browsers
+
+When the value of the Elisp variable `mgl-pax-browser-function`
+is not `w3m-browse-url`, requests are served via a web server
+started in the running Lisp, and documentation is most likely
+displayed in a separate browser window .
+
+By default, `mgl-pax-browser-function` is `nil`, which makes PAX use
+`browse-url-browser-function`. You may want to customize the related
+`browse-url-new-window-flag` or, for Chrome, set
+`browse-url-chrome-arguments` to `("--new-window")`.
+
+In the browser, clicking on the locative on the left of the
+object (e.g. in `- [function] PRINT`) will raise and focus the Emacs
+window (if Emacs is not in text mode, and also subject to window
+manager focus stealing settings), then go to the corresponding
+source location. For sections, clicking on the lambda link will do
+the same (see [`*DOCUMENT-FANCY-HTML-NAVIGATION*`][6ab0]).
+
+Finally, note that the `URL`s exposed by the web server are subject to
+change.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29"></a>
 ### 8.3 Markdown Support
@@ -2033,7 +2068,7 @@ linked to all non-local references.
 - [variable] **\*DOCUMENT-HYPERSPEC-ROOT\*** *"http://www.lispworks.com/documentation/HyperSpec/"*
 
     A URL of the Common Lisp Hyperspec. The default value
-    is the canonical location. When [invoked from Emacs][7199], the Elisp variable
+    is the canonical location. When [invoked from Emacs][a595], the Elisp variable
     `common-lisp-hyperspec-root` is in effect.
 
 <a id="x-28MGL-PAX-3A-40LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29"></a>
@@ -2079,9 +2114,10 @@ table of contents and navigation links.
 
     If true and the output format is HTML, then headings get a
     navigation component that consists of links to the previous, parent,
-    next section and a permalink. This component is normally hidden, it
-    is visible only when the mouse is over the heading. Needs
-    [`*DOCUMENT-LINK-SECTIONS*`][1b28] to be on to work.
+    next section, a self-link, and a link to the definition in the
+    source code if available (see `:SOURCE-URI-FN` in [`DOCUMENT`][432c]). This
+    component is normally hidden, it is visible only when the mouse is
+    over the heading. Needs [`*DOCUMENT-LINK-SECTIONS*`][1b28] to be on to work.
 
 <a id="x-28MGL-PAX-3A-40MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29"></a>
 ### 8.8 Miscellaneous Variables
@@ -2503,8 +2539,8 @@ output. Compared to that, the following are not supported:
 - [`METHOD-COMBINATION`][9b70] docstrings on ABCL, AllegroCL.
 
 In addition, CLISP does not support the ambiguous case of [PAX URLs][1e80]
-for [Documenting in Emacs][7199] because the current implementation relies
-on Swank to list definitions of symbols (as [`VARIABLE`][6c83],
+for [Browsing Live Documentation][a595] because the current implementation
+relies on Swank to list definitions of symbols (as [`VARIABLE`][6c83],
 [`FUNCTION`][ba62], etc), and that simply doesn't work.
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPTS-20MGL-PAX-3ASECTION-29"></a>
@@ -3815,6 +3851,7 @@ they are presented.
   [685e]: #x-28MGL-PAX-3A-40INTRODUCTION-20MGL-PAX-3ASECTION-29 "Introduction"
   [6887]: #x-28MGL-PAX-3ALOCATE-ERROR-20CONDITION-29 "MGL-PAX:LOCATE-ERROR CONDITION"
   [69f7]: #x-28MGL-PAX-3A-40REFERENCE-BASED-EXTENSIONS-20MGL-PAX-3ASECTION-29 "Reference Based Extensions"
+  [6ab0]: #x-28MGL-PAX-3A-2ADOCUMENT-FANCY-HTML-NAVIGATION-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-FANCY-HTML-NAVIGATION* VARIABLE"
   [6af6]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PPRINT (MGL-PAX:CLHS FUNCTION)"
   [6b59]: #x-28MGL-PAX-3A-40TRANSCRIPT-DYNENV-20MGL-PAX-3ASECTION-29 "Controlling the Dynamic Environment"
   [6c37]: http://www.lispworks.com/documentation/HyperSpec/Body/f_boundp.htm "BOUNDP (MGL-PAX:CLHS FUNCTION)"
@@ -3824,7 +3861,6 @@ they are presented.
   [6f51]: http://www.lispworks.com/documentation/HyperSpec/Body/r_muffle.htm "MUFFLE-WARNING (MGL-PAX:CLHS RESTART)"
   [6fdb]: #x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax" ASDF/SYSTEM:SYSTEM'
   [718f]: #x-28MGL-PAX-3A-40MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29 "Indentation"
-  [7199]: #x-28MGL-PAX-3A-40DOCUMENTING-IN-EMACS-20MGL-PAX-3ASECTION-29 "Documenting in Emacs"
   [72b4]: #x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFSECTION MGL-PAX:MACRO"
   [730f]: #x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20VARIABLE-29 "MGL-PAX:*DISCARD-DOCUMENTATION-P* VARIABLE"
   [7328]: http://www.lispworks.com/documentation/HyperSpec/Body/f_apropo.htm "APROPOS-LIST (MGL-PAX:CLHS FUNCTION)"
@@ -3839,6 +3875,7 @@ they are presented.
   [80cd]: #x-28MGL-PAX-3A-40REFERENCE-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@REFERENCE MGL-PAX:GLOSSARY-TERM"
   [81f7]: http://www.lispworks.com/documentation/HyperSpec/Body/s_fn.htm "FUNCTION (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [8251]: #x-28MGL-PAX-3AGLOSSARY-TERM-20CLASS-29 "MGL-PAX:GLOSSARY-TERM CLASS"
+  [83d5]: #x-28MGL-PAX-3A-40BROWSING-WITH-W3M-20MGL-PAX-3ASECTION-29 "Browsing with w3m"
   [83e1]: http://www.lispworks.com/documentation/HyperSpec/Body/e_cnd.htm "CONDITION (MGL-PAX:CLHS CONDITION)"
   [8423]: #x-28MGL-PAX-3A-40TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Utilities for Consistency Checking"
   [8492]: #x-28MGL-PAX-3ATRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR CONDITION"
@@ -3865,12 +3902,14 @@ they are presented.
   [98ff]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_l.htm#lambda_list '"lambda list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [9974]: #x-28MGL-PAX-3ALOCATE-ERROR-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29 "MGL-PAX:LOCATE-ERROR-LOCATIVE (MGL-PAX:READER MGL-PAX:LOCATE-ERROR)"
   [9a71]: http://www.lispworks.com/documentation/HyperSpec/Body/f_specia.htm "SPECIAL-OPERATOR-P (MGL-PAX:CLHS FUNCTION)"
+  [9a7b]: #x-28MGL-PAX-3A-40EMACS-SETUP-FOR-BROWSING-20MGL-PAX-3ASECTION-29 "Emacs Setup for Browsing"
   [9b43]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "DEFPACKAGE (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [9b70]: http://www.lispworks.com/documentation/HyperSpec/Body/t_meth_1.htm "METHOD-COMBINATION (MGL-PAX:CLHS CLASS)"
   [9dbc]: #x-28MGL-PAX-3A-40TRANSCRIPT-API-20MGL-PAX-3ASECTION-29 "Transcript API"
   [a17d]: #x-28MGL-PAX-3A-40MATHJAX-20MGL-PAX-3ASECTION-29 "MathJax"
   [a249]: #x-28MGL-PAX-3ATRANSCRIPTION-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION"
   [a26f]: http://www.lispworks.com/documentation/HyperSpec/Body/f_consta.htm "CONSTANTP (MGL-PAX:CLHS FUNCTION)"
+  [a595]: #x-28MGL-PAX-3A-40BROWSING-LIVE-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Browsing Live Documentation"
   [a5b1]: #x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION)"
   [a5ee]: #x-28MGL-PAX-3A-2ADOCUMENT-DOWNCASE-UPPERCASE-CODE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-DOWNCASE-UPPERCASE-CODE* VARIABLE"
   [a85e]: #x-28MGL-PAX-3ADEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO"
@@ -3897,6 +3936,7 @@ they are presented.
   [c097]: #x-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29 "ASDF/SYSTEM:SYSTEM MGL-PAX:LOCATIVE"
   [c267]: #x-28MGL-PAX-3ALOCATE-CANONICAL-REFERENCE-20GENERIC-FUNCTION-29 "MGL-PAX:LOCATE-CANONICAL-REFERENCE GENERIC-FUNCTION"
   [c2d3]: #x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29 "Markdown Support"
+  [c434]: #x-28MGL-PAX-3A-40BROWSING-WITH-OTHER-BROWSERS-20MGL-PAX-3ASECTION-29 "Browsing with Other Browsers"
   [c4ce]: #x-28MGL-PAX-3A-40EXTENSION-API-20MGL-PAX-3ASECTION-29 "Writing Extensions"
   [c5ae]: http://www.lispworks.com/documentation/HyperSpec/Body/f_docume.htm "DOCUMENTATION (MGL-PAX:CLHS GENERIC-FUNCTION)"
   [c7f7]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defgen.htm "DEFGENERIC (MGL-PAX:CLHS MGL-PAX:MACRO)"
@@ -3923,7 +3963,6 @@ they are presented.
   [dae6]: http://www.lispworks.com/documentation/HyperSpec/Body/f_string.htm "STRING (MGL-PAX:CLHS FUNCTION)"
   [db68]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pkg_na.htm "PACKAGE-NAME (MGL-PAX:CLHS FUNCTION)"
   [dff6]: #x-28MGL-PAX-3A-40GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29 "Github Workflow"
-  [e0d7]: #x-28MGL-PAX-3A-40DOCUMENTATION-KEY-BINDINGS-20MGL-PAX-3ASECTION-29 "Documentation Key Bindings"
   [e216]: #x-28MGL-PAX-3A-2ADOCUMENT-HTML-TOP-BLOCKS-OF-LINKS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* VARIABLE"
   [e248]: #x-28MGL-PAX-3A-40FUNCTIONLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Functions"
   [e2bb]: #x-28MGL-PAX-3ADOCSTRING-20GENERIC-FUNCTION-29 "MGL-PAX:DOCSTRING GENERIC-FUNCTION"

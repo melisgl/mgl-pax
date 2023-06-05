@@ -822,7 +822,7 @@
     (set-macro-character function "f_set_ma")
     (set-pprint-dispatch function "f_set_pp")
     (set-syntax-from-char function "f_set_sy")
-    (setf macro "m_setf")
+    (setf macro "m_setf_")
     #+nil
     (setf (go (documentation (clhs generic-function))) "f_docume")
     (setq operator "s_setq")

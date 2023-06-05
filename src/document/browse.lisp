@@ -2,10 +2,9 @@
 
 (in-readtable pythonic-string-syntax)
 
-(defsection @documenting-in-emacs (:title "Documenting in Emacs")
-  """Documentation can be viewed live in Emacs with the
-  [w3m](https://emacs-w3m.github.io/info/emacs-w3m.html) browser. HTML
-  documentation, complete with @CODIFICATION and
+(defsection @browsing-live-documentation (:title "Browsing Live Documentation")
+  """Documentation can be browsed live in Emacs or with an external
+  browser. HTML documentation, complete with @CODIFICATION and
   [links][@LINKING-TO-CODE], is generated from docstrings of all kinds
   of Lisp definitions and PAX SECTIONs.
 
@@ -15,11 +14,12 @@
   one can do:
 
       M-x mgl-pax-document
-      View Documentation of: pax::@documenting-in-emacs
+      View Documentation of: pax::@browsing-live-documentation
 
-  If the empty string is entered, and there is no existing w3m buffer,
-  then sections registered in @PAX-WORLD are listed. If there is a w3m
-  buffer, then entering the empty string displays that buffer.
+  If the empty string is entered, and there is no existing w3m buffer
+  or w3m is not used, then sections registered in @PAX-WORLD are
+  listed. If there is a w3m buffer, then entering the empty string
+  displays that buffer.
 
   If we enter `\function` instead, then a [disambiguation
   page](pax:function) (note that this and other `pax:` links only work
@@ -42,7 +42,9 @@
   """
   (@pax-urls section)
   (@apropos section)
-  (@documentation-key-bindings section))
+  (@emacs-setup-for-browsing section)
+  (@browsing-with-w3m section)
+  (@browsing-with-other-browsers section))
 
 (defsection @pax-urls (:title "PAX \\URLs")
   """A PAX \\URL consists of a \REFERENCE and an optional FRAGMENT
@@ -57,12 +59,19 @@
   - or the @OBJECT of a reference (e.g. `"pax:section"`), which
     possibly makes what to document ambiguous.""")
 
-(defsection @documentation-key-bindings (:title "Documentation Key Bindings")
-  """Evaluating `(mgl-pax-hijack-slime-doc-keys)` in Emacs handles
-  the common case of binding keys. Its docstring is reproduced here:
+(defsection @emacs-setup-for-browsing (:title "Emacs Setup for Browsing")
+  """Make sure @EMACS-SETUP has been done. In particular, set
+  `mgl-pax-browser-function` to choose between browsing documentation
+  with [w3m](https://emacs-w3m.github.io/info/emacs-w3m.html) in an
+  Emacs buffer, or with an external browser plus a web server in the
+  Lisp image.
 
-      If `w3m' is available, then make the following changes to
-      `slime-doc-map' (assuming it's bound to `C-c C-d').
+  In @EMACS-SETUP, `(mgl-pax-hijack-slime-doc-keys)` was evaluated,
+  which handles the common case of binding keys. Its docstring is
+  reproduced here:
+
+      Make the following changes to `slime-doc-map' (assuming it's
+      bound to `C-c C-d').
 
       - `C-c C-d a`: `mgl-pax-apropos` (replaces `slime-apropos`)
       - `C-c C-d z`: `mgl-pax-aproposa-all` (replaces `slime-apropos-all`)
@@ -86,10 +95,9 @@
       To bind `C-.` globally:
 
           (global-set-key (kbd \"C-.\") 'mgl-pax-document)
-  """
-  (@navigation-in-w3m section))
+  """)
 
-(defsection @navigation-in-w3m (:title "Navigating the Documentation in W3M")
+(defsection @browsing-with-w3m (:title "Browsing with w3m")
   """With w3m's default [key bindings][w3m-key-bindings], moving the
   cursor between links involves `TAB` and `S-TAB` (or `<up>` and
   `<down>`). `RET` and `<right>` follow a link, while `B` and `<left>`
@@ -102,8 +110,8 @@
   - `M-.` visits the source location of the definition corresponding
     to the link under the point.
 
-  - Invoking `mgl-pax-document` on a section title link will that
-    section on its own page.
+  - Invoking `mgl-pax-document` on a section title link will show the
+    documentation of that section on its own page.
 
   - `n` moves to the next PAX definition on the page.
 
@@ -121,35 +129,102 @@
     page.
   """)
 
-;;; Document URL in a `.html' file directly below DIRNAME, both
-;;; STRINGs. Return the namestring of the file written as (:FILENAME
-;;; <FILENAME>) or (:ERROR <STRING>).
-;;;
-;;; URL may be a `pax:', `pax-eval:' or a `pax-wall' URL.
-(defun/autoloaded document-for-emacs
-    (url dirname &optional *document-hyperspec-root*)
-  (swank::converting-errors-to-error-location
-    (swank::with-buffer-syntax (swank::*buffer-package*)
-      `(:file-url ,(document-for-emacs-1 url dirname)))))
+(defsection @browsing-with-other-browsers
+    (:title "Browsing with Other Browsers")
+  """When the value of the Elisp variable `mgl-pax-browser-function`
+  is not `w3m-browse-url`, requests are served via a web server
+  started in the running Lisp, and documentation is most likely
+  displayed in a separate browser window .
 
-(defun document-for-emacs-1 (url dirname)
+  By default, `mgl-pax-browser-function` is `nil`, which makes PAX use
+  `browse-url-browser-function`. You may want to customize the related
+  `browse-url-new-window-flag` or, for Chrome, set
+  `browse-url-chrome-arguments` to `("--new-window")`.
+
+  In the browser, clicking on the locative on the left of the
+  object (e.g. in `- [function] PRINT`) will raise and focus the Emacs
+  window (if Emacs is not in text mode, and also subject to window
+  manager focus stealing settings), then go to the corresponding
+  source location. For sections, clicking on the lambda link will do
+  the same (see *DOCUMENT-FANCY-HTML-NAVIGATION*).
+
+  Finally, note that the URLs exposed by the web server are subject to
+  change.""")
+
+;;; Document PAX*-URL in FILENAME, both STRINGs. Return a `file:' URL
+;;; as (:FILE-URL <URL>) or (:ERROR <STRING>). FILENAME may denote a
+;;; directory, in which case the filename will be determined by
+;;; encoding PAX*-URL in it.
+;;;
+;;; PAX*-URL may be a `pax:', `pax-eval:' or a `pax-wall' URL.
+;;;
+;;; FILENAME may also be NIL, in which case no documentation is
+;;; generated. This is for error checking from Emacs before launching
+;;; a browser.
+(defun/autoloaded document-for-emacs
+    (pax*-url filename &optional *document-hyperspec-root*)
+  (swank/backend:converting-errors-to-error-location
+    (swank::with-buffer-syntax (swank::*buffer-package*)
+      (let* ((*html-subformat* :w3m))
+        `(:url ,(document-pax*-url pax*-url filename))))))
+
+(defun document-pax*-url (url filename)
   (cond ((alexandria:starts-with-subseq "pax:" url)
-         (document-pax-url-for-emacs url dirname))
+         (document-pax-url-for-emacs url filename))
         ((alexandria:starts-with-subseq "pax-eval:" url)
-         (document-pax-eval-url-for-emacs url dirname))
+         (document-pax-eval-url-for-emacs url filename))
         ((alexandria:starts-with-subseq "pax-wall:" url)
-         (document-pax-wall-url-for-emacs url dirname))
+         (document-pax-wall-url-for-emacs url filename))
         (t
          (assert nil))))
+
+(defun file-name-for-pax-url (file-or-dir-name pax-url)
+  (let ((filename (make-pathname :name (pax-url-to-file-name pax-url)
+                                 :type "html")))
+    (if (uiop:directory-pathname-p file-or-dir-name)
+        (merge-pathnames filename file-or-dir-name)
+        (or file-or-dir-name
+            ;; DOCUMENT-FOR-EMACS is being called with FILENAME NIL to
+            ;; check for errors. No file should be created.
+            :no-file-name))))
+
+;;; Same as *UNRESERVED-URL-CHARACTERS*, but with #\* reserved. Make
+;;; that #\: reserved, too, for CCL to be happy.
+(defparameter *unreserved-pax-url-file-name-characters*
+  (let ((array (make-array 256 :element-type 'bit :initial-element 0)))
+    (_mark-range array #\a #\z)
+    (_mark-range array #\A #\Z)
+    (_mark-range array #\0 #\9)
+    (_mark-one array #\-)
+    (_mark-one array #\_)
+    (_mark-one array #\.)
+    (_mark-one array #\@)
+    (_mark-one array #\+)
+    array))
+
+;;; A PAX URL is like pax:PATH[#FRAGMENT]. When the documentation is
+;;; written to a file, special characters in PATH must be somehow
+;;; escaped so that the result is a valid file name. Also, since w3m's
+;;; URL history is buggy with regards to URL encoding and decoding,
+;;; the encoded PATH must have no #\% in it.
+(defun pax-url-to-file-name (pax-url)
+  (let ((*unreserved-url-characters* *unreserved-pax-url-file-name-characters*)
+        (*url-escape-char* #\x))
+    (urlencode pax-url)))
+
+(defun pax-url-from-file-name (filename)
+  (let ((*unreserved-url-characters* *unreserved-pax-url-file-name-characters*)
+        (*url-escape-char* #\x))
+    (urldecode filename)))
 
 
 ;;;; Handling of "pax-wall:" URLs. WALL is the acronym of
 ;;;; Word-And-Locatives-List (also, see the WALL type).
 
 ;;; pax-wall:<URLENCODED-STRINGIFIED-WALL>. The list is encoded in an
-;;; URL because to make the Elisp side simpler as what to document
-;;; goes through `mgl-pax-w3m-goto-url'.
-(defun document-pax-wall-url-for-emacs (pax-wall-url dirname)
+;;; URL to make the Elisp side simpler as what to document goes
+;;; through `mgl-pax-w3m-goto-url'.
+(defun document-pax-wall-url-for-emacs (pax-wall-url filename)
   (multiple-value-bind (scheme authority path) (parse-url pax-wall-url)
     (declare (ignore authority))
     (unless (equal scheme "pax-wall")
@@ -160,12 +235,12 @@
         ((0) nil)
         ((1)
          (urlify-if-pathname
-          (document-for-emacs/reference (first definitions) dirname)))
+          (document-for-emacs/reference (first definitions) filename)))
         (t
          (urlify-if-pathname
           (document-for-emacs/ambiguous definitions pax-wall-url
                                         "buffer content around point"
-                                        dirname)))))))
+                                        filename)))))))
 
 (defun documentables-of (object)
   (mapcar #'link-reference
@@ -193,47 +268,54 @@
 
 ;;;; Handling of "pax-eval:" URLs
 
-(defun document-pax-eval-url-for-emacs (pax-eval-url dirname)
+(defun document-pax-eval-url-for-emacs (pax-eval-url filename)
   (multiple-value-bind (scheme authority path) (parse-url pax-eval-url)
     (declare (ignore authority))
     (unless (equal scheme "pax-eval")
       (error "~S doesn't have pax-eval: scheme." pax-eval-url))
-    (let* ((sexp (read-from-string (urldecode path)))
-           (stuff (eval sexp))
-           (filename (merge-pathnames
-                      (make-pathname
-                       :name (pax-url-to-file-name
-                              (format nil "pax-eval:~A"
-                                      (urlencode
-                                       (with-standard-io-syntax*
-                                         (prin1-to-string sexp)))))
-                       :type "html")
-                      dirname)))
-      (document/w3m/file filename stuff :title path)
-      (pathname-to-file-url filename))))
+    (let* ((form (read-from-string (urldecode path)))
+           (stuff (pax-eval form))
+           (filename (file-name-for-pax-url
+                      filename
+                      (format nil "pax-eval:~A"
+                              (urlencode (with-standard-io-syntax*
+                                           (prin1-to-string form)))))))
+      (document/open/file filename stuff :title path)
+      (if (eq filename :no-file-name)
+          filename
+          (pathname-to-file-url filename)))))
+
+(defun pax-eval (form)
+  ;; For the sake of MGL-PAX/WEB, don't allow arbitrary evaluations.
+  (unless (and (listp form)
+               (eq (first form) 'pax-apropos*))
+    (error "Not allowed to evaluate ~S." form))
+  (eval form))
 
 (defun make-pax-eval-url (form)
-  (format nil "pax-eval:~A" (urlencode (with-standard-io-syntax*
-                                       (prin1-to-string form)))))
+  (finalize-pax-url (format nil "pax-eval:~A"
+                            (urlencode (with-standard-io-syntax*
+                                         (prin1-to-string form))))))
 
 
 ;;;; Handling of "pax:" URLs
 
-(defun document-pax-url-for-emacs (pax-url dirname)
-  (multiple-value-bind (scheme authority path fragment) (parse-url pax-url)
-    (declare (ignore authority))
+(defun document-pax-url-for-emacs (pax-url filename)
+  (multiple-value-bind (scheme authority path query fragment)
+      (parse-url pax-url)
+    (declare (ignore authority query))
     (unless (equal scheme "pax")
       (error "~S doesn't have pax: scheme." pax-url))
     (unless path
       (error "Nothing to document."))
-    (urlify-if-pathname (document-pax-url-path path dirname) fragment)))
+    (urlify-if-pathname (document-pax-url-path path filename) fragment)))
 
-(defun document-pax-url-path (path dirname)
+(defun document-pax-url-path (path filename)
   (multiple-value-bind (object locative foundp locative-junk)
       (read-reference-from-string path)
     (cond (foundp
            (document-for-emacs/reference (pax:make-reference object locative)
-                                         dirname))
+                                         filename))
           (locative-junk
            (error "Unknown locative ~S." locative-junk))
           (t
@@ -241,11 +323,11 @@
              (cond ((endp references)
                     (error "Could not find definitions for ~S." path))
                    ((= (length references) 1)
-                    (document-for-emacs/reference (first references) dirname))
+                    (document-for-emacs/reference (first references) filename))
                    (t
                     (document-for-emacs/ambiguous
                      references (format nil "pax:~A" (urlencode path))
-                     path dirname))))))))
+                     path filename))))))))
 
 ;;; See if (DOCUMENT REFERENCE) with *DOCUMENT-OPEN-LINKING* T would
 ;;; try to document an external reference, and return it.
@@ -256,22 +338,16 @@
         (resolve reference)))))
 
 ;;; E.g. "pax:foo function"
-(defun document-for-emacs/reference (reference dirname)
+(defun document-for-emacs/reference (reference filename)
   (let ((reference (replace-go-target reference)))
     (alexandria:if-let (external-reference (open-reference-if-external
                                             reference))
       (external-reference-url external-reference)
       (let* ((stuff ())
-             ;; Support DIRNAME NIL for testing.
-             (filename (when dirname
-                         (merge-pathnames
-                          (make-pathname :name (pax-url-to-file-name
-                                                (format nil "pax:~A"
-                                                        (urlencode
-                                                         (reference-to-anchor
-                                                          reference))))
-                                         :type "html")
-                          dirname)))
+             (filename (file-name-for-pax-url
+                        filename
+                        (format nil "pax:~A" (urlencode (reference-to-anchor
+                                                         reference)))))
              (all-sections (list-all-sections))
              (sections (sections-that-contain all-sections reference))
              (packagep (packagep (resolve reference :errorp nil)))
@@ -287,12 +363,10 @@
         (alexandria:appendf stuff (format-up-links sections reference))
         (alexandria:appendf stuff (list reference))
         (alexandria:appendf stuff (format-also-see reference))
-        (if filename
-            (document/w3m/file filename (remove nil stuff)
-                               :title (format nil "~A ~A"
-                                              (reference-object reference)
-                                              (reference-locative reference)))
-            (document/w3m (remove nil stuff)))
+        (document/open/file filename (remove nil stuff)
+                            :title (format nil "~A ~A"
+                                           (reference-object reference)
+                                           (reference-locative reference)))
         filename))))
 
 #+nil
@@ -338,7 +412,8 @@
                 (prin1-to-markdown generic-function-name))))
       (when (< 1 (length (definitions-of (reference-object reference))))
         (emit "the [disambiguation page](~A)"
-              (urlencode (reference-to-ambiguous-pax-url reference))))
+              (finalize-pax-url (urlencode (reference-to-ambiguous-pax-url
+                                            reference)))))
       (unless (eq (reference-locative-type reference) 'section)
         (let ((package (find-reference-package reference)))
           (when package
@@ -373,33 +448,32 @@
       (symbol-package object))))
 
 ;;; E.g. "pax:foo"
-(defun document-for-emacs/ambiguous (references pax-url title dirname)
+(defun document-for-emacs/ambiguous (references pax-url title filename)
   (assert (< 1 (length references)))
-  (let ((filename (merge-pathnames
-                   (make-pathname :name (pax-url-to-file-name pax-url)
-                                  :type "html")
-                   dirname)))
-    (document/w3m/file
-     filename (cons (format nil "# Disambiguation for [`~A`][pax:dislocated]"
+  (let ((filename (file-name-for-pax-url filename pax-url)))
+    (document/open/file
+     filename (cons (format nil "## Disambiguation for [`~A`][pax:dislocated]"
                             (escape-markdown title))
                     (sort-references (replace-go-targets references)))
      :title title)
     filename))
 
-(defun document/w3m/file (filename stuff &key title)
-  (with-open-file (stream (ensure-directories-exist filename)
-                          :direction :output
-                          :if-does-not-exist :create
-                          :if-exists :supersede
-                          :external-format *utf-8-external-format*)
-    (when title
-      (format stream "<title>~A</title>~%" (escape-html title)))
-    (document/w3m stuff :stream stream)))
+(defun document/open/file (filename stuff &key title)
+  (unless (or (eq filename nil) (eq filename :no-file-name))
+    (with-open-file (stream (ensure-directories-exist filename)
+                            :direction :output
+                            :if-does-not-exist :create
+                            :if-exists :supersede
+                            :external-format *utf-8-external-format*)
+      (when title
+        (format stream "<title>~A</title>~%" (escape-html title)))
+      (document/open stuff :stream stream))))
 
-(defun document/w3m (&rest args)
-  (let ((*html-subformat* :w3m)
-        (*document-open-linking* t)
-        (*document-fancy-html-navigation* nil)
+(defvar *document/open-extra-args* ())
+
+(defun document/open (documentable &rest args)
+  (let ((*document-open-linking* t)
+        (*document-fancy-html-navigation* (not (eq *html-subformat* :w3m)))
         (*document-normalize-packages* t)
         (*document-url-versions* '(2)))
     (handler-bind ((error
@@ -408,7 +482,8 @@
                              :format-control "~@<Error in ~S: ~A~:@>"
                              :format-arguments (list'document condition))
                        (continue condition))))
-      (apply #'document (append args (list :format :html))))))
+      (apply #'document documentable (append args (list :format :html)
+                                             *document/open-extra-args*)))))
 
 
 ;;;; Listing SECTIONs
@@ -437,64 +512,38 @@
          (format s "Up: ")
          (dolist (section (sort-by-proximity sections reference))
            (format s "<a href='~A#~A'>~A</a> "
-                   (urlencode (reference-to-pax-url
-                               (canonical-reference section)))
+                   (finalize-pax-url
+                    (urlencode (reference-to-pax-url
+                                (canonical-reference section))))
                    (urlencode (reference-to-anchor reference))
                    (section-title-or-name section))))))))
 
 
 (defun/autoloaded redocument-for-emacs
     (file-url dirname &optional *document-hyperspec-root*)
-  (swank::converting-errors-to-error-location
+  (swank/backend:converting-errors-to-error-location
     (swank::with-buffer-syntax (swank::*buffer-package*)
-      (multiple-value-bind (scheme authority path fragment) (parse-url file-url)
-        (declare (ignore authority))
-        (when (equal scheme "file")
-          (assert (null fragment))
-          (let ((dir (make-pathname :name nil :type nil :defaults path)))
-            (when (string= (namestring dir) dirname)
-              (let ((new-file-url (document-for-emacs-1
-                                   (pax-url-from-file-name
-                                    (pathname-name path))
-                                   dir)))
-                (assert (string= new-file-url file-url))))))))
+      (let* ((*html-subformat* :w3m))
+        (multiple-value-bind (scheme authority path query fragment)
+            (parse-url file-url)
+          (declare (ignore authority query))
+          (when (equal scheme "file")
+            (assert (null fragment))
+            (let ((dir (make-pathname :name nil :type nil :defaults path)))
+              (when (string= (namestring dir) dirname)
+                (let ((new-file-url (document-pax*-url
+                                     (pax-url-from-file-name
+                                      (pathname-name path))
+                                     dir)))
+                  (assert (string= new-file-url file-url)))))))))
     (values)))
-
-;;; Same as *UNRESERVED-URL-CHARACTERS*, but with #\* reserved. Make
-;;; that #\: reserved, too, for CCL to be happy.
-(defparameter *unreserved-pax-url-file-name-characters*
-  (let ((array (make-array 256 :element-type 'bit :initial-element 0)))
-    (_mark-range array #\a #\z)
-    (_mark-range array #\A #\Z)
-    (_mark-range array #\0 #\9)
-    (_mark-one array #\-)
-    (_mark-one array #\_)
-    (_mark-one array #\.)
-    (_mark-one array #\@)
-    (_mark-one array #\+)
-    array))
-
-;;; A PAX URL is like pax:PATH[#FRAGMENT]. When the documentation is
-;;; written to a file, special characters in PATH must be somehow
-;;; escaped so that the result is a valid file name. Also, since w3m's
-;;; URL history is buggy with regards to URL encoding and decoding,
-;;; the encoded PATH must have no #\% in it.
-(defun pax-url-to-file-name (pax-url)
-  (let ((*unreserved-url-characters* *unreserved-pax-url-file-name-characters*)
-        (*url-escape-char* #\x))
-    (urlencode pax-url)))
-
-(defun pax-url-from-file-name (filename)
-  (let ((*unreserved-url-characters* *unreserved-pax-url-file-name-characters*)
-        (*url-escape-char* #\x))
-    (urldecode filename)))
 
 
 ;;; Locate the path component. Ignore the fragment. This is what M-.
 ;;; in a w3m PAX doc buffer does.
 (defun/autoloaded locate-pax-url-for-emacs (pax-url)
   (with-swank ()
-    (swank::converting-errors-to-error-location
+    (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
         (multiple-value-bind (scheme authority path) (parse-url pax-url)
           (declare (ignore authority))
@@ -518,9 +567,9 @@
 
   On the Emacs side, `mgl-pax-apropos`, `mgl-pax-apropos-all`, and
   `mgl-pax-apropos-package` can be used to view the results in the
-  [documentation browser][@documenting-in-emacs]. These parallel the
-  functionality of `slime-apropos`, `slime-apropos-all`, and
-  `slime-apropos-package`."
+  [documentation browser][@browsing-live-documentation]. These
+  parallel the functionality of `slime-apropos`, `slime-apropos-all`,
+  and `slime-apropos-package`."
   (pax-apropos function))
 
 (defun pax-apropos (name &key package external-only case-sensitive
@@ -685,7 +734,7 @@
                     (entry-point-sections (list-sections-in-package
                                            (find-package package))))))
             `((progv '(*document-do-not-resolve-references*) '(t))
-              (,(format nil "# Results for `~A`"
+              (,(format nil "## Results for `~A`"
                         (let ((current-package *package*))
                           ;; Don't break lines.
                           (with-standard-io-syntax*
@@ -705,22 +754,22 @@
                                                       `(quote ,locative-types)
                                                       nil)))))))
                ,@(when asdf-definitions
-                   (list "## \\ASDF systems"
+                   (list "### \\ASDF systems"
                          `((progv '(*document-tight*) '(t))
                            ,@asdf-definitions)))
                ,@(when package-definitions
-                   (list "## Packages"
+                   (list "### Packages"
                          `((progv '(*document-tight*) '(t))
                            ,@package-definitions)))
                ,@(when non-symbol-definitions
-                   (list "## Non-symbol definitions"
+                   (list "### Non-symbol definitions"
                          `((progv '(*document-tight*) '(t))
                            ,@non-symbol-definitions)))
                ,@(when pax-entry-points
-                   (list "## PAX Entry Points"
+                   (list "### PAX Entry Points"
                          (sections-tightly pax-entry-points)))
                ,@(when symbol-definitions
-                   (list "## Symbol definitions"
+                   (list "### Symbol definitions"
                          `((progv '(*document-tight*) '(t))
                            ,@symbol-definitions)))))))))))
 
@@ -736,13 +785,14 @@
     ,@(list "## Documentation registered in @PAX-WORLD"
             (sections-tightly
              (mapcar #'canonical-reference (sections-registered-in-pax-world)))
-            "See @DOCUMENTING-IN-EMACS for how to use this
-        documentation browser.")))
+            "See @BROWSING-LIVE-DOCUMENTATION for how to use this
+            documentation browser.")))
 
 
-(defun/autoloaded current-definition-pax-url-for-emacs (buffer filename possibilities)
+(defun/autoloaded current-definition-pax-url-for-emacs
+    (buffer filename possibilities)
   (with-swank ()
-    (swank::converting-errors-to-error-location
+    (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
         (let ((reference (find-current-definition buffer filename
                                                   possibilities)))

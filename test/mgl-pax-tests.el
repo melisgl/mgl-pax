@@ -14,9 +14,32 @@
      (load-mgl-pax-test-system)
      ,@body))
 
-(defun sync-current-buffer ()
-  ;; https://emacs.stackexchange.com/questions/10921/why-doesnt-changing-buffer-in-filter-function-have-any-effect-in-ert
-  (set-buffer (window-buffer (selected-window))))
+(cl-defmacro with-browsers (&body body)
+  `(progn
+     (let ((mgl-pax-browser-function 'w3m-browse-url))
+       ,@body)
+     (let ((mgl-pax-browser-function 'w3m-browse-url*))
+       ,@body)))
+
+;;; Fake non-w3m browser to test the web server.
+(defun w3m-browse-url* (url)
+  (w3m-browse-url url)
+  (cl-loop repeat 20
+           until (eq major-mode 'w3m-mode)
+           do (sit-for 0.1))
+  ;; Wait for fontification to finish.
+  (sit-for 0.1))
+
+(defun substringp (sub string)
+  (string-match-p (regexp-quote sub) string))
+
+(defun should-be-looking-at (string)
+  (slime-check
+    ("In buffer %S, looking at: %S" (buffer-name (current-buffer))
+     (buffer-substring-no-properties (point)
+                                     (min (point-max)
+                                          (+ (point) 40))))
+    (looking-at (regexp-quote string))))
 
 ;;; Redefine this without truncate-string-to-width.
 (defun slime-test-ert-test-for (name input i doc _body fails-for style fname)
@@ -159,7 +182,7 @@
 
 (defun post-slime-edit-definition ()
   (slime-sync-to-top-level 1)
-  (sync-current-buffer))
+  (mgl-pax-sync-current-buffer))
 
 (def-slime-test mgl-pax-edit-definitions/test-defs
     (name snippet &optional snippet2)
@@ -376,106 +399,102 @@
 
 ;;;; Test `mgl-pax-document'
 
-(ert-deftest test-mgl-pax-document/simple ()
-  (with-temp-lisp-buffer
-   (insert "(defun foo-simple () \"docstring\" t)")
-   (slime-compile-defun)
-   (slime-sync-to-top-level 1)
-   ;; Explicit call
-   (mgl-pax-document "pax:foo-simple")
-   (slime-sync-to-top-level 1)
-   (sync-current-buffer)
-   (should (eq major-mode 'w3m-mode))
-   (should (string= (w3m-contents)
-                    "  * [function] FOO-SIMPLE
-   
-    docstring
-   
-Also, see the package COMMON-LISP-USER.
+(ert-deftest test-mgl-pax-document/simple-1 ()
+  (with-browsers
+   (with-temp-lisp-buffer
+    (insert "(defun foo-simple () \"docstring\" t)")
+    (slime-compile-defun)
+    (slime-sync-to-top-level 1)
+    ;; Explicit call
+    (mgl-pax-document "pax:foo-simple")
+    (slime-sync-to-top-level 1)
+    (mgl-pax-sync-current-buffer)
+    (should (eq major-mode 'w3m-mode))
+    (should (substringp "* [function] FOO-SIMPLE" (w3m-contents)))
+    (kill-buffer))))
 
-"))
-   (kill-buffer)))
-
-(ert-deftest test-mgl-pax-document/simple2 ()
-  (with-temp-lisp-buffer
-   (insert "(defun foo-simple () \"docstring\" t)")
-   (slime-compile-defun)
-   (slime-sync-to-top-level 1)
-   ;; Explicit call
-   (unwind-protect
-       (progn
-         (mgl-pax-document "pax:foo-simple")
-         (slime-sync-to-top-level 1)
-         (sync-current-buffer)
-         (should (eq major-mode 'w3m-mode))
-         (should (string= (w3m-contents)
-                          "  * [function] FOO-SIMPLE
-   
-    docstring
-   
-Also, see the package COMMON-LISP-USER.
-
-")))
-     (when (eq major-mode 'w3m-mode)
-       (kill-buffer)))))
+(ert-deftest test-mgl-pax-document/simple-2 ()
+  (with-browsers
+   (with-temp-lisp-buffer
+    (insert "(defun foo-simple () \"docstring\" t)")
+    (slime-compile-defun)
+    (slime-sync-to-top-level 1)
+    ;; Explicit call
+    (unwind-protect
+        (progn
+          (mgl-pax-document "pax:foo-simple")
+          (slime-sync-to-top-level 1)
+          (mgl-pax-sync-current-buffer)
+          (should (eq major-mode 'w3m-mode))
+          (should (substringp "* [function] FOO-SIMPLE" (w3m-contents))))
+      (when (eq major-mode 'w3m-mode)
+        (kill-buffer))))))
 
 (ert-deftest test-mgl-pax-document/external ()
-  (unwind-protect
-      (progn
-        (mgl-pax-document "pax:readably")
-        (slime-sync-to-top-level 1)
-        (sync-current-buffer)
-        (should (eq major-mode 'w3m-mode))
-        ;; Wait for 5 seconds for the page to load and render.
-        (cl-loop repeat 50
-                 until (looking-at "readably adv.")
-                 do (sit-for 0.1))
-        (should (looking-at "readably adv."))))
+  (let ((common-lisp-hyperspec-root
+         "http://www.lispworks.com/documentation/HyperSpec/"))
+    (with-browsers
+     (unwind-protect
+         (progn
+           (mgl-pax-document "pax:readably")
+           (slime-sync-to-top-level 1)
+           (mgl-pax-sync-current-buffer)
+           (should (eq major-mode 'w3m-mode))
+           ;; Wait for 5 seconds for the page to load and render.
+           (cl-loop repeat 50
+                    until (looking-at "readably adv.")
+                    do (sit-for 0.1))
+           (should-be-looking-at "readably adv.")))))
   (when (eq major-mode 'w3m-mode)
     (kill-buffer)))
 
 (ert-deftest test-mgl-pax-document/external/context ()
-  (with-temp-lisp-buffer
-   (insert "readably")
-   (unwind-protect
-       (progn
-         (call-interactively 'mgl-pax-document)
-         (slime-sync-to-top-level 1)
-         (sync-current-buffer)
-         (should (eq major-mode 'w3m-mode))
-         ;; Wait for 5 seconds for the page to load and render.
-         (cl-loop repeat 50
-                  until (looking-at "readably adv.")
-                  do (sit-for 0.1))
-         (should (looking-at "readably adv."))))
-   (when (eq major-mode 'w3m-mode)
-     (kill-buffer))))
+  (let ((common-lisp-hyperspec-root
+         "http://www.lispworks.com/documentation/HyperSpec/"))
+    (with-browsers
+     (with-temp-lisp-buffer
+      (insert "readably")
+      (unwind-protect
+          (progn
+            (call-interactively 'mgl-pax-document)
+            (slime-sync-to-top-level 1)
+            (mgl-pax-sync-current-buffer)
+            (should (eq major-mode 'w3m-mode))
+            ;; Wait for 5 seconds for the page to load and render.
+            (cl-loop repeat 50
+                     until (looking-at "readably adv.")
+                     do (sit-for 0.1))
+            (should-be-looking-at "readably adv.")))
+      (when (eq major-mode 'w3m-mode)
+        (kill-buffer))))))
 
 (ert-deftest test-mgl-pax-document/go ()
-  (unwind-protect
-      (progn
-        (mgl-pax-document (concat "pax:"
-                                  (w3m-url-encode-string
-                                   "defun (go (print function))")))
-        (slime-sync-to-top-level 1)
-        (sync-current-buffer)
-        (should (eq major-mode 'w3m-mode))
-        (should (string-prefix-p "  * [function] PRINT" (w3m-contents))))
-    (when (eq major-mode 'w3m-mode)
-      (kill-buffer))))
-
-(ert-deftest test-mgl-pax-document/go/context ()
-  (with-temp-lisp-buffer
+  (with-browsers
    (unwind-protect
        (progn
-         (insert "(go (print function)) defun")
-         (call-interactively 'mgl-pax-document)
+         (mgl-pax-document (concat "pax:"
+                                   (w3m-url-encode-string
+                                    "defun (go (print function))")))
          (slime-sync-to-top-level 1)
-         (sync-current-buffer)
+         (mgl-pax-sync-current-buffer)
          (should (eq major-mode 'w3m-mode))
-         (should (string-prefix-p "  * [function] PRINT" (w3m-contents))))
+         (should (substringp "  * [function] PRINT" (w3m-contents))))
      (when (eq major-mode 'w3m-mode)
        (kill-buffer)))))
+
+(ert-deftest test-mgl-pax-document/go/context ()
+  (with-browsers
+   (with-temp-lisp-buffer
+    (unwind-protect
+        (progn
+          (insert "(go (print function)) defun")
+          (call-interactively 'mgl-pax-document)
+          (slime-sync-to-top-level 1)
+          (mgl-pax-sync-current-buffer)
+          (should (eq major-mode 'w3m-mode))
+          (should (substringp "  * [function] PRINT" (w3m-contents))))
+      (when (eq major-mode 'w3m-mode)
+        (kill-buffer))))))
 
 (defun w3m-contents ()
   (save-excursion
@@ -487,65 +506,47 @@ Also, see the package COMMON-LISP-USER.
 ;;;; Test `mgl-pax-current-definition-toggle-view'
 
 (ert-deftest test-mgl-pax-current-definition-toggle-view ()
-  (with-temp-lisp-buffer
-   (let ((tmpbuffer (current-buffer)))
-     (insert "(defun foo-simple () \"docstring\" t)")
-     ;; Interpreted
-     (slime-eval-last-expression)
-     (slime-sync-to-top-level 1)
-     (backward-char)
-     (mgl-pax-current-definition-toggle-view)
-     (slime-sync-to-top-level 1)
-     (sync-current-buffer)
-     (should (eq major-mode 'w3m-mode))
-     (should (string= (w3m-contents)
-                      "  * [function] FOO-SIMPLE
-   
-    docstring
-   
-Also, see the package COMMON-LISP-USER.
-
-"))
-     (kill-buffer)
-     (switch-to-buffer tmpbuffer)
-     (sync-current-buffer)
-     ;; Compiled
-     (slime-compile-defun)
-     (slime-sync-to-top-level 1)
-     (mgl-pax-current-definition-toggle-view)
-     (slime-sync-to-top-level 1)
-     (sync-current-buffer)
-     (should (eq major-mode 'w3m-mode))
-     (should (string= (w3m-contents)
-                      "  * [function] FOO-SIMPLE
-   
-    docstring
-   
-Also, see the package COMMON-LISP-USER.
-
-"))
-     (kill-buffer)
-     (sync-current-buffer))))
+  (with-browsers
+   (with-temp-lisp-buffer
+    (let ((tmpbuffer (current-buffer)))
+      (insert "(defun foo-simple () \"docstring\" t)")
+      ;; Interpreted
+      (slime-eval-last-expression)
+      (slime-sync-to-top-level 1)
+      (backward-char)
+      (mgl-pax-current-definition-toggle-view)
+      (slime-sync-to-top-level 1)
+      (mgl-pax-sync-current-buffer)
+      (should (eq major-mode 'w3m-mode))
+      (should (substringp "* [function] FOO-SIMPLE" (w3m-contents)))
+      (kill-buffer)
+      (switch-to-buffer tmpbuffer)
+      (mgl-pax-sync-current-buffer)
+      ;; Compiled
+      (slime-compile-defun)
+      (slime-sync-to-top-level 1)
+      (mgl-pax-current-definition-toggle-view)
+      (slime-sync-to-top-level 1)
+      (mgl-pax-sync-current-buffer)
+      (should (eq major-mode 'w3m-mode))
+      (should (substringp "* [function] FOO-SIMPLE" (w3m-contents)))
+      (kill-buffer)
+      (mgl-pax-sync-current-buffer)))))
 
 
 ;;; Test `mgl-pax-apropos'
 
 (ert-deftest test-mgl-pax-apropos ()
-  (mgl-pax-apropos "install-pax-elisp")
-  (slime-sync-to-top-level 1)
-  (sync-current-buffer)
-  (should (eq major-mode 'w3m-mode))
-  (should (string= (w3m-contents)
-                   "Results for (MGL-PAX:PAX-APROPOS \"install-pax-elisp\" :EXTERNAL-ONLY NIL
-:PACKAGE NIL :CASE-SENSITIVE NIL :LOCATIVE-TYPES NIL)
-
-Symbol definitions
-
-  * [function] MGL-PAX:INSTALL-PAX-ELISP
-
-"))
-  (kill-buffer)
-  (sync-current-buffer))
+  (with-browsers
+   (mgl-pax-apropos "install-pax-elisp")
+   (slime-sync-to-top-level 1)
+   (mgl-pax-sync-current-buffer)
+   (should (eq major-mode 'w3m-mode))
+   (let ((contents (w3m-contents)))
+     (should (substringp "Apropos" contents))
+     (should (substringp "* [function] MGL-PAX:INSTALL-PAX-ELISP" contents)))
+   (kill-buffer)
+   (mgl-pax-sync-current-buffer)))
 
 
 ;;;; Test `mgl-pax-transcribe-last-expression'

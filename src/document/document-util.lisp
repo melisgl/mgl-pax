@@ -134,7 +134,7 @@
                            (typep (first objects) 'section))
                       (first objects)
                       nil))
-         (filename (sections-to-filename objects dir)))
+         (filename (and dir (sections-to-filename objects dir))))
     (flet ((header (stream)
              (let ((title (if section
                               (section-title section)
@@ -145,11 +145,11 @@
            (footer (stream)
              (html-footer stream)))
       `(,@page-spec
-        ,@(unless (getf page-spec :output)
+        ,@(when (eq (getf page-spec :output '%missing) '%missing)
             `(:output (,filename ,@*default-output-options*)))
-        ,@(unless (getf page-spec :header-fn)
+        ,@(when (eq (getf page-spec :header-fn '%missing) '%missing)
             `(:header-fn ,#'header))
-        ,@(unless (getf page-spec :footer-fn)
+        ,@(when (eq (getf page-spec :footer-fn '%missing) '%missing)
             `(:footer-fn ,#'footer))))))
 
 (defun sections-to-filename (sections dir)
@@ -245,7 +245,7 @@
    </head>~%~
    <body>~%~
    <div id="content-container">~%"""
-   (make-plain (process-title title)) stylesheet charset
+   (make-plain title) stylesheet charset
    (etypecase head
      ((or null string)
       head)

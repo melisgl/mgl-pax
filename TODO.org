@@ -1,7 +1,6 @@
 #+STARTUP: overview
 #+SEQ_TODO: TODO(t@) NEXT(n@) STARTED(s@) WAITING(w@) | DONE(d@) OLD(o@) CANCELLED(c@)
 #+TODO: MAYBE(m@) FAILED(f@) LOG(l@) DEFERRED(e@) BUG(b@)
-* OPT esrap is slow with allegro cl
 * OPT parse and print markdown once when *format* is :html?
 This would involve rewriting everything to emit parse tree fragments or be able to produce html directly. Either way, it is not without cost.
 * defining link ids doesn't work in function docstrings
@@ -99,11 +98,8 @@ E.g. for named-readtables, which has its docs in named-readtables/doc.
 E.g. 'clhs' works in a package where pax used but not elsewhere.
 
 But so does M-.'s history.
-* MAYBE documentation browser through a web server
-Instead of w3m, use `browse-url-browser-function' and a CL web server
-generating and serving pax pages. Maybe even hijack clicking on the
-locative, which normally goes to github, to act like 'v' in w3m (i.e.
-make Emacs visit the source).
+* OPT 3bmd parsing performance on large blocks
+https://github.com/3b/3bmd/issues/56
 * MAYBE make C-. parse symbols in non-lisp buffers
 E.g. it doesn't work here on PAX::@PAX-MANUAL.
 * MAYBE heuristically detect code blocks?

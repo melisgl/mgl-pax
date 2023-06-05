@@ -8,9 +8,13 @@
 ;;;;
 ;;;; - `mgl-pax-autoload'
 ;;;;
+;;;; - `mgl-pax-reload'
+;;;;
 ;;;; - `mgl-pax-hijack-slime-doc-keys'
 ;;;;
-;;;; - `mgl-pax-reload'
+;;;; - `mgl-pax-browser-function'
+;;;;
+;;;; - `mgl-pax-web-server-port'
 ;;;;
 ;;;; NAVIGATE (see MGL-PAX::@NAVIGATING-IN-EMACS)
 ;;;; --------------------------------------------
@@ -23,8 +27,8 @@
 ;;;;
 ;;;; - Also, see `mgl-pax-edit-parent-section'.
 ;;;;
-;;;; DOCUMENT (see MGL-PAX::@DOCUMENTING-IN-EMACS)
-;;;; ---------------------------------------------
+;;;; DOCUMENT (see MGL-PAX::@BROWSING-LIVE-DOCUMENTATION)
+;;;; ----------------------------------------------------
 ;;;;
 ;;;; - Browse documentation of definitions in the running Lisp live
 ;;;;   without explicitly generating documentation with
@@ -55,38 +59,41 @@
 (defcustom mgl-pax-autoload t
   "If true, then the MGL-PAX ASDF system will be loaded as necessary
 via Slime by `slime-edit-definition', `mgl-pax-document' and
-other mgl-pax commands."
+other mgl-pax commands. Furthermore, when
+`mgl-pax-browser-function' is not 'w3m-browse-url',
+`mgl-pax-document' will start a web server on the Common Lisp
+side."
   :type 'boolean
   :group 'mgl-pax)
 
 (defvar mgl-pax-version)
-(setq mgl-pax-version  '(0 2 2))
+(setq mgl-pax-version  '(0 2 3))
 
 (defun mgl-pax-maybe-autoload (cont)
-  (if mgl-pax-autoload
-      (slime-eval-async
-          `(cl:progn
-            (cl:unless
-             (cl:find-package :mgl-pax)
-             (cl:format t "~&;; Autoloading MGL-PAX for Emacs ~
-                          (mgl-pax-autoload is t).~%")
-             (asdf:load-system "mgl-pax")
-             (cl:format t ";; Done autoloading MGL-PAX for Emacs~%"))
-            (cl:and (cl:find-package :mgl-pax)
-                    (cl:funcall (cl:find-symbol
-                                 (cl:string '#:check-pax-elisp-version)
-                                 (cl:find-package :mgl-pax))
-                                ',mgl-pax-version)
-                    t))
-        cont)
-    (slime-eval-async
-        `(cl:and (cl:find-package :mgl-pax)
-                 (cl:funcall (cl:find-symbol
-                              (cl:string '#:check-pax-elisp-version)
-                              (cl:find-package :mgl-pax))
-                             ',mgl-pax-version)
-                 t)
-      cont)))
+  (if (mgl-pax-use-w3m)
+      (mgl-pax-maybe-autoload-1 cont)
+    (mgl-pax-ensure-web-server cont)))
+
+(defun mgl-pax-maybe-autoload-1 (cont)
+  (let ((check-version-form
+         `(cl:and (cl:find-package :mgl-pax)
+                  (cl:funcall (cl:find-symbol
+                               (cl:string '#:check-pax-elisp-version)
+                               (cl:find-package :mgl-pax))
+                              ',mgl-pax-version)
+                  t)))
+    (if mgl-pax-autoload
+        (slime-eval-async
+            `(cl:progn
+              (cl:unless
+               (cl:find-package :mgl-pax)
+               (cl:format t "~&;; Autoloading MGL-PAX for Emacs ~
+                            (mgl-pax-autoload is t).~%")
+               (asdf:load-system "mgl-pax")
+               (cl:format t ";; Done autoloading MGL-PAX for Emacs~%"))
+              ,check-version-form)
+          cont)
+      (slime-eval-async check-version-form cont))))
 
 (defvar mgl-pax-file-name)
 (setq mgl-pax-file-name load-file-name)
@@ -101,8 +108,8 @@ See MGL-PAX::@EMACS-SETUP."
 
 
 (defun mgl-pax-hijack-slime-doc-keys ()
-  "If `w3m' is available, then make the following changes to
-`slime-doc-map' (assuming it's bound to `C-c C-d').
+  "Make the following changes to `slime-doc-map' (assuming it's
+bound to `C-c C-d').
 
 - `C-c C-d a': `mgl-pax-apropos' (replaces `slime-apropos')
 - `C-c C-d z': `mgl-pax-aproposa-all' (replaces `slime-apropos-all')
@@ -126,17 +133,55 @@ To bind `C-.' globally:
 
     (global-set-key (kbd \"C-.\") 'mgl-pax-document)"
   (interactive)
-  (if (not (require 'w3m nil t))
-      (message "Requiring w3m failed.")
-    (slime-bind-keys slime-doc-map t
-                     '((?a mgl-pax-apropos)
-                       (?z mgl-pax-apropos-all)
-                       (?p mgl-pax-apropos-package)
-                       (?d mgl-pax-document)
-                       (?f mgl-pax-document)
-                       (?c mgl-pax-current-definition-toggle-view))))
+  (slime-bind-keys slime-doc-map t
+                   '((?a mgl-pax-apropos)
+                     (?z mgl-pax-apropos-all)
+                     (?p mgl-pax-apropos-package)
+                     (?d mgl-pax-document)
+                     (?f mgl-pax-document)
+                     (?c mgl-pax-current-definition-toggle-view)))
   (slime-bind-keys slime-doc-map t
                    '((?u mgl-pax-edit-parent-section))))
+
+
+;;;; Browser configuration
+
+(defcustom mgl-pax-browser-function nil
+  "The name of the function to use to browse URLs.
+When nil, the value of `browse-url-browser-function' is used. If
+the effective value is `w3m-browse-url', then browsing will take
+place in Emacs buffers using `w3m', and no webserver will be run
+on the Common Lisp side."
+  :type 'symbol
+  :group 'mgl-pax)
+
+(defcustom mgl-pax-web-server-port nil
+  "If the web server is started, it will be on this port.
+See `mgl-pax-autoload'. If nil, then a free port will be used."
+  :type 'natnum
+  :group 'mgl-pax)
+
+(defun mgl-pax-use-w3m ()
+  (eq (or mgl-pax-browser-function browse-url-browser-function)
+      'w3m-browse-url))
+
+(defvar mgl-pax-web-server-base-url)
+
+(defun mgl-pax-ensure-web-server (cont)
+  (mgl-pax-maybe-autoload-1
+   (lambda (loadedp)
+     (if (not loadedp)
+         (funcall cont nil)
+       (slime-eval-async `(mgl-pax::ensure-web-server
+                           :hyperspec-root ',common-lisp-hyperspec-root
+                           :port ,mgl-pax-web-server-port)
+         (lambda (values)
+           (if (eq (cl-first values) :error)
+               (message "%s" (cl-second values))
+             (cl-assert (eq (cl-first values) :base-url))
+             (setq mgl-pax-web-server-base-url (cl-second values))
+             (funcall cont t))))))))
+
 
 
 ;;;; Find possible objects and locatives at point (see MGL-PAX::WALL).
@@ -301,16 +346,29 @@ To bind `C-.' globally:
 (defun mgl-pax-not-loaded ()
   (message "MGL-PAX is not loaded. See the variable mgl-pax-autoload."))
 
-(defun mgl-pax-visit-locations (locations)
-  (when (consp locations)
-    (if (eq (car locations) :error)
-        (message "%s" (cl-second locations))
+(defun mgl-pax-visit-locations (dspec-and-location-list)
+  (when (consp dspec-and-location-list)
+    (if (eq (car dspec-and-location-list) :error)
+        (message "%s" (cl-second dspec-and-location-list))
       (slime-edit-definition-cont
-       (slime-postprocess-xrefs locations)
+       (slime-postprocess-xrefs dspec-and-location-list)
        "dummy name"
        nil))))
 
 (add-hook 'slime-edit-definition-hooks 'mgl-pax-edit-definitions)
+
+
+(defun mgl-pax-edit-for-cl (dspec-and-location-list)
+  ;; There may be no lisp-mode buffer at all.
+  (ignore-errors (slime-recently-visited-buffer 'lisp-mode))
+  (mgl-pax-sync-current-buffer)
+  (x-focus-frame nil)
+  (raise-frame)
+  (mgl-pax-visit-locations dspec-and-location-list))
+
+(defun mgl-pax-sync-current-buffer ()
+  ;; https://emacs.stackexchange.com/questions/10921/why-doesnt-changing-buffer-in-filter-function-have-any-effect-in-ert
+  (set-buffer (window-buffer (selected-window))))
 
 
 ;;;; MGL-PAX documentation browser
@@ -323,8 +381,9 @@ To bind `C-.' globally:
 (defvar mgl-pax-doc-buffers ())
 
 (defun mgl-pax-require-w3m ()
-  (unless (require 'w3m nil t)
-    (error "PAX requires w3m but it cannot be loaded. Please install it.")))
+  (when (mgl-pax-use-w3m)
+    (unless (require 'w3m nil t)
+      (error "PAX requires w3m but it cannot be loaded. Please install it."))))
 
 (defun mgl-pax-document (pax-url)
   "Browse the documentation of CL definitions for PAX-URL.
@@ -384,8 +443,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
          (let ((wall (mgl-pax-wall-at-point)))
            (if wall
                (mgl-pax-document-pax-url
-                (concat "pax-wall:" (w3m-url-encode-string
-                                     (format "%S" wall))))
+                (concat "pax-wall:" (url-encode-url (format "%S" wall))))
              (mgl-pax-prompt-and-document))))))
 
 (defun mgl-pax-prompt-and-document ()
@@ -404,6 +462,33 @@ The suggested key binding is `C-.' to parallel `M-.'."
             (throw 'exit nil))))))))
 
 (defun mgl-pax-document-pax-url (pax-url)
+  (if (mgl-pax-use-w3m)
+      (mgl-pax-document-pax-url/w3m pax-url)
+    (mgl-pax-document-pax-url/other pax-url)))
+
+(defun mgl-pax-document-pax-url/other (pax-url)
+  (let ((pax-url (if (string= pax-url "pax:")
+                     (mgl-pax-make-pax-eval-url
+                      '(mgl-pax::pax-document-home-page))
+                   pax-url)))
+    ;; Call mgl-pax-call-document-for-emacs with DIR nil to check for
+    ;; errors (e.g. "no definition for xxx") before launching a
+    ;; browser.
+    (mgl-pax-call-document-for-emacs
+     pax-url nil
+     :ok-cont (lambda (url)
+                (if (null url)
+                    (mgl-pax-prompt-and-document)
+                  (message nil)
+                  (funcall (or mgl-pax-browser-function
+                               browse-url-browser-function)
+                           (concat mgl-pax-web-server-base-url "/"
+                                   pax-url
+                                   (when (slime-current-package)
+                                     (concat "?pkg="
+                                             (slime-current-package))))))))))
+
+(defun mgl-pax-document-pax-url/w3m (pax-url)
   (unless (and (mgl-pax-in-doc-buffer-p) (string= pax-url "pax:"))
     (if (mgl-pax-in-doc-buffer-p)
         ;; When "entering" the documentation browser, reload (see
@@ -421,8 +506,8 @@ The suggested key binding is `C-.' to parallel `M-.'."
               (let ((doc-dir (buffer-local-value 'mgl-pax-doc-dir doc-buffer)))
                 (mgl-pax-call-document-for-emacs
                  pax-url doc-dir
-                 :ok-cont (lambda (file-url)
-                            (if (null file-url)
+                 :ok-cont (lambda (url)
+                            (if (null url)
                                 (mgl-pax-prompt-and-document)
                               ;; Maybe pop to a pax doc buffer.
                               (when (and (not (mgl-pax-in-doc-buffer-p))
@@ -430,7 +515,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
                                 (let ((package (slime-current-package)))
                                   (pop-to-buffer (cl-first mgl-pax-doc-buffers))
                                   (setq slime-buffer-package package)))
-                              (w3m-goto-url file-url :reload)
+                              (w3m-goto-url url :reload)
                               (mgl-pax-set-up-doc-buffer doc-dir))))))
           ;; Display the docs of this very documentation browser if
           ;; the input is the empty string.
@@ -441,11 +526,11 @@ The suggested key binding is `C-.' to parallel `M-.'."
           (let ((doc-dir (file-name-as-directory (make-temp-file "pax-doc" t))))
             (mgl-pax-call-document-for-emacs
              pax-url doc-dir
-             :ok-cont (lambda (file-url)
-                        (if (null file-url)
+             :ok-cont (lambda (url)
+                        (if (null url)
                             (mgl-pax-prompt-and-document)
                           (let ((package (slime-current-package)))
-                            (w3m-goto-url file-url :reload)
+                            (w3m-goto-url url :reload)
                             (setq slime-buffer-package package))
                           (mgl-pax-set-up-doc-buffer doc-dir)))
              :abort-cont (lambda (condition)
@@ -489,13 +574,12 @@ The suggested key binding is `C-.' to parallel `M-.'."
       (delete-directory doc-dir nil nil))))
 
 (defun mgl-pax-urllike-to-url (schemeless-pax-url)
-  (mgl-pax-require-w3m)
   (cl-destructuring-bind (reference fragment)
       (mgl-pax-parse-path-and-fragment schemeless-pax-url)
     (if fragment
-        (concat "pax:" (w3m-url-encode-string reference)
-                "#" (w3m-url-encode-string fragment))
-      (concat "pax:" (w3m-url-encode-string reference)))))
+        (concat "pax:" (url-encode-url reference)
+                "#" (url-encode-url fragment))
+      (concat "pax:" (url-encode-url reference)))))
 
 ;;; Return the path and fragment part of the schemeless URL.
 (defun mgl-pax-parse-path-and-fragment (url)
@@ -518,10 +602,10 @@ The suggested key binding is `C-.' to parallel `M-.'."
     (let ((buffer (current-buffer)))
       (mgl-pax-call-document-for-emacs url mgl-pax-doc-dir
                                        :ok-cont
-                                       (lambda (file-url)
-                                         (when file-url
+                                       (lambda (url)
+                                         (when url
                                            (pop-to-buffer buffer)
-                                           (apply oldfun file-url args)))))))
+                                           (apply oldfun url args)))))))
 
 ;;; Like slime-eval-async, but call abort-cont on :abort.
 (defun mgl-pax-eval-async (sexp ok-cont &optional abort-cont package)
@@ -546,7 +630,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
                                      :mgl-pax)
                      ',url ',dir ',common-lisp-hyperspec-root)
         (lambda (values)
-          (if (eq (cl-first values) :file-url)
+          (if (eq (cl-first values) :url)
               (apply ok-cont (cl-rest values))
             (message "%s" (cl-second values))
             (when abort-cont
@@ -898,8 +982,7 @@ Also, see `mgl-pax-apropos-all'."
                             ,package ,case-sensitive))))
 
 (defun mgl-pax-make-pax-eval-url (sexp)
-  (mgl-pax-require-w3m)
-  (concat "pax-eval:" (w3m-url-encode-string (prin1-to-string sexp))))
+  (concat "pax-eval:" (url-encode-url (prin1-to-string sexp))))
 
 (defun mgl-pax-apropos-all (string)
   "Shortcut for invoking `mgl-pax-apropos` with EXTERNAL-ONLY NIL."

@@ -1545,18 +1545,17 @@ default (see EXPORTABLE-REFERENCE-P).")
 (define-locative-type clhs (&optional nested-locative)
   """Refers to sections or definitions in the Common Lisp Hyperspec.
   These have no source location so `\\M-.` will not work. What works
-  is linking in documentation, including @DOCUMENTING-IN-EMACS. The
-  generated links are relative to *DOCUMENT-HYPERSPEC-ROOT* and work
-  even if *DOCUMENT-LINK-TO-HYPERSPEC* is NIL.
+  is linking in documentation, including @BROWSING-LIVE-DOCUMENTATION.
+  The generated links are relative to *DOCUMENT-HYPERSPEC-ROOT* and
+  work even if *DOCUMENT-LINK-TO-HYPERSPEC* is NIL.
 
   - *definitions*: These are typically unnecessary as DOCUMENT will
     produce the same link for e.g. `\\PPRINT`, `[PPRINT][function]`,
     or `[PPRINT][]` if *DOCUMENT-LINK-TO-HYPERSPEC* is non-NIL and the
-    PPRINT function in the running Lisp is not being DOCUMENTed. In
-    the [Emacs documentation browser][ @documenting-in-emacs], a
-    slight difference is that everything is being DOCUMENTed, so using
-    the CLHS link bypasses the page with the definition in the running
-    Lisp.
+    PPRINT function in the running Lisp is not being DOCUMENTed. When
+    @BROWSING-LIVE-DOCUMENTATION, a slight difference is that
+    everything is being DOCUMENTed, so using the CLHS link bypasses
+    the page with the definition in the running Lisp.
 
       - *unambiguous*: `[pprint][clhs]` ([pprint][clhs])
 
@@ -1596,9 +1595,9 @@ default (see EXPORTABLE-REFERENCE-P).")
   is [codified][ @codification] (e.g. in `PPRINT clhs` (PPRINT clhs).
 
   As mentioned above, `\M-.` does not do anything over CLHS
-  references. Slightly more usefully, the [Emacs documentation
-  browser][ @documenting-in-emacs] understands CLHS links so one can
-  enter inputs like `3.4 clhs`, `"lambda list" clhs` or `error (clhs
+  references. Slightly more usefully, the [live documentation
+  browser][@browsing-live-documentation] understands CLHS links so one
+  can enter inputs like `3.4 clhs`, `"lambda list" clhs` or `error (clhs
   function)`.
   """)
 

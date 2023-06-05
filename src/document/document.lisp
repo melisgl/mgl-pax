@@ -5,7 +5,7 @@
 (defsection @generating-documentation (:title "Generating Documentation")
   (document function)
   (mgl-pax/document asdf:system)
-  (@documenting-in-emacs section)
+  (@browsing-live-documentation section)
   (@markdown-support section)
   (@codification section)
   (@linking-to-code section)
@@ -22,7 +22,7 @@
 ;;;
 ;;; Documentation starts out being sent to a certain stream, but the
 ;;; output is redirected to different stream if it is for a reference
-;;; on the current page (see COLLECT-REACHABLE-OBJECTS,
+;;; on the current page (see REACHABLE-CANONICAL-REFERENCES,
 ;;; PAGE-REFERENCES). This stream - to which the temporary markdown
 ;;; output written - is given by PAGE-TEMP-STREAM-SPEC, that's a
 ;;; stream spec (see WITH-OPEN-STREAM-SPEC) to allow the temporary
@@ -70,7 +70,8 @@
   ;;   (CLHS FUNCTION)) is the LINK-PAGE of a LINK whose reference is
   ;;   (PRINT FUNCTION).
   ;;
-  ;; - NULL pages are to support "pax:" URLs.
+  ;; - NULL pages are to support "pax:" URLs for
+  ;;   *DOCUMENT-OPEN-LINKING*.
   (page nil :type (or page string link null)))
 
 ;;; This map caches LINKS-OF within a single DOCUMENT call. If not
@@ -78,7 +79,7 @@
 (defvar *open-olmap*)
 
 ;;; This object-to-links map contains the
-;;; REACHABLE-CANONICAL-REFERENCES from the OBJECT argument of
+;;; REACHABLE-CANONICAL-REFERENCES from the DOCUMENTABLE argument of
 ;;; DOCUMENT. It is populated at the beginning of a DOCUMENT call and
 ;;; never changed. Not used when *DOCUMENT-OPEN-LINKING*.
 (defvar *closed-olmap*)
@@ -93,32 +94,40 @@
 ;;; aliases).
 (defgeneric links-of (object)
   (:method (object)
-    (let* (;; Get the live definitions in the running Lisp.
-           (definitions (definitions-of object))
-           (static-links (static-links object))
-           (live-links
-             (if *document-open-linking*
-                 (mapcar (lambda (definition)
-                           (make-link :reference definition :page nil))
-                         definitions)
-                 ;; We are linking closed, filter out definitions not
-                 ;; in *CLOSED-OLMAP* or EXTERNAL-LINKS. The order of
-                 ;; these does not matter.
-                 (loop for definition in definitions
-                       for static-links*
-                         = (if (equal (reference-object definition) object)
-                               static-links
-                               (static-links (reference-object definition)))
-                       for link = (find-among-links definition static-links*)
-                       when link
-                         collect link))))
-      (append live-links
+    (let* ((live-definitions (definitions-of object))
+           ;; Gather all different @OBJECTs. For example, if OBJECT is
+           ;; MGL-PAX, then this is '("mgl-pax" "MGL-PAX"), where one
+           ;; is for the ASDF:SYSTEM, the other is for the PACKAGE.
+           (objects (remove-duplicates (cons object
+                                             (mapcar #'reference-object
+                                                     live-definitions))
+                                       :test #'equal))
+           (closed-links (loop for object in objects
+                               append (closed-links object)))
+           (external-links (loop for object in objects
+                                 append (external-links object)))
+           (preferred-links (if *document-open-linking*
+                                closed-links
+                                (append closed-links external-links)))
+           ;; For all LIVE-DEFINITIONS, use one of PREFFERED-LINKS or
+           ;; maybe create a new open link.
+           (preferred-live-links
+             ;; The order of these does not matter.
+             (loop for definition in live-definitions
+                   for link = (or (find-among-links definition preferred-links)
+                                  (and *document-open-linking*
+                                       (make-link :reference definition
+                                                  :page nil)))
+                   when link
+                     collect link)))
+      (append preferred-live-links
               ;; The remaining static links (with references for which
               ;; there is no definition in the running Lisp) must
               ;; follow the live ones, so that FIND-LINK will find the
               ;; live ones first. See
-              ;; MGL-PAX-TEST::TEST-DOCUMENT/W3M/LIVE-VS-STATIC.
-              (set-difference static-links live-links
+              ;; MGL-PAX-TEST::TEST-DOCUMENT/OPEN/LIVE-VS-STATIC.
+              (set-difference (append closed-links external-links)
+                              preferred-live-links
                               :key #'link-reference :test #'reference=))))
   (:method ((reference reference))
     (let* ((object (reference-object reference))
@@ -127,10 +136,9 @@
             when (reference= reference (link-reference link))
               collect link))))
 
-(defun static-links (object)
-  (append (when (boundp '*closed-olmap*)
-            (gethash object *closed-olmap*))
-          (external-links object)))
+(defun closed-links (object)
+  (when (boundp '*closed-olmap*)
+    (gethash object *closed-olmap*)))
 
 (defun find-among-links (reference links)
   (find reference links :key #'link-reference :test #'reference=))
@@ -310,7 +318,7 @@
   "http://www.lispworks.com/documentation/HyperSpec/"
   """A \URL of the Common Lisp Hyperspec. The default value
   is the canonical location. When [invoked from Emacs][
-  @documenting-in-emacs], the Elisp variable
+  @browsing-live-documentation], the Elisp variable
   `common-lisp-hyperspec-root` is in effect.""")
 
 ;;; Assumes that REFERENCE is canonical.
@@ -447,6 +455,7 @@
 
 (declaim (special *table-of-contents-stream*))
 (declaim (special *headings*))
+(declaim (special *heading-offset*))
 
 (defmacro with-headings ((object) &body body)
   `(let ((*headings* (collect-headings ,object)))
@@ -461,8 +470,8 @@
 (defvar *html-subformat* nil)
 (defvar *document-tight* nil)
 
-(defun/autoloaded document (object &key (stream t) pages (format :plain))
-  """Write OBJECT in FORMAT to STREAM diverting some output to PAGES.
+(defun/autoloaded document (documentable &key (stream t) pages (format :plain))
+  """Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
   FORMAT can be anything [3BMD][3bmd] supports, which is currently
   :MARKDOWN, :HTML and :PLAIN. STREAM may be a [STREAM][type] object,
   T or NIL as with CL:FORMAT.
@@ -503,7 +512,7 @@
 
   ##### Pages
 
-  [translate-page-specs function][docstring]
+  [page-specs-to-pages function][docstring]
 
   ##### Packages
 
@@ -513,34 +522,32 @@
   details.
   """
   (with-format (format)
-    (let ((*print-right-margin* (or *print-right-margin* 80))
-          (default-page (translate-page-spec
-                         (list :objects (alexandria:ensure-list object)
-                               :output (list stream))
-                         *format*))
-          (3bmd-code-blocks:*code-blocks* t)
-          (3bmd-code-blocks:*code-blocks-default-colorize*
-            (and (not (eq *html-subformat* :w3m))
-                 :common-lisp))
-          (3bmd-code-blocks::*colorize-name-map*
-            (if (eq *html-subformat* :w3m)
-                (make-hash-table)
-                (alexandria:plist-hash-table
-                 `("cl-transcript" :common-lisp
-                   ,@(alexandria:hash-table-plist
-                      3bmd-code-blocks::*colorize-name-map*))
-                 :test #'equal))))
+    (let* ((*print-right-margin* (or *print-right-margin* 80))
+           (pages (page-specs-to-pages pages documentable stream))
+           (default-page (alexandria:last-elt pages))
+           (3bmd-code-blocks:*code-blocks* t)
+           (3bmd-code-blocks:*code-blocks-default-colorize*
+             (and (not (eq *html-subformat* :w3m))
+                  :common-lisp))
+           (3bmd-code-blocks::*colorize-name-map*
+             (if (eq *html-subformat* :w3m)
+                 (make-hash-table)
+                 (alexandria:plist-hash-table
+                  `("cl-transcript" :common-lisp
+                    ,@(alexandria:hash-table-plist
+                       3bmd-code-blocks::*colorize-name-map*))
+                  :test #'equal))))
       (with-tracking-pages-created ()
-        (with-pages ((append (translate-page-specs pages *format*)
-                             (list default-page)))
+        (with-pages (pages)
           ;; Write output to DEFAULT-PAGE until a DOCUMENT-OBJECT
           ;; finds a reference that should got to another PAGE.
           (with-temp-output-to-page (stream default-page)
             ;; Call DOCUMENT-OBJECT on each stuff to be documented in
-            ;; OBJECT, and keep track of where to add extra newlines.
+            ;; DOCUMENTABLE, and keep track of where to add extra
+            ;; newlines.
             (let ((firstp t)
                   (add-blank-p nil))
-              (map-object-args
+              (map-documentable
                (lambda (object1)
                  (with-headings (object1)
                    (when (or add-blank-p
@@ -550,7 +557,7 @@
                    (setq firstp nil)
                    (document-object object1 stream)
                    (setq add-blank-p (not *document-tight*))))
-               object)))
+               documentable)))
           (let ((outputs ()))
             (do-pages-created (page)
               ;; Add the markdown reference link definitions for all
@@ -575,7 +582,7 @@
                       (funcall (page-footer-fn page) stream)))))
               (push (unmake-stream-spec (page-final-stream-spec page))
                     outputs))
-            (cond (pages
+            (cond ((< 1 (length pages))
                    (reverse outputs))
                   ((null stream)
                    (first outputs))
@@ -587,7 +594,7 @@
 ;;; controlling the dynamic environment around DOCUMENT-OBJECT calls.
 ;;; This is only used by PAX-APROPOS* and is not part of DOCUMENT's
 ;;; contract.
-(defun map-object-args (fn object)
+(defun map-documentable (fn object)
   (cond ((not (listp object))
          (funcall fn object))
         ;; ((progv <symbols-form> <values-form>)
@@ -596,12 +603,12 @@
               (eq (caar object) 'progv))
          (destructuring-bind (symbols-form values-form) (rest (first object))
            (progv (eval symbols-form) (eval values-form)
-             (map-object-args fn (rest object)))))
+             (map-documentable fn (rest object)))))
         (t
          (dolist (element object)
            (if (atom element)
                (funcall fn element)
-               (map-object-args fn element))))))
+               (map-documentable fn element))))))
 
 (defun guess-package (reference)
   (if (and (not (and (boundp '*section*)
@@ -681,14 +688,22 @@
         (when link
           (link-to-uri link))))))
 
+;;; With w3m, the URLs are like "pax:clhs", but with MGL-PAX/WEB, they
+;;; are like "http://localhost:8888/pax:clhs", so we need an extra /.
+(defun finalize-pax-url (url)
+  (if (eq *html-subformat* :w3m)
+      url
+      (format nil "/~A" url)))
+
 (defun link-to-uri (link)
   (let ((target-page (link-page link)))
     (if (null target-page)
-        (urlencode (reference-to-pax-url (link-reference link)))
+        (finalize-pax-url (urlencode (reference-to-pax-url
+                                      (link-reference link))))
         (let ((target-page-references (page-references target-page))
               (target-page-uri-fragment (page-uri-fragment target-page)))
           ;; Don't generate anchors when linking to the first
-          ;; reference on the page (COLLECT-REACHABLE-OBJECTS).
+          ;; reference on the page (REACHABLE-CANONICAL-REFERENCES).
           (if (and (reference= (link-reference link)
                                (first target-page-references))
                    target-page-uri-fragment)
@@ -714,7 +729,7 @@
 ;;;; Page specs
 
 ;;; Convert the PAGES argument of DOCUMENT to PAGE objects.
-(defun translate-page-specs (pages format)
+(defun page-specs-to-pages (page-specs documentable stream)
   """The PAGES argument is to create multi-page documents by routing
   some of the generated output to files, strings or streams. PAGES is
   a list of page specification elements. A page spec is a [property
@@ -816,18 +831,33 @@
      :header-fn 'write-html-header
      :footer-fn 'write-html-footer))
   ```"""
-  (mapcar (lambda (page) (translate-page-spec page format))
-          pages))
+  (mapcar #'page-spec-to-page
+          (ensure-default-page-spec page-specs documentable stream)))
 
-(defun translate-page-spec (page format)
+(defun ensure-default-page-spec (page-specs documentable stream)
+  (let ((default (find :default page-specs :key #'page-spec-objects)))
+    (cond (default
+           (let ((others (remove default page-specs))
+                 (default (copy-list default)))
+             (setf (getf default :objects) documentable)
+             (setf (getf default :output) (list stream))
+             (append others `(,default))))
+          (t
+           (append page-specs `((:objects ,documentable
+                                 :output (,stream))))))))
+
+(defun page-spec-objects (page-spec)
+  (getf page-spec :objects))
+
+(defun page-spec-to-page (page)
   (destructuring-bind (&key objects output header-fn footer-fn
-                       (uri-fragment nil uri-fragment-p)
-                       source-uri-fn)
+                         (uri-fragment nil uri-fragment-p)
+                         source-uri-fn)
       page
     (let ((stream-spec (apply #'make-stream-spec output)))
       (make-page
        :references (reachable-canonical-references objects)
-       :temp-stream-spec (if (and (eq format :markdown)
+       :temp-stream-spec (if (and (eq *format* :markdown)
                                   (null header-fn)
                                   (null footer-fn))
                              stream-spec
@@ -842,13 +872,18 @@
        :footer-fn footer-fn
        :source-uri-fn source-uri-fn))))
 
-(defun reachable-canonical-references (objects)
-  (mapcan (lambda (object)
-            (loop for object in (cons object (collect-reachable-objects object))
-                  for ref = (canonical-reference object)
-                  when ref
-                    collect ref))
-          objects))
+(defun reachable-canonical-references (documentable)
+  (let ((reference-lists ()))
+    (map-documentable
+     (lambda (object)
+       (push (loop for object in (cons object
+                                       (collect-reachable-objects object))
+                   for ref = (canonical-reference object)
+                   when ref
+                     collect ref)
+             reference-lists))
+     documentable)
+    (apply #'append reference-lists)))
 
 
 (defsection @markdown-support (:title "Markdown Support")
@@ -1817,7 +1852,9 @@
                ;; [`label`](pax:object)
                `((:explicit-link
                   :label ,label
-                  :source ,(urlencode (reference-to-ambiguous-pax-url ref-1))))
+                  :source ,(finalize-pax-url
+                            (urlencode
+                             (reference-to-ambiguous-pax-url ref-1)))))
                ;; `label`([1][link-id-1] [2][link-id-2])
                `(,@label
                  "("
@@ -2085,17 +2122,25 @@
 (defvar *document-fancy-html-navigation* t
   "If true and the output format is HTML, then headings get a
   navigation component that consists of links to the previous, parent,
-  next section and a permalink. This component is normally hidden, it
-  is visible only when the mouse is over the heading. Needs
-  *DOCUMENT-LINK-SECTIONS* to be on to work.")
+  next section, a self-link, and a link to the definition in the
+  source code if available (see :SOURCE-URI-FN in DOCUMENT). This
+  component is normally hidden, it is visible only when the mouse is
+  over the heading. Needs *DOCUMENT-LINK-SECTIONS* to be on to work.")
 
 (defvar *heading-number* ())
 
+;;; (LENGTH *HEADING-NUMBER*)
 (defvar *heading-level* 0)
+
+;;; Add this many #\# to markdown section headings in the output. This
+;;; is for when a section that is a subsection of another is
+;;; documented on its own page by DOCUMENT/OPEN.
+(defvar *heading-offset* 0)
 
 (defvar *collecting-headings-p* nil)
 
-;;; A list of HEADING objects in the order of generation.
+;;; A list of HEADING objects in the order of generation (after
+;;; COLLECT-HEADINGS is done).
 (defvar *headings* ())
 
 (defstruct heading
@@ -2125,9 +2170,9 @@
 (defun/autoloaded call-with-heading (stream object title link-title-to fn)
   (setq title (process-title title))
   (flet ((foo ()
-           ;; Arrange for all output to go to /dev/null
-           ;; (MAKE-BROADCAST-STREAM) except for the headings when we
-           ;; are generating the table of contents.
+           ;; When we are generating the table of contents, arrange
+           ;; for all output to go to /dev/null
+           ;; (MAKE-BROADCAST-STREAM) except for the headings.
            (cond
              (*collecting-headings-p*
               (funcall fn (make-broadcast-stream)))
@@ -2143,7 +2188,7 @@
                          ;; Don't generate a table of contents if it's
                          ;; empty.
                          (cdr *headings*))
-                (heading (1+ *heading-level*) stream)
+                (heading (+ *heading-level* 1 *heading-offset*) stream)
                 (format stream " Table of Contents~%~%")
                 (let ((*table-of-contents-stream* stream)
                       (*table-of-contents-page* *page*)
@@ -2174,7 +2219,7 @@
     (anchor section stream)
     (navigation-link section stream)
     (format stream "~A" (fancy-navigation section)))
-  (heading *heading-level* stream)
+  (heading (+ *heading-level* *heading-offset*) stream)
   (if (and *document-link-sections*
            (eq *format* :html))
       (print-section-title-link stream section title link-title-to)
@@ -2188,7 +2233,13 @@
               (heading-number) title
               (link-to-reference link-title-to))
       (format stream " <a href=\"~A\">~A~A</a>~%~%"
-              (object-to-uri section)
+              ;; As in PRINT-REFERENCE-BULLET, the object links to a
+              ;; separate page when open linking.
+              (if *document-open-linking*
+                  (finalize-pax-url
+                   (urlencode (reference-to-pax-url
+                               (canonical-reference section))))
+                  (object-to-uri section))
               (heading-number) title)))
 
 (defun fancy-navigation (object)
@@ -2236,10 +2287,16 @@
 (defun collect-headings (object)
   (let ((*collecting-headings-p* t)
         (*headings* ())
+        (*heading-offset* (heading-offset object))
         (*table-of-contents-stream* (make-broadcast-stream))
         (*document-max-table-of-contents-level* 0))
     (document-object object (make-broadcast-stream))
     (reverse *headings*)))
+
+;;; Determine what SECTION's *HEADING-LEVEL* would be under its root
+;;; ancestor.
+(defun heading-offset (object &optional (all-sections (list-all-sections)))
+  (nth-value 1 (find-root-section object all-sections)))
 
 (defun write-navigation-link (heading stream)
   (let ((link-id (link-to-reference
@@ -2487,20 +2544,40 @@
               (name (escape-markdown name)))
           (if (eq *format* :html)
               (let ((source-uri (source-uri reference)))
-                (if (eq *html-subformat* :w3m)
-                    (format stream "- **\\[~A]** [~A](~A)"
-                            locative-type name
-                            (urlencode (reference-to-pax-url reference)))
-                    (format stream
-                            "- <span class=reference-bullet>~
-                           <span class=reference>~
-                           <span class=\"locative-type\">~
-                           ~@[<a href=\"~A\">~]\\[~A]~:[~;</a>~]~
-                           </span> ~
-                        <span class=\"reference-object\">[~A](#~A)</span>~
-                        </span>"
-                            source-uri locative-type source-uri name
-                            (urlencode (reference-to-anchor reference)))))
+                ;; When *DOCUMENT-OPEN-LINKING* (this includes (EQ
+                ;; *HTML-SUBFORMAT* :W3M)), the object is linked to
+                ;; the a pax: URL (which opens a separate page), else
+                ;; they are self-links.
+                (cond ((eq *html-subformat* :w3m)
+                       (assert *document-open-linking*)
+                       (format stream "- **\\[~A]** [~A](~A)"
+                               locative-type name
+                               (finalize-pax-url
+                                (urlencode (reference-to-pax-url reference)))))
+                      (*document-open-linking*
+                       (format stream
+                               "- <span class=reference-bullet>~
+                            <span class=reference>~
+                            <span class=\"locative-type\">~
+                            ~@[<a href=\"~A\" title=\"Edit in Emacs\">~]~
+                            \\[~A]~:[~;</a>~]~
+                            </span> ~
+                            <span class=\"reference-object\">[~A](~A)</span>~
+                            </span>"
+                               source-uri locative-type source-uri name
+                               (finalize-pax-url
+                                (urlencode (reference-to-pax-url reference)))))
+                      (t
+                       (format stream
+                               "- <span class=reference-bullet>~
+                            <span class=reference>~
+                            <span class=\"locative-type\">~
+                            ~@[<a href=\"~A\">~]\\[~A]~:[~;</a>~]~
+                            </span> ~
+                            <span class=\"reference-object\">[~A](#~A)</span>~
+                            </span>"
+                               source-uri locative-type source-uri name
+                               (urlencode (reference-to-anchor reference))))))
               (format stream "- [~A] ~A" locative-type (bold name nil))))
         (format stream "- [~A] ~A" locative-type name))))
 
@@ -2637,6 +2714,8 @@
           (t
            (let* ((reference (canonical-reference object))
                   (*reference-being-documented* reference))
+             ;; FIXME: Redirecting to a page ought to be done on all
+             ;; branches here.
              (with-temp-output-to-page (stream (reference-page reference))
                (call-next-method object stream)))))))
 
@@ -2725,6 +2804,6 @@
   - METHOD-COMBINATION docstrings on ABCL, AllegroCL.
 
   In addition, CLISP does not support the ambiguous case of @PAX-URLS
-  for @DOCUMENTING-IN-EMACS because the current implementation relies
-  on Swank to list definitions of symbols (as VARIABLE,
+  for @BROWSING-LIVE-DOCUMENTATION because the current implementation
+  relies on Swank to list definitions of symbols (as VARIABLE,
   [FUNCTION][locative], etc), and that simply doesn't work.""")

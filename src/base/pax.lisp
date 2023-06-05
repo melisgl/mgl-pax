@@ -124,17 +124,13 @@
   documentation is generated.""")
 
 (defsection @emacs-setup (:title "Emacs Setup")
-  """Load `src/mgl-pax.el` in Emacs and maybe set up some key bindings.
+  """Load `src/mgl-pax.el` in Emacs, and maybe set up some key bindings.
 
-  - To be able to browse the documentation, make sure the w3m binary
-    and the w3m Emacs package are both installed. On Debian, simply
-    install the `w3m-el` package.
+  If you installed PAX with Quicklisp, the location of `mgl-pax.el`
+  may change with updates, and you may want to copy the current
+  version of `mgl-pax.el` to a stable location:
 
-  - If you installed PAX with Quicklisp, the location of `mgl-pax.el`
-    may change with updates, and you may want to copy the current
-    version of `mgl-pax.el` to a stable location:
-
-        (mgl-pax:install-pax-elisp "~/quicklisp/")
+      (mgl-pax:install-pax-elisp "~/quicklisp/")
 
   Then, assuming the Elisp file is in the quicklisp directory, add
   something like this to your `.emacs`:
@@ -147,7 +143,15 @@
   (global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
   ```
 
-  See @NAVIGATING-IN-EMACS, @DOCUMENTING-IN-EMACS and
+  For @BROWSING-LIVE-DOCUMENTATION, `mgl-pax-browser-function` can be
+  customized in Elisp. To browse within Emacs, choose
+  `w3m-browse-url` (see
+  [w3m](https://emacs-w3m.github.io/info/emacs-w3m.html)), and make
+  sure both the w3m binary and the w3m Emacs package are installed. On
+  Debian, simply install the `w3m-el` package. With other browser
+  functions, a [HUNCHENTOOT][package] web server is started.
+
+  See @NAVIGATING-IN-EMACS, @GENERATING-DOCUMENTATION and
   @TRANSCRIBING-WITH-EMACS for how to use the relevant features.
   """
   (install-pax-elisp function))
@@ -160,7 +164,7 @@
                                     target-dir))))
 
 (defun check-pax-elisp-version (version)
-  (let ((min-required-version '(0 2 2)))
+  (let ((min-required-version '(0 2 3)))
     (unless (version<= min-required-version version)
       (cerror "Ignore version mismatch."
               "~@<In Emacs, mgl-pax-version is ~S, ~

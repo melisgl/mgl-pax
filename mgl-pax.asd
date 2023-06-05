@@ -3,7 +3,7 @@
 ;;; See MGL-PAX::@PAX-MANUAL for the user guide.
 (asdf:defsystem "mgl-pax"
   :licence "MIT, see COPYING."
-  :version "0.2.2"
+  :version "0.2.3"
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
   :homepage "http://melisgl.github.io/mgl-pax"
@@ -30,6 +30,7 @@
                              (:file "extension-api")
                              (:file "navigate-early")
                              (:file "document-early")
+                             (:file "web-early")
                              (:file "transcribe-early")
                              (:file "locatives-early"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
@@ -83,6 +84,25 @@
                              (:file "browse"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
+(asdf:defsystem "mgl-pax/web"
+  :licence "MIT, see COPYING."
+  :author "Gábor Melis"
+  :mailto "mega@retes.hu"
+  :homepage ""
+  :bug-tracker ""
+  :source-control ""
+  :description "Web server for browsing documentation in the running
+  Lisp. Not needed for w3m (see MGL-PAX::@DOCUMENTING-IN-EMACS), and
+  autoloaded by Elisp."
+  :long-description "Autoloaded by MGL-PAX:DOCUMENT."
+  :depends-on ("hunchentoot" "mgl-pax/document")
+  :defsystem-depends-on ("mgl-pax.asdf")
+  :around-compile "mgl-pax.asdf:compile-pax"
+  :components ((:module "src/web/"
+                :serial t
+                :components ((:file "web"))))
+  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
+
 (asdf:defsystem "mgl-pax/transcribe"
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
@@ -108,8 +128,9 @@
   :homepage ""
   :bug-tracker ""
   :source-control ""
-  :description "MGL-PAX with all features preloaded."
+  :description "MGL-PAX with most features preloaded."
   :long-description ""
+  ;; FIXME?
   :depends-on ("mgl-pax/navigate" "mgl-pax/document" "mgl-pax/transcribe")
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 

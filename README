@@ -167,15 +167,11 @@ documentation is generated.
 
 ## Emacs Setup
 
-Load `src/mgl-pax.el` in Emacs and maybe set up some key bindings.
+Load `src/mgl-pax.el` in Emacs, and maybe set up some key bindings.
 
-- To be able to browse the documentation, make sure the w3m binary
-  and the w3m Emacs package are both installed. On Debian, simply
-  install the `w3m-el` package.
-
-- If you installed PAX with Quicklisp, the location of `mgl-pax.el`
-  may change with updates, and you may want to copy the current
-  version of `mgl-pax.el` to a stable location:
+If you installed PAX with Quicklisp, the location of `mgl-pax.el`
+may change with updates, and you may want to copy the current
+version of `mgl-pax.el` to a stable location:
 
     (mgl-pax:install-pax-elisp "~/quicklisp/")
 
@@ -190,7 +186,15 @@ something like this to your `.emacs`:
 (global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
 ```
 
-See @NAVIGATING-IN-EMACS, @DOCUMENTING-IN-EMACS and
+For @BROWSING-LIVE-DOCUMENTATION, `mgl-pax-browser-function` can be
+customized in Elisp. To browse within Emacs, choose
+`w3m-browse-url` (see
+[w3m](https://emacs-w3m.github.io/info/emacs-w3m.html)), and make
+sure both the w3m binary and the w3m Emacs package are installed. On
+Debian, simply install the `w3m-el` package. With other browser
+functions, a HUNCHENTOOT web server is started.
+
+See @NAVIGATING-IN-EMACS, @GENERATING-DOCUMENTATION and
 @TRANSCRIBING-WITH-EMACS for how to use the relevant features.
 
 - [function] INSTALL-PAX-ELISP TARGET-DIR
@@ -206,7 +210,7 @@ for the latest version.
 
 ### The mgl-pax ASDF System
 
-- Version: 0.2.2
+- Version: 0.2.3
 - Description: Exploratory programming tool and documentation
   generator.
 - Long Description: The set of dependencies of the MGL-PAX system is
@@ -225,7 +229,7 @@ for the latest version.
 
 ### The mgl-pax/full ASDF System
 
-- Description: MGL-PAX with all features preloaded.
+- Description: MGL-PAX with most features preloaded.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
@@ -1013,18 +1017,17 @@ which makes navigating the sources with `M-.` (see
 
     Refers to sections or definitions in the Common Lisp Hyperspec.
     These have no source location so `M-.` will not work. What works
-    is linking in documentation, including @DOCUMENTING-IN-EMACS. The
-    generated links are relative to *DOCUMENT-HYPERSPEC-ROOT* and work
-    even if *DOCUMENT-LINK-TO-HYPERSPEC* is NIL.
+    is linking in documentation, including @BROWSING-LIVE-DOCUMENTATION.
+    The generated links are relative to *DOCUMENT-HYPERSPEC-ROOT* and
+    work even if *DOCUMENT-LINK-TO-HYPERSPEC* is NIL.
     
     - *definitions*: These are typically unnecessary as DOCUMENT will
       produce the same link for e.g. `PPRINT`, `[PPRINT][function]`,
       or `[PPRINT][]` if *DOCUMENT-LINK-TO-HYPERSPEC* is non-NIL and the
-      PPRINT function in the running Lisp is not being DOCUMENTed. In
-      the Emacs documentation browser, a
-      slight difference is that everything is being DOCUMENTed, so using
-      the CLHS link bypasses the page with the definition in the running
-      Lisp.
+      PPRINT function in the running Lisp is not being DOCUMENTed. When
+      @BROWSING-LIVE-DOCUMENTATION, a slight difference is that
+      everything is being DOCUMENTed, so using the CLHS link bypasses
+      the page with the definition in the running Lisp.
     
         - *unambiguous*: `[pprint][clhs]` (pprint)
     
@@ -1064,9 +1067,9 @@ which makes navigating the sources with `M-.` (see
     is codified (e.g. in `PPRINT clhs` (PPRINT clhs).
     
     As mentioned above, `M-.` does not do anything over CLHS
-    references. Slightly more usefully, the Emacs documentation
-    browser understands CLHS links so one can
-    enter inputs like `3.4 clhs`, `"lambda list" clhs` or `error (clhs
+    references. Slightly more usefully, the live documentation
+    browser understands CLHS links so one
+    can enter inputs like `3.4 clhs`, `"lambda list" clhs` or `error (clhs
     function)`.
 
 ## Navigating Sources in Emacs
@@ -1113,7 +1116,7 @@ The `M-.` extensions can be enabled by loading `src/mgl-pax.el`.
 See @EMACS-SETUP. In addition, the Elisp command
 `mgl-pax-edit-parent-section` visits the source location of the
 section containing the definition with `point` in it. See
-@DOCUMENTATION-KEY-BINDINGS.
+@BROWSING-WITH-W3M.
 
 ### The mgl-pax/navigate ASDF System
 
@@ -1127,9 +1130,9 @@ section containing the definition with `point` in it. See
 
 ## Generating Documentation
 
-- [function] DOCUMENT OBJECT &KEY (STREAM T) PAGES (FORMAT :PLAIN)
+- [function] DOCUMENT DOCUMENTABLE &KEY (STREAM T) PAGES (FORMAT :PLAIN)
 
-    Write OBJECT in FORMAT to STREAM diverting some output to PAGES.
+    Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
     FORMAT can be anything 3BMD supports, which is currently
     :MARKDOWN, :HTML and :PLAIN. STREAM may be a STREAM object,
     T or NIL as with CL:FORMAT.
@@ -1289,11 +1292,10 @@ section containing the definition with `point` in it. See
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
 
 
-### Documenting in Emacs
+### Browsing Live Documentation
 
-Documentation can be viewed live in Emacs with the
-[w3m](https://emacs-w3m.github.io/info/emacs-w3m.html) browser. HTML
-documentation, complete with @CODIFICATION and
+Documentation can be browsed live in Emacs or with an external
+browser. HTML documentation, complete with @CODIFICATION and
 links, is generated from docstrings of all kinds
 of Lisp definitions and PAX SECTIONs.
 
@@ -1303,11 +1305,12 @@ Slime. For example, to view the documentation of this very SECTION,
 one can do:
 
     M-x mgl-pax-document
-    View Documentation of: pax::@documenting-in-emacs
+    View Documentation of: pax::@browsing-live-documentation
 
-If the empty string is entered, and there is no existing w3m buffer,
-then sections registered in @PAX-WORLD are listed. If there is a w3m
-buffer, then entering the empty string displays that buffer.
+If the empty string is entered, and there is no existing w3m buffer
+or w3m is not used, then sections registered in @PAX-WORLD are
+listed. If there is a w3m buffer, then entering the empty string
+displays that buffer.
 
 If we enter `function` instead, then a [disambiguation
 page](pax:function) (note that this and other `pax:` links only work
@@ -1351,9 +1354,9 @@ returns REFERENCEs.
 
 On the Emacs side, `mgl-pax-apropos`, `mgl-pax-apropos-all`, and
 `mgl-pax-apropos-package` can be used to view the results in the
-documentation browser. These parallel the
-functionality of `slime-apropos`, `slime-apropos-all`, and
-`slime-apropos-package`.
+documentation browser. These
+parallel the functionality of `slime-apropos`, `slime-apropos-all`,
+and `slime-apropos-package`.
 
 - [function] PAX-APROPOS NAME &KEY PACKAGE EXTERNAL-ONLY CASE-SENSITIVE LOCATIVE-TYPES
 
@@ -1390,13 +1393,20 @@ functionality of `slime-apropos`, `slime-apropos-all`, and
     alphabetically by LOCATIVE-TYPE name. This is list always empty if
     PACKAGE.
 
-#### Documentation Key Bindings
+#### Emacs Setup for Browsing
 
-Evaluating `(mgl-pax-hijack-slime-doc-keys)` in Emacs handles
-the common case of binding keys. Its docstring is reproduced here:
+Make sure @EMACS-SETUP has been done. In particular, set
+`mgl-pax-browser-function` to choose between browsing documentation
+with [w3m](https://emacs-w3m.github.io/info/emacs-w3m.html) in an
+Emacs buffer, or with an external browser plus a web server in the
+Lisp image.
 
-    If `w3m' is available, then make the following changes to
-    `slime-doc-map' (assuming it's bound to `C-c C-d').
+In @EMACS-SETUP, `(mgl-pax-hijack-slime-doc-keys)` was evaluated,
+which handles the common case of binding keys. Its docstring is
+reproduced here:
+
+    Make the following changes to `slime-doc-map' (assuming it's
+    bound to `C-c C-d').
     
     - `C-c C-d a`: `mgl-pax-apropos` (replaces `slime-apropos`)
     - `C-c C-d z`: `mgl-pax-aproposa-all` (replaces `slime-apropos-all`)
@@ -1422,7 +1432,7 @@ the common case of binding keys. Its docstring is reproduced here:
         (global-set-key (kbd \"C-.\") 'mgl-pax-document)
 
 
-##### Navigating the Documentation in W3M
+#### Browsing with w3m
 
 With w3m's default [key bindings][w3m-key-bindings], moving the
 cursor between links involves `TAB` and `S-TAB` (or `<up>` and
@@ -1436,8 +1446,8 @@ In addition, the following PAX-specific key bindings are available:
 - `M-.` visits the source location of the definition corresponding
   to the link under the point.
 
-- Invoking `mgl-pax-document` on a section title link will that
-  section on its own page.
+- Invoking `mgl-pax-document` on a section title link will show the
+  documentation of that section on its own page.
 
 - `n` moves to the next PAX definition on the page.
 
@@ -1454,6 +1464,28 @@ In addition, the following PAX-specific key bindings are available:
 - `V` visits the source location of the first definition on the
   page.
 
+
+#### Browsing with Other Browsers
+
+When the value of the Elisp variable `mgl-pax-browser-function`
+is not `w3m-browse-url`, requests are served via a web server
+started in the running Lisp, and documentation is most likely
+displayed in a separate browser window .
+
+By default, `mgl-pax-browser-function` is `nil`, which makes PAX use
+`browse-url-browser-function`. You may want to customize the related
+`browse-url-new-window-flag` or, for Chrome, set
+`browse-url-chrome-arguments` to `("--new-window")`.
+
+In the browser, clicking on the locative on the left of the
+object (e.g. in `- [function] PRINT`) will raise and focus the Emacs
+window (if Emacs is not in text mode, and also subject to window
+manager focus stealing settings), then go to the corresponding
+source location. For sections, clicking on the lambda link will do
+the same (see *DOCUMENT-FANCY-HTML-NAVIGATION*).
+
+Finally, note that the URLs exposed by the web server are subject to
+change.
 
 ### Markdown Support
 
@@ -1895,9 +1927,10 @@ table of contents and navigation links.
 
     If true and the output format is HTML, then headings get a
     navigation component that consists of links to the previous, parent,
-    next section and a permalink. This component is normally hidden, it
-    is visible only when the mouse is over the heading. Needs
-    *DOCUMENT-LINK-SECTIONS* to be on to work.
+    next section, a self-link, and a link to the definition in the
+    source code if available (see :SOURCE-URI-FN in DOCUMENT). This
+    component is normally hidden, it is visible only when the mouse is
+    over the heading. Needs *DOCUMENT-LINK-SECTIONS* to be on to work.
 
 ### Miscellaneous Variables
 
@@ -2297,8 +2330,8 @@ output. Compared to that, the following are not supported:
 - METHOD-COMBINATION docstrings on ABCL, AllegroCL.
 
 In addition, CLISP does not support the ambiguous case of @PAX-URLS
-for @DOCUMENTING-IN-EMACS because the current implementation relies
-on Swank to list definitions of symbols (as VARIABLE,
+for @BROWSING-LIVE-DOCUMENTATION because the current implementation
+relies on Swank to list definitions of symbols (as VARIABLE,
 FUNCTION, etc), and that simply doesn't work.
 
 ## Transcripts

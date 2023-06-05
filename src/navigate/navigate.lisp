@@ -119,7 +119,7 @@
   See @EMACS-SETUP. In addition, the Elisp command
   `mgl-pax-edit-parent-section` visits the source location of the
   section containing the definition with `point` in it. See
-  @DOCUMENTATION-KEY-BINDINGS."""
+  @BROWSING-WITH-W3M."""
   (mgl-pax/navigate asdf:system))
 
 ;;; Ensure that some Swank internal facilities (such as
@@ -152,7 +152,7 @@
 ;;; string).
 (defun/autoloaded locate-definitions-for-emacs (wall)
   (with-swank ()
-    (swank::converting-errors-to-error-location
+    (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
         (locate-definitions-for-emacs-1 wall)))))
 
@@ -201,16 +201,26 @@
                            most-positive-fixnum))))
         sections)))
 
-(defun find-parent-sections (reference)
-  (let ((sections (sections-that-contain (list-all-sections) reference)))
-    (sort-by-proximity sections reference)))
+(defun find-parent-sections
+    (object &optional (all-sections (list-all-sections)))
+  (let ((reference (canonical-reference object)))
+    (when reference
+      (let ((sections (sections-that-contain all-sections reference)))
+        (sort-by-proximity sections reference)))))
+
+(defun find-root-section (object &optional (all-sections (list-all-sections)))
+  (loop for depth upfrom 0
+        for section = (first (find-parent-sections object all-sections))
+        while section
+        do (setq object section)
+        finally (return (values section depth))))
 
 
 ;;;; The Common Lisp side of mgl-pax-find-parent-section
 
 (defun/autoloaded find-parent-section-for-emacs (buffer filename possibilities)
   (with-swank ()
-    (swank::converting-errors-to-error-location
+    (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
         (let ((reference (find-current-definition buffer filename
                                                   possibilities)))

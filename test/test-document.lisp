@@ -15,12 +15,13 @@
         :ctx ("Input: ~S" input))))
 
 (defun document* (object &key (format :markdown) w3m)
-  (let ((warnings ()))
+  (let ((warnings ())
+        (pax::*html-subformat* (and w3m :w3m)))
     (handler-bind ((warning (lambda (w)
                               (push (princ-to-string w) warnings)
                               (muffle-warning w))))
       (values (funcall (if w3m
-                           #'pax::document/w3m
+                           #'pax::document/open
                            #'document)
                        object :stream nil :format format)
               warnings))))
@@ -96,9 +97,9 @@
   (test-argument)
   (test-define-locative-alias)
   (test-cl-transcript)
-  (test-document/w3m)
+  (test-document/open)
   (test-pax-apropos)
-  (test-map-object-args))
+  (test-map-documentable))
 
 (deftest test-urlencode ()
   (is (equal (mgl-pax::urlencode "hello") "hello"))
@@ -1159,7 +1160,7 @@ This is [Self-referencing][e042].
 ```"))))
 
 
-(deftest test-document/w3m ()
+(deftest test-document/open ()
   (with-test ("no link duplication for objects being documented")
     (check-head (list "PAX:LOCATIVE"
                       (pax:make-reference 'pax:locative 'pax:locative))
@@ -1195,9 +1196,9 @@ This is [Self-referencing][e042].
                                    (not (search "in package" output)))
                   :w3m t)))
   (test-documentables-of)
-  (test-document/w3m/live-vs-static)
-  (test-document/w3m/object)
-  (test-document/w3m/clhs))
+  (test-document/open/live-vs-static)
+  (test-document/open/object)
+  (test-document/open/clhs))
 
 (deftest test-documentables-of ()
   ;; This test relies on what is and what is not available through
@@ -1211,9 +1212,12 @@ This is [Self-referencing][e042].
                    (make-reference 'nil '(clhs type))
                    (make-reference 'nil 'clhs)
                    (make-reference 'nil 'constant))
-             :pred #'pax::reference=))))
+             :pred (lambda (r1 r2)
+                     (and (typep r1 'reference)
+                          (typep r2 'reference)
+                          (pax::reference= r1 r2)))))))
 
-(deftest test-document/w3m/live-vs-static ()
+(deftest test-document/open/live-vs-static ()
   (with-test ("prefer live definition to CLHS")
     (with-failure-expected
         ((alexandria:featurep '(:or :abcl :allegro :clisp :ecl)))
@@ -1226,13 +1230,13 @@ This is [Self-referencing][e042].
     (with-test ("if no live definition, then link to CLHS")
       (check-head "[otherwise][macro]" "[otherwise][c9ce]" :w3m t))))
 
-(deftest test-document/w3m/object ()
+(deftest test-document/open/object ()
   (with-failure-expected ()
     (check-head "[PAX][package] [MGL-PAX][package] [`mgl-pax`][asdf:system]"
                 "[PAX][97b3] [`MGL-PAX`][97b3] [`mgl-pax`][6fdb]"
                 :w3m t)))
 
-(deftest test-document/w3m/clhs ()
+(deftest test-document/open/clhs ()
   (let ((*document-hyperspec-root* "CLHS/"))
     (loop for (object locative) in '((print function)
                                      (single-float type))
@@ -1358,28 +1362,28 @@ This is [Self-referencing][e042].
          objects-and-locatives))
 
 
-(deftest test-map-object-args ()
+(deftest test-map-documentable ()
   (is (equal (with-output-to-string (*standard-output*)
-               (mgl-pax::map-object-args 'princ 1))
+               (mgl-pax::map-documentable 'princ 1))
              "1"))
   (is (equal (with-output-to-string (*standard-output*)
-               (mgl-pax::map-object-args 'princ nil))
+               (mgl-pax::map-documentable 'princ nil))
              ""))
   (is (equal (with-output-to-string (*standard-output*)
-               (mgl-pax::map-object-args 'princ '(nil)))
+               (mgl-pax::map-documentable 'princ '(nil)))
              "NIL"))
   (is (equal (with-output-to-string (*standard-output*)
-               (mgl-pax::map-object-args 'princ '(1 2 3)))
+               (mgl-pax::map-documentable 'princ '(1 2 3)))
              "123"))
   (is (equal (with-output-to-string (*standard-output*)
-               (mgl-pax::map-object-args 'princ '((progv '(*print-base*) '(2))
-                                                  1 2 3)))
+               (mgl-pax::map-documentable 'princ '((progv '(*print-base*) '(2))
+                                                   1 2 3)))
              "11011"))
   (with-failure-expected ((alexandria:featurep :ecl))
     (is (equal (with-output-to-string (*standard-output*)
-                 (mgl-pax::map-object-args 'princ
-                                           '(2
-                                             ((progv '(*print-base*) '(2))
-                                              3)
-                                             4)))
+                 (mgl-pax::map-documentable 'princ
+                                            '(2
+                                              ((progv '(*print-base*) '(2))
+                                               3)
+                                              4)))
                "2114"))))

@@ -152,24 +152,38 @@
         (len (length string)))
     (unless scheme-end
       (error "~S has no URL scheme." string))
-    (values (prog1 (subseq string 0 scheme-end)
-              (setq pos (1+ scheme-end)))
-            (if (and (< (+ pos 2) len)
-                     (char= (aref string pos) #\/)
-                     (char= (aref string (1+ pos)) #\/))
-                (let ((authority-end
-                        (position #\/ string :start (+ pos 2))))
-                  (prog1 (urldecode (subseq string (+ pos 2) authority-end))
-                    (setq pos authority-end)))
-                nil)
-            (when (< pos len)
-              (let ((fragment-start (position #\# string :start pos)))
-                (prog1 (urldecode (subseq string pos fragment-start))
-                  (setq pos (if fragment-start
-                                (1+ fragment-start)
-                                nil)))))
-            (when (and pos (< pos len))
-              (urldecode (subseq string pos))))))
+    (values
+     ;; scheme
+     (prog1 (subseq string 0 scheme-end)
+       (setq pos (1+ scheme-end)))
+     ;; authority
+     (if (and (< (+ pos 2) len)
+              (char= (aref string pos) #\/)
+              (char= (aref string (1+ pos)) #\/))
+         (let ((authority-end
+                 (position #\/ string :start (+ pos 2))))
+           (prog1 (urldecode (subseq string (+ pos 2) authority-end))
+             (setq pos authority-end)))
+         nil)
+     ;; path
+     (when (< pos len)
+       (let ((path-end (position-if (lambda (char)
+                                      (member char '(#\# #\?)))
+                                    string :start pos)))
+         (prog1 (urldecode (subseq string pos path-end))
+           (setq pos (if path-end
+                         (1+ path-end)
+                         nil)))))
+     ;; query
+     (when (and pos (< pos len))
+       (let ((query-end (position #\# string :start pos)))
+         (prog1 (urldecode (subseq string pos query-end))
+           (setq pos (if query-end
+                         (1+ query-end)
+                         nil)))))
+     ;; fragment
+     (when (and pos (< pos len))
+       (urldecode (subseq string pos))))))
 
 
 (defun pathname-to-file-url (pathname)
