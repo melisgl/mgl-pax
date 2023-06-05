@@ -66,11 +66,12 @@ other mgl-pax commands."
   (if mgl-pax-autoload
       (slime-eval-async
           `(cl:progn
-            (cl:unless (cl:find-package :mgl-pax)
-                       (cl:format t ";; Autoloading MGL-PAX for Emacs ~
-                                     (mgl-pax-autoload is t).~%")
-                       (asdf:load-system "mgl-pax")
-                       (cl:format t ";; Done autoloading MGL-PAX for Emacs~%"))
+            (cl:unless
+             (cl:find-package :mgl-pax)
+             (cl:format t "~&;; Autoloading MGL-PAX for Emacs ~
+                          (mgl-pax-autoload is t).~%")
+             (asdf:load-system "mgl-pax")
+             (cl:format t ";; Done autoloading MGL-PAX for Emacs~%"))
             (cl:and (cl:find-package :mgl-pax)
                     (cl:funcall (cl:find-symbol
                                  (cl:string '#:check-pax-elisp-version)
@@ -779,7 +780,11 @@ In a PAX doc buffer, it's equivalent to pressing `v'
   (interactive)
   (if (mgl-pax-in-doc-buffer-p)
       (mgl-pax-doc-edit-current-definition)
-    (mgl-pax-current-definition-pax-url 'mgl-pax-document)))
+    (mgl-pax-maybe-autoload
+     (lambda (loadedp)
+       (if (not loadedp)
+           (mgl-pax-not-loaded)
+         (mgl-pax-current-definition-pax-url 'mgl-pax-document))))))
 
 (defun mgl-pax-current-definition-pax-url (cont)
   (mgl-pax-maybe-autoload

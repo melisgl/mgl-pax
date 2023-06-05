@@ -740,7 +740,7 @@
         documentation browser.")))
 
 
-(defun current-definition-pax-url-for-emacs (buffer filename possibilities)
+(defun/autoloaded current-definition-pax-url-for-emacs (buffer filename possibilities)
   (with-swank ()
     (swank::converting-errors-to-error-location
       (swank::with-buffer-syntax ()
