@@ -245,7 +245,7 @@
    </head>~%~
    <body>~%~
    <div id="content-container">~%"""
-   title stylesheet charset
+   (make-plain (process-title title)) stylesheet charset
    (etypecase head
      ((or null string)
       head)
@@ -408,7 +408,7 @@
          ;; This is the docstring of @PAX-WORLD-DUMMY above.
          (first (section-entries @pax-world-dummy))
          (let ((objects (sort (copy-seq objects) #'string<
-                              :key #'section-title-or-name)))
+                              :key #'plain-section-title-or-name)))
            (with-output-to-string (stream)
              (dolist (object objects)
                (format stream "- ~S~%~%" (section-name object))))))))
@@ -416,7 +416,13 @@
 (defun sections-registered-in-pax-world ()
   (sort (loop for doc in *registered-pax-world-docs*
               append (second doc))
-        #'string< :key #'section-title-or-name))
+        #'string< :key #'plain-section-title-or-name))
+
+(defun make-plain (md-string)
+  (document md-string :stream nil :format :plain))
+
+(defun plain-section-title-or-name (section)
+  (make-plain (section-title-or-name section)))
 
 
 ;;;; Generate the READMEs and HTML docs.

@@ -91,8 +91,6 @@ the definition.
 That is, when generating documentation for something that's referenced
 by one or more sections. See PAX::SECTIONS-THAT-CONTAIN and
 PAX::SORT-BY-PROXIMITY.
-* BUG (low) html page title has markup
-E.g \\, maybe **.
 * BUG (low) (3BMD-GRAMMAR:PARSE-DOC "[l][*x*]") fails
 https://github.com/3b/3bmd/issues/55
 * MAYBE autoload documentation when needed?
