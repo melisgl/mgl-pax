@@ -1314,9 +1314,9 @@ section containing the definition with `point` in it. See
     
     ##### Pages
     
-    The `PAGES` argument is to create multi-page documents by routing some
-    of the generated output to files, strings or streams. `PAGES` is a
-    list of page specification elements. A page spec is a [property
+    The `PAGES` argument is to create multi-page documents by routing
+    some of the generated output to files, strings or streams. `PAGES` is
+    a list of page specification elements. A page spec is a [property
     list][ed5f] with keys `:OBJECTS`, `:OUTPUT`, `:URI-FRAGMENT`,
     `:SOURCE-URI-FN`, `:HEADER-FN` and `:FOOTER-FN`. `OBJECTS` is a list of
     objects (references are allowed but not required) whose

@@ -250,13 +250,13 @@
 ;;; current page and return the link id.
 (defun link-to-reference (reference)
   (let ((link (unaliased-link (find-link reference))))
-    (when (and link
-               (let ((page (link-page link)))
-                 (or (null page)
-                     (eq *page* page)
-                     (stringp page)
-                     (and (page-uri-fragment *page*)
-                          (page-uri-fragment page)))))
+    (assert link)
+    (when (let ((page (link-page link)))
+            (or (null page)
+                (eq *page* page)
+                (stringp page)
+                (and (page-uri-fragment *page*)
+                     (page-uri-fragment page))))
       (setf (gethash link (page-used-links *page*)) t)
       (format nil "~A" (ensure-link-id link)))))
 
@@ -397,6 +397,12 @@
 
 (defun filter-external-references (references)
   (filter-clhs-references references))
+
+(defun find-external-link (reference)
+  (let ((*document-link-to-hyperspec* t))
+    (dolist (link (external-links (reference-object reference)))
+      (when (reference= (link-reference link) reference)
+        (return link)))))
 
 
 (defvar *pages-created*)
@@ -1453,12 +1459,14 @@
       ;; Handle an explicit [FOO][dislocated] in markdown. This is
       ;; always LINKABLE-REF-P.
       (list (make-reference object 'dislocated))
-      (alexandria:when-let
-          (link (find-link (canonical-reference
-                            (replace-go-target
-                             (make-reference object locative)))))
-        (when (linkablep link)
-          (list (link-reference link))))))
+      (let ((reference (canonical-reference
+                        (replace-go-target
+                         (make-reference object locative)))))
+        (alexandria:when-let
+            (link (or (find-link reference)
+                      (find-external-link reference)))
+          (when (linkablep link)
+            (list (link-reference link)))))))
 
 (defsection @unspecified-locative (:title "Unspecified Locative")
   "[filter-string-based-references function][docstring]

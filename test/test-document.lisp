@@ -1060,7 +1060,9 @@ This is [Self-referencing][e042].
                   "[`DOCUMENTATION`][68f1]")))
   (when (null (locate 'otherwise 'macro :errorp nil))
     (with-test ("if no live definition, then link to CLHS")
-      (check-head "[otherwise][macro]" "[otherwise][c9ce]"))))
+      (check-head "[otherwise][macro]" "[otherwise][c9ce]")))
+  (with-test ("explicit definition link always works")
+    (check-head "[PRINT][pax:clhs]" "[`PRINT`][d451]")))
 
 (deftest test-clhs-section ()
   (let ((*document-link-to-hyperspec* t))
@@ -1100,9 +1102,8 @@ This is [Self-referencing][e042].
 (deftest test-clhs-issue ()
   (let ((*document-link-to-hyperspec* t))
     (test-clhs-issue-1))
-  (with-failure-expected ()
-    (let ((*document-link-to-hyperspec* nil))
-      (test-clhs-issue-1))))
+  (let ((*document-link-to-hyperspec* nil))
+    (test-clhs-issue-1)))
 
 (defun test-clhs-issue-1 ()
   (check-ref (locate "ISSUE:AREF-1D" 'clhs :errorp nil)
