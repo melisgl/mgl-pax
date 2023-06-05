@@ -95,7 +95,6 @@ PAX::SORT-BY-PROXIMITY.
 E.g \\, maybe **.
 * BUG (low) (3BMD-GRAMMAR:PARSE-DOC "[l][*x*]") fails
 https://github.com/3b/3bmd/issues/55
-* BUG (low) C-. on [lambda lists][clhs] confused by the space
 * MAYBE autoload documentation when needed?
 E.g. for named-readtables, which has its docs in named-readtables/doc.
 * BUG (low) C-. history depends on current package

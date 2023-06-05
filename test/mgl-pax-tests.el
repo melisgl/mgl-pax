@@ -79,6 +79,15 @@
    (should (equal (mgl-pax-wall-at-point)
                   '(("foo" ()))))))
 
+;;; xxx `FOO` yyy
+(ert-deftest test-mgl-pax-wall-at-point/simple-4 ()
+  (with-temp-lisp-buffer
+   (insert "xxx `foo")
+   (save-excursion
+     (insert "` yyy"))
+   (should (equal (mgl-pax-wall-at-point)
+                  '(("foo" ("xxx" "yyy")))))))
+
 ;;; xxx [FOO][function] yyy
 (ert-deftest test-mgl-pax-wall-at-point/reflink-1 ()
   (with-temp-lisp-buffer
@@ -106,7 +115,8 @@
    (save-excursion
      (insert "`][function] yyy"))
    (should (equal (mgl-pax-wall-at-point)
-                  '(("foo" ("[" "function")))))))
+                  '(("foo" ("[" "function"))
+                    ("`foo`" ("function")))))))
 
 ;;; xxx [FOO ][function] yyy
 (ert-deftest test-mgl-pax-wall-at-point/reflink-4 ()
@@ -136,6 +146,7 @@
      (insert " function] yyy"))
    (should (equal (mgl-pax-wall-at-point)
                   '(("also][foo" ("[see" "function"))
+                    ("foo function" ("yyy"))
                     ("foo" ("function")))))))
 
 

@@ -163,11 +163,8 @@ To bind `C-.' globally:
         (bounds (slime-bounds-of-symbol-at-point)))
     (when bounds
       (let ((locatives (mgl-pax-find-locatives bounds))
-            (reflink-name-and-locatives (mgl-pax-parse-reflink bounds)))
-        (append (and name `((,name ,locatives)))
-                (if reflink-name-and-locatives
-                    (list reflink-name-and-locatives)
-                  ()))))))
+            (wall (mgl-pax-parse-reflink bounds)))
+        (append (and name `((,name ,locatives))) wall)))))
 
 ;;; Return the sexps before and after (slime-symbol-at-point),
 ;;; skipping some markup.
@@ -225,23 +222,41 @@ To bind `C-.' globally:
 (cl-defun mgl-pax-parse-reflink
     (&optional (bounds (slime-bounds-of-symbol-at-point)))
   (when bounds
-    (cl-destructuring-bind (symbol-start . symbol-end) bounds
-      (let ((ref-start (1+ (or (save-excursion
-                                 (search-backward "[" symbol-start t))
-                               (1- symbol-start))))
-            (ref-end (1- (or (save-excursion
-                               (search-forward "]" symbol-end t))
-                             (1+ symbol-end)))))
-        ;; If the name contains ?\[ or ?\] ...
-        (unless (and (= ref-start symbol-start)
-                     (= ref-end symbol-end))
-          ;; ... then cut off anything beyond those characters to get a
-          ;; new name.
-          (let ((name (buffer-substring-no-properties ref-start ref-end))
-                (locative (mgl-pax-locative-after ref-end)))
-            (list name (if locative
-                           (list locative)
-                         ()))))))))
+    (let ((wall ()))
+      (cl-flet ((add (start end)
+                     (let ((name (buffer-substring-no-properties start end))
+                           (locative (mgl-pax-locative-after end)))
+                       (push (list name (if locative
+                                            (list locative)
+                                          ()))
+                             wall))))
+        (cl-destructuring-bind (symbol-start . symbol-end) bounds
+          (save-restriction
+            ;; Do not search beyond the surrounding lines.
+            (let* ((min (save-excursion (ignore-errors (previous-line))
+                                        (beginning-of-line)
+                                        (point)))
+                   (max (save-excursion (ignore-errors (next-line))
+                                        (end-of-line)
+                                        (point)))
+                   (start-pos (save-excursion (search-backward "[" min t)))
+                   (end-pos (save-excursion (search-forward "]" max t))))
+              (when (and start-pos end-pos)
+                ;; Exclude the bracket characters.
+                (let ((start-pos (save-excursion
+                                   (goto-char (1+ start-pos))
+                                   (skip-chars-forward " ")
+                                   (point)))
+                      (end-pos (save-excursion (goto-char (1- end-pos))
+                                               (skip-chars-backward " ")
+                                               (point))))
+                  ;; [lambda lists][clhs]
+                  (add start-pos end-pos)
+                  ;; [see also][foo function], [FOO function][docstring]
+                  (when (and (< symbol-start start-pos)
+                             (< symbol-end end-pos))
+                    (add start-pos symbol-end))))))))
+      (reverse wall))))
 
 
 ;;;; Integration with `M-.' (`slime-edit-definition')
