@@ -166,9 +166,25 @@
 
 ;;;; Utilities for listing SECTIONs
 
+(defvar *all-sections*)
+
+;;; Lazily cache results of LIST-ALL-SECTIONS in BODY.
+(defmacro with-all-sections-cached (() &body body)
+  `(progv (unless (boundp '*all-sections*) '(*all-sections*))
+       (unless (boundp '*all-sections*) '(:not-computed))
+     ,@body))
+
 ;;; This is slow but fast enough not to bother with a SECTION-NAME to
-;;; SECTION weak hash table.
+;;; SECTION weak hash table. Some implementations (e.g. SBCL) have
+;;; scaling issues with weak pointers.
 (defun list-all-sections ()
+  (if (boundp '*all-sections*)
+      (if (eq *all-sections* :not-computed)
+          (setq *all-sections* (list-all-sections-1))
+          *all-sections*)
+      (list-all-sections-1)))
+
+(defun list-all-sections-1 ()
   (let ((sections ()))
     (do-all-symbols (symbol sections)
       (when (boundp symbol)
@@ -201,19 +217,25 @@
                            most-positive-fixnum))))
         sections)))
 
-(defun find-parent-sections
-    (object &optional (all-sections (list-all-sections)))
+(defun find-parent-sections (object)
   (let ((reference (canonical-reference object)))
     (when reference
-      (let ((sections (sections-that-contain all-sections reference)))
+      (let ((sections (sections-that-contain (list-all-sections) reference)))
         (sort-by-proximity sections reference)))))
 
-(defun find-root-section (object &optional (all-sections (list-all-sections)))
-  (loop for depth upfrom 0
-        for section = (first (find-parent-sections object all-sections))
-        while section
-        do (setq object section)
-        finally (return (values section depth))))
+(defun find-root-section (object)
+  (let ((sectionp (or (typep object 'section)
+                      (and (typep object 'reference)
+                           (typep (resolve object :errorp nil) 'section)))))
+    (multiple-value-bind (section depth)
+        (if sectionp
+            (values object 0)
+            (values (first (find-parent-sections object)) 1))
+      (loop for parent = (first (find-parent-sections section))
+            while parent
+            do (setq section parent)
+               (incf depth)
+            finally (return (values section depth))))))
 
 
 ;;;; The Common Lisp side of mgl-pax-find-parent-section

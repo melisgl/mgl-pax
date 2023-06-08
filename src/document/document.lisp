@@ -458,8 +458,10 @@
 (declaim (special *heading-offset*))
 
 (defmacro with-headings ((object) &body body)
-  `(let ((*headings* (collect-headings ,object)))
-     ,@body))
+  (alexandria:once-only (object)
+    `(let ((*headings* (collect-headings ,object))
+           (*heading-offset* (heading-offset ,object)))
+       ,@body)))
 
 (defmacro with-format ((format) &body body)
   (alexandria:with-gensyms (fn)
@@ -521,73 +523,75 @@
   *PACKAGE* and *READTABLE*. See *DOCUMENT-NORMALIZE-PACKAGES* for the
   details.
   """
-  (with-format (format)
-    (let* ((*print-right-margin* (or *print-right-margin* 80))
-           (pages (page-specs-to-pages pages documentable stream))
-           (default-page (alexandria:last-elt pages))
-           (3bmd-code-blocks:*code-blocks* t)
-           (3bmd-code-blocks:*code-blocks-default-colorize*
-             (and (not (eq *html-subformat* :w3m))
-                  :common-lisp))
-           (3bmd-code-blocks::*colorize-name-map*
-             (if (eq *html-subformat* :w3m)
-                 (make-hash-table)
-                 (alexandria:plist-hash-table
-                  `("cl-transcript" :common-lisp
-                    ,@(alexandria:hash-table-plist
-                       3bmd-code-blocks::*colorize-name-map*))
-                  :test #'equal))))
-      (with-tracking-pages-created ()
-        (with-pages (pages)
-          ;; Write output to DEFAULT-PAGE until a DOCUMENT-OBJECT
-          ;; finds a reference that should got to another PAGE.
-          (with-temp-output-to-page (stream default-page)
-            ;; Call DOCUMENT-OBJECT on each stuff to be documented in
-            ;; DOCUMENTABLE, and keep track of where to add extra
-            ;; newlines.
-            (let ((firstp t)
-                  (add-blank-p nil))
-              (map-documentable
-               (lambda (object1)
-                 (with-headings (object1)
-                   (when (or add-blank-p
-                             (and (not firstp)
-                                  (not *document-tight*)))
-                     (terpri stream))
-                   (setq firstp nil)
-                   (document-object object1 stream)
-                   (setq add-blank-p (not *document-tight*))))
-               documentable)))
-          (let ((outputs ()))
-            (do-pages-created (page)
-              ;; Add the markdown reference link definitions for all
-              ;; PAGE-USED-LINKS on PAGE.
-              (with-temp-output-to-page (stream page)
-                (write-markdown-reference-style-link-definitions stream))
-              ;; Now that markdown output for this PAGE is complete,
-              ;; we may want to convert it to the requested *FORMAT*.
-              (unless (eq *format* :markdown)
-                (let ((markdown-string
-                        (with-temp-input-from-page (stream page)
-                          (alexandria:read-stream-content-into-string
-                           stream))))
-                  (delete-stream-spec (page-temp-stream-spec page))
-                  (with-final-output-to-page (stream page)
-                    (when (page-header-fn page)
-                      (funcall (page-header-fn page) stream))
-                    (print-markdown (maybe-for-w3m (parse-markdown-fast
-                                                    markdown-string))
-                                    stream :format *format*)
-                    (when (page-footer-fn page)
-                      (funcall (page-footer-fn page) stream)))))
-              (push (unmake-stream-spec (page-final-stream-spec page))
-                    outputs))
-            (cond ((< 1 (length pages))
-                   (reverse outputs))
-                  ((null stream)
-                   (first outputs))
-                  (t
-                   nil))))))))
+  (with-all-sections-cached ()
+    (with-format (format)
+      (let* ((*print-right-margin* (or *print-right-margin* 80))
+             (pages (page-specs-to-pages pages documentable stream))
+             (default-page (alexandria:last-elt pages))
+             (3bmd-code-blocks:*code-blocks* t)
+             (3bmd-code-blocks:*code-blocks-default-colorize*
+               (and (not (eq *html-subformat* :w3m))
+                    :common-lisp))
+             (3bmd-code-blocks::*colorize-name-map*
+               (if (eq *html-subformat* :w3m)
+                   (make-hash-table)
+                   (alexandria:plist-hash-table
+                    `("cl-transcript" :common-lisp
+                      ,@(alexandria:hash-table-plist
+                         3bmd-code-blocks::*colorize-name-map*))
+                    :test #'equal))))
+        (with-tracking-pages-created ()
+          (with-pages (pages)
+            ;; Write output to DEFAULT-PAGE until a DOCUMENT-OBJECT
+            ;; finds a reference that should got to another PAGE.
+            (with-temp-output-to-page (stream default-page)
+              ;; Call DOCUMENT-OBJECT on each stuff to be documented
+              ;; in DOCUMENTABLE, and keep track of where to add extra
+              ;; newlines.
+              (let ((firstp t)
+                    (add-blank-p nil))
+                (map-documentable
+                 (lambda (object1)
+                   (with-headings (object1)
+                     (when (or add-blank-p
+                               (and (not firstp)
+                                    (not *document-tight*)))
+                       (terpri stream))
+                     (setq firstp nil)
+                     (document-object object1 stream)
+                     (setq add-blank-p (not *document-tight*))))
+                 documentable)))
+            (let ((outputs ()))
+              (do-pages-created (page)
+                ;; Add the markdown reference link definitions for all
+                ;; PAGE-USED-LINKS on PAGE.
+                (with-temp-output-to-page (stream page)
+                  (write-markdown-reference-style-link-definitions stream))
+                ;; Now that markdown output for this PAGE is complete,
+                ;; we may want to convert it to the requested
+                ;; *FORMAT*.
+                (unless (eq *format* :markdown)
+                  (let ((markdown-string
+                          (with-temp-input-from-page (stream page)
+                            (alexandria:read-stream-content-into-string
+                             stream))))
+                    (delete-stream-spec (page-temp-stream-spec page))
+                    (with-final-output-to-page (stream page)
+                      (when (page-header-fn page)
+                        (funcall (page-header-fn page) stream))
+                      (print-markdown (maybe-for-w3m (parse-markdown-fast
+                                                      markdown-string))
+                                      stream :format *format*)
+                      (when (page-footer-fn page)
+                        (funcall (page-footer-fn page) stream)))))
+                (push (unmake-stream-spec (page-final-stream-spec page))
+                      outputs))
+              (cond ((< 1 (length pages))
+                     (reverse outputs))
+                    ((null stream)
+                     (first outputs))
+                    (t
+                     nil)))))))))
 
 ;;; Call FN with each thing within OBJECT (an argument of the same
 ;;; name of DOCUMENT). Handle special PROGV forms, which allow
@@ -2287,7 +2291,6 @@
 (defun collect-headings (object)
   (let ((*collecting-headings-p* t)
         (*headings* ())
-        (*heading-offset* (heading-offset object))
         (*table-of-contents-stream* (make-broadcast-stream))
         (*document-max-table-of-contents-level* 0))
     (document-object object (make-broadcast-stream))
@@ -2295,8 +2298,14 @@
 
 ;;; Determine what SECTION's *HEADING-LEVEL* would be under its root
 ;;; ancestor.
-(defun heading-offset (object &optional (all-sections (list-all-sections)))
-  (nth-value 1 (find-root-section object all-sections)))
+(defun heading-offset (object)
+  (multiple-value-bind (foundp depth) (find-root-section object)
+    (if foundp
+        depth
+        ;; OBJECT is not a SECTION (or a reference to one), neither is
+        ;; it contained in a SECTION. Start from H2. This only affects
+        ;; ASDF:SYSTEMs in stock PAX.
+        1)))
 
 (defun write-navigation-link (heading stream)
   (let ((link-id (link-to-reference

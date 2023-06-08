@@ -63,6 +63,7 @@
   (test-names)
   (test-downcasing)
   (test-link)
+  (test-headings)
   ;; PAX::@VARIABLELIKE-LOCATIVES
   (test-variable)
   ;; PAX::@MACROLIKE-LOCATIVES
@@ -658,6 +659,13 @@ This is [Self-referencing][e042].
 
   [e042]: #MGL-PAX-TEST:@SELF-REFERENCING%20MGL-PAX:SECTION \"Self-referencing\"
 ")))
+
+
+(deftest test-headings ()
+  ;; See PAX::HEADING-OFFSET.
+  (check-pred pax::@emacs-setup (lambda (string)
+                                  (search (format nil "~%## Emacs Setup~%")
+                                          string))))
 
 
 (defparameter *nasty-var* (format nil "~%~%")
