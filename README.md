@@ -2469,7 +2469,7 @@ Let's recap how escaping [Codification][f1ab],
 In the following examples capital C/D/A letters mark the presence,
 and a/b/c the absence of codification, downcasing, and autolinking
 assuming all these features are enabled by
-[`*DOCUMENT-UPPERCASE-IS-CODE*`][f25f]. [`*DOCUMENT-DOWNCASE-UPPERCASE-CODE*`][a5ee],
+[`*DOCUMENT-UPPERCASE-IS-CODE*`][f25f], [`*DOCUMENT-DOWNCASE-UPPERCASE-CODE*`][a5ee],
 and [`*DOCUMENT-LINK-CODE*`][d9ee].
 
     DOCUMENT                => [`document`][1234]    (CDA)

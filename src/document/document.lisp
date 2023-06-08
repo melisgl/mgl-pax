@@ -284,9 +284,7 @@
   (let ((link (find-link reference)))
     (when link
       (link-page (unaliased-link link)))))
-(in-package :mgl-pax)
-
-(in-readtable pythonic-string-syntax)
+
 
 (defsection @linking-to-the-hyperspec (:title "Linking to the Hyperspec")
   (*document-link-to-hyperspec* variable)
@@ -2696,7 +2694,7 @@
   """In the following examples capital C/D/A letters mark the presence,
   and a/b/c the absence of codification, downcasing, and autolinking
   assuming all these features are enabled by
-  *DOCUMENT-UPPERCASE-IS-CODE*. *DOCUMENT-DOWNCASE-UPPERCASE-CODE*,
+  *DOCUMENT-UPPERCASE-IS-CODE*, *DOCUMENT-DOWNCASE-UPPERCASE-CODE*,
   and *DOCUMENT-LINK-CODE*.
 
       DOCUMENT                => [`document`][1234]    (CDA)
