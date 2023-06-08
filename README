@@ -3374,16 +3374,16 @@ LOCATE-AND-DOCUMENT methods, which emit markdown.
     A small wrapper around CL:DOCUMENTATION to smooth over differences
     between implementations.
 
-- [function] ESCAPE-MARKDOWN STRING
+- [function] ESCAPE-MARKDOWN STRING &KEY (ESCAPE-NEWLINE T)
 
     Construct a new string from STRING by adding a backslash before
     special markdowns character
     
         *_`<>[]
     
-    and newline.
+    and newline if ESCAPE-NEWLINE.
 
-- [function] PRIN1-TO-MARKDOWN OBJECT
+- [function] PRIN1-TO-MARKDOWN OBJECT &KEY (ESCAPE-NEWLINE T)
 
     Like PRIN1-TO-STRING, but bind *PRINT-CASE* depending on
     *DOCUMENT-DOWNCASE-UPPERCASE-CODE* and *FORMAT*, and

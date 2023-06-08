@@ -3631,17 +3631,17 @@ The following utilities are for writing new [`DOCUMENT-OBJECT`][bacc] and
     between implementations.
 
 <a id="x-28MGL-PAX-3AESCAPE-MARKDOWN-20FUNCTION-29"></a>
-- [function] **ESCAPE-MARKDOWN** *STRING*
+- [function] **ESCAPE-MARKDOWN** *STRING &KEY (ESCAPE-NEWLINE T)*
 
     Construct a new string from `STRING` by adding a backslash before
     special markdowns character
     
         *_`<>[]
     
-    and newline.
+    and newline if `ESCAPE-NEWLINE`.
 
 <a id="x-28MGL-PAX-3APRIN1-TO-MARKDOWN-20FUNCTION-29"></a>
-- [function] **PRIN1-TO-MARKDOWN** *OBJECT*
+- [function] **PRIN1-TO-MARKDOWN** *OBJECT &KEY (ESCAPE-NEWLINE T)*
 
     Like [`PRIN1-TO-STRING`][18e1], but bind [`*PRINT-CASE*`][443b] depending on
     [`*DOCUMENT-DOWNCASE-UPPERCASE-CODE*`][a5ee] and [`*FORMAT*`][3da8], and

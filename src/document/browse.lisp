@@ -747,12 +747,13 @@
                     (entry-point-sections (list-sections-in-package
                                            (find-package package))))))
             `((progv '(*document-do-not-resolve-references*) '(t))
-              (,(format nil "## Results for `~A`"
+              (,(format nil "## Apropos~%~%```~%~A~%```~%"
                         (let ((current-package *package*))
-                          ;; Don't break lines.
                           (with-standard-io-syntax*
                             (let ((*package* current-package)
-                                  (*print-readably* nil))
+                                  (*print-readably* nil)
+                                  (*print-pretty* t)
+                                  (*print-right-margin* 72))
                               (prin1-to-markdown
                                `(pax-apropos
                                  ,(if (and name (symbolp name))
@@ -765,7 +766,8 @@
                                  :case-sensitive ,case-sensitive
                                  :locative-types ,(if locative-types
                                                       `(quote ,locative-types)
-                                                      nil)))))))
+                                                      nil))
+                               :escape-newline nil)))))
                ,@(when asdf-definitions
                    (list "### \\ASDF systems"
                          `((progv '(*document-tight*) '(t))

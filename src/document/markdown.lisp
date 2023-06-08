@@ -57,19 +57,21 @@
       (format stream "*~A*" string)))
 
 (defun markdown-special-char-p (char)
-  (member char '(#\* #\_ #\` #\< #\> #\[ #\] #\Newline)))
+  (member char '(#\* #\_ #\` #\< #\> #\[ #\])))
 
-(defun/autoloaded escape-markdown (string)
+(defun/autoloaded escape-markdown (string &key (escape-newline t))
   "Construct a new string from STRING by adding a backslash before
   special markdowns character
 
       *_`<>[]
 
-  and newline."
+  and newline if ESCAPE-NEWLINE."
   (with-output-to-string (stream)
     (dotimes (i (length string))
       (let ((char (aref string i)))
-        (when (markdown-special-char-p char)
+        (when (or (markdown-special-char-p char)
+                  (and escape-newline
+                       (char= char #\Newline)))
           (write-char #\\ stream))
         (write-char char stream)))))
 

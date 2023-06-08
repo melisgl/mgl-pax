@@ -2622,11 +2622,11 @@
             (italic string stream))
         (format stream "~A" string))))
 
-(defun/autoloaded prin1-to-markdown (object)
+(defun/autoloaded prin1-to-markdown (object &key (escape-newline t))
   "Like PRIN1-TO-STRING, but bind *PRINT-CASE* depending on
   *DOCUMENT-DOWNCASE-UPPERCASE-CODE* and *FORMAT*, and
   ESCAPE-MARKDOWN."
-  (escape-markdown (prin1-to-string* object)))
+  (escape-markdown (prin1-to-string* object) :escape-newline escape-newline))
 
 ;;; Print arg names without the package prefix to a string. The
 ;;; default value with prefix. Works for macro arglists too.
