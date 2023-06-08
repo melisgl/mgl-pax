@@ -771,22 +771,33 @@
                ,@(when asdf-definitions
                    (list "### \\ASDF systems"
                          `((progv '(*document-tight*) '(t))
-                           ,@asdf-definitions)))
+                           ,@(break-long-list asdf-definitions))))
                ,@(when package-definitions
                    (list "### Packages"
                          `((progv '(*document-tight*) '(t))
-                           ,@package-definitions)))
+                           ,@(break-long-list package-definitions))))
                ,@(when non-symbol-definitions
                    (list "### Non-symbol definitions"
                          `((progv '(*document-tight*) '(t))
-                           ,@non-symbol-definitions)))
+                           ,@(break-long-list non-symbol-definitions))))
                ,@(when pax-entry-points
                    (list "### PAX Entry Points"
-                         (sections-tightly pax-entry-points)))
+                         (break-long-list (sections-tightly pax-entry-points))))
                ,@(when symbol-definitions
                    (list "### Symbol definitions"
                          `((progv '(*document-tight*) '(t))
-                           ,@symbol-definitions)))))))))))
+                           ,@(break-long-list symbol-definitions))))))))))))
+
+;;; Workaround for PARSE-MARKDOWN-FAST being slow on large lists.
+(defun break-long-list (list &key (n 10))
+  (let ((len (length list)))
+    (loop for i upfrom 0 by n below len
+          append (let ((group (subseq list i (min (+ i n) len))))
+                   (if (plusp i)
+                       (cons `((progv '(*document-tight*) '(nil))
+                               ,(format nil "~%~%<span/>~%"))
+                             group)
+                       group)))))
 
 (defun sections-tightly (section-refs)
   `((progv '(*document-tight*) '(t))

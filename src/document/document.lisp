@@ -543,7 +543,7 @@
         (with-tracking-pages-created ()
           (with-pages (pages)
             ;; Write output to DEFAULT-PAGE until a DOCUMENT-OBJECT
-            ;; finds a reference that should got to another PAGE.
+            ;; finds a reference that should go to another PAGE.
             (with-temp-output-to-page (stream default-page)
               ;; Call DOCUMENT-OBJECT on each stuff to be documented
               ;; in DOCUMENTABLE, and keep track of where to add extra
