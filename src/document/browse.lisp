@@ -475,13 +475,26 @@
   (let ((*document-open-linking* t)
         (*document-fancy-html-navigation* (not (eq *html-subformat* :w3m)))
         (*document-normalize-packages* t)
-        (*document-url-versions* '(2)))
-    (handler-bind ((error
-                     (lambda (condition)
-                       (warn 'simple-warning
-                             :format-control "~@<Error in ~S: ~A~:@>"
-                             :format-arguments (list'document condition))
-                       (continue condition))))
+        (*document-url-versions* '(2))
+        (previous-error-string "")
+        (n-repeats 0))
+    (handler-bind
+        ;; CONTINUE continuable errors, but give up if the same error
+        ;; seems to happen again to avoid getting stuck and maybe
+        ;; running out of stack.
+        ((error
+           (lambda (error)
+             (let ((string (with-standard-io-syntax*
+                             (princ-to-string error))))
+               (if (string= string previous-error-string)
+                   (incf n-repeats)
+                   (setq n-repeats 0))
+               (setq previous-error-string string)
+               (warn "~@<Error in ~S: ~A~:@>" 'document error))
+             (if (< 100 n-repeats)
+                 (warn "~@<Sameish error repeated too many times. ~
+                                 Not CONTINUEing.~:@>")
+                 (continue error)))))
       (apply #'document documentable (append args (list :format :html)
                                              *document/open-extra-args*)))))
 
