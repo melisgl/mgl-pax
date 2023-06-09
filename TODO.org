@@ -107,3 +107,6 @@ C-. on ALEXANDRIA:DESTRUCTURING-CASE
 * MAYBE obsolete REGISTER-DOC-IN-PAX-WORLD
 Use QL:WHO-DEPENDS-ON and look for the top-level sections instead. All
 the noise sections in MGL-PAX-TEST argue against this idea.
+* MAYBE add "also exported from" to "see home package xxx"
+* MAYBE when exported by pax, we know the exact definition being exported
+The package apropos could take advantage?

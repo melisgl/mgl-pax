@@ -343,13 +343,10 @@
     (alexandria:if-let (external-reference (open-reference-if-external
                                             reference))
       (external-reference-url external-reference)
-      (let* ((stuff ())
-             (filename (file-name-for-pax-url
+      (let* ((filename (file-name-for-pax-url
                         filename
                         (format nil "pax:~A" (urlencode (reference-to-anchor
                                                          reference)))))
-             (all-sections (list-all-sections))
-             (sections (sections-that-contain all-sections reference))
              (packagep (packagep (resolve reference :errorp nil)))
              (*package* (if packagep
                             (resolve reference :errorp nil)
@@ -360,14 +357,23 @@
              #+nil
              (*document-docstring-key*
                (and packagep (alexandria:rcurry 'shorten-docstring reference))))
-        (alexandria:appendf stuff (format-up-links sections reference))
-        (alexandria:appendf stuff (list reference))
-        (alexandria:appendf stuff (format-also-see reference))
-        (document/open/file filename (remove nil stuff)
+        (document/open/file filename
+                            (if packagep
+                                (pax-apropos* nil t (make-symbol
+                                                     (package-name *package*)))
+                                (documentable-for-reference reference))
                             :title (format nil "~A ~A"
                                            (reference-object reference)
                                            (reference-locative reference)))
         filename))))
+
+(defun documentable-for-reference (reference)
+  (remove nil
+          (append (format-up-links (sections-that-contain (list-all-sections)
+                                                          reference)
+                                   reference)
+                  (list reference)
+                  (format-also-see reference))))
 
 #+nil
 (defun shorten-arglist (string &optional except-reference)
@@ -422,9 +428,7 @@
       (let ((resolved (resolve reference :errorp nil)))
         (when (packagep resolved)
           (let ((name (make-symbol (package-name resolved))))
-            (emit "see the package [apropos](~A), ~
-                   maybe [with internal symbols](~A) included"
-                  (make-pax-eval-url `(pax-apropos* nil t ',name t))
+            (emit "the package [apropos with internal symbols](~A) included"
                   (make-pax-eval-url `(pax-apropos* nil nil ',name t)))))))
     (when entries
       (list
@@ -723,10 +727,13 @@
                  (t
                   string))))
     (multiple-value-bind (name locative-types) (parse-name name)
-      (let ((package (parse-nil-symbol-or-string package))
-            (locative-types (when locative-types
-                              (read-from-string
-                               (format nil "(~A)" locative-types)))))
+      (let* ((package (parse-nil-symbol-or-string package))
+             ;; Whether this is for an exact package match and no
+             ;; other restrictions.
+             (%packagep (and (null name) (symbolp package)))
+             (locative-types (when locative-types
+                               (read-from-string
+                                (format nil "(~A)" locative-types)))))
         (multiple-value-bind (symbol-definitions non-symbol-definitions)
             (pax-apropos name :external-only external-only
                               :package package
@@ -743,13 +750,14 @@
                                            :key #'reference-locative-type)
                           :key #'reference-locative-type))
                 (pax-entry-points
-                  (when (and (symbolp package)
-                             case-sensitive
-                             (find-package package))
+                  (when (and (symbolp package) (find-package package))
                     (entry-point-sections (list-sections-in-package
                                            (find-package package))))))
-            `((progv '(*document-do-not-resolve-references*) '(t))
-              (,(format nil "## Apropos~%~%```~%~A~%```~%"
+            `(,@(when %packagep
+                  (documentable-for-reference
+                   (make-reference package 'package)))
+              ((progv '(*document-do-not-resolve-references*) '(t))
+               ,(format nil "## Apropos~%~%```~%~A~%```~%"
                         (let ((current-package *package*))
                           (with-standard-io-syntax*
                             (let ((*package* current-package)
@@ -770,15 +778,15 @@
                                                       `(quote ,locative-types)
                                                       nil))
                                :escape-newline nil)))))
-               ,@(when asdf-definitions
+               ,@(when (and (not %packagep) asdf-definitions)
                    (list "### \\ASDF systems"
                          `((progv '(*document-tight*) '(t))
                            ,@(break-long-list asdf-definitions))))
-               ,@(when package-definitions
+               ,@(when (and (not %packagep) package-definitions)
                    (list "### Packages"
                          `((progv '(*document-tight*) '(t))
                            ,@(break-long-list package-definitions))))
-               ,@(when non-symbol-definitions
+               ,@(when (and (not %packagep) non-symbol-definitions)
                    (list "### Non-symbol definitions"
                          `((progv '(*document-tight*) '(t))
                            ,@(break-long-list non-symbol-definitions))))
