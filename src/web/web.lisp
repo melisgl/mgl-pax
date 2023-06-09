@@ -21,9 +21,8 @@
       (let* ((pax-url (request-pax*-url))
              (pkgname (hunchentoot:get-parameter "pkg"))
              (*package* (or (find-package* pkgname)
-                            (find-package* (let ((*read-eval* nil))
-                                             (ignore-errors
-                                              (read-from-string pkgname))))
+                            (find-package* (ignore-errors
+                                            (read-from-string pkgname)))
                             (find-package :cl)))
              (editp (hunchentoot:get-parameter "edit")))
         (if editp

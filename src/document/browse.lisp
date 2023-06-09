@@ -288,7 +288,7 @@
 (defun pax-eval (form)
   ;; For the sake of MGL-PAX/WEB, don't allow arbitrary evaluations.
   (unless (and (listp form)
-               (eq (first form) 'pax-apropos*))
+               (member (first form) '(pax-apropos* pax-document-home-page)))
     (error "Not allowed to evaluate ~S." form))
   (eval form))
 
