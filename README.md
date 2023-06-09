@@ -1513,8 +1513,8 @@ and `slime-apropos-package`.
 
     Return a list of [`REFERENCE`][1cea]s corresponding to definitions of symbols
     matching various arguments. As the second value, return another list
-    of `REFERENCE`s that correspond to definitions named by string such as
-    `PACKAGE`s and [`ASDF:SYSTEM`][c097]s.
+    of `REFERENCE`s that correspond to definitions named by strings such
+    as `PACKAGE`s and [`ASDF:SYSTEM`][c097]s.
     
     First, from the set of all interned symbols, the set of matching
     [object][75ce]s are determined:
@@ -1541,8 +1541,7 @@ and `slime-apropos-package`.
     For the second list, names of registered `ASDF:SYSTEM`s and `PACKAGE`s
     are matched against `NAME`, the `PACKAGE` and `EXTERNAL-ONLY` arguments
     are ignored. This list is also filtered by `LOCATIVE-TYPES` and sorted
-    alphabetically by `LOCATIVE-TYPE` name. This is list always empty if
-    `PACKAGE`.
+    alphabetically by `LOCATIVE-TYPE` name. It is always empty if `PACKAGE`.
 
 <a id="x-28MGL-PAX-3A-40EMACS-SETUP-FOR-BROWSING-20MGL-PAX-3ASECTION-29"></a>
 #### 8.2.3 Emacs Setup for Browsing

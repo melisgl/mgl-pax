@@ -589,8 +589,8 @@
                            locative-types)
   "Return a list of REFERENCEs corresponding to definitions of symbols
   matching various arguments. As the second value, return another list
-  of REFERENCEs that correspond to definitions named by string such as
-  PACKAGEs and ASDF:SYSTEMs.
+  of REFERENCEs that correspond to definitions named by strings such
+  as PACKAGEs and ASDF:SYSTEMs.
 
   First, from the set of all interned symbols, the set of matching
   @OBJECTs are determined:
@@ -617,8 +617,7 @@
   For the second list, names of registered ASDF:SYSTEMs and PACKAGEs
   are matched against NAME, the PACKAGE and EXTERNAL-ONLY arguments
   are ignored. This list is also filtered by LOCATIVE-TYPES and sorted
-  alphabetically by LOCATIVE-TYPE name. This is list always empty if
-  PACKAGE."
+  alphabetically by LOCATIVE-TYPE name. It is always empty if PACKAGE."
   (let ((test (if case-sensitive #'char= #'char-equal))
         (matching-symbols (make-hash-table))
         (asdf-definitions ())
@@ -649,9 +648,12 @@
                         (search name name-1 :test test))))
              (matching-symbol-reference-p (reference)
                (let ((locative-type (reference-locative-type reference)))
-                 (and (or (null locative-types)
-                          (member locative-type locative-types))
-                      (not (member locative-type '(package asdf:system))))))
+                 (and
+                  ;; FIXME: This may be a bit heavy-handed.
+                  (not (eq locative-type 'dspec))
+                  (or (null locative-types)
+                      (member locative-type locative-types))
+                  (not (member locative-type '(package asdf:system))))))
              (consider (symbol)
                (when (matching-name-p (symbol-name symbol))
                  (setf (gethash symbol matching-symbols) t))))

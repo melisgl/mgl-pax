@@ -1362,8 +1362,8 @@ and `slime-apropos-package`.
 
     Return a list of REFERENCEs corresponding to definitions of symbols
     matching various arguments. As the second value, return another list
-    of REFERENCEs that correspond to definitions named by string such as
-    PACKAGEs and ASDF:SYSTEMs.
+    of REFERENCEs that correspond to definitions named by strings such
+    as PACKAGEs and ASDF:SYSTEMs.
     
     First, from the set of all interned symbols, the set of matching
     @OBJECTs are determined:
@@ -1390,8 +1390,7 @@ and `slime-apropos-package`.
     For the second list, names of registered ASDF:SYSTEMs and PACKAGEs
     are matched against NAME, the PACKAGE and EXTERNAL-ONLY arguments
     are ignored. This list is also filtered by LOCATIVE-TYPES and sorted
-    alphabetically by LOCATIVE-TYPE name. This is list always empty if
-    PACKAGE.
+    alphabetically by LOCATIVE-TYPE name. It is always empty if PACKAGE.
 
 #### Emacs Setup for Browsing
 
