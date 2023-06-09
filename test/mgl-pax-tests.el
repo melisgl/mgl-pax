@@ -4,9 +4,14 @@
 (require 'w3m-load)
 (require 'slime-tests)
 
+(defun load-mgl-pax-test-system ()
+  (slime-eval '(cl:unless (cl:find-package '#:mgl-pax-test)
+                          (asdf:load-system "mgl-pax/test"))))
+
 (cl-defmacro with-temp-lisp-buffer (&body body)
   `(with-temp-buffer
      (lisp-mode)
+     (load-mgl-pax-test-system)
      ,@body))
 
 (defun sync-current-buffer ()
@@ -155,10 +160,6 @@
 (defun post-slime-edit-definition ()
   (slime-sync-to-top-level 1)
   (sync-current-buffer))
-
-(defun load-mgl-pax-test-system ()
-  (slime-eval '(cl:unless (cl:find-package '#:mgl-pax-test)
-                          (asdf:load-system "mgl-pax/test"))))
 
 (def-slime-test mgl-pax-edit-definitions/test-defs
     (name snippet &optional snippet2)
