@@ -730,7 +730,7 @@
       (let* ((package (parse-nil-symbol-or-string package))
              ;; Whether this is for an exact package match and no
              ;; other restrictions.
-             (%packagep (and (null name) (symbolp package)))
+             (%packagep (and package (null name) (symbolp package)))
              (locative-types (when locative-types
                                (read-from-string
                                 (format nil "(~A)" locative-types)))))
