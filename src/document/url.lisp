@@ -157,7 +157,8 @@
      (prog1 (subseq string 0 scheme-end)
        (setq pos (1+ scheme-end)))
      ;; authority
-     (if (and (< (+ pos 2) len)
+     (if (and pos
+              (< (+ pos 2) len)
               (char= (aref string pos) #\/)
               (char= (aref string (1+ pos)) #\/))
          (let ((authority-end
@@ -166,7 +167,7 @@
              (setq pos authority-end)))
          nil)
      ;; path
-     (when (< pos len)
+     (when (and pos (< pos len))
        (let ((path-end (position-if (lambda (char)
                                       (member char '(#\# #\?)))
                                     string :start pos)))
@@ -184,6 +185,15 @@
      ;; fragment
      (when (and pos (< pos len))
        (urldecode (subseq string pos))))))
+
+(defun urlp (string)
+  (ignore-errors (parse-url string)))
+
+(defun append-to-url (url suffix)
+  (if (or (alexandria:ends-with #\/ url)
+          (alexandria:starts-with #\/ suffix))
+      (format nil "~A~A" url suffix)
+      (format nil "~A/~A" url suffix)))
 
 
 (defun pathname-to-file-url (pathname)

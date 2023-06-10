@@ -579,8 +579,9 @@
                     (with-final-output-to-page (stream page)
                       (when (page-header-fn page)
                         (funcall (page-header-fn page) stream))
-                      (print-markdown (maybe-for-w3m (parse-markdown-fast
-                                                      markdown-string))
+                      (print-markdown (post-process-parse-tree
+                                       (parse-markdown-fast
+                                        markdown-string))
                                       stream :format *format*)
                       (when (page-footer-fn page)
                         (funcall (page-footer-fn page) stream)))))
@@ -1008,9 +1009,16 @@
                       out))))
 
 
-;;;; Post-process the markdown parse tree to make it prettier on w3m.
+;;;; Post-process the markdown parse tree to make it prettier on w3m
+;;;; and maybe make relative links absolute.
 
-(defun maybe-for-w3m (parse-tree)
+(defvar *document-base-url* nil)
+
+(defun post-process-parse-tree (parse-tree)
+  (post-process-base-url
+   (post-process-for-w3m parse-tree)))
+
+(defun post-process-for-w3m (parse-tree)
   (if (eq *html-subformat* :w3m)
       (flet ((translate (parent tree)
                (declare (ignore parent))
@@ -1026,6 +1034,23 @@
                                 (:RAW-HTML "</i>"))
                               nil t)))))
         (map-markdown-parse-tree '(:code :verbatim 3bmd-code-blocks::code-block)
+                                 '() nil #'translate parse-tree))
+      parse-tree))
+
+(defun post-process-base-url (parse-tree)
+  (if *document-base-url*
+      (flet ((translate (parent tree)
+               (declare (ignore parent))
+               (cond ((eq (first tree) :explicit-link)
+                      (let ((source (pt-get tree :source)))
+                        (assert source)
+                        (unless (urlp source)
+                          (setf (pt-get tree :source)
+                                (append-to-url *document-base-url* source)))
+                        tree))
+                     (t
+                      (assert nil)))))
+        (map-markdown-parse-tree '(:explicit-link)
                                  '() nil #'translate parse-tree))
       parse-tree))
 
