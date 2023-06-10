@@ -614,14 +614,6 @@
                (funcall fn element)
                (map-documentable fn element))))))
 
-(defun guess-package (reference)
-  (if (and (not (and (boundp '*section*)
-                     *document-normalize-packages*))
-           reference
-           (symbolp (reference-object reference)))
-      (symbol-package (reference-object reference))
-      *package*))
-
 ;;; Silence SBCL compiler note.
 #+sbcl
 (define-condition unresolvable-reflink (warning) ())
@@ -2708,6 +2700,14 @@
         bound to `(SYMBOL-PACKAGE 'PAX:RESOLVE)`. See
         DOCUMENTING-REFERENCE from @EXTENDING-DOCUMENT for the gory
         details.")
+
+(defun guess-package (reference)
+  (if (and (not (and (boundp '*section*)
+                     *document-normalize-packages*))
+           reference
+           (symbolp (reference-object reference)))
+      (symbol-package (reference-object reference))
+      *package*))
 
 
 ;;;; Basic DOCUMENT-OBJECT methods
