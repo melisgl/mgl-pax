@@ -29,8 +29,8 @@
                                       :key #'first :test #'match-dspec))))
     (if entry
         (second entry)
-        `(:error (format nil "Could not find source location for ~S."
-                         dspecs)))))
+        `(:error ,(format nil "Could not find source location for ~S."
+                          dspecs)))))
 
 (defun/autoloaded find-definition* (object reference-object &rest locatives)
   "Like FIND-DEFINITION, but tries to get the definition of

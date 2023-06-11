@@ -214,7 +214,9 @@
                               (swank-find-definitions-1 object)))))
 
 (defun swank-find-definitions-1 (object)
-  (swank-backend::find-definitions (object-to-swank-name object)))
+  ;; Source files may have #. in them.
+  (let ((*read-eval* t))
+    (swank-backend::find-definitions (object-to-swank-name object))))
 
 ;;; Turn OBJECT into a symbol suitable as an argument to
 ;;; SWANK-BACKEND:FIND-DEFINITIONS.
