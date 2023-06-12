@@ -483,10 +483,18 @@ The suggested key binding is `C-.' to parallel `M-.'."
                   (funcall (or mgl-pax-browser-function
                                browse-url-browser-function)
                            (concat mgl-pax-web-server-base-url "/"
-                                   pax-url
+                                   (url-hexify-string pax-url
+                                                      mgl-pax-url-allowed-chars)
                                    (when (slime-current-package)
                                      (concat "?pkg="
                                              (slime-current-package))))))))))
+
+;;; What characters need no escaping when PAX URLs are encoded in a
+;;; URL path. This does not allow ?/ to keep relative links working.
+(defconst mgl-pax-url-allowed-chars
+  (let ((vec (copy-sequence url-path-allowed-chars)))
+    (aset vec ?/ nil)
+    vec))
 
 (defun mgl-pax-document-pax-url/w3m (pax-url)
   (unless (and (mgl-pax-in-doc-buffer-p) (string= pax-url "pax:"))

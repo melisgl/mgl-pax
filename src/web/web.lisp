@@ -42,7 +42,7 @@
 (defun request-pax*-url ()
   (let ((uri (hunchentoot:request-uri*)))
     (assert (char= (aref uri 0) #\/))
-    (subseq uri 1)))
+    (urldecode (subseq uri 1))))
 
 (defun document-for-web (pax-url filename)
   (let ((*document/open-extra-args*
@@ -125,7 +125,7 @@
   (multiple-value-bind (static-files static-root) (web-toplevel-static-files)
     (let ((dispatchers ()))
       (dolist (file static-files)
-        (unless (string= (pathname-name file) "README")
+        (unless (alexandria:starts-with-subseq "README" (pathname-name file))
           (let ((uri (format nil "/~A" (enough-namestring file static-root))))
             (pushnew (if (uiop:directory-pathname-p file)
                          (hunchentoot:create-folder-dispatcher-and-handler
