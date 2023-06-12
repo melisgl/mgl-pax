@@ -321,9 +321,7 @@
 
 (defun working-locative-p (locative)
   (let ((type (locative-type locative)))
-    (cond ((and (alexandria:featurep :abcl)
-                (member type '(variable constant method type restart
-                               section locative glossary-term)))
+    (cond ((alexandria:featurep :abcl)
            nil)
           ((alexandria:featurep :clisp)
            nil)
