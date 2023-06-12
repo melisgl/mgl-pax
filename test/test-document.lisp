@@ -6,12 +6,13 @@
     (is (equal (reference-locative reference) locative))))
 
 (defun check-document (input expected
-                       &key (package (find-package :mgl-pax-test)))
+                       &key (package (find-package :mgl-pax-test)) msg)
   (let ((output (let ((*package* package)
                       (*document-hyperspec-root* "CLHS/")
                       (*document-url-versions* '(2)))
                   (document input :stream nil :format :markdown))))
     (is (null (mismatch% output expected))
+        :msg msg
         :ctx ("Input: ~S" input))))
 
 (defun document* (object &key (format :markdown) w3m)
@@ -42,14 +43,18 @@
         (is (= (length (% warnings)) n-expected-warnings)
             :ctx ("Input: ~S~%Full output:~%~S" input full-output))))))
 
-(defun check-pred (input pred &key msg w3m)
+(defun check-pred (input pred &key msg w3m (format :markdown))
   (let* ((*package* (find-package :mgl-pax-test))
          (*document-hyperspec-root* "CLHS/")
          (*document-url-versions* '(2))
-         (full-output (document* input :format :markdown :w3m w3m)))
-    (is (funcall pred full-output)
+         (full-output (document* input :format format :w3m w3m))
+         (pred* (if (stringp pred)
+                    (lambda (string)
+                      (search pred string))
+                    pred)))
+    (is (funcall pred* full-output)
         :msg msg
-        :ctx ("Input: ~S~%Full output:~%~S" input full-output))))
+        :ctx ("Input: ~S~%Pred: ~S~%" input pred))))
 
 (defun internedp (name)
   (find-symbol (string name) :mgl-pax-test))
@@ -64,6 +69,7 @@
   (test-downcasing)
   (test-link)
   (test-headings)
+  (test-base-url)
   ;; PAX::@VARIABLELIKE-LOCATIVES
   (test-variable)
   ;; PAX::@MACROLIKE-LOCATIVES
@@ -666,6 +672,32 @@ This is [Self-referencing][e042].
   (check-pred pax::@emacs-setup (lambda (string)
                                   (search (format nil "~%## Emacs Setup~%")
                                           string))))
+
+
+(deftest test-base-url ()
+  (dolist (*document-base-url* '("http://example.com" "http://example.com/"))
+    (check-pred "[xxx](x.html)" "http://example.com/x.html"
+                :msg ":EXPLICIT-LINK")
+    (check-pred (format nil "[xxx][def]~%~%  [def]: x.html")
+                "http://example.com/x.html"
+                :msg ":REFERENCE")
+    (check-pred "![xxx](x.jpg)" "http://example.com/x.jpg"
+                :msg ":IMG :EXPLICIT-LINK")
+    (check-pred (format nil "![xxx][def]~%~%  [def]: x.jpg")
+                "http://example.com/x.jpg"
+                :msg ":IMG :REFERENCE")
+    (check-pred (list "FOO function" (make-reference 'foo 'function))
+                "[bc64]: #MGL-PAX-TEST:FOO%20FUNCTION"
+                :msg "intra-page")
+    (check-pred "<a href='relative'>link</a>"
+                "<a href='relative'>link</a>"
+                :msg "explicit html link"))
+  (signals (error :pred "no query and fragment")
+    (let ((*document-base-url* "http://example.com/?q"))
+      (document "xxx")))
+  (signals (error :pred "no query and fragment")
+    (let ((*document-base-url* "http://example.com/#z"))
+      (document "xxx"))))
 
 
 (defparameter *nasty-var* (format nil "~%~%")

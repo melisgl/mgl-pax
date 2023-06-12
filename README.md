@@ -2244,6 +2244,17 @@ table of contents and navigation links.
           details.
 
 
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-BASE-URL-2A-20VARIABLE-29"></a>
+- [variable] **\*DOCUMENT-BASE-URL\*** *NIL*
+
+    When `*DOCUMENT-BASE-URL*` is non-`NIL`, this is prepended to all
+    Markdown relative `URL`s. It must be a valid `URL` without no query and
+    fragment parts (that is, "http://lisp.org/doc/" but not
+    "http://lisp.org/doc?a=1" or "http://lisp.org/doc#fragment").
+    Note that intra-page links using only `URL` fragments (e.g. and
+    explicit HTML links (e.g. `<a href="...">`) in Markdown are not
+    affected.
+
 <a id="x-28MGL-PAX-3A-40DOCUMENTATION-UTILITIES-20MGL-PAX-3ASECTION-29"></a>
 ### 8.9 Utilities for Generating Documentation
 

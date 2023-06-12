@@ -579,7 +579,7 @@
                     (with-final-output-to-page (stream page)
                       (when (page-header-fn page)
                         (funcall (page-header-fn page) stream))
-                      (print-markdown (post-process-parse-tree
+                      (print-markdown (post-process-for-w3m
                                        (parse-markdown-fast
                                         markdown-string))
                                       stream :format *format*)
@@ -1000,23 +1000,18 @@
 ;;; markup symbols as code (if *DOCUMENT-UPPERCASE-IS-CODE*), autolink
 ;;; (if *DOCUMENT-LINK-SECTIONS*, *DOCUMENT-LINK-CODE*) and always
 ;;; handle explicit links with locatives (e.g. [FOO][function]).
-;;; Return the transformed string.
+;;; Finally handle *DOCUMENT-BASE-URL* and return the transformed
+;;; string.
 (defun codify-and-link (string)
   (when string
     (with-output-to-string (out)
-      (print-markdown (link (codify (include-docstrings
-                                     (parse-markdown string))))
+      (print-markdown (add-base-url (link (codify (include-docstrings
+                                                   (parse-markdown string)))))
                       out))))
 
 
 ;;;; Post-process the markdown parse tree to make it prettier on w3m
 ;;;; and maybe make relative links absolute.
-
-(defvar *document-base-url* nil)
-
-(defun post-process-parse-tree (parse-tree)
-  (post-process-base-url
-   (post-process-for-w3m parse-tree)))
 
 (defun post-process-for-w3m (parse-tree)
   (if (eq *html-subformat* :w3m)
@@ -1034,23 +1029,6 @@
                                 (:RAW-HTML "</i>"))
                               nil t)))))
         (map-markdown-parse-tree '(:code :verbatim 3bmd-code-blocks::code-block)
-                                 '() nil #'translate parse-tree))
-      parse-tree))
-
-(defun post-process-base-url (parse-tree)
-  (if *document-base-url*
-      (flet ((translate (parent tree)
-               (declare (ignore parent))
-               (cond ((eq (first tree) :explicit-link)
-                      (let ((source (pt-get tree :source)))
-                        (assert source)
-                        (unless (urlp source)
-                          (setf (pt-get tree :source)
-                                (append-to-url *document-base-url* source)))
-                        tree))
-                     (t
-                      (assert nil)))))
-        (map-markdown-parse-tree '(:explicit-link)
                                  '() nil #'translate parse-tree))
       parse-tree))
 
@@ -2368,7 +2346,8 @@
   (*document-url-versions* variable)
   (*document-min-link-hash-length* variable)
   (*document-mark-up-signatures* variable)
-  (*document-normalize-packages* variable))
+  (*document-normalize-packages* variable)
+  (*document-base-url* variable))
 
 
 (defvar *document-url-versions* '(2 1)
@@ -2733,6 +2712,39 @@
            (symbolp (reference-object reference)))
       (symbol-package (reference-object reference))
       *package*))
+
+
+(defvar *document-base-url* nil
+  """When *DOCUMENT-BASE-URL* is non-NIL, this is prepended to all
+  Markdown relative URLs. It must be a valid URL without no query and
+  fragment parts (that is, "http://lisp.org/doc/" but not
+  "http://lisp.org/doc?a=1" or "http://lisp.org/doc#fragment").
+  Note that intra-page links using only URL fragments (e.g. and
+  explicit HTML links (e.g. `<a href="...">`) in Markdown are not
+  affected.""")
+
+(defun add-base-url (parse-tree)
+  (if *document-base-url*
+      (flet ((translate (parent tree)
+               (declare (ignore parent))
+               (ecase (first tree)
+                 ((:explicit-link :reference)
+                  (let ((source (pt-get tree :source)))
+                    (assert source)
+                    (unless (urlp source)
+                      (setf (pt-get tree :source)
+                            (append-to-url *document-base-url* source)))
+                    tree)))))
+        (multiple-value-bind (scheme authority path query fragment)
+            (parse-url *document-base-url*)
+          (declare (ignore path))
+          (unless (and scheme authority (null query) (null fragment))
+            (error "~@<~S should have scheme and authority ~
+                   but no query and fragment parts.~:@>"
+                   '*document-base-url*)))
+        (map-markdown-parse-tree '(:explicit-link :reference)
+                                 '() nil #'translate parse-tree))
+      parse-tree))
 
 
 ;;;; Basic DOCUMENT-OBJECT methods

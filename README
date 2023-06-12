@@ -2052,6 +2052,16 @@ table of contents and navigation links.
           details.
 
 
+- [variable] *DOCUMENT-BASE-URL* NIL
+
+    When *DOCUMENT-BASE-URL* is non-NIL, this is prepended to all
+    Markdown relative URLs. It must be a valid URL without no query and
+    fragment parts (that is, "http://lisp.org/doc/" but not
+    "http://lisp.org/doc?a=1" or "http://lisp.org/doc#fragment").
+    Note that intra-page links using only URL fragments (e.g. and
+    explicit HTML links (e.g. `<a href="...">`) in Markdown are not
+    affected.
+
 ### Utilities for Generating Documentation
 
 Two convenience functions are provided to serve the common case of

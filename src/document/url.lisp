@@ -146,6 +146,17 @@
                                 (t char))))))
 
 
+;;; For http://user@example.com:8080/x/y.html?a=1&b=2#z, return:
+;;;
+;;; 1. the scheme ("http"),
+;;;
+;;; 2. the authority ("user@example.com:8080"),
+;;;
+;;; 3. the path ("/x/y.html"),
+;;;
+;;; 4. the query ("a=1&b=2"),
+;;;
+;;; 5. and the fragment ("z").
 (defun parse-url (string)
   (let ((scheme-end (position #\: string))
         (pos 0)
