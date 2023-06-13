@@ -41,11 +41,16 @@
   #-allegro
   (find-package name))
 
-(defun external-symbol-p (symbol)
-  (let ((package (symbol-package symbol)))
-    (and package
-         (eq (nth-value 1 (find-symbol (symbol-name symbol) package))
-             :external))))
+(defun external-symbol-p (symbol &optional (package (symbol-package symbol)))
+  (and package
+       (eq (nth-value 1 (find-symbol (symbol-name symbol) package))
+           :external)))
+
+(defun symbol-other-packages (symbol)
+  (loop for package in (list-all-packages)
+        when (and (external-symbol-p symbol package)
+                  (not (eq package (symbol-package symbol))))
+          collect package))
 
 (defun special-operator-p* (name)
   (or (special-operator-p name)

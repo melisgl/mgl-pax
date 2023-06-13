@@ -15,7 +15,7 @@ because it's translated to a list item
 
 " *standard-output* :FORMAT :HTML)
 
-But there is not good place to define them, so we'll need something
+But there is no good place to define them, so we'll need something
 like a symbol based definition:
 
 (defmdtarget markdown "http://exxx")
@@ -34,7 +34,6 @@ This is partially done. CLHS is mostly implemented as an external
 link. See EXTERNAL-LOCATIVE-P and co.
 * MAYBE link to MOP
 * MAYBE consider CommonDoc from the 40ants fork
-* MAYBE split transcription off into a separate library?
 * MAYBE remove some markup in :PLAIN format?
 * MAYBE get variable initforms from source?
 Or fall back on this for deficient ARGLISTs. Will be really slow.
@@ -106,6 +105,5 @@ C-. on ALEXANDRIA:DESTRUCTURING-CASE
 Use QL:WHO-DEPENDS-ON and look for the top-level sections instead. All
 the noise sections in MGL-PAX-TEST argue against this idea. Also, what
 if QL is not available?
-* MAYBE add "also exported from" to "see home package xxx"
 * MAYBE when exported by pax, we know the exact definition being exported
-The package apropos could take advantage?
+Package apropos could take advantage?

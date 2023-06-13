@@ -421,10 +421,15 @@
               (finalize-pax-url (urlencode (reference-to-ambiguous-pax-url
                                             reference)))))
       (unless (eq (reference-locative-type reference) 'section)
-        (let ((package (find-reference-package reference)))
+        (multiple-value-bind (package other-packages)
+            (find-reference-package reference)
           (when package
-            (emit "the package `~A`"
-                  (escape-markdown (package-name package))))))
+            (emit "the home package [~A][cl:package]"
+                  (escape-markdown (package-name package))))
+          (when other-packages
+            (emit "other exporting packages ~{[~A][cl:package]~^, ~}"
+                  (loop for package in other-packages
+                        collect (escape-markdown (package-name package)))))))
       (let ((resolved (resolve reference :errorp nil)))
         (when (packagep resolved)
           (let ((name (make-symbol (package-name resolved))))
@@ -449,7 +454,7 @@
 (defun find-reference-package (reference)
   (let ((object (reference-object reference)))
     (when (symbolp object)
-      (symbol-package object))))
+      (values (symbol-package object) (symbol-other-packages object)))))
 
 ;;; E.g. "pax:foo"
 (defun document-for-emacs/ambiguous (references pax-url title filename)
