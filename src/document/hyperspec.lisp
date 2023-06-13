@@ -2177,7 +2177,7 @@
 (defun hyperspec-glossary-entry-anchor (title)
   (if (string= title "()")
       "OPCP"
-      (string-downcase (substitute #\_ #\- (substitute #\_ #\Space title)))))
+      (string-downcase (substitute #\_ #\Space title))))
 
 (defun hyperspec-glossary-entry-filename-part (title)
   (let ((char (aref title 0)))

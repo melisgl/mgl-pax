@@ -1137,8 +1137,8 @@ This is [Self-referencing][e042].
   (check-head "[readably][(clhs glossary-term)]" "[readably][278a]")
   (check-document "[non-local exit][clhs]" "[non-local exit][b815]
 
-  [b815]: CLHS/Body/26_glo_n.htm#non_local_exit '\"non-local exit\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
-"))
+  [b815]: CLHS/Body/26_glo_n.htm#non-local_exit '\"non-local exit\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  "))
 
 (deftest test-clhs-issue ()
   (let ((*document-link-to-hyperspec* t))
