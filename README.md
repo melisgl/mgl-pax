@@ -2460,8 +2460,9 @@ World](https://melisgl.github.io/mgl-pax-world/).
 <a id="x-28MGL-PAX-3AREGISTER-DOC-IN-PAX-WORLD-20FUNCTION-29"></a>
 - [function] **REGISTER-DOC-IN-PAX-WORLD** *NAME SECTIONS PAGE-SPECS*
 
-    Register `SECTIONS` and `PAGE-SPECS` under `NAME` in PAX World. By
-    default, [`UPDATE-PAX-WORLD`][ee51] generates documentation for all of these.
+    Register `SECTIONS` and `PAGE-SPECS` under `NAME` (a symbol) in PAX
+    World. By default, [`UPDATE-PAX-WORLD`][ee51] generates documentation for all
+    of these.
 
 For example, this is how PAX registers itself:
 

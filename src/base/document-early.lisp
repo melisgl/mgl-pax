@@ -352,11 +352,14 @@
 (defvar *registered-pax-world-docs* ())
 
 (defun register-doc-in-pax-world (name sections page-specs)
-  """Register SECTIONS and PAGE-SPECS under NAME in PAX World. By
-  default, UPDATE-PAX-WORLD generates documentation for all of these."""
+  """Register SECTIONS and PAGE-SPECS under NAME (a symbol) in PAX
+  World. By default, UPDATE-PAX-WORLD generates documentation for all
+  of these."""
+  (declare (type symbol name))
   (setq *registered-pax-world-docs*
         (remove name *registered-pax-world-docs* :key #'first))
-  (push (list name sections page-specs) *registered-pax-world-docs*))
+  (push (list name (ensure-list sections) page-specs)
+        *registered-pax-world-docs*))
 
 ;;; Register PAX itself.
 (defun pax-sections ()
