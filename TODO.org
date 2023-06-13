@@ -100,8 +100,6 @@ E.g. 'clhs' works in a package where pax used but not elsewhere.
 But so does M-.'s history.
 * OPT 3bmd parsing performance on large blocks
 https://github.com/3b/3bmd/issues/56
-* MAYBE make C-. parse symbols in non-lisp buffers
-E.g. it doesn't work here on PAX::@PAX-MANUAL.
 * MAYBE heuristically detect code blocks?
 C-. on ALEXANDRIA:DESTRUCTURING-CASE
 * MAYBE obsolete REGISTER-DOC-IN-PAX-WORLD

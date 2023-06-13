@@ -204,12 +204,34 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 ;;; addition, we also look up definitions for the symbol whose name
 ;;; has the parts beyond [] cut off.
 (defun mgl-pax-wall-at-point ()
-  (let ((name (slime-symbol-at-point))
-        (bounds (slime-bounds-of-symbol-at-point)))
-    (when bounds
-      (let ((locatives (mgl-pax-find-locatives bounds))
-            (wall (mgl-pax-parse-reflink bounds)))
-        (append (and name `((,name ,locatives))) wall)))))
+  ;; `mgl-pax-call-in-lisp-mode' makes this function work even in
+  ;; non-lisp buffers.
+  (mgl-pax-call-in-lisp-mode
+   (lambda ()
+     (let ((name (slime-symbol-at-point))
+           (bounds (slime-bounds-of-symbol-at-point)))
+       (when bounds
+         (let ((locatives (mgl-pax-find-locatives bounds))
+               (wall (mgl-pax-parse-reflink bounds)))
+           (append (and name `((,name ,locatives))) wall)))))))
+
+;;; If not in a lisp-mode buffer, then copy the five lines around
+;;; point into a temporary lisp buffer, put point on the same
+;;; character in the new buffer and call FN.
+(defun mgl-pax-call-in-lisp-mode (fn)
+  (if (eq major-mode 'lisp-mode)
+      (funcall fn)
+    (let ((text-before (buffer-substring-no-properties
+                        (line-beginning-position -1)
+                        (point)))
+          (text-after (buffer-substring-no-properties
+                       (point)
+                       (line-beginning-position 4))))
+      (with-temp-buffer
+        (lisp-mode)
+        (insert text-before)
+        (save-excursion (insert text-after))
+        (funcall fn)))))
 
 ;;; Return the sexps before and after (slime-symbol-at-point),
 ;;; skipping some markup.
@@ -413,14 +435,26 @@ example, the URL \"pax::@pax-manual pax:section#pax:defsection
 pax:macro\" points to the documentation of the DEFSECTION macro
 on the page that contains the entire PAX manual.
 
-Note that when invoked interactively, the URL scheme, \"pax:\",
-must not to be included in PAX-URL and the entered REFERENCE and
-FRAGMENT will be automatically urlencoded.
+When invoked interactively:
 
-When PAX-URL is the string \"pax:\" (e.g. when the empty string
-was entered interactively), an existing w3m buffer is displayed,
-or if there is no such buffer, then the documentation of how to
-browse documentation in Emacs is shown.
+- Without a prefix arg, the object of the reference defaults to
+  `slime-symbol-at-point' and an attempt is made to find the
+  locative around that. This works in non-lisp buffers as well.
+
+- With a prefix arg, when no object is found, or when there are
+  no definitions found for the object and locatives found in the
+  buffer, `mgl-pax-document' prompts for URL. In this case, the
+  URL scheme, \"pax:\", must not to be included. The entered
+  REFERENCE and FRAGMENT need not be URL encoded.
+
+- When PAX-URL is the string \"pax:\" (e.g. when the empty string
+  was entered interactively), an existing w3m buffer is
+  displayed, or if there is no such buffer, then the
+  documentation of how to browse documentation in Emacs is shown.
+
+The package in which symbols are read is `slime-current-package'.
+Hence, in Lisp buffers, the buffer's package is used. In other
+buffers, the package of the repl.
 
 The suggested key binding is `C-.' to parallel `M-.'."
   (interactive (list nil))
