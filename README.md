@@ -1322,7 +1322,7 @@ section containing the definition with `point` in it. See
     The `PAGES` argument is to create multi-page documents by routing
     some of the generated output to files, strings or streams. `PAGES` is
     a list of page specification elements. A page spec is a [property
-    list][ed5f] with keys `:OBJECTS`, `:OUTPUT`, `:URI-FRAGMENT`,
+    list][b18e] with keys `:OBJECTS`, `:OUTPUT`, `:URI-FRAGMENT`,
     `:SOURCE-URI-FN`, `:HEADER-FN` and `:FOOTER-FN`. `OBJECTS` is a list of
     objects (references are allowed but not required) whose
     documentation is to be sent to `:OUTPUT`.
@@ -3926,6 +3926,7 @@ they are presented.
   [ad78]: http://www.lispworks.com/documentation/HyperSpec/Body/f_format.htm "FORMAT (MGL-PAX:CLHS FUNCTION)"
   [ad94]: #x-28MGL-PAX-3A-40UNAMBIGUOUS-UNSPECIFICED-LOCATIVE-20MGL-PAX-3ASECTION-29 "Unambiguous Unspecified Locative"
   [aeb6]: http://www.lispworks.com/documentation/HyperSpec/Body/a_fn.htm "FUNCTION MGL-PAX:CLHS"
+  [b18e]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_p.htm#property_list '"property list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [b372]: #x-28MGL-PAX-3A-40UNRESOLVABLE-REFLINKS-20MGL-PAX-3ASECTION-29 "Unresolvable Links"
   [b3cc]: #x-28MGL-PAX-3A-40EXPLICIT-AND-AUTOLINKING-20MGL-PAX-3ASECTION-29 "Explicit and Autolinking"
   [b4f0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_intern.htm "INTERN (MGL-PAX:CLHS FUNCTION)"

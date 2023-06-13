@@ -1609,8 +1609,9 @@ default (see EXPORTABLE-REFERENCE-P).")
                              name
                              (princ-to-string name))))
         (flet ((glossary-term? ()
-                 (when (find-hyperspec-glossary-entry-url name-string)
-                   (make-reference name-string '(clhs glossary-term))))
+                 (let ((id (find-hyperspec-glossary-entry-id name-string)))
+                   (when id
+                     (make-reference id '(clhs glossary-term)))))
                (issue-or-section? ()
                  (or (let ((id (find-hyperspec-issue-id name-string)))
                        (when id

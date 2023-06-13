@@ -1131,14 +1131,18 @@ This is [Self-referencing][e042].
   (check-head "[`3.4`][]" "`3.4`" :warnings 1)
   (check-head "[3.4][CLHS]" "[3.4][e442]")
   (check-head "[Lambda Lists][clhs]" "[Lambda Lists][e442]")
-  (check-head "[03_d][clhs]" "[03\\_d][e442]"))
+  (check-head "[03_d][clhs]" "[03\\_d][e442]")
+  (check-head "[ Lambda  Lists ][clhs]" "[ Lambda  Lists ][e442]"))
 
 (deftest test-clhs-glossary-entries ()
   (check-head "[readably][(clhs glossary-term)]" "[readably][278a]")
   (check-document "[non-local exit][clhs]" "[non-local exit][b815]
 
   [b815]: CLHS/Body/26_glo_n.htm#non-local_exit '\"non-local exit\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
-  "))
+")
+  (check-head (format nil "[ non-local~%exit ][(clhs glossary-term)]")
+              (format nil "[ non-local~%exit ][b815]")
+              :n-lines 2))
 
 (deftest test-clhs-issue ()
   (let ((*document-link-to-hyperspec* t))

@@ -32,6 +32,7 @@
 (autoload find-hyperspec-definition-url '#:mgl-pax/document :export nil)
 (autoload find-hyperspec-section-id '#:mgl-pax/document :export nil)
 (autoload find-hyperspec-section-url '#:mgl-pax/document :export nil)
+(autoload find-hyperspec-glossary-entry-id '#:mgl-pax/document :export nil)
 (autoload find-hyperspec-glossary-entry-url '#:mgl-pax/document :export nil)
 (autoload find-hyperspec-issue-id '#:mgl-pax/document :export nil)
 (autoload find-hyperspec-issue-url '#:mgl-pax/document :export nil)
