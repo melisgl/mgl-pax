@@ -229,7 +229,7 @@
     (declare (ignore authority))
     (unless (equal scheme "pax-wall")
       (error "~S doesn't have pax-wall: scheme." pax-wall-url))
-    (let ((definitions (definitions-of-wall (read-from-string (urldecode path))
+    (let ((definitions (definitions-of-wall (read-from-string path)
                                             :definitions-of 'documentables-of)))
       (case (length definitions)
         ((0) nil)

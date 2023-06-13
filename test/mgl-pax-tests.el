@@ -412,7 +412,6 @@
     (insert "(defun foo-simple () \"docstring\" t)")
     (slime-compile-defun)
     (slime-sync-to-top-level 1)
-    ;; Explicit call
     (mgl-pax-document "pax:foo-simple")
     (slime-sync-to-top-level 1)
     (mgl-pax-sync-current-buffer)
@@ -426,7 +425,6 @@
     (insert "(defun foo-simple () \"docstring\" t)")
     (slime-compile-defun)
     (slime-sync-to-top-level 1)
-    ;; Explicit call
     (unwind-protect
         (progn
           (mgl-pax-document "pax:foo-simple")
@@ -434,6 +432,41 @@
           (mgl-pax-sync-current-buffer)
           (should (eq major-mode 'w3m-mode))
           (should (substringp "* [function] FOO-SIMPLE" (w3m-contents))))
+      (when (eq major-mode 'w3m-mode)
+        (kill-buffer))))))
+
+(ert-deftest test-mgl-pax-document/url-encoding/interactive ()
+  (with-browsers
+   (with-temp-lisp-and-non-lisp-buffer
+    (insert "(defun %foo-simple () \"docstring\" t)")
+    (slime-compile-defun)
+    (slime-sync-to-top-level 1)
+    (unwind-protect
+        (progn
+          (insert "%foo-simple")
+          (call-interactively 'mgl-pax-document)
+          (slime-sync-to-top-level 1)
+          (mgl-pax-sync-current-buffer)
+          (should (eq major-mode 'w3m-mode))
+          (should (substringp "* [function] %FOO-SIMPLE" (w3m-contents))))
+      (when (eq major-mode 'w3m-mode)
+        (kill-buffer))))))
+
+(ert-deftest test-mgl-pax-document/url-encoding/non-interactive ()
+  (with-browsers
+   (with-temp-lisp-and-non-lisp-buffer
+    (insert "(defun %foo-simple () \"docstring\" t)")
+    (slime-compile-defun)
+    (slime-sync-to-top-level 1)
+    (unwind-protect
+        (progn
+          (mgl-pax-document (concat "pax:" (url-hexify-string "%foo-simple")))
+          (slime-sync-to-top-level 1)
+          (mgl-pax-sync-current-buffer)
+          (should (eq major-mode 'w3m-mode))
+          (should (substringp "* [function] %FOO-SIMPLE" (w3m-contents)))
+          (mgl-pax-doc-reload)
+          (slime-sync-to-top-level 1))
       (when (eq major-mode 'w3m-mode)
         (kill-buffer))))))
 

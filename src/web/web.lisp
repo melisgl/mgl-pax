@@ -42,7 +42,7 @@
 (defun request-pax*-url ()
   (let ((uri (hunchentoot:request-uri*)))
     (assert (char= (aref uri 0) #\/))
-    (urldecode (subseq uri 1))))
+    (subseq uri 1)))
 
 (defun document-for-web (pax-url filename)
   (let ((*document/open-extra-args*

@@ -477,7 +477,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
          (let ((wall (mgl-pax-wall-at-point)))
            (if wall
                (mgl-pax-document-pax-url
-                (concat "pax-wall:" (url-encode-url (format "%S" wall))))
+                (concat "pax-wall:" (url-hexify-string (format "%S" wall))))
              (mgl-pax-prompt-and-document))))))
 
 (defun mgl-pax-prompt-and-document ()
@@ -619,9 +619,9 @@ The suggested key binding is `C-.' to parallel `M-.'."
   (cl-destructuring-bind (reference fragment)
       (mgl-pax-parse-path-and-fragment schemeless-pax-url)
     (if fragment
-        (concat "pax:" (url-encode-url reference)
-                "#" (url-encode-url fragment))
-      (concat "pax:" (url-encode-url reference)))))
+        (concat "pax:" (url-hexify-string reference)
+                "#" (url-hexify-string fragment))
+      (concat "pax:" (url-hexify-string reference)))))
 
 ;;; Return the path and fragment part of the schemeless URL.
 (defun mgl-pax-parse-path-and-fragment (url)
