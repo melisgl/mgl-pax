@@ -671,12 +671,27 @@ which makes navigating the sources with `M-.` (see
     DEFINE-COMPILER-MACRO. See the FUNCTION locative for a note on
     arglists.
 
+- [locative] SETF &OPTIONAL METHOD
+
+    Refers to a setf expander (see DEFSETF and DEFINE-SETF-EXPANDER)
+    or a setf function (e.g. `(DEFUN (SETF NAME) ...)` or the
+    same with DEFGENERIC). The format in DEFSECTION is `(<NAME> SETF)`
+    in all these cases.
+    
+    To refer to methods of a setf generic function, use a METHOD
+    locative inside SETF like this:
+    
+        (documentation (setf (method () (t symbol (eql function))))
+
+
 ### Locatives for Functions
 
 - [locative] FUNCTION
 
     Refers to a global function, typically defined with DEFUN. It is
-    also allowed to reference GENERIC-FUNCTIONs as FUNCTIONs.
+    also allowed to reference GENERIC-FUNCTIONs as FUNCTIONs. The
+    @OBJECT must be a SYMBOL (see the SETF locative for how to reference
+    setf functions).
     
     Note that the arglist in the generated documentation depends on the
     quality of SWANK-BACKEND:ARGLIST. It may be that default values of
@@ -685,12 +700,15 @@ which makes navigating the sources with `M-.` (see
 - [locative] GENERIC-FUNCTION
 
     Refers to a GENERIC-FUNCTION, typically defined with
-    DEFGENERIC.
+    DEFGENERIC. The @OBJECT must be a SYMBOL (see the SETF locative for
+    how to reference setf functions).
 
 - [locative] METHOD METHOD-QUALIFIERS METHOD-SPECIALIZERS
 
-    See CL:FIND-METHOD for the description of the arguments
-    METHOD-QUALIFIERS and METHOD-SPECIALIZERS. For example, a
+    This locative is to refer to METHODs named by SYMBOLs (for SETF methods,
+    see the SETF locative). See CL:FIND-METHOD for the description of
+    the arguments METHOD-QUALIFIERS and METHOD-SPECIALIZERS. For
+    example, a
     `(FOO (METHOD () (T (EQL XXX))))` as a DEFSECTION entry refers to
     this method:
     

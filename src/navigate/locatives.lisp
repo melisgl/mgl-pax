@@ -268,11 +268,84 @@
   (find-definition* (compiler-macro-function symbol) symbol 'compiler-macro))
 
 
+;;;; SETF locative
+
+(define-locative-type setf (&optional method)
+  "Refers to a [setf expander][clhs] (see DEFSETF and DEFINE-SETF-EXPANDER)
+  or a [setf function][clhs] (e.g. `(DEFUN (SETF NAME) ...)` or the
+  same with DEFGENERIC). The format in DEFSECTION is `(<NAME> SETF)`
+  in all these cases.
+
+  To refer to methods of a setf generic function, use a METHOD
+  locative inside SETF like this:
+
+      (documentation (setf (method () (t symbol (eql function))))")
+
+(defmethod locate-object (symbol (locative-type (eql 'setf))
+                          locative-args)
+  (unless (and (symbolp symbol)
+               (or (has-setf-p symbol)
+                   ;; KLUDGE: On some implementations HAS-SETF-P may
+                   ;; return NIL even though there is a
+                   ;; DEFINE-SETF-EXPANDER.
+                   (locate-docstring symbol 'setf ())))
+    (locate-error "~S does not have a SETF expansion." symbol))
+  (or (cond (locative-args
+             (unless (and (= (length locative-args) 1)
+                          (listp (first locative-args))
+                          (eq (first (first locative-args)) 'method))
+               (locate-error
+                "Only the METHOD locative is supported within SETF."))
+             (let ((method-locative (first locative-args)))
+               (ignore-errors (find-method* `(setf ,symbol)
+                                            (second method-locative)
+                                            (third method-locative)))))
+            (t
+             (ignore-errors (fdefinition* `(setf ,symbol)))))
+      (make-reference symbol (cons locative-type locative-args))))
+
+(defun locate-setf-function-or-method (symbol setf-locative-args)
+  (if setf-locative-args
+      (let ((method-locative (first setf-locative-args)))
+        (assert (eq (first method-locative) 'method))
+        (locate `(setf ,symbol) method-locative :errorp nil))
+      (ignore-errors (fdefinition* `(setf ,symbol)))))
+
+(defmethod locate-and-document (symbol (locative-type (eql 'setf))
+                                locative-args stream)
+  (documenting-reference (stream :arglist locative-args)
+    (document-docstring (locate-docstring symbol 'setf locative-args) stream)))
+
+(defmethod locate-docstring (symbol (locative-type (eql 'setf)) locative-args)
+  (let ((fn-or-method (locate-setf-function-or-method symbol locative-args)))
+    (if fn-or-method
+        (documentation* fn-or-method (if (typep fn-or-method 'method)
+                                         t
+                                         'function))
+        (or (documentation* symbol 'setf)
+            ;; CLISP runs into NO-APPLICABLE-METHOD currently.
+            (#-clisp progn #+clisp ignore-errors
+             (documentation* `(setf ,symbol) 'function))))))
+
+(defmethod locate-and-find-source (symbol (locative-type (eql 'setf))
+                                   locative-args)
+  (declare (ignore locative-args))
+  (let* ((name `(setf ,symbol))
+         (fn (ignore-errors (fdefinition name))))
+    (if fn
+        (find-definition* fn  name 'function)
+        (find-definition symbol 'setf))))
+
+(add-locative-to-source-search-list 'setf)
+
+
 ;;;; FUNCTION and GENERIC-FUNCTION locatives
 
 (define-locative-type function ()
   "Refers to a global function, typically defined with DEFUN. It is
-  also allowed to reference GENERIC-FUNCTIONs as FUNCTIONs.
+  also allowed to reference GENERIC-FUNCTIONs as FUNCTIONs. The
+  @OBJECT must be a SYMBOL (see the SETF locative for how to reference
+  [setf functions][clhs]).
 
   Note that the arglist in the generated documentation depends on the
   quality of SWANK-BACKEND:ARGLIST. It [may be][
@@ -281,15 +354,16 @@
 
 (define-locative-type generic-function ()
   "Refers to a [GENERIC-FUNCTION][class], typically defined with
-  DEFGENERIC.")
+  DEFGENERIC. The @OBJECT must be a SYMBOL (see the SETF locative for
+  how to reference [setf functions][clhs]).")
 
 (defmethod locate-object (symbol (locative-type (eql 'function)) locative-args)
   (declare (ignore locative-args))
-  (when (macro-function symbol)
-    (locate-error "~S is a macro, not a function." symbol))
+  (when (and (symbolp symbol) (macro-function symbol))
+    (locate-error "~S names a macro not a function." symbol))
   (let ((function (ignore-errors (symbol-function* symbol))))
     (unless function
-      (locate-error "~S does not name a function." symbol))
+      (locate-error "~S is not a symbol naming a function." symbol))
     function))
 
 (defmethod locate-object (symbol (locative-type (eql 'generic-function))
@@ -297,14 +371,16 @@
   (declare (ignore locative-args))
   (let ((function (ignore-errors (symbol-function* symbol))))
     (unless (typep function 'generic-function)
-      (locate-error "~S does not name a generic function." symbol))
+      (locate-error "~S is not a symbol naming a generic function." symbol))
     function))
 
 (defmethod canonical-reference ((function function))
   (let ((name (function-name function)))
     (unless name
       (locate-error "~S has no name." function))
-    (make-reference name 'function)))
+    (if (setf-name-p name)
+        (make-reference (second name) 'setf)
+        (make-reference name 'function))))
 
 ;;; It may be that (NOT (EQ SYMBOL (FUNCTION-NAME (FUNCTION
 ;;; SYMBOL)))), perhaps due to (SETF SYMBOL-FUNCTION). Thus if we have
@@ -315,8 +391,10 @@
   (make-reference object (cons locative-type locative-args)))
 
 (defmethod canonical-reference ((function generic-function))
-  (make-reference (swank-mop:generic-function-name function)
-                  'generic-function))
+  (let ((name (swank-mop:generic-function-name function)))
+    (if (setf-name-p name)
+        (make-reference (second name) 'setf)
+        (make-reference name 'generic-function))))
 
 (defmethod locate-canonical-reference
     (object (locative-type (eql 'generic-function)) locative-args)
@@ -352,8 +430,10 @@
 ;;;; METHOD locative
 
 (define-locative-type method (method-qualifiers method-specializers)
-  "See CL:FIND-METHOD for the description of the arguments
-  METHOD-QUALIFIERS and METHOD-SPECIALIZERS. For example, a
+  "This locative is to refer to METHODs named by SYMBOLs (for SETF methods,
+  see the SETF locative). See CL:FIND-METHOD for the description of
+  the arguments METHOD-QUALIFIERS and METHOD-SPECIALIZERS. For
+  example, a
   `(FOO (METHOD () (T (EQL XXX))))` as a DEFSECTION entry refers to
   this method:
 
@@ -362,19 +442,23 @@
 
   METHOD is not EXPORTABLE-LOCATIVE-TYPE-P.")
 
-(defmethod locate-object (symbol (locative-type (eql 'method)) locative-args)
+(defmethod locate-object (name (locative-type (eql 'method)) locative-args)
   (unless (= 2 (length locative-args))
     (locate-error "The syntax of the METHOD locative is ~
                    (METHOD <METHOD-QUALIFIERS> <METHOD-SPECIALIZERS>)."))
   (destructuring-bind (qualifiers specializers) locative-args
-    (or (ignore-errors (find-method* symbol qualifiers specializers))
+    (or (and (symbolp name)
+             (ignore-errors (find-method* name qualifiers specializers)))
         (locate-error "Method does not exist."))))
 
 (defmethod canonical-reference ((method method))
-  (make-reference (swank-mop:generic-function-name
-                   (swank-mop:method-generic-function method))
-                  `(method ,(swank-mop:method-qualifiers method)
-                           ,(method-specializers-list method))))
+  (let ((name (swank-mop:generic-function-name
+               (swank-mop:method-generic-function method)))
+        (method-locative `(method ,(swank-mop:method-qualifiers method)
+                                  ,(method-specializers-list method))))
+    (if (setf-name-p name)
+        (make-reference (second name) `(setf ,method-locative))
+        (make-reference name method-locative))))
 
 ;;; Return the specializers in a format suitable as the second
 ;;; argument to FIND-METHOD.

@@ -35,10 +35,11 @@
 
 (defun find-package* (name)
   ;; On AllegroCL, FIND-PACKAGE will signal an error if a relative
-  ;; package name has too many leading dots.
-  #+allegro
+  ;; package name has too many leading dots. On CMUCL, (FIND-PACKAGE
+  ;; "..") fails.
+  #+(or allegro cmucl)
   (ignore-errors (find-package name))
-  #-allegro
+  #-(or allegro cmucl)
   (find-package name))
 
 (defun external-symbol-p (symbol &optional (package (symbol-package symbol)))
@@ -70,6 +71,46 @@
     #+cmucl
     (sys::parse-unknown-type ())))
 
+(defun setf-name-p (name)
+  (and (listp name)
+       (= (length name) 2)
+       (eq (first name) 'setf)))
+
+;;; See if SYMBOL has a [setf expander][clhs] or [setf
+;;; function][clhs].
+(defun has-setf-p (symbol)
+  (or (has-setf-expander-p symbol)
+      (has-setf-function-p symbol)))
+
+(defun has-setf-expander-p (symbol)
+  ;; FIXME: other implemenations
+  #+ccl (gethash symbol ccl::%setf-methods%)
+  #+clisp (get symbol 'system::setf-expander)
+  #+sbcl (swank/sbcl::setf-expander symbol)
+  #-(or ccl clisp sbcl)
+  ;; KLUDGE: When there is no setf expansion, we get this:
+  ;;
+  ;;   (nth-value 3 (get-setf-expansion '(undefined)))
+  ;;   => (FUNCALL #'(SETF UNDEFINED) #:NEW1)
+  ;;
+  ;; which is non-portable in theory, but luckily, portable in
+  ;; practice.
+  (let ((storing-form (nth-value 3 (ignore-errors
+                                    (get-setf-expansion `(,symbol))))))
+    ;; Sadly, using (NTH-VALUE 3 (GET-SETF-EXPANSION `(,SYMBOL))) to
+    ;; tell whether SYMBOL has a setf expansion doesn't work in
+    ;; general because GET-SETF-EXPANSION may fail due to either
+    ;; DEFINE-SETF-EXPANDER or the macro named by the value of SYMBOL
+    ;; failing (e.g. with an insufficient number of arguments). For
+    ;; this reason, DEFSETFs can be detected but DEFINE-SETF-EXPANDERs
+    ;; cannot in general.
+    (and storing-form
+         (not (and (eq (first storing-form) 'funcall)
+                   (equal (second storing-form) `#'(setf ,symbol)))))))
+
+(defun has-setf-function-p (symbol)
+  (values (ignore-errors (fdefinition `(setf ,symbol)))))
+
 (defun symbol-global-value (symbol)
   #+allegro
   (multiple-value-bind (value bound) (sys:global-symbol-value symbol)
@@ -82,7 +123,7 @@
   #-(or allegro ccl sbcl)
   (ignore-errors (symbol-value symbol)))
 
-;;; Like SYMBOL-FUNCTION*, but sees through encapsulated functions.
+;;; Like SYMBOL-FUNCTION* but sees through encapsulated functions.
 (defun symbol-function* (symbol)
   #+abcl
   (or (system::untraced-function symbol)
@@ -91,9 +132,22 @@
   (or (system::get-traced-definition symbol)
       (symbol-function symbol))
   #+cmucl
-  (eval `(function ,symbol))
+  (progn (check-type symbol symbol)
+         (eval `(function ,symbol)))
   #-(or abcl cmucl clisp)
   (unencapsulated-function (symbol-function symbol)))
+
+(defun fdefinition* (name)
+  #+abcl
+  (or (system::untraced-function name)
+      (fdefinition name))
+  #+clisp
+  (or (system::get-traced-definition name)
+      (fdefinition name))
+  #+cmucl
+  (eval `(function ,name))
+  #-(or abcl cmucl clisp)
+  (unencapsulated-function (fdefinition name)))
 
 (defun unencapsulated-function (function)
   (or #+ccl (ccl::find-unencapsulated-definition function)
@@ -129,7 +183,7 @@
          (name #+clisp (system::function-name function)
                #-clisp (swank-backend:function-name function)))
     ;; ABCL has function names like (FOO (SYSTEM::INTERPRETED)).
-    (if (listp name)
+    (if (and (listp name) (not (eq (first name) 'setf)))
         (first name)
         name)))
 
@@ -254,9 +308,9 @@
 
 (defun find-method* (function-designator qualifiers specializers
                      &optional (errorp t))
-  (find-method (if (symbolp function-designator)
-                   (symbol-function* function-designator)
-                   function-designator)
+  (find-method (if (functionp function-designator)
+                   function-designator
+                   (fdefinition* function-designator))
                qualifiers
                (specializers-to-objects specializers)
                errorp))

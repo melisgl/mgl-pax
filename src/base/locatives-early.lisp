@@ -9,7 +9,8 @@
 (defsection @macrolike-locatives (:title "Locatives for Macros")
   (macro locative)
   (symbol-macro locative)
-  (compiler-macro locative))
+  (compiler-macro locative)
+  (setf locative))
 
 (defsection @functionlike-locatives (:title "Locatives for Functions")
   (function locative)

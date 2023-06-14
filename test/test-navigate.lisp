@@ -194,6 +194,8 @@
     (check-dspec-roundtrip (make-reference 'mmm 'macro)))
   (check-dspec-roundtrip (make-reference 'foo 'compiler-macro))
   (check-dspec-roundtrip (make-reference 'symmac 'symbol-macro))
+  (check-dspec-roundtrip (make-reference 'has-setf-expander 'setf))
+  (check-dspec-roundtrip (make-reference 'has-setf-function 'setf))
   (check-dspec-roundtrip (make-reference 'foo 'function))
   (with-test ("non-existent generic-function")
     (with-failure-expected ((alexandria:featurep '(:or :allegro :ccl)))
@@ -276,6 +278,11 @@
     (bar macro (defmacro bar))
     (my-smac symbol-macro (define-symbol-macro my-smac))
     (foo compiler-macro (define-compiler-macro foo))
+    (has-setf-expander setf (defsetf has-setf-expander) nil
+     ;; No source location for DEFSETF on any implementation.
+     t)
+    (has-setf-function setf (defun (setf has-setf-function)) nil
+     #.(alexandria:featurep '(:or :allegro :cmucl)))
     ;; @FUNCTIONLIKE-LOCATIVES
     (foo function (defun foo))
     (traced-foo function (defun traced-foo))

@@ -150,6 +150,7 @@
                 :serial t
                 :components ((:file "package")
                              (:file "test-defs")
+                             (:file "test-util")
                              (:file "test-navigate")
                              (:file "test-document")
                              (:file "test-transcribe")

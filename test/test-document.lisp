@@ -75,6 +75,7 @@
   ;; PAX::@MACROLIKE-LOCATIVES
   (test-macro)
   (test-symbol-macro)
+  (test-setf)
   ;; PAX::@FUNCTIONLIKE-LOCATIVES
   (test-function)
   (test-generic-function)
@@ -774,6 +775,118 @@ This is [Self-referencing][e042].
 "))
 
 
+(deftest test-setf ()
+  (is (null (locate 'undefined 'setf :errorp nil)))
+  (test-setf/expander)
+  (test-setf/function)
+  (test-setf/generic-function)
+  (test-setf/method))
+
+(deftest test-setf/expander ()
+  (check-ref (locate 'has-setf-expander 'setf) 'has-setf-expander 'setf)
+  (with-failure-expected ((and (alexandria:featurep :abcl) 'failure))
+    (check-document (make-reference 'has-setf-expander 'setf)
+                    "<a id=\"MGL-PAX-TEST:HAS-SETF-EXPANDER%20SETF\"></a>
+
+- [setf] **HAS-SETF-EXPANDER**
+
+    ddd
+")))
+
+(deftest test-setf/function ()
+  (with-test ("locate")
+    (with-failure-expected ((and (alexandria:featurep :clisp) 'failure))
+      (is (eq (locate 'has-setf-function 'setf) #'(setf has-setf-function)))))
+  (with-test ("canonical-reference with reference")
+    (check-ref (canonical-reference (make-reference 'has-setf-function 'setf))
+               'has-setf-function 'setf))
+  (with-test ("canonical-reference with object")
+    (check-ref (canonical-reference #'(setf has-setf-function))
+               'has-setf-function 'setf))
+  (with-test ("illegal form")
+    (with-test ("locate")
+      (is (null (locate '(setf has-setf-function) 'function :errorp nil))))
+    (with-test ("canonical-reference")
+      (check-ref (canonical-reference (make-reference '(setf has-setf-function)
+                                                      'function))
+                 '(setf has-setf-function) 'function)))
+  (with-failure-expected
+      ((and (alexandria:featurep '(:or :abcl :clisp)) 'failure))
+    (check-document (make-reference 'has-setf-function 'setf)
+                    "<a id=\"MGL-PAX-TEST:HAS-SETF-FUNCTION%20SETF\"></a>
+
+- [setf] **HAS-SETF-FUNCTION** *V*
+
+    eee
+")))
+
+(deftest test-setf/generic-function ()
+  (with-test ("locate")
+    (with-failure-expected ((and (alexandria:featurep :clisp) 'failure))
+      (is (eq (locate 'has-setf-generic-function 'setf)
+              #'(setf has-setf-generic-function)))))
+  (with-test ("canonical-reference with reference")
+    (check-ref (canonical-reference
+                (make-reference 'has-setf-generic-function 'setf))
+               'has-setf-generic-function 'setf))
+  (with-test ("canonical-reference with object")
+    (check-ref (canonical-reference #'(setf has-setf-generic-function))
+               'has-setf-generic-function 'setf))
+  (with-test ("illegal form")
+    (with-test ("locate")
+      (is (null (locate '(setf has-setf-generic-function) 'generic-function
+                        :errorp nil))))
+    (with-test ("canonical-reference")
+      (check-ref (canonical-reference
+                  (make-reference '(setf has-setf-generic-function)
+                                  'generic-function))
+                 '(setf has-setf-generic-function) 'generic-function)))
+  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :clisp :cmucl))
+                               'failure))
+    (check-document (make-reference 'has-setf-generic-function 'setf)
+                    "<a id=\"MGL-PAX-TEST:HAS-SETF-GENERIC-FUNCTION%20SETF\"></a>
+
+- [setf] **HAS-SETF-GENERIC-FUNCTION** *V*
+
+    fff
+")))
+
+(deftest test-setf/method ()
+  (let ((method (pax::find-method* #'(setf has-setf-generic-function)
+                                   () '(string)))
+        (locative '(setf (method () (string)))))
+    (with-test ("locate")
+      (with-failure-expected ((and (alexandria:featurep :clisp) 'failure))
+        (is (eq (locate 'has-setf-generic-function locative :errorp nil)
+                method))))
+    (with-test ("canonical-reference with reference")
+      (check-ref (canonical-reference
+                  (make-reference 'has-setf-generic-function locative))
+                 'has-setf-generic-function locative))
+    (with-test ("canonical-reference with object")
+      (check-ref (canonical-reference method)
+                 'has-setf-generic-function locative))
+    (with-test ("illegal form")
+      (with-test ("locate")
+        (is (null (locate '(setf has-setf-generic-function)
+                          '(method () (string)) :errorp nil))))
+      (with-test ("canonical-reference")
+        (check-ref (canonical-reference
+                    (make-reference '(setf has-setf-generic-function)
+                                    '(method () (string))))
+                   '(setf has-setf-generic-function) '(method () (string)))))
+    (with-failure-expected ((alexandria:featurep :clisp))
+      (signals-not (locate-error)
+        (check-document
+         (make-reference 'has-setf-generic-function locative)
+         "<a id=\"MGL-PAX-TEST:HAS-SETF-GENERIC-FUNCTION%20%28SETF%20%28METHOD%20NIL%20%28STRING%29%29%29\"></a>
+
+- [setf] **HAS-SETF-GENERIC-FUNCTION** *(V STRING)*
+
+    ggg
+")))))
+
+
 (deftest test-function ()
   (test-function-args)
   (test-function/canonical-reference)
@@ -854,7 +967,9 @@ This is [Self-referencing][e042].
   ;; Referring to a GENERIC-FUNCTION as FUNCTION
   (let ((ref (make-reference 'locate-object 'function)))
     (is (mgl-pax::reference= (canonical-reference ref) ref))
-    (check-head ref "<a id=\"MGL-PAX:LOCATE-OBJECT%20GENERIC-FUNCTION\"></a>")))
+    (check-head ref "<a id=\"MGL-PAX:LOCATE-OBJECT%20GENERIC-FUNCTION\"></a>"))
+  (check-pred (make-reference 'test-gf 'generic-function)
+              "`TEST-GF` is not a link."))
 
 
 (defsection @test-method-combination (:export nil)
@@ -880,7 +995,14 @@ This is [Self-referencing][e042].
                               '(method () ((eql #.(find-package :cl)))))
               :stream nil))
   (is (equal (pax::urldecode "MGL-PAX-TEST:TEST-GF%20%28METHOD%20NIL%20%28%28EQL%20%23%3CPACKAGE%20%22COMMON-LISP%22%3E%29%29%29")
-             "MGL-PAX-TEST:TEST-GF (METHOD NIL ((EQL #<PACKAGE \"COMMON-LISP\">)))")))
+             "MGL-PAX-TEST:TEST-GF (METHOD NIL ((EQL #<PACKAGE \"COMMON-LISP\">)))"))
+  (check-document (make-reference 'test-gf '(method () (number)))
+                  "<a id=\"MGL-PAX-TEST:TEST-GF%20%28METHOD%20NIL%20%28NUMBER%29%29\"></a>
+
+- [method] **TEST-GF** *(X NUMBER)*
+
+    `TEST-GF` is not a link. `X` is not a link.
+"))
 
 (deftest test-accessor ()
   (check-head (list "FOO-A `(accessor foo)`"

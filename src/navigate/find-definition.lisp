@@ -64,6 +64,7 @@
       (macro (swank-macro-dspec name))
       (compiler-macro (swank-compiler-macro-dspec name))
       (symbol-macro (swank-symbol-macro-dspec name))
+      (setf (swank-setf-dspec name))
       (function (swank-function-dspec name))
       (generic-function (swank-generic-function-dspec name))
       (method (swank-method-dspec name (first args) (second args)))
@@ -80,8 +81,8 @@
       (t
        ;; Maybe it's a PAX locative. Fake a dspec. It won't matter
        ;; that it's fake (i.e. it cannot be produced by
-       ;; SWANK/BACKEND:FIND-DEFINITIONS) because it's only used as a
-       ;; label to show to the user.
+       ;; SWANK/BACKEND:FIND-DEFINITIONS) because Swank only uses it
+       ;; as a label to show to the user.
        (list name locative)))))
 
 (defmacro define-dspec (name lambda-list &body body)
@@ -177,6 +178,12 @@
   :ccl `(symbol-macro ,name)
   :cmucl `(variable :macro ,name))
 
+(define-dspec swank-setf-dspec (name)
+  (:or :abcl :sbcl) `(define-setf-expander ,name)
+  :allegro `(:setf-method ,name)
+  #+ccl :ccl #+ccl `(ccl::setf-expander ,name)
+  :cmucl `(setf ,name))
+
 (define-dspec swank-function-dspec (name)
   #+ccl (declare (ignore name))
   (:or :abcl :ecl :sbcl) `(defun ,name)
@@ -262,6 +269,7 @@
                    (macro ,(swank-macro-dspec name))
                    (compiler-macro ,(swank-compiler-macro-dspec name))
                    (symbol-macro ,(swank-symbol-macro-dspec name))
+                   (setf ,(swank-setf-dspec name))
                    (generic-function ,(swank-generic-function-dspec name))
                    (method-combination ,(swank-method-combination-dspec name))
                    (type ,(swank-type-dspec name))

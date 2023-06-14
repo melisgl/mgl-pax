@@ -125,3 +125,21 @@
      locative-type locative-args)
   (declare (ignore symbol locative-type locative-args))
   nil)
+
+(defsetf has-setf-expander some-setter "ddd")
+
+(defun (setf has-setf-function) (v)
+  "eee"
+  (declare (ignore v)))
+
+(defgeneric (setf has-setf-generic-function) (v)
+  (:documentation "fff"))
+
+(defmethod (setf has-setf-generic-function) ((v string))
+  "ggg"
+  (declare (ignore v)))
+
+(define-setf-expander full-setf (x)
+  (declare (ignore x)))
+
+(defun full-setf ())

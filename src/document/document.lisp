@@ -2754,8 +2754,9 @@
            (let ((*reference-being-documented* nil))
              (call-next-method)))
           ((typep object 'reference)
-           (let ((*reference-being-documented* object))
-             (call-next-method)))
+           (let* ((reference (canonical-reference object))
+                  (*reference-being-documented* reference))
+             (call-next-method reference stream)))
           (t
            (let* ((reference (canonical-reference object))
                   (*reference-being-documented* reference))

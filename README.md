@@ -780,6 +780,20 @@ which makes navigating the sources with `M-.` (see
     [`DEFINE-COMPILER-MACRO`][23d5]. See the [`FUNCTION`][ba62] locative for a note on
     arglists.
 
+<a id="x-28SETF-20MGL-PAX-3ALOCATIVE-29"></a>
+- [locative] **SETF** *&OPTIONAL METHOD*
+
+    Refers to a [setf expander][35a2] (see [`DEFSETF`][66dc] and [`DEFINE-SETF-EXPANDER`][d2cb])
+    or a [setf function][99b0] (e.g. `(DEFUN (SETF NAME) ...)` or the
+    same with [`DEFGENERIC`][c7f7]). The format in [`DEFSECTION`][72b4] is `(<NAME> SETF)`
+    in all these cases.
+    
+    To refer to methods of a setf generic function, use a [`METHOD`][172e]
+    locative inside `SETF` like this:
+    
+        (documentation (setf (method () (t symbol (eql function))))
+
+
 <a id="x-28MGL-PAX-3A-40FUNCTIONLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 ### 6.3 Locatives for Functions
 
@@ -787,7 +801,9 @@ which makes navigating the sources with `M-.` (see
 - [locative] **FUNCTION**
 
     Refers to a global function, typically defined with [`DEFUN`][f472]. It is
-    also allowed to reference [`GENERIC-FUNCTION`][efe2]s as `FUNCTION`s.
+    also allowed to reference [`GENERIC-FUNCTION`][efe2]s as `FUNCTION`s. The
+    [object][75ce] must be a [`SYMBOL`][e5af] (see the [`SETF`][d83a] locative for how to reference
+    [setf functions][99b0]).
     
     Note that the arglist in the generated documentation depends on the
     quality of `SWANK-BACKEND:ARGLIST`. It [may be][d1ca] that default values of
@@ -797,13 +813,16 @@ which makes navigating the sources with `M-.` (see
 - [locative] **GENERIC-FUNCTION**
 
     Refers to a [`GENERIC-FUNCTION`][efe2], typically defined with
-    [`DEFGENERIC`][c7f7].
+    [`DEFGENERIC`][c7f7]. The [object][75ce] must be a [`SYMBOL`][e5af] (see the [`SETF`][d83a] locative for
+    how to reference [setf functions][99b0]).
 
 <a id="x-28METHOD-20MGL-PAX-3ALOCATIVE-29"></a>
 - [locative] **METHOD** *METHOD-QUALIFIERS METHOD-SPECIALIZERS*
 
-    See [`CL:FIND-METHOD`][6d46] for the description of the arguments
-    `METHOD-QUALIFIERS` and `METHOD-SPECIALIZERS`. For example, a
+    This locative is to refer to `METHOD`s named by [`SYMBOL`][e5af]s (for [`SETF`][a138] methods,
+    see the `SETF` locative). See [`CL:FIND-METHOD`][6d46] for the description of
+    the arguments `METHOD-QUALIFIERS` and `METHOD-SPECIALIZERS`. For
+    example, a
     `(FOO (METHOD () (T (EQL XXX))))` as a [`DEFSECTION`][72b4] entry refers to
     this method:
     
@@ -3810,6 +3829,7 @@ they are presented.
   [3386]: #x-28MGL-PAX-3A-40NAVIGATING-IN-EMACS-20MGL-PAX-3ASECTION-29 "Navigating Sources in Emacs"
   [33fd]: #x-28MGL-PAX-3APAX-APROPOS-20FUNCTION-29 "MGL-PAX:PAX-APROPOS FUNCTION"
   [3473]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_s.htm "FIND-SYMBOL (MGL-PAX:CLHS FUNCTION)"
+  [35a2]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_expander '"setf expander" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [36e1]: #x-28MGL-PAX-3A-40HTML-OUTPUT-20MGL-PAX-3ASECTION-29 "HTML Output"
   [378f]: #x-28MGL-PAX-3A-40PARSING-20MGL-PAX-3ASECTION-29 "Parsing"
   [38e4]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rst.htm "RESTART (MGL-PAX:CLHS CLASS)"
@@ -3857,6 +3877,7 @@ they are presented.
   [660b]: #x-28MGL-PAX-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-LOCATIVE-TYPE MGL-PAX:MACRO"
   [6611]: #x-28MGL-PAX-3ALOCATE-AND-DOCUMENT-20GENERIC-FUNCTION-29 "MGL-PAX:LOCATE-AND-DOCUMENT GENERIC-FUNCTION"
   [66c6]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*ERROR-OUTPUT* (MGL-PAX:CLHS VARIABLE)"
+  [66dc]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defset.htm "DEFSETF (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [672f]: #x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:SECTION MGL-PAX:LOCATIVE"
   [6832]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defmet.htm "DEFMETHOD (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [685e]: #x-28MGL-PAX-3A-40INTRODUCTION-20MGL-PAX-3ASECTION-29 "Introduction"
@@ -3912,11 +3933,13 @@ they are presented.
   [94c7]: #x-28MGL-PAX-3A-40BASICS-20MGL-PAX-3ASECTION-29 "Basics"
   [98ff]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_l.htm#lambda_list '"lambda list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [9974]: #x-28MGL-PAX-3ALOCATE-ERROR-LOCATIVE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATE-ERROR-29-29 "MGL-PAX:LOCATE-ERROR-LOCATIVE (MGL-PAX:READER MGL-PAX:LOCATE-ERROR)"
+  [99b0]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function '"setf function" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [9a71]: http://www.lispworks.com/documentation/HyperSpec/Body/f_specia.htm "SPECIAL-OPERATOR-P (MGL-PAX:CLHS FUNCTION)"
   [9a7b]: #x-28MGL-PAX-3A-40EMACS-SETUP-FOR-BROWSING-20MGL-PAX-3ASECTION-29 "Emacs Setup for Browsing"
   [9b43]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "DEFPACKAGE (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [9b70]: http://www.lispworks.com/documentation/HyperSpec/Body/t_meth_1.htm "METHOD-COMBINATION (MGL-PAX:CLHS CLASS)"
   [9dbc]: #x-28MGL-PAX-3A-40TRANSCRIPT-API-20MGL-PAX-3ASECTION-29 "Transcript API"
+  [a138]: http://www.lispworks.com/documentation/HyperSpec/Body/m_setf_.htm "SETF (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [a17d]: #x-28MGL-PAX-3A-40MATHJAX-20MGL-PAX-3ASECTION-29 "MathJax"
   [a249]: #x-28MGL-PAX-3ATRANSCRIPTION-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION"
   [a26f]: http://www.lispworks.com/documentation/HyperSpec/Body/f_consta.htm "CONSTANTP (MGL-PAX:CLHS FUNCTION)"
@@ -3962,6 +3985,7 @@ they are presented.
   [d162]: http://www.lispworks.com/documentation/HyperSpec/Body/e_error.htm "ERROR (MGL-PAX:CLHS CONDITION)"
   [d1ca]: #x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29 "Documentation Generation Implementation Notes"
   [d1dc]: #x-28MGL-PAX-3A-40GLOSSARY-TERMS-20MGL-PAX-3ASECTION-29 "Glossary Terms"
+  [d2cb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_3.htm "DEFINE-SETF-EXPANDER (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [d3e1]: http://www.lispworks.com/documentation/HyperSpec/Body/f_procla.htm "PROCLAIM (MGL-PAX:CLHS FUNCTION)"
   [d451]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRINT (MGL-PAX:CLHS FUNCTION)"
   [d5a2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_car_c.htm "CAR (MGL-PAX:CLHS FUNCTION)"
@@ -3970,6 +3994,7 @@ they are presented.
   [d6a4]: #x-28MGL-PAX-3ALOCATE-AND-FIND-SOURCE-20GENERIC-FUNCTION-29 "MGL-PAX:LOCATE-AND-FIND-SOURCE GENERIC-FUNCTION"
   [d761]: #x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/full" ASDF/SYSTEM:SYSTEM'
   [d7b0]: #x-28MGL-PAX-3A-40WORD-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@WORD MGL-PAX:GLOSSARY-TERM"
+  [d83a]: #x-28SETF-20MGL-PAX-3ALOCATIVE-29 "SETF MGL-PAX:LOCATIVE"
   [d9ee]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-CODE* VARIABLE"
   [da14]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "SIMPLE-CONDITION-FORMAT-ARGUMENTS (MGL-PAX:CLHS FUNCTION)"
   [dae6]: http://www.lispworks.com/documentation/HyperSpec/Body/f_string.htm "STRING (MGL-PAX:CLHS FUNCTION)"

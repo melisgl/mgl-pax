@@ -1,6 +1,7 @@
 (in-package :mgl-pax-test)
 
 (deftest test-all ()
+  (test-util)
   (test-navigate)
   (test-document)
   (test-transcribe))

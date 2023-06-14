@@ -40,7 +40,6 @@ Or fall back on this for deficient ARGLISTs. Will be really slow.
 * MAYBE document glossary-term class and slots?
 * MAYBE add format control character locative?
 * MAYBE add loop keyword locative?
-* MAYBE support SETF locative?
 * MAYBE move towards literate programming
 ** MAYBE todo/comment locative?
 ** add SYMBOL as an alias for dislocated?
@@ -79,8 +78,6 @@ expands to
    ))
 * MAYBE add list of dependencies to ASDF system doc
 https://github.com/40ants/doc/commit/c3bf89fa88ab70074466aa07358caad159d45008
-* MAYBE autodoc?
-https://github.com/40ants/doc/commit/d638135b784c2fd7e0199c829157644da197fdb7
 * BUG (low) method dspec parsing is incorrect
 e.g. SB-PCL::MAKE-SPECIALIZER-FORM-USING-CLASS One cannot tell method
 qualifiers from specializers in the dspec without actually consulting
@@ -107,5 +104,5 @@ the noise sections in MGL-PAX-TEST argue against this idea. Also, what
 if QL is not available?
 * MAYBE when exported by pax, we know the exact definition being exported
 Package apropos could take advantage?
-* do not load the webserver if not yet necessary
-* C-. on swank/sbcl::setf-expander
+* MAYBE mgl-pax-apropos should defer to slime-apropos if pax not loaded?
+* MAYBE add TAB completion to M-. prompt
