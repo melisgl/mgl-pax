@@ -535,8 +535,7 @@
          (dolist (section (sort-by-proximity sections reference))
            (format s "<a href='~A#~A'>~A</a> "
                    (finalize-pax-url
-                    (urlencode (reference-to-pax-url
-                                (canonical-reference section))))
+                    (reference-to-pax-url (canonical-reference section)))
                    (urlencode (reference-to-anchor reference))
                    (section-title-or-name section))))))))
 

@@ -695,8 +695,7 @@
 (defun link-to-uri (link)
   (let ((target-page (link-page link)))
     (if (null target-page)
-        (finalize-pax-url (urlencode (reference-to-pax-url
-                                      (link-reference link))))
+        (finalize-pax-url (reference-to-pax-url (link-reference link)))
         (let ((target-page-references (page-references target-page))
               (target-page-uri-fragment (page-uri-fragment target-page)))
           ;; Don't generate anchors when linking to the first
@@ -2236,8 +2235,7 @@
               ;; separate page when open linking.
               (if *document-open-linking*
                   (finalize-pax-url
-                   (urlencode (reference-to-pax-url
-                               (canonical-reference section))))
+                   (reference-to-pax-url (canonical-reference section)))
                   (object-to-uri section))
               (heading-number) title)))
 
@@ -2433,11 +2431,12 @@
 
 (defun reference-to-pax-url (reference)
   (let ((reference (canonical-reference reference)))
-    (with-standard-io-syntax*
-      (let ((*print-readably* nil))
-        (format nil "pax:~A ~S"
-                (object-to-url-part (reference-object reference))
-                (reference-locative reference))))))
+    (urlencode
+     (with-standard-io-syntax*
+       (let ((*print-readably* nil))
+         (format nil "pax:~A ~S"
+                 (object-to-url-part (reference-object reference))
+                 (reference-locative reference)))))))
 
 (defun reference-to-ambiguous-pax-url (reference)
   (let ((reference (canonical-reference reference)))
@@ -2558,7 +2557,7 @@
                        (format stream "- **\\[~A]** [~A](~A)"
                                locative-type name
                                (finalize-pax-url
-                                (urlencode (reference-to-pax-url reference)))))
+                                (reference-to-pax-url reference))))
                       (*document-open-linking*
                        (format stream
                                "- <span class=reference-bullet>~
@@ -2571,7 +2570,7 @@
                             </span>"
                                source-uri locative-type source-uri name
                                (finalize-pax-url
-                                (urlencode (reference-to-pax-url reference)))))
+                                (reference-to-pax-url reference))))
                       (t
                        (format stream
                                "- <span class=reference-bullet>~
