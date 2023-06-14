@@ -340,16 +340,40 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 ;;; When it's on `slime-edit-definition-hooks', `M-.' calls this
 ;;; function with (slime-symbol-at-point) as NAME.
 (defun mgl-pax-edit-definitions (name &optional where)
+  (if (slime-eval '(cl:and (cl:find-package :mgl-pax)
+                           (cl:find-symbol (cl:string '#:*navigate-loaded*)
+                                           :mgl-pax)
+                           cl:t))
+      ;; No autoloading will take place, and everything else is quite
+      ;; quick. Do things synchronously.
+      (mgl-pax-edit-definitions-1 name where nil)
+    ;; Either mgl-pax or mgl-pax/navigate will be autoloaded, which
+    ;; may be slow or fail to compile. Do things asynchronously.
+    (mgl-pax-maybe-autoload
+     :no-web
+     (lambda (loadedp)
+       ;; `slime-edit-definition' is functional even without PAX. Remain
+       ;; silent if PAX is not loaded.
+       (when loadedp
+         (mgl-pax-edit-definitions-1 name where t))))
+    ;; Return nil and let other hooks run. It's racy, but they will
+    ;; probably visit the same source location as
+    ;; mgl-pax-edit-definitions-1, and this branch is quite likely
+    ;; taken only once (subject to a similar race).
+    nil))
+
+(defun mgl-pax-edit-definitions-1 (name where asyncp)
   (let ((name-in-buffer (slime-symbol-at-point)))
     (if (string= name name-in-buffer)
-        (mgl-pax-edit-buffer-definitions)
-      (mgl-pax-edit-interactive-definitions name where))))
+        (mgl-pax-edit-buffer-definitions asyncp)
+      (mgl-pax-edit-interactive-definitions name where asyncp))))
 
-(defun mgl-pax-edit-buffer-definitions ()
+(defun mgl-pax-edit-buffer-definitions (asyncp)
   (mgl-pax-locate-definitions (mgl-pax-wall-at-point)
-                              'mgl-pax-visit-locations))
+                              'mgl-pax-visit-locations
+                              asyncp))
 
-(defun mgl-pax-edit-interactive-definitions (string &optional where)
+(defun mgl-pax-edit-interactive-definitions (string where asyncp)
   (let ((pos (cl-position ?\s string)))
     (if pos
         (let ((first (cl-subseq string 0 pos))
@@ -357,25 +381,21 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
           ;; "FOO function" or "function FOO"
           (mgl-pax-locate-definitions `((,first (,second))
                                         (,second (,first)))
-                                      'mgl-pax-visit-locations))
+                                      'mgl-pax-visit-locations
+                                      asyncp))
       ;; "FOO"
       (mgl-pax-locate-definitions `((,string ()))
-                                  'mgl-pax-visit-locations))))
+                                  'mgl-pax-visit-locations
+                                  asyncp))))
 
-(defun mgl-pax-locate-definitions (name-and-locatives-list cont)
-  (mgl-pax-maybe-autoload
-   t
-   (lambda (loadedp)
-     ;; `slime-edit-definition' is functional even without PAX. Remain
-     ;; silent if PAX is not loaded.
-     (when loadedp
-       (slime-eval-async
-           `(cl:when (cl:find-package :mgl-pax)
-                     (cl:funcall (cl:find-symbol
-                                  (cl:string '#:locate-definitions-for-emacs)
-                                  :mgl-pax)
-                                 ',name-and-locatives-list))
-         cont)))))
+(defun mgl-pax-locate-definitions (name-and-locatives-list cont asyncp)
+  (let ((form `(cl:funcall (cl:find-symbol
+                            (cl:string '#:locate-definitions-for-emacs)
+                            :mgl-pax)
+                           ',name-and-locatives-list)))
+    (if asyncp
+        (slime-eval-async form cont)
+      (funcall cont (slime-eval form)))))
 
 (defun mgl-pax-visit-locations (dspec-and-location-list)
   (when (consp dspec-and-location-list)
