@@ -522,20 +522,23 @@ The suggested key binding is `C-.' to parallel `M-.'."
                          (url-hexify-string (format "%S" wall))))
               (mgl-pax-prompt-and-document)))))))
 
+(cl-defmacro mgl-pax-with-nlx-barrier (&body body)
+  `(catch 'nlx-barrier
+     (let ((done nil))
+       (unwind-protect
+           (prog1 (progn ,@body)
+             (setq done t))
+         (unless done
+           (throw 'nlx-barrier nil))))))
+
 (defun mgl-pax-prompt-and-document ()
-  (catch 'exit
-    (mgl-pax-document-pax-url
-     (mgl-pax-urllike-to-url
-      (let ((done nil))
-        (unwind-protect
-            (prog1
-                (mgl-pax-read-urllike-from-minibuffer "View Documentation of: ")
-              (setq done t))
-          (unless done
-            ;; Cancel the non-local exit to avoid "error in process
-            ;; filter" message and the subsequent delay when this
-            ;; function is called by `slime-async-eval'.
-            (throw 'exit nil))))))))
+  ;; Cancel the non-local exits to avoid "error in process filter"
+  ;; messages and the subsequent delay when this function is called by
+  ;; `slime-async-eval' and `read-from-minibuffer' is C-g'ed.
+  (mgl-pax-with-nlx-barrier
+   (mgl-pax-document-pax-url
+    (mgl-pax-urllike-to-url
+     (mgl-pax-read-urllike-from-minibuffer "View Documentation of: ")))))
 
 (defun mgl-pax-document-pax-url (pax-url)
   (if (mgl-pax-use-w3m)
@@ -1072,24 +1075,25 @@ matter.
 Also, see `mgl-pax-apropos-all'."
   (interactive (list nil nil nil nil))
   (mgl-pax-ensure-pax-loaded ()
-   (mgl-pax-document
-    (mgl-pax-make-pax-eval-url
-     (if string
-         `(mgl-pax::pax-apropos* ,string ,external-only
-                                 ,package ,case-sensitive)
-       `(mgl-pax::pax-apropos*
-         ;; Do the defaulting of arguments here instead of in
-         ;; INTERACTIVE because mgl-pax-read-urllike-from-minibuffer
-         ;; relies on mgl-pax-ensure-pax-loaded having succeeded.
-         ,@(if current-prefix-arg
-               (list (mgl-pax-read-urllike-from-minibuffer
-                      "PAX Apropos: ")
-                     (y-or-n-p "External symbols only? ")
-                     (slime-read-package-name "Package: ")
-                     (y-or-n-p "Case-sensitive? "))
-             (list (mgl-pax-read-urllike-from-minibuffer
-                    "PAX Apropos: ")
-                   t "" nil))))))))
+   (mgl-pax-with-nlx-barrier
+    (mgl-pax-document
+     (mgl-pax-make-pax-eval-url
+      (if string
+          `(mgl-pax::pax-apropos* ,string ,external-only
+                                  ,package ,case-sensitive)
+        `(mgl-pax::pax-apropos*
+          ;; Do the defaulting of arguments here instead of in
+          ;; INTERACTIVE because mgl-pax-read-urllike-from-minibuffer
+          ;; relies on mgl-pax-ensure-pax-loaded having succeeded.
+          ,@(if current-prefix-arg
+                (list (mgl-pax-read-urllike-from-minibuffer
+                       "PAX Apropos: ")
+                      (y-or-n-p "External symbols only? ")
+                      (slime-read-package-name "Package: ")
+                      (y-or-n-p "Case-sensitive? "))
+              (list (mgl-pax-read-urllike-from-minibuffer
+                     "PAX Apropos: ")
+                    t "" nil)))))))))
 
 (defun mgl-pax-make-pax-eval-url (sexp)
   (concat "pax-eval:" (url-encode-url (prin1-to-string sexp))))
