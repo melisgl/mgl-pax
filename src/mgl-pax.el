@@ -69,8 +69,8 @@ side."
 (defvar mgl-pax-version)
 (setq mgl-pax-version  '(0 2 4))
 
-(defun mgl-pax-maybe-autoload (cont)
-  (if (mgl-pax-use-w3m)
+(defun mgl-pax-maybe-autoload (no-web cont)
+  (if (or no-web (mgl-pax-use-w3m))
       (mgl-pax-maybe-autoload-1 cont)
     (mgl-pax-ensure-web-server cont)))
 
@@ -95,12 +95,11 @@ side."
           cont)
       (slime-eval-async check-version-form cont))))
 
-(cl-defmacro mgl-pax-ensure-pax-loaded (&body body)
-  `(mgl-pax-maybe-autoload
-    (lambda (loadedp)
-      (if (not loadedp)
-          (mgl-pax-not-loaded)
-        ,@body))))
+(cl-defmacro mgl-pax-ensure-pax-loaded ((&key no-web) &body body)
+  `(mgl-pax-maybe-autoload ,no-web (lambda (loadedp)
+                                     (if (not loadedp)
+                                         (mgl-pax-not-loaded)
+                                       ,@body))))
 
 (defun mgl-pax-not-loaded ()
   (message "MGL-PAX is not loaded. See the variable mgl-pax-autoload."))
@@ -365,6 +364,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 
 (defun mgl-pax-locate-definitions (name-and-locatives-list cont)
   (mgl-pax-maybe-autoload
+   t
    (lambda (loadedp)
      ;; `slime-edit-definition' is functional even without PAX. Remain
      ;; silent if PAX is not loaded.
@@ -482,7 +482,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
   (mgl-pax-require-w3m)
   ;; Handle the interactive defaults here because it involves async
   ;; calls.
-  (mgl-pax-ensure-pax-loaded
+  (mgl-pax-ensure-pax-loaded ()
    (cond (pax-url
           (mgl-pax-document-pax-url pax-url))
          ;; interactive with prefix arg
@@ -970,7 +970,7 @@ In a PAX doc buffer, it's equivalent to pressing `v'
   (interactive)
   (if (mgl-pax-in-doc-buffer-p)
       (mgl-pax-doc-edit-current-definition)
-    (mgl-pax-ensure-pax-loaded
+    (mgl-pax-ensure-pax-loaded ()
      (mgl-pax-current-definition-pax-url 'mgl-pax-document))))
 
 (defun mgl-pax-current-definition-pax-url (cont)
@@ -996,7 +996,7 @@ In a PAX doc buffer, it's equivalent to pressing `v'
 there are multiple containing sections, then pop up a selection
 buffer."
   (interactive)
-  (mgl-pax-ensure-pax-loaded
+  (mgl-pax-ensure-pax-loaded (:no-web t)
    (mgl-pax-find-parent-section #'mgl-pax-visit-locations)))
 
 (defun mgl-pax-find-parent-section (cont)
@@ -1051,7 +1051,7 @@ matter.
 
 Also, see `mgl-pax-apropos-all'."
   (interactive (list nil nil nil nil))
-  (mgl-pax-ensure-pax-loaded
+  (mgl-pax-ensure-pax-loaded ()
    (mgl-pax-document
     (mgl-pax-make-pax-eval-url
      (if string
@@ -1077,7 +1077,7 @@ Also, see `mgl-pax-apropos-all'."
 (defun mgl-pax-apropos-all (string)
   "Shortcut for invoking `mgl-pax-apropos' with EXTERNAL-ONLY NIL."
   (interactive (list nil))
-  (mgl-pax-ensure-pax-loaded
+  (mgl-pax-ensure-pax-loaded ()
    (let ((string (or string (mgl-pax-read-urllike-from-minibuffer
                              "PAX Apropos All: "))))
      (mgl-pax-apropos string nil "" nil))))
@@ -1102,7 +1102,7 @@ argument as in index to select one of the Common Lisp
 MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
 Without a prefix argument, the first syntax is used."
   (interactive)
-  (mgl-pax-ensure-pax-loaded
+  (mgl-pax-ensure-pax-loaded (:no-web t)
    (save-excursion
      (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
        (let* ((start (progn (backward-sexp)
@@ -1131,7 +1131,7 @@ MGL-PAX:*TRANSCRIBE-SYNTAXES* as the SYNTAX argument to
 MGL-PAX:TRANSCRIBE. Without a prefix argument, the syntax of the
 input will not be changed."
   (interactive "r")
-  (mgl-pax-ensure-pax-loaded
+  (mgl-pax-ensure-pax-loaded (:no-web t)
    (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
      (let* ((point-at-start-p (= (point) start))
             (point-at-end-p (= (point) end))
