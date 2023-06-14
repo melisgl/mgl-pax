@@ -210,7 +210,7 @@ for the latest version.
 
 ### The mgl-pax ASDF System
 
-- Version: 0.2.3
+- Version: 0.2.4
 - Description: Exploratory programming tool and documentation
   generator.
 - Long Description: The set of dependencies of the MGL-PAX system is

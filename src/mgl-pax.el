@@ -67,7 +67,7 @@ side."
   :group 'mgl-pax)
 
 (defvar mgl-pax-version)
-(setq mgl-pax-version  '(0 2 3))
+(setq mgl-pax-version  '(0 2 4))
 
 (defun mgl-pax-maybe-autoload (cont)
   (if (mgl-pax-use-w3m)
@@ -94,6 +94,16 @@ side."
               ,check-version-form)
           cont)
       (slime-eval-async check-version-form cont))))
+
+(cl-defmacro mgl-pax-ensure-pax-loaded (&body body)
+  `(mgl-pax-maybe-autoload
+    (lambda (loadedp)
+      (if (not loadedp)
+          (mgl-pax-not-loaded)
+        ,@body))))
+
+(defun mgl-pax-not-loaded ()
+  (message "MGL-PAX is not loaded. See the variable mgl-pax-autoload."))
 
 (defvar mgl-pax-file-name)
 (setq mgl-pax-file-name load-file-name)
@@ -356,6 +366,8 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 (defun mgl-pax-locate-definitions (name-and-locatives-list cont)
   (mgl-pax-maybe-autoload
    (lambda (loadedp)
+     ;; `slime-edit-definition' is functional even without PAX. Remain
+     ;; silent if PAX is not loaded.
      (when loadedp
        (slime-eval-async
            `(cl:when (cl:find-package :mgl-pax)
@@ -364,9 +376,6 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
                                   :mgl-pax)
                                  ',name-and-locatives-list))
          cont)))))
-
-(defun mgl-pax-not-loaded ()
-  (message "MGL-PAX is not loaded. See the variable mgl-pax-autoload."))
 
 (defun mgl-pax-visit-locations (dspec-and-location-list)
   (when (consp dspec-and-location-list)
@@ -452,6 +461,17 @@ When invoked interactively:
   displayed, or if there is no such buffer, then the
   documentation of how to browse documentation in Emacs is shown.
 
+Autocomplete: In the minibuffer, TAB-completion is available for
+symbol objects and once the object is entered followed by a space
+also for their possible locatives. Only symbols are completed.
+String objects are not (e.g names of PACKAGEs or CLHS SECTIONs).
+Completion of locatives which are lists (e.g. `(CLHS SECTION)')
+is a bit broken because Emacs completion is designed for symbols.
+Still, pressing TAB before entering the opening parenthesis and
+selecting the locative from the buffer that pops up works. For
+finding all definitions with a given locative, use
+`mgl-pax-apropos'.
+
 The package in which symbols are read is `slime-current-package'.
 Hence, in Lisp buffers, the buffer's package is used. In other
 buffers, the package of the repl.
@@ -462,23 +482,25 @@ The suggested key binding is `C-.' to parallel `M-.'."
   (mgl-pax-require-w3m)
   ;; Handle the interactive defaults here because it involves async
   ;; calls.
-  (cond (pax-url
-         (mgl-pax-document-pax-url pax-url))
-        ;; interactive with prefix arg
-        (current-prefix-arg
-         (mgl-pax-prompt-and-document))
-        ;; interactive without prefix arg, point over a pax URL
-        ((and (null current-prefix-arg)
-              (mgl-pax-in-doc-buffer-p)
-              (mgl-pax-doc-pax-url (w3m-anchor)))
-         (mgl-pax-document-pax-url (mgl-pax-doc-pax-url (w3m-anchor))))
-        ;; interactive without prefix arg, point not over a pax URL
-        (t
-         (let ((wall (mgl-pax-wall-at-point)))
-           (if wall
-               (mgl-pax-document-pax-url
-                (concat "pax-wall:" (url-hexify-string (format "%S" wall))))
-             (mgl-pax-prompt-and-document))))))
+  (mgl-pax-ensure-pax-loaded
+   (cond (pax-url
+          (mgl-pax-document-pax-url pax-url))
+         ;; interactive with prefix arg
+         (current-prefix-arg
+          (mgl-pax-prompt-and-document))
+         ;; interactive without prefix arg, point over a pax URL
+         ((and (null current-prefix-arg)
+               (mgl-pax-in-doc-buffer-p)
+               (mgl-pax-doc-pax-url (w3m-anchor)))
+          (mgl-pax-document-pax-url (mgl-pax-doc-pax-url (w3m-anchor))))
+         ;; interactive without prefix arg, point not over a pax URL
+         (t
+          (let ((wall (mgl-pax-wall-at-point)))
+            (if wall
+                (mgl-pax-document-pax-url
+                 (concat "pax-wall:"
+                         (url-hexify-string (format "%S" wall))))
+              (mgl-pax-prompt-and-document)))))))
 
 (defun mgl-pax-prompt-and-document ()
   (catch 'exit
@@ -487,7 +509,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
       (let ((done nil))
         (unwind-protect
             (prog1
-                (slime-read-from-minibuffer "View Documentation of: ")
+                (mgl-pax-read-urllike-from-minibuffer "View Documentation of: ")
               (setq done t))
           (unless done
             ;; Cancel the non-local exit to avoid "error in process
@@ -623,6 +645,37 @@ The suggested key binding is `C-.' to parallel `M-.'."
                 "#" (url-hexify-string fragment))
       (concat "pax:" (url-hexify-string reference)))))
 
+(defun mgl-pax-read-urllike-from-minibuffer (prompt)
+  (let ((slime-completion-at-point-functions
+         '(mgl-pax-complete-urllike-in-minibuffer)))
+    (slime-read-from-minibuffer prompt)))
+
+(defun mgl-pax-complete-urllike-in-minibuffer ()
+  (let* ((start
+          ;; The position of the first character after the prompt
+          (line-beginning-position -1000))
+         (end (point))
+         (beg (slime-symbol-start-pos))
+         (first-space-pos (cl-position ?\s (buffer-substring-no-properties
+                                            start end))))
+    (if first-space-pos
+        (let ((object (buffer-substring-no-properties
+                       start (+ start first-space-pos))))
+          (list beg end (completion-table-dynamic
+                         (lambda (prefix)
+                           (mgl-pax-locatives-for-name object)))))
+      (list beg end (completion-table-dynamic #'slime-simple-completions)))))
+
+(defun mgl-pax-locatives-for-name (object)
+  (let ((values (slime-eval
+                 `(cl:funcall (cl:find-symbol
+                               (cl:string '#:locatives-for-name-for-emacs)
+                               :mgl-pax)
+                              ,object))))
+    (if (eq (cl-first values) :error)
+        (error (second values))
+      (cl-second values))))
+
 ;;; Return the path and fragment part of the schemeless URL.
 (defun mgl-pax-parse-path-and-fragment (url)
   (let ((fragment-pos (cl-position ?# url)))
@@ -663,22 +716,18 @@ The suggested key binding is `C-.' to parallel `M-.'."
        (message "Evaluation aborted on %s." condition)))))
 
 (cl-defun mgl-pax-call-document-for-emacs (url dir &key ok-cont abort-cont)
-  (mgl-pax-maybe-autoload
-   (lambda (loadedp)
-     (if (not loadedp)
-         (mgl-pax-not-loaded)
-       (mgl-pax-eval-async
-        `(cl:funcall (cl:find-symbol (cl:string '#:document-for-emacs)
-                                     :mgl-pax)
-                     ',url ',dir ',common-lisp-hyperspec-root)
-        (lambda (values)
-          (if (eq (cl-first values) :url)
-              (apply ok-cont (cl-rest values))
-            (message "%s" (cl-second values))
-            (when abort-cont
-              (apply abort-cont (cl-rest values)))))
-        abort-cont)
-       (message "Generating documentation ...")))))
+  (mgl-pax-eval-async
+   `(cl:funcall (cl:find-symbol (cl:string '#:document-for-emacs)
+                                :mgl-pax)
+                ',url ',dir ',common-lisp-hyperspec-root)
+   (lambda (values)
+     (if (eq (cl-first values) :url)
+         (apply ok-cont (cl-rest values))
+       (message "%s" (cl-second values))
+       (when abort-cont
+         (apply abort-cont (cl-rest values)))))
+   abort-cont)
+  (message "Generating documentation ..."))
 
 (advice-add 'w3m-goto-url :around #'mgl-pax-w3m-goto-url)
 
@@ -921,31 +970,24 @@ In a PAX doc buffer, it's equivalent to pressing `v'
   (interactive)
   (if (mgl-pax-in-doc-buffer-p)
       (mgl-pax-doc-edit-current-definition)
-    (mgl-pax-maybe-autoload
-     (lambda (loadedp)
-       (if (not loadedp)
-           (mgl-pax-not-loaded)
-         (mgl-pax-current-definition-pax-url 'mgl-pax-document))))))
+    (mgl-pax-ensure-pax-loaded
+     (mgl-pax-current-definition-pax-url 'mgl-pax-document))))
 
 (defun mgl-pax-current-definition-pax-url (cont)
-  (mgl-pax-maybe-autoload
-   (lambda (loadedp)
-     (if (not loadedp)
-         (mgl-pax-not-loaded)
-       (slime-eval-async
-           `(cl:if (cl:find-package :mgl-pax)
-                   (cl:funcall
-                    (cl:find-symbol (cl:string
-                                     '#:current-definition-pax-url-for-emacs)
-                                    :mgl-pax)
-                    ',(buffer-name)
-                    ',(buffer-file-name)
-                    ',(mgl-pax-current-definition-possible-names))
-                   '(:error "MGL-PAX is not loaded."))
-         (lambda (values)
-           (if (eq (cl-first values) :error)
-               (message "%s" (cl-second values))
-             (apply cont (cl-rest values)))))))))
+  (slime-eval-async
+      `(cl:if (cl:find-package :mgl-pax)
+              (cl:funcall
+               (cl:find-symbol (cl:string
+                                '#:current-definition-pax-url-for-emacs)
+                               :mgl-pax)
+               ',(buffer-name)
+               ',(buffer-file-name)
+               ',(mgl-pax-current-definition-possible-names))
+              '(:error "MGL-PAX is not loaded."))
+    (lambda (values)
+      (if (eq (cl-first values) :error)
+          (message "%s" (cl-second values))
+        (apply cont (cl-rest values))))))
 
 
 (defun mgl-pax-edit-parent-section ()
@@ -954,24 +996,21 @@ In a PAX doc buffer, it's equivalent to pressing `v'
 there are multiple containing sections, then pop up a selection
 buffer."
   (interactive)
-  (mgl-pax-find-parent-section #'mgl-pax-visit-locations))
+  (mgl-pax-ensure-pax-loaded
+   (mgl-pax-find-parent-section #'mgl-pax-visit-locations)))
 
 (defun mgl-pax-find-parent-section (cont)
-  (mgl-pax-maybe-autoload
-   (lambda (loadedp)
-     (if (not loadedp)
-         (mgl-pax-not-loaded)
-       (slime-eval-async
-           `(cl:if (cl:find-package :mgl-pax)
-                   (cl:funcall
-                    (cl:find-symbol (cl:string
-                                     '#:find-parent-section-for-emacs)
-                                    :mgl-pax)
-                    ',(buffer-name)
-                    ',(buffer-file-name)
-                    ',(mgl-pax-current-definition-possible-names))
-                   '(:error "MGL-PAX is not loaded."))
-         cont)))))
+  (slime-eval-async
+      `(cl:if (cl:find-package :mgl-pax)
+              (cl:funcall
+               (cl:find-symbol (cl:string
+                                '#:find-parent-section-for-emacs)
+                               :mgl-pax)
+               ',(buffer-name)
+               ',(buffer-file-name)
+               ',(mgl-pax-current-definition-possible-names))
+              '(:error "MGL-PAX is not loaded."))
+    cont))
 
 
 ;;;; Apropos
@@ -1011,25 +1050,37 @@ packages and locative types are not filtered, and case does not
 matter.
 
 Also, see `mgl-pax-apropos-all'."
-  (interactive
-   (if current-prefix-arg
-       (list (slime-read-from-minibuffer "PAX Apropos: ")
-             (y-or-n-p "External symbols only? ")
-             (slime-read-package-name "Package: ")
-             (y-or-n-p "Case-sensitive? "))
-     (list (slime-read-from-minibuffer "PAX Apropos: ") t "" nil)))
-  (mgl-pax-document
-   (mgl-pax-make-pax-eval-url
-    `(mgl-pax::pax-apropos* ,string ,external-only
-                            ,package ,case-sensitive))))
+  (interactive (list nil nil nil nil))
+  (mgl-pax-ensure-pax-loaded
+   (mgl-pax-document
+    (mgl-pax-make-pax-eval-url
+     (if string
+         `(mgl-pax::pax-apropos* ,string ,external-only
+                                 ,package ,case-sensitive)
+       `(mgl-pax::pax-apropos*
+         ;; Do the defaulting of arguments here instead of in
+         ;; INTERACTIVE because mgl-pax-read-urllike-from-minibuffer
+         ;; relies on mgl-pax-ensure-pax-loaded having succeeded.
+         ,@(if current-prefix-arg
+               (list (mgl-pax-read-urllike-from-minibuffer
+                      "PAX Apropos: ")
+                     (y-or-n-p "External symbols only? ")
+                     (slime-read-package-name "Package: ")
+                     (y-or-n-p "Case-sensitive? "))
+             (list (mgl-pax-read-urllike-from-minibuffer
+                    "PAX Apropos: ")
+                   t "" nil))))))))
 
 (defun mgl-pax-make-pax-eval-url (sexp)
   (concat "pax-eval:" (url-encode-url (prin1-to-string sexp))))
 
 (defun mgl-pax-apropos-all (string)
-  "Shortcut for invoking `mgl-pax-apropos` with EXTERNAL-ONLY NIL."
-  (interactive (list (slime-read-from-minibuffer "PAX Apropos All: ")))
-  (mgl-pax-apropos string nil "" nil))
+  "Shortcut for invoking `mgl-pax-apropos' with EXTERNAL-ONLY NIL."
+  (interactive (list nil))
+  (mgl-pax-ensure-pax-loaded
+   (let ((string (or string (mgl-pax-read-urllike-from-minibuffer
+                             "PAX Apropos All: "))))
+     (mgl-pax-apropos string nil "" nil))))
 
 (defun mgl-pax-apropos-package (package &optional internal)
   "Show apropos listing for symbols in PACKAGE.
@@ -1038,7 +1089,7 @@ With prefix argument include internal symbols."
                                  "PAX Apropos for Package: ")))
                        (if (string= pkg "") (slime-current-package) pkg))
                      current-prefix-arg))
-  (mgl-pax-apropos nil (not internal) (concat "'" package) t))
+  (mgl-pax-apropos "" (not internal) (concat "'" package) t))
 
 
 ;;;; Transcribe
@@ -1051,29 +1102,26 @@ argument as in index to select one of the Common Lisp
 MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
 Without a prefix argument, the first syntax is used."
   (interactive)
-  (mgl-pax-maybe-autoload
-   (lambda (loadedp)
-     (if (not loadedp)
-         (mgl-pax-not-loaded)
-       (save-excursion
-         (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
-           (let* ((start (progn (backward-sexp)
-                                ;; If the last expression is in a
-                                ;; comment, we need this for
-                                ;; forward-sexp below.
-                                (save-excursion
-                                  (move-beginning-of-line nil)
-                                  (point))))
-                  (end (progn (forward-sexp)
+  (mgl-pax-ensure-pax-loaded
+   (save-excursion
+     (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
+       (let* ((start (progn (backward-sexp)
+                            ;; If the last expression is in a
+                            ;; comment, we need this for
+                            ;; forward-sexp below.
+                            (save-excursion
+                              (move-beginning-of-line nil)
                               (point))))
-             (goto-char end)
-             (insert
-              (mgl-pax-transcribe start end (mgl-pax-transcribe-syntax-arg)
-                                  nil nil nil dynenv))
-             ;; The transcript ends with a newline. Delete it if it
-             ;; would result in a blank line.
-             (when (looking-at "\n")
-               (delete-char 1)))))))))
+              (end (progn (forward-sexp)
+                          (point))))
+         (goto-char end)
+         (insert
+          (mgl-pax-transcribe start end (mgl-pax-transcribe-syntax-arg)
+                              nil nil nil dynenv))
+         ;; The transcript ends with a newline. Delete it if it
+         ;; would result in a blank line.
+         (when (looking-at "\n")
+           (delete-char 1)))))))
 
 (defun mgl-pax-retranscribe-region (start end)
   "Updates the transcription in the current region (as in calling
@@ -1083,25 +1131,22 @@ MGL-PAX:*TRANSCRIBE-SYNTAXES* as the SYNTAX argument to
 MGL-PAX:TRANSCRIBE. Without a prefix argument, the syntax of the
 input will not be changed."
   (interactive "r")
-  (mgl-pax-maybe-autoload
-   (lambda (loadedp)
-     (if (not loadedp)
-         (mgl-pax-not-loaded)
-       (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
-         (let* ((point-at-start-p (= (point) start))
-                (point-at-end-p (= (point) end))
-                (transcript (mgl-pax-transcribe start end
-                                                (mgl-pax-transcribe-syntax-arg)
-                                                t t nil dynenv)))
-           (if point-at-start-p
-               (save-excursion
-                 (goto-char start)
-                 (delete-region start end)
-                 (insert transcript))
-             (save-excursion
-               (goto-char start)
-               (delete-region start end))
-             (insert transcript))))))))
+  (mgl-pax-ensure-pax-loaded
+   (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
+     (let* ((point-at-start-p (= (point) start))
+            (point-at-end-p (= (point) end))
+            (transcript (mgl-pax-transcribe start end
+                                            (mgl-pax-transcribe-syntax-arg)
+                                            t t nil dynenv)))
+       (if point-at-start-p
+           (save-excursion
+             (goto-char start)
+             (delete-region start end)
+             (insert transcript))
+         (save-excursion
+           (goto-char start)
+           (delete-region start end))
+         (insert transcript))))))
 
 (defun mgl-pax-transcribe-syntax-arg ()
   (if current-prefix-arg

@@ -839,3 +839,31 @@
           (if reference
               `(:pax-url ,(reference-to-pax-url reference))
               '(:error "Cannot determine current definition.")))))))
+
+
+(defun/autoloaded locatives-for-name-for-emacs (name)
+  (with-swank ()
+    (swank/backend:converting-errors-to-error-location
+      (swank::with-buffer-syntax ()
+        (flet ((locative-to-string (locative)
+                 (let ((*print-readably* nil)
+                       (*print-case* :downcase))
+                   (prin1-to-string locative))))
+          `(:locatives
+            ,(if (string= name "")
+                 (mapcar #'locative-to-string (list-locative-types))
+                 (let ((*document-open-linking* t))
+                   (loop
+                     for object in (parse-word name :depluralize nil)
+                     append (loop for link in (links-of object)
+                                  collect (locative-to-string
+                                           (reference-locative
+                                            (link-reference link)))))))))))))
+
+(defun list-locative-types ()
+  (mapcar (lambda (method)
+            (second
+             (third
+              ;; E.g. (DEFMETHOD LOCATIVE-LAMBDA-LIST (EQL CLHS))
+              (reference-to-dspec (canonical-reference method)))))
+          (swank-mop:generic-function-methods #'locative-lambda-list)))

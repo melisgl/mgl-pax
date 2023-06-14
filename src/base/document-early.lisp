@@ -2,6 +2,7 @@
 
 (in-readtable pythonic-string-syntax)
 
+(declaim (special *document-open-linking*))
 (defvar *document-uppercase-is-code*)
 (export '*document-uppercase-is-code*)
 (defvar *document-link-code*)
@@ -48,6 +49,7 @@
 (autoload redocument-for-emacs '#:mgl-pax/document :export nil)
 (autoload locate-pax-url-for-emacs '#:mgl-pax/document :export nil)
 (autoload current-definition-pax-url-for-emacs '#:mgl-pax/document :export nil)
+(autoload locatives-for-name-for-emacs '#:mgl-pax/document :export nil)
 
 
 (defsection @extending-document (:title "Extending DOCUMENT")
