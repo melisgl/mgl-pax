@@ -169,8 +169,9 @@
   locative for a note on arglists.")
 
 (defmethod locate-object (symbol (locative-type (eql 'macro)) locative-args)
-  (unless (or (macro-function symbol)
-              (special-operator-p* symbol))
+  (unless (and (symbolp symbol)
+               (or (macro-function symbol)
+                   (special-operator-p* symbol)))
     (locate-error "~S does not name a macro." symbol))
   (make-reference symbol (cons locative-type locative-args)))
 
