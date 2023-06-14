@@ -56,7 +56,7 @@
     (document-pax*-url pax-url filename)))
 
 (defun reference-to-edit-uri (reference)
-  (let ((url (finalize-pax-url (urlencode (reference-to-pax-url reference)))))
+  (let ((url (finalize-pax-url (reference-to-pax-url reference))))
     (if (find #\? url)
         (format nil "~A&edit" url)
         (format nil "~A?edit" url))))
@@ -68,7 +68,7 @@
       (unless (equal scheme "pax")
         (error "~S doesn't have pax: scheme." pax-url))
       (multiple-value-bind (object locative foundp)
-          (read-reference-from-string (urldecode path))
+          (read-reference-from-string path)
         (when foundp
           (swank::with-connection ((swank::default-connection))
             (let* ((reference (make-reference object locative))
