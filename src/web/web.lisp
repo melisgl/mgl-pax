@@ -68,7 +68,7 @@
       (unless (equal scheme "pax")
         (error "~S doesn't have pax: scheme." pax-url))
       (multiple-value-bind (object locative foundp)
-          (read-reference-from-string path)
+          (read-reference-from-string (urldecode path))
         (when foundp
           (swank::with-connection ((swank::default-connection))
             (let* ((reference (make-reference object locative))

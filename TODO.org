@@ -107,3 +107,5 @@ the noise sections in MGL-PAX-TEST argue against this idea. Also, what
 if QL is not available?
 * MAYBE when exported by pax, we know the exact definition being exported
 Package apropos could take advantage?
+* do not load the webserver if not yet necessary
+* C-. on swank/sbcl::setf-expander
