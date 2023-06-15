@@ -86,7 +86,11 @@ side."
         (slime-eval-async
             `(cl:progn
               (cl:unless
-               (cl:find-package :mgl-pax)
+               (cl:and (cl:find-package :mgl-pax)
+                       ;; Not there if only mgl-pax/bootstrap loaded.
+                       (cl:find-symbol
+                        (cl:string '#:check-pax-elisp-version)
+                        (cl:find-package :mgl-pax)))
                (cl:format t "~&;; Autoloading MGL-PAX for Emacs ~
                             (mgl-pax-autoload is t).~%")
                (asdf:load-system "mgl-pax")
@@ -142,6 +146,7 @@ want to give `mgl-pax-document' a more convenient binding such as
 To bind `C-.' globally:
 
     (global-set-key (kbd \"C-.\") 'mgl-pax-document)"
+  ;; end-hijack-include
   (interactive)
   (slime-bind-keys slime-doc-map t
                    '((?a mgl-pax-apropos)
@@ -1042,7 +1047,7 @@ buffer."
 (defun mgl-pax-apropos (string &optional external-only package
                                case-sensitive)
   "Show all PAX definitions that match the arguments.
-This is a wrapper around MGL-PAX:PAX-APROPOS. STRING is basically
+This is a wrapper around DREF:DREF-APROPOS. STRING is basically
 NAME and LOCATIVE-TYPES concatenated with a space in between. If
 STRING or PACKAGE starts with `?'', then only exact matches with
 a symbol or package name are accepted.
@@ -1067,6 +1072,15 @@ a symbol or package name are accepted.
 - \" pax:section\" (note the leading space) matches all PAX
   sections (note that EXTERNAL-ONLY NIL is necessary to see most
   of them).
+
+- \"print :lisp\" matches definitions with
+  DREF:LISP-LOCATIVE-TYPES, which is the default.
+
+- \"print :pseudo\" matches definitions with
+  DREF:PSEUDO-LOCATIVE-TYPES such as PAX:CLHS and DREF:UNKNOWN.
+
+- \"print :all\" matches definitions with all locative
+  types (DREF:LOCATIVE-TYPES).
 
 With a prefix arg, you're interactively asked for parameters of
 the search. Without a prefix arg, EXTERNAL-ONLY defaults to T,

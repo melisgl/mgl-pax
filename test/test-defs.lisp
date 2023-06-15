@@ -24,9 +24,6 @@
     (:export nil :title "`CODE` *italic* _italic2_ *bold* [link][sdf] <thing>")
   "backlink @TEST")
 
-(define-locative-type my-loc ()
-  "This is MY-LOC.")
-
 ;;; LOCATIVE whose name is a symbol in another package.
 (define-locative-type pax::funny-loc (some-arg)
   "This is SOME-ARG.")
@@ -82,6 +79,10 @@
 (defconstant bar 2
   "BAR is not a link.")
 
+(define-symbol-macro my-smac 42)
+(setf (documentation 'my-smac 'symbol-macro)
+      "This is MY-SMAC.")
+
 (defgeneric baz ())
 ;; KLUDGE: CMUCL clobbers the DEFVAR's source location with that of
 ;; the DEFSTRUCT if they have the same name.
@@ -96,6 +97,12 @@
   nil)
 (defmethod test-gf ((x (eql 7))))
 (defmethod test-gf ((x (eql #.(find-package :common-lisp)))))
+
+(defsection @test-method-combination (:export nil)
+  (my-comb method-combination))
+
+(define-method-combination my-comb :identity-with-one-argument t
+  :documentation "This is MY-COMB.")
 
 (define-glossary-term some-term ()
   "SOME-TERM is a link.")
@@ -143,3 +150,5 @@
   (declare (ignore x)))
 
 (defun full-setf ())
+
+(define-locative-type my-loc ())

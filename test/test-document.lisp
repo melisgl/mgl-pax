@@ -1,10 +1,5 @@
 (in-package :mgl-pax-test)
 
-(defun check-ref (reference object locative)
-  (when (is reference)
-    (is (equal (reference-object reference) object))
-    (is (equal (reference-locative reference) locative))))
-
 (defun check-document (input expected
                        &key (package (find-package :mgl-pax-test)) msg
                          (url-versions '(2)))
@@ -36,7 +31,7 @@
          (n-expected-warnings warnings))
     (multiple-value-bind (full-output warnings)
         (document* input :format format :w3m w3m)
-      (let ((got (mgl-pax::first-lines full-output n-lines))
+      (let ((got (dref::first-lines full-output n-lines))
             (expected (format nil expected)))
         (is (equal got expected)
             :msg msg
@@ -64,7 +59,6 @@
 (deftest test-document ()
   (test-urlencode)
   (test-transform-tree)
-  (test-macro-arg-names)
   (test-codify)
   (test-names)
   (test-downcasing)
@@ -72,8 +66,10 @@
   (test-headings)
   (test-base-url)
   (test-url-versions)
+  (test-pages)
   ;; PAX::@VARIABLELIKE-LOCATIVES
   (test-variable)
+  (test-constant)
   ;; PAX::@MACROLIKE-LOCATIVES
   (test-macro)
   (test-symbol-macro)
@@ -86,6 +82,7 @@
   (test-accessor)
   (test-reader)
   (test-writer)
+  (test-structure-accessor)
   ;; PAX::@TYPELIKE-LOCATIVES
   (test-declaration)
   ;; PAX::@CONDITION-SYSTEM-LOCATIVES
@@ -108,8 +105,8 @@
   (test-define-locative-alias)
   (test-cl-transcript)
   (test-document/open)
-  (test-pax-apropos)
-  (test-map-documentable))
+  (test-map-documentable)
+  (test-table-of-contents))
 
 (deftest test-urlencode ()
   (is (equal (mgl-pax::urlencode "hello") "hello"))
@@ -141,10 +138,6 @@
                                                 (listp a)
                                                 (not (listp a))))
                                       '(1 (2 (3 4)))))))
-
-(deftest test-macro-arg-names ()
-  (is (equal '(x a b c)
-             (mgl-pax::macro-arg-names '((&key (x y)) (a b) &key (c d))))))
 
 
 (deftest test-codify ()
@@ -281,7 +274,7 @@ xxx
       (check-head "[CLASSes][]" "[`CLASS`es][1f37]"))
     (check-head "[CLASSes.][]" "`CLASS`es." :warnings 1)
     ;; Somewhat surprisingly, the ARRAY-DIMENSIONS is to be linked as
-    ;; the PAX::@OBJECT is determined by PARSE-TREE-TO-TEXT.
+    ;; the PAX::@NAME is determined by PARSE-TREE-TO-TEXT.
     (check-head "[ARRAY-DIMENSIONs][]" "[`ARRAY-DIMENSION`s][b315]")
     (check-head "[ARRAY-DIMENSIONs.][]" "`ARRAY-DIMENSION`s." :warnings 1))
   (with-test ("Uppercase code + lowercase plural in reflink.")
@@ -486,29 +479,29 @@ xxx
 (deftest test-autolink ()
   (with-test ("object with multiple refs")
     (check-head (list "macro BAR function"
-                      (make-reference 'bar 'type)
-                      (make-reference 'bar 'macro))
+                      (locate 'bar 'type)
+                      (locate 'bar 'macro))
                 ;; "3e5e" is the id of the macro.
                 "macro [`BAR`][3e5e] function"
                 :msg "locative before, irrelavant locative after")
     (check-head (list "function BAR macro"
-                      (make-reference 'bar 'type)
-                      (make-reference 'bar 'macro))
+                      (locate 'bar 'type)
+                      (locate 'bar 'macro))
                 "function [`BAR`][3e5e] macro"
                 :msg "locative after, irrelavant locative before")
     (check-head (list "macro BAR type"
-                      (make-reference 'bar 'type)
-                      (make-reference 'bar 'macro)
-                      (make-reference 'bar 'constant))
+                      (locate 'bar 'type)
+                      (locate 'bar 'macro)
+                      (locate 'bar 'constant))
                 ;; "e2a5" is the the id of the type.
                 "macro `BAR`([`0`][3e5e] [`1`][e2a5]) type"
                 :msg "ambiguous locative"))
   (with-test ("locative in backticks")
     (check-head (list "`TEST-GF` `(method t (number))`"
-                      (make-reference 'test-gf '(method () (number))))
+                      (locate 'test-gf '(method () (number))))
                 "[`TEST-GF`][044a] `(method t (number))`")
     (check-head (list "`(method t (number))` `TEST-GF`"
-                      (make-reference 'test-gf '(method () (number))))
+                      (locate 'test-gf '(method () (number))))
                 "`(method t (number))` [`TEST-GF`][044a]"))
   (with-test ("escaped autolinking")
     (check-head "`\\PRINT`" "`PRINT`"))
@@ -535,24 +528,24 @@ xxx
     (check-head "[see this][nil]" "see this([`0`][9990] [`1`][4df2])"))
   (with-test ("definition is both a locative and an object")
     (check-head (list "[see this][section]"
-                      (make-reference 'section 'class)
-                      (make-reference 'section 'locative))
+                      (locate 'section 'class)
+                      (locate 'section 'locative))
                 "[see this][5fac]")
     (check-head (list "[FORMAT][dislocated]"
-                      (make-reference 'dislocated 'locative)
-                      (make-reference 'pax::@explicit-and-autolinking
+                      (locate 'dislocated 'locative)
+                      (locate 'pax::@explicit-and-autolinking
                                       'section))
                 "`FORMAT`"
                 :package (find-package '#:mgl-pax))
     (check-head (list "[NOT-CODE][dislocated]"
-                      (make-reference 'dislocated 'locative)
-                      (make-reference 'pax::@explicit-and-autolinking
+                      (locate 'dislocated 'locative)
+                      (locate 'pax::@explicit-and-autolinking
                                       'section))
                 "NOT-CODE"
                 :package (find-package '#:mgl-pax))
     (check-head (list "[`SOME-CODE`][dislocated]"
-                      (make-reference 'dislocated 'locative)
-                      (make-reference 'pax::@explicit-and-autolinking
+                      (locate 'dislocated 'locative)
+                      (locate 'pax::@explicit-and-autolinking
                                       'section))
                 "`SOME-CODE`"
                 :package (find-package '#:mgl-pax))
@@ -561,13 +554,13 @@ xxx
   (with-test ("name with reference hiding in interesting object")
     (is (internedp 'sections))
     (check-head (list "[SECTIONS][class]"
-                      (make-reference 'section 'class))
+                      (locate 'section 'class))
                 "[`SECTIONS`][5fac]")
     (check-head (list "[SECTIONs][class]"
-                      (make-reference 'section 'class))
+                      (locate 'section 'class))
                 "[`SECTION`s][5fac]")
     (check-head (list "[SECTION][class]"
-                      (make-reference 'section 'class))
+                      (locate 'section 'class))
                 "[`SECTION`][5fac]"))
   (with-test ("normal markdown reference link")
     (with-test ("simple")
@@ -689,7 +682,7 @@ This is [Self-referencing][e042].
     (check-pred (format nil "![xxx][def]~%~%  [def]: x.jpg")
                 "http://example.com/x.jpg"
                 :msg ":IMG :REFERENCE")
-    (check-pred (list "FOO function" (make-reference 'foo 'function))
+    (check-pred (list "FOO function" (locate 'foo 'function))
                 "[bc64]: #MGL-PAX-TEST:FOO%20FUNCTION"
                 :msg "intra-page")
     (check-pred "<a href='relative'>link</a>"
@@ -704,7 +697,7 @@ This is [Self-referencing][e042].
 
 
 (deftest test-url-versions ()
-  (check-document (make-reference 'foo2 'function)
+  (check-document (make-xref 'foo2 'function)
                   "<a id=\"x-28MGL-PAX-TEST-3AFOO2-20FUNCTION-29\"></a>
 
 - [function] **FOO2** *OOK X*
@@ -712,7 +705,7 @@ This is [Self-referencing][e042].
     `FOO2` has args `OOK` and `X`.
 "
                   :url-versions '(1))
-  (check-document (make-reference 'foo2 'function)
+  (check-document (make-xref 'foo2 'function)
                   "<a id=\"MGL-PAX-TEST:FOO2%20FUNCTION\"></a>
 
 - [function] **FOO2** *OOK X*
@@ -720,7 +713,7 @@ This is [Self-referencing][e042].
     `FOO2` has args `OOK` and `X`.
 "
                   :url-versions '(2))
-  (check-document (make-reference 'foo2 'function)
+  (check-document (make-xref 'foo2 'function)
                   "<a id=\"x-28MGL-PAX-TEST-3AFOO2-20FUNCTION-29\"></a>
 <a id=\"MGL-PAX-TEST:FOO2%20FUNCTION\"></a>
 
@@ -729,6 +722,27 @@ This is [Self-referencing][e042].
     `FOO2` has args `OOK` and `X`.
 "
                   :url-versions '(1 2)))
+
+(deftest test-pages ()
+  (let ((*package* (find-package (find-package :mgl-pax-test))))
+    (let ((outputs (document (list #'foo #'->max) :stream nil
+                                                  :pages `((:objects (,#'foo)
+                                                            :output nil)
+                                                           (:objects ()
+                                                            :output (nil))
+                                                           (:objects (,#'->max)
+                                                            :output (nil))))))
+      (when (is (= (length outputs) 2))
+        (with-failure-expected ((and (alexandria:featurep '(:or :ecl))
+                                     'failure))
+          (is (equal (first outputs)
+                     "- [function] FOO OOK X
+
+    FOO has args OOK and X.
+")))
+        (is (equal (second outputs)
+                   "- [function] ->MAX
+"))))))
 
 
 (defparameter *nasty-var* (format nil "~%~%")
@@ -736,7 +750,7 @@ This is [Self-referencing][e042].
 
 (deftest test-variable ()
   (with-failure-expected ((alexandria:featurep :clisp))
-    (check-document (make-reference '*nasty-var* 'variable)
+    (check-document (locate '*nasty-var* 'variable)
                     "<a id=\"MGL-PAX-TEST:*NASTY-VAR*%20VARIABLE\"></a>
 
 - [variable] **\\*NASTY-VAR\\*** *\"\\
@@ -744,37 +758,27 @@ This is [Self-referencing][e042].
 \"*
 
     docstring
-")))
+"))
+  (with-test ("initform")
+    (check-pred (locate '*some-var* '(variable 7))
+                "- [variable] **\\*SOME-VAR\\*** *7*")))
+
+
+(deftest test-constant ()
+  (check-pred (locate 'bar 'constant)
+              "- [constant] **BAR** *2*")
+  (with-test ("actualizing")
+    (check-pred (locate 'bar 'variable)
+                "- [constant] **BAR** *2*"))
+  (with-test ("actualizing and initform")
+    (check-pred (locate 'bar '(variable 7))
+                "- [constant] **BAR** *7*")))
 
 
 (deftest test-macro ()
-  (test-macro/canonical-reference)
   (test-macro/arglist))
 
-(setf (macro-function 'setfed-macro)
-      (lambda (whole env)
-        (declare (ignore whole env))))
-
-(deftest test-macro/canonical-reference ()
-  (let ((ref (make-reference 'setfed-macro 'macro)))
-    (is (mgl-pax::reference= (canonical-reference ref) ref))))
-
-(defmacro macro-with-fancy-args (x &optional (o 1) &key (k 2 kp))
-  (declare #+sbcl (sb-ext:muffle-conditions style-warning)
-           (ignore x o k kp))
-  ())
-
-(defmacro macro-with-local-key ((&key a) (b print))
-  (declare #+sbcl (sb-ext:muffle-conditions style-warning)
-           (ignore a b print))
-  ())
-
 (deftest test-macro/arglist ()
-  (with-failure-expected ((alexandria:featurep '(:or :allegro)))
-    (is (or (equal (% (mgl-pax::arglist 'macro-with-fancy-args))
-                   '(x &optional (o 1) &key (k 2 kp)))
-            (equal (mgl-pax::arglist 'macro-with-fancy-args)
-                   '(x &optional (o 1) &key (k 2))))))
   ;; C is a parameter. If it were treated as a default value, then
   ;; *DOCUMENT-MARK-UP-SIGNATURES* would be accessed, and this would
   ;; fail.
@@ -783,20 +787,14 @@ This is [Self-referencing][e042].
                "(&KEY A) (B C)")))
   (with-test ("macro-with-whole-and-dot")
     (is (equal (mgl-pax::arglist-to-markdown '(name . args))
-               "NAME . ARGS"))
-    (is (equal (mgl-pax::macro-arg-names '(name . args))
-               '(name args)))))
+               "NAME . ARGS"))))
 
 
 (defsection @test-symbol-macro (:export nil)
   (my-smac symbol-macro))
 
-(define-symbol-macro my-smac 42)
-(setf (documentation 'my-smac 'symbol-macro)
-      "This is MY-SMAC.")
-
 (deftest test-symbol-macro ()
-  (check-document (make-reference 'my-smac 'symbol-macro)
+  (check-document (locate 'my-smac 'symbol-macro)
                   "<a id=\"MGL-PAX-TEST:MY-SMAC%20MGL-PAX:SYMBOL-MACRO\"></a>
 
 - [symbol-macro] **MY-SMAC**
@@ -806,16 +804,15 @@ This is [Self-referencing][e042].
 
 
 (deftest test-setf ()
-  (is (null (locate 'undefined 'setf :errorp nil)))
+  (is (null (locate 'undefined 'setf nil)))
   (test-setf/expander)
   (test-setf/function)
   (test-setf/generic-function)
   (test-setf/method))
 
 (deftest test-setf/expander ()
-  (check-ref (locate 'has-setf-expander 'setf) 'has-setf-expander 'setf)
   (with-failure-expected ((and (alexandria:featurep :abcl) 'failure))
-    (check-document (make-reference 'has-setf-expander 'setf)
+    (check-document (locate 'has-setf-expander 'setf)
                     "<a id=\"MGL-PAX-TEST:HAS-SETF-EXPANDER%20SETF\"></a>
 
 - [setf] **HAS-SETF-EXPANDER**
@@ -824,25 +821,9 @@ This is [Self-referencing][e042].
 ")))
 
 (deftest test-setf/function ()
-  (with-test ("locate")
-    (with-failure-expected ((and (alexandria:featurep :clisp) 'failure))
-      (is (eq (locate 'has-setf-function 'setf) #'(setf has-setf-function)))))
-  (with-test ("canonical-reference with reference")
-    (check-ref (canonical-reference (make-reference 'has-setf-function 'setf))
-               'has-setf-function 'setf))
-  (with-test ("canonical-reference with object")
-    (check-ref (canonical-reference #'(setf has-setf-function))
-               'has-setf-function 'setf))
-  (with-test ("illegal form")
-    (with-test ("locate")
-      (is (null (locate '(setf has-setf-function) 'function :errorp nil))))
-    (with-test ("canonical-reference")
-      (check-ref (canonical-reference (make-reference '(setf has-setf-function)
-                                                      'function))
-                 '(setf has-setf-function) 'function)))
   (with-failure-expected
-      ((and (alexandria:featurep '(:or :abcl :clisp)) 'failure))
-    (check-document (make-reference 'has-setf-function 'setf)
+      ((and (alexandria:featurep '(:or :abcl)) 'failure))
+    (check-document (locate 'has-setf-function 'setf)
                     "<a id=\"MGL-PAX-TEST:HAS-SETF-FUNCTION%20SETF\"></a>
 
 - [setf] **HAS-SETF-FUNCTION** *V*
@@ -851,29 +832,9 @@ This is [Self-referencing][e042].
 ")))
 
 (deftest test-setf/generic-function ()
-  (with-test ("locate")
-    (with-failure-expected ((and (alexandria:featurep :clisp) 'failure))
-      (is (eq (locate 'has-setf-generic-function 'setf)
-              #'(setf has-setf-generic-function)))))
-  (with-test ("canonical-reference with reference")
-    (check-ref (canonical-reference
-                (make-reference 'has-setf-generic-function 'setf))
-               'has-setf-generic-function 'setf))
-  (with-test ("canonical-reference with object")
-    (check-ref (canonical-reference #'(setf has-setf-generic-function))
-               'has-setf-generic-function 'setf))
-  (with-test ("illegal form")
-    (with-test ("locate")
-      (is (null (locate '(setf has-setf-generic-function) 'generic-function
-                        :errorp nil))))
-    (with-test ("canonical-reference")
-      (check-ref (canonical-reference
-                  (make-reference '(setf has-setf-generic-function)
-                                  'generic-function))
-                 '(setf has-setf-generic-function) 'generic-function)))
-  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :clisp :cmucl))
+  (with-failure-expected ((and (alexandria:featurep '(:or :cmucl))
                                'failure))
-    (check-document (make-reference 'has-setf-generic-function 'setf)
+    (check-document (locate 'has-setf-generic-function 'setf)
                     "<a id=\"MGL-PAX-TEST:HAS-SETF-GENERIC-FUNCTION%20SETF\"></a>
 
 - [setf] **HAS-SETF-GENERIC-FUNCTION** *V*
@@ -882,45 +843,20 @@ This is [Self-referencing][e042].
 ")))
 
 (deftest test-setf/method ()
-  (let ((method (pax::find-method* #'(setf has-setf-generic-function)
-                                   () '(string)))
-        (locative '(setf (method () (string)))))
-    (with-test ("locate")
-      (with-failure-expected ((and (alexandria:featurep :clisp) 'failure))
-        (is (eq (locate 'has-setf-generic-function locative :errorp nil)
-                method))))
-    (with-test ("canonical-reference with reference")
-      (check-ref (canonical-reference
-                  (make-reference 'has-setf-generic-function locative))
-                 'has-setf-generic-function locative))
-    (with-test ("canonical-reference with object")
-      (check-ref (canonical-reference method)
-                 'has-setf-generic-function locative))
-    (with-test ("illegal form")
-      (with-test ("locate")
-        (is (null (locate '(setf has-setf-generic-function)
-                          '(method () (string)) :errorp nil))))
-      (with-test ("canonical-reference")
-        (check-ref (canonical-reference
-                    (make-reference '(setf has-setf-generic-function)
-                                    '(method () (string))))
-                   '(setf has-setf-generic-function) '(method () (string)))))
-    (with-failure-expected ((alexandria:featurep :clisp))
-      (signals-not (locate-error)
-        (check-document
-         (make-reference 'has-setf-generic-function locative)
-         "<a id=\"MGL-PAX-TEST:HAS-SETF-GENERIC-FUNCTION%20%28SETF%20%28METHOD%20NIL%20%28STRING%29%29%29\"></a>
+  (with-failure-expected ((alexandria:featurep :clisp))
+    (signals-not (locate-error)
+      (check-document
+       (locate 'has-setf-generic-function '(setf (method () (string))))
+       "<a id=\"MGL-PAX-TEST:HAS-SETF-GENERIC-FUNCTION%20%28SETF%20%28METHOD%20NIL%20%28STRING%29%29%29\"></a>
 
 - [setf] **HAS-SETF-GENERIC-FUNCTION** *(V STRING)*
 
     ggg
-")))))
+"))))
 
 
 (deftest test-function ()
   (test-function-args)
-  (test-function/canonical-reference)
-  (test-function/arglist)
   (test-function/encapsulated))
 
 (deftest test-function-args ()
@@ -931,22 +867,6 @@ This is [Self-referencing][e042].
 
     `FOO2` has args `OOK` and `X`.
 ")))
-
-(setf (symbol-function 'setfed-function)
-      (lambda ()))
-
-(deftest test-function/canonical-reference ()
-  (let ((ref (make-reference 'setfed-function 'function)))
-    (is (mgl-pax::reference= (canonical-reference ref) ref))))
-
-(defun function-with-fancy-args (x &optional (o 1) &key (k 2 kp))
-  (declare #+sbcl (sb-ext:muffle-conditions style-warning)
-           (ignore x o k kp))
-  nil)
-
-(deftest test-function/arglist ()
-  (is (equal (mgl-pax::arglist 'function-with-fancy-args)
-             '(x &optional (o 1) &key (k 2 kp)))))
 
 (when (fboundp 'encapsulated-function)
   (untrace encapsulated-function))
@@ -970,47 +890,39 @@ This is [Self-referencing][e042].
     This may be encapsulated.
 "))
     (with-failure-expected ((alexandria:featurep '(:or :abcl :clisp :ecl)))
-      (check-document (make-reference 'encapsulated-function 'function)
+      (check-document (locate 'encapsulated-function 'function nil)
                       expected)
-      (check-document #'encapsulated-function expected)))
+      (signals-not (locate-error)
+        (check-document #'encapsulated-function expected))))
   (let ((expected "<a id=\"MGL-PAX-TEST:ENCAPSULATED-GENERIC-FUNCTION%20GENERIC-FUNCTION\"></a>
 
 - [generic-function] **ENCAPSULATED-GENERIC-FUNCTION** *X*
 
     This may be encapsulated.
 "))
-    (with-failure-expected ((alexandria:featurep '(:or :abcl :clisp)))
-      (check-document (make-reference 'encapsulated-generic-function
-                                      'generic-function)
+    (with-failure-expected ((and (alexandria:featurep '(:or :abcl :clisp :ecl))
+                                 'failure))
+      (check-document (locate 'encapsulated-generic-function
+                              'generic-function nil)
                       expected))
-    (with-failure-expected ((alexandria:featurep
-                             '(:or :abcl :clisp :cmucl :ecl)))
-      (check-document #'encapsulated-generic-function expected))))
+    (with-failure-expected ((and (alexandria:featurep
+                                  '(:or :abcl :clisp :cmucl :ecl))
+                                 'failure))
+      (signals-not (locate-error)
+        (check-document #'encapsulated-generic-function expected)))))
 
 
-(setf (symbol-function 'setfed-generic-function)
-      (lambda ()))
-
 (deftest test-generic-function ()
-  (let ((ref (make-reference 'setfed-generic-function 'function)))
-    (is (mgl-pax::reference= (canonical-reference ref) ref)))
   ;; Referring to a GENERIC-FUNCTION as FUNCTION
-  (let ((ref (make-reference 'locate-object 'function)))
-    (is (mgl-pax::reference= (canonical-reference ref) ref))
-    (check-head ref "<a id=\"MGL-PAX:LOCATE-OBJECT%20GENERIC-FUNCTION\"></a>"))
-  (check-pred (make-reference 'test-gf 'generic-function)
+  (check-head (make-xref 'test-gf 'function)
+              "<a id=\"MGL-PAX-TEST:TEST-GF%20GENERIC-FUNCTION\"></a>")
+  (check-pred (locate 'test-gf 'generic-function)
               "`TEST-GF` is not a link."))
 
 
-(defsection @test-method-combination (:export nil)
-  (my-comb method-combination))
-
-(define-method-combination my-comb :identity-with-one-argument t
-  :documentation "This is MY-COMB.")
-
 (deftest test-method-combination ()
   (with-failure-expected ((alexandria:featurep '(:or :abcl :allegro)))
-    (check-document (make-reference 'my-comb 'method-combination)
+    (check-document (locate 'my-comb 'method-combination)
                     "<a id=\"MGL-PAX-TEST:MY-COMB%20METHOD-COMBINATION\"></a>
 
 - [method-combination] **MY-COMB**
@@ -1021,12 +933,12 @@ This is [Self-referencing][e042].
 
 (deftest test-method ()
   (signals-not (error)
-    (document (make-reference 'test-gf
+    (document (locate 'test-gf
                               '(method () ((eql #.(find-package :cl)))))
               :stream nil))
   (is (equal (pax::urldecode "MGL-PAX-TEST:TEST-GF%20%28METHOD%20NIL%20%28%28EQL%20%23%3CPACKAGE%20%22COMMON-LISP%22%3E%29%29%29")
              "MGL-PAX-TEST:TEST-GF (METHOD NIL ((EQL #<PACKAGE \"COMMON-LISP\">)))"))
-  (check-document (make-reference 'test-gf '(method () (number)))
+  (check-document (locate 'test-gf '(method () (number)))
                   "<a id=\"MGL-PAX-TEST:TEST-GF%20%28METHOD%20NIL%20%28NUMBER%29%29\"></a>
 
 - [method] **TEST-GF** *(X NUMBER)*
@@ -1036,16 +948,16 @@ This is [Self-referencing][e042].
 
 (deftest test-accessor ()
   (check-head (list "FOO-A `(accessor foo)`"
-                    (make-reference 'foo-a '(accessor foo))
-                    (make-reference 'foo-a 'variable))
+                    (locate 'foo-a '(accessor foo))
+                    (locate 'foo-a 'variable))
               "[`FOO-A`][dbec] `(accessor foo)`"))
 
 (deftest test-reader ()
   (check-head (list "FOO-R `(reader foo)`"
-                    (make-reference 'foo-r '(reader foo))
-                    (make-reference 'foo-r 'variable))
+                    (locate 'foo-r '(reader foo))
+                    (locate 'foo-r 'variable))
               "[`FOO-R`][618a] `(reader foo)`")
-  (check-document (make-reference 'foo-r '(reader foo))
+  (check-document (locate 'foo-r '(reader foo))
                   "<a id=\"MGL-PAX-TEST:FOO-R%20%28MGL-PAX:READER%20MGL-PAX-TEST::FOO%29\"></a>
 
 - [reader] **FOO-R** *FOO*
@@ -1053,9 +965,17 @@ This is [Self-referencing][e042].
 
 (deftest test-writer ()
   (check-head (list "FOO-W `(writer foo)`"
-                    (make-reference 'foo-w '(writer foo))
-                    (make-reference 'foo-w 'variable))
+                    (locate 'foo-w '(writer foo))
+                    (locate 'foo-w 'variable))
               "[`FOO-W`][2b65] `(writer foo)`"))
+
+(deftest test-structure-accessor ()
+  (check-pred (locate 'baz-aaa 'structure-accessor)
+              "- [structure-accessor] **BAZ-AAA**
+")
+  (check-pred (locate 'baz-aaa '(structure-accessor baz))
+              "- [structure-accessor] **BAZ-AAA** *BAZ*
+"))
 
 
 (deftest test-declaration ()
@@ -1066,10 +986,10 @@ This is [Self-referencing][e042].
 
 (deftest test-condition ()
   (check-document
-   (list (pax:make-reference 'transcription-values-consistency-error
-                             'condition)
-         (pax:make-reference 'transcription-consistency-error
-                             'condition))
+   (list (locate 'transcription-values-consistency-error
+                'condition)
+         (locate 'transcription-consistency-error
+                'condition))
    "<a id=\"MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR%20CONDITION\"></a>
 
 - [condition] **TRANSCRIPTION-VALUES-CONSISTENCY-ERROR** *[TRANSCRIPTION-CONSISTENCY-ERROR][a249]*
@@ -1094,7 +1014,7 @@ This is [Self-referencing][e042].
 
 (deftest test-restart ()
   (check-head "ABORT restart" "[`ABORT`][ae44] restart")
-  (check-document (make-reference 'use-value 'restart)
+  (check-document (locate 'use-value 'restart)
                   "<a id=\"USE-VALUE%20RESTART\"></a>
 
 - [restart] **USE-VALUE** *VALUE*
@@ -1111,27 +1031,27 @@ This is [Self-referencing][e042].
   (with-test ("name is a symbol accessible in the current package")
     (is (find-symbol (string '#:mgl-pax/full) '#:mgl-pax-test))
     (check-head (list "MGL-PAX/FULL"
-                      (make-reference :mgl-pax/full 'asdf:system))
+                      (locate :mgl-pax/full 'asdf:system))
                 "`MGL-PAX/FULL`")
     (check-head (list "MGL-PAX/FULL asdf:system"
-                      (make-reference 'mgl-pax/full 'asdf:system))
+                      (locate 'mgl-pax/full 'asdf:system))
                 "[`MGL-PAX/FULL`][d761] asdf:system")
     (check-head (list "[MGL-PAX/FULL][asdf:system]"
-                      (make-reference 'mgl-pax/full 'asdf:system))
+                      (locate 'mgl-pax/full 'asdf:system))
                 "[`MGL-PAX/FULL`][d761]"))
   (with-test ("name is not a symbol accessible in the current package")
     (is (null (find-symbol (string '#:mgl-pax/test) '#:mgl-pax-test)))
     (check-head (list "MGL-PAX/TEST"
-                      (make-reference "mgl-pax/test" 'asdf:system))
+                      (locate "mgl-pax/test" 'asdf:system))
                 "MGL-PAX/TEST")
     (check-head (list "MGL-PAX/TEST asdf:system"
-                      (make-reference "mgl-pax/test" 'asdf:system))
+                      (locate "mgl-pax/test" 'asdf:system))
                 "MGL-PAX/TEST asdf:system")
     (check-head (list "`MGL-PAX/TEST` asdf:system"
-                      (make-reference "mgl-pax/test" 'asdf:system))
+                      (locate "mgl-pax/test" 'asdf:system))
                 "[`MGL-PAX/TEST`][69db] asdf:system")
     (check-head (list "[MGL-PAX/TEST][asdf:system]"
-                      (make-reference "mgl-pax/test" 'asdf:system))
+                      (locate "mgl-pax/test" 'asdf:system))
                 "[MGL-PAX/TEST][69db]")))
 
 
@@ -1140,24 +1060,24 @@ This is [Self-referencing][e042].
 
 (deftest test-package ()
   (check-head (list "INTERNED-PKG-NAME"
-                    (make-reference 'interned-pkg-name 'package))
+                    (locate 'interned-pkg-name 'package))
               "`INTERNED-PKG-NAME`")
   (check-head (list "INTERNED-PKG-NAME package"
-                    (make-reference 'interned-pkg-name 'package))
+                    (locate 'interned-pkg-name 'package))
               "[`INTERNED-PKG-NAME`][0651] package")
   (check-head (list "[INTERNED-PKG-NAME][package]"
-                    (make-reference 'interned-pkg-name 'package))
+                    (locate 'interned-pkg-name 'package))
               "[`INTERNED-PKG-NAME`][0651]")
   (let ((*package* (find-package :mgl-pax-test)))
     (is (not (internedp '#:non-interned-pkg-name))))
   (check-head (list "NON-INTERNED-PKG-NAME"
-                    (make-reference '#:non-interned-pkg-name 'package))
+                    (locate '#:non-interned-pkg-name 'package))
               "NON-INTERNED-PKG-NAME")
   (check-head (list "NON-INTERNED-PKG-NAME package"
-                    (make-reference '#:non-interned-pkg-name 'package))
+                    (locate '#:non-interned-pkg-name 'package))
               "NON-INTERNED-PKG-NAME package")
   (check-head (list "[NON-INTERNED-PKG-NAME][package]"
-                    (make-reference '#:non-interned-pkg-name 'package))
+                    (locate '#:non-interned-pkg-name 'package))
               "[NON-INTERNED-PKG-NAME][5a00]"))
 
 
@@ -1178,7 +1098,7 @@ This is [Self-referencing][e042].
 ;;;; PAX::@PAX-LOCATIVES
 
 (deftest test-locative ()
-  (check-document (make-reference 'pax::funny-loc 'locative)
+  (check-document (locate 'pax::funny-loc 'locative)
                   "<a id=\"MGL-PAX:FUNNY-LOC%20MGL-PAX:LOCATIVE\"></a>
 
 - [locative] **MGL-PAX::FUNNY-LOC** *SOME-ARG*
@@ -1200,7 +1120,7 @@ This is [Self-referencing][e042].
 (deftest test-docstring ()
   (check-head "[BAR CONSTANT][docstring]" "`BAR` is not a link.")
   (check-head (list "[BAR CONSTANT][docstring]"
-                    (make-reference 'bar 'constant))
+                    (locate 'bar 'constant))
               "[`BAR`][f3f4] is not a link."))
 
 (deftest test-hyperspec ()
@@ -1215,14 +1135,14 @@ This is [Self-referencing][e042].
                         (search "- [function] **PRINT**" output))))
 
 (deftest test-clhs-definitions ()
-  (check-ref (locate 'function '(clhs class) :errorp nil)
+  (check-ref (locate 'function '(clhs class) nil)
              'function '(clhs class))
-  (check-ref (locate 'function '(clhs macro) :errorp nil)
+  (check-ref (locate 'function '(clhs macro) nil)
              'function '(clhs macro))
-  (is (null (locate 'function '(clhs xxx) :errorp nil)))
-  (is (null (locate 'xxx '(clhs function) :errorp nil)))
+  (is (null (locate 'function '(clhs xxx) nil)))
+  (is (null (locate 'xxx '(clhs function) nil)))
   (with-test ("disambiguation paged preferred to section and glossary entry")
-    (check-ref (locate 'function 'clhs :errorp nil)
+    (check-ref (locate 'function 'clhs nil)
                'function 'clhs))
   (check-head "[function][(clhs class)]" "[function][119e]")
   (check-head "[function][(clhs macro)]" "[function][81f7]")
@@ -1251,7 +1171,7 @@ This is [Self-referencing][e042].
                              '(:or :abcl :allegro :ccl :clisp :cmucl)))
       (check-head (list "[DOCUMENTATION][generic-function]" #'documentation)
                   "[`DOCUMENTATION`][68f1]")))
-  (when (null (locate 'otherwise 'macro :errorp nil))
+  (when (null (locate 'otherwise 'macro nil))
     (with-test ("if no live definition, then link to CLHS")
       (check-head "[otherwise][macro]" "[otherwise][c9ce]")))
   (with-test ("explicit definition link always works")
@@ -1266,12 +1186,12 @@ This is [Self-referencing][e042].
 
 (defun test-clhs-section-1 ()
   ;; "A.1" and "3.4" are section ids in the CLHS.
-  (check-ref (locate "A.1" '(clhs section) :errorp nil)
+  (check-ref (locate "A.1" '(clhs section) nil)
              "A.1" '(clhs section))
-  (is (null (locate "a.1" '(clhs section) :errorp nil)))
-  (check-ref (locate "lambda lists" '(clhs section) :errorp nil)
+  (is (null (locate "a.1" '(clhs section) nil)))
+  (check-ref (locate "lambda lists" '(clhs section) nil)
              "3.4" '(clhs section))
-  (check-ref (locate "Lambda Lists" '(clhs section) :errorp nil)
+  (check-ref (locate "Lambda Lists" '(clhs section) nil)
              "3.4" '(clhs section))
   (check-head "A.1" "A.1")
   (check-head "`A.1`" "`A.1`")
@@ -1303,9 +1223,9 @@ This is [Self-referencing][e042].
     (test-clhs-issue-1)))
 
 (defun test-clhs-issue-1 ()
-  (check-ref (locate "ISSUE:AREF-1D" 'clhs :errorp nil)
+  (check-ref (locate "ISSUE:AREF-1D" 'clhs nil)
              '"ISSUE:AREF-1D" '(clhs section))
-  (check-ref (locate "iss009" 'clhs :errorp nil)
+  (check-ref (locate "iss009" 'clhs nil)
              '"SUMMARY:AREF-1D" '(clhs section))
   (check-head "ISSUE:AREF-1D" "ISSUE:AREF-1D")
   (check-head "`ISSUE:AREF-1D`" "`ISSUE:AREF-1D`")
@@ -1321,13 +1241,13 @@ This is [Self-referencing][e042].
 (deftest test-argument ()
   (check-head "[PRINT][argument]" "`PRINT`"))
 
-(mgl-pax:define-locative-alias instance class)
+(define-locative-alias %%%defun function)
 
 (deftest test-define-locative-alias ()
-  (check-head (list "SECTION instance"
-                    (make-reference 'section 'class)
-                    (make-reference 'section 'locative))
-              "[`SECTION`][5fac] instance"))
+  (check-head (list "FOO %%%defun"
+                    (locate 'foo 'function)
+                    (locate 'foo 'compiler-macro))
+              "[`FOO`][bc64] %%%defun"))
 
 
 (deftest test-cl-transcript ()
@@ -1359,14 +1279,13 @@ This is [Self-referencing][e042].
 (deftest test-document/open ()
   (with-test ("no link duplication for objects being documented")
     (check-head (list "PAX:LOCATIVE"
-                      (pax:make-reference 'pax:locative 'pax:locative))
+                      (locate 'pax:locative 'pax:locative))
                 "[`PAX:LOCATIVE`][0b3a]"
                 :w3m t))
   (with-failure-expected ((alexandria:featurep :clisp))
     (with-test ("simplified ambiguous links")
       (check-head "AMBI" "[`AMBI`](pax:MGL-PAX-TEST:AMBI)" :w3m t))
-    (is (find 'package (pax::definitions-of 'cl)
-              :key #'pax::reference-locative-type))
+    (is (find 'package (definitions 'cl) :key #'xref-locative-type))
     (with-test ("escaping of non-ambiguous")
       (check-head "`foo<>&`"
                   "<p><a href=\"pax:MGL-PAX-TEST:FOO%3C%3E%26%20FUNCTION\" title=\"MGL-PAX-TEST:FOO&lt;&gt;&amp; FUNCTION\"><strong><code>foo&lt;&gt;&amp;</code></strong></a></p>"
@@ -1376,7 +1295,7 @@ This is [Self-referencing][e042].
                   "<a href=\"pax:MGL-PAX-TEST:AMBI%3C%3E%26\" ><strong><code>ambi&lt;&gt;&amp;</code></strong></a>"
                   :w3m t :format :html)))
   (let ((*error-output* (make-broadcast-stream)))
-    (check-head (make-reference 'foo-with-bad-transcript 'function)
+    (check-head (locate 'foo-with-bad-transcript 'function)
                 "<a id=\"MGL-PAX-TEST:FOO-WITH-BAD-TRANSCRIPT%20FUNCTION\"></a>
 
 - [function] **FOO-WITH-BAD-TRANSCRIPT**
@@ -1394,24 +1313,25 @@ This is [Self-referencing][e042].
   (test-documentables-of)
   (test-document/open/live-vs-static)
   (test-document/open/object)
-  (test-document/open/clhs))
+  (test-document/open/clhs)
+  (test-document/open/undefined))
 
 (deftest test-documentables-of ()
   ;; This test relies on what is and what is not available through
   ;; SWANK-BACKEND:FIND-DEFINITIONS in a given implementation.
   #+sbcl
   (is (endp (different-elements
-             (pax::sort-references (pax::documentables-of nil))
-             (list (make-reference "NIL" '(clhs glossary-term))
-                   (make-reference :common-lisp 'readtable)
-                   (make-reference 'nil '(clhs constant))
-                   (make-reference 'nil '(clhs type))
-                   (make-reference 'nil 'clhs)
-                   (make-reference 'nil 'constant))
+             (dref::sort-references (pax::documentables-of nil))
+             (list (locate "NIL" '(clhs glossary-term))
+                   (locate :common-lisp 'readtable)
+                   (locate 'nil '(clhs constant))
+                   (locate 'nil '(clhs type))
+                   (locate 'nil 'clhs)
+                   (locate 'nil 'constant))
              :pred (lambda (r1 r2)
-                     (and (typep r1 'reference)
-                          (typep r2 'reference)
-                          (pax::reference= r1 r2)))))))
+                     (and (typep r1 'xref)
+                          (typep r2 'xref)
+                          (xref= r1 r2)))))))
 
 (deftest test-document/open/live-vs-static ()
   (with-test ("prefer live definition to CLHS")
@@ -1422,27 +1342,38 @@ This is [Self-referencing][e042].
                              '(:or :abcl :allegro :ccl :clisp :cmucl)))
       (check-head "[DOCUMENTATION][generic-function]" "[`DOCUMENTATION`][68f1]"
                   :w3m t)))
-  (when (null (locate 'otherwise 'macro :errorp nil))
+  (when (null (locate 'otherwise 'macro nil))
     (with-test ("if no live definition, then link to CLHS")
       (check-head "[otherwise][macro]" "[otherwise][c9ce]" :w3m t))))
 
 (deftest test-document/open/object ()
-  (with-failure-expected ()
-    (check-head "[PAX][package] [MGL-PAX][package] [`mgl-pax`][asdf:system]"
-                "[PAX][97b3] [`MGL-PAX`][97b3] [`mgl-pax`][6fdb]"
-                :w3m t)))
+  (check-head "[PAX][package] [MGL-PAX][package] [`mgl-pax`][asdf:system]"
+              "[PAX][97b3] [MGL-PAX][97b3] [`mgl-pax`][6fdb]"
+              :w3m t))
 
 (deftest test-document/open/clhs ()
   (let ((*document-hyperspec-root* "CLHS/"))
     (loop for (object locative) in '((print function)
                                      (single-float type))
-          do (let ((reference (make-reference object `(clhs ,locative))))
+          do (let ((reference (locate object `(clhs ,locative))))
                (signals-not (error :msg ("REFERENCE=~S" reference))
                  (let ((url (let ((*standard-output* (make-broadcast-stream)))
                               (pax::document-for-emacs/reference reference
                                                                  nil))))
                    (is (stringp url))
-                   (is (alexandria:starts-with-subseq "CLHS/" url))))))))
+                   (is (alexandria:starts-with-subseq "CLHS/" url)))))))
+  (with-test ("ambiguous link")
+    ;; This used to fail because CLHS aliases are XREFs and not DREFs.
+    (let ((pax::*document-open-linking* t))
+      (pax:document "DOUBLE-FLOAT" :stream nil :format :html))))
+
+(defsection @bad-section (:export nil)
+  (undefined function))
+
+(deftest test-document/open/undefined ()
+  (check-head @bad-section
+              "<a id=\"MGL-PAX-TEST:@BAD-SECTION%20MGL-PAX:SECTION\"></a>"
+              :warnings 1 :w3m t))
 
 (defun ambi ())
 (defclass ambi () ())
@@ -1456,106 +1387,6 @@ This is [Self-referencing][e042].
   => 7
   ```"
   nil)
-
-
-(defun mgl-pax::%test9jwern% ())
-(defun %test9jwern% ())
-
-(deftest test-pax-apropos ()
-  (let ((swank::*buffer-package* (find-package :mgl-pax-test)))
-    (with-failure-expected ((alexandria:featurep '(:or :abcl :clisp)))
-      (with-test ("NAME is NIL")
-        (is (match-values (pax-apropos nil :package :mgl-pax-test
-                                           :external-only t)
-              (reflist= * '((mgl-pax-test:test function)))
-              (reflist= * ()))))
-      (with-test ("NAME is SYMBOL")
-        (with-test (":PACKAGE is a symbol")
-          (is (match-values (pax-apropos '%test9jwern% :package :mgl-pax)
-                (reflist= * '((mgl-pax::%test9jwern% function)))
-                (reflist= * ()))))
-        (with-test (":PACKAGE is a symbol matching a nickname")
-          (is (match-values (pax-apropos '%test9jwern% :package :pax)
-                (reflist= * '((mgl-pax::%test9jwern% function)))
-                (reflist= * ()))))
-        (with-test ("NAME is a lower-case symbol")
-          (is (match-values (pax-apropos '#:|%test9jwern%| :package :mgl-pax)
-                (reflist= * '((mgl-pax::%test9jwern% function)))
-                (reflist= * ())))))
-      (with-test ("NAME is STRING")
-        (with-test ("full match")
-          (is (match-values (pax-apropos "test" :package :mgl-pax-test
-                                                :external-only t)
-                (reflist= * '((mgl-pax-test:test function)))
-                (reflist= * ()))))
-        (with-test ("partial match")
-          (is (match-values (pax-apropos "es" :package :mgl-pax-test
-                                              :external-only t)
-                (reflist= * '((mgl-pax-test:test function)))
-                (reflist= * ()))))
-        (with-test ("case-sensitive")
-          (with-test ("no match")
-            (is (match-values (pax-apropos "es" :package :mgl-pax-test
-                                                :external-only t
-                                                :case-sensitive t)
-                  (reflist= * ())
-                  (reflist= * ()))))
-          (with-test ("match")
-            (is (match-values (pax-apropos "ES" :package :mgl-pax-test
-                                                :external-only t
-                                                :case-sensitive t)
-                  (reflist= * '((mgl-pax-test:test function)))
-                  (reflist= * ()))))))
-      (with-test (":PACKAGE is NIL")
-        (is (match-values (pax-apropos '%test9jwern%)
-              ;; Symbols accessible in the current package are first.
-              (reflist= * '((mgl-pax-test::%test9jwern% function)
-                            (mgl-pax::%test9jwern% function)))
-              (reflist= * ()))))
-      (with-test (":PACKAGE is STRING")
-        (with-test ("full match")
-          (is (match-values (pax-apropos '%test9jwern% :package "mgl-pax-test")
-                (reflist= * '((mgl-pax-test::%test9jwern% function)))
-                (reflist= * ()))))
-        (with-test ("partial match")
-          (is (match-values (pax-apropos '%test9jwern% :package "mgl-pax")
-                (reflist= * '((mgl-pax-test::%test9jwern% function)
-                              (mgl-pax::%test9jwern% function)))
-                (reflist= * ()))))
-        (with-test ("case-sensitive")
-          (with-test ("no match")
-            (is (match-values (pax-apropos '%test9jwern% :package "mgl-pax"
-                                                         :case-sensitive t)
-                  (reflist= * ())
-                  (reflist= * ()))))
-          (with-test ("match")
-            (is (match-values (pax-apropos '%test9jwern% :package "MGL-PAX"
-                                                         :case-sensitive t)
-                  (reflist= * '((mgl-pax-test::%test9jwern% function)
-                                (mgl-pax::%test9jwern% function)))
-                  (reflist= * ())))))))
-    (with-test (":LOCATIVE-TYPES")
-      (with-test ("only asdf systems")
-        (is (match-values (pax-apropos nil :locative-types '(asdf:system))
-              (endp *)
-              (= (length *) (length (asdf:registered-systems))))))
-      (with-test ("only packages")
-        (is (match-values (pax-apropos nil :locative-types '(package))
-              (endp *)
-              (= (length *) (length (list-all-packages))))))
-      (with-test ("asdf systems and packages")
-        (is (match-values (pax-apropos nil
-                                       :locative-types '(asdf:system package))
-              (endp *)
-              (= (length *) (+ (length (asdf:registered-systems))
-                               (length (list-all-packages))))))))))
-
-(defun reflist= (references objects-and-locatives)
-  (equal (mapcar (lambda (reference)
-                   (list (reference-object reference)
-                         (reference-locative reference)))
-                 references)
-         objects-and-locatives))
 
 
 (deftest test-map-documentable ()
@@ -1583,3 +1414,36 @@ This is [Self-referencing][e042].
                                                3)
                                               4)))
                "2114"))))
+
+
+(deftest test-table-of-contents ()
+  (check-document (list @parent-section-without-title
+                        @test-examples)
+                  "- [`@PARENT-SECTION-WITHOUT-TITLE`][74ce]
+- [`@TEST-EXAMPLES`][bb1c]
+
+<a id=\"MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
+
+# `@PARENT-SECTION-WITHOUT-TITLE`
+
+## Table of Contents
+
+- [1 `@SECTION-WITHOUT-TITLE`][eeac]
+
+###### \\[in package MGL-PAX-TEST\\]
+<a id=\"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
+
+## 1 `@SECTION-WITHOUT-TITLE`
+
+
+<a id=\"MGL-PAX-TEST:@TEST-EXAMPLES%20MGL-PAX:SECTION\"></a>
+
+# `@TEST-EXAMPLES`
+
+###### \\[in package MGL-PAX-TEST\\]
+example section
+
+  [74ce]: #MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"`MGL-PAX-TEST::@PARENT-SECTION-WITHOUT-TITLE`\"
+  [bb1c]: #MGL-PAX-TEST:@TEST-EXAMPLES%20MGL-PAX:SECTION \"`MGL-PAX-TEST::@TEST-EXAMPLES`\"
+  [eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"`MGL-PAX-TEST::@SECTION-WITHOUT-TITLE`\"
+"))

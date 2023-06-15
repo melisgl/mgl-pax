@@ -18,14 +18,13 @@
   MGL-PAX/FULL systems. To keep deployed code small, client systems
   should declare an ASDF dependency on this system, never on the
   others, which are intended for autoloading and interactive use."
-  :depends-on ("named-readtables" "pythonic-string-reader")
+  :depends-on ("mgl-pax/bootstrap" "dref"
+               "named-readtables" "pythonic-string-reader")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/base/"
                 :serial t
-                :components ((:file "package")
-                             (:file "autoload")
-                             (:file "pax-early")
+                :components ((:file "autoload")
                              (:file "pax")
                              (:file "extension-api")
                              (:file "navigate-early")
@@ -33,6 +32,27 @@
                              (:file "web-early")
                              (:file "transcribe-early")
                              (:file "locatives-early"))))
+  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
+
+;;; MGL-PAX depends on DREF, and DREF depends on MGL-PAX/BOOTSTRAP.
+(asdf:defsystem "mgl-pax/bootstrap"
+  :licence "MIT, see COPYING."
+  :author "Gábor Melis"
+  :mailto "mega@retes.hu"
+  ;; Prevent inheritance of slot values from the MGL-PAX system.
+  :homepage ""
+  :bug-tracker ""
+  :source-control ""
+  :description "Not for public use. This is solely for systems on
+  which PAX depends but which also use PAX."
+  :depends-on ()
+  :defsystem-depends-on ("mgl-pax.asdf")
+  :around-compile "mgl-pax.asdf:compile-pax"
+  :components ((:module "src/bootstrap/"
+                :serial t
+                :components ((:file "package")
+                             (:file "basics")
+                             (:file "pax-world"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
 (asdf:defsystem "mgl-pax/navigate"
@@ -46,14 +66,15 @@
   :description "Slime `\\\\M-.` support for MGL-PAX."
   :long-description "Autoloaded by Slime's `\\\\M-.` when `src/pax.el` is
   loaded. See MGL-PAX::@NAVIGATING-IN-EMACS."
-  :depends-on ("alexandria" "mgl-pax" (:feature (:not :swank) "swank"))
+  :depends-on ("alexandria" "mgl-pax" "dref/full"
+               (:feature (:not :swank) "swank"))
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/navigate/"
                 :serial t
-                :components ((:file "util")
+                :components ((:file "package")
+                             (:file "util")
                              (:file "parse")
-                             (:file "find-definition")
                              (:file "locatives")
                              (:file "navigate"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
@@ -66,8 +87,8 @@
   :bug-tracker ""
   :source-control ""
   :description "Documentation generation support for MGL-PAX."
-  :long-description "Autoloaded by MGL-PAX:DOCUMENT. See
-  MGL-PAX::@GENERATING-DOCUMENTATION."
+  :long-description "Do not declar a dependency on this system. It is
+  autoloaded. See MGL-PAX::@GENERATING-DOCUMENTATION."
   :depends-on ("alexandria" "3bmd" "3bmd-ext-code-blocks" "colorize" "md5"
                "mgl-pax/navigate" "trivial-utf-8")
   :defsystem-depends-on ("mgl-pax.asdf")
@@ -79,6 +100,7 @@
                              (:file "stream-spec")
                              (:file "docstring")
                              (:file "hyperspec")
+                             (:file "document-dref")
                              (:file "document")
                              (:file "document-util")
                              (:file "browse"))))
@@ -92,9 +114,10 @@
   :bug-tracker ""
   :source-control ""
   :description "Web server for browsing documentation in the running
-  Lisp. Not needed for w3m (see MGL-PAX::@DOCUMENTING-IN-EMACS), and
-  autoloaded by Elisp."
-  :long-description "Autoloaded by MGL-PAX:DOCUMENT."
+  Lisp. Not needed for w3m (see
+  MGL-PAX::@BROWSING-WITH-OTHER-BROWSERS), and autoloaded by Elisp."
+  :long-description "Do not declare a dependency on this sytem. It is
+  autoloaded."
   :depends-on ("hunchentoot" "mgl-pax/document")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
@@ -111,7 +134,8 @@
   :bug-tracker ""
   :source-control ""
   :description "Transcription support for MGL-PAX."
-  :long-description "Autoloaded by MGL-PAX:TRANSCRIBE and by the Emacs
+  :long-description "Do not declare a dependency on this system.
+  It is autoloaded by MGL-PAX:TRANSCRIBE and by the Emacs
   integration (see MGL-PAX::@TRANSCRIPTS)."
   :depends-on ("alexandria" "mgl-pax/navigate")
   :defsystem-depends-on ("mgl-pax.asdf")
@@ -128,9 +152,9 @@
   :homepage ""
   :bug-tracker ""
   :source-control ""
-  :description "MGL-PAX with most features preloaded."
-  :long-description ""
-  ;; FIXME?
+  :description "MGL-PAX with all features preloaded except MGL-PAX/WEB."
+  :long-description "Do not declare a dependency on this system. It
+  is autoloaded."
   :depends-on ("mgl-pax/navigate" "mgl-pax/document" "mgl-pax/transcribe")
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 
@@ -143,7 +167,7 @@
   :source-control ""
   :description "Test system for MGL-PAX."
   :long-description ""
-  :depends-on ("mgl-pax/full" "try")
+  :depends-on ("mgl-pax/full" "dref/test" "try")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "test"

@@ -102,3 +102,27 @@ C-. on ALEXANDRIA:DESTRUCTURING-CASE
 Package apropos could take advantage?
 * MAYBE mgl-pax-apropos should defer to slime-apropos if pax not loaded?
 * MAYBE add TAB completion to M-. prompt
+* MAYBE add SPECIAL locative and make variable an alias of it?
+* MAYBE support DECLARATION docstrings?
+* MAYBE support setf docstring?
+* MAYBE better SOURCE addressing for INCLUDE
+* MAYBE live browsing: reload page automatically on redefinition
+* transcribe: how to include errors without failing?
+* BUG on @LOCATIVE-TYPEs M-. goes to @LOCATIVE-TYPES
+but DOCUMENT doesn't.
+* BUG M-. in comments with ; chars in the way of parsing
+* BUG disambiguation page escaping of NAME (e.g. *print-length*)
+* compare DREF to the DEFINITIONS library
+Cons of DEFINITIONS:
+- Assumes that designators are SYMBOLs or (SETF <SYMBOL>).
+- Shadows cl:symbol, cl:package, cl:class, ... (can't be :USEd without
+  hassle?)
+- Has no equivalent to LOCATEing a single definition ((LOCATE 'XXX
+  'VARIABLE))?
+- only 3 lisps are supported
+- no tests
+- very little documentation
+
+Pros of DEFINITIONs:
+- BIND, (SETF OBJECT), UNBIND, (SETF DOCUMENTATION).
+* BUG M-. on pax:docstring pax:locative>

@@ -20,10 +20,10 @@
     (with-swank ()
       (let* ((pax-url (request-pax*-url))
              (pkgname (hunchentoot:get-parameter "pkg"))
-             (*package* (or (find-package* pkgname)
-                            (find-package* (ignore-errors
-                                            (read-from-string pkgname)))
-                            (find-package :cl)))
+             (*package* (or (dref::find-package* pkgname)
+                            (dref::find-package* (ignore-errors
+                                                  (read-from-string pkgname)))
+                            (dref::find-package :cl)))
              (editp (hunchentoot:get-parameter "edit")))
         (if editp
             (progn
@@ -56,7 +56,7 @@
     (document-pax*-url pax-url filename)))
 
 (defun reference-to-edit-uri (reference)
-  (let ((url (finalize-pax-url (reference-to-pax-url reference))))
+  (let ((url (finalize-pax-url (dref-to-pax-url reference))))
     (if (find #\? url)
         (format nil "~A&edit" url)
         (format nil "~A?edit" url))))
@@ -71,9 +71,9 @@
           (read-reference-from-string path)
         (when foundp
           (swank::with-connection ((swank::default-connection))
-            (let* ((reference (make-reference object locative))
-                   (dspec (reference-to-dspec reference))
-                   (location (ignore-errors (find-source reference))))
+            (let* ((dref (locate object locative))
+                   (dspec (dref::definition-to-dspec dref))
+                   (location (source-location dref)))
               (when (eq (first location) :location)
                 (swank:eval-in-emacs `(mgl-pax-edit-for-cl
                                        '((,dspec ,location))))))))))))
@@ -143,7 +143,8 @@
   (make-instance 'hunchentoot:easy-acceptor
                  ;; Any free port
                  :port 0
-                 :access-log-destination nil))
+                 :access-log-destination nil
+                 :message-log-destination nil))
 
 (defun %start-server (port)
   (when port

@@ -1125,12 +1125,12 @@
   (:report (lambda (condition stream)
              (let ((on (transcription-error-on condition)))
                (format stream
-                       "~@<Transcription error~@[ in ~:_~A~]~
+                       "~@<Transcription error~@[ while documenting ~:_~A~]~
                        ~@[ ~:_at position ~A~].~
                        ~:_ ~?~%~
                        Form: ~:_~S~:@>"
-                       (if (typep on 'reference)
-                           ;; Allow M-. to work in the slime debugger.
+                       (if (typep on 'xref)
+                           ;; Allow M-. to work in the Slime debugger.
                            (print-reference-with-package on)
                            ;; Don't print the stream, since it's
                            ;; likely to be constructed by
@@ -1144,14 +1144,13 @@
 
 (defun print-reference-with-package (reference)
   (let ((*package* (find-package :keyword)))
-    (format nil "~S ~S" (reference-object reference)
-            (reference-locative reference))))
+    (format nil "~S" reference)))
 
 (defun transcription-error (stream file-position form-as-string
                             message &rest message-args)
   (error 'transcription-error
-         :on (or *reference-being-documented* stream)
-         :file-position (if *reference-being-documented* nil file-position)
+         :on (or *documenting-reference* stream)
+         :file-position (if *documenting-reference* nil file-position)
          :form-as-string form-as-string
          :message message
          :message-args message-args))
@@ -1182,8 +1181,8 @@
 (defun consistency-error (class stream form-as-string
                           message &rest message-args)
   (cerror "Continue." class
-          :on (or *reference-being-documented* stream)
-          :file-position (cond (*reference-being-documented*
+          :on (or *documenting-reference* stream)
+          :file-position (cond (*documenting-reference*
                                 nil)
                                (stream
                                 (file-position stream))
@@ -1285,31 +1284,32 @@
 
 (defun/autoloaded transcribe-for-emacs (string default-syntax* update-only echo
                                                first-line-special-p dynenv)
-  (swank::with-buffer-syntax ()
-    (let ((default-syntax (cond ((numberp default-syntax*)
-                                 (first (elt *transcribe-syntaxes*
-                                             default-syntax*)))
-                                ((null default-syntax*)
-                                 nil)
-                                (t (error "Unexpected default syntax ~S."
-                                          default-syntax*))))
-          (dynenv (and dynenv (read-from-string dynenv))))
-      (when (and dynenv (or (not (symbolp dynenv))
-                            (not (fboundp dynenv))))
-        (error ":dynenv ~S does not name a function." dynenv))
-      (multiple-value-bind (string prefix)
-          (strip-longest-common-prefix
-           string "; " :first-line-special-p first-line-special-p)
-        (let ((transcript
-                (prefix-lines prefix
-                              (transcribe string nil
-                                          :default-syntax default-syntax
-                                          :update-only update-only :echo echo
-                                          :dynenv dynenv)
-                              :exclude-first-line-p first-line-special-p)))
-          (if echo
-              transcript
-              (format nil "~%~A" transcript)))))))
+  (with-swank ()
+    (swank::with-buffer-syntax ()
+      (let ((default-syntax (cond ((numberp default-syntax*)
+                                   (first (elt *transcribe-syntaxes*
+                                               default-syntax*)))
+                                  ((null default-syntax*)
+                                   nil)
+                                  (t (error "Unexpected default syntax ~S."
+                                            default-syntax*))))
+            (dynenv (and dynenv (read-from-string dynenv))))
+        (when (and dynenv (or (not (symbolp dynenv))
+                              (not (fboundp dynenv))))
+          (error ":dynenv ~S does not name a function." dynenv))
+        (multiple-value-bind (string prefix)
+            (strip-longest-common-prefix
+             string "; " :first-line-special-p first-line-special-p)
+          (let ((transcript
+                  (prefix-lines prefix
+                                (transcribe string nil
+                                            :default-syntax default-syntax
+                                            :update-only update-only :echo echo
+                                            :dynenv dynenv)
+                                :exclude-first-line-p first-line-special-p)))
+            (if echo
+                transcript
+                (format nil "~%~A" transcript))))))))
 
 
 (defsection @transcript-conistency-checking
@@ -1453,7 +1453,7 @@
   including the first occurrence of PATTERN. On changed lines, delete
   trailing whitespace too. Let's define a comparison function:
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv pax-std-env)
   (defun string=/no-comments (string1 string2)
     (string= (delete-comments string1) (delete-comments string2)))
   ```
@@ -1485,3 +1485,5 @@
         (loop for line = (read-line in nil nil)
               while line
               do (write-line (delete-on-one-line line) out))))))
+
+(defun/autoloaded ensure-transcribe-loaded ())

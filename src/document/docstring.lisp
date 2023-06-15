@@ -1,7 +1,5 @@
 (in-package :mgl-pax)
 
-(declaim (special *table-of-contents-stream*))
-
 ;;; Normalize indentation of docstrings as described in (METHOD ()
 ;;; (STRING T)) DOCUMENT-OBJECT.
 (defun strip-docstring-indentation (docstring &key (first-line-special-p t))
@@ -43,36 +41,3 @@
                            (< (n-leading-spaces line) n-min-indentation))
                    (setq n-min-indentation (n-leading-spaces line))))))
     (or n-min-indentation 0)))
-
-
-(defun/autoloaded documentation* (object doc-type)
-  "A small wrapper around CL:DOCUMENTATION to smooth over differences
-  between implementations."
-  ;; KLUDGE: Some just can't decide where the documentation is. Traced
-  ;; generic functions complicate things.
-  (when (functionp object)
-    #+(or ccl ecl)
-    (when (and (eq doc-type 'function)
-               (null (documentation object 'function)))
-      (setq object (function-name object)))
-    #+cmucl
-    (setq object (function-name object)))
-  #+cmucl
-  (when (typep object 'class)
-    (setq object (class-name object)
-          doc-type 'type))
-  (let ((docstring (documentation object doc-type)))
-    #+sbcl
-    (setq docstring (filter-junk-docstrings docstring))
-    docstring))
-
-#+sbcl
-(defun filter-junk-docstrings (docstring)
-  (if (member docstring
-              '("Return whether debug-block represents elsewhere code."
-                "automatically generated accessor method"
-                "automatically generated reader method"
-                "automatically generated writer method")
-              :test #'equal)
-      nil
-      docstring))

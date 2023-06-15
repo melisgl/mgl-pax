@@ -1,5 +1,5 @@
-;;;; After this file is loaded, the rest of PAX can be written using
-;;;; DEFSECTION.
+;;;; After this file is loaded, the rest of PAX and XREF can be
+;;;; written using DEFSECTION.
 
 (in-package :mgl-pax)
 
@@ -10,8 +10,9 @@
   building a binary application.")
 
 (defmacro defsection (name (&key (package '*package*) (readtable '*readtable*)
-                            (export t) title link-title-to
-                            (discard-documentation-p *discard-documentation-p*))
+                              (export t) title link-title-to
+                              (discard-documentation-p
+                               *discard-documentation-p*))
                       &body entries)
   "Define a documentation section and maybe export referenced symbols.
   A bit behind the scenes, a global variable with NAME is defined and
@@ -23,23 +24,23 @@
   ENTRIES consists of docstrings and references in any order.
   Docstrings are arbitrary strings in markdown format.
 
-  REFERENCES are given in the form `(OBJECT LOCATIVE)`. For example,
-  `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR SECTION)` says
-  that `@BAR` is a subsection of this one. `(BAZ (METHOD () (T T T)))`
-  refers to the default method of the three argument generic function
-  `BAZ`. `(FOO FUNCTION)` is equivalent to `(FOO (FUNCTION))`. See
-  @LOCATIVES-AND-REFERENCES for more.
+  References are XREFs given in the form `(NAME LOCATIVE)`. For
+  example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
+  SECTION)` says that `@BAR` is a subsection of this
+  one. `(BAZ (METHOD () (T T T)))` refers to the default method of the
+  three argument generic function `BAZ`. `(FOO FUNCTION)` is
+  equivalent to `(FOO (FUNCTION))`. See the DRef DREF::@INTRODUCTION
+  for more.
 
-  The same object may occur in multiple references, typically with
+  The same name may occur in multiple references, typically with
   different locatives, but this is not required.
 
-  The references are not looked up (see RESOLVE in the
-  @LOCATIVES-AND-REFERENCES-API) until documentation is generated, so
-  it is allowed to refer to things yet to be defined.
+  The references are not LOCATEd until documentation is generated, so
+  they may refer to things yet to be defined.
 
   ##### Exporting
 
-  If EXPORT is true (the default), NAME and the @OBJECTs of references
+  If EXPORT is true (the default), NAME and the @NAMEs of references
   among ENTRIES which are SYMBOLs are candidates for exporting. A
   candidate symbol is exported if
 
@@ -56,93 +57,32 @@
 
   TITLE is a string containing markdown or NIL. If non-NIL, it
   determines the text of the heading in the generated output.
-  LINK-TITLE-TO is a reference given as an `(OBJECT LOCATIVE)` pair or
+  LINK-TITLE-TO is a reference given as an `(NAME LOCATIVE)` pair or
   NIL, to which the heading will link when generating HTML. If not
   specified, the heading will link to its own anchor.
 
   When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
   is true, ENTRIES will not be recorded to save memory."
-  ;; Let's check the syntax as early as possible.
-  (transform-entries entries name)
-  (transform-link-title-to link-title-to)
+  (check-section-entries entries name)
+  (check-link-title-to link-title-to name)
   `(progn
      (eval-when (:compile-toplevel :load-toplevel :execute)
        (when ,export
-         (export-some-symbols ',name ',entries ,package)))
+         (export-some-symbols ',name ',entries
+                              ,(if (eq export t)
+                                   package
+                                   ;; This is a tentative feature,
+                                   ;; currently undocumented.
+                                   export))))
      (defparameter ,name
        (make-instance 'section
                       :name ',name
-                      :package ,package
+                      :package (find-package ,package)
                       :readtable ,readtable
                       :title ,title
-                      :link-title-to (transform-link-title-to ',link-title-to)
-                      :entries ,(if discard-documentation-p
-                                    ()
-                                    `(transform-entries ',entries ',name))))))
-
-
-(defclass reference ()
-  ((object :initarg :object :reader reference-object)
-   (locative :initarg :locative :reader reference-locative))
-  (:documentation "A REFERENCE represents a path (REFERENCE-LOCATIVE)
-  to take from an object (REFERENCE-OBJECT)."))
-
-;;; Canonicalize it a bit for easier comparison. E.g. (FUNCTION) =>
-;;; FUNCTION.
-(declaim (inline normalize-locative))
-(defun normalize-locative (locative)
-  (if (and (listp locative)
-           (null (cdr locative)))
-      (first locative)
-      locative))
-
-(defun make-reference (object locative)
-  (make-instance 'reference :object object
-                 :locative (normalize-locative locative)))
-
-(defmethod print-object ((object reference) stream)
-  (print-unreadable-object (object stream :type t)
-    (format stream "~S ~S" (reference-object object)
-            (reference-locative object))))
-
-;;; This assumes that references are in canonical form (see
-;;; CANONICAL-REFERENCE), so they can be compared this dumbly.
-(declaim (inline reference=))
-(defun reference= (reference-1 reference-2)
-  (and (equal (reference-object reference-1)
-              (reference-object reference-2))
-       (equal (reference-locative reference-1)
-              (reference-locative reference-2))))
-
-;;; This also checks for EQUALness and not whether OBJECT is
-;;; equivalent to the REFERENCE-OBJECT of REFERENCE (as in it would
-;;; resolve to the same thing with the locative).
-(declaim (inline reference-object=))
-(defun reference-object= (object reference)
-  (equal object (reference-object reference)))
-
-(declaim (inline reference-locative-type))
-(defun reference-locative-type (reference)
-  (locative-type (reference-locative reference)))
-
-(declaim (inline reference-locative-args))
-(defun reference-locative-args (reference)
-  (locative-args (reference-locative reference)))
-
-(defun locative-type (locative)
-  "Return the first element of LOCATIVE if it's a list. If it's a symbol,
-  then return that symbol itself."
-  (if (listp locative)
-      (first locative)
-      locative))
-
-(defun locative-args (locative)
-  "The REST of LOCATIVE if it's a list. If it's a symbol then it's
-  NIL."
-  (if (listp locative)
-      (rest locative)
-      ()))
-
+                      :link-title-to ',link-title-to
+                      :entries ',(and (not discard-documentation-p)
+                                      entries)))))
 
 (defclass section ()
   ((name
@@ -161,14 +101,12 @@
     :initarg :title :reader section-title
     :documentation "A markdown string or NIL. Used in generated
     documentation.")
-   (link-title-to
-    :initform nil
-    :initarg :link-title-to :reader section-link-title-to
-    :documentation "A REFERENCE or NIL. Used in generated documentation.")
-   (entries
-    :initarg :entries :reader section-entries
-    :documentation "A list of markdown docstrings and REFERENCE
-    objects in the order they occurred in DEFSECTION."))
+   ;; DEFSECTION's raw link-title-to argument. Translated to an XREF
+   ;; by SECTION-LINK-TITLE-TO, which is defined later so that XREF
+   ;; can depend on mgl-pax/basics.
+   (%link-title-to :initform nil :initarg :link-title-to)
+   ;; DEFSECTION's raw ENTRIES argument. See SECTION-ENTRIES.
+   (%entries :initarg :entries))
   (:documentation "DEFSECTION stores its NAME, TITLE, [PACKAGE][type],
   [READTABLE][type] and ENTRIES arguments in [SECTION][class]
   objects."))
@@ -177,59 +115,59 @@
   (print-unreadable-object (section stream :type t)
     (format stream "~S" (section-name section))))
 
-(defun transform-entries (entries section-name)
-  (mapcar (lambda (entry)
-            (if (stringp entry)
-                entry
-                (entry-to-reference entry section-name)))
-          entries))
+(defun ref-list-p (obj)
+  (and (listp obj) (= (length obj) 2)))
 
-(defun entry-to-reference (entry section-name)
-  (handler-case
-      (destructuring-bind (object locative) entry
-        (make-reference object locative))
-    (error ()
-      (error "~@<Malformed entry ~A in the definition of SECTION ~A. ~
-               Entries must be of the form (SYMBOL LOCATIVE).~:@>"
-             ;; Force symbols to be fully qualified so that M-. works
-             ;; in the Slime debugger.
-             (prin1-to-string/fully-qualified entry)
-             (prin1-to-string/fully-qualified section-name)))))
+(defun check-section-entries (entries section-name)
+  (loop for entry in entries
+        do (unless (or (stringp entry) (ref-list-p entry))
+             (malformed-ref-list-in-section-error "entry" entry section-name))))
+
+(defun check-link-title-to (link-title-to section-name)
+  (unless (or (null link-title-to)
+              (ref-list-p link-title-to))
+    (malformed-ref-list-in-section-error :link-title-to link-title-to
+                                         section-name)))
+
+(defun malformed-ref-list-in-section-error (what ref-list section-name)
+  (error "~@<Malformed ~A ~S in SECTION ~S. ~
+         It should be of form (NAME LOCATIVE).~:@>"
+         what (prin1-to-string/fully-qualified ref-list)
+         (prin1-to-string/fully-qualified section-name)))
 
 (defun prin1-to-string/fully-qualified (object)
   (let ((*package* (find-package :keyword)))
     (prin1-to-string object)))
-
-(defun transform-link-title-to (link-title-to)
-  (when link-title-to
-    (if (typep link-title-to 'reference)
-        link-title-to
-        (apply #'make-reference link-title-to))))
 
 
 ;;;; Exporting
 
 (defun export-some-symbols (name entries package)
-  (when (exportablep package name 'section)
-    (export name package))
-  (dolist (entry entries)
-    (when (listp entry)
-      (destructuring-bind (object locative) entry
-        (when (and (symbolp object)
-                   (exportablep package object locative))
-          (export object package))))))
+  (let ((package1 (find-package package)))
+    (unless package1
+      (error "~@<~S for ~S: Cannot export from non-existent package ~S.~:@>"
+             'defsection name package))
+    (when (exportablep package1 name 'section)
+      (export name package1))
+    (dolist (entry entries)
+      (when (listp entry)
+        (destructuring-bind (name locative) entry
+          (when (and (symbolp name)
+                     (exportablep package1 name locative))
+            (export name package1)))))))
 
 (defun exportablep (package symbol locative)
   (and (symbol-accessible-in-package-p symbol package)
-       (exportable-reference-p package symbol (locative-type locative)
-                               (locative-args locative))))
+       (let ((locative (if (listp locative) locative (list locative))))
+         (exportable-reference-p package symbol (first locative)
+                                 (rest locative)))))
 
 (defun symbol-accessible-in-package-p (symbol package)
   (eq symbol (find-symbol (symbol-name symbol) package)))
 
 (defgeneric exportable-reference-p (package symbol locative-type locative-args)
   (:documentation "Return true iff SYMBOL is to be exported from
-  PACKAGE when it occurs in a DEFSECTION as a reference with
+  PACKAGE when it occurs in a DEFSECTION in a reference with
   LOCATIVE-TYPE and LOCATIVE-ARGS. SYMBOL is [accessible][find-symbol]
   in PACKAGE.
 
@@ -238,7 +176,7 @@
 
   By default, SECTIONs and GLOSSARY-TERMs are not exported although
   they are EXPORTABLE-LOCATIVE-TYPE-P. To export symbols naming
-  section from MGL-PAX, the following method could be added:
+  sections from MGL-PAX, the following method could be added:
 
   ```
   (defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
@@ -300,7 +238,7 @@
    (title
     :initarg :title :reader glossary-term-title
     :documentation "A markdown string or NIL. Used in generated
-    documentation.")
+    documentation (see DOCUMENT-DREF (method () (glossary-term-dref t))).")
    (docstring :initarg :docstring :reader glossary-term-docstring))
   (:documentation "DEFINE-GLOSSARY-TERM instantiates a GLOSSARY-TERM
   with its NAME and TITLE arguments."))
@@ -326,3 +264,40 @@
                     :name ',name :title ,title
                     :docstring ,(unless discard-documentation-p
                                   docstring))))
+
+
+(defmacro define-package (package &rest options)
+  "This is like CL:DEFPACKAGE but silences warnings and errors
+  signalled when the redefined package is at variance with the current
+  state of the package. Typically this situation occurs when symbols
+  are exported by calling EXPORT (as is the case with DEFSECTION) as
+  opposed to adding :EXPORT forms to the DEFPACKAGE form and the
+  package definition is subsequently reevaluated. See the section on
+  [package variance](http://www.sbcl.org/manual/#Package-Variance) in
+  the SBCL manual.
+
+  The bottom line is that if you rely on DEFSECTION to do the
+  exporting, then you'd better use DEFINE-PACKAGE."
+  `(eval-when (:compile-toplevel :load-toplevel, :execute)
+     (locally
+         (declare #+sbcl
+                  (sb-ext:muffle-conditions sb-kernel::package-at-variance))
+       (handler-bind
+           (#+sbcl (sb-kernel::package-at-variance #'muffle-warning))
+         (cl:defpackage ,package ,@options)))))
+
+
+;;; Arrange for the home package of these LOCATIVEs (exported by DRef)
+;;; to be PAX. The home packages are visible in links, and from that
+;;; point of view XREF is an implementation detail.
+(export 'locative)
+(export 'docstring)
+(export 'constant)
+(export 'macro)
+(export 'symbol-macro)
+(export 'accessor)
+(export 'reader)
+(export 'writer)
+(export 'structure-accessor)
+(export 'include)
+(export 'unknown)

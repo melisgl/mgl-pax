@@ -37,6 +37,8 @@
 ;;; remember autoloaded functions (in an :AROUND-COMPILE in the ASDF
 ;;; system definition) and generate autoload definitions.
 (defmacro defun/autoloaded (name lambda-list &body body)
+  (unless (ignore-errors (fdefinition name))
+    (warn "~S function ~S not defined." 'defun/autoloaded name))
   `(without-redefinition-warnings
      (defun ,name ,lambda-list
        ,@body)))

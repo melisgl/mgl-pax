@@ -1,23 +1,26 @@
 (in-package :mgl-pax)
 
+;;;; I/O
+
 (defmacro with-standard-io-syntax* (&body body)
   `(with-standard-io-syntax
      ;; With *PRINT-READABLY*, CLISP insists on printing FOO as |FOO|.
      (let (#+clisp (*print-readably* nil))
        ,@body)))
 
-(defun adjust-string-case (string)
-  (ecase (readtable-case *readtable*)
-    ((:upcase) (string-upcase string))
-    ((:downcase) (string-downcase string))
-    ;; We don't care about convenience with :INVERT.
-    ((:preserve :invert) string)))
+(defparameter *utf-8-external-format*
+  #+abcl :utf-8
+  #+clisp charset:utf-8
+  #-(or abcl clisp) :default)
 
 ;;; Return the number of characters that would be read by
 ;;; READ-FROM-STRING. May signal READER-ERROR or END-OF-FILE.
 (defun n-chars-would-read (string)
   (nth-value 1 (let ((*read-suppress* t))
                  (read-from-string string))))
+
+
+;;;; Symbols
 
 (defun read-interned-symbol-from-string (string)
   (let ((pos (n-chars-would-read string)))
@@ -27,20 +30,6 @@
         (multiple-value-bind (symbol2 pos) (read-from-string string)
           (assert (eq symbol symbol2))
           (values symbol2 pos))))))
-
-(defparameter *utf-8-external-format*
-  #+abcl :utf-8
-  #+clisp charset:utf-8
-  #-(or abcl clisp) :default)
-
-(defun find-package* (name)
-  ;; On AllegroCL, FIND-PACKAGE will signal an error if a relative
-  ;; package name has too many leading dots. On CMUCL, (FIND-PACKAGE
-  ;; "..") fails.
-  #+(or allegro cmucl)
-  (ignore-errors (find-package name))
-  #-(or allegro cmucl)
-  (find-package name))
 
 (defun external-symbol-p (symbol &optional (package (symbol-package symbol)))
   (and package
@@ -53,64 +42,6 @@
                   (not (eq package (symbol-package symbol))))
           collect package))
 
-(defun special-operator-p* (name)
-  (or (special-operator-p name)
-      ;; KLUDGE: CCL is mistaken about DECLARE.
-      #+ccl (eq name 'declare)))
-
-(defun valid-type-specifier-p (type)
-  (handler-case
-      (null (nth-value 1 (ignore-errors (typep nil type))))
-    ;; Avoid "WARNING: * is not permitted as a type specifier" on
-    ;; SBCL.
-    #+sbcl
-    (warning (c) (ignore-errors (muffle-warning c)))
-    ;; Silence compiler notes on SBCL when run via ASDF:TEST-SYSTEM.
-    #+sbcl
-    (sb-kernel:parse-unknown-type ())
-    #+cmucl
-    (sys::parse-unknown-type ())))
-
-(defun setf-name-p (name)
-  (and (listp name)
-       (= (length name) 2)
-       (eq (first name) 'setf)))
-
-;;; See if SYMBOL has a [setf expander][clhs] or [setf
-;;; function][clhs].
-(defun has-setf-p (symbol)
-  (or (has-setf-expander-p symbol)
-      (has-setf-function-p symbol)))
-
-(defun has-setf-expander-p (symbol)
-  ;; FIXME: other implemenations
-  #+ccl (gethash symbol ccl::%setf-methods%)
-  #+clisp (get symbol 'system::setf-expander)
-  #+sbcl (swank/sbcl::setf-expander symbol)
-  #-(or ccl clisp sbcl)
-  ;; KLUDGE: When there is no setf expansion, we get this:
-  ;;
-  ;;   (nth-value 3 (get-setf-expansion '(undefined)))
-  ;;   => (FUNCALL #'(SETF UNDEFINED) #:NEW1)
-  ;;
-  ;; which is non-portable in theory, but luckily, portable in
-  ;; practice.
-  (let ((storing-form (nth-value 3 (ignore-errors
-                                    (get-setf-expansion `(,symbol))))))
-    ;; Sadly, using (NTH-VALUE 3 (GET-SETF-EXPANSION `(,SYMBOL))) to
-    ;; tell whether SYMBOL has a setf expansion doesn't work in
-    ;; general because GET-SETF-EXPANSION may fail due to either
-    ;; DEFINE-SETF-EXPANDER or the macro named by the value of SYMBOL
-    ;; failing (e.g. with an insufficient number of arguments). For
-    ;; this reason, DEFSETFs can be detected but DEFINE-SETF-EXPANDERs
-    ;; cannot in general.
-    (and storing-form
-         (not (and (eq (first storing-form) 'funcall)
-                   (equal (second storing-form) `#'(setf ,symbol)))))))
-
-(defun has-setf-function-p (symbol)
-  (values (ignore-errors (fdefinition `(setf ,symbol)))))
-
 (defun symbol-global-value (symbol)
   #+allegro
   (multiple-value-bind (value bound) (sys:global-symbol-value symbol)
@@ -122,227 +53,6 @@
   (ignore-errors (sb-ext:symbol-global-value symbol))
   #-(or allegro ccl sbcl)
   (ignore-errors (symbol-value symbol)))
-
-;;; Like SYMBOL-FUNCTION* but sees through encapsulated functions.
-(defun symbol-function* (symbol)
-  #+abcl
-  (or (system::untraced-function symbol)
-      (symbol-function symbol))
-  #+clisp
-  (or (system::get-traced-definition symbol)
-      (symbol-function symbol))
-  #+cmucl
-  (progn (check-type symbol symbol)
-         (eval `(function ,symbol)))
-  #-(or abcl cmucl clisp)
-  (unencapsulated-function (symbol-function symbol)))
-
-(defun fdefinition* (name)
-  #+abcl
-  (or (system::untraced-function name)
-      (fdefinition name))
-  #+clisp
-  (or (system::get-traced-definition name)
-      (fdefinition name))
-  #+cmucl
-  (eval `(function ,name))
-  #-(or abcl cmucl clisp)
-  (unencapsulated-function (fdefinition name)))
-
-(defun unencapsulated-function (function)
-  (or #+ccl (ccl::find-unencapsulated-definition function)
-      #+ecl (find-type-in-sexp (function-lambda-expression function) 'function)
-      #+sbcl (maybe-find-encapsulated-function function)
-      function))
-
-#+sbcl
-;;; Tracing typically encapsulates a function in a closure. The
-;;; function we need is at the end of the encapsulation chain.
-(defun maybe-find-encapsulated-function (function)
-  (declare (type function function))
-  (if (eq (sb-impl::%fun-name function) 'sb-impl::encapsulation)
-      (maybe-find-encapsulated-function
-       (sb-impl::encapsulation-info-definition
-        (sb-impl::encapsulation-info function)))
-      function))
-
-#+ecl
-(defun find-type-in-sexp (form type)
-  (dolist (x form)
-    (cond ((listp x)
-           (let ((r (find-type-in-sexp x type)))
-             (when r
-               (return-from find-type-in-sexp r))))
-          ((typep x type)
-           (return-from find-type-in-sexp x))
-          (t
-           nil))))
-
-(defun function-name (function)
-  (let* ((function (unencapsulated-function function))
-         (name #+clisp (system::function-name function)
-               #-clisp (swank-backend:function-name function)))
-    ;; ABCL has function names like (FOO (SYSTEM::INTERPRETED)).
-    (if (and (listp name) (not (eq (first name) 'setf)))
-        (first name)
-        name)))
-
-(defun arglist (function-designator)
-  (let ((function-designator
-          (if (symbolp function-designator)
-              function-designator
-              (unencapsulated-function function-designator))))
-    #+abcl
-    (multiple-value-bind (arglist foundp)
-        (extensions:arglist function-designator)
-      (cond (foundp arglist)
-            ((typep function-designator 'generic-function)
-             (mop:generic-function-lambda-list function-designator))
-            ((and (symbolp function-designator)
-                  (typep (symbol-function* function-designator)
-                         'generic-function))
-             (mop:generic-function-lambda-list
-              (symbol-function* function-designator)))))
-    #+allegro
-    (handler-case
-        (let* ((symbol (if (symbolp function-designator)
-                           function-designator
-                           (function-name function-designator)))
-               (lambda-expression (ignore-errors
-                                   (function-lambda-expression
-                                    (symbol-function symbol)))))
-          (if lambda-expression
-              (second lambda-expression)
-              (excl:arglist symbol)))
-      (simple-error () :not-available))
-    #+ccl
-    (let ((arglist (swank-backend:arglist function-designator)))
-      ;; Function arglist don't have the default values of &KEY and
-      ;; &OPTIONAL arguments. Get those from CCL:FUNCTION-SOURCE-NOTE.
-      (or (and (or (find '&key arglist) (find '&optional arglist))
-               (function-arglist-from-source-note function-designator))
-          (if (listp arglist)
-              ;; &KEY arguments are given as keywords, which screws up
-              ;; WITH-DISLOCATED-SYMBOLS when generating documentation
-              ;; for functions.
-              (mapcar (lambda (x)
-                        (if (keywordp x)
-                            (intern (string x))
-                            x))
-                      arglist)
-              arglist)))
-    #-(or abcl allegro ccl)
-    (swank-backend:arglist function-designator)))
-
-#+ccl
-(defun function-arglist-from-source-note (function-designator)
-  (multiple-value-bind (function-name function)
-      (if (functionp function-designator)
-          (values (function-name function-designator) function-designator)
-          (values function-designator (fdefinition function-designator)))
-    (when function
-      (let ((source-note (ccl:function-source-note function)))
-        (when source-note
-          (let ((text (ccl:source-note-text source-note)))
-            (when text
-              (lambda-list-from-source-note-text text function-name))))))))
-
-;;; Extract the lambda list from TEXT, which is like "(defun foo (x
-;;; &optional (o 1)) ...".
-#+ccl
-(defun lambda-list-from-source-note-text (text symbol)
-  ;; This is a heuristic. It is impossible to determine what *PACKAGE*
-  ;; was when the definition form was read.
-  (let ((*package* (symbol-package symbol)))
-    (with-input-from-string (s text)
-      (when (eql (read-char s nil) #\()
-        ;; Skip DEFUN and the name.
-        (let ((*read-suppress* t))
-          (read s nil)
-          (read s nil))
-        (ignore-errors (read s))))))
-
-
-;;; Like SWANK-BACKEND::FIND-DEFINITIONS, but OBJECT may be a STRING
-;;; or a SYMBOL (including keyword symbols), and if ERRORP is NIL (the
-;;; default), then errors treated as the empty list.
-(defun swank-find-definitions (object &key errorp)
-  (if errorp
-      (swank-find-definitions-1 object)
-      (error-location-to-nil (ignore-errors
-                              (swank-find-definitions-1 object)))))
-
-(defun swank-find-definitions-1 (object)
-  ;; Source files may have #. in them.
-  (let ((*read-eval* t))
-    (swank-backend::find-definitions (object-to-swank-name object))))
-
-;;; Turn OBJECT into a symbol suitable as an argument to
-;;; SWANK-BACKEND:FIND-DEFINITIONS.
-(defun object-to-swank-name (object)
-  (cond ((stringp object)
-         ;; E.g. to find the package when OBJECT is "MGL-PAX".
-         (make-symbol (adjust-string-case object)))
-        ((keywordp object)
-         ;; E.g. to find the package when OBJECT is :MGL-PAX.
-         ;; On SBCL, SWANK-BACKEND:FIND-DEFINITIONS barfs on
-         ;; keywords.
-         (make-symbol (symbol-name object)))
-        ((symbolp object)
-         object)
-        (t
-         (assert nil))))
-
-(defun error-location-to-nil (dspec-and-locations)
-  (if (eq (first dspec-and-locations) :error)
-      ()
-      #+allegro
-      ;; (swank-backend::find-definitions :xxx)
-      ;; => ((:XXX (:ERROR "Unknown source location for :XXX")))
-      (remove-if (lambda (dspec-and-location)
-                   (not (listp (first dspec-and-location))))
-                 dspec-and-locations)
-      #-allegro
-      dspec-and-locations))
-
-
-(defun find-method* (function-designator qualifiers specializers
-                     &optional (errorp t))
-  (find-method (if (functionp function-designator)
-                   function-designator
-                   (fdefinition* function-designator))
-               qualifiers
-               (specializers-to-objects specializers)
-               errorp))
-
-(defun specializers-to-objects (specializers)
-  #-(or allegro ccl clisp) specializers
-  #+(or allegro ccl clisp) (mapcar #'specializer-to-object specializers))
-
-(defun objects-to-specializers (objects)
-  #-(or allegro ccl clisp) objects
-  #+(or allegro ccl clisp) (mapcar #'object-to-specializer objects))
-
-#+(or allegro ccl clisp)
-(defun specializer-to-object (specializer)
-  (cond ((symbolp specializer)
-         (find-class specializer))
-        ((and (listp specializer)
-              (= (length specializer) 2)
-              (eq (first specializer) 'eql))
-         #+allegro (aclmop:intern-eql-specializer (second specializer))
-         #+ccl (ccl:intern-eql-specializer (second specializer))
-         #+clisp specializer)
-        (t specializer)))
-
-#+(or allegro ccl clisp)
-(defun object-to-specializer (object)
-  (cond ((typep object 'class)
-         (class-name object))
-        #+ccl
-        ((typep object 'ccl:eql-specializer)
-         `(eql ,(ccl:eql-specializer-object object)))
-        (t object)))
 
 
 (defmacro with-debugger-hook (fn &body body)
@@ -356,14 +66,13 @@
        ,@body)))
 
 
-;;; Convert to full width character string. Useful for prettier
-;;; printing and ensuring canonical form.
-(defun character-string (string)
-  (make-array (length string) :element-type 'character
-              :initial-contents string))
+;;;; Sequences
 
 (defun subseq* (seq start)
   (subseq seq (min (length seq) start)))
+
+
+;;;; Pathnames
 
 (defun relativize-pathname (pathname reference-pathname)
   "Return a pathname that's equivalent to PATHNAME but relative to
@@ -396,7 +105,7 @@
       pathname))
 
 
-;;;; String utilities
+;;;; Strings
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defparameter *whitespace-chars*
@@ -425,17 +134,7 @@
           (unless missing-newline-p
             (terpri out)))))))
 
-(defun first-lines (string &optional (n-lines 1))
-  (with-output-to-string (out)
-    (with-input-from-string (in string)
-      (loop for i below n-lines do
-        (let ((line (read-line in nil nil)))
-          (when line
-            (cond ((< i (1- n-lines))
-                   (write-line line out))
-                  ((= i (1- n-lines))
-                   (write-string line out)))))))))
-
+#+nil
 (defun shorten-string (string &key n-lines n-chars ellipsis)
   (let ((shortened string))
     (when n-lines
@@ -445,8 +144,3 @@
     (if (and ellipsis (< (length shortened) (length string)))
         (concatenate 'string shortened ellipsis)
         shortened)))
-
-
-(declaim (inline hashash))
-(defun hashash (key hash-table)
-  (nth-value 1 (gethash key hash-table)))

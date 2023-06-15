@@ -1,13 +1,12 @@
 (in-package :mgl-pax-test)
 
 (deftest test-navigate ()
-  (test-dspecs)
   (test-read-locative-from-string)
   (test-read-object-from-string)
   (test-read-reference-from-string)
   (test-definitions-of-wall)
-  (test-navigation-to-source)
-  (test-misc))
+  (test-locate)
+  (test-navigation-to-source))
 
 (deftest test-read-locative-from-string ()
   (let ((*package* (find-package :mgl-pax-test)))
@@ -153,9 +152,9 @@
 
 (defun check-dowall (wall expected-refs)
   (let ((refs (mapcar (lambda (ref)
-                        (list (reference-object ref)
-                              (reference-locative ref)))
-                      (pax::sort-references (pax::definitions-of-wall wall)))))
+                        (list (xref-name ref)
+                              (xref-locative ref)))
+                      (dref::sort-references (pax::definitions-of-wall wall)))))
     (is (equal refs expected-refs)
         :ctx ("WORD-AND-LOCATIVES-LIST = ~S" wall))))
 
@@ -166,259 +165,72 @@
                                         (string< (second r1) (second r2)))))))
 
 
-(defclass ccc ()
-  ((r :reader ccc-r)
-   (w :writer ccc-w)
-   (a :accessor ccc-a)))
-(defmethod ccc-r2 ((ccc ccc))
-  (slot-value ccc 'r))
-(defmethod set-ccc-w2 (value (ccc ccc))
-  (setf (slot-value ccc 'w) value))
-(define-condition cocc () ())
-(defmacro mmm ())
-(defgeneric ggg ())
-(define-symbol-macro symmac ())
+(deftest test-locate ()
+  (test-locate/section)
+  (test-locate/glossary-term)
+  (test-locate/go)
+  (test-locate/include))
 
-(deftest test-dspecs ()
-  (check-dspec-roundtrip (make-reference 'foo 'variable))
-  (with-test ("non-existent constant")
-    (with-failure-expected ((alexandria:featurep :allegro))
-      (check-dspec-roundtrip (make-reference 'foo 'constant))))
-  (with-test ("existing constant")
-    (check-dspec-roundtrip (make-reference 'pi 'constant)))
-  (with-test ("non-existent macro")
-    (with-failure-expected ((alexandria:featurep '(:or :allegro :ccl)))
-      (check-dspec-roundtrip (make-reference 'foo 'macro))))
-  (check-dspec-roundtrip (make-reference 'block 'macro))
-  (with-test ("existing macro")
-    (check-dspec-roundtrip (make-reference 'mmm 'macro)))
-  (check-dspec-roundtrip (make-reference 'foo 'compiler-macro))
-  (check-dspec-roundtrip (make-reference 'symmac 'symbol-macro))
-  (check-dspec-roundtrip (make-reference 'has-setf-expander 'setf))
-  (check-dspec-roundtrip (make-reference 'has-setf-function 'setf))
-  (check-dspec-roundtrip (make-reference 'foo 'function))
-  (with-test ("non-existent generic-function")
-    (with-failure-expected ((alexandria:featurep '(:or :allegro :ccl)))
-      (check-dspec-roundtrip (make-reference 'foo 'generic-function))))
-  (with-test ("existing generic-function")
-    (check-dspec-roundtrip (make-reference 'ggg 'generic-function)))
-  (check-dspec-roundtrip (make-reference 'foo '(method () ((eql 5) t))))
-  (check-dspec-roundtrip (make-reference 'foo '(method (:around) ((eql 5) t))))
-  (check-dspec-roundtrip (make-reference 'foo '(method (:around) ((eql 5) t))))
-  (check-dspec-roundtrip (make-reference 'foo 'method-combination))
-  ;; Based on the dspec only, we often can't tell a method defined
-  ;; with :READER, :WRITER, or :ACCESSOR in DEFLCASS from a method
-  ;; defined with DEFMETHOD.
-  (with-test ("existing reader")
-    (with-failure-expected ((alexandria:featurep '(:or :abcl :clisp :ecl)))
-      (check-dspec-roundtrip (make-reference 'ccc-r '(reader ccc)))))
-  (with-test ("non-existent reader")
-    (with-failure-expected ((alexandria:featurep '(:or :abcl :clisp :ecl)))
-      (check-dspec-roundtrip (make-reference 'foo '(reader ccc))
-                             #-(or ccl cmucl)
-                             (make-reference 'foo '(method () (ccc))))))
-  (with-test ("existing writer")
-    (with-failure-expected ((alexandria:featurep '(:or :abcl :clisp :ecl)))
-      (check-dspec-roundtrip (make-reference 'ccc-w '(writer ccc)))))
-  (with-test ("non-existent writer")
-    (with-failure-expected ((alexandria:featurep '(:or :abcl :clisp :ecl)))
-      (check-dspec-roundtrip (make-reference 'foo '(writer ccc))
-                             #-(or ccl cmucl)
-                             (make-reference 'foo '(method () (t ccc))))))
-  (with-test ("existing accessor")
-    (with-failure-expected ((alexandria:featurep '(:or :abcl :clisp :ecl)))
-      (check-dspec-roundtrip (make-reference 'ccc-a '(accessor ccc)))))
-  (with-test ("non-existent accessor")
-    (with-failure-expected ((alexandria:featurep '(:or :abcl :clisp :ecl)))
-      (check-dspec-roundtrip (make-reference 'foo '(accessor ccc))
-                             #+(or ccl cmucl)
-                             (make-reference 'foo '(writer ccc))
-                             #-(or ccl cmucl)
-                             (make-reference 'foo '(method () (t ccc))))))
-  (check-dspec-roundtrip (make-reference 'nnn 'type))
-  (with-test ("existing class")
-    (check-dspec-roundtrip (make-reference 'ccc 'class)))
-  (with-test ("non-existent class")
-    (check-dspec-roundtrip (make-reference 'nnn 'class)
-                           #+allegro
-                           (make-reference 'nnn 'type)))
-  (check-dspec-roundtrip (make-reference 'array 'class))
-  (with-test ("non-existent condition")
-    (with-failure-expected ((not (alexandria:featurep :sbcl)))
-      (check-dspec-roundtrip (make-reference 'foo 'condition))))
-  (with-test ("existing condition")
-    (check-dspec-roundtrip (make-reference 'cocc 'condition)))
-  (check-dspec-roundtrip (make-reference 'foo 'package))
-  (check-dspec-roundtrip (make-reference "foo" 'package))
-  (check-dspec-roundtrip (make-reference 'pax::@links 'variable)
-                         (make-reference 'pax::@links 'section))
-  (check-dspec-roundtrip (make-reference 'pax::@object 'variable)
-                         (make-reference 'pax::@object 'glossary-term)))
+(deftest test-locate/section ()
+  (check-ref-sets (definitions '@test-examples)
+                  `(,(make-xref '@test-examples 'section))))
 
-(defun check-dspec-roundtrip (reference &optional (expected-result reference))
-  (let* ((dspec (mgl-pax::reference-to-dspec reference))
-         (roundtripped (mgl-pax::dspec-to-reference
-                        dspec (reference-object reference))))
-    (when (is roundtripped
-              :ctx ("REFERENCE = ~S~%DPSEC = ~S" reference dspec))
-      (is (mgl-pax::reference= (capture roundtripped)
-                               (capture expected-result))
-          :ctx ("REFERENCE = ~S~%DPSEC = ~S" reference dspec)))))
+(deftest test-locate/glossary-term ()
+  (check-ref-sets (definitions 'some-term)
+                  `(,(make-xref 'some-term 'glossary-term))))
+
+(deftest test-locate/go ()
+  (check-ref (locate 'xxx '(go (foo function)))
+             'xxx '(go (foo function)) 'pax::go-dref)
+  (check-ref (locate "xxx" '(go (foo function)))
+             "xxx" '(go (foo function)) 'pax::go-dref)
+  (signals (locate-error)
+    (locate 'xxx '(go (undefined function))))
+  (signals (locate-error :pred "Bad arguments")
+    (locate 'xxx '(go 1 2))))
+
+(deftest test-locate/include ()
+  (check-ref (locate nil '(include #.(asdf:system-relative-pathname
+                                      "mgl-pax" "HACKING.md")))
+             nil '(include #.(asdf:system-relative-pathname
+                              "mgl-pax" "HACKING.md"))
+             'pax::include-dref)
+  (signals (locate-error :pred "/non-existent")
+    (locate nil '(include "/non-existent/file")))
+  (with-failure-expected ((and (alexandria:featurep '(:or :clisp))
+                               'failure))
+    (signals-not (locate-error)
+      (locate nil '(include (:start (*some-var* variable)))))
+    (signals-not (locate-error)
+      (locate nil '(include (:end (*some-var* variable))))))
+  (signals (locate-error :pred "UNDEFINED")
+    (locate nil '(include (:start (undefined variable)))))
+  (signals (locate-error :pred "UNDEFINED")
+    (locate nil '(include (:end (undefined variable))))))
 
 
-;;; Keep this and `mgl-pax-edit-definitions/test-defs' in test.el in
-;;; sync.
+;;; Keep *NAVIGATION-TEST-CASES* plus
+;;; DREF-TEST::*SOURCE-LOCATION-TEST-CASES* and
+;;; `mgl-pax-edit-definitions/test-defs' in test.el in sync.
 (defparameter *navigation-test-cases*
-  '(;; @VARIABLELIKE-LOCATIVES
-    (foo-a variable (defvar foo-a))
-    (foo-r variable (defvar foo-r))
-    (foo-w variable (defvar foo-w))
-    (bar constant (defconstant bar))
-    ;; @MACROLIKE-LOCATIVES
-    (bar macro (defmacro bar))
-    (my-smac symbol-macro (define-symbol-macro my-smac))
-    (foo compiler-macro (define-compiler-macro foo))
-    (has-setf-expander setf (defsetf has-setf-expander) nil
-     ;; No source location for DEFSETF on any implementation.
-     t)
-    (has-setf-function setf (defun (setf has-setf-function)) nil
-     #.(alexandria:featurep '(:or :allegro :cmucl)))
-    ;; @FUNCTIONLIKE-LOCATIVES
-    (foo function (defun foo))
-    (traced-foo function (defun traced-foo))
-    (test-gf generic-function (defgeneric test-gf))
-    (test-gf (method () (number)) (defmethod test-gf))
-    (exportable-reference-p
-     (method nil ((eql #.(find-package '#:mgl-pax-test)) T T T))
-     (defmethod exportable-reference-p) (defmethod exportable-reference-p)
-     #.(alexandria:featurep :ecl))
-    (my-comb method-combination (define-method-combination my-comb))
-    (foo-a (accessor foo) (defclass foo) (a :accessor foo-a))
-    (foo-r (reader foo) (defclass foo) (r :reader foo-r))
-    (foo-w (writer foo) (defclass foo) (w :writer foo-w))
-    (baz-aaa structure-accessor (defstruct baz))
-    ;; @TYPELIKE-LOCATIVES
-    (bar type (deftype bar))
-    (foo type (defclass foo))
-    (my-error type (define-condition my-error))
-    (foo class (defclass foo))
-    (test-declaration declaration (define-declaration test-declaration))
-    ;; @CONDITION-SYSTEM-LOCATIVES
-    (my-error condition (define-condition my-error))
-    (some-restart restart (define-restart some-restart))
-    ;; @PACKAGELIKE-LOCATIVES
-    (mgl-pax asdf:system ())
-    (mgl-pax package
-     (eval-when (:compile-toplevel :load-toplevel :execute))
-     (cl:defpackage))
-    (xxx-rt readtable (defreadtable xxx-rt))
-    ;; @PAX-LOCATIVES
-    (mgl-pax::@pax-manual section (defsection @pax-manual))
+  '((mgl-pax::@pax-manual section (defsection @pax-manual))
     (some-term glossary-term (define-glossary-term some-term))
-    (my-loc locative (define-locative-type my-loc))))
+    (mgl-pax.el (include #.(asdf:system-relative-pathname
+                            :mgl-pax "src/mgl-pax.el")
+                 :header-nl "```elisp" :footer-nl "```")
+     ";; -*- lexical-binding: t -*-")
+    (foo-example (include (:start (dref-ext:make-source-location function)
+                           :end (dref-ext:source-location-p function))
+                  :header-nl "```"
+                  :footer-nl "```")
+     (defun/autoloaded make-source-location))))
 
 (deftest test-navigation-to-source ()
-  (dolist (test-case *navigation-test-cases*)
-    (apply #'check-navigation test-case))
+  (let ((*package* (find-package :mgl-pax-test)))
+    (dolist (test-case *navigation-test-cases*)
+      (apply #'check-source-location test-case)))
   (signals-not (error)
-    (find-source (make-reference 'function 'locative)))
+    (source-location (make-xref 'function 'locative)))
   (with-failure-expected ()
     (signals-not (error)
-      (find-source (make-reference 'locative 'function)))))
-
-(defun working-locative-p (locative)
-  (let ((type (locative-type locative)))
-    (cond ((alexandria:featurep :abcl)
-           nil)
-          ((alexandria:featurep :clisp)
-           nil)
-          ((eq type 'symbol-macro)
-           (alexandria:featurep '(:not :ccl)))
-          ((eq type 'declaration)
-           (alexandria:featurep :sbcl))
-          ((eq type 'readtable)
-           nil)
-          ((eq type 'generic-function)
-           ;; AllegroCL is off by one form.
-           (alexandria:featurep '(:not :allegro)))
-          ((eq type 'method-combination)
-           (alexandria:featurep '(:not (:or :abcl :cmucl :ecl))))
-          ((member type '(reader writer accessor))
-           (alexandria:featurep '(:not (:or :abcl :cmucl :ecl))))
-          ((eq type 'structure-accessor)
-           (alexandria:featurep '(:not (:or :abcl :ecl))))
-          ((eq type 'type)
-           (alexandria:featurep '(:not :ecl)))
-          ((eq type 'package)
-           (alexandria:featurep '(:not (:or :abcl :allegro :clisp :cmucl
-                                        :ecl))))
-          (t
-           t))))
-
-(defun check-navigation (symbol locative prefix &optional alternative-prefix
-                                                  failure-expected-p)
-  (let* ((ref (make-reference symbol locative))
-         (located (resolve ref)))
-    ;; Test FIND-SOURCE with a REFERENCE and a resolved object if
-    ;; there is one.
-    (dolist (target (if (and (typep located 'reference)
-                             (mgl-pax::reference= located ref))
-                        (list ref)
-                        (list ref located)))
-      (with-test ((format nil "navigate to ~S" target))
-        (with-failure-expected ((or (not (working-locative-p locative))
-                                    failure-expected-p))
-          (let ((location (ignore-errors (find-source target))))
-            (when (is (and location (not (eq :error (first location))))
-                      :msg `("Find source location for (~S ~S)."
-                             ,symbol ,locative))
-              (multiple-value-bind (file position function-name)
-                  (extract-source-location location)
-                (is (or position function-name))
-                (when position
-                  (let ((form
-                          (let ((*package* (find-package :mgl-pax-test)))
-                            (read-form-from-file-position file position))))
-                    (is (and (listp form)
-                             (or (alexandria:starts-with-subseq
-                                  prefix form :test #'equal)
-                                 (and alternative-prefix
-                                      (alexandria:starts-with-subseq
-                                       alternative-prefix form
-                                       :test #'equal))))
-                        :msg `("Find prefix ~S~@[ or ~S~] ~
-                                    at source location~%~S~% ~
-                                    for reference (~S ~S).~%~
-                                    Form found was:~%~S."
-                               ,prefix ,alternative-prefix
-                               ,location ,symbol ,locative
-                               ,form))))))))))))
-
-(defun extract-source-location (location)
-  (let ((file-entry (find :file (rest location) :key #'first))
-        (position-entry (find :position (rest location) :key #'first))
-        (offset-entry (find :offset (rest location) :key #'first))
-        (function-name-entry (find :function-name (rest location)
-                                   :key #'first)))
-    (values (second file-entry)
-            (cond (position-entry
-                   (1- (second position-entry)))
-                  (offset-entry
-                   (1- (third offset-entry))))
-            (second function-name-entry))))
-
-(defun read-form-from-file-position (filename position)
-  (with-open-file (stream filename
-                          :direction :input
-                          :external-format pax::*utf-8-external-format*)
-    (file-position stream position)
-    (read stream)))
-
-
-(deftest test-misc ()
-  ;; This is a primitive object, that (SWANK-BACKEND:FIND-DEFINITIONS
-  ;; 'SB-C::CATCH-BLOCK) returns as a TYPE.
-  #+sbcl
-  (signals-not (locate-error)
-    (map nil #'resolve
-         (pax::definitions-of 'sb-c::catch-block))))
+      (source-location (make-xref 'locative 'function)))))

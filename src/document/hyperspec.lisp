@@ -670,7 +670,7 @@
     (nth-value macro "m_nth_va")
     (nthcdr function "f_nthcdr")
     (null function "f_null")
-    (null type "t_null")
+    (null class "t_null")
     (number class "t_number")
     (numberp function "f_nump")
     (numerator function "f_numera")
@@ -1072,34 +1072,34 @@
     (values "a_values")
     (vector "a_vector")))
 
-(defun make-hyperspec-object-to-locatives ()
+(defun make-hyperspec-name-to-locatives ()
   (let ((map (make-hash-table)))
-    (loop for (object locative filename) in *hyperspec-definitions*
+    (loop for (name locative filename) in *hyperspec-definitions*
           do (push (list (if (eq locative 'operator)
                              'macro
                              locative)
                          (format nil "~A.htm" filename))
-                   (gethash object map)))
-    (loop for (object filename) in *hyperspec-disambiguations*
+                   (gethash name map)))
+    (loop for (name filename) in *hyperspec-disambiguations*
           do ;; KLUDGE: LAMBDA has two pages, but one of them is a
              ;; "symbol" page, which we don't have.
-             (unless (eq object 'lambda)
-               (assert (<= 1 (length (gethash object map)))))
+             (unless (eq name 'lambda)
+               (assert (<= 1 (length (gethash name map)))))
              (push (list nil (format nil "~A.htm" filename))
-                   (gethash object map)))
+                   (gethash name map)))
     map))
 
-(defparameter *hyperspec-object-to-locatives*
-  (make-hyperspec-object-to-locatives))
+(defparameter *hyperspec-name-to-locatives*
+  (make-hyperspec-name-to-locatives))
 
 ;;; Find stuff in *HYPERSPEC-DEFINITIONS* and
-;;; *HYPERSPEC-DISAMBIGUATIONS*. Return the URL corresponding to
-;;; OBJECT and LOCATIVE. As a special case, LOCATIVE NIL refers to the
+;;; *HYPERSPEC-DISAMBIGUATIONS*. Return the URL corresponding to NAME
+;;; and LOCATIVE. As a special case, LOCATIVE NIL refers to the
 ;;; disambiguation page.
 (defun/autoloaded find-hyperspec-definition-url
-    (object locative &optional hyperspec-root)
-  (declare (special *hyperspec-object-to-locatives*))
-  (let* ((entries (gethash object *hyperspec-object-to-locatives*))
+    (name locative &optional hyperspec-root)
+  (declare (special *hyperspec-name-to-locatives*))
+  (let* ((entries (gethash name *hyperspec-name-to-locatives*))
          (entry (if locative
                     ;; UNLIST1 is to (FUNCTION) -> FUNCTION.
                     (find (unlist1 locative) entries :key #'first)
@@ -1116,9 +1116,9 @@
       (first obj)
       obj))
 
-(defun hyperspec-locatives-for-object (object)
+(defun hyperspec-locatives-for-name (name)
   (loop for (locative filename)
-          in (gethash object *hyperspec-object-to-locatives*)
+          in (gethash name *hyperspec-name-to-locatives*)
         collect locative))
 
 
@@ -2207,8 +2207,7 @@
 
 (defun/autoloaded find-hyperspec-glossary-entry-id (string)
   (let ((string (normalize-whitespace string)))
-    (when (gethash string *hyperspec-glossary-entry-map*)
-      string)))
+    (first (gethash string *hyperspec-glossary-entry-map*))))
 
 (defun/autoloaded find-hyperspec-glossary-entry-url
     (name &optional hyperspec-root)

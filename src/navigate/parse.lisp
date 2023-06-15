@@ -2,12 +2,17 @@
 
 (in-readtable pythonic-string-syntax)
 
-(defsection @parsing (:title "Parsing" :export nil)
+(defsection @parsing (:title "Parsing")
+  "When @NAVIGATING-IN-EMACS or @GENERATING-DOCUMENTATION, references
+  are parsed from the buffer content or docstrings, respectively. In
+  either case, @NAMEs are extracted from @WORDs and then turned into
+  [DRef names][DREF::@NAME] to form [DRef references]
+  [DREF::@REFERENCE] maybe with locatives found next to the @WORD."
   (@word glossary-term)
   (@name glossary-term))
 
 (define-glossary-term @word (:title "word")
-  "A _word_ is a string from which we want to extract an @OBJECT. When
+  "A _word_ is a string from which we want to extract a @NAME. When
   [Navigating][@navigating-in-emacs section], the word is
   `slime-symbol-at-point`. When @GENERATING-DOCUMENTATION, it is a
   non-empty string between whitespace characters in a docstring.")
@@ -17,11 +22,11 @@
   (defparameter *name-right-trim* ",;:.>\""))
 
 (define-glossary-term @name (:title "name")
-  #.(format nil """A _name_ is a string that names a possible @OBJECT
-  (e.g. an INTERNed SYMBOL, a PACKAGE, or an ASDF:SYSTEM). Names are
-  constructed from @WORDs by trimming some prefixes and suffixes. For
-  a given word, multiple candidate names are considered in the
-  following order.
+  #.(format nil """A _name_ is a string that denotes a possible [DRef
+   name] [DREF::@NAME] (e.g. an INTERNed SYMBOL, the name of a PACKAGE
+  or an ASDF:SYSTEM). Names are constructed from @WORDs by trimming
+  some prefixes and suffixes. For a given word, multiple candidate
+  names are considered in the following order.
 
   1. The entire word.
 
@@ -62,9 +67,9 @@
   - [trim-uppercase-core function][docstring]
   """ *name-left-trim* *name-right-trim*))
 
-;;; Return a list of @OBJECTs and a list of @NAMEs naming them in
-;;; WORD. If ONLY-ONE matches, then return only a single object and a
-;;; single name.
+;;; Return a list of DREF::@NAMEs and a list of @NAMEs naming them in
+;;; WORD. If ONLY-ONE matches, then return only a single DREF::@NAME
+;;; and a single @NAME.
 ;;;
 ;;; We trim only in CODIFY-UPPERCASE-WORD. Within markdown :CODE (see
 ;;; AUTOLINK) and :REFLINK :LABEL (see PARSE-REFLINK-LABEL-STRING), we
@@ -74,17 +79,18 @@
                           clhs-substring-match only-one)
   (let ((left-trim *name-left-trim*)
         (right-trim *name-right-trim*)
-        (objects ())
+        (xref-names ())
         (names ()))
-    (flet ((consider (object name)
+    (flet ((consider (xref-name name)
              (cond (only-one
-                    (when (funcall only-one object name)
-                      (return-from parse-word (values object name))))
+                    (when (funcall only-one xref-name name)
+                      (return-from parse-word (values xref-name name))))
                    (t
-                    (push object objects)
+                    (push xref-name xref-names)
                     (push name names)))))
       (flet ((find-it (name)
                (when (plusp (length name))
+                 ;; Consider NAME as a symbol.
                  (multiple-value-bind (object found)
                      (swank::parse-symbol name)
                    ;; FIXME: (SWANK::PARSE-SYMBOL "PAX:SECTION:")
@@ -93,15 +99,23 @@
                    ;; OBJECT in NAMES.
                    (when found
                      (consider object name)))
-                 (when (and (string/= (adjust-string-case name) name)
-                            (find-package* (adjust-string-case name)))
-                   (consider (adjust-string-case name) name))
-                 (when (or (find-package* name)
-                           (locate name 'asdf:system :errorp nil)
+                 ;; Consider NAME as a string.
+                 (when (or (definitions name)
+                           ;; FIXME: CLHS is a pseudo locative.
+                           ;; DEFINITIONS does not look for it. It's
+                           ;; fine though because we need a hack for
+                           ;; substring matching anyway.
                            (let ((*clhs-substring-match* clhs-substring-match))
                              (declare (special *clhs-substring-match*))
-                             (locate name 'clhs :errorp nil)))
-                   (consider name name)))))
+                             (locate name 'clhs nil)))
+                   (consider name name))
+                 ;; Consider NAME as a string, but adjust its case
+                 ;; according to the readtable case. This handles
+                 ;; [pax][package], for example.
+                 (let ((adjusted (dref::adjust-string-case name)))
+                   (when (and (string/= adjusted name)
+                              (definitions adjusted))
+                     (consider (dref::adjust-string-case name) name))))))
         (find-it word)
         (if trim
             (let* ((left-trimmed (string-left-trim left-trim word))
@@ -127,7 +141,7 @@
                 (unless (string= depluralized word)
                   (find-it depluralized))))))
       (unless only-one
-        (values (nreverse objects) (nreverse names))))))
+        (values (nreverse xref-names) (nreverse names))))))
 
 (defun depluralize (string)
   "If a @WORD ends with what looks like a plural
@@ -202,7 +216,7 @@
         (if pos
             (when (and (or junk-allowed
                            (not (find-if-not #'whitespacep string :start pos)))
-                       (locate symbol 'locative :errorp nil))
+                       (locate symbol 'locative nil))
               (values symbol pos))
             (let ((first-char-pos (position-if-not #'whitespacep string)))
               (when (and first-char-pos (char= (elt string first-char-pos) #\())
@@ -213,7 +227,7 @@
                   (multiple-value-bind (symbol found)
                       (swank::parse-symbol
                        (subseq string (1+ first-char-pos) delimiter-pos))
-                    (when (and found (locate symbol 'locative :errorp nil))
+                    (when (and found (locate symbol 'locative nil))
                       ;; The rest of the symbols in the string need not be
                       ;; already interned, so let's just READ.
                       (multiple-value-bind (locative position)
@@ -275,7 +289,7 @@
              (double-single-colon string))
           (if found
               symbol
-              (adjust-string-case string))))))
+              (dref::adjust-string-case string))))))
 
 (defun double-single-colon (string)
   (let ((pos (position #\: string)))

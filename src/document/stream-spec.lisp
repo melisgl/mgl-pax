@@ -14,6 +14,7 @@
                                  &body body)
   `(call-with-open-stream-spec ,stream-spec ,direction
                                (lambda (,stream) ,@body)))
+
 
 ;;;; STRING-STREAM-SPEC
 
@@ -42,6 +43,7 @@
 
 (defmethod delete-stream-spec ((spec string-stream-spec))
   (setf (string-stream-spec-string spec) ""))
+
 
 ;;;; FILE-STREAM-SPEC
 
@@ -86,6 +88,7 @@
 
 (defmethod delete-stream-spec ((spec file-stream-spec))
   (delete-file (file-stream-spec-pathname spec)))
+
 
 ;;;; STREAM-STREAM-SPEC
 

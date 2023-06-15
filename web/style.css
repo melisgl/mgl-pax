@@ -3,7 +3,8 @@
 
 :root {
   --font-family: 'XCharter', serif;
-  --font-feature-settings: "onum" 1, "cv01" 1;
+  /* No old-style figures: */
+  /* --font-feature-settings: "onum" 1, "cv01" 1; */
   --font-family-heading: 'XEB Garamond', serif;
   --font-feature-settings-heading: "onum" 0;
   --font-family-monospace: 'DejaVu Sans Mono', 'Liberation Mono', 'Hack', 'Roboto Mono', monospace;
@@ -176,7 +177,7 @@ pre {
   border: 0.1em solid #CCCCCC;
   line-height: 1.25em;
   overflow: auto;
-  padding: 0;
+  padding: 0 0 calc(0.5*var(--parsep)) 0;
 }
 
 ul, ol, dl {

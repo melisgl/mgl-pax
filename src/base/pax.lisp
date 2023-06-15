@@ -1,5 +1,48 @@
 (in-package :mgl-pax)
 
+;;;; Do what was deferred until DREF is loaded.
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (use-package '#:named-readtables)
+  (use-package '#:pythonic-string-reader)
+  ;; These were interned in basics.lisp.
+  (shadowing-import 'dref-ext:locative-args)
+  (shadowing-import 'dref-ext:locative-type)
+  (use-package '#:dref)
+  (use-package '#:dref-ext))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  ;; For backward compatibility with pre-DRef PAX, reexport these DRef
+  ;; macros.
+  (export 'define-locative-type)
+  (export 'define-locative-alias)
+  (export 'define-symbol-locative-type)
+  (export 'define-definer-for-symbol-locative-type)
+  (export 'define-restart))
+
+
+(defun section-entries (section)
+  "A list of markdown docstrings and XREFs in the order they occurred
+  in DEFSECTION."
+  (mapcar #'section-entry-to-xref (slot-value section '%entries)))
+
+(defun section-entry-to-xref (entry)
+  (if (listp entry)
+      ;; CHECK-SECTION-ENTRIES made sure this will work.
+      (destructuring-bind (name locative) entry
+        (make-xref name locative))
+      entry))
+
+(defun section-link-title-to (section)
+  (let ((link-title-to (slot-value section '%link-title-to)))
+    (when link-title-to
+      (if (listp link-title-to)
+          ;; CHECK-LINK-TITLE-TO made sure this will work.
+          (destructuring-bind (name locative) link-title-to
+            (make-xref name locative))
+          link-title-to))))
+
+
 (in-readtable pythonic-string-syntax)
 
 (defsection @pax-manual (:title "PAX Manual")
@@ -8,7 +51,7 @@
   (@links section)
   (@background section)
   (@basics section)
-  (@locative-types section)
+  (@pax-locatives section)
   (@navigating-in-emacs section)
   (@generating-documentation section)
   (@transcripts section)
@@ -103,8 +146,9 @@
   """Note how `(VARIABLE *FOO-STATE*)` in the DEFSECTION form both
   exports `*FOO-STATE*` and includes its documentation in
   `@FOO-RANDOM-MANUAL`. The symbols [VARIABLE][locative] and
-  [FUNCTION][locative] are just two instances of @LOCATIVEs, which are
-  used in DEFSECTION to refer to definitions tied to symbols.
+  [FUNCTION][locative] are just two instances of DREF::@LOCATIVEs,
+  which are used in DEFSECTION to refer to definitions tied to
+  symbols.
 
   `(DOCUMENT @FOO-RANDOM-MANUAL)` generates fancy markdown or HTML
   output with [automatic markup][\*document-uppercase-is-code\*
@@ -186,7 +230,12 @@
   "Here is the [official
   repository](https://github.com/melisgl/mgl-pax) and the [HTML
   documentation](http://melisgl.github.io/mgl-pax-world/mgl-pax-manual.html)
-  for the latest version."
+  for the latest version.
+
+  PAX is built on top of the [DRef
+  library][DREF::@DREF-MANUAL] (bundled in the same repository). See
+  [DRef's HTML
+  documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)"
   ("mgl-pax" asdf:system)
   (mgl-pax/full asdf:system))
 
@@ -259,7 +308,10 @@
   referred to.
 
   I settled on [Markdown][markdown] as a reasonably non-intrusive
-  format, and a few thousand lines later PAX was born.
+  format, and a few thousand lines later PAX was born. Since then,
+  locatives and references were factored out into the [DRef][
+  DREF::@DREF-MANUAL] library to let PAX focus on `\\M-.` and
+  documentation.
 
   [markdown]: https://daringfireball.net/projects/markdown/""")
 
@@ -269,177 +321,4 @@
   (defsection macro)
   (*discard-documentation-p* variable)
   (define-package macro)
-  (@locatives-and-references section)
   (@parsing section))
-
-(defmacro define-package (package &rest options)
-  "This is like CL:DEFPACKAGE but silences warnings and errors
-  signalled when the redefined package is at variance with the current
-  state of the package. Typically this situation occurs when symbols
-  are exported by calling EXPORT (as is the case with DEFSECTION) as
-  opposed to adding :EXPORT forms to the DEFPACKAGE form and the
-  package definition is subsequently reevaluated. See the section on
-  [package variance](http://www.sbcl.org/manual/#Package-Variance) in
-  the SBCL manual.
-
-  The bottom line is that if you rely on DEFSECTION to do the
-  exporting, then you'd better use DEFINE-PACKAGE."
-  `(eval-when (:compile-toplevel :load-toplevel, :execute)
-     (locally
-         (declare #+sbcl
-                  (sb-ext:muffle-conditions sb-kernel::package-at-variance))
-       (handler-bind
-           (#+sbcl (sb-kernel::package-at-variance #'muffle-warning))
-         (cl:defpackage ,package ,@options)))))
-
-
-(defsection @locatives-and-references (:title "Locatives and References")
-  """To [navigate with `\\M-.`][@NAVIGATING-IN-EMACS] and to [generate
-  documentation][@GENERATING-DOCUMENTATION] we need to refer to things
-  such as the `FOO` type or the `FOO` function.
-
-  ```
-  (deftype foo ()
-    "type doc"
-    '(or integer real).
-
-  (defun foo ()
-    "function doc"
-    7)
-  ```
-
-  The docstring is available via `(CL:DOCUMENTATION 'FOO 'TYPE)`,
-  where `\TYPE` – called `DOC-TYPE` – is what tells CL:DOCUMENTATION
-  that we want the docstring of the type named `FOO`. This design
-  supports disambiguation and working with things that are not
-  first-class, such as types.
-
-  PAX generalizes `DOC-TYPE` to the concept of @LOCATIVEs, which may
-  also take arguments. An @OBJECT and a @LOCATIVE together are called
-  a @REFERENCE, and they identify a definition. REFERENCEs are actual
-  objects, but often they appear as an `(OBJECT LOCATIVE)` list (see
-  DEFSECTION) or as `"OBJECT LOCATIVE"` in docstrings (see
-  @LINKING-TO-CODE for the various forms possible).
-
-  ```
-  (defsection @foos ()
-    "We discuss the FOO type and the FOO function."
-    (foo type)
-    (foo function))
-  ```"""
-  (@reference glossary-term)
-  (@object glossary-term)
-  (@locative glossary-term)
-  (@locatives-and-references-api section))
-
-(define-glossary-term @reference (:title "reference")
-  """A @REFERENCE is an @OBJECT plus a @LOCATIVE, and it identifies a
-  definition. For example, the symbol `FOO` as the object and the
-  symbol [`FUNCTION`][locative] as the locative together refer to the
-  global definition of the function `FOO`.
-
-  REFERENCE objects can be designated by an `(OBJECT LOCATIVE)` list
-  as in DEFSECTION entries, or textually as `"FOO function"` where
-  `FOO` is a @NAME or similar (see @CODIFICATION and
-  @LINKING-TO-CODE).""")
-
-(define-glossary-term @object (:title "object")
-  "@OBJECTs are symbols or strings which name [functions][function
-  locative], [types][type locative], [packages][package locative],
-  etc. Together with @LOCATIVEs, they form @REFERENCEs.")
-
-(define-glossary-term @locative (:title "locative")
-  "@LOCATIVEs specify a _type_ of definition such as
-  [FUNCTION][locative] or [VARIABLE][locative] and together with
-  @OBJECTs form @REFERENCEs.
-
-  A locative can be a symbol or a list whose CAR is a symbol. In
-  either case, the symbol is called the [locative type][
-  @locative-types section] while the rest of the elements are the
-  _locative arguments_. See the METHOD locative or the LOCATIVE
-  locative for examples of locative types with arguments.")
-
-
-(defsection @locatives-and-references-api
-    (:title "Locatives and References API")
-  "`(MAKE-REFERENCE 'FOO 'VARIABLE)` constructs a REFERENCE that
-  captures the path to take from an @OBJECT (the symbol `FOO`) to an
-  entity of interest (for example, the documentation of the variable).
-  The path is called the @LOCATIVE. A locative can be applied to an
-  object like this:
-
-  ```
-  (locate 'foo 'variable)
-  ```
-
-  which will return the same reference as `(MAKE-REFERENCE 'FOO
-  'VARIABLE)`. Operations need to know how to deal with references,
-  which we will see in the @EXTENSION-API.
-
-  Naturally, `(LOCATE 'FOO 'FUNCTION)` will simply return `#'FOO`, no
-  need to muck with references when there is a perfectly good object."
-  (reference class)
-  (reference-object (reader reference))
-  (reference-locative (reader reference))
-  (make-reference function)
-  (locative-type function)
-  (locative-args function)
-  (locate function)
-  (locate-error condition)
-  (locate-error-message (reader locate-error))
-  (locate-error-object (reader locate-error))
-  (locate-error-locative (reader locate-error))
-  (resolve function))
-
-;;; This gets clobbered with an empty function when MGL-PAX/NAVIGATE
-;;; is loaded.
-(autoload ensure-navigate-loaded '#:mgl-pax/navigate)
-
-(declaim (ftype function locate-object))
-
-(define-condition locate-error (error)
-  ((message :initarg :message :reader locate-error-message)
-   (object :initarg :object :reader locate-error-object)
-   (locative :initarg :locative :reader locate-error-locative))
-  (:documentation "Signalled by LOCATE when the lookup fails and
-  ERRORP is true.")
-  (:report (lambda (condition stream)
-             (format stream "~@<Could not locate ~A ~A.~@[ ~A~]~:@>"
-                     (locate-error-object condition)
-                     (locate-error-locative condition)
-                     (locate-error-message condition)))))
-
-(defun locate (object locative &key (errorp t))
-  "Follow LOCATIVE from OBJECT and return the object it leads to or a
-  REFERENCE if there is no first-class object corresponding to the
-  location. Depending on ERRORP, a LOCATE-ERROR condition is signalled
-  or NIL is returned if the lookup fails.
-
-  ```
-  (locate 'locate 'function)
-  ==> #<FUNCTION LOCATE>
-
-  (locate 'no-such-function 'function)
-  .. debugger invoked on LOCATE-ERROR:
-  ..   Could not locate NO-SUCH-FUNCTION FUNCTION.
-  ..   NO-SUCH-FUNCTION does not name a function.
-
-  (locate 'locate-object 'method)
-  .. debugger invoked on LOCATE-ERROR:
-  ..   Could not locate LOCATE-OBJECT METHOD.
-  ..   The syntax of the METHOD locative is (METHOD <METHOD-QUALIFIERS> <METHOD-SPECIALIZERS>).
-  ```"
-  (ensure-navigate-loaded)
-  (if errorp
-      (locate-object object (locative-type locative) (locative-args locative))
-      (handler-case
-          (locate-object object (locative-type locative)
-                         (locative-args locative))
-        (locate-error ()
-          nil))))
-
-(defun resolve (reference &key (errorp t))
-  "A convenience function to LOCATE REFERENCE's object with its
-  locative."
-  (locate (reference-object reference) (reference-locative reference)
-          :errorp errorp))

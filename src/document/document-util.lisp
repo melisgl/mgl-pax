@@ -95,11 +95,10 @@
   (update-asdf-system-html-docs
     @pax-manual :mgl-pax
     :pages
-    `((:objects
-      (,mgl-pax::@pax-manual)
-      :source-uri-fn ,(make-git-source-uri-fn
-                       :mgl-pax
-                       \"https://github.com/melisgl/mgl-pax\"))))
+    `((:objects (,mgl-pax::@pax-manual)
+       :source-uri-fn ,(make-git-source-uri-fn
+                        :mgl-pax
+                        \"https://github.com/melisgl/mgl-pax\"))))
   ```"
   (document-html sections pages target-dir update-css-p nil))
 
@@ -372,8 +371,16 @@
       (create-pax-world sections pages dir nil))))
 
 (defun sections-and-pages (registered-docs)
-  (values (apply #'append (mapcar #'second registered-docs))
-          (apply #'append (mapcar #'third registered-docs))))
+  (values (apply #'append (mapcar #'denoted-list
+                                  (mapcar #'second registered-docs)))
+          (apply #'append (mapcar #'denoted-list
+                                  (mapcar #'third registered-docs)))))
+
+;;; See LIST-DESIGNATOR.
+(defun denoted-list (designator)
+  (if (listp designator)
+      designator
+      (funcall designator)))
 
 (defvar @pax-world-dummy)
 
@@ -403,7 +410,7 @@
     (setq @pax-world-dummy nil)))
 
 (defun set-pax-world-list (objects)
-  (setf (slot-value @pax-world-dummy 'entries)
+  (setf (slot-value @pax-world-dummy '%entries)
         (list
          ;; This is the docstring of @PAX-WORLD-DUMMY above.
          (first (section-entries @pax-world-dummy))
@@ -415,7 +422,7 @@
 
 (defun sections-registered-in-pax-world ()
   (sort (loop for doc in *registered-pax-world-docs*
-              append (second doc))
+              append (denoted-list (second doc)))
         #'string< :key #'plain-section-title-or-name))
 
 (defun make-plain (md-string)
@@ -427,16 +434,49 @@
 
 ;;;; Generate the READMEs and HTML docs.
 
+(defun pax-and-dref-sections ()
+  (list @pax-manual dref::@dref-manual))
+
+(defun pax-and-dref-pages (format)
+  (let ((source-uri-fn (make-git-source-uri-fn
+                        :mgl-pax
+                        "https://github.com/melisgl/mgl-pax"))
+        (pax-file (ecase format
+                    ((:plain) "README")
+                    ((:markdown) "README.md")
+                    ((:html) "README.html")))
+        (dref-file (ecase format
+                     ((:plain) "dref/README")
+                     ((:markdown) "dref/README.md")
+                     ((:html) "dref/README.html"))))
+    `((:objects (, @pax-manual)
+       :output (,(asdf:system-relative-pathname "mgl-pax" pax-file)
+                ,@*default-output-options*)
+       ,@(unless (eq format :html)
+           '(:footer-fn print-markdown-footer))
+       :uri-fragment ,pax-file
+       :source-uri-fn ,source-uri-fn)
+      (:objects (, dref::@dref-manual)
+       :output (,(asdf:system-relative-pathname "mgl-pax" dref-file)
+                ,@*default-output-options*)
+       ,@(unless (eq format :html)
+           '(:footer-fn print-markdown-footer))
+       :uri-fragment ,dref-file
+       :source-uri-fn ,source-uri-fn))))
+
 #+nil
 (progn
   (asdf:load-system :mgl-pax/full)
   (time
-   (progn
-     (update-asdf-system-readmes (pax-sections) :mgl-pax
-                                 :formats '(:markdown :plain))
-     (let ((*document-downcase-uppercase-code* t))
-       (update-asdf-system-html-docs (pax-sections)
-                                     :mgl-pax :pages (pax-pages))))))
+   (let ((*document-url-versions* '(1)))
+     (document (pax-and-dref-sections) :pages (pax-and-dref-pages :plain)
+                                       :format :plain)
+     (document (pax-and-dref-sections) :pages (pax-and-dref-pages :markdown)
+                                       :format :markdown)))
+  (let ((*document-downcase-uppercase-code* t))
+    (update-asdf-system-html-docs (pax-and-dref-sections)
+                                  :mgl-pax :pages (pax-and-dref-pages
+                                                   :html))))
 
 
 ;;; Load systems that use PAX and generate PAX World in

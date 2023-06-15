@@ -7,36 +7,7 @@
 (defun/autoloaded ensure-navigate-loaded ()
   (prog1 *navigate-loaded*
     (setq *navigate-loaded* t)))
-
-;;; Return all definitions of OBJECT in the running Lisp as a list of
-;;; canonical REFERENCEs. REFERENCE-OBJECTs may not be the same as
-;;; OBJECT (for example, when OBJECT is a package nickname).
-(defun definitions-of (object &key (allow-dspec t))
-  (remove-duplicates
-   (append (when (or (symbolp object) (stringp object))
-             (loop for dspec in (find-dspecs (if (stringp object)
-                                                 (make-symbol object)
-                                                 object))
-                   for ref = (dspec-to-reference dspec object)
-                   for locative-type = (reference-locative-type ref)
-                   when (and (or allow-dspec
-                                 (not (eq locative-type 'dspec)))
-                             ;; (:XXX CONSTANT) is trivial.
-                             (not (and (keywordp object)
-                                       (eq locative-type 'constant)))
-                             ;; SWANK-BACKEND::FIND-DEFINITIONS'
-                             ;; support for :MGL-PAX, PAX, "PAX" is
-                             ;; uneven across implementations.
-                             (not (eq locative-type 'package)))
-                     collect (canonical-reference ref)))
-           ;; For locatives not supported by Swank, we try locatives
-           ;; on *LOCATIVE-SOURCE-SEARCH-LIST* one by one.
-           (mapcan (lambda (locative)
-                     (let ((thing (locate object locative :errorp nil)))
-                       (when thing
-                         `(,(canonical-reference thing)))))
-                   *locative-source-search-list*))
-   :test #'reference=))
+
 
 ;;; An acronym for Word-And-Locatives-List. This is what
 ;;; `mgl-pax-object-and-locatives-list-at-point' returns. It may look
@@ -48,10 +19,10 @@
 
 (defvar *definitions-of-fn*)
 
-;;; List all definitions (as REFERENCEs) of WALL. Specify
-;;; DEFINITIONS-OF (a function designator) to change how the
-;;; no-locative case is handled.
-(defun definitions-of-wall (wall &key (definitions-of 'definitions-of))
+;;; List all definitions (as DREFs) of WALL. Specify DEFINITIONS-OF (a
+;;; function designator) to change how the no-locative case is
+;;; handled.
+(defun definitions-of-wall (wall &key (definitions-of 'definitions))
   (let ((*definitions-of-fn* definitions-of))
     (or
      ;; First, try with the given locatives.
@@ -67,9 +38,7 @@
   (let ((locative (read-locative-from-markdown locative-string)))
     (when locative
       (loop for object in (parse-word word)
-              thereis (alexandria:when-let
-                          (ref (locate object locative :errorp nil))
-                        (list (canonical-reference ref)))))))
+              thereis (ensure-list (locate object locative nil))))))
 
 (defun definitions-of-word (word)
   (loop for object in (parse-word word)
@@ -78,15 +47,22 @@
 
 (defsection @navigating-in-emacs (:title "Navigating Sources in Emacs")
   """Integration into [SLIME's `\\M-.`][slime-m-.]
-  (`slime-edit-definition`) allows one to visit the source location of
-  the definition that's identified by `slime-symbol-at-point` parsed
-  as a @WORD and the locative before or after the symbol in a buffer.
-  With this extension, if a locative is the previous or the next
-  expression around the symbol of interest, then `\\M-.` will go
-  straight to the definition which corresponds to the locative. If
-  that fails, `\\M-.` will try to find the definitions in the normal
-  way, which may involve popping up an xref buffer and letting the
-  user interactively select one of possible definitions.
+  (`slime-edit-definition`) allows one to visit the SOURCE-LOCATION of
+  a [definition][DREF].
+
+  The definition is either determined from the buffer content at point
+  or is prompted. If prompted, then the format is `<NAME> <LOCATIVE>`,
+  where the locative may be omitted to recover stock Slime behaviour.
+
+  When determining the definition from the buffer contents,
+  `slime-symbol-at-point` is parsed as a @WORD, then candidate
+  locatives are looked for before and after that word. Thus, if a
+  locative is the previous or the next expression around the symbol of
+  interest, then `\\M-.` will go straight to the definition which
+  corresponds to the locative. If that fails, `\\M-.` will try to find
+  the definitions in the normal way, which may involve popping up an
+  xref buffer and letting the user interactively select one of
+  possible definitions.
 
   In the following examples, when the cursor is on one of the
   characters of `FOO` or just after `FOO`, pressing `\\M-.` will visit
@@ -97,7 +73,7 @@
       (function foo)
       (foo function)
 
-  In particular, references in a DEFSECTION form are in (SYMBOL
+  In particular, DREF::@REFERENCEs in a DEFSECTION form are in (NAME
   LOCATIVE) format so `\\M-.` will work just fine there.
 
   Just like vanilla `\\M-.`, this works in comments and docstrings. In
@@ -105,10 +81,7 @@
   default method:
 
   ```
-  ;;;; See FOO `(method () (t t t))` for how this all works.
-  ;;;; But if the locative has semicolons inside: FOO `(method
-  ;;;; () (t t t))`, then it won't, so be wary of line breaks
-  ;;;; in comments.
+  ;; See RESOLVE-DREF (method () (dref)) for how this all works.
   ```
 
   With a prefix argument (`C-u M-.`), one can enter a symbol plus a
@@ -119,7 +92,7 @@
   See @EMACS-SETUP. In addition, the Elisp command
   `mgl-pax-edit-parent-section` visits the source location of the
   section containing the definition with `point` in it. See
-  @BROWSING-WITH-W3M."""
+  @BROWSING-LIVE-DOCUMENTATION."""
   (mgl-pax/navigate asdf:system))
 
 ;;; Ensure that some Swank internal facilities (such as
@@ -138,18 +111,14 @@
 
 ;;; List Swank source locations (suitable for `make-slime-xref') for
 ;;; the things that the Elisp side considers possible around the point
-;;; when M-. is invoked.
-;;;
-;;; where each element in the list is a consist of a @WORD and a list
-;;; of possible @LOCATIVEs found next to it. All strings may need to
-;;; be trimmed of punctuation characters, but [ and ] are dealt with
-;;; by providing two possiblities as in the above example.
+;;; when M-. is invoked. The return value is a list of (DSPEC
+;;; LOCATION) elements (with DSPEC as a string).
 ;;;
 ;;; If none of the resulting references can be resolved (including if
-;;; no locatives are specified), then list all possible definitions.
+;;; no locatives are specified), then list all possible DEFINITIONS.
 ;;;
-;;; Return a list of (DSPEC LOCATION) elements (with DSPEC as a
-;;; string).
+;;; Each element in the list WALL consists of a @WORD and a list of
+;;; possible DREF::@LOCATIVEs found next to it in the Emacs buffer.
 (defun/autoloaded locate-definitions-for-emacs (wall)
   (with-swank ()
     (swank/backend:converting-errors-to-error-location
@@ -158,9 +127,9 @@
 
 (defun locate-definitions-for-emacs-1 (wall)
   (loop for definition in (definitions-of-wall wall)
-        for location = (ignore-errors (find-source definition))
+        for location = (source-location definition)
         unless (eq (first location) :error)
-          collect `(,(prin1-to-string (reference-to-dspec definition))
+          collect `(,(prin1-to-string (dref::definition-to-dspec definition))
                     ,location)))
 
 
@@ -194,39 +163,45 @@
                      (eq (section-name value) symbol))
             (pushnew value sections)))))))
 
-(defun sections-that-contain (sections reference)
-  (remove-if-not (lambda (section)
-                   (find-if (lambda (entry)
-                              (and (typep entry 'reference)
-                                   (reference= reference entry)))
-                            (section-entries section)))
-                 sections))
+(defun sections-that-contain (sections ref)
+  ;; It doesn't make sense to talk about containing an INCLUDE, and it
+  ;; is also a huge performance bottleneck as its accesses. See
+  ;; LOCATE-DREF* (method () (t (eql include) t)).
+  (unless (eq (xref-locative-type ref) 'include)
+    (let ((ref (or (locate ref nil nil)
+                   ref)))
+      (remove-if-not
+       (lambda (section)
+         (find-if (lambda (entry)
+                    (and (typep entry 'xref)
+                         (not (eq (xref-locative-type entry) 'include))
+                         (xref= ref (or (locate entry nil nil)
+                                        entry))))
+                  (section-entries section)))
+       sections))))
 
 ;;; As a heuristic to find the "home" section, move sections whose
 ;;; name is closer to the package of OBJECT to the front.
-(defun sort-by-proximity (sections reference)
-  (let ((object (reference-object reference)))
-    (if (symbolp object)
-        (let ((package-name (package-name (symbol-package object))))
-          (sort (copy-list sections) #'>
-                :key (lambda (section)
-                       (or (mismatch package-name
-                                     (package-name
-                                      (symbol-package
-                                       (section-name section))))
-                           most-positive-fixnum))))
-        sections)))
+(defun sort-by-proximity (sections object)
+  (if (symbolp object)
+      (let ((package-name (package-name (symbol-package object))))
+        (sort (copy-list sections) #'>
+              :key (lambda (section)
+                     (or (mismatch package-name
+                                   (package-name
+                                    (symbol-package
+                                     (section-name section))))
+                         most-positive-fixnum))))
+      sections))
 
 (defun find-parent-sections (object)
-  (let ((reference (canonical-reference object)))
-    (when reference
-      (let ((sections (sections-that-contain (list-all-sections) reference)))
-        (sort-by-proximity sections reference)))))
+  (let ((dref (locate object nil nil)))
+    (when dref
+      (let ((sections (sections-that-contain (list-all-sections) dref)))
+        (sort-by-proximity sections (dref-name dref))))))
 
 (defun find-root-section (object)
-  (let ((sectionp (or (typep object 'section)
-                      (and (typep object 'reference)
-                           (typep (resolve object :errorp nil) 'section)))))
+  (let ((sectionp (typep (resolve object nil) 'section)))
     (multiple-value-bind (section depth)
         (if sectionp
             (values object 0)
@@ -244,22 +219,21 @@
   (with-swank ()
     (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
-        (let ((reference (find-current-definition buffer filename
-                                                  possibilities)))
-          (if (not reference)
+        (let ((dref (find-current-definition buffer filename possibilities)))
+          (if (null dref)
               '(:error "Cannot determine current definition.")
-              (let ((sections (find-parent-sections reference)))
+              (let ((sections (find-parent-sections dref)))
                 (if sections
                     (loop for section in sections
                           collect (dspec-and-source-location-for-emacs
-                                   (canonical-reference section)))
+                                   (locate section)))
                     `(:error ,(format nil "Cannot find parent section of ~S ~S."
-                                      (reference-object reference)
-                                      (reference-locative reference)))))))))))
+                                      (dref-name dref)
+                                      (dref-locative dref)))))))))))
 
-(defun dspec-and-source-location-for-emacs (reference)
-  (let ((location (ignore-errors (find-source reference))))
-    `(,(prin1-to-string (reference-to-dspec reference))
+(defun dspec-and-source-location-for-emacs (dref)
+  (let ((location (source-location dref)))
+    `(,(prin1-to-string (dref::definition-to-dspec dref))
       ,(if (null location)
            '(:error "No source location.")
            location))))
@@ -274,7 +248,7 @@
                                pos))))
 
 ;;; Return the definition of OBJECT in BUFFER (a string) and FILE (a
-;;; string or NIL) whose source location information from FIND-SOURCE
+;;; string or NIL) whose source location information from SOURCE-LOCATION
 ;;; matches SNIPPET or is otherwise closest to buffer positions POS
 ;;; (1-based indexing).
 (defun guess-current-definition (object buffer file snippet pos)
@@ -288,17 +262,17 @@
     ;; The following algorithm is heuristic.
     (let ((closest-definition nil)
           ;; Limit the chance of finding an unrelated definition just
-          ;; because its @OBJECT is used as the first arg of some form
+          ;; because its @NAME is used as the first arg of some form
           ;; by not accepting position-based matches farther than 2000
           ;; characters from POS.
           (closest-pos 2000))
-      (dolist (reference (definitions-of object))
-        (let ((location (ignore-errors (find-source reference))))
-          (if (eq (first location) :location)
-              (let ((loc-file (location-file location))
-                    (loc-buffer (location-buffer location))
-                    (loc-pos (location-position location :adjustment 0))
-                    (loc-snippet (location-snippet location)))
+      (dolist (dref (definitions object))
+        (let ((location (source-location dref)))
+          (if (source-location-p location)
+              (let ((loc-file (source-location-file location))
+                    (loc-buffer (source-location-buffer location))
+                    (loc-pos (source-location-buffer-position location))
+                    (loc-snippet (source-location-snippet location)))
                 (when (and
                        ;; The files must always match (even if NIL).
                        (equal file loc-file)
@@ -312,11 +286,11 @@
                            (snippets-match loc-snippet)
                            (<= (abs (- loc-pos pos))
                                (abs (- closest-pos pos)))))
-                  (setq closest-definition reference
+                  (setq closest-definition dref
                         closest-pos loc-pos)))
               ;; No source location
-              (when (reference-and-snippet-match-p reference snippet)
-                (setq closest-definition reference
+              (when (reference-and-snippet-match-p dref snippet)
+                (setq closest-definition dref
                       closest-pos pos)))))
       closest-definition)))
 
@@ -325,12 +299,12 @@
         (position-if #'whitespacep string :start (1+ pos)))
       (length string)))
 
-;;; This could use macroexpanded form instead of the snippet and a
+;;; This could use the macroexpanded form instead of the snippet and a
 ;;; generic function specialized on the locative type, but since it's
 ;;; a fallback mechanism for the no-source-location case, that may be
 ;;; an overkill.
-(defun reference-and-snippet-match-p (reference snippet)
-  (let ((patterns (case (reference-locative-type reference)
+(defun reference-and-snippet-match-p (ref snippet)
+  (let ((patterns (case (xref-locative-type ref)
                     ((variable) '("defvar" "defparameter"))
                     ((constant) '("defconstant" "define-constant"))
                     ((macro) '("defmacro"))

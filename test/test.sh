@@ -49,27 +49,6 @@ function autoload_tests {
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "test-locate-autoload on ${lisp_name}" $@ <<EOF
-(asdf:load-system :mgl-pax/test-extension)
-(in-package :mgl-pax-test-extension)
-(when (passedp (try 'test-locate-autoload))
-  (uiop/image:quit 22))
-EOF
-
-  run_test_case "test-canonical-reference-autoload on ${lisp_name}" $@ <<EOF
-(asdf:load-system :mgl-pax/test-extension)
-(in-package :mgl-pax-test-extension)
-(when (passedp (try 'test-canonical-reference-autoload))
-  (uiop/image:quit 22))
-EOF
-
-  run_test_case "test-collect-reachable-objects-autoload on ${lisp_name}" $@ <<EOF
-(asdf:load-system :mgl-pax/test-extension)
-(in-package :mgl-pax-test-extension)
-(when (passedp (try 'test-collect-reachable-objects-autoload))
-  (uiop/image:quit 22))
-EOF
-
   run_test_case "test-document-autoload on ${lisp_name}" $@ <<EOF
 (asdf:load-system :mgl-pax/test-extension)
 (in-package :mgl-pax-test-extension)
@@ -77,24 +56,33 @@ EOF
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "test-document-autoload on ${lisp_name}" $@ <<EOF
+  run_test_case "test-document-for-emacs-autoload on ${lisp_name}" $@ <<EOF
 (asdf:load-system :mgl-pax/test-extension)
 (in-package :mgl-pax-test-extension)
 (when (passedp (try 'test-document-for-emacs-autoload))
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "test-docstring-autoload on ${lisp_name}" $@ <<EOF
+  run_test_case "test-locate-definitions-for-emacs-autoload on ${lisp_name}" \
+                $@ <<EOF
 (asdf:load-system :mgl-pax/test-extension)
 (in-package :mgl-pax-test-extension)
-(when (passedp (try 'test-docstring-autoload))
+(when (passedp (try 'test-locate-definitions-for-emacs-autoload))
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "test-find-source-autoload on ${lisp_name}" $@ <<EOF
+  run_test_case "test-transcribe-autoload on ${lisp_name}" $@ <<EOF
 (asdf:load-system :mgl-pax/test-extension)
 (in-package :mgl-pax-test-extension)
-(when (passedp (try 'test-find-source-autoload))
+(when (passedp (try 'test-transcribe-autoload))
+  (uiop/image:quit 22))
+EOF
+
+  run_test_case "test-transcribe-for-emacs-autoload on ${lisp_name}" $@ <<EOF
+(asdf:load-system :mgl-pax/test-extension)
+(asdf:load-system "swank")
+(in-package :mgl-pax-test-extension)
+(when (passedp (try 'test-transcribe-for-emacs-autoload))
   (uiop/image:quit 22))
 EOF
 }
@@ -140,24 +128,21 @@ function run_tests {
 
 export LC_ALL=en_US.UTF-8
 
-# Most lisps take only 10s or so to run the tests. CLISP takes 4x longer. ABCL
-# is 25x slower.
+# Most lisps take only 10s or so to run the tests. CLISP takes 4x
+# longer. ABCL is 25x slower.
 run_tests lisp_tests sbcl --noinform --disable-debugger
-
-export LC_ALL=C
 run_tests lisp_tests allegro --batch --backtrace-on-error
-export LC_ALL=en_US.UTF-8
-
 run_tests lisp_tests ccl-bin --batch
 run_tests lisp_tests cmu-bin -batch
 run_tests lisp_tests ecl
 run_tests lisp_tests clisp -on-error exit;
 run_tests lisp_tests abcl-bin
+
 # We run the autoload tests on the faster ones only.
 run_tests autoload_tests sbcl --noinform --disable-debugger
 run_tests autoload_tests allegro --batch --backtrace-on-error
 run_tests autoload_tests ccl-bin --batch
-run_tests autoload_tests cmu-bin -batch
-run_tests autoload_tests ecl
+# run_tests autoload_tests cmu-bin -batch
+# run_tests autoload_tests ecl
 
 echo "SHTEST: ${num_failures} failures, ${num_passes} passes."

@@ -66,11 +66,8 @@
 
 (defun/autoloaded escape-markdown (string &key (escape-newline t))
   "Construct a new string from STRING by adding a backslash before
-  special markdowns character
-
-      *_`<>[]
-
-  and newline if ESCAPE-NEWLINE."
+  the special markdown characters ``*_`<>[]`` and newline if
+  ESCAPE-NEWLINE."
   (with-output-to-string (stream)
     (dotimes (i (length string))
       (let ((char (aref string i)))

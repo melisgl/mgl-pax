@@ -10,6 +10,7 @@
 (autoload squeeze-whitespace '#:mgl-pax/transcribe)
 (autoload delete-trailing-whitespace '#:mgl-pax/transcribe)
 (autoload delete-comments '#:mgl-pax/transcribe)
+(autoload ensure-transcribe-loaded '#:mgl-pax/transcribe :export nil)
 
 ;;; Silence SBCL compiler notes.
 #+sbcl
