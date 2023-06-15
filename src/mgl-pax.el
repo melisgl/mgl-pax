@@ -96,6 +96,7 @@ side."
       (slime-eval-async check-version-form cont))))
 
 (cl-defmacro mgl-pax-ensure-pax-loaded ((&key no-web) &body body)
+  (declare (indent 1))
   `(mgl-pax-maybe-autoload ,no-web (lambda (loadedp)
                                      (if (not loadedp)
                                          (mgl-pax-not-loaded)
@@ -503,24 +504,24 @@ The suggested key binding is `C-.' to parallel `M-.'."
   ;; Handle the interactive defaults here because it involves async
   ;; calls.
   (mgl-pax-ensure-pax-loaded ()
-   (cond (pax-url
-          (mgl-pax-document-pax-url pax-url))
-         ;; interactive with prefix arg
-         (current-prefix-arg
-          (mgl-pax-prompt-and-document))
-         ;; interactive without prefix arg, point over a pax URL
-         ((and (null current-prefix-arg)
-               (mgl-pax-in-doc-buffer-p)
-               (mgl-pax-doc-pax-url (w3m-anchor)))
-          (mgl-pax-document-pax-url (mgl-pax-doc-pax-url (w3m-anchor))))
-         ;; interactive without prefix arg, point not over a pax URL
-         (t
-          (let ((wall (mgl-pax-wall-at-point)))
-            (if wall
-                (mgl-pax-document-pax-url
-                 (concat "pax-wall:"
-                         (url-hexify-string (format "%S" wall))))
-              (mgl-pax-prompt-and-document)))))))
+    (cond (pax-url
+           (mgl-pax-document-pax-url pax-url))
+          ;; interactive with prefix arg
+          (current-prefix-arg
+           (mgl-pax-prompt-and-document))
+          ;; interactive without prefix arg, point over a pax URL
+          ((and (null current-prefix-arg)
+                (mgl-pax-in-doc-buffer-p)
+                (mgl-pax-doc-pax-url (w3m-anchor)))
+           (mgl-pax-document-pax-url (mgl-pax-doc-pax-url (w3m-anchor))))
+          ;; interactive without prefix arg, point not over a pax URL
+          (t
+           (let ((wall (mgl-pax-wall-at-point)))
+             (if wall
+                 (mgl-pax-document-pax-url
+                  (concat "pax-wall:"
+                          (url-hexify-string (format "%S" wall))))
+               (mgl-pax-prompt-and-document)))))))
 
 (cl-defmacro mgl-pax-with-nlx-barrier (&body body)
   `(catch 'nlx-barrier
@@ -994,7 +995,7 @@ In a PAX doc buffer, it's equivalent to pressing `v'
   (if (mgl-pax-in-doc-buffer-p)
       (mgl-pax-doc-edit-current-definition)
     (mgl-pax-ensure-pax-loaded ()
-     (mgl-pax-current-definition-pax-url 'mgl-pax-document))))
+      (mgl-pax-current-definition-pax-url 'mgl-pax-document))))
 
 (defun mgl-pax-current-definition-pax-url (cont)
   (slime-eval-async
@@ -1020,7 +1021,7 @@ there are multiple containing sections, then pop up a selection
 buffer."
   (interactive)
   (mgl-pax-ensure-pax-loaded (:no-web t)
-   (mgl-pax-find-parent-section #'mgl-pax-visit-locations)))
+    (mgl-pax-find-parent-section #'mgl-pax-visit-locations)))
 
 (defun mgl-pax-find-parent-section (cont)
   (slime-eval-async
@@ -1075,25 +1076,25 @@ matter.
 Also, see `mgl-pax-apropos-all'."
   (interactive (list nil nil nil nil))
   (mgl-pax-ensure-pax-loaded ()
-   (mgl-pax-with-nlx-barrier
-    (mgl-pax-document
-     (mgl-pax-make-pax-eval-url
-      (if string
-          `(mgl-pax::pax-apropos* ,string ,external-only
-                                  ,package ,case-sensitive)
-        `(mgl-pax::pax-apropos*
-          ;; Do the defaulting of arguments here instead of in
-          ;; INTERACTIVE because mgl-pax-read-urllike-from-minibuffer
-          ;; relies on mgl-pax-ensure-pax-loaded having succeeded.
-          ,@(if current-prefix-arg
-                (list (mgl-pax-read-urllike-from-minibuffer
-                       "PAX Apropos: ")
-                      (y-or-n-p "External symbols only? ")
-                      (slime-read-package-name "Package: ")
-                      (y-or-n-p "Case-sensitive? "))
-              (list (mgl-pax-read-urllike-from-minibuffer
-                     "PAX Apropos: ")
-                    t "" nil)))))))))
+    (mgl-pax-with-nlx-barrier
+     (mgl-pax-document
+      (mgl-pax-make-pax-eval-url
+       (if string
+           `(mgl-pax::pax-apropos* ,string ,external-only
+                                   ,package ,case-sensitive)
+         `(mgl-pax::pax-apropos*
+           ;; Do the defaulting of arguments here instead of in
+           ;; INTERACTIVE because mgl-pax-read-urllike-from-minibuffer
+           ;; relies on mgl-pax-ensure-pax-loaded having succeeded.
+           ,@(if current-prefix-arg
+                 (list (mgl-pax-read-urllike-from-minibuffer
+                        "PAX Apropos: ")
+                       (y-or-n-p "External symbols only? ")
+                       (slime-read-package-name "Package: ")
+                       (y-or-n-p "Case-sensitive? "))
+               (list (mgl-pax-read-urllike-from-minibuffer
+                      "PAX Apropos: ")
+                     t "" nil)))))))))
 
 (defun mgl-pax-make-pax-eval-url (sexp)
   (concat "pax-eval:" (url-encode-url (prin1-to-string sexp))))
@@ -1102,9 +1103,10 @@ Also, see `mgl-pax-apropos-all'."
   "Shortcut for invoking `mgl-pax-apropos' with EXTERNAL-ONLY NIL."
   (interactive (list nil))
   (mgl-pax-ensure-pax-loaded ()
-   (let ((string (or string (mgl-pax-read-urllike-from-minibuffer
-                             "PAX Apropos All: "))))
-     (mgl-pax-apropos string nil "" nil))))
+    (mgl-pax-with-nlx-barrier
+     (let ((string (or string (mgl-pax-read-urllike-from-minibuffer
+                               "PAX Apropos All: "))))
+       (mgl-pax-apropos string nil "" nil)))))
 
 (defun mgl-pax-apropos-package (package &optional internal)
   "Show apropos listing for symbols in PACKAGE.
@@ -1127,25 +1129,25 @@ MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
 Without a prefix argument, the first syntax is used."
   (interactive)
   (mgl-pax-ensure-pax-loaded (:no-web t)
-   (save-excursion
-     (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
-       (let* ((start (progn (backward-sexp)
-                            ;; If the last expression is in a
-                            ;; comment, we need this for
-                            ;; forward-sexp below.
-                            (save-excursion
-                              (move-beginning-of-line nil)
-                              (point))))
-              (end (progn (forward-sexp)
-                          (point))))
-         (goto-char end)
-         (insert
-          (mgl-pax-transcribe start end (mgl-pax-transcribe-syntax-arg)
-                              nil nil nil dynenv))
-         ;; The transcript ends with a newline. Delete it if it
-         ;; would result in a blank line.
-         (when (looking-at "\n")
-           (delete-char 1)))))))
+    (save-excursion
+      (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
+        (let* ((start (progn (backward-sexp)
+                             ;; If the last expression is in a
+                             ;; comment, we need this for
+                             ;; forward-sexp below.
+                             (save-excursion
+                               (move-beginning-of-line nil)
+                               (point))))
+               (end (progn (forward-sexp)
+                           (point))))
+          (goto-char end)
+          (insert
+           (mgl-pax-transcribe start end (mgl-pax-transcribe-syntax-arg)
+                               nil nil nil dynenv))
+          ;; The transcript ends with a newline. Delete it if it
+          ;; would result in a blank line.
+          (when (looking-at "\n")
+            (delete-char 1)))))))
 
 (defun mgl-pax-retranscribe-region (start end)
   "Updates the transcription in the current region (as in calling
@@ -1156,21 +1158,21 @@ MGL-PAX:TRANSCRIBE. Without a prefix argument, the syntax of the
 input will not be changed."
   (interactive "r")
   (mgl-pax-ensure-pax-loaded (:no-web t)
-   (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
-     (let* ((point-at-start-p (= (point) start))
-            (point-at-end-p (= (point) end))
-            (transcript (mgl-pax-transcribe start end
-                                            (mgl-pax-transcribe-syntax-arg)
-                                            t t nil dynenv)))
-       (if point-at-start-p
-           (save-excursion
-             (goto-char start)
-             (delete-region start end)
-             (insert transcript))
-         (save-excursion
-           (goto-char start)
-           (delete-region start end))
-         (insert transcript))))))
+    (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
+      (let* ((point-at-start-p (= (point) start))
+             (point-at-end-p (= (point) end))
+             (transcript (mgl-pax-transcribe start end
+                                             (mgl-pax-transcribe-syntax-arg)
+                                             t t nil dynenv)))
+        (if point-at-start-p
+            (save-excursion
+              (goto-char start)
+              (delete-region start end)
+              (insert transcript))
+          (save-excursion
+            (goto-char start)
+            (delete-region start end))
+          (insert transcript))))))
 
 (defun mgl-pax-transcribe-syntax-arg ()
   (if current-prefix-arg
