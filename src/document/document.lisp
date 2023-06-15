@@ -866,7 +866,10 @@
                              nil))
        :header-fn header-fn
        :footer-fn footer-fn
-       :source-uri-fn source-uri-fn))))
+       :source-uri-fn (if (and (listp source-uri-fn)
+                               (eq (first source-uri-fn) :maker))
+                          (funcall (second source-uri-fn))
+                          source-uri-fn)))))
 
 (defun reachable-canonical-references (documentable)
   (let ((reference-lists ()))

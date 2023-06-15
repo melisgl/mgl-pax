@@ -250,23 +250,30 @@
   The default value of URI-FORMAT-STRING is for github. If using a
   non-standard git forge, such as Sourcehut or Gitlab, simply pass a
   suitable URI-FORMAT-STRING matching the \URI scheme of your forge."""
-  (let* ((git-version (or git-version (asdf-system-git-version asdf-system)))
-         (system-dir (asdf:system-relative-pathname asdf-system "")))
-    (if git-version
-        (let ((line-file-position-cache (make-hash-table :test #'equal))
-              (find-source-cache (make-hash-table :test #'equal)))
-          (lambda (reference)
-            (let ((*find-source-cache* find-source-cache))
-              (multiple-value-bind (relative-path line-number)
-                  (convert-source-location (find-source reference)
-                                           system-dir reference
-                                           line-file-position-cache)
-                (when relative-path
-                  (format nil uri-format-string git-forge-uri git-version
-                          relative-path (1+ line-number)))))))
-        (warn "No GIT-VERSION given and can't find .git directory ~
+  ;; Because the git version may change and UPDATE-PAX-WORLD gets
+  ;; PAGE-SPECS (containing our return value in :SOURCE-URI-FN) via
+  ;; REGISTER-DOC-IN-PAX-WORLD, we need to clear the cache at the
+  ;; start of DOCUMENT.
+  `(:maker
+    ,(lambda ()
+       (let* ((git-version
+                (or git-version (asdf-system-git-version asdf-system)))
+              (system-dir (asdf:system-relative-pathname asdf-system "")))
+         (if git-version
+             (let ((line-file-position-cache (make-hash-table :test #'equal))
+                   (find-source-cache (make-hash-table :test #'equal)))
+               (lambda (reference)
+                 (let ((*find-source-cache* find-source-cache))
+                   (multiple-value-bind (relative-path line-number)
+                       (convert-source-location (find-source reference)
+                                                system-dir reference
+                                                line-file-position-cache)
+                     (when relative-path
+                       (format nil uri-format-string git-forge-uri git-version
+                               relative-path (1+ line-number)))))))
+             (warn "No GIT-VERSION given and can't find .git directory ~
               for ASDF system~% ~A. Links to git forge will not be generated."
-              (asdf:component-name (asdf:find-system asdf-system))))))
+                   (asdf:component-name (asdf:find-system asdf-system))))))))
 
 (defun asdf-system-git-version (system)
   (let ((git-dir
