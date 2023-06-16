@@ -4,6 +4,19 @@
 
 (in-package :mgl-pax-test-extension)
 
+(defun external-symbols ()
+  (let ((externals ()))
+    (do-external-symbols (sym '#:mgl-pax)
+      (push sym externals))
+    (sort externals #'string< :key #'symbol-name)))
+
+(defvar *externals-before* (external-symbols))
+
+(deftest test-exports ()
+  (let ((externals (external-symbols)))
+    (is (endp (set-difference externals *externals-before*)))
+    (is (endp (set-difference *externals-before* externals)))))
+
 (define-symbol-locative-type aaa ())
 
 (define-definer-for-symbol-locative-type define-aaa aaa)

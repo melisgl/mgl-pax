@@ -3,10 +3,30 @@
 (in-readtable pythonic-string-syntax)
 
 (declaim (special *document-open-linking*))
+
+;;; @LINKING-TO-THE-HYPERSPEC
+(defvar *document-link-to-hyperspec*)
+(export '*document-link-to-hyperspec*)
+(defvar *document-hyperspec-root*)
+(export '*document-hyperspec-root*)
+
+;;; @CODIFICATION
 (defvar *document-uppercase-is-code*)
 (export '*document-uppercase-is-code*)
+(defvar *document-downcase-uppercase-code*)
+(export '*document-downcase-uppercase-code*)
+
+;;; @LINKING-TO-CODE
 (defvar *document-link-code*)
 (export '*document-link-code*)
+;;; Silence SBCL compiler notes.
+#+sbcl
+(define-condition unresolvable-reflink (warning) ())
+(export 'unresolvable-reflink)
+(export 'output-reflink)
+(export 'output-label)
+
+;;; @LINKING-TO-SECTIONS
 (defvar *document-link-sections*)
 (export '*document-link-sections*)
 (defvar *document-max-numbering-level*)
@@ -17,18 +37,33 @@
 (export '*document-text-navigation*)
 (defvar *document-fancy-html-navigation*)
 (export '*document-fancy-html-navigation*)
-(defvar *document-mark-up-signatures*)
-(export '*document-mark-up-signatures*)
-(defvar *document-normalize-packages*)
-(export '*document-normalize-packages*)
+
+;;; @HTML-OUTPUT
+(defvar *document-html-max-navigation-table-of-contents-level*)
+(export '*document-html-max-navigation-table-of-contents-level*)
 (defvar *document-html-head*)
 (export '*document-html-head*)
+(defvar *document-html-sidebar*)
+(export '*document-html-sidebar*)
 (defvar *document-html-top-blocks-of-links*)
 (export '*document-html-top-blocks-of-links*)
 (defvar *document-html-bottom-blocks-of-links*)
 (export '*document-html-bottom-blocks-of-links*)
-(defvar *document-html-max-navigation-table-of-contents-level*)
-(export '*document-html-max-navigation-table-of-contents-level*)
+
+;;; @MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES
+(defvar *document-url-versions*)
+(export '*document-url-versions*)
+(defvar *document-min-link-hash-length*)
+(export '*document-min-link-hash-length*)
+(defvar *document-mark-up-signatures*)
+(export '*document-mark-up-signatures*)
+(defvar *document-normalize-packages*)
+(export '*document-normalize-packages*)
+(defvar *document-base-url*)
+(export '*document-base-url*)
+
+;;; @APROPOS
+(autoload pax-apropos '#:mgl-pax/document)
 
 (autoload find-hyperspec-definition-url '#:mgl-pax/document :export nil)
 (autoload find-hyperspec-section-id '#:mgl-pax/document :export nil)

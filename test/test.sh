@@ -41,6 +41,14 @@ function autoload_tests {
   local lisp_name="$1"
   shift
 
+  run_test_case "test-exports on ${lisp_name}" $@ <<EOF
+(asdf:load-system :mgl-pax/test-extension)
+(asdf:load-system :mgl-pax/full)
+(in-package :mgl-pax-test-extension)
+(when (passedp (try 'test-exports))
+  (uiop/image:quit 22))
+EOF
+
   run_test_case "test-locate-autoload on ${lisp_name}" $@ <<EOF
 (asdf:load-system :mgl-pax/test-extension)
 (in-package :mgl-pax-test-extension)

@@ -593,8 +593,8 @@
   and `slime-apropos-package`."
   (pax-apropos function))
 
-(defun pax-apropos (name &key package external-only case-sensitive
-                           locative-types)
+(defun/autoloaded pax-apropos (name &key package external-only case-sensitive
+                                    locative-types)
   "Return a list of REFERENCEs corresponding to definitions of symbols
   matching various arguments. As the second value, return another list
   of REFERENCEs that correspond to definitions named by strings such

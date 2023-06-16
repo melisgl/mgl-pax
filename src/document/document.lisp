@@ -615,10 +615,6 @@
                (funcall fn element)
                (map-documentable fn element))))))
 
-;;; Silence SBCL compiler note.
-#+sbcl
-(define-condition unresolvable-reflink (warning) ())
-
 (defun call-with-format (format fn)
   (if (eq format :plain)
       ;; 3BMD's :PLAIN is very broken. Take matters into our hands,
@@ -2349,7 +2345,6 @@
   (*document-mark-up-signatures* variable)
   (*document-normalize-packages* variable)
   (*document-base-url* variable))
-
 
 (defvar *document-url-versions* '(2 1)
   """A list of versions of PAX \URL formats to support in the
