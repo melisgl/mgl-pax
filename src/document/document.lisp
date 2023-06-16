@@ -2380,7 +2380,7 @@
   ```
   (defun foo (x))
 
-  (document #'foo)
+  (document #'foo :format :markdown)
   => ("<a id=\"x-28MGL-PAX-3AFOO-20FUNCTION-29\"></a>
   <a id=\"MGL-PAX:FOO%20FUNCTION\"></a>
   
@@ -2388,20 +2388,25 @@
   ")
 
   (let ((*document-url-versions* '(1)))
-    (document #'foo))
+    (document #'foo :format :markdown))
   => ("<a id=\"x-28MGL-PAX-3AFOO-20FUNCTION-29\"></a>
+
   - [function] **FOO** *X*
   ")
   ```
   """)
 
 (defun anchor (object stream)
-  (when (member 1 *document-url-versions*)
-    (format stream "<a id=~S></a>~%"
-            (html4-safe-name (reference-to-anchor-v1 object))))
-  (when (member 2 *document-url-versions*)
-    (format stream "<a id=~S></a>~%~%"
-            (urlencode (reference-to-anchor object)))))
+  (let ((v1 (member 1 *document-url-versions*))
+        (v2 (member 2 *document-url-versions*)))
+    (when (or v1 v2)
+      (when v1
+        (format stream "<a id=~S></a>~%"
+                (html4-safe-name (reference-to-anchor-v1 object))))
+      (when v2
+        (format stream "<a id=~S></a>~%"
+                (urlencode (reference-to-anchor object))))
+      (terpri stream))))
 
 (defun anchor-id (object)
   (if (= (first *document-url-versions*) 1)

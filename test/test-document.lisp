@@ -6,10 +6,11 @@
     (is (equal (reference-locative reference) locative))))
 
 (defun check-document (input expected
-                       &key (package (find-package :mgl-pax-test)) msg)
+                       &key (package (find-package :mgl-pax-test)) msg
+                         (url-versions '(2)))
   (let ((output (let ((*package* package)
                       (*document-hyperspec-root* "CLHS/")
-                      (*document-url-versions* '(2)))
+                      (*document-url-versions* url-versions))
                   (document input :stream nil :format :markdown))))
     (is (null (mismatch% output expected))
         :msg msg
@@ -70,6 +71,7 @@
   (test-link)
   (test-headings)
   (test-base-url)
+  (test-url-versions)
   ;; PAX::@VARIABLELIKE-LOCATIVES
   (test-variable)
   ;; PAX::@MACROLIKE-LOCATIVES
@@ -699,6 +701,34 @@ This is [Self-referencing][e042].
   (signals (error :pred "no query and fragment")
     (let ((*document-base-url* "http://example.com/#z"))
       (document "xxx"))))
+
+
+(deftest test-url-versions ()
+  (check-document (make-reference 'foo2 'function)
+                  "<a id=\"x-28MGL-PAX-TEST-3AFOO2-20FUNCTION-29\"></a>
+
+- [function] **FOO2** *OOK X*
+
+    `FOO2` has args `OOK` and `X`.
+"
+                  :url-versions '(1))
+  (check-document (make-reference 'foo2 'function)
+                  "<a id=\"MGL-PAX-TEST:FOO2%20FUNCTION\"></a>
+
+- [function] **FOO2** *OOK X*
+
+    `FOO2` has args `OOK` and `X`.
+"
+                  :url-versions '(2))
+  (check-document (make-reference 'foo2 'function)
+                  "<a id=\"x-28MGL-PAX-TEST-3AFOO2-20FUNCTION-29\"></a>
+<a id=\"MGL-PAX-TEST:FOO2%20FUNCTION\"></a>
+
+- [function] **FOO2** *OOK X*
+
+    `FOO2` has args `OOK` and `X`.
+"
+                  :url-versions '(1 2)))
 
 
 (defparameter *nasty-var* (format nil "~%~%")
