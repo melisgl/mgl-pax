@@ -1986,7 +1986,7 @@ table of contents and navigation links.
     ```
     (defun foo (x))
     
-    (document #'foo)
+    (document #'foo :format :markdown)
     => ("<a id=\"x-28MGL-PAX-3AFOO-20FUNCTION-29\"></a>
     <a id=\"MGL-PAX:FOO%20FUNCTION\"></a>
     
@@ -1994,8 +1994,9 @@ table of contents and navigation links.
     ")
     
     (let ((*document-url-versions* '(1)))
-      (document #'foo))
+      (document #'foo :format :markdown))
     => ("<a id=\"x-28MGL-PAX-3AFOO-20FUNCTION-29\"></a>
+    
     - [function] **FOO** *X*
     ")
     ```
