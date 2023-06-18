@@ -46,7 +46,7 @@
   :description "Slime `\\\\M-.` support for MGL-PAX."
   :long-description "Autoloaded by Slime's `\\\\M-.` when `src/pax.el` is
   loaded. See MGL-PAX::@NAVIGATING-IN-EMACS."
-  :depends-on ("alexandria" "mgl-pax" "swank")
+  :depends-on ("alexandria" "mgl-pax" (:feature (:not :swank) "swank"))
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/navigate/"
