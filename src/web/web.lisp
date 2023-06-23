@@ -125,7 +125,9 @@
   (multiple-value-bind (static-files static-root) (web-toplevel-static-files)
     (let ((dispatchers ()))
       (dolist (file static-files)
-        (unless (alexandria:starts-with-subseq "README" (pathname-name file))
+        (unless (let ((name (pathname-name file)))
+                  (and (stringp name)
+                       (alexandria:starts-with-subseq "README" name)))
           (let ((uri (format nil "/~A" (enough-namestring file static-root))))
             (pushnew (if (uiop:directory-pathname-p file)
                          (hunchentoot:create-folder-dispatcher-and-handler
