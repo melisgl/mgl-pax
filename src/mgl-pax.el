@@ -322,10 +322,10 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
                 ;; Exclude the bracket characters.
                 (let ((start-pos (save-excursion
                                    (goto-char (1+ start-pos))
-                                   (skip-chars-forward " ")
+                                   (skip-chars-forward " \t\n")
                                    (point)))
                       (end-pos (save-excursion (goto-char (1- end-pos))
-                                               (skip-chars-backward " ")
+                                               (skip-chars-backward " \t\n")
                                                (point))))
                   ;; [lambda lists][clhs]
                   (add start-pos end-pos)

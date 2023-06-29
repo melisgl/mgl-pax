@@ -183,6 +183,17 @@
                   '(("also][foo" ("[see" "function"))
                     ("foo function" ("yyy"))
                     ("foo" ("function")))))))
+
+;;; xxx [see also][
+;;;   FOO] yyy
+(ert-deftest test-mgl-pax-wall-at-point/reflink-7 ()
+  (with-temp-lisp-and-non-lisp-buffer
+   (insert "xxx [see also][\n  foo")
+   (save-excursion
+     (insert "] yyy"))
+   (should (equal (mgl-pax-wall-at-point)
+                  '(("foo]" ("also][" "yyy"))
+                    ("foo" ("yyy")))))))
 
 
 ;;;; Test `mgl-pax-edit-definitions'
