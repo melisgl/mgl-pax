@@ -243,7 +243,8 @@
   the form. INPUT can be a stream or a string, while OUTPUT can be a
   stream or NIL in which case transcription goes into a string. The
   return value is the OUTPUT stream or the string that was
-  constructed.
+  constructed. Since TRANSCRIBE EVALuates arbitrary code anyway, forms
+  are read with *READ-EVAL* T.
 
   A simple example is this:
 
@@ -457,9 +458,12 @@
                              :echo echo
                              :default-syntax default-syntax
                              :syntaxes output-syntaxes)))
-    (if dynenv
-        (funcall dynenv #'do-it)
-        (do-it))))
+    ;; There is no point not allowing *READ-EVAL* because we are
+    ;; EVALuating code anyway.
+    (let ((*read-eval* t))
+      (if dynenv
+          (funcall dynenv #'do-it)
+          (do-it)))))
 
 
 ;;;; Prefix utilities

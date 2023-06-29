@@ -361,5 +361,12 @@
 (deftest test-transcribe ()
   (test-read-prefixed-lines)
   (test-read-write-transcript)
+  (with-test ("*read-eval* nil")
+    (let ((*read-eval* nil))
+      (signals-not (error)
+        (is (equal (pax:transcribe "#.(1+ 2)" nil)
+                   "#.(1+ 2)
+=> 3
+")))))
   (test-transcribe-from-source)
   (test-transcribe-stability))
