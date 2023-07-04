@@ -904,8 +904,8 @@ otherwise noted.
     locatives of DREFS and not check for plain XREFs.
 
 The following convenience functions are compositions of
-\{`LOCATIVE-TYPE`, `LOCATIVE-ARGS`\} and \{`XREF-LOCATIVE`,
-`DREF-LOCATIVE`\}.
+{`LOCATIVE-TYPE`, `LOCATIVE-ARGS`} and {`XREF-LOCATIVE`,
+`DREF-LOCATIVE`}.
 
 - [function] XREF-LOCATIVE-TYPE XREF
 

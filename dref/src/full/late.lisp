@@ -27,7 +27,6 @@
 
 (defun/autoloaded dref-apropos (name &key package external-only case-sensitive
                                      (locative-types '(:lisp)))
-  ;; FIXME: revisit after https://github.com/3b/3bmd/issues/57
   """Return a list of DREFs corresponding to existing definitions that
   match the various arguments. First, `(DREF-APROPOS NIL
   :LOCATIVE-TYPES NIL)` lists all definitions in the system. Arguments

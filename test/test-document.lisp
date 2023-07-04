@@ -609,7 +609,11 @@ xxx
       (check-head "[see this][print]
 
   [print]: #ttt"
-                  "[see this][d451]"))))
+                  "[see this][d451]")))
+  (with-test ("emph in reflink definition")
+    (check-head "[xxx][*print-length* variable]" "[xxx][8f7a]"))
+  (with-test ("backtick in reflink definition")
+    (check-head "[xxx][`*print-length*` variable]" "[xxx][8f7a]")))
 
 
 (defsection @section-with-title (:title "My `Title`" :export nil))

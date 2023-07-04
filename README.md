@@ -96,9 +96,9 @@ references are the glue. To support interactive development, PAX
 
 See [Emacs Setup][8541].
 
-[slime]: https://slime.common-lisp.dev/ 
+[slime]: https://slime.common-lisp.dev/
 
-[slime-m-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions 
+[slime-m-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions
 
 Beyond interactive workflows, [Generating Documentation][2c93] from
 sections and all the referenced items in Markdown or HTML format is
@@ -332,9 +332,9 @@ code by jumping around with [SLIME][slime]'s
 I spend a great deal of time polishing code but precious little
 writing documentation.
 
-[slime]: https://slime.common-lisp.dev/ 
+[slime]: https://slime.common-lisp.dev/
 
-[slime-m-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions 
+[slime-m-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions
 
 In fact, I rarely write anything more comprehensive than docstrings
 for exported stuff. Writing docstrings feels easier than writing a
@@ -362,7 +362,7 @@ little comments that were like section names. A clear violation of
 [OAOO][oaoo], one of them had to go, so `DEFSECTION` got
 a list of symbols to export.
 
-[oaoo]: http://c2.com/cgi/wiki?OnceAndOnlyOnce 
+[oaoo]: http://c2.com/cgi/wiki?OnceAndOnlyOnce
 
 That was great, but soon I found that the listing of symbols is
 ambiguous if, for example, a function, a compiler macro and a class
@@ -398,7 +398,7 @@ format, and a few thousand lines later PAX was born. Since then,
 locatives and references were factored out into the [DRef][5225] library to let PAX focus on `M-.` and
 documentation.
 
-[markdown]: https://daringfireball.net/projects/markdown/ 
+[markdown]: https://daringfireball.net/projects/markdown/
 
 
 <a id="x-28MGL-PAX-3A-40BASICS-20MGL-PAX-3ASECTION-29"></a>
@@ -756,9 +756,9 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
     - A `GO` reference [`RESOLVE`][63b4]s to what `NAME` with `LOCATIVE` resolves to:
     
         ```common-lisp
-    (resolve (locate 'xxx '(go (print function))))
-    ==> #<FUNCTION PRINT>
-    ```
+        (resolve (locate 'xxx '(go (print function))))
+        ==> #<FUNCTION PRINT>
+        ```
     
     - The [`DOCSTRING`][affc] of a `GO` reference is `NIL`.
     
@@ -766,10 +766,10 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
       embedded reference:
     
         ```common-lisp
-    (equal (source-location (locate 'xxx '(go (print function))))
-           (source-location (locate 'print 'function)))
-    => T
-    ```
+        (equal (source-location (locate 'xxx '(go (print function))))
+               (source-location (locate 'print 'function)))
+        => T
+        ```
 
 
 <a id="x-28MGL-PAX-3ACLHS-20MGL-PAX-3ALOCATIVE-29"></a>
@@ -1316,7 +1316,7 @@ cursor between links involves `TAB` and `S-TAB` (or `<up>` and
 `<down>`). `RET` and `<right>` follow a link, while `B` and `<left>`
 go back in history.
 
-[w3m-key-bindings]: https://emacs-w3m.github.io/info/emacs-w3m_10.html#Key-Binding 
+[w3m-key-bindings]: https://emacs-w3m.github.io/info/emacs-w3m_10.html#Key-Binding
 
 In addition, the following PAX-specific key bindings are available:
 
@@ -1436,11 +1436,11 @@ is optional and defaults to `common-lisp`.
 See the documentation of 3BMD and colorize for
 the details.
 
-[3bmd]: https://github.com/3b/3bmd 
+[3bmd]: https://github.com/3b/3bmd
 
-[colorize]: https://github.com/redline6561/colorize/ 
+[colorize]: https://github.com/redline6561/colorize/
 
-[fenced-code-blocks]: https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks 
+[fenced-code-blocks]: https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks
 
 
 <a id="x-28MGL-PAX-3A-40MATHJAX-20MGL-PAX-3ASECTION-29"></a>
@@ -1452,12 +1452,12 @@ MathJax. It can be done inline with `$` like this:
 
     $\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$
 
-which is displayed as $\int\_0^\infty e^\{-x^2\}
-dx=\frac\{\sqrt\{\pi\}\}\{2\}$, or it can be delimited by `$$` like this:
+which is displayed as $\int\_0^\infty e^{-x^2}
+dx=\frac{\sqrt{\pi}}{2}$, or it can be delimited by `$$` like this:
 
     $$\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
 
-to get: $$\int\_0^\infty e^\{-x^2\} dx=\frac\{\sqrt\{\pi\}\}\{2\}$$
+to get: $$\int\_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
 
 MathJax will leave code blocks (including those inline with
 backticks) alone. Outside code blocks, escape `$` by prefixing it
@@ -1467,7 +1467,7 @@ Escaping all those backslashes in TeX fragments embedded in Lisp
 strings can be a pain. Pythonic String
 Reader can help with that.
 
-[pythonic-string-reader]: https://github.com/smithzvk/pythonic-string-reader 
+[pythonic-string-reader]: https://github.com/smithzvk/pythonic-string-reader
 
 
 <a id="x-28MGL-PAX-3A-40CODIFICATION-20MGL-PAX-3ASECTION-29"></a>

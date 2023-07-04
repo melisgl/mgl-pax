@@ -1068,8 +1068,8 @@ otherwise noted.
     locatives of [`DREFS`][d930] and not check for plain [`XREF`][1538]s.
 
 The following convenience functions are compositions of
-\{[`LOCATIVE-TYPE`][97ba], [`LOCATIVE-ARGS`][2444]\} and \{[`XREF-LOCATIVE`][f486],
-[`DREF-LOCATIVE`][3d59]\}.
+{[`LOCATIVE-TYPE`][97ba], [`LOCATIVE-ARGS`][2444]} and {[`XREF-LOCATIVE`][f486],
+[`DREF-LOCATIVE`][3d59]}.
 
 <a id="x-28DREF-EXT-3AXREF-LOCATIVE-TYPE-20FUNCTION-29"></a>
 
