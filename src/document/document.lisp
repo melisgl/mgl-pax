@@ -1065,7 +1065,9 @@
   (let ((label (pt-get tree :label))
         (definition (pt-get tree :definition)))
     (alexandria:nth-value-or 0
-      (when (eq (read-locative-from-markdown definition) 'docstring)
+      (when (eq (read-locative-from-markdown (parse-tree-to-text definition
+                                                                 :deemph t))
+                'docstring)
         (multiple-value-bind (object locative foundp)
             (read-reference-from-string (parse-tree-to-text label))
           (when foundp
@@ -1642,7 +1644,7 @@
 ;;; This translator handles :REFERENCE-LINK nodes:
 ;;;
 ;;;   - those with an explicit locative (:REFERENCE-LINK :LABEL
-;;;     ((:CODE "SOMETHING")) :DEFINITION "function"), the parse of
+;;;     ((:CODE "SOMETHING")) :DEFINITION ("function")), the parse of
 ;;;     [`SOMETHING`][function],
 ;;;
 ;;;   - and those with no locative (:REFERENCE-LINK :LABEL ((:CODE
@@ -1651,7 +1653,7 @@
   ;; Markdown to handle: [`SECTION`][class], [`SECTION`][], [see
   ;; this][section class], [see this][section]. For example, the tree
   ;; for [`SECTION`][class] is (:REFERENCE-LINK :LABEL ((:CODE
-  ;; "SECTION")) :DEFINITION "class").
+  ;; "SECTION")) :DEFINITION ("class")).
   (multiple-value-bind (label explicit-label-p object locative pax-link-p)
       (dissect-reflink reflink)
     (cond ((not pax-link-p)
@@ -1680,8 +1682,7 @@
 
 (defun likely-a-pax-reflink-p (object locative reflink)
   (or (and locative (symbolp object))
-      (zerop (length (getf (rest reflink)
-                           :definition)))))
+      (zerop (length (getf (rest reflink) :definition)))))
 
 ;;; Return 1. the label, 2. whether to use the returned label in the
 ;;; reference link without further transformations (e.g. replace it
@@ -1758,8 +1759,8 @@
 ;;; This translator handles (:CODE "SOMETHING"), the parse of
 ;;; `SOMETHING`: looks for any references to "SOMETHING" and tanslates
 ;;; it to, for example, (:REFERENCE-LINK :LABEL ((:CODE "SOMETHING"))
-;;; :DEFINITION "function") if there is a single function reference to
-;;; it.
+;;; :DEFINITION ("function")) if there is a single function reference
+;;; to it.
 (defun autolink (parent tree word linked-refs)
   (let ((refs (linkables-for-autolink
                (parse-word word :trim nil :depluralize t)
@@ -1788,7 +1789,7 @@
                      ((eq :code (first element))
                       (try-string (second element)))
                      ;; (:REFERENCE-LINK :LABEL ((:CODE
-                     ;; "CLASS")) :DEFINITION "0524")
+                     ;; "CLASS")) :DEFINITION ("0524"))
                      ((eq :reference-link (first element))
                       (try (first (third element)))))))
       ;; Note that (EQ (THIRD REST) TREE) may be true multiple times,
@@ -1862,7 +1863,7 @@
                                   '(" "))
                               (:reference-link
                                :label (,(code-fragment i))
-                               :definition ,(link-to-reference ref))))
+                               :definition (,(link-to-reference ref)))))
                  ")")))
           ((member (reference-locative-type ref-1) '(dislocated argument))
            label)
@@ -1874,7 +1875,7 @@
                                 (null (section-title section)))
                             label
                             (codify (parse-markdown (section-title section))))
-                :definition ,(link-to-reference ref-1)))))
+                :definition (,(link-to-reference ref-1))))))
           ((eq (reference-locative-type ref-1) 'glossary-term)
            (let ((glossary-term (resolve ref-1 :errorp nil)))
              `((:reference-link
@@ -1883,11 +1884,11 @@
                             label
                             (codify (parse-markdown (glossary-term-title
                                                      glossary-term))))
-                :definition ,(link-to-reference ref-1)))))
+                :definition (,(link-to-reference ref-1))))))
           (t
            `((:reference-link
               :label ,label
-              :definition ,(link-to-reference ref-1)))))))
+              :definition (,(link-to-reference ref-1))))))))
 
 ;;; Order REFERENCES in an implementation independent way.
 (defun sort-references (references)

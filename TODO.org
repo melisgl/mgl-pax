@@ -86,8 +86,6 @@ the definition.
 That is, when generating documentation for something that's referenced
 by one or more sections. See PAX::SECTIONS-THAT-CONTAIN and
 PAX::SORT-BY-PROXIMITY.
-* BUG (low) (3BMD-GRAMMAR:PARSE-DOC "[l][*x*]") fails
-https://github.com/3b/3bmd/issues/55
 * MAYBE autoload documentation when needed?
 E.g. for named-readtables, which has its docs in named-readtables/doc.
 * BUG (low) C-. history depends on current package
