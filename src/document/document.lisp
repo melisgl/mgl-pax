@@ -1503,7 +1503,14 @@
         (*transcribe-check-consistency* t))
     (remf args :dynenv)
     (flet ((call-it ()
-             (apply #'transcribe transcript nil :update-only t args)))
+             (if *document-open-linking*
+                 (handler-case
+                     (apply #'transcribe transcript nil :update-only t args)
+                   (transcription-error (e)
+                     (let ((*package* (find-package :cl)))
+                       (warn "~@<~A~:@>" e))
+                     transcript))
+                 (apply #'transcribe transcript nil :update-only t args))))
       (if dynenv
           (funcall dynenv #'call-it)
           (call-it)))))
