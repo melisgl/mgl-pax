@@ -3,7 +3,8 @@
 (in-readtable pythonic-string-syntax)
 
 (defun/autoloaded definitions (name &key (locative-types (lisp-locative-types)))
-  """Return all definitions of NAME as a list of DREFs.
+  """Return all definitions of NAME that match LOCATIVE-TYPES
+  as a list of DREFs.
 
   The DREF-NAMEs may not be the same as NAME (for example, when NAME
   is a package nickname).

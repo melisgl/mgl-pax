@@ -10,10 +10,15 @@
        (handler-bind
            ((error (lambda (,error)
                      (when hunchentoot:*catch-errors-p*
-                       (trivial-backtrace:print-backtrace ,error)
-                       (return (format nil "<h2>Error</h2><p>~A</p>"
-                                       ,error))))))
+                       (let ((,error (error-and-backtrace-to-string ,error)))
+                         (print ,error)
+                         (return (format nil "<h2>Error</h2><pre>~A</pre>"
+                                         (escape-html ,error))))))))
          (progn ,@body)))))
+
+(defun error-and-backtrace-to-string (error)
+  (with-output-to-string (out)
+    (trivial-backtrace:print-backtrace error :output out)))
 
 (defun handle-pax*-request ()
   (with-errors-to-html
