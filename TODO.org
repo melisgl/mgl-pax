@@ -111,7 +111,6 @@ Package apropos could take advantage?
 * BUG on @LOCATIVE-TYPEs M-. goes to @LOCATIVE-TYPES
 but DOCUMENT doesn't.
 * BUG M-. in comments with ; chars in the way of parsing
-* BUG disambiguation page escaping of NAME (e.g. *print-length*)
 * compare DREF to the DEFINITIONS library
 Cons of DEFINITIONS:
 - Assumes that designators are SYMBOLs or (SETF <SYMBOL>).

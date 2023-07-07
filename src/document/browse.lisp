@@ -444,7 +444,7 @@
   (assert (< 1 (length references)))
   (let ((filename (file-name-for-pax-url filename pax-url)))
     (document/open/file
-     filename (cons (format nil "## Disambiguation for [`~A`][pax:dislocated]"
+     filename (cons (format nil "## Disambiguation for [~S][pax:dislocated]"
                             (escape-markdown title))
                     (dref::sort-references (replace-go-targets references)))
      :title title)
@@ -630,14 +630,14 @@
           `(,@(when %packagep
                 (documentable-for-reference (make-xref package 'package)))
             ((progv '(*document-do-not-follow-references*) '(t))
-             ,(format nil "## Apropos~%~%```~%~A~%```~%"
+             ,(format nil "## Apropos~%~%```~%~A~%```~%~%"
                       (let ((current-package *package*))
                         (with-standard-io-syntax*
                           (let ((*package* current-package)
                                 (*print-readably* nil)
                                 (*print-pretty* t)
                                 (*print-right-margin* 72))
-                            (prin1-to-markdown
+                            (prin1-to-string*
                              `(dref-apropos
                                ,(if (and name (symbolp name))
                                     `(quote ,name)
@@ -649,8 +649,7 @@
                                :case-sensitive ,case-sensitive
                                :locative-types ,(if locative-types
                                                     `(quote ,locative-types)
-                                                    nil))
-                             :escape-newline nil)))))
+                                                    nil)))))))
              ,@(when pax-entry-points
                  (list "### PAX Entry Points"
                        (break-long-list (sections-tightly pax-entry-points))))

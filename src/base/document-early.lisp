@@ -62,9 +62,6 @@
 (defvar *document-base-url*)
 (export '*document-base-url*)
 
-;;; @APROPOS
-(autoload pax-apropos '#:mgl-pax/document)
-
 (autoload find-hyperspec-definition-url '#:mgl-pax/document :export nil)
 (autoload find-hyperspec-section-id '#:mgl-pax/document :export nil)
 (autoload find-hyperspec-section-url '#:mgl-pax/document :export nil)
