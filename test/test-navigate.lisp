@@ -154,7 +154,12 @@
       ;; :MGL-PAX
       (check-dowall '((":MGL-PAX" ()))
                     '(("MGL-PAX" package)
-                      ("mgl-pax" asdf:system))))))
+                      ("mgl-pax" asdf:system))))
+    (with-test ("prefer uppercase")
+      (check-dowall '(("DREF::@LOCATIVE-TYPES" ()))
+                    '((dref::@locative-types section)))
+      (check-dowall '(("DREF::@LOCATIVE-TYPEs" ()))
+                    '((dref::@locative-type glossary-term))))))
 
 (defun check-dowall (wall expected-refs)
   (let ((refs (mapcar (lambda (ref)

@@ -37,12 +37,28 @@
 (defun definitions-of-word-with-locative (word locative-string)
   (let ((locative (read-locative-from-noisy-string locative-string)))
     (when locative
-      (loop for object in (parse-word word)
+      (loop for object in (parse-word-preferring-uppercase word)
               thereis (ensure-list (locate object locative nil))))))
 
 (defun definitions-of-word (word)
-  (loop for object in (parse-word word)
+  (loop for object in (parse-word-preferring-uppercase word)
           thereis (funcall *definitions-of-fn* object)))
+
+;;; To make M-. behave like DOCUMENT, prefer the word that
+;;; CODIFY-UPPERCASE-WORD would find.
+(defun parse-word-preferring-uppercase (word)
+  (multiple-value-bind (xref-name name) (parse-uppercase-word word)
+    (multiple-value-bind (xref-names names) (parse-word word)
+      (if name
+          (values (cons xref-name xref-names)
+                  (cons name names))
+          (values xref-names names)))))
+
+(defun parse-uppercase-word (word)
+  (parse-word word :trim t :depluralize t
+                   :only-one (lambda (xref-name name)
+                               (declare (ignore xref-name))
+                               (notany #'lower-case-p name))))
 
 
 (defsection @navigating-in-emacs (:title "Navigating Sources in Emacs")

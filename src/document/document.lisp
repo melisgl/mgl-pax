@@ -1424,11 +1424,7 @@
 ;;; already handled in the caller TRANSLATE-UPPERCASE-WORD. Trims
 ;;; separators and depluralizes.
 (defun codify-uppercase-word (word)
-  (multiple-value-bind (xref-name name)
-      (parse-word word :trim t :depluralize t
-                       :only-one (lambda (xref-name name)
-                                   (declare (ignore xref-name))
-                                   (notany #'lower-case-p name)))
+  (multiple-value-bind (xref-name name) (parse-uppercase-word word)
     (when (and name (interesting-name-p xref-name name))
       (let ((pos (search name word :test #'char-equal)))
         (assert pos)
