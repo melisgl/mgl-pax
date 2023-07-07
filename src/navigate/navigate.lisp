@@ -35,7 +35,7 @@
            append (definitions-of-word (first entry))))))
 
 (defun definitions-of-word-with-locative (word locative-string)
-  (let ((locative (read-locative-from-markdown locative-string)))
+  (let ((locative (read-locative-from-noisy-string locative-string)))
     (when locative
       (loop for object in (parse-word word)
               thereis (ensure-list (locate object locative nil))))))

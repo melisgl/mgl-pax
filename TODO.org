@@ -125,4 +125,3 @@ Cons of DEFINITIONS:
 
 Pros of DEFINITIONs:
 - BIND, (SETF OBJECT), UNBIND, (SETF DOCUMENTATION).
-* BUG M-. on pax:docstring pax:locative>

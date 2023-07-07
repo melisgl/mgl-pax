@@ -1304,7 +1304,7 @@
   (let ((label (pt-get tree :label))
         (definition (pt-get tree :definition)))
     (nth-value-or 0
-      (when (eq (read-locative-from-markdown definition) 'docstring)
+      (when (eq (read-locative-from-noisy-string definition) 'docstring)
         (multiple-value-bind (name locative foundp)
             (read-reference-from-string (parse-tree-to-text label))
           (when foundp
@@ -1954,7 +1954,7 @@
            (definition (trim-whitespace
                         (parse-tree-to-text definition :deemph t)))
            (locative-from-def
-             (and definition (read-locative-from-markdown definition)))
+             (and definition (read-locative-from-noisy-string definition)))
            (label-string (trim-whitespace
                           (parse-tree-to-text label :deemph nil))))
       (nth-value-or 0
@@ -2036,7 +2036,7 @@
 (defun find-locatives-around (parent tree)
   (let ((locatives ()))
     (labels ((try-string (string)
-               (let ((locative (read-locative-from-markdown string)))
+               (let ((locative (read-locative-from-noisy-string string)))
                  (when locative
                    (push locative locatives))))
              (try (element)

@@ -34,7 +34,13 @@
     (let ((locative (mgl-pax::read-locative-from-string "(function yyy)")))
       (is (eq (first locative) 'function))
       (is (string= (symbol-name (second locative)) (string '#:yyy)))
-      (is (eq (symbol-package (second locative)) *package*)))))
+      (is (eq (symbol-package (second locative)) *package*)))
+    (with-test ("markdown and M-.")
+      (dolist (string '("function." "function," "function;" "function:"
+                        "function`" "function'" "function>" "<function>"
+                        "\"function\""))
+        (is (eq (mgl-pax::read-locative-from-noisy-string (% string))
+                'function))))))
 
 (defun test-read-object-from-string ()
   (let ((*package* (find-package :mgl-pax-test)))

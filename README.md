@@ -510,9 +510,9 @@ either case, [name][88cf]s are extracted from [word][d7b0]s and then turned into
     
     1. The entire word.
     
-    2. Trimming the characters `#<;"` from the left of the word.
+    2. Trimming the characters \`#<;"'\`\` from the left of the word.
     
-    3. Trimming the characters `,;:.>"` from the right of the word.
+    3. Trimming the characters \`,;:.>"'\`\` from the right of the word.
     
     4. Trimming both of the previous two at the same time.
     
@@ -2938,7 +2938,7 @@ there are only a couple of PAX generic functions left to extend.
 
     Return true iff `SYMBOL` is to be exported from
     `PACKAGE` when it occurs in a [`DEFSECTION`][72b4] in a reference with
-    [`LOCATIVE-TYPE`][97ba] and [`LOCATIVE-ARGS`][2444]. `SYMBOL` is [accessible][3473]
+    `LOCATIVE-TYPE` and `LOCATIVE-ARGS`. `SYMBOL` is [accessible][3473]
     in `PACKAGE`.
     
     The default method calls [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] with
@@ -2961,7 +2961,7 @@ there are only a couple of PAX generic functions left to extend.
 - [generic-function] **EXPORTABLE-LOCATIVE-TYPE-P** *LOCATIVE-TYPE*
 
     Return true iff symbols in references with
-    [`LOCATIVE-TYPE`][97ba] are to be exported by default when they occur in a
+    `LOCATIVE-TYPE` are to be exported by default when they occur in a
     [`DEFSECTION`][72b4]. The default method returns `T`, while the methods for
     [`SECTION`][5fac], [`GLOSSARY-TERM`][8251], [`PACKAGE`][1d5a], [`ASDF:SYSTEM`][c097], [`METHOD`][51c3] and [`INCLUDE`][5cd7]
     return `NIL`.

@@ -18,8 +18,8 @@
   non-empty string between whitespace characters in a docstring.")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defparameter *name-left-trim* "#<;\"")
-  (defparameter *name-right-trim* ",;:.>\""))
+  (defparameter *name-left-trim* "#<;\"'`")
+  (defparameter *name-right-trim* ",;:.>\"'`"))
 
 (define-glossary-term @name (:title "name")
   #.(format nil """A _name_ is a string that denotes a possible [DRef
@@ -199,11 +199,14 @@
         (subseq string uppercase-start uppercase-end)))))
 
 
-(defun read-locative-from-markdown (string)
+;;; Read locative form a markdown docstring for DOCUMENT or from any
+;;; Emacs buffer with strange stuff in it for M-..
+(defun read-locative-from-noisy-string (string)
   (read-locative-from-string
    ;; It is assumed that names of locative types are not funny, and we
    ;; can trim aggressively.
-   (string-trim ":`',." string)))
+   (string-left-trim *name-left-trim*
+                     (string-right-trim *name-right-trim* string))))
 
 ;;; Parse "LOCATIVE-TYPE" and "(LOCATIVE-TYPE ...)" like
 ;;; READ-FROM-STRING, but try to minimize the chance of interning
