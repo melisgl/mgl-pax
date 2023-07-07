@@ -2636,14 +2636,16 @@
       (let* ((package (symbol-package name))
              (name (symbol-name name))
              (name-url (print-name-for-url name))
-             (cl-package (symbol-package 'print)))
+             (cl-package (find-package :common-lisp))
+             (keyword-package (find-package :keyword))
+             (pax-package (find-package :pax)))
         (cond
           ((eq package cl-package)
            (format nil "~A" name-url))
-          ((eq package (symbol-package :if-exists))
+          ((eq package keyword-package)
            (format nil ":~A" name-url))
           (t
-           ;; Note the single #\:.
+           ;; Note the single : character.
            (format nil "~A:~A" (print-name-for-url (package-name package))
                    name-url))))
       (prin1-to-string name)))
@@ -2975,7 +2977,8 @@
 
 (defun pax-std-env (fn)
   ;; FIXME: Add all others too.
-  (let ((*document-downcase-uppercase-code* nil))
+  (let ((*document-downcase-uppercase-code* nil)
+        (*transcribe-check-consistency* (alexandria:featurep :sbcl)))
     (handler-bind ((warning #'muffle-warning))
       (unwind-protect
            (funcall fn)

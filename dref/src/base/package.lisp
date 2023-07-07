@@ -164,7 +164,7 @@
   a CL type corresponding to the reference's locative type, the
   references can be RESOLVEd to a unique object as is the case in
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (resolve (locate 'print 'function))
   ==> #<FUNCTION PRINT>
   ```

@@ -90,7 +90,9 @@
 
 (defun dref-std-env (fn)
   ;; FIXME: Add all others too.
-  (progv '(pax::*document-downcase-uppercase-code*) '(nil)
+  (progv '(pax::*document-downcase-uppercase-code*
+           pax::*transcribe-check-consistency*)
+      '(nil #+sbcl t #-sbcl nil)
     (handler-bind ((warning #'muffle-warning))
       (unwind-protect
            (funcall fn)
@@ -357,7 +359,7 @@
   - When LOCATIVE is non-NIL, NAME-OR-OBJECT is interpreted as the
     @NAME:
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (locate '*print-length* 'variable)
   ==> #<DREF *PRINT-LENGTH* VARIABLE>
   ```
@@ -365,15 +367,15 @@
   - With LOCATIVE NIL, NAME-OR-OBJECT must be a supported first-class
     object, a DREF, or an XREF:
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (locate #'print)
   ==> #<DREF PRINT FUNCTION>
   ```
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (locate (locate #'print))
   ==> #<DREF PRINT FUNCTION>
   ```
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (locate (make-xref 'print 'function))
   ==> #<DREF PRINT FUNCTION>
   ```
@@ -382,19 +384,19 @@
     corresponding definition is not found. If ERRORP is NIL, then NIL
     and the LOCATE-ERROR condition are returned instead.
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (locate 'no-such-function 'function)
   .. debugger invoked on LOCATE-ERROR:
   ..   Could not locate DREF::NO-SUCH-FUNCTION FUNCTION.
   ..   NO-SUCH-FUNCTION is not a symbol naming a function.
   ```
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (locate 'print '(function xxx))
   .. debugger invoked on LOCATE-ERROR:
   ..   Could not locate PRINT #'DREF::XXX.
   ..   Bad arguments (XXX) for locative FUNCTION with lambda list NIL.
   ```
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (locate "xxx")
   .. debugger invoked on LOCATE-ERROR:
   ..   Could not locate "xxx".
@@ -434,11 +436,11 @@
      with its definition if any. Return OBJECT if it's not an XREF.
      Thus, the value returned is never an XREF.
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (resolve (locate 'print 'function))
   ==> #<FUNCTION PRINT>
   ```
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (resolve #'print)
   ==> #<FUNCTION PRINT>
   ```
@@ -549,12 +551,12 @@
   list][clhs], :MACRO a [macro lambda list][clhs], and :DEFTYPE a
   [deftype lambda list][clhs]. Other non-NIL values are also allowed.
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (arglist #'arglist)
   => (OBJECT)
   => :ORDINARY
   ```
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (arglist (locate 'define-locative-type 'macro))
   => (LOCATIVE-TYPE LAMBDA-LIST &BODY DOCSTRING)
   => :MACRO

@@ -101,16 +101,22 @@
 
 (defun ->max ())
 
-(defmacro define-declaration (decl-name (decl-spec env) &body body)
-  #+sbcl
-  `(sb-cltl2:define-declaration ,decl-name (,decl-spec ,env)
-     ,@body)
-  #-sbcl
-  (declare (ignore decl-name decl-spec env body)))
+#+sbcl
+(require :sb-cltl2)
 
-(define-declaration test-declaration (decl-spec env)
-  (declare (ignore env))
-  (values :declare decl-spec))
+(defmacro define-declaration (name)
+  #+allegro
+  `(system:define-declaration ,name () nil :both)
+  #+ccl
+  `(ccl:define-declaration ,name (decl-spec env)
+     (declare (ignore env))
+     (values :declare decl-spec))
+  #+sbcl
+  `(sb-cltl2:define-declaration ,name (decl-spec env)
+     (declare (ignore env))
+     (values :declare decl-spec)))
+
+(define-declaration test-declaration)
 
 (unless (named-readtables:find-readtable 'xxx-rt)
   (named-readtables:defreadtable xxx-rt

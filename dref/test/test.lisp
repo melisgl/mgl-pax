@@ -22,7 +22,7 @@
                                'failure))
     (check-ref-sets (definitions '*some-var*)
                     `(,(make-xref '*some-var* 'variable))))
-  (with-failure-expected ((and (alexandria:featurep '(:or :ccl :clisp))
+  (with-failure-expected ((and (alexandria:featurep '(:or :clisp))
                                'failure))
     (check-ref-sets (definitions 'my-smac)
                     `(,(make-xref 'my-smac 'symbol-macro))))
@@ -45,7 +45,7 @@
                       ,(make-xref 'bar 'constant)
                       ,(make-xref 'bar 'type))))
   (with-failure-expected ((and (alexandria:featurep
-                                '(:or :abcl :ccl :clisp :cmucl :ecl))
+                                '(:or :abcl :clisp :cmucl :ecl))
                                'failure))
     (check-ref-sets (definitions 'has-setf-expander)
                     `(,(make-xref 'has-setf-expander 'setf))))
@@ -79,8 +79,11 @@
                             :key #'dref-locative-type)
                     `(,(make-xref 'foo-w 'variable)
                       ,(make-xref 'foo-w '(writer foo)))))
-  ;; recognized as function
-  (with-failure-expected (t)
+  ;; BAZ-AAA is not recognized as a structure accessor on most Lisps.
+  ;; On CCL, (SETF BAZ-AAA) show up as well. FIXME: Maybe that's how
+  ;; it should be?
+  (with-failure-expected ((and (alexandria:featurep '(:not (:or :sbcl)))
+                               'failure))
     (check-ref-sets (definitions 'baz-aaa)
                     `(,(make-xref 'baz-aaa '(structure-accessor baz)))))
   (with-failure-expected ((alexandria:featurep '(:not :sbcl)))
@@ -205,7 +208,7 @@
 
 (deftest test-arglist/compiler-macro ()
   (with-failure-expected ((and (alexandria:featurep
-                                '(:or :abcl :ccl :clisp :ecl))
+                                '(:or :abcl :clisp :ecl))
                                'failure))
     (is (match-values (arglist (locate 'cmac 'compiler-macro))
           (equal * '(x &rest y))

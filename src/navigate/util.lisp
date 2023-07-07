@@ -10,8 +10,9 @@
 
 (defparameter *utf-8-external-format*
   #+abcl :utf-8
+  #+allegro :utf-8
   #+clisp charset:utf-8
-  #-(or abcl clisp) :default)
+  #-(or abcl allegro clisp) :default)
 
 ;;; Return the number of characters that would be read by
 ;;; READ-FROM-STRING. May signal READER-ERROR or END-OF-FILE.
@@ -33,8 +34,10 @@
 
 (defun external-symbol-p (symbol &optional (package (symbol-package symbol)))
   (and package
-       (eq (nth-value 1 (find-symbol (symbol-name symbol) package))
-           :external)))
+       (multiple-value-bind (symbol* status)
+           (find-symbol (symbol-name symbol) package)
+         (and (eq status :external)
+              (eq symbol symbol*)))))
 
 (defun symbol-other-packages (symbol)
   (loop for package in (list-all-packages)
@@ -85,8 +88,8 @@
                    (pathname-host reference-pathname)))
     (assert (equal (pathname-device pathname)
                    (pathname-device reference-pathname)))
-    (let* ((dir (pathname-directory pathname))
-           (ref-dir (pathname-directory reference-pathname))
+    (let* ((dir (remove :relative (pathname-directory pathname)))
+           (ref-dir (remove :relative (pathname-directory reference-pathname)))
            (mismatch-index (or (mismatch dir ref-dir :test #'equal)
                                (length dir))))
       (normalize-pathname

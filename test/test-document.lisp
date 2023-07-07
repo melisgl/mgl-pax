@@ -970,9 +970,6 @@ This is [Self-referencing][e042].
               "[`FOO-W`][2b65] `(writer foo)`"))
 
 (deftest test-structure-accessor ()
-  (check-pred (locate 'baz-aaa 'structure-accessor)
-              "- [structure-accessor] **BAZ-AAA**
-")
   (check-pred (locate 'baz-aaa '(structure-accessor baz))
               "- [structure-accessor] **BAZ-AAA** *BAZ*
 "))

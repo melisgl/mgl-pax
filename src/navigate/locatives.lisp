@@ -121,7 +121,7 @@
 
   - A GO reference RESOLVEs to what NAME with LOCATIVE resolves to:
 
-      ```cl-transcript
+      ```cl-transcript (:dynenv pax-std-env)
       (resolve (locate 'xxx '(go (print function))))
       ==> #<FUNCTION PRINT>
       ```

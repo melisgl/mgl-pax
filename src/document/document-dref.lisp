@@ -155,8 +155,7 @@
 (defmethod document-dref ((dref structure-accessor-dref) stream)
   "For definitions with a STRUCTURE-ACCESSOR locative, the arglist
   printed is the locative's CLASS-NAME argument if provided."
-  (documenting-reference (stream :arglist (xref-locative-args
-                                           (dref-origin dref)))
+  (documenting-reference (stream :arglist (dref-locative-args dref))
     (document-docstring (docstring dref) stream)))
 
 (defmethod document-dref ((dref class-dref) stream)
@@ -333,14 +332,16 @@
     (destructuring-bind (source &key (line-prefix "") header footer
                                   header-nl footer-nl) locative-args
       (multiple-value-bind (file start-loc end-loc) (include-region source)
-        (let ((start (source-location-file-position-offset start-loc))
-              (end (source-location-file-position-offset end-loc)))
+        (let ((start (or (source-location-file-position-offset start-loc)
+                         (source-location-file-position start-loc)))
+              (end (or (source-location-file-position-offset end-loc)
+                       (source-location-file-position end-loc))))
           (cond ((and start-loc (null start))
-                 (warn "~@<~S cannot find ~S ~S~:@>"
-                       'include :start start-loc))
+                 (warn-in-document-context "~S cannot find ~S ~S"
+                                           'include :start start-loc))
                 ((and end-loc (null end))
-                 (warn "~@<~S cannot find ~S ~S~:@>"
-                       'include :end end-loc))
+                 (warn-in-document-context "~S cannot find ~S ~S"
+                                           'include :end end-loc))
                 (t
                  (let ((text (file-subseq file start end)))
                    (when header
@@ -356,6 +357,19 @@
                      (format stream "~&")
                      (format stream footer-nl)
                      (format stream "~%"))))))))))
+
+(defun warn-in-document-context (format-control &rest format-args)
+  (declare (special *objects-being-documented*))
+  (apply #'warn
+         (with-output-to-string (out)
+           (write-string "~@<" out)
+           (write-string format-control out)
+           (dolist (object *objects-being-documented*)
+             (when (typep object 'dref)
+               (let ((*package* (find-package :keyword)))
+                 (format out "~%  while documenting ~S" object))))
+           (write-string "~:@>" out))
+         format-args))
 
 (defun file-subseq (pathname &optional start end)
   (with-open-file (stream pathname)

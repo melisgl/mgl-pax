@@ -15,7 +15,7 @@
   PAX 'defines' standard CL restarts such as USE-VALUE with
   DEFINE-RESTART:
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (first-line (source-location-snippet
                (source-location (locate 'use-value 'restart))))
   => \"(define-restart use-value (value)\"

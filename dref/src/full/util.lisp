@@ -51,7 +51,7 @@
 
 (defun has-setf-expander-p (symbol)
   ;; FIXME: other implemenations
-  #+ccl (gethash symbol ccl::%setf-methods%)
+  #+ccl (ccl::%setf-method symbol)
   #+clisp (get symbol 'system::setf-expander)
   #+sbcl (swank/sbcl::setf-expander symbol)
   #-(or ccl clisp sbcl)
@@ -83,14 +83,15 @@
 
 (defun function-name (function)
   (let* ((function (unencapsulated-function function))
-         (name #+clisp (system::function-name function)
-               #-clisp (swank-backend:function-name function)))
+         (name #-clisp (swank-backend:function-name function)
+               #+clisp (system::function-name function)))
     #-abcl
     (let ((kind (and (listp name)
                      (= (length name) 2)
                      (case (first name)
                        ((macro-function) 'macro)
-                       ((compiler-macro) 'compiler-macro)))))
+                       ((compiler-macro compiler-macro-function)
+                        'compiler-macro)))))
       (if kind
           (values (second name) kind)
           name))
@@ -164,89 +165,100 @@
               #-cmucl function-designator
               #+cmucl (symbol-function* function-designator)
               (unencapsulated-function function-designator))))
-    #-(or abcl allegro ccl)
-    (let ((arglist (swank-backend:arglist function-designator)))
-      (if (eq arglist :not-available)
-          (values nil nil)
-          (values arglist foundp)))
-    #+abcl
-    (multiple-value-bind (arglist foundp*)
-        (extensions:arglist function-designator)
-      (cond (foundp*
-             (values arglist foundp))
-            ((typep function-designator 'generic-function)
-             (values (mop:generic-function-lambda-list function-designator)
-                     foundp))
-            ((and (symbolp function-designator)
-                  (typep (symbol-function* function-designator)
-                         'generic-function))
-             (values (mop:generic-function-lambda-list
-                      (symbol-function* function-designator))
-                     foundp))))
-    #+allegro
-    (handler-case
-        (let* ((symbol (if (symbolp function-designator)
-                           function-designator
-                           (function-name function-designator)))
-               (lambda-expression (ignore-errors
-                                   (function-lambda-expression
-                                    (symbol-function symbol)))))
-          (values (if lambda-expression
-                      (second lambda-expression)
-                      (excl:arglist function-designator))
-                  foundp))
-      (simple-error () nil))
-    #+ccl
-    (let* ((function-designator (or (and (functionp function-designator)
-                                         (function-name function-designator))
-                                    function-designator))
-           (arglist (swank-backend:arglist function-designator)))
-      ;; Function arglist don't have the default values of &KEY and
-      ;; &OPTIONAL arguments. Get those from CCL:FUNCTION-SOURCE-NOTE.
-      (alexandria:nth-value-or 0
-        (and (listp arglist)
-             (or (find '&key arglist) (find '&optional arglist))
-             (function-arglist-from-source-note function-designator foundp))
-        (values (if (listp arglist)
-                    ;; &KEY arguments are given as keywords, which
-                    ;; screws up WITH-DISLOCATED-SYMBOLS when
-                    ;; generating documentation for functions.
-                    (mapcar (lambda (x)
-                              (if (keywordp x)
-                                  (intern (string x))
-                                  x))
-                            arglist)
-                    arglist)
-                foundp)))))
+    (multiple-value-bind (function-name function)
+        (if (functionp function-designator)
+            (values (function-name function-designator) function-designator)
+            (values function-designator (fdefinition* function-designator)))
+      (declare (ignorable function-name function))
+      #-(or abcl allegro ccl)
+      (let ((arglist (swank-backend:arglist function-designator)))
+        (if (eq arglist :not-available)
+            (values nil nil)
+            (values arglist foundp)))
+      #+abcl
+      (multiple-value-bind (arglist foundp*)
+          (extensions:arglist function-designator)
+        (cond (foundp*
+               (values arglist foundp))
+              ((typep function-designator 'generic-function)
+               (values (mop:generic-function-lambda-list function-designator)
+                       foundp))
+              ((and (symbolp function-designator)
+                    (typep (symbol-function* function-designator)
+                           'generic-function))
+               (values (mop:generic-function-lambda-list
+                        (symbol-function* function-designator))
+                       foundp))))
+      #+allegro
+      (handler-case
+          (let* ((symbol (if (symbolp function-designator)
+                             function-designator
+                             (function-name function-designator)))
+                 (lambda-expression (ignore-errors
+                                     (function-lambda-expression
+                                      (symbol-function symbol)))))
+            (values (if lambda-expression
+                        (second lambda-expression)
+                        (excl:arglist function-designator))
+                    foundp))
+        (simple-error () nil))
+      #+ccl
+      (alexandria:nth-value-or 1
+        ;; Function arglist don't have the default values of &KEY and
+        ;; &OPTIONAL arguments. Get those from
+        ;; CCL:FUNCTION-SOURCE-NOTE. This is also the way to get
+        ;; DEFTYPE expanders arglists.
+        (function-arglist-from-source-note function foundp)
+        (let ((arglist (swank-backend:arglist
+                        (or (and (functionp function-designator)
+                                 (function-name function-designator))
+                            function-designator))))
+          (when (listp arglist)
+            (values
+             ;; &KEY arguments are given as keywords, which screws up
+             ;; WITH-DISLOCATED-SYMBOLS when generating documentation
+             ;; for functions.
+             (mapcar (lambda (x)
+                       (if (keywordp x)
+                           (intern (string x))
+                           x))
+                     arglist)
+             foundp)))))))
 
 #+ccl
-(defun function-arglist-from-source-note (function-designator foundp)
-  (multiple-value-bind (function-name function)
-      (if (functionp function-designator)
-          (values (function-name function-designator) function-designator)
-          (values function-designator (fdefinition function-designator)))
-    (when function
+(defun function-arglist-from-source-note (function foundp)
+  (let ((function-name (function-name function)))
+    (when function-name
       (let ((source-note (ccl:function-source-note function)))
         (when source-note
           (let ((text (ccl:source-note-text source-note)))
             (when text
-              (values (lambda-list-from-source-note-text text function-name)
-                      foundp))))))))
+              (lambda-list-from-source-note-text text function-name
+                                                 foundp))))))))
 
 ;;; Extract the lambda list from TEXT, which is like "(defun foo (x
-;;; &optional (o 1)) ...".
+;;; &optional (o 1)) ...". Or the same with DEFTYPE.
 #+ccl
-(defun lambda-list-from-source-note-text (text symbol)
+(defun lambda-list-from-source-note-text (text name foundp)
   ;; This is a heuristic. It is impossible to determine what *PACKAGE*
   ;; was when the definition form was read.
-  (let ((*package* (symbol-package symbol)))
-    (with-input-from-string (s text)
-      (when (eql (read-char s nil) #\()
-        ;; Skip DEFUN and the name.
-        (let ((*read-suppress* t))
-          (read s nil)
-          (read s nil))
-        (ignore-errors (read s))))))
+  (let ((symbol (if (listp name)
+                    (second name)
+                    name)))
+    (when (symbolp symbol)
+      (let ((*package* (symbol-package symbol)))
+        (with-input-from-string (s text)
+          (when (eql (read-char s nil) #\()
+            ;; Skip DEFUN, DEFTYPE or similar and the name.
+            (let ((*read-suppress* t))
+              (read s nil)
+              ;; FIXME: check that it's similar to NAME.
+              (read s nil))
+            (multiple-value-bind (arglist error)
+                (ignore-errors (read s))
+              (when (and (null error)
+                         (listp arglist))
+                (values arglist foundp)))))))))
 
 ;;; Return the names of the function arguments in ARGLIST, which is an
 ;;; [ordinary lambda list][clhs]. Handles &KEY, &OPTIONAL, &REST,

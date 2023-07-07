@@ -62,7 +62,7 @@
     (cond (position-entry
            (second position-entry))
           (offset-entry
-           (third offset-entry)))))
+           (+ (second offset-entry) (third offset-entry))))))
 
 (defun/autoloaded source-location-snippet (location)
   "Return the [defining form][clhs] as a string or NIL if it's not available."
@@ -97,8 +97,9 @@
 
 (defparameter *utf-8-external-format*
   #+abcl :utf-8
+  #+allegro :utf-8
   #+clisp charset:utf-8
-  #-(or abcl clisp) :default)
+  #-(or abcl allegro clisp) :default)
 
 (defun slurp-file (file)
   ;; FIXME: Determine the external format somehow?
