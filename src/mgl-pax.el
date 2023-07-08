@@ -223,12 +223,16 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
   ;; non-lisp buffers.
   (mgl-pax-call-in-lisp-mode
    (lambda ()
-     (let ((name (slime-symbol-at-point))
-           (bounds (slime-bounds-of-symbol-at-point)))
-       (when bounds
-         (let ((locatives (mgl-pax-find-locatives bounds))
-               (wall (mgl-pax-parse-reflink bounds)))
-           (append (and name `((,name ,locatives))) wall)))))))
+     ;; So that locatives spanning multiple comment lines are parsed
+     ;; without the semicolons.
+     (mgl-pax-call-uncommented
+      (lambda ()
+        (let ((name (slime-symbol-at-point))
+              (bounds (slime-bounds-of-symbol-at-point)))
+          (when bounds
+            (let ((locatives (mgl-pax-find-locatives bounds))
+                  (wall (mgl-pax-parse-reflink bounds)))
+              (append (and name `((,name ,locatives))) wall)))))))))
 
 ;;; If not in a lisp-mode buffer, then copy the five lines around
 ;;; point into a temporary lisp buffer, put point on the same
@@ -248,6 +252,47 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
         (save-excursion (insert text-after))
         (funcall fn)))))
 
+;;; If point is in a comment, then call FN in in temporary buffer with
+;;; all consecutive comment lines uncommented and point position at
+;;; the original position. Else just call FN.
+(defun mgl-pax-call-uncommented (fn)
+  (let ((comment-bounds (mgl-pax-comment-lines-bounds)))
+    (if comment-bounds
+        (let ((comment (apply #'buffer-substring comment-bounds))
+              (pos (1+ (- (point) (car comment-bounds)))))
+          (with-temp-buffer
+            (lisp-mode)
+            (insert comment)
+            (goto-char pos)
+            (uncomment-region (point-min) (point-max))
+            (funcall fn)))
+      (funcall fn))))
+
+(defun mgl-pax-comment-lines-bounds ()
+  (when (elt (syntax-ppss) 4)
+    (let* ((end (save-excursion
+                  (re-search-backward comment-start-skip
+                                      (line-beginning-position)
+                                      t)
+                  (comment-forward (point-max))
+                  (point)))
+           (beg (save-excursion
+                  (forward-line 0)
+                  (while (and (not (bobp))
+                              (= end (save-excursion
+                                       (comment-forward (point-max))
+                                       (point))))
+                    (forward-line -1))
+                  (goto-char (line-end-position))
+                  (re-search-backward comment-start-skip
+                                      (line-beginning-position)
+                                      t)
+                  (ignore-errors
+                    (while (looking-at-p comment-start-skip)
+                      (forward-char -1)))
+                  (point))))
+      (list beg end))))
+
 ;;; Return the sexps before and after (slime-symbol-at-point),
 ;;; skipping some markup.
 (cl-defun mgl-pax-find-locatives
@@ -259,10 +304,10 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
   (save-excursion
     (goto-char (1- point))
     (unless (looking-at "(")
-      (skip-chars-backward ";` \n\t")
-      (let ((sexp (ignore-errors (slime-last-expression))))
-        (unless (equal sexp "")
-          sexp)))))
+      (skip-chars-backward "            ;` \n\t")
+                          (let ((sexp (ignore-errors (slime-last-expression))))
+                            (unless (equal sexp "")
+                              sexp)))))
 
 (cl-defun mgl-pax-locative-after (&optional (point (point)))
   (save-excursion

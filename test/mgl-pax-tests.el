@@ -123,6 +123,25 @@
    (should (equal (mgl-pax-wall-at-point)
                   '(("foo" ("xxx" "yyy")))))))
 
+;;; ;;; xxx FOO yyy
+(ert-deftest test-mgl-pax-wall-at-point/comment-1 ()
+  (with-temp-lisp-and-non-lisp-buffer
+   (insert ";;; xxx foo")
+   (save-excursion
+     (insert " yyy"))
+   (should (equal (mgl-pax-wall-at-point)
+                  '(("foo" ("xxx" "yyy")))))))
+
+;;; ;;; xxx FOO (method ()
+;;; ;;;          (number))
+(ert-deftest test-mgl-pax-wall-at-point/comment-2 ()
+  (with-temp-lisp-and-non-lisp-buffer
+   (insert ";;; xxx foo")
+   (save-excursion
+     (insert " (method ()\n;;; (number))"))
+   (should (equal (mgl-pax-wall-at-point)
+                  '(("foo" ("xxx" "(method ()\n(number))")))))))
+
 ;;; xxx [FOO][function] yyy
 (ert-deftest test-mgl-pax-wall-at-point/reflink-1 ()
   (with-temp-lisp-and-non-lisp-buffer
