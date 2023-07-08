@@ -4,11 +4,15 @@ Testing
 Testing within Lisp
 -------------------
 
-- Run the Common Lisp tests with `(asdf:test-system "mgl-pax")` or
-  just load the `"mgl-pax/test"`system and maybe do
-  `(mgl-pax-test:test :debug 'try:unexpected)`. Similarly for DRef,
-  `(asdf:test-system "dref")` or load `"mgl-pax/test"` and call
-  `(dref-test:test)`.
+- Run the Common Lisp tests with
+
+        (asdf:test-system "mgl-pax")
+        (asdf:test-system "dref")
+
+    Or just load the `"mgl-pax/test"` system and do, for example:
+
+        (mgl-pax-test:test :debug 'try:unexpected).
+        (dref-test:test :print '(or try:failure try:unexpected))
 
 - To run the Elisp tests, load `test/mgl-pax-tests.el`, `M-x ert` and
   enter `"mgl-pax"` (yes, within quotes) to run only the PAX tests
@@ -19,14 +23,14 @@ Testing from the command line
 -----------------------------
 
 - `test/test.sh` and `dref/test/test.sh` test the Common Lisp side.
-  They runs the tests on several Lisp implementations assuming that
+  They run the tests on several Lisp implementations assuming that
   they are installed under Roswell (e.g. `ros --lisp sbcl run` works).
   So install ABCL, AllegroCL, CCL, CMUCL, CLISP, ECL, and SBCL under
   Roswell:
 
-      for lisp in allegro abcl-bin ccl-bin clisp cmu-bin ecl sbcl-bin; do
-          ros install $lisp
-      done
+        for lisp in allegro abcl-bin ccl-bin clisp cmu-bin ecl sbcl-bin; do
+            ros install $lisp
+        done
 
 - `test/test-el.sh` runs the Elisp tests. This currently only tests
   under SBCL and needs the value of `SLIME_DIR` to be specified in the

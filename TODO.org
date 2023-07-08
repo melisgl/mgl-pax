@@ -107,7 +107,6 @@ Package apropos could take advantage?
 * MAYBE support setf docstring?
 * MAYBE better SOURCE addressing for INCLUDE
 * MAYBE live browsing: reload page automatically on redefinition
-* transcribe: how to include errors without failing?
 * compare DREF to the DEFINITIONS library
 Cons of DEFINITIONS:
 - Assumes that designators are SYMBOLs or (SETF <SYMBOL>).

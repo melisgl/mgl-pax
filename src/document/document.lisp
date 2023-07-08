@@ -2633,8 +2633,7 @@
              (name (symbol-name name))
              (name-url (print-name-for-url name))
              (cl-package (find-package :common-lisp))
-             (keyword-package (find-package :keyword))
-             (pax-package (find-package :pax)))
+             (keyword-package (find-package :keyword)))
         (cond
           ((eq package cl-package)
            (format nil "~A" name-url))
