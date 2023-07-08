@@ -118,3 +118,6 @@ Cons of DEFINITIONS:
 
 Pros of DEFINITIONs:
 - BIND, (SETF OBJECT), UNBIND, (SETF DOCUMENTATION).
+* (dref::function-arg-names (dref:arglist (dref:locate 'CL-PPCRE:SCAN '(METHOD NIL (FUNCTION T)))))
+* transcript errors not caught properly
+* auto-escape headings in docstrings

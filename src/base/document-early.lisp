@@ -157,9 +157,10 @@
               (,%arglist ,arglist)
               (,%name ,name))
          (when (and *document-link-code*
-                    ;; Anchors are not used in this case, and with large
-                    ;; HTML pages, we stress w3m less this way.
-                    (not *document-do-not-follow-references*))
+                    ;; Anchors are not used in this case (PAX-APROPOS*
+                    ;; list view), and with large result sets, we
+                    ;; stress w3m less this way.
+                    (not (eq *document-do-not-follow-references* t)))
            (anchor ,%reference ,%stream))
          (print-reference-bullet ,%reference ,%stream :name ,%name)
          (let ((*package* (or ,package (guess-package ,%reference))))

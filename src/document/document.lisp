@@ -41,25 +41,27 @@
 ;;; necessary.
 (defmacro %document (documentable stream page-specs)
   (once-only (documentable stream page-specs)
-    `(with-link-maps ()
-       (let ((*pages* (page-specs-to-pages ,documentable ,stream ,page-specs)))
-         (with-headings ()
-           ;; 1st pass
-           (let ((*first-pass* t)
-                 (*page* (last-elt *pages*)))
-             (document-documentable ,documentable (make-broadcast-stream)))
-           (finalize-headings)
-           (finalize-pages *pages*)
-           ;; 2nd pass
-           (let ((*first-pass* nil))
-             (print-toplevel-section-lists *pages*)
-             ;; Initially, send output to the default page (built for
-             ;; STREAM). Note that on PAGE-BOUNDARIES, DOCUMENT-OBJECT
-             ;; (method () (dref t)) redirects the output.
-             (with-temp-output-to-page (,stream (last-elt *pages*))
-               (document-documentable ,documentable ,stream))))
-         ;; 2.5th pass
-         (mapcar #'finalize-page-output *pages*)))))
+    `(with-documentable-bindings (documentable)
+       (with-link-maps ()
+         (let ((*pages* (page-specs-to-pages ,documentable ,stream
+                                             ,page-specs)))
+           (with-headings ()
+             ;; 1st pass
+             (let ((*first-pass* t)
+                   (*page* (last-elt *pages*)))
+               (document-documentable ,documentable (make-broadcast-stream)))
+             (finalize-headings)
+             (finalize-pages *pages*)
+             ;; 2nd pass
+             (let ((*first-pass* nil))
+               (print-toplevel-section-lists *pages*)
+               ;; Initially, send output to the default page (built for
+               ;; STREAM). Note that on PAGE-BOUNDARIES, DOCUMENT-OBJECT
+               ;; (method () (dref t)) redirects the output.
+               (with-temp-output-to-page (,stream (last-elt *pages*))
+                 (document-documentable ,documentable ,stream))))
+           ;; 2.5th pass
+           (mapcar #'finalize-page-output *pages*))))))
 
 (defvar *first-pass*)
 
@@ -607,6 +609,86 @@
         (return link)))))
 
 
+(defvar *document-tight* nil)
+
+;;; Basically, call DOCUMENT-OBJECT on every element of DOCUMENTABLE
+;;; (see MAP-DOCUMENTABLE) and add extra newlines between them
+;;; according to *DOCUMENT-TIGHT*.
+(defun document-documentable (documentable stream)
+  ;; The newline logic assumes that everything goes to the same page,
+  ;; which is currently fine because *DOCUMENT-TIGHT* is not public,
+  ;; and it's used only for @BROWSING-LIVE-DOCUMENTATION, which works
+  ;; with single pages.
+  (let ((firstp t)
+        (add-blank-p nil))
+    (map-documentable
+     (lambda (object1)
+       (when (or add-blank-p
+                 (and (not firstp)
+                      (not *document-tight*)))
+         (terpri stream))
+       (setq firstp nil)
+       (with-heading-offset (object1)
+         (document-object object1 stream))
+       (setq add-blank-p (not *document-tight*)))
+     documentable)))
+
+(defmacro with-documentable-bindings ((documentable) &body body)
+  (assert (symbolp documentable))
+  `(call-with-documentable-bindings ,documentable
+                                    (lambda (,documentable)
+                                      (declare (ignorable ,documentable))
+                                      ,@body)))
+
+;;; Call FN with each thing within DOCUMENTABLE (an argument of the
+;;; same name of DOCUMENT). Handle special PROGV forms, which allow
+;;; controlling the dynamic environment around DOCUMENT-OBJECT calls.
+;;; This is only used by PAX-APROPOS* and is not part of DOCUMENT's
+;;; contract.
+(defun map-documentable (fn documentable)
+  "**Documentables**
+
+  - The DOCUMENTABLE argument may be a DREF or anything else that is
+    LOCATEable. This includes non-DREF XREFs and first-class objects
+    such as [FUNCTION][class]s.
+
+  - If DOCUMENTABLE is a string, then it is processed like a docstring
+    in DEFSECTION. That is, with [indentation cleanup]
+    [@markdown-indentation], @CODIFICATION, and linking (see
+    @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
+
+  - Finally, DOCUMENTABLE may be a nested list of LOCATEable objects
+    and docstrings. The structure of the list is unimportant. The
+    objects in it are documented in depth-first order."
+  (if (not (listp documentable))
+      (funcall fn documentable)
+      (with-documentable-bindings (documentable)
+        (dolist (element documentable)
+          (if (atom element)
+              (funcall fn element)
+              (map-documentable fn element))))))
+
+;;; If DOCUMENTABLE is a list with a PROGV form as its first element:
+;;;
+;;;   ((PROGV <symbols-form> <values-form>)
+;;;    <reference> <string> ...)
+;;;
+;;; then establish dynamic variable bindings with PROGV, EVALuating
+;;; SYMBOLS-FORM and VALUES-FORM, and call FN with the REST of the
+;;; list.
+;;;
+;;; Else, just call FN with DOCUMENTABLE.
+(defun call-with-documentable-bindings (documentable fn)
+  (if (and (listp documentable)
+           (listp (first documentable))
+           (eq (caar documentable) 'progv))
+      (destructuring-bind (symbols-form values-form) (rest (first documentable))
+        (progv (eval symbols-form) (eval values-form)
+          (funcall fn (rest documentable))))
+      (funcall fn documentable)))
+
+
+
 (defmacro with-format ((format) &body body)
   (with-gensyms (fn)
     `(flet ((,fn ()
@@ -614,7 +696,6 @@
        (call-with-format ,format #',fn))))
 
 (defvar *html-subformat* nil)
-(defvar *document-tight* nil)
 
 (defun/autoloaded document (documentable &key (stream t) pages (format :plain))
   """Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
@@ -858,64 +939,6 @@
           collect dref))
 
 
-;;; Basically, call DOCUMENT-OBJECT on every element of DOCUMENTABLE
-;;; (see MAP-DOCUMENTABLE) and add extra newlines between them
-;;; according to *DOCUMENT-TIGHT*.
-(defun document-documentable (documentable stream)
-  ;; The newline logic assumes that everything goes to the same page,
-  ;; which is currently fine because *DOCUMENT-TIGHT* is not public,
-  ;; and it's used only for @BROWSING-LIVE-DOCUMENTATION, which works
-  ;; with single pages.
-  (let ((firstp t)
-        (add-blank-p nil))
-    (map-documentable
-     (lambda (object1)
-       (when (or add-blank-p
-                 (and (not firstp)
-                      (not *document-tight*)))
-         (terpri stream))
-       (setq firstp nil)
-       (with-heading-offset (object1)
-         (document-object object1 stream))
-       (setq add-blank-p (not *document-tight*)))
-     documentable)))
-
-;;; Call FN with each thing within OBJECT (an argument of the same
-;;; name of DOCUMENT). Handle special PROGV forms, which allow
-;;; controlling the dynamic environment around DOCUMENT-OBJECT calls.
-;;; This is only used by PAX-APROPOS* and is not part of DOCUMENT's
-;;; contract.
-(defun map-documentable (fn object)
-  "**Documentables**
-
-  - The DOCUMENTABLE argument may be a DREF or anything else that is
-    LOCATEable. This includes non-DREF XREFs and first-class objects
-    such as [FUNCTION][class]s.
-
-  - If DOCUMENTABLE is a string, then it is processed like a docstring
-    in DEFSECTION. That is, with [indentation cleanup]
-    [@markdown-indentation], @CODIFICATION, and linking (see
-    @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
-
-  - Finally, DOCUMENTABLE may be any nested list of LOCATEable objects
-    and docstrings. The structure of the list is unimportant. The
-    objects in it are documented in a depth-first order."
-  (cond ((not (listp object))
-         (funcall fn object))
-        ;; Handle the secret ((PROGV <symbols-form> <values-form>)
-        ;;  <reference> <string> ...) trick.
-        ((and (listp (first object))
-              (eq (caar object) 'progv))
-         (destructuring-bind (symbols-form values-form) (rest (first object))
-           (progv (eval symbols-form) (eval values-form)
-             (map-documentable fn (rest object)))))
-        (t
-         (dolist (element object)
-           (if (atom element)
-               (funcall fn element)
-               (map-documentable fn element))))))
-
-
 ;;;; DOCUMENT-OBJECT
 
 (defvar *document-do-not-follow-references* nil)
@@ -947,7 +970,9 @@
            (terpri stream))))
   (:method :around ((xref xref) stream)
     (let ((*documenting-reference* xref))
-      (if *document-do-not-follow-references*
+      (if (or (eq *document-do-not-follow-references* t)
+              (member (xref-locative-type xref)
+                      *document-do-not-follow-references*))
           (documenting-reference (stream
                                   :reference xref
                                   :arglist (xref-locative-args xref)))
@@ -1507,9 +1532,15 @@
                        (warn "~@<~A~:@>" e))
                      transcript))
                  (apply #'transcribe transcript nil :update-only t args))))
-      (if dynenv
-          (funcall dynenv #'call-it)
-          (call-it)))))
+      (cond ((and dynenv (ignore-errors (fdefinition dynenv)))
+             (funcall dynenv #'call-it))
+            (t
+             (when dynenv
+               (funcall (if *document-open-linking*
+                            'warn-in-document-context
+                            'error-in-document-context)
+                        "Undefined :DYNENV function ~S" dynenv))
+             (call-it))))))
 
 ;;; Undo the :EMPH parsing for code references. E.g. (:EMPH "XXX") ->
 ;;; "*XXX*" if "*XXX*" is to be codified according to

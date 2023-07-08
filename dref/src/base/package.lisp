@@ -41,6 +41,17 @@
 
 (in-package :dref-ext)
 
+(defun dref-std-env (fn)
+  (let ((*package* (find-package :dref)))
+    ;; FIXME: Add all others too.
+    (progv '(pax::*document-downcase-uppercase-code*
+             pax::*transcribe-check-consistency*)
+        '(nil #+sbcl t #-sbcl nil)
+      (handler-bind ((warning #'muffle-warning))
+        (unwind-protect
+             (funcall fn)
+          (unintern '*my-var* (find-package :dref)))))))
+
 (in-readtable pythonic-string-syntax)
 
 (defsection @extending-dref (:title "Extending DRef"
@@ -155,6 +166,8 @@
 ;;;; package.
 
 (in-package :dref)
+
+(import 'dref-ext::dref-std-env)
 
 (in-readtable pythonic-string-syntax)
 

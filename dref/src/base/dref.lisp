@@ -87,16 +87,6 @@
   (dref-apropos "ate-err" :package :dref :external-only t)
   ==> (#<DREF LOCATE-ERROR CONDITION> #<DREF LOCATE-ERROR FUNCTION>)
   ```""")
-
-(defun dref-std-env (fn)
-  ;; FIXME: Add all others too.
-  (progv '(pax::*document-downcase-uppercase-code*
-           pax::*transcribe-check-consistency*)
-      '(nil #+sbcl t #-sbcl nil)
-    (handler-bind ((warning #'muffle-warning))
-      (unwind-protect
-           (funcall fn)
-        (unintern '*my-var* (find-package :dref))))))
 
 
 (defsection @glossary (:title "Glossary")
@@ -184,11 +174,11 @@
    The locative is normalized by replacing single-element lists with
    their only element:
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (make-xref 'print 'function)
   ==> #<XREF PRINT FUNCTION>
   ```
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (make-xref 'print '(function))
   ==> #<XREF PRINT FUNCTION>
   ```"))
@@ -216,12 +206,12 @@
     included in LOCATIVE-ARGS as is the case with INITFORM argument of
     the VARIABLE locative:
 
-    ```cl-transcript
+    ```cl-transcript (:dynenv dref-std-env)
     (locate '*standard-output* '(variable "see-below"))
     ==> #<DREF *STANDARD-OUTPUT* VARIABLE>
     ```
 
-    ```cl-transcript
+    ```cl-transcript (:dynenv dref-std-env)
     (dref-origin (locate '*standard-output* '(variable "see-below")))
     ==> #<XREF *STANDARD-OUTPUT* (VARIABLE "see-below")>
     ```

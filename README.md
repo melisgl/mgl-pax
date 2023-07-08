@@ -981,9 +981,9 @@ section containing the definition with `point` in it. See
       in [`DEFSECTION`][72b4]. That is, with [indentation cleanup][718f], [Codification][f1ab], and linking (see
       [Linking to Code][1865], [Linking to the Hyperspec][7cc3]).
     
-    - Finally, `DOCUMENTABLE` may be any nested list of `LOCATE`able objects
+    - Finally, `DOCUMENTABLE` may be a nested list of `LOCATE`able objects
       and docstrings. The structure of the list is unimportant. The
-      objects in it are documented in a depth-first order.
+      objects in it are documented in depth-first order.
     
     **Pages**
     

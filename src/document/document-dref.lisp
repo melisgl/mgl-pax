@@ -358,19 +358,6 @@
                      (format stream footer-nl)
                      (format stream "~%"))))))))))
 
-(defun warn-in-document-context (format-control &rest format-args)
-  (declare (special *objects-being-documented*))
-  (apply #'warn
-         (with-output-to-string (out)
-           (write-string "~@<" out)
-           (write-string format-control out)
-           (dolist (object *objects-being-documented*)
-             (when (typep object 'dref)
-               (let ((*package* (find-package :keyword)))
-                 (format out "~%  while documenting ~S" object))))
-           (write-string "~:@>" out))
-         format-args))
-
 (defun file-subseq (pathname &optional start end)
   (with-open-file (stream pathname)
     (let ((*print-pretty* nil)
@@ -404,3 +391,33 @@
                             ;; Are dspecs readable?
                             (let ((*print-readably* nil))
                               (prin1-to-string (first locative-args)))))))))
+
+
+(defun warn-in-document-context (format-control &rest format-args)
+  (warn-or-error-in-document-context #'warn format-control format-args))
+
+(defun error-in-document-context (format-control &rest format-args)
+  (warn-or-error-in-document-context #'error format-control format-args))
+
+#+nil
+(defun warn-or-error-in-document-context (fn format-control format-args)
+  (declare (special *objects-being-documented*))
+  (apply fn (concatenate 'string
+                         "~@<" format-control
+                         "~{ while documenting ~S~^~%~}~:@>")
+         (append format-args
+                 (list (loop for object in *objects-being-documented*
+                             when (typep object 'dref)
+                               collect object)))))
+
+(defun warn-or-error-in-document-context (fn format-control format-args)
+  (declare (special *objects-being-documented*))
+  (apply fn(with-output-to-string (out)
+             (write-string "~@<" out)
+             (write-string format-control out)
+             (dolist (object *objects-being-documented*)
+               (when (typep object 'dref)
+                 (let ((*package* (find-package :keyword)))
+                   (format out "~%  while documenting ~S" object))))
+             (write-string "~:@>" out))
+         format-args))
