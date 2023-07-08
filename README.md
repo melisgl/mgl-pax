@@ -818,14 +818,14 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
     - *sections*:
     
         - *by section number*: `[3.4][clhs]` or `[3.4][(clhs
-        section)]` ([3.4][e442])
+           section)]` ([3.4][e442])
     
         - *by section title* (case-insensitive, substring match):
-        `[lambda lists][clhs]` or `[lambda lists][(clhs
-        section)]` ([lambda lists][e442])
+           `[lambda lists][clhs]` or `[lambda lists][(clhs
+           section)]` ([lambda lists][e442])
     
         - *by filename*: `[03_d][clhs]` or `[03_d][(clhs
-        section)]` ([03\_d][e442])
+           section)]` ([03\_d][e442])
     
     As the above examples show, the `NESTED-LOCATIVE` argument of the [`CLHS`][ed5f]
     locative may be omitted. In that case, definitions, glossary terms,

@@ -59,6 +59,7 @@
 (deftest test-document ()
   (test-urlencode)
   (test-transform-tree)
+  (test-round-up-indentation)
   (test-codify)
   (test-names)
   (test-downcasing)
@@ -138,6 +139,29 @@
                                                 (listp a)
                                                 (not (listp a))))
                                       '(1 (2 (3 4)))))))
+
+
+(deftest test-round-up-indentation ()
+  (flet ((test1 (test-name in out)
+           (with-test (nil :name test-name)
+             (is (equal (pax::round-up-indentation (format nil in))
+                        (format nil out))))))
+    (test1 "0" "xxx~%~%(1~%2~%" "xxx~%~%(1~%2~%")
+    (test1 "1" "xxx~%~% (1~% 2~%"         "xxx~%~%    (1~%    2~%")
+    (test1 "2" "xxx~%~%  (1~%  2~%"       "xxx~%~%    (1~%    2~%")
+    (test1 "3" "xxx~%~%   (1~%   2~%"     "xxx~%~%    (1~%    2~%")
+    (test1 "4" "xxx~%~%    (1~%    2~%"   "xxx~%~%    (1~%    2~%")
+    (test1 "5" "xxx~%~%     (1~%     2~%" "xxx~%~%        (1~%        2~%")
+    (test1 "1/6" "xxx~%~% (1~%      2~%"  "xxx~%~%    (1~%         2~%")
+    (test1 "1/6" "xxx~%~% (1~%      2~%"  "xxx~%~%    (1~%         2~%")
+    (test1 "no newline" "xxx" "xxx")
+    (test1 "no newline 2" "xxx~%~% (1" "xxx~%~%    (1")
+    (test1 "consecutive blocks"
+           "xxx~%~% (1~%~% (2~%"
+           "xxx~%~%    (1~%~%    (2~%")
+    (test1 "simple" "xxx~%~% (1~%~%xxx" "xxx~%~%    (1~%~%xxx")
+    (test1 "comment" "xxx~%~% ;1~%~%xxx" "xxx~%~%    ;1~%~%xxx")))
+
 
 
 (deftest test-codify ()

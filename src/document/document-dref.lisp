@@ -11,19 +11,19 @@
   some DREF::@LOCATIVE-TYPES defined in DRef and the @PAX-LOCATIVES,
   special provisions have been made.
 
-   - [document-dref (method () (variable-dref t))][docstring]
-   - [document-dref (method () (setf-dref t))][docstring]
-   - [document-dref (method () (method-dref t))][docstring]
-   - [document-dref (method () (accessor-dref t))][docstring]
-   - [document-dref (method () (structure-accessor-dref t))][docstring]
-   - [document-dref (method () (class-dref t))][docstring]
-   - [document-dref (method () (asdf-system-dref t))][docstring]
-   - [document-dref (method () (section-dref t))][docstring]
-   - [document-dref (method () (glossary-term-dref t))][docstring]
-   - [document-dref (method () (go-dref t))][docstring]
-   - [document-dref (method () (include-dref t))][docstring]
-   - [document-dref (method () (clhs-dref t))][docstring]
-   - [document-dref (method () (unknown-dref t))][docstring]")
+  - [document-dref (method () (variable-dref t))][docstring]
+  - [document-dref (method () (setf-dref t))][docstring]
+  - [document-dref (method () (method-dref t))][docstring]
+  - [document-dref (method () (accessor-dref t))][docstring]
+  - [document-dref (method () (structure-accessor-dref t))][docstring]
+  - [document-dref (method () (class-dref t))][docstring]
+  - [document-dref (method () (asdf-system-dref t))][docstring]
+  - [document-dref (method () (section-dref t))][docstring]
+  - [document-dref (method () (glossary-term-dref t))][docstring]
+  - [document-dref (method () (go-dref t))][docstring]
+  - [document-dref (method () (include-dref t))][docstring]
+  - [document-dref (method () (clhs-dref t))][docstring]
+  - [document-dref (method () (unknown-dref t))][docstring]")
 
 (defmethod document-dref ((dref dref) stream)
   "By default, DREFs are documented in the following format.

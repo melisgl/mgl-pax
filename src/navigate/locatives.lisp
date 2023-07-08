@@ -401,15 +401,15 @@
 
   - *sections*:
 
-       - *by section number*: `[3.4][clhs]` or `[3.4][(clhs
-          section)]` ([3.4][clhs])
+      - *by section number*: `[3.4][clhs]` or `[3.4][(clhs
+         section)]` ([3.4][clhs])
 
-       - *by section title* (case-insensitive, substring match):
-          `[lambda lists][clhs]` or `[lambda lists][(clhs
-          section)]` ([lambda lists][clhs])
+      - *by section title* (case-insensitive, substring match):
+         `[lambda lists][clhs]` or `[lambda lists][(clhs
+         section)]` ([lambda lists][clhs])
 
-       - *by filename*: `[03_d][clhs]` or `[03_d][(clhs
-          section)]` ([03_d][clhs])
+      - *by filename*: `[03_d][clhs]` or `[03_d][(clhs
+         section)]` ([03_d][clhs])
 
   As the above examples show, the NESTED-LOCATIVE argument of the CLHS
   locative may be omitted. In that case, definitions, glossary terms,
