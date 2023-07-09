@@ -170,9 +170,7 @@
   FORMAT. FORMAT-AND-ARGS may be NIL."
   (error 'locate-error
          :object *locating-object*
-         :message (if format-and-args
-                      (apply #'format nil format-and-args)
-                      nil)))
+         :message format-and-args))
 
 (defvar *dref-actualizers* ())
 

@@ -323,15 +323,20 @@
   (:documentation "Signalled by LOCATE when the definition cannot be
   found, and ERRORP is true.")
   (:report (lambda (condition stream)
-             (let ((*package* (find-package :cl))
-                   (object (locate-error-object condition)))
+             (let ((object (locate-error-object condition)))
                (if (typep object 'xref)
                    (format stream "~@<Could not locate ~S~@[ ~S~].~@[ ~A~]~:@>"
                            (xref-name object) (xref-locative object)
-                           (locate-error-message condition))
+                           (format-format-and-args
+                            (locate-error-message condition)))
                    (format stream "~@<Could not locate ~S.~@[ ~A~]~:@>"
                            object
-                           (locate-error-message condition)))))))
+                           (format-format-and-args
+                            (locate-error-message condition))))))))
+
+(defun format-format-and-args (format-and-args)
+  (when format-and-args
+    (apply #'format nil format-and-args)))
 
 ;;; This gets clobbered with an empty function when DREF/AUTOLOAD is
 ;;; loaded.
@@ -377,13 +382,13 @@
   ```cl-transcript (:dynenv dref-std-env)
   (locate 'no-such-function 'function)
   .. debugger invoked on LOCATE-ERROR:
-  ..   Could not locate DREF::NO-SUCH-FUNCTION FUNCTION.
+  ..   Could not locate NO-SUCH-FUNCTION FUNCTION.
   ..   NO-SUCH-FUNCTION is not a symbol naming a function.
   ```
   ```cl-transcript (:dynenv dref-std-env)
   (locate 'print '(function xxx))
   .. debugger invoked on LOCATE-ERROR:
-  ..   Could not locate PRINT #'DREF::XXX.
+  ..   Could not locate PRINT #'XXX.
   ..   Bad arguments (XXX) for locative FUNCTION with lambda list NIL.
   ```
   ```cl-transcript (:dynenv dref-std-env)

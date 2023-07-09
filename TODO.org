@@ -118,6 +118,8 @@ Cons of DEFINITIONS:
 
 Pros of DEFINITIONs:
 - BIND, (SETF OBJECT), UNBIND, (SETF DOCUMENTATION).
-* (dref::function-arg-names (dref:arglist (dref:locate 'CL-PPCRE:SCAN '(METHOD NIL (FUNCTION T)))))
-* transcript errors not caught properly
-* auto-escape headings in docstrings
+* BUG (dref::function-arg-names (dref:arglist (dref:locate 'CL-PPCRE:SCAN '(METHOD NIL (FUNCTION T)))))
+* BUG transcript: "debugger invoked on" is treated like output
+* BUG auto-escape some headings in docstrings
+* set package to home section's
+when documenting a function ref

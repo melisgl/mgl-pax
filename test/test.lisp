@@ -9,7 +9,7 @@
 (defun test (&key (debug nil) (print 'unexpected) (describe *describe*))
   ;; Bind *PACKAGE* so that names of tests printed have package names,
   ;; and M-. works on them in Slime.
-  (pax::with-all-sections-cached ()
+  (pax::with-sections-cache ()
     (let ((*package* (find-package :common-lisp))
           (*print-duration* nil)
           (*print-compactly* t)

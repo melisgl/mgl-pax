@@ -76,6 +76,7 @@
                              (:file "util")
                              (:file "parse")
                              (:file "locatives")
+                             (:file "sections")
                              (:file "navigate"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
 

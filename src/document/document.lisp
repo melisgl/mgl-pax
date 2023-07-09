@@ -751,7 +751,7 @@
   ;; situations, but when documenting PAX itself, it would cause the
   ;; documentables to change from the 1st pass to the 2nd.
   (ensure-transcribe-loaded)
-  (with-all-sections-cached ()
+  (with-sections-cache ()
     (with-format (format)
       (let* ((*print-right-margin* (or *print-right-margin* 80))
              (3bmd-code-blocks:*code-blocks* t)

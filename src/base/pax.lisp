@@ -24,7 +24,11 @@
 (defun section-entries (section)
   "A list of markdown docstrings and XREFs in the order they occurred
   in DEFSECTION."
-  (mapcar #'section-entry-to-xref (slot-value section '%entries)))
+  (let ((%entries (slot-value section '%entries)))
+    (if (eq (first %entries) '%to-xref)
+        (setf (slot-value section '%entries)
+              (mapcar #'section-entry-to-xref (rest %entries)))
+        %entries)))
 
 (defun section-entry-to-xref (entry)
   (if (listp entry)
