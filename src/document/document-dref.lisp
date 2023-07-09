@@ -46,7 +46,10 @@
                                  ((:macro :deftype)
                                   (dref::macro-arg-names arglist))
                                  ((:ordinary)
-                                  (dref::function-arg-names arglist)))
+                                  (or
+                                   (ignore-errors
+                                    (dref::function-arg-names arglist))
+                                   (dref::macro-arg-names arglist))))
           (document-docstring docstring stream))))))
 
 (defmethod document-dref ((dref variable-dref) stream)

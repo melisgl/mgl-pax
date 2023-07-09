@@ -881,7 +881,8 @@ This is [Self-referencing][e042].
 
 (deftest test-function ()
   (test-function-args)
-  (test-function/encapsulated))
+  (test-function/encapsulated)
+  (test-non-function-function-arglist))
 
 (deftest test-function-args ()
   (with-failure-expected ((alexandria:featurep :clisp))
@@ -934,6 +935,20 @@ This is [Self-referencing][e042].
                                  'failure))
       (signals-not (locate-error)
         (check-document #'encapsulated-generic-function expected)))))
+
+(deftest test-non-function-function-arglist ()
+  #+sbcl
+  (is (match-values (arglist (locate 'sb-c::ir1-convert-nlx-protect 'function))
+        (equal * '(sb-c::protected &body sb-c::cleanup))
+        (eq * :ordinary)))
+  ;; Check that DOCUMENT doesn't fail when the function lambda list is
+  ;; really a macro lambda list.
+  #+sbcl
+  (check-document #'sb-c::ir1-convert-nlx-protect
+                  "<a id=\"SB-C:IR1-CONVERT-NLX-PROTECT%20FUNCTION\"></a>
+
+- [function] **SB-C::IR1-CONVERT-NLX-PROTECT** *PROTECTED &BODY CLEANUP*
+"))
 
 
 (deftest test-generic-function ()
