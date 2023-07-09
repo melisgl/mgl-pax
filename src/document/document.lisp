@@ -2414,8 +2414,7 @@
 (defun print-table-of-contents (object stream)
   (when (and (zerop *heading-level*)
              (plusp *document-max-table-of-contents-level*))
-    (let ((rest (member object *headings* :key #'heading-object)))
-      (assert (= *heading-level* (heading-level (first rest))))
+    (let ((rest (list-headings object *heading-level*)))
       ;; Don't generate a table of contents if it's empty.
       (when (and (second rest)
                  (< *heading-level* (heading-level (second rest))))
@@ -2427,6 +2426,15 @@
                            *document-max-table-of-contents-level*)
                    (print-table-of-contents-entry heading stream)))
         (terpri stream)))))
+
+;;; Return the tail of *HEADINGS* from OBJECT at HEADING-LEVEL or NIL.
+(defun list-headings (object heading-level)
+  ;; OBJECT may be DOCUMENTed multiple times at different depths. See
+  ;; MGL-PAX-TEST::TEST-TABLE-OF-CONTENTS-REAPATED-SECTION-DEPTH.
+  (member-if (lambda (heading)
+               (and (eq (heading-object heading) object)
+                    (= (heading-level heading) heading-level)))
+             *headings*))
 
 (defun print-table-of-contents-entry (heading stream)
   (let ((object (heading-object heading))

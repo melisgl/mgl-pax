@@ -1467,4 +1467,37 @@ example section
   [74ce]: #MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"`MGL-PAX-TEST::@PARENT-SECTION-WITHOUT-TITLE`\"
   [bb1c]: #MGL-PAX-TEST:@TEST-EXAMPLES%20MGL-PAX:SECTION \"`MGL-PAX-TEST::@TEST-EXAMPLES`\"
   [eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"`MGL-PAX-TEST::@SECTION-WITHOUT-TITLE`\"
+")
+  (test-table-of-contents-reapated-section-depth))
+
+(deftest test-table-of-contents-reapated-section-depth ()
+  ;; When the same section is documented twice: first as a subsection
+  ;; of another section, second directly as itself, then determining
+  ;; its heading depth is trickier.
+  (check-document (list @parent-section-without-title @section-without-title)
+                  "- [`@PARENT-SECTION-WITHOUT-TITLE`][74ce]
+- [`@SECTION-WITHOUT-TITLE`][eeac]
+
+<a id=\"MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
+
+# `@PARENT-SECTION-WITHOUT-TITLE`
+
+## Table of Contents
+
+- [1 `@SECTION-WITHOUT-TITLE`][eeac]
+
+###### \\[in package MGL-PAX-TEST\\]
+<a id=\"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
+
+## 1 `@SECTION-WITHOUT-TITLE`
+
+
+<a id=\"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
+
+## `@SECTION-WITHOUT-TITLE`
+
+###### \\[in package MGL-PAX-TEST\\]
+
+  [74ce]: #MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"`MGL-PAX-TEST::@PARENT-SECTION-WITHOUT-TITLE`\"
+  [eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"`MGL-PAX-TEST::@SECTION-WITHOUT-TITLE`\"
 "))
