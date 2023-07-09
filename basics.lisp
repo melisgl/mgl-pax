@@ -82,7 +82,7 @@
                       :title ,title
                       :link-title-to ',link-title-to
                       :entries ',(and (not discard-documentation-p)
-                                      entries)))))
+                                      (cons '%to-xref entries))))))
 
 (defclass section ()
   ((name
