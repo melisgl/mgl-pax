@@ -252,7 +252,7 @@
       ("asdf:system mgl-pax" "")
       ("package mgl-pax"
        "(eval-when (:compile-toplevel :load-toplevel :execute)"
-       "(cl:defpackage")
+       "(defpackage :mgl-pax")
       ;; Source location not implemented
       ;;("readtable xxx-rt" "(defreadtable xxx-rt")
       ("section mgl-pax::@pax-manual" "(defsection @pax-manual ")

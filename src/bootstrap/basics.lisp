@@ -284,7 +284,12 @@
                   (sb-ext:muffle-conditions sb-kernel::package-at-variance))
        (handler-bind
            (#+sbcl (sb-kernel::package-at-variance #'muffle-warning))
-         (cl:defpackage ,package ,@options)))))
+         (cl:defpackage ,package ,@options)
+         ;; https://abcl.org/trac/ticket/16
+         #+abcl
+         ,@(loop for option in options
+                 when (eq (first option) :use)
+                   collect `(use-package ',(rest option) ',package))))))
 
 
 ;;; Arrange for the home package of these LOCATIVEs (exported by DRef)

@@ -1,15 +1,10 @@
 (in-package :mgl-pax)
 
-;;;; Do what was deferred until DREF is loaded.
+;;;; USE-PACKAGEs that were not available in MGL-PAX/BOOTSTRAP.
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (use-package '#:named-readtables)
-  (use-package '#:pythonic-string-reader)
-  ;; These were interned in basics.lisp.
-  (shadowing-import 'dref-ext:locative-args)
-  (shadowing-import 'dref-ext:locative-type)
-  (use-package '#:dref)
-  (use-package '#:dref-ext))
+  (use-package '#:pythonic-string-reader))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   ;; For backward compatibility with pre-DRef PAX, reexport these DRef
