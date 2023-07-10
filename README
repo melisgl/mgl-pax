@@ -332,7 +332,7 @@ Now let's examine the most important pieces.
     is bound to a SECTION object. By convention, section names
     start with the character `@`. See @INTRODUCTION for an example.
     
-    ##### Entries
+    **Entries**
     
     ENTRIES consists of docstrings and references in any order.
     Docstrings are arbitrary strings in markdown format.
@@ -351,7 +351,7 @@ Now let's examine the most important pieces.
     The references are not LOCATEd until documentation is generated, so
     they may refer to things yet to be defined.
     
-    ##### Exporting
+    **Exporting**
     
     If EXPORT is true (the default), NAME and the @NAMEs of references
     among ENTRIES which are SYMBOLs are candidates for exporting. A
@@ -366,7 +366,7 @@ Now let's examine the most important pieces.
     confounding documentation and exporting is to force documentation of
     all exported symbols.
     
-    ##### Misc
+    **Misc**
     
     TITLE is a string containing markdown or NIL. If non-NIL, it
     determines the text of the heading in the generated output.
@@ -798,6 +798,8 @@ section containing the definition with `point` in it. See
 
 ## Generating Documentation
 
+### The DOCUMENT Function
+
 - [function] DOCUMENT DOCUMENTABLE &KEY (STREAM T) PAGES (FORMAT :PLAIN)
 
     Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
@@ -820,7 +822,7 @@ section containing the definition with `point` in it. See
     To generate the documentation for separate libraries with automatic
     cross-links:
     
-        (document (list @cube-manual @mat-manual) :format :markdown)
+        (document (list pax::@pax-manual dref::@dref-manual) :format :markdown)
     
     See @DOCUMENTATION-UTILITIES for more.
     
@@ -834,45 +836,45 @@ section containing the definition with `point` in it. See
     @LINKING-TO-SECTIONS, and
     @MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES.
     
-    **Return Value**
-    
-    If PAGES are NIL, then DOCUMENT - like CL:FORMAT - returns a
-    string (when STREAM is NIL) else NIL.
-    
-    If PAGES, then a list of output designators are returned, one for
-    each non-empty page (to which some output has been written), which
-    are determined as follows.
-    
-    - The string itself if the output was to a string.
-    
-    - The stream if the output was to a stream.
-    
-    - The pathname of the file if the output was to a file.
-    
-    If the default page given by the STREAM argument of DOCUMENT was
-    written to, then its output designator is the first element of the
-    returned list. The rest of the designators correspond to the
-    non-empty pages in the PAGES argument of DOCUMENT in that order.
-    
-    **Documentables**
-    
-    - The DOCUMENTABLE argument may be a DREF or anything else that is
-      LOCATEable. This includes non-DREF XREFs and first-class objects
-      such as FUNCTIONs.
-    
-    - If DOCUMENTABLE is a string, then it is processed like a docstring
-      in DEFSECTION. That is, with indentation cleanup, @CODIFICATION, and linking (see
-      @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
-    
-    - Finally, DOCUMENTABLE may be a nested list of LOCATEable objects
-      and docstrings. The structure of the list is unimportant. The
-      objects in it are documented in depth-first order.
-    
-    **Extensions**
-    
-    See @EXTENSION-API and DOCUMENT-DREF.
+    For the details, see the following sections, starting with
+    @DOCUMENTABLES. Also see @EXTENSION-API and DOCUMENT-DREF.
 
-### Pages
+#### Documentables
+
+- The DOCUMENTABLE argument may be a DREF or anything else that is
+  LOCATEable. This includes non-DREF XREFs and first-class objects
+  such as FUNCTIONs.
+
+- If DOCUMENTABLE is a string, then it is processed like a docstring
+  in DEFSECTION. That is, with indentation cleanup, @CODIFICATION, and linking (see
+  @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
+
+- Finally, DOCUMENTABLE may be a nested list of LOCATEable objects
+  and docstrings. The structure of the list is unimportant. The
+  objects in it are documented in depth-first order.
+
+
+#### Return Values
+
+If PAGES are NIL, then DOCUMENT - like CL:FORMAT - returns a
+string (when STREAM is NIL) else NIL.
+
+If PAGES, then a list of output designators are returned, one for
+each non-empty page (to which some output has been written), which
+are determined as follows.
+
+- The string itself if the output was to a string.
+
+- The stream if the output was to a stream.
+
+- The pathname of the file if the output was to a file.
+
+If the default page given by the STREAM argument of DOCUMENT was
+written to, then its output designator is the first element of the
+returned list. The rest of the designators correspond to the
+non-empty pages in the PAGES argument of DOCUMENT in that order.
+
+#### Pages
 
 The PAGES argument of DOCUMENT is to create multi-page documents
 by routing some of the generated output to files, strings or
@@ -964,7 +966,7 @@ PAGES may look something like this:
 ```
 
 
-### Package and Readtable
+#### Package and Readtable
 
 While generating documentation, symbols may be read (e.g. from
 docstrings) and printed. What values of *PACKAGE* and *READTABLE*
@@ -996,7 +998,7 @@ printed, for printing of the arglist and the docstring.
 In the above, the `<!>` marks the place where *PACKAGE* and
 *READTABLE* are bound.
 
-#### Home Section
+##### Home Section
 
 The home section of an object is a SECTION that contains the
 object's definition in its SECTION-ENTRIES or NIL. In the

@@ -3,9 +3,7 @@
 (in-readtable pythonic-string-syntax)
 
 (defsection @generating-documentation (:title "Generating Documentation")
-  (document function)
-  (@pages section)
-  (@package-and-readtable section)
+  (@document-function section)
   (mgl-pax/document asdf:system)
   (@browsing-live-documentation section)
   (@markdown-support section)
@@ -611,6 +609,20 @@
         (return link)))))
 
 
+(defsection @documentables (:title "Documentables")
+ "- The DOCUMENTABLE argument may be a DREF or anything else that is
+    LOCATEable. This includes non-DREF XREFs and first-class objects
+    such as [FUNCTION][class]s.
+
+  - If DOCUMENTABLE is a string, then it is processed like a docstring
+    in DEFSECTION. That is, with [indentation cleanup]
+    [@markdown-indentation], @CODIFICATION, and linking (see
+    @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
+
+  - Finally, DOCUMENTABLE may be a nested list of LOCATEable objects
+    and docstrings. The structure of the list is unimportant. The
+    objects in it are documented in depth-first order.")
+
 (defvar *document-tight* nil)
 
 ;;; Basically, call DOCUMENT-OBJECT on every element of DOCUMENTABLE
@@ -648,20 +660,6 @@
 ;;; This is only used by PAX-APROPOS* and is not part of DOCUMENT's
 ;;; contract.
 (defun map-documentable (fn documentable)
-  "**Documentables**
-
-  - The DOCUMENTABLE argument may be a DREF or anything else that is
-    LOCATEable. This includes non-DREF XREFs and first-class objects
-    such as [FUNCTION][class]s.
-
-  - If DOCUMENTABLE is a string, then it is processed like a docstring
-    in DEFSECTION. That is, with [indentation cleanup]
-    [@markdown-indentation], @CODIFICATION, and linking (see
-    @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
-
-  - Finally, DOCUMENTABLE may be a nested list of LOCATEable objects
-    and docstrings. The structure of the list is unimportant. The
-    objects in it are documented in depth-first order."
   (if (not (listp documentable))
       (funcall fn documentable)
       (with-documentable-bindings (documentable)
@@ -691,6 +689,13 @@
 
 
 
+(defsection @document-function (:title "The DOCUMENT Function")
+  (document function)
+  (@documentables section)
+  (@document-return section)
+  (@pages section)
+  (@package-and-readtable section))
+
 (defmacro with-format ((format) &body body)
   (with-gensyms (fn)
     `(flet ((,fn ()
@@ -703,7 +708,7 @@
   """Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
   FORMAT is a [3BMD][3bmd] output format (currently one of :MARKDOWN,
   :HTML and :PLAIN). STREAM may be a [STREAM][type] object, T or NIL
-  as with CL:FORMAT.
+  as with [CL:FORMAT][].
 
   To look up the documentation of the DOCUMENT function itself:
 
@@ -720,7 +725,7 @@
   To generate the documentation for separate libraries with automatic
   cross-links:
 
-      (document (list @cube-manual @mat-manual) :format :markdown)
+      (document (list pax::@pax-manual dref::@dref-manual) :format :markdown)
 
   See @DOCUMENTATION-UTILITIES for more.
 
@@ -734,13 +739,8 @@
   @LINKING-TO-SECTIONS, and
   @MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES.
 
-  [document-return function][docstring]
-
-  [map-documentable function][docstring]
-
-  **Extensions**
-
-  See @EXTENSION-API and DOCUMENT-DREF."""
+  For the details, see the following sections, starting with
+  @DOCUMENTABLES. Also see @EXTENSION-API and DOCUMENT-DREF."""
   ;; Autoloading mgl-pax/transcribe on demand would be enough for most
   ;; situations, but when documenting PAX itself, it would cause the
   ;; documentables to change from the 1st pass to the 2nd.
@@ -1069,10 +1069,8 @@
         (process-title (let ((*print-case* :upcase))
                          (prin1-to-string (xref-name ref)))))))
 
-(defun document-return (stream outputs)
-  "**Return Value**
-
-  If PAGES are NIL, then DOCUMENT - like CL:FORMAT - returns a
+(defsection @document-return (:title "Return Values")
+  "If PAGES are NIL, then DOCUMENT - like CL:FORMAT - returns a
   string (when STREAM is NIL) else NIL.
 
   If PAGES, then a list of output designators are returned, one for
@@ -1088,7 +1086,9 @@
   If the default page given by the STREAM argument of DOCUMENT was
   written to, then its output designator is the first element of the
   returned list. The rest of the designators correspond to the
-  non-empty pages in the PAGES argument of DOCUMENT in that order."
+  non-empty pages in the PAGES argument of DOCUMENT in that order.")
+
+(defun document-return (stream outputs)
   (let ((default-page-output (last-elt outputs))
         (page-outputs (remove nil (butlast outputs))))
     (cond (page-outputs

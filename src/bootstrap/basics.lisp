@@ -19,7 +19,7 @@
   is bound to a [SECTION][class] object. By convention, section names
   start with the character `@`. See @INTRODUCTION for an example.
 
-  ##### Entries
+  **Entries**
 
   ENTRIES consists of docstrings and references in any order.
   Docstrings are arbitrary strings in markdown format.
@@ -38,7 +38,7 @@
   The references are not LOCATEd until documentation is generated, so
   they may refer to things yet to be defined.
 
-  ##### Exporting
+  **Exporting**
 
   If EXPORT is true (the default), NAME and the @NAMEs of references
   among ENTRIES which are SYMBOLs are candidates for exporting. A
@@ -53,7 +53,7 @@
   confounding documentation and exporting is to force documentation of
   all exported symbols.
 
-  ##### Misc
+  **Misc**
 
   TITLE is a string containing markdown or NIL. If non-NIL, it
   determines the text of the heading in the generated output.
