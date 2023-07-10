@@ -88,7 +88,7 @@
   :bug-tracker ""
   :source-control ""
   :description "Documentation generation support for MGL-PAX."
-  :long-description "Do not declar a dependency on this system. It is
+  :long-description "Do not declare a dependency on this system. It is
   autoloaded. See MGL-PAX::@GENERATING-DOCUMENTATION."
   :depends-on ("alexandria" "3bmd" "3bmd-ext-code-blocks" "colorize" "md5"
                "mgl-pax/navigate" "trivial-utf-8")

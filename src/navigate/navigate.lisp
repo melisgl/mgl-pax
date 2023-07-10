@@ -177,6 +177,7 @@
 ;;; This is also used by CURRENT-DEFINITION-PAX-URL-FOR-EMACS.
 (defun find-current-definition (buffer filename possibilities)
   (loop for (name snippet pos) in possibilities
+        ;; FIXME: use non-interning read
         for object = (ignore-errors (read-from-string name))
           thereis (and object (guess-current-definition
                                object buffer

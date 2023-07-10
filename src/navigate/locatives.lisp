@@ -103,7 +103,7 @@
 ;;;;; GO locative
 
 (define-pseudo-locative-type go ((name locative))
-  """Redirect to a definition in the context of the @REFERENCE
+  """Redirect to a definition in the context of the DREF::@REFERENCE
   designated by NAME and LOCATIVE. This pseudolocative is intended for
   things that have no explicit global definition.
 
