@@ -284,10 +284,14 @@
       (reverse names))))
 
 (defun method-arglist (method)
-  (let ((arglist (swank-mop:method-lambda-list method)))
+  (let ((arglist (swank-mop:method-lambda-list method))
+        (seen-special-p nil))
     ;; Some implementations include the specializers. Remove them.
     (loop for arg in arglist
-          collect (if (and (listp arg)
+          do (when (member arg '(&key &optional &rest &aux &allow-other-keys))
+               (setq seen-special-p t))
+          collect (if (and (not seen-special-p)
+                           (listp arg)
                            (= (length arg) 2))
                       (first arg)
                       arg))))

@@ -94,7 +94,9 @@
   (:method :around (x &key)
     (declare (ignore x)))
   (:method :after (x &key y)
-    (declare (ignore x y))))
+    (declare (ignore x y)))
+  (:method ((x number) &key ((:x y) t))
+    (declare (ignore y))))
 
 (define-method-combination my-comb :identity-with-one-argument t
   :documentation "MY-COMB method-combination")

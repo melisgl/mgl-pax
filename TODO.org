@@ -118,7 +118,6 @@ Cons of DEFINITIONS:
 
 Pros of DEFINITIONs:
 - BIND, (SETF OBJECT), UNBIND, (SETF DOCUMENTATION).
-* BUG (dref::function-arg-names (dref:arglist (dref:locate 'CL-PPCRE:SCAN '(METHOD NIL (FUNCTION T)))))
 * BUG transcript: "debugger invoked on" is treated like output
 * BUG auto-escape some headings in docstrings
 * BUG DEFINE-PACKAGE-SYNTAX MGL-PAX:MACRO document failure
