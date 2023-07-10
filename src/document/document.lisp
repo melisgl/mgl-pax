@@ -472,6 +472,59 @@
 (defvar *html-subformat* nil)
 (defvar *document-tight* nil)
 
+(defvar *pandoc-program* "pandoc")
+
+(defvar *pandoc-options* nil)
+
+;;; Trying to represent YAML as an alist is rife with corner cases, so
+;;; for now just store the block as a string.
+;;; Allowing an alist will be backwards compatible, so leave the decision
+;;; for later.
+(defvar *pandoc-metadata-block* "")
+
+;;; TODO: Remove reference list at end for :PANDOC-PDF? Probably unnecessary.
+;;; TODO: Call ESCAPE-TEX in defvar values, etc.
+;;;
+;;; FIXME: ``` code blocks start with indented line, but rest of code
+;;; block is not indented, which causes failures.
+;;; Doesn't seem to be necessarily the fault of 3bmd, because the
+;;; markdown manual is well-formatted.
+;;; Fixed in https://github.com/3b/3bmd/issues/57.
+;;;
+;;; FIXME: Better function name?
+(defun print-output (parse-tree stream &key format)
+  (case format
+    (:pandoc-pdf
+     (let ((proc (uiop:launch-program (append (list *pandoc-program*)
+                                              *pandoc-options*
+                                              (list "--shift-heading-level-by=-1"
+                                                    "-f" "markdown"
+                                                    "-t" "pdf"
+                                                    "-o" "-"))
+                                      :input :stream
+                                      :output stream
+                                      :error-output *error-output*))
+           (ok nil))
+       (unwind-protect
+            (prog1
+                (with-open-stream (stream (uiop:process-info-input proc))
+                  (format stream "---~%")
+                  (when (parse-tree-p parse-tree :heading)
+                    (format stream "title: ~{~A~}~%" (pt-get (pop parse-tree) :contents)))
+                  (format stream "~A~&---~%" *pandoc-metadata-block*)
+                  ;; FIXME Is this enough checking or should I check for
+                  ;; \label{...} in :CODE?
+                  (when (parse-tree-p parse-tree :paragraph)
+                    (pop parse-tree))   ; Skip the link to the title
+                  (print-markdown parse-tree stream :format :markdown))
+              (uiop:wait-process proc)
+              (setf ok t))
+         (uiop:close-streams proc)
+         (unless ok
+           (uiop:terminate-process proc)))))
+    (t
+     (print-markdown parse-tree stream :format format))))
+
 (defun/autoloaded document (documentable &key (stream t) pages (format :plain))
   """Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
   FORMAT can be anything [3BMD][3bmd] supports, which is currently
@@ -579,10 +632,10 @@
                     (with-final-output-to-page (stream page)
                       (when (page-header-fn page)
                         (funcall (page-header-fn page) stream))
-                      (print-markdown (post-process-for-w3m
-                                       (parse-markdown-fast
-                                        markdown-string))
-                                      stream :format *format*)
+                      (print-output (post-process-parse-tree
+                                     (parse-markdown-fast
+                                      markdown-string))
+                                    stream :format *format*)
                       (when (page-footer-fn page)
                         (funcall (page-footer-fn page) stream)))))
                 (push (unmake-stream-spec (page-final-stream-spec page))
@@ -616,22 +669,45 @@
                (map-documentable fn element))))))
 
 (defun call-with-format (format fn)
-  (if (eq format :plain)
-      ;; 3BMD's :PLAIN is very broken. Take matters into our hands,
-      ;; and make :PLAIN equivalent to :MARKDOWN without all the bells
-      ;; and whistles.
-      (let ((*format* :markdown)
-            (*document-uppercase-is-code* nil)
-            (*document-link-code* nil)
-            (*document-link-sections* nil)
-            (*document-mark-up-signatures* nil)
-            (*document-max-numbering-level* 0)
-            (*document-max-table-of-contents-level* 0)
-            (*document-text-navigation* nil))
-        (handler-bind ((unresolvable-reflink #'output-label))
-          (funcall fn)))
-      (let ((*format* format))
-        (funcall fn))))
+  (case format
+    (:plain
+     ;; 3BMD's :PLAIN is very broken. Take matters into our hands,
+     ;; and make :PLAIN equivalent to :MARKDOWN without all the bells
+     ;; and whistles.
+     (let ((*format* :markdown)
+           (*document-uppercase-is-code* nil)
+           (*document-link-code* nil)
+           (*document-link-sections* nil)
+           (*document-mark-up-signatures* nil)
+           (*document-max-numbering-level* 0)
+           (*document-max-table-of-contents-level* 0)
+           (*document-text-navigation* nil))
+       (handler-bind ((unresolvable-reflink #'output-label))
+         (funcall fn))))
+    (:pandoc-pdf
+     (let ((*format* format)
+           (*pandoc-metadata-block*
+             (concatenate
+              'string
+              (cond ((plusp *document-max-numbering-level*)
+                     (format nil "numbersections: true~%secnumdepth: ~A~%"
+                             *document-max-numbering-level*))
+                    (t
+                     (format nil "numbersections: false~%")))
+              (cond ((plusp *document-max-table-of-contents-level*)
+                     (format nil "toc: true~%toc-depth: ~A~%"
+                             *document-max-table-of-contents-level*))
+                    (t
+                     (format nil "toc: false~%")))
+              *pandoc-metadata-block*))
+           (*document-max-numbering-level* 0)
+           (*document-max-table-of-contents-level* 0)
+           (*document-text-navigation* nil)
+           (*document-url-versions* '(1)))
+       (funcall fn)))
+    (t
+     (let ((*format* format))
+       (funcall fn)))))
 
 ;;; Emit markdown definitions for links (in *LINKS*) to REFERENCE
 ;;; objects that were linked to on the current page.
@@ -1011,24 +1087,74 @@
 ;;;; Post-process the markdown parse tree to make it prettier on w3m
 ;;;; and maybe make relative links absolute.
 
-(defun post-process-for-w3m (parse-tree)
-  (if (eq *html-subformat* :w3m)
-      (flet ((translate (parent tree)
-               (declare (ignore parent))
-               (cond ((eq (first tree) :code)
-                      `(:strong ,tree))
-                     ((eq (first tree) :verbatim)
-                      (values `((:RAW-HTML #.(format nil "<i>~%"))
-                                ,(indent-verbatim tree) (:RAW-HTML "</i>"))
-                              nil t))
-                     (t
-                      (values `((:RAW-HTML #.(format nil "<i>~%"))
-                                ,(indent-code-block tree)
-                                (:RAW-HTML "</i>"))
-                              nil t)))))
-        (map-markdown-parse-tree '(:code :verbatim 3bmd-code-blocks::code-block)
-                                 '() nil #'translate parse-tree))
-      parse-tree))
+;;; FIXME: Move this and escape-tex to tex.lisp?
+(defun tex-special-char-p (char)
+  (member char '(#\& #\% #\$ #\# #\_ #\{ #\} #\~ #\^ #\\)))
+
+;;; FIXME: \textasciitilde, \textasciicircum, \textasciibackslash?
+;;; https://tex.stackexchange.com/a/34586
+(defun/autoloaded escape-tex (string)
+  "Construct a new string from STRING by adding a backslash before
+  special TeX characters
+
+      &%$#_{}~^\\"
+  (with-output-to-string (stream)
+    (dotimes (i (length string))
+      (let ((char (aref string i)))
+        (when (tex-special-char-p char)
+          (write-char #\\ stream))
+        (write-char char stream)))))
+
+(defun post-process-parse-tree (parse-tree)
+  (cond
+    ((eq *html-subformat* :w3m)
+     (flet ((translate (parent tree)
+              (declare (ignore parent))
+              (cond ((eq (first tree) :code)
+                     `(:strong ,tree))
+                    ((eq (first tree) :verbatim)
+                     (values `((:RAW-HTML #.(format nil "<i>~%"))
+                               ,(indent-verbatim tree) (:RAW-HTML "</i>"))
+                             nil t))
+                    (t
+                     (values `((:RAW-HTML #.(format nil "<i>~%"))
+                               ,(indent-code-block tree)
+                               (:RAW-HTML "</i>"))
+                             nil t)))))
+       (map-markdown-parse-tree '(:code :verbatim 3bmd-code-blocks::code-block)
+                                '() nil #'translate parse-tree)))
+    ((eq *format* :pandoc-pdf)
+     (flet ((translate (parent tree)
+              (declare (ignore parent))
+              (ecase (first tree)
+                (:reference-link
+                 (let* ((label (pt-get tree :label))
+                        (definition (pt-get tree :definition))
+                        (link (gethash definition *id-to-link*))
+                        (target-page (and link (link-page link))))
+                   ;; FIXME: This doesn't seem like the recommended way
+                   ;; to check for “local” links (i.e., links starting
+                   ;; with #).
+                   (when (and link target-page (not (stringp target-page)))
+                     (return-from translate
+                       (values `((:code
+                                  ,(concatenate 'string
+                                                "\\hyperref["
+                                                (anchor-id (link-reference link))
+                                                "]{"))
+                                 "{=latex}"
+                                 ;; Separate the label from the
+                                 ;; surrounding LaTeX commands to
+                                 ;; prevent consecutive backquotes when
+                                 ;; the label contains some.
+                                 "\\relax{}" ,@label "\\relax{}"
+                                 (:code "}")
+                                 "{=latex}")
+                               nil t))))
+                 tree))))
+       (map-markdown-parse-tree '(:reference-link)
+                                '() nil #'translate parse-tree)))
+    (t parse-tree)))
 
 
 (defun include-docstrings (parse-tree)
@@ -1083,7 +1209,8 @@
   (@interesting glossary-term)
   (*document-downcase-uppercase-code* variable))
 
-(defvar *document-uppercase-is-code* t
+;;; TODO Remove after testing tex-escape.
+(defvar *document-uppercase-is-code* #\Syn
   """When true, @INTERESTING @NAMEs extracted from @CODIFIABLE @WORDs
   are assumed to be code as if they were marked up with backticks. For
   example, this docstring
@@ -2213,14 +2340,20 @@
 
 (defun print-section-title (stream section title link-title-to)
   (when *document-link-sections*
-    (anchor section stream)
+    (unless (eq *format* :pandoc-pdf)
+      (section-anchor section stream))
     (navigation-link section stream)
     (format stream "~A" (fancy-navigation section)))
   (heading (+ *heading-level* *heading-offset*) stream)
-  (if (and *document-link-sections*
-           (eq *format* :html))
-      (print-section-title-link stream section title link-title-to)
-      (format stream " ~A~A~%~%" (heading-number) title)))
+  (cond ((and *document-link-sections*
+              (eq *format* :html))
+         (print-section-title-link stream section title link-title-to))
+        (t
+         (format stream " ~A~A~%" (heading-number) title)
+         (when (and *document-link-sections*
+                    (eq *format* :pandoc-pdf))
+           (section-anchor section stream))
+         (terpri stream))))
 
 (defun print-section-title-link (stream section title link-title-to)
   (if link-title-to
@@ -2396,6 +2529,7 @@
   ```
   """)
 
+;;; FIXME: Maybe rename to something else to match SECTION-ANCHOR?
 (defun anchor (object stream)
   (let ((v1 (member 1 *document-url-versions*))
         (v2 (member 2 *document-url-versions*)))
@@ -2407,6 +2541,18 @@
         (format stream "<a id=~S></a>~%"
                 (urlencode (reference-to-anchor object))))
       (terpri stream))))
+
+(defun section-anchor (object stream)
+  (if (eq *format* :pandoc-pdf)
+      (format stream "`\\label{~A}`{=latex}~%"
+              (html4-safe-name (reference-to-anchor-v1 object)))
+      (anchor object stream)))
+
+(defun reference-anchor (object stream)
+  (if (eq *format* :pandoc-pdf)
+      (format stream "`\\phantomsection\\label{~A}`{=latex}~%"
+              (html4-safe-name (reference-to-anchor-v1 object)))
+      (anchor object stream)))
 
 (defun anchor-id (object)
   (if (= (first *document-url-versions*) 1)
@@ -2585,8 +2731,8 @@
                             </span>"
                                source-uri locative-type source-uri name
                                (urlencode (reference-to-anchor reference))))))
-              (format stream "- [~A] ~A" locative-type (bold name nil))))
-        (format stream "- [~A] ~A" locative-type name))))
+              (format stream "- \\[~A] ~A" locative-type (bold name nil))))
+        (format stream "- \\[~A] ~A" locative-type name))))
 
 (defun print-end-bullet (stream)
   (cond ((eq *html-subformat* :w3m)
@@ -2612,6 +2758,17 @@
                      (arglist-to-markdown arglist)))
          (string (if *print-arglist-key*
                      (funcall *print-arglist-key* string)
+                     string))
+         (string (if (eq *format* :pandoc-pdf)
+                     ;; FIXME This is awkward and probably broken in
+                     ;; some cases.
+                     ;; A single escape-tex is not enough, probably
+                     ;; because it's printed to a string, but in that
+                     ;; case, maybe only backslashes need be doubled
+                     ;; after the initial escape-tex.
+                     ;; FIXME Complains about undefined function when
+                     ;; first compiling.
+                     (escape-tex (escape-tex string))
                      string)))
     (if *document-mark-up-signatures*
         (if (and (eq *format* :html)

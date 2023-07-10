@@ -1221,12 +1221,15 @@ EXPORTABLE-REFERENCE-P).")
         (document-object entry stream)))))
 
 (defun format-in-package (package stream)
-  (format stream "###### \\[in package ~A~A\\]~%"
-          (escape-markdown (package-name package))
-          (if (package-nicknames *package*)
-              (format nil " with nicknames ~{~A~^, ~}"
-                      (mapcar #'escape-markdown (package-nicknames package)))
-              "")))
+  (let ((name (escape-markdown (package-name package)))
+        (nicknames (if (package-nicknames *package*)
+                       (format nil " with nicknames ~{~A~^, ~}"
+                               (mapcar #'escape-markdown (package-nicknames package)))
+                       "")))
+    (if (eq *format* :pandoc-pdf)
+        (format stream "`\\subsubsection*{\\normalfont\\sffamily[in package ~A~A]}`{=latex}~%"
+                name nicknames)
+        (format stream "###### \\[in package ~A~A\\]~%" name nicknames))))
 
 (defmethod docstring ((section section))
   nil)

@@ -146,17 +146,23 @@
   (let ((%stream (gensym))
         (%reference (gensym))
         (%arglist (gensym))
-        (%name (gensym)))
+        (%name (gensym))
+        (%want-anchor (gensym)))
     `(let ((,%stream ,stream)
            (,%reference (or ,reference *reference-being-documented*))
            (,%arglist ,arglist)
-           (,%name ,name))
-       (when (and *document-link-code*
-                  ;; Anchors are not used in this case, and with large
-                  ;; HTML pages, we stress w3m less this way.
-                  (not *document-do-not-resolve-references*))
-         (anchor ,%reference ,%stream))
+           (,%name ,name)
+           (,%want-anchor (and *document-link-code*
+                               ;; Anchors are not used in this case, and with large
+                               ;; HTML pages, we stress w3m less this way.
+                               (not *document-do-not-resolve-references*))))
+       (when (and ,%want-anchor
+                  (not (eq *format* :pandoc-pdf)))
+         (reference-anchor ,%reference ,%stream))
        (print-reference-bullet ,%reference ,%stream :name ,%name)
+       (when (and ,%want-anchor
+                  (eq *format* :pandoc-pdf))
+         (reference-anchor ,%reference ,%stream))
        (let ((*package* (or ,package (guess-package ,%reference))))
          (when (and ,%arglist (not (eq ,%arglist :not-available)))
            (write-char #\Space ,%stream)
