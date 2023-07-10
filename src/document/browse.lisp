@@ -467,7 +467,6 @@
 (defun document/open (documentable &rest args)
   (let ((*document-open-linking* t)
         (*document-fancy-html-navigation* (not (eq *html-subformat* :w3m)))
-        (*document-normalize-packages* t)
         (*document-url-versions* '(2))
         (previous-error-string "")
         (n-repeats 0))

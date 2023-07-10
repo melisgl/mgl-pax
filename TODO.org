@@ -121,5 +121,4 @@ Pros of DEFINITIONs:
 * BUG (dref::function-arg-names (dref:arglist (dref:locate 'CL-PPCRE:SCAN '(METHOD NIL (FUNCTION T)))))
 * BUG transcript: "debugger invoked on" is treated like output
 * BUG auto-escape some headings in docstrings
-* set package to home section's
-when documenting a function ref
+* BUG DEFINE-PACKAGE-SYNTAX MGL-PAX:MACRO document failure

@@ -254,27 +254,17 @@
 (defvar *section*)
 
 (defmacro documenting-section ((section stream) &body body)
-  "- When documentation is generated for a SECTION (including its
-     SECTION-ENTRIES), then *PACKAGE* and *READTABLE* will be bound to
-     SECTION-PACKAGE and SECTION-READTABLE. To eliminate ambiguity
-     `[in package ...]` messages are printed right after the section
-     heading if necessary.
-
-   - When documenting a SECTION's SECTION-ENTRIES, the bindings
-     established by the section are in effect if
-     *DOCUMENT-NORMALIZE-PACKAGES* is true."
   (alexandria:with-gensyms (same-package)
     (alexandria:once-only (section)
       `(let ((,same-package (and (eq *package* (section-package ,section))
                                  (or (boundp '*section*)
-                                     *document-open-linking*
-                                     (not *document-normalize-packages*))))
+                                     *document-open-linking*)))
              (*package* (section-package ,section))
              (*readtable* (section-readtable ,section))
              (*section* ,section))
          (with-heading (,stream ,section (section-title-or-name ,section)
                         :link-title-to (section-link-title-to ,section))
-           (when (not ,same-package)
+           (when (and (not ,same-package) *document-normalize-packages*)
              (format-in-package *package* ,stream))
            ,@body)))))
 

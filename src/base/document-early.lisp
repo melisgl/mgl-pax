@@ -114,18 +114,24 @@
 (autoload call-with-heading '#:mgl-pax/document :export nil)
 (declaim (special *first-pass*))
 
-(defmacro documenting-reference ((stream &key reference arglist name package)
+(defmacro documenting-reference ((stream &key reference name package readtable
+                                           arglist)
                                  &body body)
   "Write REFERENCE to STREAM as described in
   *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a [local
-  reference][@LOCAL-REFERENCES] followed by ARGLIST.
+  reference][@LOCAL-REFERENCES] for the processing of BODY.
 
   - REFERENCE defaults to the reference being DOCUMENTed.
 
   - NAME defaults to `(XREF-NAME REFERENCE)` and is printed after the
     LOCATIVE-TYPE.
 
-  - If ARGLIST is NIL or :NOT-AVAILABLE, then it is not printed.
+  - *PACKAGE* and *READTABLE* are bound to PACKAGE and READTABLE for
+    the duration of printing the ARGLIST and the processing of BODY.
+    If either is NIL, then a default value is computed as described in
+    @PACKAGE-AND-READTABLE.
+
+  - If ARGLIST is NIL, then it is not printed.
 
   - If ARGLIST is a list, then it is must be a [lambda list][clhs] and
     is printed without the outermost parens and with the package names
@@ -133,19 +139,14 @@
 
   - If ARGLIST is a string, then it must be valid markdown.
 
-  - Unless REFERENCE is documented as part of a SECTION (being on its
-    SECTION-ENTRIES), then after the locative type and the name are
-    printed, *PACKAGE* is bound to PACKAGE, which affects how symbols
-    in ARGLIST and during the processing of BODY are printed. When
-    REFERENCE's DREF::@NAME is a symbol, PACKAGE defaults to the
-    package of that symbol, else to *PACKAGE*.
-
-  - It is not allowed to have WITH-HEADING in the [dynamic
+  - It is not allowed to have WITH-HEADING within the [dynamic
     extent][clhs] of BODY."
   (let ((%stream (gensym))
         (%reference (gensym))
-        (%arglist (gensym))
-        (%name (gensym)))
+        (%name (gensym))
+        (%package (gensym))
+        (%readtable (gensym))
+        (%arglist (gensym)))
     ;; If WITH-HEADING were allowed in BODY, then we couldn't stop if
     ;; *FIRST-PASS*.
     `(unless *first-pass*
@@ -163,22 +164,25 @@
                     (not (eq *document-do-not-follow-references* t)))
            (anchor ,%reference ,%stream))
          (print-reference-bullet ,%reference ,%stream :name ,%name)
-         (let ((*package* (or ,package (guess-package ,%reference))))
-           (when (and ,%arglist (not (eq ,%arglist :not-available)))
-             (write-char #\Space ,%stream)
-             (print-arglist ,%arglist ,%stream))
-           (print-end-bullet ,%stream)
-           (with-local-references
-               (if (member (dref-locative-type ,%reference)
-                           '(section glossary-term))
-                   ;; See @SUPPRESSED-LINKS.
-                   ()
-                   ,%reference)
-             ,@body))))))
+         (multiple-value-bind (,%package ,%readtable)
+             (guess-package-and-readtable ,%reference)
+           (let ((*package* (or ,package ,%package))
+                 (*readtable* (or ,readtable ,%readtable)))
+             (when ,%arglist
+               (write-char #\Space ,%stream)
+               (print-arglist ,%arglist ,%stream))
+             (print-end-bullet ,%stream)
+             (with-local-references
+                 (if (member (dref-locative-type ,%reference)
+                             '(section glossary-term))
+                     ;; See @SUPPRESSED-LINKS.
+                     ()
+                     ,%reference)
+               ,@body)))))))
 (autoload print-reference-bullet '#:mgl-pax/document :export nil)
 (declaim (ftype function print-arglist))
 (declaim (ftype function print-end-bullet))
-(declaim (ftype function guess-package))
+(declaim (ftype function guess-package-and-readtable))
 (declaim (ftype function anchor))
 (declaim (special *document-do-not-follow-references*))
 

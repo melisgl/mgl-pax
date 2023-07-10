@@ -16,36 +16,39 @@
 - [7 Navigating Sources in Emacs][3386]
     - [7.1 The mgl-pax/navigate ASDF System][f155]
 - [8 Generating Documentation][2c93]
-    - [8.1 The mgl-pax/document ASDF System][4bb8]
-    - [8.2 Browsing Live Documentation][a595]
-        - [8.2.1 PAX URLs][1e80]
-        - [8.2.2 Apropos][b7fc]
-        - [8.2.3 Emacs Setup for Browsing][9a7b]
-        - [8.2.4 Browsing with w3m][83d5]
-        - [8.2.5 Browsing with Other Browsers][c434]
-    - [8.3 Markdown Support][c2d3]
-        - [8.3.1 Indentation][718f]
-        - [8.3.2 Syntax Highlighting][bc83]
-        - [8.3.3 MathJax][a17d]
-    - [8.4 Codification][f1ab]
-    - [8.5 Linking to Code][1865]
-        - [8.5.1 Specified Locative][8996]
-        - [8.5.2 Unspecified Locative][524e]
-        - [8.5.3 Explicit and Autolinking][b3cc]
-        - [8.5.4 Preventing Autolinking][8c16]
-        - [8.5.5 Unresolvable Links][b372]
-        - [8.5.6 Suppressed Links][e2e8]
-        - [8.5.7 Local References][4c96]
-    - [8.6 Linking to the Hyperspec][7cc3]
-    - [8.7 Linking to Sections][22c2]
-    - [8.8 Miscellaneous Variables][7c82]
-    - [8.9 Utilities for Generating Documentation][1b1b]
-        - [8.9.1 HTML Output][36e1]
-        - [8.9.2 Github Workflow][dff6]
-        - [8.9.3 PAX World][1281]
-    - [8.10 Overview of Escaping][2634]
-    - [8.11 Output Details][af6f]
-    - [8.12 Documentation Generation Implementation Notes][d1ca]
+    - [8.1 Pages][9c7d]
+    - [8.2 Package and Readtable][ab7e]
+        - [8.2.1 Home Section][bdd5]
+    - [8.3 The mgl-pax/document ASDF System][4bb8]
+    - [8.4 Browsing Live Documentation][a595]
+        - [8.4.1 PAX URLs][1e80]
+        - [8.4.2 Apropos][b7fc]
+        - [8.4.3 Emacs Setup for Browsing][9a7b]
+        - [8.4.4 Browsing with w3m][83d5]
+        - [8.4.5 Browsing with Other Browsers][c434]
+    - [8.5 Markdown Support][c2d3]
+        - [8.5.1 Indentation][718f]
+        - [8.5.2 Syntax Highlighting][bc83]
+        - [8.5.3 MathJax][a17d]
+    - [8.6 Codification][f1ab]
+    - [8.7 Linking to Code][1865]
+        - [8.7.1 Specified Locative][8996]
+        - [8.7.2 Unspecified Locative][524e]
+        - [8.7.3 Explicit and Autolinking][b3cc]
+        - [8.7.4 Preventing Autolinking][8c16]
+        - [8.7.5 Unresolvable Links][b372]
+        - [8.7.6 Suppressed Links][e2e8]
+        - [8.7.7 Local References][4c96]
+    - [8.8 Linking to the Hyperspec][7cc3]
+    - [8.9 Linking to Sections][22c2]
+    - [8.10 Miscellaneous Variables][7c82]
+    - [8.11 Utilities for Generating Documentation][1b1b]
+        - [8.11.1 HTML Output][36e1]
+        - [8.11.2 Github Workflow][dff6]
+        - [8.11.3 PAX World][1281]
+    - [8.12 Overview of Escaping][2634]
+    - [8.13 Output Details][af6f]
+    - [8.14 Documentation Generation Implementation Notes][d1ca]
 - [9 Transcripts][6300]
     - [9.1 The mgl-pax/transcribe ASDF System][5825]
     - [9.2 Transcribing with Emacs][f5bd]
@@ -985,110 +988,185 @@ section containing the definition with `point` in it. See
       and docstrings. The structure of the list is unimportant. The
       objects in it are documented in depth-first order.
     
-    **Pages**
-    
-    The `PAGES` argument is to create multi-page documents by routing
-    some of the generated output to files, strings or streams. `PAGES` is
-    a list of page specification elements. A page spec is a [property
-    list][b18e] with keys `:OBJECTS`, `:OUTPUT`, `:URI-FRAGMENT`,
-    `:SOURCE-URI-FN`, `:HEADER-FN` and `:FOOTER-FN`. `OBJECTS` is a list of
-    objects (references are allowed but not required) whose
-    documentation is to be sent to `:OUTPUT`.
-    
-    Documentation is initially sent to a default stream (the `STREAM`
-    argument of `DOCUMENT`), but output is redirected if the thing being
-    currently documented is the `:OBJECT` of a `PAGE-SPEC`.
-    
-    `:OUTPUT` can be a number things:
-    
-    - If it's `NIL`, then output will be collected in a string.
-    
-    - If it's `T`, then output will be sent to [`*STANDARD-OUTPUT*`][e7ee].
-    
-    - If it's a stream, then output will be sent to that stream.
-    
-    - If it's a list whose first element is a string or a pathname, then
-      output will be sent to the file denoted by that and the rest of
-      the elements of the list are passed on to [`CL:OPEN`][6547]. One extra
-      keyword argument is `:ENSURE-DIRECTORIES-EXIST`. If it's true,
-      [`ENSURE-DIRECTORIES-EXIST`][876d] will be called on the pathname before
-      it's opened.
-    
-    Note that even if `PAGES` is specified, `STREAM` acts as a catch all,
-    absorbing the generated documentation for references not claimed by
-    any pages.
-    
-    `:HEADER-FN`, if not `NIL`, is a function of a single stream argument,
-    which is called just before the first write to the page. Since
-    `:FORMAT` `:HTML` only generates HTML fragments, this makes it possible
-    to print arbitrary headers, typically setting the title, CSS
-    stylesheet, or charset.
-    
-    `:FOOTER-FN` is similar to `:HEADER-FN`, but it's called after the last
-    write to the page. For HTML, it typically just closes the body.
-    
-    `:URI-FRAGMENT` is a string such as `"doc/manual.html"` that specifies
-    where the page will be deployed on a webserver. It defines how links
-    between pages will look. If it's not specified and `:OUTPUT` refers to
-    a file, then it defaults to the name of the file. If `:URI-FRAGMENT`
-    is `NIL`, then no links will be made to or from that page.
-    
-    Finally, `:SOURCE-URI-FN` is a function of a single, `REFERENCE`
-    argument. If it returns a value other than `NIL`, then it must be a
-    string representing an URI. If `FORMAT` is `:HTML` and
-    [`*DOCUMENT-MARK-UP-SIGNATURES*`][8fb6] is true, then the locative as
-    displayed in the signature will be a link to this `URI`. See
-    [`MAKE-GIT-SOURCE-URI-FN`][587f].
-    
-    `PAGES` may look something like this:
-    
-    ```
-    `((;; The section about SECTIONs and everything below it ...
-       :objects (, @sections)
-       ;; ... is so boring that it's not worth the disk space, so
-       ;; send it to a string.
-       :output (nil)
-       ;; Explicitly tell other pages not to link to these guys.
-       :uri-fragment nil)
-      ;; Send the @EXTENSION-API section and everything reachable
-      ;; from it ...
-      (:objects (, @extension-api)
-       ;; ... to build/tmp/pax-extension-api.html.
-       :output "build/tmp/pax-extension-api.html"
-       ;; However, on the web server html files will be at this
-       ;; location relative to some common root, so override the
-       ;; default:
-       :uri-fragment "doc/dev/pax-extension-api.html"
-       ;; Set html page title, stylesheet, charset.
-       :header-fn 'write-html-header
-       ;; Just close the body.
-       :footer-fn 'write-html-footer)
-      ;; Catch references that were not reachable from the above. It
-      ;; is important for this page spec to be last.
-      (:objects (, @pax-manual)
-       :output "build/tmp/manual.html"
-       ;; Links from the extension api page to the manual page will
-       ;; be to ../user/pax-manual#<anchor>, while links going to
-       ;; the opposite direction will be to
-       ;; ../dev/pax-extension-api.html#<anchor>.
-       :uri-fragment "doc/user/pax-manual.html"
-       :header-fn 'write-html-header
-       :footer-fn 'write-html-footer))
-    ```
-    
-    **Packages**
-    
-    While generating the documentation, symbols may be read (e.g. from
-    docstrings) or printed, which is affected by the values of [`*PACKAGE*`][5ed1]
-    and [`*READTABLE*`][b79a]. See [`*DOCUMENT-NORMALIZE-PACKAGES*`][440e] for the details.
-    
     **Extensions**
     
     See [Writing Extensions][c4ce] and [`DOCUMENT-DREF`][561f].
 
+<a id="x-28MGL-PAX-3A-40PAGES-20MGL-PAX-3ASECTION-29"></a>
+
+### 8.1 Pages
+
+The `PAGES` argument of [`DOCUMENT`][432c] is to create multi-page documents
+by routing some of the generated output to files, strings or
+streams. `PAGES` is a list of page specification elements. A page spec
+is a [property list][b18e] with keys `:OBJECTS`, `:OUTPUT`,
+`:URI-FRAGMENT`, `:SOURCE-URI-FN`, `:HEADER-FN` and `:FOOTER-FN`. `OBJECTS` is
+a list of objects (references are allowed but not required) whose
+documentation is to be sent to `:OUTPUT`.
+
+Documentation is initially sent to a default stream (the `STREAM`
+argument of `DOCUMENT`), but output is redirected if the thing being
+currently documented is the `:OBJECT` of a `PAGE-SPEC`.
+
+`:OUTPUT` can be a number things:
+
+- If it's `NIL`, then output will be collected in a string.
+
+- If it's `T`, then output will be sent to [`*STANDARD-OUTPUT*`][e7ee].
+
+- If it's a stream, then output will be sent to that stream.
+
+- If it's a list whose first element is a string or a pathname, then
+  output will be sent to the file denoted by that and the rest of
+  the elements of the list are passed on to [`CL:OPEN`][6547]. One extra
+  keyword argument is `:ENSURE-DIRECTORIES-EXIST`. If it's true,
+  [`ENSURE-DIRECTORIES-EXIST`][876d] will be called on the pathname before
+  it's opened.
+
+Note that even if `PAGES` is specified, `STREAM` acts as a catch all,
+absorbing the generated documentation for references not claimed by
+any pages.
+
+`:HEADER-FN`, if not `NIL`, is a function of a single stream argument,
+which is called just before the first write to the page. Since
+`:FORMAT` `:HTML` only generates HTML fragments, this makes it possible
+to print arbitrary headers, typically setting the title, CSS
+stylesheet, or charset.
+
+`:FOOTER-FN` is similar to `:HEADER-FN`, but it's called after the last
+write to the page. For HTML, it typically just closes the body.
+
+`:URI-FRAGMENT` is a string such as `"doc/manual.html"` that specifies
+where the page will be deployed on a webserver. It defines how links
+between pages will look. If it's not specified and `:OUTPUT` refers to
+a file, then it defaults to the name of the file. If `:URI-FRAGMENT`
+is `NIL`, then no links will be made to or from that page.
+
+Finally, `:SOURCE-URI-FN` is a function of a single, `REFERENCE`
+argument. If it returns a value other than `NIL`, then it must be a
+string representing an URI. If [`FORMAT`][ad78] is `:HTML` and
+[`*DOCUMENT-MARK-UP-SIGNATURES*`][8fb6] is true, then the locative as
+displayed in the signature will be a link to this `URI`. See
+[`MAKE-GIT-SOURCE-URI-FN`][587f].
+
+`PAGES` may look something like this:
+
+```
+`((;; The section about SECTIONs and everything below it ...
+   :objects (, @sections)
+   ;; ... is so boring that it's not worth the disk space, so
+   ;; send it to a string.
+   :output (nil)
+   ;; Explicitly tell other pages not to link to these guys.
+   :uri-fragment nil)
+  ;; Send the @EXTENSION-API section and everything reachable
+  ;; from it ...
+  (:objects (, @extension-api)
+   ;; ... to build/tmp/pax-extension-api.html.
+   :output "build/tmp/pax-extension-api.html"
+   ;; However, on the web server html files will be at this
+   ;; location relative to some common root, so override the
+   ;; default:
+   :uri-fragment "doc/dev/pax-extension-api.html"
+   ;; Set html page title, stylesheet, charset.
+   :header-fn 'write-html-header
+   ;; Just close the body.
+   :footer-fn 'write-html-footer)
+  ;; Catch references that were not reachable from the above. It
+  ;; is important for this page spec to be last.
+  (:objects (, @pax-manual)
+   :output "build/tmp/manual.html"
+   ;; Links from the extension api page to the manual page will
+   ;; be to ../user/pax-manual#<anchor>, while links going to
+   ;; the opposite direction will be to
+   ;; ../dev/pax-extension-api.html#<anchor>.
+   :uri-fragment "doc/user/pax-manual.html"
+   :header-fn 'write-html-header
+   :footer-fn 'write-html-footer))
+```
+
+
+<a id="x-28MGL-PAX-3A-40PACKAGE-AND-READTABLE-20MGL-PAX-3ASECTION-29"></a>
+
+### 8.2 Package and Readtable
+
+While generating documentation, symbols may be read (e.g. from
+docstrings) and printed. What values of [`*PACKAGE*`][5ed1] and [`*READTABLE*`][b79a]
+are used is determined separately for each definition being
+documented.
+
+- If the values of `*PACKAGE*` and `*READTABLE*` in effect at the time
+  of definition were captured (e.g. by [`DEFINE-LOCATIVE-TYPE`][b6c4] and
+  [`DEFSECTION`][72b4]), then they are used.
+
+- Else, if the definition has a [Home Section][bdd5] (see below), then the
+  home section's [`SECTION-PACKAGE`][a5b1] and [`SECTION-READTABLE`][88a7] are used.
+
+- Else, if the definition is [name][5fc4]d by a symbol, then its
+  [`SYMBOL-PACKAGE`][e5ab] is used, and `*READTABLE*` is set to the standard
+  readtable `(NAMED-READTABLES:FIND-READTABLE :COMMON-LISP)`.
+
+- Else, `*PACKAGE*` is set to the `CL-USER` package and `*READTABLE*` to
+  the standard readtable.
+
+The values thus determined come into effect after the name itself is
+printed, for printing of the arglist and the docstring.
+
+    CL-USER> (pax:document #'foo)
+    - [function] FOO <!> X Y &KEY (ERRORP T)
+    
+        Do something with X and Y.
+
+In the above, the `<!>` marks the place where `*PACKAGE*` and
+`*READTABLE*` are bound.
+
+<a id="x-28MGL-PAX-3A-40HOME-SECTION-20MGL-PAX-3ASECTION-29"></a>
+
+#### 8.2.1 Home Section
+
+The home section of an object is a [`SECTION`][5fac] that contains the
+object's definition in its [`SECTION-ENTRIES`][d850] or `NIL`. In the
+overwhelming majority of cases there should be at most one
+containing section.
+
+If there are multiple containing sections, the following apply.
+
+- If the [name][5fc4] of the definition is a non-keyword symbol, only
+  those containing sections are considered whose package is closest
+  to the [`SYMBOL-PACKAGE`][e5ab] of the name, where closest is defined as
+  having the longest common prefix between the two [`PACKAGE-NAME`][db68]s.
+
+- If there are multiple sections with equally long matches or the
+  name is not a non-keyword symbol, then it's undefined which one is
+  the home section.
+
+For example, `(MGL-PAX:DOCUMENT FUNCTION)` is an entry in the
+`MGL-PAX::@BASICS` section. Unless another section that contains
+it is defined in the MGL-PAX package, the home section is guaranteed
+to be `MGL-PAX::@BASICS` because the `SYMBOL-PACKAGE`s of
+[`MGL-PAX:DOCUMENT`][432c] and `MGL-PAX::@BASICS` are the same (hence their
+common prefix is maximally long).
+
+This scheme would also work, for example, if the [home package][407c]
+of `DOCUMENT` were `MGL-PAX/IMPL`, and it were reexported from
+`MGL-PAX` because the only way to externally change the home package
+would be to define a containing section in a package like
+`MGL-PAX/IMP`.
+
+Thus, relying on the package system makes it possible to find the
+intended home section of a definition among multiple containing
+sections with high probability. However, for names which are not
+symbols, there is no package system to advantage of.
+
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20VARIABLE-29"></a>
+
+- [variable] **\*DOCUMENT-NORMALIZE-PACKAGES\*** *T*
+
+    Deprecated.
+
 <a id="x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
-### 8.1 The mgl-pax/document ASDF System
+### 8.3 The mgl-pax/document ASDF System
 
 - Description: Documentation generation support for MGL-PAX.
 - Long Description: Do not declar a dependency on this system. It is
@@ -1100,7 +1178,7 @@ section containing the definition with `point` in it. See
 
 <a id="x-28MGL-PAX-3A-40BROWSING-LIVE-DOCUMENTATION-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.2 Browsing Live Documentation
+### 8.4 Browsing Live Documentation
 
 Documentation can be browsed live in Emacs or with an external
 browser. HTML documentation, complete with [Codification][f1ab] and
@@ -1141,7 +1219,7 @@ point in it.
 
 <a id="x-28MGL-PAX-3A-40PAX-URLS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.2.1 PAX URLs
+#### 8.4.1 PAX URLs
 
 A PAX URL consists of a REFERENCE and an optional `FRAGMENT`
 part:
@@ -1158,7 +1236,7 @@ where REFERENCE names either
 
 <a id="x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.2.2 Apropos
+#### 8.4.2 Apropos
 
 The Elisp functions `mgl-pax-apropos`, `mgl-pax-apropos-all`, and
 `mgl-pax-apropos-package` can display the results of
@@ -1177,7 +1255,7 @@ name then by locative type.
 
 <a id="x-28MGL-PAX-3A-40EMACS-SETUP-FOR-BROWSING-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.2.3 Emacs Setup for Browsing
+#### 8.4.3 Emacs Setup for Browsing
 
 Make sure [Emacs Setup][8541] has been done. In particular, set
 `mgl-pax-browser-function` to choose between browsing documentation
@@ -1221,7 +1299,7 @@ To bind `C-.' globally:
 
 <a id="x-28MGL-PAX-3A-40BROWSING-WITH-W3M-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.2.4 Browsing with w3m
+#### 8.4.4 Browsing with w3m
 
 With w3m's default [key bindings][w3m-key-bindings], moving the
 cursor between links involves `TAB` and `S-TAB` (or `<up>` and
@@ -1256,7 +1334,7 @@ In addition, the following PAX-specific key bindings are available:
 
 <a id="x-28MGL-PAX-3A-40BROWSING-WITH-OTHER-BROWSERS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.2.5 Browsing with Other Browsers
+#### 8.4.5 Browsing with Other Browsers
 
 When the value of the Elisp variable `mgl-pax-browser-function`
 is not `w3m-browse-url`, requests are served via a web server
@@ -1280,14 +1358,14 @@ change.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.3 Markdown Support
+### 8.5 Markdown Support
 
 The [Markdown][markdown] in docstrings is processed with the
 3BMD library.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.3.1 Indentation
+#### 8.5.1 Indentation
 
 Docstrings can be indented in any of the usual styles. PAX
 normalizes indentation by stripping the longest run of leading
@@ -1308,7 +1386,7 @@ to
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.3.2 Syntax Highlighting
+#### 8.5.2 Syntax Highlighting
 
 For syntax highlighting, Github's [fenced code
 blocks][fenced-code-blocks] markdown extension to mark up code
@@ -1335,7 +1413,7 @@ the details.
 
 <a id="x-28MGL-PAX-3A-40MATHJAX-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.3.3 MathJax
+#### 8.5.3 MathJax
 
 Displaying pretty mathematics in TeX format is supported via
 MathJax. It can be done inline with `$` like this:
@@ -1362,7 +1440,7 @@ Reader can help with that.
 
 <a id="x-28MGL-PAX-3A-40CODIFICATION-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.4 Codification
+### 8.6 Codification
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20VARIABLE-29"></a>
 
@@ -1422,8 +1500,7 @@ Reader can help with that.
     
     - it names a [local reference][4c96].
     
-    Symbols are read in the current [`*PACKAGE*`][5ed1], which is subject to
-    [`*DOCUMENT-NORMALIZE-PACKAGES*`][440e].
+    See [Package and Readtable][ab7e].
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-DOWNCASE-UPPERCASE-CODE-2A-20VARIABLE-29"></a>
 
@@ -1459,7 +1536,7 @@ Reader can help with that.
 
 <a id="x-28MGL-PAX-3A-40LINKING-TO-CODE-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.5 Linking to Code
+### 8.7 Linking to Code
 
 In this section, we describe all ways of linking to code
 available when [`*DOCUMENT-UPPERCASE-IS-CODE*`][f25f] is true.
@@ -1480,7 +1557,7 @@ will contain a single link.*
 
 <a id="x-28MGL-PAX-3A-40SPECIFIED-LOCATIVE-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.5.1 Specified Locative
+#### 8.7.1 Specified Locative
 
 The following examples all render as [`DOCUMENT`][432c].
 
@@ -1508,7 +1585,7 @@ this form may be used:
 
 <a id="x-28MGL-PAX-3A-40UNSPECIFIED-LOCATIVE-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.5.2 Unspecified Locative
+#### 8.7.2 Unspecified Locative
 
 When only an [name][88cf] is provided without a locative, all
 definitions of the name are considered as possible link targets.
@@ -1564,7 +1641,7 @@ To override the title:
 
 <a id="x-28MGL-PAX-3A-40EXPLICIT-AND-AUTOLINKING-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.5.3 Explicit and Autolinking
+#### 8.7.3 Explicit and Autolinking
 
 The examples in the previous sections are marked with *explicit
 link* or *autolink*. Explicit links are those with a Markdown
@@ -1573,7 +1650,7 @@ without.
 
 <a id="x-28MGL-PAX-3A-40PREVENTING-AUTOLINKING-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.5.4 Preventing Autolinking
+#### 8.7.4 Preventing Autolinking
 
 In the common case, when [`*DOCUMENT-UPPERCASE-IS-CODE*`][f25f] is true,
 prefixing an uppercase [word][d7b0] with a backslash prevents it from being
@@ -1591,7 +1668,7 @@ This renders as `DOCUMENT`. Alternatively, the [`DISLOCATED`][e391] or the
 
 <a id="x-28MGL-PAX-3A-40UNRESOLVABLE-REFLINKS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.5.5 Unresolvable Links
+#### 8.7.5 Unresolvable Links
 
 <a id="x-28MGL-PAX-3AUNRESOLVABLE-REFLINK-20CONDITION-29"></a>
 
@@ -1628,7 +1705,7 @@ This renders as `DOCUMENT`. Alternatively, the [`DISLOCATED`][e391] or the
 
 <a id="x-28MGL-PAX-3A-40SUPPRESSED-LINKS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.5.6 Suppressed Links
+#### 8.7.6 Suppressed Links
 
 [Autolinking][b3cc] of code (i.e.
 of something like `FOO`) is suppressed if it would create a link
@@ -1654,7 +1731,7 @@ Finally, [autolinking][b3cc] to `T` or
 
 <a id="x-28MGL-PAX-3A-40LOCAL-REFERENCES-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.5.7 Local References
+#### 8.7.7 Local References
 
 To declutter the generated output by reducing the number of
 links, the so-called local references (e.g. references to the very
@@ -1693,7 +1770,7 @@ linked to all non-local references.
 
 <a id="x-28MGL-PAX-3A-40LINKING-TO-THE-HYPERSPEC-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.6 Linking to the Hyperspec
+### 8.8 Linking to the Hyperspec
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29"></a>
 
@@ -1724,7 +1801,7 @@ linked to all non-local references.
 
 <a id="x-28MGL-PAX-3A-40LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.7 Linking to Sections
+### 8.9 Linking to Sections
 
 The following variables control how to generate section numbering,
 table of contents and navigation links.
@@ -1786,7 +1863,7 @@ table of contents and navigation links.
 
 <a id="x-28MGL-PAX-3A-40MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.8 Miscellaneous Variables
+### 8.10 Miscellaneous Variables
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-URL-VERSIONS-2A-20VARIABLE-29"></a>
 
@@ -1880,40 +1957,6 @@ table of contents and navigation links.
     Also, in HTML `**foo**` will be a link to that very entry and
     `[function]` may turn into a link to sources.
 
-<a id="x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20VARIABLE-29"></a>
-
-- [variable] **\*DOCUMENT-NORMALIZE-PACKAGES\*** *T*
-
-    Determines what [`*PACKAGE*`][5ed1] and [`*READTABLE*`][b79a] are when generating
-    documentation.
-    
-    - When documentation is generated for a [`SECTION`][5fac] (including its
-      [`SECTION-ENTRIES`][d850]), then `*PACKAGE*` and `*READTABLE*` will be bound to
-      [`SECTION-PACKAGE`][a5b1] and [`SECTION-READTABLE`][88a7]. To eliminate ambiguity
-      `[in package ...]` messages are printed right after the section
-      heading if necessary.
-    
-    - When documenting a `SECTION`'s `SECTION-ENTRIES`, the bindings
-      established by the section are in effect if
-      `*DOCUMENT-NORMALIZE-PACKAGES*` is true.
-    
-    - In all other cases (i.e. when `*DOCUMENT-NORMALIZE-PACKAGES*` is
-      false or we are not documenting a `SECTION` nor its
-      `SECTION-ENTRIES`), documenting most other kinds of definitions
-      attached to a symbol (e.g. a function), prints the symbol itself
-      normally, then binds `*PACKAGE*` to [`SYMBOL-PACKAGE`][e5ab] for the printing
-      of the arglist and the docstring.
-    
-              CL-USER> (pax:document #'foo)
-              - [function] FOO <!> X Y &KEY (ERRORP T)
-            
-                  Do something with X and Y.
-    
-        In the above, the `<!>` marks the place where `*PACKAGE*` is
-          bound to `(SYMBOL-PACKAGE 'FOO)`. See [`DOCUMENTING-REFERENCE`][b8a8]
-          from [Extending `DOCUMENT`][574a] for the gory details.
-
-
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-BASE-URL-2A-20VARIABLE-29"></a>
 
 - [variable] **\*DOCUMENT-BASE-URL\*** *NIL*
@@ -1928,7 +1971,7 @@ table of contents and navigation links.
 
 <a id="x-28MGL-PAX-3A-40DOCUMENTATION-UTILITIES-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.9 Utilities for Generating Documentation
+### 8.11 Utilities for Generating Documentation
 
 Two convenience functions are provided to serve the common case of
 having an ASDF system with some readmes and a directory with for the
@@ -1963,7 +2006,7 @@ HTML documentation and the default CSS stylesheet.
 
 <a id="x-28MGL-PAX-3A-40HTML-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.9.1 HTML Output
+#### 8.11.1 HTML Output
 
 <a id="x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-HTML-DOCS-20FUNCTION-29"></a>
 
@@ -2052,7 +2095,7 @@ See the following variables, which control HTML generation.
 
 <a id="x-28MGL-PAX-3A-40GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.9.2 Github Workflow
+#### 8.11.2 Github Workflow
 
 It is generally recommended to commit generated readmes (see
 [`UPDATE-ASDF-SYSTEM-READMES`][13a9]), so that users have something to read
@@ -2134,7 +2177,7 @@ to allow jumping between the repository and the gh-pages site.
 
 <a id="x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.9.3 PAX World
+#### 8.11.3 PAX World
 
 PAX World is a registry of documents, which can generate
 cross-linked HTML documentation pages for all the registered
@@ -2185,7 +2228,7 @@ For example, this is how PAX registers itself:
 
 <a id="x-28MGL-PAX-3A-40OVERVIEW-OF-ESCAPING-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.10 Overview of Escaping
+### 8.12 Overview of Escaping
 
 Let's recap how escaping [Codification][f1ab],
 [downcasing][a5ee], and
@@ -2226,7 +2269,7 @@ in an explicit link.
 
 <a id="x-28MGL-PAX-3A-40OUTPUT-DETAILS-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.11 Output Details
+### 8.13 Output Details
 
 By default, [`DREF`][d930]s are documented in the following format.
 
@@ -2295,7 +2338,7 @@ printed as the arglist. There is no docstring.
 
 <a id="x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.12 Documentation Generation Implementation Notes
+### 8.14 Documentation Generation Implementation Notes
 
 Documentation Generation is supported on ABCL, AllegroCL, CLISP,
 CCL, CMUCL, ECL and SBCL, but their outputs may differ due to the
@@ -2920,7 +2963,7 @@ package for evaluation.
 
 ### 10.1 Adding New Locatives
 
-Once everyting in [Adding New Locatives][3cf3] has been done,
+Once everything in [Adding New Locatives][3cf3] has been done,
 there are only a couple of PAX generic functions left to extend.
 
 <a id="x-28MGL-PAX-3ADOCUMENT-DREF-20GENERIC-FUNCTION-29"></a>
@@ -2969,6 +3012,10 @@ there are only a couple of PAX generic functions left to extend.
     This function is called by the default method of
     [`EXPORTABLE-REFERENCE-P`][e51f] to decide what symbols `DEFSECTION` shall
     export when its `EXPORT` argument is true.
+
+Also note that due to the [Home Section][bdd5] logic, especially for
+locative types with string names, [`DREF-EXT:DREF-DOCSTRING`][12a1] should
+probably return a non-`NIL` package.
 
 <a id="x-28MGL-PAX-3A-40LOCATIVE-ALIASES-20MGL-PAX-3ASECTION-29"></a>
 
@@ -3038,18 +3085,23 @@ new `DOCUMENT-DREF` methods, which emit markdown.
 
 <a id="x-28MGL-PAX-3ADOCUMENTING-REFERENCE-20MGL-PAX-3AMACRO-29"></a>
 
-- [macro] **DOCUMENTING-REFERENCE** *(STREAM &KEY REFERENCE ARGLIST NAME PACKAGE) &BODY BODY*
+- [macro] **DOCUMENTING-REFERENCE** *(STREAM &KEY REFERENCE NAME PACKAGE READTABLE ARGLIST) &BODY BODY*
 
     Write `REFERENCE` to `STREAM` as described in
     [`*DOCUMENT-MARK-UP-SIGNATURES*`][8fb6], and establish `REFERENCE` as a [local
-    reference][4c96] followed by `ARGLIST`.
+    reference][4c96] for the processing of `BODY`.
     
     - `REFERENCE` defaults to the reference being [`DOCUMENT`][432c]ed.
     
     - `NAME` defaults to `(XREF-NAME REFERENCE)` and is printed after the
       [`LOCATIVE-TYPE`][97ba].
     
-    - If `ARGLIST` is `NIL` or `:NOT-AVAILABLE`, then it is not printed.
+    - [`*PACKAGE*`][5ed1] and [`*READTABLE*`][b79a] are bound to `PACKAGE` and `READTABLE` for
+      the duration of printing the `ARGLIST` and the processing of `BODY`.
+      If either is `NIL`, then a default value is computed as described in
+      [Package and Readtable][ab7e].
+    
+    - If `ARGLIST` is `NIL`, then it is not printed.
     
     - If `ARGLIST` is a list, then it is must be a [lambda list][98ff] and
       is printed without the outermost parens and with the package names
@@ -3057,14 +3109,7 @@ new `DOCUMENT-DREF` methods, which emit markdown.
     
     - If `ARGLIST` is a string, then it must be valid markdown.
     
-    - Unless `REFERENCE` is documented as part of a [`SECTION`][5fac] (being on its
-      [`SECTION-ENTRIES`][d850]), then after the locative type and the name are
-      printed, [`*PACKAGE*`][5ed1] is bound to `PACKAGE`, which affects how symbols
-      in `ARGLIST` and during the processing of `BODY` are printed. When
-      `REFERENCE`'s [name][5fc4] is a symbol, `PACKAGE` defaults to the
-      package of that symbol, else to `*PACKAGE*`.
-    
-    - It is not allowed to have [`WITH-HEADING`][80e8] in the [dynamic
+    - It is not allowed to have [`WITH-HEADING`][80e8] within the [dynamic
       extent][36e9] of `BODY`.
 
 
@@ -3200,6 +3245,7 @@ they are presented.
   [0fa3]: #x-28MGL-PAX-3A-40LOCATIVE-ALIASES-20MGL-PAX-3ASECTION-29 "Locative Aliases"
   [119e]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm "FUNCTION (MGL-PAX:CLHS CLASS)"
   [1281]: #x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29 "PAX World"
+  [12a1]: dref/README.md#x-28DREF-EXT-3ADREF-DOCSTRING-20GENERIC-FUNCTION-29 "DREF-EXT:DREF-DOCSTRING GENERIC-FUNCTION"
   [13a9]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29 "MGL-PAX:UPDATE-ASDF-SYSTEM-READMES FUNCTION"
   [1538]: dref/README.md#x-28DREF-3AXREF-20CLASS-29 "DREF:XREF CLASS"
   [172e]: dref/README.md#x-28METHOD-20MGL-PAX-3ALOCATIVE-29 "METHOD MGL-PAX:LOCATIVE"
@@ -3235,11 +3281,11 @@ they are presented.
   [3da8]: #x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29 "MGL-PAX:*FORMAT* VARIABLE"
   [3f2e]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pr_obj.htm "PRINT-OBJECT (MGL-PAX:CLHS GENERIC-FUNCTION)"
   [3fb5]: http://www.lispworks.com/documentation/HyperSpec/Body/f_equal.htm "EQUAL (MGL-PAX:CLHS FUNCTION)"
+  [407c]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_h.htm#home_package '"home package" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [4143]: http://www.lispworks.com/documentation/HyperSpec/Body/f_stgeq_.htm "STRING= (MGL-PAX:CLHS FUNCTION)"
   [4317]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cerror.htm "CERROR (MGL-PAX:CLHS FUNCTION)"
   [432c]: #x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29 "MGL-PAX:DOCUMENT FUNCTION"
   [43bd]: dref/README.md#x-28DREF-3A-40REFERENCE-20MGL-PAX-3AGLOSSARY-TERM-29 "DREF:@REFERENCE MGL-PAX:GLOSSARY-TERM"
-  [440e]: #x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-NORMALIZE-PACKAGES* VARIABLE"
   [443b]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_cas.htm "*PRINT-CASE* (MGL-PAX:CLHS VARIABLE)"
   [4796]: dref/README.md#x-28LAMBDA-20MGL-PAX-3ALOCATIVE-29 "LAMBDA MGL-PAX:LOCATIVE"
   [479a]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "ABORT (MGL-PAX:CLHS FUNCTION)"
@@ -3322,6 +3368,7 @@ they are presented.
   [99b0]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function '"setf function" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [9a7b]: #x-28MGL-PAX-3A-40EMACS-SETUP-FOR-BROWSING-20MGL-PAX-3ASECTION-29 "Emacs Setup for Browsing"
   [9b43]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "DEFPACKAGE (MGL-PAX:CLHS MGL-PAX:MACRO)"
+  [9c7d]: #x-28MGL-PAX-3A-40PAGES-20MGL-PAX-3ASECTION-29 "Pages"
   [9dbc]: #x-28MGL-PAX-3A-40TRANSCRIPT-API-20MGL-PAX-3ASECTION-29 "Transcript API"
   [a11d]: dref/README.md#x-28DREF-3A-40LOCATIVE-TYPE-20MGL-PAX-3AGLOSSARY-TERM-29 "DREF:@LOCATIVE-TYPE MGL-PAX:GLOSSARY-TERM"
   [a17d]: #x-28MGL-PAX-3A-40MATHJAX-20MGL-PAX-3ASECTION-29 "MathJax"
@@ -3331,6 +3378,7 @@ they are presented.
   [a5ee]: #x-28MGL-PAX-3A-2ADOCUMENT-DOWNCASE-UPPERCASE-CODE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-DOWNCASE-UPPERCASE-CODE* VARIABLE"
   [a843]: http://www.lispworks.com/documentation/HyperSpec/Body/t_std_ob.htm "STANDARD-OBJECT (MGL-PAX:CLHS CLASS)"
   [a951]: dref/README.md#x-28MGL-PAX-3AUNKNOWN-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:UNKNOWN MGL-PAX:LOCATIVE"
+  [ab7e]: #x-28MGL-PAX-3A-40PACKAGE-AND-READTABLE-20MGL-PAX-3ASECTION-29 "Package and Readtable"
   [ad78]: http://www.lispworks.com/documentation/HyperSpec/Body/f_format.htm "FORMAT (MGL-PAX:CLHS FUNCTION)"
   [ad80]: dref/README.md#x-28DREF-3A-40INTRODUCTION-20MGL-PAX-3ASECTION-29 "Introduction"
   [ad94]: #x-28MGL-PAX-3A-40UNAMBIGUOUS-UNSPECIFICED-LOCATIVE-20MGL-PAX-3ASECTION-29 "Unambiguous Unspecified Locative"
@@ -3342,6 +3390,7 @@ they are presented.
   [b372]: #x-28MGL-PAX-3A-40UNRESOLVABLE-REFLINKS-20MGL-PAX-3ASECTION-29 "Unresolvable Links"
   [b3cc]: #x-28MGL-PAX-3A-40EXPLICIT-AND-AUTOLINKING-20MGL-PAX-3ASECTION-29 "Explicit and Autolinking"
   [b4f0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_intern.htm "INTERN (MGL-PAX:CLHS FUNCTION)"
+  [b6c4]: dref/README.md#x-28DREF-EXT-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "DREF-EXT:DEFINE-LOCATIVE-TYPE MGL-PAX:MACRO"
   [b79a]: http://www.lispworks.com/documentation/HyperSpec/Body/v_rdtabl.htm "*READTABLE* (MGL-PAX:CLHS VARIABLE)"
   [b7fc]: #x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29 "Apropos"
   [b81d]: #x-28MGL-PAX-3ATRANSCRIPTION-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-ERROR CONDITION"
@@ -3354,6 +3403,7 @@ they are presented.
   [ba74]: #x-28MGL-PAX-3A-40LINKS-20MGL-PAX-3ASECTION-29 "Links and Systems"
   [bc83]: #x-28MGL-PAX-3A-40MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29 "Syntax Highlighting"
   [bcb6]: http://www.lispworks.com/documentation/HyperSpec/Body/e_warnin.htm "WARNING (MGL-PAX:CLHS CONDITION)"
+  [bdd5]: #x-28MGL-PAX-3A-40HOME-SECTION-20MGL-PAX-3ASECTION-29 "Home Section"
   [bf0f]: dref/README.md#x-28DREF-3A-40LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29 "Locative Types"
   [c097]: dref/README.md#x-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29 "ASDF/SYSTEM:SYSTEM MGL-PAX:LOCATIVE"
   [c2d3]: #x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29 "Markdown Support"
@@ -3379,6 +3429,7 @@ they are presented.
   [d9ee]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-CODE* VARIABLE"
   [da14]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "SIMPLE-CONDITION-FORMAT-ARGUMENTS (MGL-PAX:CLHS FUNCTION)"
   [dae6]: http://www.lispworks.com/documentation/HyperSpec/Body/f_string.htm "STRING (MGL-PAX:CLHS FUNCTION)"
+  [db68]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pkg_na.htm "PACKAGE-NAME (MGL-PAX:CLHS FUNCTION)"
   [dff6]: #x-28MGL-PAX-3A-40GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29 "Github Workflow"
   [e216]: #x-28MGL-PAX-3A-2ADOCUMENT-HTML-TOP-BLOCKS-OF-LINKS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* VARIABLE"
   [e2e8]: #x-28MGL-PAX-3A-40SUPPRESSED-LINKS-20MGL-PAX-3ASECTION-29 "Suppressed Links"

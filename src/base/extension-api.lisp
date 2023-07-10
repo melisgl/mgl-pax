@@ -11,11 +11,14 @@
 
 
 (defsection @adding-new-locatives (:title "Adding New Locatives")
-  "Once everyting in DREF-EXT::@ADDING-NEW-LOCATIVES has been done,
+  "Once everything in DREF-EXT::@ADDING-NEW-LOCATIVES has been done,
   there are only a couple of PAX generic functions left to extend."
   (document-dref generic-function)
   (exportable-reference-p generic-function)
-  (exportable-locative-type-p generic-function))
+  (exportable-locative-type-p generic-function)
+  "Also note that due to the @HOME-SECTION logic, especially for
+  locative types with string names, DREF-EXT:DREF-DOCSTRING should
+  probably return a non-NIL package.")
 
 ;;; This gets clobbered with an empty function when MGL-PAX/NAVIGATE
 ;;; is loaded.

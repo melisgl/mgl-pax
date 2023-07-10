@@ -205,14 +205,14 @@ with references (discussed in the [Extending DRef][68fb]).
     ```common-lisp
     (locate 'no-such-function 'function)
     .. debugger invoked on LOCATE-ERROR:
-    ..   Could not locate DREF::NO-SUCH-FUNCTION FUNCTION.
+    ..   Could not locate NO-SUCH-FUNCTION FUNCTION.
     ..   NO-SUCH-FUNCTION is not a symbol naming a function.
     ```
     
     ```common-lisp
     (locate 'print '(function xxx))
     .. debugger invoked on LOCATE-ERROR:
-    ..   Could not locate PRINT #'DREF::XXX.
+    ..   Could not locate PRINT #'XXX.
     ..   Bad arguments (XXX) for locative FUNCTION with lambda list NIL.
     ```
     

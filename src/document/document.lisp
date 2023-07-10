@@ -4,6 +4,8 @@
 
 (defsection @generating-documentation (:title "Generating Documentation")
   (document function)
+  (@pages section)
+  (@package-and-readtable section)
   (mgl-pax/document asdf:system)
   (@browsing-live-documentation section)
   (@markdown-support section)
@@ -736,14 +738,6 @@
 
   [map-documentable function][docstring]
 
-  [page-specs-to-pages function][docstring]
-
-  **Packages**
-
-  While generating the documentation, symbols may be read (e.g. from
-  docstrings) or printed, which is affected by the values of *PACKAGE*
-  and *READTABLE*. See *DOCUMENT-NORMALIZE-PACKAGES* for the details.
-
   **Extensions**
 
   See @EXTENSION-API and DOCUMENT-DREF."""
@@ -787,18 +781,13 @@
         (funcall fn))))
 
 
-;;;; Page specs
-
-;;; Convert the PAGES argument of DOCUMENT to PAGE objects.
-(defun page-specs-to-pages (documentable stream page-specs)
-  """**Pages**
-
-  The PAGES argument is to create multi-page documents by routing
-  some of the generated output to files, strings or streams. PAGES is
-  a list of page specification elements. A page spec is a [property
-  list][clhs] with keys :OBJECTS, :OUTPUT, :URI-FRAGMENT,
-  :SOURCE-URI-FN, :HEADER-FN and :FOOTER-FN. OBJECTS is a list of
-  objects (references are allowed but not required) whose
+(defsection @pages (:title "Pages")
+  """The PAGES argument of DOCUMENT is to create multi-page documents
+  by routing some of the generated output to files, strings or
+  streams. PAGES is a list of page specification elements. A page spec
+  is a [property list][clhs] with keys :OBJECTS, :OUTPUT,
+  :URI-FRAGMENT, :SOURCE-URI-FN, :HEADER-FN and :FOOTER-FN. OBJECTS is
+  a list of objects (references are allowed but not required) whose
   documentation is to be sent to :OUTPUT.
 
   Documentation is initially sent to a default stream (the STREAM
@@ -880,7 +869,10 @@
      :uri-fragment "doc/user/pax-manual.html"
      :header-fn 'write-html-header
      :footer-fn 'write-html-footer))
-  ```"""
+  ```""")
+
+;;; Convert the PAGES argument of DOCUMENT to PAGE objects.
+(defun page-specs-to-pages (documentable stream page-specs)
   (mapcar #'page-spec-to-page
           (ensure-default-page-spec page-specs documentable stream)))
 
@@ -1393,8 +1385,7 @@
 
   - it names a [local reference][@LOCAL-REFERENCES].
 
-  Symbols are read in the current *PACKAGE*, which is subject to
-  *DOCUMENT-NORMALIZE-PACKAGES*.")
+  See @PACKAGE-AND-READTABLE.")
 
 (defun interesting-name-p (xref-name name)
   (or (and (symbolp xref-name)
@@ -2561,7 +2552,6 @@
   (*document-url-versions* variable)
   (*document-min-link-hash-length* variable)
   (*document-mark-up-signatures* variable)
-  (*document-normalize-packages* variable)
   (*document-base-url* variable))
 
 (defvar *document-url-versions* '(2 1)
@@ -2894,35 +2884,58 @@
         (foo arglist 0)))))
 
 
+(defsection @package-and-readtable (:title "Package and Readtable")
+  "While generating documentation, symbols may be read (e.g. from
+  docstrings) and printed. What values of *PACKAGE* and *READTABLE*
+  are used is determined separately for each definition being
+  documented.
+
+  - If the values of *PACKAGE* and *READTABLE* in effect at the time
+    of definition were captured (e.g. by DEFINE-LOCATIVE-TYPE and
+    DEFSECTION), then they are used.
+
+  - Else, if the definition has a @HOME-SECTION (see below), then the
+    home section's SECTION-PACKAGE and SECTION-READTABLE are used.
+
+  - Else, if the definition is DREF::@NAMEd by a symbol, then its
+    SYMBOL-PACKAGE is used, and *READTABLE* is set to the standard
+    readtable `(NAMED-READTABLES:FIND-READTABLE :COMMON-LISP)`.
+
+  - Else, *PACKAGE* is set to the `CL-USER` package and *READTABLE* to
+    the standard readtable.
+
+  The values thus determined come into effect after the name itself is
+  printed, for printing of the arglist and the docstring.
+
+      CL-USER> (pax:document #'foo)
+      - [function] FOO <!> X Y &KEY (ERRORP T)
+
+          Do something with X and Y.
+
+  In the above, the `<!>` marks the place where *PACKAGE* and
+  *READTABLE* are bound."
+  (@home-section section)
+  (*document-normalize-packages* variable))
+
+(defsection @home-section (:title "Home Section")
+  "[home-section function][docstring]")
+
+(defun guess-package-and-readtable (reference)
+  ;; The caller of this function deals with the first bullet point.
+  (let ((home-section (first (find-parent-sections reference))))
+    (cond (home-section
+           (values (section-package home-section)
+                   (section-readtable home-section)))
+          ((symbolp (xref-name reference))
+           (values (symbol-package (xref-name reference))
+                   named-readtables::*standard-readtable*))
+          (t
+           (values (find-package :cl-user)
+                   named-readtables::*standard-readtable*)))))
+
 (defvar *document-normalize-packages* t
-  "Determines what *PACKAGE* and *READTABLE* are when generating
-  documentation.
-
-  [documenting-section macro][docstring]
-
-  - In all other cases (i.e. when *DOCUMENT-NORMALIZE-PACKAGES* is
-    false or we are not documenting a SECTION nor its
-    SECTION-ENTRIES), documenting most other kinds of definitions
-    attached to a symbol (e.g. a function), prints the symbol itself
-    normally, then binds *PACKAGE* to SYMBOL-PACKAGE for the printing
-    of the arglist and the docstring.
-
-            CL-USER> (pax:document #'foo)
-            - [function] FOO <!> X Y &KEY (ERRORP T)
-
-                Do something with X and Y.
-
-        In the above, the `<!>` marks the place where *PACKAGE* is
-        bound to `(SYMBOL-PACKAGE 'FOO)`. See DOCUMENTING-REFERENCE
-        from @EXTENDING-DOCUMENT for the gory details.")
-
-(defun guess-package (reference)
-  (if (and (not (and (boundp '*section*)
-                     *document-normalize-packages*))
-           reference
-           (symbolp (xref-name reference)))
-      (symbol-package (xref-name reference))
-      *package*))
+  "Whether to print `[in package <package-name>]` in the documentation
+  when the package changes.")
 
 
 (defvar *document-base-url* nil

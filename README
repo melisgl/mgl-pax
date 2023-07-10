@@ -868,106 +868,173 @@ section containing the definition with `point` in it. See
       and docstrings. The structure of the list is unimportant. The
       objects in it are documented in depth-first order.
     
-    **Pages**
-    
-    The PAGES argument is to create multi-page documents by routing
-    some of the generated output to files, strings or streams. PAGES is
-    a list of page specification elements. A page spec is a property
-    list with keys :OBJECTS, :OUTPUT, :URI-FRAGMENT,
-    :SOURCE-URI-FN, :HEADER-FN and :FOOTER-FN. OBJECTS is a list of
-    objects (references are allowed but not required) whose
-    documentation is to be sent to :OUTPUT.
-    
-    Documentation is initially sent to a default stream (the STREAM
-    argument of DOCUMENT), but output is redirected if the thing being
-    currently documented is the :OBJECT of a PAGE-SPEC.
-    
-    :OUTPUT can be a number things:
-    
-    - If it's NIL, then output will be collected in a string.
-    
-    - If it's T, then output will be sent to *STANDARD-OUTPUT*.
-    
-    - If it's a stream, then output will be sent to that stream.
-    
-    - If it's a list whose first element is a string or a pathname, then
-      output will be sent to the file denoted by that and the rest of
-      the elements of the list are passed on to CL:OPEN. One extra
-      keyword argument is :ENSURE-DIRECTORIES-EXIST. If it's true,
-      ENSURE-DIRECTORIES-EXIST will be called on the pathname before
-      it's opened.
-    
-    Note that even if PAGES is specified, STREAM acts as a catch all,
-    absorbing the generated documentation for references not claimed by
-    any pages.
-    
-    :HEADER-FN, if not NIL, is a function of a single stream argument,
-    which is called just before the first write to the page. Since
-    :FORMAT :HTML only generates HTML fragments, this makes it possible
-    to print arbitrary headers, typically setting the title, CSS
-    stylesheet, or charset.
-    
-    :FOOTER-FN is similar to :HEADER-FN, but it's called after the last
-    write to the page. For HTML, it typically just closes the body.
-    
-    :URI-FRAGMENT is a string such as `"doc/manual.html"` that specifies
-    where the page will be deployed on a webserver. It defines how links
-    between pages will look. If it's not specified and :OUTPUT refers to
-    a file, then it defaults to the name of the file. If :URI-FRAGMENT
-    is NIL, then no links will be made to or from that page.
-    
-    Finally, :SOURCE-URI-FN is a function of a single, REFERENCE
-    argument. If it returns a value other than NIL, then it must be a
-    string representing an URI. If FORMAT is :HTML and
-    *DOCUMENT-MARK-UP-SIGNATURES* is true, then the locative as
-    displayed in the signature will be a link to this URI. See
-    MAKE-GIT-SOURCE-URI-FN.
-    
-    PAGES may look something like this:
-    
-    ```
-    `((;; The section about SECTIONs and everything below it ...
-       :objects (, @sections)
-       ;; ... is so boring that it's not worth the disk space, so
-       ;; send it to a string.
-       :output (nil)
-       ;; Explicitly tell other pages not to link to these guys.
-       :uri-fragment nil)
-      ;; Send the @EXTENSION-API section and everything reachable
-      ;; from it ...
-      (:objects (, @extension-api)
-       ;; ... to build/tmp/pax-extension-api.html.
-       :output "build/tmp/pax-extension-api.html"
-       ;; However, on the web server html files will be at this
-       ;; location relative to some common root, so override the
-       ;; default:
-       :uri-fragment "doc/dev/pax-extension-api.html"
-       ;; Set html page title, stylesheet, charset.
-       :header-fn 'write-html-header
-       ;; Just close the body.
-       :footer-fn 'write-html-footer)
-      ;; Catch references that were not reachable from the above. It
-      ;; is important for this page spec to be last.
-      (:objects (, @pax-manual)
-       :output "build/tmp/manual.html"
-       ;; Links from the extension api page to the manual page will
-       ;; be to ../user/pax-manual#<anchor>, while links going to
-       ;; the opposite direction will be to
-       ;; ../dev/pax-extension-api.html#<anchor>.
-       :uri-fragment "doc/user/pax-manual.html"
-       :header-fn 'write-html-header
-       :footer-fn 'write-html-footer))
-    ```
-    
-    **Packages**
-    
-    While generating the documentation, symbols may be read (e.g. from
-    docstrings) or printed, which is affected by the values of *PACKAGE*
-    and *READTABLE*. See *DOCUMENT-NORMALIZE-PACKAGES* for the details.
-    
     **Extensions**
     
     See @EXTENSION-API and DOCUMENT-DREF.
+
+### Pages
+
+The PAGES argument of DOCUMENT is to create multi-page documents
+by routing some of the generated output to files, strings or
+streams. PAGES is a list of page specification elements. A page spec
+is a property list with keys :OBJECTS, :OUTPUT,
+:URI-FRAGMENT, :SOURCE-URI-FN, :HEADER-FN and :FOOTER-FN. OBJECTS is
+a list of objects (references are allowed but not required) whose
+documentation is to be sent to :OUTPUT.
+
+Documentation is initially sent to a default stream (the STREAM
+argument of DOCUMENT), but output is redirected if the thing being
+currently documented is the :OBJECT of a PAGE-SPEC.
+
+:OUTPUT can be a number things:
+
+- If it's NIL, then output will be collected in a string.
+
+- If it's T, then output will be sent to *STANDARD-OUTPUT*.
+
+- If it's a stream, then output will be sent to that stream.
+
+- If it's a list whose first element is a string or a pathname, then
+  output will be sent to the file denoted by that and the rest of
+  the elements of the list are passed on to CL:OPEN. One extra
+  keyword argument is :ENSURE-DIRECTORIES-EXIST. If it's true,
+  ENSURE-DIRECTORIES-EXIST will be called on the pathname before
+  it's opened.
+
+Note that even if PAGES is specified, STREAM acts as a catch all,
+absorbing the generated documentation for references not claimed by
+any pages.
+
+:HEADER-FN, if not NIL, is a function of a single stream argument,
+which is called just before the first write to the page. Since
+:FORMAT :HTML only generates HTML fragments, this makes it possible
+to print arbitrary headers, typically setting the title, CSS
+stylesheet, or charset.
+
+:FOOTER-FN is similar to :HEADER-FN, but it's called after the last
+write to the page. For HTML, it typically just closes the body.
+
+:URI-FRAGMENT is a string such as `"doc/manual.html"` that specifies
+where the page will be deployed on a webserver. It defines how links
+between pages will look. If it's not specified and :OUTPUT refers to
+a file, then it defaults to the name of the file. If :URI-FRAGMENT
+is NIL, then no links will be made to or from that page.
+
+Finally, :SOURCE-URI-FN is a function of a single, REFERENCE
+argument. If it returns a value other than NIL, then it must be a
+string representing an URI. If FORMAT is :HTML and
+*DOCUMENT-MARK-UP-SIGNATURES* is true, then the locative as
+displayed in the signature will be a link to this URI. See
+MAKE-GIT-SOURCE-URI-FN.
+
+PAGES may look something like this:
+
+```
+`((;; The section about SECTIONs and everything below it ...
+   :objects (, @sections)
+   ;; ... is so boring that it's not worth the disk space, so
+   ;; send it to a string.
+   :output (nil)
+   ;; Explicitly tell other pages not to link to these guys.
+   :uri-fragment nil)
+  ;; Send the @EXTENSION-API section and everything reachable
+  ;; from it ...
+  (:objects (, @extension-api)
+   ;; ... to build/tmp/pax-extension-api.html.
+   :output "build/tmp/pax-extension-api.html"
+   ;; However, on the web server html files will be at this
+   ;; location relative to some common root, so override the
+   ;; default:
+   :uri-fragment "doc/dev/pax-extension-api.html"
+   ;; Set html page title, stylesheet, charset.
+   :header-fn 'write-html-header
+   ;; Just close the body.
+   :footer-fn 'write-html-footer)
+  ;; Catch references that were not reachable from the above. It
+  ;; is important for this page spec to be last.
+  (:objects (, @pax-manual)
+   :output "build/tmp/manual.html"
+   ;; Links from the extension api page to the manual page will
+   ;; be to ../user/pax-manual#<anchor>, while links going to
+   ;; the opposite direction will be to
+   ;; ../dev/pax-extension-api.html#<anchor>.
+   :uri-fragment "doc/user/pax-manual.html"
+   :header-fn 'write-html-header
+   :footer-fn 'write-html-footer))
+```
+
+
+### Package and Readtable
+
+While generating documentation, symbols may be read (e.g. from
+docstrings) and printed. What values of *PACKAGE* and *READTABLE*
+are used is determined separately for each definition being
+documented.
+
+- If the values of *PACKAGE* and *READTABLE* in effect at the time
+  of definition were captured (e.g. by DEFINE-LOCATIVE-TYPE and
+  DEFSECTION), then they are used.
+
+- Else, if the definition has a @HOME-SECTION (see below), then the
+  home section's SECTION-PACKAGE and SECTION-READTABLE are used.
+
+- Else, if the definition is DREF::@NAMEd by a symbol, then its
+  SYMBOL-PACKAGE is used, and *READTABLE* is set to the standard
+  readtable `(NAMED-READTABLES:FIND-READTABLE :COMMON-LISP)`.
+
+- Else, *PACKAGE* is set to the `CL-USER` package and *READTABLE* to
+  the standard readtable.
+
+The values thus determined come into effect after the name itself is
+printed, for printing of the arglist and the docstring.
+
+    CL-USER> (pax:document #'foo)
+    - [function] FOO <!> X Y &KEY (ERRORP T)
+    
+        Do something with X and Y.
+
+In the above, the `<!>` marks the place where *PACKAGE* and
+*READTABLE* are bound.
+
+#### Home Section
+
+The home section of an object is a SECTION that contains the
+object's definition in its SECTION-ENTRIES or NIL. In the
+overwhelming majority of cases there should be at most one
+containing section.
+
+If there are multiple containing sections, the following apply.
+
+- If the DREF::@NAME of the definition is a non-keyword symbol, only
+  those containing sections are considered whose package is closest
+  to the SYMBOL-PACKAGE of the name, where closest is defined as
+  having the longest common prefix between the two PACKAGE-NAMEs.
+
+- If there are multiple sections with equally long matches or the
+  name is not a non-keyword symbol, then it's undefined which one is
+  the home section.
+
+For example, `(MGL-PAX:DOCUMENT FUNCTION)` is an entry in the
+`MGL-PAX::@BASICS` section. Unless another section that contains
+it is defined in the MGL-PAX package, the home section is guaranteed
+to be `MGL-PAX::@BASICS` because the SYMBOL-PACKAGEs of
+MGL-PAX:DOCUMENT and `MGL-PAX::@BASICS` are the same (hence their
+common prefix is maximally long).
+
+This scheme would also work, for example, if the home package
+of DOCUMENT were `MGL-PAX/IMPL`, and it were reexported from
+`MGL-PAX` because the only way to externally change the home package
+would be to define a containing section in a package like
+`MGL-PAX/IMP`.
+
+Thus, relying on the package system makes it possible to find the
+intended home section of a definition among multiple containing
+sections with high probability. However, for names which are not
+symbols, there is no package system to advantage of.
+
+- [variable] *DOCUMENT-NORMALIZE-PACKAGES* T
+
+    Deprecated.
 
 ### The mgl-pax/document ASDF System
 
@@ -1275,8 +1342,7 @@ Reader can help with that.
     
     - it names a local reference.
     
-    Symbols are read in the current *PACKAGE*, which is subject to
-    *DOCUMENT-NORMALIZE-PACKAGES*.
+    See @PACKAGE-AND-READTABLE.
 
 - [variable] *DOCUMENT-DOWNCASE-UPPERCASE-CODE* NIL
 
@@ -1676,38 +1742,6 @@ table of contents and navigation links.
     
     Also, in HTML `**foo**` will be a link to that very entry and
     `[function]` may turn into a link to sources.
-
-- [variable] *DOCUMENT-NORMALIZE-PACKAGES* T
-
-    Determines what *PACKAGE* and *READTABLE* are when generating
-    documentation.
-    
-    - When documentation is generated for a SECTION (including its
-      SECTION-ENTRIES), then *PACKAGE* and *READTABLE* will be bound to
-      SECTION-PACKAGE and SECTION-READTABLE. To eliminate ambiguity
-      `[in package ...]` messages are printed right after the section
-      heading if necessary.
-    
-    - When documenting a SECTION's SECTION-ENTRIES, the bindings
-      established by the section are in effect if
-      *DOCUMENT-NORMALIZE-PACKAGES* is true.
-    
-    - In all other cases (i.e. when *DOCUMENT-NORMALIZE-PACKAGES* is
-      false or we are not documenting a SECTION nor its
-      SECTION-ENTRIES), documenting most other kinds of definitions
-      attached to a symbol (e.g. a function), prints the symbol itself
-      normally, then binds *PACKAGE* to SYMBOL-PACKAGE for the printing
-      of the arglist and the docstring.
-    
-              CL-USER> (pax:document #'foo)
-              - [function] FOO <!> X Y &KEY (ERRORP T)
-            
-                  Do something with X and Y.
-    
-        In the above, the `<!>` marks the place where *PACKAGE* is
-          bound to `(SYMBOL-PACKAGE 'FOO)`. See DOCUMENTING-REFERENCE
-          from @EXTENDING-DOCUMENT for the gory details.
-
 
 - [variable] *DOCUMENT-BASE-URL* NIL
 
@@ -2637,7 +2671,7 @@ package for evaluation.
 
 ### Adding New Locatives
 
-Once everyting in DREF-EXT::@ADDING-NEW-LOCATIVES has been done,
+Once everything in DREF-EXT::@ADDING-NEW-LOCATIVES has been done,
 there are only a couple of PAX generic functions left to extend.
 
 - [generic-function] DOCUMENT-DREF DREF STREAM
@@ -2680,6 +2714,10 @@ there are only a couple of PAX generic functions left to extend.
     This function is called by the default method of
     EXPORTABLE-REFERENCE-P to decide what symbols DEFSECTION shall
     export when its EXPORT argument is true.
+
+Also note that due to the @HOME-SECTION logic, especially for
+locative types with string names, DREF-EXT:DREF-DOCSTRING should
+probably return a non-NIL package.
 
 ### Locative Aliases
 
@@ -2739,18 +2777,23 @@ new DOCUMENT-DREF methods, which emit markdown.
     anchors based on the definition of OBJECT. LINK-TITLE-TO
     behaves like the LINK-TITLE-TO argument of DEFSECTION.
 
-- [macro] DOCUMENTING-REFERENCE (STREAM &KEY REFERENCE ARGLIST NAME PACKAGE) &BODY BODY
+- [macro] DOCUMENTING-REFERENCE (STREAM &KEY REFERENCE NAME PACKAGE READTABLE ARGLIST) &BODY BODY
 
     Write REFERENCE to STREAM as described in
     *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a local
-    reference followed by ARGLIST.
+    reference for the processing of BODY.
     
     - REFERENCE defaults to the reference being DOCUMENTed.
     
     - NAME defaults to `(XREF-NAME REFERENCE)` and is printed after the
       LOCATIVE-TYPE.
     
-    - If ARGLIST is NIL or :NOT-AVAILABLE, then it is not printed.
+    - *PACKAGE* and *READTABLE* are bound to PACKAGE and READTABLE for
+      the duration of printing the ARGLIST and the processing of BODY.
+      If either is NIL, then a default value is computed as described in
+      @PACKAGE-AND-READTABLE.
+    
+    - If ARGLIST is NIL, then it is not printed.
     
     - If ARGLIST is a list, then it is must be a lambda list and
       is printed without the outermost parens and with the package names
@@ -2758,14 +2801,7 @@ new DOCUMENT-DREF methods, which emit markdown.
     
     - If ARGLIST is a string, then it must be valid markdown.
     
-    - Unless REFERENCE is documented as part of a SECTION (being on its
-      SECTION-ENTRIES), then after the locative type and the name are
-      printed, *PACKAGE* is bound to PACKAGE, which affects how symbols
-      in ARGLIST and during the processing of BODY are printed. When
-      REFERENCE's DREF::@NAME is a symbol, PACKAGE defaults to the
-      package of that symbol, else to *PACKAGE*.
-    
-    - It is not allowed to have WITH-HEADING in the dynamic
+    - It is not allowed to have WITH-HEADING within the dynamic
       extent of BODY.
 
 
