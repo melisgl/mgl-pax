@@ -1150,39 +1150,23 @@
 (defsection @markdown-support (:title "Markdown Support")
   "The [Markdown][markdown] in docstrings is processed with the
   [3BMD][3bmd] library."
-  (@markdown-indentation section)
+  (@markdown-in-docstrings section)
   (@markdown-syntax-highlighting section)
   (@mathjax section))
 
-(defsection @markdown-indentation (:title "Indentation")
-  """Docstrings can be indented in any of the usual styles. PAX
-  normalizes indentation by stripping the longest run of leading
-  spaces that common to all non-blank lines except the first:
-
-      (defun foo ()
-        "This is
-        indented
-        differently")
-
-  to
-
-      (defun foo ()
-        "This is
-      indented
-      differently")
-  """)
+(defsection @markdown-in-docstrings (:title "Markdown in Docstrings")
+  "[sanitize-docstring function][docstring]")
 
 (defvar *document-docstring-key* nil)
 
 (defun/autoloaded document-docstring
     (docstring stream &key (indentation "    ")
                exclude-first-line-p (paragraphp t))
-  "Process and DOCSTRING to STREAM, [stripping
-  indentation][@markdown-indentation] from it, performing
-  @CODIFICATION and @LINKING-TO-CODE, finally prefixing each line with
-  INDENTATION. The prefix is not added to the first line if
-  EXCLUDE-FIRST-LINE-P. If PARAGRAPHP, then add a newline before and
-  after the output."
+  "Write DOCSTRING to STREAM, [stripping indentation]
+  [@markdown-in-docstrings] from it, performing @CODIFICATION and
+  @LINKING-TO-CODE, finally prefixing each line with INDENTATION. The
+  prefix is not added to the first line if EXCLUDE-FIRST-LINE-P. If
+  PARAGRAPHP, then add a newline before and after the output."
   (when (and docstring
              (not (equal docstring ""))
              ;; If the output is going to /dev/null, then skip this
@@ -1191,7 +1175,7 @@
     (let ((docstring (funcall (or *document-docstring-key* #'identity)
                               docstring)))
       (when docstring
-        (let* ((docstring (strip-docstring-indentation docstring))
+        (let* ((docstring (sanitize-docstring docstring))
                (reindented (prefix-lines
                             indentation (codify-and-link docstring)
                             :exclude-first-line-p exclude-first-line-p)))
@@ -1327,8 +1311,9 @@
           (when foundp
             (let ((docstring (docstring (locate name locative))))
               (when docstring
-                (values (parse-markdown
-                         (strip-docstring-indentation docstring))
+                (values (or (parse-markdown
+                             (sanitize-docstring docstring))
+                            '(""))
                         t t))))))
       tree)))
 

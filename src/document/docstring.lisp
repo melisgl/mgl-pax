@@ -1,8 +1,25 @@
 (in-package :mgl-pax)
 
-;;; Normalize indentation of docstrings as described in (METHOD ()
-;;; (STRING T)) DOCUMENT-OBJECT.
-(defun strip-docstring-indentation (docstring &key (first-line-special-p t))
+(in-readtable pythonic-string-syntax)
+
+(defun sanitize-docstring (docstring &key (first-line-special-p t))
+  """Docstrings can be indented in any of the usual styles. PAX
+  normalizes indentation by stripping the longest run of leading
+  spaces common to all non-blank lines except the first:
+
+      (defun foo ()
+        "This is
+        indented
+        differently")
+
+  to
+
+      (defun foo ()
+        "This is
+      indented
+      differently")
+
+  [escape-md-heading function][docstring]"""
   (let ((indentation
           (docstring-indentation docstring
                                  :first-line-special-p first-line-special-p)))
@@ -14,12 +31,43 @@
                               (read-line s nil nil)
                             (unless line
                               (return))
-                            (if (and first-line-special-p (zerop i))
-                                (write-string line out)
-                                (write-string (subseq* line indentation) out))
+                            (write-string (escape-md-heading
+                                           (if (and first-line-special-p
+                                                    (zerop i))
+                                               line
+                                               (subseq* line indentation)))
+                                          out)
                             (unless missing-newline-p
                               (terpri out)))))))
             indentation)))
+
+;;; Until https://github.com/3b/3bmd/issues/58 is fixed.
+(defun escape-md-heading (line)
+  ""
+  line)
+
+#+nil
+(defun escape-md-heading (line)
+  """Furthermore, to reduce the chance of inadvertently intoducing a
+  markdown heading, if a line starts with a string of `#` characters
+  followed by a non-space character, then the first `#` is
+  automatically escaped. Thus, the following two docstrings are
+  equivalent:
+
+      The characters #\Space, #\Tab and
+      #Return are in the whitespace group.
+
+      The characters #\Space, #\Tab and
+      \#Return are in the whitespace group."""
+  (let ((n-spaces (n-leading-spaces line)))
+    (if (and (< n-spaces (length line))
+             (char= (aref line n-spaces) #\#)
+             (not (eql (find #\# line :start n-spaces :test-not #'char=)
+                       #\Space)))
+        (concatenate 'string (subseq line 0 n-spaces)
+                     "\\"
+                     (subseq line n-spaces))
+        line)))
 
 (defun n-leading-spaces (line)
   (let ((n 0))
@@ -54,6 +102,7 @@
                          (< (n-leading-spaces line) n-min-indentation))
                  (setq n-min-indentation (n-leading-spaces line)))))
     (or n-min-indentation 0)))
+
 
 ;;; Many docstrings out in the wild indent code by 1-3 spaces instead
 ;;; of 4. Round the indentation of consecutive non-zero indented lines
