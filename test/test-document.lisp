@@ -811,7 +811,13 @@ This is [Self-referencing][e042].
                "(&KEY A) (B C)")))
   (with-test ("macro-with-whole-and-dot")
     (is (equal (mgl-pax::arglist-to-markdown '(name . args))
-               "NAME . ARGS"))))
+               "NAME . ARGS")))
+  (with-test ("macro-with-body-and-dot")
+    (is (equal (mgl-pax::arglist-to-markdown '(&body (name . args)))
+               "&BODY (NAME . ARGS)")))
+  (with-test ("macro-with-rest-and-dot")
+    (is (equal (mgl-pax::arglist-to-markdown '(&rest (x y . z)))
+               "&REST (X Y . Z)"))))
 
 
 (defsection @test-symbol-macro (:export nil)

@@ -2831,10 +2831,10 @@
 ;;; default value with prefix. Works for macro arglists too.
 (defun arglist-to-markdown (arglist)
   (with-output-to-string (out)
-    (let ((*seen-special-p* nil)
+    (let ((*default-values-possible-p* nil)
           (*print-pretty* t)
           (*print-right-margin* 80))
-      (declare (special *seen-special-p*))
+      (declare (special *default-values-possible-p*))
       (labels
           ((resolve* (object)
              (if (and *document-mark-up-signatures*
@@ -2845,7 +2845,8 @@
                  (prin1-to-markdown object)))
            (print-arg (arg level)
              (cond ((member arg '(&key &optional &rest &body))
-                    (setq *seen-special-p* t)
+                    (when (member arg '(&key &optional))
+                      (setq *default-values-possible-p* t))
                     (format out "~A" (prin1-to-markdown arg)))
                    ((symbolp arg)
                     (format out "~A"
@@ -2854,20 +2855,19 @@
                               (symbol-name arg)))))
                    ((atom arg)
                     (format out "~A" (prin1-to-markdown arg)))
-                   (*seen-special-p*
+                   (*default-values-possible-p*
                     (if (symbolp (first arg))
                         (format out "(~A~{ ~A~})"
                                 (escape-markdown
                                  (maybe-downcase-all-uppercase-code
                                   (symbol-name (first arg))))
                                 (mapcar #'resolve* (rest arg)))
-                        (format out "~A"
-                                (prin1-to-markdown arg))))
+                        (format out "~A" (prin1-to-markdown arg))))
                    (t
-                    (foo arg (1+ level)))))
-           (foo (arglist level)
-             (let ((*seen-special-p* nil))
-               (declare (special *seen-special-p*))
+                    (print-arglist arg (1+ level)))))
+           (print-arglist (arglist level)
+             (let ((*default-values-possible-p* nil))
+               (declare (special *default-values-possible-p*))
                (unless (= level 0)
                  (format out "("))
                (loop for i upfrom 0
@@ -2875,13 +2875,28 @@
                      do (unless (zerop i)
                           (format out " "))
                         (print-arg (car rest) level)
-                        ;; There are arglists like (&WHOLE FORM NAME . ARGS).
+                        ;; Handle (&WHOLE FORM NAME . ARGS) and similar.
                         (unless (listp (cdr rest))
                           (format out " . ")
-                          (print-arg (cdr rest) level))))
-             (unless (= level 0)
-               (format out ")"))))
-        (foo arglist 0)))))
+                          (print-arg (cdr rest) level)))
+               (unless (= level 0)
+                 (format out ")")))))
+        (print-arglist arglist 0)))))
+
+(defun map-dotted (fn list*)
+  (if (listp list*)
+      (loop for rest on list*
+            do (funcall fn (car rest) nil)
+               (unless (listp (cdr rest))
+                 (funcall (cdr rest) t)))
+      (funcall fn list* t)))
+
+(defun mapcan-dotted (fn list)
+  (let ((results ()))
+    (map-dotted (lambda (x dotp)
+                  (push (funcall fn x dotp) results))
+                list)
+    (apply #'append (reverse results))))
 
 
 (defsection @package-and-readtable (:title "Package and Readtable")
