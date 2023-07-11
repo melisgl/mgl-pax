@@ -1309,12 +1309,14 @@
         (multiple-value-bind (name locative foundp)
             (read-reference-from-string (parse-tree-to-text label))
           (when foundp
-            (let ((docstring (docstring (locate name locative))))
-              (when docstring
+            (if-let (dref (locate name locative nil))
+              (when-let (docstring (docstring dref))
                 (values (or (parse-markdown
                              (sanitize-docstring docstring))
                             '(""))
-                        t t))))))
+                        t t))
+              (warn "~@<Including ~S failed because ~S ~S cannot be ~Sd~:@>"
+                    'docstring name locative 'locate)))))
       tree)))
 
 
