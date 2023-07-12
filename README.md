@@ -29,7 +29,7 @@
         - [8.3.4 Browsing with w3m][83d5]
         - [8.3.5 Browsing with Other Browsers][c434]
     - [8.4 Markdown Support][c2d3]
-        - [8.4.1 Indentation][718f]
+        - [8.4.1 Markdown in Docstrings][7bf5]
         - [8.4.2 Syntax Highlighting][bc83]
         - [8.4.3 MathJax][a17d]
     - [8.5 Codification][f1ab]
@@ -972,7 +972,7 @@ section containing the definition with `point` in it. See
   such as [`FUNCTION`][119e]s.
 
 - If `DOCUMENTABLE` is a string, then it is processed like a docstring
-  in [`DEFSECTION`][72b4]. That is, with [indentation cleanup][718f], [Codification][f1ab], and linking (see
+  in [`DEFSECTION`][72b4]. That is, with [docstring sanitization][7bf5], [Codification][f1ab], and linking (see
   [Linking to Code][1865], [Linking to the Hyperspec][7cc3]).
 
 - Finally, `DOCUMENTABLE` may be a nested list of `LOCATE`able objects
@@ -1179,7 +1179,7 @@ symbols, there is no package system to advantage of.
 ### 8.2 The mgl-pax/document ASDF System
 
 - Description: Documentation generation support for MGL-PAX.
-- Long Description: Do not declar a dependency on this system. It is
+- Long Description: Do not declare a dependency on this system. It is
   autoloaded. See [Generating Documentation][2c93].
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
@@ -1373,13 +1373,13 @@ change.
 The [Markdown][markdown] in docstrings is processed with the
 3BMD library.
 
-<a id="x-28MGL-PAX-3A-40MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29"></a>
+<a id="x-28MGL-PAX-3A-40MARKDOWN-IN-DOCSTRINGS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.4.1 Indentation
+#### 8.4.1 Markdown in Docstrings
 
 Docstrings can be indented in any of the usual styles. PAX
 normalizes indentation by stripping the longest run of leading
-spaces that common to all non-blank lines except the first:
+spaces common to all non-blank lines except the first:
 
     (defun foo ()
       "This is
@@ -1392,6 +1392,29 @@ to
       "This is
     indented
     differently")
+
+Docstrings of definitions which do not have a [Home Section][bdd5] and are
+not [`SECTION`][5fac]s themselves are assumed to have been written with no
+knowledge of PAX and to conform to markdown only by accident. These
+docstrings are thus sanitized more aggressively.
+
+- Indentation of what looks like blocks of Lisp code is rounded up to
+a multiple of 4. More precisely, non-zero indented lines between
+blank lines or the docstring boundaries are reindented if the first
+non-space character of the first line is an `(` or a `;` character.
+
+- Special HTML characters `<>&` are escaped.
+
+- Furthermore, to reduce the chance of inadvertently introducing a
+markdown heading, if a line starts with a string of `#` characters,
+then the first one is automatically escaped. Thus, the following two
+docstrings are equivalent:
+
+        The characters #\Space, #\Tab and
+        #Return are in the whitespace group.
+    
+        The characters #\Space, #\Tab and
+        \#Return are in the whitespace group.
 
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29"></a>
@@ -3135,12 +3158,10 @@ new `DOCUMENT-DREF` methods, which emit markdown.
 
 - [function] **DOCUMENT-DOCSTRING** *DOCSTRING STREAM &KEY (INDENTATION "    ") EXCLUDE-FIRST-LINE-P (PARAGRAPHP T)*
 
-    Process and `DOCSTRING` to `STREAM`, [stripping
-    indentation][718f] from it, performing
-    [Codification][f1ab] and [Linking to Code][1865], finally prefixing each line with
-    `INDENTATION`. The prefix is not added to the first line if
-    `EXCLUDE-FIRST-LINE-P`. If `PARAGRAPHP`, then add a newline before and
-    after the output.
+    Write `DOCSTRING` to `STREAM`, [sanitizing the markdown][7bf5] from it, performing [Codification][f1ab] and
+    [Linking to Code][1865], finally prefixing each line with `INDENTATION`. The
+    prefix is not added to the first line if `EXCLUDE-FIRST-LINE-P`. If
+    `PARAGRAPHP`, then add a newline before and after the output.
 
 <a id="x-28MGL-PAX-3AESCAPE-MARKDOWN-20FUNCTION-29"></a>
 
@@ -3341,12 +3362,12 @@ they are presented.
   [6e18]: #x-28MGL-PAX-3A-40TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS-20MGL-PAX-3ASECTION-29 "Finer-Grained Consistency Checks"
   [6f51]: http://www.lispworks.com/documentation/HyperSpec/Body/r_muffle.htm "MUFFLE-WARNING (MGL-PAX:CLHS RESTART)"
   [6fdb]: #x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax" ASDF/SYSTEM:SYSTEM'
-  [718f]: #x-28MGL-PAX-3A-40MARKDOWN-INDENTATION-20MGL-PAX-3ASECTION-29 "Indentation"
   [72b4]: #x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFSECTION MGL-PAX:MACRO"
   [730f]: #x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20VARIABLE-29 "MGL-PAX:*DISCARD-DOCUMENTATION-P* VARIABLE"
   [7328]: http://www.lispworks.com/documentation/HyperSpec/Body/f_apropo.htm "APROPOS-LIST (MGL-PAX:CLHS FUNCTION)"
   [7445]: #x-28MGL-PAX-3A-40INTERESTING-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@INTERESTING MGL-PAX:GLOSSARY-TERM"
   [7ac8]: dref/README.md#x-28DREF-3A-40LOCATIVE-20MGL-PAX-3AGLOSSARY-TERM-29 "DREF:@LOCATIVE MGL-PAX:GLOSSARY-TERM"
+  [7bf5]: #x-28MGL-PAX-3A-40MARKDOWN-IN-DOCSTRINGS-20MGL-PAX-3ASECTION-29 "Markdown in Docstrings"
   [7c82]: #x-28MGL-PAX-3A-40MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29 "Miscellaneous Variables"
   [7cc3]: #x-28MGL-PAX-3A-40LINKING-TO-THE-HYPERSPEC-20MGL-PAX-3ASECTION-29 "Linking to the Hyperspec"
   [7dc7]: #x-28MGL-PAX-3A-40DOCUMENT-RETURN-20MGL-PAX-3ASECTION-29 "Return Values"

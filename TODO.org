@@ -119,18 +119,11 @@ Cons of DEFINITIONS:
 Pros of DEFINITIONs:
 - BIND, (SETF OBJECT), UNBIND, (SETF DOCUMENTATION).
 * BUG transcript: "debugger invoked on" is treated like output
-* MAYBE escape some html in docstrings?
-This could be easily implemented as a parse tree transformation in
-SANITIZE-DOCSTRING but:
-
-1. An extra parse/print is costly (although we can avoid it if there
-   are e.g. no < characters in the docstring at all).
-2. 3bmd is not print/parse consistent enough for this to work well.
-3. What if we do want to include html?
-
-Instead, just make sure that the HTML does not mess things up by
-closing open tags? That would still make unescaped tags disappear from
-docstrings.
-
-So, we need to be able to include html but in a way that's less likely
-to be stumbled upon in docstrings.
+* too many warnings on stuff like [xxx]
+* reduce memory working set size of large apropos
+* MAYBE packages of argument names are slightly informative
+When the name of the function is in A, but the actual definition is in
+package B, then the package is guessed wrong during documentation
+generation, which results in missed codification and autolinking
+opportunities. However, the names of arguments (especially the
+unexported ones!) can help identify the package.

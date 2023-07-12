@@ -137,13 +137,17 @@
 
 
 (defun escape-html (string)
-  (with-output-to-string (out)
-    (loop for char across string
-          do (format out "~A" (case char
-                                ((#\<) "&lt;")
-                                ((#\>) "&gt;")
-                                ((#\&) "&amp;")
-                                (t char))))))
+  (if (or (find #\< string)
+          (find #\> string)
+          (find #\& string))
+      (with-output-to-string (out)
+        (loop for char across string
+              do (format out "~A" (case char
+                                    ((#\<) "&lt;")
+                                    ((#\>) "&gt;")
+                                    ((#\&) "&amp;")
+                                    (t char)))))
+      string))
 
 
 ;;; For http://user@example.com:8080/x/y.html?a=1&b=2#z, return:

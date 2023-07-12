@@ -216,8 +216,8 @@
 (declaim (ftype function global-definition-p))
 (declaim (ftype function link-to-definition))
 
-;;; We need this for more informative TRANSCRIBE-ERRORs and for
-;;; DOCUMENTING-REFERENCE.
+;;; We need this for more informative TRANSCRIBE-ERRORs,
+;;; DOCUMENTING-REFERENCE and SANITIZE-AGGRESSIVELY-P.
 (defvar *documenting-reference* nil)
 
 

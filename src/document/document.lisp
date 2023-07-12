@@ -615,8 +615,8 @@
     such as [FUNCTION][class]s.
 
   - If DOCUMENTABLE is a string, then it is processed like a docstring
-    in DEFSECTION. That is, with [indentation cleanup]
-    [@markdown-indentation], @CODIFICATION, and linking (see
+    in DEFSECTION. That is, with [docstring sanitization]
+    [@markdown-in-docstrings], @CODIFICATION, and linking (see
     @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
 
   - Finally, DOCUMENTABLE may be a nested list of LOCATEable objects
@@ -1155,14 +1155,31 @@
   (@mathjax section))
 
 (defsection @markdown-in-docstrings (:title "Markdown in Docstrings")
-  "[sanitize-docstring function][docstring]")
+  """[strip-docstring-indent function][docstring]
+
+  [ sanitize-aggressively-p function][docstring]
+
+  - [ round-up-indentation function][docstring]
+  - [ escape-html-in-docstring function][docstring]
+  - [ escape-heading-in-docstring function][docstring]""")
+
+(defun sanitize-aggressively-p ()
+  "Docstrings of definitions which do not have a @HOME-SECTION and are
+  not SECTIONs themselves are assumed to have been written with no
+  knowledge of PAX and to conform to markdown only by accident. These
+  docstrings are thus sanitized more aggressively."
+  (and (not (boundp '*section*))
+       ;; This is implicit in the above, but docstrings passed
+       ;; directly to DOCUMENT are not treated aggressively.
+       *documenting-reference*
+       (null (home-section *documenting-reference*))))
 
 (defvar *document-docstring-key* nil)
 
 (defun/autoloaded document-docstring
     (docstring stream &key (indentation "    ")
                exclude-first-line-p (paragraphp t))
-  "Write DOCSTRING to STREAM, [stripping indentation]
+  "Write DOCSTRING to STREAM, [sanitizing the markdown]
   [@markdown-in-docstrings] from it, performing @CODIFICATION and
   @LINKING-TO-CODE, finally prefixing each line with INDENTATION. The
   prefix is not added to the first line if EXCLUDE-FIRST-LINE-P. If
@@ -1175,7 +1192,8 @@
     (let ((docstring (funcall (or *document-docstring-key* #'identity)
                               docstring)))
       (when docstring
-        (let* ((docstring (sanitize-docstring docstring))
+        (let* ((docstring (sanitize-docstring
+                           docstring :aggressivep (sanitize-aggressively-p)))
                (reindented (prefix-lines
                             indentation (codify-and-link docstring)
                             :exclude-first-line-p exclude-first-line-p)))
@@ -1311,8 +1329,7 @@
           (when foundp
             (if-let (dref (locate name locative nil))
               (when-let (docstring (docstring dref))
-                (values (or (parse-markdown
-                             (sanitize-docstring docstring))
+                (values (or (parse-markdown (sanitize-docstring docstring))
                             '(""))
                         t t))
               (warn "~@<Including ~S failed because ~S ~S cannot be ~Sd~:@>"

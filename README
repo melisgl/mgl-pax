@@ -846,7 +846,7 @@ section containing the definition with `point` in it. See
   such as FUNCTIONs.
 
 - If DOCUMENTABLE is a string, then it is processed like a docstring
-  in DEFSECTION. That is, with indentation cleanup, @CODIFICATION, and linking (see
+  in DEFSECTION. That is, with docstring sanitization, @CODIFICATION, and linking (see
   @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
 
 - Finally, DOCUMENTABLE may be a nested list of LOCATEable objects
@@ -1041,7 +1041,7 @@ symbols, there is no package system to advantage of.
 ### The mgl-pax/document ASDF System
 
 - Description: Documentation generation support for MGL-PAX.
-- Long Description: Do not declar a dependency on this system. It is
+- Long Description: Do not declare a dependency on this system. It is
   autoloaded. See MGL-PAX::@GENERATING-DOCUMENTATION.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
@@ -1221,11 +1221,11 @@ change.
 The [Markdown][markdown] in docstrings is processed with the
 3BMD library.
 
-#### Indentation
+#### Markdown in Docstrings
 
 Docstrings can be indented in any of the usual styles. PAX
 normalizes indentation by stripping the longest run of leading
-spaces that common to all non-blank lines except the first:
+spaces common to all non-blank lines except the first:
 
     (defun foo ()
       "This is
@@ -1238,6 +1238,29 @@ to
       "This is
     indented
     differently")
+
+Docstrings of definitions which do not have a @HOME-SECTION and are
+not SECTIONs themselves are assumed to have been written with no
+knowledge of PAX and to conform to markdown only by accident. These
+docstrings are thus sanitized more aggressively.
+
+- Indentation of what looks like blocks of Lisp code is rounded up to
+a multiple of 4. More precisely, non-zero indented lines between
+blank lines or the docstring boundaries are reindented if the first
+non-space character of the first line is an `(` or a `;` character.
+
+- Special HTML characters `<>&` are escaped.
+
+- Furthermore, to reduce the chance of inadvertently introducing a
+markdown heading, if a line starts with a string of `#` characters,
+then the first one is automatically escaped. Thus, the following two
+docstrings are equivalent:
+
+        The characters #\Space, #\Tab and
+        #Return are in the whitespace group.
+    
+        The characters #\Space, #\Tab and
+        \#Return are in the whitespace group.
 
 
 #### Syntax Highlighting
@@ -2815,12 +2838,10 @@ new DOCUMENT-DREF methods, which emit markdown.
 
 - [function] DOCUMENT-DOCSTRING DOCSTRING STREAM &KEY (INDENTATION "    ") EXCLUDE-FIRST-LINE-P (PARAGRAPHP T)
 
-    Process and DOCSTRING to STREAM, stripping
-    indentation from it, performing
-    @CODIFICATION and @LINKING-TO-CODE, finally prefixing each line with
-    INDENTATION. The prefix is not added to the first line if
-    EXCLUDE-FIRST-LINE-P. If PARAGRAPHP, then add a newline before and
-    after the output.
+    Write DOCSTRING to STREAM, sanitizing the markdown from it, performing @CODIFICATION and
+    @LINKING-TO-CODE, finally prefixing each line with INDENTATION. The
+    prefix is not added to the first line if EXCLUDE-FIRST-LINE-P. If
+    PARAGRAPHP, then add a newline before and after the output.
 
 - [function] ESCAPE-MARKDOWN STRING &KEY (ESCAPE-NEWLINE T)
 
