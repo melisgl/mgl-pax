@@ -73,7 +73,8 @@
       (let ((char (aref string i)))
         (when (or (markdown-special-char-p char)
                   (and escape-newline
-                       (char= char #\Newline)))
+                       (or (char= char #\Newline)
+                           (char= char #\Return))))
           (write-char #\\ stream))
         (write-char char stream)))))
 

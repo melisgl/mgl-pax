@@ -2,11 +2,11 @@
 
 (defun check-document (input expected
                        &key (package (find-package :mgl-pax-test)) msg
-                         (url-versions '(2)))
+                         (url-versions '(2)) (format :markdown))
   (let ((output (let ((*package* package)
                       (*document-hyperspec-root* "CLHS/")
                       (*document-url-versions* url-versions))
-                  (document input :stream nil :format :markdown))))
+                  (document input :stream nil :format format))))
     (is (null (mismatch% output expected))
         :msg msg
         :ctx ("Input: ~S" input))))
@@ -769,20 +769,25 @@ This is [Self-referencing][e042].
 "))))))
 
 
-(defparameter *nasty-var* (format nil "~%~%")
+(defparameter *nasty-var* (coerce '(#\Space #\Linefeed #\Tab #\Newline
+                                    #\Page #\Return)
+                                  'string)
   "docstring")
 
 (deftest test-variable ()
   (with-failure-expected ((alexandria:featurep :clisp))
     (check-document (locate '*nasty-var* 'variable)
-                    "<a id=\"MGL-PAX-TEST:*NASTY-VAR*%20VARIABLE\"></a>
+                    "<p><a id=\"MGL-PAX-TEST:*NASTY-VAR*%20VARIABLE\"></a></p>
 
-- [variable] **\\*NASTY-VAR\\*** *\"\\
+<ul>
+<li><p><span class=reference-bullet><span class=reference><span class=\"locative-type\">[variable]</span> <span class=\"reference-object\"><a href=\"#MGL-PAX-TEST:*NASTY-VAR*%20VARIABLE\" >*NASTY-VAR*</a></span></span> <span class=\"locative-args\">&quot; \\
 \\
-\"*
+\\&quot;</span></span></p>
 
-    docstring
-"))
+<p>docstring</p></li>
+</ul>
+"
+                    :format :html))
   (with-test ("initform")
     (check-pred (locate '*some-var* '(variable 7))
                 "- [variable] **\\*SOME-VAR\\*** *7*")))
