@@ -61,22 +61,53 @@
       ""
       (format stream "*~A*" string)))
 
-(defun markdown-special-char-p (char)
-  (member char '(#\* #\_ #\` #\< #\> #\[ #\])))
+(defun markdown-special-inline-char-p (char)
+  (member char '(#\* #\_ #\` #\[ #\])))
 
-(defun/autoloaded escape-markdown (string &key (escape-newline t))
+(defun markdown-special-block-char-p (char)
+  (member char '(#\#)))
+
+(defun/autoloaded escape-markdown (string &key (escape-newline t)
+                                          (escape-block t))
   "Construct a new string from STRING by adding a backslash before
-  the special markdown characters ``*_`<>[]`` and newline if
-  ESCAPE-NEWLINE."
-  (with-output-to-string (stream)
-    (dotimes (i (length string))
-      (let ((char (aref string i)))
-        (when (or (markdown-special-char-p char)
-                  (and escape-newline
-                       (or (char= char #\Newline)
-                           (char= char #\Return))))
-          (write-char #\\ stream))
-        (write-char char stream)))))
+  the special markdown characters ``*_`[]`` when necessary, escaping
+  HTML characters `<&`, and also newlines if ESCAPE-NEWLINE, and also
+  `#` when ESCAPE-BLOCK."
+  (flet ((blank-line-until-p (pos)
+           (loop for i downfrom (1- pos) downto 0
+                 for char = (aref string i)
+                 do (when (char= char #\Newline)
+                      (return t))
+                 do (unless (whitespacep char)
+                      (return nil))
+                 finally (return t))))
+    (with-output-to-string (stream)
+      (dotimes (i (length string))
+        (let ((char (aref string i)))
+          (case char
+            ((#\<) (write-string "&lt;" stream))
+            ((#\&)
+             (let ((semicolon-pos (position #\; string :start (1+ i)))
+                   (whitespace-pos (position-if #'whitespacep string
+                                                :start (1+ i))))
+               ;; If there is no semicolon or there is no whitespace
+               ;; between & and ;, then it's not parsed as an entity, so
+               ;; don't escape it to reduce clutter.
+               (if (and semicolon-pos (or (null whitespace-pos)
+                                          (< semicolon-pos whitespace-pos)))
+                   (write-string "&amp;" stream)
+                   (write-char char stream))))
+            (t
+             (when (or (markdown-special-inline-char-p char)
+                       (and escape-newline
+                            (or (char= char #\Return)
+                                (char= char #\Newline))
+                            (blank-line-until-p i))
+                       (and escape-block
+                            (markdown-special-block-char-p char)
+                            (blank-line-until-p i)))
+               (write-char #\\ stream))
+             (write-char char stream))))))))
 
 (defun unescape-markdown (string)
   (let ((escaping nil))

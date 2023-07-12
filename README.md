@@ -1379,15 +1379,14 @@ The [Markdown][markdown] in docstrings is processed with the
 
 Docstrings can be indented in any of the usual styles. PAX
 normalizes indentation by stripping the longest run of leading
-spaces common to all non-blank lines except the first:
+spaces common to all non-blank lines except the first. The following
+two docstrings are equivalent:
 
     (defun foo ()
       "This is
       indented
       differently")
-
-to
-
+    
     (defun foo ()
       "This is
     indented
@@ -2763,14 +2762,14 @@ Transcription support in Emacs can be enabled by loading
 
 <a id="x-28MGL-PAX-3A-2ATRANSCRIBE-SYNTAXES-2A-20VARIABLE-29"></a>
 
-- [variable] **\*TRANSCRIBE-SYNTAXES\*** *((:DEFAULT (:OUTPUT "..") (:NO-VALUE "=\> ; No value") (:READABLE "=\>")\
-  (:UNREADABLE "==\>") (:UNREADABLE-CONTINUATION "--\>"))\
- (:COMMENTED-1 (:OUTPUT ";..") (:NO-VALUE ";=\> ; No value") (:READABLE ";=\>")\
-  (:READABLE-CONTINUATION ";-\>") (:UNREADABLE ";==\>")\
-  (:UNREADABLE-CONTINUATION ";--\>"))\
- (:COMMENTED-2 (:OUTPUT ";;..") (:NO-VALUE ";;=\> ; No value")\
-  (:READABLE ";;=\>") (:READABLE-CONTINUATION ";;-\>") (:UNREADABLE ";;==\>")\
-  (:UNREADABLE-CONTINUATION ";;--\>")))*
+- [variable] **\*TRANSCRIBE-SYNTAXES\*** *((:DEFAULT (:OUTPUT "..") (:NO-VALUE "=> ; No value") (:READABLE "=>")
+  (:UNREADABLE "==>") (:UNREADABLE-CONTINUATION "-->"))
+ (:COMMENTED-1 (:OUTPUT ";..") (:NO-VALUE ";=> ; No value") (:READABLE ";=>")
+  (:READABLE-CONTINUATION ";->") (:UNREADABLE ";==>")
+  (:UNREADABLE-CONTINUATION ";-->"))
+ (:COMMENTED-2 (:OUTPUT ";;..") (:NO-VALUE ";;=> ; No value")
+  (:READABLE ";;=>") (:READABLE-CONTINUATION ";;->") (:UNREADABLE ";;==>")
+  (:UNREADABLE-CONTINUATION ";;-->")))*
 
     The default syntaxes used by [`TRANSCRIBE`][f1f0] for reading and writing
     lines containing output and values of an evaluated form.
@@ -3165,15 +3164,16 @@ new `DOCUMENT-DREF` methods, which emit markdown.
 
 <a id="x-28MGL-PAX-3AESCAPE-MARKDOWN-20FUNCTION-29"></a>
 
-- [function] **ESCAPE-MARKDOWN** *STRING &KEY (ESCAPE-NEWLINE T)*
+- [function] **ESCAPE-MARKDOWN** *STRING &KEY (ESCAPE-NEWLINE T) (ESCAPE-BLOCK T)*
 
     Construct a new string from `STRING` by adding a backslash before
-    the special markdown characters ``*_`<>[]`` and newline if
-    `ESCAPE-NEWLINE`.
+    the special markdown characters ``*_`[]`` when necessary, escaping
+    HTML characters `<&`, and also newlines if `ESCAPE-NEWLINE`, and also
+    `#` when `ESCAPE-BLOCK`.
 
 <a id="x-28MGL-PAX-3APRIN1-TO-MARKDOWN-20FUNCTION-29"></a>
 
-- [function] **PRIN1-TO-MARKDOWN** *OBJECT &KEY (ESCAPE-NEWLINE T)*
+- [function] **PRIN1-TO-MARKDOWN** *OBJECT &KEY (ESCAPE-NEWLINE T) (ESCAPE-BLOCK T)*
 
     Like [`PRIN1-TO-STRING`][18e1], but bind [`*PRINT-CASE*`][443b] depending on
     [`*DOCUMENT-DOWNCASE-UPPERCASE-CODE*`][a5ee] and [`*FORMAT*`][3da8], and
