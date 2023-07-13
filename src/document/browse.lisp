@@ -594,12 +594,17 @@
            (parse-nil-symbol-or-string (string)
              (cond ((string= string "")
                     nil)
-                   ((starts-with #\' string)
+                   ((starts-with-subseq "'#:" string)
+                    (make-symbol (subseq string 3)))
+                   ((starts-with-subseq "':" string)
+                    (print (make-symbol (subseq string 2))))
+                   ((starts-with-subseq "'" string)
                     (make-symbol (subseq string 1)))
                    (t
                     string))))
       (multiple-value-bind (name locative-types) (parse-name name)
-        (let* ((package (parse-nil-symbol-or-string package))
+        (let* ((package (parse-nil-symbol-or-string
+                         (dref::adjust-string-case package)))
                ;; Whether this is for an exact package match and no
                ;; other restrictions.
                (%packagep (and package (null name) (symbolp package)))

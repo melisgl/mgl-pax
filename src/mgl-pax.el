@@ -1169,7 +1169,8 @@ Also, see `mgl-pax-apropos-all'."
 
 (defun mgl-pax-apropos-package (package &optional internal)
   "Show apropos listing for symbols in PACKAGE.
-With prefix argument include internal symbols."
+With prefix argument include internal symbols.
+The empty string means the current package."
   (interactive (list (let ((pkg (slime-read-package-name
                                  "PAX Apropos for Package: ")))
                        (if (string= pkg "") (slime-current-package) pkg))
