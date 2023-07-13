@@ -1263,9 +1263,9 @@
 
   `C-u 0 mgl-pax-retranscribe-region` will turn commented into
   non-commented markup. In general, the numeric prefix argument is the
-  index of the syntax to be used in MGL-PAX:*TRANSCRIBE-SYNTAXES*.
-  Without a prefix argument `mgl-pax-retranscribe-region` will not
-  change the markup style.
+  index of the syntax to be used in *TRANSCRIBE-SYNTAXES*. Without a
+  prefix argument `mgl-pax-retranscribe-region` will not change the
+  markup style.
 
   Finally, not only do both functions work at any indentation level,
   but in comments too:

@@ -6,6 +6,7 @@
 (let ((imports '(alexandria:if-let alexandria:when-let alexandria:nth-value-or
                  alexandria:first-elt alexandria:last-elt
                  alexandria:starts-with alexandria:starts-with-subseq
+                 alexandria:ends-with
                  alexandria:once-only alexandria:with-gensyms
                  alexandria:hash-table-keys
                  alexandria:rcurry)))

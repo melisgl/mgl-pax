@@ -6,10 +6,7 @@
 
 (defun parse-markdown (string)
   (let ((3bmd-grammar:*smart-quotes* nil))
-    ;; To be able to recognize symbols like FOO* join (... "FOO" "*"
-    ;; ...) to look like (... "FOO*" ...).
-    (join-consecutive-non-blank-strings-in-parse-tree
-     (parse-markdown-fast string))))
+    (preprocess-parse-tree (parse-markdown-fast string))))
 
 (defun parse-markdown-fast (string)
   (if (< (length string) 1000)
@@ -253,25 +250,30 @@
                       handle-strings fn parent tree))
                   parse-tree))
 
-(defun join-consecutive-non-blank-strings-in-parse-tree (parse-tree)
-  (transform-tree
-   (lambda (parent tree)
-     (declare (ignore parent))
-     (if (listp tree)
-         (values (join-consecutive-non-blank-strings-in-list tree) t nil)
-         tree))
-   parse-tree))
+(defun preprocess-parse-tree (parse-tree)
+  (transform-tree (lambda (parent tree)
+                    (declare (ignore parent))
+                    (if (listp tree)
+                        (values (join-stuff-in-list tree) t nil)
+                        tree))
+                  parse-tree))
 
-(defun join-consecutive-non-blank-strings-in-list (list)
+(defun join-stuff-in-list (tree)
   (let ((result ()))
-    (dolist (element list)
-      (if (and (stringp element)
-               (stringp (first result))
-               (not (blankp element))
-               (not (blankp (first result))))
-          (setf (first result)
-                (concatenate 'string (first result) element))
-          (push element result)))
+    (dolist (element tree)
+      (let ((prev (first result)))
+        (cond
+          ;; "x" "y" -> "xy"
+          ((and (stringp element) (not (blankp element))
+                (stringp prev) (not (blankp prev)))
+           (setf (first result) (concatenate 'string prev element)))
+          ;; "CL:" (:EMPH "*FEATURES*") - > "CL:*FEATURES*"
+          ((and (listp element) (eq (first element) :emph)
+                (stringp prev) (ends-with #\: prev))
+           (setf (first result)
+                 (format nil "~A*~A*" prev (second element))))
+          (t
+           (push element result)))))
     (reverse result)))
 
 ;;; Call FN with STRING and START, END indices of @WORDS.
