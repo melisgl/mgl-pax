@@ -133,8 +133,7 @@
                 (dolist (depluralized (depluralize both-trimmed))
                   (unless (string= depluralized both-trimmed)
                     (find-it depluralized))))
-              (alexandria:when-let (trimmed (trim-uppercase-core
-                                             both-trimmed))
+              (when-let (trimmed (trim-uppercase-core both-trimmed))
                 (find-it trimmed)))
             (when depluralize
               (dolist (depluralized (depluralize word))
@@ -157,7 +156,7 @@
   (let ((l (length string))
         (r ()))
     (labels ((suffixp (suffix)
-               (alexandria:ends-with-subseq suffix string :test #'char-equal))
+               (ends-with-subseq suffix string :test #'char-equal))
              (%desuffix (suffix)
                (subseq string 0 (- l (length suffix))))
              (desuffix (suffix)
@@ -283,7 +282,7 @@
 
 (defun read-object-from-string (string)
   (let ((string (string-trim *whitespace-chars* string)))
-    (if (alexandria:starts-with #\" string)
+    (if (starts-with #\" string)
         (read-from-string string)
         (multiple-value-bind (symbol found)
             (swank::parse-symbol

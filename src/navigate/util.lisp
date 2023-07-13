@@ -63,7 +63,7 @@
 
 
 (defmacro with-debugger-hook (fn &body body)
-  (alexandria:with-gensyms (prev-debugger-hook condition this-hook)
+  (with-gensyms (prev-debugger-hook condition this-hook)
     `(let* ((,prev-debugger-hook *debugger-hook*)
             (*debugger-hook* (lambda (,condition ,this-hook)
                                (declare (ignore ,this-hook))

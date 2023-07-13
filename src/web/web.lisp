@@ -5,7 +5,7 @@
 ;;;; HANDLE-PAX*-REQUEST
 
 (defmacro with-errors-to-html (&body body)
-  (alexandria:with-gensyms (error)
+  (with-gensyms (error)
     `(block nil
        (handler-bind
            ((error (lambda (,error)
@@ -41,7 +41,7 @@
                   (declare (ignore authority))
                   (if (and (string= scheme "file")
                            (string= path (namestring temp-file-name)))
-                      (alexandria:read-file-into-string path)
+                      (read-file-into-string path)
                       (hunchentoot:redirect url))))))))))
 
 (defun request-pax*-url ()
@@ -132,7 +132,7 @@
       (dolist (file static-files)
         (unless (let ((name (pathname-name file)))
                   (and (stringp name)
-                       (alexandria:starts-with-subseq "README" name)))
+                       (starts-with-subseq "README" name)))
           (let ((uri (format nil "/~A" (enough-namestring file static-root))))
             (pushnew (if (uiop:directory-pathname-p file)
                          (hunchentoot:create-folder-dispatcher-and-handler

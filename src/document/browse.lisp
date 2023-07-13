@@ -154,11 +154,11 @@
         `(:url ,(document-pax*-url pax*-url filename))))))
 
 (defun document-pax*-url (url filename)
-  (cond ((alexandria:starts-with-subseq "pax:" url)
+  (cond ((starts-with-subseq "pax:" url)
          (document-pax-url-for-emacs url filename))
-        ((alexandria:starts-with-subseq "pax-eval:" url)
+        ((starts-with-subseq "pax-eval:" url)
          (document-pax-eval-url-for-emacs url filename))
-        ((alexandria:starts-with-subseq "pax-wall:" url)
+        ((starts-with-subseq "pax-wall:" url)
          (document-pax-wall-url-for-emacs url filename))
         (t
          (assert nil))))
@@ -324,8 +324,7 @@
 ;;; E.g. "pax:foo function"
 (defun document-for-emacs/reference (reference filename)
   (let ((reference (replace-go-target reference)))
-    (alexandria:if-let (external-reference (open-reference-if-external
-                                            reference))
+    (if-let (external-reference (open-reference-if-external reference))
       (external-reference-url external-reference)
       (let* ((filename (file-name-for-pax-url
                         filename
@@ -337,10 +336,10 @@
                             *package*))
              #+nil
              (*print-arglist-key*
-               (and packagep (alexandria:rcurry 'shorten-arglist reference)))
+               (and packagep (rcurry 'shorten-arglist reference)))
              #+nil
              (*document-docstring-key*
-               (and packagep (alexandria:rcurry 'shorten-docstring reference))))
+               (and packagep (rcurry 'shorten-docstring reference))))
         (document/open/file filename
                             (if packagep
                                 (pax-apropos* nil t (make-symbol
@@ -587,7 +586,7 @@
                     (tail (and tail-pos (subseq string (1+ tail-pos))))
                     (string (subseq string 0 tail-pos)))
                (values (cond ((string= string "") nil)
-                             ((alexandria:starts-with #\' string)
+                             ((starts-with #\' string)
                               (make-symbol (subseq string 1 tail-pos)))
                              (t
                               (subseq string 0 tail-pos)))
@@ -595,7 +594,7 @@
            (parse-nil-symbol-or-string (string)
              (cond ((string= string "")
                     nil)
-                   ((alexandria:starts-with #\' string)
+                   ((starts-with #\' string)
                     (make-symbol (subseq string 1)))
                    (t
                     string))))

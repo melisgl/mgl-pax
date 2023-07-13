@@ -108,8 +108,7 @@
   (when update-css-p
     (copy-css target-dir))
   (document sections
-            :pages (add-html-defaults-to-page-specs
-                    (alexandria:ensure-list sections)
+            :pages (add-html-defaults-to-page-specs (ensure-list sections)
                     page-specs target-dir link-to-pax-world-p)
             :format :html))
 

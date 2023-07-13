@@ -755,9 +755,9 @@
              (3bmd-code-blocks::*colorize-name-map*
                (if (eq *html-subformat* :w3m)
                    (make-hash-table)
-                   (alexandria:plist-hash-table
+                   (plist-hash-table
                     `("cl-transcript" :common-lisp
-                      ,@(alexandria:hash-table-plist
+                      ,@(hash-table-plist
                          3bmd-code-blocks::*colorize-name-map*))
                     :test #'equal))))
         (document-return stream (%document documentable stream pages))))))
@@ -1019,8 +1019,7 @@
               (page-footer-fn page))
       (let ((markdown-string
               (with-temp-input-from-page (stream page)
-                (alexandria:read-stream-content-into-string
-                 stream))))
+                (read-stream-content-into-string stream))))
         (delete-stream-spec (page-temp-stream-spec page))
         (with-final-output-to-page (stream page)
           (when (page-header-fn page)
@@ -3066,7 +3065,7 @@
 (defun pax-std-env (fn)
   ;; FIXME: Add all others too.
   (let ((*document-downcase-uppercase-code* nil)
-        (*transcribe-check-consistency* (alexandria:featurep :sbcl)))
+        (*transcribe-check-consistency* (featurep :sbcl)))
     (handler-bind ((warning #'muffle-warning))
       (unwind-protect
            (funcall fn)

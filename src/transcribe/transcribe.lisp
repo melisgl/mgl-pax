@@ -78,7 +78,7 @@
           (read-line* stream nil nil)
         (let ((prefix (if (zerop n-lines-read) first-line-prefix prefix)))
           (when (or (null line)
-                    (not (alexandria:starts-with-subseq prefix line)))
+                    (not (starts-with-subseq prefix line)))
             (return-from read-prefixed-lines
               (values (get-output-stream-string output) n-lines-read
                       line missing-newline-p file-position)))
@@ -489,7 +489,7 @@
 (defun match-prefixes (line syntax-id)
   (flet ((foo (syntax-definition)
            (let ((match (find-if (lambda (entry)
-                                   (alexandria:starts-with-subseq
+                                   (starts-with-subseq
                                     (second entry) line))
                                  (rest syntax-definition))))
              (if match
@@ -623,8 +623,7 @@
          ;; There is no way to guarantee that FILE-POSITION will work
          ;; on a stream so let's just read the entire INPUT into a
          ;; string.
-         (with-input-from-string (stream (alexandria:read-file-into-string
-                                          input))
+         (with-input-from-string (stream (read-file-into-string input))
            (funcall fn stream)))
         ((stringp input)
          (with-input-from-string (input input)
@@ -634,7 +633,7 @@
          (assert nil))))
 
 (defmacro with-load-environment ((stream) &body body)
-  (alexandria:once-only (stream)
+  (once-only (stream)
     `(let* ((*readtable* *readtable*)
             (*package* *package*)
             (*load-pathname* (handler-case (pathname ,stream)
@@ -942,7 +941,7 @@
                                                unreadable-checker)))))))
 
 (defmacro with-transcription-syntax (() &body body)
-  (alexandria:with-gensyms (package)
+  (with-gensyms (package)
     `(let ((,package *package*))
        (with-standard-io-syntax
          (let ((*package* ,package)

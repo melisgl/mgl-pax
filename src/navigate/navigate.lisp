@@ -232,7 +232,7 @@
       closest-definition)))
 
 (defun 2nd-whitespace-position (string)
-  (or (alexandria:when-let (pos (position-if #'whitespacep string))
+  (or (when-let (pos (position-if #'whitespacep string))
         (position-if #'whitespacep string :start (1+ pos)))
       (length string)))
 

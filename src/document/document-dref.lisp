@@ -259,8 +259,8 @@
 (defvar *section*)
 
 (defmacro documenting-section ((section stream) &body body)
-  (alexandria:with-gensyms (same-package)
-    (alexandria:once-only (section)
+  (with-gensyms (same-package)
+    (once-only (section)
       `(let ((,same-package (and (eq *package* (section-package ,section))
                                  (or (boundp '*section*)
                                      *document-open-linking*)))

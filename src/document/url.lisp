@@ -205,8 +205,8 @@
   (ignore-errors (parse-url string)))
 
 (defun append-to-url (url suffix)
-  (if (or (alexandria:ends-with #\/ url)
-          (alexandria:starts-with #\/ suffix))
+  (if (or (ends-with #\/ url)
+          (starts-with #\/ suffix))
       (format nil "~A~A" url suffix)
       (format nil "~A/~A" url suffix)))
 
@@ -233,7 +233,7 @@
                  :defaults pathname)))))))
 
 (defun file-url-to-pathname (url)
-  (when (alexandria:starts-with-subseq "file://" url)
+  (when (starts-with-subseq "file://" url)
     (let* ((pathname (pathname (subseq url 7)))
            (pathname-directory (pathname-directory pathname)))
       (make-pathname

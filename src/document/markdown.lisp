@@ -181,9 +181,9 @@
                ;; (:CODE "S") -> "S"
                ((parse-tree-p e :code)
                 (let ((string (second e)))
-                  (cond ((alexandria:starts-with-subseq "\\\\" string)
+                  (cond ((starts-with-subseq "\\\\" string)
                          (recurse (subseq string 2)))
-                        ((alexandria:starts-with-subseq "\\" string)
+                        ((starts-with-subseq "\\" string)
                          (recurse (subseq string 1)))
                         (t
                          (recurse string)))))
