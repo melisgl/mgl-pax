@@ -228,7 +228,7 @@
       (check-head "\\COS" "COS")))
   (with-test ("reflink")
     (with-test ("no refs")
-      (check-head "[U]" "U" :warnings 1)))
+      (check-head "[U]" "\\[U\\]")))
   (with-test ("in :REFERENCE")
     (check-document "xxx
 xxx
@@ -545,7 +545,7 @@ xxx
     (check-head "[*PACKAGE*][variable]" "[`*PACKAGE*`][5ed1]")
     (check-head "[ *PACKAGE*][]" "[ `*PACKAGE*`][5ed1]")
     (check-head "[*PACKAGE*][ variable]" "[`*PACKAGE*`][5ed1]")
-    (check-head "[*PACKAGE*]" "[`*PACKAGE*`][5ed1]")
+    (check-head "[*PACKAGE*]" "\\[[`*PACKAGE*`][5ed1]\\]")
     (check-head "[*PACKAGE*][normaldef]" "[`*PACKAGE*`][normaldef]")
     (check-head "[*FORMAT*][]" "`*FORMAT*`" :warnings 1))
   (with-test ("definition is a reference")

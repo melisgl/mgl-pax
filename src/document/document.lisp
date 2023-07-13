@@ -1918,7 +1918,10 @@
 
 (defun maybe-translate-explicit-link (tree linked-refs)
   (when (eq :reference-link (first tree))
-    (translate-explicit-link tree linked-refs)))
+    (if (or (pt-get tree :definition) (pt-get tree :tail))
+        (translate-explicit-link tree linked-refs)
+        ;; (:REFERENCE-LINK :LABEL ("xxx") :TAIL NIL), the parse of [xxx].
+        (values `(:plain "[" ,@(pt-get tree :label) "]") t nil))))
 
 ;;; This translator handles :REFERENCE-LINK nodes:
 ;;;
@@ -1940,7 +1943,7 @@
   (multiple-value-bind (label explicit-label-p name locative pax-link-p)
       (dissect-reflink reflink)
     (cond ((not pax-link-p)
-           ;; [something][user-defined-id]
+           ;; [something][user-defined-id] or [something]
            reflink)
           ((and (eq name 'not-found)
                 (member locative '(dislocated argument)))
