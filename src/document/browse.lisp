@@ -413,12 +413,7 @@
           (when other-packages
             (emit "other exporting packages ~{[~A][cl:package]~^, ~}"
                   (loop for package in other-packages
-                        collect (escape-markdown (package-name package)))))))
-      (let ((resolved (resolve reference nil)))
-        (when (packagep resolved)
-          (let ((name (make-symbol (package-name resolved))))
-            (emit "the package [apropos with internal symbols](~A) included"
-                  (make-pax-eval-url `(pax-apropos* nil nil ',name t)))))))
+                        collect (escape-markdown (package-name package))))))))
     (when entries
       (list
        (let ((n-entries (length entries)))
@@ -654,17 +649,24 @@
                                  :case-sensitive ,case-sensitive
                                  :locative-types ,(maybe-quote
                                                    locative-types)))))))
-               ,(if (or pax-entry-points
-                        non-symbol-definitions
-                        symbol-definitions)
-                    (format nil (if just-list
-                                    "[Switch to detailed view](~A)"
-                                    "[Switch to list view](~A)")
-                            (make-pax-eval-url
-                             `(pax-apropos* ,(maybe-quote name0) ,external-only
-                                            ,(maybe-quote package0)
-                                            ,case-sensitive ,(not just-list))))
-                    (format nil "### No matching definitions"))
+               ,(format nil "Switch to [~S ~S](~A), [~S ~S](~A), or to ~
+                            [~A view](~A)."
+                        :external-only (not external-only)
+                        (make-pax-eval-url
+                         `(pax-apropos* ,(maybe-quote name0)
+                                        ,(not external-only)
+                                        ,(maybe-quote package0)
+                                        ,case-sensitive ,just-list))
+                        :case-sensitive (not case-sensitive)
+                        (make-pax-eval-url
+                         `(pax-apropos* ,(maybe-quote name0) ,external-only
+                                        ,(maybe-quote package0)
+                                        ,(not case-sensitive) ,just-list))
+                        (if just-list "detailed" "list")
+                        (make-pax-eval-url
+                         `(pax-apropos* ,(maybe-quote name0) ,external-only
+                                        ,(maybe-quote package0)
+                                        ,case-sensitive ,(not just-list))))
                ,@(when pax-entry-points
                    (list "### PAX Entry Points"
                          (break-long-list (sections-tightly pax-entry-points))))

@@ -1174,7 +1174,7 @@ With prefix argument include internal symbols."
                                  "PAX Apropos for Package: ")))
                        (if (string= pkg "") (slime-current-package) pkg))
                      current-prefix-arg))
-  (mgl-pax-apropos "" (not internal) (concat "'" package) t))
+  (mgl-pax-apropos "" (not internal) (concat "'" package) nil))
 
 
 ;;;; Transcribe
