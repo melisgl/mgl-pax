@@ -137,7 +137,6 @@
           (unless missing-newline-p
             (terpri out)))))))
 
-#+nil
 (defun shorten-string (string &key n-lines n-chars ellipsis)
   (let ((shortened string))
     (when n-lines
@@ -147,3 +146,13 @@
     (if (and ellipsis (< (length shortened) (length string)))
         (concatenate 'string shortened ellipsis)
         shortened)))
+
+(defun first-lines (string &optional (n-lines 1))
+  (with-output-to-string (out)
+    (with-input-from-string (in string)
+      (loop for i below n-lines do
+        (multiple-value-bind (line missing-newline-p) (read-line in nil nil)
+          (when line
+            (if missing-newline-p
+                (write-string line out)
+                (write-line line out))))))))

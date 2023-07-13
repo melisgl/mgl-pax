@@ -52,12 +52,16 @@
                                    (dref::macro-arg-names arglist))))
           (document-docstring docstring stream))))))
 
+(declaim (ftype function prin1-to-string*))
+
 (defmethod document-dref ((dref variable-dref) stream)
   "For definitions with a VARIABLE or CONSTANT locative, their
   initform is printed as their arglist. The initform is the INITFORM
   argument of the locative if provided, or the global symbol value of
   their name. If no INITFORM is provided, and the symbol is globally
-  unbound, then no arglist is printed."
+  unbound, then no arglist is printed.
+
+  When the printed initform is too long, it is truncated."
   (let ((symbol (dref-name dref)))
     (destructuring-bind (&optional (initform nil initformp))
         (xref-locative-args (dref-origin dref))
@@ -65,9 +69,10 @@
                          (symbol-global-value symbol)
                        (when (or initformp (not unboundp))
                          (let ((*print-pretty* t))
-                           (prin1-to-markdown (if initformp
-                                                  initform
-                                                  value)))))))
+                           (escape-markdown
+                            (shorten-string
+                             (prin1-to-string* (if initformp initform value))
+                             :n-lines 10 :n-chars 512 :ellipsis " ...")))))))
         (documenting-reference (stream :arglist arglist)
           (document-docstring (docstring dref) stream))))))
 
