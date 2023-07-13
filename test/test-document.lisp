@@ -164,7 +164,7 @@
            "xxx~%~%    (1~%~%    (2~%")
     (test1 "simple"  "xxx~%~% (1~%~%xxx"    "xxx~%~%    (1~%~%xxx")
     (test1 "comment" "xxx~%~% ;1~%~%xxx"    "xxx~%~%    ;1~%~%xxx")
-    (test1 "html"    "<x>&"                 "&lt;x&gt;&amp;")
+    (test1 "html"    "<x>&amp;&"                 "\\<x>\\&amp;&")
     (test1 "html in verbatim" "x~%~% (<x>&" "x~%~%    (<x>&")
     (test1 "heading"  "#x"                  "\\#x")
     (test1 "heading2" "# x"                 "\\# x")

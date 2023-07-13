@@ -157,10 +157,11 @@
 ;;;; stuff only (i.e. when SANITIZE-AGGRESSIVELY-P).
 
 (defun escape-html-in-docstring (line)
-  "Special HTML characters `<>&` are escaped."
+  "Special HTML characters `<&` are escaped."
   (if (starts-with-subseq "    " line)
       line
-      (escape-html line)))
+      (escape-markdown line :escape-html t :escape-inline nil
+                            :escape-block nil)))
 
 (defun escape-heading-in-docstring (line)
   """Furthermore, to reduce the chance of inadvertently introducing a

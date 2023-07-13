@@ -980,6 +980,9 @@ documented.
 - Else, if the definition has a @HOME-SECTION (see below), then the
   home section's SECTION-PACKAGE and SECTION-READTABLE are used.
 
+- Else, if the definition has an argument list, then the package of
+  the first argument that's not external in any package is used.
+
 - Else, if the definition is DREF::@NAMEd by a symbol, then its
   SYMBOL-PACKAGE is used, and *READTABLE* is set to the standard
   readtable `(NAMED-READTABLES:FIND-READTABLE :COMMON-LISP)`.
@@ -1248,7 +1251,7 @@ a multiple of 4. More precisely, non-zero indented lines between
 blank lines or the docstring boundaries are reindented if the first
 non-space character of the first line is an `(` or a `;` character.
 
-- Special HTML characters `<>&` are escaped.
+- Special HTML characters `<&` are escaped.
 
 - Furthermore, to reduce the chance of inadvertently introducing a
 markdown heading, if a line starts with a string of `#` characters,
@@ -2069,6 +2072,8 @@ argument of the locative if provided, or the global symbol value of
 their name. If no INITFORM is provided, and the symbol is globally
 unbound, then no arglist is printed.
 
+When the printed initform is too long, it is truncated.
+
 - Depending of what the SETF locative refers to, the ARGLIST of the
 setf expander, setf function, or the method
 signature is printed as with the METHOD locative.
@@ -2842,14 +2847,18 @@ new DOCUMENT-DREF methods, which emit markdown.
     prefix is not added to the first line if EXCLUDE-FIRST-LINE-P. If
     PARAGRAPHP, then add a newline before and after the output.
 
-- [function] ESCAPE-MARKDOWN STRING &KEY (ESCAPE-NEWLINE T) (ESCAPE-BLOCK T)
+- [function] ESCAPE-MARKDOWN STRING &KEY (INLINE T) (HTML T) (BLOCK T)
 
-    Construct a new string from STRING by adding a backslash before
-    the special markdown characters ``*_`[]`` when necessary, escaping
-    HTML characters `<&`, and also newlines if ESCAPE-NEWLINE, and also
-    `#` when ESCAPE-BLOCK.
+    Backslash escape markdown constructs in STRING.
+    
+    - If INLINE, then escape ``*_`[`` characters.
+    
+    - If HTML, then escape `<&` characters.
+    
+    - If BLOCK, then escape newlines and headings.
 
-- [function] PRIN1-TO-MARKDOWN OBJECT &KEY (ESCAPE-NEWLINE T) (ESCAPE-BLOCK T)
+
+- [function] PRIN1-TO-MARKDOWN OBJECT &KEY (INLINE T) (HTML T) (BLOCK T)
 
     Like PRIN1-TO-STRING, but bind *PRINT-CASE* depending on
     *DOCUMENT-DOWNCASE-UPPERCASE-CODE* and *FORMAT*, and

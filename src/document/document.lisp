@@ -1277,13 +1277,13 @@
                (cond ((eq (first tree) :code)
                       `(:strong ,tree))
                      ((eq (first tree) :verbatim)
-                      (values `((:RAW-HTML #.(format nil "<i>~%"))
-                                ,(indent-verbatim tree) (:RAW-HTML "</i>"))
+                      (values `((:raw-html #.(format nil "<i>~%"))
+                                ,(indent-verbatim tree) (:raw-html "</i>"))
                               nil t))
                      (t
-                      (values `((:RAW-HTML #.(format nil "<i>~%"))
+                      (values `((:raw-html #.(format nil "<i>~%"))
                                 ,(indent-code-block tree)
-                                (:RAW-HTML "</i>"))
+                                (:raw-html "</i>"))
                               nil t)))))
         (map-markdown-parse-tree '(:code :verbatim 3bmd-code-blocks::code-block)
                                  '() nil #'translate parse-tree))
@@ -2760,7 +2760,7 @@
                         (xref-locative-type reference)))
         (name (or name (prin1-to-string* (xref-name reference)))))
     (if *document-mark-up-signatures*
-        ;; insert self links in HTML
+        ;; Insert self links in HTML.
         (let ((locative-type (escape-markdown locative-type))
               (name (escape-markdown name)))
           (if (eq *format* :html)
@@ -2833,13 +2833,14 @@
             (italic string stream))
         (format stream "~A" string))))
 
-(defun/autoloaded prin1-to-markdown (object &key (escape-newline t)
-                                            (escape-block t))
+(defun/autoloaded prin1-to-markdown (object &key (escape-inline t)
+                                            (escape-html t) (escape-block t))
   "Like PRIN1-TO-STRING, but bind *PRINT-CASE* depending on
   *DOCUMENT-DOWNCASE-UPPERCASE-CODE* and *FORMAT*, and
   ESCAPE-MARKDOWN."
-  (escape-markdown (prin1-to-string* object) :escape-newline escape-newline
-                                             :escape-block escape-block))
+  (escape-markdown (prin1-to-string* object)
+                   :escape-inline escape-inline :escape-html escape-html
+                   :escape-block escape-block))
 
 ;;; Print arg names without the package prefix to a string. The
 ;;; default value with prefix. Works for macro arglists too.
