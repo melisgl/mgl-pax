@@ -2261,12 +2261,12 @@
       reflink)))
 
 (defun output-reflink (&optional condition)
-  "Invoke the OUTPUT-REFLINK restart."
+  "Invoke the OUTPUT-REFLINK restart. See UNRESOLVABLE-REFLINK."
   (declare (ignore condition))
   (invoke-restart 'output-reflink))
 
 (defun output-label (&optional condition)
-  "Invoke the OUTPUT-L restart."
+  "Invoke the OUTPUT-LABEL restart. See UNRESOLVABLE-REFLINK."
   (declare (ignore condition))
   (invoke-restart 'output-label))
 

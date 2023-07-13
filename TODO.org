@@ -117,5 +117,3 @@ Cons of DEFINITIONS:
 Pros of DEFINITIONs:
 - BIND, (SETF OBJECT), UNBIND, (SETF DOCUMENTATION).
 * BUG transcript: "debugger invoked on" is treated like output
-* too many warnings on stuff like [xxx]
-* reduce memory working set size of large apropos

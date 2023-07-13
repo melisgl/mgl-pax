@@ -346,7 +346,6 @@
          (ftype function actualize-dref))
 
 (defun locate (name-or-object &optional locative (errorp t))
-  ;; FIXME: revisit after https://github.com/3b/3bmd/issues/57
   """Return a DREF representing the definition given by the arguments.
   In the same [dynamic environment][clhs], two DREFs denote the same
   thing if and only if they are XREF=.
@@ -354,48 +353,48 @@
   - When LOCATIVE is non-NIL, NAME-OR-OBJECT is interpreted as the
     @NAME:
 
-  ```cl-transcript (:dynenv dref-std-env)
-  (locate '*print-length* 'variable)
-  ==> #<DREF *PRINT-LENGTH* VARIABLE>
-  ```
+      ```cl-transcript (:dynenv dref-std-env)
+      (locate '*print-length* 'variable)
+      ==> #<DREF *PRINT-LENGTH* VARIABLE>
+      ```
 
   - With LOCATIVE NIL, NAME-OR-OBJECT must be a supported first-class
     object, a DREF, or an XREF:
 
-  ```cl-transcript (:dynenv dref-std-env)
-  (locate #'print)
-  ==> #<DREF PRINT FUNCTION>
-  ```
-  ```cl-transcript (:dynenv dref-std-env)
-  (locate (locate #'print))
-  ==> #<DREF PRINT FUNCTION>
-  ```
-  ```cl-transcript (:dynenv dref-std-env)
-  (locate (make-xref 'print 'function))
-  ==> #<DREF PRINT FUNCTION>
-  ```
+      ```cl-transcript (:dynenv dref-std-env)
+      (locate #'print)
+      ==> #<DREF PRINT FUNCTION>
+      ```
+      ```cl-transcript (:dynenv dref-std-env)
+      (locate (locate #'print))
+      ==> #<DREF PRINT FUNCTION>
+      ```
+      ```cl-transcript (:dynenv dref-std-env)
+      (locate (make-xref 'print 'function))
+      ==> #<DREF PRINT FUNCTION>
+      ```
 
   - LOCATE-ERROR is signalled if LOCATIVE is malformed or if no
     corresponding definition is not found. If ERRORP is NIL, then NIL
     and the LOCATE-ERROR condition are returned instead.
 
-  ```cl-transcript (:dynenv dref-std-env)
-  (locate 'no-such-function 'function)
-  .. debugger invoked on LOCATE-ERROR:
-  ..   Could not locate NO-SUCH-FUNCTION FUNCTION.
-  ..   NO-SUCH-FUNCTION is not a symbol naming a function.
-  ```
-  ```cl-transcript (:dynenv dref-std-env)
-  (locate 'print '(function xxx))
-  .. debugger invoked on LOCATE-ERROR:
-  ..   Could not locate PRINT #'XXX.
-  ..   Bad arguments (XXX) for locative FUNCTION with lambda list NIL.
-  ```
-  ```cl-transcript (:dynenv dref-std-env)
-  (locate "xxx")
-  .. debugger invoked on LOCATE-ERROR:
-  ..   Could not locate "xxx".
-  ```
+      ```cl-transcript (:dynenv dref-std-env)
+      (locate 'no-such-function 'function)
+      .. debugger invoked on LOCATE-ERROR:
+      ..   Could not locate NO-SUCH-FUNCTION FUNCTION.
+      ..   NO-SUCH-FUNCTION is not a symbol naming a function.
+      ```
+      ```cl-transcript (:dynenv dref-std-env)
+      (locate 'print '(function xxx))
+      .. debugger invoked on LOCATE-ERROR:
+      ..   Could not locate PRINT #'XXX.
+      ..   Bad arguments (XXX) for locative FUNCTION with lambda list NIL.
+      ```
+      ```cl-transcript (:dynenv dref-std-env)
+      (locate "xxx")
+      .. debugger invoked on LOCATE-ERROR:
+      ..   Could not locate "xxx".
+      ```
 
   Use the low-level MAKE-XREF to construct an XREF without error
   checking."""
@@ -426,19 +425,18 @@
 (declaim (ftype function resolve-dref))
 
 (defun resolve (object &optional (errorp t))
-  ;; FIXME: revisit after https://github.com/3b/3bmd/issues/57
   "- If OBJECT is an XREF, then return the first-class object associated
      with its definition if any. Return OBJECT if it's not an XREF.
      Thus, the value returned is never an XREF.
 
-  ```cl-transcript (:dynenv dref-std-env)
-  (resolve (locate 'print 'function))
-  ==> #<FUNCTION PRINT>
-  ```
-  ```cl-transcript (:dynenv dref-std-env)
-  (resolve #'print)
-  ==> #<FUNCTION PRINT>
-  ```
+      ```cl-transcript (:dynenv dref-std-env)
+      (resolve (locate 'print 'function))
+      ==> #<FUNCTION PRINT>
+      ```
+      ```cl-transcript (:dynenv dref-std-env)
+      (resolve #'print)
+      ==> #<FUNCTION PRINT>
+      ```
 
   - If the definition for XREF cannot be LOCATEd, then signal a
     LOCATE-ERROR condition. If there is a defintion, but there is no

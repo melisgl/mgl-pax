@@ -144,7 +144,7 @@ output of `(mgl-pax:document #'abort :format :markdown)`.
 Note that the docstring of the [`ABORT`][479a] function was not written with
 PAX in mind. The above markdown is rendered as
 
-- \[function\] **ABORT** *&OPTIONAL CONDITION*
+- \[function] **ABORT** *[`&OPTIONAL`][4336] CONDITION*
 
     Transfer control to a restart named `ABORT`, signalling a
     [`CONTROL-ERROR`][6bc0] if none exists.
@@ -515,9 +515,9 @@ either case, [name][88cf]s are extracted from [word][d7b0]s and then turned into
     
     1. The entire word.
     
-    2. Trimming the characters \`#<;"'\`\` from the left of the word.
+    2. Trimming the characters \`#\<{;"'\`\` from the left of the word.
     
-    3. Trimming the characters \`,;:.>"'\`\` from the right of the word.
+    3. Trimming the characters \`,;:.>}"'\`\` from the right of the word.
     
     4. Trimming both of the previous two at the same time.
     
@@ -737,7 +737,7 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
 
 - [locative] **GO** *(NAME LOCATIVE)*
 
-    Redirect to a definition in the context of the @REFERENCE
+    Redirect to a definition in the context of the [reference][43bd]
     designated by `NAME` and `LOCATIVE`. This pseudolocative is intended for
     things that have no explicit global definition.
     
@@ -1112,6 +1112,9 @@ documented.
 - Else, if the definition has a [Home Section][bdd5] (see below), then the
   home section's [`SECTION-PACKAGE`][a5b1] and [`SECTION-READTABLE`][88a7] are used.
 
+- Else, if the definition has an argument list, then the package of
+  the first argument that's not external in any package is used.
+
 - Else, if the definition is [name][5fc4]d by a symbol, then its
   [`SYMBOL-PACKAGE`][e5ab] is used, and `*READTABLE*` is set to the standard
   readtable `(NAMED-READTABLES:FIND-READTABLE :COMMON-LISP)`.
@@ -1402,7 +1405,7 @@ a multiple of 4. More precisely, non-zero indented lines between
 blank lines or the docstring boundaries are reindented if the first
 non-space character of the first line is an `(` or a `;` character.
 
-- Special HTML characters `<>&` are escaped.
+- Special HTML characters `<&` are escaped.
 
 - Furthermore, to reduce the chance of inadvertently introducing a
 markdown heading, if a line starts with a string of `#` characters,
@@ -2327,6 +2330,8 @@ argument of the locative if provided, or the global symbol value of
 their name. If no `INITFORM` is provided, and the symbol is globally
 unbound, then no arglist is printed.
 
+When the printed initform is too long, it is truncated.
+
 - Depending of what the [`SETF`][d83a] locative refers to, the `ARGLIST` of the
 [setf expander][35a2], [setf function][99b0], or the method
 signature is printed as with the [`METHOD`][172e] locative.
@@ -3164,16 +3169,21 @@ new `DOCUMENT-DREF` methods, which emit markdown.
 
 <a id="x-28MGL-PAX-3AESCAPE-MARKDOWN-20FUNCTION-29"></a>
 
-- [function] **ESCAPE-MARKDOWN** *STRING &KEY (ESCAPE-NEWLINE T) (ESCAPE-BLOCK T)*
+- [function] **ESCAPE-MARKDOWN** *STRING &KEY (ESCAPE-INLINE T) (ESCAPE-HTML T) (ESCAPE-BLOCK T)*
 
-    Construct a new string from `STRING` by adding a backslash before
-    the special markdown characters ``*_`[]`` when necessary, escaping
-    HTML characters `<&`, and also newlines if `ESCAPE-NEWLINE`, and also
-    `#` when `ESCAPE-BLOCK`.
+    Backslash escape markdown constructs in `STRING`.
+    
+    - If ESCPAPE-INLINE, then escape ``*_`[\`` characters.
+    
+    - If ESCPAPE-HTML, then escape `<&` characters.
+    
+    - If ESCPAPE-BLOCK, then escape whatever is necessary to avoid
+      starting a new markdown block (e.g. a paragraph, heading, etc).
+
 
 <a id="x-28MGL-PAX-3APRIN1-TO-MARKDOWN-20FUNCTION-29"></a>
 
-- [function] **PRIN1-TO-MARKDOWN** *OBJECT &KEY (ESCAPE-NEWLINE T) (ESCAPE-BLOCK T)*
+- [function] **PRIN1-TO-MARKDOWN** *OBJECT &KEY (ESCAPE-INLINE T) (ESCAPE-HTML T) (ESCAPE-BLOCK T)*
 
     Like [`PRIN1-TO-STRING`][18e1], but bind [`*PRINT-CASE*`][443b] depending on
     [`*DOCUMENT-DOWNCASE-UPPERCASE-CODE*`][a5ee] and [`*FORMAT*`][3da8], and
@@ -3317,6 +3327,7 @@ they are presented.
   [4143]: http://www.lispworks.com/documentation/HyperSpec/Body/f_stgeq_.htm "STRING= (MGL-PAX:CLHS FUNCTION)"
   [4317]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cerror.htm "CERROR (MGL-PAX:CLHS FUNCTION)"
   [432c]: #x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29 "MGL-PAX:DOCUMENT FUNCTION"
+  [4336]: http://www.lispworks.com/documentation/HyperSpec/Body/03_da.htm '"3.4.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [43bd]: dref/README.md#x-28DREF-3A-40REFERENCE-20MGL-PAX-3AGLOSSARY-TERM-29 "DREF:@REFERENCE MGL-PAX:GLOSSARY-TERM"
   [443b]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_cas.htm "*PRINT-CASE* (MGL-PAX:CLHS VARIABLE)"
   [4796]: dref/README.md#x-28LAMBDA-20MGL-PAX-3ALOCATIVE-29 "LAMBDA MGL-PAX:LOCATIVE"

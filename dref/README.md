@@ -175,52 +175,52 @@ with references (discussed in the [Extending DRef][68fb]).
     - When `LOCATIVE` is non-`NIL`, `NAME-OR-OBJECT` is interpreted as the
       [name][5fc4]:
     
-    ```common-lisp
-    (locate '*print-length* 'variable)
-    ==> #<DREF *PRINT-LENGTH* VARIABLE>
-    ```
+        ```common-lisp
+        (locate '*print-length* 'variable)
+        ==> #<DREF *PRINT-LENGTH* VARIABLE>
+        ```
     
     - With `LOCATIVE` `NIL`, `NAME-OR-OBJECT` must be a supported first-class
       object, a `DREF`, or an [`XREF`][1538]:
     
-    ```common-lisp
-    (locate #'print)
-    ==> #<DREF PRINT FUNCTION>
-    ```
+        ```common-lisp
+        (locate #'print)
+        ==> #<DREF PRINT FUNCTION>
+        ```
     
-    ```common-lisp
-    (locate (locate #'print))
-    ==> #<DREF PRINT FUNCTION>
-    ```
+        ```common-lisp
+        (locate (locate #'print))
+        ==> #<DREF PRINT FUNCTION>
+        ```
     
-    ```common-lisp
-    (locate (make-xref 'print 'function))
-    ==> #<DREF PRINT FUNCTION>
-    ```
+        ```common-lisp
+        (locate (make-xref 'print 'function))
+        ==> #<DREF PRINT FUNCTION>
+        ```
     
     - `LOCATE-ERROR`([`0`][6334] [`1`][6932]) is signalled if `LOCATIVE` is malformed or if no
       corresponding definition is not found. If `ERRORP` is `NIL`, then `NIL`
       and the [`LOCATE-ERROR`][6334] condition are returned instead.
     
-    ```common-lisp
-    (locate 'no-such-function 'function)
-    .. debugger invoked on LOCATE-ERROR:
-    ..   Could not locate NO-SUCH-FUNCTION FUNCTION.
-    ..   NO-SUCH-FUNCTION is not a symbol naming a function.
-    ```
+        ```common-lisp
+        (locate 'no-such-function 'function)
+        .. debugger invoked on LOCATE-ERROR:
+        ..   Could not locate NO-SUCH-FUNCTION FUNCTION.
+        ..   NO-SUCH-FUNCTION is not a symbol naming a function.
+        ```
     
-    ```common-lisp
-    (locate 'print '(function xxx))
-    .. debugger invoked on LOCATE-ERROR:
-    ..   Could not locate PRINT #'XXX.
-    ..   Bad arguments (XXX) for locative FUNCTION with lambda list NIL.
-    ```
+        ```common-lisp
+        (locate 'print '(function xxx))
+        .. debugger invoked on LOCATE-ERROR:
+        ..   Could not locate PRINT #'XXX.
+        ..   Bad arguments (XXX) for locative FUNCTION with lambda list NIL.
+        ```
     
-    ```common-lisp
-    (locate "xxx")
-    .. debugger invoked on LOCATE-ERROR:
-    ..   Could not locate "xxx".
-    ```
+        ```common-lisp
+        (locate "xxx")
+        .. debugger invoked on LOCATE-ERROR:
+        ..   Could not locate "xxx".
+        ```
     
     Use the low-level [`MAKE-XREF`][3491] to construct an `XREF` without error
     checking.
@@ -233,31 +233,31 @@ with references (discussed in the [Extending DRef][68fb]).
        with its definition if any. Return `OBJECT` if it's not an `XREF`.
        Thus, the value returned is never an `XREF`.
     
-    ```common-lisp
-    (resolve (locate 'print 'function))
-    ==> #<FUNCTION PRINT>
-    ```
+        ```common-lisp
+        (resolve (locate 'print 'function))
+        ==> #<FUNCTION PRINT>
+        ```
     
-    ```common-lisp
-    (resolve #'print)
-    ==> #<FUNCTION PRINT>
-    ```
+        ```common-lisp
+        (resolve #'print)
+        ==> #<FUNCTION PRINT>
+        ```
     
     - If the definition for `XREF` cannot be [`LOCATE`][8f19]d, then signal a
       [`LOCATE-ERROR`][6334] condition. If there is a defintion, but there is no
       first-class object corresponding to it, then signal a
       [`RESOLVE-ERROR`][0660] condition or return `NIL` depending on `ERRORP`:
     
-    ```common-lisp
-    (resolve (locate '*print-length* 'variable))
-    .. debugger invoked on RESOLVE-ERROR:
-    ..   Could not locate *PRINT-LENGTH* VARIABLE.
-    ```
+        ```common-lisp
+        (resolve (locate '*print-length* 'variable))
+        .. debugger invoked on RESOLVE-ERROR:
+        ..   Could not locate *PRINT-LENGTH* VARIABLE.
+        ```
     
-    ```common-lisp
-    (resolve (locate '*print-length* 'variable) nil)
-    => NIL
-    ```
+        ```common-lisp
+        (resolve (locate '*print-length* 'variable) nil)
+        => NIL
+        ```
 
 
 <a id="x-28DREF-EXT-3ALOCATE-ERROR-20CONDITION-29"></a>

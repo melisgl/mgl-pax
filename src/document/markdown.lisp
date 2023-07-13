@@ -62,7 +62,7 @@
       (format stream "*~A*" string)))
 
 (defun markdown-special-inline-char-p (char)
-  (member char '(#\* #\_ #\` #\[)))
+  (member char '(#\\ #\* #\_ #\` #\[ #\])))
 
 (defun markdown-special-html-char-p (char)
   (member char '(#\< #\&)))
@@ -74,7 +74,7 @@
                                           (escape-html t) (escape-block t))
   "Backslash escape markdown constructs in STRING.
 
-  - If ESCPAPE-INLINE, then escape ``*_`[`` characters.
+  - If ESCPAPE-INLINE, then escape ``*_`[]\\`` characters.
 
   - If ESCPAPE-HTML, then escape `<&` characters.
 

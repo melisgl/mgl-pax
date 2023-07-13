@@ -319,7 +319,7 @@ xxx
   (with-test ("Trimming")
     (check-head "`#<CLASS>`" "`#<CLASS>`")
     (with-failure-expected ((alexandria:featurep :clisp))
-      (check-head "\\#\\<CLASS>" "\\#<[`CLASS`][1f37]>")))
+      (check-head "\\#\\<CLASS>" "\\#\\<[`CLASS`][1f37]>")))
   (check-head "*PRINT-LENGTH*s" "[`*PRINT-LENGTH*`][8f7a]s")
   (check-head "\\Delta" "\\Delta" :msg "mathjax")
   (check-head "T." "`T`.")
