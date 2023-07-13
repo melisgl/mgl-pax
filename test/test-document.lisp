@@ -1439,6 +1439,8 @@ This is [Self-referencing][e042].
 (defun ambi<>& ())
 (defclass ambi<>& () ())
 
+(defsection @must-have ()
+  (foo-with-bad-transcript function))
 (defun foo-with-bad-transcript ()
   "```cl-transcript
   (1+ 2)

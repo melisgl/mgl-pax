@@ -992,14 +992,18 @@
           (with-locate-error-context (xref)
             (document-object (locate xref) stream)))))
   (:method ((dref dref) stream)
-    (let ((page (boundary-page dref)))
-      (if *first-pass*
-          (let ((*page* (or page *page*)))
-            (push dref (page-definitions *page*))
-            (setf (page-written-p *page*) t)
-            (document-dref dref stream))
-          (with-temp-output-to-page (stream page)
-            (document-dref dref stream))))))
+    (handler-bind
+        ((warning (lambda (warning)
+                    (when (sanitize-aggressively-p)
+                      (muffle-warning warning)))))
+      (let ((page (boundary-page dref)))
+        (if *first-pass*
+            (let ((*page* (or page *page*)))
+              (push dref (page-definitions *page*))
+              (setf (page-written-p *page*) t)
+              (document-dref dref stream))
+            (with-temp-output-to-page (stream page)
+              (document-dref dref stream)))))))
 
 
 (defun finalize-page-output (page)
@@ -1953,8 +1957,7 @@
                       (vector-push-extend ref linked-refs))
                     (values (make-reflinks label explicit-label-p refs) nil t))
                    (t
-                    (values (if (and (likely-a-pax-reflink-p name locative
-                                                             reflink))
+                    (values (if (likely-a-pax-reflink-p name locative reflink)
                                 (signal-unresolvable-reflink reflink name
                                                              locative)
                                 label)
