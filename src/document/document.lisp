@@ -1008,31 +1008,45 @@
 
 (defun finalize-page-output (page)
   (when (page-written-p page)
-    ;; Add the markdown reference link definitions for all
-    ;; PAGE-USED-LINKS on PAGE.
-    (with-temp-output-to-page (stream page)
-      (write-markdown-reference-style-link-definitions stream))
     ;; Now that markdown output for this PAGE is complete, we may want
     ;; to convert it to the requested *FORMAT*.
-    (when (or (not (eq *format* :markdown))
-              (page-header-fn page)
-              (page-footer-fn page))
-      (let ((markdown-string
-              (with-temp-input-from-page (stream page)
-                (read-stream-content-into-string stream))))
-        (delete-stream-spec (page-temp-stream-spec page))
-        (with-final-output-to-page (stream page)
-          (when (page-header-fn page)
-            (funcall (page-header-fn page) stream))
-          (if (eq *format* :markdown)
-              (write-string markdown-string stream)
-              (print-markdown (post-process-for-w3m
-                               (parse-markdown-fast
-                                markdown-string))
-                              stream :format *format*))
-          (when (page-footer-fn page)
-            (funcall (page-footer-fn page) stream)))))
+    (if (and (eq *format* :markdown)
+             (null (page-header-fn page))
+             (null (page-footer-fn page)))
+        (with-temp-output-to-page (stream page)
+          (write-markdown-reference-style-link-definitions stream))
+        (let ((markdown-string
+                (if (typep (page-temp-stream-spec page) 'string-stream-spec)
+                    (string-stream-spec-string (page-temp-stream-spec page))
+                    (with-temp-input-from-page (stream page)
+                      (read-stream-content-into-string stream))))
+              (markdown-reflinks
+                (with-output-to-string (stream)
+                  (let ((*page* page))
+                    (write-markdown-reference-style-link-definitions stream)))))
+          (delete-stream-spec (page-temp-stream-spec page))
+          (with-final-output-to-page (stream page)
+            (when (page-header-fn page)
+              (funcall (page-header-fn page) stream))
+            (cond ((eq *format* :markdown)
+                   (write-string markdown-string stream)
+                   (write-string markdown-reflinks stream))
+                  (t
+                   (reprint-in-format markdown-string markdown-reflinks
+                                      stream)))
+            (when (page-footer-fn page)
+              (funcall (page-footer-fn page) stream)))))
     (unmake-stream-spec (page-final-stream-spec page))))
+
+(defun reprint-in-format (markdown-string markdown-reflinks stream)
+  (let ((reflinks-parse-tree (parse-markdown markdown-reflinks)))
+    ;; Process it block by block to limit maximum memory usage.
+    (map-markdown-block-parses (lambda (tree)
+                                 (print-markdown
+                                  (append (post-process-for-w3m (list tree))
+                                          reflinks-parse-tree)
+                                  stream :format *format*))
+                               markdown-string)))
 
 ;;; Emit markdown definitions for links (in *LINKS*) to REFERENCE
 ;;; objects that were linked to on the current page.

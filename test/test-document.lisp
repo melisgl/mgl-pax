@@ -793,7 +793,6 @@ This is [Self-referencing][e042].
   (with-failure-expected ((alexandria:featurep :clisp))
     (check-document (locate '*nasty-var* 'variable)
                     "<p><a id=\"MGL-PAX-TEST:*NASTY-VAR*%20VARIABLE\"></a></p>
-
 <ul>
 <li><p><span class=reference-bullet><span class=reference><span class=\"locative-type\">[variable]</span> <span class=\"reference-object\"><a href=\"#MGL-PAX-TEST:*NASTY-VAR*%20VARIABLE\" >*NASTY-VAR*</a></span></span> <span class=\"locative-args\">&quot; 
 \\
@@ -1350,7 +1349,7 @@ This is [Self-referencing][e042].
     (is (find 'package (definitions 'cl) :key #'xref-locative-type))
     (with-test ("escaping of non-ambiguous")
       (check-head "`foo<>&`"
-                  "<p><a href=\"pax:MGL-PAX-TEST:FOO%3C%3E%26%20FUNCTION\" title=\"MGL-PAX-TEST:FOO&lt;&gt;&amp; FUNCTION\"><strong><code>foo&lt;&gt;&amp;</code></strong></a></p>"
+                  "<a href=\"pax:MGL-PAX-TEST:FOO%3C%3E%26%20FUNCTION\" title=\"MGL-PAX-TEST:FOO&lt;&gt;&amp; FUNCTION\"><strong><code>foo&lt;&gt;&amp;</code></strong></a>"
                   :w3m t :format :html))
     (with-test ("escaping of ambiguous")
       (check-head "`ambi<>&`"

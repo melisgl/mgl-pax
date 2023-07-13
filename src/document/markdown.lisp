@@ -11,6 +11,15 @@
 (defun parse-markdown-fast (string)
   (if (< (length string) 1000)
       (3bmd-grammar:parse-doc string)
+      (let ((parses ()))
+        (map-markdown-block-parses (lambda (parse)
+                                     (push parse parses))
+                                   string)
+        (nreverse parses))))
+
+(defun map-markdown-block-parses (fn string)
+  (if (< (length string) 1000)
+      (map nil fn (3bmd-grammar:parse-doc string))
       ;; This is 3BMD-GRAMMAR:PARSE-DOC's currently commented out
       ;; alternative implementation, which is much faster on long
       ;; strings but perhaps slower on short strings. This still has a
@@ -29,7 +38,7 @@
                                string :start start :junk-allowed t))
           ;; do (format t "PMF  ~S~%" pos)
           while %block
-          collect %block
+          do (funcall fn %block)
           while pos))))
 
 (defmacro with-colorize-silenced (() &body body)
