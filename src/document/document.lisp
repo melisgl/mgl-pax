@@ -1953,7 +1953,8 @@
                       (vector-push-extend ref linked-refs))
                     (values (make-reflinks label explicit-label-p refs) nil t))
                    (t
-                    (values (if (likely-a-pax-reflink-p name locative reflink)
+                    (values (if (and (likely-a-pax-reflink-p name locative
+                                                             reflink))
                                 (signal-unresolvable-reflink reflink name
                                                              locative)
                                 label)

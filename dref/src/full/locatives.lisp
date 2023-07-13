@@ -995,7 +995,8 @@
   (map nil fn (asdf:registered-systems)))
 
 (defmethod resolve-dref ((dref asdf-system-dref))
-  (asdf:find-system (dref-name dref)))
+  (handler-bind ((warning #'muffle-warning))
+    (asdf:find-system (dref-name dref))))
 
 (defmethod dref-source-location ((dref asdf-system-dref))
   (let ((system (resolve dref)))
