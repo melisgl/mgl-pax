@@ -2923,6 +2923,9 @@
   - Else, if the definition has a @HOME-SECTION (see below), then the
     home section's SECTION-PACKAGE and SECTION-READTABLE are used.
 
+  - Else, if the definition has an argument list, then the package of
+    the first argument that's not external in any package is used.
+
   - Else, if the definition is DREF::@NAMEd by a symbol, then its
     SYMBOL-PACKAGE is used, and *READTABLE* is set to the standard
     readtable `(NAMED-READTABLES:FIND-READTABLE :COMMON-LISP)`.
@@ -2946,18 +2949,26 @@
 (defsection @home-section (:title "Home Section")
   "[home-section function][docstring]")
 
-(defun guess-package-and-readtable (reference)
-  ;; The caller of this function deals with the first bullet point.
+(defun guess-package-and-readtable (reference arglist)
   (let ((home-section (first (find-parent-sections reference))))
-    (cond (home-section
-           (values (section-package home-section)
-                   (section-readtable home-section)))
-          ((symbolp (xref-name reference))
-           (values (symbol-package (xref-name reference))
-                   named-readtables::*standard-readtable*))
-          (t
-           (values (find-package :cl-user)
-                   named-readtables::*standard-readtable*)))))
+    (if home-section
+        (values (section-package home-section)
+                (section-readtable home-section))
+        (values (or (guess-package-from-arglist arglist)
+                    (and (symbolp (xref-name reference))
+                         (symbol-package (xref-name reference)))
+                    (find-package :cl-user))
+                named-readtables::*standard-readtable*))))
+
+;;; Unexported argument names are highly informative about *PACKAGE*
+;;; at read time. No one ever uses fully-qualified internal symbols
+;;; from another package for arguments, right?
+(defun guess-package-from-arglist (arglist)
+  (let ((args (or (ignore-errors (dref::function-arg-names arglist))
+                  (ignore-errors (dref::macro-arg-names arglist)))))
+    (dolist (arg args)
+      (unless (external-symbol-in-any-package-p arg)
+        (return (symbol-package arg))))))
 
 (defvar *document-normalize-packages* t
   "Whether to print `[in package <package-name>]` in the documentation

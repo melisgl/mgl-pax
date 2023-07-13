@@ -165,7 +165,7 @@
            (anchor ,%reference ,%stream))
          (print-reference-bullet ,%reference ,%stream :name ,%name)
          (multiple-value-bind (,%package ,%readtable)
-             (guess-package-and-readtable ,%reference)
+             (guess-package-and-readtable ,%reference ,%arglist)
            (let ((*package* (or ,package ,%package))
                  (*readtable* (or ,readtable ,%readtable)))
              (when ,%arglist

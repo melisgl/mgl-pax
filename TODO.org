@@ -119,9 +119,3 @@ Pros of DEFINITIONs:
 * BUG transcript: "debugger invoked on" is treated like output
 * too many warnings on stuff like [xxx]
 * reduce memory working set size of large apropos
-* MAYBE packages of argument names are slightly informative
-When the name of the function is in A, but the actual definition is in
-package B, then the package is guessed wrong during documentation
-generation, which results in missed codification and autolinking
-opportunities. However, the names of arguments (especially the
-unexported ones!) can help identify the package.

@@ -39,6 +39,10 @@
          (and (eq status :external)
               (eq symbol symbol*)))))
 
+(defun external-symbol-in-any-package-p (symbol)
+  (loop for package in (list-all-packages)
+          thereis (external-symbol-p symbol package)))
+
 (defun symbol-other-packages (symbol)
   (loop for package in (list-all-packages)
         when (and (external-symbol-p symbol package)
