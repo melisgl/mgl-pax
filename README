@@ -76,7 +76,7 @@ output of `(mgl-pax:document #'abort :format :markdown)`.
 Note that the docstring of the ABORT function was not written with
 PAX in mind. The above markdown is rendered as
 
-- \[function] **ABORT** *\&OPTIONAL CONDITION*
+- \[function\] **ABORT** *\&OPTIONAL CONDITION*
 
     Transfer control to a restart named `ABORT`, signalling a
     [`CONTROL-ERROR`][6bc0] if none exists.
@@ -1540,11 +1540,11 @@ ARGUMENT locative may be used as in `[DOCUMENT][dislocated]`.
 
 - [function] OUTPUT-REFLINK &OPTIONAL CONDITION
 
-    Invoke the OUTPUT-REFLINK restart.
+    Invoke the OUTPUT-REFLINK restart. See UNRESOLVABLE-REFLINK.
 
 - [function] OUTPUT-LABEL &OPTIONAL CONDITION
 
-    Invoke the OUTPUT-L restart.
+    Invoke the OUTPUT-LABEL restart. See UNRESOLVABLE-REFLINK.
 
 #### Suppressed Links
 
@@ -2851,7 +2851,7 @@ new DOCUMENT-DREF methods, which emit markdown.
 
     Backslash escape markdown constructs in STRING.
     
-    - If ESCPAPE-INLINE, then escape ``*_`[\`` characters.
+    - If ESCPAPE-INLINE, then escape ``*_`[]\`` characters.
     
     - If ESCPAPE-HTML, then escape `<&` characters.
     

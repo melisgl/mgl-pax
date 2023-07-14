@@ -144,7 +144,7 @@ output of `(mgl-pax:document #'abort :format :markdown)`.
 Note that the docstring of the [`ABORT`][479a] function was not written with
 PAX in mind. The above markdown is rendered as
 
-- \[function] **ABORT** *[`&OPTIONAL`][4336] CONDITION*
+- \[function\] **ABORT** *[`&OPTIONAL`][4336] CONDITION*
 
     Transfer control to a restart named `ABORT`, signalling a
     [`CONTROL-ERROR`][6bc0] if none exists.
@@ -1730,13 +1730,13 @@ This renders as `DOCUMENT`. Alternatively, the [`DISLOCATED`][e391] or the
 
 - [function] **OUTPUT-REFLINK** *&OPTIONAL CONDITION*
 
-    Invoke the `OUTPUT-REFLINK` restart.
+    Invoke the `OUTPUT-REFLINK` restart. See [`UNRESOLVABLE-REFLINK`][64be].
 
 <a id="x-28MGL-PAX-3AOUTPUT-LABEL-20FUNCTION-29"></a>
 
 - [function] **OUTPUT-LABEL** *&OPTIONAL CONDITION*
 
-    Invoke the OUTPUT-L restart.
+    Invoke the `OUTPUT-LABEL` restart. See [`UNRESOLVABLE-REFLINK`][64be].
 
 <a id="x-28MGL-PAX-3A-40SUPPRESSED-LINKS-20MGL-PAX-3ASECTION-29"></a>
 
@@ -3173,7 +3173,7 @@ new `DOCUMENT-DREF` methods, which emit markdown.
 
     Backslash escape markdown constructs in `STRING`.
     
-    - If ESCPAPE-INLINE, then escape ``*_`[\`` characters.
+    - If ESCPAPE-INLINE, then escape ``*_`[]\`` characters.
     
     - If ESCPAPE-HTML, then escape `<&` characters.
     
@@ -3360,6 +3360,7 @@ they are presented.
   [63b4]: dref/README.md#x-28DREF-3ARESOLVE-20FUNCTION-29 "DREF:RESOLVE FUNCTION"
   [63ef]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009_w.htm '"ISSUE:AREF-1D" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [63f3]: #x-28MGL-PAX-3ADEFINE-PACKAGE-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-PACKAGE MGL-PAX:MACRO"
+  [64be]: #x-28MGL-PAX-3AUNRESOLVABLE-REFLINK-20CONDITION-29 "MGL-PAX:UNRESOLVABLE-REFLINK CONDITION"
   [6547]: http://www.lispworks.com/documentation/HyperSpec/Body/f_open.htm "OPEN (MGL-PAX:CLHS FUNCTION)"
   [65b4]: dref/README.md#x-28DREF-3ADREF-APROPOS-20FUNCTION-29 "DREF:DREF-APROPOS FUNCTION"
   [66c6]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*ERROR-OUTPUT* (MGL-PAX:CLHS VARIABLE)"
