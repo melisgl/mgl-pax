@@ -1143,8 +1143,9 @@ Also, see `mgl-pax-apropos-all'."
                                    ,package ,case-sensitive)
          `(mgl-pax::pax-apropos*
            ;; Do the defaulting of arguments here instead of in
-           ;; INTERACTIVE because mgl-pax-read-urllike-from-minibuffer
-           ;; relies on mgl-pax-ensure-pax-loaded having succeeded.
+           ;; `interactive' because
+           ;; `mgl-pax-read-urllike-from-minibuffer' relies on
+           ;; `mgl-pax-ensure-pax-loaded' having succeeded.
            ,@(if current-prefix-arg
                  (list (mgl-pax-read-urllike-from-minibuffer
                         "PAX Apropos: ")
@@ -1153,7 +1154,7 @@ Also, see `mgl-pax-apropos-all'."
                        (y-or-n-p "Case-sensitive? "))
                (list (mgl-pax-read-urllike-from-minibuffer
                       "PAX Apropos: ")
-                     t "" nil)))))))))
+                     t nil nil)))))))))
 
 (defun mgl-pax-make-pax-eval-url (sexp)
   (concat "pax-eval:" (url-encode-url (prin1-to-string sexp))))

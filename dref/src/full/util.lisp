@@ -347,6 +347,7 @@
               :initial-contents string))
 
 (defun adjust-string-case (string)
+  (declare (type string string))
   (ecase (readtable-case *readtable*)
     ((:upcase) (string-upcase string))
     ((:downcase) (string-downcase string))

@@ -591,20 +591,27 @@
                              (t
                               (subseq string 0 tail-pos)))
                        tail)))
-           (parse-nil-symbol-or-string (string)
-             (cond ((string= string "")
-                    nil)
-                   ((starts-with-subseq "'#:" string)
-                    (make-symbol (subseq string 3)))
-                   ((starts-with-subseq "':" string)
-                    (print (make-symbol (subseq string 2))))
-                   ((starts-with-subseq "'" string)
-                    (make-symbol (subseq string 1)))
-                   (t
-                    string))))
+           (parse-nil-symbol-or-string (obj)
+             (etypecase obj
+               (string
+                (let ((string obj))
+                  (cond ((string= string "")
+                         nil)
+                        ((starts-with-subseq "'#:" string)
+                         (make-symbol (subseq string 3)))
+                        ((starts-with-subseq "':" string)
+                         (print (make-symbol (subseq string 2))))
+                        ((starts-with-subseq "'" string)
+                         (make-symbol (subseq string 1)))
+                        (t
+                         string))))
+               (symbol
+                obj))))
       (multiple-value-bind (name locative-types) (parse-name name)
         (let* ((package (parse-nil-symbol-or-string
-                         (dref::adjust-string-case package)))
+                         (if (stringp package)
+                             (dref::adjust-string-case package)
+                             package)))
                ;; Whether this is for an exact package match and no
                ;; other restrictions.
                (%packagep (and package (null name) (symbolp package)))
