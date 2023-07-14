@@ -238,30 +238,37 @@
    (title
     :initarg :title :reader glossary-term-title
     :documentation "A markdown string or NIL. Used in generated
-    documentation (see DOCUMENT-DREF (method () (glossary-term-dref t))).")
+    documentation (see [DOCUMENT-DREF][(method () (glossary-term-dref
+    t))]).")
+   (url
+    :initarg :url :reader glossary-term-url
+    :documentation "A string or NIL.")
    (docstring :initarg :docstring :reader glossary-term-docstring))
-  (:documentation "DEFINE-GLOSSARY-TERM instantiates a GLOSSARY-TERM
-  with its NAME and TITLE arguments."))
+  (:documentation "See DEFINE-GLOSSARY-TERM."))
 
 (defmacro define-glossary-term
-    (name (&key title (discard-documentation-p *discard-documentation-p*))
-     docstring)
-  "Define a global variable with NAME, and set it to a
-  [GLOSSARY-TERM][class] object. A glossary term is just a symbol to
-  hang a docstring on. It is a bit like a SECTION in that, when linked
-  to, its TITLE will be the link text instead of the name of the
-  symbol. Also as with sections, both TITLE and DOCSTRING are markdown
-  strings or NIL.
+    (name (&key title url (discard-documentation-p *discard-documentation-p*))
+     &optional docstring)
+  "Define a global variable with NAME, and set it to a [GLOSSARY-TERM]
+  [class] object. TITLE, URL and DOCSTRING are markdown strings or
+  NIL. Glossary terms are DOCUMENTed in the lightweight bullet +
+  locative + name/title style. See the glossary entry @NAME for an
+  example.
 
-  Unlike sections though, glossary terms are not rendered with
-  headings, but in the more lightweight bullet + locative + name/title
-  style. See the glossary entry @NAME for an example.
+  When a glossary term is linked to in documentation, its TITLE will
+  be the link text instead of the name of the symbol (as with
+  SECTIONs).
+
+  Glossary entries with a non-NIL URL are like external links: they
+  are linked to their URL in the generated documentation. These offer
+  a more reliable alternative to using markdown reference links and
+  are usually not included in SECTIONs.
 
   When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
   is true, DOCSTRING will not be recorded to save memory."
   `(defparameter ,name
      (make-instance 'glossary-term
-                    :name ',name :title ,title
+                    :name ',name :title ,title :url ,url
                     :docstring ,(unless discard-documentation-p
                                   docstring))))
 
