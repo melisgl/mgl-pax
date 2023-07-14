@@ -511,10 +511,7 @@
        (with-output-to-string (s)
          (format s "Up: ")
          (dolist (section (sort-by-proximity sections (xref-name reference)))
-           (format s "<a href='~A#~A'>~A</a> "
-                   (finalize-pax-url (dref-to-pax-url (locate section)))
-                   (urlencode (dref-to-anchor reference))
-                   (section-title-or-name section))))))))
+           (format s "~S " (section-name section))))))))
 
 
 (defun/autoloaded redocument-for-emacs
