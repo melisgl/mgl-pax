@@ -2448,19 +2448,22 @@
           collect heading))
 
 (defun print-table-of-contents (object stream)
-  (when (and (zerop *heading-level*)
-             (plusp *document-max-table-of-contents-level*))
-    (let ((rest (list-headings object *heading-level*)))
-      ;; Don't generate a table of contents if it's empty.
-      (when (and (second rest)
-                 (< *heading-level* (heading-level (second rest))))
-        (heading (+ *heading-level* 1 *heading-offset*) stream)
-        (format stream " Table of Contents~%~%")
+  ;; FIXME: take *HEADING-OFFSET* into account?
+  (when (zerop *heading-level*)
+    (let ((rest (list-headings object *heading-level*))
+          (toc-title-printed nil))
+      (flet ((ensure-toc-title ()
+               (unless toc-title-printed
+                 (heading (+ *heading-level* 1 *heading-offset*) stream)
+                 (format stream " Table of Contents~%~%")
+                 (setq toc-title-printed t))))
         (loop for heading in (rest rest)
-              while (< *heading-offset* (heading-level heading))
+              while (plusp (heading-level heading))
               do (when (<= (heading-level heading)
                            *document-max-table-of-contents-level*)
-                   (print-table-of-contents-entry heading stream)))
+                   (ensure-toc-title)
+                   (print-table-of-contents-entry heading stream))))
+      (when toc-title-printed
         (terpri stream)))))
 
 ;;; Return the tail of *HEADINGS* from OBJECT at HEADING-LEVEL or NIL.
