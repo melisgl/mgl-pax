@@ -80,8 +80,7 @@
   (check-docstring-only-body docstring)
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (defmethod locative-type-lambda-list ((symbol (eql ',locative-type)))
-       ,@docstring
-       (values ',lambda-list ,*package*))
+       (values ',lambda-list ,(first docstring) ,*package*))
      (declare-locative-type ',locative-type)))
 
 (defmacro define-pseudo-locative-type (locative-type lambda-list
@@ -95,8 +94,7 @@
   (check-docstring-only-body docstring)
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (defmethod locative-type-lambda-list ((symbol (eql ',locative-type)))
-       ,@docstring
-       (values ',lambda-list ,*package*))
+       (values ',lambda-list ,(first docstring) ,*package*))
      (declare-pseudo-locative-type ',locative-type)))
 
 (defun check-docstring-only-body (body)
@@ -146,16 +144,14 @@
   (check-docstring-only-body docstring)
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (defmethod locative-type-lambda-list ((symbol (eql ',alias)))
-       ,@docstring
-       (values '(&rest args) ,*package*))
+       (values '(&rest args) ,(first docstring) ,*package*))
      (defmethod locate-dref* (name (locative-type (eql ',alias)) locative-args)
        (locate-dref* name ',locative-type locative-args))
      (declare-locative-alias ',alias)))
 
-;;; A somewhat dummy generic function on which the docstring can be
-;;; hung, and which provides a source location. It returns LAMBDA-LIST
-;;; from DEFINE-LOCATIVE-TYPE and *PACKAGE* in effect at its
-;;; definition.
+;;; A somewhat dummy generic function that provides a source location.
+;;; It returns LAMBDA-LIST and DOCSTRING from DEFINE-LOCATIVE-TYPE,
+;;; and the *PACKAGE* in effect at macroexpansion time.
 (defgeneric locative-type-lambda-list (symbol))
 
 
@@ -282,7 +278,7 @@
                       nil)))
 
 (defgeneric resolve-dref (dref)
-  (:documentation "Return the object defined by the defintion XREF
+  (:documentation "Return the object defined by the definition DREF
   refers to. Signal a RESOLVE-ERROR condition by calling the
   RESOLVE-ERROR function if the lookup fails. Don't call this function
   directly. It serves only to extend RESOLVE.

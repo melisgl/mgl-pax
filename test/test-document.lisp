@@ -1337,6 +1337,22 @@ This is [Self-referencing][e042].
 ```"))))
 
 
+(defvar *testing-bad-transcript* nil)
+
+(defsection @must-have ()
+  (foo-with-bad-transcript function))
+(defun foo-with-bad-transcript ()
+  "```cl-transcript (:dynenv check-transcript-only-if-testing)
+  (1+ 2)
+  => 7
+  ```"
+  nil)
+
+(defun check-transcript-only-if-testing (fn)
+  ;; Silence the warning if someone does an apropos on this.
+  (let ((*transcribe-check-consistency* *testing-bad-transcript*))
+    (funcall fn)))
+
 (deftest test-document/open ()
   (with-test ("no link duplication for objects being documented")
     (check-head (list "PAX:LOCATIVE"
@@ -1355,7 +1371,8 @@ This is [Self-referencing][e042].
       (check-head "`ambi<>&`"
                   "<a href=\"pax:MGL-PAX-TEST:AMBI%3C%3E%26\" ><strong><code>ambi&lt;&gt;&amp;</code></strong></a>"
                   :w3m t :format :html)))
-  (let ((*error-output* (make-broadcast-stream)))
+  (let ((*error-output* (make-broadcast-stream))
+        (*testing-bad-transcript* t))
     (check-head (locate 'foo-with-bad-transcript 'function)
                 "<a id=\"MGL-PAX-TEST:FOO-WITH-BAD-TRANSCRIPT%20FUNCTION\"></a>
 
@@ -1441,15 +1458,6 @@ This is [Self-referencing][e042].
 (defun foo<>& ())
 (defun ambi<>& ())
 (defclass ambi<>& () ())
-
-(defsection @must-have ()
-  (foo-with-bad-transcript function))
-(defun foo-with-bad-transcript ()
-  "```cl-transcript
-  (1+ 2)
-  => 7
-  ```"
-  nil)
 
 
 (deftest test-map-documentable ()

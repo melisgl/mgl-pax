@@ -1118,10 +1118,10 @@
   (values (locative-type-lambda-list (dref-name dref)) :macro))
 
 (defmethod dref-docstring ((dref locative-dref))
-  (let* ((symbol (dref-name dref))
-         (method (locative-type-lambda-list-method-for-symbol symbol)))
-    (values (documentation* method t)
-            (nth-value 1 (locative-type-lambda-list (dref-name dref))))))
+  (multiple-value-bind (arglist docstring package)
+      (locative-type-lambda-list (dref-name dref))
+    (declare (ignore arglist))
+    (values docstring package)))
 
 (defmethod dref-source-location ((dref locative-dref))
   (let ((symbol (dref-name dref)))
