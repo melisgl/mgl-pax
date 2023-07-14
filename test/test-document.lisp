@@ -569,19 +569,19 @@ xxx
     (check-head (list "[FORMAT][dislocated]"
                       (locate 'dislocated 'locative)
                       (locate 'pax::@explicit-and-autolinking
-                                      'section))
+                              'section))
                 "`FORMAT`"
                 :package (find-package '#:mgl-pax))
     (check-head (list "[NOT-CODE][dislocated]"
                       (locate 'dislocated 'locative)
                       (locate 'pax::@explicit-and-autolinking
-                                      'section))
+                              'section))
                 "NOT-CODE"
                 :package (find-package '#:mgl-pax))
     (check-head (list "[`SOME-CODE`][dislocated]"
                       (locate 'dislocated 'locative)
                       (locate 'pax::@explicit-and-autolinking
-                                      'section))
+                              'section))
                 "`SOME-CODE`"
                 :package (find-package '#:mgl-pax))
     (check-head "[locative][dislocated]" "locative")
@@ -614,10 +614,11 @@ xxx
 
   [print]: #ttt"
                   "[see this][d451]")))
-  (with-test ("emph in reflink definition")
-    (check-head "[xxx][*print-length* variable]" "[xxx][8f7a]"))
-  (with-test ("backtick in reflink definition")
-    (check-head "[xxx][`*print-length*` variable]" "[xxx][8f7a]")))
+  (when pax::*3bmd-reflink-definition-is-list*
+    (with-test ("emph in reflink definition")
+      (check-head "[xxx][*print-length* variable]" "[xxx][8f7a]"))
+    (with-test ("backtick in reflink definition")
+      (check-head "[xxx][`*print-length*` variable]" "[xxx][8f7a]"))))
 
 
 (defsection @section-with-title (:title "My `Title`" :export nil))
