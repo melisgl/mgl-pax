@@ -99,3 +99,5 @@ Cons of DEFINITIONS:
 Pros of DEFINITIONs:
 - BIND, (SETF OBJECT), UNBIND, (SETF DOCUMENTATION).
 * BUG transcript: "debugger invoked on" is treated like output
+* BUG @package-and-readtable up link incorrect
+* BUG @package-and-readtable table of contents empty
