@@ -90,15 +90,11 @@ Like this one, sections can have docstrings and references to
 definitions (e.g. `(UNIFORM-RANDOM FUNCTION)`). These docstrings and
 references are the glue. To support interactive development, PAX
 
-- makes [SLIME's `M-.`][slime-m-.] work with references and
+- makes [SLIME][6be7]'s [`M-.`][cb15] work with references and
 
 - adds a documentation browser.
 
 See [Emacs Setup][8541].
-
-[slime]: https://slime.common-lisp.dev/
-
-[slime-m-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions
 
 Beyond interactive workflows, [Generating Documentation][2c93] from
 sections and all the referenced items in Markdown or HTML format is
@@ -332,10 +328,6 @@ code by jumping around with [SLIME][slime]'s
 I spend a great deal of time polishing code but precious little
 writing documentation.
 
-[slime]: https://slime.common-lisp.dev/
-
-[slime-m-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions
-
 In fact, I rarely write anything more comprehensive than docstrings
 for exported stuff. Writing docstrings feels easier than writing a
 separate user manual, and they are always close at hand during
@@ -359,10 +351,8 @@ parts of `DEFSECTION` docstrings were just listings of
 all the functions, macros and variables related to the narrative,
 and this list was repeated in the [`DEFPACKAGE`][9b43] form complete with
 little comments that were like section names. A clear violation of
-[OAOO][oaoo], one of them had to go, so `DEFSECTION` got
-a list of symbols to export.
-
-[oaoo]: http://c2.com/cgi/wiki?OnceAndOnlyOnce
+[OAOO][7d18], one of them had to go, so `DEFSECTION` got a list
+of symbols to export.
 
 That was great, but soon I found that the listing of symbols is
 ambiguous if, for example, a function, a compiler macro and a class
@@ -393,13 +383,10 @@ no need to explicitly mark up links: if `M-.` works, then the
 documentation generator shall also be able figure out what's being
 referred to.
 
-I settled on [Markdown][markdown] as a reasonably non-intrusive
-format, and a few thousand lines later PAX was born. Since then,
-locatives and references were factored out into the [DRef][5225] library to let PAX focus on `M-.` and
-documentation.
-
-[markdown]: https://daringfireball.net/projects/markdown/
-
+I settled on [markdown][a317] as a reasonably non-intrusive format, and a
+few thousand lines later PAX was born. Since then, locatives and
+references were factored out into the [DRef][5225]
+library to let PAX focus on `M-.` and documentation.
 
 <a id="x-28MGL-PAX-3A-40BASICS-20MGL-PAX-3ASECTION-29"></a>
 
@@ -585,18 +572,21 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
 
 <a id="x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20MGL-PAX-3AMACRO-29"></a>
 
-- [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) DOCSTRING*
+- [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &OPTIONAL DOCSTRING*
 
-    Define a global variable with `NAME`, and set it to a
-    [`GLOSSARY-TERM`][8251] object. A glossary term is just a symbol to
-    hang a docstring on. It is a bit like a [`SECTION`][5fac] in that, when linked
-    to, its `TITLE` will be the link text instead of the name of the
-    symbol. Also as with sections, both `TITLE` and `DOCSTRING` are markdown
-    strings or `NIL`.
+    Define a global variable with `NAME`, and set it to a [`GLOSSARY-TERM`][8251] object. `TITLE`, `URL` and `DOCSTRING` are markdown strings or
+    `NIL`. Glossary terms are [`DOCUMENT`][432c]ed in the lightweight bullet +
+    locative + name/title style. See the glossary entry [name][88cf] for an
+    example.
     
-    Unlike sections though, glossary terms are not rendered with
-    headings, but in the more lightweight bullet + locative + name/title
-    style. See the glossary entry [name][88cf] for an example.
+    When a glossary term is linked to in documentation, its `TITLE` will
+    be the link text instead of the name of the symbol (as with
+    [`SECTION`][5fac]s).
+    
+    Glossary entries with a non-`NIL` `URL` are like external links: they
+    are linked to their `URL` in the generated documentation. These offer
+    a more reliable alternative to using markdown reference links and
+    are usually not included in `SECTION`s.
     
     When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][730f])
     is true, `DOCSTRING` will not be recorded to save memory.
@@ -3258,8 +3248,7 @@ they are presented.
 
 - [class] **GLOSSARY-TERM**
 
-    [`DEFINE-GLOSSARY-TERM`][8ece] instantiates a `GLOSSARY-TERM`
-    with its `NAME` and `TITLE` arguments.
+    See [`DEFINE-GLOSSARY-TERM`][8ece].
 
 <a id="x-28MGL-PAX-3AGLOSSARY-TERM-NAME-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29"></a>
 
@@ -3274,6 +3263,12 @@ they are presented.
 
     A markdown string or `NIL`. Used in generated
     documentation (see [`DOCUMENT-DREF`][561f] (method () (glossary-term-dref t))).
+
+<a id="x-28MGL-PAX-3AGLOSSARY-TERM-URL-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29"></a>
+
+- [reader] **GLOSSARY-TERM-URL** *GLOSSARY-TERM (:URL)*
+
+    A string or `NIL`.
 
   [00d4]: dref/README.md#x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE"
   [0317]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pn.htm "PATHNAME (MGL-PAX:CLHS CLASS)"
@@ -3328,7 +3323,7 @@ they are presented.
   [4317]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cerror.htm "CERROR (MGL-PAX:CLHS FUNCTION)"
   [432c]: #x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29 "MGL-PAX:DOCUMENT FUNCTION"
   [4336]: http://www.lispworks.com/documentation/HyperSpec/Body/03_da.htm '"3.4.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
-  [43bd]: dref/README.md#x-28DREF-3A-40REFERENCE-20MGL-PAX-3AGLOSSARY-TERM-29 "DREF:@REFERENCE MGL-PAX:GLOSSARY-TERM"
+  [43bd]: dref/README.md#x-28DREF-3A-40REFERENCE-20MGL-PAX-3AGLOSSARY-TERM-29 "reference"
   [443b]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_cas.htm "*PRINT-CASE* (MGL-PAX:CLHS VARIABLE)"
   [4796]: dref/README.md#x-28LAMBDA-20MGL-PAX-3ALOCATIVE-29 "LAMBDA MGL-PAX:LOCATIVE"
   [479a]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "ABORT (MGL-PAX:CLHS FUNCTION)"
@@ -3352,7 +3347,7 @@ they are presented.
   [5cd7]: #x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:INCLUDE MGL-PAX:LOCATIVE"
   [5ed1]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm "*PACKAGE* (MGL-PAX:CLHS VARIABLE)"
   [5fac]: #x-28MGL-PAX-3ASECTION-20CLASS-29 "MGL-PAX:SECTION CLASS"
-  [5fc4]: dref/README.md#x-28DREF-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29 "DREF:@NAME MGL-PAX:GLOSSARY-TERM"
+  [5fc4]: dref/README.md#x-28DREF-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29 "name"
   [6067]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#destructuring_lambda_list '"destructuring lambda list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [6300]: #x-28MGL-PAX-3A-40TRANSCRIPTS-20MGL-PAX-3ASECTION-29 "Transcripts"
   [6334]: dref/README.md#x-28DREF-EXT-3ALOCATE-ERROR-20CONDITION-29 "DREF-EXT:LOCATE-ERROR CONDITION"
@@ -3370,6 +3365,7 @@ they are presented.
   [6ab0]: #x-28MGL-PAX-3A-2ADOCUMENT-FANCY-HTML-NAVIGATION-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-FANCY-HTML-NAVIGATION* VARIABLE"
   [6af6]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PPRINT (MGL-PAX:CLHS FUNCTION)"
   [6b59]: #x-28MGL-PAX-3A-40TRANSCRIPT-DYNENV-20MGL-PAX-3ASECTION-29 "Controlling the Dynamic Environment"
+  [6be7]: https://slime.common-lisp.dev/ "SLIME"
   [6c83]: dref/README.md#x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29 "VARIABLE MGL-PAX:LOCATIVE"
   [6e18]: #x-28MGL-PAX-3A-40TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS-20MGL-PAX-3ASECTION-29 "Finer-Grained Consistency Checks"
   [6f51]: http://www.lispworks.com/documentation/HyperSpec/Body/r_muffle.htm "MUFFLE-WARNING (MGL-PAX:CLHS RESTART)"
@@ -3377,11 +3373,12 @@ they are presented.
   [72b4]: #x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFSECTION MGL-PAX:MACRO"
   [730f]: #x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20VARIABLE-29 "MGL-PAX:*DISCARD-DOCUMENTATION-P* VARIABLE"
   [7328]: http://www.lispworks.com/documentation/HyperSpec/Body/f_apropo.htm "APROPOS-LIST (MGL-PAX:CLHS FUNCTION)"
-  [7445]: #x-28MGL-PAX-3A-40INTERESTING-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@INTERESTING MGL-PAX:GLOSSARY-TERM"
-  [7ac8]: dref/README.md#x-28DREF-3A-40LOCATIVE-20MGL-PAX-3AGLOSSARY-TERM-29 "DREF:@LOCATIVE MGL-PAX:GLOSSARY-TERM"
+  [7445]: #x-28MGL-PAX-3A-40INTERESTING-20MGL-PAX-3AGLOSSARY-TERM-29 "interesting"
+  [7ac8]: dref/README.md#x-28DREF-3A-40LOCATIVE-20MGL-PAX-3AGLOSSARY-TERM-29 "locative"
   [7bf5]: #x-28MGL-PAX-3A-40MARKDOWN-IN-DOCSTRINGS-20MGL-PAX-3ASECTION-29 "Markdown in Docstrings"
   [7c82]: #x-28MGL-PAX-3A-40MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29 "Miscellaneous Variables"
   [7cc3]: #x-28MGL-PAX-3A-40LINKING-TO-THE-HYPERSPEC-20MGL-PAX-3ASECTION-29 "Linking to the Hyperspec"
+  [7d18]: http://c2.com/cgi/wiki?OnceAndOnlyOnce "OAOO"
   [7dc7]: #x-28MGL-PAX-3A-40DOCUMENT-RETURN-20MGL-PAX-3ASECTION-29 "Return Values"
   [7f1f]: #x-28MGL-PAX-3ADOCUMENT-DOCSTRING-20FUNCTION-29 "MGL-PAX:DOCUMENT-DOCSTRING FUNCTION"
   [80e8]: #x-28MGL-PAX-3AWITH-HEADING-20MGL-PAX-3AMACRO-29 "MGL-PAX:WITH-HEADING MGL-PAX:MACRO"
@@ -3397,7 +3394,7 @@ they are presented.
   [875e]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-TO-HYPERSPEC* VARIABLE"
   [876d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_ensu_1.htm "ENSURE-DIRECTORIES-EXIST (MGL-PAX:CLHS FUNCTION)"
   [88a7]: #x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "MGL-PAX:SECTION-READTABLE (MGL-PAX:READER MGL-PAX:SECTION)"
-  [88cf]: #x-28MGL-PAX-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@NAME MGL-PAX:GLOSSARY-TERM"
+  [88cf]: #x-28MGL-PAX-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29 "name"
   [8996]: #x-28MGL-PAX-3A-40SPECIFIED-LOCATIVE-20MGL-PAX-3ASECTION-29 "Specified Locative"
   [8a58]: #x-28MGL-PAX-3A-40SECTIONS-20MGL-PAX-3ASECTION-29 "Sections"
   [8c16]: #x-28MGL-PAX-3A-40PREVENTING-AUTOLINKING-20MGL-PAX-3ASECTION-29 "Preventing Autolinking"
@@ -3415,9 +3412,10 @@ they are presented.
   [9b43]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "DEFPACKAGE (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [9c7d]: #x-28MGL-PAX-3A-40PAGES-20MGL-PAX-3ASECTION-29 "Pages"
   [9dbc]: #x-28MGL-PAX-3A-40TRANSCRIPT-API-20MGL-PAX-3ASECTION-29 "Transcript API"
-  [a11d]: dref/README.md#x-28DREF-3A-40LOCATIVE-TYPE-20MGL-PAX-3AGLOSSARY-TERM-29 "DREF:@LOCATIVE-TYPE MGL-PAX:GLOSSARY-TERM"
+  [a11d]: dref/README.md#x-28DREF-3A-40LOCATIVE-TYPE-20MGL-PAX-3AGLOSSARY-TERM-29 "locative type"
   [a17d]: #x-28MGL-PAX-3A-40MATHJAX-20MGL-PAX-3ASECTION-29 "MathJax"
   [a249]: #x-28MGL-PAX-3ATRANSCRIPTION-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION"
+  [a317]: https://daringfireball.net/projects/markdown/ "markdown"
   [a595]: #x-28MGL-PAX-3A-40BROWSING-LIVE-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Browsing Live Documentation"
   [a5b1]: #x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION)"
   [a5ee]: #x-28MGL-PAX-3A-2ADOCUMENT-DOWNCASE-UPPERCASE-CODE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-DOWNCASE-UPPERCASE-CODE* VARIABLE"
@@ -3440,7 +3438,7 @@ they are presented.
   [b7fc]: #x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29 "Apropos"
   [b81d]: #x-28MGL-PAX-3ATRANSCRIPTION-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-ERROR CONDITION"
   [b88e]: dref/README.md#x-28DREF-EXT-3AXREF-NAME-20-28MGL-PAX-3AREADER-20DREF-3AXREF-29-29 "DREF-EXT:XREF-NAME (MGL-PAX:READER DREF:XREF)"
-  [b89a]: #x-28MGL-PAX-3A-40CODIFIABLE-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@CODIFIABLE MGL-PAX:GLOSSARY-TERM"
+  [b89a]: #x-28MGL-PAX-3A-40CODIFIABLE-20MGL-PAX-3AGLOSSARY-TERM-29 "codifiable"
   [b8a8]: #x-28MGL-PAX-3ADOCUMENTING-REFERENCE-20MGL-PAX-3AMACRO-29 "MGL-PAX:DOCUMENTING-REFERENCE MGL-PAX:MACRO"
   [b8b4]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "MUFFLE-WARNING (MGL-PAX:CLHS FUNCTION)"
   [b93c]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "STRING (MGL-PAX:CLHS CLASS)"
@@ -3458,6 +3456,7 @@ they are presented.
   [c818]: #x-28MGL-PAX-3AOUTPUT-LABEL-20FUNCTION-29 "MGL-PAX:OUTPUT-LABEL FUNCTION"
   [c819]: dref/README.md#x-28MGL-PAX-3ACONSTANT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CONSTANT MGL-PAX:LOCATIVE"
   [c930]: #x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29 "MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION"
+  [cb15]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions "`M-.`"
   [cc04]: dref/README.md#x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:READER MGL-PAX:LOCATIVE"
   [d162]: http://www.lispworks.com/documentation/HyperSpec/Body/e_error.htm "ERROR (MGL-PAX:CLHS CONDITION)"
   [d1ca]: #x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29 "Documentation Generation Implementation Notes"
@@ -3467,7 +3466,7 @@ they are presented.
   [d5a9]: http://www.lispworks.com/documentation/HyperSpec/Body/t_stream.htm "STREAM (MGL-PAX:CLHS CLASS)"
   [d646]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rdtabl.htm "READTABLE (MGL-PAX:CLHS CLASS)"
   [d761]: #x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/full" ASDF/SYSTEM:SYSTEM'
-  [d7b0]: #x-28MGL-PAX-3A-40WORD-20MGL-PAX-3AGLOSSARY-TERM-29 "MGL-PAX:@WORD MGL-PAX:GLOSSARY-TERM"
+  [d7b0]: #x-28MGL-PAX-3A-40WORD-20MGL-PAX-3AGLOSSARY-TERM-29 "word"
   [d83a]: dref/README.md#x-28SETF-20MGL-PAX-3ALOCATIVE-29 "SETF MGL-PAX:LOCATIVE"
   [d850]: #x-28MGL-PAX-3ASECTION-ENTRIES-20FUNCTION-29 "MGL-PAX:SECTION-ENTRIES FUNCTION"
   [d930]: dref/README.md#x-28DREF-3ADREF-20CLASS-29 "DREF:DREF CLASS"

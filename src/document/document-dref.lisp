@@ -302,6 +302,12 @@
   (let* ((glossary-term (resolve dref))
          (name (glossary-term-title-or-name glossary-term)))
     (documenting-reference (stream :name name)
+      (when (glossary-term-url glossary-term)
+        (document-docstring
+         (format nil "External link to [~A](~A)."
+                 (escape-markdown (glossary-term-url glossary-term))
+                 (glossary-term-url glossary-term))
+         stream))
       (document-docstring (glossary-term-docstring glossary-term) stream))))
 
 (defmethod document-dref ((dref go-dref) stream)

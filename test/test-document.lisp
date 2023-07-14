@@ -95,6 +95,7 @@
   (test-readtable)
   ;; PAX::@PAX-LOCATIVES
   (test-locative)
+  (test-glossary-term)
   (test-go)
   (test-docstring)
   (test-hyperspec)
@@ -688,7 +689,7 @@ xxx
 
     This is [Self-referencing Term][a79b].
 
-  [a79b]: #MGL-PAX-TEST:@SELF-REFERENCING-TERM%20MGL-PAX:GLOSSARY-TERM \"MGL-PAX-TEST:@SELF-REFERENCING-TERM MGL-PAX:GLOSSARY-TERM\"
+  [a79b]: #MGL-PAX-TEST:@SELF-REFERENCING-TERM%20MGL-PAX:GLOSSARY-TERM \"Self-referencing Term\"
 ")
   (let ((*document-max-table-of-contents-level* 0))
     (check-document @self-referencing
@@ -1167,6 +1168,31 @@ This is [Self-referencing][e042].
 
     This is `SOME-ARG`.
 " :package (find-package :cl)))
+
+(define-glossary-term @external-link (:title "See X"
+                                      :url "http://example.com/x")
+                      "docstring")
+
+(deftest test-glossary-term ()
+  (with-test ("external links")
+    (check-document "@EXTERNAL-LINK" "[See X][ffc6]
+
+  [ffc6]: http://example.com/x \"See X\"
+")
+    (check-document "[xxx][@external-link]" "[xxx][ffc6]
+
+  [ffc6]: http://example.com/x \"See X\"
+")
+    (check-document
+     @external-link
+     "<a id=\"MGL-PAX-TEST:@EXTERNAL-LINK%20MGL-PAX:GLOSSARY-TERM\"></a>
+
+- [glossary-term] **See X**
+
+    External link to [http://example.com/x](http://example.com/x).
+
+    docstring
+")))
 
 (deftest test-go ()
   (with-test ("canonicalize GO target")

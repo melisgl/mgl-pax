@@ -3,24 +3,6 @@
 #+TODO: MAYBE(m@) FAILED(f@) LOG(l@) DEFERRED(e@) BUG(b@)
 * OPT parse and print markdown once when *format* is :html?
 This would involve rewriting everything to emit parse tree fragments or be able to produce html directly. Either way, it is not without cost.
-* defining link ids doesn't work in function docstrings
-because it's translated to a list item
-
-(3BMD:PARSE-STRING-AND-PRINT-TO-STREAM "
-- xxx
-
-    [link][aaaa]
-    
-    [aaaa]: https://example.com
-
-" *standard-output* :FORMAT :HTML)
-
-But there is no good place to define them, so we'll need something
-like a symbol based definition:
-
-(defmdtarget markdown "http://exxx")
-
-which is maybe an external link.
 * MAYBE pretty print lambda-lists (including default values)
 and values of variables. Unfortunately, there seems to be no way to
 use the lisp pretty printer for this because output also includes

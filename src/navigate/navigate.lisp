@@ -62,9 +62,8 @@
 
 
 (defsection @navigating-in-emacs (:title "Navigating Sources in Emacs")
-  """Integration into [SLIME's `\\M-.`][slime-m-.]
-  (`slime-edit-definition`) allows one to visit the SOURCE-LOCATION of
-  a [definition][DREF].
+  """Integration into @SLIME's @M-. (`slime-edit-definition`) allows
+  one to visit the SOURCE-LOCATION of a [definition][DREF].
 
   The definition is either determined from the buffer content at point
   or is prompted. If prompted, then the format is `<NAME> <LOCATIVE>`,

@@ -82,13 +82,14 @@
     :header-nl "```elisp"
     :footer-nl #.(format nil "...)~%```"))))
 
-(defsection @browsing-with-w3m (:title "Browsing with w3m")
-  """With w3m's default [key bindings][w3m-key-bindings], moving the
-  cursor between links involves `TAB` and `S-TAB` (or `<up>` and
-  `<down>`). `RET` and `<right>` follow a link, while `B` and `<left>`
-  go back in history.
+(define-glossary-term @w3m-key-bindings
+    (:title "w3m's default key bindings"
+     :url "https://emacs-w3m.github.io/info/emacs-w3m_10.html#Key-Binding"))
 
-    [w3m-key-bindings]: https://emacs-w3m.github.io/info/emacs-w3m_10.html#Key-Binding
+(defsection @browsing-with-w3m (:title "Browsing with w3m")
+  """With @W3M-KEY-BINDINGS, moving the cursor between links involves
+  `TAB` and `S-TAB` (or `<up>` and `<down>`). `RET` and `<right>`
+  follow a link, while `B` and `<left>` go back in history.
 
   In addition, the following PAX-specific key bindings are available:
 

@@ -56,6 +56,20 @@
   (@transcripts section)
   (@extension-api section))
 
+(define-glossary-term @slime (:title "SLIME"
+                              :url "https://slime.common-lisp.dev/"))
+
+(define-glossary-term @m-.
+    (:title "`M-.`"
+     :url "http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions"))
+
+(define-glossary-term @oaoo (:title "OAOO"
+                             :url "http://c2.com/cgi/wiki?OnceAndOnlyOnce"))
+
+(define-glossary-term @markdown
+    (:title "markdown"
+     :url "https://daringfireball.net/projects/markdown/"))
+
 (defsection @introduction (:title "Introduction")
   """_What if documentation really lived in the code?_
 
@@ -76,14 +90,11 @@
   definitions (e.g. `(UNIFORM-RANDOM FUNCTION)`). These docstrings and
   references are the glue. To support interactive development, PAX
 
-  - makes [SLIME's `\\M-.`][slime-m-.] work with references and
+  - makes @SLIME's @M-. work with references and
 
   - adds a documentation browser.
 
   See @EMACS-SETUP.
-
-  [slime]: https://slime.common-lisp.dev/
-  [slime-m-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions
 
   Beyond interactive workflows, @GENERATING-DOCUMENTATION from
   sections and all the referenced items in Markdown or HTML format is
@@ -132,7 +143,7 @@
   - \[function\] **\ABORT** *\&OPTIONAL \CONDITION*
 
       Transfer control to a restart named `ABORT`, signalling a
-      [`\CONTROL-ERROR`][6bc0] if none exists.
+      \[`\CONTROL-ERROR`\]\[6bc0\] if none exists.
 
     [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\CONTROL-ERROR \CONDITION"
 
@@ -241,13 +252,9 @@
 (defsection @background (:title "Background")
   """As a user, I frequently run into documentation that's incomplete
   and out of date, so I tend to stay in the editor and explore the
-  code by jumping around with [SLIME][slime]'s
-  [`\\M-.`][slime-m-.] (`slime-edit-definition`). As a library author,
-  I spend a great deal of time polishing code but precious little
-  writing documentation.
-
-  [slime]: https://slime.common-lisp.dev/
-  [slime-m-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions
+  code by jumping around with @SLIME's @M-. (`slime-edit-definition`).
+  As a library author, I spend a great deal of time polishing code but
+  precious little writing documentation.
 
   In fact, I rarely write anything more comprehensive than docstrings
   for exported stuff. Writing docstrings feels easier than writing a
@@ -272,10 +279,8 @@
   all the functions, macros and variables related to the narrative,
   and this list was repeated in the DEFPACKAGE form complete with
   little comments that were like section names. A clear violation of
-  [OAOO][oaoo], one of them had to go, so [DEFSECTION][dislocated] got
-  a list of symbols to export.
-
-  [oaoo]: http://c2.com/cgi/wiki?OnceAndOnlyOnce
+  @OAOO, one of them had to go, so [DEFSECTION][dislocated] got a list
+  of symbols to export.
 
   That was great, but soon I found that the listing of symbols is
   ambiguous if, for example, a function, a compiler macro and a class
@@ -306,13 +311,10 @@
   documentation generator shall also be able figure out what's being
   referred to.
 
-  I settled on [Markdown][markdown] as a reasonably non-intrusive
-  format, and a few thousand lines later PAX was born. Since then,
-  locatives and references were factored out into the [DRef][
-  DREF::@DREF-MANUAL] library to let PAX focus on `\\M-.` and
-  documentation.
-
-  [markdown]: https://daringfireball.net/projects/markdown/""")
+  I settled on @MARKDOWN as a reasonably non-intrusive format, and a
+  few thousand lines later PAX was born. Since then, locatives and
+  references were factored out into the [DRef][ DREF::@DREF-MANUAL]
+  library to let PAX focus on `\\M-.` and documentation.""")
 
 
 (defsection @basics (:title "Basics")

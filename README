@@ -22,15 +22,11 @@ Like this one, sections can have docstrings and references to
 definitions (e.g. `(UNIFORM-RANDOM FUNCTION)`). These docstrings and
 references are the glue. To support interactive development, PAX
 
-- makes [SLIME's `M-.`][slime-m-.] work with references and
+- makes @SLIME's @M-. work with references and
 
 - adds a documentation browser.
 
 See @EMACS-SETUP.
-
-[slime]: https://slime.common-lisp.dev/
-
-[slime-m-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions
 
 Beyond interactive workflows, @GENERATING-DOCUMENTATION from
 sections and all the referenced items in Markdown or HTML format is
@@ -79,7 +75,7 @@ PAX in mind. The above markdown is rendered as
 - \[function\] **ABORT** *\&OPTIONAL CONDITION*
 
     Transfer control to a restart named `ABORT`, signalling a
-    [`CONTROL-ERROR`][6bc0] if none exists.
+    \[`CONTROL-ERROR`\]\[6bc0\] if none exists.
 
 [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\\CONTROL-ERROR \\CONDITION"
 
@@ -247,14 +243,9 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
 
 As a user, I frequently run into documentation that's incomplete
 and out of date, so I tend to stay in the editor and explore the
-code by jumping around with [SLIME][slime]'s
-[`M-.`][slime-m-.] (`slime-edit-definition`). As a library author,
-I spend a great deal of time polishing code but precious little
-writing documentation.
-
-[slime]: https://slime.common-lisp.dev/
-
-[slime-m-.]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions
+code by jumping around with @SLIME's @M-. (`slime-edit-definition`).
+As a library author, I spend a great deal of time polishing code but
+precious little writing documentation.
 
 In fact, I rarely write anything more comprehensive than docstrings
 for exported stuff. Writing docstrings feels easier than writing a
@@ -279,10 +270,8 @@ parts of `DEFSECTION` docstrings were just listings of
 all the functions, macros and variables related to the narrative,
 and this list was repeated in the DEFPACKAGE form complete with
 little comments that were like section names. A clear violation of
-[OAOO][oaoo], one of them had to go, so DEFSECTION got
-a list of symbols to export.
-
-[oaoo]: http://c2.com/cgi/wiki?OnceAndOnlyOnce
+@OAOO, one of them had to go, so DEFSECTION got a list
+of symbols to export.
 
 That was great, but soon I found that the listing of symbols is
 ambiguous if, for example, a function, a compiler macro and a class
@@ -313,13 +302,10 @@ no need to explicitly mark up links: if `M-.` works, then the
 documentation generator shall also be able figure out what's being
 referred to.
 
-I settled on [Markdown][markdown] as a reasonably non-intrusive
-format, and a few thousand lines later PAX was born. Since then,
-locatives and references were factored out into the DRef library to let PAX focus on `M-.` and
-documentation.
-
-[markdown]: https://daringfireball.net/projects/markdown/
-
+I settled on @MARKDOWN as a reasonably non-intrusive format, and a
+few thousand lines later PAX was born. Since then, locatives and
+references were factored out into the DRef
+library to let PAX focus on `M-.` and documentation.
 
 ## Basics
 
@@ -483,18 +469,21 @@ To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
     GLOSSARY-TERM is EXPORTABLE-LOCATIVE-TYPE-P but not exported by
     default (see EXPORTABLE-REFERENCE-P).
 
-- [macro] DEFINE-GLOSSARY-TERM NAME (&KEY TITLE (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) DOCSTRING
+- [macro] DEFINE-GLOSSARY-TERM NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &OPTIONAL DOCSTRING
 
-    Define a global variable with NAME, and set it to a
-    GLOSSARY-TERM object. A glossary term is just a symbol to
-    hang a docstring on. It is a bit like a SECTION in that, when linked
-    to, its TITLE will be the link text instead of the name of the
-    symbol. Also as with sections, both TITLE and DOCSTRING are markdown
-    strings or NIL.
+    Define a global variable with NAME, and set it to a GLOSSARY-TERM object. TITLE, URL and DOCSTRING are markdown strings or
+    NIL. Glossary terms are DOCUMENTed in the lightweight bullet +
+    locative + name/title style. See the glossary entry @NAME for an
+    example.
     
-    Unlike sections though, glossary terms are not rendered with
-    headings, but in the more lightweight bullet + locative + name/title
-    style. See the glossary entry @NAME for an example.
+    When a glossary term is linked to in documentation, its TITLE will
+    be the link text instead of the name of the symbol (as with
+    SECTIONs).
+    
+    Glossary entries with a non-NIL URL are like external links: they
+    are linked to their URL in the generated documentation. These offer
+    a more reliable alternative to using markdown reference links and
+    are usually not included in SECTIONs.
     
     When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
     is true, DOCSTRING will not be recorded to save memory.
@@ -738,9 +727,8 @@ To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
 
 ## Navigating Sources in Emacs
 
-Integration into [SLIME's `M-.`][slime-m-.]
-(`slime-edit-definition`) allows one to visit the SOURCE-LOCATION of
-a definition.
+Integration into @SLIME's @M-. (`slime-edit-definition`) allows
+one to visit the SOURCE-LOCATION of a definition.
 
 The definition is either determined from the buffer content at point
 or is prompted. If prompted, then the format is `<NAME> <LOCATIVE>`,
@@ -1039,7 +1027,8 @@ symbols, there is no package system to advantage of.
 
 - [variable] *DOCUMENT-NORMALIZE-PACKAGES* T
 
-    Deprecated.
+    Whether to print `[in package <package-name>]` in the documentation
+    when the package changes.
 
 ### The mgl-pax/document ASDF System
 
@@ -1166,12 +1155,9 @@ To bind `C-.' globally:
 
 #### Browsing with w3m
 
-With w3m's default [key bindings][w3m-key-bindings], moving the
-cursor between links involves `TAB` and `S-TAB` (or `<up>` and
-`<down>`). `RET` and `<right>` follow a link, while `B` and `<left>`
-go back in history.
-
-[w3m-key-bindings]: https://emacs-w3m.github.io/info/emacs-w3m_10.html#Key-Binding
+With @W3M-KEY-BINDINGS, moving the cursor between links involves
+`TAB` and `S-TAB` (or `<up>` and `<down>`). `RET` and `<right>`
+follow a link, while `B` and `<left>` go back in history.
 
 In addition, the following PAX-specific key bindings are available:
 
@@ -1221,25 +1207,35 @@ change.
 
 ### Markdown Support
 
-The [Markdown][markdown] in docstrings is processed with the
-3BMD library.
+The @MARKDOWN in docstrings is processed with the @3BMD library.
 
 #### Markdown in Docstrings
 
-Docstrings can be indented in any of the usual styles. PAX
+- Docstrings can be indented in any of the usual styles. PAX
 normalizes indentation by stripping the longest run of leading
 spaces common to all non-blank lines except the first. The following
 two docstrings are equivalent:
 
-    (defun foo ()
-      "This is
-      indented
-      differently")
-    
-    (defun foo ()
-      "This is
-    indented
-    differently")
+        (defun foo ()
+          "This is
+          indented
+          differently")
+        
+        (defun foo ()
+          "This is
+        indented
+        differently")
+
+- When @BROWSING-LIVE-DOCUMENTATION, the page displayed can be of,
+say, a single function within what would constitute the offline
+documentation of a library. Because markdown reference link
+definitions, for example
+
+[Daring Fireball]: http://daringfireball.net/
+
+ can be defined anywhere, they wouldn't be resolvable in this
+ case, thus their use is discouraged. See DEFINE-GLOSSARY-TERM
+ for a better alternative.
 
 Docstrings of definitions which do not have a @HOME-SECTION and are
 not SECTIONs themselves are assumed to have been written with no
@@ -1267,8 +1263,8 @@ docstrings are equivalent:
 
 #### Syntax Highlighting
 
-For syntax highlighting, Github's [fenced code
-blocks][fenced-code-blocks] markdown extension to mark up code
+For syntax highlighting, Github's @FENCED-CODE-BLOCKS markdown
+extension to mark up code
 blocks with triple backticks is enabled so all you need to do is
 write:
 
@@ -1280,15 +1276,7 @@ to get syntactically marked up HTML output. Copy `src/style.css`
 from PAX and you are set. The language tag, `elisp` in this example,
 is optional and defaults to `common-lisp`.
 
-See the documentation of 3BMD and colorize for
-the details.
-
-[3bmd]: https://github.com/3b/3bmd
-
-[colorize]: https://github.com/redline6561/colorize/
-
-[fenced-code-blocks]: https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks
-
+See the documentation of @3BMD and @COLORIZE for the details.
 
 #### MathJax
 
@@ -1309,11 +1297,7 @@ backticks) alone. Outside code blocks, escape `$` by prefixing it
 with a backslash to scare MathJax off.
 
 Escaping all those backslashes in TeX fragments embedded in Lisp
-strings can be a pain. Pythonic String
-Reader can help with that.
-
-[pythonic-string-reader]: https://github.com/smithzvk/pythonic-string-reader
-
+strings can be a pain. @PYTHONIC-STRING-READER can help with that.
 
 ### Codification
 
@@ -2914,8 +2898,7 @@ they are presented.
 
 - [class] GLOSSARY-TERM
 
-    DEFINE-GLOSSARY-TERM instantiates a GLOSSARY-TERM
-    with its NAME and TITLE arguments.
+    See DEFINE-GLOSSARY-TERM.
 
 - [reader] GLOSSARY-TERM-NAME GLOSSARY-TERM (:NAME)
 
@@ -2926,6 +2909,10 @@ they are presented.
 
     A markdown string or NIL. Used in generated
     documentation (see DOCUMENT-DREF (method () (glossary-term-dref t))).
+
+- [reader] GLOSSARY-TERM-URL GLOSSARY-TERM (:URL)
+
+    A string or NIL.
 
 * * *
 ###### \[generated by [MGL-PAX](https://github.com/melisgl/mgl-pax)\]

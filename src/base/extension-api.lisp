@@ -93,4 +93,5 @@
   they are presented."
   (glossary-term class)
   (glossary-term-name (reader glossary-term))
-  (glossary-term-title (reader glossary-term)))
+  (glossary-term-title (reader glossary-term))
+  (glossary-term-url (reader glossary-term)))

@@ -211,7 +211,7 @@ with references (discussed in the DREF-EXT::@EXTENDING-DREF).
         ```common-lisp
         (resolve (locate '*print-length* 'variable))
         .. debugger invoked on RESOLVE-ERROR:
-        ..   Could not locate *PRINT-LENGTH* VARIABLE.
+        ..   Could not resolve *PRINT-LENGTH* VARIABLE.
         ```
     
         ```common-lisp

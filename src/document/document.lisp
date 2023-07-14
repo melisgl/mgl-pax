@@ -242,8 +242,8 @@
 ;;; pages.
 (defstruct link
   (definition nil :type dref)
-  ;; - STRING pages denote URLs. This is used to link to the
-  ;;   hyperspec.
+  ;; - STRING pages denote URLs. This is used to link to the hyperspec
+  ;;   and to external GLOSSARY-TERMs.
   ;;
   ;; - LINK pages are aliases: the LINK with the reference (PRINT
   ;;   (CLHS FUNCTION)) is the LINK-PAGE of a LINK whose reference is
@@ -252,6 +252,16 @@
   ;; - NULL pages are to support "pax:" URLs for
   ;;   *DOCUMENT-OPEN-LINKING*.
   (page nil :type (or page string link null)))
+
+;;; Like MAKE-LINK, but override PAGE with GLOSSARY-TERM-URL if
+;;; DEFINITION is a GLOSSARY-TERM with an URL.
+(defun make-link* (definition page)
+  (or (if (eq (dref-locative-type definition) 'glossary-term)
+          (when-let (glossary-term (resolve definition nil))
+            (when-let (url (glossary-term-url glossary-term))
+              (assert (stringp url))
+              (make-link :definition definition :page url))))
+      (make-link :definition definition :page page)))
 
 ;;; A DREF::@NAME to LINKs map (name-to-links map, nlmap). Caches
 ;;; LINKS-OF within a single DOCUMENT call. If not
@@ -297,8 +307,7 @@
              (loop for definition in live-definitions
                    for link = (or (find-among-links definition preferred-links)
                                   (and *document-open-linking*
-                                       (make-link :definition definition
-                                                  :page nil)))
+                                       (make-link* definition nil)))
                    when link
                      collect link)))
       (append preferred-live-links
@@ -370,8 +379,7 @@
       (let ((name (dref-name dref)))
         (unless (find dref (gethash name *closed-nlmap*)
                       :key #'link-definition :test #'xref=)
-          (add-link *closed-nlmap* (make-link :definition dref
-                                              :page page)))))))
+          (add-link *closed-nlmap* (make-link* dref page)))))))
 
 
 ;;;; Querying global and local definitions
@@ -597,7 +605,13 @@
   (find-clhs-url (locate reference)))
 
 (defun external-links (name)
-  (clhs-links name))
+  (append (clhs-links name)
+          (glossary-term-external-links name)))
+
+(defun glossary-term-external-links (name)
+  (when-let (dref (locate name 'glossary-term nil))
+    (when-let (url (glossary-term-url (resolve dref)))
+      (list (make-link :definition dref :page url)))))
 
 (defun filter-external-references (references)
   (filter-clhs-references references))
@@ -1058,33 +1072,31 @@
       (format stream "~%")
       (dolist (link used-links)
         (assert (not (link-p (link-page link))))
-        (let ((anchor (dref-to-anchor (link-definition link))))
-          ;; The format is [label]: url "title"
-          ;; E.g.  [1]: http://example.org/Hobbit#Lifestyle "Hobbit lifestyles"
-          (if (stringp (link-page link))
-              ;; Link to external page.
-              (format stream "  [~A]: ~A ~A~%" (link-id link)
-                      (link-page link)
-                      (escape-markdown-reflink-definition-title
-                       (princ-to-string anchor)))
-              ;; Link to documentation generated in the same run.
-              (format stream "  [~A]: ~A ~A~%"
-                      (link-id link)
-                      (link-to-uri link)
-                      (escape-markdown-reflink-definition-title
-                       (let* ((dref (link-definition link))
-                              (locative-type (xref-locative-type dref)))
-                         (if (not (eq locative-type 'section))
-                             (princ-to-string anchor)
-                             (markdown-section-title dref)))))))))))
+        ;; The format is [label]: url "title"
+        ;; E.g.  [1]: http://example.org/Hobbit#Lifestyle "Hobbit lifestyles"
+        (format stream "  [~A]: ~A ~A~%" (link-id link)
+                (if (stringp (link-page link))
+                    ;; Link to external page.
+                    (link-page link)
+                    ;; Link to documentation generated in the same run.
+                    (link-to-uri link))
+                (escape-markdown-reflink-definition-title
+                 (markdown-title-name-or-anchor link)))))))
 
-(defun markdown-section-title (ref)
-  (let ((section (resolve ref (not *document-open-linking*))))
-    (if (and section (section-title section))
-        (let ((*package* (section-package section)))
-          (unescape-markdown (process-title (section-title section))))
-        (process-title (let ((*print-case* :upcase))
-                         (prin1-to-string (xref-name ref)))))))
+(defun markdown-title-name-or-anchor (link)
+  (let* ((dref (link-definition link))
+         (resolved (resolve dref nil)))
+    (multiple-value-bind (title untitledp) (ignore-errors (title resolved))
+      (cond (untitledp
+             (princ-to-string (dref-to-anchor dref)))
+            (title
+             (let ((*package* (or (nth-value 1 (docstring dref))
+                                  (guess-package-and-readtable
+                                   dref (arglist dref)))))
+               (unescape-markdown (process-title (title resolved)))))
+            (t
+             (process-title (let ((*print-case* :upcase))
+                              (prin1-to-string (dref-name dref)))))))))
 
 (defsection @document-return (:title "Return Values")
   "If PAGES are NIL, then DOCUMENT - like CL:FORMAT - returns a
@@ -1165,8 +1177,7 @@
 
 
 (defsection @markdown-support (:title "Markdown Support")
-  "The [Markdown][markdown] in docstrings is processed with the
-  [3BMD][3bmd] library."
+  "The @MARKDOWN in docstrings is processed with the @3BMD library."
   (@markdown-in-docstrings section)
   (@markdown-syntax-highlighting section)
   (@mathjax section))
@@ -1219,8 +1230,8 @@
               (format stream "~A" reindented)))))))
 
 (defsection @markdown-syntax-highlighting (:title "Syntax Highlighting")
-  "For syntax highlighting, Github's [fenced code
-  blocks][fenced-code-blocks] markdown extension to mark up code
+  "For syntax highlighting, Github's @FENCED-CODE-BLOCKS markdown
+  extension to mark up code
   blocks with triple backticks is enabled so all you need to do is
   write:
 
@@ -1232,12 +1243,16 @@
   from PAX and you are set. The language tag, `elisp` in this example,
   is optional and defaults to `common-lisp`.
 
-  See the documentation of [3BMD][3bmd] and [colorize][colorize] for
-  the details.
+  See the documentation of @3BMD and @COLORIZE for the details.")
 
-  [3bmd]: https://github.com/3b/3bmd
-  [colorize]: https://github.com/redline6561/colorize/
-  [fenced-code-blocks]: https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks")
+(define-glossary-term @3bmd (:title "3BMD" :url "https://github.com/3b/3bmd"))
+
+(define-glossary-term @colorize
+    (:title "Colorize" :url "https://github.com/redline6561/colorize/"))
+
+(define-glossary-term @fenced-code-blocks
+    (:title "fenced code blocks"
+     :url "https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks"))
 
 (defsection @mathjax (:title "MathJax")
   """Displaying pretty mathematics in TeX format is supported via
@@ -1257,11 +1272,11 @@
   with a backslash to scare MathJax off.
 
   Escaping all those backslashes in TeX fragments embedded in Lisp
-  strings can be a pain. [Pythonic String
-  Reader][pythonic-string-reader] can help with that.
+  strings can be a pain. @PYTHONIC-STRING-READER can help with that.""")
 
-    [pythonic-string-reader]: https://github.com/smithzvk/pythonic-string-reader
-  """)
+(define-glossary-term @pythonic-string-reader
+    (:title "Pythonic String Reader"
+     :url "https://github.com/smithzvk/pythonic-string-reader"))
 
 
 ;;;; Automatic markup of symbols
@@ -2147,6 +2162,12 @@
       `(:reference-link :label ,label :definition (,definition))
       `(:reference-link :label ,label :definition ,definition)))
 
+(defgeneric title (object)
+  (:method ((section section))
+    (section-title section))
+  (:method ((glossary-term glossary-term))
+    (glossary-term-title glossary-term)))
+
 ;;; For LABEL (a parse tree fragment) and some references to it
 ;;; (REFS), return a markdown parse tree fragment to be spliced into a
 ;;; markdown parse tree.
@@ -2178,7 +2199,7 @@
                  ")")))
           ((member (xref-locative-type ref-1) '(dislocated argument))
            label)
-          ;; FIXME: TITLE should be a generic function.
+          ;; FIXME: TITLE should be a generic function. !
           ((eq (xref-locative-type ref-1) 'section)
            (let ((section (resolve ref-1 nil)))
              `(,(%make-reflink
