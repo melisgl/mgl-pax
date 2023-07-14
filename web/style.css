@@ -36,16 +36,15 @@ body {
   hyphens: auto;
   hyphenate-limit-chars: 4 2 2;
   min-height: 100vh;
+  line-height: var(--line-height);
 }
 
 p {
-  margin: var(--parsep) 0 0 0;
-  line-height: var(--line-height);
+  margin: var(--parsep) 0;
 }
 
 li {
   margin: calc(0.5*var(--parsep)) 0 0 0;
-  line-height: var(--line-height);
 }
 
 /* p + p { */
