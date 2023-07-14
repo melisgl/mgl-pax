@@ -59,9 +59,9 @@
                ;; STREAM). Note that on PAGE-BOUNDARIES, DOCUMENT-OBJECT
                ;; (method () (dref t)) redirects the output.
                (with-temp-output-to-page (,stream (last-elt *pages*))
-                 (document-documentable ,documentable ,stream))))
-           ;; 2.5th pass
-           (mapcar #'finalize-page-output *pages*))))))
+                 (document-documentable ,documentable ,stream))
+               ;; 2.5th pass
+               (mapcar #'finalize-page-output *pages*))))))))
 
 (defvar *first-pass*)
 
@@ -1086,8 +1086,8 @@
 (defun markdown-title-name-or-anchor (link)
   (let* ((dref (link-definition link))
          (resolved (resolve dref nil)))
-    (multiple-value-bind (title untitledp) (ignore-errors (title resolved))
-      (cond (untitledp
+    (multiple-value-bind (title titledp) (title resolved)
+      (cond ((not titledp)
              (princ-to-string (dref-to-anchor dref)))
             (title
              (let ((*package* (or (nth-value 1 (docstring dref))
@@ -2163,10 +2163,12 @@
       `(:reference-link :label ,label :definition ,definition)))
 
 (defgeneric title (object)
+  (:method (object)
+    nil)
   (:method ((section section))
-    (section-title section))
+    (values (section-title section) t))
   (:method ((glossary-term glossary-term))
-    (glossary-term-title glossary-term)))
+    (values (glossary-term-title glossary-term) t)))
 
 ;;; For LABEL (a parse tree fragment) and some references to it
 ;;; (REFS), return a markdown parse tree fragment to be spliced into a
@@ -2199,26 +2201,15 @@
                  ")")))
           ((member (xref-locative-type ref-1) '(dislocated argument))
            label)
-          ;; FIXME: TITLE should be a generic function. !
-          ((eq (xref-locative-type ref-1) 'section)
-           (let ((section (resolve ref-1 nil)))
-             `(,(%make-reflink
-                 (if (or explicit-label-p
-                         (null (section-title section)))
-                     label
-                     (codify (parse-markdown (section-title section))))
-                 (link-to-definition ref-1)))))
-          ((eq (xref-locative-type ref-1) 'glossary-term)
-           (let ((glossary-term (resolve ref-1 nil)))
-             `(,(%make-reflink
-                 (if (or explicit-label-p
-                         (null (glossary-term-title glossary-term)))
-                     label
-                     (codify (parse-markdown (glossary-term-title
-                                              glossary-term))))
-                 (link-to-definition ref-1)))))
+          (explicit-label-p
+           `(,(%make-reflink label (link-to-definition ref-1))))
           (t
-           `(,(%make-reflink label (link-to-definition ref-1)))))))
+           (let ((title (title (resolve ref-1 nil))))
+             `(,(%make-reflink
+                 (if (null title)
+                     label
+                     (codify (parse-markdown title)))
+                 (link-to-definition ref-1))))))))
 
 
 (defsection @unresolvable-reflinks (:title "Unresolvable Links")

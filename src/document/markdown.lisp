@@ -26,7 +26,6 @@
       ;; performance problem with large lists, which are processed in
       ;; one %BLOCK, hence the workaround in PAX-APROPOS*.
       (progn
-        ;; (format t "PMF ~S~%" (length string))
         (loop
           for start = 0 then pos
           for (%block pos) = (multiple-value-list
@@ -36,7 +35,6 @@
                                    ;; Make it work with old 3BMD.
                                    '3bmd-grammar::block)
                                string :start start :junk-allowed t))
-          ;; do (format t "PMF  ~S~%" pos)
           while %block
           do (funcall fn %block)
           while pos))))
