@@ -524,7 +524,7 @@
     (let* ((name (xref-name reference))
            (locative (xref-locative-args reference))
            (locative-type (locative-type locative)))
-      ;; This parallels LOCATE-DREF (METHOD () (T (EQL CLHS) T)).
+      ;; This parallels LOCATE* (METHOD () (T (EQL CLHS) T)).
       (cond ((eq locative-type 'glossary-term)
              (find-hyperspec-glossary-entry-url name
                                                 *document-hyperspec-root*))
@@ -754,7 +754,7 @@
   @MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES.
 
   For the details, see the following sections, starting with
-  @DOCUMENTABLES. Also see @EXTENSION-API and DOCUMENT-DREF."""
+  @DOCUMENTABLES. Also see @EXTENSION-API and DOCUMENT-OBJECT*."""
   ;; Autoloading mgl-pax/transcribe on demand would be enough for most
   ;; situations, but when documenting PAX itself, it would cause the
   ;; documentables to change from the 1st pass to the 2nd.
@@ -1015,9 +1015,9 @@
             (let ((*page* (or page *page*)))
               (push dref (page-definitions *page*))
               (setf (page-written-p *page*) t)
-              (document-dref dref stream))
+              (document-object* (or (resolve dref nil) dref) stream))
             (with-temp-output-to-page (stream page)
-              (document-dref dref stream)))))))
+              (document-object* (or (resolve dref nil) dref) stream)))))))
 
 
 (defun finalize-page-output (page)
@@ -2492,7 +2492,6 @@
           collect heading))
 
 (defun print-table-of-contents (object stream)
-  ;; FIXME: take *HEADING-OFFSET* into account?
   (when (zerop *heading-level*)
     (let ((rest (list-headings object *heading-level*))
           (toc-title-printed nil))

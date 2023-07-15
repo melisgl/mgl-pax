@@ -101,7 +101,7 @@
                              (:file "stream-spec")
                              (:file "docstring")
                              (:file "hyperspec")
-                             (:file "document-dref")
+                             (:file "document-object")
                              (:file "document")
                              (:file "document-util")
                              (:file "browse"))))

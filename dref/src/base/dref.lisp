@@ -54,30 +54,26 @@
   Within DRef, the DREF-EXT::@DREF-SUBCLASSES form the basis of
   extending DOCSTRING, SOURCE-LOCATION and ARGLIST. Outside DRef,
   [PAX][MGL-PAX::@PAX-MANUAL] makes PAX:DOCUMENT extensible through
-  PAX:DOCUMENT-DREF, which has methods specialized on DREFs.
+  PAX:DOCUMENT-OBJECT*, which has methods specialized on DREFs.
 
   Finally, existing definitions can be queried with DEFINITIONS and
   DREF-APROPOS:
 
   ```
-  (definitions 'dref-ext:locate-dref)
-  ==> (#<DREF LOCATE-DREF GENERIC-FUNCTION>
-  -->  #<DREF LOCATE-DREF (METHOD NIL (GLOSSARY-TERM))>
-  -->  #<DREF LOCATE-DREF (METHOD NIL (SECTION))>
-  -->  #<DREF LOCATE-DREF (METHOD NIL (READTABLE))>
-  -->  #<DREF LOCATE-DREF (METHOD NIL (PACKAGE))>
-  -->  #<DREF LOCATE-DREF (METHOD NIL (ASDF/SYSTEM:SYSTEM))>
-  -->  #<DREF LOCATE-DREF (METHOD NIL (CLASS))>
-  -->  #<DREF LOCATE-DREF (METHOD NIL (METHOD))>
-  -->  #<DREF LOCATE-DREF (METHOD NIL (GENERIC-FUNCTION))>
-  -->  #<DREF LOCATE-DREF (METHOD NIL (FUNCTION))>
-  -->  #<DREF LOCATE-DREF (METHOD (:AROUND) (T))>
-  -->  #<DREF LOCATE-DREF (METHOD NIL (T))>
-  -->  #<DREF LOCATE-DREF (METHOD NIL (XREF))>
-  -->  #<DREF LOCATE-DREF (METHOD NIL (DREF))>
-  -->  #<DREF LOCATE-DREF (UNKNOWN
-  -->                        (DECLAIM LOCATE-DREF
-  -->                                 FTYPE))>)
+  (definitions 'dref-ext:locate*)
+  ==> (#<DREF LOCATE* GENERIC-FUNCTION>
+  -->  #<DREF LOCATE* (METHOD NIL (GLOSSARY-TERM))>
+  -->  #<DREF LOCATE* (METHOD NIL (SECTION))>
+  -->  #<DREF LOCATE* (METHOD NIL (READTABLE))>
+  -->  #<DREF LOCATE* (METHOD NIL (PACKAGE))>
+  -->  #<DREF LOCATE* (METHOD NIL (ASDF/SYSTEM:SYSTEM))>
+  -->  #<DREF LOCATE* (METHOD NIL (CLASS))>
+  -->  #<DREF LOCATE* (METHOD NIL (METHOD))>
+  -->  #<DREF LOCATE* (METHOD NIL (GENERIC-FUNCTION))>
+  -->  #<DREF LOCATE* (METHOD NIL (FUNCTION))>
+  -->  #<DREF LOCATE* (METHOD (:AROUND) (T))>
+  -->  #<DREF LOCATE* (METHOD NIL (T))> #<DREF LOCATE* (METHOD NIL (XREF))>
+  -->  #<DREF LOCATE* (METHOD NIL (DREF))>)
   ```
 
   ```cl-transcript
@@ -342,7 +338,7 @@
 ;;; loaded.
 (autoload ensure-dref-loaded '#:dref/full :export nil)
 
-(declaim (ftype function locate-dref)
+(declaim (ftype function locate*)
          (ftype function actualize-dref))
 
 (defun locate (name-or-object &optional locative (errorp t))
@@ -400,7 +396,7 @@
   checking."""
   (ensure-dref-loaded)
   (flet ((locate-1 ()
-           (actualize-dref (locate-dref (if locative
+           (actualize-dref (locate* (if locative
                                             (make-xref name-or-object locative)
                                             name-or-object)))))
     (if errorp
@@ -422,7 +418,7 @@
                        (dref-name dref) (dref-locative dref)
                        (resolve-error-message condition))))))
 
-(declaim (ftype function resolve-dref))
+(declaim (ftype function resolve*))
 
 (defun resolve (object &optional (errorp t))
   "- If OBJECT is an XREF, then return the first-class object associated
@@ -456,10 +452,10 @@
   (cond ((not (typep object 'xref))
          object)
         (errorp
-         (resolve-dref (locate object)))
+         (resolve* (locate object)))
         (t
          (handler-case
-             (resolve-dref (locate object))
+             (resolve* (locate object))
            ((or locate-error resolve-error) ()
              nil)))))
 
@@ -533,7 +529,7 @@
 ;;; to the user in order to be able to change the signature more
 ;;; easily.
 
-(declaim (ftype function dref-arglist))
+(declaim (ftype function arglist*))
 
 (defun arglist (object)
   "Return the arglist of the definition of OBJECT or NIL if the
@@ -557,7 +553,7 @@
 
   This function supports MACROs, COMPILER-MACROs, SETF functions,
   FUNCTIONs, GENERIC-FUNCTIONs, METHODs, TYPES, LOCATIVEs and can be
-  extended via DREF-ARGLIST.
+  extended via ARGLIST*.
 
   Note that ARGLIST depends on the quality of SWANK-BACKEND:ARGLIST.
   With the exception of SBCL, which has perfect support, all Lisp
@@ -567,9 +563,9 @@
   - default values in MACRO lambda lists on AllegroCL;
   - various edge cases involving traced functions."
   (ensure-dref-loaded)
-  (dref-arglist (locate object)))
+  (arglist* (or (resolve object nil) object)))
 
-(declaim (ftype function dref-docstring))
+(declaim (ftype function docstring*))
 
 (defun docstring (object)
   "Return the docstring from the definition of OBJECT.
@@ -578,7 +574,7 @@
   is used by PAX:DOCUMENT when PAX::@PARSING. This function is similar
   in purpose to CL:DOCUMENTATION.
 
-  Can be extended via DREF-DOCSTRING.
+  Can be extended via DOCSTRING*.
 
   Note that some locative types such as ASDF:SYSTEMS and DECLARATIONs
   have no docstrings, and some Lisp implementations do not record all
@@ -587,27 +583,28 @@
   - COMPILER-MACRO docstrings on ABCL, AllegroCL, \CCL, ECL;
   - METHOD-COMBINATION docstrings on ABCL, AllegroCL."
   (ensure-dref-loaded)
-  (dref-docstring (locate object)))
+  (docstring* (or (resolve object nil) object)))
 
-(declaim (ftype function dref-source-location)
+(declaim (ftype function source-location*)
          (ftype function source-location-p))
 
 (defun source-location (object &key errorp)
   """Return the Swank source location for the definition of OBJECT.
-  If no source location was found, the either an ERROR condition is
+  If no source location was found, then either an ERROR condition is
   signalled if ERRORP else the [ERROR][condition] is returned as the
   second value (with the first being NIL). The returned Swank location
   object is to be accessed only through the
   DREF-EXT::@SOURCE-LOCATIONS API or to be passed to e.g Slime's
   `slime-goto-source-location`.
 
-  Can be extended via DREF-SOURCE-LOCATION.
+  Can be extended via SOURCE-LOCATION*.
 
   Note that the availability of source location information varies
   greatly across Lisp implementations."""
   (ensure-dref-loaded)
   (flet ((source-location-1 ()
-           (let ((location (dref-source-location (locate object))))
+           (let ((location (source-location* (or (resolve object nil)
+                                                     object))))
              (if (source-location-p location)
                  location
                  (error "~@<Source location of ~S not found.~:@>" object)))))

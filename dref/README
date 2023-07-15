@@ -45,30 +45,26 @@ corresponding to its XREF argument, turning it into a DREF:
 Within DRef, the DREF-EXT::@DREF-SUBCLASSES form the basis of
 extending DOCSTRING, SOURCE-LOCATION and ARGLIST. Outside DRef,
 PAX makes PAX:DOCUMENT extensible through
-PAX:DOCUMENT-DREF, which has methods specialized on DREFs.
+PAX:DOCUMENT-OBJECT\*, which has methods specialized on DREFs.
 
 Finally, existing definitions can be queried with DEFINITIONS and
 DREF-APROPOS:
 
 ```
-(definitions 'dref-ext:locate-dref)
-==> (#<DREF LOCATE-DREF GENERIC-FUNCTION>
--->  #<DREF LOCATE-DREF (METHOD NIL (GLOSSARY-TERM))>
--->  #<DREF LOCATE-DREF (METHOD NIL (SECTION))>
--->  #<DREF LOCATE-DREF (METHOD NIL (READTABLE))>
--->  #<DREF LOCATE-DREF (METHOD NIL (PACKAGE))>
--->  #<DREF LOCATE-DREF (METHOD NIL (ASDF/SYSTEM:SYSTEM))>
--->  #<DREF LOCATE-DREF (METHOD NIL (CLASS))>
--->  #<DREF LOCATE-DREF (METHOD NIL (METHOD))>
--->  #<DREF LOCATE-DREF (METHOD NIL (GENERIC-FUNCTION))>
--->  #<DREF LOCATE-DREF (METHOD NIL (FUNCTION))>
--->  #<DREF LOCATE-DREF (METHOD (:AROUND) (T))>
--->  #<DREF LOCATE-DREF (METHOD NIL (T))>
--->  #<DREF LOCATE-DREF (METHOD NIL (XREF))>
--->  #<DREF LOCATE-DREF (METHOD NIL (DREF))>
--->  #<DREF LOCATE-DREF (UNKNOWN
--->                        (DECLAIM LOCATE-DREF
--->                                 FTYPE))>)
+(definitions 'dref-ext:locate*)
+==> (#<DREF LOCATE* GENERIC-FUNCTION>
+-->  #<DREF LOCATE* (METHOD NIL (GLOSSARY-TERM))>
+-->  #<DREF LOCATE* (METHOD NIL (SECTION))>
+-->  #<DREF LOCATE* (METHOD NIL (READTABLE))>
+-->  #<DREF LOCATE* (METHOD NIL (PACKAGE))>
+-->  #<DREF LOCATE* (METHOD NIL (ASDF/SYSTEM:SYSTEM))>
+-->  #<DREF LOCATE* (METHOD NIL (CLASS))>
+-->  #<DREF LOCATE* (METHOD NIL (METHOD))>
+-->  #<DREF LOCATE* (METHOD NIL (GENERIC-FUNCTION))>
+-->  #<DREF LOCATE* (METHOD NIL (FUNCTION))>
+-->  #<DREF LOCATE* (METHOD (:AROUND) (T))>
+-->  #<DREF LOCATE* (METHOD NIL (T))> #<DREF LOCATE* (METHOD NIL (XREF))>
+-->  #<DREF LOCATE* (METHOD NIL (DREF))>)
 ```
 
 ```common-lisp
@@ -383,7 +379,7 @@ LOCATE-ERROR.
     
     This function supports MACROs, COMPILER-MACROs, SETF functions,
     FUNCTIONs, GENERIC-FUNCTIONs, METHODs, TYPES, LOCATIVEs and can be
-    extended via DREF-ARGLIST.
+    extended via ARGLIST\*.
     
     Note that ARGLIST depends on the quality of SWANK-BACKEND:ARGLIST.
     With the exception of SBCL, which has perfect support, all Lisp
@@ -404,7 +400,7 @@ LOCATE-ERROR.
     is used by PAX:DOCUMENT when PAX::@PARSING. This function is similar
     in purpose to CL:DOCUMENTATION.
     
-    Can be extended via DREF-DOCSTRING.
+    Can be extended via DOCSTRING\*.
     
     Note that some locative types such as ASDF:SYSTEMS and DECLARATIONs
     have no docstrings, and some Lisp implementations do not record all
@@ -418,14 +414,14 @@ LOCATE-ERROR.
 - [function] SOURCE-LOCATION OBJECT &KEY ERRORP
 
     Return the Swank source location for the definition of OBJECT.
-    If no source location was found, the either an ERROR condition is
+    If no source location was found, then either an ERROR condition is
     signalled if ERRORP else the ERROR is returned as the
     second value (with the first being NIL). The returned Swank location
     object is to be accessed only through the
     DREF-EXT::@SOURCE-LOCATIONS API or to be passed to e.g Slime's
     `slime-goto-source-location`.
     
-    Can be extended via DREF-SOURCE-LOCATION.
+    Can be extended via SOURCE-LOCATION\*.
     
     Note that the availability of source location information varies
     greatly across Lisp implementations.
@@ -922,32 +918,36 @@ the example of the implementation of the CLASS locative. Note that
 this is a verbatim PAX:INCLUDE of the sources. Please ignore any
 internal machinery. The first step is to define the locative type:
 
-    (define-locative-type class ()
-      "Naturally, CLASS is the locative type for [CLASS][class]es.
-      [CONDITIONs][type] may be referred to as CLASSes:
-    
-      ```cl-transcript
-      (locate 'locate-error 'class)
-      ==> #<DREF LOCATE-ERROR CONDITION>
-      ```
-    
-      CLASS references RESOLVE to the class named.")
-    
+```
+(define-locative-type class ()
+  "Naturally, CLASS is the locative type for [CLASS][class]es.
+  [CONDITIONs][type] may be referred to as CLASSes:
 
-Next, define a new subclass of DREF and specialize LOCATE-DREF:
+  ```cl-transcript
+  (locate 'locate-error 'class)
+  ==> #<DREF LOCATE-ERROR CONDITION>
+  ```
 
-    (defclass class-dref (dref) ())
-    
-    (defmethod locate-dref ((class class))
-      (make-instance 'class-dref :name (class-name class) :locative 'class))
-    
-    (defmethod locate-dref* (symbol (locative-type (eql 'class)) locative-args)
-      (check-locative-args class locative-args)
-      (unless (and (symbolp symbol)
-                   (find-class symbol nil))
-        (locate-error "~S does not name a class." symbol))
-      (make-instance 'class-dref :name symbol :locative 'class))
-    
+  CLASS references RESOLVE to the class named.")
+
+```
+
+Next, define a new subclass of DREF and specialize LOCATE\*:
+
+```
+(defclass class-dref (dref) ())
+
+(defmethod locate* ((class class))
+  (make-instance 'class-dref :name (class-name class) :locative 'class))
+
+(defmethod xref-locate* (symbol (locative-type (eql 'class)) locative-args)
+  (check-locative-args class locative-args)
+  (unless (and (symbolp symbol)
+               (find-class symbol nil))
+    (locate-error "~S does not name a class." symbol))
+  (make-instance 'class-dref :name symbol :locative 'class))
+
+```
 
 The first method makes `(LOCATE (FIND-CLASS 'DREF))` work, while
 the second is for `(LOCATE 'DREF 'CLASS)`. Naturally, for locative
@@ -959,29 +959,38 @@ whenever a new DREF is about to be returned from LOCATE and turn the
 locative TYPE into the locative CLASS if the denoted definition is
 of a class:
 
-    (defun actualize-type-to-class (dref)
-      (when (eq (dref-locative-type dref) 'type)
-        (locate (dref-name dref) 'class nil)))
-    
-    (add-dref-actualizer 'actualize-type-to-class)
-    
+```
+(defun actualize-type-to-class (dref)
+  (when (eq (dref-locative-type dref) 'type)
+    (locate (dref-name dref) 'class nil)))
 
-Finally, we define a RESOLVE-DREF method to recover the
+(add-dref-actualizer 'actualize-type-to-class)
+
+```
+
+Finally, we define a RESOLVE\* method to recover the
 CLASS object from a CLASS-DREF. We also specialize
-DREF-DOCSTRING and DREF-SOURCE-LOCATION:
+DOCSTRING\* and SOURCE-LOCATION\*:
 
-    (defmethod resolve-dref ((dref class-dref))
-      (find-class (dref-name dref)))
-    
-    (defmethod dref-docstring ((dref class-dref))
-      (documentation* (resolve dref) t))
-    
-    (defmethod dref-source-location ((dref class-dref))
-      (swank-source-location* (resolve dref) (dref-name dref) 'class))
-    
+```
+(defmethod resolve* ((dref class-dref))
+  (find-class (dref-name dref)))
 
-Classes have no arglist, so no DREF-ARGLIST method is needed.
-In the following, we describe the pieces in detail.
+(defmethod docstring* ((class class))
+  (documentation* class t))
+
+(defmethod source-location* ((dref class-dref))
+  (swank-source-location* (resolve dref) (dref-name dref) 'class))
+
+```
+
+We took advantage of having just made the class locative type being
+RESOLVEable, by specializing DOCSTRING\* on the CLASS class.
+SOURCE-LOCATION\* was specialized on CLASS-DREF to demonstrate how
+this can be done for non-RESOLVEable locative types.
+
+Classes have no arglist, so no ARGLIST\* method is needed. In the
+following, we describe the pieces in detail.
 
 - [macro] DEFINE-LOCATIVE-TYPE LOCATIVE-TYPE LAMBDA-LIST &BODY DOCSTRING
 
@@ -1038,16 +1047,16 @@ In the following, we describe the pieces in detail.
     
     Also, see PAX::@LOCATIVE-ALIASES in PAX.
 
-- [generic-function] LOCATE-DREF OBJECT
+- [generic-function] LOCATE* OBJECT
 
     Return a definition of OBJECT as a DREF, without
     actualizing it. If OBJECT is a DREF already,
     then this function simply returns it. If no definition is found for
     OBJECT, then LOCATE-ERROR is signalled.
 
-- [generic-function] LOCATE-DREF* NAME LOCATIVE-TYPE LOCATIVE-ARGS
+- [generic-function] XREF-LOCATE* NAME LOCATIVE-TYPE LOCATIVE-ARGS
 
-    LOCATE-DREF calls this for XREFs which are not
+    LOCATE\* calls this for XREFs which are not
     already canonical (i.e. not DREFs). An EQL-specialized method must
     be defined for all new locative types.
 
@@ -1060,8 +1069,8 @@ In the following, we describe the pieces in detail.
 - [function] LOCATE-ERROR &REST FORMAT-AND-ARGS
 
     Call this function to signal a LOCATE-ERROR condition from the
-    dynamic extent of a LOCATE-DREF method (which includes
-    LOCATE-DREF\*). It is an error to call LOCATE-ERROR elsewhere.
+    dynamic extent of a LOCATE\* method (which includes
+    XREF-LOCATE\*). It is an error to call LOCATE-ERROR elsewhere.
     
     FORMAT-AND-ARGS contains a format string and args suitable for
     FORMAT. FORMAT-AND-ARGS may be NIL.
@@ -1070,7 +1079,7 @@ In the following, we describe the pieces in detail.
 
     Add the global function denoted by the symbol NAME to the list
     of actualizers. Actualizers are functions of a single DREF argument.
-    They are called within LOCATE when a primary LOCATE-DREF method
+    They are called within LOCATE when a primary LOCATE\* method
     returns a DREF. Their job is to make the DREF more specific.
 
 - [function] REMOVE-DREF-ACTUALIZER NAME
@@ -1078,9 +1087,9 @@ In the following, we describe the pieces in detail.
     Remove the global function denoted by the symbol NAME from the
     list of actualizers.
 
-- [generic-function] RESOLVE-DREF DREF
+- [generic-function] RESOLVE* DREF
 
-    Return the object defined by the defintion XREF
+    Return the object defined by the definition DREF
     refers to. Signal a RESOLVE-ERROR condition by calling the
     RESOLVE-ERROR function if the lookup fails. Don't call this function
     directly. It serves only to extend RESOLVE.
@@ -1091,24 +1100,29 @@ In the following, we describe the pieces in detail.
 - [function] RESOLVE-ERROR &REST FORMAT-AND-ARGS
 
     Call this function to signal a RESOLVE-ERROR condition from the
-    dynamic extent of a RESOLVE-DREF method. It is an error to
-    call RESOLVE-ERROR elsewhere.
+    dynamic extent of a RESOLVE\* method. It is an error to call
+    RESOLVE-ERROR elsewhere.
     
     FORMAT-AND-ARGS contains a format string and args suitable for
     FORMAT. FORMAT-AND-ARGS may be NIL.
 
-- [generic-function] DREF-ARGLIST DREF
+- [generic-function] ARGLIST* OBJECT
 
-    Specialize this on a subclass of DREF to extend ARGLIST.
+    To extend ARGLIST, specialize this on a subclass of
+    DREF if that subclass is not RESOLVEable, else on the type of object
+    it resolves to.
 
-- [generic-function] DREF-DOCSTRING DREF
+- [generic-function] DOCSTRING* DREF
 
-    Specialize this on a subclass of DREF to extend DOCSTRING.
+    To extend DOCSTRING, specialize this on a subclass
+    of DREF if that subclass is not RESOLVEable, else on the type of
+    object it resolves to.
 
-- [generic-function] DREF-SOURCE-LOCATION DREF
+- [generic-function] SOURCE-LOCATION* DREF
 
-    Specialize this on a subclass of DREF to extend
-    SOURCE-LOCATION.
+    To extend SOURCE-LOCATION, specialize this on a
+    subclass of DREF if that subclass is not RESOLVEable, else on the
+    type of object it resolves to.
 
 ### Symbol Locatives
 
@@ -1153,7 +1167,7 @@ with symbols in a certain context.
 
 These are the DREF subclasses corresponding to DREF::@LOCATIVE-TYPES.
 They are exported to make it possible to go beyond the standard
-@OPERATIONS (e.g. PAX:DOCUMENT-DREF) and for subclassing.
+@OPERATIONS (e.g. PAX:DOCUMENT-OBJECT\*) and for subclassing.
 
 **for Variables**
 
@@ -1276,7 +1290,7 @@ the details see the Elisp function `slime-goto-source-location`.
     
     This is a non-interactive companion to the Elisp function
     `slime-location-offset`, supporting only file positions and
-    non-partial matching of snippets
+    non-partial matching of snippets.
 
 * * *
 ###### \[generated by [MGL-PAX](https://github.com/melisgl/mgl-pax)\]

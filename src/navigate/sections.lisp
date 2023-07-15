@@ -47,7 +47,7 @@
   (loop for entry in (section-entries section)
         ;; It doesn't make sense to talk about containing an INCLUDE,
         ;; and it is also a huge performance bottleneck as it accesses
-        ;; files. See LOCATE-DREF* (method () (t (eql include) t)).
+        ;; files. See XREF-LOCATE* (method () (t (eql include) t)).
         when (and (typep entry 'xref)
                   (not (eq (xref-locative-type entry) 'include)))
           collect (or (locate entry nil nil)

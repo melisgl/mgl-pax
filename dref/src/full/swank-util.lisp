@@ -111,7 +111,7 @@
                        ;; PAX:SECTIONs (actualized from VARIABLEs) can
                        ;; find their source location.
                        for dref = (ignore-errors
-                                   (locate-dref (make-xref name locative)))
+                                   (locate* (make-xref name locative)))
                        when dref
                          collect (definition-to-dspec dref)))
          (dspec-and-location-list

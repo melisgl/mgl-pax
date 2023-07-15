@@ -35,9 +35,9 @@
 ;;;; Foreshadowing of what the DREF/FULL system defines in the
 ;;;; DREF-EXT package.
 ;;;;
-;;;; We want the [home package][clhs] of e.g. DREF-EXT:RESOLVE-DREF to
-;;;; be DREF-EXT, so we first export everything from DREF-EXT, which
-;;;; is :USEd by DREF.
+;;;; We want the [home package][clhs] of e.g. DREF-EXT:RESOLVE* to be
+;;;; DREF-EXT, so we first export everything from DREF-EXT, which is
+;;;; :USEd by DREF.
 
 (in-package :dref-ext)
 
@@ -87,14 +87,14 @@
   (check-locative-args macro)
   (define-locative-alias macro)
   (locate-error function)
-  (locate-dref generic-function)
-  (locate-dref* generic-function)
+  (locate* generic-function)
+  (xref-locate* generic-function)
   (add-dref-actualizer function)
   (remove-dref-actualizer function)
-  (resolve-dref generic-function)
-  (dref-arglist generic-function)
-  (dref-docstring generic-function)
-  (dref-source-location generic-function))
+  (resolve* generic-function)
+  (arglist* generic-function)
+  (docstring* generic-function)
+  (source-location* generic-function))
 
 (defsection @symbol-locatives (:title "Symbol Locatives"
                                :package :dref
@@ -111,7 +111,7 @@
                               :export :dref-ext)
   "These are the DREF subclasses corresponding to DREF::@LOCATIVE-TYPES.
   They are exported to make it possible to go beyond the standard
-  @OPERATIONS (e.g. PAX:DOCUMENT-DREF) and for subclassing."
+  @OPERATIONS (e.g. PAX:DOCUMENT-OBJECT*) and for subclassing."
   "**for Variables**"
   (variable-dref class)
   (constant-dref class)

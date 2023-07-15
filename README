@@ -761,7 +761,7 @@ the next example, pressing `M-.` on `FOO` will visit `FOO`'s
 default method:
 
 ```
-;; See RESOLVE-DREF (method () (dref)) for how this all works.
+;; See RESOLVE* (method () (dref)) for how this all works.
 ```
 
 With a prefix argument (`C-u M-.`), one can enter a symbol plus a
@@ -825,7 +825,7 @@ section containing the definition with `point` in it. See
     @MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES.
     
     For the details, see the following sections, starting with
-    @DOCUMENTABLES. Also see @EXTENSION-API and DOCUMENT-DREF.
+    @DOCUMENTABLES. Also see @EXTENSION-API and DOCUMENT-OBJECT\*.
 
 #### Documentables
 
@@ -2692,7 +2692,7 @@ package for evaluation.
 Once everything in DREF-EXT::@ADDING-NEW-LOCATIVES has been done,
 there are only a couple of PAX generic functions left to extend.
 
-- [generic-function] DOCUMENT-DREF DREF STREAM
+- [generic-function] DOCUMENT-OBJECT* DREF STREAM
 
     Write DREF in *FORMAT* to STREAM.
     Add methods specializing on a subclass of DREF to customize the
@@ -2734,7 +2734,7 @@ there are only a couple of PAX generic functions left to extend.
     export when its EXPORT argument is true.
 
 Also note that due to the @HOME-SECTION logic, especially for
-locative types with string names, DREF-EXT:DREF-DOCSTRING should
+locative types with string names, DREF-EXT:DOCSTRING\* should
 probably return a non-NIL package.
 
 ### Locative Aliases
@@ -2779,9 +2779,9 @@ export the symbols `A` and `AN`.
 
 ### Extending DOCUMENT
 
-For all definitions that it encounters, DOCUMENT calls DOCUMENT-DREF
+For all definitions that it encounters, DOCUMENT calls DOCUMENT\*
 to generate documentation. The following utilities are for writing
-new DOCUMENT-DREF methods, which emit markdown.
+new DOCUMENT-OBJECT\* methods, which emit markdown.
 
 - [variable] *FORMAT*
 
@@ -2913,7 +2913,7 @@ they are presented.
 - [reader] GLOSSARY-TERM-TITLE GLOSSARY-TERM (:TITLE)
 
     A markdown string or NIL. Used in generated
-    documentation (see DOCUMENT-DREF).
+    documentation (see @OUTPUT-DETAILS).
 
 - [reader] GLOSSARY-TERM-URL GLOSSARY-TERM (:URL)
 

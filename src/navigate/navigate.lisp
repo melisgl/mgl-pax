@@ -96,7 +96,7 @@
   default method:
 
   ```
-  ;; See RESOLVE-DREF (method () (dref)) for how this all works.
+  ;; See RESOLVE* (method () (dref)) for how this all works.
   ```
 
   With a prefix argument (`C-u M-.`), one can enter a symbol plus a

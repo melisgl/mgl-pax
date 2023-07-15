@@ -88,7 +88,7 @@
   (check-ref (locate 'bar 'macro)
              'bar 'macro 'macro-dref)
   (with-failure-expected ((and (alexandria:featurep
-                                '(:not (:or :allegro :ccl :sbcl)))
+                                '(:not (:or :allegro :ccl :clisp :ecl :sbcl)))
                                'failure))
     (with-test ("How to detect macro functions?")
       (signals-not (locate-error :pred "The name")
@@ -120,7 +120,7 @@
   (check-ref (locate 'foo 'compiler-macro)
              'foo 'compiler-macro 'compiler-macro-dref)
   (with-failure-expected ((and (alexandria:featurep
-                                '(:not (:or :allegro :ccl :sbcl)))
+                                '(:not (:or :allegro :ccl :clisp :sbcl)))
                                'failure))
     (with-test ("How to detect compiler macro functions?")
       (signals-not (locate-error)
@@ -353,7 +353,9 @@
         (locate 'baz-aaa '(structure-accessor 1))))
     (signals (locate-error :pred "Bad arguments")
       (locate 'baz-aaa '(structure-accessor 1 2)))
-    (is (eq (resolve (make-xref 'baz-aaa 'structure-accessor)) #'baz-aaa))))
+    (with-failure-expected ((and lacks-name 'failure))
+      (is (eq (resolve (make-xref 'baz-aaa 'structure-accessor) nil)
+              #'baz-aaa)))))
 
 (deftest test-locate/type ()
   (check-ref (locate 'bar 'type)

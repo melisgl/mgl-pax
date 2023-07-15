@@ -5,27 +5,27 @@
 (declaim (ftype function document-object))
 
 (defsection @output-details (:title "Output Details")
-  "[document-dref (method () (dref t))][docstring]
+  "[document-object* (method () (dref t))][docstring]
 
   With this default format, PAX supports all locative types, but for
   some DREF::@LOCATIVE-TYPES defined in DRef and the @PAX-LOCATIVES,
   special provisions have been made.
 
-  - [document-dref (method () (variable-dref t))][docstring]
-  - [document-dref (method () (setf-dref t))][docstring]
-  - [document-dref (method () (method-dref t))][docstring]
-  - [document-dref (method () (accessor-dref t))][docstring]
-  - [document-dref (method () (structure-accessor-dref t))][docstring]
-  - [document-dref (method () (class-dref t))][docstring]
-  - [document-dref (method () (asdf-system-dref t))][docstring]
-  - [document-dref (method () (section-dref t))][docstring]
-  - [document-dref (method () (glossary-term-dref t))][docstring]
-  - [document-dref (method () (go-dref t))][docstring]
-  - [document-dref (method () (include-dref t))][docstring]
-  - [document-dref (method () (clhs-dref t))][docstring]
-  - [document-dref (method () (unknown-dref t))][docstring]")
+  - [document-object* (method () (variable-dref t))][docstring]
+  - [document-object* (method () (setf-dref t))][docstring]
+  - [document-object* (method () (method-dref t))][docstring]
+  - [document-object* (method () (accessor-dref t))][docstring]
+  - [document-object* (method () (structure-accessor-dref t))][docstring]
+  - [document-object* (method () (class-dref t))][docstring]
+  - [document-object* (method () (asdf-system-dref t))][docstring]
+  - [document-object* (method () (section t))][docstring]
+  - [document-object* (method () (glossary-term t))][docstring]
+  - [document-object* (method () (go-dref t))][docstring]
+  - [document-object* (method () (include-dref t))][docstring]
+  - [document-object* (method () (clhs-dref t))][docstring]
+  - [document-object* (method () (unknown-dref t))][docstring]")
 
-(defmethod document-dref ((dref dref) stream)
+(defmethod document-object* ((dref dref) stream)
   "By default, DREFs are documented in the following format.
 
   ```
@@ -54,7 +54,7 @@
 
 (declaim (ftype function prin1-to-string*))
 
-(defmethod document-dref ((dref variable-dref) stream)
+(defmethod document-object* ((dref variable-dref) stream)
   "For definitions with a VARIABLE or CONSTANT locative, their
   initform is printed as their arglist. The initform is the INITFORM
   argument of the locative if provided, or the global symbol value of
@@ -76,7 +76,7 @@
         (documenting-reference (stream :arglist arglist)
           (document-docstring (docstring dref) stream))))))
 
-(defmethod document-dref ((dref setf-dref) stream)
+(defmethod document-object* ((dref setf-dref) stream)
   "Depending of what the SETF locative refers to, the ARGLIST of the
   [setf expander][clhs], [setf function][clhs], or the method
   signature is printed as with the METHOD locative."
@@ -85,7 +85,7 @@
         (%document-method dref stream)
         (call-next-method))))
 
-(defmethod document-dref ((dref method-dref) stream)
+(defmethod document-object* ((dref method-dref) stream)
   "For definitions with a METHOD locative, the arglist printed is
   the method signature, which consists of the locative's `QUALIFIERS`
   and `SPECIALIZERS` appended."
@@ -101,7 +101,7 @@
 
 ;;;; ACCESSOR, READER and WRITER locatives
 
-(defmethod document-dref ((dref accessor-dref) stream)
+(defmethod document-object* ((dref accessor-dref) stream)
   "For definitions with an ACCESSOR, READER or WRITER locative, the
   class on which they are specialized is printed as their arglist."
   (let ((symbol (dref-name dref))
@@ -110,14 +110,14 @@
      (dref::find-accessor-slot-definition symbol (first locative-args))
      (first locative-args) stream)))
 
-(defmethod document-dref ((dref reader-dref) stream)
+(defmethod document-object* ((dref reader-dref) stream)
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
     (generate-documentation-for-slot-definition
      (dref::find-reader-slot-definition symbol (first locative-args))
      (first locative-args) stream)))
 
-(defmethod document-dref ((dref writer-dref) stream)
+(defmethod document-object* ((dref writer-dref) stream)
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
     (generate-documentation-for-slot-definition
@@ -160,13 +160,13 @@
                  ,(swank-mop:slot-definition-initform slot-def))))))))
 
 
-(defmethod document-dref ((dref structure-accessor-dref) stream)
+(defmethod document-object* ((dref structure-accessor-dref) stream)
   "For definitions with a STRUCTURE-ACCESSOR locative, the arglist
   printed is the locative's CLASS-NAME argument if provided."
   (documenting-reference (stream :arglist (dref-locative-args dref))
     (document-docstring (docstring dref) stream)))
 
-(defmethod document-dref ((dref class-dref) stream)
+(defmethod document-object* ((dref class-dref) stream)
   "For definitions with a CLASS locative, the arglist printed is the
   list of immediate superclasses with STANDARD-OBJECT, CONDITION and
   non-exported symbols omitted."
@@ -209,7 +209,7 @@
 (defvar *omit-asdf-slots* nil)
 
 ;; FIXME: should not be WITH-HEADING
-(defmethod document-dref ((dref asdf-system-dref) stream)
+(defmethod document-object* ((dref asdf-system-dref) stream)
   "For definitions with a ASDF:SYSTEM locative, their most
   important slots are printed as an unnumbered list."
   (let ((system (resolve dref)))
@@ -273,19 +273,18 @@
              (format-in-package *package* ,stream))
            ,@body)))))
 
-(defmethod document-dref ((dref section-dref) stream)
+(defmethod document-object* ((section section) stream)
   "When a definition with the SECTION locative is being documented,
   a new (sub)section is opened (see WITH-HEADING), within which
   documentation for its each of its SECTION-ENTRIES is generated. A
   fresh line is printed after all entries except the last."
-  (let ((section (resolve dref)))
-    (documenting-section (section stream)
-      (let ((firstp t))
-        (dolist (entry (section-entries section))
-          (if firstp
-              (setq firstp nil)
-              (terpri stream))
-          (document-object entry stream))))))
+  (documenting-section (section stream)
+    (let ((firstp t))
+      (dolist (entry (section-entries section))
+        (if firstp
+            (setq firstp nil)
+            (terpri stream))
+        (document-object entry stream)))))
 
 (defun format-in-package (package stream)
   (format stream "###### \\[in package ~A~A\\]~%"
@@ -296,11 +295,10 @@
               "")))
 
 
-(defmethod document-dref ((dref glossary-term-dref) stream)
+(defmethod document-object* ((glossary-term glossary-term) stream)
   "For definitions with a GLOSSARY-TERM locative, no arglist is
   printed, and if non-NIL, GLOSSARY-TERM-TITLE is printed as name."
-  (let* ((glossary-term (resolve dref))
-         (name (glossary-term-title-or-name glossary-term)))
+  (let ((name (glossary-term-title-or-name glossary-term)))
     (documenting-reference (stream :name name)
       (when (glossary-term-url glossary-term)
         (document-docstring
@@ -310,7 +308,7 @@
          stream))
       (document-docstring (glossary-term-docstring glossary-term) stream))))
 
-(defmethod document-dref ((dref go-dref) stream)
+(defmethod document-object* ((dref go-dref) stream)
   "For definitions with a GO locative, its LOCATIVE-ARGS are printed
   as its arglist, along with a redirection message."
   (let ((locative-args (dref-locative-args dref)))
@@ -330,7 +328,7 @@
 
 ;;;; INCLUDE locative
 
-(defmethod document-dref ((dref include-dref) stream)
+(defmethod document-object* ((dref include-dref) stream)
   "See the INCLUDE locative."
   (let ((locative-args (dref-locative-args dref)))
     (destructuring-bind (source &key (line-prefix "") header footer
@@ -380,12 +378,12 @@
             while (= bytes-read buffer-size)))))))
 
 
-(defmethod document-dref ((dref clhs-dref) stream)
+(defmethod document-object* ((dref clhs-dref) stream)
   "For definitions with a CLHS locative, the LOCATIVE-ARGS are printed
   as the arglist. There is no docstring."
   (documenting-reference (stream :arglist (dref-locative-args dref))))
 
-(defmethod document-dref ((dref unknown-dref) stream)
+(defmethod document-object* ((dref unknown-dref) stream)
   "For definitions with an UNKNOWN locative, the LOCATIVE-ARGS are
   printed as the arglist. There is no docstring."
   (let ((locative-args (dref-locative-args dref)))

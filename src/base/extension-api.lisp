@@ -13,22 +13,26 @@
 (defsection @adding-new-locatives (:title "Adding New Locatives")
   "Once everything in DREF-EXT::@ADDING-NEW-LOCATIVES has been done,
   there are only a couple of PAX generic functions left to extend."
-  (document-dref generic-function)
+  (document-object* generic-function)
   (exportable-reference-p generic-function)
   (exportable-locative-type-p generic-function)
   "Also note that due to the @HOME-SECTION logic, especially for
-  locative types with string names, DREF-EXT:DREF-DOCSTRING should
+  locative types with string names, DREF-EXT:DOCSTRING* should
   probably return a non-NIL package.")
 
 ;;; This gets clobbered with an empty function when MGL-PAX/NAVIGATE
 ;;; is loaded.
 (autoload ensure-navigate-loaded '#:mgl-pax/navigate)
 
-(defgeneric document-dref (dref stream)
+(defgeneric document-object* (dref stream)
   (:documentation "Write DREF in *FORMAT* to STREAM.
   Add methods specializing on a subclass of DREF to customize the
   output of DOCUMENT. This function is for extension only. Don't call
-  it directly."))
+  it directly.")
+  (:method (object stream)
+    (let ((dref (locate object nil nil)))
+      (when dref
+        (document-object* dref stream)))))
 
 
 (defsection @locative-aliases (:title "Locative Aliases")

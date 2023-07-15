@@ -9,11 +9,11 @@
   this is a verbatim PAX:INCLUDE of the sources. Please ignore any
   internal machinery. The first step is to define the locative type:"
   (nil (include (:start (class locative) :end (class-dref class))
-                :line-prefix "    "))
-  "Next, define a new subclass of DREF and specialize LOCATE-DREF:"
+                :header-nl "```" :footer-nl "```"))
+  "Next, define a new subclass of DREF and specialize LOCATE*:"
   (nil (include (:start (class-dref class)
                  :end (actualize-type-to-class function))
-                :line-prefix "    "))
+                :header-nl "```" :footer-nl "```"))
   "The first method makes `(LOCATE (FIND-CLASS 'DREF))` work, while
   the second is for `(LOCATE 'DREF 'CLASS)`. Naturally, for locative
   types that do not define first-class objects, the first method
@@ -24,30 +24,35 @@
   locative TYPE into the locative CLASS if the denoted definition is
   of a class:"
   (nil (include (:start (actualize-type-to-class function)
-                 :end (resolve-dref (method () (class-dref))))
-                :line-prefix "    "))
-  "Finally, we define a RESOLVE-DREF method to recover the
+                 :end (resolve* (method () (class-dref))))
+                :header-nl "```" :footer-nl "```"))
+  "Finally, we define a RESOLVE* method to recover the
   [CLASS][type] object from a CLASS-DREF. We also specialize
-  DREF-DOCSTRING and DREF-SOURCE-LOCATION:"
-  (nil (include (:start (resolve-dref (method () (class-dref)))
+  DOCSTRING* and SOURCE-LOCATION*:"
+  (nil (include (:start (resolve* (method () (class-dref)))
                  :end (%end-of-class-example variable))
-                :line-prefix "    "))
-  "Classes have no arglist, so no DREF-ARGLIST method is needed.
-  In the following, we describe the pieces in detail."
+                :header-nl "```" :footer-nl "```"))
+  "We took advantage of having just made the class locative type being
+  RESOLVEable, by specializing DOCSTRING* on the CLASS class.
+  SOURCE-LOCATION* was specialized on CLASS-DREF to demonstrate how
+  this can be done for non-RESOLVEable locative types.
+
+  Classes have no arglist, so no ARGLIST* method is needed. In the
+  following, we describe the pieces in detail."
   (define-locative-type macro)
   (define-pseudo-locative-type macro)
   (define-locative-alias macro)
-  (locate-dref generic-function)
-  (locate-dref* generic-function)
+  (locate* generic-function)
+  (xref-locate* generic-function)
   (check-locative-args macro)
   (locate-error function)
   (add-dref-actualizer function)
   (remove-dref-actualizer function)
-  (resolve-dref generic-function)
+  (resolve* generic-function)
   (resolve-error function)
-  (dref-arglist generic-function)
-  (dref-docstring generic-function)
-  (dref-source-location generic-function))
+  (arglist* generic-function)
+  (docstring* generic-function)
+  (source-location* generic-function))
 
 ;;; This is not a function so that constant CLASS-NAMEs can be
 ;;; optimized by the compiler.
@@ -145,8 +150,8 @@
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (defmethod locative-type-lambda-list ((symbol (eql ',alias)))
        (values '(&rest args) ,(first docstring) ,*package*))
-     (defmethod locate-dref* (name (locative-type (eql ',alias)) locative-args)
-       (locate-dref* name ',locative-type locative-args))
+     (defmethod xref-locate* (name (locative-type (eql ',alias)) locative-args)
+       (xref-locate* name ',locative-type locative-args))
      (declare-locative-alias ',alias)))
 
 ;;; A somewhat dummy generic function that provides a source location.
@@ -159,8 +164,8 @@
 
 (defun locate-error (&rest format-and-args)
   "Call this function to signal a LOCATE-ERROR condition from the
-  [dynamic extent][clhs] of a LOCATE-DREF method (which includes
-  LOCATE-DREF*). It is an error to call LOCATE-ERROR elsewhere.
+  [dynamic extent][clhs] of a LOCATE* method (which includes
+  XREF-LOCATE*). It is an error to call LOCATE-ERROR elsewhere.
 
   FORMAT-AND-ARGS contains a format string and args suitable for
   FORMAT. FORMAT-AND-ARGS may be NIL."
@@ -173,7 +178,7 @@
 (defun add-dref-actualizer (name)
   "Add the global function denoted by the symbol NAME to the list
   of actualizers. Actualizers are functions of a single DREF argument.
-  They are called within LOCATE when a primary LOCATE-DREF method
+  They are called within LOCATE when a primary LOCATE* method
   returns a DREF. Their job is to make the DREF more specific."
   (check-type name symbol)
   (setq *dref-actualizers* (cons name (remove name *dref-actualizers*))))
@@ -198,7 +203,7 @@
           (setq dref (the-dref actualized))
           (return dref)))))
 
-(defgeneric locate-dref (object)
+(defgeneric locate* (object)
   (:documentation "Return a definition of OBJECT as a DREF, without
   [actualizing it][ADD-DREF-ACTUALIZER]. If OBJECT is a DREF already,
   then this function simply returns it. If no definition is found for
@@ -215,14 +220,14 @@
     (declare (ignore object))
     (locate-error))
   (:method  ((xref xref))
-    (locate-dref* (xref-name xref)
+    (xref-locate* (xref-name xref)
                   (xref-locative-type xref)
                   (xref-locative-args xref)))
   (:method ((dref dref))
     dref))
 
-(defgeneric locate-dref* (name locative-type locative-args)
-  (:documentation "LOCATE-DREF calls this for XREFs which are not
+(defgeneric xref-locate* (name locative-type locative-args)
+  (:documentation "LOCATE* calls this for XREFs which are not
   already canonical (i.e. not DREFs). An EQL-specialized method must
   be defined for all new locative types.")
   (:method :around (name locative-type locative-args)
@@ -266,8 +271,8 @@
 
 (defun resolve-error (&rest format-and-args)
   "Call this function to signal a RESOLVE-ERROR condition from the
-  [dynamic extent][clhs] of a RESOLVE-DREF method. It is an error to
-  call RESOLVE-ERROR elsewhere.
+  [dynamic extent][clhs] of a RESOLVE* method. It is an error to call
+  RESOLVE-ERROR elsewhere.
 
   FORMAT-AND-ARGS contains a format string and args suitable for
   FORMAT. FORMAT-AND-ARGS may be NIL."
@@ -277,7 +282,7 @@
                       (apply #'format nil format-and-args)
                       nil)))
 
-(defgeneric resolve-dref (dref)
+(defgeneric resolve* (dref)
   (:documentation "Return the object defined by the definition DREF
   refers to. Signal a RESOLVE-ERROR condition by calling the
   RESOLVE-ERROR function if the lookup fails. Don't call this function
@@ -293,21 +298,40 @@
   (:method ((dref dref))
     (resolve-error)))
 
-(defgeneric dref-arglist (dref)
-  (:documentation "Specialize this on a subclass of DREF to extend ARGLIST.")
+(defgeneric arglist* (object)
+  (:documentation "To extend ARGLIST, specialize this on a subclass of
+  DREF if that subclass is not RESOLVEable, else on the type of object
+  it resolves to.")
   (:method ((dref dref))
-    nil))
+    nil)
+  ;; This fallback is necessary in case a locative type is originally
+  ;; not RESOLVEable but later becomes so.
+  (:method (object)
+    (let ((dref (locate object nil nil)))
+      (when dref
+        (arglist* dref)))))
 
-(defgeneric dref-docstring (dref)
-  (:documentation "Specialize this on a subclass of DREF to extend DOCSTRING.")
+(defgeneric docstring* (dref)
+  (:documentation "To extend DOCSTRING, specialize this on a subclass
+  of DREF if that subclass is not RESOLVEable, else on the type of
+  object it resolves to.")
   (:method ((dref dref))
-    nil))
+    nil)
+  (:method (object)
+    (let ((dref (locate object nil nil)))
+      (when dref
+        (docstring* dref)))))
 
-(defgeneric dref-source-location (dref)
-  (:documentation "Specialize this on a subclass of DREF to extend
-  SOURCE-LOCATION.")
+(defgeneric source-location* (dref)
+  (:documentation "To extend SOURCE-LOCATION, specialize this on a
+  subclass of DREF if that subclass is not RESOLVEable, else on the
+  type of object it resolves to.")
   (:method ((dref dref))
-    nil))
+    nil)
+  (:method (object)
+    (let ((dref (locate object nil nil)))
+      (when dref
+        (source-location* dref)))))
 
 
 (defsection @symbol-locatives (:title "Symbol Locatives"
@@ -356,7 +380,7 @@
     `(progn
        (define-locative-type ,locative-type ,lambda-list ,@docstring)
        (defclass ,dref-class (symbol-locative-dref) ())
-       (defmethod locate-dref* (symbol (locative-type (eql ',locative-type))
+       (defmethod xref-locate* (symbol (locative-type (eql ',locative-type))
                                 locative-args)
          (check-locative-args ,locative-type locative-args)
          (or (symbol-lambda-list-method symbol ',locative-type)

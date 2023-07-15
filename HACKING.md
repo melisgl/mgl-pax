@@ -19,6 +19,9 @@ Testing within Lisp
   (excluding Slime's). Some tests require that Slime is connected to a
   Lisp and load PAX if it isn't already.
 
+The tests do not fail if there are unexpected successes, but it's
+expected not to expect them to be failures.
+
 Testing from the command line
 -----------------------------
 

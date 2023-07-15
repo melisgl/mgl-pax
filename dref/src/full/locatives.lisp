@@ -18,7 +18,7 @@
 
 (defclass variable-dref (dref) ())
 
-(defmethod locate-dref* (symbol (locative-type (eql 'variable))
+(defmethod xref-locate* (symbol (locative-type (eql 'variable))
                          locative-args)
   (check-locative-args variable locative-args)
   (unless (and (symbolp symbol)
@@ -33,10 +33,10 @@
   (declare (ignore fn name))
   'swank-definitions)
 
-(defmethod dref-docstring ((dref variable-dref))
+(defmethod docstring* ((dref variable-dref))
   (documentation* (dref-name dref) 'variable))
 
-(defmethod dref-source-location ((dref variable-dref))
+(defmethod source-location* ((dref variable-dref))
   (swank-source-location (dref-name dref) 'variable))
 
 
@@ -52,7 +52,7 @@
 
 (defclass constant-dref (variable-dref) ())
 
-(defmethod locate-dref* (symbol (locative-type (eql 'constant))
+(defmethod xref-locate* (symbol (locative-type (eql 'constant))
                          locative-args)
   (check-locative-args constant locative-args)
   (unless (and (symbolp symbol)
@@ -72,10 +72,10 @@
 
 (add-dref-actualizer 'actualize-variable-to-constant)
 
-(defmethod dref-docstring ((dref constant-dref))
+(defmethod docstring* ((dref constant-dref))
   (documentation* (dref-name dref) 'variable))
 
-(defmethod dref-source-location ((dref constant-dref))
+(defmethod source-location* ((dref constant-dref))
   (swank-source-location (dref-name dref) 'constant))
 
 
@@ -89,7 +89,7 @@
 
 (defclass macro-dref (dref) ())
 
-(defmethod locate-dref* (symbol (locative-type (eql 'macro)) locative-args)
+(defmethod xref-locate* (symbol (locative-type (eql 'macro)) locative-args)
   (check-locative-args macro locative-args)
   (unless (and (symbolp symbol)
                (or (macro-function symbol)
@@ -97,14 +97,14 @@
     (locate-error "~S does not name a macro." symbol))
   (%make-dref 'macro-dref symbol (cons locative-type locative-args)))
 
-(defmethod dref-arglist ((dref macro-dref))
+(defmethod arglist* ((dref macro-dref))
   (alexandria:when-let (fn (macro-function (dref-name dref)))
     (function-arglist fn :macro)))
 
-(defmethod dref-docstring ((dref macro-dref))
+(defmethod docstring* ((dref macro-dref))
   (documentation* (dref-name dref) 'function))
 
-(defmethod dref-source-location ((dref macro-dref))
+(defmethod source-location* ((dref macro-dref))
   (let ((symbol (dref-name dref)))
     (alexandria:when-let (fn (macro-function symbol))
       (swank-source-location* fn symbol 'macro))))
@@ -132,7 +132,7 @@
 
 (defclass symbol-macro-dref (dref) ())
 
-(defmethod locate-dref* (symbol (locative-type (eql 'symbol-macro))
+(defmethod xref-locate* (symbol (locative-type (eql 'symbol-macro))
                          locative-args)
   (check-locative-args symbol-macro locative-args)
   (unless (and (symbolp symbol)
@@ -154,10 +154,10 @@
                                  (doc-type (eql 'symbol-macro)))
   (setf (gethash symbol *symbol-macro-docstrings*) docstring))
 
-(defmethod dref-docstring ((dref symbol-macro-dref))
+(defmethod docstring* ((dref symbol-macro-dref))
   (documentation* (dref-name dref) 'symbol-macro))
 
-(defmethod dref-source-location ((dref symbol-macro-dref))
+(defmethod source-location* ((dref symbol-macro-dref))
   (swank-source-location (dref-name dref) 'symbol-macro))
 
 
@@ -171,7 +171,7 @@
 
 (defclass compiler-macro-dref (dref) ())
 
-(defmethod locate-dref* (symbol (locative-type (eql 'compiler-macro))
+(defmethod xref-locate* (symbol (locative-type (eql 'compiler-macro))
                          locative-args)
   (check-locative-args compiler-macro locative-args)
   (unless (and (symbolp symbol)
@@ -179,13 +179,13 @@
     (locate-error "~S does not name a compiler macro." symbol))
   (%make-dref 'compiler-macro-dref symbol 'compiler-macro))
 
-(defmethod dref-arglist ((dref compiler-macro-dref))
+(defmethod arglist* ((dref compiler-macro-dref))
   (function-arglist (compiler-macro-function (dref-name dref)) :macro))
 
-(defmethod dref-docstring ((dref compiler-macro-dref))
+(defmethod docstring* ((dref compiler-macro-dref))
   (documentation* (dref-name dref) 'compiler-macro))
 
-(defmethod dref-source-location ((dref compiler-macro-dref))
+(defmethod source-location* ((dref compiler-macro-dref))
   (let ((symbol (dref-name dref)))
     (swank-source-location* (compiler-macro-function symbol) symbol
                             'compiler-macro)))
@@ -209,7 +209,7 @@
 
 (defclass setf-dref (dref) ())
 
-(defmethod locate-dref* (symbol (locative-type (eql 'setf)) locative-args)
+(defmethod xref-locate* (symbol (locative-type (eql 'setf)) locative-args)
   (check-locative-args setf locative-args)
   (unless (and (symbolp symbol)
                (or (has-setf-p symbol)
@@ -236,7 +236,7 @@
   ;; FIXME: setf function, method
   'swank-definitions)
 
-(defmethod resolve-dref ((dref setf-dref))
+(defmethod resolve* ((dref setf-dref))
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
     (or (if locative-args
@@ -248,7 +248,7 @@
             (ignore-errors (fdefinition* `(setf ,symbol))))
         (resolve-error))))
 
-(defmethod dref-arglist ((dref setf-dref))
+(defmethod arglist* ((dref setf-dref))
   ;; FIXME: Handle setf expanders.
   (let ((fn-or-method (resolve dref nil)))
     (if fn-or-method
@@ -257,7 +257,7 @@
             (function-arglist fn-or-method :ordinary))
         nil)))
 
-(defmethod dref-docstring ((dref setf-dref))
+(defmethod docstring* ((dref setf-dref))
   (let* ((symbol (dref-name dref))
          (fn-or-method (resolve dref nil)))
     (if fn-or-method
@@ -266,7 +266,7 @@
                                          'function))
         (documentation* symbol 'setf))))
 
-(defmethod dref-source-location ((dref setf-dref))
+(defmethod source-location* ((dref setf-dref))
   (let* ((symbol (dref-name dref))
          (name `(setf ,symbol))
          (fn (ignore-errors (fdefinition name))))
@@ -290,7 +290,7 @@
 
 (defclass function-dref (dref) ())
 
-(defmethod locate-dref ((function function))
+(defmethod locate* ((function function))
   (multiple-value-bind (name kind) (function-name function)
     (unless name
       (locate-error "~S has no name." function))
@@ -312,7 +312,7 @@
                       (locate (second name) 'setf)
                       (locate name 'function))))))))
 
-(defmethod locate-dref* (symbol (locative-type (eql 'function))
+(defmethod xref-locate* (symbol (locative-type (eql 'function))
                          locative-args)
   (check-locative-args function locative-args)
   (when (and (symbolp symbol) (macro-function symbol))
@@ -321,19 +321,18 @@
     (locate-error "~S is not a symbol naming a function." symbol))
   (%make-dref 'function-dref symbol 'function))
 
-(defmethod dref-arglist ((dref function-dref))
+(defmethod arglist* ((dref function-dref))
   (function-arglist (dref-name dref) :ordinary))
 
-(defmethod resolve-dref ((dref function-dref))
+(defmethod resolve* ((dref function-dref))
   (symbol-function* (dref-name dref)))
 
-(defmethod dref-docstring ((dref function-dref))
+(defmethod docstring* ((dref function-dref))
   (documentation* (symbol-function* (dref-name dref)) 'function))
 
-(defmethod dref-source-location ((dref function-dref))
+(defmethod source-location* ((dref function-dref))
   (let ((symbol (dref-name dref)))
     (swank-source-location* (symbol-function* symbol) symbol 'function)))
-
 (defvar end-of-function-example)
 
 
@@ -346,13 +345,13 @@
 
 (defclass generic-function-dref (function-dref) ())
 
-(defmethod locate-dref ((function generic-function))
+(defmethod locate* ((function generic-function))
   (let ((name (swank-mop:generic-function-name function)))
     (if (setf-name-p name)
         (locate (second name) 'setf)
         (%make-dref 'generic-function-dref name 'generic-function))))
 
-(defmethod locate-dref* (symbol (locative-type (eql 'generic-function))
+(defmethod xref-locate* (symbol (locative-type (eql 'generic-function))
                          locative-args)
   (check-locative-args generic-function locative-args)
   (let ((function (ignore-errors (symbol-function* symbol))))
@@ -366,13 +365,13 @@
 
 (add-dref-actualizer 'actualize-function-to-generic-function)
 
-(defmethod resolve-dref ((dref generic-function-dref))
+(defmethod resolve* ((dref generic-function-dref))
   (symbol-function* (dref-name dref)))
 
-(defmethod dref-docstring ((dref generic-function-dref))
+(defmethod docstring* ((dref generic-function-dref))
   (documentation* (dref-name dref) 'function))
 
-(defmethod dref-source-location ((dref generic-function-dref))
+(defmethod source-location* ((dref generic-function-dref))
   (let ((symbol (dref-name dref)))
     (swank-source-location* (symbol-function* symbol) symbol
                             'generic-function)))
@@ -403,14 +402,14 @@
 
 (defclass method-dref (dref) ())
 
-(defmethod locate-dref ((method method))
+(defmethod locate* ((method method))
   (let* ((name (swank-mop:generic-function-name
                 (swank-mop:method-generic-function method)))
          (qualifiers (swank-mop:method-qualifiers method))
          (specializers (method-specializers-list method)))
     (%make-dref 'method-dref name `(method ,qualifiers ,specializers))))
 
-(defmethod locate-dref* (name (locative-type (eql 'method)) locative-args)
+(defmethod xref-locate* (name (locative-type (eql 'method)) locative-args)
   (check-locative-args method locative-args)
   (destructuring-bind (qualifiers specializers) locative-args
     (or (and (symbolp name)
@@ -481,19 +480,19 @@
           (swank-mop:method-qualifiers method)
           (method-specializers-for-inspect method)))
 
-(defmethod resolve-dref ((dref method-dref))
+(defmethod resolve* ((dref method-dref))
   (destructuring-bind (qualifiers specializers) (dref-locative-args dref)
     (or (ignore-errors (find-method* (dref-name dref)
                                      qualifiers specializers))
         (resolve-error "Method does not exist."))))
 
-(defmethod dref-arglist ((dref method-dref))
+(defmethod arglist* ((dref method-dref))
   (values (method-arglist (resolve dref)) :ordinary))
 
-(defmethod dref-docstring ((dref method-dref))
+(defmethod docstring* ((dref method-dref))
   (documentation* (resolve dref) t))
 
-(defmethod dref-source-location ((dref method-dref))
+(defmethod source-location* ((dref method-dref))
   (swank-source-location* (resolve dref) (dref-name dref)
                           (dref-locative dref)))
 
@@ -508,7 +507,7 @@
 
 (defclass method-combination-dref (dref) ())
 
-(defmethod locate-dref* (symbol (locative-type (eql 'method-combination))
+(defmethod xref-locate* (symbol (locative-type (eql 'method-combination))
                          locative-args)
   (check-locative-args method-combination locative-args)
   (unless (and (symbolp symbol)
@@ -521,10 +520,10 @@
   (declare (ignore fn name))
   'swank-definitions)
 
-(defmethod dref-docstring ((dref method-combination-dref))
+(defmethod docstring* ((dref method-combination-dref))
   (documentation* (dref-name dref) 'method-combination))
 
-(defmethod dref-source-location ((dref method-combination-dref))
+(defmethod source-location* ((dref method-combination-dref))
   (swank-source-location (dref-name dref) 'method-combination))
 
 
@@ -555,7 +554,7 @@
 (defclass reader-dref (dref) ())
 (defclass writer-dref (dref) ())
 
-(defmethod locate-dref* (symbol (locative-type (eql 'accessor))
+(defmethod xref-locate* (symbol (locative-type (eql 'accessor))
                          locative-args)
   (check-locative-args accessor locative-args)
   (unless (ignore-errors
@@ -580,7 +579,7 @@
   #-cmucl t
   #+cmucl (not (subtypep class 'condition)))
 
-(defmethod locate-dref* (symbol (locative-type (eql 'reader)) locative-args)
+(defmethod xref-locate* (symbol (locative-type (eql 'reader)) locative-args)
   (check-locative-args reader locative-args)
   (cond ((ignore-errors
           (find-accessor-slot-definition symbol (first locative-args)))
@@ -599,7 +598,7 @@
     (locate-error "Could not find reader ~S for class ~S." reader-symbol
                   class-symbol)))
 
-(defmethod locate-dref* (symbol (locative-type (eql 'writer)) locative-args)
+(defmethod xref-locate* (symbol (locative-type (eql 'writer)) locative-args)
   (check-locative-args writer locative-args)
   (cond ((ignore-errors
           (find-accessor-slot-definition symbol (first locative-args)))
@@ -632,54 +631,54 @@
   (declare (ignore fn name))
   'swank-definitions)
 
-(defmethod resolve-dref ((dref accessor-dref))
+(defmethod resolve* ((dref accessor-dref))
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
     (find-method* `(setf ,symbol) () (list t (first locative-args)))))
 
-(defmethod resolve-dref ((dref reader-dref))
+(defmethod resolve* ((dref reader-dref))
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
     (find-method* symbol () (list (first locative-args)))))
 
-(defmethod resolve-dref ((dref writer-dref))
+(defmethod resolve* ((dref writer-dref))
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
     (find-method* symbol () (list t (first locative-args)))))
 
-(defmethod dref-docstring ((dref accessor-dref))
+(defmethod docstring* ((dref accessor-dref))
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
     (swank-mop:slot-definition-documentation
      (find-accessor-slot-definition symbol (first locative-args)))))
 
-(defmethod dref-docstring ((dref reader-dref))
+(defmethod docstring* ((dref reader-dref))
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
     (swank-mop:slot-definition-documentation
      (find-reader-slot-definition symbol (first locative-args)))))
 
-(defmethod dref-docstring ((dref writer-dref))
+(defmethod docstring* ((dref writer-dref))
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
     (swank-mop:slot-definition-documentation
      (find-writer-slot-definition symbol (first locative-args)))))
 
-(defmethod dref-source-location ((dref accessor-dref))
+(defmethod source-location* ((dref accessor-dref))
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
     (swank-source-location* (find-method* symbol ()
                                           (list (first locative-args)))
                             symbol `(accessor ,(first locative-args)))))
 
-(defmethod dref-source-location ((dref reader-dref))
+(defmethod source-location* ((dref reader-dref))
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
     (swank-source-location* (find-method* symbol ()
                                           (list (first locative-args)))
                             symbol `(reader ,(first locative-args)))))
 
-(defmethod dref-source-location ((dref writer-dref))
+(defmethod source-location* ((dref writer-dref))
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
     (swank-source-location* (find-method* symbol ()
@@ -700,7 +699,7 @@
 
 (defclass structure-accessor-dref (dref) ())
 
-(defmethod locate-dref* (symbol (locative-type (eql 'structure-accessor))
+(defmethod xref-locate* (symbol (locative-type (eql 'structure-accessor))
                          locative-args)
   (check-locative-args structure-accessor locative-args)
   (unless (and (symbolp symbol)
@@ -741,13 +740,16 @@
   (declare (ignore fn name))
   'swank-definitions)
 
-(defmethod resolve-dref ((dref structure-accessor-dref))
-  (symbol-function* (dref-name dref)))
+(defmethod resolve* ((dref structure-accessor-dref))
+  #+(or ccl sbcl)
+  (symbol-function* (dref-name dref))
+  #-(or ccl sbcl)
+  (resolve-error))
 
-(defmethod dref-docstring ((dref structure-accessor-dref))
+(defmethod docstring* ((dref structure-accessor-dref))
   (documentation* (dref-name dref) 'function))
 
-(defmethod dref-source-location ((dref structure-accessor-dref))
+(defmethod source-location* ((dref structure-accessor-dref))
   (let ((symbol (dref-name dref)))
     (swank-source-location* (symbol-function* symbol) symbol 'function)))
 
@@ -773,7 +775,7 @@
 
 (defclass type-dref (dref) ())
 
-(defmethod locate-dref* (symbol (locative-type (eql 'type)) locative-args)
+(defmethod xref-locate* (symbol (locative-type (eql 'type)) locative-args)
   (check-locative-args type locative-args)
   (unless (and (symbolp symbol)
                ;; On most Lisps, SWANK-BACKEND:TYPE-SPECIFIER-P is not
@@ -790,7 +792,7 @@
   (declare (ignore fn name))
   'swank-definitions)
 
-(defmethod dref-arglist ((dref type-dref))
+(defmethod arglist* ((dref type-dref))
   (let ((name (dref-name dref)))
     (alexandria:nth-value-or 1
       #+ccl
@@ -800,10 +802,10 @@
             nil
             (values arglist :deftype))))))
 
-(defmethod dref-docstring ((dref type-dref))
+(defmethod docstring* ((dref type-dref))
   (documentation* (dref-name dref) 'type))
 
-(defmethod dref-source-location ((dref type-dref))
+(defmethod source-location* ((dref type-dref))
   (swank-source-location (dref-name dref) 'type 'class 'condition))
 
 
@@ -825,10 +827,10 @@
 
 (defclass class-dref (dref) ())
 
-(defmethod locate-dref ((class class))
+(defmethod locate* ((class class))
   (make-instance 'class-dref :name (class-name class) :locative 'class))
 
-(defmethod locate-dref* (symbol (locative-type (eql 'class)) locative-args)
+(defmethod xref-locate* (symbol (locative-type (eql 'class)) locative-args)
   (check-locative-args class locative-args)
   (unless (and (symbolp symbol)
                (find-class symbol nil))
@@ -841,13 +843,13 @@
 
 (add-dref-actualizer 'actualize-type-to-class)
 
-(defmethod resolve-dref ((dref class-dref))
+(defmethod resolve* ((dref class-dref))
   (find-class (dref-name dref)))
 
-(defmethod dref-docstring ((dref class-dref))
-  (documentation* (resolve dref) t))
+(defmethod docstring* ((class class))
+  (documentation* class t))
 
-(defmethod dref-source-location ((dref class-dref))
+(defmethod source-location* ((dref class-dref))
   (swank-source-location* (resolve dref) (dref-name dref) 'class))
 
 (defvar %end-of-class-example)
@@ -860,7 +862,7 @@
 
 (defclass condition-dref (class-dref) ())
 
-(defmethod locate-dref* (symbol (locative-type (eql 'condition))
+(defmethod xref-locate* (symbol (locative-type (eql 'condition))
                          locative-args)
   (check-locative-args condition locative-args)
   (let ((class (and (symbolp symbol) (find-class symbol nil))))
@@ -875,7 +877,7 @@
 
 (add-dref-actualizer 'actualize-class-to-condition)
 
-(defmethod dref-source-location ((dref condition-dref))
+(defmethod source-location* ((dref condition-dref))
   (swank-source-location* (resolve dref) (dref-name dref) 'condition))
 
 
@@ -907,7 +909,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require :sb-cltl2))
 
-(defmethod locate-dref* (symbol (locative-type (eql 'declaration))
+(defmethod xref-locate* (symbol (locative-type (eql 'declaration))
                          locative-args)
   (check-locative-args declaration locative-args)
   (unless (and (symbolp symbol)
@@ -928,14 +930,14 @@
   (alexandria:when-let (dref (locate name locative-type nil))
     (funcall fn dref))
   ;; Lacking DECLARATION-INFORMATION form CLTL2 on other Lisps,
-  ;; LOCATE-DREF* always succeeds.
+  ;; XREF-LOCATE* always succeeds.
   #-(or ccl sbcl)
   (declare (ignore fn name))
   (values))
 
 ;;; FIXME: implement a new doc-type for DOCUMENTATION?
 
-(defmethod dref-source-location ((dref declaration-dref))
+(defmethod source-location* ((dref declaration-dref))
   #+sbcl
   (swank-backend:find-source-location
    (sb-int:info :declaration :known (dref-name dref)))
@@ -973,12 +975,12 @@
 
 (defclass asdf-system-dref (dref) ())
 
-(defmethod locate-dref ((system asdf:system))
+(defmethod locate* ((system asdf:system))
   (%make-dref 'asdf-system-dref
               (character-string (slot-value system 'asdf::name))
               'asdf:system))
 
-(defmethod locate-dref* (name (locative-type (eql 'asdf:system))
+(defmethod xref-locate* (name (locative-type (eql 'asdf:system))
                          locative-args)
   (check-locative-args asdf:system locative-args)
   (let ((name (ignore-errors (string-downcase (string name)))))
@@ -994,11 +996,11 @@
 (defmethod map-names (fn (locative-type (eql 'asdf:system)))
   (map nil fn (asdf:registered-systems)))
 
-(defmethod resolve-dref ((dref asdf-system-dref))
+(defmethod resolve* ((dref asdf-system-dref))
   (handler-bind ((warning #'muffle-warning))
     (asdf:find-system (dref-name dref))))
 
-(defmethod dref-source-location ((dref asdf-system-dref))
+(defmethod source-location* ((dref asdf-system-dref))
   (let ((system (resolve dref)))
     `(:location
       (:file ,(namestring (asdf/system:system-source-file system)))
@@ -1016,11 +1018,11 @@
 
 (defclass package-dref (dref) ())
 
-(defmethod locate-dref ((package package))
+(defmethod locate* ((package package))
   (%make-dref 'package-dref (character-string (package-name package))
               'package))
 
-(defmethod locate-dref* (package-designator (locative-type (eql 'package))
+(defmethod xref-locate* (package-designator (locative-type (eql 'package))
                          locative-args)
   (check-locative-args package locative-args)
   (unless (and (or (symbolp package-designator)
@@ -1036,13 +1038,13 @@
              (funcall fn (package-name package)))
        (list-all-packages)))
 
-(defmethod resolve-dref ((dref package-dref))
+(defmethod resolve* ((dref package-dref))
   (find-package* (dref-name dref)))
 
-(defmethod dref-docstring ((dref package-dref))
+(defmethod docstring* ((dref package-dref))
   (documentation* (resolve dref) t))
 
-(defmethod dref-source-location ((dref package-dref))
+(defmethod source-location* ((dref package-dref))
   (let ((name (dref-name dref)))
     (swank-source-location* (find-package* name)
                             (if (stringp name)
@@ -1064,13 +1066,13 @@
 
 (defclass readtable-dref (dref) ())
 
-(defmethod locate-dref ((readtable readtable))
+(defmethod locate* ((readtable readtable))
   (let ((name (readtable-name readtable)))
     (unless name
       (locate-error "~S is not a NAMED-READTABLE." readtable))
     (%make-dref 'readtable-dref name 'readtable)))
 
-(defmethod locate-dref* (symbol (locative-type (eql 'readtable))
+(defmethod xref-locate* (symbol (locative-type (eql 'readtable))
                          locative-args)
   (check-locative-args readtable locative-args)
   (let ((readtable (and (symbolp symbol)
@@ -1080,13 +1082,13 @@
                     'readtable)
         (locate-error))))
 
-(defmethod resolve-dref ((dref readtable-dref))
+(defmethod resolve* ((dref readtable-dref))
   (named-readtables:find-readtable (dref-name dref)))
 
-(defmethod dref-docstring ((dref readtable-dref))
+(defmethod docstring* ((dref readtable-dref))
   (documentation* (dref-name dref) 'readtable))
 
-(defmethod dref-source-location ((dref readtable-dref))
+(defmethod source-location* ((dref readtable-dref))
   '(:error "Don't know how find the source location of readtables."))
 
 
@@ -1104,7 +1106,7 @@
 
 (defclass locative-dref (dref) ())
 
-(defmethod locate-dref* (symbol (locative-type (eql 'locative))
+(defmethod xref-locate* (symbol (locative-type (eql 'locative))
                          locative-args)
   (check-locative-args locative locative-args)
   (unless (ignore-errors (locative-type-lambda-list-method-for-symbol symbol))
@@ -1114,16 +1116,16 @@
 (defun locative-type-lambda-list-method-for-symbol (symbol)
   (find-method* #'locative-type-lambda-list () `((eql ,symbol))))
 
-(defmethod dref-arglist ((dref locative-dref))
+(defmethod arglist* ((dref locative-dref))
   (values (locative-type-lambda-list (dref-name dref)) :macro))
 
-(defmethod dref-docstring ((dref locative-dref))
+(defmethod docstring* ((dref locative-dref))
   (multiple-value-bind (arglist docstring package)
       (locative-type-lambda-list (dref-name dref))
     (declare (ignore arglist))
     (values docstring package)))
 
-(defmethod dref-source-location ((dref locative-dref))
+(defmethod source-location* ((dref locative-dref))
   (let ((symbol (dref-name dref)))
     (swank-source-location* (locative-type-lambda-list-method-for-symbol symbol)
                             'locative-type-lambda-list
@@ -1132,19 +1134,19 @@
 
 ;;;; Finish the job of DEFINE-SYMBOL-LOCATIVE-TYPE
 
-(defmethod dref-arglist ((dref symbol-locative-dref))
+(defmethod arglist* ((dref symbol-locative-dref))
   (let ((symbol (dref-name dref))
         (locative-type (dref-locative-type dref)))
     (values (symbol-lambda-list symbol locative-type) :macro)))
 
-(defmethod dref-docstring ((dref symbol-locative-dref))
+(defmethod docstring* ((dref symbol-locative-dref))
   (let* ((symbol (dref-name dref))
          (locative-type (dref-locative-type dref))
          (method (symbol-lambda-list-method symbol locative-type)))
     (values (documentation method t)
             (nth-value 1 (symbol-lambda-list symbol locative-type)))))
 
-(defmethod dref-source-location ((dref symbol-locative-dref))
+(defmethod source-location* ((dref symbol-locative-dref))
   (let ((symbol (dref-name dref))
         (locative-type (dref-locative-type dref)))
     (swank-source-location*
@@ -1178,7 +1180,7 @@
 
 (defclass unknown-dref (dref) ())
 
-(defmethod locate-dref* (name (locative-type (eql 'unknown)) locative-args)
+(defmethod xref-locate* (name (locative-type (eql 'unknown)) locative-args)
   (unless (and (symbolp name)
                (find (first locative-args) (swank-dspecs name) :test #'equal))
     (locate-error))
@@ -1188,7 +1190,7 @@
   (declare (ignore fn name))
   'swank-definitions)
 
-(defmethod dref-source-location ((dref unknown-dref))
+(defmethod source-location* ((dref unknown-dref))
   (let ((dspec-and-location-list (swank-dspecs-and-locations (dref-name dref)))
         (dspec (first (dref-locative-args dref))))
     (second (find dspec dspec-and-location-list :key #'first :test #'equal))))
@@ -1229,25 +1231,25 @@
 
 (defclass lambda-dref (dref) ())
 
-(defmethod locate-dref* (name (locative-type (eql 'lambda)) locative-args)
+(defmethod xref-locate* (name (locative-type (eql 'lambda)) locative-args)
   (check-locative-args lambda locative-args)
   (when name
     (locate-error "The name ~S is not NIL." name))
   (%make-dref 'lambda-dref name (cons locative-type locative-args)))
 
-(defmethod dref-arglist ((dref lambda-dref))
+(defmethod arglist* ((dref lambda-dref))
   (let ((arglist (getf (dref-locative-args dref) :arglist '%not-there))
         (arglist-type (getf (dref-locative-args dref) :arglist-type t)))
     (unless (eq arglist '%not-there)
       (values arglist arglist-type))))
 
-(defmethod dref-docstring ((dref lambda-dref))
+(defmethod docstring* ((dref lambda-dref))
   (let ((docstring (getf (dref-locative-args dref) :docstring '%not-there))
         (package (getf (dref-locative-args dref) :docstring-package)))
     (unless (eq docstring '%not-there)
       (values docstring (find-package* package)))))
 
-(defmethod dref-source-location ((dref lambda-dref))
+(defmethod source-location* ((dref lambda-dref))
   (let* ((args (dref-locative-args dref))
          (file (getf args :file))
          (file-position (getf args :file-position))

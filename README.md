@@ -877,7 +877,7 @@ the next example, pressing `M-.` on `FOO` will visit `FOO`'s
 default method:
 
 ```
-;; See RESOLVE-DREF (method () (dref)) for how this all works.
+;; See RESOLVE* (method () (dref)) for how this all works.
 ```
 
 With a prefix argument (`C-u M-.`), one can enter a symbol plus a
@@ -949,7 +949,7 @@ section containing the definition with `point` in it. See
     [Miscellaneous Variables][7c82].
     
     For the details, see the following sections, starting with
-    [Documentables][2e45]. Also see [Writing Extensions][c4ce] and [`DOCUMENT-DREF`][561f].
+    [Documentables][2e45]. Also see [Writing Extensions][c4ce] and [`DOCUMENT-OBJECT*`][8269].
 
 <a id="x-28MGL-PAX-3A-40DOCUMENTABLES-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2992,9 +2992,9 @@ package for evaluation.
 Once everything in [Adding New Locatives][3cf3] has been done,
 there are only a couple of PAX generic functions left to extend.
 
-<a id="x-28MGL-PAX-3ADOCUMENT-DREF-20GENERIC-FUNCTION-29"></a>
+<a id="x-28MGL-PAX-3ADOCUMENT-OBJECT-2A-20GENERIC-FUNCTION-29"></a>
 
-- [generic-function] **DOCUMENT-DREF** *DREF STREAM*
+- [generic-function] **DOCUMENT-OBJECT\*** *DREF STREAM*
 
     Write `DREF` in [`*FORMAT*`][3da8] to `STREAM`.
     Add methods specializing on a subclass of `DREF` to customize the
@@ -3040,7 +3040,7 @@ there are only a couple of PAX generic functions left to extend.
     export when its `EXPORT` argument is true.
 
 Also note that due to the [Home Section][bdd5] logic, especially for
-locative types with string names, [`DREF-EXT:DREF-DOCSTRING`][12a1] should
+locative types with string names, [`DREF-EXT:DOCSTRING*`][9fd4] should
 probably return a non-`NIL` package.
 
 <a id="x-28MGL-PAX-3A-40LOCATIVE-ALIASES-20MGL-PAX-3ASECTION-29"></a>
@@ -3089,9 +3089,9 @@ export the symbols `A` and `AN`.
 
 ### 10.3 Extending `DOCUMENT`
 
-For all definitions that it encounters, [`DOCUMENT`][432c] calls [`DOCUMENT-DREF`][561f]
+For all definitions that it encounters, [`DOCUMENT`][432c] calls DOCUMENT\*
 to generate documentation. The following utilities are for writing
-new `DOCUMENT-DREF` methods, which emit markdown.
+new [`DOCUMENT-OBJECT*`][8269] methods, which emit markdown.
 
 <a id="x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29"></a>
 
@@ -3261,7 +3261,7 @@ they are presented.
 - [reader] **GLOSSARY-TERM-TITLE** *GLOSSARY-TERM (:TITLE)*
 
     A markdown string or `NIL`. Used in generated
-    documentation (see `DOCUMENT-DREF`).
+    documentation (see [Output Details][af6f]).
 
 <a id="x-28MGL-PAX-3AGLOSSARY-TERM-URL-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29"></a>
 
@@ -3280,7 +3280,6 @@ they are presented.
   [0fa3]: #x-28MGL-PAX-3A-40LOCATIVE-ALIASES-20MGL-PAX-3ASECTION-29 "Locative Aliases"
   [119e]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm "FUNCTION (MGL-PAX:CLHS CLASS)"
   [1281]: #x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29 "PAX World"
-  [12a1]: dref/README.md#x-28DREF-EXT-3ADREF-DOCSTRING-20GENERIC-FUNCTION-29 "DREF-EXT:DREF-DOCSTRING GENERIC-FUNCTION"
   [1322]: https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks "fenced code blocks"
   [13a9]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29 "MGL-PAX:UPDATE-ASDF-SYSTEM-READMES FUNCTION"
   [1538]: dref/README.md#x-28DREF-3AXREF-20CLASS-29 "DREF:XREF CLASS"
@@ -3340,7 +3339,6 @@ they are presented.
   [524e]: #x-28MGL-PAX-3A-40UNSPECIFIED-LOCATIVE-20MGL-PAX-3ASECTION-29 "Unspecified Locative"
   [548e]: dref/README.md#x-28DREF-EXT-3ADEFINE-LOCATIVE-ALIAS-20MGL-PAX-3AMACRO-29 "DREF-EXT:DEFINE-LOCATIVE-ALIAS MGL-PAX:MACRO"
   [54d8]: #x-28MGL-PAX-3A-40ADDING-NEW-LOCATIVES-20MGL-PAX-3ASECTION-29 "Adding New Locatives"
-  [561f]: #x-28MGL-PAX-3ADOCUMENT-DREF-20GENERIC-FUNCTION-29 "MGL-PAX:DOCUMENT-DREF GENERIC-FUNCTION"
   [574a]: #x-28MGL-PAX-3A-40EXTENDING-DOCUMENT-20MGL-PAX-3ASECTION-29 "Extending `DOCUMENT`"
   [5825]: #x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/transcribe" ASDF/SYSTEM:SYSTEM'
   [5875]: dref/README.md#x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "GENERIC-FUNCTION MGL-PAX:LOCATIVE"
@@ -3387,6 +3385,7 @@ they are presented.
   [80e8]: #x-28MGL-PAX-3AWITH-HEADING-20MGL-PAX-3AMACRO-29 "MGL-PAX:WITH-HEADING MGL-PAX:MACRO"
   [81f7]: http://www.lispworks.com/documentation/HyperSpec/Body/s_fn.htm "FUNCTION (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [8251]: #x-28MGL-PAX-3AGLOSSARY-TERM-20CLASS-29 "MGL-PAX:GLOSSARY-TERM CLASS"
+  [8269]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-2A-20GENERIC-FUNCTION-29 "MGL-PAX:DOCUMENT-OBJECT* GENERIC-FUNCTION"
   [82f7]: http://www.lispworks.com/documentation/HyperSpec/Body/v_rd_eva.htm "*READ-EVAL* (MGL-PAX:CLHS VARIABLE)"
   [83d5]: #x-28MGL-PAX-3A-40BROWSING-WITH-W3M-20MGL-PAX-3ASECTION-29 "Browsing with w3m"
   [83e1]: http://www.lispworks.com/documentation/HyperSpec/Body/e_cnd.htm "CONDITION (MGL-PAX:CLHS CONDITION)"
@@ -3415,6 +3414,7 @@ they are presented.
   [9b43]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "DEFPACKAGE (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [9c7d]: #x-28MGL-PAX-3A-40PAGES-20MGL-PAX-3ASECTION-29 "Pages"
   [9dbc]: #x-28MGL-PAX-3A-40TRANSCRIPT-API-20MGL-PAX-3ASECTION-29 "Transcript API"
+  [9fd4]: dref/README.md#x-28DREF-EXT-3ADOCSTRING-2A-20GENERIC-FUNCTION-29 "DREF-EXT:DOCSTRING* GENERIC-FUNCTION"
   [a11d]: dref/README.md#x-28DREF-3A-40LOCATIVE-TYPE-20MGL-PAX-3AGLOSSARY-TERM-29 "locative type"
   [a17d]: #x-28MGL-PAX-3A-40MATHJAX-20MGL-PAX-3ASECTION-29 "MathJax"
   [a249]: #x-28MGL-PAX-3ATRANSCRIPTION-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION"

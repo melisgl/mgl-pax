@@ -957,11 +957,12 @@ This is [Self-referencing][e042].
       (check-document (locate 'encapsulated-generic-function
                               'generic-function nil)
                       expected))
-    (with-failure-expected ((and (alexandria:featurep
-                                  '(:or :abcl :clisp :cmucl :ecl))
+    (with-failure-expected ((and (alexandria:featurep '(:or :abcl))
                                  'failure))
       (signals-not (locate-error)
-        (check-document #'encapsulated-generic-function expected)))))
+        (with-failure-expected ((and (alexandria:featurep '(:or :clisp :ecl))
+                                     'failure))
+          (check-document #'encapsulated-generic-function expected))))))
 
 (deftest test-non-function-function-arglist ()
   #+sbcl

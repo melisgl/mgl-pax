@@ -85,9 +85,9 @@
 
 
 (defsection @extending-document (:title "Extending DOCUMENT")
-  "For all definitions that it encounters, DOCUMENT calls DOCUMENT-DREF
+  "For all definitions that it encounters, DOCUMENT calls DOCUMENT*
   to generate documentation. The following utilities are for writing
-  new DOCUMENT-DREF methods, which emit markdown."
+  new DOCUMENT-OBJECT* methods, which emit markdown."
   (*format* variable)
   (with-heading macro)
   (documenting-reference macro)
