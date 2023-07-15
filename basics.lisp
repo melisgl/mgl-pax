@@ -238,8 +238,7 @@
    (title
     :initarg :title :reader glossary-term-title
     :documentation "A markdown string or NIL. Used in generated
-    documentation (see [DOCUMENT-DREF][(method () (glossary-term-dref
-    t))]).")
+    documentation (see @OUTPUT-DETAILS).")
    (url
     :initarg :url :reader glossary-term-url
     :documentation "A string or NIL.")
