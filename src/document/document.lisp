@@ -1052,15 +1052,57 @@
               (funcall (page-footer-fn page) stream)))))
     (unmake-stream-spec (page-final-stream-spec page))))
 
+;;; Process MARKDOWN-STRING block by block to limit maximum memory usage.
 (defun reprint-in-format (markdown-string markdown-reflinks stream)
-  (let ((reflinks-parse-tree (parse-markdown markdown-reflinks)))
-    ;; Process it block by block to limit maximum memory usage.
-    (map-markdown-block-parses (lambda (tree)
-                                 (print-markdown
-                                  (append (post-process-for-w3m (list tree))
-                                          reflinks-parse-tree)
-                                  stream :format *format*))
-                               markdown-string)))
+  "- When @BROWSING-LIVE-DOCUMENTATION, the page displayed can be of,
+  say, a single function within what would constitute the offline
+  documentation of a library. Because markdown reference link
+  definitions, for example
+
+          [Daring Fireball]: http://daringfireball.net/
+
+      can be defined anywhere, they wouldn't be resolvable in that
+      case, their use is discouraged. Currently, only reflink
+      definitions in the vicinity of their uses are resolvable. This
+      is left intentionally vague because the specifics are subject to
+      change.
+
+      See DEFINE-GLOSSARY-TERM for a better alternative to markdown
+      reference links."
+  (let ((reflinks-parse-tree (parse-markdown markdown-reflinks))
+        ;; The reflink definitions from the most recent
+        ;; MAX-N-REFLINK-BLOCKS.
+        (reflink-defs ())
+        (max-n-reflink-blocks 20)
+        ;; Parse trees of the most recent MAX-N-TREES blocks.
+        (trees ())
+        (max-n-tree-blocks 10))
+    (labels
+        ((add-parse-tree (tree)
+           (when (= (length trees) max-n-tree-blocks)
+             (write-tree (first (last trees)))
+             (setq trees (nbutlast trees)))
+           (push tree trees)
+           (push (reflink-defs tree) reflink-defs)
+           (setq reflink-defs (subseq reflink-defs
+                                      0 (min max-n-reflink-blocks
+                                             (length reflink-defs)))))
+         (reflinks-around ()
+           (apply #'append reflink-defs))
+         (write-tree (tree)
+           (print-markdown (append tree reflinks-parse-tree (reflinks-around))
+                           stream :format *format*)))
+      (map-markdown-block-parses (lambda (tree)
+                                   (add-parse-tree
+                                    (post-process-for-w3m (list tree))))
+                                 markdown-string)
+      (loop repeat max-n-tree-blocks
+            do (add-parse-tree ())))))
+
+(defun reflink-defs (tree)
+  (remove-if-not (lambda (tree)
+                   (parse-tree-p tree :reference))
+                 tree))
 
 ;;; Emit markdown definitions for links (in *LINKS*) to REFERENCE
 ;;; objects that were linked to on the current page.
@@ -1183,7 +1225,9 @@
   (@mathjax section))
 
 (defsection @markdown-in-docstrings (:title "Markdown in Docstrings")
-  """[strip-docstring-indent function][docstring]
+  """[ strip-docstring-indent function][docstring]
+
+  [ reprint-in-format function][docstring]
 
   [ sanitize-aggressively-p function][docstring]
 

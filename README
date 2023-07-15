@@ -1231,11 +1231,16 @@ say, a single function within what would constitute the offline
 documentation of a library. Because markdown reference link
 definitions, for example
 
-[Daring Fireball]: http://daringfireball.net/
+        [Daring Fireball]: http://daringfireball.net/
 
- can be defined anywhere, they wouldn't be resolvable in this
- case, thus their use is discouraged. See DEFINE-GLOSSARY-TERM
- for a better alternative.
+    can be defined anywhere, they wouldn't be resolvable in that
+    case, their use is discouraged. Currently, only reflink
+    definitions in the vicinity of their uses are resolvable. This
+    is left intentionally vague because the specifics are subject to
+    change.
+
+    See DEFINE-GLOSSARY-TERM for a better alternative to markdown
+    reference links.
 
 Docstrings of definitions which do not have a @HOME-SECTION and are
 not SECTIONs themselves are assumed to have been written with no
@@ -2908,7 +2913,7 @@ they are presented.
 - [reader] GLOSSARY-TERM-TITLE GLOSSARY-TERM (:TITLE)
 
     A markdown string or NIL. Used in generated
-    documentation (see DOCUMENT-DREF (method () (glossary-term-dref t))).
+    documentation (see DOCUMENT-DREF).
 
 - [reader] GLOSSARY-TERM-URL GLOSSARY-TERM (:URL)
 

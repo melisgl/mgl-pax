@@ -143,7 +143,7 @@ PAX in mind. The above markdown is rendered as
 - \[function\] **ABORT** *[`&OPTIONAL`][4336] CONDITION*
 
     Transfer control to a restart named `ABORT`, signalling a
-    [`CONTROL-ERROR`][6bc0] if none exists.
+    \[`CONTROL-ERROR`\]\[6bc0\] if none exists.
 
 [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\\CONTROL-ERROR \\CONDITION"
 
@@ -323,10 +323,9 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
 
 As a user, I frequently run into documentation that's incomplete
 and out of date, so I tend to stay in the editor and explore the
-code by jumping around with [SLIME][slime]'s
-[`M-.`][slime-m-.] (`slime-edit-definition`). As a library author,
-I spend a great deal of time polishing code but precious little
-writing documentation.
+code by jumping around with [SLIME][6be7]'s [`M-.`][cb15] (`slime-edit-definition`).
+As a library author, I spend a great deal of time polishing code but
+precious little writing documentation.
 
 In fact, I rarely write anything more comprehensive than docstrings
 for exported stuff. Writing docstrings feels easier than writing a
@@ -844,9 +843,8 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
 
 ## 7 Navigating Sources in Emacs
 
-Integration into [SLIME's `M-.`][slime-m-.]
-(`slime-edit-definition`) allows one to visit the [`SOURCE-LOCATION`][32da] of
-a [definition][d930].
+Integration into [SLIME][6be7]'s [`M-.`][cb15] (`slime-edit-definition`) allows
+one to visit the [`SOURCE-LOCATION`][32da] of a [definition][d930].
 
 The definition is either determined from the buffer content at point
 or is prompted. If prompted, then the format is `<NAME> <LOCATIVE>`,
@@ -1165,7 +1163,8 @@ symbols, there is no package system to advantage of.
 
 - [variable] **\*DOCUMENT-NORMALIZE-PACKAGES\*** *T*
 
-    Deprecated.
+    Whether to print `[in package <package-name>]` in the documentation
+    when the package changes.
 
 <a id="x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
@@ -1304,12 +1303,9 @@ To bind `C-.' globally:
 
 #### 8.3.4 Browsing with w3m
 
-With w3m's default [key bindings][w3m-key-bindings], moving the
-cursor between links involves `TAB` and `S-TAB` (or `<up>` and
-`<down>`). `RET` and `<right>` follow a link, while `B` and `<left>`
-go back in history.
-
-[w3m-key-bindings]: https://emacs-w3m.github.io/info/emacs-w3m_10.html#Key-Binding
+With [w3m's default key bindings][1743], moving the cursor between links involves
+`TAB` and `S-TAB` (or `<up>` and `<down>`). `RET` and `<right>`
+follow a link, while `B` and `<left>` go back in history.
 
 In addition, the following PAX-specific key bindings are available:
 
@@ -1363,27 +1359,42 @@ change.
 
 ### 8.4 Markdown Support
 
-The [Markdown][markdown] in docstrings is processed with the
-3BMD library.
+The [markdown][a317] in docstrings is processed with the [3BMD][1904] library.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-IN-DOCSTRINGS-20MGL-PAX-3ASECTION-29"></a>
 
 #### 8.4.1 Markdown in Docstrings
 
-Docstrings can be indented in any of the usual styles. PAX
+- Docstrings can be indented in any of the usual styles. PAX
 normalizes indentation by stripping the longest run of leading
 spaces common to all non-blank lines except the first. The following
 two docstrings are equivalent:
 
-    (defun foo ()
-      "This is
-      indented
-      differently")
-    
-    (defun foo ()
-      "This is
-    indented
-    differently")
+        (defun foo ()
+          "This is
+          indented
+          differently")
+        
+        (defun foo ()
+          "This is
+        indented
+        differently")
+
+- When [Browsing Live Documentation][a595], the page displayed can be of,
+say, a single function within what would constitute the offline
+documentation of a library. Because markdown reference link
+definitions, for example
+
+        [Daring Fireball]: http://daringfireball.net/
+
+    can be defined anywhere, they wouldn't be resolvable in that
+    case, their use is discouraged. Currently, only reflink
+    definitions in the vicinity of their uses are resolvable. This
+    is left intentionally vague because the specifics are subject to
+    change.
+
+    See [`DEFINE-GLOSSARY-TERM`][8ece] for a better alternative to markdown
+    reference links.
 
 Docstrings of definitions which do not have a [Home Section][bdd5] and are
 not [`SECTION`][5fac]s themselves are assumed to have been written with no
@@ -1413,8 +1424,8 @@ docstrings are equivalent:
 
 #### 8.4.2 Syntax Highlighting
 
-For syntax highlighting, Github's [fenced code
-blocks][fenced-code-blocks] markdown extension to mark up code
+For syntax highlighting, Github's [fenced code blocks][1322] markdown
+extension to mark up code
 blocks with triple backticks is enabled so all you need to do is
 write:
 
@@ -1426,15 +1437,7 @@ to get syntactically marked up HTML output. Copy `src/style.css`
 from PAX and you are set. The language tag, `elisp` in this example,
 is optional and defaults to `common-lisp`.
 
-See the documentation of 3BMD and colorize for
-the details.
-
-[3bmd]: https://github.com/3b/3bmd
-
-[colorize]: https://github.com/redline6561/colorize/
-
-[fenced-code-blocks]: https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks
-
+See the documentation of [3BMD][1904] and [Colorize][3076] for the details.
 
 <a id="x-28MGL-PAX-3A-40MATHJAX-20MGL-PAX-3ASECTION-29"></a>
 
@@ -1457,11 +1460,7 @@ backticks) alone. Outside code blocks, escape `$` by prefixing it
 with a backslash to scare MathJax off.
 
 Escaping all those backslashes in TeX fragments embedded in Lisp
-strings can be a pain. Pythonic String
-Reader can help with that.
-
-[pythonic-string-reader]: https://github.com/smithzvk/pythonic-string-reader
-
+strings can be a pain. [Pythonic String Reader][d3fc] can help with that.
 
 <a id="x-28MGL-PAX-3A-40CODIFICATION-20MGL-PAX-3ASECTION-29"></a>
 
@@ -3262,7 +3261,7 @@ they are presented.
 - [reader] **GLOSSARY-TERM-TITLE** *GLOSSARY-TERM (:TITLE)*
 
     A markdown string or `NIL`. Used in generated
-    documentation (see [`DOCUMENT-DREF`][561f] (method () (glossary-term-dref t))).
+    documentation (see `DOCUMENT-DREF`).
 
 <a id="x-28MGL-PAX-3AGLOSSARY-TERM-URL-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29"></a>
 
@@ -3282,13 +3281,16 @@ they are presented.
   [119e]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm "FUNCTION (MGL-PAX:CLHS CLASS)"
   [1281]: #x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29 "PAX World"
   [12a1]: dref/README.md#x-28DREF-EXT-3ADREF-DOCSTRING-20GENERIC-FUNCTION-29 "DREF-EXT:DREF-DOCSTRING GENERIC-FUNCTION"
+  [1322]: https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks "fenced code blocks"
   [13a9]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29 "MGL-PAX:UPDATE-ASDF-SYSTEM-READMES FUNCTION"
   [1538]: dref/README.md#x-28DREF-3AXREF-20CLASS-29 "DREF:XREF CLASS"
   [172e]: dref/README.md#x-28METHOD-20MGL-PAX-3ALOCATIVE-29 "METHOD MGL-PAX:LOCATIVE"
+  [1743]: https://emacs-w3m.github.io/info/emacs-w3m_10.html#Key-Binding "w3m's default key bindings"
   [17e0]: #x-28MGL-PAX-3A-2ADOCUMENT-URL-VERSIONS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-URL-VERSIONS* VARIABLE"
   [1865]: #x-28MGL-PAX-3A-40LINKING-TO-CODE-20MGL-PAX-3ASECTION-29 "Linking to Code"
   [1867]: http://www.lispworks.com/documentation/HyperSpec/Body/r_contin.htm "CONTINUE (MGL-PAX:CLHS RESTART)"
   [18e1]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_to_.htm "PRIN1-TO-STRING (MGL-PAX:CLHS FUNCTION)"
+  [1904]: https://github.com/3b/3bmd "3BMD"
   [1b1b]: #x-28MGL-PAX-3A-40DOCUMENTATION-UTILITIES-20MGL-PAX-3ASECTION-29 "Utilities for Generating Documentation"
   [1b28]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE"
   [1d5a]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pkg.htm "PACKAGE (MGL-PAX:CLHS CLASS)"
@@ -3306,6 +3308,7 @@ they are presented.
   [2d48]: #x-28MGL-PAX-3AWITH-DISLOCATED-NAMES-20MGL-PAX-3AMACRO-29 "MGL-PAX:WITH-DISLOCATED-NAMES MGL-PAX:MACRO"
   [2e45]: #x-28MGL-PAX-3A-40DOCUMENTABLES-20MGL-PAX-3ASECTION-29 "Documentables"
   [3026]: #x-28MGL-PAX-3AESCAPE-MARKDOWN-20FUNCTION-29 "MGL-PAX:ESCAPE-MARKDOWN FUNCTION"
+  [3076]: https://github.com/redline6561/colorize/ "Colorize"
   [32da]: dref/README.md#x-28DREF-3ASOURCE-LOCATION-20FUNCTION-29 "DREF:SOURCE-LOCATION FUNCTION"
   [3386]: #x-28MGL-PAX-3A-40NAVIGATING-IN-EMACS-20MGL-PAX-3ASECTION-29 "Navigating Sources in Emacs"
   [3473]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_s.htm "FIND-SYMBOL (MGL-PAX:CLHS FUNCTION)"
@@ -3461,6 +3464,7 @@ they are presented.
   [d162]: http://www.lispworks.com/documentation/HyperSpec/Body/e_error.htm "ERROR (MGL-PAX:CLHS CONDITION)"
   [d1ca]: #x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29 "Documentation Generation Implementation Notes"
   [d1dc]: #x-28MGL-PAX-3A-40GLOSSARY-TERMS-20MGL-PAX-3ASECTION-29 "Glossary Terms"
+  [d3fc]: https://github.com/smithzvk/pythonic-string-reader "Pythonic String Reader"
   [d451]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRINT (MGL-PAX:CLHS FUNCTION)"
   [d5a2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_car_c.htm "CAR (MGL-PAX:CLHS FUNCTION)"
   [d5a9]: http://www.lispworks.com/documentation/HyperSpec/Body/t_stream.htm "STREAM (MGL-PAX:CLHS CLASS)"
