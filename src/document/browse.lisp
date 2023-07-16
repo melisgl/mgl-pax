@@ -273,10 +273,18 @@
 (defun pax-eval (form)
   ;; For the sake of MGL-PAX/WEB, don't allow arbitrary evaluations.
   (unless (and (listp form)
-               (member (first form) '(pax-apropos* pax-document-home-page)))
+               (member (first form) '(pax-apropos* pax-document-home-page))
+               (every (lambda (arg)
+                        (and (constantp arg)
+                             (or (not (symbolp arg))
+                                 (allowed-to-evaluate-symbol-p arg))))
+                      (rest form)))
     (error "Not allowed to evaluate ~S." form))
-  ;; FIXME: check that the args are literals
   (eval form))
+
+(defun allowed-to-evaluate-symbol-p (symbol)
+  (or (keywordp symbol)
+      (member symbol '(nil t))))
 
 (defun make-pax-eval-url (form)
   (finalize-pax-url (format nil "pax-eval:~A"
