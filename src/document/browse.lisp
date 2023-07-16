@@ -721,12 +721,13 @@
                             (prin1-to-markdown (xref-name ref))))))
 
 (defun pax-document-home-page ()
-  `((progv '(*package*) (list ,(find-package '#:mgl-pax)))
-    ,@(list "## Documentation registered in @PAX-WORLD"
-            (sections-tightly
-             (mapcar #'locate (sections-registered-in-pax-world)))
-            "See @BROWSING-LIVE-DOCUMENTATION for how to use this
-            documentation browser.")))
+  (let ((*package* (find-package '#:mgl-pax) ))
+    `((progv '(*package*) (list ,(find-package '#:mgl-pax)))
+      ,@(list "## Documentation registered in @PAX-WORLD"
+              (sections-tightly
+               (mapcar #'locate (sections-registered-in-pax-world)))
+              "See @BROWSING-LIVE-DOCUMENTATION for how to use this
+            documentation browser."))))
 
 
 (defun/autoloaded current-definition-pax-url-for-emacs
