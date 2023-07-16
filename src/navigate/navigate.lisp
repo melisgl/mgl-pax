@@ -176,12 +176,18 @@
 ;;; This is also used by CURRENT-DEFINITION-PAX-URL-FOR-EMACS.
 (defun find-current-definition (buffer filename possibilities)
   (loop for (name snippet pos) in possibilities
-        ;; FIXME: use non-interning read
-        for object = (ignore-errors (read-from-string name))
+        for object = (ignore-errors (read-name-without-interning name))
           thereis (and object (guess-current-definition
                                object buffer
                                filename snippet
                                pos))))
+
+(defun read-name-without-interning (string)
+  (let ((string (trim-whitespace string)))
+    (if (or (starts-with-subseq "#:" string)
+            (starts-with #\" string))
+        (read-from-string string)
+        (read-interned-symbol-from-string string))))
 
 ;;; Return the definition of OBJECT in BUFFER (a string) and FILE (a
 ;;; string or NIL) whose source location information from SOURCE-LOCATION

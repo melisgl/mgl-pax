@@ -630,6 +630,62 @@
       (should (substringp "* [function] %FOO-SIMPLE" (w3m-contents)))
       (kill-buffer)
       (mgl-pax-sync-current-buffer)))))
+
+(ert-deftest test-mgl-pax-current-definition-toggle-view/string ()
+  (with-browsers
+   (with-temp-lisp-buffer
+    (let ((tmpbuffer (current-buffer)))
+      (insert "(defpackage \"MGL-PAX-TEST\")")
+      ;; Interpreted
+      (slime-eval-last-expression)
+      (slime-sync-to-top-level 1)
+      (backward-char)
+      (mgl-pax-current-definition-toggle-view)
+      (slime-sync-to-top-level 1)
+      (mgl-pax-sync-current-buffer)
+      (should (eq major-mode 'w3m-mode))
+      (should (substringp "* [package] \"MGL-PAX-TEST\"" (w3m-contents)))
+      (kill-buffer)
+      (switch-to-buffer tmpbuffer)
+      (mgl-pax-sync-current-buffer)
+      ;; Compiled
+      (slime-compile-defun)
+      (slime-sync-to-top-level 1)
+      (mgl-pax-current-definition-toggle-view)
+      (slime-sync-to-top-level 1)
+      (mgl-pax-sync-current-buffer)
+      (should (eq major-mode 'w3m-mode))
+      (should (substringp "* [package] \"MGL-PAX-TEST\"" (w3m-contents)))
+      (kill-buffer)
+      (mgl-pax-sync-current-buffer)))))
+
+(ert-deftest test-mgl-pax-current-definition-toggle-view/uninterned ()
+  (with-browsers
+   (with-temp-lisp-buffer
+    (let ((tmpbuffer (current-buffer)))
+      (insert "(defpackage #:mgl-pax-test)")
+      ;; Interpreted
+      (slime-eval-last-expression)
+      (slime-sync-to-top-level 1)
+      (backward-char)
+      (mgl-pax-current-definition-toggle-view)
+      (slime-sync-to-top-level 1)
+      (mgl-pax-sync-current-buffer)
+      (should (eq major-mode 'w3m-mode))
+      (should (substringp "* [package] \"MGL-PAX-TEST\"" (w3m-contents)))
+      (kill-buffer)
+      (switch-to-buffer tmpbuffer)
+      (mgl-pax-sync-current-buffer)
+      ;; Compiled
+      (slime-compile-defun)
+      (slime-sync-to-top-level 1)
+      (mgl-pax-current-definition-toggle-view)
+      (slime-sync-to-top-level 1)
+      (mgl-pax-sync-current-buffer)
+      (should (eq major-mode 'w3m-mode))
+      (should (substringp "* [package] \"MGL-PAX-TEST\"" (w3m-contents)))
+      (kill-buffer)
+      (mgl-pax-sync-current-buffer)))))
 
 
 ;;; Test `mgl-pax-apropos'
