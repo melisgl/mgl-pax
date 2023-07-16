@@ -52,10 +52,10 @@ li {
 /*   text-indent: var(--line-height); */
 /* } */
 
-/* ul + p, ol + p, dl + p { */
-/*   margin: 0; */
-/*   text-indent: 0; */
-/* } */
+ul + p, ol + p, dl + p {
+  margin: calc(2*var(--parsep)) 0 0 0;
+  text-indent: 0;
+}
 
 /* li > p { */
 /*   margin: 0; */
@@ -223,8 +223,10 @@ img {
 
 .reference-object {
   background-color: #EBE8E2;
-  padding: 0.1em;
-  border: solid 1px;
+  /* The live browser does not lowercase. Balance the space around
+   * uppercase characters manually. */
+  padding: 0.1em 0.22em 0.02em 0.22em;
+  border: solid 1px #777;
   font-weight: bold;
 }
 
