@@ -88,7 +88,7 @@
   (define-locative-alias macro)
   (locate-error function)
   (locate* generic-function)
-  (xref-locate* generic-function)
+  (dref* generic-function)
   (add-dref-actualizer function)
   (remove-dref-actualizer function)
   (resolve* generic-function)
@@ -99,19 +99,20 @@
 (defsection @symbol-locatives (:title "Symbol Locatives"
                                :package :dref
                                :export :dref-ext)
-  "Let's see how the obscure DEFINE-SYMBOL-LOCATIVE-TYPE and
-  DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE macros work together to
-  simplify the common task of associating definition and documentation
-  with symbols in a certain context."
+  "Let's see how the opaque DEFINE-SYMBOL-LOCATIVE-TYPE and the
+  obscure DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE macros work together
+  to simplify the common task of associating definition with a symbol
+  in a certain context."
   (define-symbol-locative-type macro)
   (define-definer-for-symbol-locative-type macro))
 
 (defsection @dref-subclasses (:title "DREF Subclasses"
                               :package :dref
                               :export :dref-ext)
-  "These are the DREF subclasses corresponding to DREF::@LOCATIVE-TYPES.
-  They are exported to make it possible to go beyond the standard
-  @OPERATIONS (e.g. PAX:DOCUMENT-OBJECT*) and for subclassing."
+  "These are the [DREF][class] subclasses corresponding to
+  DREF::@LOCATIVE-TYPES. They are exported to make it possible to go
+  beyond the standard @OPERATIONS (e.g. PAX:DOCUMENT-OBJECT*) and for
+  subclassing."
   "**for Variables**"
   (variable-dref class)
   (constant-dref class)
@@ -151,7 +152,7 @@
                                :export :dref-ext)
   "These represent the file or buffer position of a [defining
   form][clhs] and are returned by the SOURCE-LOCATION function. For
-  the details see the Elisp function `slime-goto-source-location`."
+  the details, see the Elisp function `slime-goto-source-location`."
   (make-source-location function)
   (source-location-p function)
   (source-location-file function)
@@ -159,7 +160,7 @@
   (source-location-buffer function)
   (source-location-buffer-position function)
   (source-location-snippet function)
-  (source-location-file-position-offset function))
+  (source-location-adjusted-file-position function))
 
 
 ;;;; Foreshadowing of what the DREF/FULL system defines in the DREF
@@ -178,7 +179,7 @@
   references can be RESOLVEd to a unique object as is the case in
 
   ```cl-transcript (:dynenv dref-std-env)
-  (resolve (locate 'print 'function))
+  (resolve (dref 'print 'function))
   ==> #<FUNCTION PRINT>
   ```
 

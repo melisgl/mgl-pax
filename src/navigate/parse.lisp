@@ -107,7 +107,7 @@
                            ;; substring matching anyway.
                            (let ((*clhs-substring-match* clhs-substring-match))
                              (declare (special *clhs-substring-match*))
-                             (locate name 'clhs nil)))
+                             (dref name 'clhs nil)))
                    (consider name name))
                  ;; Consider NAME as a string, but adjust its case
                  ;; according to the readtable case. This handles
@@ -218,7 +218,7 @@
         (if pos
             (when (and (or junk-allowed
                            (not (find-if-not #'whitespacep string :start pos)))
-                       (locate symbol 'locative nil))
+                       (dref symbol 'locative nil))
               (values symbol pos))
             (let ((first-char-pos (position-if-not #'whitespacep string)))
               (when (and first-char-pos (char= (elt string first-char-pos) #\())
@@ -229,7 +229,7 @@
                   (multiple-value-bind (symbol found)
                       (swank::parse-symbol
                        (subseq string (1+ first-char-pos) delimiter-pos))
-                    (when (and found (locate symbol 'locative nil))
+                    (when (and found (dref symbol 'locative nil))
                       ;; The rest of the symbols in the string need not be
                       ;; already interned, so let's just READ.
                       (multiple-value-bind (locative position)

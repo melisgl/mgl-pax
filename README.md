@@ -407,8 +407,8 @@ Now let's examine the most important pieces.
     `ENTRIES` consists of docstrings and references in any order.
     Docstrings are arbitrary strings in markdown format.
     
-    References are [`XREF`][1538]s given in the form `(NAME LOCATIVE)`. For
-    example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
+    References are [`XREF`][1538]s given in the form `(NAME LOCATIVE)`.
+    For example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
     SECTION)` says that `@BAR` is a subsection of this
     one. `(BAZ (METHOD () (T T T)))` refers to the default method of the
     three argument generic function `BAZ`. `(FOO FUNCTION)` is
@@ -745,7 +745,7 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
     - A `GO` reference [`RESOLVE`][63b4]s to what `NAME` with `LOCATIVE` resolves to:
     
         ```common-lisp
-        (resolve (locate 'xxx '(go (print function))))
+        (resolve (dref 'xxx '(go (print function))))
         ==> #<FUNCTION PRINT>
         ```
     
@@ -755,8 +755,8 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
       embedded reference:
     
         ```common-lisp
-        (equal (source-location (locate 'xxx '(go (print function))))
-               (source-location (locate 'print 'function)))
+        (equal (source-location (dref 'xxx '(go (print function))))
+               (source-location (dref 'print 'function)))
         => T
         ```
 
@@ -844,7 +844,7 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
 ## 7 Navigating Sources in Emacs
 
 Integration into [SLIME][6be7]'s [`M-.`][cb15] (`slime-edit-definition`) allows
-one to visit the [`SOURCE-LOCATION`][32da] of a [definition][d930].
+one to visit the [`SOURCE-LOCATION`][32da] of a definition([`0`][d930] [`1`][7e92]).
 
 The definition is either determined from the buffer content at point
 or is prompted. If prompted, then the format is `<NAME> <LOCATIVE>`,
@@ -955,9 +955,9 @@ section containing the definition with `point` in it. See
 
 #### 8.1.1 Documentables
 
-- The `DOCUMENTABLE` argument may be a [`DREF`][d930] or anything else that is
-  [`LOCATE`][8f19]able. This includes non-`DREF` [`XREF`][1538]s and first-class objects
-  such as [`FUNCTION`][119e]s.
+- The `DOCUMENTABLE` argument may be a [`DREF`][d930] or anything else
+  that is [`LOCATE`][8f19]able. This includes non-`DREF` [`XREF`][1538]s and
+  first-class objects such as [`FUNCTION`][119e]s.
 
 - If `DOCUMENTABLE` is a string, then it is processed like a docstring
   in [`DEFSECTION`][72b4]. That is, with [docstring sanitization][7bf5], [Codification][f1ab], and linking (see
@@ -2167,12 +2167,12 @@ to allow jumping between the repository and the gh-pages site.
 
     Return a function suitable as `:SOURCE-URI-FN` of a page spec (see
     the `PAGES` argument of [`DOCUMENT`][432c]). The function looks at the source
-    location of the [`XREF`][1538] passed to it, and if the location is found, the
-    path is made relative to the toplevel directory of the git checkout
-    containing the file of the `ASDF-SYSTEM` and finally an URI pointing
-    to your git forge (such as github) is returned. A warning is
-    signalled whenever the source location lookup fails or if the source
-    location points to a directory not below the directory of
+    location of the object passed to it, and if the location is found,
+    the path is made relative to the toplevel directory of the git
+    checkout containing the file of the `ASDF-SYSTEM` and finally an URI
+    pointing to your git forge (such as github) is returned. A warning
+    is signalled whenever the source location lookup fails or if the
+    source location points to a directory not below the directory of
     `ASDF-SYSTEM`.
     
     If `GIT-FORGE-URI` is `"https://github.com/melisgl/mgl-pax/"` and
@@ -2994,12 +2994,12 @@ there are only a couple of PAX generic functions left to extend.
 
 <a id="x-28MGL-PAX-3ADOCUMENT-OBJECT-2A-20GENERIC-FUNCTION-29"></a>
 
-- [generic-function] **DOCUMENT-OBJECT\*** *DREF STREAM*
+- [generic-function] **DOCUMENT-OBJECT\*** *OBJECT STREAM*
 
-    Write `DREF` in [`*FORMAT*`][3da8] to `STREAM`.
-    Add methods specializing on a subclass of `DREF` to customize the
-    output of [`DOCUMENT`][432c]. This function is for extension only. Don't call
-    it directly.
+    Write `OBJECT` in [`*FORMAT*`][3da8] to `STREAM`.
+    Specialize this on a subclass of [`DREF`][d930] if that subclass is
+    not [`RESOLVE`][63b4]able, else on the type of object it resolves to. This
+    function is for extension only. Don't call it directly.
 
 <a id="x-28MGL-PAX-3AEXPORTABLE-REFERENCE-P-20GENERIC-FUNCTION-29"></a>
 
@@ -3231,8 +3231,8 @@ presented.
 
 - [function] **SECTION-ENTRIES** *SECTION*
 
-    A list of markdown docstrings and [`XREF`][1538]s in the order they occurred
-    in [`DEFSECTION`][72b4].
+    A list of markdown docstrings and [`XREF`][1538]s in the order they
+    occurred in [`DEFSECTION`][72b4].
 
 <a id="x-28MGL-PAX-3A-40GLOSSARY-TERMS-20MGL-PAX-3ASECTION-29"></a>
 
@@ -3381,6 +3381,7 @@ they are presented.
   [7cc3]: #x-28MGL-PAX-3A-40LINKING-TO-THE-HYPERSPEC-20MGL-PAX-3ASECTION-29 "Linking to the Hyperspec"
   [7d18]: http://c2.com/cgi/wiki?OnceAndOnlyOnce "OAOO"
   [7dc7]: #x-28MGL-PAX-3A-40DOCUMENT-RETURN-20MGL-PAX-3ASECTION-29 "Return Values"
+  [7e92]: dref/README.md#x-28DREF-3ADREF-20FUNCTION-29 "DREF:DREF FUNCTION"
   [7f1f]: #x-28MGL-PAX-3ADOCUMENT-DOCSTRING-20FUNCTION-29 "MGL-PAX:DOCUMENT-DOCSTRING FUNCTION"
   [80e8]: #x-28MGL-PAX-3AWITH-HEADING-20MGL-PAX-3AMACRO-29 "MGL-PAX:WITH-HEADING MGL-PAX:MACRO"
   [81f7]: http://www.lispworks.com/documentation/HyperSpec/Body/s_fn.htm "FUNCTION (MGL-PAX:CLHS MGL-PAX:MACRO)"

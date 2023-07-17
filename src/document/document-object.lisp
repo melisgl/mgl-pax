@@ -26,7 +26,7 @@
   - [document-object* (method () (unknown-dref t))][docstring]")
 
 (defmethod document-object* ((dref dref) stream)
-  "By default, DREFs are documented in the following format.
+  "By default, [DREF][class]s are documented in the following format.
 
   ```
   - [<locative-type>] <name> <arglist>
@@ -194,7 +194,7 @@
   (with-output-to-string (stream)
     (loop for class in superclasses
           for i upfrom 0
-          do (let ((dref (locate class 'class)))
+          do (let ((dref (dref class 'class)))
                (let ((name (prin1-to-markdown class)))
                  (unless (zerop i)
                    (format stream " "))
@@ -334,10 +334,8 @@
     (destructuring-bind (source &key (line-prefix "") header footer
                                   header-nl footer-nl) locative-args
       (multiple-value-bind (file start-loc end-loc) (include-region source)
-        (let ((start (or (source-location-file-position-offset start-loc)
-                         (source-location-file-position start-loc)))
-              (end (or (source-location-file-position-offset end-loc)
-                       (source-location-file-position end-loc))))
+        (let ((start (source-location-adjusted-file-position start-loc))
+              (end (source-location-adjusted-file-position end-loc)))
           (cond ((and start-loc (null start))
                  (warn "~S cannot find ~S ~S" 'include :start start-loc))
                 ((and end-loc (null end))

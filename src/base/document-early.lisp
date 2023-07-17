@@ -201,7 +201,7 @@
   reference][@local-references] with the DISLOCATED locative, which
   [prevents autolinking][@preventing-autolinking]."
   `(with-local-references (mapcar (lambda (name)
-                                    (make-xref name 'dislocated))
+                                    (xref name 'dislocated))
                                   (ensure-list ,names))
      ,@body))
 
@@ -266,12 +266,12 @@
                                  (uri-format-string "~A/blob/~A/~A#L~S"))
   """Return a function suitable as :SOURCE-URI-FN of a page spec (see
   the PAGES argument of DOCUMENT). The function looks at the source
-  location of the XREF passed to it, and if the location is found, the
-  path is made relative to the toplevel directory of the git checkout
-  containing the file of the ASDF-SYSTEM and finally an \URI pointing
-  to your git forge (such as github) is returned. A warning is
-  signalled whenever the source location lookup fails or if the source
-  location points to a directory not below the directory of
+  location of the object passed to it, and if the location is found,
+  the path is made relative to the toplevel directory of the git
+  checkout containing the file of the ASDF-SYSTEM and finally an \URI
+  pointing to your git forge (such as github) is returned. A warning
+  is signalled whenever the source location lookup fails or if the
+  source location points to a directory not below the directory of
   ASDF-SYSTEM.
 
   If GIT-FORGE-URI is `"https://github.com/melisgl/mgl-pax/"` and
@@ -305,10 +305,10 @@
                                              :default-version git-version)
          (if git-version
              (let ((line-file-position-cache (make-hash-table :test #'equal)))
-               (lambda (xref)
+               (lambda (object)
                  (multiple-value-bind (relative-path line-number)
                      (convert-source-location
-                      (source-location xref) git-root xref
+                      (source-location object) git-root object
                       line-file-position-cache)
                    (when relative-path
                      (format nil uri-format-string git-forge-uri git-version
@@ -358,7 +358,7 @@
         version
         nil)))
 
-(defun convert-source-location (source-location git-dir xref
+(defun convert-source-location (source-location git-dir object
                                 line-file-position-cache)
   (cond ((or
           ;; CCL
@@ -366,7 +366,7 @@
           ;; SBCL, AllegroCL
           (eq (first source-location) :error))
          (warn "~@<No source location found for ~:_~A: ~:_~A~%~@:>"
-               xref (second source-location)))
+               object (second source-location)))
         (t
          (assert (eq (first source-location) :location))
          (let* ((filename (second (assoc :file (rest source-location))))
@@ -383,7 +383,7 @@
                      (warn "~@<Source location information in file ~S ~
                             is out of date.~@:>" filename)))
                (warn "~@<Source location for ~S is not below the git toplevel ~
-                      directory ~S.~%~@:>" xref git-dir))))))
+                      directory ~S.~%~@:>" object git-dir))))))
 
 (defun file-position-to-line-number (filename file-position cache)
   (if (null file-position)

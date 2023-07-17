@@ -33,7 +33,7 @@
 (defmethod locate* ((section section))
   (make-instance 'section-dref :name (section-name section) :locative 'section))
 
-(defmethod xref-locate* (symbol (locative-type (eql 'section))
+(defmethod dref* (symbol (locative-type (eql 'section))
                                        locative-args)
   (check-locative-args section locative-args)
   (unless (and (symbolp symbol)
@@ -47,7 +47,7 @@
 
 (defun actualize-variable-to-section (dref)
   (when (eq (dref-locative-type dref) 'variable)
-    (locate (dref-name dref) 'section nil)))
+    (dref (dref-name dref) 'section nil)))
 
 (add-dref-actualizer 'actualize-variable-to-section)
 
@@ -78,7 +78,7 @@
   (make-instance 'glossary-term-dref :name (glossary-term-name glossary-term)
                  :locative 'glossary-term))
 
-(defmethod xref-locate*
+(defmethod dref*
     (symbol (locative-type (eql 'glossary-term)) locative-args)
   (check-locative-args glossary-term locative-args)
   (unless (and (symbolp symbol)
@@ -92,7 +92,7 @@
 
 (defun actualize-variable-to-glossary-term (dref)
   (when (eq (dref-locative-type dref) 'variable)
-    (locate (dref-name dref) 'glossary-term nil)))
+    (dref (dref-name dref) 'glossary-term nil)))
 
 (add-dref-actualizer 'actualize-variable-to-glossary-term)
 
@@ -122,7 +122,7 @@
   - A GO reference RESOLVEs to what NAME with LOCATIVE resolves to:
 
       ```cl-transcript (:dynenv pax-std-env)
-      (resolve (locate 'xxx '(go (print function))))
+      (resolve (dref 'xxx '(go (print function))))
       ==> #<FUNCTION PRINT>
       ```
 
@@ -132,18 +132,18 @@
     embedded reference:
 
       ```cl-transcript
-      (equal (source-location (locate 'xxx '(go (print function))))
-             (source-location (locate 'print 'function)))
+      (equal (source-location (dref 'xxx '(go (print function))))
+             (source-location (dref 'print 'function)))
       => T
       ```""")
 
 (defclass go-dref (dref)
   ((target-dref :initarg :target-dref :reader go-target-dref)))
 
-(defmethod xref-locate* (name (locative-type (eql 'go)) locative-args)
+(defmethod dref* (name (locative-type (eql 'go)) locative-args)
   (check-locative-args go locative-args)
   (destructuring-bind ((go-name go-locative)) locative-args
-    (let ((go-dref (locate go-name go-locative)))
+    (let ((go-dref (dref go-name go-locative)))
       (make-instance 'go-dref :name name
                               :locative `(go (,(dref-name go-dref)
                                               ,(dref-locative go-dref)))
@@ -154,10 +154,10 @@
   (values))
 
 (defmethod resolve* ((dref go-dref))
-  (resolve* (apply #'locate (first (dref-locative-args dref)))))
+  (resolve* (apply #'dref (first (dref-locative-args dref)))))
 
 (defmethod source-location* ((dref go-dref))
-  (source-location (apply #'locate (first (dref-locative-args dref)))))
+  (source-location (apply #'dref (first (dref-locative-args dref)))))
 
 
 ;;;; DISLOCATED locative
@@ -178,7 +178,7 @@
 
   DISLOCATED references do not RESOLVE.")
 
-(defmethod xref-locate* (symbol (locative-type (eql 'dislocated))
+(defmethod dref* (symbol (locative-type (eql 'dislocated))
                              locative-args)
   (declare (ignore symbol locative-args))
   (locate-error "~S can never be located." 'dislocated))
@@ -205,7 +205,7 @@
 
   ARGUMENT references do not RESOLVE.""")
 
-(defmethod xref-locate* (symbol (locative-type (eql 'argument))
+(defmethod dref* (symbol (locative-type (eql 'argument))
                              locative-args)
   (declare (ignore symbol locative-args))
   (locate-error "~S can never be located." 'argument))
@@ -218,7 +218,7 @@
 
   There is no way to LOCATE DOCSTRINGs, so nothing to RESOLVE either.")
 
-(defmethod xref-locate* (symbol (locative-type (eql 'docstring))
+(defmethod dref* (symbol (locative-type (eql 'docstring))
                              locative-args)
   (declare (ignore symbol locative-args))
   (locate-error "DOCSTRING can never be located."))
@@ -288,7 +288,7 @@
 
 (defclass include-dref (dref) ())
 
-(defmethod xref-locate* (name (locative-type (eql 'include)) locative-args)
+(defmethod dref* (name (locative-type (eql 'include)) locative-args)
   (check-locative-args include locative-args)
   (destructuring-bind (source &key line-prefix header footer
                                 header-nl footer-nl) locative-args
@@ -433,7 +433,7 @@
 
 (defparameter *clhs-substring-match* t)
 
-(defmethod xref-locate* (name (locative-type (eql 'clhs)) locative-args)
+(defmethod dref* (name (locative-type (eql 'clhs)) locative-args)
   (check-locative-args clhs locative-args)
   (or (let ((name-string (if (stringp name)
                              name

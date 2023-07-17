@@ -184,40 +184,40 @@
 
 (deftest test-locate/section ()
   (check-ref-sets (definitions '@test-examples)
-                  `(,(make-xref '@test-examples 'section))))
+                  `(,(xref '@test-examples 'section))))
 
 (deftest test-locate/glossary-term ()
   (check-ref-sets (definitions 'some-term)
-                  `(,(make-xref 'some-term 'glossary-term))))
+                  `(,(xref 'some-term 'glossary-term))))
 
 (deftest test-locate/go ()
-  (check-ref (locate 'xxx '(go (foo function)))
+  (check-ref (dref 'xxx '(go (foo function)))
              'xxx '(go (foo function)) 'pax::go-dref)
-  (check-ref (locate "xxx" '(go (foo function)))
+  (check-ref (dref "xxx" '(go (foo function)))
              "xxx" '(go (foo function)) 'pax::go-dref)
   (signals (locate-error)
-    (locate 'xxx '(go (undefined function))))
+    (dref 'xxx '(go (undefined function))))
   (signals (locate-error :pred "Bad arguments")
-    (locate 'xxx '(go 1 2))))
+    (dref 'xxx '(go 1 2))))
 
 (deftest test-locate/include ()
-  (check-ref (locate nil '(include #.(asdf:system-relative-pathname
+  (check-ref (dref nil '(include #.(asdf:system-relative-pathname
                                       "mgl-pax" "HACKING.md")))
              nil '(include #.(asdf:system-relative-pathname
                               "mgl-pax" "HACKING.md"))
              'pax::include-dref)
   (signals (locate-error :pred "/non-existent")
-    (locate nil '(include "/non-existent/file")))
+    (dref nil '(include "/non-existent/file")))
   (with-failure-expected ((and (alexandria:featurep '(:or :clisp))
                                'failure))
     (signals-not (locate-error)
-      (locate nil '(include (:start (*some-var* variable)))))
+      (dref nil '(include (:start (*some-var* variable)))))
     (signals-not (locate-error)
-      (locate nil '(include (:end (*some-var* variable))))))
+      (dref nil '(include (:end (*some-var* variable))))))
   (signals (locate-error :pred "UNDEFINED")
-    (locate nil '(include (:start (undefined variable)))))
+    (dref nil '(include (:start (undefined variable)))))
   (signals (locate-error :pred "UNDEFINED")
-    (locate nil '(include (:end (undefined variable))))))
+    (dref nil '(include (:end (undefined variable))))))
 
 
 ;;; Keep *NAVIGATION-TEST-CASES* plus
@@ -241,7 +241,7 @@
     (dolist (test-case *navigation-test-cases*)
       (apply #'check-source-location test-case)))
   (signals-not (error)
-    (source-location (make-xref 'function 'locative)))
+    (source-location (xref 'function 'locative)))
   (with-failure-expected ()
     (signals-not (error)
-      (source-location (make-xref 'locative 'function)))))
+      (source-location (xref 'locative 'function)))))

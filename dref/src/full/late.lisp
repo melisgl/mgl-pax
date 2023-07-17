@@ -4,15 +4,17 @@
 
 (defun/autoloaded definitions (name &key (locative-types (lisp-locative-types)))
   """Return all definitions of NAME that match LOCATIVE-TYPES
-  as a list of DREFs.
+  as a list of [DREF][class]s.
 
-  The DREF-NAMEs may not be the same as NAME (for example, when NAME
-  is a package nickname).
+  The DREF-NAMEs may not be the same as NAME, for example, when NAME
+  is a package nickname:
 
   ```cl-transcript
   (definitions 'pax)
   ==> (#<DREF "MGL-PAX" PACKAGE>)
-  ```"""
+  ```
+
+  Can be extended via MAP-DEFINITIONS."""
   (delete-duplicates
    (let ((drefs ())
          (swank-locative-types ()))
@@ -27,10 +29,10 @@
 
 (defun/autoloaded dref-apropos (name &key package external-only case-sensitive
                                      (locative-types '(:lisp)))
-  """Return a list of DREFs corresponding to existing definitions that
-  match the various arguments. First, `(DREF-APROPOS NIL
-  :LOCATIVE-TYPES NIL)` lists all definitions in the system. Arguments
-  with non-NIL values filter the list of definitions.
+  """Return a list of [DREF][class]s corresponding to existing
+  definitions that match the various arguments. First, `(DREF-APROPOS
+  NIL :LOCATIVE-TYPES NIL)` lists all definitions in the system.
+  Arguments with non-NIL values filter the list of definitions.
 
   Roughly speaking, when NAME or PACKAGE is a SYMBOL, they must match
   the whole @NAME of the definition:
@@ -84,7 +86,7 @@
 
   - If NAME is a SYMBOL, then its SYMBOL-NAME must _match_ `P`.
 
-  - If NAME is a STRING, then must be a _substring_ of `P`.
+  - If NAME is a STRING, then it must be a _substring_ of `P`.
 
   - If PACKAGE is :NONE, then `C` must _not_ be a SYMBOL.
 
@@ -94,20 +96,22 @@
     SYMBOL-PACKAGE of `C`.
 
   - If PACKAGE is a SYMBOL other than :NONE, then its SYMBOL-NAME must
-    _match_ the PACKAGE-NAME or a PACKAGE-NICKNAME of SYMBOL-PACKAGE
-    of `C`.
+    _match_ the PACKAGE-NAME or one of the PACKAGE-NICKNAMES of
+    SYMBOL-PACKAGE of `C`.
 
   - If PACKAGE is a STRING, then it must be a _substring_ of the
     PACKAGE-NAME of SYMBOL-PACKAGE of `C`.
 
-  - If EXTERNAL-ONLY and `C` is a symbol, then `C` must be external to
-    in a matching package.
+  - If EXTERNAL-ONLY and `C` is a symbol, then `C` must be external in
+    a matching package.
 
   - If LOCATIVE-TYPES is NIL, then it matches everything.
 
   - If LOCATIVE-TYPEs is non-NIL, then the LOCATIVE-TYPE of the
     candidate definition must be in it (handling :ALL,
-    :LISP, and :PSEUDO as described above)."""
+    :LISP, and :PSEUDO as described above).
+
+  Can be extended via MAP-NAMES."""
   (let ((locative-types (expand-apropos-locative-types locative-types))
         (char-test (if case-sensitive #'char= #'char-equal))
         (string-test (if case-sensitive #'string= #'string-equal))
@@ -121,6 +125,7 @@
                         (and (stringp name)
                              (search name (princ-to-string name-1)
                                      :test char-test)))
+                    ;; FIXME: Support :ANY.
                     (if (eq package :none)
                         (not (symbolp name-1))
                         (not (and (stringp name-1) package)))))

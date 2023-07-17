@@ -76,7 +76,7 @@
           (read-reference-from-string path)
         (when foundp
           (swank::with-connection ((swank::default-connection))
-            (let* ((dref (locate object locative))
+            (let* ((dref (dref object locative))
                    (dspec (dref::definition-to-dspec dref))
                    (location (source-location dref)))
               (when (eq (first location) :location)

@@ -19,7 +19,7 @@
 
 (deftest test-locate-autoload ()
   (is (not (dref-full-loaded-p)))
-  (is (eq (resolve (locate 'locate 'function)) (symbol-function 'locate)))
+  (is (eq (resolve (dref 'locate 'function)) (symbol-function 'locate)))
   (is (dref-full-loaded-p)))
 
 (deftest test-resolve-autoload ()
@@ -60,4 +60,4 @@
 ;;; source-location-buffer
 ;;; source-location-buffer-position
 ;;; source-location-snippet
-;;; source-location-file-position-offset
+;;; source-location-adjusted-file-position

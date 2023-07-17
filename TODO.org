@@ -85,17 +85,37 @@ Package apropos could take advantage?
 * MAYBE support setf docstring?
 * MAYBE better SOURCE addressing for INCLUDE
 * MAYBE live browsing: reload page automatically on redefinition
-* compare DREF to the DEFINITIONS library
-Cons of DEFINITIONS:
-- Assumes that designators are SYMBOLs or (SETF <SYMBOL>).
-- Shadows cl:symbol, cl:package, cl:class, ... (can't be :USEd without
-  hassle?)
-- Has no equivalent to LOCATEing a single definition ((LOCATE 'XXX
-  'VARIABLE))?
-- only 3 lisps are supported
-- no tests
-- very little documentation
+* compare DRef to the Definitions library
+Pros of DRef:
+- Supports string names (called designators in Definitions). PAX needs
+  to distuinguish those from symbol-based ones.
+- Operations such as ARGLIST (~ DEFINITIONS:ARGUMENTS) can be
+  specialized on normal objects for RESOLVEable definitions. In
+  Definitions, operations are always specialized on a DEFINITION
+  subclass, which can result in unnecessary duplication of the
+  hierarchy.
+- (LOCATE #'PRINT) is fast, the equivalent DEFINITIONS:WHO-DEFINES is
+  very slow. DRef uses this to allow specialization of ARGLIST on
+  either object or definition type.
+- Can LOCATE a single unresolvable definition (e.g. (DREF 'XXX
+  'VARIABLE)). Definitions only has WHO-DEFINES, which needs the
+  OBJECT of the definition. Needed by PAX.
+- DRef supports Swank buffer source locations when running under
+  Slime. Needed by PAX.
+- DRef has XREFs, which do not need even the locative type to be
+  defined when they are created. Needed by PAX.
+- DREF-APROPOS more flexible. Needed by PAX.
+- The DRef packages can be :USEd without conflicts with CL.
+  Definitions shadows CL:SYMBOL, CL:PACKAGE, CL:CLASS, etc.
+- DRef supports only 7 Lisps, Definitions 3.
+- DRef has an extensive test suite. Definitions has no tests.
+- DRef has extensive documentation.
 
-Pros of DEFINITIONs:
-- BIND, (SETF OBJECT), UNBIND, (SETF DOCUMENTATION).
+Pros of Definitions:
+- Definitions has BIND, (SETF OBJECT), UNBIND, (SETF DOCUMENTATION).
+  These can be added to DRef if needed.
 * BUG transcript: "debugger invoked on" is treated like output
+* MAYBE DREF-APROPOS: allow :LOCATIVE-TYPES match subclasses?
+This may need to know that FUNCTION-DREF belongs to FUNCTION. Move
+DEFCLASS FUNCTION-DREF into DEFINE-LOCATIVE-TYPE and
+DEFINE-PSEUDO-LOCATIVE-TYPE?

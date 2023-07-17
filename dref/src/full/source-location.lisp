@@ -28,7 +28,7 @@
 (defun/autoloaded source-location-file (location)
   "Return the name of the file of the [defining form][clhs].
   This may be NIL, for example, if LOCATION is of a [defining
-  form][clhs] that was evaluated or it was compiled in the
+  form][clhs] that was entered at the REPL, or compiled in the
   `*slime-scratch*` buffer."
   (let ((file-entry (find :file (rest location) :key #'first))
         (buffer-and-file-entry (find :buffer-and-file (rest location)
@@ -45,8 +45,8 @@
         pos)))
 
 (defun/autoloaded source-location-buffer (location)
-  "Return the name of Emacs buffer of the [defining form][clhs] or NIL
-  if there is no such Emacs buffer."
+  "Return the name of the Emacs buffer of the [defining form][clhs] or
+  NIL if there is no such Emacs buffer."
   (let ((buffer-entry (find :buffer (rest location) :key #'first))
         (buffer-and-file-entry (find :buffer-and-file (rest location)
                                      :key #'first)))
@@ -65,17 +65,21 @@
            (+ (second offset-entry) (third offset-entry))))))
 
 (defun/autoloaded source-location-snippet (location)
-  "Return the [defining form][clhs] as a string or NIL if it's not available."
+  "Return the [defining form][clhs] or a prefix of it as a string or NIL
+  if it's not available."
   (and (eq (first location) :location)
        (getf (fourth location) :snippet)))
 
-(defun/autoloaded source-location-file-position-offset (location)
-  "Return the actual file position LOCATION points to.
-  This is different from SOURCE-LOCATION-FILE-POSITION, which is a raw
-  accessor, in that it adjusts the position by searching for the
-  nearest occurrence of SOURCE-LOCATION-SNIPPET. If
-  SOURCE-LOCATION-FILE is NIL or the snippet doesn't match, NIL is
-  returned.
+(defun/autoloaded source-location-adjusted-file-position (location)
+  "Return the actual file position LOCATION points to allowing for 
+  some deviation from the raw SOURCE-LOCATION-FILE-POSITION, which is
+  adjusted by searching for the nearest occurrence of
+  SOURCE-LOCATION-SNIPPET in the file. Needless to say, this can be a
+  very expensive operation.
+
+  If SOURCE-LOCATION-FILE is NIL, NIL is returned. If there is no
+  snippet, or it doesn't match, then SOURCE-LOCATION-FILE-POSITION (or
+  0 if that's NIL) is returned.
 
   This is a non-interactive companion to the Elisp function
   `slime-location-offset`, supporting only file positions and
@@ -83,17 +87,21 @@
   (let ((file (source-location-file location))
         (pos (or (source-location-file-position location) 0))
         (snippet (source-location-snippet location)))
-    (when (and file snippet)
-      (let* ((string (slurp-file file))
-             ;; Unlike `slime-isearch', we only do full matches.
-             (pos-before (search snippet string :end2 pos :from-end t))
-             (pos-after (search snippet string :start2 pos :from-end t)))
-        (or (and pos-before pos-after
-                 (if (< (- pos pos-before)
-                        (- pos-after pos))
-                     pos-before
-                     pos-after))
-            pos-before pos-after)))))
+    (when file
+      (or (and snippet
+               (let* ((string (slurp-file file))
+                      ;; Unlike `slime-isearch', we only do full matches.
+                      (pos-before (search snippet string
+                                          :end2 pos :from-end t))
+                      (pos-after (search snippet string
+                                         :start2 pos :from-end t)))
+                 (or (and pos-before pos-after
+                          (if (< (- pos pos-before)
+                                 (- pos-after pos))
+                              pos-before
+                              pos-after))
+                     pos-before pos-after)))
+          pos))))
 
 (defparameter *utf-8-external-format*
   #+abcl :utf-8

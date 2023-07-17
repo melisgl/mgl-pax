@@ -247,7 +247,7 @@
       (read-reference-from-string fragment)
     (urlencode
      (if foundp
-         (dref-to-anchor (locate object locative))
+         (dref-to-anchor (dref object locative))
          fragment))))
 
 
@@ -308,7 +308,8 @@
   (multiple-value-bind (object locative foundp locative-junk)
       (read-reference-from-string path)
     (cond (foundp
-           (document-for-emacs/reference (locate object locative) filename))
+           (document-for-emacs/reference (dref object locative)
+                                         filename))
           (locative-junk
            (error "Unknown locative ~S." locative-junk))
           (t
@@ -508,7 +509,7 @@
 
 (defun entry-point-sections (sections)
   (loop for section in sections
-        for ref = (make-xref (section-name section) 'section)
+        for ref = (xref (section-name section) 'section)
         unless (sections-that-contain sections ref)
           collect ref))
 
@@ -556,7 +557,7 @@
               (read-reference-from-string path)
             (unless foundp
               (error "Could not parse ~S as a reference." path))
-            (when-let (dref (locate object locative nil))
+            (when-let (dref (dref object locative nil))
               (let ((location (source-location dref)))
                 (when (eq (first location) :location)
                   ;; List of one Swank dspec and location.
@@ -644,7 +645,7 @@
                                                      locative-types))))
             `((progv '(*document-max-table-of-contents-level*) '(-1))
               ,@(when %packagep
-                  (documentable-for-reference (make-xref package 'package)))
+                  (documentable-for-reference (xref package 'package)))
               ((progv '(*document-do-not-follow-references*)
                    ;; SECTIONs contain other sections and other
                    ;; references. Never document them in apropos to

@@ -38,7 +38,7 @@
   (let ((locative (read-locative-from-noisy-string locative-string)))
     (when locative
       (loop for object in (parse-word-preferring-uppercase word)
-              thereis (ensure-list (locate object locative nil))))))
+              thereis (ensure-list (dref object locative nil))))))
 
 (defun definitions-of-word (word)
   (loop for object in (parse-word-preferring-uppercase word)

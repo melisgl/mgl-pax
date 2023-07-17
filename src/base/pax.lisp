@@ -17,8 +17,8 @@
 
 
 (defun section-entries (section)
-  "A list of markdown docstrings and XREFs in the order they occurred
-  in DEFSECTION."
+  "A list of markdown docstrings and [XREF][class]s in the order they
+  occurred in DEFSECTION."
   (let ((%entries (slot-value section '%entries)))
     (if (eq (first %entries) '%to-xref)
         (setf (slot-value section '%entries)
@@ -29,7 +29,7 @@
   (if (listp entry)
       ;; CHECK-SECTION-ENTRIES made sure this will work.
       (destructuring-bind (name locative) entry
-        (make-xref name locative))
+        (xref name locative))
       entry))
 
 (defun section-link-title-to (section)
@@ -38,7 +38,7 @@
       (if (listp link-title-to)
           ;; CHECK-LINK-TITLE-TO made sure this will work.
           (destructuring-bind (name locative) link-title-to
-            (make-xref name locative))
+            (xref name locative))
           link-title-to))))
 
 

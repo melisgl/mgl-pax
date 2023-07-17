@@ -111,7 +111,7 @@
                        ;; PAX:SECTIONs (actualized from VARIABLEs) can
                        ;; find their source location.
                        for dref = (ignore-errors
-                                   (locate* (make-xref name locative)))
+                                   (locate* (xref name locative)))
                        when dref
                          collect (definition-to-dspec dref)))
          (dspec-and-location-list
@@ -389,7 +389,7 @@
                        (when (subtypep name 'condition)
                          (setq locative-type* 'condition)))
                      (return-from lazy-wasteful-parsing
-                       (locate name locative-type*))))))))
+                       (dref name locative-type*))))))))
 
 ;;; METHOD-DSPEC-TO-DEFINITION is the inverse of SWANK-METHOD-DSPEC and
 ;;; SWANK-ACCESSOR-DSPEC.
@@ -400,7 +400,7 @@
         (parse-dspec-method-qualifiers-and-specializers (nthcdr 2 dspec))
       (let ((name (second dspec))
             (locative `(method ,qualifiers ,specializers)))
-        (locate name locative)))))
+        (dref name locative)))))
 
 ;;; (:AFTER (EQL 5) CLASS-NAME) => (:AFTER) ((EQL 5) CLASS-NAME)
 ;;;
@@ -437,7 +437,7 @@
                  (<= 3 (length dspec)))
         (multiple-value-bind (qualifiers specializers)
             (parse-dspec-method-qualifiers-and-specializers (nthcdr 2 dspec))
-          (locate name `(method ,qualifiers ,specializers)))))))
+          (dref name `(method ,qualifiers ,specializers)))))))
 
 #+ccl
 (defun method-dspec-to-definition (dspec)
@@ -445,14 +445,15 @@
          (multiple-value-bind (qualifiers specializers)
              (parse-dspec-method-qualifiers-and-specializers (nthcdr 2 dspec))
            (when (= (length specializers) 1)
-             (locate (second dspec)
-                     `(method ,qualifiers ,(objects-to-specializers
-                                            specializers))))))
+             (dref (second dspec)
+                          `(method ,qualifiers ,(objects-to-specializers
+                                                 specializers))))))
         ((eq (first dspec) 'ccl::reader-method)
          ;; E.g. (CCL::READER-METHOD (:METHOD FOO (#<STANDARD-CLASS CCC>)))
          (destructuring-bind (method-keyword method-name classes) (second dspec)
            (when (eq method-keyword :method)
-             (locate method-name `(reader ,@(mapcar #'class-name classes))))))
+             (dref method-name
+                          `(reader ,@(mapcar #'class-name classes))))))
         ((eq (first dspec) 'ccl::writer-method)
          ;; E.g. (CCL::WRITER-METHOD (:METHOD FOO (#<BUILT-IN-CLASS T>
          ;; #<STANDARD-CLASS CCC>)))
@@ -460,4 +461,4 @@
            (when (and (eq method-keyword :method)
                       (= (length classes) 2))
              (let ((specializers (mapcar #'class-name classes)))
-               (locate method-name `(writer ,(second specializers)))))))))
+               (dref method-name `(writer ,(second specializers)))))))))

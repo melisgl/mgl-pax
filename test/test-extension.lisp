@@ -39,7 +39,7 @@
 (deftest test-document-autoload ()
   (is (not (document-system-loaded-p)))
   (signals-not (error)
-    (document (dref:locate 'aaa1 'aaa)))
+    (document (dref:dref 'aaa1 'aaa)))
   (is (document-system-loaded-p)))
 
 (deftest test-document-for-emacs-autoload ()

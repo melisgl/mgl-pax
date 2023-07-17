@@ -323,8 +323,8 @@ Now let's examine the most important pieces.
     ENTRIES consists of docstrings and references in any order.
     Docstrings are arbitrary strings in markdown format.
     
-    References are XREFs given in the form `(NAME LOCATIVE)`. For
-    example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
+    References are XREFs given in the form `(NAME LOCATIVE)`.
+    For example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
     SECTION)` says that `@BAR` is a subsection of this
     one. `(BAZ (METHOD () (T T T)))` refers to the default method of the
     three argument generic function `BAZ`. `(FOO FUNCTION)` is
@@ -633,7 +633,7 @@ To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
     - A GO reference RESOLVEs to what NAME with LOCATIVE resolves to:
     
         ```common-lisp
-        (resolve (locate 'xxx '(go (print function))))
+        (resolve (dref 'xxx '(go (print function))))
         ==> #<FUNCTION PRINT>
         ```
     
@@ -643,8 +643,8 @@ To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
       embedded reference:
     
         ```common-lisp
-        (equal (source-location (locate 'xxx '(go (print function))))
-               (source-location (locate 'print 'function)))
+        (equal (source-location (dref 'xxx '(go (print function))))
+               (source-location (dref 'print 'function)))
         => T
         ```
 
@@ -829,9 +829,9 @@ section containing the definition with `point` in it. See
 
 #### Documentables
 
-- The DOCUMENTABLE argument may be a DREF or anything else that is
-  LOCATEable. This includes non-DREF XREFs and first-class objects
-  such as FUNCTIONs.
+- The DOCUMENTABLE argument may be a DREF or anything else
+  that is LOCATEable. This includes non-DREF XREFs and
+  first-class objects such as FUNCTIONs.
 
 - If DOCUMENTABLE is a string, then it is processed like a docstring
   in DEFSECTION. That is, with docstring sanitization, @CODIFICATION, and linking (see
@@ -1919,12 +1919,12 @@ to allow jumping between the repository and the gh-pages site.
 
     Return a function suitable as :SOURCE-URI-FN of a page spec (see
     the PAGES argument of DOCUMENT). The function looks at the source
-    location of the XREF passed to it, and if the location is found, the
-    path is made relative to the toplevel directory of the git checkout
-    containing the file of the ASDF-SYSTEM and finally an URI pointing
-    to your git forge (such as github) is returned. A warning is
-    signalled whenever the source location lookup fails or if the source
-    location points to a directory not below the directory of
+    location of the object passed to it, and if the location is found,
+    the path is made relative to the toplevel directory of the git
+    checkout containing the file of the ASDF-SYSTEM and finally an URI
+    pointing to your git forge (such as github) is returned. A warning
+    is signalled whenever the source location lookup fails or if the
+    source location points to a directory not below the directory of
     ASDF-SYSTEM.
     
     If GIT-FORGE-URI is `"https://github.com/melisgl/mgl-pax/"` and
@@ -2692,12 +2692,12 @@ package for evaluation.
 Once everything in DREF-EXT::@ADDING-NEW-LOCATIVES has been done,
 there are only a couple of PAX generic functions left to extend.
 
-- [generic-function] DOCUMENT-OBJECT* DREF STREAM
+- [generic-function] DOCUMENT-OBJECT* OBJECT STREAM
 
-    Write DREF in *FORMAT* to STREAM.
-    Add methods specializing on a subclass of DREF to customize the
-    output of DOCUMENT. This function is for extension only. Don't call
-    it directly.
+    Write OBJECT in *FORMAT* to STREAM.
+    Specialize this on a subclass of DREF if that subclass is
+    not RESOLVEable, else on the type of object it resolves to. This
+    function is for extension only. Don't call it directly.
 
 - [generic-function] EXPORTABLE-REFERENCE-P PACKAGE SYMBOL LOCATIVE-TYPE LOCATIVE-ARGS
 
@@ -2891,8 +2891,8 @@ presented.
 
 - [function] SECTION-ENTRIES SECTION
 
-    A list of markdown docstrings and XREFs in the order they occurred
-    in DEFSECTION.
+    A list of markdown docstrings and XREFs in the order they
+    occurred in DEFSECTION.
 
 ### Glossary Terms
 

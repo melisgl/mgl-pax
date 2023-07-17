@@ -24,8 +24,8 @@
   ENTRIES consists of docstrings and references in any order.
   Docstrings are arbitrary strings in markdown format.
 
-  References are XREFs given in the form `(NAME LOCATIVE)`. For
-  example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
+  References are [XREF][class]s given in the form `(NAME LOCATIVE)`.
+  For example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
   SECTION)` says that `@BAR` is a subsection of this
   one. `(BAZ (METHOD () (T T T)))` refers to the default method of the
   three argument generic function `BAZ`. `(FOO FUNCTION)` is

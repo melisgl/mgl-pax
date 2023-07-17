@@ -24,13 +24,13 @@
 ;;; is loaded.
 (autoload ensure-navigate-loaded '#:mgl-pax/navigate)
 
-(defgeneric document-object* (dref stream)
-  (:documentation "Write DREF in *FORMAT* to STREAM.
-  Add methods specializing on a subclass of DREF to customize the
-  output of DOCUMENT. This function is for extension only. Don't call
-  it directly.")
+(defgeneric document-object* (object stream)
+  (:documentation "Write OBJECT in *FORMAT* to STREAM.
+  Specialize this on a subclass of [DREF][class] if that subclass is
+  not RESOLVEable, else on the type of object it resolves to. This
+  function is for extension only. Don't call it directly.")
   (:method (object stream)
-    (let ((dref (locate object nil nil)))
+    (let ((dref (locate object nil)))
       (when dref
         (document-object* dref stream)))))
 

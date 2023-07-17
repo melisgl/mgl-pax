@@ -47,16 +47,15 @@
   (loop for entry in (section-entries section)
         ;; It doesn't make sense to talk about containing an INCLUDE,
         ;; and it is also a huge performance bottleneck as it accesses
-        ;; files. See XREF-LOCATE* (method () (t (eql include) t)).
+        ;; files. See DREF* (method () (t (eql include) t)).
         when (and (typep entry 'xref)
                   (not (eq (xref-locative-type entry) 'include)))
-          collect (or (locate entry nil nil)
+          collect (or (locate entry nil)
                       entry)))
 
 (defun sections-that-contain (sections ref)
   (unless (eq (xref-locative-type ref) 'include)
-    (let ((ref (or (locate ref nil nil)
-                   ref)))
+    (let ((ref (or (locate ref nil) ref)))
       (remove-if-not (lambda (section)
                        (loop for definition in (section-definitions section)
                                thereis (xref= ref definition)))
@@ -70,7 +69,7 @@
       (find-parent-sections-1 object)))
 
 (defun find-parent-sections-1 (object)
-  (let ((dref (locate object nil nil)))
+  (let ((dref (locate object nil)))
     (when dref
       (let ((sections (sections-that-contain (list-all-sections) dref)))
         (sort-by-proximity sections (dref-name dref))))))

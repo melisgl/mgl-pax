@@ -549,8 +549,8 @@
 
 (defun clhs-documentations (name)
   (let ((*clhs-substring-match* nil))
-    (ensure-list (or (locate name '(clhs glossary-term) nil)
-                     (locate name '(clhs section) nil)))))
+    (ensure-list (or (dref name '(clhs glossary-term) nil)
+                     (dref name '(clhs section) nil)))))
 
 (defun make-clhs-alias-link (link)
   (let* ((dref (link-definition link))
@@ -559,7 +559,7 @@
          (locative-args (locative-args locative)))
     (assert (eq (locative-type locative) 'clhs))
     (when locative-args
-      (make-link :definition (or (locate name locative-args nil)
+      (make-link :definition (or (dref name locative-args nil)
                                  ;; There is no live definition. Fake a
                                  ;; DREF because pretty much everything
                                  ;; else is a DREF.
@@ -609,7 +609,7 @@
           (glossary-term-external-links name)))
 
 (defun glossary-term-external-links (name)
-  (when-let (dref (locate name 'glossary-term nil))
+  (when-let (dref (dref name 'glossary-term nil))
     (when-let (url (glossary-term-url (resolve dref)))
       (list (make-link :definition dref :page url)))))
 
@@ -624,9 +624,9 @@
 
 
 (defsection @documentables (:title "Documentables")
- "- The DOCUMENTABLE argument may be a DREF or anything else that is
-    LOCATEable. This includes non-DREF XREFs and first-class objects
-    such as [FUNCTION][class]s.
+ "- The DOCUMENTABLE argument may be a [DREF][class] or anything else
+    that is LOCATEable. This includes non-DREF [XREF][class]s and
+    first-class objects such as [FUNCTION][class]s.
 
   - If DOCUMENTABLE is a string, then it is processed like a docstring
     in DEFSECTION. That is, with [docstring sanitization]
@@ -1003,7 +1003,7 @@
 (defun page-spec-objects-to-definitions (objects)
   (loop for object in (ensure-list objects)
         for dref = (and (not (stringp object))
-                        (locate object nil nil))
+                        (locate object nil))
         when dref
           collect dref))
 
@@ -1045,7 +1045,7 @@
                  (boundp '*section*))))
       (if warn-if-undefined
           (multiple-value-bind (dref error)
-              (locate xref nil (not warn-if-undefined))
+              (locate xref (not warn-if-undefined))
             (if dref
                 (document-object dref stream)
                 (when *first-pass*
@@ -1449,7 +1449,7 @@
         (multiple-value-bind (name locative foundp)
             (read-reference-from-string (parse-tree-to-text label))
           (when foundp
-            (if-let (dref (locate name locative nil))
+            (if-let (dref (dref name locative nil))
               (when-let (docstring (docstring dref))
                 (values (or (parse-markdown (sanitize-docstring docstring))
                             '(""))
@@ -1875,14 +1875,14 @@
   (if (member (locative-type locative) '(dislocated argument))
       ;; Handle an explicit [FOO][dislocated] in markdown. This is
       ;; always LINKABLE-REF-P.
-      (list (make-xref name 'dislocated))
-      (if-let (dref (locate name locative nil))
+      (list (xref name 'dislocated))
+      (if-let (dref (dref name locative nil))
         ;; Prefer the live definition.
         (when-let (link (find-link (replace-go-target dref)))
           (when (linkablep link)
             (list (link-definition link))))
         ;; Fall back on an external one.
-        (let ((xref (replace-xref-go-target (make-xref name locative))))
+        (let ((xref (replace-xref-go-target (xref name locative))))
           (when-let (link (find-external-link xref))
             (when (linkablep link)
               (list (link-definition link))))))))
@@ -1893,7 +1893,7 @@
            (ignore-errors
             (destructuring-bind (go-name go-locative)
                 (first (xref-locative-args xref))
-              (make-xref go-name go-locative))))
+              (xref go-name go-locative))))
       xref))
 
 (defsection @unspecified-locative (:title "Unspecified Locative")
@@ -2129,7 +2129,7 @@
         (interesting-name nil))
     (flet ((good-parse-p (xref-name name)
              (cond ((external-locative-p locative)
-                    (let ((reference (locate xref-name locative nil)))
+                    (let ((reference (dref xref-name locative nil)))
                       (when reference
                         (xref-name reference))))
                    ((has-reference-p xref-name)
