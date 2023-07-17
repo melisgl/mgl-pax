@@ -694,7 +694,7 @@
                     (setq file-position file-position-1))))
             (transcription-error (e)
               (apply #'transcription-error
-                     stream file-position
+                     file-position
                      (second (first (first transcript)))
                      (transcription-error-message e)
                      (transcription-error-message-args e)))))
@@ -1096,12 +1096,7 @@
 ;;;; Conditions
 
 (define-condition transcription-error (error)
-  (;; This is usually the source stream object on which TRANSCRIBE
-   ;; failed, but it can also be a REFERENCE object if transcription
-   ;; was invoked by DOCUMENT to check the consistency of a
-   ;; transcript.
-   (on :initarg :on :reader transcription-error-on)
-   ;; The file position at which the error was encountered or NIL if
+  (;; The file position at which the error was encountered or NIL if
    ;; unknown.
    (file-position
     :initarg :file-position
@@ -1122,40 +1117,29 @@
   of TRANSCRIBE and also serves as the superclass of
   TRANSCRIPTION-CONSISTENCY-ERROR.")
   (:report (lambda (condition stream)
-             (let ((on (transcription-error-on condition)))
-               (format stream
-                       "~@<Transcription error~@[ while documenting ~:_~A~]~
-                       ~@[ ~:_at position ~A~].~
+             (format stream
+                     "~@<Transcription error~@[ ~:_at position ~A~]:~
                        ~:_ ~?~%~
                        Form: ~:_~S~:@>"
-                       (if (typep on 'xref)
-                           ;; Allow M-. to work in the Slime debugger.
-                           (print-reference-with-package on)
-                           ;; Don't print the stream, since it's
-                           ;; likely to be constructed by
-                           ;; WITH-INPUT-STREAM which is meaningless
-                           ;; for the user.
-                           nil)
-                       (transcription-error-file-position condition)
-                       (transcription-error-message condition)
-                       (transcription-error-message-args condition)
-                       (transcription-error-form-as-string condition))))))
+                     (transcription-error-file-position condition)
+                     (transcription-error-message condition)
+                     (transcription-error-message-args condition)
+                     (transcription-error-form-as-string condition)))))
 
 (defun print-reference-with-package (reference)
   (let ((*package* (find-package :keyword)))
     (format nil "~S" reference)))
 
-(defun transcription-error (stream file-position form-as-string
+(defun transcription-error (file-position form-as-string
                             message &rest message-args)
   (error 'transcription-error
-         :on (or *documenting-reference* stream)
-         :file-position (if *documenting-reference* nil file-position)
+         :file-position file-position
          :form-as-string form-as-string
          :message message
          :message-args message-args))
 
 (defun transcription-error* (message &rest message-args)
-  (apply #'transcription-error nil nil nil message message-args))
+  (apply #'transcription-error nil nil message message-args))
 
 (define-condition transcription-consistency-error (transcription-error)
   ()
@@ -1180,12 +1164,7 @@
 (defun consistency-error (class stream form-as-string
                           message &rest message-args)
   (cerror "Continue." class
-          :on (or *documenting-reference* stream)
-          :file-position (cond (*documenting-reference*
-                                nil)
-                               (stream
-                                (file-position stream))
-                               (t nil))
+          :file-position (and stream (file-position stream))
           :form-as-string form-as-string
           :message message
           :message-args message-args))

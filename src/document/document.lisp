@@ -639,6 +639,68 @@
 
 (defvar *document-tight* nil)
 
+(defvar *objects-being-documented* ())
+
+;;; Stuff a description of *OBJECTS-BEING-DOCUMENTED* into known
+;;; conditions.
+(defmacro with-document-context (&body body)
+  `(handler-bind ((locate-error
+                    (lambda (e)
+                      ;; On CMUCL, SLOT-VALUE doesn't seem to work on
+                      ;; conditions.
+                      #-cmucl
+                      (destructuring-bind (format-control &rest format-args)
+                          (dref::locate-error-message e)
+                        (setf (slot-value e 'dref::message)
+                              (cons (concatenate
+                                     'string
+                                     format-control
+                                     (escape-format-control
+                                      (print-document-context nil)))
+                                    format-args)))))
+                  (transcription-error
+                    (lambda (e)
+                      #-cmucl
+                      (setf (slot-value e 'message)
+                            (concatenate 'string (transcription-error-message e)
+                                         (escape-format-control
+                                          (print-document-context nil))))))
+                  (simple-error
+                    (lambda (e)
+                      (apply #'error
+                             (concatenate 'string
+                                          (simple-condition-format-control e)
+                                          (escape-format-control
+                                           (print-document-context nil)))
+                             (simple-condition-format-arguments e))))
+                  (simple-warning
+                    (lambda (w)
+                      (apply #'warn
+                             (concatenate 'string
+                                          (simple-condition-format-control w)
+                                          (escape-format-control
+                                           (print-document-context nil)))
+                             (simple-condition-format-arguments w))
+                      (muffle-warning w))))
+     ,@body))
+
+(defun print-document-context (stream)
+  (let ((*package* (find-package :keyword))
+        (context (loop for object in *objects-being-documented*
+                       when (typep object 'dref)
+                         collect (list (dref-name object)
+                                       (dref-locative object)))))
+    (if context
+        (format stream "~%  [While documenting ~{~S~^~%   in ~}]~%" context)
+        (format stream ""))))
+
+(defun escape-format-control (string)
+  (with-output-to-string (out)
+    (loop for char across string
+          do (when (char= char #\~)
+               (write-char #\~ out))
+             (write-char char out))))
+
 ;;; Basically, call DOCUMENT-OBJECT on every element of DOCUMENTABLE
 ;;; (see MAP-DOCUMENTABLE) and add extra newlines between them
 ;;; according to *DOCUMENT-TIGHT*.
@@ -647,19 +709,20 @@
   ;; which is currently fine because *DOCUMENT-TIGHT* is not public,
   ;; and it's used only for @BROWSING-LIVE-DOCUMENTATION, which works
   ;; with single pages.
-  (let ((firstp t)
-        (add-blank-p nil))
-    (map-documentable
-     (lambda (object1)
-       (when (or add-blank-p
-                 (and (not firstp)
-                      (not *document-tight*)))
-         (terpri stream))
-       (setq firstp nil)
-       (with-heading-offset (object1)
-         (document-object object1 stream))
-       (setq add-blank-p (not *document-tight*)))
-     documentable)))
+  (with-document-context
+    (let ((firstp t)
+          (add-blank-p nil))
+      (map-documentable
+       (lambda (object1)
+         (when (or add-blank-p
+                   (and (not firstp)
+                        (not *document-tight*)))
+           (terpri stream))
+         (setq firstp nil)
+         (with-heading-offset (object1)
+           (document-object object1 stream))
+         (setq add-blank-p (not *document-tight*)))
+       documentable))))
 
 (defmacro with-documentable-bindings ((documentable) &body body)
   (assert (symbolp documentable))
@@ -948,19 +1011,6 @@
 ;;;; DOCUMENT-OBJECT
 
 (defvar *document-do-not-follow-references* nil)
-(defvar *objects-being-documented* ())
-
-(defmacro with-locate-error-context ((xref) &body body)
-  `(handler-bind ((locate-error
-                    (lambda (e)
-                      (error 'locate-error
-                             :object (dref::locate-error-object e)
-                             :message
-                             (let ((*package* (find-package :keyword)))
-                               (format nil "~A~%  while documenting ~S"
-                                       (dref::locate-error-message e)
-                                       ,xref))))))
-     ,@body))
 
 (defgeneric document-object (object stream)
   (:method :around (object stream)
@@ -999,12 +1049,8 @@
             (if dref
                 (document-object dref stream)
                 (when *first-pass*
-                  (let ((*package* (find-package :keyword)))
-                    (warn "~@<Not documenting undefined ~S~@[ in ~S~]: ~A~:@>"
-                          xref (second *objects-being-documented*)
-                          error)))))
-          (with-locate-error-context (xref)
-            (document-object (locate xref) stream)))))
+                  (warn "Not documenting ~S: ~A" xref error))))
+          (document-object (locate xref) stream))))
   (:method ((dref dref) stream)
     (handler-bind
         ((warning (lambda (warning)
@@ -1397,11 +1443,9 @@
   (declare (ignore parent))
   (assert (parse-tree-p tree :reference-link))
   (let ((label (pt-get tree :label))
-        (definition (pt-get tree :definition)))
+        (definition (parse-tree-to-text (pt-get tree :definition) :deemph t)))
     (nth-value-or 0
-      (when (eq (read-locative-from-noisy-string (parse-tree-to-text definition
-                                                                 :deemph t))
-                'docstring)
+      (when (eq (read-locative-from-noisy-string definition) 'docstring)
         (multiple-value-bind (name locative foundp)
             (read-reference-from-string (parse-tree-to-text label))
           (when foundp
@@ -1601,17 +1645,14 @@
                  (handler-case
                      (apply #'transcribe transcript nil :update-only t args)
                    (transcription-error (e)
-                     (let ((*package* (find-package :cl)))
-                       (warn "~@<~A~:@>" e))
+                     (warn "~A" e)
                      transcript))
                  (apply #'transcribe transcript nil :update-only t args))))
       (cond ((and dynenv (ignore-errors (fdefinition dynenv)))
              (funcall dynenv #'call-it))
             (t
              (when dynenv
-               (funcall (if *document-open-linking*
-                            'warn-in-document-context
-                            'error-in-document-context)
+               (funcall (if *document-open-linking* 'warn 'error)
                         "Undefined :DYNENV function ~S" dynenv))
              (call-it))))))
 
@@ -2286,11 +2327,11 @@
   (let* ((c unresolvable-reflink)
          (reflink (unresolvable-reflink-string c))
          (name #-cmucl (if (slot-boundp c 'name)
-                             (unresolvable-reflink-name c)
-                             'not-found)
-                 #+cmucl (or (ignore-errors
-                              (unresolvable-reflink-name c))
-                             'not-found))
+                           (unresolvable-reflink-name c)
+                           'not-found)
+               #+cmucl (or (ignore-errors
+                            (unresolvable-reflink-name c))
+                           'not-found))
          (locative #-cmucl (if (slot-boundp c 'locative)
                                (unresolvable-reflink-locative c)
                                nil)
@@ -2311,10 +2352,7 @@
                    reflink locative '@locative))
           (t
            (format stream "~@<~S cannot be resolved.~:@>" reflink)))
-    (when *documenting-reference*
-      (let ((*package* (find-package :keyword)))
-        (format stream "~%~@<  while documenting ~S~:@>"
-                *documenting-reference*)))))
+    (print-document-context stream)))
 
 (defun signal-unresolvable-reflink (reflink name locative)
   (restart-case

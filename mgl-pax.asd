@@ -91,7 +91,7 @@
   :long-description "Do not declare a dependency on this system. It is
   autoloaded. See MGL-PAX::@GENERATING-DOCUMENTATION."
   :depends-on ("alexandria" "3bmd" "3bmd-ext-code-blocks" "colorize" "md5"
-               "mgl-pax/navigate" "trivial-utf-8")
+               "mgl-pax/navigate" "mgl-pax/transcribe" "trivial-utf-8")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/document/"
