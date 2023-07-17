@@ -610,14 +610,16 @@ The suggested key binding is `C-.' to parallel `M-.'."
                 (if (null url)
                     (mgl-pax-prompt-and-document)
                   (message nil)
-                  (funcall (or mgl-pax-browser-function
-                               browse-url-browser-function)
-                           (concat mgl-pax-web-server-base-url "/"
-                                   (url-hexify-string pax-url
-                                                      mgl-pax-url-allowed-chars)
-                                   (when (slime-current-package)
-                                     (concat "?pkg="
-                                             (slime-current-package))))))))))
+                  (let ((url (concat mgl-pax-web-server-base-url "/"
+                                     (url-hexify-string
+                                      pax-url mgl-pax-url-allowed-chars)
+                                     (when (slime-current-package)
+                                       (concat "?pkg="
+                                               (url-hexify-string
+                                                (slime-current-package)))))))
+                    (funcall (or mgl-pax-browser-function
+                                 browse-url-browser-function)
+                             url)))))))
 
 ;;; What characters need no escaping when PAX URLs are encoded in a
 ;;; URL path. This does not allow ?/ to keep relative links working.
