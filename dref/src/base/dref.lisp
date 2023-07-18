@@ -554,8 +554,9 @@
 
   The second return value indicates whether the arglist has been
   found. Furthermore, :ORDINARY indicates an [ordinary lambda
-  list][clhs], :MACRO a [macro lambda list][clhs], and :DEFTYPE a
-  [deftype lambda list][clhs]. Other non-NIL values are also allowed.
+  list][clhs], :MACRO a [macro lambda list][clhs], :DEFTYPE a [deftype
+  lambda list][clhs], and :DESTRUCTURING a [destructuring lambda
+  list][clhs]. Other non-NIL values are also allowed.
 
   ```cl-transcript (:dynenv dref-std-env)
   (arglist #'arglist)
@@ -566,6 +567,11 @@
   (arglist (dref 'define-locative-type 'macro))
   => (LOCATIVE-TYPE LAMBDA-LIST &BODY DOCSTRING)
   => :MACRO
+  ```
+  ```cl-transcript (:dynenv dref-std-env)
+  (arglist (dref 'method 'locative))
+  => (METHOD-QUALIFIERS METHOD-SPECIALIZERS)
+  => :DESTRUCTURING
   ```
 
   This function supports MACROs, COMPILER-MACROs, SETF functions,

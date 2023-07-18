@@ -43,7 +43,7 @@
     (multiple-value-bind (docstring package) (docstring dref)
       (documenting-reference (stream :arglist arglist :package package)
         (with-dislocated-names (case arglist-type
-                                 ((:macro :deftype)
+                                 ((:macro :deftype :destructuring)
                                   (dref::macro-arg-names arglist))
                                  ((:ordinary)
                                   (or

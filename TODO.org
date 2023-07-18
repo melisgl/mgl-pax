@@ -105,6 +105,8 @@ Pros of DRef:
 - DRef has XREFs, which do not need even the locative type to be
   defined when they are created. Needed by PAX.
 - DREF-APROPOS more flexible. Needed by PAX.
+- ARGLIST returns the type of arglist.
+- DOCSTRING returns the package if available. Needed by PAX.
 - The DRef packages can be :USEd without conflicts with CL.
   Definitions shadows CL:SYMBOL, CL:PACKAGE, CL:CLASS, etc.
 - DRef supports only 7 Lisps, Definitions 3.

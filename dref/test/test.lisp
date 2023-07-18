@@ -269,7 +269,7 @@
 (deftest test-arglist/locative ()
   (is (match-values (arglist (dref 'loc-with-args 'locative))
         (equal * '((x y) &key z))
-        (eq * :macro))))
+        (eq * :destructuring))))
 
 (deftest test-arglist/symbol-locative ()
   (is (match-values (arglist (dref 'sloc1 'sloc))

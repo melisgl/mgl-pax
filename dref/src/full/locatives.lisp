@@ -1120,7 +1120,7 @@
   (find-method* #'locative-type-lambda-list () `((eql ,symbol))))
 
 (defmethod arglist* ((dref locative-dref))
-  (values (locative-type-lambda-list (dref-name dref)) :macro))
+  (values (locative-type-lambda-list (dref-name dref)) :destructuring))
 
 (defmethod docstring* ((dref locative-dref))
   (multiple-value-bind (arglist docstring package)

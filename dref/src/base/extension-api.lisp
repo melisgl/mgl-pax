@@ -149,7 +149,7 @@
   ```cl-transcript
   (arglist (dref 'object 'locative))
   => (&REST ARGS)
-  => :MACRO
+  => :DESTRUCTURING
   ```
 
   Also, see PAX::@LOCATIVE-ALIASES in PAX."""
@@ -425,8 +425,8 @@
 
 (defmacro define-definer-for-symbol-locative-type
     (name locative-type &body docstring)
-  "Define a macro with NAME that can be used to attach documentation,
-  a lambda-list and source location to a symbol in the context of
+  "Define a macro with NAME that can be used to attach a lambda list,
+  documentation, and source location to a symbol in the context of
   LOCATIVE-TYPE. The defined macro's arglist is `(SYMBOL LAMBDA-LIST
   &OPTIONAL DOCSTRING)`. LOCATIVE-TYPE is assumed to have been defined
   with DEFINE-SYMBOL-LOCATIVE-TYPE."

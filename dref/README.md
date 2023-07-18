@@ -444,8 +444,9 @@ signal a [`LOCATE-ERROR`][6334] condition.
     
     The second return value indicates whether the arglist has been
     found. Furthermore, `:ORDINARY` indicates an [ordinary lambda
-    list][059c], `:MACRO` a [macro lambda list][cc32], and `:DEFTYPE` a
-    [deftype lambda list][817d]. Other non-`NIL` values are also allowed.
+    list][059c], `:MACRO` a [macro lambda list][cc32], `:DEFTYPE` a [deftype
+    lambda list][817d], and `:DESTRUCTURING` a [destructuring lambda
+    list][6067]. Other non-`NIL` values are also allowed.
     
     ```common-lisp
     (arglist #'arglist)
@@ -457,6 +458,12 @@ signal a [`LOCATE-ERROR`][6334] condition.
     (arglist (dref 'define-locative-type 'macro))
     => (LOCATIVE-TYPE LAMBDA-LIST &BODY DOCSTRING)
     => :MACRO
+    ```
+    
+    ```common-lisp
+    (arglist (dref 'method 'locative))
+    => (METHOD-QUALIFIERS METHOD-SPECIALIZERS)
+    => :DESTRUCTURING
     ```
     
     This function supports [`MACRO`][f3cc]s, [`COMPILER-MACRO`][41fd]s, [`SETF`][a138] functions,
@@ -1244,7 +1251,7 @@ following, we describe the pieces in detail.
     ```common-lisp
     (arglist (dref 'object 'locative))
     => (&REST ARGS)
-    => :MACRO
+    => :DESTRUCTURING
     ```
     
     Also, see [Locative Aliases][0fa3] in `PAX`.
@@ -1422,8 +1429,8 @@ in a certain context.
 
 - [macro] **DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE** *NAME LOCATIVE-TYPE &BODY DOCSTRING*
 
-    Define a macro with `NAME` that can be used to attach documentation,
-    a lambda-list and source location to a symbol in the context of
+    Define a macro with `NAME` that can be used to attach a lambda list,
+    documentation, and source location to a symbol in the context of
     `LOCATIVE-TYPE`. The defined macro's arglist is `(SYMBOL LAMBDA-LIST
     &OPTIONAL DOCSTRING)`. `LOCATIVE-TYPE` is assumed to have been defined
     with [`DEFINE-SYMBOL-LOCATIVE-TYPE`][ee9b].
