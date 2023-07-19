@@ -6,7 +6,6 @@
   "To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own."
   (section locative)
   (glossary-term locative)
-  (define-glossary-term macro)
   (dislocated locative)
   (argument locative)
   (include locative)

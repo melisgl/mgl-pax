@@ -78,11 +78,11 @@
                                           (escape-html t) (escape-block t))
   "Backslash escape markdown constructs in STRING.
 
-  - If ESCPAPE-INLINE, then escape ``*_`[]\\`` characters.
+  - If ESCAPE-INLINE, then escape ``*_`[]\\`` characters.
 
-  - If ESCPAPE-HTML, then escape `<&` characters.
+  - If ESCAPE-HTML, then escape `<&` characters.
 
-  - If ESCPAPE-BLOCK, then escape whatever is necessary to avoid
+  - If ESCAPE-BLOCK, then escape whatever is necessary to avoid
     starting a new markdown block (e.g. a paragraph, heading, etc)."
   (flet ((blank-line-until-p (pos)
            (loop for i downfrom (1- pos) downto 0

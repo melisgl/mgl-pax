@@ -388,11 +388,11 @@
 ;;; UPDATE-PAX-WORLD was called. FIXME: this is not thread-safe.
 (defun define-pax-world-dummy ()
   (defsection @pax-world-dummy (:title "PAX World")
-    "This is a list of documents generated with [MGL-PAX][@pax-manual]
-  in the default style. The documents are cross-linked: links to other
-  documents are added automatically when a reference is found. Note
-  that clicking on the locative type (e.g. `[function]`) will take you
-  to the sources on github if possible."))
+    "This is a list of documents generated with
+    [MGL-PAX][@pax-manual]. The documents are cross-linked: links to
+    other documents are added automatically when a reference is found.
+    Note that clicking on the locative type (e.g. `[function]`) will
+    take you to the sources on github if possible."))
 
 (defun create-pax-world (sections page-specs dir update-css-p)
   (define-pax-world-dummy)

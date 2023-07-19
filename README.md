@@ -86,7 +86,8 @@ PAX provides for this is [`DEFSECTION`][72b4]:
   (@foo-random-examples section))
 ```
 
-Like this one, sections can have docstrings and references to
+Like this one, sections can have docstrings and
+[references][5225] to
 definitions (e.g. `(UNIFORM-RANDOM FUNCTION)`). These docstrings and
 references are the glue. To support interactive development, PAX
 
@@ -110,42 +111,38 @@ code, not vice versa, and there is no support for chunking.
 
 PAX automatically recognizes and [marks up code][f1ab] with
 backticks and [links code][1865] to their definitions.
-The following [Transcripts][6300] show the lines of the output (prefixed
-with `..`) generated:
+Take, for instance, SBCL's [`ABORT`][479a] function, whose docstring is
+written in the usual style, uppercasing names of symbols:
 
 ```
-(document "&KEY arguments such as :IF-EXISTS are common." :format :markdown)
-.. `&KEY` arguments such as `:IF-EXISTS` are common.
-
-(document "AND denotes a macro and a type specifier.
-Here we focus on the macro AND." :format :markdown)
-.. `AND`([`0`][4954] [`1`][330f]) denotes a macro and a type specifier.
-.. Here we focus on the macro [`AND`][4954].
-..
-..   [330f]: http://www.lispworks.com/documentation/HyperSpec/Body/t_and.htm "AND TYPE"
-..   [4954]: http://www.lispworks.com/documentation/HyperSpec/Body/m_and.htm "AND MGL-PAX:MACRO"
+(docstring #'abort)
+=> "Transfer control to a restart named ABORT, signalling a CONTROL-ERROR if
+   none exists."
 ```
 
-These features are designed to handle the most common style of
-docstrings with minimal additional markup. The following is the
-output of `(mgl-pax:document #'abort :format :markdown)`.
+Note how in the generated documentation, `ABORT` is set with a
+monospace font, while `CONTROL-ERROR` is autolinked:
 
-    - \[function\] **\ABORT** *\&OPTIONAL \CONDITION*
-    
-        Transfer control to a restart named `ABORT`, signalling a
-        [`\CONTROL-ERROR`][6bc0] if none exists.
-    
-      [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\CONTROL-ERROR \CONDITION"
-
-Note that the docstring of the [`ABORT`][479a] function was not written with
-PAX in mind. The above markdown is rendered as
-
-- \[function\] **ABORT** *[`&OPTIONAL`][4336] CONDITION*
+- \[function\] **ABORT** *\&OPTIONAL CONDITION*
 
     Transfer control to a restart named `ABORT`, signalling a
-    \[`CONTROL-ERROR`\]\[6bc0\] if none exists.
+    [`CONTROL-ERROR`][6bc0] if none exists.
 
-[6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\\CONTROL-ERROR \\CONDITION"
+[6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "CONTROL-ERROR CONDITION"
+
+In the following [transcript][6300], the above output is
+rendered from the raw markdown:
+
+```
+(document #'abort :format :markdown)
+.. - [function] **ABORT** *&OPTIONAL CONDITION*
+..
+..     Transfer control to a restart named `ABORT`, signalling a [`CONTROL-ERROR`][7c2c] if
+..     none exists.
+..
+..   [7c2c]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "CONTROL-ERROR (MGL-PAX:CLHS CONDITION)"
+..
+```
 
 ##### A Complete Example
 
@@ -471,6 +468,27 @@ Now let's examine the most important pieces.
     The bottom line is that if you rely on `DEFSECTION` to do the
     exporting, then you'd better use `DEFINE-PACKAGE`.
 
+<a id="x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20MGL-PAX-3AMACRO-29"></a>
+
+- [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &OPTIONAL DOCSTRING*
+
+    Define a global variable with `NAME`, and set it to a [`GLOSSARY-TERM`][8251] object. `TITLE`, `URL` and `DOCSTRING` are markdown strings or
+    `NIL`. Glossary terms are [`DOCUMENT`][432c]ed in the lightweight bullet +
+    locative + name/title style. See the glossary entry [name][88cf] for an
+    example.
+    
+    When a glossary term is linked to in documentation, its `TITLE` will
+    be the link text instead of the name of the symbol (as with
+    [`SECTION`][5fac]s).
+    
+    Glossary entries with a non-`NIL` `URL` are like external links: they
+    are linked to their `URL` in the generated documentation. These offer
+    a more reliable alternative to using markdown reference links and
+    are usually not included in `SECTION`s.
+    
+    When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][730f])
+    is true, `DOCSTRING` will not be recorded to save memory.
+
 <a id="x-28MGL-PAX-3A-40PARSING-20MGL-PAX-3ASECTION-29"></a>
 
 ### 5.1 Parsing
@@ -568,27 +586,6 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
     
     `GLOSSARY-TERM` is [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] but not exported by
     default (see [`EXPORTABLE-REFERENCE-P`][e51f]).
-
-<a id="x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20MGL-PAX-3AMACRO-29"></a>
-
-- [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &OPTIONAL DOCSTRING*
-
-    Define a global variable with `NAME`, and set it to a [`GLOSSARY-TERM`][8251] object. `TITLE`, `URL` and `DOCSTRING` are markdown strings or
-    `NIL`. Glossary terms are [`DOCUMENT`][432c]ed in the lightweight bullet +
-    locative + name/title style. See the glossary entry [name][88cf] for an
-    example.
-    
-    When a glossary term is linked to in documentation, its `TITLE` will
-    be the link text instead of the name of the symbol (as with
-    [`SECTION`][5fac]s).
-    
-    Glossary entries with a non-`NIL` `URL` are like external links: they
-    are linked to their `URL` in the generated documentation. These offer
-    a more reliable alternative to using markdown reference links and
-    are usually not included in `SECTION`s.
-    
-    When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][730f])
-    is true, `DOCSTRING` will not be recorded to save memory.
 
 <a id="x-28MGL-PAX-3ADISLOCATED-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -1188,9 +1185,8 @@ browser. HTML documentation, complete with [Codification][f1ab] and
 of Lisp definitions and PAX [`SECTION`][5fac]s.
 
 If [Emacs Setup][8541] has been done, the Elisp function `mgl-pax-document`
-displays documentation as a single HTML page generated by PAX via
-Slime. For example, to view the documentation of this very `SECTION`,
-one can do:
+generates and displays documentation as a single HTML page. For
+example, to view the documentation of this very `SECTION`, one can do:
 
     M-x mgl-pax-document
     View Documentation of: pax::@browsing-live-documentation
@@ -1200,16 +1196,18 @@ or w3m is not used, then sections registered in [PAX World][1281] are
 listed. If there is a w3m buffer, then entering the empty string
 displays that buffer.
 
-If we enter `function` instead, then a [disambiguation
-page](pax:function) (note that this and other `pax:` links only work
-in Emacs) will be shown with the documentation of the [`FUNCTION`][119e] class
-and the [`FUNCTION`][ba62] locative. One may then follow the links on the page
-to navigate to a page with the documentation the desired definition.
+If we enter `function` instead, then a disambiguation page will be
+shown with the documentation of the [`FUNCTION`][119e] class and the [`FUNCTION`][ba62]
+locative. One may then follow the links on the page to navigate to a
+page with the documentation the desired definition. If you are
+browsing live documentation right now, then the disambiguation page
+is like this: `FUNCTION`([`0`][119e] [`1`][81f7]). In offline documentation, multiple links
+are shown instead as described in [Ambiguous Unspecified Locative][2f82].
 
 Alternatively, a [locative][7ac8] may be entered as part of the
 argument to `mgl-pax-document` as in `function class`, which gives
-[this result](pax:function%20class). Finally, the definition of
-[`DEFSECTION`][72b4] in the context of a single-page [PAX Manual][2415] can be
+[this result][119e]. Finally, the definition of [`DEFSECTION`][72b4]
+in the context of a single-page [PAX Manual][2415] can be
 [viewed](pax:pax::@pax-manual#pax:defsection%20pax:macro) by
 entering `pax::@pax-manual#pax:defsection pax:macro`.
 
@@ -1651,7 +1649,9 @@ To override the title:
 
 These examples all render as [`SECTION`][5fac], linking to both
 definitions of the [name][88cf] `SECTION`, the `CLASS` and the
-`LOCATIVE`.
+`LOCATIVE`. Note that the rendered output is a single link to a
+disambiguation page when [Browsing Live Documentation][a595], while
+multiple, numbered links are generated in offline documentation.
 
 - `[SECTION][]` (*name, explicit link*)
 
@@ -1659,8 +1659,8 @@ definitions of the [name][88cf] `SECTION`, the `CLASS` and the
 
 To override the title:
 
-- `[see this][section]` (*title + name, explicit link*) renders
-  as: [see this][5fac].
+- `[see this][section]` (*title + name, explicit link*) renders as:
+  [see this][5fac].
 
 
 <a id="x-28MGL-PAX-3A-40EXPLICIT-AND-AUTOLINKING-20MGL-PAX-3ASECTION-29"></a>
@@ -2682,9 +2682,8 @@ Transcription support in Emacs can be enabled by loading
     `EVAL` is printed to a string and compared to the source value. Hence,
     any change to unreadable values will break consistency checks. This
     is most troublesome with instances of classes with the default
-    [`PRINT-OBJECT`][3f2e] method printing the memory address. See @ no remedy for
-    that, except for customizing `PRINT-OBJECT` or not transcribing that
-    kind of stuff.
+    [`PRINT-OBJECT`][3f2e] method printing the memory address. See
+    [Finer-Grained Consistency Checks][6e18].
     
     **Errors**
     
@@ -3089,9 +3088,9 @@ export the symbols `A` and `AN`.
 
 ### 10.3 Extending `DOCUMENT`
 
-For all definitions that it encounters, [`DOCUMENT`][432c] calls DOCUMENT\*
-to generate documentation. The following utilities are for writing
-new [`DOCUMENT-OBJECT*`][8269] methods, which emit markdown.
+For all definitions that it encounters, [`DOCUMENT`][432c] calls
+[`DOCUMENT-OBJECT*`][8269] to generate documentation. The following utilities
+are for writing new `DOCUMENT-OBJECT*` methods, which emit markdown.
 
 <a id="x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29"></a>
 
@@ -3162,11 +3161,11 @@ new [`DOCUMENT-OBJECT*`][8269] methods, which emit markdown.
 
     Backslash escape markdown constructs in `STRING`.
     
-    - If ESCPAPE-INLINE, then escape ``*_`[]\`` characters.
+    - If `ESCAPE-INLINE`, then escape ``*_`[]\`` characters.
     
-    - If ESCPAPE-HTML, then escape `<&` characters.
+    - If `ESCAPE-HTML`, then escape `<&` characters.
     
-    - If ESCPAPE-BLOCK, then escape whatever is necessary to avoid
+    - If `ESCAPE-BLOCK`, then escape whatever is necessary to avoid
       starting a new markdown block (e.g. a paragraph, heading, etc).
 
 
@@ -3306,6 +3305,7 @@ they are presented.
   [2ca9]: #x-28MGL-PAX-3AOUTPUT-REFLINK-20FUNCTION-29 "MGL-PAX:OUTPUT-REFLINK FUNCTION"
   [2d48]: #x-28MGL-PAX-3AWITH-DISLOCATED-NAMES-20MGL-PAX-3AMACRO-29 "MGL-PAX:WITH-DISLOCATED-NAMES MGL-PAX:MACRO"
   [2e45]: #x-28MGL-PAX-3A-40DOCUMENTABLES-20MGL-PAX-3ASECTION-29 "Documentables"
+  [2f82]: #x-28MGL-PAX-3A-40AMBIGUOUS-UNSPECIFIED-LOCATIVE-20MGL-PAX-3ASECTION-29 "Ambiguous Unspecified Locative"
   [3026]: #x-28MGL-PAX-3AESCAPE-MARKDOWN-20FUNCTION-29 "MGL-PAX:ESCAPE-MARKDOWN FUNCTION"
   [3076]: https://github.com/redline6561/colorize/ "Colorize"
   [32da]: dref/README.md#x-28DREF-3ASOURCE-LOCATION-20FUNCTION-29 "DREF:SOURCE-LOCATION FUNCTION"
@@ -3324,7 +3324,6 @@ they are presented.
   [4143]: http://www.lispworks.com/documentation/HyperSpec/Body/f_stgeq_.htm "STRING= (MGL-PAX:CLHS FUNCTION)"
   [4317]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cerror.htm "CERROR (MGL-PAX:CLHS FUNCTION)"
   [432c]: #x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29 "MGL-PAX:DOCUMENT FUNCTION"
-  [4336]: http://www.lispworks.com/documentation/HyperSpec/Body/03_da.htm '"3.4.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [43bd]: dref/README.md#x-28DREF-3A-40REFERENCE-20MGL-PAX-3AGLOSSARY-TERM-29 "reference"
   [443b]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_cas.htm "*PRINT-CASE* (MGL-PAX:CLHS VARIABLE)"
   [4796]: dref/README.md#x-28LAMBDA-20MGL-PAX-3ALOCATIVE-29 "LAMBDA MGL-PAX:LOCATIVE"

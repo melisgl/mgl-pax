@@ -382,9 +382,8 @@
   EVAL is printed to a string and compared to the source value. Hence,
   any change to unreadable values will break consistency checks. This
   is most troublesome with instances of classes with the default
-  PRINT-OBJECT method printing the memory address. See @ no remedy for
-  that, except for customizing PRINT-OBJECT or not transcribing that
-  kind of stuff.
+  PRINT-OBJECT method printing the memory address. See
+  @TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS.
 
   **Errors**
 

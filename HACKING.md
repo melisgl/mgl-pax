@@ -42,9 +42,10 @@ Testing from the command line
 Catching changes in behaviour
 -----------------------------
 
-Some bugs not caught by the test suite may show up in the diffs of the
-generated documentation. Check out PAX World in the top-level
-directory, where the ASDF files are with
+Some bugs not caught by the test suite may be caught by transcription
+consistency checking or show up in the diffs of the generated
+documentation. Check out PAX World in the top-level directory, where
+the ASDF files are with
 
     git clone https://github.com/melisgl/mgl-pax-world.git world/
 

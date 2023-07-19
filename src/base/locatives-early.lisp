@@ -5,7 +5,6 @@
 (defsection @pax-locatives (:title "PAX Locatives")
   (section locative)
   (glossary-term locative)
-  (define-glossary-term macro)
   (dislocated locative)
   (argument locative)
   (include locative)

@@ -1586,7 +1586,7 @@ the details, see the Elisp function `slime-goto-source-location`.
     Make a Swank source location. The ultimate reference is `slime.el`.
     When `SNIPPET` is provided, the match nearest to `FILE-POSITION` is
     determined (see the Elisp `slime-isearch` and
-    SOURCE-LOCATION-FILE-POSITION-OFFSET).
+    [`SOURCE-LOCATION-ADJUSTED-FILE-POSITION`][daac]).
 
 <a id="x-28DREF-EXT-3ASOURCE-LOCATION-P-20FUNCTION-29"></a>
 
@@ -1800,6 +1800,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [d83a]: #x-28SETF-20MGL-PAX-3ALOCATIVE-29 "SETF MGL-PAX:LOCATIVE"
   [d930]: #x-28DREF-3ADREF-20CLASS-29 "DREF:DREF CLASS"
   [da93]: #x-28DREF-3A-40DREF-LOCATIVES-20MGL-PAX-3ASECTION-29 "DRef Locatives"
+  [daac]: #x-28DREF-EXT-3ASOURCE-LOCATION-ADJUSTED-FILE-POSITION-20FUNCTION-29 "DREF-EXT:SOURCE-LOCATION-ADJUSTED-FILE-POSITION FUNCTION"
   [dae6]: http://www.lispworks.com/documentation/HyperSpec/Body/f_string.htm "STRING (MGL-PAX:CLHS FUNCTION)"
   [db03]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eql.htm "EQL (MGL-PAX:CLHS FUNCTION)"
   [db68]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pkg_na.htm "PACKAGE-NAME (MGL-PAX:CLHS FUNCTION)"

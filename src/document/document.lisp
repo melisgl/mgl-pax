@@ -1980,15 +1980,17 @@
     (:title "Ambiguous Unspecified Locative")
   """These examples all render as [SECTION][], linking to both
   definitions of the @NAME `\SECTION`, the `\CLASS` and the
-  `\LOCATIVE`.
+  `\LOCATIVE`. Note that the rendered output is a single link to a
+  disambiguation page when @BROWSING-LIVE-DOCUMENTATION, while
+  multiple, numbered links are generated in offline documentation.
 
   - `[SECTION][]` (*name, explicit link*)
   - `\SECTION` (*name, autolink*)
 
   To override the title:
 
-  - `\[see this][section]` (*title + name, explicit link*) renders
-    as: [see this][section].""")
+  - `\[see this][section]` (*title + name, explicit link*) renders as:
+    [see this][section].""")
 
 (defsection @explicit-and-autolinking (:title "Explicit and Autolinking")
   "The examples in the previous sections are marked with *explicit

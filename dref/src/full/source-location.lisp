@@ -7,7 +7,7 @@
   "Make a Swank source location. The ultimate reference is `slime.el`.
   When SNIPPET is provided, the match nearest to FILE-POSITION is
   determined (see the Elisp `slime-isearch` and
-  SOURCE-LOCATION-FILE-POSITION-OFFSET)."
+  SOURCE-LOCATION-ADJUSTED-FILE-POSITION)."
   (list :location
         (cond ((and file buffer)
                (list :buffer-and-file buffer (namestring file)))

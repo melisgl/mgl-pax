@@ -19,7 +19,6 @@ link. See EXTERNAL-LOCATIVE-P and co.
 * MAYBE remove some markup in :PLAIN format?
 * MAYBE get variable initforms from source?
 Or fall back on this for deficient ARGLISTs. Will be really slow.
-* MAYBE document glossary-term class and slots?
 * MAYBE add format control character locative?
 * MAYBE add loop keyword locative?
 * MAYBE move towards literate programming
@@ -88,7 +87,7 @@ Package apropos could take advantage?
 * compare DRef to the Definitions library
 Pros of DRef:
 - Supports string names (called designators in Definitions). PAX needs
-  to distuinguish those from symbol-based ones.
+  to distinguish those from symbol-based ones.
 - Operations such as ARGLIST (~ DEFINITIONS:ARGUMENTS) can be
   specialized on normal objects for RESOLVEable definitions. In
   Definitions, operations are always specialized on a DEFINITION
@@ -118,3 +117,6 @@ Pros of Definitions:
   These can be added to DRef if needed.
 * BUG transcript: "debugger invoked on" is treated like output
 * MAYBE DREF-APROPOS: allow :LOCATIVE-TYPES to match subclasses?
+* MAYBE generate offline documentation for everything in quicklisp?
+Like https://quickref.common-lisp.net/index-per-library.html, but more
+useful?

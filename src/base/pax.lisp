@@ -86,7 +86,8 @@
     (@foo-random-examples section))
   ```
 
-  Like this one, sections can have docstrings and references to
+  Like this one, sections can have docstrings and
+  [references][dref::@dref-manual] to
   definitions (e.g. `(UNIFORM-RANDOM FUNCTION)`). These docstrings and
   references are the glue. To support interactive development, PAX
 
@@ -110,42 +111,38 @@
 
   PAX automatically recognizes and [marks up code][@codification] with
   backticks and [links code][@linking-to-code] to their definitions.
-  The following @TRANSCRIPTS show the lines of the output (prefixed
-  with ` ..`) generated:
+  Take, for instance, SBCL's ABORT function, whose docstring is
+  written in the usual style, uppercasing names of symbols:
 
   ```
-  (document "&KEY arguments such as :IF-EXISTS are common." :format :markdown)
-  .. `&KEY` arguments such as `:IF-EXISTS` are common.
-
-  (document "AND denotes a macro and a type specifier.
-  Here we focus on the macro AND." :format :markdown)
-  .. `AND`([`0`][4954] [`1`][330f]) denotes a macro and a type specifier.
-  .. Here we focus on the macro [`AND`][4954].
-  ..
-  ..   [330f]: http://www.lispworks.com/documentation/HyperSpec/Body/t_and.htm "AND TYPE"
-  ..   [4954]: http://www.lispworks.com/documentation/HyperSpec/Body/m_and.htm "AND MGL-PAX:MACRO"
+  (docstring #'abort)
+  => "Transfer control to a restart named ABORT, signalling a CONTROL-ERROR if
+     none exists."
   ```
 
-  These features are designed to handle the most common style of
-  docstrings with minimal additional markup. The following is the
-  output of `(mgl-pax:document #'abort :format :markdown)`.
+  Note how in the generated documentation, ABORT is set with a
+  monospace font, while `\CONTROL-ERROR` is autolinked:
 
-      - \[function\] **\ABORT** *\&OPTIONAL \CONDITION*
-
-          Transfer control to a restart named `ABORT`, signalling a
-          [`\CONTROL-ERROR`][6bc0] if none exists.
-
-        [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\CONTROL-ERROR \CONDITION"
-
-  Note that the docstring of the ABORT function was not written with
-  PAX in mind. The above markdown is rendered as
-
-  - \[function\] **\ABORT** *\&OPTIONAL \CONDITION*
+  - \[function\] **\ABORT** *\\&OPTIONAL \CONDITION*
 
       Transfer control to a restart named `ABORT`, signalling a
-      \[`\CONTROL-ERROR`\]\[6bc0\] if none exists.
+      [`\CONTROL-ERROR`][6bc0] if none exists.
 
-    [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "\CONTROL-ERROR \CONDITION"
+    [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "CONTROL-ERROR CONDITION"
+
+  In the following [transcript][@transcripts], the above output is
+  rendered from the raw markdown:
+
+  ```
+  (document #'abort :format :markdown)
+  .. - [function] **ABORT** *&OPTIONAL CONDITION*
+  ..
+  ..     Transfer control to a restart named `ABORT`, signalling a [`CONTROL-ERROR`][7c2c] if
+  ..     none exists.
+  ..
+  ..   [7c2c]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "CONTROL-ERROR (MGL-PAX:CLHS CONDITION)"
+  ..
+  ```
 
   ##### A Complete Example
 
@@ -322,4 +319,5 @@
   (defsection macro)
   (*discard-documentation-p* variable)
   (define-package macro)
+  (define-glossary-term macro)
   (@parsing section))
