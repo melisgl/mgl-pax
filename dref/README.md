@@ -151,9 +151,10 @@ with references (discussed in the [Extending DRef][68fb]).
 
 - [function] **XREF** *NAME LOCATIVE*
 
-    A shorthand for `(MAKE-INSTANCE 'XREF :NAME NAME :LOCATIVE :LOCATIVE)`.
-    It does no error checking. Use the [`DREF`][7e92] function to create
-    [`DREF`][d930] objects.
+    A shorthand for `(MAKE-INSTANCE 'XREF :NAME NAME :LOCATIVE LOCATIVE)`.
+    It does no error checking: the [`LOCATIVE-TYPE`][97ba] of `LOCATIVE-TYPE` need
+    not be defined, and the [`LOCATIVE-ARGS`][2444] need not be valid. Use [`LOCATE`][8f19]
+    or the [`DREF`][7e92] function to create [`DREF`][d930] objects.
 
 <a id="x-28DREF-3AXREF-3D-20FUNCTION-29"></a>
 
@@ -1129,11 +1130,11 @@ internal machinery. The first step is to define the locative type:
 
 ```
 
-Next, define a new subclass of [`DREF`][d930] and specialize
-[`LOCATE*`][76c4]:
+Next, we define a subclass of [`DREF`][d930] associated with the
+[`CLASS`][2060] locative type and specialize [`LOCATE*`][76c4]:
 
 ```
-(defclass class-dref (dref) ())
+(define-definition-class class class-dref)
 
 (defmethod locate* ((class class))
   (make-instance 'class-dref :name (class-name class) :locative 'class))
@@ -1255,6 +1256,14 @@ following, we describe the pieces in detail.
     ```
     
     Also, see [Locative Aliases][0fa3] in `PAX`.
+
+<a id="x-28DREF-EXT-3ADEFINE-DEFINITION-CLASS-20MGL-PAX-3AMACRO-29"></a>
+
+- [macro] **DEFINE-DEFINITION-CLASS** *LOCATIVE-TYPE CLASS-NAME &OPTIONAL (SUPERCLASSES '(DREF)) &BODY BODY*
+
+    Define a subclass of `DREF`([`0`][d930] [`1`][7e92]). All definitions with `LOCATIVE-TYPE`
+    must be of this type. If non-`NIL`, `BODY` is [`DEFCLASS`][ead6]' slot definitions
+    and other options.
 
 <a id="x-28DREF-EXT-3ALOCATE-2A-20GENERIC-FUNCTION-29"></a>
 

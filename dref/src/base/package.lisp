@@ -86,6 +86,7 @@
   (define-pseudo-locative-type macro)
   (check-locative-args macro)
   (define-locative-alias macro)
+  (define-definition-class macro)
   (locate-error function)
   (locate* generic-function)
   (dref* generic-function)

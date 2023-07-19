@@ -10,13 +10,13 @@
   internal machinery. The first step is to define the locative type:"
   (nil (include (:start (class locative) :end (class-dref class))
                 :header-nl "```" :footer-nl "```"))
-  "Next, define a new subclass of [DREF][class] and specialize
-  LOCATE*:"
+  "Next, we define a subclass of [DREF][class] associated with the
+  CLASS locative type and specialize LOCATE*:"
   (nil (include (:start (class-dref class)
                  :end (actualize-type-to-class function))
                 :header-nl "```" :footer-nl "```"))
   "The first method makes `(LOCATE (FIND-CLASS 'DREF))` work, while
-  the second is for `(LOCATE 'DREF 'CLASS)`. Naturally, for locative
+  the second is for `(DREF 'DREF 'CLASS)`. Naturally, for locative
   types that do not define first-class objects, the first method
   cannot be defined.
 
@@ -43,6 +43,7 @@
   (define-locative-type macro)
   (define-pseudo-locative-type macro)
   (define-locative-alias macro)
+  (define-definition-class macro)
   (locate* generic-function)
   (dref* generic-function)
   (check-locative-args macro)
@@ -165,6 +166,19 @@
 ;;; It returns LAMBDA-LIST and DOCSTRING from DEFINE-LOCATIVE-TYPE,
 ;;; and the *PACKAGE* in effect at macroexpansion time.
 (defgeneric locative-type-lambda-list (symbol))
+
+(defmacro define-definition-class (locative-type class-name
+                                   &optional (superclasses '(dref)) &body body)
+  "Define a subclass of DREF. All definitions with LOCATIVE-TYPE
+  must be of this type. If non-NIL, BODY is DEFCLASS' slot definitions
+  and other options."
+  ;; We could record which DREF subclass corresponds to which locative
+  ;; type. This will be needed, for example, for DREF-APROPOS to
+  ;; support matching on subtypes. For now we ignore LOCATIVE-TYPE.
+  (declare (ignore locative-type))
+  `(defclass ,class-name ,superclasses
+     ,@(or body '(()))))
+
 
 
 (defvar *locating-object*)

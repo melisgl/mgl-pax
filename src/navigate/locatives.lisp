@@ -23,7 +23,7 @@
   SECTION is EXPORTABLE-LOCATIVE-TYPE-P but not exported by
   default (see EXPORTABLE-REFERENCE-P).")
 
-(defclass section-dref (variable-dref) ())
+(define-definition-class section section-dref (variable-dref))
 
 (defun section-title-or-name (section)
   (or (section-title section)
@@ -72,7 +72,7 @@
   GLOSSARY-TERM is EXPORTABLE-LOCATIVE-TYPE-P but not exported by
   default (see EXPORTABLE-REFERENCE-P).")
 
-(defclass glossary-term-dref (variable-dref) ())
+(define-definition-class glossary-term glossary-term-dref (variable-dref))
 
 (defmethod locate* ((glossary-term glossary-term))
   (make-instance 'glossary-term-dref :name (glossary-term-name glossary-term)
@@ -137,7 +137,7 @@
       => T
       ```""")
 
-(defclass go-dref (dref)
+(define-definition-class go go-dref (dref)
   ((target-dref :initarg :target-dref :reader go-target-dref)))
 
 (defmethod dref* (name (locative-type (eql 'go)) locative-args)
@@ -286,7 +286,7 @@
   INCLUDE is not EXPORTABLE-LOCATIVE-TYPE-P, and INCLUDE references do
   not RESOLVE.""")
 
-(defclass include-dref (dref) ())
+(define-definition-class include include-dref)
 
 (defmethod dref* (name (locative-type (eql 'include)) locative-args)
   (check-locative-args include locative-args)
@@ -429,7 +429,7 @@
   
   CLHS references do not RESOLVE.""")
 
-(defclass clhs-dref (dref) ())
+(define-definition-class clhs clhs-dref)
 
 (defparameter *clhs-substring-match* t)
 

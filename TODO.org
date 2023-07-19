@@ -117,7 +117,4 @@ Pros of Definitions:
 - Definitions has BIND, (SETF OBJECT), UNBIND, (SETF DOCUMENTATION).
   These can be added to DRef if needed.
 * BUG transcript: "debugger invoked on" is treated like output
-* MAYBE DREF-APROPOS: allow :LOCATIVE-TYPES match subclasses?
-This may need to know that FUNCTION-DREF belongs to FUNCTION. Move
-DEFCLASS FUNCTION-DREF into DEFINE-LOCATIVE-TYPE and
-DEFINE-PSEUDO-LOCATIVE-TYPE?
+* MAYBE DREF-APROPOS: allow :LOCATIVE-TYPES to match subclasses?

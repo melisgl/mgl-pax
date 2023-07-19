@@ -954,11 +954,11 @@ internal machinery. The first step is to define the locative type:
 
 ```
 
-Next, define a new subclass of DREF and specialize
-LOCATE\*:
+Next, we define a subclass of DREF associated with the
+CLASS locative type and specialize LOCATE\*:
 
 ```
-(defclass class-dref (dref) ())
+(define-definition-class class class-dref)
 
 (defmethod locate* ((class class))
   (make-instance 'class-dref :name (class-name class) :locative 'class))
@@ -1074,6 +1074,12 @@ following, we describe the pieces in detail.
     ```
     
     Also, see PAX::@LOCATIVE-ALIASES in PAX.
+
+- [macro] DEFINE-DEFINITION-CLASS LOCATIVE-TYPE CLASS-NAME &OPTIONAL (SUPERCLASSES '(DREF)) &BODY BODY
+
+    Define a subclass of DREF. All definitions with LOCATIVE-TYPE
+    must be of this type. If non-NIL, BODY is DEFCLASS' slot definitions
+    and other options.
 
 - [generic-function] LOCATE* OBJECT
 
