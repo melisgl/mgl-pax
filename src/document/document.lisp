@@ -1014,6 +1014,7 @@
 
 (defgeneric document-object (object stream)
   (:method :around (object stream)
+    (declare (ignorable stream))
     (let ((*objects-being-documented* (cons object *objects-being-documented*)))
       (call-next-method)))
   (:method (object stream)
@@ -2251,7 +2252,8 @@
 
 (defgeneric title (object)
   (:method (object)
-    nil)
+    (declare (ignore object))
+   nil)
   (:method ((section section))
     (values (section-title section) t))
   (:method ((glossary-term glossary-term))

@@ -214,22 +214,24 @@
 ;;;    of new tree (which must be a LIST) are added. No slice is like
 ;;;    MAPCAR, slice is is MAPCAN.
 (defun transform-tree (fn tree)
-  (labels ((foo (parent tree)
-             (multiple-value-bind (new-tree recurse slice)
-                 (funcall fn parent tree)
-               (assert (or (not slice) (listp new-tree)))
-               (if (or (atom new-tree)
-                       (not recurse))
-                   (values new-tree slice)
-                   (values (loop for sub-tree in new-tree
-                                 append (multiple-value-bind
-                                              (new-sub-tree slice)
-                                            (foo new-tree sub-tree)
-                                          (if slice
-                                              new-sub-tree
-                                              (list new-sub-tree))))
-                           slice)))))
-    (foo nil tree)))
+  (declare (optimize speed))
+  (let ((fn (coerce fn 'function)))
+    (labels ((foo (parent tree)
+               (multiple-value-bind (new-tree recurse slice)
+                   (funcall fn parent tree)
+                 (assert (or (not slice) (listp new-tree)))
+                 (if (or (atom new-tree)
+                         (not recurse))
+                     (values new-tree slice)
+                     (values (loop for sub-tree in new-tree
+                                   nconc (multiple-value-bind
+                                               (new-sub-tree slice)
+                                             (foo new-tree sub-tree)
+                                           (if slice
+                                               (copy-list new-sub-tree)
+                                               (list new-sub-tree))))
+                             slice)))))
+      (foo nil tree))))
 
 ;;; When used as the FN argument to TRANSFORM-TREE, leave the tree
 ;;; intact except for subtrees (lists) whose CAR is in TAGS, whose

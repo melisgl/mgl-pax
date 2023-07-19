@@ -51,7 +51,6 @@
 (add-dref-actualizer 'actualize-variable-to-section)
 
 (defmethod docstring* ((dref section-dref))
-  (declare (ignore dref))
   nil)
 
 
@@ -149,6 +148,7 @@
                               :target-dref go-dref))))
 
 (defmethod map-definitions (name (locative-type (eql 'go)))
+   (declare (ignorable name))
   ;; There are no real GO definitions.
   (values))
 
@@ -177,9 +177,8 @@
 
   DISLOCATED references do not RESOLVE.")
 
-(defmethod dref* (symbol (locative-type (eql 'dislocated))
-                             locative-args)
-  (declare (ignore symbol locative-args))
+(defmethod dref* (symbol (locative-type (eql 'dislocated)) locative-args)
+  (declare (ignorable symbol locative-args))
   (locate-error "~S can never be located." 'dislocated))
 
 
@@ -204,9 +203,8 @@
 
   ARGUMENT references do not RESOLVE.""")
 
-(defmethod dref* (symbol (locative-type (eql 'argument))
-                             locative-args)
-  (declare (ignore symbol locative-args))
+(defmethod dref* (symbol (locative-type (eql 'argument)) locative-args)
+  (declare (ignorable symbol locative-args))
   (locate-error "~S can never be located." 'argument))
 
 
@@ -217,9 +215,8 @@
 
   There is no way to LOCATE DOCSTRINGs, so nothing to RESOLVE either.")
 
-(defmethod dref* (symbol (locative-type (eql 'docstring))
-                             locative-args)
-  (declare (ignore symbol locative-args))
+(defmethod dref* (symbol (locative-type (eql 'docstring)) locative-args)
+  (declare (ignorable symbol locative-args))
   (locate-error "DOCSTRING can never be located."))
 
 

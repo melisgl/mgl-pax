@@ -1117,8 +1117,7 @@
       obj))
 
 (defun hyperspec-locatives-for-name (name)
-  (loop for (locative filename)
-          in (gethash name *hyperspec-name-to-locatives*)
+  (loop for (locative *) in (gethash name *hyperspec-name-to-locatives*)
         collect locative))
 
 

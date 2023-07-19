@@ -188,7 +188,7 @@
               (first dspec-forms)
               (progn
                 (format *error-output* "!!! No definition for ~S." name)
-                `'(,(gensym "NOTIMPLEMENTED"))))))))
+                `'(,(gensym "NOTIMPLEMENTED") ,name)))))))
 
 #-(or allegro ecl)
 (defun normalize-dspec (dspec)
@@ -327,6 +327,7 @@
   (:or :ccl :cmucl) `(class ,name))
 
 (define-dspec swank-package-dspec (name)
+  (:or :abcl :allegro :ecl :cmucl) `(:no-such-dspec ,name)
   :ccl `(package ,name)
   :sbcl `(defpackage ,name))
 

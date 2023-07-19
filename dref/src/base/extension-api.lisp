@@ -257,12 +257,13 @@
   types. This function is for extending LOCATE. Do not call it
   directly.")
   (:method :around (name locative-type locative-args)
+    (declare (ignorable name locative-type locative-args))
     (let ((located (call-next-method)))
       (assert (or (not (typep located 'xref))
                   (typep located 'dref)))
       located))
   (:method (name locative-type locative-args)
-    (declare (ignore name locative-type locative-args))
+    (declare (ignorable name locative-type locative-args))
     (locate-error)))
 
 (defvar *resolving-dref*)

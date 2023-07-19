@@ -159,6 +159,7 @@
 
 (defmethod hunchentoot:acceptor-dispatch-request
     :around ((acceptor (eql *server*)) request)
+  (declare (ignorable request))
   (let ((hunchentoot:*dispatch-table* (append *dispatch-table*
                                               *hyperspec-dispatch-table*))
         (*document-hyperspec-root*
