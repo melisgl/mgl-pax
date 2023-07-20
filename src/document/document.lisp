@@ -2743,15 +2743,25 @@
     (when (or v1 v2)
       (when v1
         (format stream "<a id=~S></a>~%"
-                (html4-safe-name (dref-to-anchor-v1 dref))))
+                (github-anchor-id-workaround
+                 (html4-safe-name (dref-to-anchor-v1 dref)))))
       (when v2
         (format stream "<a id=~S></a>~%"
                 (urlencode (dref-to-anchor dref))))
       (terpri stream))))
 
+(defun github-anchor-id-workaround (string)
+  ;; FIXME: Once
+  ;; https://support.github.com/ticket/personal/0/2259703 is
+  ;; fixed, remove the STRING-DOWNCASE here and in ANCHOR-ID,
+  ;; which can collapse different anchors to the same id.
+  (if (eq *format* :markdown)
+      (string-downcase string)
+      string))
+
 (defun anchor-id (dref)
   (if (= (first *document-url-versions*) 1)
-      (html4-safe-name (dref-to-anchor-v1 dref))
+      (github-anchor-id-workaround (html4-safe-name (dref-to-anchor-v1 dref)))
       (urlencode (dref-to-anchor dref))))
 
 ;;; Return the unescaped name of the HTML anchor for DREF. See
