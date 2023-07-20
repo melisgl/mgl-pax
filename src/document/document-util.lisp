@@ -70,20 +70,36 @@
 (defsection @html-output (:title "HTML Output")
   (update-asdf-system-html-docs function)
   "See the following variables, which control HTML generation."
+  (*document-html-default-style* variable)
   (*document-html-max-navigation-table-of-contents-level* variable)
   (*document-html-head* variable)
   (*document-html-sidebar* variable)
   (*document-html-top-blocks-of-links* variable)
   (*document-html-bottom-blocks-of-links* variable))
 
+(defvar *document-html-default-style* :default
+  "The HTML style to use. It's either STYLE is either :DEFAULT or
+  :CHARTER. The :DEFAULT CSS stylesheet relies on the default
+  fonts (sans-serif, serif, monospace), while :CHARTER bundles some
+  fonts for a more controlled look.
+
+  The value of this variable affects the default style of
+  UPDATE-ASDF-SYSTEM-HTML-DOCS. If you change this variable, you may
+  need to do a hard refresh in the browser (often `C-<f5>`). See
+  *BROWSE-HTML-STYLE* for how to control the style used for
+  @BROWSING-LIVE-DOCUMENTATION.")
+
 (defun/autoloaded update-asdf-system-html-docs
     (sections asdf-system &key pages
               (target-dir (asdf:system-relative-pathname
                            asdf-system "doc/"))
-              (update-css-p t))
+              (update-css-p t)
+              (style *document-html-default-style*))
   "Generate pretty HTML documentation for a single ASDF system,
-  possibly linking to github. If UPDATE-CSS-P, copy the CSS style
-  sheet to TARGET-DIR as well. Example usage:
+  possibly linking to github. If UPDATE-CSS-P, copy the STYLE files to
+  TARGET-DIR (see *DOCUMENT-HTML-DEFAULT-STYLE*).
+
+  Example usage:
 
   ```
   (update-asdf-system-html-docs @pax-manual :mgl-pax)
@@ -100,16 +116,17 @@
                         :mgl-pax
                         \"https://github.com/melisgl/mgl-pax\"))))
   ```"
-  (document-html sections pages target-dir update-css-p nil))
+  (document-html sections pages target-dir update-css-p style nil))
 
 ;;; Generate with the default HTML look.
-(defun document-html (sections page-specs target-dir update-css-p
+(defun document-html (sections page-specs target-dir update-css-p style
                       link-to-pax-world-p)
   (when update-css-p
-    (copy-css target-dir))
+    (copy-css style target-dir))
   (document sections
-            :pages (add-html-defaults-to-page-specs (ensure-list sections)
-                    page-specs target-dir link-to-pax-world-p)
+            :pages (add-html-defaults-to-page-specs
+                    (ensure-list sections) page-specs target-dir
+                    link-to-pax-world-p)
             :format :html))
 
 (defun add-html-defaults-to-page-specs (sections page-specs dir
@@ -160,19 +177,26 @@
 
 (defun remove-special-chars (string)
   (remove-if (lambda (char)
-               (find char "!@#$%^&*"))
+               (find char "!@#$%^&*/"))
              string))
 
-(defun copy-css (target-dir)
-  (ensure-directories-exist target-dir)
-  (loop for file in '("src/document/jquery.min.js"
-                      "src/document/toc.min.js"
-                      "src/document/style.css")
-        do (let ((target-file (merge-pathnames (file-namestring file)
-                                               target-dir)))
-             (uiop:delete-file-if-exists target-file)
-             (uiop:copy-file (asdf:system-relative-pathname :mgl-pax file)
-                             target-file))))
+(defun copy-css (style target-dir)
+  (copy-dir (html-style-dir style) target-dir))
+
+(defun copy-dir (dir to-dir)
+  (dolist (file (uiop:directory* (merge-pathnames "*.*" dir)))
+    (let* ((relative-file (enough-namestring (namestring file) dir))
+           (to-file (merge-pathnames relative-file to-dir)))
+      (uiop:delete-file-if-exists to-file)
+      (ensure-directories-exist to-file)
+      (if (uiop:file-pathname-p file)
+          (uiop:copy-file file to-file)
+          (copy-dir file to-file)))))
+
+(defun html-style-dir (style)
+  (asdf:system-relative-pathname :mgl-pax (ecase style
+                                            ((:default) "web/default/")
+                                            ((:charter) "web/charter/"))))
 
 (defvar *document-html-head* nil
   "Stuff to be included in the `<head>` of the generated HTML.
@@ -352,8 +376,9 @@
 
 ;;;; The autoloaded part of @PAX-WORLD
 
-(defun/autoloaded update-pax-world (&key (docs *registered-pax-world-docs*)
-                                         dir)
+(defun/autoloaded update-pax-world
+    (&key (docs *registered-pax-world-docs*) dir update-css-p
+          (style *document-html-default-style*))
   "Generate HTML documentation for all DOCS. Files are created in
   DIR (`(asdf:system-relative-pathname :mgl-pax \"world/\")` by
   default if DIR is NIL). DOCS is a list of entries of the form (NAME
@@ -367,7 +392,7 @@
   If necessary a default page spec is created for every section."
   (let ((dir (or dir (asdf:system-relative-pathname :mgl-pax "world/"))))
     (multiple-value-bind (sections pages) (sections-and-pages docs)
-      (create-pax-world sections pages dir nil))))
+      (create-pax-world sections pages dir update-css-p style))))
 
 (defun sections-and-pages (registered-docs)
   (values (apply #'append (mapcar #'denoted-list
@@ -394,7 +419,7 @@
     Note that clicking on the locative type (e.g. `[function]`) will
     take you to the sources on github if possible."))
 
-(defun create-pax-world (sections page-specs dir update-css-p)
+(defun create-pax-world (sections page-specs dir update-css-p style)
   (define-pax-world-dummy)
   (unwind-protect
        (progn
@@ -405,7 +430,7 @@
                                 :output (,(merge-pathnames "index.html" dir)
                                          ,@*default-output-options*))
                               page-specs)
-                        dir update-css-p t))
+                        dir update-css-p style t))
     (setq @pax-world-dummy nil)))
 
 (defun set-pax-world-list (objects)
@@ -443,11 +468,11 @@
         (pax-file (ecase format
                     ((:plain) "README")
                     ((:markdown) "README.md")
-                    ((:html) "README.html")))
+                    ((:html) "doc/pax-manual.html")))
         (dref-file (ecase format
                      ((:plain) "dref/README")
                      ((:markdown) "dref/README.md")
-                     ((:html) "dref/README.html"))))
+                     ((:html) "doc/dref-manual.html"))))
     `((:objects (, @pax-manual)
        :output (,(asdf:system-relative-pathname "mgl-pax" pax-file)
                 ,@*default-output-options*)
@@ -475,7 +500,8 @@
   (let ((*document-downcase-uppercase-code* t))
     (update-asdf-system-html-docs (pax-and-dref-sections)
                                   :mgl-pax :pages (pax-and-dref-pages
-                                                   :html))))
+                                                   :html)
+                                  :update-css-p t :style :charter)))
 
 
 ;;; Load systems that use PAX and generate PAX World in
@@ -500,7 +526,7 @@
     (asdf:load-system :lmdb))
   (time
    (let ((*document-downcase-uppercase-code* t))
-     (update-pax-world))))
+     (update-pax-world :style :charter))))
 
 #+nil
 (update-pax-world*)

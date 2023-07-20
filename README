@@ -1203,6 +1203,12 @@ the same (see *DOCUMENT-FANCY-HTML-NAVIGATION*).
 Finally, note that the URLs exposed by the web server are subject to
 change.
 
+- [variable] *BROWSE-HTML-STYLE* :CHARTER
+
+    The HTML style to use for browsing live documentation. Affects only
+    non-w3m browsers. See *DOCUMENT-HTML-DEFAULT-STYLE* for the possible
+    values.
+
 ### Markdown Support
 
 The @MARKDOWN in docstrings is processed with the @3BMD library.
@@ -1802,11 +1808,13 @@ HTML documentation and the default CSS stylesheet.
 
 #### HTML Output
 
-- [function] UPDATE-ASDF-SYSTEM-HTML-DOCS SECTIONS ASDF-SYSTEM &KEY PAGES (TARGET-DIR (ASDF/SYSTEM:SYSTEM-RELATIVE-PATHNAME ASDF-SYSTEM "doc/")) (UPDATE-CSS-P T)
+- [function] UPDATE-ASDF-SYSTEM-HTML-DOCS SECTIONS ASDF-SYSTEM &KEY PAGES (TARGET-DIR (ASDF/SYSTEM:SYSTEM-RELATIVE-PATHNAME ASDF-SYSTEM "doc/")) (UPDATE-CSS-P T) (STYLE \*DOCUMENT-HTML-DEFAULT-STYLE\*)
 
     Generate pretty HTML documentation for a single ASDF system,
-    possibly linking to github. If UPDATE-CSS-P, copy the CSS style
-    sheet to TARGET-DIR as well. Example usage:
+    possibly linking to github. If UPDATE-CSS-P, copy the STYLE files to
+    TARGET-DIR (see *DOCUMENT-HTML-DEFAULT-STYLE*).
+    
+    Example usage:
     
     ```
     (update-asdf-system-html-docs @pax-manual :mgl-pax)
@@ -1826,6 +1834,19 @@ HTML documentation and the default CSS stylesheet.
 
 
 See the following variables, which control HTML generation.
+
+- [variable] *DOCUMENT-HTML-DEFAULT-STYLE* :DEFAULT
+
+    The HTML style to use. It's either STYLE is either :DEFAULT or
+    :CHARTER. The :DEFAULT CSS stylesheet relies on the default
+    fonts (sans-serif, serif, monospace), while :CHARTER bundles some
+    fonts for a more controlled look.
+    
+    The value of this variable affects the default style of
+    UPDATE-ASDF-SYSTEM-HTML-DOCS. If you change this variable, you may
+    need to do a hard refresh in the browser (often `C-<f5>`). See
+    *BROWSE-HTML-STYLE* for how to control the style used for
+    @BROWSING-LIVE-DOCUMENTATION.
 
 - [variable] *DOCUMENT-HTML-MAX-NAVIGATION-TABLE-OF-CONTENTS-LEVEL* NIL
 
@@ -1982,7 +2003,7 @@ For example, this is how PAX registers itself:
 
 ```
 
-- [function] UPDATE-PAX-WORLD &KEY (DOCS \*REGISTERED-PAX-WORLD-DOCS\*) DIR
+- [function] UPDATE-PAX-WORLD &KEY (DOCS \*REGISTERED-PAX-WORLD-DOCS\*) DIR UPDATE-CSS-P (STYLE \*DOCUMENT-HTML-DEFAULT-STYLE\*)
 
     Generate HTML documentation for all DOCS. Files are created in
     DIR (`(asdf:system-relative-pathname :mgl-pax "world/")` by

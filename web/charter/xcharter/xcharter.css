@@ -20,10 +20,3 @@
   font-weight: normal;
   font-style: italic;
 }
-
-@font-face {
-  font-family: "XCharter";
-  src: url("XCharter-BoldItalic.otf") format("opentype");
-  font-weight: bold;
-  font-style: italic;
-}

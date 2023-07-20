@@ -39,8 +39,7 @@
   `slime-symbol-at-point`, possibly with a nearby locative the same
   way as in @NAVIGATING-IN-EMACS. The convenience function
   `mgl-pax-document-current-definition` documents the definition with
-  point in it.
-  """
+  point in it."""
   (@pax-urls section)
   (@apropos section)
   (@emacs-setup-for-browsing section)
@@ -136,7 +135,13 @@
   the same (see *DOCUMENT-FANCY-HTML-NAVIGATION*).
 
   Finally, note that the URLs exposed by the web server are subject to
-  change.""")
+  change."""
+  (*browse-html-style* variable))
+
+(defvar *browse-html-style* :charter
+  "The HTML style to use for browsing live documentation. Affects only
+  non-w3m browsers. See *DOCUMENT-HTML-DEFAULT-STYLE* for the possible
+  values.")
 
 ;;; Document PAX*-URL in FILENAME, both STRINGs. Return a `file:' URL
 ;;; as (:FILE-URL <URL>) or (:ERROR <STRING>). FILENAME may denote a

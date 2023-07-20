@@ -1353,6 +1353,14 @@ the same (see [`*DOCUMENT-FANCY-HTML-NAVIGATION*`][6ab0]).
 Finally, note that the `URL`s exposed by the web server are subject to
 change.
 
+<a id="x-28MGL-PAX-3A-2ABROWSE-HTML-STYLE-2A-20VARIABLE-29"></a>
+
+- [variable] **\*BROWSE-HTML-STYLE\*** *:CHARTER*
+
+    The HTML style to use for browsing live documentation. Affects only
+    non-w3m browsers. See [`*DOCUMENT-HTML-DEFAULT-STYLE*`][90fa] for the possible
+    values.
+
 <a id="x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29"></a>
 
 ### 8.4 Markdown Support
@@ -2034,11 +2042,13 @@ HTML documentation and the default CSS stylesheet.
 
 <a id="x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-HTML-DOCS-20FUNCTION-29"></a>
 
-- [function] **UPDATE-ASDF-SYSTEM-HTML-DOCS** *SECTIONS ASDF-SYSTEM &KEY PAGES (TARGET-DIR (ASDF/SYSTEM:SYSTEM-RELATIVE-PATHNAME ASDF-SYSTEM "doc/")) (UPDATE-CSS-P T)*
+- [function] **UPDATE-ASDF-SYSTEM-HTML-DOCS** *SECTIONS ASDF-SYSTEM &KEY PAGES (TARGET-DIR (ASDF/SYSTEM:SYSTEM-RELATIVE-PATHNAME ASDF-SYSTEM "doc/")) (UPDATE-CSS-P T) (STYLE \*DOCUMENT-HTML-DEFAULT-STYLE\*)*
 
     Generate pretty HTML documentation for a single ASDF system,
-    possibly linking to github. If `UPDATE-CSS-P`, copy the CSS style
-    sheet to `TARGET-DIR` as well. Example usage:
+    possibly linking to github. If `UPDATE-CSS-P`, copy the `STYLE` files to
+    `TARGET-DIR` (see [`*DOCUMENT-HTML-DEFAULT-STYLE*`][90fa]).
+    
+    Example usage:
     
     ```
     (update-asdf-system-html-docs @pax-manual :mgl-pax)
@@ -2058,6 +2068,21 @@ HTML documentation and the default CSS stylesheet.
 
 
 See the following variables, which control HTML generation.
+
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-HTML-DEFAULT-STYLE-2A-20VARIABLE-29"></a>
+
+- [variable] **\*DOCUMENT-HTML-DEFAULT-STYLE\*** *:DEFAULT*
+
+    The HTML style to use. It's either `STYLE` is either `:DEFAULT` or
+    `:CHARTER`. The `:DEFAULT` CSS stylesheet relies on the default
+    fonts (sans-serif, serif, monospace), while `:CHARTER` bundles some
+    fonts for a more controlled look.
+    
+    The value of this variable affects the default style of
+    [`UPDATE-ASDF-SYSTEM-HTML-DOCS`][bb12]. If you change this variable, you may
+    need to do a hard refresh in the browser (often `C-<f5>`). See
+    [`*BROWSE-HTML-STYLE*`][e527] for how to control the style used for
+    [Browsing Live Documentation][a595].
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-HTML-MAX-NAVIGATION-TABLE-OF-CONTENTS-LEVEL-2A-20VARIABLE-29"></a>
 
@@ -2236,7 +2261,7 @@ For example, this is how PAX registers itself:
 
 <a id="x-28MGL-PAX-3AUPDATE-PAX-WORLD-20FUNCTION-29"></a>
 
-- [function] **UPDATE-PAX-WORLD** *&KEY (DOCS \*REGISTERED-PAX-WORLD-DOCS\*) DIR*
+- [function] **UPDATE-PAX-WORLD** *&KEY (DOCS \*REGISTERED-PAX-WORLD-DOCS\*) DIR UPDATE-CSS-P (STYLE \*DOCUMENT-HTML-DEFAULT-STYLE\*)*
 
     Generate HTML documentation for all `DOCS`. Files are created in
     `DIR` (`(asdf:system-relative-pathname :mgl-pax "world/")` by
@@ -3403,6 +3428,7 @@ they are presented.
   [8ece]: #x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-GLOSSARY-TERM MGL-PAX:MACRO"
   [8f19]: dref/README.md#x-28DREF-3ALOCATE-20FUNCTION-29 "DREF:LOCATE FUNCTION"
   [8fb6]: #x-28MGL-PAX-3A-2ADOCUMENT-MARK-UP-SIGNATURES-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-MARK-UP-SIGNATURES* VARIABLE"
+  [90fa]: #x-28MGL-PAX-3A-2ADOCUMENT-HTML-DEFAULT-STYLE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HTML-DEFAULT-STYLE* VARIABLE"
   [9172]: http://www.lispworks.com/documentation/HyperSpec/Body/t_t.htm "T (MGL-PAX:CLHS CLASS)"
   [935f]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss045.htm '"SUMMARY:CHARACTER-PROPOSAL:2-6-5" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [9439]: http://www.lispworks.com/documentation/HyperSpec/Body/m_pr_unr.htm "PRINT-UNREADABLE-OBJECT (MGL-PAX:CLHS MGL-PAX:MACRO)"
@@ -3447,6 +3473,7 @@ they are presented.
   [b93c]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "STRING (MGL-PAX:CLHS CLASS)"
   [ba62]: dref/README.md#x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29 "FUNCTION MGL-PAX:LOCATIVE"
   [ba74]: #x-28MGL-PAX-3A-40LINKS-20MGL-PAX-3ASECTION-29 "Links and Systems"
+  [bb12]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-HTML-DOCS-20FUNCTION-29 "MGL-PAX:UPDATE-ASDF-SYSTEM-HTML-DOCS FUNCTION"
   [bc83]: #x-28MGL-PAX-3A-40MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29 "Syntax Highlighting"
   [bcb6]: http://www.lispworks.com/documentation/HyperSpec/Body/e_warnin.htm "WARNING (MGL-PAX:CLHS CONDITION)"
   [bdd5]: #x-28MGL-PAX-3A-40HOME-SECTION-20MGL-PAX-3ASECTION-29 "Home Section"
@@ -3485,6 +3512,7 @@ they are presented.
   [e391]: #x-28MGL-PAX-3ADISLOCATED-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:DISLOCATED MGL-PAX:LOCATIVE"
   [e442]: http://www.lispworks.com/documentation/HyperSpec/Body/03_d.htm '"3.4" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [e51f]: #x-28MGL-PAX-3AEXPORTABLE-REFERENCE-P-20GENERIC-FUNCTION-29 "MGL-PAX:EXPORTABLE-REFERENCE-P GENERIC-FUNCTION"
+  [e527]: #x-28MGL-PAX-3A-2ABROWSE-HTML-STYLE-2A-20VARIABLE-29 "MGL-PAX:*BROWSE-HTML-STYLE* VARIABLE"
   [e548]: dref/README.md#x-28MGL-PAX-3AWRITER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:WRITER MGL-PAX:LOCATIVE"
   [e5ab]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_3.htm "SYMBOL-PACKAGE (MGL-PAX:CLHS FUNCTION)"
   [e5af]: http://www.lispworks.com/documentation/HyperSpec/Body/t_symbol.htm "SYMBOL (MGL-PAX:CLHS CLASS)"

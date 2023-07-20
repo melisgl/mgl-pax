@@ -118,15 +118,12 @@
 
 ;;;; Web server
 
-;;; HUNCHENTOOT:*DISPATCH-TABLE* will be bound to this locally to
-;;; avoid conflicts with other HUNCHENTOOT servers running in the same
-;;; image.
 (defun web-toplevel-static-files ()
-  (let ((static-root (asdf:system-relative-pathname :mgl-pax "web/")))
-    (values (uiop:directory* (merge-pathnames "*.*" static-root))
-            static-root)))
+  (let ((style-dir (html-style-dir *browse-html-style*)))
+    (values (uiop:directory* (merge-pathnames "*.*" style-dir))
+            style-dir)))
 
-(defparameter *dispatch-table*
+(defun make-dispatch-table ()
   (multiple-value-bind (static-files static-root) (web-toplevel-static-files)
     (let ((dispatchers ()))
       (dolist (file static-files)
@@ -144,6 +141,23 @@
             dispatchers)
       dispatchers)))
 
+;;; Cache the dispatch table of the most recent request, which depends
+;;; on *BROWSE-HTML-STYLE*.
+(defvar *style-and-dispatch-table* nil)
+
+(defun dispatch-table ()
+  (if (eq (car *style-and-dispatch-table*) *browse-html-style*)
+      (cdr *style-and-dispatch-table*)
+      (let ((*browse-html-style* *browse-html-style*))
+        (setq *style-and-dispatch-table* (cons *browse-html-style*
+                                               (make-dispatch-table)))
+        (cdr *style-and-dispatch-table*))))
+
+;;; HUNCHENTOOT:*DISPATCH-TABLE* will be bound to this locally to
+;;; avoid conflicts with other HUNCHENTOOT servers running in the same
+;;; image.
+(defparameter *dispatch-table* (make-dispatch-table))
+
 (defvar *server*
   (make-instance 'hunchentoot:easy-acceptor
                  ;; Any free port
@@ -160,7 +174,7 @@
 (defmethod hunchentoot:acceptor-dispatch-request
     :around ((acceptor (eql *server*)) request)
   (declare (ignorable request))
-  (let ((hunchentoot:*dispatch-table* (append *dispatch-table*
+  (let ((hunchentoot:*dispatch-table* (append (dispatch-table)
                                               *hyperspec-dispatch-table*))
         (*document-hyperspec-root*
           (cond ((null *web-document-hyperspec-root*)

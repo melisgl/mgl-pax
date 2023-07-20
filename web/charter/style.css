@@ -2,27 +2,50 @@
 @import url("xeb-garamond/xeb-garamond.css");
 
 :root {
-  --font-family: 'XCharter', serif;
-  /* No old-style figures: */
-  /* --font-feature-settings: "onum" 1, "cv01" 1; */
-  --font-family-heading: 'XEB Garamond', serif;
+  /* Use a serif font as the main font. */
+  --font-family: 'XCharter', 'Charter', 'Georgia', serif;
+  --font-family-heading: 'XEB Garamond', 'Times New Roman', serif;
   --font-feature-settings-heading: "onum" 0;
-  --font-family-monospace: 'DejaVu Sans Mono', 'Liberation Mono', 'Hack', 'Roboto Mono', monospace;
-  /* 86% makes DejaVu Sans Mono match XCharter in x-height. This is
-   * slightly larger to allow inline code to stand out a tiny bit more
-   * without becoming an eye sore. */
-  --font-size-monospace: 88%;
+  --font-family-monospace: 'DejaVu Sans Mono', 'Liberation Mono', 'Hack',
+                           'Roboto Mono', monospace;
+  /* 86% makes DejaVu Sans Mono match Charter and Georgia in x-height.
+   * This is slightly larger to allow inline code to stand out a tiny
+   * bit more without becoming an eye sore. */
+  --font-size-monospace-in-code: 88%;
+  --code-color: #111;
+  /* With DejaVu Sans Mono 97% gets about 80 characters per line at full
+   * width (73ch). */
+  --font-size-monospace-in-pre: 97%;
+
   --line-height: 1.35rem;
   --parsep: 0.3375rem;
 }
 
-html {
-  font-size: calc(0.9em + 0.25vw);
-}
-
-@media (min-width: 70rem) {
+@media (min-width: 65rem) {
   html {
     text-align: justify;
+  }
+  #content {
+    margin-left: calc(min(40ex,33%));
+  }
+  #toc {
+    width: 40ex;
+    max-width: 33%;
+  }
+}
+
+@media (max-width: 65rem) {
+  html {
+    text-align: justify;
+  }
+  #toc {
+    width: 0ex;
+  }
+}
+
+@media (max-width: 40rem) {
+  html {
+    text-align: left;
   }
 }
 
@@ -76,14 +99,8 @@ h1 {
 }
 
 h2 {
-  /* font-family: var(--font-family-heading); */
-  /* font-feature-settings: var(--font-feature-settings-heading); */
-  /* font-size: 1.8rem; */
   font-size: 1.3rem;
   font-weight: bold;
-  /* font-variant: small-caps; */
-  /* text-transform: lowercase; */
-  /* letter-spacing: 0.1em; */
   line-height: var(--line-height);
   margin: var(--line-height) 0;
 }
@@ -96,8 +113,6 @@ h3 {
 }
 
 h4 {
-  /* font-family: var(--font-family-heading); */
-  /* font-size: 1.416rem; */
   font-size: 1.1rem;
   font-weight: bold;
   line-height: var(--line-height);
@@ -146,15 +161,13 @@ h6 a {
 
 pre {
   font-family: var(--font-family-monospace);
-  /* With DejaVu Sans Mono 97% gets about 80 characters per line at full
-   * width (73ch). */
-  font-size: 97%;
+  font-size: var(--font-size-monospace-in-pre);
 }
 
 code {
   font-family: var(--font-family-monospace);
-  font-size: var(--font-size-monospace);
-  color: #111;
+  font-size: var(--font-size-monospace-in-code);
+  color: var(--code-color);
   hyphens: none;
 }
 
@@ -215,10 +228,10 @@ img {
 }
 
 .locative-type a {
-  color: #333;
   text-decoration: none;
   border-bottom: 0;
   font-weight: bold;
+  color: #444;
 }
 
 .reference-object {
@@ -228,11 +241,13 @@ img {
   padding: 0.1em 0.22em 0.02em 0.22em;
   border: solid 1px #777;
   font-weight: bold;
+  letter-spacing: 0.02em;
+  /* Counter the effect of boldness by slightly reducing the size. */
+  font-size: 98%;
 }
 
 .reference-object a {
   text-decoration: none;
-  color: #333;
   border-bottom: none;
 }
 
@@ -339,7 +354,6 @@ a.symbol:hover { color : #229955; background-color : transparent; text-decoratio
 
 #content {
   max-width: 85ex;
-  margin-left: calc(min(40ex,33%));
   padding-left: 4ch;
   padding-right: 4ch;
 }
@@ -348,11 +362,9 @@ a.symbol:hover { color : #229955; background-color : transparent; text-decoratio
   top: 0px;
   left: 0px;
   height: 100%;
-  width: 40ex;
-  max-width: 33%;
   position: fixed;
-  overflow-y:auto;
-  overflow-x:hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   background: #333;
   box-shadow: inset -5px 0 5px 0px #000;
   color: #aaa;
