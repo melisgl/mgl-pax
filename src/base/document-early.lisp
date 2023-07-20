@@ -39,6 +39,8 @@
 (export '*document-fancy-html-navigation*)
 
 ;;; @HTML-OUTPUT
+(defvar *document-html-default-style*)
+(export '*document-html-default-style*)
 (defvar *document-html-max-navigation-table-of-contents-level*)
 (export '*document-html-max-navigation-table-of-contents-level*)
 (defvar *document-html-head*)
@@ -61,6 +63,10 @@
 (export '*document-normalize-packages*)
 (defvar *document-base-url*)
 (export '*document-base-url*)
+
+;;; @BROWSING-WITH-OTHER-BROWSERS
+(defvar *browse-html-style*)
+(export '*browse-html-style*)
 
 (autoload find-hyperspec-definition-url '#:mgl-pax/document :export nil)
 (autoload find-hyperspec-section-id '#:mgl-pax/document :export nil)
