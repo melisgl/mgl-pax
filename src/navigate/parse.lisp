@@ -101,10 +101,10 @@
                      (consider object name)))
                  ;; Consider NAME as a string.
                  (when (or (definitions name)
-                           ;; FIXME: CLHS is a pseudo locative.
-                           ;; DEFINITIONS does not look for it. It's
-                           ;; fine though because we need a hack for
-                           ;; substring matching anyway.
+                           ;; CLHS is a pseudo locative. DEFINITIONS
+                           ;; does not look for it. It's fine though
+                           ;; because we need a hack for substring
+                           ;; matching anyway.
                            (let ((*clhs-substring-match* clhs-substring-match))
                              (declare (special *clhs-substring-match*))
                              (dref name 'clhs nil)))

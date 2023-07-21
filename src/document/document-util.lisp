@@ -410,7 +410,8 @@
 
 ;;; This section is not in the documentation of PAX-WORLD itself. It
 ;;; is dynamically extended with the list of sections for which
-;;; UPDATE-PAX-WORLD was called. FIXME: this is not thread-safe.
+;;; UPDATE-PAX-WORLD was called. FIXME: this makes CREATE-PAX-WORLD
+;;; not thread-safe.
 (defun define-pax-world-dummy ()
   (defsection @pax-world-dummy (:title "PAX World")
     "This is a list of documents generated with

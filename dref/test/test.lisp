@@ -81,7 +81,7 @@
                     `(,(xref 'foo-w 'variable)
                       ,(xref 'foo-w '(writer foo)))))
   ;; BAZ-AAA is not recognized as a structure accessor on most Lisps.
-  ;; On CCL, (SETF BAZ-AAA) show up as well. FIXME: Maybe that's how
+  ;; On CCL, (SETF BAZ-AAA) shows up as well. FIXME: Maybe that's how
   ;; it should be?
   (with-failure-expected ((and (alexandria:featurep '(:not (:or :sbcl)))
                                'failure))

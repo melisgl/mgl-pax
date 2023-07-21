@@ -67,7 +67,7 @@ side."
   :group 'mgl-pax)
 
 (defvar mgl-pax-version)
-(setq mgl-pax-version  '(0 2 4))
+(setq mgl-pax-version  '(0 3 0))
 
 (defun mgl-pax-maybe-autoload (no-web cont)
   (if (or no-web (mgl-pax-use-w3m))
