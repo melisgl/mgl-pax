@@ -416,10 +416,13 @@
        (define-locative-type ,locative-type ,lambda-list ,@docstring)
        (defclass ,dref-class (symbol-locative-dref) ())
        (defmethod dref* (symbol (locative-type (eql ',locative-type))
-                                locative-args)
+                         locative-args)
          (check-locative-args ,locative-type locative-args)
-         (or (symbol-lambda-list-method symbol ',locative-type)
-             (locate-error))
+         ;; Faster than calling SYMBOL-LAMBDA-LIST-METHOD.
+         (when (nth-value 1
+                          (ignore-errors
+                           (values (symbol-lambda-list symbol locative-type))))
+           (locate-error))
          (%make-dref ',dref-class symbol (cons locative-type locative-args))))))
 
 ;;; SOURCE-LOCATION (method () (symbol-locative-dref)) is defined
