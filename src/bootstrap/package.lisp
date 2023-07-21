@@ -28,8 +28,6 @@
       (defpackage :mgl-pax
         (:documentation "See MGL-PAX::@PAX-MANUAL.")
         (:use #:common-lisp #:dref #:dref-ext)
-        ;; FIXME: Swap this with the package name without breaking
-        ;; existing URLs, which have MGL-PAX:<LOCATIVE> all over them.
         (:nicknames #:pax)
         ;; These are the exports from MGL-PAX/BOOTSTRAP.
         (:export #:define-package

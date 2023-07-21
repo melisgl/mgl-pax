@@ -285,9 +285,8 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
 
 ### 3.1 The mgl-pax ASDF System
 
-- Version: 0.2.4
-- Description: Exploratory programming tool and documentation
-  generator.
+- Version: 0.3.0
+- Description: Documentation system, browser, generator.
 - Long Description: The set of dependencies of the MGL-PAX system is
   kept light, and its heavier dependencies are autoloaded via ASDF
   when the relevant functionality is accessed. See the

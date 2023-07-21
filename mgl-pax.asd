@@ -3,14 +3,13 @@
 ;;; See MGL-PAX::@PAX-MANUAL for the user guide.
 (asdf:defsystem "mgl-pax"
   :licence "MIT, see COPYING."
-  :version "0.2.4"
+  :version "0.3.0"
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
   :homepage "http://melisgl.github.io/mgl-pax"
   :bug-tracker "https://github.com/melisgl/mgl-pax/issues"
   :source-control (:git "https://github.com/melisgl/mgl-pax.git")
-  :description "Exploratory programming tool and documentation
-  generator."
+  :description "Documentation system, browser, generator."
   :long-description "The set of dependencies of the MGL-PAX system is
   kept light, and its heavier dependencies are autoloaded via ASDF
   when the relevant functionality is accessed. See the

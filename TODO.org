@@ -120,3 +120,9 @@ Pros of Definitions:
 * MAYBE generate offline documentation for everything in quicklisp?
 Like https://quickref.common-lisp.net/index-per-library.html, but more
 useful?
+* MAYBE swap the MGL-PAX package name with the PAX nickname
+... somehow without breaking existing URLs, which have
+MGL-PAX:<LOCATIVE> all over them?
+* MAYBE ASDF:SYSTEMs should not be sectionlike
+I.e. they shouldn't be implemented with WITH-HEADING but maybe
+DOCUMENTING-REFERENCE like everything else.

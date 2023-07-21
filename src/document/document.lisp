@@ -333,11 +333,11 @@
 (defun find-among-links (reference links)
   (find reference links :key #'link-definition :test #'xref=))
 
-;;; FIXME: CLRHASH if too large?
 (defun ensure-in-open-nlmap (name)
   (declare (optimize speed))
   (if *first-pass*
       (closed-links name)
+      ;; This could be CLRHASHed if it gets too large.
       (let ((open-nlmap *open-nlmap*))
         (multiple-value-bind (links found) (gethash name open-nlmap)
           (if found
@@ -1415,9 +1415,6 @@
 
 ;;; This is the first of the translator functions, which are those
 ;;; passed to MAP-MARKDOWN-PARSE-TREE.
-;;;
-;;; FIXME: Circular includes are hard to detect because the 'recurse'
-;;; return value is handled in the caller of this function.
 (defun translate-docstring-links (parent tree)
   """DOCSTRING is a pseudolocative for including the parse tree of the
   markdown [DOCSTRING][function] of a definition in the parse tree of
@@ -1454,6 +1451,9 @@
               (when-let (docstring (docstring dref))
                 (values (or (parse-markdown (sanitize-docstring docstring))
                             '(""))
+                        ;; Detecting circular includes would be hard
+                        ;; because the 'recurse' return value is
+                        ;; handled in the caller of this function.
                         t t))
               (warn "~@<Including ~S failed because ~S ~S cannot be ~Sd~:@>"
                     'docstring name locative 'locate)))))

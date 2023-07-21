@@ -208,7 +208,6 @@
 ;;; For testing
 (defvar *omit-asdf-slots* nil)
 
-;; FIXME: should not be WITH-HEADING
 (defmethod document-object* ((dref asdf-system-dref) stream)
   "For definitions with a ASDF:SYSTEM locative, their most
   important slots are printed as an unnumbered list."
