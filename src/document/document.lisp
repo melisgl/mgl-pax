@@ -2973,61 +2973,71 @@
                    :escape-inline escape-inline :escape-html escape-html
                    :escape-block escape-block))
 
-;;; Print arg names without the package prefix to a string. The
-;;; default value with prefix. Works for macro arglists too.
+;;; Print a lambda list of any kind (ordinary, macro, etc) or a method
+;;; arglist to a string. Arg names are printed without the package
+;;; prefix, default values with the package prefix. For specializers
+;;; in method arglists to be distinguishable from nested macro lambda
+;;; lists, they look like
+;;;
+;;; (:method (x string) y (z (eql 7)) ...)
+;;;
+;;; else the specializers are printed without package information.
 (defun arglist-to-markdown (arglist)
   (with-output-to-string (out)
-    (let ((*default-values-possible-p* nil)
-          (*print-pretty* t)
-          (*print-right-margin* 80))
-      (declare (special *default-values-possible-p*))
-      (labels
-          ((resolve* (object)
-             (if (and *document-mark-up-signatures*
-                      ;; KLUDGE: Github has trouble displaying things
-                      ;; like '`*package*`, so disable this.
-                      (eq *format* :html))
-                 (codify-and-link (prin1-to-markdown object))
-                 (prin1-to-markdown object)))
-           (print-arg (arg level)
-             (cond ((member arg '(&key &optional &rest &body))
-                    (when (member arg '(&key &optional))
-                      (setq *default-values-possible-p* t))
-                    (format out "~A" (prin1-to-markdown arg)))
-                   ((symbolp arg)
-                    (format out "~A"
-                            (escape-markdown
-                             (maybe-downcase-all-uppercase-code
-                              (symbol-name arg)))))
-                   ((atom arg)
-                    (format out "~A" (prin1-to-markdown arg)))
-                   (*default-values-possible-p*
-                    (if (symbolp (first arg))
-                        (format out "(~A~{ ~A~})"
-                                (escape-markdown
-                                 (maybe-downcase-all-uppercase-code
-                                  (symbol-name (first arg))))
-                                (mapcar #'resolve* (rest arg)))
-                        (format out "~A" (prin1-to-markdown arg))))
-                   (t
-                    (print-arglist arg (1+ level)))))
-           (print-arglist (arglist level)
-             (let ((*default-values-possible-p* nil))
-               (declare (special *default-values-possible-p*))
-               (unless (= level 0)
-                 (format out "("))
-               (loop for i upfrom 0
-                     for rest on arglist
-                     do (unless (zerop i)
-                          (format out " "))
-                        (print-arg (car rest) level)
-                        ;; Handle (&WHOLE FORM NAME . ARGS) and similar.
-                        (unless (listp (cdr rest))
-                          (format out " . ")
-                          (print-arg (cdr rest) level)))
-               (unless (= level 0)
-                 (format out ")")))))
-        (print-arglist arglist 0)))))
+    (multiple-value-bind (methodp arglist)
+        (if (eq (first arglist) :method)
+            (values t (rest arglist))
+            (values nil arglist))
+      (let ((*print-pretty* t)
+            (*print-right-margin* 80))
+        (labels
+            ((resolve* (object)
+               (if (and *document-mark-up-signatures*
+                        ;; KLUDGE: Github has trouble displaying things
+                        ;; like '`*package*`, so disable this.
+                        (eq *format* :html))
+                   (codify-and-link (prin1-to-markdown object))
+                   (prin1-to-markdown object)))
+             (print-arg (arg level)
+               (declare (special *nesting-possible-p*))
+               (cond ((member arg '(&key &optional &rest &body))
+                      (when (member arg '(&key &optional))
+                        (setq *nesting-possible-p* nil))
+                      (format out "~A" (prin1-to-markdown arg)))
+                     ((symbolp arg)
+                      (format out "~A"
+                              (escape-markdown
+                               (maybe-downcase-all-uppercase-code
+                                (symbol-name arg)))))
+                     ((atom arg)
+                      (format out "~A" (prin1-to-markdown arg)))
+                     (*nesting-possible-p*
+                      (print-arglist arg (1+ level)))
+                     (t
+                      (if (symbolp (first arg))
+                          (format out "(~A~{ ~A~})"
+                                  (escape-markdown
+                                   (maybe-downcase-all-uppercase-code
+                                    (symbol-name (first arg))))
+                                  (mapcar #'resolve* (rest arg)))
+                          (format out "~A" (prin1-to-markdown arg))))))
+             (print-arglist (arglist level)
+               (let ((*nesting-possible-p* (not methodp)))
+                 (declare (special *nesting-possible-p*))
+                 (unless (= level 0)
+                   (format out "("))
+                 (loop for i upfrom 0
+                       for rest on arglist
+                       do (unless (zerop i)
+                            (format out " "))
+                          (print-arg (car rest) level)
+                          ;; Handle (&WHOLE FORM NAME . ARGS) and similar.
+                          (unless (listp (cdr rest))
+                            (format out " . ")
+                            (print-arg (cdr rest) level)))
+                 (unless (= level 0)
+                   (format out ")")))))
+          (print-arglist arglist 0))))))
 
 (defun map-dotted (fn list*)
   (if (listp list*)

@@ -97,6 +97,7 @@
   nil)
 (defmethod test-gf ((x (eql 7))))
 (defmethod test-gf ((x (eql #.(find-package :common-lisp)))))
+(defmethod test-gf ((x (eql :bar))))
 
 (defsection @test-method-combination (:export nil)
   (my-comb method-combination))

@@ -1002,9 +1002,9 @@ This is [Self-referencing][e042].
 
 
 (deftest test-method ()
+  (test-method/arglist)
   (signals-not (error)
-    (document (dref 'test-gf
-                           '(method () ((eql #.(find-package :cl)))))
+    (document (dref 'test-gf '(method () ((eql #.(find-package :cl)))))
               :stream nil))
   (is (equal (pax::urldecode "MGL-PAX-TEST:TEST-GF%20%28METHOD%20NIL%20%28%28EQL%20%23%3CPACKAGE%20%22COMMON-LISP%22%3E%29%29%29")
              "MGL-PAX-TEST:TEST-GF (METHOD NIL ((EQL #<PACKAGE \"COMMON-LISP\">)))"))
@@ -1015,6 +1015,10 @@ This is [Self-referencing][e042].
 
     `TEST-GF` is not a link. `X` is not a link.
 "))
+
+(deftest test-method/arglist ()
+  (check-pred (dref 'test-gf '(method () ((eql :bar))))
+              "- [method] **TEST-GF** *(X (EQL :BAR))*"))
 
 (deftest test-accessor ()
   (check-head (list "FOO-A `(accessor foo)`"

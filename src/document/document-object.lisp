@@ -94,7 +94,7 @@
 (defun %document-method (dref stream)
   (declare (type (or method-dref setf-dref) dref))
   (let ((arglist (rest (dref::method-for-inspect-value (resolve dref)))))
-    (documenting-reference (stream :arglist arglist)
+    (documenting-reference (stream :arglist `(:method ,@arglist))
       (with-dislocated-names (dref::function-arg-names (arglist dref))
         (document-docstring (docstring dref) stream)))))
 
