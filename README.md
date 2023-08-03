@@ -2420,10 +2420,10 @@ The main worry associated with including examples in the
 documentation is that they tend to get out-of-sync with the code.
 This is solved by being able to parse back and update transcripts.
 In fact, this is exactly what happens during documentation
-generation with PAX. Code sections tagged `cl-transcript` are
-retranscribed and checked for inconsistency (that is, any difference
-in output or return values). If the consistency check fails, an
-error is signalled that includes a reference to the object being
+generation with PAX. Code sections tagged with `cl-transcript` are
+retranscribed and checked for consistency (that is, no difference in
+output or return values). If the consistency check fails, an error
+is signalled that includes a reference to the object being
 documented.
 
 Going beyond documentation, transcript consistency checks can be
@@ -2441,9 +2441,9 @@ used for writing simple tests in a very readable form. For example:
 
 All in all, transcripts are a handy tool especially when combined
 with the Emacs support to regenerate them and with
-PYTHONIC-STRING-READER's triple-quoted strings, that allow one to
-work with nested strings with less noise. The triple-quote syntax
-can be enabled with:
+[PYTHONIC-STRING-READER][c097]'s triple-quoted strings, that
+allow one to work with nested strings with less noise. The
+triple-quote syntax can be enabled with:
 
     (in-readtable pythonic-string-syntax)
 
@@ -2465,7 +2465,7 @@ can be enabled with:
 
 ### 9.2 Transcribing with Emacs
 
-Typical transcript usage from within Emacs is simple: add a lisp
+Typical transcript usage from within Emacs is simple: add a Lisp
 form to a docstring or comment at any indentation level. Move the
 cursor right after the end of the form as if you were to evaluate it
 with `C-x C-e`. The cursor is marked by `#\^`:
@@ -2480,8 +2480,8 @@ Note that the use of fenced code blocks with the language tag
 `cl-transcript` is only to tell PAX to perform consistency checks at
 documentation generation time.
 
-Now invoke the elisp function `mgl-pax-transcribe` where the cursor
-is and the fenced code block from the docstring becomes:
+Now invoke the Elisp function `mgl-pax-transcribe` where the cursor
+is, and the fenced code block from the docstring becomes:
 
     (values (princ :hello) (list 1 2))
     .. HELLO
@@ -2501,7 +2501,7 @@ return value:
 
 When generating the documentation you get a
 [`TRANSCRIPTION-CONSISTENCY-ERROR`][a249] because the printed output and the
-first return value changed so you regenerate the documentation by
+first return value changed, so you regenerate the documentation by
 marking the region of bounded by `#\|` and the cursor at `#\^` in
 the example:
 
@@ -2513,7 +2513,7 @@ the example:
         2)
     ^
 
-then invoke the elisp function `mgl-pax-retranscribe-region` to get:
+then invoke the Elisp function `mgl-pax-retranscribe-region` to get:
 
     (values (princ :hello-world) (list 1 2))
     .. HELLO-WORLD
@@ -2523,7 +2523,7 @@ then invoke the elisp function `mgl-pax-retranscribe-region` to get:
         2)
     ^
 
-Note how the indentation and the comment of `(1 2)` was left alone
+Note how the indentation and the comment of `(1 2)` were left alone,
 but the output and the first return value got updated.
 
 Alternatively, `C-u 1 mgl-pax-transcribe` will emit commented markup:
@@ -2536,10 +2536,10 @@ Alternatively, `C-u 1 mgl-pax-transcribe` will emit commented markup:
 `C-u 0 mgl-pax-retranscribe-region` will turn commented into
 non-commented markup. In general, the numeric prefix argument is the
 index of the syntax to be used in [`*TRANSCRIBE-SYNTAXES*`][ebd3]. Without a
-prefix argument `mgl-pax-retranscribe-region` will not change the
+prefix argument, `mgl-pax-retranscribe-region` will not change the
 markup style.
 
-Finally, not only do both functions work at any indentation level,
+Finally, not only do both functions work at any indentation level
 but in comments too:
 
     ;;;; (values (princ :hello) (list 1 2))
@@ -2548,7 +2548,7 @@ but in comments too:
     ;;;; => (1 2)
 
 The dynamic environment of the transcription is determined by the
-`:DYNENV` argument of the enclosing cl-transcript code block (see
+`:DYNENV` argument of the enclosing `cl-transcript` code block (see
 [Controlling the Dynamic Environment][6b59]).
 
 Transcription support in Emacs can be enabled by loading
@@ -2565,12 +2565,13 @@ Transcription support in Emacs can be enabled by loading
     Read forms from `INPUT` and write them (iff `ECHO`) to `OUTPUT`
     followed by any output and return values produced by calling [`EVAL`][0d6e] on
     the form. `INPUT` can be a stream or a string, while `OUTPUT` can be a
-    stream or `NIL` in which case transcription goes into a string. The
-    return value is the `OUTPUT` stream or the string that was
-    constructed. Since `TRANSCRIBE` `EVAL`uates arbitrary code anyway, forms
-    are read with [`*READ-EVAL*`][82f7] `T`.
+    stream or `NIL`, in which case output goes into a string. The return
+    value is the `OUTPUT` stream or the string that was constructed. Since
+    `TRANSCRIBE` `EVAL`uates arbitrary code anyway, forms are read with
+    [`*READ-EVAL*`][82f7] `T`.
     
-    A simple example is this:
+    Go up to [Transcribing with Emacs][f5bd] for nice examples. A more
+    mind-bending one is this:
     
     ```common-lisp
     (transcribe "(princ 42) " nil)
@@ -2622,9 +2623,9 @@ Transcription support in Emacs can be enabled by loading
     => (1 2)
     ```
     
-    With `UPDATE-ONLY`, the printed output of a form is only transcribed
+    With `UPDATE-ONLY`, the printed output of a form is transcribed only
     if there were output markers in the source. Similarly, with
-    `UPDATE-ONLY`, return values are only transcribed if there were value
+    `UPDATE-ONLY`, return values are transcribed only if there were value
     markers in the source.
     
     **No Output/Values**
@@ -2649,7 +2650,7 @@ Transcription support in Emacs can be enabled by loading
     With `UPDATE-ONLY` true, we probably wouldn't like to lose those
     markers since they were put there for a reason. Hence, with
     `UPDATE-ONLY`, `INCLUDE-NO-OUTPUT` and `INCLUDE-NO-VALUE` default to true.
-    So with `UPDATE-ONLY` the above example is transcribed to:
+    So, with `UPDATE-ONLY` the above example is transcribed to:
     
     ```
     (values)
@@ -2963,8 +2964,8 @@ package for evaluation.
 - [function] **SQUEEZE-WHITESPACE** *STRING*
 
     Replace consecutive whitespace characters with a single space in
-    `STRING`. This is useful to do undo the effects of pretty printing
-    when building comparison functions for [`TRANSCRIBE`][f1f0].
+    `STRING`. This is useful to undo the effects of pretty printing when
+    building comparison functions for [`TRANSCRIBE`][f1f0].
 
 <a id="x-28mgl-pax-3adelete-trailing-whitespace-20function-29"></a>
 
@@ -2979,7 +2980,11 @@ package for evaluation.
 
     For each line in `STRING` delete the rest of the line after and
     including the first occurrence of `PATTERN`. On changed lines, delete
-    trailing whitespace too. Let's define a comparison function:
+    trailing whitespace too. This function does not parse `STRING` as Lisp
+    forms, hence all occurrences of `PATTERN` (even those seemingly in
+    string literals) are recognized as comments.
+    
+    Let's define a comparison function:
     
     ```common-lisp
     (defun string=/no-comments (string1 string2)
@@ -2994,7 +2999,7 @@ package for evaluation.
         .. world     ; This is the second line.
         ```
     
-    Just to make sure the above example works, here it is without the being
+    Just to make sure the above example works, here it is without being
     quoted.
     
     ```common-lisp

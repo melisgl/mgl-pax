@@ -115,7 +115,10 @@ Pros of DRef:
 Pros of Definitions:
 - Definitions has BIND, (SETF OBJECT), UNBIND, (SETF DOCUMENTATION).
   These can be added to DRef if needed.
-* BUG transcript: "debugger invoked on" is treated like output
+* MAYBE transcript: don't treat "debugger invoked on" is treated like output
+Well, it's a kind of output, but maybe it would be better for
+consistency checking to treat it as a different kind of output. First,
+capturing interaction with the debugger needs to be though out though.
 * MAYBE DREF-APROPOS: allow :LOCATIVE-TYPES to match subclasses?
 * MAYBE generate offline documentation for everything in quicklisp?
 Like https://quickref.common-lisp.net/index-per-library.html, but more

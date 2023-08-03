@@ -134,10 +134,10 @@
   documentation is that they tend to get out-of-sync with the code.
   This is solved by being able to parse back and update transcripts.
   In fact, this is exactly what happens during documentation
-  generation with PAX. Code sections tagged `cl-transcript` are
-  retranscribed and checked for inconsistency (that is, any difference
-  in output or return values). If the consistency check fails, an
-  error is signalled that includes a reference to the object being
+  generation with PAX. Code sections tagged with `cl-transcript` are
+  retranscribed and checked for consistency (that is, no difference in
+  output or return values). If the consistency check fails, an error
+  is signalled that includes a reference to the object being
   documented.
 
   Going beyond documentation, transcript consistency checks can be
@@ -155,9 +155,9 @@
 
   All in all, transcripts are a handy tool especially when combined
   with the Emacs support to regenerate them and with
-  PYTHONIC-STRING-READER's triple-quoted strings, that allow one to
-  work with nested strings with less noise. The triple-quote syntax
-  can be enabled with:
+  [PYTHONIC-STRING-READER][asdf:system]'s triple-quoted strings, that
+  allow one to work with nested strings with less noise. The
+  triple-quote syntax can be enabled with:
 
       (in-readtable pythonic-string-syntax)"
   (mgl-pax/transcribe asdf:system)
@@ -241,12 +241,13 @@
   """Read forms from INPUT and write them (iff ECHO) to OUTPUT
   followed by any output and return values produced by calling EVAL on
   the form. INPUT can be a stream or a string, while OUTPUT can be a
-  stream or NIL in which case transcription goes into a string. The
-  return value is the OUTPUT stream or the string that was
-  constructed. Since TRANSCRIBE EVALuates arbitrary code anyway, forms
-  are read with *READ-EVAL* T.
+  stream or NIL, in which case output goes into a string. The return
+  value is the OUTPUT stream or the string that was constructed. Since
+  TRANSCRIBE EVALuates arbitrary code anyway, forms are read with
+  *READ-EVAL* T.
 
-  A simple example is this:
+  Go up to @TRANSCRIBING-WITH-EMACS for nice examples. A more
+  mind-bending one is this:
 
   ```cl-transcript
   (transcribe "(princ 42) " nil)
@@ -298,9 +299,9 @@
   => (1 2)
   ```
 
-  With UPDATE-ONLY, the printed output of a form is only transcribed
+  With UPDATE-ONLY, the printed output of a form is transcribed only
   if there were output markers in the source. Similarly, with
-  UPDATE-ONLY, return values are only transcribed if there were value
+  UPDATE-ONLY, return values are transcribed only if there were value
   markers in the source.
 
   **No Output/Values**
@@ -325,7 +326,7 @@
   With UPDATE-ONLY true, we probably wouldn't like to lose those
   markers since they were put there for a reason. Hence, with
   UPDATE-ONLY, INCLUDE-NO-OUTPUT and INCLUDE-NO-VALUE default to true.
-  So with UPDATE-ONLY the above example is transcribed to:
+  So, with UPDATE-ONLY the above example is transcribed to:
 
   ```
   (values)
@@ -1170,7 +1171,7 @@
 
 
 (defsection @transcribing-with-emacs (:title "Transcribing with Emacs")
-  """Typical transcript usage from within Emacs is simple: add a lisp
+  """Typical transcript usage from within Emacs is simple: add a Lisp
   form to a docstring or comment at any indentation level. Move the
   cursor right after the end of the form as if you were to evaluate it
   with `C-x C-e`. The cursor is marked by `#\^`:
@@ -1185,8 +1186,8 @@
   `cl-transcript` is only to tell PAX to perform consistency checks at
   documentation generation time.
 
-  Now invoke the elisp function `mgl-pax-transcribe` where the cursor
-  is and the fenced code block from the docstring becomes:
+  Now invoke the Elisp function `mgl-pax-transcribe` where the cursor
+  is, and the fenced code block from the docstring becomes:
 
       (values (princ :hello) (list 1 2))
       .. HELLO
@@ -1206,7 +1207,7 @@
 
   When generating the documentation you get a
   TRANSCRIPTION-CONSISTENCY-ERROR because the printed output and the
-  first return value changed so you regenerate the documentation by
+  first return value changed, so you regenerate the documentation by
   marking the region of bounded by `#\|` and the cursor at `#\^` in
   the example:
 
@@ -1218,7 +1219,7 @@
           2)
       ^
 
-  then invoke the elisp function `mgl-pax-retranscribe-region` to get:
+  then invoke the Elisp function `mgl-pax-retranscribe-region` to get:
 
       (values (princ :hello-world) (list 1 2))
       .. HELLO-WORLD
@@ -1228,7 +1229,7 @@
           2)
       ^
 
-  Note how the indentation and the comment of `(1 2)` was left alone
+  Note how the indentation and the comment of `(1 2)` were left alone,
   but the output and the first return value got updated.
 
   Alternatively, `C-u 1 mgl-pax-transcribe` will emit commented markup:
@@ -1241,10 +1242,10 @@
   `C-u 0 mgl-pax-retranscribe-region` will turn commented into
   non-commented markup. In general, the numeric prefix argument is the
   index of the syntax to be used in *TRANSCRIBE-SYNTAXES*. Without a
-  prefix argument `mgl-pax-retranscribe-region` will not change the
+  prefix argument, `mgl-pax-retranscribe-region` will not change the
   markup style.
 
-  Finally, not only do both functions work at any indentation level,
+  Finally, not only do both functions work at any indentation level
   but in comments too:
 
       ;;;; (values (princ :hello) (list 1 2))
@@ -1253,7 +1254,7 @@
       ;;;; => (1 2)
 
   The dynamic environment of the transcription is determined by the
-  :DYNENV argument of the enclosing cl-transcript code block (see
+  :DYNENV argument of the enclosing `cl-transcript` code block (see
   @TRANSCRIPT-DYNENV).
 
   Transcription support in Emacs can be enabled by loading
@@ -1401,8 +1402,8 @@
 
 (defun/autoloaded squeeze-whitespace (string)
   "Replace consecutive whitespace characters with a single space in
-  STRING. This is useful to do undo the effects of pretty printing
-  when building comparison functions for TRANSCRIBE."
+  STRING. This is useful to undo the effects of pretty printing when
+  building comparison functions for TRANSCRIBE."
   (with-output-to-string (s)
     (let ((prev-whitespace-p nil))
       (loop for char across string
@@ -1428,7 +1429,11 @@
 (defun/autoloaded delete-comments (string &key (pattern ";"))
   """For each line in STRING delete the rest of the line after and
   including the first occurrence of PATTERN. On changed lines, delete
-  trailing whitespace too. Let's define a comparison function:
+  trailing whitespace too. This function does not parse STRING as Lisp
+  forms, hence all occurrences of PATTERN (even those seemingly in
+  string literals) are recognized as comments.
+
+  Let's define a comparison function:
 
   ```cl-transcript (:dynenv pax-std-env)
   (defun string=/no-comments (string1 string2)
@@ -1443,15 +1448,14 @@
       .. world     ; This is the second line.
       ```
 
-  Just to make sure the above example works, here it is without the being
+  Just to make sure the above example works, here it is without being
   quoted.
 
   ```cl-transcript (:check-consistency ((:output string=/no-comments)))
   (format t "hello~%world")
   .. hello     ; This is the first line.
   .. world     ; This is the second line.
-  ```
-  """
+  ```"""
   (flet ((delete-on-one-line (string)
            (let ((pos (search pattern string)))
              (if pos
