@@ -14,5 +14,4 @@
                 :serial t
                 :components ((:file "package")
                              (:file "basics")
-                             (:file "pax-world"))))
-  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
+                             (:file "pax-world")))))
