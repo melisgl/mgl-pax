@@ -1,6 +1,6 @@
 (in-package :mgl-pax)
 
-;;;; USE-PACKAGEs that were not available in MGL-PAX/BOOTSTRAP.
+;;;; USE-PACKAGEs that were not available in MGL-PAX-BOOTSTRAP.
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (use-package '#:named-readtables)

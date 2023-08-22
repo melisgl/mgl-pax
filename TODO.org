@@ -129,3 +129,4 @@ MGL-PAX:<LOCATIVE> all over them?
 * MAYBE ASDF:SYSTEMs should not be sectionlike
 I.e. they shouldn't be implemented with WITH-HEADING but maybe
 DOCUMENTING-REFERENCE like everything else.
+* print ASDF/SYSTEM:SYSTEM as ASDF:SYSTEM

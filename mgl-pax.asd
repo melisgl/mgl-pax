@@ -17,7 +17,7 @@
   MGL-PAX/FULL systems. To keep deployed code small, client systems
   should declare an ASDF dependency on this system, never on the
   others, which are intended for autoloading and interactive use."
-  :depends-on ("mgl-pax/bootstrap" "dref"
+  :depends-on ("mgl-pax-bootstrap" "dref"
                "named-readtables" "pythonic-string-reader")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
@@ -31,28 +31,7 @@
                              (:file "web-early")
                              (:file "transcribe-early")
                              (:file "locatives-early"))))
-  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
-
-;;; MGL-PAX depends on DREF, and DREF depends on MGL-PAX/BOOTSTRAP.
-(asdf:defsystem "mgl-pax/bootstrap"
-  :licence "MIT, see COPYING."
-  :author "Gábor Melis"
-  :mailto "mega@retes.hu"
-  ;; Prevent inheritance of slot values from the MGL-PAX system.
-  :homepage ""
-  :bug-tracker ""
-  :source-control ""
-  :description "Not for public use. This is solely for systems on
-  which PAX depends but which also use PAX."
-  :depends-on ()
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
-  :components ((:module "src/bootstrap/"
-                :serial t
-                :components ((:file "package")
-                             (:file "basics")
-                             (:file "pax-world"))))
-  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
+  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
 
 (asdf:defsystem "mgl-pax/navigate"
   :licence "MIT, see COPYING."
@@ -77,7 +56,7 @@
                              (:file "locatives")
                              (:file "sections")
                              (:file "navigate"))))
-  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
+  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
 
 (asdf:defsystem "mgl-pax/document"
   :licence "MIT, see COPYING."
@@ -104,7 +83,7 @@
                              (:file "document")
                              (:file "document-util")
                              (:file "browse"))))
-  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
+  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
 
 (asdf:defsystem "mgl-pax/web"
   :licence "MIT, see COPYING."
@@ -124,7 +103,7 @@
   :components ((:module "src/web/"
                 :serial t
                 :components ((:file "web"))))
-  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
+  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
 
 (asdf:defsystem "mgl-pax/transcribe"
   :licence "MIT, see COPYING."
@@ -143,7 +122,7 @@
   :components ((:module "src/transcribe/"
                 :serial t
                 :components ((:file "transcribe"))))
-  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
+  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
 
 (asdf:defsystem "mgl-pax/full"
   :licence "MIT, see COPYING."
@@ -156,44 +135,4 @@
   :long-description "Do not declare a dependency on this system. It
   is autoloaded."
   :depends-on ("mgl-pax/navigate" "mgl-pax/document" "mgl-pax/transcribe")
-  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax/test"))))
-
-(asdf:defsystem "mgl-pax/test"
-  :licence "MIT, see COPYING."
-  :author "Gábor Melis"
-  :mailto "mega@retes.hu"
-  :homepage ""
-  :bug-tracker ""
-  :source-control ""
-  :description "Test system for MGL-PAX."
-  :long-description ""
-  :depends-on ("mgl-pax/full" "dref/test" "try")
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
-  :components ((:module "test"
-                :serial t
-                :components ((:file "package")
-                             (:file "test-defs")
-                             (:file "test-util")
-                             (:file "test-navigate")
-                             (:file "test-document")
-                             (:file "test-transcribe")
-                             (:file "test"))))
-  :perform (asdf:test-op (o s)
-             (uiop:symbol-call '#:mgl-pax-test '#:test)))
-
-(asdf:defsystem "mgl-pax/test-extension"
-  :licence "MIT, see COPYING."
-  :author "Gábor Melis"
-  :mailto "mega@retes.hu"
-  :homepage ""
-  :bug-tracker ""
-  :source-control ""
-  :description "Test system for MGL-PAX extensions."
-  :long-description "Runnable by test/test.sh only."
-  :depends-on ("mgl-pax" "try")
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
-  :components ((:module "test"
-                :serial t
-                :components ((:file "test-extension")))))
+  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))

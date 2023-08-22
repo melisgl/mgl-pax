@@ -1111,19 +1111,19 @@ This is [Self-referencing][e042].
                       (dref 'mgl-pax/full 'asdf:system))
                 "[`MGL-PAX/FULL`][d761]"))
   (with-test ("name is not a symbol accessible in the current package")
-    (is (null (find-symbol (string '#:mgl-pax/test) '#:mgl-pax-test)))
-    (check-head (list "MGL-PAX/TEST"
-                      (dref "mgl-pax/test" 'asdf:system))
-                "MGL-PAX/TEST")
-    (check-head (list "MGL-PAX/TEST asdf:system"
-                      (dref "mgl-pax/test" 'asdf:system))
-                "MGL-PAX/TEST asdf:system")
-    (check-head (list "`MGL-PAX/TEST` asdf:system"
-                      (dref "mgl-pax/test" 'asdf:system))
-                "[`MGL-PAX/TEST`][69db] asdf:system")
-    (check-head (list "[MGL-PAX/TEST][asdf:system]"
-                      (dref "mgl-pax/test" 'asdf:system))
-                "[MGL-PAX/TEST][69db]")))
+    (is (null (find-symbol (string '#:mgl-pax-test) '#:mgl-pax-test)))
+    (check-head (list "MGL-PAX-TEST"
+                      (dref "mgl-pax-test" 'asdf:system))
+                "MGL-PAX-TEST")
+    (check-head (list "MGL-PAX-TEST asdf:system"
+                      (dref "mgl-pax-test" 'asdf:system))
+                "MGL-PAX-TEST asdf:system")
+    (check-head (list "`MGL-PAX-TEST` asdf:system"
+                      (dref "mgl-pax-test" 'asdf:system))
+                "[`MGL-PAX-TEST`][cad4] asdf:system")
+    (check-head (list "[MGL-PAX-TEST][asdf:system]"
+                      (dref "mgl-pax-test" 'asdf:system))
+                "[MGL-PAX-TEST][cad4]")))
 
 
 (defpackage interned-pkg-name)

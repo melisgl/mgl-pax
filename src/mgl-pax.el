@@ -87,7 +87,7 @@ side."
             `(cl:progn
               (cl:unless
                (cl:and (cl:find-package :mgl-pax)
-                       ;; Not there if only mgl-pax/bootstrap loaded.
+                       ;; Not there if only mgl-pax-bootstrap is loaded.
                        (cl:find-symbol
                         (cl:string '#:check-pax-elisp-version)
                         (cl:find-package :mgl-pax)))

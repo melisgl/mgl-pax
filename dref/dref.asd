@@ -16,7 +16,7 @@
   definitions and smooths over the differences between
   implementations. This system has minimal dependencies. It autoloads
   the `DREF/FULL` ASDF:SYSTEM, which depends Alexandria and Swank."
-  :depends-on ("mgl-pax/bootstrap" "named-readtables" "pythonic-string-reader")
+  :depends-on ("mgl-pax-bootstrap" "named-readtables" "pythonic-string-reader")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/base/"

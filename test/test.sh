@@ -30,7 +30,7 @@ function lisp_tests {
 
   run_test_case "lisp test suite on ${lisp_name}" $@ <<EOF
 (require :asdf)
-(asdf:load-system :mgl-pax/test)
+(asdf:load-system :mgl-pax-test)
 (when (try:passedp (mgl-pax-test:test :debug ${debug} :print ${print}
                                       :describe ${describe}))
   (uiop/image:quit 22))
@@ -42,7 +42,7 @@ function autoload_tests {
   shift
 
   run_test_case "test-exports on ${lisp_name}" $@ <<EOF
-(asdf:load-system :mgl-pax/test-extension)
+(asdf:load-system :mgl-pax-test/extension)
 (asdf:load-system :mgl-pax/full)
 (in-package :mgl-pax-test-extension)
 (when (passedp (try 'test-exports))
@@ -50,14 +50,14 @@ function autoload_tests {
 EOF
 
   run_test_case "test-document-autoload on ${lisp_name}" $@ <<EOF
-(asdf:load-system :mgl-pax/test-extension)
+(asdf:load-system :mgl-pax-test/extension)
 (in-package :mgl-pax-test-extension)
 (when (passedp (try 'test-document-autoload))
   (uiop/image:quit 22))
 EOF
 
   run_test_case "test-document-for-emacs-autoload on ${lisp_name}" $@ <<EOF
-(asdf:load-system :mgl-pax/test-extension)
+(asdf:load-system :mgl-pax-test/extension)
 (in-package :mgl-pax-test-extension)
 (when (passedp (try 'test-document-for-emacs-autoload))
   (uiop/image:quit 22))
@@ -65,21 +65,21 @@ EOF
 
   run_test_case "test-locate-definitions-for-emacs-autoload on ${lisp_name}" \
                 $@ <<EOF
-(asdf:load-system :mgl-pax/test-extension)
+(asdf:load-system :mgl-pax-test/extension)
 (in-package :mgl-pax-test-extension)
 (when (passedp (try 'test-locate-definitions-for-emacs-autoload))
   (uiop/image:quit 22))
 EOF
 
   run_test_case "test-transcribe-autoload on ${lisp_name}" $@ <<EOF
-(asdf:load-system :mgl-pax/test-extension)
+(asdf:load-system :mgl-pax-test/extension)
 (in-package :mgl-pax-test-extension)
 (when (passedp (try 'test-transcribe-autoload))
   (uiop/image:quit 22))
 EOF
 
   run_test_case "test-transcribe-for-emacs-autoload on ${lisp_name}" $@ <<EOF
-(asdf:load-system :mgl-pax/test-extension)
+(asdf:load-system :mgl-pax-test/extension)
 (asdf:load-system "swank")
 (in-package :mgl-pax-test-extension)
 (when (passedp (try 'test-transcribe-for-emacs-autoload))
