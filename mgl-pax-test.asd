@@ -10,7 +10,7 @@
   :source-control ""
   :description "Test system for MGL-PAX."
   :long-description ""
-  :depends-on ("mgl-pax/full" "dref/test" "try")
+  :depends-on ("mgl-pax/full" "dref-test" "try")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "test"
