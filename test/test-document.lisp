@@ -738,15 +738,14 @@ This is [Self-referencing][e042].
 
 
 (deftest test-url-versions ()
-  (with-failure-expected ('failure)
-    (check-document (xref 'foo2 'function)
-                    "<a id=\"x-28MGL-PAX-TEST-3AFOO2-20FUNCTION-29\"></a>
+  (check-document (xref 'foo2 'function)
+                  "<a id=\"x-28MGL-PAX-TEST-3AFOO2-20FUNCTION-29\"></a>
 
 - [function] **FOO2** *OOK X*
 
     `FOO2` has args `OOK` and `X`.
 "
-                    :url-versions '(1)))
+                  :url-versions '(1))
   (check-document (xref 'foo2 'function)
                   "<a id=\"MGL-PAX-TEST:FOO2%20FUNCTION\"></a>
 
@@ -755,16 +754,15 @@ This is [Self-referencing][e042].
     `FOO2` has args `OOK` and `X`.
 "
                   :url-versions '(2))
-  (with-failure-expected ('failure)
-    (check-document (xref 'foo2 'function)
-                    "<a id=\"x-28MGL-PAX-TEST-3AFOO2-20FUNCTION-29\"></a>
+  (check-document (xref 'foo2 'function)
+                  "<a id=\"x-28MGL-PAX-TEST-3AFOO2-20FUNCTION-29\"></a>
 <a id=\"MGL-PAX-TEST:FOO2%20FUNCTION\"></a>
 
 - [function] **FOO2** *OOK X*
 
     `FOO2` has args `OOK` and `X`.
 "
-                    :url-versions '(1 2))))
+                  :url-versions '(1 2)))
 
 (deftest test-pages ()
   (let ((*package* (find-package (find-package :mgl-pax-test))))
