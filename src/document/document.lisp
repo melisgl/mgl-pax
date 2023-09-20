@@ -649,15 +649,19 @@
                       ;; On CMUCL, SLOT-VALUE doesn't seem to work on
                       ;; conditions.
                       #-cmucl
-                      (destructuring-bind (format-control &rest format-args)
-                          (dref::locate-error-message e)
-                        (setf (slot-value e 'dref::message)
-                              (cons (concatenate
-                                     'string
-                                     format-control
-                                     (escape-format-control
-                                      (print-document-context nil)))
-                                    format-args)))))
+                      (setf (slot-value e 'dref::message)
+                            (if (dref::locate-error-message e)
+                                (destructuring-bind (format-control
+                                                     &rest format-args)
+                                    (dref::locate-error-message e)
+                                  (cons (concatenate
+                                         'string
+                                         format-control
+                                         (escape-format-control
+                                          (print-document-context nil)))
+                                        format-args))
+                                (list (escape-format-control
+                                       (print-document-context nil)))))))
                   (transcription-error
                     (lambda (e)
                       #-cmucl

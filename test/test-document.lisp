@@ -68,6 +68,7 @@
   (test-base-url)
   (test-url-versions)
   (test-pages)
+  (test-locate-error)
   ;; PAX::@VARIABLELIKE-LOCATIVES
   (test-variable)
   (test-constant)
@@ -784,6 +785,14 @@ This is [Self-referencing][e042].
         (is (equal (second outputs)
                    "- [function] ->MAX
 "))))))
+
+
+(defsection @section-with-undefined-stuff ()
+  (undefined undefined))
+
+(deftest test-locate-error ()
+  (signals (locate-error)
+    (document '@section-with-undefined-stuff)))
 
 
 (defparameter *nasty-var* (coerce '(#\Space #\Linefeed #\Tab #\Newline
