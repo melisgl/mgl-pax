@@ -145,7 +145,7 @@
 
 ;;;; Parse tree based markdown fragments
 
-(declaim (inline parse-tree-tag-p))
+(declaim (inline parse-tree-p))
 (defun parse-tree-p (parse-tree tag)
   (and (listp parse-tree)
        (eq (first parse-tree) tag)))
