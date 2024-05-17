@@ -128,7 +128,7 @@
 
   SYMBOL-MACRO references do not RESOLVE.""")
 
-(defvar *symbol-macro-docstrings* (make-hash-table))
+(defvar *symbol-macro-docstrings* (make-hash-table :test #'eq))
 
 (define-definition-class symbol-macro symbol-macro-dref)
 

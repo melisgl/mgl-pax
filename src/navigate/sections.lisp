@@ -13,7 +13,9 @@
   `(progv (unless (boundp '*all-sections*)
             '(*all-sections* *section-definitions* *parent-sections*))
        (unless (boundp '*all-sections*)
-         `(:not-computed ,(make-hash-table) ,(make-hash-table)))
+         `(:not-computed
+           ,(make-hash-table :test #'eq)
+           ,(make-hash-table :test #'eq)))
      ,@body))
 
 ;;; This is slow but fast enough not to bother with a SECTION-NAME to

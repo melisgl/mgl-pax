@@ -194,7 +194,7 @@
   written-p
   ;; LINKS made from this page. For LINK-TO-DEFINITION and
   ;; WRITE-MARKDOWN-REFERENCE-STYLE-LINK-DEFINITIONS.
-  (used-links (make-hash-table) :type hash-table))
+  (used-links (make-hash-table :test #'eq) :type hash-table))
 
 ;;; All the PAGEs in a DOCUMENT call.
 (defvar *pages*)
@@ -365,7 +365,7 @@
   `(let ((*open-nlmap* (make-hash-table :test #'equal))
          (*closed-nlmap* (make-hash-table :test #'equal))
          (*local-references* ())
-         (*link-to-id* (make-hash-table))
+         (*link-to-id* (make-hash-table :test #'eq))
          (*id-to-link* (make-hash-table :test #'equal)))
      (locally ,@body)))
 
