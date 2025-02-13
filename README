@@ -1853,6 +1853,16 @@ See the following variables, which control HTML generation.
     *DOCUMENT-MAX-NUMBERING-LEVEL* in the dynamic HTML table of contents
     on the left of the page.
 
+- [variable] *DOCUMENT-HTML-LANG* "en"
+
+    The value for the `html` element's `xml:lang` and `lang`
+    attributes in the generated HTML.
+
+- [variable] *DOCUMENT-HTML-CHARSET* "UTF-8"
+
+    The value for `charset` attribute of the `<meta http-equiv='Content-Type'
+    content='text/html'>` element in the generated HTML.
+
 - [variable] *DOCUMENT-HTML-HEAD* NIL
 
     Stuff to be included in the `<head>` of the generated HTML.

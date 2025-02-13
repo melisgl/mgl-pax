@@ -2091,6 +2091,20 @@ See the following variables, which control HTML generation.
     [`*DOCUMENT-MAX-NUMBERING-LEVEL*`][f12d] in the dynamic HTML table of contents
     on the left of the page.
 
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-HTML-LANG-2A-20VARIABLE-29"></a>
+
+- [variable] **\*DOCUMENT-HTML-LANG\*** *"en"*
+
+    The value for the `html` element's `xml:lang` and `lang`
+    attributes in the generated HTML.
+
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-HTML-CHARSET-2A-20VARIABLE-29"></a>
+
+- [variable] **\*DOCUMENT-HTML-CHARSET\*** *"UTF-8"*
+
+    The value for `charset` attribute of the `<meta http-equiv='Content-Type'
+    content='text/html'>` element in the generated HTML.
+
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-HTML-HEAD-2A-20VARIABLE-29"></a>
 
 - [variable] **\*DOCUMENT-HTML-HEAD\*** *NIL*

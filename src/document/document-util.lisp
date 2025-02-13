@@ -72,6 +72,8 @@
   "See the following variables, which control HTML generation."
   (*document-html-default-style* variable)
   (*document-html-max-navigation-table-of-contents-level* variable)
+  (*document-html-lang* variable)
+  (*document-html-charset* variable)
   (*document-html-head* variable)
   (*document-html-sidebar* variable)
   (*document-html-top-blocks-of-links* variable)
@@ -155,7 +157,7 @@
                               (section-title section)
                               nil)))
                (html-header stream :title title
-                                   :stylesheet "style.css" :charset "UTF-8"
+                                   :stylesheet "style.css"
                                    :link-to-pax-world-p link-to-pax-world-p)))
            (footer (stream)
              (html-footer stream)))
@@ -198,6 +200,14 @@
                                             ((:default) "web/default/")
                                             ((:charter) "web/charter/"))))
 
+(defvar *document-html-lang* "en"
+  "The value for the `html` element's `xml:lang` and `lang`
+  attributes in the generated HTML.")
+
+(defvar *document-html-charset* "UTF-8"
+  "The value for `charset` attribute of the `<meta http-equiv='Content-Type'
+  content='text/html'>` element in the generated HTML.")
+
 (defvar *document-html-head* nil
   "Stuff to be included in the `<head>` of the generated HTML.
 
@@ -235,7 +245,8 @@
   below the table of contents.")
 
 (defun html-header
-    (stream &key title stylesheet (charset "UTF-8")
+    (stream &key title stylesheet (lang *document-html-lang* )
+              (charset *document-html-charset*)
               link-to-pax-world-p
               (head *document-html-head*)
               (sidebar *document-html-sidebar*)
@@ -244,13 +255,13 @@
   (format
    stream
    """<!DOCTYPE html>~%~
-   <html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>~%~
+   <html xmlns='http://www.w3.org/1999/xhtml' xml:lang='~A' lang='~A'>~%~
    <head>~%~
    ~@[<title>~A</title>~]~%~
    ~@[<link type='text/css' href='~A' rel='stylesheet'>~]~%~
    ~@[<meta http-equiv="Content-Type" content="text/html; ~
    charset=~A">~]~%~
-   <meta name="viewport" content="width=device-width">
+   <meta name="viewport" content="width=device-width">~%~
    <script src="jquery.min.js"></script>~%~
    <script src="toc.min.js"></script>~%~
    <script type="text/x-mathjax-config">
@@ -261,13 +272,12 @@
        }
      });
    </script>
-   <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
-   </script>
+   <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
    ~@[~A~]~%~
    </head>~%~
    <body>~%~
    <div id="content-container">~%"""
-   (make-plain title) stylesheet charset
+   lang lang (make-plain title) stylesheet charset
    (etypecase head
      ((or null string)
       head)
