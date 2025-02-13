@@ -89,12 +89,11 @@ h1 {
   font-feature-settings: var(--font-feature-settings-heading);
   font-weight: normal;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
-  /* text-shadow: 0.05em 0.05em 0.02em #DDD; */
+  letter-spacing: 0.08em;
+  word-spacing: 0.08em;
   line-height: calc(2*var(--line-height));
   font-size: 2.0rem;
   margin: calc(2*var(--line-height)) 0;
-  /* margin: calc(3*var(--line-height)) 0 calc(2*var(--line-height)) 0; */
   text-align: center;
 }
 
@@ -313,24 +312,24 @@ img {
 
 /* Syntax highlighting with Colorize */
 
-.symbol { color : #770055; background-color : transparent; border: 0px; margin: 0px;}
-a.symbol:link { color : #229955; background-color : transparent; text-decoration: none; border: 0px; margin: 0px; }
-a.symbol:active { color : #229955; background-color : transparent; text-decoration: none; border: 0px; margin: 0px; }
-a.symbol:visited { color : #229955; background-color : transparent; text-decoration: none; border: 0px; margin: 0px; }
-a.symbol:hover { color : #229955; background-color : transparent; text-decoration: none; border: 0px; margin: 0px; }
-.special { color : #FF5000; background-color : inherit; }
-.keyword { color : #770000; background-color : inherit; }
-.comment { color : #007777; background-color : inherit; }
-.string { color : #777777; background-color : inherit; }
-.atom { color : #314F4F; background-color : inherit; }
-.macro { color : #FF5000; background-color : inherit; }
-.variable { color : #36648B; background-color : inherit; }
-.function { color : #8B4789; background-color : inherit; }
-.attribute { color : #FF5000; background-color : inherit; }
-.character { color : #0055AA; background-color : inherit; }
-.syntaxerror { color : #FF0000; background-color : inherit; }
-.diff-deleted { color : #5F2121; background-color : inherit; }
-.diff-added { color : #215F21; background-color : inherit; }
+.symbol { color: #770055; font-style: normal; background-color: transparent; border: 0px; margin: 0px;}
+a.symbol:link { color: #229955; background-color: transparent; text-decoration: none; border: 0px; margin: 0px; }
+a.symbol:active { color: #229955; background-color: transparent; text-decoration: none; border: 0px; margin: 0px; }
+a.symbol:visited { color: #229955; background-color: transparent; text-decoration: none; border: 0px; margin: 0px; }
+a.symbol:hover { color: #229955; background-color: transparent; text-decoration: none; border: 0px; margin: 0px; }
+.special { color: #FF5000; background-color: inherit; }
+.keyword { color: #770000; background-color: inherit; }
+.comment { color: #007777; background-color: inherit; }
+.string { color: #777777; background-color: inherit; }
+.atom { color: #314F4F; background-color: inherit; }
+.macro { color: #FF5000; background-color: inherit; }
+.variable { color: #36648B; background-color: inherit; }
+.function { color: #8B4789; background-color: inherit; }
+.attribute { color: #FF5000; background-color: inherit; }
+.character { color: #0055AA; background-color: inherit; }
+.syntaxerror { color: #FF0000; background-color: inherit; }
+.diff-deleted { color: #5F2121; background-color: inherit; }
+.diff-added { color: #215F21; background-color: inherit; }
 
 /* Disable rainbow nesting on hover */
 
