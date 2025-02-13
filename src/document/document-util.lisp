@@ -451,7 +451,9 @@
         #'string< :key #'plain-section-title-or-name))
 
 (defun make-plain (md-string)
-  (document md-string :stream nil :format :plain))
+  ;; KLUDGE: 3mbd doesn't leaves the markup for `code` intact when
+  ;; rendering to :PLAIN.
+  (document (remove #\` md-string) :stream nil :format :plain))
 
 (defun plain-section-title-or-name (section)
   (make-plain (section-title-or-name section)))
