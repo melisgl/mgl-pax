@@ -1723,6 +1723,8 @@
 
 (defun maybe-downcase (string)
   (if *translating-reference-link*
+      ;; In a reference link label, the first backslash the prevents
+      ;; autolinking no effect.
       (cond ((starts-with-subseq "\\\\" string)
              (subseq string 2))
             ((starts-with-subseq "\\" string)
@@ -1734,9 +1736,8 @@
                  (downcase-all-uppercase-code string)
                  string)))
       (cond ((starts-with-subseq "\\\\" string)
-             ;; Leave one backslash to escape linking in
-             ;; TRANSLATE-TO-LINKS unless we are in a reference link,
-             ;; where linking cannot be escaped.
+             ;; Leave one backslash to escape autolinking in
+             ;; TRANSLATE-TO-LINKS.
              (subseq string 1))
             ((downcasingp)
              (downcase-all-uppercase-code string))
@@ -2301,7 +2302,8 @@
              `(,(%make-reflink
                  (if (null title)
                      label
-                     (codify (parse-markdown title)))
+                     (let ((*translating-reference-link* t))
+                       (codify (parse-markdown title))))
                  (link-to-definition ref-1))))))))
 
 

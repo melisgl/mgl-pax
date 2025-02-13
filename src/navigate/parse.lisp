@@ -41,7 +41,7 @@
   6. From the result of 4., further removing non-uppercase prefixes
      and suffixes.
 
-  For example, when `\M-.` is pressed while point is over
+  For example, when `\\M-.` is pressed while point is over
   `nonREADable.`, the last word of the sentence `It may be
   nonREADable.`, the following names are considered until one is found
   with a definition:
@@ -57,7 +57,7 @@
   5. No plural markers are found.
 
   6. The lowercase prefix and suffix is removed around the uppercase
-     core, giving `"READ"`. This has a definition, which `\M-.' will
+     core, giving `"READ"`. This has a definition, which `\\M-.` will
      visit.
 
   The exact rules for steps 5. and 6. are the following.

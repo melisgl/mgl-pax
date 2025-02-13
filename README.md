@@ -545,7 +545,7 @@ either case, [name][88cf]s are extracted from [word][d7b0]s and then turned into
     5. No plural markers are found.
     
     6. The lowercase prefix and suffix is removed around the uppercase
-       core, giving `"READ"`. This has a definition, which \`M-.' will
+       core, giving `"READ"`. This has a definition, which `M-.` will
        visit.
     
     The exact rules for steps 5. and 6. are the following.

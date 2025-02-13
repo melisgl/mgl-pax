@@ -60,7 +60,7 @@
                               :url "https://slime.common-lisp.dev/"))
 
 (define-glossary-term @m-.
-    (:title "`M-.`"
+    (:title "`\\\\M-.`"
      :url "http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions"))
 
 (define-glossary-term @oaoo (:title "OAOO"

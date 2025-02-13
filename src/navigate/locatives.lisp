@@ -417,7 +417,7 @@
   links. Autolinking also works if the @NAME is marked up as code or
   is [codified][ @codification] (e.g. in `COS clhs` (COS clhs).
 
-  As mentioned above, `\M-.` does not do anything over CLHS
+  As mentioned above, `\\M-.` does not do anything over CLHS
   references. Slightly more usefully, the [live documentation
   browser][@browsing-live-documentation] understands CLHS links so one
   can enter inputs like `3.4 clhs`, `"lambda list" clhs` or `error (clhs

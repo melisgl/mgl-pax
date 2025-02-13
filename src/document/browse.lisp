@@ -93,7 +93,7 @@
 
   In addition, the following PAX-specific key bindings are available:
 
-  - `M-.` visits the source location of the definition corresponding
+  - `\\M-.` visits the source location of the definition corresponding
     to the link under the point.
 
   - Invoking `mgl-pax-document` on a section title link will show the

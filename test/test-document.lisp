@@ -368,6 +368,9 @@ xxx
 
 (defsection @section-without-title (:export nil))
 
+(define-glossary-term @gt-escaped-title (:title "`\\\\PRINT`"
+                                         :url "xxx"))
+
 (deftest test-downcasing-in-docstrings ()
   (with-test ("unadorned")
     (check-downcasing "NOT-INTERNED" "NOT-INTERNED")
@@ -476,7 +479,9 @@ xxx
     (let ((*document-uppercase-is-code* nil))
       (check-downcasing "XXX" "XXX")
       (check-downcasing "`XXX`" "`xxx`")
-      (check-downcasing "`(PRINT \"hello\")`" "`(print \"hello\")`"))))
+      (check-downcasing "`(PRINT \"hello\")`" "`(print \"hello\")`")))
+  (with-test ("escaped downcasing in title")
+    (check-downcasing "@GT-ESCAPED-TITLE" "[`PRINT`][5758]")))
 
 (defsection @parent-section-without-title (:export nil)
   (@section-without-title section))

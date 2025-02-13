@@ -449,7 +449,7 @@ DRef names to form DRef references maybe with locatives found next to the @WORD.
     5. No plural markers are found.
     
     6. The lowercase prefix and suffix is removed around the uppercase
-       core, giving `"READ"`. This has a definition, which \`M-.' will
+       core, giving `"READ"`. This has a definition, which `M-.` will
        visit.
     
     The exact rules for steps 5. and 6. are the following.
