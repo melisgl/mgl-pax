@@ -141,7 +141,10 @@
 (defvar *browse-html-style* :charter
   "The HTML style to use for browsing live documentation. Affects only
   non-w3m browsers. See *DOCUMENT-HTML-DEFAULT-STYLE* for the possible
-  values.")
+  values.
+
+  If you change this variable, you may need to do a hard refresh in
+  the browser (often `C-<f5>`).")
 
 ;;; Document PAX*-URL in FILENAME, both STRINGs. Return a `file:' URL
 ;;; as (:FILE-URL <URL>) or (:ERROR <STRING>). FILENAME may denote a

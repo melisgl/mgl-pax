@@ -1359,6 +1359,9 @@ change.
     The HTML style to use for browsing live documentation. Affects only
     non-w3m browsers. See [`*DOCUMENT-HTML-DEFAULT-STYLE*`][90fa] for the possible
     values.
+    
+    If you change this variable, you may need to do a hard refresh in
+    the browser (often `C-<f5>`).
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2078,10 +2081,7 @@ See the following variables, which control HTML generation.
     fonts for a more controlled look.
     
     The value of this variable affects the default style of
-    [`UPDATE-ASDF-SYSTEM-HTML-DOCS`][bb12]. If you change this variable, you may
-    need to do a hard refresh in the browser (often `C-<f5>`). See
-    [`*BROWSE-HTML-STYLE*`][e527] for how to control the style used for
-    [Browsing Live Documentation][a595].
+    [`UPDATE-ASDF-SYSTEM-HTML-DOCS`][bb12].
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-HTML-MAX-NAVIGATION-TABLE-OF-CONTENTS-LEVEL-2A-20VARIABLE-29"></a>
 
@@ -3530,7 +3530,6 @@ they are presented.
   [e391]: #x-28MGL-PAX-3ADISLOCATED-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:DISLOCATED MGL-PAX:LOCATIVE"
   [e442]: http://www.lispworks.com/documentation/HyperSpec/Body/03_d.htm '"3.4" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [e51f]: #x-28MGL-PAX-3AEXPORTABLE-REFERENCE-P-20GENERIC-FUNCTION-29 "MGL-PAX:EXPORTABLE-REFERENCE-P GENERIC-FUNCTION"
-  [e527]: #x-28MGL-PAX-3A-2ABROWSE-HTML-STYLE-2A-20VARIABLE-29 "MGL-PAX:*BROWSE-HTML-STYLE* VARIABLE"
   [e548]: dref/README.md#x-28MGL-PAX-3AWRITER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:WRITER MGL-PAX:LOCATIVE"
   [e5ab]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_3.htm "SYMBOL-PACKAGE (MGL-PAX:CLHS FUNCTION)"
   [e5af]: http://www.lispworks.com/documentation/HyperSpec/Body/t_symbol.htm "SYMBOL (MGL-PAX:CLHS CLASS)"

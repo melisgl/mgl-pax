@@ -1207,6 +1207,9 @@ change.
     The HTML style to use for browsing live documentation. Affects only
     non-w3m browsers. See *DOCUMENT-HTML-DEFAULT-STYLE* for the possible
     values.
+    
+    If you change this variable, you may need to do a hard refresh in
+    the browser (often `C-<f5>`).
 
 ### Markdown Support
 
@@ -1842,10 +1845,7 @@ See the following variables, which control HTML generation.
     fonts for a more controlled look.
     
     The value of this variable affects the default style of
-    UPDATE-ASDF-SYSTEM-HTML-DOCS. If you change this variable, you may
-    need to do a hard refresh in the browser (often `C-<f5>`). See
-    *BROWSE-HTML-STYLE* for how to control the style used for
-    @BROWSING-LIVE-DOCUMENTATION.
+    UPDATE-ASDF-SYSTEM-HTML-DOCS.
 
 - [variable] *DOCUMENT-HTML-MAX-NAVIGATION-TABLE-OF-CONTENTS-LEVEL* NIL
 

@@ -86,10 +86,7 @@
   fonts for a more controlled look.
 
   The value of this variable affects the default style of
-  UPDATE-ASDF-SYSTEM-HTML-DOCS. If you change this variable, you may
-  need to do a hard refresh in the browser (often `C-<f5>`). See
-  *BROWSE-HTML-STYLE* for how to control the style used for
-  @BROWSING-LIVE-DOCUMENTATION.")
+  UPDATE-ASDF-SYSTEM-HTML-DOCS.")
 
 (defun/autoloaded update-asdf-system-html-docs
     (sections asdf-system &key pages
