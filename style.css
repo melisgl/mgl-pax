@@ -2,17 +2,26 @@
 @import url("xeb-garamond/xeb-garamond.css");
 
 :root {
-  /* Use the default fonts with sans-serif as the main font. */
-  --font-family: sans-serif;
-  --font-family-heading: serif;
-  --font-family-monospace: monospace;
-  --code-color: #333;
+  /* Use a serif font as the main font. */
+  --font-family: 'XCharter', 'Charter', 'Georgia', serif;
+  --font-family-heading: 'XEB Garamond', 'Times New Roman', serif;
+  --font-feature-settings-heading: "onum" 0;
+  --font-family-monospace: 'DejaVu Sans Mono', 'Liberation Mono', 'Hack',
+                           'Roboto Mono', monospace;
+  /* 86% makes DejaVu Sans Mono match Charter and Georgia in x-height.
+   * This is slightly larger to allow inline code to stand out a tiny
+   * bit more without becoming an eye sore. */
+  --font-size-monospace-in-code: 88%;
+  --code-color: #111;
+  /* With DejaVu Sans Mono 97% gets about 80 characters per line at full
+   * width (73ch). */
+  --font-size-monospace-in-pre: 97%;
 
   --line-height: 1.35rem;
   --parsep: 0.3375rem;
 }
 
-@media (min-width: 70rem) {
+@media (min-width: 65rem) {
   html {
     text-align: justify;
   }
@@ -25,7 +34,7 @@
   }
 }
 
-@media (max-width: 70rem) {
+@media (max-width: 65rem) {
   html {
     text-align: justify;
   }
