@@ -911,10 +911,9 @@
 
   Finally, :SOURCE-URI-FN is a function of a single, REFERENCE
   argument. If it returns a value other than NIL, then it must be a
-  string representing an \URI. If FORMAT is :HTML and
-  *DOCUMENT-MARK-UP-SIGNATURES* is true, then the locative as
-  displayed in the signature will be a link to this URI. See
-  MAKE-GIT-SOURCE-URI-FN.
+  string representing an \URI. This affects
+  *DOCUMENT-MARK-UP-SIGNATURES* and *DOCUMENT-FANCY-HTML-NAVIGATION*.
+  Also see MAKE-GIT-SOURCE-URI-FN.
 
   PAGES may look something like this:
 
@@ -996,7 +995,14 @@
        :footer-fn footer-fn
        :source-uri-fn (if (and (listp source-uri-fn)
                                (eq (first source-uri-fn) :maker))
-                          (funcall (second source-uri-fn))
+                          ;; The maker returned by
+                          ;; MAKE-GIT-SOURCE-URI-FN is slow as it
+                          ;; invokes git. Don't call it if the
+                          ;; PAGE-SOURCE-URI-FN won't be used.
+                          (when (or (and *document-mark-up-signatures*
+                                         (eq *format* :html))
+                                    (fancy-navigation-p))
+                            (funcall (second source-uri-fn)))
                           source-uri-fn)))))
 
 (defun make-stream-spec-from-page-spec-output (output)
@@ -2515,7 +2521,8 @@
   next section, a self-link, and a link to the definition in the
   source code if available (see :SOURCE-URI-FN in DOCUMENT). This
   component is normally hidden, it is visible only when the mouse is
-  over the heading. Needs *DOCUMENT-LINK-SECTIONS* to be on to work.")
+  over the heading. Has no effect if *DOCUMENT-LINK-SECTIONS* is
+  false.")
 
 (defun print-toplevel-section-lists (pages)
   (when (<= 0 *document-max-table-of-contents-level*)
@@ -2606,10 +2613,13 @@
                   (object-to-uri section))
               (format-heading-number) title)))
 
+(defun fancy-navigation-p ()
+  (and *document-fancy-html-navigation*
+       *document-link-sections*
+       (eq *format* :html)))
+
 (defun fancy-navigation (object)
-  (if (and *document-fancy-html-navigation*
-           *document-link-sections*
-           (eq *format* :html))
+  (if (fancy-navigation-p)
       (let* ((position (position object *headings* :key #'heading-object))
              (level (heading-level (elt *headings* position)))
              (n (length *headings*))
@@ -2863,7 +2873,7 @@
 (defvar *document-mark-up-signatures* t
   "When true, some things such as function names and arglists are
   rendered as bold and italic. In :HTML output, locative types become
-  links to sources (if :SOURCE-URI-FN is provided, see DOCUMENT), and
+  links to sources (if :SOURCE-URI-FN is provided, see @PAGES), and
   the symbol becomes a self-link for your permalinking pleasure.
 
   For example, a reference is rendered in markdown roughly as:

@@ -507,11 +507,12 @@
                                        :format :plain)
      (document (pax-and-dref-sections) :pages (pax-and-dref-pages :markdown)
                                        :format :markdown)))
-  (let ((*document-downcase-uppercase-code* t))
-    (update-asdf-system-html-docs (pax-and-dref-sections)
-                                  :mgl-pax :pages (pax-and-dref-pages
-                                                   :html)
-                                  :update-css-p t :style :charter)))
+  (time
+   (let ((*document-downcase-uppercase-code* t))
+     (update-asdf-system-html-docs (pax-and-dref-sections)
+                                   :mgl-pax :pages (pax-and-dref-pages
+                                                    :html)
+                                   :update-css-p t :style :charter))))
 
 
 ;;; Load systems that use PAX and generate PAX World in

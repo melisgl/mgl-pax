@@ -270,7 +270,7 @@
 (defun make-git-source-uri-fn (asdf-system git-forge-uri
                                &key git-version
                                  (uri-format-string "~A/blob/~A/~A#L~S"))
-  """Return a function suitable as :SOURCE-URI-FN of a page spec (see
+  """Return an object suitable as :SOURCE-URI-FN of a page spec (see
   the PAGES argument of DOCUMENT). The function looks at the source
   location of the object passed to it, and if the location is found,
   the path is made relative to the toplevel directory of the git

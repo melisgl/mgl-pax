@@ -1038,10 +1038,9 @@ is `NIL`, then no links will be made to or from that page.
 
 Finally, `:SOURCE-URI-FN` is a function of a single, `REFERENCE`
 argument. If it returns a value other than `NIL`, then it must be a
-string representing an URI. If [`FORMAT`][ad78] is `:HTML` and
-[`*DOCUMENT-MARK-UP-SIGNATURES*`][8fb6] is true, then the locative as
-displayed in the signature will be a link to this `URI`. See
-[`MAKE-GIT-SOURCE-URI-FN`][587f].
+string representing an URI. This affects
+[`*DOCUMENT-MARK-UP-SIGNATURES*`][8fb6] and [`*DOCUMENT-FANCY-HTML-NAVIGATION*`][6ab0].
+Also see [`MAKE-GIT-SOURCE-URI-FN`][587f].
 
 `PAGES` may look something like this:
 
@@ -1893,7 +1892,8 @@ table of contents and navigation links.
     next section, a self-link, and a link to the definition in the
     source code if available (see `:SOURCE-URI-FN` in [`DOCUMENT`][432c]). This
     component is normally hidden, it is visible only when the mouse is
-    over the heading. Needs [`*DOCUMENT-LINK-SECTIONS*`][1b28] to be on to work.
+    over the heading. Has no effect if [`*DOCUMENT-LINK-SECTIONS*`][1b28] is
+    false.
 
 <a id="x-28MGL-PAX-3A-40MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES-20MGL-PAX-3ASECTION-29"></a>
 
@@ -1977,7 +1977,7 @@ table of contents and navigation links.
 
     When true, some things such as function names and arglists are
     rendered as bold and italic. In `:HTML` output, locative types become
-    links to sources (if `:SOURCE-URI-FN` is provided, see [`DOCUMENT`][432c]), and
+    links to sources (if `:SOURCE-URI-FN` is provided, see [Pages][9c7d]), and
     the symbol becomes a self-link for your permalinking pleasure.
     
     For example, a reference is rendered in markdown roughly as:
@@ -2203,7 +2203,7 @@ to allow jumping between the repository and the gh-pages site.
 
 - [function] **MAKE-GIT-SOURCE-URI-FN** *ASDF-SYSTEM GIT-FORGE-URI &KEY GIT-VERSION (URI-FORMAT-STRING "~A/blob/~A/~A#L~S")*
 
-    Return a function suitable as `:SOURCE-URI-FN` of a page spec (see
+    Return an object suitable as `:SOURCE-URI-FN` of a page spec (see
     the `PAGES` argument of [`DOCUMENT`][432c]). The function looks at the source
     location of the object passed to it, and if the location is found,
     the path is made relative to the toplevel directory of the git
