@@ -209,10 +209,10 @@
 ;;; 2. Recurse flag: If recurse and the new tree is not a leaf, then
 ;;;    traversal recurses into the new tree.
 ;;;
-;;; 3. Slice flag: If slice, then instead of add the new tree as an
-;;;    element to the transformed output (of the parent), all elements
-;;;    of new tree (which must be a LIST) are added. No slice is like
-;;;    MAPCAR, slice is is MAPCAN.
+;;; 3. Slice flag: If slice, then instead of adding the new tree as an
+;;;    element to the transformed output (of the parent), add all
+;;;    elements of the new tree (which must be a LIST). No slice is
+;;;    like MAPCAR, slice is is MAPCAN.
 (defun transform-tree (fn tree)
   (declare (optimize speed))
   (let ((fn (coerce fn 'function)))
@@ -242,16 +242,16 @@
 ;;; If the CAR of a subtree is in STOP-TAGS, then the entire subtree
 ;;; is included in the output without further processing.
 (defun defer-tag-handling (tags stop-tags handle-strings fn parent tree)
-  (cond ((or (and (listp tree)
+  (cond ((or (and (consp tree)
                   (member (first tree) tags))
              (and handle-strings
                   (stringp tree)))
          (funcall fn parent tree))
-        ((and (listp tree)
+        ((and (consp tree)
               (member (first tree) stop-tags))
          (values tree nil nil))
         (t
-         (values tree (and tree (listp tree)) nil))))
+         (values tree t nil))))
 
 (defun map-markdown-parse-tree (tags stop-tags handle-strings fn parse-tree)
   (transform-tree (lambda (parent tree)

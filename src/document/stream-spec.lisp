@@ -1,13 +1,18 @@
 (in-package :mgl-pax)
 
-;;;; Stream specs
+;;;; Stream specs: multi-write, appending streams with a unified
+;;;; interface for strings, files, etc.
 
 (defgeneric make-stream-spec (object &rest args))
 
 (defgeneric unmake-stream-spec (stream-spec))
 
+;;; Call FN with a stream that supports reads (if :DIRECTION is
+;;; :INPUT) or writes (if :DIRECTION is :OUTPUT). After the use of a
+;;; stream-spec, subsequent writes always append.
 (defgeneric call-with-open-stream-spec (stream-spec direction fn))
 
+;;; Release the backing storage: delete the file or forget the string.
 (defgeneric delete-stream-spec (stream-spec))
 
 (defmacro with-open-stream-spec ((stream stream-spec &key (direction :input))
@@ -104,6 +109,7 @@
     ((:input) (assert (input-stream-p stream)))
     ((:output) (assert (output-stream-p stream))))
   (funcall fn stream))
+
 
 ;;;; T
 
