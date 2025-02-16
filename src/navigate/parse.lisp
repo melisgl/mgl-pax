@@ -100,7 +100,7 @@
                    (when found
                      (consider object name)))
                  ;; Consider NAME as a string.
-                 (when (or (definitions name)
+                 (when (or (definitions* name)
                            ;; CLHS is a pseudo locative. DEFINITIONS
                            ;; does not look for it. It's fine though
                            ;; because we need a hack for substring
@@ -114,7 +114,7 @@
                  ;; [pax][package], for example.
                  (let ((adjusted (dref::adjust-string-case name)))
                    (when (and (string/= adjusted name)
-                              (definitions adjusted))
+                              (definitions* adjusted))
                      (consider (dref::adjust-string-case name) name))))))
         (find-it word)
         (if trim

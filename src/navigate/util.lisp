@@ -160,3 +160,20 @@
             (if missing-newline-p
                 (write-string line out)
                 (write-line line out))))))))
+
+
+;;;; Cached DREF:DEFINITIONS
+
+(defvar *definitions-cache*)
+
+(defmacro with-definitions-cached (&body body)
+  `(let ((*definitions-cache* (make-hash-table :test 'equal)))
+     ,@body))
+
+(defun definitions* (name)
+  (if (boundp '*definitions-cache*)
+      (multiple-value-bind (value presentp) (gethash name *definitions-cache*)
+        (if presentp
+            value
+            (setf (gethash name *definitions-cache*) (definitions name))))
+      (definitions name)))

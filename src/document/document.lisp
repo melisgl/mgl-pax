@@ -284,7 +284,7 @@
 ;;; aliases).
 (defgeneric links-of (name)
   (:method (name)
-    (let* ((live-definitions (definitions name))
+    (let* ((live-definitions (definitions* name))
            ;; Gather all different DREF::@NAMEs. For example, if NAME
            ;; is MGL-PAX, then this is '("mgl-pax" "MGL-PAX"), where
            ;; one is for the ASDF:SYSTEM, the other is for the
@@ -827,21 +827,22 @@
   ;; documentables to change from the 1st pass to the 2nd.
   (ensure-transcribe-loaded)
   (with-sections-cache ()
-    (with-format (format)
-      (let* ((*print-right-margin* (or *print-right-margin* 80))
-             (3bmd-code-blocks:*code-blocks* t)
-             (3bmd-code-blocks:*code-blocks-default-colorize*
-               (and (not (eq *html-subformat* :w3m))
-                    :common-lisp))
-             (3bmd-code-blocks::*colorize-name-map*
-               (if (eq *html-subformat* :w3m)
-                   (make-hash-table)
-                   (plist-hash-table
-                    `("cl-transcript" :common-lisp
-                      ,@(hash-table-plist
-                         3bmd-code-blocks::*colorize-name-map*))
-                    :test #'equal))))
-        (document-return stream (%document documentable stream pages))))))
+    (with-definitions-cached
+      (with-format (format)
+        (let* ((*print-right-margin* (or *print-right-margin* 80))
+               (3bmd-code-blocks:*code-blocks* t)
+               (3bmd-code-blocks:*code-blocks-default-colorize*
+                 (and (not (eq *html-subformat* :w3m))
+                      :common-lisp))
+               (3bmd-code-blocks::*colorize-name-map*
+                 (if (eq *html-subformat* :w3m)
+                     (make-hash-table)
+                     (plist-hash-table
+                      `("cl-transcript" :common-lisp
+                        ,@(hash-table-plist
+                           3bmd-code-blocks::*colorize-name-map*))
+                      :test #'equal))))
+          (document-return stream (%document documentable stream pages)))))))
 
 (defun call-with-format (format fn)
   (if (eq format :plain)
