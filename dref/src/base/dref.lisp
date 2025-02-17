@@ -121,7 +121,7 @@
   See XREF-LOCATIVE-TYPE and DREF-LOCATIVE-TYPE.")
 
 (define-glossary-term @reference (:title "reference")
-  "A reference is an @NAME plus a @LOCATIVE, and it identifies a
+  "A reference is a @NAME plus a @LOCATIVE, and it identifies a
   possible definition. References are of class XREF. When a reference
   is a [DREF][class], it may also be called a definition.")
 
@@ -627,7 +627,7 @@
   (ensure-dref-loaded)
   (flet ((source-location-1 ()
            (let ((location (source-location* (or (resolve object nil)
-                                                     object))))
+                                                 object))))
              (if (source-location-p location)
                  location
                  (error "~@<Source location of ~S not found.~:@>" object)))))

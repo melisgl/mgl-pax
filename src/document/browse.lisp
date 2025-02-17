@@ -322,7 +322,7 @@
           (locative-junk
            (error "Unknown locative ~S." locative-junk))
           (t
-           (let ((references (documentables-of (read-object-from-string path))))
+           (let ((references (documentables-of (read-name-from-string path))))
              (cond ((endp references)
                     (error "Could not find definitions for ~S." path))
                    ((= (length references) 1)
@@ -616,7 +616,7 @@
                         ((starts-with-subseq "'#:" string)
                          (make-symbol (subseq string 3)))
                         ((starts-with-subseq "':" string)
-                         (print (make-symbol (subseq string 2))))
+                         (make-symbol (subseq string 2)))
                         ((starts-with-subseq "'" string)
                          (make-symbol (subseq string 1)))
                         (t
@@ -760,7 +760,7 @@
               '(:error "Cannot determine current definition.")))))))
 
 
-(defun/autoloaded locatives-for-name-for-emacs (name)
+(defun/autoloaded locatives-for-word-for-emacs (word)
   (with-swank ()
     (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
@@ -769,11 +769,11 @@
                        (*print-case* :downcase))
                    (prin1-to-string locative))))
           `(:locatives
-            ,(if (string= name "")
+            ,(if (string= word "")
                  (mapcar #'locative-to-string (locative-types))
                  (let ((*document-open-linking* t))
                    (loop
-                     for object in (parse-word name :depluralize nil)
+                     for object in (parse-word word :depluralize nil)
                      append (loop for link in (links-of object)
                                   collect (locative-to-string
                                            (dref-locative

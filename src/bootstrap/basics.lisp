@@ -300,7 +300,7 @@
 
 ;;; Arrange for the home package of these LOCATIVEs (exported by DRef)
 ;;; to be PAX. The home packages are visible in links, and from that
-;;; point of view XREF is an implementation detail.
+;;; point of view, DRef is an implementation detail.
 (export 'locative)
 (export 'docstring)
 (export 'constant)

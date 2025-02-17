@@ -146,7 +146,7 @@
   ```cl-transcript
   (+ 1 2)
   => 3
-  
+
   (values (princ :hello) (list 1 2))
   .. HELLO
   => :HELLO
@@ -356,7 +356,7 @@
   ```
 
   See @TRANSCRIPT-CONISTENCY-CHECKING for the full picture.
-  
+
   **Unreadable Values**
 
   The above scheme involves READ, so consistency of unreadable values
@@ -365,10 +365,10 @@
 
   ```
   (defclass some-class () ())
-  
+
   (defmethod print-object ((obj some-class) stream)
     (print-unreadable-object (obj stream :type t)
-      (format stream \"~%~%end\")))
+      (format stream "~%~%end")))
 
   (make-instance 'some-class)
   ==> #<SOME-CLASS 

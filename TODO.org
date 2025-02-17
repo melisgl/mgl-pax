@@ -70,7 +70,7 @@ PAX::SORT-BY-PROXIMITY.
 * MAYBE autoload documentation when needed?
 E.g. for named-readtables, which has its docs in named-readtables/doc.
 * BUG (low) C-. history depends on current package
-E.g. 'clhs' works in a package where pax used but not elsewhere.
+E.g. 'clhs' works in a package where PAX is :USEd but not elsewhere.
 
 But so does M-.'s history.
 * OPT 3bmd parsing performance on large blocks
@@ -78,7 +78,8 @@ https://github.com/3b/3bmd/issues/56
 * MAYBE when exported by pax, we know the exact definition being exported
 Package apropos could take advantage?
 * MAYBE mgl-pax-apropos should defer to slime-apropos if pax not loaded?
-* MAYBE add TAB completion to M-. prompt
+* MAYBE add TAB completion on the locative in the M-. prompt
+This already works in C-.
 * MAYBE add SPECIAL locative and make variable an alias of it?
 * MAYBE support DECLARATION docstrings?
 * MAYBE support setf docstring?
@@ -115,7 +116,7 @@ Pros of DRef:
 Pros of Definitions:
 - Definitions has BIND, (SETF OBJECT), UNBIND, (SETF DOCUMENTATION).
   These can be added to DRef if needed.
-* MAYBE transcript: don't treat "debugger invoked on" is treated like output
+* MAYBE transcript: don't treat "debugger invoked on" as output
 Well, it's a kind of output, but maybe it would be better for
 consistency checking to treat it as a different kind of output. First,
 capturing interaction with the debugger needs to be though out though.
@@ -131,3 +132,5 @@ I.e. they shouldn't be implemented with WITH-HEADING but maybe
 DOCUMENTING-REFERENCE like everything else.
 * print ASDF/SYSTEM:SYSTEM as ASDF:SYSTEM
 Maybe. ASDF is a nickname of ASDF/INTERFACE.
+* BUG fix [PYTHONIC-STRING-READER][asdf:system] link
+* BUG make C-. work on '"lambda list" clhs'

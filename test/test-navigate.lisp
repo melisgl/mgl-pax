@@ -2,7 +2,7 @@
 
 (deftest test-navigate ()
   (test-read-locative-from-string)
-  (test-read-object-from-string)
+  (test-read-name-from-string)
   (test-read-reference-from-string)
   (test-definitions-of-wall)
   (test-locate)
@@ -42,10 +42,10 @@
         (is (eq (mgl-pax::read-locative-from-noisy-string (% string))
                 'function))))))
 
-(defun test-read-object-from-string ()
+(defun test-read-name-from-string ()
   (let ((*package* (find-package :mgl-pax-test)))
-    (is (eq (mgl-pax::read-object-from-string "deftest") 'deftest))
-    (is (eq (mgl-pax::read-object-from-string "MGL-PAX::@CODIFIABLE")
+    (is (eq (mgl-pax::read-name-from-string "deftest") 'deftest))
+    (is (eq (mgl-pax::read-name-from-string "MGL-PAX::@CODIFIABLE")
             'mgl-pax::@codifiable))))
 
 (deftest test-read-reference-from-string ()

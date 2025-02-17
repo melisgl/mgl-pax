@@ -91,14 +91,14 @@
       (flet ((find-it (name)
                (when (plusp (length name))
                  ;; Consider NAME as a symbol.
-                 (multiple-value-bind (object found)
+                 (multiple-value-bind (symbol found)
                      (swank::parse-symbol name)
-                   ;; FIXME: (SWANK::PARSE-SYMBOL "PAX:SECTION:")
-                   ;; is broken. Only add if the _string_ read is
-                   ;; shorter than the one we may already have for
-                   ;; OBJECT in NAMES.
+                   ;; FIXME: (SWANK::PARSE-SYMBOL "PAX:SECTION:") is
+                   ;; broken. Only add if the _string_ read is shorter
+                   ;; than the one we may already have for SYMBOL in
+                   ;; NAMES.
                    (when found
-                     (consider object name)))
+                     (consider symbol name)))
                  ;; Consider NAME as a string.
                  (when (or (definitions* name)
                            ;; CLHS is a pseudo locative. DEFINITIONS
@@ -252,9 +252,9 @@
                (return)))))
     (values (reverse locatives) start)))
 
-;;; Parse "OBJECT LOCATIVE-TYPE" or "OBJECT (LOCATIVE-TYPE ...))", but
-;;; only intern stuff if LOCATIVE-TYPE is interned. Return 1. object,
-;;; 2. locative, 3. whether at least one locative was found, 4. the
+;;; Parse "NAME LOCATIVE-TYPE" or "NAME (LOCATIVE-TYPE ...)", but only
+;;; intern stuff if LOCATIVE-TYPE is interned. Return 1. name, 2.
+;;; locative, 3. whether at least one locative was found, 4. the
 ;;; unparsable junk if any unread non-whitespace characters are left.
 (defun read-reference-from-string (string &key multiple-locatives-p)
   (flet ((maybe-junk (start)
@@ -264,23 +264,23 @@
                  nil
                  locstring))))
     (handler-case
-        ;; Skip whatever OBJECT may be ...
-        (let ((object-end-pos (n-chars-would-read string)))
+        ;; Skip whatever NAME may be ...
+        (let ((name-end-pos (n-chars-would-read string)))
           ;; ... then just try to parse the locative.
           (multiple-value-bind (one-or-more-locatives pos)
               (if multiple-locatives-p
-                  (read-locatives-from-string (subseq string object-end-pos))
-                  (read-locative-from-string (subseq string object-end-pos)))
+                  (read-locatives-from-string (subseq string name-end-pos))
+                  (read-locative-from-string (subseq string name-end-pos)))
             (if one-or-more-locatives
-                (values (read-object-from-string
-                         (subseq string 0 object-end-pos))
+                (values (read-name-from-string
+                         (subseq string 0 name-end-pos))
                         one-or-more-locatives t
-                        (maybe-junk (+ object-end-pos pos)))
-                (values nil nil nil (maybe-junk object-end-pos)))))
+                        (maybe-junk (+ name-end-pos pos)))
+                (values nil nil nil (maybe-junk name-end-pos)))))
       ((or reader-error end-of-file) ()
         nil))))
 
-(defun read-object-from-string (string)
+(defun read-name-from-string (string)
   (let ((string (string-trim *whitespace-chars* string)))
     (if (starts-with #\" string)
         (read-from-string string)

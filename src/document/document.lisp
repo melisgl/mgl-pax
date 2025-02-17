@@ -1255,7 +1255,7 @@
           ;; Don't generate anchors when linking to the first
           ;; definition on the page.
           (if (and (xref= (link-definition link)
-                                (first target-page-definitions))
+                          (first target-page-definitions))
                    target-page-uri-fragment)
               (if (eq target-page *page*)
                   ;; "xxx.html"
@@ -1787,7 +1787,7 @@
 
 (defsection @linking-to-code (:title "Linking to Code")
   """In this section, we describe all ways of linking to code
-  available when *DOCUMENT-UPPERCASE-IS-CODE* is true.
+  available when *DOCUMENT-LINK-CODE* is true.
 
   _Note that invoking [`\\M-.`][@navigating-in-emacs section] on the
   @NAME of any of the following links will disambiguate based the
@@ -1922,6 +1922,12 @@
   (filter-locative-references
    (filter-method-references
     (replace-go-targets
+     ;; This removes all CLHS references, which is fine because there
+     ;; is always a normalish DREF (ensured by MAKE-CLHS-ALIAS-LINK),
+     ;; and this will be linked to either the live (if being
+     ;; documeted) or the clhs definition with closed linking, and to
+     ;; both with open linking (see *DOCUMENT-OPEN-LINKING* and
+     ;; LINKS-OF).
      (filter-external-references
       (filter-string-based-references
        (linkable-references
@@ -1936,7 +1942,7 @@
       dref))
 
 (defun filter-string-based-references (refs)
-  "When only an @NAME is provided without a locative, all
+  "When only a @NAME is provided without a locative, all
   definitions of the name are considered as possible link targets.
   Then, definitions that are not symbol-based (i.e. whose
   XREF-NAME is not a symbol) are filtered out to prevent
@@ -1970,8 +1976,8 @@
        refs))))
 
 (defun filter-locative-references (refs)
-  "Furthermore, filter out all references with LOCATIVE-TYPE
-  LOCATIVE if there are references with other LOCATIVE-TYPEs."
+  "Furthermore, all references with LOCATIVE-TYPE LOCATIVE are
+  filtered out if there are references with other LOCATIVE-TYPEs."
   (or (remove 'locative refs :key #'xref-locative-type)
       refs))
 
@@ -2357,11 +2363,11 @@
                                'not-found)))
     (cond ((and (not (eq name 'not-found)) locative)
            (format stream "~@<~S cannot be resolved although ~S looks ~
-                           like an ~S and ~S like a ~S.~:@>"
+                           like a ~S and ~S like a ~S.~:@>"
                    reflink name '@name locative '@locative))
           ((not (eq name 'not-found))
            (format stream "~@<~S cannot be resolved although ~S looks ~
-                           like an ~S.~:@>"
+                           like a ~S.~:@>"
                    reflink name '@name))
           (locative
            (format stream "~@<~S cannot be resolved although ~S looks ~
@@ -2741,7 +2747,7 @@
   (document #'foo :format :markdown)
   => ("<a id=\"x-28MGL-PAX-3AFOO-20FUNCTION-29\"></a>
   <a id=\"MGL-PAX:FOO%20FUNCTION\"></a>
-  
+
   - [function] **FOO** *X*
   ")
 

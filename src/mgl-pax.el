@@ -199,18 +199,20 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 
 
 
-;;;; Find possible objects and locatives at point (see MGL-PAX::WALL).
+;;;; Find possible words and locatives at point (see MGL-PAX::WALL).
 
-;;; Return a list of of things like (object (locative1 locative2 ...))
-;;; representing the possible references (object locative1), (object
-;;; locative2), and so on. MGL-PAX::LOCATE-DEFINITIONS-FOR-EMACS and
+;;; Return a list of of things like (word (locative1 locative2 ...))
+;;; representing the possible references (word locative1), (word
+;;; locative2), and so on, where MGL-PAX::@WORD may be processed
+;;; further into a MGL-PAX::@NAME on the CL side.
+;;; MGL-PAX::LOCATE-DEFINITIONS-FOR-EMACS and
 ;;; MGL-PAX::DOCUMENT-FOR-EMACS take such lists.
 ;;;
 ;;; `slime-symbol-at-point' works fine in code, but in printed
 ;;; representations and docstrings heuristics are needed (just think
 ;;; "SYM." and "#<SYM"), which we leave for the the Common Lisp side
 ;;; to resolve. However, we handle here the complications caused by
-;;; Markdown, whose code (`nil`) and reference link syntax
+;;; Markdown, whose syntax for code (`nil`) and reference links
 ;;; ([title][id]) is used by PAX, maybe both at the same time as in
 ;;; [`FOO`][function] or [FOO][`function`]. ?` is a delimiter, but ?\[
 ;;; is not, which means that `slime-symbol-at-point' on FOO will
@@ -227,12 +229,12 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
      ;; without the semicolons.
      (mgl-pax-call-uncommented
       (lambda ()
-        (let ((name (slime-symbol-at-point))
+        (let ((word (slime-symbol-at-point))
               (bounds (slime-bounds-of-symbol-at-point)))
           (when bounds
             (let ((locatives (mgl-pax-find-locatives bounds))
                   (wall (mgl-pax-parse-reflink bounds)))
-              (append (and name `((,name ,locatives))) wall)))))))))
+              (append (and word `((,word ,locatives))) wall)))))))))
 
 ;;; If not in a lisp-mode buffer, then copy the five lines around
 ;;; point into a temporary lisp buffer, put point on the same
@@ -351,12 +353,12 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
   (when bounds
     (let ((wall ()))
       (cl-flet ((add (start end)
-                     (let ((name (buffer-substring-no-properties start end))
-                           (locative (mgl-pax-locative-after end)))
-                       (push (list name (if locative
-                                            (list locative)
-                                          ()))
-                             wall))))
+                  (let ((word (buffer-substring-no-properties start end))
+                        (locative (mgl-pax-locative-after end)))
+                    (push (list word (if locative
+                                         (list locative)
+                                       ()))
+                          wall))))
         (cl-destructuring-bind (symbol-start . symbol-end) bounds
           (save-restriction
             ;; Do not search beyond the surrounding lines.
@@ -439,11 +441,11 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
                                   'mgl-pax-visit-locations
                                   asyncp))))
 
-(defun mgl-pax-locate-definitions (name-and-locatives-list cont asyncp)
+(defun mgl-pax-locate-definitions (wall cont asyncp)
   (let ((form `(cl:funcall (cl:find-symbol
                             (cl:string '#:locate-definitions-for-emacs)
                             :mgl-pax)
-                           ',name-and-locatives-list)))
+                           ',wall)))
     (if asyncp
         (slime-eval-async form cont)
       (funcall cont (slime-eval form)))))
@@ -506,7 +508,7 @@ where REFERENCE names either
 
 - a complete CL PAX:REFERENCE (e.g. \"PAX:SECTION CLASS\"),
 
-- or the object of a reference (e.g. \"PAX:SECTION\"), which
+- or the name of a reference (e.g. \"PAX:SECTION\"), which
   possibly makes what to document ambiguous.
 
 If given, FRAGMENT must be a complete PAX:REFERENCE and refers to
@@ -517,12 +519,12 @@ on the page that contains the entire PAX manual.
 
 When invoked interactively:
 
-- Without a prefix arg, the object of the reference defaults to
+- Without a prefix arg, the name of the reference defaults to
   `slime-symbol-at-point' and an attempt is made to find the
   locative around that. This works in non-lisp buffers as well.
 
-- With a prefix arg, when no object is found, or when there are
-  no definitions found for the object and locatives found in the
+- With a prefix arg, when no name is found, or when there are no
+  definitions found for the name and locatives found in the
   buffer, `mgl-pax-document' prompts for URL. In this case, the
   URL scheme, \"pax:\", must not to be included. The entered
   REFERENCE and FRAGMENT need not be URL encoded.
@@ -533,9 +535,9 @@ When invoked interactively:
   documentation of how to browse documentation in Emacs is shown.
 
 Autocomplete: In the minibuffer, TAB-completion is available for
-symbol objects and once the object is entered followed by a space
+symbol names, and once the name is entered followed by a space,
 also for their possible locatives. Only symbols are completed.
-String objects are not (e.g names of PACKAGEs or CLHS SECTIONs).
+String names are not (e.g names of PACKAGEs or CLHS SECTIONs).
 Completion of locatives which are lists (e.g. `(CLHS SECTION)')
 is a bit broken because Emacs completion is designed for symbols.
 Still, pressing TAB before entering the opening parenthesis and
@@ -735,19 +737,19 @@ The suggested key binding is `C-.' to parallel `M-.'."
          (first-space-pos (cl-position ?\s (buffer-substring-no-properties
                                             start end))))
     (if first-space-pos
-        (let ((object (buffer-substring-no-properties
-                       start (+ start first-space-pos))))
+        (let ((name (buffer-substring-no-properties
+                     start (+ start first-space-pos))))
           (list beg end (completion-table-dynamic
                          (lambda (prefix)
-                           (mgl-pax-locatives-for-name object)))))
+                           (mgl-pax-locatives-for-word name)))))
       (list beg end (completion-table-dynamic #'slime-simple-completions)))))
 
-(defun mgl-pax-locatives-for-name (object)
+(defun mgl-pax-locatives-for-word (word)
   (let ((values (slime-eval
                  `(cl:funcall (cl:find-symbol
-                               (cl:string '#:locatives-for-name-for-emacs)
+                               (cl:string '#:locatives-for-word-for-emacs)
                                :mgl-pax)
-                              ,object))))
+                              ,word))))
     (if (eq (cl-first values) :error)
         (error (second values))
       (cl-second values))))
@@ -903,7 +905,7 @@ That is, in a PAX doc buffer (see `mgl-pax-document'), open a new
 URL with the documentation of the first containing section and
 put point on the definition corresponding the current page.
 
-When there multiple sections that contain the current object, the
+When there multiple sections that contain the current name, the
 first one will be chosen heuristically based on the similarity of
 the names of the SYMBOL-PACKAGEs of their names."
   (interactive)

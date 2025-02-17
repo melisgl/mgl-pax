@@ -107,7 +107,7 @@
 
   - If LOCATIVE-TYPES is NIL, then it matches everything.
 
-  - If LOCATIVE-TYPEs is non-NIL, then the LOCATIVE-TYPE of the
+  - If LOCATIVE-TYPES is non-NIL, then the LOCATIVE-TYPE of the
     candidate definition must be in it (handling :ALL,
     :LISP, and :PSEUDO as described above).
 

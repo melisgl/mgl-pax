@@ -10,8 +10,7 @@
 
 
 ;;; An acronym for Word-And-Locatives-List. This is what
-;;; `mgl-pax-object-and-locatives-list-at-point' returns. It may look
-;;; like this:
+;;; `mgl-pax-wall-at-point' returns. It may look like this:
 ;;;
 ;;;     (("[section][" ("junk-before" "class"))
 ;;;      ("section" ("class")))
@@ -70,7 +69,7 @@
   where the locative may be omitted to recover stock Slime behaviour.
 
   When determining the definition from the buffer contents,
-  `slime-symbol-at-point` is parsed as a @WORD, then candidate
+  `(slime-symbol-at-point)` is parsed as a @WORD, then candidate
   locatives are looked for before and after that word. Thus, if a
   locative is the previous or the next expression around the symbol of
   interest, then `\\M-.` will go straight to the definition which
@@ -89,7 +88,9 @@
       (foo function)
 
   In particular, DREF::@REFERENCEs in a DEFSECTION form are in (NAME
-  LOCATIVE) format so `\\M-.` will work just fine there.
+  LOCATIVE) format so `\\M-.` will work just fine there. `\\M-.` also
+  recognizes the `[foo][function]` and similar forms of
+  @LINKING-TO-CODE in docstrings.
 
   Just like vanilla `\\M-.`, this works in comments and docstrings. In
   the next example, pressing `\\M-.` on `FOO` will visit `FOO`'s
@@ -143,9 +144,8 @@
 (defun locate-definitions-for-emacs-1 (wall)
   (loop for definition in (definitions-of-wall wall)
         for location = (source-location definition)
-        unless (eq (first location) :error)
-          collect `(,(prin1-to-string (dref::definition-to-dspec definition))
-                    ,location)))
+        collect `(,(prin1-to-string (dref::definition-to-dspec definition))
+                  ,location)))
 
 
 ;;;; The Common Lisp side of mgl-pax-find-parent-section

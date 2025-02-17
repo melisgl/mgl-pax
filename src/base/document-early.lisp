@@ -91,7 +91,7 @@
 (autoload redocument-for-emacs '#:mgl-pax/document :export nil)
 (autoload locate-pax-url-for-emacs '#:mgl-pax/document :export nil)
 (autoload current-definition-pax-url-for-emacs '#:mgl-pax/document :export nil)
-(autoload locatives-for-name-for-emacs '#:mgl-pax/document :export nil)
+(autoload locatives-for-word-for-emacs '#:mgl-pax/document :export nil)
 
 
 (defsection @extending-document (:title "Extending DOCUMENT")

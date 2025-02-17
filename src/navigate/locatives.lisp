@@ -268,7 +268,7 @@
     to be included. Note that the file of the source location of START
     and END must be the same. If SOURCE is a pathname designator, then
     it must be absolute so that the locative is context independent.
-  
+
   - If specified, LINE-PREFIX is a string that's prepended to each
     line included in the documentation. For example, a string of four
     spaces makes markdown think it's a code block.
@@ -350,11 +350,12 @@
 ;;;; CLHS locative
 
 (define-pseudo-locative-type clhs (&optional nested-locative)
-  """Refers to sections or definitions in the Common Lisp Hyperspec.
-  These have no source location so `\\M-.` will not work. What works
-  is linking in documentation, including @BROWSING-LIVE-DOCUMENTATION.
-  The generated links are relative to *DOCUMENT-HYPERSPEC-ROOT* and
-  work even if *DOCUMENT-LINK-TO-HYPERSPEC* is NIL.
+  """Refers to definitions, glossary entries, sections, issues and
+  issue summaries in the Common Lisp Hyperspec. These have no source
+  location so @M-. will not work. What works is linking in
+  documentation, including @BROWSING-LIVE-DOCUMENTATION. The generated
+  links are relative to *DOCUMENT-HYPERSPEC-ROOT* and work even if
+  *DOCUMENT-LINK-TO-HYPERSPEC* is NIL.
 
   - *definitions*: These are typically unnecessary as DOCUMENT will
     produce the same link for e.g. `\\PPRINT`, `[PPRINT][function]`,
@@ -422,7 +423,7 @@
   browser][@browsing-live-documentation] understands CLHS links so one
   can enter inputs like `3.4 clhs`, `"lambda list" clhs` or `error (clhs
   function)`.
-  
+
   CLHS references do not RESOLVE.""")
 
 (define-definition-class clhs clhs-dref)

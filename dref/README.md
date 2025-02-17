@@ -393,7 +393,7 @@ with references (discussed in the [Extending DRef][68fb]).
     
     - If `LOCATIVE-TYPES` is `NIL`, then it matches everything.
     
-    - If [`LOCATIVE-TYPE`][97ba]s is non-`NIL`, then the `LOCATIVE-TYPE` of the
+    - If `LOCATIVE-TYPES` is non-`NIL`, then the [`LOCATIVE-TYPE`][97ba] of the
       candidate definition must be in it (handling `:ALL`,
       `:LISP`, and `:PSEUDO` as described above).
     
@@ -974,7 +974,7 @@ otherwise noted.
 
 - [glossary-term] **reference**
 
-    A reference is an [name][5fc4] plus a [locative][7ac8], and it identifies a
+    A reference is a [name][5fc4] plus a [locative][7ac8], and it identifies a
     possible definition. References are of class [`XREF`][1538]. When a reference
     is a [`DREF`][d930], it may also be called a definition.
 

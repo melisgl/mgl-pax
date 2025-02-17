@@ -185,7 +185,7 @@
 
   Then, assuming the Elisp file is in the quicklisp directory, add
   something like this to your `.emacs`:
-  
+
   ```elisp
   (load "~/quicklisp/mgl-pax.el")
   (mgl-pax-hijack-slime-doc-keys)

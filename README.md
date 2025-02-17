@@ -761,11 +761,12 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
 
 - [locative] **CLHS** *&OPTIONAL NESTED-LOCATIVE*
 
-    Refers to sections or definitions in the Common Lisp Hyperspec.
-    These have no source location so `M-.` will not work. What works
-    is linking in documentation, including [Browsing Live Documentation][a595].
-    The generated links are relative to [`*DOCUMENT-HYPERSPEC-ROOT*`][f585] and
-    work even if [`*DOCUMENT-LINK-TO-HYPERSPEC*`][875e] is `NIL`.
+    Refers to definitions, glossary entries, sections, issues and
+    issue summaries in the Common Lisp Hyperspec. These have no source
+    location so [`M-.`][cb15] will not work. What works is linking in
+    documentation, including [Browsing Live Documentation][a595]. The generated
+    links are relative to [`*DOCUMENT-HYPERSPEC-ROOT*`][f585] and work even if
+    [`*DOCUMENT-LINK-TO-HYPERSPEC*`][875e] is `NIL`.
     
     - *definitions*: These are typically unnecessary as [`DOCUMENT`][432c] will
       produce the same link for e.g. `PPRINT`, `[PPRINT][function]`,
@@ -847,7 +848,7 @@ or is prompted. If prompted, then the format is `<NAME> <LOCATIVE>`,
 where the locative may be omitted to recover stock Slime behaviour.
 
 When determining the definition from the buffer contents,
-`slime-symbol-at-point` is parsed as a [word][d7b0], then candidate
+`(slime-symbol-at-point)` is parsed as a [word][d7b0], then candidate
 locatives are looked for before and after that word. Thus, if a
 locative is the previous or the next expression around the symbol of
 interest, then `M-.` will go straight to the definition which
@@ -866,7 +867,9 @@ the definition of function `FOO`:
     (foo function)
 
 In particular, [reference][43bd]s in a [`DEFSECTION`][72b4] form are in (`NAME`
-[`LOCATIVE`][0b3a]) format so `M-.` will work just fine there.
+[`LOCATIVE`][0b3a]) format so `M-.` will work just fine there. `M-.` also
+recognizes the `[foo][function]` and similar forms of
+[Linking to Code][1865] in docstrings.
 
 Just like vanilla `M-.`, this works in comments and docstrings. In
 the next example, pressing `M-.` on `FOO` will visit `FOO`'s
@@ -1570,7 +1573,7 @@ strings can be a pain. [Pythonic String Reader][d3fc] can help with that.
 ### 8.6 Linking to Code
 
 In this section, we describe all ways of linking to code
-available when [`*DOCUMENT-UPPERCASE-IS-CODE*`][f25f] is true.
+available when [`*DOCUMENT-LINK-CODE*`][d9ee] is true.
 
 *Note that invoking [`M-.`][3386] on the
 [name][88cf] of any of the following links will disambiguate based the
@@ -1618,7 +1621,7 @@ this form may be used:
 
 #### 8.6.2 Unspecified Locative
 
-When only an [name][88cf] is provided without a locative, all
+When only a [name][88cf] is provided without a locative, all
 definitions of the name are considered as possible link targets.
 Then, definitions that are not symbol-based (i.e. whose
 [`XREF-NAME`][b88e] is not a symbol) are filtered out to prevent
@@ -1631,8 +1634,8 @@ To further reduce clutter, if the definitions include a
 [`WRITER`][e548] are removed to avoid linking to a possibly large
 number of methods.
 
-Furthermore, filter out all references with `LOCATIVE-TYPE`
-[`LOCATIVE`][0b3a] if there are references with other `LOCATIVE-TYPE`s.
+Furthermore, all references with `LOCATIVE-TYPE` [`LOCATIVE`][0b3a] are
+filtered out if there are references with other `LOCATIVE-TYPE`s.
 
 <a id="x-28MGL-PAX-3A-40UNAMBIGUOUS-UNSPECIFICED-LOCATIVE-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2706,7 +2709,7 @@ Transcription support in Emacs can be enabled by loading
     
     (defmethod print-object ((obj some-class) stream)
       (print-unreadable-object (obj stream :type t)
-        (format stream \"~%~%end\")))
+        (format stream "~%~%end")))
     
     (make-instance 'some-class)
     ==> #<SOME-CLASS 
