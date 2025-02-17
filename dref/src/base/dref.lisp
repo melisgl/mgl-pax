@@ -53,7 +53,7 @@
 
   Within DRef, the DREF-EXT::@DREF-SUBCLASSES form the basis of
   extending DOCSTRING, SOURCE-LOCATION and ARGLIST. Outside DRef,
-  [PAX][MGL-PAX::@PAX-MANUAL] makes PAX:DOCUMENT extensible through
+  [\\PAX][MGL-PAX::@PAX-MANUAL] makes PAX:DOCUMENT extensible through
   PAX:DOCUMENT-OBJECT*, which has methods specialized on DREFs.
 
   Finally, existing definitions can be queried with DEFINITIONS and
