@@ -1023,7 +1023,7 @@
               'package))
 
 (defmethod dref* (package-designator (locative-type (eql 'package))
-                         locative-args)
+                  locative-args)
   (check-locative-args package locative-args)
   (unless (and (or (symbolp package-designator)
                    (stringp package-designator))

@@ -253,6 +253,16 @@
           (terpri stream))))))
 
 
+;;;; PACKAGE locative
+
+(defmethod document-object* ((dref package-dref) stream)
+  (let* ((nicknames (package-nicknames (resolve dref)))
+         (arglist (when nicknames
+                    (list :nicknames nicknames))))
+    (documenting-reference (stream :arglist arglist)
+      (document-docstring (docstring dref) stream))))
+
+
 ;;;; SECTION locative
 
 (defvar *section*)

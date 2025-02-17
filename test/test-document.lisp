@@ -1161,7 +1161,9 @@ This is [Self-referencing][e042].
               "NON-INTERNED-PKG-NAME package")
   (check-head (list "[NON-INTERNED-PKG-NAME][package]"
                     (dref '#:non-interned-pkg-name 'package))
-              "[NON-INTERNED-PKG-NAME][5a00]"))
+              "[NON-INTERNED-PKG-NAME][5a00]")
+  (check-pred (dref "PAX" 'package)
+              "- [package] **\"MGL-PAX\"** *NICKNAMES (\"PAX\")*"))
 
 
 (deftest test-readtable ()
