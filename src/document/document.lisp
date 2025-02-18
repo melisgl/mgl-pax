@@ -436,6 +436,9 @@
 (defun has-local-reference-p (name)
   (find name *local-references* :test #'xref-name=))
 
+(defun local-reference-p (reference)
+  (find reference *local-references* :test #'xref=))
+
 (defun has-reference-p (name)
   (or (has-global-definition-p name)
       (has-local-reference-p name)))
@@ -1993,23 +1996,34 @@
   To override the title:
 
   - `\[see this][document]` (*title + name, explicit link*) renders
-    as: [see this][document].""")
+    as: [see this][document].
+
+  However, to avoid amiguity e.g. in `\[X][package]`, which can be a
+  title override equivalent to `\[X][package locative]` or a
+  @SPECIFIED-LOCATIVE, when the Markdown link definition names a
+  locative, the reference link is interpreted as a specified locative.
+  See the title override [there][@specified-locative].""")
 
 (defsection @ambiguous-unspecified-locative
     (:title "Ambiguous Unspecified Locative")
-  """These examples all render as [SECTION][], linking to both
-  definitions of the @NAME `\SECTION`, the `\CLASS` and the
-  `\LOCATIVE`. Note that the rendered output is a single link to a
-  disambiguation page when @BROWSING-LIVE-DOCUMENTATION, while
-  multiple, numbered links are generated in offline documentation.
+  """These examples all render as [XREF][], linking to both
+  definitions of the @NAME `\XREF`, the `\CLASS` and the `\FUNCTION`.
+  Note that the rendered output is a single link to a disambiguation
+  page when @BROWSING-LIVE-DOCUMENTATION, while multiple, numbered
+  links are generated in offline documentation.
 
-  - `[SECTION][]` (*name, explicit link*)
-  - `\SECTION` (*name, autolink*)
+  - `[XREF][]` (*name, explicit link*)
+  - `\XREF` (*name, autolink*)
 
   To override the title:
 
-  - `\[see this][section]` (*title + name, explicit link*) renders as:
-    [see this][section].""")
+  - `\[see this][xref]` (*title + name, explicit link*) renders as:
+    [see this][xref].
+
+  As with @UNAMBIGUOUS-UNSPECIFICED-LOCATIVEs, to avoid ambiguity, the
+  title override works only if the Markdown definition does not name a
+  locative. If it is, then there is currently no way to override the
+  title.""")
 
 (defsection @explicit-and-autolinking (:title "Explicit and Autolinking")
   "The examples in the previous sections are marked with *explicit
@@ -2107,8 +2121,8 @@
 ;;; Return 1. the label, 2. whether to use the returned label in the
 ;;; reference link without further transformations (e.g. replace it
 ;;; with SECTION-TITLE), 3. name, 4. the locative, 5. whether the
-;;; reflink looks like something we should resolve (as opposed to a
-;;; user-defined one).
+;;; reflink looks like something PAX should resolve (as opposed to a
+;;; normal markdown reflink).
 (defun dissect-reflink (tree)
   (assert (parse-tree-p tree :reference-link))
   (destructuring-bind (&key label definition tail) (rest tree)
@@ -2122,56 +2136,62 @@
            (label-string (trim-whitespace
                           (parse-tree-to-text label :deemph nil))))
       (nth-value-or 0
-        (and (or empty-definition-p locative-from-def)
+        ;; [foo][] (explicitly @UNSPECIFIED-LOCATIVE)
+        (and empty-definition-p
              label-string
-             ;; [foo][] or [foo][function]
              (multiple-value-bind (xref-name name)
-                 (parse-reflink-label-string label-string locative-from-def)
+                 (parse-reflink-label/no-locative label-string)
+               (when name
+                 (values label nil xref-name nil t))))
+        ;; [foo][function] (@SPECIFIED-LOCATIVE)
+        (and locative-from-def
+             label-string
+             (multiple-value-bind (xref-name name)
+                 (parse-reflink-label/locative label-string locative-from-def)
                (when name
                  (values label nil xref-name locative-from-def t))))
         (and (member locative-from-def '(dislocated argument))
              (values label t 'not-found locative-from-def t))
-        ;; [see this][foo]
-        (multiple-value-bind (xref-name name)
-            (parse-word definition :trim nil :depluralize nil
-                                   :only-one (constantly t))
-          (when name
-            (values label t xref-name nil t)))
-        ;; [see this][foo function]
-        (multiple-value-bind (name locative foundp)
-            (and definition (read-reference-from-string definition))
-          (when foundp
-            (values label t name locative t)))
+        ;; [see this][foo] (title override with @UNSPECIFIED-LOCATIVE)
+        (and (null locative-from-def)
+             (multiple-value-bind (xref-name name)
+                 (parse-word definition :trim nil :depluralize nil
+                                        :only-one (constantly t))
+               (when name
+                 (values label t xref-name nil t))))
+        ;; [see this][foo function] (title override with @SPECIFIED-LOCATIVE)
+        (and (null locative-from-def)
+             (multiple-value-bind (name locative foundp)
+                 (and definition (read-reference-from-string definition))
+               (when foundp
+                 (values label t name locative t))))
         (values label nil 'not-found locative-from-def
                 (or empty-definition-p locative-from-def))))))
 
-(defun parse-reflink-label-string (label-string locative)
-  (let ((interesting-xref-name nil)
-        (interesting-name nil))
-    (flet ((good-parse-p (xref-name name)
-             (cond ((external-locative-p locative)
-                    (let ((reference (dref xref-name locative nil)))
-                      (when reference
-                        (xref-name reference))))
-                   ((has-reference-p xref-name)
-                    t)
-                   (t
-                    ;; Remember the first interesting object ...
-                    (when (and (null interesting-name)
-                               (interesting-name-p xref-name name))
-                      (setq interesting-xref-name xref-name
-                            interesting-name name)
-                      ;; ... but don't stop looking for a known
-                      ;; reference.
-                      nil)))))
-      (nth-value-or 1
-        (parse-word label-string
-                    :trim nil :depluralize t
-                    :clhs-substring-match t
-                    :only-one #'good-parse-p)
-        ;; Only consider merely interesting names if there were no
-        ;; objects with known references.
-        (values interesting-xref-name interesting-name)))))
+(defun parse-reflink-label/no-locative (label-string)
+  (flet ((good-parse-p (xref-name name)
+           (declare (ignore name))
+           (has-reference-p xref-name)))
+    (parse-word label-string
+                :trim nil :depluralize t
+                :clhs-substring-match t
+                :only-one #'good-parse-p)))
+
+(defun parse-reflink-label/locative (label-string locative)
+  (flet ((good-parse-p (xref-name name)
+           (declare (ignore name))
+           (if (eq locative 'dislocated)
+               (has-reference-p xref-name)
+               ;; Stop at the first existing definition.
+               (or
+                (dref xref-name locative nil)
+                (let ((xref (xref xref-name locative)))
+                  (local-reference-p xref)
+                  (find-external-link xref))))))
+    (parse-word label-string
+                :trim nil :depluralize t
+                :clhs-substring-match t
+                :only-one #'good-parse-p)))
 
 
 ;;;; Autolinking

@@ -132,5 +132,4 @@ I.e. they shouldn't be implemented with WITH-HEADING but maybe
 DOCUMENTING-REFERENCE like everything else.
 * print ASDF/SYSTEM:SYSTEM as ASDF:SYSTEM
 Maybe. ASDF is a nickname of ASDF/INTERFACE.
-* BUG fix [PYTHONIC-STRING-READER][asdf:system] link
 * BUG make C-. work on '"lambda list" clhs'

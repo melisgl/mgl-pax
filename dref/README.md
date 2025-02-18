@@ -70,7 +70,7 @@ corresponding to its `XREF` argument, turning it into a [`DREF`][d930]:
 
 Within DRef, the [`DREF` Subclasses][0b7c] form the basis of
 extending `DOCSTRING`, [`SOURCE-LOCATION`][32da] and [`ARGLIST`][e6bd]. Outside DRef,
-[`PAX`][2415] makes [`PAX:DOCUMENT`][432c] extensible through
+[PAX][2415] makes [`PAX:DOCUMENT`][432c] extensible through
 [`PAX:DOCUMENT-OBJECT*`][8269], which has methods specialized on `DREF`s.
 
 Finally, existing definitions can be queried with [`DEFINITIONS`][e196] and

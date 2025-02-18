@@ -500,7 +500,7 @@
 
 #+nil
 (progn
-  (asdf:load-system :mgl-pax/full)
+  (asdf:load-system :mgl-pax/web)
   (time
    (let ((*document-url-versions* '(1)))
      (document (pax-and-dref-sections) :pages (pax-and-dref-pages :plain)

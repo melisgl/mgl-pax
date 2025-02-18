@@ -256,7 +256,7 @@ customized in Elisp. To browse within Emacs, choose
 [w3m](https://emacs-w3m.github.io/info/emacs-w3m.html)), and make
 sure both the w3m binary and the w3m Emacs package are installed. On
 Debian, simply install the `w3m-el` package. With other browser
-functions, a [HUNCHENTOOT][1d5a] web server is started.
+functions, a HUNCHENTOOT web server is started.
 
 See [Navigating Sources in Emacs][3386], [Generating Documentation][2c93] and
 [Transcribing with Emacs][f5bd] for how to use the relevant features.
@@ -1654,26 +1654,35 @@ To override the title:
 - `[see this][document]` (*title + name, explicit link*) renders
   as: [see this][432c].
 
+However, to avoid amiguity e.g. in `[X][package]`, which can be a
+title override equivalent to `[X][package locative]` or a
+[Specified Locative][8996], when the Markdown link definition names a
+locative, the reference link is interpreted as a specified locative.
+See the title override [there][8996].
 
 <a id="x-28MGL-PAX-3A-40AMBIGUOUS-UNSPECIFIED-LOCATIVE-20MGL-PAX-3ASECTION-29"></a>
 
 ##### Ambiguous Unspecified Locative
 
-These examples all render as [`SECTION`][5fac], linking to both
-definitions of the [name][88cf] `SECTION`, the `CLASS` and the
-`LOCATIVE`. Note that the rendered output is a single link to a
-disambiguation page when [Browsing Live Documentation][a595], while
-multiple, numbered links are generated in offline documentation.
+These examples all render as `XREF`([`0`][1538] [`1`][cda7]), linking to both
+definitions of the [name][88cf] `XREF`, the `CLASS` and the `FUNCTION`.
+Note that the rendered output is a single link to a disambiguation
+page when [Browsing Live Documentation][a595], while multiple, numbered
+links are generated in offline documentation.
 
-- `[SECTION][]` (*name, explicit link*)
+- `[XREF][]` (*name, explicit link*)
 
-- `SECTION` (*name, autolink*)
+- `XREF` (*name, autolink*)
 
 To override the title:
 
-- `[see this][section]` (*title + name, explicit link*) renders as:
-  [see this][5fac].
+- `[see this][xref]` (*title + name, explicit link*) renders as:
+  see this([`0`][1538] [`1`][cda7]).
 
+As with [Unambiguous Unspecified Locative][ad94]s, to avoid ambiguity, the
+title override works only if the Markdown definition does not name a
+locative. If it is, then there is currently no way to override the
+title.
 
 <a id="x-28MGL-PAX-3A-40EXPLICIT-AND-AUTOLINKING-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2458,7 +2467,7 @@ used for writing simple tests in a very readable form. For example:
 
 All in all, transcripts are a handy tool especially when combined
 with the Emacs support to regenerate them and with
-[PYTHONIC-STRING-READER][c097]'s triple-quoted strings, that
+PYTHONIC-STRING-READER's triple-quoted strings, that
 allow one to work with nested strings with less noise. The
 triple-quote syntax can be enabled with:
 
@@ -3509,6 +3518,7 @@ they are presented.
   [c930]: #x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29 "MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION"
   [cb15]: http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions "`M-.`"
   [cc04]: dref/README.md#x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:READER MGL-PAX:LOCATIVE"
+  [cda7]: dref/README.md#x-28DREF-3AXREF-20FUNCTION-29 "DREF:XREF FUNCTION"
   [d162]: http://www.lispworks.com/documentation/HyperSpec/Body/e_error.htm "ERROR (MGL-PAX:CLHS CONDITION)"
   [d1ca]: #x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29 "Documentation Generation Implementation Notes"
   [d1dc]: #x-28MGL-PAX-3A-40GLOSSARY-TERMS-20MGL-PAX-3ASECTION-29 "Glossary Terms"

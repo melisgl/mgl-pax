@@ -1474,24 +1474,33 @@ To override the title:
 - `[see this][document]` (*title + name, explicit link*) renders
   as: see this.
 
+However, to avoid amiguity e.g. in `[X][package]`, which can be a
+title override equivalent to `[X][package locative]` or a
+@SPECIFIED-LOCATIVE, when the Markdown link definition names a
+locative, the reference link is interpreted as a specified locative.
+See the title override there.
 
 ##### Ambiguous Unspecified Locative
 
-These examples all render as SECTION, linking to both
-definitions of the @NAME `SECTION`, the `CLASS` and the
-`LOCATIVE`. Note that the rendered output is a single link to a
-disambiguation page when @BROWSING-LIVE-DOCUMENTATION, while
-multiple, numbered links are generated in offline documentation.
+These examples all render as XREF, linking to both
+definitions of the @NAME `XREF`, the `CLASS` and the `FUNCTION`.
+Note that the rendered output is a single link to a disambiguation
+page when @BROWSING-LIVE-DOCUMENTATION, while multiple, numbered
+links are generated in offline documentation.
 
-- `[SECTION][]` (*name, explicit link*)
+- `[XREF][]` (*name, explicit link*)
 
-- `SECTION` (*name, autolink*)
+- `XREF` (*name, autolink*)
 
 To override the title:
 
-- `[see this][section]` (*title + name, explicit link*) renders as:
+- `[see this][xref]` (*title + name, explicit link*) renders as:
   see this.
 
+As with @UNAMBIGUOUS-UNSPECIFICED-LOCATIVEs, to avoid ambiguity, the
+title override works only if the Markdown definition does not name a
+locative. If it is, then there is currently no way to override the
+title.
 
 #### Explicit and Autolinking
 

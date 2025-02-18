@@ -569,26 +569,26 @@ xxx
     (check-head "[see this][\\*package*]" "[see this][5ed1]")
     (check-head "[see this][nil]" "see this([`0`][9990] [`1`][4df2])"))
   (with-test ("definition is both a locative and an object")
-    (check-head (list "[see this][section]"
-                      (dref 'section 'class)
+    (check-head (list "[see this][section]") "see this" :warnings 1)
+    (check-head (list "[see this][section]" (dref 'section 'class)
                       (dref 'section 'locative))
-                "[see this][5fac]")
+                "see this" :warnings 1)
     (check-head (list "[FORMAT][dislocated]"
                       (dref 'dislocated 'locative)
                       (dref 'pax::@explicit-and-autolinking
-                              'section))
+                            'section))
                 "`FORMAT`"
                 :package (find-package '#:mgl-pax))
     (check-head (list "[NOT-CODE][dislocated]"
                       (dref 'dislocated 'locative)
                       (dref 'pax::@explicit-and-autolinking
-                              'section))
+                            'section))
                 "NOT-CODE"
                 :package (find-package '#:mgl-pax))
     (check-head (list "[`SOME-CODE`][dislocated]"
                       (dref 'dislocated 'locative)
                       (dref 'pax::@explicit-and-autolinking
-                              'section))
+                            'section))
                 "`SOME-CODE`"
                 :package (find-package '#:mgl-pax))
     (check-head "[locative][dislocated]" "locative")
@@ -1284,7 +1284,8 @@ This is [Self-referencing][e042].
                   "[`DOCUMENTATION`][68f1]")))
   (when (null (dref 'otherwise 'macro nil))
     (with-test ("if no live definition, then link to CLHS")
-      (check-head "[otherwise][macro]" "[otherwise][c9ce]")))
+      (check-head "[otherwise][macro]" "[otherwise][c9ce]")
+      (check-head "[OTHERWISES][macro]" "[`OTHERWISE`s][c9ce]")))
   (with-test ("explicit definition link always works")
     (check-head "[PRINT][pax:clhs]" "[`PRINT`][d451]")))
 
