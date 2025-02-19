@@ -23,16 +23,25 @@
                        object :stream nil :format format)
               warnings))))
 
-(defun check-head (input expected &key (format :markdown) msg (n-lines 1)
+(defun count-lines (string)
+  (with-input-from-string (in string)
+    (loop while (read-line in nil nil)
+          count 1)))
+
+(defun check-head (input expected &key (format :markdown) msg n-lines
                                     (warnings 0) package w3m)
   (let* ((*package* (or package (find-package :mgl-pax-test)))
          (*document-hyperspec-root* "CLHS/")
          (*document-url-versions* '(2))
-         (n-expected-warnings warnings))
+         (n-expected-warnings warnings)
+         (input (if (stringp input)
+                    (format nil input)
+                    input))
+         (expected (format nil expected))
+         (n-lines (or n-lines (count-lines expected))))
     (multiple-value-bind (full-output warnings)
         (document* input :format format :w3m w3m)
-      (let ((got (dref::first-lines full-output n-lines))
-            (expected (format nil expected)))
+      (let ((got (dref::first-lines full-output n-lines)))
         (is (equal got expected)
             :msg msg
             :ctx ("Input: ~S~%Full output:~%~S" input full-output))
@@ -663,8 +672,7 @@ xxx
 
 (deftest test-repeated-links ()
   (check-head "PRINT PRINT" "[`PRINT`][d451] `PRINT`")
-  (check-head (list "PRINT" "PRINT") "[`PRINT`][d451]~%~%[`PRINT`][d451]"
-              :n-lines 3)
+  (check-head (list "PRINT" "PRINT") "[`PRINT`][d451]~%~%[`PRINT`][d451]")
   (check-head "[STRING][function] STRING" "[`STRING`][dae6] `STRING`")
   (check-head "[STRING][dislocated] STRING" "`STRING` `STRING`")
   (check-head "[STRING][function] STRING function"
@@ -1324,9 +1332,8 @@ This is [Self-referencing][e042].
 
   [b815]: CLHS/Body/26_glo_n.htm#non-local_exit '\"non-local exit\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
 ")
-  (check-head (format nil "[ non-local~%exit ][(clhs glossary-term)]")
-              (format nil "[ non-local~%exit ][b815]")
-              :n-lines 2))
+  (check-head "[ non-local~%exit ][(clhs glossary-term)]"
+              "[ non-local~%exit ][b815]"))
 
 (deftest test-clhs-issue ()
   (let ((*document-link-to-hyperspec* t))
@@ -1349,9 +1356,23 @@ This is [Self-referencing][e042].
   (check-head "[`ISSUE:AREF-1D`][]" "`ISSUE:AREF-1D`" :warnings 1)
   (check-head "[ISSUE:AREF-1D][CLHS]" "[ISSUE:AREF-1D][63ef]")
   (check-head "[iss009][clhs]" "[iss009][e357]"))
+
 
 (deftest test-argument ()
-  (check-head "[PRINT][argument]" "`PRINT`"))
+  (check-head "[PRINT][argument]" "`PRINT`")
+  (check-head (list #'argument-shadow (dref 'section 'class))
+              "<a id=\"MGL-PAX-TEST:ARGUMENT-SHADOW%20FUNCTION\"></a>
+
+- [function] **ARGUMENT-SHADOW** *SECTIONS*
+
+    `SECTIONS`, `SECTIONS`s, `SECTIONS`, `SECTIONS`s, `SECTIONS`,
+    [`SECTIONS`][5fac]"))
+
+(defun argument-shadow (sections)
+  "SECTIONS, SECTIONSs, [SECTIONS][], [SECTIONSs][], [SECTIONS][argument],
+  [SECTIONS][section class]"
+  sections)
+
 
 (define-locative-alias %%%defun function)
 
@@ -1433,7 +1454,7 @@ This is [Self-referencing][e042].
     (1+ 2)
     => 7
     ```"
-                :n-lines 8 :warnings 1 :w3m t))
+                :warnings 1 :w3m t))
   (with-test ("[in package]")
     (let ((*package* (find-package '#:mgl-pax-test)))
       (check-pred @test-examples (lambda (output)
