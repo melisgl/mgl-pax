@@ -593,6 +593,27 @@
 
 (defun filter-clhs-references (refs)
   (remove 'clhs refs :key #'xref-locative-type))
+
+;;; Just for the generated docstrings. See CLHS locative.
+(defvar *format-directive-alias-links* nil
+  #.(with-output-to-string (out)
+      (loop for alias in *hyperspec-format-directive-aliases*
+            for i upfrom 0
+            do (unless (zerop i)
+                 (if (zerop (mod i 4))
+                     (format out "~%")
+                     (format out " ")))
+               (format out "[~A][clhs]" (escape-markdown alias)))))
+(defvar *reader-macro-alias-links* nil
+  #.(with-output-to-string (out)
+      (loop for alias in *hyperspec-reader-macro-char-aliases*
+            for i upfrom 0
+            do (unless (zerop i)
+                 (if (zerop (mod i 4))
+                     (format out "~%")
+                     (format out " ")))
+               (format out "[~A][clhs]" (escape-markdown alias)))))
+
 
 
 ;;;; Beginnings of abstracting CLHS to external references. This could

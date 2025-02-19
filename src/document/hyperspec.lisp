@@ -4,7 +4,10 @@
 
 (defparameter *hyperspec-definitions*
   ;; (SYMBOL LOCATIVE FILENAME)
-  '((&allow-other-keys (go ("3.4.1" clhs)) "03_da")
+  '(;; The hyperspec describes "symbols", which do not correspond to
+    ;; any single context or locative, and we emulate them by GOing to
+    ;; the relevant section.
+    (&allow-other-keys (go ("3.4.1" clhs)) "03_da")
     (&aux (go ("3.4.1" clhs)) "03_da")
     (&body (go ("3.4.4" clhs)) "03_dd")
     (&environment (go ("3.4.4" clhs)) "03_dd")
@@ -1089,6 +1092,12 @@
                    (gethash name map)))
     map))
 
+;;; A map with all the definitions and disambiguations in the spec
+;;; with the form:
+;;;
+;;; NAME -> ((LOCATIVE-1 FILENAME-1) (LOCATIVE-2 FILENAME-2) ...)
+;;;
+;;; The locative may be NIL for disambiguation pages.
 (defparameter *hyperspec-name-to-locatives*
   (make-hyperspec-name-to-locatives))
 
@@ -1124,7 +1133,11 @@
 ;;;; Low-level interface to Hyperspec sections
 
 (defparameter *hyperspec-sections*
-  ;; (FILENAME TITLE SECTION-ID)
+  ;; (FILENAME SECTION-ID TITLE &REST ALIAS-KINDS-AND-ALIASES)
+  ;;
+  ;; For example, ALIAS-KINDS-AND-ALIASES is (:FORMAT-DIRECTIVE "~C")
+  ;; for "Tilde C: Character". There are aliases for
+  ;; :READER-MACRO-CHARs, as well.
   '(("00_" "0" "Credits")
     ("01_" "1" "Introduction")
     ("01_a" "1.1" "Scope, Purpose, and History")
@@ -1256,11 +1269,11 @@
     ("02_ce" "2.3.5" "Valid Patterns for Tokens")
     ("02_cf" "2.3.6" "Package System Consistency Rules")
     ("02_d" "2.4" "Standard Macro Characters")
-    ("02_da" "2.4.1" "Left-Parenthesis")
-    ("02_db" "2.4.2" "Right-Parenthesis")
-    ("02_dc" "2.4.3" "Single-Quote")
+    ("02_da" "2.4.1" "Left-Parenthesis" :reader-macro-char "(")
+    ("02_db" "2.4.2" "Right-Parenthesis" :reader-macro-char ")")
+    ("02_dc" "2.4.3" "Single-Quote" :reader-macro-char "'")
     ("02_dca" "2.4.3.1" "Examples of Single-Quote")
-    ("02_dd" "2.4.4" "Semicolon")
+    ("02_dd" "2.4.4" "Semicolon" :reader-macro-char ";")
     ("02_dda" "2.4.4.1" "Examples of Semicolon")
     ("02_ddb" "2.4.4.2" "Notes about Style for Semicolon")
     ("02_ddba" "2.4.4.2.1" "Use of Single Semicolon")
@@ -1268,36 +1281,36 @@
     ("02_ddbc" "2.4.4.2.3" "Use of Triple Semicolon")
     ("02_ddbd" "2.4.4.2.4" "Use of Quadruple Semicolon")
     ("02_ddbe" "2.4.4.2.5" "Examples of Style for Semicolon")
-    ("02_de" "2.4.5" "Double-Quote")
-    ("02_df" "2.4.6" "Backquote")
+    ("02_de" "2.4.5" "Double-Quote" :reader-macro-char "\"")
+    ("02_df" "2.4.6" "Backquote" :reader-macro-char "`")
     ("02_dfa" "2.4.6.1" "Notes about Backquote")
-    ("02_dg" "2.4.7" "Comma")
-    ("02_dh" "2.4.8" "Sharpsign")
-    ("02_dha" "2.4.8.1" "Sharpsign Backslash")
-    ("02_dhb" "2.4.8.2" "Sharpsign Single-Quote")
-    ("02_dhc" "2.4.8.3" "Sharpsign Left-Parenthesis")
-    ("02_dhd" "2.4.8.4" "Sharpsign Asterisk")
+    ("02_dg" "2.4.7" "Comma" :reader-macro-char ",")
+    ("02_dh" "2.4.8" "Sharpsign" "#")
+    ("02_dha" "2.4.8.1" "Sharpsign Backslash" :reader-macro-char "#\\")
+    ("02_dhb" "2.4.8.2" "Sharpsign Single-Quote" :reader-macro-char "#'")
+    ("02_dhc" "2.4.8.3" "Sharpsign Left-Parenthesis" :reader-macro-char "#(")
+    ("02_dhd" "2.4.8.4" "Sharpsign Asterisk" :reader-macro-char "#*")
     ("02_dhda" "2.4.8.4.1" "Examples of Sharpsign Asterisk")
-    ("02_dhe" "2.4.8.5" "Sharpsign Colon")
-    ("02_dhf" "2.4.8.6" "Sharpsign Dot")
-    ("02_dhg" "2.4.8.7" "Sharpsign B")
-    ("02_dhh" "2.4.8.8" "Sharpsign O")
-    ("02_dhi" "2.4.8.9" "Sharpsign X")
-    ("02_dhj" "2.4.8.10" "Sharpsign R")
-    ("02_dhk" "2.4.8.11" "Sharpsign C")
-    ("02_dhl" "2.4.8.12" "Sharpsign A")
-    ("02_dhm" "2.4.8.13" "Sharpsign S")
-    ("02_dhn" "2.4.8.14" "Sharpsign P")
-    ("02_dho" "2.4.8.15" "Sharpsign Equal-Sign")
-    ("02_dhp" "2.4.8.16" "Sharpsign Sharpsign")
-    ("02_dhq" "2.4.8.17" "Sharpsign Plus")
-    ("02_dhr" "2.4.8.18" "Sharpsign Minus")
-    ("02_dhs" "2.4.8.19" "Sharpsign Vertical-Bar")
+    ("02_dhe" "2.4.8.5" "Sharpsign Colon" :reader-macro-char "#:")
+    ("02_dhf" "2.4.8.6" "Sharpsign Dot" :reader-macro-char "#.")
+    ("02_dhg" "2.4.8.7" "Sharpsign B" :reader-macro-char "#B")
+    ("02_dhh" "2.4.8.8" "Sharpsign O" :reader-macro-char "#O")
+    ("02_dhi" "2.4.8.9" "Sharpsign X" :reader-macro-char "#X")
+    ("02_dhj" "2.4.8.10" "Sharpsign R" :reader-macro-char "#R")
+    ("02_dhk" "2.4.8.11" "Sharpsign C" :reader-macro-char "#C")
+    ("02_dhl" "2.4.8.12" "Sharpsign A" :reader-macro-char "#A")
+    ("02_dhm" "2.4.8.13" "Sharpsign S" :reader-macro-char "#S")
+    ("02_dhn" "2.4.8.14" "Sharpsign P" :reader-macro-char "#P")
+    ("02_dho" "2.4.8.15" "Sharpsign Equal-Sign" :reader-macro-char "#=")
+    ("02_dhp" "2.4.8.16" "Sharpsign Sharpsign" :reader-macro-char "##")
+    ("02_dhq" "2.4.8.17" "Sharpsign Plus" :reader-macro-char "#+")
+    ("02_dhr" "2.4.8.18" "Sharpsign Minus" :reader-macro-char "#-")
+    ("02_dhs" "2.4.8.19" "Sharpsign Vertical-Bar" :reader-macro-char "#|")
     ("02_dhsa" "2.4.8.19.1" "Examples of Sharpsign Vertical-Bar")
     ("02_dhsb" "2.4.8.19.2" "Notes about Style for Sharpsign Vertical-Bar")
-    ("02_dht" "2.4.8.20" "Sharpsign Less-Than-Sign")
+    ("02_dht" "2.4.8.20" "Sharpsign Less-Than-Sign" :reader-macro-char "#<")
     ("02_dhu" "2.4.8.21" "Sharpsign Whitespace")
-    ("02_dhv" "2.4.8.22" "Sharpsign Right-Parenthesis")
+    ("02_dhv" "2.4.8.22" "Sharpsign Right-Parenthesis" :reader-macro-char "#)")
     ("02_di" "2.4.9" "Re-Reading Abbreviated Expressions")
     ("03_" "3" "Evaluation and Compilation")
     ("03_a" "3.1" "Evaluation")
@@ -1366,7 +1379,7 @@
     ("03_dada" "3.4.1.4.1" "Suppressing Keyword Argument Checking")
     ("03_dadaa" "3.4.1.4.1.1"
      "Examples of Suppressing Keyword Argument Checking")
-    ("03_dae" "3.4.1.5" "Specifiers for &amp;aux variables")
+    ("03_dae" "3.4.1.5" "Specifiers for &aux variables")
     ("03_daf" "3.4.1.6" "Examples of Ordinary Lambda Lists")
     ("03_db" "3.4.2" "Generic Function Lambda Lists")
     ("03_dc" "3.4.3" "Specialized Lambda Lists")
@@ -1829,50 +1842,67 @@
     ("22_bc" "22.2.3" "Notes about the Pretty Printer's Background")
     ("22_c" "22.3" "Formatted Output")
     ("22_ca" "22.3.1" "FORMAT Basic Output")
-    ("22_caa" "22.3.1.1" "Tilde C: Character")
-    ("22_cab" "22.3.1.2" "Tilde Percent: Newline")
-    ("22_cac" "22.3.1.3" "Tilde Ampersand: Fresh-Line")
-    ("22_cad" "22.3.1.4" "Tilde Vertical-Bar: Page")
-    ("22_cae" "22.3.1.5" "Tilde Tilde: Tilde")
+    ("22_caa" "22.3.1.1" "Tilde C: Character" :format-directive "~C")
+    ("22_cab" "22.3.1.2" "Tilde Percent: Newline" :format-directive "~%")
+    ("22_cac" "22.3.1.3" "Tilde Ampersand: Fresh-Line" :format-directive "~&")
+    ("22_cad" "22.3.1.4" "Tilde Vertical-Bar: Page" :format-directive "~|")
+    ("22_cae" "22.3.1.5" "Tilde Tilde: Tilde" :format-directive "~~")
     ("22_cb" "22.3.2" "FORMAT Radix Control")
-    ("22_cba" "22.3.2.1" "Tilde R: Radix")
-    ("22_cbb" "22.3.2.2" "Tilde D: Decimal")
-    ("22_cbc" "22.3.2.3" "Tilde B: Binary")
-    ("22_cbd" "22.3.2.4" "Tilde O: Octal")
-    ("22_cbe" "22.3.2.5" "Tilde X: Hexadecimal")
+    ("22_cba" "22.3.2.1" "Tilde R: Radix" :format-directive "~R")
+    ("22_cbb" "22.3.2.2" "Tilde D: Decimal" :format-directive "~D")
+    ("22_cbc" "22.3.2.3" "Tilde B: Binary" :format-directive "~B")
+    ("22_cbd" "22.3.2.4" "Tilde O: Octal" :format-directive "~O")
+    ("22_cbe" "22.3.2.5" "Tilde X: Hexadecimal" :format-directive "~X")
     ("22_cc" "22.3.3" "FORMAT Floating-Point Printers")
-    ("22_cca" "22.3.3.1" "Tilde F: Fixed-Format Floating-Point")
-    ("22_ccb" "22.3.3.2" "Tilde E: Exponential Floating-Point")
-    ("22_ccc" "22.3.3.3" "Tilde G: General Floating-Point")
-    ("22_ccd" "22.3.3.4" "Tilde Dollarsign: Monetary Floating-Point")
+    ("22_cca" "22.3.3.1" "Tilde F: Fixed-Format Floating-Point"
+     :format-directive "~F")
+    ("22_ccb" "22.3.3.2" "Tilde E: Exponential Floating-Point"
+     :format-directive "~E")
+    ("22_ccc" "22.3.3.3" "Tilde G: General Floating-Point"
+     :format-directive "~G")
+    ("22_ccd" "22.3.3.4" "Tilde Dollarsign: Monetary Floating-Point"
+     :format-directive "~$")
     ("22_cd" "22.3.4" "FORMAT Printer Operations")
-    ("22_cda" "22.3.4.1" "Tilde A: Aesthetic")
-    ("22_cdb" "22.3.4.2" "Tilde S: Standard")
-    ("22_cdc" "22.3.4.3" "Tilde W: Write")
+    ("22_cda" "22.3.4.1" "Tilde A: Aesthetic" :format-directive "~A")
+    ("22_cdb" "22.3.4.2" "Tilde S: Standard" :format-directive "~S")
+    ("22_cdc" "22.3.4.3" "Tilde W: Write" :format-directive "~W")
     ("22_ce" "22.3.5" "FORMAT Pretty Printer Operations")
-    ("22_cea" "22.3.5.1" "Tilde Underscore: Conditional Newline")
-    ("22_ceb" "22.3.5.2" "Tilde Less-Than-Sign: Logical Block")
-    ("22_cec" "22.3.5.3" "Tilde I: Indent")
-    ("22_ced" "22.3.5.4" "Tilde Slash: Call Function")
+    ("22_cea" "22.3.5.1" "Tilde Underscore: Conditional Newline"
+     :format-directive "~_")
+    ("22_ceb" "22.3.5.2" "Tilde Less-Than-Sign: Logical Block"
+     :format-directive "~<" :format-directive "~:>")
+    ("22_cec" "22.3.5.3" "Tilde I: Indent" :format-directive "~I")
+    ("22_ced" "22.3.5.4" "Tilde Slash: Call Function" :format-directive "~/")
     ("22_cf" "22.3.6" "FORMAT Layout Control")
-    ("22_cfa" "22.3.6.1" "Tilde T: Tabulate")
-    ("22_cfb" "22.3.6.2" "Tilde Less-Than-Sign: Justification")
-    ("22_cfc" "22.3.6.3" "Tilde Greater-Than-Sign: End of Justification")
+    ("22_cfa" "22.3.6.1" "Tilde T: Tabulate" :format-directive "~T")
+    ("22_cfb" "22.3.6.2" "Tilde Less-Than-Sign: Justification"
+     :format-directive "~< Justification")
+    ("22_cfc" "22.3.6.3" "Tilde Greater-Than-Sign: End of Justification"
+     :format-directive "~>")
     ("22_cg" "22.3.7" "FORMAT Control-Flow Operations")
-    ("22_cga" "22.3.7.1" "Tilde Asterisk: Go-To")
-    ("22_cgb" "22.3.7.2" "Tilde Left-Bracket: Conditional Expression")
-    ("22_cgc" "22.3.7.3" "Tilde Right-Bracket: End of Conditional Expression")
-    ("22_cgd" "22.3.7.4" "Tilde Left-Brace: Iteration")
-    ("22_cge" "22.3.7.5" "Tilde Right-Brace: End of Iteration")
-    ("22_cgf" "22.3.7.6" "Tilde Question-Mark: Recursive Processing")
+    ("22_cga" "22.3.7.1" "Tilde Asterisk: Go-To" :format-directive "~*")
+    ("22_cgb" "22.3.7.2" "Tilde Left-Bracket: Conditional Expression"
+     :format-directive "~[")
+    ("22_cgc" "22.3.7.3" "Tilde Right-Bracket: End of Conditional Expression"
+     :format-directive "~]")
+    ("22_cgd" "22.3.7.4" "Tilde Left-Brace: Iteration" :format-directive "~{")
+    ("22_cge" "22.3.7.5" "Tilde Right-Brace: End of Iteration"
+     :format-directive "~}")
+    ("22_cgf" "22.3.7.6" "Tilde Question-Mark: Recursive Processing"
+     :format-directive "~?")
     ("22_ch" "22.3.8" "FORMAT Miscellaneous Operations")
-    ("22_cha" "22.3.8.1" "Tilde Left-Paren: Case Conversion")
-    ("22_chb" "22.3.8.2" "Tilde Right-Paren: End of Case Conversion")
-    ("22_chc" "22.3.8.3" "Tilde P: Plural")
+    ("22_cha" "22.3.8.1" "Tilde Left-Paren: Case Conversion"
+     :format-directive "~(")
+    ("22_chb" "22.3.8.2" "Tilde Right-Paren: End of Case Conversion"
+     :format-directive "~)")
+    ("22_chc" "22.3.8.3" "Tilde P: Plural" :format-directive "~P")
     ("22_ci" "22.3.9" "FORMAT Miscellaneous Pseudo-Operations")
-    ("22_cia" "22.3.9.1" "Tilde Semicolon: Clause Separator")
-    ("22_cib" "22.3.9.2" "Tilde Circumflex: Escape Upward")
-    ("22_cic" "22.3.9.3" "Tilde Newline: Ignored Newline")
+    ("22_cia" "22.3.9.1" "Tilde Semicolon: Clause Separator"
+     :format-directive "~;")
+    ("22_cib" "22.3.9.2" "Tilde Circumflex: Escape Upward"
+     :format-directive "~^")
+    ("22_cic" "22.3.9.3" "Tilde Newline: Ignored Newline"
+     :format-directive "~Newline")
     ("22_cj" "22.3.10" "Additional Information about FORMAT Operations")
     ("22_cja" "22.3.10.1" "Nesting of FORMAT Operations")
     ("22_cjb" "22.3.10.2" "Missing and Additional FORMAT Arguments")
@@ -1942,24 +1972,42 @@
         :key #'second))
 
 (defun make-hyperspec-section-map ()
-  (let ((ht (make-hash-table :test #'equal)))
+  ;; EQUALP for case-insensitive comparisons. The filenames are all
+  ;; lowercase, so they are not a problem.
+  (let ((ht (make-hash-table :test #'equalp)))
     (loop for entry in *hyperspec-sections*
-          do (destructuring-bind (filename id title) entry
+          do (destructuring-bind (filename id title
+                                  &rest alias-kinds-and-aliases)
+                 entry
                (declare (ignore title))
-               (let ((value (list id filename)))
-                 (setf (gethash id ht) value)
+               (let ((value (list id filename))
+                     (aliases (loop for (kind alias) on alias-kinds-and-aliases
+                                    by #'cddr collect alias)))
+                 (dolist (key (cons id aliases))
+                   (setf (gethash key ht) value))
+                 (assert (not (gethash filename ht)))
                  (setf (gethash filename ht) value))))
-    (loop for entry in *hyperspec-definitions*
-          do (destructuring-bind (symbol locative filename) entry
-               (declare (ignore symbol locative))
-               (setf (gethash filename ht) (list filename filename))))
-    (loop for entry in *hyperspec-disambiguations*
-          do (destructuring-bind (symbol filename) entry
-               (declare (ignore symbol))
-               (setf (gethash filename ht) (list filename filename))))
+    ;; KLUDGE: lambda has a symbol page "s_lambda", which we GO to.
+    ;; Unlike the other GO redirects in *HYPERSPEC-SECTIONS*, this one
+    ;; has no corresponding section, so we fake it.
+    (setf (gethash "s_lambda" ht) '("s_lambda" "s_lambda"))
     ht))
 
+;;; An SECTION-ID -> (SECTION-ID FILENAME) and FILENAME -> (SECTION-ID
+;;; FILENAME) map.
 (defparameter *hyperspec-section-map* (make-hyperspec-section-map))
+
+(defun list-hyperspec-section-aliases (kind)
+  (loop for entry in *hyperspec-sections*
+        nconc (loop for (kind-1 alias) on (nthcdr 3 entry) by #'cddr
+                    when (eq kind-1 kind)
+                      collect alias)))
+
+(defparameter *hyperspec-format-directive-aliases*
+  (list-hyperspec-section-aliases :format-directive))
+
+(defparameter *hyperspec-reader-macro-char-aliases*
+  (list-hyperspec-section-aliases :reader-macro-char))
 
 ;;; Return the first section in *SORTED-HYPERSPEC-SECTIONS* whose
 ;;; title contains STRING.
@@ -2921,7 +2969,7 @@
     ("ISSUE:WITH-STANDARD-IO-SYNTAX-READTABLE" "iss365_w")))
 
 (defun make-hyperspec-issue-map ()
-  (let ((ht (make-hash-table :test #'equal)))
+  (let ((ht (make-hash-table :test #'equalp)))
     (loop for entry in *hyperspec-issues*
           do (destructuring-bind (id filename) entry
                (setf (gethash id ht) entry)

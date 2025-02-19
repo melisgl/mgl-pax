@@ -355,7 +355,8 @@
   location so @M-. will not work. What works is linking in
   documentation, including @BROWSING-LIVE-DOCUMENTATION. The generated
   links are relative to *DOCUMENT-HYPERSPEC-ROOT* and work even if
-  *DOCUMENT-LINK-TO-HYPERSPEC* is NIL.
+  *DOCUMENT-LINK-TO-HYPERSPEC* is NIL. All matching is
+  case-insensitive.
 
   - *definitions*: These are typically unnecessary as DOCUMENT will
     produce the same link for e.g. `\\PPRINT`, `[PPRINT][function]`,
@@ -371,7 +372,7 @@
 
       - *explicit*: `[function][(clhs class)]` ([function][(clhs class)])
 
-  - *glossary terms* (case-insensitive):
+  - *glossary terms*:
 
       - `[lambda list][(clhs glossary-term)]`
         ([lambda list][(clhs glossary-term)])
@@ -390,7 +391,7 @@
       - `[SUMMARY:CHARACTER-PROPOSAL:2-6-5][(clhs section)]`
 
       Since these summary ids are not particularly reader friendly,
-      the alternative form of the @SPECIFIED-LOCATIVE may be used:
+      the title override form of the @SPECIFIED-LOCATIVE may be used:
 
       - `[see this][SUMMARY:CHARACTER-PROPOSAL:2-6-5 (clhs
         section)]` ([see this][SUMMARY:CHARACTER-PROPOSAL:2-6-5 (clhs
@@ -401,12 +402,21 @@
       - *by section number*: `[3.4][clhs]` or `[3.4][(clhs
          section)]` ([3.4][clhs])
 
-      - *by section title* (case-insensitive, substring match):
-         `[lambda lists][clhs]` or `[lambda lists][(clhs
-         section)]` ([lambda lists][clhs])
+      - *by section title* (substring match): `[lambda lists][clhs]`
+         or `[lambda lists][(clhs section)]` ([lambda lists][clhs])
 
       - *by filename*: `[03_d][clhs]` or `[03_d][(clhs
          section)]` ([03_d][clhs])
+
+      - *by alias*: [Format directives][(clhs glossary-term)] are
+         alieses of the sections describing them. Thus, `[~c][clhs]`
+         is equivalent to `[22.3.1.1][clhs]` and `[Tilde C:
+         Character][clhs]`. The full list is
+         [*format-directive-alias-links* variable][docstring].
+
+          Similarly, [reader macro][clhs] characters are aliases of
+          the sections describing them. The full list is
+          [*reader-macro-alias-links* variable][docstring].
 
   As the above examples show, the NESTED-LOCATIVE argument of the CLHS
   locative may be omitted. In that case, definitions, glossary terms,
@@ -421,8 +431,8 @@
   As mentioned above, `\\M-.` does not do anything over CLHS
   references. Slightly more usefully, the [live documentation
   browser][@browsing-live-documentation] understands CLHS links so one
-  can enter inputs like `3.4 clhs`, `"lambda list" clhs` or `error (clhs
-  function)`.
+  can enter inputs like `3.4 clhs`, `"lambda list" clhs` or
+  `error (clhs function)`.
 
   CLHS references do not RESOLVE.""")
 

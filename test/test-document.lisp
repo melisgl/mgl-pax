@@ -1312,7 +1312,8 @@ This is [Self-referencing][e042].
   ;; "A.1" and "3.4" are section ids in the CLHS.
   (check-ref (dref "A.1" '(clhs section) nil)
              "A.1" '(clhs section))
-  (is (null (dref "a.1" '(clhs section) nil)))
+  (check-ref (dref "a.1" '(clhs section) nil)
+             "A.1" '(clhs section))
   (check-ref (dref "lambda lists" '(clhs section) nil)
              "3.4" '(clhs section))
   (check-ref (dref "Lambda Lists" '(clhs section) nil)
@@ -1328,7 +1329,13 @@ This is [Self-referencing][e042].
   (check-head "[3.4][CLHS]" "[3.4][e442]")
   (check-head "[Lambda Lists][clhs]" "[Lambda Lists][e442]")
   (check-head "[03_d][clhs]" "[03\\_d][e442]")
-  (check-head "[ Lambda  Lists ][clhs]" "[ Lambda  Lists ][e442]"))
+  (check-head "[ Lambda  Lists ][clhs]" "[ Lambda  Lists ][e442]")
+  (check-ref (dref "#:" '(clhs section) nil)
+             "2.4.8.5" '(clhs section))
+  (check-ref (dref "~f" 'clhs nil)
+             "22.3.3.1" '(clhs section))
+  (check-head "[#:][clhs]" "[\\#:][ac5e]")
+  (check-head "[~~f][clhs]" "[~~f][cae2]"))
 
 (deftest test-clhs-glossary-entries ()
   (check-head "[readably][(clhs glossary-term)]" "[readably][278a]")
@@ -1348,7 +1355,11 @@ This is [Self-referencing][e042].
 (defun test-clhs-issue-1 ()
   (check-ref (dref "ISSUE:AREF-1D" 'clhs nil)
              '"ISSUE:AREF-1D" '(clhs section))
+  (check-ref (dref "issue:aref-1d" 'clhs nil)
+             '"ISSUE:AREF-1D" '(clhs section))
   (check-ref (dref "iss009" 'clhs nil)
+             '"SUMMARY:AREF-1D" '(clhs section))
+  (check-ref (dref "ISS009" 'clhs nil)
              '"SUMMARY:AREF-1D" '(clhs section))
   (check-head "ISSUE:AREF-1D" "ISSUE:AREF-1D")
   (check-head "`ISSUE:AREF-1D`" "`ISSUE:AREF-1D`")
@@ -1359,7 +1370,9 @@ This is [Self-referencing][e042].
   (check-head "[ISSUE:AREF-1D][]" "ISSUE:AREF-1D" :warnings 1)
   (check-head "[`ISSUE:AREF-1D`][]" "`ISSUE:AREF-1D`" :warnings 1)
   (check-head "[ISSUE:AREF-1D][CLHS]" "[ISSUE:AREF-1D][63ef]")
-  (check-head "[iss009][clhs]" "[iss009][e357]"))
+  (check-head "[issue:aref-1d][CLHS]" "[issue:aref-1d][63ef]")
+  (check-head "[iss009][clhs]" "[iss009][e357]")
+  (check-head "[ISS009][clhs]" "[ISS009][e357]"))
 
 
 (deftest test-argument ()

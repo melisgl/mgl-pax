@@ -322,7 +322,10 @@
           (locative-junk
            (error "Unknown locative ~S." locative-junk))
           (t
-           (let ((references (documentables-of (read-name-from-string path))))
+           (let ((references (documentables-of
+                              (or (ignore-errors
+                                   (read-name-from-string path))
+                                  path))))
              (cond ((endp references)
                     (error "Could not find definitions for ~S." path))
                    ((= (length references) 1)

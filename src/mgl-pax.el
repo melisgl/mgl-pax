@@ -756,7 +756,13 @@ The suggested key binding is `C-.' to parallel `M-.'."
 
 ;;; Return the path and fragment part of the schemeless URL.
 (defun mgl-pax-parse-path-and-fragment (url)
-  (let ((fragment-pos (cl-position ?# url)))
+  (let ((fragment-pos
+         ;; KLUDGE: If the first character is #, then don't treat it
+         ;; as the URL fragment separator for the sake of the
+         ;; alternative section ids in the hyperspec definition such
+         ;; as "#:" and "#".
+         (when (< 0 (length url))
+           (cl-position ?# url :start 1))))
     (if fragment-pos
         (list (cl-subseq url 0 fragment-pos)
               (cl-subseq url (1+ fragment-pos)))
