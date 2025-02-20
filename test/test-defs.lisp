@@ -29,9 +29,11 @@
   "This is SOME-ARG.")
 
 (defun foo2 (ook x)
-  "FOO2 has args OOK and X."
+  "FOO2 has args [OOK][] and X."
   (declare (ignore ook x))
   nil)
+
+(defun ook ())
 
 (defun traced-foo (x)
   "XXX"
@@ -41,6 +43,9 @@
   "FOO has args OOK and X."
   (declare (ignore ook x))
   nil)
+(defun |Foo| ())
+(defun |F o| ())
+(defun |F O| ())
 (define-compiler-macro foo ()
   "Docstring of a compiler macro."
   nil)
@@ -153,3 +158,5 @@
 (defun full-setf ())
 
 (define-locative-type my-loc ())
+
+(defpackage "X Y")

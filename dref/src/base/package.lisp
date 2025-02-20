@@ -19,7 +19,7 @@
 ;;;; belong.
 ;;;;
 ;;;; So instead, the SECTIONs for DREF/FULL are defined in this file
-;;;; for both packages, addressing 1. and 2 at the cost of 3.
+;;;; for both packages, addressing 1 and 2 at the cost of 3.
 
 (mgl-pax:define-package :dref-ext
   (:documentation "See DREF-EXT::@EXTENDING-DREF.")
@@ -40,6 +40,12 @@
 ;;;; :USEd by DREF.
 
 (in-package :dref-ext)
+
+(defmethod exportable-reference-p ((package (eql (find-package 'dref-ext)))
+                                   symbol locative-type locative-args)
+  (and (call-next-method)
+       (not (eq symbol 'asdf:system))
+       :warn))
 
 (defun dref-std-env (fn)
   (let ((*package* (find-package :dref)))
@@ -81,18 +87,61 @@
   (dref-locative-type function)
   (dref-locative-args function))
 
-(defsection @adding-new-locatives (:export :dref-ext)
+(defsection @adding-new-locatives (:title "Adding New Locatives"
+                                   :package :dref
+                                   :export :dref-ext)
+  "Let's see how to tell DRef about new kinds of definitions through
+  the example of the implementation of the CLASS locative. Note that
+  this is a verbatim [PAX:INCLUDE][locative] of the sources. Please
+  ignore any internal machinery. The first step is to define the
+  locative type:"
+  (nil (include (:start (class locative) :end (class-dref class))
+                :header-nl "```" :footer-nl "```"))
+  "Next, we define a subclass of [DREF][class] associated with the
+  CLASS locative type and specialize LOCATE*:"
+  (nil (include (:start (class-dref class)
+                 :end (dref::actualize-type-to-class function))
+                :header-nl "```" :footer-nl "```"))
+  "The first method makes `(LOCATE (FIND-CLASS 'DREF))` work, while
+  the second is for `(DREF 'DREF 'CLASS)`. Naturally, for locative
+  types that do not define first-class objects, the first method
+  cannot be defined.
+
+  Then, with ADD-DREF-ACTUALIZER, we install a function that that runs
+  whenever a new [DREF][class] is about to be returned from LOCATE and
+  turn the locative TYPE into the locative CLASS if the denoted
+  definition is of a class:"
+  (nil (include (:start (dref::actualize-type-to-class function)
+                 :end (resolve* (method () (class-dref))))
+                :header-nl "```" :footer-nl "```"))
+  "Finally, we define a RESOLVE* method to recover the
+  [CLASS][type] object from a CLASS-DREF. We also specialize
+  DOCSTRING* and SOURCE-LOCATION*:"
+  (nil (include (:start (resolve* (method () (class-dref)))
+                 :end (dref::%end-of-class-example variable))
+                :header-nl "```" :footer-nl "```"))
+  "We took advantage of having just made the class locative type being
+  RESOLVEable, by specializing DOCSTRING* on the CLASS class.
+  SOURCE-LOCATION* was specialized on CLASS-DREF to demonstrate how
+  this can be done for non-RESOLVEable locative types.
+
+  Classes have no arglist, so no ARGLIST* method is needed. In the
+  following, we describe the pieces in detail."
   (define-locative-type macro)
   (define-pseudo-locative-type macro)
-  (check-locative-args macro)
   (define-locative-alias macro)
   (define-definition-class macro)
-  (locate-error function)
   (locate* generic-function)
   (dref* generic-function)
+  (check-locative-args macro)
+  (locate-error function)
   (add-dref-actualizer function)
   (remove-dref-actualizer function)
   (resolve* generic-function)
+  (resolve-error function)
+  ;; Experimental:
+  ;; (map-definitions generic-function)
+  ;; (map-names generic-function)
   (arglist* generic-function)
   (docstring* generic-function)
   (source-location* generic-function))

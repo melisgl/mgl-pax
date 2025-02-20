@@ -72,16 +72,13 @@
       (declare (ignore authority))
       (unless (equal scheme "pax")
         (error "~S doesn't have pax: scheme." pax-url))
-      (multiple-value-bind (object locative foundp)
-          (read-reference-from-string path)
-        (when foundp
-          (swank::with-connection ((swank::default-connection))
-            (let* ((dref (dref object locative))
-                   (dspec (dref::definition-to-dspec dref))
-                   (location (source-location dref)))
-              (when (eq (first location) :location)
-                (swank:eval-in-emacs `(mgl-pax-edit-for-cl
-                                       '((,dspec ,location))))))))))))
+      (when-let (dref (parse-dref path))
+        (swank::with-connection ((swank::default-connection))
+          (let ((dspec (dref::definition-to-dspec dref))
+                (location (source-location dref)))
+            (when (eq (first location) :location)
+              (swank:eval-in-emacs `(mgl-pax-edit-for-cl
+                                     '((,dspec ,location)))))))))))
 
 
 ;;;; Hyperspec

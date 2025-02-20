@@ -1101,12 +1101,19 @@
 (defparameter *hyperspec-name-to-locatives*
   (make-hyperspec-name-to-locatives))
 
+(defparameter *hyperspec-definition-locative-types*
+  (let ((locative-types (make-hash-table)))
+    (loop for (name locative filename) in *hyperspec-definitions*
+          do (let ((locative-type (locative-type locative)))
+               (unless (member locative-type '(go operator))
+                 (setf (gethash locative-type locative-types) t))))
+    (hash-table-keys locative-types)))
+
 ;;; Find stuff in *HYPERSPEC-DEFINITIONS* and
 ;;; *HYPERSPEC-DISAMBIGUATIONS*. Return the URL corresponding to NAME
 ;;; and LOCATIVE. As a special case, LOCATIVE NIL refers to the
 ;;; disambiguation page.
-(defun/autoloaded find-hyperspec-definition-url
-    (name locative &optional hyperspec-root)
+(defun find-hyperspec-definition-url (name locative &optional hyperspec-root)
   (declare (special *hyperspec-name-to-locatives*))
   (let* ((entries (gethash name *hyperspec-name-to-locatives*))
          (entry (if locative
@@ -2011,18 +2018,21 @@
 
 ;;; Return the first section in *SORTED-HYPERSPEC-SECTIONS* whose
 ;;; title contains STRING.
-(defun find-hyperspec-section (string)
-  (find-if (lambda (entry)
-             (search (string-downcase string)
-                     (string-downcase (third entry))))
-           *sorted-hyperspec-sections*))
+(defun find-hyperspec-section (string &optional (substring t))
+  (let ((string (string-downcase string)))
+    (find-if (lambda (entry)
+               (let ((title (string-downcase (third entry))))
+                 (if substring
+                     (search string title)
+                     (string= string title))))
+             *sorted-hyperspec-sections*)))
 
-(defun/autoloaded find-hyperspec-section-id (string &key (substring-match t))
+(defun find-hyperspec-section-id (string &key (match-title t))
   (let ((string (normalize-whitespace string)))
     (or (first (gethash string *hyperspec-section-map*))
-        (second (and substring-match (find-hyperspec-section string))))))
+        (second (and match-title (find-hyperspec-section string))))))
 
-(defun/autoloaded find-hyperspec-section-url
+(defun find-hyperspec-section-url
     (string hyperspec-root &key (substring-match t))
   (let* ((string (normalize-whitespace string))
          (filename (or (second (gethash string *hyperspec-section-map*))
@@ -2252,12 +2262,11 @@
 (defparameter *hyperspec-glossary-entry-map*
   (make-hyperspec-glossary-entry-map))
 
-(defun/autoloaded find-hyperspec-glossary-entry-id (string)
+(defun find-hyperspec-glossary-entry-id (string)
   (let ((string (normalize-whitespace string)))
     (first (gethash string *hyperspec-glossary-entry-map*))))
 
-(defun/autoloaded find-hyperspec-glossary-entry-url
-    (name &optional hyperspec-root)
+(defun find-hyperspec-glossary-entry-url (name &optional hyperspec-root)
   (let ((filename (second (gethash (normalize-whitespace name)
                                    *hyperspec-glossary-entry-map*))))
     (when filename
@@ -2982,11 +2991,10 @@
 
 (defparameter *hyperspec-issue-map* (make-hyperspec-issue-map))
 
-(defun/autoloaded find-hyperspec-issue-id (name)
+(defun find-hyperspec-issue-id (name)
   (first (gethash name *hyperspec-issue-map*)))
 
-(defun/autoloaded find-hyperspec-issue-url
-    (name &optional hyperspec-root)
+(defun find-hyperspec-issue-url (name &optional hyperspec-root)
   (let ((filename (second (gethash name *hyperspec-issue-map*))))
     (when filename
       (hyperspec-link hyperspec-root "Issues/" filename ".htm"))))

@@ -50,6 +50,7 @@
   (@links section)
   (@background section)
   (@basics section)
+  (@parsing section)
   (@pax-locatives section)
   (@navigating-in-emacs section)
   (@generating-documentation section)
@@ -67,8 +68,12 @@
                              :url "http://c2.com/cgi/wiki?OnceAndOnlyOnce"))
 
 (define-glossary-term @markdown
-    (:title "markdown"
+    (:title "Markdown"
      :url "https://daringfireball.net/projects/markdown/"))
+
+(define-glossary-term @markdown-reflink
+    (:title "Markdown reflink"
+     :url "https://daringfireball.net/projects/markdown/syntax#link"))
 
 (defsection @introduction (:title "Introduction")
   """_What if documentation really lived in the code?_
@@ -110,7 +115,7 @@
   ##### Docstrings
 
   PAX automatically recognizes and [marks up code][@codification] with
-  backticks and [links code][@linking-to-code] to their definitions.
+  backticks and [links][@linking] names in code to their definitions.
   Take, for instance, SBCL's ABORT function, whose docstring is
   written in the usual style, uppercasing names of symbols:
 
@@ -121,7 +126,7 @@
   ```
 
   Note how in the generated documentation, ABORT is set with a
-  monospace font, while `\CONTROL-ERROR` is autolinked:
+  monospace font, while `\CONTROL-ERROR` is @AUTOLINKed:
 
   - \[function\] **\ABORT** *\\&OPTIONAL \CONDITION*
 
@@ -130,8 +135,8 @@
 
     [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "CONTROL-ERROR CONDITION"
 
-  In the following [transcript][@transcripts], the above output is
-  rendered from the raw markdown:
+  The following [transcript][@transcripts] shows the raw Markdown for
+  the previous example.
 
   ```
   (document #'abort :format :markdown)
@@ -157,11 +162,10 @@
   which are used in DEFSECTION to refer to definitions tied to
   symbols.
 
-  `(DOCUMENT @FOO-RANDOM-MANUAL)` generates fancy markdown or HTML
+  `(DOCUMENT @FOO-RANDOM-MANUAL)` generates fancy Markdown or HTML
   output with [automatic markup][\*document-uppercase-is-code\*
-  variable] and [autolinks][@linking-to-code section] uppercase @WORDs
-  found in docstrings, numbers sections, and creates a table of
-  contents.
+  variable] and @AUTOLINKs uppercase @WORDs found in docstrings,
+  numbers sections, and creates a table of contents.
 
   One can even generate documentation for different but related
   libraries at the same time with the output going to different files
@@ -215,7 +219,7 @@
                                     target-dir))))
 
 (defun check-pax-elisp-version (version)
-  (let ((min-required-version '(0 3 0)))
+  (let ((min-required-version '(0 4 0)))
     (unless (version<= min-required-version version)
       (cerror "Ignore version mismatch."
               "~@<In Emacs, mgl-pax-version is ~S, ~
@@ -319,5 +323,4 @@
   (defsection macro)
   (*discard-documentation-p* variable)
   (define-package macro)
-  (define-glossary-term macro)
-  (@parsing section))
+  (define-glossary-term macro))

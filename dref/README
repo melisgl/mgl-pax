@@ -17,8 +17,8 @@ to fill this gap with the introduction of XREF objects:
 ```
 
 XREFs just package up a @NAME (`*MY-VAR*`) and a
-@LOCATIVE (VARIABLE). They need not denote existing definitions
-until we actually want to use them:
+@LOCATIVE (VARIABLE). They need not denote existing
+definitions until we actually want to use them:
 
 ```
 (docstring (xref '*my-var* 'variable))
@@ -105,9 +105,9 @@ with references (discussed in the DREF-EXT::@EXTENDING-DREF).
 
 - [class] DREF XREF
 
-    DREFs can be thought of as referring to
-    definitions that actually exist, although changes in the system can
-    invalidate them (for example, a DREF to a function definition can be
+    DREFs can be thought of as referring to definitions
+    that actually exist, although changes in the system can invalidate
+    them (for example, a DREF to a function definition can be
     invalidated by FMAKUNBOUND).
     
     DREFs must be created with LOCATE, and their purpose is to allow
@@ -403,10 +403,12 @@ signal a LOCATE-ERROR condition.
     => :DESTRUCTURING
     ```
     
-    This function supports MACROs, COMPILER-MACROs, SETF functions,
-    FUNCTIONs, GENERIC-FUNCTIONs, METHODs, TYPES, LOCATIVEs. Note that
-    ARGLIST depends on the quality of SWANK-BACKEND:ARGLIST. With the
-    exception of SBCL, which has perfect support, all Lisp
+    This function supports MACROs,
+    COMPILER-MACROs, SETF functions,
+    FUNCTIONs, GENERIC-FUNCTIONs,
+    METHODs, TYPEs, LOCATIVEs. Note
+    that ARGLIST depends on the quality of SWANK-BACKEND:ARGLIST. With
+    the exception of SBCL, which has perfect support, all Lisp
     implementations have minor omissions:
     
     - DEFTYPE lambda lists on ABCL, AllegroCL, CLISP, CCL, CMUCL, ECL;
@@ -425,9 +427,10 @@ signal a LOCATE-ERROR condition.
     is used by PAX:DOCUMENT when PAX::@PARSING the docstring). This
     function is similar in purpose to CL:DOCUMENTATION.
     
-    Note that some locative types such as ASDF:SYSTEMS and DECLARATIONs
-    have no docstrings, and some Lisp implementations do not record all
-    docstrings. The following are known to be missing:
+    Note that some locative types such as ASDF:SYSTEMS and
+    DECLARATIONs have no docstrings, and some Lisp
+    implementations do not record all docstrings. The following are
+    known to be missing:
     
     - COMPILER-MACRO docstrings on ABCL, AllegroCL, CCL, ECL;
     
@@ -939,8 +942,9 @@ The following convenience functions are compositions of
 
 Let's see how to tell DRef about new kinds of definitions through
 the example of the implementation of the CLASS locative. Note that
-this is a verbatim PAX:INCLUDE of the sources. Please ignore any
-internal machinery. The first step is to define the locative type:
+this is a verbatim PAX:INCLUDE of the sources. Please
+ignore any internal machinery. The first step is to define the
+locative type:
 
 ```
 (define-locative-type class ()
@@ -1147,26 +1151,6 @@ following, we describe the pieces in detail.
     
     FORMAT-AND-ARGS, if non-NIL, is a format string and arguments
     suitable for FORMAT.
-
-- [generic-function] MAP-DEFINITIONS FN NAME LOCATIVE-TYPE
-
-    Call FN with DREFs which have the given
-    NAME and LOCATIVE-TYPE. For most locative types, there is at most
-    one definition, but for METHOD, for example, there may be many. The
-    default method simply does `(DREF NAME LOCATIVE-TYPE NIL)` and calls
-    FN with result if DREF succeeds.
-    
-    This function is for extending DEFINITIONS. Do not call it directly.
-
-- [generic-function] MAP-NAMES FN LOCATIVE-TYPE
-
-    Call FN with @NAMEs that form a DREF with
-    some locative with LOCATIVE-TYPE. The default method tries to form
-    DREFs by combining each interned symbol with LOCATIVE-TYPE and no
-    LOCATIVE-ARGS.
-    
-    This function is for extending DREF-APROPOS. Do not call it
-    directly.
 
 - [generic-function] ARGLIST* OBJECT
 

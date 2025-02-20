@@ -201,9 +201,10 @@
 
 ;;; Order REFERENCES in an implementation independent way.
 ;;; PAX:PAX-APROPOS depends on non-symbol names coming first.
-(defun sort-references (references)
-  (flet ((key (reference)
-           (let ((locative-type (xref-locative-type reference)))
+(defun sort-references (references &key key)
+  (flet ((sort-key (reference)
+           (let* ((reference (if key (funcall key reference) reference))
+                  (locative-type (xref-locative-type reference)))
              (with-standard-io-syntax*
                ;; Avoid mentions of BASE-CHAR and such.
                (let ((*print-readably* nil))
@@ -221,7 +222,7 @@
                              (xref-name reference)
                              (locative-type-to-sort-key locative-type)
                              (xref-locative-args reference))))))))
-    (sort-list-with-precomputed-key references #'string< :key #'key)))
+    (sort-list-with-precomputed-key references #'string< :key #'sort-key)))
 
 (defun locative-type-to-sort-key (locative-type)
   (format nil "~S ~S"

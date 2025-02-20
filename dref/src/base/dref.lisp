@@ -26,8 +26,8 @@
   ```
 
   XREFs just package up a @NAME (`\*MY-VAR*`) and a
-  @LOCATIVE (VARIABLE). They need not denote existing definitions
-  until we actually want to use them:
+  @LOCATIVE ([VARIABLE][locative]). They need not denote existing
+  definitions until we actually want to use them:
 
   ```
   (docstring (xref '*my-var* 'variable))
@@ -222,9 +222,9 @@
                    :stream nil))
     => "- [variable] *STANDARD-OUTPUT* \"see-below\""
     ```"""))
-  (:documentation "[DREF][class]s can be thought of as referring to
-  definitions that actually exist, although changes in the system can
-  invalidate them (for example, a DREF to a function definition can be
+  (:documentation "DREFs can be thought of as referring to definitions
+  that actually exist, although changes in the system can invalidate
+  them (for example, a DREF to a function definition can be
   invalidated by FMAKUNBOUND).
 
   DREFs must be created with LOCATE, and their purpose is to allow
@@ -519,13 +519,13 @@
 
 (defun lisp-locative-types ()
   "Return the locative types that correspond to Lisp definitions
-  except UNKNOWN. These are the ones defined with
+  except [UNKNOWN][locative]. These are the ones defined with
   DEFINE-LOCATIVE-TYPE."
   *lisp-locative-types*)
 
 (defun pseudo-locative-types ()
   "Return the locative types that correspond to non-Lisp definitions
-  plus UNKNOWN. These are the ones defined with
+  plus [UNKNOWN][locative]. These are the ones defined with
   DEFINE-PSEUDO-LOCATIVE-TYPE."
   *pseudo-locative-types*)
 
@@ -574,10 +574,12 @@
   => :DESTRUCTURING
   ```
 
-  This function supports MACROs, COMPILER-MACROs, SETF functions,
-  FUNCTIONs, GENERIC-FUNCTIONs, METHODs, TYPES, LOCATIVEs. Note that
-  ARGLIST depends on the quality of SWANK-BACKEND:ARGLIST. With the
-  exception of SBCL, which has perfect support, all Lisp
+  This function supports [MACROs][locative],
+  [COMPILER-MACROs][locative], [SETF][locative] functions,
+  [FUNCTIONs][locative], [GENERIC-FUNCTIONs][locative],
+  [METHODs][locative], [TYPEs][locative], [LOCATIVEs][locative]. Note
+  that ARGLIST depends on the quality of SWANK-BACKEND:ARGLIST. With
+  the exception of SBCL, which has perfect support, all Lisp
   implementations have minor omissions:
 
   - DEFTYPE lambda lists on ABCL, AllegroCL, CLISP, \CCL, CMUCL, ECL;
@@ -597,12 +599,13 @@
   is used by PAX:DOCUMENT when PAX::@PARSING the docstring). This
   function is similar in purpose to CL:DOCUMENTATION.
 
-  Note that some locative types such as ASDF:SYSTEMS and DECLARATIONs
-  have no docstrings, and some Lisp implementations do not record all
-  docstrings. The following are known to be missing:
+  Note that some locative types such as [ASDF:SYSTEMS][locative] and
+  [DECLARATIONs][locative] have no docstrings, and some Lisp
+  implementations do not record all docstrings. The following are
+  known to be missing:
 
-  - COMPILER-MACRO docstrings on ABCL, AllegroCL, \CCL, ECL;
-  - METHOD-COMBINATION docstrings on ABCL, AllegroCL.
+  - [COMPILER-MACRO][locative] docstrings on ABCL, AllegroCL, \CCL, ECL;
+  - [METHOD-COMBINATION][locative] docstrings on ABCL, AllegroCL.
 
   Can be extended via DOCSTRING*."
   (ensure-dref-loaded)

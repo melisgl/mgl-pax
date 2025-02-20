@@ -23,7 +23,8 @@
   - [document-object* (method () (go-dref t))][docstring]
   - [document-object* (method () (include-dref t))][docstring]
   - [document-object* (method () (clhs-dref t))][docstring]
-  - [document-object* (method () (unknown-dref t))][docstring]")
+  - [document-object* (method () (unknown-dref t))][docstring]"
+  (*document-mark-up-signatures* variable))
 
 (defmethod document-object* ((dref dref) stream)
   "By default, [DREF][class]s are documented in the following format.
@@ -36,7 +37,7 @@
 
   The line with the bullet is printed with DOCUMENTING-REFERENCE. The
   docstring is processed with DOCUMENT-DOCSTRING while
-  @LOCAL-REFERENCES established with WITH-DISLOCATED-NAMES are in
+  @LOCAL-DEFINITIONs established with WITH-DISLOCATED-NAMES are in
   effect for all variables locally bound in a definition with ARGLIST,
   and *PACKAGE* is bound to the second return value of DOCSTRING."
   (multiple-value-bind (arglist arglist-type) (arglist dref)
@@ -55,11 +56,11 @@
 (declaim (ftype function prin1-to-string*))
 
 (defmethod document-object* ((dref variable-dref) stream)
-  "For definitions with a VARIABLE or CONSTANT locative, their
-  initform is printed as their arglist. The initform is the INITFORM
-  argument of the locative if provided, or the global symbol value of
-  their name. If no INITFORM is provided, and the symbol is globally
-  unbound, then no arglist is printed.
+  "For definitions with a [VARIABLE][locative] or CONSTANT locative,
+  their initform is printed as their arglist. The initform is the
+  INITFORM argument of the locative if provided, or the global symbol
+  value of their name. If no INITFORM is provided, and the symbol is
+  globally unbound, then no arglist is printed.
 
   When the printed initform is too long, it is truncated."
   (let ((symbol (dref-name dref)))
@@ -102,8 +103,9 @@
 ;;;; ACCESSOR, READER and WRITER locatives
 
 (defmethod document-object* ((dref accessor-dref) stream)
-  "For definitions with an ACCESSOR, READER or WRITER locative, the
-  class on which they are specialized is printed as their arglist."
+  "For definitions with an [ACCESSOR][locative], [READER][locative] or
+  WRITER locative, the class on which they are specialized is printed
+  as their arglist."
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
     (generate-documentation-for-slot-definition
@@ -198,9 +200,10 @@
                (let ((name (prin1-to-markdown class)))
                  (unless (zerop i)
                    (format stream " "))
-                 (if (global-definition-p dref)
-                     (format stream "[~A][~A]" name (link-to-definition dref))
-                     (format stream "~A" name)))))))
+                 (unless *first-pass*
+                   (if (find-link dref)
+                       (format stream "[~A][~A]" name (link-to-definition dref))
+                       (format stream "~A" name))))))))
 
 
 ;;;; ASDF:SYSTEM locative
@@ -283,10 +286,11 @@
            ,@body)))))
 
 (defmethod document-object* ((section section) stream)
-  "When a definition with the SECTION locative is being documented,
-  a new (sub)section is opened (see WITH-HEADING), within which
-  documentation for its each of its SECTION-ENTRIES is generated. A
-  fresh line is printed after all entries except the last."
+  "When documentation is being generated for a definition with
+  the SECTION locative, a new (sub)section is opened (see
+  WITH-HEADING), within which documentation for its each of its
+  SECTION-ENTRIES is generated. A fresh line is printed after all
+  entries except the last."
   (documenting-section (section stream)
     (let ((firstp t))
       (dolist (entry (section-entries section))

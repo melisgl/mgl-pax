@@ -5,8 +5,8 @@
 (defsection @browsing-live-documentation (:title "Browsing Live Documentation")
   """Documentation can be browsed live in Emacs or with an external
   browser. HTML documentation, complete with @CODIFICATION and
-  [links][@LINKING-TO-CODE], is generated from docstrings of all kinds
-  of Lisp definitions and PAX SECTIONs.
+  @LINKING, is generated from docstrings of all kinds of Lisp
+  definitions and PAX SECTIONs.
 
   If @EMACS-SETUP has been done, the Elisp function `mgl-pax-document`
   generates and displays documentation as a single HTML page. For
@@ -25,8 +25,8 @@
   locative. One may then follow the links on the page to navigate to a
   page with the documentation the desired definition. If you are
   browsing live documentation right now, then the disambiguation page
-  is like this: [FUNCTION][]. In offline documentation, multiple links
-  are shown instead as described in @AMBIGUOUS-UNSPECIFIED-LOCATIVE.
+  looks like this: [FUNCTION][]. In offline documentation, multiple
+  links are shown instead as described in @LINKING.
 
   Alternatively, a DREF::@LOCATIVE may be entered as part of the
   argument to `mgl-pax-document` as in `\function class`, which gives
@@ -47,16 +47,17 @@
   (@browsing-with-other-browsers section))
 
 (defsection @pax-urls (:title "PAX \\URLs")
-  """A PAX \\URL consists of a \REFERENCE and an optional FRAGMENT
+  """A PAX \URL consists of a `REFERENCE` and an optional FRAGMENT
   part:
 
       URL = [REFERENCE] ["#" FRAGMENT]
 
-  where \REFERENCE names either
+  where `REFERENCE` names either
 
-  - a complete DREF::@REFERENCE (e.g. `"pax:section class"`),
+  - a complete DREF::@REFERENCE as a string in `NAME LOCATIVE` format
+    (e.g. `"standard-object class"`),
 
-  - or the @NAME of a reference (e.g. `"pax:section"`), which
+  - or the @NAME of a reference (e.g. `"class"`), which
     possibly makes what to document ambiguous.""")
 
 (defsection @emacs-setup-for-browsing (:title "Emacs Setup for Browsing")
@@ -128,7 +129,7 @@
   `browse-url-chrome-arguments` to `("--new-window")`.
 
   In the browser, clicking on the locative on the left of the
-  object (e.g. in `- [function] PRINT`) will raise and focus the Emacs
+  name (e.g. in `- [function] PRINT`) will raise and focus the Emacs
   window (if Emacs is not in text mode, and also subject to window
   manager focus stealing settings), then go to the corresponding
   source location. For sections, clicking on the lambda link will do
@@ -225,7 +226,7 @@
     (unless (equal scheme "pax-wall")
       (error "~S doesn't have pax-wall: scheme." pax-wall-url))
     (let ((definitions (definitions-of-wall (read-from-string path)
-                                            :definitions-of 'documentables-of)))
+                                            :definitions #'definitions*)))
       (case (length definitions)
         ((0) nil)
         ((1)
@@ -237,12 +238,6 @@
                                         "buffer content around point"
                                         filename)))))))
 
-(defun documentables-of (object)
-  (mapcar #'link-definition
-          (remove-duplicates (mapcar #'unaliased-link
-                                     (let ((*document-open-linking* t))
-                                       (links-of object))))))
-
 (defun urlify-if-pathname (pathname-or-url &optional fragment)
   (if (pathnamep pathname-or-url)
       (if fragment
@@ -252,12 +247,10 @@
       pathname-or-url))
 
 (defun canonicalize-pax-url-fragment (fragment)
-  (multiple-value-bind (object locative foundp)
-      (read-reference-from-string fragment)
-    (urlencode
-     (if foundp
-         (dref-to-anchor (dref object locative))
-         fragment))))
+  (let ((dref (parse-dref fragment)))
+    (urlencode (if dref
+                   (dref-to-anchor dref)
+                   fragment))))
 
 
 ;;;; Handling of "pax-eval:" URLs
@@ -314,25 +307,25 @@
     (urlify-if-pathname (document-pax-url-path path filename) fragment)))
 
 (defun document-pax-url-path (path filename)
-  (multiple-value-bind (object locative foundp locative-junk)
-      (read-reference-from-string path)
-    (cond (foundp
-           (document-for-emacs/reference (dref object locative)
-                                         filename))
+  ;; FIXME: PARSE-DREF is not the inverse of DREF-TO-PAX-URL, and
+  ;; neither is PARSE-DEFINITIONS* the inverse of
+  ;; NAME-TO-AMBIGUOUS-PAX-URL.
+  (multiple-value-bind (dref locative locative-junk) (parse-dref path)
+    (declare (ignore locative))
+    (cond (dref
+           (document-for-emacs/reference dref filename))
           (locative-junk
            (error "Unknown locative ~S." locative-junk))
           (t
-           (let ((references (documentables-of
-                              (or (ignore-errors
-                                   (read-name-from-string path))
-                                  path))))
-             (cond ((endp references)
+           ;; Ignore LOCATIVE.
+           (let ((drefs (parse-definitions* path)))
+             (cond ((endp drefs)
                     (error "Could not find definitions for ~S." path))
-                   ((= (length references) 1)
-                    (document-for-emacs/reference (first references) filename))
+                   ((= (length drefs) 1)
+                    (document-for-emacs/reference (first drefs) filename))
                    (t
                     (document-for-emacs/ambiguous
-                     references (format nil "pax:~A" (urlencode path))
+                     drefs (format nil "pax:~A" (urlencode path))
                      path filename))))))))
 
 ;;; See if (DOCUMENT REFERENCE) with *DOCUMENT-OPEN-LINKING* T would
@@ -340,14 +333,14 @@
 (defun open-reference-if-external (reference)
   (let ((*document-open-linking* t))
     (let ((dref (locate reference)))
-      (when (external-locative-p (xref-locative dref))
-        (locate reference)))))
+      (when (external-dref-p dref)
+        dref))))
 
 ;;; E.g. "pax:foo function"
 (defun document-for-emacs/reference (reference filename)
   (let ((reference (replace-go-target reference)))
     (if-let (external-reference (open-reference-if-external reference))
-      (external-reference-url external-reference)
+      (external-dref-url external-reference)
       (let* ((filename (file-name-for-pax-url
                         filename
                         (format nil "pax:~A" (urlencode (dref-to-anchor
@@ -406,25 +399,24 @@
         (reference (locate reference)))
     (flet ((emit (control &rest args)
              (push (cons control args) entries)))
-      (assert (not (external-reference-p reference)))
-      (dolist (link (links-of reference))
-        (let ((dref (link-definition (unaliased-link link))))
-          (when (external-reference-p dref)
-            (emit "the [~A][~A ~A]"
-                  (escape-markdown (symbol-name
-                                    (dref-locative-type dref)))
-                  (prin1-to-markdown (dref-name dref))
-                  (prin1-to-markdown (dref-locative dref))))))
+      (assert (not (external-dref-p reference)))
+      (dolist (dref (cons (clhs-dref (dref-name reference)
+                                     (dref-locative reference))
+                          (definitions* reference)))
+        (when (external-dref-p dref)
+          (emit "the [~A][~A ~A]"
+                (escape-markdown (symbol-name (dref-locative-type dref)))
+                (prin1-to-markdown (dref-name dref))
+                (prin1-to-markdown (dref-locative dref)))))
       (let ((generic-function-name
               (and (eq (xref-locative-type reference) 'method)
                    (xref-name reference))))
         (when generic-function-name
           (emit "the generic-function `~A`"
                 (prin1-to-markdown generic-function-name))))
-      (when (< 1 (length (definitions (xref-name reference))))
+      (when (< 1 (length (definitions* (xref-name reference))))
         (emit "the [disambiguation page](~A)"
-              (finalize-pax-url (urlencode (name-to-ambiguous-pax-url
-                                            (xref-name reference))))))
+              (finalize-pax-url (name-to-pax-url (xref-name reference)))))
       (unless (eq (xref-locative-type reference) 'section)
         (multiple-value-bind (package other-packages)
             (find-reference-package reference)
@@ -555,8 +547,9 @@
     (values)))
 
 
-;;; Locate the path component. Ignore the fragment. This is what M-.
-;;; in a w3m PAX doc buffer does.
+;;; Find the source location of the path component of PAX-URL, and
+;;; return its dspec and source location. Ignore the fragment. This is
+;;; what M-. in a w3m PAX doc buffer does.
 (defun/autoloaded locate-pax-url-for-emacs (pax-url)
   (with-swank ()
     (swank/backend:converting-errors-to-error-location
@@ -565,11 +558,11 @@
           (declare (ignore authority))
           (unless (equal scheme "pax")
             (error "~S doesn't have pax: scheme." pax-url))
-          (multiple-value-bind (object locative foundp)
-              (read-reference-from-string path)
-            (unless foundp
-              (error "Could not parse ~S as a reference." path))
-            (when-let (dref (dref object locative nil))
+          (multiple-value-bind (dref locative locative-junk) (parse-dref path)
+            (declare (ignore locative))
+            (when locative-junk
+              (error "~S in ~S is not a valid locative." locative-junk path))
+            (when dref
               (let ((location (source-location dref)))
                 (when (eq (first location) :location)
                   ;; List of one Swank dspec and location.
@@ -600,7 +593,7 @@
                             (just-list t))
   (let ((name0 name)
         (package0 package))
-    (flet ((parse-name (string)
+    (flet ((find-name (string)
              (let* ((tail-pos (position #\Space string))
                     (tail (and tail-pos (subseq string (1+ tail-pos))))
                     (string (subseq string 0 tail-pos)))
@@ -626,7 +619,7 @@
                          string))))
                (symbol
                 obj))))
-      (multiple-value-bind (name locative-types) (parse-name name)
+      (multiple-value-bind (name locative-types) (find-name name)
         (let* ((package (parse-nil-symbol-or-string
                          (if (stringp package)
                              (dref::adjust-string-case package)
@@ -763,7 +756,7 @@
               '(:error "Cannot determine current definition.")))))))
 
 
-(defun/autoloaded locatives-for-word-for-emacs (word)
+(defun/autoloaded locatives-for-name-for-emacs (raw)
   (with-swank ()
     (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
@@ -772,12 +765,13 @@
                        (*print-case* :downcase))
                    (prin1-to-string locative))))
           `(:locatives
-            ,(if (string= word "")
+            ,(if (string= raw "")
                  (mapcar #'locative-to-string (locative-types))
-                 (let ((*document-open-linking* t))
-                   (loop
-                     for object in (parse-word word :depluralize nil)
-                     append (loop for link in (links-of object)
-                                  collect (locative-to-string
-                                           (dref-locative
-                                            (link-definition link)))))))))))))
+                 (let ((*document-open-linking* t)
+                       (locatives ()))
+                   (flet ((match (name)
+                            (loop for dref in (definitions* name)
+                                  do (pushnew (dref-locative dref) locatives
+                                              :test #'equal))))
+                     (find-name #'match raw)
+                     (mapcar #'locative-to-string locatives))))))))))

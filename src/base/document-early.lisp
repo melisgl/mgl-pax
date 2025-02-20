@@ -16,7 +16,7 @@
 (defvar *document-downcase-uppercase-code*)
 (export '*document-downcase-uppercase-code*)
 
-;;; @LINKING-TO-CODE
+;;; @LINKING
 (defvar *document-link-code*)
 (export '*document-link-code*)
 ;;; Silence SBCL compiler notes.
@@ -72,13 +72,6 @@
 (defvar *browse-html-style*)
 (export '*browse-html-style*)
 
-(autoload find-hyperspec-definition-url '#:mgl-pax/document :export nil)
-(autoload find-hyperspec-section-id '#:mgl-pax/document :export nil)
-(autoload find-hyperspec-section-url '#:mgl-pax/document :export nil)
-(autoload find-hyperspec-glossary-entry-id '#:mgl-pax/document :export nil)
-(autoload find-hyperspec-glossary-entry-url '#:mgl-pax/document :export nil)
-(autoload find-hyperspec-issue-id '#:mgl-pax/document :export nil)
-(autoload find-hyperspec-issue-url '#:mgl-pax/document :export nil)
 (autoload downcasingp '#:mgl-pax/document :export nil)
 (autoload document '#:mgl-pax/document)
 (autoload update-asdf-system-readmes '#:mgl-pax/document)
@@ -91,7 +84,7 @@
 (autoload redocument-for-emacs '#:mgl-pax/document :export nil)
 (autoload locate-pax-url-for-emacs '#:mgl-pax/document :export nil)
 (autoload current-definition-pax-url-for-emacs '#:mgl-pax/document :export nil)
-(autoload locatives-for-word-for-emacs '#:mgl-pax/document :export nil)
+(autoload locatives-for-name-for-emacs '#:mgl-pax/document :export nil)
 
 
 (defsection @extending-document (:title "Extending DOCUMENT")
@@ -128,10 +121,11 @@
                                            arglist)
                                  &body body)
   "Write REFERENCE to STREAM as described in
-  *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a [local
-  reference][@LOCAL-REFERENCES] for the processing of BODY.
+  *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a
+   @LOCAL-DEFINITION for the processing of BODY.
 
-  - REFERENCE defaults to the reference being DOCUMENTed.
+  - REFERENCE defaults to the reference for which documentation is
+    currently being generated.
 
   - NAME defaults to `(XREF-NAME REFERENCE)` and is printed after the
     LOCATIVE-TYPE.
@@ -207,11 +201,11 @@
       (list object)))
 
 (defmacro with-dislocated-names (names &body body)
-  "For each name in NAMES, establish a [local
-  reference][@local-references] with the DISLOCATED locative, which
-  [prevents autolinking][@preventing-autolinking]."
+  "For each name in NAMES, establish a @LOCAL-DEFINITION."
   `(with-local-references (mapcar (lambda (name)
-                                    (xref name 'dislocated))
+                                    ;; FIXME: It is ARGUMENT not
+                                    ;; DISLOCATED.
+                                    (xref name 'argument))
                                   (ensure-list ,names))
      ,@body))
 
@@ -222,8 +216,8 @@
 
 ;;;; Early non-exported definitions
 
-;;; These are used only by the DOCUMENT-OBJECT for CLASSes.
-(declaim (ftype function global-definition-p))
+;;; These are used only by the DOCUMENT-OBJECT* (METHOD () CLASS-DREF T).
+(declaim (ftype function find-link))
 (declaim (ftype function link-to-definition))
 
 ;;; We need this for DOCUMENTING-REFERENCE.

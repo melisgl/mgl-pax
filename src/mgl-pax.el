@@ -66,8 +66,9 @@ side."
   :type 'boolean
   :group 'mgl-pax)
 
+;;; See MGL-PAX::CHECK-PAX-ELISP-VERSION.
 (defvar mgl-pax-version)
-(setq mgl-pax-version  '(0 3 0))
+(setq mgl-pax-version  '(0 4 0))
 
 (defun mgl-pax-maybe-autoload (no-web cont)
   (if (or no-web (mgl-pax-use-w3m))
@@ -502,9 +503,10 @@ is:
 
 where REFERENCE names either
 
-- a complete CL PAX:REFERENCE (e.g. \"PAX:SECTION CLASS\"),
+- a complete CL DREF::@REFERENCE as a string in \"NAME LOCATIVE\"
+  format (e.g. \"standard-object class\")
 
-- or the name of a reference (e.g. \"PAX:SECTION\"), which
+- or the PAX::@NAME of a reference (e.g. \"class\"), which
   possibly makes what to document ambiguous.
 
 If given, FRAGMENT must be a complete PAX:REFERENCE and refers to
@@ -737,15 +739,15 @@ The suggested key binding is `C-.' to parallel `M-.'."
                      start (+ start first-space-pos))))
           (list beg end (completion-table-dynamic
                          (lambda (prefix)
-                           (mgl-pax-locatives-for-word name)))))
+                           (mgl-pax-locatives-for-name name)))))
       (list beg end (completion-table-dynamic #'slime-simple-completions)))))
 
-(defun mgl-pax-locatives-for-word (word)
+(defun mgl-pax-locatives-for-name (name)
   (let ((values (slime-eval
                  `(cl:funcall (cl:find-symbol
-                               (cl:string '#:locatives-for-word-for-emacs)
+                               (cl:string '#:locatives-for-name-for-emacs)
                                :mgl-pax)
-                              ,word))))
+                              ,name))))
     (if (eq (cl-first values) :error)
         (error (cl-second values))
       (cl-second values))))
@@ -1129,7 +1131,8 @@ a symbol or package name are accepted.
   DREF:LISP-LOCATIVE-TYPES, which is the default.
 
 - \"print :pseudo\" matches definitions with
-  DREF:PSEUDO-LOCATIVE-TYPES such as PAX:CLHS and DREF:UNKNOWN.
+  DREF:PSEUDO-LOCATIVE-TYPES such as MGL-PAX:CLHS and
+  DREF:UNKNOWN.
 
 - \"print :all\" matches definitions with all locative
   types (DREF:LOCATIVE-TYPES).

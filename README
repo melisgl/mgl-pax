@@ -42,7 +42,7 @@ code, not vice versa, and there is no support for chunking.
 ##### Docstrings
 
 PAX automatically recognizes and marks up code with
-backticks and links code to their definitions.
+backticks and links names in code to their definitions.
 Take, for instance, SBCL's ABORT function, whose docstring is
 written in the usual style, uppercasing names of symbols:
 
@@ -53,7 +53,7 @@ written in the usual style, uppercasing names of symbols:
 ```
 
 Note how in the generated documentation, ABORT is set with a
-monospace font, while `CONTROL-ERROR` is autolinked:
+monospace font, while `CONTROL-ERROR` is @AUTOLINKed:
 
 - \[function\] **ABORT** *\&OPTIONAL CONDITION*
 
@@ -62,8 +62,8 @@ monospace font, while `CONTROL-ERROR` is autolinked:
 
 [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "CONTROL-ERROR CONDITION"
 
-In the following transcript, the above output is
-rendered from the raw markdown:
+The following transcript shows the raw Markdown for
+the previous example.
 
 ```
 (document #'abort :format :markdown)
@@ -143,10 +143,9 @@ FUNCTION are just two instances of DREF::@LOCATIVEs,
 which are used in DEFSECTION to refer to definitions tied to
 symbols.
 
-`(DOCUMENT @FOO-RANDOM-MANUAL)` generates fancy markdown or HTML
-output with automatic markup and autolinks uppercase @WORDs
-found in docstrings, numbers sections, and creates a table of
-contents.
+`(DOCUMENT @FOO-RANDOM-MANUAL)` generates fancy Markdown or HTML
+output with automatic markup and @AUTOLINKs uppercase @WORDs found in docstrings,
+numbers sections, and creates a table of contents.
 
 One can even generate documentation for different but related
 libraries at the same time with the output going to different files
@@ -209,7 +208,7 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
 
 ### The mgl-pax ASDF System
 
-- Version: 0.3.0
+- Version: 0.4.0
 - Description: Documentation system, browser, generator.
 - Long Description: The set of dependencies of the MGL-PAX system is
   kept light, and its heavier dependencies are autoloaded via ASDF
@@ -379,7 +378,7 @@ Now let's examine the most important pieces.
     The bottom line is that if you rely on DEFSECTION to do the
     exporting, then you'd better use DEFINE-PACKAGE.
 
-- [macro] DEFINE-GLOSSARY-TERM NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &OPTIONAL DOCSTRING
+- [macro] DEFINE-GLOSSARY-TERM NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &BODY DOCSTRING
 
     Define a global variable with NAME, and set it to a GLOSSARY-TERM object. TITLE, URL and DOCSTRING are markdown strings or
     NIL. Glossary terms are DOCUMENTed in the lightweight bullet +
@@ -398,73 +397,154 @@ Now let's examine the most important pieces.
     When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
     is true, DOCSTRING will not be recorded to save memory.
 
-### Parsing
+## Parsing
 
-When @NAVIGATING-IN-EMACS or @GENERATING-DOCUMENTATION, references
-are parsed from the buffer content or docstrings, respectively. In
-either case, @NAMEs are extracted from @WORDs and then turned into
-DRef names to form DRef references maybe with locatives found next to the @WORD.
+When encountering a @WORD such as `CLASSes`, PAX needs to find the
+@NAME in it that makes sense in the context. @CODIFICATION, for
+example, looks for @INTERESTING names, @NAVIGATING-IN-EMACS for
+names with Lisp DEFINITIONS, and
+@LINKING for names with any kind of definition.
+
+This is not as straightforward as it sounds because it needs to
+handle cases like nonREADable, CLASSES, all the various forms of
+@LINKING in docstrings as well as in comments, and the `(NAME
+LOCATIVE)` syntax in DEFSECTION.
 
 - [glossary-term] word
 
     A *word* is a string from which we want to extract a @NAME. When
     Navigating, the word is
-    `slime-symbol-at-point`. When @GENERATING-DOCUMENTATION, it is a
-    non-empty string between whitespace characters in a docstring.
+    `slime-symbol-at-point` or the label of a @MARKDOWN/REFLINK if point
+    is over one. Similarly, when @GENERATING-DOCUMENTATION, it is a
+    non-empty string between whitespace characters in a docstring or the
+    label of a @MARKDOWN/REFLINK.
+
+- [glossary-term] raw name
+
+    A *raw name* is a string from which a @NAME may be read. Raw names
+    correspond to an intermediate parsing step between @WORDs an @NAMEs.
 
 - [glossary-term] name
 
-    A *name* is a string that denotes a possible DRef
-     name (e.g. an INTERNed SYMBOL, the name of a PACKAGE
-    or an ASDF:SYSTEM). Names are constructed from @WORDs by trimming
-    some prefixes and suffixes. For a given word, multiple candidate
-    names are considered in the following order.
-    
-    1. The entire word.
-    
-    2. Trimming the characters \`#\<{;"'\`\` from the left of the word.
-    
-    3. Trimming the characters \`,;:.>}"'\`\` from the right of the word.
-    
-    4. Trimming both of the previous two at the same time.
-    
-    5. From the result of 4., further removing some plural markers.
-    
-    6. From the result of 4., further removing non-uppercase prefixes
-       and suffixes.
-    
-    For example, when `M-.` is pressed while point is over
-    `nonREADable.`, the last word of the sentence `It may be
-    nonREADable.`, the following names are considered until one is found
-    with a definition:
-    
-    1. The entire word, `"nonREADable."`.
-    
-    2. Trimming left does not produce a new word.
-    
-    3. Trimming right removes the dot and gives `"nonREADable"`.
-    
-    4. Trimming both is the same as trimming right.
-    
-    5. No plural markers are found.
-    
-    6. The lowercase prefix and suffix is removed around the uppercase
-       core, giving `"READ"`. This has a definition, which `M-.` will
-       visit.
-    
-    The exact rules for steps 5. and 6. are the following.
-    
-    - If a @WORD ends with what looks like a plural
-    marker (case-insensitive), then a @NAME is created by removing it.
-    For example, from the @WORD `BUSES` the plural marker `ES` is
-    removed to produce the @NAME `BUS`. The list of plural markers
-    considered is `S` (e.g. `CARS`), `ES` (e.g. `BUSES`), `SES` (e.g.
-    `GASSES`), `ZES` (e.g. `FEZZES`), and `REN` (e.g. `CHILDREN`).
-    
-    - From a @CODIFIABLE @WORD, a @NAME is created by removing the prefix
-    before the first and the suffix after the last uppercase character
-    if they contain at least one lowercase character.
+    A *name* is a DRef name. That is, a symbol or a
+    string associated with a definition, whose kind is given by a
+    DREF::@LOCATIVE.
 
+Depending on the context, trimming and depluralization may be
+enabled (see @RAW-NAMES-IN-WORDS), while the possible names may be
+restricted to symbols (see @NAMES-IN-RAW-NAMES).
+
+- *Trimming:* Enabled for @NAVIGATING-IN-EMACS and @CODIFICATION.
+
+- *Depluralization:* Enabled when the @WORD is part of the normal
+  flow of text (i.e. not for @SPECIFIC-REFLINK-WITH-TEXT,
+  @UNSPECIFIC-REFLINK-WITH-TEXT and various Elisp functions such as
+  `mgl-pax-apropos` unless they determine their argument from buffer
+  contents).
+
+- *Symbols only:* This is the case for @CODIFICATION and
+  @UNSPECIFIC-AUTOLINK to prevent string-based definitions from
+  littering the documentation with links without the control
+  provided by explicitly IMPORTing symbols.
+
+
+For a word, a number of @RAW-NAMEs is generated by trimming
+delimiter characters and plural markers, and for each raw name a
+number of names are considered until one is found suitable in the
+context. The following subsections describe the details of the
+parsing algorithm.
+
+### Raw Names in Words
+
+From @WORDs, @RAW-NAMEs are parsed by trimming some
+prefixes and suffixes. For a given word, multiple raw names are
+considered in the following order.
+
+1. The entire word.
+
+2. Trimming the characters \`#\<{;"'\`\` from the left of the word.
+
+3. Trimming the characters \`,;:.>}"'\`\` from the right of the word.
+
+4. Trimming both of the previous two at the same time.
+
+5. From the result of 4., If a @WORD ends with what looks like a plural marker (case-insensitive),
+then a @NAME is created by removing it. For example, from the word
+`BUSES` the plural marker `ES` is removed to produce the name `BUS`.
+The list of plural markers considered is `SES` (e.g. `GASSES`),
+`ES` (e.g. `BUSES`), `S` (e.g. `CARS`), `ZES` (e.g. `FEZZES`), and
+`REN` (e.g. `CHILDREN`).
+
+6. From the result of 4., removing the prefix before the first, and the suffix after the last
+uppercase character if it contains at least one lowercase character.
+
+
+### Names in Raw Names
+
+For each @RAW-NAME from @RAW-NAMES-IN-WORDS, various @NAMEs
+may be considered until one is found suitable in the context.
+
+The following examples list the names considered for a given raw
+name, assuming that READTABLE-CASE is :UPCASE as well as that `FOO`
+and `|Foo|` are interned.
+
+- `"foo"`: `FOO`, `"foo"`, `"FOO"` (rules 1, 2, 3)
+
+- `"FOO"`: `FOO`, `"FOO"` (rules 1, 2)
+
+- `"Foo"`: `"Foo"`, `"FOO"` (rules 2, 3)
+
+- `"|Foo|"`: `|Foo|` (rule 4)
+
+- `"\"foo\""`: `"foo"` (rule 5)
+
+The rules are:
+
+1. If the raw name is not mixed case (i.e. it doesn't have both
+   upper- and lowercase characters) and it names an interned
+   symbol (subject to the current @PACKAGE-AND-READTABLE), then that
+   symbol is considered as a name.
+
+2. The raw name itself (a string) is considered a name.
+
+3. The raw name upcased or downcased according to
+   READTABLE-CASE (subject to the current
+   readtable) but still as a string. This
+   is to allow `[dref][package]` to refer to the `"DREF"`
+   package regardless of whether the symbol `DREF` is interned in
+   the current package.
+
+4. If the raw name is explicitly a symbol (it starts with `#\|`),
+   and it names an interned symbol (subject to the current
+   @PACKAGE-AND-READTABLE), then that symbol is considered as a name
+   and nothing else.
+
+5. If the raw name has an embedded string (it starts with `#\"`) and
+   READ-FROM-STRING can read the embedded string from it, then that
+   string is considered as a name and nothing else.
+
+
+<br/>
+For example, when `M-.` is pressed while point is over
+`nonREADable.`, the last word of the sentence `It may be
+nonREADable.`, the following @RAW-NAMEs are considered until one is
+found with a definition:
+
+1. The entire word, `"nonREADable."`.
+
+2. Trimming left does not produce a new raw name.
+
+3. Trimming right removes the dot and gives `"nonREADable"`.
+
+4. Trimming both is the same as trimming right.
+
+5. No plural markers are found.
+
+6. The lowercase prefix and suffix is removed around the uppercase
+   core, giving `"READ"`. This names an interned symbol which has a
+   definition, so `M-.` will visit it.
+
+When @GENERATING-DOCUMENTATION, @AUTOLINKing behaves similary.
 
 ## PAX Locatives
 
@@ -486,9 +566,9 @@ To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
 
 - [locative] DISLOCATED
 
-    Refers to a symbol in a non-specific context. Useful for preventing
-    autolinking. For example, if
-    there is a function called `FOO` then
+    Refers to a symbol in a non-specific context. Useful for
+    suppressing @UNSPECIFIC-AUTOLINKing. For example, if there is a
+    function called `FOO` then
     
         `FOO`
     
@@ -497,15 +577,15 @@ To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
         [`FOO`][dislocated]
     
     will not be. With a dislocated locative, LOCATE always fails with a
-    LOCATE-ERROR condition. Also see @PREVENTING-AUTOLINKING.
+    LOCATE-ERROR condition. Also see @ESCAPING-AUTOLINKING.
     
     DISLOCATED references do not RESOLVE.
 
 - [locative] ARGUMENT
 
-    An alias for DISLOCATED, so that one can refer to an argument of
-    a macro without accidentally linking to a class that has the same
-    name as that argument. In the following example,
+    An alias for DISLOCATED, so that one can refer to an
+    argument of a macro without accidentally linking to a class that has
+    the same name as that argument. In the following example,
     FORMAT may link to CL:FORMAT (if we generated
     documentation for it):
     
@@ -658,16 +738,16 @@ To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
     - *definitions*: These are typically unnecessary as DOCUMENT will
       produce the same link for e.g. `PPRINT`, `[PPRINT][function]`,
       or `[PPRINT][]` if *DOCUMENT-LINK-TO-HYPERSPEC* is non-NIL and the
-      PPRINT function in the running Lisp is not being DOCUMENTed. When
+      PPRINT function in the running Lisp is not @LINKABLE. When
       @BROWSING-LIVE-DOCUMENTATION, a slight difference is that
-      everything is being DOCUMENTed, so using the CLHS link bypasses
-      the page with the definition in the running Lisp.
+      everything is linkable, so using the CLHS link bypasses the page
+      with the definition in the running Lisp.
     
-        - *unambiguous*: `[pprint][clhs]` (pprint)
+        - *unambiguous definition*: `[pprint][clhs]` (pprint)
     
-        - *ambiguous*: `[function][clhs]` (function)
+        - *disambiguation page*: `[function][clhs]` (function)
     
-        - *explicit*: `[function][(clhs class)]` (function)
+        - *specific*: `[function][(clhs class)]` (function)
     
     - *glossary terms*:
     
@@ -688,10 +768,10 @@ To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
         - `[SUMMARY:CHARACTER-PROPOSAL:2-6-5][(clhs section)]`
     
         Since these summary ids are not particularly reader friendly,
-        the title override form of the @SPECIFIED-LOCATIVE may be used:
+        the anchor text a @SPECIFIC-REFLINK-WITH-TEXT may be used:
     
-        - `[see this][SUMMARY:CHARACTER-PROPOSAL:2-6-5 (clhs
-          section)]` (see this)
+        - `[see this][SUMMARY:CHARACTER-PROPOSAL:2-6-5 (clhs section)]`
+          (see this).
     
     - *sections*:
     
@@ -735,9 +815,9 @@ To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
     Sections are considered last because a substring of a section title
     can be matched by chance easily.
     
-    All examples so far used explicit
-    links. Autolinking also works if the @NAME is marked up as code or
-    is codified (e.g. in `COS clhs` (COS clhs).
+    All examples so far used @REFLINKs. @AUTOLINKing also works if the
+    @NAME is marked up as code or is codified (e.g. in
+    `COS clhs` (COS clhs).
     
     As mentioned above, `M-.` does not do anything over CLHS
     references. Slightly more usefully, the live documentation
@@ -764,7 +844,7 @@ interest, then `M-.` will go straight to the definition which
 corresponds to the locative. If that fails, `M-.` will try to find
 the definitions in the normal way, which may involve popping up an
 xref buffer and letting the user interactively select one of
-possible definitions.
+possible definitions. For more details, see @PARSING.
 
 In the following examples, when the cursor is on one of the
 characters of `FOO` or just after `FOO`, pressing `M-.` will visit
@@ -777,8 +857,8 @@ the definition of function `FOO`:
 
 In particular, DREF::@REFERENCEs in a DEFSECTION form are in (NAME
 LOCATIVE) format so `M-.` will work just fine there. `M-.` also
-recognizes the `[foo][function]` and similar forms of
-@LINKING-TO-CODE in docstrings.
+recognizes the `[foo][function]` and similar forms of @LINKING in
+docstrings.
 
 Just like vanilla `M-.`, this works in comments and docstrings. In
 the next example, pressing `M-.` on `FOO` will visit `FOO`'s
@@ -815,9 +895,9 @@ section containing the definition with `point` in it. See
 - [function] DOCUMENT DOCUMENTABLE &KEY (STREAM T) PAGES (FORMAT :PLAIN)
 
     Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
-    FORMAT is a 3BMD output format (currently one of :MARKDOWN,
-    :HTML and :PLAIN). STREAM may be a STREAM object, T or NIL
-    as with CL:FORMAT.
+    FORMAT is a @3BMD output format (currently one of :MARKDOWN, :HTML
+    and :PLAIN). STREAM may be a STREAM object, T or NIL as with
+    CL:FORMAT.
     
     To look up the documentation of the DOCUMENT function itself:
     
@@ -829,7 +909,7 @@ section containing the definition with `point` in it. See
     
     To document a SECTION:
     
-        (document @pax-manual)
+        (document pax::@pax-manual)
     
     To generate the documentation for separate libraries with automatic
     cross-links:
@@ -844,26 +924,32 @@ section containing the definition with `point` in it. See
         (document (dref:locate 'foo 'type))
     
     There are quite a few special variables that affect how output is
-    generated, see @CODIFICATION, @LINKING-TO-CODE,
-    @LINKING-TO-SECTIONS, and
+    generated, see @CODIFICATION, @LINKING, @LINKING-TO-THE-HYPERSPEC,
+    and @LINKING-TO-SECTIONS, and
     @MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES.
     
     For the details, see the following sections, starting with
-    @DOCUMENTABLES. Also see @EXTENSION-API and DOCUMENT-OBJECT\*.
+    @DOCUMENTABLE. Also see @EXTENSION-API and DOCUMENT-OBJECT\*.
 
-#### Documentables
+#### DOCUMENTABLE
 
-- The DOCUMENTABLE argument may be a DREF or anything else
+The DOCUMENTABLE argument of DOCUMENT may be a single object (e.g.
+`#'PRINT`'), a definition such as `(DREF 'PRINT
+'FUNCTION)`, a string, or a nested list of these. More precisely,
+DOCUMENTABLE is one of the following:
+
+- *single definition designator*: A DREF or anything else
   that is LOCATEable. This includes non-DREF XREFs and
-  first-class objects such as FUNCTIONs.
+  first-class objects such as FUNCTIONs. The generated
+  documentation typically includes the definition's DOCSTRING. See
+  @OUTPUT-DETAILS for more.
 
-- If DOCUMENTABLE is a string, then it is processed like a docstring
-  in DEFSECTION. That is, with docstring sanitization, @CODIFICATION, and linking (see
-  @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
+- *docstring*: A string, in which case it is processed like a
+  docstring in DEFSECTION. That is, with docstring sanitization, @CODIFICATION, and @LINKING.
 
-- Finally, DOCUMENTABLE may be a nested list of LOCATEable objects
-  and docstrings. The structure of the list is unimportant. The
-  objects in it are documented in depth-first order.
+- *list of documentables*: A nested list of LOCATEable objects and
+  docstrings. The objects in it are documented in depth-first order.
+  The structure of the list is otherwise unimportant.
 
 
 #### Return Values
@@ -886,7 +972,7 @@ written to, then its output designator is the first element of the
 returned list. The rest of the designators correspond to the
 non-empty pages in the PAGES argument of DOCUMENT in that order.
 
-#### Pages
+#### PAGES
 
 The PAGES argument of DOCUMENT is to create multi-page documents
 by routing some of the generated output to files, strings or
@@ -895,50 +981,6 @@ is a property list with keys :OBJECTS, :OUTPUT,
 :URI-FRAGMENT, :SOURCE-URI-FN, :HEADER-FN and :FOOTER-FN. OBJECTS is
 a list of objects (references are allowed but not required) whose
 documentation is to be sent to :OUTPUT.
-
-Documentation is initially sent to a default stream (the STREAM
-argument of DOCUMENT), but output is redirected if the thing being
-currently documented is the :OBJECT of a PAGE-SPEC.
-
-:OUTPUT can be a number things:
-
-- If it's NIL, then output will be collected in a string.
-
-- If it's T, then output will be sent to *STANDARD-OUTPUT*.
-
-- If it's a stream, then output will be sent to that stream.
-
-- If it's a list whose first element is a string or a pathname, then
-  output will be sent to the file denoted by that and the rest of
-  the elements of the list are passed on to CL:OPEN. One extra
-  keyword argument is :ENSURE-DIRECTORIES-EXIST. If it's true,
-  ENSURE-DIRECTORIES-EXIST will be called on the pathname before
-  it's opened.
-
-Note that even if PAGES is specified, STREAM acts as a catch all,
-absorbing the generated documentation for references not claimed by
-any pages.
-
-:HEADER-FN, if not NIL, is a function of a single stream argument,
-which is called just before the first write to the page. Since
-:FORMAT :HTML only generates HTML fragments, this makes it possible
-to print arbitrary headers, typically setting the title, CSS
-stylesheet, or charset.
-
-:FOOTER-FN is similar to :HEADER-FN, but it's called after the last
-write to the page. For HTML, it typically just closes the body.
-
-:URI-FRAGMENT is a string such as `"doc/manual.html"` that specifies
-where the page will be deployed on a webserver. It defines how links
-between pages will look. If it's not specified and :OUTPUT refers to
-a file, then it defaults to the name of the file. If :URI-FRAGMENT
-is NIL, then no links will be made to or from that page.
-
-Finally, :SOURCE-URI-FN is a function of a single, REFERENCE
-argument. If it returns a value other than NIL, then it must be a
-string representing an URI. This affects
-*DOCUMENT-MARK-UP-SIGNATURES* and *DOCUMENT-FANCY-HTML-NAVIGATION*.
-Also see MAKE-GIT-SOURCE-URI-FN.
 
 PAGES may look something like this:
 
@@ -975,6 +1017,52 @@ PAGES may look something like this:
    :header-fn 'write-html-header
    :footer-fn 'write-html-footer))
 ```
+
+Documentation is initially sent to a default stream (the STREAM
+argument of DOCUMENT), but output is redirected if the thing being
+currently documented is the :OBJECT of a PAGE-SPEC.
+
+- :OUTPUT can be a number things:
+
+    - If it's NIL, then output will be collected in a string.
+
+    - If it's T, then output will be sent to *STANDARD-OUTPUT*.
+
+    - If it's a stream, then output will be sent to that stream.
+
+    - If it's a list whose first element is a string or a pathname, then
+      output will be sent to the file denoted by that and the rest of
+      the elements of the list are passed on to CL:OPEN. One extra
+      keyword argument is :ENSURE-DIRECTORIES-EXIST. If it's true,
+      ENSURE-DIRECTORIES-EXIST will be called on the pathname before
+      it's opened.
+
+    Note that even if PAGES is specified, STREAM acts as a catch all,
+    absorbing the generated documentation for references not claimed by
+    any pages.
+
+- :HEADER-FN, if not NIL, is a function of a single stream argument,
+  which is called just before the first write to the page. Since
+  :FORMAT :HTML only generates HTML fragments, this makes it
+  possible to print arbitrary headers, typically setting the title,
+  CSS stylesheet, or charset.
+
+- :FOOTER-FN is similar to :HEADER-FN, but it's called after the
+   last write to the page. For HTML, it typically just closes the
+   body.
+
+- :URI-FRAGMENT is a string such as `"doc/manual.html"` that specifies
+  where the page will be deployed on a webserver. It defines how
+  links between pages will look. If it's not specified and :OUTPUT
+  refers to a file, then it defaults to the name of the file. If
+  :URI-FRAGMENT is NIL, then no links will be made to or from that
+  page.
+
+- :SOURCE-URI-FN is a function of a single, DREF argument.
+  If it returns a value other than NIL, then it must be a string
+  representing an URI. This affects *DOCUMENT-MARK-UP-SIGNATURES*
+  and *DOCUMENT-FANCY-HTML-NAVIGATION*. Also see
+  MAKE-GIT-SOURCE-URI-FN.
 
 
 #### Package and Readtable
@@ -1067,8 +1155,8 @@ symbols, there is no package system to advantage of.
 
 Documentation can be browsed live in Emacs or with an external
 browser. HTML documentation, complete with @CODIFICATION and
-links, is generated from docstrings of all kinds
-of Lisp definitions and PAX SECTIONs.
+@LINKING, is generated from docstrings of all kinds of Lisp
+definitions and PAX SECTIONs.
 
 If @EMACS-SETUP has been done, the Elisp function `mgl-pax-document`
 generates and displays documentation as a single HTML page. For
@@ -1087,8 +1175,8 @@ shown with the documentation of the FUNCTION class and the FUNCTION
 locative. One may then follow the links on the page to navigate to a
 page with the documentation the desired definition. If you are
 browsing live documentation right now, then the disambiguation page
-is like this: FUNCTION. In offline documentation, multiple links
-are shown instead as described in @AMBIGUOUS-UNSPECIFIED-LOCATIVE.
+looks like this: FUNCTION. In offline documentation, multiple
+links are shown instead as described in @LINKING.
 
 Alternatively, a DREF::@LOCATIVE may be entered as part of the
 argument to `mgl-pax-document` as in `function class`, which gives
@@ -1105,16 +1193,17 @@ point in it.
 
 #### PAX URLs
 
-A PAX URL consists of a REFERENCE and an optional FRAGMENT
+A PAX URL consists of a `REFERENCE` and an optional FRAGMENT
 part:
 
     URL = [REFERENCE] ["#" FRAGMENT]
 
-where REFERENCE names either
+where `REFERENCE` names either
 
-- a complete DREF::@REFERENCE (e.g. `"pax:section class"`),
+- a complete DREF::@REFERENCE as a string in `NAME LOCATIVE` format
+  (e.g. `"standard-object class"`),
 
-- or the @NAME of a reference (e.g. `"pax:section"`), which
+- or the @NAME of a reference (e.g. `"class"`), which
   possibly makes what to document ambiguous.
 
 
@@ -1220,7 +1309,7 @@ By default, `mgl-pax-browser-function` is `nil`, which makes PAX use
 `browse-url-chrome-arguments` to `("--new-window")`.
 
 In the browser, clicking on the locative on the left of the
-object (e.g. in `- [function] PRINT`) will raise and focus the Emacs
+name (e.g. in `- [function] PRINT`) will raise and focus the Emacs
 window (if Emacs is not in text mode, and also subject to window
 manager focus stealing settings), then go to the corresponding
 source location. For sections, clicking on the lambda link will do
@@ -1342,8 +1431,7 @@ strings can be a pain. @PYTHONIC-STRING-READER can help with that.
 - [variable] *DOCUMENT-UPPERCASE-IS-CODE* T
 
     When true, @INTERESTING @NAMEs extracted from @CODIFIABLE @WORDs
-    are assumed to be code as if they were marked up with backticks. For
-    example, this docstring
+    marked up as code with backticks. For example, this docstring
     
         "T PRINT CLASSes SECTION *PACKAGE* MGL-PAX ASDF
         CaMeL Capital"
@@ -1371,7 +1459,7 @@ strings can be a pain. @PYTHONIC-STRING-READER can help with that.
 
 - [glossary-term] codifiable
 
-    A @WORD is *codifiable* iff
+    A @WORD is *codifiable* if
     
     - it has a single uppercase character (e.g. it's `T`) and no
       lowercase characters at all, or
@@ -1383,25 +1471,24 @@ strings can be a pain. @PYTHONIC-STRING-READER can help with that.
 
 - [glossary-term] interesting
 
-    A @NAME is *interesting* iff
+    A @NAME is *interesting* if
     
     - it names a symbol external to its package, or
     
     - it is at least 3 characters long and names an interned symbol, or
     
-    - it names a local reference.
+    - it names a @LOCAL-DEFINITION.
     
     See @PACKAGE-AND-READTABLE.
 
 - [variable] *DOCUMENT-DOWNCASE-UPPERCASE-CODE* NIL
 
-    If true, then all Markdown inline code (that is, `stuff between
-    backticks`, including those found if *DOCUMENT-UPPERCASE-IS-CODE*)
-    which has no lowercase characters is downcased in the output.
-    Characters of literal strings in the code may be of any case. If
-    this variable is :ONLY-IN-MARKUP and the output format does not
-    support markup (e.g. it's :PLAIN), then no downcasing is performed.
-    For example,
+    If true, then all @MARKDOWN/INLINE-CODE (e.g. \`code\`, *which
+    renders as* `code`) – including @CODIFICATION – which has no
+    lowercase characters is downcased in the output. Characters of
+    literal strings in the code may be of any case. If this variable is
+    :ONLY-IN-MARKUP and the output format does not support markup (e.g.
+    it's :PLAIN), then no downcasing is performed. For example,
     
         `(PRINT "Hello")`
     
@@ -1417,147 +1504,147 @@ strings can be a pain. @PYTHONIC-STRING-READER can help with that.
     is not altered because it has lowercase characters.
     
     If the first two characters are backslashes, then no downcasing is
-    performed, in addition to @PREVENTING-AUTOLINKING. Use this to mark
+    performed, in addition to @ESCAPING-AUTOLINKING. Use this to mark
     inline code that's not Lisp.
     
         Press `\\M-.` in Emacs.
 
 
-### Linking to Code
+### Linking
 
-In this section, we describe all ways of linking to code
-available when *DOCUMENT-LINK-CODE* is true.
+PAX supports linking to definitions either with
+explicit @REFLINKs or with @AUTOLINKs.
 
-*Note that invoking `M-.` on the
-@NAME of any of the following links will disambiguate based the
-textual context, determining the locative. In a nutshell, if `M-.`
-works without popping up a list of choices, then the documentation
-will contain a single link.*
+When generating offline documentation, only the definitions in
+@DOCUMENTABLE may be @LINKABLE, but when
+@BROWSING-LIVE-DOCUMENTATION, everything is linkable as
+documentation is generated on-demand.
 
-- [variable] *DOCUMENT-LINK-CODE* T
+Many examples in this section link to standard Common Lisp
+definitions. In the offline case, these will link to external
+URLs, while in the live case to
+disambiguation pages that list the definition in the running Lisp
+and in the Hyperspec.
 
-    Enable the various forms of links in docstrings described in
-    @LINKING-TO-CODE. See the following sections for a description of
-    how to use linking.
+*Invoking `M-.` on WORD or NAME in
+any of the following examples will disambiguate based on the textual
+context, determining the locative.* This is because navigation and
+linking use the same @PARSING algorithm, although linking is a bit
+more strict about trimming, depluralization, and it performs
+@FILTERING-LINKS. On the other hand, `M-.` cannot visit the
+CLHS references because there are no associated source
+locations.
 
-#### Specified Locative
+#### Reflink
 
-The following examples all render as DOCUMENT.
+The @MARKDOWN/REFLINK syntax `[label][id]` is
+repurposed for linking to definitions. In the
+following, we discusss the various forms of reflinks.
 
-- `[DOCUMENT][function]` (*name + locative, explicit link*)
+##### Specific Reflink
 
-- `DOCUMENT function` (*name + locative, autolink*)
+*Format:* `[`WORD`][`LOCATIVE`]`
 
-- `function DOCUMENT` (*locative + name, autolink*)
+The first @NAME in WORD (with depluralization) that forms a valid
+DREF with LOCATIVE is determined, and that definition is
+linked to. If there is no such DREF, then an UNRESOLVABLE-REFLINK
+warning is signalled.
 
-The Markdown link definition (i.e. `function` between the second
-set of brackets above) needs no backticks to mark it as code.
+*Examples:*
 
-Here and below, the @NAME (`DOCUMENT`) is uppercased, and we rely
-on *DOCUMENT-UPPERCASE-IS-CODE* being true. Alternatively, the @NAME
-could be explicitly marked up as code with a pair of backticks, and
-then its character case would likely not matter (subject to
-READTABLE-CASE).
+- `[`EQL`][type]` *renders as* EQL.
 
-The link text in the above examples is `DOCUMENT`. To override it,
-this form may be used:
+- `[EQL][type]` *renders as* EQL.
 
-- `[see this][document function]` (*title + name + locative,
-  explicit link*) renders as: see this.
+The Markdown link definition (i.e. `type` above) needs no backticks
+to mark it as code, but here and below, the second example relies on
+*DOCUMENT-UPPERCASE-IS-CODE* being true.
+
+##### Specific Reflink with Text
+
+*Format:* `[LINK TEXT][`NAME LOCATIVE`]`
+
+If NAME and LOCATIVE form a valid DREF, then that
+definition is linked to with link text `LINK TEXT`. If there is no
+such DREF, then an UNRESOLVABLE-REFLINK warning is signalled.
+
+In this form, if NAME starts with `#\"`, then it's read as a string,
+else as a symbol.
+
+*Examples:*
+
+- `[see this][eql type]` *renders as* see this.
+
+- `[see this]["MGL-PAX" package]` *renders as* see this.
 
 
-#### Unspecified Locative
+##### Unspecific Reflink
 
-When only a @NAME is provided without a locative, all
-definitions of the name are considered as possible link targets.
-Then, definitions that are not symbol-based (i.e. whose
-XREF-NAME is not a symbol) are filtered out to prevent
-unrelated PACKAGEs and ASDF:SYSTEMs from cluttering the
-documentation without the control provided by importing symbols.
+*Format:* `[`WORD`][]`
 
-To further reduce clutter, if the definitions include a
-GENERIC-FUNCTION locative, then all references with LOCATIVE-TYPE
-METHOD, ACCESSOR, READER and
-WRITER are removed to avoid linking to a possibly large
-number of methods.
+The first @NAME in WORD (with depluralization, symbols only) that
+has some DEFINITIONS is determined, and those definitions are linked
+to. If no @NAME with any definition is found, then an
+UNRESOLVABLE-REFLINK warning is signalled.
 
-Furthermore, all references with LOCATIVE-TYPE LOCATIVE are
-filtered out if there are references with other LOCATIVE-TYPEs.
+*Examples:*
 
-##### Unambiguous Unspecified Locative
+- single link: `[PRINT][]` *renders as* PRINT.
 
-In the following examples, although no locative is specified,
-`DOCUMENT` names a single @NAME being DOCUMENTed, so they all
-render as DOCUMENT.
+- multiple links: `[EQL][]` *renders as* EQL.
 
-- `[DOCUMENT][]` (*name, explicit link*),
+- no definitions: `[BAD-NAME][]` *renders as* BAD-NAME.
 
-- `DOCUMENT` (*name, autolink*).
 
-To override the title:
+##### Unspecific Reflink with Text
 
-- `[see this][document]` (*title + name, explicit link*) renders
-  as: see this.
+*Format:* `[LINK TEXT][`NAME`]`
 
-However, to avoid amiguity e.g. in `[X][package]`, which can be a
-title override equivalent to `[X][package locative]` or a
-@SPECIFIED-LOCATIVE, when the Markdown link definition names a
-locative, the reference link is interpreted as a specified locative.
-See the title override there.
+The DEFINITIONS of NAME are determined, and those definitions are
+linked to. If NAME has no definitions, then an UNRESOLVABLE-REFLINK
+warning is signalled.
 
-##### Ambiguous Unspecified Locative
+In this form, if NAME starts with `#\"`, then it's read as a string,
+else as as symbol.
 
-These examples all render as XREF, linking to both
-definitions of the @NAME `XREF`, the `CLASS` and the `FUNCTION`.
-Note that the rendered output is a single link to a disambiguation
-page when @BROWSING-LIVE-DOCUMENTATION, while multiple, numbered
-links are generated in offline documentation.
+*Examples:*
 
-- `[XREF][]` (*name, explicit link*)
+- `[see this][print]` *renders as* see this.
 
-- `XREF` (*name, autolink*)
+- `[see this][eql]` *renders as* see this.
 
-To override the title:
 
-- `[see this][xref]` (*title + name, explicit link*) renders as:
-  see this.
+##### Markdown Reflink
 
-As with @UNAMBIGUOUS-UNSPECIFICED-LOCATIVEs, to avoid ambiguity, the
-title override works only if the Markdown definition does not name a
-locative. If it is, then there is currently no way to override the
-title.
+*Format:* `[label][id]`
 
-#### Explicit and Autolinking
+This is a normal @MARKDOWN/REFLINK if `id` is not a valid locative.
 
-The examples in the previous sections are marked with *explicit
-link* or *autolink*. Explicit links are those with a Markdown
-reference link spelled out explicitly, while autolinks are those
-without.
+- `[see this][user-defined]` renders unchanged.
 
-#### Preventing Autolinking
+    ```common-lisp
+    (dref:dref 'user-defined 'locative)
+    .. debugger invoked on LOCATE-ERROR:
+    ..   Could not locate USER-DEFINED LOCATIVE.
+    ..   USER-DEFINED is not a valid locative.
+    ```
 
-In the common case, when *DOCUMENT-UPPERCASE-IS-CODE* is true,
-prefixing an uppercase @WORD with a backslash prevents it from being
-codified and thus also prevents autolinking form kicking in. For example,
+    ```common-lisp
+    (document "[see this][user-defined]" :format :markdown)
+    .. [see this][user-defined]
+    ..
+    ```
 
-    \DOCUMENT
+Use URLs with DEFINE-GLOSSARY-TERM as a better alternative to
+Markdown reference links (see @MARKDOWN-IN-DOCSTRINGS).
 
-renders as DOCUMENT. If it should be marked up as code but not
-autolinked, the backslash must be within backticks like this:
-
-    `\DOCUMENT`
-
-This renders as `DOCUMENT`. Alternatively, the DISLOCATED or the
-ARGUMENT locative may be used as in `[DOCUMENT][dislocated]`.
-
-#### Unresolvable Links
+##### Unresolvable Links
 
 - [condition] UNRESOLVABLE-REFLINK WARNING
 
-    When DOCUMENT encounters an explicit
-    link such as `[NONEXISTENT][function]`
-    that looks like a PAX construct but cannot be resolved, it signals
-    and UNRESOLVABLE-REFLINK warning.
+    When DOCUMENT encounters a @REFLINK that looks
+    like a PAX construct but has no matching definition, it signals an
+    UNRESOLVABLE-REFLINK warning.
     
     - If the OUTPUT-REFLINK restart is invoked, then no warning is
       printed and the markdown link is left unchanged. MUFFLE-WARNING is
@@ -1568,7 +1655,7 @@ ARGUMENT locative may be used as in `[DOCUMENT][dislocated]`.
       `[NONEXISTENT][function]` becomes `NONEXISTENT`.
     
     - If the warning is not handled, then it is printed to
-      *ERROR-OUTPUT*. Otherwise, it behaves as OUTPUT-REFLINK.
+      *ERROR-OUTPUT*, and it behaves as if OUTPUT-LABEL was invoked.
 
 
 - [function] OUTPUT-REFLINK &OPTIONAL CONDITION
@@ -1579,93 +1666,134 @@ ARGUMENT locative may be used as in `[DOCUMENT][dislocated]`.
 
     Invoke the OUTPUT-LABEL restart. See UNRESOLVABLE-REFLINK.
 
-#### Suppressed Links
+#### Autolink
 
-Autolinking of code (i.e.
-of something like `FOO`) is suppressed if it would create a link
-that was already made within the same docstring. In the following
-docstring, only the first `FOO` will be turned into a link.
+@MARKDOWN/INLINE-CODE automatically links to the corresponding
+definitions without having to use @REFLINKS. This works especially
+well in conjunction with @CODIFICATION. The following examples
+assume that *DOCUMENT-UPPERCASE-IS-CODE* is true. If that's not the
+case, explicit backticks are required on WORD (but not on
+LOCATIVE).
 
-    "`FOO` is safe. `FOO` is great."
+##### Specific Autolink
 
-However, explicit links (when a DREF::@LOCATIVE was specified or
-found near the @NAME) are never suppressed. In the following, in
-both docstrings, both occurrences `FOO` produce links.
+*Format:* WORD LOCATIVE or
+LOCATIVE WORD
 
-    "`FOO` is safe. [`FOO`][macro] is great."
-    "`FOO` is safe. Macro `FOO` is great."
+The first @NAME in WORD (with depluralization) that forms a valid
+DREF with LOCATIVE is determined, and that definition is
+linked to. If no such name is found, then @UNSPECIFIC-AUTOLINK is
+attempted.
 
-As an exception, links with specified
-and unambiguous
-locatives to SECTIONs and GLOSSARY-TERMs always produce a link to
-allow their titles to be displayed properly.
+*Examples:*
 
-Finally, autolinking to T or
-NIL is suppressed (see *DOCUMENT-LINK-TO-HYPERSPEC*).
+- `PRINT function` *renders as* PRINT function.
 
-#### Local References
+- `type EQL` *renders as* type EQL.
 
-To declutter the generated output by reducing the number of
-links, the so-called local references (e.g. references to the very
-definition for which documentation is being generated) are treated
-specially. In the following example, there are local references to
-the function FOO and its arguments, so none of them get turned into
-links:
+- `type EQL function` *renders as* type EQL function.
 
-```
-(defun foo (arg1 arg2)
-  "FOO takes two arguments: ARG1 and ARG2."
-  t)
-```
+If LOCATIVE has spaces, then it needs to be marked up as code, too.
+For example,
 
-If linking was desired, one could use a @SPECIFIED-LOCATIVE (e.g.
-`[FOO][function]` or `FOO function`), which results in a single
-link. An explicit link with an unspecified locative like `[FOO][]`
-generates links to all references involving the `FOO` symbol except
-the local ones.
+    DREF-NAME `(reader dref)`
 
-The exact rules for local references are as follows:
+*renders as* DREF-NAME `(reader dref)`.
 
-- Unless a locative is specified, no
-autolinking is performed for
-@NAMEs for which there are local references. For example, `FOO` does
-not get any links if there is *any* local reference with the same
-@NAME.
+##### Unspecific Autolink
 
-- With a locative specified (e.g. in the explicit link
-`[FOO][function]` or in the text `the FOO function`), a single link
-is made irrespective of any local references.
+*Format:* WORD
 
-- Explicit links with an unspecified locative (e.g. `[FOO][]`) are
-linked to all non-local references.
+The first @NAME in WORD (with depluralization, symbols only) that
+has some DEFINITIONS is determined, and those definitions are linked
+to. If no such name is found or the autolink to this name is
+*suppressed* (see below), then WORD is left unchanged. If a locative
+is found before or after WORD, then @SPECIFIC-AUTOLINK is tried
+first.
+
+*Examples:*
+
+- `PRINT` *renders as* PRINT.
+
+- `EQL` *renders as* EQL.
+
+@UNSPECIFIC-AUTOLINKing is suppressed if the name found has a
+@LOCAL-DEFINITION or was linked to before in the same docstring:
+
+- "`My other CAR is also a CAR`" *renders as* "My other CAR is also a
+  CAR".
+
+- "`[COS][] and COS`" *renders as* "COS and COS".
+
+- "`[EQL][type] and EQL`" *renders as* "EQL and EQL".
+
+- "`EQ and the EQ function`" *renders as* "EQ and the EQ function".
+
+@UNSPECIFIC-AUTOLINKing to T and NIL is also suppressed (see
+*DOCUMENT-LINK-TO-HYPERSPEC*):
+
+- "`T and NIL`" *renders as* "T and NIL".
+
+As an exception, a single link (be it either a @SPECIFIC-LINK or an
+unambiguous @UNSPECIFIC-LINK) to a SECTION or GLOSSARY-TERM is not
+suppressed to allow their titles to be displayed properly:
+
+- "`@NAME and @NAME`" *renders as* "@NAME and @NAME".
 
 
-### Linking to the Hyperspec
+##### Escaping Autolinking
+
+In the common case, when *DOCUMENT-UPPERCASE-IS-CODE* is true,
+prefixing an uppercase @WORD with a backslash prevents it from being
+codified and thus also prevents @AUTOLINKing form kicking in. For
+example,
+
+    \DOCUMENT
+
+renders as DOCUMENT. If it should be marked up as code but not
+autolinked, the backslash must be within backticks like this:
+
+    `\DOCUMENT`
+
+This renders as `DOCUMENT`. Alternatively, the
+DISLOCATED or the ARGUMENT locative may be used as in
+`[DOCUMENT][dislocated]`.
+
+#### Linking to the Hyperspec
 
 - [variable] *DOCUMENT-LINK-TO-HYPERSPEC* T
 
-    If true, link symbols found in code to the Common Lisp Hyperspec
-    unless there is a definition in the running Lisp that is being
-    DOCUMENTed.
+    If true, consider definitions found in the Common Lisp Hyperspec
+    for linking. For example,
+    
+    - `PRINT` *renders as* PRINT.
+    
+    In offline documentation, this would be a link to the hyperspec
+    unless `#'PRINT` in the running Lisp is @DOCUMENTABLE.
+    
+    When @BROWSING-LIVE-DOCUMENTATION, everything is @LINKABLE, so the
+    generated link will go to a disambiguation page that lists the
+    definition in the Lisp and in the Hyperspec.
     
     Locatives work as expected (see *DOCUMENT-LINK-CODE*): `FIND-IF`
     links to FIND-IF, `FUNCTION` links to FUNCTION, and
     `[FUNCTION][type]` links to FUNCTION.
     
-    Autolinking to T and NIL is
-    suppressed. If desired, use `[T][]` (that
-    links to T) or `[T][constant]` (that links to T).
+    @UNSPECIFIC-AUTOLINKing to T and NIL is suppressed. If desired, use
+    @REFLINKs such as `[T][]` (that links to T) or
+    `[T][constant]` (that links to T).
     
     Note that linking explicitly with the CLHS locative is not subject
     to the value of this variable.
 
 - [variable] *DOCUMENT-HYPERSPEC-ROOT* "http://www.lispworks.com/documentation/HyperSpec/"
 
-    A URL of the Common Lisp Hyperspec. The default value
-    is the canonical location. When invoked from Emacs, the Elisp variable
+    A URL of the Common Lisp Hyperspec.
+    The default value is the canonical location. When invoked from
+    Emacs, the Elisp variable
     `common-lisp-hyperspec-root` is in effect.
 
-### Linking to Sections
+#### Linking to Sections
 
 The following variables control how to generate section numbering,
 table of contents and navigation links.
@@ -1675,8 +1803,8 @@ table of contents and navigation links.
     When true, HTML anchors are generated before the headings (e.g. of
     sections), which allows the table of contents to contain links and
     also code-like references to sections (like `@FOO-MANUAL`) to be
-    translated to links with the section title being the name of the
-    link.
+    translated to links with the TITLE being the link
+    text.
 
 - [variable] *DOCUMENT-MAX-NUMBERING-LEVEL* 3
 
@@ -1716,7 +1844,84 @@ table of contents and navigation links.
     over the heading. Has no effect if *DOCUMENT-LINK-SECTIONS* is
     false.
 
-### Miscellaneous Variables
+#### Filtering Links
+
+- [variable] *DOCUMENT-LINK-CODE* T
+
+    Whether definitions of things other than SECTIONs
+    are allowed to be @LINKABLE.
+
+- [glossary-term] linkable
+
+    When a reference is encountered to definition D
+    while processing documentation for some page C, we say that
+    definition D is *linkable* (from C) if
+    
+    - D denotes a SECTION and *DOCUMENT-LINK-SECTIONS* is true, or
+    
+    - D does not denote a SECTION and *DOCUMENT-LINK-CODE* is true
+    
+    ... and
+    
+    - We are @BROWSING-LIVE-DOCUMENTATION, or
+    
+    - D is an external definition (CLHS or denotes a
+      GLOSSARY-TERM with a URL), or
+    
+    - D's page is C, or
+    
+    - D's page is relativizable to C.
+    
+    In the above,\_D's page\_ is the last of the pages in the
+    @DOCUMENTABLE to which D's documentation is written (see :OBJECTS in
+    @PAGES), and we say that a page is *relativizable* to another if it
+    is possible to construct a relative link between their
+    :URI-FRAGMENTs.
+
+##### Specific Link
+
+Specific links are those @REFLINKs and @AUTOLINKs that have a
+single DREF::@LOCATIVE and therefore at most a single matching
+definition. These are @SPECIFIC-REFLINK,
+@SPECIFIC-REFLINK-WITH-TEXT and @SPECIFIC-AUTOLINK.
+
+A specific link to a @LINKABLE definition produces a link in the
+output. If the definition is not linkable, then the output will
+contain only what would otherwise be the link text.
+
+##### Unspecific Link
+
+Unspecific links are those @REFLINKs and @AUTOLINKs that do not
+specify a DREF::@LOCATIVE and match all definitions
+with a name. These are @UNSPECIFIC-REFLINK,
+@UNSPECIFIC-REFLINK-WITH-TEXT and @UNSPECIFIC-AUTOLINK.
+
+To make the links predictible and managable in number, the following
+steps are taken.
+
+1. Definitions that are not symbol-based (i.e. whose DREF-NAME
+is not a symbol) are filtered out to prevent unrelated
+PACKAGEs, ASDF:SYSTEMs and CLHS
+sections from cluttering the documentation without the control
+provided by importing symbols.
+
+2. All references with LOCATIVE-TYPE LOCATIVE are filtered out.
+
+3. Non-@LINKABLE definitions are removed.
+
+4. If the definitions include a GENERIC-FUNCTION, then
+all definitions with LOCATIVE-TYPE METHOD,
+ACCESSOR, READER and WRITER are
+removed to avoid linking to a possibly large number of methods.
+
+If at most a single definition remains, then the output is the same
+as with a @SPECIFIC-LINK. If multiple definitions remain, then the
+link text is output followed by a number of numbered links, one to
+each definition.
+
+#### Link Format
+
+The following variables control various aspects of links and URLs.
 
 - [variable] *DOCUMENT-URL-VERSIONS* (2 1)
 
@@ -1725,9 +1930,9 @@ table of contents and navigation links.
     links.
     
     PAX emits HTML anchors before the documentation of SECTIONs
-    (see @LINKING-TO-SECTIONS) and other things (see @LINKING-TO-CODE).
-    For the function `FOO`, in the current version (version 2), the
-    anchor is `<a id="MGL-PAX:FOO%20FUNCTION">`, and its URL will end
+    (see @LINKING-TO-SECTIONS) and other things (see @LINKING). For the
+    function `FOO`, in the current version (version 2), the anchor is
+    `<a id="MGL-PAX:FOO%20FUNCTION">`, and its URL will end
     with `#MGL-PAX:FOO%20FUNCTION`.
     
     *Note that to make the URL independent of whether a symbol is
@@ -1771,11 +1976,11 @@ table of contents and navigation links.
 
 - [variable] *DOCUMENT-MIN-LINK-HASH-LENGTH* 4
 
-    Recall that markdown reference style links (like `[label][id]`) are
-    used for linking to sections and code. It is desirable to have ids
-    that are short to maintain legibility of the generated markdown, but
-    also stable to reduce the spurious diffs in the generated
-    documentation, which can be a pain in a version control system.
+    Recall that @MARKDOWN/REFLINKs (like `[label][id]`) are used for
+    @LINKING. It is desirable to have ids that are short to maintain
+    legibility of the generated markdown, but also stable to reduce the
+    spurious diffs in the generated documentation, which can be a pain
+    in a version control system.
     
     Clearly, there is a tradeoff here. This variable controls how many
     characters of the MD5 sum of the full link id (the reference as a
@@ -1785,6 +1990,152 @@ table of contents and navigation links.
     
     This variable has no effect on the HTML generated from markdown, but
     it can make markdown output more readable.
+
+- [variable] *DOCUMENT-BASE-URL* NIL
+
+    When *DOCUMENT-BASE-URL* is non-NIL, this is prepended to all
+    Markdown relative URLs. It must be a valid URL without no query and
+    fragment parts (that is, *http://lisp.org/doc/* but not
+    *http://lisp.org/doc?a=1* or *http://lisp.org/doc#fragment*). Note
+    that intra-page links using only URL fragments (e.g. and explicit
+    HTML links (e.g. `<a href="...">`) in Markdown are not
+    affected.
+
+### Local Definition
+
+While documentation is generated for a definition, that
+definition is considered local. Other local definitions may also be
+established. Local definitions inform @CODIFICATION through
+@INTERESTING @NAMEs and affect @UNSPECIFIC-AUTOLINKing.
+
+```
+(defun foo (x)
+  "FOO adds one to X."
+  (1+ x)
+```
+
+In this example, while the docstring of FOO is being processed, the
+global definition `(DREF 'FOO 'FUNCTION)` is also considered local,
+which suppresses linking FOO in the FOO's docstring back to its
+definition. If FOO has other definitions, @UNSPECIFIC-AUTOLINKing to
+those is also suppressed.
+
+Furthermore, the purely local definition `(DREF 'X 'ARGUMENT)` is
+established, causing the argument name `X` to be
+codified because `X` is now @INTERESTING.
+
+See DOCUMENTING-REFERENCE and WITH-DISLOCATED-NAMES in
+@EXTENDING-DOCUMENT.
+
+### Overview of Escaping
+
+Let's recap how escaping @CODIFICATION,
+downcasing, and @LINKING
+works.
+
+- One backslash in front of a @WORD turns codification off. Use this
+  to prevent codification words such as DOCUMENT, which is all
+  uppercase hence @CODIFIABLE, and it names an exported symbol hence
+  it is @INTERESTING.
+
+- One backslash right after an opening backtick turns autolinking
+  off.
+
+- Two backslashes right after an opening backtick turns autolinking
+  and downcasing off. Use this for things that are not Lisp code but
+  which need to be in a monospace font.
+
+
+In the following examples capital C/D/A letters mark the presence,
+and a/b/c the absence of codification, downcasing, and autolinking
+assuming all these features are enabled by
+*DOCUMENT-UPPERCASE-IS-CODE*, *DOCUMENT-DOWNCASE-UPPERCASE-CODE*,
+and *DOCUMENT-LINK-CODE*.
+
+    DOCUMENT                => [`document`][1234]    (CDA)
+    \DOCUMENT               => DOCUMENT              (cda)
+    `\DOCUMENT`             => `document`            (CDa)
+    `\\DOCUMENT`            => `DOCUMENT`            (CdA)
+    [DOCUMENT][]            => [`document`][1234]    (CDA)
+    [\DOCUMENT][]           => [DOCUMENT][1234]      (cdA)
+    [`\DOCUMENT`][]         => [`document`][1234]    (CDA) *
+    [`\\DOCUMENT`][]        => [`DOCUMENT`][1234]    (CdA)
+    [DOCUMENT][dislocated]  => `document`            (CDa)
+
+Note that in the example marked with `*`, the single backslash,
+that would normally turn autolinking off, is ignored because it is
+in an explicit link.
+
+### Output Details
+
+By default, DREFs are documented in the following format.
+
+```
+- [<locative-type>] <name> <arglist>
+
+    <docstring>
+```
+
+The line with the bullet is printed with DOCUMENTING-REFERENCE. The
+docstring is processed with DOCUMENT-DOCSTRING while
+@LOCAL-DEFINITIONs established with WITH-DISLOCATED-NAMES are in
+effect for all variables locally bound in a definition with ARGLIST,
+and *PACKAGE* is bound to the second return value of DOCSTRING.
+
+With this default format, PAX supports all locative types, but for
+some DREF::@LOCATIVE-TYPES defined in DRef and the @PAX-LOCATIVES,
+special provisions have been made.
+
+- For definitions with a VARIABLE or CONSTANT locative,
+their initform is printed as their arglist. The initform is the
+INITFORM argument of the locative if provided, or the global symbol
+value of their name. If no INITFORM is provided, and the symbol is
+globally unbound, then no arglist is printed.
+
+When the printed initform is too long, it is truncated.
+
+- Depending of what the SETF locative refers to, the ARGLIST of the
+setf expander, setf function, or the method
+signature is printed as with the METHOD locative.
+
+- For definitions with a METHOD locative, the arglist printed is
+the method signature, which consists of the locative's `QUALIFIERS`
+and `SPECIALIZERS` appended.
+
+- For definitions with an ACCESSOR, READER or
+WRITER locative, the class on which they are specialized is printed
+as their arglist.
+
+- For definitions with a STRUCTURE-ACCESSOR locative, the arglist
+printed is the locative's CLASS-NAME argument if provided.
+
+- For definitions with a CLASS locative, the arglist printed is the
+list of immediate superclasses with STANDARD-OBJECT, CONDITION and
+non-exported symbols omitted.
+
+- For definitions with a ASDF:SYSTEM locative, their most
+important slots are printed as an unnumbered list.
+
+- When documentation is being generated for a definition with
+the SECTION locative, a new (sub)section is opened (see
+WITH-HEADING), within which documentation for its each of its
+SECTION-ENTRIES is generated. A fresh line is printed after all
+entries except the last.
+
+- For definitions with a GLOSSARY-TERM locative, no arglist is
+printed, and if non-NIL, GLOSSARY-TERM-TITLE is printed as name.
+
+- For definitions with a GO locative, its LOCATIVE-ARGS are printed
+as its arglist, along with a redirection message.
+
+- See the INCLUDE locative.
+
+- For definitions with a CLHS locative, the LOCATIVE-ARGS are printed
+as the arglist. There is no docstring.
+
+- For definitions with an UNKNOWN locative, the LOCATIVE-ARGS are
+printed as the arglist. There is no docstring.
+
 
 - [variable] *DOCUMENT-MARK-UP-SIGNATURES* T
 
@@ -1804,15 +2155,19 @@ table of contents and navigation links.
     Also, in HTML `**foo**` will be a link to that very entry and
     `[function]` may turn into a link to sources.
 
-- [variable] *DOCUMENT-BASE-URL* NIL
+### Documentation Generation Implementation Notes
 
-    When *DOCUMENT-BASE-URL* is non-NIL, this is prepended to all
-    Markdown relative URLs. It must be a valid URL without no query and
-    fragment parts (that is, "http://lisp.org/doc/" but not
-    "http://lisp.org/doc?a=1" or "http://lisp.org/doc#fragment").
-    Note that intra-page links using only URL fragments (e.g. and
-    explicit HTML links (e.g. `<a href="...">`) in Markdown are not
-    affected.
+Documentation Generation is supported on ABCL, AllegroCL, CLISP,
+CCL, CMUCL, ECL and SBCL, but their outputs may differ due to the
+lack of some introspective capability. SBCL generates complete
+output. see ARGLIST, DOCSTRING and SOURCE-LOCATION for
+implementation notes.
+
+In addition, CLISP does not support the ambiguous case of @PAX-URLS
+for @BROWSING-LIVE-DOCUMENTATION because the current implementation
+relies on Swank to list definitions of symbols (as
+VARIABLE, FUNCTION, etc), and that simply
+doesn't work.
 
 ### Utilities for Generating Documentation
 
@@ -1832,7 +2187,7 @@ HTML documentation and the default CSS stylesheet.
     
     If :PLAIN is in FORMATS, then `README` is generated, which is
     optimized for reading in text format. It has less cluttery markup
-    and no autolinking.
+    and no @AUTOLINKing.
     
     Example usage:
     
@@ -2062,127 +2417,6 @@ For example, this is how PAX registers itself:
     location specifications (based on the name of the section).
     
     If necessary a default page spec is created for every section.
-
-### Overview of Escaping
-
-Let's recap how escaping @CODIFICATION,
-downcasing, and
-@LINKING-TO-CODE works.
-
-- One backslash in front of a @WORD turns codification off. Use this
-  to prevent codification words such as DOCUMENT, which is all
-  uppercase hence @CODIFIABLE, and it names an exported symbol hence
-  it is @INTERESTING.
-
-- One backslash right after an opening backtick turns autolinking
-  off.
-
-- Two backslashes right after an opening backtick turns autolinking
-  and downcasing off. Use this for things that are not Lisp code but
-  which need to be in a monospace font.
-
-
-In the following examples capital C/D/A letters mark the presence,
-and a/b/c the absence of codification, downcasing, and autolinking
-assuming all these features are enabled by
-*DOCUMENT-UPPERCASE-IS-CODE*, *DOCUMENT-DOWNCASE-UPPERCASE-CODE*,
-and *DOCUMENT-LINK-CODE*.
-
-    DOCUMENT                => [`document`][1234]    (CDA)
-    \DOCUMENT               => DOCUMENT              (cda)
-    `\DOCUMENT`             => `document`            (CDa)
-    `\\DOCUMENT`            => `DOCUMENT`            (CdA)
-    [DOCUMENT][]            => [`document`][1234]    (CDA)
-    [\DOCUMENT][]           => [DOCUMENT][1234]      (cdA)
-    [`\DOCUMENT`][]         => [`document`][1234]    (CDA) *
-    [`\\DOCUMENT`][]        => [`DOCUMENT`][1234]    (CdA)
-    [DOCUMENT][dislocated]  => `document`            (CDa)
-
-Note that in the example marked with `*`, the single backslash,
-that would normally turn autolinking off, is ignored because it is
-in an explicit link.
-
-### Output Details
-
-By default, DREFs are documented in the following format.
-
-```
-- [<locative-type>] <name> <arglist>
-
-    <docstring>
-```
-
-The line with the bullet is printed with DOCUMENTING-REFERENCE. The
-docstring is processed with DOCUMENT-DOCSTRING while
-@LOCAL-REFERENCES established with WITH-DISLOCATED-NAMES are in
-effect for all variables locally bound in a definition with ARGLIST,
-and *PACKAGE* is bound to the second return value of DOCSTRING.
-
-With this default format, PAX supports all locative types, but for
-some DREF::@LOCATIVE-TYPES defined in DRef and the @PAX-LOCATIVES,
-special provisions have been made.
-
-- For definitions with a VARIABLE or CONSTANT locative, their
-initform is printed as their arglist. The initform is the INITFORM
-argument of the locative if provided, or the global symbol value of
-their name. If no INITFORM is provided, and the symbol is globally
-unbound, then no arglist is printed.
-
-When the printed initform is too long, it is truncated.
-
-- Depending of what the SETF locative refers to, the ARGLIST of the
-setf expander, setf function, or the method
-signature is printed as with the METHOD locative.
-
-- For definitions with a METHOD locative, the arglist printed is
-the method signature, which consists of the locative's `QUALIFIERS`
-and `SPECIALIZERS` appended.
-
-- For definitions with an ACCESSOR, READER or WRITER locative, the
-class on which they are specialized is printed as their arglist.
-
-- For definitions with a STRUCTURE-ACCESSOR locative, the arglist
-printed is the locative's CLASS-NAME argument if provided.
-
-- For definitions with a CLASS locative, the arglist printed is the
-list of immediate superclasses with STANDARD-OBJECT, CONDITION and
-non-exported symbols omitted.
-
-- For definitions with a ASDF:SYSTEM locative, their most
-important slots are printed as an unnumbered list.
-
-- When a definition with the SECTION locative is being documented,
-a new (sub)section is opened (see WITH-HEADING), within which
-documentation for its each of its SECTION-ENTRIES is generated. A
-fresh line is printed after all entries except the last.
-
-- For definitions with a GLOSSARY-TERM locative, no arglist is
-printed, and if non-NIL, GLOSSARY-TERM-TITLE is printed as name.
-
-- For definitions with a GO locative, its LOCATIVE-ARGS are printed
-as its arglist, along with a redirection message.
-
-- See the INCLUDE locative.
-
-- For definitions with a CLHS locative, the LOCATIVE-ARGS are printed
-as the arglist. There is no docstring.
-
-- For definitions with an UNKNOWN locative, the LOCATIVE-ARGS are
-printed as the arglist. There is no docstring.
-
-
-### Documentation Generation Implementation Notes
-
-Documentation Generation is supported on ABCL, AllegroCL, CLISP,
-CCL, CMUCL, ECL and SBCL, but their outputs may differ due to the
-lack of some introspective capability. SBCL generates complete
-output. see ARGLIST, DOCSTRING and SOURCE-LOCATION for
-implementation notes.
-
-In addition, CLISP does not support the ambiguous case of @PAX-URLS
-for @BROWSING-LIVE-DOCUMENTATION because the current implementation
-relies on Swank to list definitions of symbols (as VARIABLE,
-FUNCTION, etc), and that simply doesn't work.
 
 ## Transcripts
 
@@ -2772,7 +3006,7 @@ there are only a couple of PAX generic functions left to extend.
 
 - [generic-function] EXPORTABLE-REFERENCE-P PACKAGE SYMBOL LOCATIVE-TYPE LOCATIVE-ARGS
 
-    Return true iff SYMBOL is to be exported from
+    Return true if SYMBOL is to be exported from
     PACKAGE when it occurs in a DEFSECTION in a reference with
     LOCATIVE-TYPE and LOCATIVE-ARGS. SYMBOL is accessible
     in PACKAGE.
@@ -2794,11 +3028,12 @@ there are only a couple of PAX generic functions left to extend.
 
 - [generic-function] EXPORTABLE-LOCATIVE-TYPE-P LOCATIVE-TYPE
 
-    Return true iff symbols in references with
+    Return true if symbols in references with
     LOCATIVE-TYPE are to be exported by default when they occur in a
     DEFSECTION. The default method returns T, while the methods for
-    SECTION, GLOSSARY-TERM, PACKAGE, ASDF:SYSTEM, METHOD and INCLUDE
-    return NIL.
+    locative types SECTION, GLOSSARY-TERM,
+    PACKAGE, ASDF:SYSTEM, METHOD and
+    INCLUDE return NIL.
     
     This function is called by the default method of
     EXPORTABLE-REFERENCE-P to decide what symbols DEFSECTION shall
@@ -2810,9 +3045,8 @@ probably return a non-NIL package.
 
 ### Locative Aliases
 
-DEFINE-LOCATIVE-ALIAS can be used to help `M-.` and autolinking
-disambiguate references based on the context of a @NAME as described
-on @PARSING and also in @SPECIFIED-LOCATIVE.
+DEFINE-LOCATIVE-ALIAS can be used to help `M-.` and @SPECIFIC-AUTOLINKs disambiguate
+references based on the context of a @NAME as described on @PARSING.
 
 The following example shows how to make docstrings read
 more naturally by defining an alias.
@@ -2869,10 +3103,11 @@ are for writing new DOCUMENT-OBJECT\* methods, which emit markdown.
 - [macro] DOCUMENTING-REFERENCE (STREAM &KEY REFERENCE NAME PACKAGE READTABLE ARGLIST) &BODY BODY
 
     Write REFERENCE to STREAM as described in
-    *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a local
-    reference for the processing of BODY.
+    *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a
+     @LOCAL-DEFINITION for the processing of BODY.
     
-    - REFERENCE defaults to the reference being DOCUMENTed.
+    - REFERENCE defaults to the reference for which documentation is
+      currently being generated.
     
     - NAME defaults to `(XREF-NAME REFERENCE)` and is printed after the
       LOCATIVE-TYPE.
@@ -2896,15 +3131,13 @@ are for writing new DOCUMENT-OBJECT\* methods, which emit markdown.
 
 - [macro] WITH-DISLOCATED-NAMES NAMES &BODY BODY
 
-    For each name in NAMES, establish a local
-    reference with the DISLOCATED locative, which
-    prevents autolinking.
+    For each name in NAMES, establish a @LOCAL-DEFINITION.
 
 - [function] DOCUMENT-DOCSTRING DOCSTRING STREAM &KEY (INDENTATION "    ") EXCLUDE-FIRST-LINE-P (PARAGRAPHP T)
 
     Write DOCSTRING to STREAM, sanitizing the markdown from it, performing @CODIFICATION and
-    @LINKING-TO-CODE, finally prefixing each line with INDENTATION. The
-    prefix is not added to the first line if EXCLUDE-FIRST-LINE-P. If
+    @LINKING, finally prefixing each line with INDENTATION. The prefix
+    is not added to the first line if EXCLUDE-FIRST-LINE-P. If
     PARAGRAPHP, then add a newline before and after the output.
 
 - [function] ESCAPE-MARKDOWN STRING &KEY (ESCAPE-INLINE T) (ESCAPE-HTML T) (ESCAPE-BLOCK T)

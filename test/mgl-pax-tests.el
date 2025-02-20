@@ -1,3 +1,5 @@
+;;;; See HACKING.md for how to run this.
+
 (require 'mgl-pax)
 (require 'ert)
 (require 'cl-lib)
@@ -228,7 +230,8 @@
 (def-slime-test mgl-pax-edit-definitions/test-defs
     (name snippet &optional snippet2)
     "Test `M-.' on PAX references."
-    ;; These mirror MGL-PAX-TEST::*NAVIGATION-TEST-CASES*.
+    ;; These mirror DREF-TEST::*SOURCE-LOCATION-TEST-CASES* plus
+    ;; MGL-PAX-TEST::*NAVIGATION-TEST-CASES*.
     '(("variable foo-a" "(defvar foo-a)")
       ("variable foo-r" "(defvar foo-r)")
       ("variable foo-w" "(defvar foo-w)")
@@ -236,6 +239,7 @@
       ("macro bar" "(defmacro bar ")
       ("symbol-macro my-smac" "(define-symbol-macro my-smac ")
       ("function foo" "(defun foo ")
+      ("function |Foo|" "(defun |Foo| ")
       ("traced-foo" "(defun traced-foo ")
       ("generic-function test-gf" "(defgeneric test-gf ")
       ("(method () (number)) test-gf" "(defmethod test-gf ")
@@ -259,9 +263,9 @@
        "(defpackage :mgl-pax")
       ;; Source location not implemented
       ;;("readtable xxx-rt" "(defreadtable xxx-rt")
+      ("locative my-loc" "(define-locative-type my-loc ")
       ("section mgl-pax::@pax-manual" "(defsection @pax-manual ")
-      ("glossary-term some-term" "(define-glossary-term some-term ")
-      ("locative my-loc" "(define-locative-type my-loc "))
+      ("glossary-term some-term" "(define-glossary-term some-term "))
   (load-mgl-pax-test-system)
   (let ((slime-buffer-package "MGL-PAX-TEST")
         (test-name (format "%S visits snippet %S or %S."

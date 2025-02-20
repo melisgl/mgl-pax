@@ -2,67 +2,13 @@
 
 (in-readtable pythonic-string-syntax)
 
-(defsection dref-ext::@adding-new-locatives (:title "Adding New Locatives"
-                                             :export :dref-ext)
-  "Let's see how to tell DRef about new kinds of definitions through
-  the example of the implementation of the CLASS locative. Note that
-  this is a verbatim PAX:INCLUDE of the sources. Please ignore any
-  internal machinery. The first step is to define the locative type:"
-  (nil (include (:start (class locative) :end (class-dref class))
-                :header-nl "```" :footer-nl "```"))
-  "Next, we define a subclass of [DREF][class] associated with the
-  CLASS locative type and specialize LOCATE*:"
-  (nil (include (:start (class-dref class)
-                 :end (actualize-type-to-class function))
-                :header-nl "```" :footer-nl "```"))
-  "The first method makes `(LOCATE (FIND-CLASS 'DREF))` work, while
-  the second is for `(DREF 'DREF 'CLASS)`. Naturally, for locative
-  types that do not define first-class objects, the first method
-  cannot be defined.
-
-  Then, with ADD-DREF-ACTUALIZER, we install a function that that runs
-  whenever a new [DREF][class] is about to be returned from LOCATE and
-  turn the locative TYPE into the locative CLASS if the denoted
-  definition is of a class:"
-  (nil (include (:start (actualize-type-to-class function)
-                 :end (resolve* (method () (class-dref))))
-                :header-nl "```" :footer-nl "```"))
-  "Finally, we define a RESOLVE* method to recover the
-  [CLASS][type] object from a CLASS-DREF. We also specialize
-  DOCSTRING* and SOURCE-LOCATION*:"
-  (nil (include (:start (resolve* (method () (class-dref)))
-                 :end (%end-of-class-example variable))
-                :header-nl "```" :footer-nl "```"))
-  "We took advantage of having just made the class locative type being
-  RESOLVEable, by specializing DOCSTRING* on the CLASS class.
-  SOURCE-LOCATION* was specialized on CLASS-DREF to demonstrate how
-  this can be done for non-RESOLVEable locative types.
-
-  Classes have no arglist, so no ARGLIST* method is needed. In the
-  following, we describe the pieces in detail."
-  (define-locative-type macro)
-  (define-pseudo-locative-type macro)
-  (define-locative-alias macro)
-  (define-definition-class macro)
-  (locate* generic-function)
-  (dref* generic-function)
-  (check-locative-args macro)
-  (locate-error function)
-  (add-dref-actualizer function)
-  (remove-dref-actualizer function)
-  (resolve* generic-function)
-  (resolve-error function)
-  (map-definitions generic-function)
-  (map-names generic-function)
-  (arglist* generic-function)
-  (docstring* generic-function)
-  (source-location* generic-function))
-
 ;;; This is not a function so that constant CLASS-NAMEs can be
 ;;; optimized by the compiler.
 (defmacro %make-dref (class-name name locative &rest args)
   `(make-instance ,class-name :name ,name :locative ,locative ,@args))
 
+
+;;;; @ADDING-NEW-LOCATIVES
 
 (defmacro define-locative-type (locative-type lambda-list &body docstring)
   """Declare LOCATIVE-TYPE as a [LOCATIVE][locative], which is the
@@ -369,14 +315,7 @@
         (source-location* dref)))))
 
 
-(defsection @symbol-locatives (:title "Symbol Locatives"
-                               :export :dref-ext)
-  "Let's see how the obscure DEFINE-SYMBOL-LOCATIVE-TYPE and
-  DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE macros work together to
-  simplify the common task of associating definition and documentation
-  with symbols in a certain context."
-  (define-symbol-locative-type macro)
-  (define-definer-for-symbol-locative-type macro))
+;;;; @SYMBOL-LOCATIVES
 
 (declaim (ftype function find-method*))
 

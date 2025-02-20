@@ -16,50 +16,21 @@
 ;;;      ("section" ("class")))
 (deftype wall () 'list)
 
-(defvar *definitions-of-fn*)
+(defun definitions-of-wall (wall &key (definitions #'definitions))
+  (delete-duplicates
+   (or
+    ;; First, try with the given locatives.
+    (loop for (word locative-strings) in wall
+          append (loop for locative-string in locative-strings
+                       append (ensure-list (wal-dref word locative-string))))
+    ;; Then, fall back on the no-locative case.
+    (loop for entry in wall
+          append (find-name definitions (first entry) :trim t :depluralize t)))
+   :test #'xref=))
 
-;;; List all definitions (as DREFs) of WALL. Specify DEFINITIONS-OF (a
-;;; function designator) to change how the no-locative case is
-;;; handled.
-(defun definitions-of-wall (wall &key (definitions-of 'definitions))
-  (let ((*definitions-of-fn* definitions-of))
-    (delete-duplicates
-     (or
-      ;; First, try with the given locatives.
-      (loop for (word locative-strings) in wall
-            append (loop for locative-string in locative-strings
-                         append (definitions-of-word-with-locative
-                                 word locative-string)))
-      ;; Then, fall back on the no locative case.
-      (loop for entry in wall
-            append (definitions-of-word (first entry))))
-     :test #'xref=)))
-
-(defun definitions-of-word-with-locative (word locative-string)
-  (let ((locative (read-locative-from-noisy-string locative-string)))
-    (when locative
-      (loop for object in (parse-word-preferring-uppercase word)
-              thereis (ensure-list (dref object locative nil))))))
-
-(defun definitions-of-word (word)
-  (loop for object in (parse-word-preferring-uppercase word)
-          thereis (funcall *definitions-of-fn* object)))
-
-;;; To make M-. behave like DOCUMENT, prefer the word that
-;;; CODIFY-UPPERCASE-WORD would find.
-(defun parse-word-preferring-uppercase (word)
-  (multiple-value-bind (xref-name name) (parse-uppercase-word word)
-    (multiple-value-bind (xref-names names) (parse-word word)
-      (if name
-          (values (cons xref-name xref-names)
-                  (cons name names))
-          (values xref-names names)))))
-
-(defun parse-uppercase-word (word)
-  (parse-word word :trim t :depluralize t
-                   :only-one (lambda (xref-name name)
-                               (declare (ignore xref-name))
-                               (notany #'lower-case-p name))))
+(defun wal-dref (word locative-string)
+  (when-let (locative (parse-locative/noisy locative-string :junk-allowed t))
+    (find-name (rcurry #'dref locative nil) word :trim t :depluralize t)))
 
 
 (defsection @navigating-in-emacs (:title "Navigating Sources in Emacs")
@@ -78,7 +49,7 @@
   corresponds to the locative. If that fails, `\\M-.` will try to find
   the definitions in the normal way, which may involve popping up an
   xref buffer and letting the user interactively select one of
-  possible definitions.
+  possible definitions. For more details, see @PARSING.
 
   In the following examples, when the cursor is on one of the
   characters of `FOO` or just after `FOO`, pressing `\\M-.` will visit
@@ -91,8 +62,8 @@
 
   In particular, DREF::@REFERENCEs in a DEFSECTION form are in (NAME
   LOCATIVE) format so `\\M-.` will work just fine there. `\\M-.` also
-  recognizes the `[foo][function]` and similar forms of
-  @LINKING-TO-CODE in docstrings.
+  recognizes the `[foo][function]` and similar forms of @LINKING in
+  docstrings.
 
   Just like vanilla `\\M-.`, this works in comments and docstrings. In
   the next example, pressing `\\M-.` on `FOO` will visit `FOO`'s
@@ -150,7 +121,7 @@
                   ,location)))
 
 
-;;;; The Common Lisp side of mgl-pax-find-parent-section
+;;;; The Common Lisp side of `mgl-pax-find-parent-section'
 
 (defun/autoloaded find-parent-section-for-emacs (buffer filename possibilities)
   (with-swank ()
@@ -210,7 +181,10 @@
           ;; by not accepting position-based matches farther than 2000
           ;; characters from POS.
           (closest-pos 2000))
-      (dolist (dref (definitions object))
+      (dolist (dref
+               ;; It is likely that only LISP-LOCATIVE-TYPES have
+               ;; source location (except UNKNOWN).
+               (definitions object))
         (let ((location (source-location dref)))
           (if (source-location-p location)
               (let ((loc-file (source-location-file location))

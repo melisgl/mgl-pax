@@ -36,7 +36,7 @@ Testing from the command line
         done
 
 - `test/test-el.sh` runs the Elisp tests. This currently only tests
-  under SBCL and needs the value of `SLIME_DIR` to be specified in the
+  with SBCL and needs the value of `SLIME_DIR` to be specified in the
   script.
 
 Catching changes in behaviour
@@ -76,3 +76,15 @@ handlers on and off with:
 
     (setq hunchentoot:*catch-errors-p* nil)
     (setq hunchentoot:*catch-errors-p* t)
+
+
+Versioning
+==========
+
+`:VERSION` in the ASDF system definition is in the usual
+`MAJOR.MINOR.PATCH` format. Bump `MINOR` for significant changes.
+Bumping `PATCH` is optional. `MAJOR` is constant 0 :-).
+
+Incompatible changes to the Elisp--CL interface also require bumping
+`mgl-pax-version` in `mgl-pax.el` and
+`MGL-PAX::CHECK-PAX-ELISP-VERSION`.

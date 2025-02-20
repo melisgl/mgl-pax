@@ -29,7 +29,7 @@
 
   If :PLAIN is in FORMATS, then `\\\\README` is generated, which is
   optimized for reading in text format. It has less cluttery markup
-  and no [autolinking][@explicit-and-autolinking section].
+  and no @AUTOLINKing.
 
   Example usage:
 
@@ -348,7 +348,7 @@
               (signal-unresolvable-reflink
                `(:reference-link :label (,text)
                                  :definition (,(princ-to-string url)))
-               text url))))))
+               url))))))
 
 (defvar *google-analytics-id* nil)
 
@@ -525,7 +525,7 @@
   ;; with C-x C-e), the file's readtable is not used (which leads to a
   ;; reader macro conflict with CL-SYNTAX).
   (let ((*readtable* (named-readtables:find-readtable :standard)))
-    (asdf:load-system :mgl-pax/full)
+    (asdf:load-system :mgl-pax/web)
     (asdf:load-system :mgl-mat)
     (asdf:load-system :named-readtables)
     (asdf:load-system :micmac)

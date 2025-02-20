@@ -43,8 +43,8 @@ to fill this gap with the introduction of [`XREF`][1538] objects:
 ```
 
 `XREF`s just package up a [name][5fc4] (`*MY-VAR*`) and a
-[locative][7ac8] ([`VARIABLE`][6c83]). They need not denote existing definitions
-until we actually want to use them:
+[locative][7ac8] ([`VARIABLE`][6c83]). They need not denote existing
+definitions until we actually want to use them:
 
 ```
 (docstring (xref '*my-var* 'variable))
@@ -137,9 +137,9 @@ with references (discussed in the [Extending DRef][68fb]).
 
 - [class] **DREF** *[XREF][1538]*
 
-    [`DREF`][d930]s can be thought of as referring to
-    definitions that actually exist, although changes in the system can
-    invalidate them (for example, a `DREF` to a function definition can be
+    `DREF`s can be thought of as referring to definitions
+    that actually exist, although changes in the system can invalidate
+    them (for example, a `DREF` to a function definition can be
     invalidated by [`FMAKUNBOUND`][609c]).
     
     `DREF`s must be created with [`LOCATE`][8f19], and their purpose is to allow
@@ -255,7 +255,7 @@ with references (discussed in the [Extending DRef][68fb]).
     ```
     
     If there is a definition, but there is no first-class object
-    corresponding to it, then signal a [`RESOLVE-ERROR`][0660] condition or return
+    corresponding to it, then signal a [`RESOLVE-ERROR`][58ba] condition or return
     `NIL` depending on `ERRORP`:
     
     ```common-lisp
@@ -283,7 +283,7 @@ with references (discussed in the [Extending DRef][68fb]).
     Signalled by [`LOCATE`][8f19] when the definition cannot be
     found, and `ERRORP` is true.
 
-<a id="x-28DREF-3ARESOLVE-ERROR-20CONDITION-29"></a>
+<a id="x-28DREF-EXT-3ARESOLVE-ERROR-20CONDITION-29"></a>
 
 - [condition] **RESOLVE-ERROR** *[ERROR][d162]*
 
@@ -309,7 +309,7 @@ with references (discussed in the [Extending DRef][68fb]).
     ==> (#<DREF "MGL-PAX" PACKAGE>)
     ```
     
-    Can be extended via [`MAP-DEFINITIONS`][0e9c].
+    Can be extended via `MAP-DEFINITIONS`.
 
 <a id="x-28DREF-3ADREF-APROPOS-20FUNCTION-29"></a>
 
@@ -397,7 +397,7 @@ with references (discussed in the [Extending DRef][68fb]).
       candidate definition must be in it (handling `:ALL`,
       `:LISP`, and `:PSEUDO` as described above).
     
-    Can be extended via [`MAP-NAMES`][811f].
+    Can be extended via `MAP-NAMES`.
 
 <a id="x-28DREF-3ALOCATIVE-TYPES-20FUNCTION-29"></a>
 
@@ -467,10 +467,12 @@ signal a [`LOCATE-ERROR`][6334] condition.
     => :DESTRUCTURING
     ```
     
-    This function supports [`MACRO`][f3cc]s, [`COMPILER-MACRO`][41fd]s, [`SETF`][a138] functions,
-    `FUNCTION`([`0`][119e] [`1`][81f7])s, [`GENERIC-FUNCTION`][efe2]s, [`METHOD`][51c3]s, [`TYPE`][7c9f]s, [`LOCATIVE`][0b3a]s. Note that
-    `ARGLIST` depends on the quality of `SWANK-BACKEND:ARGLIST`. With the
-    exception of SBCL, which has perfect support, all Lisp
+    This function supports [`MACRO`s][f3cc],
+    [`COMPILER-MACRO`s][41fd], [`SETF`][d83a] functions,
+    [`FUNCTION`s][ba62], [`GENERIC-FUNCTION`s][5875],
+    [`METHOD`s][172e], [`TYPE`s][926d], [`LOCATIVE`s][0b3a]. Note
+    that `ARGLIST` depends on the quality of `SWANK-BACKEND:ARGLIST`. With
+    the exception of SBCL, which has perfect support, all Lisp
     implementations have minor omissions:
     
     - [`DEFTYPE`][7f9a] lambda lists on ABCL, AllegroCL, CLISP, CCL, CMUCL, ECL;
@@ -491,13 +493,14 @@ signal a [`LOCATE-ERROR`][6334] condition.
     is used by [`PAX:DOCUMENT`][432c] when [Parsing][378f] the docstring). This
     function is similar in purpose to [`CL:DOCUMENTATION`][c5ae].
     
-    Note that some locative types such as [`ASDF:SYSTEM`][c097]s and [`DECLARATION`][d07c]s
-    have no docstrings, and some Lisp implementations do not record all
-    docstrings. The following are known to be missing:
+    Note that some locative types such as [`ASDF:SYSTEM`s][c097] and
+    [`DECLARATION`s][6e04] have no docstrings, and some Lisp
+    implementations do not record all docstrings. The following are
+    known to be missing:
     
     - [`COMPILER-MACRO`][41fd] docstrings on ABCL, AllegroCL, CCL, ECL;
     
-    - [`METHOD-COMBINATION`][9b70] docstrings on ABCL, AllegroCL.
+    - [`METHOD-COMBINATION`][82e0] docstrings on ABCL, AllegroCL.
     
     Can be extended via [`DOCSTRING*`][9fd4].
 
@@ -612,7 +615,7 @@ otherwise noted.
 - [locative] **SETF** *&OPTIONAL METHOD*
 
     Refers to a [setf expander][35a2] (see [`DEFSETF`][66dc] and [`DEFINE-SETF-EXPANDER`][d2cb])
-    or a [setf function][99b0] (e.g. `(DEFUN (SETF NAME) ...)` or the
+    or a [setf function][99b05] (e.g. `(DEFUN (SETF NAME) ...)` or the
     same with [`DEFGENERIC`][c7f7]). The format in [`DEFSECTION`][72b4] is `(<NAME> SETF)`
     in all these cases.
     
@@ -634,7 +637,7 @@ otherwise noted.
 
     Refers to a global function, typically defined with [`DEFUN`][f472]. The
     [name][5fc4] must be a [`SYMBOL`][e5af] (see the [`SETF`][d83a] locative for how to reference
-    [setf functions][99b0]). It is also allowed to reference
+    [setf functions][99b05]). It is also allowed to reference
     [`GENERIC-FUNCTION`][efe2]s as `FUNCTION`s:
     
     ```common-lisp
@@ -649,14 +652,14 @@ otherwise noted.
 
     Refers to a [`GENERIC-FUNCTION`][efe2], typically defined with
     [`DEFGENERIC`][c7f7]. The [name][5fc4] must be a [`SYMBOL`][e5af] (see the [`SETF`][d83a] locative for
-    how to reference [setf functions][99b0]).
+    how to reference [setf functions][99b05]).
 
 <a id="x-28METHOD-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **METHOD** *METHOD-QUALIFIERS METHOD-SPECIALIZERS*
 
     Refers to `METHOD`s named by [`SYMBOL`][e5af]s (for [`SETF`][a138] methods,
-    see the `SETF` locative). `METHOD-QUALIFIERS` and `METHOD-SPECIALIZERS`
+    see the [`SETF`][d83a] locative). `METHOD-QUALIFIERS` and `METHOD-SPECIALIZERS`
     are similar to the [`CL:FIND-METHOD`][6d46]'s arguments of the same names. For
     example, the method
     
@@ -954,7 +957,7 @@ otherwise noted.
     A locative can be a symbol or a list whose [`CAR`][d5a2] is a symbol. In
     either case, the symbol is called the [locative type][a11d], and the rest
     of the elements are the *locative arguments* (for example, see the
-    [`METHOD`][51c3] locative).
+    [`METHOD`][172e] locative).
     
     See [`XREF-LOCATIVE`][f486] and [`DREF-LOCATIVE`][3d59].
 
@@ -1115,8 +1118,9 @@ The following convenience functions are compositions of
 
 Let's see how to tell DRef about new kinds of definitions through
 the example of the implementation of the [`CLASS`][2060] locative. Note that
-this is a verbatim [`PAX:INCLUDE`][5cd7] of the sources. Please ignore any
-internal machinery. The first step is to define the locative type:
+this is a verbatim [`PAX:INCLUDE`][5cd7] of the sources. Please
+ignore any internal machinery. The first step is to define the
+locative type:
 
 ```
 (define-locative-type class ()
@@ -1232,7 +1236,7 @@ following, we describe the pieces in detail.
 - [macro] **DEFINE-LOCATIVE-ALIAS** *ALIAS LOCATIVE-TYPE &BODY DOCSTRING*
 
     Define `ALIAS` as a locative equivalent to `LOCATIVE-TYPE` (both
-    [`SYMBOL`][e5af]s). `LOCATIVE-TYPE` must exist (i.e. be among [`LOCATIVE-TYPES`][99b0a]).
+    [`SYMBOL`][e5af]s). `LOCATIVE-TYPE` must exist (i.e. be among [`LOCATIVE-TYPES`][99b0]).
     For example, let's define `OBJECT` as an alias of the [`CLASS`][2060] locative:
     
     ```common-lisp
@@ -1326,8 +1330,8 @@ following, we describe the pieces in detail.
 - [generic-function] **RESOLVE\*** *DREF*
 
     Return the object defined by the definition `DREF`
-    refers to. Signal a [`RESOLVE-ERROR`][0660] condition by calling the
-    [`RESOLVE-ERROR`][f70b] function if the lookup fails.
+    refers to. Signal a [`RESOLVE-ERROR`][58ba] condition by calling the
+    [`RESOLVE-ERROR`][7825] function if the lookup fails.
     
     To keep [`RESOLVE`][63b4] a partial inverse of [`LOCATE`][8f19], a specialized [`LOCATE*`][76c4]
     method or an [actualizer][8490] must be defined for
@@ -1337,40 +1341,16 @@ following, we describe the pieces in detail.
     It is an error for methods of this generic function to return an
     [`XREF`][1538].
 
-<a id="x-28DREF-3ARESOLVE-ERROR-20FUNCTION-29"></a>
+<a id="x-28DREF-EXT-3ARESOLVE-ERROR-20FUNCTION-29"></a>
 
 - [function] **RESOLVE-ERROR** *&REST FORMAT-AND-ARGS*
 
-    Call this function to signal a [`RESOLVE-ERROR`][0660] condition from the
+    Call this function to signal a [`RESOLVE-ERROR`][58ba] condition from the
     [dynamic extent][36e9] of a [`RESOLVE*`][d3b3] method. It is an error to call
     `RESOLVE-ERROR` elsewhere.
     
     `FORMAT-AND-ARGS`, if non-`NIL`, is a format string and arguments
     suitable for [`FORMAT`][ad78].
-
-<a id="x-28DREF-3AMAP-DEFINITIONS-20GENERIC-FUNCTION-29"></a>
-
-- [generic-function] **MAP-DEFINITIONS** *FN NAME LOCATIVE-TYPE*
-
-    Call `FN` with [`DREF`][d930]s which have the given
-    `NAME` and `LOCATIVE-TYPE`. For most locative types, there is at most
-    one definition, but for [`METHOD`][51c3], for example, there may be many. The
-    default method simply does `(DREF NAME LOCATIVE-TYPE NIL)` and calls
-    `FN` with result if [`DREF`][7e92] succeeds.
-    
-    This function is for extending [`DEFINITIONS`][e196]. Do not call it directly.
-
-<a id="x-28DREF-3AMAP-NAMES-20GENERIC-FUNCTION-29"></a>
-
-- [generic-function] **MAP-NAMES** *FN LOCATIVE-TYPE*
-
-    Call `FN` with [name][5fc4]s that form a [`DREF`][d930] with
-    some locative with `LOCATIVE-TYPE`. The default method tries to form
-    `DREF`s by combining each interned symbol with `LOCATIVE-TYPE` and no
-    [`LOCATIVE-ARGS`][2444].
-    
-    This function is for extending [`DREF-APROPOS`][65b4]. Do not call it
-    directly.
 
 <a id="x-28DREF-EXT-3AARGLIST-2A-20GENERIC-FUNCTION-29"></a>
 
@@ -1654,12 +1634,10 @@ the details, see the Elisp function `slime-goto-source-location`.
   [00d4]: #x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE"
   [059c]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_o.htm#ordinary_lambda_list '"ordinary lambda list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [0617]: #x-28DREF-3AXREF-3D-20FUNCTION-29 "DREF:XREF= FUNCTION"
-  [0660]: #x-28DREF-3ARESOLVE-ERROR-20CONDITION-29 "DREF:RESOLVE-ERROR CONDITION"
   [0a96]: #x-28DREF-EXT-3AARGLIST-2A-20GENERIC-FUNCTION-29 "DREF-EXT:ARGLIST* GENERIC-FUNCTION"
   [0b3a]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE"
   [0b7c]: #x-28DREF-EXT-3A-40DREF-SUBCLASSES-20MGL-PAX-3ASECTION-29 "`DREF` Subclasses"
   [0d07]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_2.htm "SYMBOL-NAME (MGL-PAX:CLHS FUNCTION)"
-  [0e9c]: #x-28DREF-3AMAP-DEFINITIONS-20GENERIC-FUNCTION-29 "DREF:MAP-DEFINITIONS GENERIC-FUNCTION"
   [0fa3]: ../README.md#x-28MGL-PAX-3A-40LOCATIVE-ALIASES-20MGL-PAX-3ASECTION-29 "Locative Aliases"
   [10a7]: #x-28DREF-EXT-3ACHECK-LOCATIVE-ARGS-20MGL-PAX-3AMACRO-29 "DREF-EXT:CHECK-LOCATIVE-ARGS MGL-PAX:MACRO"
   [119e]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm "FUNCTION (MGL-PAX:CLHS CLASS)"
@@ -1703,9 +1681,10 @@ the details, see the Elisp function `slime-goto-source-location`.
   [4dd7]: #x-28PACKAGE-20MGL-PAX-3ALOCATIVE-29 "PACKAGE MGL-PAX:LOCATIVE"
   [509d]: #x-28DREF-EXT-3A-40REFERENCES-20MGL-PAX-3ASECTION-29 "References"
   [515e]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_c.htm#compound_type_specifier '"compound type specifier" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
-  [51c3]: http://www.lispworks.com/documentation/HyperSpec/Body/t_method.htm "METHOD (MGL-PAX:CLHS CLASS)"
   [5406]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "USE-VALUE (MGL-PAX:CLHS FUNCTION)"
   [548e]: #x-28DREF-EXT-3ADEFINE-LOCATIVE-ALIAS-20MGL-PAX-3AMACRO-29 "DREF-EXT:DEFINE-LOCATIVE-ALIAS MGL-PAX:MACRO"
+  [5875]: #x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "GENERIC-FUNCTION MGL-PAX:LOCATIVE"
+  [58ba]: #x-28DREF-EXT-3ARESOLVE-ERROR-20CONDITION-29 "DREF-EXT:RESOLVE-ERROR CONDITION"
   [59c9]: #x-28DREF-EXT-3A-40SYMBOL-LOCATIVES-20MGL-PAX-3ASECTION-29 "Symbol Locatives"
   [5a82]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq.htm "EQ (MGL-PAX:CLHS FUNCTION)"
   [5cd7]: ../README.md#x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:INCLUDE MGL-PAX:LOCATIVE"
@@ -1726,21 +1705,22 @@ the details, see the Elisp function `slime-goto-source-location`.
   [6932]: #x-28DREF-EXT-3ALOCATE-ERROR-20FUNCTION-29 "DREF-EXT:LOCATE-ERROR FUNCTION"
   [6c83]: #x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29 "VARIABLE MGL-PAX:LOCATIVE"
   [6d46]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_m.htm "FIND-METHOD (MGL-PAX:CLHS GENERIC-FUNCTION)"
+  [6e04]: #x-28DECLARATION-20MGL-PAX-3ALOCATIVE-29 "DECLARATION MGL-PAX:LOCATIVE"
   [6e6e]: http://www.lispworks.com/documentation/HyperSpec/Body/f_mk_pkg.htm "MAKE-PACKAGE (MGL-PAX:CLHS FUNCTION)"
   [6ec3]: #x-28DREF-EXT-3ASOURCE-LOCATION-SNIPPET-20FUNCTION-29 "DREF-EXT:SOURCE-LOCATION-SNIPPET FUNCTION"
   [72b4]: ../README.md#x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFSECTION MGL-PAX:MACRO"
   [7334]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpar.htm "DEFVAR (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [76c4]: #x-28DREF-EXT-3ALOCATE-2A-20GENERIC-FUNCTION-29 "DREF-EXT:LOCATE* GENERIC-FUNCTION"
+  [7825]: #x-28DREF-EXT-3ARESOLVE-ERROR-20FUNCTION-29 "DREF-EXT:RESOLVE-ERROR FUNCTION"
   [7a04]: #x-28DREF-3A-40TYPELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Types and Declarations"
   [7ac8]: #x-28DREF-3A-40LOCATIVE-20MGL-PAX-3AGLOSSARY-TERM-29 "locative"
-  [7c9f]: http://www.lispworks.com/documentation/HyperSpec/Body/d_type.htm "TYPE (MGL-PAX:CLHS DECLARATION)"
   [7e8c]: #x-28DREF-3A-40LOCATIVES-AND-REFERENCES-20MGL-PAX-3ASECTION-29 "Locatives and References"
   [7e92]: #x-28DREF-3ADREF-20FUNCTION-29 "DREF:DREF FUNCTION"
   [7f9a]: http://www.lispworks.com/documentation/HyperSpec/Body/m_deftp.htm "DEFTYPE (MGL-PAX:CLHS MGL-PAX:MACRO)"
-  [811f]: #x-28DREF-3AMAP-NAMES-20GENERIC-FUNCTION-29 "DREF:MAP-NAMES GENERIC-FUNCTION"
   [817d]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#deftype_lambda_list '"deftype lambda list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [81f7]: http://www.lispworks.com/documentation/HyperSpec/Body/s_fn.htm "FUNCTION (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [8269]: ../README.md#x-28MGL-PAX-3ADOCUMENT-OBJECT-2A-20GENERIC-FUNCTION-29 "MGL-PAX:DOCUMENT-OBJECT* GENERIC-FUNCTION"
+  [82e0]: #x-28METHOD-COMBINATION-20MGL-PAX-3ALOCATIVE-29 "METHOD-COMBINATION MGL-PAX:LOCATIVE"
   [83e1]: http://www.lispworks.com/documentation/HyperSpec/Body/e_cnd.htm "CONDITION (MGL-PAX:CLHS CONDITION)"
   [8490]: #x-28DREF-EXT-3AADD-DREF-ACTUALIZER-20FUNCTION-29 "DREF-EXT:ADD-DREF-ACTUALIZER FUNCTION"
   [882a]: #x-28DREF-EXT-3AXREF-LOCATIVE-TYPE-20FUNCTION-29 "DREF-EXT:XREF-LOCATIVE-TYPE FUNCTION"
@@ -1749,8 +1729,8 @@ the details, see the Elisp function `slime-goto-source-location`.
   [926d]: #x-28TYPE-20MGL-PAX-3ALOCATIVE-29 "TYPE MGL-PAX:LOCATIVE"
   [94d1]: #x-28DREF-3ALOCATIVE-ALIASES-20FUNCTION-29 "DREF:LOCATIVE-ALIASES FUNCTION"
   [97ba]: #x-28DREF-EXT-3ALOCATIVE-TYPE-20FUNCTION-29 "DREF-EXT:LOCATIVE-TYPE FUNCTION"
-  [99b0]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function '"setf function" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
-  [99b0a]: #x-28DREF-3ALOCATIVE-TYPES-20FUNCTION-29 "DREF:LOCATIVE-TYPES FUNCTION"
+  [99b0]: #x-28DREF-3ALOCATIVE-TYPES-20FUNCTION-29 "DREF:LOCATIVE-TYPES FUNCTION"
+  [99b05]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function '"setf function" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [9a71]: http://www.lispworks.com/documentation/HyperSpec/Body/f_specia.htm "SPECIAL-OPERATOR-P (MGL-PAX:CLHS FUNCTION)"
   [9b43]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "DEFPACKAGE (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [9b70]: http://www.lispworks.com/documentation/HyperSpec/Body/t_meth_1.htm "METHOD-COMBINATION (MGL-PAX:CLHS CLASS)"
@@ -1788,7 +1768,6 @@ the details, see the Elisp function `slime-goto-source-location`.
   [cda7]: #x-28DREF-3AXREF-20FUNCTION-29 "DREF:XREF FUNCTION"
   [cf08]: http://www.lispworks.com/documentation/HyperSpec/Body/r_use_va.htm "USE-VALUE (MGL-PAX:CLHS RESTART)"
   [d061]: #x-28DREF-3A-40GLOSSARY-20MGL-PAX-3ASECTION-29 "Glossary"
-  [d07c]: http://www.lispworks.com/documentation/HyperSpec/Body/d_declar.htm "DECLARATION (MGL-PAX:CLHS DECLARATION)"
   [d162]: http://www.lispworks.com/documentation/HyperSpec/Body/e_error.htm "ERROR (MGL-PAX:CLHS CONDITION)"
   [d2cb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_3.htm "DEFINE-SETF-EXPANDER (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [d3b3]: #x-28DREF-EXT-3ARESOLVE-2A-20GENERIC-FUNCTION-29 "DREF-EXT:RESOLVE* GENERIC-FUNCTION"
@@ -1821,7 +1800,6 @@ the details, see the Elisp function `slime-goto-source-location`.
   [f3cc]: #x-28MGL-PAX-3AMACRO-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:MACRO MGL-PAX:LOCATIVE"
   [f472]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defun.htm "DEFUN (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [f486]: #x-28DREF-EXT-3AXREF-LOCATIVE-20-28MGL-PAX-3AREADER-20DREF-3AXREF-29-29 "DREF-EXT:XREF-LOCATIVE (MGL-PAX:READER DREF:XREF)"
-  [f70b]: #x-28DREF-3ARESOLVE-ERROR-20FUNCTION-29 "DREF:RESOLVE-ERROR FUNCTION"
   [fe9f]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rest.htm "REST (MGL-PAX:CLHS FUNCTION)"
 
 * * *

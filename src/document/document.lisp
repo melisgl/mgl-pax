@@ -8,14 +8,12 @@
   (@browsing-live-documentation section)
   (@markdown-support section)
   (@codification section)
-  (@linking-to-code section)
-  (@linking-to-the-hyperspec section)
-  (@linking-to-sections section)
-  (@miscellaneous-documentation-printer-variables section)
-  (@documentation-utilities section)
+  (@linking section)
+  (@local-definition section)
   (@overview-of-escaping section)
   (@output-details section)
-  (@document-implementation-notes section))
+  (@document-implementation-notes section)
+  (@documentation-utilities section))
 
 ;;; This is the core of the DOCUMENT function, presented here for an
 ;;; overview.
@@ -34,7 +32,7 @@
 ;;; - PRINT-TOPLEVEL-SECTION-LIST for each PAGE-WRITTEN-P,
 ;;; - PRINT-TABLE-OF-CONTENTS for top-level sections,
 ;;; - add prev/next/up links to sections (FANCY-NAVIGATION),
-;;; - know what definitions are being documented and thus can be linked to.
+;;; - know what definitions are @LINKABLE.
 ;;;
 ;;; In the 2.5th pass, we add markdown reference link definitions,
 ;;; headers, footers, and convert markdown to other formats if
@@ -43,7 +41,8 @@
   (once-only (documentable stream page-specs)
     `(with-documentable-bindings (documentable)
        (with-link-maps ()
-         (let ((*pages* (page-specs-to-pages ,documentable ,stream
+         (let ((*local-references* ())
+               (*pages* (page-specs-to-pages ,documentable ,stream
                                              ,page-specs)))
            (with-headings ()
              ;; 1st pass
@@ -55,9 +54,10 @@
              ;; 2nd pass
              (let ((*first-pass* nil))
                (print-toplevel-section-lists *pages*)
-               ;; Initially, send output to the default page (built for
-               ;; STREAM). Note that on PAGE-BOUNDARIES, DOCUMENT-OBJECT
-               ;; (method () (dref t)) redirects the output.
+               ;; Initially, send output to the default page (built
+               ;; for STREAM). Note that on PAGE-BOUNDARIES,
+               ;; DOCUMENT-OBJECT* (method () (dref t)) redirects the
+               ;; output.
                (with-temp-output-to-page (,stream (last-elt *pages*))
                  (document-documentable ,documentable ,stream))
                ;; 2.5th pass
@@ -237,235 +237,94 @@
        ,@body)))
 
 
-;;; A LINK (a possible link target, really) is definition that resides
-;;; on PAGE. Note that the same definition may be written to multiple
-;;; pages.
+;;; A LINK (a possible link target, really) is a definition that
+;;; resides on PAGE. Note that the same definition may be written to
+;;; multiple pages.
 (defstruct link
   (definition nil :type dref)
-  ;; - STRING pages denote URLs. This is used to link to the hyperspec
-  ;;   and to external GLOSSARY-TERMs.
-  ;;
-  ;; - LINK pages are aliases: the LINK with the reference (PRINT
-  ;;   (CLHS FUNCTION)) is the LINK-PAGE of a LINK whose reference is
-  ;;   (PRINT FUNCTION).
-  ;;
-  ;; - NULL pages are to support "pax:" URLs for
-  ;;   *DOCUMENT-OPEN-LINKING*.
-  (page nil :type (or page string link null)))
+  ;; STRING pages denote URLs (see EXTERNAL-DREF-URLs). NULL pages are
+  ;; to support "pax:" URLs for *DOCUMENT-OPEN-LINKING*.
+  (page nil :type (or page string null)))
 
 ;;; Like MAKE-LINK, but override PAGE with GLOSSARY-TERM-URL if
 ;;; DEFINITION is a GLOSSARY-TERM with an URL.
-(defun make-link* (definition page)
-  (or (if (eq (dref-locative-type definition) 'glossary-term)
-          (when-let (glossary-term (resolve definition nil))
-            (when-let (url (glossary-term-url glossary-term))
-              (assert (stringp url))
-              (make-link :definition definition :page url))))
-      (make-link :definition definition :page page)))
+(defun make-link* (dref page)
+  (or (when-let (url (external-dref-url dref))
+        (make-link :definition dref :page url))
+      (make-link :definition dref :page page)))
 
-;;; A DREF::@NAME to LINKs map (name-to-links map, nlmap). Caches
-;;; LINKS-OF within a single DOCUMENT call. If not
-;;; *DOCUMENT-OPEN-LINKING*, then only stuff on on *CLOSED-NLMAP* may
-;;; be present.
-(defvar *open-nlmap*)
+;;; An EQUAL hash table, mapping a DREF in (NAME . LOCATIVE) form to
+;;; its LINK within a single DOCUMENT call. FINALIZE-PAGES populates
+;;; this after the first pass with all definitions that are being
+;;; documented. In case the same definition is documented on multiple
+;;; pages, links will go to the last such page.
+;;;
+;;; FIND-LINK may add more links in the second pass for
+;;; *DOCUMENT-OPEN-LINKING* and CLHS definitions.
+(defvar *links*)
 
-;;; After the first pass, this name-to-links map is populated the all
-;;; definitions that are being documented. Not used when
-;;; *DOCUMENT-OPEN-LINKING*.
-(defvar *closed-nlmap*)
+(defmacro link-key (dref)
+  (once-only ((dref dref))
+    `(cons (dref-name ,dref) (dref-locative ,dref))))
 
-;;; Whether definitions present in the running Lisp but not in
-;;; *CLOSED-NLMAP* can be linked with magic "pax:" URLs. This is to
-;;; support @BROWSING-LIVE-DOCUMENTATION.
-(defvar *document-open-linking* nil)
+(declaim (inline set-link))
+(defun set-link (key link)
+  (setf (gethash key *links*) link))
 
-;;; Return all possible LINKs for NAME in the order of linking
-;;; preference when there are duplicate LINK-REFERENCEs (e.g CLHS
-;;; aliases).
-(defgeneric links-of (name)
-  (:method (name)
-    (let* ((live-definitions (definitions* name))
-           ;; Gather all different DREF::@NAMEs. For example, if NAME
-           ;; is MGL-PAX, then this is '("mgl-pax" "MGL-PAX"), where
-           ;; one is for the ASDF:SYSTEM, the other is for the
-           ;; PACKAGE.
-           (names (remove-duplicates (cons name
-                                           (mapcar #'xref-name
-                                                   live-definitions))
-                                     :test #'equal))
-           (closed-links (loop for name in names
-                               append (closed-links name)))
-           (external-links (loop for name in names
-                                 append (external-links name)))
-           (preferred-links (if *document-open-linking*
-                                closed-links
-                                (append closed-links external-links)))
-           ;; For all LIVE-DEFINITIONS, use one of PREFFERED-LINKS or
-           ;; maybe create a new open link.
-           (preferred-live-links
-             ;; The order of these does not matter.
-             (loop for definition in live-definitions
-                   for link = (or (find-among-links definition preferred-links)
-                                  (and *document-open-linking*
-                                       (make-link* definition nil)))
-                   when link
-                     collect link)))
-      (append preferred-live-links
-              ;; The remaining static links (with references for which
-              ;; there is no definition in the running Lisp) must
-              ;; follow the live ones, so that FIND-LINK will find the
-              ;; live ones first. See
-              ;; MGL-PAX-TEST::TEST-DOCUMENT/OPEN/LIVE-VS-STATIC.
-              (set-difference (append closed-links external-links)
-                              preferred-live-links
-                              :key #'link-definition :test #'xref=))))
-  (:method ((xref xref))
-    (let* ((name (xref-name xref))
-           (links (links-of name)))
-      (loop for link in links
-            when (xref= xref (link-definition link))
-              collect link))))
-
-(defun closed-links (name)
-  (when (boundp '*closed-nlmap*)
-    (gethash name *closed-nlmap*)))
-
-(defun find-among-links (reference links)
-  (find reference links :key #'link-definition :test #'xref=))
-
-(defun ensure-in-open-nlmap (name)
-  (declare (optimize speed))
-  (if *first-pass*
-      (closed-links name)
-      ;; This could be CLRHASHed if it gets too large.
-      (let ((open-nlmap *open-nlmap*))
-        (multiple-value-bind (links found) (gethash name open-nlmap)
-          (if found
-              links
-              (setf (gethash name open-nlmap) (links-of name)))))))
-
-;;; Iterate over LINKs with DREFs whose XREF-NAME is EQUAL to NAME.
-(defmacro do-links ((link name) &body body)
-  (once-only (name)
-    `(dolist (,link (ensure-in-open-nlmap ,name))
-       ,@body)))
-
-(defun add-link (nlmap link &optional name)
-  (let* ((dref (link-definition link))
-         (name (or name (dref-name dref))))
-    (push link (gethash name nlmap))))
-
-;;; A list of references with special rules for linking (see
-;;; @LOCAL-REFERENCES). The reference being documented is always on
-;;; this list (see DOCUMENTING-REFERENCE). Arguments of functions and
-;;; similar typically also are. Bound by WITH-LOCAL-REFERENCES.
-(defvar *local-references*)
-
-(defmacro with-link-maps (() &body body)
-  `(let ((*open-nlmap* (make-hash-table :test #'equal))
-         (*closed-nlmap* (make-hash-table :test #'equal))
-         (*local-references* ())
-         (*link-to-id* (make-hash-table :test #'eq))
-         (*id-to-link* (make-hash-table :test #'equal)))
-     (locally ,@body)))
+(declaim (inline get-link))
+(defun get-link (key)
+  (gethash key *links*))
 
 ;;; Called at the end of the first pass. Reverse PAGE-DEFINITIONS so
-;;; that it's in depth-first order, and add a LINK to *CLOSED-NLMAP*
-;;; for all PAGE-DEFINITIONS of PAGES.
+;;; that it's in depth-first order, and add a LINK to *LINKS* for all
+;;; definitions on each page.
 (defun finalize-pages (pages)
   (dolist (page pages)
     (setf (page-definitions page) (reverse (page-definitions page)))
     (dolist (dref (page-definitions page))
-      (let ((name (dref-name dref)))
-        (unless (find dref (gethash name *closed-nlmap*)
-                      :key #'link-definition :test #'xref=)
-          (add-link *closed-nlmap* (make-link* dref page)))))))
-
+      (set-link (link-key dref) (make-link* dref page)))))
 
-;;;; Querying global and local definitions
+;;; Whether all definitions present in the running Lisp are @LINKABLE
+;;; with magic "pax:" URLs. This is to support
+;;; @BROWSING-LIVE-DOCUMENTATION.
+(defvar *document-open-linking* nil)
 
 (defun find-link (dref)
   (declare (type dref dref))
-  (let ((name (dref-name dref))
-        (locative (dref-locative dref)))
-    (do-links (link name)
-      (when (equal locative (dref-locative (link-definition link)))
-        (return link)))))
+  (assert (not *first-pass*))
+  (let ((key (link-key dref)))
+    (or (get-link key)
+        (when (or *document-open-linking* (external-dref-p dref))
+          (set-link key (make-link* dref nil)))
+        ;; Maybe fall back on the CLHS definition.
+        (when-let (clhs-link (and *document-link-to-hyperspec*
+                                  (clhs-link dref)))
+          (set-link key clhs-link)))))
 
-;;; Return a list of all DREFs whose XREF-NAME matches NAME, that is,
-;;; with NAME as their XREF-NAME they would resolve to the same thing.
-;;;
-;;; If LOCAL is NIL, only global definitions are considered for
-;;; matching. If LOCAL is :EXCLUDE, then only those global references
-;;; which are not local references are considered. If LOCAL is
-;;; :INCLUDE, then both global and local references are considered.
-(defun definitions-with-name (name &key local)
-  (let ((global-refs (global-definitions-with-name name)))
-    (if local
-        (let ((local-refs (local-definitions-with-name name)))
-          (if (eq local :include)
-              (nconc global-refs local-refs)
-              (set-difference global-refs local-refs :test #'xref=)))
-        global-refs)))
-
-(defun global-definitions-with-name (name)
-  (let ((result ()))
-    (do-links (link name)
-      (let ((dref (link-definition link)))
-        (push dref result)))
-    result))
-
-(defun has-global-definition-p (name)
-  (do-links (link name)
-    (return link)))
-
-(defun global-definition-p (reference)
-  (let ((name (xref-name reference)))
-    (do-links (link name)
-      (return link))))
-
-(declaim (inline xref-name=))
-(defun xref-name= (name ref)
-  (equal name (xref-name ref)))
-
-(defun local-definitions-with-name (name)
-  (remove-if-not (lambda (ref)
-                   (xref-name= name ref))
-                 *local-references*))
-
-(defun has-local-reference-p (name)
-  (find name *local-references* :test #'xref-name=))
-
-(defun local-reference-p (reference)
-  (find reference *local-references* :test #'xref=))
-
-(defun has-reference-p (name)
-  (or (has-global-definition-p name)
-      (has-local-reference-p name)))
+(defun clhs-link (dref)
+  (let ((clhs-dref (clhs-dref (dref-name dref) (dref-locative dref))))
+    (when clhs-dref
+      (or (get-link (link-key clhs-dref))
+          ;; Ensure that if two CLHS DREFs are XREF=, then they are
+          ;; EQ, so they have the same id (see ENSURE-LINK-ID).
+          (set-link (link-key clhs-dref) (make-link* clhs-dref nil))))))
 
 
-;;; Follow LINK-PAGE if it is a LINK, and return the LINK it
-;;; eventually points to.
-(defun unaliased-link (link)
+;;; Increment the link counter for the current page and return the
+;;; link id.
+(defun link-to (link)
   (declare (type link link))
-  (if (link-p (link-page link))
-      (unaliased-link (link-page link))
-      link))
+  (when (let ((page (link-page link)))
+          (or (null page)
+              (eq *page* page)
+              (stringp page)
+              (and (page-uri-fragment *page*)
+                   (page-uri-fragment page))))
+    (setf (gethash link (page-used-links *page*)) t)
+    (ensure-link-id link)))
 
-;;; For the LINK to DREF, increment the link counter for the current
-;;; page and return the link id.
 (defun link-to-definition (dref)
-  (declare (type dref dref))
-  (let ((link (unaliased-link (find-link dref))))
-    (assert link)
-    (when (let ((page (link-page link)))
-            (or (null page)
-                (eq *page* page)
-                (stringp page)
-                (and (page-uri-fragment *page*)
-                     (page-uri-fragment page))))
-      (setf (gethash link (page-used-links *page*)) t)
-      (ensure-link-id link))))
+  (link-to (find-link dref)))
 
 ;;; Link ids are short hashes (as STRINGs), and they go into markdown
 ;;; reference links. Due to possible collisions, they are
@@ -489,177 +348,35 @@
   (gethash id *id-to-link*))
 
 (defun definition-page (dref)
-  (let ((link (find-link dref)))
-    (when link
-      (link-page (unaliased-link link)))))
+  (when-let (link (find-link dref))
+    (link-page link)))
+
+(defmacro with-link-maps (() &body body)
+  `(let ((*links* (make-hash-table :test #'equal))
+         (*link-to-id* (make-hash-table :test #'eq))
+         (*id-to-link* (make-hash-table :test #'equal)))
+     (locally ,@body)))
 
 
-(defsection @linking-to-the-hyperspec (:title "Linking to the Hyperspec")
-  (*document-link-to-hyperspec* variable)
-  (*document-hyperspec-root* variable))
+(defsection @documentable (:title "DOCUMENTABLE")
+  "The DOCUMENTABLE argument of DOCUMENT may be a single object (e.g.
+  `#'PRINT`'), a [definition][dref class] such as `(DREF 'PRINT
+  'FUNCTION)`, a string, or a nested list of these. More precisely,
+  DOCUMENTABLE is one of the following:
 
-(defvar *document-link-to-hyperspec* t
-  "If true, link symbols found in code to the Common Lisp Hyperspec
-  unless there is a definition in the running Lisp that is being
-  DOCUMENTed.
-
-  Locatives work as expected (see *DOCUMENT-LINK-CODE*): `\\FIND-IF`
-  links to FIND-IF, `\\FUNCTION` links to FUNCTION, and
-  `[FUNCTION][type]` links to [FUNCTION][type].
-
-  [Autolinking][ @explicit-and-autolinking section] to T and NIL is
-  [suppressed][ @suppressed-links]. If desired, use `[T][]` (that
-  links to [T][]) or `[T][constant]` (that links to [T][constant]).
-
-  Note that linking explicitly with the CLHS locative is not subject
-  to the value of this variable.")
-
-(defvar *document-hyperspec-root*
-  "http://www.lispworks.com/documentation/HyperSpec/"
-  """A \URL of the Common Lisp Hyperspec. The default value
-  is the canonical location. When [invoked from Emacs][
-  @browsing-live-documentation], the Elisp variable
-  `common-lisp-hyperspec-root` is in effect.""")
-
-;;; Assumes that REFERENCE is canonical.
-(defun find-clhs-url (reference)
-  (when (eq (xref-locative-type reference) 'clhs)
-    (let* ((name (xref-name reference))
-           (locative (xref-locative-args reference))
-           (locative-type (locative-type locative)))
-      ;; This parallels LOCATE* (METHOD () (T (EQL CLHS) T)).
-      (cond ((eq locative-type 'glossary-term)
-             (find-hyperspec-glossary-entry-url name
-                                                *document-hyperspec-root*))
-            ((eq locative-type 'section)
-             (or (find-hyperspec-issue-url name *document-hyperspec-root*)
-                 (find-hyperspec-section-url name
-                                             *document-hyperspec-root*)))
-            (t
-             (find-hyperspec-definition-url name locative
-                                            *document-hyperspec-root*))))))
-
-(defun clhs-definitions (name)
-  (mapcar (lambda (locative)
-            ;; We could use LOCATE, but MAKE-INSTANCE is more direct.
-            (make-instance 'clhs-dref
-                           :name name
-                           :locative (if locative
-                                         `(clhs ,locative)
-                                         ;; The Hyperspec disambiguation page
-                                         'clhs)))
-          (hyperspec-locatives-for-name name)))
-
-(defun clhs-documentations (name)
-  (let ((*clhs-substring-match* nil))
-    (ensure-list (or (dref name '(clhs glossary-term) nil)
-                     (dref name '(clhs section) nil)))))
-
-(defun make-clhs-alias-link (link)
-  (let* ((dref (link-definition link))
-         (name (dref-name dref))
-         (locative (dref-locative dref))
-         (locative-args (locative-args locative)))
-    (assert (eq (locative-type locative) 'clhs))
-    (when locative-args
-      (make-link :definition (or (dref name locative-args nil)
-                                 ;; There is no live definition. Fake a
-                                 ;; DREF because pretty much everything
-                                 ;; else is a DREF.
-                                 (make-instance 'dref
-                                                :name name
-                                                :locative locative-args))
-                 :page link))))
-
-(defun clhs-definition-links (name)
-  (when *document-link-to-hyperspec*
-    (loop for dref in (clhs-definitions name)
-          append (let ((clhs-link (make-link
-                                   :definition dref
-                                   :page (find-clhs-url dref))))
-                   (let ((alias (make-clhs-alias-link clhs-link)))
-                     (if alias
-                         (list alias clhs-link)
-                         (list clhs-link)))))))
-
-(defun clhs-documentation-links (name)
-  (loop for dref in (clhs-documentations name)
-        collect (make-link :definition dref
-                           :page (find-clhs-url dref))))
-
-(defun clhs-links (name)
-  (append (clhs-definition-links name)
-          (clhs-documentation-links name)))
-
-(defun filter-clhs-references (refs)
-  (remove 'clhs refs :key #'xref-locative-type))
-
-;;; Just for the generated docstrings. See CLHS locative.
-(defvar *format-directive-alias-links* nil
-  #.(with-output-to-string (out)
-      (loop for alias in *hyperspec-format-directive-aliases*
-            for i upfrom 0
-            do (unless (zerop i)
-                 (if (zerop (mod i 4))
-                     (format out "~%")
-                     (format out " ")))
-               (format out "[~A][clhs]" (escape-markdown alias)))))
-(defvar *reader-macro-alias-links* nil
-  #.(with-output-to-string (out)
-      (loop for alias in *hyperspec-reader-macro-char-aliases*
-            for i upfrom 0
-            do (unless (zerop i)
-                 (if (zerop (mod i 4))
-                     (format out "~%")
-                     (format out " ")))
-               (format out "[~A][clhs]" (escape-markdown alias)))))
-
-
-
-;;;; Beginnings of abstracting CLHS to external references. This could
-;;;; serve the needs of e.g. linking to the MOP.
-
-(defun external-locative-p (locative)
-  (eq (locative-type locative) 'clhs))
-
-(defun external-reference-p (reference)
-  (external-locative-p (xref-locative reference)))
-
-(defun external-reference-url (reference)
-  (find-clhs-url (locate reference)))
-
-(defun external-links (name)
-  (append (clhs-links name)
-          (glossary-term-external-links name)))
-
-(defun glossary-term-external-links (name)
-  (when-let (dref (dref name 'glossary-term nil))
-    (when-let (url (glossary-term-url (resolve dref)))
-      (list (make-link :definition dref :page url)))))
-
-(defun filter-external-references (references)
-  (filter-clhs-references references))
-
-(defun find-external-link (xref)
-  (let ((*document-link-to-hyperspec* t))
-    (dolist (link (external-links (xref-name xref)))
-      (when (xref= (link-definition link) xref)
-        (return link)))))
-
-
-(defsection @documentables (:title "Documentables")
- "- The DOCUMENTABLE argument may be a [DREF][class] or anything else
+  - _single definition designator_: A [DREF][class] or anything else
     that is LOCATEable. This includes non-DREF [XREF][class]s and
-    first-class objects such as [FUNCTION][class]s.
+    first-class objects such as [FUNCTION][class]s. The generated
+    documentation typically includes the definition's DOCSTRING. See
+    @OUTPUT-DETAILS for more.
 
-  - If DOCUMENTABLE is a string, then it is processed like a docstring
-    in DEFSECTION. That is, with [docstring sanitization]
-    [@markdown-in-docstrings], @CODIFICATION, and linking (see
-    @LINKING-TO-CODE, @LINKING-TO-THE-HYPERSPEC).
+  - _docstring_: A string, in which case it is processed like a
+    docstring in DEFSECTION. That is, with [docstring sanitization]
+    [@markdown-in-docstrings], @CODIFICATION, and @LINKING.
 
-  - Finally, DOCUMENTABLE may be a nested list of LOCATEable objects
-    and docstrings. The structure of the list is unimportant. The
-    objects in it are documented in depth-first order.")
+  - _list of documentables_: A nested list of LOCATEable objects and
+    docstrings. The objects in it are documented in depth-first order.
+    The structure of the list is otherwise unimportant.")
 
 (defvar *document-tight* nil)
 
@@ -796,7 +513,7 @@
 
 (defsection @document-function (:title "The DOCUMENT Function")
   (document function)
-  (@documentables section)
+  (@documentable section)
   (@document-return section)
   (@pages section)
   (@package-and-readtable section))
@@ -811,9 +528,9 @@
 
 (defun/autoloaded document (documentable &key (stream t) pages (format :plain))
   """Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
-  FORMAT is a [3BMD][3bmd] output format (currently one of :MARKDOWN,
-  :HTML and :PLAIN). STREAM may be a [STREAM][type] object, T or NIL
-  as with [CL:FORMAT][].
+  FORMAT is a @3BMD output format (currently one of :MARKDOWN, :HTML
+  and :PLAIN). STREAM may be a [STREAM][type] object, T or NIL as with
+  [CL:FORMAT][].
 
   To look up the documentation of the DOCUMENT function itself:
 
@@ -825,7 +542,7 @@
 
   To document a SECTION:
 
-      (document @pax-manual)
+      (document pax::@pax-manual)
 
   To generate the documentation for separate libraries with automatic
   cross-links:
@@ -840,12 +557,12 @@
       (document (dref:locate 'foo 'type))
 
   There are quite a few special variables that affect how output is
-  generated, see @CODIFICATION, @LINKING-TO-CODE,
-  @LINKING-TO-SECTIONS, and
+  generated, see @CODIFICATION, @LINKING, @LINKING-TO-THE-HYPERSPEC,
+  and @LINKING-TO-SECTIONS, and
   @MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES.
 
   For the details, see the following sections, starting with
-  @DOCUMENTABLES. Also see @EXTENSION-API and DOCUMENT-OBJECT*."""
+  @DOCUMENTABLE. Also see @EXTENSION-API and DOCUMENT-OBJECT*."""
   ;; Autoloading mgl-pax/transcribe on demand would be enough for most
   ;; situations, but when documenting PAX itself, it would cause the
   ;; documentables to change from the 1st pass to the 2nd.
@@ -887,7 +604,7 @@
         (funcall fn))))
 
 
-(defsection @pages (:title "Pages")
+(defsection @pages (:title "PAGES")
   """The PAGES argument of DOCUMENT is to create multi-page documents
   by routing some of the generated output to files, strings or
   streams. PAGES is a list of page specification elements. A page spec
@@ -895,50 +612,6 @@
   :URI-FRAGMENT, :SOURCE-URI-FN, :HEADER-FN and :FOOTER-FN. OBJECTS is
   a list of objects (references are allowed but not required) whose
   documentation is to be sent to :OUTPUT.
-
-  Documentation is initially sent to a default stream (the STREAM
-  argument of DOCUMENT), but output is redirected if the thing being
-  currently documented is the :OBJECT of a PAGE-SPEC.
-
-  :OUTPUT can be a number things:
-
-  - If it's NIL, then output will be collected in a string.
-
-  - If it's T, then output will be sent to *STANDARD-OUTPUT*.
-
-  - If it's a stream, then output will be sent to that stream.
-
-  - If it's a list whose first element is a string or a pathname, then
-    output will be sent to the file denoted by that and the rest of
-    the elements of the list are passed on to CL:OPEN. One extra
-    keyword argument is :ENSURE-DIRECTORIES-EXIST. If it's true,
-    ENSURE-DIRECTORIES-EXIST will be called on the pathname before
-    it's opened.
-
-  Note that even if PAGES is specified, STREAM acts as a catch all,
-  absorbing the generated documentation for references not claimed by
-  any pages.
-
-  :HEADER-FN, if not NIL, is a function of a single stream argument,
-  which is called just before the first write to the page. Since
-  :FORMAT :HTML only generates HTML fragments, this makes it possible
-  to print arbitrary headers, typically setting the title, CSS
-  stylesheet, or charset.
-
-  :FOOTER-FN is similar to :HEADER-FN, but it's called after the last
-  write to the page. For HTML, it typically just closes the body.
-
-  :URI-FRAGMENT is a string such as `"doc/manual.html"` that specifies
-  where the page will be deployed on a webserver. It defines how links
-  between pages will look. If it's not specified and :OUTPUT refers to
-  a file, then it defaults to the name of the file. If :URI-FRAGMENT
-  is NIL, then no links will be made to or from that page.
-
-  Finally, :SOURCE-URI-FN is a function of a single, REFERENCE
-  argument. If it returns a value other than NIL, then it must be a
-  string representing an \URI. This affects
-  *DOCUMENT-MARK-UP-SIGNATURES* and *DOCUMENT-FANCY-HTML-NAVIGATION*.
-  Also see MAKE-GIT-SOURCE-URI-FN.
 
   PAGES may look something like this:
 
@@ -974,7 +647,53 @@
      :uri-fragment "doc/user/pax-manual.html"
      :header-fn 'write-html-header
      :footer-fn 'write-html-footer))
-  ```""")
+  ```
+
+  Documentation is initially sent to a default stream (the STREAM
+  argument of DOCUMENT), but output is redirected if the thing being
+  currently documented is the :OBJECT of a PAGE-SPEC.
+
+  - :OUTPUT can be a number things:
+
+      - If it's NIL, then output will be collected in a string.
+
+      - If it's T, then output will be sent to *STANDARD-OUTPUT*.
+
+      - If it's a stream, then output will be sent to that stream.
+
+      - If it's a list whose first element is a string or a pathname, then
+        output will be sent to the file denoted by that and the rest of
+        the elements of the list are passed on to CL:OPEN. One extra
+        keyword argument is :ENSURE-DIRECTORIES-EXIST. If it's true,
+        ENSURE-DIRECTORIES-EXIST will be called on the pathname before
+        it's opened.
+
+      Note that even if PAGES is specified, STREAM acts as a catch all,
+      absorbing the generated documentation for references not claimed by
+      any pages.
+
+  - :HEADER-FN, if not NIL, is a function of a single stream argument,
+    which is called just before the first write to the page. Since
+    :FORMAT :HTML only generates HTML fragments, this makes it
+    possible to print arbitrary headers, typically setting the title,
+    CSS stylesheet, or charset.
+
+  - :FOOTER-FN is similar to :HEADER-FN, but it's called after the
+     last write to the page. For HTML, it typically just closes the
+     body.
+
+  - :URI-FRAGMENT is a string such as `"doc/manual.html"` that specifies
+    where the page will be deployed on a webserver. It defines how
+    links between pages will look. If it's not specified and :OUTPUT
+    refers to a file, then it defaults to the name of the file. If
+    :URI-FRAGMENT is NIL, then no links will be made to or from that
+    page.
+
+  - :SOURCE-URI-FN is a function of a single, [DREF][class] argument.
+    If it returns a value other than NIL, then it must be a string
+    representing an \URI. This affects *DOCUMENT-MARK-UP-SIGNATURES*
+    and *DOCUMENT-FANCY-HTML-NAVIGATION*. Also see
+    MAKE-GIT-SOURCE-URI-FN.""")
 
 ;;; Convert the PAGES argument of DOCUMENT to PAGE objects.
 (defun page-specs-to-pages (documentable stream page-specs)
@@ -1041,6 +760,71 @@
                         (locate object nil))
         when dref
           collect dref))
+
+
+(defsection @package-and-readtable (:title "Package and Readtable")
+  "While generating documentation, symbols may be read (e.g. from
+  docstrings) and printed. What values of *PACKAGE* and *READTABLE*
+  are used is determined separately for each definition being
+  documented.
+
+  - If the values of *PACKAGE* and *READTABLE* in effect at the time
+    of definition were captured (e.g. by DEFINE-LOCATIVE-TYPE and
+    DEFSECTION), then they are used.
+
+  - Else, if the definition has a @HOME-SECTION (see below), then the
+    home section's SECTION-PACKAGE and SECTION-READTABLE are used.
+
+  - Else, if the definition has an argument list, then the package of
+    the first argument that's not external in any package is used.
+
+  - Else, if the definition is DREF::@NAMEd by a symbol, then its
+    SYMBOL-PACKAGE is used, and *READTABLE* is set to the standard
+    readtable `(NAMED-READTABLES:FIND-READTABLE :COMMON-LISP)`.
+
+  - Else, *PACKAGE* is set to the `CL-USER` package and *READTABLE* to
+    the standard readtable.
+
+  The values thus determined come into effect after the name itself is
+  printed, for printing of the arglist and the docstring.
+
+      CL-USER> (pax:document #'foo)
+      - [function] FOO <!> X Y &KEY (ERRORP T)
+
+          Do something with X and Y.
+
+  In the above, the `<!>` marks the place where *PACKAGE* and
+  *READTABLE* are bound."
+  (@home-section section)
+  (*document-normalize-packages* variable))
+
+(defsection @home-section (:title "Home Section")
+  "[home-section function][docstring]")
+
+(defun guess-package-and-readtable (reference arglist)
+  (let ((home-section (first (find-parent-sections reference))))
+    (if home-section
+        (values (section-package home-section)
+                (section-readtable home-section))
+        (values (or (guess-package-from-arglist arglist)
+                    (and (symbolp (xref-name reference))
+                         (symbol-package (xref-name reference)))
+                    (find-package :cl-user))
+                named-readtables::*standard-readtable*))))
+
+;;; Unexported argument names are highly informative about *PACKAGE*
+;;; at read time. No one ever uses fully-qualified internal symbols
+;;; from another package for arguments, right?
+(defun guess-package-from-arglist (arglist)
+  (let ((args (or (ignore-errors (dref::function-arg-names arglist))
+                  (ignore-errors (dref::macro-arg-names arglist)))))
+    (dolist (arg args)
+      (unless (external-symbol-in-any-package-p arg)
+        (return (symbol-package arg))))))
+
+(defvar *document-normalize-packages* t
+  "Whether to print `[in package <package-name>]` in the documentation
+  when the package changes.")
 
 
 ;;;; DOCUMENT-OBJECT
@@ -1176,7 +960,9 @@
                            stream :format *format*)))
       (map-markdown-block-parses (lambda (tree)
                                    (add-parse-tree
-                                    (post-process-for-w3m (list tree))))
+                                    (if (eq *html-subformat* :w3m)
+                                        (postprocess-for-w3m (list tree))
+                                        (list tree))))
                                  markdown-string)
       (loop repeat max-n-tree-blocks
             do (add-parse-tree ())))))
@@ -1186,8 +972,8 @@
                    (parse-tree-p tree :reference))
                  tree))
 
-;;; Emit markdown definitions for links (in *LINKS*) to REFERENCE
-;;; objects that were linked to on the current page.
+;;; Emit markdown definitions for links that were linked to on the
+;;; current page.
 (defun write-markdown-reference-style-link-definitions (stream)
   (let ((used-links (sort (hash-table-keys (page-used-links *page*))
                           #'string< :key #'link-id))
@@ -1257,11 +1043,9 @@
 ;;;; URIs of stuff
 
 (defun object-to-uri (object)
-  (let ((dref (locate object)))
-    (when dref
-      (let ((link (find-link dref)))
-        (when link
-          (link-to-uri link))))))
+  (when-let (dref (locate object))
+    (when-let (link (find-link dref))
+      (link-to-uri link))))
 
 ;;; With w3m, the URLs are like "pax:clhs", but with MGL-PAX/WEB, they
 ;;; are like "http://localhost:8888/pax:clhs", so we need an extra /.
@@ -1335,8 +1119,8 @@
                exclude-first-line-p (paragraphp t))
   "Write DOCSTRING to STREAM, [sanitizing the markdown]
   [@markdown-in-docstrings] from it, performing @CODIFICATION and
-  @LINKING-TO-CODE, finally prefixing each line with INDENTATION. The
-  prefix is not added to the first line if EXCLUDE-FIRST-LINE-P. If
+  @LINKING, finally prefixing each line with INDENTATION. The prefix
+  is not added to the first line if EXCLUDE-FIRST-LINE-P. If
   PARAGRAPHP, then add a newline before and after the output."
   (when (and docstring
              (not (equal docstring ""))
@@ -1421,28 +1205,7 @@
                       out))))
 
 
-;;;; Post-process the markdown parse tree to make it prettier on w3m
-;;;; and maybe make relative links absolute.
-
-(defun post-process-for-w3m (parse-tree)
-  (if (eq *html-subformat* :w3m)
-      (flet ((translate (parent tree)
-               (declare (ignore parent))
-               (cond ((eq (first tree) :code)
-                      `(:strong ,tree))
-                     ((eq (first tree) :verbatim)
-                      (values `((:raw-html #.(format nil "<i>~%"))
-                                ,(indent-verbatim tree) (:raw-html "</i>"))
-                              nil t))
-                     (t
-                      (values `((:raw-html #.(format nil "<i>~%"))
-                                ,(indent-code-block tree)
-                                (:raw-html "</i>"))
-                              nil t)))))
-        (map-markdown-parse-tree '(:code :verbatim 3bmd-code-blocks::code-block)
-                                 '() nil #'translate parse-tree))
-      parse-tree))
-
+;;;; Including docstrings
 
 (defun include-docstrings (parse-tree)
   (map-markdown-parse-tree (list :reference-link) () nil
@@ -1478,20 +1241,18 @@
   (let ((label (pt-get tree :label))
         (definition (parse-tree-to-text (pt-get tree :definition) :deemph t)))
     (nth-value-or 0
-      (when (eq (read-locative-from-noisy-string definition) 'docstring)
-        (multiple-value-bind (name locative foundp)
-            (read-reference-from-string (parse-tree-to-text label :deemph t))
-          (when foundp
-            (if-let (dref (dref name locative nil))
-              (when-let (docstring (docstring dref))
-                (values (or (parse-markdown (sanitize-docstring docstring))
-                            '(""))
-                        ;; Detecting circular includes would be hard
-                        ;; because the `recurse' return value is
-                        ;; handled in the caller of this function.
-                        t t))
-              (warn "~@<Including ~S failed because ~S ~S cannot be ~Sd~:@>"
-                    'docstring name locative 'locate)))))
+      (when (eq (parse-locative definition) 'docstring)
+        (let ((label-string (parse-tree-to-text label :deemph t)))
+          (if-let (dref (parse-dref label-string))
+            (when-let (docstring (docstring dref))
+              (values (or (parse-markdown (sanitize-docstring docstring))
+                          '(""))
+                      ;; Detecting circular includes would be hard
+                      ;; because the `recurse' return value is
+                      ;; handled in the caller of this function.
+                      t t))
+            (warn "~@<Including ~S failed because ~S cannot be ~Sd~:@>"
+                  'docstring label-string 'locate))))
       tree)))
 
 
@@ -1503,8 +1264,7 @@
 
 (defvar *document-uppercase-is-code* t
   """When true, @INTERESTING @NAMEs extracted from @CODIFIABLE @WORDs
-  are assumed to be code as if they were marked up with backticks. For
-  example, this docstring
+  marked up as code with backticks. For example, this docstring
 
       "T PRINT CLASSes SECTION *PACKAGE* MGL-PAX ASDF
       CaMeL Capital"
@@ -1523,7 +1283,7 @@
   [handle-codification-escapes function][docstring]""")
 
 (define-glossary-term @codifiable (:title "codifiable")
-  "A @WORD is _codifiable_ iff
+  "A @WORD is _codifiable_ if
 
   - it has a single uppercase character (e.g. it's `T`) and no
     lowercase characters at all, or
@@ -1539,21 +1299,21 @@
    (uppercase-core-bounds string)))
 
 (define-glossary-term @interesting (:title "interesting")
-  "A @NAME is _interesting_ iff
+  "A @NAME is _interesting_ if
 
   - it names a symbol external to its package, or
 
   - it is at least 3 characters long and names an interned symbol, or
 
-  - it names a [local reference][@LOCAL-REFERENCES].
+  - it names a @LOCAL-DEFINITION.
 
   See @PACKAGE-AND-READTABLE.")
 
-(defun interesting-name-p (xref-name name)
-  (or (and (symbolp xref-name)
-           (or (<= 3 (length name))
-               (external-symbol-p xref-name)))
-      (has-local-reference-p xref-name)))
+(defun interesting-name-p (raw name)
+  (or (and (symbolp name)
+           (or (<= 3 (length raw))
+               (external-symbol-p name)))
+      (has-local-reference-p name)))
 
 ;;; The core of the implementation of *DOCUMENT-UPPERCASE-IS-CODE*.
 ;;;
@@ -1594,7 +1354,7 @@
          ;; E.g. "\\MGL-PAX" -> "MGL-PAX"
          (values (list (subseq word 1)) t))))
 
-;;; Find the [approximately] longest @NAME in WORD. Return a 3bmd
+;;; Find the [approximately] longest @NAME in WORD. Return a 3BMD
 ;;; parse tree fragment with that substring marked up as code and the
 ;;; suffixes downcased (so that CLASSES turns into `CLASS`es).
 ;;;
@@ -1602,18 +1362,26 @@
 ;;; already handled in the caller TRANSLATE-UPPERCASE-WORD. Trims
 ;;; separators and depluralizes.
 (defun codify-uppercase-word (word)
-  (multiple-value-bind (xref-name name) (parse-uppercase-word word)
-    (when (and name (interesting-name-p xref-name name))
-      (let ((pos (search name word :test #'char-equal)))
-        (assert pos)
-        (values `(,@(when (plusp pos)
-                      `(,(subseq word 0 pos)))
-                  (:code ,(maybe-downcase name))
-                  ,@(let ((tail-pos (+ pos (length name))))
-                      (when (< tail-pos (length word))
-                        ;; CLASSES -> `CLASS`es
-                        `(,(string-downcase (subseq word tail-pos))))))
-                t)))))
+  (when-let (match (parse-uppercase-word word))
+    (destructuring-bind (raw name) match
+      (when (and raw (interesting-name-p raw name))
+        (let ((pos (search raw word :test #'char-equal)))
+          (assert pos)
+          (values `(,@(when (plusp pos)
+                        `(,(subseq word 0 pos)))
+                    (:code ,(maybe-downcase raw))
+                    ,@(let ((tail-pos (+ pos (length raw))))
+                        (when (< tail-pos (length word))
+                          ;; CLASSES -> `CLASS`es
+                          `(,(string-downcase (subseq word tail-pos))))))
+                  t))))))
+
+(defun parse-uppercase-word (word)
+  (flet ((match (raw name)
+           (when (and (notany #'lower-case-p raw)
+                      (interesting-name-p raw name))
+             (list raw name))))
+    (find-name #'match word :pass-raw t :trim t :depluralize t)))
 
 ;;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings and :EMPH
 ;;; (to recognize *VAR*). Also, perform consistency checking of
@@ -1712,13 +1480,12 @@
 
 
 (defvar *document-downcase-uppercase-code* nil
-  """If true, then all Markdown inline code (that is, `stuff between
-  backticks`, including those found if *DOCUMENT-UPPERCASE-IS-CODE*)
-  which has no lowercase characters is downcased in the output.
-  Characters of literal strings in the code may be of any case. If
-  this variable is :ONLY-IN-MARKUP and the output format does not
-  support markup (e.g. it's :PLAIN), then no downcasing is performed.
-  For example,
+  """If true, then all @MARKDOWN/INLINE-CODE (e.g. \`code\`, _which
+  renders as_ `\code`) – including @CODIFICATION – which has no
+  lowercase characters is downcased in the output. Characters of
+  literal strings in the code may be of any case. If this variable is
+  :ONLY-IN-MARKUP and the output format does not support markup (e.g.
+  it's :PLAIN), then no downcasing is performed. For example,
 
       `(PRINT "Hello")`
 
@@ -1734,10 +1501,14 @@
   is not altered because it has lowercase characters.
 
   If the first two characters are backslashes, then no downcasing is
-  performed, in addition to @PREVENTING-AUTOLINKING. Use this to mark
+  performed, in addition to @ESCAPING-AUTOLINKING. Use this to mark
   inline code that's not Lisp.
 
       Press `\\M-.` in Emacs.""")
+
+(define-glossary-term @markdown/inline-code
+    (:title "Markdown inline code"
+     :url "https://daringfireball.net/projects/markdown/syntax#code"))
 
 (defun/autoloaded downcasingp ()
   (or (and *document-downcase-uppercase-code*
@@ -1810,28 +1581,46 @@
                     (funcall fn char nil in-string))))))
 
 
-(defsection @linking-to-code (:title "Linking to Code")
-  """In this section, we describe all ways of linking to code
-  available when *DOCUMENT-LINK-CODE* is true.
+(defsection @linking (:title "Linking")
+  """PAX supports linking to [definitions][DREF class] either with
+  explicit @REFLINKs or with @AUTOLINKs.
 
-  _Note that invoking [`\\M-.`][@navigating-in-emacs section] on the
-  @NAME of any of the following links will disambiguate based the
-  textual context, determining the locative. In a nutshell, if `\\M-.`
-  works without popping up a list of choices, then the documentation
-  will contain a single link._"""
+  When generating offline documentation, only the definitions in
+  @DOCUMENTABLE may be @LINKABLE, but when
+  @BROWSING-LIVE-DOCUMENTATION, everything is linkable as
+  documentation is generated on-demand.
+
+  Many examples in this section link to standard Common Lisp
+  definitions. In the offline case, these will link to [external
+  \URLs][*DOCUMENT-HYPERSPEC-ROOT*], while in the live case to
+  disambiguation pages that list the definition in the running Lisp
+  and in the Hyperspec.
+
+  _Invoking [`\\M-.`][@navigating-in-emacs section] on WORD or NAME in
+  any of the following examples will disambiguate based on the textual
+  context, determining the locative._ This is because navigation and
+  linking use the same @PARSING algorithm, although linking is a bit
+  more strict about trimming, depluralization, and it performs
+  @FILTERING-LINKS. On the other hand, `\\M-.` cannot visit the
+  [CLHS][locative] references because there are no associated source
+  locations."""
+  (@reflink section)
+  (@autolink section)
+  (@linking-to-the-hyperspec section)
+  (@linking-to-sections section)
+  (@filtering-links section)
+  (@link-format section))
+
+
+(defsection @filtering-links (:title "Filtering Links")
   (*document-link-code* variable)
-  (@specified-locative section)
-  (@unspecified-locative section)
-  (@explicit-and-autolinking section)
-  (@preventing-autolinking section)
-  (@unresolvable-reflinks section)
-  (@suppressed-links section)
-  (@local-references section))
+  (@linkable glossary-term)
+  (@specific-link section)
+  (@unspecific-link section))
 
 (defvar *document-link-code* t
-  """Enable the various forms of links in docstrings described in
-  @LINKING-TO-CODE. See the following sections for a description of
-  how to use linking.""")
+  """Whether definitions of things other than [SECTION][class]s
+  are allowed to be @LINKABLE.""")
 
 ;;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
 ;;; :REFERENCE-LINK for [symbol][locative]). Don't hurt other links.
@@ -1848,24 +1637,40 @@
 (defun translate-to-links (parent tree linked-refs)
   (nth-value-or 0
     (maybe-unescape-or-autolink parent tree linked-refs)
-    (maybe-translate-explicit-link tree linked-refs)
+    (maybe-translate-reflink tree linked-refs)
     (assert nil)))
 
-;;; Check if we are in a position to link to REF and that we are
-;;; allowed to.
-(defun linkable-ref-p (ref &key page)
-  (declare (special *document-link-sections*))
-  (let ((ref (replace-go-target ref)))
-    (and (or (and *document-link-sections*
-                  (eq (xref-locative-type ref) 'section))
+(define-glossary-term @linkable (:title "linkable")
+  "When a reference is encountered to [definition][dref class] D
+  while processing documentation for some page C, we say that
+  definition D is _linkable_ (from C) if
+
+  - D denotes a SECTION and *DOCUMENT-LINK-SECTIONS* is true, or
+  - D does not denote a SECTION and *DOCUMENT-LINK-CODE* is true
+
+  ... and
+
+  - We are @BROWSING-LIVE-DOCUMENTATION, or
+  - D is an external definition ([CLHS][locative] or denotes a
+    [GLOSSARY-TERM][class] with a [\URL][define-glossary-term]), or
+  - D's page is C, or
+  - D's page is relativizable to C.
+
+  In the above,_D's page_ is the last of the pages in the
+  @DOCUMENTABLE to which D's documentation is written (see :OBJECTS in
+  @PAGES), and we say that a page is _relativizable_ to another if it
+  is possible to construct a relative link between their
+  :URI-FRAGMENTs.")
+
+;;; See if we are allowed to link to DREF and that we know how to.
+(defun linkable-dref-p (dref &key page)
+  (let ((dref (replace-go-target dref)))
+    (and (if (typep dref 'section-dref)
+             *document-link-sections*
              *document-link-code*)
-         (let ((page (or page (definition-page ref))))
-           (assert (not (link-p page)))
+         (let ((page (or page (definition-page dref))))
            (or
-            ;; These have no pages, but won't result in link anyway.
-            ;; Keep them.
-            (member (xref-locative-type ref) '(dislocated argument))
-            ;; Pax URLs are always linkable.
+            ;; pax: URLs are always linkable.
             (null page)
             ;; Intrapage links always work.
             (eq *page* page)
@@ -1878,218 +1683,144 @@
                  (page-uri-fragment page)))))))
 
 (defun linkablep (link)
-  (linkable-ref-p (link-definition link)
-                  :page (link-page (unaliased-link link))))
+  (linkable-dref-p (link-definition link) :page (link-page link)))
 
-(defun linkable-references (refs)
-  (remove-if-not #'linkable-ref-p refs))
+(defun linkable-drefs (drefs)
+  (remove-if-not #'linkable-dref-p drefs))
 
-(defsection @specified-locative (:title "Specified Locative")
-  """The following examples all render as [DOCUMENT][function].
+(defun drefs-to-links (drefs)
+  ;; FIND-LINK may fall back on the CLHS definition, not knowing if
+  ;; that CLHS definition is already present.
+  (delete-duplicates
+   (loop for dref in drefs
+         for link = (find-link dref)
+         when (and link (linkablep link))
+           collect link)
+   :key #'link-definition
+   :test #'xref=))
 
-  - `\[DOCUMENT][function]` (*name + locative, explicit link*)
-  - `DOCUMENT function` (*name + locative, autolink*)
-  - `function DOCUMENT` (*locative + name, autolink*)
+(defsection @specific-link (:title "Specific Link")
+  """Specific links are those @REFLINKs and @AUTOLINKs that have a
+  single DREF::@LOCATIVE and therefore at most a single matching
+  [definition][dref class]. These are @SPECIFIC-REFLINK,
+  @SPECIFIC-REFLINK-WITH-TEXT and @SPECIFIC-AUTOLINK.
 
-  The Markdown link definition (i.e. `\function` between the second
-  set of brackets above) needs no backticks to mark it as code.
+  A specific link to a @LINKABLE definition produces a link in the
+  output. If the definition is not linkable, then the output will
+  contain only what would otherwise be the link text.""")
 
-  Here and below, the @NAME (`\DOCUMENT`) is uppercased, and we rely
-  on *DOCUMENT-UPPERCASE-IS-CODE* being true. Alternatively, the @NAME
-  could be explicitly marked up as code with a pair of backticks, and
-  then its character case would likely not matter (subject to
-  READTABLE-CASE).
-
-  The link text in the above examples is `\DOCUMENT`. To override it,
-  this form may be used:
-
-  - `[see this][document function]` (*title + name + locative,
-    explicit link*) renders as: [see this][document function].""")
-
-(defun linkables-for-specified-locative (name locative)
-  "With a locative specified (e.g. in the explicit link
-  `[FOO][function]` or in the text `the FOO function`), a single link
-  is made irrespective of any local references."
+;;; Get the definitions for NAME and LOCATIVE. We expressly want to
+;;; avoid depending on what we can link to because what is @LINKABLE
+;;; is not predictible (consider PAX World and the value of
+;;; *DOCUMENT-LINK-TO-HYPERSPEC*).
+(defun specific-link-dref (name locative)
   (if (member (locative-type locative) '(dislocated argument))
-      ;; Handle an explicit [FOO][dislocated] in markdown. This is
-      ;; always LINKABLE-REF-P.
-      (list (xref name 'dislocated))
-      (if-let (dref (dref name locative nil))
-        ;; Prefer the live definition.
-        (when-let (link (find-link (replace-go-target dref)))
-          (when (linkablep link)
-            (list (link-definition link))))
-        ;; Fall back on an external one.
-        (let ((xref (replace-xref-go-target (xref name locative))))
-          (when-let (link (find-external-link xref))
-            (when (linkablep link)
-              (list (link-definition link))))))))
+      (xref name 'dislocated)
+      (substitute-clhs-for-missing-standard-definition
+       (dref name locative nil) name locative)))
 
-(defun replace-xref-go-target (xref)
-  (or (and (eq (xref-locative-type xref) 'go)
-           ;; See "accidental GO" in MGL-PAX-TEST::TEST-GO.
-           (ignore-errors
-            (destructuring-bind (go-name go-locative)
-                (first (xref-locative-args xref))
-              (xref go-name go-locative))))
-      xref))
+(defun dref-to-links/specific (dref)
+  (drefs-to-links (filter-clhs-dref (replace-go-targets (list dref)))))
 
-(defsection @unspecified-locative (:title "Unspecified Locative")
-  "[filter-string-based-references function][docstring]
+(defsection @unspecific-link (:title "Unspecific Link")
+  """Unspecific links are those @REFLINKs and @AUTOLINKs that do not
+  specify a DREF::@LOCATIVE and match all [definitions][dref class]
+  with a name. These are @UNSPECIFIC-REFLINK,
+  @UNSPECIFIC-REFLINK-WITH-TEXT and @UNSPECIFIC-AUTOLINK.
 
-  [filter-method-references function][docstring]
+  To make the links predictible and managable in number, the following
+  steps are taken.
 
-  [filter-locative-references function][docstring]"
-  (@unambiguous-unspecificed-locative section)
-  (@ambiguous-unspecified-locative section))
+  1. [filter-string-based-drefs function][docstring]
 
-(defun linkables-for-unspecified-locative (name &key local)
-  (filter-locative-references
-   (filter-method-references
-    (replace-go-targets
-     ;; This removes all CLHS references, which is fine because there
-     ;; is always a normalish DREF (ensured by MAKE-CLHS-ALIAS-LINK),
-     ;; and this will be linked to either the live (if being
-     ;; documeted) or the clhs definition with closed linking, and to
-     ;; both with open linking (see *DOCUMENT-OPEN-LINKING* and
-     ;; LINKS-OF).
-     (filter-external-references
-      (filter-string-based-references
-       (linkable-references
-        (definitions-with-name name :local local))))))))
+  2. [filter-locative-drefs function][docstring]
 
-(defun replace-go-targets (references)
-  (mapcar #'replace-go-target references))
+  3. Non-[@LINKABLE][] definitions are removed.
+
+  4. [filter-method-links function][docstring]
+
+  If at most a single definition remains, then the output is the same
+  as with a @SPECIFIC-LINK. If multiple definitions remain, then the
+  link text is output followed by a number of numbered links, one to
+  each definition.""")
+
+;;; Get the DEFINITIONS* for NAME. This includes ARGUMENTs (which
+;;; depend on the documentation context via *LOCAL-REFERENCES*) and
+;;; CLHS.
+(defun unspecific-link-definitions* (name)
+  ;; Although this is called only through FIND-NAME with :SYMBOLS-ONLY
+  ;; T, we still need to remove string-based definitions due to e.g.
+  ;; (DREF 'MGL-PAX 'PACKAGE).
+  (filter-string-based-drefs (definitions* name)))
+
+(defun drefs-to-links/unspecific (drefs)
+  (filter-method-links
+   (drefs-to-links
+    (filter-locative-drefs
+     (filter-clhs-dref
+      (replace-go-targets drefs))))))
+
+(defun replace-go-targets (drefs)
+  (mapcar #'replace-go-target drefs))
 
 (defun replace-go-target (dref)
   (if (eq (xref-locative-type dref) 'go)
       (go-target-dref dref)
       dref))
 
-(defun filter-string-based-references (refs)
-  "When only a @NAME is provided without a locative, all
-  definitions of the name are considered as possible link targets.
-  Then, definitions that are not symbol-based (i.e. whose
-  XREF-NAME is not a symbol) are filtered out to prevent
-  unrelated PACKAGEs and ASDF:SYSTEMs from cluttering the
-  documentation without the control provided by importing symbols."
-  (remove-if #'string-based-reference-p refs))
+(defun filter-string-based-drefs (drefs)
+  "Definitions that are not symbol-based (i.e. whose DREF-NAME
+  is not a symbol) are filtered out to prevent unrelated
+  [PACKAGE][locative]s, [ASDF:SYSTEM][locative]s and [CLHS][locative]
+  sections from cluttering the documentation without the control
+  provided by importing symbols."
+  (remove-if #'string-based-dref-p drefs))
 
-(defun string-based-reference-p (reference)
-  ;; We assume that REFERENCE is canonical and only look at the
-  ;; name.
-  (stringp (xref-name reference)))
+(defun string-based-dref-p (dref)
+  (stringp (dref-name dref)))
 
-(defun filter-method-references (refs)
-  "To further reduce clutter, if the definitions include a
-  GENERIC-FUNCTION locative, then all references with LOCATIVE-TYPE
-  [METHOD][locative], [ACCESSOR][locative], [READER][locative] and
-  [WRITER][locative] are removed to avoid linking to a possibly large
-  number of methods."
-  (flet ((non-method-refs ()
-           (remove-if (lambda (ref)
-                        (member (xref-locative-type ref)
+(defun filter-method-links (links)
+  "If the definitions include a [GENERIC-FUNCTION][locative], then
+  all definitions with LOCATIVE-TYPE [METHOD][locative],
+  [ACCESSOR][locative], [READER][locative] and [WRITER][locative] are
+  removed to avoid linking to a possibly large number of methods."
+  (flet ((non-method-links ()
+           (remove-if (lambda (link)
+                        (member (link-locative-type link)
                                 '(accessor reader writer method)))
-                      refs)))
+                      links)))
     (cond
       ;; If in doubt, prefer the generic function to methods.
-      ((find 'generic-function refs :key #'xref-locative-type)
-       (non-method-refs))
+      ((find 'generic-function links :key #'link-locative-type)
+       (non-method-links))
       ;; No generic function, prefer non-methods to methods.
-      ((non-method-refs))
+      ((non-method-links))
       (t
-       refs))))
+       links))))
 
-(defun filter-locative-references (refs)
-  "Furthermore, all references with LOCATIVE-TYPE LOCATIVE are
-  filtered out if there are references with other LOCATIVE-TYPEs."
-  (or (remove 'locative refs :key #'xref-locative-type)
-      refs))
+(defun link-locative-type (link)
+  (dref-locative-type (link-definition link)))
 
-(defsection @unambiguous-unspecificed-locative
-    (:title "Unambiguous Unspecified Locative")
-  """In the following examples, although no locative is specified,
-  `\DOCUMENT` names a single @NAME being DOCUMENTed, so they all
-  render as [DOCUMENT][function].
-
-  - `\[DOCUMENT][]` (*name, explicit link*),
-  - `DOCUMENT` (*name, autolink*).
-
-  To override the title:
-
-  - `\[see this][document]` (*title + name, explicit link*) renders
-    as: [see this][document].
-
-  However, to avoid amiguity e.g. in `\[X][package]`, which can be a
-  title override equivalent to `\[X][package locative]` or a
-  @SPECIFIED-LOCATIVE, when the Markdown link definition names a
-  locative, the reference link is interpreted as a specified locative.
-  See the title override [there][@specified-locative].""")
-
-(defsection @ambiguous-unspecified-locative
-    (:title "Ambiguous Unspecified Locative")
-  """These examples all render as [XREF][], linking to both
-  definitions of the @NAME `\XREF`, the `\CLASS` and the `\FUNCTION`.
-  Note that the rendered output is a single link to a disambiguation
-  page when @BROWSING-LIVE-DOCUMENTATION, while multiple, numbered
-  links are generated in offline documentation.
-
-  - `[XREF][]` (*name, explicit link*)
-  - `\XREF` (*name, autolink*)
-
-  To override the title:
-
-  - `\[see this][xref]` (*title + name, explicit link*) renders as:
-    [see this][xref].
-
-  As with @UNAMBIGUOUS-UNSPECIFICED-LOCATIVEs, to avoid ambiguity, the
-  title override works only if the Markdown definition does not name a
-  locative. If it is, then there is currently no way to override the
-  title.""")
-
-(defsection @explicit-and-autolinking (:title "Explicit and Autolinking")
-  "The examples in the previous sections are marked with *explicit
-  link* or *autolink*. Explicit links are those with a Markdown
-  reference link spelled out explicitly, while autolinks are those
-  without.")
-
-(defun linkables-for-explicitly-unspecified-locative (name)
-  "Explicit links with an unspecified locative (e.g. `[FOO][]`) are
-  linked to all non-local references."
-  (linkables-for-unspecified-locative name :local :exclude))
-
-(defun linkables-for-autolink-with-unspecified-locative (name)
-  "Unless a locative is [specified][ @specified-locative section], no
-  [autolinking][ @explicit-and-autolinking section] is performed for
-  @NAMEs for which there are local references. For example, `FOO` does
-  not get any links if there is _any_ local reference with the same
-  @NAME."
-  (linkables-for-unspecified-locative name))
-
-;;; All returned REFERENCES are for the same name.
-(defun linkables-for-autolink (names locatives linked-refs)
-  (or
-   ;; Use the first of NAMES with which some LOCATIVES form known
-   ;; references.
-   (loop for name in names
-           thereis (loop for locative in locatives
-                         append (linkables-for-specified-locative
-                                 name locative)))
-   ;; Fall back on the no-locative case.
-   (loop for name in names
-         for refs = (linkables-for-autolink-with-unspecified-locative name)
-         until (or (suppressed-link-p name refs linked-refs)
-                   (has-local-reference-p name))
-           thereis refs
-         until (definitions-with-name name :local :include))))
+(defun filter-locative-drefs (drefs)
+  "All references with LOCATIVE-TYPE LOCATIVE are filtered out."
+  (remove 'locative drefs :key #'dref-locative-type))
 
 
-;;;; Explicit links
+(defsection @reflink (:title "Reflink")
+  """The @MARKDOWN/REFLINK syntax `\[label][id]` is
+  repurposed for linking to [definitions][DREF class]. In the
+  following, we discusss the various forms of reflinks."""
+  (@specific-reflink section)
+  (@specific-reflink-with-text section)
+  (@unspecific-reflink section)
+  (@unspecific-reflink-with-text section)
+  (@markdown-reflink section)
+  (@unresolvable-reflinks section))
 
-(defun maybe-translate-explicit-link (tree linked-refs)
+(defun maybe-translate-reflink (tree linked-refs)
   (when (eq :reference-link (first tree))
     (if (or (pt-get tree :definition) (pt-get tree :tail))
-        (translate-explicit-link tree linked-refs)
+        (translate-reflink tree linked-refs)
         ;; (:REFERENCE-LINK :LABEL ("xxx") :TAIL NIL), the parse of [xxx].
         (values `(:plain "[" ,@(pt-get tree :label) "]") t nil))))
 
@@ -2101,122 +1832,270 @@
 ;;;
 ;;; - and those with no locative (:REFERENCE-LINK :LABEL ((:CODE
 ;;;   "SOMETHING")) :TAIL "[]"), the parse of [`SOMETHING`][].
-(defun translate-explicit-link (reflink linked-refs)
-  ;; Markdown to handle:
-  ;; - [`SECTION`][class]
-  ;; - [`SECTION`][]
-  ;; - [see this][section class]
-  ;; - [see this][section]
-  ;;
-  ;; For example, the tree for [`SECTION`][class] is (:REFERENCE-LINK
-  ;; :LABEL ((:CODE "SECTION")) :DEFINITION ("class")).
-  (multiple-value-bind (label explicit-label-p name locative pax-link-p)
-      (dissect-reflink reflink)
-    (cond ((not pax-link-p)
-           ;; [something][user-defined-id] or [something]
-           reflink)
-          ((and (eq name 'not-found)
-                (member locative '(dislocated argument)))
-           ;; [not code][dislocated]
-           (values label nil t))
+(defun translate-reflink (reflink linked-refs)
+  (multiple-value-bind (links title-override replacement-tree)
+      (dissect-reflink reflink linked-refs)
+    (cond (replacement-tree
+           ;; A non-PAX link like [something][user-defined-id] or
+           ;; [something] or the return value of
+           ;; SIGNAL-UNRESOLVABLE-REFLINK.
+           (values replacement-tree nil t))
           (t
-           (let ((refs (unless (eq name 'not-found)
-                         (if locative
-                             (linkables-for-specified-locative name locative)
-                             (linkables-for-explicitly-unspecified-locative
-                              name)))))
-             (cond (refs
-                    (dolist (ref refs)
-                      (vector-push-extend ref linked-refs))
-                    (values (make-reflinks label explicit-label-p refs) nil t))
-                   (t
-                    (values (if (likely-a-pax-reflink-p name locative reflink)
-                                (signal-unresolvable-reflink reflink name
-                                                             locative)
-                                label)
-                            nil t))))))))
+           (dolist (link links)
+             (vector-push-extend (link-definition link) linked-refs))
+           (values (make-reflinks (or title-override (pt-get reflink :label))
+                                  title-override links)
+                   nil t)))))
 
-(defun likely-a-pax-reflink-p (name locative reflink)
-  (or (and locative (symbolp name))
-      (zerop (length (getf (rest reflink) :definition)))))
-
-;;; Return 1. the label, 2. whether to use the returned label in the
-;;; reference link without further transformations (e.g. replace it
-;;; with SECTION-TITLE), 3. name, 4. the locative, 5. whether the
-;;; reflink looks like something PAX should resolve (as opposed to a
-;;; normal markdown reflink).
-(defun dissect-reflink (tree)
-  (assert (parse-tree-p tree :reference-link))
-  (destructuring-bind (&key label definition tail) (rest tree)
+(defun dissect-reflink (reflink linked-refs)
+  (assert (parse-tree-p reflink :reference-link))
+  (destructuring-bind (&key label definition tail) (rest reflink)
     (let* ((empty-definition-p (and (zerop (length definition))
                                     (or (null tail)
                                         (equal tail "[]"))))
            (definition (trim-whitespace
                         (parse-tree-to-text definition :deemph t)))
-           (locative-from-def
-             (and definition (read-locative-from-noisy-string definition)))
+           (locative-from-def (and definition (parse-locative definition)))
            (label-string (trim-whitespace
                           (parse-tree-to-text label :deemph nil))))
-      (nth-value-or 0
-        ;; [foo][] (explicitly @UNSPECIFIED-LOCATIVE)
-        (and empty-definition-p
-             label-string
-             (multiple-value-bind (xref-name name)
-                 (parse-reflink-label/no-locative label-string)
-               (when name
-                 (values label nil xref-name nil t))))
-        ;; [foo][function] (@SPECIFIED-LOCATIVE)
-        (and locative-from-def
-             label-string
-             (multiple-value-bind (xref-name name)
-                 (parse-reflink-label/locative label-string locative-from-def)
-               (when name
-                 (values label nil xref-name locative-from-def t))))
-        (and (member locative-from-def '(dislocated argument))
-             (values label t 'not-found locative-from-def t))
-        ;; [see this][foo] (title override with @UNSPECIFIED-LOCATIVE)
-        (and (null locative-from-def)
-             (multiple-value-bind (xref-name name)
-                 (parse-word definition :trim nil :depluralize nil
-                                        :only-one (constantly t))
-               (when name
-                 (values label t xref-name nil t))))
-        ;; [see this][foo function] (title override with @SPECIFIED-LOCATIVE)
-        (and (null locative-from-def)
-             (multiple-value-bind (name locative foundp)
-                 (and definition (read-reference-from-string definition))
-               (when foundp
-                 (values label t name locative t))))
-        (values label nil 'not-found locative-from-def
-                (or empty-definition-p locative-from-def))))))
+      (multiple-value-bind (links foundp label)
+          (nth-value-or 1
+            (when (and label-string locative-from-def)
+              (specific-reflink label-string locative-from-def linked-refs))
+            (when (and definition (null locative-from-def))
+              (specific-reflink-with-text label definition))
+            (when (and label-string empty-definition-p)
+              (unspecific-reflink label-string))
+            (when (null locative-from-def)
+              (unspecific-reflink-with-text label definition)))
+        (if foundp
+            (values links label)
+            (values nil nil
+                    ;; [print][] and [xxx][clhs] are almost definitely
+                    ;; PAX links.
+                    (if (or empty-definition-p locative-from-def)
+                        (signal-unresolvable-reflink reflink locative-from-def)
+                        (list reflink))))))))
 
-(defun parse-reflink-label/no-locative (label-string)
-  (flet ((good-parse-p (xref-name name)
-           (declare (ignore name))
-           (has-reference-p xref-name)))
-    (parse-word label-string
-                :trim nil :depluralize t
-                :clhs-substring-match t
-                :only-one #'good-parse-p)))
-
-(defun parse-reflink-label/locative (label-string locative)
-  (flet ((good-parse-p (xref-name name)
-           (declare (ignore name))
-           (if (eq locative 'dislocated)
-               (has-reference-p xref-name)
-               ;; Stop at the first existing definition.
-               (or
-                (dref xref-name locative nil)
-                (let ((xref (xref xref-name locative)))
-                  (local-reference-p xref)
-                  (find-external-link xref))))))
-    (parse-word label-string
-                :trim nil :depluralize t
-                :clhs-substring-match t
-                :only-one #'good-parse-p)))
+;;; Substitute a CLHS definition for standard stuff that's missing in
+;;; the running Lisp. If we didn't do this, then:
+;;;
+;;; - "EQL type" could link to both (EQL TYPE) and (EQL FUNCTION) if
+;;;   (EQL TYPE) were not defined in the Lisp (because AUTOLINK would
+;;;   fall back on UNSPECIFIC-AUTOLINK.
+;;;
+;;; - [CONS][function] could link to (CON FUNCTION) if defined (via
+;;;   FIND-NAME depluralizing).
+;;;
+;;; However, if *DOCUMENT-LINK-TO-HYPERSPEC* is NIL, this substitution
+;;; must be later filtered out, but an explicit [EQL][(clhs type)]
+;;; must be always kept, so we mark explicit CLHS links for
+;;; FILTER-CLHS-REFERENCES.
+(defun substitute-clhs-for-missing-standard-definition (dref name locative)
+  (cond (dref
+         (when (eq (dref-locative-type dref) 'clhs)
+           (setf (clhs-dref-explicit-p dref) t))
+         dref)
+        (t
+         (clhs-dref name locative))))
 
 
-;;;; Autolinking
+(defsection @specific-reflink (:title "Specific Reflink")
+  """_Format:_ `\[`[WORD][@WORD]`\][`[LOCATIVE][locative]`\]`
+
+  The first @NAME in WORD (with depluralization) that forms a valid
+  [DREF][class] with LOCATIVE is determined, and that definition is
+  linked to. If there is no such DREF, then an UNRESOLVABLE-REFLINK
+  warning is signalled.
+
+  _Examples:_
+
+  - `\[`EQL`][type]` _renders as_ [EQL][type].
+
+  - `\[EQL][type]` _renders as_ [EQL][type].
+
+  The Markdown link definition (i.e. `type` above) needs no backticks
+  to mark it as code, but here and below, the second example relies on
+  *DOCUMENT-UPPERCASE-IS-CODE* being true.
+  """)
+
+(defun specific-reflink (label-string locative-from-def linked-refs)
+  (when-let (xref (find-name (rcurry #'specific-link-dref locative-from-def)
+                             label-string :depluralize t))
+    (values (cond ((eq (xref-locative-type xref) 'dislocated)
+                   (vector-push-extend xref linked-refs)
+                   ())
+                  (t
+                   (dref-to-links/specific xref)))
+            t)))
+
+(defsection @specific-reflink-with-text (:title "Specific Reflink with Text")
+  """_Format:_ `\[LINK TEXT][`[NAME][@name] [LOCATIVE][locative]`\]`
+
+  If NAME and LOCATIVE form a valid [DREF][class], then that
+  definition is linked to with link text `LINK TEXT`. If there is no
+  such DREF, then an UNRESOLVABLE-REFLINK warning is signalled.
+
+  In this form, if NAME starts with `#\"`, then it's read as a string,
+  else as a symbol.
+
+  _Examples:_
+
+  - `\[see this][eql type]` _renders as_ [see this][eql type].
+
+  - `\[see this]["MGL-PAX" package]` _renders as_ [see this]["MGL-PAX" package].
+  """)
+
+(defun specific-reflink-with-text (label definition)
+  (when-let (dref (parse-dref definition))
+    (values (dref-to-links/specific dref) t label)))
+
+(defsection @unspecific-reflink (:title "Unspecific Reflink")
+  """_Format:_ `\[`[WORD][@WORD]`\][]`
+
+  The first @NAME in WORD (with depluralization, symbols only) that
+  has some DEFINITIONS is determined, and those definitions are linked
+  to. If no @NAME with any definition is found, then an
+  UNRESOLVABLE-REFLINK warning is signalled.
+
+  _Examples:_
+
+  - single link: `\[PRINT][]` _renders as_ [PRINT][].
+
+  - multiple links: `\[EQL][]` _renders as_ [EQL][].
+
+  - no definitions: `\[BAD-NAME][]` _renders as_ BAD-NAME.
+  """)
+
+(defun unspecific-reflink (label-string)
+  (when-let (drefs (find-name #'unspecific-link-definitions* label-string
+                              :symbols-only t :depluralize t))
+    (values (drefs-to-links/unspecific drefs) t)))
+
+(defsection @unspecific-reflink-with-text
+    (:title "Unspecific Reflink with Text")
+  """_Format:_ `\[LINK TEXT][`[NAME][@name]`\]`
+
+  The DEFINITIONS of NAME are determined, and those definitions are
+  linked to. If NAME has no definitions, then an UNRESOLVABLE-REFLINK
+  warning is signalled.
+
+  In this form, if NAME starts with `#\"`, then it's read as a string,
+  else as as symbol.
+
+  _Examples:_
+
+  - `\[see this][print]` _renders as_ [see this][print].
+
+  - `\[see this][eql]` _renders as_ [see this][eql].
+  """)
+
+(defun unspecific-reflink-with-text (label definition)
+  (when-let (drefs (find-name #'unspecific-link-definitions* definition
+                              :symbols-only t))
+    (values (drefs-to-links/unspecific drefs) t label)))
+
+(defsection @markdown-reflink (:title "Markdown Reflink")
+  """_Format:_ `\[label][id]`
+
+  This is a normal @MARKDOWN/REFLINK if `id` is not a valid locative.
+
+   - `\[see this][user-defined]` renders unchanged.
+
+      ```cl-transcript (:dynenv pax-std-env)
+      (dref:dref 'user-defined 'locative)
+      .. debugger invoked on LOCATE-ERROR:
+      ..   Could not locate USER-DEFINED LOCATIVE.
+      ..   USER-DEFINED is not a valid locative.
+      ```
+      ```cl-transcript (:dynenv pax-std-env)
+      (document "[see this][user-defined]" :format :markdown)
+      .. [see this][user-defined]
+      ..
+      ```
+
+  Use URLs with DEFINE-GLOSSARY-TERM as a better alternative to
+  Markdown reference links (see @MARKDOWN-IN-DOCSTRINGS).
+  """)
+
+
+(defsection @unresolvable-reflinks (:title "Unresolvable Links")
+  (unresolvable-reflink condition)
+  (output-reflink function)
+  (output-label function))
+
+(define-condition unresolvable-reflink (warning)
+  ((reflink :initarg :reflink :reader unresolvable-reflink-string)
+   (locative :initarg :locative :reader unresolvable-reflink-locative))
+  (:report print-unresolvable-reflink)
+  (:documentation """When DOCUMENT encounters a @REFLINK that looks
+  like a PAX construct but has no matching definition, it signals an
+  UNRESOLVABLE-REFLINK warning.
+
+  - If the OUTPUT-REFLINK restart is invoked, then no warning is
+    printed and the markdown link is left unchanged. MUFFLE-WARNING is
+    equivalent to OUTPUT-REFLINK.
+
+  - If the OUTPUT-LABEL restart is invoked, then no warning is printed
+    and the markdown link is replaced by its label. For example,
+    `[NONEXISTENT][function]` becomes `NONEXISTENT`.
+
+  - If the warning is not handled, then it is printed to
+    *ERROR-OUTPUT*, and it behaves as if OUTPUT-LABEL was invoked."""))
+
+(defun print-unresolvable-reflink (unresolvable-reflink stream)
+  (let* ((c unresolvable-reflink)
+         (reflink (unresolvable-reflink-string c))
+         (locative #-cmucl (if (slot-boundp c 'locative)
+                               (unresolvable-reflink-locative c)
+                               nil)
+                   #+cmucl (or (ignore-errors
+                                (unresolvable-reflink-locative c))
+                               'not-found)))
+    (if locative
+        (format stream "~@<No ~S found for ~S although ~S looks ~
+                       like a ~S.~:@>"
+                'dref reflink locative '@locative)
+        (format stream "~@<No ~S found for ~S.~:@>" 'definitions reflink))
+    (print-document-context stream)))
+
+(defun signal-unresolvable-reflink (reflink locative)
+  (restart-case
+      (let ((string (reflink-to-string reflink)))
+        (warn 'unresolvable-reflink :reflink string :locative locative)
+        (pt-get reflink :label))
+    (output-label ()
+      :report "Output only the label."
+      (pt-get reflink :label))
+    (output-reflink ()
+      :report "Output the whole reflink."
+      reflink)))
+
+(defun output-reflink (&optional condition)
+  "Invoke the OUTPUT-REFLINK restart. See UNRESOLVABLE-REFLINK."
+  (declare (ignore condition))
+  (invoke-restart 'output-reflink))
+
+(defun output-label (&optional condition)
+  "Invoke the OUTPUT-LABEL restart. See UNRESOLVABLE-REFLINK."
+  (declare (ignore condition))
+  (invoke-restart 'output-label))
+
+(defun reflink-to-string (tree)
+  (with-output-to-string (stream)
+    (print-markdown (list tree) stream)))
+
+
+(defsection @autolink (:title "Autolink")
+  "@MARKDOWN/INLINE-CODE automatically links to the corresponding
+  definitions without having to use @REFLINKS. This works especially
+  well in conjunction with @CODIFICATION. The following examples
+  assume that *DOCUMENT-UPPERCASE-IS-CODE* is true. If that's not the
+  case, explicit backticks are required on [WORD][@word] (but not on
+  LOCATIVE)."
+  (@specific-autolink section)
+  (@unspecific-autolink section)
+  (@escaping-autolinking section))
 
 ;;; This translator handles (:CODE "SOMETHING"), the parse of
 ;;; `SOMETHING`: looks for any references to "SOMETHING" and tanslates
@@ -2224,17 +2103,55 @@
 ;;; :DEFINITION ("function")) if there is a single function reference
 ;;; to it.
 (defun autolink (parent tree word linked-refs)
-  (let ((refs (linkables-for-autolink
-               (parse-word word :trim nil :depluralize t)
-               (find-locatives-around parent tree)
-               linked-refs)))
-    (cond (refs
-           (let ((reflinks (make-reflinks `(,tree) nil refs)))
-             (dolist (ref refs)
-               (vector-push-extend ref linked-refs))
-             (values reflinks nil t)))
+  (multiple-value-bind (links foundp)
+      (nth-value-or 1
+        ;; This prefers a @SPECIFIC-AUTOLINK with a shorter name to an
+        ;; @UNSPECIFIED-LOCATIVE with a longer one.
+        (specific-autolink word parent tree linked-refs)
+        (unspecific-autolink word linked-refs))
+    (cond (foundp
+           (dolist (link links)
+             (vector-push-extend (link-definition link) linked-refs))
+           (values (make-reflinks `(,tree) nil links)
+                   nil t))
           (t
            tree))))
+
+
+(defsection @specific-autolink (:title "Specific Autolink")
+  """_Format:_ [WORD][@WORD] [LOCATIVE][LOCATIVE] or
+  [LOCATIVE][LOCATIVE] [WORD][@WORD]
+
+  The first @NAME in WORD (with depluralization) that forms a valid
+  [DREF][class] with LOCATIVE is determined, and that definition is
+  linked to. If no such name is found, then @UNSPECIFIC-AUTOLINK is
+  attempted.
+
+  _Examples:_
+
+  - `\PRINT function` _renders as_ PRINT function.
+
+  - `\type EQL` _renders as_ type EQL.
+
+  - `\type EQL function` _renders as_ type EQL function.
+
+  If LOCATIVE has spaces, then it needs to be marked up as code, too.
+  For example,
+
+      DREF-NAME `(reader dref)`
+
+  _renders as_ DREF-NAME `(reader dref)`.
+  """)
+
+(defun specific-autolink (word parent tree linked-refs)
+  (when-let (locatives (find-locatives-around parent tree))
+    (when-let (xref (find-name (rcurry #'specific-autolink-dref locatives) word
+                               :depluralize t))
+      (cond ((eq (xref-locative-type xref) 'dislocated)
+             (vector-push-extend xref linked-refs)
+             (values () t))
+            (t
+             (values (dref-to-links/specific xref) t))))))
 
 ;;; Find locatives just before or after TREE in PARENT. For example,
 ;;; PARENT is (:PLAIN "See" "function" " " (:CODE "FOO")), and TREE is
@@ -2242,18 +2159,14 @@
 (defun find-locatives-around (parent tree)
   (let ((locatives ()))
     (labels ((try-string (string)
-               (let ((locative (read-locative-from-noisy-string string)))
+               (let ((locative (parse-locative/noisy string :junk-allowed t)))
                  (when locative
                    (push locative locatives))))
              (try (element)
                (cond ((stringp element)
                       (try-string element))
                      ((eq :code (first element))
-                      (try-string (second element)))
-                     ;; (:REFERENCE-LINK :LABEL ((:CODE
-                     ;; "CLASS")) :DEFINITION ("0524"))
-                     ((eq :reference-link (first element))
-                      (try (first (third element)))))))
+                      (try-string (second element))))))
       ;; Note that (EQ (THIRD REST) TREE) may be true multiple times,
       ;; for example if strings are interned and "FOO" occurs multiple
       ;; times in PARENT.
@@ -2271,13 +2184,90 @@
                  (try (third rest))
                  (return))))
     locatives))
+
+(defun specific-autolink-dref (name locatives)
+  (loop for locative in locatives
+          thereis (specific-link-dref name locative)))
 
 
-(defsection @preventing-autolinking (:title "Preventing Autolinking")
+(defsection @unspecific-autolink (:title "Unspecific Autolink")
+  """_Format:_ [WORD][@WORD]
+
+  The first @NAME in WORD (with depluralization, symbols only) that
+  has some DEFINITIONS is determined, and those definitions are linked
+  to. If no such name is found or the autolink to this name is
+  _suppressed_ (see below), then WORD is left unchanged. If a locative
+  is found before or after WORD, then @SPECIFIC-AUTOLINK is tried
+  first.
+
+  _Examples:_
+
+  - `\PRINT` _renders as_ PRINT.
+
+  - `\EQL` _renders as_ EQL.
+
+  [suppressed-link-p function][docstring]
+  """)
+
+(defun unspecific-autolink (word linked-refs)
+  (when-let (drefs (find-name #'unspecific-link-definitions* word
+                              :symbols-only t :depluralize t))
+    (values (drefs-to-links/unspecific
+             (filter-suppressed-references drefs linked-refs))
+            t)))
+
+(defun filter-suppressed-references (refs linked-refs)
+  (if (suppressed-link-p refs linked-refs)
+      ()
+      refs))
+
+(declaim (inline xref-name=))
+(defun xref-name= (name ref)
+  (equal name (xref-name ref)))
+
+(defun suppressed-link-p (drefs linked-refs)
+  """@UNSPECIFIC-AUTOLINKing is suppressed if the name found has a
+  @LOCAL-DEFINITION or was linked to before in the same docstring:
+
+  - "`My other CAR is also a CAR`" _renders as_ "My other CAR is also a
+    CAR".
+
+  - "`[COS][] and COS`" _renders as_ "[COS][] and COS".
+
+  - "`[EQL][type] and EQL`" _renders as_ "[EQL][type] and EQL".
+
+  - "`EQ and the EQ function`" _renders as_ "EQ and the EQ function".
+
+  @UNSPECIFIC-AUTOLINKing to T and NIL is also suppressed (see
+  *DOCUMENT-LINK-TO-HYPERSPEC*):
+
+  - "`T and NIL`" _renders as_ "T and NIL".
+
+  As an exception, a single link (be it either a @SPECIFIC-LINK or an
+  unambiguous @UNSPECIFIC-LINK) to a SECTION or GLOSSARY-TERM is not
+  suppressed to allow their titles to be displayed properly:
+
+  - "`@NAME and @NAME`" _renders as_ "@NAME and @NAME"."""
+  (when drefs
+    (or (some (lambda (dref)
+                (let ((name (dref-name dref)))
+                  (or (member name '(t nil))
+                      (has-local-reference-p name))))
+              drefs)
+        (and
+         (loop for dref in drefs
+                 thereis (find (xref-name dref) linked-refs
+                               :test #'xref-name=))
+         (not (and (= (length drefs) 1)
+                   (typep (resolve (first drefs) nil)
+                          '(or section glossary-term))))))))
+
+
+(defsection @escaping-autolinking (:title "Escaping Autolinking")
   """In the common case, when [*DOCUMENT-UPPERCASE-IS-CODE*][] is true,
   prefixing an uppercase @WORD with a backslash prevents it from being
-  codified and thus also prevents [autolinking][
-  @explicit-and-autolinking section] form kicking in. For example,
+  codified and thus also prevents @AUTOLINKing form kicking in. For
+  example,
 
       \DOCUMENT
 
@@ -2286,8 +2276,9 @@
 
       `\DOCUMENT`
 
-  This renders as `\DOCUMENT`. Alternatively, the DISLOCATED or the
-  ARGUMENT locative may be used as in `[DOCUMENT][dislocated]`.""")
+  This renders as `\DOCUMENT`. Alternatively, the
+  [DISLOCATED][locative] or the ARGUMENT locative may be used as in
+  `[DOCUMENT][dislocated]`.""")
 
 (defun maybe-unescape-or-autolink (parent tree linked-refs)
   (when (parse-tree-p tree :code)
@@ -2297,7 +2288,7 @@
           (autolink parent tree string linked-refs)))))
 
 
-;;;; Common code for @EXPLICIT-AND-AUTOLINKING
+;;;; Common code for @LINKING
 
 ;;; With older versions it's a STRING or NIL.
 (defparameter *3bmd-reflink-definition-is-list*
@@ -2322,36 +2313,36 @@
 ;;; For LABEL (a parse tree fragment) and some references to it
 ;;; (REFS), return a markdown parse tree fragment to be spliced into a
 ;;; markdown parse tree.
-(defun make-reflinks (label explicit-label-p refs)
-  (let ((ref-1 (first refs)))
-    (cond ((endp refs)
-           ;; All references were filtered out.
-           label)
-          ((< 1 (length refs))
+(defun make-reflinks (label explicit-label-p links)
+  (if (endp links)
+      ;; All references were filtered out.
+      label
+      (let* ((link-1 (first links))
+             (ref-1 (link-definition link-1)))
+        (cond
+          ((< 1 (length links))
            (if *document-open-linking*
                ;; [`label`](pax:name)
                `((:explicit-link
                   :label ,label
-                  :source ,(finalize-pax-url
-                            (urlencode
-                             (name-to-ambiguous-pax-url
-                              ;; CLHS aliases are XREFs.
-                              (xref-name ref-1))))))
+                  :source ,(finalize-pax-url (name-to-pax-url
+                                              (dref-name ref-1)))))
                ;; `label`([1][link-id-1] [2][link-id-2])
                `(,@label
                  "("
                  ,@(loop
                      for i upfrom 0
-                     for ref in (dref::sort-references refs)
+                     for link in (dref::sort-references
+                                  links :key #'link-definition)
                      append `(,@(unless (zerop i)
                                   '(" "))
                               ,(%make-reflink `(,(code-fragment i))
-                                              (link-to-definition ref))))
+                                              (link-to link))))
                  ")")))
           ((member (xref-locative-type ref-1) '(dislocated argument))
            label)
           (explicit-label-p
-           `(,(%make-reflink label (link-to-definition ref-1))))
+           `(,(%make-reflink label (link-to link-1))))
           (t
            (let ((title (title (resolve ref-1 nil))))
              `(,(%make-reflink
@@ -2359,168 +2350,104 @@
                      label
                      (let ((*translating-reference-link* t))
                        (codify (parse-markdown title))))
-                 (link-to-definition ref-1))))))))
+                 (link-to link-1)))))))))
 
 
-(defsection @unresolvable-reflinks (:title "Unresolvable Links")
-  (unresolvable-reflink condition)
-  (output-reflink function)
-  (output-label function))
+(defsection @linking-to-the-hyperspec (:title "Linking to the Hyperspec")
+  (*document-link-to-hyperspec* variable)
+  (*document-hyperspec-root* variable))
 
-(define-condition unresolvable-reflink (warning)
-  ((reflink :initarg :reflink :reader unresolvable-reflink-string)
-   (name :initarg :name :reader unresolvable-reflink-name)
-   (locative :initarg :locative :reader unresolvable-reflink-locative))
-  (:report print-unresolvable-reflink)
-  (:documentation """When DOCUMENT encounters an [explicit
-  link][@explicit-and-autolinking] such as `[NONEXISTENT][function]`
-  that looks like a PAX construct but cannot be resolved, it signals
-  and UNRESOLVABLE-REFLINK warning.
+(defvar *document-link-to-hyperspec* t
+  """If true, consider definitions found in the Common Lisp Hyperspec
+  for linking. For example,
 
-  - If the OUTPUT-REFLINK restart is invoked, then no warning is
-    printed and the markdown link is left unchanged. MUFFLE-WARNING is
-    equivalent to OUTPUT-REFLINK.
+  - `\PRINT` _renders as_ PRINT.
 
-  - If the OUTPUT-LABEL restart is invoked, then no warning is printed
-    and the markdown link is replaced by its label. For example,
-    `[NONEXISTENT][function]` becomes `NONEXISTENT`.
+  In offline documentation, this would be a link to the hyperspec
+  unless `#'PRINT` in the running Lisp is @DOCUMENTABLE.
 
-  - If the warning is not handled, then it is printed to
-    *ERROR-OUTPUT*. Otherwise, it behaves as OUTPUT-REFLINK."""))
+  When @BROWSING-LIVE-DOCUMENTATION, everything is @LINKABLE, so the
+  generated link will go to a disambiguation page that lists the
+  definition in the Lisp and in the Hyperspec.
 
-(defun print-unresolvable-reflink (unresolvable-reflink stream)
-  (let* ((c unresolvable-reflink)
-         (reflink (unresolvable-reflink-string c))
-         (name #-cmucl (if (slot-boundp c 'name)
-                           (unresolvable-reflink-name c)
-                           'not-found)
-               #+cmucl (or (ignore-errors
-                            (unresolvable-reflink-name c))
-                           'not-found))
-         (locative #-cmucl (if (slot-boundp c 'locative)
-                               (unresolvable-reflink-locative c)
-                               nil)
-                   #+cmucl (or (ignore-errors
-                                (unresolvable-reflink-locative c))
-                               'not-found)))
-    (cond ((and (not (eq name 'not-found)) locative)
-           (format stream "~@<~S cannot be resolved although ~S looks ~
-                           like a ~S and ~S like a ~S.~:@>"
-                   reflink name '@name locative '@locative))
-          ((not (eq name 'not-found))
-           (format stream "~@<~S cannot be resolved although ~S looks ~
-                           like a ~S.~:@>"
-                   reflink name '@name))
-          (locative
-           (format stream "~@<~S cannot be resolved although ~S looks ~
-                           like a ~S.~:@>"
-                   reflink locative '@locative))
-          (t
-           (format stream "~@<~S cannot be resolved.~:@>" reflink)))
-    (print-document-context stream)))
+  Locatives work as expected (see *DOCUMENT-LINK-CODE*): `\FIND-IF`
+  links to FIND-IF, `\FUNCTION` links to FUNCTION, and
+  `[FUNCTION][type]` links to [FUNCTION][type].
 
-(defun signal-unresolvable-reflink (reflink name locative)
-  (restart-case
-      (let ((string (reflink-to-string reflink)))
-        (cond ((and (not (eq name 'not-found)) locative)
-               (warn 'unresolvable-reflink
-                     :reflink string :name name :locative locative))
-              ((not (eq name 'not-found))
-               (warn 'unresolvable-reflink :reflink string :name name))
-              (locative
-               (warn 'unresolvable-reflink :reflink string
-                                           :locative locative))
-              (t
-               (warn 'unresolvable-reflink :reflink string)))
-        (pt-get reflink :label))
-    (output-label ()
-      :report "Output only the label."
-      (pt-get reflink :label))
-    (output-reflink ()
-      :report "Output the whole reflink."
-      reflink)))
+  @UNSPECIFIC-AUTOLINKing to T and NIL is suppressed. If desired, use
+  @REFLINKs such as `[T][]` (that links to [T][]) or
+  `[T][constant]` (that links to [T][constant]).
 
-(defun output-reflink (&optional condition)
-  "Invoke the OUTPUT-REFLINK restart. See UNRESOLVABLE-REFLINK."
-  (declare (ignore condition))
-  (invoke-restart 'output-reflink))
+  Note that linking explicitly with the CLHS locative is not subject
+  to the value of this variable.""")
 
-(defun output-label (&optional condition)
-  "Invoke the OUTPUT-LABEL restart. See UNRESOLVABLE-REFLINK."
-  (declare (ignore condition))
-  (invoke-restart 'output-label))
+(defvar *document-hyperspec-root*
+  "http://www.lispworks.com/documentation/HyperSpec/"
+  """A \URL of the Common Lisp Hyperspec.
+  The default value is the canonical location. When [invoked from
+  Emacs][ @browsing-live-documentation], the Elisp variable
+  `common-lisp-hyperspec-root` is in effect.""")
 
-(defun reflink-to-string (tree)
-  (with-output-to-string (stream)
-    (print-markdown (list tree) stream)))
+(defun find-clhs-url (dref)
+  (when (eq (dref-locative-type dref) 'clhs)
+    (let* ((name (dref-name dref))
+           (locative (dref-locative-args dref))
+           (locative-type (locative-type locative)))
+      ;; This parallels DREF* (METHOD () (T (EQL CLHS) T)).
+      (cond ((eq locative-type 'glossary-term)
+             (find-hyperspec-glossary-entry-url name
+                                                *document-hyperspec-root*))
+            ((eq locative-type 'section)
+             (or (find-hyperspec-issue-url name *document-hyperspec-root*)
+                 (find-hyperspec-section-url name
+                                             *document-hyperspec-root*)))
+            (t
+             (find-hyperspec-definition-url name locative
+                                            *document-hyperspec-root*))))))
+
+(defun filter-clhs-dref (drefs)
+  (if *document-link-to-hyperspec*
+      drefs
+      (remove-if (lambda (dref)
+                   (and (typep dref 'clhs-dref)
+                        (not (clhs-dref-explicit-p dref))))
+                 drefs)))
+
+;;; Just for the generated docstrings. See CLHS locative.
+(defvar *format-directive-alias-links* nil
+  #.(with-output-to-string (out)
+      (loop for alias in *hyperspec-format-directive-aliases*
+            for i upfrom 0
+            do (unless (zerop i)
+                 (if (zerop (mod i 4))
+                     (format out "~%")
+                     (format out " ")))
+               (format out "[~A][clhs]" (escape-markdown alias)))))
+(defvar *reader-macro-alias-links* nil
+  #.(with-output-to-string (out)
+      (loop for alias in *hyperspec-reader-macro-char-aliases*
+            for i upfrom 0
+            do (unless (zerop i)
+                 (if (zerop (mod i 4))
+                     (format out "~%")
+                     (format out " ")))
+               (format out "[~A][clhs]" (escape-markdown alias)))))
 
 
-(defsection @suppressed-links (:title "Suppressed Links")
-  """[Autolinking][ @explicit-and-autolinking section] of code (i.e.
-  of something like `FOO`) is suppressed if it would create a link
-  that was already made within the same docstring. In the following
-  docstring, only the first `FOO` will be turned into a link.
+;;;; External references: beginnings of an abstraction for DREFs
+;;;; denoting stuff that lives outside the running image (e.g. CLHS
+;;;; and GLOSSARY-TERMs with URLs). This could serve the needs of e.g.
+;;;; linking to the MOP.
 
-      "`FOO` is safe. `FOO` is great."
+(defun external-dref-url (dref)
+  (or (when (typep dref 'clhs-dref)
+        (find-clhs-url dref))
+      (when (typep dref 'glossary-term-dref)
+        (when-let (glossary-term (resolve dref nil))
+          (glossary-term-url glossary-term)))))
 
-  However, explicit links (when a DREF::@LOCATIVE was specified or
-  found near the @NAME) are never suppressed. In the following, in
-  both docstrings, both occurrences `FOO` produce links.
-
-      "`FOO` is safe. [`FOO`][macro] is great."
-      "`FOO` is safe. Macro `FOO` is great."
-
-  As an exception, links with [specified][@specified-locative section]
-  and [unambiguous][ @unambiguous-unspecificed-locative section]
-  locatives to SECTIONs and GLOSSARY-TERMs always produce a link to
-  allow their titles to be displayed properly.
-
-  Finally, [autolinking][@explicit-and-autolinking section] to T or
-  NIL is suppressed (see *DOCUMENT-LINK-TO-HYPERSPEC*).""")
-
-(defsection @local-references (:title "Local References")
-  """To declutter the generated output by reducing the number of
-  links, the so-called local references (e.g. references to the very
-  definition for which documentation is being generated) are treated
-  specially. In the following example, there are local references to
-  the function FOO and its arguments, so none of them get turned into
-  links:
-
-  ```
-  (defun foo (arg1 arg2)
-    "FOO takes two arguments: ARG1 and ARG2."
-    t)
-  ```
-
-  If linking was desired, one could use a @SPECIFIED-LOCATIVE (e.g.
-  `[FOO][function]` or `FOO function`), which results in a single
-  link. An explicit link with an unspecified locative like `[FOO][]`
-  generates links to all references involving the `FOO` symbol except
-  the local ones.
-
-  The exact rules for local references are as follows:
-
-  - [linkables-for-autolink-with-unspecified-locative function][docstring]
-
-  - [linkables-for-specified-locative function][docstring]
-
-  - [linkables-for-explicitly-unspecified-locative function][docstring]
-  """)
-
-(defun suppressed-link-p (name refs linked-refs)
-  (when refs
-    (or (member name '(t nil))
-        (and
-         ;; See if NAME would be linked to any previously linked-to
-         ;; reference.
-         (loop for ref in refs
-                 thereis (find (xref-name ref) linked-refs
-                               :test #'xref-name=))
-         ;; Replace references to sections and glossary terms with
-         ;; their title any number of times.
-         (not (and (= (length refs) 1)
-                   (typep (resolve (first refs) nil)
-                          '(or section glossary-term))))))))
+(defun external-dref-p (dref)
+  (external-dref-url dref))
 
 
 (defsection @linking-to-sections (:title "Linking to Sections")
@@ -2536,8 +2463,8 @@
   "When true, HTML anchors are generated before the headings (e.g. of
   sections), which allows the table of contents to contain links and
   also code-like references to sections (like `@FOO-MANUAL`) to be
-  translated to links with the section title being the name of the
-  link.")
+  translated to links with the [TITLE][DEFSECTION] being the link
+  text.")
 
 (defvar *document-max-numbering-level* 3
   "A non-negative integer. In their hierarchy, sections on levels less
@@ -2745,11 +2672,46 @@
             heading-number)))
 
 
-(defsection @miscellaneous-documentation-printer-variables
-    (:title "Miscellaneous Variables")
+(defsection @local-definition (:title "Local Definition")
+  """While documentation is generated for a definition, that
+  definition is considered local. Other local definitions may also be
+  established. Local definitions inform @CODIFICATION through
+  @INTERESTING @NAMEs and affect @UNSPECIFIC-AUTOLINKing.
+
+  ```
+  (defun foo (x)
+    "FOO adds one to X."
+    (1+ x)
+  ```
+
+  In this example, while the docstring of FOO is being processed, the
+  global definition `(DREF 'FOO 'FUNCTION)` is also considered local,
+  which suppresses linking FOO in the FOO's docstring back to its
+  definition. If FOO has other definitions, @UNSPECIFIC-AUTOLINKing to
+  those is also suppressed.
+
+  Furthermore, the purely local definition `(DREF 'X 'ARGUMENT)` is
+  established, causing the argument name `X` to be
+  [codified][@codification] because `X` is now @INTERESTING.
+
+  See DOCUMENTING-REFERENCE and WITH-DISLOCATED-NAMES in
+  @EXTENDING-DOCUMENT.
+  """)
+
+;;; A list of references with special rules for linking. The
+;;; definition being documented is always on this list (see
+;;; DOCUMENTING-REFERENCE). Arguments of functions and similar
+;;; typically also are. Bound by WITH-LOCAL-REFERENCES.
+(defvar *local-references*)
+
+(defun has-local-reference-p (name)
+  (find name *local-references* :test #'xref-name=))
+
+
+(defsection @link-format (:title "Link Format")
+  "The following variables control various aspects of links and \URLs."
   (*document-url-versions* variable)
   (*document-min-link-hash-length* variable)
-  (*document-mark-up-signatures* variable)
   (*document-base-url* variable))
 
 (defvar *document-url-versions* '(2 1)
@@ -2758,9 +2720,9 @@
   links.
 
   PAX emits HTML anchors before the documentation of SECTIONs
-  (see @LINKING-TO-SECTIONS) and other things (see @LINKING-TO-CODE).
-  For the function `FOO`, in the current version (version 2), the
-  anchor is `<a id="MGL-PAX:FOO%20FUNCTION">`, and its \URL will end
+  (see @LINKING-TO-SECTIONS) and other things (see @LINKING). For the
+  function `FOO`, in the current version (version 2), the anchor is
+  `<a id="MGL-PAX:FOO%20FUNCTION">`, and its \URL will end
   with `\\#MGL-PAX:FOO%20FUNCTION`.
 
   _Note that to make the \URL independent of whether a symbol is
@@ -2842,9 +2804,10 @@
        (format nil "pax:~A ~S"
                (name-to-url-part (dref-name dref)) (dref-locative dref))))))
 
-(defun name-to-ambiguous-pax-url (name)
-  (with-standard-io-syntax*
-    (format nil "pax:~A" (name-to-url-part name))))
+(defun name-to-pax-url (name)
+  (urlencode
+   (with-standard-io-syntax*
+     (format nil "pax:~A" (name-to-url-part name)))))
 
 ;;; If NAME is a symbol, then print it almost as PRIN1 would with
 ;;; *PACKAGE* were the CL package. Differences:
@@ -2882,11 +2845,11 @@
 
 
 (defvar *document-min-link-hash-length* 4
-  "Recall that markdown reference style links (like `[label][id]`) are
-  used for linking to sections and code. It is desirable to have ids
-  that are short to maintain legibility of the generated markdown, but
-  also stable to reduce the spurious diffs in the generated
-  documentation, which can be a pain in a version control system.
+  "Recall that @MARKDOWN/REFLINKs (like `[label][id]`) are used for
+  @LINKING. It is desirable to have ids that are short to maintain
+  legibility of the generated markdown, but also stable to reduce the
+  spurious diffs in the generated documentation, which can be a pain
+  in a version control system.
 
   Clearly, there is a tradeoff here. This variable controls how many
   characters of the MD5 sum of the full link id (the reference as a
@@ -3110,78 +3073,13 @@
     (apply #'append (reverse results))))
 
 
-(defsection @package-and-readtable (:title "Package and Readtable")
-  "While generating documentation, symbols may be read (e.g. from
-  docstrings) and printed. What values of *PACKAGE* and *READTABLE*
-  are used is determined separately for each definition being
-  documented.
-
-  - If the values of *PACKAGE* and *READTABLE* in effect at the time
-    of definition were captured (e.g. by DEFINE-LOCATIVE-TYPE and
-    DEFSECTION), then they are used.
-
-  - Else, if the definition has a @HOME-SECTION (see below), then the
-    home section's SECTION-PACKAGE and SECTION-READTABLE are used.
-
-  - Else, if the definition has an argument list, then the package of
-    the first argument that's not external in any package is used.
-
-  - Else, if the definition is DREF::@NAMEd by a symbol, then its
-    SYMBOL-PACKAGE is used, and *READTABLE* is set to the standard
-    readtable `(NAMED-READTABLES:FIND-READTABLE :COMMON-LISP)`.
-
-  - Else, *PACKAGE* is set to the `CL-USER` package and *READTABLE* to
-    the standard readtable.
-
-  The values thus determined come into effect after the name itself is
-  printed, for printing of the arglist and the docstring.
-
-      CL-USER> (pax:document #'foo)
-      - [function] FOO <!> X Y &KEY (ERRORP T)
-
-          Do something with X and Y.
-
-  In the above, the `<!>` marks the place where *PACKAGE* and
-  *READTABLE* are bound."
-  (@home-section section)
-  (*document-normalize-packages* variable))
-
-(defsection @home-section (:title "Home Section")
-  "[home-section function][docstring]")
-
-(defun guess-package-and-readtable (reference arglist)
-  (let ((home-section (first (find-parent-sections reference))))
-    (if home-section
-        (values (section-package home-section)
-                (section-readtable home-section))
-        (values (or (guess-package-from-arglist arglist)
-                    (and (symbolp (xref-name reference))
-                         (symbol-package (xref-name reference)))
-                    (find-package :cl-user))
-                named-readtables::*standard-readtable*))))
-
-;;; Unexported argument names are highly informative about *PACKAGE*
-;;; at read time. No one ever uses fully-qualified internal symbols
-;;; from another package for arguments, right?
-(defun guess-package-from-arglist (arglist)
-  (let ((args (or (ignore-errors (dref::function-arg-names arglist))
-                  (ignore-errors (dref::macro-arg-names arglist)))))
-    (dolist (arg args)
-      (unless (external-symbol-in-any-package-p arg)
-        (return (symbol-package arg))))))
-
-(defvar *document-normalize-packages* t
-  "Whether to print `[in package <package-name>]` in the documentation
-  when the package changes.")
-
-
 (defvar *document-base-url* nil
   """When *DOCUMENT-BASE-URL* is non-NIL, this is prepended to all
   Markdown relative URLs. It must be a valid URL without no query and
-  fragment parts (that is, "http://lisp.org/doc/" but not
-  "http://lisp.org/doc?a=1" or "http://lisp.org/doc#fragment").
-  Note that intra-page links using only URL fragments (e.g. and
-  explicit HTML links (e.g. `<a href="...">`) in Markdown are not
+  fragment parts (that is, _http://lisp.org/doc/_ but not
+  _http://lisp.org/doc?a=1_ or _http://lisp.org/doc#fragment_). Note
+  that intra-page links using only URL fragments (e.g. and explicit
+  HTML links (e.g. `<a href="...">`) in Markdown are not
   affected.""")
 
 (defun add-base-url (parse-tree)
@@ -3210,8 +3108,8 @@
 
 (defsection @overview-of-escaping (:title "Overview of Escaping")
   """Let's recap how escaping @CODIFICATION,
-  [downcasing][\*document-downcase-uppercase-code*], and
-  @LINKING-TO-CODE works.
+  [downcasing][\*document-downcase-uppercase-code*], and @LINKING
+  works.
 
   - One backslash in front of a @WORD turns codification off. Use this
     to prevent codification words such as \DOCUMENT, which is all
@@ -3255,8 +3153,9 @@
 
   In addition, CLISP does not support the ambiguous case of @PAX-URLS
   for @BROWSING-LIVE-DOCUMENTATION because the current implementation
-  relies on Swank to list definitions of symbols (as VARIABLE,
-  [FUNCTION][locative], etc), and that simply doesn't work.""")
+  relies on Swank to list definitions of symbols (as
+  [VARIABLE][locative], [FUNCTION][locative], etc), and that simply
+  doesn't work.""")
 
 
 (defun pax-std-env (fn)

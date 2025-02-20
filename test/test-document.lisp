@@ -69,6 +69,8 @@
   (test-urlencode)
   (test-transform-tree)
   (test-sanitize-docstring-aggressively)
+  (test-parse-dref)
+  (test-parse-definitions*)
   (test-codify)
   (test-names)
   (test-downcasing)
@@ -115,6 +117,7 @@
   (test-clhs-issue)
   (test-argument)
   (test-define-locative-alias)
+  ;; Misc
   (test-cl-transcript)
   (test-document/open)
   (test-map-documentable)
@@ -180,6 +183,57 @@
     (test1 "heading"  "#x"                  "\\#x")
     (test1 "heading2" "# x"                 "\\# x")
     (test1 "heading3" "x~%~%    # x"        "x~%~%    \\# x")))
+
+
+(deftest test-parse-dref ()
+  (let ((*package* (find-package :mgl-pax-test)))
+    (unintern (read-from-string "non-interned"))
+    (unintern (read-from-string "yyy"))
+    (is (match-values (mgl-pax::parse-dref "yyy non-interned")
+          (null *)
+          (null *)
+          (string= * "non-interned")))
+    (is (null (find-symbol (string '#:non-interned))))
+    (is (null (find-symbol (string '#:yyy))))
+    (is (match-values (mgl-pax::parse-dref "yyy (non-interned)")
+          (null *)
+          (null *)
+          (string= * "(non-interned)")))
+    (is (null (find-symbol (string '#:non-interned))))
+    (is (null (find-symbol (string '#:yyy))))
+    (is (match-values (mgl-pax::parse-dref "yyy find")
+          (null *)
+          (null *)
+          (string= * "find")))
+    (is (null (find-symbol (string '#:yyy))))
+    (is (match-values (mgl-pax::parse-dref "foo function")
+          (xref= * (dref 'foo 'function))
+          (eq * 'function)
+          (null *)))
+    (is (match-values (mgl-pax::parse-dref " foo  function ")
+          (xref= * (dref 'foo 'function))
+          (eq * 'function)
+          (null *)))
+    (is (match-values (mgl-pax::parse-dref " foo  function  bar ")
+          (null *)
+          (null *)
+          (string= * "function  bar")))
+    (is (match-values (mgl-pax::parse-dref "mgl-pax:@codification section")
+          (xref= * (dref 'mgl-pax::@codification 'section))
+          (eq * 'section)
+          (null *))
+        :msg "internal symbol with single :")))
+
+(deftest test-parse-definitions* ()
+  (let ((*package* (find-package :mgl-pax-test)))
+    (is (dref-set= (mgl-pax::parse-definitions* "deftest")
+                   (definitions 'deftest)))
+    (is (dref-set= (mgl-pax::parse-definitions* "MGL-PAX::@CODIFIABLE")
+                   (definitions 'mgl-pax::@codifiable)))
+    (is (dref-set= (mgl-pax::parse-definitions* "nil")
+                   (mgl-pax::definitions* 'nil)))
+    (is (dref-set= (mgl-pax::parse-definitions* "\"nil\"")
+                   (mgl-pax::definitions* "nil")))))
 
 
 (deftest test-codify ()
@@ -257,7 +311,11 @@ xxx
 "))
   (is (internedp 'references))
   (check-head "REFERENCEs" "`REFERENCE`s" :msg "interned lowercase plural")
-  (check-head "<PRINT>" "<PRINT>" :msg "No codification in :RAW-HTML"))
+  (check-head "<PRINT>" "<PRINT>" :msg "No codification in :RAW-HTML")
+  (with-test ("funny names")
+    (check-head "|Foo|" "|Foo|")
+    (check-head "|F o|" "|F o|")
+    (check-head "|F O|" "|F O|")))
 
 (defun q ())
 (defun qq ())
@@ -322,7 +380,7 @@ xxx
     (check-head "[CLASSes.][]" "`CLASS`es." :warnings 1)
     ;; Somewhat surprisingly, the ARRAY-DIMENSIONS is to be linked as
     ;; the PAX::@NAME is determined by PARSE-TREE-TO-TEXT.
-    (check-head "[ARRAY-DIMENSIONs][]" "[`ARRAY-DIMENSION`s][b315]")
+    (check-head "[ARRAY-DIMENSIONs][]" "[`ARRAY-DIMENSION`s][6c28]")
     (check-head "[ARRAY-DIMENSIONs.][]" "`ARRAY-DIMENSION`s." :warnings 1))
   (with-test ("Uppercase code + lowercase plural in reflink.")
     (check-head "[`CAR`s][]" "[`CAR`s][d5a2]")
@@ -330,7 +388,7 @@ xxx
     (with-failure-expected ((alexandria:featurep :clisp))
       (check-head "[`CLASS`es][]" "[`CLASS`es][1f37]"))
     (check-head "[`CLASS`es.][]" "`CLASS`es." :warnings 1)
-    (check-head "[`ARRAY-DIMENSION`s][]" "[`ARRAY-DIMENSION`s][b315]")
+    (check-head "[`ARRAY-DIMENSION`s][]" "[`ARRAY-DIMENSION`s][6c28]")
     (check-head "[`ARRAY-DIMENSION`s.][]" "`ARRAY-DIMENSION`s." :warnings 1))
   (with-test ("Trimming")
     (check-head "`#<CLASS>`" "`#<CLASS>`")
@@ -364,12 +422,20 @@ xxx
     (check-head "T=3" "T=3"))
   (check-head "Classes" "Classes")
   (with-failure-expected ((alexandria:featurep :clisp))
-    (check-head "`Classes`" "[`Classes`][1f37]"))
+    (check-head "`Classes`" "`Classes`"))
   (check-head "`\"=>\"`" "`\"=>\"`")
   (with-test ("no uppercase")
     (check-head "non-nil" "non-nil"))
   (with-test ("uppercase too short")
-    (check-head "nonXX" "nonXX")))
+    (check-head "nonXX" "nonXX"))
+  (with-test ("a longer definition exists but it's not being documented")
+    (check-head (list "[XYZS][]" #'xyz) "`XYZS`")
+    (check-head (list "XYZS" #'xyz) "`XYZS`")
+    (check-head (list "[XYZs][]" #'xyz) "[`XYZ`s][1f17]")
+    (check-head (list "XYZs" #'xyz) "[`XYZ`][1f17]s")))
+
+(defun xyz ())
+(defun xyzs ())
 
 
 (deftest test-downcasing ()
@@ -440,10 +506,10 @@ xxx
   (with-test ("reflink unadorned")
     (check-downcasing "[NOT-INTERNED][]" "NOT-INTERNED" :warnings 1)
     (check-downcasing "[CaMeL][]" "CaMeL" :warnings 1)
-    (check-downcasing "[TEST][]" "`test`" :warnings 1)
+    (check-downcasing "[TEST][]" "`test`")
     (with-failure-expected ((alexandria:featurep :clisp))
       (check-downcasing "[CLASS][]" "[`class`][1f37]"))
-    (check-downcasing "[*FORMAT*][]" "`*format*`" :warnings 1)
+    (check-downcasing "[*FORMAT*][]" "`*format*`")
     (check-downcasing "[*PACKAGE*][]" "[`*package*`][5ed1]")
     (check-downcasing (list "[@SECTION-WITHOUT-TITLE][]"
                             @section-without-title)
@@ -451,10 +517,10 @@ xxx
   (with-test ("reflink code")
     (check-downcasing "[`NOT-INTERNED`][]" "`not-interned`" :warnings 1)
     (check-downcasing "[`CaMeL`][]" "`CaMeL`" :warnings 1)
-    (check-downcasing "[`TEST`][]" "`test`" :warnings 1)
+    (check-downcasing "[`TEST`][]" "`test`")
     (with-failure-expected ((alexandria:featurep :clisp))
       (check-downcasing "[`CLASS`][]" "[`class`][1f37]"))
-    (check-downcasing "[`*FORMAT*`][]" "`*format*`" :warnings 1)
+    (check-downcasing "[`*FORMAT*`][]" "`*format*`")
     (check-downcasing "[`*PACKAGE*`][]" "[`*package*`][5ed1]")
     (check-downcasing (list "[`@SECTION-WITHOUT-TITLE`][]"
                             @section-without-title)
@@ -462,10 +528,10 @@ xxx
   (with-test ("reflink escaped code")
     (check-downcasing "[`\\NOT-INTERNED`][]" "`not-interned`" :warnings 1)
     (check-downcasing "[`\\CaMeL`][]" "`CaMeL`" :warnings 1)
-    (check-downcasing "[`\\TEST`][]" "`test`" :warnings 1)
+    (check-downcasing "[`\\TEST`][]" "`test`")
     (with-failure-expected ((alexandria:featurep :clisp))
       (check-downcasing "[`\\CLASS`][]" "[`class`][1f37]"))
-    (check-downcasing "[`\\*FORMAT*`][]" "`*format*`" :warnings 1)
+    (check-downcasing "[`\\*FORMAT*`][]" "`*format*`")
     (check-downcasing "[`\\*PACKAGE*`][]" "[`*package*`][5ed1]")
     (check-downcasing (list "[`\\@SECTION-WITHOUT-TITLE`][]"
                             @section-without-title)
@@ -473,10 +539,10 @@ xxx
   (with-test ("reflink doubly escaped code")
     (check-downcasing "[`\\\\NOT-INTERNED`][]" "`NOT-INTERNED`" :warnings 1)
     (check-downcasing "[`\\\\CaMeL`][]" "`CaMeL`" :warnings 1)
-    (check-downcasing "[`\\\\TEST`][]" "`TEST`" :warnings 1)
+    (check-downcasing "[`\\\\TEST`][]" "`TEST`")
     (with-failure-expected ((alexandria:featurep :clisp))
       (check-downcasing "[`\\\\CLASS`][]" "[`CLASS`][1f37]"))
-    (check-downcasing "[`\\\\*FORMAT*`][]" "`*FORMAT*`" :warnings 1)
+    (check-downcasing "[`\\\\*FORMAT*`][]" "`*FORMAT*`")
     (check-downcasing "[`\\\\*PACKAGE*`][]" "[`*PACKAGE*`][5ed1]")
     (check-downcasing (list "[`\\\\@SECTION-WITHOUT-TITLE`][]"
                             @section-without-title)
@@ -523,7 +589,7 @@ xxx
 
 (deftest test-link ()
   (test-autolink)
-  (test-resolve-reflink)
+  (test-reflink)
   (test-explicit-label)
   (test-suppressed-links))
 
@@ -535,32 +601,42 @@ xxx
                       (dref 'bar 'macro))
                 ;; "3e5e" is the id of the macro.
                 "macro [`BAR`][3e5e] function"
-                :msg "locative before, irrelavant locative after")
+                :msg "locative before, irrelevant locative after")
     (check-head (list "function BAR macro"
                       (dref 'bar 'type)
                       (dref 'bar 'macro))
                 "function [`BAR`][3e5e] macro"
-                :msg "locative after, irrelavant locative before")
+                :msg "locative after, irrelevant locative before")
     (check-head (list "macro BAR type"
                       (dref 'bar 'type)
                       (dref 'bar 'macro)
                       (dref 'bar 'constant))
                 ;; "e2a5" is the the id of the type.
-                "macro `BAR`([`0`][3e5e] [`1`][e2a5]) type"
-                :msg "ambiguous locative"))
+                "macro [`BAR`][e2a5] type"
+                :msg "ambiguous locative")
+    (check-head (list "macro BAR type"
+                      (dref 'bar 'macro))
+                "macro `BAR` type"
+                :msg "definition with preferred locative no being documented"))
   (with-test ("locative in backticks")
-    (check-head (list "`TEST-GF` `(method t (number))`"
+    (check-head (list "`TEST-GF` `(method () (number))`"
                       (dref 'test-gf '(method () (number))))
-                "[`TEST-GF`][044a] `(method t (number))`")
-    (check-head (list "`(method t (number))` `TEST-GF`"
+                "[`TEST-GF`][044a] `(method () (number))`")
+    (check-head (list "`(method () (number))` `TEST-GF`"
                       (dref 'test-gf '(method () (number))))
-                "`(method t (number))` [`TEST-GF`][044a]"))
+                "`(method () (number))` [`TEST-GF`][044a]"))
   (with-test ("escaped autolinking")
     (check-head "`\\PRINT`" "`PRINT`"))
   (with-test ("used to fail")
-    (check-head " :KEY xxx" " `:KEY` xxx")))
+    (check-head " :KEY xxx" " `:KEY` xxx"))
+  (with-test ("longer definition with unspecified locative")
+    (check-head "class STRING>." "class [`STRING`][b93c]>."))
+  (check-head "the EQL function's" "the [`EQL`][db03] function's")
+  (with-test ("mixed case name")
+    (check-head (list "`|Foo|`" #'|Foo|) "[`|Foo|`][5696]")
+    (check-head (list "`|F o|`" #'|F o|) "[`|F o|`][775e]")))
 
-(deftest test-resolve-reflink ()
+(deftest test-reflink ()
   (with-test ("label is a single name")
     (check-head "[*PACKAGE*][]" "[`*PACKAGE*`][5ed1]")
     (check-head "[*PACKAGE*][variable]" "[`*PACKAGE*`][5ed1]")
@@ -568,7 +644,7 @@ xxx
     (check-head "[*PACKAGE*][ variable]" "[`*PACKAGE*`][5ed1]")
     (check-head "[*PACKAGE*]" "\\[[`*PACKAGE*`][5ed1]\\]")
     (check-head "[*PACKAGE*][normaldef]" "[`*PACKAGE*`][normaldef]")
-    (check-head "[*FORMAT*][]" "`*FORMAT*`" :warnings 1))
+    (check-head "[*FORMAT*][]" "`*FORMAT*`"))
   (with-test ("definition is a reference")
     (check-head "[see this][car function]" "[see this][d5a2]")
     (check-head "[`see` *this*][car function]" "[`see` *this*][d5a2]"))
@@ -584,21 +660,15 @@ xxx
                       (dref 'section 'locative))
                 "see this" :warnings 1)
     (check-head (list "[FORMAT][dislocated]"
-                      (dref 'dislocated 'locative)
-                      (dref 'pax::@explicit-and-autolinking
-                            'section))
+                      (dref 'dislocated 'locative))
                 "`FORMAT`"
                 :package (find-package '#:mgl-pax))
     (check-head (list "[NOT-CODE][dislocated]"
-                      (dref 'dislocated 'locative)
-                      (dref 'pax::@explicit-and-autolinking
-                            'section))
+                      (dref 'dislocated 'locative))
                 "NOT-CODE"
                 :package (find-package '#:mgl-pax))
     (check-head (list "[`SOME-CODE`][dislocated]"
-                      (dref 'dislocated 'locative)
-                      (dref 'pax::@explicit-and-autolinking
-                            'section))
+                      (dref 'dislocated 'locative))
                 "`SOME-CODE`"
                 :package (find-package '#:mgl-pax))
     (check-head "[locative][dislocated]" "locative")
@@ -625,7 +695,9 @@ xxx
       (check-head "[see this][references]
 
   [references]: #ttt"
-                  "see this"))
+                  "[see this][references]
+
+[references]: #ttt"))
     (with-test ("definition is an interned symbol with a definition")
       (check-head "[see this][print]
 
@@ -637,7 +709,22 @@ xxx
     (with-test ("backtick in reflink definition")
       (check-head "[xxx][`*print-length*` variable]" "[xxx][8f7a]")))
   (with-test ("emph around reflink")
-    (check-head "*[x][y]*" "*[x][y]*")))
+    (check-head "*[x][y]*" "*[x][y]*"))
+  (with-test ("mixed case name")
+    (check-head (list "[|Foo|][function]" #'|Foo|) "[|Foo|][5696]"))
+  (with-test ("spaces in names")
+    (check-head (list "[see this][\"X Y\" package]" (find-package "X Y"))
+                "[see this][4ef3]")
+    (is (internedp '|X Y|))
+    (check-head (list "[see this][|X Y| package]" (find-package "X Y"))
+                "[see this][4ef3]")
+    (check-head (list "[|X Y|][package]" (find-package "X Y"))
+                "[|X Y|][4ef3]")
+    (check-head (list "[X Y][package]" (find-package "X Y"))
+                "[X Y][4ef3]")
+    (check-head (list "[\"X Y\"][package]" (find-package "X Y"))
+                "[\"X Y\"][4ef3]")))
+
 
 
 (defsection @section-with-title (:title "My `Title`" :export nil))
@@ -949,12 +1036,12 @@ This is [Self-referencing][e042].
 
 (deftest test-function-args ()
   (with-failure-expected ((alexandria:featurep :clisp))
-    (check-document #'foo2 "<a id=\"MGL-PAX-TEST:FOO2%20FUNCTION\"></a>
+    (check-head (list #'foo2 #'ook)
+                "<a id=\"MGL-PAX-TEST:FOO2%20FUNCTION\"></a>
 
 - [function] **FOO2** *OOK X*
 
-    `FOO2` has args `OOK` and `X`.
-")))
+    `FOO2` has args [`OOK`][0e7e] and `X`.")))
 
 (when (fboundp 'encapsulated-function)
   (untrace encapsulated-function))
@@ -1311,7 +1398,12 @@ This is [Self-referencing][e042].
       (check-head "[otherwise][macro]" "[otherwise][c9ce]")
       (check-head "[OTHERWISES][macro]" "[`OTHERWISE`s][c9ce]")))
   (with-test ("explicit definition link always works")
-    (check-head "[PRINT][pax:clhs]" "[`PRINT`][d451]")))
+    (check-head "[PRINT][pax:clhs]" "[`PRINT`][d451]"))
+  (with-test ("clhs fallback link is EQ to explicit link")
+    (check-head (list "[PRINT][function] [PRINT][pax:clhs]")
+                "[`PRINT`][d451] [`PRINT`][d451]")
+    (check-head (list "[PRINT][clhs] [PRINT][function]")
+                "[`PRINT`][d451] [`PRINT`][d451]")))
 
 (deftest test-clhs-section ()
   (let ((*document-link-to-hyperspec* t))
@@ -1395,7 +1487,11 @@ This is [Self-referencing][e042].
 - [function] **ARGUMENT-SHADOW** *SECTIONS*
 
     `SECTIONS`, `SECTIONS`s, `SECTIONS`, `SECTIONS`s, `SECTIONS`,
-    [`SECTIONS`][5fac]"))
+    [`SECTIONS`][5fac]")
+  (check-head "STREAM argument" "`STREAM` argument")
+  (check-head "STREAM dislocated" "`STREAM` dislocated")
+  (check-head "[STREAM][argument]" "`STREAM`")
+  (check-head "[STREAM][dislocated]" "`STREAM`"))
 
 (defun argument-shadow (sections)
   "SECTIONS, SECTIONSs, [SECTIONS][], [SECTIONSs][], [SECTIONS][argument],
@@ -1455,11 +1551,6 @@ This is [Self-referencing][e042].
     (funcall fn)))
 
 (deftest test-document/open ()
-  (with-test ("no link duplication for objects being documented")
-    (check-head (list "PAX:LOCATIVE"
-                      (dref 'pax:locative 'pax:locative))
-                "[`PAX:LOCATIVE`][0b3a]"
-                :w3m t))
   (with-failure-expected ((alexandria:featurep :clisp))
     (with-test ("simplified ambiguous links")
       (check-head "AMBI" "[`AMBI`](pax:MGL-PAX-TEST:AMBI)" :w3m t))
@@ -1489,28 +1580,10 @@ This is [Self-referencing][e042].
       (check-pred @test-examples (lambda (output)
                                    (not (search "in package" output)))
                   :w3m t)))
-  (test-documentables-of)
   (test-document/open/live-vs-static)
   (test-document/open/object)
   (test-document/open/clhs)
   (test-document/open/undefined))
-
-(deftest test-documentables-of ()
-  ;; This test relies on what is and what is not available through
-  ;; SWANK-BACKEND:FIND-DEFINITIONS in a given implementation.
-  #+sbcl
-  (is (endp (different-elements
-             (dref::sort-references (pax::documentables-of nil))
-             (list (dref "NIL" '(clhs glossary-term))
-                   (dref :common-lisp 'readtable)
-                   (dref 'nil '(clhs constant))
-                   (dref 'nil '(clhs type))
-                   (dref 'nil 'clhs)
-                   (dref 'nil 'constant))
-             :pred (lambda (r1 r2)
-                     (and (typep r1 'xref)
-                          (typep r2 'xref)
-                          (xref= r1 r2)))))))
 
 (deftest test-document/open/live-vs-static ()
   (with-test ("prefer live definition to CLHS")
@@ -1622,9 +1695,11 @@ example section
   (test-table-of-contents-reapated-section-depth))
 
 (deftest test-table-of-contents-reapated-section-depth ()
-  ;; When the same section is documented twice: first as a subsection
-  ;; of another section, second directly as itself, then determining
-  ;; its heading depth is trickier.
+  ;; Sometimes we want to document the same thing on two pages. For
+  ;; example, a section maybe go on the page of its parent section,
+  ;; and it may also have its own page. In that case, check that the
+  ;; PAX::*HEADING-LEVEL* on the separate page is the same as the
+  ;; heading level when in the parent context.
   (check-document (list @parent-section-without-title @section-without-title)
                   "- [`@PARENT-SECTION-WITHOUT-TITLE`][74ce]
 - [`@SECTION-WITHOUT-TITLE`][eeac]

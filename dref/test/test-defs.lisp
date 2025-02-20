@@ -11,6 +11,8 @@
   (declare (ignore ook x))
   nil)
 
+(defun |Foo| ())
+
 (defun traced-foo (x)
   "TRACED-FOO function"
   x)

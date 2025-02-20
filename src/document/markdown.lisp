@@ -2,8 +2,6 @@
 
 (in-readtable pythonic-string-syntax)
 
-;;;; Text based markdown fragments
-
 (defun parse-markdown (string)
   (let ((3bmd-grammar:*smart-quotes* nil))
     (postprocess-parse-tree (parse-markdown-fast string))))
@@ -47,6 +45,9 @@
   (with-colorize-silenced ()
     (3bmd::print-doc-to-stream-using-format
      (preprocess-parse-tree-for-printing parse-tree format) stream format)))
+
+
+;;;; Text based markdown fragments
 
 (defun heading (level stream)
   (loop repeat (1+ level) do (write-char #\# stream)))
@@ -168,6 +169,7 @@
           (prefix-lines "  " (pt-get tree :content)))
     tree))
 
+;;; This may return NIL (e.g for ((:EMPH "XXX")) :DEEMPH NIL).
 (defun parse-tree-to-text (parse-tree &key deemph)
   (labels
       ((recurse (e)
@@ -310,6 +312,26 @@
   (if (ends-with #\\ string)
       (concatenate 'string string "\\")
       string))
+
+;;; Post-process the markdown parse tree to make it prettier on w3m
+;;; and maybe make relative links absolute.
+(defun postprocess-for-w3m (parse-tree)
+  (flet ((translate (parent tree)
+           (declare (ignore parent))
+           (cond ((eq (first tree) :code)
+                  `(:strong ,tree))
+                 ((eq (first tree) :verbatim)
+                  (values `((:raw-html #.(format nil "<i>~%"))
+                            ,(indent-verbatim tree) (:raw-html "</i>"))
+                          nil t))
+                 (t
+                  (values `((:raw-html #.(format nil "<i>~%"))
+                            ,(indent-code-block tree)
+                            (:raw-html "</i>"))
+                          nil t)))))
+    (map-markdown-parse-tree '(:code :verbatim 3bmd-code-blocks::code-block)
+                             '() nil #'translate parse-tree)))
+
 
 ;;; Call FN with STRING and START, END indices of @WORDS.
 ;;;

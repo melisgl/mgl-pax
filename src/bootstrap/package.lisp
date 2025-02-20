@@ -32,6 +32,8 @@
         ;; These are the exports from MGL-PAX-BOOTSTRAP.
         (:export #:define-package
          #:defsection #:section
+         #:exportable-reference-p
+         #:exportable-locative-type-p
          #:define-glossary-term #:glossary-term
          #:make-github-source-uri-fn
          #:make-git-source-uri-fn

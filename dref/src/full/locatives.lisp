@@ -546,10 +546,10 @@
    method but can be LOCATEd with either.""")
 
 (define-locative-type reader (class-name)
-  "Like ACCESSOR, but refers to a :READER method in a DEFCLASS.")
+  "Like [ACCESSOR][locative], but refers to a :READER method in a DEFCLASS.")
 
 (define-locative-type writer (class-name)
-  "Like ACCESSOR, but refers to a :WRITER method in a DEFCLASS.")
+  "Like [ACCESSOR][locative], but refers to a :WRITER method in a DEFCLASS.")
 
 (define-definition-class accessor accessor-dref)
 (define-definition-class reader reader-dref)
@@ -1238,6 +1238,9 @@
   (when name
     (locate-error "The name ~S is not NIL." name))
   (%make-dref 'lambda-dref name (cons locative-type locative-args)))
+
+(defmethod map-definitions (fn name (locative-type (eql 'lambda)))
+  (declare (ignore fn name)))
 
 (defmethod arglist* ((dref lambda-dref))
   (let ((arglist (getf (dref-locative-args dref) :arglist '%not-there))

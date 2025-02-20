@@ -147,8 +147,8 @@
                                               ,(dref-locative go-dref)))
                               :target-dref go-dref))))
 
-(defmethod map-definitions (name (locative-type (eql 'go)))
-   (declare (ignorable name))
+(defmethod dref::map-definitions (fn name (locative-type (eql 'go)))
+  (declare (ignorable name))
   ;; There are no real GO definitions.
   (values))
 
@@ -162,9 +162,9 @@
 ;;;; DISLOCATED locative
 
 (define-pseudo-locative-type dislocated ()
-  "Refers to a symbol in a non-specific context. Useful for preventing
-  [autolinking][@explicit-and-autolinking section]. For example, if
-  there is a function called `FOO` then
+  "Refers to a symbol in a non-specific context. Useful for
+  suppressing @UNSPECIFIC-AUTOLINKing. For example, if there is a
+  function called `FOO` then
 
       `FOO`
 
@@ -173,7 +173,7 @@
       [`FOO`][dislocated]
 
   will not be. With a dislocated locative, LOCATE always fails with a
-  LOCATE-ERROR condition. Also see @PREVENTING-AUTOLINKING.
+  LOCATE-ERROR condition. Also see @ESCAPING-AUTOLINKING.
 
   DISLOCATED references do not RESOLVE.")
 
@@ -185,9 +185,9 @@
 ;;;; ARGUMENT locative
 
 (define-pseudo-locative-type argument ()
-  """An alias for DISLOCATED, so that one can refer to an argument of
-  a macro without accidentally linking to a class that has the same
-  name as that argument. In the following example,
+  """An alias for [DISLOCATED][locative], so that one can refer to an
+  argument of a macro without accidentally linking to a class that has
+  the same name as that argument. In the following example,
   [FORMAT][dislocated] may link to CL:FORMAT (if we generated
   documentation for it):
 
@@ -203,9 +203,16 @@
 
   ARGUMENT references do not RESOLVE.""")
 
+(defvar *local-references* ())
+
+(defun find-local-reference (xref)
+  (find xref *local-references* :test #'xref=))
+
 (defmethod dref* (symbol (locative-type (eql 'argument)) locative-args)
-  (declare (ignorable symbol locative-args))
-  (locate-error "~S can never be located." 'argument))
+  (check-locative-args argument locative-args)
+  (if (find-local-reference (xref symbol 'argument))
+      (make-instance 'dref :name symbol :locative 'argument)
+      (locate-error)))
 
 
 ;;;; DOCSTRING
@@ -361,16 +368,16 @@
   - *definitions*: These are typically unnecessary as DOCUMENT will
     produce the same link for e.g. `\\PPRINT`, `[PPRINT][function]`,
     or `[PPRINT][]` if *DOCUMENT-LINK-TO-HYPERSPEC* is non-NIL and the
-    PPRINT function in the running Lisp is not being DOCUMENTed. When
+    PPRINT function in the running Lisp is not @LINKABLE. When
     @BROWSING-LIVE-DOCUMENTATION, a slight difference is that
-    everything is being DOCUMENTed, so using the CLHS link bypasses
-    the page with the definition in the running Lisp.
+    everything is linkable, so using the CLHS link bypasses the page
+    with the definition in the running Lisp.
 
-      - *unambiguous*: `[pprint][clhs]` ([pprint][clhs])
+      - *unambiguous definition*: `[pprint][clhs]` ([pprint][clhs])
 
-      - *ambiguous*: `[function][clhs]` ([function][clhs])
+      - *disambiguation page*: `[function][clhs]` ([function][clhs])
 
-      - *explicit*: `[function][(clhs class)]` ([function][(clhs class)])
+      - *specific*: `[function][(clhs class)]` ([function][(clhs class)])
 
   - *glossary terms*:
 
@@ -391,11 +398,10 @@
       - `[SUMMARY:CHARACTER-PROPOSAL:2-6-5][(clhs section)]`
 
       Since these summary ids are not particularly reader friendly,
-      the title override form of the @SPECIFIED-LOCATIVE may be used:
+      the anchor text a @SPECIFIC-REFLINK-WITH-TEXT may be used:
 
-      - `[see this][SUMMARY:CHARACTER-PROPOSAL:2-6-5 (clhs
-        section)]` ([see this][SUMMARY:CHARACTER-PROPOSAL:2-6-5 (clhs
-        section)])
+      - `[see this][SUMMARY:CHARACTER-PROPOSAL:2-6-5 (clhs section)]`
+        ([see this][SUMMARY:CHARACTER-PROPOSAL:2-6-5 (clhs section)]).
 
   - *sections*:
 
@@ -424,9 +430,9 @@
   Sections are considered last because a substring of a section title
   can be matched by chance easily.
 
-  All examples so far used [explicit][ @explicit-and-autolinking]
-  links. Autolinking also works if the @NAME is marked up as code or
-  is [codified][ @codification] (e.g. in `COS clhs` (COS clhs).
+  All examples so far used @REFLINKs. @AUTOLINKing also works if the
+  @NAME is marked up as code or is [codified][ @codification] (e.g. in
+  `COS clhs` (COS clhs).
 
   As mentioned above, `\\M-.` does not do anything over CLHS
   references. Slightly more usefully, the [live documentation
@@ -436,9 +442,9 @@
 
   CLHS references do not RESOLVE.""")
 
-(define-definition-class clhs clhs-dref)
-
-(defparameter *clhs-substring-match* t)
+(define-definition-class clhs clhs-dref (dref)
+  ;; For SUBSTITUTE-CLHS-FOR-MISSING-STANDARD-DEFINITION
+  ((explicit-p :initform nil :accessor clhs-dref-explicit-p)))
 
 (defmethod dref* (name (locative-type (eql 'clhs)) locative-args)
   (check-locative-args clhs locative-args)
@@ -457,9 +463,7 @@
                          (make-instance 'clhs-dref
                                         :name id
                                         :locative '(clhs section))))
-                     (let ((id (find-hyperspec-section-id
-                                name-string
-                                :substring-match *clhs-substring-match*)))
+                     (let ((id (find-hyperspec-section-id name-string)))
                        (when id
                          (make-instance 'clhs-dref
                                         :name id
@@ -468,11 +472,13 @@
                  (multiple-value-bind (url nested-locative)
                      (find-hyperspec-definition-url name locative-args)
                    (when url
-                     (make-instance 'clhs-dref
-                                    :name name
-                                    :locative (if nested-locative
-                                                  `(clhs ,nested-locative)
-                                                  'clhs))))))
+                     (if (eq 'go (locative-type nested-locative))
+                         (dref name nested-locative)
+                         (make-instance 'clhs-dref
+                                        :name name
+                                        :locative (if nested-locative
+                                                      `(clhs ,nested-locative)
+                                                      'clhs)))))))
           (cond ((equal locative-args '(glossary-term))
                  (glossary-term?))
                 ((equal locative-args '(section))
@@ -482,3 +488,20 @@
                 (t
                  (definition?)))))
       (locate-error)))
+
+(defmethod dref::map-definitions (fn name (locative-type (eql 'clhs)))
+  (cond ((symbolp name)
+         (loop for locative in (hyperspec-locatives-for-name name)
+               ;; LOCATIVE NIL is for *HYPERSPEC-DISAMBIGUATIONS*.
+               do (when locative
+                    (funcall fn (dref name `(clhs ,locative))))))
+        (t
+         (when-let (dref (dref name '(clhs glossary-term) nil))
+           (funcall fn dref))
+         (when-let (dref (dref name '(clhs section) nil))
+           (funcall fn dref)))))
+
+(defun clhs-dref (name locative)
+  ;; Pick off the impossible cases quickly.
+  (when  (member (locative-type locative) *hyperspec-definition-locative-types*)
+    (dref name `(clhs ,locative) nil)))

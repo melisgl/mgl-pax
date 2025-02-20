@@ -376,12 +376,12 @@
 ;;;; TEST-SOURCE-LOCATION
 
 (defparameter *source-location-test-cases*
-  '(;; @VARIABLELIKE-LOCATIVES
+  '(;; DREF::@VARIABLELIKE-LOCATIVES
     (foo-a variable (defvar foo-a))
     (foo-r variable (defvar foo-r))
     (foo-w variable (defvar foo-w))
     (bar constant (defconstant bar))
-    ;; @MACROLIKE-LOCATIVES
+    ;; DREF::@MACROLIKE-LOCATIVES
     (bar macro (defmacro bar))
     (my-smac symbol-macro (define-symbol-macro my-smac))
     (foo compiler-macro (define-compiler-macro foo))
@@ -390,8 +390,9 @@
      t)
     (has-setf-function setf (defun (setf has-setf-function)) nil
      #.(alexandria:featurep '(:or :allegro :cmucl)))
-    ;; @FUNCTIONLIKE-LOCATIVES
+    ;; DREF::@FUNCTIONLIKE-LOCATIVES
     (foo function (defun foo))
+    (|Foo| function (defun |Foo|))
     (traced-foo function (defun traced-foo))
     (test-gf generic-function (defgeneric test-gf))
     (test-gf (method () (number)) (defmethod test-gf))
@@ -400,22 +401,22 @@
     (foo-r (reader foo) (defclass foo) (r :reader foo-r))
     (foo-w (writer foo) (defclass foo) (w :writer foo-w))
     (baz-aaa structure-accessor (defstruct baz) nil #+cmucl t)
-    ;; @TYPELIKE-LOCATIVES
+    ;; DREF::@TYPELIKE-LOCATIVES
     (bar type (deftype bar))
     (foo type (defclass foo))
     (my-error type (define-condition my-error))
     (foo class (defclass foo))
     (test-declaration declaration (define-declaration test-declaration))
-    ;; @CONDITION-SYSTEM-LOCATIVES
+    ;; DREF::@CONDITION-SYSTEM-LOCATIVES
     (my-error condition (define-condition my-error))
     (some-restart restart (define-restart some-restart))
-    ;; @PACKAGELIKE-LOCATIVES
+    ;; DREF::@PACKAGELIKE-LOCATIVES
     (mgl-pax asdf:system ())
     (mgl-pax package
      (eval-when (:compile-toplevel :load-toplevel :execute))
      (cl:defpackage))
     (xxx-rt readtable (defreadtable xxx-rt))
-    ;; @PAX-LOCATIVES
+    ;; DREF-EXT::@ADDING-NEW-LOCATIVES
     (my-loc locative (define-locative-type my-loc))))
 
 (deftest test-source-location ()

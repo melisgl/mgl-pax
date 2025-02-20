@@ -37,9 +37,8 @@
 
 (defsection @locative-aliases (:title "Locative Aliases")
   """DEFINE-LOCATIVE-ALIAS can be used to help [`\\M-.`][
-  @navigating-in-emacs] and [autolinking][ @explicit-and-autolinking]
-  disambiguate references based on the context of a @NAME as described
-  on @PARSING and also in @SPECIFIED-LOCATIVE.
+  @navigating-in-emacs] and @SPECIFIC-AUTOLINKs disambiguate
+  references based on the context of a @NAME as described on @PARSING.
 
   The following example shows how to make docstrings read
   more naturally by defining an alias.

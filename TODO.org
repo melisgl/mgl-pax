@@ -12,8 +12,8 @@ This either relies on the global value of
 *TRANSCRIBE-CHECK-CONSISTENCY* or it needs to see the
 "```cl-transcript (...)" line.
 * TODO support external links
-This is partially done. CLHS is mostly implemented as an external
-link. See EXTERNAL-LOCATIVE-P and co.
+This is partially done. There is CLHS and there are glossary terms
+with URLs. See EXTERNAL-DREF-P and co.
 * MAYBE link to MOP
 * MAYBE consider CommonDoc from the 40ants fork
 * MAYBE remove some markup in :PLAIN format?
@@ -129,7 +129,7 @@ MGL-PAX:<LOCATIVE> all over them?
 * MAYBE ASDF:SYSTEMs should not be sectionlike
 I.e. they shouldn't be implemented with WITH-HEADING but maybe
 DOCUMENTING-REFERENCE like everything else.
-* print ASDF/SYSTEM:SYSTEM as ASDF:SYSTEM
+* MAYBE print ASDF/SYSTEM:SYSTEM as ASDF:SYSTEM
 Maybe. ASDF is a nickname of ASDF/INTERFACE.
 * CANCELLED make C-. work on '"lambda list" pax:clhs'
 It works on [lambda list][pax:clhs]. Actually, that would behave
@@ -145,3 +145,17 @@ Acutally mgl-pax-find-locatives here finds the locative but not in Lisp mode.
 * MAYBE do not test the locative type of a DREF with EQ
 Use (TYPEP DREF 'SECTION-DREF) instead of (EQ (DREF-LOCATIVE-TYPE
 DREF) 'SECTION).
+* TODO It's unclear how pressing M-. or C-. on X shall combine (definitions'x) and (definitions "X").
+* BUG mgl-pax-document FRAGMENT syntax is broken
+* MAYBE replace titles even if not linking in :FORMAT :PLAIN?
+* MAYBE always replace titles but follow the link suppression rules?
+* BUG pax::@PAX-URLs in DOCUMENT-PAX-URL-PATH are not parsed properly
+It should invert DREF-TO-PAX-URL.
+
+(defpackage "X Y")
+(defun |x y| ()
+  "sdaf"
+  nil)
+(urldecode (dref-to-pax-url (dref "X Y" 'package)))
+(parse-url (urldecode (dref-to-pax-url (dref '|x y| 'function))))
+
