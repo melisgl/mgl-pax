@@ -6,7 +6,7 @@
 
 (defun parse-markdown (string)
   (let ((3bmd-grammar:*smart-quotes* nil))
-    (preprocess-parse-tree (parse-markdown-fast string))))
+    (postprocess-parse-tree (parse-markdown-fast string))))
 
 (defun parse-markdown-fast (string)
   (if (< (length string) 1000)
@@ -45,7 +45,8 @@
 
 (defun print-markdown (parse-tree stream &key (format :markdown))
   (with-colorize-silenced ()
-    (3bmd::print-doc-to-stream-using-format parse-tree stream format)))
+    (3bmd::print-doc-to-stream-using-format
+     (preprocess-parse-tree-for-printing parse-tree format) stream format)))
 
 (defun heading (level stream)
   (loop repeat (1+ level) do (write-char #\# stream)))
@@ -261,10 +262,11 @@
                       handle-strings fn parent tree))
                   parse-tree))
 
-(defun preprocess-parse-tree (parse-tree)
+(defun postprocess-parse-tree (parse-tree)
   (transform-tree (lambda (parent tree)
                     (declare (ignore parent))
-                    (if (listp tree)
+                    (if (and (listp tree)
+                             (not (parse-tree-p tree :verbatim)))
                         (values (join-stuff-in-list tree) t nil)
                         tree))
                   parse-tree))
@@ -274,7 +276,7 @@
     (dolist (element tree)
       (let ((prev (first result)))
         (cond
-          ;; "x" "y" -> "xy"
+          ;; Join consecutive non-blank strings: "x" "y" -> "xy"
           ((and (stringp element) (not (blankp element))
                 (stringp prev) (not (blankp prev)))
            (setf (first result) (concatenate 'string prev element)))
@@ -286,6 +288,28 @@
           (t
            (push element result)))))
     (reverse result)))
+
+(defun preprocess-parse-tree-for-printing (parse-tree format)
+  (if (eq format :markdown)
+      (map-markdown-parse-tree '() '(:verbatim) t
+                               #'escape-trailing-backslash parse-tree)
+      parse-tree))
+
+;;; KLUDGE: 3BMD parse-print roundtrip loses backslash escapes:
+;;;
+;;; (with-output-to-string (out)
+;;;   (3bmd::print-doc-to-stream-using-format
+;;;    (3bmd-grammar:parse-doc "[\\\\][x]")
+;;;    out :markdown))
+;;; => "[\\][x]"
+;;;
+;;; (3bmd-grammar:parse-doc "[\\][x]")
+;;; => ((:PLAIN "[" "]" (:REFERENCE-LINK :LABEL ("x") :TAIL NIL)))
+(defun escape-trailing-backslash (parent string)
+  (declare (ignore parent))
+  (if (ends-with #\\ string)
+      (concatenate 'string string "\\")
+      string))
 
 ;;; Call FN with STRING and START, END indices of @WORDS.
 ;;;

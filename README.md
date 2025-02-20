@@ -3216,7 +3216,7 @@ are for writing new `DOCUMENT-OBJECT*` methods, which emit markdown.
 
     Backslash escape markdown constructs in `STRING`.
     
-    - If `ESCAPE-INLINE`, then escape ``*_`[]\`` characters.
+    - If `ESCAPE-INLINE`, then escape ``*_`[]\\`` characters.
     
     - If `ESCAPE-HTML`, then escape `<&` characters.
     
