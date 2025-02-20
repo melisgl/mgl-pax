@@ -142,31 +142,37 @@
 
 ;;;; Exporting
 
-(defun export-some-symbols (name entries package)
+(defun export-some-symbols (section-name entries package)
   (let ((package1 (find-package package)))
     (unless package1
       (error "~@<~S for ~S: Cannot export from non-existent package ~S.~:@>"
-             'defsection name package))
-    (when (exportablep package1 name 'section)
-      (export name package1))
+             'defsection section-name package))
+    (when (exportablep section-name package1 section-name 'section)
+      (export section-name package1))
     (dolist (entry entries)
       (when (listp entry)
         (destructuring-bind (name locative) entry
           (when (and (symbolp name)
-                     (exportablep package1 name locative))
+                     (exportablep section-name package1 name locative))
             (export name package1)))))))
 
-(defun exportablep (package symbol locative)
-  (and (symbol-accessible-in-package-p symbol package)
-       (let ((locative (if (listp locative) locative (list locative))))
-         (exportable-reference-p package symbol (first locative)
-                                 (rest locative)))))
+(defun exportablep (section-name package symbol locative)
+  (let* ((locative (if (listp locative) locative (list locative)))
+         (exportablep (exportable-reference-p package symbol (first locative)
+                                              (rest locative))))
+    (when exportablep
+      (if (symbol-accessible-in-package-p symbol package)
+          t
+          (when (eq exportablep :warn)
+            (warn "~@<~S for ~S: Cannot export non-accessible ~
+                  symbol ~S from ~S.~:@>"
+                  'defsection section-name symbol package))))))
 
 (defun symbol-accessible-in-package-p (symbol package)
   (eq symbol (find-symbol (symbol-name symbol) package)))
 
 (defgeneric exportable-reference-p (package symbol locative-type locative-args)
-  (:documentation "Return true iff SYMBOL is to be exported from
+  (:documentation "Return true if SYMBOL is to be exported from
   PACKAGE when it occurs in a DEFSECTION in a reference with
   LOCATIVE-TYPE and LOCATIVE-ARGS. SYMBOL is [accessible][find-symbol]
   in PACKAGE.
@@ -201,11 +207,12 @@
   nil)
 
 (defgeneric exportable-locative-type-p (locative-type)
-  (:documentation "Return true iff symbols in references with
+  (:documentation "Return true if symbols in references with
   LOCATIVE-TYPE are to be exported by default when they occur in a
   DEFSECTION. The default method returns T, while the methods for
-  SECTION, GLOSSARY-TERM, PACKAGE, ASDF:SYSTEM, METHOD and INCLUDE
-  return NIL.
+  locative types [SECTION][locative], [GLOSSARY-TERM][locative],
+  [PACKAGE][locative], [ASDF:SYSTEM][locative], METHOD and
+  [INCLUDE][locative] return NIL.
 
   This function is called by the default method of
   EXPORTABLE-REFERENCE-P to decide what symbols DEFSECTION shall
@@ -247,7 +254,7 @@
 
 (defmacro define-glossary-term
     (name (&key title url (discard-documentation-p *discard-documentation-p*))
-     &optional docstring)
+     &body docstring)
   "Define a global variable with NAME, and set it to a [GLOSSARY-TERM]
   [class] object. TITLE, URL and DOCSTRING are markdown strings or
   NIL. Glossary terms are DOCUMENTed in the lightweight bullet +
@@ -269,7 +276,7 @@
      (make-instance 'glossary-term
                     :name ',name :title ,title :url ,url
                     :docstring ,(unless discard-documentation-p
-                                  docstring))))
+                                  (apply #'concatenate 'string docstring)))))
 
 
 (defmacro define-package (package &rest options)
