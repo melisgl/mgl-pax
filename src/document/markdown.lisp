@@ -194,6 +194,8 @@
                          (recurse (subseq string 1)))
                         (t
                          (recurse string)))))
+               ((and (listp e) (null (cdr e)))
+                (recurse (first e)))
                (t
                 (return-from parse-tree-to-text nil)))))
     (recurse parse-tree)))

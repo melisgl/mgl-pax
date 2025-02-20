@@ -1240,7 +1240,9 @@ This is [Self-referencing][e042].
   (check-head "[BAR CONSTANT][docstring]" "`BAR` is not a link.")
   (check-head (list "[BAR CONSTANT][docstring]"
                     (dref 'bar 'constant))
-              "[`BAR`][f3f4] is not a link."))
+              "[`BAR`][f3f4] is not a link.")
+  (check-head "[*TEST-VARIABLE* VARIABLE][docstring]"
+              "`*TEST-VARIABLE*` is not a link."))
 
 (deftest test-hyperspec ()
   (check-head "FIND-IF" "[`FIND-IF`][5884]")

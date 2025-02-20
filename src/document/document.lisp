@@ -1459,14 +1459,14 @@
     (nth-value-or 0
       (when (eq (read-locative-from-noisy-string definition) 'docstring)
         (multiple-value-bind (name locative foundp)
-            (read-reference-from-string (parse-tree-to-text label))
+            (read-reference-from-string (parse-tree-to-text label :deemph t))
           (when foundp
             (if-let (dref (dref name locative nil))
               (when-let (docstring (docstring dref))
                 (values (or (parse-markdown (sanitize-docstring docstring))
                             '(""))
                         ;; Detecting circular includes would be hard
-                        ;; because the 'recurse' return value is
+                        ;; because the `recurse' return value is
                         ;; handled in the caller of this function.
                         t t))
               (warn "~@<Including ~S failed because ~S ~S cannot be ~Sd~:@>"
