@@ -1,12 +1,17 @@
 (in-package :mgl-pax-test)
 
 (deftest test-navigate ()
+  (test-depluralize)
   (test-read-locative-from-string)
   (test-read-name-from-string)
   (test-read-reference-from-string)
   (test-definitions-of-wall)
   (test-locate)
   (test-navigation-to-source))
+
+(deftest test-depluralize ()
+  (is (equal (mgl-pax::depluralize "classes")
+             '("classe" "class" "clas"))))
 
 (deftest test-read-locative-from-string ()
   (let ((*package* (find-package :mgl-pax-test)))
