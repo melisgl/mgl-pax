@@ -242,7 +242,7 @@
   below the table of contents.")
 
 (defun html-header
-    (stream &key title stylesheet (lang *document-html-lang* )
+    (stream &key title stylesheet (lang *document-html-lang*)
               (charset *document-html-charset*)
               link-to-pax-world-p
               (head *document-html-head*)
