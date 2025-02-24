@@ -1675,7 +1675,8 @@
 ;;; "*XXX*" if "*XXX*" is to be codified according to
 ;;; CODIFY-UPPERCASE-WORD-P.
 (defun translate-emph (parent tree)
-  (if (= 2 (length tree))
+  (if (and (= 2 (length tree))
+           (stringp (second tree)))
       (let ((translation (translate-uppercase-word parent tree (second tree))))
         (if translation
             ;; Replace TREE with TRANSLATION, don't process

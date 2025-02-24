@@ -634,7 +634,9 @@ xxx
     (with-test ("emph in reflink definition")
       (check-head "[xxx][*print-length* variable]" "[xxx][8f7a]"))
     (with-test ("backtick in reflink definition")
-      (check-head "[xxx][`*print-length*` variable]" "[xxx][8f7a]"))))
+      (check-head "[xxx][`*print-length*` variable]" "[xxx][8f7a]")))
+  (with-test ("emph around reflink")
+    (check-head "*[x][y]*" "*[x][y]*")))
 
 
 (defsection @section-with-title (:title "My `Title`" :export nil))
