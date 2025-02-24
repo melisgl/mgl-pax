@@ -164,7 +164,12 @@
       (check-dowall '(("DREF::@LOCATIVE-TYPES" ()))
                     '((dref::@locative-types section)))
       (check-dowall '(("DREF::@LOCATIVE-TYPEs" ()))
-                    '((dref::@locative-type glossary-term))))))
+                    '((dref::@locative-type glossary-term))))
+    (with-test ("deduplication")
+      (check-dowall '(("print" ("function")) ("print" ("function")))
+                    '((print function)))
+      (check-dowall '(("Lists" ("Lambda" "clhs")) ("Lambda  Lists" ("clhs")))
+                    '(("3.4" (clhs section)))))))
 
 (defun check-dowall (wall expected-refs)
   (let ((refs (mapcar (lambda (ref)

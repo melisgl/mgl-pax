@@ -23,15 +23,17 @@
 ;;; handled.
 (defun definitions-of-wall (wall &key (definitions-of 'definitions))
   (let ((*definitions-of-fn* definitions-of))
-    (or
-     ;; First, try with the given locatives.
-     (loop for (word locative-strings) in wall
-           append (loop for locative-string in locative-strings
-                        append (definitions-of-word-with-locative
-                                word locative-string)))
-     ;; Then, fall back on the no locative case.
-     (loop for entry in wall
-           append (definitions-of-word (first entry))))))
+    (delete-duplicates
+     (or
+      ;; First, try with the given locatives.
+      (loop for (word locative-strings) in wall
+            append (loop for locative-string in locative-strings
+                         append (definitions-of-word-with-locative
+                                 word locative-string)))
+      ;; Then, fall back on the no locative case.
+      (loop for entry in wall
+            append (definitions-of-word (first entry))))
+     :test #'xref=)))
 
 (defun definitions-of-word-with-locative (word locative-string)
   (let ((locative (read-locative-from-noisy-string locative-string)))
