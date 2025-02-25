@@ -327,7 +327,9 @@
   (:or :ccl :cmucl) `(class ,name))
 
 (define-dspec swank-package-dspec (name)
-  (:or :abcl :allegro :ecl :cmucl) `(:no-such-dspec ,name)
+  ;; These don't currently seem to have definitions for packages, so
+  ;; the dspec is just a guess.
+  (:or :abcl :allegro :ecl :clisp :cmucl) `(defpackage ,name)
   :ccl `(package ,name)
   :sbcl `(defpackage ,name))
 
@@ -350,8 +352,11 @@
 
 (defun dspec-to-definition* (dspec name)
   (let ((dspec (normalize-dspec dspec)))
-    (or (method-dspec-to-definition dspec)
-        (when (atom name)
+    (or (package-dspec-to-definition dspec)
+        (method-dspec-to-definition dspec)
+        ;; Handle the symbol-based cases where the DPSEC is unique and
+        ;; easy.
+        (when (symbolp name)
           (loop named lazy-wasteful-parsing
                 for (locative-type* dspec*)
                   in `((variable ,(swank-variable-dspec name))
@@ -366,8 +371,7 @@
                         ,(swank-method-combination-dspec name))
                        (type ,(swank-type-dspec name))
                        (class ,(swank-class-dspec name))
-                       (condition ,(swank-condition-dspec name))
-                       (package ,(swank-package-dspec name)))
+                       (condition ,(swank-condition-dspec name)))
                 do (when (equal dspec* dspec)
                      #+allegro
                      (when (and (eq locative-type* 'variable)
@@ -391,6 +395,13 @@
                          (setq locative-type* 'condition)))
                      (return-from lazy-wasteful-parsing
                        (dref name locative-type*))))))))
+
+(defun package-dspec-to-definition (dspec)
+  (if (and (listp dspec)
+           (= 2 (length dspec))
+           (member (first dspec) '(package defpackage)))
+      (dref (second dspec) 'package)
+      nil))
 
 ;;; METHOD-DSPEC-TO-DEFINITION is the inverse of SWANK-METHOD-DSPEC and
 ;;; SWANK-ACCESSOR-DSPEC.
