@@ -730,15 +730,26 @@ This is [Self-referencing][e042].
 (deftest test-base-url ()
   (dolist (*document-base-url* '("http://example.com" "http://example.com/"))
     (check-pred "[xxx](x.html)" "http://example.com/x.html"
-                :msg ":EXPLICIT-LINK")
+                :msg "relative :EXPLICIT-LINK")
+    (check-pred "[xxx](http://other.com/x.html)"
+                "http://other.com/x.html"
+                :msg "absolute :EXPLICIT-LINK")
     (check-pred (format nil "[xxx][def]~%~%  [def]: x.html")
                 "http://example.com/x.html"
-                :msg ":REFERENCE")
+                :msg "relative :REFERENCE")
+    (check-pred (format nil "[xxx][def]~%~%  [def]: http://other.com/x.html")
+                "http://other.com/x.html"
+                :msg "absolute :REFERENCE")
     (check-pred "![xxx](x.jpg)" "http://example.com/x.jpg"
                 :msg ":IMG :EXPLICIT-LINK")
+    (check-pred "![xxx](http://other.com/x.jpg)" "http://other.com/x.jpg"
+                :msg "absolute :IMG :EXPLICIT-LINK")
     (check-pred (format nil "![xxx][def]~%~%  [def]: x.jpg")
                 "http://example.com/x.jpg"
                 :msg ":IMG :REFERENCE")
+    (check-pred (format nil "![xxx][def]~%~%  [def]: http://other.com/x.jpg")
+                "http://other.com/x.jpg"
+                :msg "absolute :IMG :REFERENCE")
     (check-pred (list "FOO function" (dref 'foo 'function))
                 "[bc64]: #MGL-PAX-TEST:FOO%20FUNCTION"
                 :msg "intra-page")
