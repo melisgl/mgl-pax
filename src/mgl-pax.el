@@ -772,7 +772,8 @@ The suggested key binding is `C-.' to parallel `M-.'."
   (if (not (or (string-prefix-p "pax:" url)
                (string-prefix-p "pax-eval:" url)
                (string-prefix-p "pax-wall:" url)))
-      (apply oldfun url args)
+      (let ((w3m-confirm-leaving-secure-page nil))
+        (apply oldfun url args))
     ;; Set up pax e.g. when the user starts w3m, then presses g and
     ;; enters a pax url.
     (unless (mgl-pax-in-doc-buffer-p)
