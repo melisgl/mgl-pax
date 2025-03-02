@@ -731,7 +731,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
 (defun mgl-pax-complete-urllike-in-minibuffer ()
   (let* ((start
           ;; The position of the first character after the prompt
-          (line-beginning-position -1000))
+          (line-beginning-position))
          (end (point))
          (beg (slime-symbol-start-pos))
          (first-space-pos (cl-position ?\s (buffer-substring-no-properties
@@ -751,7 +751,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
                                :mgl-pax)
                               ,word))))
     (if (eq (cl-first values) :error)
-        (error (second values))
+        (error (cl-second values))
       (cl-second values))))
 
 ;;; Return the path and fragment part of the schemeless URL.
