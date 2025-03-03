@@ -76,26 +76,22 @@ side."
 
 (defun mgl-pax-maybe-autoload-1 (cont)
   (let ((check-version-form
-         `(cl:and (cl:find-package :mgl-pax)
-                  (cl:funcall (cl:find-symbol
+         `(cl:let ((f (cl:and (cl:find-package :mgl-pax)
+                              (cl:find-symbol
                                (cl:string '#:check-pax-elisp-version)
-                               (cl:find-package :mgl-pax))
-                              ',mgl-pax-version)
-                  t)))
+                               :mgl-pax))))
+            (cl:when f
+              (cl:funcall f ',mgl-pax-version)
+              t))))
     (if mgl-pax-autoload
         (slime-eval-async
             `(cl:progn
-              (cl:unless
-               (cl:and (cl:find-package :mgl-pax)
-                       ;; Not there if only mgl-pax-bootstrap is loaded.
-                       (cl:find-symbol
-                        (cl:string '#:check-pax-elisp-version)
-                        (cl:find-package :mgl-pax)))
-               (cl:format t "~&;; Autoloading MGL-PAX for Emacs ~
+               (cl:unless ,check-version-form
+                 (cl:format t "~&;; Autoloading MGL-PAX for Emacs ~
                             (mgl-pax-autoload is t).~%")
-               (asdf:load-system "mgl-pax")
-               (cl:format t ";; Done autoloading MGL-PAX for Emacs~%"))
-              ,check-version-form)
+                 (asdf:load-system "mgl-pax")
+                 (cl:format t ";; Done autoloading MGL-PAX for Emacs~%"))
+                 ,check-version-form)
           cont)
       (slime-eval-async check-version-form cont))))
 
