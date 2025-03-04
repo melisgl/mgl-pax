@@ -256,7 +256,8 @@ xxx
 
 "))
   (is (internedp 'references))
-  (check-head "REFERENCEs" "`REFERENCE`s" :msg "interned lowercase plural"))
+  (check-head "REFERENCEs" "`REFERENCE`s" :msg "interned lowercase plural")
+  (check-head "<PRINT>" "<PRINT>" :msg "No codification in :RAW-HTML"))
 
 (defun q ())
 (defun qq ())

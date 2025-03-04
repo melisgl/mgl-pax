@@ -1622,7 +1622,7 @@
   (map-markdown-parse-tree
    (list :emph '3bmd-code-blocks::code-block :reference-link :code)
    '(:code :verbatim 3bmd-code-blocks::code-block
-     :explicit-link :image :mailto :reference)
+     :explicit-link :image :mailto :reference :raw-html)
    t
    #'translate-to-code
    parse-tree))
@@ -1840,7 +1840,7 @@
                                    :element-type 'dref)))
     (map-markdown-parse-tree
      '(:code :reference-link)
-     '(:explicit-link :image :mailto)
+     '(:explicit-link :image :mailto :raw-html)
      nil
      (rcurry #'translate-to-links linked-refs)
      parse-tree)))
