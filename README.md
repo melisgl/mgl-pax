@@ -2378,7 +2378,8 @@ as its arglist, along with a redirection message.
 - See the [`INCLUDE`][5cd7] locative.
 
 - For definitions with a [`CLHS`][ed5f] locative, the `LOCATIVE-ARGS` are printed
-as the arglist. There is no docstring.
+as the arglist. For `CLHS` [`SECTION`][7a4e]s, the title and aliases are
+included. There is no docstring.
 
 - For definitions with an [`UNKNOWN`][a951] locative, the `LOCATIVE-ARGS` are
 printed as the arglist. There is no docstring.
@@ -3746,6 +3747,7 @@ they are presented.
   [76ab]: http://www.lispworks.com/documentation/HyperSpec/Body/22_ccc.htm '"22.3.3.3" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [76df]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cbd.htm '"22.3.2.4" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [76ea]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cgb.htm '"22.3.7.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [7a4e]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#section '"section" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [7a7f]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhc.htm '"2.4.8.3" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [7ac8]: dref/README.md#x-28DREF-3A-40LOCATIVE-20MGL-PAX-3AGLOSSARY-TERM-29 "locative"
   [7b6f]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dha.htm '"2.4.8.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'

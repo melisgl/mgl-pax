@@ -1986,10 +1986,9 @@
           do (destructuring-bind (filename id title
                                   &rest alias-kinds-and-aliases)
                  entry
-               (declare (ignore title))
-               (let ((value (list id filename))
-                     (aliases (loop for (kind alias) on alias-kinds-and-aliases
-                                    by #'cddr collect alias)))
+               (let* ((aliases (loop for (kind alias) on alias-kinds-and-aliases
+                                     by #'cddr collect alias))
+                      (value (list* id filename title aliases)))
                  (dolist (key (cons id aliases))
                    (setf (gethash key ht) value))
                  (assert (not (gethash filename ht)))
@@ -2000,8 +1999,9 @@
     (setf (gethash "s_lambda" ht) '("s_lambda" "s_lambda"))
     ht))
 
-;;; An SECTION-ID -> (SECTION-ID FILENAME) and FILENAME -> (SECTION-ID
-;;; FILENAME) map.
+;;; The values are (SECTION-ID FILENAME TITLE &REST ALIASES) and
+;;; element of a value except for TITLE is a key that's mapped to that
+;;; value.
 (defparameter *hyperspec-section-map* (make-hyperspec-section-map))
 
 (defun list-hyperspec-section-aliases (kind)
@@ -2031,6 +2031,11 @@
   (let ((string (normalize-whitespace string)))
     (or (first (gethash string *hyperspec-section-map*))
         (second (and match-title (find-hyperspec-section string))))))
+
+;;; Return the title and a list of aliases as the second value.
+(defun find-hyperspec-section-title (id)
+  (let ((entry (gethash id *hyperspec-section-map*)))
+    (values (third entry) (nthcdr 3 entry))))
 
 (defun find-hyperspec-section-url
     (string hyperspec-root &key (substring-match t))

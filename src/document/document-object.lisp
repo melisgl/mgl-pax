@@ -263,7 +263,8 @@
          (arglist (when nicknames
                     (list :nicknames nicknames))))
     (documenting-reference (stream :arglist arglist)
-      (document-docstring (docstring dref) stream))))
+      (unless *document-do-not-follow-references*
+        (document-docstring (docstring dref) stream)))))
 
 
 ;;;; SECTION locative
@@ -389,8 +390,16 @@
 
 (defmethod document-object* ((dref clhs-dref) stream)
   "For definitions with a CLHS locative, the LOCATIVE-ARGS are printed
-  as the arglist. There is no docstring."
-  (documenting-reference (stream :arglist (dref-locative-args dref))))
+  as the arglist. For CLHS SECTIONs, the title and aliases are
+  included. There is no docstring."
+  (multiple-value-bind (title aliases)
+      (find-hyperspec-section-title (dref-name dref))
+    (let ((titles (when title
+                    (if aliases
+                        (list* title :aliases aliases)
+                        (list title)))))
+      (documenting-reference (stream :arglist
+                              (append (dref-locative-args dref) titles))))))
 
 (defmethod document-object* ((dref unknown-dref) stream)
   "For definitions with an UNKNOWN locative, the LOCATIVE-ARGS are

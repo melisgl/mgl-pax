@@ -2131,7 +2131,8 @@ as its arglist, along with a redirection message.
 - See the INCLUDE locative.
 
 - For definitions with a CLHS locative, the LOCATIVE-ARGS are printed
-as the arglist. There is no docstring.
+as the arglist. For CLHS SECTIONs, the title and aliases are
+included. There is no docstring.
 
 - For definitions with an UNKNOWN locative, the LOCATIVE-ARGS are
 printed as the arglist. There is no docstring.

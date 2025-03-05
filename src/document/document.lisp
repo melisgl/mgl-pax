@@ -845,10 +845,16 @@
            (document-docstring string stream :indentation "" :paragraphp nil)
            (terpri stream))))
   (:method :around ((xref xref) stream)
-    (let ((*documenting-reference* xref))
-      (if (or (eq *document-do-not-follow-references* t)
-              (member (xref-locative-type xref)
-                      *document-do-not-follow-references*))
+    (let ((*documenting-reference* xref)
+          (locative-type (xref-locative-type xref)))
+      (if (and
+           ;; KLUDGE: (CLHS SECTION) adds the title to the arglist.
+           (not (eq locative-type 'clhs))
+           (not (eq locative-type 'package))
+           ;; FIXME: Maybe it would be better to suppress the BODY of
+           ;; WITH-HEADING and DOCUMENTING-REFERENCE?
+           (or (eq *document-do-not-follow-references* t)
+               (member locative-type *document-do-not-follow-references*)))
           (documenting-reference (stream
                                   :reference xref
                                   :arglist (xref-locative-args xref)))
