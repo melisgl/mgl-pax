@@ -511,8 +511,11 @@ where REFERENCE names either
 
 If given, FRAGMENT must be a complete PAX:REFERENCE and refers to
 a definition within the documentation page of REFERENCE. For
-example, the URL \"pax::@pax-manual pax:section#pax:defsection
-pax:macro\" points to the documentation of the DEFSECTION macro
+example, the URL
+
+  \"pax::@pax-manual pax:section#pax:defsection pax:macro\"
+
+points to the documentation of the DEFSECTION macro
 on the page that contains the entire PAX manual.
 
 When invoked interactively:
@@ -527,10 +530,10 @@ When invoked interactively:
   URL scheme, \"pax:\", must not to be included. The entered
   REFERENCE and FRAGMENT need not be URL encoded.
 
-- When PAX-URL is the string \"pax:\" (e.g. when the empty string
-  was entered interactively), an existing w3m buffer is
-  displayed, or if there is no such buffer, then the
-  documentation of how to browse documentation in Emacs is shown.
+- If the empty string is entered, and there is no existing w3m
+  buffer or w3m is not used, then sections registered in
+  MGL-PAX::@PAX-WORLD are listed. If there is a w3m buffer, then
+  entering the empty string displays that buffer.
 
 Autocomplete: In the minibuffer, TAB-completion is available for
 symbol names, and once the name is entered followed by a space,
@@ -601,22 +604,19 @@ The suggested key binding is `C-.' to parallel `M-.'."
                      (mgl-pax-make-pax-eval-url
                       '(mgl-pax::pax-document-home-page))
                    pax-url)))
-    ;; Call mgl-pax-call-document-for-emacs with DIR nil to check for
-    ;; errors (e.g. "no definition for xxx") before launching a
+    ;; Call `mgl-pax-call-document-for-emacs' with DIR nil to check
+    ;; for errors (e.g. "no definition for xxx") before launching a
     ;; browser.
     (mgl-pax-call-document-for-emacs
      pax-url nil
      :ok-cont (lambda (url)
                 (if (null url)
                     (mgl-pax-prompt-and-document)
-                  (message nil)
-                  (let ((url (concat mgl-pax-web-server-base-url "/"
-                                     (url-hexify-string
-                                      pax-url mgl-pax-url-allowed-chars)
-                                     (when (slime-current-package)
-                                       (concat "?pkg="
-                                               (url-hexify-string
-                                                (slime-current-package)))))))
+                  ;; `url' may be `pax-url' canonicalized (e.g. the
+                  ;; fragment) or an external URL.
+                  (let ((url (if (string-prefix-p "pax" url)
+                                 (concat mgl-pax-web-server-base-url "/" url)
+                               url)))
                     (funcall (or mgl-pax-browser-function
                                  browse-url-browser-function)
                              url)))))))
@@ -714,12 +714,17 @@ The suggested key binding is `C-.' to parallel `M-.'."
       (delete-directory doc-dir nil nil))))
 
 (defun mgl-pax-urllike-to-url (schemeless-pax-url)
-  (cl-destructuring-bind (reference fragment)
-      (mgl-pax-parse-path-and-fragment schemeless-pax-url)
-    (if fragment
-        (concat "pax:" (url-hexify-string reference)
-                "#" (url-hexify-string fragment))
-      (concat "pax:" (url-hexify-string reference)))))
+  (if (zerop (length (slime-trim-whitespace schemeless-pax-url)))
+      "pax:"
+    (cl-destructuring-bind (reference fragment)
+        (mgl-pax-parse-path-and-fragment schemeless-pax-url)
+      (concat "pax:" (url-hexify-string reference)
+              (if (slime-current-package)
+                  (concat "?pkg=" (url-hexify-string (slime-current-package)))
+                "")
+              (if fragment
+                  (concat "#" (url-hexify-string fragment))
+                "")))))
 
 (defun mgl-pax-read-urllike-from-minibuffer (prompt)
   (let ((slime-completion-at-point-functions

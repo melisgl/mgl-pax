@@ -6,7 +6,7 @@ LISP=sbcl
 # FIXME: This is hardcoded.
 SLIME_DIR=~/src/slime/
 LOAD_PATH="-L ../src/ -L . -L ${SLIME_DIR}"
-SELECTOR="\"mgl-pax\""
+SELECTOR=${1:-"\"mgl-pax\""}
 
 ${EMACS} -q --no-splash --batch ${LOAD_PATH} \
          --eval "(require 'mgl-pax-tests)" \

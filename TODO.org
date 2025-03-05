@@ -146,7 +146,6 @@ Acutally mgl-pax-find-locatives here finds the locative but not in Lisp mode.
 Use (TYPEP DREF 'SECTION-DREF) instead of (EQ (DREF-LOCATIVE-TYPE
 DREF) 'SECTION).
 * TODO It's unclear how pressing M-. or C-. on X shall combine (definitions'x) and (definitions "X").
-* BUG mgl-pax-document FRAGMENT syntax is broken
 * MAYBE replace titles even if not linking in :FORMAT :PLAIN?
 * MAYBE always replace titles but follow the link suppression rules?
 * BUG pax::@PAX-URLs in DOCUMENT-PAX-URL-PATH are not parsed properly

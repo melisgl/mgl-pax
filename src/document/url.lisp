@@ -150,7 +150,20 @@
       string))
 
 
-;;; For http://user@example.com:8080/x/y.html?a=1&b=2#z, return:
+
+;;; (parse-url "http://user@example.com:8080/x/y.html?a=1&b=2#z")
+;;; => "http"
+;;; => "user@example.com:8080"
+;;; => "/x/y.html"
+;;; => "a=1&b=2"
+;;; => "z"
+;;;
+;;; (parse-url "file:x/y")
+;;; => "file"
+;;; => NIL
+;;; => "x/y"
+;;; => NIL
+;;; => NIL
 ;;;
 ;;; 1. the scheme ("http"),
 ;;;
@@ -201,6 +214,21 @@
      (when (and pos (< pos len))
        (urldecode (subseq string pos))))))
 
+(defun make-url (&key scheme authority path encoded-path encoded-query fragment)
+  (with-output-to-string (out)
+    (when scheme
+      (format out "~A:" (urlencode scheme)))
+    (when authority
+      (format out "//~A" (urlencode authority)))
+    (when path
+      (format out "~A" (urlencode path)))
+    (when encoded-path
+      (format out "~A" encoded-path))
+    (when encoded-query
+      (format out "?~A" encoded-query))
+    (when fragment
+      (format out "#~A" (urlencode fragment)))))
+
 (defun urlp (string)
   (ignore-errors (parse-url string)))
 
@@ -218,19 +246,20 @@
            #-ccl namestring))
     (let* ((pathname (pathname pathname))
            (pathname-directory (pathname-directory pathname)))
-      (format nil "file://~A"
-              (sanitize
-               (namestring
-                (make-pathname
-                 :directory (and pathname-directory
-                                 (cons (first pathname-directory)
-                                       (mapcar #'urlencode
-                                               (rest pathname-directory))))
-                 :name (and (pathname-name pathname)
-                            (urlencode (sanitize (pathname-name pathname))))
-                 :type (and (pathname-type pathname)
-                            (urlencode (pathname-type pathname)))
-                 :defaults pathname)))))))
+      (make-url :scheme "file"
+                :encoded-path
+                (sanitize
+                 (namestring
+                  (make-pathname
+                   :directory (and pathname-directory
+                                   (cons (first pathname-directory)
+                                         (mapcar #'urlencode
+                                                 (rest pathname-directory))))
+                   :name (and (pathname-name pathname)
+                              (urlencode (sanitize (pathname-name pathname))))
+                   :type (and (pathname-type pathname)
+                              (urlencode (pathname-type pathname)))
+                   :defaults pathname)))))))
 
 (defun file-url-to-pathname (url)
   (when (starts-with-subseq "file://" url)
