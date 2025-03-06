@@ -62,7 +62,7 @@
                       ,(xref 'test-gf '(method () (number)))
                       ,(xref 'test-gf '(method () ((eql 7))))
                       ,(xref 'test-gf '(method ()
-                                             ((eql #.(find-package :cl))))))))
+                                        ((eql #.(find-package :cl))))))))
   (with-failure-expected ((and (alexandria:featurep
                                 '(:or :abcl :clisp :cmucl :ecl))
                                'failure))
@@ -106,17 +106,11 @@
   (check-ref-sets (definitions 'my-loc)
                   `(,(xref 'my-loc 'locative)))
   #+sbcl
-  (check-ref-sets (definitions 'print
-                               :locative-types (cons 'unknown
-                                                     (lisp-locative-types)))
-                  `(,(xref 'print 'function)
-                    ,(xref 'print '(unknown
-                                         (:defoptimizer print
-                                             sb-c:derive-type)))
-                    ,(xref 'print '(unknown
-                                         (:define-vop print print)))
-                    ,(xref 'print '(unknown
-                                         (declaim print sb-c:defknown)))))
+  (check-ref-sets+ (definitions 'print)
+                   `(,(xref 'print 'function)
+                     ,(xref 'print '(unknown (:defoptimizer print
+                                                 sb-c:derive-type)))
+                     ,(xref 'print '(unknown (declaim print sb-c:defknown)))))
   ;; This is a primitive object, that (SWANK-BACKEND:FIND-DEFINITIONS
   ;; 'SB-C::CATCH-BLOCK) returns as a TYPE.
   #+sbcl
@@ -128,6 +122,10 @@
                                :test #'xref=)
         (endp *)
         (endp *))))
+
+(defun check-ref-sets+ (refs expected-refs)
+  (is (endp (set-difference (capture expected-refs) (capture refs)
+                            :test #'xref=))))
 
 (defun diff-sets (set1 set2 &key (test 'eql))
   (values (set-difference set1 set2 :test test)
@@ -601,7 +599,7 @@
           (check-ref-sets (dref-apropos '%test9jwern% :package "DREF"
                                                       :case-sensitive t)
                           `(,(xref 'dref-test::%test9jwern%
-                                        'function))))))
+                                   'function))))))
     (with-test ("PACKAGE is :NONE")
       (check-ref-sets (dref-apropos "dref" :package :none)
                       `(,(xref (package-name :dref) 'package)
@@ -623,9 +621,10 @@
              (+ (length (asdf:registered-systems))
                 (length (list-all-packages))))))
     #+sbcl
-    (with-test (":PSEUDO")
-      (is (plusp (length (% (dref-apropos 'print
-                                          :locative-types '(:pseudo)))))))
+    (when (dref 'pax:clhs 'locative nil)
+      (with-test (":PSEUDO")
+        (is (plusp (length (% (dref-apropos 'print
+                                            :locative-types '(:pseudo))))))))
     #+sbcl
     (with-test (":ALL")
       (is (= (+ (length (% (dref-apropos 'print

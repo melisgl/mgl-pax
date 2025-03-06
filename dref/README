@@ -354,15 +354,13 @@ with references (discussed in the DREF-EXT::@EXTENDING-DREF).
 
 - [function] LISP-LOCATIVE-TYPES
 
-    Return the locative types that correspond to Lisp definitions
-    except UNKNOWN. These are the ones defined with
-    DEFINE-LOCATIVE-TYPE.
+    Return the locative types that correspond to Lisp definitions.
+    These are the ones defined with DEFINE-LOCATIVE-TYPE.
 
 - [function] PSEUDO-LOCATIVE-TYPES
 
-    Return the locative types that correspond to non-Lisp definitions
-    plus UNKNOWN. These are the ones defined with
-    DEFINE-PSEUDO-LOCATIVE-TYPE.
+    Return the locative types that correspond to non-Lisp definitions.
+    These are the ones defined with DEFINE-PSEUDO-LOCATIVE-TYPE.
 
 - [function] LOCATIVE-ALIASES
 
@@ -747,12 +745,12 @@ otherwise noted.
 
 - [locative] UNKNOWN DSPEC
 
-    This pseudo locative type is to allow PAX
-    to work in a limited way with locatives it doesn't know. UNKNOWN
-    definitions come from DEFINITIONS, which uses
-    SWANK/BACKEND:FIND-DEFINITIONS. The following examples show PAX
-    stuffing the Swank dspec `(:DEFINE-ALIEN-TYPE DOUBLE-FLOAT)` into an
-    UNKNOWN locative on SBCL.
+    This locative type allows PAX to work in a limited way with
+    locatives it doesn't know. UNKNOWN definitions come from
+    DEFINITIONS, which uses SWANK/BACKEND:FIND-DEFINITIONS. The
+    following examples show PAX stuffing the Swank
+    dspec `(:DEFINE-ALIEN-TYPE DOUBLE-FLOAT)` into an UNKNOWN locative
+    on SBCL.
     
     ```common-lisp
     (definitions 'double-float :locative-types (locative-types))

@@ -518,15 +518,13 @@
   *locative-types*)
 
 (defun lisp-locative-types ()
-  "Return the locative types that correspond to Lisp definitions
-  except [UNKNOWN][locative]. These are the ones defined with
-  DEFINE-LOCATIVE-TYPE."
+  "Return the locative types that correspond to Lisp definitions.
+  These are the ones defined with DEFINE-LOCATIVE-TYPE."
   *lisp-locative-types*)
 
 (defun pseudo-locative-types ()
-  "Return the locative types that correspond to non-Lisp definitions
-  plus [UNKNOWN][locative]. These are the ones defined with
-  DEFINE-PSEUDO-LOCATIVE-TYPE."
+  "Return the locative types that correspond to non-Lisp definitions.
+  These are the ones defined with DEFINE-PSEUDO-LOCATIVE-TYPE."
   *pseudo-locative-types*)
 
 (defun locative-aliases ()

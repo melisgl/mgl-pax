@@ -1136,8 +1136,7 @@ a symbol or package name are accepted.
   DREF:LISP-LOCATIVE-TYPES, which is the default.
 
 - \"print :pseudo\" matches definitions with
-  DREF:PSEUDO-LOCATIVE-TYPES such as MGL-PAX:CLHS and
-  DREF:UNKNOWN.
+  DREF:PSEUDO-LOCATIVE-TYPES such as MGL-PAX:CLHS.
 
 - \"print :all\" matches definitions with all locative
   types (DREF:LOCATIVE-TYPES).

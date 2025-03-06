@@ -1158,13 +1158,13 @@
 
 ;;;; UNKNOWN locative
 
-(define-pseudo-locative-type unknown (dspec)
-  "This [pseudo locative type][pseudo-locative-types] is to allow PAX
-  to work in a limited way with locatives it doesn't know. UNKNOWN
-  definitions come from DEFINITIONS, which uses
-  SWANK/BACKEND:FIND-DEFINITIONS. The following examples show PAX
-  stuffing the Swank dspec `(:DEFINE-ALIEN-TYPE DOUBLE-FLOAT)` into an
-  UNKNOWN locative on SBCL.
+(define-locative-type unknown (dspec)
+  "This locative type allows PAX to work in a limited way with
+  locatives it doesn't know. UNKNOWN definitions come from
+  DEFINITIONS, which uses SWANK/BACKEND:FIND-DEFINITIONS. The
+  following examples show PAX stuffing the Swank
+  dspec `(:DEFINE-ALIEN-TYPE DOUBLE-FLOAT)` into an UNKNOWN locative
+  on SBCL.
 
   ```cl-transcript (:dynenv dref-std-env)
   (definitions 'double-float :locative-types (locative-types))

@@ -372,7 +372,12 @@
                        (type ,(swank-type-dspec name))
                        (class ,(swank-class-dspec name))
                        (condition ,(swank-condition-dspec name)))
-                do (when (equal dspec* dspec)
+                do (assert dspec*)
+                   ;; This could be just (EQUAL DSPEC* DSPEC), but there
+                   ;; GENERIC-FUNCTIONs sometimes have their arglist in
+                   ;; DSPEC.
+                   (when (alexandria:starts-with-subseq dspec* dspec
+                                                        :test #'equal)
                      #+allegro
                      (when (and (eq locative-type* 'variable)
                                 (constantp name))

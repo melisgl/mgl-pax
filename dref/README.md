@@ -410,17 +410,15 @@ with references (discussed in the [Extending DRef][68fb]).
 
 - [function] **LISP-LOCATIVE-TYPES**
 
-    Return the locative types that correspond to Lisp definitions
-    except [`UNKNOWN`][a951]. These are the ones defined with
-    [`DEFINE-LOCATIVE-TYPE`][b6c4].
+    Return the locative types that correspond to Lisp definitions.
+    These are the ones defined with [`DEFINE-LOCATIVE-TYPE`][b6c4].
 
 <a id="x-28DREF-3APSEUDO-LOCATIVE-TYPES-20FUNCTION-29"></a>
 
 - [function] **PSEUDO-LOCATIVE-TYPES**
 
-    Return the locative types that correspond to non-Lisp definitions
-    plus [`UNKNOWN`][a951]. These are the ones defined with
-    [`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4].
+    Return the locative types that correspond to non-Lisp definitions.
+    These are the ones defined with [`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4].
 
 <a id="x-28DREF-3ALOCATIVE-ALIASES-20FUNCTION-29"></a>
 
@@ -881,12 +879,12 @@ otherwise noted.
 
 - [locative] **UNKNOWN** *DSPEC*
 
-    This [pseudo locative type][c340] is to allow `PAX`
-    to work in a limited way with locatives it doesn't know. `UNKNOWN`
-    definitions come from [`DEFINITIONS`][e196], which uses
-    `SWANK/BACKEND:FIND-DEFINITIONS`. The following examples show `PAX`
-    stuffing the Swank dspec `(:DEFINE-ALIEN-TYPE DOUBLE-FLOAT)` into an
-    [`UNKNOWN`][a951] locative on SBCL.
+    This locative type allows `PAX` to work in a limited way with
+    locatives it doesn't know. `UNKNOWN` definitions come from
+    [`DEFINITIONS`][e196], which uses `SWANK/BACKEND:FIND-DEFINITIONS`. The
+    following examples show `PAX` stuffing the Swank
+    dspec `(:DEFINE-ALIEN-TYPE DOUBLE-FLOAT)` into an [`UNKNOWN`][a951] locative
+    on SBCL.
     
     ```common-lisp
     (definitions 'double-float :locative-types (locative-types))
