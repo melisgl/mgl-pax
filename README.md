@@ -956,6 +956,8 @@ one to visit the [`SOURCE-LOCATION`][32da] of a definition([`0`][d930] [`1`][7e9
 The definition is either determined from the buffer content at point
 or is prompted. If prompted, then the format is `<NAME> <LOCATIVE>`,
 where the locative may be omitted to recover stock Slime behaviour.
+TAB-completion is available for symbol names, and once the name is
+entered followed by a space, also for their possible locatives.
 
 When determining the definition from the buffer contents,
 `(slime-symbol-at-point)` is parsed as a [word][d7b0], then candidate

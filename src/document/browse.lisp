@@ -771,7 +771,7 @@
               '(:error "Cannot determine current definition.")))))))
 
 
-(defun/autoloaded locatives-for-name-for-emacs (raw)
+(defun/autoloaded locatives-for-name-for-emacs (raw navigatep)
   (with-swank ()
     (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
@@ -785,7 +785,9 @@
                  (let ((*document-open-linking* t)
                        (locatives ()))
                    (flet ((match (name)
-                            (loop for dref in (definitions* name)
+                            (loop for dref in (if navigatep
+                                                  (definitions name)
+                                                  (definitions* name))
                                   do (pushnew (dref-locative dref) locatives
                                               :test #'equal))))
                      (find-name #'match raw)

@@ -1,4 +1,4 @@
-;; -*- lexical-binding: t -*-
+;;;; mgl-pax.el --- MGL-PAX Emacs integration -*- lexical-binding: t -*-
 
 ;;;; MGL-PAX Emacs integration
 ;;;; =========================
@@ -57,12 +57,9 @@
 ;;;; Autoloading of MGL-PAX on the Common Lisp side
 
 (defcustom mgl-pax-autoload t
-  "If true, then the MGL-PAX ASDF system will be loaded as necessary
+  "If true, then the MGL-PAX components will be loaded as necessary
 via Slime by `slime-edit-definition', `mgl-pax-document' and
-other mgl-pax commands. Furthermore, when
-`mgl-pax-browser-function' is not 'w3m-browse-url',
-`mgl-pax-document' will start a web server on the Common Lisp
-side."
+other mgl-pax commands in interactive use."
   :type 'boolean
   :group 'mgl-pax)
 
@@ -70,41 +67,73 @@ side."
 (defvar mgl-pax-version)
 (setq mgl-pax-version  '(0 4 0))
 
-(defun mgl-pax-maybe-autoload (no-web cont)
-  (if (or no-web (mgl-pax-use-w3m))
-      (mgl-pax-maybe-autoload-1 cont)
-    (mgl-pax-ensure-web-server cont)))
+;;; Check that the Elisp and CL PAX versions match, ensure that
+;;; ASDF-SYSTEM is loaded (in the sense of ASDF:COMPONENT-LOADED-P),
+;;; and evaluate BODY. If the system was not loaded and couldn't be
+;;; autoloaded, then signal an error.
+;;;
+;;; Note that autoloading happens asynchronously because it may take a
+;;; long time and can run into errors. Hence, we only do it for when
+;;; the immediately containing function was `called-interactively-p'
+;;; (and `mgl-pax-autoload' is true, of course).
+;;;
+;;; If the ASDF-SYSTEM is `:mgl-pax/document' and `(mgl-pax-use-w3m)`
+;;; is nil, then `:mgl-pax/web' is loaded instead and the web server
+;;; is started.
+(cl-defmacro mgl-pax-with-component ((asdf-system) &body body)
+  (declare (indent 1))
+  `(let* ((asdf-system (if (and (eq ',asdf-system :mgl-pax/document)
+                                (not (mgl-pax-use-w3m)))
+                           :mgl-pax/web
+                         ',asdf-system))
+          (interactivep (called-interactively-p 'interactive))
+          (autoload (and mgl-pax-autoload interactivep)))
+     (mgl-pax-maybe-autoload
+      asdf-system
+      autoload
+      (lambda (loadedp)
+        (if (not loadedp)
+            (mgl-pax-system-not-loaded-error asdf-system interactivep)
+          (cl-flet ((foo () ,@body))
+            (if (eq asdf-system :mgl-pax/web)
+                (mgl-pax-call-with-web-server/async #'foo)
+              (foo))))))))
 
-(defun mgl-pax-maybe-autoload-1 (cont)
-  (let ((check-version-form
+(defun mgl-pax-system-not-loaded-error (asdf-system interactivep)
+  (error "The ASDF system %s is not loaded (%s)."
+         asdf-system (if (not interactivep)
+                         "non-interactive call"
+                       (format "mgl-pax-autoload is %s" mgl-pax-autoload))))
+
+(defun mgl-pax-maybe-autoload (asdf-system autoload cont)
+  (let ((check-form
          `(cl:let ((f (cl:and (cl:find-package :mgl-pax)
                               (cl:find-symbol
                                (cl:string '#:check-pax-elisp-version)
                                :mgl-pax))))
             (cl:when f
               (cl:funcall f ',mgl-pax-version)
-              t))))
-    (if mgl-pax-autoload
-        (slime-eval-async
-            `(cl:progn
-               (cl:unless ,check-version-form
-                 (cl:format t "~&;; Autoloading MGL-PAX for Emacs ~
-                            (mgl-pax-autoload is t).~%")
-                 (asdf:load-system "mgl-pax")
-                 (cl:format t ";; Done autoloading MGL-PAX for Emacs~%"))
-                 ,check-version-form)
-          cont)
-      (slime-eval-async check-version-form cont))))
+              (asdf:component-loaded-p (cl:ignore-errors
+                                        (asdf:find-system ',asdf-system)))))))
+    (cond ((slime-eval check-form)
+           (when cont (funcall cont t)))
+          ((not autoload)
+           (when cont (funcall cont nil)))
+          (t
+           ;; This is the only async path.
+           (slime-eval-async
+               `(cl:progn
+                 (cl:format t "~&;; Autoloading ~S for Emacs ~
+                              (mgl-pax-autoload is t).~%" ',asdf-system)
+                 (asdf:load-system ',asdf-system)
+                 (cl:format t ";; Done autoloading ~S for Emacs~%"
+                            ',asdf-system)
+                 (cl:and ,check-form :async))
+             cont)))))
 
-(cl-defmacro mgl-pax-ensure-pax-loaded ((&key no-web) &body body)
-  (declare (indent 1))
-  `(mgl-pax-maybe-autoload ,no-web (lambda (loadedp)
-                                     (if (not loadedp)
-                                         (mgl-pax-not-loaded)
-                                       ,@body))))
-
-(defun mgl-pax-not-loaded ()
-  (message "MGL-PAX is not loaded. See the variable mgl-pax-autoload."))
+(defun mgl-pax-component-loaded-p (asdf-system)
+  (slime-eval`(asdf:component-loaded-p (cl:ignore-errors
+                                        (asdf:find-system ',asdf-system)))))
 
 (defvar mgl-pax-file-name)
 (setq mgl-pax-file-name load-file-name)
@@ -161,9 +190,10 @@ To bind `C-.' globally:
 (defcustom mgl-pax-browser-function nil
   "The name of the function to use to browse URLs.
 When nil, the value of `browse-url-browser-function' is used. If
-the effective value is `w3m-browse-url', then browsing will take
-place in Emacs buffers using `w3m', and no webserver will be run
-on the Common Lisp side."
+the effective value is `w3m-browse-url', then
+MGL-PAX::@BROWSING-LIVE-DOCUMENTATION will take place in Emacs
+buffers using `w3m'. Else, `mgl-pax-document' will start a web
+server on the Common Lisp side for the external browser."
   :type 'symbol
   :group 'mgl-pax)
 
@@ -179,21 +209,16 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 
 (defvar mgl-pax-web-server-base-url)
 
-(defun mgl-pax-ensure-web-server (cont)
-  (mgl-pax-maybe-autoload-1
-   (lambda (loadedp)
-     (if (not loadedp)
-         (funcall cont nil)
-       (slime-eval-async `(mgl-pax::ensure-web-server
-                           :hyperspec-root ',common-lisp-hyperspec-root
-                           :port ,mgl-pax-web-server-port)
-         (lambda (values)
-           (if (eq (cl-first values) :error)
-               (message "%s" (cl-second values))
-             (cl-assert (eq (cl-first values) :base-url))
-             (setq mgl-pax-web-server-base-url (cl-second values))
-             (funcall cont t))))))))
-
+(defun mgl-pax-call-with-web-server/async (fn)
+  (slime-eval-async `(mgl-pax::ensure-web-server
+                      :hyperspec-root ',common-lisp-hyperspec-root
+                      :port ,mgl-pax-web-server-port)
+    (lambda (values)
+      (if (eq (cl-first values) :error)
+          (message "%s" (cl-second values))
+        (cl-assert (eq (cl-first values) :base-url))
+        (setq mgl-pax-web-server-base-url (cl-second values))
+        (funcall fn)))))
 
 
 ;;;; Find possible words and locatives at point (see MGL-PAX::WALL).
@@ -233,7 +258,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
                   (wall (mgl-pax-parse-reflink bounds)))
               (append (and word `((,word ,locatives))) wall)))))))))
 
-;;; If not in a lisp-mode buffer, then copy the five lines around
+;;; If not in a `lisp-mode' buffer, then copy the five lines around
 ;;; point into a temporary lisp buffer, put point on the same
 ;;; character in the new buffer and call FN.
 (defun mgl-pax-call-in-lisp-mode (fn)
@@ -303,7 +328,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
   (save-excursion
     (goto-char (1- point))
     (unless (looking-at "(")
-      (skip-chars-backward "            ;` \n\t")
+      (skip-chars-backward ";` \n\t")
                           (let ((sexp (ignore-errors (slime-last-expression))))
                             (unless (equal sexp "")
                               sexp)))))
@@ -386,62 +411,32 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 ;;; When it's on `slime-edit-definition-hooks', `M-.' calls this
 ;;; function with (slime-symbol-at-point) as NAME.
 (defun mgl-pax-edit-definitions (name &optional where)
-  (if (slime-eval '(cl:and (cl:find-package :mgl-pax)
-                           (cl:find-symbol (cl:string '#:*navigate-loaded*)
-                                           :mgl-pax)
-                           cl:t))
-      ;; No autoloading will take place, and everything else is quite
-      ;; quick. Do things synchronously.
-      (mgl-pax-edit-definitions-1 name where nil)
-    ;; Either mgl-pax or mgl-pax/navigate will be autoloaded, which
-    ;; may be slow or fail to compile. Do things asynchronously.
-    (mgl-pax-maybe-autoload
-     :no-web
-     (lambda (loadedp)
-       ;; `slime-edit-definition' is functional even without PAX. Remain
-       ;; silent if PAX is not loaded.
-       (when loadedp
-         (mgl-pax-edit-definitions-1 name where t))))
-    ;; Return nil and let other hooks run. It's racy, but they will
-    ;; probably visit the same source location as
-    ;; mgl-pax-edit-definitions-1, and this branch is quite likely
-    ;; taken only once (subject to a similar race).
-    nil))
+  (when (mgl-pax-component-loaded-p :mgl-pax/navigate)
+    (mgl-pax-visit-locations
+     (let ((name-in-buffer (slime-symbol-at-point)))
+       (if (string= name name-in-buffer)
+           (mgl-pax-edit-buffer-definitions)
+         (mgl-pax-edit-interactive-definitions name where))))))
 
-(defun mgl-pax-edit-definitions-1 (name where asyncp)
-  (let ((name-in-buffer (slime-symbol-at-point)))
-    (if (string= name name-in-buffer)
-        (mgl-pax-edit-buffer-definitions asyncp)
-      (mgl-pax-edit-interactive-definitions name where asyncp))))
+(defun mgl-pax-edit-buffer-definitions ()
+  (mgl-pax-locate-definitions (mgl-pax-wall-at-point)))
 
-(defun mgl-pax-edit-buffer-definitions (asyncp)
-  (mgl-pax-locate-definitions (mgl-pax-wall-at-point)
-                              'mgl-pax-visit-locations
-                              asyncp))
-
-(defun mgl-pax-edit-interactive-definitions (string where asyncp)
+(defun mgl-pax-edit-interactive-definitions (string where)
   (let ((pos (cl-position ?\s string)))
     (if pos
         (let ((first (cl-subseq string 0 pos))
               (second (cl-subseq string (1+ pos))))
           ;; "FOO function" or "function FOO"
           (mgl-pax-locate-definitions `((,first (,second))
-                                        (,second (,first)))
-                                      'mgl-pax-visit-locations
-                                      asyncp))
+                                        (,second (,first)))))
       ;; "FOO"
-      (mgl-pax-locate-definitions `((,string ()))
-                                  'mgl-pax-visit-locations
-                                  asyncp))))
+      (mgl-pax-locate-definitions `((,string ()))))))
 
-(defun mgl-pax-locate-definitions (wall cont asyncp)
-  (let ((form `(cl:funcall (cl:find-symbol
+(defun mgl-pax-locate-definitions (wall)
+  (slime-eval `(cl:funcall (cl:find-symbol
                             (cl:string '#:locate-definitions-for-emacs)
                             :mgl-pax)
                            ',wall)))
-    (if asyncp
-        (slime-eval-async form cont)
-      (funcall cont (slime-eval form)))))
 
 (defun mgl-pax-visit-locations (dspec-and-location-list)
   (when (consp dspec-and-location-list)
@@ -453,6 +448,47 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
        nil))))
 
 (add-hook 'slime-edit-definition-hooks 'mgl-pax-edit-definitions)
+
+
+;;;; Completion of locatives for `slime-edit-definition'
+
+;;; Normally, we would ensure PAX is loaded in an interactive
+;;; function, but `slime-edit-definition' is not ours and `advice-add'
+;;; doesn't seem to work sensibly with interactive function argument
+;;; defaulting.
+(define-advice slime-read-symbol-name (:before (prompt &optional query)
+                                       mgl-pax-autoload-async)
+  ;; KLUDGE: `slime-edit-definition' calls `slime-read-symbol-name'
+  ;; for interactive defaulting with this prompt.
+  (when (equal prompt "Edit Definition of: ")
+    ;; Autoload early and asynchronously so that by the time `M-.'
+    ;; prompts and `mgl-pax-complete-urllike-in-minibuffer' gets to
+    ;; work, all is hopefully set up.
+    (mgl-pax-maybe-autoload :mgl-pax/navigate mgl-pax-autoload nil)))
+
+;;; FIXME: non-interactive first call to `slime-edit-definition'?
+
+(add-to-list 'slime-completion-at-point-functions
+             'mgl-pax-complete-locative-in-minibuffer)
+
+(defun mgl-pax-complete-locative-in-minibuffer ()
+  (let* ((start
+          ;; The position of the first character after the prompt
+          (line-beginning-position))
+         (end (point))
+         (beg (slime-symbol-start-pos))
+         (first-space-pos (cl-position ?\s (buffer-substring-no-properties
+                                            start end))))
+    (when first-space-pos
+      ;; PAX may not be loaded yet or at all (see
+      ;; `slime-read-symbol-name@mgl-pax-autoload-async'), and we
+      ;; don't want to autoload in a completion function.
+      (when (mgl-pax-component-loaded-p :mgl-pax/navigate)
+        (let ((name (buffer-substring-no-properties
+                     start (+ start first-space-pos))))
+          (list beg end (completion-table-dynamic
+                         (lambda (prefix)
+                           (mgl-pax-locatives-for-name name)))))))))
 
 
 (defun mgl-pax-edit-for-cl (dspec-and-location-list)
@@ -552,7 +588,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
   (mgl-pax-require-w3m)
   ;; Handle the interactive defaults here because it involves async
   ;; calls.
-  (mgl-pax-ensure-pax-loaded ()
+  (mgl-pax-with-component (:mgl-pax/document)
     (cond (pax-url
            (mgl-pax-document-pax-url pax-url))
           ;; interactive with prefix arg
@@ -727,28 +763,22 @@ The suggested key binding is `C-.' to parallel `M-.'."
          '(mgl-pax-complete-urllike-in-minibuffer)))
     (slime-read-from-minibuffer prompt)))
 
+(defun mgl-pax-completion-for-navigation-p ()
+  (not (equal slime-completion-at-point-functions
+              '(mgl-pax-complete-urllike-in-minibuffer))))
+
 (defun mgl-pax-complete-urllike-in-minibuffer ()
-  (let* ((start
-          ;; The position of the first character after the prompt
-          (line-beginning-position))
-         (end (point))
-         (beg (slime-symbol-start-pos))
-         (first-space-pos (cl-position ?\s (buffer-substring-no-properties
-                                            start end))))
-    (if first-space-pos
-        (let ((name (buffer-substring-no-properties
-                     start (+ start first-space-pos))))
-          (list beg end (completion-table-dynamic
-                         (lambda (prefix)
-                           (mgl-pax-locatives-for-name name)))))
-      (list beg end (completion-table-dynamic #'slime-simple-completions)))))
+  (or (mgl-pax-complete-locative-in-minibuffer)
+      (let ((end (point))
+            (beg (slime-symbol-start-pos)))
+        (list beg end (completion-table-dynamic #'slime-simple-completions)))))
 
 (defun mgl-pax-locatives-for-name (name)
   (let ((values (slime-eval
                  `(cl:funcall (cl:find-symbol
                                (cl:string '#:locatives-for-name-for-emacs)
                                :mgl-pax)
-                              ,name))))
+                              ,name ,(mgl-pax-completion-for-navigation-p)))))
     (if (eq (cl-first values) :error)
         (error (cl-second values))
       (cl-second values))))
@@ -828,11 +858,9 @@ if the current page was generated from a PAX URL."
 
 (defun mgl-pax-call-redocument-for-emacs (file-url dir cont)
   (slime-eval-async
-      `(cl:if (cl:find-package :mgl-pax)
-              (cl:funcall (cl:find-symbol (cl:string '#:redocument-for-emacs)
-                                          :mgl-pax)
-                          ',file-url ',dir ',common-lisp-hyperspec-root)
-              '(:error "MGL-PAX is not loaded."))
+      `(cl:funcall (cl:find-symbol (cl:string '#:redocument-for-emacs)
+                                   :mgl-pax)
+                   ',file-url ',dir ',common-lisp-hyperspec-root)
     (lambda (values)
       (if (eq (cl-first values) :error)
           (message "%s" (cl-second values))
@@ -840,7 +868,7 @@ if the current page was generated from a PAX URL."
   (message "Generating documentation ..."))
 
 
-;;;; Navigation commands for PAX doc.
+;;;; Navigation commands for PAX doc
 ;;;;
 ;;;; These jump between the HTML anchors (<a id="...">) generated by
 ;;;; PAX before definitions (e.g. function signature lines, SECTION
@@ -993,7 +1021,7 @@ move point to the beginning of the buffer."
 (defun mgl-pax-doc-edit-pax-definition (pax-url)
   (when (string-prefix-p "pax:" pax-url)
     (slime-eval-async
-        ;; Silently fail if MGL-PAX is not loaded.
+        ;; Silently fail if the function is not available.
         `(cl:when (cl:find-package :mgl-pax)
                   (cl:funcall
                    (cl:find-symbol (cl:string '#:locate-pax-url-for-emacs)
@@ -1054,20 +1082,17 @@ In a PAX doc buffer, it's equivalent to pressing `v'
   (interactive)
   (if (mgl-pax-in-doc-buffer-p)
       (mgl-pax-doc-edit-current-definition)
-    (mgl-pax-ensure-pax-loaded ()
+    (mgl-pax-with-component (:mgl-pax/document)
       (mgl-pax-current-definition-pax-url 'mgl-pax-document))))
 
 (defun mgl-pax-current-definition-pax-url (cont)
   (slime-eval-async
-      `(cl:if (cl:find-package :mgl-pax)
-              (cl:funcall
-               (cl:find-symbol (cl:string
-                                '#:current-definition-pax-url-for-emacs)
-                               :mgl-pax)
-               ',(buffer-name)
-               ',(buffer-file-name)
-               ',(mgl-pax-current-definition-possible-names))
-              '(:error "MGL-PAX is not loaded."))
+      `(cl:funcall (cl:find-symbol (cl:string
+                                    '#:current-definition-pax-url-for-emacs)
+                                   :mgl-pax)
+                   ',(buffer-name)
+                   ',(buffer-file-name)
+                   ',(mgl-pax-current-definition-possible-names))
     (lambda (values)
       (if (eq (cl-first values) :error)
           (message "%s" (cl-second values))
@@ -1080,20 +1105,16 @@ In a PAX doc buffer, it's equivalent to pressing `v'
 there are multiple containing sections, then pop up a selection
 buffer."
   (interactive)
-  (mgl-pax-ensure-pax-loaded (:no-web t)
+  (mgl-pax-with-component (:mgl-pax/navigate)
     (mgl-pax-find-parent-section #'mgl-pax-visit-locations)))
 
 (defun mgl-pax-find-parent-section (cont)
   (slime-eval-async
-      `(cl:if (cl:find-package :mgl-pax)
-              (cl:funcall
-               (cl:find-symbol (cl:string
-                                '#:find-parent-section-for-emacs)
-                               :mgl-pax)
-               ',(buffer-name)
-               ',(buffer-file-name)
-               ',(mgl-pax-current-definition-possible-names))
-              '(:error "MGL-PAX is not loaded."))
+      `(cl:funcall (cl:find-symbol (cl:string '#:find-parent-section-for-emacs)
+                                   :mgl-pax)
+                   ',(buffer-name)
+                   ',(buffer-file-name)
+                   ',(mgl-pax-current-definition-possible-names))
     cont))
 
 
@@ -1144,7 +1165,7 @@ matter.
 
 Also, see `mgl-pax-apropos-all'."
   (interactive (list nil nil nil nil))
-  (mgl-pax-ensure-pax-loaded ()
+  (mgl-pax-with-component (:mgl-pax/document)
     (mgl-pax-with-nlx-barrier
      (mgl-pax-document
       (mgl-pax-make-pax-eval-url
@@ -1155,7 +1176,7 @@ Also, see `mgl-pax-apropos-all'."
            ;; Do the defaulting of arguments here instead of in
            ;; `interactive' because
            ;; `mgl-pax-read-urllike-from-minibuffer' relies on
-           ;; `mgl-pax-ensure-pax-loaded' having succeeded.
+           ;; MGL-PAX/NAVIGATE being loaded.
            ,@(if current-prefix-arg
                  (list (mgl-pax-read-urllike-from-minibuffer
                         "PAX Apropos: ")
@@ -1172,7 +1193,7 @@ Also, see `mgl-pax-apropos-all'."
 (defun mgl-pax-apropos-all (string)
   "Shortcut for invoking `mgl-pax-apropos' with EXTERNAL-ONLY NIL."
   (interactive (list nil))
-  (mgl-pax-ensure-pax-loaded ()
+  (mgl-pax-with-component (:mgl-pax/document)
     (mgl-pax-with-nlx-barrier
      (let ((string (or string (mgl-pax-read-urllike-from-minibuffer
                                "PAX Apropos All: "))))
@@ -1199,7 +1220,7 @@ argument as in index to select one of the Common Lisp
 MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
 Without a prefix argument, the first syntax is used."
   (interactive)
-  (mgl-pax-ensure-pax-loaded (:no-web t)
+  (mgl-pax-with-component (:mgl-pax/transcribe)
     (save-excursion
       (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
         (let* ((start (progn (backward-sexp)
@@ -1228,7 +1249,7 @@ MGL-PAX:*TRANSCRIBE-SYNTAXES* as the SYNTAX argument to
 MGL-PAX:TRANSCRIBE. Without a prefix argument, the syntax of the
 input will not be changed."
   (interactive "r")
-  (mgl-pax-ensure-pax-loaded (:no-web t)
+  (mgl-pax-with-component (:mgl-pax/transcribe)
     (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
       (let* ((point-at-start-p (= (point) start))
              (point-at-end-p (= (point) end))

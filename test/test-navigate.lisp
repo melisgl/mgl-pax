@@ -210,7 +210,7 @@
     (mgl-pax.el (include #.(asdf:system-relative-pathname
                             :mgl-pax "src/mgl-pax.el")
                  :header-nl "```elisp" :footer-nl "```")
-     ";; -*- lexical-binding: t -*-")
+     ";;;; mgl-pax.el --- MGL-PAX Emacs integration -*- lexical-binding: t -*-")
     (foo-example (include (:start (dref-ext:make-source-location function)
                            :end (dref-ext:source-location-p function))
                   :header-nl "```"

@@ -20,10 +20,6 @@
   locative types with string names, DREF-EXT:DOCSTRING* should
   probably return a non-NIL package.")
 
-;;; This gets clobbered with an empty function when MGL-PAX/NAVIGATE
-;;; is loaded.
-(autoload ensure-navigate-loaded '#:mgl-pax/navigate)
-
 (defgeneric document-object* (object stream)
   (:documentation "Write OBJECT in *FORMAT* to STREAM.
   Specialize this on a subclass of [DREF][class] if that subclass is

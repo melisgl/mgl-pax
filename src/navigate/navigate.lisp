@@ -2,13 +2,6 @@
 
 (in-readtable pythonic-string-syntax)
 
-(defvar *navigate-loaded* nil)
-
-(defun/autoloaded ensure-navigate-loaded ()
-  (prog1 *navigate-loaded*
-    (setq *navigate-loaded* t)))
-
-
 ;;; An acronym for Word-And-Locatives-List. This is what
 ;;; `mgl-pax-wall-at-point' returns. It may look like this:
 ;;;
@@ -40,6 +33,8 @@
   The definition is either determined from the buffer content at point
   or is prompted. If prompted, then the format is `<NAME> <LOCATIVE>`,
   where the locative may be omitted to recover stock Slime behaviour.
+  TAB-completion is available for symbol names, and once the name is
+  entered followed by a space, also for their possible locatives.
 
   When determining the definition from the buffer contents,
   `(slime-symbol-at-point)` is parsed as a @WORD, then candidate
