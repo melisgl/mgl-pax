@@ -714,12 +714,13 @@ xxx
                   "[see this][ddd]"))
     (with-test ("definition is also an interned symbol")
       (is (internedp 'references))
-      (check-head "[see this][references]
+      (with-failure-expected ((and (alexandria:featurep :abcl) 'failure))
+        (check-head "[see this][references]
 
   [references]: #ttt"
-                  "[see this][references]
+                    "[see this][references]
 
-[references]: #ttt"))
+[references]: #ttt")))
     (with-test ("definition is an interned symbol with a definition")
       (check-head "[see this][print]
 

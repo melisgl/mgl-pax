@@ -271,7 +271,11 @@
   :cmucl `(setf ,name))
 
 (define-dspec swank-function-dspec (name)
-  (:or :abcl :ecl :sbcl) `(defun ,name)
+  (declare (ignorable name))
+  ;; KLUDGE: On ABCL, sometimes other symbols than NAME are returned
+  ;; by SWANK-DSPECS.
+  :abcl `(defun)
+  (:or :ecl :sbcl) `(defun ,name)
   :allegro `(:operator ,name)
   (:or :ccl :cmucl) `(function ,name))
 
@@ -291,6 +295,7 @@
   :cmucl `(method ,name ,@qualifiers ,specializers))
 
 (define-dspec swank-accessor-dspec (name class-name writerp)
+  (declare (ignorable name class-name writerp))
   :allegro `(:type (method ,name (,@(when writerp '(t)) ,class-name)))
   #+ccl :ccl #+ccl `(,(if writerp
                           'ccl::writer-method
