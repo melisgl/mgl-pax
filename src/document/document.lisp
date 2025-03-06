@@ -2796,60 +2796,44 @@
     ;; The locative may not be readable (e.g. methods with EQL
     ;; specializers with unreadable stuff).
     (let ((*print-readably* nil))
-      (format nil "~A ~S" (name-to-url-part (dref-name dref))
+      (format nil "~A ~S" (prin1-funny-to-string (dref-name dref))
               (dref-locative dref)))))
 
 (defun dref-to-anchor-v1 (dref)
   (with-standard-io-syntax*
     (let ((*print-readably* nil))
-      (format nil "(~A ~S)"
-              (name-to-url-part (dref-name dref)) (dref-locative dref)))))
+      (format nil "(~A ~S)" (prin1-funny-to-string (dref-name dref))
+              (dref-locative dref)))))
 
 (defun dref-to-pax-url (dref)
   (urlencode
    (with-standard-io-syntax*
      (let ((*print-readably* nil))
-       (format nil "pax:~A ~S"
-               (name-to-url-part (dref-name dref)) (dref-locative dref))))))
+       (format nil "pax:~A ~S" (prin1-funny-to-string (dref-name dref))
+               (dref-locative dref))))))
 
 (defun name-to-pax-url (name)
   (urlencode
    (with-standard-io-syntax*
-     (format nil "pax:~A" (name-to-url-part name)))))
+     (format nil "pax:~A" (prin1-funny-to-string name)))))
 
-;;; If NAME is a symbol, then print it almost as PRIN1 would with
-;;; *PACKAGE* were the CL package. Differences:
-;;;
-;;; - For symbols in other packages, a single #\: is printed even if
-;;;   it is an internal symbol.
-;;;
-;;; - Package and symbol names are printed without the || syntax but
-;;;   #\: and #\Space are escaped with backslashes.
-(defun name-to-url-part (name)
-  (if (symbolp name)
-      (let* ((package (symbol-package name))
-             (name (symbol-name name))
-             (name-url (print-name-for-url name))
-             (cl-package (find-package :common-lisp))
-             (keyword-package (find-package :keyword)))
-        (cond
-          ((eq package cl-package)
-           (format nil "~A" name-url))
-          ((eq package keyword-package)
-           (format nil ":~A" name-url))
-          (t
-           ;; Note the single : character.
-           (format nil "~A:~A" (print-name-for-url (package-name package))
-                   name-url))))
-      (prin1-to-string name)))
-
-;;; Escape #\: and #\Space with a backslash.
-(defun print-name-for-url (string)
-  (with-output-to-string (s)
-    (loop for char across string
-          do (when (or (eql char #\:) (eql char #\Space))
-               (write-char #\\ s))
-             (write-char char s))))
+;;; This is kind of the collective inverse of DREF-TO-PAX-URL and
+;;; NAME-TO-PAX-URL.
+(defun definitions-for-pax-url-path (path)
+  (with-standard-io-syntax*
+    (let ((*print-readably* nil))
+      (with-input-from-string (stream path)
+        (let ((name (read-funny stream nil)))
+          (unless name
+            (error "~@<Bad ~S name in PAX URL path ~S~:@>" '@name path))
+          (let ((locative-string (trim-whitespace
+                                  (read-stream-content-into-string stream))))
+            (if (zerop (length locative-string))
+                (definitions* name)
+                (let ((locative (parse-locative locative-string)))
+                  (unless locative
+                    (error "~@<Bad ~S in PAX URL path ~S.~:@>" 'locative path))
+                  (ensure-list (dref name locative nil))))))))))
 
 
 (defvar *document-min-link-hash-length* 4

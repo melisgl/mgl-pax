@@ -190,17 +190,10 @@
 (defun map-names-in-raw (fn raw symbols-only)
   (flet ((try-parse-symbol (raw)
            (multiple-value-bind (symbol found)
+               ;; KLUDGE: (SWANK::PARSE-SYMBOL "PAX:SECTION:")
+               ;; incorrectly ignores the trailing colon.
                (unless (ends-with #\: raw)
-                 ;; KLUDGE: (SWANK::PARSE-SYMBOL "PAX:SECTION:")
-                 ;; incorrectly ignores the trailing colon. Doubling
-                 ;; helps.
-                 ;;
-                 ;; FIXME: The doubling is actually needed to be able
-                 ;; to parse PAX urls (see *DOCUMENT-URL-VERSIONS*),
-                 ;; but this is probably the wrong place because, for
-                 ;; example, the case of symbols in PAX URLs is lost
-                 ;; here (see NAME-TO-URL-PART).
-                 (swank::parse-symbol (double-single-colon raw)))
+                 (swank::parse-symbol raw))
              (when found
                (funcall fn raw symbol)))))
     (unless (zerop (length raw))
@@ -314,13 +307,6 @@
                           (values locative position))))))))))
     ((or reader-error end-of-file) ()
       nil)))
-
-(defun double-single-colon (string)
-  (let ((pos (position #\: string)))
-    (if (and pos (plusp pos)
-             (not (search "::" string)))
-        (concatenate 'string (subseq string 0 pos) ":" (subseq string pos))
-        string)))
 
 (defun delimiterp (char)
   (or (whitespacep char) (find char "()'`\"")))

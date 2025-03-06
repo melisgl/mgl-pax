@@ -148,12 +148,5 @@ DREF) 'SECTION).
 * TODO It's unclear how pressing M-. or C-. on X shall combine (definitions'x) and (definitions "X").
 * MAYBE replace titles even if not linking in :FORMAT :PLAIN?
 * MAYBE always replace titles but follow the link suppression rules?
-* BUG pax::@PAX-URLs in DOCUMENT-PAX-URL-PATH are not parsed properly
-It should invert DREF-TO-PAX-URL.
-
-(defpackage "X Y")
-(defun |x y| ()
-  "sdaf"
-  nil)
-(urldecode (dref-to-pax-url (dref "X Y" 'package)))
-(parse-url (urldecode (dref-to-pax-url (dref '|x y| 'function))))
+* BUG M-. on Foo doesn't find |Foo|
+With plain Slime either.

@@ -71,6 +71,7 @@
   (test-sanitize-docstring-aggressively)
   (test-parse-dref)
   (test-parse-definitions*)
+  (test-funny)
   (test-codify)
   (test-names)
   (test-downcasing)
@@ -121,7 +122,8 @@
   (test-cl-transcript)
   (test-document/open)
   (test-map-documentable)
-  (test-table-of-contents))
+  (test-table-of-contents)
+  (test-definitions-for-pax-url-path))
 
 (deftest test-urlencode ()
   (is (equal (mgl-pax::urlencode "hello") "hello"))
@@ -219,7 +221,7 @@
           (null *)
           (string= * "function  bar")))
     (is (match-values (mgl-pax::parse-dref "mgl-pax:@codification section")
-          (xref= * (dref 'mgl-pax::@codification 'section))
+          (null *)
           (eq * 'section)
           (null *))
         :msg "internal symbol with single :")))
@@ -234,6 +236,24 @@
                    (mgl-pax::definitions* 'nil)))
     (is (dref-set= (mgl-pax::parse-definitions* "\"nil\"")
                    (mgl-pax::definitions* "nil")))))
+
+(deftest test-funny ()
+  (is (equal (mgl-pax::prin1-funny-to-string 'mgl-pax::@pax-manual)
+             "MGL-PAX:@PAX-MANUAL"))
+  (is (eq (mgl-pax::read-funny-from-string "MGL-PAX:@PAX-MANUAL")
+          'mgl-pax::@pax-manual))
+  (is (equal (mgl-pax::prin1-funny-to-string :if-exists) ":IF-EXISTS"))
+  (is (eq (mgl-pax::read-funny-from-string ":IF-EXISTS") :if-exists))
+  (let ((*package* (find-package :keyword)))
+    (is (eq (mgl-pax::read-funny-from-string "PRINT") 'cl:print)))
+  (is (equal (mgl-pax::prin1-funny-to-string '|Foo|) "MGL-PAX-TEST:Foo"))
+  (is (equal (mgl-pax::read-funny*-from-string "x y:") "x"))
+  (is (equal (mgl-pax::read-funny*-from-string "x:y") "x"))
+  (is (equal (mgl-pax::read-funny*-from-string "x y") "x"))
+  (is (equal (mgl-pax::read-funny*-from-string "x\\y") "xy"))
+  (is (equal (mgl-pax::read-funny*-from-string "x\\:y") "x:y"))
+  (signals (end-of-file)
+    (mgl-pax::read-funny*-from-string "x\\")))
 
 
 (deftest test-codify ()
@@ -1729,3 +1749,11 @@ example section
   [74ce]: #MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"`MGL-PAX-TEST::@PARENT-SECTION-WITHOUT-TITLE`\"
   [eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"`MGL-PAX-TEST::@SECTION-WITHOUT-TITLE`\"
 "))
+
+
+(deftest test-definitions-for-pax-url-path ()
+  (signals (error :pred "Bad")
+    (let ((*package* (find-package '#:mgl-pax)))
+      (pax::definitions-for-pax-url-path "SECTION LOCATIVE")))
+  (check-ref-sets (pax::definitions-for-pax-url-path "PAX:SECTION PAX:LOCATIVE")
+                  (list (dref 'section 'locative))))

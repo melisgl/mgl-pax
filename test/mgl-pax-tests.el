@@ -632,6 +632,32 @@
       (kill-buffer)
       (mgl-pax-sync-current-buffer)))))
 
+(ert-deftest test-mgl-pax-current-definition-toggle-view/funny ()
+  (with-browsers
+   (with-temp-lisp-buffer
+    (let ((tmpbuffer (current-buffer)))
+      (insert "(defun |F: \\\\o| () \"docstring\" t)")
+      ;; Interpreted
+      (slime-eval-last-expression)
+      (slime-sync-to-top-level 1)
+      (backward-char)
+      (mgl-pax-current-definition-toggle-view)
+      (mgl-pax-test-sync-hard)
+      (should (eq major-mode 'w3m-mode))
+      (should (substringp "* [function] |F: \\\\o|" (w3m-contents)))
+      (kill-buffer)
+      (switch-to-buffer tmpbuffer)
+      (mgl-pax-sync-current-buffer)
+      ;; Compiled
+      (slime-compile-defun)
+      (slime-sync-to-top-level 1)
+      (mgl-pax-current-definition-toggle-view)
+      (mgl-pax-test-sync-hard)
+      (should (eq major-mode 'w3m-mode))
+      (should (substringp "* [function] |F: \\\\o|" (w3m-contents)))
+      (kill-buffer)
+      (mgl-pax-sync-current-buffer)))))
+
 (ert-deftest test-mgl-pax-current-definition-toggle-view/string ()
   (with-browsers
    (with-temp-lisp-buffer

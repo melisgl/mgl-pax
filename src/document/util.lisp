@@ -60,3 +60,88 @@
 
 (defun parse-definitions* (string)
   (find-name #'definitions* (trim-whitespace string)))
+
+
+;;;; Funny printing of @NAMEs
+
+;;; If NAME is a symbol, then print it almost as PRIN1 would with
+;;; *PACKAGE* were the CL package. Differences:
+;;;
+;;; - For symbols in other packages, a single #\: is printed even if
+;;;   it is an internal symbol.
+;;;
+;;; - Package and symbol names are printed without the || syntax but
+;;;   #\: and #\Space are escaped with backslashes.
+(defun prin1-funny (name &optional (stream *standard-output*))
+  (etypecase name
+    (symbol
+     (let* ((package (symbol-package name))
+            (name (symbol-name name))
+            (cl-package #.(find-package :common-lisp))
+            (keyword-package #.(find-package :keyword)))
+       (cond
+         ((eq package cl-package)
+          (prin1-funny* name stream))
+         ((eq package keyword-package)
+          (write-char #\: stream)
+          (prin1-funny* name stream))
+         (t
+          (prin1-funny* (package-name package) stream)
+          ;; Note the single : character.
+          (write-char #\: stream)
+          (prin1-funny* name stream)))))
+    (string
+     (prin1 name stream))))
+
+;;; Escape #\:, #\Space, #\\ with a backslash.
+(defun prin1-funny* (string &optional (stream *standard-output*))
+  (loop for char across string
+        do (when (or (eql char #\:) (eql char #\Space) (eql char #\\))
+             (write-char #\\ stream))
+           (write-char char stream)))
+
+;;; Like READ, but do not INTERN.
+(defun read-funny (stream &optional (eof-error-p t) eof-value)
+  (if (eql (peek-char t stream eof-value eof-value) #\")
+      (read stream eof-error-p eof-value)
+      (let ((name-1 (read-funny* stream))
+            (next-char (peek-char nil stream nil)))
+        (cond ((eql next-char #\:)
+               (read-char stream)
+               (find-symbol (read-funny* stream)
+                            (if (zerop (length name-1))
+                                #.(find-package :keyword)
+                                (find-package name-1))))
+              (t
+               (find-symbol name-1 #.(find-package :cl)))))))
+
+(defun read-funny* (stream)
+  (with-output-to-string (s)
+    (loop for char = (read-char stream nil)
+          while char
+          do ;; These would be escaped if they were part of the name.
+             (when (or (eql char #\:) (eql char #\Space))
+               (unread-char char stream)
+               (return))
+             (when (eql char #\\)
+               ;; EOF is invalid syntax.
+               (setq char (read-char stream)))
+             (write-char char s))))
+
+(defun prin1-funny-to-string (name)
+  (with-output-to-string (stream)
+    (prin1-funny name stream)))
+
+(defun prin1-funny*-to-string (string)
+  (with-output-to-string (stream)
+    (prin1-funny* string stream)))
+
+(defun read-funny-from-string (string)
+  (with-input-from-string (stream string)
+    (values (read-funny stream)
+            (file-position stream))))
+
+(defun read-funny*-from-string (string)
+  (with-input-from-string (stream string)
+    (values (read-funny* stream)
+            (file-position stream))))
