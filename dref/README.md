@@ -320,6 +320,8 @@ with references (discussed in the [Extending DRef][68fb]).
     NIL :LOCATIVE-TYPES NIL)` lists all definitions in the system.
     Arguments with non-`NIL` values filter the list of definitions.
     
+    `PAX` has a live browsing [frontend][b7fc].
+    
     Roughly speaking, when `NAME` or `PACKAGE` is a [`SYMBOL`][e5af], they must match
     the whole [name][5fc4] of the definition:
     
@@ -1747,6 +1749,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [affc]: #x-28MGL-PAX-3ADOCSTRING-20FUNCTION-29 "MGL-PAX:DOCSTRING FUNCTION"
   [b3a7]: #x-28DREF-EXT-3ACLASS-DREF-20CLASS-29 "DREF-EXT:CLASS-DREF CLASS"
   [b6c4]: #x-28DREF-EXT-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "DREF-EXT:DEFINE-LOCATIVE-TYPE MGL-PAX:MACRO"
+  [b7fc]: ../README.md#x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29 "Apropos"
   [b88e]: #x-28DREF-EXT-3AXREF-NAME-20-28MGL-PAX-3AREADER-20DREF-3AXREF-29-29 "DREF-EXT:XREF-NAME (MGL-PAX:READER DREF:XREF)"
   [b93c]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "STRING (MGL-PAX:CLHS CLASS)"
   [ba62]: #x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29 "FUNCTION MGL-PAX:LOCATIVE"

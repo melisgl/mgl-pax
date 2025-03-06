@@ -268,6 +268,8 @@ with references (discussed in the DREF-EXT::@EXTENDING-DREF).
     NIL :LOCATIVE-TYPES NIL)` lists all definitions in the system.
     Arguments with non-NIL values filter the list of definitions.
     
+    PAX has a live browsing frontend.
+    
     Roughly speaking, when NAME or PACKAGE is a SYMBOL, they must match
     the whole @NAME of the definition:
     

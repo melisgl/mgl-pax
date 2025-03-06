@@ -34,6 +34,8 @@
   NIL :LOCATIVE-TYPES NIL)` lists all definitions in the system.
   Arguments with non-NIL values filter the list of definitions.
 
+  PAX has a live browsing [frontend][PAX::@APROPOS].
+
   Roughly speaking, when NAME or PACKAGE is a SYMBOL, they must match
   the whole @NAME of the definition:
 

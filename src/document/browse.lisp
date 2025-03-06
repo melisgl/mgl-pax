@@ -587,15 +587,14 @@
 
 (defsection @apropos (:title "Apropos")
   "The Elisp functions `mgl-pax-apropos`, `mgl-pax-apropos-all`, and
-  `mgl-pax-apropos-package` can display the results of
-  DREF:DREF-APROPOS in the [live documentation browser]
-  [@browsing-live-documentation]. These parallel the functionality of
-  `slime-apropos`, `slime-apropos-all`, and `slime-apropos-package`.
+  `mgl-pax-apropos-package` can display the results of DREF-APROPOS in
+  the [live documentation browser] [@browsing-live-documentation].
+  These parallel the functionality of `slime-apropos`,
+  `slime-apropos-all`, and `slime-apropos-package`.
 
-  DREF:DREF-APROPOS itself is similar to CL:APROPOS-LIST, but it
-  supports more flexible matching – e.g. filtering by
-  DREF::@LOCATIVE-TYPEs – and returns [DRef
-  references][DREF::@REFERENCE].
+  DREF-APROPOS itself is similar to CL:APROPOS-LIST, but it supports
+  more flexible matching – e.g. filtering by DREF::@LOCATIVE-TYPEs –
+  and returns [DREFs][class].
 
   The returned references are presented in two groups: those with
   non-symbol and those with symbol @NAMEs. The non-symbol group is
@@ -673,7 +672,7 @@
                    ;; avoid duplications. Also exclude ASDF:SYSTEMs
                    ;; because they have headings that look weird.
                    '(,(if just-list t '(section asdf:system))))
-               ,(format nil "## Apropos~%~%```~%~A~%```~%~%"
+               ,(format nil "## [Apropos][pax::@apropos]~%~%```~%~A~%```~%~%"
                         (let ((current-package *package*))
                           (with-standard-io-syntax*
                             (let ((*package* current-package)

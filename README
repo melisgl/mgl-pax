@@ -1210,14 +1210,14 @@ where `REFERENCE` names either
 #### Apropos
 
 The Elisp functions `mgl-pax-apropos`, `mgl-pax-apropos-all`, and
-`mgl-pax-apropos-package` can display the results of
-DREF:DREF-APROPOS in the live documentation browser. These parallel the functionality of
-`slime-apropos`, `slime-apropos-all`, and `slime-apropos-package`.
+`mgl-pax-apropos-package` can display the results of DREF-APROPOS in
+the live documentation browser.
+These parallel the functionality of `slime-apropos`,
+`slime-apropos-all`, and `slime-apropos-package`.
 
-DREF:DREF-APROPOS itself is similar to CL:APROPOS-LIST, but it
-supports more flexible matching – e.g. filtering by
-DREF::@LOCATIVE-TYPEs – and returns DRef
-references.
+DREF-APROPOS itself is similar to CL:APROPOS-LIST, but it supports
+more flexible matching – e.g. filtering by DREF::@LOCATIVE-TYPEs –
+and returns DREFs.
 
 The returned references are presented in two groups: those with
 non-symbol and those with symbol @NAMEs. The non-symbol group is
