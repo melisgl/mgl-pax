@@ -129,6 +129,15 @@
    (should (equal (mgl-pax-wall-at-point)
                   '(("foo" ("xxx" "yyy")))))))
 
+;;; xxx FOO `(method () number)`
+(ert-deftest test-mgl-pax-wall-at-point/locative-in-backticks ()
+  (with-temp-lisp-and-non-lisp-buffer
+   (insert "xxx foo")
+   (save-excursion
+     (insert " `(method () number)`"))
+   (should (equal (mgl-pax-wall-at-point)
+                  '(("foo" ("xxx" "(method () number)")))))))
+
 ;;; ;;; xxx FOO yyy
 (ert-deftest test-mgl-pax-wall-at-point/comment-1 ()
   (with-temp-lisp-and-non-lisp-buffer

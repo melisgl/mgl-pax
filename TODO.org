@@ -131,22 +131,17 @@ I.e. they shouldn't be implemented with WITH-HEADING but maybe
 DOCUMENTING-REFERENCE like everything else.
 * MAYBE print ASDF/SYSTEM:SYSTEM as ASDF:SYSTEM
 Maybe. ASDF is a nickname of ASDF/INTERFACE.
-* CANCELLED make C-. work on '"lambda list" pax:clhs'
-It works on [lambda list][pax:clhs]. Actually, that would behave
-differently from DOCUMENT.
 * GO nested in GO?
 * MAYBE "function. FOO" should not consider FUNCTION a locative
 "BAR has a useful function, FOO doesn't."
-* BUG (low) M-. vs DOCUMENT inconsistency
-DOCUMENT-OBJECT* (method () (dref t)) works with M-.
-DOCUMENT-OBJECT* `(method () (dref t))` works with DOCUMENT.
-               ^
-Acutally mgl-pax-find-locatives here finds the locative but not in Lisp mode.
 * MAYBE do not test the locative type of a DREF with EQ
 Use (TYPEP DREF 'SECTION-DREF) instead of (EQ (DREF-LOCATIVE-TYPE
 DREF) 'SECTION).
-* TODO It's unclear how pressing M-. or C-. on X shall combine (definitions'x) and (definitions "X").
+* TODO It's unclear how pressing M-. or C-. on X shall combine (definitions 'x) and (definitions "X").
+Or (definitions '|x|), for that matter. See [[M-. on Foo]] below.
 * MAYBE replace titles even if not linking in :FORMAT :PLAIN?
 * MAYBE always replace titles but follow the link suppression rules?
 * BUG M-. on Foo doesn't find |Foo|
 With plain Slime either.
+* TODO finalize DREF::MAP-DEFINITIONS and DREF::MAP-NAMES
+They may not be the right API.

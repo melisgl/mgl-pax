@@ -329,18 +329,14 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 
 ;;; Return the next sexp as a string or nil.
 (defun mgl-pax-next-sexp ()
-  (save-excursion
-    (when (mgl-pax-forward-sexp)
-      (ignore-errors (slime-last-expression)))))
-
-;;; Like forward-sexp, but don't signal errors and return t if
-;;; something other than whitespace was skipped over.
-(defun mgl-pax-forward-sexp ()
-  (let ((point (point)))
-    (ignore-errors (forward-sexp))
-    (save-excursion
-      (ignore-errors (backward-sexp))
-      (<= point (point)))))
+  (let ((string (slime-trim-whitespace
+                 (buffer-substring-no-properties
+                  (point)
+                  (save-excursion
+                    (ignore-error scan-error (forward-sexp))
+                    (point))))))
+    (unless (zerop (length string))
+      string)))
 
 ;;; With point on FOO or just after, parse "[FOO][function]" as a
 ;;; Markdown reference link. Return the name and the locative string
