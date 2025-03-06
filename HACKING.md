@@ -85,6 +85,8 @@ Versioning
 `MAJOR.MINOR.PATCH` format. Bump `MINOR` for significant changes.
 Bumping `PATCH` is optional. `MAJOR` is constant 0 :-).
 
-Incompatible changes to the Elisp--CL interface also require bumping
-`mgl-pax-version` in `mgl-pax.el` and
-`MGL-PAX::CHECK-PAX-ELISP-VERSION`.
+When making an incompatible change to the Elisp-CL interface or even a
+bugfix to the ELisp side, bump `:VERSION` in the ASDF and copy it to
+`mgl-pax-version` and `MGL-PAX::CHECK-PAX-ELISP-VERSION`. This way the
+user will be notified if the Elisp code is incompatible with the Lisp
+side or it lacks available bug fixes.

@@ -219,23 +219,14 @@
                                     target-dir))))
 
 (defun check-pax-elisp-version (version)
-  (let ((min-required-version '(0 4 0)))
-    (unless (version<= min-required-version version)
+  (let ((required-version '(0 4 0)))
+    (unless (equal required-version version)
       (cerror "Ignore version mismatch."
               "~@<In Emacs, mgl-pax-version is ~S, ~
-              which is lower than the required ~S. ~
+              which is different from the required ~S. ~
               You may need to M-x mgl-pax-reload.~:@>"
-              version min-required-version '@emacs-setup)))
+              version required-version '@emacs-setup)))
   t)
-
-(defun version<= (version1 version2)
-  (loop for x1 in version1
-        for x2 in version2
-        do (when (< x1 x2)
-             (return t))
-           (when (< x2 x1)
-             (return nil))
-        finally (return t)))
 
 (defsection @links (:title "Links and Systems")
   "Here is the [official
