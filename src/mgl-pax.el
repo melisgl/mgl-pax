@@ -147,6 +147,9 @@ See MGL-PAX::@EMACS-SETUP."
     (load-file sourcefile)))
 
 
+;;; KLUDGE: The quotes are not escaped in the docstring because it is
+;;; INCLUDEd in PAX documentation, where the \=' would look bad.
+(with-no-warnings
 (defun mgl-pax-hijack-slime-doc-keys ()
   "Make the following changes to `slime-doc-map' (assuming it's
 bound to `C-c C-d').
@@ -157,9 +160,6 @@ bound to `C-c C-d').
 - `C-c C-d d': `mgl-pax-document' (replaces `slime-describe-symbol')
 - `C-c C-d f': `mgl-pax-document' (replaces `slime-describe-function')
 - `C-c C-d c': `mgl-pax-current-definition-toggle-view'
-
-Also, regardless of whether `w3m' is available, add this:
-
 - `C-c C-d u': `mgl-pax-edit-parent-section'
 
 In addition, because it can be almost as useful as `M-.', one may
@@ -180,9 +180,8 @@ To bind `C-.' globally:
                      (?p mgl-pax-apropos-package)
                      (?d mgl-pax-document)
                      (?f mgl-pax-document)
-                     (?c mgl-pax-current-definition-toggle-view)))
-  (slime-bind-keys slime-doc-map t
-                   '((?u mgl-pax-edit-parent-section))))
+                     (?c mgl-pax-current-definition-toggle-view)
+                     (?u mgl-pax-edit-parent-section)))))
 
 
 ;;;; Browser configuration
@@ -380,10 +379,10 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
         (cl-destructuring-bind (symbol-start . symbol-end) bounds
           (save-restriction
             ;; Do not search beyond the surrounding lines.
-            (let* ((min (save-excursion (ignore-errors (previous-line))
+            (let* ((min (save-excursion (ignore-errors (forward-line -1))
                                         (beginning-of-line)
                                         (point)))
-                   (max (save-excursion (ignore-errors (next-line))
+                   (max (save-excursion (ignore-errors (forward-line))
                                         (end-of-line)
                                         (point)))
                    (start-pos (save-excursion (search-backward "[" min t)))
@@ -422,6 +421,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
   (mgl-pax-locate-definitions (mgl-pax-wall-at-point)))
 
 (defun mgl-pax-edit-interactive-definitions (string where)
+  (ignore where)
   (let ((pos (cl-position ?\s string)))
     (if pos
         (let ((first (cl-subseq string 0 pos))
@@ -458,6 +458,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 ;;; defaulting.
 (define-advice slime-read-symbol-name (:before (prompt &optional query)
                                        mgl-pax-autoload-async)
+  (ignore query)
   ;; KLUDGE: `slime-edit-definition' calls `slime-read-symbol-name'
   ;; for interactive defaulting with this prompt.
   (when (equal prompt "Edit Definition of: ")
@@ -465,8 +466,6 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
     ;; prompts and `mgl-pax-complete-urllike-in-minibuffer' gets to
     ;; work, all is hopefully set up.
     (mgl-pax-maybe-autoload :mgl-pax/navigate mgl-pax-autoload nil)))
-
-;;; FIXME: non-interactive first call to `slime-edit-definition'?
 
 (add-to-list 'slime-completion-at-point-functions
              'mgl-pax-complete-locative-in-minibuffer)
@@ -488,6 +487,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
                      start (+ start first-space-pos))))
           (list beg end (completion-table-dynamic
                          (lambda (prefix)
+                           (ignore prefix)
                            (mgl-pax-locatives-for-name name)))))))))
 
 
@@ -513,6 +513,8 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 
 (defvar mgl-pax-doc-buffers ())
 
+;;; Note we allow w3m not to be loaded or loaded after mgl-pax, so we
+;;; must silence compilation warnings later on.
 (defun mgl-pax-require-w3m ()
   (when (mgl-pax-use-w3m)
     (unless (require 'w3m nil t)
@@ -597,8 +599,9 @@ The suggested key binding is `C-.' to parallel `M-.'."
           ;; interactive without prefix arg, point over a pax URL
           ((and (null current-prefix-arg)
                 (mgl-pax-in-doc-buffer-p)
-                (mgl-pax-doc-pax-url (w3m-anchor)))
-           (mgl-pax-document-pax-url (mgl-pax-doc-pax-url (w3m-anchor))))
+                (mgl-pax-doc-pax-url (with-no-warnings (w3m-anchor))))
+           (mgl-pax-document-pax-url (mgl-pax-doc-pax-url (with-no-warnings
+                                                            (w3m-anchor)))))
           ;; interactive without prefix arg, point not over a pax URL
           (t
            (let ((wall (mgl-pax-wall-at-point)))
@@ -706,6 +709,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
                             (setq slime-buffer-package package))
                           (mgl-pax-set-up-doc-buffer doc-dir)))
              :abort-cont (lambda (condition)
+                           (ignore condition)
                            (mgl-pax-delete-doc-dir doc-dir)))))))))
 
 (defun mgl-pax-in-doc-buffer-p ()
@@ -718,7 +722,8 @@ The suggested key binding is `C-.' to parallel `M-.'."
   (mgl-pax-doc-set-up-key-bindings))
 
 (defun mgl-pax-doc-set-up-key-bindings ()
-  (use-local-map (copy-keymap w3m-mode-map))
+  (with-suppressed-warnings ((free-vars w3m-mode-map))
+    (use-local-map (copy-keymap w3m-mode-map)))
   ;; `M-.' visits the source when pressed on a "pax:" link.
   (local-set-key (kbd "M-.") 'slime-edit-definition)
   (local-set-key (kbd "M-,") 'slime-pop-find-definition-stack)
@@ -797,6 +802,10 @@ The suggested key binding is `C-.' to parallel `M-.'."
               (cl-subseq url (1+ fragment-pos)))
       (list url nil))))
 
+;;; Make sure the dynamic binding is used below even if w3m is not
+;;; loaded at compilation time.
+(defvar w3m-confirm-leaving-secure-page)
+
 (defun mgl-pax-w3m-goto-url (oldfun url &rest args)
   (if (not (or (string-prefix-p "pax:" url)
                (string-prefix-p "pax-eval:" url)
@@ -851,10 +860,12 @@ if the current page was generated from a PAX URL."
   (interactive)
   (when mgl-pax-doc-dir
     (let ((buffer (current-buffer)))
-      (mgl-pax-call-redocument-for-emacs w3m-current-url mgl-pax-doc-dir
-                                         (lambda ()
-                                           (pop-to-buffer buffer)
-                                           (w3m-reload-this-page))))))
+      (with-suppressed-warnings ((free-vars w3m-current-url))
+        (mgl-pax-call-redocument-for-emacs w3m-current-url mgl-pax-doc-dir
+                                           (lambda ()
+                                             (pop-to-buffer buffer)
+                                             (with-no-warnings
+                                               (w3m-reload-this-page))))))))
 
 (defun mgl-pax-call-redocument-for-emacs (file-url dir cont)
   (slime-eval-async
@@ -887,7 +898,7 @@ Use it in a PAX doc buffer (see `mgl-pax-document')."
           (unless start
             ;; There are no PAX definitions at all. Just move to the
             ;; next link.
-            (w3m-next-anchor)))))))
+            (with-no-warnings (w3m-next-anchor))))))))
 
 (defun mgl-pax-doc-previous-definition ()
   "Move point to the previous PAX definition.
@@ -900,7 +911,7 @@ Use it in a PAX doc buffer (see `mgl-pax-document')."
         (if prev
             (goto-char prev)
           (unless start
-            (w3m-previous-anchor)))))))
+            (with-no-warnings (w3m-previous-anchor))))))))
 
 ;;; Return the buffer position of the first character of the link
 ;;; corresponding to the current definition.
@@ -928,8 +939,9 @@ Use it in a PAX doc buffer (see `mgl-pax-document')."
   (when pos
     (save-excursion
       (goto-char pos)
-      (unless (w3m-anchor)
-        (w3m-next-anchor))
+      (with-no-warnings
+        (unless (w3m-anchor)
+          (w3m-next-anchor)))
       (point))))
 
 (defun mgl-pax-doc-up-definition ()
@@ -955,24 +967,24 @@ move point to the beginning of the buffer."
   (interactive)
   (let ((url (mgl-pax-doc-url-up t)))
     (if (null url)
-        (beginning-of-buffer)
+        (goto-char (point-min))
       (w3m-goto-url url)
       t)))
 
 (defun mgl-pax-doc-url-up (&optional strip-fragment-p)
   (when (mgl-pax-doc-has-up-line-p)
     (save-excursion
-      (beginning-of-buffer)
-      (w3m-next-anchor)
-      (let ((url (w3m-anchor)))
+      (goto-char (point-min))
+      (with-no-warnings (w3m-next-anchor))
+      (let ((url (with-no-warnings (w3m-anchor))))
         (when url
           (if strip-fragment-p
-              (w3m-url-strip-fragment url)
+              (with-no-warnings (w3m-url-strip-fragment url))
             url))))))
 
 (defun mgl-pax-doc-has-up-line-p ()
   (save-excursion
-    (beginning-of-buffer)
+    (goto-char (point-min))
     (forward-line)
     (and (<= (+ (point) 4) (buffer-size))
          (string= (buffer-substring-no-properties (point) (+ (point) 4))
@@ -992,7 +1004,7 @@ move point to the beginning of the buffer."
     (when pos
       (save-excursion
         (goto-char pos)
-        (mgl-pax-doc-pax-url (w3m-anchor))))))
+        (mgl-pax-doc-pax-url (with-no-warnings (w3m-anchor)))))))
 
 (defun mgl-pax-doc-edit-first-definition ()
   "Visit the source of the first PAX definition on the page."
@@ -1001,9 +1013,9 @@ move point to the beginning of the buffer."
 
 (defun mgl-pax-doc-first-definition-pax-url ()
   (save-excursion
-    (beginning-of-buffer)
+    (goto-char (point-min))
     (mgl-pax-doc-next-definition)
-    (mgl-pax-doc-pax-url (w3m-anchor))))
+    (mgl-pax-doc-pax-url (with-no-warnings (w3m-anchor)))))
 
 
 ;;;; Make `M-.' (`slime-edit-definition') work on links in w3m PAX
@@ -1014,6 +1026,7 @@ move point to the beginning of the buffer."
 ;;; itself identifies the target. For "file:" URLs, the target is the
 ;;; PAX reference encoded in the fragment part of the URL if any.
 (defun mgl-pax-doc-edit-definition (name &optional where)
+  (ignore name where)
   (let ((url (and (fboundp 'w3m-anchor)
                   (mgl-pax-doc-pax-url (w3m-anchor)))))
     (mgl-pax-doc-edit-pax-definition url)))
@@ -1125,20 +1138,20 @@ buffer."
   "Show all PAX definitions that match the arguments.
 This is a wrapper around DREF:DREF-APROPOS. STRING is basically
 NAME and LOCATIVE-TYPES concatenated with a space in between. If
-STRING or PACKAGE starts with `?'', then only exact matches with
-a symbol or package name are accepted.
+STRING or PACKAGE starts with `?\\='', then only exact matches
+with a symbol or package name are accepted.
 
 - \"print\" matches definitions whose names contain \"print\" as
   a substring.
 
-- \"'print\" matches definitions whose names are \"print\" (still
-  subject to CASE-SENSITIVE).
+- \"\\='print\" matches definitions whose names are
+  \"print\" (still subject to CASE-SENSITIVE).
 
 - \"print function\" matches functions whose names contain
   \"print\" (e.g. CL:PRINT and CL:PPRINT).
 
-- \"'print function\" is like the previous example but with exact
-  name match.
+- \"\\='print function\" is like the previous example but with
+  exact name match.
 
 - \"print variable\" matches for example *PRINT-ESCAPE*.
 
@@ -1251,11 +1264,10 @@ input will not be changed."
   (interactive "r")
   (mgl-pax-with-component (:mgl-pax/transcribe)
     (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
-      (let* ((point-at-start-p (= (point) start))
-             (point-at-end-p (= (point) end))
-             (transcript (mgl-pax-transcribe start end
-                                             (mgl-pax-transcribe-syntax-arg)
-                                             t t nil dynenv)))
+      (let ((point-at-start-p (= (point) start))
+            (transcript (mgl-pax-transcribe start end
+                                            (mgl-pax-transcribe-syntax-arg)
+                                            t t nil dynenv)))
         (if point-at-start-p
             (save-excursion
               (goto-char start)

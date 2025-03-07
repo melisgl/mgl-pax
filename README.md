@@ -1400,9 +1400,6 @@ bound to `C-c C-d').
 - `C-c C-d d': `mgl-pax-document' (replaces `slime-describe-symbol')
 - `C-c C-d f': `mgl-pax-document' (replaces `slime-describe-function')
 - `C-c C-d c': `mgl-pax-current-definition-toggle-view'
-
-Also, regardless of whether `w3m' is available, add this:
-
 - `C-c C-d u': `mgl-pax-edit-parent-section'
 
 In addition, because it can be almost as useful as `M-.', one may
