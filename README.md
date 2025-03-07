@@ -38,7 +38,7 @@
     - [9.6 Linking][19e3]
         - [9.6.1 Reflink][cbc4]
         - [9.6.2 Autolink][ec7a]
-        - [9.6.3 Linking to the Hyperspec][7cc3]
+        - [9.6.3 Linking to the HyperSpec][7cc3]
         - [9.6.4 Linking to Sections][22c2]
         - [9.6.5 Filtering Links][b2e4]
         - [9.6.6 Link Format][c0d2]
@@ -847,7 +847,7 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
 - [locative] **CLHS** *&OPTIONAL NESTED-LOCATIVE*
 
     Refers to definitions, glossary entries, sections, issues and
-    issue summaries in the Common Lisp Hyperspec. These have no source
+    issue summaries in the Common Lisp HyperSpec. These have no source
     location so [`M-.`][cb15] will not work. What works is linking in
     documentation, including [Browsing Live Documentation][a595]. The generated
     links are relative to [`*DOCUMENT-HYPERSPEC-ROOT*`][f585] and work even if
@@ -1055,7 +1055,7 @@ section containing the definition with `point` in it. See
         (document (dref:locate 'foo 'type))
     
     There are quite a few special variables that affect how output is
-    generated, see [Codification][f1ab], [Linking][19e3], [Linking to the Hyperspec][7cc3],
+    generated, see [Codification][f1ab], [Linking][19e3], [Linking to the HyperSpec][7cc3],
     and [Linking to Sections][22c2], and
     @MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES.
     
@@ -1700,7 +1700,7 @@ Many examples in this section link to standard Common Lisp
 definitions. In the offline case, these will link to [external
 URLs][f585], while in the live case to
 disambiguation pages that list the definition in the running Lisp
-and in the Hyperspec.
+and in the HyperSpec.
 
 *Invoking [`M-.`][3386] on `WORD` or `NAME` in
 any of the following examples will disambiguate based on the textual
@@ -1965,13 +1965,13 @@ This renders as `DOCUMENT`. Alternatively, the
 
 <a id="x-28MGL-PAX-3A-40LINKING-TO-THE-HYPERSPEC-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.6.3 Linking to the Hyperspec
+#### 9.6.3 Linking to the HyperSpec
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29"></a>
 
 - [variable] **\*DOCUMENT-LINK-TO-HYPERSPEC\*** *T*
 
-    If true, consider definitions found in the Common Lisp Hyperspec
+    If true, consider definitions found in the Common Lisp HyperSpec
     for linking. For example,
     
     - `PRINT` *renders as* [`PRINT`][d451].
@@ -1981,7 +1981,7 @@ This renders as `DOCUMENT`. Alternatively, the
     
     When [Browsing Live Documentation][a595], everything is [linkable][7eb5], so the
     generated link will go to a disambiguation page that lists the
-    definition in the Lisp and in the Hyperspec.
+    definition in the Lisp and in the HyperSpec.
     
     Locatives work as expected (see [`*DOCUMENT-LINK-CODE*`][d9ee]): `FIND-IF`
     links to [`FIND-IF`][5884], `FUNCTION` links to `FUNCTION`([`0`][119e] [`1`][81f7]), and
@@ -1998,7 +1998,7 @@ This renders as `DOCUMENT`. Alternatively, the
 
 - [variable] **\*DOCUMENT-HYPERSPEC-ROOT\*** *"http://www.lispworks.com/documentation/HyperSpec/"*
 
-    A URL of the Common Lisp Hyperspec.
+    A URL of the Common Lisp HyperSpec.
     The default value is the canonical location. When [invoked from
     Emacs][a595], the Elisp variable
     `common-lisp-hyperspec-root` is in effect.
@@ -3753,7 +3753,7 @@ they are presented.
   [7bd6]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cab.htm '"22.3.1.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [7bf5]: #x-28MGL-PAX-3A-40MARKDOWN-IN-DOCSTRINGS-20MGL-PAX-3ASECTION-29 "Markdown in Docstrings"
   [7c9f]: http://www.lispworks.com/documentation/HyperSpec/Body/d_type.htm "TYPE (MGL-PAX:CLHS DECLARATION)"
-  [7cc3]: #x-28MGL-PAX-3A-40LINKING-TO-THE-HYPERSPEC-20MGL-PAX-3ASECTION-29 "Linking to the Hyperspec"
+  [7cc3]: #x-28MGL-PAX-3A-40LINKING-TO-THE-HYPERSPEC-20MGL-PAX-3ASECTION-29 "Linking to the HyperSpec"
   [7d18]: http://c2.com/cgi/wiki?OnceAndOnlyOnce "OAOO"
   [7dc7]: #x-28MGL-PAX-3A-40DOCUMENT-RETURN-20MGL-PAX-3ASECTION-29 "Return Values"
   [7e92]: dref/README.md#x-28DREF-3ADREF-20FUNCTION-29 "DREF:DREF FUNCTION"

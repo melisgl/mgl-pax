@@ -83,7 +83,7 @@
                                      '((,dspec ,location)))))))))))
 
 
-;;;; Hyperspec
+;;;; HyperSpec
 
 ;;; The previous hyperspec root with which ENSURE-WEB-SERVER was
 ;;; called.

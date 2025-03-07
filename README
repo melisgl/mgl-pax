@@ -728,7 +728,7 @@ To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
 - [locative] CLHS &OPTIONAL NESTED-LOCATIVE
 
     Refers to definitions, glossary entries, sections, issues and
-    issue summaries in the Common Lisp Hyperspec. These have no source
+    issue summaries in the Common Lisp HyperSpec. These have no source
     location so @M-. will not work. What works is linking in
     documentation, including @BROWSING-LIVE-DOCUMENTATION. The generated
     links are relative to *DOCUMENT-HYPERSPEC-ROOT* and work even if
@@ -1523,7 +1523,7 @@ Many examples in this section link to standard Common Lisp
 definitions. In the offline case, these will link to external
 URLs, while in the live case to
 disambiguation pages that list the definition in the running Lisp
-and in the Hyperspec.
+and in the HyperSpec.
 
 *Invoking `M-.` on WORD or NAME in
 any of the following examples will disambiguate based on the textual
@@ -1758,11 +1758,11 @@ This renders as `DOCUMENT`. Alternatively, the
 DISLOCATED or the ARGUMENT locative may be used as in
 `[DOCUMENT][dislocated]`.
 
-#### Linking to the Hyperspec
+#### Linking to the HyperSpec
 
 - [variable] *DOCUMENT-LINK-TO-HYPERSPEC* T
 
-    If true, consider definitions found in the Common Lisp Hyperspec
+    If true, consider definitions found in the Common Lisp HyperSpec
     for linking. For example,
     
     - `PRINT` *renders as* PRINT.
@@ -1772,7 +1772,7 @@ DISLOCATED or the ARGUMENT locative may be used as in
     
     When @BROWSING-LIVE-DOCUMENTATION, everything is @LINKABLE, so the
     generated link will go to a disambiguation page that lists the
-    definition in the Lisp and in the Hyperspec.
+    definition in the Lisp and in the HyperSpec.
     
     Locatives work as expected (see *DOCUMENT-LINK-CODE*): `FIND-IF`
     links to FIND-IF, `FUNCTION` links to FUNCTION, and
@@ -1787,7 +1787,7 @@ DISLOCATED or the ARGUMENT locative may be used as in
 
 - [variable] *DOCUMENT-HYPERSPEC-ROOT* "http://www.lispworks.com/documentation/HyperSpec/"
 
-    A URL of the Common Lisp Hyperspec.
+    A URL of the Common Lisp HyperSpec.
     The default value is the canonical location. When invoked from
     Emacs, the Elisp variable
     `common-lisp-hyperspec-root` is in effect.

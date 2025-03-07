@@ -1,6 +1,6 @@
 (in-package :mgl-pax)
 
-;;;; Low-level interface to Hyperspec Lisp definitions
+;;;; Low-level interface to HyperSpec Lisp definitions
 
 (defparameter *hyperspec-definitions*
   ;; (SYMBOL LOCATIVE FILENAME)
@@ -1137,7 +1137,7 @@
         collect locative))
 
 
-;;;; Low-level interface to Hyperspec sections
+;;;; Low-level interface to HyperSpec sections
 
 (defparameter *hyperspec-sections*
   ;; (FILENAME SECTION-ID TITLE &REST ALIAS-KINDS-AND-ALIASES)
@@ -2062,7 +2062,7 @@
                  (setq prev-whitespace-p whitespacep))))))
 
 
-;;;; Low-level interface to Hyperspec glossary entries
+;;;; Low-level interface to HyperSpec glossary entries
 
 (defparameter *hyperspec-glossary-entries*
   ;; TITLE
@@ -2278,7 +2278,7 @@
       (hyperspec-link hyperspec-root "Body/26_glo_" filename))))
 
 
-;;;; Low-level interface to Hyperspec issues and issue summaries
+;;;; Low-level interface to HyperSpec issues and issue summaries
 
 (defparameter *hyperspec-issue-summaries*
   ;; (TITLE FILENAME)

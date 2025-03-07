@@ -1602,7 +1602,7 @@
   definitions. In the offline case, these will link to [external
   \URLs][*DOCUMENT-HYPERSPEC-ROOT*], while in the live case to
   disambiguation pages that list the definition in the running Lisp
-  and in the Hyperspec.
+  and in the HyperSpec.
 
   _Invoking [`\\M-.`][@navigating-in-emacs section] on WORD or NAME in
   any of the following examples will disambiguate based on the textual
@@ -2361,12 +2361,12 @@
                  (link-to link-1)))))))))
 
 
-(defsection @linking-to-the-hyperspec (:title "Linking to the Hyperspec")
+(defsection @linking-to-the-hyperspec (:title "Linking to the HyperSpec")
   (*document-link-to-hyperspec* variable)
   (*document-hyperspec-root* variable))
 
 (defvar *document-link-to-hyperspec* t
-  """If true, consider definitions found in the Common Lisp Hyperspec
+  """If true, consider definitions found in the Common Lisp HyperSpec
   for linking. For example,
 
   - `\PRINT` _renders as_ PRINT.
@@ -2376,7 +2376,7 @@
 
   When @BROWSING-LIVE-DOCUMENTATION, everything is @LINKABLE, so the
   generated link will go to a disambiguation page that lists the
-  definition in the Lisp and in the Hyperspec.
+  definition in the Lisp and in the HyperSpec.
 
   Locatives work as expected (see *DOCUMENT-LINK-CODE*): `\FIND-IF`
   links to FIND-IF, `\FUNCTION` links to FUNCTION, and
@@ -2391,7 +2391,7 @@
 
 (defvar *document-hyperspec-root*
   "http://www.lispworks.com/documentation/HyperSpec/"
-  """A \URL of the Common Lisp Hyperspec.
+  """A \URL of the Common Lisp HyperSpec.
   The default value is the canonical location. When [invoked from
   Emacs][ @browsing-live-documentation], the Elisp variable
   `common-lisp-hyperspec-root` is in effect.""")

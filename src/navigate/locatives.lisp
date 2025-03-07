@@ -358,7 +358,7 @@
 
 (define-pseudo-locative-type clhs (&optional nested-locative)
   """Refers to definitions, glossary entries, sections, issues and
-  issue summaries in the Common Lisp Hyperspec. These have no source
+  issue summaries in the Common Lisp HyperSpec. These have no source
   location so @M-. will not work. What works is linking in
   documentation, including @BROWSING-LIVE-DOCUMENTATION. The generated
   links are relative to *DOCUMENT-HYPERSPEC-ROOT* and work even if
