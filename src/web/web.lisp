@@ -60,11 +60,14 @@
                      :source-uri-fn ,#'reference-to-edit-uri)))))
     (document-pax*-url pax-url filename)))
 
-(defun reference-to-edit-uri (reference)
-  (let ((url (finalize-pax-url (dref-to-pax-url reference))))
-    (if (find #\? url)
-        (format nil "~A&edit" url)
-        (format nil "~A?edit" url))))
+(defun reference-to-edit-uri (dref)
+  (let ((url (finalize-pax-url (dref-to-pax-url dref))))
+    (cond ((null (source-location dref))
+           nil)
+          ((find #\? url)
+           (format nil "~A&edit" url))
+          (t
+           (format nil "~A?edit" url)))))
 
 (defun edit-pax-url-in-emacs (pax-url)
   (when (swank::default-connection)

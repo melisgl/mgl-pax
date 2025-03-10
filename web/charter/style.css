@@ -226,11 +226,13 @@ img {
   /* background-color: #EEEEEE; */
 }
 
-.locative-type a {
-  text-decoration: none;
-  border-bottom: 0;
+.locative-type {
   font-weight: bold;
   color: #444;
+}
+
+.locative-type a {
+  text-decoration: none;
 }
 
 .reference-object {
