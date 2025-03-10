@@ -3143,8 +3143,8 @@
   output. see ARGLIST, DOCSTRING and SOURCE-LOCATION for
   implementation notes.
 
-  In addition, CLISP does not support the ambiguous case of @PAX-URLS
-  for @BROWSING-LIVE-DOCUMENTATION because the current implementation
+  In addition, CLISP does not support the ambiguous case of
+  @BROWSING-LIVE-DOCUMENTATION because the current implementation
   relies on Swank to list definitions of symbols (as
   [VARIABLE][locative], [FUNCTION][locative], etc), and that simply
   doesn't work.""")

@@ -142,4 +142,45 @@ Or (definitions '|x|), for that matter. See [[M-. on Foo]] below.
 * BUG M-. on Foo doesn't find |Foo|
 With plain Slime either.
 * TODO finalize DREF::MAP-DEFINITIONS and DREF::MAP-NAMES
-They may not be the right API.
+They may not be the right API. Especially with PAX:CLHS, there is a
+huge number of possible names, and the glossary terms, section ids,
+etc are all lumped together.
+
+MAP-DEFINITIONS may need to support LOCATIVE-ARGS, so that it can be
+used directly for completion of a name given a full locative.
+
+MAP-NAMES may not even belong in DREF as what it lists seems a bit too
+tailored to PAX. Or MAP-DEFINITIONS could do its job too.
+* BUG (low) locative completion: nicknames don't work
+print f<TAB> -> "print function"
+print dref:f<TAB> -> no completions
+(eq 'function 'dref:function) => t
+
+print (mgl-pax:clh<TAB> -> works
+print (pax:clh<TAB> -> no completions
+
+Actually, it's not just the completion of thelocative, but of the
+second sexp, which should be informed by the first sexp.
+
+Normal completion includes nicknames as "pax:" without relisting all
+symbols.
+* MAYBE complete asdf:system and hyperspec names case-insensitively?
+Currently, MAP-NAMES returns the canonical names, and completion
+doesn't know about the non-canonical names, of which there are many
+due to the case-insensitive matching. So, we need to pass PREFIX to
+MAP-NAMES or similar, but that won't support fancier completion
+mechnanisms such as c-p-c.
+
+Instead, the completion may match case-insensitively but replace with
+the canonical name?
+
+Let MAP-NAMES somehow specify whether matching is case-sensitive?
+
+There is always mgl-pax-apropos for case-insensitive matching.
+* TODO mgl-pax-apropos: no way to have a space in string name?
+How to apropos "lambda list"?
+* TODO test codify and link INCLUDEd stuff
+* TODO should PAX::MAP-NAMES-IN-RAW list instead of find the first?
+This would make 'mgl-pax' refer to "MGL-PAX" package even if there is
+an "mgl-pax" asdf:system.
+* TODO completion in mgl-pax-apropos

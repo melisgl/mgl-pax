@@ -1260,8 +1260,8 @@
   Transcription support in Emacs can be enabled by loading
   `src/mgl-pax.el`. See @EMACS-SETUP.""")
 
-(defun/autoloaded transcribe-for-emacs (string default-syntax* update-only echo
-                                               first-line-special-p dynenv)
+(defun transcribe-for-emacs (string default-syntax* update-only echo
+                             first-line-special-p dynenv)
   (with-swank ()
     (swank::with-buffer-syntax ()
       (let ((default-syntax (cond ((numberp default-syntax*)

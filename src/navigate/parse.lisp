@@ -65,14 +65,15 @@
 (define-glossary-term @word (:title "word")
   "A _word_ is a string from which we want to extract a @NAME. When
   [Navigating][@navigating-in-emacs section], the word is
-  `slime-symbol-at-point` or the label of a @MARKDOWN/REFLINK if point
+  `slime-sexp-at-point` or the label of a @MARKDOWN/REFLINK if point
   is over one. Similarly, when @GENERATING-DOCUMENTATION, it is a
   non-empty string between whitespace characters in a docstring or the
   label of a @MARKDOWN/REFLINK.")
 
 (define-glossary-term @raw-name (:title "raw name")
   "A _raw name_ is a string from which a @NAME may be read. Raw names
-  correspond to an intermediate parsing step between @WORDs an @NAMEs.")
+  correspond to an intermediate parsing step between @WORDs an @NAMEs.
+  See @NAMES-IN-RAW-NAMES.")
 
 (define-glossary-term @name (:title "name")
   """A _name_ is a [DRef name][dref::@name]. That is, a symbol or a

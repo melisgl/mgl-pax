@@ -2,6 +2,88 @@
 
 (in-readtable pythonic-string-syntax)
 
+(defsection @navigating-in-emacs (:title "Navigating Sources in Emacs")
+  """Integration into @SLIME's @M-. (`slime-edit-definition`) allows
+  one to visit the SOURCE-LOCATION of a [definition][DREF]. PAX
+  extends standard Slime functionality by
+
+  - adding support for all kinds of definitions (see e.g.
+    [ASDF:SYSTEM][locative], [READTABLE][locative] in
+    DREF::@LOCATIVE-TYPES), not just the ones Slime knows about,
+
+  - providing a portable way to refer to even standard definitions,
+
+  - disambiguating the definition based on buffer content, and
+
+  - adding more powerful completions.
+
+  The definition is either determined from the buffer content at point
+  or is prompted for. At the prompt, TAB-completion is available for
+  both names and locatives. With a prefix argument (`C-u M-.`), the
+  buffer contents are not consulted, and `M-.` always prompts.
+
+  The `M-.` extensions can be enabled by loading `src/mgl-pax.el`. See
+  @EMACS-SETUP. In addition, the Elisp command
+  `mgl-pax-edit-parent-section` visits the source location of the
+  section containing the definition with point in it.
+
+  A close relative of `M-.` is `C-.` for @BROWSING-LIVE-DOCUMENTATION."""
+  (mgl-pax/navigate asdf:system)
+  (@m-.-defaulting section)
+  (@m-.-prompting section))
+
+
+(defsection @m-.-defaulting (:title "`M-.` Defaulting")
+  """When `@M-.` is invoked, it first tries to find a @NAME in the
+  current buffer at point. If no name is found, then it
+  [prompts][@M-.-PROMPTING].
+
+  First, `(slime-sexp-at-point)` is taken as a @WORD, from which the
+  @NAME will be [parsed][@parsing]. Then, candidate locatives are
+  looked for before and after the @WORD. Thus, if a locative is the
+  previous or the next expression, then `M-.` will go straight to the
+  definition which corresponds to the locative. If that fails, `M-.`
+  will try to find the definitions in the normal way, which may
+  involve popping up an xref buffer and letting the user interactively
+  select one of possible definitions.
+
+  `M-.` works on parenthesized references, such as those in
+  DEFSECTION:
+
+  ```
+  (defsection @foo ()
+    (cos function))
+  ```
+
+  Here, when the cursor is on one of the characters of `\COS` or just
+  after `\COS`, pressing `M-.` will visit the definition of the
+  function `COS`.
+
+  To play nice with @GENERATING-DOCUMENTATION, forms suitable for
+  @AUTOLINKing are recognized:
+
+      function cos
+      cos function
+
+  ... as well as @REFLINKs:
+
+      [cos][function]
+      [see this][cos function]
+
+  ... and @MARKDOWN/INLINE-CODE:
+
+      cos `function`
+      `cos` function
+      `cos` `function`
+
+  Everything works the same way in comments and docstrings as in code.
+  In the next example, pressing `M-.` on `RESOLVE*` will visit its
+  denoted method:
+
+  ```
+  ;;; See RESOLVE* (method () (function-dref)) for how this all works.
+  ```""")
+
 ;;; An acronym for Word-And-Locatives-List. This is what
 ;;; `mgl-pax-wall-at-point' returns. It may look like this:
 ;;;
@@ -24,60 +106,6 @@
 (defun wal-dref (word locative-string)
   (when-let (locative (parse-locative/noisy locative-string :junk-allowed t))
     (find-name (rcurry #'dref locative nil) word :trim t :depluralize t)))
-
-
-(defsection @navigating-in-emacs (:title "Navigating Sources in Emacs")
-  """Integration into @SLIME's @M-. (`slime-edit-definition`) allows
-  one to visit the SOURCE-LOCATION of a [definition][DREF].
-
-  The definition is either determined from the buffer content at point
-  or is prompted. If prompted, then the format is `<NAME> <LOCATIVE>`,
-  where the locative may be omitted to recover stock Slime behaviour.
-  TAB-completion is available for symbol names, and once the name is
-  entered followed by a space, also for their possible locatives.
-
-  When determining the definition from the buffer contents,
-  `(slime-symbol-at-point)` is parsed as a @WORD, then candidate
-  locatives are looked for before and after that word. Thus, if a
-  locative is the previous or the next expression around the symbol of
-  interest, then `\\M-.` will go straight to the definition which
-  corresponds to the locative. If that fails, `\\M-.` will try to find
-  the definitions in the normal way, which may involve popping up an
-  xref buffer and letting the user interactively select one of
-  possible definitions. For more details, see @PARSING.
-
-  In the following examples, when the cursor is on one of the
-  characters of `FOO` or just after `FOO`, pressing `\\M-.` will visit
-  the definition of function `FOO`:
-
-      function foo
-      foo function
-      (function foo)
-      (foo function)
-
-  In particular, DREF::@REFERENCEs in a DEFSECTION form are in (NAME
-  LOCATIVE) format so `\\M-.` will work just fine there. `\\M-.` also
-  recognizes the `[foo][function]` and similar forms of @LINKING in
-  docstrings.
-
-  Just like vanilla `\\M-.`, this works in comments and docstrings. In
-  the next example, pressing `\\M-.` on `FOO` will visit `FOO`'s
-  default method:
-
-  ```
-  ;; See RESOLVE* (method () (dref)) for how this all works.
-  ```
-
-  With a prefix argument (`C-u M-.`), one can enter a symbol plus a
-  locative separated by whitespace to preselect one of the
-  possibilities.
-
-  The `\\M-.` extensions can be enabled by loading `src/mgl-pax.el`.
-  See @EMACS-SETUP. In addition, the Elisp command
-  `mgl-pax-edit-parent-section` visits the source location of the
-  section containing the definition with `point` in it. See
-  @BROWSING-LIVE-DOCUMENTATION."""
-  (mgl-pax/navigate asdf:system))
 
 ;;; Ensure that some Swank internal facilities (such as
 ;;; SWANK::FIND-DEFINITIONS-FIND-SYMBOL-OR-PACKAGE,
@@ -103,7 +131,7 @@
 ;;;
 ;;; Each element in the list WALL consists of a @WORD and a list of
 ;;; possible DREF::@LOCATIVEs found next to it in the Emacs buffer.
-(defun/autoloaded locate-definitions-for-emacs (wall)
+(defun locate-definitions-for-emacs (wall)
   (with-swank ()
     (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
@@ -116,9 +144,188 @@
                   ,location)))
 
 
+(defsection @m-.-prompting (:title "`M-.` Prompting")
+  (@m-.-minibuffer-syntax section)
+  (@m-.-completion section))
+
+;;; This documents the Elisp function `mgl-pax-edit-definitions'.
+;;; There isn't muh code exclusively for this on the CL side.
+(defsection @m-.-minibuffer-syntax (:title "`M-.` Minibuffer Syntax")
+  """At the minibuffer prompt, the [definitions][dref class] to edit
+  can be specified as follows.
+
+  - NAME: Refers to all DREF:DEFINITIONS of NAME with a [Lisp locative
+    type][DREF:LISP-LOCATIVE-TYPES]. See these `NAME -> DEFINITIONS`
+    examples:
+
+          print    ->  PRINT FUNCTION
+          PRINT    ->  PRINT FUNCTION
+          MGL-PAX  ->  "mgl-pax" ASDF:SYSTEM, "MGL-PAX" package
+          pax      ->  "PAX" PACKAGE
+          "PAX"    ->  "PAX" PACKAGE
+
+      Note that depending on the Lisp implementation there may be more
+      definitions. For example, SBCL has an [UNKNOWN][locative]
+      :DEFOPTIMIZER definition for `\PRINT`.
+
+  - NAME LOCATIVE: Refers to a single definition (as in `(DREF:DREF
+    NAME LOCATIVE)`). Example inputs of this form:
+
+          print function
+          dref-ext:docstring* (method nil (t))
+
+  - LOCATIVE NAME: This has the same form as the previous: two sexps,
+    but here the first one is the locative. If ambiguous, this is
+    considered in addition to the previous one. Example inputs:
+
+          function print
+          (method nil (t)) dref-ext:docstring*
+
+  In all of the above NAME is a PAX::@RAW-NAME, meaning that `\print`
+  will be recognized as `\PRINT` and `\pax` as `"PAX"`.
+
+  The package in which symbols are read is the Elisp
+  `slime-current-package`. In Lisp buffers, this is the buffer's
+  package, else it's the package of the Slime repl buffer.""")
+
+
+;;;; Completion of names and locatives for the Elisp function
+;;;; `mgl-pax-name-completions-at-point'
+
+(defsection @m-.-completion (:title "`M-.` Completion")
+  "When `M-.` prompts for the definition to edit, TAB-completion is
+  available in the minibuffer for both names and locatives. To reduce
+  clutter, string names are completed only if they are typed
+  explicitly with an opening quotation mark, and they are
+  case-sensitive. Examples:
+
+  - `pri<TAB>` invokes the usual Slime completion.
+
+  - `print <TAB>` (note the space) lists FUNCTION and (PAX:CLHS
+    FUNCTION) as locatives.
+
+  - `class dref:<TAB>` lists DREF:XREF and DREF:DREF (all the classes
+    in the package DREF).
+
+  - `pax:locative <TAB>` lists all DREF::@LOCATIVE-TYPES (see the CL
+    function DREF:LOCATIVE-TYPES).
+
+  - `package \"MGL<TAB>` lists the names of packages that start with
+    `\"MGL\"`.
+
+  - `package <TAB>` lists the names of all packages as strings and
+     also CLASS, MGL-PAX:LOCATIVE because PACKAGE denotes a class and
+     also a locative.
+
+  For more powerful search, see @APROPOS.")
+
+;;; Called when completing a name and no locative has been typed yet.
+;;; E.g.
+;;;
+;;;    Edit Definitions: "mgl-
+;;;
+;;; This only completes explicit string prefixes (i.e. starting with a
+;;; #\") to avoid cluttering the match list. Completing other prefixes
+;;; is left to Slime. LOCATIVE-TYPES is (LOCATIVE-TYPES) for
+;;; documenting.
+(defun string-name-completions-for-emacs (prefix &key (locative-types
+                                                       (lisp-locative-types)))
+  (with-swank ()
+    (swank::with-buffer-syntax ()
+      (mapcar #'prin1-to-string
+              (string-name-completions-for-emacs-1
+               prefix locative-types)))))
+
+(defun string-name-completions-for-emacs-1 (prefix locative-types)
+  (let ((names ()))
+    (flet ((maybe-add (name)
+             (when (and (stringp name)
+                        (starts-with-subseq prefix name))
+               (push name names))))
+      (dolist (locative-type locative-types)
+        (dref::map-names #'maybe-add locative-type)))
+    names))
+
+;;; Called when completing the second sexp at the prompt.
+(defun names-or-locatives-for-emacs (sexp-1 prefix
+                                     &key (definitions #'definitions))
+  (with-swank ()
+    (swank::with-buffer-syntax ()
+      `(:names ,(mapcar (rcurry #'prin1-to-string/case (string-case prefix))
+                        (names-or-locatives-for-emacs-1 sexp-1 prefix
+                                                        definitions))))))
+
+(defun string-case (string)
+  (if (some #'lower-case-p string)
+      :downcase
+      :upcase))
+
+(defun names-or-locatives-for-emacs-1 (sexp-1 prefix definitions)
+  (let ((locative (parse-locative sexp-1)))
+    (if (starts-with #\" prefix)
+        (when locative
+          (list-string-names-for-locative (subseq prefix 1) locative))
+        (append (and locative (list-names-for-locative prefix locative))
+                (list-locatives-for-name sexp-1 definitions)))))
+
+(defun list-locatives-for-name (name definitions)
+  (flet ((match (name)
+           (loop for dref in (funcall definitions name)
+                 collect (dref-locative dref))))
+    (find-name #'match name)))
+
+(defun list-symbols-for-locative (prefix locative)
+  (let ((symbols ())
+        (print-fn (rcurry #'prin1-to-string/case (string-case prefix))))
+    (flet ((consider (symbol)
+             (when (and (or (null prefix)
+                            (starts-with-subseq prefix
+                                                (funcall print-fn symbol)))
+                        (dref symbol locative nil))
+               (push symbol symbols))))
+      (with-package-iterator (next (remove #.(find-package :keyword)
+                                           (list-all-packages))
+                                   :external :internal)
+        (loop (multiple-value-bind (morep symbol) (next)
+                (if morep
+                    (consider symbol)
+                    (return))))))
+    symbols))
+
+(defun list-string-names-for-locative (prefix locative)
+  (let ((names ())
+        (locative-type (locative-type locative))
+        (locative-args (locative-args locative)))
+    (flet ((add (name)
+             (when (and (stringp name)
+                        (or (null prefix)
+                            (starts-with-subseq prefix name))
+                        (or (null locative-args)
+                            (dref name locative nil)))
+               (push name names))))
+      (dref::map-names #'add locative-type)
+      names)))
+
+(defun list-names-for-locative (prefix locative)
+  (let ((names ())
+        (locative-type (locative-type locative))
+        (locative-args (locative-args locative)))
+    (flet ((add (name)
+             (when (and (stringp name)
+                        (or (null prefix)
+                            (starts-with-subseq prefix name))
+                        (or (null locative-args)
+                            (dref name locative nil)))
+               (push name names))))
+      (if (eq (dref::map-names #'add locative-type)
+              'dref::try-interned-symbols)
+          (append (list-symbols-for-locative prefix locative) names)
+          names))))
+
+
 ;;;; The Common Lisp side of `mgl-pax-find-parent-section'
 
-(defun/autoloaded find-parent-section-for-emacs (buffer filename possibilities)
+(defun find-parent-section-for-emacs (buffer filename possibilities)
   (with-swank ()
     (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()

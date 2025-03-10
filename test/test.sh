@@ -56,33 +56,10 @@ EOF
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "test-document-for-emacs-autoload on ${lisp_name}" $@ <<EOF
-(asdf:load-system :mgl-pax-test/extension)
-(in-package :mgl-pax-test-extension)
-(when (passedp (try 'test-document-for-emacs-autoload))
-  (uiop/image:quit 22))
-EOF
-
-  run_test_case "test-locate-definitions-for-emacs-autoload on ${lisp_name}" \
-                $@ <<EOF
-(asdf:load-system :mgl-pax-test/extension)
-(in-package :mgl-pax-test-extension)
-(when (passedp (try 'test-locate-definitions-for-emacs-autoload))
-  (uiop/image:quit 22))
-EOF
-
   run_test_case "test-transcribe-autoload on ${lisp_name}" $@ <<EOF
 (asdf:load-system :mgl-pax-test/extension)
 (in-package :mgl-pax-test-extension)
 (when (passedp (try 'test-transcribe-autoload))
-  (uiop/image:quit 22))
-EOF
-
-  run_test_case "test-transcribe-for-emacs-autoload on ${lisp_name}" $@ <<EOF
-(asdf:load-system :mgl-pax-test/extension)
-(asdf:load-system "swank")
-(in-package :mgl-pax-test-extension)
-(when (passedp (try 'test-transcribe-for-emacs-autoload))
   (uiop/image:quit 22))
 EOF
 }
@@ -91,11 +68,15 @@ function basic_load_tests {
   local lisp_name="$1"
   shift
 
-  run_test_case "load mgl-pax on ${lisp_name}" $@ <<EOF
+  for system in mgl-pax mgl-pax/navigate mgl-pax/document mgl-pax/web \
+                mgl-pax/transcribe mgl-pax/full; do
+      run_test_case "load ${system} on ${lisp_name}" $@ <<EOF
 (progn
-  (asdf:load-system :mgl-pax)
+  (asdf:load-system "${system}")
   (uiop/image:quit 22))
 EOF
+
+  done
 }
 
 function run_tests {

@@ -71,10 +71,6 @@
     (:title "Markdown"
      :url "https://daringfireball.net/projects/markdown/"))
 
-(define-glossary-term @markdown-reflink
-    (:title "Markdown reflink"
-     :url "https://daringfireball.net/projects/markdown/syntax#link"))
-
 (defsection @introduction (:title "Introduction")
   """_What if documentation really lived in the code?_
 
@@ -187,7 +183,7 @@
 
       (mgl-pax:install-pax-elisp "~/quicklisp/")
 
-  Then, assuming the Elisp file is in the quicklisp directory, add
+  Then, assuming the Elisp file is in the `~/quicklisp` directory, add
   something like this to your `.emacs`:
 
   ```elisp
@@ -198,16 +194,40 @@
   (global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
   ```
 
-  For @BROWSING-LIVE-DOCUMENTATION, `mgl-pax-browser-function` can be
-  customized in Elisp. To browse within Emacs, choose
-  `w3m-browse-url` (see
+  Instead of the global binding above, one could bind `C-.` locally in
+  all Slime related modes like this:
+
+  ```elisp
+  (slime-bind-keys slime-parent-map nil '(("C-." mgl-pax-document)))
+  ```
+
+  For reference, `mgl-pax-hijack-slime-doc-keys` makes the following
+  changes to `slime-doc-map` (assuming it's bound to `C-c C-d`):
+
+  - `C-c C-d a`: `mgl-pax-apropos` (replaces `slime-apropos`)
+  - `C-c C-d z`: `mgl-pax-aproposa-all` (replaces `slime-apropos-all`)
+  - `C-c C-d p`: `mgl-pax-apropos-package` (replaces `slime-apropos-package`)
+  - `C-c C-d d`: `mgl-pax-document` (replaces `slime-describe-symbol`)
+  - `C-c C-d f`: `mgl-pax-document` (replaces `slime-describe-function`)
+  - `C-c C-d c`: `mgl-pax-current-definition-toggle-view`
+  - `C-c C-d u`: `mgl-pax-edit-parent-section`
+
+
+  For @NAVIGATING-IN-EMACS, loading `mgl-pax.el` extends
+  `slime-edit-definitions` (`M-.`) by adding
+  `mgl-pax-edit-definitions` to `slime-edit-definition-hooks`. There
+  isn't much else to set up.
+
+  For @BROWSING-LIVE-DOCUMENTATION, `mgl-pax-browser-function` and
+  `mgl-pax-web-server-port` can be customized in Elisp. To browse
+  within Emacs, choose `w3m-browse-url` (see
   [w3m](https://emacs-w3m.github.io/info/emacs-w3m.html)), and make
   sure both the w3m binary and the w3m Emacs package are installed. On
   Debian, simply install the `w3m-el` package. With other browser
   functions, a [HUNCHENTOOT][package] web server is started.
 
-  See @NAVIGATING-IN-EMACS, @GENERATING-DOCUMENTATION and
-  @TRANSCRIBING-WITH-EMACS for how to use the relevant features.
+  See @TRANSCRIBING-WITH-EMACS for how to use the transcription features.
+
   """
   (install-pax-elisp function))
 

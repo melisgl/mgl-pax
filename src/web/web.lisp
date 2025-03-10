@@ -42,7 +42,8 @@
                   (if (and (string= scheme "file")
                            (string= path (namestring temp-file-name)))
                       (read-file-into-string path)
-                      (hunchentoot:redirect url))))))))))
+                      (unless (starts-with-subseq "pax" url)
+                        (hunchentoot:redirect url)))))))))))
 
 (defun request-pax*-url ()
   (let ((uri (hunchentoot:request-uri*)))
@@ -188,7 +189,7 @@
         (*read-eval* nil))
     (call-next-method)))
 
-(defun/autoloaded ensure-web-server (&key hyperspec-root port)
+(defun ensure-web-server (&key hyperspec-root port)
   (swank/backend:converting-errors-to-error-location
     (if (not (hunchentoot:started-p *server*))
         (%start-server port)

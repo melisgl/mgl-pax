@@ -129,7 +129,23 @@
   (is (equal (mgl-pax::urlencode "hello") "hello"))
   (is (equal (mgl-pax::urlencode "@hello section") "@hello%20section"))
   (is (equal (mgl-pax::urlencode "\"") "%22"))
-  (is (equal (mgl-pax::urlencode "á") "%C3%A1")))
+  (is (equal (mgl-pax::urlencode "á") "%C3%A1"))
+  (is (match-values
+          (mgl-pax::parse-url "http://x.org:8888/y/z.html?a=1&b=2#frag")
+        (equal * "http")
+        (equal * "x.org:8888")
+        (equal * "/y/z.html")
+        (equal * "a=1&b=2")
+        (equal * "frag")))
+  (is (match-values
+          (mgl-pax::parse-url
+           #.(format nil "pax:pax%3A%3A%40pax-manual%20pax%3Asection~
+                          #pax%3Adefsection%20pax%3Amacro"))
+        (equal * "pax")
+        (null *)
+        (equal * "pax::@pax-manual pax:section")
+        (null *)
+        (equal * "pax:defsection pax:macro"))))
 
 (deftest test-transform-tree ()
   (is (equal '(1)
@@ -1384,6 +1400,8 @@ This is [Self-referencing][e042].
              'function '(clhs class))
   (check-ref (dref 'function '(clhs macro) nil)
              'function '(clhs macro))
+  (check-ref-sets (dref-apropos '#:|print| :locative-types '(clhs))
+                  (list (xref 'print '(clhs function))))
   (is (null (dref 'function '(clhs xxx) nil)))
   (is (null (dref 'xxx '(clhs function) nil)))
   (with-test ("disambiguation paged preferred to section and glossary entry")

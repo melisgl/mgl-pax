@@ -412,8 +412,9 @@ with references (discussed in the [Extending DRef][68fb]).
 
 - [function] **LISP-LOCATIVE-TYPES**
 
-    Return the locative types that correspond to Lisp definitions.
-    These are the ones defined with [`DEFINE-LOCATIVE-TYPE`][b6c4].
+    Return the locative types that correspond to Lisp definitions,
+    which typically have [`SOURCE-LOCATION`][32da]. These are defined with
+    [`DEFINE-LOCATIVE-TYPE`][b6c4].
 
 <a id="x-28DREF-3APSEUDO-LOCATIVE-TYPES-20FUNCTION-29"></a>
 

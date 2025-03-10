@@ -265,7 +265,7 @@
   location of the `FOO` function.
 
   With the LAMBDA locative, one can specify positions in arbitrary
-  files as in, for example, PAX::@EMACS-SETUP-FOR-BROWSING.
+  files.
 
   - SOURCE is either an absolute pathname designator or a list
     matching the [destructuring lambda list][clhs] `(&KEY START END)`,
@@ -500,6 +500,22 @@
            (funcall fn dref))
          (when-let (dref (dref name '(clhs section) nil))
            (funcall fn dref)))))
+
+(defmethod dref::map-names (fn (locative-type (eql 'clhs)))
+  (mapc fn *hyperspec-format-directive-aliases*)
+  (mapc fn *hyperspec-reader-macro-char-aliases*)
+  (loop for entry in *hyperspec-sections*
+        do (funcall fn (first entry))
+           (funcall fn (second entry))
+           (funcall fn (third entry)))
+  (mapc fn *hyperspec-glossary-entries*)
+  (loop for entry in *hyperspec-issue-summaries*
+        do (funcall fn (first entry))
+           (funcall fn (second entry)))
+  (loop for entry in *hyperspec-issues*
+        do (funcall fn (first entry))
+           (funcall fn (second entry)))
+  'dref::try-interned-symbols)
 
 (defun clhs-dref (name locative)
   ;; Pick off the impossible cases quickly.

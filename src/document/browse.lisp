@@ -8,87 +8,84 @@
   @LINKING, is generated from docstrings of all kinds of Lisp
   definitions and PAX SECTIONs.
 
-  If @EMACS-SETUP has been done, the Elisp function `mgl-pax-document`
-  generates and displays documentation as a single HTML page. For
-  example, to view the documentation of this very SECTION, one can do:
+  If @EMACS-SETUP has been done, the Elisp function
+  `mgl-pax-document` (maybe bound to `C-.`) generates and displays
+  documentation as a single HTML page. If necessary, a disambiguation
+  page is generated with the documentation of all matching
+  definitions. For example, to view the documentation of this very
+  SECTION, one can do:
 
       M-x mgl-pax-document
       View Documentation of: pax::@browsing-live-documentation
 
-  If the empty string is entered, and there is no existing w3m buffer
-  or w3m is not used, then sections registered in @PAX-WORLD are
-  listed. If there is a w3m buffer, then entering the empty string
-  displays that buffer.
+  Alternatively, pressing `C-.` with point over the text
+  `\pax::@browsing-live-documentation` in a buffer achieves the same
+  effect.
 
-  If we enter `\function` instead, then a disambiguation page will be
-  shown with the documentation of the FUNCTION class and the FUNCTION
-  locative. One may then follow the links on the page to navigate to a
-  page with the documentation the desired definition. If you are
-  browsing live documentation right now, then the disambiguation page
-  looks like this: [FUNCTION][]. In offline documentation, multiple
-  links are shown instead as described in @LINKING.
+  In interactive use, `mgl-pax-document` behaves similarly to
+  [`M-.`][@NAVIGATING-IN-EMACS] except:
 
-  Alternatively, a DREF::@LOCATIVE may be entered as part of the
-  argument to `mgl-pax-document` as in `\function class`, which gives
-  [this result][function class]. Finally, the definition of DEFSECTION
-  in the context of a single-page @PAX-MANUAL can be
-  [viewed](pax:pax::@pax-manual#pax:defsection%20pax:macro) by
-  entering `pax::@pax-manual#pax:defsection pax:macro`.
+  - It shows the DOCUMENTation of some definition and does not visit
+    its SOURCE-LOCATION.
 
-  In interactive use, `mgl-pax-document` defaults to documenting
-  `slime-symbol-at-point`, possibly with a nearby locative the same
-  way as in @NAVIGATING-IN-EMACS. The convenience function
-  `mgl-pax-document-current-definition` documents the definition with
-  point in it."""
-  (@pax-urls section)
-  (@apropos section)
-  (@emacs-setup-for-browsing section)
+  - It considers definitions with all LOCATIVE-TYPES not just
+    LISP-LOCATIVE-TYPES because it doesn't need SOURCE-LOCATION.
+
+      This also means that completion works for [CLHS][locative]
+      definitions:
+
+      - `\"lambda list<TAB>` lists `"lambda list"` and `"lambda list
+        keywords"`, both HyperSpec glossary entries. This is similar
+        to `common-lisp-hyperspec-glossary-term` in Elisp but also
+        works for HyperSpec section titles.
+
+      - `\"#<TAB>` lists all sharpsign reader macros (similar to
+        `common-lisp-hyperspec-lookup-reader-macro` in Elisp).
+
+      - `\"~<TAB>` lists all CL:FORMAT directives (similar to
+        `common-lisp-hyperspec-format` in Elisp).
+
+  - It works in non-`lisp-mode` buffers by reinterpreting a few lines
+    of text surrounding point as lisp code (hence the suggested
+    _global_ binding).
+
+  - It supports fragment syntax at the prompt:
+
+          NAME LOCATIVE FRAGMENT-NAME FRAGMENT-LOCATIVE
+
+      This is like `NAME LOCATIVE`, but the browser scrolls to the
+      definition of `FRAGMENT-NAME FRAGMENT-LOCATIVE` within that
+      page.
+
+      For example, entering this at the prompt will generate the
+      entire PAX manual as a single page and scroll to the very
+      section you are reading within it:
+
+          pax::@pax-manual pax:section pax::@browsing-live-documentation pax:section
+
+  - If the empty string is entered at the prompt, and there is no
+    existing w3m buffer or w3m is not used, then sections registered
+    in MGL-PAX::@PAX-WORLD are listed. If there is a w3m buffer, then
+    entering the empty string displays that buffer.
+
+  The convenience function
+  `mgl-pax-current-definition-toggle-view` (`C-c C-d c`) documents the
+  definition with point in it."""
   (@browsing-with-w3m section)
-  (@browsing-with-other-browsers section))
-
-(defsection @pax-urls (:title "PAX \\URLs")
-  """A PAX \URL consists of a `REFERENCE` and an optional FRAGMENT
-  part:
-
-      URL = [REFERENCE] ["#" FRAGMENT]
-
-  where `REFERENCE` names either
-
-  - a complete DREF::@REFERENCE as a string in `NAME LOCATIVE` format
-    (e.g. `"standard-object class"`),
-
-  - or the @NAME of a reference (e.g. `"class"`), which
-    possibly makes what to document ambiguous.""")
-
-(defsection @emacs-setup-for-browsing (:title "Emacs Setup for Browsing")
-  """Make sure @EMACS-SETUP has been done. In particular, set
-  `mgl-pax-browser-function` to choose between browsing documentation
-  with [w3m](https://emacs-w3m.github.io/info/emacs-w3m.html) in an
-  Emacs buffer, or with an external browser plus a web server in the
-  Lisp image.
-
-  In @EMACS-SETUP, `(mgl-pax-hijack-slime-doc-keys)` was evaluated,
-  which handles the common case of binding keys. The Elisp definition
-  is reproduced here for its docstring."""
-  (mgl-pax-hijack-slime-doc-keys
-   (include
-    (:start (nil (lambda
-                   :file #.(asdf:system-relative-pathname
-                            :mgl-pax "src/mgl-pax.el")
-                   :snippet "(defun mgl-pax-hijack-slime-doc-keys ()"))
-     :end (nil (lambda
-                 :file #.(asdf:system-relative-pathname
-                          :mgl-pax "src/mgl-pax.el")
-                 :snippet ";; end-hijack-include")))
-    :header-nl "```elisp"
-    :footer-nl #.(format nil "...)~%```"))))
+  (@browsing-with-other-browsers section)
+  (@apropos section))
 
 (define-glossary-term @w3m-key-bindings
     (:title "w3m's default key bindings"
      :url "https://emacs-w3m.github.io/info/emacs-w3m_10.html#Key-Binding"))
 
 (defsection @browsing-with-w3m (:title "Browsing with w3m")
-  """With @W3M-KEY-BINDINGS, moving the cursor between links involves
+  """When the value of the Elisp variable `mgl-pax-browser-function`
+  is `w3m-browse-url` (see @EMACS-SETUP), the Emacs w3m browser is
+  used without the need for a web server, and also offering somewhat
+  tighter integration than @BROWSING-WITH-OTHER-BROWSERS.
+
+  With @W3M-KEY-BINDINGS, moving the cursor between links involves
   `TAB` and `S-TAB` (or `<up>` and `<down>`). `RET` and `<right>`
   follow a link, while `B` and `<left>` go back in history.
 
@@ -119,14 +116,17 @@
 (defsection @browsing-with-other-browsers
     (:title "Browsing with Other Browsers")
   """When the value of the Elisp variable `mgl-pax-browser-function`
-  is not `w3m-browse-url`, requests are served via a web server
-  started in the running Lisp, and documentation is most likely
-  displayed in a separate browser window .
+  is not `w3m-browse-url` (see @EMACS-SETUP), requests are served via
+  a web server started in the running Lisp, and documentation is most
+  likely displayed in a separate browser window.
 
   By default, `mgl-pax-browser-function` is `nil`, which makes PAX use
   `browse-url-browser-function`. You may want to customize the related
   `browse-url-new-window-flag` or, for Chrome, set
   `browse-url-chrome-arguments` to `("--new-window")`.
+
+  By default, `mgl-pax-web-server-port` is `nil`, and PAX will pick a
+  free port automatically.
 
   In the browser, clicking on the locative on the left of the
   name (e.g. in `- [function] PRINT`) will raise and focus the Emacs
@@ -136,7 +136,8 @@
   the same (see *DOCUMENT-FANCY-HTML-NAVIGATION*).
 
   Finally, note that the URLs exposed by the web server are subject to
-  change."""
+  change, and even the port used may vary by session if the Elisp
+  variable `mgl-pax-web-server-port` is nil."""
   (*browse-html-style* variable))
 
 (defvar *browse-html-style* :charter
@@ -147,8 +148,7 @@
   If you change this variable, you may need to do a hard refresh in
   the browser (often `C-<f5>`).")
 
-(defun/autoloaded document-for-emacs
-    (pax*-url output &optional *document-hyperspec-root*)
+(defun document-for-emacs (pax*-url output &optional *document-hyperspec-root*)
   (swank/backend:converting-errors-to-error-location
     (swank::with-buffer-syntax (swank::*buffer-package*)
       ;; This is called only for `w3m' and `precheck'. See below.
@@ -198,10 +198,19 @@
         (fragment (when fragment
                     (canonicalize-pax-url-fragment fragment))))
     (cond
-      ;; Redirect to external URL.
+      ;; Redirect to external or a PAX URL.
       ((stringp place)
-       (assert (parse-url place))
-       place)
+       (multiple-value-bind (p-scheme p-authority p-path p-query p-fragment)
+           (parse-url place)
+         ;; Add the canonicalized fragment when redirecting to a PAX URL.
+         (cond ((string= p-scheme "pax")
+                (assert (null p-authority))
+                (assert (null p-query))
+                (assert (null p-fragment))
+                (make-url :scheme p-scheme :path p-path
+                          :encoded-query query :fragment fragment))
+               (t
+                place))))
       ;; Output was written to this file.
       ((pathnamep place)
        (multiple-value-bind (f-scheme f-authority f-path f-query f-fragment)
@@ -270,14 +279,16 @@
 ;;; URL to make the Elisp side simpler as what to document goes
 ;;; through `mgl-pax-w3m-goto-url'.
 (defun document-pax-wall-url (pax-url path dirname)
-  (let ((definitions (definitions-of-wall (read-from-string path)
-                                          :definitions #'definitions*)))
+  (let* ((wall (read-from-string path))
+         (definitions (definitions-of-wall wall :definitions #'definitions*)))
     (case (length definitions)
-      ((0) nil)
+      ((0) (error "No definitions for ~{~S~^ or ~} (in ~S)."
+                  (mapcar #'first wall) (package-name *package*)))
       ((1) (document-for-emacs/reference (first definitions) dirname))
-      (t (document-for-emacs/ambiguous definitions pax-url
-                                       "buffer content around point"
-                                       dirname)))))
+      (t (document-for-emacs/ambiguous
+          definitions pax-url
+          (format nil "~{~A~^ and ~} in buffer context" (mapcar #'first wall))
+          dirname)))))
 
 
 ;;;; Handling of "pax-eval:" URLs
@@ -355,31 +366,33 @@
   (let ((reference (replace-go-target reference)))
     (if-let (external-reference (open-reference-if-external reference))
       (external-dref-url external-reference)
-      (when output
-        (let* ((filename (filename-for-pax-url
-                          output
-                          (format nil "pax:~A" (urlencode (dref-to-anchor
-                                                           reference)))))
-               (packagep (packagep (resolve reference nil)))
-               (*package* (if packagep
-                              (resolve reference)
-                              *package*))
-               #+nil
-               (*print-arglist-key*
-                 (and packagep (rcurry 'shorten-arglist reference)))
-               #+nil
-               (*document-docstring-key*
-                 (and packagep (rcurry 'shorten-docstring reference))))
-          (document/open/file filename
-                              (if packagep
-                                  (pax-apropos* nil t
-                                                (make-symbol
-                                                 (package-name *package*)))
-                                  (documentable-for-reference reference))
-                              :title (format nil "~A ~A"
-                                             (xref-name reference)
-                                             (xref-locative reference)))
-          filename)))))
+      (let ((url (format nil "pax:~A" (urlencode (dref-to-anchor reference)))))
+        (values (if output
+                    (document-for-emacs/reference-1 reference output url)
+                    url))))))
+
+(defun document-for-emacs/reference-1 (reference output url)
+  (let* ((filename (filename-for-pax-url output url))
+         (packagep (packagep (resolve reference nil)))
+         (*package* (if packagep
+                        (resolve reference)
+                        *package*))
+         #+nil
+         (*print-arglist-key*
+           (and packagep (rcurry 'shorten-arglist reference)))
+         #+nil
+         (*document-docstring-key*
+           (and packagep (rcurry 'shorten-docstring reference))))
+    (document/open/file filename
+                        (if packagep
+                            (pax-apropos* nil t
+                                          (make-symbol
+                                           (package-name *package*)))
+                            (documentable-for-reference reference))
+                        :title (format nil "~A ~A"
+                                       (xref-name reference)
+                                       (xref-locative reference)))
+    filename))
 
 (defun documentable-for-reference (reference)
   (remove nil
@@ -388,6 +401,15 @@
                                    reference)
                   (list reference)
                   (format-also-see reference))))
+
+(defun format-up-links (sections reference)
+  (when sections
+    (with-standard-io-syntax*
+      (list
+       (with-output-to-string (s)
+         (format s "Up: ")
+         (dolist (section (sort-by-proximity sections (xref-name reference)))
+           (format s "~S " (section-name section))))))))
 
 #+nil
 (defun shorten-arglist (string &optional except-reference)
@@ -472,7 +494,7 @@
   (when output
     (let ((filename (filename-for-pax-url output pax-url)))
       (document/open/file
-       filename (cons (format nil "## Disambiguation for [~S][pax:dislocated]"
+       filename (cons (format nil "## Disambiguation for [~A][pax:dislocated]"
                               (escape-markdown title))
                       (dref::sort-references (replace-go-targets references)))
        :title title)
@@ -517,36 +539,8 @@
                                              *document/open-extra-args*)))))
 
 
-;;;; Listing SECTIONs
-
-(defun list-sections-in-package (package)
-  (let ((sections ()))
-    (do-symbols (symbol package sections)
-      (when (boundp symbol)
-        (let ((value (symbol-value symbol)))
-          (when (and (typep value 'section)
-                     ;; Filter out normal variables with SECTION values.
-                     (eq (section-name value) symbol))
-            (pushnew value sections)))))))
-
-(defun entry-point-sections (sections)
-  (loop for section in sections
-        for ref = (xref (section-name section) 'section)
-        unless (sections-that-contain sections ref)
-          collect ref))
-
-(defun format-up-links (sections reference)
-  (when sections
-    (with-standard-io-syntax*
-      (list
-       (with-output-to-string (s)
-         (format s "Up: ")
-         (dolist (section (sort-by-proximity sections (xref-name reference)))
-           (format s "~S " (section-name section))))))))
-
-
-(defun/autoloaded redocument-for-emacs
-    (file-url output &optional *document-hyperspec-root*)
+(defun redocument-for-emacs (file-url output
+                             &optional *document-hyperspec-root*)
   (swank/backend:converting-errors-to-error-location
     (swank::with-buffer-syntax (swank::*buffer-package*)
       ;; This is called only for `w3m' and `precheck'.
@@ -569,7 +563,7 @@
 ;;; Find the source location of the path component of PAX-URL, and
 ;;; return its dspec and source location. Ignore the fragment. This is
 ;;; what M-. in a w3m PAX doc buffer does.
-(defun/autoloaded locate-pax-url-for-emacs (pax-url)
+(defun locate-pax-url-for-emacs (pax-url)
   (with-swank ()
     (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
@@ -587,12 +581,23 @@
                   `((,(dref::definition-to-dspec dref) ,location)))))))))))
 
 
+(defun current-definition-pax-url-for-emacs (buffer filename possibilities)
+  (with-swank ()
+    (swank::with-buffer-syntax ()
+      (let ((reference (find-current-definition buffer filename
+                                                possibilities)))
+        (if reference
+            `(:pax-url ,(dref-to-pax-url reference))
+            '(:error "Cannot determine current definition."))))))
+
+
 (defsection @apropos (:title "Apropos")
   "The Elisp functions `mgl-pax-apropos`, `mgl-pax-apropos-all`, and
   `mgl-pax-apropos-package` can display the results of DREF-APROPOS in
   the [live documentation browser] [@browsing-live-documentation].
   These parallel the functionality of `slime-apropos`,
-  `slime-apropos-all`, and `slime-apropos-package`.
+  `slime-apropos-all`, and `slime-apropos-package`, and in fact, they
+  might [take over their key bindings][@EMACS-SETUP].
 
   DREF-APROPOS itself is similar to CL:APROPOS-LIST, but it supports
   more flexible matching – e.g. filtering by DREF::@LOCATIVE-TYPEs –
@@ -759,38 +764,19 @@
                (mapcar #'locate (sections-registered-in-pax-world)))
               "See @BROWSING-LIVE-DOCUMENTATION for how to use this
             documentation browser."))))
-
 
-(defun/autoloaded current-definition-pax-url-for-emacs
-    (buffer filename possibilities)
-  (with-swank ()
-    (swank/backend:converting-errors-to-error-location
-      (swank::with-buffer-syntax ()
-        (let ((reference (find-current-definition buffer filename
-                                                  possibilities)))
-          (if reference
-              `(:pax-url ,(dref-to-pax-url reference))
-              '(:error "Cannot determine current definition.")))))))
-
+(defun list-sections-in-package (package)
+  (let ((sections ()))
+    (do-symbols (symbol package sections)
+      (when (boundp symbol)
+        (let ((value (symbol-value symbol)))
+          (when (and (typep value 'section)
+                     ;; Filter out normal variables with SECTION values.
+                     (eq (section-name value) symbol))
+            (pushnew value sections)))))))
 
-(defun/autoloaded locatives-for-name-for-emacs (raw navigatep)
-  (with-swank ()
-    (swank/backend:converting-errors-to-error-location
-      (swank::with-buffer-syntax ()
-        (flet ((locative-to-string (locative)
-                 (let ((*print-readably* nil)
-                       (*print-case* :downcase))
-                   (prin1-to-string locative))))
-          `(:locatives
-            ,(if (string= raw "")
-                 (mapcar #'locative-to-string (locative-types))
-                 (let ((*document-open-linking* t)
-                       (locatives ()))
-                   (flet ((match (name)
-                            (loop for dref in (if navigatep
-                                                  (definitions name)
-                                                  (definitions* name))
-                                  do (pushnew (dref-locative dref) locatives
-                                              :test #'equal))))
-                     (find-name #'match raw)
-                     (mapcar #'locative-to-string locatives))))))))))
+(defun entry-point-sections (sections)
+  (loop for section in sections
+        for ref = (xref (section-name section) 'section)
+        unless (sections-that-contain sections ref)
+          collect ref))

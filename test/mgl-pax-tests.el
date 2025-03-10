@@ -3,7 +3,7 @@
 (require 'mgl-pax)
 (require 'ert)
 (require 'cl-lib)
-(require 'w3m-load)
+(require 'w3m)
 (require 'slime-tests)
 
 (defun load-mgl-pax-test-system ()
@@ -48,11 +48,11 @@
 
 (defun should-be-looking-at (string)
   (slime-check
-    ("In buffer %S, looking at: %S" (buffer-name (current-buffer))
-     (buffer-substring-no-properties (point)
-                                     (min (point-max)
-                                          (+ (point) 40))))
-    (looking-at (regexp-quote string))))
+   ("In buffer %S, looking at: %S" (buffer-name)
+    (buffer-substring-no-properties (point)
+                                    (min (point-max)
+                                         (+ (point) 40))))
+   (looking-at (regexp-quote string))))
 
 ;;; Redefine this without truncate-string-to-width.
 (defun slime-test-ert-test-for (name input i doc _body fails-for style fname)
@@ -83,6 +83,23 @@
                (slime-skip-test (format "test not applicable for style %s"
                                         style))))))
      (apply #',fname ',input)))
+
+
+(ert-deftest test-mgl-pax-parse-lisp-string-to-sexps ()
+  (should (equal (let ((lisp-code "(+ 1 2) (list 'a 'b) \"string\" 123  "))
+                   (mgl-pax-parse-lisp-string-to-sexps lisp-code))
+                 '("(+ 1 2)" "(list 'a 'b)" "\"string\"" "123"))))
+
+(ert-deftest test-mgl-pax-urllike-to-url ()
+  (should
+   (equal (url-unhex-string (mgl-pax-urllike-to-url "1 2"))
+          "pax-wall:((\"1\" (\"2\")) (\"2\" (\"1\")))?pkg=COMMON-LISP-USER"))
+  (should
+   (equal
+    (url-unhex-string
+     (mgl-pax-urllike-to-url
+      "pax::@pax-manual pax:section pax:defsection pax:macro"))
+    "pax:pax::@pax-manual pax:section?pkg=COMMON-LISP-USER#pax:defsection pax:macro")))
 
 
 ;;;; Test `mgl-pax-wall-at-point'
@@ -289,7 +306,7 @@
        (call-interactively 'slime-edit-definition)
        (mgl-pax-test-sync-hard)
        (slime-check ("%s: %S is found in another buffer" test-name name)
-         (not (eq tmpbuffer (current-buffer))))
+                    (not (eq tmpbuffer (current-buffer))))
        (format "%S visits snippet %S or %S.\n"
                name snippet snippet2 (buffer-name)
                (buffer-substring-no-properties (point)
@@ -297,16 +314,63 @@
                                                     (+ (point) 40))))
        (unwind-protect
            (slime-check
-             ("%s: In buffer %S, looking at: %S" test-name buffer-name
+             ("%s: In buffer %S, looking at: %S" test-name (buffer-name)
               (buffer-substring-no-properties (point)
                                               (min (point-max)
-                                                   (+ (point) 40))))
+                                                   (+ (point) 400))))
              (or (looking-at snippet)
                  (and snippet2 (looking-at snippet2))))
          (slime-pop-find-definition-stack))
        (should (eq (current-buffer) tmpbuffer))
        (should (= (point) start-pos)))
      (slime-check-top-level))))
+
+
+;;;; Test `mgl-pax-completions-at-point'
+
+(ert-deftest test-mgl-pax-completions-at-point ()
+  (with-temp-lisp-buffer
+   (insert "prin1-to-str")
+   ;; This is left for Slime to complete.
+   (should (null (mgl-pax-completions-at-point)))
+   (insert "\nprin1-to-string ")
+   (should (cl-find "FUNCTION" (cl-third (mgl-pax-completions-at-point))
+                    :test 'equal))
+   (insert "\nclass dref:")
+   (should (equal (cl-third (mgl-pax-completions-at-point))
+                  ;; The non-matching ones get filtered out by the
+                  ;; standard Emacs completion mechanism.
+                  '("dref:dref" "dref:xref" "class" "mgl-pax:locative")))
+   (insert "\n\"lambda list")
+   (should (null (cl-third (mgl-pax-completions-at-point))))
+   (let ((mgl-pax-navigating nil))
+     (should (equal (cl-third (mgl-pax-completions-at-point))
+                    '("\"lambda list keyword\"" "\"lambda list\""))))
+   (insert "\npax:locative ")
+   (let ((locative-type-names (cl-third (mgl-pax-completions-at-point))))
+     (should (< 30 (length locative-type-names)))
+     (should (cl-find "FUNCTION" (cl-third (mgl-pax-completions-at-point))
+                      :test 'equal))
+     (should (cl-find "METHOD" (cl-third (mgl-pax-completions-at-point))
+                      :test 'equal)))
+   (insert "\npackage ")
+   (should (= (length (cl-third (mgl-pax-completions-at-point)))
+              (+ (slime-eval '(cl:length (cl:list-all-packages)))
+                 ;; CLASS and MGL-PAX:LOCATIVE
+                 2)))
+   (let ((mgl-pax-navigating nil))
+     (should (= (length (cl-third (mgl-pax-completions-at-point)))
+                (+ (slime-eval '(cl:length (cl:list-all-packages)))
+                   ;; CLASS, (MGL-PAX:CLHS CLASS) and MGL-PAX:LOCATIVE
+                   3))))
+   (insert "\n\"#")
+   (let ((mgl-pax-navigating nil))
+     (should (cl-find "\"#B\"" (cl-third (mgl-pax-completions-at-point))
+                      :test 'equal)))
+   (insert "\n\"~")
+   (let ((mgl-pax-navigating nil))
+     (should (cl-find "\"~F\"" (cl-third (mgl-pax-completions-at-point))
+                      :test 'equal)))))
 
 
 ;;;; Test `mgl-pax-current-definition-possible-names'

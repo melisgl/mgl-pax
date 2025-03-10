@@ -26,9 +26,7 @@
                 :components ((:file "autoload")
                              (:file "pax")
                              (:file "extension-api")
-                             (:file "navigate-early")
                              (:file "document-early")
-                             (:file "web-early")
                              (:file "transcribe-early")
                              (:file "locatives-early"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
@@ -42,8 +40,8 @@
   :bug-tracker ""
   :source-control ""
   :description "Slime `\\\\M-.` support for MGL-PAX."
-  :long-description "Autoloaded by Slime's `\\\\M-.` when `src/pax.el` is
-  loaded. See MGL-PAX::@NAVIGATING-IN-EMACS."
+  :long-description "Autoloaded by Elisp. See
+  MGL-PAX::@NAVIGATING-IN-EMACS."
   :depends-on ("alexandria" "mgl-pax" "dref/full"
                (:feature (:not :swank) "swank"))
   :defsystem-depends-on ("mgl-pax.asdf")

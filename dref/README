@@ -356,8 +356,9 @@ with references (discussed in the DREF-EXT::@EXTENDING-DREF).
 
 - [function] LISP-LOCATIVE-TYPES
 
-    Return the locative types that correspond to Lisp definitions.
-    These are the ones defined with DEFINE-LOCATIVE-TYPE.
+    Return the locative types that correspond to Lisp definitions,
+    which typically have SOURCE-LOCATION. These are defined with
+    DEFINE-LOCATIVE-TYPE.
 
 - [function] PSEUDO-LOCATIVE-TYPES
 

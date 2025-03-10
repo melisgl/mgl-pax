@@ -518,8 +518,9 @@
   *locative-types*)
 
 (defun lisp-locative-types ()
-  "Return the locative types that correspond to Lisp definitions.
-  These are the ones defined with DEFINE-LOCATIVE-TYPE."
+  "Return the locative types that correspond to Lisp definitions,
+  which typically have SOURCE-LOCATION. These are defined with
+  DEFINE-LOCATIVE-TYPE."
   *lisp-locative-types*)
 
 (defun pseudo-locative-types ()

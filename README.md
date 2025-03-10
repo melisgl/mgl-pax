@@ -17,6 +17,10 @@
 - [7 PAX Locatives][292a]
 - [8 Navigating Sources in Emacs][3386]
     - [8.1 The mgl-pax/navigate ASDF System][f155]
+    - [8.2 `M-.` Defaulting][460e]
+    - [8.3 `M-.` Prompting][ed46]
+        - [8.3.1 `M-.` Minibuffer Syntax][8106]
+        - [8.3.2 `M-.` Completion][e444]
 - [9 Generating Documentation][2c93]
     - [9.1 The `DOCUMENT` Function][dc0a]
         - [9.1.1 `DOCUMENTABLE`][0702]
@@ -25,11 +29,9 @@
         - [9.1.4 Package and Readtable][ab7e]
     - [9.2 The mgl-pax/document ASDF System][4bb8]
     - [9.3 Browsing Live Documentation][a595]
-        - [9.3.1 PAX URLs][1e80]
-        - [9.3.2 Apropos][b7fc]
-        - [9.3.3 Emacs Setup for Browsing][9a7b]
-        - [9.3.4 Browsing with w3m][83d5]
-        - [9.3.5 Browsing with Other Browsers][c434]
+        - [9.3.1 Browsing with w3m][83d5]
+        - [9.3.2 Browsing with Other Browsers][c434]
+        - [9.3.3 Apropos][b7fc]
     - [9.4 Markdown Support][c2d3]
         - [9.4.1 Markdown in Docstrings][7bf5]
         - [9.4.2 Syntax Highlighting][bc83]
@@ -237,7 +239,7 @@ version of `mgl-pax.el` to a stable location:
 
     (mgl-pax:install-pax-elisp "~/quicklisp/")
 
-Then, assuming the Elisp file is in the quicklisp directory, add
+Then, assuming the Elisp file is in the `~/quicklisp` directory, add
 something like this to your `.emacs`:
 
 ```elisp
@@ -248,16 +250,45 @@ something like this to your `.emacs`:
 (global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
 ```
 
-For [Browsing Live Documentation][a595], `mgl-pax-browser-function` can be
-customized in Elisp. To browse within Emacs, choose
-`w3m-browse-url` (see
+Instead of the global binding above, one could bind `C-.` locally in
+all Slime related modes like this:
+
+```elisp
+(slime-bind-keys slime-parent-map nil '(("C-." mgl-pax-document)))
+```
+
+For reference, `mgl-pax-hijack-slime-doc-keys` makes the following
+changes to `slime-doc-map` (assuming it's bound to `C-c C-d`):
+
+- `C-c C-d a`: `mgl-pax-apropos` (replaces `slime-apropos`)
+
+- `C-c C-d z`: `mgl-pax-aproposa-all` (replaces `slime-apropos-all`)
+
+- `C-c C-d p`: `mgl-pax-apropos-package` (replaces `slime-apropos-package`)
+
+- `C-c C-d d`: `mgl-pax-document` (replaces `slime-describe-symbol`)
+
+- `C-c C-d f`: `mgl-pax-document` (replaces `slime-describe-function`)
+
+- `C-c C-d c`: `mgl-pax-current-definition-toggle-view`
+
+- `C-c C-d u`: `mgl-pax-edit-parent-section`
+
+For [Navigating Sources in Emacs][3386], loading `mgl-pax.el` extends
+`slime-edit-definitions` (`M-.`) by adding
+`mgl-pax-edit-definitions` to `slime-edit-definition-hooks`. There
+isn't much else to set up.
+
+For [Browsing Live Documentation][a595], `mgl-pax-browser-function` and
+`mgl-pax-web-server-port` can be customized in Elisp. To browse
+within Emacs, choose `w3m-browse-url` (see
 [w3m](https://emacs-w3m.github.io/info/emacs-w3m.html)), and make
 sure both the w3m binary and the w3m Emacs package are installed. On
 Debian, simply install the `w3m-el` package. With other browser
 functions, a HUNCHENTOOT web server is started.
 
-See [Navigating Sources in Emacs][3386], [Generating Documentation][2c93] and
-[Transcribing with Emacs][f5bd] for how to use the relevant features.
+See [Transcribing with Emacs][f5bd] for how to use the transcription features.
+
 
 <a id="x-28MGL-PAX-3AINSTALL-PAX-ELISP-20FUNCTION-29"></a>
 
@@ -507,7 +538,7 @@ LOCATIVE)` syntax in [`DEFSECTION`][72b4].
 
     A *word* is a string from which we want to extract a [name][88cf]. When
     [Navigating][3386], the word is
-    `slime-symbol-at-point` or the label of a [Markdown reference link][8c00] if point
+    `slime-sexp-at-point` or the label of a [Markdown reference link][8c00] if point
     is over one. Similarly, when [Generating Documentation][2c93], it is a
     non-empty string between whitespace characters in a docstring or the
     label of a [Markdown reference link][8c00].
@@ -518,6 +549,7 @@ LOCATIVE)` syntax in [`DEFSECTION`][72b4].
 
     A *raw name* is a string from which a [name][88cf] may be read. Raw names
     correspond to an intermediate parsing step between [word][d7b0]s an [name][88cf]s.
+    See [Names in Raw Names][016d].
 
 <a id="x-28MGL-PAX-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
 
@@ -750,7 +782,7 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
     location of the `FOO` function.
     
     With the [`LAMBDA`][4796] locative, one can specify positions in arbitrary
-    files as in, for example, [Emacs Setup for Browsing][9a7b].
+    files.
     
     - `SOURCE` is either an absolute pathname designator or a list
       matching the [destructuring lambda list][6067] `(&KEY START END)`,
@@ -951,67 +983,172 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
 ## 8 Navigating Sources in Emacs
 
 Integration into [SLIME][6be7]'s [`M-.`][cb15] (`slime-edit-definition`) allows
-one to visit the [`SOURCE-LOCATION`][32da] of a definition([`0`][d930] [`1`][7e92]).
+one to visit the [`SOURCE-LOCATION`][32da] of a definition([`0`][d930] [`1`][7e92]). PAX
+extends standard Slime functionality by
+
+- adding support for all kinds of definitions (see e.g.
+  [`ASDF:SYSTEM`][c097], [`READTABLE`][7506] in
+  [Locative Types][bf0f]), not just the ones Slime knows about,
+
+- providing a portable way to refer to even standard definitions,
+
+- disambiguating the definition based on buffer content, and
+
+- adding more powerful completions.
 
 The definition is either determined from the buffer content at point
-or is prompted. If prompted, then the format is `<NAME> <LOCATIVE>`,
-where the locative may be omitted to recover stock Slime behaviour.
-TAB-completion is available for symbol names, and once the name is
-entered followed by a space, also for their possible locatives.
+or is prompted for. At the prompt, TAB-completion is available for
+both names and locatives. With a prefix argument (`C-u M-.`), the
+buffer contents are not consulted, and `M-.` always prompts.
 
-When determining the definition from the buffer contents,
-`(slime-symbol-at-point)` is parsed as a [word][d7b0], then candidate
-locatives are looked for before and after that word. Thus, if a
-locative is the previous or the next expression around the symbol of
-interest, then `M-.` will go straight to the definition which
-corresponds to the locative. If that fails, `M-.` will try to find
-the definitions in the normal way, which may involve popping up an
-xref buffer and letting the user interactively select one of
-possible definitions. For more details, see [Parsing][378f].
-
-In the following examples, when the cursor is on one of the
-characters of `FOO` or just after `FOO`, pressing `M-.` will visit
-the definition of function `FOO`:
-
-    function foo
-    foo function
-    (function foo)
-    (foo function)
-
-In particular, [reference][43bd]s in a [`DEFSECTION`][72b4] form are in (`NAME`
-`LOCATIVE`) format so `M-.` will work just fine there. `M-.` also
-recognizes the `[foo][function]` and similar forms of [Linking][19e3] in
-docstrings.
-
-Just like vanilla `M-.`, this works in comments and docstrings. In
-the next example, pressing `M-.` on `FOO` will visit `FOO`'s
-default method:
-
-```
-;; See RESOLVE* (method () (dref)) for how this all works.
-```
-
-With a prefix argument (`C-u M-.`), one can enter a symbol plus a
-locative separated by whitespace to preselect one of the
-possibilities.
-
-The `M-.` extensions can be enabled by loading `src/mgl-pax.el`.
-See [Emacs Setup][8541]. In addition, the Elisp command
+The `M-.` extensions can be enabled by loading `src/mgl-pax.el`. See
+[Emacs Setup][8541]. In addition, the Elisp command
 `mgl-pax-edit-parent-section` visits the source location of the
-section containing the definition with `point` in it. See
-[Browsing Live Documentation][a595].
+section containing the definition with point in it.
+
+A close relative of `M-.` is `C-.` for [Browsing Live Documentation][a595].
 
 <a id="x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 ### 8.1 The mgl-pax/navigate ASDF System
 
 - Description: Slime `M-.` support for MGL-PAX.
-- Long Description: Autoloaded by Slime's `M-.` when `src/pax.el` is
-  loaded. See [Navigating Sources in Emacs][3386].
+- Long Description: Autoloaded by Elisp. See
+  [Navigating Sources in Emacs][3386].
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
 
+
+<a id="x-28MGL-PAX-3A-40M--2E-DEFAULTING-20MGL-PAX-3ASECTION-29"></a>
+
+### 8.2 `M-.` Defaulting
+
+When [`M-.`][cb15] is invoked, it first tries to find a [name][88cf] in the
+current buffer at point. If no name is found, then it
+[prompts][ed46].
+
+First, `(slime-sexp-at-point)` is taken as a [word][d7b0], from which the
+[name][88cf] will be [parsed][378f]. Then, candidate locatives are
+looked for before and after the [word][d7b0]. Thus, if a locative is the
+previous or the next expression, then `M-.` will go straight to the
+definition which corresponds to the locative. If that fails, `M-.`
+will try to find the definitions in the normal way, which may
+involve popping up an xref buffer and letting the user interactively
+select one of possible definitions.
+
+`M-.` works on parenthesized references, such as those in
+[`DEFSECTION`][72b4]:
+
+```
+(defsection @foo ()
+  (cos function))
+```
+
+Here, when the cursor is on one of the characters of `COS` or just
+after `COS`, pressing `M-.` will visit the definition of the
+function [`COS`][c4a3].
+
+To play nice with [Generating Documentation][2c93], forms suitable for
+[Autolink][ec7a]ing are recognized:
+
+    function cos
+    cos function
+
+... as well as [Reflink][cbc4]s:
+
+    [cos][function]
+    [see this][cos function]
+
+... and [Markdown inline code][68c1]:
+
+    cos `function`
+    `cos` function
+    `cos` `function`
+
+Everything works the same way in comments and docstrings as in code.
+In the next example, pressing `M-.` on [`RESOLVE*`][d3b3] will visit its
+denoted method:
+
+```
+;;; See RESOLVE* (method () (function-dref)) for how this all works.
+```
+
+
+<a id="x-28MGL-PAX-3A-40M--2E-PROMPTING-20MGL-PAX-3ASECTION-29"></a>
+
+### 8.3 `M-.` Prompting
+
+<a id="x-28MGL-PAX-3A-40M--2E-MINIBUFFER-SYNTAX-20MGL-PAX-3ASECTION-29"></a>
+
+#### 8.3.1 `M-.` Minibuffer Syntax
+
+At the minibuffer prompt, the [definitions][d930] to edit
+can be specified as follows.
+
+- `NAME`: Refers to all [`DREF:DEFINITIONS`][e196] of `NAME` with a [Lisp locative
+  type][30ad]. See these `NAME -> DEFINITIONS`
+  examples:
+
+        print    ->  PRINT FUNCTION
+        PRINT    ->  PRINT FUNCTION
+        MGL-PAX  ->  "mgl-pax" ASDF:SYSTEM, "MGL-PAX" package
+        pax      ->  "PAX" PACKAGE
+        "PAX"    ->  "PAX" PACKAGE
+
+    Note that depending on the Lisp implementation there may be more
+    definitions. For example, SBCL has an [`UNKNOWN`][a951]
+    `:DEFOPTIMIZER` definition for `PRINT`.
+
+- `NAME` `LOCATIVE`: Refers to a single definition (as in `(DREF:DREF
+  NAME LOCATIVE)`). Example inputs of this form:
+
+        print function
+        dref-ext:docstring* (method nil (t))
+
+- `LOCATIVE` `NAME`: This has the same form as the previous: two sexps,
+  but here the first one is the locative. If ambiguous, this is
+  considered in addition to the previous one. Example inputs:
+
+        function print
+        (method nil (t)) dref-ext:docstring*
+
+In all of the above `NAME` is a [raw name][f5af], meaning that `print`
+will be recognized as `PRINT` and `pax` as `"PAX"`.
+
+The package in which symbols are read is the Elisp
+`slime-current-package`. In Lisp buffers, this is the buffer's
+package, else it's the package of the Slime repl buffer.
+
+<a id="x-28MGL-PAX-3A-40M--2E-COMPLETION-20MGL-PAX-3ASECTION-29"></a>
+
+#### 8.3.2 `M-.` Completion
+
+When `M-.` prompts for the definition to edit, TAB-completion is
+available in the minibuffer for both names and locatives. To reduce
+clutter, string names are completed only if they are typed
+explicitly with an opening quotation mark, and they are
+case-sensitive. Examples:
+
+- `pri<TAB>` invokes the usual Slime completion.
+
+- `print <TAB>` (note the space) lists `FUNCTION`([`0`][119e] [`1`][81f7]) and (`PAX:CLHS`
+  `FUNCTION`) as locatives.
+
+- `class dref:<TAB>` lists `DREF:XREF`([`0`][1538] [`1`][cda7]) and `DREF:DREF`([`0`][d930] [`1`][7e92]) (all the classes
+  in the package `DREF`).
+
+- `pax:locative <TAB>` lists all [Locative Types][bf0f] (see the CL
+  function [`DREF:LOCATIVE-TYPES`][99b0]).
+
+- `package "MGL<TAB>` lists the names of packages that start with
+  `"MGL"`.
+
+- `package <TAB>` lists the names of all packages as strings and
+   also [`CLASS`][1f37], `MGL-PAX:LOCATIVE` because [`PACKAGE`][1d5a] denotes a class and
+   also a locative.
+
+For more powerful search, see [Apropos][b7fc].
 
 <a id="x-28MGL-PAX-3A-40GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29"></a>
 
@@ -1305,120 +1442,78 @@ browser. HTML documentation, complete with [Codification][f1ab] and
 [Linking][19e3], is generated from docstrings of all kinds of Lisp
 definitions and PAX [`SECTION`][5fac]s.
 
-If [Emacs Setup][8541] has been done, the Elisp function `mgl-pax-document`
-generates and displays documentation as a single HTML page. For
-example, to view the documentation of this very `SECTION`, one can do:
+If [Emacs Setup][8541] has been done, the Elisp function
+`mgl-pax-document` (maybe bound to `C-.`) generates and displays
+documentation as a single HTML page. If necessary, a disambiguation
+page is generated with the documentation of all matching
+definitions. For example, to view the documentation of this very
+`SECTION`, one can do:
 
     M-x mgl-pax-document
     View Documentation of: pax::@browsing-live-documentation
 
-If the empty string is entered, and there is no existing w3m buffer
-or w3m is not used, then sections registered in [PAX World][1281] are
-listed. If there is a w3m buffer, then entering the empty string
-displays that buffer.
+Alternatively, pressing `C-.` with point over the text
+`pax::@browsing-live-documentation` in a buffer achieves the same
+effect.
 
-If we enter `function` instead, then a disambiguation page will be
-shown with the documentation of the [`FUNCTION`][119e] class and the [`FUNCTION`][ba62]
-locative. One may then follow the links on the page to navigate to a
-page with the documentation the desired definition. If you are
-browsing live documentation right now, then the disambiguation page
-looks like this: `FUNCTION`([`0`][119e] [`1`][81f7]). In offline documentation, multiple
-links are shown instead as described in [Linking][19e3].
+In interactive use, `mgl-pax-document` behaves similarly to
+[`M-.`][3386] except:
 
-Alternatively, a [locative][7ac8] may be entered as part of the
-argument to `mgl-pax-document` as in `function class`, which gives
-[this result][119e]. Finally, the definition of [`DEFSECTION`][72b4]
-in the context of a single-page [PAX Manual][2415] can be
-[viewed](pax:pax::@pax-manual#pax:defsection%20pax:macro) by
-entering `pax::@pax-manual#pax:defsection pax:macro`.
+- It shows the [`DOCUMENT`][432c]ation of some definition and does not visit
+  its [`SOURCE-LOCATION`][32da].
 
-In interactive use, `mgl-pax-document` defaults to documenting
-`slime-symbol-at-point`, possibly with a nearby locative the same
-way as in [Navigating Sources in Emacs][3386]. The convenience function
-`mgl-pax-document-current-definition` documents the definition with
-point in it.
+- It considers definitions with all [`LOCATIVE-TYPES`][99b0] not just
+  [`LISP-LOCATIVE-TYPES`][30ad] because it doesn't need `SOURCE-LOCATION`.
 
-<a id="x-28MGL-PAX-3A-40PAX-URLS-20MGL-PAX-3ASECTION-29"></a>
+    This also means that completion works for [`CLHS`][ed5f]
+    definitions:
 
-#### 9.3.1 PAX URLs
+    - `"lambda list<TAB>` lists `"lambda list"` and `"lambda list
+      keywords"`, both HyperSpec glossary entries. This is similar
+      to `common-lisp-hyperspec-glossary-term` in Elisp, but also
+      works for HyperSpec section titles.
 
-A PAX URL consists of a `REFERENCE` and an optional `FRAGMENT`
-part:
+    - `"#<TAB>` lists all sharpsign reader macros (similar to
+      `common-lisp-hyperspec-lookup-reader-macro` in Elisp).
 
-    URL = [REFERENCE] ["#" FRAGMENT]
+    - `"~<TAB>` lists all [`CL:FORMAT`][ad78] directives (similar to
+      `common-lisp-hyperspec-format` in Elisp).
 
-where `REFERENCE` names either
+- It works in non-`lisp-mode` buffers by reinterpreting a few lines
+  of text surrounding point as lisp code (hence the suggested
+  *global* binding).
 
-- a complete [reference][43bd] as a string in `NAME LOCATIVE` format
-  (e.g. `"standard-object class"`),
+- It supports fragment syntax at the prompt:
 
-- or the [name][88cf] of a reference (e.g. `"class"`), which
-  possibly makes what to document ambiguous.
+        NAME LOCATIVE FRAGMENT-NAME FRAGMENT-LOCATIVE
 
+    This is like `NAME LOCATIVE`, but the browser scrolls to the
+    definition of `FRAGMENT-NAME FRAGMENT-LOCATIVE` within that
+    page.
 
-<a id="x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29"></a>
+    For example, entering this at the prompt will generate the
+    entire PAX manual as a single page and scroll to the very
+    section you are reading within it:
 
-#### 9.3.2 Apropos
+        pax::@pax-manual pax:section pax::@browsing-live-documentation pax:section
 
-The Elisp functions `mgl-pax-apropos`, `mgl-pax-apropos-all`, and
-`mgl-pax-apropos-package` can display the results of [`DREF-APROPOS`][65b4] in
-the [live documentation browser][a595].
-These parallel the functionality of `slime-apropos`,
-`slime-apropos-all`, and `slime-apropos-package`.
+- If the empty string is entered at the prompt, and there is no
+  existing w3m buffer or w3m is not used, then sections registered
+  in [PAX World][1281] are listed. If there is a w3m buffer, then
+  entering the empty string displays that buffer.
 
-`DREF-APROPOS` itself is similar to [`CL:APROPOS-LIST`][7328], but it supports
-more flexible matching – e.g. filtering by [locative type][a11d]s –
-and returns [`DREF`s][d930].
-
-The returned references are presented in two groups: those with
-non-symbol and those with symbol [name][88cf]s. The non-symbol group is
-sorted by locative type then by name. The symbol group is sorted by
-name then by locative type.
-
-<a id="x-28MGL-PAX-3A-40EMACS-SETUP-FOR-BROWSING-20MGL-PAX-3ASECTION-29"></a>
-
-#### 9.3.3 Emacs Setup for Browsing
-
-Make sure [Emacs Setup][8541] has been done. In particular, set
-`mgl-pax-browser-function` to choose between browsing documentation
-with [w3m](https://emacs-w3m.github.io/info/emacs-w3m.html) in an
-Emacs buffer, or with an external browser plus a web server in the
-Lisp image.
-
-In [Emacs Setup][8541], `(mgl-pax-hijack-slime-doc-keys)` was evaluated,
-which handles the common case of binding keys. The Elisp definition
-is reproduced here for its docstring.
-
-```elisp
-(defun mgl-pax-hijack-slime-doc-keys ()
-  "Make the following changes to `slime-doc-map' (assuming it's
-bound to `C-c C-d').
-
-- `C-c C-d a': `mgl-pax-apropos' (replaces `slime-apropos')
-- `C-c C-d z': `mgl-pax-aproposa-all' (replaces `slime-apropos-all')
-- `C-c C-d p': `mgl-pax-apropos-package' (replaces `slime-apropos-package')
-- `C-c C-d d': `mgl-pax-document' (replaces `slime-describe-symbol')
-- `C-c C-d f': `mgl-pax-document' (replaces `slime-describe-function')
-- `C-c C-d c': `mgl-pax-current-definition-toggle-view'
-- `C-c C-d u': `mgl-pax-edit-parent-section'
-
-In addition, because it can be almost as useful as `M-.', one may
-want to give `mgl-pax-document' a more convenient binding such as
-`C-.' or `s-.' if you have a Super key. For example, to bind
-`C-.' in all Slime buffers:
-
-    (slime-bind-keys slime-parent-map nil '((\"C-.\" mgl-pax-document)))
-
-To bind `C-.' globally:
-
-    (global-set-key (kbd \"C-.\") 'mgl-pax-document)"
-  
-...)
-```
+The convenience function
+`mgl-pax-current-definition-toggle-view` (`C-c C-d c`) documents the
+definition with point in it.
 
 <a id="x-28MGL-PAX-3A-40BROWSING-WITH-W3M-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.3.4 Browsing with w3m
+#### 9.3.1 Browsing with w3m
+
+When the value of the Elisp variable `mgl-pax-browser-function`
+is `w3m-browse-url` (see [Emacs Setup][8541]), the Emacs w3m browser is
+used without the need for a web server, and also offering somewhat
+tighter integration than [Browsing with Other Browsers][c434].
 
 With [w3m's default key bindings][1743], moving the cursor between links involves
 `TAB` and `S-TAB` (or `<up>` and `<down>`). `RET` and `<right>`
@@ -1450,17 +1545,20 @@ In addition, the following PAX-specific key bindings are available:
 
 <a id="x-28MGL-PAX-3A-40BROWSING-WITH-OTHER-BROWSERS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.3.5 Browsing with Other Browsers
+#### 9.3.2 Browsing with Other Browsers
 
 When the value of the Elisp variable `mgl-pax-browser-function`
-is not `w3m-browse-url`, requests are served via a web server
-started in the running Lisp, and documentation is most likely
-displayed in a separate browser window .
+is not `w3m-browse-url` (see [Emacs Setup][8541]), requests are served via
+a web server started in the running Lisp, and documentation is most
+likely displayed in a separate browser window.
 
 By default, `mgl-pax-browser-function` is `nil`, which makes PAX use
 `browse-url-browser-function`. You may want to customize the related
 `browse-url-new-window-flag` or, for Chrome, set
 `browse-url-chrome-arguments` to `("--new-window")`.
+
+By default, `mgl-pax-web-server-port` is `nil`, and PAX will pick a
+free port automatically.
 
 In the browser, clicking on the locative on the left of the
 name (e.g. in `- [function] PRINT`) will raise and focus the Emacs
@@ -1470,7 +1568,8 @@ source location. For sections, clicking on the lambda link will do
 the same (see [`*DOCUMENT-FANCY-HTML-NAVIGATION*`][6ab0]).
 
 Finally, note that the `URL`s exposed by the web server are subject to
-change.
+change, and even the port used may vary by session if the Elisp
+variable `mgl-pax-web-server-port` is nil.
 
 <a id="x-28MGL-PAX-3A-2ABROWSE-HTML-STYLE-2A-20VARIABLE-29"></a>
 
@@ -1482,6 +1581,26 @@ change.
     
     If you change this variable, you may need to do a hard refresh in
     the browser (often `C-<f5>`).
+
+<a id="x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29"></a>
+
+#### 9.3.3 Apropos
+
+The Elisp functions `mgl-pax-apropos`, `mgl-pax-apropos-all`, and
+`mgl-pax-apropos-package` can display the results of [`DREF-APROPOS`][65b4] in
+the [live documentation browser][a595].
+These parallel the functionality of `slime-apropos`,
+`slime-apropos-all`, and `slime-apropos-package`, and in fact, they
+might [take over their key bindings][8541].
+
+`DREF-APROPOS` itself is similar to [`CL:APROPOS-LIST`][7328], but it supports
+more flexible matching – e.g. filtering by [locative type][a11d]s –
+and returns [`DREF`s][d930].
+
+The returned references are presented in two groups: those with
+non-symbol and those with symbol [name][88cf]s. The non-symbol group is
+sorted by locative type then by name. The symbol group is sorted by
+name then by locative type.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2414,8 +2533,8 @@ lack of some introspective capability. SBCL generates complete
 output. see [`ARGLIST`][e6bd], [`DOCSTRING`][affc] and [`SOURCE-LOCATION`][32da] for
 implementation notes.
 
-In addition, CLISP does not support the ambiguous case of [PAX URLs][1e80]
-for [Browsing Live Documentation][a595] because the current implementation
+In addition, CLISP does not support the ambiguous case of
+[Browsing Live Documentation][a595] because the current implementation
 relies on Swank to list definitions of symbols (as
 [`VARIABLE`][6c83], [`FUNCTION`][ba62], etc), and that simply
 doesn't work.
@@ -3639,7 +3758,6 @@ they are presented.
   [1b28]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE"
   [1cf6]: dref/README.md#x-28DREF-EXT-3ADREF-NAME-20-28MGL-PAX-3AREADER-20DREF-3ADREF-29-29 "DREF-EXT:DREF-NAME (MGL-PAX:READER DREF:DREF)"
   [1d5a]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pkg.htm "PACKAGE (MGL-PAX:CLHS CLASS)"
-  [1e80]: #x-28MGL-PAX-3A-40PAX-URLS-20MGL-PAX-3ASECTION-29 "PAX URLs"
   [1f37]: http://www.lispworks.com/documentation/HyperSpec/Body/t_class.htm "CLASS (MGL-PAX:CLHS CLASS)"
   [2060]: dref/README.md#x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "CLASS MGL-PAX:LOCATIVE"
   [225d]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhn.htm '"2.4.8.14" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -3647,7 +3765,6 @@ they are presented.
   [22c2]: #x-28MGL-PAX-3A-40LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29 "Linking to Sections"
   [2352]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cfa.htm '"22.3.6.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [238c]: #x-28MGL-PAX-3ATRANSCRIPTION-VALUES-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION"
-  [2415]: README.md "PAX Manual"
   [2444]: dref/README.md#x-28DREF-EXT-3ALOCATIVE-ARGS-20FUNCTION-29 "DREF-EXT:LOCATIVE-ARGS FUNCTION"
   [2634]: #x-28MGL-PAX-3A-40OVERVIEW-OF-ESCAPING-20MGL-PAX-3ASECTION-29 "Overview of Escaping"
   [2826]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhj.htm '"2.4.8.10" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -3684,6 +3801,7 @@ they are presented.
   [432c]: #x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29 "MGL-PAX:DOCUMENT FUNCTION"
   [43bd]: dref/README.md#x-28DREF-3A-40REFERENCE-20MGL-PAX-3AGLOSSARY-TERM-29 "reference"
   [443b]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_cas.htm "*PRINT-CASE* (MGL-PAX:CLHS VARIABLE)"
+  [460e]: #x-28MGL-PAX-3A-40M--2E-DEFAULTING-20MGL-PAX-3ASECTION-29 "`M-.` Defaulting"
   [4796]: dref/README.md#x-28LAMBDA-20MGL-PAX-3ALOCATIVE-29 "LAMBDA MGL-PAX:LOCATIVE"
   [479a]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "ABORT (MGL-PAX:CLHS FUNCTION)"
   [4841]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "SIMPLE-CONDITION-FORMAT-CONTROL (MGL-PAX:CLHS FUNCTION)"
@@ -3743,6 +3861,7 @@ they are presented.
   [730f]: #x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20VARIABLE-29 "MGL-PAX:*DISCARD-DOCUMENTATION-P* VARIABLE"
   [7328]: http://www.lispworks.com/documentation/HyperSpec/Body/f_apropo.htm "APROPOS-LIST (MGL-PAX:CLHS FUNCTION)"
   [7445]: #x-28MGL-PAX-3A-40INTERESTING-20MGL-PAX-3AGLOSSARY-TERM-29 "interesting"
+  [7506]: dref/README.md#x-28READTABLE-20MGL-PAX-3ALOCATIVE-29 "READTABLE MGL-PAX:LOCATIVE"
   [76ab]: http://www.lispworks.com/documentation/HyperSpec/Body/22_ccc.htm '"22.3.3.3" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [76df]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cbd.htm '"22.3.2.4" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [76ea]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cgb.htm '"22.3.7.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -3760,6 +3879,7 @@ they are presented.
   [7eb5]: #x-28MGL-PAX-3A-40LINKABLE-20MGL-PAX-3AGLOSSARY-TERM-29 "linkable"
   [7f1f]: #x-28MGL-PAX-3ADOCUMENT-DOCSTRING-20FUNCTION-29 "MGL-PAX:DOCUMENT-DOCSTRING FUNCTION"
   [80e8]: #x-28MGL-PAX-3AWITH-HEADING-20MGL-PAX-3AMACRO-29 "MGL-PAX:WITH-HEADING MGL-PAX:MACRO"
+  [8106]: #x-28MGL-PAX-3A-40M--2E-MINIBUFFER-SYNTAX-20MGL-PAX-3ASECTION-29 "`M-.` Minibuffer Syntax"
   [81b3]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhr.htm '"2.4.8.18" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [81f7]: http://www.lispworks.com/documentation/HyperSpec/Body/s_fn.htm "FUNCTION (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [8251]: #x-28MGL-PAX-3AGLOSSARY-TERM-20CLASS-29 "MGL-PAX:GLOSSARY-TERM CLASS"
@@ -3798,7 +3918,6 @@ they are presented.
   [9927]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cba.htm '"22.3.2.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [99b0]: dref/README.md#x-28DREF-3ALOCATIVE-TYPES-20FUNCTION-29 "DREF:LOCATIVE-TYPES FUNCTION"
   [99b05]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function '"setf function" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
-  [9a7b]: #x-28MGL-PAX-3A-40EMACS-SETUP-FOR-BROWSING-20MGL-PAX-3ASECTION-29 "Emacs Setup for Browsing"
   [9b43]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "DEFPACKAGE (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [9c7d]: #x-28MGL-PAX-3A-40PAGES-20MGL-PAX-3ASECTION-29 "`PAGES`"
   [9db9]: #x-28MGL-PAX-3A-40LOCAL-DEFINITION-20MGL-PAX-3ASECTION-29 "Local Definition"
@@ -3860,11 +3979,13 @@ they are presented.
   [cbc4]: #x-28MGL-PAX-3A-40REFLINK-20MGL-PAX-3ASECTION-29 "Reflink"
   [cc04]: dref/README.md#x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:READER MGL-PAX:LOCATIVE"
   [cd66]: http://www.lispworks.com/documentation/HyperSpec/Body/02_de.htm '"2.4.5" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [cda7]: dref/README.md#x-28DREF-3AXREF-20FUNCTION-29 "DREF:XREF FUNCTION"
   [d162]: http://www.lispworks.com/documentation/HyperSpec/Body/e_error.htm "ERROR (MGL-PAX:CLHS CONDITION)"
   [d1ca]: #x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29 "Documentation Generation Implementation Notes"
   [d1dc]: #x-28MGL-PAX-3A-40GLOSSARY-TERMS-20MGL-PAX-3ASECTION-29 "Glossary Terms"
   [d273]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_f.htm#format_directive '"format directive" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [d296]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cia.htm '"22.3.9.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [d3b3]: dref/README.md#x-28DREF-EXT-3ARESOLVE-2A-20GENERIC-FUNCTION-29 "DREF-EXT:RESOLVE* GENERIC-FUNCTION"
   [d3fc]: https://github.com/smithzvk/pythonic-string-reader "Pythonic String Reader"
   [d451]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRINT (MGL-PAX:CLHS FUNCTION)"
   [d5a2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_car_c.htm "CAR (MGL-PAX:CLHS FUNCTION)"
@@ -3893,6 +4014,7 @@ they are presented.
   [e391]: #x-28MGL-PAX-3ADISLOCATED-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:DISLOCATED MGL-PAX:LOCATIVE"
   [e43c]: http://www.lispworks.com/documentation/HyperSpec/Body/02_db.htm '"2.4.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [e442]: http://www.lispworks.com/documentation/HyperSpec/Body/03_d.htm '"3.4" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [e444]: #x-28MGL-PAX-3A-40M--2E-COMPLETION-20MGL-PAX-3ASECTION-29 "`M-.` Completion"
   [e51f]: #x-28MGL-PAX-3AEXPORTABLE-REFERENCE-P-20GENERIC-FUNCTION-29 "MGL-PAX:EXPORTABLE-REFERENCE-P GENERIC-FUNCTION"
   [e548]: dref/README.md#x-28MGL-PAX-3AWRITER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:WRITER MGL-PAX:LOCATIVE"
   [e5ab]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_3.htm "SYMBOL-PACKAGE (MGL-PAX:CLHS FUNCTION)"
@@ -3902,6 +4024,7 @@ they are presented.
   [e7ee]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*STANDARD-OUTPUT* (MGL-PAX:CLHS VARIABLE)"
   [ebd3]: #x-28MGL-PAX-3A-2ATRANSCRIBE-SYNTAXES-2A-20VARIABLE-29 "MGL-PAX:*TRANSCRIBE-SYNTAXES* VARIABLE"
   [ec7a]: #x-28MGL-PAX-3A-40AUTOLINK-20MGL-PAX-3ASECTION-29 "Autolink"
+  [ed46]: #x-28MGL-PAX-3A-40M--2E-PROMPTING-20MGL-PAX-3ASECTION-29 "`M-.` Prompting"
   [ed5f]: #x-28MGL-PAX-3ACLHS-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CLHS MGL-PAX:LOCATIVE"
   [ed9f]: http://www.lispworks.com/documentation/HyperSpec/Body/22_ceb.htm '"22.3.5.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [ee51]: #x-28MGL-PAX-3AUPDATE-PAX-WORLD-20FUNCTION-29 "MGL-PAX:UPDATE-PAX-WORLD FUNCTION"

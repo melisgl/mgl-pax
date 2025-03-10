@@ -80,11 +80,6 @@
 ;;; MGL-PAX/FULL to have all documentation. Otherwise,
 ;;; MGL-PAX/DOCUMENT would be enough.
 (autoload update-pax-world '#:mgl-pax/full)
-(autoload document-for-emacs '#:mgl-pax/document :export nil)
-(autoload redocument-for-emacs '#:mgl-pax/document :export nil)
-(autoload locate-pax-url-for-emacs '#:mgl-pax/document :export nil)
-(autoload current-definition-pax-url-for-emacs '#:mgl-pax/document :export nil)
-(autoload locatives-for-name-for-emacs '#:mgl-pax/document :export nil)
 
 
 (defsection @extending-document (:title "Extending DOCUMENT")

@@ -86,7 +86,7 @@ other mgl-pax commands in interactive use."
                                 (not (mgl-pax-use-w3m)))
                            :mgl-pax/web
                          ',asdf-system))
-          (interactivep (called-interactively-p 'interactive))
+          (interactivep (called-interactively-p 'any))
           (autoload (and mgl-pax-autoload interactivep)))
      (mgl-pax-maybe-autoload
       asdf-system
@@ -147,32 +147,10 @@ See MGL-PAX::@EMACS-SETUP."
     (load-file sourcefile)))
 
 
-;;; KLUDGE: The quotes are not escaped in the docstring because it is
-;;; INCLUDEd in PAX documentation, where the \=' would look bad.
-(with-no-warnings
+;;;; MGL-PAX::@EMACS-SETUP
+
 (defun mgl-pax-hijack-slime-doc-keys ()
-  "Make the following changes to `slime-doc-map' (assuming it's
-bound to `C-c C-d').
-
-- `C-c C-d a': `mgl-pax-apropos' (replaces `slime-apropos')
-- `C-c C-d z': `mgl-pax-aproposa-all' (replaces `slime-apropos-all')
-- `C-c C-d p': `mgl-pax-apropos-package' (replaces `slime-apropos-package')
-- `C-c C-d d': `mgl-pax-document' (replaces `slime-describe-symbol')
-- `C-c C-d f': `mgl-pax-document' (replaces `slime-describe-function')
-- `C-c C-d c': `mgl-pax-current-definition-toggle-view'
-- `C-c C-d u': `mgl-pax-edit-parent-section'
-
-In addition, because it can be almost as useful as `M-.', one may
-want to give `mgl-pax-document' a more convenient binding such as
-`C-.' or `s-.' if you have a Super key. For example, to bind
-`C-.' in all Slime buffers:
-
-    (slime-bind-keys slime-parent-map nil '((\"C-.\" mgl-pax-document)))
-
-To bind `C-.' globally:
-
-    (global-set-key (kbd \"C-.\") 'mgl-pax-document)"
-  ;; end-hijack-include
+  "See MGL-PAX::@EMACS-SETUP."
   (interactive)
   (slime-bind-keys slime-doc-map t
                    '((?a mgl-pax-apropos)
@@ -181,10 +159,10 @@ To bind `C-.' globally:
                      (?d mgl-pax-document)
                      (?f mgl-pax-document)
                      (?c mgl-pax-current-definition-toggle-view)
-                     (?u mgl-pax-edit-parent-section)))))
+                     (?u mgl-pax-edit-parent-section))))
 
 
-;;;; Browser configuration
+;;;; Browser configuration (see MGL-PAX::@EMACS-SETUP)
 
 (defcustom mgl-pax-browser-function nil
   "The name of the function to use to browse URLs.
@@ -229,14 +207,14 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 ;;; MGL-PAX::LOCATE-DEFINITIONS-FOR-EMACS and
 ;;; MGL-PAX::DOCUMENT-FOR-EMACS take such lists.
 ;;;
-;;; `slime-symbol-at-point' works fine in code, but in printed
+;;; `slime-sexp-at-point' works fine in code, but in printed
 ;;; representations and docstrings heuristics are needed (just think
 ;;; "SYM." and "#<SYM"), which we leave for the the Common Lisp side
 ;;; to resolve. However, we handle here the complications caused by
 ;;; Markdown, whose syntax for code (`nil`) and reference links
 ;;; ([title][id]) is used by PAX, maybe both at the same time as in
 ;;; [`FOO`][function] or [FOO][`function`]. ?` is a delimiter, but ?\[
-;;; is not, which means that `slime-symbol-at-point' on FOO will
+;;; is not, which means that `slime-sexp-at-point' on FOO will
 ;;; result in NAME being "FOO" or "[FOO][". "[FOO][" is a valid symbol
 ;;; name, so we definitely want to look up definitions for it. In
 ;;; addition, we also look up definitions for the symbol whose name
@@ -250,8 +228,8 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
      ;; without the semicolons.
      (mgl-pax-call-uncommented
       (lambda ()
-        (let ((word (slime-symbol-at-point))
-              (bounds (slime-bounds-of-symbol-at-point)))
+        (let ((word (slime-sexp-at-point))
+              (bounds (slime-bounds-of-sexp-at-point)))
           (when bounds
             (let ((locatives (mgl-pax-find-locatives bounds))
                   (wall (mgl-pax-parse-reflink bounds)))
@@ -268,7 +246,8 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
                         (point)))
           (text-after (buffer-substring-no-properties
                        (point)
-                       (line-beginning-position 4))))
+                       (line-beginning-position 4)))
+          (lisp-mode-hook ()))
       (with-temp-buffer
         (lisp-mode)
         (insert text-before)
@@ -316,7 +295,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
                   (point))))
       (list beg end))))
 
-;;; Return the sexps before and after (slime-symbol-at-point),
+;;; Return the sexps before and after (slime-sexp-at-point),
 ;;; skipping some markup.
 (cl-defun mgl-pax-find-locatives
     (&optional (bounds (slime-bounds-of-symbol-at-point)))
@@ -405,38 +384,98 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
       (reverse wall))))
 
 
-;;;; Integration with `M-.' (`slime-edit-definition')
+;;;; Integration with `M-.' (`slime-edit-definition') (see
+;;;; MGL-PAX::@NAVIGATING-IN-EMACS)
 
-;;; When it's on `slime-edit-definition-hooks', `M-.' calls this
-;;; function with (slime-symbol-at-point) as NAME.
-(defun mgl-pax-edit-definitions (name &optional where)
+;;; Functions `slime-edit-definition-hooks' are called with just a
+;;; name, but `mgl-pax-edit-definition' needs `mgl-pax-wall-at-point'.
+(defvar mgl-pax-edit-definition-wall :no-wall)
+
+;;; Alterations to `slime-edit-definition':
+;;;
+;;; - Ensure that :MGL-PAX/NAVIGATE is loaded.
+;;;
+;;; - Instead of `slime-symbol-at-point' default to
+;;;  `slime-sexp-at-point' to support string names.
+;;;
+;;; - Capture the buffer context in `mgl-pax-edit-definition-wall'
+;;;   when defaulting.
+(define-advice slime-edit-definition (:around (oldfun &optional name where)
+                                      mgl-pax)
+  (interactive)
+  (mgl-pax-with-component (:mgl-pax/navigate)
+    (or (when (and interactivep (not current-prefix-arg))
+          ;; Default to buffer context.
+          (when-let (name (slime-sexp-at-point))
+            (let ((mgl-pax-edit-definition-wall (mgl-pax-wall-at-point)))
+              (funcall oldfun name where)
+              t)))
+        ;; Prompt. This involves `mgl-pax-completions-at-point',
+        ;; which needs :MGL-PAX/NAVIGATE for completion.
+        (let ((name (if interactivep
+                        (slime-read-symbol-name "Edit Definition of: ")
+                      name)))
+          (funcall oldfun name where)))))
+
+(defun mgl-pax-edit-definition (name &optional where)
+  (ignore where)
   (when (mgl-pax-component-loaded-p :mgl-pax/navigate)
     (mgl-pax-visit-locations
-     (let ((name-in-buffer (slime-symbol-at-point)))
-       (if (string= name name-in-buffer)
-           (mgl-pax-edit-buffer-definitions)
-         (mgl-pax-edit-interactive-definitions name where))))))
+     (if (eq mgl-pax-edit-definition-wall :no-wall)
+         (mgl-pax-edit-reference name)
+       (mgl-pax-edit-wall mgl-pax-edit-definition-wall)))))
 
-(defun mgl-pax-edit-buffer-definitions ()
-  (mgl-pax-locate-definitions (mgl-pax-wall-at-point)))
+(add-hook 'slime-edit-definition-hooks 'mgl-pax-edit-definition)
 
-(defun mgl-pax-edit-interactive-definitions (string where)
-  (ignore where)
-  (let ((pos (cl-position ?\s string)))
-    (if pos
-        (let ((first (cl-subseq string 0 pos))
-              (second (cl-subseq string (1+ pos))))
-          ;; "FOO function" or "function FOO"
-          (mgl-pax-locate-definitions `((,first (,second))
-                                        (,second (,first)))))
+(defun mgl-pax-edit-wall (wall)
+  (mgl-pax-locate-definitions wall))
+
+(defun mgl-pax-edit-reference (reference)
+  (cl-destructuring-bind (sexp-1 sexp-2) (mgl-pax-parse-reference reference)
+    (if sexp-2
+        ;; "FOO function" or "function FOO"
+        (mgl-pax-locate-definitions `((,sexp-1 (,sexp-2))
+                                      (,sexp-2 (,sexp-1))))
       ;; "FOO"
-      (mgl-pax-locate-definitions `((,string ()))))))
+      (mgl-pax-locate-definitions `((,sexp-1 ()))))))
+
+(defun mgl-pax-parse-reference (string &optional allow-fragment)
+  (let* ((sexps (mgl-pax-parse-lisp-string-to-sexps string))
+         (n (length sexps)))
+    (if (and allow-fragment (= n 4))
+        sexps
+      (cond ((= n 0) (list nil nil))
+            ((= n 1) (list (cl-first sexps) nil))
+            ((= n 2) sexps)
+            (t
+             (message "Ignoring trailing junk %S" (cl-subseq sexps 2))
+             (sit-for 1)
+             (cl-subseq sexps 0 2))))))
+
+;;; Return a list of strings representing `lisp-mode' sexps in STRING.
+(defun mgl-pax-parse-lisp-string-to-sexps (string)
+  (let ((lisp-mode-hook ()))
+    (with-temp-buffer
+      (insert string)
+      (lisp-mode)
+      (let ((sexps ()))
+        (goto-char (point-min))
+        (while (not (eobp))
+          (let ((sexp-start (point)))
+            (condition-case nil
+                (forward-sexp)
+              (scan-error
+               (forward-word)))
+            (let* ((sexp-end (point))
+                   (sexp (slime-trim-whitespace
+                          (buffer-substring-no-properties
+                           sexp-start sexp-end))))
+              (unless (zerop (length sexp))
+                (push sexp sexps)))))
+        (nreverse sexps)))))
 
 (defun mgl-pax-locate-definitions (wall)
-  (slime-eval `(cl:funcall (cl:find-symbol
-                            (cl:string '#:locate-definitions-for-emacs)
-                            :mgl-pax)
-                           ',wall)))
+  (slime-eval `(mgl-pax::locate-definitions-for-emacs ',wall)))
 
 (defun mgl-pax-visit-locations (dspec-and-location-list)
   (when (consp dspec-and-location-list)
@@ -446,65 +485,113 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
        (slime-postprocess-xrefs dspec-and-location-list)
        "dummy name"
        nil))))
-
-(add-hook 'slime-edit-definition-hooks 'mgl-pax-edit-definitions)
 
 
-;;;; Completion of locatives for `slime-edit-definition'
-
-;;; Normally, we would ensure PAX is loaded in an interactive
-;;; function, but `slime-edit-definition' is not ours and `advice-add'
-;;; doesn't seem to work sensibly with interactive function argument
-;;; defaulting.
-(define-advice slime-read-symbol-name (:before (prompt &optional query)
-                                       mgl-pax-autoload-async)
-  (ignore query)
-  ;; KLUDGE: `slime-edit-definition' calls `slime-read-symbol-name'
-  ;; for interactive defaulting with this prompt.
-  (when (equal prompt "Edit Definition of: ")
-    ;; Autoload early and asynchronously so that by the time `M-.'
-    ;; prompts and `mgl-pax-complete-urllike-in-minibuffer' gets to
-    ;; work, all is hopefully set up.
-    (mgl-pax-maybe-autoload :mgl-pax/navigate mgl-pax-autoload nil)))
+;;;; Completion of locatives for `slime-edit-definition' (see
+;;;; MGL-PAX::@M-.-COMPLETION)
 
 (add-to-list 'slime-completion-at-point-functions
-             'mgl-pax-complete-locative-in-minibuffer)
+             'mgl-pax-completions-at-point)
 
-(defun mgl-pax-complete-locative-in-minibuffer ()
-  (let* ((start
-          ;; The position of the first character after the prompt
-          (line-beginning-position))
-         (end (point))
-         (beg (slime-symbol-start-pos))
-         (first-space-pos (cl-position ?\s (buffer-substring-no-properties
-                                            start end))))
-    (when first-space-pos
-      ;; PAX may not be loaded yet or at all (see
-      ;; `slime-read-symbol-name@mgl-pax-autoload-async'), and we
-      ;; don't want to autoload in a completion function.
-      (when (mgl-pax-component-loaded-p :mgl-pax/navigate)
-        (let ((name (buffer-substring-no-properties
-                     start (+ start first-space-pos))))
-          (list beg end (completion-table-dynamic
-                         (lambda (prefix)
-                           (ignore prefix)
-                           (mgl-pax-locatives-for-name name)))))))))
+(defvar mgl-pax-navigating t)
+
+(defun mgl-pax-completions-at-point ()
+  (when (mgl-pax-component-loaded-p :mgl-pax/navigate)
+    (let* (;; This the position of the first character after the prompt.
+           (bol (line-beginning-position))
+           (end (point))
+           (sexp-1 (save-excursion
+                     (goto-char bol)
+                     (mgl-pax-next-sexp)))
+           (sexp-2-start (when sexp-1
+                           (save-excursion
+                             (goto-char bol)
+                             (forward-sexp)
+                             (when (search-forward " " end t)
+                               (skip-chars-forward " ")
+                               (point))))))
+      (if sexp-2-start
+          (list sexp-2-start end (mgl-pax-names-or-locatives
+                                  sexp-1 (buffer-substring-no-properties
+                                          sexp-2-start end)))
+        (mgl-pax-string-name-completions)))))
+
+;;; Return the completions for a DREF::@NAME typed in is explicitly as
+;;; a string (e.g. `"mgl-p', note the missing right quote).
+(defun mgl-pax-string-name-completions ()
+  (let ((start (save-excursion (re-search-backward "\"[^\t\n]*\\="
+                                                   (max (point-min)
+                                                        (- (point) 1000))
+                                                   t))))
+    (when start
+      (let* ((string (buffer-substring-no-properties (1+ start) (point)))
+             (matches (slime-eval `(mgl-pax::string-name-completions-for-emacs
+                                    ,string :locative-types
+                                    ,(if mgl-pax-navigating
+                                         '(dref:lisp-locative-types)
+                                       '(dref:locative-types))))))
+        ;; KLUDGE: Returning this even if MATCHES is () prevents other
+        ;; completion functions from running, which is quite desirable
+        ;; as currently these functions (`slime-complete-symbol*' and
+        ;; `slime-filename-completion') attempt to complete the string
+        ;; as a filename.
+        (list start (point) matches)))))
 
 
-(defun mgl-pax-edit-for-cl (dspec-and-location-list)
-  ;; There may be no lisp-mode buffer at all.
-  (ignore-errors (slime-recently-visited-buffer 'lisp-mode))
-  (mgl-pax-sync-current-buffer)
-  (x-focus-frame nil)
-  (raise-frame)
-  (mgl-pax-visit-locations dspec-and-location-list))
+;;;; Also for MGL-PAX::@NAVIGATING-IN-EMACS
 
-(defun mgl-pax-sync-current-buffer ()
-  ;; https://emacs.stackexchange.com/questions/10921/why-doesnt-changing-buffer-in-filter-function-have-any-effect-in-ert
-  (set-buffer (window-buffer (selected-window))))
+(defun mgl-pax-edit-parent-section ()
+  "Look up the definition of parent section of the definition
+`point' is in as if with `M-.' (`slime-edit-definition'). If
+there are multiple containing sections, then pop up a selection
+buffer."
+  (interactive)
+  (mgl-pax-with-component (:mgl-pax/navigate)
+    (mgl-pax-find-parent-section #'mgl-pax-visit-locations)))
+
+(defun mgl-pax-find-parent-section (cont)
+  (slime-eval-async `(mgl-pax::find-parent-section-for-emacs
+                      ',(buffer-name)
+                      ',(buffer-file-name)
+                      ',(mgl-pax-current-definition-possible-names))
+    cont))
+
+
+(defun mgl-pax-current-definition-possible-names ()
+  (save-excursion
+    (when (looking-at "(")
+      (ignore-errors (down-list)))
+    (cl-loop for name-snippet-and-pos
+             = (mgl-pax-current-sexp-first-arg-snippet-and-pos)
+             when name-snippet-and-pos
+             collect name-snippet-and-pos
+             while (ignore-errors (backward-up-list 1 t t)
+                                  t))))
+
+;;; Return 1. the first argument of the current sexp if it's a symbol,
+;;; 2. the Slime source location :SNIPPET, 3. the start position of
+;;; the sexp. If any movement fails or the first argument is not a
+;;; symbol, then return nil.
+(defun mgl-pax-current-sexp-first-arg-snippet-and-pos ()
+  (ignore-errors
+    (save-excursion
+      (backward-up-list 1 t t)
+      (let ((snippet (mgl-pax-next-sexp))
+            (pos (point)))
+        (when (< 200 (length snippet))
+          (setq snippet (cl-subseq snippet 0 200)))
+        (down-list)
+        (slime-forward-sexp)
+        (forward-char)
+        ;; `name' can be a symbol or a string ...
+        (let ((name (mgl-pax-next-sexp)))
+          ;; ... but currently never a list.
+          (unless (string-prefix-p "(" name)
+            (list name snippet pos)))))))
 
 
-;;;; MGL-PAX documentation browser
+;;;; MGL-PAX documentation browser (see
+;;;; MGL-PAX::@BROWSING-LIVE-DOCUMENTATION)
 ;;;;
 ;;;; Like `C-h f` (describe-function) but for Common Lisp via PAX.
 
@@ -524,10 +611,18 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
   "Browse the documentation of CL definitions for PAX-URL.
 
 The documentation is a single HTML page generated by PAX via
-Slime documenting the definitions given by PAX-URL. If necessary,
-a disambiguation page is generated with the documentation of all
-possible references. The HTML page is opened in the w3m browser
-within Emacs.
+Slime documenting the definitions corresponding to PAX-URL. If
+necessary, a disambiguation page is generated with the
+documentation of all matching definitions. The HTML page is
+opened in the browser specified by `mgl-pax-browser-function'.
+
+Interactive behaviour is documented in
+MGL-PAX::@BROWSING-LIVE-DOCUMENTATION (pressing `C-.' on this
+works in the docstring in the sources or when viewed in a Help
+buffer).
+
+The following describes the syntax of PAX-URL in non-interactive
+mode.
 
 When invoked programatically, PAX-URL must be a properly
 urlencoded string with URL scheme \"pax:\". The format of PAX-URL
@@ -535,56 +630,28 @@ is:
 
   URL = \"pax:\" [REFERENCE] [\"#\" FRAGMENT]
 
-where REFERENCE names either
+where REFERENCE is a complete CL DREF::@REFERENCE as a string in
+\"NAME LOCATIVE\" format (e.g. \"standard-object class\") and, if
+given, so is FRAGMENT. For example,
 
-- a complete CL DREF::@REFERENCE as a string in \"NAME LOCATIVE\"
-  format (e.g. \"standard-object class\")
+  (mgl-pax-document (concat \"pax:\" (url-hexify-string \"print\")))
 
-- or the PAX::@NAME of a reference (e.g. \"class\"), which
-  possibly makes what to document ambiguous.
+opens the disambiguation page for \"print\", while
 
-If given, FRAGMENT must be a complete PAX:REFERENCE and refers to
-a definition within the documentation page of REFERENCE. For
-example, the URL
+  (mgl-pax-document
+    (concat \"pax:\" (url-hexify-string \"pax::@pax-manual pax:section\")))
 
-  \"pax::@pax-manual pax:section#pax:defsection pax:macro\"
+visits the page with the entire documentation of the PAX, and
 
-points to the documentation of the DEFSECTION macro
-on the page that contains the entire PAX manual.
+  (mgl-pax-document
+    (concat \"pax:\"
+            (url-hexify-string \"pax::@pax-manual pax:section\")
+            \"#\"
+            (url-hexify-string \"pax:defsection pax:macro\")))
 
-When invoked interactively:
-
-- Without a prefix arg, the name of the reference defaults to
-  `slime-symbol-at-point' and an attempt is made to find the
-  locative around that. This works in non-lisp buffers as well.
-
-- With a prefix arg, when no name is found, or when there are no
-  definitions found for the name and locatives found in the
-  buffer, `mgl-pax-document' prompts for URL. In this case, the
-  URL scheme, \"pax:\", must not to be included. The entered
-  REFERENCE and FRAGMENT need not be URL encoded.
-
-- If the empty string is entered, and there is no existing w3m
-  buffer or w3m is not used, then sections registered in
-  MGL-PAX::@PAX-WORLD are listed. If there is a w3m buffer, then
-  entering the empty string displays that buffer.
-
-Autocomplete: In the minibuffer, TAB-completion is available for
-symbol names, and once the name is entered followed by a space,
-also for their possible locatives. Only symbols are completed.
-String names are not (e.g names of PACKAGEs or CLHS SECTIONs).
-Completion of locatives which are lists (e.g. `(CLHS SECTION)')
-is a bit broken because Emacs completion is designed for symbols.
-Still, pressing TAB before entering the opening parenthesis and
-selecting the locative from the buffer that pops up works. For
-finding all definitions with a given locative, use
-`mgl-pax-apropos'.
-
-The package in which symbols are read is `slime-current-package'.
-Hence, in Lisp buffers, the buffer's package is used. In other
-buffers, the package of the repl.
-
-The suggested key binding is `C-.' to parallel `M-.'."
+does the same but scrolls to the documentation of the DEFSECTION
+macro on that page."
+  ;; end-include
   (interactive (list nil))
   (slime-check-connected)
   (mgl-pax-require-w3m)
@@ -599,16 +666,14 @@ The suggested key binding is `C-.' to parallel `M-.'."
           ;; interactive without prefix arg, point over a pax URL
           ((and (null current-prefix-arg)
                 (mgl-pax-in-doc-buffer-p)
-                (mgl-pax-doc-pax-url (with-no-warnings (w3m-anchor))))
-           (mgl-pax-document-pax-url (mgl-pax-doc-pax-url (with-no-warnings
-                                                            (w3m-anchor)))))
+                (mgl-pax-doc-pax-url (mgl-pax-doc-url)))
+           (mgl-pax-document-pax-url (mgl-pax-doc-pax-url (mgl-pax-doc-url))))
           ;; interactive without prefix arg, point not over a pax URL
           (t
            (let ((wall (mgl-pax-wall-at-point)))
              (if wall
                  (mgl-pax-document-pax-url
-                  (concat "pax-wall:"
-                          (url-hexify-string (format "%S" wall))))
+                  (concat "pax-wall:" (url-hexify-string (format "%S" wall))))
                (mgl-pax-prompt-and-document)))))))
 
 (cl-defmacro mgl-pax-with-nlx-barrier (&body body)
@@ -626,6 +691,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
   ;; `slime-async-eval' and `read-from-minibuffer' is C-g'ed.
   (mgl-pax-with-nlx-barrier
    (mgl-pax-document-pax-url
+    ;; FIXME: rename urllike?
     (mgl-pax-urllike-to-url
      (mgl-pax-read-urllike-from-minibuffer "View Documentation of: ")))))
 
@@ -753,54 +819,40 @@ The suggested key binding is `C-.' to parallel `M-.'."
 (defun mgl-pax-urllike-to-url (schemeless-pax-url)
   (if (zerop (length (slime-trim-whitespace schemeless-pax-url)))
       "pax:"
-    (cl-destructuring-bind (reference fragment)
-        (mgl-pax-parse-path-and-fragment schemeless-pax-url)
-      (concat "pax:" (url-hexify-string reference)
-              (if (slime-current-package)
-                  (concat "?pkg=" (url-hexify-string (slime-current-package)))
-                "")
-              (if fragment
-                  (concat "#" (url-hexify-string fragment))
-                "")))))
+    (cl-destructuring-bind (sexp-1 sexp-2 &optional fragment-1 fragment-2)
+        (mgl-pax-parse-reference schemeless-pax-url :allow-fragment)
+      (let ((pkg (if (slime-current-package)
+                     (concat "?pkg="
+                             (url-hexify-string (slime-current-package)))
+                   ""))
+            (fragment (if fragment-1
+                          (concat "#" (url-hexify-string
+                                       (format "%s %s" fragment-1 fragment-2)))
+                        "")))
+        (cond ((null sexp-2)
+               (concat "pax:" (url-hexify-string sexp-1) pkg))
+              ((null fragment-2)
+               (let ((wall `((,sexp-1 (,sexp-2))
+                             (,sexp-2 (,sexp-1)))))
+                 (concat "pax-wall:" (url-hexify-string (format "%S" wall))
+                         pkg)))
+              (t
+               (concat "pax:" (url-hexify-string sexp-1) " "
+                       (url-hexify-string sexp-2) pkg fragment)))))))
 
 (defun mgl-pax-read-urllike-from-minibuffer (prompt)
-  (let ((slime-completion-at-point-functions
-         '(mgl-pax-complete-urllike-in-minibuffer)))
+  (let ((mgl-pax-navigating nil))
     (slime-read-from-minibuffer prompt)))
 
-(defun mgl-pax-completion-for-navigation-p ()
-  (not (equal slime-completion-at-point-functions
-              '(mgl-pax-complete-urllike-in-minibuffer))))
-
-(defun mgl-pax-complete-urllike-in-minibuffer ()
-  (or (mgl-pax-complete-locative-in-minibuffer)
-      (let ((end (point))
-            (beg (slime-symbol-start-pos)))
-        (list beg end (completion-table-dynamic #'slime-simple-completions)))))
-
-(defun mgl-pax-locatives-for-name (name)
+(defun mgl-pax-names-or-locatives (sexp-1 prefix)
   (let ((values (slime-eval
-                 `(cl:funcall (cl:find-symbol
-                               (cl:string '#:locatives-for-name-for-emacs)
-                               :mgl-pax)
-                              ,name ,(mgl-pax-completion-for-navigation-p)))))
+                 `(mgl-pax::names-or-locatives-for-emacs
+                   ,sexp-1 ,prefix :definitions ',(if mgl-pax-navigating
+                                                      'dref:definitions
+                                                    'mgl-pax::definitions*)))))
     (if (eq (cl-first values) :error)
         (error (cl-second values))
       (cl-second values))))
-
-;;; Return the path and fragment part of the schemeless URL.
-(defun mgl-pax-parse-path-and-fragment (url)
-  (let ((fragment-pos
-         ;; KLUDGE: If the first character is #, then don't treat it
-         ;; as the URL fragment separator for the sake of the
-         ;; alternative section ids in the hyperspec definition such
-         ;; as "#:" and "#".
-         (when (< 0 (length url))
-           (cl-position ?# url :start 1))))
-    (if fragment-pos
-        (list (cl-subseq url 0 fragment-pos)
-              (cl-subseq url (1+ fragment-pos)))
-      (list url nil))))
 
 ;;; Make sure the dynamic binding is used below even if w3m is not
 ;;; loaded at compilation time.
@@ -840,9 +892,7 @@ The suggested key binding is `C-.' to parallel `M-.'."
 
 (cl-defun mgl-pax-call-document-for-emacs (url dir &key ok-cont abort-cont)
   (mgl-pax-eval-async
-   `(cl:funcall (cl:find-symbol (cl:string '#:document-for-emacs)
-                                :mgl-pax)
-                ',url ',dir ',common-lisp-hyperspec-root)
+   `(mgl-pax::document-for-emacs  ',url ',dir ',common-lisp-hyperspec-root)
    (lambda (values)
      (if (eq (cl-first values) :url)
          (apply ok-cont (cl-rest values))
@@ -868,10 +918,8 @@ if the current page was generated from a PAX URL."
                                                (w3m-reload-this-page))))))))
 
 (defun mgl-pax-call-redocument-for-emacs (file-url dir cont)
-  (slime-eval-async
-      `(cl:funcall (cl:find-symbol (cl:string '#:redocument-for-emacs)
-                                   :mgl-pax)
-                   ',file-url ',dir ',common-lisp-hyperspec-root)
+  (slime-eval-async `(mgl-pax::redocument-for-emacs
+                      ',file-url ',dir ',common-lisp-hyperspec-root)
     (lambda (values)
       (if (eq (cl-first values) :error)
           (message "%s" (cl-second values))
@@ -879,7 +927,7 @@ if the current page was generated from a PAX URL."
   (message "Generating documentation ..."))
 
 
-;;;; Navigation commands for PAX doc
+;;;; Navigation commands for w3m PAX doc (see MGL-PAX::@BROWSING-WITH-W3M)
 ;;;;
 ;;;; These jump between the HTML anchors (<a id="...">) generated by
 ;;;; PAX before definitions (e.g. function signature lines, SECTION
@@ -940,7 +988,7 @@ Use it in a PAX doc buffer (see `mgl-pax-document')."
     (save-excursion
       (goto-char pos)
       (with-no-warnings
-        (unless (w3m-anchor)
+        (unless (mgl-pax-doc-url)
           (w3m-next-anchor)))
       (point))))
 
@@ -976,7 +1024,7 @@ move point to the beginning of the buffer."
     (save-excursion
       (goto-char (point-min))
       (with-no-warnings (w3m-next-anchor))
-      (let ((url (with-no-warnings (w3m-anchor))))
+      (let ((url (mgl-pax-doc-url)))
         (when url
           (if strip-fragment-p
               (with-no-warnings (w3m-url-strip-fragment url))
@@ -1004,7 +1052,7 @@ move point to the beginning of the buffer."
     (when pos
       (save-excursion
         (goto-char pos)
-        (mgl-pax-doc-pax-url (with-no-warnings (w3m-anchor)))))))
+        (mgl-pax-doc-pax-url (mgl-pax-doc-url))))))
 
 (defun mgl-pax-doc-edit-first-definition ()
   "Visit the source of the first PAX definition on the page."
@@ -1015,7 +1063,16 @@ move point to the beginning of the buffer."
   (save-excursion
     (goto-char (point-min))
     (mgl-pax-doc-next-definition)
-    (mgl-pax-doc-pax-url (with-no-warnings (w3m-anchor)))))
+    (mgl-pax-doc-pax-url (mgl-pax-doc-url))))
+
+(defun mgl-pax-doc-url ()
+  ;; This is equivalent to `(w3m-anchor)' but works even if this file
+  ;; is byte-compiled. Without this trickery, the call to `w3m-anchor'
+  ;; would be an invalid function error because it is really a macro.
+  (when (featurep 'w3m)
+    (setf (symbol-function 'mgl-pax-doc-url)
+          (eval '(lambda ()
+                   (w3m-anchor))))))
 
 
 ;;;; Make `M-.' (`slime-edit-definition') work on links in w3m PAX
@@ -1027,19 +1084,14 @@ move point to the beginning of the buffer."
 ;;; PAX reference encoded in the fragment part of the URL if any.
 (defun mgl-pax-doc-edit-definition (name &optional where)
   (ignore name where)
-  (let ((url (and (fboundp 'w3m-anchor)
-                  (mgl-pax-doc-pax-url (w3m-anchor)))))
+  (let ((url (mgl-pax-doc-pax-url (mgl-pax-doc-url))))
     (mgl-pax-doc-edit-pax-definition url)))
+
+(add-hook 'slime-edit-definition-hooks 'mgl-pax-doc-edit-definition)
 
 (defun mgl-pax-doc-edit-pax-definition (pax-url)
   (when (string-prefix-p "pax:" pax-url)
-    (slime-eval-async
-        ;; Silently fail if the function is not available.
-        `(cl:when (cl:find-package :mgl-pax)
-                  (cl:funcall
-                   (cl:find-symbol (cl:string '#:locate-pax-url-for-emacs)
-                                   :mgl-pax)
-                   ',pax-url))
+    (slime-eval-async `(mgl-pax::locate-pax-url-for-emacs  ',pax-url)
       'mgl-pax-visit-locations)))
 
 (defun mgl-pax-doc-pax-url (url)
@@ -1050,42 +1102,29 @@ move point to the beginning of the buffer."
            (when fragment
              (concat "pax:" fragment))))))
 
-(add-hook 'slime-edit-definition-hooks 'mgl-pax-doc-edit-definition)
+(defun mgl-pax-parse-path-and-fragment (url)
+  (let ((fragment-pos (cl-position ?# url :start 1)))
+    (if fragment-pos
+        (list (cl-subseq url 0 fragment-pos)
+              (cl-subseq url (1+ fragment-pos)))
+      (list url nil))))
 
 
-;;;; Determining the current definition
+;;;; Clicking on a locative in a non-w3m browser focusses on the Emacs
+;;;; window and visit the source location of the corresponding
+;;;; definition (see MGL-PAX::@BROWSING-WITH-OTHER-BROWSERS).
 
-(defun mgl-pax-current-definition-possible-names ()
-  (save-excursion
-    (when (looking-at "(")
-      (ignore-errors (down-list)))
-    (cl-loop for name-snippet-and-pos
-             = (mgl-pax-current-sexp-first-arg-snippet-and-pos)
-             when name-snippet-and-pos
-             collect name-snippet-and-pos
-             while (ignore-errors (backward-up-list 1 t t)
-                                  t))))
+(defun mgl-pax-edit-for-cl (dspec-and-location-list)
+  ;; There may be no `lisp-mode' buffer at all.
+  (ignore-errors (slime-recently-visited-buffer 'lisp-mode))
+  (mgl-pax-sync-current-buffer)
+  (x-focus-frame nil)
+  (raise-frame)
+  (mgl-pax-visit-locations dspec-and-location-list))
 
-;;; Return 1. the first argument of the current sexp if it's a symbol,
-;;; 2. the Slime source location :SNIPPET, 3. the start position of
-;;; the sexp. If any movement fails or the first argument is not a
-;;; symbol, then return nil.
-(defun mgl-pax-current-sexp-first-arg-snippet-and-pos ()
-  (ignore-errors
-    (save-excursion
-      (backward-up-list 1 t t)
-      (let ((snippet (mgl-pax-next-sexp))
-            (pos (point)))
-        (when (< 200 (length snippet))
-          (setq snippet (cl-subseq snippet 0 200)))
-        (down-list)
-        (slime-forward-sexp)
-        (forward-char)
-        ;; `name' can be a symbol or a string ...
-        (let ((name (mgl-pax-next-sexp)))
-          ;; ... but currently never a list.
-          (unless (string-prefix-p "(" name)
-            (list name snippet pos)))))))
+(defun mgl-pax-sync-current-buffer ()
+  ;; https://emacs.stackexchange.com/questions/10921/why-doesnt-changing-buffer-in-filter-function-have-any-effect-in-ert
+  (set-buffer (window-buffer (selected-window))))
 
 
 (defun mgl-pax-current-definition-toggle-view ()
@@ -1096,42 +1135,19 @@ In a PAX doc buffer, it's equivalent to pressing `v'
   (if (mgl-pax-in-doc-buffer-p)
       (mgl-pax-doc-edit-current-definition)
     (mgl-pax-with-component (:mgl-pax/document)
-      (mgl-pax-current-definition-pax-url 'mgl-pax-document))))
+      (mgl-pax-document (mgl-pax-current-definition-pax-url)))))
 
-(defun mgl-pax-current-definition-pax-url (cont)
-  (slime-eval-async
-      `(cl:funcall (cl:find-symbol (cl:string
-                                    '#:current-definition-pax-url-for-emacs)
-                                   :mgl-pax)
-                   ',(buffer-name)
-                   ',(buffer-file-name)
-                   ',(mgl-pax-current-definition-possible-names))
-    (lambda (values)
-      (if (eq (cl-first values) :error)
-          (message "%s" (cl-second values))
-        (apply cont (cl-rest values))))))
+(defun mgl-pax-current-definition-pax-url ()
+  (let ((values (slime-eval `(mgl-pax::current-definition-pax-url-for-emacs
+                              ',(buffer-name)
+                              ',(buffer-file-name)
+                              ',(mgl-pax-current-definition-possible-names)))))
+    (if (eq (cl-first values) :error)
+        (message "%s" (cl-second values))
+      (cl-second values))))
 
 
-(defun mgl-pax-edit-parent-section ()
-  "Look up the definition of parent section of the definition
-`point' is in as if with `M-.' (`slime-edit-definition'). If
-there are multiple containing sections, then pop up a selection
-buffer."
-  (interactive)
-  (mgl-pax-with-component (:mgl-pax/navigate)
-    (mgl-pax-find-parent-section #'mgl-pax-visit-locations)))
-
-(defun mgl-pax-find-parent-section (cont)
-  (slime-eval-async
-      `(cl:funcall (cl:find-symbol (cl:string '#:find-parent-section-for-emacs)
-                                   :mgl-pax)
-                   ',(buffer-name)
-                   ',(buffer-file-name)
-                   ',(mgl-pax-current-definition-possible-names))
-    cont))
-
-
-;;;; Apropos
+;;;; Apropos (see MGL-PAX::@APROPOS)
 
 (defun mgl-pax-apropos (string &optional external-only package
                                case-sensitive)
@@ -1223,7 +1239,7 @@ The empty string means the current package."
   (mgl-pax-apropos "" (not internal) (concat "'" package) nil))
 
 
-;;;; Transcribe
+;;;; Transcribe (see MGL-PAX::@TRANSCRIBING-WITH-EMACS)
 
 (defun mgl-pax-transcribe-last-expression ()
   "A bit like C-u C-x C-e (slime-eval-last-expression) that
@@ -1301,8 +1317,7 @@ input will not be changed."
 
 (defun mgl-pax-transcribe (start end syntax update-only echo
                                  first-line-special-p dynenv)
-  (slime-eval
-   `(cl:funcall (cl:find-symbol (cl:string '#:transcribe-for-emacs) :mgl-pax)
+  (slime-eval `(mgl-pax::transcribe-for-emacs
                 ,(buffer-substring-no-properties start end)
                 ',syntax ',update-only ',echo ',first-line-special-p ,dynenv)))
 

@@ -200,19 +200,16 @@
                                       (member char '(#\# #\?)))
                                     string :start pos)))
          (prog1 (urldecode (subseq string pos path-end))
-           (setq pos (if path-end
-                         (1+ path-end)
-                         nil)))))
+           (setq pos path-end))))
      ;; query
-     (when (and pos (< pos len))
-       (let ((query-end (position #\# string :start pos)))
-         (prog1 (urldecode (subseq string pos query-end))
-           (setq pos (if query-end
-                         (1+ query-end)
-                         nil)))))
+     (when (and pos (< pos len) (char= (aref string pos) #\?))
+       (let ((query-end (position #\# string :start (1+ pos))))
+         (prog1 (urldecode (subseq string (1+ pos) query-end))
+           (setq pos query-end))))
      ;; fragment
-     (when (and pos (< pos len))
-       (urldecode (subseq string pos))))))
+     (if (and pos (< pos len) (char= (aref string pos) #\#))
+         (urldecode (subseq string (1+ pos)))
+         (assert (null pos))))))
 
 (defun make-url (&key scheme authority path encoded-path encoded-query fragment)
   (with-output-to-string (out)
