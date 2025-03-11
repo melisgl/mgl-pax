@@ -1433,7 +1433,10 @@ This is [Self-referencing][e042].
     (test-clhs-section-1))
   (with-failure-expected ()
     (let ((*document-link-to-hyperspec* nil))
-      (test-clhs-section-1))))
+      (test-clhs-section-1)))
+  (check-ref-sets (dref-apropos "lambda-list-directed"
+                                :locative-types '(:all))
+                  `(,(xref "3.4.4.1.2" '(pax:clhs section)))))
 
 (defun test-clhs-section-1 ()
   ;; "A.1" and "3.4" are section ids in the CLHS.

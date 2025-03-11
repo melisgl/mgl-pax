@@ -182,9 +182,14 @@
                           (if morep
                               (consider symbol)
                               (return)))))))))
+      ;; KLUDGE: If NAME had to be matched again below, then it would
+      ;; filter out e.g. CLHS sections that matched the title because
+      ;; the canonical name is a section id like "3.4.1".
+      (setq name nil)
       (sort-references
        (remove-duplicate-drefs/nonstable
-        ;; Filter again, this time on the canonical form of the DREF.
+        ;; Filter again, this time on DREF, so that, for example, we
+        ;; filter out string names when we need to.
         (remove-if-not
          #'matching-reference-p
          (loop for name in (hash-table-keys matching-names)
