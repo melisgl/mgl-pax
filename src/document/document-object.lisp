@@ -344,31 +344,36 @@
 
 (defmethod document-object* ((dref include-dref) stream)
   "See the INCLUDE locative."
-  (let ((locative-args (dref-locative-args dref)))
-    (destructuring-bind (source &key (line-prefix "") header footer
-                                  header-nl footer-nl) locative-args
-      (multiple-value-bind (file start-loc end-loc) (include-region source)
-        (let ((start (source-location-adjusted-file-position start-loc))
-              (end (source-location-adjusted-file-position end-loc)))
-          (cond ((and start-loc (null start))
-                 (warn "~S cannot find ~S ~S" 'include :start start-loc))
-                ((and end-loc (null end))
-                 (warn "~S cannot find ~S ~S" 'include :end end-loc))
-                (t
-                 (let ((text (file-subseq file start end)))
-                   (when header
-                     (format stream "~A" header))
-                   (when header-nl
-                     (format stream "~&")
-                     (format stream header-nl)
-                     (format stream "~%"))
-                   (format stream "~A" (prefix-lines line-prefix text))
-                   (when footer
-                     (format stream footer))
-                   (when footer-nl
-                     (format stream "~&")
-                     (format stream footer-nl)
-                     (format stream "~%"))))))))))
+  (unless *first-pass*
+    (let ((locative-args (dref-locative-args dref)))
+      (destructuring-bind (source &key (line-prefix "") header footer
+                                    header-nl footer-nl) locative-args
+        (multiple-value-bind (file start-loc end-loc) (include-region source)
+          (let ((start (source-location-adjusted-file-position start-loc))
+                (end (source-location-adjusted-file-position end-loc)))
+            (cond ((and start-loc (null start))
+                   (warn "~S cannot find ~S ~S" 'include :start start-loc))
+                  ((and end-loc (null end))
+                   (warn "~S cannot find ~S ~S" 'include :end end-loc))
+                  (t
+                   (write-string
+                    (codify-and-link
+                     (with-output-to-string (stream)
+                       (let ((text (file-subseq file start end)))
+                         (when header
+                           (format stream "~A" header))
+                         (when header-nl
+                           (format stream "~&")
+                           (format stream header-nl)
+                           (format stream "~%"))
+                         (format stream "~A" (prefix-lines line-prefix text))
+                         (when footer
+                           (format stream footer))
+                         (when footer-nl
+                           (format stream "~&")
+                           (format stream footer-nl)
+                           (format stream "~%")))))
+                    stream)))))))))
 
 (defun file-subseq (pathname &optional start end)
   (with-open-file (stream pathname)

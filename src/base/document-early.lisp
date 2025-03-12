@@ -220,6 +220,9 @@
 (declaim (ftype function find-link))
 (declaim (ftype function link-to-definition))
 
+;;; For DOCUMENT-OBJECT* (METHOD () (INCLUDE-DREF T))
+(declaim (ftype function codify-and-link))
+
 ;;; We need this for DOCUMENTING-REFERENCE.
 (defvar *documenting-reference* nil)
 
