@@ -429,7 +429,9 @@
                    (xref-name reference))))
         (when generic-function-name
           (emit "the generic-function `~A`"
-                (prin1-to-markdown generic-function-name))))
+                (prin1-to-markdown generic-function-name
+                                   ;; It goes between backtics.
+                                   :escape-inline nil))))
       (when (< 1 (length (definitions* (xref-name reference))))
         (emit "the [disambiguation page](~A)"
               (finalize-pax-url (name-to-pax-url (xref-name reference)))))
