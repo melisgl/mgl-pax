@@ -137,10 +137,15 @@ Use (TYPEP DREF 'SECTION-DREF) instead of (EQ (DREF-LOCATIVE-TYPE
 DREF) 'SECTION).
 * TODO It's unclear how pressing M-. or C-. on X shall combine (definitions 'x) and (definitions "X").
 Or (definitions '|x|), for that matter. See [[M-. on Foo]] below.
-* MAYBE replace titles even if not linking in :FORMAT :PLAIN?
-* MAYBE always replace titles but follow the link suppression rules?
+
+Should PAX::MAP-NAMES-IN-RAW list instead of find the first? This
+would make 'mgl-pax' refer to "MGL-PAX" package even if there is an
+"mgl-pax" asdf:system.
 * BUG M-. on Foo doesn't find |Foo|
 With plain Slime either.
+
+* MAYBE replace titles even if not linking in :FORMAT :PLAIN?
+* MAYBE always replace titles but follow the link suppression rules?
 * TODO finalize DREF::MAP-DEFINITIONS and DREF::MAP-NAMES
 They may not be the right API. Especially with PAX:CLHS, there is a
 huge number of possible names, and the glossary terms, section ids,
@@ -180,7 +185,4 @@ There is always mgl-pax-apropos for case-insensitive matching.
 * TODO mgl-pax-apropos: no way to have a space in string name?
 How to apropos "lambda list"?
 * TODO test codify and link INCLUDEd stuff
-* TODO should PAX::MAP-NAMES-IN-RAW list instead of find the first?
-This would make 'mgl-pax' refer to "MGL-PAX" package even if there is
-an "mgl-pax" asdf:system.
 * TODO completion in mgl-pax-apropos

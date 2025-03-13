@@ -64,12 +64,19 @@
     (:title "`\\\\M-.`"
      :url "http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions"))
 
+(define-glossary-term @quicklisp (:title "Quicklisp"
+                                  :url "https://quicklisp.org/"))
+
 (define-glossary-term @oaoo (:title "OAOO"
                              :url "http://c2.com/cgi/wiki?OnceAndOnlyOnce"))
 
 (define-glossary-term @markdown
     (:title "Markdown"
      :url "https://daringfireball.net/projects/markdown/"))
+
+(define-glossary-term @w3m
+    (:title "w3m"
+     :url "https://emacs-w3m.github.io/info/emacs-w3m.html"))
 
 (defsection @introduction (:title "Introduction")
   """_What if documentation really lived in the code?_
@@ -175,26 +182,107 @@
   documentation is generated.""")
 
 (defsection @emacs-setup (:title "Emacs Setup")
-  """Load `src/mgl-pax.el` in Emacs, and maybe set up some key bindings.
+  """Here is a quick recipe for setting up PAX for use via @SLIME to
+  take advantage of the [conveniences on offer][@EMACS-FUNCTIONALITY].
+  Conversely, there is no need to do any of this just to use
+  DEFSECTION, write docstrings and for @GENERATING-DOCUMENTATION.
 
-  If you installed PAX with Quicklisp, the location of `mgl-pax.el`
-  may change with updates, and you may want to copy the current
-  version of `mgl-pax.el` to a stable location:
+  If PAX was installed from @QUICKLISP, then evaluate this in CL to
+  copy the Elisp code to a stable location:
 
       (mgl-pax:install-pax-elisp "~/quicklisp/")
 
-  Then, assuming the Elisp file is in the `~/quicklisp` directory, add
+  Assuming the Elisp file is in the `~/quicklisp/` directory, add
   something like this to your `.emacs`:
 
   ```elisp
-  (load "~/quicklisp/mgl-pax.el")
-  (mgl-pax-hijack-slime-doc-keys)
+  (add-to-list 'load-path "~/quicklisp/")
+  (require 'mgl-pax)
   (global-set-key (kbd "C-.") 'mgl-pax-document)
   (global-set-key (kbd "s-x t") 'mgl-pax-transcribe-last-expression)
   (global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
+  (mgl-pax-hijack-slime-doc-keys)
+  ```"""
+  (@emacs-functionality section)
+  (@emacs-quicklisp section)
+  (@emacs-loading section)
+  (@emacs-keys section))
+
+(defsection @emacs-functionality (:title "Functionality Provided")
+  "- For @NAVIGATING-IN-EMACS, loading `mgl-pax` extends
+    `slime-edit-definitions` (@M-.) by adding
+    `mgl-pax-edit-definitions` to `slime-edit-definition-hooks`. There
+    are no related variables to customize.
+
+  - For @BROWSING-LIVE-DOCUMENTATION, `mgl-pax-browser-function` and
+    `mgl-pax-web-server-port` can be customized in Elisp. To browse
+    within Emacs, choose `w3m-browse-url` (see @W3M), and make sure
+    both the w3m binary and the w3m Emacs package are installed. On
+    Debian, simply install the `w3m-el` package. With other browser
+    functions, a [HUNCHENTOOT][package] web server is started.
+
+   - See @TRANSCRIBING-WITH-EMACS for how to use the transcription
+     features. There are no related variables to customize.")
+
+(defsection @emacs-quicklisp (:title "Installing from Quicklisp")
+  """If you installed PAX with Quicklisp, the location of `mgl-pax.el`
+  may change with updates, and you may want to copy the current
+  version of `mgl-pax.el` to a stable location by evaluting this in
+  CL:
+
+      (mgl-pax:install-pax-elisp "~/quicklisp/")
+
+  If working from, say, a git checkout, there is no need for this
+  step."""
+  (install-pax-elisp function))
+
+(defsection @emacs-loading (:title "Loading PAX")
+  """Assuming the Elisp file is in the `~/quicklisp/` directory, add
+  something like this to your `.emacs`:
+
+  ```elisp
+  (add-to-list 'load-path "~/quicklisp/")
+  (require 'mgl-pax)
   ```
 
-  Instead of the global binding above, one could bind `C-.` locally in
+  If the Lisp variable `mgl-pax-autoload` is true (the default), then
+  MGL-PAX will be loaded in the connected Lisp on-demand via @SLIME.
+
+  If loading fails, `mgl-pax` will be unloaded from Emacs and any
+  [overridden Slime key bindings][@EMACS-KEYS] restored.
+  """)
+
+(defun install-pax-elisp (target-dir)
+  "Copy `mgl-pax.el` distributed with this package to TARGET-DIR."
+  (uiop:copy-file (asdf:system-relative-pathname "mgl-pax" "src/mgl-pax.el")
+                  (merge-pathnames "mgl-pax.el"
+                                   (uiop:ensure-directory-pathname
+                                    target-dir))))
+
+(defun check-pax-elisp-version (pax-elisp-version)
+  (let ((pax-cl-version '(0 4 0)))
+    (unless (equal pax-elisp-version pax-cl-version)
+      (cerror "Ignore version mismatch."
+              "~@<In Emacs, mgl-pax-version is ~S, ~
+              which is different from the CL version ~S. ~
+              You may need to ~S and M-x mgl-pax-reload. ~
+              See ~S for more.~:@>"
+              pax-elisp-version pax-cl-version 'mgl-pax:install-pax-elisp
+              '@emacs-setup)))
+  t)
+
+(defsection @emacs-keys (:title "Setting up Keys")
+  """The recommended key bindings are this:
+
+  ```
+  (global-set-key (kbd "C-.") 'mgl-pax-document)
+  (global-set-key (kbd "s-x t") 'mgl-pax-transcribe-last-expression)
+  (global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
+  (mgl-pax-hijack-slime-doc-keys)
+  ```
+
+  The global key bindings above are global because their commands work
+  in any mode. If that's not desired, one may bind `C-.` locally in
   all Slime related modes like this:
 
   ```elisp
@@ -204,49 +292,16 @@
   For reference, `mgl-pax-hijack-slime-doc-keys` makes the following
   changes to `slime-doc-map` (assuming it's bound to `C-c C-d`):
 
-  - `C-c C-d a`: `mgl-pax-apropos` (replaces `slime-apropos`)
-  - `C-c C-d z`: `mgl-pax-aproposa-all` (replaces `slime-apropos-all`)
-  - `C-c C-d p`: `mgl-pax-apropos-package` (replaces `slime-apropos-package`)
-  - `C-c C-d d`: `mgl-pax-document` (replaces `slime-describe-symbol`)
-  - `C-c C-d f`: `mgl-pax-document` (replaces `slime-describe-function`)
-  - `C-c C-d c`: `mgl-pax-current-definition-toggle-view`
-  - `C-c C-d u`: `mgl-pax-edit-parent-section`
+  - `C-c C-d a`: replaces `slime-apropos` with `mgl-pax-apropos`
+  - `C-c C-d z`: replaces `slime-apropos-all` with `mgl-pax-aproposa-all`
+  - `C-c C-d p`: replaces `slime-apropos-package` with `mgl-pax-apropos-package`
+  - `C-c C-d d`: replaces `slime-describe-symbol` with `mgl-pax-document`
+  - `C-c C-d f`: replaces `slime-describe-function` with `mgl-pax-document`
+  - `C-c C-d c`: installs `mgl-pax-current-definition-toggle-view`
+  - `C-c C-d u`: installs `mgl-pax-edit-parent-section`
 
-
-  For @NAVIGATING-IN-EMACS, loading `mgl-pax.el` extends
-  `slime-edit-definitions` (`M-.`) by adding
-  `mgl-pax-edit-definitions` to `slime-edit-definition-hooks`. There
-  isn't much else to set up.
-
-  For @BROWSING-LIVE-DOCUMENTATION, `mgl-pax-browser-function` and
-  `mgl-pax-web-server-port` can be customized in Elisp. To browse
-  within Emacs, choose `w3m-browse-url` (see
-  [w3m](https://emacs-w3m.github.io/info/emacs-w3m.html)), and make
-  sure both the w3m binary and the w3m Emacs package are installed. On
-  Debian, simply install the `w3m-el` package. With other browser
-  functions, a [HUNCHENTOOT][package] web server is started.
-
-  See @TRANSCRIBING-WITH-EMACS for how to use the transcription features.
-
-  """
-  (install-pax-elisp function))
-
-(defun install-pax-elisp (target-dir)
-  "Copy `mgl-pax.el` distributed with this package to TARGET-DIR."
-  (uiop:copy-file (asdf:system-relative-pathname "mgl-pax" "src/mgl-pax.el")
-                  (merge-pathnames "mgl-pax.el"
-                                   (uiop:ensure-directory-pathname
-                                    target-dir))))
-
-(defun check-pax-elisp-version (version)
-  (let ((required-version '(0 4 0)))
-    (unless (equal required-version version)
-      (cerror "Ignore version mismatch."
-              "~@<In Emacs, mgl-pax-version is ~S, ~
-              which is different from the required ~S. ~
-              You may need to M-x mgl-pax-reload.~:@>"
-              version required-version '@emacs-setup)))
-  t)
+  `mgl-pax-unhijack-slime-doc-keys` reverts these changes.
+  """)
 
 (defsection @links (:title "Links and Systems")
   "Here is the [official

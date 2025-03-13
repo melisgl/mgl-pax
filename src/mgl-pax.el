@@ -96,12 +96,15 @@ other mgl-pax commands in interactive use."
       asdf-system
       autoload
       (lambda (loadedp)
-        (if (not loadedp)
-            (mgl-pax-system-not-loaded-error asdf-system interactivep)
-          (cl-flet ((foo () ,@body))
-            (if (eq asdf-system :mgl-pax/web)
-                (mgl-pax-call-with-web-server/async #'foo)
-              (foo))))))))
+        (cond ((not loadedp)
+               (mgl-pax-system-not-loaded-error asdf-system interactivep))
+              ((eq loadedp :failed)
+               (mgl-pax-autoloading-failed-error asdf-system))
+              (t
+               (cl-flet ((foo () ,@body))
+                 (if (eq asdf-system :mgl-pax/web)
+                     (mgl-pax-call-with-web-server/async #'foo)
+                   (foo)))))))))
 
 (defun mgl-pax-system-not-loaded-error (asdf-system interactivep)
   (error "The ASDF system %s is not loaded (%s)."
@@ -109,16 +112,21 @@ other mgl-pax commands in interactive use."
                          "non-interactive call"
                        (format "mgl-pax-autoload is %s" mgl-pax-autoload))))
 
+(defun mgl-pax-autoloading-failed-error (asdf-system)
+  (unload-feature 'mgl-pax :force)
+  (error "Loading the ASDF system %s failed. Unloaded mgl-pax from Emacs."
+         asdf-system))
+
 (defun mgl-pax-maybe-autoload (asdf-system autoload cont)
   (let ((check-form
          `(cl:let ((f (cl:and (cl:find-package :mgl-pax)
                               (cl:find-symbol
                                (cl:string '#:check-pax-elisp-version)
                                :mgl-pax))))
-            (cl:when f
-              (cl:funcall f ',mgl-pax-version)
-              (asdf:component-loaded-p (cl:ignore-errors
-                                        (asdf:find-system ',asdf-system)))))))
+              (cl:when (cl:and f (asdf:component-loaded-p
+                                  (cl:ignore-errors
+                                   (asdf:find-system ',asdf-system))))
+                       (cl:funcall f ',mgl-pax-version)))))
     (cond ((slime-eval check-form)
            (when cont (funcall cont t)))
           ((not autoload)
@@ -127,12 +135,23 @@ other mgl-pax commands in interactive use."
            ;; This is the only async path.
            (slime-eval-async
                `(cl:progn
-                 (cl:format t "~&;; Autoloading ~S for Emacs ~
-                              (mgl-pax-autoload is t).~%" ',asdf-system)
-                 (asdf:load-system ',asdf-system)
-                 (cl:format t ";; Done autoloading ~S for Emacs~%"
-                            ',asdf-system)
-                 (cl:and ,check-form :async))
+                 (cl:format cl:t "~&;; Autoloading ~S for Emacs ~
+                                 (mgl-pax-autoload is t).~%" ',asdf-system)
+                 (cl:cond
+                  ((cl:ignore-errors (asdf:load-system ',asdf-system)
+                                     cl:t)
+                   (cl:format cl:t ";; Done autoloading ~S for Emacs~%"
+                              ',asdf-system)
+                   (cl:and ,check-form :async))
+                  (cl:t
+                   (cl:format
+                    cl:t
+                    ";; FAILED autoloading ~S~%~
+                     ;; Proceeding to unload mgl-pax from Emacs~%~
+                     ;; Once PAX loads cleanly, you may want to ~
+                     (require 'mgl-pax) in Emacs.~%"
+                    ',asdf-system)
+                   :failed)))
              cont)))))
 
 (defun mgl-pax-component-loaded-p (asdf-system)
@@ -149,21 +168,45 @@ See MGL-PAX::@EMACS-SETUP."
   (let ((sourcefile (concat (file-name-sans-extension mgl-pax-file-name)
                             ".el")))
     (load-file sourcefile)))
+
+;;; This is called automatically by (unload-feature 'mgl-pax).
+(defun mgl-pax-unload-function ()
+  (mgl-pax-unhijack-slime-doc-keys)
+  (advice-remove 'slime-edit-definition #'slime-edit-definition@mgl-pax))
 
 
 ;;;; MGL-PAX::@EMACS-SETUP
 
+(defvar mgl-pax-slime-doc-map-overrides
+  '((?a slime-apropos mgl-pax-apropos)
+    (?z slime-apropos-all mgl-pax-apropos-all)
+    (?p slime-apropos-package mgl-pax-apropos-package)
+    (?d slime-describe-symbol mgl-pax-document)
+    (?f slime-describe-function mgl-pax-document)
+    (?c nil mgl-pax-current-definition-toggle-view)
+    (?u nil mgl-pax-edit-parent-section)))
+
 (defun mgl-pax-hijack-slime-doc-keys ()
   "See MGL-PAX::@EMACS-SETUP."
   (interactive)
-  (slime-bind-keys slime-doc-map t
-                   '((?a mgl-pax-apropos)
-                     (?z mgl-pax-apropos-all)
-                     (?p mgl-pax-apropos-package)
-                     (?d mgl-pax-document)
-                     (?f mgl-pax-document)
-                     (?c mgl-pax-current-definition-toggle-view)
-                     (?u mgl-pax-edit-parent-section))))
+  (mgl-pax-override-keys slime-doc-map mgl-pax-slime-doc-map-overrides))
+
+(defun mgl-pax-override-keys (keymap overrides &optional reversep)
+  (cl-loop for (key old new) in overrides do
+           (when reversep
+             (cl-rotatef old new))
+           ;; This is like `slime-bind-keys' with BOTHP.
+           (let ((key `[,key]))
+             (when (eq (lookup-key keymap key) old)
+               (define-key keymap key new)))
+           (let ((key `[(control ,key)]))
+             (when (eq (lookup-key keymap key) old)
+               (define-key keymap key new)))))
+
+(defun mgl-pax-unhijack-slime-doc-keys ()
+  "See MGL-PAX::@EMACS-SETUP."
+  (interactive)
+  (mgl-pax-override-keys slime-doc-map mgl-pax-slime-doc-map-overrides t))
 
 
 ;;;; Browser configuration (see MGL-PAX::@EMACS-SETUP)
@@ -1318,5 +1361,6 @@ input will not be changed."
   (slime-eval `(mgl-pax::transcribe-for-emacs
                 ,(buffer-substring-no-properties start end)
                 ',syntax ',update-only ',echo ',first-line-special-p ,dynenv)))
+
 
 (provide 'mgl-pax)

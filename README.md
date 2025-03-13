@@ -6,6 +6,10 @@
 
 - [1 Introduction][685e]
 - [2 Emacs Setup][8541]
+    - [2.1 Functionality Provided][d4a9]
+    - [2.2 Installing from Quicklisp][f3f4]
+    - [2.3 Loading PAX][d3fc]
+    - [2.4 Setting up Keys][cfab]
 - [3 Links and Systems][ba74]
     - [3.1 The mgl-pax ASDF System][6fdb]
     - [3.2 The mgl-pax/full ASDF System][d761]
@@ -231,26 +235,102 @@ documentation is generated.
 
 ## 2 Emacs Setup
 
-Load `src/mgl-pax.el` in Emacs, and maybe set up some key bindings.
+Here is a quick recipe for setting up PAX for use via [SLIME][6be7] to
+take advantage of the [conveniences on offer][d4a9].
+Conversely, there is no need to do any of this just to use
+[`DEFSECTION`][72b4], write docstrings and for [Generating Documentation][2c93].
 
-If you installed PAX with Quicklisp, the location of `mgl-pax.el`
-may change with updates, and you may want to copy the current
-version of `mgl-pax.el` to a stable location:
+If PAX was installed from [Quicklisp][1539], then evaluate this in CL to
+copy the Elisp code to a stable location:
 
     (mgl-pax:install-pax-elisp "~/quicklisp/")
 
-Then, assuming the Elisp file is in the `~/quicklisp` directory, add
+Assuming the Elisp file is in the `~/quicklisp/` directory, add
 something like this to your `.emacs`:
 
 ```elisp
-(load "~/quicklisp/mgl-pax.el")
-(mgl-pax-hijack-slime-doc-keys)
+(add-to-list 'load-path "~/quicklisp/")
+(require 'mgl-pax)
 (global-set-key (kbd "C-.") 'mgl-pax-document)
 (global-set-key (kbd "s-x t") 'mgl-pax-transcribe-last-expression)
 (global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
+(mgl-pax-hijack-slime-doc-keys)
 ```
 
-Instead of the global binding above, one could bind `C-.` locally in
+
+<a id="x-28MGL-PAX-3A-40EMACS-FUNCTIONALITY-20MGL-PAX-3ASECTION-29"></a>
+
+### 2.1 Functionality Provided
+
+- For [Navigating Sources in Emacs][3386], loading `mgl-pax` extends
+  `slime-edit-definitions` ([`M-.`][cb15]) by adding
+  `mgl-pax-edit-definitions` to `slime-edit-definition-hooks`. There
+  are no related variables to customize.
+
+- For [Browsing Live Documentation][a595], `mgl-pax-browser-function` and
+  `mgl-pax-web-server-port` can be customized in Elisp. To browse
+  within Emacs, choose `w3m-browse-url` (see [w3m][7439]), and make sure
+  both the w3m binary and the w3m Emacs package are installed. On
+  Debian, simply install the `w3m-el` package. With other browser
+  functions, a HUNCHENTOOT web server is started.
+
+- See [Transcribing with Emacs][f5bd] for how to use the transcription
+   features. There are no related variables to customize.
+
+
+<a id="x-28MGL-PAX-3A-40EMACS-QUICKLISP-20MGL-PAX-3ASECTION-29"></a>
+
+### 2.2 Installing from Quicklisp
+
+If you installed PAX with Quicklisp, the location of `mgl-pax.el`
+may change with updates, and you may want to copy the current
+version of `mgl-pax.el` to a stable location by evaluting this in
+CL:
+
+    (mgl-pax:install-pax-elisp "~/quicklisp/")
+
+If working from, say, a git checkout, there is no need for this
+step.
+
+<a id="x-28MGL-PAX-3AINSTALL-PAX-ELISP-20FUNCTION-29"></a>
+
+- [function] **INSTALL-PAX-ELISP** *TARGET-DIR*
+
+    Copy `mgl-pax.el` distributed with this package to `TARGET-DIR`.
+
+<a id="x-28MGL-PAX-3A-40EMACS-LOADING-20MGL-PAX-3ASECTION-29"></a>
+
+### 2.3 Loading PAX
+
+Assuming the Elisp file is in the `~/quicklisp/` directory, add
+something like this to your `.emacs`:
+
+```elisp
+(add-to-list 'load-path "~/quicklisp/")
+(require 'mgl-pax)
+```
+
+If the Lisp variable `mgl-pax-autoload` is true (the default), then
+MGL-PAX will be loaded in the connected Lisp on-demand via [SLIME][6be7].
+
+If loading fails, `mgl-pax` will be unloaded from Emacs and any
+[overridden Slime key bindings][cfab] restored.
+
+<a id="x-28MGL-PAX-3A-40EMACS-KEYS-20MGL-PAX-3ASECTION-29"></a>
+
+### 2.4 Setting up Keys
+
+The recommended key bindings are this:
+
+```
+(global-set-key (kbd "C-.") 'mgl-pax-document)
+(global-set-key (kbd "s-x t") 'mgl-pax-transcribe-last-expression)
+(global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
+(mgl-pax-hijack-slime-doc-keys)
+```
+
+The global key bindings above are global because their commands work
+in any mode. If that's not desired, one may bind `C-.` locally in
 all Slime related modes like this:
 
 ```elisp
@@ -260,41 +340,21 @@ all Slime related modes like this:
 For reference, `mgl-pax-hijack-slime-doc-keys` makes the following
 changes to `slime-doc-map` (assuming it's bound to `C-c C-d`):
 
-- `C-c C-d a`: `mgl-pax-apropos` (replaces `slime-apropos`)
+- `C-c C-d a`: replaces `slime-apropos` with `mgl-pax-apropos`
 
-- `C-c C-d z`: `mgl-pax-aproposa-all` (replaces `slime-apropos-all`)
+- `C-c C-d z`: replaces `slime-apropos-all` with `mgl-pax-aproposa-all`
 
-- `C-c C-d p`: `mgl-pax-apropos-package` (replaces `slime-apropos-package`)
+- `C-c C-d p`: replaces `slime-apropos-package` with `mgl-pax-apropos-package`
 
-- `C-c C-d d`: `mgl-pax-document` (replaces `slime-describe-symbol`)
+- `C-c C-d d`: replaces `slime-describe-symbol` with `mgl-pax-document`
 
-- `C-c C-d f`: `mgl-pax-document` (replaces `slime-describe-function`)
+- `C-c C-d f`: replaces `slime-describe-function` with `mgl-pax-document`
 
-- `C-c C-d c`: `mgl-pax-current-definition-toggle-view`
+- `C-c C-d c`: installs `mgl-pax-current-definition-toggle-view`
 
-- `C-c C-d u`: `mgl-pax-edit-parent-section`
+- `C-c C-d u`: installs `mgl-pax-edit-parent-section`
 
-For [Navigating Sources in Emacs][3386], loading `mgl-pax.el` extends
-`slime-edit-definitions` (`M-.`) by adding
-`mgl-pax-edit-definitions` to `slime-edit-definition-hooks`. There
-isn't much else to set up.
-
-For [Browsing Live Documentation][a595], `mgl-pax-browser-function` and
-`mgl-pax-web-server-port` can be customized in Elisp. To browse
-within Emacs, choose `w3m-browse-url` (see
-[w3m](https://emacs-w3m.github.io/info/emacs-w3m.html)), and make
-sure both the w3m binary and the w3m Emacs package are installed. On
-Debian, simply install the `w3m-el` package. With other browser
-functions, a HUNCHENTOOT web server is started.
-
-See [Transcribing with Emacs][f5bd] for how to use the transcription features.
-
-
-<a id="x-28MGL-PAX-3AINSTALL-PAX-ELISP-20FUNCTION-29"></a>
-
-- [function] **INSTALL-PAX-ELISP** *TARGET-DIR*
-
-    Copy `mgl-pax.el` distributed with this package to `TARGET-DIR`.
+`mgl-pax-unhijack-slime-doc-keys` reverts these changes.
 
 <a id="x-28MGL-PAX-3A-40LINKS-20MGL-PAX-3ASECTION-29"></a>
 
@@ -1470,7 +1530,7 @@ In interactive use, `mgl-pax-document` behaves similarly to
 
     - `"lambda list<TAB>` lists `"lambda list"` and `"lambda list
       keywords"`, both HyperSpec glossary entries. This is similar
-      to `common-lisp-hyperspec-glossary-term` in Elisp, but also
+      to `common-lisp-hyperspec-glossary-term` in Elisp but also
       works for HyperSpec section titles.
 
     - `"#<TAB>` lists all sharpsign reader macros (similar to
@@ -1707,7 +1767,7 @@ backticks) alone. Outside code blocks, escape `$` by prefixing it
 with a backslash to scare MathJax off.
 
 Escaping all those backslashes in TeX fragments embedded in Lisp
-strings can be a pain. [Pythonic String Reader][d3fc] can help with that.
+strings can be a pain. [Pythonic String Reader][d3fc5] can help with that.
 
 <a id="x-28MGL-PAX-3A-40CODIFICATION-20MGL-PAX-3ASECTION-29"></a>
 
@@ -3745,6 +3805,7 @@ they are presented.
   [1322]: https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks "fenced code blocks"
   [13a9]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29 "MGL-PAX:UPDATE-ASDF-SYSTEM-READMES FUNCTION"
   [1538]: dref/README.md#x-28DREF-3AXREF-20CLASS-29 "DREF:XREF CLASS"
+  [1539]: https://quicklisp.org/ "Quicklisp"
   [1567]: http://www.lispworks.com/documentation/HyperSpec/Body/22_ccb.htm '"22.3.3.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [172e]: dref/README.md#x-28METHOD-20MGL-PAX-3ALOCATIVE-29 "METHOD MGL-PAX:LOCATIVE"
   [1743]: https://emacs-w3m.github.io/info/emacs-w3m_10.html#Key-Binding "w3m's default key bindings"
@@ -3860,6 +3921,7 @@ they are presented.
   [72b4]: #x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFSECTION MGL-PAX:MACRO"
   [730f]: #x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20VARIABLE-29 "MGL-PAX:*DISCARD-DOCUMENTATION-P* VARIABLE"
   [7328]: http://www.lispworks.com/documentation/HyperSpec/Body/f_apropo.htm "APROPOS-LIST (MGL-PAX:CLHS FUNCTION)"
+  [7439]: https://emacs-w3m.github.io/info/emacs-w3m.html "w3m"
   [7445]: #x-28MGL-PAX-3A-40INTERESTING-20MGL-PAX-3AGLOSSARY-TERM-29 "interesting"
   [7506]: dref/README.md#x-28READTABLE-20MGL-PAX-3ALOCATIVE-29 "READTABLE MGL-PAX:LOCATIVE"
   [76ab]: http://www.lispworks.com/documentation/HyperSpec/Body/22_ccc.htm '"22.3.3.3" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -3980,14 +4042,17 @@ they are presented.
   [cc04]: dref/README.md#x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:READER MGL-PAX:LOCATIVE"
   [cd66]: http://www.lispworks.com/documentation/HyperSpec/Body/02_de.htm '"2.4.5" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [cda7]: dref/README.md#x-28DREF-3AXREF-20FUNCTION-29 "DREF:XREF FUNCTION"
+  [cfab]: #x-28MGL-PAX-3A-40EMACS-KEYS-20MGL-PAX-3ASECTION-29 "Setting up Keys"
   [d162]: http://www.lispworks.com/documentation/HyperSpec/Body/e_error.htm "ERROR (MGL-PAX:CLHS CONDITION)"
   [d1ca]: #x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29 "Documentation Generation Implementation Notes"
   [d1dc]: #x-28MGL-PAX-3A-40GLOSSARY-TERMS-20MGL-PAX-3ASECTION-29 "Glossary Terms"
   [d273]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_f.htm#format_directive '"format directive" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [d296]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cia.htm '"22.3.9.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [d3b3]: dref/README.md#x-28DREF-EXT-3ARESOLVE-2A-20GENERIC-FUNCTION-29 "DREF-EXT:RESOLVE* GENERIC-FUNCTION"
-  [d3fc]: https://github.com/smithzvk/pythonic-string-reader "Pythonic String Reader"
+  [d3fc]: #x-28MGL-PAX-3A-40EMACS-LOADING-20MGL-PAX-3ASECTION-29 "Loading PAX"
+  [d3fc5]: https://github.com/smithzvk/pythonic-string-reader "Pythonic String Reader"
   [d451]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRINT (MGL-PAX:CLHS FUNCTION)"
+  [d4a9]: #x-28MGL-PAX-3A-40EMACS-FUNCTIONALITY-20MGL-PAX-3ASECTION-29 "Functionality Provided"
   [d5a2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_car_c.htm "CAR (MGL-PAX:CLHS FUNCTION)"
   [d5a9]: http://www.lispworks.com/documentation/HyperSpec/Body/t_stream.htm "STREAM (MGL-PAX:CLHS CLASS)"
   [d5e1]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhq.htm '"2.4.8.17" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -4036,6 +4101,7 @@ they are presented.
   [f25f]: #x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE* VARIABLE"
   [f275]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cda.htm '"22.3.4.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [f2f5]: http://www.lispworks.com/documentation/HyperSpec/Body/e_smp_cn.htm "SIMPLE-CONDITION (MGL-PAX:CLHS CONDITION)"
+  [f3f4]: #x-28MGL-PAX-3A-40EMACS-QUICKLISP-20MGL-PAX-3ASECTION-29 "Installing from Quicklisp"
   [f47d]: #x-28MGL-PAX-3A-40TRANSCRIPT-CONISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Transcript Consistency Checking"
   [f4fd]: #x-28MGL-PAX-3AREGISTER-DOC-IN-PAX-WORLD-20FUNCTION-29 "MGL-PAX:REGISTER-DOC-IN-PAX-WORLD FUNCTION"
   [f585]: #x-28MGL-PAX-3A-2ADOCUMENT-HYPERSPEC-ROOT-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HYPERSPEC-ROOT* VARIABLE"
