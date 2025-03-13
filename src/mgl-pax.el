@@ -52,6 +52,10 @@
   ;; For emacs 23, look for bundled version
   (require 'cl-lib "lib/cl-lib")
   (require 'slime))
+
+(eval-when-compile
+  ;; For byte-compiling uses of the `w3m-anchor' macro
+  (require 'w3m))
 
 
 ;;;; Autoloading of MGL-PAX on the Common Lisp side
@@ -605,7 +609,8 @@ buffer."
 (defun mgl-pax-require-w3m ()
   (when (mgl-pax-use-w3m)
     (unless (require 'w3m nil t)
-      (error "PAX requires w3m but it cannot be loaded. Please install it."))))
+      (error "mgl-pax is configured to use w3m but it cannot be loaded."))
+    (advice-add 'w3m-goto-url :around #'mgl-pax-w3m-goto-url)))
 
 (defun mgl-pax-document (pax-url)
   "Browse the documentation of CL definitions for PAX-URL.
@@ -734,7 +739,7 @@ macro on that page."
     (if (mgl-pax-in-doc-buffer-p)
         ;; When "entering" the documentation browser, reload (see
         ;; `mgl-pax-doc-reload').
-        (w3m-goto-url pax-url :reload)
+        (with-no-warnings (w3m-goto-url pax-url :reload))
       (let* ((doc-buffer (if (mgl-pax-in-doc-buffer-p)
                              (current-buffer)
                            (cl-first mgl-pax-doc-buffers))))
@@ -756,7 +761,7 @@ macro on that page."
                                 (let ((package (slime-current-package)))
                                   (pop-to-buffer (cl-first mgl-pax-doc-buffers))
                                   (setq slime-buffer-package package)))
-                              (w3m-goto-url url :reload)
+                              (with-no-warnings (w3m-goto-url url :reload))
                               (mgl-pax-set-up-doc-buffer doc-dir))))))
           ;; Display the docs of this very documentation browser if
           ;; the input is the empty string.
@@ -771,7 +776,7 @@ macro on that page."
                         (if (null url)
                             (mgl-pax-prompt-and-document)
                           (let ((package (slime-current-package)))
-                            (w3m-goto-url url :reload)
+                            (with-no-warnings (w3m-goto-url url :reload))
                             (setq slime-buffer-package package))
                           (mgl-pax-set-up-doc-buffer doc-dir)))
              :abort-cont (lambda (condition)
@@ -902,8 +907,6 @@ macro on that page."
    abort-cont)
   (message "Generating documentation ..."))
 
-(advice-add 'w3m-goto-url :around #'mgl-pax-w3m-goto-url)
-
 (defun mgl-pax-doc-reload ()
   "Like `w3m-reload-this-page', but also regenerate the documentation
 if the current page was generated from a PAX URL."
@@ -1005,7 +1008,7 @@ the names of the SYMBOL-PACKAGEs of their names."
   (interactive)
   (let ((url (mgl-pax-doc-url-up)))
     (when url
-      (w3m-goto-url url)
+      (with-no-warnings (w3m-goto-url url))
       t)))
 
 (defun mgl-pax-doc-up-definition-and-beginning-of-buffer ()
@@ -1016,7 +1019,7 @@ move point to the beginning of the buffer."
   (let ((url (mgl-pax-doc-url-up t)))
     (if (null url)
         (goto-char (point-min))
-      (w3m-goto-url url)
+      (with-no-warnings (w3m-goto-url url))
       t)))
 
 (defun mgl-pax-doc-url-up (&optional strip-fragment-p)
@@ -1066,13 +1069,8 @@ move point to the beginning of the buffer."
     (mgl-pax-doc-pax-url (mgl-pax-doc-url))))
 
 (defun mgl-pax-doc-url ()
-  ;; This is equivalent to `(w3m-anchor)' but works even if this file
-  ;; is byte-compiled. Without this trickery, the call to `w3m-anchor'
-  ;; would be an invalid function error because it is really a macro.
   (when (featurep 'w3m)
-    (setf (symbol-function 'mgl-pax-doc-url)
-          (eval '(lambda ()
-                   (w3m-anchor))))))
+    (w3m-anchor)))
 
 
 ;;;; Make `M-.' (`slime-edit-definition') work on links in w3m PAX
