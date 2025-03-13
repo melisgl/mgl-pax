@@ -256,7 +256,7 @@
 (defun mgl-pax-test-sync-hard ()
   (slime-sync-to-top-level 1)
   (mgl-pax-sync-current-buffer)
-  (sit-for 0.1))
+  (sit-for 0.2))
 
 (def-slime-test mgl-pax-edit-definitions/test-defs
     (name snippet &optional snippet2)
@@ -818,11 +818,9 @@
 (ert-deftest test-mgl-pax-apropos ()
   (with-browsers
    (with-temp-lisp-and-non-lisp-buffer
-    (slime-sync-to-top-level 1)
+    (mgl-pax-test-sync-hard)
     (mgl-pax-apropos "install-pax-elisp")
-    (sit-for 1)
-    (slime-sync-to-top-level 1)
-    (mgl-pax-sync-current-buffer)
+    (mgl-pax-test-sync-hard)
     (should (eq major-mode 'w3m-mode))
     (let ((contents (w3m-contents)))
       (should (substringp "Apropos" contents))

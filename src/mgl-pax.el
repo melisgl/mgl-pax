@@ -1250,8 +1250,7 @@ with a symbol or package name are accepted.
 
 With a prefix arg, you're interactively asked for parameters of
 the search. Without a prefix arg, EXTERNAL-ONLY defaults to T,
-packages and locative types are not filtered, and case does not
-matter.
+packages are not filtered, and case does not matter.
 
 Also, see `mgl-pax-apropos-all'."
   (interactive (list nil nil nil nil))

@@ -155,6 +155,8 @@ used directly for completion of a name given a full locative.
 
 MAP-NAMES may not even belong in DREF as what it lists seems a bit too
 tailored to PAX. Or MAP-DEFINITIONS could do its job too.
+* MAYBE Should DREF-APROPOS should be made more flexible?
+regexp, generic filter functions, non-listing maps?
 * BUG (low) locative completion: nicknames don't work
 print f<TAB> -> "print function"
 print dref:f<TAB> -> no completions
@@ -185,3 +187,9 @@ There is always mgl-pax-apropos for case-insensitive matching.
 How to apropos "lambda list"?
 * TODO test codify and link INCLUDEd stuff
 * TODO completion in mgl-pax-apropos
+Doesn't work for the second locative or for :all and co.
+confused by 'pri, too.
+* MAYBE (pax:clhs pax:section) in mgl-pax-apropos
+* TODO @BROWSING-LIVE-DOCUMENTATION without Emacs
+* TODO hijack should be a customization option
+so that it's done even if pax is unloaded and reloaded.
