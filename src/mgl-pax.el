@@ -1050,7 +1050,8 @@ first one will be chosen heuristically based on the similarity of
 the names of the SYMBOL-PACKAGEs of their names."
   (interactive)
   (let ((url (mgl-pax-doc-url-up)))
-    (when url
+    (if (null url)
+        (message "No containing PAX section found")
       (with-no-warnings (w3m-goto-url url))
       t)))
 
@@ -1061,7 +1062,9 @@ move point to the beginning of the buffer."
   (interactive)
   (let ((url (mgl-pax-doc-url-up t)))
     (if (null url)
-        (goto-char (point-min))
+        (progn
+          (message "No containing PAX section found")
+          (goto-char (point-min)))
       (with-no-warnings (w3m-goto-url url))
       t)))
 
@@ -1132,8 +1135,12 @@ move point to the beginning of the buffer."
 
 (defun mgl-pax-doc-edit-pax-definition (pax-url)
   (when (string-prefix-p "pax:" pax-url)
-    (slime-eval-async `(mgl-pax::locate-pax-url-for-emacs  ',pax-url)
-      'mgl-pax-visit-locations)))
+    (let ((dspec-and-location-list
+           (slime-eval `(mgl-pax::locate-pax-url-for-emacs ',pax-url))))
+      (if dspec-and-location-list
+          (mgl-pax-visit-locations dspec-and-location-list)
+        (message "No source location for %s"
+                 (cl-subseq (url-unhex-string pax-url) 4))))))
 
 (defun mgl-pax-doc-pax-url (url)
   (cond ((string-prefix-p "pax:" url)
