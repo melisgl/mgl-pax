@@ -402,14 +402,17 @@
                   (list reference)
                   (format-also-see reference))))
 
-(defun format-up-links (sections reference)
+(defun format-up-links (sections dref)
   (when sections
     (with-standard-io-syntax*
       (list
        (with-output-to-string (s)
          (format s "Up: ")
-         (dolist (section (sort-by-proximity sections (xref-name reference)))
-           (format s "~S " (section-name section))))))))
+         (dolist (section (sort-by-proximity sections dref))
+           (format s "<a href='~A#~A'>~A</a> "
+                   (finalize-pax-url (dref-to-pax-url (locate section)))
+                   (urlencode (dref-to-anchor dref))
+                   (section-title-or-name section))))))))
 
 #+nil
 (defun shorten-arglist (string &optional except-reference)

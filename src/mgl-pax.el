@@ -1069,23 +1069,26 @@ move point to the beginning of the buffer."
       t)))
 
 (defun mgl-pax-doc-url-up (&optional strip-fragment-p)
-  (when (mgl-pax-doc-has-up-line-p)
-    (save-excursion
-      (goto-char (point-min))
-      (with-no-warnings (w3m-next-anchor))
-      (let ((url (mgl-pax-doc-url)))
-        (when url
-          (if strip-fragment-p
-              (with-no-warnings (w3m-url-strip-fragment url))
-            url))))))
+  (let ((up-url (mgl-pax-doc-url-up-1)))
+    (when up-url
+      (if strip-fragment-p
+          (with-no-warnings (w3m-url-strip-fragment up-url))
+        up-url))))
 
-(defun mgl-pax-doc-has-up-line-p ()
+(defun mgl-pax-doc-url-up-1 ()
   (save-excursion
     (goto-char (point-min))
-    (forward-line)
-    (and (<= (+ (point) 4) (buffer-size))
-         (string= (buffer-substring-no-properties (point) (+ (point) 4))
-                  "Up: "))))
+    (cond ((mgl-pax-use-w3m)
+           (forward-line)
+           (when (and (<= (+ (point) 4) (buffer-size))
+                      (string= (buffer-substring-no-properties
+                                (point) (+ (point) 4))
+                               "Up: "))
+             (with-no-warnings (w3m-next-anchor)
+                               (w3m-anchor))))
+          ;; This is only for testing non-w3m browsers
+          ((search-forward "Up: " nil t)
+           (w3m-anchor)))))
 
 (defun mgl-pax-doc-edit-current-definition ()
   "Visit the source of the current PAX definition on the page."

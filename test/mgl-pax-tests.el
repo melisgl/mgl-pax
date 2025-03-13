@@ -23,15 +23,19 @@
 (cl-defmacro with-temp-lisp-and-non-lisp-buffer (&body body)
   `(progn
      (with-temp-lisp-buffer
+      (message "buffer: lisp")
       ,@body)
      (with-temp-buffer
+      (message "buffer: other")
        ,@body)))
 
 (cl-defmacro with-browsers (&body body)
   `(progn
      (let ((mgl-pax-browser-function 'w3m-browse-url))
+       (message "browser: w3m")
        ,@body)
      (let ((mgl-pax-browser-function 'w3m-browse-url*))
+       (message "browser: other")
        ,@body)))
 
 ;;; Fake non-w3m browser to test the web server.
@@ -575,6 +579,31 @@
           (should (substringp "* [function] %FOO-SIMPLE" (w3m-contents)))
           (mgl-pax-doc-reload)
           (slime-sync-to-top-level 1))
+      (when (eq major-mode 'w3m-mode)
+        (kill-buffer))))))
+
+(ert-deftest test-mgl-pax-document/up ()
+  (with-browsers
+   (with-temp-lisp-and-non-lisp-buffer
+    (insert "pax::@markdown-syntax-highlighting")
+    (unwind-protect
+        (progn
+          (call-interactively 'mgl-pax-document)
+          (mgl-pax-test-sync-hard)
+          (should (eq major-mode 'w3m-mode))
+          (let ((up-pax-url "pax:MGL-PAX:@MARKDOWN-SUPPORT%20MGL-PAX:SECTION\
+#MGL-PAX:@MARKDOWN-SYNTAX-HIGHLIGHTING%20MGL-PAX:SECTION"))
+            (if (eq mgl-pax-browser-function 'w3m-browse-url)
+                (should (equal up-pax-url (mgl-pax-doc-url-up)))
+              (should (substringp up-pax-url (mgl-pax-doc-url-up)))
+              (should (string-prefix-p "http" (mgl-pax-doc-url-up)))
+              (call-interactively 'mgl-pax-doc-up-definition)
+              (mgl-pax-test-sync-hard)
+              (should (eq major-mode 'w3m-mode))
+              (should-be-looking-at
+               (if (eq mgl-pax-browser-function 'w3m-browse-url)
+                   "2 Syntax Highlighting"
+                 "← ↑ → ↺ λ\n\n2 Syntax Highlighting")))))
       (when (eq major-mode 'w3m-mode)
         (kill-buffer))))))
 
