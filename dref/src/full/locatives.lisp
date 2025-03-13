@@ -1239,9 +1239,6 @@
     (locate-error "The name ~S is not NIL." name))
   (%make-dref 'lambda-dref name (cons locative-type locative-args)))
 
-(defmethod map-definitions (fn name (locative-type (eql 'lambda)))
-  (declare (ignore fn name)))
-
 (defmethod arglist* ((dref lambda-dref))
   (let ((arglist (getf (dref-locative-args dref) :arglist '%not-there))
         (arglist-type (getf (dref-locative-args dref) :arglist-type t)))

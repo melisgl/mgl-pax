@@ -124,7 +124,8 @@
   (test-map-documentable)
   (test-table-of-contents)
   (test-definitions-for-pax-url-path)
-  (test-with-document-context))
+  (test-with-document-context)
+  (test-asdf-system-name-of))
 
 (deftest test-urlencode ()
   (is (equal (mgl-pax::urlencode "hello") "hello"))
@@ -1792,3 +1793,16 @@ example section
         ;; ASDF:TEST-SYSTEM).
         (with-compilation-unit (:override t)
           (compile nil '(lambda () x)))))))
+
+
+(deftest test-asdf-system-name-of ()
+  (is (equal "mgl-pax" (mgl-pax::asdf-system-name-of mgl-pax::@pax-manual)))
+  (with-test ("cached")
+    (mgl-pax::with-filename-to-asdf-system-name-map
+      (is (equal "mgl-pax"
+                 (mgl-pax::asdf-system-name-of mgl-pax::@pax-manual)))))
+  (eval '(defun no-source ()))
+  (is (null (mgl-pax::asdf-system-name-of (dref 'no-source 'function))))
+  (with-failure-expected ((not (dref-test::working-locative-p 'package)))
+    (is (equal (mgl-pax::asdf-system-name-of* (dref 'no-source 'function))
+               "mgl-pax-test"))))

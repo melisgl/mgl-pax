@@ -285,14 +285,18 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
 ### The mgl-pax ASDF System
 
 - Version: 0.4.0
-- Description: Documentation system, browser, generator.
-- Long Description: The set of dependencies of the MGL-PAX system is
-  kept light, and its heavier dependencies are autoloaded via ASDF
-  when the relevant functionality is accessed. See the
-  MGL-PAX/NAVIGATE, MGL-PAX/DOCUMENT, MGL-PAX/TRANSCRIBE and
-  MGL-PAX/FULL systems. To keep deployed code small, client systems
-  should declare an ASDF dependency on this system, never on the
-  others, which are intended for autoloading and interactive use.
+- Description: Documentation system, browser, generator. See the
+  MGL-PAX::@PAX-MANUAL.
+- Long Description: The set of dependencies of the
+  `mgl-pax` system is kept light, and its heavier
+  dependencies are autoloaded via ASDF when the relevant functionality
+  is accessed. See the `mgl-pax/navigate`,
+  `mgl-pax/document`,
+  `mgl-pax/transcribe` and
+  `mgl-pax/full` systems. To keep deployed code small,
+  client systems should declare an ASDF dependency on this system,
+  never on the others, which are intended for autoloading and
+  interactive use.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
@@ -302,9 +306,10 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
 
 ### The mgl-pax/full ASDF System
 
-- Description: MGL-PAX with all features preloaded except MGL-PAX/WEB.
+- Description: The `mgl-pax` system with all features
+  preloaded except `mgl-pax/web`.
 - Long Description: Do not declare a dependency on this system. It
-  is autoloaded.
+  is for interactive use.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
@@ -934,9 +939,11 @@ A close relative of `M-.` is `C-.` for @BROWSING-LIVE-DOCUMENTATION.
 
 ### The mgl-pax/navigate ASDF System
 
-- Description: Slime `M-.` support for MGL-PAX.
-- Long Description: Autoloaded by Elisp. See
-  MGL-PAX::@NAVIGATING-IN-EMACS.
+- Description: Support for MGL-PAX::@NAVIGATING-IN-EMACS via Slime's
+  `MGL-PAX::@M-.` in MGL-PAX.
+- Long Description: Do not declare a dependency on this system. It is
+  autoloaded by Elisp or by accessing the functionality provided if the
+  `mgl-pax` system is loaded.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
@@ -1319,9 +1326,11 @@ symbols, there is no package system to advantage of.
 
 ### The mgl-pax/document ASDF System
 
-- Description: Documentation generation support for MGL-PAX.
+- Description: Support for MGL-PAX::@GENERATING-DOCUMENTATION in
+  MGL-PAX.
 - Long Description: Do not declare a dependency on this system. It is
-  autoloaded. See MGL-PAX::@GENERATING-DOCUMENTATION.
+  autoloaded by Elisp or by accessing the functionality provided if the
+  `mgl-pax` system is loaded.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
@@ -1329,10 +1338,18 @@ symbols, there is no package system to advantage of.
 
 ### Browsing Live Documentation
 
-Documentation can be browsed live in Emacs or with an external
-browser. HTML documentation, complete with @CODIFICATION and
-@LINKING, is generated from docstrings of all kinds of Lisp
-definitions and PAX SECTIONs.
+Documentation for definitions in the running Lisp can be browsed
+directly without generating documentation in the offline manner.
+HTML documentation, complete with @CODIFICATION and @LINKING, is
+generated from docstrings of all kinds of definitions and PAX
+SECTIONs in the running Lisp on the fly. This allows ad-hoc
+exploration of the Lisp, much like `describe-function`,
+`apropos-command` and other online help commands in Emacs, for which
+direct parallels are provided.
+
+Still, even without Emacs and @SLIME, limited functionality can be
+accessed through @PAX-LIVE-HOME-PAGE by starting the live
+documentation web server manually.
 
 If @EMACS-SETUP has been done, the Elisp function
 `mgl-pax-document` (maybe bound to `C-.`) generates and displays
@@ -1390,9 +1407,9 @@ In interactive use, `mgl-pax-document` behaves similarly to
         pax::@pax-manual pax:section pax::@browsing-live-documentation pax:section
 
 - If the empty string is entered at the prompt, and there is no
-  existing w3m buffer or w3m is not used, then sections registered
-  in MGL-PAX::@PAX-WORLD are listed. If there is a w3m buffer, then
-  entering the empty string displays that buffer.
+  existing w3m buffer or w3m is not used, then @PAX-LIVE-HOME-PAGE
+  is visited. If there is a w3m buffer, then entering the empty
+  string displays that buffer.
 
 The convenience function
 `mgl-pax-current-definition-toggle-view` (`C-c C-d c`) documents the
@@ -1485,6 +1502,76 @@ The returned references are presented in two groups: those with
 non-symbol and those with symbol @NAMEs. The non-symbol group is
 sorted by locative type then by name. The symbol group is sorted by
 name then by locative type.
+
+#### PAX Live Home Page
+
+When @BROWSING-LIVE-DOCUMENTATION, the home page provides
+quick access to documentation of the definitions in the system. In
+Emacs, when `mgl-pax-document` is invoked with the empty string, it
+visits the home page. The home page may also be accessed directly by
+going to the root page of the web server (if one is started).
+
+- [function] ENSURE-WEB-SERVER &KEY PORT HYPERSPEC-ROOT
+
+    Start or update a web server on PORT for @BROWSING-LIVE-DOCUMENTATION.
+    Returns the base URL of the server (e.g. `http://localhost:32790`),
+    which goes to the @PAX-LIVE-HOME-PAGE. If the web server is running
+    already `(ENSURE-WEB-SERVER)` simply returns its base URL.
+    
+    Note that even when using Emacs but @BROWSING-WITH-OTHER-BROWSERS,
+    the web server is started automatically. When @BROWSING-WITH-W3M, no
+    web server is involved at all. Calling this function explicitly is
+    only needed if the Emacs integration is not used, or to override
+    PORT and HYPERSPEC-ROOT.
+    
+    - If PORT is NIL or 0, then the server will use any free port.
+    
+    - If there is a server already running and PORT is not NIL or 0,
+      then the server is restarted on PORT.
+    
+    - If HYPERSPEC-ROOT is NIL, the HyperSpec pages will be served from
+      any previously provided HYPERSPEC-ROOT or, failing that, from
+      *DOCUMENT-HYPERSPEC-ROOT*.
+    
+    - If HYPERSPEC-ROOT is non-NIL, then pages in the HyperSpec will be
+      served from HYPERSPEC-ROOT. The following command changes the root
+      without affecting the server in any other way:
+    
+            (ensure-web-server :hyperspec-root "/usr/share/doc/hyperspec/")
+
+
+##### Top-level PAX Sections
+
+The @PAX-LIVE-HOME-PAGE lists the top-level PAX sections: those
+that have no other SECTIONs referencing them (see DEFSECTION).
+
+##### ASDF:SYSTEMs and Related PACKAGEs
+
+The @PAX-LIVE-HOME-PAGE lists all ASDF:SYSTEMs and PACKAGEs in the Lisp.
+For easier overview, the they are grouped based on their
+SOURCE-LOCATIONs. Two systems are in the same group if the directory
+of one (i.e. the directory of the `.asd` file in which it was
+defined) is the same or is below the other's.
+
+A PACKAGE presented under a group of systems, if the SOURCE-LOCATION
+of the package is below the the top-most directory among the systems
+in the group.
+
+##### Systemless Packages
+
+The @PAX-LIVE-HOME-PAGE lists PACKAGEs
+unrelated to any ASDF:SYSTEM
+as systemless.
+
+##### Browse by Locative Types
+
+The @PAX-LIVE-HOME-PAGE provides quick links to @APROPOS result
+pages for all LOCATIVE-TYPES which may have definitions.
+
+- [glossary-term] related
+
+    Two definitions are *related* if the directory of one's
+    SOURCE-LOCATIONs contains the directory of the other's.
 
 ### Markdown Support
 
@@ -2625,10 +2712,11 @@ triple-quote syntax can be enabled with:
 
 ### The mgl-pax/transcribe ASDF System
 
-- Description: Transcription support for MGL-PAX.
-- Long Description: Do not declare a dependency on this system.
-  It is autoloaded by MGL-PAX:TRANSCRIBE and by the Emacs
-  integration (see MGL-PAX::@TRANSCRIPTS).
+- Description: Support for MGL-PAX::@TRANSCRIPTS in
+  MGL-PAX.
+- Long Description: Do not declare a dependency on this system. It is
+  autoloaded by Elisp or by accessing the functionality provided if
+  the `mgl-pax` system is loaded.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)

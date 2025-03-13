@@ -55,6 +55,13 @@
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (defmethod locative-type-lambda-list ((symbol (eql ',locative-type)))
        (values ',lambda-list ,(first docstring) ,*package*))
+     (defmethod dref::map-definitions
+         (fn name (locative-type (eql ',locative-type)))
+       (declare (ignorable fn name))
+       nil)
+     (defmethod dref::map-names (fn (locative-type (eql ',locative-type)))
+       (declare (ignorable fn))
+       nil)
      (declare-pseudo-locative-type ',locative-type)))
 
 (defun check-docstring-only-body (body)

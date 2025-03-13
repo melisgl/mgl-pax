@@ -50,8 +50,12 @@
     (assert (char= (aref uri 0) #\/))
     (subseq uri 1)))
 
-(defmacro with-document-open-args-for-web ((title) &body body)
-  `(let ((*document/open-extra-args*
+(defmacro with-document-open-args-for-web ((title &key (link-to-home t))
+                                           &body body)
+  `(let ((*document-html-top-blocks-of-links*
+           (when ,link-to-home
+             '((:id "link-to-home" :links (("/" "PAX Home"))))))
+         (*document/open-extra-args*
            `(:pages ((:objects :default
                       :header-fn ,(lambda (stream)
                                     (html-header stream
@@ -67,9 +71,9 @@
 
 (defun reference-to-edit-uri (dref)
   (let ((url (finalize-pax-url (dref-to-pax-url dref))))
-    (cond ((null (source-location dref))
-           nil)
-          ((find #\? url)
+    ;; Checking whether DREF has SOURCE-LOCATION is too expensive on
+    ;; large pages.
+    (cond ((find #\? url)
            (format nil "~A&edit" url))
           (t
            (format nil "~A?edit" url)))))
@@ -81,12 +85,11 @@
       (unless (equal scheme "pax")
         (error "~S doesn't have pax: scheme." pax-url))
       (when-let (drefs (definitions-for-pax-url-path path))
-        (assert (= (length drefs) 1))
-        (swank::with-connection ((swank::default-connection))
-          (let* ((dref (first drefs))
-                 (dspec (dref::definition-to-dspec dref))
-                 (location (source-location dref)))
-            (when (eq (first location) :location)
+        (when (= (length drefs) 1)
+          (swank::with-connection ((swank::default-connection))
+            (let* ((dref (first drefs))
+                   (dspec (dref::definition-to-dspec dref))
+                   (location (source-location dref)))
               (swank:eval-in-emacs `(mgl-pax-edit-for-cl
                                      '((,dspec ,location)))))))))))
 
@@ -157,8 +160,8 @@
 
 (defun handle-homepage-request ()
   (with-errors-to-html
-    (with-document-open-args-for-web ("PAX")
-      (document/open (pax-document-home-page) :stream nil))))
+    (with-document-open-args-for-web ("PAX" :link-to-home nil)
+      (document/open (pax-live-home-page) :stream nil))))
 
 ;;; HUNCHENTOOT:*DISPATCH-TABLE* will be bound to this locally to
 ;;; avoid conflicts with other HUNCHENTOOT servers running in the same
@@ -211,18 +214,48 @@
         (*read-eval* nil))
     (call-next-method)))
 
-(defun ensure-web-server (&key hyperspec-root port)
+(defun ensure-web-server-for-emacs (&key port hyperspec-root)
   (swank/backend:converting-errors-to-error-location
-    (if (not (hunchentoot:started-p *server*))
-        (%start-server port)
-        ;; Treat both NIL and 0 as 'any port'.
-        (when (and port (plusp port)
-                   (/= port (hunchentoot:acceptor-port *server*)))
-          (hunchentoot:stop *server*)
-          (%start-server port)))
-    (when hyperspec-root
-      (set-web-hyperspec-root hyperspec-root))
-    `(:base-url ,(web-base-url))))
+    `(:base-url ,(ensure-web-server :port port
+                                    :hyperspec-root hyperspec-root))))
+
+(defun/autoloaded ensure-web-server (&key port hyperspec-root)
+  """Start or update a web server on PORT for @BROWSING-LIVE-DOCUMENTATION.
+  Returns the base URL of the server (e.g. `http://localhost:32790`),
+  which goes to the @PAX-LIVE-HOME-PAGE. If the web server is running
+  already `(ENSURE-WEB-SERVER)` simply returns its base URL.
+
+  Note that even when using Emacs but @BROWSING-WITH-OTHER-BROWSERS,
+  the web server is started automatically. When @BROWSING-WITH-W3M, no
+  web server is involved at all. Calling this function explicitly is
+  only needed if the Emacs integration is not used, or to override
+  PORT and HYPERSPEC-ROOT.
+
+  - If PORT is NIL or 0, then the server will use any free port.
+
+  - If there is a server already running and PORT is not NIL or 0,
+    then the server is restarted on PORT.
+
+  - If HYPERSPEC-ROOT is NIL, the HyperSpec pages will be served from
+    any previously provided HYPERSPEC-ROOT or, failing that, from
+    *DOCUMENT-HYPERSPEC-ROOT*.
+
+  - If HYPERSPEC-ROOT is non-NIL, then pages in the HyperSpec will be
+    served from HYPERSPEC-ROOT. The following command changes the root
+    without affecting the server in any other way:
+
+          (ensure-web-server :hyperspec-root "/usr/share/doc/hyperspec/")
+  """
+  (if (not (hunchentoot:started-p *server*))
+      (%start-server port)
+      ;; Treat both NIL and 0 as 'any port'.
+      (when (and port (plusp port)
+                 (/= port (hunchentoot:acceptor-port *server*)))
+        (hunchentoot:stop *server*)
+        (%start-server port)))
+  (when hyperspec-root
+    (set-web-hyperspec-root hyperspec-root))
+  (web-base-url))
 
 (defun web-base-url ()
   (format nil "http://localhost:~S" (hunchentoot:acceptor-port *server*)))

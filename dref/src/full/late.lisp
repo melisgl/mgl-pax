@@ -240,6 +240,9 @@
               (symbol-name locative-type))
           (package-name (symbol-package locative-type))))
 
+(defun sort-locative-types (locative-types)
+  (sort locative-types #'string< :key #'locative-type-to-sort-key))
+
 ;;; Like REMOVE-DUPLICATES but does not maintain a stable order and
 ;;; faster because it first groups DREFs by name. The length of DREFs
 ;;; can easily be in the tens of thousands.

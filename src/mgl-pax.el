@@ -244,7 +244,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 (defvar mgl-pax-web-server-base-url)
 
 (defun mgl-pax-call-with-web-server/async (fn)
-  (slime-eval-async `(mgl-pax::ensure-web-server
+  (slime-eval-async `(mgl-pax::ensure-web-server-for-emacs
                       :hyperspec-root ',common-lisp-hyperspec-root
                       :port ,mgl-pax-web-server-port)
     (lambda (values)
@@ -761,7 +761,7 @@ macro on that page."
 (defun mgl-pax-document-pax-url/other (pax-url)
   (let ((pax-url (if (string= pax-url "pax:")
                      (mgl-pax-make-pax-eval-url
-                      '(mgl-pax::pax-document-home-page))
+                      '(mgl-pax::pax-live-home-page))
                    pax-url)))
     ;; Call `mgl-pax-call-document-for-emacs' with DIR nil to check
     ;; for errors (e.g. "no definition for xxx") before launching a
@@ -820,7 +820,7 @@ macro on that page."
           ;; the input is the empty string.
           (when (string= pax-url "pax:")
             (setq pax-url (mgl-pax-make-pax-eval-url
-                           '(mgl-pax::pax-document-home-page))))
+                           '(mgl-pax::pax-live-home-page))))
           ;; No doc buffer. Create a new dir.
           (let ((doc-dir (file-name-as-directory (make-temp-file "pax-doc" t))))
             (mgl-pax-call-document-for-emacs

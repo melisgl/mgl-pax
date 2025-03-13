@@ -145,3 +145,70 @@
   (with-input-from-string (stream string)
     (values (read-funny* stream)
             (file-position stream))))
+
+
+;;;; Determine the ASDF system a definition belongs to.
+
+(defvar *filename-to-asdf-system-name-map*)
+
+;;; Amortize the cost of ASDF-SYSTEM-NAME-OF and ASDF-SYSTEM-NAME-OF*
+;;; calls within the dynamic scope of BODY.
+(defmacro with-filename-to-asdf-system-name-map (&body body)
+  `(let ((*filename-to-asdf-system-name-map*
+           (if (boundp '*filename-to-asdf-system-name-map*)
+               *filename-to-asdf-system-name-map*
+               (filename-to-asdf-system-name-map))))
+     ,@body))
+
+;;;; Return the ASDF:SYSTEM DREF is defined in or NIL.
+(defun asdf-system-name-of (dref)
+  (when-let (source-location (source-location dref))
+    (when-let (file (source-location-file source-location))
+      (asdf-system-name-of-filename file))))
+
+;;; Like ASDF-SYSTEM-NAME-OF, but if DREF has no SOURCE-LOCATION then
+;;; fall back to the source location of the home package of DREF-NAME
+;;; (if it's a symbol).
+(defun asdf-system-name-of* (dref)
+  (if-let (file (file-of-dref dref))
+    (asdf-system-name-of-filename file)
+    (when (symbolp (dref-name dref))
+      (when-let (package-dref (locate (symbol-package (dref-name dref))))
+        (when-let (file (file-of-dref package-dref))
+          (asdf-system-name-of-filename file))))))
+
+(defun asdf-system-name-of-filename (filename)
+  (let ((filename (namestring filename)))
+    (if (boundp '*filename-to-asdf-system-name-map*)
+        (gethash filename *filename-to-asdf-system-name-map*)
+        (filename-to-asdf-system-name filename))))
+
+(defmacro do-asdf-files ((system-name filename) &body body)
+  (alexandria:with-unique-names (system component)
+    `(dolist (,system-name (asdf:registered-systems))
+       (let ((,system (asdf:find-system ,system-name)))
+         (dolist (,component (asdf/component:sub-components ,system))
+           (when (typep ,component 'asdf:cl-source-file)
+             (when-let (,filename (namestring
+                                   (slot-value
+                                    ,component
+                                    'asdf/component:absolute-pathname)))
+               ,@body)))))))
+
+(defun filename-to-asdf-system-name-map ()
+  (let ((h (make-hash-table :test #'equal)))
+    (do-asdf-files (system-name filename)
+      (setf (gethash filename h) system-name))
+    h))
+
+(defun filename-to-asdf-system-name (filename)
+  (let ((filename (namestring filename)))
+    (do-asdf-files (system-name filename-1)
+      ;; KLUDGE: Compare namestrings so that e.g. NIL vs :NEWEST in
+      ;; PATHNAME-VERSION is hopefully not a diference.
+      (when (equal filename-1 filename)
+        (return-from filename-to-asdf-system-name system-name)))))
+
+(defun file-of-dref (dref)
+  (when-let (source-location (source-location dref))
+    (source-location-file source-location)))

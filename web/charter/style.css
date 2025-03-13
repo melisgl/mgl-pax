@@ -428,6 +428,10 @@ a.symbol:hover { color: #229955; background-color: transparent; text-decoration:
   margin-bottom: 1em;
 }
 
+#link-to-home {
+  padding-left: 0;
+}
+
 .menu-block-title {
   font-size: 90%;
 }

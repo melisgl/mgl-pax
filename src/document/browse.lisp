@@ -3,10 +3,18 @@
 (in-readtable pythonic-string-syntax)
 
 (defsection @browsing-live-documentation (:title "Browsing Live Documentation")
-  """Documentation can be browsed live in Emacs or with an external
-  browser. HTML documentation, complete with @CODIFICATION and
-  @LINKING, is generated from docstrings of all kinds of Lisp
-  definitions and PAX SECTIONs.
+  """Documentation for definitions in the running Lisp can be browsed
+  directly without generating documentation in the offline manner.
+  HTML documentation, complete with @CODIFICATION and @LINKING, is
+  generated from docstrings of all kinds of definitions and PAX
+  SECTIONs in the running Lisp on the fly. This allows ad-hoc
+  exploration of the Lisp, much like `describe-function`,
+  `apropos-command` and other online help commands in Emacs, for which
+  direct parallels are provided.
+
+  Still, even without Emacs and @SLIME, limited functionality can be
+  accessed through @PAX-LIVE-HOME-PAGE by starting the live
+  documentation web server [manually][ensure-web-server].
 
   If @EMACS-SETUP has been done, the Elisp function
   `mgl-pax-document` (maybe bound to `C-.`) generates and displays
@@ -64,16 +72,17 @@
           pax::@pax-manual pax:section pax::@browsing-live-documentation pax:section
 
   - If the empty string is entered at the prompt, and there is no
-    existing w3m buffer or w3m is not used, then sections registered
-    in MGL-PAX::@PAX-WORLD are listed. If there is a w3m buffer, then
-    entering the empty string displays that buffer.
+    existing w3m buffer or w3m is not used, then @PAX-LIVE-HOME-PAGE
+    is visited. If there is a w3m buffer, then entering the empty
+    string displays that buffer.
 
   The convenience function
   `mgl-pax-current-definition-toggle-view` (`C-c C-d c`) documents the
   definition with point in it."""
   (@browsing-with-w3m section)
   (@browsing-with-other-browsers section)
-  (@apropos section))
+  (@apropos section)
+  (@pax-live-home-page section))
 
 (define-glossary-term @w3m-key-bindings
     (:title "w3m's default key bindings"
@@ -308,7 +317,7 @@
 (defun pax-eval (form)
   ;; For the sake of MGL-PAX/WEB, don't allow arbitrary evaluations.
   (unless (and (listp form)
-               (member (first form) '(pax-apropos* pax-document-home-page))
+               (member (first form) '(pax-apropos* pax-live-home-page))
                (every (lambda (arg)
                         (and (constantp arg)
                              (or (not (symbolp arg))
@@ -400,6 +409,7 @@
                                                           reference)
                                    reference)
                   (list reference)
+                  (format-asdf-detritus reference)
                   (format-also-see reference))))
 
 (defun format-up-links (sections dref)
@@ -413,6 +423,71 @@
                    (finalize-pax-url (dref-to-pax-url (locate section)))
                    (urlencode (dref-to-anchor dref))
                    (section-title-or-name section))))))))
+
+(defun format-asdf-detritus (dref)
+  (when (typep dref 'dref-ext:asdf-system-dref)
+    (with-filename-to-asdf-system-name-map
+      (let* ((name (dref-name dref))
+             (related-asdf-systems (related-asdf-systems name)))
+        (multiple-value-bind (packages-defined related-packages)
+            (asdf-packages name)
+          (flet ((format-system (system)
+                   (format nil "- [~A][asdf:system]"
+                           (escape-markdown (dref-name (locate system)))))
+                 (format-package (package)
+                   (format nil "- [~A][cl:package]"
+                           (escape-markdown (package-name package)))))
+            (append
+             (when packages-defined
+               (list* "### Packages Defined"
+                      (mapcar #'format-package packages-defined)))
+             (when related-asdf-systems
+               (list* "### [Related][PAX::@RELATED] ASDF Systems"
+                      (mapcar #'format-system related-asdf-systems)))
+             (when related-packages
+               (list* "### [Related][PAX::@RELATED] Packages"
+                      (mapcar #'format-package related-packages))))))))))
+
+;;; Return the packages defined directly in files of ASDF-SYSTEM, or
+;;; packages defined in files below the directory of ASDF-SYSTEM.
+(defun asdf-packages (asdf-system)
+  (let* ((packages ())
+         (related ())
+         (system (asdf:find-system asdf-system))
+         (system-name (dref-name (locate system)))
+         (system-dirname (asdf-system-dirname system)))
+    (dolist (package (sort (list-all-packages) #'string< :key #'package-name))
+      (when-let (name (asdf-system-name-of package))
+        (cond ((equal system-name name)
+               (push package packages))
+              ((and system-dirname
+                    (starts-with-subseq system-dirname
+                                        (asdf-system-dirname
+                                         (asdf:find-system name))))
+               (push package related)))))
+    (values (reverse packages) (reverse related))))
+
+(defun related-asdf-systems (asdf-system)
+  (let* ((related ())
+         (system (asdf:find-system asdf-system))
+         (system-dirname (asdf-system-dirname system))
+         (root-dirname system-dirname))
+    (when system-dirname
+      (dolist (name (sort (asdf:registered-systems) #'string<))
+        (let* ((system-1 (asdf:find-system name))
+               (dirname-1 (asdf-system-dirname system-1)))
+          (when (and (not (eq system system-1))
+                     dirname-1
+                     (or (starts-with-subseq system-dirname dirname-1)
+                         (starts-with-subseq dirname-1 system-dirname)))
+            (push system-1 related)
+            (when (< (length dirname-1) (length root-dirname))
+              (setq root-dirname dirname-1))))))
+    (values (reverse related) root-dirname)))
+
+(defun asdf-system-dirname (system)
+  (when-let (pathname (slot-value system 'asdf/component:absolute-pathname))
+    (namestring pathname)))
 
 #+nil
 (defun shorten-arglist (string &optional except-reference)
@@ -469,7 +544,10 @@
           (when other-packages
             (emit "other exporting packages ~{[~A][cl:package]~^, ~}"
                   (loop for package in other-packages
-                        collect (escape-markdown (package-name package))))))))
+                        collect (escape-markdown (package-name package))))))
+        (when-let (asdf-system-name (asdf-system-name-of* reference))
+          (emit "the defining ASDF system [~A][asdf:system]"
+                (escape-markdown asdf-system-name)))))
     (when entries
       (list
        (let ((n-entries (length entries)))
@@ -759,15 +837,6 @@
             collect (format nil "- [~A][pax:section]"
                             (prin1-to-markdown (xref-name ref))))))
 
-(defun pax-document-home-page ()
-  (let ((*package* (find-package '#:mgl-pax) ))
-    `((progv '(*package*) (list ,(find-package '#:mgl-pax)))
-      ,@(list "## Documentation registered in @PAX-WORLD"
-              (sections-tightly
-               (mapcar #'locate (sections-registered-in-pax-world)))
-              "See @BROWSING-LIVE-DOCUMENTATION for how to use this
-            documentation browser."))))
-
 (defun list-sections-in-package (package)
   (let ((sections ()))
     (do-symbols (symbol package sections)
@@ -777,9 +846,171 @@
                      ;; Filter out normal variables with SECTION values.
                      (eq (section-name value) symbol))
             (pushnew value sections)))))))
+
+
+(defsection @pax-live-home-page (:title "PAX Live Home Page")
+  """When @BROWSING-LIVE-DOCUMENTATION, the home page provides
+  quick access to documentation of the definitions in the system. In
+  Emacs, when `mgl-pax-document` is invoked with the empty string, it
+  visits the home page. The home page may also be accessed directly by
+  going to the root page of the web server (if one is started)."""
+  ;; FIXME: This may not be loaded.
+  (ensure-web-server function)
+  (@top-level-pax-sections section)
+  (@asdf-systems-and-related-packages section)
+  (@systemless-packages section)
+  (@browse-by-locative-type section)
+  (@related glossary-term))
+
+(defun pax-live-home-page ()
+  (with-filename-to-asdf-system-name-map
+    (let ((*package* (find-package '#:mgl-pax) ))
+      `((progv '(*package*) (list ,(find-package '#:mgl-pax)))
+        ,@(list*
+           "## [PAX Home][@pax-live-home-page]"
+           "You are @BROWSING-LIVE-DOCUMENTATION."
+           "### [Top-level PAX Sections][@top-level-pax-sections]"
+           (sections-tightly (top-level-pax-sections))
+           (asdf-systems-and-packages-grouped-documentable)
+           (locative-types-documentable))))))
+
+
+(defsection @top-level-pax-sections (:title "Top-level PAX Sections")
+  "The @PAX-LIVE-HOME-PAGE lists the top-level PAX sections: those
+  that have no other SECTIONs referencing them (see DEFSECTION).")
+
+(defun top-level-pax-sections ()
+  (sort (remove-duplicates
+         (append (mapcar #'locate (sections-registered-in-pax-world))
+                 (entry-point-sections (list-all-sections)))
+         :test #'xref=)
+        #'string< :key (alexandria:compose #'plain-section-title-or-name
+                                           #'resolve)))
 
 (defun entry-point-sections (sections)
   (loop for section in sections
-        for ref = (xref (section-name section) 'section)
-        unless (sections-that-contain sections ref)
+        for ref = (locate section)
+        unless (or (sections-that-contain sections ref)
+                   (member (package-name (symbol-package
+                                          (section-name section)))
+                           '(#:dref-test #:mgl-pax-test)
+                           :test #'string=))
           collect ref))
+
+
+(defsection @asdf-systems-and-related-packages
+    (:title "ASDF:SYSTEMs and Related PACKAGEs")
+  "The @PAX-LIVE-HOME-PAGE lists all ASDF:SYSTEMs and PACKAGEs in the Lisp.
+  For easier overview, the they are grouped based on their
+  SOURCE-LOCATIONs. Two systems are in the same group if the directory
+  of one (i.e. the directory of the `.asd` file in which it was
+  defined) is the same or is below the other's.
+
+  A PACKAGE presented under a group of systems, if the SOURCE-LOCATION
+  of the package is below the the top-most directory among the systems
+  in the group.")
+
+(define-glossary-term @related (:title "related")
+  "Two definitions are _related_ if the directory of one's
+  SOURCE-LOCATIONs contains the directory of the other's.")
+
+(defsection @systemless-packages (:title "Systemless Packages")
+  "The @PAX-LIVE-HOME-PAGE lists PACKAGEs
+  [unrelated][@asdf-systems-and-related-packages] to any ASDF:SYSTEM
+  as systemless.")
+
+(defun asdf-systems-and-packages-grouped-documentable ()
+  (multiple-value-bind (groups orphan-packages)
+      (asdf-systems-and-packages-grouped)
+    (list
+     "### [ASDF:SYSTEMs and Related PACKAGEs][@asdf-systems-and-related-packages]"
+     (loop for (root-dir systems packages) in groups
+           collect (with-output-to-string (s)
+                     (format s "~%- ~{[~A][asdf:system]~^, ~}~%~%"
+                             (mapcar (compose #'escape-markdown #'dref-name
+                                              #'locate)
+                                     systems))
+                     (loop for package in packages
+                           do (format s "    - [~A][package]~%"
+                                      (escape-codification
+                                       (escape-markdown
+                                        (package-name package)))))))
+     (when orphan-packages
+       (with-output-to-string (s)
+         (format s "### [Systemless Packages][@systemless-packages]~%~%")
+         (loop for package in orphan-packages
+               do (format s "    - [~A][cl:package]~%"
+                          (escape-codification
+                           (escape-markdown (package-name package))))))))))
+
+(defun escape-codification (raw)
+  (if (codifiable-word-p raw)
+      (format nil "\\~A" raw)
+      raw))
+
+(defun asdf-systems-and-packages-grouped ()
+  (let (;; (ROOT-DIR SYSTEMS PACKAGES)
+        (groups ())
+        (orphan-packages))
+    (flet ((add-system (dir system)
+             (when dir
+               (dolist (group groups)
+                 (let ((root-dir (first group)))
+                   (cond ((and root-dir (starts-with-subseq root-dir dir))
+                          (push system (second group))
+                          (return-from add-system))
+                         ((and root-dir (starts-with-subseq dir root-dir))
+                          (setf (first group) dir)
+                          (push system (second group))
+                          (return-from add-system))))))
+             (push (list dir (list system) ()) groups))
+           (add-package (file package)
+             (when file
+               (dolist (group groups)
+                 (when-let (root-dir (first group))
+                   (when (starts-with-subseq root-dir file)
+                     (push package (third group))
+                     (return-from add-package)))))
+             (push package orphan-packages)))
+      ;; Sort in reverse order so that PACKAGES in GROUPS come out in
+      ;; forward order.
+      (dolist (asdf-system-name (sort (asdf:registered-systems) #'string>))
+        (let* ((system (asdf:find-system asdf-system-name))
+               (dir (asdf-system-dirname system)))
+          (add-system dir system)))
+      (dolist (package (sort (list-all-packages) #'string> :key #'package-name))
+        (let ((file (file-of-dref package)))
+          (add-package file package))))
+    (values groups orphan-packages)))
+
+
+(defsection @browse-by-locative-type (:title "Browse by Locative Types")
+  "The @PAX-LIVE-HOME-PAGE provides quick links to @APROPOS result
+  pages for all LOCATIVE-TYPES which may have definitions.")
+
+(defun locative-types-documentable ()
+  `(,(format nil "### [Locative Types][@browse-by-locative-type]")
+    ,@(enumerate-locative-types-in-markdown
+       (locative-types-maybe-with-definitions))))
+
+(defun enumerate-locative-types-in-markdown (locative-types)
+  (loop for locative-type in locative-types
+        collect (format nil "- [`~S`](~A)" locative-type
+                        (make-pax-eval-url
+                         `(pax-apropos* ,(with-standard-io-syntax*
+                                           (format nil " ~S" locative-type))
+                                        t)))))
+
+(defun locative-types-maybe-with-definitions ()
+  (dref::sort-locative-types
+   (loop for locative-type in (locative-types)
+         unless (or (not (external-symbol-p locative-type))
+                    (not (locative-type-may-have-definitions-p locative-type)))
+           collect locative-type)))
+
+(defun locative-type-may-have-definitions-p (locative-type)
+  (eq 'dref::try-interned-symbols
+      (dref::map-names (lambda (name)
+                         (declare (ignore name))
+                         (return-from locative-type-may-have-definitions-p t))
+                       locative-type)))

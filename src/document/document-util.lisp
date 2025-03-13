@@ -453,9 +453,8 @@
                (format stream "- ~S~%~%" (section-name object))))))))
 
 (defun sections-registered-in-pax-world ()
-  (sort (loop for doc in *registered-pax-world-docs*
-              append (denoted-list (second doc)))
-        #'string< :key #'plain-section-title-or-name))
+  (loop for doc in *registered-pax-world-docs*
+        append (denoted-list (second doc))))
 
 (defun make-plain (md-string)
   ;; KLUDGE: 3mbd doesn't leaves the markup for `code` intact when

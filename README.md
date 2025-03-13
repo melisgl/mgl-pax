@@ -36,6 +36,7 @@
         - [9.3.1 Browsing with w3m][83d5]
         - [9.3.2 Browsing with Other Browsers][c434]
         - [9.3.3 Apropos][b7fc]
+        - [9.3.4 PAX Live Home Page][9d50]
     - [9.4 Markdown Support][c2d3]
         - [9.4.1 Markdown in Docstrings][7bf5]
         - [9.4.2 Syntax Highlighting][bc83]
@@ -374,14 +375,18 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
 ### 3.1 The mgl-pax ASDF System
 
 - Version: 0.4.0
-- Description: Documentation system, browser, generator.
-- Long Description: The set of dependencies of the MGL-PAX system is
-  kept light, and its heavier dependencies are autoloaded via ASDF
-  when the relevant functionality is accessed. See the
-  `MGL-PAX/NAVIGATE`, `MGL-PAX/DOCUMENT`, `MGL-PAX/TRANSCRIBE` and
-  `MGL-PAX/FULL` systems. To keep deployed code small, client systems
-  should declare an ASDF dependency on this system, never on the
-  others, which are intended for autoloading and interactive use.
+- Description: Documentation system, browser, generator. See the
+  [PAX Manual][2415].
+- Long Description: The set of dependencies of the
+  [`mgl-pax`][6fdb] system is kept light, and its heavier
+  dependencies are autoloaded via ASDF when the relevant functionality
+  is accessed. See the [`mgl-pax/navigate`][f155],
+  [`mgl-pax/document`][4bb8],
+  [`mgl-pax/transcribe`][5825] and
+  [`mgl-pax/full`][d761] systems. To keep deployed code small,
+  client systems should declare an ASDF dependency on this system,
+  never on the others, which are intended for autoloading and
+  interactive use.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
@@ -393,9 +398,10 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
 
 ### 3.2 The mgl-pax/full ASDF System
 
-- Description: MGL-PAX with all features preloaded except MGL-PAX/WEB.
+- Description: The [`mgl-pax`][6fdb] system with all features
+  preloaded except `mgl-pax/web`.
 - Long Description: Do not declare a dependency on this system. It
-  is autoloaded.
+  is for interactive use.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
@@ -1071,9 +1077,11 @@ A close relative of `M-.` is `C-.` for [Browsing Live Documentation][a595].
 
 ### 8.1 The mgl-pax/navigate ASDF System
 
-- Description: Slime `M-.` support for MGL-PAX.
-- Long Description: Autoloaded by Elisp. See
-  [Navigating Sources in Emacs][3386].
+- Description: Support for [Navigating Sources in Emacs][3386] via Slime's
+  [`M-.`][cb15] in [MGL-PAX][2415].
+- Long Description: Do not declare a dependency on this system. It is
+  autoloaded by Elisp or by accessing the functionality provided if the
+  [`mgl-pax`][6fdb] system is loaded.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
@@ -1484,9 +1492,11 @@ symbols, there is no package system to advantage of.
 
 ### 9.2 The mgl-pax/document ASDF System
 
-- Description: Documentation generation support for MGL-PAX.
+- Description: Support for [Generating Documentation][2c93] in
+  [MGL-PAX][2415].
 - Long Description: Do not declare a dependency on this system. It is
-  autoloaded. See [Generating Documentation][2c93].
+  autoloaded by Elisp or by accessing the functionality provided if the
+  [`mgl-pax`][6fdb] system is loaded.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
@@ -1496,10 +1506,18 @@ symbols, there is no package system to advantage of.
 
 ### 9.3 Browsing Live Documentation
 
-Documentation can be browsed live in Emacs or with an external
-browser. HTML documentation, complete with [Codification][f1ab] and
-[Linking][19e3], is generated from docstrings of all kinds of Lisp
-definitions and PAX [`SECTION`][5fac]s.
+Documentation for definitions in the running Lisp can be browsed
+directly without generating documentation in the offline manner.
+HTML documentation, complete with [Codification][f1ab] and [Linking][19e3], is
+generated from docstrings of all kinds of definitions and PAX
+[`SECTION`][5fac]s in the running Lisp on the fly. This allows ad-hoc
+exploration of the Lisp, much like `describe-function`,
+`apropos-command` and other online help commands in Emacs, for which
+direct parallels are provided.
+
+Still, even without Emacs and [SLIME][6be7], limited functionality can be
+accessed through [PAX Live Home Page][9d50] by starting the live
+documentation web server [manually][72cc].
 
 If [Emacs Setup][8541] has been done, the Elisp function
 `mgl-pax-document` (maybe bound to `C-.`) generates and displays
@@ -1557,9 +1575,9 @@ In interactive use, `mgl-pax-document` behaves similarly to
         pax::@pax-manual pax:section pax::@browsing-live-documentation pax:section
 
 - If the empty string is entered at the prompt, and there is no
-  existing w3m buffer or w3m is not used, then sections registered
-  in [PAX World][1281] are listed. If there is a w3m buffer, then
-  entering the empty string displays that buffer.
+  existing w3m buffer or w3m is not used, then [PAX Live Home Page][9d50]
+  is visited. If there is a w3m buffer, then entering the empty
+  string displays that buffer.
 
 The convenience function
 `mgl-pax-current-definition-toggle-view` (`C-c C-d c`) documents the
@@ -1660,6 +1678,90 @@ The returned references are presented in two groups: those with
 non-symbol and those with symbol [name][88cf]s. The non-symbol group is
 sorted by locative type then by name. The symbol group is sorted by
 name then by locative type.
+
+<a id="x-28MGL-PAX-3A-40PAX-LIVE-HOME-PAGE-20MGL-PAX-3ASECTION-29"></a>
+
+#### 9.3.4 PAX Live Home Page
+
+When [Browsing Live Documentation][a595], the home page provides
+quick access to documentation of the definitions in the system. In
+Emacs, when `mgl-pax-document` is invoked with the empty string, it
+visits the home page. The home page may also be accessed directly by
+going to the root page of the web server (if one is started).
+
+<a id="x-28MGL-PAX-3AENSURE-WEB-SERVER-20FUNCTION-29"></a>
+
+- [function] **ENSURE-WEB-SERVER** *&KEY PORT HYPERSPEC-ROOT*
+
+    Start or update a web server on `PORT` for [Browsing Live Documentation][a595].
+    Returns the base `URL` of the server (e.g. `http://localhost:32790`),
+    which goes to the [PAX Live Home Page][9d50]. If the web server is running
+    already `(ENSURE-WEB-SERVER)` simply returns its base `URL`.
+    
+    Note that even when using Emacs but [Browsing with Other Browsers][c434],
+    the web server is started automatically. When [Browsing with w3m][83d5], no
+    web server is involved at all. Calling this function explicitly is
+    only needed if the Emacs integration is not used, or to override
+    `PORT` and `HYPERSPEC-ROOT`.
+    
+    - If `PORT` is `NIL` or 0, then the server will use any free port.
+    
+    - If there is a server already running and `PORT` is not `NIL` or 0,
+      then the server is restarted on `PORT`.
+    
+    - If `HYPERSPEC-ROOT` is `NIL`, the HyperSpec pages will be served from
+      any previously provided `HYPERSPEC-ROOT` or, failing that, from
+      [`*DOCUMENT-HYPERSPEC-ROOT*`][f585].
+    
+    - If `HYPERSPEC-ROOT` is non-`NIL`, then pages in the HyperSpec will be
+      served from `HYPERSPEC-ROOT`. The following command changes the root
+      without affecting the server in any other way:
+    
+            (ensure-web-server :hyperspec-root "/usr/share/doc/hyperspec/")
+
+
+<a id="x-28MGL-PAX-3A-40TOP-LEVEL-PAX-SECTIONS-20MGL-PAX-3ASECTION-29"></a>
+
+##### Top-level PAX Sections
+
+The [PAX Live Home Page][9d50] lists the top-level PAX sections: those
+that have no other [`SECTION`][5fac]s referencing them (see [`DEFSECTION`][72b4]).
+
+<a id="x-28MGL-PAX-3A-40ASDF-SYSTEMS-AND-RELATED-PACKAGES-20MGL-PAX-3ASECTION-29"></a>
+
+##### `ASDF:SYSTEM`s and Related `PACKAGE`s
+
+The [PAX Live Home Page][9d50] lists all `ASDF:SYSTEM`s and [`PACKAGE`][1d5a]s in the Lisp.
+For easier overview, the they are grouped based on their
+[`SOURCE-LOCATION`][32da]s. Two systems are in the same group if the directory
+of one (i.e. the directory of the `.asd` file in which it was
+defined) is the same or is below the other's.
+
+A `PACKAGE` presented under a group of systems, if the `SOURCE-LOCATION`
+of the package is below the the top-most directory among the systems
+in the group.
+
+<a id="x-28MGL-PAX-3A-40SYSTEMLESS-PACKAGES-20MGL-PAX-3ASECTION-29"></a>
+
+##### Systemless Packages
+
+The [PAX Live Home Page][9d50] lists [`PACKAGE`][1d5a]s
+[unrelated][b033] to any `ASDF:SYSTEM`
+as systemless.
+
+<a id="x-28MGL-PAX-3A-40BROWSE-BY-LOCATIVE-TYPE-20MGL-PAX-3ASECTION-29"></a>
+
+##### Browse by Locative Types
+
+The [PAX Live Home Page][9d50] provides quick links to [Apropos][b7fc] result
+pages for all [`LOCATIVE-TYPES`][99b0] which may have definitions.
+
+<a id="x-28MGL-PAX-3A-40RELATED-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+
+- [glossary-term] **related**
+
+    Two definitions are *related* if the directory of one's
+    [`SOURCE-LOCATION`][32da]s contains the directory of the other's.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2934,10 +3036,11 @@ triple-quote syntax can be enabled with:
 
 ### 10.1 The mgl-pax/transcribe ASDF System
 
-- Description: Transcription support for MGL-PAX.
-- Long Description: Do not declare a dependency on this system.
-  It is autoloaded by [`MGL-PAX:TRANSCRIBE`][f1f0] and by the Emacs
-  integration (see [Transcripts][6300]).
+- Description: Support for [Transcripts][6300] in
+  [MGL-PAX][2415].
+- Long Description: Do not declare a dependency on this system. It is
+  autoloaded by Elisp or by accessing the functionality provided if
+  the [`mgl-pax`][6fdb] system is loaded.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
@@ -3825,6 +3928,7 @@ they are presented.
   [22c2]: #x-28MGL-PAX-3A-40LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29 "Linking to Sections"
   [2352]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cfa.htm '"22.3.6.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [238c]: #x-28MGL-PAX-3ATRANSCRIPTION-VALUES-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION"
+  [2415]: README.md "PAX Manual"
   [2444]: dref/README.md#x-28DREF-EXT-3ALOCATIVE-ARGS-20FUNCTION-29 "DREF-EXT:LOCATIVE-ARGS FUNCTION"
   [2634]: #x-28MGL-PAX-3A-40OVERVIEW-OF-ESCAPING-20MGL-PAX-3ASECTION-29 "Overview of Escaping"
   [2826]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhj.htm '"2.4.8.10" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -3918,6 +4022,7 @@ they are presented.
   [6fdb]: #x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax" ASDF/SYSTEM:SYSTEM'
   [7163]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhl.htm '"2.4.8.12" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [72b4]: #x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFSECTION MGL-PAX:MACRO"
+  [72cc]: #x-28MGL-PAX-3AENSURE-WEB-SERVER-20FUNCTION-29 "MGL-PAX:ENSURE-WEB-SERVER FUNCTION"
   [730f]: #x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20VARIABLE-29 "MGL-PAX:*DISCARD-DOCUMENTATION-P* VARIABLE"
   [7328]: http://www.lispworks.com/documentation/HyperSpec/Body/f_apropo.htm "APROPOS-LIST (MGL-PAX:CLHS FUNCTION)"
   [7439]: https://emacs-w3m.github.io/info/emacs-w3m.html "w3m"
@@ -3981,6 +4086,7 @@ they are presented.
   [99b05]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function '"setf function" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [9b43]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "DEFPACKAGE (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [9c7d]: #x-28MGL-PAX-3A-40PAGES-20MGL-PAX-3ASECTION-29 "`PAGES`"
+  [9d50]: #x-28MGL-PAX-3A-40PAX-LIVE-HOME-PAGE-20MGL-PAX-3ASECTION-29 "PAX Live Home Page"
   [9db9]: #x-28MGL-PAX-3A-40LOCAL-DEFINITION-20MGL-PAX-3ASECTION-29 "Local Definition"
   [9dbc]: #x-28MGL-PAX-3A-40TRANSCRIPT-API-20MGL-PAX-3ASECTION-29 "Transcript API"
   [9fd4]: dref/README.md#x-28DREF-EXT-3ADOCSTRING-2A-20GENERIC-FUNCTION-29 "DREF-EXT:DOCSTRING* GENERIC-FUNCTION"
@@ -4004,6 +4110,7 @@ they are presented.
   [af6f]: #x-28MGL-PAX-3A-40OUTPUT-DETAILS-20MGL-PAX-3ASECTION-29 "Output Details"
   [af78]: #x-28MGL-PAX-3AGLOSSARY-TERM-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29 "MGL-PAX:GLOSSARY-TERM-TITLE (MGL-PAX:READER MGL-PAX:GLOSSARY-TERM)"
   [affc]: dref/README.md#x-28MGL-PAX-3ADOCSTRING-20FUNCTION-29 "MGL-PAX:DOCSTRING FUNCTION"
+  [b033]: #x-28MGL-PAX-3A-40ASDF-SYSTEMS-AND-RELATED-PACKAGES-20MGL-PAX-3ASECTION-29 "`ASDF:SYSTEM`s and Related `PACKAGE`s"
   [b18e]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_p.htm#property_list '"property list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [b2e4]: #x-28MGL-PAX-3A-40FILTERING-LINKS-20MGL-PAX-3ASECTION-29 "Filtering Links"
   [b39f]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cdb.htm '"22.3.4.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'

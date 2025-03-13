@@ -191,6 +191,8 @@ Doesn't work for the second locative or for :all and co.
 confused by 'pri, too.
 * MAYBE (pax:clhs pax:section) in mgl-pax-apropos
 * MAYBE web: link asdf system to definitions in it?
+This would make the PAX Live home page more capable without Emacs.
+
 Packages defined are linked already, which handles many cases but not
 all, and of course includes definitions (e.g methods) not defined in
 the system.
@@ -203,4 +205,3 @@ It could control the results when searching for TYPE and getting a
 CLASS.
 * MAYBE option to sort apropos results by source location
 Files in ASDF system order.
-* TODO link home page titles to doc

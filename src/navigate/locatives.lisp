@@ -147,11 +147,6 @@
                                               ,(dref-locative go-dref)))
                               :target-dref go-dref))))
 
-(defmethod dref::map-definitions (fn name (locative-type (eql 'go)))
-  (declare (ignorable name))
-  ;; There are no real GO definitions.
-  (values))
-
 (defmethod resolve* ((dref go-dref))
   (resolve* (apply #'dref (first (dref-locative-args dref)))))
 
@@ -213,6 +208,17 @@
   (if (find-local-reference (xref symbol 'argument))
       (make-instance 'dref :name symbol :locative 'argument)
       (locate-error)))
+
+(defmethod dref::map-definitions (fn name (locative-type (eql 'argument)))
+  (declare (ignorable fn name))
+  (when-let (dref (dref name 'argument nil))
+    (funcall fn dref))
+  nil)
+
+(defmethod dref::map-names (fn (locative-type (eql 'argument)))
+  (declare (ignorable fn))
+  (map nil (compose fn #'dref-name) *local-references*)
+  nil)
 
 
 ;;;; DOCSTRING
