@@ -177,6 +177,13 @@ See MGL-PAX::@EMACS-SETUP."
 
 ;;;; MGL-PAX::@EMACS-SETUP
 
+(defcustom mgl-pax-hijack-slime-doc-keys t
+  "If true, then bind mgl-pax functions in `slime-mode-map'
+  by `mgl-pax-hijack-slime-doc-keys' upon loading `mgl-pax'. See
+  MGL-PAX::@EMACS-KEYS for details."
+  :type 'boolean
+  :group 'mgl-pax)
+
 (defvar mgl-pax-slime-doc-map-overrides
   '((?a slime-apropos mgl-pax-apropos)
     (?z slime-apropos-all mgl-pax-apropos-all)
@@ -207,6 +214,9 @@ See MGL-PAX::@EMACS-SETUP."
   "See MGL-PAX::@EMACS-SETUP."
   (interactive)
   (mgl-pax-override-keys slime-doc-map mgl-pax-slime-doc-map-overrides t))
+
+(when mgl-pax-hijack-slime-doc-keys
+  (mgl-pax-hijack-slime-doc-keys))
 
 
 ;;;; Browser configuration (see MGL-PAX::@EMACS-SETUP)
@@ -1194,7 +1204,7 @@ In a PAX doc buffer, it's equivalent to pressing `v'
                               ',(buffer-file-name)
                               ',(mgl-pax-current-definition-possible-names)))))
     (if (eq (cl-first values) :error)
-        (message "%s" (cl-second values))
+        (error "%s" (cl-second values))
       (cl-second values))))
 
 

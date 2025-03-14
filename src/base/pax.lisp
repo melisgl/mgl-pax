@@ -201,7 +201,6 @@
   (global-set-key (kbd "C-.") 'mgl-pax-document)
   (global-set-key (kbd "s-x t") 'mgl-pax-transcribe-last-expression)
   (global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
-  (mgl-pax-hijack-slime-doc-keys)
   ```"""
   (@emacs-functionality section)
   (@emacs-quicklisp section)
@@ -278,7 +277,6 @@
   (global-set-key (kbd "C-.") 'mgl-pax-document)
   (global-set-key (kbd "s-x t") 'mgl-pax-transcribe-last-expression)
   (global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
-  (mgl-pax-hijack-slime-doc-keys)
   ```
 
   The global key bindings above are global because their commands work
@@ -289,8 +287,9 @@
   (slime-bind-keys slime-parent-map nil '(("C-." mgl-pax-document)))
   ```
 
-  For reference, `mgl-pax-hijack-slime-doc-keys` makes the following
-  changes to `slime-doc-map` (assuming it's bound to `C-c C-d`):
+  If the customizable variable `mgl-pax-hijack-slime-doc-keys` is
+  true, then upon loading `mgl-pax', the following changes are made to
+  `slime-doc-map` (assuming it's bound to `C-c C-d`):
 
   - `C-c C-d a`: replaces `slime-apropos` with `mgl-pax-apropos`
   - `C-c C-d z`: replaces `slime-apropos-all` with `mgl-pax-aproposa-all`
@@ -300,7 +299,7 @@
   - `C-c C-d c`: installs `mgl-pax-current-definition-toggle-view`
   - `C-c C-d u`: installs `mgl-pax-edit-parent-section`
 
-  `mgl-pax-unhijack-slime-doc-keys` reverts these changes.
+  Calling `mgl-pax-unhijack-slime-doc-keys` reverts these changes.
   """)
 
 (defsection @links (:title "Links and Systems")

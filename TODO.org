@@ -76,7 +76,6 @@ But so does M-.'s history.
 https://github.com/3b/3bmd/issues/56
 * MAYBE when exported by pax, we know the exact definition being exported
 Package apropos could take advantage?
-* MAYBE mgl-pax-apropos should defer to slime-apropos if pax not loaded?
 * MAYBE add SPECIAL locative and make variable an alias of it?
 * MAYBE support DECLARATION docstrings?
 * MAYBE support setf docstring?
