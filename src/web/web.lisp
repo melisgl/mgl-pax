@@ -144,22 +144,28 @@
             dispatchers)
       dispatchers)))
 
+;;; HUNCHENTOOT:*DISPATCH-TABLE* will be bound to this locally to
+;;; avoid conflicts with other HUNCHENTOOT servers running in the same
+;;; image.
+;;;
+;;; Whenever this file is recompiled, *DISPATCH-TABLE* is set to NIL,
+;;; which invalidates the dispatch table cache, to pick up any changes
+;;; during development or upgrades.
+(defparameter *dispatch-table* nil)
+
 ;;; Cache the dispatch table of the most recent request, which depends
 ;;; on *BROWSE-HTML-STYLE*.
 (defvar *style-and-dispatch-table* nil)
 
 (defun dispatch-table ()
-  (if (eq (car *style-and-dispatch-table*) *browse-html-style*)
+  (if (and *dispatch-table*
+           (eq (car *style-and-dispatch-table*) *browse-html-style*))
       (cdr *style-and-dispatch-table*)
       (let ((*browse-html-style* *browse-html-style*))
         (setq *style-and-dispatch-table* (cons *browse-html-style*
                                                (make-dispatch-table)))
+        (setq *dispatch-table* 'cached)
         (cdr *style-and-dispatch-table*))))
-
-;;; HUNCHENTOOT:*DISPATCH-TABLE* will be bound to this locally to
-;;; avoid conflicts with other HUNCHENTOOT servers running in the same
-;;; image.
-(defparameter *dispatch-table* (make-dispatch-table))
 
 (defvar *server*
   (make-instance 'hunchentoot:easy-acceptor
