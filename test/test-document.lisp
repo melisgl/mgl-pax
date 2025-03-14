@@ -315,7 +315,9 @@ xxx
   (with-test ("funny names")
     (check-head "|Foo|" "|Foo|")
     (check-head "|F o|" "|F o|")
-    (check-head "|F O|" "|F O|")))
+    (check-head "|F O|" "|F O|"))
+  (with-test ("explicit link label")
+    (check-head "[PACKAGEs](xxx)" "[`PACKAGE`s](xxx)")))
 
 (defun q ())
 (defun qq ())

@@ -1388,9 +1388,10 @@
 ;;; cl-transcript code blocks (see @TRANSCRIBING-WITH-EMACS).
 (defun codify (parse-tree)
   (map-markdown-parse-tree
-   (list :emph '3bmd-code-blocks::code-block :reference-link :code)
+   (list :emph '3bmd-code-blocks::code-block :reference-link :explicit-link
+         :code)
    '(:code :verbatim 3bmd-code-blocks::code-block
-     :explicit-link :image :mailto :reference :raw-html)
+     :image :mailto :reference :raw-html)
    t
    #'translate-to-code
    parse-tree))
@@ -1411,7 +1412,8 @@
          (translate-emph parent tree))
         ((parse-tree-p tree '3bmd-code-blocks::code-block)
          (translate-code-block parent tree))
-        ((parse-tree-p tree :reference-link)
+        ((or (parse-tree-p tree :reference-link)
+             (parse-tree-p tree :explicit-link))
          (let ((replacement (copy-list tree)))
            (setf (pt-get replacement :label)
                  (let ((*translating-reference-link* t))
