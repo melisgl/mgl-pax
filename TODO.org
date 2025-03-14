@@ -191,14 +191,13 @@ Doesn't work for the second locative or for :all and co.
 confused by 'pri, too.
 * MAYBE (pax:clhs pax:section) in mgl-pax-apropos
 * MAYBE web: link asdf system to definitions in it?
-Deteremine containment from the source location of definitions with a
-fallback to the source location of the definition name's home packages
-(if a symbol)?
+Packages defined are linked already, which handles many cases but not
+all, and of course includes definitions (e.g methods) not defined in
+the system.
 
-Group packages under asdf systems on the home page, and maybe on
-individual ASDF system pages.
+Maybe DREF-APROPOS should support filtering by source location.
 * MAYBE web: have apropos name be editable?
-* TODO elisp: consistently error or message when no definiton is found
+This would make the PAX Live home page more capable without Emacs.
 * MAYBE should DREF-APROPOS provide an option to match canonical dref?
 It could control the results when searching for TYPE and getting a
 CLASS.

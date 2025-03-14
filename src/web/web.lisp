@@ -50,15 +50,19 @@
     (assert (char= (aref uri 0) #\/))
     (subseq uri 1)))
 
+(defmacro with-document-open-args-for-web ((title) &body body)
+  `(let ((*document/open-extra-args*
+           `(:pages ((:objects :default
+                      :header-fn ,(lambda (stream)
+                                    (html-header stream
+                                                 :title ,title
+                                                 :stylesheet "style.css"))
+                      :footer-fn ,#'html-footer
+                      :source-uri-fn ,#'reference-to-edit-uri)))))
+     ,@body))
+
 (defun document-for-web (pax-url filename)
-  (let ((*document/open-extra-args*
-          `(:pages ((:objects :default
-                     :header-fn ,(lambda (stream)
-                                   (html-header stream
-                                                :title (urldecode pax-url)
-                                                :stylesheet "style.css"))
-                     :footer-fn ,#'html-footer
-                     :source-uri-fn ,#'reference-to-edit-uri)))))
+  (with-document-open-args-for-web ((urldecode pax-url))
     (document-pax*-url pax-url filename)))
 
 (defun reference-to-edit-uri (dref)
@@ -142,7 +146,19 @@
                      dispatchers))))
       (push (hunchentoot:create-prefix-dispatcher "/pax" 'handle-pax*-request)
             dispatchers)
+      (push (create-exact-dispatcher "/" 'handle-homepage-request)
+            dispatchers)
       dispatchers)))
+
+(defun create-exact-dispatcher (string handler)
+  (lambda (request)
+    (and (string= (hunchentoot:script-name request) string)
+         handler)))
+
+(defun handle-homepage-request ()
+  (with-errors-to-html
+    (with-document-open-args-for-web ("PAX")
+      (document/open (pax-document-home-page) :stream nil))))
 
 ;;; HUNCHENTOOT:*DISPATCH-TABLE* will be bound to this locally to
 ;;; avoid conflicts with other HUNCHENTOOT servers running in the same
