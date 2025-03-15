@@ -123,7 +123,8 @@
   (test-document/open)
   (test-map-documentable)
   (test-table-of-contents)
-  (test-definitions-for-pax-url-path))
+  (test-definitions-for-pax-url-path)
+  (test-with-document-context))
 
 (deftest test-urlencode ()
   (is (equal (mgl-pax::urlencode "hello") "hello"))
@@ -1779,3 +1780,15 @@ example section
       (pax::definitions-for-pax-url-path "SECTION LOCATIVE")))
   (check-ref-sets (pax::definitions-for-pax-url-path "PAX:SECTION PAX:LOCATIVE")
                   (list (dref 'section 'locative))))
+
+(deftest test-with-document-context ()
+  (signals-not (error)
+    ;; This used to fail trying to concatenate format control strings,
+    ;; but apparently "format control" (CLHS) can be a function.
+    (pax::with-document-context
+      (let ((*error-output* (make-broadcast-stream)))
+        ;; This is to ensure that the warning is not deferred until
+        ;; the end of any enclosing compilation unit (e.g.
+        ;; ASDF:TEST-SYSTEM).
+        (with-compilation-unit (:override t)
+          (compile nil '(lambda () x)))))))

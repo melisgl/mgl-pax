@@ -1301,14 +1301,14 @@ following, we describe the pieces in detail.
 
 <a id="x-28DREF-EXT-3ALOCATE-ERROR-20FUNCTION-29"></a>
 
-- [function] **LOCATE-ERROR** *&REST FORMAT-AND-ARGS*
+- [function] **LOCATE-ERROR** *&OPTIONAL FORMAT-CONTROL &REST FORMAT-ARGS*
 
     Call this function to signal a [`LOCATE-ERROR`][6334] condition from the
     [dynamic extent][36e9] of a [`LOCATE*`][76c4] method (which includes
     [`DREF*`][ee40]). It is an error to call `LOCATE-ERROR` elsewhere.
     
-    `FORMAT-AND-ARGS`, if non-`NIL`, is a format string and arguments
-    suitable for [`FORMAT`][ad78].
+    `FORMAT-CONTROL`, if non-`NIL`, is a [format control][b8d5] for which
+    `FORMAT-ARGS` are suitable.
 
 <a id="x-28DREF-EXT-3AADD-DREF-ACTUALIZER-20FUNCTION-29"></a>
 
@@ -1752,6 +1752,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [b6c4]: #x-28DREF-EXT-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "DREF-EXT:DEFINE-LOCATIVE-TYPE MGL-PAX:MACRO"
   [b7fc]: ../README.md#x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29 "Apropos"
   [b88e]: #x-28DREF-EXT-3AXREF-NAME-20-28MGL-PAX-3AREADER-20DREF-3AXREF-29-29 "DREF-EXT:XREF-NAME (MGL-PAX:READER DREF:XREF)"
+  [b8d5]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_f.htm#format_control '"format control" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [b93c]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "STRING (MGL-PAX:CLHS CLASS)"
   [ba62]: #x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29 "FUNCTION MGL-PAX:LOCATIVE"
   [bb23]: #x-28DREF-3ADEFINE-RESTART-20MGL-PAX-3AMACRO-29 "DREF:DEFINE-RESTART MGL-PAX:MACRO"

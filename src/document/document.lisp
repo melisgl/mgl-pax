@@ -387,45 +387,30 @@
 (defmacro with-document-context (&body body)
   `(handler-bind ((locate-error
                     (lambda (e)
-                      ;; On CMUCL, SLOT-VALUE doesn't seem to work on
-                      ;; conditions.
                       #-cmucl
-                      (setf (slot-value e 'dref::message)
-                            (if (dref::locate-error-message e)
-                                (destructuring-bind (format-control
-                                                     &rest format-args)
-                                    (dref::locate-error-message e)
-                                  (cons (concatenate
-                                         'string
-                                         format-control
-                                         (escape-format-control
-                                          (print-document-context nil)))
-                                        format-args))
-                                (list (escape-format-control
-                                       (print-document-context nil)))))))
+                      (let ((args (list (slot-value e 'dref::message)
+                                        (slot-value e 'dref::message-args)
+                                        (print-document-context nil))))
+                        (setf (slot-value e 'dref::message) "~?~A"
+                              (slot-value e 'dref::message-args) args))))
                   (transcription-error
                     (lambda (e)
                       #-cmucl
-                      (setf (slot-value e 'message)
-                            (concatenate 'string (transcription-error-message e)
-                                         (escape-format-control
-                                          (print-document-context nil))))))
+                      (let ((args (list (slot-value e 'message)
+                                        (slot-value e 'message-args)
+                                        (print-document-context nil))))
+                        (setf (slot-value e 'message) "~?~A"
+                              (slot-value e 'message-args) args))))
                   (simple-error
                     (lambda (e)
-                      (apply #'error
-                             (concatenate 'string
-                                          (simple-condition-format-control e)
-                                          (escape-format-control
-                                           (print-document-context nil)))
-                             (simple-condition-format-arguments e))))
+                      (error "~?~A" (simple-condition-format-control e)
+                             (simple-condition-format-arguments e)
+                             (print-document-context nil))))
                   (simple-warning
                     (lambda (w)
-                      (apply #'warn
-                             (concatenate 'string
-                                          (simple-condition-format-control w)
-                                          (escape-format-control
-                                           (print-document-context nil)))
-                             (simple-condition-format-arguments w))
+                      (warn "~?~A" (simple-condition-format-control w)
+                            (simple-condition-format-arguments w)
+                            (print-document-context nil))
                       (muffle-warning w))))
      ,@body))
 
@@ -438,13 +423,6 @@
     (if context
         (format stream "~%  [While documenting ~{~S~^~%   in ~}]~%" context)
         (format stream ""))))
-
-(defun escape-format-control (string)
-  (with-output-to-string (out)
-    (loop for char across string
-          do (when (char= char #\~)
-               (write-char #\~ out))
-             (write-char char out))))
 
 ;;; Basically, call DOCUMENT-OBJECT on every element of DOCUMENTABLE
 ;;; (see MAP-DOCUMENTABLE) and add extra newlines between them

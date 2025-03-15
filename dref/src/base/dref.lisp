@@ -320,25 +320,22 @@
 
 (define-condition locate-error (error)
   ((object :initarg :object :reader locate-error-object)
-   (message :initarg :message :reader locate-error-message))
+   (message :initarg :message :reader locate-error-message)
+   (message-args :initarg :message-args :reader locate-error-message-args))
   (:documentation "Signalled by LOCATE when the definition cannot be
   found, and ERRORP is true.")
   (:report (lambda (condition stream)
              (let ((object (locate-error-object condition)))
                (if (typep object 'xref)
-                   (format stream "~@<Could not locate ~S ~S.~@[ ~A~]~:@>"
+                   (format stream "~@<Could not locate ~S ~S.~:_~@[ ~?~]~:@>"
                            (xref-name object)
                            (xref-locative object)
-                           (format-format-and-args
-                            (locate-error-message condition)))
-                   (format stream "~@<Could not locate ~S.~@[ ~A~]~:@>"
+                           (locate-error-message condition)
+                           (locate-error-message-args condition))
+                   (format stream "~@<Could not locate ~S.~:_~@[ ~?~]~:@>"
                            object
-                           (format-format-and-args
-                            (locate-error-message condition))))))))
-
-(defun format-format-and-args (format-and-args)
-  (when format-and-args
-    (apply #'format nil format-and-args)))
+                           (locate-error-message condition)
+                           (locate-error-message-args condition)))))))
 
 ;;; This gets clobbered with an empty function when DREF/AUTOLOAD is
 ;;; loaded.

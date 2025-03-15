@@ -1025,6 +1025,7 @@
   (format t "~&~A ~S~A~%~A~A" prefix (type-of c) midfix
           (prefix-lines "  "
                         (if (typep c 'simple-condition)
+                            ;; FIXME: "format control" (CLHS)
                             (apply #'format nil
                                    (simple-condition-format-control c)
                                    (simple-condition-format-arguments c))
@@ -1119,8 +1120,8 @@
   (:report (lambda (condition stream)
              (format stream
                      "~@<Transcription error~@[ ~:_at position ~A~]:~
-                       ~:_ ~?~%~
-                       Form: ~:_~S~:@>"
+                      ~:_ ~?~%~
+                      Form: ~:_~S~:@>"
                      (transcription-error-file-position condition)
                      (transcription-error-message condition)
                      (transcription-error-message-args condition)

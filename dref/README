@@ -1109,14 +1109,14 @@ following, we describe the pieces in detail.
     Signal a LOCATE-ERROR condition if LOCATIVE-ARGS do not match the
     LAMBDA-LIST argument of LOCATIVE-TYPE (not evaluated).
 
-- [function] LOCATE-ERROR &REST FORMAT-AND-ARGS
+- [function] LOCATE-ERROR &OPTIONAL FORMAT-CONTROL &REST FORMAT-ARGS
 
     Call this function to signal a LOCATE-ERROR condition from the
     dynamic extent of a LOCATE\* method (which includes
     DREF\*). It is an error to call LOCATE-ERROR elsewhere.
     
-    FORMAT-AND-ARGS, if non-NIL, is a format string and arguments
-    suitable for FORMAT.
+    FORMAT-CONTROL, if non-NIL, is a format control for which
+    FORMAT-ARGS are suitable.
 
 - [function] ADD-DREF-ACTUALIZER NAME
 
