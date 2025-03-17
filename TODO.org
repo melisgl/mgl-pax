@@ -190,6 +190,18 @@ How to apropos "lambda list"?
 Doesn't work for the second locative or for :all and co.
 confused by 'pri, too.
 * MAYBE (pax:clhs pax:section) in mgl-pax-apropos
-* TODO @BROWSING-LIVE-DOCUMENTATION without Emacs
-* TODO hijack should be a customization option
-so that it's done even if pax is unloaded and reloaded.
+* MAYBE web: link asdf system to definitions in it?
+Deteremine containment from the source location of definitions with a
+fallback to the source location of the definition name's home packages
+(if a symbol)?
+
+Group packages under asdf systems on the home page, and maybe on
+individual ASDF system pages.
+* MAYBE web: have apropos name be editable?
+* TODO elisp: consistently error or message when no definiton is found
+* MAYBE should DREF-APROPOS provide an option to match canonical dref?
+It could control the results when searching for TYPE and getting a
+CLASS.
+* MAYBE option to sort apropos results by source location
+Files in ASDF system order.
+* TODO link home page titles to doc
