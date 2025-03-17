@@ -797,7 +797,8 @@
   (let ((args (or (ignore-errors (dref::function-arg-names arglist))
                   (ignore-errors (dref::macro-arg-names arglist)))))
     (dolist (arg args)
-      (unless (external-symbol-in-any-package-p arg)
+      (when (and (symbolp arg)
+                 (not (external-symbol-in-any-package-p arg)))
         (return (symbol-package arg))))))
 
 (defvar *document-normalize-packages* t

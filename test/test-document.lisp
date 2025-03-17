@@ -125,7 +125,8 @@
   (test-table-of-contents)
   (test-definitions-for-pax-url-path)
   (test-with-document-context)
-  (test-asdf-system-name-of))
+  (test-asdf-system-name-of)
+  (test-guess-package-from-arglist))
 
 (deftest test-urlencode ()
   (is (equal (mgl-pax::urlencode "hello") "hello"))
@@ -1793,7 +1794,6 @@ example section
         ;; ASDF:TEST-SYSTEM).
         (with-compilation-unit (:override t)
           (compile nil '(lambda () x)))))))
-
 
 (deftest test-asdf-system-name-of ()
   (is (equal "mgl-pax" (mgl-pax::asdf-system-name-of mgl-pax::@pax-manual)))
@@ -1806,3 +1806,7 @@ example section
   (with-failure-expected ((not (dref-test::working-locative-p 'package)))
     (is (equal (mgl-pax::asdf-system-name-of* (dref 'no-source 'function))
                "mgl-pax-test"))))
+
+(deftest test-guess-package-from-arglist ()
+  (signals-not (error)
+    (is (null (mgl-pax::guess-package-from-arglist '(1 3))))))
