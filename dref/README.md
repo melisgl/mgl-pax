@@ -914,14 +914,14 @@ otherwise noted.
     
     ```common-lisp
     (arglist (dref nil '(lambda :arglist ((x y) z)
-                                       :arglist-type :macro)))
+                                :arglist-type :macro)))
     => ((X Y) Z)
     => :MACRO
     ```
     
     ```common-lisp
     (docstring (dref nil '(lambda :docstring "xxx"
-                                         :docstring-package :dref)))
+                                  :docstring-package :dref)))
     => "xxx"
     ==> #<PACKAGE "DREF">
     ```
@@ -932,7 +932,7 @@ otherwise noted.
     => "xxx.el"
     ```
     
-    See the [`PAX:INCLUDE`][5cd7] locative for an example.
+    Also, see the [`PAX:INCLUDE`][5cd7] locative.
 
 <a id="x-28DREF-3A-40GLOSSARY-20MGL-PAX-3ASECTION-29"></a>
 

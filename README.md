@@ -3620,8 +3620,8 @@ there are only a couple of PAX generic functions left to extend.
 
     Return true if `SYMBOL` is to be exported from
     `PACKAGE` when it occurs in a [`DEFSECTION`][72b4] in a reference with
-    `LOCATIVE-TYPE` and `LOCATIVE-ARGS`. `SYMBOL` is [accessible][3473]
-    in `PACKAGE`.
+    `LOCATIVE-TYPE` and `LOCATIVE-ARGS`. `SYMBOL` is [accessible][9b15] in
+    `PACKAGE`.
     
     The default method calls [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] with
     `LOCATIVE-TYPE` and ignores the other arguments.
@@ -4084,6 +4084,7 @@ they are presented.
   [9927]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cba.htm '"22.3.2.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [99b0]: dref/README.md#x-28DREF-3ALOCATIVE-TYPES-20FUNCTION-29 "DREF:LOCATIVE-TYPES FUNCTION"
   [99b05]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function '"setf function" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  [9b15]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_a.htm#accessible '"accessible" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [9b43]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "DEFPACKAGE (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [9c7d]: #x-28MGL-PAX-3A-40PAGES-20MGL-PAX-3ASECTION-29 "`PAGES`"
   [9d50]: #x-28MGL-PAX-3A-40PAX-LIVE-HOME-PAGE-20MGL-PAX-3ASECTION-29 "PAX Live Home Page"

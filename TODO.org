@@ -11,7 +11,7 @@ markup. We could get the original indentation from the sources.
 This either relies on the global value of
 *TRANSCRIBE-CHECK-CONSISTENCY* or it needs to see the
 "```cl-transcript (...)" line.
-* TODO support external links
+* MAYBE support external links
 This is partially done. There is CLHS and there are glossary terms
 with URLs. See EXTERNAL-DREF-P and co.
 * MAYBE link to MOP
@@ -81,7 +81,7 @@ Package apropos could take advantage?
 * MAYBE support setf docstring?
 * MAYBE better SOURCE addressing for INCLUDE
 * MAYBE live browsing: reload page automatically on redefinition
-* compare DRef to the Definitions library
+* DONE compare DRef to the Definitions library
 Pros of DRef:
 - Supports string names (called designators in Definitions). PAX needs
   to distinguish those from symbol-based ones.
@@ -134,15 +134,6 @@ Maybe. ASDF is a nickname of ASDF/INTERFACE.
 * MAYBE do not test the locative type of a DREF with EQ
 Use (TYPEP DREF 'SECTION-DREF) instead of (EQ (DREF-LOCATIVE-TYPE
 DREF) 'SECTION).
-* TODO It's unclear how pressing M-. or C-. on X shall combine (definitions 'x) and (definitions "X").
-Or (definitions '|x|), for that matter. See [[M-. on Foo]] below.
-
-Should PAX::MAP-NAMES-IN-RAW list instead of find the first? This
-would make 'mgl-pax' refer to "MGL-PAX" package even if there is an
-"mgl-pax" asdf:system.
-* BUG M-. on Foo doesn't find |Foo|
-With plain Slime either.
-
 * MAYBE replace titles even if not linking in :FORMAT :PLAIN?
 * MAYBE always replace titles but follow the link suppression rules?
 * TODO finalize DREF::MAP-DEFINITIONS and DREF::MAP-NAMES
@@ -203,3 +194,7 @@ It could control the results when searching for TYPE and getting a
 CLASS.
 * MAYBE option to sort apropos results by source location
 Files in ASDF system order.
+* MAYBE support SLY?
+* MAYBE the LAMBDA locative could support function that return e.g. the source location
+* MAYBE warn when generating offline documentation for autoloaded functions?
+* MAYBE provide way to autoload from live documentation?

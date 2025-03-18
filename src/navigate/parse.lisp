@@ -120,6 +120,12 @@
                (when match
                  (return-from find-name (values match extra-value))))))
       (flet ((find-it (raw)
+               ;; In the @UNSPECIFIC-LINK case, it is arguable that
+               ;; the result set should include definitions with all
+               ;; @NAMEs found in RAW. However, in the @SPECIFIC-LINK
+               ;; case, we must stop at the first match to keep the
+               ;; result set size at most 1 (i.e. "specific"), so we
+               ;; stop at the first name always for consistency.
                (map-names-in-raw #'consider raw symbols-only)))
         (find-it word)
         (if trim

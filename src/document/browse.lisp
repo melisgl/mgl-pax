@@ -614,7 +614,7 @@
                (warn "~@<Error in ~S: ~A~:@>" 'document error))
              (if (< 100 n-repeats)
                  (warn "~@<Sameish error repeated too many times. ~
-                                 Not CONTINUEing.~:@>")
+                       Not CONTINUEing.~:@>")
                  (continue error)))))
       (apply #'document documentable (append args (list :format :html)
                                              *document/open-extra-args*)))))

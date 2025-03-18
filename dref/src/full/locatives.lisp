@@ -1211,14 +1211,14 @@
 
   ```cl-transcript (:dynenv dref-std-env)
   (arglist (dref nil '(lambda :arglist ((x y) z)
-                                     :arglist-type :macro)))
+                              :arglist-type :macro)))
   => ((X Y) Z)
   => :MACRO
   ```
 
   ```cl-transcript (:dynenv dref-std-env)
   (docstring (dref nil '(lambda :docstring "xxx"
-                                       :docstring-package :dref)))
+                                :docstring-package :dref)))
   => "xxx"
   ==> #<PACKAGE "DREF">
   ```
@@ -1229,7 +1229,7 @@
   => "xxx.el"
   ```
 
-  See the PAX:INCLUDE locative for an example.""")
+  Also, see the PAX:INCLUDE locative.""")
 
 (define-definition-class lambda lambda-dref)
 

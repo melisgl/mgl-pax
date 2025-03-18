@@ -337,7 +337,7 @@
                            (locate-error-message condition)
                            (locate-error-message-args condition)))))))
 
-;;; This gets clobbered with an empty function when DREF/AUTOLOAD is
+;;; This gets clobbered with an empty function when DREF/FULL is
 ;;; loaded.
 (autoload ensure-dref-loaded '#:dref/full :export nil)
 

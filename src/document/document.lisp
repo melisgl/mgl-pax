@@ -2953,15 +2953,6 @@
             (italic string stream))
         (format stream "~A" string))))
 
-(defun/autoloaded prin1-to-markdown (object &key (escape-inline t)
-                                            (escape-html t) (escape-block t))
-  "Like PRIN1-TO-STRING, but bind *PRINT-CASE* depending on
-  *DOCUMENT-DOWNCASE-UPPERCASE-CODE* and *FORMAT*, and
-  ESCAPE-MARKDOWN."
-  (escape-markdown (prin1-to-string* object)
-                   :escape-inline escape-inline :escape-html escape-html
-                   :escape-block escape-block))
-
 ;;; Print a lambda list of any kind (ordinary, macro, etc) or a method
 ;;; arglist to a string. Arg names are printed without the package
 ;;; prefix, default values with the package prefix. For specializers
