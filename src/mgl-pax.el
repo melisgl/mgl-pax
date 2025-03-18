@@ -133,26 +133,26 @@ other mgl-pax commands in interactive use."
            (when cont (funcall cont nil)))
           (t
            ;; This is the only async path.
-           (slime-eval-async
-               `(cl:progn
-                 (cl:format cl:t "~&;; Autoloading ~S for Emacs ~
+           (mgl-pax-eval-async
+            `(cl:progn
+              (cl:format cl:t "~&;; Autoloading ~S for Emacs ~
                                  (mgl-pax-autoload is t).~%" ',asdf-system)
-                 (cl:cond
-                  ((cl:ignore-errors (asdf:load-system ',asdf-system)
-                                     cl:t)
-                   (cl:format cl:t ";; Done autoloading ~S for Emacs~%"
-                              ',asdf-system)
-                   (cl:and ,check-form :async))
-                  (cl:t
-                   (cl:format
-                    cl:t
-                    ";; FAILED autoloading ~S~%~
+              (cl:cond
+               ((cl:ignore-errors (asdf:load-system ',asdf-system)
+                                  cl:t)
+                (cl:format cl:t ";; Done autoloading ~S for Emacs~%"
+                           ',asdf-system)
+                (cl:and ,check-form :async))
+               (cl:t
+                (cl:format
+                 cl:t
+                 ";; FAILED autoloading ~S~%~
                      ;; Proceeding to unload mgl-pax from Emacs~%~
                      ;; Once PAX loads cleanly, you may want to ~
                      (require 'mgl-pax) in Emacs.~%"
-                    ',asdf-system)
-                   :failed)))
-             cont)))))
+                 ',asdf-system)
+                :failed)))
+            cont)))))
 
 (defun mgl-pax-component-loaded-p (asdf-system)
   (slime-eval`(asdf:component-loaded-p (cl:ignore-errors
@@ -244,15 +244,16 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 (defvar mgl-pax-web-server-base-url)
 
 (defun mgl-pax-call-with-web-server/async (fn)
-  (slime-eval-async `(mgl-pax::ensure-web-server-for-emacs
-                      :hyperspec-root ',common-lisp-hyperspec-root
-                      :port ,mgl-pax-web-server-port)
-    (lambda (values)
-      (if (eq (cl-first values) :error)
-          (message "%s" (cl-second values))
-        (cl-assert (eq (cl-first values) :base-url))
-        (setq mgl-pax-web-server-base-url (cl-second values))
-        (funcall fn)))))
+  (mgl-pax-eval-async
+   `(mgl-pax::ensure-web-server-for-emacs
+     :hyperspec-root ',common-lisp-hyperspec-root
+     :port ,mgl-pax-web-server-port)
+   (lambda (values)
+     (if (eq (cl-first values) :error)
+         (error "%s" (cl-second values))
+       (cl-assert (eq (cl-first values) :base-url))
+       (setq mgl-pax-web-server-base-url (cl-second values))
+       (funcall fn)))))
 
 
 ;;;; Find possible words and locatives at point (see MGL-PAX::WALL).
@@ -537,7 +538,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 (defun mgl-pax-visit-locations (dspec-and-location-list)
   (when (consp dspec-and-location-list)
     (if (eq (car dspec-and-location-list) :error)
-        (message "%s" (cl-second dspec-and-location-list))
+        (error "%s" (cl-second dspec-and-location-list))
       (slime-edit-definition-cont
        (slime-postprocess-xrefs dspec-and-location-list)
        "dummy name"
@@ -607,11 +608,12 @@ buffer."
     (mgl-pax-find-parent-section #'mgl-pax-visit-locations)))
 
 (defun mgl-pax-find-parent-section (cont)
-  (slime-eval-async `(mgl-pax::find-parent-section-for-emacs
-                      ',(buffer-name)
-                      ',(buffer-file-name)
-                      ',(mgl-pax-current-definition-possible-names))
-    cont))
+  (mgl-pax-eval-async
+   `(mgl-pax::find-parent-section-for-emacs
+     ',(buffer-name)
+     ',(buffer-file-name)
+     ',(mgl-pax-current-definition-possible-names))
+   cont))
 
 
 (defun mgl-pax-current-definition-possible-names ()
@@ -734,24 +736,41 @@ macro on that page."
                   (concat "pax-wall:" (url-hexify-string (format "%S" wall))))
                (mgl-pax-prompt-and-document)))))))
 
+;;; Cancel the non-local exits to avoid "error in process filter"
+;;; messages and the subsequent delay when this function is called by
+;;; `slime-async-eval' and `read-from-minibuffer' is C-g'ed.
 (cl-defmacro mgl-pax-with-nlx-barrier (&body body)
   `(catch 'nlx-barrier
      (let ((done nil))
        (unwind-protect
-           (prog1 (progn ,@body)
-             (setq done t))
+           (condition-case c
+               (progn ,@body)
+             (error (message "%s" (error-message-string c)))
+             (:success (setq done t)))
          (unless done
            (throw 'nlx-barrier nil))))))
 
+;;; Like `slime-eval-async', but call abort-cont on :abort and
+;;; establish an nlx barrier.
+(defun mgl-pax-eval-async (sexp ok-cont &optional abort-cont package)
+  (slime-rex (ok-cont abort-cont (buffer (current-buffer)))
+      (sexp (or package (slime-current-package)))
+    ((:ok result)
+     (when ok-cont
+       (set-buffer buffer)
+       (mgl-pax-with-nlx-barrier
+        (funcall ok-cont result))))
+    ((:abort condition)
+     (if abort-cont
+         (mgl-pax-with-nlx-barrier
+          (funcall abort-cont condition))
+       (message "Evaluation aborted on %s." condition)))))
+
 (defun mgl-pax-prompt-and-document ()
-  ;; Cancel the non-local exits to avoid "error in process filter"
-  ;; messages and the subsequent delay when this function is called by
-  ;; `slime-async-eval' and `read-from-minibuffer' is C-g'ed.
-  (mgl-pax-with-nlx-barrier
-   (mgl-pax-document-pax-url
-    ;; FIXME: rename urllike?
-    (mgl-pax-urllike-to-url
-     (mgl-pax-read-urllike-from-minibuffer "View Documentation of: ")))))
+  (mgl-pax-document-pax-url
+   ;; FIXME: rename urllike?
+   (mgl-pax-urllike-to-url
+    (mgl-pax-read-urllike-from-minibuffer "View Documentation of: "))))
 
 (defun mgl-pax-document-pax-url (pax-url)
   (if (mgl-pax-use-w3m)
@@ -935,26 +954,13 @@ macro on that page."
                                            (pop-to-buffer buffer)
                                            (apply oldfun url args)))))))
 
-;;; Like slime-eval-async, but call abort-cont on :abort.
-(defun mgl-pax-eval-async (sexp ok-cont &optional abort-cont package)
-  (slime-rex (ok-cont abort-cont (buffer (current-buffer)))
-      (sexp (or package (slime-current-package)))
-    ((:ok result)
-     (when ok-cont
-       (set-buffer buffer)
-       (funcall ok-cont result)))
-    ((:abort condition)
-     (if abort-cont
-         (funcall abort-cont condition)
-       (message "Evaluation aborted on %s." condition)))))
-
 (cl-defun mgl-pax-call-document-for-emacs (url dir &key ok-cont abort-cont)
   (mgl-pax-eval-async
    `(mgl-pax::document-for-emacs  ',url ',dir ',common-lisp-hyperspec-root)
    (lambda (values)
      (if (eq (cl-first values) :url)
          (apply ok-cont (cl-rest values))
-       (message "%s" (cl-second values))
+       (error "%s" (cl-second values))
        (when abort-cont
          (apply abort-cont (cl-rest values)))))
    abort-cont)
@@ -974,12 +980,13 @@ if the current page was generated from a PAX URL."
                                                (w3m-reload-this-page))))))))
 
 (defun mgl-pax-call-redocument-for-emacs (file-url dir cont)
-  (slime-eval-async `(mgl-pax::redocument-for-emacs
-                      ',file-url ',dir ',common-lisp-hyperspec-root)
-    (lambda (values)
-      (if (eq (cl-first values) :error)
-          (message "%s" (cl-second values))
-        (apply cont (cl-rest values)))))
+  (mgl-pax-eval-async
+   `(mgl-pax::redocument-for-emacs ',file-url ',dir
+                                   ',common-lisp-hyperspec-root)
+   (lambda (values)
+     (if (eq (cl-first values) :error)
+         (error "%s" (cl-second values))
+       (apply cont (cl-rest values)))))
   (message "Generating documentation ..."))
 
 
@@ -1152,8 +1159,8 @@ move point to the beginning of the buffer."
            (slime-eval `(mgl-pax::locate-pax-url-for-emacs ',pax-url))))
       (if dspec-and-location-list
           (mgl-pax-visit-locations dspec-and-location-list)
-        (message "No source location for %s"
-                 (cl-subseq (url-unhex-string pax-url) 4))))))
+        (error "No source location for %s"
+               (cl-subseq (url-unhex-string pax-url) 4))))))
 
 (defun mgl-pax-doc-pax-url (url)
   (cond ((string-prefix-p "pax:" url)
@@ -1255,26 +1262,25 @@ packages are not filtered, and case does not matter.
 Also, see `mgl-pax-apropos-all'."
   (interactive (list nil nil nil nil))
   (mgl-pax-with-component (:mgl-pax/document)
-    (mgl-pax-with-nlx-barrier
-     (mgl-pax-document
-      (mgl-pax-make-pax-eval-url
-       (if string
-           `(mgl-pax::pax-apropos* ,string ,external-only
-                                   ,package ,case-sensitive)
-         `(mgl-pax::pax-apropos*
-           ;; Do the defaulting of arguments here instead of in
-           ;; `interactive' because
-           ;; `mgl-pax-read-urllike-from-minibuffer' relies on
-           ;; MGL-PAX/NAVIGATE being loaded.
-           ,@(if current-prefix-arg
-                 (list (mgl-pax-read-urllike-from-minibuffer
-                        "PAX Apropos: ")
-                       (y-or-n-p "External symbols only? ")
-                       (slime-read-package-name "Package: ")
-                       (y-or-n-p "Case-sensitive? "))
-               (list (mgl-pax-read-urllike-from-minibuffer
-                      "PAX Apropos: ")
-                     t nil nil)))))))))
+    (mgl-pax-document
+     (mgl-pax-make-pax-eval-url
+      (if string
+          `(mgl-pax::pax-apropos* ,string ,external-only
+                                  ,package ,case-sensitive)
+        `(mgl-pax::pax-apropos*
+          ;; Do the defaulting of arguments here instead of in
+          ;; `interactive' because
+          ;; `mgl-pax-read-urllike-from-minibuffer' relies on
+          ;; MGL-PAX/NAVIGATE being loaded.
+          ,@(if current-prefix-arg
+                (list (mgl-pax-read-urllike-from-minibuffer
+                       "PAX Apropos: ")
+                      (y-or-n-p "External symbols only? ")
+                      (slime-read-package-name "Package: ")
+                      (y-or-n-p "Case-sensitive? "))
+              (list (mgl-pax-read-urllike-from-minibuffer
+                     "PAX Apropos: ")
+                    t nil nil))))))))
 
 (defun mgl-pax-make-pax-eval-url (sexp)
   (concat "pax-eval:" (url-encode-url (prin1-to-string sexp))))
@@ -1283,10 +1289,9 @@ Also, see `mgl-pax-apropos-all'."
   "Shortcut for invoking `mgl-pax-apropos' with EXTERNAL-ONLY NIL."
   (interactive (list nil))
   (mgl-pax-with-component (:mgl-pax/document)
-    (mgl-pax-with-nlx-barrier
-     (let ((string (or string (mgl-pax-read-urllike-from-minibuffer
-                               "PAX Apropos All: "))))
-       (mgl-pax-apropos string nil "" nil)))))
+    (let ((string (or string (mgl-pax-read-urllike-from-minibuffer
+                              "PAX Apropos All: "))))
+      (mgl-pax-apropos string nil "" nil))))
 
 (defun mgl-pax-apropos-package (package &optional internal)
   "Show apropos listing for symbols in PACKAGE.
