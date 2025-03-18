@@ -174,8 +174,8 @@
 (defgeneric exportable-reference-p (package symbol locative-type locative-args)
   (:documentation "Return true if SYMBOL is to be exported from
   PACKAGE when it occurs in a DEFSECTION in a reference with
-  LOCATIVE-TYPE and LOCATIVE-ARGS. SYMBOL is [accessible][find-symbol]
-  in PACKAGE.
+  LOCATIVE-TYPE and LOCATIVE-ARGS. SYMBOL is [accessible][clhs] in
+  PACKAGE.
 
   The default method calls EXPORTABLE-LOCATIVE-TYPE-P with
   LOCATIVE-TYPE and ignores the other arguments.
