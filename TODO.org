@@ -128,7 +128,6 @@ I.e. they shouldn't be implemented with WITH-HEADING but maybe
 DOCUMENTING-REFERENCE like everything else.
 * MAYBE print ASDF/SYSTEM:SYSTEM as ASDF:SYSTEM
 Maybe. ASDF is a nickname of ASDF/INTERFACE.
-* GO nested in GO?
 * MAYBE "function. FOO" should not consider FUNCTION a locative
 "BAR has a useful function, FOO doesn't."
 * MAYBE do not test the locative type of a DREF with EQ

@@ -147,11 +147,24 @@
                                               ,(dref-locative go-dref)))
                               :target-dref go-dref))))
 
+(defun go-embedded-dref (go-dref)
+  (apply #'dref (first (dref-locative-args go-dref))))
+
+;;; Delegate all known extension methods. Maybe it would be better to
+;;; partially resolve the embedded DREF in the DREF* method above, but
+;;; currently RESOLVE* explicitly forbids returning XREFs.
+
 (defmethod resolve* ((dref go-dref))
-  (resolve* (apply #'dref (first (dref-locative-args dref)))))
+  (resolve* (go-embedded-dref dref)))
+
+(defmethod arglist* ((dref go-dref))
+  (arglist* (go-embedded-dref dref)))
+
+(defmethod docstring* ((dref go-dref))
+  (docstring* (go-embedded-dref dref)))
 
 (defmethod source-location* ((dref go-dref))
-  (source-location (apply #'dref (first (dref-locative-args dref)))))
+  (source-location (go-embedded-dref dref)))
 
 
 ;;;; DISLOCATED locative
