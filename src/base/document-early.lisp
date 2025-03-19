@@ -72,14 +72,14 @@
 (defvar *browse-html-style*)
 (export '*browse-html-style*)
 
-(autoload downcasingp '#:mgl-pax/document :export nil)
-(autoload document '#:mgl-pax/document)
-(autoload update-asdf-system-readmes '#:mgl-pax/document)
-(autoload update-asdf-system-html-docs '#:mgl-pax/document)
+(autoload downcasingp "mgl-pax/document" :export nil)
+(autoload document "mgl-pax/document")
+(autoload update-asdf-system-readmes "mgl-pax/document")
+(autoload update-asdf-system-html-docs "mgl-pax/document")
 ;;; UPDATE-PAX-WORLD generates documentation for PAX itself, so load
 ;;; MGL-PAX/FULL to have all documentation. Otherwise,
 ;;; MGL-PAX/DOCUMENT would be enough.
-(autoload update-pax-world '#:mgl-pax/full)
+(autoload update-pax-world "mgl-pax/full")
 
 
 (defsection @extending-document (:title "Extending DOCUMENT")
@@ -109,7 +109,7 @@
   `(call-with-heading ,stream ,object ,title ,link-title-to
                       (lambda (,stream)
                         ,@body)))
-(autoload call-with-heading '#:mgl-pax/document :export nil)
+(autoload call-with-heading "mgl-pax/document" :export nil)
 (declaim (special *first-pass*))
 
 (defmacro documenting-reference ((stream &key reference name package readtable
@@ -178,7 +178,7 @@
                      ()
                      ,%reference)
                ,@body)))))))
-(autoload print-reference-bullet '#:mgl-pax/document :export nil)
+(autoload print-reference-bullet "mgl-pax/document" :export nil)
 (declaim (ftype function print-arglist))
 (declaim (ftype function print-end-bullet))
 (declaim (ftype function guess-package-and-readtable))
@@ -204,9 +204,9 @@
                                   (ensure-list ,names))
      ,@body))
 
-(autoload document-docstring '#:mgl-pax/document)
-(autoload escape-markdown '#:mgl-pax/document)
-(autoload prin1-to-markdown '#:mgl-pax/document)
+(autoload document-docstring "mgl-pax/document")
+(autoload escape-markdown "mgl-pax/document")
+(autoload prin1-to-markdown "mgl-pax/document")
 
 
 ;;;; Early non-exported definitions

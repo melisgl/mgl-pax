@@ -339,7 +339,7 @@
 
 ;;; This gets clobbered with an empty function when DREF/FULL is
 ;;; loaded.
-(autoload ensure-dref-loaded '#:dref/full :export nil)
+(autoload ensure-dref-loaded "dref/full" :export nil)
 
 (declaim (ftype function locate*)
          (ftype function actualize-dref))
