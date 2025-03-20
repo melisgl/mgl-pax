@@ -471,7 +471,8 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
         ;; Prompt. This involves `mgl-pax-completions-at-point',
         ;; which needs :MGL-PAX/NAVIGATE for completion.
         (let ((name (if interactivep
-                        (slime-read-symbol-name "Edit Definition of: ")
+                        (mgl-pax-read-from-minibuffer "Edit Definition of: "
+                                                      'navigate)
                       name)))
           (funcall oldfun name where)))))
 
@@ -551,10 +552,20 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 (add-to-list 'slime-completion-at-point-functions
              'mgl-pax-completions-at-point)
 
-(defvar mgl-pax-navigating t)
+;;; The context in which `mgl-pax-completions-at-point' is invoked.
+;;; This affects whether the name entered the list of possible
+;;; locatives (doesn't for `apropos') and whether the only
+;;; DREF:LISP-LOCATIVE-TYPES are considered (yes, for `navigate').
+(defvar mgl-pax-completing-for nil)
+
+(defun mgl-pax-read-from-minibuffer (prompt completing-for)
+  (cl-assert (member completing-for '(navigate document apropos)))
+  (let ((mgl-pax-completing-for completing-for))
+    (slime-read-from-minibuffer prompt)))
 
 (defun mgl-pax-completions-at-point ()
-  (when (mgl-pax-component-loaded-p :mgl-pax/navigate)
+  (when (and mgl-pax-completing-for
+             (mgl-pax-component-loaded-p :mgl-pax/navigate))
     (let* (;; This the position of the first character after the prompt.
            (bol (line-beginning-position))
            (end (point))
@@ -585,7 +596,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
       (let* ((string (buffer-substring-no-properties (1+ start) (point)))
              (matches (slime-eval `(mgl-pax::string-name-completions-for-emacs
                                     ,string :locative-types
-                                    ,(if mgl-pax-navigating
+                                    ,(if (eq mgl-pax-completing-for 'navigate)
                                          '(dref:lisp-locative-types)
                                        '(dref:locative-types))))))
         ;; KLUDGE: Returning this even if MATCHES is () prevents other
@@ -770,7 +781,7 @@ macro on that page."
   (mgl-pax-document-pax-url
    ;; FIXME: rename urllike?
    (mgl-pax-urllike-to-url
-    (mgl-pax-read-urllike-from-minibuffer "View Documentation of: "))))
+    (mgl-pax-read-from-minibuffer "View Documentation of: " 'document))))
 
 (defun mgl-pax-document-pax-url (pax-url)
   (if (mgl-pax-use-w3m)
@@ -917,16 +928,13 @@ macro on that page."
                (concat "pax:" (url-hexify-string sexp-1) " "
                        (url-hexify-string sexp-2) pkg fragment)))))))
 
-(defun mgl-pax-read-urllike-from-minibuffer (prompt)
-  (let ((mgl-pax-navigating nil))
-    (slime-read-from-minibuffer prompt)))
-
 (defun mgl-pax-names-or-locatives (sexp-1 prefix)
   (let ((values (slime-eval
                  `(mgl-pax::names-or-locatives-for-emacs
-                   ,sexp-1 ,prefix :definitions ',(if mgl-pax-navigating
-                                                      'dref:definitions
-                                                    'mgl-pax::definitions*)))))
+                   ,sexp-1 ,prefix
+                   :definitions ',(if (eq mgl-pax-completing-for 'navigate)
+                                      'dref:definitions
+                                    'mgl-pax::definitions*)))))
     (if (eq (cl-first values) :error)
         (error (cl-second values))
       (cl-second values))))
@@ -1270,16 +1278,16 @@ Also, see `mgl-pax-apropos-all'."
         `(mgl-pax::pax-apropos*
           ;; Do the defaulting of arguments here instead of in
           ;; `interactive' because
-          ;; `mgl-pax-read-urllike-from-minibuffer' relies on
+          ;; `mgl-pax-read-from-minibuffer-for-apropos' relies on
           ;; MGL-PAX/NAVIGATE being loaded.
           ,@(if current-prefix-arg
-                (list (mgl-pax-read-urllike-from-minibuffer
-                       "PAX Apropos: ")
+                (list (mgl-pax-read-from-minibuffer "PAX Apropos: "
+                                                    'apropos)
                       (y-or-n-p "External symbols only? ")
                       (slime-read-package-name "Package: ")
                       (y-or-n-p "Case-sensitive? "))
-              (list (mgl-pax-read-urllike-from-minibuffer
-                     "PAX Apropos: ")
+              (list (mgl-pax-read-from-minibuffer "PAX Apropos: "
+                                                  'apropos)
                     t nil nil))))))))
 
 (defun mgl-pax-make-pax-eval-url (sexp)
@@ -1289,8 +1297,8 @@ Also, see `mgl-pax-apropos-all'."
   "Shortcut for invoking `mgl-pax-apropos' with EXTERNAL-ONLY NIL."
   (interactive (list nil))
   (mgl-pax-with-component (:mgl-pax/document)
-    (let ((string (or string (mgl-pax-read-urllike-from-minibuffer
-                              "PAX Apropos All: "))))
+    (let ((string (or string (mgl-pax-read-from-minibuffer
+                              "PAX Apropos All: " 'apropos))))
       (mgl-pax-apropos string nil "" nil))))
 
 (defun mgl-pax-apropos-package (package &optional internal)

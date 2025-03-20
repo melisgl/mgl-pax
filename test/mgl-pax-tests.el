@@ -333,48 +333,49 @@
 ;;;; Test `mgl-pax-completions-at-point'
 
 (ert-deftest test-mgl-pax-completions-at-point ()
-  (with-temp-lisp-buffer
-   (insert "prin1-to-str")
-   ;; This is left for Slime to complete.
-   (should (null (mgl-pax-completions-at-point)))
-   (insert "\nprin1-to-string ")
-   (should (cl-find "FUNCTION" (cl-third (mgl-pax-completions-at-point))
-                    :test 'equal))
-   (insert "\nclass dref:")
-   (should (equal (cl-third (mgl-pax-completions-at-point))
-                  ;; The non-matching ones get filtered out by the
-                  ;; standard Emacs completion mechanism.
-                  '("dref:dref" "dref:xref" "class" "mgl-pax:locative")))
-   (insert "\n\"lambda list")
-   (should (null (cl-third (mgl-pax-completions-at-point))))
-   (let ((mgl-pax-navigating nil))
-     (should (equal (cl-third (mgl-pax-completions-at-point))
-                    '("\"lambda list keyword\"" "\"lambda list\""))))
-   (insert "\npax:locative ")
-   (let ((locative-type-names (cl-third (mgl-pax-completions-at-point))))
-     (should (< 30 (length locative-type-names)))
+  (let ((mgl-pax-completing-for 'navigate))
+    (with-temp-lisp-buffer
+     (insert "prin1-to-str")
+     ;; This is left for Slime to complete.
+     (should (null (mgl-pax-completions-at-point)))
+     (insert "\nprin1-to-string ")
      (should (cl-find "FUNCTION" (cl-third (mgl-pax-completions-at-point))
                       :test 'equal))
-     (should (cl-find "METHOD" (cl-third (mgl-pax-completions-at-point))
-                      :test 'equal)))
-   (insert "\npackage ")
-   (should (= (length (cl-third (mgl-pax-completions-at-point)))
-              (+ (slime-eval '(cl:length (cl:list-all-packages)))
-                 ;; CLASS and MGL-PAX:LOCATIVE
-                 2)))
-   (let ((mgl-pax-navigating nil))
+     (insert "\nclass dref:")
+     (should (equal (cl-third (mgl-pax-completions-at-point))
+                    ;; The non-matching ones get filtered out by the
+                    ;; standard Emacs completion mechanism.
+                    '("dref:dref" "dref:xref" "class" "mgl-pax:locative")))
+     (insert "\n\"lambda list")
+     (should (null (cl-third (mgl-pax-completions-at-point))))
+     (let ((mgl-pax-completing-for 'document))
+       (should (equal (cl-third (mgl-pax-completions-at-point))
+                      '("\"lambda list keyword\"" "\"lambda list\""))))
+     (insert "\npax:locative ")
+     (let ((locative-type-names (cl-third (mgl-pax-completions-at-point))))
+       (should (< 30 (length locative-type-names)))
+       (should (cl-find "FUNCTION" (cl-third (mgl-pax-completions-at-point))
+                        :test 'equal))
+       (should (cl-find "METHOD" (cl-third (mgl-pax-completions-at-point))
+                        :test 'equal)))
+     (insert "\npackage ")
      (should (= (length (cl-third (mgl-pax-completions-at-point)))
                 (+ (slime-eval '(cl:length (cl:list-all-packages)))
-                   ;; CLASS, (MGL-PAX:CLHS CLASS) and MGL-PAX:LOCATIVE
-                   3))))
-   (insert "\n\"#")
-   (let ((mgl-pax-navigating nil))
-     (should (cl-find "\"#B\"" (cl-third (mgl-pax-completions-at-point))
-                      :test 'equal)))
-   (insert "\n\"~")
-   (let ((mgl-pax-navigating nil))
-     (should (cl-find "\"~F\"" (cl-third (mgl-pax-completions-at-point))
-                      :test 'equal)))))
+                   ;; CLASS and MGL-PAX:LOCATIVE
+                   2)))
+     (let ((mgl-pax-completing-for 'document))
+       (should (= (length (cl-third (mgl-pax-completions-at-point)))
+                  (+ (slime-eval '(cl:length (cl:list-all-packages)))
+                     ;; CLASS, (MGL-PAX:CLHS CLASS) and MGL-PAX:LOCATIVE
+                     3))))
+     (insert "\n\"#")
+     (let ((mgl-pax-completing-for 'document))
+       (should (cl-find "\"#B\"" (cl-third (mgl-pax-completions-at-point))
+                        :test 'equal)))
+     (insert "\n\"~")
+     (let ((mgl-pax-completing-for 'document))
+       (should (cl-find "\"~F\"" (cl-third (mgl-pax-completions-at-point))
+                        :test 'equal))))))
 
 
 ;;;; Test `mgl-pax-current-definition-possible-names'
