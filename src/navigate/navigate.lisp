@@ -321,6 +321,13 @@
               'dref::try-interned-symbols)
           (append (list-symbols-for-locative prefix locative) names)
           names))))
+
+(defun locative-types-for-emacs (prefix)
+  (with-swank ()
+    (swank::with-buffer-syntax ()
+      (swank/backend:converting-errors-to-error-location
+        `(:ok ,(mapcar (rcurry #'prin1-to-string/case (string-case prefix))
+                       (locative-types)))))))
 
 
 ;;;; The Common Lisp side of `mgl-pax-find-parent-section'

@@ -176,9 +176,6 @@ There is always mgl-pax-apropos for case-insensitive matching.
 * TODO mgl-pax-apropos: no way to have a space in string name?
 How to apropos "lambda list"?
 * TODO test codify and link INCLUDEd stuff
-* TODO completion in mgl-pax-apropos
-Doesn't work for the second locative or for :all and co.
-confused by 'pri, too.
 * MAYBE (pax:clhs pax:section) in mgl-pax-apropos
 * MAYBE web: link asdf system to definitions in it?
 Packages defined are linked already, which handles many cases but not

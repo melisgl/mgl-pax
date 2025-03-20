@@ -333,14 +333,25 @@
 ;;;; Test `mgl-pax-completions-at-point'
 
 (ert-deftest test-mgl-pax-completions-at-point ()
-  (let ((mgl-pax-completing-for 'navigate))
+  (let ((mgl-pax-completing-for 'navigate)
+        (n-locatives (length (mgl-pax-eval
+                              '(mgl-pax::locative-types-for-emacs "")))))
     (with-temp-lisp-buffer
      (insert "prin1-to-str")
      ;; This is left for Slime to complete.
      (should (null (mgl-pax-completions-at-point)))
      (insert "\nprin1-to-string ")
-     (should (cl-find "FUNCTION" (cl-third (mgl-pax-completions-at-point))
-                      :test 'equal))
+     (let ((navigation-completions (mgl-pax-completions-at-point)))
+       (should (cl-find "FUNCTION" (cl-third navigation-completions)
+                        :test 'equal))
+       (let ((mgl-pax-completing-for 'document))
+         ;; The CLHS has one extra definition.
+         (should (= (1+ (length navigation-completions))
+                    (length (cl-third (mgl-pax-completions-at-point))))))
+       (let ((mgl-pax-completing-for 'apropos))
+         ;; For apropos, the name has no effect.
+         (should (= (length (cl-third (mgl-pax-completions-at-point)))
+                    n-locatives))))
      (insert "\nclass dref:")
      (should (equal (cl-third (mgl-pax-completions-at-point))
                     ;; The non-matching ones get filtered out by the

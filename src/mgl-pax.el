@@ -256,6 +256,45 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
        (funcall fn)))))
 
 
+;;;; Communicating with CL
+
+;;; Cancel the non-local exits to avoid "error in process filter"
+;;; messages and the subsequent delay when this function is called by
+;;; `slime-async-eval' and `read-from-minibuffer' is C-g'ed.
+(cl-defmacro mgl-pax-with-nlx-barrier (&body body)
+  `(catch 'nlx-barrier
+     (let ((done nil))
+       (unwind-protect
+           (condition-case c
+               (progn ,@body)
+             (error (message "%s" (error-message-string c)))
+             (:success (setq done t)))
+         (unless done
+           (throw 'nlx-barrier nil))))))
+
+;;; Like `slime-eval-async', but call abort-cont on :abort and
+;;; establish an nlx barrier.
+(defun mgl-pax-eval-async (sexp ok-cont &optional abort-cont package)
+  (slime-rex (ok-cont abort-cont (buffer (current-buffer)))
+      (sexp (or package (slime-current-package)))
+    ((:ok result)
+     (when ok-cont
+       (set-buffer buffer)
+       (mgl-pax-with-nlx-barrier
+        (funcall ok-cont result))))
+    ((:abort condition)
+     (if abort-cont
+         (mgl-pax-with-nlx-barrier
+          (funcall abort-cont condition))
+       (message "Evaluation aborted on %s." condition)))))
+
+(defun mgl-pax-eval (sexp)
+  (let ((values (slime-eval sexp)))
+    (if (eq (cl-first values) :error)
+        (error "%s" (cl-second values))
+      (cl-second values))))
+
+
 ;;;; Find possible words and locatives at point (see MGL-PAX::WALL).
 
 ;;; Return a list of of things like (word (locative1 locative2 ...))
@@ -547,7 +586,8 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 
 
 ;;;; Completion of locatives for `slime-edit-definition' (see
-;;;; MGL-PAX::@M-.-COMPLETION)
+;;;; MGL-PAX::@M-.-COMPLETION) and also for `mgl-pax-document',
+;;;; `mgl-pax-apropos' and `mgl-pax-apropos-all'.
 
 (add-to-list 'slime-completion-at-point-functions
              'mgl-pax-completions-at-point)
@@ -579,11 +619,26 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
                              (when (search-forward " " end t)
                                (skip-chars-forward " ")
                                (point))))))
-      (if sexp-2-start
-          (list sexp-2-start end (mgl-pax-names-or-locatives
-                                  sexp-1 (buffer-substring-no-properties
-                                          sexp-2-start end)))
-        (mgl-pax-string-name-completions)))))
+      (if (eq mgl-pax-completing-for 'apropos)
+          ;; The first sexp is a pattern for a name, not a whole name.
+          ;; Just return all the possiblities. This doesn't handle
+          ;; composite locatives (e.g. (METHOD () (NUMBER)), (PAX:CLHS
+          ;; FUNCTION), of course.
+          (if sexp-2-start
+              (list sexp-2-start end
+                    (mgl-pax-eval
+                     ;; FIXME: MGL-PAX::PAX-APROPOS* could tell us all
+                     ;; the possible locatives for the pattern in
+                     ;; sexp-1, but that may be too expensive.
+                     `(mgl-pax::locative-types-for-emacs
+                       ,(buffer-substring-no-properties
+                         sexp-2-start end))))
+            nil)
+        (if sexp-2-start
+            (list sexp-2-start end (mgl-pax-names-or-locatives
+                                    sexp-1 (buffer-substring-no-properties
+                                            sexp-2-start end)))
+          (mgl-pax-string-name-completions))))))
 
 ;;; Return the completions for a DREF::@NAME typed in is explicitly as
 ;;; a string (e.g. `"mgl-p', note the missing right quote).
@@ -746,36 +801,6 @@ macro on that page."
                  (mgl-pax-document-pax-url
                   (concat "pax-wall:" (url-hexify-string (format "%S" wall))))
                (mgl-pax-prompt-and-document)))))))
-
-;;; Cancel the non-local exits to avoid "error in process filter"
-;;; messages and the subsequent delay when this function is called by
-;;; `slime-async-eval' and `read-from-minibuffer' is C-g'ed.
-(cl-defmacro mgl-pax-with-nlx-barrier (&body body)
-  `(catch 'nlx-barrier
-     (let ((done nil))
-       (unwind-protect
-           (condition-case c
-               (progn ,@body)
-             (error (message "%s" (error-message-string c)))
-             (:success (setq done t)))
-         (unless done
-           (throw 'nlx-barrier nil))))))
-
-;;; Like `slime-eval-async', but call abort-cont on :abort and
-;;; establish an nlx barrier.
-(defun mgl-pax-eval-async (sexp ok-cont &optional abort-cont package)
-  (slime-rex (ok-cont abort-cont (buffer (current-buffer)))
-      (sexp (or package (slime-current-package)))
-    ((:ok result)
-     (when ok-cont
-       (set-buffer buffer)
-       (mgl-pax-with-nlx-barrier
-        (funcall ok-cont result))))
-    ((:abort condition)
-     (if abort-cont
-         (mgl-pax-with-nlx-barrier
-          (funcall abort-cont condition))
-       (message "Evaluation aborted on %s." condition)))))
 
 (defun mgl-pax-prompt-and-document ()
   (mgl-pax-document-pax-url
