@@ -169,7 +169,6 @@ the funky SWANK-DEFINITIONS logic in MAP-DEFINITIONS.
 mgl-pax-apropos-package could take advantage?
 ** TODO mgl-pax-apropos: no way to have a space in string name?
 How to apropos "lambda list"?
-** TODO apropos: completion with multiple locatives
 ** MAYBE (pax:clhs pax:section) in mgl-pax-apropos
 ** MAYBE web: have apropos name be editable?
 This would make the PAX Live home page more capable without Emacs.
@@ -193,10 +192,11 @@ capturing interaction with the debugger needs to be though out though.
 ** MAYBE (values 1 2) => 1, 2 on a single line?
 * elisp
 ** MAYBE support SLY?
-** TODO completion when point is not at the minibuffer end?
 ** MAYBE support elisp function and variable locatives?
 Would it be nice to if M-. on "`mgl-pax-document` (elisp) would visit
 the elisp def and C-. would call `describe-function` (elisp)?
+** BUG completion for newline in suffix
+E.g print <tab>
 * literate programming
 ** MAYBE todo/comment locative?
 ** MAYBE reorder source definitions

@@ -90,9 +90,21 @@
 
 
 (ert-deftest test-mgl-pax-parse-lisp-string-to-sexps ()
-  (should (equal (let ((lisp-code "(+ 1 2) (list 'a 'b) \"string\" 123  "))
-                   (mgl-pax-parse-lisp-string-to-sexps lisp-code))
-                 '("(+ 1 2)" "(list 'a 'b)" "\"string\"" "123"))))
+  (should (equal (mgl-pax-parse-sexps-from-string
+                  "(+ 1 2) (list 'a 'b) \"string\" 123  ")
+                 '(("(+ 1 2)" "(list 'a 'b)" "\"string\"" "123")
+                   ((1 . 8) (9 . 21) (22 . 30) (31 . 34)))))
+  (should (equal (mgl-pax-parse-sexps-from-string "x y  \"abc xy")
+                     '(("x" "y" "\"abc xy")
+                       ((1 . 2) (3 . 4) (6 . 13)))))
+  (should (equal (mgl-pax-parse-sexps-from-string "x")
+                 '(("x") ((1 . 2)))))
+  (should (equal (mgl-pax-parse-sexps-from-string "x" :allow-empty t)
+                 '(("x") ((1 . 2)))))
+  (should (equal (mgl-pax-parse-sexps-from-string "x ")
+                 '(("x") ((1 . 2)))))
+  (should (equal (mgl-pax-parse-sexps-from-string "x " :allow-empty t)
+                 '(("x" "") ((1 . 2) (3 . 3))))))
 
 (ert-deftest test-mgl-pax-urllike-to-url ()
   (should

@@ -295,6 +295,40 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
       (cl-second values))))
 
 
+;;;; Parsing utilities
+
+;;; Return a list of strings representing `lisp-mode' sexps in STRING.
+;;; The last sexp returned may be incomplete.
+(cl-defun mgl-pax-parse-sexps (&key (start (point)) (end (point-max))
+                                    allow-empty)
+  (let ((sexps ())
+        (bounds ()))
+    (save-excursion
+      (goto-char start)
+      (while (< (point) end)
+        (skip-syntax-forward " ")
+        (let ((sexp-start (point)))
+          (condition-case nil
+              (forward-sexp)
+            (scan-error
+             (goto-char end)))
+          (let* ((sexp-end (point))
+                 (sexp (slime-trim-whitespace
+                        (buffer-substring-no-properties
+                         sexp-start sexp-end))))
+            (when (or allow-empty (cl-plusp (length sexp)))
+              (push sexp sexps)
+              (push (cons sexp-start sexp-end) bounds))))))
+    (list (nreverse sexps) (nreverse bounds))))
+
+(cl-defun mgl-pax-parse-sexps-from-string (string &key allow-empty)
+  (let ((lisp-mode-hook ()))
+    (with-temp-buffer
+      (insert string)
+      (lisp-mode)
+      (mgl-pax-parse-sexps :start (point-min) :allow-empty allow-empty))))
+
+
 ;;;; Find possible words and locatives at point (see MGL-PAX::WALL).
 
 ;;; Return a list of of things like (word (locative1 locative2 ...))
@@ -538,7 +572,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
       (mgl-pax-locate-definitions `((,sexp-1 ()))))))
 
 (defun mgl-pax-parse-reference (string &optional allow-fragment)
-  (let* ((sexps (mgl-pax-parse-lisp-string-to-sexps string))
+  (let* ((sexps (cl-first (mgl-pax-parse-sexps-from-string string)))
          (n (length sexps)))
     (if (and allow-fragment (= n 4))
         sexps
@@ -549,28 +583,6 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
              (message "Ignoring trailing junk %S" (cl-subseq sexps 2))
              (sit-for 1)
              (cl-subseq sexps 0 2))))))
-
-;;; Return a list of strings representing `lisp-mode' sexps in STRING.
-(defun mgl-pax-parse-lisp-string-to-sexps (string)
-  (let ((lisp-mode-hook ()))
-    (with-temp-buffer
-      (insert string)
-      (lisp-mode)
-      (let ((sexps ()))
-        (goto-char (point-min))
-        (while (not (eobp))
-          (let ((sexp-start (point)))
-            (condition-case nil
-                (forward-sexp)
-              (scan-error
-               (forward-word)))
-            (let* ((sexp-end (point))
-                   (sexp (slime-trim-whitespace
-                          (buffer-substring-no-properties
-                           sexp-start sexp-end))))
-              (unless (zerop (length sexp))
-                (push sexp sexps)))))
-        (nreverse sexps)))))
 
 (defun mgl-pax-locate-definitions (wall)
   (slime-eval `(mgl-pax::locate-definitions-for-emacs ',wall)))
@@ -608,37 +620,51 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
              (mgl-pax-component-loaded-p :mgl-pax/navigate))
     (let* (;; This the position of the first character after the prompt.
            (bol (line-beginning-position))
-           (end (point))
-           (sexp-1 (save-excursion
-                     (goto-char bol)
-                     (mgl-pax-next-sexp)))
-           (sexp-2-start (when sexp-1
-                           (save-excursion
-                             (goto-char bol)
-                             (forward-sexp)
-                             (when (search-forward " " end t)
-                               (skip-chars-forward " ")
-                               (point))))))
-      (if (eq mgl-pax-completing-for 'apropos)
-          ;; The first sexp is a pattern for a name, not a whole name.
-          ;; Just return all the possiblities. This doesn't handle
-          ;; composite locatives (e.g. (METHOD () (NUMBER)), (PAX:CLHS
-          ;; FUNCTION), of course.
-          (if sexp-2-start
-              (list sexp-2-start end
-                    (mgl-pax-eval
-                     ;; FIXME: MGL-PAX::PAX-APROPOS* could tell us all
-                     ;; the possible locatives for the pattern in
-                     ;; sexp-1, but that may be too expensive.
-                     `(mgl-pax::locative-types-for-emacs
-                       ,(buffer-substring-no-properties
-                         sexp-2-start end))))
-            nil)
-        (if sexp-2-start
-            (list sexp-2-start end (mgl-pax-names-or-locatives
-                                    sexp-1 (buffer-substring-no-properties
-                                            sexp-2-start end)))
-          (mgl-pax-string-name-completions))))))
+           (end (point)))
+      (cl-destructuring-bind (sexps bounds)
+          (mgl-pax-parse-sexps :start bol :end end :allow-empty t)
+        (let ((start (car (cl-first (last bounds)))))
+          (if (eq mgl-pax-completing-for 'apropos)
+              ;; Punt to Slime completion for the first sexp.
+              (when (<= 2 (length sexps))
+                ;; For apropos, the first sexp is a pattern for a
+                ;; name, not a whole name. Just return all the
+                ;; possiblities. This doesn't handle composite
+                ;; locatives (e.g. (METHOD () (NUMBER)), (PAX:CLHS
+                ;; FUNCTION), of course.
+                (list start end
+                      (mgl-pax-eval
+                       ;; FIXME: MGL-PAX::PAX-APROPOS* could tell us
+                       ;; all the possible locatives for the pattern
+                       ;; in the first sexp, but that may be too
+                       ;; expensive.
+                       `(mgl-pax::locative-types-for-emacs
+                         ,(buffer-substring-no-properties start end)))))
+            ;; Completing for `navigate' and `document'
+            (cond ((= (length sexps) 1)
+                   ;; point is within the first sexp or just beyond,
+                   ;; so the next char to be typed may still be part
+                   ;; of it. We only need to complete explicit string
+                   ;; names because returning nil lets the default
+                   ;; Slime completion take care of symbols.
+                   (mgl-pax-string-name-completions))
+                  ;; Specified locative
+                  ((= (length sexps) 2)
+                   ;; The first sexp is definitely complete.
+                   (list start end
+                         (mgl-pax-names-or-locatives
+                          (elt sexps 0) (buffer-substring-no-properties
+                                         start end))))
+                  ;; `mgl-pax-document' input with fragment. We could
+                  ;; also complete the third sexp (the fragment's
+                  ;; name) based on what is on the page generated for
+                  ;; the main reference.
+                  ((= (length sexps) 4)
+                   ;; The first sexp is definitely complete.
+                   (list start end
+                         (mgl-pax-names-or-locatives
+                          (elt sexps 2) (buffer-substring-no-properties
+                                         start end)))))))))))
 
 ;;; Return the completions for a DREF::@NAME typed in is explicitly as
 ;;; a string (e.g. `"mgl-p', note the missing right quote).
