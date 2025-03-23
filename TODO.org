@@ -99,7 +99,6 @@ the system.
 Maybe DREF-APROPOS should support filtering by source location.
 ** CANCELLED live browsing: reload page automatically on redefinition
 Its value is dubious. Not even Emacs help does this.
-** TODO test codify and link INCLUDEd stuff
 ** MAYBE ASDF:SYSTEMs should not be sectionlike
 I.e. they shouldn't be implemented with WITH-HEADING but maybe
 DOCUMENTING-REFERENCE like everything else.

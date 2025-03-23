@@ -111,6 +111,7 @@
   (test-glossary-term)
   (test-go)
   (test-docstring)
+  (test-include)
   (test-hyperspec)
   (test-clhs-definitions)
   (test-clhs-section)
@@ -1402,6 +1403,9 @@ This is [Self-referencing][e042].
               "[`BAR`][f3f4] is not a link.")
   (check-head "[*TEST-VARIABLE* VARIABLE][docstring]"
               "`*TEST-VARIABLE*` is not a link."))
+
+(deftest test-include ()
+  (check-pred @inc "This is in [`@INC`][0a52]"))
 
 (deftest test-hyperspec ()
   (check-head "FIND-IF" "[`FIND-IF`][5884]")
