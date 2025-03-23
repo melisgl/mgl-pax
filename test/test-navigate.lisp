@@ -21,6 +21,7 @@
   (test-map-names-in-raw)
   (test-parse-locative)
   (test-definitions-of-wall)
+  (test-names-or-locatives-for-emacs)
   (test-locate)
   (test-navigation-to-source))
 
@@ -155,6 +156,17 @@
                                (or (string< (first r1) (first r2))
                                    (and (string= (first r1) (first r2))
                                         (string< (second r1) (second r2)))))))
+
+
+(deftest test-names-or-locatives-for-emacs ()
+  (let ((x (mgl-pax::names-or-locatives-for-emacs "print" "")))
+    (is (eq (first x) :names))
+    (dolist (locative (second x))
+      (is (null (find #\Newline locative)))))
+  (let ((x (mgl-pax::names-or-locatives-for-emacs "package" "")))
+    (is (eq (first x) :names))
+    (dolist (locative (second x))
+      (is (null (search "BASE-CHAR" locative))))))
 
 
 (deftest test-locate ()

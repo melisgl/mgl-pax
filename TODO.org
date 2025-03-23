@@ -195,8 +195,6 @@ capturing interaction with the debugger needs to be though out though.
 ** MAYBE support elisp function and variable locatives?
 Would it be nice to if M-. on "`mgl-pax-document` (elisp) would visit
 the elisp def and C-. would call `describe-function` (elisp)?
-** BUG completion for newline in suffix
-E.g print <tab>
 * literate programming
 ** MAYBE todo/comment locative?
 ** MAYBE reorder source definitions
