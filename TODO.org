@@ -180,10 +180,6 @@ Files in ASDF system order.
 Regexp, generic filter functions, non-listing maps? Revisit if
 filtering the list is a performance problem.
 * transcribe
-** MAYBE emacs retranscribe should not update if consistent?
-This either relies on the global value of
-*TRANSCRIBE-CHECK-CONSISTENCY* or it needs to see the
-"```cl-transcript (...)" line.
 ** MAYBE don't treat "debugger invoked on" as output
 Well, it's a kind of output, but maybe it would be better for
 consistency checking to treat it as a different kind of output. First,

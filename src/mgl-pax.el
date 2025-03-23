@@ -1408,15 +1408,17 @@ input will not be changed."
             (transcript (mgl-pax-transcribe start end
                                             (mgl-pax-transcribe-syntax-arg)
                                             t t nil dynenv)))
-        (if point-at-start-p
+        (if (string= transcript (buffer-substring-no-properties start end))
+            (deactivate-mark)
+          (if point-at-start-p
+              (save-excursion
+                (goto-char start)
+                (delete-region start end)
+                (insert transcript))
             (save-excursion
               (goto-char start)
-              (delete-region start end)
-              (insert transcript))
-          (save-excursion
-            (goto-char start)
-            (delete-region start end))
-          (insert transcript))))))
+              (delete-region start end))
+            (insert transcript)))))))
 
 (defun mgl-pax-transcribe-syntax-arg ()
   (if current-prefix-arg
