@@ -1511,6 +1511,15 @@
                           :upcase)))
     (prin1-to-string object)))
 
+(defun/autoloaded prin1-to-markdown (object &key (escape-inline t)
+                                            (escape-html t) (escape-block t))
+  "Like PRIN1-TO-STRING, but bind *PRINT-CASE* depending on
+  *DOCUMENT-DOWNCASE-UPPERCASE-CODE* and *FORMAT*, and
+  ESCAPE-MARKDOWN."
+  (escape-markdown (prin1-to-string* object)
+                   :escape-inline escape-inline :escape-html escape-html
+                   :escape-block escape-block))
+
 (defun maybe-downcase (string)
   (if *translating-reference-link*
       ;; In a reference link label, the first backslash the prevents

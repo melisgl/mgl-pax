@@ -905,7 +905,7 @@ otherwise noted.
     
     ```common-lisp
     (definitions 'double-float :locative-types (locative-types))
-    ==> (#<DREF DOUBLE-FLOAT CLASS> #<DREF DOUBLE-FLOAT (CLHS TYPE)>
+    ==> (#<DREF DOUBLE-FLOAT (CLHS TYPE)> #<DREF DOUBLE-FLOAT CLASS>
     -->  #<DREF DOUBLE-FLOAT (UNKNOWN (:DEFINE-ALIEN-TYPE DOUBLE-FLOAT))>)
     ```
     
@@ -1153,7 +1153,7 @@ Next, we define a subclass of [`DREF`][d930] associated with the
 [`CLASS`][2060] locative type and specialize [`LOCATE*`][76c4]:
 
 ```
-(define-definition-class class class-dref)
+(define-definition-class class class-dref (type-dref))
 
 (defmethod locate* ((class class))
   (make-instance 'class-dref :name (class-name class) :locative 'class))
@@ -1281,8 +1281,8 @@ following, we describe the pieces in detail.
 - [macro] **DEFINE-DEFINITION-CLASS** *LOCATIVE-TYPE CLASS-NAME &OPTIONAL (SUPERCLASSES '(DREF)) &BODY BODY*
 
     Define a subclass of `DREF`([`0`][d930] [`1`][7e92]). All definitions with `LOCATIVE-TYPE`
-    must be of this type. If non-`NIL`, `BODY` is [`DEFCLASS`][ead6]' slot definitions
-    and other options.
+    must be of this type. If non-`NIL`, `BODY` is [`DEFCLASS`][ead6]'s slot
+    definitions and other options.
 
 <a id="x-28DREF-EXT-3ALOCATE-2A-20GENERIC-FUNCTION-29"></a>
 
@@ -1555,7 +1555,7 @@ subclassing.
 
 <a id="x-28DREF-EXT-3ACLASS-DREF-20CLASS-29"></a>
 
-- [class] **CLASS-DREF** *[DREF][d930]*
+- [class] **CLASS-DREF** *[TYPE-DREF][b4e9]*
 
 <a id="x-28DREF-EXT-3ADECLARATION-DREF-20CLASS-29"></a>
 
@@ -1802,6 +1802,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [ae5a]: #x-28DREF-EXT-3ASOURCE-LOCATION-FILE-20FUNCTION-29 "DREF-EXT:SOURCE-LOCATION-FILE FUNCTION"
   [affc]: #x-28MGL-PAX-3ADOCSTRING-20FUNCTION-29 "MGL-PAX:DOCSTRING FUNCTION"
   [b3a7]: #x-28DREF-EXT-3ACLASS-DREF-20CLASS-29 "DREF-EXT:CLASS-DREF CLASS"
+  [b4e9]: #x-28DREF-EXT-3ATYPE-DREF-20CLASS-29 "DREF-EXT:TYPE-DREF CLASS"
   [b6c4]: #x-28DREF-EXT-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "DREF-EXT:DEFINE-LOCATIVE-TYPE MGL-PAX:MACRO"
   [b7fc]: ../README.md#x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29 "Apropos"
   [b88e]: #x-28DREF-EXT-3AXREF-NAME-20-28MGL-PAX-3AREADER-20DREF-3AXREF-29-29 "DREF-EXT:XREF-NAME (MGL-PAX:READER DREF:XREF)"

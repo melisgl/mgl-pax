@@ -121,18 +121,29 @@
 ;;; and the *PACKAGE* in effect at macroexpansion time.
 (defgeneric locative-type-lambda-list (symbol))
 
+(defvar *locative-type-to-class-name* (make-hash-table))
+
+(defun locative-type-class (locative-type &optional (errorp t))
+  (or (gethash locative-type *locative-type-to-class-name*)
+      (not errorp)
+      (error "~@<No class defined for locative type ~S~:@>"
+             locative-type)))
+
+(defun locative-subtype-p (locative-type-1 locative-type-2)
+  (subtypep (locative-type-class locative-type-1)
+            (locative-type-class locative-type-2)))
+
 (defmacro define-definition-class (locative-type class-name
                                    &optional (superclasses '(dref)) &body body)
   "Define a subclass of DREF. All definitions with LOCATIVE-TYPE
-  must be of this type. If non-NIL, BODY is DEFCLASS' slot definitions
-  and other options."
-  ;; We could record which DREF subclass corresponds to which locative
-  ;; type. This will be needed, for example, for DREF-APROPOS to
-  ;; support matching on subtypes. For now we ignore LOCATIVE-TYPE.
-  (declare (ignore locative-type))
-  `(defclass ,class-name ,superclasses
-     ,@(or body '(()))))
-
+  must be of this type. If non-NIL, BODY is DEFCLASS's slot
+  definitions and other options."
+  `(progn
+     (defclass ,class-name ,superclasses
+       ,@(or body '(())))
+     (eval-when (:compile-toplevel :load-toplevel :execute)
+       (setf (gethash ',locative-type *locative-type-to-class-name*)
+             ',class-name))))
 
 
 (defvar *locating-object*)

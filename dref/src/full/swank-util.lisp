@@ -93,7 +93,10 @@
              locative-types)
     (loop for dspec in (swank-dspecs name)
           for dref = (dspec-to-definition dspec name)
-          when (member (dref-locative-type dref) locative-types)
+          when (loop for locative-type in locative-types
+                       thereis (dref::locative-subtype-p
+                                (dref-locative-type dref)
+                                locative-type))
             ;; FIXME:
             ;; (definitions 'sb-pcl:make-specializer-form-using-class)
             ;; puts the method combination among the specializers.

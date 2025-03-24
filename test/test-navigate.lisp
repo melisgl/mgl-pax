@@ -177,11 +177,17 @@
 
 (deftest test-locate/section ()
   (check-ref-sets (definitions '@test-examples)
-                  `(,(xref '@test-examples 'section))))
+                  `(,(xref '@test-examples 'section)))
+  (with-test ("actualized")
+    (check-ref-sets (definitions '@test-examples :locative-types '(variable))
+                    `(,(xref '@test-examples 'section)))))
 
 (deftest test-locate/glossary-term ()
   (check-ref-sets (definitions 'some-term)
-                  `(,(xref 'some-term 'glossary-term))))
+                  `(,(xref 'some-term 'glossary-term)))
+  (with-test ("actualized")
+    (check-ref-sets (definitions 'some-term)
+                    `(,(xref 'some-term 'glossary-term)))))
 
 (deftest test-locate/go ()
   (check-ref (dref 'xxx '(go (foo function)))

@@ -141,7 +141,7 @@
                         (and (stringp name)
                              (search name (princ-to-string name-1)
                                      :test char-test)))
-                    ;; FIXME: Support :ANY.
+                    ;; FIXME: Support :ANY to match only symbol names.
                     (if (eq package :none)
                         (not (symbolp name-1))
                         (not (and (stringp name-1) package)))))

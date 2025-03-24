@@ -115,7 +115,10 @@
   ;; 'SB-C::CATCH-BLOCK) returns as a TYPE.
   #+sbcl
   (signals-not (locate-error)
-    (definitions 'sb-c::catch-block)))
+    (definitions 'sb-c::catch-block))
+  (with-test ("actualized")
+    (check-ref-sets (definitions 'foo :locative-types '(type))
+                    `(,(xref 'foo 'class)))))
 
 (defun check-ref-sets (refs expected-refs)
   (is (match-values (diff-sets (capture refs) (capture expected-refs)
@@ -632,7 +635,17 @@
                 (length (% (dref-apropos 'print
                                          :locative-types '(:pseudo)))))
              (length (% (dref-apropos 'print
-                                      :locative-types '(:all)))))))))
+                                      :locative-types '(:all))))))))
+  (with-test ("actualized")
+    (check-ref-sets (dref-apropos 'foo :locative-types '(type)
+                                       :package '#:dref-test)
+                    `(,(xref 'foo 'class)))
+    (check-ref-sets (dref-apropos 'my-error :locative-types '(type)
+                                       :package '#:dref-test)
+                    `(,(xref 'my-error 'condition)))
+    (check-ref-sets (dref-apropos 'my-error :locative-types '(class)
+                                            :package '#:dref-test)
+                    `(,(xref 'my-error 'condition)))))
 
 
 (deftest test-all ()

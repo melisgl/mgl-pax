@@ -771,7 +771,7 @@ otherwise noted.
     
     ```common-lisp
     (definitions 'double-float :locative-types (locative-types))
-    ==> (#<DREF DOUBLE-FLOAT CLASS> #<DREF DOUBLE-FLOAT (CLHS TYPE)>
+    ==> (#<DREF DOUBLE-FLOAT (CLHS TYPE)> #<DREF DOUBLE-FLOAT CLASS>
     -->  #<DREF DOUBLE-FLOAT (UNKNOWN (:DEFINE-ALIEN-TYPE DOUBLE-FLOAT))>)
     ```
     
@@ -977,7 +977,7 @@ Next, we define a subclass of DREF associated with the
 CLASS locative type and specialize LOCATE\*:
 
 ```
-(define-definition-class class class-dref)
+(define-definition-class class class-dref (type-dref))
 
 (defmethod locate* ((class class))
   (make-instance 'class-dref :name (class-name class) :locative 'class))
@@ -1097,8 +1097,8 @@ following, we describe the pieces in detail.
 - [macro] DEFINE-DEFINITION-CLASS LOCATIVE-TYPE CLASS-NAME &OPTIONAL (SUPERCLASSES '(DREF)) &BODY BODY
 
     Define a subclass of DREF. All definitions with LOCATIVE-TYPE
-    must be of this type. If non-NIL, BODY is DEFCLASS' slot definitions
-    and other options.
+    must be of this type. If non-NIL, BODY is DEFCLASS's slot
+    definitions and other options.
 
 - [generic-function] LOCATE* OBJECT
 
@@ -1305,7 +1305,7 @@ subclassing.
 
 - [class] TYPE-DREF DREF
 
-- [class] CLASS-DREF DREF
+- [class] CLASS-DREF TYPE-DREF
 
 - [class] DECLARATION-DREF DREF
 

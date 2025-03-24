@@ -19,7 +19,7 @@
 (define-definition-class variable variable-dref)
 
 (defmethod dref* (symbol (locative-type (eql 'variable))
-                         locative-args)
+                  locative-args)
   (check-locative-args variable locative-args)
   (unless (and (symbolp symbol)
                #+ccl (member (ccl::variable-information symbol)
@@ -827,7 +827,7 @@
   ==> #<DREF LOCATE-ERROR CONDITION>
   ```")
 
-(define-definition-class class class-dref)
+(define-definition-class class class-dref (type-dref))
 
 (defmethod locate* ((class class))
   (make-instance 'class-dref :name (class-name class) :locative 'class))
@@ -1170,7 +1170,7 @@
 
   ```cl-transcript (:dynenv dref-std-env)
   (definitions 'double-float :locative-types (locative-types))
-  ==> (#<DREF DOUBLE-FLOAT CLASS> #<DREF DOUBLE-FLOAT (CLHS TYPE)>
+  ==> (#<DREF DOUBLE-FLOAT (CLHS TYPE)> #<DREF DOUBLE-FLOAT CLASS>
   -->  #<DREF DOUBLE-FLOAT (UNKNOWN (:DEFINE-ALIEN-TYPE DOUBLE-FLOAT))>)
   ```
 

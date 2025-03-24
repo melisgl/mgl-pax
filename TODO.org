@@ -54,11 +54,6 @@ symbols.
 ** MAYBE add source locative
 That is, link to github, without documenting anything. Useful for code
 examples without actually INCLUDEing them. Does/should LAMBDA do this?
-** BUG sublocativetype in DEFINITIONS
-(dref:definitions 'dref::reader-dref :locative-types '(type))
-=> NIL
-(dref:definitions 'dref::reader-dref :locative-types '(class))
-==> (#<DREF:DREF DREF-EXT:READER-DREF CLASS>)
 * document
 ** OPT parse and print markdown once when *format* is :html?
 This would involve rewriting everything to emit parse tree fragments or be able to produce html directly. Either way, it is not without cost.
@@ -131,9 +126,6 @@ How to apropos "lambda list"?
 ** MAYBE (pax:clhs pax:section) in mgl-pax-apropos
 ** MAYBE web: have apropos name be editable?
 This would make the PAX Live home page more capable without Emacs.
-** MAYBE should DREF-APROPOS provide an option to match canonical dref?
-It could control the results when searching for TYPE and getting a
-CLASS.
 ** MAYBE option to sort apropos results by source location
 Files in ASDF system order.
 ** CANCELLED Should DREF-APROPOS be made more flexible?

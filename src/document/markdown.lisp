@@ -119,15 +119,6 @@
                    (write-char #\\ stream))
                  (write-char char stream))))))))
 
-(defun/autoloaded prin1-to-markdown (object &key (escape-inline t)
-                                            (escape-html t) (escape-block t))
-  "Like PRIN1-TO-STRING, but bind *PRINT-CASE* depending on
-  *DOCUMENT-DOWNCASE-UPPERCASE-CODE* and *FORMAT*, and
-  ESCAPE-MARKDOWN."
-  (escape-markdown (prin1-to-string* object)
-                   :escape-inline escape-inline :escape-html escape-html
-                   :escape-block escape-block))
-
 (defun unescape-markdown (string)
   (let ((escaping nil))
     (with-output-to-string (stream)
