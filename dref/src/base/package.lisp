@@ -139,9 +139,8 @@
   (remove-dref-actualizer function)
   (resolve* generic-function)
   (resolve-error function)
-  ;; Experimental:
-  ;; (map-definitions generic-function)
-  ;; (map-names generic-function)
+  (map-definitions-of-name generic-function)
+  (map-definitions-of-type generic-function)
   (arglist* generic-function)
   (docstring* generic-function)
   (source-location* generic-function))

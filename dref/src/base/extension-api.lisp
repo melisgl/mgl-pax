@@ -55,11 +55,12 @@
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (defmethod locative-type-lambda-list ((symbol (eql ',locative-type)))
        (values ',lambda-list ,(first docstring) ,*package*))
-     (defmethod dref::map-definitions
+     (defmethod dref::map-definitions-of-name
          (fn name (locative-type (eql ',locative-type)))
        (declare (ignorable fn name))
        nil)
-     (defmethod dref::map-names (fn (locative-type (eql ',locative-type)))
+     (defmethod dref::map-definitions-of-type
+         (fn (locative-type (eql ',locative-type)))
        (declare (ignorable fn))
        nil)
      (declare-pseudo-locative-type ',locative-type)))
@@ -190,6 +191,9 @@
            (dref (call-next-method)))
       (declare (type dref dref))
       ;; Don't set ORIGIN if a nested LOCATE already did.
+      ;; FIXME: This is in conflict with DREF-ORIGIN:
+      ;; (dref-origin (locate #'print))
+      ;; ==> #<XREF PRINT FUNCTION>
       (unless (slot-boundp dref 'origin)
         (setf (slot-value dref 'origin) object))
       dref))
@@ -255,14 +259,22 @@
   (:method ((dref dref))
     (resolve-error)))
 
-(defgeneric map-definitions (fn name locative-type)
-  (:documentation "Call FN with [DREF][class]s which have the given
-  NAME and LOCATIVE-TYPE. For most locative types, there is at most
-  one definition, but for METHOD, for example, there may be many. The
-  default method simply does `(DREF NAME LOCATIVE-TYPE NIL)` and calls
-  FN with result if [DREF][function] succeeds.
+(defgeneric map-definitions-of-name (fn name locative-type)
+  (:documentation "Call FN with [DREF][class]s which can be LOCATEd
+  with an XREF with NAME, LOCATIVE-TYPE and some LOCATIVE-ARGS. The
+  strange wording here is because there may be multiple ways (and thus
+  XREFs) that refer to the same definition.
+  
+  For most locative types, there is at most one such definition, but
+  for METHOD, for example, there may be many. The default method
+  simply does `(DREF NAME LOCATIVE-TYPE NIL)` and calls FN with result
+  if [DREF][function] succeeds.
 
-  This function is for extending DEFINITIONS. Do not call it directly.")
+  FN must not be called with the same (under XREF=) definition
+  multiple times.
+
+  This function is for extending DEFINITIONS and DREF-APROPOS. Do not
+  call it directly.")
   ;; See DEFINITIONS for how the efficiency hack of returning the
   ;; magic symbol SWANK-DEFINITIONS instead of mapping with FN works.
   (:method (fn name locative-type)
@@ -271,11 +283,16 @@
         (funcall fn located)
         (values)))))
 
-(defgeneric map-names (fn locative-type)
-  (:documentation "Call FN with @NAMEs that form a [DREF][class] with
-  some locative with LOCATIVE-TYPE. The default method tries to form
-  DREFs by combining each interned symbol with LOCATIVE-TYPE and no
-  LOCATIVE-ARGS.
+(defgeneric map-definitions-of-type (fn locative-type)
+  (:documentation "Call FN with [DREF][class]s which can be LOCATEd
+  with an XREF with LOCATIVE-TYPE with some NAME and LOCATIVE-ARGS.
+
+  The default method forms XREFs by combining each interned symbol as
+  @NAMEs with LOCATIVE-TYPE and no LOCATIVE-ARGS and calls FN if it
+  LOCATEs a definition.
+
+  FN may be called with DREFs that are XREF= but differ in the XREF in
+  their DREF-ORIGIN.
 
   This function is for extending DREF-APROPOS. Do not call it
   directly.")
@@ -283,6 +300,13 @@
     (declare (ignore fn locative-type))
     ;; See DREF-APROPOS about the magic symbol TRY-INTERNED-SYMBOLS.
     'try-interned-symbols))
+
+(defun map-names-for-type (fn locative-type)
+  ;; This is wasteful in that a DREF is created from an XREF while we
+  ;; are only interested in the XREF-NAME.
+  (map-definitions-of-type (lambda (dref)
+                             (funcall fn (xref-name (dref-origin dref))))
+                           locative-type))
 
 (defgeneric arglist* (object)
   (:documentation "To extend ARGLIST, specialize this on a subclass of

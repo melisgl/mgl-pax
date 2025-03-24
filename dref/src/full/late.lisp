@@ -3,25 +3,38 @@
 (in-readtable pythonic-string-syntax)
 
 (defun/autoloaded definitions (name &key (locative-types (lisp-locative-types)))
-  """Return all definitions of NAME that match LOCATIVE-TYPES
-  as a list of [DREF][class]s.
+  """Return all definitions as a list of [DREF][class]s LOCATEable
+  with NAME and a locative with one of LOCATIVE-TYPES.
 
-  The DREF-NAMEs may not be the same as NAME, for example, when NAME
-  is a package nickname:
+  Just as `(DREF NAME LOCATIVE)` returns the canonical definition, the
+  DREF-NAMEs of returned by DEFINITIONS are different from NAME if
+  NAME is non-canonical:
 
   ```cl-transcript
-  (definitions 'pax)
+  (definitions "PAX")
   ==> (#<DREF "MGL-PAX" PACKAGE>)
   ```
 
-  Can be extended via MAP-DEFINITIONS."""
+  ```cl-transcript
+  (definitions 'mgl-pax)
+  ==> (#<DREF "mgl-pax" ASDF/SYSTEM:SYSTEM> #<DREF "MGL-PAX" PACKAGE>)
+  ```
+
+  Similarly, DREF-LOCATIVE-TYPE may be more made more specific:
+
+  ```cl-transcript
+  (definitions 'dref:locate-error :locative-types '(class))
+  ==> (#<DREF LOCATE-ERROR CONDITION>)
+  ```
+
+  Can be extended via MAP-DEFINITIONS-OF-NAME."""
   (delete-duplicates
    (let ((drefs ())
          (swank-locative-types ()))
      (dolist (locative-type locative-types)
-       (let ((mapper (map-definitions (lambda (dref)
-                                        (push dref drefs))
-                                      name locative-type)))
+       (let ((mapper (map-definitions-of-name (lambda (dref)
+                                                (push dref drefs))
+                                              name locative-type)))
          (when (eq mapper 'swank-definitions)
            (push locative-type swank-locative-types))))
      (append drefs (swank-definitions name swank-locative-types)))
@@ -113,12 +126,13 @@
     candidate definition must be in it (handling :ALL,
     :LISP, and :PSEUDO as described above).
 
-  Can be extended via MAP-NAMES."""
+  Can be extended via MAP-REFERENCES-OF-TYPE and
+  MAP-DEFINITIONS-OF-NAME."""
   (let ((locative-types (expand-apropos-locative-types locative-types))
         (char-test (if case-sensitive #'char= #'char-equal))
         (string-test (if case-sensitive #'string= #'string-equal))
-        (matching-names (make-hash-table :test #'equal))
-        (locative-types-to-try-with-interned-symbols ()))
+        (to-try ())
+        (drefs ()))
     (labels ((matching-name-p (name-1)
                (and (or (null name)
                         (and (symbolp name)
@@ -132,68 +146,48 @@
                         (not (symbolp name-1))
                         (not (and (stringp name-1) package)))))
              (matching-package-p (package-1)
-               (or (null package)
-                   (and (packagep package)
-                        (eq package-1 package))
-                   (and (symbolp package)
-                        (not (eq package :none))
-                        (find (symbol-name package)
-                              (cons (package-name package-1)
-                                    (package-nicknames package-1))
-                              :test string-test))
-                   (and (stringp package)
-                        (find-if (lambda (package-name-1)
-                                   (search package package-name-1
-                                           :test char-test))
-                                 (cons (package-name package-1)
-                                       (package-nicknames package-1))))))
-             (matching-reference-p (dref)
-               (let ((name (dref-name dref))
-                     (locative-type (dref-locative-type dref)))
+               (and (not (eq package-1 #.(find-package '#:keyword)))
+                    (or (null package)
+                        (and (packagep package)
+                             (eq package-1 package))
+                        (and (symbolp package)
+                             (not (eq package :none))
+                             (find (symbol-name package)
+                                   (cons (package-name package-1)
+                                         (package-nicknames package-1))
+                                   :test string-test))
+                        (and (stringp package)
+                             (find-if (lambda (package-name-1)
+                                        (search package package-name-1
+                                                :test char-test))
+                                      (cons (package-name package-1)
+                                            (package-nicknames package-1)))))))
+             (matching-reference-p (xref)
+               (let ((name (xref-name xref))
+                     (locative-type (xref-locative-type xref)))
                  (and (matching-name-p name)
                       (member locative-type locative-types))))
-             (consider (name)
-               (when (matching-name-p name)
-                 (setf (gethash name matching-names) t))))
+             (consider-dref (dref)
+               (let ((xref (dref-origin dref)))
+                 (when (matching-reference-p xref)
+                   (push dref drefs)))))
       ;; Populate MATCHING-NAMES with @NAMEs that combine with some
       ;; locative whose type is in LOCATIVE-TYPES.
       (dolist (locative-type locative-types)
-        (let ((mapper (map-names #'consider locative-type)))
+        (let ((mapper (map-definitions-of-type #'consider-dref locative-type)))
           (when (and mapper (symbolp mapper))
             (assert (eq mapper 'try-interned-symbols))
-            (push locative-type locative-types-to-try-with-interned-symbols))))
+            (push locative-type to-try))))
       ;; For many locative types, we need to consider all symbols as
-      ;; @NAMEs. Let's do that in a single run. This where MAP-NAMES
-      ;; for different locative types that return TRY-INTERNED-SYMBOLS
-      ;; join.
-      (when (and (not (eq package :none))
-                 locative-types-to-try-with-interned-symbols)
-        (dolist (package-1 (remove (find-package :keyword)
-                                   (list-all-packages)))
-          (when (matching-package-p package-1)
-            (if external-only
-                (with-package-iterator (next package-1 :external)
-                  (loop (multiple-value-bind (morep symbol) (next)
-                          (if morep
-                              (consider symbol)
-                              (return)))))
-                (with-package-iterator (next package-1 :external :internal)
-                  (loop (multiple-value-bind (morep symbol) (next)
-                          (if morep
-                              (consider symbol)
-                              (return)))))))))
-      ;; KLUDGE: If NAME had to be matched again below, then it would
-      ;; filter out e.g. CLHS sections that matched the title because
-      ;; the canonical name is a section id like "3.4.1".
-      (setq name nil)
-      (sort-references
-       (remove-duplicate-drefs/nonstable
-        ;; Filter again, this time on DREF, so that, for example, we
-        ;; filter out string names when we need to.
-        (remove-if-not
-         #'matching-reference-p
-         (loop for name in (hash-table-keys matching-names)
-               append (definitions name :locative-types locative-types))))))))
+      ;; @NAMEs. Iterating over many symbols takes time, so iterate
+      ;; once for all locative types TO-TRY.
+      (when (and (not (eq package :none)) to-try)
+        (loop for symbol being the hash-key
+                in (matching-symbols #'matching-package-p #'matching-name-p
+                                     external-only)
+              do (dolist (dref (definitions symbol :locative-types to-try))
+                   (push dref drefs))))
+      (sort-references (remove-duplicate-drefs/nonstable drefs)))))
 
 (defun expand-apropos-locative-types (locative-types)
   (if locative-types
@@ -205,6 +199,25 @@
                                         (t
                                          (list locative-type)))))
       (locative-types)))
+
+(defun matching-symbols (package-pred symbol-pred external-only)
+  (let ((h (make-hash-table)))
+    (dolist (package-1 (remove (find-package :keyword) (list-all-packages)))
+      (when (funcall package-pred package-1)
+        (if external-only
+            (with-package-iterator (next package-1 :external)
+              (loop (multiple-value-bind (morep symbol) (next)
+                      (if morep
+                          (when (funcall symbol-pred symbol)
+                            (setf (gethash symbol h) t))
+                          (return)))))
+            (with-package-iterator (next package-1 :external :internal)
+              (loop (multiple-value-bind (morep symbol) (next)
+                      (if morep
+                          (when (funcall symbol-pred symbol)
+                            (setf (gethash symbol h) t))
+                          (return))))))))
+    h))
 
 ;;; Order REFERENCES in an implementation independent way.
 ;;; PAX:PAX-APROPOS depends on non-symbol names coming first.

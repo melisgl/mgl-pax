@@ -298,18 +298,31 @@ with references (discussed in the [Extending DRef][68fb]).
 
 - [function] **DEFINITIONS** *NAME &KEY (LOCATIVE-TYPES (LISP-LOCATIVE-TYPES))*
 
-    Return all definitions of `NAME` that match `LOCATIVE-TYPES`
-    as a list of [`DREF`][d930]s.
+    Return all definitions as a list of [`DREF`][d930]s [`LOCATE`][8f19]able
+    with `NAME` and a locative with one of `LOCATIVE-TYPES`.
     
-    The [`DREF-NAME`][1cf6]s may not be the same as `NAME`, for example, when `NAME`
-    is a package nickname:
+    Just as `(DREF NAME LOCATIVE)` returns the canonical definition, the
+    [`DREF-NAME`][1cf6]s of returned by `DEFINITIONS` are different from `NAME` if
+    `NAME` is non-canonical:
     
     ```common-lisp
-    (definitions 'pax)
+    (definitions "PAX")
     ==> (#<DREF "MGL-PAX" PACKAGE>)
     ```
     
-    Can be extended via `MAP-DEFINITIONS`.
+    ```common-lisp
+    (definitions 'mgl-pax)
+    ==> (#<DREF "mgl-pax" ASDF/SYSTEM:SYSTEM> #<DREF "MGL-PAX" PACKAGE>)
+    ```
+    
+    Similarly, [`DREF-LOCATIVE-TYPE`][6801] may be more made more specific:
+    
+    ```common-lisp
+    (definitions 'dref:locate-error :locative-types '(class))
+    ==> (#<DREF LOCATE-ERROR CONDITION>)
+    ```
+    
+    Can be extended via [`MAP-DEFINITIONS-OF-NAME`][97b4].
 
 <a id="x-28DREF-3ADREF-APROPOS-20FUNCTION-29"></a>
 
@@ -320,7 +333,7 @@ with references (discussed in the [Extending DRef][68fb]).
     NIL :LOCATIVE-TYPES NIL)` lists all definitions in the system.
     Arguments with non-`NIL` values filter the list of definitions.
     
-    `PAX` has a live browsing [frontend][b7fc].
+    PAX has a live browsing [frontend][b7fc].
     
     Roughly speaking, when `NAME` or `PACKAGE` is a [`SYMBOL`][e5af], they must match
     the whole [name][5fc4] of the definition:
@@ -399,7 +412,8 @@ with references (discussed in the [Extending DRef][68fb]).
       candidate definition must be in it (handling `:ALL`,
       `:LISP`, and `:PSEUDO` as described above).
     
-    Can be extended via `MAP-NAMES`.
+    Can be extended via MAP-REFERENCES-OF-TYPE and
+    [`MAP-DEFINITIONS-OF-NAME`][97b4].
 
 <a id="x-28DREF-3ALOCATIVE-TYPES-20FUNCTION-29"></a>
 
@@ -588,7 +602,7 @@ otherwise noted.
 - [locative] **SYMBOL-MACRO**
 
     Refers to a global symbol macro, defined with [`DEFINE-SYMBOL-MACRO`][46c0].
-    Note that since `DEFINE-SYMBOL-MACRO` does not support docstrings, `PAX`
+    Note that since `DEFINE-SYMBOL-MACRO` does not support docstrings, PAX
     defines methods on the [`DOCUMENTATION`][c5ae] generic function specialized on
     `(DOC-TYPE (EQL 'SYMBOL-MACRO))`.
     
@@ -813,7 +827,7 @@ otherwise noted.
     `LAMBDA-LIST` should be what calls like `(INVOKE-RESTART '<SYMBOL>
     ...)` must conform to, but this not enforced.
     
-    `PAX` "defines" standard CL restarts such as `USE-VALUE`([`0`][5406] [`1`][cf08]) with
+    PAX "defines" standard CL restarts such as `USE-VALUE`([`0`][5406] [`1`][cf08]) with
     `DEFINE-RESTART`:
     
     ```common-lisp
@@ -882,10 +896,10 @@ otherwise noted.
 
 - [locative] **UNKNOWN** *DSPEC*
 
-    This locative type allows `PAX` to work in a limited way with
+    This locative type allows PAX to work in a limited way with
     locatives it doesn't know. `UNKNOWN` definitions come from
     [`DEFINITIONS`][e196], which uses `SWANK/BACKEND:FIND-DEFINITIONS`. The
-    following examples show `PAX` stuffing the Swank
+    following examples show PAX stuffing the Swank
     dspec `(:DEFINE-ALIEN-TYPE DOUBLE-FLOAT)` into an [`UNKNOWN`][a951] locative
     on SBCL.
     
@@ -1260,7 +1274,7 @@ following, we describe the pieces in detail.
     => :DESTRUCTURING
     ```
     
-    Also, see [Locative Aliases][0fa3] in `PAX`.
+    Also, see [Locative Aliases][0fa3] in PAX.
 
 <a id="x-28DREF-EXT-3ADEFINE-DEFINITION-CLASS-20MGL-PAX-3AMACRO-29"></a>
 
@@ -1352,6 +1366,43 @@ following, we describe the pieces in detail.
     
     `FORMAT-AND-ARGS`, if non-`NIL`, is a format string and arguments
     suitable for [`FORMAT`][ad78].
+
+<a id="x-28DREF-EXT-3AMAP-DEFINITIONS-OF-NAME-20GENERIC-FUNCTION-29"></a>
+
+- [generic-function] **MAP-DEFINITIONS-OF-NAME** *FN NAME LOCATIVE-TYPE*
+
+    Call `FN` with [`DREF`][d930]s which can be [`LOCATE`][8f19]d
+    with an `XREF`([`0`][1538] [`1`][cda7]) with `NAME`, `LOCATIVE-TYPE` and some [`LOCATIVE-ARGS`][2444]. The
+    strange wording here is because there may be multiple ways (and thus
+    `XREF`s) that refer to the same definition.
+    
+    For most locative types, there is at most one such definition, but
+    for [`METHOD`][51c3], for example, there may be many. The default method
+    simply does `(DREF NAME LOCATIVE-TYPE NIL)` and calls `FN` with result
+    if [`DREF`][7e92] succeeds.
+    
+    `FN` must not be called with the same (under [`XREF=`][0617]) definition
+    multiple times.
+    
+    This function is for extending [`DEFINITIONS`][e196] and [`DREF-APROPOS`][65b4]. Do not
+    call it directly.
+
+<a id="x-28DREF-EXT-3AMAP-DEFINITIONS-OF-TYPE-20GENERIC-FUNCTION-29"></a>
+
+- [generic-function] **MAP-DEFINITIONS-OF-TYPE** *FN LOCATIVE-TYPE*
+
+    Call `FN` with [`DREF`][d930]s which can be [`LOCATE`][8f19]d
+    with an `XREF`([`0`][1538] [`1`][cda7]) with `LOCATIVE-TYPE` with some `NAME` and [`LOCATIVE-ARGS`][2444].
+    
+    The default method forms `XREF`s by combining each interned symbol as
+    [name][5fc4]s with `LOCATIVE-TYPE` and no `LOCATIVE-ARGS` and calls `FN` if it
+    `LOCATE`s a definition.
+    
+    `FN` may be called with `DREF`s that are [`XREF=`][0617] but differ in the `XREF` in
+    their [`DREF-ORIGIN`][c938].
+    
+    This function is for extending [`DREF-APROPOS`][65b4]. Do not call it
+    directly.
 
 <a id="x-28DREF-EXT-3AARGLIST-2A-20GENERIC-FUNCTION-29"></a>
 
@@ -1682,6 +1733,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [4dd7]: #x-28PACKAGE-20MGL-PAX-3ALOCATIVE-29 "PACKAGE MGL-PAX:LOCATIVE"
   [509d]: #x-28DREF-EXT-3A-40REFERENCES-20MGL-PAX-3ASECTION-29 "References"
   [515e]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_c.htm#compound_type_specifier '"compound type specifier" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  [51c3]: http://www.lispworks.com/documentation/HyperSpec/Body/t_method.htm "METHOD (MGL-PAX:CLHS CLASS)"
   [5406]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "USE-VALUE (MGL-PAX:CLHS FUNCTION)"
   [548e]: #x-28DREF-EXT-3ADEFINE-LOCATIVE-ALIAS-20MGL-PAX-3AMACRO-29 "DREF-EXT:DEFINE-LOCATIVE-ALIAS MGL-PAX:MACRO"
   [5875]: #x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "GENERIC-FUNCTION MGL-PAX:LOCATIVE"
@@ -1729,6 +1781,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [8f19]: #x-28DREF-3ALOCATE-20FUNCTION-29 "DREF:LOCATE FUNCTION"
   [926d]: #x-28TYPE-20MGL-PAX-3ALOCATIVE-29 "TYPE MGL-PAX:LOCATIVE"
   [94d1]: #x-28DREF-3ALOCATIVE-ALIASES-20FUNCTION-29 "DREF:LOCATIVE-ALIASES FUNCTION"
+  [97b4]: #x-28DREF-EXT-3AMAP-DEFINITIONS-OF-NAME-20GENERIC-FUNCTION-29 "DREF-EXT:MAP-DEFINITIONS-OF-NAME GENERIC-FUNCTION"
   [97ba]: #x-28DREF-EXT-3ALOCATIVE-TYPE-20FUNCTION-29 "DREF-EXT:LOCATIVE-TYPE FUNCTION"
   [99b0]: #x-28DREF-3ALOCATIVE-TYPES-20FUNCTION-29 "DREF:LOCATIVE-TYPES FUNCTION"
   [99b05]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function '"setf function" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'

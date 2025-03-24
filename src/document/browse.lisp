@@ -1010,7 +1010,8 @@
 
 (defun locative-type-may-have-definitions-p (locative-type)
   (eq 'dref::try-interned-symbols
-      (dref::map-names (lambda (name)
-                         (declare (ignore name))
-                         (return-from locative-type-may-have-definitions-p t))
-                       locative-type)))
+      (dref::map-names-for-type
+       (lambda (name)
+         (declare (ignore name))
+         (return-from locative-type-may-have-definitions-p t))
+       locative-type)))

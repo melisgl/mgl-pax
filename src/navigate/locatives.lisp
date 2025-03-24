@@ -222,15 +222,17 @@
       (make-instance 'dref :name symbol :locative 'argument)
       (locate-error)))
 
-(defmethod dref::map-definitions (fn name (locative-type (eql 'argument)))
+(defmethod map-definitions-of-name (fn name (locative-type (eql 'argument)))
   (declare (ignorable fn name))
   (when-let (dref (dref name 'argument nil))
     (funcall fn dref))
   nil)
 
-(defmethod dref::map-names (fn (locative-type (eql 'argument)))
+(defmethod map-definitions-of-type (fn (locative-type (eql 'argument)))
   (declare (ignorable fn))
-  (map nil (compose fn #'dref-name) *local-references*)
+  (dolist (dref *local-references*)
+    (when (eq (dref-locative-type dref) 'argument)
+      (funcall fn dref)))
   nil)
 
 
@@ -508,7 +510,7 @@
                  (definition?)))))
       (locate-error)))
 
-(defmethod dref::map-definitions (fn name (locative-type (eql 'clhs)))
+(defmethod map-definitions-of-name (fn name (locative-type (eql 'clhs)))
   (cond ((symbolp name)
          (loop for locative in (hyperspec-locatives-for-name name)
                ;; LOCATIVE NIL is for *HYPERSPEC-DISAMBIGUATIONS*.
@@ -520,21 +522,26 @@
          (when-let (dref (dref name '(clhs section) nil))
            (funcall fn dref)))))
 
-(defmethod dref::map-names (fn (locative-type (eql 'clhs)))
-  (mapc fn *hyperspec-format-directive-aliases*)
-  (mapc fn *hyperspec-reader-macro-char-aliases*)
-  (loop for entry in *hyperspec-sections*
-        do (funcall fn (first entry))
-           (funcall fn (second entry))
-           (funcall fn (third entry)))
-  (mapc fn *hyperspec-glossary-entries*)
-  (loop for entry in *hyperspec-issue-summaries*
-        do (funcall fn (first entry))
-           (funcall fn (second entry)))
-  (loop for entry in *hyperspec-issues*
-        do (funcall fn (first entry))
-           (funcall fn (second entry)))
-  'dref::try-interned-symbols)
+(defmethod map-definitions-of-type (fn (locative-type (eql 'clhs)))
+  (flet ((foo (name locative)
+           (funcall fn (dref name locative))))
+    (dolist (alias *hyperspec-format-directive-aliases*)
+      (foo alias '(clhs section)))
+    (dolist (alias *hyperspec-reader-macro-char-aliases*)
+      (foo alias '(clhs section)))
+    (loop for entry in *hyperspec-sections*
+          do (foo (first entry) '(clhs section))
+             (foo (second entry) '(clhs section))
+             (foo (third entry) '(clhs section)))
+    (dolist (term *hyperspec-glossary-entries*)
+      (foo term '(clhs glossary-term)))
+    (loop for entry in *hyperspec-issue-summaries*
+          do (foo (first entry) '(clhs section))
+             (foo (second entry) '(clhs section)))
+    (loop for entry in *hyperspec-issues*
+          do (foo (first entry) '(clhs section))
+             (foo (second entry) '(clhs section)))
+    'dref::try-interned-symbols))
 
 (defun clhs-dref (name locative)
   ;; Pick off the impossible cases quickly.

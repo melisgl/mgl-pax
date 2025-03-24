@@ -243,7 +243,7 @@
                         (starts-with-subseq prefix name))
                (push name names))))
       (dolist (locative-type locative-types)
-        (dref::map-names #'maybe-add locative-type)))
+        (dref::map-names-for-type #'maybe-add locative-type)))
     names))
 
 ;;; Called when completing the second sexp at the prompt.
@@ -303,7 +303,7 @@
                         (or (null locative-args)
                             (dref name locative nil)))
                (push name names))))
-      (dref::map-names #'add locative-type)
+      (dref::map-names-for-type #'add locative-type)
       names)))
 
 (defun list-names-for-locative (prefix locative)
@@ -317,7 +317,7 @@
                         (or (null locative-args)
                             (dref name locative nil)))
                (push name names))))
-      (if (eq (dref::map-names #'add locative-type)
+      (if (eq (dref::map-names-for-type #'add locative-type)
               'dref::try-interned-symbols)
           (append (list-symbols-for-locative prefix locative) names)
           names))))

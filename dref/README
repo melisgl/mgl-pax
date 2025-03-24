@@ -248,18 +248,31 @@ with references (discussed in the DREF-EXT::@EXTENDING-DREF).
 
 - [function] DEFINITIONS NAME &KEY (LOCATIVE-TYPES (LISP-LOCATIVE-TYPES))
 
-    Return all definitions of NAME that match LOCATIVE-TYPES
-    as a list of DREFs.
+    Return all definitions as a list of DREFs LOCATEable
+    with NAME and a locative with one of LOCATIVE-TYPES.
     
-    The DREF-NAMEs may not be the same as NAME, for example, when NAME
-    is a package nickname:
+    Just as `(DREF NAME LOCATIVE)` returns the canonical definition, the
+    DREF-NAMEs of returned by DEFINITIONS are different from NAME if
+    NAME is non-canonical:
     
     ```common-lisp
-    (definitions 'pax)
+    (definitions "PAX")
     ==> (#<DREF "MGL-PAX" PACKAGE>)
     ```
     
-    Can be extended via MAP-DEFINITIONS.
+    ```common-lisp
+    (definitions 'mgl-pax)
+    ==> (#<DREF "mgl-pax" ASDF/SYSTEM:SYSTEM> #<DREF "MGL-PAX" PACKAGE>)
+    ```
+    
+    Similarly, DREF-LOCATIVE-TYPE may be more made more specific:
+    
+    ```common-lisp
+    (definitions 'dref:locate-error :locative-types '(class))
+    ==> (#<DREF LOCATE-ERROR CONDITION>)
+    ```
+    
+    Can be extended via MAP-DEFINITIONS-OF-NAME.
 
 - [function] DREF-APROPOS NAME &KEY PACKAGE EXTERNAL-ONLY CASE-SENSITIVE (LOCATIVE-TYPES '(:LISP))
 
@@ -347,7 +360,8 @@ with references (discussed in the DREF-EXT::@EXTENDING-DREF).
       candidate definition must be in it (handling :ALL,
       :LISP, and :PSEUDO as described above).
     
-    Can be extended via MAP-NAMES.
+    Can be extended via MAP-REFERENCES-OF-TYPE and
+    MAP-DEFINITIONS-OF-NAME.
 
 - [function] LOCATIVE-TYPES
 
@@ -1152,6 +1166,39 @@ following, we describe the pieces in detail.
     
     FORMAT-AND-ARGS, if non-NIL, is a format string and arguments
     suitable for FORMAT.
+
+- [generic-function] MAP-DEFINITIONS-OF-NAME FN NAME LOCATIVE-TYPE
+
+    Call FN with DREFs which can be LOCATEd
+    with an XREF with NAME, LOCATIVE-TYPE and some LOCATIVE-ARGS. The
+    strange wording here is because there may be multiple ways (and thus
+    XREFs) that refer to the same definition.
+    
+    For most locative types, there is at most one such definition, but
+    for METHOD, for example, there may be many. The default method
+    simply does `(DREF NAME LOCATIVE-TYPE NIL)` and calls FN with result
+    if DREF succeeds.
+    
+    FN must not be called with the same (under XREF=) definition
+    multiple times.
+    
+    This function is for extending DEFINITIONS and DREF-APROPOS. Do not
+    call it directly.
+
+- [generic-function] MAP-DEFINITIONS-OF-TYPE FN LOCATIVE-TYPE
+
+    Call FN with DREFs which can be LOCATEd
+    with an XREF with LOCATIVE-TYPE with some NAME and LOCATIVE-ARGS.
+    
+    The default method forms XREFs by combining each interned symbol as
+    @NAMEs with LOCATIVE-TYPE and no LOCATIVE-ARGS and calls FN if it
+    LOCATEs a definition.
+    
+    FN may be called with DREFs that are XREF= but differ in the XREF in
+    their DREF-ORIGIN.
+    
+    This function is for extending DREF-APROPOS. Do not call it
+    directly.
 
 - [generic-function] ARGLIST* OBJECT
 

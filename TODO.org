@@ -124,46 +124,6 @@ Maybe this is a special case of dynamically generated documentation.
 ** TODO arglist autolink font size too small
 ** TODO html href label includes markdown markup such as backquotes
 * apropos
-** TODO design DREF::MAP-DEFINITIONS and DREF::MAP-NAMES better
-*** status quo
-**** MAP-NAMES
-Used for PAX name completion and DREF-APROPOS. Name completion
-definitely needs non-canonical names, not sure about DREF-APROPOS.
-
-- 'TRY-INTERNED-SYMBOLS,
-- NIL for pseudo,
-- PACKAGE and ASDF:SYSTEM
-- ARGUMENT is special,
-- so is CLHS .
-**** MAP-DEFINITIONS
-Use for DEFINITIONS, which is used by DREF-APROPOS and for locative
-completion. Both are fine with canonical definitions (DREFs).
-
-- direct DREF lookup, or
-- 'SWANK-DEFINITIONS, or
-- NIL for pseudo,
-- ARGUMENT is special,
-- so is CLHS.
-*** problems
-- With PAX:CLHS, there is a huge number of possible names, and the
-  glossary terms, section ids, etc are all lumped together.
-- MAP-DEFINITIONS does not support LOCATIVE-ARGS (but it's easy to
-  filter afterwards and not a performance problem).
-*** design
-- For apropos, we need a CANONICAL-ONLY flag?
-- MAP-NAMES may not even belong in DREF as what it lists seems a bit
-  too tailored to PAX. Or MAP-DEFINITIONS could do its job too.
-- Maybe it should map XREFs or DREFs not names (think METHODs), but
-  then it would not combine the same way with MAP-DEFINITIONS.
-
-What about having MAP-DEFINITIONS (for DREFs) and MAP-REFERENCES for
-(XREF) where the latter maps all XREFs that LOCATE a DREF. The number
-of such XREFs is exponential due to substring matching (stupid CLHS,
-again). Both maps should take NAME LOCATIVE-TYPE LOCATIVE-ARGS
-arguments.
-
-It's unclear whether both MAP-REFERENCES is easily implementable with
-the funky SWANK-DEFINITIONS logic in MAP-DEFINITIONS.
 ** MAYBE when exported by pax, we know the exact definition being exported
 mgl-pax-apropos-package could take advantage?
 ** TODO mgl-pax-apropos: no way to have a space in string name?

@@ -365,15 +365,17 @@
          (should (= (length (cl-third (mgl-pax-completions-at-point)))
                     n-locatives))))
      (insert "\nclass dref:")
-     (should (equal (cl-third (mgl-pax-completions-at-point))
-                    ;; The non-matching ones get filtered out by the
-                    ;; standard Emacs completion mechanism.
-                    '("dref:dref" "dref:xref" "class" "mgl-pax:locative")))
+     (should (seq-set-equal-p
+              (cl-third (mgl-pax-completions-at-point))
+              ;; The non-matching ones get filtered out by the
+              ;; standard Emacs completion mechanism.
+              '("dref:dref" "dref:xref" "class" "mgl-pax:locative")))
      (insert "\n\"lambda list")
      (should (null (cl-third (mgl-pax-completions-at-point))))
      (let ((mgl-pax-completing-for 'document))
-       (should (equal (cl-third (mgl-pax-completions-at-point))
-                      '("\"lambda list keyword\"" "\"lambda list\""))))
+       (should (seq-set-equal-p
+                (cl-third (mgl-pax-completions-at-point))
+                '("\"lambda list keyword\"" "\"lambda list\""))))
      (insert "\npax:locative ")
      (let ((locative-type-names (cl-third (mgl-pax-completions-at-point))))
        (should (< 30 (length locative-type-names)))

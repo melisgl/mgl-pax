@@ -29,7 +29,7 @@
     (locate-error))
   (%make-dref 'variable-dref symbol 'variable))
 
-(defmethod map-definitions (fn name (locative-type (eql 'variable)))
+(defmethod map-definitions-of-name (fn name (locative-type (eql 'variable)))
   (declare (ignore fn name))
   'swank-definitions)
 
@@ -143,7 +143,7 @@
 
 ;;; SWANK-BACKEND:FIND-DEFINITIONS does not support symbol macros on CCL.
 #-ccl
-(defmethod map-definitions (fn name (locative-type (eql 'symbol-macro)))
+(defmethod map-definitions-of-name (fn name (locative-type (eql 'symbol-macro)))
   (declare (ignore fn name))
   'swank-definitions)
 
@@ -231,7 +231,7 @@
 
 ;;; SWANK-BACKEND:FIND-DEFINITIONS does not support setf on CCL.
 #-ccl
-(defmethod map-definitions (fn name (locative-type (eql 'setf)))
+(defmethod map-definitions-of-name (fn name (locative-type (eql 'setf)))
   (declare (ignore fn name))
   ;; FIXME: setf function, method
   'swank-definitions)
@@ -417,7 +417,7 @@
         (locate-error "Method does not exist.")))
   (%make-dref 'method-dref name (cons locative-type locative-args)))
 
-(defmethod map-definitions (fn name (locative-type (eql 'method)))
+(defmethod map-definitions-of-name (fn name (locative-type (eql 'method)))
   (declare (ignore fn name))
   'swank-definitions)
 
@@ -517,7 +517,8 @@
     (locate-error))
   (%make-dref 'method-combination-dref symbol 'method-combination))
 
-(defmethod map-definitions (fn name (locative-type (eql 'method-combination)))
+(defmethod map-definitions-of-name
+    (fn name (locative-type (eql 'method-combination)))
   (declare (ignore fn name))
   'swank-definitions)
 
@@ -620,15 +621,15 @@
     (locate-error "Could not find writer ~S for class ~S."
                   accessor-symbol class-symbol)))
 
-(defmethod map-definitions (fn name (locative-type (eql 'accessor)))
+(defmethod map-definitions-of-name (fn name (locative-type (eql 'accessor)))
   (declare (ignore fn name))
   'swank-definitions)
 
-(defmethod map-definitions (fn name (locative-type (eql 'reader)))
+(defmethod map-definitions-of-name (fn name (locative-type (eql 'reader)))
   (declare (ignore fn name))
   'swank-definitions)
 
-(defmethod map-definitions (fn name (locative-type (eql 'writer)))
+(defmethod map-definitions-of-name (fn name (locative-type (eql 'writer)))
   (declare (ignore fn name))
   'swank-definitions)
 
@@ -738,7 +739,8 @@
 #+(or ccl sbcl)
 (add-dref-actualizer 'actualize-function-to-structure-accessor)
 
-(defmethod map-definitions (fn name (locative-type (eql 'structure-accessor)))
+(defmethod map-definitions-of-name
+    (fn name (locative-type (eql 'structure-accessor)))
   (declare (ignore fn name))
   'swank-definitions)
 
@@ -790,7 +792,7 @@
     (locate-error "~S is not a valid type specifier." symbol))
   (%make-dref 'type-dref symbol (cons locative-type locative-args)))
 
-(defmethod map-definitions (fn name (locative-type (eql 'type)))
+(defmethod map-definitions-of-name (fn name (locative-type (eql 'type)))
   (declare (ignore fn name))
   'swank-definitions)
 
@@ -925,7 +927,7 @@
     (locate-error "~S is not a known declaration." symbol))
   (%make-dref 'declaration-dref symbol 'declaration))
 
-(defmethod map-definitions (fn name (locative-type (eql 'declaration)))
+(defmethod map-definitions-of-name (fn name (locative-type (eql 'declaration)))
   #+(or ccl sbcl)
   (alexandria:when-let (dref (dref name locative-type nil))
     (funcall fn dref))
@@ -993,8 +995,9 @@
       (locate-error "~S does not name an ASDF:SYSTEM." name))
     (%make-dref 'asdf-system-dref (character-string name) 'asdf:system)))
 
-(defmethod map-names (fn (locative-type (eql 'asdf:system)))
-  (map nil fn (asdf:registered-systems)))
+(defmethod map-definitions-of-type (fn (locative-type (eql 'asdf:system)))
+  (dolist (name (asdf:registered-systems))
+    (funcall fn (dref name 'asdf:system))))
 
 (defmethod resolve* ((dref asdf-system-dref))
   (handler-bind ((warning #'muffle-warning))
@@ -1033,10 +1036,9 @@
                              (package-name (find-package* package-designator)))
               'package))
 
-(defmethod map-names (fn (locative-type (eql 'package)))
-  (map nil (lambda (package)
-             (funcall fn (package-name package)))
-       (list-all-packages)))
+(defmethod map-definitions-of-type (fn (locative-type (eql 'package)))
+  (dolist (package (list-all-packages))
+    (funcall fn (dref (package-name package) 'package))))
 
 (defmethod resolve* ((dref package-dref))
   (find-package* (dref-name dref)))
@@ -1188,7 +1190,7 @@
     (locate-error))
   (%make-dref 'unknown-dref name `(unknown ,@locative-args)))
 
-(defmethod map-definitions (fn name (locative-type (eql 'unknown)))
+(defmethod map-definitions-of-name (fn name (locative-type (eql 'unknown)))
   (declare (ignore fn name))
   'swank-definitions)
 
