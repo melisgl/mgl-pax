@@ -241,14 +241,17 @@
                       (format stream "    - ~A: [~A](mailto:~A)~%"
                               name value value))
                      ((:source-control)
-                      (format stream "    - ~A: [~A](~A)"
-                              name (first value) (second value))
-                      (terpri stream))
+                      (cond ((and (listp value) (= (length value) 2))
+                             (format stream "    - ~A: [~A](~A)~%"
+                                     name (first value) (second value)))
+                            ((stringp value)
+                             (format stream "    - ~A: [~A](~A)~%"
+                                     name value value))))
                      ((:docstring)
                       (format stream "    - ~A: " name)
                       (document-docstring value stream :indentation "        "
-                                          :exclude-first-line-p t
-                                          :paragraphp nil)
+                                                       :exclude-first-line-p t
+                                                       :paragraphp nil)
                       (format stream "~&"))
                      ((:list-of-systems)
                       (document-docstring
