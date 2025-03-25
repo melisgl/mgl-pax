@@ -256,6 +256,7 @@
 
 (define-dspec swank-compiler-macro-dspec (name)
   (:or :abcl :ecl :cmucl :sbcl) `(define-compiler-macro ,name)
+  :clisp `(,name define-compiler-macro)
   :allegro `(:compiler-macro ,name)
   :ccl `(compiler-macro ,name))
 
@@ -278,6 +279,7 @@
   ;; KLUDGE: On ABCL, sometimes other symbols than NAME are returned
   ;; by SWANK-DSPECS.
   :abcl `(defun)
+  #+clisp :clisp #+clisp `(,name system::defun/defmacro)
   (:or :ecl :sbcl) `(defun ,name)
   :allegro `(:operator ,name)
   (:or :ccl :cmucl) `(function ,name))
