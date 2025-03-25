@@ -263,9 +263,7 @@
 (define-dspec swank-symbol-macro-dspec (name)
   (:or :abcl :ecl :sbcl) `(define-symbol-macro ,name)
   :allegro `(:symbol-macro ,name)
-  ;; Symbol macros are not currently supported by Swank, so this is
-  ;; moot.
-  :ccl `(symbol-macro ,name)
+  #+ccl :ccl #+ccl `(ccl::symbol-macro ,name)
   :cmucl `(variable :macro ,name))
 
 (define-dspec swank-setf-dspec (name)
