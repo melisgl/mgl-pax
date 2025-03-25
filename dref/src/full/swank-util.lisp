@@ -320,8 +320,9 @@
   :ccl `(type ,name))
 
 (define-dspec swank-class-dspec (name)
-  (:or :abcl :cmucl :ecl) `(defclass ,name)
+  :abcl '(defclass)
   :allegro `(:type ,name)
+  (:or :cmucl :ecl) `(defclass ,name)
   :ccl `(class ,name)
   :sbcl (if (and (valid-type-specifier-p name)
                  (subtypep name 'structure-object))
@@ -329,8 +330,8 @@
             `(defclass ,name)))
 
 (define-dspec swank-condition-dspec (name)
-  :sbcl `(define-condition ,name)
-  (:or :abcl :ecl) `(defclass ,name)
+  (:or :abcl :sbcl) `(define-condition ,name)
+  :ecl `(defclass ,name)
   :allegro `(:type ,name)
   (:or :ccl :cmucl) `(class ,name))
 
@@ -381,9 +382,10 @@
                        (class ,(swank-class-dspec name))
                        (condition ,(swank-condition-dspec name)))
                 do (assert dspec*)
-                   ;; This could be just (EQUAL DSPEC* DSPEC), but there
-                   ;; GENERIC-FUNCTIONs sometimes have their arglist in
-                   ;; DSPEC.
+                   ;; This could be just (EQUAL DSPEC* DSPEC), but
+                   ;; GENERIC-FUNCTIONs sometimes have their arglist
+                   ;; in DSPEC. Also, see SWANK-FUNCTION-DSPEC and
+                   ;; SWANK-CLASS-DSPEC on ABCL.
                    (when (alexandria:starts-with-subseq dspec* dspec
                                                         :test #'equal)
                      #+allegro
