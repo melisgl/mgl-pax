@@ -104,16 +104,18 @@
 
   - If NAME is a STRING, then it must be a _substring_ of `P`.
 
+  - If PACKAGE is :ANY, then `C` must be a SYMBOL.
+
   - If PACKAGE is :NONE, then `C` must _not_ be a SYMBOL.
 
-  - If PACKAGE is not NIL or :NONE, then `C` must be a symbol.
+  - If PACKAGE is not NIL, :ANY or :NONE, then `C` must be a symbol.
 
   - If PACKAGE is a [PACKAGE][class], it must be EQ to the
     SYMBOL-PACKAGE of `C`.
 
-  - If PACKAGE is a SYMBOL other than :NONE, then its SYMBOL-NAME must
-    _match_ the PACKAGE-NAME or one of the PACKAGE-NICKNAMES of
-    SYMBOL-PACKAGE of `C`.
+  - If PACKAGE is a SYMBOL other than NIL, :ANY and :NONE, then its
+    SYMBOL-NAME must _match_ the PACKAGE-NAME or one of the
+    PACKAGE-NICKNAMES of SYMBOL-PACKAGE of `C`.
 
   - If PACKAGE is a STRING, then it must be a _substring_ of the
     PACKAGE-NAME of SYMBOL-PACKAGE of `C`.
@@ -142,10 +144,12 @@
                         (and (stringp name)
                              (search name (princ-to-string name-1)
                                      :test char-test)))
-                    ;; FIXME: Support :ANY to match only symbol names.
-                    (if (eq package :none)
-                        (not (symbolp name-1))
-                        (not (and (stringp name-1) package)))))
+                    (cond ((eq package :none)
+                           (not (symbolp name-1)))
+                          ((eq package :any)
+                           (symbolp name-1))
+                          (t
+                           (not (and (stringp name-1) package))))))
              (matching-package-p (package-1)
                (and (not (eq package-1 #.(find-package '#:keyword)))
                     (or (null package)
@@ -153,10 +157,11 @@
                              (eq package-1 package))
                         (and (symbolp package)
                              (not (eq package :none))
-                             (find (symbol-name package)
-                                   (cons (package-name package-1)
-                                         (package-nicknames package-1))
-                                   :test string-test))
+                             (or (eq package :any)
+                                 (find (symbol-name package)
+                                       (cons (package-name package-1)
+                                             (package-nicknames package-1))
+                                       :test string-test)))
                         (and (stringp package)
                              (find-if (lambda (package-name-1)
                                         (search package package-name-1

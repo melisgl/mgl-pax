@@ -610,6 +610,11 @@
                                                       :case-sensitive t)
                           `(,(xref 'dref-test::%test9jwern%
                                    'function))))))
+    (with-test ("PACKAGE is :ANY")
+      (is (null (dref-apropos nil :package :any
+                                  :locative-types '(asdf:system))))
+      (is (not (null (dref-apropos 'foo2 :package :any
+                                         :locative-types '(function))))))
     (with-test ("PACKAGE is :NONE")
       (check-ref-sets (dref-apropos "dref" :package :none)
                       `(,(xref (package-name :dref) 'package)

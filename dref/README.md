@@ -389,16 +389,18 @@ with references (discussed in the [Extending DRef][68fb]).
     
     - If `NAME` is a `STRING`, then it must be a *substring* of `P`.
     
+    - If `PACKAGE` is `:ANY`, then `C` must be a `SYMBOL`.
+    
     - If `PACKAGE` is `:NONE`, then `C` must *not* be a `SYMBOL`.
     
-    - If `PACKAGE` is not `NIL` or `:NONE`, then `C` must be a symbol.
+    - If `PACKAGE` is not `NIL`, `:ANY` or `:NONE`, then `C` must be a symbol.
     
     - If `PACKAGE` is a [`PACKAGE`][1d5a], it must be [`EQ`][5a82] to the
       [`SYMBOL-PACKAGE`][e5ab] of `C`.
     
-    - If `PACKAGE` is a `SYMBOL` other than `:NONE`, then its `SYMBOL-NAME` must
-      *match* the [`PACKAGE-NAME`][db68] or one of the [`PACKAGE-NICKNAMES`][4b93] of
-      `SYMBOL-PACKAGE` of `C`.
+    - If `PACKAGE` is a `SYMBOL` other than `NIL`, `:ANY` and `:NONE`, then its
+      `SYMBOL-NAME` must *match* the [`PACKAGE-NAME`][db68] or one of the
+      [`PACKAGE-NICKNAMES`][4b93] of `SYMBOL-PACKAGE` of `C`.
     
     - If `PACKAGE` is a `STRING`, then it must be a *substring* of the
       `PACKAGE-NAME` of `SYMBOL-PACKAGE` of `C`.
