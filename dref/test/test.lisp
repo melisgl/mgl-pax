@@ -118,7 +118,10 @@
     (definitions 'sb-c::catch-block))
   (with-test ("actualized")
     (check-ref-sets (definitions 'foo :locative-types '(type))
-                    `(,(xref 'foo 'class)))))
+                    `(,(xref 'foo 'class))))
+  (with-test ("invalid locative type")
+    (signals (error :pred "not a valid")
+      (definitions nil :locative-types '("x")))))
 
 (defun check-ref-sets (refs expected-refs)
   (is (match-values (diff-sets (capture refs) (capture expected-refs)
@@ -645,7 +648,12 @@
                     `(,(xref 'my-error 'condition)))
     (check-ref-sets (dref-apropos 'my-error :locative-types '(class)
                                             :package '#:dref-test)
-                    `(,(xref 'my-error 'condition)))))
+                    `(,(xref 'my-error 'condition))))
+  (with-test ("invalid locative type")
+    (signals (error :pred "not a valid")
+      (dref-apropos nil :locative-types '("x")))
+    (signals (error :pred "not a valid")
+      (dref-apropos nil :package :none :locative-types '("x")))))
 
 
 (deftest test-all ()

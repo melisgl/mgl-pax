@@ -32,6 +32,7 @@
    (let ((drefs ())
          (swank-locative-types ()))
      (dolist (locative-type locative-types)
+       (check-valid-locative-type locative-type)
        (let ((mapper (map-definitions-of-name (lambda (dref)
                                                 (push dref drefs))
                                               name locative-type)))
@@ -197,6 +198,8 @@
                                         ((:lisp) (lisp-locative-types))
                                         ((:pseudo) (pseudo-locative-types))
                                         (t
+                                         (check-valid-locative-type
+                                          locative-type)
                                          (list locative-type)))))
       (locative-types)))
 

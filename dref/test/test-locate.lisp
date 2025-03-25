@@ -44,7 +44,7 @@
 (deftest test-locate/undefined ()
   (signals (locate-error)
     (locate :xxx))
-  (signals (locate-error)
+  (signals (locate-error :pred "@LOCATIVE-TYPE")
     (locate (xref '*package* 'undefined))))
 
 (deftest test-locate/variable ()

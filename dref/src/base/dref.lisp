@@ -528,6 +528,10 @@
 (defun locative-aliases ()
   "Return the list of locatives aliases, defined with DEFINE-LOCATIVE-ALIAS."
   *locative-aliases*)
+
+(defun check-valid-locative-type (locative-type)
+  (unless (member locative-type *locative-types*)
+    (error "~@<~S is not a valid ~S.~:@>" locative-type '@locative-type)))
 
 
 (defsection @operations (:title "Operations")

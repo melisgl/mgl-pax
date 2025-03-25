@@ -233,7 +233,7 @@
       located))
   (:method (name locative-type locative-args)
     (declare (ignorable name locative-type locative-args))
-    (locate-error)))
+    (locate-error "~@<No such ~S as ~S.~:@>" '@locative-type locative-type)))
 
 (defvar *resolving-dref*)
 
