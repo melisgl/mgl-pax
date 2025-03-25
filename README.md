@@ -11,8 +11,6 @@
     - [2.3 Loading PAX][d3fc]
     - [2.4 Setting up Keys][cfab]
 - [3 Links and Systems][ba74]
-    - [3.1 The mgl-pax ASDF System][6fdb]
-    - [3.2 The mgl-pax/full ASDF System][d761]
 - [4 Background][f74b]
 - [5 Basics][94c7]
 - [6 Parsing][378f]
@@ -20,51 +18,48 @@
     - [6.2 Names in Raw Names][016d]
 - [7 PAX Locatives][292a]
 - [8 Navigating Sources in Emacs][3386]
-    - [8.1 The mgl-pax/navigate ASDF System][f155]
-    - [8.2 `M-.` Defaulting][460e]
-    - [8.3 `M-.` Prompting][ed46]
-        - [8.3.1 `M-.` Minibuffer Syntax][8106]
-        - [8.3.2 `M-.` Completion][e444]
+    - [8.1 `M-.` Defaulting][460e]
+    - [8.2 `M-.` Prompting][ed46]
+        - [8.2.1 `M-.` Minibuffer Syntax][8106]
+        - [8.2.2 `M-.` Completion][e444]
 - [9 Generating Documentation][2c93]
     - [9.1 The `DOCUMENT` Function][dc0a]
         - [9.1.1 `DOCUMENTABLE`][0702]
         - [9.1.2 Return Values][7dc7]
         - [9.1.3 `PAGES`][9c7d]
         - [9.1.4 Package and Readtable][ab7e]
-    - [9.2 The mgl-pax/document ASDF System][4bb8]
-    - [9.3 Browsing Live Documentation][a595]
-        - [9.3.1 Browsing with w3m][83d5]
-        - [9.3.2 Browsing with Other Browsers][c434]
-        - [9.3.3 Apropos][b7fc]
-        - [9.3.4 PAX Live Home Page][9d50]
-    - [9.4 Markdown Support][c2d3]
-        - [9.4.1 Markdown in Docstrings][7bf5]
-        - [9.4.2 Syntax Highlighting][bc83]
-        - [9.4.3 MathJax][a17d]
-    - [9.5 Codification][f1ab]
-    - [9.6 Linking][19e3]
-        - [9.6.1 Reflink][cbc4]
-        - [9.6.2 Autolink][ec7a]
-        - [9.6.3 Linking to the HyperSpec][7cc3]
-        - [9.6.4 Linking to Sections][22c2]
-        - [9.6.5 Filtering Links][b2e4]
-        - [9.6.6 Link Format][c0d2]
-    - [9.7 Local Definition][9db9]
-    - [9.8 Overview of Escaping][2634]
-    - [9.9 Output Details][af6f]
-    - [9.10 Documentation Generation Implementation Notes][d1ca]
-    - [9.11 Utilities for Generating Documentation][1b1b]
-        - [9.11.1 HTML Output][36e1]
-        - [9.11.2 Github Workflow][dff6]
-        - [9.11.3 PAX World][1281]
+    - [9.2 Browsing Live Documentation][a595]
+        - [9.2.1 Browsing with w3m][83d5]
+        - [9.2.2 Browsing with Other Browsers][c434]
+        - [9.2.3 Apropos][b7fc]
+        - [9.2.4 PAX Live Home Page][9d50]
+    - [9.3 Markdown Support][c2d3]
+        - [9.3.1 Markdown in Docstrings][7bf5]
+        - [9.3.2 Syntax Highlighting][bc83]
+        - [9.3.3 MathJax][a17d]
+    - [9.4 Codification][f1ab]
+    - [9.5 Linking][19e3]
+        - [9.5.1 Reflink][cbc4]
+        - [9.5.2 Autolink][ec7a]
+        - [9.5.3 Linking to the HyperSpec][7cc3]
+        - [9.5.4 Linking to Sections][22c2]
+        - [9.5.5 Filtering Links][b2e4]
+        - [9.5.6 Link Format][c0d2]
+    - [9.6 Local Definition][9db9]
+    - [9.7 Overview of Escaping][2634]
+    - [9.8 Output Details][af6f]
+    - [9.9 Documentation Generation Implementation Notes][d1ca]
+    - [9.10 Utilities for Generating Documentation][1b1b]
+        - [9.10.1 HTML Output][36e1]
+        - [9.10.2 Github Workflow][dff6]
+        - [9.10.3 PAX World][1281]
 - [10 Transcripts][6300]
-    - [10.1 The mgl-pax/transcribe ASDF System][5825]
-    - [10.2 Transcribing with Emacs][f5bd]
-    - [10.3 Transcript API][9dbc]
-    - [10.4 Transcript Consistency Checking][f47d]
-        - [10.4.1 Finer-Grained Consistency Checks][6e18]
-        - [10.4.2 Controlling the Dynamic Environment][6b59]
-        - [10.4.3 Utilities for Consistency Checking][8423]
+    - [10.1 Transcribing with Emacs][f5bd]
+    - [10.2 Transcript API][9dbc]
+    - [10.3 Transcript Consistency Checking][f47d]
+        - [10.3.1 Finer-Grained Consistency Checks][6e18]
+        - [10.3.2 Controlling the Dynamic Environment][6b59]
+        - [10.3.3 Utilities for Consistency Checking][8423]
 - [11 Writing Extensions][c4ce]
     - [11.1 Adding New Locatives][54d8]
     - [11.2 Locative Aliases][0fa3]
@@ -372,44 +367,40 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
 
 <a id="x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
-### 3.1 The mgl-pax ASDF System
-
-- Version: 0.4.0
-- Description: Documentation system, browser, generator. See the
-  [PAX Manual][2415].
-- Long Description: The set of dependencies of the
-  [`mgl-pax`][6fdb] system is kept light, and its heavier
-  dependencies are autoloaded via ASDF when the relevant functionality
-  is accessed. See the [`mgl-pax/navigate`][f155],
-  [`mgl-pax/document`][4bb8],
-  [`mgl-pax/transcribe`][5825] and
-  [`mgl-pax/full`][d761] systems. To keep deployed code small,
-  client systems should declare an ASDF dependency on this system,
-  never on the others, which are intended for autoloading and
-  interactive use.
-- Licence: MIT, see COPYING.
-- Author: Gábor Melis
-- Mailto: [mega@retes.hu](mailto:mega@retes.hu)
-- Homepage: [http://melisgl.github.io/mgl-pax](http://melisgl.github.io/mgl-pax)
-- Bug tracker: [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
-- Source control: [GIT](https://github.com/melisgl/mgl-pax.git)
-- Depends on: dref, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
-- Defsystem depends on: mgl-pax.asdf
-
+- [system] **"mgl-pax"**
+    - Version: 0.4.0
+    - Description: Documentation system, browser, generator. See the
+        [PAX Manual][2415].
+    - Long Description: The set of dependencies of the
+        [`mgl-pax`][6fdb] system is kept light, and its heavier
+        dependencies are autoloaded via ASDF when the relevant functionality
+        is accessed. See the [`mgl-pax/navigate`][f155],
+        [`mgl-pax/document`][4bb8],
+        [`mgl-pax/transcribe`][5825] and
+        [`mgl-pax/full`][d761] systems. To keep deployed code small,
+        client systems should declare an ASDF dependency on this system,
+        never on the others, which are intended for autoloading and
+        interactive use.
+    - Licence: MIT, see COPYING.
+    - Author: Gábor Melis
+    - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
+    - Homepage: [http://melisgl.github.io/mgl-pax](http://melisgl.github.io/mgl-pax)
+    - Bug tracker: [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
+    - Source control: [GIT](https://github.com/melisgl/mgl-pax.git)
+    - Depends on: dref, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
+    - Defsystem depends on: mgl-pax.asdf
 
 <a id="x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
-### 3.2 The mgl-pax/full ASDF System
-
-- Description: The [`mgl-pax`][6fdb] system with all features
-  preloaded except `mgl-pax/web`.
-- Long Description: Do not declare a dependency on this system. It
-  is for interactive use.
-- Licence: MIT, see COPYING.
-- Author: Gábor Melis
-- Mailto: [mega@retes.hu](mailto:mega@retes.hu)
-- Depends on: [mgl-pax/document][4bb8], [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825]
-
+- [system] **"mgl-pax/full"**
+    - Description: The [`mgl-pax`][6fdb] system with all features
+        preloaded except `mgl-pax/web`.
+    - Long Description: Do not declare a dependency on this system. It
+        is for interactive use.
+    - Licence: MIT, see COPYING.
+    - Author: Gábor Melis
+    - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
+    - Depends on: [mgl-pax/document][4bb8], [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825]
 
 <a id="x-28MGL-PAX-3A-40BACKGROUND-20MGL-PAX-3ASECTION-29"></a>
 
@@ -1079,23 +1070,21 @@ A close relative of `M-.` is `C-.` for [Browsing Live Documentation][a595].
 
 <a id="x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
-### 8.1 The mgl-pax/navigate ASDF System
-
-- Description: Support for [Navigating Sources in Emacs][3386] via Slime's
-  [`M-.`][cb15] in [MGL-PAX][2415].
-- Long Description: Do not declare a dependency on this system. It is
-  autoloaded by Elisp or by accessing the functionality provided if the
-  [`mgl-pax`][6fdb] system is loaded.
-- Licence: MIT, see COPYING.
-- Author: Gábor Melis
-- Mailto: [mega@retes.hu](mailto:mega@retes.hu)
-- Depends on: alexandria, dref/full, [mgl-pax][6fdb], swank(?)
-- Defsystem depends on: mgl-pax.asdf
-
+- [system] **"mgl-pax/navigate"**
+    - Description: Support for [Navigating Sources in Emacs][3386] via Slime's
+        [`M-.`][cb15] in [MGL-PAX][2415].
+    - Long Description: Do not declare a dependency on this system. It is
+        autoloaded by Elisp or by accessing the functionality provided if the
+        [`mgl-pax`][6fdb] system is loaded.
+    - Licence: MIT, see COPYING.
+    - Author: Gábor Melis
+    - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
+    - Depends on: alexandria, dref/full, [mgl-pax][6fdb], swank(?)
+    - Defsystem depends on: mgl-pax.asdf
 
 <a id="x-28MGL-PAX-3A-40M--2E-DEFAULTING-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.2 `M-.` Defaulting
+### 8.1 `M-.` Defaulting
 
 When [`M-.`][cb15] is invoked, it first tries to find a [name][88cf] in the
 current buffer at point. If no name is found, then it
@@ -1150,11 +1139,11 @@ denoted method:
 
 <a id="x-28MGL-PAX-3A-40M--2E-PROMPTING-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.3 `M-.` Prompting
+### 8.2 `M-.` Prompting
 
 <a id="x-28MGL-PAX-3A-40M--2E-MINIBUFFER-SYNTAX-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.3.1 `M-.` Minibuffer Syntax
+#### 8.2.1 `M-.` Minibuffer Syntax
 
 At the minibuffer prompt, the [definitions][d930] to edit
 can be specified as follows.
@@ -1195,7 +1184,7 @@ package, else it's the package of the Slime repl buffer.
 
 <a id="x-28MGL-PAX-3A-40M--2E-COMPLETION-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.3.2 `M-.` Completion
+#### 8.2.2 `M-.` Completion
 
 When `M-.` prompts for the definition to edit, TAB-completion is
 available in the minibuffer for both names and locatives. To reduce
@@ -1496,23 +1485,21 @@ symbols, there is no package system to advantage of.
 
 <a id="x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
-### 9.2 The mgl-pax/document ASDF System
-
-- Description: Support for [Generating Documentation][2c93] in
-  [MGL-PAX][2415].
-- Long Description: Do not declare a dependency on this system. It is
-  autoloaded by Elisp or by accessing the functionality provided if the
-  [`mgl-pax`][6fdb] system is loaded.
-- Licence: MIT, see COPYING.
-- Author: Gábor Melis
-- Mailto: [mega@retes.hu](mailto:mega@retes.hu)
-- Depends on: 3bmd, 3bmd-ext-code-blocks, alexandria, colorize, md5, [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], trivial-utf-8
-- Defsystem depends on: mgl-pax.asdf
-
+- [system] **"mgl-pax/document"**
+    - Description: Support for [Generating Documentation][2c93] in
+        [MGL-PAX][2415].
+    - Long Description: Do not declare a dependency on this system. It is
+        autoloaded by Elisp or by accessing the functionality provided if the
+        [`mgl-pax`][6fdb] system is loaded.
+    - Licence: MIT, see COPYING.
+    - Author: Gábor Melis
+    - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
+    - Depends on: 3bmd, 3bmd-ext-code-blocks, alexandria, colorize, md5, [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], trivial-utf-8
+    - Defsystem depends on: mgl-pax.asdf
 
 <a id="x-28MGL-PAX-3A-40BROWSING-LIVE-DOCUMENTATION-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.3 Browsing Live Documentation
+### 9.2 Browsing Live Documentation
 
 Documentation for definitions in the running Lisp can be browsed
 directly without generating documentation in the offline manner.
@@ -1593,7 +1580,7 @@ definition with point in it.
 
 <a id="x-28MGL-PAX-3A-40BROWSING-WITH-W3M-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.3.1 Browsing with w3m
+#### 9.2.1 Browsing with w3m
 
 When the value of the Elisp variable `mgl-pax-browser-function`
 is `w3m-browse-url` (see [Emacs Setup][8541]), the Emacs w3m browser is
@@ -1630,7 +1617,7 @@ In addition, the following PAX-specific key bindings are available:
 
 <a id="x-28MGL-PAX-3A-40BROWSING-WITH-OTHER-BROWSERS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.3.2 Browsing with Other Browsers
+#### 9.2.2 Browsing with Other Browsers
 
 When the value of the Elisp variable `mgl-pax-browser-function`
 is not `w3m-browse-url` (see [Emacs Setup][8541]), requests are served via
@@ -1669,7 +1656,7 @@ variable `mgl-pax-web-server-port` is nil.
 
 <a id="x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.3.3 Apropos
+#### 9.2.3 Apropos
 
 The Elisp functions `mgl-pax-apropos`, `mgl-pax-apropos-all`, and
 `mgl-pax-apropos-package` can display the results of [`DREF-APROPOS`][65b4] in
@@ -1689,7 +1676,7 @@ name then by locative type.
 
 <a id="x-28MGL-PAX-3A-40PAX-LIVE-HOME-PAGE-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.3.4 PAX Live Home Page
+#### 9.2.4 PAX Live Home Page
 
 When [Browsing Live Documentation][a595], the home page provides
 quick access to documentation of the definitions in the system. In
@@ -1773,13 +1760,13 @@ pages for all [`LOCATIVE-TYPES`][99b0] which may have definitions.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.4 Markdown Support
+### 9.3 Markdown Support
 
 The [Markdown][a317] in docstrings is processed with the [3BMD][1904] library.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-IN-DOCSTRINGS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.4.1 Markdown in Docstrings
+#### 9.3.1 Markdown in Docstrings
 
 - Docstrings can be indented in any of the usual styles. PAX
 normalizes indentation by stripping the longest run of leading
@@ -1838,7 +1825,7 @@ docstrings are equivalent:
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.4.2 Syntax Highlighting
+#### 9.3.2 Syntax Highlighting
 
 For syntax highlighting, Github's [fenced code blocks][1322] markdown
 extension to mark up code
@@ -1857,7 +1844,7 @@ See the documentation of [3BMD][1904] and [Colorize][3076] for the details.
 
 <a id="x-28MGL-PAX-3A-40MATHJAX-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.4.3 MathJax
+#### 9.3.3 MathJax
 
 Displaying pretty mathematics in TeX format is supported via
 MathJax. It can be done inline with `$` like this:
@@ -1880,7 +1867,7 @@ strings can be a pain. [Pythonic String Reader][d3fc5] can help with that.
 
 <a id="x-28MGL-PAX-3A-40CODIFICATION-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.5 Codification
+### 9.4 Codification
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20VARIABLE-29"></a>
 
@@ -1974,7 +1961,7 @@ strings can be a pain. [Pythonic String Reader][d3fc5] can help with that.
 
 <a id="x-28MGL-PAX-3A-40LINKING-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.6 Linking
+### 9.5 Linking
 
 PAX supports linking to [definitions][d930] either with
 explicit [Reflink][cbc4]s or with [Autolink][ec7a]s.
@@ -2001,7 +1988,7 @@ locations.
 
 <a id="x-28MGL-PAX-3A-40REFLINK-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.6.1 Reflink
+#### 9.5.1 Reflink
 
 The [Markdown reference link][8c00] syntax `[label][id]` is
 repurposed for linking to [definitions][d930]. In the
@@ -2152,7 +2139,7 @@ Markdown reference links (see [Markdown in Docstrings][7bf5]).
 
 <a id="x-28MGL-PAX-3A-40AUTOLINK-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.6.2 Autolink
+#### 9.5.2 Autolink
 
 [Markdown inline code][68c1] automatically links to the corresponding
 definitions without having to use [Reflink][cbc4]s. This works especially
@@ -2253,7 +2240,7 @@ This renders as `DOCUMENT`. Alternatively, the
 
 <a id="x-28MGL-PAX-3A-40LINKING-TO-THE-HYPERSPEC-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.6.3 Linking to the HyperSpec
+#### 9.5.3 Linking to the HyperSpec
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29"></a>
 
@@ -2293,7 +2280,7 @@ This renders as `DOCUMENT`. Alternatively, the
 
 <a id="x-28MGL-PAX-3A-40LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.6.4 Linking to Sections
+#### 9.5.4 Linking to Sections
 
 The following variables control how to generate section numbering,
 table of contents and navigation links.
@@ -2356,7 +2343,7 @@ table of contents and navigation links.
 
 <a id="x-28MGL-PAX-3A-40FILTERING-LINKS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.6.5 Filtering Links
+#### 9.5.5 Filtering Links
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20VARIABLE-29"></a>
 
@@ -2441,7 +2428,7 @@ each definition.
 
 <a id="x-28MGL-PAX-3A-40LINK-FORMAT-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.6.6 Link Format
+#### 9.5.6 Link Format
 
 The following variables control various aspects of links and `URL`s.
 
@@ -2531,7 +2518,7 @@ The following variables control various aspects of links and `URL`s.
 
 <a id="x-28MGL-PAX-3A-40LOCAL-DEFINITION-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.7 Local Definition
+### 9.6 Local Definition
 
 While documentation is generated for a definition, that
 definition is considered local. Other local definitions may also be
@@ -2559,7 +2546,7 @@ See [`DOCUMENTING-REFERENCE`][b8a8] and [`WITH-DISLOCATED-NAMES`][2d48] in
 
 <a id="x-28MGL-PAX-3A-40OVERVIEW-OF-ESCAPING-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.8 Overview of Escaping
+### 9.7 Overview of Escaping
 
 Let's recap how escaping [Codification][f1ab],
 [downcasing][a5ee], and [Linking][19e3]
@@ -2600,7 +2587,7 @@ in an explicit link.
 
 <a id="x-28MGL-PAX-3A-40OUTPUT-DETAILS-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.9 Output Details
+### 9.8 Output Details
 
 By default, [`DREF`][d930]s are documented in the following format.
 
@@ -2694,7 +2681,7 @@ printed as the arglist. There is no docstring.
 
 <a id="x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.10 Documentation Generation Implementation Notes
+### 9.9 Documentation Generation Implementation Notes
 
 Documentation Generation is supported on ABCL, AllegroCL, CLISP,
 CCL, CMUCL, ECL and SBCL, but their outputs may differ due to the
@@ -2710,7 +2697,7 @@ doesn't work.
 
 <a id="x-28MGL-PAX-3A-40DOCUMENTATION-UTILITIES-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.11 Utilities for Generating Documentation
+### 9.10 Utilities for Generating Documentation
 
 Two convenience functions are provided to serve the common case of
 having an ASDF system with some readmes and a directory with for the
@@ -2745,7 +2732,7 @@ HTML documentation and the default CSS stylesheet.
 
 <a id="x-28MGL-PAX-3A-40HTML-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.11.1 HTML Output
+#### 9.10.1 HTML Output
 
 <a id="x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-HTML-DOCS-20FUNCTION-29"></a>
 
@@ -2862,7 +2849,7 @@ See the following variables, which control HTML generation.
 
 <a id="x-28MGL-PAX-3A-40GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.11.2 Github Workflow
+#### 9.10.2 Github Workflow
 
 It is generally recommended to commit generated readmes (see
 [`UPDATE-ASDF-SYSTEM-READMES`][13a9]), so that users have something to read
@@ -2944,7 +2931,7 @@ to allow jumping between the repository and the gh-pages site.
 
 <a id="x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.11.3 PAX World
+#### 9.10.3 PAX World
 
 PAX World is a registry of documents, which can generate
 cross-linked HTML documentation pages for all the registered
@@ -3042,23 +3029,21 @@ triple-quote syntax can be enabled with:
 
 <a id="x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
-### 10.1 The mgl-pax/transcribe ASDF System
-
-- Description: Support for [Transcripts][6300] in
-  [MGL-PAX][2415].
-- Long Description: Do not declare a dependency on this system. It is
-  autoloaded by Elisp or by accessing the functionality provided if
-  the [`mgl-pax`][6fdb] system is loaded.
-- Licence: MIT, see COPYING.
-- Author: Gábor Melis
-- Mailto: [mega@retes.hu](mailto:mega@retes.hu)
-- Depends on: alexandria, [mgl-pax/navigate][f155]
-- Defsystem depends on: mgl-pax.asdf
-
+- [system] **"mgl-pax/transcribe"**
+    - Description: Support for [Transcripts][6300] in
+        [MGL-PAX][2415].
+    - Long Description: Do not declare a dependency on this system. It is
+        autoloaded by Elisp or by accessing the functionality provided if
+        the [`mgl-pax`][6fdb] system is loaded.
+    - Licence: MIT, see COPYING.
+    - Author: Gábor Melis
+    - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
+    - Depends on: alexandria, [mgl-pax/navigate][f155]
+    - Defsystem depends on: mgl-pax.asdf
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIBING-WITH-EMACS-20MGL-PAX-3ASECTION-29"></a>
 
-### 10.2 Transcribing with Emacs
+### 10.1 Transcribing with Emacs
 
 Typical transcript usage from within Emacs is simple: add a Lisp
 form to a docstring or comment at any indentation level. Move the
@@ -3151,7 +3136,7 @@ Transcription support in Emacs can be enabled by loading
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-API-20MGL-PAX-3ASECTION-29"></a>
 
-### 10.3 Transcript API
+### 10.2 Transcript API
 
 <a id="x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29"></a>
 
@@ -3446,7 +3431,7 @@ Transcription support in Emacs can be enabled by loading
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-CONISTENCY-CHECKING-20MGL-PAX-3ASECTION-29"></a>
 
-### 10.4 Transcript Consistency Checking
+### 10.3 Transcript Consistency Checking
 
 The main use case for consistency checking is detecting
 out-of-date examples in documentation, although using it for writing
@@ -3479,7 +3464,7 @@ objects are printed with their `#<>` syntax, especially when
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 10.4.1 Finer-Grained Consistency Checks
+#### 10.3.1 Finer-Grained Consistency Checks
 
 To get around this problem, consistency checking of output,
 readable and unreadable values can be customized individually by
@@ -3514,7 +3499,7 @@ output.
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-DYNENV-20MGL-PAX-3ASECTION-29"></a>
 
-#### 10.4.2 Controlling the Dynamic Environment
+#### 10.3.2 Controlling the Dynamic Environment
 
 The dynamic environment in which forms in the transcript are
 evaluated can be controlled via the `:DYNENV` argument of
@@ -3552,7 +3537,7 @@ package for evaluation.
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29"></a>
 
-#### 10.4.3 Utilities for Consistency Checking
+#### 10.3.3 Utilities for Consistency Checking
 
 <a id="x-28MGL-PAX-3ASQUEEZE-WHITESPACE-20FUNCTION-29"></a>
 

@@ -757,9 +757,8 @@
               ((progv '(*document-do-not-follow-references*)
                    ;; SECTIONs contain other sections and other
                    ;; references. Never document them in apropos to
-                   ;; avoid duplications. Also exclude ASDF:SYSTEMs
-                   ;; because they have headings that look weird.
-                   '(,(if just-list t '(section asdf:system))))
+                   ;; avoid duplications.
+                   '(,just-list))
                ,(format nil "## [Apropos][pax::@apropos]~%~%```~%~A~%```~%~%"
                         (let ((current-package *package*))
                           (with-standard-io-syntax*

@@ -230,36 +230,32 @@
   "For definitions with a ASDF:SYSTEM locative, their most
   important slots are printed as an unnumbered list."
   (let ((system (resolve dref)))
-    (with-heading (stream system
-                          (format nil "The ~A \\ASDF System"
-                                  (escape-markdown (slot-value system
-                                                               'asdf::name))))
+    (documenting-reference (stream :reference dref)
       (flet ((foo (name fn &key type)
                (let ((value (funcall fn system)))
                  (when (and value (not (equal value "")))
                    (case type
                      ((:link)
-                      (format stream "- ~A: [~A](~A)~%" name value value))
+                      (format stream "    - ~A: [~A](~A)~%" name value value))
                      ((:mailto)
-                      (format stream "- ~A: [~A](mailto:~A)~%"
+                      (format stream "    - ~A: [~A](mailto:~A)~%"
                               name value value))
                      ((:source-control)
-                      (format stream "- ~A: [~A](~A)"
+                      (format stream "    - ~A: [~A](~A)"
                               name (first value) (second value))
                       (terpri stream))
                      ((:docstring)
-                      (format stream "- ~A: " name)
-                      (document-docstring value stream
-                                          :indentation "  "
+                      (format stream "    - ~A: " name)
+                      (document-docstring value stream :indentation "        "
                                           :exclude-first-line-p t
                                           :paragraphp nil)
-                      (terpri stream))
+                      (format stream "~&"))
                      ((:list-of-systems)
                       (document-docstring
                        (format nil "- ~A: ~{~A~^, ~}~%" name (asdf-deps value))
-                       stream :indentation "" :paragraphp nil))
+                       stream :paragraphp nil))
                      ((nil)
-                      (format stream "- ~A: ~A~%" name value)))))))
+                      (format stream "    - ~A: ~A~%" name value)))))))
         (unless *omit-asdf-slots*
           (foo "Version" 'asdf/component:component-version)
           (foo "Description" 'asdf/system:system-description :type :docstring)
@@ -275,8 +271,7 @@
                :type :source-control)
           (foo "Depends on" 'asdf:system-depends-on :type :list-of-systems)
           (foo "Defsystem depends on" 'asdf:system-defsystem-depends-on
-               :type :list-of-systems)
-          (terpri stream))))))
+               :type :list-of-systems))))))
 
 (defun asdf-deps (dep-names)
   (let ((names* (sort (remove nil (mapcar #'extract-asdf-dep-name dep-names))
