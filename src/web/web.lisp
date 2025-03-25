@@ -90,8 +90,9 @@
             (let* ((dref (first drefs))
                    (dspec (dref::definition-to-dspec dref))
                    (location (source-location dref)))
-              (swank:eval-in-emacs `(mgl-pax-edit-for-cl
-                                     '((,dspec ,location)))))))))))
+              (when location
+                (swank:eval-in-emacs `(mgl-pax-edit-for-cl
+                                       '((,dspec ,location))))))))))))
 
 
 ;;;; HyperSpec
