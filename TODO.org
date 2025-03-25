@@ -72,8 +72,6 @@ markup. We could get the original indentation from the sources.
 ** MAYBE remove some markup in :PLAIN format?
 ** MAYBE get variable initforms from source?
 Or fall back on this for deficient ARGLISTs. Will be really slow.
-** TODO add list of dependencies to ASDF system doc
-https://github.com/40ants/doc/commit/c3bf89fa88ab70074466aa07358caad159d45008
 ** MAYBE use SECTION-PACKAGE from "first" enclosing section?
 That is, when generating documentation for something that's referenced
 by one or more sections. See PAX::SECTIONS-THAT-CONTAIN and

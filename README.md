@@ -393,6 +393,9 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
 - Homepage: [http://melisgl.github.io/mgl-pax](http://melisgl.github.io/mgl-pax)
 - Bug tracker: [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
 - Source control: [GIT](https://github.com/melisgl/mgl-pax.git)
+- Depends on: dref, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
+- Defsystem depends on: mgl-pax.asdf
+
 
 <a id="x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
@@ -405,6 +408,7 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
+- Depends on: [mgl-pax/document][4bb8], [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825]
 
 
 <a id="x-28MGL-PAX-3A-40BACKGROUND-20MGL-PAX-3ASECTION-29"></a>
@@ -1085,6 +1089,8 @@ A close relative of `M-.` is `C-.` for [Browsing Live Documentation][a595].
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
+- Depends on: alexandria, dref/full, [mgl-pax][6fdb], swank(?)
+- Defsystem depends on: mgl-pax.asdf
 
 
 <a id="x-28MGL-PAX-3A-40M--2E-DEFAULTING-20MGL-PAX-3ASECTION-29"></a>
@@ -1500,6 +1506,8 @@ symbols, there is no package system to advantage of.
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
+- Depends on: 3bmd, 3bmd-ext-code-blocks, alexandria, colorize, md5, [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], trivial-utf-8
+- Defsystem depends on: mgl-pax.asdf
 
 
 <a id="x-28MGL-PAX-3A-40BROWSING-LIVE-DOCUMENTATION-20MGL-PAX-3ASECTION-29"></a>
@@ -3044,6 +3052,8 @@ triple-quote syntax can be enabled with:
 - Licence: MIT, see COPYING.
 - Author: Gábor Melis
 - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
+- Depends on: alexandria, [mgl-pax/navigate][f155]
+- Defsystem depends on: mgl-pax.asdf
 
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIBING-WITH-EMACS-20MGL-PAX-3ASECTION-29"></a>

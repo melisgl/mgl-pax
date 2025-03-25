@@ -100,6 +100,21 @@
         (document-docstring (docstring dref) stream)))))
 
 
+;;;; Utilities
+
+(defun md-reflink-from (name locative)
+  (let ((md-name (if (stringp name)
+                     (escape-markdown name)
+                     (prin1-to-markdown name))))
+    ;; To avoid warnings, do not link explicitly if there is nothing
+    ;; to link to.
+    (if (dref name locative nil)
+        (format nil "[~A][~A]" md-name
+                (let ((*print-readably* nil))
+                  (prin1-to-markdown locative)))
+        (format nil "~A" md-name))))
+
+
 ;;;; ACCESSOR, READER and WRITER locatives
 
 (defmethod document-object* ((dref accessor-dref) stream)
@@ -230,7 +245,8 @@
                               name value value))
                      ((:source-control)
                       (format stream "- ~A: [~A](~A)"
-                              name (first value) (second value)))
+                              name (first value) (second value))
+                      (terpri stream))
                      ((:docstring)
                       (format stream "- ~A: " name)
                       (document-docstring value stream
@@ -238,6 +254,10 @@
                                           :exclude-first-line-p t
                                           :paragraphp nil)
                       (terpri stream))
+                     ((:list-of-systems)
+                      (document-docstring
+                       (format nil "- ~A: ~{~A~^, ~}~%" name (asdf-deps value))
+                       stream :indentation "" :paragraphp nil))
                      ((nil)
                       (format stream "- ~A: ~A~%" name value)))))))
         (unless *omit-asdf-slots*
@@ -253,7 +273,31 @@
           (foo "Bug tracker" 'asdf/system:system-bug-tracker :type :link)
           (foo "Source control" 'asdf/system:system-source-control
                :type :source-control)
+          (foo "Depends on" 'asdf:system-depends-on :type :list-of-systems)
+          (foo "Defsystem depends on" 'asdf:system-defsystem-depends-on
+               :type :list-of-systems)
           (terpri stream))))))
+
+(defun asdf-deps (dep-names)
+  (let ((names* (sort (remove nil (mapcar #'extract-asdf-dep-name dep-names))
+                      #'string< :key #'first)))
+    (loop for (name conditionalp) in names*
+          collect (format nil "~A~A" (md-reflink-from name 'asdf:system)
+                          (if conditionalp "(?)" "")))))
+
+;;; Return the name of the dependency and whether it's a conditional
+;;; dependency.
+(defun extract-asdf-dep-name (dep)
+  ;; Typically, DEP is just the name of the system ...
+  (if (stringp dep)
+      (list dep nil)
+      ;; ... but it may be conditional like (:FEATURE :CORMAN
+      ;; (:REQUIRE "threads")).
+      (let ((string (find-if-in-tree #'stringp dep)))
+        (if string
+            (list string t)
+            ;; Survive the unexpected.
+            nil))))
 
 
 ;;;; PACKAGE locative
@@ -331,13 +375,6 @@
        (format nil "See ~A." (apply #'md-reflink-from
                                     (first (dref-locative-args dref))))
        stream))))
-
-(defun md-reflink-from (object locative)
-  (format nil "[~A][~A]" (if (stringp object)
-                             (escape-markdown object)
-                             (prin1-to-markdown object))
-          (let ((*print-readably* nil))
-            (prin1-to-markdown locative))))
 
 
 ;;;; INCLUDE locative

@@ -1,5 +1,15 @@
 (in-package :mgl-pax)
 
+(defun find-if-in-tree (fn tree)
+  (labels ((recurse (tree)
+             (if (listp tree)
+                 (dolist (subtree tree)
+                   (recurse subtree))
+                 (when (funcall fn tree)
+                   (return-from find-if-in-tree tree)))))
+    (recurse tree)))
+
+
 ;;;; Cached DREF:DEFINITIONS with all LOCATIVE-TYPES.
 
 (defvar *definitions-cache*)
