@@ -14,21 +14,25 @@
   #+clisp charset:utf-8
   #-(or abcl allegro clisp) :default)
 
-;;; Return the number of characters that would be read by
-;;; READ-FROM-STRING. May signal READER-ERROR or END-OF-FILE.
-(defun n-chars-would-read (string)
+;;; From START in STRING, skip over the next sexp, and return the
+;;; index of the next character (preserving whitespace). Thus, (SUBSEQ
+;;; STRING INDEX) is the sexp as a string. May signal READER-ERROR or
+;;; END-OF-FILE.
+(defun skip-sexp (string &key (start 0))
   (nth-value 1 (let ((*read-suppress* t))
-                 (read-from-string string))))
+                 (read-from-string string t nil :start start
+                                                :preserve-whitespace t))))
 
 
 ;;;; Symbols
 
-(defun read-interned-symbol-from-string (string)
-  (let ((pos (n-chars-would-read string)))
+(defun read-interned-symbol-from-string (string &key (start 0))
+  (let ((pos (skip-sexp string :start start)))
     (multiple-value-bind (symbol foundp)
-        (swank::parse-symbol (trim-whitespace (subseq string 0 pos)))
+        (swank::parse-symbol (trim-whitespace (subseq string start pos)))
       (when foundp
-        (multiple-value-bind (symbol2 pos) (read-from-string string)
+        (multiple-value-bind (symbol2 pos)
+            (read-from-string string t nil :start start)
           (assert (eq symbol symbol2))
           (values symbol2 pos))))))
 
@@ -121,12 +125,13 @@
 (defun whitespacep (char)
   (member char *whitespace-chars*))
 
-(defun blankp (string)
-  (every #'whitespacep string))
+(defun blankp (string-or-nil &key (start 0))
+  (loop for i upfrom start below (length string-or-nil)
+        always (whitespacep (aref string-or-nil i))))
 
-(defun trim-whitespace (string)
-  (if string
-      (string-trim #.(format nil "~{~A~}" *whitespace-chars*) string)
+(defun trim-whitespace (string-or-nil)
+  (if string-or-nil
+      (string-trim #.(format nil "~{~A~}" *whitespace-chars*) string-or-nil)
       nil))
 
 (defun mixed-case-p (string)

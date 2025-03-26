@@ -315,5 +315,11 @@
     ((or reader-error end-of-file) ()
       nil)))
 
+(defun read-locative-type-from-string (string &key (start 0))
+  (multiple-value-bind (symbol pos)
+      (read-interned-symbol-from-string string :start start)
+    (when (and pos (dref symbol 'locative nil))
+      (values symbol pos))))
+
 (defun delimiterp (char)
   (or (whitespacep char) (find char "()'`\"")))

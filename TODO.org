@@ -115,8 +115,6 @@ Maybe this is a special case of dynamically generated documentation.
 * apropos
 ** MAYBE when exported by pax, we know the exact definition being exported
 mgl-pax-apropos-package could take advantage?
-** TODO mgl-pax-apropos: no way to have a space in string name?
-How to apropos "lambda list"?
 ** MAYBE web: have apropos name be editable?
 This would make the PAX Live home page more capable without Emacs.
 ** MAYBE option to sort apropos results by source location

@@ -698,113 +698,164 @@
                             (just-list t))
   (let ((name0 name)
         (package0 package))
-    (flet ((find-name (string)
-             (let* ((tail-pos (position #\Space string))
-                    (tail (and tail-pos (subseq string (1+ tail-pos))))
-                    (string (subseq string 0 tail-pos)))
-               (values (cond ((string= string "") nil)
-                             ((starts-with #\' string)
-                              (make-symbol (subseq string 1 tail-pos)))
-                             (t
-                              (subseq string 0 tail-pos)))
-                       tail)))
-           (parse-nil-symbol-or-string (obj)
-             (etypecase obj
-               (string
-                (let ((string obj))
-                  (cond ((string= string "")
-                         nil)
-                        ((starts-with-subseq "'#:" string)
-                         (make-symbol (subseq string 3)))
-                        ((starts-with-subseq "':" string)
-                         (make-symbol (subseq string 2)))
-                        ((starts-with-subseq "'" string)
-                         (make-symbol (subseq string 1)))
-                        (t
-                         string))))
-               (symbol
-                obj))))
-      (multiple-value-bind (name locative-types) (find-name name)
-        (let* ((package (parse-nil-symbol-or-string
-                         (if (stringp package)
-                             (dref::adjust-string-case package)
-                             package)))
-               ;; Whether this is for an exact package match and no
-               ;; other restrictions.
-               (%packagep (and package (null name) (symbolp package)))
-               (locative-types (when locative-types
-                                 (read-from-string
-                                  (format nil "(~A)" locative-types))))
-               (pax-entry-points
-                 (when (and (symbolp package) (find-package package))
-                   (entry-point-sections (list-sections-in-package
-                                          (find-package package))))))
-          (multiple-value-bind (non-symbol-definitions symbol-definitions)
-              (split-apropos-definitions
-               (dref-apropos name :external-only external-only
-                                  :package package
-                                  :case-sensitive case-sensitive
-                                  :locative-types (case locative-types
-                                                    ((:all)
-                                                     (locative-types))
-                                                    ((nil :lisp)
-                                                     (lisp-locative-types))
-                                                    ((:psuedo)
-                                                     (pseudo-locative-types))
-                                                    (t
-                                                     locative-types))))
-            `((progv '(*document-max-table-of-contents-level*) '(-1))
-              ,@(when %packagep
-                  (documentable-for-reference (xref package 'package)))
-              ((progv '(*document-do-not-follow-references*)
-                   ;; SECTIONs contain other sections and other
-                   ;; references. Never document them in apropos to
-                   ;; avoid duplications.
-                   '(,just-list))
-               ,(format nil "## [Apropos][pax::@apropos]~%~%```~%~A~%```~%~%"
-                        (let ((current-package *package*))
-                          (with-standard-io-syntax*
-                            (let ((*package* current-package)
-                                  (*print-readably* nil)
-                                  (*print-pretty* t)
-                                  (*print-right-margin* 72))
-                              (prin1-to-string*
-                               `(dref-apropos
-                                 ,(maybe-quote name)
-                                 :external-only ,external-only
-                                 :package ,(maybe-quote package)
-                                 :case-sensitive ,case-sensitive
-                                 :locative-types ,(maybe-quote
-                                                   locative-types)))))))
-               ,(format nil "Switch to [~S ~S](~A), [~S ~S](~A), or to ~
+    (multiple-value-bind (name locative-types package)
+        (pax-apropos*-process-args name package)
+      (let* (;; Whether this is for an exact package match and no
+             ;; other restrictions.
+             (%packagep (and package (null name) (symbolp package)))
+             (pax-entry-points
+               (when (and (symbolp package) (find-package package))
+                 (entry-point-sections (list-sections-in-package
+                                        (find-package package)))))
+             (dref-apropos-form
+               `(dref-apropos ,(maybe-quote name)
+                              :external-only ,external-only
+                              :package ,(maybe-quote package)
+                              :case-sensitive ,case-sensitive
+                              :locative-types ,(maybe-quote locative-types))))
+        (multiple-value-bind (non-symbol-definitions symbol-definitions)
+            (split-apropos-definitions
+             (dref-apropos name :external-only external-only
+                                :package package
+                                :case-sensitive case-sensitive
+                                :locative-types locative-types))
+          (values
+           `((progv '(*document-max-table-of-contents-level*) '(-1))
+             ,@(when %packagep
+                 (documentable-for-reference (xref package 'package)))
+             ((progv '(*document-do-not-follow-references*)
+                  ;; SECTIONs contain other sections and other
+                  ;; references. Never document them in apropos to
+                  ;; avoid duplications.
+                  '(,just-list))
+              ,(format nil "## [Apropos][pax::@apropos]~%~%```~%~A~%```~%~%"
+                       (let ((current-package *package*))
+                         (with-standard-io-syntax*
+                           (let ((*package* current-package)
+                                 (*print-readably* nil)
+                                 (*print-pretty* t)
+                                 (*print-right-margin* 72))
+                             (prin1-to-string* dref-apropos-form)))))
+              ,(format nil "Switch to [~S ~S](~A), [~S ~S](~A), or to ~
                             [~A view](~A)."
-                        :external-only (not external-only)
-                        (make-pax-eval-url
-                         `(pax-apropos* ,(maybe-quote name0)
-                                        ,(not external-only)
-                                        ,(maybe-quote package0)
-                                        ,case-sensitive ,just-list))
-                        :case-sensitive (not case-sensitive)
-                        (make-pax-eval-url
-                         `(pax-apropos* ,(maybe-quote name0) ,external-only
-                                        ,(maybe-quote package0)
-                                        ,(not case-sensitive) ,just-list))
-                        (if just-list "detailed" "list")
-                        (make-pax-eval-url
-                         `(pax-apropos* ,(maybe-quote name0) ,external-only
-                                        ,(maybe-quote package0)
-                                        ,case-sensitive ,(not just-list))))
-               ,@(when pax-entry-points
-                   (list "### PAX Entry Points"
-                         (break-long-list (sections-tightly pax-entry-points))))
-               ,@(when (and (not %packagep) non-symbol-definitions)
-                   (cons "### Non-Symbol Definitions"
-                         (list `((progv '(*document-tight*) '(t))
-                                 ,@(break-long-list non-symbol-definitions)))))
-               ,@(when symbol-definitions
-                   (list "### Symbol Definitions"
-                         `((progv '(*document-tight*) '(t))
-                           ,@(break-long-list symbol-definitions))))))))))))
+                       :external-only (not external-only)
+                       (make-pax-eval-url
+                        `(pax-apropos* ,(maybe-quote name0)
+                                       ,(not external-only)
+                                       ,(maybe-quote package0)
+                                       ,case-sensitive ,just-list))
+                       :case-sensitive (not case-sensitive)
+                       (make-pax-eval-url
+                        `(pax-apropos* ,(maybe-quote name0) ,external-only
+                                       ,(maybe-quote package0)
+                                       ,(not case-sensitive) ,just-list))
+                       (if just-list "detailed" "list")
+                       (make-pax-eval-url
+                        `(pax-apropos* ,(maybe-quote name0) ,external-only
+                                       ,(maybe-quote package0)
+                                       ,case-sensitive ,(not just-list))))
+              ,@(when pax-entry-points
+                  (list "### PAX Entry Points"
+                        (break-long-list (sections-tightly pax-entry-points))))
+              ,@(when (and (not %packagep) non-symbol-definitions)
+                  (cons "### Non-Symbol Definitions"
+                        (list `((progv '(*document-tight*) '(t))
+                                ,@(break-long-list non-symbol-definitions)))))
+              ,@(when symbol-definitions
+                  (list "### Symbol Definitions"
+                        `((progv '(*document-tight*) '(t))
+                          ,@(break-long-list symbol-definitions))))))
+           dref-apropos-form))))))
+
+(defun pax-apropos*-process-args (name package)
+  (multiple-value-bind (name locative-types) (parse-apropos-input name)
+    (let ((package (cond
+                     ;; For DOCUMENT-FOR-EMACS/REFERENCE-1
+                     ((symbolp package)
+                      package)
+                     ;; For mgl-pax-apropos-package
+                     ((listp package)
+                      (assert (= (length package) 1))
+                      (make-symbol (first package)))
+                     (t
+                      (read-apropos-package-pattern-from-string package)))))
+      (values name locative-types package))))
+
+(defun parse-apropos-input (string)
+  (multiple-value-bind (name-pattern pos)
+      (read-apropos-name-pattern-from-string string)
+    (values name-pattern (read-apropos-locative-types string :start pos))))
+
+(defun read-apropos-name-pattern-from-string (string)
+  (cond ((string= string "")
+         (values nil 0))
+        ((starts-with #\Space string)
+         (values nil 1))
+        ((starts-with-subseq ":" string)
+         (read-uninterned-symbol-from-string string :start 1))
+        ((starts-with #\" string)
+         (read-from-string string))
+        (t
+         (let ((n (or (position #\Space string) (length string))))
+           (values (subseq string 0 n) n)))))
+
+(defun read-apropos-package-pattern-from-string (string)
+  (let ((string (trim-whitespace string)))
+    (multiple-value-bind (pattern pos)
+        (cond ((blankp string)
+               (values nil (length string)))
+              ((starts-with-subseq ":" string)
+               (read-uninterned-symbol-from-string string :start 1))
+              ((starts-with #\" string)
+               (alexandria:nth-value-or 0
+                 (ignore-errors (read-from-string string))
+                 (values (subseq string 1) (length string))))
+              (t
+               (let ((n (length string)))
+                 (values (subseq string 0 n) n))))
+      (unless (= pos (length string))
+        (error "~@<Trailing junk from index ~S in ~S.~:@>" pos string))
+      (cond ((and (symbolp pattern)
+                  (equal (dref::adjust-string-case (symbol-name pattern))
+                         (dref::adjust-string-case "none")))
+             :none)
+            ((and (symbolp pattern)
+                  (equal (dref::adjust-string-case (symbol-name pattern))
+                         (dref::adjust-string-case "any")))
+             :any)
+            (t
+             pattern)))))
+
+(defun read-uninterned-symbol-from-string (string &key (start 0))
+  (let* ((pos (skip-sexp string :start start))
+         (substring (subseq string start pos)))
+    (values (make-symbol
+             ;; KLUDGE: This handles |xyz| but not X|y|Z that some
+             ;; lisps may print.
+             (if (and (starts-with #\| substring)
+                      (ends-with #\| substring))
+                 (subseq substring 1 (1- (length substring)))
+                 substring))
+            pos)))
+
+(defun read-apropos-locative-types (string &key (start 0))
+  (let ((pos start)
+        (locative-types ()))
+    (loop until (blankp string :start pos) do
+      (multiple-value-bind (locative-type new-pos)
+          (read-locative-type-from-string string :start pos)
+        (cond (locative-type
+               (push locative-type locative-types)
+               (setq pos new-pos))
+              (t
+               (multiple-value-bind (symbol new-pos)
+                   (read-interned-symbol-from-string string :start pos)
+                 (unless (member symbol '(:all :lisp :pseudo))
+                   (error "~@<Cannot parse locative type at ~S.~:@>"
+                          (subseq string pos)))
+                 (push symbol locative-types)
+                 (setq pos new-pos))))))
+    (nreverse locative-types)))
 
 (defun maybe-quote (obj)
   (if (and obj (or (symbolp obj)

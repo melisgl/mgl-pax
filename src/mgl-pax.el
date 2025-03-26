@@ -297,8 +297,9 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 
 ;;;; Parsing utilities
 
-;;; Return a list of strings representing `lisp-mode' sexps in STRING.
-;;; The last sexp returned may be incomplete.
+;;; Return a list of strings representing `lisp-mode' sexps in the
+;;; current buffer between START and END. The last sexp returned may
+;;; be incomplete.
 (cl-defun mgl-pax-parse-sexps (&key (start (point)) (end (point-max))
                                     allow-empty)
   (let ((sexps ())
@@ -611,60 +612,63 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 (defvar mgl-pax-completing-for nil)
 
 (defun mgl-pax-read-from-minibuffer (prompt completing-for)
-  (cl-assert (member completing-for '(navigate document apropos)))
+  (cl-assert (member completing-for
+                     '(navigate document apropos apropos-package)))
   (let ((mgl-pax-completing-for completing-for))
     (slime-read-from-minibuffer prompt)))
 
 (defun mgl-pax-completions-at-point ()
   (when (and mgl-pax-completing-for
              (mgl-pax-component-loaded-p :mgl-pax/navigate))
-    (let* (;; This the position of the first character after the prompt.
-           (bol (line-beginning-position))
-           (end (point)))
-      (cl-destructuring-bind (sexps bounds)
-          (mgl-pax-parse-sexps :start bol :end end :allow-empty t)
-        (let ((start (car (cl-first (last bounds)))))
-          (if (eq mgl-pax-completing-for 'apropos)
-              ;; Punt to Slime completion for the first sexp.
-              (when (<= 2 (length sexps))
-                ;; For apropos, the first sexp is a pattern for a
-                ;; name, not a whole name. Just return all the
-                ;; possiblities. This doesn't handle composite
-                ;; locatives (e.g. (METHOD () (NUMBER)), (PAX:CLHS
-                ;; FUNCTION), of course.
-                (list start end
-                      (mgl-pax-eval
-                       ;; FIXME: MGL-PAX::PAX-APROPOS* could tell us
-                       ;; all the possible locatives for the pattern
-                       ;; in the first sexp, but that may be too
-                       ;; expensive.
-                       `(mgl-pax::locative-types-for-emacs
-                         ,(buffer-substring-no-properties start end)))))
-            ;; Completing for `navigate' and `document'
-            (cond ((= (length sexps) 1)
-                   ;; point is within the first sexp or just beyond,
-                   ;; so the next char to be typed may still be part
-                   ;; of it. We only need to complete explicit string
-                   ;; names because returning nil lets the default
-                   ;; Slime completion take care of symbols.
-                   (mgl-pax-string-name-completions))
-                  ;; Specified locative
-                  ((= (length sexps) 2)
-                   ;; The first sexp is definitely complete.
-                   (list start end
-                         (mgl-pax-names-or-locatives
-                          (elt sexps 0) (buffer-substring-no-properties
-                                         start end))))
-                  ;; `mgl-pax-document' input with fragment. We could
-                  ;; also complete the third sexp (the fragment's
-                  ;; name) based on what is on the page generated for
-                  ;; the main reference.
-                  ((= (length sexps) 4)
-                   ;; The first sexp is definitely complete.
-                   (list start end
-                         (mgl-pax-names-or-locatives
-                          (elt sexps 2) (buffer-substring-no-properties
-                                         start end)))))))))))
+    (if (eq mgl-pax-completing-for 'apropos-package)
+        (mgl-pax-completions-at-point-for-apropos-package)
+        (let* (;; This the position of the first character after the prompt.
+               (bol (line-beginning-position))
+               (end (point)))
+          (cl-destructuring-bind (sexps bounds)
+              (mgl-pax-parse-sexps :start bol :end end :allow-empty t)
+            (let ((start (car (cl-first (last bounds)))))
+              (if (eq mgl-pax-completing-for 'apropos)
+                  ;; Punt to Slime completion for the first sexp.
+                  (when (<= 2 (length sexps))
+                    ;; For apropos, the first sexp is a pattern for a
+                    ;; name, not a whole name. Just return all the
+                    ;; possiblities. This doesn't handle composite
+                    ;; locatives (e.g. (METHOD () (NUMBER)), (PAX:CLHS
+                    ;; FUNCTION), of course.
+                    (list start end
+                          (mgl-pax-eval
+                           ;; FIXME: MGL-PAX::PAX-APROPOS* could tell us
+                           ;; all the possible locatives for the pattern
+                           ;; in the first sexp, but that may be too
+                           ;; expensive.
+                           `(mgl-pax::locative-types-for-emacs
+                             ,(buffer-substring-no-properties start end)))))
+                ;; Completing for `navigate' and `document'
+                (cond ((= (length sexps) 1)
+                       ;; point is within the first sexp or just beyond,
+                       ;; so the next char to be typed may still be part
+                       ;; of it. We only need to complete explicit string
+                       ;; names because returning nil lets the default
+                       ;; Slime completion take care of symbols.
+                       (mgl-pax-string-name-completions))
+                      ;; Specified locative
+                      ((= (length sexps) 2)
+                       ;; The first sexp is definitely complete.
+                       (list start end
+                             (mgl-pax-names-or-locatives
+                              (elt sexps 0) (buffer-substring-no-properties
+                                             start end))))
+                      ;; `mgl-pax-document' input with fragment. We could
+                      ;; also complete the third sexp (the fragment's
+                      ;; name) based on what is on the page generated for
+                      ;; the main reference.
+                      ((= (length sexps) 4)
+                       ;; The first sexp is definitely complete.
+                       (list start end
+                             (mgl-pax-names-or-locatives
+                              (elt sexps 2) (buffer-substring-no-properties
+                                             start end))))))))))))
 
 ;;; Return the completions for a DREF::@NAME typed in is explicitly as
 ;;; a string (e.g. `"mgl-p', note the missing right quote).
@@ -1281,20 +1285,42 @@ In a PAX doc buffer, it's equivalent to pressing `v'
   "Show all PAX definitions that match the arguments.
 This is a wrapper around DREF:DREF-APROPOS. STRING is basically
 NAME and LOCATIVE-TYPES concatenated with a space in between. If
-STRING or PACKAGE starts with `?\\='', then only exact matches
+STRING or PACKAGE starts with a colon, then only exact matches
 with a symbol or package name are accepted.
 
-- \"print\" matches definitions whose names contain \"print\" as
-  a substring.
+With a prefix arg, you're interactively asked for parameters of
+the search. Without a prefix arg, EXTERNAL-ONLY defaults to T,
+packages are not filtered, and case does not matter.
 
-- \"\\='print\" matches definitions whose names are
-  \"print\" (still subject to CASE-SENSITIVE).
+Also, see `mgl-pax-apropos-all'.
+
+The syntax of STRING
+--------------------
+
+Name patterns:
+
+- \":print\" matches definitions whose names are \"print\".
+
+- \"\"print\"\" matches definitions whose names contain \"print\"
+  as a substring.
+
+- \"print\" like for previous, substring matching case. Use this
+  form, if the pattern does not contain spaces and does not start
+  with a colon.
+
+- The empty string matches everything.
+
+Matching of name is subject to CASE-SENSITIVE.
+
+After the name pattern, STRING may contain a list of locative
+types. If some locative types are given, then the matches are
+restricted to them.
 
 - \"print function\" matches functions whose names contain
   \"print\" (e.g. CL:PRINT and CL:PPRINT).
 
-- \"\\='print function\" is like the previous example but with
-  exact name match.
+- \":print function\" is like the previous example but with exact
+  name match.
 
 - \"print variable\" matches for example *PRINT-ESCAPE*.
 
@@ -1314,11 +1340,26 @@ with a symbol or package name are accepted.
 - \"print :all\" matches definitions with all locative
   types (DREF:LOCATIVE-TYPES).
 
-With a prefix arg, you're interactively asked for parameters of
-the search. Without a prefix arg, EXTERNAL-ONLY defaults to T,
-packages are not filtered, and case does not matter.
 
-Also, see `mgl-pax-apropos-all'."
+The syntax of PACKAGE
+---------------------
+
+- \":none\" restricts matches to non-symbol names.
+
+- \":any\" restricts matches to symbol names.
+
+- \":CL\" restrict matches to symbols in the CL package.
+
+- \":|X Y|\" is the same as the previous, but the vertical bar
+  syntax allows for spaces in names.
+
+- \"mgl\" restrict matches to packages whose name contains the
+  string \"mgl\".
+
+- \"\\\"x y\\\"\" is the same as the previous, but the explicit
+  quotes allow for spaces in names.
+
+Matching of the package is also subject to CASE-SENSITIVE."
   (interactive (list nil nil nil nil))
   (mgl-pax-with-component (:mgl-pax/document)
     (mgl-pax-document
@@ -1335,11 +1376,23 @@ Also, see `mgl-pax-apropos-all'."
                 (list (mgl-pax-read-from-minibuffer "PAX Apropos: "
                                                     'apropos)
                       (y-or-n-p "External symbols only? ")
-                      (slime-read-package-name "Package: ")
+                      (mgl-pax-read-apropos-package-from-minibuffer)
                       (y-or-n-p "Case-sensitive? "))
               (list (mgl-pax-read-from-minibuffer "PAX Apropos: "
                                                   'apropos)
                     t nil nil))))))))
+
+(defun mgl-pax-read-apropos-package-from-minibuffer ()
+  (mgl-pax-read-from-minibuffer "Package pattern: " 'apropos-package))
+
+(defun mgl-pax-completions-at-point-for-apropos-package ()
+  (list (line-beginning-position) (point)
+        (cl-list* ":none" ":any" (mgl-pax-package-names-as-keywords))))
+
+(defun mgl-pax-package-names-as-keywords ()
+  (mapcar (lambda (name)
+            (concat ":" name))
+          (slime-eval `(swank:list-all-package-names t))))
 
 (defun mgl-pax-make-pax-eval-url (sexp)
   (concat "pax-eval:" (url-encode-url (prin1-to-string sexp))))
@@ -1360,7 +1413,8 @@ The empty string means the current package."
                                  "PAX Apropos for Package: ")))
                        (if (string= pkg "") (slime-current-package) pkg))
                      current-prefix-arg))
-  (mgl-pax-apropos "" (not internal) (concat "'" package) nil))
+  (mgl-pax-with-component (:mgl-pax/document)
+    (mgl-pax-apropos "" (not internal) `'(,package) nil)))
 
 
 ;;;; Transcribe (see MGL-PAX::@TRANSCRIBING-WITH-EMACS)

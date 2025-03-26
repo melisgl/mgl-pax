@@ -54,7 +54,7 @@
                  locstring))))
     (handler-case
         ;; Skip whatever NAME may be ...
-        (let* ((name-end-pos (n-chars-would-read string))
+        (let* ((name-end-pos (skip-sexp string))
                (raw (subseq string 0 name-end-pos)))
           ;; ... then just try to parse the locative.
           (multiple-value-bind (locative pos)
