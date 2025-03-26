@@ -884,12 +884,20 @@ To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
             Similarly, reader macro characters are aliases of
             the sections describing them. The full list is
             ( ) ' ;
-            " \` , #\\
-            \#' #( #\* #:
-            \#. #B #O #X
-            \#R #C #A #S
-            \#P #= ## #+
-            \#- #| #\< #).
+            " \` , #
+            \#\\ #' #( #\*
+            \#: #. #B #O
+            \#X #R #C #A
+            \#S #P #= ##
+            \#+ #- #| #\<
+            \#).
+    
+            Finally, loop keywords have aliases
+            to the sections describing them. For example, the strings
+            `loop:for`, `for` and `:for` are aliases of CLHS `6.1.2.1`.
+            The `loop:*` aliases are convenient for completion at the
+            prompt when @BROWSING-LIVE-DOCUMENTATION, while the other
+            aliases are for defaulting to buffer contents.
     
     As the above examples show, the NESTED-LOCATIVE argument of the CLHS
     locative may be omitted. In that case, definitions, glossary terms,
@@ -1387,6 +1395,8 @@ In interactive use, `mgl-pax-document` behaves similarly to
 
     - `"~<TAB>` lists all CL:FORMAT directives (similar to
       `common-lisp-hyperspec-format` in Elisp).
+
+    - `"loop:~<TAB>` lists all loop keywords.
 
 - It works in non-`lisp-mode` buffers by reinterpreting a few lines
   of text surrounding point as lisp code (hence the suggested

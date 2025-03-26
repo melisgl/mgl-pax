@@ -53,6 +53,8 @@
       - `\"~<TAB>` lists all CL:FORMAT directives (similar to
         `common-lisp-hyperspec-format` in Elisp).
 
+      - `\"loop:~<TAB>` lists all [loop keywords][clhs].
+
   - It works in non-`lisp-mode` buffers by reinterpreting a few lines
     of text surrounding point as lisp code (hence the suggested
     _global_ binding).

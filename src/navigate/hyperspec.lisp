@@ -1139,13 +1139,18 @@
 
 ;;;; Low-level interface to HyperSpec sections
 
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (defun loop-kw (string)
+    (list (format nil "loop:~A" string) string (format nil ":~A" string))))
+
 (defparameter *hyperspec-sections*
   ;; (FILENAME SECTION-ID TITLE &REST ALIAS-KINDS-AND-ALIASES)
   ;;
   ;; For example, ALIAS-KINDS-AND-ALIASES is (:FORMAT-DIRECTIVE "~C")
   ;; for "Tilde C: Character". There are aliases for
-  ;; :READER-MACRO-CHARs, as well.
-  '(("00_" "0" "Credits")
+  ;; :READER-MACRO-CHARs, as well. The alias may be a single string or
+  ;; a list of them (see :LOOP-KEYWORD below).
+  `(("00_" "0" "Credits")
     ("01_" "1" "Introduction")
     ("01_a" "1.1" "Scope, Purpose, and History")
     ("01_aa" "1.1.1" "Scope and Purpose")
@@ -1292,7 +1297,7 @@
     ("02_df" "2.4.6" "Backquote" :reader-macro-char "`")
     ("02_dfa" "2.4.6.1" "Notes about Backquote")
     ("02_dg" "2.4.7" "Comma" :reader-macro-char ",")
-    ("02_dh" "2.4.8" "Sharpsign" "#")
+    ("02_dh" "2.4.8" "Sharpsign" :reader-macro-char "#")
     ("02_dha" "2.4.8.1" "Sharpsign Backslash" :reader-macro-char "#\\")
     ("02_dhb" "2.4.8.2" "Sharpsign Single-Quote" :reader-macro-char "#'")
     ("02_dhc" "2.4.8.3" "Sharpsign Left-Parenthesis" :reader-macro-char "#(")
@@ -1475,7 +1480,7 @@
     ("06_aaea" "6.1.1.5.1"
      "Summary of Variable Initialization and Stepping Clauses")
     ("06_aaeb" "6.1.1.5.2" "Summary of Value Accumulation Clauses")
-    ("06_aaec" "6.1.1.5.3" "Summary of Termination Test Clauses")
+    ("06_aaec" "6.1.1.5.3" "Summary of Termaxation Test Clauses")
     ("06_aaed" "6.1.1.5.4" "Summary of Unconditional Execution Clauses")
     ("06_aaee" "6.1.1.5.5" "Summary of Conditional Execution Clauses")
     ("06_aaef" "6.1.1.5.6" "Summary of Miscellaneous Clauses")
@@ -1483,40 +1488,91 @@
     ("06_aag" "6.1.1.7" "Destructuring")
     ("06_aah" "6.1.1.8" "Restrictions on Side-Effects")
     ("06_ab" "6.1.2" "Variable Initialization and Stepping Clauses")
-    ("06_aba" "6.1.2.1" "Iteration Control")
-    ("06_abaa" "6.1.2.1.1" "The for-as-arithmetic subclause")
+    ("06_aba" "6.1.2.1" "Iteration Control"
+     ;; These occur in multiple subsections.
+     :loop-keyword (,@(loop-kw "for")
+                    ,@(loop-kw "as")
+                    ,@(loop-kw "in")
+                    ,@(loop-kw "by")
+                    ,@(loop-kw "being")
+                    ,@(loop-kw "each")
+                    ,@(loop-kw "the")
+                    ,@(loop-kw "of")))
+    ("06_abaa" "6.1.2.1.1" "The for-as-arithmetic subclause"
+     :loop-keyword (,@(loop-kw "from")
+                    ,@(loop-kw "downfrom")
+                    ,@(loop-kw "upfrom")
+                    ,@(loop-kw "to")
+                    ,@(loop-kw "downto")
+                    ,@(loop-kw "upto")
+                    ,@(loop-kw "below")
+                    ,@(loop-kw "above")))
     ("06_abaaa" "6.1.2.1.1.1" "Examples of for-as-arithmetic subclause")
     ("06_abab" "6.1.2.1.2" "The for-as-in-list subclause")
     ("06_ababa" "6.1.2.1.2.1" "Examples of for-as-in-list subclause")
-    ("06_abac" "6.1.2.1.3" "The for-as-on-list subclause")
+    ("06_abac" "6.1.2.1.3" "The for-as-on-list subclause"
+     :loop-keyword (,@(loop-kw "on")))
     ("06_abaca" "6.1.2.1.3.1" "Examples of for-as-on-list subclause")
-    ("06_abad" "6.1.2.1.4" "The for-as-equals-then subclause")
+    ("06_abad" "6.1.2.1.4" "The for-as-equals-then subclause"
+     :loop-keyword (,@(loop-kw "=")
+                    ,@(loop-kw "then")))
     ("06_abada" "6.1.2.1.4.1" "Examples of for-as-equals-then subclause")
-    ("06_abae" "6.1.2.1.5" "The for-as-across subclause")
+    ("06_abae" "6.1.2.1.5" "The for-as-across subclause"
+     :loop-keyword (,@(loop-kw "across")))
     ("06_abaea" "6.1.2.1.5.1" "Examples of for-as-across subclause")
-    ("06_abaf" "6.1.2.1.6" "The for-as-hash subclause")
-    ("06_abag" "6.1.2.1.7" "The for-as-package subclause")
+    ("06_abaf" "6.1.2.1.6" "The for-as-hash subclause"
+     :loop-keyword (,@(loop-kw "hash-key")
+                    ,@(loop-kw "hash-value")
+                    ,@(loop-kw "using")))
+    ("06_abag" "6.1.2.1.7" "The for-as-package subclause"
+     :loop-keyword (,@(loop-kw "present-symbol")
+                    ,@(loop-kw "symbol")
+                    ,@(loop-kw "external-symbol")))
     ("06_abaga" "6.1.2.1.7.1" "Examples of for-as-package subclause")
-    ("06_abb" "6.1.2.2" "Local Variable Initializations")
+    ("06_abb" "6.1.2.2" "Local Variable Initializations"
+     :loop-keyword ( ,@(loop-kw "with")))
     ("06_abba" "6.1.2.2.1" "Examples of WITH clause")
-    ("06_ac" "6.1.3" "Value Accumulation Clauses")
+    ("06_ac" "6.1.3" "Value Accumulation Clauses"
+     :loop-keyword (,@(loop-kw "collect") ,@(loop-kw "collecting")
+                    ,@(loop-kw "append") ,@(loop-kw "appending")
+                    ,@(loop-kw "nconc") ,@(loop-kw "noncing")
+                    ,@(loop-kw "sum") ,@(loop-kw "summing")
+                    ,@(loop-kw "count") ,@(loop-kw "counting")
+                    ,@(loop-kw "minimize") ,@(loop-kw "minimizing")
+                    ,@(loop-kw "maximize") ,@(loop-kw "maximizing")))
     ("06_aca" "6.1.3.1" "Examples of COLLECT clause")
     ("06_acb" "6.1.3.2" "Examples of APPEND and NCONC clauses")
     ("06_acc" "6.1.3.3" "Examples of COUNT clause")
     ("06_acd" "6.1.3.4" "Examples of MAXIMIZE and MINIMIZE clauses")
     ("06_ace" "6.1.3.5" "Examples of SUM clause")
-    ("06_ad" "6.1.4" "Termination Test Clauses")
+    ("06_ad" "6.1.4" "Termination Test Clauses"
+     :loop-keyword (,@(loop-kw "repeat")
+                    ,@(loop-kw "while")
+                    ,@(loop-kw "until")
+                    ,@(loop-kw "always")
+                    ,@(loop-kw "never")
+                    ,@(loop-kw "thereis")))
     ("06_ada" "6.1.4.1" "Examples of REPEAT clause")
     ("06_adb" "6.1.4.2" "Examples of ALWAYS, NEVER, and THEREIS clauses")
     ("06_adc" "6.1.4.3" "Examples of WHILE and UNTIL clauses")
-    ("06_ae" "6.1.5" "Unconditional Execution Clauses")
+    ("06_ae" "6.1.5" "Unconditional Execution Clauses"
+     :loop-keyword (,@(loop-kw "do") ,@(loop-kw "doing")
+                    ,@(loop-kw "return")))
     ("06_aea" "6.1.5.1" "Examples of unconditional execution")
-    ("06_af" "6.1.6" "Conditional Execution Clauses")
+    ("06_af" "6.1.6" "Conditional Execution Clauses"
+     :loop-keyword (,@(loop-kw "if")
+                    ,@(loop-kw "when")
+                    ,@(loop-kw "unless")
+                    ,@(loop-kw "else")
+                    ,@(loop-kw "end")))
     ("06_afa" "6.1.6.1" "Examples of WHEN clause")
     ("06_ag" "6.1.7" "Miscellaneous Clauses")
-    ("06_aga" "6.1.7.1" "Control Transfer Clauses")
+    ("06_aga" "6.1.7.1" "Control Transfer Clauses"
+     :loop-keyword (,@(loop-kw "named")))
     ("06_agaa" "6.1.7.1.1" "Examples of NAMED clause")
-    ("06_agb" "6.1.7.2" "Initial and Final Execution")
+    ("06_agb" "6.1.7.2" "Initial and Final Execution"
+     :loop-keyword (,@(loop-kw "initially")
+                    ,@(loop-kw "finally")))
     ("06_ah" "6.1.8" "Examples of Miscellaneous Loop Features")
     ("06_aha" "6.1.8.1" "Examples of clause grouping")
     ("06_ai" "6.1.9" "Notes about Loop")
@@ -1986,8 +2042,11 @@
           do (destructuring-bind (filename id title
                                   &rest alias-kinds-and-aliases)
                  entry
-               (let* ((aliases (loop for (kind alias) on alias-kinds-and-aliases
-                                     by #'cddr collect alias))
+               (let* ((aliases (loop for (kind alias*)
+                                       on alias-kinds-and-aliases
+                                     by #'cddr
+                                     do (assert (keywordp kind))
+                                     append (ensure-list alias*)))
                       (value (list* id filename title aliases)))
                  (dolist (key (cons id aliases))
                    (setf (gethash key ht) value))
@@ -2006,9 +2065,9 @@
 
 (defun list-hyperspec-section-aliases (kind)
   (loop for entry in *hyperspec-sections*
-        nconc (loop for (kind-1 alias) on (nthcdr 3 entry) by #'cddr
+        nconc (loop for (kind-1 alias*) on (nthcdr 3 entry) by #'cddr
                     when (eq kind-1 kind)
-                      collect alias)))
+                      append (ensure-list alias*))))
 
 (defparameter *hyperspec-format-directive-aliases*
   (list-hyperspec-section-aliases :format-directive))

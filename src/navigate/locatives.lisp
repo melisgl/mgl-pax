@@ -445,6 +445,13 @@
           the sections describing them. The full list is
           [*reader-macro-alias-links* variable][docstring].
 
+          Finally, [loop keywords][(clhs glossary-term)] have aliases
+          to the sections describing them. For example, the strings
+          `loop:for`, `for` and `:for` are aliases of CLHS `6.1.2.1`.
+          The `loop:*` aliases are convenient for completion at the
+          prompt when @BROWSING-LIVE-DOCUMENTATION, while the other
+          aliases are for defaulting to buffer contents.
+
   As the above examples show, the NESTED-LOCATIVE argument of the CLHS
   locative may be omitted. In that case, definitions, glossary terms,
   issues, issue summaries, and sections are considered in that order.
@@ -525,14 +532,13 @@
 (defmethod map-definitions-of-type (fn (locative-type (eql 'clhs)))
   (flet ((foo (name locative)
            (funcall fn (dref name locative))))
-    (dolist (alias *hyperspec-format-directive-aliases*)
-      (foo alias '(clhs section)))
-    (dolist (alias *hyperspec-reader-macro-char-aliases*)
-      (foo alias '(clhs section)))
     (loop for entry in *hyperspec-sections*
-          do (foo (first entry) '(clhs section))
-             (foo (second entry) '(clhs section))
-             (foo (third entry) '(clhs section)))
+          do (dolist (x entry)
+               (cond ((stringp x)
+                      (foo x '(clhs section)))
+                     ((listp x)
+                      (dolist (alias x)
+                        (foo alias '(clhs section)))))))
     (dolist (term *hyperspec-glossary-entries*)
       (foo term '(clhs glossary-term)))
     (loop for entry in *hyperspec-issue-summaries*

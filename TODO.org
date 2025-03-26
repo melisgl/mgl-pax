@@ -2,7 +2,6 @@
 #+SEQ_TODO: TODO(t@) NEXT(n@) STARTED(s@) WAITING(w@) | DONE(d@) OLD(o@) CANCELLED(c@)
 #+TODO: MAYBE(m@) FAILED(f@) LOG(l@) DEFERRED(e@) BUG(b@)
 * locatives
-** MAYBE add LOOP keyword locative?
 ** BUG (low) METHOD dspec parsing is incorrect
 e.g. SB-PCL::MAKE-SPECIALIZER-FORM-USING-CLASS One cannot tell method
 qualifiers from specializers in the dspec without actually consulting

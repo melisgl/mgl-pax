@@ -1013,12 +1013,20 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
             Similarly, [reader macro][3972] characters are aliases of
             the sections describing them. The full list is
             [(][040b] [)][e43c] ['][8e92] [;][56ba]
-            ["][cd66] [\`][309c] [,][826b] [#\\][7b6f]
-            [\#'][8a5e] [#(][7a7f] [#\*][adf2] [#:][ac5e]
-            [\#.][ffd7] [#B][c93e] [#O][68d2] [#X][227d]
-            [\#R][2826] [#C][bfaa] [#A][7163] [#S][dded]
-            [\#P][225d] [#=][fa43] [##][dd03] [#+][d5e1]
-            [\#-][81b3] [#|][342d] [#\<][0f42] [#)][9478].
+            ["][cd66] [\`][309c] [,][826b] [#][698d]
+            [\#\\][7b6f] [#'][8a5e] [#(][7a7f] [#\*][adf2]
+            [\#:][ac5e] [#.][ffd7] [#B][c93e] [#O][68d2]
+            [\#X][227d] [#R][2826] [#C][bfaa] [#A][7163]
+            [\#S][dded] [#P][225d] [#=][fa43] [##][dd03]
+            [\#+][d5e1] [#-][81b3] [#|][342d] [#\<][0f42]
+            [\#)][9478].
+    
+            Finally, [loop keywords][21f4] have aliases
+            to the sections describing them. For example, the strings
+            `loop:for`, `for` and `:for` are aliases of `CLHS` [`6.1.2.1`][142c].
+            The `loop:*` aliases are convenient for completion at the
+            prompt when [Browsing Live Documentation][a595], while the other
+            aliases are for defaulting to buffer contents.
     
     As the above examples show, the `NESTED-LOCATIVE` argument of the [`CLHS`][ed5f]
     locative may be omitted. In that case, definitions, glossary terms,
@@ -1550,6 +1558,8 @@ In interactive use, `mgl-pax-document` behaves similarly to
 
     - `"~<TAB>` lists all [`CL:FORMAT`][ad78] directives (similar to
       `common-lisp-hyperspec-format` in Elisp).
+
+    - `"loop:~<TAB>` lists all [loop keywords][e016].
 
 - It works in non-`lisp-mode` buffers by reinterpreting a few lines
   of text surrounding point as lisp code (hence the suggested
@@ -3901,6 +3911,7 @@ they are presented.
   [1281]: #x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29 "PAX World"
   [1322]: https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks "fenced code blocks"
   [13a9]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29 "MGL-PAX:UPDATE-ASDF-SYSTEM-READMES FUNCTION"
+  [142c]: http://www.lispworks.com/documentation/HyperSpec/Body/06_aba.htm '"6.1.2.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [1538]: dref/README.md#x-28DREF-3AXREF-20CLASS-29 "DREF:XREF CLASS"
   [1539]: https://quicklisp.org/ "Quicklisp"
   [1567]: http://www.lispworks.com/documentation/HyperSpec/Body/22_ccb.htm '"22.3.3.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -3918,6 +3929,7 @@ they are presented.
   [1d5a]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pkg.htm "PACKAGE (MGL-PAX:CLHS CLASS)"
   [1f37]: http://www.lispworks.com/documentation/HyperSpec/Body/t_class.htm "CLASS (MGL-PAX:CLHS CLASS)"
   [2060]: dref/README.md#x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "CLASS MGL-PAX:LOCATIVE"
+  [21f4]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_l.htm#loop_keyword '"loop keyword" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [225d]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhn.htm '"2.4.8.14" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [227d]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhi.htm '"2.4.8.9" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [22c2]: #x-28MGL-PAX-3A-40LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29 "Linking to Sections"
@@ -4007,6 +4019,7 @@ they are presented.
   [6897]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cbc.htm '"22.3.2.3" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [68c1]: https://daringfireball.net/projects/markdown/syntax#code "Markdown inline code"
   [68d2]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhh.htm '"2.4.8.8" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [698d]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dh.htm '"2.4.8" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [6ab0]: #x-28MGL-PAX-3A-2ADOCUMENT-FANCY-HTML-NAVIGATION-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-FANCY-HTML-NAVIGATION* VARIABLE"
   [6af6]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PPRINT (MGL-PAX:CLHS FUNCTION)"
   [6b59]: #x-28MGL-PAX-3A-40TRANSCRIPT-DYNENV-20MGL-PAX-3ASECTION-29 "Controlling the Dynamic Environment"
@@ -4175,6 +4188,7 @@ they are presented.
   [dd03]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhp.htm '"2.4.8.16" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [dded]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhm.htm '"2.4.8.13" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [dff6]: #x-28MGL-PAX-3A-40GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29 "Github Workflow"
+  [e016]: http://www.lispworks.com/documentation/HyperSpec/Body/06_aab.htm '"6.1.1.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [e196]: dref/README.md#x-28DREF-3ADEFINITIONS-20FUNCTION-29 "DREF:DEFINITIONS FUNCTION"
   [e216]: #x-28MGL-PAX-3A-2ADOCUMENT-HTML-TOP-BLOCKS-OF-LINKS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* VARIABLE"
   [e2a4]: #x-28MGL-PAX-3A-40UNSPECIFIC-AUTOLINK-20MGL-PAX-3ASECTION-29 "Unspecific Autolink"
