@@ -3804,28 +3804,28 @@ presented.
 
 <a id="x-28MGL-PAX-3ASECTION-NAME-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
 
-- [reader] **SECTION-NAME** *SECTION (:NAME)*
+- [reader] **SECTION-NAME** *[SECTION][5fac] (:NAME)*
 
     The name of the global variable whose value is
     this [`SECTION`][5fac] object.
 
 <a id="x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
 
-- [reader] **SECTION-PACKAGE** *SECTION (:PACKAGE)*
+- [reader] **SECTION-PACKAGE** *[SECTION][5fac] (:PACKAGE)*
 
     [`*PACKAGE*`][5ed1] will be bound to this package when
     generating documentation for this section.
 
 <a id="x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
 
-- [reader] **SECTION-READTABLE** *SECTION (:READTABLE)*
+- [reader] **SECTION-READTABLE** *[SECTION][5fac] (:READTABLE)*
 
     [`*READTABLE*`][b79a] will be bound to this when generating
     documentation for this section.
 
 <a id="x-28MGL-PAX-3ASECTION-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
 
-- [reader] **SECTION-TITLE** *SECTION (:TITLE)*
+- [reader] **SECTION-TITLE** *[SECTION][5fac] (:TITLE)*
 
     A markdown string or `NIL`. Used in generated
     documentation.
@@ -3858,21 +3858,21 @@ they are presented.
 
 <a id="x-28MGL-PAX-3AGLOSSARY-TERM-NAME-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29"></a>
 
-- [reader] **GLOSSARY-TERM-NAME** *GLOSSARY-TERM (:NAME)*
+- [reader] **GLOSSARY-TERM-NAME** *[GLOSSARY-TERM][8251] (:NAME)*
 
     The name of the global variable whose value is
     this [`GLOSSARY-TERM`][8251] object.
 
 <a id="x-28MGL-PAX-3AGLOSSARY-TERM-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29"></a>
 
-- [reader] **GLOSSARY-TERM-TITLE** *GLOSSARY-TERM (:TITLE)*
+- [reader] **GLOSSARY-TERM-TITLE** *[GLOSSARY-TERM][8251] (:TITLE)*
 
     A markdown string or `NIL`. Used in generated
     documentation (see [Output Details][af6f]).
 
 <a id="x-28MGL-PAX-3AGLOSSARY-TERM-URL-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29"></a>
 
-- [reader] **GLOSSARY-TERM-URL** *GLOSSARY-TERM (:URL)*
+- [reader] **GLOSSARY-TERM-URL** *[GLOSSARY-TERM][8251] (:URL)*
 
     A string or `NIL`.
 

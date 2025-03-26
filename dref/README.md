@@ -1020,13 +1020,13 @@ otherwise noted.
 
 <a id="x-28DREF-EXT-3AXREF-NAME-20-28MGL-PAX-3AREADER-20DREF-3AXREF-29-29"></a>
 
-- [reader] **XREF-NAME** *XREF (:NAME)*
+- [reader] **XREF-NAME** *[XREF][1538] (:NAME)*
 
     The [name][5fc4] of the reference.
 
 <a id="x-28DREF-EXT-3AXREF-LOCATIVE-20-28MGL-PAX-3AREADER-20DREF-3AXREF-29-29"></a>
 
-- [reader] **XREF-LOCATIVE** *XREF (:LOCATIVE)*
+- [reader] **XREF-LOCATIVE** *[XREF][1538] (:LOCATIVE)*
 
     The [locative][7ac8] of the reference.
     
@@ -1046,21 +1046,21 @@ otherwise noted.
 
 <a id="x-28DREF-EXT-3ADREF-NAME-20-28MGL-PAX-3AREADER-20DREF-3ADREF-29-29"></a>
 
-- [reader] **DREF-NAME** *DREF*
+- [reader] **DREF-NAME** *[DREF][d930]*
 
     The same as [`XREF-NAME`][b88e], but only works on
     [`DREF`][d930]s. Use it as a statement of intent.
 
 <a id="x-28DREF-EXT-3ADREF-LOCATIVE-20-28MGL-PAX-3AREADER-20DREF-3ADREF-29-29"></a>
 
-- [reader] **DREF-LOCATIVE** *DREF*
+- [reader] **DREF-LOCATIVE** *[DREF][d930]*
 
     The same as [`XREF-LOCATIVE`][f486], but only works on
     [`DREF`][d930]s. Use it as a statement of intent.
 
 <a id="x-28DREF-EXT-3ADREF-ORIGIN-20-28MGL-PAX-3AREADER-20DREF-3ADREF-29-29"></a>
 
-- [reader] **DREF-ORIGIN** *DREF*
+- [reader] **DREF-ORIGIN** *[DREF][d930]*
 
     The object from which [`LOCATE`][8f19] constructed this
     [`DREF`][d930]. This is an [`XREF`][1538] when the `LOCATIVE` argument

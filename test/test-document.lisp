@@ -1186,12 +1186,18 @@ This is [Self-referencing][e042].
               "- [method] **TEST-GF** *(X (EQL :BAR))*"))
 
 (deftest test-accessor ()
+  (check-pred (list (dref 'foo-a '(accessor foo))
+                    (dref 'foo 'class))
+              "- [accessor] **FOO-A** *[FOO][b01d]*")
   (check-head (list "FOO-A `(accessor foo)`"
                     (dref 'foo-a '(accessor foo))
                     (dref 'foo-a 'variable))
               "[`FOO-A`][dbec] `(accessor foo)`"))
 
 (deftest test-reader ()
+  (check-pred (list (dref 'foo-r '(reader foo))
+                    (dref 'foo 'class))
+              "- [reader] **FOO-R** *[FOO][b01d]*")
   (check-head (list "FOO-R `(reader foo)`"
                     (dref 'foo-r '(reader foo))
                     (dref 'foo-r 'variable))
@@ -1203,6 +1209,9 @@ This is [Self-referencing][e042].
 "))
 
 (deftest test-writer ()
+  (check-pred (list (dref 'foo-w '(writer foo))
+                    (dref 'foo 'class))
+              "- [writer] **FOO-W** *[FOO][b01d]*")
   (check-head (list "FOO-W `(writer foo)`"
                     (dref 'foo-w '(writer foo))
                     (dref 'foo-w 'variable))

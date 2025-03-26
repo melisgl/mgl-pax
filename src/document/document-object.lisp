@@ -142,7 +142,7 @@
      (first locative-args) stream)))
 
 (defun generate-documentation-for-slot-definition (slot-def class stream)
-  (let ((arglist (format nil "~A~@[ ~A~]" (prin1-to-markdown class)
+  (let ((arglist (format nil "~A~@[ ~A~]" (md-link (dref class 'class))
                          (slot-def-to-string slot-def))))
     (documenting-reference (stream :arglist arglist)
       ;; There is no documentation for condition accessors, and some
@@ -177,6 +177,8 @@
                  ,(swank-mop:slot-definition-initform slot-def))))))))
 
 
+;;;; STRUCTURE-ACCESSOR and CLASS locatives
+
 (defmethod document-object* ((dref structure-accessor-dref) stream)
   "For definitions with a STRUCTURE-ACCESSOR locative, the arglist
   printed is the locative's CLASS-NAME argument if provided."
@@ -201,7 +203,7 @@
                       (mapcar #'class-name
                               (swank-mop:class-direct-superclasses class))))
          (arglist (when superclasses
-                    (if *document-mark-up-signatures*
+                    (if (and (not *first-pass*) *document-mark-up-signatures*)
                         (mark-up-superclasses superclasses)
                         superclasses))))
     (documenting-reference (stream :arglist arglist)
@@ -211,14 +213,20 @@
   (with-output-to-string (stream)
     (loop for class in superclasses
           for i upfrom 0
-          do (let ((dref (dref class 'class)))
-               (let ((name (prin1-to-markdown class)))
-                 (unless (zerop i)
-                   (format stream " "))
-                 (unless *first-pass*
-                   (if (find-link dref)
-                       (format stream "[~A][~A]" name (link-to-definition dref))
-                       (format stream "~A" name))))))))
+          do (unless (zerop i)
+               (format stream " "))
+             (write-md-link (dref class 'class) stream))))
+
+(defun write-md-link (dref stream)
+  (unless *first-pass*
+    (let ((name (prin1-to-markdown (dref-name dref))))
+      (if (find-link dref)
+          (format stream "[~A][~A]" name (link-to-definition dref))
+          (format stream "~A" name)))))
+
+(defun md-link (dref)
+  (with-output-to-string (stream)
+    (write-md-link dref stream)))
 
 
 ;;;; ASDF:SYSTEM locative
