@@ -157,10 +157,10 @@
               (,%arglist ,arglist)
               (,%name ,name))
          (when (and *document-link-code*
-                    ;; Anchors are not used in this case (PAX-APROPOS*
-                    ;; list view), and with large result sets, we
+                    ;; Anchors are not used in this case
+                    ;; (PAX-APROPOS*), and with large result sets, we
                     ;; stress w3m less this way.
-                    (not (eq *document-do-not-follow-references* t)))
+                    (not *document-list-view*))
            (anchor ,%reference ,%stream))
          (print-reference-bullet ,%reference ,%stream :name ,%name)
          (multiple-value-bind (,%package ,%readtable)
@@ -171,19 +171,20 @@
                (write-char #\Space ,%stream)
                (print-arglist ,%arglist ,%stream))
              (print-end-bullet ,%stream)
-             (with-local-references
-                 (if (member (dref-locative-type ,%reference)
-                             '(section glossary-term))
-                     ;; See @SUPPRESSED-LINKS.
-                     ()
-                     ,%reference)
-               ,@body)))))))
+             (unless (eq *document-list-view* :terse)
+               (with-local-references
+                   (if (member (dref-locative-type ,%reference)
+                               '(section glossary-term))
+                       ;; See @SUPPRESSED-LINKS.
+                       ()
+                       ,%reference)
+                 ,@body))))))))
 (autoload print-reference-bullet "mgl-pax/document" :export nil)
 (declaim (ftype function print-arglist))
 (declaim (ftype function print-end-bullet))
 (declaim (ftype function guess-package-and-readtable))
 (declaim (ftype function anchor))
-(declaim (special *document-do-not-follow-references*))
+(declaim (special *document-list-view*))
 
 (declaim (special *local-references*))
 (defmacro with-local-references (refs &body body)

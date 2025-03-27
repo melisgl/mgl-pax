@@ -1620,7 +1620,7 @@ This is [Self-referencing][e042].
         (eql * 5)))
   (is (match-values (mgl-pax::read-apropos-name-pattern-from-string "\"x y\" ")
         (equal * "x y")
-        (eql * 6)))
+        (eql * 5)))
   (is (match-values (mgl-pax::read-apropos-name-pattern-from-string "x y")
         (equal * "x")
         (eql * 1)))
@@ -1666,7 +1666,7 @@ This is [Self-referencing][e042].
        "x y"))
   (signals (error :pred "Trailing junk from index 2")
     (mgl-pax::read-apropos-package-pattern-from-string " :x y"))
-  (signals (error :pred "Trailing junk from index 4")
+  (signals (error :pred "Trailing junk from index 3")
     (mgl-pax::read-apropos-package-pattern-from-string " \"x\" y")))
 
 (deftest test-pax-apropos* ()

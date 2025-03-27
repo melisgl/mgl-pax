@@ -723,11 +723,8 @@
            `((progv '(*document-max-table-of-contents-level*) '(-1))
              ,@(when %packagep
                  (documentable-for-reference (xref package 'package)))
-             ((progv '(*document-do-not-follow-references*)
-                  ;; SECTIONs contain other sections and other
-                  ;; references. Never document them in apropos to
-                  ;; avoid duplications.
-                  '(,just-list))
+             ((progv '(*document-list-view*)
+                  '(,(if just-list :terse :detailed)))
               ,(format nil "## [Apropos][pax::@apropos]~%~%```~%~A~%```~%~%"
                        (let ((current-package *package*))
                          (with-standard-io-syntax*
@@ -794,7 +791,7 @@
         ((starts-with-subseq ":" string)
          (read-uninterned-symbol-from-string string :start 1))
         ((starts-with #\" string)
-         (read-from-string string))
+         (read-from-string string t nil :preserve-whitespace t))
         (t
          (let ((n (or (position #\Space string) (length string))))
            (values (subseq string 0 n) n)))))
@@ -808,7 +805,8 @@
                (read-uninterned-symbol-from-string string :start 1))
               ((starts-with #\" string)
                (alexandria:nth-value-or 0
-                 (ignore-errors (read-from-string string))
+                 (ignore-errors (read-from-string string t nil
+                                                  :preserve-whitespace t))
                  (values (subseq string 1) (length string))))
               (t
                (let ((n (length string)))

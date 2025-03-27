@@ -2662,8 +2662,8 @@ as its arglist, along with a redirection message.
 - See the [`INCLUDE`][5cd7] locative.
 
 - For definitions with a [`CLHS`][ed5f] locative, the `LOCATIVE-ARGS` are printed
-as the arglist. For `CLHS` [`SECTION`][7a4e]s, the title and aliases are
-included. There is no docstring.
+as the arglist. For `CLHS` [`SECTION`][7a4e]s, the title is included in the
+arglist.
 
 - For definitions with an [`UNKNOWN`][a951] locative, the `LOCATIVE-ARGS` are
 printed as the arglist. There is no docstring.

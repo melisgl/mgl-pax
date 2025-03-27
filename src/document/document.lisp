@@ -109,6 +109,9 @@
                       :level *heading-level*)
         *headings*))
 
+;;; PAX-APROPOS* binds this to :DETAILED or :TERSE.
+(defvar *document-list-view* nil)
+
 ;;; This is the implementation of the WITH-HEADING macro.
 (defun/autoloaded call-with-heading (stream object title link-title-to fn)
   (let ((level *heading-level*)
@@ -117,16 +120,23 @@
       (incf (nth (1- level) *heading-number*)))
     (when *first-pass*
       (collect-heading object title))
-    (unless *first-pass*
-      (print-section-title stream object title link-title-to)
-      (print-table-of-contents object stream))
-    (let ((*heading-number*
-            (append *heading-number*
-                    (loop repeat (max 0 (- (1+ level)
-                                           (length *heading-number*)))
-                          collect 0)))
-          (*heading-level* (1+ *heading-level*)))
-      (funcall fn stream))))
+    (cond (*document-list-view*
+           (let ((dref (locate object)))
+             (documenting-reference
+                 (stream :reference dref
+                         :arglist (ensure-list
+                                   (section-title object))))))
+          (t
+           (unless *first-pass*
+             (print-section-title stream object title link-title-to)
+             (print-table-of-contents object stream))
+           (let ((*heading-number*
+                   (append *heading-number*
+                           (loop repeat (max 0 (- (1+ level)
+                                                  (length *heading-number*)))
+                                 collect 0)))
+                 (*heading-level* (1+ *heading-level*)))
+             (funcall fn stream))))))
 
 (defun process-title (string)
   (with-output-to-string (out)
@@ -808,8 +818,6 @@
 
 ;;;; DOCUMENT-OBJECT
 
-(defvar *document-do-not-follow-references* nil)
-
 (defgeneric document-object (object stream)
   (:method :around (object stream)
     (declare (ignorable stream))
@@ -824,20 +832,8 @@
            (document-docstring string stream :indentation "" :paragraphp nil)
            (terpri stream))))
   (:method :around ((xref xref) stream)
-    (let ((*documenting-reference* xref)
-          (locative-type (xref-locative-type xref)))
-      (if (and
-           ;; KLUDGE: (CLHS SECTION) adds the title to the arglist.
-           (not (eq locative-type 'clhs))
-           (not (eq locative-type 'package))
-           ;; FIXME: Maybe it would be better to suppress the BODY of
-           ;; WITH-HEADING and DOCUMENTING-REFERENCE?
-           (or (eq *document-do-not-follow-references* t)
-               (member locative-type *document-do-not-follow-references*)))
-          (documenting-reference (stream
-                                  :reference xref
-                                  :arglist (xref-locative-args xref)))
-          (call-next-method))))
+    (let ((*documenting-reference* xref))
+      (call-next-method)))
   ;; LOCATE non-DREF XREFs.
   (:method ((xref xref) stream)
     (let ((warn-if-undefined
