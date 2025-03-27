@@ -340,6 +340,14 @@
        (should (eq (current-buffer) tmpbuffer))
        (should (= (point) start-pos)))
      (slime-check-top-level))))
+
+(ert-deftest test-mgl-pax-locate-definitions ()
+  (with-temp-lisp-buffer
+   (should (null (mgl-pax-locate-definitions '(("non-existent" ())))))
+   (should (equal (mgl-pax-locate-definitions '(("cl" ("package"))))
+                  '(("(DEFPACKAGE \"COMMON-LISP\")"
+                     (:error "Error: Source location of #<DREF:DREF \
+\"COMMON-LISP\" PACKAGE> not found.")))))))
 
 
 ;;;; Test `mgl-pax-completions-at-point'
