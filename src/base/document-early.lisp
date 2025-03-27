@@ -143,8 +143,6 @@
   (let ((%stream (gensym))
         (%reference (gensym))
         (%name (gensym))
-        (%package (gensym))
-        (%readtable (gensym))
         (%arglist (gensym)))
     ;; If WITH-HEADING were allowed in BODY, then we couldn't stop if
     ;; *FIRST-PASS*.
@@ -156,29 +154,30 @@
                                *documenting-reference*))
               (,%arglist ,arglist)
               (,%name ,name))
-         (when (and *document-link-code*
-                    ;; Anchors are not used in this case
-                    ;; (PAX-APROPOS*), and with large result sets, we
-                    ;; stress w3m less this way.
-                    (not *document-list-view*))
+         (when *document-link-code*
            (anchor ,%reference ,%stream))
          (print-reference-bullet ,%reference ,%stream :name ,%name)
-         (multiple-value-bind (,%package ,%readtable)
-             (guess-package-and-readtable ,%reference ,%arglist)
-           (let ((*package* (or ,package ,%package))
-                 (*readtable* (or ,readtable ,%readtable)))
-             (when ,%arglist
-               (write-char #\Space ,%stream)
-               (print-arglist ,%arglist ,%stream))
-             (print-end-bullet ,%stream)
-             (unless (eq *document-list-view* :terse)
-               (with-local-references
-                   (if (member (dref-locative-type ,%reference)
-                               '(section glossary-term))
-                       ;; See @SUPPRESSED-LINKS.
-                       ()
-                       ,%reference)
-                 ,@body))))))))
+         (multiple-value-bind (*package* *readtable*)
+             ;; In apropos terse view, whatever BODY emits is to be
+             ;; skipped. Do not waste time with
+             ;; GUESS-PACKAGE-AND-READTABLE, which can be very
+             ;; expensive.
+             (if (eq *document-list-view* :terse)
+                 (values *package* *readtable*)
+                 (guess-package-and-readtable ,package ,readtable
+                                              ,%reference ,%arglist))
+           (when ,%arglist
+             (write-char #\Space ,%stream)
+             (print-arglist ,%arglist ,%stream))
+           (print-end-bullet ,%stream)
+           (unless (eq *document-list-view* :terse)
+             (with-local-references
+                 (if (member (dref-locative-type ,%reference)
+                             '(section glossary-term))
+                     ;; See @SUPPRESSED-LINKS.
+                     ()
+                     ,%reference)
+               ,@body)))))))
 (autoload print-reference-bullet "mgl-pax/document" :export nil)
 (declaim (ftype function print-arglist))
 (declaim (ftype function print-end-bullet))

@@ -154,14 +154,17 @@
 ;;; Determine what SECTION's *HEADING-LEVEL* would be under its root
 ;;; ancestor.
 (defun heading-offset (object)
-  (multiple-value-bind (foundp depth) (and (not (stringp object))
-                                           (find-root-section object))
-    (if foundp
-        depth
-        ;; OBJECT is not a SECTION (or a reference to one), neither is
-        ;; it contained in a SECTION. Start from H2. This only affects
-        ;; ASDF:SYSTEMs in stock PAX.
-        1)))
+  ;; This calculation is quite expensive. Don't do it if it's not
+  ;; going to be used.
+  (unless *document-list-view*
+    (multiple-value-bind (foundp depth) (and (not (stringp object))
+                                             (find-root-section object))
+      (if foundp
+          depth
+          ;; OBJECT is not a SECTION (or a reference to one), neither is
+          ;; it contained in a SECTION. Start from H2. This only affects
+          ;; ASDF:SYSTEMs in stock PAX.
+          1))))
 
 
 ;;; A PAGE is basically a single markdown or html file to where the
@@ -789,16 +792,21 @@
 (defsection @home-section (:title "Home Section")
   "[home-section function][docstring]")
 
-(defun guess-package-and-readtable (reference arglist)
-  (let ((home-section (first (find-parent-sections reference))))
-    (if home-section
-        (values (section-package home-section)
-                (section-readtable home-section))
-        (values (or (guess-package-from-arglist arglist)
-                    (and (symbolp (xref-name reference))
-                         (symbol-package (xref-name reference)))
-                    (find-package :cl-user))
-                named-readtables::*standard-readtable*))))
+(defun guess-package-and-readtable (requested-package requested-readtable
+                                    reference arglist)
+  (if (and requested-package requested-readtable)
+      (values requested-package requested-readtable)
+      (let ((home-section (first (find-parent-sections reference))))
+        (if home-section
+            (values (or requested-package (section-package home-section))
+                    (or requested-readtable (section-readtable home-section)))
+            (values (or requested-package
+                        (guess-package-from-arglist arglist)
+                        (and (symbolp (xref-name reference))
+                             (symbol-package (xref-name reference)))
+                        (find-package :cl-user))
+                    (or requested-readtable
+                        named-readtables::*standard-readtable*))))))
 
 ;;; Unexported argument names are highly informative about *PACKAGE*
 ;;; at read time. No one ever uses fully-qualified internal symbols
@@ -981,9 +989,9 @@
       (cond ((not titledp)
              (princ-to-string (dref-to-anchor dref)))
             (title
-             (let ((*package* (or (nth-value 1 (docstring dref))
-                                  (guess-package-and-readtable
-                                   dref (arglist dref)))))
+             (let ((*package* (guess-package-and-readtable
+                               (nth-value 1 (docstring dref)) *readtable*
+                               dref (arglist dref))))
                (unescape-markdown (process-title (title resolved)))))
             (t
              (process-title (let ((*print-case* :upcase))
