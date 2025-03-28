@@ -278,8 +278,17 @@ with references (discussed in the DREF-EXT::@EXTENDING-DREF).
 
     Return a list of DREFs corresponding to existing
     definitions that match the various arguments. First, `(DREF-APROPOS
-    NIL :LOCATIVE-TYPES NIL)` lists all definitions in the system.
-    Arguments with non-NIL values filter the list of definitions.
+    NIL :LOCATIVE-TYPES NIL)` lists all definitions in the running Lisp
+    and maybe more (e.g. MGL-PAX:CLHS). Arguments with
+    non-NIL values filter the list of definitions.
+    
+    DREF-APROPOS itself is similar to CL:APROPOS-LIST, but
+    
+    - it finds @DEFINITIONs not SYMBOLs,
+    
+    - it supports an extensible definition types, and
+    
+    - filtering based on them.
     
     PAX has a live browsing frontend.
     
@@ -840,7 +849,8 @@ otherwise noted.
 
     The locative type is the part of a @LOCATIVE that identifies
     what kind definition is being referred to. See @LOCATIVE-TYPES for
-    the list locative types built into DRef.
+    the list locative types built into DRef, and MGL-PAX::@PAX-LOCATIVES
+    for those in PAX.
     
     Locative types are similar to Lisp namespaces.
     
@@ -851,6 +861,16 @@ otherwise noted.
     A reference is a @NAME plus a @LOCATIVE, and it identifies a
     possible definition. References are of class XREF. When a reference
     is a DREF, it may also be called a definition.
+
+- [glossary-term] definition
+
+    A definition is a @REFERENCE that identifies a concrete definition.
+    Definitions are of class DREF. A definition RESOLVEs to the
+    first-class object associated with the definition if such a thing
+    exists, and LOCATE on this object returns a DREF object that's
+    unique under XREF=.
+    
+    The kind of a definition is given by its @LOCATIVE-TYPE.
 
 - [glossary-term] presentation
 

@@ -4,8 +4,8 @@
 
 (defsection @navigating-in-emacs (:title "Navigating Sources in Emacs")
   """Integration into @SLIME's @M-. (`slime-edit-definition`) allows
-  one to visit the SOURCE-LOCATION of a [definition][DREF]. PAX
-  extends standard Slime functionality by
+  one to visit the SOURCE-LOCATION of a DREF::@DEFINITION. PAX extends
+  standard Slime functionality by
 
   - adding support for all kinds of definitions (see e.g.
     [ASDF:SYSTEM][locative], [READTABLE][locative] in
@@ -151,7 +151,7 @@
 ;;; This documents the Elisp function `mgl-pax-edit-definitions'.
 ;;; There isn't muh code exclusively for this on the CL side.
 (defsection @m-.-minibuffer-syntax (:title "`M-.` Minibuffer Syntax")
-  """At the minibuffer prompt, the [definitions][dref class] to edit
+  """At the minibuffer prompt, the DREF::@DEFINITIONS to edit
   can be specified as follows.
 
   - NAME: Refers to all DREF:DEFINITIONS of NAME with a [Lisp locative

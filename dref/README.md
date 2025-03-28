@@ -330,12 +330,21 @@ with references (discussed in the [Extending DRef][68fb]).
 
     Return a list of [`DREF`][d930]s corresponding to existing
     definitions that match the various arguments. First, `(DREF-APROPOS
-    NIL :LOCATIVE-TYPES NIL)` lists all definitions in the system.
-    Arguments with non-`NIL` values filter the list of definitions.
+    NIL :LOCATIVE-TYPES NIL)` lists all definitions in the running Lisp
+    and maybe more (e.g. [`MGL-PAX:CLHS`][ed5f]). Arguments with
+    non-`NIL` values filter the list of definitions.
+    
+    `DREF-APROPOS` itself is similar to [`CL:APROPOS-LIST`][7328], but
+    
+    - it finds [definition][2143]s not [`SYMBOL`][e5af]s,
+    
+    - it supports an extensible definition types, and
+    
+    - filtering based on them.
     
     PAX has a live browsing [frontend][b7fc].
     
-    Roughly speaking, when `NAME` or `PACKAGE` is a [`SYMBOL`][e5af], they must match
+    Roughly speaking, when `NAME` or `PACKAGE` is a `SYMBOL`, they must match
     the whole [name][5fc4] of the definition:
     
     ```common-lisp
@@ -984,7 +993,8 @@ otherwise noted.
 
     The locative type is the part of a [locative][7ac8] that identifies
     what kind definition is being referred to. See [Locative Types][bf0f] for
-    the list locative types built into DRef.
+    the list locative types built into DRef, and [PAX Locatives][292a]
+    for those in PAX.
     
     Locative types are similar to Lisp [namespaces][c8c1].
     
@@ -997,6 +1007,18 @@ otherwise noted.
     A reference is a [name][5fc4] plus a [locative][7ac8], and it identifies a
     possible definition. References are of class [`XREF`][1538]. When a reference
     is a [`DREF`][d930], it may also be called a definition.
+
+<a id="x-28DREF-3A-40DEFINITION-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+
+- [glossary-term] **definition**
+
+    A definition is a [reference][43bd] that identifies a concrete definition.
+    Definitions are of class [`DREF`][d930]. A definition [`RESOLVE`][63b4]s to the
+    first-class object associated with the definition if such a thing
+    exists, and [`LOCATE`][8f19] on this object returns a [`DREF`][d930] object that's
+    unique under [`XREF=`][0617].
+    
+    The kind of a definition is given by its [locative type][a11d].
 
 <a id="x-28DREF-3A-40PRESENTATION-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
 
@@ -1704,10 +1726,12 @@ the details, see the Elisp function `slime-goto-source-location`.
   [1d5a]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pkg.htm "PACKAGE (MGL-PAX:CLHS CLASS)"
   [1f37]: http://www.lispworks.com/documentation/HyperSpec/Body/t_class.htm "CLASS (MGL-PAX:CLHS CLASS)"
   [2060]: #x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "CLASS MGL-PAX:LOCATIVE"
+  [2143]: #x-28DREF-3A-40DEFINITION-20MGL-PAX-3AGLOSSARY-TERM-29 "definition"
   [23a8]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#defining_form '"defining form" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [23d5]: http://www.lispworks.com/documentation/HyperSpec/Body/m_define.htm "DEFINE-COMPILER-MACRO (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [2415]: ../README.md "PAX Manual"
   [2444]: #x-28DREF-EXT-3ALOCATIVE-ARGS-20FUNCTION-29 "DREF-EXT:LOCATIVE-ARGS FUNCTION"
+  [292a]: ../README.md#x-28MGL-PAX-3A-40PAX-LOCATIVES-20MGL-PAX-3ASECTION-29 "PAX Locatives"
   [2ff3]: http://www.lispworks.com/documentation/HyperSpec/Body/f_equalp.htm "EQUALP (MGL-PAX:CLHS FUNCTION)"
   [30ad]: #x-28DREF-3ALISP-LOCATIVE-TYPES-20FUNCTION-29 "DREF:LISP-LOCATIVE-TYPES FUNCTION"
   [32da]: #x-28DREF-3ASOURCE-LOCATION-20FUNCTION-29 "DREF:SOURCE-LOCATION FUNCTION"
@@ -1764,6 +1788,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [6e6e]: http://www.lispworks.com/documentation/HyperSpec/Body/f_mk_pkg.htm "MAKE-PACKAGE (MGL-PAX:CLHS FUNCTION)"
   [6ec3]: #x-28DREF-EXT-3ASOURCE-LOCATION-SNIPPET-20FUNCTION-29 "DREF-EXT:SOURCE-LOCATION-SNIPPET FUNCTION"
   [72b4]: ../README.md#x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFSECTION MGL-PAX:MACRO"
+  [7328]: http://www.lispworks.com/documentation/HyperSpec/Body/f_apropo.htm "APROPOS-LIST (MGL-PAX:CLHS FUNCTION)"
   [7334]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpar.htm "DEFVAR (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [76c4]: #x-28DREF-EXT-3ALOCATE-2A-20GENERIC-FUNCTION-29 "DREF-EXT:LOCATE* GENERIC-FUNCTION"
   [7825]: #x-28DREF-EXT-3ARESOLVE-ERROR-20FUNCTION-29 "DREF-EXT:RESOLVE-ERROR FUNCTION"
@@ -1853,6 +1878,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [eac1]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defstr.htm "DEFSTRUCT (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [ead6]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defcla.htm "DEFCLASS (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [ebea]: http://www.lispworks.com/documentation/HyperSpec/Body/m_declai.htm "DECLAIM (MGL-PAX:CLHS MGL-PAX:MACRO)"
+  [ed5f]: ../README.md#x-28MGL-PAX-3ACLHS-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CLHS MGL-PAX:LOCATIVE"
   [ee40]: #x-28DREF-EXT-3ADREF-2A-20GENERIC-FUNCTION-29 "DREF-EXT:DREF* GENERIC-FUNCTION"
   [ee9b]: #x-28DREF-EXT-3ADEFINE-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "DREF-EXT:DEFINE-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO"
   [efe2]: http://www.lispworks.com/documentation/HyperSpec/Body/t_generi.htm "GENERIC-FUNCTION (MGL-PAX:CLHS CLASS)"

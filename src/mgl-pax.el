@@ -1283,83 +1283,31 @@ In a PAX doc buffer, it's equivalent to pressing `v'
 (defun mgl-pax-apropos (string &optional external-only package
                                case-sensitive)
   "Show all PAX definitions that match the arguments.
-This is a wrapper around DREF:DREF-APROPOS. STRING is basically
-NAME and LOCATIVE-TYPES concatenated with a space in between. If
-STRING or PACKAGE starts with a colon, then only exact matches
-with a symbol or package name are accepted.
+This is a fontend for DREF:DREF-APROPOS. The syntax is described
+in detail in MGL-PAX::@APROPOS. Here, we give only a few
+examples.
+
+STRING is basically NAME and LOCATIVE-TYPES concatenated with a
+special syntax:
+
+- \":print\", where the colon means exact matching of the
+  name (CL:SYMBOL-NAME if the name is a symbol), or
+
+- \"rin function\", where \"rin\" is for substring match, and
+  \"function\" restricts the matches to function definitions.
+
+- \"\"rin\" function macro\"
+
+PACKAGE is a pattern like NAME or the special symbols :NONE or
+:ANY.
+
+Matching of NAME and PACKAGE is subject to CASE-SENSITIVE.
 
 With a prefix arg, you're interactively asked for parameters of
 the search. Without a prefix arg, EXTERNAL-ONLY defaults to T,
 packages are not filtered, and case does not matter.
 
-Also, see `mgl-pax-apropos-all'.
-
-The syntax of STRING
---------------------
-
-Name patterns:
-
-- \":print\" matches definitions whose names are \"print\".
-
-- \"\"print\"\" matches definitions whose names contain \"print\"
-  as a substring.
-
-- \"print\" like for previous, substring matching case. Use this
-  form, if the pattern does not contain spaces and does not start
-  with a colon.
-
-- The empty string matches everything.
-
-Matching of name is subject to CASE-SENSITIVE.
-
-After the name pattern, STRING may contain a list of locative
-types. If some locative types are given, then the matches are
-restricted to them.
-
-- \"print function\" matches functions whose names contain
-  \"print\" (e.g. CL:PRINT and CL:PPRINT).
-
-- \":print function\" is like the previous example but with exact
-  name match.
-
-- \"print variable\" matches for example *PRINT-ESCAPE*.
-
-- \"print variable function\" matches all variables and functions
-  with \"print\" in their names.
-
-- \" pax:section\" (note the leading space) matches all PAX
-  sections (note that EXTERNAL-ONLY NIL is necessary to see most
-  of them).
-
-- \"print :lisp\" matches definitions with
-  DREF:LISP-LOCATIVE-TYPES, which is the default.
-
-- \"print :pseudo\" matches definitions with
-  DREF:PSEUDO-LOCATIVE-TYPES such as MGL-PAX:CLHS.
-
-- \"print :all\" matches definitions with all locative
-  types (DREF:LOCATIVE-TYPES).
-
-
-The syntax of PACKAGE
----------------------
-
-- \":none\" restricts matches to non-symbol names.
-
-- \":any\" restricts matches to symbol names.
-
-- \":CL\" restrict matches to symbols in the CL package.
-
-- \":|X Y|\" is the same as the previous, but the vertical bar
-  syntax allows for spaces in names.
-
-- \"mgl\" restrict matches to packages whose name contains the
-  string \"mgl\".
-
-- \"\\\"x y\\\"\" is the same as the previous, but the explicit
-  quotes allow for spaces in names.
-
-Matching of the package is also subject to CASE-SENSITIVE."
+Also, see `mgl-pax-apropos-all'."
   (interactive (list nil nil nil nil))
   (mgl-pax-with-component (:mgl-pax/document)
     (mgl-pax-document

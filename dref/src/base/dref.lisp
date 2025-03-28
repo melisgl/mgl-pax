@@ -90,6 +90,7 @@
   (@locative glossary-term)
   (@locative-type glossary-term)
   (@reference glossary-term)
+  (@definition glossary-term)
   (@presentation glossary-term))
 
 (define-glossary-term @name (:title "name")
@@ -114,7 +115,8 @@
 (define-glossary-term @locative-type (:title "locative type")
   "The locative type is the part of a @LOCATIVE that identifies
   what kind definition is being referred to. See @LOCATIVE-TYPES for
-  the list locative types built into DRef.
+  the list locative types built into DRef, and MGL-PAX::@PAX-LOCATIVES
+  for those in PAX.
 
   Locative types are similar to Lisp [namespaces][clhs].
 
@@ -124,6 +126,15 @@
   "A reference is a @NAME plus a @LOCATIVE, and it identifies a
   possible definition. References are of class XREF. When a reference
   is a [DREF][class], it may also be called a definition.")
+
+(define-glossary-term @definition (:title "definition")
+  "A definition is a @REFERENCE that identifies a concrete definition.
+  Definitions are of class DREF. A definition RESOLVEs to the
+  first-class object associated with the definition if such a thing
+  exists, and LOCATE on this object returns a DREF object that's
+  unique under XREF=.
+
+  The kind of a definition is given by its @LOCATIVE-TYPE.")
 
 (define-glossary-term @presentation (:title "presentation")
   "@REFERENCEs may have arguments (see

@@ -45,8 +45,15 @@
                                      (locative-types '(:lisp)))
   """Return a list of [DREF][class]s corresponding to existing
   definitions that match the various arguments. First, `(DREF-APROPOS
-  NIL :LOCATIVE-TYPES NIL)` lists all definitions in the system.
-  Arguments with non-NIL values filter the list of definitions.
+  NIL :LOCATIVE-TYPES NIL)` lists all definitions in the running Lisp
+  and maybe more (e.g. [MGL-PAX:CLHS][locative]). Arguments with
+  non-NIL values filter the list of definitions.
+
+  DREF-APROPOS itself is similar to CL:APROPOS-LIST, but
+
+  - it finds @DEFINITIONs not SYMBOLs,
+  - it supports an extensible definition types, and
+  - filtering based on them.
 
   PAX has a live browsing [frontend][PAX::@APROPOS].
 

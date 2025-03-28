@@ -373,9 +373,9 @@
 
 (defsection @documentable (:title "DOCUMENTABLE")
   "The DOCUMENTABLE argument of DOCUMENT may be a single object (e.g.
-  `#'PRINT`'), a [definition][dref class] such as `(DREF 'PRINT
-  'FUNCTION)`, a string, or a nested list of these. More precisely,
-  DOCUMENTABLE is one of the following:
+  `#'PRINT`'), a DREF::@DEFINITION such as `(DREF 'PRINT 'FUNCTION)`,
+  a string, or a nested list of these. More precisely, DOCUMENTABLE is
+  one of the following:
 
   - _single definition designator_: A [DREF][class] or anything else
     that is LOCATEable. This includes non-DREF [XREF][class]s and
@@ -1582,7 +1582,7 @@
 
 
 (defsection @linking (:title "Linking")
-  """PAX supports linking to [definitions][DREF class] either with
+  """PAX supports linking to DREF::@DEFINITIONS either with
   explicit @REFLINKs or with @AUTOLINKs.
 
   When generating offline documentation, only the definitions in
@@ -1641,7 +1641,7 @@
     (assert nil)))
 
 (define-glossary-term @linkable (:title "linkable")
-  "When a reference is encountered to [definition][dref class] D
+  "When a reference is encountered to DREF::@DEFINITION D
   while processing documentation for some page C, we say that
   definition D is _linkable_ (from C) if
 
@@ -1702,7 +1702,7 @@
 (defsection @specific-link (:title "Specific Link")
   """Specific links are those @REFLINKs and @AUTOLINKs that have a
   single DREF::@LOCATIVE and therefore at most a single matching
-  [definition][dref class]. These are @SPECIFIC-REFLINK,
+  DREF::@DEFINITION. These are @SPECIFIC-REFLINK,
   @SPECIFIC-REFLINK-WITH-TEXT and @SPECIFIC-AUTOLINK.
 
   A specific link to a @LINKABLE definition produces a link in the
@@ -1808,8 +1808,8 @@
 
 (defsection @reflink (:title "Reflink")
   """The @MARKDOWN/REFLINK syntax `\[label][id]` is
-  repurposed for linking to [definitions][DREF class]. In the
-  following, we discusss the various forms of reflinks."""
+  repurposed for linking to DREF::@DEFINITIONS. In the following, we
+  discusss the various forms of reflinks."""
   (@specific-reflink section)
   (@specific-reflink-with-text section)
   (@unspecific-reflink section)

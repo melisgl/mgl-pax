@@ -678,18 +678,50 @@
   "The Elisp functions `mgl-pax-apropos`, `mgl-pax-apropos-all`, and
   `mgl-pax-apropos-package` can display the results of DREF-APROPOS in
   the [live documentation browser] [@browsing-live-documentation].
-  These parallel the functionality of `slime-apropos`,
-  `slime-apropos-all`, and `slime-apropos-package`, and in fact, they
-  might [take over their key bindings][@EMACS-SETUP].
+  These extend the functionality of `slime-apropos`,
+  `slime-apropos-all` and `slime-apropos-package` to support more
+  kinds of DREF::@DEFINITIONs in an extensible way. The correspondence
+  is so close that the PAX versions might [take over the Slime key
+  bindings][@EMACS-SETUP].
 
-  DREF-APROPOS itself is similar to CL:APROPOS-LIST, but it supports
-  more flexible matching – e.g. filtering by DREF::@LOCATIVE-TYPEs –
-  and returns [DREFs][class].
+  More concretely, the PAX versions supports the following extensions:
 
-  The returned references are presented in two groups: those with
-  non-symbol and those with symbol @NAMEs. The non-symbol group is
-  sorted by locative type then by name. The symbol group is sorted by
-  name then by locative type.")
+  - Definitions with string names. One can search for
+    [ASDF:SYSTEMs][locative], [PACKAGEs][locative] and
+    [CLHS][locative] sections, glossary entries, format directives,
+    reader macro characters, loop keywords.
+
+  - Exact or substring matching of the name and the package.
+
+  - Matching only symbol or string names.
+
+  On the @PAX-LIVE-HOME-PAGE, one may @BROWSE-BY-LOCATIVE-TYPE, which
+  gives access to some of the apropos functionality via the browser
+  without involving Emacs.
+
+  On the result page:
+
+  - A DREF-APROPOS form to reproduce the results at the REPL is shown.
+
+  - One may toggle the EXTERNAL-ONLY and CASE-SENSITIVE boolean
+    arguments.
+
+  - One may switch between list, and detailed view. The list view only
+    shows the first, [bulleted line][@output-details] for each
+    definition, while the detailed view includes the full
+    documentation of definitions with the exception of SECTIONs.
+
+  - The returned references are presented in two groups: those with
+    non-symbol and those with symbol @NAMEs. The non-symbol group is
+    sorted by locative type then by name. The symbol group is sorted
+    by name then by locative type.
+
+  With `mgl-pax-apropos-all` and `mgl-pax-apropos-package` being
+  simple convenience functions on top of `mgl-pax-apropos`, we only
+  discuss the latter in detail here. For the others, see the Elisp
+  docstrings."
+  (@apropos-string-argument section)
+  (@apropos-package-argument section))
 
 ;;; `mgl-pax-apropos' calls DOCUMENT-FOR-EMACS with a `pax-eval:' URL
 ;;; that evaluates a call to this function. NAME and PACKAGE are
@@ -783,7 +815,28 @@
       (read-apropos-name-pattern-from-string string)
     (values name-pattern (read-apropos-locative-types string :start pos))))
 
+(defsection @apropos-string-argument
+    (:title "The STRING Argument of `mgl-pax-apropos`")
+  "The STRING argument consists of a name pattern and a list of
+  DREF::@LOCATIVE-TYPEs.
+
+  [read-apropos-name-pattern-from-string function][docstring]
+  [read-apropos-locative-types function][docstring]")
+
 (defun read-apropos-name-pattern-from-string (string)
+  """The name pattern has the following forms.
+
+  - `:print` matches definitions whose names are the string `\print`
+    or a symbol with SYMBOL-NAME `\print`.
+
+  - `"print"` matches definitions whose names contain `\print` as
+    a substring.
+
+  - `\print` is like the previous, substring matching case. Use this
+    form to save typing if the pattern does not contain spaces and
+    does not start with a colon.
+
+  - The empty string matches everything."""
   (cond ((string= string "")
          (values nil 0))
         ((starts-with #\Space string)
@@ -796,7 +849,77 @@
          (let ((n (or (position #\Space string) (length string))))
            (values (subseq string 0 n) n)))))
 
+(defun read-apropos-locative-types (string &key (start 0))
+  """After the name pattern, STRING may contain a list of locative
+  types. These are READ following normal Lisp rules. If some locative
+  types are given, then the matches are restricted to them.
+
+  - `print function` matches functions whose names contain
+    `\print` (e.g. CL:PRINT and CL:PPRINT).
+
+  - `:print function` is like the previous example but with exact
+    name match (so it matches CL:PRINT but not CL:PPRINT).
+
+  - `print variable` matches for example *PRINT-ESCAPE*.
+
+  - `print variable function` matches all variables and functions
+    with `print` in their names.
+
+  - &nbsp;`\pax:section` (note the leading space) matches all PAX
+    sections (note that EXTERNAL-ONLY NIL is necessary to see most of
+    them).
+
+  - `print :lisp` matches definitions with
+    LISP-LOCATIVE-TYPES, which is the default.
+
+  - `print :pseudo` matches definitions with
+    PSEUDO-LOCATIVE-TYPES such as MGL-PAX:CLHS.
+
+  - `print :all` matches definitions with all locative
+    types (LOCATIVE-TYPES)."""
+  (let ((pos start)
+        (locative-types ()))
+    (loop until (blankp string :start pos) do
+      (multiple-value-bind (locative-type new-pos)
+          (read-locative-type-from-string string :start pos)
+        (cond (locative-type
+               (push locative-type locative-types)
+               (setq pos new-pos))
+              (t
+               (multiple-value-bind (symbol new-pos)
+                   (read-interned-symbol-from-string string :start pos)
+                 (unless (member symbol '(:all :lisp :pseudo))
+                   (error "~@<Cannot parse locative type at ~S.~:@>"
+                          (subseq string pos)))
+                 (push symbol locative-types)
+                 (setq pos new-pos))))))
+    (nreverse locative-types)))
+
+(defsection @apropos-package-argument
+    (:title "The PACKAGE Argument of `mgl-pax-apropos`")
+  "[read-apropos-package-pattern-from-string function][docstring]")
+
 (defun read-apropos-package-pattern-from-string (string)
+  """When `mgl-pax-apropos` is invoked with a prefix argument, it
+  prompts for a package pattern among other things. The pattern may be
+  like the following examples.
+
+  - `:none` restricts matches to non-symbol names.
+
+  - `:any` restricts matches to symbol names.
+
+  - `:cl` restricts matches to symbols in the CL package.
+
+  - `:|X Y|` is similar to the previous, but the vertical bar syntax
+    allows for spaces in names.
+
+  - `mgl` restricts matches to packages whose name contains `mgl` as a
+    substring.
+
+  - `"x y"` is the same as the previous, but the explicit quotes allow
+    for spaces in names.
+
+  The above examples assume case-insensitive matching."""
   (let ((string (trim-whitespace string)))
     (multiple-value-bind (pattern pos)
         (cond ((blankp string)
@@ -835,25 +958,6 @@
                  (subseq substring 1 (1- (length substring)))
                  substring))
             pos)))
-
-(defun read-apropos-locative-types (string &key (start 0))
-  (let ((pos start)
-        (locative-types ()))
-    (loop until (blankp string :start pos) do
-      (multiple-value-bind (locative-type new-pos)
-          (read-locative-type-from-string string :start pos)
-        (cond (locative-type
-               (push locative-type locative-types)
-               (setq pos new-pos))
-              (t
-               (multiple-value-bind (symbol new-pos)
-                   (read-interned-symbol-from-string string :start pos)
-                 (unless (member symbol '(:all :lisp :pseudo))
-                   (error "~@<Cannot parse locative type at ~S.~:@>"
-                          (subseq string pos)))
-                 (push symbol locative-types)
-                 (setq pos new-pos))))))
-    (nreverse locative-types)))
 
 (defun maybe-quote (obj)
   (if (and obj (or (symbolp obj)
@@ -1036,7 +1140,7 @@
 
 (defsection @browse-by-locative-type (:title "Browse by Locative Types")
   "The @PAX-LIVE-HOME-PAGE provides quick links to @APROPOS result
-  pages for all LOCATIVE-TYPES which may have definitions.")
+  pages for all DREF::@LOCATIVE-TYPEs which may have definitions.")
 
 (defun locative-types-documentable ()
   `(,(format nil "### [Locative Types][@browse-by-locative-type]")

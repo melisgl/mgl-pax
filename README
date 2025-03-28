@@ -920,8 +920,8 @@ To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
 ## Navigating Sources in Emacs
 
 Integration into @SLIME's @M-. (`slime-edit-definition`) allows
-one to visit the SOURCE-LOCATION of a definition. PAX
-extends standard Slime functionality by
+one to visit the SOURCE-LOCATION of a DREF::@DEFINITION. PAX extends
+standard Slime functionality by
 
 - adding support for all kinds of definitions (see e.g.
   ASDF:SYSTEM, READTABLE in
@@ -1014,7 +1014,7 @@ denoted method:
 
 #### `M-.` Minibuffer Syntax
 
-At the minibuffer prompt, the definitions to edit
+At the minibuffer prompt, the DREF::@DEFINITIONS to edit
 can be specified as follows.
 
 - NAME: Refers to all DREF:DEFINITIONS of NAME with a Lisp locative
@@ -1125,9 +1125,9 @@ For more powerful search, see @APROPOS.
 #### DOCUMENTABLE
 
 The DOCUMENTABLE argument of DOCUMENT may be a single object (e.g.
-`#'PRINT`'), a definition such as `(DREF 'PRINT
-'FUNCTION)`, a string, or a nested list of these. More precisely,
-DOCUMENTABLE is one of the following:
+`#'PRINT`'), a DREF::@DEFINITION such as `(DREF 'PRINT 'FUNCTION)`,
+a string, or a nested list of these. More precisely, DOCUMENTABLE is
+one of the following:
 
 - *single definition designator*: A DREF or anything else
   that is LOCATEable. This includes non-DREF XREFs and
@@ -1500,18 +1500,119 @@ variable `mgl-pax-web-server-port` is nil.
 The Elisp functions `mgl-pax-apropos`, `mgl-pax-apropos-all`, and
 `mgl-pax-apropos-package` can display the results of DREF-APROPOS in
 the live documentation browser.
-These parallel the functionality of `slime-apropos`,
-`slime-apropos-all`, and `slime-apropos-package`, and in fact, they
-might take over their key bindings.
+These extend the functionality of `slime-apropos`,
+`slime-apropos-all` and `slime-apropos-package` to support more
+kinds of DREF::@DEFINITIONs in an extensible way. The correspondence
+is so close that the PAX versions might take over the Slime key
+bindings.
 
-DREF-APROPOS itself is similar to CL:APROPOS-LIST, but it supports
-more flexible matching – e.g. filtering by DREF::@LOCATIVE-TYPEs –
-and returns DREFs.
+More concretely, the PAX versions supports the following extensions:
 
-The returned references are presented in two groups: those with
-non-symbol and those with symbol @NAMEs. The non-symbol group is
-sorted by locative type then by name. The symbol group is sorted by
-name then by locative type.
+- Definitions with string names. One can search for
+  ASDF:SYSTEMs, PACKAGEs and
+  CLHS sections, glossary entries, format directives,
+  reader macro characters, loop keywords.
+
+- Exact or substring matching of the name and the package.
+
+- Matching only symbol or string names.
+
+On the @PAX-LIVE-HOME-PAGE, one may @BROWSE-BY-LOCATIVE-TYPE, which
+gives access to some of the apropos functionality via the browser
+without involving Emacs.
+
+On the result page:
+
+- A DREF-APROPOS form to reproduce the results at the REPL is shown.
+
+- One may toggle the EXTERNAL-ONLY and CASE-SENSITIVE boolean
+  arguments.
+
+- One may switch between list, and detailed view. The list view only
+  shows the first, bulleted line for each
+  definition, while the detailed view includes the full
+  documentation of definitions with the exception of SECTIONs.
+
+- The returned references are presented in two groups: those with
+  non-symbol and those with symbol @NAMEs. The non-symbol group is
+  sorted by locative type then by name. The symbol group is sorted
+  by name then by locative type.
+
+With `mgl-pax-apropos-all` and `mgl-pax-apropos-package` being
+simple convenience functions on top of `mgl-pax-apropos`, we only
+discuss the latter in detail here. For the others, see the Elisp
+docstrings.
+
+##### The STRING Argument of `mgl-pax-apropos`
+
+The STRING argument consists of a name pattern and a list of
+DREF::@LOCATIVE-TYPEs.
+
+The name pattern has the following forms.
+
+- `:print` matches definitions whose names are the string `print`
+  or a symbol with SYMBOL-NAME `print`.
+
+- `"print"` matches definitions whose names contain `print` as
+  a substring.
+
+- `print` is like the previous, substring matching case. Use this
+  form to save typing if the pattern does not contain spaces and
+  does not start with a colon.
+
+- The empty string matches everything.
+
+After the name pattern, STRING may contain a list of locative
+types. These are READ following normal Lisp rules. If some locative
+types are given, then the matches are restricted to them.
+
+- `print function` matches functions whose names contain
+  `print` (e.g. CL:PRINT and CL:PPRINT).
+
+- `:print function` is like the previous example but with exact
+  name match (so it matches CL:PRINT but not CL:PPRINT).
+
+- `print variable` matches for example *PRINT-ESCAPE*.
+
+- `print variable function` matches all variables and functions
+  with `print` in their names.
+
+- &nbsp;`pax:section` (note the leading space) matches all PAX
+  sections (note that EXTERNAL-ONLY NIL is necessary to see most of
+  them).
+
+- `print :lisp` matches definitions with
+  LISP-LOCATIVE-TYPES, which is the default.
+
+- `print :pseudo` matches definitions with
+  PSEUDO-LOCATIVE-TYPES such as MGL-PAX:CLHS.
+
+- `print :all` matches definitions with all locative
+  types (LOCATIVE-TYPES).
+
+
+##### The PACKAGE Argument of `mgl-pax-apropos`
+
+When `mgl-pax-apropos` is invoked with a prefix argument, it
+prompts for a package pattern among other things. The pattern may be
+like the following examples.
+
+- `:none` restricts matches to non-symbol names.
+
+- `:any` restricts matches to symbol names.
+
+- `:cl` restricts matches to symbols in the CL package.
+
+- `:|X Y|` is similar to the previous, but the vertical bar syntax
+  allows for spaces in names.
+
+- `mgl` restricts matches to packages whose name contains `mgl` as a
+  substring.
+
+- `"x y"` is the same as the previous, but the explicit quotes allow
+  for spaces in names.
+
+The above examples assume case-insensitive matching.
 
 #### PAX Live Home Page
 
@@ -1576,7 +1677,7 @@ as systemless.
 ##### Browse by Locative Types
 
 The @PAX-LIVE-HOME-PAGE provides quick links to @APROPOS result
-pages for all LOCATIVE-TYPES which may have definitions.
+pages for all DREF::@LOCATIVE-TYPEs which may have definitions.
 
 - [glossary-term] related
 
@@ -1768,7 +1869,7 @@ strings can be a pain. @PYTHONIC-STRING-READER can help with that.
 
 ### Linking
 
-PAX supports linking to definitions either with
+PAX supports linking to DREF::@DEFINITIONS either with
 explicit @REFLINKs or with @AUTOLINKs.
 
 When generating offline documentation, only the definitions in
@@ -1794,8 +1895,8 @@ locations.
 #### Reflink
 
 The @MARKDOWN/REFLINK syntax `[label][id]` is
-repurposed for linking to definitions. In the
-following, we discusss the various forms of reflinks.
+repurposed for linking to DREF::@DEFINITIONS. In the following, we
+discusss the various forms of reflinks.
 
 ##### Specific Reflink
 
@@ -2109,7 +2210,7 @@ table of contents and navigation links.
 
 - [glossary-term] linkable
 
-    When a reference is encountered to definition D
+    When a reference is encountered to DREF::@DEFINITION D
     while processing documentation for some page C, we say that
     definition D is *linkable* (from C) if
     
@@ -2138,7 +2239,7 @@ table of contents and navigation links.
 
 Specific links are those @REFLINKs and @AUTOLINKs that have a
 single DREF::@LOCATIVE and therefore at most a single matching
-definition. These are @SPECIFIC-REFLINK,
+DREF::@DEFINITION. These are @SPECIFIC-REFLINK,
 @SPECIFIC-REFLINK-WITH-TEXT and @SPECIFIC-AUTOLINK.
 
 A specific link to a @LINKABLE definition produces a link in the
