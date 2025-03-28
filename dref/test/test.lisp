@@ -218,7 +218,8 @@
                    '(x &optional (o 1) &key (k 2))))))
   (with-test ("special operator")
     (is (match-values (arglist (dref 'function 'macro))
-          (null *)))))
+          (null *)
+          (not *)))))
 
 (deftest test-arglist/compiler-macro ()
   (with-failure-expected ((and (alexandria:featurep
@@ -277,7 +278,8 @@
                                                  :ccl :cmucl :ecl)))
     (is (match-values (arglist (dref 'bar 'type))
           (equal * '(x &rest r))
-          (eq * :deftype)))))
+          (eq * :deftype))))
+  (is (listp (arglist (dref 'debug0-non-constant-type 'type)))))
 
 (deftest test-arglist/locative ()
   (is (match-values (arglist (dref 'loc-with-args 'locative))

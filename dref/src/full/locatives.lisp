@@ -802,9 +802,9 @@
       #+ccl
       (function-arglist (gethash name ccl::%deftype-expanders%) :deftype)
       (let ((arglist (swank-backend:type-specifier-arglist name)))
-        (if (eq arglist :not-available)
-            nil
-            (values arglist :deftype))))))
+        (if (listp arglist)
+            (values arglist :deftype)
+            nil)))))
 
 (defmethod docstring* ((dref type-dref))
   (documentation* (dref-name dref) 'type))

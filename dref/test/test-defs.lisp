@@ -177,3 +177,12 @@
 (define-locative-alias object class)
 (define-locative-alias var variable
   "VAR locative")
+
+
+(defvar *x* 1)
+
+(eval-when (:compile-toplevel)
+  (declaim (optimize (debug 0))))
+
+(deftype debug0-non-constant-type ()
+  `(member ,*x*))

@@ -599,7 +599,13 @@
 
   Can be extended via ARGLIST*"
   (ensure-dref-loaded)
-  (arglist* (or (resolve object nil) object)))
+  (multiple-value-bind (arglist kind)
+      (arglist* (or (resolve object nil) object))
+    (cond ((listp arglist)
+           (values arglist kind))
+          (t
+           (warn "~@<~S returned non-list value: ~S.~:@>"
+                 'arglist* arglist)))))
 
 (declaim (ftype function docstring*))
 
