@@ -8,12 +8,18 @@
   (with-gensyms (error)
     `(block nil
        (handler-bind
-           ((error (lambda (,error)
-                     (when hunchentoot:*catch-errors-p*
-                       (let ((,error (error-and-backtrace-to-string ,error)))
-                         (print ,error)
-                         (return (format nil "<h2>Error</h2><pre>~A</pre>"
-                                         (escape-html ,error))))))))
+           ((pax-http-error
+              (lambda (error)
+                (setf (hunchentoot:return-code*) (http-code-of error))
+                (return (format nil "~A" (escape-html
+                                          (princ-to-string error))))))
+            (error
+              (lambda (,error)
+                (when hunchentoot:*catch-errors-p*
+                  (let ((,error (error-and-backtrace-to-string ,error)))
+                    (print ,error)
+                    (return (format nil "<h2>Error</h2><pre>~A</pre>"
+                                    (escape-html ,error))))))))
          (progn ,@body)))))
 
 (defun error-and-backtrace-to-string (error)
@@ -50,9 +56,28 @@
     (assert (char= (aref uri 0) #\/))
     (subseq uri 1)))
 
+(defparameter *pax-live-inputs*
+  """View Documentation of:
+  <input type="text" id="paxToDocument"
+         placeholder="reference (e.g. print or print function)">
+  <script>mglpaxAddDocumentListener();</script>
+
+  See @BROWSING-LIVE-DOCUMENTATION for the reference syntax.
+
+  Apropos:
+  <input type="text" id="paxToApropos"
+         placeholder="NAME-PATTERN LOCATIVE-TYPE*">
+  <script>mglpaxAddAproposListener();</script>
+
+  See @APROPOS for the syntax.""")
+
+(defparameter *pax-live-html-head*
+  """<script src="live.js"></script>""")
+
 (defmacro with-document-open-args-for-web ((title &key (link-to-home t))
                                            &body body)
-  `(let ((*document-html-top-blocks-of-links*
+  `(let ((*document-html-head* *pax-live-html-head*)
+         (*document-html-top-blocks-of-links*
            (when ,link-to-home
              '((:id "link-to-home" :links (("/" "PAX Home"))))))
          (*document/open-extra-args*
@@ -162,7 +187,8 @@
 (defun handle-homepage-request ()
   (with-errors-to-html
     (with-document-open-args-for-web ("PAX" :link-to-home nil)
-      (document/open (pax-live-home-page) :stream nil))))
+      (document/open (pax-live-home-page :override *pax-live-inputs*)
+                     :stream nil))))
 
 ;;; HUNCHENTOOT:*DISPATCH-TABLE* will be bound to this locally to
 ;;; avoid conflicts with other HUNCHENTOOT servers running in the same

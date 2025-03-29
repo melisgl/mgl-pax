@@ -340,6 +340,14 @@
 
 ;;;; Handling of "pax:" URLs
 
+(define-condition pax-http-error (error)
+  ((message :initarg :message :reader message-of)
+   (message-args :initarg :message-args :reader message-args-of)
+   (http-code :initarg :http-code :reader http-code-of))
+  (:report (lambda (condition stream)
+             (format stream "~@<~?~:@>" (message-of condition)
+                     (message-args-of condition)))))
+
 (defun document-pax-url (path output)
   (unless path
     (error "Nothing to document."))
@@ -356,7 +364,18 @@
                 (ensure-list (parse-dref path))
                 (parse-definitions* path))))
     (cond ((endp drefs)
-           (error "Could not find definitions for ~S." path))
+           (multiple-value-bind (dref locative junk) (parse-dref path)
+             (declare (ignore dref))
+             (if (or locative (null junk))
+                 (error 'pax-http-error
+                        :message "Could not find definitions for ~S ~
+                                 (in package ~S)."
+                        :message-args (list path (package-name *package*))
+                        :http-code 404)
+                 (error 'pax-http-error
+                        :message "Bad locative ~S (in package ~S)."
+                        :message-args (list junk (package-name *package*))
+                        :http-code 404))))
           ((= (length drefs) 1)
            (document-for-emacs/reference (first drefs) output))
           (t
@@ -686,6 +705,9 @@
   is so close that the PAX versions might [take over the Slime key
   bindings][@EMACS-SETUP].
 
+  Note that apropos functionality is also exposed via the
+  @PAX-LIVE-HOME-PAGE.
+
   More concretely, the PAX versions supports the following extensions:
 
   - Definitions with string names. One can search for
@@ -1008,8 +1030,12 @@
   """When @BROWSING-LIVE-DOCUMENTATION, the home page provides
   quick access to documentation of the definitions in the system. In
   Emacs, when `mgl-pax-document` is invoked with the empty string, it
-  visits the home page. The home page may also be accessed directly by
-  going to the root page of the web server (if one is started)."""
+  visits the home page.
+
+  The home page may also be accessed directly by going to the root
+  page of the web server (if one is started). Here, unless the home
+  page is viewed [with w3m][@BROWSING-WITH-W3M], one may directly look
+  up documentation and access @APROPOS via the input boxes provided."""
   ;; FIXME: This may not be loaded.
   (ensure-web-server function)
   (@top-level-pax-sections section)
@@ -1018,13 +1044,13 @@
   (@browse-by-locative-type section)
   (@related glossary-term))
 
-(defun pax-live-home-page ()
+(defun pax-live-home-page (&key override)
   (with-filename-to-asdf-system-name-map
     (let ((*package* (find-package '#:mgl-pax) ))
       `((progv '(*package*) (list ,(find-package '#:mgl-pax)))
         ,@(list*
            "## [PAX Home][@pax-live-home-page]"
-           "You are @BROWSING-LIVE-DOCUMENTATION."
+           (or override "You are @BROWSING-LIVE-DOCUMENTATION.")
            "### [Top-level PAX Sections][@top-level-pax-sections]"
            (sections-tightly (top-level-pax-sections))
            (asdf-systems-and-packages-grouped-documentable)

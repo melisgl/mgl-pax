@@ -1506,6 +1506,9 @@ kinds of DREF::@DEFINITIONs in an extensible way. The correspondence
 is so close that the PAX versions might take over the Slime key
 bindings.
 
+Note that apropos functionality is also exposed via the
+@PAX-LIVE-HOME-PAGE.
+
 More concretely, the PAX versions supports the following extensions:
 
 - Definitions with string names. One can search for
@@ -1619,8 +1622,12 @@ The above examples assume case-insensitive matching.
 When @BROWSING-LIVE-DOCUMENTATION, the home page provides
 quick access to documentation of the definitions in the system. In
 Emacs, when `mgl-pax-document` is invoked with the empty string, it
-visits the home page. The home page may also be accessed directly by
-going to the root page of the web server (if one is started).
+visits the home page.
+
+The home page may also be accessed directly by going to the root
+page of the web server (if one is started). Here, unless the home
+page is viewed with w3m, one may directly look
+up documentation and access @APROPOS via the input boxes provided.
 
 - [function] ENSURE-WEB-SERVER &KEY PORT HYPERSPEC-ROOT
 

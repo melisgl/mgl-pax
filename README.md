@@ -1677,6 +1677,9 @@ kinds of [definition][2143]s in an extensible way. The correspondence
 is so close that the PAX versions might [take over the Slime key
 bindings][8541].
 
+Note that apropos functionality is also exposed via the
+[PAX Live Home Page][9d50].
+
 More concretely, the PAX versions supports the following extensions:
 
 - Definitions with string names. One can search for
@@ -1796,8 +1799,12 @@ The above examples assume case-insensitive matching.
 When [Browsing Live Documentation][a595], the home page provides
 quick access to documentation of the definitions in the system. In
 Emacs, when `mgl-pax-document` is invoked with the empty string, it
-visits the home page. The home page may also be accessed directly by
-going to the root page of the web server (if one is started).
+visits the home page.
+
+The home page may also be accessed directly by going to the root
+page of the web server (if one is started). Here, unless the home
+page is viewed [with w3m][83d5], one may directly look
+up documentation and access [Apropos][b7fc] via the input boxes provided.
 
 <a id="x-28MGL-PAX-3AENSURE-WEB-SERVER-20FUNCTION-29"></a>
 
