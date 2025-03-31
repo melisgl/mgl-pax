@@ -14,18 +14,31 @@
 
 ;;;; Types
 
-(defun valid-type-specifier-p (type)
-  (handler-case
-      (null (nth-value 1 (ignore-errors (typep nil type))))
-    ;; Avoid "WARNING: * is not permitted as a type specifier" on
-    ;; SBCL.
-    #+sbcl
-    (warning (c) (ignore-errors (muffle-warning c)))
-    ;; Silence compiler notes on SBCL when run via ASDF:TEST-SYSTEM.
-    #+sbcl
-    (sb-kernel:parse-unknown-type ())
-    #+cmucl
-    (sys::parse-unknown-type ())))
+;;; Like TYPEP, but never warn or error and indicate in the second
+;;; return value whether TYPE is valid.
+(defun typep* (obj type)
+  #+abcl
+  (if (valid-type-specifier-p type)
+      (values (typep obj type) t)
+      (values nil nil))
+  #-abcl
+  (on-unknown-type-warning ((values nil nil))
+    (handler-case
+        (values (typep obj type) t)
+      (error ()
+        (values nil nil)))))
+
+(defun subtypep* (type1 type2)
+  (on-unknown-type-warning ((values nil t))
+    (handler-case
+        (subtypep type1 type2)
+      (error ()
+        (values nil t)))))
+
+(defun typexpand (type-specifier)
+  #+sbcl (sb-ext:typexpand type-specifier)
+  ;; FIXME
+  #-sbcl (values type-specifier nil))
 
 
 ;;;; Macros

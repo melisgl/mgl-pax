@@ -53,6 +53,7 @@ symbols.
 ** MAYBE add source locative
 That is, link to github, without documenting anything. Useful for code
 examples without actually INCLUDEing them. Does/should LAMBDA do this?
+** MAYBE DEFINE-DEFINITION-CLASS shouldn't even exist but be incorporated into DEFINE-LOCATIVE-TYPE?
 * document
 ** OPT parse and print markdown once when *format* is :html?
 This would involve rewriting everything to emit parse tree fragments or be able to produce html directly. Either way, it is not without cost.
@@ -110,8 +111,6 @@ linking all locatives in the running lisp, which makes no sense in
 offline documentation.
 
 Maybe this is a special case of dynamically generated documentation.
-** TODO arglist autolink font size too small
-** TODO html href label includes markdown markup such as backquotes
 * apropos
 ** MAYBE when exported by pax, we know the exact definition being exported
 mgl-pax-apropos-package could take advantage?
@@ -122,6 +121,7 @@ Files in ASDF system order.
 ** CANCELLED Should DREF-APROPOS be made more flexible?
 Regexp, generic filter functions, non-listing maps? Revisit if
 filtering the list is a performance problem.
+** BUG do not intern in READ-APROPOS-DTYPE
 * transcribe
 ** MAYBE don't treat "debugger invoked on" as output
 Well, it's a kind of output, but maybe it would be better for

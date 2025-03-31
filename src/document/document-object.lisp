@@ -17,7 +17,9 @@
   - [document-object* (method () (accessor-dref t))][docstring]
   - [document-object* (method () (structure-accessor-dref t))][docstring]
   - [document-object* (method () (class-dref t))][docstring]
+  - [document-object* (method () (condition-dref t))][docstring]
   - [document-object* (method () (asdf-system-dref t))][docstring]
+  - [document-object* (method () (locative-dref t))][docstring]
   - [document-object* (method () (section t))][docstring]
   - [document-object* (method () (glossary-term t))][docstring]
   - [document-object* (method () (go-dref t))][docstring]
@@ -177,7 +179,7 @@
                  ,(swank-mop:slot-definition-initform slot-def))))))))
 
 
-;;;; STRUCTURE-ACCESSOR and CLASS locatives
+;;;; STRUCTURE-ACCESSOR, CLASS and CONDITION locatives
 
 (defmethod document-object* ((dref structure-accessor-dref) stream)
   "For definitions with a STRUCTURE-ACCESSOR locative, the arglist
@@ -189,6 +191,15 @@
   "For definitions with a CLASS locative, the arglist printed is the
   list of immediate superclasses with STANDARD-OBJECT, CONDITION and
   non-exported symbols omitted."
+  (%document-class dref stream))
+
+(defmethod document-object* ((dref condition-dref) stream)
+  "For definitions with a CONDITION locative, the arglist printed is
+  the list of immediate superclasses with STANDARD-OBJECT, CONDITION
+  and non-exported symbols omitted."
+  (%document-class dref stream))
+
+(defun %document-class (dref stream)
   (let* ((class (find-class (dref-name dref)))
          (conditionp (subtypep class 'condition))
          (superclasses
@@ -314,6 +325,30 @@
                     (list :nicknames nicknames))))
     (documenting-reference (stream :arglist arglist)
       (document-docstring (docstring dref) stream))))
+
+
+;;;; LOCATIVE locative
+
+(defmethod document-object* ((dref locative-dref) stream)
+  (documenting-reference (stream)
+    (let ((locative-type (dref-name dref)))
+      (document-docstring
+       (with-output-to-string (stream)
+         (when-let ((equivalent-class (find-class locative-type nil)))
+           (format stream "- Equivalent class: ~A~%"
+                   (md-link (dref (class-name equivalent-class) 'type))))
+         (when-let ((direct-supers (dref::locative-type-direct-supers
+                                    locative-type)))
+           (format stream "- Direct super locative types: ~{~A~^, ~}~%"
+                   (loop for super in direct-supers
+                         collect (md-link (dref super 'locative)))))
+         (when-let ((direct-subs (dref::locative-type-direct-subs
+                                  locative-type)))
+           (format stream "- Direct sub locative types: ~{~A~^, ~}~%"
+                   (loop for sub in direct-subs
+                         collect (md-link (dref sub 'locative))))))
+       stream :paragraphp nil))
+    (document-docstring (docstring dref) stream)))
 
 
 ;;;; SECTION locative

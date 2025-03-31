@@ -22,6 +22,43 @@
 
   Note that while there is a CL:RESTART class, its instances have no
   docstring or source location.")
+
+
+;;;; Early DTYPEs
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *dtype-expanders* (make-hash-table)))
+
+(defmacro define-dtype (name lambda-list &body body)
+  "Like DEFTYPE, but it may expand into other DTYPEs.
+
+  The following example defines `METHOD*` as the locative METHOD
+  without its direct locative subtypes.
+
+  ```common-lisp
+  (define-dtype method* () '(and method (not reader) (not writer)))
+  ```
+
+  See DTYPEP for the semantics and also the locative DTYPE."
+  (multiple-value-bind (docstring body) (parse-body-docstring body)
+    `(eval-when (:compile-toplevel :load-toplevel :execute)
+       (setf (gethash ',name *dtype-expanders*)
+             (compile nil '(lambda ,lambda-list
+                            ,@body)))
+       (defmethod dtype-dummy ((name (eql ',name)))
+         (values ',lambda-list ,docstring ,*package*)))))
+
+;;; Like LOCATIVE-TYPE-LAMBDA-LIST, but for DTYPEs. This is to have a
+;;; source location, portable arglist and docstring along with
+;;; definition-time package.
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defgeneric dtype-dummy (name)))
+
+(autoload dtypep "dref/full")
+
+
+(autoload definitions "dref/full")
+(autoload dref-apropos "dref/full")
 
 (autoload make-source-location "dref/full")
 (autoload source-location-p "dref/full")
@@ -31,6 +68,3 @@
 (autoload source-location-buffer-position "dref/full")
 (autoload source-location-snippet "dref/full")
 (autoload source-location-adjusted-file-position "dref/full")
-
-(autoload definitions "dref/full")
-(autoload dref-apropos "dref/full")

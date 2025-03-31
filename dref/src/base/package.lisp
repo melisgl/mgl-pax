@@ -192,6 +192,7 @@
   (readtable-dref class)
   "**for DRef Locatives**"
   (locative-dref class)
+  (dtype-dref class)
   (symbol-locative-dref class)
   (unknown-dref class)
   (lambda-dref class))
@@ -253,7 +254,8 @@
   (compiler-macro locative)
   (setf locative))
 
-(defsection @functionlike-locatives (:title "Locatives for Functions")
+(defsection @functionlike-locatives
+    (:title "Locatives for Functions and Methods")
   (function locative)
   (generic-function locative)
   (method locative)
@@ -282,5 +284,6 @@
 
 (defsection @dref-locatives (:title "DRef Locatives")
   (locative locative)
+  (dtype locative)
   (unknown locative)
   (lambda locative))

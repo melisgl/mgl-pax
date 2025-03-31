@@ -19,7 +19,13 @@
   LOCATIVE-TYPE (the argument given to this macro) always conform to
   this lambda list. See CHECK-LOCATIVE-ARGS.
 
-  For example, if  have:
+  - If there is a CLASS named LOCATIVE-TYPE, then LOCATIVE-TYPE must
+    be able to represent exactly the set of definitions of that class.
+
+  - A non-class Lisp type and locative type with the same name must
+    not exist at the same time.
+
+  For example, if we have:
 
   ```
   (define-locative-type dummy (x &key y)
@@ -36,9 +42,20 @@
                    (string (first docstring)))))
   (check-docstring-only-body docstring)
   `(eval-when (:compile-toplevel :load-toplevel :execute)
+     (check-locative-type-definable ',locative-type)
      (defmethod locative-type-lambda-list ((symbol (eql ',locative-type)))
        (values ',lambda-list ,(first docstring) ,*package*))
      (declare-locative-type ',locative-type)))
+
+(defun check-locative-type-definable (locative-type)
+  (when (and
+         ;; FIXME: This cannot detect most DEFTYPEs with non-empty
+         ;; arglist.
+         #-sbcl (valid-type-specifier-p locative-type)
+         #+sbcl (sb-ext:defined-type-name-p locative-type)
+         (not (find-class locative-type nil)))
+    (error "~@<Cannot define ~S as a ~S because it names a type ~
+           that's not a class.~:@>" locative-type 'dref::@locative-type)))
 
 (defmacro define-pseudo-locative-type (locative-type lambda-list
                                        &body docstring)
@@ -82,10 +99,23 @@
        (locate-error "Bad arguments ~S for locative ~S with lambda list ~S."
                      ,locative-args ',locative-type ',lambda-list))))
 
+;;; Same as CHECK-LOCATIVE-ARGS, but LOCATIVE-TYPE is evaluated and it
+;;; signals a SIMPLE-ERROR.
+(defun check-locative-args* (locative-type locative-args)
+  (let ((lambda-list (locative-type-lambda-list locative-type)))
+    (unless (ignore-errors
+             (handler-bind ((warning #'muffle-warning))
+               (eval `(destructuring-bind ,lambda-list ',locative-args
+                        (declare (ignore ,@(macro-arg-names lambda-list)))
+                        t))))
+      (error "~@<Bad arguments ~S for locative ~S with lambda list ~S.~:@>"
+             locative-args locative-type lambda-list))))
+
 (defmacro define-locative-alias (alias locative-type &body docstring)
-  """Define ALIAS as a locative equivalent to LOCATIVE-TYPE (both
-  SYMBOLs). LOCATIVE-TYPE must exist (i.e. be among LOCATIVE-TYPES).
-  For example, let's define OBJECT as an alias of the CLASS locative:
+  """Define ALIAS that can be substituted for LOCATIVE-TYPE (both
+  SYMBOLs) for the purposes of LOCATEing. LOCATIVE-TYPE must
+  exist (i.e. be among LOCATIVE-TYPES). For example, let's define
+  OBJECT as an alias of the CLASS locative:
 
   ```cl-transcript
   (define-locative-alias object class)
@@ -107,6 +137,9 @@
   => :DESTRUCTURING
   ```
 
+  Note that LOCATIVE-ALIASES are not LOCATIVE-TYPES and are not valid
+  DTYPES.
+
   Also, see PAX::@LOCATIVE-ALIASES in PAX."""
   (check-docstring-only-body docstring)
   `(eval-when (:compile-toplevel :load-toplevel :execute)
@@ -121,29 +154,46 @@
 ;;; and the *PACKAGE* in effect at macroexpansion time.
 (defgeneric locative-type-lambda-list (symbol))
 
-(defvar *locative-type-to-class-name* (make-hash-table))
+;;; LOCATIVE-TYPE -> (DREF-CLASS-NAME SUPER-CLASS-NAMES)
+;;;
+;;; E.g. FUNCTION -> (FUNCTION-DREF ()).
+(defvar *locative-type-to-class-info* (make-hash-table))
 
-(defun locative-type-class (locative-type &optional (errorp t))
-  (or (gethash locative-type *locative-type-to-class-name*)
-      (not errorp)
-      (error "~@<No class defined for locative type ~S~:@>"
-             locative-type)))
+(defun %locative-type-class-info (locative-type)
+  (gethash locative-type *locative-type-to-class-info*))
 
-(defun locative-subtype-p (locative-type-1 locative-type-2)
-  (subtypep (locative-type-class locative-type-1)
-            (locative-type-class locative-type-2)))
+(defun locative-type-dref-class (locative-type)
+  (first (%locative-type-class-info locative-type)))
+
+(defun dref-class-name-to-locative (dref-class-name)
+  (maphash (lambda (locative-type class-info)
+             (when (eq (first class-info) dref-class-name)
+               (return-from dref-class-name-to-locative locative-type)))
+           *locative-type-to-class-info*))
 
 (defmacro define-definition-class (locative-type class-name
-                                   &optional (superclasses '(dref)) &body body)
-  "Define a subclass of DREF. All definitions with LOCATIVE-TYPE
-  must be of this type. If non-NIL, BODY is DEFCLASS's slot
-  definitions and other options."
+                                   &optional (superclasses '(dref))
+                                   &body body)
+  "Define a subclass of DREF with CLASS-NAME. All @DEFINITIONs with
+  LOCATEable with a @LOCATIVE of LOCATIVE-TYPE must be of the type
+  named by CLASS-NAME. If non-NIL, BODY is DEFCLASS's slot definitions
+  and other options.
+
+  The hiererarchy of definition classes as defined by SUPERCLASSES
+  must agree with the hierarchy of the classes named by
+  @LOCATIVE-TYPEs. That is, if two locative types `L1` and `L2` with
+  definition classes `D1` and `D2` both name CLASSes, then it must be
+  that (SUBTYPEP D1 D2) iff (SUBTYPEP L1 L2).
+
+  Also, definition classes of LISP-LOCATIVE-TYPES and
+  PSEUDO-LOCATIVE-TYPES must not intersect."
+  (check-locative-type locative-type)
   `(progn
      (defclass ,class-name ,superclasses
        ,@(or body '(())))
      (eval-when (:compile-toplevel :load-toplevel :execute)
-       (setf (gethash ',locative-type *locative-type-to-class-name*)
-             ',class-name))))
+       (setf (gethash ',locative-type *locative-type-to-class-info*)
+             (list ',class-name ',superclasses)))))
 
 
 (defvar *locating-object*)
@@ -396,7 +446,8 @@
                                     'dref))))
     `(progn
        (define-locative-type ,locative-type ,lambda-list ,@docstring)
-       (defclass ,dref-class (symbol-locative-dref) ())
+       (define-definition-class ,locative-type ,dref-class
+           (symbol-locative-dref))
        (defmethod dref* (symbol (locative-type (eql ',locative-type))
                          locative-args)
          (check-locative-args ,locative-type locative-args)

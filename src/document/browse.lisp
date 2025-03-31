@@ -754,7 +754,7 @@
                             (just-list t))
   (let ((name0 name)
         (package0 package))
-    (multiple-value-bind (name locative-types package)
+    (multiple-value-bind (name dtype package)
         (pax-apropos*-process-args name package)
       (let* (;; Whether this is for an exact package match and no
              ;; other restrictions.
@@ -768,13 +768,13 @@
                               :external-only ,external-only
                               :package ,(maybe-quote package)
                               :case-sensitive ,case-sensitive
-                              :locative-types ,(maybe-quote locative-types))))
+                              :dtype ,(maybe-quote dtype))))
         (multiple-value-bind (non-symbol-definitions symbol-definitions)
             (split-apropos-definitions
              (dref-apropos name :external-only external-only
                                 :package package
                                 :case-sensitive case-sensitive
-                                :locative-types locative-types))
+                                :dtype dtype))
           (values
            `((progv '(*document-max-table-of-contents-level*) '(-1))
              ,@(when %packagep
@@ -821,7 +821,7 @@
            dref-apropos-form))))))
 
 (defun pax-apropos*-process-args (name package)
-  (multiple-value-bind (name locative-types) (parse-apropos-input name)
+  (multiple-value-bind (name dtype) (parse-apropos-input name)
     (let ((package (cond
                      ;; For DOCUMENT-FOR-EMACS/REFERENCE-1
                      ((symbolp package)
@@ -832,26 +832,27 @@
                       (make-symbol (first package)))
                      (t
                       (read-apropos-package-pattern-from-string package)))))
-      (values name locative-types package))))
+      (values name dtype package))))
 
 (defun parse-apropos-input (string)
   (multiple-value-bind (name-pattern pos)
       (read-apropos-name-pattern-from-string string)
-    (values name-pattern (read-apropos-locative-types string :start pos))))
+    (values name-pattern (read-apropos-dtype string :start pos))))
 
 (defsection @apropos-string-argument
     (:title "The STRING Argument of `mgl-pax-apropos`")
-  "The STRING argument consists of a name pattern and a list of
-  DREF::@LOCATIVE-TYPEs.
+  "The STRING argument consists of a name pattern and a [DTYPE][DREF::@DTYPES].
 
   [read-apropos-name-pattern-from-string function][docstring]
-  [read-apropos-locative-types function][docstring]")
+  [read-apropos-dtype function][docstring]")
 
 (defun read-apropos-name-pattern-from-string (string)
   """The name pattern has the following forms.
 
   - `:print` matches definitions whose names are the string `\print`
-    or a symbol with SYMBOL-NAME `\print`.
+    or a symbol with SYMBOL-NAME `\print`. Vertical bar form as in
+    `:|prInt|` is also also supported and is useful in when
+    CASE-SENSITIVE is true.
 
   - `"print"` matches definitions whose names contain `\print` as
     a substring.
@@ -873,10 +874,12 @@
          (let ((n (or (position #\Space string) (length string))))
            (values (subseq string 0 n) n)))))
 
-(defun read-apropos-locative-types (string &key (start 0))
-  """After the name pattern, STRING may contain a list of locative
-  types. These are READ following normal Lisp rules. If some locative
-  types are given, then the matches are restricted to them.
+(defun read-apropos-dtype (string &key (start 0))
+  """After the name pattern, STRING may contain a
+  [DTYPE][DREF::@DTYPES] that the definitions must match.
+
+  - `print t` matches definitions with LISP-LOCATIVE-TYPES, which is
+    the default (equivalent to `\print`).
 
   - `print function` matches functions whose names contain
     `\print` (e.g. CL:PRINT and CL:PPRINT).
@@ -886,38 +889,28 @@
 
   - `print variable` matches for example *PRINT-ESCAPE*.
 
-  - `print variable function` matches all variables and functions
+  - `print (or variable function)` matches all variables and functions
     with `print` in their names.
 
+  - `array (or type (not class))` matches DEFTYPEs and but not CLASSes
+    with the string `array` in their names.
+
   - &nbsp;`\pax:section` (note the leading space) matches all PAX
-    sections (note that EXTERNAL-ONLY NIL is necessary to see most of
-    them).
+    sections (EXTERNAL-ONLY NIL is necessary to see many of them).
 
-  - `print :lisp` matches definitions with
-    LISP-LOCATIVE-TYPES, which is the default.
+  - `print dref:pseudo` matches definitions with PSEUDO-LOCATIVE-TYPES
+    such as MGL-PAX:CLHS.
 
-  - `print :pseudo` matches definitions with
-    PSEUDO-LOCATIVE-TYPES such as MGL-PAX:CLHS.
-
-  - `print :all` matches definitions with all locative
+  - `print dref:top` matches definitions with all locative
     types (LOCATIVE-TYPES)."""
-  (let ((pos start)
-        (locative-types ()))
-    (loop until (blankp string :start pos) do
-      (multiple-value-bind (locative-type new-pos)
-          (read-locative-type-from-string string :start pos)
-        (cond (locative-type
-               (push locative-type locative-types)
-               (setq pos new-pos))
-              (t
-               (multiple-value-bind (symbol new-pos)
-                   (read-interned-symbol-from-string string :start pos)
-                 (unless (member symbol '(:all :lisp :pseudo))
-                   (error "~@<Cannot parse locative type at ~S.~:@>"
-                          (subseq string pos)))
-                 (push symbol locative-types)
-                 (setq pos new-pos))))))
-    (nreverse locative-types)))
+  (if (blankp string :start start)
+      t
+      (multiple-value-bind (dtype pos)
+          (read-from-string string  t nil :start start)
+        (unless (blankp string :start pos)
+          (error "~@<Junk following ~S from position ~S in ~S.~:@>"
+                 'dtype pos string))
+        dtype)))
 
 (defsection @apropos-package-argument
     (:title "The PACKAGE Argument of `mgl-pax-apropos`")
@@ -984,8 +977,10 @@
             pos)))
 
 (defun maybe-quote (obj)
-  (if (and obj (or (symbolp obj)
-                   (listp obj)))
+  (if (and obj
+           (not (member obj '(nil t)))
+           (or (symbolp obj)
+               (listp obj)))
       `(quote ,obj)
       obj))
 
@@ -1182,18 +1177,3 @@
                          `(pax-apropos* ,(with-standard-io-syntax*
                                            (format nil " ~S" locative-type))
                                         t)))))
-
-(defun locative-types-maybe-with-definitions ()
-  (dref::sort-locative-types
-   (loop for locative-type in (locative-types)
-         unless (or (not (external-symbol-p locative-type))
-                    (not (locative-type-may-have-definitions-p locative-type)))
-           collect locative-type)))
-
-(defun locative-type-may-have-definitions-p (locative-type)
-  (eq 'dref::try-interned-symbols
-      (dref::map-names-for-type
-       (lambda (name)
-         (declare (ignore name))
-         (return-from locative-type-may-have-definitions-p t))
-       locative-type)))

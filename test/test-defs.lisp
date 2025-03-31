@@ -1,9 +1,5 @@
 (in-package :mgl-pax-test)
 
-(defsection @stealing-from-other-package (:package (find-package :mgl-pax)
-                                          :export nil)
-  (method locative))
-
 (defsection @test-examples (:export nil)
   "example section")
 

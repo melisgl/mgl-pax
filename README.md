@@ -748,6 +748,9 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
 <a id="x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **SECTION**
+    - Equivalent class: [`SECTION`][5fac]
+    
+    - Direct super locative types: [`VARIABLE`][6c83]
 
     Refers to a [`SECTION`][5fac] defined by [`DEFSECTION`][72b4].
     
@@ -757,6 +760,9 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
 <a id="x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **GLOSSARY-TERM**
+    - Equivalent class: [`GLOSSARY-TERM`][8251]
+    
+    - Direct super locative types: [`VARIABLE`][6c83]
 
     Refers to a [`GLOSSARY-TERM`][8251] defined by [`DEFINE-GLOSSARY-TERM`][8ece].
     
@@ -1721,13 +1727,14 @@ docstrings.
 
 ##### The `STRING` Argument of `mgl-pax-apropos`
 
-The `STRING` argument consists of a name pattern and a list of
-[locative type][a11d]s.
+The `STRING` argument consists of a name pattern and a [`DTYPE`][a459].
 
 The name pattern has the following forms.
 
 - `:print` matches definitions whose names are the string `print`
-  or a symbol with [`SYMBOL-NAME`][0d07] `print`.
+  or a symbol with [`SYMBOL-NAME`][0d07] `print`. Vertical bar form as in
+  `:|prInt|` is also also supported and is useful in when
+  `CASE-SENSITIVE` is true.
 
 - `"print"` matches definitions whose names contain `print` as
   a substring.
@@ -1738,9 +1745,11 @@ The name pattern has the following forms.
 
 - The empty string matches everything.
 
-After the name pattern, `STRING` may contain a list of locative
-types. These are [`READ`][fe58] following normal Lisp rules. If some locative
-types are given, then the matches are restricted to them.
+After the name pattern, `STRING` may contain a
+[`DTYPE`][a459] that the definitions must match.
+
+- `print t` matches definitions with [`LISP-LOCATIVE-TYPES`][30ad], which is
+  the default (equivalent to `print`).
 
 - `print function` matches functions whose names contain
   `print` (e.g. [`CL:PRINT`][d451] and [`CL:PPRINT`][6af6]).
@@ -1750,20 +1759,19 @@ types are given, then the matches are restricted to them.
 
 - `print variable` matches for example [`*PRINT-ESCAPE*`][ff76].
 
-- `print variable function` matches all variables and functions
+- `print (or variable function)` matches all variables and functions
   with `print` in their names.
 
+- `array (or type (not class))` matches [`DEFTYPE`][7f9a]s and but not [`CLASS`][1f37]es
+  with the string [`array`][1f99] in their names.
+
 - &nbsp;`pax:section` (note the leading space) matches all PAX
-  sections (note that `EXTERNAL-ONLY` `NIL` is necessary to see most of
-  them).
+  sections (`EXTERNAL-ONLY` `NIL` is necessary to see many of them).
 
-- `print :lisp` matches definitions with
-  [`LISP-LOCATIVE-TYPES`][30ad], which is the default.
+- `print dref:pseudo` matches definitions with [`PSEUDO-LOCATIVE-TYPES`][c340]
+  such as `MGL-PAX:CLHS`.
 
-- `print :pseudo` matches definitions with
-  [`PSEUDO-LOCATIVE-TYPES`][c340] such as `MGL-PAX:CLHS`.
-
-- `print :all` matches definitions with all locative
+- `print dref:top` matches definitions with all locative
   types ([`LOCATIVE-TYPES`][99b0]).
 
 
@@ -2756,8 +2764,14 @@ printed is the locative's `CLASS-NAME` argument if provided.
 list of immediate superclasses with [`STANDARD-OBJECT`][a843], [`CONDITION`][83e1] and
 non-exported symbols omitted.
 
+- For definitions with a [`CONDITION`][c479] locative, the arglist printed is
+the list of immediate superclasses with `STANDARD-OBJECT`, `CONDITION`
+and non-exported symbols omitted.
+
 - For definitions with a [`ASDF:SYSTEM`][c097] locative, their most
 important slots are printed as an unnumbered list.
+
+- document-object\* (method () (locative-dref t))
 
 - When documentation is being generated for a definition with
 the [`SECTION`][672f] locative, a new (sub)section is opened (see
@@ -3841,7 +3855,7 @@ are for writing new `DOCUMENT-OBJECT*` methods, which emit markdown.
 
 <a id="x-28MGL-PAX-3ADOCUMENTING-REFERENCE-20MGL-PAX-3AMACRO-29"></a>
 
-- [macro] **DOCUMENTING-REFERENCE** *(STREAM &KEY REFERENCE NAME PACKAGE READTABLE ARGLIST) &BODY BODY*
+- [macro] **DOCUMENTING-REFERENCE** *(STREAM &KEY REFERENCE NAME PACKAGE READTABLE (ARGLIST NIL)) &BODY BODY*
 
     Write `REFERENCE` to `STREAM` as described in
     [`*DOCUMENT-MARK-UP-SIGNATURES*`][8fb6], and establish `REFERENCE` as a
@@ -3858,13 +3872,18 @@ are for writing new `DOCUMENT-OBJECT*` methods, which emit markdown.
       If either is `NIL`, then a default value is computed as described in
       [Package and Readtable][ab7e].
     
-    - If `ARGLIST` is `NIL`, then it is not printed.
+    - `ARGLIST`:
     
-    - If `ARGLIST` is a list, then it is must be a [lambda list][98ff] and
-      is printed without the outermost parens and with the package names
-      removed from the argument names.
+        - If it is not provided, then it defaults to (`ARGLIST`
+          `REFERENCE`).
     
-    - If `ARGLIST` is a string, then it must be valid markdown.
+        - If `NIL`, then it is not printed.
+    
+        - If it is a list, then it is must be a [lambda list][98ff] and
+          is printed without the outermost parens and with the package
+          names removed from the argument names.
+    
+        - If its is a string, then it must be valid markdown.
     
     - It is not allowed to have [`WITH-HEADING`][80e8] within the [dynamic
       extent][36e9] of `BODY`.
@@ -4041,6 +4060,7 @@ they are presented.
   [1cf6]: dref/README.md#x-28DREF-EXT-3ADREF-NAME-20-28MGL-PAX-3AREADER-20DREF-3ADREF-29-29 "DREF-EXT:DREF-NAME (MGL-PAX:READER DREF:DREF)"
   [1d5a]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pkg.htm "PACKAGE (MGL-PAX:CLHS CLASS)"
   [1f37]: http://www.lispworks.com/documentation/HyperSpec/Body/t_class.htm "CLASS (MGL-PAX:CLHS CLASS)"
+  [1f99]: http://www.lispworks.com/documentation/HyperSpec/Body/t_array.htm "ARRAY (MGL-PAX:CLHS CLASS)"
   [2060]: dref/README.md#x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "CLASS MGL-PAX:LOCATIVE"
   [2143]: dref/README.md#x-28DREF-3A-40DEFINITION-20MGL-PAX-3AGLOSSARY-TERM-29 "definition"
   [21f4]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_l.htm#loop_keyword '"loop keyword" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
@@ -4166,6 +4186,7 @@ they are presented.
   [7e92]: dref/README.md#x-28DREF-3ADREF-20FUNCTION-29 "DREF:DREF FUNCTION"
   [7eb5]: #x-28MGL-PAX-3A-40LINKABLE-20MGL-PAX-3AGLOSSARY-TERM-29 "linkable"
   [7f1f]: #x-28MGL-PAX-3ADOCUMENT-DOCSTRING-20FUNCTION-29 "MGL-PAX:DOCUMENT-DOCSTRING FUNCTION"
+  [7f9a]: http://www.lispworks.com/documentation/HyperSpec/Body/m_deftp.htm "DEFTYPE (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [80e8]: #x-28MGL-PAX-3AWITH-HEADING-20MGL-PAX-3AMACRO-29 "MGL-PAX:WITH-HEADING MGL-PAX:MACRO"
   [8106]: #x-28MGL-PAX-3A-40M--2E-MINIBUFFER-SYNTAX-20MGL-PAX-3ASECTION-29 "`M-.` Minibuffer Syntax"
   [81b3]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhr.htm '"2.4.8.18" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -4218,6 +4239,7 @@ they are presented.
   [a249]: #x-28MGL-PAX-3ATRANSCRIPTION-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION"
   [a270]: #x-28MGL-PAX-3A-40ESCAPING-AUTOLINKING-20MGL-PAX-3ASECTION-29 "Escaping Autolinking"
   [a317]: https://daringfireball.net/projects/markdown/ "Markdown"
+  [a459]: dref/README.md#x-28DREF-3A-40DTYPES-20MGL-PAX-3ASECTION-29 "`DTYPE`s"
   [a595]: #x-28MGL-PAX-3A-40BROWSING-LIVE-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Browsing Live Documentation"
   [a5b1]: #x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION)"
   [a5ee]: #x-28MGL-PAX-3A-2ADOCUMENT-DOWNCASE-UPPERCASE-CODE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-DOWNCASE-UPPERCASE-CODE* VARIABLE"
@@ -4260,6 +4282,7 @@ they are presented.
   [c2d3]: #x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29 "Markdown Support"
   [c340]: dref/README.md#x-28DREF-3APSEUDO-LOCATIVE-TYPES-20FUNCTION-29 "DREF:PSEUDO-LOCATIVE-TYPES FUNCTION"
   [c434]: #x-28MGL-PAX-3A-40BROWSING-WITH-OTHER-BROWSERS-20MGL-PAX-3ASECTION-29 "Browsing with Other Browsers"
+  [c479]: dref/README.md#x-28CONDITION-20MGL-PAX-3ALOCATIVE-29 "CONDITION MGL-PAX:LOCATIVE"
   [c4a3]: http://www.lispworks.com/documentation/HyperSpec/Body/f_sin_c.htm "COS (MGL-PAX:CLHS FUNCTION)"
   [c4ce]: #x-28MGL-PAX-3A-40EXTENSION-API-20MGL-PAX-3ASECTION-29 "Writing Extensions"
   [c818]: #x-28MGL-PAX-3AOUTPUT-LABEL-20FUNCTION-29 "MGL-PAX:OUTPUT-LABEL FUNCTION"

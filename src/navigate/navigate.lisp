@@ -323,12 +323,32 @@
           (append (list-symbols-for-locative prefix locative) names)
           names))))
 
-(defun locative-types-for-emacs (prefix)
+;;; Return locative types and other symbols (e.g. OR, AND, NOT) from
+;;; which @DTYPES may be built. This is not exhaustive because (METHOD
+;;; () (NUMBER)) would also need NUMBER.
+(defun dtype-symbols-for-emacs (prefix)
   (with-swank ()
     (swank::with-buffer-syntax ()
       (swank/backend:converting-errors-to-error-location
-        `(:ok ,(mapcar (rcurry #'prin1-to-string/case (string-case prefix))
-                       (locative-types)))))))
+        `(:ok ,(mapcar (rcurry #'prin1-to-string/case
+                               (string-case prefix))
+                       (list* 'or 'and 'not 'member 'satisfies
+                              (locative-types-maybe-with-definitions))))))))
+
+(defun locative-types-maybe-with-definitions ()
+  (dref::sort-locative-types
+   (loop for locative-type in (locative-types)
+         unless (or (not (external-symbol-p locative-type))
+                    (not (locative-type-may-have-definitions-p locative-type)))
+           collect locative-type)))
+
+(defun locative-type-may-have-definitions-p (locative-type)
+  (eq 'dref::try-interned-symbols
+      (dref::map-names-for-type
+       (lambda (name)
+         (declare (ignore name))
+         (return-from locative-type-may-have-definitions-p t))
+       locative-type)))
 
 
 ;;;; The Common Lisp side of `mgl-pax-find-parent-section'

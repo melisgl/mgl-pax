@@ -2,13 +2,11 @@
 
 (in-readtable pythonic-string-syntax)
 
-(defun/autoloaded definitions (name &key (locative-types (lisp-locative-types)))
-  """Return all definitions as a list of [DREF][class]s LOCATEable
-  with NAME and a locative with one of LOCATIVE-TYPES.
+(defun/autoloaded definitions (name &key (dtype t))
+  """List all definitions of NAME that are of DTYPE as [DREFs][class].
 
   Just as `(DREF NAME LOCATIVE)` returns the canonical definition, the
-  DREF-NAMEs of returned by DEFINITIONS are different from NAME if
-  NAME is non-canonical:
+  DREF-NAMEs of returned by DEFINITIONS are different from NAME:
 
   ```cl-transcript
   (definitions "PAX")
@@ -23,31 +21,48 @@
   Similarly, DREF-LOCATIVE-TYPE may be more made more specific:
 
   ```cl-transcript
-  (definitions 'dref:locate-error :locative-types '(class))
+  (definitions 'dref:locate-error :dtype 'class)
   ==> (#<DREF LOCATE-ERROR CONDITION>)
   ```
 
   Can be extended via MAP-DEFINITIONS-OF-NAME."""
-  (delete-duplicates
-   (let ((drefs ())
-         (swank-locative-types ()))
-     (dolist (locative-type locative-types)
-       (check-valid-locative-type locative-type)
-       (let ((mapper (map-definitions-of-name (lambda (dref)
-                                                (push dref drefs))
-                                              name locative-type)))
-         (when (eq mapper 'swank-definitions)
-           (push locative-type swank-locative-types))))
-     (append drefs (swank-definitions name swank-locative-types)))
-   :test #'xref=))
+  (let ((drefs (definitions-with-locative-types name (cover-dtype dtype))))
+    (filter-drefs-by-dtype (delete-duplicates drefs :test #'xref=) dtype)))
+
+(defun definitions-with-locative-types (name locative-types)
+  (let ((drefs ())
+        (swank-locative-types ()))
+    (dolist (locative-type locative-types)
+      (let ((mapper (map-definitions-of-name (lambda (dref)
+                                               (push dref drefs))
+                                             name locative-type)))
+        (when (eq mapper 'swank-definitions)
+          (push locative-type swank-locative-types))))
+    (append drefs (swank-definitions name swank-locative-types))))
+
+(defun filter-drefs-by-dtype (drefs dtype)
+  ;; We use the fact that DREFS is the result
+  ;; DEFINITIONS-WITH-LOCATIVE-TYPES for (COVER-DTYPE DTYPE) as
+  ;; LOCATIVE-TYPES. The bound given by COVER-DTYPE is tight in some
+  ;; common cases, which we pick off to avoid the busywork of checking
+  ;; something that's always true.
+  ;;
+  ;; More generally, COVER-DTYPE could provide the minimal necessary
+  ;; type to check.
+  (if (or (find-locative-type dtype)
+          (member dtype '(t top pseudo)))
+      drefs
+      (loop for dref in drefs
+            when (dtypep dref dtype)
+              collect dref)))
 
 (defun/autoloaded dref-apropos (name &key package external-only case-sensitive
-                                     (locative-types '(:lisp)))
+                                     (dtype t))
   """Return a list of [DREF][class]s corresponding to existing
   definitions that match the various arguments. First, `(DREF-APROPOS
-  NIL :LOCATIVE-TYPES NIL)` lists all definitions in the running Lisp
-  and maybe more (e.g. [MGL-PAX:CLHS][locative]). Arguments with
-  non-NIL values filter the list of definitions.
+  NIL)` lists all definitions in the running Lisp and maybe more (e.g.
+  [MGL-PAX:CLHS][locative]). Arguments specify how the list of
+  definitions is filtered.
 
   DREF-APROPOS itself is similar to CL:APROPOS-LIST, but
 
@@ -74,18 +89,12 @@
   -->  #<DREF METHOD-COMBINATION CLASS> #<DREF METHOD-COMBINATION LOCATIVE>)
   ```
 
-  The list of LOCATIVE-TYPES, if non-NIL, filters out definitions
-  whose locative types are not listed:
+  Definitions that are not of DTYPE (see DTYPEP) are filtered out:
 
   ```cl-transcript
-  (dref-apropos "method" :package :dref :external-only t
-                :locative-types '(class))
+  (dref-apropos "method" :package :dref :external-only t :dtype 'class)
   ==> (#<DREF METHOD CLASS> #<DREF METHOD-COMBINATION CLASS>)
   ```
-
-  In the list, the special keywords :ALL, :LISP, :PSEUDO match all
-  LOCATIVE-TYPES, LISP-LOCATIVE-TYPES and PSEUDO-LOCATIVE-TYPES,
-  respectively.
 
   When PACKAGE is :NONE, only non-symbol @NAMES are matched:
 
@@ -130,15 +139,11 @@
   - If EXTERNAL-ONLY and `C` is a symbol, then `C` must be external in
     a matching package.
 
-  - If LOCATIVE-TYPES is NIL, then it matches everything.
-
-  - If LOCATIVE-TYPES is non-NIL, then the LOCATIVE-TYPE of the
-    candidate definition must be in it (handling :ALL,
-    :LISP, and :PSEUDO as described above).
+  - DTYPE matches candidate definition `D` if `(DTYPEP D DTYPE)`.
 
   Can be extended via MAP-REFERENCES-OF-TYPE and
   MAP-DEFINITIONS-OF-NAME."""
-  (let ((locative-types (expand-apropos-locative-types locative-types))
+  (let ((locative-types (cover-dtype dtype))
         (char-test (if case-sensitive #'char= #'char-equal))
         (string-test (if case-sensitive #'string= #'string-equal))
         (to-try ())
@@ -198,22 +203,11 @@
         (loop for symbol being the hash-key
                 in (matching-symbols #'matching-package-p #'matching-name-p
                                      external-only)
-              do (dolist (dref (definitions symbol :locative-types to-try))
+              do (dolist (dref (definitions-with-locative-types symbol to-try))
                    (push dref drefs))))
-      (sort-references (remove-duplicate-drefs/nonstable drefs)))))
-
-(defun expand-apropos-locative-types (locative-types)
-  (if locative-types
-      (delete-duplicates (loop for locative-type in locative-types
-                               append (case locative-type
-                                        ((:all) (locative-types))
-                                        ((:lisp) (lisp-locative-types))
-                                        ((:pseudo) (pseudo-locative-types))
-                                        (t
-                                         (check-valid-locative-type
-                                          locative-type)
-                                         (list locative-type)))))
-      (locative-types)))
+      (sort-references
+       (filter-drefs-by-dtype (remove-duplicate-drefs/nonstable drefs)
+                              dtype)))))
 
 (defun matching-symbols (package-pred symbol-pred external-only)
   (let ((h (make-hash-table)))

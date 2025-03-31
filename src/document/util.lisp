@@ -15,26 +15,23 @@
 (defvar *definitions-cache*)
 
 (defmacro with-definitions-cached (&body body)
-  `(let ((*definitions-cache* (make-hash-table :test 'equal))
-         (*non-local-locative-types* (set-difference (locative-types)
-                                                     *local-locative-types*)))
+  `(let ((*definitions-cache* (make-hash-table :test 'equal)))
      ,@body))
 
-(defparameter *local-locative-types* '(argument dislocated))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter *local-dtype* '(or argument dislocated)))
 
-(defvar *non-local-locative-types*)
+(defparameter *non-local-dtype* `(not ,*local-dtype*))
 
 (defun definitions* (name)
   (if (boundp '*definitions-cache*)
       (multiple-value-bind (drefs presentp) (gethash name *definitions-cache*)
         (unless presentp
-          (setq drefs (definitions name
-                                   :locative-types *non-local-locative-types*))
+          (setq drefs (definitions name :dtype *non-local-dtype*))
           (setf (gethash name *definitions-cache*) drefs))
         ;; @LOCAL-DEFINITIONs are not cacheable.
-        (append drefs (definitions name
-                                   :locative-types *local-locative-types*)))
-      (definitions name :locative-types (locative-types))))
+        (append drefs (definitions name :dtype *local-dtype*)))
+      (definitions name :dtype 'top)))
 
 
 ;;;; Like the DREF function and DEFINITIONS*, but for references and

@@ -113,7 +113,7 @@
 (declaim (special *first-pass*))
 
 (defmacro documenting-reference ((stream &key reference name package readtable
-                                           arglist)
+                                           (arglist nil arglistp))
                                  &body body)
   "Write REFERENCE to STREAM as described in
   *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a
@@ -130,13 +130,18 @@
     If either is NIL, then a default value is computed as described in
     @PACKAGE-AND-READTABLE.
 
-  - If ARGLIST is NIL, then it is not printed.
+  - ARGLIST:
 
-  - If ARGLIST is a list, then it is must be a [lambda list][clhs] and
-    is printed without the outermost parens and with the package names
-    removed from the argument names.
+      - If it is not provided, then it defaults to (ARGLIST
+        REFERENCE).
 
-  - If ARGLIST is a string, then it must be valid markdown.
+      - If NIL, then it is not printed.
+
+      - If it is a list, then it is must be a [lambda list][clhs] and
+        is printed without the outermost parens and with the package
+        names removed from the argument names.
+
+      - If its is a string, then it must be valid markdown.
 
   - It is not allowed to have WITH-HEADING within the [dynamic
     extent][clhs] of BODY."
@@ -152,7 +157,9 @@
               (,%reference (if ,%reference
                                (locate ,%reference)
                                *documenting-reference*))
-              (,%arglist ,arglist)
+              (,%arglist ,(if arglistp
+                              arglist
+                              (list 'arglist %reference)))
               (,%name ,name))
          (when *document-link-code*
            (anchor ,%reference ,%stream))

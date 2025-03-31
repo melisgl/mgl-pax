@@ -45,9 +45,11 @@
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/full/"
                 :serial t
-                :components ((:file "loaded")
+                :components ((:file "package")
+                             (:file "loaded")
                              (:file "util")
                              (:file "swank-util")
+                             (:file "dtype")
                              (:file "late")
                              (:file "source-location")
                              (:file "locatives")

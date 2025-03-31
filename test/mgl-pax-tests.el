@@ -354,8 +354,7 @@
 
 (ert-deftest test-mgl-pax-completions-at-point ()
   (let ((mgl-pax-completing-for 'navigate)
-        (n-locatives (length (mgl-pax-eval
-                              '(mgl-pax::locative-types-for-emacs "")))))
+        (n-locatives (slime-eval '(cl:length (dref:locative-types)))))
     (with-temp-lisp-buffer
      (insert "prin1-to-str")
      ;; This is left for Slime to complete.
@@ -370,8 +369,12 @@
                     (length (cl-third (mgl-pax-completions-at-point))))))
        (let ((mgl-pax-completing-for 'apropos))
          ;; For apropos, the name has no effect.
-         (should (= (length (cl-third (mgl-pax-completions-at-point)))
-                    n-locatives))))
+         (mgl-pax-completions-at-point)
+         (should (seq-set-equal-p
+                  (cl-third (mgl-pax-completions-at-point))
+                  (cl-second
+                   (slime-eval '(mgl-pax::dtype-symbols-for-emacs "")))
+                  'equal))))
      (insert "\nclass dref:")
      (should (seq-set-equal-p
               (cl-third (mgl-pax-completions-at-point))

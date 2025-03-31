@@ -5,6 +5,7 @@
 (defsection @dref-manual (:title "DRef Manual")
   (@introduction section)
   (@locatives-and-references section)
+  (@dtypes section)
   (@listing-definitions section)
   (@operations section)
   (@locative-types section)
@@ -118,9 +119,8 @@
   the list locative types built into DRef, and MGL-PAX::@PAX-LOCATIVES
   for those in PAX.
 
-  Locative types are similar to Lisp [namespaces][clhs].
-
-  See XREF-LOCATIVE-TYPE and DREF-LOCATIVE-TYPE.")
+  See XREF-LOCATIVE-TYPE, DREF-LOCATIVE-TYPE and EXPAND-DTYPE, that
+  expands the compound @DTYPES to a list of locative types.")
 
 (define-glossary-term @reference (:title "reference")
   "A reference is a @NAME plus a @LOCATIVE, and it identifies a
@@ -486,6 +486,48 @@
              nil)))))
 
 
+(defsection @dtypes (:title "DTYPEs")
+  """DTYPEs are a generalization Lisp types, to support definitions
+  without first-class objects. A DTYPE is either
+
+  - a normal Lisp [type][(clhs section)] such as `\METHOD`,
+    `(integer 3 5)`, [NIL][type] and [T][type], or
+
+  - a @LOCATIVE-TYPE such as [TYPE][locative] and [CLHS][locative], or
+
+  - a full @LOCATIVE such as `(METHOD () (NUMBER))` and `(CLHS
+    SECTION)`, or
+
+  - named with DEFINE-DTYPE, or
+
+  - a combination of the previous with [AND][type], [OR][type] and
+    [NOT][type].
+
+  Just as @LOCATIVE-TYPEs extend the Lisp CLASS hierarchy, DTYPEs
+  extend the Lisp type hierarchy. DTYPEs are used in DEFINITIONS and
+  DREF-APROPOS to filter the set of definitions as in
+
+  ```cl-transcript
+  (definitions 'print :dtype '(not unknown))
+  ==> (#<DREF PRINT (CLHS FUNCTION)> #<DREF PRINT FUNCTION>)
+  ```
+
+  ```cl-transcript
+  (dref-apropos "type specifier" :dtype 'pseudo)
+  ==> (#<DREF "1.4.4.6" #1=(CLHS SECTION)> #<DREF "1.4.4.6.1" #1#>
+  -->  #<DREF "1.4.4.6.2" #1#> #<DREF "1.4.4.6.3" #1#>
+  -->  #<DREF "1.4.4.6.4" #1#> #<DREF "4.2.3" #1#>
+  -->  #<DREF "atomic type specifier" #2=(CLHS GLOSSARY-TERM)>
+  -->  #<DREF "compound type specifier" #2#>
+  -->  #<DREF "derived type specifier" #2#> #<DREF "type specifier" #2#>)
+  ```
+  """
+  (define-dtype macro)
+  (top dtype)
+  (pseudo dtype)
+  (dtypep function))
+
+
 (defsection @listing-definitions (:title "Listing Definitions")
   (definitions function)
   (dref-apropos function)
@@ -522,26 +564,32 @@
 
 (defun locative-types ()
   "Return a list of non-[alias][locative-aliases] locative types.
-  This is the UNION of LISP-LOCATIVE-TYPES and PSEUDO-LOCATIVE-TYPES."
+  This is the UNION of LISP-LOCATIVE-TYPES and PSEUDO-LOCATIVE-TYPES,
+  which is the set of constituents of the DTYPE TOP."
   *locative-types*)
 
 (defun lisp-locative-types ()
   "Return the locative types that correspond to Lisp definitions,
   which typically have SOURCE-LOCATION. These are defined with
-  DEFINE-LOCATIVE-TYPE."
+  DEFINE-LOCATIVE-TYPE and are the constituents of DTYPE T."
   *lisp-locative-types*)
 
 (defun pseudo-locative-types ()
   "Return the locative types that correspond to non-Lisp definitions.
-  These are the ones defined with DEFINE-PSEUDO-LOCATIVE-TYPE."
+  These are the ones defined with DEFINE-PSEUDO-LOCATIVE-TYPE and are
+  the constituents of DTYPE PSEUDO."
   *pseudo-locative-types*)
 
 (defun locative-aliases ()
   "Return the list of locatives aliases, defined with DEFINE-LOCATIVE-ALIAS."
   *locative-aliases*)
 
-(defun check-valid-locative-type (locative-type)
-  (unless (member locative-type *locative-types*)
+(declaim (inline find-locative-type))
+(defun find-locative-type (object)
+  (find object *locative-types*))
+
+(defun check-locative-type (locative-type)
+  (unless (find-locative-type locative-type)
     (error "~@<~S is not a valid ~S.~:@>" locative-type '@locative-type)))
 
 

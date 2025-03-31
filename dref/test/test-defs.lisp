@@ -40,6 +40,7 @@
       :documentation "FOO-W (writer foo)"))
   (:documentation "FOO class"))
 (defclass unexported-class () ())
+(defclass subclass (class) ())
 (defvar foo-a nil
   "FOO-A variable")
 (defvar foo-r)
@@ -64,6 +65,9 @@
   "BAR macro"
   (declare (ignore x y z))
   nil)
+(deftype type-number () 'number)
+(deftype type-subclass () 'subclass)
+(deftype type-or-number-and-subclass () '(or number subclass))
 (deftype bar (x &rest r)
   "BAR type"
   (declare (ignore x r))

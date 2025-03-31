@@ -9,7 +9,7 @@
   INITFORM, or if not specified, the global value of the variable is
   to be used for @PRESENTATION.
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (dref '*print-length* 'variable)
   ==> #<DREF *PRINT-LENGTH* VARIABLE>
   ```
@@ -80,7 +80,9 @@
 
 ;;;; MACRO locative
 
-;;; FIXME: Resolve if we can?
+;;; FIXME: Resolve if we can? Also, note that MACRO-FUNCTION returns a
+;;; [FUNCTION][class] object, but (LOCATIVE-SUBTYPE-P 'MACRO
+;;; 'FUNCTION) is NIL.
 (define-locative-type macro ()
   "Refers to a global macro, typically defined with DEFMACRO, or to a
   [special operator][SPECIAL-OPERATOR-P FUNCTION].
@@ -207,7 +209,7 @@
   References to setf functions RESOLVE to the function object. Setf
   expander references do not RESOLVE.")
 
-(define-definition-class setf setf-dref)
+(define-definition-class setf setf-dref (function-dref))
 
 (defmethod dref* (symbol (locative-type (eql 'setf)) locative-args)
   (check-locative-args setf locative-args)
@@ -283,7 +285,7 @@
   [setf functions][clhs]). It is also allowed to reference
   GENERIC-FUNCTIONs as FUNCTIONs:
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (dref 'docstring 'function)
   ==> #<DREF DOCSTRING FUNCTION>
   ```")
@@ -385,7 +387,7 @@
   are similar to the CL:FIND-METHOD's arguments of the same names. For
   example, the method
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (defgeneric foo-gf (x y z)
     (:method :around (x (y (eql 'xxx)) (z string))
       (values x y z)))
@@ -393,7 +395,7 @@
 
   can be referred to as
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (dref 'foo-gf '(method (:around) (t (eql xxx) string)))
   ==> #<DREF FOO-GF (METHOD (:AROUND) (T (EQL XXX) STRING))>
   ```
@@ -552,9 +554,9 @@
 (define-locative-type writer (class-name)
   "Like [ACCESSOR][locative], but refers to a :WRITER method in a DEFCLASS.")
 
-(define-definition-class accessor accessor-dref)
-(define-definition-class reader reader-dref)
-(define-definition-class writer writer-dref)
+(define-definition-class reader reader-dref (method-dref))
+(define-definition-class writer writer-dref (method-dref))
+(define-definition-class accessor accessor-dref (reader-dref writer-dref))
 
 (defmethod dref* (symbol (locative-type (eql 'accessor))
                          locative-args)
@@ -700,7 +702,8 @@
   DREF-APROPOS will return FUNCTION references instead. On such
   platforms, STRUCTURE-ACCESSOR references do not RESOLVE.")
 
-(define-definition-class structure-accessor structure-accessor-dref)
+(define-definition-class structure-accessor structure-accessor-dref
+    (function-dref))
 
 (defmethod dref* (symbol (locative-type (eql 'structure-accessor))
                          locative-args)
@@ -761,16 +764,20 @@
 ;;;; TYPE locative
 
 (define-locative-type type ()
-  "This locative can refer to any Lisp type and [compound type
-  specifiers][clhs] such as [AND][type]. For types defined with
-  DEFTYPE, their ARGLIST is available. [CLASSes][class] and
-  [CONDITIONs][type] may be referred to as TYPEs:
+  "This locative can refer to [types and classes][clhs] and
+  [conditions][clhs], simply put, to things defined by DEFTYPE,
+  DEFCLASS and DEFINE-CONDITION.
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
+  (deftype my-type () t)
+  (dref 'my-type 'type)
+  ==> #<DREF MY-TYPE TYPE>
+  ```
+  ```cl-transcript (:dynenv dref-std-env)
   (dref 'xref 'type)
   ==> #<DREF XREF CLASS>
   ```
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (dref 'locate-error 'type)
   ==> #<DREF LOCATE-ERROR CONDITION>
   ```
@@ -787,8 +794,7 @@
                #-(or abcl allegro clisp cmucl ecl sbcl)
                (swank-backend:type-specifier-p symbol)
                #+sbcl
-               (or (find-class symbol nil)
-                   (sb-int:info :type :expander symbol)))
+               (sb-ext:defined-type-name-p symbol))
     (locate-error "~S is not a valid type specifier." symbol))
   (%make-dref 'type-dref symbol (cons locative-type locative-args)))
 
@@ -820,12 +826,8 @@
 
 (define-locative-type class ()
   "Naturally, CLASS is the locative type for [CLASS][class]es.
-  [CONDITIONs][type] may be referred to as CLASSes:
 
-  ```cl-transcript
-  (dref 'locate-error 'class)
-  ==> #<DREF LOCATE-ERROR CONDITION>
-  ```")
+  Also, see the related CONDITION locative.")
 
 (define-definition-class class class-dref (type-dref))
 
@@ -860,16 +862,26 @@
 ;;;; CONDITION locative
 
 (define-locative-type condition ()
-  "CONDITION is the locative type for [CONDITION][condition]s.")
+  "Although CONDITION is not SUBTYPEP of CLASS, actual condition
+  objects are commonly instances of a condition class that is a CLOS
+  class. HyperSpec [ISSUE:CLOS-CONDITIONS][clhs] and
+  [ISSUE:CLOS-CONDITIONS-AGAIN][clhs] provide the relevant history.
 
-(define-definition-class condition condition-dref (class-dref))
+  Whenever a CLASS denotes a CONDITION, its DREF-LOCATIVE-TYPE will be
+  CONDITION:
+
+  ```cl-transcript (:dynenv dref-std-env)
+  (dref 'locate-error 'class)
+  ==> #<DREF LOCATE-ERROR CONDITION>
+  ```")
+
+(define-definition-class condition condition-dref (type-dref))
 
 (defmethod dref* (symbol (locative-type (eql 'condition))
                          locative-args)
   (check-locative-args condition locative-args)
   (let ((class (and (symbolp symbol) (find-class symbol nil))))
-    (unless (and class
-                 (subtypep class 'condition))
+    (unless (and class (subtypep class 'condition))
       (locate-error "~S does not name a condition class." symbol))
     (%make-dref 'condition-dref symbol 'condition)))
 
@@ -878,6 +890,12 @@
     (dref (dref-name dref) 'condition nil)))
 
 (add-dref-actualizer 'actualize-class-to-condition)
+
+(defmethod resolve* ((dref condition-dref))
+  (find-class (dref-name dref)))
+
+(defmethod docstring* ((dref condition-dref))
+  (documentation* (find-class (dref-name dref)) t))
 
 (defmethod source-location* ((dref condition-dref))
   (swank-source-location* (resolve dref) (dref-name dref) 'condition))
@@ -970,7 +988,7 @@
 ;;;; ASDF:SYSTEM locative
 
 (define-locative-type asdf:system ()
-  "Refers to a registered ASDF:SYSTEM.
+  "Refers to an already loaded ASDF:SYSTEM (those in ASDF:REGISTERED-SYSTEMS).
   The @NAME may be anything ASDF:FIND-SYSTEM supports.
 
   ASDF:SYSTEM is not EXPORTABLE-LOCATIVE-TYPE-P.")
@@ -1094,6 +1112,52 @@
   '(:error "Don't know how find the source location of readtables."))
 
 
+;;;; DTYPE locative
+
+(define-locative-type dtype ()
+  "Locative for @DTYPES defined with DEFINE-DTYPE and LOCATIVE types.
+  DTYPE is to LOCATIVE as TYPE is to CLASS.
+
+  The TOP of the DTYPE hiearchy:
+
+  ```cl-transcript
+  (dref 'top 'dtype)
+  ==> #<DREF TOP DTYPE>
+  ```
+
+  This very definition:
+
+  ```cl-transcript
+  (dref 'dtype 'locative)
+  ==> #<DREF DTYPE LOCATIVE>
+  ```")
+
+(define-definition-class dtype dtype-dref)
+
+(defmethod dref* (name (locative-type (eql 'dtype)) locative-args)
+  (check-locative-args dtype locative-args)
+  (if (gethash name *dtype-expanders*)
+      (%make-dref 'dtype-dref name 'dtype)
+      (dref name 'locative)))
+
+(defun dtype-dummy-method (name)
+  (find-method* #'dtype-dummy () `((eql ,name))))
+
+(defmethod arglist* ((dref dtype-dref))
+  (values (dtype-dummy (dref-name dref)) :destructuring))
+
+(defmethod docstring* ((dref dtype-dref))
+  (multiple-value-bind (arglist docstring package)
+      (dtype-dummy (dref-name dref))
+    (declare (ignore arglist))
+    (values docstring package)))
+
+(defmethod source-location* ((dref dtype-dref))
+  (let ((name (dref-name dref)))
+    (swank-source-location* (dtype-dummy name) 'dtype-dummy
+                            `(method () ((eql ,name))))))
+
+
 ;;;; LOCATIVE locative
 
 (define-locative-type locative ()
@@ -1107,7 +1171,7 @@
   => \"(define-locative-type macro ()\"
   ```")
 
-(define-definition-class locative locative-dref)
+(define-definition-class locative locative-dref (dtype-dref))
 
 (defmethod dref* (symbol (locative-type (eql 'locative)) locative-args)
   (check-locative-args locative locative-args)
@@ -1169,8 +1233,8 @@
   on SBCL.
 
   ```cl-transcript (:dynenv dref-std-env)
-  (definitions 'double-float :locative-types (locative-types))
-  ==> (#<DREF DOUBLE-FLOAT (CLHS TYPE)> #<DREF DOUBLE-FLOAT CLASS>
+  (definitions 'double-float)
+  ==> (#<DREF DOUBLE-FLOAT CLASS>
   -->  #<DREF DOUBLE-FLOAT (UNKNOWN (:DEFINE-ALIEN-TYPE DOUBLE-FLOAT))>)
   ```
 

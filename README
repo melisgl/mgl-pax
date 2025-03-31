@@ -633,6 +633,9 @@ When @GENERATING-DOCUMENTATION, @AUTOLINKing behaves similary.
 To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
 
 - [locative] SECTION
+    - Equivalent class: [SECTION][5fac]
+    
+    - Direct super locative types: [VARIABLE][6c83]
 
     Refers to a SECTION defined by DEFSECTION.
     
@@ -640,6 +643,9 @@ To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
     default (see EXPORTABLE-REFERENCE-P).
 
 - [locative] GLOSSARY-TERM
+    - Equivalent class: [GLOSSARY-TERM][8251]
+    
+    - Direct super locative types: [VARIABLE][6c83]
 
     Refers to a GLOSSARY-TERM defined by DEFINE-GLOSSARY-TERM.
     
@@ -1548,13 +1554,14 @@ docstrings.
 
 ##### The STRING Argument of `mgl-pax-apropos`
 
-The STRING argument consists of a name pattern and a list of
-DREF::@LOCATIVE-TYPEs.
+The STRING argument consists of a name pattern and a DTYPE.
 
 The name pattern has the following forms.
 
 - `:print` matches definitions whose names are the string `print`
-  or a symbol with SYMBOL-NAME `print`.
+  or a symbol with SYMBOL-NAME `print`. Vertical bar form as in
+  `:|prInt|` is also also supported and is useful in when
+  CASE-SENSITIVE is true.
 
 - `"print"` matches definitions whose names contain `print` as
   a substring.
@@ -1565,9 +1572,11 @@ The name pattern has the following forms.
 
 - The empty string matches everything.
 
-After the name pattern, STRING may contain a list of locative
-types. These are READ following normal Lisp rules. If some locative
-types are given, then the matches are restricted to them.
+After the name pattern, STRING may contain a
+DTYPE that the definitions must match.
+
+- `print t` matches definitions with LISP-LOCATIVE-TYPES, which is
+  the default (equivalent to `print`).
 
 - `print function` matches functions whose names contain
   `print` (e.g. CL:PRINT and CL:PPRINT).
@@ -1577,20 +1586,19 @@ types are given, then the matches are restricted to them.
 
 - `print variable` matches for example *PRINT-ESCAPE*.
 
-- `print variable function` matches all variables and functions
+- `print (or variable function)` matches all variables and functions
   with `print` in their names.
 
+- `array (or type (not class))` matches DEFTYPEs and but not CLASSes
+  with the string `array` in their names.
+
 - &nbsp;`pax:section` (note the leading space) matches all PAX
-  sections (note that EXTERNAL-ONLY NIL is necessary to see most of
-  them).
+  sections (EXTERNAL-ONLY NIL is necessary to see many of them).
 
-- `print :lisp` matches definitions with
-  LISP-LOCATIVE-TYPES, which is the default.
+- `print dref:pseudo` matches definitions with PSEUDO-LOCATIVE-TYPES
+  such as MGL-PAX:CLHS.
 
-- `print :pseudo` matches definitions with
-  PSEUDO-LOCATIVE-TYPES such as MGL-PAX:CLHS.
-
-- `print :all` matches definitions with all locative
+- `print dref:top` matches definitions with all locative
   types (LOCATIVE-TYPES).
 
 
@@ -2477,8 +2485,14 @@ printed is the locative's CLASS-NAME argument if provided.
 list of immediate superclasses with STANDARD-OBJECT, CONDITION and
 non-exported symbols omitted.
 
+- For definitions with a CONDITION locative, the arglist printed is
+the list of immediate superclasses with STANDARD-OBJECT, CONDITION
+and non-exported symbols omitted.
+
 - For definitions with a ASDF:SYSTEM locative, their most
 important slots are printed as an unnumbered list.
+
+- document-object\* (method () (locative-dref t))
 
 - When documentation is being generated for a definition with
 the SECTION locative, a new (sub)section is opened (see
@@ -3466,7 +3480,7 @@ are for writing new DOCUMENT-OBJECT\* methods, which emit markdown.
     anchors based on the definition of OBJECT. LINK-TITLE-TO
     behaves like the LINK-TITLE-TO argument of DEFSECTION.
 
-- [macro] DOCUMENTING-REFERENCE (STREAM &KEY REFERENCE NAME PACKAGE READTABLE ARGLIST) &BODY BODY
+- [macro] DOCUMENTING-REFERENCE (STREAM &KEY REFERENCE NAME PACKAGE READTABLE (ARGLIST NIL)) &BODY BODY
 
     Write REFERENCE to STREAM as described in
     *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a
@@ -3483,13 +3497,18 @@ are for writing new DOCUMENT-OBJECT\* methods, which emit markdown.
       If either is NIL, then a default value is computed as described in
       @PACKAGE-AND-READTABLE.
     
-    - If ARGLIST is NIL, then it is not printed.
+    - ARGLIST:
     
-    - If ARGLIST is a list, then it is must be a lambda list and
-      is printed without the outermost parens and with the package names
-      removed from the argument names.
+        - If it is not provided, then it defaults to (ARGLIST
+          REFERENCE).
     
-    - If ARGLIST is a string, then it must be valid markdown.
+        - If NIL, then it is not printed.
+    
+        - If it is a list, then it is must be a lambda list and
+          is printed without the outermost parens and with the package
+          names removed from the argument names.
+    
+        - If its is a string, then it must be valid markdown.
     
     - It is not allowed to have WITH-HEADING within the dynamic
       extent of BODY.
@@ -3590,6 +3609,7 @@ they are presented.
     A string or NIL.
 
   [5fac]: #x-28MGL-PAX-3ASECTION-20CLASS-29 "MGL-PAX:SECTION CLASS"
+  [6c83]: dref/README#x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29 "VARIABLE MGL-PAX:LOCATIVE"
   [8251]: #x-28MGL-PAX-3AGLOSSARY-TERM-20CLASS-29 "MGL-PAX:GLOSSARY-TERM CLASS"
 
 * * *
