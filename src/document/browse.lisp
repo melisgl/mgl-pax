@@ -564,7 +564,9 @@
                                (= i (1- n-entries)))
                       (format out "and "))
                     (apply #'format out entry))
-           (format out ".~%")))))))
+           ;; KLUDGE: The second newline makes 3BMD emit the "Also,
+           ;; see ..." string in paragraph in HTML.
+           (format out ".~%~%")))))))
 
 (defun find-reference-package (reference)
   (let ((name (xref-name reference)))
