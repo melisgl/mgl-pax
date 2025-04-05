@@ -1180,8 +1180,8 @@
 (defmethod dref* (symbol (locative-type (eql 'locative)) locative-args)
   (check-locative-args locative locative-args)
   ;; Faster than calling LOCATIVE-TYPE-LAMBDA-LIST-METHOD-FOR-SYMBOL.
-  (when (nth-value 1 (ignore-errors
-                      (values (locative-type-lambda-list symbol))))
+  (unless (or (find-locative-type symbol)
+              (find symbol *locative-aliases*))
     (locate-error "~S is not a valid locative." symbol))
   (%make-dref 'locative-dref symbol 'locative))
 
