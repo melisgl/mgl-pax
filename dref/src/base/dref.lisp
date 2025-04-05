@@ -355,6 +355,8 @@
 (declaim (ftype function locate*)
          (ftype function actualize-dref))
 
+(defvar *ignore-locate-error* nil)
+
 (defun locate (object &optional (errorp t))
   """Return a [DREF][class] representing the definition given by the arguments.
   In the same [dynamic environment][clhs], two DREFs denote the same
@@ -378,8 +380,7 @@
 
   LOCATE-ERROR is signalled if OBJECT is an XREF with malformed
   LOCATIVE-ARGS, or if no corresponding definition is found. If ERRORP
-  is NIL, then NIL and the LOCATE-ERROR condition are returned
-  instead.
+  is NIL, then NIL is returned instead.
 
   ```cl-transcript (:dynenv dref-std-env)
   (locate (xref 'no-such-function 'function))
@@ -409,7 +410,8 @@
     (if errorp
         (locate-1)
         (handler-case
-            (locate-1)
+            (let ((*ignore-locate-error* t))
+              (locate-1))
           (locate-error (error)
             (values nil error))))))
 

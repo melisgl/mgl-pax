@@ -198,6 +198,12 @@
 
 (defvar *locating-object*)
 
+;;; To speed LOCATE up, when we know that the actual condition object
+;;; does not matter (because *IGNORE-LOCATE-ERROR* is true), use this
+;;; premade one.
+(defvar *dummy-locate-error*
+  (make-condition 'locate-error :object nil :message "" :message-args nil))
+
 (defun locate-error (&optional format-control &rest format-args)
   "Call this function to signal a LOCATE-ERROR condition from the
   [dynamic extent][clhs] of a LOCATE* method (which includes
@@ -205,10 +211,12 @@
 
   FORMAT-CONTROL, if non-NIL, is a [format control][clhs] for which
   FORMAT-ARGS are suitable."
-  (error 'locate-error
-         :object *locating-object*
-         :message (and (not (equal format-control "")) format-control)
-         :message-args format-args))
+  (if *ignore-locate-error*
+      (error *dummy-locate-error*)
+      (error 'locate-error
+             :object *locating-object*
+             :message (and (not (equal format-control "")) format-control)
+             :message-args format-args)))
 
 (defvar *dref-actualizers* ())
 
