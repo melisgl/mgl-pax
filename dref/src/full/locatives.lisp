@@ -921,9 +921,13 @@
 
 (define-definition-class declaration declaration-dref)
 
-(defvar *ansi-declarations*
-  '(compilation-speed debug declaration dynamic-extent ftype ignorable
-    ignore inline notinline optimize safety space special speed type))
+(defparameter *ansi-declarations*
+  (alexandria:plist-hash-table
+   (loop for symbol in '(compilation-speed debug declaration dynamic-extent
+                         ftype ignorable ignore inline notinline optimize
+                         safety space special speed type)
+         append (list symbol t))
+   :test #'eq))
 
 #+sbcl
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -933,7 +937,7 @@
                          locative-args)
   (check-locative-args declaration locative-args)
   (unless (and (symbolp symbol)
-               (or (find symbol *ansi-declarations*)
+               (or (gethash symbol *ansi-declarations*)
                    #+allegro (find symbol (system:declaration-information
                                            'declaration))
                    #+ccl (find symbol (ccl:declaration-information
