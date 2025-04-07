@@ -1233,6 +1233,7 @@
       (when (eq (parse-locative definition) 'docstring)
         (let ((label-string (parse-tree-to-text label :deemph t)))
           (if-let (dref (parse-dref label-string))
+            ;; FIXME: handle PACKAGE and NIL docstring?
             (when-let (docstring (docstring dref))
               (values (or (parse-markdown (sanitize-docstring docstring))
                           '(""))

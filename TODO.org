@@ -1,7 +1,7 @@
 #+STARTUP: overview
 #+SEQ_TODO: TODO(t@) NEXT(n@) STARTED(s@) WAITING(w@) | DONE(d@) OLD(o@) CANCELLED(c@)
 #+TODO: MAYBE(m@) FAILED(f@) LOG(l@) DEFERRED(e@) BUG(b@)
-* locatives
+* dref
 ** BUG (low) METHOD dspec parsing is incorrect
 e.g. SB-PCL::MAKE-SPECIALIZER-FORM-USING-CLASS One cannot tell method
 qualifiers from specializers in the dspec without actually consulting
@@ -36,6 +36,49 @@ Let MAP-NAMES-FOR-TYPE somehow specify whether matching is case-
 sensitive?
 
 There is always mgl-pax-apropos for case-insensitive matching.
+** MAYBE add SYMBOL as an alias for dislocated?
+** MAYBE add source locative
+That is, link to github, without documenting anything. Useful for code
+examples without actually INCLUDEing them. Does/should LAMBDA do this?
+** MAYBE DEFINE-DEFINITION-CLASS shouldn't even exist but be incorporated into DEFINE-LOCATIVE-TYPE?
+Apart from the syntactic difference, SUPERCLASSES would be expressed
+in terms of locative types, not classes, and SUPERCLASSES would be
+determined from that.
+
+Do all have definition classes? No, some of the pseudo don't.
+** DONE compare DRef to the Definitions library
+Pros of DRef:
+- Supports string names (called designators in Definitions). PAX needs
+  to distinguish those from symbol-based ones.
+- Operations such as ARGLIST (~ DEFINITIONS:ARGUMENTS) can be
+  specialized on normal objects for RESOLVEable definitions. In
+  Definitions, operations are always specialized on a DEFINITION
+  subclass, which can result in unnecessary duplication of the
+  hierarchy.
+- (LOCATE #'PRINT) is fast, the equivalent DEFINITIONS:WHO-DEFINES is
+  very slow. DRef uses this to allow specialization of ARGLIST on
+  either object or definition type.
+- Can LOCATE a single unresolvable definition (e.g. (DREF 'XXX
+  'VARIABLE)). Definitions only has WHO-DEFINES, which needs the
+  OBJECT of the definition. Needed by PAX.
+- DRef supports Swank buffer source locations when running under
+  Slime. Needed by PAX.
+- DRef has XREFs, which do not need even the locative type to be
+  defined when they are created. Needed by PAX.
+- DREF-APROPOS more flexible. Needed by PAX.
+- ARGLIST returns the type of arglist.
+- DOCSTRING returns the package if available. Needed by PAX.
+- The DRef packages can be :USEd without conflicts with CL.
+  Definitions shadows CL:SYMBOL, CL:PACKAGE, CL:CLASS, etc.
+- DRef supports only 7 Lisps, Definitions 3.
+- DRef has an extensive test suite. Definitions has no tests.
+- DRef has extensive documentation.
+
+Pros of Definitions:
+- Definitions has BIND, (SETF OBJECT), UNBIND, (SETF DOCUMENTATION).
+  These can be added to DRef if needed.
+** TODO add MARK-SOURCE-LOCATION (DREF)
+* navigate
 ** BUG (low) locative completion: nicknames don't work
 print f<TAB> -> "print function"
 print dref:f<TAB> -> no completions
@@ -49,11 +92,7 @@ second sexp, which should be informed by the first sexp.
 
 Normal completion includes nicknames as "pax:" without relisting all
 symbols.
-** MAYBE add SYMBOL as an alias for dislocated?
-** MAYBE add source locative
-That is, link to github, without documenting anything. Useful for code
-examples without actually INCLUDEing them. Does/should LAMBDA do this?
-** MAYBE DEFINE-DEFINITION-CLASS shouldn't even exist but be incorporated into DEFINE-LOCATIVE-TYPE?
+
 * document
 ** OPT parse and print markdown once when *format* is :html?
 This would involve rewriting everything to emit parse tree fragments or be able to produce html directly. Either way, it is not without cost.
@@ -111,6 +150,7 @@ linking all locatives in the running lisp, which makes no sense in
 offline documentation.
 
 Maybe this is a special case of dynamically generated documentation.
+** MAYBE live browsing: allow filtering out local definitions when there is a clhs definition?
 * apropos
 ** MAYBE when exported by pax, we know the exact definition being exported
 mgl-pax-apropos-package could take advantage?
@@ -128,6 +168,22 @@ Well, it's a kind of output, but maybe it would be better for
 consistency checking to treat it as a different kind of output. First,
 capturing interaction with the debugger needs to be though out though.
 ** MAYBE (values 1 2) => 1, 2 on a single line?
+** BUG mgl-pax-transcribe-last-expression is confused
+This works in org-mode, but get "unbalanced parenthesis" in lisp-mode:
+;;; (1+
+;;;  2)
+;;; => 3
+due to a difference in the behaviour of backward-sexp.
+
+STRIP-LONGEST-COMMON-PREFIX and PREFIX-LINES should happen in Elisp, or point could be passed to CL.
+
+Also:
+
+;;; Consider (1+ 2)
+;;; .. debugger invoked on UNBOUND-VARIABLE:
+;;; ..   The variable CONSIDER is unbound.
+;;; => 3
+
 * elisp
 ** MAYBE support SLY?
 ** MAYBE support elisp function and variable locatives?
@@ -165,37 +221,6 @@ expands to
   ;; Just for the name, really. Maybe control what it can close over?
   (subfoo ()
    ))
-* DONE compare DRef to the Definitions library
-Pros of DRef:
-- Supports string names (called designators in Definitions). PAX needs
-  to distinguish those from symbol-based ones.
-- Operations such as ARGLIST (~ DEFINITIONS:ARGUMENTS) can be
-  specialized on normal objects for RESOLVEable definitions. In
-  Definitions, operations are always specialized on a DEFINITION
-  subclass, which can result in unnecessary duplication of the
-  hierarchy.
-- (LOCATE #'PRINT) is fast, the equivalent DEFINITIONS:WHO-DEFINES is
-  very slow. DRef uses this to allow specialization of ARGLIST on
-  either object or definition type.
-- Can LOCATE a single unresolvable definition (e.g. (DREF 'XXX
-  'VARIABLE)). Definitions only has WHO-DEFINES, which needs the
-  OBJECT of the definition. Needed by PAX.
-- DRef supports Swank buffer source locations when running under
-  Slime. Needed by PAX.
-- DRef has XREFs, which do not need even the locative type to be
-  defined when they are created. Needed by PAX.
-- DREF-APROPOS more flexible. Needed by PAX.
-- ARGLIST returns the type of arglist.
-- DOCSTRING returns the package if available. Needed by PAX.
-- The DRef packages can be :USEd without conflicts with CL.
-  Definitions shadows CL:SYMBOL, CL:PACKAGE, CL:CLASS, etc.
-- DRef supports only 7 Lisps, Definitions 3.
-- DRef has an extensive test suite. Definitions has no tests.
-- DRef has extensive documentation.
-
-Pros of Definitions:
-- Definitions has BIND, (SETF OBJECT), UNBIND, (SETF DOCUMENTATION).
-  These can be added to DRef if needed.
 * MAYBE swap the MGL-PAX package name with the PAX nickname
 ... somehow without breaking existing URLs, which have
 MGL-PAX:<LOCATIVE> all over them?
