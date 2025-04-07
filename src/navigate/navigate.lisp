@@ -252,14 +252,15 @@
                                      &key (definitions #'definitions))
   (with-swank ()
     (swank::with-buffer-syntax ()
-      `(:names ,(mapcar (rcurry #'prin1-to-string/case (string-case prefix))
+      `(:names ,(mapcar (rcurry #'prin1-to-string/case
+                                (guess-print-case prefix))
                         (names-or-locatives-for-emacs-1 sexp-1 prefix
                                                         definitions))))))
 
-(defun string-case (string)
-  (if (some #'lower-case-p string)
-      :downcase
-      :upcase))
+(defun guess-print-case (string)
+  (if (some #'upper-case-p string)
+      :upcase
+      :downcase))
 
 (defun names-or-locatives-for-emacs-1 (sexp-1 prefix definitions)
   (let ((locative (parse-locative sexp-1)))
@@ -277,7 +278,7 @@
 
 (defun list-symbols-for-locative (prefix locative)
   (let ((symbols ())
-        (print-fn (rcurry #'prin1-to-string/case (string-case prefix))))
+        (print-fn (rcurry #'prin1-to-string/case (guess-print-case prefix))))
     (flet ((consider (symbol)
              (when (and (or (null prefix)
                             (starts-with-subseq prefix
@@ -331,7 +332,7 @@
     (swank::with-buffer-syntax ()
       (swank/backend:converting-errors-to-error-location
         `(:ok ,(mapcar (rcurry #'prin1-to-string/case
-                               (string-case prefix))
+                               (guess-print-case prefix))
                        (list* 'or 'and 'not 'member 'satisfies
                               (locative-types-maybe-with-definitions))))))))
 
