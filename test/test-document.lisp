@@ -1090,18 +1090,22 @@ This is [Self-referencing][e042].
     `FOO2` has args [`OOK`][0e7e] and `X`.")))
 
 (when (fboundp 'encapsulated-function)
-  (untrace encapsulated-function))
+  (handler-bind ((warning #'muffle-warning))
+    (untrace encapsulated-function)))
 (defun encapsulated-function (x &rest args)
   "This may be encapsulated."
   (declare (ignore x args))
   nil)
-(trace encapsulated-function)
+(handler-bind ((warning #'muffle-warning))
+  (trace encapsulated-function))
 
 (when (fboundp 'encapsulated-generic-function)
-  (untrace encapsulated-generic-function))
+  (handler-bind ((warning #'muffle-warning))
+    (untrace encapsulated-generic-function)))
 (defgeneric encapsulated-generic-function (x)
   (:documentation "This may be encapsulated."))
-(trace encapsulated-generic-function)
+(handler-bind ((warning #'muffle-warning))
+  (trace encapsulated-generic-function))
 
 (deftest test-function/encapsulated ()
   (let ((expected "<a id=\"MGL-PAX-TEST:ENCAPSULATED-FUNCTION%20FUNCTION\"></a>

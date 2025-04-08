@@ -16,10 +16,12 @@
 (defun traced-foo (x)
   "TRACED-FOO function"
   x)
-(trace traced-foo)
+(handler-bind ((warning #'muffle-warning))
+  (trace traced-foo))
 (defgeneric traced-gf (x)
   (:documentation "TRACED-GF generic-function"))
-(trace traced-gf)
+(handler-bind ((warning #'muffle-warning))
+  (trace traced-gf))
 (defun foo (ook x)
   "FOO function"
   (declare (ignore ook x))

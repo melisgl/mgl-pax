@@ -34,7 +34,8 @@
 (defun traced-foo (x)
   "XXX"
   x)
-(trace traced-foo)
+(handler-bind ((warning #'muffle-warning))
+  (trace traced-foo))
 (defun foo (ook x)
   "FOO has args OOK and X."
   (declare (ignore ook x))
