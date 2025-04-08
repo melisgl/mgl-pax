@@ -54,7 +54,7 @@
                            (/= code escape-char-code))
                       (write-char (code-char code) out))
                      (t
-                      (format out "~A~:@(~16r~)" escape-char code)))))
+                      (format out "~A~:@(~16,2,'0r~)" escape-char code)))))
     (coerce output 'simple-string)))
 
 (declaim (inline hex-digit-to-int))

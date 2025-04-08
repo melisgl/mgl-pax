@@ -150,7 +150,8 @@
         (null *)
         (equal * "pax::@pax-manual pax:section")
         (null *)
-        (equal * "pax:defsection pax:macro"))))
+        (equal * "pax:defsection pax:macro")))
+  (is (equal (mgl-pax::urlencode (format nil "~%")) "%0A")))
 
 (deftest test-transform-tree ()
   (is (equal '(1)
