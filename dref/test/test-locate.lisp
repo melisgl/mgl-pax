@@ -32,8 +32,7 @@
   (test-locate/alias))
 
 (defun check-ref (reference name locative &optional type)
-  (let ((type (or type (dref::locative-type-dref-class
-                        (locative-type locative)))))
+  (let ((type (or type (dref-class (locative-type locative)))))
     (is (and (% reference)
              (equal (xref-name reference) name)
              (equal (xref-locative reference) locative)

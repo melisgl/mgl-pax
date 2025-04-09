@@ -1121,9 +1121,8 @@ For more powerful search, see @APROPOS.
         (document (dref:locate 'foo 'type))
     
     There are quite a few special variables that affect how output is
-    generated, see @CODIFICATION, @LINKING, @LINKING-TO-THE-HYPERSPEC,
-    and @LINKING-TO-SECTIONS, and
-    @MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES.
+    generated, see @CODIFICATION, @LINKING-TO-THE-HYPERSPEC,
+    @LINKING-TO-SECTIONS, @LINK-FORMAT and @OUTPUT-DETAILS.
     
     For the details, see the following sections, starting with
     @DOCUMENTABLE. Also see @EXTENSION-API and DOCUMENT-OBJECT\*.

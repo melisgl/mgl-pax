@@ -16,13 +16,11 @@
 
 ;;;; SECTION locative
 
-(define-locative-type section ()
+(define-locative-type section (variable)
   "Refers to a [SECTION][class] defined by DEFSECTION.
 
   SECTION is EXPORTABLE-LOCATIVE-TYPE-P but not exported by
   default (see EXPORTABLE-REFERENCE-P).")
-
-(define-definition-class section section-dref (variable-dref))
 
 (defun section-title-or-name (section)
   (or (section-title section)
@@ -64,13 +62,11 @@
   (print-unreadable-object (glossary-term stream :type t)
     (format stream "~a" (glossary-term-name glossary-term))))
 
-(define-locative-type glossary-term ()
+(define-locative-type glossary-term (variable)
   "Refers to a [GLOSSARY-TERM][class] defined by DEFINE-GLOSSARY-TERM.
 
   GLOSSARY-TERM is EXPORTABLE-LOCATIVE-TYPE-P but not exported by
   default (see EXPORTABLE-REFERENCE-P).")
-
-(define-definition-class glossary-term glossary-term-dref (variable-dref))
 
 (defmethod locate* ((glossary-term glossary-term))
   (make-instance 'glossary-term-dref :name (glossary-term-name glossary-term)
@@ -100,7 +96,7 @@
 
 ;;;;; GO locative
 
-(define-pseudo-locative-type go ((name locative))
+(define-pseudo-locative-type (go (name locative)) ()
   """Redirect to a definition in the context of the DREF::@REFERENCE
   designated by NAME and LOCATIVE. This pseudolocative is intended for
   things that have no explicit global definition.
@@ -133,10 +129,9 @@
       (equal (source-location (dref 'xxx '(go (print function))))
              (source-location (dref 'print 'function)))
       => T
-      ```""")
-
-(define-definition-class go go-dref (dref)
-  ((target-dref :initarg :target-dref :reader go-target-dref)))
+      ```"""
+  (defclass go-dref ()
+    ((target-dref :initarg :target-dref :reader go-target-dref))))
 
 (defmethod dref* (name (locative-type (eql 'go)) locative-args)
   (check-locative-args go locative-args)
@@ -250,8 +245,9 @@
 
 ;;;; INCLUDE locative
 
-(define-pseudo-locative-type include (source &key line-prefix header footer
-                                             header-nl footer-nl)
+(define-pseudo-locative-type (include source &key line-prefix header footer
+                                      header-nl footer-nl)
+    ()
   """This pseudolocative refers to a region of a file. SOURCE can be a
   [STRING][type] or a [PATHNAME][type], in which case the whole file
   is being pointed to, or it can explicitly supply START, END
@@ -309,8 +305,6 @@
 
   INCLUDE is not EXPORTABLE-LOCATIVE-TYPE-P, and INCLUDE references do
   not RESOLVE.""")
-
-(define-definition-class include include-dref)
 
 (defmethod dref* (name (locative-type (eql 'include)) locative-args)
   (check-locative-args include locative-args)
@@ -377,7 +371,7 @@
 
 ;;;; CLHS locative
 
-(define-pseudo-locative-type clhs (&optional nested-locative)
+(define-pseudo-locative-type (clhs &optional nested-locative) ()
   """Refers to definitions, glossary entries, sections, issues and
   issue summaries in the Common Lisp HyperSpec. These have no source
   location so @M-. will not work. What works is linking in
@@ -468,11 +462,10 @@
   can enter inputs like `3.4 clhs`, `"lambda list" clhs` or
   `error (clhs function)`.
 
-  CLHS references do not RESOLVE.""")
-
-(define-definition-class clhs clhs-dref (dref)
+  CLHS references do not RESOLVE."""
   ;; For SUBSTITUTE-CLHS-FOR-MISSING-STANDARD-DEFINITION
-  ((explicit-p :initform nil :accessor clhs-dref-explicit-p)))
+  (defclass clhs-dref ()
+    ((explicit-p :initform nil :accessor clhs-dref-explicit-p))))
 
 (defmethod dref* (name (locative-type (eql 'clhs)) locative-args)
   (check-locative-args clhs locative-args)

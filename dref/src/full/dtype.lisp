@@ -213,17 +213,6 @@
                               (and dref1 (xref= dref1 dref))))))))))
           (values (recurse dtype)))))))
 
-(defun locative-type-direct-supers (locative-type)
-  (remove nil (mapcar #'dref-class-name-to-locative
-                      (second (%locative-type-class-info locative-type)))))
-
-(defun locative-type-direct-subs (locative-type)
-  (let ((dref-class-name (locative-type-dref-class locative-type)))
-    (loop for locative-type being the hash-key in *locative-type-to-class-info*
-            using (hash-value info)
-          when (member dref-class-name (second info))
-            collect locative-type)))
-
 (defun locative-subtypes (locative-type)
   (cond ((eq locative-type nil)
          ())
@@ -245,11 +234,11 @@
         ((eq locative-type-2 t)
          (find locative-type-1 *lisp-locative-types*))
         (t
-         (let ((class1 (locative-type-dref-class locative-type-1))
-               (class2 (locative-type-dref-class locative-type-2)))
-           (if (or (null class1) (null class2))
-               (values nil t)
-               (subtypep class1 class2))))))
+         (let ((class1 (dref-class locative-type-1))
+               (class2 (dref-class locative-type-2)))
+           (assert class1)
+           (assert class2)
+           (subtypep class1 class2)))))
 
 ;;; Return the largest Lisp type that's a subtype of of the class
 ;;; named LOCATIVE-TYPE. If LOCATIVE-TYPE does not name a class, then

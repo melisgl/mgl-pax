@@ -505,9 +505,12 @@
   - a combination of the previous with [AND][type], [OR][type] and
     [NOT][type].
 
-  Just as @LOCATIVE-TYPEs extend the Lisp CLASS hierarchy, DTYPEs
-  extend the Lisp type hierarchy. DTYPEs are used in DEFINITIONS and
-  DREF-APROPOS to filter the set of definitions as in
+  Just as @LOCATIVE-TYPEs [extend][
+  dref-ext::@locative-type-hierarchy] the Lisp CLASS hierarchy, DTYPEs
+  extend the Lisp [type hierarchy]["types and
+  classes" clhs]. DTYPEs are
+  used in DEFINITIONS and DREF-APROPOS to filter the set of
+  definitions as in
 
   ```cl-transcript
   (definitions 'print :dtype '(not unknown))
@@ -626,7 +629,8 @@
   ```
   ```cl-transcript (:dynenv dref-std-env)
   (arglist (dref 'define-locative-type 'macro))
-  => (LOCATIVE-TYPE LAMBDA-LIST &BODY DOCSTRING)
+  => (LOCATIVE-TYPE-AND-LAMBDA-LIST LOCATIVE-SUPERTYPES &OPTIONAL
+      DOCSTRING DREF-DEFCLASS-FORM)
   => :MACRO
   ```
   ```cl-transcript (:dynenv dref-std-env)

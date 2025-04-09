@@ -64,6 +64,7 @@
                              :package :dref
                              :export :dref-ext)
   (@references section)
+  (@locative-type-hierarchy section)
   (@adding-new-locatives section)
   (@symbol-locatives section)
   (@dref-subclasses section)
@@ -87,6 +88,26 @@
   (dref-locative-type function)
   (dref-locative-args function))
 
+(defsection @locative-type-hierarchy (:title "Locative Type Hierarchy"
+                                      :package :dref
+                                      :export :dref-ext)
+  """[Locative types][@LOCATIVE-TYPE] form their own hierarchy, that
+  is consistent with the Lisp CLASS hierarchy. The following rules
+  apply:
+
+  [ check-locative-type-shadowing function ][docstring]
+  [ check-lisp-and-pseudo-are-distinct function ][docstring]
+  [ check-lisp-locative-type-hierarchy function ][docstring]
+  [ check-pseudo-locative-type-hierarchy function ][docstring]
+
+  These rules are enforced by DEFINE-LOCATIVE-TYPE and
+  DEFINE-PSEUDO-LOCATIVE-TYPE. Behaviour is undefined if they are
+  violated later, for example by DEFTYPE a DEFCLASS with the name of a
+  locative type."""
+  (dref-class function)
+  (locative-type-direct-supers function)
+  (locative-type-direct-subs function))
+
 (defsection @adding-new-locatives (:title "Adding New Locatives"
                                    :package :dref
                                    :export :dref-ext)
@@ -94,12 +115,11 @@
   the example of the implementation of the CLASS locative. Note that
   this is a verbatim [PAX:INCLUDE][locative] of the sources. Please
   ignore any internal machinery. The first step is to define the
-  locative type:"
-  (nil (include (:start (class locative) :end (class-dref class))
+  @LOCATIVE-TYPE:"
+  (nil (include (:start (class locative) :end (locate* (method () (class))))
                 :header-nl "```" :footer-nl "```"))
-  "Next, we define a subclass of [DREF][class] associated with the
-  CLASS locative type and specialize LOCATE*:"
-  (nil (include (:start (class-dref class)
+  "Then, we make it possible to look up CLASS definitions:"
+  (nil (include (:start (locate* (method () (class)))
                  :end (dref::actualize-type-to-class function))
                 :header-nl "```" :footer-nl "```"))
   "The first method makes `(LOCATE (FIND-CLASS 'DREF))` work, while
@@ -109,7 +129,7 @@
 
   Then, with ADD-DREF-ACTUALIZER, we install a function that that runs
   whenever a new [DREF][class] is about to be returned from LOCATE and
-  turn the locative TYPE into the locative CLASS if the denoted
+  turns the locative TYPE into the locative CLASS if the denoted
   definition is of a class:"
   (nil (include (:start (dref::actualize-type-to-class function)
                  :end (resolve* (method () (class-dref))))
@@ -130,7 +150,6 @@
   (define-locative-type macro)
   (define-pseudo-locative-type macro)
   (define-locative-alias macro)
-  (define-definition-class macro)
   (locate* generic-function)
   (dref* generic-function)
   (check-locative-args macro)

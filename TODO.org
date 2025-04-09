@@ -40,12 +40,6 @@ There is always mgl-pax-apropos for case-insensitive matching.
 ** MAYBE add source locative
 That is, link to github, without documenting anything. Useful for code
 examples without actually INCLUDEing them. Does/should LAMBDA do this?
-** MAYBE DEFINE-DEFINITION-CLASS shouldn't even exist but be incorporated into DEFINE-LOCATIVE-TYPE?
-Apart from the syntactic difference, SUPERCLASSES would be expressed
-in terms of locative types, not classes, and SUPERCLASSES would be
-determined from that.
-
-Do all have definition classes? No, some of the pseudo don't.
 ** DONE compare DRef to the Definitions library
 Pros of DRef:
 - Supports string names (called designators in Definitions). PAX needs

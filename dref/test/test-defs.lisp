@@ -3,7 +3,7 @@
 (define-locative-type my-loc ()
   "This is MY-LOC.")
 
-(define-locative-type loc-with-args ((x y) &key z)
+(define-locative-type (loc-with-args (x y) &key z) ()
   "LOC-WITH-ARGS locative")
 
 (defun foo2 (ook x)
@@ -172,8 +172,21 @@
            (ignore x o k kp))
   nil)
 
-(define-symbol-locative-type sloc (&optional nested)
+(define-symbol-locative-type (sloc &optional nested) ()
   "SLOC locative")
+#+nil
+(PROGN
+  (DREF::%DEFINE-LOCATIVE-TYPE NIL (SLOC &OPTIONAL NESTED) NIL "SLOC locative"
+                               NIL (SYMBOL-LOCATIVE-DREF))
+  (DEFMETHOD DREF* (SYMBOL (LOCATIVE-TYPE (EQL 'SLOC)) LOCATIVE-ARGS)
+    (CHECK-LOCATIVE-ARGS SLOC LOCATIVE-ARGS)
+    
+    (UNLESS
+        (DREF::SUCCEEDSP
+          (DREF::SYMBOL-LAMBDA-LIST SYMBOL LOCATIVE-TYPE))
+      (LOCATE-ERROR))
+    (DREF::%MAKE-DREF 'SLOC-DREF SYMBOL (CONS LOCATIVE-TYPE LOCATIVE-ARGS))))
+;; (dref* 'sloc1 'sloc nil)
 
 (define-definer-for-symbol-locative-type define-sloc sloc)
 

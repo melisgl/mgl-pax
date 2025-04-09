@@ -340,13 +340,11 @@
          (when-let ((equivalent-class (find-class locative-type nil)))
            (format stream "- Equivalent class: ~A~%"
                    (md-link (dref (class-name equivalent-class) 'type))))
-         (when-let ((direct-supers (dref::locative-type-direct-supers
-                                    locative-type)))
+         (when-let ((direct-supers (locative-type-direct-supers locative-type)))
            (format stream "- Direct super locative types: ~{~A~^, ~}~%"
                    (loop for super in direct-supers
                          collect (md-link (dref super 'locative)))))
-         (when-let ((direct-subs (dref::locative-type-direct-subs
-                                  locative-type)))
+         (when-let ((direct-subs (locative-type-direct-subs locative-type)))
            (format stream "- Direct sub locative types: ~{~A~^, ~}~%"
                    (loop for sub in direct-subs
                          collect (md-link (dref sub 'locative))))))

@@ -1268,9 +1268,8 @@ For more powerful search, see [Apropos][b7fc].
         (document (dref:locate 'foo 'type))
     
     There are quite a few special variables that affect how output is
-    generated, see [Codification][f1ab], [Linking][19e3], [Linking to the HyperSpec][7cc3],
-    and [Linking to Sections][22c2], and
-    @MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES.
+    generated, see [Codification][f1ab], [Linking to the HyperSpec][7cc3],
+    [Linking to Sections][22c2], [Link Format][c0d2] and [Output Details][af6f].
     
     For the details, see the following sections, starting with
     [`DOCUMENTABLE`][0702]. Also see [Writing Extensions][c4ce] and [`DOCUMENT-OBJECT*`][8269].

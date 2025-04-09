@@ -20,10 +20,11 @@
 - [7 Glossary][d061]
 - [8 Extending DRef][68fb]
     - [8.1 References][509d]
-    - [8.2 Adding New Locatives][3cf3]
-    - [8.3 Symbol Locatives][59c9]
-    - [8.4 `DREF` Subclasses][0b7c]
-    - [8.5 Source Locations][a078]
+    - [8.2 Locative Type Hierarchy][c9ab]
+    - [8.3 Adding New Locatives][3cf3]
+    - [8.4 Symbol Locatives][59c9]
+    - [8.5 `DREF` Subclasses][0b7c]
+    - [8.6 Source Locations][a078]
 
 ###### \[in package DREF\]
 <a id="x-28DREF-3A-40INTRODUCTION-20MGL-PAX-3ASECTION-29"></a>
@@ -194,8 +195,7 @@ with references (discussed in the [Extending DRef][68fb]).
     
     `LOCATE-ERROR`([`0`][6334] [`1`][6932]) is signalled if `OBJECT` is an `XREF` with malformed
     [`LOCATIVE-ARGS`][2444], or if no corresponding definition is found. If `ERRORP`
-    is `NIL`, then `NIL` and the [`LOCATE-ERROR`][6334] condition are returned
-    instead.
+    is `NIL`, then `NIL` is returned instead.
     
     ```common-lisp
     (locate (xref 'no-such-function 'function))
@@ -311,9 +311,10 @@ without first-class objects. A `DTYPE` is either
 - a combination of the previous with [`AND`][dd55], [`OR`][e2d1] and
   [`NOT`][954a].
 
-Just as [locative type][a11d]s extend the Lisp [`CLASS`][1f37] hierarchy, `DTYPE`s
-extend the Lisp type hierarchy. `DTYPE`s are used in [`DEFINITIONS`][e196] and
-[`DREF-APROPOS`][65b4] to filter the set of definitions as in
+Just as [locative type][a11d]s [extend][c9ab] the Lisp [`CLASS`][1f37] hierarchy, `DTYPE`s
+extend the Lisp [type hierarchy][0ff7]. `DTYPE`s are
+used in [`DEFINITIONS`][e196] and [`DREF-APROPOS`][65b4] to filter the set of
+definitions as in
 
 ```common-lisp
 (definitions 'print :dtype '(not unknown))
@@ -668,7 +669,8 @@ signal a [`LOCATE-ERROR`][6334] condition.
     
     ```common-lisp
     (arglist (dref 'define-locative-type 'macro))
-    => (LOCATIVE-TYPE LAMBDA-LIST &BODY DOCSTRING)
+    => (LOCATIVE-TYPE-AND-LAMBDA-LIST LOCATIVE-SUPERTYPES &OPTIONAL
+        DOCSTRING DREF-DEFCLASS-FORM)
     => :MACRO
     ```
     
@@ -1403,30 +1405,101 @@ The following convenience functions are compositions of
 
 - [function] **DREF-LOCATIVE-ARGS** *DREF*
 
+<a id="x-28DREF-EXT-3A-40LOCATIVE-TYPE-HIERARCHY-20MGL-PAX-3ASECTION-29"></a>
+
+### 8.2 Locative Type Hierarchy
+
+[Locative types][a11d] form their own hierarchy, that
+is consistent with the Lisp [`CLASS`][1f37] hierarchy. The following rules
+apply:
+
+- A non-class Lisp type and a locative type with the same name must
+not exist at the same time.
+
+- The hierarchies of [`LISP-LOCATIVE-TYPES`][30ad] and [`PSEUDO-LOCATIVE-TYPES`][c340]
+are distinct. That is, the [`DREF-CLASS`][25be] of a Lisp one must not be a
+subclass of a [`PSEUDO`][943a] one, and vice versa.
+
+- For locative types `L1` and `L2`, both `LISP-LOCATIVE-TYPES` and
+both naming a `CLASS`, [`SUBTYPEP`][daac] of their respective `DREF-CLASS`es
+must be the same as `(SUBTYPEP L1 L2)`.
+
+- `PSEUDO-LOCATIVE-TYPES` must not name a `CLASS`.
+
+These rules are enforced by [`DEFINE-LOCATIVE-TYPE`][b6c4] and
+[`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4]. Behaviour is undefined if they are
+violated later, for example by [`DEFTYPE`][7f9a] a [`DEFCLASS`][ead6] with the name of a
+locative type.
+
+<a id="x-28DREF-EXT-3ADREF-CLASS-20FUNCTION-29"></a>
+
+- [function] **DREF-CLASS** *LOCATIVE-TYPE*
+
+    Return the name of the [`CLASS`][1f37] used to represent [definition][2143]s with
+    `LOCATIVE-TYPE`. This is always a subclass of [`DREF`][d930].
+    
+    Note that the actual [`TYPE-OF`][9caa] a `DREF` is mostly intended for
+    [Extending DRef][68fb]. Hence, it is hidden when a `DREF` is
+    printed:
+    
+    ```common-lisp
+    (dref 'print 'function)
+    ==> #<DREF PRINT FUNCTION>
+    (type-of *)
+    => FUNCTION-DREF
+    ```
+    
+    Due to [actualization][8490], the actual
+    type may be a proper subtype of `DREF-CLASS`:
+    
+    ```common-lisp
+    (dref 'documentation 'function)
+    ==> #<DREF DOCUMENTATION GENERIC-FUNCTION>
+    (type-of *)
+    => GENERIC-FUNCTION-DREF
+    (subtypep 'generic-function-dref 'function-dref)
+    => T
+    => T
+    ```
+
+
+<a id="x-28DREF-EXT-3ALOCATIVE-TYPE-DIRECT-SUPERS-20FUNCTION-29"></a>
+
+- [function] **LOCATIVE-TYPE-DIRECT-SUPERS** *LOCATIVE-TYPE*
+
+    List the [locative type][a11d]s whose [`DREF-CLASS`][25be]es are direct superclasses
+    of the `DREF-CLASS` of `LOCATIVE-TYPE`. These can be considered
+    supertypes of `LOCATIVE-TYPE` in the sense of [`DTYPEP`][963f].
+
+<a id="x-28DREF-EXT-3ALOCATIVE-TYPE-DIRECT-SUBS-20FUNCTION-29"></a>
+
+- [function] **LOCATIVE-TYPE-DIRECT-SUBS** *LOCATIVE-TYPE*
+
+    List the [locative type][a11d]s whose [`DREF-CLASS`][25be]es are direct subclasses
+    of the `DREF-CLASS` of `LOCATIVE-TYPE`. These can be considered subtypes
+    of `LOCATIVE-TYPE` in the sense of [`DTYPEP`][963f].
+
 <a id="x-28DREF-EXT-3A-40ADDING-NEW-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.2 Adding New Locatives
+### 8.3 Adding New Locatives
 
 Let's see how to tell DRef about new kinds of definitions through
 the example of the implementation of the [`CLASS`][2060] locative. Note that
 this is a verbatim [`PAX:INCLUDE`][5cd7] of the sources. Please
 ignore any internal machinery. The first step is to define the
-locative type:
+[locative type][a11d]:
 
 ```
-(define-locative-type class ()
+(define-locative-type class (type)
   "Naturally, CLASS is the locative type for [CLASS][class]es.
 
   Also, see the related CONDITION locative.")
 
 ```
 
-Next, we define a subclass of [`DREF`][d930] associated with the
-[`CLASS`][2060] locative type and specialize [`LOCATE*`][76c4]:
+Then, we make it possible to look up [`CLASS`][1f37] definitions:
 
 ```
-(define-definition-class class class-dref (type-dref))
-
 (defmethod locate* ((class class))
   (make-instance 'class-dref :name (class-name class) :locative 'class))
 
@@ -1446,7 +1519,7 @@ cannot be defined.
 
 Then, with [`ADD-DREF-ACTUALIZER`][8490], we install a function that that runs
 whenever a new [`DREF`][d930] is about to be returned from [`LOCATE`][8f19] and
-turn the locative [`TYPE`][926d] into the locative [`CLASS`][2060] if the denoted
+turns the locative [`TYPE`][926d] into the locative [`CLASS`][2060] if the denoted
 definition is of a class:
 
 ```
@@ -1484,42 +1557,72 @@ following, we describe the pieces in detail.
 
 <a id="x-28DREF-EXT-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29"></a>
 
-- [macro] **DEFINE-LOCATIVE-TYPE** *LOCATIVE-TYPE LAMBDA-LIST &BODY DOCSTRING*
+- [macro] **DEFINE-LOCATIVE-TYPE** *LOCATIVE-TYPE-AND-LAMBDA-LIST LOCATIVE-SUPERTYPES &OPTIONAL DOCSTRING DREF-DEFCLASS-FORM*
 
-    Declare `LOCATIVE-TYPE` as a [`LOCATIVE`][0b3a], which is the
-    first step in [Extending DRef][68fb].
+    Declare `LOCATIVE-TYPE` as a [`LOCATIVE`][0b3a],
+    which is the first step in [Extending DRef][68fb].
     
-    `LAMBDA-LIST` is a [destructuring lambda list][6067]. The
-    [`LOCATIVE-ARGS`][2444] of [`DREF`][d930]s with [locative type][a11d]
-    `LOCATIVE-TYPE` (the argument given to this macro) always conform to
-    this lambda list. See [`CHECK-LOCATIVE-ARGS`][10a7].
+    - *Simple example:* To define a locative type called `DUMMY` that
+      takes no arguments and is not a locative subtype of any other
+      locative type:
     
-    - If there is a [`CLASS`][1f37] named `LOCATIVE-TYPE`, then `LOCATIVE-TYPE` must
-      be able to represent exactly the set of definitions of that class.
+        ```
+        (define-locative-type dummy ()
+          "Dummy docstring.")
+        ```
     
-    - A non-class Lisp type and locative type with the same name must
-      not exist at the same time.
+        With this definition, only the locatives `DUMMY` and its
+        equivalent form `(DUMMY)` are valid. The above defines a `DREF`([`0`][d930] [`1`][7e92])
+        subclass called `DUMMY-DREF` in the current package. All
+        definitions with locative type `DUMMY` and its locatives
+        subtypes must be instances of `DUMMY-DREF`.
     
-    For example, if we have:
+        `(LOCATE 'DUMMY 'LOCATIVE)` refers to this definition. That is,
+        [`ARGLIST`][e6bd], [`DOCSTRING`][affc] and [`SOURCE-LOCATION`][32da] all work on
+        it.
     
-    ```
-    (define-locative-type dummy (x &key y)
-      "Dummy docstring.")
-    ```
+    - *Complex example:* DUMMY may have arguments `X` and `Y` and
+      inherit from locative types `L1` and `L2`:
     
-    then `(LOCATE 'DUMMY 'LOCATIVE)` refers to this definition. That is,
-    [`ARGLIST`][e6bd], [`DOCSTRING`][affc] and [`SOURCE-LOCATION`][32da] all work on it.
+        ```
+        (define-locative-type (dummy x &key y) (l1 l2)
+          "Dummy docstring."
+          (defclass dummy-dref ()
+            ((xxx :initform nil :accessor dummy-xxx))))
+        ```
+    
+        One may change name of `DUMMY-DREF`, specify superclasses and
+        add slots as with [`DEFCLASS`][ead6]. Behind the scenes, the `DREF` classes
+        of `L1` and `L2` are added automatically to the list of
+        superclasses.
+    
+    Arguments:
+    
+    - The general form of `LOCATIVE-TYPE-AND-LAMBDA-LIST`
+      is (`LOCATIVE-TYPE` [`&REST`][4336] `LAMBDA-LIST`), where `LOCATIVE-TYPE` is a
+      [`SYMBOL`][e5af], and `LAMBDA-LIST` is a [destructuring lambda list][6067].
+      The [`LOCATIVE-ARGS`][2444] of [`DREF`][d930]s with [locative type][a11d]
+      `LOCATIVE-TYPE` (the argument given to this macro) always conform to
+      this lambda list. See [`CHECK-LOCATIVE-ARGS`][10a7].
+    
+        If `LOCATIVE-TYPE-AND-LAMBDA-LIST` is a single symbol, then that's
+        interpreted as `LOCATIVE-TYPE`, and `LAMBDA-LIST` is `NIL`.
+    
+    - `LOCATIVE-SUPERTYPES` is a list of [locative type][a11d]s whose `DREF`
+      classes are added to prepended to the list of superclasses this
+      definition.
     
     Locative types defined with `DEFINE-LOCATIVE-TYPE` can be listed with
     [`LISP-LOCATIVE-TYPES`][30ad].
 
 <a id="x-28DREF-EXT-3ADEFINE-PSEUDO-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29"></a>
 
-- [macro] **DEFINE-PSEUDO-LOCATIVE-TYPE** *LOCATIVE-TYPE LAMBDA-LIST &BODY DOCSTRING*
+- [macro] **DEFINE-PSEUDO-LOCATIVE-TYPE** *LOCATIVE-TYPE-AND-LAMBDA-LIST LOCATIVE-SUPERTYPES &OPTIONAL DOCSTRING DREF-DEFCLASS-FORM*
 
-    Like [`DEFINE-LOCATIVE-TYPE`][b6c4], but declare that `LOCATIVE-TYPE` does
-    not correspond to definitions in the Lisp system. Definitions with
-    pseduo locatives are not listed by default by [`DEFINITIONS`][e196].
+    Like [`DEFINE-LOCATIVE-TYPE`][b6c4], but declare that
+    `LOCATIVE-TYPE` does not correspond to definitions in the
+    running Lisp. Definitions with pseudo locatives are of `DTYPE` [`PSEUDO`][943a]
+    and are not listed by default by [`DEFINITIONS`][e196].
     
     Locative types defined with `DEFINE-PSEUDO-LOCATIVE-TYPE` can be
     listed with [`PSEUDO-LOCATIVE-TYPES`][c340].
@@ -1558,24 +1661,6 @@ following, we describe the pieces in detail.
     
     Also, see [Locative Aliases][0fa3] in PAX.
 
-<a id="x-28DREF-EXT-3ADEFINE-DEFINITION-CLASS-20MGL-PAX-3AMACRO-29"></a>
-
-- [macro] **DEFINE-DEFINITION-CLASS** *LOCATIVE-TYPE CLASS-NAME &OPTIONAL (SUPERCLASSES '(DREF)) &BODY BODY*
-
-    Define a subclass of `DREF`([`0`][d930] [`1`][7e92]) with `CLASS-NAME`. All [definition][2143]s with
-    [`LOCATE`][8f19]able with a [locative][7ac8] of `LOCATIVE-TYPE` must be of the type
-    named by `CLASS-NAME`. If non-`NIL`, `BODY` is [`DEFCLASS`][ead6]'s slot definitions
-    and other options.
-    
-    The hiererarchy of definition classes as defined by `SUPERCLASSES`
-    must agree with the hierarchy of the classes named by
-    [locative type][a11d]s. That is, if two locative types `L1` and `L2` with
-    definition classes `D1` and `D2` both name [`CLASS`][1f37]es, then it must be
-    that ([`SUBTYPEP`][daac] D1 D2) iff (`SUBTYPEP` L1 L2).
-    
-    Also, definition classes of [`LISP-LOCATIVE-TYPES`][30ad] and
-    [`PSEUDO-LOCATIVE-TYPES`][c340] must not intersect.
-
 <a id="x-28DREF-EXT-3ALOCATE-2A-20GENERIC-FUNCTION-29"></a>
 
 - [generic-function] **LOCATE\*** *OBJECT*
@@ -1584,6 +1669,9 @@ following, we describe the pieces in detail.
     without [actualizing it][8490]. If `OBJECT` is a `DREF`
     already, then this function simply returns it. If no definition is
     found for `OBJECT`, then `LOCATE-ERROR`([`0`][6334] [`1`][6932]) is signalled.
+    
+    Furthermore, if `OBJECT` is an instance of a [`CLASS`][1f37] that also names a
+    [locative type][a11d], then `LOCATE*` must return a definition.
     
     This function is for extending [`LOCATE`][8f19]. Do not call it directly.
 
@@ -1595,8 +1683,14 @@ following, we describe the pieces in detail.
     [`DREF`][d930]s.
     
     An `EQL`([`0`][db03] [`1`][5fd4])-specialized method must be defined for all new locative
-    types. This function is for extending [`LOCATE`][8f19]. Do not call it
-    directly.
+    types. Furthermore, if there is a [`CLASS`][1f37] named `LOCATIVE-TYPE`, then
+    [definition][2143]s with `LOCATIVE-TYPE` must be able to represent exactly
+    the set of definitions that define objects of `CLASS`. For
+    example, `(DREF NAME 'FUNCTION)` must find the definition of the
+    `FUNCTION`([`0`][119e] [`1`][81f7]) with global `NAME` if it exists even if it is a
+    [`GENERIC-FUNCTION`][efe2] but not any other kind of definition.
+    
+    This function is for extending [`LOCATE`][8f19]. Do not call it directly.
 
 <a id="x-28DREF-EXT-3ACHECK-LOCATIVE-ARGS-20MGL-PAX-3AMACRO-29"></a>
 
@@ -1725,7 +1819,7 @@ following, we describe the pieces in detail.
 
 <a id="x-28DREF-EXT-3A-40SYMBOL-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.3 Symbol Locatives
+### 8.4 Symbol Locatives
 
 Let's see how the opaque [`DEFINE-SYMBOL-LOCATIVE-TYPE`][ee9b] and the
 obscure [`DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE`][3b96] macros work together
@@ -1734,10 +1828,10 @@ in a certain context.
 
 <a id="x-28DREF-EXT-3ADEFINE-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29"></a>
 
-- [macro] **DEFINE-SYMBOL-LOCATIVE-TYPE** *LOCATIVE-TYPE LAMBDA-LIST &BODY DOCSTRING*
+- [macro] **DEFINE-SYMBOL-LOCATIVE-TYPE** *LOCATIVE-TYPE-AND-LAMBDA-LIST LOCATIVE-SUPERTYPES &OPTIONAL DOCSTRING DREF-CLASS-DEF*
 
     Similar to [`DEFINE-LOCATIVE-TYPE`][b6c4], but it assumes that all things
-    [`LOCATE`][8f19]able with `LOCATIVE-TYPE` are going to be symbols defined with a
+    [`LOCATE`][8f19]able with [`LOCATIVE-TYPE`][97ba] are going to be symbols defined with a
     definer defined with [`DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE`][3b96]. Symbol
     locatives are for attaching a definition (along with arglist,
     documentation and source location) to a symbol in a particular
@@ -1770,7 +1864,7 @@ in a certain context.
 
 <a id="x-28DREF-EXT-3A-40DREF-SUBCLASSES-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.4 `DREF` Subclasses
+### 8.5 `DREF` Subclasses
 
 These are the [`DREF`][d930] subclasses corresponding to
 [Locative Types][bf0f]. They are exported to make it possible to go
@@ -1785,7 +1879,7 @@ subclassing.
 
 <a id="x-28DREF-EXT-3ACONSTANT-DREF-20CLASS-29"></a>
 
-- [class] **CONSTANT-DREF** *[VARIABLE-DREF][ad35]*
+- [class] **CONSTANT-DREF** *[VARIABLE-DREF][ad35] [DREF][d930]*
 
 **for Macros**
 
@@ -1803,7 +1897,7 @@ subclassing.
 
 <a id="x-28DREF-EXT-3ASETF-DREF-20CLASS-29"></a>
 
-- [class] **SETF-DREF** *[FUNCTION-DREF][e576]*
+- [class] **SETF-DREF** *[FUNCTION-DREF][e576] [DREF][d930]*
 
 **for Functions**
 
@@ -1813,7 +1907,7 @@ subclassing.
 
 <a id="x-28DREF-EXT-3AGENERIC-FUNCTION-DREF-20CLASS-29"></a>
 
-- [class] **GENERIC-FUNCTION-DREF** *[FUNCTION-DREF][e576]*
+- [class] **GENERIC-FUNCTION-DREF** *[FUNCTION-DREF][e576] [DREF][d930]*
 
 <a id="x-28DREF-EXT-3AMETHOD-DREF-20CLASS-29"></a>
 
@@ -1825,19 +1919,19 @@ subclassing.
 
 <a id="x-28DREF-EXT-3AACCESSOR-DREF-20CLASS-29"></a>
 
-- [class] **ACCESSOR-DREF** *[READER-DREF][ec6f] [WRITER-DREF][2638]*
+- [class] **ACCESSOR-DREF** *[READER-DREF][ec6f] [WRITER-DREF][2638] [DREF][d930]*
 
 <a id="x-28DREF-EXT-3AREADER-DREF-20CLASS-29"></a>
 
-- [class] **READER-DREF** *[METHOD-DREF][2c45]*
+- [class] **READER-DREF** *[METHOD-DREF][2c45] [DREF][d930]*
 
 <a id="x-28DREF-EXT-3AWRITER-DREF-20CLASS-29"></a>
 
-- [class] **WRITER-DREF** *[METHOD-DREF][2c45]*
+- [class] **WRITER-DREF** *[METHOD-DREF][2c45] [DREF][d930]*
 
 <a id="x-28DREF-EXT-3ASTRUCTURE-ACCESSOR-DREF-20CLASS-29"></a>
 
-- [class] **STRUCTURE-ACCESSOR-DREF** *[FUNCTION-DREF][e576]*
+- [class] **STRUCTURE-ACCESSOR-DREF** *[FUNCTION-DREF][e576] [DREF][d930]*
 
 **for Types and Declarations**
 
@@ -1847,7 +1941,7 @@ subclassing.
 
 <a id="x-28DREF-EXT-3ACLASS-DREF-20CLASS-29"></a>
 
-- [class] **CLASS-DREF** *[TYPE-DREF][b4e9]*
+- [class] **CLASS-DREF** *[TYPE-DREF][b4e9] [DREF][d930]*
 
 <a id="x-28DREF-EXT-3ADECLARATION-DREF-20CLASS-29"></a>
 
@@ -1857,7 +1951,7 @@ subclassing.
 
 <a id="x-28DREF-EXT-3ACONDITION-DREF-20CLASS-29"></a>
 
-- [class] **CONDITION-DREF** *[TYPE-DREF][b4e9]*
+- [class] **CONDITION-DREF** *[TYPE-DREF][b4e9] [DREF][d930]*
 
 <a id="x-28DREF-EXT-3ARESTART-DREF-20CLASS-29"></a>
 
@@ -1881,7 +1975,7 @@ subclassing.
 
 <a id="x-28DREF-EXT-3ALOCATIVE-DREF-20CLASS-29"></a>
 
-- [class] **LOCATIVE-DREF** *[DTYPE-DREF][6aa6]*
+- [class] **LOCATIVE-DREF** *[DTYPE-DREF][6aa6] [DREF][d930]*
 
 <a id="x-28DREF-EXT-3ADTYPE-DREF-20CLASS-29"></a>
 
@@ -1901,7 +1995,7 @@ subclassing.
 
 <a id="x-28DREF-EXT-3A-40SOURCE-LOCATIONS-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.5 Source Locations
+### 8.6 Source Locations
 
 These represent the file or buffer position of a [defining
 form][23a8] and are returned by the [`SOURCE-LOCATION`][32da] function. For
@@ -2008,6 +2102,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [2415]: ../README.md "PAX Manual"
   [2444]: #x-28DREF-EXT-3ALOCATIVE-ARGS-20FUNCTION-29 "DREF-EXT:LOCATIVE-ARGS FUNCTION"
   [2522]: http://www.lispworks.com/documentation/HyperSpec/Body/f_method.htm "METHOD-QUALIFIERS (MGL-PAX:CLHS GENERIC-FUNCTION)"
+  [25be]: #x-28DREF-EXT-3ADREF-CLASS-20FUNCTION-29 "DREF-EXT:DREF-CLASS FUNCTION"
   [2638]: #x-28DREF-EXT-3AWRITER-DREF-20CLASS-29 "DREF-EXT:WRITER-DREF CLASS"
   [292a]: ../README.md#x-28MGL-PAX-3A-40PAX-LOCATIVES-20MGL-PAX-3ASECTION-29 "PAX Locatives"
   [2b8b]: http://www.lispworks.com/documentation/HyperSpec/Body/t_satisf.htm "SATISFIES (MGL-PAX:CLHS TYPE)"
@@ -2031,6 +2126,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [408d]: #x-28DREF-3A-40CONDITION-SYSTEM-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for the Condition System"
   [41fd]: #x-28COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29 "COMPILER-MACRO MGL-PAX:LOCATIVE"
   [432c]: ../README.md#x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29 "MGL-PAX:DOCUMENT FUNCTION"
+  [4336]: http://www.lispworks.com/documentation/HyperSpec/Body/03_da.htm '"3.4.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [43bd]: #x-28DREF-3A-40REFERENCE-20MGL-PAX-3AGLOSSARY-TERM-29 "reference"
   [444d]: #x-28DREF-EXT-3ASOURCE-LOCATION-2A-20GENERIC-FUNCTION-29 "DREF-EXT:SOURCE-LOCATION* GENERIC-FUNCTION"
   [462c]: #x-28DREF-3A-40VARIABLELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Variables"
@@ -2106,6 +2202,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [9a71]: http://www.lispworks.com/documentation/HyperSpec/Body/f_specia.htm "SPECIAL-OPERATOR-P (MGL-PAX:CLHS FUNCTION)"
   [9b43]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "DEFPACKAGE (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [9b70]: http://www.lispworks.com/documentation/HyperSpec/Body/t_meth_1.htm "METHOD-COMBINATION (MGL-PAX:CLHS CLASS)"
+  [9caa]: http://www.lispworks.com/documentation/HyperSpec/Body/f_tp_of.htm "TYPE-OF (MGL-PAX:CLHS FUNCTION)"
   [9fd4]: #x-28DREF-EXT-3ADOCSTRING-2A-20GENERIC-FUNCTION-29 "DREF-EXT:DOCSTRING* GENERIC-FUNCTION"
   [a078]: #x-28DREF-EXT-3A-40SOURCE-LOCATIONS-20MGL-PAX-3ASECTION-29 "Source Locations"
   [a11d]: #x-28DREF-3A-40LOCATIVE-TYPE-20MGL-PAX-3AGLOSSARY-TERM-29 "locative type"
@@ -2143,6 +2240,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [c819]: #x-28MGL-PAX-3ACONSTANT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CONSTANT MGL-PAX:LOCATIVE"
   [c930]: ../README.md#x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29 "MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION"
   [c938]: #x-28DREF-EXT-3ADREF-ORIGIN-20-28MGL-PAX-3AREADER-20DREF-3ADREF-29-29 "DREF-EXT:DREF-ORIGIN (MGL-PAX:READER DREF:DREF)"
+  [c9ab]: #x-28DREF-EXT-3A-40LOCATIVE-TYPE-HIERARCHY-20MGL-PAX-3ASECTION-29 "Locative Type Hierarchy"
   [cc04]: #x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:READER MGL-PAX:LOCATIVE"
   [cc32]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_m.htm#macro_lambda_list '"macro lambda list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [cda7]: #x-28DREF-3AXREF-20FUNCTION-29 "DREF:XREF FUNCTION"

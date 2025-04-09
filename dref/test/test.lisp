@@ -545,6 +545,33 @@
     (read stream)))
 
 
+(deftest test-locative-type-hierarchy ()
+  (test-lisp-locative-type-hierarchy)
+  (test-pseudo-locative-type-hierarchy))
+
+(deftest test-lisp-locative-type-hierarchy ()
+  (signals-not (error)
+    (dref::check-locative-type-hierarchy nil 'classless ()))
+  (signals-not (error)
+    (dref::check-locative-type-hierarchy nil 'classless '(package-dref)))
+  (signals (error :pred "DREF-EXT:DEFINE-LOCATIVE-TYPE of READTABLE with superclasses (DREF-EXT:PACKAGE-DREF) contradicts the Lisp class hierarchy where READTABLE is not a subclass of PACKAGE, whose DRef class is DREF-EXT:PACKAGE-DREF.")
+    (dref::check-locative-type-hierarchy nil 'readtable '(package-dref)))
+  (signals-not (error)
+    (dref::check-locative-type-hierarchy nil 'subclass '(class-dref)))
+  (signals (error :pred "DREF-EXT:DEFINE-LOCATIVE-TYPE of DREF-TEST::SUBCLASS with superclasses NIL contradicts the Lisp class hierarchy where DREF-TEST::SUBCLASS is a subclass of CLASS, whose DRef class is DREF-EXT:CLASS-DREF, but none of the superclasses is a subclass of DREF-EXT:CLASS-DREF.")
+    (dref::check-locative-type-hierarchy nil 'subclass '()))
+  (signals (error :pred "DREF-EXT:DEFINE-LOCATIVE-TYPE of DREF-TEST::JUNK with superclasses (DREF-EXT:LAMBDA-DREF) is illegal because DREF-EXT:LAMBDA-DREF is the DREF-EXT:DREF-CLASS of LAMBDA, one of DREF:PSEUDO-LOCATIVE-TYPES.")
+    (dref::check-locative-type-hierarchy nil 'junk '(lambda-dref))))
+
+(deftest test-pseudo-locative-type-hierarchy ()
+  (signals-not (error)
+    (dref::check-locative-type-hierarchy t 'classless ()))
+  (signals (error :pred "DREF-EXT:DEFINE-PSEUDO-LOCATIVE-TYPE of NUMBER is illegal because NUMBER names a class.")
+    (dref::check-locative-type-hierarchy t 'number ()))
+  (signals (error :pred "DREF-EXT:DEFINE-PSEUDO-LOCATIVE-TYPE of DREF-TEST::CLASSLESS with superclasses (DREF-EXT:PACKAGE-DREF) is illegal because DREF-EXT:PACKAGE-DREF is the DREF-EXT:DREF-CLASS of PACKAGE, one of DREF:LISP-LOCATIVE-TYPES.")
+    (dref::check-locative-type-hierarchy t 'classless '(package-dref))))
+
+
 (deftest test-dtypes ()
   (test-widest-subtype-of-locative-type)
   (test-narrowest-supertype-of-locative-type)
@@ -916,6 +943,7 @@
   (test-arglist)
   (test-docstring)
   (test-source-location)
+  (test-locative-type-hierarchy)
   (test-dtypes)
   (test-apropos))
 

@@ -4,7 +4,7 @@
 
 ;;;; VARIABLE locative
 
-(define-locative-type variable (&optional initform)
+(define-locative-type (variable &optional initform) ()
   """Refers to a global special variable.
   INITFORM, or if not specified, the global value of the variable is
   to be used for @PRESENTATION.
@@ -15,8 +15,6 @@
   ```
   
   VARIABLE references do not RESOLVE.""")
-
-(define-definition-class variable variable-dref)
 
 (defmethod dref* (symbol (locative-type (eql 'variable))
                   locative-args)
@@ -42,15 +40,13 @@
 
 ;;;; CONSTANT locative
 
-(define-locative-type constant (&optional initform)
+(define-locative-type (constant &optional initform) (variable)
   "Refers to a constant variable defined with DEFCONSTANT. INITFORM,
   or if not specified, the value of the constant is included in the
   documentation. The CONSTANT locative is like the VARIABLE locative,
   but it also checks that its object is CONSTANTP.
 
   CONSTANT references do not RESOLVE.")
-
-(define-definition-class constant constant-dref (variable-dref))
 
 (defmethod dref* (symbol (locative-type (eql 'constant)) locative-args)
   (check-locative-args constant locative-args)
@@ -88,8 +84,6 @@
   [special operator][SPECIAL-OPERATOR-P FUNCTION].
 
   MACRO references do not RESOLVE.")
-
-(define-definition-class macro macro-dref)
 
 (defmethod dref* (symbol (locative-type (eql 'macro)) locative-args)
   (check-locative-args macro locative-args)
@@ -132,8 +126,6 @@
 
 (defvar *symbol-macro-docstrings* (make-hash-table :test #'eq))
 
-(define-definition-class symbol-macro symbol-macro-dref)
-
 (defmethod dref* (symbol (locative-type (eql 'symbol-macro))
                          locative-args)
   (check-locative-args symbol-macro locative-args)
@@ -172,8 +164,6 @@
 
   COMPILER-MACRO references do not RESOLVE.")
 
-(define-definition-class compiler-macro compiler-macro-dref)
-
 (defmethod dref* (symbol (locative-type (eql 'compiler-macro)) locative-args)
   (check-locative-args compiler-macro locative-args)
   (unless (and (symbolp symbol)
@@ -193,9 +183,68 @@
                             'compiler-macro)))
 
 
+;;;; FUNCTION locative
+
+(define-locative-type function ()
+  "Refers to a global function, typically defined with DEFUN. The
+  @NAME must be a SYMBOL (see the SETF locative for how to reference
+  [setf functions][clhs]). It is also allowed to reference
+  GENERIC-FUNCTIONs as FUNCTIONs:
+
+  ```cl-transcript (:dynenv dref-std-env)
+  (dref 'docstring 'function)
+  ==> #<DREF DOCSTRING FUNCTION>
+  ```")
+
+(defmethod locate* ((function function))
+  (multiple-value-bind (name kind) (function-name function)
+    (unless name
+      (locate-error "~S has no name." function))
+    (cond (kind
+           (dref name kind))
+          (t
+           (cond ((and (symbolp name)
+                       (eq (macro-function name) function))
+                  (dref name 'macro))
+                 ((and (symbolp name)
+                       (eq (compiler-macro-function name) function))
+                  (dref name 'compiler-macro))
+                 (t
+                  (unless (eq (ignore-errors (fdefinition* name))
+                              (unencapsulated-function function))
+                    (locate-error "The name ~S does not denote the function."
+                                  name))
+                  (if (setf-name-p name)
+                      (dref (second name) 'setf)
+                      (dref name 'function))))))))
+
+(defmethod dref* (symbol (locative-type (eql 'function))
+                         locative-args)
+  (check-locative-args function locative-args)
+  (when (and (symbolp symbol) (macro-function symbol))
+    (locate-error "~S names a macro not a function." symbol))
+  (unless (ignore-errors (symbol-function* symbol))
+    (locate-error "~S is not a symbol naming a function." symbol))
+  (%make-dref 'function-dref symbol 'function))
+
+(defmethod arglist* ((dref function-dref))
+  (function-arglist (dref-name dref) :ordinary))
+
+(defmethod resolve* ((dref function-dref))
+  (symbol-function* (dref-name dref)))
+
+(defmethod docstring* ((dref function-dref))
+  (documentation* (symbol-function* (dref-name dref)) 'function))
+
+(defmethod source-location* ((dref function-dref))
+  (let ((symbol (dref-name dref)))
+    (swank-source-location* (symbol-function* symbol) symbol 'function)))
+(defvar end-of-function-example)
+
+
 ;;;; SETF locative
 
-(define-locative-type setf (&optional method)
+(define-locative-type (setf &optional method) (function)
   "Refers to a [setf expander][clhs] (see DEFSETF and DEFINE-SETF-EXPANDER)
   or a [setf function][clhs] (e.g. `(DEFUN (SETF NAME) ...)` or the
   same with DEFGENERIC). The format in DEFSECTION is `(<NAME> SETF)`
@@ -208,8 +257,6 @@
 
   References to setf functions RESOLVE to the function object. Setf
   expander references do not RESOLVE.")
-
-(define-definition-class setf setf-dref (function-dref))
 
 (defmethod dref* (symbol (locative-type (eql 'setf)) locative-args)
   (check-locative-args setf locative-args)
@@ -277,75 +324,12 @@
         (swank-source-location symbol 'setf))))
 
 
-;;;; FUNCTION locative
-
-(define-locative-type function ()
-  "Refers to a global function, typically defined with DEFUN. The
-  @NAME must be a SYMBOL (see the SETF locative for how to reference
-  [setf functions][clhs]). It is also allowed to reference
-  GENERIC-FUNCTIONs as FUNCTIONs:
-
-  ```cl-transcript (:dynenv dref-std-env)
-  (dref 'docstring 'function)
-  ==> #<DREF DOCSTRING FUNCTION>
-  ```")
-
-(define-definition-class function function-dref)
-
-(defmethod locate* ((function function))
-  (multiple-value-bind (name kind) (function-name function)
-    (unless name
-      (locate-error "~S has no name." function))
-    (cond (kind
-           (dref name kind))
-          (t
-           (cond ((and (symbolp name)
-                       (eq (macro-function name) function))
-                  (dref name 'macro))
-                 ((and (symbolp name)
-                       (eq (compiler-macro-function name) function))
-                  (dref name 'compiler-macro))
-                 (t
-                  (unless (eq (ignore-errors (fdefinition* name))
-                              (unencapsulated-function function))
-                    (locate-error "The name ~S does not denote the function."
-                                  name))
-                  (if (setf-name-p name)
-                      (dref (second name) 'setf)
-                      (dref name 'function))))))))
-
-(defmethod dref* (symbol (locative-type (eql 'function))
-                         locative-args)
-  (check-locative-args function locative-args)
-  (when (and (symbolp symbol) (macro-function symbol))
-    (locate-error "~S names a macro not a function." symbol))
-  (unless (ignore-errors (symbol-function* symbol))
-    (locate-error "~S is not a symbol naming a function." symbol))
-  (%make-dref 'function-dref symbol 'function))
-
-(defmethod arglist* ((dref function-dref))
-  (function-arglist (dref-name dref) :ordinary))
-
-(defmethod resolve* ((dref function-dref))
-  (symbol-function* (dref-name dref)))
-
-(defmethod docstring* ((dref function-dref))
-  (documentation* (symbol-function* (dref-name dref)) 'function))
-
-(defmethod source-location* ((dref function-dref))
-  (let ((symbol (dref-name dref)))
-    (swank-source-location* (symbol-function* symbol) symbol 'function)))
-(defvar end-of-function-example)
-
-
 ;;;; GENERIC-FUNCTION locative
 
-(define-locative-type generic-function ()
+(define-locative-type generic-function (function)
   "Refers to a [GENERIC-FUNCTION][class], typically defined with
   DEFGENERIC. The @NAME must be a SYMBOL (see the SETF locative for
   how to reference [setf functions][clhs]).")
-
-(define-definition-class generic-function generic-function-dref (function-dref))
 
 (defmethod locate* ((function generic-function))
   (let ((name (swank-mop:generic-function-name function)))
@@ -381,7 +365,7 @@
 
 ;;;; METHOD locative
 
-(define-locative-type method (method-qualifiers method-specializers)
+(define-locative-type (method method-qualifiers method-specializers) ()
   "Refers to METHODs named by SYMBOLs (for SETF methods,
   see the SETF locative). METHOD-QUALIFIERS and METHOD-SPECIALIZERS
   are similar to the CL:FIND-METHOD's arguments of the same names. For
@@ -401,8 +385,6 @@
   ```
 
   METHOD is not EXPORTABLE-LOCATIVE-TYPE-P.")
-
-(define-definition-class method method-dref)
 
 (defmethod locate* ((method method))
   (let* ((name (swank-mop:generic-function-name
@@ -508,8 +490,6 @@
 
   METHOD-COMBINATION references do not RESOLVE.")
 
-(define-definition-class method-combination method-combination-dref)
-
 (defmethod dref* (symbol (locative-type (eql 'method-combination))
                          locative-args)
   (check-locative-args method-combination locative-args)
@@ -533,7 +513,13 @@
 
 ;;;; ACCESSOR, READER and WRITER locatives
 
-(define-locative-type accessor (class-name)
+(define-locative-type (reader class-name) (method)
+  "Like [ACCESSOR][locative], but refers to a :READER method in a DEFCLASS.")
+
+(define-locative-type (writer class-name) (method)
+  "Like [ACCESSOR][locative], but refers to a :WRITER method in a DEFCLASS.")
+
+(define-locative-type (accessor class-name) (reader writer)
   """Refers to an :ACCESSOR in a DEFCLASS:
 
    ```cl-transcript (:dynenv dref-std-env)
@@ -547,16 +533,6 @@
    An :ACCESSOR in DEFCLASS creates a reader and a writer method.
    Somewhat arbitrarily, ACCESSOR references RESOLVE to the writer
    method but can be LOCATEd with either.""")
-
-(define-locative-type reader (class-name)
-  "Like [ACCESSOR][locative], but refers to a :READER method in a DEFCLASS.")
-
-(define-locative-type writer (class-name)
-  "Like [ACCESSOR][locative], but refers to a :WRITER method in a DEFCLASS.")
-
-(define-definition-class reader reader-dref (method-dref))
-(define-definition-class writer writer-dref (method-dref))
-(define-definition-class accessor accessor-dref (reader-dref writer-dref))
 
 (defmethod dref* (symbol (locative-type (eql 'accessor))
                          locative-args)
@@ -692,7 +668,8 @@
 
 ;;;; STRUCTURE-ACCESSOR locative
 
-(define-locative-type structure-accessor (&optional structure-class-name)
+(define-locative-type (structure-accessor &optional structure-class-name)
+    (function)
   "Refers to an accessor function generated by DEFSTRUCT.
   A LOCATE-ERROR condition is signalled if the wrong
   STRUCTURE-CLASS-NAME is provided.
@@ -702,11 +679,8 @@
   DREF-APROPOS will return FUNCTION references instead. On such
   platforms, STRUCTURE-ACCESSOR references do not RESOLVE.")
 
-(define-definition-class structure-accessor structure-accessor-dref
-    (function-dref))
-
 (defmethod dref* (symbol (locative-type (eql 'structure-accessor))
-                         locative-args)
+                  locative-args)
   (check-locative-args structure-accessor locative-args)
   (unless (and (symbolp symbol)
                (ignore-errors (symbol-function* symbol)))
@@ -784,8 +758,6 @@
 
   TYPE references do not RESOLVE.")
 
-(define-definition-class type type-dref)
-
 (defmethod dref* (symbol (locative-type (eql 'type)) locative-args)
   (check-locative-args type locative-args)
   (unless (and (symbolp symbol)
@@ -824,12 +796,10 @@
 ;;;; Be careful changing this because DREF-EXT::@ADDING-NEW-LOCATIVES
 ;;;; INCLUDEs the code in a rather fine-grained way.
 
-(define-locative-type class ()
+(define-locative-type class (type)
   "Naturally, CLASS is the locative type for [CLASS][class]es.
 
   Also, see the related CONDITION locative.")
-
-(define-definition-class class class-dref (type-dref))
 
 (defmethod locate* ((class class))
   (make-instance 'class-dref :name (class-name class) :locative 'class))
@@ -861,7 +831,7 @@
 
 ;;;; CONDITION locative
 
-(define-locative-type condition ()
+(define-locative-type condition (type)
   "Although CONDITION is not SUBTYPEP of CLASS, actual condition
   objects are commonly instances of a condition class that is a CLOS
   class. HyperSpec [ISSUE:CLOS-CONDITIONS][clhs] and
@@ -874,8 +844,6 @@
   (dref 'locate-error 'class)
   ==> #<DREF LOCATE-ERROR CONDITION>
   ```")
-
-(define-definition-class condition condition-dref (type-dref))
 
 (defmethod dref* (symbol (locative-type (eql 'condition))
                          locative-args)
@@ -918,8 +886,6 @@
   DECLARATION references do not RESOLVE.
 
   Also, SOURCE-LOCATION on declarations currently only works on SBCL.""")
-
-(define-definition-class declaration declaration-dref)
 
 (defparameter *ansi-declarations*
   (alexandria:plist-hash-table
@@ -995,9 +961,8 @@
   "Refers to an already loaded ASDF:SYSTEM (those in ASDF:REGISTERED-SYSTEMS).
   The @NAME may be anything ASDF:FIND-SYSTEM supports.
 
-  ASDF:SYSTEM is not EXPORTABLE-LOCATIVE-TYPE-P.")
-
-(define-definition-class asdf:system asdf-system-dref)
+  ASDF:SYSTEM is not EXPORTABLE-LOCATIVE-TYPE-P."
+  (defclass asdf-system-dref))
 
 (defmethod locate* ((system asdf:system))
   (%make-dref 'asdf-system-dref
@@ -1040,8 +1005,6 @@
   The @NAME may be anything FIND-PACKAGE supports.
 
   PACKAGE is not EXPORTABLE-LOCATIVE-TYPE-P.")
-
-(define-definition-class package package-dref)
 
 (defmethod locate* ((package package))
   (%make-dref 'package-dref (character-string (package-name package))
@@ -1087,8 +1050,6 @@
   is not available.
 
   READTABLE references RESOLVE to FIND-READTABLE on their @NAME.")
-
-(define-definition-class readtable readtable-dref)
 
 (defmethod locate* ((readtable readtable))
   (let ((name (readtable-name readtable)))
@@ -1136,8 +1097,6 @@
   ==> #<DREF DTYPE LOCATIVE>
   ```")
 
-(define-definition-class dtype dtype-dref)
-
 (defmethod dref* (name (locative-type (eql 'dtype)) locative-args)
   (check-locative-args dtype locative-args)
   (if (gethash name *dtype-expanders*)
@@ -1164,7 +1123,7 @@
 
 ;;;; LOCATIVE locative
 
-(define-locative-type locative ()
+(define-locative-type locative (dtype)
   "This is the locative for @LOCATIVE-TYPEs defined with
   DEFINE-LOCATIVE-TYPE, DEFINE-PSEUDO-LOCATIVE-TYPE and
   DEFINE-LOCATIVE-ALIAS.
@@ -1174,8 +1133,6 @@
                (source-location (dref 'macro 'locative))))
   => \"(define-locative-type macro ()\"
   ```")
-
-(define-definition-class locative locative-dref (dtype-dref))
 
 (defmethod dref* (symbol (locative-type (eql 'locative)) locative-args)
   (check-locative-args locative locative-args)
@@ -1228,7 +1185,7 @@
 
 ;;;; UNKNOWN locative
 
-(define-locative-type unknown (dspec)
+(define-locative-type (unknown dspec) ()
   "This locative type allows PAX to work in a limited way with
   locatives it doesn't know. UNKNOWN definitions come from
   DEFINITIONS, which uses SWANK/BACKEND:FIND-DEFINITIONS. The
@@ -1250,8 +1207,6 @@
   ARGLIST and DOCSTRING return NIL for UNKNOWNs, but SOURCE-LOCATION
   works.")
 
-(define-definition-class unknown unknown-dref)
-
 (defmethod dref* (name (locative-type (eql 'unknown)) locative-args)
   (unless (and (symbolp name)
                (find (first locative-args) (swank-dspecs name) :test #'equal))
@@ -1270,10 +1225,11 @@
 
 ;;;; LAMBDA locative
 
-(define-pseudo-locative-type lambda
-    (&key arglist arglist-type docstring docstring-package
-          file file-position snippet
-          &allow-other-keys)
+(define-pseudo-locative-type
+    (lambda &key arglist arglist-type docstring docstring-package
+            file file-position snippet
+            &allow-other-keys)
+    ()
   """A [pseudo locative type][ pseudo-locative-types] that carries its
   ARGLIST, DOCSTRING and SOURCE-LOCATION in the locative itself. See
   MAKE-SOURCE-LOCATION for the description of FILE, FILE-POSITION, and
@@ -1300,8 +1256,6 @@
   ```
 
   Also, see the PAX:INCLUDE locative.""")
-
-(define-definition-class lambda lambda-dref)
 
 (defmethod dref* (name (locative-type (eql 'lambda)) locative-args)
   (check-locative-args lambda locative-args)

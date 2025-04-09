@@ -8,46 +8,18 @@
   `(make-instance ,class-name :name ,name :locative ,locative ,@args))
 
 
-;;;; @ADDING-NEW-LOCATIVES
+;;;; DREF-EXT::@LOCATIVE-TYPE-HIERARCHY
 
-(defmacro define-locative-type (locative-type lambda-list &body docstring)
-  """Declare LOCATIVE-TYPE as a [LOCATIVE][locative], which is the
-  first step in DREF-EXT::@EXTENDING-DREF.
+(defun check-locative-type-hierarchy (pseudop locative-type superclasses)
+  (check-locative-type-shadowing locative-type)
+  (check-lisp-and-pseudo-are-distinct pseudop locative-type superclasses)
+  (if pseudop
+      (check-pseudo-locative-type-hierarchy locative-type)
+      (check-lisp-locative-type-hierarchy locative-type superclasses)))
 
-  LAMBDA-LIST is a [destructuring lambda list][clhs]. The
-  LOCATIVE-ARGS of [DREF][class]s with @LOCATIVE-TYPE
-  LOCATIVE-TYPE (the argument given to this macro) always conform to
-  this lambda list. See CHECK-LOCATIVE-ARGS.
-
-  - If there is a CLASS named LOCATIVE-TYPE, then LOCATIVE-TYPE must
-    be able to represent exactly the set of definitions of that class.
-
-  - A non-class Lisp type and locative type with the same name must
-    not exist at the same time.
-
-  For example, if we have:
-
-  ```
-  (define-locative-type dummy (x &key y)
-    "Dummy docstring.")
-  ```
-
-  then `(LOCATE 'DUMMY 'LOCATIVE)` refers to this definition. That is,
-  ARGLIST, [DOCSTRING][function] and SOURCE-LOCATION all work on it.
-
-  Locative types defined with DEFINE-LOCATIVE-TYPE can be listed with
-  LISP-LOCATIVE-TYPES."""
-  (assert (or (endp docstring)
-              (and (= 1 (length docstring))
-                   (string (first docstring)))))
-  (check-docstring-only-body docstring)
-  `(eval-when (:compile-toplevel :load-toplevel :execute)
-     (check-locative-type-definable ',locative-type)
-     (defmethod locative-type-lambda-list ((symbol (eql ',locative-type)))
-       (values ',lambda-list ,(first docstring) ,*package*))
-     (declare-locative-type ',locative-type)))
-
-(defun check-locative-type-definable (locative-type)
+(defun check-locative-type-shadowing (locative-type)
+  "- A non-class Lisp type and a locative type with the same name must
+     not exist at the same time."
   (when (and
          ;; FIXME: This cannot detect most DEFTYPEs with non-empty
          ;; arglist.
@@ -57,36 +29,305 @@
     (error "~@<Cannot define ~S as a ~S because it names a type ~
            that's not a class.~:@>" locative-type 'dref::@locative-type)))
 
-(defmacro define-pseudo-locative-type (locative-type lambda-list
-                                       &body docstring)
-  """Like DEFINE-LOCATIVE-TYPE, but declare that LOCATIVE-TYPE does
-  not correspond to definitions in the Lisp system. Definitions with
-  pseduo locatives are not listed by default by DEFINITIONS.
+(defun check-lisp-and-pseudo-are-distinct (pseudop locative-type superclasses)
+  "- The hierarchies of LISP-LOCATIVE-TYPES and PSEUDO-LOCATIVE-TYPES
+     are distinct. That is, the DREF-CLASS of a Lisp one must not be a
+     subclass of a PSEUDO one, and vice versa."
+  (dolist (l2 (if pseudop
+                  *lisp-locative-types*
+                  *pseudo-locative-types*))
+    (let* ((d2 (dref-class l2))
+           (subclass-superclass (find-subclass-of d2 superclasses)))
+      (when subclass-superclass
+        (cerror "Continue."
+                "~@<~S of ~S with superclasses ~S is illegal ~
+                because ~S~? is the ~S of ~S, ~
+                one of ~S.~:@>"
+                (if pseudop
+                    'define-pseudo-locative-type
+                    'define-locative-type)
+                locative-type superclasses
+                subclass-superclass
+                (if (eq subclass-superclass d2) "" " is a subclass of ~S")
+                (if (eq subclass-superclass d2) () `(,d2))
+                'dref-class l2
+                (if pseudop
+                    'lisp-locative-types
+                    'pseudo-locative-types))))))
+
+(defun check-lisp-locative-type-hierarchy (locative-type superclasses)
+  "- For locative types `L1` and `L2`, both LISP-LOCATIVE-TYPES and
+     both naming a CLASS, SUBTYPEP of their respective DREF-CLASSes
+     must be the same as `(SUBTYPEP L1 L2)`."
+  (let ((c (find-class locative-type nil)))
+    ;; Adding a classless locative type is always legal because at the
+    ;; time of their definition they have no subtypes, so it cannot
+    ;; contradict the Lisp class hierarchy.
+    (when c
+      ;; Adding a locative type A that also names an existing class
+      ;; can contradict the Lisp side. The invariant is A-DREF ->
+      ;; B-DREF iff A -> B for all locative types that name classes.
+      (dolist (l2 *locative-types*)
+        (when (and (not (eq locative-type l2))
+                   (find-class l2 nil))
+          (let* ((d2 (dref-class l2))
+                 (subclass-superclass (find-subclass-of d2 superclasses)))
+            (unless (eq (not (subtypep c l2))
+                        (null subclass-superclass))
+              (inconsistent-hierarchies locative-type superclasses
+                                        subclass-superclass l2 d2))))))))
+
+(defun check-pseudo-locative-type-hierarchy (locative-type)
+  "- PSEUDO-LOCATIVE-TYPES must not name a CLASS."
+  (when (find-class locative-type nil)
+    (cerror "Continue."
+            "~@<~S of ~S is illegal because ~S names a class.~:@>"
+            'define-pseudo-locative-type locative-type locative-type)))
+
+(defun find-subclass-of (class classes)
+  (loop for class-1 in classes
+        when (subtypep class-1 class)
+          return class-1))
+
+(defun inconsistent-hierarchies (locative-type superclasses
+                                 subclass-superclass other-locative-type
+                                 other-dref-class)
+  (apply #'cerror
+         "Continue."
+         "~@<~S of ~S with superclasses ~S ~
+         contradicts the Lisp class hierarchy where ~S is ~Aa subclass ~
+         of ~S, whose DRef class is ~S~?.~:@>"
+         'define-locative-type locative-type superclasses
+         locative-type (if subclass-superclass "not " "")
+         other-locative-type other-dref-class
+         (cond ((eq subclass-superclass other-dref-class)
+                '("" ()))
+               ((null subclass-superclass)
+                `(", but none of the superclasses is a subclass of ~S"
+                  (,other-dref-class)))
+               (t
+                `(", and ~S is a subclass of ~S"
+                  (,subclass-superclass ,other-dref-class))))))
+
+(defun %declare-locative-type (pseudop locative-type)
+  (if pseudop
+      (declare-pseudo-locative-type locative-type)
+      (declare-locative-type locative-type)))
+
+;;; LOCATIVE-TYPE -> (DREF-CLASS-NAME SUPER-CLASS-NAMES
+;;;                   LOCATIVE-TYPE-DIRECT-SUPERS LOCATIVE-TYPE-DIRECT-SUBS)
+;;;
+;;; E.g. READER -> (READER-DREF (METHOD-DREF) (METHOD) (ACCESSOR))
+(defvar *locative-type-to-class-info* (make-hash-table))
+
+(defvar *dref-class-to-locative-type* (make-hash-table))
+
+(declaim (inline %locative-type-class-info))
+(defun %locative-type-class-info (locative-type)
+  (gethash locative-type *locative-type-to-class-info*))
+
+(defun dref-class (locative-type)
+  "Return the name of the CLASS used to represent @DEFINITIONs with
+  LOCATIVE-TYPE. This is always a subclass of [DREF][class].
+
+  Note that the actual TYPE-OF a DREF is mostly intended for
+  DREF-EXT::@EXTENDING-DREF. Hence, it is hidden when a DREF is
+  printed:
+
+  ```cl-transcript
+  (dref 'print 'function)
+  ==> #<DREF PRINT FUNCTION>
+  (type-of *)
+  => FUNCTION-DREF
+  ```
+
+  Due to [actualization][add-dref-actualizer function], the actual
+  type may be a proper subtype of DREF-CLASS:
+
+  ```cl-transcript
+  (dref 'documentation 'function)
+  ==> #<DREF DOCUMENTATION GENERIC-FUNCTION>
+  (type-of *)
+  => GENERIC-FUNCTION-DREF
+  (subtypep 'generic-function-dref 'function-dref)
+  => T
+  => T
+  ```"
+  (first (%locative-type-class-info locative-type)))
+
+(defun dref-class-superclasses (locative-type)
+  (second (%locative-type-class-info locative-type)))
+
+(defun locative-type-direct-supers (locative-type)
+  "List the @LOCATIVE-TYPEs whose DREF-CLASSes are direct superclasses
+  of the DREF-CLASS of LOCATIVE-TYPE. These can be considered
+  supertypes of LOCATIVE-TYPE in the sense of DTYPEP."
+  (third (%locative-type-class-info locative-type)))
+
+(defun locative-type-direct-subs (locative-type)
+  "List the @LOCATIVE-TYPEs whose DREF-CLASSes are direct subclasses
+  of the DREF-CLASS of LOCATIVE-TYPE. These can be considered subtypes
+  of LOCATIVE-TYPE in the sense of DTYPEP."
+  (fourth (%locative-type-class-info locative-type)))
+
+(defun dref-class-to-locative-type (dref-class)
+  (gethash (if (symbolp dref-class)
+               dref-class
+               (class-name dref-class))
+           *dref-class-to-locative-type*))
+
+(defun update-class-info (locative-type dref-class superclasses)
+  (let ((old-supers (locative-type-direct-supers locative-type))
+        (new-supers (%locative-type-direct-supers superclasses))
+        (subs (%locative-type-direct-subs locative-type dref-class))
+        (info-map *locative-type-to-class-info*))
+    ;; Update the subs of deleted supers.
+    (dolist (deleted-super (set-difference old-supers new-supers))
+      (setf (fourth (gethash deleted-super info-map))
+            (remove locative-type (fourth (gethash deleted-super info-map)))))
+    ;; Update the subs of newly added supers.
+    (dolist (added-super (set-difference new-supers old-supers))
+      ;; APPEND to keep them ordered by time of definition.
+      (setf (fourth (gethash added-super info-map))
+            (append (fourth (gethash added-super info-map))
+                    (list locative-type))))
+    ;; Update LOCATIVE-TYPE's class info.
+    (setf (gethash locative-type info-map)
+          (list dref-class superclasses new-supers subs)))
+  (setf (gethash dref-class *dref-class-to-locative-type*) locative-type))
+
+(defun %locative-type-direct-supers (superclasses)
+  (remove nil (mapcar #'dref-class-to-locative-type superclasses)))
+
+(defun %locative-type-direct-subs (locative-type dref-class)
+  (loop for locative-type-1 being the hash-key in *locative-type-to-class-info*
+          using (hash-value info)
+        when (and (not (eq locative-type-1 locative-type))
+                  (member dref-class (second info)))
+          collect locative-type-1))
+
+
+;;;; DREF-EXT::@ADDING-NEW-LOCATIVES
+
+(defmacro define-locative-type (locative-type-and-lambda-list
+                                locative-supertypes
+                                &optional docstring dref-defclass-form)
+  """Declare [LOCATIVE-TYPE][argument] as a [LOCATIVE][locative],
+  which is the first step in DREF-EXT::@EXTENDING-DREF.
+
+  - *Simple example:* To define a locative type called `DUMMY` that
+    takes no arguments and is not a locative subtype of any other
+    locative type:
+
+      ```
+      (define-locative-type dummy ()
+        "Dummy docstring.")
+      ```
+
+      With this definition, only the locatives `DUMMY` and its
+      equivalent form `(DUMMY)` are valid. The above defines a DREF
+      subclass called `DUMMY-DREF` in the current package. All
+      definitions with locative type `DUMMY` and its locatives
+      subtypes must be instances of `DUMMY-DREF`.
+
+      `(LOCATE 'DUMMY 'LOCATIVE)` refers to this definition. That is,
+      ARGLIST, [DOCSTRING][function] and SOURCE-LOCATION all work on
+      it.
+
+  - *Complex example:* DUMMY may have arguments `X` and `Y` and
+    inherit from locative types `L1` and `L2`:
+
+      ```
+      (define-locative-type (dummy x &key y) (l1 l2)
+        "Dummy docstring."
+        (defclass dummy-dref ()
+          ((xxx :initform nil :accessor dummy-xxx))))
+      ```
+
+      One may change name of `DUMMY-DREF`, specify superclasses and
+      add slots as with DEFCLASS. Behind the scenes, the DREF classes
+      of `L1` and `L2` are added automatically to the list of
+      superclasses.
+
+  Arguments:
+
+  - The general form of LOCATIVE-TYPE-AND-LAMBDA-LIST
+    is (LOCATIVE-TYPE &REST LAMBDA-LIST), where LOCATIVE-TYPE is a
+    SYMBOL, and LAMBDA-LIST is a [destructuring lambda list][clhs].
+    The LOCATIVE-ARGS of [DREF][class]s with @LOCATIVE-TYPE
+    LOCATIVE-TYPE (the argument given to this macro) always conform to
+    this lambda list. See CHECK-LOCATIVE-ARGS.
+
+      If LOCATIVE-TYPE-AND-LAMBDA-LIST is a single symbol, then that's
+      interpreted as LOCATIVE-TYPE, and LAMBDA-LIST is NIL.
+
+  - LOCATIVE-SUPERTYPES is a list of @LOCATIVE-TYPEs whose DREF
+    classes are added to prepended to the list of superclasses this
+    definition.
+
+  Locative types defined with DEFINE-LOCATIVE-TYPE can be listed with
+  LISP-LOCATIVE-TYPES."""
+  `(%define-locative-type nil ,locative-type-and-lambda-list
+                          ,locative-supertypes ,docstring ,dref-defclass-form
+                          nil))
+
+(defmacro %define-locative-type (pseudop locative-type-and-lambda-list
+                                 locative-supertypes docstring
+                                 dref-defclass-form extra-superclasses)
+  (destructuring-bind (locative-type &rest lambda-list)
+      (ensure-list* locative-type-and-lambda-list)
+    (destructuring-bind (&optional dref-defclass dref-class dref-superclasses
+                           dref-slots)
+        dref-defclass-form
+      (declare (ignore dref-class))
+      (when (and dref-defclass-form
+                 (not (eq dref-defclass 'defclass)))
+        (error "~@<When defining locative type ~S, the argument ~S ~
+               should start with ~S~:@>"
+               locative-type dref-defclass-form 'defclass))
+      (let* ((superclasses
+               (loop for superlocative in locative-supertypes
+                     for dref-class = (dref-class superlocative)
+                     do (check-locative-type superlocative)
+                     when dref-class
+                       collect dref-class))
+             (extra-superclasses (or extra-superclasses
+                                     ;; FIXME: only if necessary
+                                     '(dref)))
+             (all-superclasses (append superclasses
+                                       dref-superclasses
+                                       extra-superclasses))
+             (dref-class (maybe-default-dref-class locative-type-and-lambda-list
+                                                   dref-defclass-form)))
+        `(eval-when (:compile-toplevel :load-toplevel :execute)
+           (check-locative-type-hierarchy ,pseudop ',locative-type
+                                          ',all-superclasses)
+           (%declare-locative-type ,pseudop ',locative-type)
+           (defmethod locative-type-lambda-list
+               ((symbol (eql ',locative-type)))
+             (values ',lambda-list ,docstring ,*package*))
+           (defclass ,dref-class ,all-superclasses
+             ,dref-slots)
+           (update-class-info ',locative-type ',dref-class ',superclasses))))))
+
+(defun maybe-default-dref-class (locative-type-and-lambda-list dref-class-def)
+  (or (second dref-class-def)
+      (intern
+       (let ((locative-type (locative-type locative-type-and-lambda-list)))
+         (format nil "~A-~A" (symbol-name locative-type) 'dref)))))
+
+(defmacro define-pseudo-locative-type (locative-type-and-lambda-list
+                                       locative-supertypes
+                                       &optional docstring dref-defclass-form)
+  """Like DEFINE-LOCATIVE-TYPE, but declare that
+  [LOCATIVE-TYPE][argument] does not correspond to definitions in the
+  running Lisp. Definitions with pseudo locatives are of DTYPE PSEUDO
+  and are not listed by default by DEFINITIONS.
 
   Locative types defined with DEFINE-PSEUDO-LOCATIVE-TYPE can be
   listed with PSEUDO-LOCATIVE-TYPES."""
-  (assert (or (endp docstring)
-              (and (= 1 (length docstring))
-                   (string (first docstring)))))
-  (check-docstring-only-body docstring)
-  `(eval-when (:compile-toplevel :load-toplevel :execute)
-     (defmethod locative-type-lambda-list ((symbol (eql ',locative-type)))
-       (values ',lambda-list ,(first docstring) ,*package*))
-     (defmethod dref::map-definitions-of-name
-         (fn name (locative-type (eql ',locative-type)))
-       (declare (ignorable fn name))
-       nil)
-     (defmethod dref::map-definitions-of-type
-         (fn (locative-type (eql ',locative-type)))
-       (declare (ignorable fn))
-       nil)
-     (declare-pseudo-locative-type ',locative-type)))
-
-(defun check-docstring-only-body (body)
-  (assert (or (endp body)
-              (and (= (length body) 1)
-                   (stringp (first body))))
-          () "BODY must be () or a single docstring."))
+  `(%define-locative-type t ,locative-type-and-lambda-list ,locative-supertypes
+                          ,docstring ,dref-defclass-form nil))
 
 (defmacro check-locative-args (locative-type locative-args)
   "Signal a LOCATE-ERROR condition if LOCATIVE-ARGS do not match the
@@ -149,51 +390,16 @@
        (dref* name ',locative-type locative-args))
      (declare-locative-alias ',alias)))
 
+(defun check-docstring-only-body (body)
+  (assert (or (endp body)
+              (and (= (length body) 1)
+                   (stringp (first body))))
+          () "BODY must be () or a single docstring."))
+
 ;;; A somewhat dummy generic function that provides a source location.
 ;;; It returns LAMBDA-LIST and DOCSTRING from DEFINE-LOCATIVE-TYPE,
 ;;; and the *PACKAGE* in effect at macroexpansion time.
 (defgeneric locative-type-lambda-list (symbol))
-
-;;; LOCATIVE-TYPE -> (DREF-CLASS-NAME SUPER-CLASS-NAMES)
-;;;
-;;; E.g. FUNCTION -> (FUNCTION-DREF ()).
-(defvar *locative-type-to-class-info* (make-hash-table))
-
-(defun %locative-type-class-info (locative-type)
-  (gethash locative-type *locative-type-to-class-info*))
-
-(defun locative-type-dref-class (locative-type)
-  (first (%locative-type-class-info locative-type)))
-
-(defun dref-class-name-to-locative (dref-class-name)
-  (maphash (lambda (locative-type class-info)
-             (when (eq (first class-info) dref-class-name)
-               (return-from dref-class-name-to-locative locative-type)))
-           *locative-type-to-class-info*))
-
-(defmacro define-definition-class (locative-type class-name
-                                   &optional (superclasses '(dref))
-                                   &body body)
-  "Define a subclass of DREF with CLASS-NAME. All @DEFINITIONs with
-  LOCATEable with a @LOCATIVE of LOCATIVE-TYPE must be of the type
-  named by CLASS-NAME. If non-NIL, BODY is DEFCLASS's slot definitions
-  and other options.
-
-  The hiererarchy of definition classes as defined by SUPERCLASSES
-  must agree with the hierarchy of the classes named by
-  @LOCATIVE-TYPEs. That is, if two locative types `L1` and `L2` with
-  definition classes `D1` and `D2` both name CLASSes, then it must be
-  that (SUBTYPEP D1 D2) iff (SUBTYPEP L1 L2).
-
-  Also, definition classes of LISP-LOCATIVE-TYPES and
-  PSEUDO-LOCATIVE-TYPES must not intersect."
-  (check-locative-type locative-type)
-  `(progn
-     (defclass ,class-name ,superclasses
-       ,@(or body '(())))
-     (eval-when (:compile-toplevel :load-toplevel :execute)
-       (setf (gethash ',locative-type *locative-type-to-class-info*)
-             (list ',class-name ',superclasses)))))
 
 
 (defvar *locating-object*)
@@ -254,6 +460,9 @@
   already, then this function simply returns it. If no definition is
   found for OBJECT, then LOCATE-ERROR is signalled.
 
+  Furthermore, if OBJECT is an instance of a CLASS that also names a
+  @LOCATIVE-TYPE, then LOCATE* must return a definition.
+
   This function is for extending LOCATE. Do not call it directly.")
   (:method :around (object)
     (let* ((*locating-object* object)
@@ -277,8 +486,14 @@
   [DREF][class]s.
 
   An EQL-specialized method must be defined for all new locative
-  types. This function is for extending LOCATE. Do not call it
-  directly.")
+  types. Furthermore, if there is a CLASS named LOCATIVE-TYPE, then
+  @DEFINITIONs with LOCATIVE-TYPE must be able to represent exactly
+  the set of definitions that define objects of CLASS. For
+  example, `(DREF NAME 'FUNCTION)` must find the definition of the
+  FUNCTION with global NAME if it exists even if it is a
+  GENERIC-FUNCTION but not any other kind of definition.
+
+  This function is for extending LOCATE. Do not call it directly.")
   (:method :around (name locative-type locative-args)
     (declare (ignorable name locative-type locative-args))
     (let ((located (call-next-method)))
@@ -287,7 +502,11 @@
       located))
   (:method (name locative-type locative-args)
     (declare (ignorable name locative-type locative-args))
-    (locate-error "~@<No such ~S as ~S.~:@>" '@locative-type locative-type)))
+    (if (find-locative-type locative-type)
+        (locate-error "~@<~S ~S has no ~S method defined.~:@>"
+                      '@locative-type locative-type 'dref*)
+        (locate-error "~@<No such ~S as ~S.~:@>"
+                      '@locative-type locative-type))))
 
 (defvar *resolving-dref*)
 
@@ -420,10 +639,12 @@
   `(find-method* #'symbol-lambda-list () `((eql ,,symbol) (eql ,,locative-type))
                  nil))
 
-(defclass symbol-locative-dref (dref) ())
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defclass symbol-locative-dref (dref) ()))
 
-(defmacro define-symbol-locative-type (locative-type lambda-list
-                                       &body docstring)
+(defmacro define-symbol-locative-type
+    (locative-type-and-lambda-list locative-supertypes
+     &optional docstring dref-class-def)
   """Similar to DEFINE-LOCATIVE-TYPE, but it assumes that all things
   LOCATEable with LOCATIVE-TYPE are going to be symbols defined with a
   definer defined with DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE. Symbol
@@ -445,22 +666,21 @@
 
   After all this, `(DREF 'UP 'DIRECTION)` refers to the
   `DEFINE-DIRECTION` form above."""
-  (check-body-docstring docstring)
-  (let ((dref-class (intern (format nil "~A-~A" (symbol-name locative-type)
-                                    'dref))))
-    `(progn
-       (define-locative-type ,locative-type ,lambda-list ,@docstring)
-       (define-definition-class ,locative-type ,dref-class
-           (symbol-locative-dref))
+  (let ((locative-type (locative-type locative-type-and-lambda-list))
+        (dref-class (maybe-default-dref-class locative-type-and-lambda-list
+                                              dref-class-def)))
+    `(eval-when (:compile-toplevel :load-toplevel :execute)
+       (%define-locative-type nil ,locative-type-and-lambda-list
+                              ,locative-supertypes ,docstring ,dref-class-def
+                              (symbol-locative-dref))
        (defmethod dref* (symbol (locative-type (eql ',locative-type))
                          locative-args)
          (check-locative-args ,locative-type locative-args)
          ;; Faster than calling SYMBOL-LAMBDA-LIST-METHOD.
-         (when (nth-value 1
-                          (ignore-errors
-                           (values (symbol-lambda-list symbol locative-type))))
+         (unless (succeedsp (symbol-lambda-list symbol locative-type))
            (locate-error))
-         (%make-dref ',dref-class symbol (cons locative-type locative-args))))))
+         (%make-dref ',dref-class
+                     symbol (cons locative-type locative-args))))))
 
 ;;; SOURCE-LOCATION (method () (symbol-locative-dref)) is defined
 ;;; later, when Swank is available.

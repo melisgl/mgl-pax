@@ -1,5 +1,10 @@
 (in-package :dref)
 
+(defun ensure-list* (obj)
+  (if (listp obj)
+      obj
+      (list obj)))
+
 (defun parse-body-docstring (body)
   (if (and (stringp (first body))
            (<= 2 (length body)))
@@ -31,7 +36,7 @@
       (reverse names))))
 
 (defmacro succeedsp (&body body)
-  `(null (nth-value 1 (ignore-errors ,@body))))
+  `(null (nth-value 1 (ignore-errors (values ,@body)))))
 
 
 (defmacro on-unknown-type-warning ((&optional (value-form nil)) &body body)

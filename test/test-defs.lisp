@@ -21,7 +21,7 @@
   "backlink @TEST")
 
 ;;; LOCATIVE whose name is a symbol in another package.
-(define-locative-type pax::funny-loc (some-arg)
+(define-locative-type (pax::funny-loc some-arg) ()
   "This is SOME-ARG.")
 
 (defun foo2 (ook x)
