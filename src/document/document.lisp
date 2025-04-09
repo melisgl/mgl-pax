@@ -138,9 +138,9 @@
                  (*heading-level* (1+ *heading-level*)))
              (funcall fn stream))))))
 
-(defun process-title (string)
+(defun process-title (string &key (format :markdown))
   (with-output-to-string (out)
-    (print-markdown (codify (parse-markdown string)) out)))
+    (print-markdown (codify (parse-markdown string)) out :format format)))
 
 ;;; Add this many #\# to markdown section headings in the output. This
 ;;; is for when a section that is a subsection of another is

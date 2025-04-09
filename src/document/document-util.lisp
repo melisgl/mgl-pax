@@ -151,7 +151,7 @@
          (filename (and dir (sections-to-filename objects dir))))
     (flet ((header (stream)
              (let ((title (if section
-                              (section-title section)
+                              (plain-section-title-or-name section)
                               nil)))
                (html-header stream :title title
                                    :stylesheet "style.css"
@@ -274,7 +274,7 @@
    </head>~%~
    <body>~%~
    <div id="content-container">~%"""
-   lang lang (make-plain title) stylesheet charset
+   lang lang title stylesheet charset
    (etypecase head
      ((or null string)
       head)
@@ -456,13 +456,9 @@
   (loop for doc in *registered-pax-world-docs*
         append (denoted-list (second doc))))
 
-(defun make-plain (md-string)
-  ;; KLUDGE: 3mbd doesn't leaves the markup for `code` intact when
-  ;; rendering to :PLAIN.
-  (document (remove #\` md-string) :stream nil :format :plain))
-
 (defun plain-section-title-or-name (section)
-  (make-plain (section-title-or-name section)))
+  (normalize-whitespace
+   (process-title (section-title-or-name section) :format :plain)))
 
 
 ;;;; Generate the READMEs and HTML docs.
