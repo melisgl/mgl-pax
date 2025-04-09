@@ -4,11 +4,13 @@
 
 (declaim (special *document-open-linking*))
 
-;;; @LINKING-TO-THE-HYPERSPEC
-(defvar *document-link-to-hyperspec*)
-(export '*document-link-to-hyperspec*)
-(defvar *document-hyperspec-root*)
-(export '*document-hyperspec-root*)
+;;; @PACKAGE-AND-READTABLE
+(defvar *document-normalize-packages*)
+(export '*document-normalize-packages*)
+
+;;; @BROWSING-WITH-OTHER-BROWSERS
+(defvar *browse-html-style*)
+(export '*browse-html-style*)
 
 ;;; @CODIFICATION
 (defvar *document-uppercase-is-code*)
@@ -26,6 +28,12 @@
 (export 'output-reflink)
 (export 'output-label)
 
+;;; @LINKING-TO-THE-HYPERSPEC
+(defvar *document-link-to-hyperspec*)
+(export '*document-link-to-hyperspec*)
+(defvar *document-hyperspec-root*)
+(export '*document-hyperspec-root*)
+
 ;;; @LINKING-TO-SECTIONS
 (defvar *document-link-sections*)
 (export '*document-link-sections*)
@@ -37,6 +45,18 @@
 (export '*document-text-navigation*)
 (defvar *document-fancy-html-navigation*)
 (export '*document-fancy-html-navigation*)
+
+;;; @LINK-FORMAT
+(defvar *document-url-versions*)
+(export '*document-url-versions*)
+(defvar *document-min-link-hash-length*)
+(export '*document-min-link-hash-length*)
+(defvar *document-base-url*)
+(export '*document-base-url*)
+
+;;; @OUTPUT-DETAILS
+(defvar *document-mark-up-signatures*)
+(export '*document-mark-up-signatures*)
 
 ;;; @HTML-OUTPUT
 (defvar *document-html-default-style*)
@@ -55,22 +75,6 @@
 (export '*document-html-top-blocks-of-links*)
 (defvar *document-html-bottom-blocks-of-links*)
 (export '*document-html-bottom-blocks-of-links*)
-
-;;; @MISCELLANEOUS-DOCUMENTATION-PRINTER-VARIABLES
-(defvar *document-url-versions*)
-(export '*document-url-versions*)
-(defvar *document-min-link-hash-length*)
-(export '*document-min-link-hash-length*)
-(defvar *document-mark-up-signatures*)
-(export '*document-mark-up-signatures*)
-(defvar *document-normalize-packages*)
-(export '*document-normalize-packages*)
-(defvar *document-base-url*)
-(export '*document-base-url*)
-
-;;; @BROWSING-WITH-OTHER-BROWSERS
-(defvar *browse-html-style*)
-(export '*browse-html-style*)
 
 (autoload downcasingp "mgl-pax/document" :export nil)
 (autoload document "mgl-pax/document")

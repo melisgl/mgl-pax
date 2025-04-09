@@ -2771,7 +2771,9 @@ and non-exported symbols omitted.
 - For definitions with a [`ASDF:SYSTEM`][c097] locative, their most
 important slots are printed as an unnumbered list.
 
-- document-object\* (method () (locative-dref t))
+- For definitions with the [`LOCATIVE`][0b3a] locative type, their
+[`LOCATIVE-TYPE-DIRECT-SUPERS`][80a8] and [`LOCATIVE-TYPE-DIRECT-SUBS`][130a] are
+printed.
 
 - When documentation is being generated for a definition with
 the [`SECTION`][672f] locative, a new (sub)section is opened (see
@@ -4041,6 +4043,7 @@ they are presented.
   [119e]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm "FUNCTION (MGL-PAX:CLHS CLASS)"
   [11f1]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cfb.htm '"22.3.6.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [1281]: #x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29 "PAX World"
+  [130a]: dref/README.md#x-28DREF-EXT-3ALOCATIVE-TYPE-DIRECT-SUBS-20FUNCTION-29 "DREF-EXT:LOCATIVE-TYPE-DIRECT-SUBS FUNCTION"
   [1322]: https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks "fenced code blocks"
   [13a9]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29 "MGL-PAX:UPDATE-ASDF-SYSTEM-READMES FUNCTION"
   [142c]: http://www.lispworks.com/documentation/HyperSpec/Body/06_aba.htm '"6.1.2.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -4187,6 +4190,7 @@ they are presented.
   [7eb5]: #x-28MGL-PAX-3A-40LINKABLE-20MGL-PAX-3AGLOSSARY-TERM-29 "linkable"
   [7f1f]: #x-28MGL-PAX-3ADOCUMENT-DOCSTRING-20FUNCTION-29 "MGL-PAX:DOCUMENT-DOCSTRING FUNCTION"
   [7f9a]: http://www.lispworks.com/documentation/HyperSpec/Body/m_deftp.htm "DEFTYPE (MGL-PAX:CLHS MGL-PAX:MACRO)"
+  [80a8]: dref/README.md#x-28DREF-EXT-3ALOCATIVE-TYPE-DIRECT-SUPERS-20FUNCTION-29 "DREF-EXT:LOCATIVE-TYPE-DIRECT-SUPERS FUNCTION"
   [80e8]: #x-28MGL-PAX-3AWITH-HEADING-20MGL-PAX-3AMACRO-29 "MGL-PAX:WITH-HEADING MGL-PAX:MACRO"
   [8106]: #x-28MGL-PAX-3A-40M--2E-MINIBUFFER-SYNTAX-20MGL-PAX-3ASECTION-29 "`M-.` Minibuffer Syntax"
   [81b3]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhr.htm '"2.4.8.18" (MGL-PAX:CLHS MGL-PAX:SECTION)'

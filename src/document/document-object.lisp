@@ -330,6 +330,9 @@
 ;;;; LOCATIVE locative
 
 (defmethod document-object* ((dref locative-dref) stream)
+  "For definitions with the LOCATIVE locative type, their
+  LOCATIVE-TYPE-DIRECT-SUPERS and LOCATIVE-TYPE-DIRECT-SUBS are
+  printed."
   (documenting-reference (stream)
     (let ((locative-type (dref-name dref)))
       (document-docstring

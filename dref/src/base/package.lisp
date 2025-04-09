@@ -1,6 +1,6 @@
 ;;;; Normally, the DEFSECTION forms, which do the actual exporting,
 ;;;; would live close to the definitions they refer to. However, there
-;;;; are self-imposed requirements:
+;;;; are some self-inflicted design decisions that get in the way:
 ;;;;
 ;;;; - We want to export some symbols from the DREF and some from
 ;;;;   DREF-EXT package.

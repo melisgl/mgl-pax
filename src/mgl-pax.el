@@ -1367,7 +1367,7 @@ The empty string means the current package."
 ;;;; Transcribe (see MGL-PAX::@TRANSCRIBING-WITH-EMACS)
 
 (defun mgl-pax-transcribe-last-expression ()
-  "A bit like C-u C-x C-e (slime-eval-last-expression) that
+  "A bit like C-u C-x C-e (`slime-eval-last-expression') that
 inserts the output and values of the sexp before the point, this
 does the same but with MGL-PAX:TRANSCRIBE. Use a numeric prefix
 argument as in index to select one of the Common Lisp

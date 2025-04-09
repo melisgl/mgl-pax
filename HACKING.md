@@ -39,6 +39,9 @@ Testing from the command line
   with SBCL and needs the value of `SLIME_DIR` to be specified in the
   script.
 
+    Debugging test failures can be easier if `--batch` is removed from
+    the script.
+
 Catching changes in behaviour
 -----------------------------
 

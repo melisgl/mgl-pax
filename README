@@ -2492,7 +2492,9 @@ and non-exported symbols omitted.
 - For definitions with a ASDF:SYSTEM locative, their most
 important slots are printed as an unnumbered list.
 
-- document-object\* (method () (locative-dref t))
+- For definitions with the LOCATIVE locative type, their
+LOCATIVE-TYPE-DIRECT-SUPERS and LOCATIVE-TYPE-DIRECT-SUBS are
+printed.
 
 - When documentation is being generated for a definition with
 the SECTION locative, a new (sub)section is opened (see
