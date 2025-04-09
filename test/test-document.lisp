@@ -1922,11 +1922,18 @@ example section
 
 
 (deftest test-definitions-for-pax-url-path ()
-  (signals (error :pred "Bad")
+  (signals (error :pred "Bad DREF::@NAME")
     (let ((*package* (find-package '#:mgl-pax)))
       (pax::definitions-for-pax-url-path "SECTION LOCATIVE")))
-  (check-ref-sets (pax::definitions-for-pax-url-path "PAX:SECTION PAX:LOCATIVE")
-                  (list (dref 'section 'locative))))
+  (signals (error :pred "Bad DREF::@LOCATIVE-TYPE")
+    (pax::definitions-for-pax-url-path "MGL-PAX:SECTION JUNK"))
+  (dolist (dref (list (dref 'section 'locative)
+                      (dref 'test-gf
+                            '(method () ((eql #.(find-package :cl)))))))
+    (check-ref-sets
+     (pax::definitions-for-pax-url-path
+      (nth-value 2 (pax::parse-url (pax::dref-to-pax-url dref))))
+     (list dref))))
 
 (deftest test-with-document-context ()
   (signals-not (error)

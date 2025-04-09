@@ -287,10 +287,13 @@
 ;;; READ-FROM-STRING, but try to minimize the chance of interning
 ;;; junk. That is, don't intern LOCATIVE-TYPE (it must be already) or
 ;;; anything in "..." if LOCATIVE-TYPE is not a valid locative type.
-(defun parse-locative (string &key junk-allowed)
+(defun parse-locative (string &key junk-allowed (read-args t))
   (handler-case
       (multiple-value-bind (symbol pos)
-          (read-interned-symbol-from-string string)
+          (handler-case
+              (read-interned-symbol-from-string string)
+            ((or reader-error end-of-file) ()
+              nil))
         (if pos
             (when (and (or junk-allowed
                            (not (find-if-not #'whitespacep string :start pos)))
@@ -306,12 +309,15 @@
                       (swank::parse-symbol
                        (subseq string (1+ first-char-pos) delimiter-pos))
                     (when (and found (dref symbol 'locative nil))
-                      ;; The rest of the symbols in the string need not be
-                      ;; already interned, so let's just READ.
-                      (multiple-value-bind (locative position)
-                          (ignore-errors (read-from-string string))
-                        (when locative
-                          (values locative position))))))))))
+                      (if read-args
+                          ;; The rest of the symbols in the string
+                          ;; need not be already interned, so let's
+                          ;; just READ.
+                          (multiple-value-bind (locative position)
+                              (ignore-errors (read-from-string string))
+                            (when locative
+                              (values locative position)))
+                          symbol))))))))
     ((or reader-error end-of-file) ()
       nil)))
 
