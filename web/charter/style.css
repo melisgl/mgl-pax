@@ -257,7 +257,8 @@ img {
 }
 
 .locative-args code {
-  font-family: sans-serif;
+  font-family: var(--font-family);
+  font-size: 1rem;
 }
 
 .navigation a {
