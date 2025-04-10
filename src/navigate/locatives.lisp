@@ -30,8 +30,7 @@
 (defmethod locate* ((section section))
   (make-instance 'section-dref :name (section-name section) :locative 'section))
 
-(defmethod dref* (symbol (locative-type (eql 'section))
-                                       locative-args)
+(defmethod dref* (symbol (locative-type (eql 'section)) locative-args)
   (check-locative-args section locative-args)
   (unless (and (symbolp symbol)
                (boundp symbol)
@@ -70,7 +69,7 @@
 
 (defmethod locate* ((glossary-term glossary-term))
   (make-instance 'glossary-term-dref :name (glossary-term-name glossary-term)
-                 :locative 'glossary-term))
+                                     :locative 'glossary-term))
 
 (defmethod dref*
     (symbol (locative-type (eql 'glossary-term)) locative-args)

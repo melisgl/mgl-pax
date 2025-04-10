@@ -238,7 +238,7 @@
         (equal * '(v))
         (eq * :ordinary)))
   (is (match-values (arglist (dref 'has-setf-generic-function
-                                          '(setf (method () (string)))))
+                                   '(setf (method () (string)))))
         (equal * '(v))
         (eq * :ordinary))))
 
@@ -293,7 +293,7 @@
 
 (deftest test-arglist/lambda ()
   (is (match-values (arglist (dref nil '(lambda :arglist ((x y) z)
-                                                :arglist-type :macro)))
+                                         :arglist-type :macro)))
         (equal * '((x y) z))
         (eq * :macro))))
 
@@ -324,7 +324,7 @@
     (is (equal (docstring (dref 'has-setf-generic-function 'setf))
                "HAS-SETF-GENERIC-FUNCTION setf")))
   (is (equal (docstring (dref 'has-setf-generic-function
-                                     '(setf (method () (string)))))
+                              '(setf (method () (string)))))
              "HAS-SETF-GENERIC-FUNCTION (setf (method () (string)))"))
   (with-failure-expected ((and (alexandria:featurep '(:or :ecl))
                                'failure))
@@ -378,7 +378,7 @@
   (dolist (dref (definitions 'print :dtype 'unknown))
     (is (null (docstring dref))))
   (is (match-values (docstring (dref nil '(lambda :docstring "xxx"
-                                             :docstring-package :dref)))
+                                           :docstring-package :dref)))
         (equal * "xxx")
         (eq * (find-package :dref)))))
 

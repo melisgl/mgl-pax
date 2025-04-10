@@ -126,8 +126,7 @@
 
 (defvar *symbol-macro-docstrings* (make-hash-table :test #'eq))
 
-(defmethod dref* (symbol (locative-type (eql 'symbol-macro))
-                         locative-args)
+(defmethod dref* (symbol (locative-type (eql 'symbol-macro)) locative-args)
   (check-locative-args symbol-macro locative-args)
   (unless (and (symbolp symbol)
                #+ccl (gethash symbol ccl::*symbol-macros*)
@@ -218,8 +217,7 @@
                       (dref (second name) 'setf)
                       (dref name 'function))))))))
 
-(defmethod dref* (symbol (locative-type (eql 'function))
-                         locative-args)
+(defmethod dref* (symbol (locative-type (eql 'function)) locative-args)
   (check-locative-args function locative-args)
   (when (and (symbolp symbol) (macro-function symbol))
     (locate-error "~S names a macro not a function." symbol))
@@ -337,8 +335,7 @@
         (dref (second name) 'setf)
         (%make-dref 'generic-function-dref name 'generic-function))))
 
-(defmethod dref* (symbol (locative-type (eql 'generic-function))
-                         locative-args)
+(defmethod dref* (symbol (locative-type (eql 'generic-function)) locative-args)
   (check-locative-args generic-function locative-args)
   (let ((function (ignore-errors (symbol-function* symbol))))
     (unless (typep function 'generic-function)
@@ -491,7 +488,7 @@
   METHOD-COMBINATION references do not RESOLVE.")
 
 (defmethod dref* (symbol (locative-type (eql 'method-combination))
-                         locative-args)
+                  locative-args)
   (check-locative-args method-combination locative-args)
   (unless (and (symbolp symbol)
                #+ccl (ccl::method-combination-info symbol)
@@ -534,8 +531,7 @@
    Somewhat arbitrarily, ACCESSOR references RESOLVE to the writer
    method but can be LOCATEd with either.""")
 
-(defmethod dref* (symbol (locative-type (eql 'accessor))
-                         locative-args)
+(defmethod dref* (symbol (locative-type (eql 'accessor)) locative-args)
   (check-locative-args accessor locative-args)
   (unless (ignore-errors
            (find-accessor-slot-definition symbol (first locative-args)))
@@ -845,8 +841,7 @@
   ==> #<DREF LOCATE-ERROR CONDITION>
   ```")
 
-(defmethod dref* (symbol (locative-type (eql 'condition))
-                         locative-args)
+(defmethod dref* (symbol (locative-type (eql 'condition)) locative-args)
   (check-locative-args condition locative-args)
   (let ((class (and (symbolp symbol) (find-class symbol nil))))
     (unless (and class (subtypep class 'condition))
@@ -899,8 +894,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require :sb-cltl2))
 
-(defmethod dref* (symbol (locative-type (eql 'declaration))
-                         locative-args)
+(defmethod dref* (symbol (locative-type (eql 'declaration)) locative-args)
   (check-locative-args declaration locative-args)
   (unless (and (symbolp symbol)
                (or (gethash symbol *ansi-declarations*)
@@ -969,8 +963,7 @@
               (character-string (slot-value system 'asdf::name))
               'asdf:system))
 
-(defmethod dref* (name (locative-type (eql 'asdf:system))
-                         locative-args)
+(defmethod dref* (name (locative-type (eql 'asdf:system)) locative-args)
   (check-locative-args asdf:system locative-args)
   (let ((name (ignore-errors (string-downcase (string name)))))
     (unless (progn
@@ -1057,8 +1050,7 @@
       (locate-error "~S is not a NAMED-READTABLE." readtable))
     (%make-dref 'readtable-dref name 'readtable)))
 
-(defmethod dref* (symbol (locative-type (eql 'readtable))
-                         locative-args)
+(defmethod dref* (symbol (locative-type (eql 'readtable)) locative-args)
   (check-locative-args readtable locative-args)
   (let ((readtable (and (symbolp symbol)
                         (named-readtables:find-readtable symbol))))

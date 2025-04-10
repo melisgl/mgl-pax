@@ -71,7 +71,7 @@
 ;;;     .. 2
 ;;;     ..
 (defun read-prefixed-lines (stream prefix &key (first-line-prefix prefix)
-                            (eat-one-space-p t))
+                                            (eat-one-space-p t))
   (with-output-to-string (output)
     (loop for n-lines-read upfrom 0 do
       (multiple-value-bind (line missing-newline-p file-position)
@@ -100,7 +100,7 @@
 ;;; The inverse of READ-PREFIXED-LINES. If ADD-ONE-SPACE-P, a space
 ;;; character is printed after the prefix if the line is zero length.
 (defun write-prefixed-lines (string prefix stream &key (add-one-space-p t)
-                             (first-line-prefix prefix))
+                                                    (first-line-prefix prefix))
   (let ((last-newline-missing-p nil))
     (with-input-from-string (s string)
       (loop for n-lines-read upfrom 0 do
@@ -852,11 +852,11 @@
         (t
          (assert nil))))
 
-(defun write-transcript (transcript output &key update-only
-                         (include-no-output update-only)
-                         (include-no-value update-only)
-                         (echo t) check-consistency
-                         default-syntax (syntaxes *transcribe-syntaxes*))
+(defun write-transcript (transcript output
+                         &key update-only (include-no-output update-only)
+                           (include-no-value update-only)
+                           (echo t) check-consistency
+                           default-syntax (syntaxes *transcribe-syntaxes*))
   (check-type output (or stream null))
   (with-output-stream (stream output)
     (let ((*transcribe-syntaxes* syntaxes)
@@ -1025,7 +1025,7 @@
 
 (defun eval-and-capture (form)
   (let* ((buffer (make-array 0 :element-type 'character
-                             :fill-pointer 0 :adjustable t))
+                               :fill-pointer 0 :adjustable t))
          (values (with-output-to-string (output buffer)
                    (with-transcription-syntax ()
                      (let ((*standard-output* output)

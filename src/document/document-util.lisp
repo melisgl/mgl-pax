@@ -305,9 +305,9 @@
              by MGL-PAX]</a></li></ul>~
        </div>~%~
      </div>~%"""
-   (blocks-of-links-to-html-string top-blocks-of-links)
-   link-to-pax-world-p
-   (blocks-of-links-to-html-string bottom-blocks-of-links)))
+     (blocks-of-links-to-html-string top-blocks-of-links)
+     link-to-pax-world-p
+     (blocks-of-links-to-html-string bottom-blocks-of-links)))
 
 (defun blocks-of-links-to-html-string (blocks-of-links)
   (if (listp blocks-of-links)

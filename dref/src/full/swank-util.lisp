@@ -470,14 +470,14 @@
              (parse-dspec-method-qualifiers-and-specializers (nthcdr 2 dspec))
            (when (= (length specializers) 1)
              (dref (second dspec)
-                          `(method ,qualifiers ,(objects-to-specializers
-                                                 specializers))))))
+                   `(method ,qualifiers ,(objects-to-specializers
+                                          specializers))))))
         ((eq (first dspec) 'ccl::reader-method)
          ;; E.g. (CCL::READER-METHOD (:METHOD FOO (#<STANDARD-CLASS CCC>)))
          (destructuring-bind (method-keyword method-name classes) (second dspec)
            (when (eq method-keyword :method)
              (dref method-name
-                          `(reader ,@(mapcar #'class-name classes))))))
+                   `(reader ,@(mapcar #'class-name classes))))))
         ((eq (first dspec) 'ccl::writer-method)
          ;; E.g. (CCL::WRITER-METHOD (:METHOD FOO (#<BUILT-IN-CLASS T>
          ;; #<STANDARD-CLASS CCC>)))

@@ -165,7 +165,7 @@
   (signals (locate-error :pred "METHOD not found.")
     (dref 'has-setf-generic-function '(setf (method () (undefined)))))
   (is (eq (resolve (xref 'has-setf-generic-function
-                              '(setf (method () (string)))))
+                         '(setf (method () (string)))))
           (dref::find-method* '(setf has-setf-generic-function) () '(string)))))
 
 (deftest test-locate/function ()
@@ -467,10 +467,10 @@
   (signals (locate-error)
     (dref 'xxx 'lambda))
   (let ((dref (dref nil '(lambda :arglist (x y z)
-                                 :docstring "doc"
-                                 :file "xxx"
-                                 :file-position 7
-                                 :snippet "snip"))))
+                          :docstring "doc"
+                          :file "xxx"
+                          :file-position 7
+                          :snippet "snip"))))
     (is (equal (arglist dref) '(x y z)))
     (is (equal (docstring dref) "doc"))
     (is (equal (source-location-file (source-location dref)) "xxx"))

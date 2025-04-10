@@ -123,10 +123,10 @@ other mgl-pax commands in interactive use."
                               (cl:find-symbol
                                (cl:string '#:check-pax-elisp-version)
                                :mgl-pax))))
-              (cl:when (cl:and f (asdf:component-loaded-p
-                                  (cl:ignore-errors
-                                   (asdf:find-system ',asdf-system))))
-                       (cl:funcall f ',mgl-pax-version)))))
+                  (cl:when (cl:and f (asdf:component-loaded-p
+                                      (cl:ignore-errors
+                                       (asdf:find-system ',asdf-system))))
+                           (cl:funcall f ',mgl-pax-version)))))
     (cond ((slime-eval check-form)
            (when cont (funcall cont t)))
           ((not autoload)
@@ -439,9 +439,9 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
     (goto-char (1- point))
     (unless (looking-at "(")
       (skip-chars-backward ";` \n\t")
-                          (let ((sexp (ignore-errors (slime-last-expression))))
-                            (unless (equal sexp "")
-                              sexp)))))
+      (let ((sexp (ignore-errors (slime-last-expression))))
+        (unless (equal sexp "")
+          sexp)))))
 
 (cl-defun mgl-pax-locative-after (&optional (point (point)))
   (save-excursion

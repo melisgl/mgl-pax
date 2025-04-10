@@ -2306,7 +2306,7 @@
 (defgeneric title (object)
   (:method (object)
     (declare (ignore object))
-   nil)
+    nil)
   (:method ((section section))
     (values (section-title section) t))
   (:method ((glossary-term glossary-term))

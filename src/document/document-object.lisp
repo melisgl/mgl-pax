@@ -366,7 +366,7 @@
              (*readtable* (section-readtable ,section))
              (*section* ,section))
          (with-heading (,stream ,section (section-title-or-name ,section)
-                        :link-title-to (section-link-title-to ,section))
+                                :link-title-to (section-link-title-to ,section))
            (when (and (not ,same-package) *document-normalize-packages*)
              (format-in-package *package* ,stream))
            ,@body)))))
@@ -478,8 +478,8 @@
   (multiple-value-bind (title aliases)
       (find-hyperspec-section-title (dref-name dref))
     (documenting-reference (stream :arglist
-                            (append (dref-locative-args dref)
-                                    (ensure-list title)))
+                                   (append (dref-locative-args dref)
+                                           (ensure-list title)))
       (when aliases
         (format stream "Aliases: ~{~S~^, ~}~%" aliases)))))
 
