@@ -8,8 +8,8 @@
   "[document-object* (method () (dref t))][docstring]
 
   With this default format, PAX supports all locative types, but for
-  some DREF::@LOCATIVE-TYPES defined in DRef and the @PAX-LOCATIVES,
-  special provisions have been made.
+  some DREF::@BASIC-LOCATIVE-TYPES defined in DRef and the
+  @PAX-LOCATIVES, special provisions have been made.
 
   - [document-object* (method () (variable-dref t))][docstring]
   - [document-object* (method () (setf-dref t))][docstring]
@@ -337,15 +337,12 @@
     (let ((locative-type (dref-name dref)))
       (document-docstring
        (with-output-to-string (stream)
-         (when-let ((equivalent-class (find-class locative-type nil)))
-           (format stream "- Equivalent class: ~A~%"
-                   (md-link (dref (class-name equivalent-class) 'type))))
          (when-let ((direct-supers (locative-type-direct-supers locative-type)))
-           (format stream "- Direct super locative types: ~{~A~^, ~}~%"
+           (format stream "- Direct locative supertypes: ~{~A~^, ~}~%"
                    (loop for super in direct-supers
                          collect (md-link (dref super 'locative)))))
          (when-let ((direct-subs (locative-type-direct-subs locative-type)))
-           (format stream "- Direct sub locative types: ~{~A~^, ~}~%"
+           (format stream "- Direct locative subtypes: ~{~A~^, ~}~%"
                    (loop for sub in direct-subs
                          collect (md-link (dref sub 'locative))))))
        stream :paragraphp nil))

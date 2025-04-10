@@ -6,7 +6,7 @@
   """List all definitions of NAME that are of DTYPE as [DREFs][class].
 
   Just as `(DREF NAME LOCATIVE)` returns the canonical definition, the
-  DREF-NAMEs of returned by DEFINITIONS are different from NAME:
+  DREF-NAMEs of returned by DEFINITIONS may be different from NAME:
 
   ```cl-transcript
   (definitions "PAX")
@@ -21,13 +21,13 @@
   Similarly, DREF-LOCATIVE-TYPE may be more made more specific:
 
   ```cl-transcript
-  (definitions 'dref:locate-error :dtype 'class)
+  (definitions 'dref:locate-error :dtype 'type)
   ==> (#<DREF LOCATE-ERROR CONDITION>)
   ```
 
   Can be extended via MAP-DEFINITIONS-OF-NAME."""
   (let ((drefs (definitions-with-locative-types name (cover-dtype dtype))))
-    (filter-drefs-by-dtype (delete-duplicates drefs :test #'xref=) dtype)))
+    (filter-covered-drefs (delete-duplicates drefs :test #'xref=) dtype)))
 
 (defun definitions-with-locative-types (name locative-types)
   (let ((drefs ())
@@ -39,22 +39,6 @@
         (when (eq mapper 'swank-definitions)
           (push locative-type swank-locative-types))))
     (append drefs (swank-definitions name swank-locative-types))))
-
-(defun filter-drefs-by-dtype (drefs dtype)
-  ;; We use the fact that DREFS is the result
-  ;; DEFINITIONS-WITH-LOCATIVE-TYPES for (COVER-DTYPE DTYPE) as
-  ;; LOCATIVE-TYPES. The bound given by COVER-DTYPE is tight in some
-  ;; common cases, which we pick off to avoid the busywork of checking
-  ;; something that's always true.
-  ;;
-  ;; More generally, COVER-DTYPE could provide the minimal necessary
-  ;; type to check.
-  (if (or (find-locative-type dtype)
-          (member dtype '(t top pseudo)))
-      drefs
-      (loop for dref in drefs
-            when (dtypep dref dtype)
-              collect dref)))
 
 (defun/autoloaded dref-apropos (name &key package external-only case-sensitive
                                      (dtype t))
@@ -81,7 +65,7 @@
   ```
 
   On the other hand, when NAME or PACKAGE is a STRING, they are
-  matched as substrings:
+  matched as substrings to the defintion's name PRINC-TO-STRINGed:
 
   ```cl-transcript
   (dref-apropos "method" :package :dref :external-only t)
@@ -140,6 +124,9 @@
     a matching package.
 
   - DTYPE matches candidate definition `D` if `(DTYPEP D DTYPE)`.
+
+  - SETF [function names][clhs] are matched on the embedded symbol
+    only.
 
   Can be extended via MAP-REFERENCES-OF-TYPE and
   MAP-DEFINITIONS-OF-NAME."""
@@ -204,10 +191,15 @@
                 in (matching-symbols #'matching-package-p #'matching-name-p
                                      external-only)
               do (dolist (dref (definitions-with-locative-types symbol to-try))
-                   (push dref drefs))))
+                   (push dref drefs))
+                 ;; This feels expensive just for SETF names.
+                 (let ((setf-name `(setf ,symbol)))
+                   (dolist (dref (definitions-with-locative-types
+                                  setf-name to-try))
+                     (push dref drefs)))))
       (sort-references
-       (filter-drefs-by-dtype (remove-duplicate-drefs/nonstable drefs)
-                              dtype)))))
+       (filter-covered-drefs (remove-duplicate-drefs/nonstable drefs)
+                             dtype)))))
 
 (defun matching-symbols (package-pred symbol-pred external-only)
   (let ((h (make-hash-table)))

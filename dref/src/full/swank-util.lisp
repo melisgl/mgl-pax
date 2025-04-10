@@ -39,7 +39,8 @@
          ;; E.g. to find the package when OBJECT is :DREF. On SBCL,
          ;; SWANK-BACKEND:FIND-DEFINITIONS barfs on keywords.
          (make-symbol (symbol-name object)))
-        ((symbolp object)
+        ((or (symbolp object)
+             (listp object))
          object)
         (t
          (assert nil))))
@@ -89,7 +90,7 @@
 ;;;; Swank utilities that depend on DREF
 
 (defun swank-definitions (name locative-types)
-  (when (and (or (symbolp name) (stringp name))
+  (when (and (or (symbolp name) (stringp name) (listp name))
              locative-types)
     (loop for dspec in (swank-dspecs name)
           for dref = (dspec-to-definition dspec name)
@@ -107,11 +108,12 @@
 ;;; expensive SWANK-BACKEND:FIND-DEFINITIONS function.
 (defun swank-source-location (name &rest locatives)
   (let* ((dspecs (loop for locative in locatives
-                       ;; Get the non-actualized DREF, so that
-                       ;; PAX:SECTIONs (actualized from VARIABLEs) can
-                       ;; find their source location.
+                       ;; Get the initial DREF, so that PAX:SECTIONs
+                       ;; (canonicalized from VARIABLEs) can find
+                       ;; their source location.
                        for dref = (ignore-errors
-                                   (locate* (xref name locative)))
+                                   (call-lookup name (locative-type locative)
+                                                (locative-args locative)))
                        when dref
                          collect (definition-to-dspec dref)))
          (dspec-and-location-list
@@ -362,7 +364,9 @@
         (method-dspec-to-definition dspec)
         ;; Handle the symbol-based cases where the DPSEC is unique and
         ;; easy.
-        (when (symbolp name)
+        (when (or (symbolp name)
+                  ;; For (SETF FOO)
+                  (listp name))
           (loop named lazy-wasteful-parsing
                 for (locative-type* dspec*)
                   in `((variable ,(swank-variable-dspec name))
@@ -391,7 +395,7 @@
                        (setq locative-type* 'constant))
                      #+(or allegro ccl cmucl ecl)
                      (when (eq locative-type* 'function)
-                       (cond ((or (macro-function name)
+                       (cond ((or (name-of-macro-p name)
                                   (special-operator-p* name))
                               (setq locative-type* 'macro))
                              ((typep (ignore-errors (symbol-function name))

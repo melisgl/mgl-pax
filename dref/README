@@ -9,43 +9,46 @@ Some defining forms do not create first-class
 objects. For example, DEFUN creates
 FUNCTION objects, but DEFVAR does not create variable
 objects as no such thing exists. The main purpose of this library is
-to fill this gap with the introduction of XREF objects:
-
-```common-lisp
-(xref '*my-var* 'variable)
-==> #<XREF *MY-VAR* VARIABLE>
-```
-
-XREFs just package up a @NAME (`*MY-VAR*`) and a
-@LOCATIVE (VARIABLE). They need not denote existing
-definitions until we actually want to use them:
-
-```
-(docstring (xref '*my-var* 'variable))
-.. debugger invoked on LOCATE-ERROR:
-..   Could not locate *MY-VAR* VARIABLE.
-```
+to fill this gap with the introduction of DREF objects:
 
 ```common-lisp
 (defvar *my-var* nil
   "This is my var.")
-
-(docstring (xref '*my-var* 'variable))
-=> "This is my var."
-```
-
-Behind the scenes, the DOCSTRING function LOCATEs the definition
-corresponding to its XREF argument, turning it into a DREF:
-
-```common-lisp
-(locate (xref '*my-var* 'variable))
+(dref '*my-var* 'variable)
 ==> #<DREF *MY-VAR* VARIABLE>
 ```
 
-Within DRef, the DREF-EXT::@DREF-SUBCLASSES form the basis of
-extending DOCSTRING, SOURCE-LOCATION and ARGLIST. Outside DRef,
-PAX makes PAX:DOCUMENT extensible through
-PAX:DOCUMENT-OBJECT\*, which has methods specialized on DREFs.
+DREFs just package up a @NAME (`*MY-VAR*`) and a
+@LOCATIVE (VARIABLE) then check that the definition
+actually exists:
+
+```common-lisp
+(dref 'junk 'variable)
+.. debugger invoked on LOCATE-ERROR:
+..   Could not locate JUNK VARIABLE.
+```
+
+The @BASIC-OPERATIONS on definitions in DRef are ARGLIST, DOCSTRING
+and SOURCE-LOCATION.
+
+```common-lisp
+(docstring (dref '*my-var* 'variable))
+=> "This is my var."
+```
+
+For definitions associated with objects, the definition can be
+LOCATEd from the object:
+
+```common-lisp
+(locate #'print)
+==> #<DREF PRINT FUNCTION>
+```
+
+These objects designate their definitions, so `(DOCSTRING #'PRINT)`
+works. Extending DRef and these operations is possible through
+DREF-EXT::@DEFINING-LOCATIVE-TYPES. It is also possible to define
+new operations. For example, PAX makes
+PAX:DOCUMENT extensible through PAX:DOCUMENT-OBJECT\*.
 
 Finally, existing definitions can be queried with DEFINITIONS and
 DREF-APROPOS:
@@ -68,7 +71,7 @@ DREF-APROPOS:
 ```
 
 ```common-lisp
-(dref-apropos 'locate-error :package :dref :external-only t)
+(dref-apropos 'locate-error :package :dref)
 ==> (#<DREF LOCATE-ERROR CONDITION> #<DREF LOCATE-ERROR FUNCTION>)
 
 (dref-apropos "ate-err" :package :dref :external-only t)
@@ -76,7 +79,7 @@ DREF-APROPOS:
 ```
 
 
-## Locatives and References
+## References
 
 After the @INTRODUCTION, here we get into the details. Of special
 interest are:
@@ -84,43 +87,31 @@ interest are:
 - The XREF function to construct an arbitrary @REFERENCE without any
   checking of validity.
 
-- LOCATE and DREF to construct a syntactically valid
-  reference (matching the LAMBDA-LIST in the locative type's
-  definition) that refers to an exisiting
-  definition.
+- LOCATE and DREF to look up the @DEFINITION of an
+  object (e.g `#'PRINT`) or a @REFERENCE (e.g. `(XREF 'PRINT
+  'FUNCTION)`).
 
 - RESOLVE to find the first-class (non-XREF) object the
   definition refers to, if any.
 
-@OPERATIONS (ARGLIST, DOCSTRING, SOURCE-LOCATION) know how to deal
-with references (discussed in the DREF-EXT::@EXTENDING-DREF).
+The @BASIC-OPERATIONS (ARGLIST, DOCSTRING, SOURCE-LOCATION) know how to
+deal with references (discussed in the DREF-EXT::@EXTENDING-DREF).
 
 - [class] XREF
 
-    An XREF (cross-reference) may represent some
-    kind of definition of its @NAME in the context given by its
-    @LOCATIVE. The definition may not exist and the locative may be
-    malformed. The subclass DREF
-    represents definitions that exist.
-
-- [class] DREF XREF
-
-    DREFs can be thought of as referring to definitions
-    that actually exist, although changes in the system can invalidate
-    them (for example, a DREF to a function definition can be
-    invalidated by FMAKUNBOUND).
-    
-    DREFs must be created with LOCATE, and their purpose is to allow
-    easy specialization of other generic functions (see
-    DREF-EXT::@EXTENDING-DREF) and to confine locative validation to
-    LOCATE.
+    An XREF (cross-reference) is a @REFERENCE. It may
+    represent some kind of @DEFINITION of its @NAME in the context given
+    by its @LOCATIVE. The definition may not exist and the locative may
+    even be invalid. The subclass DREF represents
+    definitions that exist.
 
 - [function] XREF NAME LOCATIVE
 
-    A shorthand for `(MAKE-INSTANCE 'XREF :NAME NAME :LOCATIVE LOCATIVE)`.
-    It does no error checking: the LOCATIVE-TYPE of LOCATIVE-TYPE need
-    not be defined, and the LOCATIVE-ARGS need not be valid. Use LOCATE
-    or the DREF function to create DREF objects.
+    A shorthand for `(MAKE-INSTANCE 'XREF :NAME NAME :LOCATIVE LOCATIVE)`
+    to create XREF objects. It does no error checking: the
+    LOCATIVE-TYPE of LOCATIVE-TYPE need not be defined, and the
+    LOCATIVE-ARGS need not be valid. Use LOCATE or the DREF function to
+    create DREF objects.
 
 - [function] XREF= XREF1 XREF2
 
@@ -129,11 +120,20 @@ with references (discussed in the DREF-EXT::@EXTENDING-DREF).
     DREFs. However, two XREFs different under XREF=
     may denote the same DREFs.
 
+- [class] DREF XREF
+
+    DREFs can be thought of as @DEFINITIONs that
+    actually exist, although changes in the system can invalidate
+    them (for example, a DREF to a function definition can be
+    invalidated by FMAKUNBOUND). DREFs must be created with LOCATE or
+    the DREF function.
+    
+    Two DREFs created in the same dynamic environment denote the
+    same thing if and only if they are XREF=.
+
 - [function] LOCATE OBJECT &OPTIONAL (ERRORP T)
 
-    Return a DREF representing the definition given by the arguments.
-    In the same dynamic environment, two DREFs denote the same
-    thing if and only if they are XREF=.
+    Return a DREF representing the @DEFINITION of OBJECT.
     
     OBJECT must be a supported first-class object, a DREF, or an
     XREF:
@@ -153,15 +153,17 @@ with references (discussed in the DREF-EXT::@EXTENDING-DREF).
     ==> #<DREF PRINT FUNCTION>
     ```
     
-    LOCATE-ERROR is signalled if OBJECT is an XREF with malformed
-    LOCATIVE-ARGS, or if no corresponding definition is found. If ERRORP
-    is NIL, then NIL is returned instead.
+    When OBJECT is a DREF, it is simply returned.
+    
+    Else, a LOCATE-ERROR is signalled if OBJECT is an XREF with an
+    invalid @LOCATIVE, or if no corresponding definition is found. If
+    ERRORP is NIL, then NIL is returned instead.
     
     ```common-lisp
     (locate (xref 'no-such-function 'function))
     .. debugger invoked on LOCATE-ERROR:
     ..   Could not locate NO-SUCH-FUNCTION FUNCTION.
-    ..   NO-SUCH-FUNCTION is not a symbol naming a function.
+    ..   NO-SUCH-FUNCTION does not name a function.
     ```
     
     ```common-lisp
@@ -177,10 +179,9 @@ with references (discussed in the DREF-EXT::@EXTENDING-DREF).
     ..   Could not locate "xxx".
     ```
     
-    Use the low-level XREF to construct an XREF without error
-    checking.
+    Use the XREF function to construct an XREF without error checking.
     
-    Can be extended via LOCATE\*.
+    See DREF-EXT::@EXTENDING-LOCATE.
 
 - [function] DREF NAME LOCATIVE &OPTIONAL (ERRORP T)
 
@@ -190,20 +191,23 @@ with references (discussed in the DREF-EXT::@EXTENDING-DREF).
 
     If OBJECT is an XREF, then return the first-class object
     associated with its definition if any. Return OBJECT if it's not an
-    XREF. Thus, the value returned is never an XREF.
+    XREF. Thus, the value returned is never an XREF. The second return
+    value is whether resolving succeeded.
     
     ```common-lisp
     (resolve (dref 'print 'function))
     ==> #<FUNCTION PRINT>
+    => T
     ```
     
     ```common-lisp
     (resolve #'print)
     ==> #<FUNCTION PRINT>
+    => T
     ```
     
     If OBJECT is an XREF, and the definition for it cannot be LOCATEd,
-    then signal a LOCATE-ERROR condition.
+    then LOCATE-ERROR is signalled.
     
     ```common-lisp
     (resolve (xref 'undefined 'variable))
@@ -212,8 +216,8 @@ with references (discussed in the DREF-EXT::@EXTENDING-DREF).
     ```
     
     If there is a definition, but there is no first-class object
-    corresponding to it, then signal a RESOLVE-ERROR condition or return
-    NIL depending on ERRORP:
+    corresponding to it, then RESOLVE-ERROR is signalled or NIL is
+    returned depending on ERRORP:
     
     ```common-lisp
     (resolve (dref '*print-length* 'variable))
@@ -223,6 +227,7 @@ with references (discussed in the DREF-EXT::@EXTENDING-DREF).
     
     ```common-lisp
     (resolve (dref '*print-length* 'variable) nil)
+    => NIL
     => NIL
     ```
     
@@ -243,27 +248,191 @@ with references (discussed in the DREF-EXT::@EXTENDING-DREF).
     Signalled by RESOLVE when the object defined cannot
     be returned, and ERRORP is true.
 
+### Dissecting References
+
+- [reader] XREF-NAME [XREF][1538] (:NAME)
+
+    The @NAME of the reference.
+
+- [reader] XREF-LOCATIVE [XREF][1538] (:LOCATIVE)
+
+    The @LOCATIVE of the reference.
+    
+    The locative is normalized by replacing single-element lists with
+     their only element:
+    
+    ```common-lisp
+    (xref 'print 'function)
+    ==> #<XREF PRINT FUNCTION>
+    ```
+    
+    ```common-lisp
+    (xref 'print '(function))
+    ==> #<XREF PRINT FUNCTION>
+    ```
+
+
+- [reader] DREF-NAME [DREF][d930]
+
+    The same as XREF-NAME, but only works on
+    DREFs. Use it as a statement of intent.
+
+- [reader] DREF-LOCATIVE [DREF][d930]
+
+    The same as XREF-LOCATIVE, but only works on
+    DREFs. Use it as a statement of intent.
+
+- [reader] DREF-ORIGIN [DREF][d930]
+
+    The object from which LOCATE constructed this
+    DREF. DREF-ORIGIN may have @PRESENTATION arguments, which
+    are not included in LOCATIVE-ARGS as is the case with the INITFORM
+    argument of the VARIABLE locative:
+    
+    ```common-lisp
+    (dref '*standard-output* '(variable "see-below"))
+    ==> #<DREF *STANDARD-OUTPUT* VARIABLE>
+    ```
+    
+    ```common-lisp
+    (dref-origin (dref '*standard-output* '(variable "see-below")))
+    ==> #<XREF *STANDARD-OUTPUT* (VARIABLE "see-below")>
+    ```
+    
+    The INITFORM argument overrides the global binding of
+    *STANDARD-OUTPUT* when it's PAX:DOCUMENTed:
+    
+    ```common-lisp
+    (first-line
+     (pax:document (dref '*standard-output* '(variable "see-below"))
+                   :stream nil))
+    => "- [variable] *STANDARD-OUTPUT* \"see-below\""
+    ```
+
+
+- [function] LOCATIVE-TYPE LOCATIVE
+
+    Return @LOCATIVE-TYPE of the @LOCATIVE LOCATIVE. This is the first
+    element of LOCATIVE if it's a list. If it's a symbol, it's that
+    symbol itself.
+
+- [function] LOCATIVE-ARGS LOCATIVE
+
+    Return the REST of @LOCATIVE LOCATIVE if it's a list. If it's a symbol,
+    then return NIL. See @LOCATIVE.
+
+The following convenience functions are compositions of
+{`LOCATIVE-TYPE`, `LOCATIVE-ARGS`} and {`XREF-LOCATIVE`,
+`DREF-LOCATIVE`}.
+
+- [function] XREF-LOCATIVE-TYPE XREF
+
+- [function] XREF-LOCATIVE-ARGS XREF
+
+- [function] DREF-LOCATIVE-TYPE DREF
+
+- [function] DREF-LOCATIVE-ARGS DREF
+
+### References Glossary
+
+- [glossary-term] reference
+
+    A reference is a @NAME plus a @LOCATIVE, and it identifies a
+    possible definition. References are of class XREF. When a reference
+    is a DREF, it may also be called a definition.
+
+- [glossary-term] definition
+
+    A definition is a @REFERENCE that identifies a concrete definition.
+    Definitions are of class DREF. A definition RESOLVEs to the
+    first-class object associated with the definition if such a thing
+    exists, and LOCATE on this object returns the canonical DREF object
+    that's unique under XREF=.
+    
+    The kind of a definition is given by its @LOCATIVE-TYPE. There is at
+    most one definition for any given @NAME and locative type.
+    Equivalently, there can be no two definitions of the same DREF-NAME
+    and DREF-LOCATIVE-TYPE but different DREF-LOCATIVE-ARGS.
+
+- [glossary-term] name
+
+    Names are symbols, lists or strings which name functions, types, packages,
+    etc. Together with @LOCATIVEs, they form @REFERENCEs.
+    
+    See XREF-NAME and DREF-NAME.
+
+- [glossary-term] locative
+
+    Locatives specify a *type* of definition such as
+    FUNCTION or VARIABLE. Together with @NAMEs,
+    they form @REFERENCEs.
+    
+    In their compound form, locatives may have arguments (see
+    LOCATIVE-ARGS) as in `(METHOD () (NUMBER))`. In fact, their atomic
+    form is shorthand for the common no-argment case: that is,
+    FUNCTION is equivalent to `(FUNCTION)`.
+    
+    A locative is valid if it names an existing @LOCATIVE-TYPE and its
+    LOCATIVE-ARGS match that type's lambda-list (see
+    DEFINE-LOCATIVE-TYPE).
+    
+    ```common-lisp
+    (arglist (dref 'method 'locative))
+    => (METHOD-QUALIFIERS METHOD-SPECIALIZERS)
+    => :DESTRUCTURING
+    ```
+    
+    See XREF-LOCATIVE and DREF-LOCATIVE.
+
+- [glossary-term] locative type
+
+    The locative type is the part of a @LOCATIVE that identifies
+    what kind definition is being referred to. This is always a symbol.
+    
+    Locative types are defined with DEFINE-LOCATIVE-TYPE or
+    DEFINE-PSEUDO-LOCATIVE-TYPE. See @BASIC-LOCATIVE-TYPES for the list
+    locative types built into DRef, and MGL-PAX::@PAX-LOCATIVES for
+    those in PAX.
+    
+    Also, see LOCATIVE-TYPE, XREF-LOCATIVE-TYPE, DREF-LOCATIVE-TYPE,
+    DREF-EXT::@DEFINING-LOCATIVE-TYPES.
+
+- [glossary-term] presentation
+
+    @REFERENCEs may have arguments (see
+    DREF-EXT::@DEFINING-LOCATIVE-TYPES) that do not affect the behaviour
+    of LOCATE and the @BASIC-OPERATIONS, but which may be used for
+    other, "presentation" purposes. For example, the VARIABLE
+    locative's INITFORM argument is used for presentation by
+    PAX:DOCUMENT. Presentation arguments are available via
+    DREF:DREF-ORIGIN but do not feature in DREF-LOCATIVE to ensure the
+    uniqueness of the definition under XREF=.
+
 ## DTYPEs
 
-DTYPEs are a generalization Lisp types, to support definitions
-without first-class objects. A DTYPE is either
+DTYPEs are to Lisp types what @LOCATIVE-TYPEs are to CLASSes.
+A DTYPE is either
 
-- a normal Lisp type such as `METHOD`,
-  `(integer 3 5)`, NIL and T, or
-
-- a @LOCATIVE-TYPE such as TYPE and CLHS, or
+- a @LOCATIVE-TYPE such as FUNCTION, TYPE
+  and CLHS, or
 
 - a full @LOCATIVE such as `(METHOD () (NUMBER))` and `(CLHS
   SECTION)`, or
 
-- named with DEFINE-DTYPE, or
+- NIL (the empty DTYPE) and T (that encompasses all
+  LISP-LOCATIVE-TYPES), or
 
-- a combination of the previous with AND, OR and
-  NOT.
+- named with DEFINE-DTYPE (such as PSEUDO and TOP), or
 
-Just as @LOCATIVE-TYPEs extend the Lisp CLASS hierarchy, DTYPEs
-extend the Lisp type hierarchy. DTYPEs are
-used in DEFINITIONS and DREF-APROPOS to filter the set of
+- a combination of the above with AND, OR and
+  NOT, or
+
+- a MEMBER form with LOCATEable definitions, or
+
+- a SATISFIES form with the name of a function that takes a single
+  @DEFINITION as its argument.
+
+DTYPEs are used in DEFINITIONS and DREF-APROPOS to filter the set of
 definitions as in
 
 ```common-lisp
@@ -308,103 +477,49 @@ definitions as in
     This is the union of all PSEUDO-LOCATIVE-TYPES. It expands
     to `(OR ,@(PSEUDO-LOCATIVE-TYPES))`.
 
-- [function] DTYPEP OBJECT DTYPE
+- [function] DTYPEP DREF DTYPE
 
-    Like CL:TYPEP, but OBJECT may be an XREF and DTYPE may involve
-    @LOCATIVE-TYPEs and full @LOCATIVEs.
+    See if DREF is of DTYPE.
     
-    - OBJECT may be an XREF (including DREFs). `(DTYPEP OBJECT DTYPE)`
-      is equivalent to `(DTYPEP (LOCATE OBJECT) DTYPE)`. This form is
-      necesary when the definition has no first-class object associated
-      with it:
+    - *Atomic locatives:* If DTYPE is a @LOCATIVE-TYPE,
+      then it matches definitions with that locative type and its
+      locative subtypes.
+    
+        Because CONSTANT is defined with VARIABLE among its
+         LOCATIVE-SUPERTYPES:
     
         ```common-lisp
         (dtypep (dref 'pi 'constant) 'variable)
         => T
         ```
     
-        Note however that as a consequence, DTYPEP deviates from TYPEP
-        when OBJECT is an XREF:
-    
         ```common-lisp
-        (typep (dref 'number 'class) 'class)
-        => NIL
-        (dtypep (dref 'number 'class) 'class)
-        => T
-        (typep (xref 'number 'junk) 'standard-object)
-        => T
-        (dtypep (xref 'number 'junk) 'standard-object)
-        => NIL
-        (dtypep (xref 'number 'junk) 'junk)
-        => NIL
-        ```
-    
-        MEMBER and SATISFIES are only matched with the
-        RESOLVEd OBJECT if any:
-    
-        ```common-lisp
-        (let ((dref (dref nil 'type)))
-          (typep dref `(member ,dref)))
-        => T
-        (let ((dref (dref nil 'type)))
-          (dtypep dref `(member ,dref)))
-        => NIL
-        ```
-    
-    - If OBJECT is not of type XREF (including DREFs) and DTYPE is a
-      valid Lisp type specifier, then DTYPEP is equivalent to
-      TYPEP:
-    
-        ```common-lisp
-        (defparameter *c* (find-class 'number))
-        (defparameter *m* (find-method #'dref* () '(t t t)))
-        (typep *c* 'class)
-        => T
-        (dtypep *c* 'class)
-        => T
-        (typep *m* 'method)
-        => T
-        (dtypep *m* 'method)
-        => T
-        (typep 4 '(integer 3 5))
-        => T
-        (dtypep 4 '(integer 3 5))
+        (dtypep (dref 'number 'class) 'type)
         => T
         ```
     
-    - DTYPE may be a @LOCATIVE-TYPE:
+        It is an error if DTYPE is an ATOM but is not a @LOCATIVE-TYPE,
+        but (the empty) argument list of bare locative types are not
+        checked even if having no arguments makes them invalid
+        locatives.
+    
+    - *Compound locatives:* Locatives in their compound
+      form are validated and must match exactly (under EQUAL, as in
+      XREF=).
     
         ```common-lisp
-        (dtypep (dref nil 'type) 'type)
+        (defparameter *d* (dref 'dref* '(method () (t t t))))
+        (defparameter *d2* (dref 'dref* '(method (:around) (t t t))))
+        (dtypep *d* 'method)
         => T
-        ```
-    
-    - DTYPE may be a full @LOCATIVE:
-    
-        ```common-lisp
-        (typep *c* '(class))
+        (dtypep *d* '(method))
         .. debugger invoked on SIMPLE-ERROR:
-        ..   unknown type specifier: (CLASS)
-        (dtypep *c* '(class))
+        ..   Bad arguments NIL for locative METHOD with lambda list
+        ..   (METHOD-QUALIFIERS METHOD-SPECIALIZERS).
+        (dtypep *d* '(method () (t t t)))
         => T
-        (dtypep *c* '(class junk))
-        .. debugger invoked on SIMPLE-ERROR:
-        ..   Bad arguments (JUNK) for locative CLASS with lambda list NIL.
-        (typep *m* '(method () (t t t)))
-        .. debugger invoked on SIMPLE-ERROR:
-        ..   unknown type specifier: (METHOD NIL (T T T))
-        (dtypep *m* '(method () (t t t)))
-        => T
-        ```
-    
-        If a full locative matches, then its locative type (without the
-        locative args) also does.
-    
-    - DTYPE may be named by DEFINE-DTYPE:
-    
-        ```common-lisp
-        (dtypep 7 'top)
-        => T
+        (dtypep *d2* '(method () (t t t)))
+        => NIL
         ```
     
     - DTYPE may be constructed with AND, OR and
@@ -412,18 +527,26 @@ definitions as in
       named DTYPEs:
     
         ```common-lisp
-        (typep 7 '(or type string))
-        .. debugger invoked on SIMPLE-ERROR:
-        ..   unknown type specifier: TYPE
-        (dtypep 7 '(or type string))
-        => NIL
-        (dtypep 7 '(or integer type))
-        => T
-        (dtypep *c* '(or condition class))
-        => T
         (dtypep (dref 'locate-error 'condition) '(or condition class))
         => T
         (dtypep (dref nil 'type) '(and type (not class)))
+        => T
+        ```
+    
+    - For `(MEMBER &REST OBJS)`, each of OBJS is LOCATEd and DREF is
+      matched against them with XREF=:
+    
+        ```common-lisp
+        (dtypep (locate #'print) `(member ,#'print))
+        => T
+        ```
+    
+    - For `(SATISFIES PRED)`, the predicate PRED is funcalled with DREF.
+    
+    - DTYPE may be named by DEFINE-DTYPE:
+    
+        ```common-lisp
+        (dtypep (locate #'car) 'top)
         => T
         ```
 
@@ -435,7 +558,7 @@ definitions as in
     List all definitions of NAME that are of DTYPE as DREFs.
     
     Just as `(DREF NAME LOCATIVE)` returns the canonical definition, the
-    DREF-NAMEs of returned by DEFINITIONS are different from NAME:
+    DREF-NAMEs of returned by DEFINITIONS may be different from NAME:
     
     ```common-lisp
     (definitions "PAX")
@@ -450,7 +573,7 @@ definitions as in
     Similarly, DREF-LOCATIVE-TYPE may be more made more specific:
     
     ```common-lisp
-    (definitions 'dref:locate-error :dtype 'class)
+    (definitions 'dref:locate-error :dtype 'type)
     ==> (#<DREF LOCATE-ERROR CONDITION>)
     ```
     
@@ -483,7 +606,7 @@ definitions as in
     ```
     
     On the other hand, when NAME or PACKAGE is a STRING, they are
-    matched as substrings:
+    matched as substrings to the defintion's name PRINC-TO-STRINGed:
     
     ```common-lisp
     (dref-apropos "method" :package :dref :external-only t)
@@ -543,36 +666,56 @@ definitions as in
     
     - DTYPE matches candidate definition `D` if `(DTYPEP D DTYPE)`.
     
+    - SETF function names are matched on the embedded symbol
+      only.
+    
     Can be extended via MAP-REFERENCES-OF-TYPE and
     MAP-DEFINITIONS-OF-NAME.
+
+- [glossary-term] reverse definition order
+
+    Lists of @LOCATIVE-TYPEs and aliases are sometimes in reverse order
+    of the time of their definition. This order is not affected by
+    redefinition, regardless of whether it's by DEFINE-LOCATIVE-TYPE,
+    DEFINE-PSEUDO-LOCATIVE-TYPE, DEFINE-SYMBOL-LOCATIVE-TYPE or
+    DEFINE-LOCATIVE-ALIAS.
 
 - [function] LOCATIVE-TYPES
 
     Return a list of non-alias locative types.
     This is the UNION of LISP-LOCATIVE-TYPES and PSEUDO-LOCATIVE-TYPES,
     which is the set of constituents of the DTYPE TOP.
+    
+    This list is in @REVERSE-DEFINITION-ORDER.
 
 - [function] LISP-LOCATIVE-TYPES
 
     Return the locative types that correspond to Lisp definitions,
     which typically have SOURCE-LOCATION. These are defined with
-    DEFINE-LOCATIVE-TYPE and are the constituents of DTYPE T.
+    DEFINE-LOCATIVE-TYPE and DEFINE-SYMBOL-LOCATIVE-TYPE and are the
+    constituents of DTYPE T.
+    
+    This list is in @REVERSE-DEFINITION-ORDER.
 
 - [function] PSEUDO-LOCATIVE-TYPES
 
     Return the locative types that correspond to non-Lisp definitions.
     These are the ones defined with DEFINE-PSEUDO-LOCATIVE-TYPE and are
     the constituents of DTYPE PSEUDO.
+    
+    This list is in @REVERSE-DEFINITION-ORDER.
 
 - [function] LOCATIVE-ALIASES
 
     Return the list of locatives aliases, defined with DEFINE-LOCATIVE-ALIAS.
+    
+    This list is in @REVERSE-DEFINITION-ORDER.
 
-## Operations
+## Basic Operations
 
-The following functions take a single object definition as their argument.
-They may try to LOCATE the definition of the object, which may
-signal a LOCATE-ERROR condition.
+The following functions take a single argument, which may be a
+DREF, or an object denoting its own definition (see
+LOCATE).
 
 - [function] ARGLIST OBJECT
 
@@ -614,9 +757,9 @@ signal a LOCATE-ERROR condition.
     
     - DEFTYPE lambda lists on ABCL, AllegroCL, CLISP, CCL, CMUCL, ECL;
     
-    - default values in MACRO lambda lists on AllegroCL; various edge
+    - default values in MACRO lambda lists on AllegroCL;
     
-    - cases involving traced functions.
+    - various edge cases involving traced functions.
     
     Can be extended via ARGLIST\*
 
@@ -654,7 +797,7 @@ signal a LOCATE-ERROR condition.
     
     Can be extended via SOURCE-LOCATION\*.
 
-## Locative Types
+## Basic Locative Types
 
 The following are the @LOCATIVE-TYPEs supported out of the
 box. As all locative types, they are named by symbols. When there is
@@ -664,16 +807,20 @@ references can be RESOLVEd to a unique object as is the case in
 ```common-lisp
 (resolve (dref 'print 'function))
 ==> #<FUNCTION PRINT>
+=> T
 ```
 
 Even if there is no such CL type, the ARGLIST, the DOCSTRING, and
 the SOURCE-LOCATION of the defining form is usually recorded unless
 otherwise noted.
 
+The basic locative types and their inheritance structure is loosely
+based on the DOC-TYPE argument of CL:DOCUMENTATION.
+
 ### Locatives for Variables
 
 - [locative] VARIABLE &OPTIONAL INITFORM
-    - Direct sub locative types: [CONSTANT][c819], [SECTION][672f], [GLOSSARY-TERM][5119]
+    - Direct locative subtypes: [GLOSSARY-TERM][5119], [SECTION][672f], [CONSTANT][c819]
 
     Refers to a global special variable.
     INITFORM, or if not specified, the global value of the variable is
@@ -687,7 +834,7 @@ otherwise noted.
     VARIABLE references do not RESOLVE.
 
 - [locative] CONSTANT &OPTIONAL INITFORM
-    - Direct super locative types: [VARIABLE][6c83]
+    - Direct locative supertypes: [VARIABLE][6c83]
 
     Refers to a constant variable defined with DEFCONSTANT. INITFORM,
     or if not specified, the value of the constant is included in the
@@ -703,7 +850,8 @@ otherwise noted.
     Refers to a global macro, typically defined with DEFMACRO, or to a
     special operator.
     
-    MACRO references do not RESOLVE.
+    MACRO references resolve to the MACRO-FUNCTION of their NAME or
+    signal RESOLVE-ERROR if that's NIL.
 
 - [locative] SYMBOL-MACRO
 
@@ -729,33 +877,23 @@ otherwise noted.
     
     COMPILER-MACRO references do not RESOLVE.
 
-- [locative] SETF &OPTIONAL METHOD
-    - Direct super locative types: [FUNCTION][ba62]
+- [locative] SETF
 
-    Refers to a setf expander (see DEFSETF and DEFINE-SETF-EXPANDER)
-    or a setf function (e.g. `(DEFUN (SETF NAME) ...)` or the
-    same with DEFGENERIC). The format in DEFSECTION is `(<NAME> SETF)`
-    in all these cases.
+    Refers to a setf expander (see DEFSETF and DEFINE-SETF-EXPANDER).
+    Setf functions (e.g. `(DEFUN (SETF NAME) ...)` or the same
+    with DEFGENERIC) are handled by the FUNCTION,
+    GENERIC-FUNCTION and METHOD locatives.
     
-    To refer to methods of a setf generic function, use a METHOD
-    locative inside SETF like this:
-    
-        (dref 'documentation '(setf (method () (t symbol (eql function))))
-    
-    References to setf functions RESOLVE to the function object. Setf
-    expander references do not RESOLVE.
+    SETF references do not RESOLVE.
 
 ### Locatives for Functions and Methods
 
 - [locative] FUNCTION
-    - Equivalent class: [FUNCTION][119e]
-    
-    - Direct sub locative types: [SETF][d83a], [GENERIC-FUNCTION][5875], [STRUCTURE-ACCESSOR][090c]
+    - Direct locative subtypes: [STRUCTURE-ACCESSOR][090c], [GENERIC-FUNCTION][5875]
 
     Refers to a global function, typically defined with DEFUN. The
-    @NAME must be a SYMBOL (see the SETF locative for how to reference
-    setf functions). It is also allowed to reference
-    GENERIC-FUNCTIONs as FUNCTIONs:
+    @NAME must be a function name. It is also allowed to
+    reference GENERIC-FUNCTIONs as FUNCTIONs:
     
     ```common-lisp
     (dref 'docstring 'function)
@@ -764,23 +902,18 @@ otherwise noted.
 
 
 - [locative] GENERIC-FUNCTION
-    - Equivalent class: [GENERIC-FUNCTION][efe2]
-    
-    - Direct super locative types: [FUNCTION][ba62]
+    - Direct locative supertypes: [FUNCTION][ba62]
 
     Refers to a GENERIC-FUNCTION, typically defined with
-    DEFGENERIC. The @NAME must be a SYMBOL (see the SETF locative for
-    how to reference setf functions).
+    DEFGENERIC. The @NAME must be a function name.
 
 - [locative] METHOD METHOD-QUALIFIERS METHOD-SPECIALIZERS
-    - Equivalent class: [METHOD][51c3]
-    
-    - Direct sub locative types: [READER][cc04], [WRITER][e548]
+    - Direct locative subtypes: [WRITER][e548], [READER][cc04]
 
-    Refers to METHODs named by SYMBOLs (for SETF methods,
-    see the SETF locative). METHOD-QUALIFIERS and METHOD-SPECIALIZERS
-    are similar to the CL:FIND-METHOD's arguments of the same names. For
-    example, the method
+    Refers to METHODs. @NAME must be a function name.
+    METHOD-QUALIFIERS and METHOD-SPECIALIZERS are similar to the
+    CL:FIND-METHOD's arguments of the same names. For example, the
+    method
     
     ```common-lisp
     (defgeneric foo-gf (x y z)
@@ -798,46 +931,46 @@ otherwise noted.
     METHOD is not EXPORTABLE-LOCATIVE-TYPE-P.
 
 - [locative] METHOD-COMBINATION
-    - Equivalent class: [METHOD-COMBINATION][9b70]
 
     Refers to a METHOD-COMBINATION, defined with
     DEFINE-METHOD-COMBINATION.
     
     METHOD-COMBINATION references do not RESOLVE.
 
-- [locative] ACCESSOR CLASS-NAME
-    - Direct super locative types: [READER][cc04], [WRITER][e548]
+- [locative] READER CLASS-NAME
+    - Direct locative supertypes: [METHOD][172e]
+    
+    - Direct locative subtypes: [ACCESSOR][00d4]
 
-    Refers to an :ACCESSOR in a DEFCLASS:
+    Refers to a :READER method in a DEFCLASS:
     
     ```common-lisp
     (defclass foo ()
-      ((xxx :accessor foo-xxx)))
-    
-    (dref 'foo-xxx '(accessor foo))
-    ==> #<DREF FOO-XXX (ACCESSOR FOO)>
+      ((xxx :reader foo-xxx)))
+       
+    (dref 'foo-xxx '(reader foo))
+    ==> #<DREF FOO-XXX (READER FOO)>
     ```
+
+
+- [locative] WRITER CLASS-NAME
+    - Direct locative supertypes: [METHOD][172e]
+    
+    - Direct locative subtypes: [ACCESSOR][00d4]
+
+    Like ACCESSOR, but refers to a :WRITER method in a DEFCLASS.
+
+- [locative] ACCESSOR CLASS-NAME
+    - Direct locative supertypes: [READER][cc04], [WRITER][e548]
+
+    Refers to an :ACCESSOR in a DEFCLASS.
     
     An :ACCESSOR in DEFCLASS creates a reader and a writer method.
     Somewhat arbitrarily, ACCESSOR references RESOLVE to the writer
     method but can be LOCATEd with either.
 
-- [locative] READER CLASS-NAME
-    - Direct super locative types: [METHOD][172e]
-    
-    - Direct sub locative types: [ACCESSOR][00d4]
-
-    Like ACCESSOR, but refers to a :READER method in a DEFCLASS.
-
-- [locative] WRITER CLASS-NAME
-    - Direct super locative types: [METHOD][172e]
-    
-    - Direct sub locative types: [ACCESSOR][00d4]
-
-    Like ACCESSOR, but refers to a :WRITER method in a DEFCLASS.
-
 - [locative] STRUCTURE-ACCESSOR &OPTIONAL STRUCTURE-CLASS-NAME
-    - Direct super locative types: [FUNCTION][ba62]
+    - Direct locative supertypes: [FUNCTION][ba62]
 
     Refers to an accessor function generated by DEFSTRUCT.
     A LOCATE-ERROR condition is signalled if the wrong
@@ -851,7 +984,7 @@ otherwise noted.
 ### Locatives for Types and Declarations
 
 - [locative] TYPE
-    - Direct sub locative types: [CLASS][2060], [CONDITION][c479]
+    - Direct locative subtypes: [CLASS][2060]
 
     This locative can refer to types and classes and
     conditions, simply put, to things defined by DEFTYPE,
@@ -876,9 +1009,9 @@ otherwise noted.
     TYPE references do not RESOLVE.
 
 - [locative] CLASS
-    - Equivalent class: [CLASS][1f37]
+    - Direct locative supertypes: [TYPE][926d]
     
-    - Direct super locative types: [TYPE][926d]
+    - Direct locative subtypes: [CONDITION][c479]
 
     Naturally, CLASS is the locative type for CLASSes.
     
@@ -904,9 +1037,7 @@ otherwise noted.
 ### Locatives for the Condition System
 
 - [locative] CONDITION
-    - Equivalent class: [CONDITION][83e1]
-    
-    - Direct super locative types: [TYPE][926d]
+    - Direct locative supertypes: [CLASS][2060]
 
     Although CONDITION is not SUBTYPEP of CLASS, actual condition
     objects are commonly instances of a condition class that is a CLOS
@@ -923,7 +1054,6 @@ otherwise noted.
 
 
 - [locative] RESTART
-    - Equivalent class: [RESTART][38e4]
 
     A locative to refer to the definition of a restart defined by
     DEFINE-RESTART.
@@ -949,7 +1079,6 @@ otherwise noted.
 ### Locatives for Packages and Readtables
 
 - [locative] ASDF/SYSTEM:SYSTEM
-    - Equivalent class: ASDF/SYSTEM:SYSTEM
 
     Refers to an already loaded ASDF:SYSTEM (those in ASDF:REGISTERED-SYSTEMS).
     The @NAME may be anything ASDF:FIND-SYSTEM supports.
@@ -957,7 +1086,6 @@ otherwise noted.
     ASDF:SYSTEM is not EXPORTABLE-LOCATIVE-TYPE-P.
 
 - [locative] PACKAGE
-    - Equivalent class: [PACKAGE][1d5a]
 
     Refers to a PACKAGE, defined by DEFPACKAGE or MAKE-PACKAGE.
     The @NAME may be anything FIND-PACKAGE supports.
@@ -965,7 +1093,6 @@ otherwise noted.
     PACKAGE is not EXPORTABLE-LOCATIVE-TYPE-P.
 
 - [locative] READTABLE
-    - Equivalent class: [READTABLE][d646]
 
     Refers to a named READTABLE defined with
     NAMED-READTABLES:DEFREADTABLE, which associates a global name and a
@@ -975,24 +1102,35 @@ otherwise noted.
     
     READTABLE references RESOLVE to FIND-READTABLE on their @NAME.
 
-### DRef Locatives
+### Locatives for Unknown Definitions
 
-- [locative] LOCATIVE
-    - Direct super locative types: [DTYPE][85ba]
+- [locative] UNKNOWN DSPEC
 
-    This is the locative for @LOCATIVE-TYPEs defined with
-    DEFINE-LOCATIVE-TYPE, DEFINE-PSEUDO-LOCATIVE-TYPE and
-    DEFINE-LOCATIVE-ALIAS.
+    This locative type allows PAX to work in a limited way with
+    definition types it doesn't know. UNKNOWN definitions come from
+    DEFINITIONS, which uses SWANK/BACKEND:FIND-DEFINITIONS. The
+    following examples show PAX stuffing the Swank
+    dspec `(:DEFINE-ALIEN-TYPE DOUBLE-FLOAT)` into an UNKNOWN locative
+    on SBCL.
     
+    ```common-lisp
+    (definitions 'double-float)
+    ==> (#<DREF DOUBLE-FLOAT CLASS>
+    -->  #<DREF DOUBLE-FLOAT (UNKNOWN (:DEFINE-ALIEN-TYPE DOUBLE-FLOAT))>)
     ```
-    (first-line (source-location-snippet
-                 (source-location (dref 'macro 'locative))))
-    => "(define-locative-type macro ()"
+    
+    ```common-lisp
+    (dref 'double-float '(unknown (:define-alien-type double-float)))
+    ==> #<DREF DOUBLE-FLOAT (UNKNOWN (:DEFINE-ALIEN-TYPE DOUBLE-FLOAT))>
     ```
+    
+    ARGLIST and DOCSTRING return NIL for UNKNOWNs, but SOURCE-LOCATION
+    works.
 
+### Locatives for DRef Constructs
 
 - [locative] DTYPE
-    - Direct sub locative types: [LOCATIVE][0b3a]
+    - Direct locative subtypes: [LOCATIVE][0b3a]
 
     Locative for @DTYPES defined with DEFINE-DTYPE and LOCATIVE types.
     DTYPE is to LOCATIVE as TYPE is to CLASS.
@@ -1012,28 +1150,19 @@ otherwise noted.
     ```
 
 
-- [locative] UNKNOWN DSPEC
+- [locative] LOCATIVE
+    - Direct locative supertypes: [DTYPE][85ba]
 
-    This locative type allows PAX to work in a limited way with
-    locatives it doesn't know. UNKNOWN definitions come from
-    DEFINITIONS, which uses SWANK/BACKEND:FIND-DEFINITIONS. The
-    following examples show PAX stuffing the Swank
-    dspec `(:DEFINE-ALIEN-TYPE DOUBLE-FLOAT)` into an UNKNOWN locative
-    on SBCL.
+    This is the locative for @LOCATIVE-TYPEs defined with
+    DEFINE-LOCATIVE-TYPE, DEFINE-PSEUDO-LOCATIVE-TYPE and
+    DEFINE-LOCATIVE-ALIAS.
     
-    ```common-lisp
-    (definitions 'double-float)
-    ==> (#<DREF DOUBLE-FLOAT CLASS>
-    -->  #<DREF DOUBLE-FLOAT (UNKNOWN (:DEFINE-ALIEN-TYPE DOUBLE-FLOAT))>)
     ```
-    
-    ```common-lisp
-    (dref 'double-float '(unknown (:define-alien-type double-float)))
-    ==> #<DREF DOUBLE-FLOAT (UNKNOWN (:DEFINE-ALIEN-TYPE DOUBLE-FLOAT))>
+    (first-line (source-location-snippet
+                 (source-location (dref 'macro 'locative))))
+    => "(define-locative-type macro ()"
     ```
-    
-    ARGLIST and DOCSTRING return NIL for UNKNOWNs, but SOURCE-LOCATION
-    works.
+
 
 - [locative] LAMBDA &KEY ARGLIST ARGLIST-TYPE DOCSTRING DOCSTRING-PACKAGE FILE FILE-POSITION SNIPPET &ALLOW-OTHER-KEYS
 
@@ -1064,224 +1193,9 @@ otherwise noted.
     
     Also, see the PAX:INCLUDE locative.
 
-## Glossary
-
-- [glossary-term] name
-
-    Names are symbols or strings which name functions, types, packages,
-    etc. Together with @LOCATIVEs, they form @REFERENCEs.
-    
-    See XREF-NAME and DREF-NAME.
-
-- [glossary-term] locative
-
-    Locatives specify a *type* of definition such as
-    FUNCTION or VARIABLE and together with
-    @NAMEs form @REFERENCEs.
-    
-    A locative can be a symbol or a list whose CAR is a symbol. In
-    either case, the symbol is called the @LOCATIVE-TYPE, and the rest
-    of the elements are the *locative arguments* (for example, see the
-    METHOD locative).
-    
-    See XREF-LOCATIVE and DREF-LOCATIVE.
-
-- [glossary-term] locative type
-
-    The locative type is the part of a @LOCATIVE that identifies
-    what kind definition is being referred to. See @LOCATIVE-TYPES for
-    the list locative types built into DRef, and MGL-PAX::@PAX-LOCATIVES
-    for those in PAX.
-    
-    See XREF-LOCATIVE-TYPE, DREF-LOCATIVE-TYPE and EXPAND-DTYPE, that
-    expands the compound @DTYPES to a list of locative types.
-
-- [glossary-term] reference
-
-    A reference is a @NAME plus a @LOCATIVE, and it identifies a
-    possible definition. References are of class XREF. When a reference
-    is a DREF, it may also be called a definition.
-
-- [glossary-term] definition
-
-    A definition is a @REFERENCE that identifies a concrete definition.
-    Definitions are of class DREF. A definition RESOLVEs to the
-    first-class object associated with the definition if such a thing
-    exists, and LOCATE on this object returns a DREF object that's
-    unique under XREF=.
-    
-    The kind of a definition is given by its @LOCATIVE-TYPE.
-
-- [glossary-term] presentation
-
-    @REFERENCEs may have arguments (see
-    DREF-EXT::@ADDING-NEW-LOCATIVES) that do not affect the behaviour of
-    LOCATE and the standard DRef @OPERATIONS, but which may be used for
-    other, "presentation" purposes. For example, the VARIABLE
-    locative's INITFORM argument is used for presentation by
-    PAX:DOCUMENT. Presentation arguments are available via
-    DREF-EXT:DREF-ORIGIN.
-
 ## Extending DRef
 
-### References
-
-- [reader] XREF-NAME [XREF][1538] (:NAME)
-
-    The @NAME of the reference.
-
-- [reader] XREF-LOCATIVE [XREF][1538] (:LOCATIVE)
-
-    The @LOCATIVE of the reference.
-    
-    The locative is normalized by replacing single-element lists with
-     their only element:
-    
-    ```common-lisp
-    (xref 'print 'function)
-    ==> #<XREF PRINT FUNCTION>
-    ```
-    
-    ```common-lisp
-    (xref 'print '(function))
-    ==> #<XREF PRINT FUNCTION>
-    ```
-
-
-- [reader] DREF-NAME [DREF][d930]
-
-    The same as XREF-NAME, but only works on
-    DREFs. Use it as a statement of intent.
-
-- [reader] DREF-LOCATIVE [DREF][d930]
-
-    The same as XREF-LOCATIVE, but only works on
-    DREFs. Use it as a statement of intent.
-
-- [reader] DREF-ORIGIN [DREF][d930]
-
-    The object from which LOCATE constructed this
-    DREF. This is an XREF when the LOCATIVE argument
-    to LOCATE was non-NIL and the value NAME-OR-OBJECT argument
-    otherwise. DREF-ORIGIN may have @PRESENTATION arguments, which are
-    not included in LOCATIVE-ARGS as is the case with INITFORM
-    argument of the VARIABLE locative:
-    
-    ```common-lisp
-    (dref '*standard-output* '(variable "see-below"))
-    ==> #<DREF *STANDARD-OUTPUT* VARIABLE>
-    ```
-    
-    ```common-lisp
-    (dref-origin (dref '*standard-output* '(variable "see-below")))
-    ==> #<XREF *STANDARD-OUTPUT* (VARIABLE "see-below")>
-    ```
-    
-    The INITFORM argument overrides the global binding of
-    *STANDARD-OUTPUT* when it's PAX:DOCUMENTed:
-    
-    ```common-lisp
-    (first-line
-     (pax:document (dref '*standard-output* '(variable "see-below"))
-                   :stream nil))
-    => "- [variable] *STANDARD-OUTPUT* \"see-below\""
-    ```
-
-
-- [function] LOCATIVE-TYPE LOCATIVE
-
-    Return @LOCATIVE-TYPE of LOCATIVE (which may be from
-    XREF-LOCATIVE). This is the first element of LOCATIVE if it's a
-    list. If it's a symbol, it's that symbol itself.
-
-- [function] LOCATIVE-ARGS LOCATIVE
-
-    Return the REST of LOCATIVE (which may be from XREF-LOCATIVE)
-    if it's a list. If it's a symbol, then return NIL. The locative args
-    should match the LAMBDA-LIST of the LOCATIVE-TYPE's
-    definition, but this is guaranteed only for
-    locatives of DREFs and is not checked for plain
-    XREFs.
-
-The following convenience functions are compositions of
-{`LOCATIVE-TYPE`, `LOCATIVE-ARGS`} and {`XREF-LOCATIVE`,
-`DREF-LOCATIVE`}.
-
-- [function] XREF-LOCATIVE-TYPE XREF
-
-- [function] XREF-LOCATIVE-ARGS XREF
-
-- [function] DREF-LOCATIVE-TYPE DREF
-
-- [function] DREF-LOCATIVE-ARGS DREF
-
-### Locative Type Hierarchy
-
-Locative types form their own hierarchy, that
-is consistent with the Lisp CLASS hierarchy. The following rules
-apply:
-
-- A non-class Lisp type and a locative type with the same name must
-not exist at the same time.
-
-- The hierarchies of LISP-LOCATIVE-TYPES and PSEUDO-LOCATIVE-TYPES
-are distinct. That is, the DREF-CLASS of a Lisp one must not be a
-subclass of a PSEUDO one, and vice versa.
-
-- For locative types `L1` and `L2`, both LISP-LOCATIVE-TYPES and
-both naming a CLASS, SUBTYPEP of their respective DREF-CLASSes
-must be the same as `(SUBTYPEP L1 L2)`.
-
-- PSEUDO-LOCATIVE-TYPES must not name a CLASS.
-
-These rules are enforced by DEFINE-LOCATIVE-TYPE and
-DEFINE-PSEUDO-LOCATIVE-TYPE. Behaviour is undefined if they are
-violated later, for example by DEFTYPE a DEFCLASS with the name of a
-locative type.
-
-- [function] DREF-CLASS LOCATIVE-TYPE
-
-    Return the name of the CLASS used to represent @DEFINITIONs with
-    LOCATIVE-TYPE. This is always a subclass of DREF.
-    
-    Note that the actual TYPE-OF a DREF is mostly intended for
-    DREF-EXT::@EXTENDING-DREF. Hence, it is hidden when a DREF is
-    printed:
-    
-    ```common-lisp
-    (dref 'print 'function)
-    ==> #<DREF PRINT FUNCTION>
-    (type-of *)
-    => FUNCTION-DREF
-    ```
-    
-    Due to actualization, the actual
-    type may be a proper subtype of DREF-CLASS:
-    
-    ```common-lisp
-    (dref 'documentation 'function)
-    ==> #<DREF DOCUMENTATION GENERIC-FUNCTION>
-    (type-of *)
-    => GENERIC-FUNCTION-DREF
-    (subtypep 'generic-function-dref 'function-dref)
-    => T
-    => T
-    ```
-
-
-- [function] LOCATIVE-TYPE-DIRECT-SUPERS LOCATIVE-TYPE
-
-    List the @LOCATIVE-TYPEs whose DREF-CLASSes are direct superclasses
-    of the DREF-CLASS of LOCATIVE-TYPE. These can be considered
-    supertypes of LOCATIVE-TYPE in the sense of DTYPEP.
-
-- [function] LOCATIVE-TYPE-DIRECT-SUBS LOCATIVE-TYPE
-
-    List the @LOCATIVE-TYPEs whose DREF-CLASSes are direct subclasses
-    of the DREF-CLASS of LOCATIVE-TYPE. These can be considered subtypes
-    of LOCATIVE-TYPE in the sense of DTYPEP.
-
-### Adding New Locatives
+### Extension Tutorial
 
 Let's see how to tell DRef about new kinds of definitions through
 the example of the implementation of the CLASS locative. Note that
@@ -1300,11 +1214,10 @@ ignore any internal machinery. The first step is to define the
 Then, we make it possible to look up CLASS definitions:
 
 ```
-(defmethod locate* ((class class))
+(define-locator class ((class class))
   (make-instance 'class-dref :name (class-name class) :locative 'class))
 
-(defmethod dref* (symbol (locative-type (eql 'class)) locative-args)
-  (check-locative-args class locative-args)
+(define-lookup class (symbol locative-args)
   (unless (and (symbolp symbol)
                (find-class symbol nil))
     (locate-error "~S does not name a class." symbol))
@@ -1312,28 +1225,14 @@ Then, we make it possible to look up CLASS definitions:
 
 ```
 
-The first method makes `(LOCATE (FIND-CLASS 'DREF))` work, while
-the second is for `(DREF 'DREF 'CLASS)`. Naturally, for locative
+DEFINE-LOCATOR makes `(LOCATE (FIND-CLASS 'DREF))` work, while
+DEFINE-LOOKUP is for `(DREF 'DREF 'CLASS)`. Naturally, for locative
 types that do not define first-class objects, the first method
 cannot be defined.
 
-Then, with ADD-DREF-ACTUALIZER, we install a function that that runs
-whenever a new DREF is about to be returned from LOCATE and
-turns the locative TYPE into the locative CLASS if the denoted
-definition is of a class:
-
-```
-(defun actualize-type-to-class (dref)
-  (when (eq (dref-locative-type dref) 'type)
-    (dref (dref-name dref) 'class nil)))
-
-(add-dref-actualizer 'actualize-type-to-class)
-
-```
-
-Finally, we define a RESOLVE\* method to recover the
-CLASS object from a CLASS-DREF. We also specialize
-DOCSTRING\* and SOURCE-LOCATION\*:
+Finally, we define a RESOLVE\* method to recover the CLASS
+object from a CLASS-DREF. We also specialize DOCSTRING\* and
+SOURCE-LOCATION\*:
 
 ```
 (defmethod resolve* ((dref class-dref))
@@ -1355,14 +1254,73 @@ this can be done for non-RESOLVEable locative types.
 Classes have no arglist, so no ARGLIST\* method is needed. In the
 following, we describe the pieces in detail.
 
+### Locative Type Hierarchy
+
+Locative types form their own hierarchy, that
+is only superficially similar to the Lisp CLASS hierarchy.
+The hierarchies of LISP-LOCATIVE-TYPES and PSEUDO-LOCATIVE-TYPES
+are distinct. That is, the DREF-CLASS of a Lisp locative type must
+not be a subclass of a PSEUDO one, and vice versa. This is enforced
+by DEFINE-LOCATIVE-TYPE and DEFINE-PSEUDO-LOCATIVE-TYPE.
+
+- [function] DREF-CLASS LOCATIVE-TYPE
+
+    Return the name of the CLASS used to represent @DEFINITIONs with
+    LOCATIVE-TYPE. This is always a subclass of DREF. Returns
+    NIL if LOCATIVE-TYPE is not a valid locative type.
+    
+    Note that the actual TYPE-OF a DREF is mostly intended for
+    DREF-EXT::@EXTENDING-DREF. Hence, it is hidden when a DREF is
+    printed:
+    
+    ```common-lisp
+    (dref 'print 'function)
+    ==> #<DREF PRINT FUNCTION>
+    (type-of *)
+    => FUNCTION-DREF
+    ```
+    
+    Due to DREF-EXT::@CANONICALIZATION, the actual type may be a proper
+    subtype of DREF-CLASS:
+    
+    ```common-lisp
+    (dref 'documentation 'function)
+    ==> #<DREF DOCUMENTATION GENERIC-FUNCTION>
+    (type-of *)
+    => GENERIC-FUNCTION-DREF
+    (subtypep 'generic-function-dref 'function-dref)
+    => T
+    => T
+    ```
+
+
+- [function] LOCATIVE-TYPE-DIRECT-SUPERS LOCATIVE-TYPE
+
+    List the @LOCATIVE-TYPEs whose DREF-CLASSes are direct superclasses
+    of the DREF-CLASS of LOCATIVE-TYPE. These can be considered
+    supertypes of LOCATIVE-TYPE in the sense of DTYPEP.
+    
+    This is ordered as in the corresponding definition.
+
+- [function] LOCATIVE-TYPE-DIRECT-SUBS LOCATIVE-TYPE
+
+    List the @LOCATIVE-TYPEs whose DREF-CLASSes are direct subclasses
+    of the DREF-CLASS of LOCATIVE-TYPE. These can be considered subtypes
+    of LOCATIVE-TYPE in the sense of DTYPEP.
+    
+    This list is in @REVERSE-DEFINITION-ORDER.
+
+### Defining Locative Types
+
 - [macro] DEFINE-LOCATIVE-TYPE LOCATIVE-TYPE-AND-LAMBDA-LIST LOCATIVE-SUPERTYPES &OPTIONAL DOCSTRING DREF-DEFCLASS-FORM
 
     Declare LOCATIVE-TYPE as a LOCATIVE,
     which is the first step in DREF-EXT::@EXTENDING-DREF.
     
-    - *Simple example:* To define a locative type called `DUMMY` that
-      takes no arguments and is not a locative subtype of any other
-      locative type:
+    - *Simple example*
+    
+        To define a locative type called `DUMMY` that takes no arguments
+        and is not a locative subtype of any other locative type:
     
         ```
         (define-locative-type dummy ()
@@ -1379,8 +1337,10 @@ following, we describe the pieces in detail.
         ARGLIST, DOCSTRING and SOURCE-LOCATION all work on
         it.
     
-    - *Complex example:* DUMMY may have arguments `X` and `Y` and
-      inherit from locative types `L1` and `L2`:
+    - *Complex example*
+    
+        `DUMMY` may have arguments `X` and `Y` and inherit from locative
+        types `L1` and `L2`:
     
         ```
         (define-locative-type (dummy x &key y) (l1 l2)
@@ -1406,9 +1366,9 @@ following, we describe the pieces in detail.
         If LOCATIVE-TYPE-AND-LAMBDA-LIST is a single symbol, then that's
         interpreted as LOCATIVE-TYPE, and LAMBDA-LIST is NIL.
     
-    - LOCATIVE-SUPERTYPES is a list of @LOCATIVE-TYPEs whose DREF
-      classes are added to prepended to the list of superclasses this
-      definition.
+    - LOCATIVE-SUPERTYPES is a list of @LOCATIVE-TYPEs whose
+      DREF-CLASSes are added to prepended to the list of superclasses
+      this definition.
     
     Locative types defined with DEFINE-LOCATIVE-TYPE can be listed with
     LISP-LOCATIVE-TYPES.
@@ -1455,58 +1415,333 @@ following, we describe the pieces in detail.
     
     Also, see PAX::@LOCATIVE-ALIASES in PAX.
 
-- [generic-function] LOCATE* OBJECT
+#### Symbol Locatives
 
-    Return a definition of OBJECT as a DREF,
-    without actualizing it. If OBJECT is a DREF
-    already, then this function simply returns it. If no definition is
-    found for OBJECT, then LOCATE-ERROR is signalled.
-    
-    Furthermore, if OBJECT is an instance of a CLASS that also names a
-    @LOCATIVE-TYPE, then LOCATE\* must return a definition.
-    
-    This function is for extending LOCATE. Do not call it directly.
+Let's see how the opaque DEFINE-SYMBOL-LOCATIVE-TYPE and the
+obscure DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE macros work together
+to simplify the common task of associating definition with a symbol
+in a certain context.
 
-- [generic-function] DREF* NAME LOCATIVE-TYPE LOCATIVE-ARGS
+- [macro] DEFINE-SYMBOL-LOCATIVE-TYPE LOCATIVE-TYPE-AND-LAMBDA-LIST LOCATIVE-SUPERTYPES &OPTIONAL DOCSTRING DREF-CLASS-DEF
 
-    LOCATE\* calls this for XREFs which are not
-    DREFs.
+    Similar to DEFINE-LOCATIVE-TYPE, but it assumes that all things
+    LOCATEable with LOCATIVE-TYPE are going to be symbols defined with a
+    definer defined with DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE. Symbol
+    locatives are for attaching a definition (along with arglist,
+    documentation and source location) to a symbol in a particular
+    context. An example will make everything clear:
     
-    An EQL-specialized method must be defined for all new locative
-    types. Furthermore, if there is a CLASS named LOCATIVE-TYPE, then
-    @DEFINITIONs with LOCATIVE-TYPE must be able to represent exactly
-    the set of definitions that define objects of CLASS. For
-    example, `(DREF NAME 'FUNCTION)` must find the definition of the
-    FUNCTION with global NAME if it exists even if it is a
-    GENERIC-FUNCTION but not any other kind of definition.
+    ```
+    (define-symbol-locative-type direction ()
+      "A direction is a symbol.")
     
-    This function is for extending LOCATE. Do not call it directly.
+    (define-definer-for-symbol-locative-type define-direction direction
+      "With DEFINE-DIRECTION, one can document what a symbol means when
+      interpreted as a DIRECTION.")
+    
+    (define-direction up ()
+      "UP is equivalent to a coordinate delta of (0, -1).")
+    ```
+    
+    After all this, `(DREF 'UP 'DIRECTION)` refers to the
+    `DEFINE-DIRECTION` form above.
+    
+    The DREF-CLASS of the defined locative type inherits from
+    SYMBOL-LOCATIVE-DREF, which may be used for specializing when
+    implementing new operations.
+
+- [macro] DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE NAME LOCATIVE-TYPE &BODY DOCSTRING
+
+    Define a macro with NAME that can be used to attach a lambda list,
+    documentation, and source location to a symbol in the context of
+    LOCATIVE-TYPE. The defined macro's arglist is `(SYMBOL LAMBDA-LIST
+    &OPTIONAL DOCSTRING)`. LOCATIVE-TYPE is assumed to have been defined
+    with DEFINE-SYMBOL-LOCATIVE-TYPE.
+
+### Extending LOCATE
+
+Internally, LOCATE finds an initial DREF of its OBJECT
+argument with a lookup or with a
+locator. This initial DREF is then canonicalized
+with a series of casts. In more detail, the process
+is as follows.
+
+- If the OBJECT argument of LOCATE is a DREF, then it is returned
+  without processing.
+
+Else, LOCATE first needs to finds the initial definition.
+
+#### Initial Definition
+
+LOCATE can find the initial definition in one of two ways:
+
+- *With direct
+lookup*
+
+    If OBJECT is an XREF, then the lookup
+    for (XREF-LOCATIVE-TYPE OBJECT) is invoked. For an XREF with the
+    locative `(METHOD () (NUMBER))`, this would be the lookup
+    defined as
+
+    ```
+    (define-lookup method (name locative-args) ...)
+    ```
+
+- *With locator
+search*
+
+    Else, OBJECT is a normal Lisp object, such as a METHOD
+    object from FIND-METHOD. The first of LISP-LOCATIVE-TYPES whose
+    locator succeeds provides the initial
+    definition, which may be defined like this:
+
+    ```
+    (define-locator method ((obj method)) ...)
+    ```
+
+    This is a locator that returns definitions with the METHOD
+    locative type and takes an argument named `OBJ` of class
+    METHOD (which is like a specializer in DEFMETHOD).
+
+    - LISP-LOCATIVE-TYPES are tried one by one in the order
+      specified there.
+
+    - For a given locative type, if there are multiple locators,
+      standard CLOS method selection applies.
+
+
+#### Canonicalization
+
+The initial definition thus found is then canonicalized so that
+there is a unique @DEFINITION under XREF=:
+
+```
+(locate #'arglist*)
+==> #<DREF ARGLIST* GENERIC-FUNCTION>
+(dref 'arglist* 'function)
+==> #<DREF ARGLIST* GENERIC-FUNCTION>
+(dref 'arglist* 'generic-function)
+==> #<DREF ARGLIST* GENERIC-FUNCTION>
+```
+
+Canonicalization is performed by recursively attempting to
+downcast the current definition to one of its
+LOCATIVE-TYPE-DIRECT-SUBS in a depth-first manner, backtracking if a
+cast fails.
+
+##### Default Downcast
+
+Downcasting to direct locative subtypes is performed by default by looking up
+the definition where the locative type is replaced with its sub
+while the name and the locative args remain the same.
+
+##### Cast Name Change
+
+Casts must be careful about changing DREF-NAME.
+
+Their DREF argument and the DREF returned must have the
+same DREF-NAME (under EQUAL, see XREF=) or it must be possible to
+upcast the returned value to the DREF argument's DREF-LOCATIVE-TYPE.
+
+- *Implementation note*
+
+    The purpose of this rule is to allow DTYPEP answer this correctly:
+
+    ```common-lisp
+    (defclass foo ()
+      ((a :accessor foo-a)))
+    (dref '(setf foo-a) '(method () (t foo)))
+    ==> #<DREF FOO-A (ACCESSOR FOO)>
+    (dtypep * '(method () (t foo)))
+    => T
+    ;; Internally, DTYPEP upcast #<DREF FOO-A (ACCESSOR FOO)>
+    ;; and checks that the locative args of the resulting
+    ;; definition match those in (METHOD () (T FOO)).
+    (locate* ** 'method)
+    ==> #<DREF (SETF FOO-A) (METHOD NIL (T FOO))>
+    ```
+
+    For even more background, also note that if the name remains the
+    same but locative args change, then DTYPEP can simply check with
+    DREF if there is a definition of the name with the
+    given locative:
+
+    ```common-lisp
+    (defclass foo ()
+      ((r :reader foo-r)))
+    (dref 'foo-r '(reader foo))
+    ==> #<DREF FOO-R (READER FOO)>
+    (dtypep * '(method () (foo)))
+    => T
+    ;; Behind the scenes, DTYPEP does this:
+    (xref= ** (dref 'foo-r '(method () (foo))))
+    => T
+    ```
+
+
+#### Defining Lookups, Locators and Casts
+
+As we have seen, the DREF-EXT::@INITIAL-DEFINITION is provided either by a
+lookup or a locator, then DREF-EXT::@CANONICALIZATION works with
+casts. Here, we look at how to define these.
+
+*Implementation note:* All three are currently implemented as
+methods of generic functions with EQL specializers for
+the locative type, which may easily prove to be problematic down the
+road. To make future changes easier, the generic function and the
+methods are hidden behind e.g. the DEFINE-LOOKUP and CALL-LOOKUP
+macros.
+
+- [variable] *CHECK-LOCATE* NIL
+
+    Enable runtime verification of invariants during LOCATE calls.
+    This carries a performance penalty and is intended for testing and
+    debugging.
+    
+    In particular, enforce the rule of @CAST-NAME-CHANGE and that lookups, locators and
+    casts obey the following:
+    
+    - The value returned must be either NIL or a DREF. Alternatively,
+      LOCATE-ERROR may be signalled.
+    
+    - If a DREF is returned, then its DREF-LOCATIVE-TYPE must be
+      LOCATIVE-TYPE, and its class must be the DREF-CLASS of
+      LOCATIVE-TYPE.
+    
+    - LOCATIVE-ARGS must be congruent with the destructuring lambda list
+      in the definition of LOCATIVE-TYPE.
+
+
+- [macro] DEFINE-LOOKUP LOCATIVE-TYPE (NAME LOCATIVE-ARGS) &BODY BODY
+
+    Define a method of looking up @DEFINITIONs of LOCATIVE-TYPE
+    with the given LOCATIVE-ARGS. Lookups are invoked by LOCATE when its
+    OBJECT argument is an XREF with LOCATIVE-TYPE but it is not a DREF,
+    as in the case of `(DREF 'PRINT 'FUNCTION)`. When called, the
+    variables NAME and LOCATIVE-ARGS are bound to XREF-NAME and
+    XREF-LOCATIVE-ARGS of the XREF. LOCATIVE-ARGS is validated with
+    CHECK-LOCATIVE-ARGS before BODY is evaluated.
+    
+    ```
+    (define-lookup variable (name locative-args)
+      (unless (special-variable-name-p name)
+        (locate-error))
+      (make-instance 'variable-dref :name name :locative 'variable))
+    ```
+    
+    - LOCATIVE-TYPE is a valid @LOCATIVE-TYPE.
+    
+    - NAME and LOCATIVE-ARGS are both SYMBOLs.
+    
+    The above are enforced at macro-expansion time.
+    
+    - BODY must follow the rules in *CHECK-LOCATE*.
+
+
+- [macro] CALL-LOOKUP NAME LOCATIVE-TYPE LOCATIVE-ARGS
+
+    Call the lookup for LOCATIVE-TYPE with NAME
+    and LOCATIVE-ARGS.
+
+- [macro] DEFINE-LOCATOR LOCATIVE-TYPE ((OBJECT CLASS)) &BODY BODY
+
+    Define a method of finding the @DEFINITION with LOCATIVE-TYPE of
+    instances of CLASS. When a locator's BODY is evaluated, OBJECT is
+    bound to such an instance.
+    
+    ```
+    (define-locator class ((class class))
+      (make-instance 'class-dref :name (class-name class) :locative 'class))
+    ```
+    
+    - LOCATIVE-TYPE is one of LISP-LOCATIVE-TYPES. This is because
+      PSEUDO-LOCATIVE-TYPES never RESOLVE to first-class objects.
+    
+    - OBJECT is a SYMBOL.
+    
+    - CLASS names a CLASS that is not a subtype of
+      XREF. For how to convert definitions from one locative
+      type to another, see DEFINE-CAST.
+    
+    The above are enforced at macro-expansion time.
+    
+    - BODY must follow the rules in *CHECK-LOCATE*.
+    
+    In contrast to when the DREF-EXT::@INITIAL-DEFINITION is created
+    from an XREF (see DEFINE-LOOKUP), here LOCATIVE-ARGS are determined
+    from OBJECT.
+
+- [macro] CALL-LOCATOR OBJECT LOCATIVE-TYPE
+
+    Call the locator for LOCATIVE-TYPE with OBJECT.
+
+- [macro] DEFINE-CAST LOCATIVE-TYPE ((DREF DREF-CLASS)) &BODY BODY
+
+    Define a method of converting a @DEFINITION to another
+    with LOCATIVE-TYPE. When a cast's BODY is evaluated, DREF is bound
+    to an instance DREF-CLASS, which denotes a valid but potentially
+    non-canonical definition.
+    
+    Note the DREF-EXT::@DEFAULT-DOWNCAST often suffices, and defining a
+    cast is only necessary if the name
+    or the locative args change:
+    
+    ```
+    (define-cast accessor ((dref reader-dref))
+      (let ((name (dref-name dref))
+            (class (second (dref-locative dref))))
+        (when (ignore-errors (find-accessor-slot-definition name class))
+          (make-instance 'accessor-dref :name name
+                          :locative `(accessor ,class)))))
+    ```
+    
+    - LOCATIVE-TYPE is a valid @LOCATIVE-TYPE.
+    
+    - If LOCATIVE-TYPE is one of PSEUDO-LOCATIVE-TYPES, then DREF-CLASS
+      must be of another pseudo locative type.
+    
+    - DREF-CLASS is either a direct *downcast* or an potentially
+      non-direct *upcast*.
+    
+        - *Downcast:* In this case, LOCATIVE-TYPE is one of
+          LOCATIVE-TYPE-DIRECT-SUBS of (DREF-CLASS-TO-LOCATIVE-TYPE
+          DREF-CLASS).
+    
+            Downcasting to non-direct subtypes is done in multiple
+            steps. Consequently,the BODY of a downcast can rely on
+            (CLASS-OF DREF) being CLASS, not any subclass thereof.
+    
+        - *Upcast:* LOCATIVE-TYPE is different but reachable
+          from (DREF-CLASS-TO-LOCATIVE-TYPE DREF-CLASS) by repeatedly
+          choosing one of LOCATIVE-TYPE-DIRECT-SUPERS. Upcasting to
+          non-direct supertypes is done in one step.
+    
+    The above are enforced at macro-expansion time.
+    
+    - BODY must follow the rules in *CHECK-LOCATE*, including those in
+      @CAST-NAME-CHANGE.
+
+
+- [macro] CALL-CAST LOCATIVE-TYPE DREF
+
+    Call the cast to LOCATIVE-TYPE with DREF.
+
+- [function] LOCATE-ERROR &OPTIONAL FORMAT-CONTROL &REST FORMAT-ARGS
+
+    Call this function to signal a LOCATE-ERROR condition from the
+    dynamic extent of a LOCATE call, that is, from the `BODY`s
+    of DEFINE-LOOKUP, DEFINE-LOCATOR and DEFINE-CAST. It is an error to
+    call LOCATE-ERROR elsewhere.
+    
+    FORMAT-CONTROL, if non-NIL, is a format control for which
+    FORMAT-ARGS are suitable.
 
 - [macro] CHECK-LOCATIVE-ARGS LOCATIVE-TYPE LOCATIVE-ARGS
 
     Signal a LOCATE-ERROR condition if LOCATIVE-ARGS do not match the
     LAMBDA-LIST argument of LOCATIVE-TYPE (not evaluated).
 
-- [function] LOCATE-ERROR &OPTIONAL FORMAT-CONTROL &REST FORMAT-ARGS
-
-    Call this function to signal a LOCATE-ERROR condition from the
-    dynamic extent of a LOCATE\* method (which includes
-    DREF\*). It is an error to call LOCATE-ERROR elsewhere.
-    
-    FORMAT-CONTROL, if non-NIL, is a format control for which
-    FORMAT-ARGS are suitable.
-
-- [function] ADD-DREF-ACTUALIZER NAME
-
-    Add the global function denoted by the symbol NAME to the list
-    of actualizers. Actualizers are functions of a single DREF
-    argument. They are called within LOCATE when LOCATE\* returns a DREF.
-    Their job is to make the DREF more specific.
-
-- [function] REMOVE-DREF-ACTUALIZER NAME
-
-    Remove the global function denoted by the symbol NAME from the
-    list of actualizers.
+### Extending Everything Else
 
 - [generic-function] RESOLVE* DREF
 
@@ -1514,10 +1749,9 @@ following, we describe the pieces in detail.
     refers to. Signal a RESOLVE-ERROR condition by calling the
     RESOLVE-ERROR function if the lookup fails.
     
-    To keep RESOLVE a partial inverse of LOCATE, a specialized LOCATE\*
-    method or an actualizer must be defined for
-    RESOLVEable definitions. This function is for extending RESOLVE. Do
-    not call it directly.
+    To keep RESOLVE a partial inverse of LOCATE, DEFINE-LOCATOR may be
+    necessary for RESOLVEable definitions. This function is for
+    extending RESOLVE. Do not call it directly.
     
     It is an error for methods of this generic function to return an
     XREF.
@@ -1585,119 +1819,139 @@ following, we describe the pieces in detail.
     on the type of object it resolves to. This function is for extension
     only. Do not call it directly.
 
-### Symbol Locatives
+### DREF-CLASSes
 
-Let's see how the opaque DEFINE-SYMBOL-LOCATIVE-TYPE and the
-obscure DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE macros work together
-to simplify the common task of associating definition with a symbol
-in a certain context.
-
-- [macro] DEFINE-SYMBOL-LOCATIVE-TYPE LOCATIVE-TYPE-AND-LAMBDA-LIST LOCATIVE-SUPERTYPES &OPTIONAL DOCSTRING DREF-CLASS-DEF
-
-    Similar to DEFINE-LOCATIVE-TYPE, but it assumes that all things
-    LOCATEable with LOCATIVE-TYPE are going to be symbols defined with a
-    definer defined with DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE. Symbol
-    locatives are for attaching a definition (along with arglist,
-    documentation and source location) to a symbol in a particular
-    context. An example will make everything clear:
-    
-    ```
-    (define-symbol-locative-type direction ()
-      "A direction is a symbol.")
-    
-    (define-definer-for-symbol-locative-type define-direction direction
-      "With DEFINE-DIRECTION, one can document what a symbol means when
-      interpreted as a DIRECTION.")
-    
-    (define-direction up ()
-      "UP is equivalent to a coordinate delta of (0, -1).")
-    ```
-    
-    After all this, `(DREF 'UP 'DIRECTION)` refers to the
-    `DEFINE-DIRECTION` form above.
-
-- [macro] DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE NAME LOCATIVE-TYPE &BODY DOCSTRING
-
-    Define a macro with NAME that can be used to attach a lambda list,
-    documentation, and source location to a symbol in the context of
-    LOCATIVE-TYPE. The defined macro's arglist is `(SYMBOL LAMBDA-LIST
-    &OPTIONAL DOCSTRING)`. LOCATIVE-TYPE is assumed to have been defined
-    with DEFINE-SYMBOL-LOCATIVE-TYPE.
-
-### DREF Subclasses
-
-These are the DREF subclasses corresponding to
-DREF::@LOCATIVE-TYPES. They are exported to make it possible to go
-beyond the standard @OPERATIONS (e.g. PAX:DOCUMENT-OBJECT\*) and for
-subclassing.
+These are the DREF-CLASSes corresponding to DREF::@BASIC-LOCATIVE-TYPES.
+They are exported to make it possible to go beyond the
+@BASIC-OPERATIONS (e.g. PAX:DOCUMENT-OBJECT\*). For
+DREF-EXT::@DEFINING-LOCATIVE-TYPES, they are not necessary, as
+DEFINE-LOCATIVE-TYPE handles inheritence automatically based on its
+LOCATIVE-SUPERTYPES argument.
 
 **for Variables**
 
 - [class] VARIABLE-DREF DREF
 
-- [class] CONSTANT-DREF VARIABLE-DREF DREF
+    DREF-EXT:DREF-CLASS of VARIABLE.
+
+- [class] CONSTANT-DREF VARIABLE-DREF
+
+    DREF-EXT:DREF-CLASS of MGL-PAX:CONSTANT.
 
 **for Macros**
 
 - [class] MACRO-DREF DREF
 
+    DREF-EXT:DREF-CLASS of MGL-PAX:MACRO.
+
 - [class] SYMBOL-MACRO-DREF DREF
+
+    DREF-EXT:DREF-CLASS of MGL-PAX:SYMBOL-MACRO.
 
 - [class] COMPILER-MACRO-DREF DREF
 
-- [class] SETF-DREF FUNCTION-DREF DREF
+    DREF-EXT:DREF-CLASS of COMPILER-MACRO.
+
+- [class] SETF-DREF DREF
+
+    DREF-EXT:DREF-CLASS of SETF.
 
 **for Functions**
 
 - [class] FUNCTION-DREF DREF
 
-- [class] GENERIC-FUNCTION-DREF FUNCTION-DREF DREF
+    DREF-EXT:DREF-CLASS of FUNCTION.
+
+- [class] GENERIC-FUNCTION-DREF FUNCTION-DREF
+
+    DREF-EXT:DREF-CLASS of GENERIC-FUNCTION.
 
 - [class] METHOD-DREF DREF
 
+    DREF-EXT:DREF-CLASS of METHOD.
+
 - [class] METHOD-COMBINATION-DREF DREF
 
-- [class] ACCESSOR-DREF READER-DREF WRITER-DREF DREF
+    DREF-EXT:DREF-CLASS of METHOD-COMBINATION.
 
-- [class] READER-DREF METHOD-DREF DREF
+- [class] READER-DREF METHOD-DREF
 
-- [class] WRITER-DREF METHOD-DREF DREF
+    DREF-EXT:DREF-CLASS of MGL-PAX:READER.
 
-- [class] STRUCTURE-ACCESSOR-DREF FUNCTION-DREF DREF
+- [class] WRITER-DREF METHOD-DREF
+
+    DREF-EXT:DREF-CLASS of MGL-PAX:WRITER.
+
+- [class] ACCESSOR-DREF READER-DREF WRITER-DREF
+
+    DREF-EXT:DREF-CLASS of MGL-PAX:ACCESSOR.
+
+- [class] STRUCTURE-ACCESSOR-DREF FUNCTION-DREF
+
+    DREF-EXT:DREF-CLASS of MGL-PAX:STRUCTURE-ACCESSOR.
 
 **for Types and Declarations**
 
 - [class] TYPE-DREF DREF
 
-- [class] CLASS-DREF TYPE-DREF DREF
+    DREF-EXT:DREF-CLASS of TYPE.
+
+- [class] CLASS-DREF TYPE-DREF
+
+    DREF-EXT:DREF-CLASS of CLASS.
 
 - [class] DECLARATION-DREF DREF
 
+    DREF-EXT:DREF-CLASS of DECLARATION.
+
 **for the Condition System**
 
-- [class] CONDITION-DREF TYPE-DREF DREF
+- [class] CONDITION-DREF CLASS-DREF
+
+    DREF-EXT:DREF-CLASS of CONDITION.
 
 - [class] RESTART-DREF SYMBOL-LOCATIVE-DREF
+
+    DREF-EXT:DREF-CLASS of RESTART.
 
 **for Packages and Readtables**
 
 - [class] ASDF-SYSTEM-DREF DREF
 
+    DREF-EXT:DREF-CLASS of ASDF/SYSTEM:SYSTEM.
+
 - [class] PACKAGE-DREF DREF
+
+    DREF-EXT:DREF-CLASS of PACKAGE.
 
 - [class] READTABLE-DREF DREF
 
-**for DRef Locatives**
+    DREF-EXT:DREF-CLASS of READTABLE.
 
-- [class] LOCATIVE-DREF DTYPE-DREF DREF
-
-- [class] DTYPE-DREF DREF
-
-- [class] SYMBOL-LOCATIVE-DREF DREF
+**for Unknown Definitions**
 
 - [class] UNKNOWN-DREF DREF
 
+    DREF-EXT:DREF-CLASS of MGL-PAX:UNKNOWN.
+
+**for DRef Constructs**
+
+- [class] DTYPE-DREF DREF
+
+    DREF-EXT:DREF-CLASS of DREF:DTYPE.
+
+- [class] LOCATIVE-DREF DTYPE-DREF
+
+    DREF-EXT:DREF-CLASS of MGL-PAX:LOCATIVE.
+
+- [class] SYMBOL-LOCATIVE-DREF DREF
+
+    All @LOCATIVE-TYPEs defined with
+    DEFINE-SYMBOL-LOCATIVE-TYPE inherit from this class.
+
 - [class] LAMBDA-DREF DREF
+
+    DREF-EXT:DREF-CLASS of LAMBDA.
 
 ### Source Locations
 
@@ -1763,31 +2017,21 @@ the details, see the Elisp function `slime-goto-source-location`.
   [00d4]: #x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE"
   [090c]: #x-28MGL-PAX-3ASTRUCTURE-ACCESSOR-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:STRUCTURE-ACCESSOR MGL-PAX:LOCATIVE"
   [0b3a]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE"
-  [119e]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm "FUNCTION (MGL-PAX:CLHS CLASS)"
   [1538]: #x-28DREF-3AXREF-20CLASS-29 "DREF:XREF CLASS"
   [172e]: #x-28METHOD-20MGL-PAX-3ALOCATIVE-29 "METHOD MGL-PAX:LOCATIVE"
-  [1d5a]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pkg.htm "PACKAGE (MGL-PAX:CLHS CLASS)"
-  [1f37]: http://www.lispworks.com/documentation/HyperSpec/Body/t_class.htm "CLASS (MGL-PAX:CLHS CLASS)"
   [2060]: #x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "CLASS MGL-PAX:LOCATIVE"
-  [38e4]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rst.htm "RESTART (MGL-PAX:CLHS CLASS)"
   [5119]: ../README#x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:GLOSSARY-TERM MGL-PAX:LOCATIVE"
-  [51c3]: http://www.lispworks.com/documentation/HyperSpec/Body/t_method.htm "METHOD (MGL-PAX:CLHS CLASS)"
   [5875]: #x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "GENERIC-FUNCTION MGL-PAX:LOCATIVE"
   [672f]: ../README#x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:SECTION MGL-PAX:LOCATIVE"
   [6c83]: #x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29 "VARIABLE MGL-PAX:LOCATIVE"
-  [83e1]: http://www.lispworks.com/documentation/HyperSpec/Body/e_cnd.htm "CONDITION (MGL-PAX:CLHS CONDITION)"
   [85ba]: #x-28DREF-3ADTYPE-20MGL-PAX-3ALOCATIVE-29 "DREF:DTYPE MGL-PAX:LOCATIVE"
   [926d]: #x-28TYPE-20MGL-PAX-3ALOCATIVE-29 "TYPE MGL-PAX:LOCATIVE"
-  [9b70]: http://www.lispworks.com/documentation/HyperSpec/Body/t_meth_1.htm "METHOD-COMBINATION (MGL-PAX:CLHS CLASS)"
   [ba62]: #x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29 "FUNCTION MGL-PAX:LOCATIVE"
   [c479]: #x-28CONDITION-20MGL-PAX-3ALOCATIVE-29 "CONDITION MGL-PAX:LOCATIVE"
   [c819]: #x-28MGL-PAX-3ACONSTANT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CONSTANT MGL-PAX:LOCATIVE"
   [cc04]: #x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:READER MGL-PAX:LOCATIVE"
-  [d646]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rdtabl.htm "READTABLE (MGL-PAX:CLHS CLASS)"
-  [d83a]: #x-28SETF-20MGL-PAX-3ALOCATIVE-29 "SETF MGL-PAX:LOCATIVE"
   [d930]: #x-28DREF-3ADREF-20CLASS-29 "DREF:DREF CLASS"
   [e548]: #x-28MGL-PAX-3AWRITER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:WRITER MGL-PAX:LOCATIVE"
-  [efe2]: http://www.lispworks.com/documentation/HyperSpec/Body/t_generi.htm "GENERIC-FUNCTION (MGL-PAX:CLHS CLASS)"
 
 * * *
 ###### \[generated by [MGL-PAX](https://github.com/melisgl/mgl-pax)\]

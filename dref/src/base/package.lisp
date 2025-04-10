@@ -63,80 +63,37 @@
 (defsection @extending-dref (:title "Extending DRef"
                              :package :dref
                              :export :dref-ext)
-  (@references section)
+  (@extension-tutorial section)
   (@locative-type-hierarchy section)
-  (@adding-new-locatives section)
-  (@symbol-locatives section)
-  (@dref-subclasses section)
+  (@defining-locative-types section)
+  (@extending-locate section)
+  (@extending-everything-else section)
+  (@dref-classes section)
   (@source-locations section))
 
-(defsection @references (:title "References"
-                         :package :dref
-                         :export :dref-ext)
-  (xref-name (reader dref::xref))
-  (xref-locative (reader dref::xref))
-  (dref-name (reader dref::dref))
-  (dref-locative (reader dref::dref))
-  (dref-origin (reader dref::dref))
-  (locative-type function)
-  (locative-args function)
-  "The following convenience functions are compositions of
-  {`LOCATIVE-TYPE`, `LOCATIVE-ARGS`} and {`XREF-LOCATIVE`,
-  `DREF-LOCATIVE`}."
-  (xref-locative-type function)
-  (xref-locative-args function)
-  (dref-locative-type function)
-  (dref-locative-args function))
-
-(defsection @locative-type-hierarchy (:title "Locative Type Hierarchy"
-                                      :package :dref
-                                      :export :dref-ext)
-  """[Locative types][@LOCATIVE-TYPE] form their own hierarchy, that
-  is consistent with the Lisp CLASS hierarchy. The following rules
-  apply:
-
-  [ check-locative-type-shadowing function ][docstring]
-  [ check-lisp-and-pseudo-are-distinct function ][docstring]
-  [ check-lisp-locative-type-hierarchy function ][docstring]
-  [ check-pseudo-locative-type-hierarchy function ][docstring]
-
-  These rules are enforced by DEFINE-LOCATIVE-TYPE and
-  DEFINE-PSEUDO-LOCATIVE-TYPE. Behaviour is undefined if they are
-  violated later, for example by DEFTYPE a DEFCLASS with the name of a
-  locative type."""
-  (dref-class function)
-  (locative-type-direct-supers function)
-  (locative-type-direct-subs function))
-
-(defsection @adding-new-locatives (:title "Adding New Locatives"
-                                   :package :dref
-                                   :export :dref-ext)
+(defsection @extension-tutorial (:title "Extension Tutorial"
+                                 :package :dref
+                                 :export :dref-ext)
   "Let's see how to tell DRef about new kinds of definitions through
   the example of the implementation of the CLASS locative. Note that
   this is a verbatim [PAX:INCLUDE][locative] of the sources. Please
   ignore any internal machinery. The first step is to define the
   @LOCATIVE-TYPE:"
-  (nil (include (:start (class locative) :end (locate* (method () (class))))
+  (nil (include (:start (class locative)
+                 :end (dref::locate* (method () (class (eql class)))))
                 :header-nl "```" :footer-nl "```"))
   "Then, we make it possible to look up CLASS definitions:"
-  (nil (include (:start (locate* (method () (class)))
-                 :end (dref::actualize-type-to-class function))
+  (nil (include (:start (dref::locate* (method () (class (eql class))))
+                 :end (resolve* (method () (class-dref))))
                 :header-nl "```" :footer-nl "```"))
-  "The first method makes `(LOCATE (FIND-CLASS 'DREF))` work, while
-  the second is for `(DREF 'DREF 'CLASS)`. Naturally, for locative
+  "DEFINE-LOCATOR makes `(LOCATE (FIND-CLASS 'DREF))` work, while
+  DEFINE-LOOKUP is for `(DREF 'DREF 'CLASS)`. Naturally, for locative
   types that do not define first-class objects, the first method
   cannot be defined.
 
-  Then, with ADD-DREF-ACTUALIZER, we install a function that that runs
-  whenever a new [DREF][class] is about to be returned from LOCATE and
-  turns the locative TYPE into the locative CLASS if the denoted
-  definition is of a class:"
-  (nil (include (:start (dref::actualize-type-to-class function)
-                 :end (resolve* (method () (class-dref))))
-                :header-nl "```" :footer-nl "```"))
-  "Finally, we define a RESOLVE* method to recover the
-  [CLASS][type] object from a CLASS-DREF. We also specialize
-  DOCSTRING* and SOURCE-LOCATION*:"
+  Finally, we define a RESOLVE* method to recover the [CLASS][type]
+  object from a CLASS-DREF. We also specialize DOCSTRING* and
+  SOURCE-LOCATION*:"
   (nil (include (:start (resolve* (method () (class-dref)))
                  :end (dref::%end-of-class-example variable))
                 :header-nl "```" :footer-nl "```"))
@@ -146,16 +103,78 @@
   this can be done for non-RESOLVEable locative types.
 
   Classes have no arglist, so no ARGLIST* method is needed. In the
-  following, we describe the pieces in detail."
+  following, we describe the pieces in detail.")
+
+(defsection @locative-type-hierarchy (:title "Locative Type Hierarchy"
+                                      :package :dref
+                                      :export :dref-ext)
+  """[Locative types][@LOCATIVE-TYPE] form their own hierarchy, that
+  is only superficially similar to the Lisp CLASS hierarchy.
+  [ check-lisp-and-pseudo-are-distinct function ][docstring]"""
+  (dref-class function)
+  (locative-type-direct-supers function)
+  (locative-type-direct-subs function))
+
+(defsection @defining-locative-types (:title "Defining Locative Types"
+                                      :package :dref
+                                      :export :dref-ext)
   (define-locative-type macro)
   (define-pseudo-locative-type macro)
   (define-locative-alias macro)
-  (locate* generic-function)
-  (dref* generic-function)
-  (check-locative-args macro)
+  (@symbol-locatives section))
+
+(defsection @extending-locate (:title "Extending LOCATE"
+                               :package :dref
+                               :export :dref-ext)
+  "[ dref::%locate function][docstring]"
+  (@initial-definition section)
+  (@canonicalization section)
+  (@defining-lookups-locators-and-casts section))
+
+(defsection @initial-definition (:title "Initial Definition"
+                                 :package :dref
+                                 :export :dref-ext)
+  "[ dref::locate-initial-definition function][docstring]")
+
+(defsection @canonicalization (:title "Canonicalization"
+                               :package :dref
+                               :export :dref-ext)
+  "[ dref::canonicalize-dref function][docstring]"
+  (@default-downcast section)
+  (@cast-name-change section))
+
+(defsection @default-downcast (:title "Default Downcast"
+                               :package :dref
+                               :export :dref-ext)
+  "[ dref::locate* (method () (dref t))][docstring]")
+
+(defsection @defining-lookups-locators-and-casts
+    (:title "Defining Lookups, Locators and Casts"
+     :package :dref
+     :export :dref-ext)
+  "As we have seen, the DREF-EXT::@INITIAL-DEFINITION is provided either by a
+  lookup or a locator, then DREF-EXT::@CANONICALIZATION works with
+  casts. Here, we look at how to define these.
+
+  _Implementation note:_ All three are currently implemented as
+  methods of generic functions with [EQL specializers][7.6.2 clhs] for
+  the locative type, which may easily prove to be problematic down the
+  road. To make future changes easier, the generic function and the
+  methods are hidden behind e.g. the DEFINE-LOOKUP and CALL-LOOKUP
+  macros."
+  (*check-locate* variable)
+  (define-lookup macro)
+  (call-lookup macro)
+  (define-locator macro)
+  (call-locator macro)
+  (define-cast macro)
+  (call-cast macro)
   (locate-error function)
-  (add-dref-actualizer function)
-  (remove-dref-actualizer function)
+  (check-locative-args macro))
+
+(defsection @extending-everything-else (:title "Extending Everything Else"
+                                        :package :dref
+                                        :export :dref-ext)
   (resolve* generic-function)
   (resolve-error function)
   (map-definitions-of-name generic-function)
@@ -174,46 +193,49 @@
   (define-symbol-locative-type macro)
   (define-definer-for-symbol-locative-type macro))
 
-(defsection @dref-subclasses (:title "DREF Subclasses"
-                              :package :dref
-                              :export :dref-ext)
-  "These are the [DREF][class] subclasses corresponding to
-  DREF::@LOCATIVE-TYPES. They are exported to make it possible to go
-  beyond the standard @OPERATIONS (e.g. PAX:DOCUMENT-OBJECT*) and for
-  subclassing."
-  "**for Variables**"
+(defsection @dref-classes (:title "DREF-CLASSes"
+                           :package :dref
+                           :export :dref-ext)
+  "These are the DREF-CLASSes corresponding to DREF::@BASIC-LOCATIVE-TYPES.
+  They are exported to make it possible to go beyond the
+  @BASIC-OPERATIONS (e.g. PAX:DOCUMENT-OBJECT*). For
+  DREF-EXT::@DEFINING-LOCATIVE-TYPES, they are not necessary, as
+  DEFINE-LOCATIVE-TYPE handles inheritence automatically based on its
+  LOCATIVE-SUPERTYPES argument."
+  "**[for Variables][ @variablelike-locatives]**"
   (variable-dref class)
   (constant-dref class)
-  "**for Macros**"
+  "**[for Macros][ @macrolike-locatives]**"
   (macro-dref class)
   (symbol-macro-dref class)
   (compiler-macro-dref class)
   (setf-dref class)
-  "**for Functions**"
+  "**[for Functions][ @functionlike-locatives]**"
   (function-dref class)
   (generic-function-dref class)
   (method-dref class)
   (method-combination-dref class)
-  (accessor-dref class)
   (reader-dref class)
   (writer-dref class)
+  (accessor-dref class)
   (structure-accessor-dref class)
-  "**for Types and Declarations**"
+  "**[for Types and Declarations][ @typelike-locatives]**"
   (type-dref class)
   (class-dref class)
   (declaration-dref class)
-  "**for the Condition System**"
+  "**[for the Condition System][ @condition-system-locatives]**"
   (condition-dref class)
   (restart-dref class)
-  "**for Packages and Readtables**"
+  "**[for Packages and Readtables][ @packagelike-locatives]**"
   (asdf-system-dref class)
   (package-dref class)
   (readtable-dref class)
-  "**for DRef Locatives**"
-  (locative-dref class)
-  (dtype-dref class)
-  (symbol-locative-dref class)
+  "**[for Unknown Definitions][ @unknown-definitions]**"
   (unknown-dref class)
+  "**[for DRef Constructs][ @dref-locatives]**"
+  (dtype-dref class)
+  (locative-dref class)
+  (symbol-locative-dref class)
   (lambda-dref class))
 
 (defsection @source-locations (:title "Source Locations"
@@ -238,10 +260,11 @@
 (in-package :dref)
 
 (import 'dref-ext::dref-std-env)
+(import 'dref-ext::@cast-name-change)
 
 (in-readtable pythonic-string-syntax)
 
-(defsection @locative-types (:title "Locative Types")
+(defsection @basic-locative-types (:title "Basic Locative Types")
   """The following are the @LOCATIVE-TYPEs supported out of the
   box. As all locative types, they are named by symbols. When there is
   a CL type corresponding to the reference's locative type, the
@@ -250,17 +273,22 @@
   ```cl-transcript (:dynenv dref-std-env)
   (resolve (dref 'print 'function))
   ==> #<FUNCTION PRINT>
+  => T
   ```
 
   Even if there is no such CL type, the ARGLIST, the DOCSTRING, and
   the SOURCE-LOCATION of the defining form is usually recorded unless
-  otherwise noted."""
+  otherwise noted.
+
+  The basic locative types and their inheritance structure is loosely
+  based on the DOC-TYPE argument of [CL:DOCUMENTATION][clhs]."""
   (@variablelike-locatives section)
   (@macrolike-locatives section)
   (@functionlike-locatives section)
   (@typelike-locatives section)
   (@condition-system-locatives section)
   (@packagelike-locatives section)
+  (@unknown-definitions section)
   (@dref-locatives section))
 
 (defsection @variablelike-locatives (:title "Locatives for Variables")
@@ -279,9 +307,9 @@
   (generic-function locative)
   (method locative)
   (method-combination locative)
-  (accessor locative)
   (reader locative)
   (writer locative)
+  (accessor locative)
   (structure-accessor locative))
 
 (defsection @typelike-locatives (:title "Locatives for Types and Declarations")
@@ -301,8 +329,10 @@
   (package locative)
   (readtable locative))
 
-(defsection @dref-locatives (:title "DRef Locatives")
-  (locative locative)
+(defsection @unknown-definitions (:title "Locatives for Unknown Definitions")
+  (unknown locative))
+
+(defsection @dref-locatives (:title "Locatives for DRef Constructs")
   (dtype locative)
-  (unknown locative)
+  (locative locative)
   (lambda locative))

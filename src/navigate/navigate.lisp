@@ -9,7 +9,7 @@
 
   - adding support for all kinds of definitions (see e.g.
     [ASDF:SYSTEM][locative], [READTABLE][locative] in
-    DREF::@LOCATIVE-TYPES), not just the ones Slime knows about,
+    DREF::@BASIC-LOCATIVE-TYPES), not just the ones Slime knows about,
 
   - providing a portable way to refer to even standard definitions,
 
@@ -208,7 +208,7 @@
   - `class dref:<TAB>` lists DREF:XREF and DREF:DREF (all the classes
     in the package DREF).
 
-  - `pax:locative <TAB>` lists all DREF::@LOCATIVE-TYPES (see the CL
+  - `pax:locative <TAB>` lists all DREF::@LOCATIVE-TYPEs (see the CL
     function DREF:LOCATIVE-TYPES).
 
   - `package \"MGL<TAB>` lists the names of packages that start with

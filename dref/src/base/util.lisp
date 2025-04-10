@@ -11,6 +11,14 @@
       (values (first body) (rest body))
       (values () body)))
 
+(defun parse-body-declare (body)
+  (loop for form in body
+        for rest on body
+        while (and (listp form)
+                   (eq (first form) 'declare))
+        collect form into declarations
+        finally (return (values declarations rest))))
+
 ;;; Return the names of the arguments in the [macro lambda list][clhs]
 ;;; ARGLIST.
 (defun macro-arg-names (arglist)
@@ -84,9 +92,9 @@
            (succeedsp (typep nil type-specifier))))))
 
 (defun type-specifier-name (type-specifier)
-  (if (atom type-specifier)
-      type-specifier
-      (first type-specifier)))
+  (if (listp type-specifier)
+      (first type-specifier)
+      type-specifier))
 
 (defun member-type-specifier-p (type-specifier)
   (and (not (atom type-specifier))

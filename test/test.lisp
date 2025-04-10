@@ -1,10 +1,11 @@
 (in-package :mgl-pax-test)
 
 (deftest test-all ()
-  (test-util)
-  (test-navigate)
-  (test-document)
-  (test-transcribe))
+  (let ((dref::*check-locate* t))
+    (test-util)
+    (test-navigate)
+    (test-document)
+    (test-transcribe)))
 
 (defun test (&key (debug nil) (print 'unexpected) (describe *describe*))
   ;; Bind *PACKAGE* so that names of tests printed have package names,

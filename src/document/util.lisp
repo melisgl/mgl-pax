@@ -71,8 +71,8 @@
 
 ;;;; Funny printing of @NAMEs
 
-;;; If NAME is a symbol, then print it almost as PRIN1 would with
-;;; *PACKAGE* were the CL package. Differences:
+;;; Symbols in names (they can be lists) ared printed almost as PRIN1
+;;; would with *PACKAGE* were the CL package. Differences:
 ;;;
 ;;; - For symbols in other packages, a single #\: is printed even if
 ;;;   it is an internal symbol.
@@ -98,36 +98,50 @@
           (write-char #\: stream)
           (prin1-funny* name stream)))))
     (string
-     (prin1 name stream))))
+     (prin1 name stream))
+    (list
+     (write-char #\( stream)
+     (loop for el in name
+           for firstp = t then nil
+           do (unless firstp
+                (write-char #\Space stream))
+              (prin1-funny el stream))
+     (write-char #\) stream))))
 
-;;; Escape #\:, #\Space, #\\ with a backslash.
+;;; Escape #\:, #\Space, #\(, #\), #\\ with a backslash.
 (defun prin1-funny* (string &optional (stream *standard-output*))
   (loop for char across string
-        do (when (or (eql char #\:) (eql char #\Space) (eql char #\\))
+        do (when (member char '(#\: #\Space #\( #\) #\\))
              (write-char #\\ stream))
            (write-char char stream)))
 
 ;;; Like READ, but do not INTERN.
 (defun read-funny (stream &optional (eof-error-p t) eof-value)
-  (if (eql (peek-char t stream eof-value eof-value) #\")
-      (read stream eof-error-p eof-value)
-      (let ((name-1 (read-funny* stream))
-            (next-char (peek-char nil stream nil)))
-        (cond ((eql next-char #\:)
-               (read-char stream)
-               (find-symbol (read-funny* stream)
-                            (if (zerop (length name-1))
-                                #.(find-package :keyword)
-                                (find-package name-1))))
-              (t
-               (find-symbol name-1 #.(find-package :cl)))))))
+  (case (peek-char t stream eof-value eof-value)
+    ((#\))
+     (error "~@<Unpaired closing paren.~:@>"))
+    ((#\()
+     (assert nil () "FIXME: Unimplemented"))
+    ((#\")
+     (read stream eof-error-p eof-value))
+    (t
+     (let ((name-1 (read-funny* stream))
+           (next-char (peek-char nil stream nil)))
+       (cond ((eql next-char #\:)
+              (read-char stream)
+              (find-symbol (read-funny* stream)
+                           (if (zerop (length name-1))
+                               #.(find-package :keyword)
+                               (find-package name-1))))
+             (t
+              (find-symbol name-1 #.(find-package :cl))))))))
 
 (defun read-funny* (stream)
   (with-output-to-string (s)
     (loop for char = (read-char stream nil)
           while char
           do ;; These would be escaped if they were part of the name.
-             (when (or (eql char #\:) (eql char #\Space))
+             (when (member char '(#\: #\Space #\( #\)))
                (unread-char char stream)
                (return))
              (when (eql char #\\)

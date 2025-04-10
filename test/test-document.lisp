@@ -93,9 +93,9 @@
   (test-generic-function)
   (test-method-combination)
   (test-method)
-  (test-accessor)
   (test-reader)
   (test-writer)
+  (test-accessor)
   (test-structure-accessor)
   ;; PAX::@TYPELIKE-LOCATIVES
   (test-declaration)
@@ -1043,10 +1043,10 @@ This is [Self-referencing][e042].
 (deftest test-setf/function ()
   (with-failure-expected
       ((and (alexandria:featurep '(:or :abcl)) 'failure))
-    (check-document (dref 'has-setf-function 'setf)
-                    "<a id=\"MGL-PAX-TEST:HAS-SETF-FUNCTION%20SETF\"></a>
+    (check-document (dref '(setf has-setf-function) 'function)
+                    "<a id=\"%28SETF%20MGL-PAX-TEST:HAS-SETF-FUNCTION%29%20FUNCTION\"></a>
 
-- [setf] **HAS-SETF-FUNCTION** *V*
+- [function] **(SETF HAS-SETF-FUNCTION)** *V*
 
     eee
 ")))
@@ -1054,10 +1054,10 @@ This is [Self-referencing][e042].
 (deftest test-setf/generic-function ()
   (with-failure-expected ((and (alexandria:featurep '(:or :cmucl))
                                'failure))
-    (check-document (dref 'has-setf-generic-function 'setf)
-                    "<a id=\"MGL-PAX-TEST:HAS-SETF-GENERIC-FUNCTION%20SETF\"></a>
+    (check-document (dref '(setf has-setf-generic-function) 'generic-function)
+                    "<a id=\"%28SETF%20MGL-PAX-TEST:HAS-SETF-GENERIC-FUNCTION%29%20GENERIC-FUNCTION\"></a>
 
-- [setf] **HAS-SETF-GENERIC-FUNCTION** *V*
+- [generic-function] **(SETF HAS-SETF-GENERIC-FUNCTION)** *V*
 
     fff
 ")))
@@ -1066,10 +1066,10 @@ This is [Self-referencing][e042].
   (with-failure-expected ((alexandria:featurep :clisp))
     (signals-not (locate-error)
       (check-document
-       (dref 'has-setf-generic-function '(setf (method () (string))))
-       "<a id=\"MGL-PAX-TEST:HAS-SETF-GENERIC-FUNCTION%20%28SETF%20%28METHOD%20NIL%20%28STRING%29%29%29\"></a>
+       (dref '(setf has-setf-generic-function) '(method () (string)))
+       "<a id=\"%28SETF%20MGL-PAX-TEST:HAS-SETF-GENERIC-FUNCTION%29%20%28METHOD%20NIL%20%28STRING%29%29\"></a>
 
-- [setf] **HAS-SETF-GENERIC-FUNCTION** *(V STRING)*
+- [method] **(SETF HAS-SETF-GENERIC-FUNCTION)** *(V STRING)*
 
     ggg
 "))))
@@ -1191,15 +1191,6 @@ This is [Self-referencing][e042].
   (check-pred (dref 'test-gf '(method () ((eql :bar))))
               "- [method] **TEST-GF** *(X (EQL :BAR))*"))
 
-(deftest test-accessor ()
-  (check-pred (list (dref 'foo-a '(accessor foo))
-                    (dref 'foo 'class))
-              "- [accessor] **FOO-A** *[FOO][b01d]*")
-  (check-head (list "FOO-A `(accessor foo)`"
-                    (dref 'foo-a '(accessor foo))
-                    (dref 'foo-a 'variable))
-              "[`FOO-A`][dbec] `(accessor foo)`"))
-
 (deftest test-reader ()
   (check-pred (list (dref 'foo-r '(reader foo))
                     (dref 'foo 'class))
@@ -1222,6 +1213,15 @@ This is [Self-referencing][e042].
                     (dref 'foo-w '(writer foo))
                     (dref 'foo-w 'variable))
               "[`FOO-W`][2b65] `(writer foo)`"))
+
+(deftest test-accessor ()
+  (check-pred (list (dref 'foo-a '(accessor foo))
+                    (dref 'foo 'class))
+              "- [accessor] **FOO-A** *[FOO][b01d]*")
+  (check-head (list "FOO-A `(accessor foo)`"
+                    (dref 'foo-a '(accessor foo))
+                    (dref 'foo-a 'variable))
+              "[`FOO-A`][dbec] `(accessor foo)`"))
 
 (deftest test-structure-accessor ()
   (check-pred (dref 'baz-aaa '(structure-accessor baz))

@@ -743,14 +743,13 @@ When [Generating Documentation][2c93], [Autolink][ec7a]ing behaves similary.
 
 ## 7 PAX Locatives
 
-To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
+To the DREF::@BASI-LOCATIVE-TYPES defined by DRef,
+PAX adds a few of its own.
 
 <a id="x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **SECTION**
-    - Equivalent class: [`SECTION`][5fac]
-    
-    - Direct super locative types: [`VARIABLE`][6c83]
+    - Direct locative supertypes: [`VARIABLE`][6c83]
 
     Refers to a [`SECTION`][5fac] defined by [`DEFSECTION`][72b4].
     
@@ -760,9 +759,7 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
 <a id="x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **GLOSSARY-TERM**
-    - Equivalent class: [`GLOSSARY-TERM`][8251]
-    
-    - Direct super locative types: [`VARIABLE`][6c83]
+    - Direct locative supertypes: [`VARIABLE`][6c83]
 
     Refers to a [`GLOSSARY-TERM`][8251] defined by [`DEFINE-GLOSSARY-TERM`][8ece].
     
@@ -926,6 +923,7 @@ To the [Locative Types][bf0f] defined by DRef, PAX adds a few of its own.
         ```common-lisp
         (resolve (dref 'xxx '(go (print function))))
         ==> #<FUNCTION PRINT>
+        => T
         ```
     
     - The [`DOCSTRING`][affc] of a `GO` reference is `NIL`.
@@ -1062,7 +1060,7 @@ standard Slime functionality by
 
 - adding support for all kinds of definitions (see e.g.
   [`ASDF:SYSTEM`][c097], [`READTABLE`][7506] in
-  [Locative Types][bf0f]), not just the ones Slime knows about,
+  [Basic Locative Types][1d1d]), not just the ones Slime knows about,
 
 - providing a portable way to refer to even standard definitions,
 
@@ -1214,7 +1212,7 @@ case-sensitive. Examples:
 - `class dref:<TAB>` lists `DREF:XREF`([`0`][1538] [`1`][cda7]) and `DREF:DREF`([`0`][d930] [`1`][7e92]) (all the classes
   in the package `DREF`).
 
-- `pax:locative <TAB>` lists all [Locative Types][bf0f] (see the CL
+- `pax:locative <TAB>` lists all [locative type][a11d]s (see the CL
   function [`DREF:LOCATIVE-TYPES`][99b0]).
 
 - `package "MGL<TAB>` lists the names of packages that start with
@@ -1878,7 +1876,8 @@ as systemless.
 ##### Browse by Locative Types
 
 The [PAX Live Home Page][9d50] provides quick links to [Apropos][b7fc] result
-pages for all [locative type][a11d]s which may have definitions.
+pages for all DREF::@BASIC-LOCATIVE-TYPEs which may have
+definitions.
 
 <a id="x-28MGL-PAX-3A-40RELATED-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
 
@@ -2218,7 +2217,7 @@ This is a normal [Markdown reference link][8c00] if `id` is not a valid locative
     (dref:dref 'user-defined 'locative)
     .. debugger invoked on LOCATE-ERROR:
     ..   Could not locate USER-DEFINED LOCATIVE.
-    ..   USER-DEFINED is not a valid locative.
+    ..   USER-DEFINED is not a valid locative type or locative alias.
     ```
 
     ```common-lisp
@@ -2302,7 +2301,7 @@ For example,
 
     DREF-NAME `(reader dref)`
 
-*renders as* [`DREF-NAME`][1cf6] `(reader dref)`.
+*renders as* [`DREF-NAME`][1e36] `(reader dref)`.
 
 <a id="x-28MGL-PAX-3A-40UNSPECIFIC-AUTOLINK-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2535,7 +2534,7 @@ with a name. These are [Unspecific Reflink][4e05],
 To make the links predictible and managable in number, the following
 steps are taken.
 
-1. Definitions that are not symbol-based (i.e. whose [`DREF-NAME`][1cf6]
+1. Definitions that are not symbol-based (i.e. whose [`DREF-NAME`][1e36]
 is not a symbol) are filtered out to prevent unrelated
 [`PACKAGE`][4dd7]s, [`ASDF:SYSTEM`][c097]s and [`CLHS`][ed5f]
 sections from cluttering the documentation without the control
@@ -2733,8 +2732,8 @@ effect for all variables locally bound in a definition with [`ARGLIST`][e6bd],
 and [`*PACKAGE*`][5ed1] is bound to the second return value of [`DOCSTRING`][affc].
 
 With this default format, PAX supports all locative types, but for
-some [Locative Types][bf0f] defined in DRef and the [PAX Locatives][292a],
-special provisions have been made.
+some [Basic Locative Types][1d1d] defined in DRef and the
+[PAX Locatives][292a], special provisions have been made.
 
 - For definitions with a [`VARIABLE`][6c83] or [`CONSTANT`][c819] locative,
 their initform is printed as their arglist. The initform is the
@@ -3738,7 +3737,7 @@ package for evaluation.
 
 ### 11.1 Adding New Locatives
 
-Once everything in [Adding New Locatives][3cf3] has been done,
+Once everything in DREF-EXT::@ADDING-NEW-LOCATIVES has been done,
 there are only a couple of PAX generic functions left to extend.
 
 <a id="x-28MGL-PAX-3ADOCUMENT-OBJECT-2A-20GENERIC-FUNCTION-29"></a>
@@ -4063,8 +4062,9 @@ they are presented.
   [19e3]: #x-28MGL-PAX-3A-40LINKING-20MGL-PAX-3ASECTION-29 "Linking"
   [1b1b]: #x-28MGL-PAX-3A-40DOCUMENTATION-UTILITIES-20MGL-PAX-3ASECTION-29 "Utilities for Generating Documentation"
   [1b28]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE"
-  [1cf6]: dref/README.md#x-28DREF-EXT-3ADREF-NAME-20-28MGL-PAX-3AREADER-20DREF-3ADREF-29-29 "DREF-EXT:DREF-NAME (MGL-PAX:READER DREF:DREF)"
+  [1d1d]: dref/README.md#x-28DREF-3A-40BASIC-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29 "Basic Locative Types"
   [1d5a]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pkg.htm "PACKAGE (MGL-PAX:CLHS CLASS)"
+  [1e36]: dref/README.md#x-28DREF-3ADREF-NAME-20-28MGL-PAX-3AREADER-20DREF-3ADREF-29-29 "DREF:DREF-NAME (MGL-PAX:READER DREF:DREF)"
   [1f37]: http://www.lispworks.com/documentation/HyperSpec/Body/t_class.htm "CLASS (MGL-PAX:CLHS CLASS)"
   [1f99]: http://www.lispworks.com/documentation/HyperSpec/Body/t_array.htm "ARRAY (MGL-PAX:CLHS CLASS)"
   [2060]: dref/README.md#x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "CLASS MGL-PAX:LOCATIVE"
@@ -4101,7 +4101,6 @@ they are presented.
   [3831]: http://www.lispworks.com/documentation/HyperSpec/Body/v_sl_sls.htm "/// (MGL-PAX:CLHS VARIABLE)"
   [38de]: #x-28MGL-PAX-3A-40SPECIFIC-AUTOLINK-20MGL-PAX-3ASECTION-29 "Specific Autolink"
   [3972]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_r.htm#reader_macro '"reader macro" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
-  [3cf3]: dref/README.md#x-28DREF-EXT-3A-40ADDING-NEW-LOCATIVES-20MGL-PAX-3ASECTION-29 "Adding New Locatives"
   [3da8]: #x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29 "MGL-PAX:*FORMAT* VARIABLE"
   [3e6e]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cbb.htm '"22.3.2.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [3f2e]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pr_obj.htm "PRINT-OBJECT (MGL-PAX:CLHS GENERIC-FUNCTION)"
@@ -4288,7 +4287,6 @@ they are presented.
   [bcb6]: http://www.lispworks.com/documentation/HyperSpec/Body/e_warnin.htm "WARNING (MGL-PAX:CLHS CONDITION)"
   [bdd5]: #x-28MGL-PAX-3A-40HOME-SECTION-20MGL-PAX-3ASECTION-29 "Home Section"
   [bdd6]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cga.htm '"22.3.7.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
-  [bf0f]: dref/README.md#x-28DREF-3A-40LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29 "Locative Types"
   [bf38]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cfc.htm '"22.3.6.3" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [bfaa]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhk.htm '"2.4.8.11" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [c097]: dref/README.md#x-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29 "ASDF/SYSTEM:SYSTEM MGL-PAX:LOCATIVE"

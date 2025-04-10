@@ -12,6 +12,22 @@
   (find-package name))
 
 
+;;;; Variables
+
+(defun special-variable-name-p (obj)
+  (and (symbolp obj)
+       #+ccl (member (ccl::variable-information obj) '(:special :constant))
+       #+sbcl (member (sb-int:info :variable :kind obj)
+                      '(:special :constant))))
+
+(defun constant-variable-name-p (obj)
+  (and (symbolp obj)
+       (not (keywordp obj))
+       ;; CONSTANTP may detect constant symbol macros, for example.
+       (boundp obj)
+       (constantp obj)))
+
+
 ;;;; Types
 
 ;;; Like TYPEP, but never warn or error and indicate in the second
@@ -34,19 +50,26 @@
         (subtypep type1 type2)
       (error ()
         (values nil t)))))
-
-(defun typexpand (type-specifier)
-  #+sbcl (sb-ext:typexpand type-specifier)
-  ;; FIXME
-  #-sbcl (values type-specifier nil))
 
 
 ;;;; Macros
 
+(defun name-of-macro-p (name &optional fn)
+  (and (symbolp name)
+       (if fn
+           (eq fn (macro-function name))
+           (macro-function name))))
+
 (defun special-operator-p* (name)
-  (or (special-operator-p name)
-      ;; KLUDGE: CCL is mistaken about DECLARE.
-      #+ccl (eq name 'declare)))
+  (and (symbolp name)
+       (or (special-operator-p name)
+           ;; KLUDGE: CCL is mistaken about DECLARE.
+           #+ccl (eq name 'declare))))
+
+(defun symbol-macro-p (name)
+  (and (symbolp name)
+       #+ccl (gethash name ccl::*symbol-macros*)
+       #+sbcl (sb-int:info :variable :macro-expansion name)))
 
 
 ;;;; SETF
@@ -125,6 +148,18 @@
   #-(or abcl clisp)
   (unencapsulated-function (symbol-function symbol)))
 
+;;; See "function name" (clhs).
+(defun valid-function-name-p (name)
+  (or (symbolp name) (setf-name-p name)))
+
+(defun consistent-fdefinition (name)
+  (let ((fn (ignore-errors (fdefinition* name))))
+    (when (and fn (equal (function-name fn) name))
+      fn)))
+
+(defun has-fdefinition-p (name)
+  (ignore-errors (fdefinition* name)))
+
 (defun fdefinition* (name)
   #+abcl
   (or (system::untraced-function name)
@@ -174,7 +209,7 @@
 ;;; arglist was not found.
 (defun function-arglist (function-designator &optional (foundp t))
   (let ((function-designator
-          (if (symbolp function-designator)
+          (if (valid-function-name-p function-designator)
               #-cmucl function-designator
               #+cmucl (symbol-function* function-designator)
               (unencapsulated-function function-designator))))

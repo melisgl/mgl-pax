@@ -1242,7 +1242,7 @@
                       ;; because the `recurse' return value is
                       ;; handled in the caller of this function.
                       t t))
-            (warn "~@<Including ~S failed because ~S cannot be ~Sd~:@>"
+            (warn "~@<Including ~S failed because ~S cannot be ~Sd.~:@>"
                   'docstring label-string 'locate))))
       tree)))
 
@@ -2008,7 +2008,7 @@
       (dref:dref 'user-defined 'locative)
       .. debugger invoked on LOCATE-ERROR:
       ..   Could not locate USER-DEFINED LOCATIVE.
-      ..   USER-DEFINED is not a valid locative.
+      ..   USER-DEFINED is not a valid locative type or locative alias.
       ```
       ```cl-transcript (:dynenv pax-std-env)
       (document "[see this][user-defined]" :format :markdown)

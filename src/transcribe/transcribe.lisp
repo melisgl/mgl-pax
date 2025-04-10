@@ -805,7 +805,7 @@
 ;;; string of all of the characters that were read even if EOF
 ;;; (whitespace, comments).
 (defun read-form-and-string (stream eof &key preserve-whitespace-p)
-  (let* ((old-file-position (file-position  stream))
+  (let* ((old-file-position (file-position stream))
          (form (handler-case
                    (funcall (if preserve-whitespace-p
                                 #'read-preserving-whitespace

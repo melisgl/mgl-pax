@@ -281,6 +281,14 @@
       ("constant bar" "(defconstant bar ")
       ("macro bar" "(defmacro bar ")
       ("symbol-macro my-smac" "(define-symbol-macro my-smac ")
+      ("compiler-macro foo" "(define-compiler-macro foo ")
+      ("function (setf has-setf-function)" "(defun (setf has-setf-function) ")
+      ("compiler-macro (setf has-setf-function)"
+       "(define-compiler-macro (setf has-setf-function) ")
+      ("function (setf has-setf-generic-function)"
+       "(defun (setf has-setf-generic-function) ")
+      ("(method () (string)) (setf has-setf-generic-function)"
+       "(defmethod (setf has-setf-generic-function) ((v string))")
       ("function foo" "(defun foo ")
       ("function |Foo|" "(defun |Foo| ")
       ("traced-foo" "(defun traced-foo ")
@@ -289,9 +297,9 @@
       ("(method nil ((eql #.(find-package '#:mgl-pax-test)) T T T)) exportable-reference-p"
        "(defmethod exportable-reference-p")
       ("method-combination my-comb" "(define-method-combination my-comb ")
-      ("(accessor foo) foo-a" "(defclass foo " "(a :accessor foo-a)")
       ("(reader foo) foo-r" "(defclass foo " "(r :reader foo-r)")
       ("(writer foo) foo-w" "(defclass foo " "(w :writer foo-w)")
+      ("(accessor foo) foo-a" "(defclass foo " "(a :accessor foo-a)")
       ("type bar" "(deftype bar ")
       ("type foo" "(defclass foo ")
       ("type my-error" "(define-condition my-error ")
@@ -380,7 +388,8 @@
               (cl-third (mgl-pax-completions-at-point))
               ;; The non-matching ones get filtered out by the
               ;; standard Emacs completion mechanism.
-              '("dref:dref" "dref:xref" "class" "mgl-pax:locative")))
+              '("dref::function-name-mixin" "dref:dref" "dref:xref"
+                "class" "mgl-pax:locative")))
      (insert "\n\"lambda list")
      (should (null (cl-third (mgl-pax-completions-at-point))))
      (let ((mgl-pax-completing-for 'document))

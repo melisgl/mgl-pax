@@ -630,12 +630,11 @@ When @GENERATING-DOCUMENTATION, @AUTOLINKing behaves similary.
 
 ## PAX Locatives
 
-To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
+To the DREF::@BASI-LOCATIVE-TYPES defined by DRef,
+PAX adds a few of its own.
 
 - [locative] SECTION
-    - Equivalent class: [SECTION][5fac]
-    
-    - Direct super locative types: [VARIABLE][6c83]
+    - Direct locative supertypes: [VARIABLE][6c83]
 
     Refers to a SECTION defined by DEFSECTION.
     
@@ -643,9 +642,7 @@ To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
     default (see EXPORTABLE-REFERENCE-P).
 
 - [locative] GLOSSARY-TERM
-    - Equivalent class: [GLOSSARY-TERM][8251]
-    
-    - Direct super locative types: [VARIABLE][6c83]
+    - Direct locative supertypes: [VARIABLE][6c83]
 
     Refers to a GLOSSARY-TERM defined by DEFINE-GLOSSARY-TERM.
     
@@ -799,6 +796,7 @@ To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own.
         ```common-lisp
         (resolve (dref 'xxx '(go (print function))))
         ==> #<FUNCTION PRINT>
+        => T
         ```
     
     - The DOCSTRING of a GO reference is NIL.
@@ -931,7 +929,7 @@ standard Slime functionality by
 
 - adding support for all kinds of definitions (see e.g.
   ASDF:SYSTEM, READTABLE in
-  DREF::@LOCATIVE-TYPES), not just the ones Slime knows about,
+  DREF::@BASIC-LOCATIVE-TYPES), not just the ones Slime knows about,
 
 - providing a portable way to refer to even standard definitions,
 
@@ -1073,7 +1071,7 @@ case-sensitive. Examples:
 - `class dref:<TAB>` lists DREF:XREF and DREF:DREF (all the classes
   in the package DREF).
 
-- `pax:locative <TAB>` lists all DREF::@LOCATIVE-TYPES (see the CL
+- `pax:locative <TAB>` lists all DREF::@LOCATIVE-TYPEs (see the CL
   function DREF:LOCATIVE-TYPES).
 
 - `package "MGL<TAB>` lists the names of packages that start with
@@ -1691,7 +1689,8 @@ as systemless.
 ##### Browse by Locative Types
 
 The @PAX-LIVE-HOME-PAGE provides quick links to @APROPOS result
-pages for all DREF::@LOCATIVE-TYPEs which may have definitions.
+pages for all DREF::@BASIC-LOCATIVE-TYPEs which may have
+definitions.
 
 - [glossary-term] related
 
@@ -1997,7 +1996,7 @@ This is a normal @MARKDOWN/REFLINK if `id` is not a valid locative.
     (dref:dref 'user-defined 'locative)
     .. debugger invoked on LOCATE-ERROR:
     ..   Could not locate USER-DEFINED LOCATIVE.
-    ..   USER-DEFINED is not a valid locative.
+    ..   USER-DEFINED is not a valid locative type or locative alias.
     ```
 
     ```common-lisp
@@ -2454,8 +2453,8 @@ effect for all variables locally bound in a definition with ARGLIST,
 and *PACKAGE* is bound to the second return value of DOCSTRING.
 
 With this default format, PAX supports all locative types, but for
-some DREF::@LOCATIVE-TYPES defined in DRef and the @PAX-LOCATIVES,
-special provisions have been made.
+some DREF::@BASIC-LOCATIVE-TYPES defined in DRef and the
+@PAX-LOCATIVES, special provisions have been made.
 
 - For definitions with a VARIABLE or CONSTANT locative,
 their initform is printed as their arglist. The initform is the

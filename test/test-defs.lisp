@@ -47,9 +47,9 @@
   "Docstring of a compiler macro."
   nil)
 (defclass foo (unexported-class)
-  ((a :accessor foo-a)
-   (r :reader foo-r)
-   (w :writer foo-w)))
+  ((r :reader foo-r)
+   (w :writer foo-w)
+   (a :accessor foo-a)))
 (defclass unexported-class () ())
 (defvar foo-a)
 (defvar foo-r)
@@ -142,6 +142,9 @@
   "eee"
   (declare (ignore v)))
 
+(define-compiler-macro (setf has-setf-function) (v)
+  v)
+
 (defgeneric (setf has-setf-generic-function) (v)
   (:documentation "fff"))
 
@@ -160,3 +163,6 @@
 
 (defsection @inc ()
   (nil (include #.(asdf:system-relative-pathname :mgl-pax "test/inc.md"))))
+
+(defun xxx ())
+(defun xxxs ())

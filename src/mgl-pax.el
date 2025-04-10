@@ -702,7 +702,6 @@ buffer."
      ',(mgl-pax-current-definition-possible-names))
    cont))
 
-
 (defun mgl-pax-current-definition-possible-names ()
   (save-excursion
     (when (looking-at "(")
@@ -731,7 +730,7 @@ buffer."
         (forward-char)
         ;; `name' can be a symbol or a string ...
         (let ((name (mgl-pax-next-sexp)))
-          ;; ... but currently never a list.
+          ;; ... but currently never a list. FIXME: SETF names?
           (unless (string-prefix-p "(" name)
             (list name snippet pos)))))))
 

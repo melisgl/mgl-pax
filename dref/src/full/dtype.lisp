@@ -25,102 +25,48 @@
   `(or ,@(pseudo-locative-types)))
 
 
-(defun/autoloaded dtypep (object dtype)
-  """Like CL:TYPEP, but OBJECT may be an XREF and DTYPE may involve
-  @LOCATIVE-TYPEs and full @LOCATIVEs.
+(defun/autoloaded dtypep (dref dtype)
+  """See if DREF is of DTYPE.
 
-  - OBJECT may be an XREF (including DREFs). `(DTYPEP OBJECT DTYPE)`
-    is equivalent to `(DTYPEP (LOCATE OBJECT) DTYPE)`. This form is
-    necesary when the definition has no first-class object associated
-    with it:
+  - _[Atomic locatives][@locative]:_ If DTYPE is a @LOCATIVE-TYPE,
+    then it matches definitions with that locative type and its
+    locative subtypes.
+
+      Because [CONSTANT][locative] is defined with VARIABLE among its
+      [ LOCATIVE-SUPERTYPES] [ define-locative-type]:
 
       ```cl-transcript (:dynenv dref-std-env)
       (dtypep (dref 'pi 'constant) 'variable)
       => T
       ```
 
-      Note however that as a consequence, DTYPEP deviates from TYPEP
-      when OBJECT is an XREF:
-
       ```cl-transcript (:dynenv dref-std-env)
-      (typep (dref 'number 'class) 'class)
-      => NIL
-      (dtypep (dref 'number 'class) 'class)
-      => T
-      (typep (xref 'number 'junk) 'standard-object)
-      => T
-      (dtypep (xref 'number 'junk) 'standard-object)
-      => NIL
-      (dtypep (xref 'number 'junk) 'junk)
-      => NIL
-      ```
-
-      [MEMBER][type] and [SATISFIES][type] are only matched with the
-      RESOLVEd OBJECT if any:
-
-      ```cl-transcript (:dynenv dref-std-env)
-      (let ((dref (dref nil 'type)))
-        (typep dref `(member ,dref)))
-      => T
-      (let ((dref (dref nil 'type)))
-        (dtypep dref `(member ,dref)))
-      => NIL
-      ```
-
-  - If OBJECT is not of type XREF (including DREFs) and DTYPE is a
-    valid Lisp [type specifier][clhs], then DTYPEP is equivalent to
-    TYPEP:
-
-      ```cl-transcript (:dynenv dref-std-env)
-      (defparameter *c* (find-class 'number))
-      (defparameter *m* (find-method #'dref* () '(t t t)))
-      (typep *c* 'class)
-      => T
-      (dtypep *c* 'class)
-      => T
-      (typep *m* 'method)
-      => T
-      (dtypep *m* 'method)
-      => T
-      (typep 4 '(integer 3 5))
-      => T
-      (dtypep 4 '(integer 3 5))
+      (dtypep (dref 'number 'class) 'type)
       => T
       ```
 
-  - DTYPE may be a @LOCATIVE-TYPE:
+      It is an error if DTYPE is an ATOM but is not a @LOCATIVE-TYPE,
+      but (the empty) argument list of bare locative types are not
+      checked even if having no arguments makes them [invalid
+      locatives][@locative].
 
-      ```cl-transcript (:dynenv dref-std-env)
-      (dtypep (dref nil 'type) 'type)
+  - _[Compound locatives][@locative]:_ Locatives in their compound
+    form are validated and must match exactly (under EQUAL, as in
+    XREF=).
+
+      ```cl-transcript
+      (defparameter *d* (dref 'dref* '(method () (t t t))))
+      (defparameter *d2* (dref 'dref* '(method (:around) (t t t))))
+      (dtypep *d* 'method)
       => T
-      ```
-
-  - DTYPE may be a full @LOCATIVE:
-
-      ```cl-transcript (:dynenv dref-std-env)
-      (typep *c* '(class))
+      (dtypep *d* '(method))
       .. debugger invoked on SIMPLE-ERROR:
-      ..   unknown type specifier: (CLASS)
-      (dtypep *c* '(class))
+      ..   Bad arguments NIL for locative METHOD with lambda list
+      ..   (METHOD-QUALIFIERS METHOD-SPECIALIZERS).
+      (dtypep *d* '(method () (t t t)))
       => T
-      (dtypep *c* '(class junk))
-      .. debugger invoked on SIMPLE-ERROR:
-      ..   Bad arguments (JUNK) for locative CLASS with lambda list NIL.
-      (typep *m* '(method () (t t t)))
-      .. debugger invoked on SIMPLE-ERROR:
-      ..   unknown type specifier: (METHOD NIL (T T T))
-      (dtypep *m* '(method () (t t t)))
-      => T
-      ```
-
-      If a full locative matches, then its locative type (without the
-      locative args) also does.
-
-  - DTYPE may be named by DEFINE-DTYPE:
-
-      ```cl-transcript (:dynenv dref-std-env)
-      (dtypep 7 'top)
-      => T
+      (dtypep *d2* '(method () (t t t)))
+      => NIL
       ```
 
   - DTYPE may be constructed with [AND][type], [OR][type] and
@@ -128,90 +74,76 @@
     named DTYPEs:
 
       ```cl-transcript (:dynenv dref-std-env)
-      (typep 7 '(or type string))
-      .. debugger invoked on SIMPLE-ERROR:
-      ..   unknown type specifier: TYPE
-      (dtypep 7 '(or type string))
-      => NIL
-      (dtypep 7 '(or integer type))
-      => T
-      (dtypep *c* '(or condition class))
-      => T
       (dtypep (dref 'locate-error 'condition) '(or condition class))
       => T
       (dtypep (dref nil 'type) '(and type (not class)))
       => T
+      ```
+
+  - For `(MEMBER &REST OBJS)`, each of OBJS is LOCATEd and DREF is
+    matched against them with XREF=:
+
+      ```cl-transcript (:dynenv dref-std-env)
+      (dtypep (locate #'print) `(member ,#'print))
+      => T
+      ```
+
+  - For `(SATISFIES PRED)`, the predicate PRED is funcalled with DREF.
+
+  - DTYPE may be named by DEFINE-DTYPE:
+
+      ```cl-transcript (:dynenv dref-std-env)
+      (dtypep (locate #'car) 'top)
+      => T
       ```"""
-  (multiple-value-bind (resolved unresolvedp) (ignore-errors (resolve object))
-    (let* ((resolvedp (not unresolvedp))
-           (dref (locate object nil))
-           (object-name (and dref (dref-name dref)))
-           (object-locative-type (and dref (dref-locative-type dref)))
-           (pseudop (member object-locative-type *pseudo-locative-types*)))
-      (when (or dref resolvedp)
-        (labels
-            ((object-is-of-locative-type-p (locative-type)
-               (or (and dref (locative-subtype-p object-locative-type
-                                                 locative-type))
-                   (and resolvedp
-                        (typep resolved (widest-subtype-of-locative-type
-                                         locative-type)))))
-             (recurse (dtype)
-               ;; CCL is terribly slow with some invalid types
-               ;; https://github.com/Clozure/ccl/issues/531
-               (unless (progn
-                         #+ccl (eq (type-specifier-name dtype) 'not)
-                         #-ccl nil)
-                 (cond
-                   ((not resolvedp)
-                    ;; LOCATIVE-ARGS can only restrict LOCATIVE-TYPE.
-                    (when (and (not pseudop)
-                               (subtypep* (narrowest-supertype-of-locative-type
-                                           object-locative-type)
-                                          dtype))
-                      (return-from recurse t)))
-                   ((member (type-specifier-name dtype) '(member satisfies))
-                    ;; Let the errors through.
-                    (return-from recurse (typep resolved dtype)))
-                   (t
-                    (multiple-value-bind (matchedp valid-lisp-type-p)
-                        (typep* resolved dtype)
-                      (when valid-lisp-type-p
-                        (return-from recurse matchedp))))))
-               (setq dtype (dtypexpand dtype))
-               (cond
-                 ;; E.g. FUNCTION or METHOD
-                 ((atom dtype)
-                  (object-is-of-locative-type-p dtype))
-                 ((eq (first dtype) 'and)
-                  (loop for child in (rest dtype) always (recurse child)))
-                 ((eq (first dtype) 'or)
-                  (loop for child in (rest dtype) thereis (recurse child)))
-                 ((eq (first dtype) 'not)
-                  (unless (= (length dtype) 2)
-                    (error "Invalid type specifier ~S." dtype))
-                  (not (recurse (second dtype))))
-                 ((member-type-specifier-p dtype)
-                  nil)
-                 ((satisfies-type-specifier-p dtype)
-                  (unless (valid-satisisfies-type-specifier-args-p (rest dtype))
-                    (error "~@<~S is not a valid ~S type.~:@>"
-                           dtype 'satisfies)))
-                 ;; E.g. (FUNCTION) or (METHOD NIL (NUMBER))
-                 (t
-                  (check-locative-type (first dtype))
-                  (check-locative-args* (first dtype) (rest dtype))
-                  (if (= (length dtype) 1)
-                      (object-is-of-locative-type-p (first dtype))
-                      ;; LOCATIVE-ARGS restrict LOCATIVE-TYPE in
-                      ;; unknown ways, so we must match
-                      ;; LOCATIVE-TYPE exactly.
-                      (when dref
-                        (or (equal dtype (dref-locative dref))
-                            ;; DREF-TEST::TEST-DTYPEP/WITH-LOCATIVE-ARGS/ACTUALIZED
-                            (let ((dref1 (dref object-name dtype nil)))
-                              (and dref1 (xref= dref1 dref))))))))))
-          (values (recurse dtype)))))))
+  (declare (type dref dref))
+  (let* ((d-name (dref-name dref))
+         (d-locative (dref-locative dref))
+         (d-locative-type (locative-type d-locative)))
+    (labels
+        ((d-is-of-atomic-locative-p (locative-type)
+           (locative-subtype-p d-locative-type locative-type))
+         (d-is-of-compound-locative-p (locative)
+           (or
+            ;; Pick off the exact match case.
+            (equal locative d-locative)
+            ;; @CAST-NAME-CHANGE: Upcasting or
+            ;; SAME-DEFINITION-WITH-LOCATIVE-P works.
+            (and (locative-subtype-p d-locative-type (first locative))
+                 (when-let (upcast (locate* dref (first locative)))
+                   (equal (dref-locative upcast) locative)))
+            (same-definition-with-locative-p locative)))
+         (same-definition-with-locative-p (locative)
+           (when-let (dref1 (dref d-name locative nil))
+             (xref= dref1 dref)))
+         (recurse (dtype)
+           (setq dtype (dtypexpand dtype))
+           (cond
+             ;; E.g. FUNCTION or METHOD
+             ((atom dtype)
+              (d-is-of-atomic-locative-p dtype))
+             ((eq (first dtype) 'and)
+              (loop for child in (rest dtype) always (recurse child)))
+             ((eq (first dtype) 'or)
+              (loop for child in (rest dtype) thereis (recurse child)))
+             ((eq (first dtype) 'not)
+              (unless (= (length dtype) 2)
+                (invalid-dtype dtype))
+              (not (recurse (second dtype))))
+             ((member-type-specifier-p dtype)
+              (when (find dref (mapcar #'locate (rest dtype)) :test #'xref=)
+                t))
+             ((satisfies-type-specifier-p dtype)
+              (unless (valid-satisisfies-type-specifier-args-p (rest dtype))
+                (invalid-dtype dtype))
+              (when (funcall (second dtype) dref)
+                t))
+             ;; E.g. (FUNCTION) or (METHOD NIL (NUMBER))
+             (t
+              (check-locative-type (first dtype))
+              (check-locative-args* (first dtype) (rest dtype))
+              (d-is-of-compound-locative-p dtype)))))
+      (values (recurse dtype)))))
 
 (defun locative-subtypes (locative-type)
   (cond ((eq locative-type nil)
@@ -225,20 +157,6 @@
          (loop for locative-type-1 in (locative-types)
                when (locative-subtype-p locative-type-1 locative-type)
                  collect locative-type-1))))
-
-(defun locative-subtype-p (locative-type-1 locative-type-2)
-  (cond ((or (eq locative-type-1 locative-type-2)
-             (eq locative-type-1 nil)
-             (eq locative-type-2 'top))
-         (values t t))
-        ((eq locative-type-2 t)
-         (find locative-type-1 *lisp-locative-types*))
-        (t
-         (let ((class1 (dref-class locative-type-1))
-               (class2 (dref-class locative-type-2)))
-           (assert class1)
-           (assert class2)
-           (subtypep class1 class2)))))
 
 ;;; Return the largest Lisp type that's a subtype of of the class
 ;;; named LOCATIVE-TYPE. If LOCATIVE-TYPE does not name a class, then
@@ -285,10 +203,9 @@
 ;;;; tens of thousands. So, we query like this:
 ;;;;
 ;;;; 1. COVER-DTYPE gives a set of locative types whose union contains
-;;;;    all definitions of DTYPE, but this upper bound may be loose if
-;;;;    Lisp types that do not correspond to a single locative type
-;;;;    are involved or when a locative args restict a locative type
-;;;;    further as in (METHOD () (NUMBER)).
+;;;;    all definitions of DTYPE, but this upper bound may be loose
+;;;;    when a locative's args restict a locative type further as in
+;;;;    (METHOD () (NUMBER)).
 ;;;;
 ;;;; 2. We gather all definitions with these locative types.
 ;;;;
@@ -300,10 +217,8 @@
 
 (defun cover-dtype* (dtype negatep)
   ;; Expanding gets rid of one level of derived types (but children
-  ;; may still be derived). If we don't expand, we only loosen the
-  ;; bound because COVER-BASIC-DTYPE, SUPPORT-BASIC-DTYPE and the last
-  ;; branch of the COND below are conservative.
-  (let ((dtype (dtypexpand (typexpand dtype))))
+  ;; may still be derived).
+  (let ((dtype (dtypexpand dtype)))
     (flet ((child-sets (children)
              (loop for child in children
                    collect (cover-dtype* child negatep))))
@@ -316,82 +231,66 @@
                  :initial-value ()))
         ((not)
          (unless (= (length dtype) 2)
-           (error "Invalid type specifier ~S." dtype))
+           (invalid-dtype dtype))
          (set-difference *locative-types*
                          (cover-dtype* (second dtype) (not negatep))))
         ((member)
-         (reduce #'union (mapcar #'cover-object-with-locative-types
-                                 (rest dtype))
+         (reduce #'union
+                 (mapcar (rcurry #'cover-object-with-locative-types negatep)
+                         (rest dtype))
                  :initial-value ()))
         ((satisfies)
-         *locative-types*)
+         (unless (valid-satisisfies-type-specifier-args-p (rest dtype))
+           (invalid-dtype dtype))
+         (if negatep
+             ()
+             *locative-types*))
         (t
-         (locative-subtypes (if negatep
-                                (support-dtype/single dtype)
-                                (cover-dtype/single dtype))))))))
+         (locative-subtypes (cover-dtype/single dtype negatep)))))))
 
-(defun cover-object-with-locative-types (object)
+(defun cover-object-with-locative-types (object negatep)
   (when-let ((dref (locate object nil)))
-    (list (dref-locative-type dref))))
+    (locative-subtypes (cover-dtype/single (dref-locative dref) negatep))))
 
 ;;; In the base case, we cover DTYPE with a single locative type, NIL
-;;; or T (where NIL and T are not locative types) meaning that
-;;; COVER-DTYPE-WITH-LOCATIVE-TYPE returns a locative type L such that
-;;; (DTYPEP OBJ DTYPE) implies (DTYPEP OBJ L) for all LOCATEable OBJ,
-;;; T if there is no such locative type, or NIL if there can be no
-;;; definitions of DTYPE.
-;;;
-;;; - L is minimal in the sense that none of its sublocativetypes
-;;;   satisfy the "DTYPE implies L" condition above.
-;;;
-;;; - The LOCATEable requirement is there because our goal is
-;;;   filtering definitions. E.g. we want to return NIL when DTYPE is
-;;;   NUMBER because NUMBER objects have no definition. FIXME
-(defun cover-dtype/single (dtype)
-  (cond
-    ;; Handle METHOD, (METHOD), (METHOD () (NUMBER)).
-    ((find-locative-type (validated-locative-type dtype)))
-    ((eq dtype nil) nil)
-    ((eq dtype t) t)
-    ;; Lisp types
-    ((valid-type-specifier-p dtype)
-     (let ((best-locative-type t)
-           (best-class t))
-       (dolist (locative-type *locative-types*)
-         (let ((class (find-class locative-type nil)))
-           (when (and class
-                      (subtypep dtype class)
-                      (subtypep class best-class))
-             (setq best-locative-type locative-type
-                   best-class class))))
-       best-locative-type))
-    (t (error "~@<Invalid ~S ~S.~:@>" 'dtype dtype))))
+;;; or T (where NIL and T are not locative types).
+(defun cover-dtype/single (dtype negatep)
+  (let ((name (locative-type dtype)))
+    (cond
+      ((locative-type-p name)
+       ;; Compound locatives must have valid args.
+       (when (listp dtype)
+         (let ((args (rest dtype)))
+           (check-locative-args* name args)
+           (when negatep
+             ;; (NOT (METHOD () (NUMBER))) is the universe minus an
+             ;; atom.
+             (return-from cover-dtype/single nil))))
+       name)
+      ((eq dtype nil) nil)
+      ((eq dtype t) t)
+      (t (invalid-dtype dtype)))))
 
-(defun support-dtype/single (dtype)
-  (cond ((find-locative-type (validated-locative-type dtype)))
-        ((eq dtype nil) nil)
-        ((eq dtype t) t)
-        ((valid-type-specifier-p dtype)
-         (let ((best-locative-type nil)
-               (best-class nil))
-           (dolist (locative-type *locative-types*)
-             (let ((class (find-class locative-type nil)))
-               (when (and class
-                          (subtypep best-class class)
-                          (subtypep class dtype))
-                 (setq best-locative-type locative-type
-                       best-class class))))
-           best-locative-type))
-        (t (error "~@<Invalid ~S ~S.~:@>" 'dtype dtype))))
+(defun invalid-dtype (dtype)
+  (error "~@<Invalid ~S ~S.~:@>" 'dtype dtype))
+
 
-;;; If DTYPE-SPECIFIER is a
-;; - an atomic locative type, e.g. METHOD, or
-;; - a compond locative, e.g. (METHOD () (NUMBER)).
-;;; then return the locative type. If a compound form, check that it
-;;; is valid.
-(defun validated-locative-type (dtype-specifier)
-  (let ((name (type-specifier-name dtype-specifier)))
-    (when (find-locative-type name)
-      (when (listp dtype-specifier)
-        (check-locative-args* name (rest dtype-specifier)))
-      name)))
+;;; Filter DREFS that match one of the locative types in (COVER-DTYPE
+;;; DTYPE), such as when come from DEFINITIONS or DREF-APROPOS, to
+;;; match DTYPE.
+(defun filter-covered-drefs (drefs dtype)
+  (if (inexact-dtype-cover-p dtype)
+      (loop for dref in drefs
+            when (dtypep dref dtype)
+              collect dref)
+      drefs))
+
+(defun inexact-dtype-cover-p (dtype)
+  (let ((dtype (dtypexpand dtype)))
+    (unless (atom dtype)
+      (if (member (first dtype) '(and or not))
+          (loop for child in (rest dtype)
+                  thereis (inexact-dtype-cover-p child))
+          ;; This a bit conservative. For example, it deems (FUNCTION)
+          ;; inexact.
+          t))))

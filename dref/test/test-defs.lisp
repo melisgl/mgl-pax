@@ -148,10 +148,15 @@
   "HAS-SETF-GENERIC-FUNCTION (setf (method () (string)))"
   ())
 
+(define-compiler-macro (setf has-setf-function) (v)
+  v)
+
 (define-setf-expander full-setf (x)
   (declare (ignore x)))
 
 (defun full-setf ())
+
+(setf (symbol-function 'setfed-fun) (lambda (x) (1+ x)))
 
 (setf (macro-function 'setfed-macro)
       (lambda (whole env)
@@ -174,19 +179,6 @@
 
 (define-symbol-locative-type (sloc &optional nested) ()
   "SLOC locative")
-#+nil
-(PROGN
-  (DREF::%DEFINE-LOCATIVE-TYPE NIL (SLOC &OPTIONAL NESTED) NIL "SLOC locative"
-                               NIL (SYMBOL-LOCATIVE-DREF))
-  (DEFMETHOD DREF* (SYMBOL (LOCATIVE-TYPE (EQL 'SLOC)) LOCATIVE-ARGS)
-    (CHECK-LOCATIVE-ARGS SLOC LOCATIVE-ARGS)
-    
-    (UNLESS
-        (DREF::SUCCEEDSP
-          (DREF::SYMBOL-LAMBDA-LIST SYMBOL LOCATIVE-TYPE))
-      (LOCATE-ERROR))
-    (DREF::%MAKE-DREF 'SLOC-DREF SYMBOL (CONS LOCATIVE-TYPE LOCATIVE-ARGS))))
-;; (dref* 'sloc1 'sloc nil)
 
 (define-definer-for-symbol-locative-type define-sloc sloc)
 

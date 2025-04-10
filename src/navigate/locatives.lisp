@@ -3,7 +3,8 @@
 (in-readtable pythonic-string-syntax)
 
 (defsection @pax-locatives (:title "PAX Locatives")
-  "To the DREF::@LOCATIVE-TYPES defined by DRef, PAX adds a few of its own."
+  "To the DREF::@BASI-LOCATIVE-TYPES defined by DRef,
+  PAX adds a few of its own."
   (section locative)
   (glossary-term locative)
   (dislocated locative)
@@ -27,11 +28,10 @@
       (let ((*print-case* :upcase))
         (prin1-to-string (section-name section)))))
 
-(defmethod locate* ((section section))
+(define-locator section ((section section))
   (make-instance 'section-dref :name (section-name section) :locative 'section))
 
-(defmethod dref* (symbol (locative-type (eql 'section)) locative-args)
-  (check-locative-args section locative-args)
+(define-lookup section (symbol locative-args)
   (unless (and (symbolp symbol)
                (boundp symbol)
                (typep (symbol-value symbol) 'section))
@@ -40,12 +40,6 @@
 
 (defmethod resolve* ((dref section-dref))
   (symbol-value (dref-name dref)))
-
-(defun actualize-variable-to-section (dref)
-  (when (eq (dref-locative-type dref) 'variable)
-    (dref (dref-name dref) 'section nil)))
-
-(add-dref-actualizer 'actualize-variable-to-section)
 
 (defmethod docstring* ((dref section-dref))
   nil)
@@ -67,13 +61,11 @@
   GLOSSARY-TERM is EXPORTABLE-LOCATIVE-TYPE-P but not exported by
   default (see EXPORTABLE-REFERENCE-P).")
 
-(defmethod locate* ((glossary-term glossary-term))
+(define-locator glossary-term ((glossary-term glossary-term))
   (make-instance 'glossary-term-dref :name (glossary-term-name glossary-term)
                                      :locative 'glossary-term))
 
-(defmethod dref*
-    (symbol (locative-type (eql 'glossary-term)) locative-args)
-  (check-locative-args glossary-term locative-args)
+(define-lookup glossary-term (symbol locative-args)
   (unless (and (symbolp symbol)
                (boundp symbol)
                (typep (symbol-value symbol) 'glossary-term))
@@ -82,12 +74,6 @@
 
 (defmethod resolve* ((dref glossary-term-dref))
   (symbol-value (dref-name dref)))
-
-(defun actualize-variable-to-glossary-term (dref)
-  (when (eq (dref-locative-type dref) 'variable)
-    (dref (dref-name dref) 'glossary-term nil)))
-
-(add-dref-actualizer 'actualize-variable-to-glossary-term)
 
 (defmethod docstring* ((dref glossary-term-dref))
   (glossary-term-docstring (resolve dref)))
@@ -117,6 +103,7 @@
       ```cl-transcript (:dynenv pax-std-env)
       (resolve (dref 'xxx '(go (print function))))
       ==> #<FUNCTION PRINT>
+      => T
       ```
 
   - The DOCSTRING of a GO reference is NIL.
@@ -132,8 +119,7 @@
   (defclass go-dref ()
     ((target-dref :initarg :target-dref :reader go-target-dref))))
 
-(defmethod dref* (name (locative-type (eql 'go)) locative-args)
-  (check-locative-args go locative-args)
+(define-lookup go (name locative-args)
   (destructuring-bind ((go-name go-locative)) locative-args
     (let ((go-dref (dref go-name go-locative)))
       (make-instance 'go-dref :name name
@@ -144,9 +130,9 @@
 (defun go-embedded-dref (go-dref)
   (apply #'dref (first (dref-locative-args go-dref))))
 
-;;; Delegate all known extension methods. Maybe it would be better to
-;;; partially resolve the embedded DREF in the DREF* method above, but
-;;; currently RESOLVE* explicitly forbids returning XREFs.
+;;; Delegate all known extension methods. For GO definitions to
+;;; automatically work with other operations, another approach would
+;;; be needed.
 
 (defmethod resolve* ((dref go-dref))
   (resolve* (go-embedded-dref dref)))
@@ -179,8 +165,8 @@
 
   DISLOCATED references do not RESOLVE.")
 
-(defmethod dref* (symbol (locative-type (eql 'dislocated)) locative-args)
-  (declare (ignorable symbol locative-args))
+(define-lookup dislocated (symbol locative-args)
+  (declare (ignorable symbol))
   (locate-error "~S can never be located." 'dislocated))
 
 
@@ -210,8 +196,7 @@
 (defun find-local-reference (xref)
   (find xref *local-references* :test #'xref=))
 
-(defmethod dref* (symbol (locative-type (eql 'argument)) locative-args)
-  (check-locative-args argument locative-args)
+(define-lookup argument (symbol locative-args)
   (if (find-local-reference (xref symbol 'argument))
       (make-instance 'dref :name symbol :locative 'argument)
       (locate-error)))
@@ -237,8 +222,8 @@
 
   There is no way to LOCATE DOCSTRINGs, so nothing to RESOLVE either.")
 
-(defmethod dref* (symbol (locative-type (eql 'docstring)) locative-args)
-  (declare (ignorable symbol locative-args))
+(define-lookup docstring (symbol locative-args)
+  (declare (ignore symbol))
   (locate-error "DOCSTRING can never be located."))
 
 
@@ -305,8 +290,7 @@
   INCLUDE is not EXPORTABLE-LOCATIVE-TYPE-P, and INCLUDE references do
   not RESOLVE.""")
 
-(defmethod dref* (name (locative-type (eql 'include)) locative-args)
-  (check-locative-args include locative-args)
+(define-lookup include (name locative-args)
   (destructuring-bind (source &key line-prefix header footer
                                 header-nl footer-nl) locative-args
     (declare (ignore line-prefix header footer header-nl footer-nl))
@@ -316,7 +300,7 @@
         (locate-error "File ~S does not exist." file)))
     (make-instance 'include-dref
                    :name name
-                   :locative (cons locative-type locative-args))))
+                   :locative (cons 'include locative-args))))
 
 ;;; Return the filename plus the START, END source locations of the
 ;;; region to be included.
@@ -466,8 +450,7 @@
   (defclass clhs-dref ()
     ((explicit-p :initform nil :accessor clhs-dref-explicit-p))))
 
-(defmethod dref* (name (locative-type (eql 'clhs)) locative-args)
-  (check-locative-args clhs locative-args)
+(define-lookup clhs (name locative-args)
   (or (let ((name-string (if (stringp name)
                              name
                              (princ-to-string name))))

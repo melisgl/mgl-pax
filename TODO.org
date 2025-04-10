@@ -71,6 +71,8 @@ Pros of DRef:
 Pros of Definitions:
 - Definitions has BIND, (SETF OBJECT), UNBIND, (SETF DOCUMENTATION).
   These can be added to DRef if needed.
+** MAYBE add DCAST and DLOOKUP locatives
+Needs a constant name such as LOCATE* or DREF*.
 ** TODO add MARK-SOURCE-LOCATION (DREF)
 * navigate
 ** BUG (low) locative completion: nicknames don't work
@@ -185,6 +187,7 @@ Would it be nice to if M-. on "`mgl-pax-document` (elisp) would visit
 the elisp def and C-. would call `describe-function` (elisp)?
 * literate programming
 ** MAYBE todo/comment locative?
+(note @xxx "This is a comment with global name @XXX.")
 ** MAYBE reorder source definitions
 ** MAYBE autoinclude docstrings
 (with-implementation
@@ -221,3 +224,14 @@ MGL-PAX:<LOCATIVE> all over them?
 * MAYBE do not test the locative type of a DREF with EQ
 At most places, using (TYPEP DREF 'SECTION-DREF) instead of (EQ (DREF-
 LOCATIVE-TYPE DREF) 'SECTION) may make more sense.
+* TODO support list names such as (SETF FOO-A) in M-., C-., etc
+** PAX::MAP-NAMES-IN-RAW only knows about symbol and string names:
+
+MGL-PAX-TEST> (pax::definitions-of-wall
+               '(("foo" ("function"))))
+(#<DREF FOO FUNCTION>)
+MGL-PAX-TEST> (pax::definitions-of-wall
+               '(("(setf has-setf-function)"
+                  ("function"))))
+NIL
+** READ-FUNNY needs to support list names too
