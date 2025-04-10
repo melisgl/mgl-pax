@@ -259,7 +259,47 @@
               ;.. debugger invoked on UNBOUND-VARIABLE:~%~
               ;..   The variable => is unbound.~%~
               1~%~
-              ;=> 1~%")))
+              ;=> 1~%")
+    ;; REPL variables -
+    (:input "(princ -)~%"
+     :output "(princ -)~%~
+              .. (PRINC -)~%~
+              => (PRINC -)~%")
+    ;; REPL variables *, **, ***
+    (:input "1~%(1+ *)~%(+ 2 **)~%(+ 3 ***)~%"
+     :output "1~%~
+              => 1~%~
+              (1+ *)~%~
+              => 2~%~
+              (+ 2 **)~%~
+              => 3~%~
+              (+ 3 ***)~%~
+              => 4~%")
+    ;; REPL variables /, //, ///
+    (:input "(values 1 0)~%/~%//~%///~%"
+     :output "(values 1 0)~%~
+              => 1~%~
+              => 0~%~
+              /~%~
+              => (1 0)~%~
+              //~%~
+              => (1 0)~%~
+              ///~%~
+              => (1 0)~%")
+    ;; REPL variables +, ++, +++
+    (:input "+~%+~%2~%+~%++~%+++~%"
+     :output "+~%~
+              => NIL~%~
+              +~%~
+              => +~%~
+              2~%~
+              => 2~%~
+              +~%~
+              => 2~%~
+              ++~%~
+              => 2~%~
+              +++~%~
+              => 2~%")))
 
 (defun call-format-on-strings (tree)
   (mgl-pax::transform-tree (lambda (parent node)

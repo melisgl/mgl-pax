@@ -240,11 +240,15 @@
            dynenv)
   """Read forms from INPUT and write them (iff ECHO) to OUTPUT
   followed by any output and return values produced by calling EVAL on
-  the form. INPUT can be a stream or a string, while OUTPUT can be a
-  stream or NIL, in which case output goes into a string. The return
-  value is the OUTPUT stream or the string that was constructed. Since
-  TRANSCRIBE EVALuates arbitrary code anyway, forms are read with
-  *READ-EVAL* T.
+  the form. The variables [*][variable], [**][], [\***][],
+  [/][variable], [//][], [///][], [-][variable], [+][variable],
+  [++][], [+++][] are locally bound and updated as in a
+  [REPL]["Lisp read-eval-print loop" clhs]. Since TRANSCRIBE EVALuates
+  arbitrary code anyway, forms are read with *READ-EVAL* T.
+
+  INPUT can be a stream or a string, while OUTPUT can be a stream or
+  NIL, in which case output goes into a string. The return value is
+  the OUTPUT stream or the string that was constructed.
 
   Go up to @TRANSCRIBING-WITH-EMACS for nice examples. A more
   mind-bending one is this:
@@ -860,7 +864,10 @@
           (output-checker (consistency-checker check-consistency :output))
           (readable-checker (consistency-checker check-consistency :readable))
           (unreadable-checker (consistency-checker check-consistency
-                                                   :unreadable)))
+                                                   :unreadable))
+          (* nil) (** nil) (*** nil)
+          (/ ()) (// ()) (/// ())
+          (+ nil) (++ nil) (+++ nil))
       (dolist (command transcript)
         (let ((form (command-form command))
               (form-as-string (command-string command)))
@@ -874,8 +881,10 @@
             (unless (eq form 'eof)
               (terpri stream)))
           (unless (eq form 'eof)
+            (setf - form)
             (multiple-value-bind (form-output form-values errorp)
                 (eval-and-capture form)
+              (update-repl-vars form-values errorp)
               (let ((output-capture (command-output-capture command)))
                 (when (and output-checker output-capture)
                   (check-output-consistency
@@ -894,6 +903,18 @@
                 (transcribe-values stream form-values value-captures
                                    last-syntax-id update-only
                                    include-no-value)))))))))
+
+(defun update-repl-vars (values errorp)
+  (unless errorp
+    (setf /// //
+          // /
+          / values
+          *** **
+          ** *
+          * (car values)))
+  (setf +++ ++
+        ++ +
+        + -))
 
 (defun readable-object-p (object)
   (null
@@ -1209,8 +1230,8 @@
   When generating the documentation you get a
   TRANSCRIPTION-CONSISTENCY-ERROR because the printed output and the
   first return value changed, so you regenerate the documentation by
-  marking the region of bounded by `#\|` and the cursor at `#\^` in
-  the example:
+  marking the region bounded by `#\|` and the cursor at `#\^` in the
+  example:
 
       |(values (princ :hello-world) (list 1 2))
       .. HELLO
