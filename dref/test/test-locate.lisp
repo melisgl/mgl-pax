@@ -41,7 +41,11 @@
                  (typep reference type))))))
 
 (deftest test-locate/xref ()
-  (check-ref (locate (xref '*package* 'variable)) '*package* 'variable))
+  (check-ref (locate (xref '*package* 'variable)) '*package* 'variable)
+  (check-ref (dref-origin (dref '*package* '(variable 7)))
+             '*package* '(variable 7) 'xref)
+  (check-ref (dref-origin (locate (dref '*package* '(variable 7))))
+             '*package* '(variable 7) 'xref))
 
 (deftest test-locate/undefined ()
   (signals (locate-error)

@@ -259,11 +259,7 @@
     (let* ((*locating-object* object)
            (dref (call-next-method)))
       (declare (type dref dref))
-      ;; Don't set ORIGIN if a nested LOCATE already did.
-      ;; FIXME: This is in conflict with DREF-ORIGIN:
-      ;; (dref-origin (locate #'print))
-      ;; ==> #<XREF PRINT FUNCTION>
-      (unless (slot-boundp dref 'origin)
+      (unless (typep object 'dref)
         (setf (slot-value dref 'origin) object))
       dref))
   (:method (object)
