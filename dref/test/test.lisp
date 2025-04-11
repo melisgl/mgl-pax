@@ -640,7 +640,14 @@
   (test-dtypep/with-locative-args/actualized))
 
 (deftest test-dtypep/with-locative-args/actualized ()
-  (is (dtypep (dref 'foo-r '(method () (foo))) '(method () (foo)))))
+  (is (dtypep (dref 'foo-r '(method () (foo))) '(method () (foo))))
+  (is (dtypep (dref '(setf has-setf-function) 'function) 'function))
+  (is (dtypep (dref '(setf has-setf-generic-function) 'generic-function)
+              'generic-function))
+  (with-failure-expected ()
+    (is (dtypep (locate #'(setf has-setf-function)) 'function))
+    (is (dtypep (locate #'(setf has-setf-generic-function))
+                'generic-function))))
 
 (deftest test-dtypep/pseudo ()
   (is (not (dtypep (dref nil 'lambda) t)))

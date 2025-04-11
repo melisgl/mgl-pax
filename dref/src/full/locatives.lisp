@@ -217,27 +217,28 @@
                       (dref (second name) 'setf)
                       (dref name 'function))))))))
 
-(defmethod dref* (symbol (locative-type (eql 'function)) locative-args)
+(defmethod dref* (name (locative-type (eql 'function)) locative-args)
   (check-locative-args function locative-args)
-  (when (and (symbolp symbol) (macro-function symbol))
-    (locate-error "~S names a macro not a function." symbol))
-  (unless (ignore-errors (symbol-function* symbol))
-    (locate-error "~S is not a symbol naming a function." symbol))
-  (%make-dref 'function-dref symbol 'function))
+  (when (and (symbolp name) (macro-function name))
+    (locate-error "~S names a macro not a function." name))
+  (unless (ignore-errors (fdefinition* name))
+    (locate-error "~S does not name a function." name))
+  (if (setf-name-p name)
+      (dref (second name) 'setf)
+      (%make-dref 'function-dref name 'function)))
 
 (defmethod arglist* ((dref function-dref))
   (function-arglist (dref-name dref) :ordinary))
 
 (defmethod resolve* ((dref function-dref))
-  (symbol-function* (dref-name dref)))
+  (fdefinition* (dref-name dref)))
 
 (defmethod docstring* ((dref function-dref))
-  (documentation* (symbol-function* (dref-name dref)) 'function))
+  (documentation* (fdefinition* (dref-name dref)) 'function))
 
 (defmethod source-location* ((dref function-dref))
-  (let ((symbol (dref-name dref)))
-    (swank-source-location* (symbol-function* symbol) symbol 'function)))
-(defvar end-of-function-example)
+  (let ((name (dref-name dref)))
+    (swank-source-location* (fdefinition* name) name 'function)))
 
 
 ;;;; SETF locative
@@ -335,12 +336,14 @@
         (dref (second name) 'setf)
         (%make-dref 'generic-function-dref name 'generic-function))))
 
-(defmethod dref* (symbol (locative-type (eql 'generic-function)) locative-args)
+(defmethod dref* (name (locative-type (eql 'generic-function)) locative-args)
   (check-locative-args generic-function locative-args)
-  (let ((function (ignore-errors (symbol-function* symbol))))
+  (let ((function (ignore-errors (fdefinition* name))))
     (unless (typep function 'generic-function)
-      (locate-error "~S is not a symbol naming a generic function." symbol))
-    (%make-dref 'generic-function-dref symbol 'generic-function)))
+      (locate-error "~S does not name a generic function." name))
+    (if (setf-name-p name)
+        (dref (second name) 'setf)
+        (%make-dref 'generic-function-dref name 'generic-function))))
 
 (defun actualize-function-to-generic-function (dref)
   (when (eq (dref-locative-type dref) 'function)
