@@ -853,11 +853,13 @@
                  (boundp '*section*))))
       (if warn-if-undefined
           (multiple-value-bind (dref error)
-              (locate xref (not warn-if-undefined))
+              (handler-case
+                  (locate xref)
+                (locate-error (e) (values nil e)))
             (if dref
                 (document-object dref stream)
                 (when *first-pass*
-                  (warn "Not documenting ~S: ~A" xref error))))
+                  (warn "~@<Not documenting ~S: ~A~:@>" xref error))))
           (document-object (locate xref) stream))))
   (:method ((dref dref) stream)
     (handler-bind
