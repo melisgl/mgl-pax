@@ -359,31 +359,6 @@
               (t (swank-mop:class-name spec))))
           (swank-mop:method-specializers method)))
 
-;;;; These were lifted from the fancy inspector contrib and then
-;;;; tweaked. FIXME: move them
-
-;;; Return a "pretty" list of the method's specializers. Normal
-;;; specializers are replaced by the name of the class, eql
-;;; specializers are replaced by `(EQL ,OBJECT).
-(defun method-specializers-for-inspect (method)
-  (mapcar (lambda (name spec)
-            (if (eq spec t)
-                name
-                (list name spec)))
-          (method-arglist method)
-          (method-specializers-list method)))
-
-;;; Returns a "pretty" list describing METHOD. The first element of
-;;; the list is the name of generic-function method is specialized on,
-;;; the second element is the method qualifiers, the rest of the list
-;;; is the method's specializers (as per
-;;; METHOD-SPECIALIZERS-FOR-INSPECT).
-(defun method-for-inspect-value (method)
-  (append (list (swank-mop:generic-function-name
-                 (swank-mop:method-generic-function method)))
-          (swank-mop:method-qualifiers method)
-          (method-specializers-for-inspect method)))
-
 (defmethod resolve* ((dref method-dref))
   (destructuring-bind (qualifiers specializers) (dref-locative-args dref)
     (or (ignore-errors (find-method* (dref-function-name dref)

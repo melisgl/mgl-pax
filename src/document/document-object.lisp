@@ -96,10 +96,23 @@
 
 (defun %document-method (dref stream)
   (declare (type (or method-dref setf-dref) dref))
-  (let ((arglist (rest (dref::method-for-inspect-value (resolve dref)))))
+  (let ((arglist (method-pretty-arglist dref)))
     (documenting-reference (stream :arglist `(:method ,@arglist))
       (with-dislocated-names (dref::function-arg-names (arglist dref))
         (document-docstring (docstring dref) stream)))))
+
+;;; Return a "pretty" list of the method's specializers. Normal
+;;; specializers are replaced by the name of the class, eql
+;;; specializers are replaced by `(EQL ,OBJECT).
+(defun method-pretty-arglist (dref)
+  (destructuring-bind (qualifiers specializers) (dref-locative-args dref)
+    (append qualifiers
+            (mapcar (lambda (name spec)
+                      (if (eq spec t)
+                          name
+                          (list name spec)))
+                    (dref::method-arglist (resolve dref))
+                    specializers))))
 
 
 ;;;; Utilities
