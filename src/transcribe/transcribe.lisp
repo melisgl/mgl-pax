@@ -896,10 +896,10 @@
                                    include-no-output))
               (let ((value-captures (command-value-captures command)))
                 (when (or readable-checker unreadable-checker)
-                  (check-values-consistency nil form-as-string
-                                            form-values value-captures
-                                            readable-checker
-                                            unreadable-checker))
+                  (check-values-consistency
+                   nil form-as-string form-values value-captures
+                   readable-checker unreadable-checker
+                   form-output errorp))
                 (transcribe-values stream form-values value-captures
                                    last-syntax-id update-only
                                    include-no-value)))))))))
@@ -941,7 +941,8 @@
      output-checker captured-output output)))
 
 (defun check-values-consistency (stream form-as-string values value-captures
-                                 readable-checker unreadable-checker)
+                                 readable-checker unreadable-checker
+                                 form-output errorp)
   (when value-captures
     (let ((value-captures (if (and (= 1 (length value-captures))
                                    (no-value-capture-p (first value-captures)))
@@ -951,8 +952,11 @@
              (consistency-error
               'transcription-values-consistency-error
               stream form-as-string
-              "Source had ~S return values ~:_while there are actually ~S."
-              (length value-captures) (length values)))
+              "Source had ~S return values ~:_while there are actually ~S.~:@_~
+              ~@[Note that there was an error during evalation:~:_~A~]"
+              (length value-captures) (length values)
+              (when errorp
+                form-output)))
             (t
              (loop for value in values
                    for value-capture in value-captures
