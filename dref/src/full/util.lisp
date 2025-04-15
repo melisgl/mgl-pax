@@ -77,7 +77,8 @@
 (defun setf-name-p (name)
   (and (listp name)
        (= (length name) 2)
-       (eq (first name) 'setf)))
+       (eq (first name) 'setf)
+       (symbolp (second name))))
 
 ;;; See if SYMBOL has a [setf expander][clhs] or [setf
 ;;; function][clhs].

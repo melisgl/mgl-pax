@@ -24,7 +24,7 @@
   (dref '*print-length* 'variable)
   ==> #<DREF *PRINT-LENGTH* VARIABLE>
   ```
-  
+
   VARIABLE references do not RESOLVE.""")
 
 (define-lookup variable (name locative-args)
@@ -63,6 +63,44 @@
 
 (defmethod source-location* ((dref constant-dref))
   (swank-source-location (dref-name dref) 'constant))
+
+
+;;;; SETF locative
+
+(define-locative-type (setf) ()
+  "Refers to a [setf expander][clhs] (see DEFSETF and DEFINE-SETF-EXPANDER).
+
+  [Setf functions][clhs] (e.g. `(DEFUN (SETF NAME) ...)` or the same
+  with DEFGENERIC) are handled by the [SETF-FUNCTION][locative],
+  [SETF-GENERIC-FUNCTION][locative], and SETF-METHOD locatives.
+
+  SETF expander references do not RESOLVE.")
+
+(define-lookup setf (symbol locative-args)
+  (unless (and (symbolp symbol)
+               (or (has-setf-p symbol)
+                   ;; KLUDGE: On some implementations HAS-SETF-P may
+                   ;; return NIL even though there is a
+                   ;; DEFINE-SETF-EXPANDER.
+                   (documentation* symbol 'setf)))
+    (locate-error "~S does not have a SETF expansion." symbol))
+  (%make-dref symbol setf locative-args))
+
+;;; SWANK-BACKEND:FIND-DEFINITIONS does not support setf on CCL.
+#-ccl
+(defmethod map-definitions-of-name (fn name (locative-type (eql 'setf)))
+  (declare (ignore fn name))
+  'swank-definitions)
+
+(defmethod arglist* ((dref setf-dref))
+  ;; FIXME
+  ())
+
+(defmethod docstring* ((dref setf-dref))
+  (documentation* (dref-name dref) 'setf))
+
+(defmethod source-location* ((dref setf-dref))
+  (swank-source-location (dref-name dref) 'setf))
 
 
 ;;;; MACRO locative
@@ -168,7 +206,9 @@
   "Refers to a compiler macro, typically defined with
   DEFINE-COMPILER-MACRO.
 
-  COMPILER-MACRO references do not RESOLVE.")
+  COMPILER-MACRO references do not RESOLVE."
+  (defclass compiler-macro-dref (function-name-mixin)
+    ()))
 
 (define-locator compiler-macro ((fn function))
   (let ((name (function-name fn)))
@@ -183,14 +223,14 @@
   (%make-dref name compiler-macro))
 
 (defmethod arglist* ((dref compiler-macro-dref))
-  (function-arglist (compiler-macro-function (dref-name dref)) :macro))
+  (function-arglist (compiler-macro-function (dref-function-name dref)) :macro))
 
 (defmethod docstring* ((dref compiler-macro-dref))
   (documentation* (dref-name dref) 'compiler-macro))
 
 (defmethod source-location* ((dref compiler-macro-dref))
-  (let ((symbol (dref-name dref)))
-    (swank-source-location* (compiler-macro-function symbol) symbol
+  (let ((name (dref-function-name dref)))
+    (swank-source-location* (compiler-macro-function name) name
                             'compiler-macro)))
 
 
@@ -204,7 +244,9 @@
   ```cl-transcript (:dynenv dref-std-env)
   (dref 'docstring 'function)
   ==> #<DREF DOCSTRING FUNCTION>
-  ```")
+  ```"
+  (defclass function-dref (function-name-mixin)
+    ()))
 
 (define-locator function ((fn function))
   (let ((name (function-name fn)))
@@ -227,18 +269,18 @@
   (%make-dref name function))
 
 (defmethod arglist* ((dref function-dref))
-  (function-arglist (dref-name dref) :ordinary))
+  (function-arglist (dref-function-name dref) :ordinary))
 
 (defmethod resolve* ((dref function-dref))
-  (or (consistent-fdefinition (dref-name dref))
+  (or (consistent-fdefinition (dref-function-name dref))
       (resolve-error "The name of the definition cannot be recovered ~
-                     from the function object.")))
+                       from the function object.")))
 
 (defmethod docstring* ((dref function-dref))
-  (documentation* (fdefinition* (dref-name dref)) 'function))
+  (documentation* (fdefinition* (dref-function-name dref)) 'function))
 
 (defmethod source-location* ((dref function-dref))
-  (let ((name (dref-name dref)))
+  (let ((name (dref-function-name dref)))
     (swank-source-location* (fdefinition* name) name 'function)))
 
 
@@ -255,20 +297,20 @@
     (%make-dref name generic-function)))
 
 (defmethod resolve* ((dref generic-function-dref))
-  (fdefinition* (dref-name dref)))
+  (fdefinition* (dref-function-name dref)))
 
 (defmethod docstring* ((dref generic-function-dref))
-  (documentation* (dref-name dref) 'function))
+  (documentation* (dref-function-name dref) 'function))
 
 (defmethod source-location* ((dref generic-function-dref))
-  (let ((name (dref-name dref)))
+  (let ((name (dref-function-name dref)))
     (swank-source-location* (fdefinition* name) name 'generic-function)))
 
 
 ;;;; METHOD locative
 
 (define-locative-type (method method-qualifiers method-specializers) ()
-  "Refers to METHODs. @NAME must be a [function name][clhs].
+  "Refers to a METHOD. @NAME must be a [function name][clhs].
   METHOD-QUALIFIERS and METHOD-SPECIALIZERS are similar to the
   CL:FIND-METHOD's arguments of the same names. For example, the
   method
@@ -286,7 +328,9 @@
   ==> #<DREF FOO-GF (METHOD (:AROUND) (T (EQL XXX) STRING))>
   ```
 
-  METHOD is not EXPORTABLE-LOCATIVE-TYPE-P.")
+  METHOD is not EXPORTABLE-LOCATIVE-TYPE-P."
+  (defclass method-dref (function-name-mixin)
+    ()))
 
 (define-locator method ((method method))
   (let ((name (swank-mop:generic-function-name
@@ -342,7 +386,8 @@
 
 (defmethod resolve* ((dref method-dref))
   (destructuring-bind (qualifiers specializers) (dref-locative-args dref)
-    (or (ignore-errors (find-method* (dref-name dref) qualifiers specializers))
+    (or (ignore-errors (find-method* (dref-function-name dref)
+                                     qualifiers specializers))
         (resolve-error "Method does not exist."))))
 
 (defmethod arglist* ((dref method-dref))
@@ -354,6 +399,127 @@
 (defmethod source-location* ((dref method-dref))
   (swank-source-location* (resolve dref) (dref-name dref)
                           (dref-locative dref)))
+
+
+;;;; SETF-COMPILER-MACRO locative
+
+;;; FIXME: They could resolve
+(define-locative-type setf-compiler-macro (compiler-macro)
+  "Refers to a compiler macro with a [setf function name][clhs].
+
+  SETF-COMPILER-MACRO references do not RESOLVE.")
+
+(define-lookup setf-compiler-macro (name locative-args)
+  (when-let (dref (call-lookup `(setf ,name) 'compiler-macro ()))
+    (call-cast 'setf-compiler-macro dref)))
+
+(define-cast setf-compiler-macro ((dref compiler-macro-dref))
+  (let ((name (dref-name dref)))
+    (when (setf-name-p name)
+      ;; @CAST-NAME-CHANGE
+      (%make-dref (second name) setf-compiler-macro () :function-name name))))
+
+;;; Upcast for the @CAST-NAME-CHANGE above
+(define-cast compiler-macro ((dref setf-compiler-macro-dref))
+  (call-lookup `(setf ,(dref-name dref)) 'compiler-macro ()))
+
+
+;;;; SETF-FUNCTION locative
+
+(define-locative-type setf-function (function setf)
+  "Refers to a global FUNCTION with a [setf function name][clhs].
+
+  ```cl-transcript (:dynenv dref-std-env)
+  (defun (setf ooh) ())
+  (locate #'(setf ooh))
+  ==> #<DREF OOH SETF-FUNCTION>
+  (dref 'ooh 'setf-function)
+  ==> #<DREF OOH SETF-FUNCTION>
+  (dref '(setf ooh) 'function)
+  ==> #<DREF OOH SETF-FUNCTION>
+  ```")
+
+(define-lookup setf-function (name locative-args)
+  (when-let (dref (call-lookup `(setf ,name) 'function ()))
+    (call-cast 'setf-function dref)))
+
+(define-cast setf-function ((dref function-dref))
+  (let ((name (dref-name dref)))
+    (when (setf-name-p name)
+      ;; @CAST-NAME-CHANGE
+      (%make-dref (second name) setf-function () :function-name name))))
+
+;;; Upcast for the @CAST-NAME-CHANGE above
+(define-cast function ((dref setf-function-dref))
+  (call-lookup `(setf ,(dref-name dref)) 'function ()))
+
+
+;;;; SETF-GENERIC-FUNCTION locative
+
+(define-locative-type setf-generic-function (generic-function setf-function)
+  "Refers to a global GENERIC-FUNCTION with a [setf function name][clhs].
+
+  ```cl-transcript (:dynenv dref-std-env)
+  (defgeneric (setf oog) ())
+  (locate #'(setf oog))
+  ==> #<DREF OOG SETF-GENERIC-FUNCTION>
+  (dref 'oog 'setf-function)
+  ==> #<DREF OOG SETF-GENERIC-FUNCTION>
+  (dref '(setf oog) 'function)
+  ==> #<DREF OOG SETF-GENERIC-FUNCTION>
+  ```")
+
+(define-lookup setf-generic-function (name locative-args)
+  (when-let (dref (call-lookup `(setf ,name) 'generic-function ()))
+    (call-cast 'setf-generic-function dref)))
+
+(define-cast setf-generic-function ((dref generic-function-dref))
+  (let ((name (dref-name dref)))
+    (when (setf-name-p name)
+      ;; @CAST-NAME-CHANGE
+      (%make-dref (second name) setf-generic-function () :function-name name))))
+
+;;; Upcast for the @CAST-NAME-CHANGE above
+(define-cast generic-function ((dref setf-generic-function-dref))
+  (let ((name (dref-name dref)))
+    (call-lookup `(setf ,name) 'generic-function ())))
+
+
+;;;; SETF-METHOD locative
+
+(define-locative-type (setf-method method-qualifiers method-specializers)
+    (method setf)
+  "Refers to a METHOD of a SETF-GENERIC-FUNCTION.
+
+  ```cl-transcript (:dynenv dref-std-env)
+  (defgeneric (setf oog) ()
+    (:method ()))
+  (locate (find-method #'(setf oog) () ()))
+  ==> #<DREF OOG (SETF-METHOD NIL NIL)>
+  (dref 'oog '(setf-method () ()))
+  ==> #<DREF OOG (SETF-METHOD NIL NIL)>
+  (dref '(setf oog) '(method () ()))
+  ==> #<DREF OOG (SETF-METHOD NIL NIL)>
+  ```")
+
+(define-lookup setf-method (name locative-args)
+  (when-let (dref (call-lookup `(setf ,name) 'method locative-args))
+    (call-cast 'setf-method dref)))
+
+(define-cast setf-method ((dref method-dref))
+  (let ((name (dref-name dref)))
+    (when (setf-name-p name)
+      ;; @CAST-NAME-CHANGE
+      (%make-dref (second name) setf-method (dref-locative-args dref)
+                  :function-name name))))
+
+;;; Upcast for the @CAST-NAME-CHANGE above
+(define-cast method ((dref setf-method-dref))
+  (call-lookup `(setf ,(dref-name dref)) 'method (dref-locative-args dref)))
+
+(defmethod map-definitions-of-name (fn name (locative-type (eql 'setf-method)))
+  (declare (ignore fn name))
+  'swank-definitions)
 
 
 ;;;; METHOD-COMBINATION locative
@@ -391,7 +557,7 @@
   ```cl-transcript (:dynenv dref-std-env)
   (defclass foo ()
     ((xxx :reader foo-xxx)))
-     
+
   (dref 'foo-xxx '(reader foo))
   ==> #<DREF FOO-XXX (READER FOO)>
   ```")
@@ -513,7 +679,7 @@
 
 ;;;; ACCESSOR locative
 
-(define-locative-type (accessor class-name) (reader writer)
+(define-locative-type (accessor class-name) (reader writer setf-method)
   """Refers to an :ACCESSOR in a DEFCLASS.
 
   An :ACCESSOR in DEFCLASS creates a reader and a writer method.
@@ -529,6 +695,12 @@
 (define-cast accessor ((dref writer-dref))
   (let ((name (dref-name dref))
         (class (second (dref-locative dref))))
+    (when (ignore-errors (find-accessor-slot-definition name class))
+      (%make-dref name accessor `(,class)))))
+
+(define-cast accessor ((dref setf-method-dref))
+  (let ((name (dref-name dref))
+        (class (second (third (dref-locative dref)))))
     (when (ignore-errors (find-accessor-slot-definition name class))
       (%make-dref name accessor `(,class)))))
 
@@ -576,7 +748,7 @@
 ;;;; STRUCTURE-ACCESSOR locative
 
 (define-locative-type (structure-accessor &optional structure-class-name)
-    (function)
+    (setf-function function)
   "Refers to an accessor function generated by DEFSTRUCT.
   A LOCATE-ERROR condition is signalled if the wrong
   STRUCTURE-CLASS-NAME is provided.
@@ -588,11 +760,17 @@
 
 #+(or ccl sbcl)
 (define-cast structure-accessor ((dref function-dref))
-  (when (eq (dref-locative-type dref) 'function)
-    (let* ((name (dref-name dref))
-           (structure-name (structure-name-of-accessor name)))
-      (when structure-name
-        (%make-dref name structure-accessor `(,structure-name))))))
+  (let* ((name (dref-name dref))
+         (structure-name (structure-name-of-accessor name)))
+    (when structure-name
+      (%make-dref name structure-accessor `(,structure-name)))))
+
+#+(or ccl sbcl)
+(define-cast structure-accessor ((dref setf-function-dref))
+  (let* ((name (dref-name dref))
+         (structure-name (structure-name-of-accessor name)))
+    (when structure-name
+      (%make-dref name structure-accessor `(,structure-name)))))
 
 (defun structure-name-of-accessor (symbol)
   #-(or ccl sbcl) (declare (ignore symbol))
@@ -643,43 +821,6 @@
 (defmethod source-location* ((dref structure-accessor-dref))
   (let ((symbol (dref-name dref)))
     (swank-source-location* (symbol-function* symbol) symbol 'function)))
-
-
-;;;; SETF locative
-
-(define-locative-type (setf) ()
-  "Refers to a [setf expander][clhs] (see DEFSETF and DEFINE-SETF-EXPANDER).
-  [Setf functions][clhs] (e.g. `(DEFUN (SETF NAME) ...)` or the same
-  with DEFGENERIC) are handled by the [FUNCTION][locative],
-  [GENERIC-FUNCTION][locative] and METHOD locatives.
-
-  SETF references do not RESOLVE.")
-
-(define-lookup setf (symbol locative-args)
-  (unless (and (symbolp symbol)
-               (or (has-setf-p symbol)
-                   ;; KLUDGE: On some implementations HAS-SETF-P may
-                   ;; return NIL even though there is a
-                   ;; DEFINE-SETF-EXPANDER.
-                   (documentation* symbol 'setf)))
-    (locate-error "~S does not have a SETF expansion." symbol))
-  (%make-dref symbol setf locative-args))
-
-;;; SWANK-BACKEND:FIND-DEFINITIONS does not support setf on CCL.
-#-ccl
-(defmethod map-definitions-of-name (fn name (locative-type (eql 'setf)))
-  (declare (ignore fn name))
-  'swank-definitions)
-
-(defmethod arglist* ((dref setf-dref))
-  ;; FIXME
-  ())
-
-(defmethod docstring* ((dref setf-dref))
-  (documentation* (dref-name dref) 'setf))
-
-(defmethod source-location* ((dref setf-dref))
-  (swank-source-location (dref-name dref) 'setf))
 
 
 ;;;; TYPE locative

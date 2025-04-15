@@ -137,18 +137,18 @@
 
 (defsetf has-setf-expander some-setter "HAS-SETF-EXPANDER setf")
 
-(defun (setf has-setf-function) (v)
-  "HAS-SETF-FUNCTION setf"
+(defun (setf setf-fn) (v)
+  "SETF-FN setf"
   (declare (ignore v)))
 
-(defgeneric (setf has-setf-generic-function) (v)
-  (:documentation "HAS-SETF-GENERIC-FUNCTION setf"))
+(defgeneric (setf setf-gf) (v)
+  (:documentation "SETF-GF setf"))
 
-(defmethod (setf has-setf-generic-function) ((v string))
-  "HAS-SETF-GENERIC-FUNCTION (setf (method () (string)))"
+(defmethod (setf setf-gf) ((v string))
+  "SETF-GF (setf-method () (string))"
   ())
 
-(define-compiler-macro (setf has-setf-function) (v)
+(define-compiler-macro (setf setf-fn) (v)
   v)
 
 (define-setf-expander full-setf (x)

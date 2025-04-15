@@ -69,8 +69,9 @@
 
   ```cl-transcript
   (dref-apropos "method" :package :dref :external-only t)
-  ==> (#<DREF METHOD CLASS> #<DREF METHOD LOCATIVE>
-  -->  #<DREF METHOD-COMBINATION CLASS> #<DREF METHOD-COMBINATION LOCATIVE>)
+  ==> (#<DREF SETF-METHOD LOCATIVE> #<DREF METHOD CLASS>
+  -->  #<DREF METHOD LOCATIVE> #<DREF METHOD-COMBINATION CLASS>
+  -->  #<DREF METHOD-COMBINATION LOCATIVE>)
   ```
 
   Definitions that are not of DTYPE (see DTYPEP) are filtered out:
@@ -124,9 +125,6 @@
     a matching package.
 
   - DTYPE matches candidate definition `D` if `(DTYPEP D DTYPE)`.
-
-  - SETF [function names][clhs] are matched on the embedded symbol
-    only.
 
   Can be extended via MAP-REFERENCES-OF-TYPE and
   MAP-DEFINITIONS-OF-NAME."""
@@ -191,12 +189,7 @@
                 in (matching-symbols #'matching-package-p #'matching-name-p
                                      external-only)
               do (dolist (dref (definitions-with-locative-types symbol to-try))
-                   (push dref drefs))
-                 ;; This feels expensive just for SETF names.
-                 (let ((setf-name `(setf ,symbol)))
-                   (dolist (dref (definitions-with-locative-types
-                                  setf-name to-try))
-                     (push dref drefs)))))
+                   (push dref drefs))))
       (sort-references
        (filter-covered-drefs (remove-duplicate-drefs/nonstable drefs)
                              dtype)))))

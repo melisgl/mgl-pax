@@ -1043,10 +1043,10 @@ This is [Self-referencing][e042].
 (deftest test-setf/function ()
   (with-failure-expected
       ((and (alexandria:featurep '(:or :abcl)) 'failure))
-    (check-document (dref '(setf has-setf-function) 'function)
-                    "<a id=\"%28SETF%20MGL-PAX-TEST:HAS-SETF-FUNCTION%29%20FUNCTION\"></a>
+    (check-document (dref '(setf setf-fn) 'function)
+                    "<a id=\"MGL-PAX-TEST:SETF-FN%20DREF:SETF-FUNCTION\"></a>
 
-- [function] **(SETF HAS-SETF-FUNCTION)** *V*
+- [setf-function] **SETF-FN** *V*
 
     eee
 ")))
@@ -1054,10 +1054,10 @@ This is [Self-referencing][e042].
 (deftest test-setf/generic-function ()
   (with-failure-expected ((and (alexandria:featurep '(:or :cmucl))
                                'failure))
-    (check-document (dref '(setf has-setf-generic-function) 'generic-function)
-                    "<a id=\"%28SETF%20MGL-PAX-TEST:HAS-SETF-GENERIC-FUNCTION%29%20GENERIC-FUNCTION\"></a>
+    (check-document (dref '(setf setf-gf) 'generic-function)
+                  "<a id=\"MGL-PAX-TEST:SETF-GF%20DREF:SETF-GENERIC-FUNCTION\"></a>
 
-- [generic-function] **(SETF HAS-SETF-GENERIC-FUNCTION)** *V*
+- [setf-generic-function] **SETF-GF** *V*
 
     fff
 ")))
@@ -1066,10 +1066,10 @@ This is [Self-referencing][e042].
   (with-failure-expected ((alexandria:featurep :clisp))
     (signals-not (locate-error)
       (check-document
-       (dref '(setf has-setf-generic-function) '(method () (string)))
-       "<a id=\"%28SETF%20MGL-PAX-TEST:HAS-SETF-GENERIC-FUNCTION%29%20%28METHOD%20NIL%20%28STRING%29%29\"></a>
+       (dref '(setf setf-gf) '(method () (string)))
+       "<a id=\"MGL-PAX-TEST:SETF-GF%20%28DREF:SETF-METHOD%20NIL%20%28STRING%29%29\"></a>
 
-- [method] **(SETF HAS-SETF-GENERIC-FUNCTION)** *(V STRING)*
+- [setf-method] **SETF-GF** *(V STRING)*
 
     ggg
 "))))

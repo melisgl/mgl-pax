@@ -743,7 +743,7 @@ When [Generating Documentation][2c93], [Autolink][ec7a]ing behaves similary.
 
 ## 7 PAX Locatives
 
-To the DREF::@BASI-LOCATIVE-TYPES defined by DRef,
+To the [Basic Locative Types][1d1d] defined by DRef,
 PAX adds a few of its own.
 
 <a id="x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29"></a>

@@ -719,8 +719,9 @@ definitions as in
     
     ```common-lisp
     (dref-apropos "method" :package :dref :external-only t)
-    ==> (#<DREF METHOD CLASS> #<DREF METHOD LOCATIVE>
-    -->  #<DREF METHOD-COMBINATION CLASS> #<DREF METHOD-COMBINATION LOCATIVE>)
+    ==> (#<DREF SETF-METHOD LOCATIVE> #<DREF METHOD CLASS>
+    -->  #<DREF METHOD LOCATIVE> #<DREF METHOD-COMBINATION CLASS>
+    -->  #<DREF METHOD-COMBINATION LOCATIVE>)
     ```
     
     Definitions that are not of `DTYPE` (see [`DTYPEP`][963f]) are filtered out:
@@ -774,9 +775,6 @@ definitions as in
       a matching package.
     
     - `DTYPE` matches candidate definition `D` if `(DTYPEP D DTYPE)`.
-    
-    - [`SETF`][a138] [function names][5191] are matched on the embedded symbol
-      only.
     
     Can be extended via MAP-REFERENCES-OF-TYPE and
     [`MAP-DEFINITIONS-OF-NAME`][97b4].
@@ -982,6 +980,19 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 
 ### 6.2 Locatives for Macros
 
+<a id="x-28SETF-20MGL-PAX-3ALOCATIVE-29"></a>
+
+- [locative] **SETF**
+    - Direct locative subtypes: [`SETF-METHOD`][1a03], [`SETF-FUNCTION`][19f6]
+
+    Refers to a [setf expander][35a2] (see [`DEFSETF`][66dc] and [`DEFINE-SETF-EXPANDER`][d2cb]).
+    
+    [Setf functions][99b05] (e.g. `(DEFUN (SETF NAME) ...)` or the same
+    with [`DEFGENERIC`][c7f7]) are handled by the [`SETF-FUNCTION`][19f6],
+    [`SETF-GENERIC-FUNCTION`][ab5e], and `SETF-METHOD` locatives.
+    
+    `SETF` expander references do not [`RESOLVE`][63b4].
+
 <a id="x-28MGL-PAX-3AMACRO-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **MACRO**
@@ -1014,22 +1025,21 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **COMPILER-MACRO**
+    - Direct locative subtypes: [`SETF-COMPILER-MACRO`][5df4]
 
     Refers to a compiler macro, typically defined with
     [`DEFINE-COMPILER-MACRO`][23d5].
     
     `COMPILER-MACRO` references do not [`RESOLVE`][63b4].
 
-<a id="x-28SETF-20MGL-PAX-3ALOCATIVE-29"></a>
+<a id="x-28DREF-3ASETF-COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29"></a>
 
-- [locative] **SETF**
+- [locative] **SETF-COMPILER-MACRO**
+    - Direct locative supertypes: [`COMPILER-MACRO`][41fd]
 
-    Refers to a [setf expander][35a2] (see [`DEFSETF`][66dc] and [`DEFINE-SETF-EXPANDER`][d2cb]).
-    [Setf functions][99b05] (e.g. `(DEFUN (SETF NAME) ...)` or the same
-    with [`DEFGENERIC`][c7f7]) are handled by the [`FUNCTION`][ba62],
-    [`GENERIC-FUNCTION`][5875] and [`METHOD`][51c3] locatives.
+    Refers to a compiler macro with a [setf function name][867c].
     
-    `SETF` references do not [`RESOLVE`][63b4].
+    `SETF-COMPILER-MACRO` references do not [`RESOLVE`][63b4].
 
 <a id="x-28DREF-3A-40FUNCTIONLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 
@@ -1038,7 +1048,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **FUNCTION**
-    - Direct locative subtypes: [`STRUCTURE-ACCESSOR`][090c], [`GENERIC-FUNCTION`][5875]
+    - Direct locative subtypes: [`STRUCTURE-ACCESSOR`][090c], [`SETF-FUNCTION`][19f6], [`GENERIC-FUNCTION`][5875]
 
     Refers to a global function, typically defined with [`DEFUN`][f472]. The
     [name][5fc4] must be a [function name][5191]. It is also allowed to
@@ -1050,20 +1060,60 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     ```
 
 
+<a id="x-28DREF-3ASETF-FUNCTION-20MGL-PAX-3ALOCATIVE-29"></a>
+
+- [locative] **SETF-FUNCTION**
+    - Direct locative supertypes: [`FUNCTION`][ba62], [`SETF`][d83a]
+    
+    - Direct locative subtypes: [`STRUCTURE-ACCESSOR`][090c], [`SETF-GENERIC-FUNCTION`][ab5e]
+
+    Refers to a global `FUNCTION`([`0`][119e] [`1`][81f7]) with a [setf function name][867c].
+    
+    ```common-lisp
+    (defun (setf ooh) ())
+    (locate #'(setf ooh))
+    ==> #<DREF OOH SETF-FUNCTION>
+    (dref 'ooh 'setf-function)
+    ==> #<DREF OOH SETF-FUNCTION>
+    (dref '(setf ooh) 'function)
+    ==> #<DREF OOH SETF-FUNCTION>
+    ```
+
+
 <a id="x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **GENERIC-FUNCTION**
     - Direct locative supertypes: [`FUNCTION`][ba62]
+    
+    - Direct locative subtypes: [`SETF-GENERIC-FUNCTION`][ab5e]
 
     Refers to a [`GENERIC-FUNCTION`][efe2], typically defined with
     [`DEFGENERIC`][c7f7]. The [name][5fc4] must be a [function name][5191].
 
+<a id="x-28DREF-3ASETF-GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29"></a>
+
+- [locative] **SETF-GENERIC-FUNCTION**
+    - Direct locative supertypes: [`GENERIC-FUNCTION`][5875], [`SETF-FUNCTION`][19f6]
+
+    Refers to a global [`GENERIC-FUNCTION`][efe2] with a [setf function name][867c].
+    
+    ```common-lisp
+    (defgeneric (setf oog) ())
+    (locate #'(setf oog))
+    ==> #<DREF OOG SETF-GENERIC-FUNCTION>
+    (dref 'oog 'setf-function)
+    ==> #<DREF OOG SETF-GENERIC-FUNCTION>
+    (dref '(setf oog) 'function)
+    ==> #<DREF OOG SETF-GENERIC-FUNCTION>
+    ```
+
+
 <a id="x-28METHOD-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **METHOD** *METHOD-QUALIFIERS METHOD-SPECIALIZERS*
-    - Direct locative subtypes: [`WRITER`][e548], [`READER`][cc04]
+    - Direct locative subtypes: [`WRITER`][e548], [`READER`][cc04], [`SETF-METHOD`][1a03]
 
-    Refers to `METHOD`s. [name][5fc4] must be a [function name][5191].
+    Refers to a `METHOD`. [name][5fc4] must be a [function name][5191].
     [`METHOD-QUALIFIERS`][2522] and `METHOD-SPECIALIZERS` are similar to the
     [`CL:FIND-METHOD`][6d46]'s arguments of the same names. For example, the
     method
@@ -1082,6 +1132,27 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     ```
     
     `METHOD` is not [`EXPORTABLE-LOCATIVE-TYPE-P`][c930].
+
+<a id="x-28DREF-3ASETF-METHOD-20MGL-PAX-3ALOCATIVE-29"></a>
+
+- [locative] **SETF-METHOD** *METHOD-QUALIFIERS METHOD-SPECIALIZERS*
+    - Direct locative supertypes: [`METHOD`][172e], [`SETF`][d83a]
+    
+    - Direct locative subtypes: [`ACCESSOR`][00d4]
+
+    Refers to a [`METHOD`][51c3] of a `SETF-GENERIC-FUNCTION`.
+    
+    ```common-lisp
+    (defgeneric (setf oog) ()
+      (:method ()))
+    (locate (find-method #'(setf oog) () ()))
+    ==> #<DREF OOG (SETF-METHOD NIL NIL)>
+    (dref 'oog '(setf-method () ()))
+    ==> #<DREF OOG (SETF-METHOD NIL NIL)>
+    (dref '(setf oog) '(method () ()))
+    ==> #<DREF OOG (SETF-METHOD NIL NIL)>
+    ```
+
 
 <a id="x-28METHOD-COMBINATION-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -1104,7 +1175,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     ```common-lisp
     (defclass foo ()
       ((xxx :reader foo-xxx)))
-       
+    
     (dref 'foo-xxx '(reader foo))
     ==> #<DREF FOO-XXX (READER FOO)>
     ```
@@ -1122,7 +1193,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **ACCESSOR** *CLASS-NAME*
-    - Direct locative supertypes: [`READER`][cc04], [`WRITER`][e548]
+    - Direct locative supertypes: [`READER`][cc04], [`WRITER`][e548], [`SETF-METHOD`][1a03]
 
     Refers to an `:ACCESSOR` in a [`DEFCLASS`][ead6].
     
@@ -1133,7 +1204,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28MGL-PAX-3ASTRUCTURE-ACCESSOR-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **STRUCTURE-ACCESSOR** *&OPTIONAL STRUCTURE-CLASS-NAME*
-    - Direct locative supertypes: [`FUNCTION`][ba62]
+    - Direct locative supertypes: [`SETF-FUNCTION`][19f6], [`FUNCTION`][ba62]
 
     Refers to an accessor function generated by [`DEFSTRUCT`][eac1].
     A [`LOCATE-ERROR`][6334] condition is signalled if the wrong
@@ -2141,6 +2212,12 @@ They are exported to make it possible to go beyond the
 
     [`DREF-EXT:DREF-CLASS`][25be] of [`SETF`][d83a].
 
+<a id="x-28DREF-EXT-3ASETF-COMPILER-MACRO-DREF-20CLASS-29"></a>
+
+- [class] **SETF-COMPILER-MACRO-DREF** *[COMPILER-MACRO-DREF][59cf]*
+
+    [`DREF-EXT:DREF-CLASS`][25be] of [`DREF:SETF-COMPILER-MACRO`][5df4].
+
 **[for Functions][1d59]**
 
 <a id="x-28DREF-EXT-3AFUNCTION-DREF-20CLASS-29"></a>
@@ -2149,17 +2226,35 @@ They are exported to make it possible to go beyond the
 
     [`DREF-EXT:DREF-CLASS`][25be] of [`FUNCTION`][ba62].
 
+<a id="x-28DREF-EXT-3ASETF-FUNCTION-DREF-20CLASS-29"></a>
+
+- [class] **SETF-FUNCTION-DREF** *[FUNCTION-DREF][e576] [SETF-DREF][0db5]*
+
+    [`DREF-EXT:DREF-CLASS`][25be] of [`DREF:SETF-FUNCTION`][19f6].
+
 <a id="x-28DREF-EXT-3AGENERIC-FUNCTION-DREF-20CLASS-29"></a>
 
 - [class] **GENERIC-FUNCTION-DREF** *[FUNCTION-DREF][e576]*
 
     [`DREF-EXT:DREF-CLASS`][25be] of [`GENERIC-FUNCTION`][5875].
 
+<a id="x-28DREF-EXT-3ASETF-GENERIC-FUNCTION-DREF-20CLASS-29"></a>
+
+- [class] **SETF-GENERIC-FUNCTION-DREF** *[GENERIC-FUNCTION-DREF][df33] [SETF-FUNCTION-DREF][798d]*
+
+    [`DREF-EXT:DREF-CLASS`][25be] of [`DREF:SETF-GENERIC-FUNCTION`][ab5e].
+
 <a id="x-28DREF-EXT-3AMETHOD-DREF-20CLASS-29"></a>
 
 - [class] **METHOD-DREF** *[DREF][d930]*
 
     [`DREF-EXT:DREF-CLASS`][25be] of [`METHOD`][172e].
+
+<a id="x-28DREF-EXT-3ASETF-METHOD-DREF-20CLASS-29"></a>
+
+- [class] **SETF-METHOD-DREF** *[METHOD-DREF][2c45] [SETF-DREF][0db5]*
+
+    [`DREF-EXT:DREF-CLASS`][25be] of [`DREF:SETF-METHOD`][1a03].
 
 <a id="x-28DREF-EXT-3AMETHOD-COMBINATION-DREF-20CLASS-29"></a>
 
@@ -2181,13 +2276,13 @@ They are exported to make it possible to go beyond the
 
 <a id="x-28DREF-EXT-3AACCESSOR-DREF-20CLASS-29"></a>
 
-- [class] **ACCESSOR-DREF** *[READER-DREF][ec6f] [WRITER-DREF][2638]*
+- [class] **ACCESSOR-DREF** *[READER-DREF][ec6f] [WRITER-DREF][2638] [SETF-METHOD-DREF][5ab8]*
 
     [`DREF-EXT:DREF-CLASS`][25be] of [`MGL-PAX:ACCESSOR`][00d4].
 
 <a id="x-28DREF-EXT-3ASTRUCTURE-ACCESSOR-DREF-20CLASS-29"></a>
 
-- [class] **STRUCTURE-ACCESSOR-DREF** *[FUNCTION-DREF][e576]*
+- [class] **STRUCTURE-ACCESSOR-DREF** *[SETF-FUNCTION-DREF][798d] [FUNCTION-DREF][e576]*
 
     [`DREF-EXT:DREF-CLASS`][25be] of [`MGL-PAX:STRUCTURE-ACCESSOR`][090c].
 
@@ -2369,6 +2464,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [0a96]: #x-28DREF-EXT-3AARGLIST-2A-20GENERIC-FUNCTION-29 "DREF-EXT:ARGLIST* GENERIC-FUNCTION"
   [0b3a]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE"
   [0d07]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_2.htm "SYMBOL-NAME (MGL-PAX:CLHS FUNCTION)"
+  [0db5]: #x-28DREF-EXT-3ASETF-DREF-20CLASS-29 "DREF-EXT:SETF-DREF CLASS"
   [0fa3]: ../README.md#x-28MGL-PAX-3A-40LOCATIVE-ALIASES-20MGL-PAX-3ASECTION-29 "Locative Aliases"
   [0ff7]: http://www.lispworks.com/documentation/HyperSpec/Body/04_.htm '"4" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [10a7]: #x-28DREF-EXT-3ACHECK-LOCATIVE-ARGS-20MGL-PAX-3AMACRO-29 "DREF-EXT:CHECK-LOCATIVE-ARGS MGL-PAX:MACRO"
@@ -2381,6 +2477,8 @@ the details, see the Elisp function `slime-goto-source-location`.
   [1574]: http://www.lispworks.com/documentation/HyperSpec/Body/s_declar.htm "DECLARE (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [16b6]: #x-28DREF-EXT-3ADEFINE-LOCATOR-20MGL-PAX-3AMACRO-29 "DREF-EXT:DEFINE-LOCATOR MGL-PAX:MACRO"
   [172e]: #x-28METHOD-20MGL-PAX-3ALOCATIVE-29 "METHOD MGL-PAX:LOCATIVE"
+  [19f6]: #x-28DREF-3ASETF-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "DREF:SETF-FUNCTION MGL-PAX:LOCATIVE"
+  [1a03]: #x-28DREF-3ASETF-METHOD-20MGL-PAX-3ALOCATIVE-29 "DREF:SETF-METHOD MGL-PAX:LOCATIVE"
   [1d1d]: #x-28DREF-3A-40BASIC-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29 "Basic Locative Types"
   [1d59]: #x-28DREF-3A-40FUNCTIONLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Functions and Methods"
   [1d5a]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pkg.htm "PACKAGE (MGL-PAX:CLHS CLASS)"
@@ -2440,8 +2538,11 @@ the details, see the Elisp function `slime-goto-source-location`.
   [58ba]: #x-28DREF-EXT-3ARESOLVE-ERROR-20CONDITION-29 "DREF-EXT:RESOLVE-ERROR CONDITION"
   [58f1]: #x-28DREF-3A-40UNKNOWN-DEFINITIONS-20MGL-PAX-3ASECTION-29 "Locatives for Unknown Definitions"
   [59c9]: #x-28DREF-EXT-3A-40SYMBOL-LOCATIVES-20MGL-PAX-3ASECTION-29 "Symbol Locatives"
+  [59cf]: #x-28DREF-EXT-3ACOMPILER-MACRO-DREF-20CLASS-29 "DREF-EXT:COMPILER-MACRO-DREF CLASS"
   [5a82]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq.htm "EQ (MGL-PAX:CLHS FUNCTION)"
+  [5ab8]: #x-28DREF-EXT-3ASETF-METHOD-DREF-20CLASS-29 "DREF-EXT:SETF-METHOD-DREF CLASS"
   [5cd7]: ../README.md#x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:INCLUDE MGL-PAX:LOCATIVE"
+  [5df4]: #x-28DREF-3ASETF-COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29 "DREF:SETF-COMPILER-MACRO MGL-PAX:LOCATIVE"
   [5ed1]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm "*PACKAGE* (MGL-PAX:CLHS VARIABLE)"
   [5fc4]: #x-28DREF-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29 "name"
   [6067]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#destructuring_lambda_list '"destructuring lambda list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
@@ -2472,6 +2573,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [7506]: #x-28READTABLE-20MGL-PAX-3ALOCATIVE-29 "READTABLE MGL-PAX:LOCATIVE"
   [7825]: #x-28DREF-EXT-3ARESOLVE-ERROR-20FUNCTION-29 "DREF-EXT:RESOLVE-ERROR FUNCTION"
   [793d]: #x-28DREF-EXT-3A-40EXTENDING-EVERYTHING-ELSE-20MGL-PAX-3ASECTION-29 "Extending Everything Else"
+  [798d]: #x-28DREF-EXT-3ASETF-FUNCTION-DREF-20CLASS-29 "DREF-EXT:SETF-FUNCTION-DREF CLASS"
   [7a04]: #x-28DREF-3A-40TYPELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Types and Declarations"
   [7ac8]: #x-28DREF-3A-40LOCATIVE-20MGL-PAX-3AGLOSSARY-TERM-29 "locative"
   [7c9f]: http://www.lispworks.com/documentation/HyperSpec/Body/d_type.htm "TYPE (MGL-PAX:CLHS DECLARATION)"
@@ -2487,6 +2589,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [8529]: #x-28DREF-EXT-3A-40DEFAULT-DOWNCAST-20MGL-PAX-3ASECTION-29 "Default Downcast"
   [852d]: #x-28DREF-3A-40REFERENCES-GLOSSARY-20MGL-PAX-3ASECTION-29 "References Glossary"
   [85ba]: #x-28DREF-3ADTYPE-20MGL-PAX-3ALOCATIVE-29 "DREF:DTYPE MGL-PAX:LOCATIVE"
+  [867c]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function_name '"setf function name" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [87fc]: #x-28DREF-EXT-3A-40INITIAL-DEFINITION-20MGL-PAX-3ASECTION-29 "Initial Definition"
   [8934]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defcon.htm "DEFCONSTANT (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [8f19]: #x-28DREF-3ALOCATE-20FUNCTION-29 "DREF:LOCATE FUNCTION"
@@ -2509,7 +2612,6 @@ the details, see the Elisp function `slime-goto-source-location`.
   [9fd4]: #x-28DREF-EXT-3ADOCSTRING-2A-20GENERIC-FUNCTION-29 "DREF-EXT:DOCSTRING* GENERIC-FUNCTION"
   [a078]: #x-28DREF-EXT-3A-40SOURCE-LOCATIONS-20MGL-PAX-3ASECTION-29 "Source Locations"
   [a11d]: #x-28DREF-3A-40LOCATIVE-TYPE-20MGL-PAX-3AGLOSSARY-TERM-29 "locative type"
-  [a138]: http://www.lispworks.com/documentation/HyperSpec/Body/m_setf_.htm "SETF (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [a22e]: #x-28DREF-3ADREF-LOCATIVE-TYPE-20FUNCTION-29 "DREF:DREF-LOCATIVE-TYPE FUNCTION"
   [a26f]: http://www.lispworks.com/documentation/HyperSpec/Body/f_consta.htm "CONSTANTP (MGL-PAX:CLHS FUNCTION)"
   [a459]: #x-28DREF-3A-40DTYPES-20MGL-PAX-3ASECTION-29 "`DTYPE`s"
@@ -2518,6 +2620,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [a70d]: #x-28DREF-3AXREF-LOCATIVE-20-28MGL-PAX-3AREADER-20DREF-3AXREF-29-29 "DREF:XREF-LOCATIVE (MGL-PAX:READER DREF:XREF)"
   [a79d]: http://www.lispworks.com/documentation/HyperSpec/Body/t_member.htm "MEMBER (MGL-PAX:CLHS TYPE)"
   [a951]: #x-28MGL-PAX-3AUNKNOWN-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:UNKNOWN MGL-PAX:LOCATIVE"
+  [ab5e]: #x-28DREF-3ASETF-GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "DREF:SETF-GENERIC-FUNCTION MGL-PAX:LOCATIVE"
   [ad35]: #x-28DREF-EXT-3AVARIABLE-DREF-20CLASS-29 "DREF-EXT:VARIABLE-DREF CLASS"
   [ad78]: http://www.lispworks.com/documentation/HyperSpec/Body/f_format.htm "FORMAT (MGL-PAX:CLHS FUNCTION)"
   [ad80]: #x-28DREF-3A-40INTRODUCTION-20MGL-PAX-3ASECTION-29 "Introduction"
@@ -2568,6 +2671,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [dae6]: http://www.lispworks.com/documentation/HyperSpec/Body/f_string.htm "STRING (MGL-PAX:CLHS FUNCTION)"
   [db68]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pkg_na.htm "PACKAGE-NAME (MGL-PAX:CLHS FUNCTION)"
   [dd55]: http://www.lispworks.com/documentation/HyperSpec/Body/t_and.htm "AND (MGL-PAX:CLHS TYPE)"
+  [df33]: #x-28DREF-EXT-3AGENERIC-FUNCTION-DREF-20CLASS-29 "DREF-EXT:GENERIC-FUNCTION-DREF CLASS"
   [e023]: #x-28RESTART-20MGL-PAX-3ALOCATIVE-29 "RESTART MGL-PAX:LOCATIVE"
   [e196]: #x-28DREF-3ADEFINITIONS-20FUNCTION-29 "DREF:DEFINITIONS FUNCTION"
   [e1d4]: #x-28DREF-3A-40LISTING-DEFINITIONS-20MGL-PAX-3ASECTION-29 "Listing Definitions"

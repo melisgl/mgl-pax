@@ -610,8 +610,9 @@ definitions as in
     
     ```common-lisp
     (dref-apropos "method" :package :dref :external-only t)
-    ==> (#<DREF METHOD CLASS> #<DREF METHOD LOCATIVE>
-    -->  #<DREF METHOD-COMBINATION CLASS> #<DREF METHOD-COMBINATION LOCATIVE>)
+    ==> (#<DREF SETF-METHOD LOCATIVE> #<DREF METHOD CLASS>
+    -->  #<DREF METHOD LOCATIVE> #<DREF METHOD-COMBINATION CLASS>
+    -->  #<DREF METHOD-COMBINATION LOCATIVE>)
     ```
     
     Definitions that are not of DTYPE (see DTYPEP) are filtered out:
@@ -665,9 +666,6 @@ definitions as in
       a matching package.
     
     - DTYPE matches candidate definition `D` if `(DTYPEP D DTYPE)`.
-    
-    - SETF function names are matched on the embedded symbol
-      only.
     
     Can be extended via MAP-REFERENCES-OF-TYPE and
     MAP-DEFINITIONS-OF-NAME.
@@ -845,6 +843,17 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
 
 ### Locatives for Macros
 
+- [locative] SETF
+    - Direct locative subtypes: [SETF-METHOD][1a03], [SETF-FUNCTION][19f6]
+
+    Refers to a setf expander (see DEFSETF and DEFINE-SETF-EXPANDER).
+    
+    Setf functions (e.g. `(DEFUN (SETF NAME) ...)` or the same
+    with DEFGENERIC) are handled by the SETF-FUNCTION,
+    SETF-GENERIC-FUNCTION, and SETF-METHOD locatives.
+    
+    SETF expander references do not RESOLVE.
+
 - [locative] MACRO
 
     Refers to a global macro, typically defined with DEFMACRO, or to a
@@ -871,25 +880,24 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
     SYMBOL-MACRO references do not RESOLVE.
 
 - [locative] COMPILER-MACRO
+    - Direct locative subtypes: [SETF-COMPILER-MACRO][5df4]
 
     Refers to a compiler macro, typically defined with
     DEFINE-COMPILER-MACRO.
     
     COMPILER-MACRO references do not RESOLVE.
 
-- [locative] SETF
+- [locative] SETF-COMPILER-MACRO
+    - Direct locative supertypes: [COMPILER-MACRO][41fd]
 
-    Refers to a setf expander (see DEFSETF and DEFINE-SETF-EXPANDER).
-    Setf functions (e.g. `(DEFUN (SETF NAME) ...)` or the same
-    with DEFGENERIC) are handled by the FUNCTION,
-    GENERIC-FUNCTION and METHOD locatives.
+    Refers to a compiler macro with a setf function name.
     
-    SETF references do not RESOLVE.
+    SETF-COMPILER-MACRO references do not RESOLVE.
 
 ### Locatives for Functions and Methods
 
 - [locative] FUNCTION
-    - Direct locative subtypes: [STRUCTURE-ACCESSOR][090c], [GENERIC-FUNCTION][5875]
+    - Direct locative subtypes: [STRUCTURE-ACCESSOR][090c], [SETF-FUNCTION][19f6], [GENERIC-FUNCTION][5875]
 
     Refers to a global function, typically defined with DEFUN. The
     @NAME must be a function name. It is also allowed to
@@ -901,16 +909,52 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
     ```
 
 
+- [locative] SETF-FUNCTION
+    - Direct locative supertypes: [FUNCTION][ba62], [SETF][d83a]
+    
+    - Direct locative subtypes: [STRUCTURE-ACCESSOR][090c], [SETF-GENERIC-FUNCTION][ab5e]
+
+    Refers to a global FUNCTION with a setf function name.
+    
+    ```common-lisp
+    (defun (setf ooh) ())
+    (locate #'(setf ooh))
+    ==> #<DREF OOH SETF-FUNCTION>
+    (dref 'ooh 'setf-function)
+    ==> #<DREF OOH SETF-FUNCTION>
+    (dref '(setf ooh) 'function)
+    ==> #<DREF OOH SETF-FUNCTION>
+    ```
+
+
 - [locative] GENERIC-FUNCTION
     - Direct locative supertypes: [FUNCTION][ba62]
+    
+    - Direct locative subtypes: [SETF-GENERIC-FUNCTION][ab5e]
 
     Refers to a GENERIC-FUNCTION, typically defined with
     DEFGENERIC. The @NAME must be a function name.
 
-- [locative] METHOD METHOD-QUALIFIERS METHOD-SPECIALIZERS
-    - Direct locative subtypes: [WRITER][e548], [READER][cc04]
+- [locative] SETF-GENERIC-FUNCTION
+    - Direct locative supertypes: [GENERIC-FUNCTION][5875], [SETF-FUNCTION][19f6]
 
-    Refers to METHODs. @NAME must be a function name.
+    Refers to a global GENERIC-FUNCTION with a setf function name.
+    
+    ```common-lisp
+    (defgeneric (setf oog) ())
+    (locate #'(setf oog))
+    ==> #<DREF OOG SETF-GENERIC-FUNCTION>
+    (dref 'oog 'setf-function)
+    ==> #<DREF OOG SETF-GENERIC-FUNCTION>
+    (dref '(setf oog) 'function)
+    ==> #<DREF OOG SETF-GENERIC-FUNCTION>
+    ```
+
+
+- [locative] METHOD METHOD-QUALIFIERS METHOD-SPECIALIZERS
+    - Direct locative subtypes: [WRITER][e548], [READER][cc04], [SETF-METHOD][1a03]
+
+    Refers to a METHOD. @NAME must be a function name.
     METHOD-QUALIFIERS and METHOD-SPECIALIZERS are similar to the
     CL:FIND-METHOD's arguments of the same names. For example, the
     method
@@ -930,6 +974,25 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
     
     METHOD is not EXPORTABLE-LOCATIVE-TYPE-P.
 
+- [locative] SETF-METHOD METHOD-QUALIFIERS METHOD-SPECIALIZERS
+    - Direct locative supertypes: [METHOD][172e], [SETF][d83a]
+    
+    - Direct locative subtypes: [ACCESSOR][00d4]
+
+    Refers to a METHOD of a SETF-GENERIC-FUNCTION.
+    
+    ```common-lisp
+    (defgeneric (setf oog) ()
+      (:method ()))
+    (locate (find-method #'(setf oog) () ()))
+    ==> #<DREF OOG (SETF-METHOD NIL NIL)>
+    (dref 'oog '(setf-method () ()))
+    ==> #<DREF OOG (SETF-METHOD NIL NIL)>
+    (dref '(setf oog) '(method () ()))
+    ==> #<DREF OOG (SETF-METHOD NIL NIL)>
+    ```
+
+
 - [locative] METHOD-COMBINATION
 
     Refers to a METHOD-COMBINATION, defined with
@@ -947,7 +1010,7 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
     ```common-lisp
     (defclass foo ()
       ((xxx :reader foo-xxx)))
-       
+    
     (dref 'foo-xxx '(reader foo))
     ==> #<DREF FOO-XXX (READER FOO)>
     ```
@@ -961,7 +1024,7 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
     Like ACCESSOR, but refers to a :WRITER method in a DEFCLASS.
 
 - [locative] ACCESSOR CLASS-NAME
-    - Direct locative supertypes: [READER][cc04], [WRITER][e548]
+    - Direct locative supertypes: [READER][cc04], [WRITER][e548], [SETF-METHOD][1a03]
 
     Refers to an :ACCESSOR in a DEFCLASS.
     
@@ -970,7 +1033,7 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
     method but can be LOCATEd with either.
 
 - [locative] STRUCTURE-ACCESSOR &OPTIONAL STRUCTURE-CLASS-NAME
-    - Direct locative supertypes: [FUNCTION][ba62]
+    - Direct locative supertypes: [SETF-FUNCTION][19f6], [FUNCTION][ba62]
 
     Refers to an accessor function generated by DEFSTRUCT.
     A LOCATE-ERROR condition is signalled if the wrong
@@ -1856,19 +1919,35 @@ LOCATIVE-SUPERTYPES argument.
 
     DREF-EXT:DREF-CLASS of SETF.
 
+- [class] SETF-COMPILER-MACRO-DREF COMPILER-MACRO-DREF
+
+    DREF-EXT:DREF-CLASS of DREF:SETF-COMPILER-MACRO.
+
 **for Functions**
 
 - [class] FUNCTION-DREF DREF
 
     DREF-EXT:DREF-CLASS of FUNCTION.
 
+- [class] SETF-FUNCTION-DREF FUNCTION-DREF SETF-DREF
+
+    DREF-EXT:DREF-CLASS of DREF:SETF-FUNCTION.
+
 - [class] GENERIC-FUNCTION-DREF FUNCTION-DREF
 
     DREF-EXT:DREF-CLASS of GENERIC-FUNCTION.
 
+- [class] SETF-GENERIC-FUNCTION-DREF GENERIC-FUNCTION-DREF SETF-FUNCTION-DREF
+
+    DREF-EXT:DREF-CLASS of DREF:SETF-GENERIC-FUNCTION.
+
 - [class] METHOD-DREF DREF
 
     DREF-EXT:DREF-CLASS of METHOD.
+
+- [class] SETF-METHOD-DREF METHOD-DREF SETF-DREF
+
+    DREF-EXT:DREF-CLASS of DREF:SETF-METHOD.
 
 - [class] METHOD-COMBINATION-DREF DREF
 
@@ -1882,11 +1961,11 @@ LOCATIVE-SUPERTYPES argument.
 
     DREF-EXT:DREF-CLASS of MGL-PAX:WRITER.
 
-- [class] ACCESSOR-DREF READER-DREF WRITER-DREF
+- [class] ACCESSOR-DREF READER-DREF WRITER-DREF SETF-METHOD-DREF
 
     DREF-EXT:DREF-CLASS of MGL-PAX:ACCESSOR.
 
-- [class] STRUCTURE-ACCESSOR-DREF FUNCTION-DREF
+- [class] STRUCTURE-ACCESSOR-DREF SETF-FUNCTION-DREF FUNCTION-DREF
 
     DREF-EXT:DREF-CLASS of MGL-PAX:STRUCTURE-ACCESSOR.
 
@@ -2019,17 +2098,23 @@ the details, see the Elisp function `slime-goto-source-location`.
   [0b3a]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE"
   [1538]: #x-28DREF-3AXREF-20CLASS-29 "DREF:XREF CLASS"
   [172e]: #x-28METHOD-20MGL-PAX-3ALOCATIVE-29 "METHOD MGL-PAX:LOCATIVE"
+  [19f6]: #x-28DREF-3ASETF-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "DREF:SETF-FUNCTION MGL-PAX:LOCATIVE"
+  [1a03]: #x-28DREF-3ASETF-METHOD-20MGL-PAX-3ALOCATIVE-29 "DREF:SETF-METHOD MGL-PAX:LOCATIVE"
   [2060]: #x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "CLASS MGL-PAX:LOCATIVE"
+  [41fd]: #x-28COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29 "COMPILER-MACRO MGL-PAX:LOCATIVE"
   [5119]: ../README#x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:GLOSSARY-TERM MGL-PAX:LOCATIVE"
   [5875]: #x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "GENERIC-FUNCTION MGL-PAX:LOCATIVE"
+  [5df4]: #x-28DREF-3ASETF-COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29 "DREF:SETF-COMPILER-MACRO MGL-PAX:LOCATIVE"
   [672f]: ../README#x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:SECTION MGL-PAX:LOCATIVE"
   [6c83]: #x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29 "VARIABLE MGL-PAX:LOCATIVE"
   [85ba]: #x-28DREF-3ADTYPE-20MGL-PAX-3ALOCATIVE-29 "DREF:DTYPE MGL-PAX:LOCATIVE"
   [926d]: #x-28TYPE-20MGL-PAX-3ALOCATIVE-29 "TYPE MGL-PAX:LOCATIVE"
+  [ab5e]: #x-28DREF-3ASETF-GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "DREF:SETF-GENERIC-FUNCTION MGL-PAX:LOCATIVE"
   [ba62]: #x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29 "FUNCTION MGL-PAX:LOCATIVE"
   [c479]: #x-28CONDITION-20MGL-PAX-3ALOCATIVE-29 "CONDITION MGL-PAX:LOCATIVE"
   [c819]: #x-28MGL-PAX-3ACONSTANT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CONSTANT MGL-PAX:LOCATIVE"
   [cc04]: #x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:READER MGL-PAX:LOCATIVE"
+  [d83a]: #x-28SETF-20MGL-PAX-3ALOCATIVE-29 "SETF MGL-PAX:LOCATIVE"
   [d930]: #x-28DREF-3ADREF-20CLASS-29 "DREF:DREF CLASS"
   [e548]: #x-28MGL-PAX-3AWRITER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:WRITER MGL-PAX:LOCATIVE"
 

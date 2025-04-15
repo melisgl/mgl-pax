@@ -138,17 +138,17 @@
 
 (defsetf has-setf-expander some-setter "ddd")
 
-(defun (setf has-setf-function) (v)
+(defun (setf setf-fn) (v)
   "eee"
   (declare (ignore v)))
 
-(define-compiler-macro (setf has-setf-function) (v)
+(define-compiler-macro (setf setf-fn) (v)
   v)
 
-(defgeneric (setf has-setf-generic-function) (v)
+(defgeneric (setf setf-gf) (v)
   (:documentation "fff"))
 
-(defmethod (setf has-setf-generic-function) ((v string))
+(defmethod (setf setf-gf) ((v string))
   "ggg"
   (declare (ignore v)))
 

@@ -716,7 +716,7 @@ buffer."
 ;;; Return 1. the first argument of the current sexp if it's a symbol,
 ;;; 2. the Slime source location :SNIPPET, 3. the start position of
 ;;; the sexp. If any movement fails or the first argument is not a
-;;; symbol, then return nil.
+;;; looks like a list, then return nil.
 (defun mgl-pax-current-sexp-first-arg-snippet-and-pos ()
   (ignore-errors
     (save-excursion
@@ -728,9 +728,10 @@ buffer."
         (down-list)
         (slime-forward-sexp)
         (forward-char)
-        ;; `name' can be a symbol or a string ...
+        ;; `name' is commonly a symbol or a string.
         (let ((name (mgl-pax-next-sexp)))
-          ;; ... but currently never a list. FIXME: SETF names?
+          ;; FIXME: DREF::@NAME allows lists, but we ignoring them for
+          ;; expediency.
           (unless (string-prefix-p "(" name)
             (list name snippet pos)))))))
 

@@ -3,7 +3,7 @@
 (in-readtable pythonic-string-syntax)
 
 (defsection @pax-locatives (:title "PAX Locatives")
-  "To the DREF::@BASI-LOCATIVE-TYPES defined by DRef,
+  "To the DREF::@BASIC-LOCATIVE-TYPES defined by DRef,
   PAX adds a few of its own."
   (section locative)
   (glossary-term locative)

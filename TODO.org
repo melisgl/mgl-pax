@@ -224,14 +224,3 @@ MGL-PAX:<LOCATIVE> all over them?
 * MAYBE do not test the locative type of a DREF with EQ
 At most places, using (TYPEP DREF 'SECTION-DREF) instead of (EQ (DREF-
 LOCATIVE-TYPE DREF) 'SECTION) may make more sense.
-* TODO support list names such as (SETF FOO-A) in M-., C-., etc
-** PAX::MAP-NAMES-IN-RAW only knows about symbol and string names:
-
-MGL-PAX-TEST> (pax::definitions-of-wall
-               '(("foo" ("function"))))
-(#<DREF FOO FUNCTION>)
-MGL-PAX-TEST> (pax::definitions-of-wall
-               '(("(setf has-setf-function)"
-                  ("function"))))
-NIL
-** READ-FUNNY needs to support list names too

@@ -147,6 +147,7 @@
 ;;; DREFs. So, instead we require DREFs.
 (defun definition-to-dspec (dref)
   (let* ((name (dref-name dref))
+         (setf-name `(setf ,name))
          (locative (dref-locative dref))
          (type (locative-type locative))
          (args (locative-args locative)))
@@ -155,11 +156,15 @@
       (constant (swank-constant-dspec name))
       (macro (swank-macro-dspec name))
       (compiler-macro (swank-compiler-macro-dspec name))
+      (setf-compiler-macro (swank-compiler-macro-dspec setf-name))
       (symbol-macro (swank-symbol-macro-dspec name))
       (setf (swank-setf-dspec name))
       (function (swank-function-dspec name))
+      (setf-function (swank-function-dspec setf-name))
       (generic-function (swank-generic-function-dspec name))
+      (setf-generic-function (swank-generic-function-dspec setf-name))
       (method (swank-method-dspec name (first args) (second args)))
+      (setf-method (swank-method-dspec setf-name (first args) (second args)))
       (accessor (swank-accessor-dspec name (first args) t))
       (reader (swank-accessor-dspec name (first args) nil))
       (writer (swank-accessor-dspec name (first args) t))
@@ -359,24 +364,28 @@
       (make-instance 'unknown-dref :name name :locative `(unknown ,dspec))))
 
 (defun dspec-to-definition* (dspec name)
-  (let ((dspec (normalize-dspec dspec)))
+  (let ((dspec (normalize-dspec dspec))
+        (setf-name `(setf ,name)))
     (or (package-dspec-to-definition dspec)
         (method-dspec-to-definition dspec)
         ;; Handle the symbol-based cases where the DPSEC is unique and
         ;; easy.
-        (when (or (symbolp name)
-                  ;; For (SETF FOO)
-                  (listp name))
+        (when (or (symbolp name) (listp name))
           (loop named lazy-wasteful-parsing
                 for (locative-type* dspec*)
                   in `((variable ,(swank-variable-dspec name))
                        (constant ,(swank-constant-dspec name))
                        (function ,(swank-function-dspec name))
+                       (setf-function ,(swank-function-dspec setf-name))
                        (macro ,(swank-macro-dspec name))
                        (compiler-macro ,(swank-compiler-macro-dspec name))
+                       (setf-compiler-macro
+                        ,(swank-compiler-macro-dspec setf-name))
                        (symbol-macro ,(swank-symbol-macro-dspec name))
                        (setf ,(swank-setf-dspec name))
                        (generic-function ,(swank-generic-function-dspec name))
+                       (setf-generic-function
+                        ,(swank-generic-function-dspec setf-name))
                        (method-combination
                         ,(swank-method-combination-dspec name))
                        (type ,(swank-type-dspec name))

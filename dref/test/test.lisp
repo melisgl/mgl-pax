@@ -7,8 +7,8 @@
   (is (null (dref::has-setf-p 'undefined)))
   (is (dref::has-setf-p 'documentation))
   (is (dref::has-setf-p 'has-setf-expander))
-  (is (dref::has-setf-p 'has-setf-function))
-  (is (dref::has-setf-p 'has-setf-generic-function))
+  (is (dref::has-setf-p 'setf-fn))
+  (is (dref::has-setf-p 'setf-gf))
   (is (null (dref::has-setf-p 'defun)))
   (with-failure-expected
       ((and (alexandria:featurep '(:not (:or :ccl :clisp :sbcl)))
@@ -35,9 +35,9 @@
                                               (dref 'dref 'package)
                                               (xref "dref" 'asdf:system)
                                               (xref 'dref 'class)))
-    (check-ref-sets (definitions '(setf has-setf-function))
-                    (list (xref '(setf has-setf-function) 'function)
-                          (xref '(setf has-setf-function) 'compiler-macro))))
+    (check-ref-sets (definitions '(setf setf-fn))
+                    (list (xref 'setf-fn 'setf-function)
+                          (xref 'setf-fn 'setf-compiler-macro))))
   (with-failure-expected ((alexandria:featurep :abcl))
     (check-ref-sets (definitions "dref")
                     (if (string= (package-name 'dref) "dref")
@@ -67,12 +67,12 @@
                       ,(xref 'test-gf '(method () (number)))
                       ,(xref 'test-gf '(method () ((eql 7))))
                       ,(xref 'test-gf '(method ()
-                                        ((eql #.(find-package :cl)))))))
-    (check-ref-sets (definitions '(setf has-setf-generic-function))
-                    `(,(xref '(setf has-setf-generic-function)
-                             'generic-function)
-                      ,(xref '(setf has-setf-generic-function)
-                             '(method () (string))))))
+                                        ((eql #.(find-package :cl))))))))
+  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ccl :clisp))
+                               'failure))
+    (check-ref-sets (definitions '(setf setf-gf))
+                    `(,(xref 'setf-gf 'setf-generic-function)
+                      ,(xref 'setf-gf '(setf-method () (string))))))
   (with-failure-expected ((and (alexandria:featurep
                                 '(:or :abcl :clisp :cmucl :ecl))
                                'failure))
@@ -82,8 +82,8 @@
   (with-failure-expected ((and (alexandria:featurep '(:or :abcl :clisp :ecl))
                                'failure))
     (check-ref-sets (remove-if (lambda (dref)
-                                 (member (dref-locative-type dref)
-                                         '(generic-function setf)))
+                                 (or (typep dref 'generic-function-dref)
+                                     (typep dref 'setf-function-dref)))
                                (definitions 'foo-a))
                     `(,(xref 'foo-a 'variable)
                       ,(xref 'foo-a '(accessor foo))))
@@ -142,11 +142,14 @@
   (check-dspec-roundtrip (dref 'bar 'macro))
   (check-dspec-roundtrip (dref 'block 'macro))
   (check-dspec-roundtrip (dref 'foo 'compiler-macro))
+  (check-dspec-roundtrip (dref 'setf-fn 'setf-compiler-macro))
   (check-dspec-roundtrip (dref 'my-smac 'symbol-macro))
   (check-dspec-roundtrip (dref 'has-setf-expander 'setf))
-  (check-dspec-roundtrip (dref 'has-setf-function 'setf))
+  (check-dspec-roundtrip (dref 'setf-fn 'setf))
   (check-dspec-roundtrip (dref 'foo 'function))
   (check-dspec-roundtrip (dref 'test-gf 'generic-function))
+  (check-dspec-roundtrip (dref 'setf-gf 'setf-generic-function))
+  (check-dspec-roundtrip (dref 'setf-gf '(setf-method () (string))))
   (with-failure-expected ((alexandria:featurep '(:or :ecl)))
     (check-dspec-roundtrip (dref 'test-gf '(method () ((eql 7)))))
     (check-dspec-roundtrip
@@ -235,7 +238,7 @@
     (is (match-values (arglist (dref 'traced-foo 'function))
           (equal * '(x))
           (eq * :ordinary))))
-  (is (match-values (arglist (dref '(setf has-setf-function) 'function))
+  (is (match-values (arglist (dref '(setf setf-fn) 'function))
         (equal * '(v))
         (eq * :ordinary))))
 
@@ -248,8 +251,7 @@
     (is (match-values (arglist (dref 'traced-gf 'function))
           (equal * '(x))
           (eq * :ordinary))))
-  (is (match-values (arglist (dref '(setf has-setf-generic-function)
-                                   'generic-function))
+  (is (match-values (arglist (dref '(setf setf-gf) 'generic-function))
         (equal * '(v))
         (eq * :ordinary))))
 
@@ -263,8 +265,7 @@
   (is (match-values (arglist (dref 'gf2 '(method () (number))))
         (equal * '(x &key ((:x y) t)))
         (eq * :ordinary)))
-  (is (match-values (arglist (dref '(setf has-setf-generic-function)
-                                   '(method () (string))))
+  (is (match-values (arglist (dref '(setf setf-gf) '(method () (string))))
         (equal * '(v))
         (eq * :ordinary))))
 
@@ -312,16 +313,14 @@
                                'failure))
     (is (equal (docstring (dref 'has-setf-expander 'setf))
                "HAS-SETF-EXPANDER setf"))
-    (is (equal (docstring (dref '(setf has-setf-function) 'function))
-               "HAS-SETF-FUNCTION setf")))
+    (is (equal (docstring (dref '(setf setf-fn) 'function))
+               "SETF-FN setf")))
   (with-failure-expected ((and (alexandria:featurep '(:or :cmucl))
                                'failure))
-    (is (equal (docstring (dref '(setf has-setf-generic-function)
-                                'generic-function))
-               "HAS-SETF-GENERIC-FUNCTION setf")))
-  (is (equal (docstring (dref '(setf has-setf-generic-function)
-                              '(method () (string))))
-             "HAS-SETF-GENERIC-FUNCTION (setf (method () (string)))"))
+    (is (equal (docstring (dref '(setf setf-gf) 'generic-function))
+               "SETF-GF setf")))
+  (is (equal (docstring (dref '(setf setf-gf) '(method () (string))))
+             "SETF-GF (setf-method () (string))"))
   (with-failure-expected ((and (alexandria:featurep '(:or :ecl))
                                'failure))
     (is (equal (docstring (dref 'foo 'function)) "FOO function")))
@@ -394,16 +393,15 @@
     (has-setf-expander setf (defsetf has-setf-expander) nil
      ;; No source location for DEFSETF on any implementation.
      t)
-    ((setf has-setf-function) function (defun (setf has-setf-function)) nil
+    ((setf setf-fn) function (defun (setf setf-fn)) nil
      #.(alexandria:featurep '(:or :allegro :cmucl)))
-    ((setf has-setf-function) compiler-macro
-     (define-compiler-macro (setf has-setf-function)) nil
+    ((setf setf-fn) compiler-macro
+     (define-compiler-macro (setf setf-fn)) nil
      #.(alexandria:featurep '(:or :allegro :cmucl)))
-    ((setf has-setf-generic-function) generic-function
-     (defgeneric (setf has-setf-generic-function)) nil
+    ((setf setf-gf) generic-function (defgeneric (setf setf-gf)) nil
      #.(alexandria:featurep '(:or :allegro :cmucl)))
-    ((setf has-setf-generic-function) (method () (string))
-     (defmethod (setf has-setf-generic-function) ((v string))) nil
+    ((setf setf-gf) (method () (string))
+     (defmethod (setf setf-gf) ((v string))) nil
      #.(alexandria:featurep '(:or :allegro :cmucl)))
     ;; DREF::@FUNCTIONLIKE-LOCATIVES
     (foo function (defun foo))
@@ -553,7 +551,7 @@
 (deftest test-hierarchy ()
   (is (equal (locative-type-direct-subs 'function)
              ;; DREF::@REVERSE-DEFINITION-ORDER
-             '(mgl-pax:structure-accessor generic-function))))
+             '(structure-accessor setf-function generic-function))))
 
 
 (deftest test-dtypes ()
@@ -620,14 +618,12 @@
 
 (deftest test-dtypep/with-locative-args/actualized ()
   (is (dtypep (dref 'foo-r '(method () (foo))) '(method () (foo))))
-  (is (dtypep (dref '(setf has-setf-function) 'function) 'function))
-  (is (dtypep (locate #'(setf has-setf-function)) 'function))
-  (is (dtypep (dref '(setf has-setf-generic-function) 'generic-function)
-              'generic-function))
-  (is (dtypep (dref '(setf has-setf-generic-function) '(method () (string)))
+  (is (dtypep (dref '(setf setf-fn) 'function) 'function))
+  (is (dtypep (locate #'(setf setf-fn)) 'function))
+  (is (dtypep (dref '(setf setf-gf) 'generic-function) 'generic-function))
+  (is (dtypep (dref '(setf setf-gf) '(method () (string)))
               '(method () (string))))
-  (is (dtypep (locate #'(setf has-setf-generic-function))
-              'generic-function))
+  (is (dtypep (locate #'(setf setf-gf)) 'generic-function))
   (test-dtypep/accessor-writer-setf-name-change))
 
 (deftest test-dtypep/accessor-writer-setf-name-change ()
@@ -707,9 +703,9 @@
   (is (set-equal-p (dref::cover-dtype '(or reader (or writer)))
                    '(reader writer accessor)))
   (is (set-equal-p (dref::cover-dtype '(or method))
-                   '(method reader writer accessor)))
+                   '(method reader writer setf-method accessor)))
   (is (set-equal-p (dref::cover-dtype '(or method accessor))
-                   '(method reader writer accessor))))
+                   '(method reader writer setf-method accessor))))
 
 (deftest test-cover-dtype/and ()
   (is (set-equal-p (dref::cover-dtype '(and)) (locative-types)))
@@ -726,7 +722,7 @@
   (is (set-equal-p (dref::cover-dtype '(and reader writer)) '(accessor)))
   (is (set-equal-p (dref::cover-dtype '(and reader (and writer))) '(accessor)))
   (is (set-equal-p (dref::cover-dtype '(and method))
-                   '(method reader writer accessor)))
+                   '(method reader writer setf-method accessor)))
   (is (set-equal-p (dref::cover-dtype '(and method accessor)) '(accessor))))
 
 (deftest test-cover-dtype/not ()
@@ -757,7 +753,7 @@
 
 (deftest test-cover-dtype/compound ()
   (is (set-equal-p (dref::cover-dtype '(method () (number)))
-                   '(method reader writer accessor))))
+                   '(method reader writer setf-method accessor))))
 
 (deftest test-cover-dtype/member ()
   (is (set-equal-p (dref::cover-dtype '(member)) nil))
@@ -770,7 +766,7 @@
                    '(class condition)))
   (is (set-equal-p (dref::cover-dtype
                     `(member ,(dref 'test-gf '(method () (number)))))
-                   '(method reader writer accessor)))
+                   '(method reader writer setf-method accessor)))
   (is (set-equal-p (dref::cover-dtype
                     `(not (member ,(dref 'test-gf '(method () (number))))))
                    (locative-types))))
@@ -946,13 +942,13 @@
                                            :dtype '(method () (number)))
                     `(,(xref 'test-gf '(method () (number))))))
   (with-test ("setf name")
-    (check-ref-sets (dref-apropos 'has-setf-function :package 'dref-test)
-                    (list (xref '(setf has-setf-function) 'function)
-                          (xref '(setf has-setf-function) 'compiler-macro)))
-    (check-ref-sets (dref-apropos 'has-setf-functi :package 'dref-test) ())
-    (check-ref-sets (dref-apropos "has-setf-fun" :package 'dref-test)
-                    (list (xref '(setf has-setf-function) 'function)
-                          (xref '(setf has-setf-function) 'compiler-macro)))))
+    (check-ref-sets (dref-apropos 'setf-fn :package 'dref-test)
+                    (list (xref 'setf-fn 'setf-function)
+                          (xref 'setf-fn 'setf-compiler-macro)))
+    (check-ref-sets (dref-apropos 'setf-f :package 'dref-test) ())
+    (check-ref-sets (dref-apropos "setf-fn" :package 'dref-test)
+                    (list (xref 'setf-fn 'setf-function)
+                          (xref 'setf-fn 'setf-compiler-macro)))))
 
 
 (deftest test-all ()

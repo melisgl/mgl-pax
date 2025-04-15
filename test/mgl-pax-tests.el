@@ -282,13 +282,12 @@
       ("macro bar" "(defmacro bar ")
       ("symbol-macro my-smac" "(define-symbol-macro my-smac ")
       ("compiler-macro foo" "(define-compiler-macro foo ")
-      ("function (setf has-setf-function)" "(defun (setf has-setf-function) ")
-      ("compiler-macro (setf has-setf-function)"
-       "(define-compiler-macro (setf has-setf-function) ")
-      ("function (setf has-setf-generic-function)"
-       "(defun (setf has-setf-generic-function) ")
-      ("(method () (string)) (setf has-setf-generic-function)"
-       "(defmethod (setf has-setf-generic-function) ((v string))")
+      ("function (setf setf-fn)" "(defun (setf setf-fn) ")
+      ("compiler-macro (setf setf-fn)"
+       "(define-compiler-macro (setf setf-fn) ")
+      ("function (setf setf-gf)" "(defun (setf setf-gf) ")
+      ("(method () (string)) (setf setf-gf)"
+       "(defmethod (setf setf-gf) ((v string))")
       ("function foo" "(defun foo ")
       ("function |Foo|" "(defun |Foo| ")
       ("traced-foo" "(defun traced-foo ")
