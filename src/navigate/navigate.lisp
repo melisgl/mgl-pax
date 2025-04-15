@@ -392,8 +392,7 @@
           ;; characters from POS.
           (closest-pos 2000))
       (dolist (dref
-               ;; It is likely that only LISP-LOCATIVE-TYPES have
-               ;; source location (except UNKNOWN).
+               ;; Only LISP-LOCATIVE-TYPES have source location.
                (definitions object))
         (let ((location (source-location dref)))
           (if (source-location-p location)
@@ -414,8 +413,14 @@
                            (snippets-match loc-snippet)
                            (<= (abs (- loc-pos pos))
                                (abs (- closest-pos pos)))))
-                  (setq closest-definition dref
-                        closest-pos loc-pos)))
+                  ;; Multiple definitions may have the exact source
+                  ;; location (e.g. DEFGENERIC with :METHODs in it on
+                  ;; SBCL). They may then all match the snippet.
+                  (unless (and (typep closest-definition 'generic-function-dref)
+                               (typep dref 'method-dref)
+                               (eql closest-pos pos))
+                    (setq closest-definition dref
+                          closest-pos loc-pos))))
               ;; No source location
               (when (reference-and-snippet-match-p dref snippet)
                 (setq closest-definition dref
