@@ -203,10 +203,8 @@
 ;;;; COMPILER-MACRO locative
 
 (define-locative-type compiler-macro ()
-  "Refers to a compiler macro, typically defined with
-  DEFINE-COMPILER-MACRO.
-
-  COMPILER-MACRO references do not RESOLVE."
+  "Refers to a COMPILER-MACRO-FUNCTION, typically defined with
+  DEFINE-COMPILER-MACRO."
   (defclass compiler-macro-dref (function-name-mixin)
     ()))
 
@@ -232,6 +230,9 @@
   (let ((name (dref-function-name dref)))
     (swank-source-location* (compiler-macro-function name) name
                             'compiler-macro)))
+
+(defmethod resolve* ((dref compiler-macro-dref))
+  (compiler-macro-function (dref-function-name dref)))
 
 
 ;;;; FUNCTION locative
@@ -378,7 +379,6 @@
 
 ;;;; SETF-COMPILER-MACRO locative
 
-;;; FIXME: They could resolve
 (define-locative-type setf-compiler-macro (compiler-macro)
   "Refers to a compiler macro with a [setf function name][clhs].
 

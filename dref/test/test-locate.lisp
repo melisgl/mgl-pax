@@ -179,14 +179,15 @@
   (signals (locate-error :pred "Bad arguments")
     (dref 'foo '(compiler-macro 7)))
   (signals (locate-error)
-    (dref '(setf "sdf") 'compiler-macro)))
+    (dref '(setf "sdf") 'compiler-macro))
+  (is (eq (resolve (xref 'foo 'compiler-macro) nil)
+          (compiler-macro-function 'foo))))
 
 (deftest test-locate/setf-compiler-macro ()
   (check-ref (dref '(setf setf-fn) 'compiler-macro)
              'setf-fn 'setf-compiler-macro)
   (check-ref (locate (compiler-macro-function '(setf setf-fn)))
              'setf-fn 'setf-compiler-macro)
-  #+nil
   (is (eq (resolve (xref '(setf setf-fn) 'compiler-macro) nil)
           (compiler-macro-function '(setf setf-fn)))))
 
