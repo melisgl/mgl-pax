@@ -278,11 +278,8 @@
 
 (define-dspec swank-function-dspec (name)
   (declare (ignorable name))
-  ;; KLUDGE: On ABCL, sometimes other symbols than NAME are returned
-  ;; by SWANK-DSPECS.
-  :abcl `(defun)
   #+clisp :clisp #+clisp `(,name system::defun/defmacro)
-  (:or :ecl :sbcl) `(defun ,name)
+  (:or :abcl :ecl :sbcl) `(defun ,name)
   :allegro `(:operator ,name)
   (:or :ccl :cmucl) `(function ,name))
 

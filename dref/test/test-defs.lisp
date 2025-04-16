@@ -115,6 +115,7 @@
 (require :sb-cltl2)
 
 (defmacro define-declaration (name)
+  #-(or allegro ccl sbcl) (declare (ignore name))
   #+allegro
   `(system:define-declaration ,name () nil :both)
   #+ccl
@@ -156,7 +157,11 @@
 
 (defun full-setf ())
 
-(setf (symbol-function 'setfed-fun) (lambda (x) (1+ x)))
+;;; On ECL, this lambda gets named SETFED-FUN when assigned.
+(setf (symbol-function 'setfed-fun0) (lambda (x) (1+ x)))
+;;; But its name is not changed here, so this not going to be a
+;;; DREF::CONSISTENT-FDEFINITION.
+(setf (symbol-function 'setfed-fun) (symbol-function 'setfed-fun0))
 
 (setf (macro-function 'setfed-macro)
       (lambda (whole env)

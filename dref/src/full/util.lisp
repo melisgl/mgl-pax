@@ -126,8 +126,9 @@
     (let ((kind (and (listp name)
                      (= (length name) 2)
                      (case (first name)
-                       ((macro-function) 'macro)
-                       ((compiler-macro compiler-macro-function)
+                       ((macro-function :macro) 'macro)
+                       ((compiler-macro compiler-macro-function
+                                        :compiler-macro)
                         'compiler-macro)))))
       (if kind
           (values (second name) kind)
@@ -210,10 +211,19 @@
 ;;; arglist was not found.
 (defun function-arglist (function-designator &optional (foundp t))
   (let ((function-designator
-          (if (valid-function-name-p function-designator)
-              #-cmucl function-designator
-              #+cmucl (symbol-function* function-designator)
-              (unencapsulated-function function-designator))))
+          (cond ((functionp function-designator)
+                 (unencapsulated-function function-designator))
+                ((valid-function-name-p function-designator)
+                 function-designator))))
+    #+cmucl
+    (unless (functionp function-designator)
+      ;; On CMUCL, SWANK-BACKEND:ARGLIST works better with function
+      ;; objects than with names.
+      (setq function-designator (fdefinition* function-designator)))
+    #+ecl
+    (when (listp function-designator)
+      ;; On ECL, SWANK-BACKEND:ARGLIST errors on setf function names.
+      (setq function-designator (fdefinition* function-designator)))
     (multiple-value-bind (function-name function)
         (if (functionp function-designator)
             (values (function-name function-designator) function-designator)
@@ -432,32 +442,34 @@
 (defun documentation* (object doc-type)
   "A small wrapper around CL:DOCUMENTATION to smooth over differences
   between implementations."
-  ;; KLUDGE: Some just can't decide where the documentation is. Traced
-  ;; generic functions complicate things.
-  (when (functionp object)
-    #+(or ccl ecl)
-    (when (and (eq doc-type 'function)
-               (null (documentation object 'function)))
-      (setq object (function-name object)))
-    #+cmucl
-    (setq object (function-name object)))
-  #+cmucl
-  (when (typep object 'class)
-    (setq object (class-name object)
-          doc-type 'type))
-  (when (and (eq doc-type 'setf)
-             (null (documentation object 'setf)))
-    ;; CLISP runs into NO-APPLICABLE-METHOD currently.
-    #-clisp
-    (setq object `(setf ,object)
-          doc-type 'function))
-  (let* ((docstring (documentation object doc-type))
-         #+sbcl
-         (docstring (filter-junk-docstrings docstring)))
-    docstring))
+  ;; Some just can't decide where the documentation is.
+  (flet ((%documentation (x y)
+           ;; On CLISP this gets a no-applicable-method error:
+           ;;    (documentation '(setf documentation) t)
+           ;; on ABCL this:
+           ;;    (documentation (fdefinition 'function) 'function)
+           (ignore-errors (documentation x y))))
+    (filter-junk-docstrings
+     (cond ((and (functionp object)
+                 (member doc-type '(function t)))
+            (or (%documentation object 'function)
+                (%documentation (function-name object) 'function)))
+           ((eq doc-type 'function)
+            (or (%documentation object 'function)
+                (%documentation (ignore-errors (fdefinition* object))
+                                'function)))
+           ((eq doc-type 'setf)
+            (or (%documentation object 'setf)
+                (%documentation `(setf ,object) 'function)))
+           #+cmucl
+           ((typep object 'class)
+            (%documentation (class-name object) 'type))
+           (t
+            (%documentation object doc-type))))))
 
-#+sbcl
 (defun filter-junk-docstrings (docstring)
+  #-sbcl docstring
+  #+sbcl
   (if (member docstring
               '("Return whether debug-block represents elsewhere code."
                 "automatically generated accessor method"

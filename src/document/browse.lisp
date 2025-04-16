@@ -1061,8 +1061,8 @@
          (append (mapcar #'locate (sections-registered-in-pax-world))
                  (entry-point-sections (list-all-sections)))
          :test #'xref=)
-        #'string< :key (alexandria:compose #'plain-section-title-or-name
-                                           #'resolve)))
+        #'string< :key (alexandria:compose 'plain-section-title-or-name
+                                           'resolve)))
 
 (defun entry-point-sections (sections)
   (loop for section in sections

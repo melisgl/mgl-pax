@@ -782,7 +782,7 @@
 
   Can be extended via DOCSTRING*."
   (ensure-dref-loaded)
-  (docstring* (or (resolve object nil) object)))
+  (docstring* object))
 
 (declaim (ftype function source-location*)
          (ftype function source-location-p))

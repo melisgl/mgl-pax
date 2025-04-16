@@ -139,7 +139,7 @@
 
 (defmethod source-location* ((dref macro-dref))
   (let ((symbol (dref-name dref)))
-    (alexandria:when-let (fn (macro-function symbol))
+    (when-let (fn (macro-function symbol))
       (swank-source-location* fn symbol 'macro))))
 
 
@@ -190,9 +190,10 @@
 
 ;;;; Helper for [setf function names][clhs]
 
-(defclass function-name-mixin ()
-  ((function-name :initform nil :initarg :function-name
-                  :reader dref-function-name)))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defclass function-name-mixin ()
+    ((function-name :initform nil :initarg :function-name
+                    :reader dref-function-name))))
 
 (defmethod initialize-instance :after ((dref function-name-mixin)
                                        &key &allow-other-keys)
@@ -221,7 +222,8 @@
   (%make-dref name compiler-macro))
 
 (defmethod arglist* ((dref compiler-macro-dref))
-  (function-arglist (compiler-macro-function (dref-function-name dref)) :macro))
+  (function-arglist (compiler-macro-function (dref-function-name dref))
+                    :macro))
 
 (defmethod docstring* ((dref compiler-macro-dref))
   (documentation* (dref-name dref) 'compiler-macro))
@@ -232,7 +234,12 @@
                             'compiler-macro)))
 
 (defmethod resolve* ((dref compiler-macro-dref))
-  (compiler-macro-function (dref-function-name dref)))
+  (let* ((name (dref-function-name dref))
+         (fn (compiler-macro-function name)))
+    (unless (equal (function-name fn) name)
+      (resolve-error "The name of the definition cannot be recovered ~
+                      from the function object."))
+    fn))
 
 
 ;;;; FUNCTION locative
@@ -373,8 +380,9 @@
   (documentation* (resolve dref) t))
 
 (defmethod source-location* ((dref method-dref))
-  (swank-source-location* (resolve dref) (dref-name dref)
-                          (dref-locative dref)))
+  (swank-source-location* (resolve dref)
+                          (dref-function-name dref)
+                          `(method ,@(dref-locative-args dref))))
 
 
 ;;;; SETF-COMPILER-MACRO locative
@@ -733,19 +741,19 @@
   DREF-APROPOS will return FUNCTION references instead. On such
   platforms, STRUCTURE-ACCESSOR references do not RESOLVE.")
 
-#+(or ccl sbcl)
 (define-cast structure-accessor ((dref function-dref))
-  (let* ((name (dref-name dref))
-         (structure-name (structure-name-of-accessor name)))
-    (when structure-name
-      (%make-dref name structure-accessor `(,structure-name)))))
+  (let ((name (dref-name dref)))
+    (multiple-value-bind (structure-name certainp)
+        (structure-name-of-accessor name)
+      (when (and structure-name certainp)
+        (%make-dref name structure-accessor `(,structure-name))))))
 
-#+(or ccl sbcl)
 (define-cast structure-accessor ((dref setf-function-dref))
-  (let* ((name (dref-name dref))
-         (structure-name (structure-name-of-accessor name)))
-    (when structure-name
-      (%make-dref name structure-accessor `(,structure-name)))))
+  (let ((name (dref-name dref)))
+    (multiple-value-bind (structure-name certainp)
+        (structure-name-of-accessor name)
+      (when (and structure-name certainp)
+        (%make-dref name structure-accessor `(,structure-name))))))
 
 (defun structure-name-of-accessor (symbol)
   #-(or ccl sbcl) (declare (ignore symbol))
