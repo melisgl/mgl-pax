@@ -844,10 +844,10 @@ The following functions take a single argument, which may be a
     arglist cannot be determined.
     
     The second return value indicates whether the arglist has been
-    found. Furthermore, `:ORDINARY` indicates an [ordinary lambda
-    list][059c], `:MACRO` a [macro lambda list][cc32], `:DEFTYPE` a [deftype
-    lambda list][817d], and `:DESTRUCTURING` a [destructuring lambda
-    list][6067]. Other non-`NIL` values are also allowed.
+    found. As the second return value, `:ORDINARY` indicates an [ordinary
+    lambda list][059c], `:MACRO` a [macro lambda list][cc32], `:DEFTYPE` a
+    [deftype lambda list][817d], and `:DESTRUCTURING` a [destructuring
+    lambda list][6067]. Other non-`NIL` values are also allowed.
     
     ```common-lisp
     (arglist #'arglist)
@@ -1027,10 +1027,8 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 - [locative] **COMPILER-MACRO**
     - Direct locative subtypes: [`SETF-COMPILER-MACRO`][5df4]
 
-    Refers to a compiler macro, typically defined with
+    Refers to a [`COMPILER-MACRO-FUNCTION`][c575], typically defined with
     [`DEFINE-COMPILER-MACRO`][23d5].
-    
-    `COMPILER-MACRO` references do not [`RESOLVE`][63b4].
 
 <a id="x-28DREF-3ASETF-COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -2138,28 +2136,49 @@ macros.
 
 - [generic-function] **ARGLIST\*** *OBJECT*
 
-    To extend [`ARGLIST`][e6bd], specialize this on a subclass of
-    [`DREF`][d930] if that subclass is not [`RESOLVE`][63b4]able, else on the type
-    of object it resolves to. This function is for extension only. Do
-    not call it directly.
+    To extend [`ARGLIST`][e6bd], specialize `OBJECT` on a normal
+    Lisp type or on a subclass of [`DREF`][d930].
+    
+    `ARGLIST` first calls `ARGLIST*` with its `OBJECT` argument. If that
+    doesn't work (i.e. the second value returned is `NIL`), then it calls
+    `ARGLIST*` with `OBJECT` either [`RESOLVE`][63b4]d (if it's a `DREF`) or [`LOCATE`][8f19]d (if
+    it's not a `DREF`).
+    
+    The default method returns `NIL`, `NIL`.
+    
+    This function is for extension only. Do not call it directly.
 
 <a id="x-28DREF-EXT-3ADOCSTRING-2A-20GENERIC-FUNCTION-29"></a>
 
-- [generic-function] **DOCSTRING\*** *DREF*
+- [generic-function] **DOCSTRING\*** *OBJECT*
 
-    To extend [`DOCSTRING`][affc], specialize this on a subclass
-    of [`DREF`][d930] if that subclass is not [`RESOLVE`][63b4]able, else on the
-    type of object it resolves to. This function is for extension only.
-    Do not call it directly.
+    To extend [`DOCSTRING`][affc], specialize `OBJECT` on a normal
+    Lisp type or on a subclass of [`DREF`][d930].
+    
+    `DOCSTRING` first calls `DOCSTRING*` with its `OBJECT` argument. If that
+    doesn't work (i.e. `NIL` is returned), then it calls `DOCSTRING*` with
+    `OBJECT` either [`RESOLVE`][63b4]d (if it's a `DREF`) or [`LOCATE`][8f19]d (if it's not a
+    `DREF`).
+    
+    The default method returns `NIL`.
+    
+    This function is for extension only. Do not call it directly.
 
 <a id="x-28DREF-EXT-3ASOURCE-LOCATION-2A-20GENERIC-FUNCTION-29"></a>
 
-- [generic-function] **SOURCE-LOCATION\*** *DREF*
+- [generic-function] **SOURCE-LOCATION\*** *OBJECT*
 
-    To extend [`SOURCE-LOCATION`][32da], specialize this on a
-    subclass of [`DREF`][d930] if that subclass is not [`RESOLVE`][63b4]able, else
-    on the type of object it resolves to. This function is for extension
-    only. Do not call it directly.
+    To extend [`SOURCE-LOCATION`][32da], specialize `OBJECT` on a
+    normal Lisp type or on a subclass of [`DREF`][d930].
+    
+    `SOURCE-LOCATION` first calls `SOURCE-LOCATION*` with its `OBJECT`
+    argument. If that doesn't work (i.e. `NIL` is returned), then it calls
+    `SOURCE-LOCATION*` with `OBJECT` either [`RESOLVE`][63b4]d (if it's a `DREF`) or
+    [`LOCATE`][8f19]d (if it's not a `DREF`).
+    
+    The default method returns `NIL`.
+    
+    This function is for extension only. Do not call it directly.
 
 <a id="x-28DREF-EXT-3A-40DREF-CLASSES-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2643,6 +2662,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [c339]: #x-28DREF-3A-40PACKAGELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Packages and Readtables"
   [c340]: #x-28DREF-3APSEUDO-LOCATIVE-TYPES-20FUNCTION-29 "DREF:PSEUDO-LOCATIVE-TYPES FUNCTION"
   [c479]: #x-28CONDITION-20MGL-PAX-3ALOCATIVE-29 "CONDITION MGL-PAX:LOCATIVE"
+  [c575]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cmp_ma.htm "COMPILER-MACRO-FUNCTION (MGL-PAX:CLHS FUNCTION)"
   [c5ae]: http://www.lispworks.com/documentation/HyperSpec/Body/f_docume.htm "DOCUMENTATION (MGL-PAX:CLHS GENERIC-FUNCTION)"
   [c635]: #x-28DREF-3ADEFINE-DTYPE-20MGL-PAX-3AMACRO-29 "DREF:DEFINE-DTYPE MGL-PAX:MACRO"
   [c68e]: #x-28DREF-EXT-3A-40CAST-NAME-CHANGE-20MGL-PAX-3ASECTION-29 "Cast Name Change"

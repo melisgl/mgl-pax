@@ -708,9 +708,24 @@
   (docstring function)
   (source-location function))
 
-;;; The generic functions used for extension are not directly exposed
-;;; to the user in order to be able to change the signature more
-;;; easily.
+;;; Evaluate BODY. If its NTH-VALUE is NIL, evaluate it again with OBJ
+;;; bound to a RESOLVEd object (if OBJ was a defintion) or a
+;;; definition (if OBJ was not a definition).
+(defmacro nth-value-or-with-obj-or-def ((obj nth-value) &body body)
+  (let ((%body (gensym "BODY"))
+        (%obj (gensym "OBJ")))
+    `(flet ((,%body (,obj) ,@body))
+       (let ((,%obj ,obj))
+         (nth-value-or* ,nth-value
+           (,%body ,%obj)
+           (if (typep ,%obj 'dref)
+               (handler-case
+                   (let ((,%obj (resolve ,%obj)))
+                     (,%body ,%obj))
+                 (resolve-error ()))
+               (let ((,%obj (locate ,%obj nil)))
+                 (when ,%obj
+                   (,%body ,%obj)))))))))
 
 (declaim (ftype function arglist*))
 
@@ -719,10 +734,10 @@
   arglist cannot be determined.
 
   The second return value indicates whether the arglist has been
-  found. Furthermore, :ORDINARY indicates an [ordinary lambda
-  list][clhs], :MACRO a [macro lambda list][clhs], :DEFTYPE a [deftype
-  lambda list][clhs], and :DESTRUCTURING a [destructuring lambda
-  list][clhs]. Other non-NIL values are also allowed.
+  found. As the second return value, :ORDINARY indicates an [ordinary
+  lambda list][clhs], :MACRO a [macro lambda list][clhs], :DEFTYPE a
+  [deftype lambda list][clhs], and :DESTRUCTURING a [destructuring
+  lambda list][clhs]. Other non-NIL values are also allowed.
 
   ```cl-transcript (:dynenv dref-std-env)
   (arglist #'arglist)
@@ -755,13 +770,8 @@
 
   Can be extended via ARGLIST*"
   (ensure-dref-loaded)
-  (multiple-value-bind (arglist kind)
-      (arglist* (or (resolve object nil) object))
-    (cond ((listp arglist)
-           (values arglist kind))
-          (t
-           (warn "~@<~S returned non-list value: ~S.~:@>"
-                 'arglist* arglist)))))
+  (nth-value-or-with-obj-or-def (object 1)
+    (arglist* object)))
 
 (declaim (ftype function docstring*))
 
@@ -782,7 +792,8 @@
 
   Can be extended via DOCSTRING*."
   (ensure-dref-loaded)
-  (docstring* object))
+  (nth-value-or-with-obj-or-def (object 0)
+    (docstring* object)))
 
 (declaim (ftype function source-location*)
          (ftype function source-location-p))
@@ -802,11 +813,12 @@
   Can be extended via SOURCE-LOCATION*."""
   (ensure-dref-loaded)
   (flet ((source-location-1 ()
-           (let ((location (source-location* (or (resolve object nil)
-                                                 object))))
-             (if (source-location-p location)
-                 location
-                 (error "~@<Source location of ~S not found.~:@>" object)))))
+           (let ((location (nth-value-or-with-obj-or-def (object 0)
+                             (source-location* object))))
+             (if location
+                 (assert (source-location-p location))
+                 (error "~@<Source location of ~S not found.~:@>" object))
+             location)))
     (if errorp
         (source-location-1)
         (ignore-errors (source-location-1)))))

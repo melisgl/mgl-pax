@@ -5,6 +5,20 @@
       obj
       (list obj)))
 
+;;; https://gitlab.common-lisp.net/alexandria/alexandria/-/issues/46#note_16734
+(defmacro nth-value-or* (nth-value &body forms)
+  (case (length forms)
+    ((0) nil)
+    ((1) (first forms))
+    (t
+     (let ((%nth-value (gensym "NTH-VALUE"))
+           (%values (gensym "VALUES")))
+       `(let ((,%nth-value ,nth-value)
+              (,%values (multiple-value-list ,(first forms))))
+          (if (nth ,%nth-value ,%values)
+              (values-list ,%values)
+              (nth-value-or* ,%nth-value ,@(rest forms))))))))
+
 (defun parse-body-docstring (body)
   (if (and (stringp (first body))
            (<= 2 (length body)))

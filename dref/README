@@ -721,10 +721,10 @@ LOCATE).
     arglist cannot be determined.
     
     The second return value indicates whether the arglist has been
-    found. Furthermore, :ORDINARY indicates an ordinary lambda
-    list, :MACRO a macro lambda list, :DEFTYPE a deftype
-    lambda list, and :DESTRUCTURING a destructuring lambda
-    list. Other non-NIL values are also allowed.
+    found. As the second return value, :ORDINARY indicates an ordinary
+    lambda list, :MACRO a macro lambda list, :DEFTYPE a
+    deftype lambda list, and :DESTRUCTURING a destructuring
+    lambda list. Other non-NIL values are also allowed.
     
     ```common-lisp
     (arglist #'arglist)
@@ -882,10 +882,8 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
 - [locative] COMPILER-MACRO
     - Direct locative subtypes: [SETF-COMPILER-MACRO][5df4]
 
-    Refers to a compiler macro, typically defined with
+    Refers to a COMPILER-MACRO-FUNCTION, typically defined with
     DEFINE-COMPILER-MACRO.
-    
-    COMPILER-MACRO references do not RESOLVE.
 
 - [locative] SETF-COMPILER-MACRO
     - Direct locative supertypes: [COMPILER-MACRO][41fd]
@@ -1863,24 +1861,45 @@ macros.
 
 - [generic-function] ARGLIST* OBJECT
 
-    To extend ARGLIST, specialize this on a subclass of
-    DREF if that subclass is not RESOLVEable, else on the type
-    of object it resolves to. This function is for extension only. Do
-    not call it directly.
+    To extend ARGLIST, specialize OBJECT on a normal
+    Lisp type or on a subclass of DREF.
+    
+    ARGLIST first calls ARGLIST\* with its OBJECT argument. If that
+    doesn't work (i.e. the second value returned is NIL), then it calls
+    ARGLIST\* with OBJECT either RESOLVEd (if it's a DREF) or LOCATEd (if
+    it's not a DREF).
+    
+    The default method returns NIL, NIL.
+    
+    This function is for extension only. Do not call it directly.
 
-- [generic-function] DOCSTRING* DREF
+- [generic-function] DOCSTRING* OBJECT
 
-    To extend DOCSTRING, specialize this on a subclass
-    of DREF if that subclass is not RESOLVEable, else on the
-    type of object it resolves to. This function is for extension only.
-    Do not call it directly.
+    To extend DOCSTRING, specialize OBJECT on a normal
+    Lisp type or on a subclass of DREF.
+    
+    DOCSTRING first calls DOCSTRING\* with its OBJECT argument. If that
+    doesn't work (i.e. NIL is returned), then it calls DOCSTRING\* with
+    OBJECT either RESOLVEd (if it's a DREF) or LOCATEd (if it's not a
+    DREF).
+    
+    The default method returns NIL.
+    
+    This function is for extension only. Do not call it directly.
 
-- [generic-function] SOURCE-LOCATION* DREF
+- [generic-function] SOURCE-LOCATION* OBJECT
 
-    To extend SOURCE-LOCATION, specialize this on a
-    subclass of DREF if that subclass is not RESOLVEable, else
-    on the type of object it resolves to. This function is for extension
-    only. Do not call it directly.
+    To extend SOURCE-LOCATION, specialize OBJECT on a
+    normal Lisp type or on a subclass of DREF.
+    
+    SOURCE-LOCATION first calls SOURCE-LOCATION\* with its OBJECT
+    argument. If that doesn't work (i.e. NIL is returned), then it calls
+    SOURCE-LOCATION\* with OBJECT either RESOLVEd (if it's a DREF) or
+    LOCATEd (if it's not a DREF).
+    
+    The default method returns NIL.
+    
+    This function is for extension only. Do not call it directly.
 
 ### DREF-CLASSes
 

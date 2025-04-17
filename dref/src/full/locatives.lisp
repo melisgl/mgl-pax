@@ -131,8 +131,11 @@
       (resolve-error)))
 
 (defmethod arglist* ((dref macro-dref))
-  (alexandria:when-let (fn (macro-function (dref-name dref)))
-    (function-arglist fn :macro)))
+  (nth-value-or* 1
+    (when-let (fn (macro-function (dref-name dref)))
+      (function-arglist fn :macro))
+    (function-arglist (dref-name dref) :macro)
+    (values nil nil)))
 
 (defmethod docstring* ((dref macro-dref))
   (documentation* (dref-name dref) 'function))
@@ -846,7 +849,7 @@
 
 (defmethod arglist* ((dref type-dref))
   (let ((name (dref-name dref)))
-    (alexandria:nth-value-or 1
+    (nth-value-or* 1
       #+ccl
       (function-arglist (gethash name ccl::%deftype-expanders%) :deftype)
       (let ((arglist (swank-backend:type-specifier-arglist name)))
@@ -943,7 +946,7 @@
   Also, SOURCE-LOCATION on declarations currently only works on SBCL.""")
 
 (defparameter *ansi-declarations*
-  (alexandria:plist-hash-table
+  (plist-hash-table
    (loop for symbol in '(compilation-speed debug declaration dynamic-extent
                          ftype ignorable ignore inline notinline optimize
                          safety space special speed type)
@@ -970,7 +973,7 @@
 
 (defmethod map-definitions-of-name (fn name (locative-type (eql 'declaration)))
   #+(or ccl sbcl)
-  (alexandria:when-let (dref (dref name locative-type nil))
+  (when-let (dref (dref name locative-type nil))
     (funcall fn dref))
   ;; Lacking DECLARATION-INFORMATION form CLTL2 on other Lisps,
   ;; DREF* always succeeds.

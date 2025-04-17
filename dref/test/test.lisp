@@ -214,10 +214,11 @@
                    '(x &optional (o 1) &key (k 2 kp)))
             (equal (arglist (dref 'macro-with-fancy-args 'macro))
                    '(x &optional (o 1) &key (k 2))))))
+  #+sbcl
   (with-test ("special operator")
     (is (match-values (arglist (dref 'function 'macro))
-          (null *)
-          (not *)))))
+          (equal * '(sb-c::thing))
+          (eq * :macro)))))
 
 (deftest test-arglist/compiler-macro ()
   (with-failure-expected ((and (alexandria:featurep

@@ -873,42 +873,51 @@
                            locative-type))
 
 (defgeneric arglist* (object)
-  (:documentation "To extend ARGLIST, specialize this on a subclass of
-  [DREF][class] if that subclass is not RESOLVEable, else on the type
-  of object it resolves to. This function is for extension only. Do
-  not call it directly.")
-  (:method ((dref dref))
-    nil)
-  ;; This fallback is necessary in case a locative type is originally
-  ;; not RESOLVEable but later becomes so.
-  (:method (object)
-    (let ((dref (locate object nil)))
-      (when dref
-        (arglist* dref)))))
+  (:documentation "To extend ARGLIST, specialize OBJECT on a normal
+  Lisp type or on a subclass of [DREF][class].
 
-(defgeneric docstring* (dref)
-  (:documentation "To extend DOCSTRING, specialize this on a subclass
-  of [DREF][class] if that subclass is not RESOLVEable, else on the
-  type of object it resolves to. This function is for extension only.
-  Do not call it directly.")
-  (:method ((dref dref))
-    nil)
-  (:method (object)
-    (let ((dref (locate object nil)))
-      (when dref
-        (docstring* dref)))))
+  ARGLIST first calls ARGLIST* with its OBJECT argument. If that
+  doesn't work (i.e. the second value returned is NIL), then it calls
+  ARGLIST* with OBJECT either RESOLVEd (if it's a DREF) or LOCATEd (if
+  it's not a DREF).
 
-(defgeneric source-location* (dref)
-  (:documentation "To extend SOURCE-LOCATION, specialize this on a
-  subclass of [DREF][class] if that subclass is not RESOLVEable, else
-  on the type of object it resolves to. This function is for extension
-  only. Do not call it directly.")
-  (:method ((dref dref))
-    nil)
+  The default method returns NIL, NIL.
+
+  This function is for extension only. Do not call it directly.")
   (:method (object)
-    (let ((dref (locate object nil)))
-      (when dref
-        (source-location* dref)))))
+    (declare (ignorable object))
+    (values nil nil)))
+
+(defgeneric docstring* (object)
+  (:documentation "To extend DOCSTRING, specialize OBJECT on a normal
+  Lisp type or on a subclass of [DREF][class].
+
+  DOCSTRING first calls DOCSTRING* with its OBJECT argument. If that
+  doesn't work (i.e. NIL is returned), then it calls DOCSTRING* with
+  OBJECT either RESOLVEd (if it's a DREF) or LOCATEd (if it's not a
+  DREF).
+
+  The default method returns NIL.
+
+  This function is for extension only. Do not call it directly.")
+  (:method (object)
+    (declare (ignorable object))
+    nil))
+
+(defgeneric source-location* (object)
+  (:documentation "To extend SOURCE-LOCATION, specialize OBJECT on a
+  normal Lisp type or on a subclass of [DREF][class].
+
+  SOURCE-LOCATION first calls SOURCE-LOCATION* with its OBJECT
+  argument. If that doesn't work (i.e. NIL is returned), then it calls
+  SOURCE-LOCATION* with OBJECT either RESOLVEd (if it's a DREF) or
+  LOCATEd (if it's not a DREF).
+
+  The default method returns NIL.
+
+  This function is for extension only. Do not call it directly.")
+  (:method (object)
+    nil))
 
 
 ;;;; @SYMBOL-LOCATIVES

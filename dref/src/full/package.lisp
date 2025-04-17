@@ -6,7 +6,7 @@
 ;;; package conflicts if stuff is added to ALEXANDRIA, we import only
 ;;; specific symbols.
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (let ((imports '(alexandria:if-let alexandria:when-let alexandria:nth-value-or
+  (let ((imports '(alexandria:if-let alexandria:when-let
                    alexandria:ensure-list
                    alexandria:first-elt alexandria:last-elt
                    alexandria:starts-with alexandria:starts-with-subseq
