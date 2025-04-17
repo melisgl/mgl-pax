@@ -179,10 +179,8 @@
   (check-ref-sets (definitions '@test-examples)
                   `(,(xref '@test-examples 'section)))
   (with-test ("actualized")
-    (with-failure-expected ((and (alexandria:featurep '(:or :clisp))
-                                 'failure))
-      (check-ref-sets (definitions '@test-examples :dtype 'variable)
-                      `(,(xref '@test-examples 'section)))))
+    (check-ref-sets (definitions '@test-examples :dtype 'variable)
+                    `(,(xref '@test-examples 'section))))
   (is (dref::locative-subtype-p 'section 'variable)))
 
 (deftest test-locate/glossary-term ()

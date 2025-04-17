@@ -737,13 +737,12 @@ xxx
                   "[see this][ddd]"))
     (with-test ("definition is also an interned symbol")
       (is (internedp 'references))
-      (with-failure-expected ((and (alexandria:featurep :abcl) 'failure))
-        (check-head "[see this][references]
+      (check-head "[see this][references]
 
   [references]: #ttt"
-                    "[see this][references]
+                  "[see this][references]
 
-[references]: #ttt")))
+[references]: #ttt"))
     (with-test ("definition is an interned symbol with a definition")
       (check-head "[see this][print]
 
@@ -1052,7 +1051,7 @@ This is [Self-referencing][e042].
 ")))
 
 (deftest test-setf/generic-function ()
-  (with-failure-expected ((and (alexandria:featurep '(:or :cmucl))
+  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :cmucl))
                                'failure))
     (check-document (dref '(setf setf-gf) 'generic-function)
                   "<a id=\"MGL-PAX-TEST:SETF-GF%20DREF:SETF-GENERIC-FUNCTION\"></a>
@@ -1125,8 +1124,11 @@ This is [Self-referencing][e042].
 
     This may be encapsulated.
 "))
-    (with-failure-expected ((and (alexandria:featurep '(:or :abcl :clisp :ecl))
-                                 'failure))
+    (with-failure-expected
+        ((cond ((alexandria:featurep '(:or :clisp :ecl))
+                'failure)
+               ((alexandria:featurep ':abcl)
+                t)))
       (check-document (dref 'encapsulated-generic-function
                               'generic-function nil)
                       expected))
@@ -1140,7 +1142,7 @@ This is [Self-referencing][e042].
 (deftest test-non-function-function-arglist ()
   #+sbcl
   (is (match-values (arglist (dref 'sb-c::ir1-convert-nlx-protect
-                                          'function))
+                                   'function))
         (equal * '(sb-c::protected &body sb-c::cleanup))
         (eq * :ordinary)))
   ;; Check that DOCUMENT doesn't fail when the function lambda list is
@@ -1927,13 +1929,14 @@ example section
       (pax::definitions-for-pax-url-path "SECTION LOCATIVE")))
   (signals (error :pred "Bad DREF::@LOCATIVE-TYPE")
     (pax::definitions-for-pax-url-path "MGL-PAX:SECTION JUNK"))
-  (dolist (dref (list (dref 'section 'locative)
-                      (dref 'test-gf
-                            '(method () ((eql #.(find-package :cl)))))))
-    (check-ref-sets
-     (pax::definitions-for-pax-url-path
-      (nth-value 2 (pax::parse-url (pax::dref-to-pax-url dref))))
-     (list dref))))
+  (with-failure-expected ((alexandria:featurep '(:or :abcl :clisp)))
+    (dolist (dref (list (dref 'section 'locative)
+                        (dref 'test-gf
+                              '(method () ((eql #.(find-package :cl)))))))
+      (check-ref-sets
+       (pax::definitions-for-pax-url-path
+        (nth-value 2 (pax::parse-url (pax::dref-to-pax-url dref))))
+       (list dref)))))
 
 (deftest test-with-document-context ()
   (signals-not (error)

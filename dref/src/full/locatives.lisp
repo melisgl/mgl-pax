@@ -230,17 +230,17 @@
 (define-locator compiler-macro ((fn function))
   (let ((name (function-name fn)))
     (when (and name (valid-function-name-p name)
-               (eq (compiler-macro-function name) fn))
+               (eq (compiler-macro-function* name) fn))
       (%make-dref name compiler-macro))))
 
 (define-lookup compiler-macro (name locative-args)
   (unless (and (valid-function-name-p name)
-               (compiler-macro-function name))
+               (compiler-macro-function* name))
     (locate-error "~S does not name a compiler macro." name))
   (%make-dref name compiler-macro))
 
 (defmethod arglist* ((dref compiler-macro-dref))
-  (function-arglist (compiler-macro-function (dref-function-name dref))
+  (function-arglist (compiler-macro-function* (dref-function-name dref))
                     :macro))
 
 (defmethod docstring* ((dref compiler-macro-dref))
@@ -248,12 +248,12 @@
 
 (defmethod source-location* ((dref compiler-macro-dref))
   (let ((name (dref-function-name dref)))
-    (swank-source-location* (compiler-macro-function name) name
+    (swank-source-location* (compiler-macro-function* name) name
                             'compiler-macro)))
 
 (defmethod resolve* ((dref compiler-macro-dref))
   (let* ((name (dref-function-name dref))
-         (fn (compiler-macro-function name)))
+         (fn (compiler-macro-function* name)))
     (unless (equal (function-name fn) name)
       (resolve-error "The name of the definition cannot be recovered ~
                       from the function object."))

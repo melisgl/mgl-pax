@@ -72,6 +72,14 @@
        #+sbcl (sb-int:info :variable :macro-expansion name)))
 
 
+;;;; Compiler macros
+
+(defun compiler-macro-function* (name)
+  #+clisp (handler-bind ((warning #'muffle-warning))
+            (ignore-errors (compiler-macro-function name)))
+  #-clisp (compiler-macro-function name))
+
+
 ;;;; SETF
 
 (defun setf-name-p (name)
