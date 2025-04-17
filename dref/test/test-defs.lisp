@@ -136,7 +136,14 @@
     #-abcl
     "ddd"))
 
-(defsetf has-setf-expander some-setter "HAS-SETF-EXPANDER setf")
+(defsetf short-setf-with-fn some-setter "SHORT-SETF-WITH-FN doc")
+(defsetf short-setf-with-undefined-fn junk "SHORT-SETF-WITH-UNDEFINED-FN doc")
+(defsetf short-setf-with-macro setter-macro "SHORT-SETF-WITH-MACRO doc")
+
+(defun some-setter (x)
+  (declare (ignore x)))
+(defmacro setter-macro (x (&key y))
+  (declare (ignore x y)))
 
 (defun (setf setf-fn) (v)
   "SETF-FN setf"
@@ -152,10 +159,10 @@
 (define-compiler-macro (setf setf-fn) (v)
   v)
 
-(define-setf-expander full-setf (x)
+(define-setf-expander long-setf (x)
   (declare (ignore x)))
 
-(defun full-setf ())
+(defun long-setf ())
 
 ;;; On ECL, this lambda gets named SETFED-FUN when assigned.
 (setf (symbol-function 'setfed-fun0) (lambda (x) (1+ x)))
@@ -202,3 +209,12 @@
 
 (deftype debug0-non-constant-type ()
   `(member ,*x*))
+
+
+(defparameter *failure-on-long-setf*
+  (and (not (alexandria:featurep '(:or :ccl :clisp :sbcl)))
+       'failure))
+
+(defparameter *failure-on-setf-arglist*
+  (and (not (alexandria:featurep :sbcl))
+       'failure))

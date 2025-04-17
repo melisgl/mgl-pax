@@ -93,8 +93,23 @@
   'swank-definitions)
 
 (defmethod arglist* ((dref setf-dref))
-  ;; FIXME
-  ())
+  #+sbcl
+  (let ((info (sb-int:info :setf :expander (dref-name dref))))
+    (when info
+      (if (functionp info)
+          ;; long-form setf
+          (multiple-value-bind (arglist foundp)
+              (function-arglist info)
+            (when foundp
+              (values arglist :ordinary)))
+          ;; short-form setf
+          (multiple-value-bind (arglist foundp)
+              (handler-case (function-arglist (first info))
+                (error ()))
+            (when foundp
+              (values arglist (if (macro-function (first info))
+                                  :macro
+                                  :ordinary))))))))
 
 (defmethod docstring* ((dref setf-dref))
   (documentation* (dref-name dref) 'setf))
