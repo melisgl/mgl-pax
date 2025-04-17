@@ -909,14 +909,18 @@
   normal Lisp type or on a subclass of [DREF][class].
 
   SOURCE-LOCATION first calls SOURCE-LOCATION* with its OBJECT
-  argument. If that doesn't work (i.e. NIL is returned), then it calls
-  SOURCE-LOCATION* with OBJECT either RESOLVEd (if it's a DREF) or
-  LOCATEd (if it's not a DREF).
+  argument. If that doesn't work (i.e. NIL or `(:ERROR <MESSAGE>)` is
+  returned), then it calls SOURCE-LOCATION* with OBJECT either
+  RESOLVEd (if it's a DREF) or LOCATEd (if it's not a DREF).
+
+  SOURCE-LOCATION returns the last of the `(:ERROR <MESSAGE>)`s
+  encountered or a generic error message if only NILs were returned.
 
   The default method returns NIL.
 
   This function is for extension only. Do not call it directly.")
   (:method (object)
+    (declare (ignorable object))
     nil))
 
 

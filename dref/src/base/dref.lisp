@@ -798,27 +798,54 @@
 (declaim (ftype function source-location*)
          (ftype function source-location-p))
 
-(defun source-location (object &key errorp)
+(defun source-location (object &key error)
   """Return the Swank source location for the [defining form][clhs]
-  of OBJECT. If no source location was found, then either an ERROR
-  condition is signalled if ERRORP else the [ERROR][condition] is
-  returned as the second value (with the first being NIL). The
-  returned Swank location object is to be accessed only through the
-  DREF-EXT::@SOURCE-LOCATIONS API or to be passed to e.g Slime's
+  of OBJECT.
+
+  The returned Swank location object is to be accessed only through
+  the DREF-EXT::@SOURCE-LOCATIONS API or to be passed to e.g Slime's
   `slime-goto-source-location`.
+
+  If no source location was found,
+
+  - if ERROR is NIL, then return NIL;
+
+  - if ERROR is :ERROR, then return a list of the form `(:ERROR
+    <ERROR-MESSAGE>)` suitable for `slime-goto-source-location`;
+
+  - if ERROR is T, then signal an ERROR condition with the same error
+    message as in the previous case.
 
   Note that the availability of source location information varies
   greatly across Lisp implementations.
 
   Can be extended via SOURCE-LOCATION*."""
   (ensure-dref-loaded)
-  (flet ((source-location-1 ()
-           (let ((location (nth-value-or-with-obj-or-def (object 0)
-                             (source-location* object))))
-             (if location
-                 (assert (source-location-p location))
-                 (error "~@<Source location of ~S not found.~:@>" object))
-             location)))
-    (if errorp
-        (source-location-1)
-        (ignore-errors (source-location-1)))))
+  (let* ((swank-error nil)
+         (location (nth-value-or-with-obj-or-def (object 0)
+                     (let ((location (source-location* object)))
+                       (cond ((swank-error-value-p location)
+                              (setq swank-error location)
+                              nil)
+                             (t
+                              location)))))
+         (validp (source-location-p location)))
+    (assert (or validp swank-error (null location)) ()
+            "~@<(~S ~S) return value ~S is invalid.~:@>"
+            'source-location* object location)
+    (cond (validp
+           location)
+          ((null error)
+           nil)
+          ((eq error :error)
+           (or swank-error
+               `(:error ,(format nil "Source location of ~S not found."
+                                 object))))
+          (t
+           (if swank-error
+               (error "~S" swank-error)
+               (error "Source location of ~S not found." object))))))
+
+(defun swank-error-value-p (object)
+  (and (listp object)
+       (eq (first object) :error)))

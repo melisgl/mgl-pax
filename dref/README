@@ -780,15 +780,24 @@ LOCATE).
     
     Can be extended via DOCSTRING\*.
 
-- [function] SOURCE-LOCATION OBJECT &KEY ERRORP
+- [function] SOURCE-LOCATION OBJECT &KEY ERROR
 
     Return the Swank source location for the defining form
-    of OBJECT. If no source location was found, then either an ERROR
-    condition is signalled if ERRORP else the ERROR is
-    returned as the second value (with the first being NIL). The
-    returned Swank location object is to be accessed only through the
-    DREF-EXT::@SOURCE-LOCATIONS API or to be passed to e.g Slime's
+    of OBJECT.
+    
+    The returned Swank location object is to be accessed only through
+    the DREF-EXT::@SOURCE-LOCATIONS API or to be passed to e.g Slime's
     `slime-goto-source-location`.
+    
+    If no source location was found,
+    
+    - if ERROR is NIL, then return NIL;
+    
+    - if ERROR is :ERROR, then return a list of the form `(:ERROR
+      <ERROR-MESSAGE>)` suitable for `slime-goto-source-location`;
+    
+    - if ERROR is T, then signal an ERROR condition with the same error
+      message as in the previous case.
     
     Note that the availability of source location information varies
     greatly across Lisp implementations.
@@ -1893,9 +1902,12 @@ macros.
     normal Lisp type or on a subclass of DREF.
     
     SOURCE-LOCATION first calls SOURCE-LOCATION\* with its OBJECT
-    argument. If that doesn't work (i.e. NIL is returned), then it calls
-    SOURCE-LOCATION\* with OBJECT either RESOLVEd (if it's a DREF) or
-    LOCATEd (if it's not a DREF).
+    argument. If that doesn't work (i.e. NIL or `(:ERROR <MESSAGE>)` is
+    returned), then it calls SOURCE-LOCATION\* with OBJECT either
+    RESOLVEd (if it's a DREF) or LOCATEd (if it's not a DREF).
+    
+    SOURCE-LOCATION returns the last of the `(:ERROR <MESSAGE>)`s
+    encountered or a generic error message if only NILs were returned.
     
     The default method returns NIL.
     

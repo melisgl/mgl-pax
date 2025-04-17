@@ -103,39 +103,41 @@
 ;;; Return a Swank source location for a definition of NAME. Try
 ;;; forming @REFERENCEs with NAME and one of LOCATIVES. Stop at the
 ;;; first locative with which a definition is found, and return its
-;;; location. If no location was found, then return the usual Swank
-;;; `(:ERROR ...)`. The implementation is based on the rather
-;;; expensive SWANK-BACKEND:FIND-DEFINITIONS function.
+;;; location. If no location was found or on any error, then return
+;;; the usual Swank `(:ERROR ...)`. The implementation is based on the
+;;; rather expensive SWANK-BACKEND:FIND-DEFINITIONS function.
 (defun swank-source-location (name &rest locatives)
-  (let* ((dspecs (loop for locative in locatives
-                       ;; Get the initial DREF, so that PAX:SECTIONs
-                       ;; (canonicalized from VARIABLEs) can find
-                       ;; their source location.
-                       for dref = (ignore-errors
-                                   (call-lookup name (locative-type locative)
-                                                (locative-args locative)))
-                       when dref
-                         collect (definition-to-dspec dref)))
-         (dspec-and-location-list
-           (mapcar (lambda (dspec-and-location)
-                     (list (normalize-dspec (first dspec-and-location))
-                           (second dspec-and-location)))
-                   (swank-dspecs-and-locations name)))
-         (entry (loop for dspec in dspecs
-                        thereis (find dspec dspec-and-location-list
-                                      :key #'first :test #'equal))))
-    (if entry
-        (second entry)
-        `(:error ,(format nil "Could not find source location for ~S."
-                          dspecs)))))
+  (swank::converting-errors-to-error-location
+    (let* ((dspecs (loop for locative in locatives
+                         ;; Get the initial DREF, so that PAX:SECTIONs
+                         ;; (canonicalized from VARIABLEs) can find
+                         ;; their source location.
+                         for dref = (ignore-errors
+                                     (call-lookup name (locative-type locative)
+                                                  (locative-args locative)))
+                         when dref
+                           collect (definition-to-dspec dref)))
+           (dspec-and-location-list
+             (mapcar (lambda (dspec-and-location)
+                       (list (normalize-dspec (first dspec-and-location))
+                             (second dspec-and-location)))
+                     (swank-dspecs-and-locations name)))
+           (entry (loop for dspec in dspecs
+                          thereis (find dspec dspec-and-location-list
+                                        :key #'first :test #'equal))))
+      (if entry
+          (second entry)
+          `(:error ,(format nil "Could not find source location for ~S."
+                            dspecs))))))
 
 ;;; Like FIND-DEFINITION, but tries to get the definition of OBJECT
 ;;; (for example a FUNCTION or METHOD object) with the fast but not
 ;;; widely supported SWANK-BACKEND:FIND-SOURCE-LOCATION before calling
 ;;; the much slower but more complete SWANK-BACKEND:FIND-DEFINITIONS.
 (defun swank-source-location* (object name &rest locatives)
-  (or (swank-object-source-location object)
-      (apply #'swank-source-location name locatives)))
+  (swank::converting-errors-to-error-location
+    (or (swank-object-source-location object)
+        (apply #'swank-source-location name locatives))))
 
 
 ;;;; Conversions between DREFs and Swank dspecs

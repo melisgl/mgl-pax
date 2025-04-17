@@ -282,11 +282,11 @@
       ("macro bar" "(defmacro bar ")
       ("symbol-macro my-smac" "(define-symbol-macro my-smac ")
       ("compiler-macro foo" "(define-compiler-macro foo ")
-      ("function (setf setf-fn)" "(defun (setf setf-fn) ")
-      ("compiler-macro (setf setf-fn)"
+      ("setf-function setf-fn" "(defun (setf setf-fn) ")
+      ("setf-compiler-macro setf-fn"
        "(define-compiler-macro (setf setf-fn) ")
-      ("function (setf setf-gf)" "(defun (setf setf-gf) ")
-      ("(method () (string)) (setf setf-gf)"
+      ("setf-function setf-gf" "(defgeneric (setf setf-gf) ")
+      ("(setf-method () (string)) setf-gf"
        "(defmethod (setf setf-gf) ((v string))")
       ("function foo" "(defun foo ")
       ("function |Foo|" "(defun |Foo| ")
@@ -351,10 +351,9 @@
 (ert-deftest test-mgl-pax-locate-definitions ()
   (with-temp-lisp-buffer
    (should (null (mgl-pax-locate-definitions '(("non-existent" ())))))
-   (should (equal (mgl-pax-locate-definitions '(("cl" ("package"))))
-                  '(("(DEFPACKAGE \"COMMON-LISP\")"
-                     (:error "Error: Source location of #<DREF:DREF \
-\"COMMON-LISP\" PACKAGE> not found.")))))))
+   (let ((location (mgl-pax-locate-definitions '(("cl" ("package"))))))
+     (should (equal (caar location) "(DEFPACKAGE \"COMMON-LISP\")"))
+     (should (eq (cl-first (cl-second (cl-first location))) :error)))))
 
 
 ;;;; Test `mgl-pax-completions-at-point'

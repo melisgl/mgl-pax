@@ -454,6 +454,13 @@
     (my-loc locative (define-locative-type my-loc))))
 
 (deftest test-source-location ()
+  (signals-not (error)
+    (is (null (source-location 777))))
+  (signals-not (error)
+    (let ((l (source-location 777 :error :error)))
+      (is (and (listp l) (eq (first l) :error)))))
+  (signals (error)
+    (source-location 777 :error t))
   (test-make-source-location)
   (let ((*package* (find-package :dref-test)))
     (dolist (test-case *source-location-test-cases*)

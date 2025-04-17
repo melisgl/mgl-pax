@@ -907,15 +907,24 @@ The following functions take a single argument, which may be a
 
 <a id="x-28DREF-3ASOURCE-LOCATION-20FUNCTION-29"></a>
 
-- [function] **SOURCE-LOCATION** *OBJECT &KEY ERRORP*
+- [function] **SOURCE-LOCATION** *OBJECT &KEY ERROR*
 
     Return the Swank source location for the [defining form][23a8]
-    of `OBJECT`. If no source location was found, then either an [`ERROR`][d162]
-    condition is signalled if `ERRORP` else the [`ERROR`][d162] is
-    returned as the second value (with the first being `NIL`). The
-    returned Swank location object is to be accessed only through the
-    [Source Locations][a078] API or to be passed to e.g Slime's
+    of `OBJECT`.
+    
+    The returned Swank location object is to be accessed only through
+    the [Source Locations][a078] API or to be passed to e.g Slime's
     `slime-goto-source-location`.
+    
+    If no source location was found,
+    
+    - if `ERROR` is `NIL`, then return `NIL`;
+    
+    - if `ERROR` is `:ERROR`, then return a list of the form `(:ERROR
+      <ERROR-MESSAGE>)` suitable for `slime-goto-source-location`;
+    
+    - if `ERROR` is `T`, then signal an [`ERROR`][d162] condition with the same error
+      message as in the previous case.
     
     Note that the availability of source location information varies
     greatly across Lisp implementations.
@@ -2172,9 +2181,12 @@ macros.
     normal Lisp type or on a subclass of [`DREF`][d930].
     
     `SOURCE-LOCATION` first calls `SOURCE-LOCATION*` with its `OBJECT`
-    argument. If that doesn't work (i.e. `NIL` is returned), then it calls
-    `SOURCE-LOCATION*` with `OBJECT` either [`RESOLVE`][63b4]d (if it's a `DREF`) or
-    [`LOCATE`][8f19]d (if it's not a `DREF`).
+    argument. If that doesn't work (i.e. `NIL` or `(:ERROR <MESSAGE>)` is
+    returned), then it calls `SOURCE-LOCATION*` with `OBJECT` either
+    [`RESOLVE`][63b4]d (if it's a `DREF`) or [`LOCATE`][8f19]d (if it's not a `DREF`).
+    
+    `SOURCE-LOCATION` returns the last of the `(:ERROR <MESSAGE>)`s
+    encountered or a generic error message if only `NIL`s were returned.
     
     The default method returns `NIL`.
     

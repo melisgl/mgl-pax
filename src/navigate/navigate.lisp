@@ -139,8 +139,7 @@
 
 (defun locate-definitions-for-emacs-1 (wall)
   (loop for definition in (definitions-of-wall wall)
-        for location = (swank::converting-errors-to-error-location
-                         (source-location definition :errorp t))
+        for location = (source-location definition :error :error)
         collect `(,(prin1-to-string (dref::definition-to-dspec definition))
                   ,location)))
 
