@@ -1421,7 +1421,8 @@ This is [Self-referencing][e042].
                     (dref 'bar 'constant))
               "[`BAR`][f3f4] is not a link.")
   (check-head "[*TEST-VARIABLE* VARIABLE][docstring]"
-              "`*TEST-VARIABLE*` is not a link."))
+              "`*TEST-VARIABLE*` is not a link.")
+  (check-head "x[ook function][docstring]y" "xy" :warnings 1))
 
 (deftest test-include ()
   (check-pred @inc "This is in [`@INC`][0a52]"))

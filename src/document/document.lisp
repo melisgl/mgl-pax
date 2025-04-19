@@ -1233,17 +1233,24 @@
     (nth-value-or 0
       (when (eq (parse-locative definition) 'docstring)
         (let ((label-string (parse-tree-to-text label :deemph t)))
-          (if-let (dref (parse-dref label-string))
-            ;; FIXME: handle PACKAGE and NIL docstring?
-            (when-let (docstring (docstring dref))
-              (values (or (parse-markdown (sanitize-docstring docstring))
-                          '(""))
-                      ;; Detecting circular includes would be hard
-                      ;; because the `recurse' return value is
-                      ;; handled in the caller of this function.
-                      t t))
-            (warn "~@<Including ~S failed because ~S cannot be ~Sd.~:@>"
-                  'docstring label-string 'locate))))
+          (nth-value-or 0
+            (if-let (dref (parse-dref label-string))
+              (multiple-value-bind (docstring package) (docstring dref)
+                (cond (docstring
+                       (values (or (let ((*package* (or package *package*)))
+                                     (parse-markdown (sanitize-docstring docstring)))
+                                   '(""))
+                               ;; Detecting circular includes would be
+                               ;; hard because the `recurse' return
+                               ;; value is handled in the caller of this
+                               ;; function.
+                               t t))
+                      (t
+                       (warn "~@<Including the ~S of ~S failed because it is NIL.~:@>"
+                             'docstring dref))))
+              (warn "~@<Including ~S failed because ~S cannot be ~Sd.~:@>"
+                    'docstring label-string 'locate))
+            (values '("") t t))))
       tree)))
 
 
