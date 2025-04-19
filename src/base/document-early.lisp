@@ -233,10 +233,10 @@
 (defvar *documenting-reference* nil)
 
 
-(defsection @github-workflow (:title "Github Workflow")
+(defsection @github-workflow (:title "GitHub Workflow")
   "It is generally recommended to commit generated readmes (see
   UPDATE-ASDF-SYSTEM-READMES), so that users have something to read
-  without reading the code and sites like github can display them.
+  without reading the code and sites like GitHub can display them.
 
   HTML documentation can also be committed, but there is an issue with
   that: when linking to the sources (see MAKE-GIT-SOURCE-URI-FN), the
@@ -244,7 +244,7 @@
   committed first, and only then can HTML documentation be regenerated
   and committed in a followup commit.
 
-  The second issue is that github is not very good at serving HTML
+  The second issue is that GitHub is not very good at serving HTML
   files from the repository itself (and
   [http://htmlpreview.github.io](http://htmlpreview.github.io) chokes
   on links to the sources).
@@ -271,7 +271,7 @@
   "This function is a backward-compatibility wrapper around
   MAKE-GIT-SOURCE-URI-FN, which supersedes MAKE-GITHUB-SOURCE-URI-FN.
   All arguments are passed on to MAKE-GIT-SOURCE-URI-FN, leaving
-  URI-FORMAT-STRING at its default, which is suitable for github."
+  URI-FORMAT-STRING at its default, which is suitable for GitHub."
   (make-git-source-uri-fn asdf-system github-uri :git-version git-version))
 
 (defun make-git-source-uri-fn (asdf-system git-forge-uri
@@ -282,7 +282,7 @@
   location of the object passed to it, and if the location is found,
   the path is made relative to the toplevel directory of the git
   checkout containing the file of the ASDF-SYSTEM and finally an \URI
-  pointing to your git forge (such as github) is returned. A warning
+  pointing to your git forge (such as GitHub) is returned. A warning
   is signalled whenever the source location lookup fails or if the
   source location points to a directory not below the directory of
   ASDF-SYSTEM.
@@ -304,8 +304,8 @@
   - the relative path to the file of the source location of the reference,
   - and the line number.
 
-  The default value of URI-FORMAT-STRING is for github. If using a
-  non-standard git forge, such as Sourcehut or Gitlab, simply pass a
+  The default value of URI-FORMAT-STRING is for GitHub. If using a
+  non-standard git forge, such as Sourcehut or GitLab, simply pass a
   suitable URI-FORMAT-STRING matching the \URI scheme of your forge."""
   ;; Because the git version may change and UPDATE-PAX-WORLD gets
   ;; PAGE-SPECS (containing our return value in :SOURCE-URI-FN) via

@@ -1130,7 +1130,7 @@
               (format stream "~A" reindented)))))))
 
 (defsection @markdown-syntax-highlighting (:title "Syntax Highlighting")
-  "For syntax highlighting, Github's @FENCED-CODE-BLOCKS markdown
+  "For syntax highlighting, GitHub's @FENCED-CODE-BLOCKS markdown
   extension to mark up code
   blocks with triple backticks is enabled so all you need to do is
   write:
@@ -1713,7 +1713,7 @@
 
 ;;; Get the definitions for NAME and LOCATIVE. We expressly want to
 ;;; avoid depending on what we can link to because what is @LINKABLE
-;;; is not predictible (consider PAX World and the value of
+;;; is not predictable (consider PAX World and the value of
 ;;; *DOCUMENT-LINK-TO-HYPERSPEC*).
 (defun specific-link-dref (name locative)
   (if (member (locative-type locative) '(dislocated argument))
@@ -1730,8 +1730,8 @@
   with a name. These are @UNSPECIFIC-REFLINK,
   @UNSPECIFIC-REFLINK-WITH-TEXT and @UNSPECIFIC-AUTOLINK.
 
-  To make the links predictible and managable in number, the following
-  steps are taken.
+  To make the links predictable and manageable in number, the
+  following steps are taken.
 
   1. [filter-string-based-drefs function][docstring]
 
@@ -1811,7 +1811,7 @@
 (defsection @reflink (:title "Reflink")
   """The @MARKDOWN/REFLINK syntax `\[label][id]` is
   repurposed for linking to DREF::@DEFINITIONS. In the following, we
-  discusss the various forms of reflinks."""
+  discuss the various forms of reflinks."""
   (@specific-reflink section)
   (@specific-reflink-with-text section)
   (@unspecific-reflink section)
@@ -2741,7 +2741,7 @@
 
   Version 1 is based on the more strict HTML4 standard and the id of
   `FOO` is `"x-28MGL-PAX-3A-3AFOO-20FUNCTION-29"`. This is supported
-  by Github-flavoured Markdown. Version 2 has minimal clutter and is
+  by GitHub-flavoured Markdown. Version 2 has minimal clutter and is
   obviously preferred. However, in order not to break external links,
   by default, both anchors are generated.
 
@@ -2998,7 +2998,7 @@
         (labels
             ((resolve* (object)
                (if (and *document-mark-up-signatures*
-                        ;; KLUDGE: Github has trouble displaying things
+                        ;; KLUDGE: GitHub has trouble displaying things
                         ;; like '`*package*`, so disable this.
                         (eq *format* :html))
                    (codify-and-link (prin1-to-markdown object))

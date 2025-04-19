@@ -200,7 +200,7 @@
   They are exported to make it possible to go beyond the
   @BASIC-OPERATIONS (e.g. PAX:DOCUMENT-OBJECT*). For
   DREF-EXT::@DEFINING-LOCATIVE-TYPES, they are not necessary, as
-  DEFINE-LOCATIVE-TYPE handles inheritence automatically based on its
+  DEFINE-LOCATIVE-TYPE handles inheritance automatically based on its
   LOCATIVE-SUPERTYPES argument."
   "**[for Variables][ @variablelike-locatives]**"
   (variable-dref class)

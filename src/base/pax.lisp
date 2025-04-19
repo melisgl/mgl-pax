@@ -226,7 +226,7 @@
 (defsection @emacs-quicklisp (:title "Installing from Quicklisp")
   """If you installed PAX with Quicklisp, the location of `mgl-pax.el`
   may change with updates, and you may want to copy the current
-  version of `mgl-pax.el` to a stable location by evaluting this in
+  version of `mgl-pax.el` to a stable location by evaluating this in
   CL:
 
       (mgl-pax:install-pax-elisp "~/quicklisp/")
@@ -292,7 +292,7 @@
   `slime-doc-map` (assuming it's bound to `C-c C-d`):
 
   - `C-c C-d a`: replaces `slime-apropos` with `mgl-pax-apropos`
-  - `C-c C-d z`: replaces `slime-apropos-all` with `mgl-pax-aproposa-all`
+  - `C-c C-d z`: replaces `slime-apropos-all` with `mgl-pax-apropos-all`
   - `C-c C-d p`: replaces `slime-apropos-package` with `mgl-pax-apropos-package`
   - `C-c C-d d`: replaces `slime-describe-symbol` with `mgl-pax-document`
   - `C-c C-d f`: replaces `slime-describe-function` with `mgl-pax-document`

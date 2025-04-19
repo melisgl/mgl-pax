@@ -59,7 +59,7 @@
     "FOO takes an argument X, a MY-CLASS object.")
   ```
 
-  Similary, defining the indefinite articles as aliases of the CLASS
+  Similarly, defining the indefinite articles as aliases of the CLASS
   locative can reduce the need for explicit linking.
 
   ```

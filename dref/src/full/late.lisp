@@ -65,7 +65,7 @@
   ```
 
   On the other hand, when NAME or PACKAGE is a STRING, they are
-  matched as substrings to the defintion's name PRINC-TO-STRINGed:
+  matched as substrings to the definition's name PRINC-TO-STRINGed:
 
   ```cl-transcript
   (dref-apropos "method" :package :dref :external-only t)

@@ -51,12 +51,12 @@
     - [9.9 Documentation Generation Implementation Notes][d1ca]
     - [9.10 Utilities for Generating Documentation][1b1b]
         - [9.10.1 HTML Output][36e1]
-        - [9.10.2 Github Workflow][dff6]
+        - [9.10.2 GitHub Workflow][dff6]
         - [9.10.3 PAX World][1281]
 - [10 Transcripts][6300]
     - [10.1 Transcribing with Emacs][f5bd]
     - [10.2 Transcript API][9dbc]
-    - [10.3 Transcript Consistency Checking][f47d]
+    - [10.3 Transcript Consistency Checking][4c39]
         - [10.3.1 Finer-Grained Consistency Checks][6e18]
         - [10.3.2 Controlling the Dynamic Environment][6b59]
         - [10.3.3 Utilities for Consistency Checking][8423]
@@ -279,7 +279,7 @@ something like this to your `.emacs`:
 
 If you installed PAX with Quicklisp, the location of `mgl-pax.el`
 may change with updates, and you may want to copy the current
-version of `mgl-pax.el` to a stable location by evaluting this in
+version of `mgl-pax.el` to a stable location by evaluating this in
 CL:
 
     (mgl-pax:install-pax-elisp "~/quicklisp/")
@@ -337,7 +337,7 @@ true, then upon loading `mgl-pax', the following changes are made to
 
 - `C-c C-d a`: replaces `slime-apropos` with `mgl-pax-apropos`
 
-- `C-c C-d z`: replaces `slime-apropos-all` with `mgl-pax-aproposa-all`
+- `C-c C-d z`: replaces `slime-apropos-all` with `mgl-pax-apropos-all`
 
 - `C-c C-d p`: replaces `slime-apropos-package` with `mgl-pax-apropos-package`
 
@@ -737,7 +737,7 @@ found with a definition:
    core, giving `"READ"`. This names an interned symbol which has a
    definition, so `M-.` will visit it.
 
-When [Generating Documentation][2c93], [Autolink][ec7a]ing behaves similary.
+When [Generating Documentation][2c93], [Autolink][ec7a]ing behaves similarly.
 
 <a id="x-28MGL-PAX-3A-40PAX-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 
@@ -1000,7 +1000,7 @@ PAX adds a few of its own.
            section)]` ([03\_d][e442])
     
         - *by alias*: [Format directives][d273] are
-           alieses of the sections describing them. Thus, `[~c][clhs]`
+           aliases of the sections describing them. Thus, `[~c][clhs]`
            is equivalent to `[22.3.1.1][clhs]` and `[Tilde C:
            Character][clhs]`. The full list is
            [~C][0cac] [~%][7bd6] [~\&][0684] [~|][3fa1]
@@ -1955,7 +1955,7 @@ docstrings are equivalent:
 
 #### 9.3.2 Syntax Highlighting
 
-For syntax highlighting, Github's [fenced code blocks][1322] markdown
+For syntax highlighting, GitHub's [fenced code blocks][1322] markdown
 extension to mark up code
 blocks with triple backticks is enabled so all you need to do is
 write:
@@ -2120,7 +2120,7 @@ locations.
 
 The [Markdown reference link][8c00] syntax `[label][id]` is
 repurposed for linking to [definition][2143]s. In the following, we
-discusss the various forms of reflinks.
+discuss the various forms of reflinks.
 
 <a id="x-28MGL-PAX-3A-40SPECIFIC-REFLINK-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2531,8 +2531,8 @@ specify a [locative][7ac8] and match all [definitions][d930]
 with a name. These are [Unspecific Reflink][4e05],
 [Unspecific Reflink with Text][34b8] and [Unspecific Autolink][e2a4].
 
-To make the links predictible and managable in number, the following
-steps are taken.
+To make the links predictable and manageable in number, the
+following steps are taken.
 
 1. Definitions that are not symbol-based (i.e. whose [`DREF-NAME`][1e36]
 is not a symbol) are filtered out to prevent unrelated
@@ -2588,7 +2588,7 @@ The following variables control various aspects of links and `URL`s.
     
     Version 1 is based on the more strict HTML4 standard and the id of
     `FOO` is `"x-28MGL-PAX-3A-3AFOO-20FUNCTION-29"`. This is supported
-    by Github-flavoured Markdown. Version 2 has minimal clutter and is
+    by GitHub-flavoured Markdown. Version 2 has minimal clutter and is
     obviously preferred. However, in order not to break external links,
     by default, both anchors are generated.
     
@@ -2849,7 +2849,7 @@ HTML documentation and the default CSS stylesheet.
     
     If `:MARKDOWN` is in `FORMATS`, then `README.md` is generated with
     anchors, links, inline code, and other markup added. Not necessarily
-    the easiest on the eye in an editor but looks good on github.
+    the easiest on the eye in an editor but looks good on GitHub.
     
     If `:PLAIN` is in `FORMATS`, then `README` is generated, which is
     optimized for reading in text format. It has less cluttery markup
@@ -2864,7 +2864,7 @@ HTML documentation and the default CSS stylesheet.
     
     Note that [`*DOCUMENT-URL-VERSIONS*`][17e0] is bound to `URL-VERSIONS`, which
     defaults to using the uglier, version 1 style of `URL` for the sake of
-    github.
+    GitHub.
 
 <a id="x-28MGL-PAX-3A-40HTML-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2875,7 +2875,7 @@ HTML documentation and the default CSS stylesheet.
 - [function] **UPDATE-ASDF-SYSTEM-HTML-DOCS** *SECTIONS ASDF-SYSTEM &KEY PAGES (TARGET-DIR (ASDF/SYSTEM:SYSTEM-RELATIVE-PATHNAME ASDF-SYSTEM "doc/")) (UPDATE-CSS-P T) (STYLE \*DOCUMENT-HTML-DEFAULT-STYLE\*)*
 
     Generate pretty HTML documentation for a single ASDF system,
-    possibly linking to github. If `UPDATE-CSS-P`, copy the `STYLE` files to
+    possibly linking to GitHub. If `UPDATE-CSS-P`, copy the `STYLE` files to
     `TARGET-DIR` (see [`*DOCUMENT-HTML-DEFAULT-STYLE*`][90fa]).
     
     Example usage:
@@ -2884,7 +2884,7 @@ HTML documentation and the default CSS stylesheet.
     (update-asdf-system-html-docs @pax-manual :mgl-pax)
     ```
     
-    The same, linking to the sources on github:
+    The same, linking to the sources on GitHub:
     
     ```
     (update-asdf-system-html-docs
@@ -2985,11 +2985,11 @@ See the following variables, which control HTML generation.
 
 <a id="x-28MGL-PAX-3A-40GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.10.2 Github Workflow
+#### 9.10.2 GitHub Workflow
 
 It is generally recommended to commit generated readmes (see
 [`UPDATE-ASDF-SYSTEM-READMES`][13a9]), so that users have something to read
-without reading the code and sites like github can display them.
+without reading the code and sites like GitHub can display them.
 
 HTML documentation can also be committed, but there is an issue with
 that: when linking to the sources (see [`MAKE-GIT-SOURCE-URI-FN`][587f]), the
@@ -2997,7 +2997,7 @@ commit id is in the link. This means that code changes need to be
 committed first, and only then can HTML documentation be regenerated
 and committed in a followup commit.
 
-The second issue is that github is not very good at serving HTML
+The second issue is that GitHub is not very good at serving HTML
 files from the repository itself (and
 [http://htmlpreview.github.io](http://htmlpreview.github.io) chokes
 on links to the sources).
@@ -3025,7 +3025,7 @@ to allow jumping between the repository and the gh-pages site.
     This function is a backward-compatibility wrapper around
     [`MAKE-GIT-SOURCE-URI-FN`][587f], which supersedes `MAKE-GITHUB-SOURCE-URI-FN`.
     All arguments are passed on to `MAKE-GIT-SOURCE-URI-FN`, leaving
-    `URI-FORMAT-STRING` at its default, which is suitable for github.
+    `URI-FORMAT-STRING` at its default, which is suitable for GitHub.
 
 <a id="x-28MGL-PAX-3AMAKE-GIT-SOURCE-URI-FN-20FUNCTION-29"></a>
 
@@ -3036,7 +3036,7 @@ to allow jumping between the repository and the gh-pages site.
     location of the object passed to it, and if the location is found,
     the path is made relative to the toplevel directory of the git
     checkout containing the file of the `ASDF-SYSTEM` and finally an URI
-    pointing to your git forge (such as github) is returned. A warning
+    pointing to your git forge (such as GitHub) is returned. A warning
     is signalled whenever the source location lookup fails or if the
     source location points to a directory not below the directory of
     `ASDF-SYSTEM`.
@@ -3061,8 +3061,8 @@ to allow jumping between the repository and the gh-pages site.
     
     - and the line number.
     
-    The default value of `URI-FORMAT-STRING` is for github. If using a
-    non-standard git forge, such as Sourcehut or Gitlab, simply pass a
+    The default value of `URI-FORMAT-STRING` is for GitHub. If using a
+    non-standard git forge, such as Sourcehut or GitLab, simply pass a
     suitable `URI-FORMAT-STRING` matching the URI scheme of your forge.
 
 <a id="x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29"></a>
@@ -3399,7 +3399,7 @@ Transcription support in Emacs can be enabled by loading
           2)
     ```
     
-    See [Transcript Consistency Checking][f47d] for the full picture.
+    See [Transcript Consistency Checking][4c39] for the full picture.
     
     **Unreadable Values**
     
@@ -3569,7 +3569,7 @@ Transcription support in Emacs can be enabled by loading
     with `:CHECK-CONSISTENCY` and the values of a form are inconsistent
     with their parsed representation.
 
-<a id="x-28MGL-PAX-3A-40TRANSCRIPT-CONISTENCY-CHECKING-20MGL-PAX-3ASECTION-29"></a>
+<a id="x-28MGL-PAX-3A-40TRANSCRIPT-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29"></a>
 
 ### 10.3 Transcript Consistency Checking
 
@@ -3822,7 +3822,7 @@ more naturally by defining an alias.
   "FOO takes an argument X, a MY-CLASS object.")
 ```
 
-Similary, defining the indefinite articles as aliases of the [`CLASS`][2060]
+Similarly, defining the indefinite articles as aliases of the [`CLASS`][2060]
 locative can reduce the need for explicit linking.
 
 ```
@@ -4119,6 +4119,7 @@ they are presented.
   [4841]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "SIMPLE-CONDITION-FORMAT-CONTROL (MGL-PAX:CLHS FUNCTION)"
   [48f1]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rdtabl.htm "READTABLE-CASE (MGL-PAX:CLHS FUNCTION)"
   [4bb8]: #x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/document" ASDF/SYSTEM:SYSTEM'
+  [4c39]: #x-28MGL-PAX-3A-40TRANSCRIPT-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Transcript Consistency Checking"
   [4dd7]: dref/README.md#x-28PACKAGE-20MGL-PAX-3ALOCATIVE-29 "PACKAGE MGL-PAX:LOCATIVE"
   [4e05]: #x-28MGL-PAX-3A-40UNSPECIFIC-REFLINK-20MGL-PAX-3ASECTION-29 "Unspecific Reflink"
   [5119]: #x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:GLOSSARY-TERM MGL-PAX:LOCATIVE"
@@ -4337,7 +4338,7 @@ they are presented.
   [dc0a]: #x-28MGL-PAX-3A-40DOCUMENT-FUNCTION-20MGL-PAX-3ASECTION-29 "The `DOCUMENT` Function"
   [dd03]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhp.htm '"2.4.8.16" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [dded]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhm.htm '"2.4.8.13" (MGL-PAX:CLHS MGL-PAX:SECTION)'
-  [dff6]: #x-28MGL-PAX-3A-40GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29 "Github Workflow"
+  [dff6]: #x-28MGL-PAX-3A-40GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29 "GitHub Workflow"
   [e016]: http://www.lispworks.com/documentation/HyperSpec/Body/06_aab.htm '"6.1.1.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [e196]: dref/README.md#x-28DREF-3ADEFINITIONS-20FUNCTION-29 "DREF:DEFINITIONS FUNCTION"
   [e216]: #x-28MGL-PAX-3A-2ADOCUMENT-HTML-TOP-BLOCKS-OF-LINKS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* VARIABLE"
@@ -4370,7 +4371,6 @@ they are presented.
   [f275]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cda.htm '"22.3.4.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [f2f5]: http://www.lispworks.com/documentation/HyperSpec/Body/e_smp_cn.htm "SIMPLE-CONDITION (MGL-PAX:CLHS CONDITION)"
   [f3f4]: #x-28MGL-PAX-3A-40EMACS-QUICKLISP-20MGL-PAX-3ASECTION-29 "Installing from Quicklisp"
-  [f47d]: #x-28MGL-PAX-3A-40TRANSCRIPT-CONISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Transcript Consistency Checking"
   [f4fd]: #x-28MGL-PAX-3AREGISTER-DOC-IN-PAX-WORLD-20FUNCTION-29 "MGL-PAX:REGISTER-DOC-IN-PAX-WORLD FUNCTION"
   [f585]: #x-28MGL-PAX-3A-2ADOCUMENT-HYPERSPEC-ROOT-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HYPERSPEC-ROOT* VARIABLE"
   [f5af]: #x-28MGL-PAX-3A-40RAW-NAME-20MGL-PAX-3AGLOSSARY-TERM-29 "raw name"

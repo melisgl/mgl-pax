@@ -25,7 +25,7 @@
 
   If :MARKDOWN is in FORMATS, then `README.md` is generated with
   anchors, links, inline code, and other markup added. Not necessarily
-  the easiest on the eye in an editor but looks good on github.
+  the easiest on the eye in an editor but looks good on GitHub.
 
   If :PLAIN is in FORMATS, then `\\\\README` is generated, which is
   optimized for reading in text format. It has less cluttery markup
@@ -40,7 +40,7 @@
 
   Note that *DOCUMENT-URL-VERSIONS* is bound to URL-VERSIONS, which
   defaults to using the uglier, version 1 style of URL for the sake of
-  github."
+  GitHub."
   (when (member :markdown formats)
     (with-open-file (stream (asdf:system-relative-pathname
                              asdf-system "README.md")
@@ -95,7 +95,7 @@
               (update-css-p t)
               (style *document-html-default-style*))
   "Generate pretty HTML documentation for a single ASDF system,
-  possibly linking to github. If UPDATE-CSS-P, copy the STYLE files to
+  possibly linking to GitHub. If UPDATE-CSS-P, copy the STYLE files to
   TARGET-DIR (see *DOCUMENT-HTML-DEFAULT-STYLE*).
 
   Example usage:
@@ -104,7 +104,7 @@
   (update-asdf-system-html-docs @pax-manual :mgl-pax)
   ```
 
-  The same, linking to the sources on github:
+  The same, linking to the sources on GitHub:
 
   ```
   (update-asdf-system-html-docs
@@ -425,7 +425,7 @@
     [MGL-PAX][@pax-manual]. The documents are cross-linked: links to
     other documents are added automatically when a reference is found.
     Note that clicking on the locative type (e.g. `[function]`) will
-    take you to the sources on github if possible."))
+    take you to the sources on GitHub if possible."))
 
 (defun create-pax-world (sections page-specs dir update-css-p style)
   (define-pax-world-dummy)
@@ -514,7 +514,7 @@
 ;;; <mgl-pax-asdf-system-dir>/world/. To update
 ;;; https://github.com/melisgl/mgl-pax-world, check out its gh-pages
 ;;; branch in that directory, update pax world, commit and push the
-;;; changes to github.
+;;; changes to GitHub.
 (defun update-pax-world* ()
   ;; KLUDGE: Bind *READTABLE* so that when evaluating in Slime (e.g.
   ;; with C-x C-e), the file's readtable is not used (which leads to a

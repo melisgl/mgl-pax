@@ -1146,7 +1146,7 @@
   "Locative for @DTYPES defined with DEFINE-DTYPE and LOCATIVE types.
   DTYPE is to LOCATIVE as TYPE is to CLASS.
 
-  The TOP of the DTYPE hiearchy:
+  The TOP of the DTYPE hierarchy:
 
   ```cl-transcript
   (dref 'top 'dtype)

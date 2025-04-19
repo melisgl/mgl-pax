@@ -413,7 +413,7 @@
          section)]` ([03_d][clhs])
 
       - *by alias*: [Format directives][(clhs glossary-term)] are
-         alieses of the sections describing them. Thus, `[~c][clhs]`
+         aliases of the sections describing them. Thus, `[~c][clhs]`
          is equivalent to `[22.3.1.1][clhs]` and `[Tilde C:
          Character][clhs]`. The full list is
          [*format-directive-alias-links* variable][docstring].

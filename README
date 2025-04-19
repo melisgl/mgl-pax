@@ -204,7 +204,7 @@ something like this to your `.emacs`:
 
 If you installed PAX with Quicklisp, the location of `mgl-pax.el`
 may change with updates, and you may want to copy the current
-version of `mgl-pax.el` to a stable location by evaluting this in
+version of `mgl-pax.el` to a stable location by evaluating this in
 CL:
 
     (mgl-pax:install-pax-elisp "~/quicklisp/")
@@ -256,7 +256,7 @@ true, then upon loading `mgl-pax', the following changes are made to
 
 - `C-c C-d a`: replaces `slime-apropos` with `mgl-pax-apropos`
 
-- `C-c C-d z`: replaces `slime-apropos-all` with `mgl-pax-aproposa-all`
+- `C-c C-d z`: replaces `slime-apropos-all` with `mgl-pax-apropos-all`
 
 - `C-c C-d p`: replaces `slime-apropos-package` with `mgl-pax-apropos-package`
 
@@ -626,7 +626,7 @@ found with a definition:
    core, giving `"READ"`. This names an interned symbol which has a
    definition, so `M-.` will visit it.
 
-When @GENERATING-DOCUMENTATION, @AUTOLINKing behaves similary.
+When @GENERATING-DOCUMENTATION, @AUTOLINKing behaves similarly.
 
 ## PAX Locatives
 
@@ -871,7 +871,7 @@ PAX adds a few of its own.
            section)]` (03\_d)
     
         - *by alias*: Format directives are
-           alieses of the sections describing them. Thus, `[~c][clhs]`
+           aliases of the sections describing them. Thus, `[~c][clhs]`
            is equivalent to `[22.3.1.1][clhs]` and `[Tilde C:
            Character][clhs]`. The full list is
            ~C ~% ~\& ~|
@@ -1760,7 +1760,7 @@ docstrings are equivalent:
 
 #### Syntax Highlighting
 
-For syntax highlighting, Github's @FENCED-CODE-BLOCKS markdown
+For syntax highlighting, GitHub's @FENCED-CODE-BLOCKS markdown
 extension to mark up code
 blocks with triple backticks is enabled so all you need to do is
 write:
@@ -1909,7 +1909,7 @@ locations.
 
 The @MARKDOWN/REFLINK syntax `[label][id]` is
 repurposed for linking to DREF::@DEFINITIONS. In the following, we
-discusss the various forms of reflinks.
+discuss the various forms of reflinks.
 
 ##### Specific Reflink
 
@@ -2266,8 +2266,8 @@ specify a DREF::@LOCATIVE and match all definitions
 with a name. These are @UNSPECIFIC-REFLINK,
 @UNSPECIFIC-REFLINK-WITH-TEXT and @UNSPECIFIC-AUTOLINK.
 
-To make the links predictible and managable in number, the following
-steps are taken.
+To make the links predictable and manageable in number, the
+following steps are taken.
 
 1. Definitions that are not symbol-based (i.e. whose DREF-NAME
 is not a symbol) are filtered out to prevent unrelated
@@ -2319,7 +2319,7 @@ The following variables control various aspects of links and URLs.
     
     Version 1 is based on the more strict HTML4 standard and the id of
     `FOO` is `"x-28MGL-PAX-3A-3AFOO-20FUNCTION-29"`. This is supported
-    by Github-flavoured Markdown. Version 2 has minimal clutter and is
+    by GitHub-flavoured Markdown. Version 2 has minimal clutter and is
     obviously preferred. However, in order not to break external links,
     by default, both anchors are generated.
     
@@ -2562,7 +2562,7 @@ HTML documentation and the default CSS stylesheet.
     
     If :MARKDOWN is in FORMATS, then `README.md` is generated with
     anchors, links, inline code, and other markup added. Not necessarily
-    the easiest on the eye in an editor but looks good on github.
+    the easiest on the eye in an editor but looks good on GitHub.
     
     If :PLAIN is in FORMATS, then `README` is generated, which is
     optimized for reading in text format. It has less cluttery markup
@@ -2577,14 +2577,14 @@ HTML documentation and the default CSS stylesheet.
     
     Note that *DOCUMENT-URL-VERSIONS* is bound to URL-VERSIONS, which
     defaults to using the uglier, version 1 style of URL for the sake of
-    github.
+    GitHub.
 
 #### HTML Output
 
 - [function] UPDATE-ASDF-SYSTEM-HTML-DOCS SECTIONS ASDF-SYSTEM &KEY PAGES (TARGET-DIR (ASDF/SYSTEM:SYSTEM-RELATIVE-PATHNAME ASDF-SYSTEM "doc/")) (UPDATE-CSS-P T) (STYLE \*DOCUMENT-HTML-DEFAULT-STYLE\*)
 
     Generate pretty HTML documentation for a single ASDF system,
-    possibly linking to github. If UPDATE-CSS-P, copy the STYLE files to
+    possibly linking to GitHub. If UPDATE-CSS-P, copy the STYLE files to
     TARGET-DIR (see *DOCUMENT-HTML-DEFAULT-STYLE*).
     
     Example usage:
@@ -2593,7 +2593,7 @@ HTML documentation and the default CSS stylesheet.
     (update-asdf-system-html-docs @pax-manual :mgl-pax)
     ```
     
-    The same, linking to the sources on github:
+    The same, linking to the sources on GitHub:
     
     ```
     (update-asdf-system-html-docs
@@ -2676,11 +2676,11 @@ See the following variables, which control HTML generation.
     Like *DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS*, only it is displayed
     below the table of contents.
 
-#### Github Workflow
+#### GitHub Workflow
 
 It is generally recommended to commit generated readmes (see
 UPDATE-ASDF-SYSTEM-READMES), so that users have something to read
-without reading the code and sites like github can display them.
+without reading the code and sites like GitHub can display them.
 
 HTML documentation can also be committed, but there is an issue with
 that: when linking to the sources (see MAKE-GIT-SOURCE-URI-FN), the
@@ -2688,7 +2688,7 @@ commit id is in the link. This means that code changes need to be
 committed first, and only then can HTML documentation be regenerated
 and committed in a followup commit.
 
-The second issue is that github is not very good at serving HTML
+The second issue is that GitHub is not very good at serving HTML
 files from the repository itself (and
 [http://htmlpreview.github.io](http://htmlpreview.github.io) chokes
 on links to the sources).
@@ -2714,7 +2714,7 @@ to allow jumping between the repository and the gh-pages site.
     This function is a backward-compatibility wrapper around
     MAKE-GIT-SOURCE-URI-FN, which supersedes MAKE-GITHUB-SOURCE-URI-FN.
     All arguments are passed on to MAKE-GIT-SOURCE-URI-FN, leaving
-    URI-FORMAT-STRING at its default, which is suitable for github.
+    URI-FORMAT-STRING at its default, which is suitable for GitHub.
 
 - [function] MAKE-GIT-SOURCE-URI-FN ASDF-SYSTEM GIT-FORGE-URI &KEY GIT-VERSION (URI-FORMAT-STRING "~A/blob/~A/~A#L~S")
 
@@ -2723,7 +2723,7 @@ to allow jumping between the repository and the gh-pages site.
     location of the object passed to it, and if the location is found,
     the path is made relative to the toplevel directory of the git
     checkout containing the file of the ASDF-SYSTEM and finally an URI
-    pointing to your git forge (such as github) is returned. A warning
+    pointing to your git forge (such as GitHub) is returned. A warning
     is signalled whenever the source location lookup fails or if the
     source location points to a directory not below the directory of
     ASDF-SYSTEM.
@@ -2748,8 +2748,8 @@ to allow jumping between the repository and the gh-pages site.
     
     - and the line number.
     
-    The default value of URI-FORMAT-STRING is for github. If using a
-    non-standard git forge, such as Sourcehut or Gitlab, simply pass a
+    The default value of URI-FORMAT-STRING is for GitHub. If using a
+    non-standard git forge, such as Sourcehut or GitLab, simply pass a
     suitable URI-FORMAT-STRING matching the URI scheme of your forge.
 
 #### PAX World
@@ -3070,7 +3070,7 @@ Transcription support in Emacs can be enabled by loading
           2)
     ```
     
-    See @TRANSCRIPT-CONISTENCY-CHECKING for the full picture.
+    See @TRANSCRIPT-CONSISTENCY-CHECKING for the full picture.
     
     **Unreadable Values**
     
@@ -3455,7 +3455,7 @@ more naturally by defining an alias.
   "FOO takes an argument X, a MY-CLASS object.")
 ```
 
-Similary, defining the indefinite articles as aliases of the CLASS
+Similarly, defining the indefinite articles as aliases of the CLASS
 locative can reduce the need for explicit linking.
 
 ```

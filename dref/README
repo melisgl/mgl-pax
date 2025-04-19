@@ -369,7 +369,7 @@ The following convenience functions are compositions of
     
     In their compound form, locatives may have arguments (see
     LOCATIVE-ARGS) as in `(METHOD () (NUMBER))`. In fact, their atomic
-    form is shorthand for the common no-argment case: that is,
+    form is shorthand for the common no-argument case: that is,
     FUNCTION is equivalent to `(FUNCTION)`.
     
     A locative is valid if it names an existing @LOCATIVE-TYPE and its
@@ -606,7 +606,7 @@ definitions as in
     ```
     
     On the other hand, when NAME or PACKAGE is a STRING, they are
-    matched as substrings to the defintion's name PRINC-TO-STRINGed:
+    matched as substrings to the definition's name PRINC-TO-STRINGed:
     
     ```common-lisp
     (dref-apropos "method" :package :dref :external-only t)
@@ -1205,7 +1205,7 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
     Locative for @DTYPES defined with DEFINE-DTYPE and LOCATIVE types.
     DTYPE is to LOCATIVE as TYPE is to CLASS.
     
-    The TOP of the DTYPE hiearchy:
+    The TOP of the DTYPE hierarchy:
     
     ```common-lisp
     (dref 'top 'dtype)
@@ -1919,7 +1919,7 @@ These are the DREF-CLASSes corresponding to DREF::@BASIC-LOCATIVE-TYPES.
 They are exported to make it possible to go beyond the
 @BASIC-OPERATIONS (e.g. PAX:DOCUMENT-OBJECT\*). For
 DREF-EXT::@DEFINING-LOCATIVE-TYPES, they are not necessary, as
-DEFINE-LOCATIVE-TYPE handles inheritence automatically based on its
+DEFINE-LOCATIVE-TYPE handles inheritance automatically based on its
 LOCATIVE-SUPERTYPES argument.
 
 **for Variables**

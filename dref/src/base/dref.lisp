@@ -491,7 +491,7 @@
 
   In their compound form, locatives may have arguments (see
   LOCATIVE-ARGS) as in `(METHOD () (NUMBER))`. In fact, their atomic
-  form is shorthand for the common no-argment case: that is,
+  form is shorthand for the common no-argument case: that is,
   FUNCTION is equivalent to `(FUNCTION)`.
 
   A locative is valid if it names an existing @LOCATIVE-TYPE and its
@@ -709,7 +709,7 @@
   (source-location function))
 
 ;;; Evaluate BODY. If its NTH-VALUE is NIL, evaluate it again with OBJ
-;;; bound to a RESOLVEd object (if OBJ was a defintion) or a
+;;; bound to a RESOLVEd object (if OBJ was a definition) or a
 ;;; definition (if OBJ was not a definition).
 (defmacro nth-value-or-with-obj-or-def ((obj nth-value) &body body)
   (let ((%body (gensym "BODY"))

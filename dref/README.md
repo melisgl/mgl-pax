@@ -458,7 +458,7 @@ The following convenience functions are compositions of
     
     In their compound form, locatives may have arguments (see
     [`LOCATIVE-ARGS`][2444]) as in `(METHOD () (NUMBER))`. In fact, their atomic
-    form is shorthand for the common no-argment case: that is,
+    form is shorthand for the common no-argument case: that is,
     `FUNCTION` is equivalent to `(FUNCTION)`.
     
     A locative is valid if it names an existing [locative type][a11d] and its
@@ -715,7 +715,7 @@ definitions as in
     ```
     
     On the other hand, when `NAME` or `PACKAGE` is a `STRING`([`0`][b93c] [`1`][dae6]), they are
-    matched as substrings to the defintion's name [`PRINC-TO-STRING`][a541]ed:
+    matched as substrings to the definition's name [`PRINC-TO-STRING`][a541]ed:
     
     ```common-lisp
     (dref-apropos "method" :package :dref :external-only t)
@@ -1408,7 +1408,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     Locative for [`DTYPE`s][a459] defined with [`DEFINE-DTYPE`][c635] and `LOCATIVE` types.
     `DTYPE` is to `LOCATIVE` as [`TYPE`][7c9f] is to [`CLASS`][1f37].
     
-    The [`TOP`][3301] of the `DTYPE` hiearchy:
+    The [`TOP`][3301] of the `DTYPE` hierarchy:
     
     ```common-lisp
     (dref 'top 'dtype)
@@ -2200,7 +2200,7 @@ These are the [`DREF-CLASS`][25be]es corresponding to [Basic Locative Types][1d1
 They are exported to make it possible to go beyond the
 [Basic Operations][662d] (e.g. [`PAX:DOCUMENT-OBJECT*`][8269]). For
 [Defining Locative Types][f494], they are not necessary, as
-[`DEFINE-LOCATIVE-TYPE`][b6c4] handles inheritence automatically based on its
+[`DEFINE-LOCATIVE-TYPE`][b6c4] handles inheritance automatically based on its
 `LOCATIVE-SUPERTYPES` argument.
 
 **[for Variables][462c]**

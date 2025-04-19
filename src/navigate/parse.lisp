@@ -60,7 +60,7 @@
      core, giving `"READ"`. This names an interned symbol which has a
      definition, so `\\M-.` will visit it.
 
-  When @GENERATING-DOCUMENTATION, @AUTOLINKing behaves similary.""")
+  When @GENERATING-DOCUMENTATION, @AUTOLINKing behaves similarly.""")
 
 (define-glossary-term @word (:title "word")
   "A _word_ is a string from which we want to extract a @NAME. When

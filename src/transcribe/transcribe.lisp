@@ -163,7 +163,7 @@
   (mgl-pax/transcribe asdf:system)
   (@transcribing-with-emacs section)
   (@transcript-api section)
-  (@transcript-conistency-checking section))
+  (@transcript-consistency-checking section))
 
 
 (defsection @transcript-api (:title "Transcript API")
@@ -359,7 +359,7 @@
         2)
   ```
 
-  See @TRANSCRIPT-CONISTENCY-CHECKING for the full picture.
+  See @TRANSCRIPT-CONSISTENCY-CHECKING for the full picture.
 
   **Unreadable Values**
 
@@ -1316,7 +1316,7 @@
                 (format nil "~%~A" transcript))))))))
 
 
-(defsection @transcript-conistency-checking
+(defsection @transcript-consistency-checking
     (:title "Transcript Consistency Checking")
   """The main use case for consistency checking is detecting
   out-of-date examples in documentation, although using it for writing
