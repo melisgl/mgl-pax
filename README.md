@@ -1876,7 +1876,7 @@ as systemless.
 ##### Browse by Locative Types
 
 The [PAX Live Home Page][9d50] provides quick links to [Apropos][b7fc] result
-pages for all DREF::@BASIC-LOCATIVE-TYPEs which may have
+pages for all [Basic Locative Types][1d1d] which may have
 definitions.
 
 <a id="x-28MGL-PAX-3A-40RELATED-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
@@ -3737,7 +3737,7 @@ package for evaluation.
 
 ### 11.1 Adding New Locatives
 
-Once everything in DREF-EXT::@ADDING-NEW-LOCATIVES has been done,
+Once everything in [Extending DRef][68fb] has been done,
 there are only a couple of PAX generic functions left to extend.
 
 <a id="x-28MGL-PAX-3ADOCUMENT-OBJECT-2A-20GENERIC-FUNCTION-29"></a>
@@ -4163,6 +4163,7 @@ they are presented.
   [6897]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cbc.htm '"22.3.2.3" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [68c1]: https://daringfireball.net/projects/markdown/syntax#code "Markdown inline code"
   [68d2]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhh.htm '"2.4.8.8" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [68fb]: dref/README.md#x-28DREF-EXT-3A-40EXTENDING-DREF-20MGL-PAX-3ASECTION-29 "Extending DRef"
   [698d]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dh.htm '"2.4.8" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [6ab0]: #x-28MGL-PAX-3A-2ADOCUMENT-FANCY-HTML-NAVIGATION-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-FANCY-HTML-NAVIGATION* VARIABLE"
   [6af6]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PPRINT (MGL-PAX:CLHS FUNCTION)"

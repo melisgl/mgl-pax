@@ -11,7 +11,7 @@
 
 
 (defsection @adding-new-locatives (:title "Adding New Locatives")
-  "Once everything in DREF-EXT::@ADDING-NEW-LOCATIVES has been done,
+  "Once everything in DREF-EXT::@EXTENDING-DREF has been done,
   there are only a couple of PAX generic functions left to extend."
   (document-object* generic-function)
   (exportable-reference-p generic-function)

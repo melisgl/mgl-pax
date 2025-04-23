@@ -1165,7 +1165,7 @@
 
 (defsection @browse-by-locative-type (:title "Browse by Locative Types")
   "The @PAX-LIVE-HOME-PAGE provides quick links to @APROPOS result
-  pages for all DREF::@BASIC-LOCATIVE-TYPEs which may have
+  pages for all DREF::@BASIC-LOCATIVE-TYPES which may have
   definitions.")
 
 (defun locative-types-documentable ()

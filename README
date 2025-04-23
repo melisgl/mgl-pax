@@ -1689,7 +1689,7 @@ as systemless.
 ##### Browse by Locative Types
 
 The @PAX-LIVE-HOME-PAGE provides quick links to @APROPOS result
-pages for all DREF::@BASIC-LOCATIVE-TYPEs which may have
+pages for all DREF::@BASIC-LOCATIVE-TYPES which may have
 definitions.
 
 - [glossary-term] related
@@ -3378,7 +3378,7 @@ package for evaluation.
 
 ### Adding New Locatives
 
-Once everything in DREF-EXT::@ADDING-NEW-LOCATIVES has been done,
+Once everything in DREF-EXT::@EXTENDING-DREF has been done,
 there are only a couple of PAX generic functions left to extend.
 
 - [generic-function] DOCUMENT-OBJECT* OBJECT STREAM
