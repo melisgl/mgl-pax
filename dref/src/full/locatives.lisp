@@ -1056,7 +1056,11 @@
 
 (defmethod resolve* ((dref asdf-system-dref))
   (handler-bind ((warning #'muffle-warning))
-    (asdf:find-system (dref-name dref))))
+    ;; KLUDGE: This is to avoid "No package form found" errors with
+    ;; package-inferred systems.
+    (let ((*package* #.(find-package :cl-user)))
+      (or (ignore-errors (asdf:find-system (dref-name dref)))
+          (resolve-error)))))
 
 (defmethod source-location* ((dref asdf-system-dref))
   (let ((system (resolve dref)))
