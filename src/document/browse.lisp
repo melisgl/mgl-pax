@@ -1039,7 +1039,9 @@
   (@browse-by-locative-type section)
   (@related glossary-term))
 
-(defun pax-live-home-page (&key override)
+(defvar *pax-live-home-page-override* nil)
+
+(defun pax-live-home-page (&key (override *pax-live-home-page-override*))
   (with-filename-to-asdf-system-name-map
     (let ((*package* (find-package '#:mgl-pax) ))
       `((progv '(*package*) (list ,(find-package '#:mgl-pax)))

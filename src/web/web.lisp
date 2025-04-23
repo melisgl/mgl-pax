@@ -35,6 +35,7 @@
                             (dref::find-package* (ignore-errors
                                                   (read-from-string pkgname)))
                             (dref::find-package :cl)))
+             (*pax-live-home-page-override* *pax-live-inputs*)
              (editp (hunchentoot:get-parameter "edit")))
         (if editp
             (progn
