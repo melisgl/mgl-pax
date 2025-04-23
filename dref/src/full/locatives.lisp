@@ -1111,8 +1111,7 @@
   "Refers to a named [READTABLE][] defined with
   NAMED-READTABLES:DEFREADTABLE, which associates a global name and a
   docstring with the readtable object. The @NAME may be anything
-  FIND-READTABLE supports. Unfortunately, SOURCE-LOCATION information
-  is not available.
+  FIND-READTABLE supports.
 
   READTABLE references RESOLVE to FIND-READTABLE on their @NAME.")
 
@@ -1137,7 +1136,10 @@
   (documentation* (dref-name dref) 'readtable))
 
 (defmethod source-location* ((dref readtable-dref))
-  '(:error "Don't know how find the source location of readtables."))
+  (let ((readtable (named-readtables:find-readtable (dref-name dref)))
+        (ht named-readtables::*readtable-to-dummy-with-source-location*))
+    (when-let ((dummy (gethash readtable ht)))
+      (source-location (dref dummy 'function nil) :error :error))))
 
 
 ;;;; DTYPE locative

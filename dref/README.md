@@ -1362,8 +1362,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     Refers to a named [`READTABLE`][d646] defined with
     `NAMED-READTABLES:DEFREADTABLE`, which associates a global name and a
     docstring with the readtable object. The [name][5fc4] may be anything
-    `FIND-READTABLE` supports. Unfortunately, [`SOURCE-LOCATION`][32da] information
-    is not available.
+    `FIND-READTABLE` supports.
     
     `READTABLE` references [`RESOLVE`][63b4] to `FIND-READTABLE` on their [name][5fc4].
 

@@ -311,8 +311,7 @@
       ("package mgl-pax"
        "(eval-when (:compile-toplevel :load-toplevel :execute)"
        "(defpackage :mgl-pax")
-      ;; Source location not implemented
-      ;;("readtable xxx-rt" "(defreadtable xxx-rt")
+      ("readtable xxx-rt" "(named-readtables:defreadtable xxx-rt")
       ("locative my-loc" "(define-locative-type my-loc ")
       ("section mgl-pax::@pax-manual" "(defsection @pax-manual ")
       ("glossary-term some-term" "(define-glossary-term some-term "))

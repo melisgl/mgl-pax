@@ -451,7 +451,11 @@
     (mgl-pax package
      (eval-when (:compile-toplevel :load-toplevel :execute))
      (cl:defpackage))
-    (xxx-rt readtable (defreadtable xxx-rt))
+    (xxx-rt readtable
+     #-ecl "(named-readtables:defreadtable xxx-rt"
+     #+ecl "
+
+(unless (named-readtables:find-readtable 'xxx-rt)")
     ;; DREF-EXT::@DEFINING-LOCATIVE-TYPES
     (my-loc locative (define-locative-type my-loc))))
 
@@ -494,8 +498,6 @@
            (alexandria:featurep '(:not :ccl)))
           ((eq type 'declaration)
            (alexandria:featurep :sbcl))
-          ((eq type 'readtable)
-           nil)
           ((eq type 'generic-function)
            ;; AllegroCL is off by one form.
            (alexandria:featurep '(:not :allegro)))

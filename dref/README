@@ -1167,8 +1167,7 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
     Refers to a named READTABLE defined with
     NAMED-READTABLES:DEFREADTABLE, which associates a global name and a
     docstring with the readtable object. The @NAME may be anything
-    FIND-READTABLE supports. Unfortunately, SOURCE-LOCATION information
-    is not available.
+    FIND-READTABLE supports.
     
     READTABLE references RESOLVE to FIND-READTABLE on their @NAME.
 
