@@ -20,20 +20,20 @@
   The definition is either determined from the buffer content at point
   or is prompted for. At the prompt, TAB-completion is available for
   both names and locatives. With a prefix argument (`C-u M-.`), the
-  buffer contents are not consulted, and `M-.` always prompts.
+  buffer contents are not consulted, and `\\M-.` always prompts.
 
-  The `M-.` extensions can be enabled by loading `src/mgl-pax.el`. See
+  The `\\M-.` extensions can be enabled by loading `src/mgl-pax.el`. See
   @EMACS-SETUP. In addition, the Elisp command
   `mgl-pax-edit-parent-section` visits the source location of the
   section containing the definition with point in it.
 
-  A close relative of `M-.` is `C-.` for @BROWSING-LIVE-DOCUMENTATION."""
+  A close relative of `\\M-.` is `C-.` for @BROWSING-LIVE-DOCUMENTATION."""
   (mgl-pax/navigate asdf:system)
   (@m-.-defaulting section)
   (@m-.-prompting section))
 
 
-(defsection @m-.-defaulting (:title "`M-.` Defaulting")
+(defsection @m-.-defaulting (:title "`\\\\M-.` Defaulting")
   """When `@M-.` is invoked, it first tries to find a @NAME in the
   current buffer at point. If no name is found, then it
   [prompts][@M-.-PROMPTING].
@@ -41,13 +41,13 @@
   First, `(slime-sexp-at-point)` is taken as a @WORD, from which the
   @NAME will be [parsed][@parsing]. Then, candidate locatives are
   looked for before and after the @WORD. Thus, if a locative is the
-  previous or the next expression, then `M-.` will go straight to the
-  definition which corresponds to the locative. If that fails, `M-.`
+  previous or the next expression, then `\\M-.` will go straight to the
+  definition which corresponds to the locative. If that fails, `\\M-.`
   will try to find the definitions in the normal way, which may
   involve popping up an xref buffer and letting the user interactively
   select one of possible definitions.
 
-  `M-.` works on parenthesized references, such as those in
+  `\\M-.` works on parenthesized references, such as those in
   DEFSECTION:
 
   ```
@@ -56,7 +56,7 @@
   ```
 
   Here, when the cursor is on one of the characters of `\COS` or just
-  after `\COS`, pressing `M-.` will visit the definition of the
+  after `\COS`, pressing `\\M-.` will visit the definition of the
   function `COS`.
 
   To play nice with @GENERATING-DOCUMENTATION, forms suitable for
@@ -77,7 +77,7 @@
       `cos` `function`
 
   Everything works the same way in comments and docstrings as in code.
-  In the next example, pressing `M-.` on `RESOLVE*` will visit its
+  In the next example, pressing `\\M-.` on `RESOLVE*` will visit its
   denoted method:
 
   ```
@@ -144,13 +144,13 @@
                   ,location)))
 
 
-(defsection @m-.-prompting (:title "`M-.` Prompting")
+(defsection @m-.-prompting (:title "`\\\\M-.` Prompting")
   (@m-.-minibuffer-syntax section)
   (@m-.-completion section))
 
 ;;; This documents the Elisp function `mgl-pax-edit-definitions'.
 ;;; There isn't muh code exclusively for this on the CL side.
-(defsection @m-.-minibuffer-syntax (:title "`M-.` Minibuffer Syntax")
+(defsection @m-.-minibuffer-syntax (:title "`\\\\M-.` Minibuffer Syntax")
   """At the minibuffer prompt, the DREF::@DEFINITIONS to edit
   can be specified as follows.
 
@@ -192,8 +192,8 @@
 ;;;; Completion of names and locatives for the Elisp function
 ;;;; `mgl-pax-name-completions-at-point'
 
-(defsection @m-.-completion (:title "`M-.` Completion")
-  "When `M-.` prompts for the definition to edit, TAB-completion is
+(defsection @m-.-completion (:title "`\\\\M-.` Completion")
+  "When `\\\\M-.` prompts for the definition to edit, TAB-completion is
   available in the minibuffer for both names and locatives. To reduce
   clutter, string names are completed only if they are typed
   explicitly with an opening quotation mark, and they are

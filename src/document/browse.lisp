@@ -31,7 +31,7 @@
   effect.
 
   In interactive use, `mgl-pax-document` behaves similarly to
-  [`M-.`][@NAVIGATING-IN-EMACS] except:
+  [`\\M-.`][@NAVIGATING-IN-EMACS] except:
 
   - It shows the DOCUMENTation of some definition and does not visit
     its SOURCE-LOCATION.
