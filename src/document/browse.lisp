@@ -17,7 +17,7 @@
   documentation web server [manually][ensure-web-server].
 
   If @EMACS-SETUP has been done, the Elisp function
-  `mgl-pax-document` (maybe bound to `C-.`) generates and displays
+  `mgl-pax-document` (maybe bound to `\\C-.`) generates and displays
   documentation as a single HTML page. If necessary, a disambiguation
   page is generated with the documentation of all matching
   definitions. For example, to view the documentation of this very
@@ -26,7 +26,7 @@
       M-x mgl-pax-document
       View Documentation of: pax::@browsing-live-documentation
 
-  Alternatively, pressing `C-.` with point over the text
+  Alternatively, pressing `\\C-.` with point over the text
   `\pax::@browsing-live-documentation` in a buffer achieves the same
   effect.
 

@@ -27,7 +27,7 @@
   `mgl-pax-edit-parent-section` visits the source location of the
   section containing the definition with point in it.
 
-  A close relative of `\\M-.` is `C-.` for @BROWSING-LIVE-DOCUMENTATION."""
+  A close relative of `\\M-.` is `\\C-.` for @BROWSING-LIVE-DOCUMENTATION."""
   (mgl-pax/navigate asdf:system)
   (@m-.-defaulting section)
   (@m-.-prompting section))

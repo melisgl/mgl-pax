@@ -280,7 +280,7 @@
   ```
 
   The global key bindings above are global because their commands work
-  in any mode. If that's not desired, one may bind `C-.` locally in
+  in any mode. If that's not desired, one may bind `\\C-.` locally in
   all Slime related modes like this:
 
   ```elisp
