@@ -5,7 +5,7 @@
 
 (defun dref-pages ()
   (let ((uri-fn (make-git-source-uri-fn
-                 :dref "https://github.com/melisgl/mgl-pax/dref/")))
+                 :dref "https://github.com/melisgl/mgl-pax")))
     `((:objects (, @dref-manual)
        :source-uri-fn ,uri-fn))))
 
