@@ -140,7 +140,8 @@
 
 (defun process-title (string &key (format :markdown))
   (with-output-to-string (out)
-    (print-markdown (codify (parse-markdown string)) out :format format)))
+    (print-markdown (codify (parse-markdown string) :leave-autolink-escape nil)
+                    out :format format)))
 
 ;;; Add this many #\# to markdown section headings in the output. This
 ;;; is for when a section that is a subsection of another is
@@ -1381,20 +1382,21 @@
              (list raw name))))
     (find-name #'match word :pass-raw t :trim t :depluralize t)))
 
+(defvar *leave-autolink-escape* nil)
+
 ;;; Handle *DOCUMENT-UPPERCASE-IS-CODE* in normal strings and :EMPH
 ;;; (to recognize *VAR*). Also, perform consistency checking of
 ;;; cl-transcript code blocks (see @TRANSCRIBING-WITH-EMACS).
-(defun codify (parse-tree)
-  (map-markdown-parse-tree
-   (list :emph '3bmd-code-blocks::code-block :reference-link :explicit-link
-         :code)
-   '(:code :verbatim 3bmd-code-blocks::code-block
-     :image :mailto :reference :raw-html)
-   t
-   #'translate-to-code
-   parse-tree))
-
-(defvar *translating-reference-link* nil)
+(defun codify (parse-tree &key (leave-autolink-escape t))
+  (let ((*leave-autolink-escape* leave-autolink-escape))
+    (map-markdown-parse-tree
+     (list :emph '3bmd-code-blocks::code-block :reference-link :explicit-link
+           :code)
+     '(:code :verbatim 3bmd-code-blocks::code-block
+       :image :mailto :reference :raw-html)
+     t
+     #'translate-to-code
+     parse-tree)))
 
 (defun translate-to-code (parent tree)
   (cond ((stringp tree)
@@ -1414,8 +1416,7 @@
              (parse-tree-p tree :explicit-link))
          (let ((replacement (copy-list tree)))
            (setf (pt-get replacement :label)
-                 (let ((*translating-reference-link* t))
-                   (codify (pt-get tree :label))))
+                 (codify (pt-get tree :label) :leave-autolink-escape nil))
            replacement))
         ((parse-tree-p tree :code)
          `(:code ,(maybe-downcase (second tree))))
@@ -1534,9 +1535,15 @@
                    :escape-block escape-block))
 
 (defun maybe-downcase (string)
-  (if *translating-reference-link*
-      ;; In a reference link label, the first backslash the prevents
-      ;; autolinking no effect.
+  (if *leave-autolink-escape*
+      (cond ((starts-with-subseq "\\\\" string)
+             ;; Leave one backslash to escape autolinking in
+             ;; TRANSLATE-TO-LINKS.
+             (subseq string 1))
+            ((downcasingp)
+             (downcase-all-uppercase-code string))
+            (t
+             string))
       (cond ((starts-with-subseq "\\\\" string)
              (subseq string 2))
             ((starts-with-subseq "\\" string)
@@ -1546,15 +1553,7 @@
             (t
              (if (downcasingp)
                  (downcase-all-uppercase-code string)
-                 string)))
-      (cond ((starts-with-subseq "\\\\" string)
-             ;; Leave one backslash to escape autolinking in
-             ;; TRANSLATE-TO-LINKS.
-             (subseq string 1))
-            ((downcasingp)
-             (downcase-all-uppercase-code string))
-            (t
-             string))))
+                 string)))))
 
 (defun maybe-downcase-all-uppercase-code (string)
   (if (downcasingp)
@@ -2357,8 +2356,7 @@
              `(,(%make-reflink
                  (if (null title)
                      label
-                     (let ((*translating-reference-link* t))
-                       (codify (parse-markdown title))))
+                     (codify (parse-markdown title) :leave-autolink-escape nil))
                  (link-to link-1)))))))))
 
 

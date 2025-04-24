@@ -488,8 +488,10 @@ xxx
 
 (defsection @section-without-title (:export nil))
 
-(define-glossary-term @gt-escaped-title (:title "`\\\\PRINT`"
+(define-glossary-term @gt-escaped-title (:title "`\\\\COS`"
                                          :url "xxx"))
+
+(defsection @section-escaped-title (:title "See `\\\\COS`"))
 
 (deftest test-downcasing-in-docstrings ()
   (with-test ("unadorned")
@@ -601,7 +603,19 @@ xxx
       (check-downcasing "`XXX`" "`xxx`")
       (check-downcasing "`(PRINT \"hello\")`" "`(print \"hello\")`")))
   (with-test ("escaped downcasing in title")
-    (check-downcasing "@GT-ESCAPED-TITLE" "[`PRINT`][5758]")))
+    ;; This is not a title, but escaping in titles should behave the
+    ;; same.
+    (check-downcasing "\\\\COS" "COS")
+    (check-downcasing "`\\\\COS`" "`COS`")
+    ;; This is linked to the GLOSSARY-TERM-URL.
+    (check-downcasing "@GT-ESCAPED-TITLE" "[`COS`][5758]")
+    ;; And this is linked to the SECTION.
+    (check-downcasing (list "@SECTION-ESCAPED-TITLE"
+                            @section-escaped-title)
+                      "[See `COS`][5dbb]")
+    (check-downcasing-pred @section-escaped-title "See `COS`")))
+
+(defsection @xxx (:title "`\\\\COS` Prompting"))
 
 (defsection @parent-section-without-title (:export nil)
   (@section-without-title section))
@@ -629,6 +643,10 @@ xxx
 (defun check-downcasing (docstring expected &key (warnings 0))
   (let ((*document-downcase-uppercase-code* t))
     (check-head docstring expected :warnings warnings)))
+
+(defun check-downcasing-pred (docstring pred)
+  (let ((*document-downcase-uppercase-code* t))
+    (check-pred docstring pred)))
 
 
 (deftest test-link ()

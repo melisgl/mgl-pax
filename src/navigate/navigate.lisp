@@ -33,7 +33,7 @@
   (@m-.-prompting section))
 
 
-(defsection @m-.-defaulting (:title "`\\M-.` Defaulting")
+(defsection @m-.-defaulting (:title "`\\\\M-.` Defaulting")
   """When `@M-.` is invoked, it first tries to find a @NAME in the
   current buffer at point. If no name is found, then it
   [prompts][@M-.-PROMPTING].
@@ -144,13 +144,13 @@
                   ,location)))
 
 
-(defsection @m-.-prompting (:title "`\\M-.` Prompting")
+(defsection @m-.-prompting (:title "`\\\\M-.` Prompting")
   (@m-.-minibuffer-syntax section)
   (@m-.-completion section))
 
 ;;; This documents the Elisp function `mgl-pax-edit-definitions'.
 ;;; There isn't muh code exclusively for this on the CL side.
-(defsection @m-.-minibuffer-syntax (:title "`\\M-.` Minibuffer Syntax")
+(defsection @m-.-minibuffer-syntax (:title "`\\\\M-.` Minibuffer Syntax")
   """At the minibuffer prompt, the DREF::@DEFINITIONS to edit
   can be specified as follows.
 
@@ -192,7 +192,7 @@
 ;;;; Completion of names and locatives for the Elisp function
 ;;;; `mgl-pax-name-completions-at-point'
 
-(defsection @m-.-completion (:title "`\\M-.` Completion")
+(defsection @m-.-completion (:title "`\\\\M-.` Completion")
   "When `\\\\M-.` prompts for the definition to edit, TAB-completion is
   available in the minibuffer for both names and locatives. To reduce
   clutter, string names are completed only if they are typed

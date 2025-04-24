@@ -961,7 +961,7 @@ A close relative of `M-.` is `C-.` for @BROWSING-LIVE-DOCUMENTATION.
     - Depends on: alexandria, dref/full, mgl-pax, swank(?)
     - Defsystem depends on: mgl-pax.asdf
 
-### `\M-.` Defaulting
+### `M-.` Defaulting
 
 When `@M-.` is invoked, it first tries to find a @NAME in the
 current buffer at point. If no name is found, then it
@@ -1014,9 +1014,9 @@ denoted method:
 ```
 
 
-### `\M-.` Prompting
+### `M-.` Prompting
 
-#### `\M-.` Minibuffer Syntax
+#### `M-.` Minibuffer Syntax
 
 At the minibuffer prompt, the DREF::@DEFINITIONS to edit
 can be specified as follows.
@@ -1055,7 +1055,7 @@ The package in which symbols are read is the Elisp
 `slime-current-package`. In Lisp buffers, this is the buffer's
 package, else it's the package of the Slime repl buffer.
 
-#### `\M-.` Completion
+#### `M-.` Completion
 
 When `M-.` prompts for the definition to edit, TAB-completion is
 available in the minibuffer for both names and locatives. To reduce

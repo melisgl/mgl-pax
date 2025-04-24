@@ -18,10 +18,10 @@
     - [6.2 Names in Raw Names][016d]
 - [7 PAX Locatives][292a]
 - [8 Navigating Sources in Emacs][3386]
-    - [8.1 `\M-.` Defaulting][460e]
-    - [8.2 `\M-.` Prompting][ed46]
-        - [8.2.1 `\M-.` Minibuffer Syntax][8106]
-        - [8.2.2 `\M-.` Completion][e444]
+    - [8.1 `M-.` Defaulting][460e]
+    - [8.2 `M-.` Prompting][ed46]
+        - [8.2.1 `M-.` Minibuffer Syntax][8106]
+        - [8.2.2 `M-.` Completion][e444]
 - [9 Generating Documentation][2c93]
     - [9.1 The `DOCUMENT` Function][dc0a]
         - [9.1.1 `DOCUMENTABLE`][0702]
@@ -1096,7 +1096,7 @@ A close relative of `M-.` is `C-.` for [Browsing Live Documentation][a595].
 
 <a id="x-28MGL-PAX-3A-40M--2E-DEFAULTING-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.1 `\M-.` Defaulting
+### 8.1 `M-.` Defaulting
 
 When [`M-.`][cb15] is invoked, it first tries to find a [name][88cf] in the
 current buffer at point. If no name is found, then it
@@ -1151,11 +1151,11 @@ denoted method:
 
 <a id="x-28MGL-PAX-3A-40M--2E-PROMPTING-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.2 `\M-.` Prompting
+### 8.2 `M-.` Prompting
 
 <a id="x-28MGL-PAX-3A-40M--2E-MINIBUFFER-SYNTAX-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.2.1 `\M-.` Minibuffer Syntax
+#### 8.2.1 `M-.` Minibuffer Syntax
 
 At the minibuffer prompt, the [definition][2143]s to edit
 can be specified as follows.
@@ -1196,7 +1196,7 @@ package, else it's the package of the Slime repl buffer.
 
 <a id="x-28MGL-PAX-3A-40M--2E-COMPLETION-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.2.2 `\M-.` Completion
+#### 8.2.2 `M-.` Completion
 
 When `M-.` prompts for the definition to edit, TAB-completion is
 available in the minibuffer for both names and locatives. To reduce
