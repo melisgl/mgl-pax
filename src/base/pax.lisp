@@ -259,7 +259,7 @@
                                     target-dir))))
 
 (defun check-pax-elisp-version (pax-elisp-version)
-  (let ((pax-cl-version '(0 4 0)))
+  (let ((pax-cl-version '(0 4 1)))
     (unless (equal pax-elisp-version pax-cl-version)
       (cerror "Ignore version mismatch."
               "~@<In Emacs, mgl-pax-version is ~S, ~

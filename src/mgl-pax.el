@@ -69,7 +69,7 @@ other mgl-pax commands in interactive use."
 
 ;;; See MGL-PAX::CHECK-PAX-ELISP-VERSION.
 (defvar mgl-pax-version)
-(setq mgl-pax-version  '(0 4 0))
+(setq mgl-pax-version  '(0 4 1))
 
 ;;; Check that the Elisp and CL PAX versions match, ensure that
 ;;; ASDF-SYSTEM is loaded (in the sense of ASDF:COMPONENT-LOADED-P),
@@ -1368,31 +1368,37 @@ The empty string means the current package."
 
 (defun mgl-pax-transcribe-last-expression ()
   "A bit like C-u C-x C-e (`slime-eval-last-expression') that
-inserts the output and values of the sexp before the point, this
-does the same but with MGL-PAX:TRANSCRIBE. Use a numeric prefix
+inserts the output and values of the sexp before point, this does
+the same but with MGL-PAX:TRANSCRIBE. Use a numeric prefix
 argument as in index to select one of the Common Lisp
 MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
 Without a prefix argument, the first syntax is used."
   (interactive)
   (mgl-pax-with-component (:mgl-pax/transcribe)
-    (save-excursion
-      (let ((dynenv (mgl-pax-find-cl-transcript-dynenv))
-            (start (point))
-            (prefix (mgl-pax-line-prefix)))
-        (insert
-         (mgl-pax-transcribe (mgl-pax-call-uncommented 'slime-last-expression)
-                             (mgl-pax-transcribe-syntax-arg)
-                             nil nil nil dynenv))
-        (string-insert-rectangle
-         (save-excursion (goto-char start)
-                         (forward-line 1)
-                         (point))
-         (save-excursion (forward-line -1) (point))
-         prefix)
-        ;; The transcript ends with a newline. Delete it if it would
-        ;; result in a blank line.
-        (when (looking-at "\n")
-          (delete-char 1))))))
+    (let ((dynenv (mgl-pax-find-cl-transcript-dynenv))
+          (sexp (mgl-pax-call-uncommented 'slime-last-expression))
+          (start (point))
+          (prefix (mgl-pax-line-prefix)))
+      (unless (mgl-pax-blank-line-prefix-p)
+        (insert "\n"))
+      (insert
+       (mgl-pax-transcribe sexp (mgl-pax-transcribe-syntax-arg)
+                           nil nil nil dynenv))
+      (string-insert-rectangle
+       (save-excursion (goto-char start)
+                       (forward-line 1)
+                       (point))
+       (save-excursion (forward-line -1) (point))
+       prefix)
+      ;; The transcript ends with a newline. Delete it if it would
+      ;; result in a blank line.
+      (when (looking-at "\n")
+        (delete-char 1)))))
+
+(defun mgl-pax-blank-line-prefix-p ()
+  (let ((string (buffer-substring-no-properties (line-beginning-position)
+                                                (point))))
+    (string-match-p "^[[:space:]]*$" string)))
 
 ;;; Return the longest run of whitespace and semicolon characters at
 ;;; the beginning of the current line as a string.

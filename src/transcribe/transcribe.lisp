@@ -1304,16 +1304,12 @@
         (multiple-value-bind (string prefix)
             (strip-longest-common-prefix
              string "; " :first-line-special-p first-line-special-p)
-          (let ((transcript
-                  (prefix-lines prefix
-                                (transcribe string nil
-                                            :default-syntax default-syntax
-                                            :update-only update-only :echo echo
-                                            :dynenv dynenv)
-                                :exclude-first-line-p first-line-special-p)))
-            (if echo
-                transcript
-                (format nil "~%~A" transcript))))))))
+          (prefix-lines prefix
+                        (transcribe string nil
+                                    :default-syntax default-syntax
+                                    :update-only update-only :echo echo
+                                    :dynenv dynenv)
+                        :exclude-first-line-p first-line-special-p))))))
 
 
 (defsection @transcript-consistency-checking

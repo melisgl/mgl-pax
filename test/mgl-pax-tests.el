@@ -881,7 +881,7 @@
    (should (equal (point) 7))
    (mgl-pax-transcribe-last-expression)
    (accept-process-output nil 1)
-   (should (equal (point) 7))
+   (should (equal (point) 13))
    (should (equal (buffer-string) "(1+ 2)\n=> 3\n"))))
 
 (ert-deftest test-mgl-pax-transcribe-last-expression/simple-2 ()
@@ -900,7 +900,7 @@
    (insert "(princ 'xxx)")
    (mgl-pax-transcribe-last-expression)
    (accept-process-output nil 1)
-   (should (equal (point) 13))
+   (should (eobp))
    (should (equal (buffer-string) "(princ 'xxx)\n.. XXX\n=> XXX\n"))))
 
 (ert-deftest test-mgl-pax-transcribe-last-expression/comment ()
@@ -910,7 +910,7 @@
    (save-excursion (insert "\nxxx\n"))
    (mgl-pax-transcribe-last-expression)
    (accept-process-output nil 1)
-   (should (equal (point) 10))
+   (should (equal (point) 19))
    (should (equal (buffer-string) ";; (1+ 2)\n;; => 3\nxxx\n"))))
 
 (ert-deftest test-mgl-pax-transcribe-last-expression/multi-line-comment ()
@@ -920,7 +920,7 @@
    (save-excursion (insert "\nxxx\n"))
    (mgl-pax-transcribe-last-expression)
    (accept-process-output nil 1)
-   (should (equal (point) 13))
+   (should (equal (point) 22))
    (should (equal (buffer-string) ";; (1+\n;; 2)\n;; => 3\nxxx\n"))))
 
 (ert-deftest test-mgl-pax-transcribe-last-expression/junk-before ()
@@ -930,7 +930,7 @@
    (let ((p (point)))
      (mgl-pax-transcribe-last-expression)
      (accept-process-output nil 1)
-     (should (equal (point) p))
+     (should (eobp))
      (should (equal (buffer-string) ";; junk (1+ 2)\n;; => 3\n")))))
 
 
