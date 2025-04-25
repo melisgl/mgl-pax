@@ -164,22 +164,6 @@ Well, it's a kind of output, but maybe it would be better for
 consistency checking to treat it as a different kind of output. First,
 capturing interaction with the debugger needs to be though out though.
 ** MAYBE (values 1 2) => 1, 2 on a single line?
-** BUG mgl-pax-transcribe-last-expression is confused
-This works in org-mode, but get "unbalanced parenthesis" in lisp-mode:
-;;; (1+
-;;;  2)
-;;; => 3
-due to a difference in the behaviour of backward-sexp.
-
-STRIP-LONGEST-COMMON-PREFIX and PREFIX-LINES should happen in Elisp, or point could be passed to CL.
-
-Also:
-
-;;; Consider (1+ 2)
-;;; .. debugger invoked on UNBOUND-VARIABLE:
-;;; ..   The variable CONSIDER is unbound.
-;;; => 3
-
 * elisp
 ** MAYBE support SLY?
 ** MAYBE support elisp function and variable locatives?

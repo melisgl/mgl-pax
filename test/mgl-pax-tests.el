@@ -912,6 +912,26 @@
    (accept-process-output nil 1)
    (should (equal (point) 10))
    (should (equal (buffer-string) ";; (1+ 2)\n;; => 3\nxxx\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/multi-line-comment ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert ";; (1+\n;; 2)")
+   (save-excursion (insert "\nxxx\n"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (point) 13))
+   (should (equal (buffer-string) ";; (1+\n;; 2)\n;; => 3\nxxx\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/junk-before ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert ";; junk (1+ 2)")
+   (let ((p (point)))
+     (mgl-pax-transcribe-last-expression)
+     (accept-process-output nil 1)
+     (should (equal (point) p))
+     (should (equal (buffer-string) ";; junk (1+ 2)\n;; => 3\n")))))
 
 
 ;;;; Test `mgl-pax-retranscribe-region'

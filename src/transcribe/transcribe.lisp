@@ -8,7 +8,7 @@
                                                    (ignore-blank-lines-p t))
   (let ((prefix (longest-common-prefix
                  string chars :first-line-special-p first-line-special-p
-                 :ignore-blank-lines-p t)))
+                 :ignore-blank-lines-p ignore-blank-lines-p)))
     (values
      (with-output-to-string (output)
        (with-input-from-string (s string)

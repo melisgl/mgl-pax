@@ -1376,24 +1376,32 @@ Without a prefix argument, the first syntax is used."
   (interactive)
   (mgl-pax-with-component (:mgl-pax/transcribe)
     (save-excursion
-      (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
-        (let* ((start (progn (backward-sexp)
-                             ;; If the last expression is in a
-                             ;; comment, we need this for
-                             ;; forward-sexp below.
-                             (save-excursion
-                               (move-beginning-of-line nil)
-                               (point))))
-               (end (progn (forward-sexp)
-                           (point))))
-          (goto-char end)
-          (insert
-           (mgl-pax-transcribe start end (mgl-pax-transcribe-syntax-arg)
-                               nil nil nil dynenv))
-          ;; The transcript ends with a newline. Delete it if it
-          ;; would result in a blank line.
-          (when (looking-at "\n")
-            (delete-char 1)))))))
+      (let ((dynenv (mgl-pax-find-cl-transcript-dynenv))
+            (start (point))
+            (prefix (mgl-pax-line-prefix)))
+        (insert
+         (mgl-pax-transcribe (mgl-pax-call-uncommented 'slime-last-expression)
+                             (mgl-pax-transcribe-syntax-arg)
+                             nil nil nil dynenv))
+        (string-insert-rectangle
+         (save-excursion (goto-char start)
+                         (forward-line 1)
+                         (point))
+         (save-excursion (forward-line -1) (point))
+         prefix)
+        ;; The transcript ends with a newline. Delete it if it would
+        ;; result in a blank line.
+        (when (looking-at "\n")
+          (delete-char 1))))))
+
+;;; Return the longest run of whitespace and semicolon characters at
+;;; the beginning of the current line as a string.
+(defun mgl-pax-line-prefix ()
+  (let ((bound (point)))
+    (save-excursion
+      (move-beginning-of-line nil)
+      (re-search-forward "^[[:space:];]*" bound)
+      (match-string 0))))
 
 (defun mgl-pax-retranscribe-region (start end)
   "Updates the transcription in the current region (as in calling
@@ -1406,9 +1414,10 @@ input will not be changed."
   (mgl-pax-with-component (:mgl-pax/transcribe)
     (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
       (let ((point-at-start-p (= (point) start))
-            (transcript (mgl-pax-transcribe start end
-                                            (mgl-pax-transcribe-syntax-arg)
-                                            t t nil dynenv)))
+            (transcript (mgl-pax-transcribe
+                         (buffer-substring-no-properties start end)
+                         (mgl-pax-transcribe-syntax-arg)
+                         t t nil dynenv)))
         (if (string= transcript (buffer-substring-no-properties start end))
             (deactivate-mark)
           (if point-at-start-p
@@ -1442,11 +1451,11 @@ input will not be changed."
             (when (search-forward ":dynenv" nil t)
               (mgl-pax-next-sexp))))))))
 
-(defun mgl-pax-transcribe (start end syntax update-only echo
-                                 first-line-special-p dynenv)
+(defun mgl-pax-transcribe (string syntax update-only echo
+                                  first-line-special-p dynenv)
   (slime-eval `(mgl-pax::transcribe-for-emacs
-                ,(buffer-substring-no-properties start end)
-                ',syntax ',update-only ',echo ',first-line-special-p ,dynenv)))
+                ,string ',syntax ',update-only ',echo ',first-line-special-p
+                ,dynenv)))
 
 
 (provide 'mgl-pax)
