@@ -123,8 +123,8 @@ function run_tests {
 
 export LC_ALL=en_US.UTF-8
 
-# Most lisps take only 10s or so to run the tests. CLISP takes 4x longer. ABCL
-# is 25x slower.
+# Most lisps take only 10s or so to run the tests. CLISP takes 4x
+# longer. ABCL is 25x slower.
 run_tests lisp_tests sbcl --noinform --disable-debugger
 # run_tests lisp_tests allegro --batch --backtrace-on-error
 run_tests lisp_tests ccl-bin --batch

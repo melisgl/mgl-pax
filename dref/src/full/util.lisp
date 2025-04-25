@@ -95,7 +95,7 @@
       (has-setf-function-p symbol)))
 
 (defun has-setf-expander-p (symbol)
-  ;; FIXME: other implemenations
+  ;; FIXME: other implementations
   #+ccl (ccl::%setf-method symbol)
   #+clisp (get symbol 'system::setf-expander)
   #+sbcl (swank/sbcl::setf-expander symbol)

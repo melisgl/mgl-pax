@@ -49,14 +49,14 @@
         (subseq string 0 position)
         string)))
 
-;;; Read as many consucutive lines starting with PREFIX from STREAM as
-;;; possible. From each mathing line, strip the prefix and join them
+;;; Read as many consecutive lines starting with PREFIX from STREAM as
+;;; possible. From each matching line, strip the prefix and join them
 ;;; into a non-prefixed string conserving the newlines. As the second
 ;;; value, return the number of lines read.
 ;;;
 ;;; As the third value, return the first non-matching line (without
 ;;; the newline) or NIL at eof. The fourth value is whether the first
-;;; non-matching line returned as the thrid value had a missing
+;;; non-matching line returned as the third value had a missing
 ;;; newline. The fifth value is file position of the start of the line
 ;;; returned as the third value.
 ;;;
@@ -529,7 +529,7 @@
 ;;;;       (:READABLE (42 "42"))))
 ;;;;
 ;;;; Note how the command contains both the sexp and the original
-;;;; string (including preceeding comments). It also has a variable
+;;;; string (including preceding comments). It also has a variable
 ;;;; number of output (0 or 1) and value captures.
 
 (defun command-form (command)
@@ -736,11 +736,11 @@
                            (read-line* stream nil nil))
                         nil)))
         ((eq prefix-id :readable-continuation)
-         (transcription-error* "Prefix ~S must be preceeded by ~S."
+         (transcription-error* "Prefix ~S must be preceded by ~S."
                                (find-prefix prefix-id syntax-id)
                                (find-prefix :readable syntax-id)))
         ((eq prefix-id :unreadable-continuation)
-         (transcription-error* "Prefix ~S must be preceeded by ~S."
+         (transcription-error* "Prefix ~S must be preceded by ~S."
                                (find-prefix prefix-id syntax-id)
                                (find-prefix :unreadable syntax-id)))
         (t
@@ -953,7 +953,7 @@
               'transcription-values-consistency-error
               stream form-as-string
               "Source had ~S return values ~:_while there are actually ~S.~:@_~
-              ~@[Note that there was an error during evalation:~:_~A~]"
+              ~@[Note that there was an error during evaluation:~:_~A~]"
               (length value-captures) (length values)
               (when errorp
                 form-output)))

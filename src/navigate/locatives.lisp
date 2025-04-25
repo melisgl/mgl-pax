@@ -83,7 +83,7 @@
 
 (define-pseudo-locative-type (go (name locative)) ()
   """Redirect to a definition in the context of the DREF::@REFERENCE
-  designated by NAME and LOCATIVE. This pseudolocative is intended for
+  designated by NAME and LOCATIVE. This PSEUDO locative is intended for
   things that have no explicit global definition.
 
   As an example, consider this part of a hypothetical documentation of
@@ -232,7 +232,7 @@
 (define-pseudo-locative-type (include source &key line-prefix header footer
                                       header-nl footer-nl)
     ()
-  """This pseudolocative refers to a region of a file. SOURCE can be a
+  """This PSEUDO locative refers to a region of a file. SOURCE can be a
   [STRING][type] or a [PATHNAME][type], in which case the whole file
   is being pointed to, or it can explicitly supply START, END
   locatives. INCLUDE is typically used to include non-lisp files in

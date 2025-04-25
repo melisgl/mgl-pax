@@ -38,7 +38,7 @@
   :bug-tracker ""
   :source-control ""
   :description "DREF with everything loaded. There should be no need
-  to explicity load this sytem (or depend on it) as it is autoloaded
+  to explicitly load this system (or depend on it) as it is autoloaded
   as necessary by all publicly accessible functionality in DREF."
   :depends-on ("alexandria" "dref" (:feature (:not :swank) "swank"))
   :defsystem-depends-on ("mgl-pax.asdf")

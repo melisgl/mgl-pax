@@ -27,7 +27,7 @@ Dispatching" but DREF allows case-insensitive substring matching:
 But completing "printer di<TAB> doesn't work.
 
 So, we need to pass PREFIX to MAP-NAMES or similar, but that won't
-support fancier completion mechnanisms such as c-p-c.
+support fancier completion mechanisms such as c-p-c.
 
 Instead, the completion may match case-insensitively but replace with
 the canonical name?
@@ -38,7 +38,7 @@ sensitive?
 There is always mgl-pax-apropos for case-insensitive matching.
 ** MAYBE add SYMBOL as an alias for dislocated?
 ** MAYBE add source locative
-That is, link to github, without documenting anything. Useful for code
+That is, link to GitHub, without documenting anything. Useful for code
 examples without actually INCLUDEing them. Does/should LAMBDA do this?
 ** DONE compare DRef to the Definitions library
 Pros of DRef:
@@ -83,7 +83,7 @@ print dref:f<TAB> -> no completions
 print (mgl-pax:clh<TAB> -> works
 print (pax:clh<TAB> -> no completions
 
-Actually, it's not just the completion of thelocative, but of the
+Actually, it's not just the completion of the locative, but of the
 second sexp, which should be informed by the first sexp.
 
 Normal completion includes nicknames as "pax:" without relisting all

@@ -11,7 +11,7 @@
 ;;;; - Some of the definitions for both packages are autoloaded via
 ;;;;   the DREF/FULL ASDF:SYSTEM.
 ;;;;
-;;;; One option to fulfill these requirements would be to :EXPORT from
+;;;; One option to fulfil these requirements would be to :EXPORT from
 ;;;; the DEFINE-PACKAGE forms below, but 1. that would duplicate
 ;;;; information in the DEFSECTION forms, 2. the documentation
 ;;;; wouldn't be available when DREF/FULL is not yet loaded. On the

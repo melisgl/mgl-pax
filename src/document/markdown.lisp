@@ -132,7 +132,7 @@
                 (t
                  (write-char char stream))))))))
 
-;;; This is a workaround for "\"mgl-pax\" ASFD:SYSTEM" being displayed
+;;; This is a workaround for "\"mgl-pax\" ASDF:SYSTEM" being displayed
 ;;; with the backslashes.
 (defun escape-markdown-reflink-definition-title (string)
   (cond ((not (find #\" string))

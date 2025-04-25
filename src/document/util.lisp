@@ -71,7 +71,7 @@
 
 ;;;; Funny printing of @NAMEs
 
-;;; Symbols in names (they can be lists) ared printed almost as PRIN1
+;;; Symbols in names (they can be lists) are printed almost as PRIN1
 ;;; would with *PACKAGE* were the CL package. Differences:
 ;;;
 ;;; - For symbols in other packages, a single #\: is printed even if

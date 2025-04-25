@@ -1205,7 +1205,7 @@
 ;;; This is the first of the translator functions, which are those
 ;;; passed to MAP-MARKDOWN-PARSE-TREE.
 (defun translate-docstring-links (parent tree)
-  """DOCSTRING is a pseudolocative for including the parse tree of the
+  """DOCSTRING is a PSEUDO locative for including the parse tree of the
   markdown [DOCSTRING][function] of a definition in the parse tree of
   a docstring when generating documentation. It has no source location
   information and only works as an explicit link. This construct is
@@ -2106,7 +2106,7 @@
   (@escaping-autolinking section))
 
 ;;; This translator handles (:CODE "SOMETHING"), the parse of
-;;; `SOMETHING`: looks for any references to "SOMETHING" and tanslates
+;;; `SOMETHING`: looks for any references to "SOMETHING" and translates
 ;;; it to, for example, (:REFERENCE-LINK :LABEL ((:CODE "SOMETHING"))
 ;;; :DEFINITION ("function")) if there is a single function reference
 ;;; to it.

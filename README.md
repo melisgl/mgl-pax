@@ -811,7 +811,7 @@ PAX adds a few of its own.
 
 - [locative] **INCLUDE** *SOURCE &KEY LINE-PREFIX HEADER FOOTER HEADER-NL FOOTER-NL*
 
-    This pseudolocative refers to a region of a file. `SOURCE` can be a
+    This [`PSEUDO`][943a] locative refers to a region of a file. `SOURCE` can be a
     [`STRING`][b93c] or a [`PATHNAME`][0317], in which case the whole file
     is being pointed to, or it can explicitly supply `START`, `END`
     locatives. `INCLUDE` is typically used to include non-lisp files in
@@ -873,7 +873,7 @@ PAX adds a few of its own.
 
 - [locative] **DOCSTRING**
 
-    `DOCSTRING` is a pseudolocative for including the parse tree of the
+    `DOCSTRING` is a [`PSEUDO`][943a] locative for including the parse tree of the
     markdown [`DOCSTRING`][affc] of a definition in the parse tree of
     a docstring when generating documentation. It has no source location
     information and only works as an explicit link. This construct is
@@ -903,7 +903,7 @@ PAX adds a few of its own.
 - [locative] **GO** *(NAME LOCATIVE)*
 
     Redirect to a definition in the context of the [reference][43bd]
-    designated by `NAME` and `LOCATIVE`. This pseudolocative is intended for
+    designated by `NAME` and `LOCATIVE`. This [`PSEUDO`][943a] locative is intended for
     things that have no explicit global definition.
     
     As an example, consider this part of a hypothetical documentation of
@@ -3034,7 +3034,7 @@ to allow jumping between the repository and the gh-pages site.
     Return an object suitable as `:SOURCE-URI-FN` of a page spec (see
     the `PAGES` argument of [`DOCUMENT`][432c]). The function looks at the source
     location of the object passed to it, and if the location is found,
-    the path is made relative to the toplevel directory of the git
+    the path is made relative to the top-level directory of the git
     checkout containing the file of the `ASDF-SYSTEM` and finally an URI
     pointing to your git forge (such as GitHub) is returned. A warning
     is signalled whenever the source location lookup fails or if the
@@ -4232,6 +4232,7 @@ they are presented.
   [9172]: http://www.lispworks.com/documentation/HyperSpec/Body/t_t.htm "T (MGL-PAX:CLHS CLASS)"
   [935f]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss045.htm '"SUMMARY:CHARACTER-PROPOSAL:2-6-5" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [9439]: http://www.lispworks.com/documentation/HyperSpec/Body/m_pr_unr.htm "PRINT-UNREADABLE-OBJECT (MGL-PAX:CLHS MGL-PAX:MACRO)"
+  [943a]: dref/README.md#x-28DREF-3APSEUDO-20DREF-3ADTYPE-29 "DREF:PSEUDO DREF:DTYPE"
   [945b]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cgc.htm '"22.3.7.3" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [9478]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhv.htm '"2.4.8.22" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [94c7]: #x-28MGL-PAX-3A-40BASICS-20MGL-PAX-3ASECTION-29 "Basics"

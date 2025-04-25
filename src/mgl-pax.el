@@ -771,7 +771,7 @@ buffer).
 The following describes the syntax of PAX-URL in non-interactive
 mode.
 
-When invoked programatically, PAX-URL must be a properly
+When invoked programmatically, PAX-URL must be a properly
 urlencoded string with URL scheme \"pax:\". The format of PAX-URL
 is:
 
@@ -1274,7 +1274,7 @@ In a PAX doc buffer, it's equivalent to pressing `v'
 (defun mgl-pax-apropos (string &optional external-only package
                                case-sensitive)
   "Show all PAX definitions that match the arguments.
-This is a fontend for DREF:DREF-APROPOS. The syntax is described
+This is a frontend for DREF:DREF-APROPOS. The syntax is described
 in detail in MGL-PAX::@APROPOS. Here, we give only a few
 examples.
 

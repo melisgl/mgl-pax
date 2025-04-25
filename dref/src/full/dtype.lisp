@@ -204,7 +204,7 @@
 ;;;;
 ;;;; 1. COVER-DTYPE gives a set of locative types whose union contains
 ;;;;    all definitions of DTYPE, but this upper bound may be loose
-;;;;    when a locative's args restict a locative type further as in
+;;;;    when a locative's args restrict a locative type further as in
 ;;;;    (METHOD () (NUMBER)).
 ;;;;
 ;;;; 2. We gather all definitions with these locative types.

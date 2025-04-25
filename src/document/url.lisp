@@ -101,7 +101,7 @@
   (let ((array (copy-seq +html4-first-name-characters+)))
     (_mark-range array #\0 #\9)
     (_mark-one array #\-)
-    ;; Encode these as well to work around github markdown bug which
+    ;; Encode these as well to work around GitHub markdown bug which
     ;; would otherwise break links.
     #+nil (_mark-one array #\_)
     #+nil (_mark-one array #\.)

@@ -280,7 +280,7 @@
   """Return an object suitable as :SOURCE-URI-FN of a page spec (see
   the PAGES argument of DOCUMENT). The function looks at the source
   location of the object passed to it, and if the location is found,
-  the path is made relative to the toplevel directory of the git
+  the path is made relative to the top-level directory of the git
   checkout containing the file of the ASDF-SYSTEM and finally an \URI
   pointing to your git forge (such as GitHub) is returned. A warning
   is signalled whenever the source location lookup fails or if the
@@ -395,8 +395,8 @@
                      (values relative-path line-number)
                      (warn "~@<Source location information in file ~S ~
                             is out of date.~@:>" filename)))
-               (warn "~@<Source location for ~S is not below the git toplevel ~
-                      directory ~S.~%~@:>" object git-dir))))))
+               (warn "~@<Source location for ~S is not below the git ~
+                     top-level directory ~S.~%~@:>" object git-dir))))))
 
 (defun file-position-to-line-number (filename file-position cache)
   (if (null file-position)

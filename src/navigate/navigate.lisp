@@ -149,7 +149,7 @@
   (@m-.-completion section))
 
 ;;; This documents the Elisp function `mgl-pax-edit-definitions'.
-;;; There isn't muh code exclusively for this on the CL side.
+;;; There isn't much code exclusively for this on the CL side.
 (defsection @m-.-minibuffer-syntax (:title "`\\\\M-.` Minibuffer Syntax")
   """At the minibuffer prompt, the DREF::@DEFINITIONS to edit
   can be specified as follows.
