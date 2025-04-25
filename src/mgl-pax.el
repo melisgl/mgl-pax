@@ -1406,7 +1406,7 @@ Without a prefix argument, the first syntax is used."
   (let ((bound (point)))
     (save-excursion
       (move-beginning-of-line nil)
-      (re-search-forward "^[[:space:];]*" bound)
+      (re-search-forward "[[:space:];]*" bound)
       (match-string 0))))
 
 (defun mgl-pax-retranscribe-region (start end)

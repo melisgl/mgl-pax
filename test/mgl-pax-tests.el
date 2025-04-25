@@ -927,11 +927,32 @@
   (load-mgl-pax-test-system)
   (with-temp-lisp-buffer
    (insert ";; junk (1+ 2)")
-   (let ((p (point)))
-     (mgl-pax-transcribe-last-expression)
-     (accept-process-output nil 1)
-     (should (eobp))
-     (should (equal (buffer-string) ";; junk (1+ 2)\n;; => 3\n")))))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (eobp))
+   (should (equal (buffer-string) ";; junk (1+ 2)\n;; => 3\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/at-prompt ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "CL-USER> ")
+   (mgl-pax-mark-prompt)
+   (should (= (point) (point-at-bol)))
+   (insert "(1+ 2)")
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (eobp))
+   (should (equal (buffer-string) "CL-USER> (1+ 2)\n=> 3\n"))))
+
+(defun mgl-pax-mark-prompt ()
+  (add-text-properties
+   (point-at-bol)
+   (point)
+   '(inhibit-line-move-field-capture
+     t
+     rear-nonsticky t
+     field output
+     front-sticky (field inhibit-line-move-field-capture))))
 
 
 ;;;; Test `mgl-pax-retranscribe-region'
