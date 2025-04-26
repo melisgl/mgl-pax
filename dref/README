@@ -1877,7 +1877,17 @@ macros.
     ARGLIST\* with OBJECT either RESOLVEd (if it's a DREF) or LOCATEd (if
     it's not a DREF).
     
-    The default method returns NIL, NIL.
+    - The default method returns NIL, NIL.
+    
+    - There is also a method specialized on DREFs, that looks
+      up the DEFINITION-PROPERTY called ARGLIST and returns its value
+      with VALUES-LIST. Thus, an arglist and its kind can be specified
+      with something like
+    
+        ```
+        (setf (definition-property xref 'arglist)
+              (list arglist :destructuring))
+        ```
     
     This function is for extension only. Do not call it directly.
 
@@ -1891,7 +1901,17 @@ macros.
     OBJECT either RESOLVEd (if it's a DREF) or LOCATEd (if it's not a
     DREF).
     
-    The default method returns NIL.
+    - The default method returns NIL.
+    
+    - There is also a method specialized on DREFs, that looks
+      up the DEFINITION-PROPERTY called DOCSTRING and returns its value
+      with VALUES-LIST. Thus, a docstring and a package can be specified
+      with something like
+    
+        ```
+        (setf (definition-property xref 'docstring)
+              (list docstring *package*))
+        ```
     
     This function is for extension only. Do not call it directly.
 
@@ -1908,9 +1928,54 @@ macros.
     SOURCE-LOCATION returns the last of the `(:ERROR <MESSAGE>)`s
     encountered or a generic error message if only NILs were returned.
     
-    The default method returns NIL.
+    - The default method returns NIL.
+    
+    - There is also a method specialized on DREFs, that looks
+      up the DEFINITION-PROPERTY called SOURCE-LOCATION. If present, it
+      must be a function of no arguments that returns a source location
+      or NIL. Typically, this is set up in the defining macro like this:
+    
+        ```
+        (setf (definition-property xref 'source-location)
+              (this-source-location))
+        ```
     
     This function is for extension only. Do not call it directly.
+
+#### Definition Properties
+
+Arbitrary data may be associated with definitions.
+This mechanism is used by `ARGLIST*`, `DOCSTRING*` and
+`SOURCE-LOCATION*` for easy extension.
+
+The following functions take an XREF argument and not a DREF to
+allow working with non-canonical or
+non-existent definitions.
+
+- [function] DEFINITION-PROPERTY XREF INDICATOR
+
+    Return the value of the property associated with XREF whose name
+    is EQL to INDICATOR. The second return value indicates whether the
+    property was found. SETFable.
+
+- [function] DELETE-DEFINITION-PROPERTY XREF INDICATOR
+
+    Delete the property associated with XREF whose name is EQL to INDICATOR.
+    Return true if the property was found.
+
+- [function] DEFINITION-PROPERTIES XREF
+
+    Return the properties of XREF as an association list.
+
+- [function] DELETE-DEFINITION-PROPERTIES XREF
+
+    Delete all properties associated with XREF.
+
+- [function] MOVE-DEFINITION-PROPERTIES FROM-XREF TO-XREF
+
+    Associate all properties of FROM-XREF with TO-XREF, as if readding
+    them one-by-one with `(SETF DEFINITION-PROPERTY)`, and
+    deleting them from FROM-XREF with DELETE-DEFINITION-PROPERTY.
 
 ### DREF-CLASSes
 
@@ -2122,6 +2187,11 @@ the details, see the Elisp function `slime-goto-source-location`.
     This is a non-interactive companion to the Elisp function
     `slime-location-offset`, supporting only file positions and
     non-partial matching of snippets.
+
+- [macro] THIS-SOURCE-LOCATION
+
+    The value of this macro form is a function of no arguments that
+    returns its own SOURCE-LOCATION.
 
   [00d4]: #x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE"
   [090c]: #x-28MGL-PAX-3ASTRUCTURE-ACCESSOR-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:STRUCTURE-ACCESSOR MGL-PAX:LOCATIVE"

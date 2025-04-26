@@ -1170,23 +1170,6 @@
   (if (gethash name *dtype-expanders*)
       (%make-dref name dtype)
       (dref name 'locative)))
-
-(defun dtype-dummy-method (name)
-  (find-method* #'dtype-dummy () `((eql ,name))))
-
-(defmethod arglist* ((dref dtype-dref))
-  (values (dtype-dummy (dref-name dref)) :destructuring))
-
-(defmethod docstring* ((dref dtype-dref))
-  (multiple-value-bind (arglist docstring package)
-      (dtype-dummy (dref-name dref))
-    (declare (ignore arglist))
-    (values docstring package)))
-
-(defmethod source-location* ((dref dtype-dref))
-  (let ((name (dref-name dref)))
-    (swank-source-location* (dtype-dummy name) 'dtype-dummy
-                            `(method () ((eql ,name))))))
 
 
 ;;;; LOCATIVE locative
@@ -1208,46 +1191,6 @@
               (find symbol *locative-aliases*))
     (locate-error "~S is not a valid locative type or locative alias." symbol))
   (%make-dref symbol locative))
-
-(defun locative-type-lambda-list-method-for-symbol (symbol)
-  (find-method* #'locative-type-lambda-list () `((eql ,symbol))))
-
-(defmethod arglist* ((dref locative-dref))
-  (values (locative-type-lambda-list (dref-name dref)) :destructuring))
-
-(defmethod docstring* ((dref locative-dref))
-  (multiple-value-bind (arglist docstring package)
-      (locative-type-lambda-list (dref-name dref))
-    (declare (ignore arglist))
-    (values docstring package)))
-
-(defmethod source-location* ((dref locative-dref))
-  (let ((symbol (dref-name dref)))
-    (swank-source-location* (locative-type-lambda-list-method-for-symbol symbol)
-                            'locative-type-lambda-list
-                            `(method () ((eql ,symbol))))))
-
-
-;;;; Finish the job of DEFINE-SYMBOL-LOCATIVE-TYPE
-
-(defmethod arglist* ((dref symbol-locative-dref))
-  (let ((symbol (dref-name dref))
-        (locative-type (dref-locative-type dref)))
-    (values (symbol-lambda-list symbol locative-type) :macro)))
-
-(defmethod docstring* ((dref symbol-locative-dref))
-  (let* ((symbol (dref-name dref))
-         (locative-type (dref-locative-type dref))
-         (method (symbol-lambda-list-method symbol locative-type)))
-    (values (documentation method t)
-            (nth-value 1 (symbol-lambda-list symbol locative-type)))))
-
-(defmethod source-location* ((dref symbol-locative-dref))
-  (let ((symbol (dref-name dref))
-        (locative-type (dref-locative-type dref)))
-    (swank-source-location*
-     (symbol-lambda-list-method symbol locative-type)
-     'symbol-lambda-list `(method () ((eql ,symbol) (eql ,locative-type))))))
 
 
 ;;;; UNKNOWN locative

@@ -41,18 +41,18 @@
 
   See DTYPEP for the semantics and also the locative DTYPE."
   (multiple-value-bind (docstring body) (parse-body-docstring body)
-    `(eval-when (:compile-toplevel :load-toplevel :execute)
-       (setf (gethash ',name *dtype-expanders*)
-             (compile nil '(lambda ,lambda-list
-                            ,@body)))
-       (defmethod dtype-dummy ((name (eql ',name)))
-         (values ',lambda-list ,docstring ,*package*)))))
-
-;;; Like LOCATIVE-TYPE-LAMBDA-LIST, but for DTYPEs. This is to have a
-;;; source location, portable arglist and docstring along with
-;;; definition-time package.
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defgeneric dtype-dummy (name)))
+    (let ((%xref (gensym "XREF")))
+      `(eval-when (:compile-toplevel :load-toplevel :execute)
+         (setf (gethash ',name *dtype-expanders*)
+               (compile nil '(lambda ,lambda-list
+                              ,@body)))
+         (let ((,%xref (xref ',name 'dtype)))
+           (setf (definition-property ,%xref 'arglist)
+                 (list ',lambda-list :macro))
+           (setf (definition-property ,%xref 'docstring)
+                 (list ,docstring ,*package*))
+           (setf (definition-property ,%xref 'source-location)
+                 (this-source-location)))))))
 
 (autoload dtypep "dref/full")
 

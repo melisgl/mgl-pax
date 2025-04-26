@@ -30,6 +30,7 @@
         - [7.4.2 Canonicalization][9383]
         - [7.4.3 Defining Lookups, Locators and Casts][adc7]
     - [7.5 Extending Everything Else][793d]
+        - [7.5.1 Definition Properties][c9de]
     - [7.6 `DREF-CLASS`es][6354]
     - [7.7 Source Locations][a078]
 
@@ -2152,7 +2153,17 @@ macros.
     `ARGLIST*` with `OBJECT` either [`RESOLVE`][63b4]d (if it's a `DREF`) or [`LOCATE`][8f19]d (if
     it's not a `DREF`).
     
-    The default method returns `NIL`, `NIL`.
+    - The default method returns `NIL`, `NIL`.
+    
+    - There is also a method specialized on [`DREF`s][d930], that looks
+      up the [`DEFINITION-PROPERTY`][5f91] called `ARGLIST` and returns its value
+      with [`VALUES-LIST`][dbd4]. Thus, an arglist and its kind can be specified
+      with something like
+    
+        ```
+        (setf (definition-property xref 'arglist)
+              (list arglist :destructuring))
+        ```
     
     This function is for extension only. Do not call it directly.
 
@@ -2168,7 +2179,17 @@ macros.
     `OBJECT` either [`RESOLVE`][63b4]d (if it's a `DREF`) or [`LOCATE`][8f19]d (if it's not a
     `DREF`).
     
-    The default method returns `NIL`.
+    - The default method returns `NIL`.
+    
+    - There is also a method specialized on [`DREF`s][d930], that looks
+      up the [`DEFINITION-PROPERTY`][5f91] called `DOCSTRING` and returns its value
+      with [`VALUES-LIST`][dbd4]. Thus, a docstring and a package can be specified
+      with something like
+    
+        ```
+        (setf (definition-property xref 'docstring)
+              (list docstring *package*))
+        ```
     
     This function is for extension only. Do not call it directly.
 
@@ -2187,9 +2208,66 @@ macros.
     `SOURCE-LOCATION` returns the last of the `(:ERROR <MESSAGE>)`s
     encountered or a generic error message if only `NIL`s were returned.
     
-    The default method returns `NIL`.
+    - The default method returns `NIL`.
+    
+    - There is also a method specialized on [`DREF`s][d930], that looks
+      up the [`DEFINITION-PROPERTY`][5f91] called `SOURCE-LOCATION`. If present, it
+      must be a function of no arguments that returns a source location
+      or `NIL`. Typically, this is set up in the defining macro like this:
+    
+        ```
+        (setf (definition-property xref 'source-location)
+              (this-source-location))
+        ```
     
     This function is for extension only. Do not call it directly.
+
+<a id="x-28DREF-EXT-3A-40DEFINITION-PROPERTIES-20MGL-PAX-3ASECTION-29"></a>
+
+#### 7.5.1 Definition Properties
+
+Arbitrary data may be associated with definitions.
+This mechanism is used by [`ARGLIST*`][0a96], [`DOCSTRING*`][9fd4] and
+[`SOURCE-LOCATION*`][444d] for easy extension.
+
+The following functions take an `XREF` argument and not a `DREF`([`0`][d930] [`1`][7e92]) to
+allow working with [non-canonical][9383] or
+non-existent definitions.
+
+<a id="x-28DREF-EXT-3ADEFINITION-PROPERTY-20FUNCTION-29"></a>
+
+- [function] **DEFINITION-PROPERTY** *XREF INDICATOR*
+
+    Return the value of the property associated with `XREF` whose name
+    is `EQL`([`0`][db03] [`1`][5fd4]) to `INDICATOR`. The second return value indicates whether the
+    property was found. [`SETF`][a138]able.
+
+<a id="x-28DREF-EXT-3ADELETE-DEFINITION-PROPERTY-20FUNCTION-29"></a>
+
+- [function] **DELETE-DEFINITION-PROPERTY** *XREF INDICATOR*
+
+    Delete the property associated with `XREF` whose name is `EQL`([`0`][db03] [`1`][5fd4]) to `INDICATOR`.
+    Return true if the property was found.
+
+<a id="x-28DREF-EXT-3ADEFINITION-PROPERTIES-20FUNCTION-29"></a>
+
+- [function] **DEFINITION-PROPERTIES** *XREF*
+
+    Return the properties of `XREF` as an association list.
+
+<a id="x-28DREF-EXT-3ADELETE-DEFINITION-PROPERTIES-20FUNCTION-29"></a>
+
+- [function] **DELETE-DEFINITION-PROPERTIES** *XREF*
+
+    Delete all properties associated with `XREF`.
+
+<a id="x-28DREF-EXT-3AMOVE-DEFINITION-PROPERTIES-20FUNCTION-29"></a>
+
+- [function] **MOVE-DEFINITION-PROPERTIES** *FROM-XREF TO-XREF*
+
+    Associate all properties of `FROM-XREF` with `TO-XREF`, as if readding
+    them one-by-one with `(SETF DEFINITION-PROPERTY)`, and
+    deleting them from `FROM-XREF` with [`DELETE-DEFINITION-PROPERTY`][09b7].
 
 <a id="x-28DREF-EXT-3A-40DREF-CLASSES-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2484,6 +2562,13 @@ the details, see the Elisp function `slime-goto-source-location`.
     `slime-location-offset`, supporting only file positions and
     non-partial matching of snippets.
 
+<a id="x-28DREF-EXT-3ATHIS-SOURCE-LOCATION-20MGL-PAX-3AMACRO-29"></a>
+
+- [macro] **THIS-SOURCE-LOCATION**
+
+    The value of this macro form is a function of no arguments that
+    returns its own [`SOURCE-LOCATION`][32da].
+
   [006c]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_4.htm "DEFINE-METHOD-COMBINATION (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [00d4]: #x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE"
   [023a]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss049_w.htm '"ISSUE:CLOS-CONDITIONS" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -2491,6 +2576,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [0617]: #x-28DREF-3AXREF-3D-20FUNCTION-29 "DREF:XREF= FUNCTION"
   [090c]: #x-28MGL-PAX-3ASTRUCTURE-ACCESSOR-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:STRUCTURE-ACCESSOR MGL-PAX:LOCATIVE"
   [0976]: #x-28DREF-3ADREF-LOCATIVE-ARGS-20FUNCTION-29 "DREF:DREF-LOCATIVE-ARGS FUNCTION"
+  [09b7]: #x-28DREF-EXT-3ADELETE-DEFINITION-PROPERTY-20FUNCTION-29 "DREF-EXT:DELETE-DEFINITION-PROPERTY FUNCTION"
   [0a96]: #x-28DREF-EXT-3AARGLIST-2A-20GENERIC-FUNCTION-29 "DREF-EXT:ARGLIST* GENERIC-FUNCTION"
   [0b3a]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE"
   [0d07]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_2.htm "SYMBOL-NAME (MGL-PAX:CLHS FUNCTION)"
@@ -2574,7 +2660,9 @@ the details, see the Elisp function `slime-goto-source-location`.
   [5cd7]: ../README.md#x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:INCLUDE MGL-PAX:LOCATIVE"
   [5df4]: #x-28DREF-3ASETF-COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29 "DREF:SETF-COMPILER-MACRO MGL-PAX:LOCATIVE"
   [5ed1]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm "*PACKAGE* (MGL-PAX:CLHS VARIABLE)"
+  [5f91]: #x-28DREF-EXT-3ADEFINITION-PROPERTY-20FUNCTION-29 "DREF-EXT:DEFINITION-PROPERTY FUNCTION"
   [5fc4]: #x-28DREF-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29 "name"
+  [5fd4]: http://www.lispworks.com/documentation/HyperSpec/Body/t_eql.htm "EQL (MGL-PAX:CLHS TYPE)"
   [6067]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#destructuring_lambda_list '"destructuring lambda list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [609c]: http://www.lispworks.com/documentation/HyperSpec/Body/f_fmakun.htm "FMAKUNBOUND (MGL-PAX:CLHS FUNCTION)"
   [62e7]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#dynamic_environment '"dynamic environment" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
@@ -2642,6 +2730,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [9fd4]: #x-28DREF-EXT-3ADOCSTRING-2A-20GENERIC-FUNCTION-29 "DREF-EXT:DOCSTRING* GENERIC-FUNCTION"
   [a078]: #x-28DREF-EXT-3A-40SOURCE-LOCATIONS-20MGL-PAX-3ASECTION-29 "Source Locations"
   [a11d]: #x-28DREF-3A-40LOCATIVE-TYPE-20MGL-PAX-3AGLOSSARY-TERM-29 "locative type"
+  [a138]: http://www.lispworks.com/documentation/HyperSpec/Body/m_setf_.htm "SETF (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [a22e]: #x-28DREF-3ADREF-LOCATIVE-TYPE-20FUNCTION-29 "DREF:DREF-LOCATIVE-TYPE FUNCTION"
   [a26f]: http://www.lispworks.com/documentation/HyperSpec/Body/f_consta.htm "CONSTANTP (MGL-PAX:CLHS FUNCTION)"
   [a459]: #x-28DREF-3A-40DTYPES-20MGL-PAX-3ASECTION-29 "`DTYPE`s"
@@ -2681,6 +2770,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [c819]: #x-28MGL-PAX-3ACONSTANT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CONSTANT MGL-PAX:LOCATIVE"
   [c930]: ../README.md#x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29 "MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION"
   [c9ab]: #x-28DREF-EXT-3A-40LOCATIVE-TYPE-HIERARCHY-20MGL-PAX-3ASECTION-29 "Locative Type Hierarchy"
+  [c9de]: #x-28DREF-EXT-3A-40DEFINITION-PROPERTIES-20MGL-PAX-3ASECTION-29 "Definition Properties"
   [cc04]: #x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:READER MGL-PAX:LOCATIVE"
   [cc049]: #x-28DREF-3ADREF-LOCATIVE-20-28MGL-PAX-3AREADER-20DREF-3ADREF-29-29 "DREF:DREF-LOCATIVE (MGL-PAX:READER DREF:DREF)"
   [cc32]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_m.htm#macro_lambda_list '"macro lambda list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
@@ -2700,7 +2790,9 @@ the details, see the Elisp function `slime-goto-source-location`.
   [daac]: http://www.lispworks.com/documentation/HyperSpec/Body/f_subtpp.htm "SUBTYPEP (MGL-PAX:CLHS FUNCTION)"
   [daacd]: #x-28DREF-EXT-3ASOURCE-LOCATION-ADJUSTED-FILE-POSITION-20FUNCTION-29 "DREF-EXT:SOURCE-LOCATION-ADJUSTED-FILE-POSITION FUNCTION"
   [dae6]: http://www.lispworks.com/documentation/HyperSpec/Body/f_string.htm "STRING (MGL-PAX:CLHS FUNCTION)"
+  [db03]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eql.htm "EQL (MGL-PAX:CLHS FUNCTION)"
   [db68]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pkg_na.htm "PACKAGE-NAME (MGL-PAX:CLHS FUNCTION)"
+  [dbd4]: http://www.lispworks.com/documentation/HyperSpec/Body/f_vals_l.htm "VALUES-LIST (MGL-PAX:CLHS FUNCTION)"
   [dd55]: http://www.lispworks.com/documentation/HyperSpec/Body/t_and.htm "AND (MGL-PAX:CLHS TYPE)"
   [df33]: #x-28DREF-EXT-3AGENERIC-FUNCTION-DREF-20CLASS-29 "DREF-EXT:GENERIC-FUNCTION-DREF CLASS"
   [e023]: #x-28RESTART-20MGL-PAX-3ALOCATIVE-29 "RESTART MGL-PAX:LOCATIVE"

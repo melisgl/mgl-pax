@@ -252,14 +252,19 @@
                                        dref-superclasses
                                        extra-superclasses))
              (dref-class (maybe-default-dref-class locative-type-and-lambda-list
-                                                   dref-defclass-form)))
+                                                   dref-defclass-form))
+             (%xref (gensym "XREF")))
         `(eval-when (:compile-toplevel :load-toplevel :execute)
            (check-lisp-and-pseudo-are-distinct ,pseudop ',locative-type
                                                ',all-superclasses)
            (%declare-locative-type ,pseudop ',locative-type)
-           (defmethod locative-type-lambda-list
-               ((symbol (eql ',locative-type)))
-             (values ',lambda-list ,docstring ,*package*))
+           (let ((,%xref (xref ',locative-type 'locative)))
+             (setf (definition-property ,%xref 'arglist)
+                   (list ',lambda-list :destructuring))
+             (setf (definition-property ,%xref 'docstring)
+                   (list ,docstring ,*package*))
+             (setf (definition-property ,%xref 'source-location)
+                   (this-source-location)))
            (defclass ,dref-class ,all-superclasses
              ,dref-slots
              (:documentation
@@ -290,7 +295,8 @@
 (defmacro check-locative-args (locative-type locative-args)
   "Signal a LOCATE-ERROR condition if LOCATIVE-ARGS do not match the
   LAMBDA-LIST argument of LOCATIVE-TYPE (not evaluated)."
-  (let ((lambda-list (locative-type-lambda-list locative-type)))
+  (let ((lambda-list (first (definition-property (xref locative-type 'locative)
+                                                 'arglist))))
     `(unless (ignore-errors
               (destructuring-bind ,lambda-list ,locative-args
                 (declare (ignore ,@(macro-arg-names lambda-list)))
@@ -301,7 +307,8 @@
 ;;; Same as CHECK-LOCATIVE-ARGS, but LOCATIVE-TYPE is evaluated and it
 ;;; signals a SIMPLE-ERROR.
 (defun check-locative-args* (locative-type locative-args)
-  (let ((lambda-list (locative-type-lambda-list locative-type)))
+  (let ((lambda-list (first (definition-property (xref locative-type 'locative)
+                                                 'arglist))))
     (unless (ignore-errors
              (handler-bind ((warning #'muffle-warning))
                (eval `(destructuring-bind ,lambda-list ',locative-args
@@ -341,23 +348,24 @@
 
   Also, see PAX::@LOCATIVE-ALIASES in PAX."""
   (check-docstring-only-body docstring)
-  `(eval-when (:compile-toplevel :load-toplevel :execute)
-     (defmethod locative-type-lambda-list ((symbol (eql ',alias)))
-       (values '(&rest args) ,(first docstring) ,*package*))
-     (defmethod dref* (name (locative-type (eql ',alias)) locative-args)
-       (dref* name ',locative-type locative-args))
-     (declare-locative-alias ',alias)))
+  (let ((%xref (gensym "XREF")))
+    `(eval-when (:compile-toplevel :load-toplevel :execute)
+       (let ((,%xref (xref ',alias 'locative)))
+         (setf (definition-property ,%xref 'arglist)
+               (list '(&rest args) :destructuring))
+         (setf (definition-property ,%xref 'docstring)
+               (list ,(first docstring) ,*package*))
+         (setf (definition-property ,%xref 'source-location)
+               (this-source-location)))
+       (defmethod dref* (name (locative-type (eql ',alias)) locative-args)
+         (dref* name ',locative-type locative-args))
+       (declare-locative-alias ',alias))))
 
 (defun check-docstring-only-body (body)
   (assert (or (endp body)
               (and (= (length body) 1)
                    (stringp (first body))))
           () "BODY must be () or a single docstring."))
-
-;;; A somewhat dummy generic function that provides a source location.
-;;; It returns LAMBDA-LIST and DOCSTRING from DEFINE-LOCATIVE-TYPE,
-;;; and the *PACKAGE* in effect at macroexpansion time.
-(defgeneric locative-type-lambda-list (symbol))
 
 
 ;;;; LOCATE's low-level implementation, most importantly the extension
@@ -881,12 +889,24 @@
   ARGLIST* with OBJECT either RESOLVEd (if it's a DREF) or LOCATEd (if
   it's not a DREF).
 
-  The default method returns NIL, NIL.
+  - The default method returns NIL, NIL.
+
+  - There is also a method specialized on [DREFs][class], that looks
+    up the DEFINITION-PROPERTY called ARGLIST and returns its value
+    with VALUES-LIST. Thus, an arglist and its kind can be specified
+    with something like
+
+      ```
+      (setf (definition-property xref 'arglist)
+            (list arglist :destructuring))
+      ```
 
   This function is for extension only. Do not call it directly.")
   (:method (object)
     (declare (ignorable object))
-    (values nil nil)))
+    (values nil nil))
+  (:method ((dref dref))
+    (values-list (definition-property dref 'arglist))))
 
 (defgeneric docstring* (object)
   (:documentation "To extend DOCSTRING, specialize OBJECT on a normal
@@ -897,12 +917,24 @@
   OBJECT either RESOLVEd (if it's a DREF) or LOCATEd (if it's not a
   DREF).
 
-  The default method returns NIL.
+  - The default method returns NIL.
+
+  - There is also a method specialized on [DREFs][class], that looks
+    up the DEFINITION-PROPERTY called DOCSTRING and returns its value
+    with VALUES-LIST. Thus, a docstring and a package can be specified
+    with something like
+
+      ```
+      (setf (definition-property xref 'docstring)
+            (list docstring *package*))
+      ```
 
   This function is for extension only. Do not call it directly.")
   (:method (object)
     (declare (ignorable object))
-    nil))
+    nil)
+  (:method ((dref dref))
+    (values-list (definition-property dref 'docstring))))
 
 (defgeneric source-location* (object)
   (:documentation "To extend SOURCE-LOCATION, specialize OBJECT on a
@@ -916,21 +948,30 @@
   SOURCE-LOCATION returns the last of the `(:ERROR <MESSAGE>)`s
   encountered or a generic error message if only NILs were returned.
 
-  The default method returns NIL.
+  - The default method returns NIL.
+
+  - There is also a method specialized on [DREFs][class], that looks
+    up the DEFINITION-PROPERTY called SOURCE-LOCATION. If present, it
+    must be a function of no arguments that returns a source location
+    or NIL. Typically, this is set up in the defining macro like this:
+
+      ```
+      (setf (definition-property xref 'source-location)
+            (this-source-location))
+      ```
 
   This function is for extension only. Do not call it directly.")
   (:method (object)
     (declare (ignorable object))
-    nil))
+    nil)
+  (:method ((dref dref))
+    (let ((fn (definition-property dref 'source-location)))
+      (when fn
+        (assert (functionp fn))
+        (funcall fn)))))
 
 
 ;;;; @SYMBOL-LOCATIVES
-
-(declaim (ftype function find-method*))
-
-(defmacro symbol-lambda-list-method (symbol locative-type)
-  `(find-method* #'symbol-lambda-list () `((eql ,,symbol) (eql ,,locative-type))
-                 nil))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defclass symbol-locative-dref (dref) ()
@@ -975,28 +1016,22 @@
        (defmethod dref* (symbol (locative-type (eql ',locative-type))
                          locative-args)
          (check-locative-args ,locative-type locative-args)
-         ;; Faster than calling SYMBOL-LAMBDA-LIST-METHOD.
-         (unless (succeedsp (symbol-lambda-list symbol locative-type))
+         ;; There is currently no way to undefine things defined with
+         ;; the definer (defined with
+         ;; DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE), so checking for
+         ;; the properties it sets is fine.
+         (unless (definition-properties
+                  (xref symbol (cons locative-type locative-args)))
            (locate-error))
          (make-instance ',dref-class
                         :name symbol
                         :locative (cons locative-type locative-args))))))
-
-;;; SOURCE-LOCATION (method () (symbol-locative-dref)) is defined
-;;; later, when Swank is available.
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun check-body-docstring (docstring)
     (assert (or (endp docstring)
                 (and (= 1 (length docstring))
                      (string (first docstring)))))))
-
-;;; A somewhat dummy generic function whose methods are
-;;; EQL-specialized on SYMBOL and LOCATIVE-TYPE. The appropriate
-;;; method's docstring is the docstring of SYMBOL as LOCATIVE-TYPE, It
-;;; returns the LAMBDA-LIST given in the definition and the *PACKAGE*
-;;; that was in effect at the time.
-(defgeneric symbol-lambda-list (symbol locative-type))
 
 (defmacro define-definer-for-symbol-locative-type
     (name locative-type &body docstring)
@@ -1005,14 +1040,99 @@
   LOCATIVE-TYPE. The defined macro's arglist is `(SYMBOL LAMBDA-LIST
   &OPTIONAL DOCSTRING)`. LOCATIVE-TYPE is assumed to have been defined
   with DEFINE-SYMBOL-LOCATIVE-TYPE."
+  (check-body-docstring docstring)
   `(defmacro ,name (symbol lambda-list &body docstring)
      ,@docstring
      `,(expand-define-definer-for-symbol-as-locative-definer-body
-        symbol ',locative-type lambda-list docstring)))
+        symbol ',locative-type lambda-list (first docstring))))
 
 (defun expand-define-definer-for-symbol-as-locative-definer-body
     (symbol locative-type lambda-list docstring)
-  `(defmethod symbol-lambda-list ((symbol (eql ',symbol))
-                                  (locative-type (eql ',locative-type)))
-     ,@docstring
-     (values ',lambda-list ,*package*)))
+  (let ((%xref (gensym "XREF")))
+    `(eval-when (:compile-toplevel :load-toplevel :execute)
+       (let ((,%xref (xref ',symbol ',locative-type)))
+         (setf (definition-property ,%xref 'arglist)
+               (list ',lambda-list :macro))
+         (setf (definition-property ,%xref 'docstring)
+               (list ,docstring ,*package*))
+         (setf (definition-property ,%xref 'source-location)
+               (this-source-location))))))
+
+
+;;;; DREF-EXT::@DEFINITION-PROPERTIES
+
+;;; Map (NAME LOCATIVE) to a list of (PROPERTY-NAME . PROPERTY-VALUE)
+;;; elements. For example,
+;;;
+;;;     (:COMMON-LISP READTABLE) -> ((DOCSTRING "XXX" :CL))
+;;;
+;;; means that (DREF :COMMON-LISP :READTABLE)'s DOCSTRING property has
+;;; the value ("XXX" :CL), which the default DOCSTRING* method uses.
+;;;
+;;; FIXME: If a definition is no longer, then perhaps its properties
+;;; should be automatically deleted. They are just harmless garbage to
+;;; be collected at that point.
+(defvar *definition-properties* (make-hash-table :test #'equal))
+
+(declaim (inline definition-property-key))
+(defun definition-property-key (xref)
+  (list (xref-name xref) (xref-locative xref)))
+
+(defun definition-property (xref indicator)
+  "Return the value of the property associated with XREF whose name
+  is EQL to INDICATOR. The second return value indicates whether the
+  property was found. SETFable."
+  (let ((entry (assoc indicator (gethash (definition-property-key xref)
+                                         *definition-properties*))))
+    (if entry
+        (values (cdr entry) t)
+        (values nil nil))))
+
+(defun set-definition-property (xref indicator value)
+  (let* ((key (definition-property-key xref))
+         (entry (assoc indicator (gethash key *definition-properties*))))
+    (if entry
+        (setf (cdr entry) value)
+        (push (cons indicator value) (gethash key *definition-properties*))))
+  value)
+
+(defsetf definition-property set-definition-property)
+
+(defun delete-definition-property (xref indicator)
+  "Delete the property associated with XREF whose name is EQL to INDICATOR.
+  Return true if the property was found."
+  (let* ((key (definition-property-key xref))
+         (entry (assoc indicator (gethash key *definition-properties*))))
+    (when entry
+      (setf (gethash key *definition-properties*)
+            (remove entry (gethash key *definition-properties*)))
+      t)))
+
+(defun move-definition-properties (from-xref to-xref)
+  "Associate all properties of FROM-XREF with TO-XREF, as if readding
+  them one-by-one with `(SETF DEFINITION-PROPERTY)`, and
+  deleting them from FROM-XREF with DELETE-DEFINITION-PROPERTY."
+  (dolist (entry (definition-properties from-xref))
+    (destructuring-bind (indicator . value) entry
+      (setf (definition-property to-xref indicator) value)))
+  (delete-definition-properties from-xref))
+
+(defun delete-definition-properties (xref)
+  "Delete all properties associated with XREF."
+  (remhash (definition-property-key xref) *definition-properties*))
+
+(defun definition-properties (xref)
+  "Return the properties of XREF as an association list."
+  (gethash (definition-property-key xref) *definition-properties*))
+
+
+(declaim (ftype function swank-source-location*))
+
+(defmacro this-source-location ()
+  "The value of this macro form is a function of no arguments that
+  returns its own SOURCE-LOCATION."
+  (let ((%dummy (gensym "SOURCE-LOCATION-DUMMY")))
+    `(eval-when (:compile-toplevel :load-toplevel :execute)
+       (defun ,%dummy ())
+       (lambda ()
+         (swank-source-location* #',%dummy ',%dummy '(function))))))

@@ -108,9 +108,9 @@
 (defsection @locative-type-hierarchy (:title "Locative Type Hierarchy"
                                       :package :dref
                                       :export :dref-ext)
-  """[Locative types][@LOCATIVE-TYPE] form their own hierarchy, that
+  "[Locative types][@LOCATIVE-TYPE] form their own hierarchy, that
   is only superficially similar to the Lisp CLASS hierarchy.
-  [ check-lisp-and-pseudo-are-distinct function ][docstring]"""
+  [ check-lisp-and-pseudo-are-distinct function ][docstring]"
   (dref-class function)
   (locative-type-direct-supers function)
   (locative-type-direct-subs function))
@@ -181,7 +181,24 @@
   (map-definitions-of-type generic-function)
   (arglist* generic-function)
   (docstring* generic-function)
-  (source-location* generic-function))
+  (source-location* generic-function)
+  (@definition-properties section))
+
+(defsection @definition-properties (:title "Definition Properties"
+                                    :package :dref
+                                    :export :dref-ext)
+  "Arbitrary data may be associated with definitions.
+  This mechanism is used by `ARGLIST*`, `DOCSTRING*` and
+  `SOURCE-LOCATION*` for easy extension.
+
+  The following functions take an XREF argument and not a DREF to
+  allow working with [non-canonical][dref-ext::@canonicalization] or
+  non-existent definitions."
+  (definition-property function)
+  (delete-definition-property function)
+  (definition-properties function)
+  (delete-definition-properties function)
+  (move-definition-properties function))
 
 (defsection @symbol-locatives (:title "Symbol Locatives"
                                :package :dref
@@ -255,7 +272,8 @@
   (source-location-buffer function)
   (source-location-buffer-position function)
   (source-location-snippet function)
-  (source-location-adjusted-file-position function))
+  (source-location-adjusted-file-position function)
+  (this-source-location macro))
 
 
 ;;;; Foreshadowing of what the DREF/FULL system defines in the DREF

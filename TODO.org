@@ -73,7 +73,6 @@ Pros of Definitions:
   These can be added to DRef if needed.
 ** MAYBE add DCAST and DLOOKUP locatives
 Needs a constant name such as LOCATE* or DREF*.
-** TODO add MARK-SOURCE-LOCATION (DREF)
 * navigate
 ** BUG (low) locative completion: nicknames don't work
 print f<TAB> -> "print function"

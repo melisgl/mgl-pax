@@ -457,7 +457,8 @@
 
 (unless (named-readtables:find-readtable 'xxx-rt)")
     ;; DREF-EXT::@DEFINING-LOCATIVE-TYPES
-    (my-loc locative (define-locative-type my-loc))))
+    (my-loc locative (define-locative-type my-loc))
+    (object locative (define-locative-alias object class))))
 
 (deftest test-source-location ()
   (signals-not (error)
