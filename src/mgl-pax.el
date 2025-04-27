@@ -51,11 +51,104 @@
   (require 'cl-lib nil t)
   ;; For emacs 23, look for bundled version
   (require 'cl-lib "lib/cl-lib")
-  (require 'slime))
+  (require 'slime)
+  (require 'cl-generic)
+  (require 'subr-x))
 
 (eval-when-compile
   ;; For byte-compiling uses of the `w3m-anchor' macro
   (require 'w3m))
+
+
+;;;; A protocol for interfacing with an underlying Lisp interaction
+;;;; mode (such as SLIME, or Sly).
+
+(defvar mgl-pax-backend)
+
+(cl-defgeneric mgl-pax-eval (backend sexp &optional package)
+  "Evaluate `sexp' under the current Common Lisp connection, possibly
+  under `package'.")
+
+(cl-defgeneric mgl-pax-remote-execute-sexp (backend sexp package &key ok abort)
+  "Asynchronously execute `sexp' inside `package' under the current
+  Common Lisp connection, calling either `ok' with the results of the
+  evaluation or `abort' with the description of an error condition.")
+
+(cl-defgeneric mgl-pax-check-connected (backend)
+  "Asserts that we have an active Common Lisp connection, signaling
+  otherwise.")
+
+(cl-defgeneric mgl-pax-sexp-at-point (backend)
+  "Returns a string representation of the expression at point, or
+  `nil'.")
+
+(cl-defgeneric mgl-pax-bounds-of-sexp-at-point (backend)
+  "Returns, as a pair, the bounds of the current expression at point,
+  or `nil'.")
+
+(cl-defgeneric mgl-pax-bounds-of-symbol-at-point (backend)
+  "Returns, as a pair, the bounds of the current symbol at point, or
+  `nil'.")
+
+(cl-defgeneric mgl-pax-symbol-start-pos (backend)
+  "Returns the start position of the symbol at point.")
+
+(cl-defgeneric mgl-pax-last-expression (backend)
+  "Returns a string representation of the last expression before
+  point.")
+
+(cl-defgeneric mgl-pax-forward-sexp (backend &optional count)
+  "Steps point over the current expression, taking comments and reader
+  conditionals into account. If `count' is provided and a positive
+  integer, step over that many expressions.")
+
+(cl-defgeneric mgl-pax-visit-lisp-location (backend dspec-and-location-list)
+  "Visit the buffer containing `dspec-and-location-list'")
+
+(cl-defgeneric mgl-pax-set-up-backend-doc-keybindings (backend)
+  "Set up buffer-local keybindings in such a way that, among other
+  things, `M-.' and `M-.' can be used to navigate the find-definition
+  stack as if under a Lisp buffer.")
+
+(cl-defgeneric mgl-pax-read-lisp-from-minibuffer (backend prompt &optional initial-value history)
+  "Read a string from the minibuffer, possibly prompting with Common
+  Lisp-specific editing features and completions. `prompt',
+  `initial-value' and `history' are as for `read-from-minibuffer'.")
+
+(cl-defgeneric mgl-pax-current-package (backend)
+  "Return the Common Lisp package for the current context.")
+
+(cl-defgeneric mgl-pax-set-buffer-package (backend package)
+  "Set the Common Lisp package associated with the current buffer.")
+
+(cl-defgeneric mgl-pax-read-package-name (backend prompt &optional initial-value)
+  "Read a package name from the minibuffer.")
+
+(cl-defgeneric mgl-pax-list-all-package-names (backend)
+  "Enumerate all package names known to the currently-connected Common
+  Lisp system.")
+
+
+(defvar mgl-pax-edit-lisp-definition-hook nil)
+
+(defun mgl-pax-run-edit-lisp-definition-hooks (name where)
+  (run-hook-with-args-until-success 'mgl-pax-edit-lisp-definition-hook
+                                    name where))
+
+(defun mgl-pax-with-backend (function)
+  (lambda (&rest args)
+    (apply function mgl-pax-backend args)))
+
+;;; Taken verbatim from `slime-recently-visited-buffer'.
+(defun mgl-pax-recently-visited-buffer (mode)
+  "Return the most recently visited buffer whose major-mode is MODE.
+  Only considers buffers that are not already visible."
+  (cl-loop for buffer in (buffer-list)
+           when (and (with-current-buffer buffer (eq major-mode mode))
+                     (not (string-match "^ " (buffer-name buffer)))
+                     (null (get-buffer-window buffer 'visible)))
+           return buffer
+           finally (error "Can't find unshown buffer in %S" mode)))
 
 
 ;;;; Autoloading of MGL-PAX on the Common Lisp side
