@@ -26,6 +26,21 @@
   (with-output-to-string (out)
     (trivial-backtrace:print-backtrace error :output out)))
 
+(defparameter *pax-live-inputs*
+  """View Documentation of:
+  <input type="text" id="paxToDocument"
+         placeholder="reference (e.g. print or print function)">
+  <script>mglpaxAddDocumentListener();</script>
+
+  See @BROWSING-LIVE-DOCUMENTATION for the reference syntax.
+
+  Apropos:
+  <input type="text" id="paxToApropos"
+         placeholder="NAME-PATTERN LOCATIVE-TYPE*">
+  <script>mglpaxAddAproposListener();</script>
+
+  See @APROPOS for the syntax.""")
+
 (defun handle-pax*-request ()
   (with-errors-to-html
     (with-swank ()
@@ -56,21 +71,6 @@
   (let ((uri (hunchentoot:request-uri*)))
     (assert (char= (aref uri 0) #\/))
     (subseq uri 1)))
-
-(defparameter *pax-live-inputs*
-  """View Documentation of:
-  <input type="text" id="paxToDocument"
-         placeholder="reference (e.g. print or print function)">
-  <script>mglpaxAddDocumentListener();</script>
-
-  See @BROWSING-LIVE-DOCUMENTATION for the reference syntax.
-
-  Apropos:
-  <input type="text" id="paxToApropos"
-         placeholder="NAME-PATTERN LOCATIVE-TYPE*">
-  <script>mglpaxAddAproposListener();</script>
-
-  See @APROPOS for the syntax.""")
 
 (defparameter *pax-live-html-head*
   """<script src="live.js"></script>""")
