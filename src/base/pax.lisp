@@ -388,4 +388,200 @@
   (defsection macro)
   (*discard-documentation-p* variable)
   (define-package macro)
-  (define-glossary-term macro))
+  (define-glossary-term macro)
+  (note macro))
+
+
+(defmacro note (&body args)
+  """Define a note with an optional [NAME][argument] and an optional
+  [DOCSTRING][argument]. The [DOCSTRING][function] of the note is its
+  own docstring concatenated with docstrings of other notes in the
+  lexical scope of BODY.
+
+  ARGS has the form \[NAME\] \[DOCSTRING\] BODY, where the square
+  brackets indicate optional arguments. See below for the details of
+  parsing ARGS.
+
+  __NOTE is experimental and as such subject to change.__
+
+  NOTE can be wrapped around any expression that's evaluated without
+  changing its run-time behaviour or introducing any run-time
+  overhead. The names of notes live in the same global namespace
+  regardless of nesting or whether they are [top level form][clhs]s.
+  _These properties come at the price of NOTE being weird: it defines
+  named notes at macro-expansion time (or load time). But the
+  definitions are idempotent, so it's fine to macroexpand NOTE any
+  number of times._
+
+  Notes are similar to Lisp comments, but they can be included in the
+  documentation with the DOCSTRING locative. Notes are intended to
+  help reduce the distance between code and its documentation when
+  there is no convenient definition docstring to use nearby.
+
+  ```cl-transcript (:dynenv pax-std-env)
+  (note @xxx "We change the package."
+    (in-package :mgl-pax))
+  ==> #<PACKAGE "MGL-PAX">
+  (values (docstring (dref '@xxx 'note)))
+  => "We change the package."
+  ```
+
+  Here is an example of how to overdo things:
+
+  ```cl-transcript
+  (note @1+*
+    "This is a seriously overdone example."
+    (defun 1+* (x)
+      "[@1+* note][docstring]"
+      (if (stringp x)
+          (note (@1+*/1 :join #\Newline)
+            "- If X is a STRING, then it is parsed as a REAL number."
+            (let ((obj (read-from-string x)))
+              (note "It is an error if X does not contain a REAL."
+                (unless (realp obj)
+                  (assert nil)))
+              (1+ obj)))
+          (note "- Else, X is assumed to be REAL number, and we simply
+                   add 1 to it."
+            (1+ x)))))
+  
+  (1+* "7")
+  => 8
+  
+  (values (docstring (dref '@1+* 'note)))
+  => "This is a seriously overdone example.
+  
+  - If X is a STRING, then it is parsed as a REAL number.
+  It is an error if X does not contain a REAL.
+  
+  - Else, X is assumed to be REAL number, and we simply
+  add 1 to it."
+  ```
+
+  The parsing of ARGS:
+
+  - If the first element of ARGS is not a string, then it is a NAME (a
+    non-NIL SYMBOL) or name with options, currently destructured
+    as `(NAME &KEY JOIN)`. As in DEFSECTION and DEFINE-GLOSSARY-TERM,
+    the convention is that NAME starts with a `@` character.
+
+      JOIN is PRINCed before the docstring of a child note is output.
+      Its default value is a string of two newline characters.
+
+  - The next element of ARGS is a Markdown docstring. See
+    @MARKDOWN-IN-DOCSTRINGS.
+
+  - The rest of ARGS is the BODY. If BODY is empty, then NIL is
+    returned.
+
+  Note that named and nameless notes can contain other named or
+  nameless notes without restriction, but nameless notes without a
+  lexically enclosing named note are just an [implicit progn][clhs]
+  with BODY, and their docstring is discarded.
+
+  If NOTE occurs as a [top level form][clhs], then its SOURCE-LOCATION
+  is reliably recorded. Else, the quality of the source location
+  varies, but it is at least within the right top level form on all
+  implementations. On SBCL, exact source location is supported."""
+  (expand-nested-note nil args))
+
+(defun expand-nested-note (parent-name args)
+  (multiple-value-bind (name body) (handle-note parent-name args)
+    `(,@(if name
+            `(macrolet ((note (&body child-args)
+                          (expand-nested-note ',name child-args)))
+               (mark-this-source-location (xref ',name 'note)))
+            '(progn))
+      ;; When loading a compiled file, recreate the side-effects of
+      ;; macro-expansion: build the NOTE tree (through
+      ;; %NOTE-CHILDREN).
+      ;;
+      ;; KLUDGE: This relies on the evaluation order of the
+      ;; LOAD-TIME-VALUEs corresponding to the nested notes, which is
+      ;; unsepcified according to the CLHS. In practice,
+      ;; implementations seem to follow the order of macroexpansion,
+      ;; so we may be good.
+      (dref::load-time-value* (handle-note ',parent-name ',args))
+      (locally ,@body))))
+
+(defmacro mark-this-source-location (xref)
+  `(dref::load-time-value*
+    (when (or *compile-file-truename* *load-truename*)
+      (setf (definition-property ,xref 'source-location)
+            (this-source-location)))))
+
+(defstruct %note
+  name
+  ;; Child %NOTEs and docstrings in reverse order.
+  children
+  join
+  package)
+
+(defun ensure-list (object)
+  (if (listp object)
+      object
+      (list object)))
+
+;;; This function is called at macro-expansion time and load time. In
+;;; the base case, it adds the docstring of the note being
+;;; macroexpanded to the parent note's list of children.
+;;;
+;;; PARENT-NAME is NIL if there is not named parent note. BODY is BODY
+;;; argument of the NOTE macro.
+(defun handle-note (parent-name body)
+  ;; Since this is called at macro-expansion time and also at load
+  ;; time, and macros may be expanded multiple times (even by the user
+  ;; calling MACROEXPAND), we must be careful about side effects.
+  ;; HANDLE-NOTE itself is not idempotent, but the process of
+  ;; expanding a tree of nested notes is.
+  (multiple-value-bind (name join docstring body) (parse-note-body body)
+    (let ((note (when name
+                  ;; If there is already a %NOTE, then reuse it
+                  ;; because it might be a child of another note,
+                  ;; which may not be macroexpanded right now. This
+                  ;; happens for example, if the user MACROEXPANDs a
+                  ;; named NOTE form that has a parent.
+                  (let ((note (definition-property (xref name 'note) 'note)))
+                    (cond (note
+                            (assert (eq (%note-name note) name))
+                            (setf (%note-children note) (ensure-list docstring)
+                                  (%note-join note) join
+                                  (%note-package note) *package*)
+                            note)
+                          (t
+                           (make-%note :name name
+                                       :children (ensure-list docstring)
+                                       :join join
+                                       :package *package*)))))))
+      (when name
+        (setf (definition-property (xref name 'note) 'note) note))
+      (when parent-name
+        (let* ((parent-xref (xref parent-name 'note))
+               (parent-note (definition-property parent-xref 'note)))
+          (assert parent-note)
+          (assert (not (eq parent-name name)))
+          ;; If NAMEd, it can acquire more docstrings itself, so push
+          ;; NOTE and let the DOCSTRING method look up its docstrings.
+          ;;
+          ;; Also, PUSHNEW is for the sake of NOTE. DOCSTRING cannot
+          ;; be duplicated because expanding a nameless NOTE without
+          ;; its lexical context makes it parentless and the docstring
+          ;; is discarded.
+          (pushnew (or note docstring) (%note-children parent-note)))))
+    (values name body)))
+
+(defun parse-note-body (body)
+  (let ((name0 nil)
+        (join0 nil)
+        (docstring0 nil)
+        (body0 body))
+    (when (and body0 (not (stringp (first body0))))
+      (let ((name (pop body0)))
+        (if (listp name)
+            (destructuring-bind (name &key join) name
+              (setq name0 name)
+              (setq join0 join))
+            (setq name0 name))))
+    (when (and body0 (stringp (first body0)))
+      (setq docstring0 (pop body0)))
+    (values name0 join0 docstring0 body0)))

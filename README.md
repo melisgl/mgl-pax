@@ -577,6 +577,101 @@ Now let's examine the most important pieces.
     When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][730f])
     is true, `DOCSTRING` will not be recorded to save memory.
 
+<a id="x-28MGL-PAX-3ANOTE-20MGL-PAX-3AMACRO-29"></a>
+
+- [macro] **NOTE** *&BODY ARGS*
+
+    Define a note with an optional `NAME` and an optional
+    `DOCSTRING`. The [`DOCSTRING`][affc] of the note is its
+    own docstring concatenated with docstrings of other notes in the
+    lexical scope of `BODY`.
+    
+    `ARGS` has the form \[NAME\] \[DOCSTRING\] `BODY`, where the square
+    brackets indicate optional arguments. See below for the details of
+    parsing `ARGS`.
+    
+    **`NOTE` is experimental and as such subject to change.**
+    
+    `NOTE` can be wrapped around any expression that's evaluated without
+    changing its run-time behaviour or introducing any run-time
+    overhead. The names of notes live in the same global namespace
+    regardless of nesting or whether they are [top level form][0f52]s.
+    *These properties come at the price of `NOTE` being weird: it defines
+    named notes at macro-expansion time (or load time). But the
+    definitions are idempotent, so it's fine to macroexpand `NOTE` any
+    number of times.*
+    
+    Notes are similar to Lisp comments, but they can be included in the
+    documentation with the [`DOCSTRING`][ce75] locative. Notes are intended to
+    help reduce the distance between code and its documentation when
+    there is no convenient definition docstring to use nearby.
+    
+    ```common-lisp
+    (note @xxx "We change the package."
+      (in-package :mgl-pax))
+    ==> #<PACKAGE "MGL-PAX">
+    (values (docstring (dref '@xxx 'note)))
+    => "We change the package."
+    ```
+    
+    Here is an example of how to overdo things:
+    
+    ```common-lisp
+    (note @1+*
+      "This is a seriously overdone example."
+      (defun 1+* (x)
+        "[@1+* note][docstring]"
+        (if (stringp x)
+            (note (@1+*/1 :join #\Newline)
+              "- If X is a STRING, then it is parsed as a REAL number."
+              (let ((obj (read-from-string x)))
+                (note "It is an error if X does not contain a REAL."
+                  (unless (realp obj)
+                    (assert nil)))
+                (1+ obj)))
+            (note "- Else, X is assumed to be REAL number, and we simply
+                     add 1 to it."
+              (1+ x)))))
+    
+    (1+* "7")
+    => 8
+    
+    (values (docstring (dref '@1+* 'note)))
+    => "This is a seriously overdone example.
+    
+    - If X is a STRING, then it is parsed as a REAL number.
+    It is an error if X does not contain a REAL.
+    
+    - Else, X is assumed to be REAL number, and we simply
+    add 1 to it."
+    ```
+    
+    The parsing of `ARGS`:
+    
+    - If the first element of `ARGS` is not a string, then it is a `NAME` (a
+      non-`NIL` [`SYMBOL`][e5af]) or name with options, currently destructured
+      as `(NAME &KEY JOIN)`. As in [`DEFSECTION`][72b4] and [`DEFINE-GLOSSARY-TERM`][8ece],
+      the convention is that `NAME` starts with a `@` character.
+    
+        `JOIN` is [`PRINC`][676d]ed before the docstring of a child note is output.
+        Its default value is a string of two newline characters.
+    
+    - The next element of `ARGS` is a Markdown docstring. See
+      [Markdown in Docstrings][7bf5].
+    
+    - The rest of `ARGS` is the `BODY`. If `BODY` is empty, then `NIL` is
+      returned.
+    
+    Note that named and nameless notes can contain other named or
+    nameless notes without restriction, but nameless notes without a
+    lexically enclosing named note are just an [implicit progn][c2fd]
+    with `BODY`, and their docstring is discarded.
+    
+    If `NOTE` occurs as a [top level form][0f52], then its [`SOURCE-LOCATION`][32da]
+    is reliably recorded. Else, the quality of the source location
+    varies, but it is at least within the right top level form on all
+    implementations. On SBCL, exact source location is supported.
+
 <a id="x-28MGL-PAX-3A-40PARSING-20MGL-PAX-3ASECTION-29"></a>
 
 ## 6 Parsing
@@ -765,6 +860,19 @@ PAX adds a few of its own.
     
     `GLOSSARY-TERM` is [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] but not exported by
     default (see [`EXPORTABLE-REFERENCE-P`][e51f]).
+
+<a id="x-28MGL-PAX-3ANOTE-20MGL-PAX-3ALOCATIVE-29"></a>
+
+- [locative] **NOTE**
+
+    Refers to named notes defined by the [`NOTE`][e2ae] macro.
+    
+    If a single link would be made to a `NOTE` (be it either a
+    [Specific Link][0361] or an unambiguous [Unspecific Link][8e71]), then the `NOTE`'s
+    [`DOCSTRING`][affc] is included as if with the [`DOCSTRING`][ce75] locative.
+    
+    `NOTE` is [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] but not exported by default (see
+    [`EXPORTABLE-REFERENCE-P`][e51f]).
 
 <a id="x-28MGL-PAX-3ADISLOCATED-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -4042,6 +4150,7 @@ they are presented.
   [0db0]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cgf.htm '"22.3.7.6" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [0ef0]: #x-28MGL-PAX-3A-2ADOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS* VARIABLE"
   [0f42]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dht.htm '"2.4.8.20" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [0f52]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_t.htm#top_level_form '"top level form" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [0fa3]: #x-28MGL-PAX-3A-40LOCATIVE-ALIASES-20MGL-PAX-3ASECTION-29 "Locative Aliases"
   [119e]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm "FUNCTION (MGL-PAX:CLHS CLASS)"
   [11f1]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cfb.htm '"22.3.6.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -4159,6 +4268,7 @@ they are presented.
   [65bc]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cae.htm '"22.3.1.5" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [66c6]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*ERROR-OUTPUT* (MGL-PAX:CLHS VARIABLE)"
   [672f]: #x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:SECTION MGL-PAX:LOCATIVE"
+  [676d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRINC (MGL-PAX:CLHS FUNCTION)"
   [6832]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defmet.htm "DEFMETHOD (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [685e]: #x-28MGL-PAX-3A-40INTRODUCTION-20MGL-PAX-3ASECTION-29 "Introduction"
   [6897]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cbc.htm '"22.3.2.3" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -4296,6 +4406,7 @@ they are presented.
   [c097]: dref/README.md#x-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29 "ASDF/SYSTEM:SYSTEM MGL-PAX:LOCATIVE"
   [c0d2]: #x-28MGL-PAX-3A-40LINK-FORMAT-20MGL-PAX-3ASECTION-29 "Link Format"
   [c2d3]: #x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29 "Markdown Support"
+  [c2fd]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_i.htm#implicit_progn '"implicit progn" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [c340]: dref/README.md#x-28DREF-3APSEUDO-LOCATIVE-TYPES-20FUNCTION-29 "DREF:PSEUDO-LOCATIVE-TYPES FUNCTION"
   [c434]: #x-28MGL-PAX-3A-40BROWSING-WITH-OTHER-BROWSERS-20MGL-PAX-3ASECTION-29 "Browsing with Other Browsers"
   [c479]: dref/README.md#x-28CONDITION-20MGL-PAX-3ALOCATIVE-29 "CONDITION MGL-PAX:LOCATIVE"
@@ -4311,6 +4422,7 @@ they are presented.
   [cc04]: dref/README.md#x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:READER MGL-PAX:LOCATIVE"
   [cd66]: http://www.lispworks.com/documentation/HyperSpec/Body/02_de.htm '"2.4.5" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [cda7]: dref/README.md#x-28DREF-3AXREF-20FUNCTION-29 "DREF:XREF FUNCTION"
+  [ce75]: #x-28MGL-PAX-3ADOCSTRING-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:DOCSTRING MGL-PAX:LOCATIVE"
   [cfab]: #x-28MGL-PAX-3A-40EMACS-KEYS-20MGL-PAX-3ASECTION-29 "Setting up Keys"
   [d162]: http://www.lispworks.com/documentation/HyperSpec/Body/e_error.htm "ERROR (MGL-PAX:CLHS CONDITION)"
   [d1ca]: #x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29 "Documentation Generation Implementation Notes"
@@ -4346,6 +4458,7 @@ they are presented.
   [e196]: dref/README.md#x-28DREF-3ADEFINITIONS-20FUNCTION-29 "DREF:DEFINITIONS FUNCTION"
   [e216]: #x-28MGL-PAX-3A-2ADOCUMENT-HTML-TOP-BLOCKS-OF-LINKS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* VARIABLE"
   [e2a4]: #x-28MGL-PAX-3A-40UNSPECIFIC-AUTOLINK-20MGL-PAX-3ASECTION-29 "Unspecific Autolink"
+  [e2ae]: #x-28MGL-PAX-3ANOTE-20MGL-PAX-3AMACRO-29 "MGL-PAX:NOTE MGL-PAX:MACRO"
   [e391]: #x-28MGL-PAX-3ADISLOCATED-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:DISLOCATED MGL-PAX:LOCATIVE"
   [e433]: http://www.lispworks.com/documentation/HyperSpec/Body/v_sl_sls.htm "// (MGL-PAX:CLHS VARIABLE)"
   [e43c]: http://www.lispworks.com/documentation/HyperSpec/Body/02_db.htm '"2.4.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'

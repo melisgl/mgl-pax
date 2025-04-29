@@ -69,3 +69,8 @@
 (autoload source-location-buffer-position "dref/full")
 (autoload source-location-snippet "dref/full")
 (autoload source-location-adjusted-file-position "dref/full")
+
+
+(autoload swank-source-location* "dref/full")
+#+sbcl
+(autoload translate-sb-source-location "dref/full")

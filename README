@@ -478,6 +478,99 @@ Now let's examine the most important pieces.
     When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
     is true, DOCSTRING will not be recorded to save memory.
 
+- [macro] NOTE &BODY ARGS
+
+    Define a note with an optional NAME and an optional
+    DOCSTRING. The DOCSTRING of the note is its
+    own docstring concatenated with docstrings of other notes in the
+    lexical scope of BODY.
+    
+    ARGS has the form \[NAME\] \[DOCSTRING\] BODY, where the square
+    brackets indicate optional arguments. See below for the details of
+    parsing ARGS.
+    
+    **NOTE is experimental and as such subject to change.**
+    
+    NOTE can be wrapped around any expression that's evaluated without
+    changing its run-time behaviour or introducing any run-time
+    overhead. The names of notes live in the same global namespace
+    regardless of nesting or whether they are top level forms.
+    *These properties come at the price of NOTE being weird: it defines
+    named notes at macro-expansion time (or load time). But the
+    definitions are idempotent, so it's fine to macroexpand NOTE any
+    number of times.*
+    
+    Notes are similar to Lisp comments, but they can be included in the
+    documentation with the DOCSTRING locative. Notes are intended to
+    help reduce the distance between code and its documentation when
+    there is no convenient definition docstring to use nearby.
+    
+    ```common-lisp
+    (note @xxx "We change the package."
+      (in-package :mgl-pax))
+    ==> #<PACKAGE "MGL-PAX">
+    (values (docstring (dref '@xxx 'note)))
+    => "We change the package."
+    ```
+    
+    Here is an example of how to overdo things:
+    
+    ```common-lisp
+    (note @1+*
+      "This is a seriously overdone example."
+      (defun 1+* (x)
+        "[@1+* note][docstring]"
+        (if (stringp x)
+            (note (@1+*/1 :join #\Newline)
+              "- If X is a STRING, then it is parsed as a REAL number."
+              (let ((obj (read-from-string x)))
+                (note "It is an error if X does not contain a REAL."
+                  (unless (realp obj)
+                    (assert nil)))
+                (1+ obj)))
+            (note "- Else, X is assumed to be REAL number, and we simply
+                     add 1 to it."
+              (1+ x)))))
+    
+    (1+* "7")
+    => 8
+    
+    (values (docstring (dref '@1+* 'note)))
+    => "This is a seriously overdone example.
+    
+    - If X is a STRING, then it is parsed as a REAL number.
+    It is an error if X does not contain a REAL.
+    
+    - Else, X is assumed to be REAL number, and we simply
+    add 1 to it."
+    ```
+    
+    The parsing of ARGS:
+    
+    - If the first element of ARGS is not a string, then it is a NAME (a
+      non-NIL SYMBOL) or name with options, currently destructured
+      as `(NAME &KEY JOIN)`. As in DEFSECTION and DEFINE-GLOSSARY-TERM,
+      the convention is that NAME starts with a `@` character.
+    
+        JOIN is PRINCed before the docstring of a child note is output.
+        Its default value is a string of two newline characters.
+    
+    - The next element of ARGS is a Markdown docstring. See
+      @MARKDOWN-IN-DOCSTRINGS.
+    
+    - The rest of ARGS is the BODY. If BODY is empty, then NIL is
+      returned.
+    
+    Note that named and nameless notes can contain other named or
+    nameless notes without restriction, but nameless notes without a
+    lexically enclosing named note are just an implicit progn
+    with BODY, and their docstring is discarded.
+    
+    If NOTE occurs as a top level form, then its SOURCE-LOCATION
+    is reliably recorded. Else, the quality of the source location
+    varies, but it is at least within the right top level form on all
+    implementations. On SBCL, exact source location is supported.
+
 ## Parsing
 
 When encountering a @WORD such as `CLASSes`, PAX needs to find the
@@ -648,6 +741,17 @@ PAX adds a few of its own.
     
     GLOSSARY-TERM is EXPORTABLE-LOCATIVE-TYPE-P but not exported by
     default (see EXPORTABLE-REFERENCE-P).
+
+- [locative] NOTE
+
+    Refers to named notes defined by the NOTE macro.
+    
+    If a single link would be made to a NOTE (be it either a
+    @SPECIFIC-LINK or an unambiguous @UNSPECIFIC-LINK), then the NOTE's
+    DOCSTRING is included as if with the DOCSTRING locative.
+    
+    NOTE is EXPORTABLE-LOCATIVE-TYPE-P but not exported by default (see
+    EXPORTABLE-REFERENCE-P).
 
 - [locative] DISLOCATED
 

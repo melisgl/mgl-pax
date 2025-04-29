@@ -59,6 +59,20 @@
 
 (defmacro succeedsp (&body body)
   `(null (nth-value 1 (ignore-errors (values ,@body)))))
+
+#+(or allegro clisp)
+(defvar *used*)
+
+(defmacro load-time-value* (form)
+  "Like LOAD-TIME-VALUE, but evaluate FORM exactly once."
+  ;; The standard is not clear on whether LOAD-TIME-VALUE may evaluate
+  ;; its argument zero times. Allegro and CLISP seem to need some
+  ;; prodding to avoid that.
+  ;;
+  ;; Second, we rule out the problematic "same list" case in the spec
+  ;; by including a GENSYM in the form.
+  #+(or allegro clisp) `(setq *used* (load-time-value (progn ',(gensym) ,form)))
+  #-(or allegro clisp) `(load-time-value (progn ',(gensym) ,form)))
 
 
 (defmacro on-unknown-type-warning ((&optional (value-form nil)) &body body)

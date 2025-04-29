@@ -180,32 +180,7 @@ capturing interaction with the debugger needs to be though out though.
 Would it be nice to if M-. on "`mgl-pax-document` (elisp) would visit
 the elisp def and C-. would call `describe-function` (elisp)?
 * literate programming
-** MAYBE todo/comment locative?
-(note @xxx "This is a comment with global name @XXX.")
 ** MAYBE reorder source definitions
-** MAYBE autoinclude docstrings
-(with-implementation
-  (defvar *document-uppercase-is-code* t
-    "First line.")
-  (defun foo ()
-    "Second line.")
-  "3rd line with narrative"
-  (defvar saf
-    "more"))
-
-expands to
-
-(defvar *document-uppercase-is-code* t
-  "First line"
-  "[foo function][docstring]"
-  "3rd line with narrative"
-  "more")
-
-(defun foo ()
-  "Second line.")
-
-(defvar saf
-  "more")
 ** MAYBE local functions?
 ** MAYBE named one-off local functions?
 (defun foo (x)

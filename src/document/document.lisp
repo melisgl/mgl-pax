@@ -3156,7 +3156,8 @@
 (defun pax-std-env (fn)
   ;; FIXME: Add all others too.
   (let ((*document-downcase-uppercase-code* nil)
-        (*transcribe-check-consistency* (featurep :sbcl)))
+        (*transcribe-check-consistency* (featurep :sbcl))
+        (*package* *package*))
     (handler-bind ((warning #'muffle-warning))
       (unwind-protect
            (funcall fn)

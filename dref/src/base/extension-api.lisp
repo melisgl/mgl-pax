@@ -965,10 +965,12 @@
     (declare (ignorable object))
     nil)
   (:method ((dref dref))
-    (let ((fn (definition-property dref 'source-location)))
-      (when fn
-        (assert (functionp fn))
-        (funcall fn)))))
+    (let ((obj (definition-property dref 'source-location)))
+      (when obj
+        (cond ((functionp obj)
+               (funcall obj))
+              (t
+               obj))))))
 
 
 ;;;; @SYMBOL-LOCATIVES
@@ -1126,11 +1128,21 @@
   (gethash (definition-property-key xref) *definition-properties*))
 
 
-(declaim (ftype function swank-source-location*))
+(declaim (ftype function translate-sb-source-location)
+         (ftype function swank-source-location*))
 
 (defmacro this-source-location ()
   "The value of this macro form is a function of no arguments that
   returns its own SOURCE-LOCATION."
+  #+sbcl
+  `(let ((sl (load-time-value
+              ;; When evaluating, we have no meaningful source location.
+              (when (or *compile-file-truename* *load-truename*)
+                (sb-c:source-location)))))
+     (when sl
+       (lambda ()
+         (translate-sb-source-location sl))))
+  #-sbcl
   (let ((%dummy (gensym "SOURCE-LOCATION-DUMMY")))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
        (defun ,%dummy ())

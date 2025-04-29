@@ -134,10 +134,17 @@
 ;;; (for example a FUNCTION or METHOD object) with the fast but not
 ;;; widely supported SWANK-BACKEND:FIND-SOURCE-LOCATION before calling
 ;;; the much slower but more complete SWANK-BACKEND:FIND-DEFINITIONS.
-(defun swank-source-location* (object name &rest locatives)
+(defun/autoloaded swank-source-location* (object name &rest locatives)
   (swank::converting-errors-to-error-location
     (or (swank-object-source-location object)
         (apply #'swank-source-location name locatives))))
+
+
+#+sbcl
+(defun/autoloaded translate-sb-source-location (sb-source-location)
+  (swank/sbcl::definition-source-for-emacs
+   (sb-introspect::translate-source-location sb-source-location)
+   nil nil))
 
 
 ;;;; Conversions between DREFs and Swank dspecs

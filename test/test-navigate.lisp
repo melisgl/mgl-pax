@@ -172,6 +172,7 @@
 (deftest test-locate ()
   (test-locate/section)
   (test-locate/glossary-term)
+  (test-locate/note)
   (test-locate/go)
   (test-locate/include))
 
@@ -190,6 +191,14 @@
     (check-ref-sets (definitions 'some-term)
                     `(,(xref 'some-term 'glossary-term))))
   (is (dref::locative-subtype-p 'glossary-term 'variable)))
+
+(deftest test-locate/note ()
+  (check-ref (dref '@1+* 'note nil) '@1+* 'note)
+  (check-ref (dref '@1+*/1 'note nil) '@1+*/1 'note)
+  (check-ref (dref '@in-1 'note nil) '@in-1 'note)
+  (check-ref (dref '@in-2 'note nil) '@in-2 'note)
+  (check-ref-sets (definitions '@in-1)
+                  `(,(xref '@in-1 'note))))
 
 (deftest test-locate/go ()
   (check-ref (dref 'xxx '(go (foo function)))
@@ -235,7 +244,12 @@
                            :end (dref-ext:source-location-p function))
                   :header-nl "```"
                   :footer-nl "```")
-     (defun/autoloaded make-source-location))))
+     (defun/autoloaded make-source-location))
+    (@1+* note (note @1+*))
+    (@1+*/1 note (note (@1+*/1 :join #\Newline))
+     #+ccl (defun 1+*) #-(or ccl sbcl) (note @1+*))
+    (@in-1 note (note @in-1) #-sbcl (defun fn-with-inside-note))
+    (@in-2 note (note @in-2) #-sbcl (defun fn-with-inside-note))))
 
 (deftest test-navigation-to-source ()
   (let ((*package* (find-package :mgl-pax-test)))

@@ -166,3 +166,25 @@
 
 (defun xxx ())
 (defun xxxs ())
+
+(note @1+*
+  "This is a seriously overdone example."
+  (defun 1+* (x)
+    "[@1+* note][docstring]"
+    (if (stringp x)
+        (note (@1+*/1 :join #\Newline)
+          "- If X is a STRING, then it is parsed as a REAL number."
+          (let ((obj (read-from-string x)))
+            (note "It is an error if X does not contain a REAL."
+              (unless (realp obj)
+                (assert nil)))
+            (1+ obj)))
+        (note "- Else, X is assumed to be REAL number, and we simply
+                 add 1 to it."
+          (1+ x)))))
+
+(defun fn-with-inside-note ()
+  (let ((x 7))
+    (note @in-1 "dsf"
+      (* x 7)
+      (note @in-2 "aas"))))

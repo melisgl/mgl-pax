@@ -89,6 +89,13 @@ EOF
 (when (passedp (try 'test-dref-apropos-autoload))
   (uiop/image:quit 22))
 EOF
+
+  run_test_case "test-dref-this-source-location-autoload on ${lisp_name}" $@ <<EOF
+(asdf:load-system :dref-test/autoload)
+(in-package :dref-test-autoload)
+(when (passedp (try 'test-dref-this-source-location-autoload))
+  (uiop/image:quit 22))
+EOF
 }
 
 function basic_load_tests {

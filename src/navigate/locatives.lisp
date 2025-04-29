@@ -7,6 +7,7 @@
   PAX adds a few of its own."
   (section locative)
   (glossary-term locative)
+  (note locative)
   (dislocated locative)
   (argument locative)
   (include locative)
@@ -77,6 +78,26 @@
 
 (defmethod docstring* ((dref glossary-term-dref))
   (glossary-term-docstring (resolve dref)))
+
+
+;;;; NOTE locative
+
+(define-locative-type note ()
+  "Refers to named notes defined by the NOTE macro.
+
+  If a single link would be made to a NOTE (be it either a
+  @SPECIFIC-LINK or an unambiguous @UNSPECIFIC-LINK), then the NOTE's
+  DOCSTRING is included as if with the DOCSTRING locative.
+
+  NOTE is EXPORTABLE-LOCATIVE-TYPE-P but not exported by default (see
+  EXPORTABLE-REFERENCE-P).")
+
+(define-lookup note (name locative-args)
+  (unless (and (symbolp name)
+               (symbol-package name)
+               (definition-property (xref name 'note) 'note))
+    (locate-error))
+  (make-instance 'note-dref :name name :locative 'note))
 
 
 ;;;;; GO locative

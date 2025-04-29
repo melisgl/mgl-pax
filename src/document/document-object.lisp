@@ -503,3 +503,22 @@
                             ;; Are dspecs readable?
                             (let ((*print-readably* nil))
                               (prin1-to-string (first locative-args)))))))))
+
+
+(defmethod docstring* ((dref note-dref))
+  (let ((note (definition-property dref 'note)))
+    (values (note-docstring note)
+            (%note-package note))))
+
+(defun note-docstring (note)
+  (with-output-to-string (s)
+    (let ((join (or (%note-join note)
+                    #.(format nil "~A~A" #\Newline #\Newline)))
+          (firstp t))
+      (dolist (child (reverse (%note-children note)))
+        (unless firstp
+          (princ join s))
+        (if (stringp child)
+            (princ (sanitize-docstring child) s)
+            (princ (note-docstring child) s))
+        (setq firstp nil)))))

@@ -52,6 +52,13 @@
   (dref-apropos 'lkdsajfkjsaf)
   (is (dref-full-loaded-p)))
 
+(deftest test-dref-this-source-location-autoload ()
+  (is (not (dref-full-loaded-p)))
+  (let* ((xref (xref 'locative 'locative))
+         (obj (this-source-location)))
+    (is (source-location-p (funcall obj))))
+  (is (dref-full-loaded-p)))
+
 ;;; These are currently not tested:
 ;;; make-source-location
 ;;; source-location-p

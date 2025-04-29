@@ -235,6 +235,9 @@
 
 (defmethod exportable-locative-type-p ((locative-type (eql 'include)))
   nil)
+
+(defmethod exportable-locative-type-p ((locative-type (eql 'note)))
+  nil)
 
 
 (defclass glossary-term ()

@@ -201,11 +201,6 @@
   `(let ((*local-references* (append (ensure-list ,refs) *local-references*)))
      ,@body))
 
-(defun ensure-list (object)
-  (if (listp object)
-      object
-      (list object)))
-
 (defmacro with-dislocated-names (names &body body)
   "For each name in NAMES, establish a @LOCAL-DEFINITION."
   `(with-local-references (mapcar (lambda (name)
