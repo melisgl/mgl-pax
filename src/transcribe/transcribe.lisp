@@ -1376,6 +1376,7 @@
 
       (make-condition 'simple-error)
       ==> #<SIMPLE-ERROR {1008A81533}>
+      ```
   """)
 
 (defsection @transcript-dynenv

@@ -610,7 +610,7 @@
 
 (defun reorder-locative-types ()
   (macrolet ((reorder (var)
-               ` (setq ,var (order-locative-types ,var))))
+               `(setq ,var (order-locative-types ,var))))
     (reorder *locative-types*)
     (reorder *lisp-locative-types*)
     (reorder *pseudo-locative-types*)

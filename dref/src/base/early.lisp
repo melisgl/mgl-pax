@@ -49,8 +49,9 @@
          (let ((,%xref (xref ',name 'dtype)))
            (setf (definition-property ,%xref 'arglist)
                  (list ',lambda-list :macro))
-           (setf (definition-property ,%xref 'docstring)
-                 (list ,docstring ,*package*))
+           ,@(when docstring
+               `((setf (definition-property ,%xref 'docstring)
+                       (list ,docstring ,*package*))))
            (setf (definition-property ,%xref 'source-location)
                  (this-source-location)))))))
 

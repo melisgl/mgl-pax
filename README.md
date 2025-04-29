@@ -3635,6 +3635,7 @@ output.
     
     (make-condition 'simple-error)
     ==> #<SIMPLE-ERROR {1008A81533}>
+    ```
 
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-DYNENV-20MGL-PAX-3ASECTION-29"></a>

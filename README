@@ -3290,6 +3290,7 @@ output.
     
     (make-condition 'simple-error)
     ==> #<SIMPLE-ERROR {1008A81533}>
+    ```
 
 
 #### Controlling the Dynamic Environment
