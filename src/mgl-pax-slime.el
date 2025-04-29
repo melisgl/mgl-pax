@@ -9,57 +9,57 @@
 
 ;;;; SLIME implementation of the Lisp interaction mode protocol
 
-(cl-defmethod mgl-pax-eval ((backend (eql :slime)) sexp &optional package)
+(mgl-pax-defimpl mgl-pax-eval :slime (sexp &optional package)
   (slime-eval sexp package))
 
-(cl-defmethod mgl-pax-remote-execute-sexp ((backend (eql :slime)) sexp package &key ok abort)
+(mgl-pax-defimpl mgl-pax-remote-execute-sexp :slime (sexp package &key ok abort)
   (slime-rex (ok abort)
       (sexp package)
     ((:ok result) (when ok (funcall ok result)))
     ((:abort condition) (when abort (funcall abort condition)))))
 
-(cl-defmethod mgl-pax-check-connected ((backend (eql :slime)))
+(mgl-pax-defimpl mgl-pax-check-connected :slime ()
   (slime-check-connected))
 
-(cl-defmethod mgl-pax-sexp-at-point ((backend (eql :slime)))
+(mgl-pax-defimpl mgl-pax-sexp-at-point :slime ()
   (slime-sexp-at-point))
 
-(cl-defmethod mgl-pax-bounds-of-sexp-at-point ((backend (eql :slime)))
+(mgl-pax-defimpl mgl-pax-bounds-of-sexp-at-point :slime ()
   (slime-bounds-of-sexp-at-point))
 
-(cl-defmethod mgl-pax-bounds-of-symbol-at-point ((backend (eql :slime)))
+(mgl-pax-defimpl mgl-pax-bounds-of-symbol-at-point :slime ()
   (slime-bounds-of-symbol-at-point))
 
-(cl-defmethod mgl-pax-symbol-start-pos ((backend (eql :slime)))
+(mgl-pax-defimpl mgl-pax-symbol-start-pos :slime ()
   (slime-symbol-start-pos))
 
-(cl-defmethod mgl-pax-last-expression ((backend (eql :slime)))
+(mgl-pax-defimpl mgl-pax-last-expression :slime ()
   (slime-last-expression))
 
-(cl-defmethod mgl-pax-forward-sexp ((backend (eql :slime)))
+(mgl-pax-defimpl mgl-pax-forward-sexp :slime ()
   (slime-forward-sexp))
 
-(cl-defmethod mgl-pax-visit-lisp-location ((backend (eql :slime)) dspec-and-location-list)
+(mgl-pax-defimpl mgl-pax-visit-lisp-location :slime (dspec-and-location-list)
   (slime-edit-definition-cont
    (slime-postprocess-xrefs dspec-and-location-list)
    "dummy name" nil))
 
-(cl-defmethod mgl-pax-read-lisp-from-minibuffer ((backend (eql :slime)) prompt &optional initial-value history)
+(mgl-pax-defimpl mgl-pax-read-lisp-from-minibuffer :slime (prompt &optional initial-value history)
   (slime-read-from-minibuffer prompt initial-value history))
 
-(cl-defmethod mgl-pax-current-package ((backend (eql :slime)))
+(mgl-pax-defimpl mgl-pax-current-package :slime ()
   (slime-current-package))
 
-(cl-defmethod mgl-pax-set-buffer-package ((backend (eql :slime)) package)
+(mgl-pax-defimpl mgl-pax-set-buffer-package :slime (package)
   (setq slime-buffer-package package))
 
-(cl-defmethod mgl-pax-read-package-name ((backend (eql :slime)) prompt &optional initial-value)
+(mgl-pax-defimpl mgl-pax-read-package-name :slime (prompt &optional initial-value)
   (slime-read-package-name prompt initial-value))
 
-(cl-defmethod mgl-pax-list-all-package-names ((backend (eql :slime)))
+(mgl-pax-defimpl mgl-pax-list-all-package-names :slime ()
   (slime-eval `(swank:list-all-package-names t)))
 
-(cl-defmethod mgl-pax-set-up-backend-doc-keybindings ((backend (eql :slime)))
+(mgl-pax-defimpl mgl-pax-set-up-backend-doc-keybindings :slime ()
   (local-set-key (kbd "M-.") 'slime-edit-definition)
   (local-set-key (kbd "M-,") 'slime-pop-find-definition-stack)
   (local-set-key (kbd "C-c C-d") 'slime-doc-map))
