@@ -16,7 +16,12 @@
                for line = (read-line s nil nil)
                while line
                do (if (or (and first-line-special-p (zerop i))
-                          (and ignore-blank-lines-p (blankp line)))
+                          (and ignore-blank-lines-p
+                               (blankp line)
+                               ;; Without this, retranscribing with a
+                               ;; non-empty prefix can keep increasing
+                               ;; the length of the blank line.
+                               (not (starts-with-subseq prefix line))))
                       (write-line line output)
                       (write-line (subseq line (length prefix)) output)))))
      prefix)))

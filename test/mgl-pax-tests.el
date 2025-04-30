@@ -973,6 +973,10 @@
    (mark-whole-buffer)
    (call-interactively 'mgl-pax-retranscribe-region)
    (accept-process-output nil 1)
+   (should (equal (buffer-string) "  (1+ 2)\n  => 3\n  \n"))
+   (mark-whole-buffer)
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
    (should (equal (buffer-string) "  (1+ 2)\n  => 3\n  \n"))))
 
 
