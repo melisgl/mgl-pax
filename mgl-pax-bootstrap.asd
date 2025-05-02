@@ -5,9 +5,9 @@
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
-  :description "Use the [mgl-pax][ASDF:SYSTEM] system. This system is
+  :description "Use the [mgl-pax][asdf:system] system. This system is
   not for public consumption but solely for systems on which PAX
-  depends but which also use PAX."
+  depends and which also use PAX."
   :depends-on ()
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"

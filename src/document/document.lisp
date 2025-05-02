@@ -1203,14 +1203,15 @@
                            #'translate-docstring-links parse-tree))
 
 ;;; This is the first of the translator functions, which are those
-;;; passed to MAP-MARKDOWN-PARSE-TREE.
+;;; passed to MAP-MARKDOWN-PARSE-TREE. See TRANSFORM-TREE for the
+;;; semantics the return values.
 (defun translate-docstring-links (parent tree)
-  """DOCSTRING is a PSEUDO locative for including the parse tree of the
-  markdown [DOCSTRING][function] of a definition in the parse tree of
-  a docstring when generating documentation. It has no source location
-  information and only works as an explicit link. This construct is
-  intended to allow docstrings to live closer to their implementation,
-  which typically involves a non-exported definition.
+  """DOCSTRING is a PSEUDO locative for including the parse tree of
+  the markdown [DOCSTRING][function] of a definition in the parse tree
+  of a docstring when generating documentation. It has no source
+  location information and only works as an explicit link. This
+  construct is intended to allow docstrings to live closer to their
+  implementation, which typically involves a non-exported definition.
 
   ```cl-transcript (:dynenv pax-std-env)
   (defun div2 (x)
@@ -1236,23 +1237,25 @@
         (let ((label-string (parse-tree-to-text label :deemph t)))
           (nth-value-or 0
             (if-let (dref (parse-dref label-string))
-              (multiple-value-bind (docstring package) (docstring dref)
-                (cond (docstring
-                       (values (or (let ((*package* (or package *package*)))
-                                     (parse-markdown (sanitize-docstring docstring)))
-                                   '(""))
-                               ;; Detecting circular includes would be
-                               ;; hard because the `recurse' return
-                               ;; value is handled in the caller of this
-                               ;; function.
-                               t t))
-                      (t
-                       (warn "~@<Including the ~S of ~S failed because it is NIL.~:@>"
-                             'docstring dref))))
+              (translate-dref-docstring dref)
               (warn "~@<Including ~S failed because ~S cannot be ~Sd.~:@>"
                     'docstring label-string 'locate))
             (values '("") t t))))
       tree)))
+
+(defun translate-dref-docstring (dref)
+  (multiple-value-bind (docstring package) (docstring dref)
+    (cond (docstring
+           (values (or (let ((*package* (or package *package*)))
+                         (parse-markdown (sanitize-docstring docstring)))
+                       '(""))
+                   ;; Detecting circular includes would be hard
+                   ;; because the `recurse' return value is handled in
+                   ;; the caller of this function.
+                   t t))
+          (t
+           (warn "~@<Including the ~S of ~S failed because it is NIL.~:@>"
+                 'docstring dref)))))
 
 
 (defsection @codification (:title "Codification")
@@ -1406,7 +1409,7 @@
                                 (let ((word (subseq string start end)))
                                   (translate-uppercase-word
                                    parent string word))))
-                   ;; don't recurse, do slice
+                   ;; Don't recurse, do slice
                    nil t)))
         ((parse-tree-p tree :emph)
          (translate-emph parent tree))

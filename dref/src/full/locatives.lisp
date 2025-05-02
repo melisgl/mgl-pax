@@ -97,12 +97,12 @@
   (let ((info (sb-int:info :setf :expander (dref-name dref))))
     (when info
       (if (functionp info)
-          ;; long-form setf
+          ;; long-form DEFSETF
           (multiple-value-bind (arglist foundp)
               (function-arglist info)
             (when foundp
               (values arglist :ordinary)))
-          ;; short-form setf
+          ;; short-form DEFSETF
           (multiple-value-bind (arglist foundp)
               (handler-case (function-arglist (first info))
                 (error ()))
@@ -1219,6 +1219,7 @@
 
 (define-lookup unknown (name locative-args)
   (unless (and (symbolp name)
+               locative-args
                (find (first locative-args) (swank-dspecs name) :test #'equal))
     (locate-error))
   (%make-dref name unknown locative-args))

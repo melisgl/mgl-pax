@@ -1102,12 +1102,13 @@
   (multiple-value-bind (groups orphan-packages)
       (asdf-systems-and-packages-grouped)
     (list
-     "### [ASDF:SYSTEMs and Related PACKAGEs][@asdf-systems-and-related-packages]"
+     "### [ASDF:SYSTEMs and Related PACKAGEs][
+     @asdf-systems-and-related-packages]"
      (loop for (root-dir systems packages) in groups
            collect (with-output-to-string (s)
                      (format s "~%- ~{[~A][asdf:system]~^, ~}~%~%"
-                             (mapcar (compose #'escape-markdown #'dref-name
-                                              #'locate)
+                             (mapcar (compose 'escape-markdown 'dref-name
+                                              'locate)
                                      systems))
                      (loop for package in packages
                            do (format s "    - [~A][package]~%"

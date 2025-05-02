@@ -873,12 +873,12 @@ PAX adds a few of its own.
 
 - [locative] **DOCSTRING**
 
-    `DOCSTRING` is a [`PSEUDO`][943a] locative for including the parse tree of the
-    markdown [`DOCSTRING`][affc] of a definition in the parse tree of
-    a docstring when generating documentation. It has no source location
-    information and only works as an explicit link. This construct is
-    intended to allow docstrings to live closer to their implementation,
-    which typically involves a non-exported definition.
+    `DOCSTRING` is a [`PSEUDO`][943a] locative for including the parse tree of
+    the markdown [`DOCSTRING`][affc] of a definition in the parse tree
+    of a docstring when generating documentation. It has no source
+    location information and only works as an explicit link. This
+    construct is intended to allow docstrings to live closer to their
+    implementation, which typically involves a non-exported definition.
     
     ```common-lisp
     (defun div2 (x)
@@ -1898,8 +1898,8 @@ The [Markdown][a317] in docstrings is processed with the [3BMD][1904] library.
 
 - Docstrings can be indented in any of the usual styles. PAX
 normalizes indentation by stripping the longest run of leading
-spaces common to all non-blank lines except the first. The following
-two docstrings are equivalent:
+spaces common to all non-blank lines except the first. Thus, the
+following two docstrings are equivalent:
 
         (defun foo ()
           "This is

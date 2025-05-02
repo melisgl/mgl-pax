@@ -116,14 +116,18 @@ E.g. 'clhs' works in a package where PAX is :USEd but not elsewhere.
 But so does M-.'s history.
 ** MAYBE autoload documentation when needed?
 E.g. for named-readtables, which has its docs in named-readtables/doc.
+Maybe, more generally:
+   (setf (definition-property xref 'autoload)
+         ...)
+
+This could help with the package complications in dref/src/base/
+package.lisp.
 ** MAYBE warn when generating offline documentation for autoloaded functions?
 ** MAYBE provide way to autoload from live documentation?
 ** MAYBE web: link asdf system to definitions in it?
 Packages defined are linked already, which handles many cases but not
 all, and of course includes definitions (e.g methods) not defined in
 the system.
-
-Maybe DREF-APROPOS should support filtering by source location.
 ** CANCELLED live browsing: reload page automatically on redefinition
 Its value is dubious. Not even Emacs help does this.
 ** CANCELLED print ASDF/SYSTEM:SYSTEM as ASDF:SYSTEM
@@ -146,13 +150,20 @@ offline documentation.
 
 Maybe this is a special case of dynamically generated documentation.
 ** MAYBE live browsing: allow filtering out local definitions when there is a clhs definition?
+* web
+** MAYBE implement a wiki on top?
+PAX is already kind of a wiki.
 * apropos
 ** MAYBE when exported by pax, we know the exact definition being exported
 mgl-pax-apropos-package could take advantage?
 ** MAYBE web: have apropos name be editable?
 This would make the PAX Live home page more capable without Emacs.
+** MAYBE dref-apropos: add :SOURCE-LOCATION arg?
+SOURCE-LOCATION may be anything with a source location, and DREF-
+APROPOS would keep only definitions with source location below that.
 ** MAYBE option to sort apropos results by source location
-Files in ASDF system order.
+Files in ASDF system order. Maybe this make sense for generating
+documentation for a non-PAX system.
 ** CANCELLED Should DREF-APROPOS be made more flexible?
 Regexp, generic filter functions, non-listing maps? Revisit if
 filtering the list is a performance problem.
@@ -207,3 +218,4 @@ MGL-PAX:<LOCATIVE> all over them?
 * MAYBE do not test the locative type of a DREF with EQ
 At most places, using (TYPEP DREF 'SECTION-DREF) instead of (EQ (DREF-
 LOCATIVE-TYPE DREF) 'SECTION) may make more sense.
+* TODO set up github testing
