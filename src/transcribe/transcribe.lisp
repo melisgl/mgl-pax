@@ -1293,7 +1293,7 @@
 
 (defun transcribe-for-emacs (string default-syntax* update-only echo
                              first-line-special-p dynenv)
-  (with-swank ()
+  (with-swank-compatibility ()
     (swank::with-buffer-syntax ()
       (let ((default-syntax (cond ((numberp default-syntax*)
                                    (first (elt *transcribe-syntaxes*

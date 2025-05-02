@@ -61,6 +61,8 @@
                              (:file "parse")
                              (:file "locatives")
                              (:file "sections")
+                             (:file "interaction-mode")
+                             (:file "sly" :if-feature :slynk)
                              (:file "navigate"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
 
