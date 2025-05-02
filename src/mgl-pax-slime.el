@@ -21,7 +21,8 @@
 (mgl-pax-defimpl mgl-pax-check-connected :slime ()
   (slime-check-connected))
 
-(mgl-pax-defimpl mgl-pax-sexp-at-point :slime ()
+(mgl-pax-defimpl mgl-pax-sexp-at-point :slime (&optional interactive)
+  (declare (ignore interactive))
   (slime-sexp-at-point))
 
 (mgl-pax-defimpl mgl-pax-bounds-of-sexp-at-point :slime ()

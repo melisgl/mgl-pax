@@ -98,7 +98,7 @@
   "Asserts that we have an active Common Lisp connection, signaling
   otherwise.")
 
-(mgl-pax-definterface mgl-pax-sexp-at-point ()
+(mgl-pax-definterface mgl-pax-sexp-at-point (&optional interactive)
   "Returns a string representation of the expression at point, or
   `nil'.")
 
@@ -369,7 +369,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 (defun mgl-pax-eval-async (sexp ok-cont &optional abort-cont package)
   (let ((buffer (current-buffer)))
     (mgl-pax-remote-execute-sexp
-     sexp (or package (slime-current-package))
+     sexp (or package (mgl-pax-current-package))
      :ok (lambda (result)
            (when ok-cont
              (set-buffer buffer)
@@ -1327,7 +1327,8 @@ move point to the beginning of the buffer."
   (mgl-pax-sync-current-buffer)
   (x-focus-frame nil)
   (raise-frame)
-  (mgl-pax-visit-locations dspec-and-location-list))
+  (mgl-pax-visit-locations dspec-and-location-list)
+  t)
 
 (defun mgl-pax-sync-current-buffer ()
   ;; https://emacs.stackexchange.com/questions/10921/why-doesnt-changing-buffer-in-filter-function-have-any-effect-in-ert
