@@ -10,11 +10,11 @@
 ;;;; SLIME implementation of the Lisp interaction mode protocol
 
 (mgl-pax-defimpl mgl-pax-eval :slime (sexp &optional package)
-  (slime-eval sexp package))
+  (slime-eval (mgl-pax-propagating-lisp-interaction-mode :slime sexp) package))
 
 (mgl-pax-defimpl mgl-pax-remote-execute-sexp :slime (sexp package &key ok abort)
   (slime-rex (ok abort)
-      (sexp package)
+      ((mgl-pax-propagating-lisp-interaction-mode :slime sexp) package)
     ((:ok result) (when ok (funcall ok result)))
     ((:abort condition) (when abort (funcall abort condition)))))
 
@@ -108,8 +108,7 @@
 
 ;;;; Integration with `M-.'
 
-(define-advice slime-edit-definition (:around (oldfun &optional name where)
-                                     mgl-pax)
+(define-advice slime-edit-definition (:around (oldfun &optional name where) mgl-pax)
   (interactive)
   (mgl-pax-edit-definition-advice (called-interactively-p 'any)
                                   oldfun name where))

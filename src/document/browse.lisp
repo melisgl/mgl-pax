@@ -160,11 +160,12 @@
   the browser (often `C-<f5>`).")
 
 (defun document-for-emacs (pax*-url output &optional *document-hyperspec-root*)
-  (swank/backend:converting-errors-to-error-location
-    (swank::with-buffer-syntax (swank::*buffer-package*)
-      ;; This is called only for `w3m' and `precheck'. See below.
-      (let ((*html-subformat* (if (uiop:directory-exists-p output) :w3m nil)))
-        `(:url ,(document-pax*-url pax*-url output))))))
+  (with-swank-compatibility ()
+    (swank/backend:converting-errors-to-error-location
+      (swank::with-buffer-syntax (swank::*buffer-package*)
+        ;; This is called only for `w3m' and `precheck'. See below.
+        (let ((*html-subformat* (if (uiop:directory-exists-p output) :w3m nil)))
+          `(:url ,(document-pax*-url pax*-url output)))))))
 
 ;;; Write documentation of PAX*-URL into OUTPUT. Return the (:URL
 ;;; <URL>) to visit or (:ERROR <STRING>). PAX*-URL may be a `pax:',
@@ -668,7 +669,7 @@
 ;;; return its dspec and source location. Ignore the fragment. This is
 ;;; what M-. in a w3m PAX doc buffer does.
 (defun locate-pax-url-for-emacs (pax-url)
-  (with-swank ()
+  (with-swank-compatibility ()
     (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
         (multiple-value-bind (scheme authority path) (parse-url pax-url)
@@ -686,7 +687,7 @@
 
 
 (defun current-definition-pax-url-for-emacs (buffer filename possibilities)
-  (with-swank ()
+  (with-swank-compatibility ()
     (swank::with-buffer-syntax ()
       (let ((reference (find-current-definition buffer filename
                                                 possibilities)))

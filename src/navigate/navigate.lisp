@@ -107,20 +107,6 @@
   (when-let (locative (parse-locative/noisy locative-string :junk-allowed t))
     (find-name (rcurry #'dref locative nil) word :trim t :depluralize t)))
 
-;;; Ensure that some Swank internal facilities (such as
-;;; SWANK::FIND-DEFINITIONS-FIND-SYMBOL-OR-PACKAGE,
-;;; SWANK::WITH-BUFFER-SYNTAX, SWANK::PARSE-SYMBOL) are operational
-;;; even when not running under Slime.
-(defmacro with-swank (() &body body)
-  `(let* ((swank::*buffer-package* (if (boundp 'swank::*buffer-package*)
-                                       swank::*buffer-package*
-                                       *package*))
-          (swank::*buffer-readtable*
-            (if (boundp 'swank::*buffer-readtable*)
-                swank::*buffer-readtable*
-                (swank::guess-buffer-readtable swank::*buffer-package*))))
-     ,@body))
-
 ;;; List Swank source locations (suitable for `make-slime-xref') for
 ;;; the things that the Elisp side considers possible around the point
 ;;; when M-. is invoked. The return value is a list of (DSPEC
@@ -132,7 +118,7 @@
 ;;; Each element in the list WALL consists of a @WORD and a list of
 ;;; possible DREF::@LOCATIVEs found next to it in the Emacs buffer.
 (defun locate-definitions-for-emacs (wall)
-  (with-swank ()
+  (with-swank-compatibility ()
     (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
         (locate-definitions-for-emacs-1 wall)))))
@@ -230,7 +216,7 @@
 ;;; documenting.
 (defun string-name-completions-for-emacs (prefix &key (locative-types
                                                        (lisp-locative-types)))
-  (with-swank ()
+  (with-swank-compatibility ()
     (swank::with-buffer-syntax ()
       (mapcar #'prin1-to-string
               (string-name-completions-for-emacs-1
@@ -249,7 +235,7 @@
 ;;; Called when completing the second sexp at the prompt.
 (defun names-or-locatives-for-emacs (sexp-1 prefix
                                      &key (definitions #'definitions))
-  (with-swank ()
+  (with-swank-compatibility ()
     (swank::with-buffer-syntax ()
       `(:names ,(mapcar (rcurry #'prin1-to-string/case
                                 (guess-print-case prefix))
@@ -327,7 +313,7 @@
 ;;; which @DTYPES may be built. This is not exhaustive because (METHOD
 ;;; () (NUMBER)) would also need NUMBER.
 (defun dtype-symbols-for-emacs (prefix)
-  (with-swank ()
+  (with-swank-compatibility ()
     (swank::with-buffer-syntax ()
       (swank/backend:converting-errors-to-error-location
         `(:ok ,(mapcar (rcurry #'prin1-to-string/case
@@ -354,7 +340,7 @@
 ;;;; The Common Lisp side of `mgl-pax-find-parent-section'
 
 (defun find-parent-section-for-emacs (buffer filename possibilities)
-  (with-swank ()
+  (with-swank-compatibility ()
     (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
         (let ((dref (find-current-definition buffer filename possibilities)))

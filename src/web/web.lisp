@@ -28,7 +28,7 @@
 
 (defun handle-pax*-request ()
   (with-errors-to-html
-    (with-swank ()
+    (with-swank-compatibility ()
       (let* ((pax-url (request-pax*-url))
              (pkgname (hunchentoot:get-parameter "pkg"))
              (*package* (or (dref::find-package* pkgname)
@@ -105,20 +105,21 @@
            (format nil "~A?edit" url)))))
 
 (defun edit-pax-url-in-emacs (pax-url)
-  (when (swank::default-connection)
-    (multiple-value-bind (scheme authority path) (parse-url pax-url)
-      (declare (ignore authority))
-      (unless (equal scheme "pax")
-        (error "~S doesn't have pax: scheme." pax-url))
-      (when-let (drefs (definitions-for-pax-url-path path))
-        (when (= (length drefs) 1)
-          (swank::with-connection ((swank::default-connection))
-            (let* ((dref (first drefs))
-                   (dspec (dref::definition-to-dspec dref))
-                   (location (source-location dref)))
-              (when location
-                (swank:eval-in-emacs `(mgl-pax-edit-for-cl
-                                       '((,dspec ,location))))))))))))
+  (with-lisp-interaction-mode (*latest-interaction-mode*)
+    (when (default-connection)
+      (multiple-value-bind (scheme authority path) (parse-url pax-url)
+        (declare (ignore authority))
+        (unless (equal scheme "pax")
+          (error "~S doesn't have pax: scheme." pax-url))
+        (when-let (drefs (definitions-for-pax-url-path path))
+          (when (= (length drefs) 1)
+            (with-connection ((default-connection))
+              (let* ((dref (first drefs))
+                     (dspec (dref::definition-to-dspec dref))
+                     (location (source-location dref)))
+                (when location
+                  (eval-in-emacs `(mgl-pax-edit-for-cl
+                                   '((,dspec ,location)))))))))))))
 
 
 ;;;; HyperSpec

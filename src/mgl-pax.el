@@ -157,6 +157,15 @@
   (run-hook-with-args-until-success 'mgl-pax-edit-lisp-definition-hook
                                     name where))
 
+(defun mgl-pax-propagating-lisp-interaction-mode (mode cl-form)
+  `(cl:funcall
+    (cl:if (cl:find-package "MGL-PAX")
+           (cl:intern "CALL-WITH-LISP-INTERACTION-MODE" "MGL-PAX")
+           (cl:lambda (mode fun)
+             (cl:declare (cl:ignore mode))
+             (cl:funcall fun)))
+    ,mode (cl:lambda () ,cl-form)))
+
 ;;; Taken verbatim from `slime-recently-visited-buffer'.
 (defun mgl-pax-recently-visited-buffer (mode)
   "Return the most recently visited buffer whose major-mode is MODE.
