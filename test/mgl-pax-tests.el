@@ -874,7 +874,7 @@
 
 ;;;; Test `mgl-pax-transcribe-last-expression'
 
-(ert-deftest test-mgl-pax-transcribe-last-expression/simple-1 ()
+(ert-deftest test-mgl-pax-transcribe-last-expression/simple-same-line ()
   (load-mgl-pax-test-system)
   (with-temp-lisp-buffer
    (insert "(1+ 2)")
@@ -884,7 +884,7 @@
    (should (equal (point) 13))
    (should (equal (buffer-string) "(1+ 2)\n=> 3\n"))))
 
-(ert-deftest test-mgl-pax-transcribe-last-expression/simple-2 ()
+(ert-deftest test-mgl-pax-transcribe-last-expression/simple-next-line ()
   (load-mgl-pax-test-system)
   (with-temp-lisp-buffer
    (insert "(1+ 2)\n")
@@ -916,12 +916,42 @@
 (ert-deftest test-mgl-pax-transcribe-last-expression/multi-line-comment ()
   (load-mgl-pax-test-system)
   (with-temp-lisp-buffer
-   (insert ";; (1+\n;; 2)")
+   (insert ";; (1+\n;;    2)")
    (save-excursion (insert "\nxxx\n"))
    (mgl-pax-transcribe-last-expression)
    (accept-process-output nil 1)
-   (should (equal (point) 22))
-   (should (equal (buffer-string) ";; (1+\n;; 2)\n;; => 3\nxxx\n"))))
+   (should (looking-at "xxx"))
+   (should (equal (buffer-string) ";; (1+\n;;    2)\n;; => 3\nxxx\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/multi-line-comment-2 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert ";; foo (1+\n;;        2)")
+   (save-excursion (insert "\nxxx\n"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (looking-at "xxx"))
+   (should (equal (buffer-string) ";; foo (1+\n;;        2)\n;; => 3\nxxx\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/multi-line ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert " (1+\n    2)")
+   (save-excursion (insert "\nxxx\n"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (looking-at "xxx"))
+   (should (equal (buffer-string) " (1+\n    2)\n => 3\nxxx\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/multi-line-2 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert " foo (1+\n        2)")
+   (save-excursion (insert "\nxxx\n"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (looking-at "xxx"))
+   (should (equal (buffer-string) " foo (1+\n        2)\n => 3\nxxx\n"))))
 
 (ert-deftest test-mgl-pax-transcribe-last-expression/junk-before ()
   (load-mgl-pax-test-system)

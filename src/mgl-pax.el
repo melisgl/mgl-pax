@@ -1375,10 +1375,13 @@ MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
 Without a prefix argument, the first syntax is used."
   (interactive)
   (mgl-pax-with-component (:mgl-pax/transcribe)
-    (let ((dynenv (mgl-pax-find-cl-transcript-dynenv))
-          (sexp (mgl-pax-call-uncommented 'slime-last-expression))
-          (start (point))
-          (prefix (mgl-pax-line-prefix)))
+    (let* ((dynenv (mgl-pax-find-cl-transcript-dynenv))
+           (sexp (mgl-pax-call-uncommented 'slime-last-expression))
+           (start (point))
+           (prefix (save-excursion
+                     ;; Go to the first line of the sexp.
+                     (forward-line (- (cl-count ?\n sexp)))
+                     (mgl-pax-line-prefix))))
       (unless (mgl-pax-blank-line-prefix-p)
         (insert "\n"))
       (insert
@@ -1398,16 +1401,17 @@ Without a prefix argument, the first syntax is used."
 (defun mgl-pax-blank-line-prefix-p ()
   (let ((string (buffer-substring-no-properties (line-beginning-position)
                                                 (point))))
-    (string-match-p "^[[:space:]]*$" string)))
+    (string-match-p "^[[:space:];]*$" string)))
 
 ;;; Return the longest run of whitespace and semicolon characters at
 ;;; the beginning of the current line as a string.
 (defun mgl-pax-line-prefix ()
-  (let ((bound (point)))
-    (save-excursion
-      (move-beginning-of-line nil)
-      (re-search-forward "[[:space:];]*" bound)
-      (match-string 0))))
+  (save-excursion
+    ;; This may more after a prompt on the line ...
+    (move-beginning-of-line nil)
+    ;; ... so don't match the true beginning of the line with ^.
+    (re-search-forward "[[:space:];]*")
+    (match-string 0)))
 
 (defun mgl-pax-retranscribe-region (start end)
   "Updates the transcription in the current region (as in calling
