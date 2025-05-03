@@ -114,6 +114,13 @@ PAX::SORT-BY-PROXIMITY.
 E.g. 'clhs' works in a package where PAX is :USEd but not elsewhere.
 
 But so does M-.'s history.
+** BUG autoloaded DEFVAR does not set global value if locally bound
+CL-USER> (let ((pax:*document-link-code* t))
+           (pax:document "PRINT"))
+PRINT
+NIL
+CL-USER> (boundp 'pax:*document-link-code*)
+NIL
 ** MAYBE autoload documentation when needed?
 E.g. for named-readtables, which has its docs in named-readtables/doc.
 Maybe, more generally:
@@ -194,3 +201,6 @@ MGL-PAX:<LOCATIVE> all over them?
 At most places, using (TYPEP DREF 'SECTION-DREF) instead of (EQ (DREF-
 LOCATIVE-TYPE DREF) 'SECTION) may make more sense.
 * TODO set up github testing
+* MAYBE better deal with Swank/Slynk dependencies
+Probably it's too much to ask to have a portable introspection library
+factored out of them.
