@@ -299,7 +299,7 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
     - _Licence:_ MIT, see COPYING.
     - _Author:_ Gábor Melis
     - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
-    - _Homepage:_ [http://melisgl.github.io/mgl-pax](http://melisgl.github.io/mgl-pax)
+    - _Homepage:_ [http://github.com/melisgl/mgl-pax](http://github.com/melisgl/mgl-pax)
     - _Bug tracker:_ [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
     - _Source control:_ [GIT](https://github.com/melisgl/mgl-pax.git)
     - *Depends on:* dref, mgl-pax-bootstrap, named-readtables, pythonic-string-reader

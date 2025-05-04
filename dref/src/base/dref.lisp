@@ -3,6 +3,7 @@
 (in-readtable pythonic-string-syntax)
 
 (defsection @dref-manual (:title "DRef Manual")
+  (@links section)
   (@introduction section)
   (@references section)
   (@dtypes section)
@@ -10,6 +11,16 @@
   (@basic-operations section)
   (@basic-locative-types section)
   (dref-ext::@extending-dref section))
+
+(defsection @links (:title "Links and Systems")
+  "Here is the [official
+  repository](https://github.com/melisgl/mgl-pax/dref) and the [HTML
+  documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
+  for the latest version.
+
+  DRef is bundled in the same repository with [PAX][pax::@pax-manual],
+  the documentation system."
+  ("dref" asdf:system))
 
 (defsection @introduction (:title "Introduction")
   """_What if definitions were first-class objects?_

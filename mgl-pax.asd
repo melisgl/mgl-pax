@@ -6,7 +6,7 @@
   :version "0.4.0"
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
-  :homepage "http://melisgl.github.io/mgl-pax"
+  :homepage "http://github.com/melisgl/mgl-pax"
   :bug-tracker "https://github.com/melisgl/mgl-pax/issues"
   :source-control (:git "https://github.com/melisgl/mgl-pax.git")
   :description "Documentation system, browser, generator. See the

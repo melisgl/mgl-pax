@@ -3,10 +3,10 @@
 ;;; See DREF::@DREF-MANUAL for the user guide.
 (asdf:defsystem "dref"
   :licence "MIT, see COPYING."
-  :version "0.0.1"
+  :version "0.4.0"
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
-  :homepage "http://melisgl.github.io/mgl-pax"
+  :homepage "http://github.com/melisgl/mgl-pax/dref"
   :bug-tracker "https://github.com/melisgl/mgl-pax/issues"
   :source-control (:git "https://github.com/melisgl/mgl-pax.git")
   :description "Reify definitions, provide portable access to

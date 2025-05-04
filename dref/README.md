@@ -4,40 +4,73 @@
 
 ## Table of Contents
 
-- [1 Introduction][ad80]
-- [2 References][14ea]
-    - [2.1 Dissecting References][6f15]
-    - [2.2 References Glossary][852d]
-- [3 `DTYPE`s][a459]
-- [4 Listing Definitions][e1d4]
-- [5 Basic Operations][662d]
-- [6 Basic Locative Types][1d1d]
-    - [6.1 Locatives for Variables][462c]
-    - [6.2 Locatives for Macros][d45d]
-    - [6.3 Locatives for Functions and Methods][1d59]
-    - [6.4 Locatives for Types and Declarations][7a04]
-    - [6.5 Locatives for the Condition System][408d]
-    - [6.6 Locatives for Packages and Readtables][c339]
-    - [6.7 Locatives for Unknown Definitions][58f1]
-    - [6.8 Locatives for DRef Constructs][da93]
-- [7 Extending DRef][68fb]
-    - [7.1 Extension Tutorial][9d60]
-    - [7.2 Locative Type Hierarchy][c9ab]
-    - [7.3 Defining Locative Types][f494]
-        - [7.3.1 Symbol Locatives][59c9]
-    - [7.4 Extending `LOCATE`][4c16]
-        - [7.4.1 Initial Definition][87fc]
-        - [7.4.2 Canonicalization][9383]
-        - [7.4.3 Defining Lookups, Locators and Casts][adc7]
-    - [7.5 Extending Everything Else][793d]
-        - [7.5.1 Definition Properties][c9de]
-    - [7.6 `DREF-CLASS`es][6354]
-    - [7.7 Source Locations][a078]
+- [1 Links and Systems][9db3]
+- [2 Introduction][ad80]
+- [3 References][14ea]
+    - [3.1 Dissecting References][6f15]
+    - [3.2 References Glossary][852d]
+- [4 `DTYPE`s][a459]
+- [5 Listing Definitions][e1d4]
+- [6 Basic Operations][662d]
+- [7 Basic Locative Types][1d1d]
+    - [7.1 Locatives for Variables][462c]
+    - [7.2 Locatives for Macros][d45d]
+    - [7.3 Locatives for Functions and Methods][1d59]
+    - [7.4 Locatives for Types and Declarations][7a04]
+    - [7.5 Locatives for the Condition System][408d]
+    - [7.6 Locatives for Packages and Readtables][c339]
+    - [7.7 Locatives for Unknown Definitions][58f1]
+    - [7.8 Locatives for DRef Constructs][da93]
+- [8 Extending DRef][68fb]
+    - [8.1 Extension Tutorial][9d60]
+    - [8.2 Locative Type Hierarchy][c9ab]
+    - [8.3 Defining Locative Types][f494]
+        - [8.3.1 Symbol Locatives][59c9]
+    - [8.4 Extending `LOCATE`][4c16]
+        - [8.4.1 Initial Definition][87fc]
+        - [8.4.2 Canonicalization][9383]
+        - [8.4.3 Defining Lookups, Locators and Casts][adc7]
+    - [8.5 Extending Everything Else][793d]
+        - [8.5.1 Definition Properties][c9de]
+    - [8.6 `DREF-CLASS`es][6354]
+    - [8.7 Source Locations][a078]
 
 ###### \[in package DREF\]
+<a id="x-28DREF-3A-40LINKS-20MGL-PAX-3ASECTION-29"></a>
+
+## 1 Links and Systems
+
+Here is the [official
+repository](https://github.com/melisgl/mgl-pax/dref) and the [HTML
+documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
+for the latest version.
+
+DRef is bundled in the same repository with [PAX][2415],
+the documentation system.
+
+<a id="x-28-22dref-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
+
+- [system] **"dref"**
+    - _Version:_ 0.4.0
+    - _Description:_ Reify definitions, provide portable access to
+        docstrings and source locations in an extensible framework.
+    - _Long Description:_ [`DEFUN`][f472] defines a first-class object: a `FUNCTION`([`0`][119e] [`1`][81f7]).
+        [`DEFVAR`][7334] does not. This library provides a way to refer to all
+        definitions and smooths over the differences between
+        implementations. This system has minimal dependencies. It autoloads
+        the `DREF/FULL` `ASDF:SYSTEM`, which depends Alexandria and Swank.
+    - _Licence:_ MIT, see COPYING.
+    - _Author:_ Gábor Melis
+    - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
+    - _Homepage:_ [http://github.com/melisgl/mgl-pax/dref](http://github.com/melisgl/mgl-pax/dref)
+    - _Bug tracker:_ [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
+    - _Source control:_ [GIT](https://github.com/melisgl/mgl-pax.git)
+    - *Depends on:* mgl-pax-bootstrap, named-readtables, pythonic-string-reader
+    - *Defsystem depends on:* mgl-pax.asdf
+
 <a id="x-28DREF-3A-40INTRODUCTION-20MGL-PAX-3ASECTION-29"></a>
 
-## 1 Introduction
+## 2 Introduction
 
 *What if definitions were first-class objects?*
 
@@ -117,7 +150,7 @@ Finally, existing definitions can be queried with [`DEFINITIONS`][e196] and
 
 <a id="x-28DREF-3A-40REFERENCES-20MGL-PAX-3ASECTION-29"></a>
 
-## 2 References
+## 3 References
 
 After the [Introduction][ad80], here we get into the details. Of special
 interest are:
@@ -306,7 +339,7 @@ deal with references (discussed in the [Extending DRef][68fb]).
 
 <a id="x-28DREF-3A-40DISSECTING-REFERENCES-20MGL-PAX-3ASECTION-29"></a>
 
-### 2.1 Dissecting References
+### 3.1 Dissecting References
 
 <a id="x-28DREF-3AXREF-NAME-20-28MGL-PAX-3AREADER-20DREF-3AXREF-29-29"></a>
 
@@ -415,7 +448,7 @@ The following convenience functions are compositions of
 
 <a id="x-28DREF-3A-40REFERENCES-GLOSSARY-20MGL-PAX-3ASECTION-29"></a>
 
-### 2.2 References Glossary
+### 3.2 References Glossary
 
 <a id="x-28DREF-3A-40REFERENCE-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
 
@@ -504,7 +537,7 @@ The following convenience functions are compositions of
 
 <a id="x-28DREF-3A-40DTYPES-20MGL-PAX-3ASECTION-29"></a>
 
-## 3 `DTYPE`s
+## 4 `DTYPE`s
 
 `DTYPE`s are to Lisp types what [locative type][a11d]s are to [`CLASS`][1f37]es.
 A `DTYPE` is either
@@ -657,7 +690,7 @@ definitions as in
 
 <a id="x-28DREF-3A-40LISTING-DEFINITIONS-20MGL-PAX-3ASECTION-29"></a>
 
-## 4 Listing Definitions
+## 5 Listing Definitions
 
 <a id="x-28DREF-3ADEFINITIONS-20FUNCTION-29"></a>
 
@@ -831,7 +864,7 @@ definitions as in
 
 <a id="x-28DREF-3A-40BASIC-OPERATIONS-20MGL-PAX-3ASECTION-29"></a>
 
-## 5 Basic Operations
+## 6 Basic Operations
 
 The following functions take a single argument, which may be a
 [`DREF`][d930], or an object denoting its own definition (see
@@ -934,7 +967,7 @@ The following functions take a single argument, which may be a
 
 <a id="x-28DREF-3A-40BASIC-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29"></a>
 
-## 6 Basic Locative Types
+## 7 Basic Locative Types
 
 The following are the [locative type][a11d]s supported out of the
 box. As all locative types, they are named by symbols. When there is
@@ -956,7 +989,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 
 <a id="x-28DREF-3A-40VARIABLELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 
-### 6.1 Locatives for Variables
+### 7.1 Locatives for Variables
 
 <a id="x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -988,7 +1021,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 
 <a id="x-28DREF-3A-40MACROLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 
-### 6.2 Locatives for Macros
+### 7.2 Locatives for Macros
 
 <a id="x-28SETF-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -1051,7 +1084,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 
 <a id="x-28DREF-3A-40FUNCTIONLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 
-### 6.3 Locatives for Functions and Methods
+### 7.3 Locatives for Functions and Methods
 
 <a id="x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -1225,7 +1258,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 
 <a id="x-28DREF-3A-40TYPELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 
-### 6.4 Locatives for Types and Declarations
+### 7.4 Locatives for Types and Declarations
 
 <a id="x-28TYPE-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -1286,7 +1319,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 
 <a id="x-28DREF-3A-40CONDITION-SYSTEM-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 
-### 6.5 Locatives for the Condition System
+### 7.5 Locatives for the Condition System
 
 <a id="x-28CONDITION-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -1336,7 +1369,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 
 <a id="x-28DREF-3A-40PACKAGELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 
-### 6.6 Locatives for Packages and Readtables
+### 7.6 Locatives for Packages and Readtables
 
 <a id="x-28ASDF-2FSYSTEM-3ASYSTEM-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -1369,7 +1402,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 
 <a id="x-28DREF-3A-40UNKNOWN-DEFINITIONS-20MGL-PAX-3ASECTION-29"></a>
 
-### 6.7 Locatives for Unknown Definitions
+### 7.7 Locatives for Unknown Definitions
 
 <a id="x-28MGL-PAX-3AUNKNOWN-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -1398,7 +1431,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 
 <a id="x-28DREF-3A-40DREF-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 
-### 6.8 Locatives for DRef Constructs
+### 7.8 Locatives for DRef Constructs
 
 <a id="x-28DREF-3ADTYPE-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -1472,11 +1505,11 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 
 <a id="x-28DREF-EXT-3A-40EXTENDING-DREF-20MGL-PAX-3ASECTION-29"></a>
 
-## 7 Extending DRef
+## 8 Extending DRef
 
 <a id="x-28DREF-EXT-3A-40EXTENSION-TUTORIAL-20MGL-PAX-3ASECTION-29"></a>
 
-### 7.1 Extension Tutorial
+### 8.1 Extension Tutorial
 
 Let's see how to tell DRef about new kinds of definitions through
 the example of the implementation of the [`CLASS`][2060] locative. Note that
@@ -1537,7 +1570,7 @@ following, we describe the pieces in detail.
 
 <a id="x-28DREF-EXT-3A-40LOCATIVE-TYPE-HIERARCHY-20MGL-PAX-3ASECTION-29"></a>
 
-### 7.2 Locative Type Hierarchy
+### 8.2 Locative Type Hierarchy
 
 [Locative types][a11d] form their own hierarchy, that
 is only superficially similar to the Lisp [`CLASS`][1f37] hierarchy.
@@ -1601,7 +1634,7 @@ by [`DEFINE-LOCATIVE-TYPE`][b6c4] and [`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4].
 
 <a id="x-28DREF-EXT-3A-40DEFINING-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29"></a>
 
-### 7.3 Defining Locative Types
+### 8.3 Defining Locative Types
 
 <a id="x-28DREF-EXT-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29"></a>
 
@@ -1714,7 +1747,7 @@ by [`DEFINE-LOCATIVE-TYPE`][b6c4] and [`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4].
 
 <a id="x-28DREF-EXT-3A-40SYMBOL-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 
-#### 7.3.1 Symbol Locatives
+#### 8.3.1 Symbol Locatives
 
 Let's see how the opaque [`DEFINE-SYMBOL-LOCATIVE-TYPE`][ee9b] and the
 obscure [`DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE`][3b96] macros work together
@@ -1763,7 +1796,7 @@ in a certain context.
 
 <a id="x-28DREF-EXT-3A-40EXTENDING-LOCATE-20MGL-PAX-3ASECTION-29"></a>
 
-### 7.4 Extending `LOCATE`
+### 8.4 Extending `LOCATE`
 
 Internally, [`LOCATE`][8f19] finds an initial [`DREF`][d930] of its `OBJECT`
 argument with a [lookup][49b5] or with a
@@ -1778,7 +1811,7 @@ Else, `LOCATE` first needs to finds the initial definition.
 
 <a id="x-28DREF-EXT-3A-40INITIAL-DEFINITION-20MGL-PAX-3ASECTION-29"></a>
 
-#### 7.4.1 Initial Definition
+#### 8.4.1 Initial Definition
 
 [`LOCATE`][8f19] can find the initial definition in one of two ways:
 
@@ -1819,7 +1852,7 @@ search*
 
 <a id="x-28DREF-EXT-3A-40CANONICALIZATION-20MGL-PAX-3ASECTION-29"></a>
 
-#### 7.4.2 Canonicalization
+#### 8.4.2 Canonicalization
 
 The initial definition thus found is then canonicalized so that
 there is a unique [definition][2143] under [`XREF=`][0617]:
@@ -1894,7 +1927,7 @@ upcast the returned value to the `DREF` argument's `DREF-LOCATIVE-TYPE`.
 
 <a id="x-28DREF-EXT-3A-40DEFINING-LOOKUPS-LOCATORS-AND-CASTS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 7.4.3 Defining Lookups, Locators and Casts
+#### 8.4.3 Defining Lookups, Locators and Casts
 
 As we have seen, the [Initial Definition][87fc] is provided either by a
 lookup or a locator, then [Canonicalization][9383] works with
@@ -2076,7 +2109,7 @@ macros.
 
 <a id="x-28DREF-EXT-3A-40EXTENDING-EVERYTHING-ELSE-20MGL-PAX-3ASECTION-29"></a>
 
-### 7.5 Extending Everything Else
+### 8.5 Extending Everything Else
 
 <a id="x-28DREF-EXT-3ARESOLVE-2A-20GENERIC-FUNCTION-29"></a>
 
@@ -2224,7 +2257,7 @@ macros.
 
 <a id="x-28DREF-EXT-3A-40DEFINITION-PROPERTIES-20MGL-PAX-3ASECTION-29"></a>
 
-#### 7.5.1 Definition Properties
+#### 8.5.1 Definition Properties
 
 Arbitrary data may be associated with definitions.
 This mechanism is used by [`ARGLIST*`][0a96], [`DOCSTRING*`][9fd4] and
@@ -2271,7 +2304,7 @@ non-existent definitions.
 
 <a id="x-28DREF-EXT-3A-40DREF-CLASSES-20MGL-PAX-3ASECTION-29"></a>
 
-### 7.6 `DREF-CLASS`es
+### 8.6 `DREF-CLASS`es
 
 These are the [`DREF-CLASS`][25be]es corresponding to [Basic Locative Types][1d1d].
 They are exported to make it possible to go beyond the
@@ -2485,7 +2518,7 @@ They are exported to make it possible to go beyond the
 
 <a id="x-28DREF-EXT-3A-40SOURCE-LOCATIONS-20MGL-PAX-3ASECTION-29"></a>
 
-### 7.7 Source Locations
+### 8.7 Source Locations
 
 These represent the file or buffer position of a [defining
 form][23a8] and are returned by the [`SOURCE-LOCATION`][32da] function. For
@@ -2727,6 +2760,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [9bf9]: #x-28DREF-3A-40REVERSE-DEFINITION-ORDER-20MGL-PAX-3AGLOSSARY-TERM-29 "reverse definition order"
   [9caa]: http://www.lispworks.com/documentation/HyperSpec/Body/f_tp_of.htm "TYPE-OF (MGL-PAX:CLHS FUNCTION)"
   [9d60]: #x-28DREF-EXT-3A-40EXTENSION-TUTORIAL-20MGL-PAX-3ASECTION-29 "Extension Tutorial"
+  [9db3]: #x-28DREF-3A-40LINKS-20MGL-PAX-3ASECTION-29 "Links and Systems"
   [9fd4]: #x-28DREF-EXT-3ADOCSTRING-2A-20GENERIC-FUNCTION-29 "DREF-EXT:DOCSTRING* GENERIC-FUNCTION"
   [a078]: #x-28DREF-EXT-3A-40SOURCE-LOCATIONS-20MGL-PAX-3ASECTION-29 "Source Locations"
   [a11d]: #x-28DREF-3A-40LOCATIVE-TYPE-20MGL-PAX-3AGLOSSARY-TERM-29 "locative type"

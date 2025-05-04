@@ -384,10 +384,10 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
     - _Licence:_ MIT, see COPYING.
     - _Author:_ Gábor Melis
     - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
-    - _Homepage:_ [http://melisgl.github.io/mgl-pax](http://melisgl.github.io/mgl-pax)
+    - _Homepage:_ [http://github.com/melisgl/mgl-pax](http://github.com/melisgl/mgl-pax)
     - _Bug tracker:_ [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
     - _Source control:_ [GIT](https://github.com/melisgl/mgl-pax.git)
-    - *Depends on:* dref, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
+    - *Depends on:* [dref][021a], mgl-pax-bootstrap, named-readtables, pythonic-string-reader
     - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
@@ -4133,6 +4133,7 @@ they are presented.
   [00d4]: dref/README.md#x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE"
   [0165]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cic.htm '"22.3.9.3" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [016d]: #x-28MGL-PAX-3A-40NAMES-IN-RAW-NAMES-20MGL-PAX-3ASECTION-29 "Names in Raw Names"
+  [021a]: dref/README.md#x-28-22dref-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"dref" ASDF/SYSTEM:SYSTEM'
   [02e3]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cib.htm '"22.3.9.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [0317]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pn.htm "PATHNAME (MGL-PAX:CLHS CLASS)"
   [0361]: #x-28MGL-PAX-3A-40SPECIFIC-LINK-20MGL-PAX-3ASECTION-29 "Specific Link"

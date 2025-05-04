@@ -1,6 +1,34 @@
 # DRef Manual
 
 ###### \[in package DREF\]
+## Links and Systems
+
+Here is the [official
+repository](https://github.com/melisgl/mgl-pax/dref) and the [HTML
+documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
+for the latest version.
+
+DRef is bundled in the same repository with PAX,
+the documentation system.
+
+- [system] "dref"
+    - _Version:_ 0.4.0
+    - _Description:_ Reify definitions, provide portable access to
+        docstrings and source locations in an extensible framework.
+    - _Long Description:_ DEFUN defines a first-class object: a FUNCTION.
+        DEFVAR does not. This library provides a way to refer to all
+        definitions and smooths over the differences between
+        implementations. This system has minimal dependencies. It autoloads
+        the `DREF/FULL` ASDF:SYSTEM, which depends Alexandria and Swank.
+    - _Licence:_ MIT, see COPYING.
+    - _Author:_ Gábor Melis
+    - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
+    - _Homepage:_ [http://github.com/melisgl/mgl-pax/dref](http://github.com/melisgl/mgl-pax/dref)
+    - _Bug tracker:_ [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
+    - _Source control:_ [GIT](https://github.com/melisgl/mgl-pax.git)
+    - *Depends on:* mgl-pax-bootstrap, named-readtables, pythonic-string-reader
+    - *Defsystem depends on:* mgl-pax.asdf
+
 ## Introduction
 
 *What if definitions were first-class objects?*
