@@ -1,0 +1,40 @@
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: ${{ matrix.lisp }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        lisp: [sbcl-bin, ccl-bin, cmu-bin, ecl, clisp, abcl-bin]
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Let ASDF find the project
+        run: mkdir ~/common-lisp; ln -s `pwd` ~/common-lisp/mgl-pax
+
+      - name: Install Roswell
+        env:
+          LISP: ${{ matrix.lisp }}
+        run: |
+          curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
+
+      - name: Run DRef tests
+        env:
+          LISP: ${{ matrix.lisp }}
+        run: |
+          ros run -e '(ql:quickload :dref/full)' -q
+          ./dref/test/test.sh $LISP
+
+      - name: Run MGL-PAX tests
+        env:
+          LISP: ${{ matrix.lisp }}
+        run: |
+          ros run -e '(ql:quickload :mgl-pax/web)' -q
+          ./test/test.sh $LISP

@@ -200,7 +200,6 @@ MGL-PAX:<LOCATIVE> all over them?
 * MAYBE do not test the locative type of a DREF with EQ
 At most places, using (TYPEP DREF 'SECTION-DREF) instead of (EQ (DREF-
 LOCATIVE-TYPE DREF) 'SECTION) may make more sense.
-* TODO set up github testing
 * MAYBE better deal with Swank/Slynk dependencies
 Probably it's too much to ask to have a portable introspection library
 factored out of them.
