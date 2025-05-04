@@ -952,13 +952,11 @@ This is [Self-referencing][e042].
                                                            (:objects (,#'->max)
                                                             :output (nil))))))
       (when (is (= (length outputs) 2))
-        (with-failure-expected ((and (alexandria:featurep '(:or :ecl))
-                                     'failure))
-          (is (equal (first outputs)
-                     "- [function] FOO OOK X
+        (is (equal (first outputs)
+                   "- [function] FOO OOK X
 
     FOO has args OOK and X.
-")))
+"))
         (is (equal (second outputs)
                    "- [function] ->MAX
 "))))))

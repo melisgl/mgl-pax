@@ -1,5 +1,5 @@
-;;;; See comment mgl-pax-bootstrap.asd for why this is a separate .asd
-;;;; file.
+;;;; See comment in mgl-pax-bootstrap.asd for why this is a separate
+;;;; .asd file.
 
 (asdf:defsystem "mgl-pax-test"
   :licence "MIT, see COPYING."
@@ -10,7 +10,10 @@
   :source-control ""
   :description "Test system for MGL-PAX."
   :long-description ""
-  :depends-on ("mgl-pax/full" "dref-test" "try")
+  ;; KLUDGE: CMUCL cannot load CL+SSL.
+  :depends-on (#-cmucl "mgl-pax/full"
+               #+cmucl "mgl-pax/document"
+               "dref-test" "try")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "test"

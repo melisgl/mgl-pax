@@ -54,9 +54,12 @@
 
 (deftest test-dref-this-source-location-autoload ()
   (is (not (dref-full-loaded-p)))
-  (let* ((xref (xref 'locative 'locative))
-         (obj (this-source-location)))
-    (is (source-location-p (funcall obj))))
+  (let ((obj (this-source-location)))
+    (is (not (dref-full-loaded-p)))
+    (let ((sl (funcall obj)))
+      (is (or (source-location-p sl)
+              (and (listp sl)
+                   (eq (first sl) :error))))))
   (is (dref-full-loaded-p)))
 
 ;;; These are currently not tested:

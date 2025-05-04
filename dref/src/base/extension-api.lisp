@@ -1135,13 +1135,14 @@
   "The value of this macro form is a function of no arguments that
   returns its own SOURCE-LOCATION."
   #+sbcl
-  `(let ((sl (load-time-value
-              ;; When evaluating, we have no meaningful source location.
-              (when (or *compile-file-truename* *load-truename*)
-                (sb-c:source-location)))))
-     (when sl
-       (lambda ()
-         (translate-sb-source-location sl))))
+  `(load-time-value
+    (let ((sl
+            ;; When evaluating, we have no meaningful source location.
+            (when (or *compile-file-truename* *load-truename*)
+              (sb-c:source-location))))
+      (when sl
+        (lambda ()
+          (translate-sb-source-location sl)))))
   #-sbcl
   (let ((%dummy (gensym "SOURCE-LOCATION-DUMMY")))
     `(eval-when (:compile-toplevel :load-toplevel :execute)

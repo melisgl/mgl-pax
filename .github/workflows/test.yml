@@ -9,32 +9,57 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        lisp: [sbcl-bin, ccl-bin, cmu-bin, ecl, clisp, abcl-bin]
+        lisp: [abcl-bin, ccl-bin, clisp, cmu-bin, ecl, sbcl-bin]
         os: [ubuntu-latest]
+      fail-fast: false
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Let ASDF find the project
-        run: mkdir ~/common-lisp; ln -s `pwd` ~/common-lisp/mgl-pax
+        uses: actions/checkout@v4
 
       - name: Install Roswell
         env:
           LISP: ${{ matrix.lisp }}
         run: |
+          if [ $LISP = clisp ]; then
+              # KLUDGE: If we install CLISP with Roswell, then we
+              # either get complaints about multiple -B options or run
+              # into https://github.com/roswell/roswell/issues/449, so
+              # let's install it with apt. This will be picked up by
+              # 'ros --lisp clisp run'.
+              sudo apt-get install clisp
+              LISP=sbcl
+          fi
           curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
+
+      - name: Install Maven for ABCL
+        env:
+          LISP: ${{ matrix.lisp }}
+        run: if [ $LISP = abcl-bin ]; then sudo apt-get install maven; fi
+
+      - name: Install latest Try from GitHub
+        run: ros install melisgl/try
+
+      - name: Install latest Named-readtables from GitHub
+        run: ros install melisgl/named-readtables
+
+      - name: Install latest Slime from GitHub
+        # KLUDGE: 'ros install slime/slime' fails because it is not
+        # interpreted as a github reference but is special cased.
+        run: |
+          cd ~/.roswell/local-projects/
+          git clone https://github.com/slime/slime.git
 
       - name: Run DRef tests
         env:
           LISP: ${{ matrix.lisp }}
         run: |
-          ros run -e '(ql:quickload :dref/full)' -q
+          ros run -e '(ql:quickload :dref-test)' -q
           ./dref/test/test.sh $LISP
 
       - name: Run MGL-PAX tests
         env:
           LISP: ${{ matrix.lisp }}
         run: |
-          ros run -e '(ql:quickload :mgl-pax/web)' -q
+          ros run -e '(ql:quickload :mgl-pax-test)' -q
           ./test/test.sh $LISP
