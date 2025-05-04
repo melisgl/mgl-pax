@@ -368,10 +368,10 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
 <a id="x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 - [system] **"mgl-pax"**
-    - Version: 0.4.0
-    - Description: Documentation system, browser, generator. See the
+    - _Version:_ 0.4.0
+    - _Description:_ Documentation system, browser, generator. See the
         [PAX Manual][2415].
-    - Long Description: The set of dependencies of the
+    - _Long Description:_ The set of dependencies of the
         [`mgl-pax`][6fdb] system is kept light, and its heavier
         dependencies are autoloaded via ASDF when the relevant functionality
         is accessed. See the [`mgl-pax/navigate`][f155],
@@ -381,26 +381,26 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
         client systems should declare an ASDF dependency on this system,
         never on the others, which are intended for autoloading and
         interactive use.
-    - Licence: MIT, see COPYING.
-    - Author: Gábor Melis
-    - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
-    - Homepage: [http://melisgl.github.io/mgl-pax](http://melisgl.github.io/mgl-pax)
-    - Bug tracker: [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
-    - Source control: [GIT](https://github.com/melisgl/mgl-pax.git)
-    - Depends on: dref, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
-    - Defsystem depends on: mgl-pax.asdf
+    - _Licence:_ MIT, see COPYING.
+    - _Author:_ Gábor Melis
+    - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
+    - _Homepage:_ [http://melisgl.github.io/mgl-pax](http://melisgl.github.io/mgl-pax)
+    - _Bug tracker:_ [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
+    - _Source control:_ [GIT](https://github.com/melisgl/mgl-pax.git)
+    - *Depends on:* dref, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
+    - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 - [system] **"mgl-pax/full"**
-    - Description: The [`mgl-pax`][6fdb] system with all features
+    - _Description:_ The [`mgl-pax`][6fdb] system with all features
         preloaded except `mgl-pax/web`.
-    - Long Description: Do not declare a dependency on this system. It
+    - _Long Description:_ Do not declare a dependency on this system. It
         is for interactive use.
-    - Licence: MIT, see COPYING.
-    - Author: Gábor Melis
-    - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
-    - Depends on: [mgl-pax/document][4bb8], [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825]
+    - _Licence:_ MIT, see COPYING.
+    - _Author:_ Gábor Melis
+    - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
+    - *Depends on:* [mgl-pax/document][4bb8], [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825]
 
 <a id="x-28MGL-PAX-3A-40BACKGROUND-20MGL-PAX-3ASECTION-29"></a>
 
@@ -1191,16 +1191,16 @@ A close relative of `M-.` is `C-.` for [Browsing Live Documentation][a595].
 <a id="x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 - [system] **"mgl-pax/navigate"**
-    - Description: Support for [Navigating Sources in Emacs][3386] via Slime's
+    - _Description:_ Support for [Navigating Sources in Emacs][3386] via Slime's
         [`M-.`][cb15] in [MGL-PAX][2415].
-    - Long Description: Do not declare a dependency on this system. It is
+    - _Long Description:_ Do not declare a dependency on this system. It is
         autoloaded by Elisp or by accessing the functionality provided if the
         [`mgl-pax`][6fdb] system is loaded.
-    - Licence: MIT, see COPYING.
-    - Author: Gábor Melis
-    - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
-    - Depends on: alexandria, dref/full, [mgl-pax][6fdb], swank(?)
-    - Defsystem depends on: mgl-pax.asdf
+    - _Licence:_ MIT, see COPYING.
+    - _Author:_ Gábor Melis
+    - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
+    - *Depends on:* alexandria, dref/full, [mgl-pax][6fdb], swank(?)
+    - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28MGL-PAX-3A-40M--2E-DEFAULTING-20MGL-PAX-3ASECTION-29"></a>
 
@@ -1605,16 +1605,16 @@ symbols, there is no package system to advantage of.
 <a id="x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 - [system] **"mgl-pax/document"**
-    - Description: Support for [Generating Documentation][2c93] in
+    - _Description:_ Support for [Generating Documentation][2c93] in
         [MGL-PAX][2415].
-    - Long Description: Do not declare a dependency on this system. It is
+    - _Long Description:_ Do not declare a dependency on this system. It is
         autoloaded by Elisp or by accessing the functionality provided if the
         [`mgl-pax`][6fdb] system is loaded.
-    - Licence: MIT, see COPYING.
-    - Author: Gábor Melis
-    - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
-    - Depends on: 3bmd, 3bmd-ext-code-blocks, alexandria, colorize, md5, [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], trivial-utf-8
-    - Defsystem depends on: mgl-pax.asdf
+    - _Licence:_ MIT, see COPYING.
+    - _Author:_ Gábor Melis
+    - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
+    - *Depends on:* 3bmd, 3bmd-ext-code-blocks, alexandria, colorize, md5, [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], trivial-utf-8
+    - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28MGL-PAX-3A-40BROWSING-LIVE-DOCUMENTATION-20MGL-PAX-3ASECTION-29"></a>
 
@@ -3274,16 +3274,16 @@ triple-quote syntax can be enabled with:
 <a id="x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 - [system] **"mgl-pax/transcribe"**
-    - Description: Support for [Transcripts][6300] in
+    - _Description:_ Support for [Transcripts][6300] in
         [MGL-PAX][2415].
-    - Long Description: Do not declare a dependency on this system. It is
+    - _Long Description:_ Do not declare a dependency on this system. It is
         autoloaded by Elisp or by accessing the functionality provided if
         the [`mgl-pax`][6fdb] system is loaded.
-    - Licence: MIT, see COPYING.
-    - Author: Gábor Melis
-    - Mailto: [mega@retes.hu](mailto:mega@retes.hu)
-    - Depends on: alexandria, [mgl-pax/navigate][f155]
-    - Defsystem depends on: mgl-pax.asdf
+    - _Licence:_ MIT, see COPYING.
+    - _Author:_ Gábor Melis
+    - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
+    - *Depends on:* alexandria, [mgl-pax/navigate][f155]
+    - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIBING-WITH-EMACS-20MGL-PAX-3ASECTION-29"></a>
 

@@ -268,29 +268,29 @@
                  (when (and value (not (equal value "")))
                    (case type
                      ((:link)
-                      (format stream "    - ~A: [~A](~A)~%" name value value))
+                      (format stream "    - _~A:_ [~A](~A)~%" name value value))
                      ((:mailto)
-                      (format stream "    - ~A: [~A](mailto:~A)~%"
+                      (format stream "    - _~A:_ [~A](mailto:~A)~%"
                               name value value))
                      ((:source-control)
                       (cond ((and (listp value) (= (length value) 2))
-                             (format stream "    - ~A: [~A](~A)~%"
+                             (format stream "    - _~A:_ [~A](~A)~%"
                                      name (first value) (second value)))
                             ((stringp value)
-                             (format stream "    - ~A: [~A](~A)~%"
+                             (format stream "    - _~A:_ [~A](~A)~%"
                                      name value value))))
                      ((:docstring)
-                      (format stream "    - ~A: " name)
+                      (format stream "    - _~A:_ " name)
                       (document-docstring value stream :indentation "        "
                                                        :exclude-first-line-p t
                                                        :paragraphp nil)
                       (format stream "~&"))
                      ((:list-of-systems)
                       (document-docstring
-                       (format nil "- ~A: ~{~A~^, ~}~%" name (asdf-deps value))
+                       (format nil "- _~A:_ ~{~A~^, ~}~%" name (asdf-deps value))
                        stream :paragraphp nil))
                      ((nil)
-                      (format stream "    - ~A: ~A~%" name value)))))))
+                      (format stream "    - _~A:_ ~A~%" name value)))))))
         (unless *omit-asdf-slots*
           (foo "Version" 'asdf/component:component-version)
           (foo "Description" 'asdf/system:system-description :type :docstring)
