@@ -4,7 +4,7 @@
 
 ## Table of Contents
 
-- [1 Links and Systems][9db3]
+- [1 Links and Systems][a584]
 - [2 Introduction][ad80]
 - [3 References][14ea]
     - [3.1 Dissecting References][6f15]
@@ -36,7 +36,7 @@
     - [8.7 Source Locations][a078]
 
 ###### \[in package DREF\]
-<a id="x-28DREF-3A-40LINKS-20MGL-PAX-3ASECTION-29"></a>
+<a id="x-28DREF-3A-40LINKS-AND-SYSTEMS-20MGL-PAX-3ASECTION-29"></a>
 
 ## 1 Links and Systems
 
@@ -58,7 +58,7 @@ the documentation system.
         [`DEFVAR`][7334] does not. This library provides a way to refer to all
         definitions and smooths over the differences between
         implementations. This system has minimal dependencies. It autoloads
-        the `DREF/FULL` `ASDF:SYSTEM`, which depends Alexandria and Swank.
+        the [`dref/full`][0c7e] `ASDF:SYSTEM`, which depends Alexandria and Swank.
     - _Licence:_ MIT, see COPYING.
     - _Author:_ Gábor Melis
     - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
@@ -66,6 +66,17 @@ the documentation system.
     - _Bug tracker:_ [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
     - _Source control:_ [GIT](https://github.com/melisgl/mgl-pax.git)
     - *Depends on:* mgl-pax-bootstrap, named-readtables, pythonic-string-reader
+    - *Defsystem depends on:* mgl-pax.asdf
+
+<a id="x-28-22dref-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
+
+- [system] **"dref/full"**
+    - _Description:_ `DREF`([`0`][d930] [`1`][7e92]) with everything loaded. There should be no need
+        to explicitly load this system (or depend on it) as it is autoloaded
+        as necessary by all publicly accessible functionality in `DREF`.
+        
+        However, to get the dependencies, install this system.
+    - *Depends on:* alexandria, [dref][021a], swank(?)
     - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28DREF-3A-40INTRODUCTION-20MGL-PAX-3ASECTION-29"></a>
@@ -2604,6 +2615,7 @@ the details, see the Elisp function `slime-goto-source-location`.
 
   [006c]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_4.htm "DEFINE-METHOD-COMBINATION (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [00d4]: #x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE"
+  [021a]: #x-28-22dref-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"dref" ASDF/SYSTEM:SYSTEM'
   [023a]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss049_w.htm '"ISSUE:CLOS-CONDITIONS" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [059c]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_o.htm#ordinary_lambda_list '"ordinary lambda list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [0617]: #x-28DREF-3AXREF-3D-20FUNCTION-29 "DREF:XREF= FUNCTION"
@@ -2612,6 +2624,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [09b7]: #x-28DREF-EXT-3ADELETE-DEFINITION-PROPERTY-20FUNCTION-29 "DREF-EXT:DELETE-DEFINITION-PROPERTY FUNCTION"
   [0a96]: #x-28DREF-EXT-3AARGLIST-2A-20GENERIC-FUNCTION-29 "DREF-EXT:ARGLIST* GENERIC-FUNCTION"
   [0b3a]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE"
+  [0c7e]: #x-28-22dref-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"dref/full" ASDF/SYSTEM:SYSTEM'
   [0d07]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_2.htm "SYMBOL-NAME (MGL-PAX:CLHS FUNCTION)"
   [0db5]: #x-28DREF-EXT-3ASETF-DREF-20CLASS-29 "DREF-EXT:SETF-DREF CLASS"
   [0fa3]: ../README.md#x-28MGL-PAX-3A-40LOCATIVE-ALIASES-20MGL-PAX-3ASECTION-29 "Locative Aliases"
@@ -2760,7 +2773,6 @@ the details, see the Elisp function `slime-goto-source-location`.
   [9bf9]: #x-28DREF-3A-40REVERSE-DEFINITION-ORDER-20MGL-PAX-3AGLOSSARY-TERM-29 "reverse definition order"
   [9caa]: http://www.lispworks.com/documentation/HyperSpec/Body/f_tp_of.htm "TYPE-OF (MGL-PAX:CLHS FUNCTION)"
   [9d60]: #x-28DREF-EXT-3A-40EXTENSION-TUTORIAL-20MGL-PAX-3ASECTION-29 "Extension Tutorial"
-  [9db3]: #x-28DREF-3A-40LINKS-20MGL-PAX-3ASECTION-29 "Links and Systems"
   [9fd4]: #x-28DREF-EXT-3ADOCSTRING-2A-20GENERIC-FUNCTION-29 "DREF-EXT:DOCSTRING* GENERIC-FUNCTION"
   [a078]: #x-28DREF-EXT-3A-40SOURCE-LOCATIONS-20MGL-PAX-3ASECTION-29 "Source Locations"
   [a11d]: #x-28DREF-3A-40LOCATIVE-TYPE-20MGL-PAX-3AGLOSSARY-TERM-29 "locative type"
@@ -2769,6 +2781,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [a26f]: http://www.lispworks.com/documentation/HyperSpec/Body/f_consta.htm "CONSTANTP (MGL-PAX:CLHS FUNCTION)"
   [a459]: #x-28DREF-3A-40DTYPES-20MGL-PAX-3ASECTION-29 "`DTYPE`s"
   [a541]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_to_.htm "PRINC-TO-STRING (MGL-PAX:CLHS FUNCTION)"
+  [a584]: #x-28DREF-3A-40LINKS-AND-SYSTEMS-20MGL-PAX-3ASECTION-29 "Links and Systems"
   [a657]: http://www.lispworks.com/documentation/HyperSpec/Body/t_atom.htm "ATOM (MGL-PAX:CLHS TYPE)"
   [a70d]: #x-28DREF-3AXREF-LOCATIVE-20-28MGL-PAX-3AREADER-20DREF-3AXREF-29-29 "DREF:XREF-LOCATIVE (MGL-PAX:READER DREF:XREF)"
   [a79d]: http://www.lispworks.com/documentation/HyperSpec/Body/t_member.htm "MEMBER (MGL-PAX:CLHS TYPE)"

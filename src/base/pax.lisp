@@ -47,7 +47,7 @@
 (defsection @pax-manual (:title "PAX Manual")
   (@introduction section)
   (@emacs-setup section)
-  (@links section)
+  (@links-and-systems section)
   (@background section)
   (@basics section)
   (@parsing section)
@@ -302,18 +302,44 @@
   Calling `mgl-pax-unhijack-slime-doc-keys` reverts these changes.
   """)
 
-(defsection @links (:title "Links and Systems")
+(defsection @links-and-systems (:title "Links and Systems")
   "Here is the [official
   repository](https://github.com/melisgl/mgl-pax) and the [HTML
   documentation](http://melisgl.github.io/mgl-pax-world/mgl-pax-manual.html)
   for the latest version.
 
-  PAX is built on top of the [DRef
-  library][DREF::@DREF-MANUAL] (bundled in the same repository). See
-  [DRef's HTML
-  documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)"
+  PAX is built on top of the [DRef library]
+  [DREF::@DREF-MANUAL] (bundled in the same repository).
+
+  - _Installation for deployment_
+
+      The base system is [mgl-pax][asdf:system]. It has very few
+      dependencies and is sufficient as a dependency for systems using
+      the @BASICS to add documentation. This is to keep deployed code
+      small. To install only the bare minimum, with no intention of
+      using @NAVIGATING-IN-EMACS, @GENERATING-DOCUMENTATION,
+      @BROWSING-LIVE-DOCUMENTATION or using @TRANSCRIPTS, under
+      Quicklisp for example, PAX could be installed as:
+
+          (ql:quickload \"mgl-pax\")
+
+  - _Installation for development_
+
+      The heavier dependencies are on the other systems, which
+      correspond to the main functionalities provided, intended to be
+      used primarily during development. To install the dependencies
+      for all features under Quicklisp, do
+
+          (ql:quickload \"mgl-pax/full\")
+
+      Having thus installed the dependencies, it is enough to load the
+      base system, which will autoload the other systems as necessary."
   ("mgl-pax" asdf:system)
-  (mgl-pax/full asdf:system))
+  ("mgl-pax/navigate" asdf:system)
+  ("mgl-pax/document" asdf:system)
+  ("mgl-pax/web" asdf:system)
+  ("mgl-pax/transcribe" asdf:system)
+  ("mgl-pax/full" asdf:system))
 
 (defsection @background (:title "Background")
   """As a user, I frequently run into documentation that's incomplete

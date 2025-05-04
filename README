@@ -277,25 +277,38 @@ repository](https://github.com/melisgl/mgl-pax) and the [HTML
 documentation](http://melisgl.github.io/mgl-pax-world/mgl-pax-manual.html)
 for the latest version.
 
-PAX is built on top of the DRef
-library (bundled in the same repository). See
-[DRef's HTML
-documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
+PAX is built on top of the DRef library (bundled in the same repository).
+
+- *Installation for deployment*
+
+    The base system is mgl-pax. It has very few
+    dependencies and is sufficient as a dependency for systems using
+    the @BASICS to add documentation. This is to keep deployed code
+    small. To install only the bare minimum, with no intention of
+    using @NAVIGATING-IN-EMACS, @GENERATING-DOCUMENTATION,
+    @BROWSING-LIVE-DOCUMENTATION or using @TRANSCRIPTS, under
+    Quicklisp for example, PAX could be installed as:
+
+        (ql:quickload "mgl-pax")
+
+- *Installation for development*
+
+    The heavier dependencies are on the other systems, which
+    correspond to the main functionalities provided, intended to be
+    used primarily during development. To install the dependencies
+    for all features under Quicklisp, do
+
+        (ql:quickload "mgl-pax/full")
+
+    Having thus installed the dependencies, it is enough to load the
+    base system, which will autoload the other systems as necessary.
+
 
 - [system] "mgl-pax"
     - _Version:_ 0.4.0
     - _Description:_ Documentation system, browser, generator. See the
         MGL-PAX::@PAX-MANUAL.
-    - _Long Description:_ The set of dependencies of the
-        `mgl-pax` system is kept light, and its heavier
-        dependencies are autoloaded via ASDF when the relevant functionality
-        is accessed. See the `mgl-pax/navigate`,
-        `mgl-pax/document`,
-        `mgl-pax/transcribe` and
-        `mgl-pax/full` systems. To keep deployed code small,
-        client systems should declare an ASDF dependency on this system,
-        never on the others, which are intended for autoloading and
-        interactive use.
+    - _Long Description:_ The base system. See MGL-PAX::@LINKS-AND-SYSTEMS.
     - _Licence:_ MIT, see COPYING.
     - _Author:_ Gábor Melis
     - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
@@ -305,15 +318,34 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
     - *Depends on:* dref, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
     - *Defsystem depends on:* mgl-pax.asdf
 
+- [system] "mgl-pax/navigate"
+    - _Description:_ Support for MGL-PAX::@NAVIGATING-IN-EMACS via Slime's
+        `MGL-PAX::@M-.` in MGL-PAX.
+    - *Depends on:* alexandria, dref/full, mgl-pax, swank(?)
+    - *Defsystem depends on:* mgl-pax.asdf
+
+- [system] "mgl-pax/document"
+    - _Description:_ Support for MGL-PAX::@GENERATING-DOCUMENTATION in
+        MGL-PAX.
+    - *Depends on:* 3bmd, 3bmd-ext-code-blocks, alexandria, colorize, md5, mgl-pax/navigate, mgl-pax/transcribe, trivial-utf-8
+    - *Defsystem depends on:* mgl-pax.asdf
+
+- [system] "mgl-pax/web"
+    - _Description:_ Web server for MGL-PAX::@BROWSING-LIVE-DOCUMENTATION
+        in MGL-PAX.
+    - *Depends on:* hunchentoot, mgl-pax/document
+    - *Defsystem depends on:* mgl-pax.asdf
+
+- [system] "mgl-pax/transcribe"
+    - _Description:_ Support for MGL-PAX::@TRANSCRIPTS in
+        MGL-PAX.
+    - *Depends on:* alexandria, mgl-pax/navigate
+    - *Defsystem depends on:* mgl-pax.asdf
+
 - [system] "mgl-pax/full"
     - _Description:_ The `mgl-pax` system with all features
-        preloaded except `mgl-pax/web`.
-    - _Long Description:_ Do not declare a dependency on this system. It
-        is for interactive use.
-    - _Licence:_ MIT, see COPYING.
-    - _Author:_ Gábor Melis
-    - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
-    - *Depends on:* mgl-pax/document, mgl-pax/navigate, mgl-pax/transcribe
+        preloaded.
+    - *Depends on:* mgl-pax/document, mgl-pax/navigate, mgl-pax/transcribe, mgl-pax/web
 
 ## Background
 
@@ -1056,12 +1088,6 @@ A close relative of `M-.` is `C-.` for @BROWSING-LIVE-DOCUMENTATION.
 - [system] "mgl-pax/navigate"
     - _Description:_ Support for MGL-PAX::@NAVIGATING-IN-EMACS via Slime's
         `MGL-PAX::@M-.` in MGL-PAX.
-    - _Long Description:_ Do not declare a dependency on this system. It is
-        autoloaded by Elisp or by accessing the functionality provided if the
-        `mgl-pax` system is loaded.
-    - _Licence:_ MIT, see COPYING.
-    - _Author:_ Gábor Melis
-    - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
     - *Depends on:* alexandria, dref/full, mgl-pax, swank(?)
     - *Defsystem depends on:* mgl-pax.asdf
 
@@ -1442,12 +1468,6 @@ symbols, there is no package system to advantage of.
 - [system] "mgl-pax/document"
     - _Description:_ Support for MGL-PAX::@GENERATING-DOCUMENTATION in
         MGL-PAX.
-    - _Long Description:_ Do not declare a dependency on this system. It is
-        autoloaded by Elisp or by accessing the functionality provided if the
-        `mgl-pax` system is loaded.
-    - _Licence:_ MIT, see COPYING.
-    - _Author:_ Gábor Melis
-    - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
     - *Depends on:* 3bmd, 3bmd-ext-code-blocks, alexandria, colorize, md5, mgl-pax/navigate, mgl-pax/transcribe, trivial-utf-8
     - *Defsystem depends on:* mgl-pax.asdf
 
@@ -2810,8 +2830,9 @@ This way the HTML documentation will be available at
 
     http://<username>.github.io/<repo-name>
 
-It is probably a good idea to add sections like the @LINKS section
-to allow jumping between the repository and the gh-pages site.
+It is probably a good idea to add sections like the
+@LINKS-AND-SYSTEMS section to allow jumping between the repository
+and the gh-pages site.
 
 - [function] MAKE-GITHUB-SOURCE-URI-FN ASDF-SYSTEM GITHUB-URI &KEY GIT-VERSION
 
@@ -2949,12 +2970,6 @@ triple-quote syntax can be enabled with:
 - [system] "mgl-pax/transcribe"
     - _Description:_ Support for MGL-PAX::@TRANSCRIPTS in
         MGL-PAX.
-    - _Long Description:_ Do not declare a dependency on this system. It is
-        autoloaded by Elisp or by accessing the functionality provided if
-        the `mgl-pax` system is loaded.
-    - _Licence:_ MIT, see COPYING.
-    - _Author:_ Gábor Melis
-    - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
     - *Depends on:* alexandria, mgl-pax/navigate
     - *Defsystem depends on:* mgl-pax.asdf
 

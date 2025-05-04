@@ -19,7 +19,7 @@ the documentation system.
         DEFVAR does not. This library provides a way to refer to all
         definitions and smooths over the differences between
         implementations. This system has minimal dependencies. It autoloads
-        the `DREF/FULL` ASDF:SYSTEM, which depends Alexandria and Swank.
+        the `dref/full` ASDF:SYSTEM, which depends Alexandria and Swank.
     - _Licence:_ MIT, see COPYING.
     - _Author:_ Gábor Melis
     - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
@@ -27,6 +27,15 @@ the documentation system.
     - _Bug tracker:_ [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
     - _Source control:_ [GIT](https://github.com/melisgl/mgl-pax.git)
     - *Depends on:* mgl-pax-bootstrap, named-readtables, pythonic-string-reader
+    - *Defsystem depends on:* mgl-pax.asdf
+
+- [system] "dref/full"
+    - _Description:_ DREF with everything loaded. There should be no need
+        to explicitly load this system (or depend on it) as it is autoloaded
+        as necessary by all publicly accessible functionality in DREF.
+        
+        However, to get the dependencies, install this system.
+    - *Depends on:* alexandria, dref, swank(?)
     - *Defsystem depends on:* mgl-pax.asdf
 
 ## Introduction

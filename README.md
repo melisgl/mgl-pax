@@ -10,7 +10,7 @@
     - [2.2 Installing from Quicklisp][f3f4]
     - [2.3 Loading PAX][d3fc]
     - [2.4 Setting up Keys][cfab]
-- [3 Links and Systems][ba74]
+- [3 Links and Systems][ba90]
 - [4 Background][f74b]
 - [5 Basics][94c7]
 - [6 Parsing][378f]
@@ -351,7 +351,7 @@ true, then upon loading `mgl-pax', the following changes are made to
 
 Calling `mgl-pax-unhijack-slime-doc-keys` reverts these changes.
 
-<a id="x-28MGL-PAX-3A-40LINKS-20MGL-PAX-3ASECTION-29"></a>
+<a id="x-28MGL-PAX-3A-40LINKS-AND-SYSTEMS-20MGL-PAX-3ASECTION-29"></a>
 
 ## 3 Links and Systems
 
@@ -360,10 +360,32 @@ repository](https://github.com/melisgl/mgl-pax) and the [HTML
 documentation](http://melisgl.github.io/mgl-pax-world/mgl-pax-manual.html)
 for the latest version.
 
-PAX is built on top of the [DRef
-library][5225] (bundled in the same repository). See
-[DRef's HTML
-documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
+PAX is built on top of the [DRef library][5225] (bundled in the same repository).
+
+- *Installation for deployment*
+
+    The base system is [mgl-pax][6fdb]. It has very few
+    dependencies and is sufficient as a dependency for systems using
+    the [Basics][94c7] to add documentation. This is to keep deployed code
+    small. To install only the bare minimum, with no intention of
+    using [Navigating Sources in Emacs][3386], [Generating Documentation][2c93],
+    [Browsing Live Documentation][a595] or using [Transcripts][6300], under
+    Quicklisp for example, PAX could be installed as:
+
+        (ql:quickload "mgl-pax")
+
+- *Installation for development*
+
+    The heavier dependencies are on the other systems, which
+    correspond to the main functionalities provided, intended to be
+    used primarily during development. To install the dependencies
+    for all features under Quicklisp, do
+
+        (ql:quickload "mgl-pax/full")
+
+    Having thus installed the dependencies, it is enough to load the
+    base system, which will autoload the other systems as necessary.
+
 
 <a id="x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
@@ -371,16 +393,7 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
     - _Version:_ 0.4.0
     - _Description:_ Documentation system, browser, generator. See the
         [PAX Manual][2415].
-    - _Long Description:_ The set of dependencies of the
-        [`mgl-pax`][6fdb] system is kept light, and its heavier
-        dependencies are autoloaded via ASDF when the relevant functionality
-        is accessed. See the [`mgl-pax/navigate`][f155],
-        [`mgl-pax/document`][4bb8],
-        [`mgl-pax/transcribe`][5825] and
-        [`mgl-pax/full`][d761] systems. To keep deployed code small,
-        client systems should declare an ASDF dependency on this system,
-        never on the others, which are intended for autoloading and
-        interactive use.
+    - _Long Description:_ The base system. See [Links and Systems][ba90].
     - _Licence:_ MIT, see COPYING.
     - _Author:_ Gábor Melis
     - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
@@ -390,17 +403,44 @@ documentation](http://melisgl.github.io/mgl-pax-world/dref-manual.html)
     - *Depends on:* [dref][021a], mgl-pax-bootstrap, named-readtables, pythonic-string-reader
     - *Defsystem depends on:* mgl-pax.asdf
 
+<a id="x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
+
+- [system] **"mgl-pax/navigate"**
+    - _Description:_ Support for [Navigating Sources in Emacs][3386] via Slime's
+        [`M-.`][cb15] in [MGL-PAX][2415].
+    - *Depends on:* alexandria, [dref/full][0c7e], [mgl-pax][6fdb], swank(?)
+    - *Defsystem depends on:* mgl-pax.asdf
+
+<a id="x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
+
+- [system] **"mgl-pax/document"**
+    - _Description:_ Support for [Generating Documentation][2c93] in
+        [MGL-PAX][2415].
+    - *Depends on:* 3bmd, 3bmd-ext-code-blocks, alexandria, colorize, md5, [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], trivial-utf-8
+    - *Defsystem depends on:* mgl-pax.asdf
+
+<a id="x-28-22mgl-pax-2Fweb-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
+
+- [system] **"mgl-pax/web"**
+    - _Description:_ Web server for [Browsing Live Documentation][a595]
+        in [MGL-PAX][2415].
+    - *Depends on:* hunchentoot, [mgl-pax/document][4bb8]
+    - *Defsystem depends on:* mgl-pax.asdf
+
+<a id="x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
+
+- [system] **"mgl-pax/transcribe"**
+    - _Description:_ Support for [Transcripts][6300] in
+        [MGL-PAX][2415].
+    - *Depends on:* alexandria, [mgl-pax/navigate][f155]
+    - *Defsystem depends on:* mgl-pax.asdf
+
 <a id="x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 - [system] **"mgl-pax/full"**
     - _Description:_ The [`mgl-pax`][6fdb] system with all features
-        preloaded except `mgl-pax/web`.
-    - _Long Description:_ Do not declare a dependency on this system. It
-        is for interactive use.
-    - _Licence:_ MIT, see COPYING.
-    - _Author:_ Gábor Melis
-    - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
-    - *Depends on:* [mgl-pax/document][4bb8], [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825]
+        preloaded.
+    - *Depends on:* [mgl-pax/document][4bb8], [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], [mgl-pax/web][a8c5]
 
 <a id="x-28MGL-PAX-3A-40BACKGROUND-20MGL-PAX-3ASECTION-29"></a>
 
@@ -1193,13 +1233,7 @@ A close relative of `M-.` is `C-.` for [Browsing Live Documentation][a595].
 - [system] **"mgl-pax/navigate"**
     - _Description:_ Support for [Navigating Sources in Emacs][3386] via Slime's
         [`M-.`][cb15] in [MGL-PAX][2415].
-    - _Long Description:_ Do not declare a dependency on this system. It is
-        autoloaded by Elisp or by accessing the functionality provided if the
-        [`mgl-pax`][6fdb] system is loaded.
-    - _Licence:_ MIT, see COPYING.
-    - _Author:_ Gábor Melis
-    - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
-    - *Depends on:* alexandria, dref/full, [mgl-pax][6fdb], swank(?)
+    - *Depends on:* alexandria, [dref/full][0c7e], [mgl-pax][6fdb], swank(?)
     - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28MGL-PAX-3A-40M--2E-DEFAULTING-20MGL-PAX-3ASECTION-29"></a>
@@ -1607,12 +1641,6 @@ symbols, there is no package system to advantage of.
 - [system] **"mgl-pax/document"**
     - _Description:_ Support for [Generating Documentation][2c93] in
         [MGL-PAX][2415].
-    - _Long Description:_ Do not declare a dependency on this system. It is
-        autoloaded by Elisp or by accessing the functionality provided if the
-        [`mgl-pax`][6fdb] system is loaded.
-    - _Licence:_ MIT, see COPYING.
-    - _Author:_ Gábor Melis
-    - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
     - *Depends on:* 3bmd, 3bmd-ext-code-blocks, alexandria, colorize, md5, [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], trivial-utf-8
     - *Defsystem depends on:* mgl-pax.asdf
 
@@ -3123,8 +3151,9 @@ This way the HTML documentation will be available at
 
     http://<username>.github.io/<repo-name>
 
-It is probably a good idea to add sections like the [Links and Systems][ba74] section
-to allow jumping between the repository and the gh-pages site.
+It is probably a good idea to add sections like the
+[Links and Systems][ba90] section to allow jumping between the repository
+and the gh-pages site.
 
 <a id="x-28MGL-PAX-3AMAKE-GITHUB-SOURCE-URI-FN-20FUNCTION-29"></a>
 
@@ -3276,12 +3305,6 @@ triple-quote syntax can be enabled with:
 - [system] **"mgl-pax/transcribe"**
     - _Description:_ Support for [Transcripts][6300] in
         [MGL-PAX][2415].
-    - _Long Description:_ Do not declare a dependency on this system. It is
-        autoloaded by Elisp or by accessing the functionality provided if
-        the [`mgl-pax`][6fdb] system is loaded.
-    - _Licence:_ MIT, see COPYING.
-    - _Author:_ Gábor Melis
-    - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
     - *Depends on:* alexandria, [mgl-pax/navigate][f155]
     - *Defsystem depends on:* mgl-pax.asdf
 
@@ -4145,6 +4168,7 @@ they are presented.
   [090c]: dref/README.md#x-28MGL-PAX-3ASTRUCTURE-ACCESSOR-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:STRUCTURE-ACCESSOR MGL-PAX:LOCATIVE"
   [0b3a]: dref/README.md#x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE"
   [0c4f]: http://www.lispworks.com/documentation/HyperSpec/Body/f_export.htm "EXPORT (MGL-PAX:CLHS FUNCTION)"
+  [0c7e]: dref/README.md#x-28-22dref-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"dref/full" ASDF/SYSTEM:SYSTEM'
   [0cac]: http://www.lispworks.com/documentation/HyperSpec/Body/22_caa.htm '"22.3.1.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [0d07]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_2.htm "SYMBOL-NAME (MGL-PAX:CLHS FUNCTION)"
   [0d6e]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eval.htm "EVAL (MGL-PAX:CLHS FUNCTION)"
@@ -4372,6 +4396,7 @@ they are presented.
   [a5b1]: #x-28MGL-PAX-3ASECTION-PACKAGE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "MGL-PAX:SECTION-PACKAGE (MGL-PAX:READER MGL-PAX:SECTION)"
   [a5ee]: #x-28MGL-PAX-3A-2ADOCUMENT-DOWNCASE-UPPERCASE-CODE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-DOWNCASE-UPPERCASE-CODE* VARIABLE"
   [a843]: http://www.lispworks.com/documentation/HyperSpec/Body/t_std_ob.htm "STANDARD-OBJECT (MGL-PAX:CLHS CLASS)"
+  [a8c5]: #x-28-22mgl-pax-2Fweb-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/web" ASDF/SYSTEM:SYSTEM'
   [a951]: dref/README.md#x-28MGL-PAX-3AUNKNOWN-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:UNKNOWN MGL-PAX:LOCATIVE"
   [ab7e]: #x-28MGL-PAX-3A-40PACKAGE-AND-READTABLE-20MGL-PAX-3ASECTION-29 "Package and Readtable"
   [ac30]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cha.htm '"22.3.8.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -4396,7 +4421,7 @@ they are presented.
   [b8b4]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "MUFFLE-WARNING (MGL-PAX:CLHS FUNCTION)"
   [b93c]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "STRING (MGL-PAX:CLHS CLASS)"
   [ba62]: dref/README.md#x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29 "FUNCTION MGL-PAX:LOCATIVE"
-  [ba74]: #x-28MGL-PAX-3A-40LINKS-20MGL-PAX-3ASECTION-29 "Links and Systems"
+  [ba90]: #x-28MGL-PAX-3A-40LINKS-AND-SYSTEMS-20MGL-PAX-3ASECTION-29 "Links and Systems"
   [bb12]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-HTML-DOCS-20FUNCTION-29 "MGL-PAX:UPDATE-ASDF-SYSTEM-HTML-DOCS FUNCTION"
   [bc83]: #x-28MGL-PAX-3A-40MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29 "Syntax Highlighting"
   [bcb6]: http://www.lispworks.com/documentation/HyperSpec/Body/e_warnin.htm "WARNING (MGL-PAX:CLHS CONDITION)"
@@ -4439,7 +4464,6 @@ they are presented.
   [d5a9]: http://www.lispworks.com/documentation/HyperSpec/Body/t_stream.htm "STREAM (MGL-PAX:CLHS CLASS)"
   [d5e1]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhq.htm '"2.4.8.17" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [d646]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rdtabl.htm "READTABLE (MGL-PAX:CLHS CLASS)"
-  [d761]: #x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/full" ASDF/SYSTEM:SYSTEM'
   [d7b0]: #x-28MGL-PAX-3A-40WORD-20MGL-PAX-3AGLOSSARY-TERM-29 "word"
   [d813]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_fro.htm "READ-FROM-STRING (MGL-PAX:CLHS FUNCTION)"
   [d83a]: dref/README.md#x-28SETF-20MGL-PAX-3ALOCATIVE-29 "SETF MGL-PAX:LOCATIVE"

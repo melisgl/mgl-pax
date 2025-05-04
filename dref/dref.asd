@@ -15,7 +15,7 @@
   DEFVAR does not. This library provides a way to refer to all
   definitions and smooths over the differences between
   implementations. This system has minimal dependencies. It autoloads
-  the `DREF/FULL` ASDF:SYSTEM, which depends Alexandria and Swank."
+  the `dref/full` ASDF:SYSTEM, which depends Alexandria and Swank."
   :depends-on ("mgl-pax-bootstrap" "named-readtables" "pythonic-string-reader")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
@@ -30,16 +30,17 @@
   :in-order-to ((asdf:test-op (asdf:test-op "dref-test"))))
 
 (asdf:defsystem "dref/full"
-  :licence "MIT, see COPYING."
-  :author "Gábor Melis"
-  :mailto "mega@retes.hu"
-  ;; Prevent inheritance of slot values from the DREF system.
+  :licence ""
+  :author ""
+  :mailto ""
   :homepage ""
   :bug-tracker ""
   :source-control ""
   :description "DREF with everything loaded. There should be no need
   to explicitly load this system (or depend on it) as it is autoloaded
-  as necessary by all publicly accessible functionality in DREF."
+  as necessary by all publicly accessible functionality in DREF.
+
+  However, to get the dependencies, install this system."
   :depends-on ("alexandria" "dref" (:feature (:not :swank) "swank"))
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"

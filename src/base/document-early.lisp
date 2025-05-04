@@ -257,8 +257,9 @@
 
       http://<username>.github.io/<repo-name>
 
-  It is probably a good idea to add sections like the @LINKS section
-  to allow jumping between the repository and the gh-pages site."
+  It is probably a good idea to add sections like the
+  @LINKS-AND-SYSTEMS section to allow jumping between the repository
+  and the gh-pages site."
   (make-github-source-uri-fn function)
   (make-git-source-uri-fn function))
 

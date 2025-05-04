@@ -146,11 +146,16 @@ other mgl-pax commands in interactive use."
                (cl:t
                 (cl:format
                  cl:t
-                 ";; FAILED autoloading ~S~%~
-                     ;; Proceeding to unload mgl-pax from Emacs~%~
-                     ;; Once PAX loads cleanly, you may want to ~
-                     (require 'mgl-pax) in Emacs.~%"
-                 ',asdf-system)
+                 ";; FAILED autoloading ~S.~%~
+                  ;; Evaluate (ASDF:LOAD-SYSTEM ~S) to debug.~%~
+                  ;; If there are missing dependencies, ~
+                  under Quicklisp for example, evaluate~%~
+                  ;; (QL:QUICKLOAD ~S).~%~
+                  ;;~%~
+                  ;; Proceeding to unload mgl-pax from Emacs.~%~
+                  ;; Once PAX loads cleanly, you may want to ~
+                  (require 'mgl-pax) in Emacs.~%"
+                 ',asdf-system ',asdf-system ',asdf-system)
                 :failed)))
             cont)))))
 
