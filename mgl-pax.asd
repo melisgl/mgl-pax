@@ -123,6 +123,12 @@
   :source-control ""
   :description "The [`mgl-pax`][asdf:system] system with all features
   preloaded."
-  :depends-on ("mgl-pax/navigate" "mgl-pax/document" "mgl-pax/web"
+  :depends-on ("mgl-pax/navigate" "mgl-pax/document"
+               ;; KLUDGE: On ABCL, some systems get the error "Class
+               ;; not found: com.sun.jna.Pointer" although Maven is
+               ;; installed. HUNCHENTOOT depends on BORDEAUX-THREADS,
+               ;; which does not support CLISP. On CMUCL, CL+SSL
+               ;; doesn't find libcrypto.
+               #-(or abcl clisp cmucl) "mgl-pax/web"
                "mgl-pax/transcribe")
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))

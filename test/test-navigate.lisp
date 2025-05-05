@@ -201,14 +201,18 @@
                   `(,(xref '@in-1 'note))))
 
 (deftest test-locate/go ()
-  (check-ref (dref 'xxx '(go (foo function)))
-             'xxx '(go (foo function)) 'pax::go-dref)
-  (check-ref (dref "xxx" '(go (foo function)))
-             "xxx" '(go (foo function)) 'pax::go-dref)
-  (signals (locate-error)
-    (dref 'xxx '(go (undefined function))))
-  (signals (locate-error :pred "Bad arguments")
-    (dref 'xxx '(go 1 2))))
+  ;; On GitHub, ECL fails with "Detected access to an invalid or
+  ;; protected memory address.".
+  (with-failure-expected ((alexandria:featurep '(:or :ecl)))
+    (signals-not (serious-condition)
+      (check-ref (dref 'xxx '(go (foo function)))
+                 'xxx '(go (foo function)) 'pax::go-dref)
+      (check-ref (dref "xxx" '(go (foo function)))
+                 "xxx" '(go (foo function)) 'pax::go-dref)
+      (signals (locate-error)
+        (dref 'xxx '(go (undefined function))))
+      (signals (locate-error :pred "Bad arguments")
+        (dref 'xxx '(go 1 2))))))
 
 (deftest test-locate/include ()
   (check-ref (dref nil '(include #.(asdf:system-relative-pathname
