@@ -3,11 +3,11 @@
 (defvar *current-interaction-mode* nil)
 (defvar *latest-interaction-mode* nil)
 
-(defmacro with-binding-defaults* ((&rest bindings) &body body)
-  "For each pair (VARIABLE VALUE) in BINDINGS, bind VARIABLE to VALUE within BODY only if it isn't
-  already BOUNDP."
-  `(let* (,@(loop for (binding default) in bindings
-                  collect `(,binding (if (boundp ',binding) ,binding ,default))))
+(defmacro with-binding-defaults* ((&rest vars) &body body)
+  "Like LET*, but for each pair (VAR VALUE) in VARS, bind VARIABLE to VALUE within BODY only if it
+  isn't already BOUNDP."
+  `(let* (,@(loop for (var default) in vars
+                  collect `(,var (if (boundp ',var) ,var ,default))))
      ,@body))
 
 (defun call-with-lisp-interaction-mode (interaction-mode thunk)
