@@ -2,6 +2,20 @@
 
 (in-readtable pythonic-string-syntax)
 
+(defsection @source-locations (:title "Source Locations")
+  "These represent the file or buffer position of a [defining
+  form][clhs] and are returned by the SOURCE-LOCATION function. For
+  the details, see the Elisp function `slime-goto-source-location`."
+  (make-source-location function)
+  (source-location-p function)
+  (source-location-file function)
+  (source-location-file-position function)
+  (source-location-buffer function)
+  (source-location-buffer-position function)
+  (source-location-snippet function)
+  (source-location-adjusted-file-position function)
+  (this-source-location macro))
+
 (defun/autoloaded make-source-location (&key file file-position
                                              buffer buffer-position snippet)
   "Make a Swank source location. The ultimate reference is `slime.el`.

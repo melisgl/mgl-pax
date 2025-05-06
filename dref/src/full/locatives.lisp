@@ -13,6 +13,38 @@
                     ,@initargs)))
 
 
+(defsection @basic-locative-types (:title "Basic Locative Types")
+  """The following are the @LOCATIVE-TYPEs supported out of the
+  box. As all locative types, they are named by symbols. When there is
+  a CL type corresponding to the reference's locative type, the
+  references can be RESOLVEd to a unique object as is the case in
+
+  ```cl-transcript (:dynenv dref-std-env)
+  (resolve (dref 'print 'function))
+  ==> #<FUNCTION PRINT>
+  => T
+  ```
+
+  Even if there is no such CL type, the ARGLIST, the DOCSTRING, and
+  the SOURCE-LOCATION of the defining form is usually recorded unless
+  otherwise noted.
+
+  The basic locative types and their inheritance structure is loosely
+  based on the DOC-TYPE argument of [CL:DOCUMENTATION][clhs]."""
+  (@variablelike-locatives section)
+  (@macrolike-locatives section)
+  (@functionlike-locatives section)
+  (@typelike-locatives section)
+  (@condition-system-locatives section)
+  (@packagelike-locatives section)
+  (@unknown-definitions section)
+  (@dref-locatives section))
+
+(defsection @variablelike-locatives (:title "Locatives for Variables")
+  (variable locative)
+  (constant locative))
+
+
 ;;;; VARIABLE locative
 
 (define-locative-type (variable &optional initform) ()
@@ -63,6 +95,14 @@
 
 (defmethod source-location* ((dref constant-dref))
   (swank-source-location (dref-name dref) 'constant))
+
+
+(defsection @macrolike-locatives (:title "Locatives for Macros")
+  (setf locative)
+  (macro locative)
+  (symbol-macro locative)
+  (compiler-macro locative)
+  (setf-compiler-macro locative))
 
 
 ;;;; SETF locative
@@ -258,6 +298,21 @@
       (resolve-error "The name of the definition cannot be recovered ~
                       from the function object."))
     fn))
+
+
+(defsection @functionlike-locatives
+    (:title "Locatives for Functions and Methods")
+  (function locative)
+  (setf-function locative)
+  (generic-function locative)
+  (setf-generic-function locative)
+  (method locative)
+  (setf-method locative)
+  (method-combination locative)
+  (reader locative)
+  (writer locative)
+  (accessor locative)
+  (structure-accessor locative))
 
 
 ;;;; FUNCTION locative
@@ -824,6 +879,12 @@
     (swank-source-location* (symbol-function* symbol) symbol 'function)))
 
 
+(defsection @typelike-locatives (:title "Locatives for Types and Declarations")
+  (type locative)
+  (class locative)
+  (declaration locative))
+
+
 ;;;; TYPE locative
 
 (define-locative-type type ()
@@ -910,38 +971,6 @@
 (defvar %end-of-class-example)
 
 
-;;;; CONDITION locative
-
-(define-locative-type condition (class)
-  "Although CONDITION is not SUBTYPEP of CLASS, actual condition
-  objects are commonly instances of a condition class that is a CLOS
-  class. HyperSpec [ISSUE:CLOS-CONDITIONS][clhs] and
-  [ISSUE:CLOS-CONDITIONS-AGAIN][clhs] provide the relevant history.
-
-  Whenever a CLASS denotes a CONDITION, its DREF-LOCATIVE-TYPE will be
-  CONDITION:
-
-  ```cl-transcript (:dynenv dref-std-env)
-  (dref 'locate-error 'class)
-  ==> #<DREF LOCATE-ERROR CONDITION>
-  ```")
-
-(define-lookup condition (symbol locative-args)
-  (let ((class (and (symbolp symbol) (find-class symbol nil))))
-    (unless (and class (subtypep class 'condition))
-      (locate-error "~S does not name a condition class." symbol))
-    (%make-dref symbol condition)))
-
-(defmethod resolve* ((dref condition-dref))
-  (find-class (dref-name dref)))
-
-(defmethod docstring* ((dref condition-dref))
-  (documentation* (find-class (dref-name dref)) t))
-
-(defmethod source-location* ((dref condition-dref))
-  (swank-source-location* (resolve dref) (dref-name dref) 'condition))
-
-
 ;;;; DECLARATION locative
 
 (define-locative-type declaration ()
@@ -1006,6 +1035,45 @@
   '(:error "Don't know how to find the source location of declarations."))
 
 
+(defsection @condition-system-locatives
+    (:title "Locatives for the Condition System")
+  (condition locative)
+  (restart locative)
+  (define-restart macro))
+
+
+;;;; CONDITION locative
+
+(define-locative-type condition (class)
+  "Although CONDITION is not SUBTYPEP of CLASS, actual condition
+  objects are commonly instances of a condition class that is a CLOS
+  class. HyperSpec [ISSUE:CLOS-CONDITIONS][clhs] and
+  [ISSUE:CLOS-CONDITIONS-AGAIN][clhs] provide the relevant history.
+
+  Whenever a CLASS denotes a CONDITION, its DREF-LOCATIVE-TYPE will be
+  CONDITION:
+
+  ```cl-transcript (:dynenv dref-std-env)
+  (dref 'locate-error 'class)
+  ==> #<DREF LOCATE-ERROR CONDITION>
+  ```")
+
+(define-lookup condition (symbol locative-args)
+  (let ((class (and (symbolp symbol) (find-class symbol nil))))
+    (unless (and class (subtypep class 'condition))
+      (locate-error "~S does not name a condition class." symbol))
+    (%make-dref symbol condition)))
+
+(defmethod resolve* ((dref condition-dref))
+  (find-class (dref-name dref)))
+
+(defmethod docstring* ((dref condition-dref))
+  (documentation* (find-class (dref-name dref)) t))
+
+(defmethod source-location* ((dref condition-dref))
+  (swank-source-location* (resolve dref) (dref-name dref) 'condition))
+
+
 ;;;; RESTART locative
 
 ;;; Provide definitions for standard CL restarts.
@@ -1024,6 +1092,13 @@
 (define-restart abort ()
   "This is the name of the RESTART to which [ABORT][function]
   transfers control.")
+
+
+(defsection @packagelike-locatives
+    (:title "Locatives for Packages and Readtables")
+  (asdf:system locative)
+  (package locative)
+  (readtable locative))
 
 
 ;;;; ASDF:SYSTEM locative
@@ -1146,6 +1221,12 @@
       (source-location (dref dummy 'function nil) :error :error))))
 
 
+(defsection @dref-locatives (:title "Locatives for DRef Constructs")
+  (dtype locative)
+  (locative locative)
+  (lambda locative))
+
+
 ;;;; DTYPE locative
 
 (define-locative-type dtype ()
@@ -1191,47 +1272,6 @@
               (find symbol *locative-aliases*))
     (locate-error "~S is not a valid locative type or locative alias." symbol))
   (%make-dref symbol locative))
-
-
-;;;; UNKNOWN locative
-
-(define-locative-type (unknown dspec) ()
-  "This locative type allows PAX to work in a limited way with
-  definition types it doesn't know. UNKNOWN definitions come from
-  DEFINITIONS, which uses SWANK/BACKEND:FIND-DEFINITIONS. The
-  following examples show PAX stuffing the Swank
-  dspec `(:DEFINE-ALIEN-TYPE DOUBLE-FLOAT)` into an UNKNOWN locative
-  on SBCL.
-
-  ```cl-transcript (:dynenv dref-std-env)
-  (definitions 'double-float)
-  ==> (#<DREF DOUBLE-FLOAT CLASS>
-  -->  #<DREF DOUBLE-FLOAT (UNKNOWN (:DEFINE-ALIEN-TYPE DOUBLE-FLOAT))>)
-  ```
-
-  ```cl-transcript (:dynenv dref-std-env)
-  (dref 'double-float '(unknown (:define-alien-type double-float)))
-  ==> #<DREF DOUBLE-FLOAT (UNKNOWN (:DEFINE-ALIEN-TYPE DOUBLE-FLOAT))>
-  ```
-
-  ARGLIST and DOCSTRING return NIL for UNKNOWNs, but SOURCE-LOCATION
-  works.")
-
-(define-lookup unknown (name locative-args)
-  (unless (and (symbolp name)
-               locative-args
-               (find (first locative-args) (swank-dspecs name) :test #'equal))
-    (locate-error))
-  (%make-dref name unknown locative-args))
-
-(defmethod map-definitions-of-name (fn name (locative-type (eql 'unknown)))
-  (declare (ignore fn name))
-  'swank-definitions)
-
-(defmethod source-location* ((dref unknown-dref))
-  (let ((dspec-and-location-list (swank-dspecs-and-locations (dref-name dref)))
-        (dspec (first (dref-locative-args dref))))
-    (second (find dspec dspec-and-location-list :key #'first :test #'equal))))
 
 
 ;;;; LAMBDA locative
@@ -1292,3 +1332,93 @@
          (snippet (getf args :snippet)))
     (make-source-location :file file :file-position file-position
                           :snippet snippet)))
+
+
+(defsection @unknown-definitions (:title "Locatives for Unknown Definitions")
+  (unknown locative))
+
+(define-locative-type (unknown dspec) ()
+  "This locative type allows PAX to work in a limited way with
+  definition types it doesn't know. UNKNOWN definitions come from
+  DEFINITIONS, which uses SWANK/BACKEND:FIND-DEFINITIONS. The
+  following examples show PAX stuffing the Swank
+  dspec `(:DEFINE-ALIEN-TYPE DOUBLE-FLOAT)` into an UNKNOWN locative
+  on SBCL.
+
+  ```cl-transcript (:dynenv dref-std-env)
+  (definitions 'double-float)
+  ==> (#<DREF DOUBLE-FLOAT CLASS>
+  -->  #<DREF DOUBLE-FLOAT (UNKNOWN (:DEFINE-ALIEN-TYPE DOUBLE-FLOAT))>)
+  ```
+
+  ```cl-transcript (:dynenv dref-std-env)
+  (dref 'double-float '(unknown (:define-alien-type double-float)))
+  ==> #<DREF DOUBLE-FLOAT (UNKNOWN (:DEFINE-ALIEN-TYPE DOUBLE-FLOAT))>
+  ```
+
+  ARGLIST and DOCSTRING return NIL for UNKNOWNs, but SOURCE-LOCATION
+  works.")
+
+(define-lookup unknown (name locative-args)
+  (unless (and (symbolp name)
+               locative-args
+               (find (first locative-args) (swank-dspecs name) :test #'equal))
+    (locate-error))
+  (%make-dref name unknown locative-args))
+
+(defmethod map-definitions-of-name (fn name (locative-type (eql 'unknown)))
+  (declare (ignore fn name))
+  'swank-definitions)
+
+(defmethod source-location* ((dref unknown-dref))
+  (let ((dspec-and-location-list (swank-dspecs-and-locations (dref-name dref)))
+        (dspec (first (dref-locative-args dref))))
+    (second (find dspec dspec-and-location-list :key #'first :test #'equal))))
+
+
+(defsection @dref-classes (:title "DREF-CLASSes")
+  "These are the DREF-CLASSes corresponding to DREF::@BASIC-LOCATIVE-TYPES.
+  They are exported to make it possible to go beyond the
+  @BASIC-OPERATIONS (e.g. PAX:DOCUMENT-OBJECT*). For
+  DREF-EXT::@DEFINING-LOCATIVE-TYPES, they are not necessary, as
+  DEFINE-LOCATIVE-TYPE handles inheritance automatically based on its
+  LOCATIVE-SUPERTYPES argument."
+  "**[for Variables][ @variablelike-locatives]**"
+  (variable-dref class)
+  (constant-dref class)
+  "**[for Macros][ @macrolike-locatives]**"
+  (macro-dref class)
+  (symbol-macro-dref class)
+  (compiler-macro-dref class)
+  (setf-dref class)
+  (setf-compiler-macro-dref class)
+  "**[for Functions][ @functionlike-locatives]**"
+  (function-dref class)
+  (setf-function-dref class)
+  (generic-function-dref class)
+  (setf-generic-function-dref class)
+  (method-dref class)
+  (setf-method-dref class)
+  (method-combination-dref class)
+  (reader-dref class)
+  (writer-dref class)
+  (accessor-dref class)
+  (structure-accessor-dref class)
+  "**[for Types and Declarations][ @typelike-locatives]**"
+  (type-dref class)
+  (class-dref class)
+  (declaration-dref class)
+  "**[for the Condition System][ @condition-system-locatives]**"
+  (condition-dref class)
+  (restart-dref class)
+  "**[for Packages and Readtables][ @packagelike-locatives]**"
+  (asdf-system-dref class)
+  (package-dref class)
+  (readtable-dref class)
+  "**[for Unknown Definitions][ @unknown-definitions]**"
+  (unknown-dref class)
+  "**[for DRef Constructs][ @dref-locatives]**"
+  (dtype-dref class)
+  (locative-dref class)
+  (symbol-locative-dref class)
+  (lambda-dref class))

@@ -73,6 +73,12 @@ Pros of Definitions:
   These can be added to DRef if needed.
 ** MAYBE add DCAST and DLOOKUP locatives
 Needs a constant name such as LOCATE* or DREF*.
+* pax base
+** MAYBE swap the MGL-PAX package name with the PAX nickname
+... somehow without breaking existing URLs, which have
+MGL-PAX:<LOCATIVE> all over them?
+** MAYBE document :EXPORT <PGK>?
+Is this the right idea? DRef no longer uses this mechanism.p
 * navigate
 ** BUG (low) locative completion: nicknames don't work
 print f<TAB> -> "print function"
@@ -121,7 +127,15 @@ PRINT
 NIL
 CL-USER> (boundp 'pax:*document-link-code*)
 NIL
-** MAYBE autoload documentation when needed?
+** CANCELLED autoload documentation when needed?
+CLOSED: [2025-05-07 Wed 09:29]
+- State "CANCELLED"  from "MAYBE"      [2025-05-07 Wed 09:29] \\
+  Autoloading is very restricted in its abilities, and I can't see a
+  perfect way to make it work for e.g. sections. It think accessing the
+  section's variable should trigger autoloading the real section
+  definition, but that's not possible to catch. A symbol-macro might be
+  help there, but it's too much complexity for little gain, especially
+  since generating documentation loads dref/full.
 E.g. for named-readtables, which has its docs in named-readtables/doc.
 Maybe, more generally:
    (setf (definition-property xref 'autoload)
@@ -129,8 +143,15 @@ Maybe, more generally:
 
 This could help with the package complications in dref/src/base/
 package.lisp.
-** MAYBE warn when generating offline documentation for autoloaded functions?
-** MAYBE provide way to autoload from live documentation?
+
+Casting needs to be aware of autoload.
+
+(autoload-dref (xref '@xxx 'section) "dref/full")
+** CANCELLED warn when generating offline docs for autoloaded functions?
+CLOSED: [2025-05-07 Wed 09:40]
+** CANCELLED provide way to autoload from live documentation?
+CLOSED: [2025-05-07 Wed 09:40]
+- State "CANCELLED"  from "MAYBE"      [2025-05-07 Wed 09:40]
 ** MAYBE web: link asdf system to definitions in it?
 Packages defined are linked already, which handles many cases but not
 all, and of course includes definitions (e.g methods) not defined in
@@ -194,12 +215,10 @@ the elisp def and C-. would call `describe-function` (elisp)?
   ;; Just for the name, really. Maybe control what it can close over?
   (subfoo ()
    ))
-* MAYBE swap the MGL-PAX package name with the PAX nickname
-... somehow without breaking existing URLs, which have
-MGL-PAX:<LOCATIVE> all over them?
 * MAYBE do not test the locative type of a DREF with EQ
 At most places, using (TYPEP DREF 'SECTION-DREF) instead of (EQ (DREF-
 LOCATIVE-TYPE DREF) 'SECTION) may make more sense.
 * MAYBE better deal with Swank/Slynk dependencies
 Probably it's too much to ask to have a portable introspection library
-factored out of them.
+factored out of them. Conium seems abandoned. There is no clear scope
+to support a stable API.

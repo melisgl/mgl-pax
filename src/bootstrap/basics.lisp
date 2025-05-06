@@ -305,7 +305,12 @@
          #+abcl
          ,@(loop for option in options
                  when (eq (first option) :use)
-                   collect `(use-package ',(rest option) ',package))))))
+                   collect `(use-package ',(rest option) ',package)
+                 when (eq (first option) :export)
+                   collect `(export (mapcar (lambda (sym)
+                                              (intern sym ',package))
+                                            ',(rest option))
+                                    ',package))))))
 
 
 ;;; Arrange for the home package of these LOCATIVEs (exported by DRef)

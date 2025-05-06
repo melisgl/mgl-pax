@@ -1599,8 +1599,7 @@ by [`DEFINE-LOCATIVE-TYPE`][b6c4] and [`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4].
     `NIL` if `LOCATIVE-TYPE` is not a valid locative type.
     
     Note that the actual [`TYPE-OF`][9caa] a `DREF` is mostly intended for
-    [Extending DRef][68fb]. Hence, it is hidden when a `DREF` is
-    printed:
+    [Extending DRef][68fb]. Hence, it is hidden when a `DREF` is printed:
     
     ```common-lisp
     (dref 'print 'function)
@@ -1609,8 +1608,8 @@ by [`DEFINE-LOCATIVE-TYPE`][b6c4] and [`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4].
     => FUNCTION-DREF
     ```
     
-    Due to [Canonicalization][9383], the actual type may be a proper
-    subtype of `DREF-CLASS`:
+    Due to [Canonicalization][9383], the actual type may be a proper subtype of
+    `DREF-CLASS`:
     
     ```common-lisp
     (dref 'documentation 'function)
@@ -2034,9 +2033,9 @@ macros.
     
     - `BODY` must follow the rules in [`*CHECK-LOCATE*`][b038].
     
-    In contrast to when the [Initial Definition][87fc] is created
-    from an `XREF` (see [`DEFINE-LOOKUP`][49b5]), here [`LOCATIVE-ARGS`][2444] are determined
-    from `OBJECT`.
+    In contrast to when the [Initial Definition][87fc] is created from an
+    `XREF` (see [`DEFINE-LOOKUP`][49b5]), here [`LOCATIVE-ARGS`][2444] are determined from
+    `OBJECT`.
 
 <a id="x-28DREF-EXT-3ACALL-LOCATOR-20MGL-PAX-3AMACRO-29"></a>
 
@@ -2053,9 +2052,9 @@ macros.
     to an instance `DREF-CLASS`, which denotes a valid but potentially
     [non-canonical][9383] definition.
     
-    Note the [Default Downcast][8529] often suffices, and defining a
-    cast is only necessary if the [name][c68e]
-    or the locative args change:
+    Note the [Default Downcast][8529] often suffices, and defining a cast is
+    only necessary if the [name][c68e] or the locative
+    args change:
     
     ```
     (define-cast accessor ((dref reader-dref))

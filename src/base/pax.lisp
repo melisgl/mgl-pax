@@ -5,15 +5,6 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (use-package '#:named-readtables)
   (use-package '#:pythonic-string-reader))
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  ;; For backward compatibility with pre-DRef PAX, reexport these DRef
-  ;; macros.
-  (export 'define-locative-type)
-  (export 'define-locative-alias)
-  (export 'define-symbol-locative-type)
-  (export 'define-definer-for-symbol-locative-type)
-  (export 'define-restart))
 
 
 (defun section-entries (section)

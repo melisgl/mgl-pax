@@ -60,17 +60,18 @@
 
 (autoload definitions "dref/full")
 (autoload dref-apropos "dref/full")
-
-(autoload make-source-location "dref/full")
-(autoload source-location-p "dref/full")
-(autoload source-location-file "dref/full")
-(autoload source-location-file-position "dref/full")
-(autoload source-location-buffer "dref/full")
-(autoload source-location-buffer-position "dref/full")
-(autoload source-location-snippet "dref/full")
-(autoload source-location-adjusted-file-position "dref/full")
 
 
-(autoload swank-source-location* "dref/full")
+(autoload make-source-location "dref/full" :export nil)
+(autoload source-location-p "dref/full" :export nil)
+(autoload source-location-file "dref/full" :export nil)
+(autoload source-location-file-position "dref/full" :export nil)
+(autoload source-location-buffer "dref/full" :export nil)
+(autoload source-location-buffer-position "dref/full" :export nil)
+(autoload source-location-snippet "dref/full" :export nil)
+(autoload source-location-adjusted-file-position "dref/full" :export nil)
+
+
+(autoload swank-source-location* "dref/full" :export nil)
 #+sbcl
-(autoload translate-sb-source-location "dref/full")
+(autoload translate-sb-source-location "dref/full" :export nil)

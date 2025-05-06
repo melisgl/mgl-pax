@@ -1376,8 +1376,7 @@ by DEFINE-LOCATIVE-TYPE and DEFINE-PSEUDO-LOCATIVE-TYPE.
     NIL if LOCATIVE-TYPE is not a valid locative type.
     
     Note that the actual TYPE-OF a DREF is mostly intended for
-    DREF-EXT::@EXTENDING-DREF. Hence, it is hidden when a DREF is
-    printed:
+    @EXTENDING-DREF. Hence, it is hidden when a DREF is printed:
     
     ```common-lisp
     (dref 'print 'function)
@@ -1386,8 +1385,8 @@ by DEFINE-LOCATIVE-TYPE and DEFINE-PSEUDO-LOCATIVE-TYPE.
     => FUNCTION-DREF
     ```
     
-    Due to DREF-EXT::@CANONICALIZATION, the actual type may be a proper
-    subtype of DREF-CLASS:
+    Due to @CANONICALIZATION, the actual type may be a proper subtype of
+    DREF-CLASS:
     
     ```common-lisp
     (dref 'documentation 'function)
@@ -1421,7 +1420,7 @@ by DEFINE-LOCATIVE-TYPE and DEFINE-PSEUDO-LOCATIVE-TYPE.
 - [macro] DEFINE-LOCATIVE-TYPE LOCATIVE-TYPE-AND-LAMBDA-LIST LOCATIVE-SUPERTYPES &OPTIONAL DOCSTRING DREF-DEFCLASS-FORM
 
     Declare LOCATIVE-TYPE as a LOCATIVE,
-    which is the first step in DREF-EXT::@EXTENDING-DREF.
+    which is the first step in @EXTENDING-DREF.
     
     - *Simple example*
     
@@ -1687,8 +1686,8 @@ upcast the returned value to the DREF argument's DREF-LOCATIVE-TYPE.
 
 #### Defining Lookups, Locators and Casts
 
-As we have seen, the DREF-EXT::@INITIAL-DEFINITION is provided either by a
-lookup or a locator, then DREF-EXT::@CANONICALIZATION works with
+As we have seen, the @INITIAL-DEFINITION is provided either by a
+lookup or a locator, then @CANONICALIZATION works with
 casts. Here, we look at how to define these.
 
 *Implementation note:* All three are currently implemented as
@@ -1773,9 +1772,9 @@ macros.
     
     - BODY must follow the rules in *CHECK-LOCATE*.
     
-    In contrast to when the DREF-EXT::@INITIAL-DEFINITION is created
-    from an XREF (see DEFINE-LOOKUP), here LOCATIVE-ARGS are determined
-    from OBJECT.
+    In contrast to when the @INITIAL-DEFINITION is created from an
+    XREF (see DEFINE-LOOKUP), here LOCATIVE-ARGS are determined from
+    OBJECT.
 
 - [macro] CALL-LOCATOR OBJECT LOCATIVE-TYPE
 
@@ -1788,9 +1787,9 @@ macros.
     to an instance DREF-CLASS, which denotes a valid but potentially
     non-canonical definition.
     
-    Note the DREF-EXT::@DEFAULT-DOWNCAST often suffices, and defining a
-    cast is only necessary if the name
-    or the locative args change:
+    Note the @DEFAULT-DOWNCAST often suffices, and defining a cast is
+    only necessary if the name or the locative
+    args change:
     
     ```
     (define-cast accessor ((dref reader-dref))

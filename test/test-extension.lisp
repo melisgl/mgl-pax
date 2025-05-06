@@ -17,9 +17,9 @@
     (is (endp (set-difference externals *externals-before*)))
     (is (endp (set-difference *externals-before* externals)))))
 
-(define-symbol-locative-type aaa ())
+(dref-ext:define-symbol-locative-type aaa ())
 
-(define-definer-for-symbol-locative-type define-aaa aaa)
+(dref-ext:define-definer-for-symbol-locative-type define-aaa aaa)
 
 (define-aaa aaa1 ()
   "This is AAA1.")

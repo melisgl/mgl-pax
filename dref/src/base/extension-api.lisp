@@ -2,7 +2,54 @@
 
 (in-readtable pythonic-string-syntax)
 
-;;;; DREF-EXT::@LOCATIVE-TYPE-HIERARCHY
+(defsection @extending-dref (:title "Extending DRef")
+  (@extension-tutorial section)
+  (@locative-type-hierarchy section)
+  (@defining-locative-types section)
+  (@extending-locate section)
+  (@extending-everything-else section)
+  (@dref-classes section)
+  (@source-locations section))
+
+(defsection @extension-tutorial (:title "Extension Tutorial")
+  "Let's see how to tell DRef about new kinds of definitions through
+  the example of the implementation of the CLASS locative. Note that
+  this is a verbatim [PAX:INCLUDE][locative] of the sources. Please
+  ignore any internal machinery. The first step is to define the
+  @LOCATIVE-TYPE:"
+  (nil (include (:start (class locative)
+                 :end (dref::locate* (method () (class (eql class)))))
+                :header-nl "```" :footer-nl "```"))
+  "Then, we make it possible to look up CLASS definitions:"
+  (nil (include (:start (dref::locate* (method () (class (eql class))))
+                 :end (resolve* (method () (class-dref))))
+                :header-nl "```" :footer-nl "```"))
+  "DEFINE-LOCATOR makes `(LOCATE (FIND-CLASS 'DREF))` work, while
+  DEFINE-LOOKUP is for `(DREF 'DREF 'CLASS)`. Naturally, for locative
+  types that do not define first-class objects, the first method
+  cannot be defined.
+
+  Finally, we define a RESOLVE* method to recover the [CLASS][type]
+  object from a CLASS-DREF. We also specialize DOCSTRING* and
+  SOURCE-LOCATION*:"
+  (nil (include (:start (resolve* (method () (class-dref)))
+                 :end (dref::%end-of-class-example variable))
+                :header-nl "```" :footer-nl "```"))
+  "We took advantage of having just made the class locative type being
+  RESOLVEable, by specializing DOCSTRING* on the CLASS class.
+  SOURCE-LOCATION* was specialized on CLASS-DREF to demonstrate how
+  this can be done for non-RESOLVEable locative types.
+
+  Classes have no arglist, so no ARGLIST* method is needed. In the
+  following, we describe the pieces in detail.")
+
+(defsection @locative-type-hierarchy (:title "Locative Type Hierarchy")
+  "[Locative types][@LOCATIVE-TYPE] form their own hierarchy, that
+  is only superficially similar to the Lisp CLASS hierarchy.
+  [ check-lisp-and-pseudo-are-distinct function ][docstring]"
+  (dref-class function)
+  (locative-type-direct-supers function)
+  (locative-type-direct-subs function))
 
 (defun check-lisp-and-pseudo-are-distinct (pseudop locative-type superclasses)
   "The hierarchies of LISP-LOCATIVE-TYPES and PSEUDO-LOCATIVE-TYPES
@@ -59,20 +106,19 @@
   NIL if LOCATIVE-TYPE is not a valid locative type.
 
   Note that the actual TYPE-OF a DREF is mostly intended for
-  DREF-EXT::@EXTENDING-DREF. Hence, it is hidden when a DREF is
-  printed:
+  @EXTENDING-DREF. Hence, it is hidden when a DREF is printed:
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (dref 'print 'function)
   ==> #<DREF PRINT FUNCTION>
   (type-of *)
   => FUNCTION-DREF
   ```
 
-  Due to DREF-EXT::@CANONICALIZATION, the actual type may be a proper
-  subtype of DREF-CLASS:
+  Due to @CANONICALIZATION, the actual type may be a proper subtype of
+  DREF-CLASS:
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (dref 'documentation 'function)
   ==> #<DREF DOCUMENTATION GENERIC-FUNCTION>
   (type-of *)
@@ -155,13 +201,17 @@
            (subtypep class1 class2)))))
 
 
-;;;; DREF-EXT::@DEFINING-LOCATIVE-TYPES
+(defsection @defining-locative-types (:title "Defining Locative Types")
+  (define-locative-type macro)
+  (define-pseudo-locative-type macro)
+  (define-locative-alias macro)
+  (@symbol-locatives section))
 
 (defmacro define-locative-type (locative-type-and-lambda-list
                                 locative-supertypes
                                 &optional docstring dref-defclass-form)
   """Declare [LOCATIVE-TYPE][argument] as a [LOCATIVE][locative],
-  which is the first step in DREF-EXT::@EXTENDING-DREF.
+  which is the first step in @EXTENDING-DREF.
 
   - _Simple example_
 
@@ -337,7 +387,7 @@
   The LOCATIVE-ARGS of OBJECT (none in the above) are passed on to
   CLASS.
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (arglist (dref 'object 'locative))
   => (&REST ARGS)
   => :DESTRUCTURING
@@ -371,6 +421,12 @@
 ;;;; LOCATE's low-level implementation, most importantly the extension
 ;;;; points LOCATE* and DREF*, on top of which the public API rests
 
+(defsection @extending-locate (:title "Extending LOCATE")
+  "[ dref::%locate function][docstring]"
+  (@initial-definition section)
+  (@canonicalization section)
+  (@defining-lookups-locators-and-casts section))
+
 (defvar *locating-object*)
 
 (defun %locate (object)
@@ -390,6 +446,9 @@
     (unless (typep object 'dref)
       (setf (slot-value dref 'origin) object))
     (canonicalize-dref dref)))
+
+(defsection @initial-definition (:title "Initial Definition")
+  "[ dref::locate-initial-definition function][docstring]")
 
 (defun locate-initial-definition (object)
   "LOCATE can find the initial definition in one of two ways:
@@ -454,6 +513,11 @@
     (when last-locate-error
       (error last-locate-error))))
 
+(defsection @canonicalization (:title "Canonicalization")
+  "[ dref::canonicalize-dref function][docstring]"
+  (@default-downcast section)
+  (@cast-name-change section))
+
 (defun canonicalize-dref (dref)
   "The initial definition thus found is then canonicalized so that
   there is a unique @DEFINITION under XREF=:
@@ -491,6 +555,9 @@
 
   In particular, enforce the rule of @CAST-NAME-CHANGE and that [
   check-locator-return-values function][docstring]")
+
+(defsection @default-downcast (:title "Default Downcast")
+  "[ dref::locate* (method () (dref t))][docstring]")
 
 ;;; Return a @DEFINITION of OBJECT as an instance of the DREF-CLASS of
 ;;; LOCATIVE-TYPE. This function is for extending LOCATE and is behind
@@ -625,6 +692,28 @@
 
 ;;;; Public macros to define LOCATE* methods
 
+(defsection @defining-lookups-locators-and-casts
+    (:title "Defining Lookups, Locators and Casts")
+  "As we have seen, the @INITIAL-DEFINITION is provided either by a
+  lookup or a locator, then @CANONICALIZATION works with
+  casts. Here, we look at how to define these.
+
+  _Implementation note:_ All three are currently implemented as
+  methods of generic functions with [EQL specializers][7.6.2 clhs] for
+  the locative type, which may easily prove to be problematic down the
+  road. To make future changes easier, the generic function and the
+  methods are hidden behind e.g. the DEFINE-LOOKUP and CALL-LOOKUP
+  macros."
+  (*check-locate* variable)
+  (define-lookup macro)
+  (call-lookup macro)
+  (define-locator macro)
+  (call-locator macro)
+  (define-cast macro)
+  (call-cast macro)
+  (locate-error function)
+  (check-locative-args macro))
+
 ;;; To speed LOCATE up, when we know that the actual condition object
 ;;; does not matter (because *IGNORE-LOCATE-ERROR* is true), use this
 ;;; premade one.
@@ -706,9 +795,9 @@
 
   - BODY must follow the rules in *CHECK-LOCATE*.
 
-  In contrast to when the DREF-EXT::@INITIAL-DEFINITION is created
-  from an XREF (see DEFINE-LOOKUP), here LOCATIVE-ARGS are determined
-  from OBJECT."
+  In contrast to when the @INITIAL-DEFINITION is created from an
+  XREF (see DEFINE-LOOKUP), here LOCATIVE-ARGS are determined from
+  OBJECT."
   (check-locative-type locative-type)
   (check-type object symbol)
   (check-type class symbol)
@@ -726,11 +815,11 @@
   "Define a method of converting a @DEFINITION to another
   with LOCATIVE-TYPE. When a cast's BODY is evaluated, DREF is bound
   to an instance DREF-CLASS, which denotes a valid but potentially
-  [non-canonical][ dref-ext::@canonicalization] definition.
+  [non-canonical][ @canonicalization] definition.
 
-  Note the DREF-EXT::@DEFAULT-DOWNCAST often suffices, and defining a
-  cast is only necessary if the [name][ dref-ext::@cast-name-change]
-  or the locative args change:
+  Note the @DEFAULT-DOWNCAST often suffices, and defining a cast is
+  only necessary if the [name][ @cast-name-change] or the locative
+  args change:
 
   ```
   (define-cast accessor ((dref reader-dref))
@@ -797,20 +886,17 @@
   `(locate* ,dref ,locative-type))
 
 
+(defsection @extending-everything-else (:title "Extending Everything Else")
+  (resolve* generic-function)
+  (resolve-error function)
+  (map-definitions-of-name generic-function)
+  (map-definitions-of-type generic-function)
+  (arglist* generic-function)
+  (docstring* generic-function)
+  (source-location* generic-function)
+  (@definition-properties section))
+
 (defvar *resolving-dref*)
-
-(defun resolve-error (&rest format-and-args)
-  "Call this function to signal a RESOLVE-ERROR condition from the
-  [dynamic extent][clhs] of a RESOLVE* method. It is an error to call
-  RESOLVE-ERROR elsewhere.
-
-  FORMAT-AND-ARGS, if non-NIL, is a format string and arguments
-  suitable for FORMAT."
-  (error 'resolve-error
-         :dref *resolving-dref*
-         :message (if format-and-args
-                      (apply #'format nil format-and-args)
-                      nil)))
 
 (defgeneric resolve* (dref)
   (:documentation "Return the object defined by the definition DREF
@@ -830,6 +916,19 @@
       resolved))
   (:method ((dref dref))
     (resolve-error)))
+
+(defun resolve-error (&rest format-and-args)
+  "Call this function to signal a RESOLVE-ERROR condition from the
+  [dynamic extent][clhs] of a RESOLVE* method. It is an error to call
+  RESOLVE-ERROR elsewhere.
+
+  FORMAT-AND-ARGS, if non-NIL, is a format string and arguments
+  suitable for FORMAT."
+  (error 'resolve-error
+         :dref *resolving-dref*
+         :message (if format-and-args
+                      (apply #'format nil format-and-args)
+                      nil)))
 
 (defgeneric map-definitions-of-name (fn name locative-type)
   (:documentation "Call FN with [DREF][class]s which can be LOCATEd
@@ -973,7 +1072,13 @@
                obj))))))
 
 
-;;;; @SYMBOL-LOCATIVES
+(defsection @symbol-locatives (:title "Symbol Locatives")
+  "Let's see how the opaque DEFINE-SYMBOL-LOCATIVE-TYPE and the
+  obscure DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE macros work together
+  to simplify the common task of associating definition with a symbol
+  in a certain context."
+  (define-symbol-locative-type macro)
+  (define-definer-for-symbol-locative-type macro))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defclass symbol-locative-dref (dref) ()
@@ -1061,7 +1166,19 @@
                (this-source-location))))))
 
 
-;;;; DREF-EXT::@DEFINITION-PROPERTIES
+(defsection @definition-properties (:title "Definition Properties")
+  "Arbitrary data may be associated with definitions.
+  This mechanism is used by `ARGLIST*`, `DOCSTRING*` and
+  `SOURCE-LOCATION*` for easy extension.
+
+  The following functions take an XREF argument and not a DREF to
+  allow working with [non-canonical][@canonicalization] or
+  non-existent definitions."
+  (definition-property function)
+  (delete-definition-property function)
+  (definition-properties function)
+  (delete-definition-properties function)
+  (move-definition-properties function))
 
 ;;; Map (NAME LOCATIVE) to a list of (PROPERTY-NAME . PROPERTY-VALUE)
 ;;; elements. For example,
