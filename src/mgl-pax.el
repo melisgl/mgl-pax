@@ -159,8 +159,8 @@
 
 (defun mgl-pax-propagating-lisp-interaction-mode (mode cl-form)
   `(cl:funcall
-    (cl:if (cl:find-package "MGL-PAX")
-           (cl:intern "CALL-WITH-LISP-INTERACTION-MODE" "MGL-PAX")
+    (cl:or (cl:when (cl:find-package "MGL-PAX")
+             (cl:find-symbol "CALL-WITH-LISP-INTERACTION-MODE" "MGL-PAX"))
            (cl:lambda (mode fun)
              (cl:declare (cl:ignore mode))
              (cl:funcall fun)))
