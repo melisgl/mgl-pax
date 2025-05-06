@@ -59,7 +59,7 @@
            (error "%s" xrefs))
           (t
            (sly-push-definition-stack)
-           (sly-xref--show-results file-alist 'definition name
+           (sly-xref--show-results file-alist 'definition nil
                                    (sly-current-package)
                                    (cons (selected-window)
                                          method))))))
