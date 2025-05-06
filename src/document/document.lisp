@@ -35,7 +35,7 @@
 ;;; - know what definitions are @LINKABLE.
 ;;;
 ;;; In the 2.5th pass, we add markdown reference link definitions,
-;;; headers, footers, and convert markdown to other formats if
+;;; headers, footers, and convert markdown to another format if
 ;;; necessary.
 (defmacro %document (documentable stream page-specs)
   (once-only (documentable stream page-specs)

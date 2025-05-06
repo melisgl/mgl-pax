@@ -235,16 +235,20 @@
   same thing if and only if they are XREF=."))
 
 (defmethod print-object ((xref xref) stream)
-  (print-unreadable-object (xref stream :type nil)
-    (format stream "~S ~S ~S"
-            (if (typep xref 'dref)
-                ;; Hide the actual type of DREFs (e.g. FUNCTION-DREF).
-                ;; That's an implementation detail, and it's
-                ;; determined by the locative, anyway.
-                'dref
-                (type-of xref))
-            (xref-name xref)
-            (xref-locative xref))))
+  (if (or *print-escape* *print-readably*)
+      (print-unreadable-object (xref stream :type nil)
+        (format stream "~S ~S ~S"
+                (if (typep xref 'dref)
+                    ;; Hide the actual type of DREFs (e.g. FUNCTION-DREF).
+                    ;; That's an implementation detail, and it's
+                    ;; determined by the locative, anyway.
+                    'dref
+                    (type-of xref))
+                (xref-name xref)
+                (xref-locative xref)))
+      ;; PRINC ends up here.
+      (format stream "~S ~S" (xref-name xref)
+              (xref-locative xref))))
 
 
 (define-condition locate-error (error)
