@@ -165,7 +165,6 @@
   triple-quote syntax can be enabled with:
 
       (in-readtable pythonic-string-syntax)"
-  (mgl-pax/transcribe asdf:system)
   (@transcribing-with-emacs section)
   (@transcript-api section)
   (@transcript-consistency-checking section))

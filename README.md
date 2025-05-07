@@ -1232,14 +1232,6 @@ section containing the definition with point in it.
 
 A close relative of `M-.` is `C-.` for [Browsing Live Documentation][a595].
 
-<a id="x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-
-- [system] **"mgl-pax/navigate"**
-    - _Description:_ Support for [Navigating Sources in Emacs][3386] via Slime's
-        [`M-.`][cb15] in [MGL-PAX][2415].
-    - *Depends on:* alexandria, [dref/full][0c7e], [mgl-pax][6fdb], swank(?)
-    - *Defsystem depends on:* mgl-pax.asdf
-
 <a id="x-28MGL-PAX-3A-40M--2E-DEFAULTING-20MGL-PAX-3ASECTION-29"></a>
 
 ### 8.1 `M-.` Defaulting
@@ -1639,14 +1631,6 @@ symbols, there is no package system to advantage of.
 
     Whether to print `[in package <package-name>]` in the documentation
     when the package changes.
-
-<a id="x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-
-- [system] **"mgl-pax/document"**
-    - _Description:_ Support for [Generating Documentation][2c93] in
-        [MGL-PAX][2415].
-    - *Depends on:* 3bmd, 3bmd-ext-code-blocks, alexandria, colorize, md5, [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], trivial-utf-8
-    - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28MGL-PAX-3A-40BROWSING-LIVE-DOCUMENTATION-20MGL-PAX-3ASECTION-29"></a>
 
@@ -3303,14 +3287,6 @@ triple-quote syntax can be enabled with:
 
     (in-readtable pythonic-string-syntax)
 
-
-<a id="x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
-
-- [system] **"mgl-pax/transcribe"**
-    - _Description:_ Support for [Transcripts][6300] in
-        [MGL-PAX][2415].
-    - *Depends on:* alexandria, [mgl-pax/navigate][f155]
-    - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIBING-WITH-EMACS-20MGL-PAX-3ASECTION-29"></a>
 

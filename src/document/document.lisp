@@ -4,7 +4,6 @@
 
 (defsection @generating-documentation (:title "Generating Documentation")
   (@document-function section)
-  (mgl-pax/document asdf:system)
   (@browsing-live-documentation section)
   (@markdown-support section)
   (@codification section)
