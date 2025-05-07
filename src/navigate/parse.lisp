@@ -97,9 +97,13 @@
 
   1. The entire word.
 
-  2. Trimming the characters `~A` from the left of the word.
+  2. Trimming the following characters from the left of the word:
 
-  3. Trimming the characters `~A` from the right of the word.
+          ~A
+
+  3. Trimming the following characters from the right of the word:
+
+          ~A
 
   4. Trimming both of the previous two at the same time.
 

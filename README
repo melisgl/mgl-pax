@@ -669,9 +669,13 @@ considered in the following order.
 
 1. The entire word.
 
-2. Trimming the characters \`#\<{;"'\`\` from the left of the word.
+2. Trimming the following characters from the left of the word:
 
-3. Trimming the characters \`,;:.>}"'\`\` from the right of the word.
+        #<{;"'`
+
+3. Trimming the following characters from the right of the word:
+
+        ,;:.>}"'`
 
 4. Trimming both of the previous two at the same time.
 
@@ -3653,9 +3657,13 @@ are for writing new DOCUMENT-OBJECT\* methods, which emit markdown.
 
     Backslash escape markdown constructs in STRING.
     
-    - If ESCAPE-INLINE, then escape ``*_`[]\\`` characters.
+    - If ESCAPE-INLINE, then escape the following characters:
     
-    - If ESCAPE-HTML, then escape `<&` characters.
+            *_`[]\
+    
+    - If ESCAPE-HTML, then escape the following characters:
+    
+            <&
     
     - If ESCAPE-BLOCK, then escape whatever is necessary to avoid
       starting a new markdown block (e.g. a paragraph, heading, etc).

@@ -80,9 +80,13 @@
                                           (escape-html t) (escape-block t))
   "Backslash escape markdown constructs in STRING.
 
-  - If ESCAPE-INLINE, then escape ``*_`[]\\`` characters.
+  - If ESCAPE-INLINE, then escape the following characters:
 
-  - If ESCAPE-HTML, then escape `<&` characters.
+          *_`[]\\
+
+  - If ESCAPE-HTML, then escape the following characters:
+
+          <&
 
   - If ESCAPE-BLOCK, then escape whatever is necessary to avoid
     starting a new markdown block (e.g. a paragraph, heading, etc)."
