@@ -17,6 +17,7 @@
   - [document-object* (method () (accessor-dref t))][docstring]
   - [document-object* (method () (structure-accessor-dref t))][docstring]
   - [document-object* (method () (class-dref t))][docstring]
+  - [document-object* (method () (structure-dref t))][docstring]
   - [document-object* (method () (condition-dref t))][docstring]
   - [document-object* (method () (asdf-system-dref t))][docstring]
   - [document-object* (method () (locative-dref t))][docstring]
@@ -192,13 +193,19 @@
                  ,(swank-mop:slot-definition-initform slot-def))))))))
 
 
-;;;; STRUCTURE-ACCESSOR, CLASS and CONDITION locatives
+;;;; STRUCTURE-ACCESSOR, STRUCTURE, CLASS and CONDITION locatives
 
 (defmethod document-object* ((dref structure-accessor-dref) stream)
   "For definitions with a STRUCTURE-ACCESSOR locative, the arglist
   printed is the locative's CLASS-NAME argument if provided."
   (documenting-reference (stream :arglist (dref-locative-args dref))
     (document-docstring (docstring dref) stream)))
+
+(defmethod document-object* ((dref structure-dref) stream)
+  "For definitions with a STRUCTURE locative, the arglist printed is
+  the list of immediate superclasses with STRUCTURE-OBJECT and
+  non-exported symbols omitted."
+  (%document-class dref stream))
 
 (defmethod document-object* ((dref class-dref) stream)
   "For definitions with a CLASS locative, the arglist printed is the
@@ -214,11 +221,10 @@
 
 (defun %document-class (dref stream)
   (let* ((class (find-class (dref-name dref)))
-         (conditionp (subtypep class 'condition))
          (superclasses
            (remove-if (lambda (name)
-                        (or (eq name 'standard-object)
-                            (and conditionp (eq name 'condition))
+                        (or (member name '(standard-object condition
+                                           structure-object))
                             ;; Omit non-exported superclasses.
                             (not (external-symbol-p name))))
                       (mapcar #'class-name

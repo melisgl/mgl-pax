@@ -98,6 +98,7 @@
   (test-accessor)
   (test-structure-accessor)
   ;; PAX::@TYPELIKE-LOCATIVES
+  (test-structure)
   (test-declaration)
   ;; PAX::@CONDITION-SYSTEM-LOCATIVES
   (test-condition)
@@ -1247,6 +1248,18 @@ This is [Self-referencing][e042].
 "))
 
 
+(defstruct (baz2 (:include baz)))
+
+(deftest test-structure ()
+  (with-failure-expected ((and (alexandria:featurep :abcl)
+                               'failure))
+    (export '(baz) (find-package :mgl-pax-test))
+    (unwind-protect
+         (check-pred (dref 'baz2 'structure)
+                     "- [structure] **BAZ2** *BAZ*")
+      (unexport '(baz) (find-package :mgl-pax-test)))))
+
+
 (deftest test-declaration ()
   (check-head "SAFETY" "[`SAFETY`][f384]")
   (check-head "SAFETY declaration" "[`SAFETY`][f384] declaration")
@@ -1422,7 +1435,8 @@ This is [Self-referencing][e042].
                  (multiple-value-list (source-location g2))))))
   (with-test ("canonicalize GO target")
     (check-ref (dref 'xxx '(go (stream type)))
-               'xxx '(go (stream class))))
+               'xxx '(go (stream #-abcl class
+                                 #+abcl structure))))
   (check-head "[XXX][(go (3.4.1 clhs))]" "[`XXX`][4336]")
   (check-head "[&KEY][(go (3.4.1 clhs))]" "[`&KEY`][4336]")
   (check-head "&KEY" "[`&KEY`][4336]")

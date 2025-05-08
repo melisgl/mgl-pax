@@ -2886,6 +2886,10 @@ printed is the locative's `CLASS-NAME` argument if provided.
 list of immediate superclasses with [`STANDARD-OBJECT`][a843], [`CONDITION`][83e1] and
 non-exported symbols omitted.
 
+- For definitions with a [`STRUCTURE`][da65] locative, the arglist printed is
+the list of immediate superclasses with [`STRUCTURE-OBJECT`][2038] and
+non-exported symbols omitted.
+
 - For definitions with a [`CONDITION`][c479] locative, the arglist printed is
 the list of immediate superclasses with `STANDARD-OBJECT`, `CONDITION`
 and non-exported symbols omitted.
@@ -4186,6 +4190,7 @@ they are presented.
   [1e36]: dref/README.md#x-28DREF-3ADREF-NAME-20-28MGL-PAX-3AREADER-20DREF-3ADREF-29-29 "DREF:DREF-NAME (MGL-PAX:READER DREF:DREF)"
   [1f37]: http://www.lispworks.com/documentation/HyperSpec/Body/t_class.htm "CLASS (MGL-PAX:CLHS CLASS)"
   [1f99]: http://www.lispworks.com/documentation/HyperSpec/Body/t_array.htm "ARRAY (MGL-PAX:CLHS CLASS)"
+  [2038]: http://www.lispworks.com/documentation/HyperSpec/Body/t_stu_ob.htm "STRUCTURE-OBJECT (MGL-PAX:CLHS CLASS)"
   [2060]: dref/README.md#x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "CLASS MGL-PAX:LOCATIVE"
   [2143]: dref/README.md#x-28DREF-3A-40DEFINITION-20MGL-PAX-3AGLOSSARY-TERM-29 "definition"
   [21f4]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_l.htm#loop_keyword '"loop keyword" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
@@ -4455,6 +4460,7 @@ they are presented.
   [d930]: dref/README.md#x-28DREF-3ADREF-20CLASS-29 "DREF:DREF CLASS"
   [d9ee]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-CODE* VARIABLE"
   [da14]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "SIMPLE-CONDITION-FORMAT-ARGUMENTS (MGL-PAX:CLHS FUNCTION)"
+  [da65]: dref/README.md#x-28STRUCTURE-20MGL-PAX-3ALOCATIVE-29 "STRUCTURE MGL-PAX:LOCATIVE"
   [dae6]: http://www.lispworks.com/documentation/HyperSpec/Body/f_string.htm "STRING (MGL-PAX:CLHS FUNCTION)"
   [db03]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eql.htm "EQL (MGL-PAX:CLHS FUNCTION)"
   [db38]: http://www.lispworks.com/documentation/HyperSpec/Body/22_ced.htm '"22.3.5.4" (MGL-PAX:CLHS MGL-PAX:SECTION)'

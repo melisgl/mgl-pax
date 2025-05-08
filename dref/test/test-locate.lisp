@@ -447,6 +447,17 @@
     (dref 'foo '(class 1)))
   (is (eq (resolve (xref 'foo 'class)) (find-class 'foo))))
 
+(deftest test-locate/structure ()
+  (check-ref (dref 'baz 'structure) 'baz 'structure)
+  (check-ref (locate (find-class 'baz)) 'baz 'structure)
+  (signals (locate-error)
+    (dref 'undefined 'structure))
+  (signals (locate-error)
+    (dref "xxx" 'structure))
+  (signals (locate-error :pred "Bad arguments")
+    (dref 'baz '(structure 1)))
+  (is (eq (resolve (xref 'baz 'structure)) (find-class 'baz))))
+
 (deftest test-locate/condition ()
   (check-ref (dref 'my-error 'condition) 'my-error 'condition)
   (check-ref (locate (find-class 'my-error)) 'my-error 'condition)

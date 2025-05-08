@@ -180,6 +180,7 @@
       (method-combination (swank-method-combination-dspec name))
       (type (swank-type-dspec name))
       (class (swank-class-dspec name))
+      (structure (swank-structure-dspec name))
       (condition (swank-condition-dspec name))
       (package (swank-package-dspec name))
       ;; Reverse DSPEC-TO-DEFINITION's catch-all mechanism.
@@ -334,10 +335,14 @@
   :allegro `(:type ,name)
   (:or :cmucl :ecl) `(defclass ,name)
   :ccl `(class ,name)
-  :sbcl (if (and (valid-type-specifier-p name)
-                 (subtypep name 'structure-object))
-            `(defstruct ,name)
-            `(defclass ,name)))
+  :sbcl `(defclass ,name))
+
+(define-dspec swank-structure-dspec (name)
+  :abcl '(defstruct)
+  :allegro `(:type ,name)
+  (:or :cmucl :ecl) `(defstruct ,name)
+  :ccl `(structure ,name)
+  :sbcl `(defstruct ,name))
 
 (define-dspec swank-condition-dspec (name)
   (:or :abcl :sbcl) `(define-condition ,name)
@@ -396,6 +401,7 @@
                         ,(swank-method-combination-dspec name))
                        (type ,(swank-type-dspec name))
                        (class ,(swank-class-dspec name))
+                       (structure ,(swank-structure-dspec name))
                        (condition ,(swank-condition-dspec name)))
                 do (assert dspec*)
                    ;; This could be just (EQUAL DSPEC* DSPEC), but

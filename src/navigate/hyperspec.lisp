@@ -1107,7 +1107,8 @@
           do (let ((locative-type (locative-type locative)))
                (unless (member locative-type '(go operator))
                  (setf (gethash locative-type locative-types) t))))
-    (hash-table-keys locative-types)))
+    ;; See KLUDGE in FIND-HYPERSPEC-DEFINITION-URL.
+    (cons 'structure (hash-table-keys locative-types))))
 
 ;;; Find stuff in *HYPERSPEC-DEFINITIONS* and
 ;;; *HYPERSPEC-DISAMBIGUATIONS*. Return the URL corresponding to NAME
@@ -1115,6 +1116,12 @@
 ;;; disambiguation page.
 (defun find-hyperspec-definition-url (name locative &optional hyperspec-root)
   (declare (special *hyperspec-name-to-locatives*))
+  ;; KLUDGE: There are no structures in the spec, but on e.g. SBCL
+  ;; (DREF 'PACKAGE 'TYPE) ==> #<DREF PACKAGE STRUCTURE>, so to be
+  ;; able to find the CLHS entry. The correct general solution is to
+  ;; try the locative supertypes.
+  (when (eq (unlist1 locative) 'structure)
+    (setq locative 'class))
   (let* ((entries (gethash name *hyperspec-name-to-locatives*))
          (entry (if locative
                     ;; UNLIST1 is to (FUNCTION) -> FUNCTION.

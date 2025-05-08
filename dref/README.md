@@ -1303,11 +1303,18 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 - [locative] **CLASS**
     - Direct locative supertypes: [`TYPE`][926d]
     
-    - Direct locative subtypes: [`CONDITION`][c479]
+    - Direct locative subtypes: [`CONDITION`][c479], [`STRUCTURE`][da65]
 
     Naturally, `CLASS` is the locative type for [`CLASS`][1f37]es.
     
     Also, see the related [`CONDITION`][c479] locative.
+
+<a id="x-28STRUCTURE-20MGL-PAX-3ALOCATIVE-29"></a>
+
+- [locative] **STRUCTURE**
+    - Direct locative supertypes: [`CLASS`][2060]
+
+    Refers to a [`STRUCTURE-CLASS`][e608], typically defined with [`DEFSTRUCT`][eac1].
 
 <a id="x-28DECLARATION-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -2832,6 +2839,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [d83a]: #x-28SETF-20MGL-PAX-3ALOCATIVE-29 "SETF MGL-PAX:LOCATIVE"
   [d930]: #x-28DREF-3ADREF-20CLASS-29 "DREF:DREF CLASS"
   [da2e]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss048_w.htm '"ISSUE:CLOS-CONDITIONS-AGAIN" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [da65]: #x-28STRUCTURE-20MGL-PAX-3ALOCATIVE-29 "STRUCTURE MGL-PAX:LOCATIVE"
   [da93]: #x-28DREF-3A-40DREF-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for DRef Constructs"
   [daac]: http://www.lispworks.com/documentation/HyperSpec/Body/f_subtpp.htm "SUBTYPEP (MGL-PAX:CLHS FUNCTION)"
   [daacd]: #x-28DREF-EXT-3ASOURCE-LOCATION-ADJUSTED-FILE-POSITION-20FUNCTION-29 "DREF-EXT:SOURCE-LOCATION-ADJUSTED-FILE-POSITION FUNCTION"
@@ -2850,6 +2858,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [e576]: #x-28DREF-EXT-3AFUNCTION-DREF-20CLASS-29 "DREF-EXT:FUNCTION-DREF CLASS"
   [e5ab]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_3.htm "SYMBOL-PACKAGE (MGL-PAX:CLHS FUNCTION)"
   [e5af]: http://www.lispworks.com/documentation/HyperSpec/Body/t_symbol.htm "SYMBOL (MGL-PAX:CLHS CLASS)"
+  [e608]: http://www.lispworks.com/documentation/HyperSpec/Body/t_stu_cl.htm "STRUCTURE-CLASS (MGL-PAX:CLHS CLASS)"
   [e6bd]: #x-28DREF-3AARGLIST-20FUNCTION-29 "DREF:ARGLIST FUNCTION"
   [e742]: #x-28DREF-3ADREF-ORIGIN-20-28MGL-PAX-3AREADER-20DREF-3ADREF-29-29 "DREF:DREF-ORIGIN (MGL-PAX:READER DREF:DREF)"
   [e7ee]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*STANDARD-OUTPUT* (MGL-PAX:CLHS VARIABLE)"

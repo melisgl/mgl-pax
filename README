@@ -2599,6 +2599,10 @@ printed is the locative's CLASS-NAME argument if provided.
 list of immediate superclasses with STANDARD-OBJECT, CONDITION and
 non-exported symbols omitted.
 
+- For definitions with a STRUCTURE locative, the arglist printed is
+the list of immediate superclasses with STRUCTURE-OBJECT and
+non-exported symbols omitted.
+
 - For definitions with a CONDITION locative, the arglist printed is
 the list of immediate superclasses with STANDARD-OBJECT, CONDITION
 and non-exported symbols omitted.

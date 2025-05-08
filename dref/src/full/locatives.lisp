@@ -882,6 +882,7 @@
 (defsection @typelike-locatives (:title "Locatives for Types and Declarations")
   (type locative)
   (class locative)
+  (structure locative)
   (declaration locative))
 
 
@@ -969,6 +970,21 @@
   (swank-source-location* (resolve dref) (dref-name dref) 'class))
 
 (defvar %end-of-class-example)
+
+
+;;;; STRUCTURE locative
+
+(define-locative-type structure (class)
+  "Refers to a STRUCTURE-CLASS, typically defined with DEFSTRUCT.")
+
+(define-lookup structure (symbol locative-args)
+  (let ((class (and (symbolp symbol) (find-class symbol nil))))
+    (unless (and class (subtypep class 'structure-object))
+      (locate-error "~S does not name a ~S." symbol 'structure-class))
+    (%make-dref symbol structure)))
+
+(defmethod source-location* ((dref structure-dref))
+  (swank-source-location* (resolve dref) (dref-name dref) 'structure))
 
 
 ;;;; DECLARATION locative

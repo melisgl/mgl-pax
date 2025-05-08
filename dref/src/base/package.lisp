@@ -50,7 +50,7 @@
            #:source-location-buffer-position
            #:source-location-file #:source-location-file-position
            #:source-location-p #:source-location-snippet
-           #:structure-accessor-dref #:symbol-locative-dref
+           #:structure-accessor-dref #:structure-dref #:symbol-locative-dref
            #:symbol-macro-dref #:this-source-location #:type-dref
            #:unknown-dref #:variable-dref #:writer-dref))
 
@@ -75,7 +75,7 @@
            #:readtable #:resolve #:resolve-error #:restart #:setf
            #:setf-compiler-macro #:setf-function
            #:setf-generic-function #:setf-method
-           #:source-location #:structure-accessor
+           #:source-location #:structure #:structure-accessor
            #:symbol-macro #:top #:type #:unknown
            #:variable #:writer #:xref
            #:xref-locative #:xref-locative-args

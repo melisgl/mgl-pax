@@ -299,6 +299,8 @@
       ("(reader foo) foo-r" "(defclass foo " "(r :reader foo-r)")
       ("(writer foo) foo-w" "(defclass foo " "(w :writer foo-w)")
       ("(accessor foo) foo-a" "(defclass foo " "(a :accessor foo-a)")
+      ("structure baz" "(defstruct baz")
+      ("structure-accessor baz-aaa" "(defstruct baz")
       ("type bar" "(deftype bar ")
       ("type foo" "(defclass foo ")
       ("type my-error" "(define-condition my-error ")

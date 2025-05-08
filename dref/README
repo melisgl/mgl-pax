@@ -1118,11 +1118,16 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
 - [locative] CLASS
     - Direct locative supertypes: [TYPE][926d]
     
-    - Direct locative subtypes: [CONDITION][c479]
+    - Direct locative subtypes: [CONDITION][c479], [STRUCTURE][da65]
 
     Naturally, CLASS is the locative type for CLASSes.
     
     Also, see the related CONDITION locative.
+
+- [locative] STRUCTURE
+    - Direct locative supertypes: [CLASS][2060]
+
+    Refers to a STRUCTURE-CLASS, typically defined with DEFSTRUCT.
 
 - [locative] DECLARATION
 
@@ -2252,6 +2257,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [cc04]: #x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:READER MGL-PAX:LOCATIVE"
   [d83a]: #x-28SETF-20MGL-PAX-3ALOCATIVE-29 "SETF MGL-PAX:LOCATIVE"
   [d930]: #x-28DREF-3ADREF-20CLASS-29 "DREF:DREF CLASS"
+  [da65]: #x-28STRUCTURE-20MGL-PAX-3ALOCATIVE-29 "STRUCTURE MGL-PAX:LOCATIVE"
   [e548]: #x-28MGL-PAX-3AWRITER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:WRITER MGL-PAX:LOCATIVE"
 
 * * *
