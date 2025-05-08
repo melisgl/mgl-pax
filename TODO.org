@@ -78,7 +78,7 @@ Needs a constant name such as LOCATE* or DREF*.
 ... somehow without breaking existing URLs, which have
 MGL-PAX:<LOCATIVE> all over them?
 ** MAYBE document :EXPORT <PGK>?
-Is this the right idea? DRef no longer uses this mechanism.p
+Is this the right idea? DRef no longer uses this mechanism.
 * navigate
 ** BUG (low) locative completion: nicknames don't work
 print f<TAB> -> "print function"
@@ -178,6 +178,11 @@ offline documentation.
 
 Maybe this is a special case of dynamically generated documentation.
 ** MAYBE live browsing: allow filtering out local definitions when there is a clhs definition?
+** TODO non-exported direct superclasses are omitted
+but their ancestors could be exported. As it is, this is lossy.
+
+Also, external is only checked against the home package of the symbol.
+Other packages that export it may or may not be public.
 * web
 ** MAYBE implement a wiki on top?
 PAX is already kind of a wiki.
@@ -222,3 +227,7 @@ LOCATIVE-TYPE DREF) 'SECTION) may make more sense.
 Probably it's too much to ask to have a portable introspection library
 factored out of them. Conium seems abandoned. There is no clear scope
 to support a stable API.
+* MAYBE find a catchy name for the method
+- Illiterate Programming: Already used in the sense of "not literate programming".
+- Documentation-Driven Development: Exists, and also a misnomer (see https://quotenil.com/multifaceted-development.html).
+- Rubber Doc Development: reeks of pragmatism only unlike bath toys.

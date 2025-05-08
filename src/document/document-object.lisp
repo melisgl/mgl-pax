@@ -220,10 +220,7 @@
                         (or (eq name 'standard-object)
                             (and conditionp (eq name 'condition))
                             ;; Omit non-exported superclasses.
-                            (not (eq (nth-value
-                                      1 (find-symbol (symbol-name name)
-                                                     (symbol-package name)))
-                                     :external))))
+                            (not (external-symbol-p name))))
                       (mapcar #'class-name
                               (swank-mop:class-direct-superclasses class))))
          (arglist (when superclasses
