@@ -135,3 +135,22 @@
 (defun valid-satisisfies-type-specifier-args-p (args)
   (and (= (length args) 1)
        (symbolp (first args))))
+
+;;; A wrapper around ASDF:FIND-SYSTEM to make it play nicer with
+;;; package-inferred systems and warn on unexpected errors.
+(defun find-system* (name &key (errorp t) (warnp t))
+  ;; To have a better chance of READing DEFPACKAGE forms in
+  ;; package-inferred systems.
+  (let ((*read-eval* t)
+        (*package* #.(find-package :cl-user))
+        (*readtable* (named-readtables:find-readtable :standard)))
+    (handler-bind
+        ((error
+           (lambda (e)
+             (when (and warnp
+                        (not (typep e 'asdf/find-component:missing-component)))
+               (warn "~@<Loading ASDF system definition ~S failed with: ~A~:@>"
+                     name e))
+             (when (not errorp)
+               (return-from find-system* nil)))))
+      (asdf:find-system name t))))

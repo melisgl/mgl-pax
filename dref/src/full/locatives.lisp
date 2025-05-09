@@ -1135,7 +1135,7 @@
     (unless (progn
               #+(or allegro clisp ecl)
               (when (member name (asdf:registered-systems) :test #'string=)
-                (asdf:find-system name))
+                (find-system* name))
               #-(or allegro clisp ecl)
               (asdf:registered-system name))
       (locate-error "~S does not name an ASDF:SYSTEM." name))
@@ -1147,11 +1147,8 @@
 
 (defmethod resolve* ((dref asdf-system-dref))
   (handler-bind ((warning #'muffle-warning))
-    ;; KLUDGE: This is to avoid "No package form found" errors with
-    ;; package-inferred systems.
-    (let ((*package* #.(find-package :cl-user)))
-      (or (ignore-errors (asdf:find-system (dref-name dref)))
-          (resolve-error)))))
+    (or (find-system* (dref-name dref) :errorp nil)
+        (resolve-error))))
 
 (defmethod source-location* ((dref asdf-system-dref))
   (let ((system (resolve dref)))

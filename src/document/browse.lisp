@@ -475,7 +475,7 @@
 (defun asdf-packages (asdf-system)
   (let* ((packages ())
          (related ())
-         (system (asdf:find-system asdf-system))
+         (system (dref::find-system* asdf-system))
          (system-name (dref-name (locate system)))
          (system-dirname (asdf-system-dirname system)))
     (dolist (package (sort (list-all-packages) #'string< :key #'package-name))
@@ -485,18 +485,18 @@
               ((and system-dirname
                     (starts-with-subseq system-dirname
                                         (asdf-system-dirname
-                                         (asdf:find-system name))))
+                                         (dref::find-system* name))))
                (push package related)))))
     (values (reverse packages) (reverse related))))
 
 (defun related-asdf-systems (asdf-system)
   (let* ((related ())
-         (system (asdf:find-system asdf-system))
+         (system (dref::find-system* asdf-system))
          (system-dirname (asdf-system-dirname system))
          (root-dirname system-dirname))
     (when system-dirname
       (dolist (name (sort (asdf:registered-systems) #'string<))
-        (let* ((system-1 (asdf:find-system name))
+        (let* ((system-1 (dref::find-system* name))
                (dirname-1 (asdf-system-dirname system-1)))
           (when (and (not (eq system system-1))
                      dirname-1
@@ -1161,7 +1161,7 @@
       ;; Sort in reverse order so that PACKAGES in GROUPS come out in
       ;; forward order.
       (dolist (asdf-system-name (sort (asdf:registered-systems) #'string>))
-        (let* ((system (asdf:find-system asdf-system-name))
+        (let* ((system (dref::find-system* asdf-system-name))
                (dir (asdf-system-dirname system)))
           (add-system dir system)))
       (dolist (package (sort (list-all-packages) #'string> :key #'package-name))

@@ -504,7 +504,41 @@
   (signals (locate-error :pred "Bad arguments")
     (dref "dref" '(asdf:system 1)))
   (is (eq (resolve (xref "dref" 'asdf:system))
-          (asdf:find-system "dref"))))
+          (asdf:find-system "dref")))
+  (test-locate/asdf-system/package-inferred))
+
+(deftest test-locate/asdf-system/package-inferred ()
+  (let ((asdf:*central-registry*
+          (cons (asdf:system-relative-pathname "dref" "test/data/")
+                asdf:*central-registry*)))
+    (macrolet ((with-asdf (() &body body)
+                 #+asdf3.3
+                 `(asdf/session:with-asdf-session
+                      (:override t :override-cache t :override-forcing t)
+                    ,@body)
+                 #-asdf3.3
+                 `(asdf/cache:with-asdf-cache (:override t)
+                    ,@body)))
+      (dolist (*read-eval* '(t nil))
+        (dolist (*package* (list (find-package :cl-user)
+                                 (find-package :keyword)))
+          (with-test ((format nil "*read-eval* ~S, package ~S"
+                              *read-eval* *package*))
+            (if (and *read-eval* (eq *package* (find-package :cl-user)))
+                (signals-not (error)
+                  (with-asdf ()
+                    (asdf:find-system "dref-test-package-inferred/x")))
+                (signals (error)
+                  (with-asdf ()
+                    (asdf:find-system "dref-test-package-inferred/x"))))
+            (signals-not (error)
+              (with-asdf ()
+                (dref::find-system* "dref-test-package-inferred/x")))
+            (signals-not (error)
+              (with-asdf ()
+                (dref "dref-test-package-inferred/x" 'asdf:system)))))))
+    (asdf:clear-system "dref-test-package-inferred")
+    (asdf:clear-system "dref-test-package-inferred/x")))
 
 (deftest test-locate/package ()
   (check-ref (dref '#:dref 'package) (symbol-name '#:dref) 'package)
