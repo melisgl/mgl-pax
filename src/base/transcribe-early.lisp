@@ -27,7 +27,3 @@
 #+sbcl
 (define-condition transcription-consistency-error (transcription-error) ())
 (export 'transcription-output-consistency-error)
-
-(defsection @transcripts (:title "Transcripts")
-  "This is a placeholder until MGL-PAX/TRANSCRIBE is loaded."
-  (mgl-pax/transcribe asdf:system))
