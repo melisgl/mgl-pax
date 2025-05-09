@@ -1129,6 +1129,7 @@
 
 (defun asdf-systems-and-packages-grouped ()
   (let (;; (ROOT-DIR SYSTEMS PACKAGES)
+        (*read-eval* t)
         (groups ())
         (orphan-packages))
     (flet ((add-system (dir system)

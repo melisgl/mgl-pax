@@ -217,13 +217,15 @@
                ,@body)))))))
 
 (defun filename-to-asdf-system-name-map ()
-  (let ((h (make-hash-table :test #'equal)))
+  (let ((h (make-hash-table :test #'equal))
+        (*read-eval* t))
     (do-asdf-files (system-name filename)
       (setf (gethash filename h) system-name))
     h))
 
 (defun filename-to-asdf-system-name (filename)
-  (let ((filename (namestring filename)))
+  (let ((filename (namestring filename))
+        (*read-eval* t))
     (do-asdf-files (system-name filename-1)
       ;; KLUDGE: Compare namestrings so that e.g. NIL vs :NEWEST in
       ;; PATHNAME-VERSION is hopefully not a diference.
