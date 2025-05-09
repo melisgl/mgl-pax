@@ -456,7 +456,15 @@
            ;;    (documentation '(setf documentation) t)
            ;; on ABCL this:
            ;;    (documentation (fdefinition 'function) 'function)
-           (ignore-errors (documentation x y))))
+           (let ((docstring (ignore-errors (documentation x y))))
+             (cond ((or (null docstring)
+                        (stringp docstring))
+                    docstring)
+                   (t
+                    (warn "~@<~S returned ~S, which is not ~S.~:@>"
+                          `(documentation ',x ',y) docstring
+                          '(or null string))
+                    nil)))))
     (filter-junk-docstrings
      (cond ((and (functionp object)
                  (member doc-type '(function t)))
