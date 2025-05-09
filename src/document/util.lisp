@@ -207,7 +207,7 @@
 (defmacro do-asdf-files ((system-name filename) &body body)
   (alexandria:with-unique-names (system component)
     `(dolist (,system-name (asdf:registered-systems))
-       (let ((,system (asdf:find-system ,system-name)))
+       (let ((,system (dref::find-system* ,system-name)))
          (dolist (,component (asdf/component:sub-components ,system))
            (when (typep ,component 'asdf:cl-source-file)
              (when-let (,filename (namestring

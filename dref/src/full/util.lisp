@@ -1,6 +1,6 @@
 (in-package :dref)
 
-;;;; Symbols and packages
+;;;; Packages and systems
 
 (defun find-package* (name)
   ;; On AllegroCL, FIND-PACKAGE will signal an error if a relative

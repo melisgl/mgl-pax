@@ -324,10 +324,10 @@
                              relative-path (1+ line-number))))))
              (warn "No GIT-VERSION given and can't find .git directory for ~
                    ASDF system~% ~A. Links to git forge will not be generated."
-                   (asdf:component-name (asdf:find-system asdf-system))))))))
+                   (asdf:component-name (dref::find-system* asdf-system))))))))
 
 (defun asdf-system-git-root-and-version (system &key default-version)
-  (let ((file (asdf:system-source-file (asdf:find-system system))))
+  (let ((file (asdf:system-source-file (dref::find-system* system))))
     (when (in-git-p file)
       (values (git-root file)
               (or (git-version file) default-version)))))
