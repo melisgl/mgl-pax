@@ -457,7 +457,8 @@
                            (escape-markdown (dref-name (locate system)))))
                  (format-package (package)
                    (format nil "- [~A][cl:package]"
-                           (escape-markdown (package-name package)))))
+                           (escape-codification
+                            (escape-markdown (package-name package))))))
             (append
              (when packages-defined
                (list* "### Packages Defined"
