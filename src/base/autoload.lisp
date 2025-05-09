@@ -1,5 +1,29 @@
 (in-package :mgl-pax)
 
+(defstruct box
+  (value nil))
+
+(defmacro with-autoloading
+    ((asdf-system-name &optional (name asdf-system-name)) &body body)
+  (let* ((box (gensym "BOX")) (actual-body (gensym "ACTUAL-BODY"))
+         (args (gensym "ARGS"))
+
+         (stub `(lambda (,box ,actual-body)
+                  ;; Prevent this stub from being called again in case
+                  ;; the system fails to load.
+                  (setf (box-value ,box)
+                        (lambda (&rest ,args)
+                          (declare (ignore ,args))
+                          (error "Autoloading ~S failed." ',name)))
+                  (when (asdf:load-system ',asdf-system-name)
+                    (setf (box-value ,box) ,actual-body))
+                  (funcall (box-value ,box) ,box))))
+    `(let ((,box (load-time-value (make-box :value ,stub))))
+       (funcall (box-value ,box) ,box
+                (lambda (&rest ,args)
+                  (declare (ignore ,args))
+                  ,@body)))))
+
 ;;; Define a function with NAME that loads ASDF-SYSTEM-NAME (neither
 ;;; evaluated) that calls the function of the same name, which is
 ;;; expected to have been redefined by the loaded system. If not
@@ -21,17 +45,11 @@
                   ;; itself autoloaded. This should be fine because
                   ;; asdf system names are rarely funny.
                   asdf-system-name)
-         ;; Prevent infinite recursion which would happen if the loaded
-         ;; system doesn't redefine the function.
-         (setf (symbol-function ',name)
-               (lambda (&rest args)
-                 (declare (ignore args))
-                 (error "Autoloading ~S failed." ',name)))
-         (asdf:load-system ,asdf-system-name)
-         ;; Make sure that the function redefined by LOAD-SYSTEM is
-         ;; invoked and not this stub, which could be the case without
-         ;; the SYMBOL-FUNCTION call.
-         (apply (symbol-function ',name) args))
+         (with-autoloading (,asdf-system-name ,name)
+           ;; Make sure that the function redefined by LOAD-SYSTEM is
+           ;; invoked and not this stub, which could be the case without
+           ;; the SYMBOL-FUNCTION call.
+           (apply (symbol-function ',name) args)))
        ,@(when export
            `((export ',name))))))
 
