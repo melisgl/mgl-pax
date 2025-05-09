@@ -4,11 +4,14 @@
   (value nil))
 
 (defmacro with-autoloading
-    ((asdf-system-name &optional (name asdf-system-name)) &body body)
+    ((asdf-system-name &optional (name asdf-system-name)
+                         (first-time-p (gensym "FIRST-TIME-P")))
+     &body body)
   (let* ((box (gensym "BOX")) (actual-body (gensym "ACTUAL-BODY"))
          (args (gensym "ARGS"))
 
-         (stub `(lambda (,box ,actual-body)
+         (stub `(lambda (,box ,first-time-p ,actual-body)
+                  (declare (ignore ,first-time-p))
                   ;; Prevent this stub from being called again in case
                   ;; the system fails to load.
                   (setf (box-value ,box)
@@ -17,11 +20,12 @@
                           (error "Autoloading ~S failed." ',name)))
                   (when (asdf:load-system ',asdf-system-name)
                     (setf (box-value ,box) ,actual-body))
-                  (funcall (box-value ,box) ,box))))
+                  (funcall (box-value ,box) ,box t))))
     `(let ((,box (load-time-value (make-box :value ,stub))))
-       (funcall (box-value ,box) ,box
-                (lambda (&rest ,args)
-                  (declare (ignore ,args))
+       (funcall (box-value ,box) ,box nil
+                (lambda (,box ,first-time-p &rest ,args)
+                  (declare (ignore ,box ,args)
+                           (ignorable ,first-time-p))
                   ,@body)))))
 
 ;;; Define a function with NAME that loads ASDF-SYSTEM-NAME (neither
@@ -45,11 +49,16 @@
                   ;; itself autoloaded. This should be fine because
                   ;; asdf system names are rarely funny.
                   asdf-system-name)
-         (with-autoloading (,asdf-system-name ,name)
-           ;; Make sure that the function redefined by LOAD-SYSTEM is
-           ;; invoked and not this stub, which could be the case without
-           ;; the SYMBOL-FUNCTION call.
-           (apply (symbol-function ',name) args)))
+         (with-autoloading (,asdf-system-name ,name first-time-p)
+           (if first-time-p
+               ;; Make sure that the function redefined by LOAD-SYSTEM
+               ;; is invoked and not this stub, which could be the case
+               ;; without the SYMBOL-FUNCTION call.
+               (apply (symbol-function ',name) args)
+               ;; Avoid infinite recursion in case the loaded system
+               ;; fails to redefine this function.
+               (error "ASDF system ~A loaded successfully, but did not ~
+                       redefine ~A." ',asdf-system-name ',name))))
        ,@(when export
            `((export ',name))))))
 
