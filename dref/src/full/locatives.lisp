@@ -1155,10 +1155,13 @@
 
 (defmethod source-location* ((dref asdf-system-dref))
   (let ((system (resolve dref)))
-    `(:location
-      (:file ,(namestring (asdf/system:system-source-file system)))
-      (:position 1)
-      (:snippet ,(format nil "defsystem ~S" (dref-name dref))))))
+    (if-let (location (asdf/system:system-source-file system))
+      `(:location
+        (:file ,(namestring location))
+        (:position 1)
+        (:snippet ,(format nil "defsystem ~S" (dref-name dref))))
+      `(:error ,(format nil "ASDF system ~A doesn't contain any location information."
+                        (asdf:primary-system-name system))))))
 
 
 ;;;; PACKAGE locative

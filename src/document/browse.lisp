@@ -506,8 +506,13 @@
               (setq root-dirname dirname-1))))))
     (values (reverse related) root-dirname)))
 
+(defun slot-value-if-bound (object slot-name &optional default)
+  (if (slot-boundp object slot-name)
+      (slot-value object slot-name)
+      default))
+
 (defun asdf-system-dirname (system)
-  (when-let (pathname (slot-value system 'asdf/component:absolute-pathname))
+  (when-let (pathname (slot-value-if-bound system 'asdf/component:absolute-pathname))
     (namestring pathname)))
 
 #+nil
