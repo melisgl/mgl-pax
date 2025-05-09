@@ -1,7 +1,7 @@
 (in-package :mgl-pax)
 
 ;;; The MGL-PAX package is created in the MGL-PAX asdf:system, which
-;;; does not depend on ALEXANDRIA. The MGL-PAX/NAVIGATE system does
+;;; does not depend on ALEXANDRIA. The MGL-PAX/COMPATIBILITY system does
 ;;; depend on ALEXANDRIA, and we add the imports belatedly here. To
 ;;; avoid package conflicts if stuff is added to ALEXANDRIA, we import
 ;;; only specific symbols.

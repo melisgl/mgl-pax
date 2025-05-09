@@ -96,3 +96,9 @@
 
 (defimpl eval-in-emacs :slime (form &optional nowait)
   (swank::eval-in-emacs form nowait))
+
+
+
+(defimpl call-with-swank-compatibility :sly (function)
+  (with-autoloading ("mgl-pax/sly")
+    (call-next-method)))

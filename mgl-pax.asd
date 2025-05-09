@@ -36,6 +36,45 @@
                              (:file "locatives-early"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
 
+(asdf:defsystem "mgl-pax/compatibility"
+  :licence "MIT, see COPYING."
+  :author "Gábor Melis"
+  :mailto "mega@retes.hu"
+  :homepage ""
+  :bug-tracker ""
+  :source-control ""
+  :description "Abstractions for supporting multiple Lisp interaction modes on the Emacs side of
+  [MGL-PAX][mgl-pax::@pax-manual]."
+  :long-description "Do not declare a dependency on this system. It is
+  autoloaded by Elisp or by accessing the functionality provided if the
+  [`mgl-pax`][asdf:system] system is loaded."
+  :depends-on ("mgl-pax" "alexandria" (:feature (:not :swank) "swank"))
+  :defsystem-depends-on ("mgl-pax.asdf")
+  :components ((:module "src/compatibility/"
+                :serial t
+                :components ((:file "package")
+                             (:file "interaction-mode"))))
+  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
+
+(asdf:defsystem "mgl-pax/sly"
+  :licence "MIT, see COPYING."
+  :author "Gábor Melis"
+  :mailto "mega@retes.hu"
+  :homepage ""
+  :bug-tracker ""
+  :source-control ""
+  :description "Supporting definitions for interacting with the Emacs side of
+  [MGL-PAX][mgl-pax::@pax-manual] through Sly."
+  :long-description "Do not declare a dependency on this system. It is
+  autoloaded by Elisp or by accessing the functionality provided if the
+  [`mgl-pax`][asdf:system] system is loaded."
+  :depends-on ("mgl-pax/compatibility" (:feature (:not :slynk) "slynk"))
+  :defsystem-depends-on ("mgl-pax.asdf")
+  :components ((:module "src/compatibility/"
+                :serial t
+                :components ((:file "sly"))))
+  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
+
 (asdf:defsystem "mgl-pax/navigate"
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
@@ -49,20 +88,16 @@
   :long-description "Do not declare a dependency on this system. It is
   autoloaded by Elisp or by accessing the functionality provided if the
   [`mgl-pax`][asdf:system] system is loaded."
-  :depends-on ("alexandria" "mgl-pax" "dref/full"
-               (:feature (:not :swank) "swank"))
+  :depends-on ("mgl-pax/compatibility" "dref/full")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/navigate/"
                 :serial t
-                :components ((:file "package")
-                             (:file "util")
+                :components ((:file "util")
                              (:file "hyperspec")
                              (:file "parse")
                              (:file "locatives")
                              (:file "sections")
-                             (:file "interaction-mode")
-                             (:file "sly" :if-feature :slynk)
                              (:file "navigate"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
 
