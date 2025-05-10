@@ -23,12 +23,12 @@
                   (when (asdf:load-system ',asdf-system-name)
                     ;; If the system loads correctly, set the function
                     ;; within BOX to a trampoline to the actual body of
-                    ;; the WITH-LOADING form. Note that we cannot simply
-                    ;; store the current value of ACTUAL-BODY within BOX
-                    ;; because that would mean the lexical scope of BODY
-                    ;; would always correspond to the outer scope at the
-                    ;; time of the *first* invocation, and not any
-                    ;; subsequent ones.
+                    ;; the WITH-AUTOLOADING form. Note that we cannot
+                    ;; simply store the current value of ACTUAL-BODY
+                    ;; within BOX because that would mean the lexical
+                    ;; scope of BODY would always correspond to the
+                    ;; outer scope at the time of the *first*
+                    ;; invocation, and not any subsequent ones.
                     (setf (box-value ,box)
                           (lambda (,box ,first-time-p ,actual-body)
                             (declare (ignore ,box))
