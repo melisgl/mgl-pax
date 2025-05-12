@@ -115,8 +115,8 @@
 
   ```
   (docstring #'abort)
-  => "Transfer control to a restart named ABORT, signalling a CONTROL-ERROR if
-     none exists."
+  => "Transfer control to a restart named ABORT, signalling
+  a CONTROL-ERROR if none exists."
   ```
 
   Note how in the generated documentation, ABORT is set with a
@@ -124,8 +124,8 @@
 
   - \[function\] **\ABORT** *\\&OPTIONAL \CONDITION*
 
-      Transfer control to a restart named `ABORT`, signalling a
-      [`\CONTROL-ERROR`][6bc0] if none exists.
+      Transfer control to a restart named `ABORT`, signalling
+      a [`\CONTROL-ERROR`][6bc0] if none exists.
 
     [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "CONTROL-ERROR CONDITION"
 
@@ -136,8 +136,8 @@
   (document #'abort :format :markdown)
   .. - [function] **ABORT** *&OPTIONAL CONDITION*
   ..
-  ..     Transfer control to a restart named `ABORT`, signalling a [`CONTROL-ERROR`][7c2c] if
-  ..     none exists.
+  ..     Transfer control to a restart named `ABORT`, signalling
+  ..     a [`CONTROL-ERROR`][7c2c] if none exists.
   ..
   ..   [7c2c]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "CONTROL-ERROR (MGL-PAX:CLHS CONDITION)"
   ..
@@ -279,7 +279,7 @@
   ```
 
   If the customizable variable `mgl-pax-hijack-slime-doc-keys` is
-  true, then upon loading `mgl-pax', the following changes are made to
+  true, then upon loading `mgl-pax`, the following changes are made to
   `slime-doc-map` (assuming it's bound to `C-c C-d`):
 
   - `C-c C-d a`: replaces `slime-apropos` with `mgl-pax-apropos`
@@ -415,7 +415,7 @@
   own docstring concatenated with docstrings of other notes in the
   lexical scope of BODY.
 
-  ARGS has the form \[NAME\] \[DOCSTRING\] BODY, where the square
+  ARGS has the form \[`NAME`\] \[`DOCSTRING`\] BODY, where the square
   brackets indicate optional arguments. See below for the details of
   parsing ARGS.
 

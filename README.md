@@ -117,8 +117,8 @@ written in the usual style, uppercasing names of symbols:
 
 ```
 (docstring #'abort)
-=> "Transfer control to a restart named ABORT, signalling a CONTROL-ERROR if
-   none exists."
+=> "Transfer control to a restart named ABORT, signalling
+a CONTROL-ERROR if none exists."
 ```
 
 Note how in the generated documentation, `ABORT` is set with a
@@ -126,8 +126,8 @@ monospace font, while `CONTROL-ERROR` is [Autolink][ec7a]ed:
 
 - \[function\] **ABORT** *\&OPTIONAL CONDITION*
 
-    Transfer control to a restart named `ABORT`, signalling a
-    [`CONTROL-ERROR`][6bc0] if none exists.
+    Transfer control to a restart named `ABORT`, signalling
+    a [`CONTROL-ERROR`][6bc0] if none exists.
 
 [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "CONTROL-ERROR CONDITION"
 
@@ -138,8 +138,8 @@ the previous example.
 (document #'abort :format :markdown)
 .. - [function] **ABORT** *&OPTIONAL CONDITION*
 ..
-..     Transfer control to a restart named `ABORT`, signalling a [`CONTROL-ERROR`][7c2c] if
-..     none exists.
+..     Transfer control to a restart named `ABORT`, signalling
+..     a [`CONTROL-ERROR`][7c2c] if none exists.
 ..
 ..   [7c2c]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "CONTROL-ERROR (MGL-PAX:CLHS CONDITION)"
 ..
@@ -332,8 +332,8 @@ all Slime related modes like this:
 ```
 
 If the customizable variable `mgl-pax-hijack-slime-doc-keys` is
-true, then upon loading `mgl-pax', the following changes are made to
-`slime-doc-map`(assuming it's bound to`C-c C-d\`):
+true, then upon loading `mgl-pax`, the following changes are made to
+`slime-doc-map` (assuming it's bound to `C-c C-d`):
 
 - `C-c C-d a`: replaces `slime-apropos` with `mgl-pax-apropos`
 
@@ -626,7 +626,7 @@ Now let's examine the most important pieces.
     own docstring concatenated with docstrings of other notes in the
     lexical scope of `BODY`.
     
-    `ARGS` has the form \[NAME\] \[DOCSTRING\] `BODY`, where the square
+    `ARGS` has the form \[`NAME`\] \[`DOCSTRING`\] `BODY`, where the square
     brackets indicate optional arguments. See below for the details of
     parsing `ARGS`.
     
@@ -723,9 +723,9 @@ names with [Lisp][30ad] [`DEFINITIONS`][e196], and
 [Linking][19e3] for names with [any kind of definition][99b0].
 
 This is not as straightforward as it sounds because it needs to
-handle cases like non[`READ`][fe58]able, `CLASS`es, all the various forms of
-[Linking][19e3] in docstrings as well as in comments, and the `(NAME
-LOCATIVE)` syntax in [`DEFSECTION`][72b4].
+handle cases like `nonREADable`, `CLASSES`, all the various
+forms of [Linking][19e3] in docstrings as well as in comments, and
+the `(NAME LOCATIVE)` syntax in [`DEFSECTION`][72b4].
 
 <a id="x-28MGL-PAX-3A-40WORD-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
 
@@ -2162,8 +2162,8 @@ strings can be a pain. [Pythonic String Reader][d3fc5] can help with that.
       lowercase characters at all, or
     
     - there is more than one uppercase character and no lowercase
-      characters between them (e.g. [`CLASS`][1f37]es, non[`READ`][fe58]able, [`CLASS-NAME`][03fa]s
-      but not `Classes` or `aTe`.
+      characters between them (e.g. `CLASSes`, `nonREADable`,
+      `CLASS-NAMEs` but not `Classes` or `aTe`.
 
 
 <a id="x-28MGL-PAX-3A-40INTERESTING-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
@@ -4148,7 +4148,6 @@ they are presented.
   [02e3]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cib.htm '"22.3.9.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [0317]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pn.htm "PATHNAME (MGL-PAX:CLHS CLASS)"
   [0361]: #x-28MGL-PAX-3A-40SPECIFIC-LINK-20MGL-PAX-3ASECTION-29 "Specific Link"
-  [03fa]: http://www.lispworks.com/documentation/HyperSpec/Body/f_class_.htm "CLASS-NAME (MGL-PAX:CLHS GENERIC-FUNCTION)"
   [040b]: http://www.lispworks.com/documentation/HyperSpec/Body/02_da.htm '"2.4.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [051b]: http://www.lispworks.com/documentation/HyperSpec/Body/22_chb.htm '"22.3.8.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [0684]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cac.htm '"22.3.1.3" (MGL-PAX:CLHS MGL-PAX:SECTION)'

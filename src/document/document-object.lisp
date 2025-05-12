@@ -290,7 +290,8 @@
                       (format stream "~&"))
                      ((:list-of-systems)
                       (document-docstring
-                       (format nil "- _~A:_ ~{~A~^, ~}~%" name (asdf-deps value))
+                       (format nil "- _~A:_ ~{~A~^, ~}~%"
+                               name (asdf-deps value))
                        stream :paragraphp nil))
                      ((nil)
                       (format stream "    - _~A:_ ~A~%" name value)))))))

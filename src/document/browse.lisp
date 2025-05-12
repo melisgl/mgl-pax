@@ -115,12 +115,12 @@
   - `u` follows the first `Up:` link (to the first containing
     [SECTION][class]) if any.
 
-  - `U` is like `u` but positions the cursor at the top of the page.
+  - `\\U` is like `u` but positions the cursor at the top of the page.
 
   - `v` visits the source location of the current definition (the one
     under the cursor or the first one above it).
 
-  - `V` visits the source location of the first definition on the
+  - `\\V` visits the source location of the first definition on the
     page.
   """)
 

@@ -11,9 +11,9 @@
   function].
 
   This is not as straightforward as it sounds because it needs to
-  handle cases like nonREADable, CLASSES, all the various forms of
-  @LINKING in docstrings as well as in comments, and the `(NAME
-  LOCATIVE)` syntax in DEFSECTION."
+  handle cases like `\\nonREADable`, `\\CLASSES`, all the various
+  forms of @LINKING in docstrings as well as in comments, and
+  the `(NAME LOCATIVE)` syntax in DEFSECTION."
   (@word glossary-term)
   (@raw-name glossary-term)
   (@name glossary-term)

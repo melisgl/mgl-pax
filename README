@@ -48,8 +48,8 @@ written in the usual style, uppercasing names of symbols:
 
 ```
 (docstring #'abort)
-=> "Transfer control to a restart named ABORT, signalling a CONTROL-ERROR if
-   none exists."
+=> "Transfer control to a restart named ABORT, signalling
+a CONTROL-ERROR if none exists."
 ```
 
 Note how in the generated documentation, ABORT is set with a
@@ -57,8 +57,8 @@ monospace font, while `CONTROL-ERROR` is @AUTOLINKed:
 
 - \[function\] **ABORT** *\&OPTIONAL CONDITION*
 
-    Transfer control to a restart named `ABORT`, signalling a
-    [`CONTROL-ERROR`][6bc0] if none exists.
+    Transfer control to a restart named `ABORT`, signalling
+    a [`CONTROL-ERROR`][6bc0] if none exists.
 
 [6bc0]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "CONTROL-ERROR CONDITION"
 
@@ -69,8 +69,8 @@ the previous example.
 (document #'abort :format :markdown)
 .. - [function] **ABORT** *&OPTIONAL CONDITION*
 ..
-..     Transfer control to a restart named `ABORT`, signalling a [`CONTROL-ERROR`][7c2c] if
-..     none exists.
+..     Transfer control to a restart named `ABORT`, signalling
+..     a [`CONTROL-ERROR`][7c2c] if none exists.
 ..
 ..   [7c2c]: http://www.lispworks.com/documentation/HyperSpec/Body/e_contro.htm "CONTROL-ERROR (MGL-PAX:CLHS CONDITION)"
 ..
@@ -251,8 +251,8 @@ all Slime related modes like this:
 ```
 
 If the customizable variable `mgl-pax-hijack-slime-doc-keys` is
-true, then upon loading `mgl-pax', the following changes are made to
-`slime-doc-map`(assuming it's bound to`C-c C-d\`):
+true, then upon loading `mgl-pax`, the following changes are made to
+`slime-doc-map` (assuming it's bound to `C-c C-d`):
 
 - `C-c C-d a`: replaces `slime-apropos` with `mgl-pax-apropos`
 
@@ -517,7 +517,7 @@ Now let's examine the most important pieces.
     own docstring concatenated with docstrings of other notes in the
     lexical scope of BODY.
     
-    ARGS has the form \[NAME\] \[DOCSTRING\] BODY, where the square
+    ARGS has the form \[`NAME`\] \[`DOCSTRING`\] BODY, where the square
     brackets indicate optional arguments. See below for the details of
     parsing ARGS.
     
@@ -612,9 +612,9 @@ names with Lisp DEFINITIONS, and
 @LINKING for names with any kind of definition.
 
 This is not as straightforward as it sounds because it needs to
-handle cases like nonREADable, CLASSES, all the various forms of
-@LINKING in docstrings as well as in comments, and the `(NAME
-LOCATIVE)` syntax in DEFSECTION.
+handle cases like `nonREADable`, `CLASSES`, all the various
+forms of @LINKING in docstrings as well as in comments, and
+the `(NAME LOCATIVE)` syntax in DEFSECTION.
 
 - [glossary-term] word
 
@@ -1951,8 +1951,8 @@ strings can be a pain. @PYTHONIC-STRING-READER can help with that.
       lowercase characters at all, or
     
     - there is more than one uppercase character and no lowercase
-      characters between them (e.g. CLASSes, nonREADable, CLASS-NAMEs
-      but not `Classes` or `aTe`.
+      characters between them (e.g. `CLASSes`, `nonREADable`,
+      `CLASS-NAMEs` but not `Classes` or `aTe`.
 
 
 - [glossary-term] interesting
