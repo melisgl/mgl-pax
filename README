@@ -3443,8 +3443,9 @@ package for evaluation.
 - [function] SQUEEZE-WHITESPACE STRING
 
     Replace consecutive whitespace characters with a single space in
-    STRING. This is useful to undo the effects of pretty printing when
-    building comparison functions for TRANSCRIBE.
+    STRING and trim whitespace from the right. This is useful to undo
+    the effects of pretty printing when building comparison functions
+    for TRANSCRIBE.
 
 - [function] DELETE-TRAILING-WHITESPACE STRING
 

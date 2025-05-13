@@ -2094,7 +2094,7 @@
              *sorted-hyperspec-sections*)))
 
 (defun find-hyperspec-section-id (string &key (match-title t))
-  (let ((string (normalize-whitespace string)))
+  (let ((string (squeeze-whitespace string)))
     (or (first (gethash string *hyperspec-section-map*))
         (second (and match-title (find-hyperspec-section string))))))
 
@@ -2105,27 +2105,12 @@
 
 (defun find-hyperspec-section-url
     (string hyperspec-root &key (substring-match t))
-  (let* ((string (normalize-whitespace string))
+  (let* ((string (squeeze-whitespace string))
          (filename (or (second (gethash string *hyperspec-section-map*))
                        (first (and substring-match
                                    (find-hyperspec-section string))))))
     (when filename
       (hyperspec-link hyperspec-root "Body/" filename ".htm"))))
-
-;;; Replace consecutive WHITESPACEP characters with a single space,
-;;; and trim whitespace from the right.
-(defun normalize-whitespace (title)
-  (with-output-to-string (out)
-    (let ((prev-whitespace-p nil))
-      (loop for char across title
-            do (let ((whitespacep (whitespacep char)))
-                 ;; Nothing to do for whitespace chars until followed
-                 ;; by a non-whitespace char.
-                 (unless whitespacep
-                   (when prev-whitespace-p
-                     (write-char #\Space out))
-                   (write-char char out))
-                 (setq prev-whitespace-p whitespacep))))))
 
 
 ;;;; Low-level interface to HyperSpec glossary entries
@@ -2334,11 +2319,11 @@
   (make-hyperspec-glossary-entry-map))
 
 (defun find-hyperspec-glossary-entry-id (string)
-  (let ((string (normalize-whitespace string)))
+  (let ((string (squeeze-whitespace string)))
     (first (gethash string *hyperspec-glossary-entry-map*))))
 
 (defun find-hyperspec-glossary-entry-url (name &optional hyperspec-root)
-  (let ((filename (second (gethash (normalize-whitespace name)
+  (let ((filename (second (gethash (squeeze-whitespace name)
                                    *hyperspec-glossary-entry-map*))))
     (when filename
       (hyperspec-link hyperspec-root "Body/26_glo_" filename))))

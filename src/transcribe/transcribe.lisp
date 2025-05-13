@@ -1429,18 +1429,20 @@
 
 (defun/autoloaded squeeze-whitespace (string)
   "Replace consecutive whitespace characters with a single space in
-  STRING. This is useful to undo the effects of pretty printing when
-  building comparison functions for TRANSCRIBE."
-  (with-output-to-string (s)
+  STRING and trim whitespace from the right. This is useful to undo
+  the effects of pretty printing when building comparison functions
+  for TRANSCRIBE."
+  (with-output-to-string (out)
     (let ((prev-whitespace-p nil))
       (loop for char across string
-            do (cond ((whitespacep char)
-                      (unless prev-whitespace-p
-                        (write-char #\Space s)
-                        (setq prev-whitespace-p t)))
-                     (t
-                      (write-char char s)
-                      (setq prev-whitespace-p nil)))))))
+            do (let ((whitespacep (whitespacep char)))
+                 ;; Nothing to do for whitespace chars until followed
+                 ;; by a non-whitespace char.
+                 (unless whitespacep
+                   (when prev-whitespace-p
+                     (write-char #\Space out))
+                   (write-char char out))
+                 (setq prev-whitespace-p whitespacep))))))
 
 (defun/autoloaded delete-trailing-whitespace (string)
   "Delete whitespace characters after the last non-whitespace

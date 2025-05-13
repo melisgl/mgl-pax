@@ -3800,8 +3800,9 @@ package for evaluation.
 - [function] **SQUEEZE-WHITESPACE** *STRING*
 
     Replace consecutive whitespace characters with a single space in
-    `STRING`. This is useful to undo the effects of pretty printing when
-    building comparison functions for [`TRANSCRIBE`][f1f0].
+    `STRING` and trim whitespace from the right. This is useful to undo
+    the effects of pretty printing when building comparison functions
+    for [`TRANSCRIBE`][f1f0].
 
 <a id="x-28MGL-PAX-3ADELETE-TRAILING-WHITESPACE-20FUNCTION-29"></a>
 

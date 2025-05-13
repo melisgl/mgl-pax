@@ -457,7 +457,7 @@
         append (denoted-list (second doc))))
 
 (defun plain-section-title-or-name (section)
-  (normalize-whitespace
+  (squeeze-whitespace
    (process-title (section-title-or-name section) :format :plain)))
 
 
