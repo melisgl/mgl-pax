@@ -216,21 +216,19 @@
 
 (deftest test-locate/include ()
   (check-ref (dref nil '(include #.(asdf:system-relative-pathname
-                                      "mgl-pax" "HACKING.md")))
+                                    "mgl-pax" "HACKING.md")))
              nil '(include #.(asdf:system-relative-pathname
                               "mgl-pax" "HACKING.md"))
              'pax::include-dref)
-  (signals (locate-error :pred "/non-existent")
+  (signals-not (locate-error)
     (dref nil '(include "/non-existent/file")))
-  (with-failure-expected ((and (alexandria:featurep '(:or :clisp))
-                               'failure))
-    (signals-not (locate-error)
-      (dref nil '(include (:start (*some-var* variable)))))
-    (signals-not (locate-error)
-      (dref nil '(include (:end (*some-var* variable))))))
-  (signals (locate-error :pred "UNDEFINED")
+  (signals-not (locate-error)
+    (dref nil '(include (:start (*some-var* variable)))))
+  (signals-not (locate-error)
+    (dref nil '(include (:end (*some-var* variable)))))
+  (signals-not (locate-error :pred "UNDEFINED")
     (dref nil '(include (:start (undefined variable)))))
-  (signals (locate-error :pred "UNDEFINED")
+  (signals-not (locate-error :pred "UNDEFINED")
     (dref nil '(include (:end (undefined variable))))))
 
 

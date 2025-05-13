@@ -312,16 +312,20 @@
   not RESOLVE.""")
 
 (define-lookup include (name locative-args)
-  (destructuring-bind (source &key line-prefix header footer
-                                header-nl footer-nl) locative-args
-    (declare (ignore line-prefix header footer header-nl footer-nl))
-    ;; Called mostly for validation.
-    (let ((file (include-region source)))
-      (unless (and file (probe-file file))
-        (locate-error "File ~S does not exist." file)))
-    (make-instance 'include-dref
-                   :name name
-                   :locative (cons 'include locative-args))))
+  (make-instance 'include-dref
+                 :name name
+                 :locative (cons 'include locative-args)))
+
+(define-condition include-error (error)
+  ((format-control :initarg :format-control :reader format-control)
+   (format-args :initarg :format-args :reader format-args))
+  (:report (lambda (condition stream)
+             (format stream "~@<~?~:@>" (format-control condition)
+                     (format-args condition)))))
+
+(defun include-error (format-control &rest format-args)
+  (error 'include-error :format-control format-control
+                        :format-args format-args))
 
 ;;; Return the filename plus the START, END source locations of the
 ;;; region to be included.
@@ -347,30 +351,29 @@
                (when (and start* end*
                           (string/= (namestring (truename start-file))
                                     (namestring (truename end-file))))
-                 (locate-error "~S starts in file ~S and ends in ~
-                               another file ~S."
-                               'include start-file end-file))
+                 (include-error
+                  "~S starts in file ~S and ends in another file ~S."
+                  'include start-file end-file))
                (let ((file (or start-file end-file)))
                  (unless file
-                   (locate-error "No file specified."))
+                   (include-error "No file specified."))
                  (values file start* end*))))))
         (t
-         (locate-error "Malformed ~S ~S." 'include 'source source))))
+         (include-error "Malformed ~S ~S." 'include 'source source))))
 
 (defun check-source-location (ref location)
   (unless (source-location-p location)
-    (locate-error "~S of ~S is ~S, which is not SOURCE-LOCATION-P."
-                  'source-location ref location)))
+    (include-error "~S of ~S is ~S, which is not SOURCE-LOCATION-P."
+                   'source-location ref location)))
 
 (defmethod source-location* ((dref include-dref))
   (handler-case
-      (let ((dref::*locating-object* nil))
-        (multiple-value-bind (file start-location)
-            (include-region (first (dref-locative-args dref)))
-          (or start-location
-              (make-source-location :file file))))
-    (locate-error ()
-      nil)))
+      (multiple-value-bind (file start-location)
+          (include-region (first (dref-locative-args dref)))
+        (or start-location
+            (make-source-location :file file)))
+    (include-error (c)
+      `(:error ,(princ-to-string c)))))
 
 
 ;;;; CLHS locative

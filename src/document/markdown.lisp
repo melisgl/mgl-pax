@@ -4,7 +4,7 @@
 
 (defun parse-markdown (string)
   (let ((3bmd-grammar:*smart-quotes* nil))
-    (postprocess-parse-tree (parse-markdown-fast string))))
+    (clean-up-parsed-parse-tree (parse-markdown-fast string))))
 
 (defun parse-markdown-fast (string)
   (if (< (length string) 1000)
@@ -268,7 +268,7 @@
                       handle-strings fn parent tree))
                   parse-tree))
 
-(defun postprocess-parse-tree (parse-tree)
+(defun clean-up-parsed-parse-tree (parse-tree)
   (transform-tree (lambda (parent tree)
                     (declare (ignore parent))
                     (if (and (listp tree)
@@ -319,7 +319,7 @@
 
 ;;; Post-process the markdown parse tree to make it prettier on w3m
 ;;; and maybe make relative links absolute.
-(defun postprocess-for-w3m (parse-tree)
+(defun prepare-parse-tree-for-printing-to-w3m (parse-tree)
   (flet ((translate (parent tree)
            (declare (ignore parent))
            (cond ((eq (first tree) :code)

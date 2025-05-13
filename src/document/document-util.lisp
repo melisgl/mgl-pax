@@ -473,22 +473,30 @@
         (pax-file (ecase format
                     ((:plain) "README")
                     ((:markdown) "README.md")
-                    ((:html) "doc/pax-manual.html")))
+                    ((:html) "doc/pax-manual.html")
+                    ((:pdf)
+                     (if (string= *pandoc-output-format* "pdf")
+                         "pax-manual.pdf"
+                         "test/data/pax-manual.tex"))))
         (dref-file (ecase format
                      ((:plain) "dref/README")
                      ((:markdown) "dref/README.md")
-                     ((:html) "doc/dref-manual.html"))))
+                     ((:html) "doc/dref-manual.html")
+                     ((:pdf)
+                      (if (string= *pandoc-output-format* "pdf")
+                          "dref-manual.pdf"
+                          "test/data/dref-manual.tex")))))
     `((:objects (, @pax-manual)
        :output (,(asdf:system-relative-pathname "mgl-pax" pax-file)
                 ,@*default-output-options*)
-       ,@(unless (eq format :html)
+       ,@(when (member format '(:plain :markdown))
            '(:footer-fn print-markdown-footer))
        :uri-fragment ,pax-file
        :source-uri-fn ,source-uri-fn)
       (:objects (, dref::@dref-manual)
        :output (,(asdf:system-relative-pathname "mgl-pax" dref-file)
                 ,@*default-output-options*)
-       ,@(unless (eq format :html)
+       ,@(when (member format '(:plain :markdown))
            '(:footer-fn print-markdown-footer))
        :uri-fragment ,dref-file
        :source-uri-fn ,source-uri-fn))))
@@ -507,7 +515,11 @@
      (update-asdf-system-html-docs (pax-and-dref-sections)
                                    :mgl-pax :pages (pax-and-dref-pages
                                                     :html)
-                                   :update-css-p t :style :charter))))
+                                   :update-css-p t :style :charter)))
+  (time
+   (let ((pax:*document-downcase-uppercase-code* t))
+     (document (pax-and-dref-sections) :pages (pax-and-dref-pages :pdf)
+                                       :format :pdf))))
 
 
 ;;; Load systems that use PAX and generate PAX World in

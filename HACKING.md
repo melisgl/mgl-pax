@@ -45,10 +45,14 @@ Testing from the command line
 Catching changes in behaviour
 -----------------------------
 
-Some bugs not caught by the test suite may be caught by transcription
-consistency checking or show up in the diffs of the generated
-documentation. Check out PAX World in the top-level directory, where
-the ASDF files are with
+On SBCL (we don't check in generated files with other Lisps), some
+bugs not caught by the test suite may be caught by
+
+- transcription consistency checking when generating the READMEs, or
+- then show up as diffs.
+
+For wider coverage, check out PAX World in the top-level directory,
+where the ASDF files are with
 
     git clone https://github.com/melisgl/mgl-pax-world.git world/
 
@@ -57,6 +61,16 @@ After changing the code, regenerate the readmes and PAX World (see
 `src/document/document-util.lisp`), then check the `git diff`s. Note
 that you need to `cd` into `world/` and get the diff there too because
 it is a separate git checkout.
+
+Testing PDF generation
+----------------------
+
+In the test suite, `mgl-pax-test::test-pdf` only tests if the DRef
+manual in PDF form is generated without error; there is no checking of
+the content. However, the intermediate LaTeX (between Markdown and
+PDF) is written to the version controlled file
+`test/data/dref-manual.tex`, which can then be inspected for diffs (on
+SBCL only).
 
 
 Debugging

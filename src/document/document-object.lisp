@@ -3,8 +3,14 @@
 (in-readtable pythonic-string-syntax)
 
 (declaim (ftype function document-object))
+(declaim (ftype function mark-up-signatures-p))
 
-(defsection @output-details (:title "Output Details")
+(defsection @output-formats (:title "Output Formats")
+  (*document-mark-up-signatures* variable)
+  (@markdown-output section)
+  (@pdf-output section))
+
+(defsection @markdown-output (:title "Markdown Output")
   "[document-object* (method () (dref t))][docstring]
 
   With this default format, PAX supports all locative types, but for
@@ -26,8 +32,7 @@
   - [document-object* (method () (go-dref t))][docstring]
   - [document-object* (method () (include-dref t))][docstring]
   - [document-object* (method () (clhs-dref t))][docstring]
-  - [document-object* (method () (unknown-dref t))][docstring]"
-  (*document-mark-up-signatures* variable))
+  - [document-object* (method () (unknown-dref t))][docstring]")
 
 (defmethod document-object* ((dref dref) stream)
   "By default, [DREF][class]s are documented in the following format.
@@ -172,7 +177,7 @@
   (when (and slot-def
              (or (swank-mop:slot-definition-initargs slot-def)
                  (swank-mop:slot-definition-initfunction slot-def)))
-    (if (and *document-mark-up-signatures* (eq *format* :html))
+    (if (mark-up-signatures-p)
         (let ((initarg-strings
                 (when (swank-mop:slot-definition-initargs slot-def)
                   (mapcar #'prin1-to-markdown
@@ -362,7 +367,7 @@
            (format stream "- Direct locative subtypes: ~{~A~^, ~}~%"
                    (loop for sub in direct-subs
                          collect (md-link (dref sub 'locative))))))
-       stream :paragraphp nil))
+       stream))
     (document-docstring (docstring dref) stream)))
 
 
@@ -400,12 +405,17 @@
         (document-object entry stream)))))
 
 (defun format-in-package (package stream)
-  (format stream "###### \\[in package ~A~A\\]~%"
-          (escape-markdown (package-name package))
-          (if (package-nicknames *package*)
-              (format nil " with nicknames ~{~A~^, ~}"
-                      (mapcar #'escape-markdown (package-nicknames package)))
-              "")))
+  (let ((name (escape-markdown (package-name package)))
+        (nicknames (if (package-nicknames *package*)
+                       (format nil " with nicknames ~{~A~^, ~}"
+                               (mapcar #'escape-markdown
+                                       (package-nicknames package)))
+                       "")))
+    (if (eq *format* :pdf)
+        (format stream "`\\subsubsection*{\\normalfont~
+                       \\textcolor[HTML]{606060}{[in package ~A~A]}}`{=latex}~%"
+                name nicknames)
+        (format stream "###### \\[in package ~A~A\\]~%" name nicknames))))
 
 
 (defmethod document-object* ((glossary-term glossary-term) stream)
@@ -440,32 +450,42 @@
     (let ((locative-args (dref-locative-args dref)))
       (destructuring-bind (source &key (line-prefix "") header footer
                                     header-nl footer-nl) locative-args
-        (multiple-value-bind (file start-loc end-loc) (include-region source)
-          (let ((start (source-location-adjusted-file-position start-loc))
-                (end (source-location-adjusted-file-position end-loc)))
-            (cond ((and start-loc (null start))
-                   (warn "~S cannot find ~S ~S" 'include :start start-loc))
-                  ((and end-loc (null end))
-                   (warn "~S cannot find ~S ~S" 'include :end end-loc))
-                  (t
-                   (write-string
-                    (codify-and-link
-                     (with-output-to-string (stream)
-                       (let ((text (file-subseq file start end)))
-                         (when header
-                           (format stream "~A" header))
-                         (when header-nl
-                           (format stream "~&")
-                           (format stream header-nl)
-                           (format stream "~%"))
-                         (format stream "~A" (prefix-lines line-prefix text))
-                         (when footer
-                           (format stream footer))
-                         (when footer-nl
-                           (format stream "~&")
-                           (format stream footer-nl)
-                           (format stream "~%")))))
-                    stream)))))))))
+        (handler-case
+            (multiple-value-bind (file start-loc end-loc)
+                (include-region source)
+              (let ((start (source-location-adjusted-file-position start-loc))
+                    (end (source-location-adjusted-file-position end-loc)))
+                (cond ((and start-loc (null start))
+                       (warn "~@<~S cannot find ~S ~S.~:@>"
+                             'include :start start-loc))
+                      ((and end-loc (null end))
+                       (warn "~@<~S cannot find ~S ~S.~:@>"
+                             'include :end end-loc))
+                      (t
+                       (write-string
+                        (codify-and-link
+                         (with-output-to-string (stream)
+                           (let ((text (file-subseq file start end)))
+                             (unless text
+                               (warn "~@<~S's ~S ~S is after its ~S ~S.~:@>"
+                                     'include :start start :end end))
+                             (when header
+                               (format stream "~A" header))
+                             (when header-nl
+                               (format stream "~&")
+                               (format stream header-nl)
+                               (format stream "~%"))
+                             (format stream "~A" (prefix-lines line-prefix
+                                                               text))
+                             (when footer
+                               (format stream footer))
+                             (when footer-nl
+                               (format stream "~&")
+                               (format stream footer-nl)
+                               (format stream "~%")))))
+                        stream)))))
+          (include-error (c)
+            (warn "~@<~?~:@>" (format-control c) (format-args c))))))))
 
 (defun file-subseq (pathname &optional start end)
   (with-open-file (stream pathname)
@@ -474,15 +494,16 @@
           (end (or end (file-length stream)))
           (buffer-size 4096))
       (file-position stream start)
-      (with-output-to-string (datum)
-        (let ((buffer (make-array buffer-size :element-type 'character)))
-          (loop
-            for bytes-read = (read-sequence
-                              buffer stream
-                              :end (min buffer-size
-                                        (- end (file-position stream))))
-            do (write-sequence buffer datum :start 0 :end bytes-read)
-            while (= bytes-read buffer-size)))))))
+      (when (<= start end)
+        (with-output-to-string (datum)
+          (let ((buffer (make-array buffer-size :element-type 'character)))
+            (loop
+              for bytes-read = (read-sequence
+                                buffer stream
+                                :end (min buffer-size
+                                          (- end (file-position stream))))
+              do (write-sequence buffer datum :start 0 :end bytes-read)
+              while (= bytes-read buffer-size))))))))
 
 
 (defmethod document-object* ((dref clhs-dref) stream)

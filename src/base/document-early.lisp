@@ -54,7 +54,7 @@
 (defvar *document-base-url*)
 (export '*document-base-url*)
 
-;;; @OUTPUT-DETAILS
+;;; @OUTPUT-FORMATS
 (defvar *document-mark-up-signatures*)
 (export '*document-mark-up-signatures*)
 
@@ -165,9 +165,13 @@
                               arglist
                               (list 'arglist %reference)))
               (,%name ,name))
-         (when *document-link-code*
+         (when (and *document-link-code*
+                    (not (eq *format* :pdf)))
            (anchor ,%reference ,%stream))
          (print-reference-bullet ,%reference ,%stream :name ,%name)
+         (when (and *document-link-code*
+                    (eq *format* :pdf))
+           (anchor ,%reference ,%stream))
          (multiple-value-bind (*package* *readtable*)
              ;; In apropos terse view, whatever BODY emits is to be
              ;; skipped. Do not waste time with
@@ -213,6 +217,7 @@
 (autoload document-docstring "mgl-pax/document")
 (autoload escape-markdown "mgl-pax/document")
 (autoload prin1-to-markdown "mgl-pax/document")
+(autoload escape-tex "mgl-pax/document")
 
 
 ;;;; Early non-exported definitions
@@ -270,6 +275,8 @@
   URI-FORMAT-STRING at its default, which is suitable for GitHub."
   (make-git-source-uri-fn asdf-system github-uri :git-version git-version))
 
+(defvar *git-version-for-test* nil)
+
 (defun make-git-source-uri-fn (asdf-system git-forge-uri
                                &key git-version
                                  (uri-format-string "~A/blob/~A/~A#L~S"))
@@ -312,6 +319,8 @@
        (multiple-value-bind (git-root git-version)
            (asdf-system-git-root-and-version asdf-system
                                              :default-version git-version)
+         (when *git-version-for-test*
+           (setq git-version *git-version-for-test*))
          (if git-version
              (let ((line-file-position-cache (make-hash-table :test #'equal)))
                (lambda (object)

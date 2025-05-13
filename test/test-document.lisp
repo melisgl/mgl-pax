@@ -109,6 +109,7 @@
   (test-readtable)
   ;; PAX::@PAX-LOCATIVES
   (test-locative)
+  (test-section)
   (test-glossary-term)
   (test-go)
   (test-docstring)
@@ -129,7 +130,8 @@
   (test-definitions-for-pax-url-path)
   (test-with-document-context)
   (test-asdf-system-name-of)
-  (test-guess-package-from-arglist))
+  (test-guess-package-from-arglist)
+  (test-pdf))
 
 (deftest test-urlencode ()
   (is (equal (mgl-pax::urlencode "hello") "hello"))
@@ -945,13 +947,14 @@ This is [Self-referencing][e042].
 
 (deftest test-pages ()
   (let ((*package* (find-package (find-package :mgl-pax-test))))
-    (let ((outputs (document (list #'foo #'->max) :stream nil
-                                                  :pages `((:objects (,#'foo)
-                                                            :output nil)
-                                                           (:objects ()
-                                                            :output (nil))
-                                                           (:objects (,#'->max)
-                                                            :output (nil))))))
+    (let ((outputs (document (list #'foo #'->max)
+                             :stream nil
+                             :pages `((:objects (,#'foo)
+                                       :output nil)
+                                      (:objects ()
+                                       :output (nil))
+                                      (:objects (,#'->max)
+                                       :output (nil))))))
       (when (is (= (length outputs) 2))
         (is (equal (first outputs)
                    "- [function] FOO OOK X
@@ -1394,6 +1397,11 @@ This is [Self-referencing][e042].
                                       :url "http://example.com/x")
                       "docstring")
 
+(deftest test-section ()
+  (check-head "PAX::@INTRODUCTION" "PAX::@INTRODUCTION" :format :plain)
+  (check-head "PAX::@INTRODUCTION" "Introduction")
+  (check-head "PAX::@INTRODUCTION" "Introduction" :format :html))
+
 (deftest test-glossary-term ()
   (with-test ("external links")
     (check-document "@EXTERNAL-LINK" "[See X][ffc6]
@@ -1413,7 +1421,10 @@ This is [Self-referencing][e042].
     External link to [http://example.com/x](http://example.com/x).
 
     docstring
-")))
+"))
+  (check-head "PAX::@WORD" "PAX::@WORD" :format :plain)
+  (check-head "PAX::@WORD" "word")
+  (check-head "PAX::@WORD" "word" :format :html))
 
 (deftest test-go ()
   (let ((p (dref 'print 'function))
@@ -1998,3 +2009,24 @@ example section
 (deftest test-guess-package-from-arglist ()
   (signals-not (error)
     (is (null (mgl-pax::guess-package-from-arglist '(1 3))))))
+
+;;; See HACKING.md.
+(deftest test-pdf ()
+  ;; KLUDGE: Hangs on CLISP.
+  (with-skip ((or (alexandria:featurep :clisp)
+                  (not (zerop (nth-value 2 (uiop:run-program
+                                            '("which" "pdflatex")
+                                            :ignore-error-status t))))))
+    (with-test ()
+      (let ((*document-downcase-uppercase-code* t)
+            (pax::*document-transcribe-check-consistency*
+              (alexandria:featurep :sbcl))
+            (pax::*pandoc-output-format* "latex")
+            (pax::*git-version-for-test* "master")
+            (*document-pandoc-pdf-options*
+              (remove "--verbose" *document-pandoc-pdf-options*
+                      :test #'equal)))
+        ;; This is tolerably slow.
+        (document (list dref::@dref-manual)
+                  :pages (pax::pax-and-dref-pages :pdf)
+                  :format :pdf)))))

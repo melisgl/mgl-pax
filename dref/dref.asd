@@ -3,7 +3,7 @@
 ;;; See DREF::@DREF-MANUAL for the user guide.
 (asdf:defsystem "dref"
   :licence "MIT, see COPYING."
-  :version "0.4.0"
+  :version "0.4.1"
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
   :homepage "http://github.com/melisgl/mgl-pax/dref"

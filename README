@@ -305,7 +305,7 @@ PAX is built on top of the DRef library (bundled in the same repository).
 
 
 - [system] "mgl-pax"
-    - _Version:_ 0.4.0
+    - _Version:_ 0.4.1
     - _Description:_ Documentation system, browser, generator. See the
         MGL-PAX::@PAX-MANUAL.
     - _Long Description:_ The base system. See MGL-PAX::@LINKS-AND-SYSTEMS.
@@ -763,6 +763,7 @@ To the DREF::@BASIC-LOCATIVE-TYPES defined by DRef,
 PAX adds a few of its own.
 
 - [locative] SECTION
+
     - Direct locative supertypes: [VARIABLE][6c83]
 
     Refers to a SECTION defined by DEFSECTION.
@@ -771,6 +772,7 @@ PAX adds a few of its own.
     default (see EXPORTABLE-REFERENCE-P).
 
 - [locative] GLOSSARY-TERM
+
     - Direct locative supertypes: [VARIABLE][6c83]
 
     Refers to a GLOSSARY-TERM defined by DEFINE-GLOSSARY-TERM.
@@ -949,7 +951,6 @@ PAX adds a few of its own.
                (source-location (dref 'print 'function)))
         => T
         ```
-
 
 - [locative] CLHS &OPTIONAL NESTED-LOCATIVE
 
@@ -1218,9 +1219,9 @@ For more powerful search, see @APROPOS.
 - [function] DOCUMENT DOCUMENTABLE &KEY (STREAM T) PAGES (FORMAT :PLAIN)
 
     Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
-    FORMAT is a @3BMD output format (currently one of :MARKDOWN, :HTML
-    and :PLAIN). STREAM may be a STREAM object, T or NIL as with
-    CL:FORMAT.
+    FORMAT is one of :PLAIN, :MARKDOWN, :HTML and
+    :PDF. STREAM may be a STREAM object, T or NIL
+    as with CL:FORMAT.
     
     To look up the documentation of the DOCUMENT function itself:
     
@@ -1248,7 +1249,7 @@ For more powerful search, see @APROPOS.
     
     There are quite a few special variables that affect how output is
     generated, see @CODIFICATION, @LINKING-TO-THE-HYPERSPEC,
-    @LINKING-TO-SECTIONS, @LINK-FORMAT and @OUTPUT-DETAILS.
+    @LINKING-TO-SECTIONS, @LINK-FORMAT and @OUTPUT-FORMATS.
     
     For the details, see the following sections, starting with
     @DOCUMENTABLE. Also see @EXTENSION-API and DOCUMENT-OBJECT\*.
@@ -1264,7 +1265,7 @@ one of the following:
   that is LOCATEable. This includes non-DREF XREFs and
   first-class objects such as FUNCTIONs. The generated
   documentation typically includes the definition's DOCSTRING. See
-  @OUTPUT-DETAILS for more.
+  @MARKDOWN-OUTPUT for more.
 
 - *docstring*: A string, in which case it is processed like a
   docstring in DEFSECTION. That is, with docstring sanitization, @CODIFICATION, and @LINKING.
@@ -1778,7 +1779,6 @@ up documentation and access @APROPOS via the input boxes provided.
     
             (ensure-web-server :hyperspec-root "/usr/share/doc/hyperspec/")
 
-
 ##### Top-level PAX Sections
 
 The @PAX-LIVE-HOME-PAGE lists the top-level PAX sections: those
@@ -1954,7 +1954,6 @@ strings can be a pain. @PYTHONIC-STRING-READER can help with that.
       characters between them (e.g. `CLASSes`, `nonREADable`,
       `CLASS-NAMEs` but not `Classes` or `aTe`.
 
-
 - [glossary-term] interesting
 
     A @NAME is *interesting* if
@@ -1994,7 +1993,6 @@ strings can be a pain. @PYTHONIC-STRING-READER can help with that.
     inline code that's not Lisp.
     
         Press `\\M-.` in Emacs.
-
 
 ### Linking
 
@@ -2143,7 +2141,6 @@ Markdown reference links (see @MARKDOWN-IN-DOCSTRINGS).
     - If the warning is not handled, then it is printed to
       *ERROR-OUTPUT*, and it behaves as if OUTPUT-LABEL was invoked.
 
-
 - [function] OUTPUT-REFLINK &OPTIONAL CONDITION
 
     Invoke the OUTPUT-REFLINK restart. See UNRESOLVABLE-REFLINK.
@@ -2286,11 +2283,11 @@ table of contents and navigation links.
 
 - [variable] *DOCUMENT-LINK-SECTIONS* T
 
-    When true, HTML anchors are generated before the headings (e.g. of
-    sections), which allows the table of contents to contain links and
-    also code-like references to sections (like `@FOO-MANUAL`) to be
-    translated to links with the TITLE being the link
-    text.
+    When true, HTML anchors and PDF destinations are generated before
+    the headings (e.g. of sections), which allows the table of contents
+    to contain links and also code-like references to sections (like
+    `@FOO-MANUAL`) to be translated to links with the
+    TITLE being the link text.
 
 - [variable] *DOCUMENT-MAX-NUMBERING-LEVEL* 3
 
@@ -2459,7 +2456,6 @@ The following variables control various aspects of links and URLs.
     ")
     ```
 
-
 - [variable] *DOCUMENT-MIN-LINK-HASH-LENGTH* 4
 
     Recall that @MARKDOWN/REFLINKs (like `[label][id]`) are used for
@@ -2552,7 +2548,28 @@ Note that in the example marked with `*`, the single backslash,
 that would normally turn autolinking off, is ignored because it is
 in an explicit link.
 
-### Output Details
+### Output Formats
+
+- [variable] *DOCUMENT-MARK-UP-SIGNATURES* T
+
+    When true, some things such as function names and arglists are
+    rendered as bold and italic. In :HTML and :PDF output, locative
+    types become links to sources (if :SOURCE-URI-FN is provided, see
+    @PAGES), and the symbol becomes a self-link for your permalinking
+    pleasure.
+    
+    For example, a reference is rendered in markdown roughly as:
+    
+        - [function] foo x y
+    
+    With this option on, the above becomes:
+    
+        - [function] **foo** *x y*
+    
+    Also, in HTML `**foo**` will be a link to that very entry and
+    `[function]` may turn into a link to sources.
+
+#### Markdown Output
 
 By default, DREFs are documented in the following format.
 
@@ -2636,23 +2653,75 @@ arglist.
 printed as the arglist. There is no docstring.
 
 
-- [variable] *DOCUMENT-MARK-UP-SIGNATURES* T
+#### PDF Output
 
-    When true, some things such as function names and arglists are
-    rendered as bold and italic. In :HTML output, locative types become
-    links to sources (if :SOURCE-URI-FN is provided, see @PAGES), and
-    the symbol becomes a self-link for your permalinking pleasure.
+When invoked with :FORMAT :PDF, DOCUMENT generates
+@MARKDOWN-OUTPUT and converts it to PDF with @PANDOC, which in turn
+uses [LaTeX](https://www.latex-project.org/). Make sure that they
+are installed.
+
+```
+(with-open-file (s "x.pdf" :direction :output :if-exists :supersede
+                           :if-does-not-exist :create)
+  (pax:document "Hello, World!" :stream s :format :pdf))
+```
+
+To see how the output looks like, visit
+[pax-manual-v0.4.1.pdf][pax-manual-sample] and
+[dref-manual-v0.4.1.pdf][dref-manual-sample].
+
+[pax-manual-sample]: http://quotenil.com/blog-files/pax-manual-v0.4.1.pdf
+
+[dref-manual-sample]: http://quotenil.com/blog-files/dref-manual-v0.4.1.pdf
+
+PDF output is similar to *DOCUMENT-HTML-DEFAULT-STYLE* :CHARTER
+without the off-white tint and with coloured instead of underlined
+links. The latter is because underlining interferes with hyphenation
+in LaTeX. As in HTML output, locative types link to the respective
+definition in the sources on GitHub (see MAKE-GIT-SOURCE-URI-FN).
+
+Note that linking from one PDF to another is currently not supported
+due to the lack of consistent support in PDF viewers. Therefore,
+such links are replaced by their label or the title if any (e.g. of
+a SECTION or GLOSSARY-TERM).
+
+The generation of Markdown is subject to the standard
+variables (again see DOCUMENT). The Markdown to PDF conversion
+can be customized with the following variables.
+
+- [variable] *DOCUMENT-PANDOC-PROGRAM* "pandoc"
+
+    The name of the Pandoc binary. It need not be an absolute pathname
+    as `PATH` is searched.
+
+- [variable] *DOCUMENT-PANDOC-PDF-OPTIONS* (("-V" "papersize=a4") ("-V" "margin-left=1.03in") ("-V" "margin-right=1.03in")
+ ("-V" "margin-top=1.435in") ("-V" "margin-bottom=1.435in")
+ ("-V" "fontfamily=XCharter") ("-V" "fontsize=11pt") ("-V" "colorlinks=true")
+ ("-V" "linkcolor=blue") ("-V" "urlcolor=Maroon") ("-V" "toccolor=blue")
+ "--verbose")
+
+    The command-line options to invoke *DOCUMENT-PANDOC-PROGRAM* with.
+    For ease of manipulation, related options are grouped into sublists,
+    but the entire nested list is flattened to get the list of options
+    to pass to Pandoc. If `--verbose` is specified, then in addition to
+    Pandoc logging LaTeX sources, PAX will log to *ERROR-OUTPUT* the
+    Markdown that it converts to PDF via LaTeX. The Markdown includes
+    *DOCUMENT-PANDOC-PDF-HEADER-INCLUDES* and
+    *DOCUMENT-PANDOC-PDF-METADATA-BLOCK*.
+
+- [variable] *DOCUMENT-PANDOC-PDF-HEADER-INCLUDES* "\<too messy to include>"
+
+    LaTeX code (a string) to include in the preamble via
+    [`header-includes`](https://pandoc.org/MANUAL.html#layout).
     
-    For example, a reference is rendered in markdown roughly as:
+    The default includes have no configuration knobs. Look at the value
+    to see how to customize it.
+
+- [variable] *DOCUMENT-PANDOC-PDF-METADATA-BLOCK* ""
+
+    A @PANDOC-YAML-METADATA-BLOCK as a string.
     
-        - [function] foo x y
-    
-    With this option on, the above becomes:
-    
-        - [function] **foo** *x y*
-    
-    Also, in HTML `**foo**` will be a link to that very entry and
-    `[function]` may turn into a link to sources.
+    Concatenate to this string to customize it.
 
 ### Documentation Generation Implementation Notes
 
@@ -2725,7 +2794,6 @@ HTML documentation and the default CSS stylesheet.
                           "https://github.com/melisgl/mgl-pax"))))
     ```
 
-
 See the following variables, which control HTML generation.
 
 - [variable] *DOCUMENT-HTML-DEFAULT-STYLE* :DEFAULT
@@ -2766,7 +2834,6 @@ See the following variables, which control HTML generation.
     - If a function designator, then it is called with a single
       argument, the HTML stream, where it must write the output.
 
-
 - [variable] *DOCUMENT-HTML-SIDEBAR* NIL
 
     Stuff to be included in the HTML sidebar.
@@ -2780,7 +2847,6 @@ See the following variables, which control HTML generation.
     
     - If a function designator, then it is called with a single
       argument, the HTML stream, where it must write the output.
-
 
 - [variable] *DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* NIL
 
@@ -3484,7 +3550,6 @@ package for evaluation.
     .. world     ; This is the second line.
     ```
 
-
 ## Writing Extensions
 
 ### Adding New Locatives
@@ -3519,7 +3584,6 @@ there are only a couple of PAX generic functions left to extend.
                                        locative-args)
       t)
     ```
-
 
 - [generic-function] EXPORTABLE-LOCATIVE-TYPE-P LOCATIVE-TYPE
 
@@ -3628,7 +3692,6 @@ are for writing new DOCUMENT-OBJECT\* methods, which emit markdown.
     - It is not allowed to have WITH-HEADING within the dynamic
       extent of BODY.
 
-
 - [macro] WITH-DISLOCATED-NAMES NAMES &BODY BODY
 
     For each name in NAMES, establish a @LOCAL-DEFINITION.
@@ -3654,7 +3717,6 @@ are for writing new DOCUMENT-OBJECT\* methods, which emit markdown.
     
     - If ESCAPE-BLOCK, then escape whatever is necessary to avoid
       starting a new markdown block (e.g. a paragraph, heading, etc).
-
 
 - [function] PRIN1-TO-MARKDOWN OBJECT &KEY (ESCAPE-INLINE T) (ESCAPE-HTML T) (ESCAPE-BLOCK T)
 
@@ -3721,7 +3783,7 @@ they are presented.
 - [reader] GLOSSARY-TERM-TITLE [GLOSSARY-TERM][8251] (:TITLE)
 
     A markdown string or NIL. Used in generated
-    documentation (see @OUTPUT-DETAILS).
+    documentation (see @MARKDOWN-OUTPUT).
 
 - [reader] GLOSSARY-TERM-URL [GLOSSARY-TERM][8251] (:URL)
 

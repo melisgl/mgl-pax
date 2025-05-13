@@ -100,7 +100,8 @@ This would involve rewriting everything to emit parse tree fragments or be able 
 ** OPT 3bmd parsing performance on large blocks
 https://github.com/3b/3bmd/issues/56
 ** MAYBE consider CommonDoc from the 40ants fork
-Or maybe just have a good api in MGL-PAX::@EXTENDING-DOCUMENT?
+Or maybe just have a good api in MGL-PAX::@EXTENDING-DOCUMENT? Pandoc
+helps to convert to many formats.
 ** MAYBE support external links
 This is partially done. There is CLHS and there are glossary terms
 with URLs. See EXTERNAL-DREF-P and co.
@@ -164,9 +165,6 @@ ASDF is a nickname of ASDF/INTERFACE.
 This is doable when printing symbols directly, but not so easy when
 the symbol is in a list or similar, so consistency would be a problem.
 If anywhere, this belongs in the Lisp.
-** CANCELLED replace titles even if not linking in :FORMAT :PLAIN?
-Section names (e.g. @PAX-MANUAL) should be readable and C-. may work
-on them but not on the title.
 ** MAYBE always replace titles but follow the link suppression rules?
 ** MAYBE generate offline documentation for everything in quicklisp?
 Like https://quickref.common-lisp.net/index-per-library.html, but more
@@ -183,6 +181,7 @@ but their ancestors could be exported. As it is, this is lossy.
 
 Also, external is only checked against the home package of the symbol.
 Other packages that export it may or may not be public.
+** TODO document :PLAIN
 * web
 ** MAYBE implement a wiki on top?
 PAX is already kind of a wiki.

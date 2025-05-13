@@ -737,7 +737,7 @@
     arguments.
 
   - One may switch between list, and detailed view. The list view only
-    shows the first, [bulleted line][@output-details] for each
+    shows the first, [bulleted line][@markdown-output] for each
     definition, while the detailed view includes the full
     documentation of definitions with the exception of SECTIONs.
 

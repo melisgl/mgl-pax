@@ -82,8 +82,7 @@
       (ensure-directories-exist pathname))
     (remf open-args :ensure-directories-exist)
     (unwind-protect
-         (with-open-stream (stream (apply #'open pathname
-                                          :direction direction
+         (with-open-stream (stream (apply #'open pathname :direction direction
                                           open-args))
            (funcall fn stream))
       ;; Subsequent opens must append.

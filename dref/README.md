@@ -51,7 +51,7 @@ the documentation system.
 <a id="x-28-22dref-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 - [system] **"dref"**
-    - _Version:_ 0.4.0
+    - _Version:_ 0.4.1
     - _Description:_ Reify definitions, provide portable access to
         docstrings and source locations in an extensible framework.
     - _Long Description:_ [`DEFUN`][f472] defines a first-class object: a `FUNCTION`([`0`][119e] [`1`][81f7]).
@@ -377,7 +377,6 @@ deal with references (discussed in the [Extending DRef][68fb]).
     ==> #<XREF PRINT FUNCTION>
     ```
 
-
 <a id="x-28DREF-3ADREF-NAME-20-28MGL-PAX-3AREADER-20DREF-3ADREF-29-29"></a>
 
 - [reader] **DREF-NAME** *[DREF][d930]*
@@ -420,7 +419,6 @@ deal with references (discussed in the [Extending DRef][68fb]).
                    :stream nil))
     => "- [variable] *STANDARD-OUTPUT* \"see-below\""
     ```
-
 
 <a id="x-28DREF-EXT-3ALOCATIVE-TYPE-20FUNCTION-29"></a>
 
@@ -697,7 +695,6 @@ definitions as in
         (dtypep (locate #'car) 'top)
         => T
         ```
-
 
 <a id="x-28DREF-3A-40LISTING-DEFINITIONS-20MGL-PAX-3ASECTION-29"></a>
 
@@ -1005,6 +1002,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28VARIABLE-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **VARIABLE** *&OPTIONAL INITFORM*
+
     - Direct locative subtypes: [`GLOSSARY-TERM`][5119], [`SECTION`][672f], [`CONSTANT`][c819]
 
     Refers to a global special variable.
@@ -1021,6 +1019,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28MGL-PAX-3ACONSTANT-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **CONSTANT** *&OPTIONAL INITFORM*
+
     - Direct locative supertypes: [`VARIABLE`][6c83]
 
     Refers to a constant variable defined with [`DEFCONSTANT`][8934]. `INITFORM`,
@@ -1037,6 +1036,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28SETF-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **SETF**
+
     - Direct locative subtypes: [`SETF-METHOD`][1a03], [`SETF-FUNCTION`][19f6]
 
     Refers to a [setf expander][35a2] (see [`DEFSETF`][66dc] and [`DEFINE-SETF-EXPANDER`][d2cb]).
@@ -1079,6 +1079,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **COMPILER-MACRO**
+
     - Direct locative subtypes: [`SETF-COMPILER-MACRO`][5df4]
 
     Refers to a [`COMPILER-MACRO-FUNCTION`][c575], typically defined with
@@ -1087,6 +1088,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28DREF-3ASETF-COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **SETF-COMPILER-MACRO**
+
     - Direct locative supertypes: [`COMPILER-MACRO`][41fd]
 
     Refers to a compiler macro with a [setf function name][867c].
@@ -1100,6 +1102,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **FUNCTION**
+
     - Direct locative subtypes: [`STRUCTURE-ACCESSOR`][090c], [`SETF-FUNCTION`][19f6], [`GENERIC-FUNCTION`][5875]
 
     Refers to a global function, typically defined with [`DEFUN`][f472]. The
@@ -1111,10 +1114,10 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     ==> #<DREF DOCSTRING FUNCTION>
     ```
 
-
 <a id="x-28DREF-3ASETF-FUNCTION-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **SETF-FUNCTION**
+
     - Direct locative supertypes: [`FUNCTION`][ba62], [`SETF`][d83a]
     
     - Direct locative subtypes: [`STRUCTURE-ACCESSOR`][090c], [`SETF-GENERIC-FUNCTION`][ab5e]
@@ -1131,10 +1134,10 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     ==> #<DREF OOH SETF-FUNCTION>
     ```
 
-
 <a id="x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **GENERIC-FUNCTION**
+
     - Direct locative supertypes: [`FUNCTION`][ba62]
     
     - Direct locative subtypes: [`SETF-GENERIC-FUNCTION`][ab5e]
@@ -1145,6 +1148,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28DREF-3ASETF-GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **SETF-GENERIC-FUNCTION**
+
     - Direct locative supertypes: [`GENERIC-FUNCTION`][5875], [`SETF-FUNCTION`][19f6]
 
     Refers to a global [`GENERIC-FUNCTION`][efe2] with a [setf function name][867c].
@@ -1159,10 +1163,10 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     ==> #<DREF OOG SETF-GENERIC-FUNCTION>
     ```
 
-
 <a id="x-28METHOD-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **METHOD** *METHOD-QUALIFIERS METHOD-SPECIALIZERS*
+
     - Direct locative subtypes: [`WRITER`][e548], [`READER`][cc04], [`SETF-METHOD`][1a03]
 
     Refers to a `METHOD`. [name][5fc4] must be a [function name][5191].
@@ -1188,6 +1192,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28DREF-3ASETF-METHOD-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **SETF-METHOD** *METHOD-QUALIFIERS METHOD-SPECIALIZERS*
+
     - Direct locative supertypes: [`METHOD`][172e], [`SETF`][d83a]
     
     - Direct locative subtypes: [`ACCESSOR`][00d4]
@@ -1205,7 +1210,6 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     ==> #<DREF OOG (SETF-METHOD NIL NIL)>
     ```
 
-
 <a id="x-28METHOD-COMBINATION-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **METHOD-COMBINATION**
@@ -1218,6 +1222,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **READER** *CLASS-NAME*
+
     - Direct locative supertypes: [`METHOD`][172e]
     
     - Direct locative subtypes: [`ACCESSOR`][00d4]
@@ -1232,10 +1237,10 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     ==> #<DREF FOO-XXX (READER FOO)>
     ```
 
-
 <a id="x-28MGL-PAX-3AWRITER-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **WRITER** *CLASS-NAME*
+
     - Direct locative supertypes: [`METHOD`][172e]
     
     - Direct locative subtypes: [`ACCESSOR`][00d4]
@@ -1245,6 +1250,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **ACCESSOR** *CLASS-NAME*
+
     - Direct locative supertypes: [`READER`][cc04], [`WRITER`][e548], [`SETF-METHOD`][1a03]
 
     Refers to an `:ACCESSOR` in a [`DEFCLASS`][ead6].
@@ -1256,6 +1262,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28MGL-PAX-3ASTRUCTURE-ACCESSOR-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **STRUCTURE-ACCESSOR** *&OPTIONAL STRUCTURE-CLASS-NAME*
+
     - Direct locative supertypes: [`SETF-FUNCTION`][19f6], [`FUNCTION`][ba62]
 
     Refers to an accessor function generated by [`DEFSTRUCT`][eac1].
@@ -1274,6 +1281,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28TYPE-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **TYPE**
+
     - Direct locative subtypes: [`CLASS`][2060]
 
     This locative can refer to [types and classes][0ff7] and
@@ -1301,6 +1309,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28CLASS-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **CLASS**
+
     - Direct locative supertypes: [`TYPE`][926d]
     
     - Direct locative subtypes: [`CONDITION`][c479], [`STRUCTURE`][da65]
@@ -1312,6 +1321,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28STRUCTURE-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **STRUCTURE**
+
     - Direct locative supertypes: [`CLASS`][2060]
 
     Refers to a [`STRUCTURE-CLASS`][e608], typically defined with [`DEFSTRUCT`][eac1].
@@ -1342,6 +1352,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28CONDITION-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **CONDITION**
+
     - Direct locative supertypes: [`CLASS`][2060]
 
     Although `CONDITION` is not [`SUBTYPEP`][daac] of [`CLASS`][1f37], actual condition
@@ -1356,7 +1367,6 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     (dref 'locate-error 'class)
     ==> #<DREF LOCATE-ERROR CONDITION>
     ```
-
 
 <a id="x-28RESTART-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -1454,6 +1464,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 <a id="x-28DREF-3ADTYPE-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **DTYPE**
+
     - Direct locative subtypes: [`LOCATIVE`][0b3a]
 
     Locative for [`DTYPE`s][a459] defined with [`DEFINE-DTYPE`][c635] and `LOCATIVE` types.
@@ -1473,10 +1484,10 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     ==> #<DREF DTYPE LOCATIVE>
     ```
 
-
 <a id="x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **LOCATIVE**
+
     - Direct locative supertypes: [`DTYPE`][85ba]
 
     This is the locative for [locative type][a11d]s defined with
@@ -1488,7 +1499,6 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
                  (source-location (dref 'macro 'locative))))
     => "(define-locative-type macro ()"
     ```
-
 
 <a id="x-28LAMBDA-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -1627,7 +1637,6 @@ by [`DEFINE-LOCATIVE-TYPE`][b6c4] and [`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4].
     => T
     => T
     ```
-
 
 <a id="x-28DREF-EXT-3ALOCATIVE-TYPE-DIRECT-SUPERS-20FUNCTION-29"></a>
 
@@ -1978,7 +1987,6 @@ macros.
     - [`LOCATIVE-ARGS`][2444] must be congruent with the destructuring lambda list
       in the definition of `LOCATIVE-TYPE`.
 
-
 <a id="x-28DREF-EXT-3ADEFINE-LOOKUP-20MGL-PAX-3AMACRO-29"></a>
 
 - [macro] **DEFINE-LOOKUP** *LOCATIVE-TYPE (NAME LOCATIVE-ARGS) &BODY BODY*
@@ -2005,7 +2013,6 @@ macros.
     The above are enforced at macro-expansion time.
     
     - `BODY` must follow the rules in [`*CHECK-LOCATE*`][b038].
-
 
 <a id="x-28DREF-EXT-3ACALL-LOOKUP-20MGL-PAX-3AMACRO-29"></a>
 
@@ -2097,7 +2104,6 @@ macros.
     
     - `BODY` must follow the rules in [`*CHECK-LOCATE*`][b038], including those in
       [Cast Name Change][c68e].
-
 
 <a id="x-28DREF-EXT-3ACALL-CAST-20MGL-PAX-3AMACRO-29"></a>
 

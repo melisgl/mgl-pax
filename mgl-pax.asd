@@ -3,7 +3,7 @@
 ;;; See MGL-PAX::@PAX-MANUAL for the user guide.
 (asdf:defsystem "mgl-pax"
   :licence "MIT, see COPYING."
-  :version "0.4.0"
+  :version "0.4.1"
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
   :homepage "http://github.com/melisgl/mgl-pax"
@@ -69,11 +69,12 @@
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/document/"
                 :serial t
-                :components ((:file "url")
+                :components ((:file "util")
+                             (:file "url")
                              (:file "markdown")
+                             (:file "pandoc")
                              (:file "stream-spec")
                              (:file "docstring")
-                             (:file "util")
                              (:file "document-object")
                              (:file "document")
                              (:file "document-util")

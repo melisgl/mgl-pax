@@ -248,7 +248,7 @@
    (title
     :initarg :title :reader glossary-term-title
     :documentation "A markdown string or NIL. Used in generated
-    documentation (see @OUTPUT-DETAILS).")
+    documentation (see @MARKDOWN-OUTPUT).")
    (url
     :initarg :url :reader glossary-term-url
     :documentation "A string or NIL.")

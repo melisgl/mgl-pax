@@ -47,7 +47,9 @@
         - [9.5.6 Link Format][c0d2]
     - [9.6 Local Definition][9db9]
     - [9.7 Overview of Escaping][2634]
-    - [9.8 Output Details][af6f]
+    - [9.8 Output Formats][8d9b]
+        - [9.8.1 Markdown Output][dd29]
+        - [9.8.2 PDF Output][19ad]
     - [9.9 Documentation Generation Implementation Notes][d1ca]
     - [9.10 Utilities for Generating Documentation][1b1b]
         - [9.10.1 HTML Output][36e1]
@@ -390,7 +392,7 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
 <a id="x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 - [system] **"mgl-pax"**
-    - _Version:_ 0.4.0
+    - _Version:_ 0.4.1
     - _Description:_ Documentation system, browser, generator. See the
         [PAX Manual][2415].
     - _Long Description:_ The base system. See [Links and Systems][ba90].
@@ -888,6 +890,7 @@ PAX adds a few of its own.
 <a id="x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **SECTION**
+
     - Direct locative supertypes: [`VARIABLE`][6c83]
 
     Refers to a [`SECTION`][5fac] defined by [`DEFSECTION`][72b4].
@@ -898,6 +901,7 @@ PAX adds a few of its own.
 <a id="x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **GLOSSARY-TERM**
+
     - Direct locative supertypes: [`VARIABLE`][6c83]
 
     Refers to a [`GLOSSARY-TERM`][8251] defined by [`DEFINE-GLOSSARY-TERM`][8ece].
@@ -1088,7 +1092,6 @@ PAX adds a few of its own.
                (source-location (dref 'print 'function)))
         => T
         ```
-
 
 <a id="x-28MGL-PAX-3ACLHS-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -1375,9 +1378,9 @@ For more powerful search, see [Apropos][b7fc].
 - [function] **DOCUMENT** *DOCUMENTABLE &KEY (STREAM T) PAGES (FORMAT :PLAIN)*
 
     Write `DOCUMENTABLE` in `FORMAT` to `STREAM` diverting some output to `PAGES`.
-    `FORMAT` is a [3BMD][1904] output format (currently one of `:MARKDOWN`, `:HTML`
-    and `:PLAIN`). `STREAM` may be a [`STREAM`][d5a9] object, `T` or `NIL` as with
-    [`CL:FORMAT`][ad78].
+    `FORMAT` is one of `:PLAIN`, `:MARKDOWN`, [`:HTML`][36e1] and
+    [`:PDF`][19ad]. `STREAM` may be a [`STREAM`][d5a9] object, `T` or `NIL`
+    as with [`CL:FORMAT`][ad78].
     
     To look up the documentation of the [`DOCUMENT`][432c] function itself:
     
@@ -1405,7 +1408,7 @@ For more powerful search, see [Apropos][b7fc].
     
     There are quite a few special variables that affect how output is
     generated, see [Codification][f1ab], [Linking to the HyperSpec][7cc3],
-    [Linking to Sections][22c2], [Link Format][c0d2] and [Output Details][af6f].
+    [Linking to Sections][22c2], [Link Format][c0d2] and [Output Formats][8d9b].
     
     For the details, see the following sections, starting with
     [`DOCUMENTABLE`][0702]. Also see [Writing Extensions][c4ce] and [`DOCUMENT-OBJECT*`][8269].
@@ -1423,7 +1426,7 @@ one of the following:
   that is [`LOCATE`][8f19]able. This includes non-`DREF` [`XREF`][1538]s and
   first-class objects such as [`FUNCTION`][119e]s. The generated
   documentation typically includes the definition's [`DOCSTRING`][affc]. See
-  [Output Details][af6f] for more.
+  [Markdown Output][dd29] for more.
 
 - *docstring*: A string, in which case it is processed like a
   docstring in [`DEFSECTION`][72b4]. That is, with [docstring sanitization][7bf5], [Codification][f1ab], and [Linking][19e3].
@@ -1830,7 +1833,7 @@ On the result page:
   arguments.
 
 - One may switch between list, and detailed view. The list view only
-  shows the first, [bulleted line][af6f] for each
+  shows the first, [bulleted line][dd29] for each
   definition, while the detailed view includes the full
   documentation of definitions with the exception of [`SECTION`][5fac]s.
 
@@ -1964,7 +1967,6 @@ up documentation and access [Apropos][b7fc] via the input boxes provided.
       without affecting the server in any other way:
     
             (ensure-web-server :hyperspec-root "/usr/share/doc/hyperspec/")
-
 
 <a id="x-28MGL-PAX-3A-40TOP-LEVEL-PAX-SECTIONS-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2165,7 +2167,6 @@ strings can be a pain. [Pythonic String Reader][d3fc5] can help with that.
       characters between them (e.g. `CLASSes`, `nonREADable`,
       `CLASS-NAMEs` but not `Classes` or `aTe`.
 
-
 <a id="x-28MGL-PAX-3A-40INTERESTING-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
 
 - [glossary-term] **interesting**
@@ -2209,7 +2210,6 @@ strings can be a pain. [Pythonic String Reader][d3fc5] can help with that.
     inline code that's not Lisp.
     
         Press `\\M-.` in Emacs.
-
 
 <a id="x-28MGL-PAX-3A-40LINKING-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2376,7 +2376,6 @@ Markdown reference links (see [Markdown in Docstrings][7bf5]).
     - If the warning is not handled, then it is printed to
       [`*ERROR-OUTPUT*`][66c6], and it behaves as if `OUTPUT-LABEL` was invoked.
 
-
 <a id="x-28MGL-PAX-3AOUTPUT-REFLINK-20FUNCTION-29"></a>
 
 - [function] **OUTPUT-REFLINK** *&OPTIONAL CONDITION*
@@ -2541,11 +2540,11 @@ table of contents and navigation links.
 
 - [variable] **\*DOCUMENT-LINK-SECTIONS\*** *T*
 
-    When true, HTML anchors are generated before the headings (e.g. of
-    sections), which allows the table of contents to contain links and
-    also code-like references to sections (like `@FOO-MANUAL`) to be
-    translated to links with the [`TITLE`][72b4] being the link
-    text.
+    When true, HTML anchors and PDF destinations are generated before
+    the headings (e.g. of sections), which allows the table of contents
+    to contain links and also code-like references to sections (like
+    `@FOO-MANUAL`) to be translated to links with the
+    [`TITLE`][72b4] being the link text.
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-MAX-NUMBERING-LEVEL-2A-20VARIABLE-29"></a>
 
@@ -2736,7 +2735,6 @@ The following variables control various aspects of links and `URL`s.
     ")
     ```
 
-
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-MIN-LINK-HASH-LENGTH-2A-20VARIABLE-29"></a>
 
 - [variable] **\*DOCUMENT-MIN-LINK-HASH-LENGTH\*** *4*
@@ -2837,9 +2835,34 @@ Note that in the example marked with `*`, the single backslash,
 that would normally turn autolinking off, is ignored because it is
 in an explicit link.
 
-<a id="x-28MGL-PAX-3A-40OUTPUT-DETAILS-20MGL-PAX-3ASECTION-29"></a>
+<a id="x-28MGL-PAX-3A-40OUTPUT-FORMATS-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.8 Output Details
+### 9.8 Output Formats
+
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-MARK-UP-SIGNATURES-2A-20VARIABLE-29"></a>
+
+- [variable] **\*DOCUMENT-MARK-UP-SIGNATURES\*** *T*
+
+    When true, some things such as function names and arglists are
+    rendered as bold and italic. In `:HTML` and `:PDF` output, locative
+    types become links to sources (if `:SOURCE-URI-FN` is provided, see
+    [`PAGES`][9c7d]), and the symbol becomes a self-link for your permalinking
+    pleasure.
+    
+    For example, a reference is rendered in markdown roughly as:
+    
+        - [function] foo x y
+    
+    With this option on, the above becomes:
+    
+        - [function] **foo** *x y*
+    
+    Also, in HTML `**foo**` will be a link to that very entry and
+    `[function]` may turn into a link to sources.
+
+<a id="x-28MGL-PAX-3A-40MARKDOWN-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
+
+#### 9.8.1 Markdown Output
 
 By default, [`DREF`][d930]s are documented in the following format.
 
@@ -2923,25 +2946,85 @@ arglist.
 printed as the arglist. There is no docstring.
 
 
-<a id="x-28MGL-PAX-3A-2ADOCUMENT-MARK-UP-SIGNATURES-2A-20VARIABLE-29"></a>
+<a id="x-28MGL-PAX-3A-40PDF-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
 
-- [variable] **\*DOCUMENT-MARK-UP-SIGNATURES\*** *T*
+#### 9.8.2 PDF Output
 
-    When true, some things such as function names and arglists are
-    rendered as bold and italic. In `:HTML` output, locative types become
-    links to sources (if `:SOURCE-URI-FN` is provided, see [`PAGES`][9c7d]), and
-    the symbol becomes a self-link for your permalinking pleasure.
+When invoked with `:FORMAT` `:PDF`, [`DOCUMENT`][432c] generates
+[Markdown Output][dd29] and converts it to PDF with [Pandoc][59d9], which in turn
+uses [LaTeX](https://www.latex-project.org/). Make sure that they
+are installed.
+
+```
+(with-open-file (s "x.pdf" :direction :output :if-exists :supersede
+                           :if-does-not-exist :create)
+  (pax:document "Hello, World!" :stream s :format :pdf))
+```
+
+To see how the output looks like, visit
+[pax-manual-v0.4.1.pdf][pax-manual-sample] and
+[dref-manual-v0.4.1.pdf][dref-manual-sample].
+
+[pax-manual-sample]: http://quotenil.com/blog-files/pax-manual-v0.4.1.pdf
+
+[dref-manual-sample]: http://quotenil.com/blog-files/dref-manual-v0.4.1.pdf
+
+PDF output is similar to [`*DOCUMENT-HTML-DEFAULT-STYLE*`][90fa] `:CHARTER`
+without the off-white tint and with coloured instead of underlined
+links. The latter is because underlining interferes with hyphenation
+in LaTeX. As in HTML output, locative types link to the respective
+definition in the sources on GitHub (see [`MAKE-GIT-SOURCE-URI-FN`][587f]).
+
+Note that linking from one PDF to another is currently not supported
+due to the lack of consistent support in PDF viewers. Therefore,
+such links are replaced by their label or the title if any (e.g. of
+a [`SECTION`][5fac] or [`GLOSSARY-TERM`][8251]).
+
+The generation of Markdown is subject to the standard
+variables (again see [`DOCUMENT`][432c]). The Markdown to PDF conversion
+can be customized with the following variables.
+
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-PANDOC-PROGRAM-2A-20VARIABLE-29"></a>
+
+- [variable] **\*DOCUMENT-PANDOC-PROGRAM\*** *"pandoc"*
+
+    The name of the Pandoc binary. It need not be an absolute pathname
+    as `PATH` is searched.
+
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-PANDOC-PDF-OPTIONS-2A-20VARIABLE-29"></a>
+
+- [variable] **\*DOCUMENT-PANDOC-PDF-OPTIONS\*** *(("-V" "papersize=a4") ("-V" "margin-left=1.03in") ("-V" "margin-right=1.03in")
+ ("-V" "margin-top=1.435in") ("-V" "margin-bottom=1.435in")
+ ("-V" "fontfamily=XCharter") ("-V" "fontsize=11pt") ("-V" "colorlinks=true")
+ ("-V" "linkcolor=blue") ("-V" "urlcolor=Maroon") ("-V" "toccolor=blue")
+ "--verbose")*
+
+    The command-line options to invoke [`*DOCUMENT-PANDOC-PROGRAM*`][dd37] with.
+    For ease of manipulation, related options are grouped into sublists,
+    but the entire nested list is flattened to get the list of options
+    to pass to Pandoc. If `--verbose` is specified, then in addition to
+    Pandoc logging LaTeX sources, PAX will log to [`*ERROR-OUTPUT*`][66c6] the
+    Markdown that it converts to PDF via LaTeX. The Markdown includes
+    [`*DOCUMENT-PANDOC-PDF-HEADER-INCLUDES*`][2cd5] and
+    [`*DOCUMENT-PANDOC-PDF-METADATA-BLOCK*`][ee8b].
+
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-PANDOC-PDF-HEADER-INCLUDES-2A-20VARIABLE-29"></a>
+
+- [variable] **\*DOCUMENT-PANDOC-PDF-HEADER-INCLUDES\*** *"\<too messy to include>"*
+
+    LaTeX code (a string) to include in the preamble via
+    [`header-includes`](https://pandoc.org/MANUAL.html#layout).
     
-    For example, a reference is rendered in markdown roughly as:
+    The default includes have no configuration knobs. Look at the value
+    to see how to customize it.
+
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-PANDOC-PDF-METADATA-BLOCK-2A-20VARIABLE-29"></a>
+
+- [variable] **\*DOCUMENT-PANDOC-PDF-METADATA-BLOCK\*** *""*
+
+    A [Pandoc YAML metadata block][84f2] as a string.
     
-        - [function] foo x y
-    
-    With this option on, the above becomes:
-    
-        - [function] **foo** *x y*
-    
-    Also, in HTML `**foo**` will be a link to that very entry and
-    `[function]` may turn into a link to sources.
+    Concatenate to this string to customize it.
 
 <a id="x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29"></a>
 
@@ -3024,7 +3107,6 @@ HTML documentation and the default CSS stylesheet.
                           "https://github.com/melisgl/mgl-pax"))))
     ```
 
-
 See the following variables, which control HTML generation.
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-HTML-DEFAULT-STYLE-2A-20VARIABLE-29"></a>
@@ -3075,7 +3157,6 @@ See the following variables, which control HTML generation.
     - If a function designator, then it is called with a single
       argument, the HTML stream, where it must write the output.
 
-
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-HTML-SIDEBAR-2A-20VARIABLE-29"></a>
 
 - [variable] **\*DOCUMENT-HTML-SIDEBAR\*** *NIL*
@@ -3091,7 +3172,6 @@ See the following variables, which control HTML generation.
     
     - If a function designator, then it is called with a single
       argument, the HTML stream, where it must write the output.
-
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-HTML-TOP-BLOCKS-OF-LINKS-2A-20VARIABLE-29"></a>
 
@@ -3845,7 +3925,6 @@ package for evaluation.
     .. world     ; This is the second line.
     ```
 
-
 <a id="x-28MGL-PAX-3A-40EXTENSION-API-20MGL-PAX-3ASECTION-29"></a>
 
 ## 11 Writing Extensions
@@ -3888,7 +3967,6 @@ there are only a couple of PAX generic functions left to extend.
                                        locative-args)
       t)
     ```
-
 
 <a id="x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29"></a>
 
@@ -4009,7 +4087,6 @@ are for writing new `DOCUMENT-OBJECT*` methods, which emit markdown.
     - It is not allowed to have [`WITH-HEADING`][80e8] within the [dynamic
       extent][36e9] of `BODY`.
 
-
 <a id="x-28MGL-PAX-3AWITH-DISLOCATED-NAMES-20MGL-PAX-3AMACRO-29"></a>
 
 - [macro] **WITH-DISLOCATED-NAMES** *NAMES &BODY BODY*
@@ -4041,7 +4118,6 @@ are for writing new `DOCUMENT-OBJECT*` methods, which emit markdown.
     
     - If `ESCAPE-BLOCK`, then escape whatever is necessary to avoid
       starting a new markdown block (e.g. a paragraph, heading, etc).
-
 
 <a id="x-28MGL-PAX-3APRIN1-TO-MARKDOWN-20FUNCTION-29"></a>
 
@@ -4134,7 +4210,7 @@ they are presented.
 - [reader] **GLOSSARY-TERM-TITLE** *[GLOSSARY-TERM][8251] (:TITLE)*
 
     A markdown string or `NIL`. Used in generated
-    documentation (see [Output Details][af6f]).
+    documentation (see [Markdown Output][dd29]).
 
 <a id="x-28MGL-PAX-3AGLOSSARY-TERM-URL-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29"></a>
 
@@ -4182,6 +4258,7 @@ they are presented.
   [18e1]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_to_.htm "PRIN1-TO-STRING (MGL-PAX:CLHS FUNCTION)"
   [1904]: https://github.com/3b/3bmd "3BMD"
   [1959]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cec.htm '"22.3.5.3" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [19ad]: #x-28MGL-PAX-3A-40PDF-OUTPUT-20MGL-PAX-3ASECTION-29 "PDF Output"
   [19e3]: #x-28MGL-PAX-3A-40LINKING-20MGL-PAX-3ASECTION-29 "Linking"
   [1b1b]: #x-28MGL-PAX-3A-40DOCUMENTATION-UTILITIES-20MGL-PAX-3ASECTION-29 "Utilities for Generating Documentation"
   [1b28]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE"
@@ -4206,6 +4283,7 @@ they are presented.
   [292a]: #x-28MGL-PAX-3A-40PAX-LOCATIVES-20MGL-PAX-3ASECTION-29 "PAX Locatives"
   [2c93]: #x-28MGL-PAX-3A-40GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Generating Documentation"
   [2ca9]: #x-28MGL-PAX-3AOUTPUT-REFLINK-20FUNCTION-29 "MGL-PAX:OUTPUT-REFLINK FUNCTION"
+  [2cd5]: #x-28MGL-PAX-3A-2ADOCUMENT-PANDOC-PDF-HEADER-INCLUDES-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-PANDOC-PDF-HEADER-INCLUDES* VARIABLE"
   [2d48]: #x-28MGL-PAX-3AWITH-DISLOCATED-NAMES-20MGL-PAX-3AMACRO-29 "MGL-PAX:WITH-DISLOCATED-NAMES MGL-PAX:MACRO"
   [3026]: #x-28MGL-PAX-3AESCAPE-MARKDOWN-20FUNCTION-29 "MGL-PAX:ESCAPE-MARKDOWN FUNCTION"
   [3076]: https://github.com/redline6561/colorize/ "Colorize"
@@ -4260,6 +4338,7 @@ they are presented.
   [587f]: #x-28MGL-PAX-3AMAKE-GIT-SOURCE-URI-FN-20FUNCTION-29 "MGL-PAX:MAKE-GIT-SOURCE-URI-FN FUNCTION"
   [5884]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_.htm "FIND-IF (MGL-PAX:CLHS FUNCTION)"
   [58f6]: #x-28GO-20MGL-PAX-3ALOCATIVE-29 "GO MGL-PAX:LOCATIVE"
+  [59d9]: https://pandoc.org/ "Pandoc"
   [5a82]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq.htm "EQ (MGL-PAX:CLHS FUNCTION)"
   [5b4d]: http://www.lispworks.com/documentation/HyperSpec/Body/22_ccd.htm '"22.3.3.4" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [5cd7]: #x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:INCLUDE MGL-PAX:LOCATIVE"
@@ -4337,6 +4416,7 @@ they are presented.
   [83e1]: http://www.lispworks.com/documentation/HyperSpec/Body/e_cnd.htm "CONDITION (MGL-PAX:CLHS CONDITION)"
   [8423]: #x-28MGL-PAX-3A-40TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Utilities for Consistency Checking"
   [8492]: #x-28MGL-PAX-3ATRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR CONDITION"
+  [84f2]: https://pandoc.org/MANUAL.html#extension-yaml_metadata_block "Pandoc YAML metadata block"
   [8541]: #x-28MGL-PAX-3A-40EMACS-SETUP-20MGL-PAX-3ASECTION-29 "Emacs Setup"
   [8710]: #x-28MGL-PAX-3AARGUMENT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:ARGUMENT MGL-PAX:LOCATIVE"
   [875e]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-TO-HYPERSPEC* VARIABLE"
@@ -4347,6 +4427,7 @@ they are presented.
   [8a58]: #x-28MGL-PAX-3A-40SECTIONS-20MGL-PAX-3ASECTION-29 "Sections"
   [8a5e]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhb.htm '"2.4.8.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [8c00]: https://daringfireball.net/projects/markdown/syntax#link "Markdown reference link"
+  [8d9b]: #x-28MGL-PAX-3A-40OUTPUT-FORMATS-20MGL-PAX-3ASECTION-29 "Output Formats"
   [8e71]: #x-28MGL-PAX-3A-40UNSPECIFIC-LINK-20MGL-PAX-3ASECTION-29 "Unspecific Link"
   [8e92]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dc.htm '"2.4.3" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [8ece]: #x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-GLOSSARY-TERM MGL-PAX:MACRO"
@@ -4394,7 +4475,6 @@ they are presented.
   [ad80]: dref/README.md#x-28DREF-3A-40INTRODUCTION-20MGL-PAX-3ASECTION-29 "Introduction"
   [adf2]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhd.htm '"2.4.8.4" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [aeb6]: http://www.lispworks.com/documentation/HyperSpec/Body/a_fn.htm "FUNCTION MGL-PAX:CLHS"
-  [af6f]: #x-28MGL-PAX-3A-40OUTPUT-DETAILS-20MGL-PAX-3ASECTION-29 "Output Details"
   [af78]: #x-28MGL-PAX-3AGLOSSARY-TERM-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29 "MGL-PAX:GLOSSARY-TERM-TITLE (MGL-PAX:READER MGL-PAX:GLOSSARY-TERM)"
   [affc]: dref/README.md#x-28MGL-PAX-3ADOCSTRING-20FUNCTION-29 "MGL-PAX:DOCSTRING FUNCTION"
   [b033]: #x-28MGL-PAX-3A-40ASDF-SYSTEMS-AND-RELATED-PACKAGES-20MGL-PAX-3ASECTION-29 "`ASDF:SYSTEM`s and Related `PACKAGE`s"
@@ -4467,6 +4547,8 @@ they are presented.
   [db68]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pkg_na.htm "PACKAGE-NAME (MGL-PAX:CLHS FUNCTION)"
   [dc0a]: #x-28MGL-PAX-3A-40DOCUMENT-FUNCTION-20MGL-PAX-3ASECTION-29 "The `DOCUMENT` Function"
   [dd03]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhp.htm '"2.4.8.16" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [dd29]: #x-28MGL-PAX-3A-40MARKDOWN-OUTPUT-20MGL-PAX-3ASECTION-29 "Markdown Output"
+  [dd37]: #x-28MGL-PAX-3A-2ADOCUMENT-PANDOC-PROGRAM-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-PANDOC-PROGRAM* VARIABLE"
   [dded]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhm.htm '"2.4.8.13" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [dff6]: #x-28MGL-PAX-3A-40GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29 "GitHub Workflow"
   [e016]: http://www.lispworks.com/documentation/HyperSpec/Body/06_aab.htm '"6.1.1.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -4493,6 +4575,7 @@ they are presented.
   [ed5f]: #x-28MGL-PAX-3ACLHS-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CLHS MGL-PAX:LOCATIVE"
   [ed9f]: http://www.lispworks.com/documentation/HyperSpec/Body/22_ceb.htm '"22.3.5.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [ee51]: #x-28MGL-PAX-3AUPDATE-PAX-WORLD-20FUNCTION-29 "MGL-PAX:UPDATE-PAX-WORLD FUNCTION"
+  [ee8b]: #x-28MGL-PAX-3A-2ADOCUMENT-PANDOC-PDF-METADATA-BLOCK-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-PANDOC-PDF-METADATA-BLOCK* VARIABLE"
   [f0d5]: #x-28MGL-PAX-3A-40RAW-NAMES-IN-WORDS-20MGL-PAX-3ASECTION-29 "Raw Names in Words"
   [f12d]: #x-28MGL-PAX-3A-2ADOCUMENT-MAX-NUMBERING-LEVEL-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-MAX-NUMBERING-LEVEL* VARIABLE"
   [f155]: #x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/navigate" ASDF/SYSTEM:SYSTEM'

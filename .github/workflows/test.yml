@@ -17,6 +17,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      ## Very slow
+      # - name: apt-get update
+      #   run: sudo apt-get update
+      #
+      # - name: Install Pandoc and TeX Live
+      #   run: |
+      #     sudo apt-get --no-install-recommends install \
+      #         pandoc texlive-latex-extra texlive-fonts-extra
+
       - name: Install Roswell
         env:
           LISP: ${{ matrix.lisp }}
