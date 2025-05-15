@@ -2027,7 +2027,7 @@ discuss the various forms of reflinks.
 
 ##### Specific Reflink
 
-*Format:* `[`WORD`][`LOCATIVE`]`
+*Format:* `[` WORD `][` LOCATIVE `]`
 
 The first @NAME in WORD (with depluralization) that forms a valid
 DREF with LOCATIVE is determined, and that definition is
@@ -2046,7 +2046,7 @@ to mark it as code, but here and below, the second example relies on
 
 ##### Specific Reflink with Text
 
-*Format:* `[LINK TEXT][`NAME LOCATIVE`]`
+*Format:* `[LINK TEXT][` NAME LOCATIVE `]`
 
 If NAME and LOCATIVE form a valid DREF, then that
 definition is linked to with link text `LINK TEXT`. If there is no
@@ -2064,7 +2064,7 @@ else as a symbol.
 
 ##### Unspecific Reflink
 
-*Format:* `[`WORD`][]`
+*Format:* `[` WORD `][]`
 
 The first @NAME in WORD (with depluralization, symbols only) that
 has some DEFINITIONS is determined, and those definitions are linked
@@ -2082,7 +2082,7 @@ UNRESOLVABLE-REFLINK warning is signalled.
 
 ##### Unspecific Reflink with Text
 
-*Format:* `[LINK TEXT][`NAME`]`
+*Format:* `[LINK TEXT][` NAME `]`
 
 The DEFINITIONS of NAME are determined, and those definitions are
 linked to. If NAME has no definitions, then an UNRESOLVABLE-REFLINK

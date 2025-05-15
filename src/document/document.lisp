@@ -1863,7 +1863,7 @@
 
 
 (defsection @reflink (:title "Reflink")
-  """The @MARKDOWN/REFLINK syntax `\[label][id]` is
+  """The @MARKDOWN/REFLINK syntax `[label][id]` is
   repurposed for linking to DREF::@DEFINITIONS. In the following, we
   discuss the various forms of reflinks."""
   (@specific-reflink section)
@@ -1957,7 +1957,7 @@
 
 
 (defsection @specific-reflink (:title "Specific Reflink")
-  """_Format:_ `\[`[WORD][@WORD]`\][`[LOCATIVE][locative]`\]`
+  """_Format:_ `[` [WORD][@WORD] `][` [LOCATIVE][locative] `]`
 
   The first @NAME in WORD (with depluralization) that forms a valid
   [DREF][class] with LOCATIVE is determined, and that definition is
@@ -1966,9 +1966,9 @@
 
   _Examples:_
 
-  - `\[`EQL`][type]` _renders as_ [EQL][type].
+  - `[`EQL`][type]` _renders as_ [EQL][type].
 
-  - `\[EQL][type]` _renders as_ [EQL][type].
+  - `[EQL][type]` _renders as_ [EQL][type].
 
   The Markdown link definition (i.e. `type` above) needs no backticks
   to mark it as code, but here and below, the second example relies on
@@ -1986,7 +1986,7 @@
             t)))
 
 (defsection @specific-reflink-with-text (:title "Specific Reflink with Text")
-  """_Format:_ `\[LINK TEXT][`[NAME][@name] [LOCATIVE][locative]`\]`
+  """_Format:_ `[LINK TEXT][` [NAME][@name] [LOCATIVE][locative] `]`
 
   If NAME and LOCATIVE form a valid [DREF][class], then that
   definition is linked to with link text `LINK TEXT`. If there is no
@@ -1997,9 +1997,9 @@
 
   _Examples:_
 
-  - `\[see this][eql type]` _renders as_ [see this][eql type].
+  - `[see this][eql type]` _renders as_ [see this][eql type].
 
-  - `\[see this]["MGL-PAX" package]` _renders as_ [see this]["MGL-PAX" package].
+  - `[see this]["MGL-PAX" package]` _renders as_ [see this]["MGL-PAX" package].
   """)
 
 (defun specific-reflink-with-text (label definition)
@@ -2007,7 +2007,7 @@
     (values (dref-to-links/specific dref) t label)))
 
 (defsection @unspecific-reflink (:title "Unspecific Reflink")
-  """_Format:_ `\[`[WORD][@WORD]`\][]`
+  """_Format:_ `[` [WORD][@WORD] `][]`
 
   The first @NAME in WORD (with depluralization, symbols only) that
   has some DEFINITIONS is determined, and those definitions are linked
@@ -2016,11 +2016,11 @@
 
   _Examples:_
 
-  - single link: `\[PRINT][]` _renders as_ [PRINT][].
+  - single link: `[PRINT][]` _renders as_ [PRINT][].
 
-  - multiple links: `\[EQL][]` _renders as_ [EQL][].
+  - multiple links: `[EQL][]` _renders as_ [EQL][].
 
-  - no definitions: `\[BAD-NAME][]` _renders as_ BAD-NAME.
+  - no definitions: `[BAD-NAME][]` _renders as_ BAD-NAME.
   """)
 
 (defun unspecific-reflink (label-string)
@@ -2030,7 +2030,7 @@
 
 (defsection @unspecific-reflink-with-text
     (:title "Unspecific Reflink with Text")
-  """_Format:_ `\[LINK TEXT][`[NAME][@name]`\]`
+  """_Format:_ `[LINK TEXT][` [NAME][@name] `]`
 
   The DEFINITIONS of NAME are determined, and those definitions are
   linked to. If NAME has no definitions, then an UNRESOLVABLE-REFLINK
@@ -2041,9 +2041,9 @@
 
   _Examples:_
 
-  - `\[see this][print]` _renders as_ [see this][print].
+  - `[see this][print]` _renders as_ [see this][print].
 
-  - `\[see this][eql]` _renders as_ [see this][eql].
+  - `[see this][eql]` _renders as_ [see this][eql].
   """)
 
 (defun unspecific-reflink-with-text (label definition)
@@ -2052,11 +2052,11 @@
     (values (drefs-to-links/unspecific drefs) t label)))
 
 (defsection @markdown-reflink (:title "Markdown Reflink")
-  """_Format:_ `\[label][id]`
+  """_Format:_ `[label][id]`
 
   This is a normal @MARKDOWN/REFLINK if `id` is not a valid locative.
 
-   - `\[see this][user-defined]` renders unchanged.
+   - `[see this][user-defined]` renders unchanged.
 
       ```cl-transcript (:dynenv pax-std-env)
       (dref:dref 'user-defined 'locative)

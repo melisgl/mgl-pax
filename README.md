@@ -2250,7 +2250,7 @@ discuss the various forms of reflinks.
 
 ##### Specific Reflink
 
-*Format:* `[`[`WORD`][d7b0]`][`[`LOCATIVE`][0b3a]`]`
+*Format:* `[` [`WORD`][d7b0] `][` [`LOCATIVE`][0b3a] `]`
 
 The first [name][88cf] in `WORD` (with depluralization) that forms a valid
 [`DREF`][d930] with `LOCATIVE` is determined, and that definition is
@@ -2271,7 +2271,7 @@ to mark it as code, but here and below, the second example relies on
 
 ##### Specific Reflink with Text
 
-*Format:* `[LINK TEXT][`[`NAME`][88cf] [`LOCATIVE`][0b3a]`]`
+*Format:* `[LINK TEXT][` [`NAME`][88cf] [`LOCATIVE`][0b3a] `]`
 
 If `NAME` and `LOCATIVE` form a valid [`DREF`][d930], then that
 definition is linked to with link text `LINK TEXT`. If there is no
@@ -2291,7 +2291,7 @@ else as a symbol.
 
 ##### Unspecific Reflink
 
-*Format:* `[`[`WORD`][d7b0]`][]`
+*Format:* `[` [`WORD`][d7b0] `][]`
 
 The first [name][88cf] in `WORD` (with depluralization, symbols only) that
 has some [`DEFINITIONS`][e196] is determined, and those definitions are linked
@@ -2311,7 +2311,7 @@ to. If no [name][88cf] with any definition is found, then an
 
 ##### Unspecific Reflink with Text
 
-*Format:* `[LINK TEXT][`[`NAME`][88cf]`]`
+*Format:* `[LINK TEXT][` [`NAME`][88cf] `]`
 
 The [`DEFINITIONS`][e196] of `NAME` are determined, and those definitions are
 linked to. If `NAME` has no definitions, then an [`UNRESOLVABLE-REFLINK`][64be]
