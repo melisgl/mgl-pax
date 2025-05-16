@@ -68,10 +68,7 @@
     (is (match-values (mgl-pax::parse-locative "function junk" :junk-allowed t)
           (eq * 'function)
           (= * 9)))
-    (let ((locative (mgl-pax::parse-locative "(function yyy)")))
-      (is (eq (first locative) 'function))
-      (is (string= (symbol-name (second locative)) (string '#:yyy)))
-      (is (eq (symbol-package (second locative)) *package*)))
+    (is (null (mgl-pax::parse-locative "(function non-interned)")))
     (with-test ("markdown and M-.")
       (dolist (string '("function." "function," "function;" "function:"
                         "function`" "function'" "function>" "<function>"

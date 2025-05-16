@@ -2494,7 +2494,9 @@
                  (if (zerop (mod i 4))
                      (format out "~%")
                      (format out " ")))
-               (format out "[~A][clhs]" (escape-markdown alias)))))
+               (format out "[~A][~A clhs]"
+                       (escape-markdown alias)
+                       (escape-markdown (prin1-to-string alias))))))
 (defvar *reader-macro-alias-links* nil
   #.(with-output-to-string (out)
       (loop for alias in *hyperspec-reader-macro-char-aliases*
@@ -2503,7 +2505,9 @@
                  (if (zerop (mod i 4))
                      (format out "~%")
                      (format out " ")))
-               (format out "[~A][clhs]" (escape-markdown alias)))))
+               (format out "[~A][~A clhs]"
+                       (escape-markdown alias)
+                       (escape-markdown (prin1-to-string alias))))))
 
 
 ;;;; External references: beginnings of an abstraction for DREFs
@@ -2916,7 +2920,7 @@
                    ;; Don't try to READ the locative args because they
                    ;; may be unreadable. Just validate the locative
                    ;; type.
-                   (unless (parse-locative locative-string :read-args nil)
+                   (unless (validate-parsed-locative-type locative-string)
                      (error "~@<Bad ~S name in PAX URL path ~S~:@>"
                             'dref::@locative-type path))
                    (ensure-list

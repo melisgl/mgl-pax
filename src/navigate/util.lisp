@@ -13,6 +13,115 @@
   #+allegro :utf-8
   #+clisp charset:utf-8
   #-(or abcl allegro clisp) :default)
+
+
+;;;; Parsing of symbols, strings, numbers and their nested lists
+;;;; without interning
+
+(defvar *on-unreadable* :error)
+(defvar *truncating-on-unreadable* nil)
+
+;;; A non-interning parser like SWANK::PARSE-SYMBOL, but it supports
+;;; nested lists of symbols, strings and numbers, which is currently
+;;; enough for @NAMEs.
+;;;
+;;; May signal END-OF-FILE, READER-ERROR and PARSE-ERROR if ERRORP.
+;;;
+;;; *READTABLE* is ignored, and no macro dispatch character is handled
+;;; except #. and #<, which behave as in the standard readtable (but
+;;; if ON-UNREADABLE is :TRUNCATE, then the already read stuff is
+;;; returned).
+(defun parse-sexp (string &key (start 0) junk-allowed (errorp t)
+                            (on-unreadable :error))
+  (handler-bind (((or end-of-file reader-error parse-error)
+                   (lambda (c)
+                     (declare (ignore c))
+                     (unless errorp
+                       (return-from parse-sexp nil)))))
+    (let ((string (subseq string start)))
+      (with-input-from-string (stream string)
+        (let* ((*on-unreadable* on-unreadable)
+               (*truncating-on-unreadable* nil)
+               (sexp (parse-sexp* stream string))
+               (pos (file-position stream)))
+          (when (and (not junk-allowed)
+                     (not *truncating-on-unreadable*)
+                     (peek-char t stream nil))
+            (parse-sexp-error "Junk in string ~S." string))
+          (values sexp (+ start pos)))))))
+
+(define-condition parse-sexp-error (parse-error)
+  ((format-control :initarg :format-control :reader format-control)
+   (format-args :initarg :format-args :reader format-args))
+  (:report (lambda (condition stream)
+             (format stream "~@<~?~:@>" (format-control condition)
+                     (format-args condition)))))
+
+(defun parse-sexp-error (format-control &rest format-args)
+  (error 'parse-sexp-error :format-control format-control
+                           :format-args format-args))
+
+(defun parse-sexp* (stream string)
+  (let ((next (peek-char t stream nil)))
+    (cond ((null next)
+           (parse-sexp-error "Unexpected EOF"))
+          ((eql next #\))
+           (parse-sexp-error "Unmatched closing parenthesis"))
+          ((eql next #\()
+           (read-char stream)
+           (parse-sexp*/list stream string))
+          ((eql next #\#)
+           (read-char stream)
+           (let ((next (peek-char nil stream nil)))
+             (cond ((null next)
+                    (parse-sexp-error "Unexpected EOF after # character"))
+                   ((eql next #\.)
+                    (read-char stream)
+                    (eval (parse-sexp* stream string)))
+                   ((eql next #\<)
+                    (ecase *on-unreadable*
+                      ((:error)
+                       (parse-sexp-error "Unreadable value found in ~S."
+                                         string))
+                      ((:truncate)
+                       (setq *truncating-on-unreadable* t)
+                       'unreadable)))
+                   (t
+                    (parse-sexp-error "Unsupported sharp macro character ~S."
+                                      next)))))
+          (t
+           (parse-sexp*/atom stream string)))))
+
+(defun parse-sexp*/list (stream string)
+  (loop
+    do (when *truncating-on-unreadable*
+         (return children))
+    collect (let ((next (peek-char t stream nil)))
+              (cond ((null next)
+                     (parse-sexp-error "Unexpected EOF while parsing list"))
+                    ((eql next #\))
+                     (read-char stream)
+                     (return children))
+                    (t
+                     (parse-sexp* stream string))))
+      into children))
+
+(defun parse-sexp*/atom (stream string)
+  (let ((next (peek-char t stream nil)))
+    (cond ((null next)
+           (parse-sexp-error "Unexpected EOF"))
+          ((or (eql next #\") (digit-char-p next))
+           (read stream))
+          (t
+           (multiple-value-bind (symbol foundp end-pos)
+               (parse-interned-symbol string :start (file-position stream)
+                                             :junk-allowed t)
+             (unless foundp
+               (parse-sexp-error "~S does not name an interned symbol."
+                                 (subseq string (file-position stream)
+                                         end-pos)))
+             (file-position stream end-pos)
+             symbol)))))
 
 ;;; From START in STRING, skip over the next sexp, and return the
 ;;; index of the next character (preserving whitespace). Thus, (SUBSEQ
@@ -22,19 +131,24 @@
   (nth-value 1 (let ((*read-suppress* t))
                  (read-from-string string t nil :start start
                                                 :preserve-whitespace t))))
+
+(defun parse-interned-symbol (string &key (start 0) junk-allowed)
+  (handler-case
+      (let ((pos (skip-sexp string :start start)))
+        (multiple-value-bind (symbol foundp)
+            (swank::parse-symbol (trim-whitespace (subseq string start pos)))
+          (if foundp
+              (multiple-value-bind (symbol2 pos)
+                  (read-from-string string t nil :start start)
+                (assert (eq symbol symbol2))
+                (if (or junk-allowed (= pos (length string)))
+                    (values symbol2 t pos)
+                    (values symbol2 nil pos)))
+              (values nil nil pos))))
+    ((or reader-error end-of-file) ())))
 
 
 ;;;; Symbols
-
-(defun read-interned-symbol-from-string (string &key (start 0))
-  (let ((pos (skip-sexp string :start start)))
-    (multiple-value-bind (symbol foundp)
-        (swank::parse-symbol (trim-whitespace (subseq string start pos)))
-      (when foundp
-        (multiple-value-bind (symbol2 pos)
-            (read-from-string string t nil :start start)
-          (assert (eq symbol symbol2))
-          (values symbol2 pos))))))
 
 (defun external-symbol-p (symbol &optional (package (symbol-package symbol)))
   (and package

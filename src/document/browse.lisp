@@ -911,8 +911,7 @@
     types (LOCATIVE-TYPES)."""
   (if (blankp string :start start)
       t
-      (multiple-value-bind (dtype pos)
-          (read-from-string string  t nil :start start)
+      (multiple-value-bind (dtype pos) (parse-sexp string :start start)
         (unless (blankp string :start pos)
           (error "~@<Junk following ~S from position ~S in ~S.~:@>"
                  'dtype pos string))

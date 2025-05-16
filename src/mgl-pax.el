@@ -533,7 +533,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 ;;; - Ensure that :MGL-PAX/NAVIGATE is loaded.
 ;;;
 ;;; - Instead of `slime-symbol-at-point' default to
-;;;  `slime-sexp-at-point' to support string names.
+;;;  `slime-sexp-at-point' to support string and list names.
 ;;;
 ;;; - Capture the buffer context in `mgl-pax-edit-definition-wall'
 ;;;   when defaulting.

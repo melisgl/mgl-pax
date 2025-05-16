@@ -1,7 +1,8 @@
 (in-package :mgl-pax-test)
 
 (deftest test-util ()
-  (test-relativize-pathname))
+  (test-relativize-pathname)
+  (test-parse-sexp))
 
 (deftest test-relativize-pathname ()
   (dolist (*default-pathname-defaults*
@@ -21,3 +22,16 @@
                "../x/y"))
     (is (equal (namestring (pax::relativize-pathname "a/b/c" "a/x/y/"))
                "../../b/c"))))
+
+(deftest test-parse-sexp ()
+  (match-values (pax::parse-sexp "(1 (print \"hey\") #.(find-package :dref))")
+    (equal * `(1 (print "hey") ,(find-package :dref)))
+    (eql * 40))
+  (signals (pax::parse-sexp-error :pred "EOF")
+    (pax::parse-sexp ""))
+  (signals (pax::parse-sexp-error :pred "EOF")
+    (pax::parse-sexp "("))
+  (signals (pax::parse-sexp-error :pred "Unmatched closing")
+    (pax::parse-sexp ")"))
+  (signals (pax::parse-sexp-error :pred "Junk")
+    (pax::parse-sexp "1 x")))

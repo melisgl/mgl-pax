@@ -45,8 +45,8 @@
 ;;;; Like the DREF function and DEFINITIONS*, but for references and
 ;;;; name given as strings, respectively.
 
-;;; Parse "NAME LOCATIVE-TYPE" or "NAME (LOCATIVE-TYPE ...)", but only
-;;; intern stuff if LOCATIVE-TYPE is interned. Return:
+;;; Parse "NAME LOCATIVE-TYPE" or "NAME (LOCATIVE-TYPE ...)", but do
+;;; not intern stuff. Return:
 ;;;
 ;;; 1. the corresponding DREF if found,
 ;;  2. the locative if a valid one was found,
