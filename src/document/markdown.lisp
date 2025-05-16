@@ -377,3 +377,6 @@
                               (add replacement)))))
                  (setq start end))))
     (nreverse translated)))
+
+(defun delimiterp (char)
+  (or (whitespacep char) (find char "()'`\"")))

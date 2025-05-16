@@ -199,20 +199,17 @@
      string is considered as a name and nothing else.""")
 
 (defun map-names-in-raw (fn raw symbols-only)
-  (flet ((try-parse-symbol (raw)
-           (multiple-value-bind (symbol found)
-               ;; KLUDGE: (SWANK::PARSE-SYMBOL "PAX:SECTION:")
-               ;; incorrectly ignores the trailing colon.
-               (unless (ends-with #\: raw)
-                 (swank::parse-symbol raw))
-             (when found
+  (flet ((try-parse-sexp (raw)
+           (multiple-value-bind (symbol foundp) (parse-sexp raw :errorp nil)
+             (when foundp
+               (funcall fn raw symbol))))
+         (try-parse-symbol (raw)
+           (multiple-value-bind (symbol foundp) (parse-interned-symbol raw)
+             (when foundp
                (funcall fn raw symbol)))))
     (unless (zerop (length raw))
-      (cond ((starts-with #\| raw)
-             (try-parse-symbol raw))
-            ((and (starts-with #\" raw)
-                  (ignore-errors (read-from-string raw)))
-             (funcall fn raw (read-from-string raw)))
+      (cond ((find (aref raw 0) "|\"(")
+             (try-parse-sexp raw))
             (t
              (unless (mixed-case-p raw)
                (try-parse-symbol raw))
@@ -288,48 +285,26 @@
    :junk-allowed junk-allowed))
 
 ;;; Parse "LOCATIVE-TYPE" and "(LOCATIVE-TYPE ...)" like
-;;; READ-FROM-STRING, but try to minimize the chance of interning
-;;; junk. That is, don't intern LOCATIVE-TYPE (it must be already) or
-;;; anything in "..." if LOCATIVE-TYPE is not a valid locative type.
-(defun parse-locative (string &key junk-allowed (read-args t))
-  (handler-case
-      (multiple-value-bind (symbol pos)
-          (handler-case
-              (read-interned-symbol-from-string string)
-            ((or reader-error end-of-file) ()
-              nil))
-        (if pos
-            (when (and (or junk-allowed
-                           (not (find-if-not #'whitespacep string :start pos)))
-                       (dref symbol 'locative nil))
-              (values symbol pos))
-            (let ((first-char-pos (position-if-not #'whitespacep string)))
-              (when (and first-char-pos (char= (elt string first-char-pos) #\())
-                ;; Looks like a list. The first element must be an
-                ;; interned symbol naming a locative.
-                (let ((delimiter-pos (position-if #'delimiterp string
-                                                  :start (1+ first-char-pos))))
-                  (multiple-value-bind (symbol found)
-                      (swank::parse-symbol
-                       (subseq string (1+ first-char-pos) delimiter-pos))
-                    (when (and found (dref symbol 'locative nil))
-                      (if read-args
-                          ;; The rest of the symbols in the string
-                          ;; need not be already interned, so let's
-                          ;; just READ.
-                          (multiple-value-bind (locative position)
-                              (ignore-errors (read-from-string string))
-                            (when locative
-                              (values locative position)))
-                          symbol))))))))
-    ((or reader-error end-of-file) ()
-      nil)))
+;;; READ-FROM-STRING, but do not intern anything. Also, return NIL if
+;;; the locative type parsed is not defined. If ERRORP, then
+;;; PARSE-ERROR may be signalled.
+(defun parse-locative (string &key junk-allowed (errorp nil)
+                                (on-unreadable :error))
+  (multiple-value-bind (locative pos)
+      (parse-sexp string :junk-allowed junk-allowed :errorp errorp
+                         :on-unreadable on-unreadable)
+    (let ((locative-type (locative-type locative)))
+      (if (dref locative-type 'locative nil)
+          (values locative pos)
+          (when errorp
+            (dref::invalid-locative-type locative-type))))))
+
+(defun validate-parsed-locative-type (string)
+  (let ((locative (parse-sexp string :errorp nil :on-unreadable :truncate)))
+    (dref (locative-type locative) 'locative nil)))
 
 (defun read-locative-type-from-string (string &key (start 0))
-  (multiple-value-bind (symbol pos)
-      (read-interned-symbol-from-string string :start start)
-    (when (and pos (dref symbol 'locative nil))
+  (multiple-value-bind (symbol foundp pos)
+      (parse-interned-symbol string :start start)
+    (when (and foundp (dref symbol 'locative nil))
       (values symbol pos))))
-
-(defun delimiterp (char)
-  (or (whitespacep char) (find char "()'`\"")))

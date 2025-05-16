@@ -389,7 +389,7 @@
     (if (or (starts-with-subseq "#:" string)
             (starts-with #\" string))
         (read-from-string string)
-        (read-interned-symbol-from-string string))))
+        (parse-interned-symbol string))))
 
 ;;; Return the definition of OBJECT in BUFFER (a string) and FILE (a
 ;;; string or NIL) whose source location information from SOURCE-LOCATION
