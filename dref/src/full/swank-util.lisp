@@ -34,16 +34,15 @@
 (defun swank-definition-name (object)
   (cond ((stringp object)
          ;; E.g. to find the package when OBJECT is "DREF".
-         (make-symbol (adjust-string-case object)))
+         (values (make-symbol (adjust-string-case object)) t))
         ((keywordp object)
          ;; E.g. to find the package when OBJECT is :DREF. On SBCL,
          ;; SWANK-BACKEND:FIND-DEFINITIONS barfs on keywords.
-         (make-symbol (symbol-name object)))
+         (values (make-symbol (symbol-name object)) t))
         ((or (symbolp object)
-             (listp object))
-         object)
-        (t
-         (assert nil))))
+             (and (listp object)
+                  (extended-function-name-p object)))
+         (values object t))))
 
 (defun error-location-to-nil (dspec-and-locations)
   (if (eq (first dspec-and-locations) :error)
@@ -64,27 +63,29 @@
 ;;; buffers.
 #-sbcl
 (defun swank-dspecs (name)
-  (let ((name (swank-definition-name name)))
-    (mapcar #-abcl #'first
-            #+abcl (lambda (dspec-and-location)
-                     (if (eq (first dspec-and-location) :primitive)
-                         '(function)
-                         (first dspec-and-location)))
-            (swank-dspecs-and-locations name))))
+  (multiple-value-bind (name foundp) (swank-definition-name name)
+    (when foundp
+      (mapcar #-abcl #'first
+              #+abcl (lambda (dspec-and-location)
+                       (if (eq (first dspec-and-location) :primitive)
+                           '(function)
+                           (first dspec-and-location)))
+              (swank-dspecs-and-locations name)))))
 
 #+sbcl
 (defun swank-dspecs (name)
-  (let ((name (swank-definition-name name)))
-    (loop for type in swank/sbcl::*definition-types* by #'cddr
-          for defsrcs = (sb-introspect:find-definition-sources-by-name
-                         name type)
-          for filtered-defsrcs
-            = (if (eq type :generic-function)
-                  (remove :invalid defsrcs
-                          :key #'swank/sbcl::categorize-definition-source)
-                  defsrcs)
-          append (loop for defsrc in filtered-defsrcs
-                       collect (swank/sbcl::make-dspec type name defsrc)))))
+  (multiple-value-bind (name foundp) (swank-definition-name name)
+    (when foundp
+      (loop for type in swank/sbcl::*definition-types* by #'cddr
+            for defsrcs = (sb-introspect:find-definition-sources-by-name
+                           name type)
+            for filtered-defsrcs
+              = (if (eq type :generic-function)
+                    (remove :invalid defsrcs
+                            :key #'swank/sbcl::categorize-definition-source)
+                    defsrcs)
+            append (loop for defsrc in filtered-defsrcs
+                         collect (swank/sbcl::make-dspec type name defsrc))))))
 
 
 ;;;; Swank utilities that depend on DREF

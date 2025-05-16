@@ -131,7 +131,10 @@
                       `(,(xref 'foo 'class)))))
   (with-test ("invalid dtype")
     (signals (error)
-      (definitions nil :dtype '"x"))))
+      (definitions nil :dtype '"x")))
+  (is (endp (definitions 1)))
+  (is (endp (definitions 1.3)))
+  (is (endp (definitions '(x y)))))
 
 
 (deftest test-dspec ()
