@@ -373,13 +373,13 @@
   exist (i.e. be among LOCATIVE-TYPES). For example, let's define
   OBJECT as an alias of the CLASS locative:
 
-  ```cl-transcript
+  ```
   (define-locative-alias object class)
   ```
 
   Then, LOCATEing with OBJECT will find the CLASS:
 
-  ```cl-transcript
+  ```
   (dref 'xref 'object)
   ==> #<DREF XREF CLASS>
   ```
@@ -387,7 +387,7 @@
   The LOCATIVE-ARGS of OBJECT (none in the above) are passed on to
   CLASS.
 
-  ```cl-transcript (:dynenv dref-std-env)
+  ```
   (arglist (dref 'object 'locative))
   => (&REST ARGS)
   => :DESTRUCTURING

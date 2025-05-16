@@ -693,7 +693,7 @@ uppercase character if it contains at least one lowercase character.
 ### Names in Raw Names
 
 For each @RAW-NAME from @RAW-NAMES-IN-WORDS, various @NAMEs
-may be considered until one is found suitable in the context.
+may be considered until one is found that's suitable in the context.
 
 The following examples list the names considered for a given raw
 name, assuming that READTABLE-CASE is :UPCASE as well as that `FOO`
