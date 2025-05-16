@@ -816,7 +816,7 @@ uppercase character if it contains at least one lowercase character.
 ### 6.2 Names in Raw Names
 
 For each [raw name][f5af] from [Raw Names in Words][f0d5], various [name][88cf]s
-may be considered until one is found suitable in the context.
+may be considered until one is found that's suitable in the context.
 
 The following examples list the names considered for a given raw
 name, assuming that [`READTABLE-CASE`][48f1] is `:UPCASE` as well as that `FOO`

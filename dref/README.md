@@ -474,7 +474,7 @@ The following convenience functions are compositions of
     A definition is a [reference][43bd] that identifies a concrete definition.
     Definitions are of class [`DREF`][d930]. A definition [`RESOLVE`][63b4]s to the
     first-class object associated with the definition if such a thing
-    exists, and [`LOCATE`][8f19] on this object returns the canonical [`DREF`][d930] object
+    exists, and [`LOCATE`][8f19] on this object returns the canonical `DREF` object
     that's unique under [`XREF=`][0617].
     
     The kind of a definition is given by its [locative type][a11d]. There is at
@@ -1746,13 +1746,13 @@ by [`DEFINE-LOCATIVE-TYPE`][b6c4] and [`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4].
     exist (i.e. be among [`LOCATIVE-TYPES`][99b0]). For example, let's define
     `OBJECT` as an alias of the [`CLASS`][2060] locative:
     
-    ```common-lisp
+    ```
     (define-locative-alias object class)
     ```
     
     Then, `LOCATE`ing with `OBJECT` will find the `CLASS`:
     
-    ```common-lisp
+    ```
     (dref 'xref 'object)
     ==> #<DREF XREF CLASS>
     ```
@@ -1760,7 +1760,7 @@ by [`DEFINE-LOCATIVE-TYPE`][b6c4] and [`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4].
     The [`LOCATIVE-ARGS`][2444] of `OBJECT` (none in the above) are passed on to
     `CLASS`.
     
-    ```common-lisp
+    ```
     (arglist (dref 'object 'locative))
     => (&REST ARGS)
     => :DESTRUCTURING

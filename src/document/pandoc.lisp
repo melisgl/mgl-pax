@@ -65,8 +65,8 @@
                                :url "https://pandoc.org/"))
 
 (defvar *document-pandoc-program* "pandoc"
-  "The name of the Pandoc binary. It need not be an absolute pathname
-  as `\\PATH` is searched.")
+  """The name of the Pandoc binary. It need not be an absolute pathname
+  as `\\PATH` is searched.""")
 
 (defparameter *document-pandoc-pdf-options*
   `(("-V" "papersize=a4")

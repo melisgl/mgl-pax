@@ -362,7 +362,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
   (mgl-pax-call-in-lisp-mode
    (lambda ()
      ;; So that locatives spanning multiple comment lines are parsed
-     ;; without the semicolons.
+     ;; without the semicolons
      (mgl-pax-call-uncommented
       (lambda ()
         (let ((word (slime-sexp-at-point))
@@ -810,23 +810,26 @@ macro on that page."
   ;; Handle the interactive defaults here because it involves async
   ;; calls.
   (mgl-pax-with-component (:mgl-pax/document)
-    (cond (pax-url
-           (mgl-pax-document-pax-url pax-url))
-          ;; interactive with prefix arg
-          (current-prefix-arg
-           (mgl-pax-prompt-and-document))
-          ;; interactive without prefix arg, point over a pax URL
-          ((and (null current-prefix-arg)
-                (mgl-pax-in-doc-buffer-p)
-                (mgl-pax-doc-pax-url (mgl-pax-doc-url)))
-           (mgl-pax-document-pax-url (mgl-pax-doc-pax-url (mgl-pax-doc-url))))
-          ;; interactive without prefix arg, point not over a pax URL
-          (t
-           (let ((wall (mgl-pax-wall-at-point)))
-             (if wall
-                 (mgl-pax-document-pax-url
-                  (concat "pax-wall:" (url-hexify-string (format "%S" wall))))
-               (mgl-pax-prompt-and-document)))))))
+    (cond
+     ;; non-interactive
+     (pax-url
+      (mgl-pax-document-pax-url pax-url))
+     ;; interactive, prefix arg
+     (current-prefix-arg
+      (mgl-pax-prompt-and-document))
+     ;; interactive, no prefix arg, point over a PAX URL in a doc
+     ;; buffer
+     ((and (mgl-pax-in-doc-buffer-p)
+           (mgl-pax-doc-pax-url (mgl-pax-doc-url)))
+      (mgl-pax-document-pax-url (mgl-pax-doc-pax-url (mgl-pax-doc-url))))
+     ;; interactive, no prefix arg, point not over a PAX URL in a doc
+     ;; buffer
+     (t
+      (let ((wall (mgl-pax-wall-at-point)))
+        (if wall
+            (mgl-pax-document-pax-url
+             (concat "pax-wall:" (url-hexify-string (format "%S" wall))))
+          (mgl-pax-prompt-and-document)))))))
 
 (defun mgl-pax-prompt-and-document ()
   (mgl-pax-document-pax-url
@@ -1001,7 +1004,7 @@ macro on that page."
       (let ((w3m-confirm-leaving-secure-page nil))
         (apply oldfun url args))
     ;; Set up pax e.g. when the user starts w3m, then presses g and
-    ;; enters a pax url.
+    ;; enters a PAX URL.
     (unless (mgl-pax-in-doc-buffer-p)
       (mgl-pax-set-up-doc-buffer
        (file-name-as-directory (make-temp-file "pax-doc" t))))
