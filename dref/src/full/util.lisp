@@ -162,6 +162,10 @@
 (defun valid-function-name-p (name)
   (or (symbolp name) (setf-name-p name)))
 
+(defun extended-function-name-p (name)
+  (or (valid-function-name-p name)
+      #+sbcl (sb-impl::legal-fun-name-p name)))
+
 (defun consistent-fdefinition (name)
   (let ((fn (ignore-errors (fdefinition* name))))
     (when (and fn (equal (function-name fn) name))
