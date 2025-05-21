@@ -73,7 +73,7 @@
       (dolist (string '("function." "function," "function;" "function:"
                         "function`" "function'" "function>" "<function>"
                         "\"function\""))
-        (is (eq (mgl-pax::parse-locative/noisy (% string)) 'function))))))
+        (is (eq (mgl-pax::parse-locative-around (% string)) 'function))))))
 
 ;;; We have no Emacs based tests. This tests the CL side of `M-.' when
 ;;; it's invoked with point on FOO in the test cases below. The actual
@@ -138,7 +138,12 @@
       (check-dowall '(("print" ("function")) ("print" ("function")))
                     '((print function)))
       (check-dowall '(("Lists" ("Lambda" "clhs")) ("Lambda  Lists" ("clhs")))
-                    '(("3.4" (clhs section)))))))
+                    '(("3.4" (clhs section)))))
+    #+sbcl
+    (with-test ("unreadable")
+      (check-dowall '(("test-gf"
+                       ("(method nil ((eql #<package \"COMMON-LISP\">)))")))
+                    `((test-gf (method nil ((eql ,(find-package :cl))))))))))
 
 (defun check-dowall (wall expected-refs)
   (let ((refs (mapcar (lambda (ref)

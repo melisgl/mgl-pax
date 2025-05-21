@@ -3,17 +3,21 @@
 (in-readtable pythonic-string-syntax)
 
 (defsection @parsing (:title "Parsing")
-  "When encountering a @WORD such as `CLASSes`, PAX needs to find the
-  @NAME in it that makes sense in the context. @CODIFICATION, for
-  example, looks for @INTERESTING names, @NAVIGATING-IN-EMACS for
-  names with [Lisp][lisp-locative-types function] DEFINITIONS, and
-  @LINKING for names with [any kind of definition][locative-types
-  function].
+  (@parsing-names section)
+  (@parsing-locatives section))
+
+(defsection @parsing-names (:title "Parsing Names")
+  "When encountering a @WORD such as `CLASSes` in a docstring, PAX
+  needs to find the @NAME, and how that's done varies slightly.
+  @CODIFICATION, for example, looks for @INTERESTING names,
+  @NAVIGATING-IN-EMACS for names with [Lisp][lisp-locative-types
+  function] DEFINITIONS, and @LINKING for names with [any kind of
+  definition][locative-types function].
 
   This is not as straightforward as it sounds because it needs to
-  handle cases like `\\nonREADable`, `\\CLASSES`, all the various
-  forms of @LINKING in docstrings as well as in comments, and
-  the `(NAME LOCATIVE)` syntax in DEFSECTION."
+  handle cases like nonREADable, PRINTed, and all the various forms of
+  @LINKING in docstrings as well as in comments, and the `(NAME
+  LOCATIVE)` syntax in DEFSECTION."
   (@word glossary-term)
   (@raw-name glossary-term)
   (@name glossary-term)
@@ -21,7 +25,7 @@
   enabled (see @RAW-NAMES-IN-WORDS), while the possible names may be
   restricted to symbols (see @NAMES-IN-RAW-NAMES).
 
-  - _Trimming:_ Enabled for @NAVIGATING-IN-EMACS and @CODIFICATION.
+  - _Trimming:_ Enabled for @M-.-DEFAULTING and @CODIFICATION.
 
   - _Depluralization:_ Enabled when the @WORD is part of the normal
     flow of text (i.e. not for @SPECIFIC-REFLINK-WITH-TEXT,
@@ -76,9 +80,9 @@
   See @NAMES-IN-RAW-NAMES.")
 
 (define-glossary-term @name (:title "name")
-  """A _name_ is a [DRef name][dref::@name]. That is, a symbol or a
-  string associated with a definition, whose kind is given by a
-  DREF::@LOCATIVE.""")
+  """A _name_ is a [DRef name][dref::@name]. That is, a symbol, a
+  string or a nested list of the previous associated with a
+  definition, whose kind is given by a DREF::@LOCATIVE.""")
 
 (define-glossary-term @markdown/reflink
     (:title "Markdown reference link"
@@ -274,30 +278,83 @@
         (subseq string uppercase-start uppercase-end)))))
 
 
-;;; Read a locative form a markdown docstring for DOCUMENT or for M-.
-;;; from an Emacs buffer with strange stuff in it.
-(defun parse-locative/noisy (string &key junk-allowed)
-  (parse-locative
-   ;; It is assumed that names of locative types are not funny, and we
-   ;; can trim aggressively.
-   (string-left-trim *name-left-trim*
-                     (string-right-trim *name-right-trim* string))
-   :junk-allowed junk-allowed))
+(defsection @parsing-locatives (:title "Parsing Locatives")
+  """Locatives are parsed almost as if by READ. They are found in
+  buffer contents around a @WORD when @M-.-DEFAULTING or
+  @GENERATING-DOCUMENTATION, and in the string entered when
+  @M-.-PROMPTING, with a similar distinction when
+  @BROWSING-LIVE-DOCUMENTATION.
+
+  Parsing deviates from READ in the following ways.
+
+  - No new symbols are interned during parsing. If an expression
+    contains uninterned symbols, then it is not parsable as a
+    locative.
+
+  - A locative that involves unreadable objects that print using the
+    `#<` syntax (e.g. `(METHOD () (EQL #<PACKAGE DREF))`) is parsable
+    in the context of a @NAME if each unreadable object in the
+    locative occurs in one of the DEFINITIONS of that name and it
+    @PRINTS-TO-AN-EQUIVALENT-STRING (e.g. `#<PACKAGE DREF>` above)."""
+  (@prints-to-an-equivalent-string glossary-term))
+
+(define-glossary-term @prints-to-an-equivalent-string
+    (:title "prints to an equivalent string")
+  "[@unreadable-prints-to note][docstring]
+
+  See the related concept of @STABLE-PRINTED-LOCATIVE, that requires
+  the printed representation of entire locatives to be unique and
+  non-changing to support @LINKING.")
 
 ;;; Parse "LOCATIVE-TYPE" and "(LOCATIVE-TYPE ...)" like
 ;;; READ-FROM-STRING, but do not intern anything. Also, return NIL if
 ;;; the locative type parsed is not defined. If ERRORP, then
 ;;; PARSE-ERROR may be signalled.
 (defun parse-locative (string &key junk-allowed (errorp nil)
-                                (on-unreadable :error))
+                                (on-unreadable :error) (name 'no-name))
   (multiple-value-bind (locative pos)
       (parse-sexp string :junk-allowed junk-allowed :errorp errorp
-                         :on-unreadable on-unreadable)
+                         :on-unreadable (if (eq name 'no-name)
+                                            on-unreadable
+                                            (make-unreadable-reader name)))
     (let ((locative-type (locative-type locative)))
       (if (dref locative-type 'locative nil)
           (values locative pos)
           (when errorp
             (dref::invalid-locative-type locative-type))))))
+
+(defun make-unreadable-reader (name)
+  (let ((unreadables :uninitialized))
+    (lambda (stream)
+      (note @unreadable-locative-parsing
+        "Unreadable objects in the locative strings are identified by
+        comparing their PRIN1 representation (under
+        WITH-STANDARD-IO-SYNTAX but in the current package and with
+        *PRINT-READABLY* NIL) to the relevant substring."
+        (when (eq unreadables :uninitialized)
+          (setq unreadables
+                (potentially-unreadable-objects-in-locatives name)))
+        (note
+          "[@WHITESPACE-MULTIPLICITY NOTE][docstring]"
+          (read-unreadable stream unreadables))))))
+
+(defun potentially-unreadable-objects-in-locatives (name)
+  (loop for dref in (definitions name)
+        append (flatten (dref-locative-args dref))))
+
+;;; Read a locative form a Markdown docstring in the vicinity of some
+;;; NAME for DOCUMENT or for M-. from an Emacs buffer with strange
+;;; stuff in it.
+(defun parse-locative-around (string &key junk-allowed (errorp nil)
+                                       (on-unreadable :error)
+                                       (name 'no-name))
+  (parse-locative
+   ;; It is assumed that names of locative types are not funny, and we
+   ;; can trim aggressively.
+   (string-left-trim *name-left-trim*
+                     (string-right-trim *name-right-trim* string))
+   :junk-allowed junk-allowed :errorp errorp
+   :on-unreadable on-unreadable :name name))
 
 (defun validate-parsed-locative-type (string)
   (let ((locative (parse-sexp string :errorp nil :on-unreadable :truncate)))

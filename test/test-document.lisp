@@ -1207,7 +1207,12 @@ This is [Self-referencing][e042].
 - [method] **TEST-GF** *(X NUMBER)*
 
     `TEST-GF` is not a link. `X` is not a link.
-"))
+")
+  #+sbcl
+  (check-pred (list (definitions 'test-gf)
+                    "TEST-GF `(method () ((eql #<package \"COMMON-LISP\">)))`")
+              ;; The id of the link varies by implementation.
+              "[`TEST-GF`]["))
 
 (deftest test-method/arglist ()
   (check-pred (dref 'test-gf '(method () ((eql :bar))))

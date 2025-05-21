@@ -391,8 +391,10 @@ The following convenience functions are compositions of
 
 - [glossary-term] name
 
-    Names are symbols, lists or strings which name functions, types, packages,
-    etc. Together with @LOCATIVEs, they form @REFERENCEs.
+    Names are symbols, strings and nested lists of the previous, which
+    name functions, types,
+    packages, etc. Together with @LOCATIVEs, they
+    form @REFERENCEs.
     
     See XREF-NAME and DREF-NAME.
 

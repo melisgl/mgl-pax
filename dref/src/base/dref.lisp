@@ -494,9 +494,10 @@
   and DREF-LOCATIVE-TYPE but different DREF-LOCATIVE-ARGS.")
 
 (define-glossary-term @name (:title "name")
-  "Names are symbols, lists or strings which name [functions][function
-  locative], [types][type locative], [packages][package locative],
-  etc. Together with @LOCATIVEs, they form @REFERENCEs.
+  "Names are symbols, strings and nested lists of the previous, which
+  name [functions][function locative], [types][type locative],
+  [packages][package locative], etc. Together with @LOCATIVEs, they
+  form @REFERENCEs.
 
   See XREF-NAME and DREF-NAME.")
 
