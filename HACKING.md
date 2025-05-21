@@ -65,10 +65,10 @@ it is a separate git checkout.
 Testing PDF generation
 ----------------------
 
-In the test suite, `mgl-pax-test::test-pdf` only tests if the DRef
-manual in PDF form is generated without error; there is no checking of
-the content. However, the intermediate LaTeX (between Markdown and
-PDF) is written to the version controlled file
+In the test suite, `mgl-pax-test::test-pdf` only tests if a part of
+the manual in PDF form is generated without error; there is no
+checking of the content. However, the intermediate LaTeX (between
+Markdown and PDF) is written to the version controlled file
 `test/data/dref-manual.tex`, which can then be inspected for diffs (on
 SBCL only).
 

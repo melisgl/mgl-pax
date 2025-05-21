@@ -2030,8 +2030,19 @@ example section
             (pax::*git-version-for-test* "master")
             (*document-pandoc-pdf-options*
               (remove "--verbose" *document-pandoc-pdf-options*
-                      :test #'equal)))
+                      :test #'equal))
+            (documentable dref::@extending-everything-else))
         ;; This is tolerably slow.
-        (document (list dref::@dref-manual)
-                  :pages (pax::pax-and-dref-pages :pdf)
-                  :format :pdf)))))
+        (document
+         documentable
+         :pages (let ((source-uri-fn (make-git-source-uri-fn
+                                      :mgl-pax
+                                      "https://github.com/melisgl/mgl-pax"))
+                      (file "test/data/test-output.tex"))
+                  `((:objects (, documentable)
+                     :output (,(asdf:system-relative-pathname
+                                "mgl-pax" file)
+                              ,@pax::*default-output-options*)
+                     :uri-fragment ,file
+                     :source-uri-fn ,source-uri-fn)))
+         :format :pdf)))))
