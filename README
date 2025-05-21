@@ -605,16 +605,18 @@ Now let's examine the most important pieces.
 
 ## Parsing
 
-When encountering a @WORD such as `CLASSes`, PAX needs to find the
-@NAME in it that makes sense in the context. @CODIFICATION, for
-example, looks for @INTERESTING names, @NAVIGATING-IN-EMACS for
-names with Lisp DEFINITIONS, and
-@LINKING for names with any kind of definition.
+### Parsing Names
+
+When encountering a @WORD such as `CLASSes` in a docstring, PAX
+needs to find the @NAME, and how that's done varies slightly.
+@CODIFICATION, for example, looks for @INTERESTING names,
+@NAVIGATING-IN-EMACS for names with Lisp DEFINITIONS, and @LINKING for names with any kind of
+definition.
 
 This is not as straightforward as it sounds because it needs to
-handle cases like `nonREADable`, `CLASSES`, all the various
-forms of @LINKING in docstrings as well as in comments, and
-the `(NAME LOCATIVE)` syntax in DEFSECTION.
+handle cases like nonREADable, PRINTed, and all the various forms of
+@LINKING in docstrings as well as in comments, and the `(NAME
+LOCATIVE)` syntax in DEFSECTION.
 
 - [glossary-term] word
 
@@ -633,15 +635,15 @@ the `(NAME LOCATIVE)` syntax in DEFSECTION.
 
 - [glossary-term] name
 
-    A *name* is a DRef name. That is, a symbol or a
-    string associated with a definition, whose kind is given by a
-    DREF::@LOCATIVE.
+    A *name* is a DRef name. That is, a symbol, a
+    string or a nested list of the previous associated with a
+    definition, whose kind is given by a DREF::@LOCATIVE.
 
 Depending on the context, trimming and depluralization may be
 enabled (see @RAW-NAMES-IN-WORDS), while the possible names may be
 restricted to symbols (see @NAMES-IN-RAW-NAMES).
 
-- *Trimming:* Enabled for @NAVIGATING-IN-EMACS and @CODIFICATION.
+- *Trimming:* Enabled for @M-.-DEFAULTING and @CODIFICATION.
 
 - *Depluralization:* Enabled when the @WORD is part of the normal
   flow of text (i.e. not for @SPECIFIC-REFLINK-WITH-TEXT,
@@ -661,7 +663,7 @@ number of names are considered until one is found suitable in the
 context. The following subsections describe the details of the
 parsing algorithm.
 
-### Raw Names in Words
+#### Raw Names in Words
 
 From @WORDs, @RAW-NAMEs are parsed by trimming some
 prefixes and suffixes. For a given word, multiple raw names are
@@ -690,7 +692,7 @@ The list of plural markers considered is `SES` (e.g. `GASSES`),
 uppercase character if it contains at least one lowercase character.
 
 
-### Names in Raw Names
+#### Names in Raw Names
 
 For each @RAW-NAME from @RAW-NAMES-IN-WORDS, various @NAMEs
 may be considered until one is found that's suitable in the context.
@@ -756,6 +758,38 @@ found with a definition:
    definition, so `M-.` will visit it.
 
 When @GENERATING-DOCUMENTATION, @AUTOLINKing behaves similarly.
+
+### Parsing Locatives
+
+Locatives are parsed almost as if by READ. They are found in
+buffer contents around a @WORD when @M-.-DEFAULTING or
+@GENERATING-DOCUMENTATION, and in the string entered when
+@M-.-PROMPTING, with a similar distinction when
+@BROWSING-LIVE-DOCUMENTATION.
+
+Parsing deviates from READ in the following ways.
+
+- No new symbols are interned during parsing. If an expression
+  contains uninterned symbols, then it is not parsable as a
+  locative.
+
+- A locative that involves unreadable objects that print using the
+  `#<` syntax (e.g. `(METHOD () (EQL #<PACKAGE DREF))`) is parsable
+  in the context of a @NAME if each unreadable object in the
+  locative occurs in one of the DEFINITIONS of that name and it
+  @PRINTS-TO-AN-EQUIVALENT-STRING (e.g. `#<PACKAGE DREF>` above).
+
+
+- [glossary-term] prints to an equivalent string
+
+    An object with an unreadable representation is said to print to
+    some string `S` if its PRIN1 representation (under WITH-STANDARD-IO-SYNTAX
+    but in the current package and with *PRINT-READABLY* NIL) is the same as `S`, where consecutive whitepace characters are
+    replaced with a single space in both strings, and the comparison is case-insensitive.
+    
+    See the related concept of @STABLE-PRINTED-LOCATIVE, that requires
+    the printed representation of entire locatives to be unique and
+    non-changing to support @LINKING.
 
 ## PAX Locatives
 
@@ -2018,6 +2052,20 @@ more strict about trimming, depluralization, and it performs
 @FILTERING-LINKS. On the other hand, `M-.` cannot visit the
 CLHS references because there are no associated source
 locations.
+
+- [glossary-term] stable printed locative
+
+    The @LINK-FORMAT relies on DREF::@DEFINITIONS having a unique
+    textual representation that doesn't change. More concretely, if
+    PRIN1 under WITH-STANDARD-IO-SYNTAX but with *PRINT-READABLY* NIL
+    produces the same unique string deterministically, then linking to
+    DREF::@DEFINITIONS works even with non-readable locatives. The
+    uniqueness condition requires that if two definitions are different
+    under XREF=, then their textual representations are also different.
+    
+    On the other hand, for example, a method involving an EQL
+    specializer with an object printed with PRINT-UNREADABLE-OBJECT
+    :IDENTITY T does not produce a stable string and links will break.
 
 #### Reflink
 

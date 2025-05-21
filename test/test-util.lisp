@@ -2,7 +2,8 @@
 
 (deftest test-util ()
   (test-relativize-pathname)
-  (test-parse-sexp))
+  (test-parse-sexp)
+  (test-skip-string-ignoring-case-and-whitespace))
 
 (deftest test-relativize-pathname ()
   (dolist (*default-pathname-defaults*
@@ -27,6 +28,13 @@
   (match-values (pax::parse-sexp "(1 (print \"hey\") #.(find-package :dref))")
     (equal * `(1 (print "hey") ,(find-package :dref)))
     (eql * 40))
+  (signals (pax::parse-sexp-error)
+    (pax::parse-sexp "#:xxx"))
+  (let ((d (dref 'print 'function))
+        (*package* (find-package :mgl-pax-test)))
+    (pax::parse-sexp "#<DREF PRINT FUNCTION>"
+                     :on-unreadable (alexandria:rcurry #'pax::read-unreadable
+                                                       (list d))))
   (signals (pax::parse-sexp-error :pred "EOF")
     (pax::parse-sexp ""))
   (signals (pax::parse-sexp-error :pred "EOF")
@@ -34,4 +42,26 @@
   (signals (pax::parse-sexp-error :pred "Unmatched closing")
     (pax::parse-sexp ")"))
   (signals (pax::parse-sexp-error :pred "Junk")
-    (pax::parse-sexp "1 x")))
+    (pax::parse-sexp "1 x"))
+  (let* ((unreadable (find-package :cl))
+         (s (format nil "~S1" unreadable)))
+    (multiple-value-bind (obj pos)
+        (pax::parse-sexp s :junk-allowed t
+                           :on-unreadable (lambda (stream)
+                                            (pax::read-unreadable
+                                             stream (list unreadable))))
+      (is (eq obj unreadable))
+      (is (eql pos (1- (length s)))))
+    (signals (parse-error :pred "Unrecognized unreadable")
+      (pax::parse-sexp s :junk-allowed t
+                         :on-unreadable (lambda (stream)
+                                          (pax::read-unreadable
+                                           stream ()))))))
+
+(deftest test-skip-string-ignoring-case-and-whitespace ()
+  (is (with-input-from-string (s "#<x y>")
+        (mgl-pax::skip-string-ignoring-case-and-whitespace s "#<x  y>")))
+  (is (not (with-input-from-string (s "#<xy>")
+             (mgl-pax::skip-string-ignoring-case-and-whitespace s "#<x y>"))))
+  (is (not (with-input-from-string (s "#<x>")
+             (mgl-pax::skip-string-ignoring-case-and-whitespace s "#<y>")))))

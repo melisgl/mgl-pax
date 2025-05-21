@@ -14,8 +14,7 @@
                  alexandria:read-file-into-string
                  alexandria:hash-table-keys
                  alexandria:plist-hash-table alexandria:hash-table-plist
-                 alexandria:compose
-                 alexandria:rcurry
+                 alexandria:compose alexandria:curry alexandria:rcurry
                  alexandria:featurep)))
   (dolist (symbol imports)
     (import symbol)))

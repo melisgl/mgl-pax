@@ -103,8 +103,28 @@
    :test #'xref=))
 
 (defun wal-dref (word locative-string)
-  (when-let (locative (parse-locative/noisy locative-string :junk-allowed t))
-    (find-name (rcurry #'dref locative nil) word :trim t :depluralize t)))
+  (find-name (make-def-lookup-fn locative-string) word :trim t :depluralize t))
+
+;;; This is essentially (DREF NAME LOCATIVE) but also handles
+;;; unreadable locatives.
+(defun make-def-lookup-fn (locative-string)
+  (let ((locative (parse-locative-around locative-string
+                                         :junk-allowed t
+                                         :on-unreadable :truncate)))
+    (flet ((set-unreadable ()
+             (when (find-if-in-tree (lambda (obj)
+                                      (eq obj 'unreadable))
+                                    locative)
+               (setq locative 'unreadable))))
+      (set-unreadable)
+      (lambda (name)
+        (when (eq locative 'unreadable)
+          (setq locative (parse-locative-around locative-string
+                                                :junk-allowed t
+                                                :name name)))
+        (set-unreadable)
+        (when (and locative (not (eq locative 'unreadable)))
+          (dref name locative nil))))))
 
 ;;; Ensure that some Swank internal facilities (such as
 ;;; SWANK::FIND-DEFINITIONS-FIND-SYMBOL-OR-PACKAGE,

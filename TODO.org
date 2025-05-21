@@ -94,15 +94,6 @@ second sexp, which should be informed by the first sexp.
 Normal completion includes nicknames as "pax:" without relisting all
 symbols.
 
-** BUG M-. completion with unreadable locatives
-It completes, but then it cannot be read.
-
-E.g. mgl-pax-test::test-gf
-
-Since completion is for the canonical definitions, the definition with
-the completed locative can be found by string matching (as in
-DEFINITIONS-FOR-PAX-URL-PATH), but not for non-canonical versions, of
-course.
 * document
 ** OPT parse and print markdown once when *format* is :html?
 This would involve rewriting everything to emit parse tree fragments or be able to produce html directly. Either way, it is not without cost.

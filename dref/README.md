@@ -486,8 +486,10 @@ The following convenience functions are compositions of
 
 - [glossary-term] **name**
 
-    Names are symbols, lists or strings which name [functions][ba62], [types][926d], [packages][4dd7],
-    etc. Together with [locative][7ac8]s, they form [reference][43bd]s.
+    Names are symbols, strings and nested lists of the previous, which
+    name [functions][ba62], [types][926d],
+    [packages][4dd7], etc. Together with [locative][7ac8]s, they
+    form [reference][43bd]s.
     
     See [`XREF-NAME`][5447] and [`DREF-NAME`][1e36].
 

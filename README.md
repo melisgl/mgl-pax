@@ -14,8 +14,10 @@
 - [4 Background][f74b]
 - [5 Basics][94c7]
 - [6 Parsing][378f]
-    - [6.1 Raw Names in Words][f0d5]
-    - [6.2 Names in Raw Names][016d]
+    - [6.1 Parsing Names][e65d]
+        - [6.1.1 Raw Names in Words][f0d5]
+        - [6.1.2 Names in Raw Names][016d]
+    - [6.2 Parsing Locatives][ab38]
 - [7 PAX Locatives][292a]
 - [8 Navigating Sources in Emacs][3386]
     - [8.1 `M-.` Defaulting][460e]
@@ -718,16 +720,20 @@ Now let's examine the most important pieces.
 
 ## 6 Parsing
 
-When encountering a [word][d7b0] such as [`CLASSes`][1f37], PAX needs to find the
-[name][88cf] in it that makes sense in the context. [Codification][f1ab], for
-example, looks for [interesting][7445] names, [Navigating Sources in Emacs][3386] for
-names with [Lisp][30ad] [`DEFINITIONS`][e196], and
-[Linking][19e3] for names with [any kind of definition][99b0].
+<a id="x-28MGL-PAX-3A-40PARSING-NAMES-20MGL-PAX-3ASECTION-29"></a>
+
+### 6.1 Parsing Names
+
+When encountering a [word][d7b0] such as [`CLASSes`][1f37] in a docstring, PAX
+needs to find the [name][88cf], and how that's done varies slightly.
+[Codification][f1ab], for example, looks for [interesting][7445] names,
+[Navigating Sources in Emacs][3386] for names with [Lisp][30ad] [`DEFINITIONS`][e196], and [Linking][19e3] for names with [any kind of
+definition][99b0].
 
 This is not as straightforward as it sounds because it needs to
-handle cases like `nonREADable`, `CLASSES`, all the various
-forms of [Linking][19e3] in docstrings as well as in comments, and
-the `(NAME LOCATIVE)` syntax in [`DEFSECTION`][72b4].
+handle cases like non[`READ`][fe58]able, [`PRINT`][d451]ed, and all the various forms of
+[Linking][19e3] in docstrings as well as in comments, and the `(NAME
+LOCATIVE)` syntax in [`DEFSECTION`][72b4].
 
 <a id="x-28MGL-PAX-3A-40WORD-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
 
@@ -752,15 +758,15 @@ the `(NAME LOCATIVE)` syntax in [`DEFSECTION`][72b4].
 
 - [glossary-term] **name**
 
-    A *name* is a [DRef name][5fc4]. That is, a symbol or a
-    string associated with a definition, whose kind is given by a
-    [locative][7ac8].
+    A *name* is a [DRef name][5fc4]. That is, a symbol, a
+    string or a nested list of the previous associated with a
+    definition, whose kind is given by a [locative][7ac8].
 
 Depending on the context, trimming and depluralization may be
 enabled (see [Raw Names in Words][f0d5]), while the possible names may be
 restricted to symbols (see [Names in Raw Names][016d]).
 
-- *Trimming:* Enabled for [Navigating Sources in Emacs][3386] and [Codification][f1ab].
+- *Trimming:* Enabled for [`M-.` Defaulting][460e] and [Codification][f1ab].
 
 - *Depluralization:* Enabled when the [word][d7b0] is part of the normal
   flow of text (i.e. not for [Specific Reflink with Text][fb17],
@@ -782,7 +788,7 @@ parsing algorithm.
 
 <a id="x-28MGL-PAX-3A-40RAW-NAMES-IN-WORDS-20MGL-PAX-3ASECTION-29"></a>
 
-### 6.1 Raw Names in Words
+#### 6.1.1 Raw Names in Words
 
 From [word][d7b0]s, [raw name][f5af]s are parsed by trimming some
 prefixes and suffixes. For a given word, multiple raw names are
@@ -813,7 +819,7 @@ uppercase character if it contains at least one lowercase character.
 
 <a id="x-28MGL-PAX-3A-40NAMES-IN-RAW-NAMES-20MGL-PAX-3ASECTION-29"></a>
 
-### 6.2 Names in Raw Names
+#### 6.1.2 Names in Raw Names
 
 For each [raw name][f5af] from [Raw Names in Words][f0d5], various [name][88cf]s
 may be considered until one is found that's suitable in the context.
@@ -879,6 +885,42 @@ found with a definition:
    definition, so `M-.` will visit it.
 
 When [Generating Documentation][2c93], [Autolink][ec7a]ing behaves similarly.
+
+<a id="x-28MGL-PAX-3A-40PARSING-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
+
+### 6.2 Parsing Locatives
+
+Locatives are parsed almost as if by [`READ`][fe58]. They are found in
+buffer contents around a [word][d7b0] when [`M-.` Defaulting][460e] or
+[Generating Documentation][2c93], and in the string entered when
+[`M-.` Prompting][ed46], with a similar distinction when
+[Browsing Live Documentation][a595].
+
+Parsing deviates from `READ` in the following ways.
+
+- No new symbols are interned during parsing. If an expression
+  contains uninterned symbols, then it is not parsable as a
+  locative.
+
+- A locative that involves unreadable objects that print using the
+  `#<` syntax (e.g. `(METHOD () (EQL #<PACKAGE DREF))`) is parsable
+  in the context of a [name][88cf] if each unreadable object in the
+  locative occurs in one of the [`DEFINITIONS`][e196] of that name and it
+  [prints to an equivalent string][2f21] (e.g. `#<PACKAGE DREF>` above).
+
+
+<a id="x-28MGL-PAX-3A-40PRINTS-TO-AN-EQUIVALENT-STRING-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+
+- [glossary-term] **prints to an equivalent string**
+
+    An object with an unreadable representation is said to print to
+    some string `S` if its [`PRIN1`][6384] representation (under [`WITH-STANDARD-IO-SYNTAX`][39df]
+    but in the current package and with [`*PRINT-READABLY*`][8aca] `NIL`) is the same as `S`, where consecutive whitepace characters are
+    replaced with a single space in both strings, and the comparison is case-insensitive.
+    
+    See the related concept of [stable printed locative][3942], that requires
+    the printed representation of entire locatives to be unique and
+    non-changing to support [Linking][19e3].
 
 <a id="x-28MGL-PAX-3A-40PAX-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2237,6 +2279,22 @@ more strict about trimming, depluralization, and it performs
 [Filtering Links][b2e4]. On the other hand, `M-.` cannot visit the
 [`CLHS`][ed5f] references because there are no associated source
 locations.
+
+<a id="x-28MGL-PAX-3A-40STABLE-PRINTED-LOCATIVE-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+
+- [glossary-term] **stable printed locative**
+
+    The [Link Format][c0d2] relies on [definition][2143]s having a unique
+    textual representation that doesn't change. More concretely, if
+    [`PRIN1`][6384] under [`WITH-STANDARD-IO-SYNTAX`][39df] but with [`*PRINT-READABLY*`][8aca] `NIL`
+    produces the same unique string deterministically, then linking to
+    [definition][2143]s works even with non-readable locatives. The
+    uniqueness condition requires that if two definitions are different
+    under [`XREF=`][0617], then their textual representations are also different.
+    
+    On the other hand, for example, a method involving an `EQL`([`0`][db03] [`1`][5fd4])
+    specializer with an object printed with [`PRINT-UNREADABLE-OBJECT`][9439]
+    `:IDENTITY` `T` does not produce a stable string and links will break.
 
 <a id="x-28MGL-PAX-3A-40REFLINK-20MGL-PAX-3ASECTION-29"></a>
 
@@ -4227,6 +4285,7 @@ they are presented.
   [0361]: #x-28MGL-PAX-3A-40SPECIFIC-LINK-20MGL-PAX-3ASECTION-29 "Specific Link"
   [040b]: http://www.lispworks.com/documentation/HyperSpec/Body/02_da.htm '"2.4.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [051b]: http://www.lispworks.com/documentation/HyperSpec/Body/22_chb.htm '"22.3.8.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [0617]: dref/README.md#x-28DREF-3AXREF-3D-20FUNCTION-29 "DREF:XREF= FUNCTION"
   [0684]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cac.htm '"22.3.1.3" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [0702]: #x-28MGL-PAX-3A-40DOCUMENTABLE-20MGL-PAX-3ASECTION-29 "`DOCUMENTABLE`"
   [090c]: dref/README.md#x-28MGL-PAX-3ASTRUCTURE-ACCESSOR-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:STRUCTURE-ACCESSOR MGL-PAX:LOCATIVE"
@@ -4285,6 +4344,7 @@ they are presented.
   [2ca9]: #x-28MGL-PAX-3AOUTPUT-REFLINK-20FUNCTION-29 "MGL-PAX:OUTPUT-REFLINK FUNCTION"
   [2cd5]: #x-28MGL-PAX-3A-2ADOCUMENT-PANDOC-PDF-HEADER-INCLUDES-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-PANDOC-PDF-HEADER-INCLUDES* VARIABLE"
   [2d48]: #x-28MGL-PAX-3AWITH-DISLOCATED-NAMES-20MGL-PAX-3AMACRO-29 "MGL-PAX:WITH-DISLOCATED-NAMES MGL-PAX:MACRO"
+  [2f21]: #x-28MGL-PAX-3A-40PRINTS-TO-AN-EQUIVALENT-STRING-20MGL-PAX-3AGLOSSARY-TERM-29 "prints to an equivalent string"
   [3026]: #x-28MGL-PAX-3AESCAPE-MARKDOWN-20FUNCTION-29 "MGL-PAX:ESCAPE-MARKDOWN FUNCTION"
   [3076]: https://github.com/redline6561/colorize/ "Colorize"
   [309c]: http://www.lispworks.com/documentation/HyperSpec/Body/02_df.htm '"2.4.6" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -4302,7 +4362,9 @@ they are presented.
   [3808]: http://www.lispworks.com/documentation/HyperSpec/Body/f_terpri.htm "FRESH-LINE (MGL-PAX:CLHS FUNCTION)"
   [3831]: http://www.lispworks.com/documentation/HyperSpec/Body/v_sl_sls.htm "/// (MGL-PAX:CLHS VARIABLE)"
   [38de]: #x-28MGL-PAX-3A-40SPECIFIC-AUTOLINK-20MGL-PAX-3ASECTION-29 "Specific Autolink"
+  [3942]: #x-28MGL-PAX-3A-40STABLE-PRINTED-LOCATIVE-20MGL-PAX-3AGLOSSARY-TERM-29 "stable printed locative"
   [3972]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_r.htm#reader_macro '"reader macro" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  [39df]: http://www.lispworks.com/documentation/HyperSpec/Body/m_w_std_.htm "WITH-STANDARD-IO-SYNTAX (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [3da8]: #x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29 "MGL-PAX:*FORMAT* VARIABLE"
   [3e6e]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cbb.htm '"22.3.2.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [3f2e]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pr_obj.htm "PRINT-OBJECT (MGL-PAX:CLHS GENERIC-FUNCTION)"
@@ -4426,6 +4488,7 @@ they are presented.
   [88cf]: #x-28MGL-PAX-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29 "name"
   [8a58]: #x-28MGL-PAX-3A-40SECTIONS-20MGL-PAX-3ASECTION-29 "Sections"
   [8a5e]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhb.htm '"2.4.8.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [8aca]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_rda.htm "*PRINT-READABLY* (MGL-PAX:CLHS VARIABLE)"
   [8c00]: https://daringfireball.net/projects/markdown/syntax#link "Markdown reference link"
   [8d9b]: #x-28MGL-PAX-3A-40OUTPUT-FORMATS-20MGL-PAX-3ASECTION-29 "Output Formats"
   [8e71]: #x-28MGL-PAX-3A-40UNSPECIFIC-LINK-20MGL-PAX-3ASECTION-29 "Unspecific Link"
@@ -4468,6 +4531,7 @@ they are presented.
   [a843]: http://www.lispworks.com/documentation/HyperSpec/Body/t_std_ob.htm "STANDARD-OBJECT (MGL-PAX:CLHS CLASS)"
   [a8c5]: #x-28-22mgl-pax-2Fweb-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"mgl-pax/web" ASDF/SYSTEM:SYSTEM'
   [a951]: dref/README.md#x-28MGL-PAX-3AUNKNOWN-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:UNKNOWN MGL-PAX:LOCATIVE"
+  [ab38]: #x-28MGL-PAX-3A-40PARSING-LOCATIVES-20MGL-PAX-3ASECTION-29 "Parsing Locatives"
   [ab7e]: #x-28MGL-PAX-3A-40PACKAGE-AND-READTABLE-20MGL-PAX-3ASECTION-29 "Package and Readtable"
   [ac30]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cha.htm '"22.3.8.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [ac5e]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhe.htm '"2.4.8.5" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -4565,6 +4629,7 @@ they are presented.
   [e548]: dref/README.md#x-28MGL-PAX-3AWRITER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:WRITER MGL-PAX:LOCATIVE"
   [e5ab]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_3.htm "SYMBOL-PACKAGE (MGL-PAX:CLHS FUNCTION)"
   [e5af]: http://www.lispworks.com/documentation/HyperSpec/Body/t_symbol.htm "SYMBOL (MGL-PAX:CLHS CLASS)"
+  [e65d]: #x-28MGL-PAX-3A-40PARSING-NAMES-20MGL-PAX-3ASECTION-29 "Parsing Names"
   [e6bd]: dref/README.md#x-28DREF-3AARGLIST-20FUNCTION-29 "DREF:ARGLIST FUNCTION"
   [e6d3]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cdc.htm '"22.3.4.3" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [e7ee]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*STANDARD-OUTPUT* (MGL-PAX:CLHS VARIABLE)"

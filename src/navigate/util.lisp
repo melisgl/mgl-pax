@@ -16,7 +16,7 @@
 
 
 ;;;; Parsing of symbols, strings, numbers and their nested lists
-;;;; without interning
+;;;; without interning and recognizing some unreadable values
 
 (defvar *on-unreadable* :error)
 (defvar *truncating-on-unreadable* nil)
@@ -31,8 +31,13 @@
 ;;; except #. and #<, which behave as in the standard readtable (but
 ;;; if ON-UNREADABLE is :TRUNCATE, then the already read stuff is
 ;;; returned).
+;;;
+;;; If ON-UNREADABLE is a function of a STREAM argument, it is called
+;;; when an unreadable marker #< is encountered, with FILE-POSITION at
+;;; the # character. It should return the parsed unreadable object
+;;; (with FILE-POSITION of STREAM updated) or signal PARSE-SEXP-ERROR.
 (defun parse-sexp (string &key (start 0) junk-allowed (errorp t)
-                            (on-unreadable :error))
+                            (on-unreadable :error) )
   (handler-bind (((or end-of-file reader-error parse-error)
                    (lambda (c)
                      (declare (ignore c))
@@ -79,13 +84,15 @@
                     (read-char stream)
                     (eval (parse-sexp* stream string)))
                    ((eql next #\<)
-                    (ecase *on-unreadable*
-                      ((:error)
-                       (parse-sexp-error "Unreadable value found in ~S."
-                                         string))
-                      ((:truncate)
-                       (setq *truncating-on-unreadable* t)
-                       'unreadable)))
+                    (cond ((eq *on-unreadable* :error)
+                           (parse-sexp-error "Unreadable value found in ~S."
+                                             string))
+                          ((eq *on-unreadable* :truncate)
+                           (setq *truncating-on-unreadable* t)
+                           'unreadable)
+                          (t
+                           (file-position stream (1- (file-position stream)))
+                           (funcall *on-unreadable* stream))))
                    (t
                     (parse-sexp-error "Unsupported sharp macro character ~S."
                                       next)))))
@@ -146,6 +153,59 @@
                     (values symbol2 nil pos)))
               (values nil nil pos))))
     ((or reader-error end-of-file) ())))
+
+(note (@unreadable-prints-to :join " ")
+  "An object with an unreadable representation is said to print to
+  some string `S`"
+  ;; A utility for :ON-UNREADABLE of PARSE-SEXP.
+  (defun read-unreadable (stream unreadables)
+    (loop for unreadable in unreadables
+          when (skip-string-ignoring-case-and-whitespace
+                stream (unreadable-to-string unreadable))
+            do (return unreadable)
+          finally (parse-sexp-error "Unrecognized unreadable value in ~S."
+                                    (uiop:slurp-stream-string stream))))
+
+  (defun unreadable-to-string (object)
+    (note "if its PRIN1 representation (under WITH-STANDARD-IO-SYNTAX
+          but in the current package and with *PRINT-READABLY* NIL)"
+      (let ((package *package*))
+        (with-standard-io-syntax*
+          (let ((*package* package)
+                (*print-readably* nil))
+            (prin1-to-string object))))))
+
+  ;; Read characters from STREAM and STRING one-by-one as long as they
+  ;; are the EQUALP with the twist that one WHITESPACEP character is
+  ;; the same as multiple. Return T if the entire STRING matched.
+  ;; Else, return NIL and restore the FILE-POSITION of STREAM.
+  (defun skip-string-ignoring-case-and-whitespace (stream string)
+    (let ((orig-pos (file-position stream)))
+      (flet ((fail ()
+               (file-position stream orig-pos)
+               (return-from skip-string-ignoring-case-and-whitespace nil)))
+        (with-input-from-string (stream2 string)
+          (note "is the same as `S`,")
+          (loop
+            (let ((char1 (peek-char nil stream nil))
+                  (char2 (peek-char nil stream2 nil)))
+              (when (null char2)
+                (return t))
+              (when (or (null char1)
+                        (not (eq (not (whitespacep char1))
+                                 (not (whitespacep char2)))))
+                (fail))
+              (cond ((whitespacep char1)
+                     (note "where consecutive whitepace characters are
+                     replaced with a single space in both strings,"
+                       (peek-char t stream nil)
+                       (peek-char t stream2 nil)))
+                    ((note "and the comparison is case-insensitive."
+                       (char-not-equal char1 char2))
+                     (fail))
+                    (t
+                     (read-char stream)
+                     (read-char stream2))))))))))
 
 
 ;;;; Symbols
@@ -195,6 +255,26 @@
 
 (defun subseq* (seq start)
   (subseq seq (min (length seq) start)))
+
+
+;;;; Trees
+
+(defun find-if-in-tree (fn tree)
+  (labels ((recurse (tree)
+             (if (listp tree)
+                 (dolist (subtree tree)
+                   (recurse subtree))
+                 (when (funcall fn tree)
+                   (return-from find-if-in-tree tree)))))
+    (recurse tree)))
+
+(defun flatten (tree)
+  (let ((r ()))
+    (find-if-in-tree (lambda (leaf)
+                       (push leaf r)
+                       nil)
+                     tree)
+    (reverse r)))
 
 
 ;;;; Pathnames
