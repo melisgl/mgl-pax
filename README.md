@@ -13,57 +13,57 @@
 - [3 Links and Systems][ba90]
 - [4 Background][f74b]
 - [5 Basics][94c7]
-- [6 Parsing][378f]
-    - [6.1 Parsing Names][e65d]
-        - [6.1.1 Raw Names in Words][f0d5]
-        - [6.1.2 Names in Raw Names][016d]
-    - [6.2 Parsing Locatives][ab38]
-- [7 PAX Locatives][292a]
-- [8 Navigating Sources in Emacs][3386]
-    - [8.1 `M-.` Defaulting][460e]
-    - [8.2 `M-.` Prompting][ed46]
-        - [8.2.1 `M-.` Minibuffer Syntax][8106]
-        - [8.2.2 `M-.` Completion][e444]
-- [9 Generating Documentation][2c93]
-    - [9.1 The `DOCUMENT` Function][dc0a]
-        - [9.1.1 `DOCUMENTABLE`][0702]
-        - [9.1.2 Return Values][7dc7]
-        - [9.1.3 `PAGES`][9c7d]
-        - [9.1.4 Package and Readtable][ab7e]
-    - [9.2 Browsing Live Documentation][a595]
-        - [9.2.1 Browsing with w3m][83d5]
-        - [9.2.2 Browsing with Other Browsers][c434]
-        - [9.2.3 Apropos][b7fc]
-        - [9.2.4 PAX Live Home Page][9d50]
-    - [9.3 Markdown Support][c2d3]
-        - [9.3.1 Markdown in Docstrings][7bf5]
-        - [9.3.2 Syntax Highlighting][bc83]
-        - [9.3.3 MathJax][a17d]
-    - [9.4 Codification][f1ab]
-    - [9.5 Linking][19e3]
-        - [9.5.1 Reflink][cbc4]
-        - [9.5.2 Autolink][ec7a]
-        - [9.5.3 Linking to the HyperSpec][7cc3]
-        - [9.5.4 Linking to Sections][22c2]
-        - [9.5.5 Filtering Links][b2e4]
-        - [9.5.6 Link Format][c0d2]
-    - [9.6 Local Definition][9db9]
-    - [9.7 Overview of Escaping][2634]
-    - [9.8 Output Formats][8d9b]
-        - [9.8.1 Markdown Output][dd29]
-        - [9.8.2 PDF Output][19ad]
-    - [9.9 Documentation Generation Implementation Notes][d1ca]
-    - [9.10 Utilities for Generating Documentation][1b1b]
-        - [9.10.1 HTML Output][36e1]
-        - [9.10.2 GitHub Workflow][dff6]
-        - [9.10.3 PAX World][1281]
-- [10 Transcripts][6300]
-    - [10.1 Transcribing with Emacs][f5bd]
-    - [10.2 Transcript API][9dbc]
-    - [10.3 Transcript Consistency Checking][4c39]
-        - [10.3.1 Finer-Grained Consistency Checks][6e18]
-        - [10.3.2 Controlling the Dynamic Environment][6b59]
-        - [10.3.3 Utilities for Consistency Checking][8423]
+- [6 PAX Locatives][292a]
+- [7 Navigating Sources in Emacs][3386]
+    - [7.1 `M-.` Defaulting][460e]
+    - [7.2 `M-.` Prompting][ed46]
+        - [7.2.1 `M-.` Minibuffer Syntax][8106]
+        - [7.2.2 `M-.` Completion][e444]
+- [8 Generating Documentation][2c93]
+    - [8.1 The `DOCUMENT` Function][dc0a]
+        - [8.1.1 `DOCUMENTABLE`][0702]
+        - [8.1.2 Return Values][7dc7]
+        - [8.1.3 `PAGES`][9c7d]
+        - [8.1.4 Package and Readtable][ab7e]
+    - [8.2 Browsing Live Documentation][a595]
+        - [8.2.1 Browsing with w3m][83d5]
+        - [8.2.2 Browsing with Other Browsers][c434]
+        - [8.2.3 Apropos][b7fc]
+        - [8.2.4 PAX Live Home Page][9d50]
+    - [8.3 Markdown Support][c2d3]
+        - [8.3.1 Markdown in Docstrings][7bf5]
+        - [8.3.2 Syntax Highlighting][bc83]
+        - [8.3.3 MathJax][a17d]
+    - [8.4 Codification][f1ab]
+    - [8.5 Linking][19e3]
+        - [8.5.1 Reflink][cbc4]
+        - [8.5.2 Autolink][ec7a]
+        - [8.5.3 Linking to the HyperSpec][7cc3]
+        - [8.5.4 Linking to Sections][22c2]
+        - [8.5.5 Filtering Links][b2e4]
+        - [8.5.6 Link Format][c0d2]
+    - [8.6 Local Definition][9db9]
+    - [8.7 Overview of Escaping][2634]
+    - [8.8 Output Formats][8d9b]
+        - [8.8.1 Markdown Output][dd29]
+        - [8.8.2 PDF Output][19ad]
+    - [8.9 Documentation Generation Implementation Notes][d1ca]
+    - [8.10 Utilities for Generating Documentation][1b1b]
+        - [8.10.1 HTML Output][36e1]
+        - [8.10.2 GitHub Workflow][dff6]
+        - [8.10.3 PAX World][1281]
+- [9 Transcripts][6300]
+    - [9.1 Transcribing with Emacs][f5bd]
+    - [9.2 Transcript API][9dbc]
+    - [9.3 Transcript Consistency Checking][4c39]
+        - [9.3.1 Finer-Grained Consistency Checks][6e18]
+        - [9.3.2 Controlling the Dynamic Environment][6b59]
+        - [9.3.3 Utilities for Consistency Checking][8423]
+- [10 Parsing][378f]
+    - [10.1 Parsing Names][e65d]
+        - [10.1.1 Raw Names in Words][f0d5]
+        - [10.1.2 Names in Raw Names][016d]
+    - [10.2 Parsing Locatives][ab38]
 - [11 Writing Extensions][c4ce]
     - [11.1 Adding New Locatives][54d8]
     - [11.2 Locative Aliases][0fa3]
@@ -716,215 +716,9 @@ Now let's examine the most important pieces.
     varies, but it is at least within the right top level form on all
     implementations. On SBCL, exact source location is supported.
 
-<a id="x-28MGL-PAX-3A-40PARSING-20MGL-PAX-3ASECTION-29"></a>
-
-## 6 Parsing
-
-<a id="x-28MGL-PAX-3A-40PARSING-NAMES-20MGL-PAX-3ASECTION-29"></a>
-
-### 6.1 Parsing Names
-
-When encountering a [word][d7b0] such as [`CLASSes`][1f37] in a docstring, PAX
-needs to find the [name][88cf], and how that's done varies slightly.
-[Codification][f1ab], for example, looks for [interesting][7445] names,
-[Navigating Sources in Emacs][3386] for names with [Lisp][30ad] [`DEFINITIONS`][e196], and [Linking][19e3] for names with [any kind of
-definition][99b0].
-
-This is not as straightforward as it sounds because it needs to
-handle cases like non[`READ`][fe58]able, [`PRINT`][d451]ed, and all the various forms of
-[Linking][19e3] in docstrings as well as in comments, and the `(NAME
-LOCATIVE)` syntax in [`DEFSECTION`][72b4].
-
-<a id="x-28MGL-PAX-3A-40WORD-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
-
-- [glossary-term] **word**
-
-    A *word* is a string from which we want to extract a [name][88cf]. When
-    [Navigating][3386], the word is
-    `slime-sexp-at-point` or the label of a [Markdown reference link][8c00] if point
-    is over one. Similarly, when [Generating Documentation][2c93], it is a
-    non-empty string between whitespace characters in a docstring or the
-    label of a [Markdown reference link][8c00].
-
-<a id="x-28MGL-PAX-3A-40RAW-NAME-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
-
-- [glossary-term] **raw name**
-
-    A *raw name* is a string from which a [name][88cf] may be read. Raw names
-    correspond to an intermediate parsing step between [word][d7b0]s an [name][88cf]s.
-    See [Names in Raw Names][016d].
-
-<a id="x-28MGL-PAX-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
-
-- [glossary-term] **name**
-
-    A *name* is a [DRef name][5fc4]. That is, a symbol, a
-    string or a nested list of the previous associated with a
-    definition, whose kind is given by a [locative][7ac8].
-
-Depending on the context, trimming and depluralization may be
-enabled (see [Raw Names in Words][f0d5]), while the possible names may be
-restricted to symbols (see [Names in Raw Names][016d]).
-
-- *Trimming:* Enabled for [`M-.` Defaulting][460e] and [Codification][f1ab].
-
-- *Depluralization:* Enabled when the [word][d7b0] is part of the normal
-  flow of text (i.e. not for [Specific Reflink with Text][fb17],
-  [Unspecific Reflink with Text][34b8] and various Elisp functions such as
-  `mgl-pax-apropos` unless they determine their argument from buffer
-  contents).
-
-- *Symbols only:* This is the case for [Codification][f1ab] and
-  [Unspecific Autolink][e2a4] to prevent string-based definitions from
-  littering the documentation with links without the control
-  provided by explicitly [`IMPORT`][8f46]ing symbols.
-
-
-For a word, a number of [raw name][f5af]s is generated by trimming
-delimiter characters and plural markers, and for each raw name a
-number of names are considered until one is found suitable in the
-context. The following subsections describe the details of the
-parsing algorithm.
-
-<a id="x-28MGL-PAX-3A-40RAW-NAMES-IN-WORDS-20MGL-PAX-3ASECTION-29"></a>
-
-#### 6.1.1 Raw Names in Words
-
-From [word][d7b0]s, [raw name][f5af]s are parsed by trimming some
-prefixes and suffixes. For a given word, multiple raw names are
-considered in the following order.
-
-1. The entire word.
-
-2. Trimming the following characters from the left of the word:
-
-        #<{;"'`
-
-3. Trimming the following characters from the right of the word:
-
-        ,;:.>}"'`
-
-4. Trimming both of the previous two at the same time.
-
-5. From the result of 4., If a [word][d7b0] ends with what looks like a plural marker (case-insensitive),
-then a [name][88cf] is created by removing it. For example, from the word
-`BUSES` the plural marker `ES` is removed to produce the name `BUS`.
-The list of plural markers considered is `SES` (e.g. `GASSES`),
-`ES` (e.g. `BUSES`), `S` (e.g. `CARS`), `ZES` (e.g. `FEZZES`), and
-`REN` (e.g. `CHILDREN`).
-
-6. From the result of 4., removing the prefix before the first, and the suffix after the last
-uppercase character if it contains at least one lowercase character.
-
-
-<a id="x-28MGL-PAX-3A-40NAMES-IN-RAW-NAMES-20MGL-PAX-3ASECTION-29"></a>
-
-#### 6.1.2 Names in Raw Names
-
-For each [raw name][f5af] from [Raw Names in Words][f0d5], various [name][88cf]s
-may be considered until one is found that's suitable in the context.
-
-The following examples list the names considered for a given raw
-name, assuming that [`READTABLE-CASE`][48f1] is `:UPCASE` as well as that `FOO`
-and `|Foo|` are interned.
-
-- `"foo"`: `FOO`, `"foo"`, `"FOO"` (rules 1, 2, 3)
-
-- `"FOO"`: `FOO`, `"FOO"` (rules 1, 2)
-
-- `"Foo"`: `"Foo"`, `"FOO"` (rules 2, 3)
-
-- `"|Foo|"`: `|Foo|` (rule 4)
-
-- `"\"foo\""`: `"foo"` (rule 5)
-
-The rules are:
-
-1. If the raw name is not mixed case (i.e. it doesn't have both
-   upper- and lowercase characters) and it names an interned
-   symbol (subject to the current [Package and Readtable][ab7e]), then that
-   symbol is considered as a name.
-
-2. The raw name itself (a string) is considered a name.
-
-3. The raw name upcased or downcased according to
-   `READTABLE-CASE` (subject to the [current
-   readtable][ab7e]) but still as a string. This
-   is to allow `[dref][package]` to refer to the `"DREF"`
-   package regardless of whether the symbol `DREF` is interned in
-   the current package.
-
-4. If the raw name is explicitly a symbol (it starts with `#\|`),
-   and it names an interned symbol (subject to the current
-   [Package and Readtable][ab7e]), then that symbol is considered as a name
-   and nothing else.
-
-5. If the raw name has an embedded string (it starts with `#\"`) and
-   [`READ-FROM-STRING`][d813] can read the embedded string from it, then that
-   string is considered as a name and nothing else.
-
-
-<br/>
-For example, when `M-.` is pressed while point is over
-`nonREADable.`, the last word of the sentence `It may be
-nonREADable.`, the following [raw name][f5af]s are considered until one is
-found with a definition:
-
-1. The entire word, `"nonREADable."`.
-
-2. Trimming left does not produce a new raw name.
-
-3. Trimming right removes the dot and gives `"nonREADable"`.
-
-4. Trimming both is the same as trimming right.
-
-5. No plural markers are found.
-
-6. The lowercase prefix and suffix is removed around the uppercase
-   core, giving `"READ"`. This names an interned symbol which has a
-   definition, so `M-.` will visit it.
-
-When [Generating Documentation][2c93], [Autolink][ec7a]ing behaves similarly.
-
-<a id="x-28MGL-PAX-3A-40PARSING-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
-
-### 6.2 Parsing Locatives
-
-Locatives are parsed almost as if by [`READ`][fe58]. They are found in
-buffer contents around a [word][d7b0] when [`M-.` Defaulting][460e] or
-[Generating Documentation][2c93], and in the string entered when
-[`M-.` Prompting][ed46], with a similar distinction when
-[Browsing Live Documentation][a595].
-
-Parsing deviates from `READ` in the following ways.
-
-- No new symbols are interned during parsing. If an expression
-  contains uninterned symbols, then it is not parsable as a
-  locative.
-
-- A locative that involves unreadable objects that print using the
-  `#<` syntax (e.g. `(METHOD () (EQL #<PACKAGE DREF))`) is parsable
-  in the context of a [name][88cf] if each unreadable object in the
-  locative occurs in one of the [`DEFINITIONS`][e196] of that name and it
-  [prints to an equivalent string][2f21] (e.g. `#<PACKAGE DREF>` above).
-
-
-<a id="x-28MGL-PAX-3A-40PRINTS-TO-AN-EQUIVALENT-STRING-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
-
-- [glossary-term] **prints to an equivalent string**
-
-    An object with an unreadable representation is said to print to
-    some string `S` if its [`PRIN1`][6384] representation (under [`WITH-STANDARD-IO-SYNTAX`][39df]
-    but in the current package and with [`*PRINT-READABLY*`][8aca] `NIL`) is the same as `S`, where consecutive whitepace characters are
-    replaced with a single space in both strings, and the comparison is case-insensitive.
-    
-    See the related concept of [stable printed locative][3942], that requires
-    the printed representation of entire locatives to be unique and
-    non-changing to support [Linking][19e3].
-
 <a id="x-28MGL-PAX-3A-40PAX-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 
-## 7 PAX Locatives
+## 6 PAX Locatives
 
 To the [Basic Locative Types][1d1d] defined by DRef,
 PAX adds a few of its own.
@@ -1249,7 +1043,7 @@ PAX adds a few of its own.
 
 <a id="x-28MGL-PAX-3A-40NAVIGATING-IN-EMACS-20MGL-PAX-3ASECTION-29"></a>
 
-## 8 Navigating Sources in Emacs
+## 7 Navigating Sources in Emacs
 
 Integration into [SLIME][6be7]'s [`M-.`][cb15] (`slime-edit-definition`) allows
 one to visit the [`SOURCE-LOCATION`][32da] of a [definition][2143]. PAX extends
@@ -1279,7 +1073,7 @@ A close relative of `M-.` is `C-.` for [Browsing Live Documentation][a595].
 
 <a id="x-28MGL-PAX-3A-40M--2E-DEFAULTING-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.1 `M-.` Defaulting
+### 7.1 `M-.` Defaulting
 
 When [`M-.`][cb15] is invoked, it first tries to find a [name][88cf] in the
 current buffer at point. If no name is found, then it
@@ -1334,11 +1128,11 @@ denoted method:
 
 <a id="x-28MGL-PAX-3A-40M--2E-PROMPTING-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.2 `M-.` Prompting
+### 7.2 `M-.` Prompting
 
 <a id="x-28MGL-PAX-3A-40M--2E-MINIBUFFER-SYNTAX-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.2.1 `M-.` Minibuffer Syntax
+#### 7.2.1 `M-.` Minibuffer Syntax
 
 At the minibuffer prompt, the [definition][2143]s to edit
 can be specified as follows.
@@ -1379,7 +1173,7 @@ package, else it's the package of the Slime repl buffer.
 
 <a id="x-28MGL-PAX-3A-40M--2E-COMPLETION-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.2.2 `M-.` Completion
+#### 7.2.2 `M-.` Completion
 
 When `M-.` prompts for the definition to edit, TAB-completion is
 available in the minibuffer for both names and locatives. To reduce
@@ -1409,11 +1203,11 @@ For more powerful search, see [Apropos][b7fc].
 
 <a id="x-28MGL-PAX-3A-40GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29"></a>
 
-## 9 Generating Documentation
+## 8 Generating Documentation
 
 <a id="x-28MGL-PAX-3A-40DOCUMENT-FUNCTION-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.1 The `DOCUMENT` Function
+### 8.1 The `DOCUMENT` Function
 
 <a id="x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29"></a>
 
@@ -1457,7 +1251,7 @@ For more powerful search, see [Apropos][b7fc].
 
 <a id="x-28MGL-PAX-3A-40DOCUMENTABLE-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.1.1 `DOCUMENTABLE`
+#### 8.1.1 `DOCUMENTABLE`
 
 The `DOCUMENTABLE` argument of [`DOCUMENT`][432c] may be a single object (e.g.
 `#'PRINT`'), a [definition][2143] such as `(DREF 'PRINT 'FUNCTION)`,
@@ -1480,7 +1274,7 @@ one of the following:
 
 <a id="x-28MGL-PAX-3A-40DOCUMENT-RETURN-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.1.2 Return Values
+#### 8.1.2 Return Values
 
 If `PAGES` are `NIL`, then [`DOCUMENT`][432c] - like [`CL:FORMAT`][ad78] - returns a
 string (when [`STREAM`][d5a9] is `NIL`) else `NIL`.
@@ -1502,7 +1296,7 @@ non-empty pages in the `PAGES` argument of `DOCUMENT` in that order.
 
 <a id="x-28MGL-PAX-3A-40PAGES-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.1.3 `PAGES`
+#### 8.1.3 `PAGES`
 
 The `PAGES` argument of [`DOCUMENT`][432c] is to create multi-page documents
 by routing some of the generated output to files, strings or
@@ -1597,7 +1391,7 @@ currently documented is the `:OBJECT` of a `PAGE-SPEC`.
 
 <a id="x-28MGL-PAX-3A-40PACKAGE-AND-READTABLE-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.1.4 Package and Readtable
+#### 8.1.4 Package and Readtable
 
 While generating documentation, symbols may be read (e.g. from
 docstrings) and printed. What values of [`*PACKAGE*`][5ed1] and [`*READTABLE*`][b79a]
@@ -1679,7 +1473,7 @@ symbols, there is no package system to advantage of.
 
 <a id="x-28MGL-PAX-3A-40BROWSING-LIVE-DOCUMENTATION-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.2 Browsing Live Documentation
+### 8.2 Browsing Live Documentation
 
 Documentation for definitions in the running Lisp can be browsed
 directly without generating documentation in the offline manner.
@@ -1762,7 +1556,7 @@ definition with point in it.
 
 <a id="x-28MGL-PAX-3A-40BROWSING-WITH-W3M-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.2.1 Browsing with w3m
+#### 8.2.1 Browsing with w3m
 
 When the value of the Elisp variable `mgl-pax-browser-function`
 is `w3m-browse-url` (see [Emacs Setup][8541]), the Emacs w3m browser is
@@ -1799,7 +1593,7 @@ In addition, the following PAX-specific key bindings are available:
 
 <a id="x-28MGL-PAX-3A-40BROWSING-WITH-OTHER-BROWSERS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.2.2 Browsing with Other Browsers
+#### 8.2.2 Browsing with Other Browsers
 
 When the value of the Elisp variable `mgl-pax-browser-function`
 is not `w3m-browse-url` (see [Emacs Setup][8541]), requests are served via
@@ -1838,7 +1632,7 @@ variable `mgl-pax-web-server-port` is nil.
 
 <a id="x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.2.3 Apropos
+#### 8.2.3 Apropos
 
 The Elisp functions `mgl-pax-apropos`, `mgl-pax-apropos-all`, and
 `mgl-pax-apropos-package` can display the results of [`DREF-APROPOS`][65b4] in
@@ -1968,7 +1762,7 @@ The above examples assume case-insensitive matching.
 
 <a id="x-28MGL-PAX-3A-40PAX-LIVE-HOME-PAGE-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.2.4 PAX Live Home Page
+#### 8.2.4 PAX Live Home Page
 
 When [Browsing Live Documentation][a595], the home page provides
 quick access to documentation of the definitions in the system. In
@@ -2056,13 +1850,13 @@ definitions.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.3 Markdown Support
+### 8.3 Markdown Support
 
 The [Markdown][a317] in docstrings is processed with the [3BMD][1904] library.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-IN-DOCSTRINGS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.3.1 Markdown in Docstrings
+#### 8.3.1 Markdown in Docstrings
 
 - Docstrings can be indented in any of the usual styles. PAX
 normalizes indentation by stripping the longest run of leading
@@ -2121,7 +1915,7 @@ docstrings are equivalent:
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.3.2 Syntax Highlighting
+#### 8.3.2 Syntax Highlighting
 
 For syntax highlighting, GitHub's [fenced code blocks][1322] markdown
 extension to mark up code
@@ -2140,7 +1934,7 @@ See the documentation of [3BMD][1904] and [Colorize][3076] for the details.
 
 <a id="x-28MGL-PAX-3A-40MATHJAX-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.3.3 MathJax
+#### 8.3.3 MathJax
 
 Displaying pretty mathematics in TeX format is supported via
 MathJax. It can be done inline with `$` like this:
@@ -2163,7 +1957,7 @@ strings can be a pain. [Pythonic String Reader][d3fc5] can help with that.
 
 <a id="x-28MGL-PAX-3A-40CODIFICATION-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.4 Codification
+### 8.4 Codification
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20VARIABLE-29"></a>
 
@@ -2255,7 +2049,7 @@ strings can be a pain. [Pythonic String Reader][d3fc5] can help with that.
 
 <a id="x-28MGL-PAX-3A-40LINKING-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.5 Linking
+### 8.5 Linking
 
 PAX supports linking to [definition][2143]s either with
 explicit [Reflink][cbc4]s or with [Autolink][ec7a]s.
@@ -2298,7 +2092,7 @@ locations.
 
 <a id="x-28MGL-PAX-3A-40REFLINK-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.5.1 Reflink
+#### 8.5.1 Reflink
 
 The [Markdown reference link][8c00] syntax `[label][id]` is
 repurposed for linking to [definition][2143]s. In the following, we
@@ -2448,7 +2242,7 @@ Markdown reference links (see [Markdown in Docstrings][7bf5]).
 
 <a id="x-28MGL-PAX-3A-40AUTOLINK-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.5.2 Autolink
+#### 8.5.2 Autolink
 
 [Markdown inline code][68c1] automatically links to the corresponding
 definitions without having to use [Reflink][cbc4]s. This works especially
@@ -2549,7 +2343,7 @@ This renders as `DOCUMENT`. Alternatively, the
 
 <a id="x-28MGL-PAX-3A-40LINKING-TO-THE-HYPERSPEC-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.5.3 Linking to the HyperSpec
+#### 8.5.3 Linking to the HyperSpec
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29"></a>
 
@@ -2589,7 +2383,7 @@ This renders as `DOCUMENT`. Alternatively, the
 
 <a id="x-28MGL-PAX-3A-40LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.5.4 Linking to Sections
+#### 8.5.4 Linking to Sections
 
 The following variables control how to generate section numbering,
 table of contents and navigation links.
@@ -2652,7 +2446,7 @@ table of contents and navigation links.
 
 <a id="x-28MGL-PAX-3A-40FILTERING-LINKS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.5.5 Filtering Links
+#### 8.5.5 Filtering Links
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20VARIABLE-29"></a>
 
@@ -2737,7 +2531,7 @@ each definition.
 
 <a id="x-28MGL-PAX-3A-40LINK-FORMAT-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.5.6 Link Format
+#### 8.5.6 Link Format
 
 The following variables control various aspects of links and `URL`s.
 
@@ -2826,7 +2620,7 @@ The following variables control various aspects of links and `URL`s.
 
 <a id="x-28MGL-PAX-3A-40LOCAL-DEFINITION-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.6 Local Definition
+### 8.6 Local Definition
 
 While documentation is generated for a definition, that
 definition is considered local. Other local definitions may also be
@@ -2854,7 +2648,7 @@ See [`DOCUMENTING-REFERENCE`][b8a8] and [`WITH-DISLOCATED-NAMES`][2d48] in
 
 <a id="x-28MGL-PAX-3A-40OVERVIEW-OF-ESCAPING-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.7 Overview of Escaping
+### 8.7 Overview of Escaping
 
 Let's recap how escaping [Codification][f1ab],
 [downcasing][a5ee], and [Linking][19e3]
@@ -2895,7 +2689,7 @@ in an explicit link.
 
 <a id="x-28MGL-PAX-3A-40OUTPUT-FORMATS-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.8 Output Formats
+### 8.8 Output Formats
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-MARK-UP-SIGNATURES-2A-20VARIABLE-29"></a>
 
@@ -2920,7 +2714,7 @@ in an explicit link.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.8.1 Markdown Output
+#### 8.8.1 Markdown Output
 
 By default, [`DREF`][d930]s are documented in the following format.
 
@@ -3006,7 +2800,7 @@ printed as the arglist. There is no docstring.
 
 <a id="x-28MGL-PAX-3A-40PDF-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.8.2 PDF Output
+#### 8.8.2 PDF Output
 
 When invoked with `:FORMAT` `:PDF`, [`DOCUMENT`][432c] generates
 [Markdown Output][dd29] and converts it to PDF with [Pandoc][59d9], which in turn
@@ -3086,7 +2880,7 @@ can be customized with the following variables.
 
 <a id="x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.9 Documentation Generation Implementation Notes
+### 8.9 Documentation Generation Implementation Notes
 
 Documentation Generation is supported on ABCL, AllegroCL, CLISP,
 CCL, CMUCL, ECL and SBCL, but their outputs may differ due to the
@@ -3102,7 +2896,7 @@ doesn't work.
 
 <a id="x-28MGL-PAX-3A-40DOCUMENTATION-UTILITIES-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.10 Utilities for Generating Documentation
+### 8.10 Utilities for Generating Documentation
 
 Two convenience functions are provided to serve the common case of
 having an ASDF system with some readmes and a directory with for the
@@ -3137,7 +2931,7 @@ HTML documentation and the default CSS stylesheet.
 
 <a id="x-28MGL-PAX-3A-40HTML-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.10.1 HTML Output
+#### 8.10.1 HTML Output
 
 <a id="x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-HTML-DOCS-20FUNCTION-29"></a>
 
@@ -3251,7 +3045,7 @@ See the following variables, which control HTML generation.
 
 <a id="x-28MGL-PAX-3A-40GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.10.2 GitHub Workflow
+#### 8.10.2 GitHub Workflow
 
 It is generally recommended to commit generated readmes (see
 [`UPDATE-ASDF-SYSTEM-READMES`][13a9]), so that users have something to read
@@ -3334,7 +3128,7 @@ and the gh-pages site.
 
 <a id="x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.10.3 PAX World
+#### 8.10.3 PAX World
 
 PAX World is a registry of documents, which can generate
 cross-linked HTML documentation pages for all the registered
@@ -3385,7 +3179,7 @@ For example, this is how PAX registers itself:
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPTS-20MGL-PAX-3ASECTION-29"></a>
 
-## 10 Transcripts
+## 9 Transcripts
 
 What are transcripts for? When writing a tutorial, one often wants
 to include a REPL session with maybe a few defuns and a couple of
@@ -3432,7 +3226,7 @@ triple-quote syntax can be enabled with:
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIBING-WITH-EMACS-20MGL-PAX-3ASECTION-29"></a>
 
-### 10.1 Transcribing with Emacs
+### 9.1 Transcribing with Emacs
 
 Typical transcript usage from within Emacs is simple: add a Lisp
 form to a docstring or comment at any indentation level. Move the
@@ -3525,7 +3319,7 @@ Transcription support in Emacs can be enabled by loading
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-API-20MGL-PAX-3ASECTION-29"></a>
 
-### 10.2 Transcript API
+### 9.2 Transcript API
 
 <a id="x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29"></a>
 
@@ -3824,7 +3618,7 @@ Transcription support in Emacs can be enabled by loading
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29"></a>
 
-### 10.3 Transcript Consistency Checking
+### 9.3 Transcript Consistency Checking
 
 The main use case for consistency checking is detecting
 out-of-date examples in documentation, although using it for writing
@@ -3857,7 +3651,7 @@ objects are printed with their `#<>` syntax, especially when
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 10.3.1 Finer-Grained Consistency Checks
+#### 9.3.1 Finer-Grained Consistency Checks
 
 To get around this problem, consistency checking of output,
 readable and unreadable values can be customized individually by
@@ -3893,7 +3687,7 @@ output.
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-DYNENV-20MGL-PAX-3ASECTION-29"></a>
 
-#### 10.3.2 Controlling the Dynamic Environment
+#### 9.3.2 Controlling the Dynamic Environment
 
 The dynamic environment in which forms in the transcript are
 evaluated can be controlled via the `:DYNENV` argument of
@@ -3931,7 +3725,7 @@ package for evaluation.
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29"></a>
 
-#### 10.3.3 Utilities for Consistency Checking
+#### 9.3.3 Utilities for Consistency Checking
 
 <a id="x-28MGL-PAX-3ASQUEEZE-WHITESPACE-20FUNCTION-29"></a>
 
@@ -3982,6 +3776,212 @@ package for evaluation.
     .. hello     ; This is the first line.
     .. world     ; This is the second line.
     ```
+
+<a id="x-28MGL-PAX-3A-40PARSING-20MGL-PAX-3ASECTION-29"></a>
+
+## 10 Parsing
+
+<a id="x-28MGL-PAX-3A-40PARSING-NAMES-20MGL-PAX-3ASECTION-29"></a>
+
+### 10.1 Parsing Names
+
+When encountering a [word][d7b0] such as [`CLASSes`][1f37] in a docstring, PAX
+needs to find the [name][88cf], and how that's done varies slightly.
+[Codification][f1ab], for example, looks for [interesting][7445] names,
+[Navigating Sources in Emacs][3386] for names with [Lisp][30ad] [`DEFINITIONS`][e196], and [Linking][19e3] for names with [any kind of
+definition][99b0].
+
+This is not as straightforward as it sounds because it needs to
+handle cases like non[`READ`][fe58]able, [`PRINT`][d451]ed, and all the various forms of
+[Linking][19e3] in docstrings as well as in comments, and the `(NAME
+LOCATIVE)` syntax in [`DEFSECTION`][72b4].
+
+<a id="x-28MGL-PAX-3A-40WORD-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+
+- [glossary-term] **word**
+
+    A *word* is a string from which we want to extract a [name][88cf]. When
+    [Navigating][3386], the word is
+    `slime-sexp-at-point` or the label of a [Markdown reference link][8c00] if point
+    is over one. Similarly, when [Generating Documentation][2c93], it is a
+    non-empty string between whitespace characters in a docstring or the
+    label of a [Markdown reference link][8c00].
+
+<a id="x-28MGL-PAX-3A-40RAW-NAME-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+
+- [glossary-term] **raw name**
+
+    A *raw name* is a string from which a [name][88cf] may be read. Raw names
+    correspond to an intermediate parsing step between [word][d7b0]s an [name][88cf]s.
+    See [Names in Raw Names][016d].
+
+<a id="x-28MGL-PAX-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+
+- [glossary-term] **name**
+
+    A *name* is a [DRef name][5fc4]. That is, a symbol, a
+    string or a nested list of the previous associated with a
+    definition, whose kind is given by a [locative][7ac8].
+
+Depending on the context, trimming and depluralization may be
+enabled (see [Raw Names in Words][f0d5]), while the possible names may be
+restricted to symbols (see [Names in Raw Names][016d]).
+
+- *Trimming:* Enabled for [`M-.` Defaulting][460e] and [Codification][f1ab].
+
+- *Depluralization:* Enabled when the [word][d7b0] is part of the normal
+  flow of text (i.e. not for [Specific Reflink with Text][fb17],
+  [Unspecific Reflink with Text][34b8] and various Elisp functions such as
+  `mgl-pax-apropos` unless they determine their argument from buffer
+  contents).
+
+- *Symbols only:* This is the case for [Codification][f1ab] and
+  [Unspecific Autolink][e2a4] to prevent string-based definitions from
+  littering the documentation with links without the control
+  provided by explicitly [`IMPORT`][8f46]ing symbols.
+
+
+For a word, a number of [raw name][f5af]s is generated by trimming
+delimiter characters and plural markers, and for each raw name a
+number of names are considered until one is found suitable in the
+context. The following subsections describe the details of the
+parsing algorithm.
+
+<a id="x-28MGL-PAX-3A-40RAW-NAMES-IN-WORDS-20MGL-PAX-3ASECTION-29"></a>
+
+#### 10.1.1 Raw Names in Words
+
+From [word][d7b0]s, [raw name][f5af]s are parsed by trimming some
+prefixes and suffixes. For a given word, multiple raw names are
+considered in the following order.
+
+1. The entire word.
+
+2. Trimming the following characters from the left of the word:
+
+        #<{;"'`
+
+3. Trimming the following characters from the right of the word:
+
+        ,;:.>}"'`
+
+4. Trimming both of the previous two at the same time.
+
+5. From the result of 4., If a [word][d7b0] ends with what looks like a plural marker (case-insensitive),
+then a [name][88cf] is created by removing it. For example, from the word
+`BUSES` the plural marker `ES` is removed to produce the name `BUS`.
+The list of plural markers considered is `SES` (e.g. `GASSES`),
+`ES` (e.g. `BUSES`), `S` (e.g. `CARS`), `ZES` (e.g. `FEZZES`), and
+`REN` (e.g. `CHILDREN`).
+
+6. From the result of 4., removing the prefix before the first, and the suffix after the last
+uppercase character if it contains at least one lowercase character.
+
+
+<a id="x-28MGL-PAX-3A-40NAMES-IN-RAW-NAMES-20MGL-PAX-3ASECTION-29"></a>
+
+#### 10.1.2 Names in Raw Names
+
+For each [raw name][f5af] from [Raw Names in Words][f0d5], various [name][88cf]s
+may be considered until one is found that's suitable in the context.
+
+The following examples list the names considered for a given raw
+name, assuming that [`READTABLE-CASE`][48f1] is `:UPCASE` as well as that `FOO`
+and `|Foo|` are interned.
+
+- `"foo"`: `FOO`, `"foo"`, `"FOO"` (rules 1, 2, 3)
+
+- `"FOO"`: `FOO`, `"FOO"` (rules 1, 2)
+
+- `"Foo"`: `"Foo"`, `"FOO"` (rules 2, 3)
+
+- `"|Foo|"`: `|Foo|` (rule 4)
+
+- `"\"foo\""`: `"foo"` (rule 5)
+
+The rules are:
+
+1. If the raw name is not mixed case (i.e. it doesn't have both
+   upper- and lowercase characters) and it names an interned
+   symbol (subject to the current [Package and Readtable][ab7e]), then that
+   symbol is considered as a name.
+
+2. The raw name itself (a string) is considered a name.
+
+3. The raw name upcased or downcased according to
+   `READTABLE-CASE` (subject to the [current
+   readtable][ab7e]) but still as a string. This
+   is to allow `[dref][package]` to refer to the `"DREF"`
+   package regardless of whether the symbol `DREF` is interned in
+   the current package.
+
+4. If the raw name is explicitly a symbol (it starts with `#\|`),
+   and it names an interned symbol (subject to the current
+   [Package and Readtable][ab7e]), then that symbol is considered as a name
+   and nothing else.
+
+5. If the raw name has an embedded string (it starts with `#\"`) and
+   [`READ-FROM-STRING`][d813] can read the embedded string from it, then that
+   string is considered as a name and nothing else.
+
+
+<br/>
+For example, when `M-.` is pressed while point is over
+`nonREADable.`, the last word of the sentence `It may be
+nonREADable.`, the following [raw name][f5af]s are considered until one is
+found with a definition:
+
+1. The entire word, `"nonREADable."`.
+
+2. Trimming left does not produce a new raw name.
+
+3. Trimming right removes the dot and gives `"nonREADable"`.
+
+4. Trimming both is the same as trimming right.
+
+5. No plural markers are found.
+
+6. The lowercase prefix and suffix is removed around the uppercase
+   core, giving `"READ"`. This names an interned symbol which has a
+   definition, so `M-.` will visit it.
+
+When [Generating Documentation][2c93], [Autolink][ec7a]ing behaves similarly.
+
+<a id="x-28MGL-PAX-3A-40PARSING-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
+
+### 10.2 Parsing Locatives
+
+Locatives are parsed almost as if by [`READ`][fe58]. They are found in
+buffer contents around a [word][d7b0] when [`M-.` Defaulting][460e] or
+[Generating Documentation][2c93], and in the string entered when
+[`M-.` Prompting][ed46], with a similar distinction when
+[Browsing Live Documentation][a595].
+
+Parsing deviates from `READ` in the following ways.
+
+- No new symbols are interned during parsing. If an expression
+  contains uninterned symbols, then it is not parsable as a
+  locative.
+
+- A locative that involves unreadable objects that print using the
+  `#<` syntax (e.g. `(METHOD () (EQL #<PACKAGE DREF))`) is parsable
+  in the context of a [name][88cf] if each unreadable object in the
+  locative occurs in one of the [`DEFINITIONS`][e196] of that name and it
+  [prints to an equivalent string][2f21] (e.g. `#<PACKAGE DREF>` above).
+
+
+<a id="x-28MGL-PAX-3A-40PRINTS-TO-AN-EQUIVALENT-STRING-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+
+- [glossary-term] **prints to an equivalent string**
+
+    An object with an unreadable representation is said to print to
+    some string `S` if its [`PRIN1`][6384] representation (under [`WITH-STANDARD-IO-SYNTAX`][39df]
+    but in the current package and with [`*PRINT-READABLY*`][8aca] `NIL`) is the same as `S`, where consecutive whitepace characters are
+    replaced with a single space in both strings, and the comparison is case-insensitive.
+    
+    See the related concept of [stable printed locative][3942], that requires
+    the printed representation of entire locatives to be unique and
+    non-changing to support [Linking][19e3].
 
 <a id="x-28MGL-PAX-3A-40EXTENSION-API-20MGL-PAX-3ASECTION-29"></a>
 

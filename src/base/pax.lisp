@@ -41,11 +41,11 @@
   (@links-and-systems section)
   (@background section)
   (@basics section)
-  (@parsing section)
   (@pax-locatives section)
   (@navigating-in-emacs section)
   (@generating-documentation section)
   (@transcripts section)
+  (@parsing section)
   (@extension-api section))
 
 (define-glossary-term @slime (:title "SLIME"
