@@ -303,7 +303,8 @@
 ;;; That is, SPECIALIZERS contains names such as NUMBER or (EQL 7),
 ;;; not class objects and eql specializer objects.
 (define-dspec swank-method-dspec (name qualifiers specializers)
-  (:or :abcl :clisp :ecl :sbcl) `(defmethod ,name ,@qualifiers ,@specializers)
+  (:or :clisp :ecl :sbcl) `(defmethod ,name ,@qualifiers ,@specializers)
+  :abcl `(defmethod ,name ,@qualifiers ,specializers)
   :allegro `(:operator (method ,name ,@qualifiers ,specializers))
   :ccl `(:method ,name ,@qualifiers
           ,(mapcar 'specializer-to-object specializers))
@@ -464,9 +465,9 @@
                            collect (first rest)
                            finally (setq specializers rest)))
     (values qualifiers
-            #-(or allegro ccl cmucl)
+            #-(or abcl allegro ccl cmucl)
             specializers
-            #+(or allegro ccl cmucl)
+            #+(or abcl allegro ccl cmucl)
             (unlist1 specializers))))
 
 #+allegro

@@ -57,7 +57,7 @@
                                'failure))
     (check-ref-sets (definitions 'short-setf-with-fn)
                     `(,(xref 'short-setf-with-fn 'setf))))
-  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :clisp))
+  (with-failure-expected ((and (alexandria:featurep '(:or :clisp))
                                'failure))
     (check-ref-sets (definitions 'test-gf)
                     `(,(xref 'test-gf 'generic-function)
