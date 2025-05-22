@@ -20,6 +20,7 @@
 
 (defvar *on-unreadable* :error)
 (defvar *truncating-on-unreadable* nil)
+(defvar *on-read-eval-error* :parse-error)
 
 ;;; A non-interning parser like SWANK::PARSE-SYMBOL, but it supports
 ;;; nested lists of symbols, strings and numbers, which is currently
@@ -49,6 +50,7 @@
       (with-input-from-string (stream string)
         (let* ((*on-unreadable* on-unreadable)
                (*truncating-on-unreadable* nil)
+               (*on-read-eval-error* (if errorp :parse-error nil))
                (sexp (parse-sexp* stream string))
                (pos (file-position stream)))
           (when (and (not junk-allowed)
@@ -82,9 +84,19 @@
            (let ((next (peek-char nil stream nil)))
              (cond ((null next)
                     (parse-sexp-error "Unexpected EOF after # character"))
+                   ((eql next #\:)
+                    (file-position stream (1- (file-position stream)))
+                    (read stream))
                    ((eql next #\.)
                     (read-char stream)
-                    (eval (read stream)))
+                    (let ((object (read stream)))
+                      (handler-bind
+                          ((error
+                             (lambda (e)
+                               (when (eq *on-read-eval-error* :parse-error)
+                                 (parse-sexp-error "#.~A failed with:~:@_  ~A"
+                                                   object e)))))
+                        (eval object))))
                    ((eql next #\<)
                     (cond ((eq *on-unreadable* :error)
                            (parse-sexp-error "Unreadable value found in ~S."

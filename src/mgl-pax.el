@@ -720,8 +720,7 @@ buffer."
 
 ;;; Return 1. the first argument of the current sexp if it's a symbol,
 ;;; 2. the Slime source location :SNIPPET, 3. the start position of
-;;; the sexp. If any movement fails or the first argument is not a
-;;; looks like a list, then return nil.
+;;; the sexp. If any movement fails, then return nil.
 (defun mgl-pax-current-sexp-first-arg-snippet-and-pos ()
   (ignore-errors
     (save-excursion
@@ -733,12 +732,7 @@ buffer."
         (down-list)
         (slime-forward-sexp)
         (forward-char)
-        ;; `name' is commonly a symbol or a string.
-        (let ((name (mgl-pax-next-sexp)))
-          ;; FIXME: DREF::@NAME allows lists, but we ignoring them for
-          ;; expediency.
-          (unless (string-prefix-p "(" name)
-            (list name snippet pos)))))))
+        (list (mgl-pax-next-sexp) snippet pos)))))
 
 
 ;;;; MGL-PAX documentation browser (see
@@ -833,7 +827,6 @@ macro on that page."
 
 (defun mgl-pax-prompt-and-document ()
   (mgl-pax-document-pax-url
-   ;; FIXME: rename urllike?
    (mgl-pax-urllike-to-url
     (mgl-pax-read-from-minibuffer "View Documentation of: " 'document))))
 

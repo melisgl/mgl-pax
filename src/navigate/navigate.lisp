@@ -397,25 +397,22 @@
 
 ;;; This is also used by CURRENT-DEFINITION-PAX-URL-FOR-EMACS.
 (defun find-current-definition (buffer filename possibilities)
-  (loop for (name snippet pos) in possibilities
-        for object = (ignore-errors (read-name-without-interning name))
-          thereis (and object (guess-current-definition
-                               object buffer
-                               filename snippet
-                               pos))))
+  (loop for (name-string snippet pos) in possibilities
+          thereis (multiple-value-bind (name foundp)
+                      (parse-sexp name-string :errorp nil)
+                    (when foundp
+                      (or (guess-current-definition name buffer filename
+                                                    snippet pos)
+                          (when (and (listp name)
+                                     (symbolp (first name)))
+                            (guess-current-definition
+                             (first name) buffer filename snippet pos)))))))
 
-(defun read-name-without-interning (string)
-  (let ((string (trim-whitespace string)))
-    (if (or (starts-with-subseq "#:" string)
-            (starts-with #\" string))
-        (read-from-string string)
-        (parse-interned-symbol string))))
-
-;;; Return the definition of OBJECT in BUFFER (a string) and FILE (a
-;;; string or NIL) whose source location information from SOURCE-LOCATION
-;;; matches SNIPPET or is otherwise closest to buffer positions POS
-;;; (1-based indexing).
-(defun guess-current-definition (object buffer file snippet pos)
+;;; Return the definition of NAME in BUFFER (a string) and FILE (a
+;;; string or NIL) whose source location information from
+;;; SOURCE-LOCATION matches SNIPPET or is otherwise closest to buffer
+;;; positions POS (1-based indexing).
+(defun guess-current-definition (name buffer file snippet pos)
   (flet ((snippets-match (loc-snippet)
            (or (null loc-snippet)
                ;; E.g. ASDF:SYSTEMs on SBCL
@@ -432,7 +429,7 @@
           (closest-pos 2000))
       (dolist (dref
                ;; Only LISP-LOCATIVE-TYPES have source location.
-               (definitions object))
+               (definitions name))
         (let ((location (source-location dref)))
           (if (source-location-p location)
               (let ((loc-file (source-location-file location))
@@ -499,6 +496,7 @@
                     ((readtable) '("defreadtable"))
                     ((section) '("defsection"))
                     ((glossary-term) '("define-glossary-term"))
+                    ((note) '("note"))
                     ((locative) '("define-locative-type")))))
     (loop for pattern in patterns
             thereis (search pattern snippet :test #'char-equal))))

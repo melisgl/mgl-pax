@@ -28,8 +28,10 @@
   (match-values (pax::parse-sexp "(1 (print \"hey\") #.(find-package :dref))")
     (equal * `(1 (print "hey") ,(find-package :dref)))
     (eql * 40))
-  (signals (pax::parse-sexp-error)
-    (pax::parse-sexp "#:xxx"))
+  (let ((obj (pax::parse-sexp "#:xxx")))
+    (is (symbolp obj))
+    (is (null (symbol-package obj)))
+    (is (equal (symbol-name obj) (symbol-name '#:xxx))))
   (let ((d (dref 'print 'function))
         (*package* (find-package :mgl-pax-test)))
     (pax::parse-sexp "#<DREF PRINT FUNCTION>"
@@ -56,7 +58,9 @@
       (pax::parse-sexp s :junk-allowed t
                          :on-unreadable (lambda (stream)
                                           (pax::read-unreadable
-                                           stream ()))))))
+                                           stream ())))))
+  (signals (pax::parse-sexp-error)
+    (pax::parse-sexp "#.(mgl-pax-test::junk)" :errorp t)))
 
 (deftest test-skip-string-ignoring-case-and-whitespace ()
   (is (with-input-from-string (s "#<x y>")
