@@ -38,9 +38,15 @@
 
 (deftest test-document-autoload ()
   (is (not (document-system-loaded-p)))
-  (signals-not (error)
-    (document (dref:dref 'aaa1 'aaa)))
-  (is (document-system-loaded-p)))
+  (let ((*document-max-numbering-level* 1))
+    (signals-not (error)
+      (document (dref:dref 'aaa1 'aaa))))
+  (is (document-system-loaded-p))
+  (with-failure-expected ((and (alexandria:featurep
+                                '(:not (:or :allegro :ccl :ecl :sbcl)))
+                               'failure))
+    (when (is (boundp '*document-max-numbering-level*))
+      (is (eql *document-max-numbering-level* 3)))))
 
 (deftest test-document-for-emacs-autoload ()
   (is (not (document-system-loaded-p)))

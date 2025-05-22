@@ -179,7 +179,7 @@
   (transcription-output-consistency-error condition)
   (transcription-values-consistency-error condition))
 
-(defvar *transcribe-syntaxes*
+(defvar/autoloaded *transcribe-syntaxes*
   '((:default
      (:output "..")
      ;; To give precedence to this no-value marker, it is listed
@@ -232,7 +232,7 @@
 
   See TRANSCRIBE for how the actual syntax to be used is selected.")
 
-(defvar *transcribe-check-consistency* nil
+(defvar/autoloaded *transcribe-check-consistency* nil
   "The default value of TRANSCRIBE's CHECK-CONSISTENCY argument.")
 
 (defun/autoloaded transcribe

@@ -151,7 +151,7 @@
   variable `mgl-pax-web-server-port` is nil."""
   (*browse-html-style* variable))
 
-(defvar *browse-html-style* :charter
+(defvar/autoloaded *browse-html-style* :charter
   "The HTML style to use for browsing live documentation. Affects only
   non-w3m browsers. See *DOCUMENT-HTML-DEFAULT-STYLE* for the possible
   values.

@@ -64,11 +64,11 @@
 (define-glossary-term @pandoc (:title "Pandoc"
                                :url "https://pandoc.org/"))
 
-(defvar *document-pandoc-program* "pandoc"
+(defvar/autoloaded *document-pandoc-program* "pandoc"
   """The name of the Pandoc binary. It need not be an absolute pathname
   as `\\PATH` is searched.""")
 
-(defparameter *document-pandoc-pdf-options*
+(defvar/autoloaded *document-pandoc-pdf-options*
   `(("-V" "papersize=a4")
     ("-V" "margin-left=1.03in")
     ("-V" "margin-right=1.03in")
@@ -90,7 +90,7 @@
   *DOCUMENT-PANDOC-PDF-HEADER-INCLUDES* and
   *DOCUMENT-PANDOC-PDF-METADATA-BLOCK*.")
 
-(defvar *document-pandoc-pdf-metadata-block* ""
+(defvar/autoloaded *document-pandoc-pdf-metadata-block* ""
   "A @PANDOC-YAML-METADATA-BLOCK as a string.
 
   Concatenate to this string to customize it.")
@@ -153,9 +153,9 @@
   \hspace{0.1em}\fcolorbox[HTML]{606060}{f5f5f5}{\textbf{#1}}}
 """)
 
-(defparameter *document-pandoc-pdf-header-includes*
-  (default-pandoc-pdf-header-includes)
-  "LaTeX code (a string) to include in the preamble via
+(defvar/autoloaded *document-pandoc-pdf-header-includes*
+    (default-pandoc-pdf-header-includes)
+    "LaTeX code (a string) to include in the preamble via
   [`header-includes`](https://pandoc.org/MANUAL.html#layout).
 
   The default includes have no configuration knobs. Look at the value

@@ -73,6 +73,10 @@ Pros of Definitions:
   These can be added to DRef if needed.
 ** MAYBE add DCAST and DLOOKUP locatives
 Needs a constant name such as LOCATE* or DREF*.
+* autoload
+** TODO factor out autoload
+dref/src/base/autoload.lisp
+src/base/autoload.lisp
 * pax base
 ** MAYBE swap the MGL-PAX package name with the PAX nickname
 ... somehow without breaking existing URLs, which have
@@ -121,13 +125,6 @@ PAX::SORT-BY-PROXIMITY.
 E.g. 'clhs' works in a package where PAX is :USEd but not elsewhere.
 
 But so does M-.'s history.
-** BUG autoloaded DEFVAR does not set global value if locally bound
-CL-USER> (let ((pax:*document-link-code* t))
-           (pax:document "PRINT"))
-PRINT
-NIL
-CL-USER> (boundp 'pax:*document-link-code*)
-NIL
 ** CANCELLED autoload documentation when needed?
 CLOSED: [2025-05-07 Wed 09:29]
 - State "CANCELLED"  from "MAYBE"      [2025-05-07 Wed 09:29] \\

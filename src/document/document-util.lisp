@@ -79,7 +79,7 @@
   (*document-html-top-blocks-of-links* variable)
   (*document-html-bottom-blocks-of-links* variable))
 
-(defvar *document-html-default-style* :default
+(defvar/autoloaded *document-html-default-style* :default
   "The HTML style to use. It's either STYLE is either :DEFAULT or
   :CHARTER. The :DEFAULT CSS stylesheet relies on the default
   fonts (sans-serif, serif, monospace), while :CHARTER bundles some
@@ -197,15 +197,15 @@
                                             ((:default) "web/default/")
                                             ((:charter) "web/charter/"))))
 
-(defvar *document-html-lang* "en"
+(defvar/autoloaded *document-html-lang* "en"
   "The value for the `html` element's `xml:lang` and `lang`
   attributes in the generated HTML.")
 
-(defvar *document-html-charset* "UTF-8"
+(defvar/autoloaded *document-html-charset* "UTF-8"
   "The value for `charset` attribute of the `<meta http-equiv='Content-Type'
   content='text/html'>` element in the generated HTML.")
 
-(defvar *document-html-head* nil
+(defvar/autoloaded *document-html-head* nil
   "Stuff to be included in the `<head>` of the generated HTML.
 
   - If NIL, nothing is included.
@@ -216,7 +216,7 @@
   - If a function designator, then it is called with a single
     argument, the HTML stream, where it must write the output.")
 
-(defvar *document-html-sidebar* nil
+(defvar/autoloaded *document-html-sidebar* nil
   "Stuff to be included in the HTML sidebar.
 
   - If NIL, a default sidebar is generated, with
@@ -229,7 +229,7 @@
   - If a function designator, then it is called with a single
     argument, the HTML stream, where it must write the output.")
 
-(defvar *document-html-top-blocks-of-links* ()
+(defvar/autoloaded *document-html-top-blocks-of-links* ()
   "A list of blocks of links to be displayed on the sidebar on the left,
   above the table of contents. A block is of the form `(&KEY TITLE ID
   LINKS)`, where TITLE will be displayed at the top of the block in a
@@ -237,7 +237,7 @@
   LABEL)` elements, where `URI` maybe a string or an object being
   DOCUMENTed or a REFERENCE thereof.")
 
-(defvar *document-html-bottom-blocks-of-links* ()
+(defvar/autoloaded *document-html-bottom-blocks-of-links* ()
   "Like *DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS*, only it is displayed
   below the table of contents.")
 
@@ -368,7 +368,7 @@
    (toc-options)
    google-analytics-id google-analytics-id))
 
-(defvar *document-html-max-navigation-table-of-contents-level* nil
+(defvar/autoloaded *document-html-max-navigation-table-of-contents-level* nil
   "NIL or a non-negative integer. If non-NIL, it overrides
   *DOCUMENT-MAX-NUMBERING-LEVEL* in the dynamic HTML table of contents
   on the left of the page.")

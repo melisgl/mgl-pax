@@ -240,18 +240,6 @@
         when (and (external-symbol-p symbol package)
                   (not (eq package (symbol-package symbol))))
           collect package))
-
-(defun symbol-global-value (symbol)
-  #+allegro
-  (multiple-value-bind (value bound) (sys:global-symbol-value symbol)
-    (values value (eq bound :unbound)))
-  #+ccl
-  (let ((value (ccl::%sym-global-value symbol)))
-    (values value (eq value (ccl::%unbound-marker))))
-  #+sbcl
-  (ignore-errors (sb-ext:symbol-global-value symbol))
-  #-(or allegro ccl sbcl)
-  (ignore-errors (symbol-value symbol)))
 
 
 (defmacro with-debugger-hook (fn &body body)
