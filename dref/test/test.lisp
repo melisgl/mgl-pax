@@ -1008,7 +1008,7 @@
   ;; Bind *PACKAGE* so that names of tests printed have package names,
   ;; and M-. works on them in Slime.
   (handler-bind ((warning (lambda (c)
-                            (unless (expected-style-warning-p c)
+                            (when (expected-style-warning-p c)
                               (muffle-warning)))))
     (with-compilation-unit (:override t)
       (let ((*package* (find-package :common-lisp))

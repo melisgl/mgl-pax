@@ -48,6 +48,7 @@
   (test-locate/structure-accessor)
   (test-locate/type)
   (test-locate/class)
+  (test-locate/structure)
   (test-locate/condition)
   (test-locate/declaration)
   (test-locate/restart)
