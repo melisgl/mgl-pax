@@ -127,13 +127,7 @@ if [ -n "${lisp}" ]; then
       lisp2="$lisp"
   fi
   run_tests lisp_tests nil ${lisp2}
-
-  # On ABCL, this fails hard on GitHub with "already accessible in
-  # package" (similar to https://abcl.org/trac/ticket/167 and
-  # https://abcl.org/trac/ticket/357).
-  if [ "$lisp" = "abcl-bin" ]; then
-      run_tests autoload_tests t ${lisp2}
-  fi
+  run_tests autoload_tests t ${lisp2}
 else
   # Most lisps take only 10s or so to run the tests. CLISP takes 4x
   # longer. ABCL is 25x slower.

@@ -58,6 +58,16 @@
 (defvar *document-mark-up-signatures*)
 (export '*document-mark-up-signatures*)
 
+;;; @PDF-OUTPUT
+(defvar *document-pandoc-program*)
+(export '*document-pandoc-program*)
+(defvar *document-pandoc-pdf-options*)
+(export '*document-pandoc-pdf-options*)
+(defvar *document-pandoc-pdf-header-includes*)
+(export '*document-pandoc-pdf-header-includes*)
+(defvar *document-pandoc-pdf-metadata-block*)
+(export '*document-pandoc-pdf-metadata-block*)
+
 ;;; @HTML-OUTPUT
 (defvar *document-html-default-style*)
 (export '*document-html-default-style*)
