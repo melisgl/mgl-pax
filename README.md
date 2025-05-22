@@ -257,6 +257,14 @@ something like this to your `.emacs`:
 (global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
 ```
 
+When [Browsing with Other Browsers][c434], for clicking on the locative
+next to a definition to visit the corresponding source location in
+Emacs, the following permission needs to be given:
+
+```elisp
+(setq slime-enable-evaluate-in-emacs t)
+```
+
 
 <a id="x-28MGL-PAX-3A-40EMACS-FUNCTIONALITY-20MGL-PAX-3ASECTION-29"></a>
 

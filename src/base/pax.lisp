@@ -192,6 +192,14 @@
   (global-set-key (kbd "C-.") 'mgl-pax-document)
   (global-set-key (kbd "s-x t") 'mgl-pax-transcribe-last-expression)
   (global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
+  ```
+
+  When @BROWSING-WITH-OTHER-BROWSERS, for clicking on the locative
+  next to a definition to visit the corresponding source location in
+  Emacs, the following permission needs to be given:
+
+  ```elisp
+  (setq slime-enable-evaluate-in-emacs t)
   ```"""
   (@emacs-functionality section)
   (@emacs-quicklisp section)
