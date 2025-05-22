@@ -1020,7 +1020,7 @@
                                 :describe describe)))))))
 
 (defun expected-style-warning-p (c)
-  (search "junk" (princ-to-string c)))
+  (search "junk" (princ-to-string c) :test #'equalp))
 
 #+nil
 (test)
