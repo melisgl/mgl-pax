@@ -28,9 +28,11 @@
 ;;; May signal END-OF-FILE, READER-ERROR and PARSE-ERROR if ERRORP.
 ;;;
 ;;; *READTABLE* is ignored, and no macro dispatch character is handled
-;;; except #. and #<, which behave as in the standard readtable (but
-;;; if ON-UNREADABLE is :TRUNCATE, then the already read stuff is
-;;; returned).
+;;; except #. (this is allowed to INTERN) and #<, which behave as in
+;;; the standard readtable.
+;;
+;;; If ON-UNREADABLE is :TRUNCATE, then the already read stuff is
+;;; returned with the symbol PAX::UNREADABLE marking the location.
 ;;;
 ;;; If ON-UNREADABLE is a function of a STREAM argument, it is called
 ;;; when an unreadable marker #< is encountered, with FILE-POSITION at
@@ -82,7 +84,7 @@
                     (parse-sexp-error "Unexpected EOF after # character"))
                    ((eql next #\.)
                     (read-char stream)
-                    (eval (parse-sexp* stream string)))
+                    (eval (read stream)))
                    ((eql next #\<)
                     (cond ((eq *on-unreadable* :error)
                            (parse-sexp-error "Unreadable value found in ~S."

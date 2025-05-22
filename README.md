@@ -3966,14 +3966,18 @@ buffer contents around a [word][d7b0] when [`M-.` Defaulting][460e] or
 
 Parsing deviates from `READ` in the following ways.
 
-- No new symbols are interned during parsing. If an expression
+- No new symbols are [`INTERN`][b4f0]ed during parsing. If an expression
   contains uninterned symbols, then it is not parsable as a
   locative.
 
+- Read-time evaluation ([#.][ffd7]) follows normal `READ` semantics.
+  Thus, `(method () ((eql #.(find-package 'cl))))` may `INTERN` the
+  symbol `CL`.
+
 - A locative that involves unreadable objects that print using the
-  `#<` syntax (e.g. `(METHOD () (EQL #<PACKAGE DREF))`) is parsable
-  in the context of a [name][88cf] if each unreadable object in the
-  locative occurs in one of the [`DEFINITIONS`][e196] of that name and it
+  `#<` syntax (e.g. `(METHOD () ((EQL #<PACKAGE DREF>)))`) is
+  parsable in the context of a [name][88cf] if each unreadable object in
+  the locative occurs in one of the [`DEFINITIONS`][e196] of that name and it
   [prints to an equivalent string][2f21] (e.g. `#<PACKAGE DREF>` above).
 
 
@@ -4553,6 +4557,7 @@ they are presented.
   [b18e]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_p.htm#property_list '"property list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [b2e4]: #x-28MGL-PAX-3A-40FILTERING-LINKS-20MGL-PAX-3ASECTION-29 "Filtering Links"
   [b39f]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cdb.htm '"22.3.4.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [b4f0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_intern.htm "INTERN (MGL-PAX:CLHS FUNCTION)"
   [b6c4]: dref/README.md#x-28DREF-EXT-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "DREF-EXT:DEFINE-LOCATIVE-TYPE MGL-PAX:MACRO"
   [b79a]: http://www.lispworks.com/documentation/HyperSpec/Body/v_rdtabl.htm "*READTABLE* (MGL-PAX:CLHS VARIABLE)"
   [b7fc]: #x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29 "Apropos"

@@ -287,14 +287,18 @@
 
   Parsing deviates from READ in the following ways.
 
-  - No new symbols are interned during parsing. If an expression
+  - No new symbols are INTERNed during parsing. If an expression
     contains uninterned symbols, then it is not parsable as a
     locative.
 
+  - Read-time evaluation ([#.][clhs]) follows normal READ semantics.
+    Thus, `(method () ((eql #.(find-package 'cl))))` may INTERN the
+    symbol `CL`.
+
   - A locative that involves unreadable objects that print using the
-    `#<` syntax (e.g. `(METHOD () (EQL #<PACKAGE DREF))`) is parsable
-    in the context of a @NAME if each unreadable object in the
-    locative occurs in one of the DEFINITIONS of that name and it
+    `#<` syntax (e.g. `(METHOD () ((EQL #<PACKAGE DREF>)))`) is
+    parsable in the context of a @NAME if each unreadable object in
+    the locative occurs in one of the DEFINITIONS of that name and it
     @PRINTS-TO-AN-EQUIVALENT-STRING (e.g. `#<PACKAGE DREF>` above)."""
   (@prints-to-an-equivalent-string glossary-term))
 

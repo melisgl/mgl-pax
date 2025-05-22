@@ -1212,7 +1212,12 @@ This is [Self-referencing][e042].
   (check-pred (list (definitions 'test-gf)
                     "TEST-GF `(method () ((eql #<package \"COMMON-LISP\">)))`")
               ;; The id of the link varies by implementation.
-              "[`TEST-GF`]["))
+              "[`TEST-GF`][")
+  (with-failure-expected ((and (alexandria:featurep :clisp)
+                               'failure))
+    (check-pred (list (definitions 'test-gf)
+                      "TEST-GF `(method () ((eql #.(find-package :cl))))`")
+                "[`TEST-GF`][")))
 
 (deftest test-method/arglist ()
   (check-pred (dref 'test-gf '(method () ((eql :bar))))
