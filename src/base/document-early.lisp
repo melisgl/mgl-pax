@@ -4,6 +4,10 @@
 
 (declaim (special *document-open-linking*))
 
+;;; @DOCUMENTABLE
+(defvar *document-tight*)
+(export '*document-tight*)
+
 ;;; @PACKAGE-AND-READTABLE
 (defvar *document-normalize-packages*)
 (export '*document-normalize-packages*)

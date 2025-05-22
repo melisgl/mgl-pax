@@ -1,5 +1,9 @@
 (in-package :mgl-pax)
 
+(defun list-of-one-p (list)
+  (and list (null (cdr list))))
+
+
 ;;;; Cached DREF:DEFINITIONS with all LOCATIVE-TYPES.
 
 (defvar *definitions-cache*)

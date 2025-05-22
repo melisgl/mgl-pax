@@ -22,13 +22,13 @@
 ;;;
 ;;; - COLLECT-HEADINGs,
 ;;; - populate PAGE-DEFINITIONS,
-;;; - set PAGE-WRITTEN-Ps.
+;;; - set PAGE-WRITTEN-IN-FIRST-PASS-Ps.
 ;;;
 ;;; In the 2nd pass, output goes to the real output stream(s) (see
 ;;; PAGE-TEMP-STREAM-SPEC), and with the information gathered in the
 ;;; first pass, we may
 ;;;
-;;; - PRINT-TOPLEVEL-SECTION-LIST for each PAGE-WRITTEN-P,
+;;; - PRINT-TOPLEVEL-SECTION-LIST for each PAGE-WRITTEN-IN-FIRST-PASS-P,
 ;;; - PRINT-TABLE-OF-CONTENTS for top-level sections,
 ;;; - add prev/next/up links to sections (FANCY-NAVIGATION),
 ;;; - know what definitions are @LINKABLE.
@@ -55,7 +55,7 @@
                (print-toplevel-section-lists *pages*)
                ;; Initially, send output to the default page (built
                ;; for STREAM). Note that on PAGE-BOUNDARIES,
-               ;; DOCUMENT-OBJECT* (method () (dref t)) redirects the
+               ;; DOCUMENT-OBJECT (method () (dref t)) redirects the
                ;; output.
                (with-temp-output-to-page (,stream (last-elt *pages*))
                  (document-documentable ,documentable ,stream))
@@ -202,9 +202,9 @@
   source-uri-fn
   ;; The DREFs written to this page. Set in the first pass.
   definitions
-  ;; Any output written to this page (including plain docstrings)? Set
-  ;; in the first pass.
-  written-p
+  ;; Any output written to this page (including plain docstrings)?
+  written-in-first-pass-p
+  written-in-second-pass-p
   ;; LINKS made from this page. For LINK-TO-DEFINITION and
   ;; WRITE-MARKDOWN-REFERENCE-STYLE-LINK-DEFINITIONS.
   (used-links (make-hash-table :test #'eq) :type hash-table))
@@ -394,11 +394,22 @@
 
   - _list of documentables_: A nested list of LOCATEable objects and
     docstrings. The objects in it are documented in depth-first order.
-    The structure of the list is otherwise unimportant.")
+    The structure of the list is otherwise unimportant."
+  (*document-tight* variable))
 
-(defvar *document-tight* nil)
+(defvar *document-tight* nil
+  "If NIL, then DOCUMENT adds a newline between consecutive
+  [atomic][clhs] documentables on the same [page][@pages].")
 
 (defvar *objects-being-documented* ())
+
+(defun about-to-write-to-page ()
+  (assert (not *first-pass*))
+  (if (page-written-in-second-pass-p *page*)
+      (when (and (not *document-tight*)
+                 (list-of-one-p *objects-being-documented*))
+        (terpri *page-stream*))
+      (setf (page-written-in-second-pass-p *page*) t)))
 
 ;;; Stuff a description of *OBJECTS-BEING-DOCUMENTED* into known
 ;;; conditions.
@@ -442,28 +453,12 @@
         (format stream "~%  [While documenting ~{~S~^~%   in ~}]~%" context)
         (format stream ""))))
 
-;;; Basically, call DOCUMENT-OBJECT on every element of DOCUMENTABLE
-;;; (see MAP-DOCUMENTABLE) and add extra newlines between them
-;;; according to *DOCUMENT-TIGHT*.
 (defun document-documentable (documentable stream)
-  ;; The newline logic assumes that everything goes to the same page,
-  ;; which is currently fine because *DOCUMENT-TIGHT* is not public,
-  ;; and it's used only for @BROWSING-LIVE-DOCUMENTATION, which works
-  ;; with single pages.
   (with-document-context
-    (let ((firstp t)
-          (add-blank-p nil))
-      (map-documentable
-       (lambda (object1)
-         (when (or add-blank-p
-                   (and (not firstp)
-                        (not *document-tight*)))
-           (terpri stream))
-         (setq firstp nil)
-         (with-heading-offset (object1)
-           (document-object object1 stream))
-         (setq add-blank-p (not *document-tight*)))
-       documentable))))
+    (map-documentable (lambda (object1)
+                        (with-heading-offset (object1)
+                          (document-object object1 stream)))
+                      documentable)))
 
 (defmacro with-documentable-bindings ((documentable) &body body)
   (assert (symbolp documentable))
@@ -862,8 +857,9 @@
     (document-object (locate object) stream))
   (:method ((string string) stream)
     (cond (*first-pass*
-           (setf (page-written-p *page*) t))
+           (setf (page-written-in-first-pass-p *page*) t))
           (t
+           (about-to-write-to-page)
            (document-docstring string stream :indentation "" :paragraphp nil)
            (terpri stream))))
   (:method :around ((xref xref) stream)
@@ -898,14 +894,15 @@
         (if *first-pass*
             (let ((*page* (or page *page*)))
               (push dref (page-definitions *page*))
-              (setf (page-written-p *page*) t)
+              (setf (page-written-in-first-pass-p *page*) t)
               (document-object* (or (resolve dref nil) dref) stream))
             (with-temp-output-to-page (stream page)
+              (about-to-write-to-page)
               (document-object* (or (resolve dref nil) dref) stream)))))))
 
 
 (defun finalize-page-output (page)
-  (when (page-written-p page)
+  (when (page-written-in-first-pass-p page)
     ;; Now that markdown output for this PAGE is complete, we may want
     ;; to convert it to the requested *FORMAT*.
     (if (and (eq *format* :markdown)
@@ -2595,7 +2592,7 @@
 (defun print-toplevel-section-lists (pages)
   (when (<= 0 *document-max-table-of-contents-level*)
     (dolist (page pages)
-      (when (page-written-p page)
+      (when (page-written-in-first-pass-p page)
         (print-toplevel-section-list page)))))
 
 (defun print-toplevel-section-list (page)

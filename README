@@ -1121,6 +1121,11 @@ one of the following:
   The structure of the list is otherwise unimportant.
 
 
+- [variable] *DOCUMENT-TIGHT* NIL
+
+    If NIL, then DOCUMENT adds a newline between consecutive
+    atomic documentables on the same page.
+
 #### Return Values
 
 If PAGES are NIL, then DOCUMENT - like CL:FORMAT - returns a

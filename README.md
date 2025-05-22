@@ -1272,6 +1272,13 @@ one of the following:
   The structure of the list is otherwise unimportant.
 
 
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-TIGHT-2A-20VARIABLE-29"></a>
+
+- [variable] **\*DOCUMENT-TIGHT\*** *NIL*
+
+    If `NIL`, then [`DOCUMENT`][432c] adds a newline between consecutive
+    [atomic][13c7] documentables on the same [page][9c7d].
+
 <a id="x-28MGL-PAX-3A-40DOCUMENT-RETURN-20MGL-PAX-3ASECTION-29"></a>
 
 #### 8.1.2 Return Values
@@ -4306,6 +4313,7 @@ they are presented.
   [130a]: dref/README.md#x-28DREF-EXT-3ALOCATIVE-TYPE-DIRECT-SUBS-20FUNCTION-29 "DREF-EXT:LOCATIVE-TYPE-DIRECT-SUBS FUNCTION"
   [1322]: https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks "fenced code blocks"
   [13a9]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29 "MGL-PAX:UPDATE-ASDF-SYSTEM-READMES FUNCTION"
+  [13c7]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_a.htm#atomic '"atomic" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [142c]: http://www.lispworks.com/documentation/HyperSpec/Body/06_aba.htm '"6.1.2.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [1538]: dref/README.md#x-28DREF-3AXREF-20CLASS-29 "DREF:XREF CLASS"
   [1539]: https://quicklisp.org/ "Quicklisp"
