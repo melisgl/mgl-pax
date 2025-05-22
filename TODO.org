@@ -181,7 +181,6 @@ but their ancestors could be exported. As it is, this is lossy.
 
 Also, external is only checked against the home package of the symbol.
 Other packages that export it may or may not be public.
-** TODO document :PLAIN
 * web
 ** MAYBE implement a wiki on top?
 PAX is already kind of a wiki.

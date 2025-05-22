@@ -7,8 +7,17 @@
 
 (defsection @output-formats (:title "Output Formats")
   (*document-mark-up-signatures* variable)
+  (@plain-output section)
   (@markdown-output section)
   (@pdf-output section))
+
+(defsection @plain-output (:title "Plain Output")
+  "This is the default :FORMAT of DOCUMENT, intended to be a
+  replacement for CL:DOCUMENTATION. :PLAIN (short for plain text) is
+  very similar to :MARKDOWN, but most of the markup that would make
+  reading in, say, the REPL unpleasant is removed.
+
+  [@PLAIN-FORMAT note][docstring]")
 
 (defsection @markdown-output (:title "Markdown Output")
   "[document-object* (method () (dref t))][docstring]

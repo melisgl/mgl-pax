@@ -1065,7 +1065,8 @@ For more powerful search, see @APROPOS.
 - [function] DOCUMENT DOCUMENTABLE &KEY (STREAM T) PAGES (FORMAT :PLAIN)
 
     Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
-    FORMAT is one of :PLAIN, :MARKDOWN, :HTML and
+    FORMAT is one of :PLAIN,
+    :MARKDOWN, :HTML and
     :PDF. STREAM may be a STREAM object, T or NIL
     as with CL:FORMAT.
     
@@ -2433,6 +2434,28 @@ in an explicit link.
     
     Also, in HTML `**foo**` will be a link to that very entry and
     `[function]` may turn into a link to sources.
+
+#### Plain Output
+
+This is the default :FORMAT of DOCUMENT, intended to be a
+replacement for CL:DOCUMENTATION. :PLAIN (short for plain text) is
+very similar to :MARKDOWN, but most of the markup that would make
+reading in, say, the REPL unpleasant is removed.
+
+- No additional markup is introduced (e.g.
+  *DOCUMENT-UPPERCASE-IS-CODE* is ignored), but explicit markup
+  is not stripped.
+
+- @LINKING is turned off. Explicit links to definitions (such
+  as `[PRINT][clhs]`) are replaced by their labels (here,
+  `PRINT`).
+
+- No link anchors are emitted.
+
+- No section numbering.
+
+- No table of contents.
+
 
 #### Markdown Output
 

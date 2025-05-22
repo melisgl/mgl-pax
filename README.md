@@ -45,8 +45,9 @@
     - [8.6 Local Definition][9db9]
     - [8.7 Overview of Escaping][2634]
     - [8.8 Output Formats][8d9b]
-        - [8.8.1 Markdown Output][dd29]
-        - [8.8.2 PDF Output][19ad]
+        - [8.8.1 Plain Output][c879]
+        - [8.8.2 Markdown Output][dd29]
+        - [8.8.3 PDF Output][19ad]
     - [8.9 Documentation Generation Implementation Notes][d1ca]
     - [8.10 Utilities for Generating Documentation][1b1b]
         - [8.10.1 HTML Output][36e1]
@@ -1214,7 +1215,8 @@ For more powerful search, see [Apropos][b7fc].
 - [function] **DOCUMENT** *DOCUMENTABLE &KEY (STREAM T) PAGES (FORMAT :PLAIN)*
 
     Write `DOCUMENTABLE` in `FORMAT` to `STREAM` diverting some output to `PAGES`.
-    `FORMAT` is one of `:PLAIN`, `:MARKDOWN`, [`:HTML`][36e1] and
+    `FORMAT` is one of [`:PLAIN`][c879],
+    [`:MARKDOWN`][dd29], [`:HTML`][36e1] and
     [`:PDF`][19ad]. `STREAM` may be a [`STREAM`][d5a9] object, `T` or `NIL`
     as with [`CL:FORMAT`][ad78].
     
@@ -2719,9 +2721,33 @@ in an explicit link.
     Also, in HTML `**foo**` will be a link to that very entry and
     `[function]` may turn into a link to sources.
 
+<a id="x-28MGL-PAX-3A-40PLAIN-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
+
+#### 8.8.1 Plain Output
+
+This is the default `:FORMAT` of [`DOCUMENT`][432c], intended to be a
+replacement for [`CL:DOCUMENTATION`][c5ae]. `:PLAIN` (short for plain text) is
+very similar to `:MARKDOWN`, but most of the markup that would make
+reading in, say, the REPL unpleasant is removed.
+
+- No additional markup is introduced (e.g.
+  [`*DOCUMENT-UPPERCASE-IS-CODE*`][f25f] is ignored), but explicit markup
+  is not stripped.
+
+- [Linking][19e3] is turned off. Explicit links to definitions (such
+  as `[PRINT][clhs]`) are replaced by their labels (here,
+  [`PRINT`][d451]).
+
+- No link anchors are emitted.
+
+- No [section numbering][f12d].
+
+- No [table of contents][d4e7].
+
+
 <a id="x-28MGL-PAX-3A-40MARKDOWN-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.8.1 Markdown Output
+#### 8.8.2 Markdown Output
 
 By default, [`DREF`][d930]s are documented in the following format.
 
@@ -2807,7 +2833,7 @@ printed as the arglist. There is no docstring.
 
 <a id="x-28MGL-PAX-3A-40PDF-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.8.2 PDF Output
+#### 8.8.3 PDF Output
 
 When invoked with `:FORMAT` `:PDF`, [`DOCUMENT`][432c] generates
 [Markdown Output][dd29] and converts it to PDF with [Pandoc][59d9], which in turn
@@ -4584,8 +4610,10 @@ they are presented.
   [c479]: dref/README.md#x-28CONDITION-20MGL-PAX-3ALOCATIVE-29 "CONDITION MGL-PAX:LOCATIVE"
   [c4a3]: http://www.lispworks.com/documentation/HyperSpec/Body/f_sin_c.htm "COS (MGL-PAX:CLHS FUNCTION)"
   [c4ce]: #x-28MGL-PAX-3A-40EXTENSION-API-20MGL-PAX-3ASECTION-29 "Writing Extensions"
+  [c5ae]: http://www.lispworks.com/documentation/HyperSpec/Body/f_docume.htm "DOCUMENTATION (MGL-PAX:CLHS GENERIC-FUNCTION)"
   [c818]: #x-28MGL-PAX-3AOUTPUT-LABEL-20FUNCTION-29 "MGL-PAX:OUTPUT-LABEL FUNCTION"
   [c819]: dref/README.md#x-28MGL-PAX-3ACONSTANT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CONSTANT MGL-PAX:LOCATIVE"
+  [c879]: #x-28MGL-PAX-3A-40PLAIN-OUTPUT-20MGL-PAX-3ASECTION-29 "Plain Output"
   [c930]: #x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29 "MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION"
   [c93e]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhg.htm '"2.4.8.7" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [cae2]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cca.htm '"22.3.3.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
@@ -4606,6 +4634,7 @@ they are presented.
   [d3fc5]: https://github.com/smithzvk/pythonic-string-reader "Pythonic String Reader"
   [d451]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRINT (MGL-PAX:CLHS FUNCTION)"
   [d4a9]: #x-28MGL-PAX-3A-40EMACS-FUNCTIONALITY-20MGL-PAX-3ASECTION-29 "Functionality Provided"
+  [d4e7]: #x-28MGL-PAX-3A-2ADOCUMENT-MAX-TABLE-OF-CONTENTS-LEVEL-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-MAX-TABLE-OF-CONTENTS-LEVEL* VARIABLE"
   [d5a2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_car_c.htm "CAR (MGL-PAX:CLHS FUNCTION)"
   [d5a9]: http://www.lispworks.com/documentation/HyperSpec/Body/t_stream.htm "STREAM (MGL-PAX:CLHS CLASS)"
   [d5e1]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhq.htm '"2.4.8.17" (MGL-PAX:CLHS MGL-PAX:SECTION)'

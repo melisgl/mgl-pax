@@ -519,7 +519,8 @@
 
 (defun/autoloaded document (documentable &key (stream t) pages (format :plain))
   """Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
-  FORMAT is one of :PLAIN, :MARKDOWN, [:HTML][@html-output] and
+  FORMAT is one of [:PLAIN][@plain-output],
+  [:MARKDOWN][@markdown-output], [:HTML][@html-output] and
   [:PDF][@pdf-output]. STREAM may be a [STREAM][type] object, T or NIL
   as with [CL:FORMAT][].
 
@@ -577,16 +578,30 @@
      ;; 3BMD's :PLAIN is very broken. Take matters into our hands, and
      ;; make :PLAIN equivalent to :MARKDOWN without all the bells and
      ;; whistles.
-     (let ((*format* :markdown)
-           (*document-uppercase-is-code* nil)
-           (*document-link-code* nil)
-           (*document-link-sections* nil)
-           (*document-mark-up-signatures* nil)
-           (*document-max-numbering-level* 0)
-           (*document-max-table-of-contents-level* 0)
-           (*document-text-navigation* nil))
-       (handler-bind ((unresolvable-reflink #'output-label))
-         (funcall fn))))
+     (note @plain-format
+       "- No additional markup is introduced (e.g.
+         *DOCUMENT-UPPERCASE-IS-CODE* is ignored), but explicit markup
+         is not stripped.
+
+       - @LINKING is turned off. Explicit links to definitions (such
+         as `[PRINT][clhs]`) are replaced by their labels (here,
+         `PRINT`).
+
+       - No link anchors are emitted.
+
+       - No [section numbering][*document-max-numbering-level*].
+
+       - No [table of contents][*document-max-table-of-contents-level*]."
+       (let ((*format* :markdown)
+             (*document-uppercase-is-code* nil)
+             (*document-link-code* nil)
+             (*document-link-sections* nil)
+             (*document-mark-up-signatures* nil)
+             (*document-max-numbering-level* 0)
+             (*document-max-table-of-contents-level* 0)
+             (*document-text-navigation* nil))
+         (handler-bind ((unresolvable-reflink #'output-label))
+           (funcall fn)))))
     (:pdf
      (let ((*format* format)
            (*document-pandoc-pdf-metadata-block*
