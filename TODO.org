@@ -127,13 +127,13 @@ E.g. 'clhs' works in a package where PAX is :USEd but not elsewhere.
 But so does M-.'s history.
 ** CANCELLED autoload documentation when needed?
 CLOSED: [2025-05-07 Wed 09:29]
-- State "CANCELLED"  from "MAYBE"      [2025-05-07 Wed 09:29] \\
+- State "CANCELLED" from "MAYBE" [2025-05-07 Wed 09:29] \\
   Autoloading is very restricted in its abilities, and I can't see a
-  perfect way to make it work for e.g. sections. It think accessing the
-  section's variable should trigger autoloading the real section
-  definition, but that's not possible to catch. A symbol-macro might be
-  help there, but it's too much complexity for little gain, especially
-  since generating documentation loads dref/full.
+  perfect way to make it work for e.g. sections. It think accessing
+  the section's variable should trigger autoloading the real section
+  definition, but that's not possible to catch. Maybe it's too much
+  complexity for little gain, especially since generating
+  documentation loads dref/full.
 E.g. for named-readtables, which has its docs in named-readtables/doc.
 Maybe, more generally:
    (setf (definition-property xref 'autoload)

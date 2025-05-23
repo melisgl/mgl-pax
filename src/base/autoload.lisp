@@ -6,34 +6,53 @@
 ;;; redefined, then an error will be signalled and all subsequent
 ;;; calls to the function will produce the same error without
 ;;; attempting to load the system again.
-(defmacro autoload (name asdf-system-name &key (export t))
+(defmacro autoload (name asdf-system-name &key (export t) macro)
   `(eval-when (:compile-toplevel :load-toplevel :execute)
-     (unless (fboundp ',name)
-       (declaim (notinline ,name))
-       ;; Workaround for the CMUCL bug that results in "Function with
-       ;; declared result type NIL returned" errors when the real
-       ;; function definition returns.
-       #+cmucl
-       (declaim (ftype function ,name))
-       (defun ,name (&rest args)
-         ,(format nil "Autoloaded function in system [~A][asdf:system]."
-                  ;; ESCAPE-MARKDOWN, which should be used here, is
-                  ;; itself autoloaded. This should be fine because
-                  ;; asdf system names are rarely funny.
-                  asdf-system-name)
-         ;; Prevent infinite recursion which would happen if the loaded
-         ;; system doesn't redefine the function.
-         (setf (symbol-function ',name)
-               (lambda (&rest args)
-                 (declare (ignore args))
-                 (error "Autoloading ~S failed." ',name)))
-         (asdf:load-system ,asdf-system-name)
-         ;; Make sure that the function redefined by LOAD-SYSTEM is
-         ;; invoked and not this stub, which could be the case without
-         ;; the SYMBOL-FUNCTION call.
-         (apply (symbol-function ',name) args))
-       ,@(when export
-           `((export ',name))))))
+     ,(if (not macro)
+          `(unless (fboundp ',name)
+             (declaim (notinline ,name))
+             ;; Workaround for the CMUCL bug that results in "Function
+             ;; with declared result type NIL returned" errors when
+             ;; the real function definition returns.
+             #+cmucl
+             (declaim (ftype function ,name))
+             (defun ,name (&rest args)
+               ,(format nil "Autoloaded function in system [~A][asdf:system]."
+                        ;; ESCAPE-MARKDOWN, which should be used here,
+                        ;; is itself autoloaded. This should be fine
+                        ;; because asdf system names are rarely funny.
+                        asdf-system-name)
+               ;; Prevent infinite recursion which would happen if the
+               ;; loaded system doesn't redefine the function.
+               (setf (symbol-function ',name)
+                     (lambda (&rest args)
+                       (declare (ignore args))
+                       (error "~@<Autoloaded function ~S was not redefined ~
+                        by system [~A][asdf:system].~:@>"
+                              ',name ,asdf-system-name)))
+               (asdf:load-system ,asdf-system-name)
+               ;; Make sure that the function redefined by LOAD-SYSTEM
+               ;; is invoked and not this stub, which could be the
+               ;; case without the SYMBOL-FUNCTION call.
+               (apply (symbol-function ',name) args)))
+          ;; Autoloading macros like this should work, but what's the
+          ;; point? Macro-expansion happens (most often) at compile
+          ;; time, and autoloading should be about run time. Actually,
+          ;; when the fasls are loaded, this won't usually trigger.
+          `(unless (macro-function ',name)
+             (defmacro ,name (&rest args)
+               ,(format nil "Autoloaded macro in system [~A][asdf:system]."
+                        asdf-system-name)
+               (setf (macro-function ',name)
+                     (lambda (&rest args)
+                       (declare (ignore args))
+                       (error "~@<Autoloaded macro ~S was not redefined ~
+                        by system [~A][asdf:system].~:@>"
+                              ',name ,asdf-system-name)))
+               (asdf:load-system ,asdf-system-name)
+               (apply (macro-function ',name) args))))
+     ,@(when export
+         `((export ',name)))))
 
 (defmacro without-redefinition-warnings (&body body)
   #+sbcl
