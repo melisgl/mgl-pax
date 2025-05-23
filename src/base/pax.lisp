@@ -250,23 +250,32 @@
   [overridden Slime key bindings][@EMACS-KEYS] restored.
   """)
 
+(defparameter *pax-version*
+  '#.(with-open-file (s (asdf:system-relative-pathname
+                         "mgl-pax" "version.lisp-expr"))
+       (read s)))
+
 (defun install-pax-elisp (target-dir)
   "Copy `mgl-pax.el` distributed with this package to TARGET-DIR."
-  (uiop:copy-file (asdf:system-relative-pathname "mgl-pax" "src/mgl-pax.el")
-                  (merge-pathnames "mgl-pax.el"
-                                   (uiop:ensure-directory-pathname
-                                    target-dir))))
+  (let ((source (asdf:system-relative-pathname "mgl-pax" "src/mgl-pax.el"))
+        (target (merge-pathnames "mgl-pax.el"
+                                 (uiop:ensure-directory-pathname target-dir))))
+    (with-open-file (s target :direction :output :if-does-not-exist :create
+                              :if-exists :supersede)
+      (dolist (line (uiop:read-file-lines source))
+        (if (string= line "(setq mgl-pax-version (mgl-pax-read-version))")
+            (format s "(setq mgl-pax-version '~S)~%" *pax-version*)
+            (write-line line s))))))
 
 (defun check-pax-elisp-version (pax-elisp-version)
-  (let ((pax-cl-version '(0 4 1)))
-    (unless (equal pax-elisp-version pax-cl-version)
-      (cerror "Ignore version mismatch."
-              "~@<In Emacs, mgl-pax-version is ~S, ~
-              which is different from the CL version ~S. ~
-              You may need to ~S and M-x mgl-pax-reload. ~
-              See ~S for more.~:@>"
-              pax-elisp-version pax-cl-version 'mgl-pax:install-pax-elisp
-              '@emacs-setup)))
+  (unless (equal pax-elisp-version *pax-version*)
+    (cerror "Ignore version mismatch."
+            "~@<In Emacs, mgl-pax-version is ~S, ~
+            which is different from the CL version ~S. ~
+            You may need to ~S and M-x mgl-pax-reload. ~
+            See ~S for more.~:@>"
+            pax-elisp-version *pax-version* 'mgl-pax:install-pax-elisp
+            '@emacs-setup))
   t)
 
 (defsection @emacs-keys (:title "Setting up Keys")

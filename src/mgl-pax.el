@@ -67,9 +67,22 @@ other mgl-pax commands in interactive use."
   :type 'boolean
   :group 'mgl-pax)
 
+(defun mgl-pax-find-file-up (file-name)
+  (concat (locate-dominating-file load-file-name file-name)
+          file-name))
+
+(defun mgl-pax-read-version ()
+  (with-temp-buffer
+    (insert-file-contents (mgl-pax-find-file-up "version.lisp-expr"))
+    (goto-char (point-min))
+    (read (current-buffer))))
+
 ;;; See MGL-PAX::CHECK-PAX-ELISP-VERSION.
 (defvar mgl-pax-version)
-(setq mgl-pax-version  '(0 4 1))
+;;; The next line is `(setq mgl-pax-version (mgl-pax-read-version))`
+;;; in the sources, which gets replaced by the the version in
+;;; `version.lisp-expr` by MGL-PAX:INSTALL-PAX-ELISP.
+(setq mgl-pax-version (mgl-pax-read-version))
 
 ;;; Check that the Elisp and CL PAX versions match, ensure that
 ;;; ASDF-SYSTEM is loaded (in the sense of ASDF:COMPONENT-LOADED-P),

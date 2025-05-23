@@ -3,7 +3,11 @@
 ;;; See MGL-PAX::@PAX-MANUAL for the user guide.
 (asdf:defsystem "mgl-pax"
   :licence "MIT, see COPYING."
-  :version "0.4.1"
+  :version #.(cl:when cl:*load-truename*
+               (cl:format nil "~{~A~^.~}"
+                          (uiop:safe-read-file-form
+                           (cl:merge-pathnames "version.lisp-expr"
+                                               cl:*load-truename*))))
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
   :homepage "http://github.com/melisgl/mgl-pax"

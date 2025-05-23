@@ -105,12 +105,12 @@ handlers on and off with:
 Versioning
 ==========
 
-`:VERSION` in the ASDF system definition is in the usual
-`MAJOR.MINOR.PATCH` format. Bump `MINOR` for significant changes.
-Bumping `PATCH` is optional. `MAJOR` is constant 0 :-).
+The file `version.lisp-expr` has the version in `(MAJOR MINOR PATCH)`
+format. Bump `PATCH` for bug fixes and `MINOR` for significant
+changes. `MAJOR` is constant 0 :-).
 
-When making an incompatible change to the Elisp-CL interface or even a
-bugfix to the ELisp side, bump `:VERSION` in the ASDF and copy it to
-`mgl-pax-version` and `MGL-PAX::CHECK-PAX-ELISP-VERSION`. This way the
-user will be notified if the Elisp code is incompatible with the Lisp
-side or it lacks available bug fixes.
+The version file is read by both the Elisp and CL sides, to detect
+incompatibilities. When making an incompatible change to either side
+of the Elisp-CL interface or even a bugfix to the ELisp side, bump the
+version. This way the user will be notified if the Elisp code is
+incompatible with the Lisp side or it lacks available bug fixes.
