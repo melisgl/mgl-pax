@@ -1,6 +1,7 @@
 #+STARTUP: overview
 #+SEQ_TODO: TODO(t@) NEXT(n@) STARTED(s@) WAITING(w@) | DONE(d@) OLD(o@) CANCELLED(c@)
 #+TODO: MAYBE(m@) FAILED(f@) LOG(l@) DEFERRED(e@) BUG(b@)
+* autoload
 * dref
 ** BUG (low) METHOD dspec parsing is incorrect
 e.g. SB-PCL::MAKE-SPECIALIZER-FORM-USING-CLASS One cannot tell method
@@ -73,7 +74,6 @@ Pros of Definitions:
   These can be added to DRef if needed.
 ** MAYBE add DCAST and DLOOKUP locatives
 Needs a constant name such as LOCATE* or DREF*.
-* autoload
 * pax base
 ** MAYBE swap the MGL-PAX package name with the PAX nickname
 ... somehow without breaking existing URLs, which have

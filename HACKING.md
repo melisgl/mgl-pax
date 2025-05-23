@@ -1,8 +1,8 @@
 Testing
 =======
 
-Testing within Lisp
--------------------
+Testing interactively within Lisp
+---------------------------------
 
 - Run the Common Lisp tests with
 
@@ -28,10 +28,9 @@ Testing from the command line
 - `test/test.sh` and `dref/test/test.sh` test the Common Lisp side.
   They run the tests on several Lisp implementations assuming that
   they are installed under Roswell (e.g. `ros --lisp sbcl run` works).
-  So install ABCL, AllegroCL, CCL, CMUCL, CLISP, ECL, and SBCL under
-  Roswell:
+  So install ABCL, CCL, CMUCL, CLISP, ECL, and SBCL under Roswell:
 
-        for lisp in allegro abcl-bin ccl-bin clisp cmu-bin ecl sbcl-bin; do
+        for lisp in abcl-bin ccl-bin clisp cmu-bin ecl sbcl; do
             ros install $lisp
         done
 
@@ -71,6 +70,14 @@ checking of the content. However, the intermediate LaTeX (between
 Markdown and PDF) is written to the version controlled file
 `test/data/dref-manual.tex`, which can then be inspected for diffs (on
 SBCL only).
+
+Stress testing
+--------------
+
+In a similar vein, `mgl-pax-test::stress-test` generates a detailed
+apropos page for all definitions in the system. This is not part of
+the normal test suite. Load a lot of code, run this, and see if it
+crashes.
 
 
 Debugging
