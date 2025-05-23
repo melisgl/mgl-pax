@@ -2,11 +2,12 @@
 
 cd `dirname $0`
 EMACS=emacs
-LISP=sbcl
-# FIXME: This is hardcoded.
-SLIME_DIR=~/src/slime/
+LISP="${1:-sbcl}"
+# FIXME: This is hardcoded to where the github action expects it. Make
+# this a symlink locally.
+SLIME_DIR=~/.roswell/local-projects/slime/
 LOAD_PATH="-L ../src/ -L . -L ${SLIME_DIR}"
-SELECTOR=${1:-"\"mgl-pax\""}
+SELECTOR=${2:-"\"mgl-pax\""}
 # Randomization is a poor man's autoload test.
 RANDOMIZE=t
 

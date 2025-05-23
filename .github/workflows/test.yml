@@ -23,7 +23,7 @@ jobs:
       #
       # - name: Install Pandoc and TeX Live
       #   run: |
-      #     sudo apt-get --no-install-recommends install \
+      #     sudo apt-get -y --no-install-recommends install \
       #         pandoc texlive-latex-extra texlive-fonts-extra
 
       - name: Install Roswell
@@ -36,7 +36,7 @@ jobs:
               # into https://github.com/roswell/roswell/issues/449, so
               # let's install it with apt. This will be picked up by
               # 'ros --lisp clisp run'.
-              sudo apt-get install clisp
+              sudo apt-get -y install clisp
               LISP=sbcl
           fi
           curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
@@ -44,7 +44,7 @@ jobs:
       - name: Install Maven for ABCL
         env:
           LISP: ${{ matrix.lisp }}
-        run: if [ $LISP = abcl-bin ]; then sudo apt-get install maven; fi
+        run: if [ $LISP = abcl-bin ]; then sudo apt-get -y install maven; fi
 
       - name: Install latest Try from GitHub
         run: ros install melisgl/try
@@ -72,3 +72,12 @@ jobs:
         run: |
           ros run -e '(ql:quickload :mgl-pax-test)' -q
           ./test/test.sh $LISP
+
+      - name: Run Elisp tests (on SBCL only)
+        env:
+          LISP: ${{ matrix.lisp }}
+        run: |
+          if [ "$LISP" = "sbcl" -o "$LISP" = "sbcl-bin" ]; then
+              sudo apt-get -y install emacs-nox w3m-el
+              ./test/test-el.sh "ros --lisp sbcl-bin run"
+          fi

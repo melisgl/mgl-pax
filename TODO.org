@@ -205,7 +205,7 @@ Would it be nice to if M-. on "`mgl-pax-document` (elisp) would visit
 the elisp def and C-. would call `describe-function` (elisp)?
 ** MAYBE M-. and C-. on large sexps (e.g. whole defun)
 The error message is large and useless.
-** TODO make tests more reliable and run them on github
+** MAYBE make tests more reliable
 * literate programming
 ** MAYBE reorder source definitions
 ** MAYBE local functions?
