@@ -56,7 +56,7 @@
 
 (mgl-pax:define-package #:dref
     (:documentation "See DREF::@DREF-MANUAL.")
-  (:use #:common-lisp #:dref-ext
+  (:use #:common-lisp #:autoload #:dref-ext
         #:editor-hints.named-readtables #:mgl-pax
         #:pythonic-string-reader)
   ;; Some these are in autoloaded sections, so we export everything

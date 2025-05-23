@@ -23,10 +23,10 @@ the documentation system.
     - _Licence:_ MIT, see COPYING.
     - _Author:_ Gábor Melis
     - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
-    - _Homepage:_ [http://github.com/melisgl/mgl-pax/dref](http://github.com/melisgl/mgl-pax/dref)
+    - _Homepage:_ [http://github.com/melisgl/mgl-pax/tree/master/dref](http://github.com/melisgl/mgl-pax/tree/master/dref)
     - _Bug tracker:_ [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
     - _Source control:_ [GIT](https://github.com/melisgl/mgl-pax.git)
-    - *Depends on:* mgl-pax-bootstrap, named-readtables, pythonic-string-reader
+    - *Depends on:* autoload, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
     - *Defsystem depends on:* mgl-pax.asdf
 
 - [system] "dref/full"

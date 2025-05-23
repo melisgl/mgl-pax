@@ -18,8 +18,7 @@
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/base/"
                 :serial t
-                :components ((:file "autoload")
-                             (:file "pax")
+                :components ((:file "pax")
                              (:file "extension-api")
                              (:file "document-early")
                              (:file "web-early")

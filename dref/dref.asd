@@ -6,7 +6,7 @@
   :version "0.4.1"
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
-  :homepage "http://github.com/melisgl/mgl-pax/dref"
+  :homepage "http://github.com/melisgl/mgl-pax/tree/master/dref"
   :bug-tracker "https://github.com/melisgl/mgl-pax/issues"
   :source-control (:git "https://github.com/melisgl/mgl-pax.git")
   :description "Reify definitions, provide portable access to
@@ -16,13 +16,13 @@
   definitions and smooths over the differences between
   implementations. This system has minimal dependencies. It autoloads
   the `dref/full` ASDF:SYSTEM, which depends Alexandria and Swank."
-  :depends-on ("mgl-pax-bootstrap" "named-readtables" "pythonic-string-reader")
+  :depends-on ("autoload" "mgl-pax-bootstrap" "named-readtables"
+               "pythonic-string-reader")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/base/"
                 :serial t
                 :components ((:file "package")
-                             (:file "autoload")
                              (:file "util")
                              (:file "dref")
                              (:file "extension-api")

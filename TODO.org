@@ -74,9 +74,6 @@ Pros of Definitions:
 ** MAYBE add DCAST and DLOOKUP locatives
 Needs a constant name such as LOCATE* or DREF*.
 * autoload
-** TODO factor out autoload
-dref/src/base/autoload.lisp
-src/base/autoload.lisp
 * pax base
 ** MAYBE swap the MGL-PAX package name with the PAX nickname
 ... somehow without breaking existing URLs, which have

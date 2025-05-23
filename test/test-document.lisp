@@ -2011,7 +2011,7 @@ example section
       (mgl-pax::with-filename-to-asdf-system-name-map
         (is (equal "mgl-pax"
                    (mgl-pax::asdf-system-name-of mgl-pax::@pax-manual)))))
-    (mgl-pax::without-redefinition-warnings
+    (autoload::without-redefinition-warnings
       (eval '(defun no-source ())))
     (is (null (mgl-pax::asdf-system-name-of (dref 'no-source 'function))))
     (with-failure-expected ((not (dref-test::working-locative-p 'package)))

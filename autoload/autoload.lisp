@@ -1,4 +1,4 @@
-(in-package :mgl-pax)
+(in-package :autoload)
 
 ;;; Define a function with NAME that loads ASDF-SYSTEM-NAME (neither
 ;;; evaluated) that calls the function of the same name, which is

@@ -8,7 +8,7 @@
   :description "Use the [mgl-pax][asdf:system] system. This system is
   not for public consumption but solely for systems on which PAX
   depends and which also use PAX."
-  :depends-on ()
+  :depends-on ("autoload")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/bootstrap/"

@@ -84,7 +84,7 @@
     (destructuring-bind (&optional (initform nil initformp))
         (xref-locative-args (dref-origin dref))
       (let ((arglist (multiple-value-bind (value unboundp)
-                         (symbol-global-value symbol)
+                         (autoload::symbol-global-value symbol)
                        (when (or initformp (not unboundp))
                          (let ((*print-pretty* t))
                            (escape-markdown
