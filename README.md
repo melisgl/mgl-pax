@@ -993,8 +993,13 @@ PAX adds a few of its own.
         - *by section number*: `[3.4][clhs]` or `[3.4][(clhs
            section)]` ([3.4][e442])
     
-        - *by section title* (substring match): `[lambda lists][clhs]`
-           or `[lambda lists][(clhs section)]` ([lambda lists][e442])
+        - *by section title*: With the locative `(CLHS SECTION)`,
+           substring matching against the title starting at word
+           boundaries is performed. With the locative [`CLHS`][ed5f] (where
+           `SECTION` is not specified explicitly), the name must match
+           the title exactly. For example, `[lambda list][(clhs
+           section)]` refers to the same definition as `[lambda
+           lists][clhs]` ([Lambda Lists][e442]).
     
         - *by filename*: `[03_d][clhs]` or `[03_d][(clhs
            section)]` ([03\_d][e442])

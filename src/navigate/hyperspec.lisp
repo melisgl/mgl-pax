@@ -2084,31 +2084,37 @@
 
 ;;; Return the first section in *SORTED-HYPERSPEC-SECTIONS* whose
 ;;; title contains STRING.
-(defun find-hyperspec-section (string &optional (substring t))
+(defun find-hyperspec-section (string &optional (match :word-prefix))
   (let ((string (string-downcase string)))
     (find-if (lambda (entry)
                (let ((title (string-downcase (third entry))))
-                 (if substring
-                     (search string title)
+                 (if (eq match :word-prefix)
+                     (or (starts-with-subseq string title)
+                         (search (format nil " ~A" string) title))
                      (string= string title))))
              *sorted-hyperspec-sections*)))
-
-(defun find-hyperspec-section-id (string &key (match-title t))
-  (let ((string (squeeze-whitespace string)))
-    (or (first (gethash string *hyperspec-section-map*))
-        (second (and match-title (find-hyperspec-section string))))))
 
 ;;; Return the title and a list of aliases as the second value.
 (defun find-hyperspec-section-title (id)
   (let ((entry (gethash id *hyperspec-section-map*)))
     (values (third entry) (nthcdr 3 entry))))
 
+;;; :MATCH-TITLE :EXACT does case-insensitive exact matching.
+;;; :MATCH-TITLE :WORD-PREFIX does case-insensitive matching of word
+;;; prefixes.
+(defun find-hyperspec-section-id (string &key (match-title :word-prefix))
+  (let ((string (squeeze-whitespace string)))
+    (or (first (gethash string *hyperspec-section-map*))
+        (second (and match-title
+                     (find-hyperspec-section string match-title))))))
+
 (defun find-hyperspec-section-url
-    (string hyperspec-root &key (substring-match t))
+    (string hyperspec-root &key (match-title :word-prefix))
   (let* ((string (squeeze-whitespace string))
          (filename (or (second (gethash string *hyperspec-section-map*))
-                       (first (and substring-match
-                                   (find-hyperspec-section string))))))
+                       (first (and match-title
+                                   (find-hyperspec-section string
+                                                           match-title))))))
     (when filename
       (hyperspec-link hyperspec-root "Body/" filename ".htm"))))
 

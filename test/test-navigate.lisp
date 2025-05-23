@@ -137,7 +137,7 @@
     (with-test ("deduplication")
       (check-dowall '(("print" ("function")) ("print" ("function")))
                     '((print function)))
-      (check-dowall '(("Lists" ("Lambda" "clhs")) ("Lambda  Lists" ("clhs")))
+      (check-dowall '(("lambda lis" ("clhs")) ("Lambda  Lists" ("clhs")))
                     '(("3.4" (clhs section)))))
     #+sbcl
     (with-test ("unreadable")

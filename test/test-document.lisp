@@ -1546,6 +1546,10 @@ This is [Self-referencing][e042].
   (with-failure-expected ()
     (let ((*document-link-to-hyperspec* nil))
       (test-clhs-section-1)))
+  (is (endp (definitions "lambda-li" :dtype 'top)))
+  (check-ref-sets (definitions "lambda lists" :dtype 'top)
+                  `(,(xref "3.4" '(pax:clhs section))))
+  (is (endp (definitions "lambda-list-directed" :dtype 'top)))
   (check-ref-sets (dref-apropos "lambda-list-directed" :dtype 'top)
                   `(,(xref "3.4.4.1.2" '(pax:clhs section)))))
 

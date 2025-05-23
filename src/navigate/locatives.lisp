@@ -430,8 +430,13 @@
       - *by section number*: `[3.4][clhs]` or `[3.4][(clhs
          section)]` ([3.4][clhs])
 
-      - *by section title* (substring match): `[lambda lists][clhs]`
-         or `[lambda lists][(clhs section)]` ([lambda lists][clhs])
+      - *by section title*: With the locative `(CLHS SECTION)`,
+         substring matching against the title starting at word
+         boundaries is performed. With the locative CLHS (where
+         `\\SECTION` is not specified explicitly), the name must match
+         the title exactly. For example, `[lambda list][(clhs
+         section)]` refers to the same definition as `[lambda
+         lists][clhs]` ([Lambda Lists][clhs]).
 
       - *by filename*: `[03_d][clhs]` or `[03_d][(clhs
          section)]` ([03_d][clhs])
@@ -474,6 +479,8 @@
   (defclass clhs-dref ()
     ((explicit-p :initform nil :accessor clhs-dref-explicit-p))))
 
+(defvar *clhs-force-exact-match* nil)
+
 (define-lookup clhs (name locative-args)
   (or (let ((name-string (if (stringp name)
                              name
@@ -484,13 +491,17 @@
                      (make-instance 'clhs-dref
                                     :name id
                                     :locative '(clhs glossary-term)))))
-               (issue-or-section? ()
+               (issue-or-section? (&optional (match-title :word-prefix))
+                 (when *clhs-force-exact-match*
+                   (setq match-title :exact))
                  (or (let ((id (find-hyperspec-issue-id name-string)))
                        (when id
                          (make-instance 'clhs-dref
                                         :name id
                                         :locative '(clhs section))))
-                     (let ((id (find-hyperspec-section-id name-string)))
+                     (let ((id (find-hyperspec-section-id
+                                name-string :match-title match-title)))
+                       ;; ex clhs
                        (when id
                          (make-instance 'clhs-dref
                                         :name id
@@ -511,7 +522,9 @@
                 ((equal locative-args '(section))
                  (issue-or-section?))
                 ((endp locative-args)
-                 (or (definition?) (glossary-term?) (issue-or-section?)))
+                 (or (definition?)
+                     (glossary-term?)
+                     (issue-or-section? :exact)))
                 (t
                  (definition?)))))
       (locate-error)))
@@ -525,8 +538,15 @@
         (t
          (when-let (dref (dref name '(clhs glossary-term) nil))
            (funcall fn dref))
-         (when-let (dref (dref name '(clhs section) nil))
-           (funcall fn dref)))))
+         ;; (DREF "EX" 'CLHS) is a LOCATE-ERROR, but here we are
+         ;; trying (DREF "EX" '(CLHS SECTION)), which matches a
+         ;; :WORD-PREFIX in the title "Language Extensions". This is
+         ;; fine when the user explicitly specifies (CLHS SECTION),
+         ;; but here SECTION is just one of the things we try, so
+         ;; reduce noise by requiring an exact match.
+         (let ((*clhs-force-exact-match* t))
+           (when-let (dref (dref name '(clhs section) nil))
+             (funcall fn dref))))))
 
 (defmethod map-definitions-of-type (fn (locative-type (eql 'clhs)))
   (flet ((foo (name locative)
