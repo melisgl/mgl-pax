@@ -165,11 +165,6 @@ offline documentation.
 
 Maybe this is a special case of dynamically generated documentation.
 ** MAYBE live browsing: allow filtering out local definitions when there is a clhs definition?
-** TODO non-exported direct superclasses are omitted
-but their ancestors could be exported. As it is, this is lossy.
-
-Also, external is only checked against the home package of the symbol.
-Other packages that export it may or may not be public.
 * web
 ** MAYBE implement a wiki on top?
 PAX is already kind of a wiki.
