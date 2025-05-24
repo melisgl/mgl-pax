@@ -286,6 +286,13 @@
   (check-ref (locate (dref::find-method* 'test-gf ()
                                          '((eql #.(find-package :cl)))))
              'test-gf '(method () ((eql #.(find-package :cl)))))
+  #-clisp
+  (check-ref (dref 'gf3 '(method (my-comb :after) (number)))
+             'gf3 '(method (my-comb :after) (number)))
+  #-clisp
+  (check-ref (locate (dref::find-method* 'gf3 '(my-comb :after)
+                                         `(,(find-class 'number))))
+             'gf3 '(method (my-comb :after) (number)))
   (signals (locate-error :pred "Method does not exist")
     (dref 'undefined '(method () (number))))
   (signals (locate-error :pred "Method does not exist")

@@ -170,7 +170,9 @@
 
 (defun check-dspec-roundtrip (dref &optional (expected-result dref))
   (let* ((dspec (dref::definition-to-dspec dref))
-         (roundtripped (dref::dspec-to-definition dspec (dref-name dref))))
+         (swank-name (or (ignore-errors (dref::dref-function-name dref))
+                         (dref-name dref)))
+         (roundtripped (dref::dspec-to-definition dspec swank-name)))
     (when (is roundtripped
               :ctx ("DREF = ~S~%DPSEC = ~S" dref dspec))
       (is (xref= (capture roundtripped) (capture expected-result))

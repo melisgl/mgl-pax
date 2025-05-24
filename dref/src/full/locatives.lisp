@@ -588,6 +588,7 @@
 
 (define-lookup method-combination (name locative-args)
   (unless (and (symbolp name)
+               ;; FIXME
                #+ccl (ccl::method-combination-info name)
                #+sbcl (gethash name sb-pcl::**method-combinations**))
     (locate-error))

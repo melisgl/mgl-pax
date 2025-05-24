@@ -380,7 +380,7 @@
   (let ((dspec (normalize-dspec dspec))
         (setf-name `(setf ,name)))
     (or (package-dspec-to-definition dspec)
-        (method-dspec-to-definition dspec)
+        (method-dspec-to-definition name dspec)
         ;; Handle the symbol-based cases where the DPSEC is unique and
         ;; easy.
         (when (or (symbolp name) (listp name))
@@ -445,30 +445,37 @@
 ;;; METHOD-DSPEC-TO-DEFINITION is the inverse of SWANK-METHOD-DSPEC and
 ;;; SWANK-ACCESSOR-DSPEC.
 #-(or allegro ccl)
-(defun method-dspec-to-definition (dspec)
+(defun method-dspec-to-definition (name dspec)
   (when (member (first dspec) '(or method defmethod))
-    (multiple-value-bind (qualifiers specializers)
-        (parse-dspec-method-qualifiers-and-specializers (nthcdr 2 dspec))
-      (let ((name (second dspec))
-            (locative `(method ,qualifiers ,specializers)))
-        (dref name locative)))))
+    (let ((generic-fn (ignore-errors (fdefinition* name))))
+      (when (typep generic-fn 'generic-function)
+        (multiple-value-bind (qualifiers specializers)
+            (parse-dspec-method-qualifiers-and-specializers (nthcdr 2 dspec)
+                                                            generic-fn)
+          (let ((name (second dspec))
+                (locative `(method ,qualifiers ,specializers)))
+            (dref name locative)))))))
 
 ;;; (:AFTER (EQL 5) CLASS-NAME) => (:AFTER) ((EQL 5) CLASS-NAME)
 ;;;
 ;;; Allegro and others:
 ;;; (:AFTER ((EQL 5) CLASS-NAME)) => (:AFTER) ((EQL 5) CLASS-NAME)
-(defun parse-dspec-method-qualifiers-and-specializers (list)
-  (let ((qualifiers ())
-        (specializers ()))
-    (setq qualifiers (loop for rest on list
-                           while (keywordp (first rest))
-                           collect (first rest)
-                           finally (setq specializers rest)))
-    (values qualifiers
-            #-(or abcl allegro ccl cmucl)
-            specializers
-            #+(or abcl allegro ccl cmucl)
-            (unlist1 specializers))))
+(defun parse-dspec-method-qualifiers-and-specializers (list fn)
+  #+(or abcl allegro ccl cmucl)
+  (declare (ignore fn))
+  #+(or abcl allegro ccl cmucl)
+  (values (butlast list) (first (last list)))
+  #-(or abcl allegro ccl cmucl)
+  ;; What's a qualifier and what's a specializer in (DEFMETHOD :OR
+  ;; MY-COMB NUMBER) is ambiguous without knowing GF-N-REQUIRED-ARGS.
+  (let ((n-qualifiers (- (length list) (gf-n-required-args fn))))
+    (values (subseq list 0 n-qualifiers)
+            (subseq list n-qualifiers))))
+
+(defun gf-n-required-args (fn)
+  (loop for arg in (function-arglist fn)
+        while (not (member arg '(&optional &rest &key)))
+        count 1))
 
 #+allegro
 (defun method-dspec-to-definition (dspec)

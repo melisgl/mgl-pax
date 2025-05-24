@@ -3,10 +3,6 @@
 #+TODO: MAYBE(m@) FAILED(f@) LOG(l@) DEFERRED(e@) BUG(b@)
 * autoload
 * dref
-** BUG (low) METHOD dspec parsing is incorrect
-e.g. SB-PCL::MAKE-SPECIALIZER-FORM-USING-CLASS One cannot tell method
-qualifiers from specializers in the dspec without actually consulting
-the definition.
 ** MAYBE add SPECIAL locative and make variable an alias of it?
 ** MAYBE support DECLARATION docstrings?
 ** MAYBE support SETF docstring?

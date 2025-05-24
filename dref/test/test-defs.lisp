@@ -106,8 +106,30 @@
   (:method ((x number) &key ((:x y) t))
     (declare (ignore y))))
 
-(define-method-combination my-comb :identity-with-one-argument t
-  :documentation "MY-COMB method-combination")
+(define-method-combination my-comb  (&optional (order :most-specific-first))
+  ((around (:around))
+   (primary (my-comb) :order order :required t))
+  "MY-COMB method-combination"
+  (let ((form (if (rest primary)
+                  `(and ,@(mapcar #'(lambda (method)
+                                      `(call-method ,method))
+                                  primary))
+                  `(call-method ,(first primary)))))
+    (if around
+        `(call-method ,(first around)
+                      (,@(rest around)
+                       (make-method ,form)))
+        form)))
+
+(defgeneric gf3 (x &key z)
+  (:method-combination my-comb)
+  ;; On CLISP, this is a compile error.
+  #-clisp
+  (:method :after (x &key z)
+    (declare (ignore x z)))
+  #-clisp
+  (:method my-comb :after ((x number) &key z)
+    (declare (ignore z))))
 
 (defun ->max ())
 
@@ -148,6 +170,10 @@
 (defun (setf setf-fn) (v)
   "SETF-FN setf"
   (declare (ignore v)))
+
+;;; This is defined to maybe trip METHOD-DSPEC-TO-DEFINITION up.
+(defgeneric setf-gf ()
+  (:method ()))
 
 (defgeneric (setf setf-gf) (v)
   (:documentation "SETF-GF setf"))
