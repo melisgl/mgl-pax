@@ -51,7 +51,7 @@ the documentation system.
 <a id="x-28-22dref-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 - [system] **"dref"**
-    - _Version:_ 0.4.2
+    - _Version:_ 0.4.3
     - _Description:_ Reify definitions, provide portable access to
         docstrings and source locations in an extensible framework.
     - _Long Description:_ [`DEFUN`][f472] defines a first-class object: a `FUNCTION`([`0`][119e] [`1`][81f7]).

@@ -239,7 +239,10 @@ documentation is generated.
 Here is the [official
 repository](https://github.com/melisgl/mgl-pax) and the [HTML
 documentation](http://melisgl.github.io/mgl-pax-world/mgl-pax-manual.html)
-for the latest version.
+for the latest version. There is also a [PAX channel][pax-yt] on
+youtube with a couple of videos.
+
+[pax-yt]: https://www.youtube.com/playlist?list=PLxbqYr4DvjX68AEdLky4IiHG69VJu6f5s
 
 PAX is built on top of the [DRef library][5225] (bundled in the same repository).
 

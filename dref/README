@@ -12,7 +12,7 @@ DRef is bundled in the same repository with PAX,
 the documentation system.
 
 - [system] "dref"
-    - _Version:_ 0.4.2
+    - _Version:_ 0.4.3
     - _Description:_ Reify definitions, provide portable access to
         docstrings and source locations in an extensible framework.
     - _Long Description:_ DEFUN defines a first-class object: a FUNCTION.
