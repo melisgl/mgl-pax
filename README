@@ -313,7 +313,7 @@ PAX is built on top of the DRef library (bundled in the same repository).
 
 
 - [system] "mgl-pax"
-    - _Version:_ 0.4.2
+    - _Version:_ 0.4.3
     - _Description:_ Documentation system, browser, generator. See the
         MGL-PAX::@PAX-MANUAL.
     - _Long Description:_ The base system. See MGL-PAX::@LINKS-AND-SYSTEMS.

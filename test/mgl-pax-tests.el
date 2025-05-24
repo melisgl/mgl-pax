@@ -869,6 +869,37 @@
       (should (substringp "* [package] \"MGL-PAX-TEST\"" (w3m-contents)))
       (kill-buffer)
       (mgl-pax-sync-current-buffer)))))
+
+(ert-deftest test-mgl-pax-current-definition-toggle-view/methods ()
+  (with-browsers
+   (with-temp-lisp-buffer
+    (let ((tmpbuffer (current-buffer)))
+      ;; Compiled only because MGL-PAX::DREF-AND-SNIPPET-MATCH-P does
+      ;; not handle methods.
+      (insert "(defmethod foom\n  ((x string)))\n")
+      (slime-compile-defun)
+      (slime-sync-to-top-level 1)
+      (insert "(defmethod foom\n  ((x number)))\n")
+      (slime-compile-defun)
+      (slime-sync-to-top-level 1)
+      ;; Test second method
+      (backward-sexp)
+      (mgl-pax-current-definition-toggle-view)
+      (mgl-pax-test-sync-hard)
+      (should (eq major-mode 'w3m-mode))
+      (should (substringp "* [method] FOOM (X NUMBER)" (w3m-contents)))
+      (kill-buffer)
+      (switch-to-buffer tmpbuffer)
+      (mgl-pax-sync-current-buffer)
+      ;; Test first method
+      (backward-sexp)
+      (mgl-pax-current-definition-toggle-view)
+      (mgl-pax-test-sync-hard)
+      (should (eq major-mode 'w3m-mode))
+      (should (substringp "* [method] FOOM (X STRING)" (w3m-contents)))
+      (kill-buffer)
+      (switch-to-buffer tmpbuffer)
+      (mgl-pax-sync-current-buffer)))))
 
 
 ;;; Test `mgl-pax-apropos'

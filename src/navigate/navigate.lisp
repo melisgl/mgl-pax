@@ -413,20 +413,22 @@
 ;;; SOURCE-LOCATION matches SNIPPET or is otherwise closest to buffer
 ;;; positions POS (1-based indexing).
 (defun guess-current-definition (name buffer file snippet pos)
-  (flet ((snippets-match (loc-snippet)
-           (or (null loc-snippet)
-               ;; E.g. ASDF:SYSTEMs on SBCL
-               (equal loc-snippet "")
-               (< (2nd-whitespace-position snippet)
-                  (or (mismatch loc-snippet snippet)
-                      (1+ (length snippet)))))))
-    ;; The following algorithm is heuristic.
-    (let ((closest-definition nil)
-          ;; Limit the chance of finding an unrelated definition just
-          ;; because its @NAME is used as the first arg of some form
-          ;; by not accepting position-based matches farther than 2000
-          ;; characters from POS.
-          (closest-pos 2000))
+  (let ((closest-definition nil)
+        ;; Limit the chance of finding an unrelated definition just
+        ;; because its @NAME is used as the first arg of some form by
+        ;; not accepting position-based matches farther than 2000
+        ;; characters from POS.
+        (closest-pos 2000)
+        ;; To be more resistant to edits since the last definition,
+        ;; only match the beginning.
+        (snippet (first-lines snippet 2)))
+    (flet ((snippets-match (loc-snippet)
+             (or
+              ;; E.g. ASDF:SYSTEMs on SBCL
+              (equal loc-snippet "")
+              (let ((mismatch-pos (mismatch loc-snippet snippet)))
+                (or (null mismatch-pos)
+                    (= (length snippet) mismatch-pos))))))
       (dolist (dref
                ;; Only LISP-LOCATIVE-TYPES have source location.
                (definitions name))
@@ -458,45 +460,52 @@
                     (setq closest-definition dref
                           closest-pos loc-pos))))
               ;; No source location
-              (when (reference-and-snippet-match-p dref snippet)
+              (when (and (null closest-definition)
+                         (dref-and-snippet-match-p dref snippet))
                 (setq closest-definition dref
-                      closest-pos pos)))))
+                      closest-pos most-positive-fixnum)))))
       closest-definition)))
-
-(defun 2nd-whitespace-position (string)
-  (or (when-let (pos (position-if #'whitespacep string))
-        (position-if #'whitespacep string :start (1+ pos)))
-      (length string)))
 
 ;;; This could use the macroexpanded form instead of the snippet and a
 ;;; generic function specialized on the locative type, but since it's
 ;;; a fallback mechanism for the no-source-location case, that may be
 ;;; an overkill.
-(defun reference-and-snippet-match-p (ref snippet)
-  (let ((patterns (case (xref-locative-type ref)
-                    ((variable) '("defvar" "defparameter"))
-                    ((constant) '("defconstant" "define-constant"))
-                    ((macro) '("defmacro"))
-                    ((symbol-macro '("define-symbol-macro")))
-                    ((compiler-macro '("define-compiler-macro")))
-                    ((function) '("defun"))
-                    ((generic-function) '("defgeneric"))
-                    ;; Can't find :METHOD in DEFGENERIC.
-                    ((method) '("defmethod"))
-                    ((method-combination '("define-method-combination")))
-                    ;; Can't find :READER, :WRITER, :ACCESSOR in DEFCLASS.
-                    ;; Can't find STRUCTURE-ACCESSOR.
-                    ((type) '("deftype"))
-                    ((class) '("defclass"))
-                    ((condition) '("define-condition"))
-                    ((declaration) '("define-declaration"))
-                    ((restart) '("define-restart"))
-                    ((asdf:system) '("defsystem"))
-                    ((package) '("defpackage" "define-package"))
-                    ((readtable) '("defreadtable"))
-                    ((section) '("defsection"))
-                    ((glossary-term) '("define-glossary-term"))
-                    ((note) '("note"))
-                    ((locative) '("define-locative-type")))))
-    (loop for pattern in patterns
-            thereis (search pattern snippet :test #'char-equal))))
+(defun dref-and-snippet-match-p (dref snippet)
+  (and (search (make-name-pattern (dref-name dref)) snippet
+               :test #'char-equal)
+       (let ((patterns (case (xref-locative-type dref)
+                         ((variable) '("defvar" "defparameter"))
+                         ((constant) '("defconstant" "define-constant"))
+                         ((macro) '("defmacro"))
+                         ((symbol-macro '("define-symbol-macro")))
+                         ((compiler-macro '("define-compiler-macro")))
+                         ((function) '("defun"))
+                         ((generic-function) '("defgeneric"))
+                         ;; Note that DEFMETHOD is intentially omitted
+                         ;; because without matching the qualifiers
+                         ;; and specializers, it's easy to guess
+                         ;; wrong.
+                         ((method-combination '("define-method-combination")))
+                         ;; Can't find :READER, :WRITER, :ACCESSOR in DEFCLASS.
+                         ;; Can't find STRUCTURE-ACCESSOR.
+                         ((type) '("deftype"))
+                         ((class) '("defclass"))
+                         ((condition) '("define-condition"))
+                         ((declaration) '("define-declaration"))
+                         ((restart) '("define-restart"))
+                         ((asdf:system) '("defsystem"))
+                         ((package) '("defpackage" "define-package"))
+                         ((readtable) '("defreadtable"))
+                         ((section) '("defsection"))
+                         ((glossary-term) '("define-glossary-term"))
+                         ((note) '("note"))
+                         ((locative) '("define-locative-type")))))
+         (loop for pattern in patterns
+                 thereis (search pattern snippet :test #'char-equal)))))
+
+(defun make-name-pattern (obj)
+  (if (symbolp obj)
+      (let ((*package* (or (symbol-package obj)
+                           (find-package :keyword))))
+        (prin1-to-string obj))
+      (princ-to-string obj)))

@@ -731,9 +731,10 @@ buffer."
              while (ignore-errors (backward-up-list 1 t t)
                                   t))))
 
-;;; Return 1. the first argument of the current sexp if it's a symbol,
-;;; 2. the Slime source location :SNIPPET, 3. the start position of
-;;; the sexp. If any movement fails, then return nil.
+;;; Return 1. the second element of the current sexp (where the name
+;;; often is in definition forms) 2. the Slime source location
+;;; :SNIPPET, 3. the start position of the sexp. If any movement
+;;; fails, then return nil.
 (defun mgl-pax-current-sexp-first-arg-snippet-and-pos ()
   (ignore-errors
     (save-excursion
@@ -745,7 +746,9 @@ buffer."
         (down-list)
         (slime-forward-sexp)
         (forward-char)
-        (list (mgl-pax-next-sexp) snippet pos)))))
+        (let ((next (mgl-pax-next-sexp)))
+          (when next
+            (list next snippet pos)))))))
 
 
 ;;;; MGL-PAX documentation browser (see
