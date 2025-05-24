@@ -37,8 +37,8 @@
 
 (defsection @pax-manual (:title "PAX Manual")
   (@introduction section)
-  (@emacs-setup section)
   (@links-and-systems section)
+  (@emacs-setup section)
   (@background section)
   (@basics section)
   (@pax-locatives section)
@@ -172,6 +172,48 @@
   `cl-transcript` is automatically checked for up-to-dateness when
   documentation is generated.""")
 
+(defsection @links-and-systems (:title "Links and Systems")
+  "Here is the [official
+  repository](https://github.com/melisgl/mgl-pax) and the [HTML
+  documentation](http://melisgl.github.io/mgl-pax-world/mgl-pax-manual.html)
+  for the latest version. There is also a [PAX channel][pax-yt] on
+  youtube with a couple of videos.
+
+    [pax-yt]: https://www.youtube.com/playlist?list=PLxbqYr4DvjX68AEdLky4IiHG69VJu6f5s
+
+  PAX is built on top of the [DRef library]
+  [DREF::@DREF-MANUAL] (bundled in the same repository).
+
+  - _Installation for deployment_
+
+      The base system is [mgl-pax][asdf:system]. It has very few
+      dependencies and is sufficient as a dependency for systems using
+      the @BASICS to add documentation. This is to keep deployed code
+      small. To install only the bare minimum, with no intention of
+      using @NAVIGATING-IN-EMACS, @GENERATING-DOCUMENTATION,
+      @BROWSING-LIVE-DOCUMENTATION or using @TRANSCRIPTS, under
+      Quicklisp for example, PAX could be installed as:
+
+          (ql:quickload \"mgl-pax\")
+
+  - _Installation for development_
+
+      The heavier dependencies are on the other systems, which
+      correspond to the main functionalities provided, intended to be
+      used primarily during development. To install the dependencies
+      for all features under Quicklisp, do
+
+          (ql:quickload \"mgl-pax/full\")
+
+      Having thus installed the dependencies, it is enough to load the
+      base system, which will autoload the other systems as necessary."
+  ("mgl-pax" asdf:system)
+  ("mgl-pax/navigate" asdf:system)
+  ("mgl-pax/document" asdf:system)
+  ("mgl-pax/web" asdf:system)
+  ("mgl-pax/transcribe" asdf:system)
+  ("mgl-pax/full" asdf:system))
+
 (defsection @emacs-setup (:title "Emacs Setup")
   """Here is a quick recipe for setting up PAX for use via @SLIME to
   take advantage of the [conveniences on offer][@EMACS-FUNCTIONALITY].
@@ -179,7 +221,7 @@
   DEFSECTION, write docstrings and for @GENERATING-DOCUMENTATION.
 
   If PAX was installed from @QUICKLISP, then evaluate this in CL to
-  copy the Elisp code to a stable location:
+  [install][install-pax-elisp] the Elisp code in a stable location:
 
       (mgl-pax:install-pax-elisp "~/quicklisp/")
 
@@ -243,8 +285,8 @@
   (require 'mgl-pax)
   ```
 
-  If the Lisp variable `mgl-pax-autoload` is true (the default), then
-  MGL-PAX will be loaded in the connected Lisp on-demand via @SLIME.
+  If the Elisp variable `mgl-pax-autoload` is true (the default), then
+  PAX will be loaded in the connected Lisp on-demand via @SLIME.
 
   If loading fails, `mgl-pax` will be unloaded from Emacs and any
   [overridden Slime key bindings][@EMACS-KEYS] restored.
@@ -256,7 +298,7 @@
        (read s)))
 
 (defun install-pax-elisp (target-dir)
-  "Copy `mgl-pax.el` distributed with this package to TARGET-DIR."
+  "Install `mgl-pax.el` distributed with this package in TARGET-DIR."
   (let ((source (asdf:system-relative-pathname "mgl-pax" "src/mgl-pax.el"))
         (target (merge-pathnames "mgl-pax.el"
                                  (uiop:ensure-directory-pathname target-dir))))
@@ -309,45 +351,6 @@
 
   Calling `mgl-pax-unhijack-slime-doc-keys` reverts these changes.
   """)
-
-(defsection @links-and-systems (:title "Links and Systems")
-  "Here is the [official
-  repository](https://github.com/melisgl/mgl-pax) and the [HTML
-  documentation](http://melisgl.github.io/mgl-pax-world/mgl-pax-manual.html)
-  for the latest version.
-
-  PAX is built on top of the [DRef library]
-  [DREF::@DREF-MANUAL] (bundled in the same repository).
-
-  - _Installation for deployment_
-
-      The base system is [mgl-pax][asdf:system]. It has very few
-      dependencies and is sufficient as a dependency for systems using
-      the @BASICS to add documentation. This is to keep deployed code
-      small. To install only the bare minimum, with no intention of
-      using @NAVIGATING-IN-EMACS, @GENERATING-DOCUMENTATION,
-      @BROWSING-LIVE-DOCUMENTATION or using @TRANSCRIPTS, under
-      Quicklisp for example, PAX could be installed as:
-
-          (ql:quickload \"mgl-pax\")
-
-  - _Installation for development_
-
-      The heavier dependencies are on the other systems, which
-      correspond to the main functionalities provided, intended to be
-      used primarily during development. To install the dependencies
-      for all features under Quicklisp, do
-
-          (ql:quickload \"mgl-pax/full\")
-
-      Having thus installed the dependencies, it is enough to load the
-      base system, which will autoload the other systems as necessary."
-  ("mgl-pax" asdf:system)
-  ("mgl-pax/navigate" asdf:system)
-  ("mgl-pax/document" asdf:system)
-  ("mgl-pax/web" asdf:system)
-  ("mgl-pax/transcribe" asdf:system)
-  ("mgl-pax/full" asdf:system))
 
 (defsection @background (:title "Background")
   """As a user, I frequently run into documentation that's incomplete

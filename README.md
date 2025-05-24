@@ -5,12 +5,12 @@
 ## Table of Contents
 
 - [1 Introduction][685e]
-- [2 Emacs Setup][8541]
-    - [2.1 Functionality Provided][d4a9]
-    - [2.2 Installing from Quicklisp][f3f4]
-    - [2.3 Loading PAX][d3fc]
-    - [2.4 Setting up Keys][cfab]
-- [3 Links and Systems][ba90]
+- [2 Links and Systems][ba90]
+- [3 Emacs Setup][8541]
+    - [3.1 Functionality Provided][d4a9]
+    - [3.2 Installing from Quicklisp][f3f4]
+    - [3.3 Loading PAX][d3fc]
+    - [3.4 Setting up Keys][cfab]
 - [4 Background][f74b]
 - [5 Basics][94c7]
 - [6 PAX Locatives][292a]
@@ -232,141 +232,9 @@ The [transcript][6300] in the code block tagged with
 `cl-transcript` is automatically checked for up-to-dateness when
 documentation is generated.
 
-<a id="x-28MGL-PAX-3A-40EMACS-SETUP-20MGL-PAX-3ASECTION-29"></a>
-
-## 2 Emacs Setup
-
-Here is a quick recipe for setting up PAX for use via [SLIME][6be7] to
-take advantage of the [conveniences on offer][d4a9].
-Conversely, there is no need to do any of this just to use
-[`DEFSECTION`][72b4], write docstrings and for [Generating Documentation][2c93].
-
-If PAX was installed from [Quicklisp][1539], then evaluate this in CL to
-copy the Elisp code to a stable location:
-
-    (mgl-pax:install-pax-elisp "~/quicklisp/")
-
-Assuming the Elisp file is in the `~/quicklisp/` directory, add
-something like this to your `.emacs`:
-
-```elisp
-(add-to-list 'load-path "~/quicklisp/")
-(require 'mgl-pax)
-(global-set-key (kbd "C-.") 'mgl-pax-document)
-(global-set-key (kbd "s-x t") 'mgl-pax-transcribe-last-expression)
-(global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
-```
-
-When [Browsing with Other Browsers][c434], for clicking on the locative
-next to a definition to visit the corresponding source location in
-Emacs, the following permission needs to be given:
-
-```elisp
-(setq slime-enable-evaluate-in-emacs t)
-```
-
-
-<a id="x-28MGL-PAX-3A-40EMACS-FUNCTIONALITY-20MGL-PAX-3ASECTION-29"></a>
-
-### 2.1 Functionality Provided
-
-- For [Navigating Sources in Emacs][3386], loading `mgl-pax` extends
-  `slime-edit-definitions` ([`M-.`][cb15]) by adding
-  `mgl-pax-edit-definitions` to `slime-edit-definition-hooks`. There
-  are no related variables to customize.
-
-- For [Browsing Live Documentation][a595], `mgl-pax-browser-function` and
-  `mgl-pax-web-server-port` can be customized in Elisp. To browse
-  within Emacs, choose `w3m-browse-url` (see [w3m][7439]), and make sure
-  both the w3m binary and the w3m Emacs package are installed. On
-  Debian, simply install the `w3m-el` package. With other browser
-  functions, a HUNCHENTOOT web server is started.
-
-- See [Transcribing with Emacs][f5bd] for how to use the transcription
-   features. There are no related variables to customize.
-
-
-<a id="x-28MGL-PAX-3A-40EMACS-QUICKLISP-20MGL-PAX-3ASECTION-29"></a>
-
-### 2.2 Installing from Quicklisp
-
-If you installed PAX with Quicklisp, the location of `mgl-pax.el`
-may change with updates, and you may want to copy the current
-version of `mgl-pax.el` to a stable location by evaluating this in
-CL:
-
-    (mgl-pax:install-pax-elisp "~/quicklisp/")
-
-If working from, say, a git checkout, there is no need for this
-step.
-
-<a id="x-28MGL-PAX-3AINSTALL-PAX-ELISP-20FUNCTION-29"></a>
-
-- [function] **INSTALL-PAX-ELISP** *TARGET-DIR*
-
-    Copy `mgl-pax.el` distributed with this package to `TARGET-DIR`.
-
-<a id="x-28MGL-PAX-3A-40EMACS-LOADING-20MGL-PAX-3ASECTION-29"></a>
-
-### 2.3 Loading PAX
-
-Assuming the Elisp file is in the `~/quicklisp/` directory, add
-something like this to your `.emacs`:
-
-```elisp
-(add-to-list 'load-path "~/quicklisp/")
-(require 'mgl-pax)
-```
-
-If the Lisp variable `mgl-pax-autoload` is true (the default), then
-MGL-PAX will be loaded in the connected Lisp on-demand via [SLIME][6be7].
-
-If loading fails, `mgl-pax` will be unloaded from Emacs and any
-[overridden Slime key bindings][cfab] restored.
-
-<a id="x-28MGL-PAX-3A-40EMACS-KEYS-20MGL-PAX-3ASECTION-29"></a>
-
-### 2.4 Setting up Keys
-
-The recommended key bindings are this:
-
-```
-(global-set-key (kbd "C-.") 'mgl-pax-document)
-(global-set-key (kbd "s-x t") 'mgl-pax-transcribe-last-expression)
-(global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
-```
-
-The global key bindings above are global because their commands work
-in any mode. If that's not desired, one may bind `C-.` locally in
-all Slime related modes like this:
-
-```elisp
-(slime-bind-keys slime-parent-map nil '(("C-." mgl-pax-document)))
-```
-
-If the customizable variable `mgl-pax-hijack-slime-doc-keys` is
-true, then upon loading `mgl-pax`, the following changes are made to
-`slime-doc-map` (assuming it's bound to `C-c C-d`):
-
-- `C-c C-d a`: replaces `slime-apropos` with `mgl-pax-apropos`
-
-- `C-c C-d z`: replaces `slime-apropos-all` with `mgl-pax-apropos-all`
-
-- `C-c C-d p`: replaces `slime-apropos-package` with `mgl-pax-apropos-package`
-
-- `C-c C-d d`: replaces `slime-describe-symbol` with `mgl-pax-document`
-
-- `C-c C-d f`: replaces `slime-describe-function` with `mgl-pax-document`
-
-- `C-c C-d c`: installs `mgl-pax-current-definition-toggle-view`
-
-- `C-c C-d u`: installs `mgl-pax-edit-parent-section`
-
-Calling `mgl-pax-unhijack-slime-doc-keys` reverts these changes.
-
 <a id="x-28MGL-PAX-3A-40LINKS-AND-SYSTEMS-20MGL-PAX-3ASECTION-29"></a>
 
-## 3 Links and Systems
+## 2 Links and Systems
 
 Here is the [official
 repository](https://github.com/melisgl/mgl-pax) and the [HTML
@@ -454,6 +322,138 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
     - _Description:_ The [`mgl-pax`][6fdb] system with all features
         preloaded.
     - *Depends on:* [mgl-pax/document][4bb8], [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], [mgl-pax/web][a8c5]
+
+<a id="x-28MGL-PAX-3A-40EMACS-SETUP-20MGL-PAX-3ASECTION-29"></a>
+
+## 3 Emacs Setup
+
+Here is a quick recipe for setting up PAX for use via [SLIME][6be7] to
+take advantage of the [conveniences on offer][d4a9].
+Conversely, there is no need to do any of this just to use
+[`DEFSECTION`][72b4], write docstrings and for [Generating Documentation][2c93].
+
+If PAX was installed from [Quicklisp][1539], then evaluate this in CL to
+[install][1aed] the Elisp code in a stable location:
+
+    (mgl-pax:install-pax-elisp "~/quicklisp/")
+
+Assuming the Elisp file is in the `~/quicklisp/` directory, add
+something like this to your `.emacs`:
+
+```elisp
+(add-to-list 'load-path "~/quicklisp/")
+(require 'mgl-pax)
+(global-set-key (kbd "C-.") 'mgl-pax-document)
+(global-set-key (kbd "s-x t") 'mgl-pax-transcribe-last-expression)
+(global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
+```
+
+When [Browsing with Other Browsers][c434], for clicking on the locative
+next to a definition to visit the corresponding source location in
+Emacs, the following permission needs to be given:
+
+```elisp
+(setq slime-enable-evaluate-in-emacs t)
+```
+
+
+<a id="x-28MGL-PAX-3A-40EMACS-FUNCTIONALITY-20MGL-PAX-3ASECTION-29"></a>
+
+### 3.1 Functionality Provided
+
+- For [Navigating Sources in Emacs][3386], loading `mgl-pax` extends
+  `slime-edit-definitions` ([`M-.`][cb15]) by adding
+  `mgl-pax-edit-definitions` to `slime-edit-definition-hooks`. There
+  are no related variables to customize.
+
+- For [Browsing Live Documentation][a595], `mgl-pax-browser-function` and
+  `mgl-pax-web-server-port` can be customized in Elisp. To browse
+  within Emacs, choose `w3m-browse-url` (see [w3m][7439]), and make sure
+  both the w3m binary and the w3m Emacs package are installed. On
+  Debian, simply install the `w3m-el` package. With other browser
+  functions, a HUNCHENTOOT web server is started.
+
+- See [Transcribing with Emacs][f5bd] for how to use the transcription
+   features. There are no related variables to customize.
+
+
+<a id="x-28MGL-PAX-3A-40EMACS-QUICKLISP-20MGL-PAX-3ASECTION-29"></a>
+
+### 3.2 Installing from Quicklisp
+
+If you installed PAX with Quicklisp, the location of `mgl-pax.el`
+may change with updates, and you may want to copy the current
+version of `mgl-pax.el` to a stable location by evaluating this in
+CL:
+
+    (mgl-pax:install-pax-elisp "~/quicklisp/")
+
+If working from, say, a git checkout, there is no need for this
+step.
+
+<a id="x-28MGL-PAX-3AINSTALL-PAX-ELISP-20FUNCTION-29"></a>
+
+- [function] **INSTALL-PAX-ELISP** *TARGET-DIR*
+
+    Install `mgl-pax.el` distributed with this package in `TARGET-DIR`.
+
+<a id="x-28MGL-PAX-3A-40EMACS-LOADING-20MGL-PAX-3ASECTION-29"></a>
+
+### 3.3 Loading PAX
+
+Assuming the Elisp file is in the `~/quicklisp/` directory, add
+something like this to your `.emacs`:
+
+```elisp
+(add-to-list 'load-path "~/quicklisp/")
+(require 'mgl-pax)
+```
+
+If the Elisp variable `mgl-pax-autoload` is true (the default), then
+PAX will be loaded in the connected Lisp on-demand via [SLIME][6be7].
+
+If loading fails, `mgl-pax` will be unloaded from Emacs and any
+[overridden Slime key bindings][cfab] restored.
+
+<a id="x-28MGL-PAX-3A-40EMACS-KEYS-20MGL-PAX-3ASECTION-29"></a>
+
+### 3.4 Setting up Keys
+
+The recommended key bindings are this:
+
+```
+(global-set-key (kbd "C-.") 'mgl-pax-document)
+(global-set-key (kbd "s-x t") 'mgl-pax-transcribe-last-expression)
+(global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
+```
+
+The global key bindings above are global because their commands work
+in any mode. If that's not desired, one may bind `C-.` locally in
+all Slime related modes like this:
+
+```elisp
+(slime-bind-keys slime-parent-map nil '(("C-." mgl-pax-document)))
+```
+
+If the customizable variable `mgl-pax-hijack-slime-doc-keys` is
+true, then upon loading `mgl-pax`, the following changes are made to
+`slime-doc-map` (assuming it's bound to `C-c C-d`):
+
+- `C-c C-d a`: replaces `slime-apropos` with `mgl-pax-apropos`
+
+- `C-c C-d z`: replaces `slime-apropos-all` with `mgl-pax-apropos-all`
+
+- `C-c C-d p`: replaces `slime-apropos-package` with `mgl-pax-apropos-package`
+
+- `C-c C-d d`: replaces `slime-describe-symbol` with `mgl-pax-document`
+
+- `C-c C-d f`: replaces `slime-describe-function` with `mgl-pax-document`
+
+- `C-c C-d c`: installs `mgl-pax-current-definition-toggle-view`
+
+- `C-c C-d u`: installs `mgl-pax-edit-parent-section`
+
+Calling `mgl-pax-unhijack-slime-doc-keys` reverts these changes.
 
 <a id="x-28MGL-PAX-3A-40BACKGROUND-20MGL-PAX-3ASECTION-29"></a>
 
@@ -4380,6 +4380,7 @@ they are presented.
   [1959]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cec.htm '"22.3.5.3" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [19ad]: #x-28MGL-PAX-3A-40PDF-OUTPUT-20MGL-PAX-3ASECTION-29 "PDF Output"
   [19e3]: #x-28MGL-PAX-3A-40LINKING-20MGL-PAX-3ASECTION-29 "Linking"
+  [1aed]: #x-28MGL-PAX-3AINSTALL-PAX-ELISP-20FUNCTION-29 "MGL-PAX:INSTALL-PAX-ELISP FUNCTION"
   [1b1b]: #x-28MGL-PAX-3A-40DOCUMENTATION-UTILITIES-20MGL-PAX-3ASECTION-29 "Utilities for Generating Documentation"
   [1b28]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE"
   [1d1d]: dref/README.md#x-28DREF-3A-40BASIC-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29 "Basic Locative Types"
