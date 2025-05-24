@@ -74,21 +74,21 @@
   Finally, existing definitions can be queried with DEFINITIONS and
   DREF-APROPOS:
 
-  ```
-  (definitions 'dref-ext:locate*)
-  ==> (#<DREF LOCATE* GENERIC-FUNCTION>
-  -->  #<DREF LOCATE* (METHOD NIL (GLOSSARY-TERM))>
-  -->  #<DREF LOCATE* (METHOD NIL (SECTION))>
-  -->  #<DREF LOCATE* (METHOD NIL (READTABLE))>
-  -->  #<DREF LOCATE* (METHOD NIL (PACKAGE))>
-  -->  #<DREF LOCATE* (METHOD NIL (ASDF/SYSTEM:SYSTEM))>
-  -->  #<DREF LOCATE* (METHOD NIL (CLASS))>
-  -->  #<DREF LOCATE* (METHOD NIL (METHOD))>
-  -->  #<DREF LOCATE* (METHOD NIL (GENERIC-FUNCTION))>
-  -->  #<DREF LOCATE* (METHOD NIL (FUNCTION))>
-  -->  #<DREF LOCATE* (METHOD (:AROUND) (T))>
-  -->  #<DREF LOCATE* (METHOD NIL (T))> #<DREF LOCATE* (METHOD NIL (XREF))>
-  -->  #<DREF LOCATE* (METHOD NIL (DREF))>)
+  ```cl-transcript
+  (definitions 'dref-ext:arglist*)
+  ==> (#<DREF ARGLIST* GENERIC-FUNCTION>
+  -->  #<DREF ARGLIST* (METHOD (MGL-PAX::GO-DREF))>
+  -->  #<DREF ARGLIST* (METHOD (LAMBDA-DREF))>
+  -->  #<DREF ARGLIST* (METHOD (TYPE-DREF))>
+  -->  #<DREF ARGLIST* (METHOD (METHOD-DREF))>
+  -->  #<DREF ARGLIST* (METHOD (FUNCTION-DREF))>
+  -->  #<DREF ARGLIST* (METHOD (COMPILER-MACRO-DREF))>
+  -->  #<DREF ARGLIST* (METHOD (MACRO-DREF))>
+  -->  #<DREF ARGLIST* (METHOD (SETF-DREF))> #<DREF ARGLIST* (METHOD (T))>
+  -->  #<DREF ARGLIST* (METHOD (DREF))>
+  -->  #<DREF ARGLIST* (UNKNOWN
+  -->                   (DECLAIM ARGLIST*
+  -->                            FTYPE))>)
   ```
 
   ```cl-transcript
@@ -507,9 +507,9 @@
   they form @REFERENCEs.
 
   In their compound form, locatives may have arguments (see
-  LOCATIVE-ARGS) as in `(METHOD () (NUMBER))`. In fact, their atomic
-  form is shorthand for the common no-argument case: that is,
-  FUNCTION is equivalent to `(FUNCTION)`.
+  LOCATIVE-ARGS) as in `(METHOD (NUMBER))`. In fact, their atomic form
+  is shorthand for the common no-argument case: that is, FUNCTION is
+  equivalent to `(FUNCTION)`.
 
   A locative is valid if it names an existing @LOCATIVE-TYPE and its
   LOCATIVE-ARGS match that type's lambda-list (see
@@ -517,7 +517,7 @@
 
   ```cl-transcript
   (arglist (dref 'method 'locative))
-  => (METHOD-QUALIFIERS METHOD-SPECIALIZERS)
+  => (&REST QUALIFIERS-AND-SPECIALIZERS)
   => :DESTRUCTURING
   ```
 
@@ -553,8 +553,8 @@
   - a @LOCATIVE-TYPE such as [FUNCTION][locative], [TYPE][locative]
     and [CLHS][locative], or
 
-  - a full @LOCATIVE such as `(METHOD () (NUMBER))` and `(CLHS
-    SECTION)`, or
+  - a full @LOCATIVE such as `(METHOD (NUMBER))` and `(CLHS SECTION)`,
+    or
 
   - NIL (the empty DTYPE) and T (that encompasses all
     LISP-LOCATIVE-TYPES), or
@@ -769,7 +769,7 @@
   ```
   ```cl-transcript (:dynenv dref-std-env)
   (arglist (dref 'method 'locative))
-  => (METHOD-QUALIFIERS METHOD-SPECIALIZERS)
+  => (&REST QUALIFIERS-AND-SPECIALIZERS)
   => :DESTRUCTURING
   ```
 

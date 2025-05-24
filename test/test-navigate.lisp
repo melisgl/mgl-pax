@@ -142,8 +142,8 @@
     #+sbcl
     (with-test ("unreadable")
       (check-dowall '(("test-gf"
-                       ("(method nil ((eql #<package \"COMMON-LISP\">)))")))
-                    `((test-gf (method nil ((eql ,(find-package :cl))))))))))
+                       ("(method ((eql #<package \"COMMON-LISP\">)))")))
+                    `((test-gf (method ((eql ,(find-package :cl))))))))))
 
 (defun check-dowall (wall expected-refs)
   (let ((refs (mapcar (lambda (ref)

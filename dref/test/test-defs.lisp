@@ -93,7 +93,7 @@
 (defgeneric test-gf (x)
   (:documentation "TEST-GF generic-function"))
 (defmethod test-gf ((x number))
-  "TEST-GF (method () (number))"
+  "TEST-GF (method (number))"
   nil)
 (defmethod test-gf ((x (eql 7))))
 (defmethod test-gf ((x (eql #.(find-package :common-lisp)))))
@@ -179,7 +179,7 @@
   (:documentation "SETF-GF setf"))
 
 (defmethod (setf setf-gf) ((v string))
-  "SETF-GF (setf-method () (string))"
+  "SETF-GF (setf-method (string))"
   ())
 
 (define-compiler-macro (setf setf-fn) (v)

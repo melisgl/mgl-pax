@@ -55,7 +55,7 @@
                (print-toplevel-section-lists *pages*)
                ;; Initially, send output to the default page (built
                ;; for STREAM). Note that on PAGE-BOUNDARIES,
-               ;; DOCUMENT-OBJECT (method () (dref t)) redirects the
+               ;; DOCUMENT-OBJECT (method (dref t)) redirects the
                ;; output.
                (with-temp-output-to-page (,stream (last-elt *pages*))
                  (document-documentable ,documentable ,stream))
@@ -2493,7 +2493,7 @@
     (let* ((name (dref-name dref))
            (locative (dref-locative-args dref))
            (locative-type (locative-type locative)))
-      ;; This parallels DREF* (METHOD () (T (EQL CLHS) T)).
+      ;; This parallels DREF* (METHOD (T (EQL CLHS) T)).
       (cond ((eq locative-type 'glossary-term)
              (find-hyperspec-glossary-entry-url name
                                                 *document-hyperspec-root*))

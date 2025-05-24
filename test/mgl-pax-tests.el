@@ -162,14 +162,14 @@
    (should (equal (mgl-pax-wall-at-point)
                   '(("foo" ("xxx" "yyy")))))))
 
-;;; xxx FOO `(method () number)`
+;;; xxx FOO `(method number)`
 (ert-deftest test-mgl-pax-wall-at-point/locative-in-backticks ()
   (with-temp-lisp-and-non-lisp-buffer
    (insert "xxx foo")
    (save-excursion
-     (insert " `(method () number)`"))
+     (insert " `(method number)`"))
    (should (equal (mgl-pax-wall-at-point)
-                  '(("foo" ("xxx" "(method () number)")))))))
+                  '(("foo" ("xxx" "(method number)")))))))
 
 ;;; ;;; xxx FOO yyy
 (ert-deftest test-mgl-pax-wall-at-point/comment-1 ()
@@ -180,15 +180,15 @@
    (should (equal (mgl-pax-wall-at-point)
                   '(("foo" ("xxx" "yyy")))))))
 
-;;; ;;; xxx FOO (method ()
+;;; ;;; xxx FOO (method
 ;;; ;;;          (number))
 (ert-deftest test-mgl-pax-wall-at-point/comment-2 ()
   (with-temp-lisp-and-non-lisp-buffer
    (insert ";;; xxx foo")
    (save-excursion
-     (insert " (method ()\n;;; (number))"))
+     (insert " (method\n;;; (number))"))
    (should (equal (mgl-pax-wall-at-point)
-                  '(("foo" ("xxx" "(method ()\n(number))")))))))
+                  '(("foo" ("xxx" "(method\n(number))")))))))
 
 ;;; xxx [FOO][function] yyy
 (ert-deftest test-mgl-pax-wall-at-point/reflink-1 ()
@@ -286,14 +286,14 @@
       ("setf-compiler-macro setf-fn"
        "(define-compiler-macro (setf setf-fn) ")
       ("setf-function setf-gf" "(defgeneric (setf setf-gf) ")
-      ("(setf-method () (string)) setf-gf"
+      ("(setf-method (string)) setf-gf"
        "(defmethod (setf setf-gf) ((v string))")
       ("function foo" "(defun foo ")
       ("function |Foo|" "(defun |Foo| ")
       ("traced-foo" "(defun traced-foo ")
       ("generic-function test-gf" "(defgeneric test-gf ")
-      ("(method () (number)) test-gf" "(defmethod test-gf ")
-      ("(method nil ((eql #.(find-package '#:mgl-pax-test)) T T T)) exportable-reference-p"
+      ("(method (number)) test-gf" "(defmethod test-gf ")
+      ("(method ((eql #.(find-package '#:mgl-pax-test)) T T T)) exportable-reference-p"
        "(defmethod exportable-reference-p")
       ("method-combination my-comb" "(define-method-combination my-comb ")
       ("(reader foo) foo-r" "(defclass foo " "(r :reader foo-r)")

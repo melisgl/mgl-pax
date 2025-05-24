@@ -173,7 +173,7 @@
       (setf-function (swank-function-dspec setf-name))
       (generic-function (swank-generic-function-dspec name))
       (setf-generic-function (swank-generic-function-dspec setf-name))
-      (method (swank-method-dspec name (first args) (second args)))
+      (method (swank-method-dspec name (butlast args) (first (last args))))
       (setf-method (swank-method-dspec setf-name (first args) (second args)))
       (accessor (swank-accessor-dspec name (first args) t))
       (reader (swank-accessor-dspec name (first args) nil))
@@ -453,7 +453,7 @@
             (parse-dspec-method-qualifiers-and-specializers (nthcdr 2 dspec)
                                                             generic-fn)
           (let ((name (second dspec))
-                (locative `(method ,qualifiers ,specializers)))
+                (locative `(method ,@qualifiers ,specializers)))
             (dref name locative)))))))
 
 ;;; (:AFTER (EQL 5) CLASS-NAME) => (:AFTER) ((EQL 5) CLASS-NAME)
@@ -496,7 +496,7 @@
                  (<= 3 (length dspec)))
         (multiple-value-bind (qualifiers specializers)
             (parse-dspec-method-qualifiers-and-specializers (nthcdr 2 dspec))
-          (dref name `(method ,qualifiers ,specializers)))))))
+          (dref name `(method ,@qualifiers ,specializers)))))))
 
 #+ccl
 (defun method-dspec-to-definition (name dspec)
@@ -506,8 +506,8 @@
              (parse-dspec-method-qualifiers-and-specializers (nthcdr 2 dspec))
            (when (= (length specializers) 1)
              (dref (second dspec)
-                   `(method ,qualifiers ,(objects-to-specializers
-                                          specializers))))))
+                   `(method ,@qualifiers ,(objects-to-specializers
+                                           specializers))))))
         ((eq (first dspec) 'ccl::reader-method)
          ;; E.g. (CCL::READER-METHOD (:METHOD FOO (#<STANDARD-CLASS CCC>)))
          (destructuring-bind (method-keyword method-name classes) (second dspec)

@@ -55,17 +55,16 @@
     XREF=).
 
       ```cl-transcript
-      (defparameter *d* (dref 'dref* '(method () (t t t))))
-      (defparameter *d2* (dref 'dref* '(method (:around) (t t t))))
+      (defparameter *d* (dref 'dref* '(method (t t t))))
+      (defparameter *d2* (dref 'dref* '(method :around (t t t))))
       (dtypep *d* 'method)
       => T
-      (dtypep *d* '(method))
+      (dtypep *d* '(accessor))
       .. debugger invoked on SIMPLE-ERROR:
-      ..   Bad arguments NIL for locative METHOD with lambda list
-      ..   (METHOD-QUALIFIERS METHOD-SPECIALIZERS).
-      (dtypep *d* '(method () (t t t)))
+      ..   Bad arguments NIL for locative ACCESSOR with lambda list (CLASS-NAME).
+      (dtypep *d* '(method (t t t)))
       => T
-      (dtypep *d2* '(method () (t t t)))
+      (dtypep *d2* '(method (t t t)))
       => NIL
       ```
 
@@ -138,7 +137,7 @@
                 (invalid-dtype dtype))
               (when (funcall (second dtype) dref)
                 t))
-             ;; E.g. (FUNCTION) or (METHOD NIL (NUMBER))
+             ;; E.g. (FUNCTION) or (METHOD (NUMBER))
              (t
               (check-locative-type (first dtype))
               (check-locative-args* (first dtype) (rest dtype))
@@ -205,7 +204,7 @@
 ;;;; 1. COVER-DTYPE gives a set of locative types whose union contains
 ;;;;    all definitions of DTYPE, but this upper bound may be loose
 ;;;;    when a locative's args restrict a locative type further as in
-;;;;    (METHOD () (NUMBER)).
+;;;;    (METHOD (NUMBER)).
 ;;;;
 ;;;; 2. We gather all definitions with these locative types.
 ;;;;
@@ -263,7 +262,7 @@
          (let ((args (rest dtype)))
            (check-locative-args* name args)
            (when negatep
-             ;; (NOT (METHOD () (NUMBER))) is the universe minus an
+             ;; (NOT (METHOD (NUMBER))) is the universe minus an
              ;; atom.
              (return-from cover-dtype/single nil))))
        name)

@@ -133,21 +133,21 @@ new operations. For example, [PAX][2415] makes
 Finally, existing definitions can be queried with [`DEFINITIONS`][e196] and
 [`DREF-APROPOS`][65b4]:
 
-```
-(definitions 'dref-ext:locate*)
-==> (#<DREF LOCATE* GENERIC-FUNCTION>
--->  #<DREF LOCATE* (METHOD NIL (GLOSSARY-TERM))>
--->  #<DREF LOCATE* (METHOD NIL (SECTION))>
--->  #<DREF LOCATE* (METHOD NIL (READTABLE))>
--->  #<DREF LOCATE* (METHOD NIL (PACKAGE))>
--->  #<DREF LOCATE* (METHOD NIL (ASDF/SYSTEM:SYSTEM))>
--->  #<DREF LOCATE* (METHOD NIL (CLASS))>
--->  #<DREF LOCATE* (METHOD NIL (METHOD))>
--->  #<DREF LOCATE* (METHOD NIL (GENERIC-FUNCTION))>
--->  #<DREF LOCATE* (METHOD NIL (FUNCTION))>
--->  #<DREF LOCATE* (METHOD (:AROUND) (T))>
--->  #<DREF LOCATE* (METHOD NIL (T))> #<DREF LOCATE* (METHOD NIL (XREF))>
--->  #<DREF LOCATE* (METHOD NIL (DREF))>)
+```common-lisp
+(definitions 'dref-ext:arglist*)
+==> (#<DREF ARGLIST* GENERIC-FUNCTION>
+-->  #<DREF ARGLIST* (METHOD (MGL-PAX::GO-DREF))>
+-->  #<DREF ARGLIST* (METHOD (LAMBDA-DREF))>
+-->  #<DREF ARGLIST* (METHOD (TYPE-DREF))>
+-->  #<DREF ARGLIST* (METHOD (METHOD-DREF))>
+-->  #<DREF ARGLIST* (METHOD (FUNCTION-DREF))>
+-->  #<DREF ARGLIST* (METHOD (COMPILER-MACRO-DREF))>
+-->  #<DREF ARGLIST* (METHOD (MACRO-DREF))>
+-->  #<DREF ARGLIST* (METHOD (SETF-DREF))> #<DREF ARGLIST* (METHOD (T))>
+-->  #<DREF ARGLIST* (METHOD (DREF))>
+-->  #<DREF ARGLIST* (UNKNOWN
+-->                   (DECLAIM ARGLIST*
+-->                            FTYPE))>)
 ```
 
 ```common-lisp
@@ -502,9 +502,9 @@ The following convenience functions are compositions of
     they form [reference][43bd]s.
     
     In their compound form, locatives may have arguments (see
-    [`LOCATIVE-ARGS`][2444]) as in `(METHOD () (NUMBER))`. In fact, their atomic
-    form is shorthand for the common no-argument case: that is,
-    `FUNCTION` is equivalent to `(FUNCTION)`.
+    [`LOCATIVE-ARGS`][2444]) as in `(METHOD (NUMBER))`. In fact, their atomic form
+    is shorthand for the common no-argument case: that is, `FUNCTION` is
+    equivalent to `(FUNCTION)`.
     
     A locative is valid if it names an existing [locative type][a11d] and its
     `LOCATIVE-ARGS` match that type's lambda-list (see
@@ -512,7 +512,7 @@ The following convenience functions are compositions of
     
     ```common-lisp
     (arglist (dref 'method 'locative))
-    => (METHOD-QUALIFIERS METHOD-SPECIALIZERS)
+    => (&REST QUALIFIERS-AND-SPECIALIZERS)
     => :DESTRUCTURING
     ```
     
@@ -556,8 +556,8 @@ A `DTYPE` is either
 - a [locative type][a11d] such as [`FUNCTION`][ba62], [`TYPE`][926d]
   and [`CLHS`][ed5f], or
 
-- a full [locative][7ac8] such as `(METHOD () (NUMBER))` and `(CLHS
-  SECTION)`, or
+- a full [locative][7ac8] such as `(METHOD (NUMBER))` and `(CLHS SECTION)`,
+  or
 
 - `NIL` (the empty `DTYPE`) and `T` (that encompasses all
   [`LISP-LOCATIVE-TYPES`][30ad]), or
@@ -656,17 +656,16 @@ definitions as in
       [`XREF=`][0617]).
     
         ```common-lisp
-        (defparameter *d* (dref 'dref* '(method () (t t t))))
-        (defparameter *d2* (dref 'dref* '(method (:around) (t t t))))
+        (defparameter *d* (dref 'dref* '(method (t t t))))
+        (defparameter *d2* (dref 'dref* '(method :around (t t t))))
         (dtypep *d* 'method)
         => T
-        (dtypep *d* '(method))
+        (dtypep *d* '(accessor))
         .. debugger invoked on SIMPLE-ERROR:
-        ..   Bad arguments NIL for locative METHOD with lambda list
-        ..   (METHOD-QUALIFIERS METHOD-SPECIALIZERS).
-        (dtypep *d* '(method () (t t t)))
+        ..   Bad arguments NIL for locative ACCESSOR with lambda list (CLASS-NAME).
+        (dtypep *d* '(method (t t t)))
         => T
-        (dtypep *d2* '(method () (t t t)))
+        (dtypep *d2* '(method (t t t)))
         => NIL
         ```
     
@@ -908,7 +907,7 @@ The following functions take a single argument, which may be a
     
     ```common-lisp
     (arglist (dref 'method 'locative))
-    => (METHOD-QUALIFIERS METHOD-SPECIALIZERS)
+    => (&REST QUALIFIERS-AND-SPECIALIZERS)
     => :DESTRUCTURING
     ```
     
@@ -1167,14 +1166,16 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 
 <a id="x-28METHOD-20MGL-PAX-3ALOCATIVE-29"></a>
 
-- [locative] **METHOD** *METHOD-QUALIFIERS METHOD-SPECIALIZERS*
+- [locative] **METHOD** *&REST QUALIFIERS-AND-SPECIALIZERS*
 
     - Direct locative subtypes: [`WRITER`][e548], [`READER`][cc04], [`SETF-METHOD`][1a03]
 
     Refers to a `METHOD`. [name][5fc4] must be a [function name][5191].
-    [`METHOD-QUALIFIERS`][2522] and `METHOD-SPECIALIZERS` are similar to the
-    [`CL:FIND-METHOD`][6d46]'s arguments of the same names. For example, the
-    method
+    `METHOD-QUALIFIERS-AND-SPECIALIZERS` has the form
+    
+        (<QUALIFIER>* <SPECIALIZERS>)
+    
+    For example, the method
     
     ```common-lisp
     (defgeneric foo-gf (x y z)
@@ -1185,15 +1186,15 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     can be referred to as
     
     ```common-lisp
-    (dref 'foo-gf '(method (:around) (t (eql xxx) string)))
-    ==> #<DREF FOO-GF (METHOD (:AROUND) (T (EQL XXX) STRING))>
+    (dref 'foo-gf '(method :around (t (eql xxx) string)))
+    ==> #<DREF FOO-GF (METHOD :AROUND (T (EQL XXX) STRING))>
     ```
     
     `METHOD` is not [`EXPORTABLE-LOCATIVE-TYPE-P`][c930].
 
 <a id="x-28DREF-3ASETF-METHOD-20MGL-PAX-3ALOCATIVE-29"></a>
 
-- [locative] **SETF-METHOD** *METHOD-QUALIFIERS METHOD-SPECIALIZERS*
+- [locative] **SETF-METHOD** *&REST METHOD-QUALIFIERS-AND-SPECIALIZERS*
 
     - Direct locative supertypes: [`METHOD`][172e], [`SETF`][d83a]
     
@@ -1202,14 +1203,14 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     Refers to a [`METHOD`][51c3] of a `SETF-GENERIC-FUNCTION`.
     
     ```common-lisp
-    (defgeneric (setf oog) ()
-      (:method ()))
-    (locate (find-method #'(setf oog) () ()))
-    ==> #<DREF OOG (SETF-METHOD NIL NIL)>
-    (dref 'oog '(setf-method () ()))
-    ==> #<DREF OOG (SETF-METHOD NIL NIL)>
-    (dref '(setf oog) '(method () ()))
-    ==> #<DREF OOG (SETF-METHOD NIL NIL)>
+    (defgeneric (setf oog) (v)
+      (:method ((v string))))
+    (locate (find-method #'(setf oog) () (list (find-class 'string))))
+    ==> #<DREF OOG (SETF-METHOD (STRING))>
+    (dref 'oog '(setf-method (string)))
+    ==> #<DREF OOG (SETF-METHOD (STRING))>
+    (dref '(setf oog) '(method (string)))
+    ==> #<DREF OOG (SETF-METHOD (STRING))>
     ```
 
 <a id="x-28METHOD-COMBINATION-20MGL-PAX-3ALOCATIVE-29"></a>
@@ -1848,7 +1849,7 @@ lookup*
 
     If `OBJECT` is an `XREF`([`0`][1538] [`1`][cda7]), then the [lookup][49b5]
     for ([`XREF-LOCATIVE-TYPE`][840e] `OBJECT`) is invoked. For an `XREF` with the
-    locative `(METHOD () (NUMBER))`, this would be the lookup
+    locative `(METHOD (NUMBER))`, this would be the lookup
     defined as
 
     ```
@@ -1924,15 +1925,15 @@ upcast the returned value to the `DREF` argument's `DREF-LOCATIVE-TYPE`.
     ```common-lisp
     (defclass foo ()
       ((a :accessor foo-a)))
-    (dref '(setf foo-a) '(method () (t foo)))
+    (dref '(setf foo-a) '(method (t foo)))
     ==> #<DREF FOO-A (ACCESSOR FOO)>
-    (dtypep * '(method () (t foo)))
+    (dtypep * '(method (t foo)))
     => T
     ;; Internally, DTYPEP upcast #<DREF FOO-A (ACCESSOR FOO)>
     ;; and checks that the locative args of the resulting
-    ;; definition match those in (METHOD () (T FOO)).
+    ;; definition match those in (METHOD (T FOO)).
     (locate* ** 'method)
-    ==> #<DREF (SETF FOO-A) (METHOD NIL (T FOO))>
+    ==> #<DREF (SETF FOO-A) (METHOD (T FOO))>
     ```
 
     For even more background, also note that if the name remains the
@@ -1945,10 +1946,10 @@ upcast the returned value to the `DREF` argument's `DREF-LOCATIVE-TYPE`.
       ((r :reader foo-r)))
     (dref 'foo-r '(reader foo))
     ==> #<DREF FOO-R (READER FOO)>
-    (dtypep * '(method () (foo)))
+    (dtypep * '(method (foo)))
     => T
     ;; Behind the scenes, DTYPEP does this:
-    (xref= ** (dref 'foo-r '(method () (foo))))
+    (xref= ** (dref 'foo-r '(method (foo))))
     => T
     ```
 
@@ -2667,7 +2668,6 @@ the details, see the Elisp function `slime-goto-source-location`.
   [23d5]: http://www.lispworks.com/documentation/HyperSpec/Body/m_define.htm "DEFINE-COMPILER-MACRO (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [2415]: ../README.md "PAX Manual"
   [2444]: #x-28DREF-EXT-3ALOCATIVE-ARGS-20FUNCTION-29 "DREF-EXT:LOCATIVE-ARGS FUNCTION"
-  [2522]: http://www.lispworks.com/documentation/HyperSpec/Body/f_method.htm "METHOD-QUALIFIERS (MGL-PAX:CLHS GENERIC-FUNCTION)"
   [25be]: #x-28DREF-EXT-3ADREF-CLASS-20FUNCTION-29 "DREF-EXT:DREF-CLASS FUNCTION"
   [2638]: #x-28DREF-EXT-3AWRITER-DREF-20CLASS-29 "DREF-EXT:WRITER-DREF CLASS"
   [292a]: ../README.md#x-28MGL-PAX-3A-40PAX-LOCATIVES-20MGL-PAX-3ASECTION-29 "PAX Locatives"

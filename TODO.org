@@ -90,7 +90,6 @@ second sexp, which should be informed by the first sexp.
 
 Normal completion includes nicknames as "pax:" without relisting all
 symbols.
-
 * document
 ** OPT parse and print markdown once when *format* is :html?
 This would involve rewriting everything to emit parse tree fragments or be able to produce html directly. Either way, it is not without cost.

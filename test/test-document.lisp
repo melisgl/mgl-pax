@@ -684,12 +684,12 @@ xxx
                 "macro `BAR` type"
                 :msg "definition with preferred locative no being documented"))
   (with-test ("locative in backticks")
-    (check-head (list "`TEST-GF` `(method () (number))`"
-                      (dref 'test-gf '(method () (number))))
-                "[`TEST-GF`][044a] `(method () (number))`")
-    (check-head (list "`(method () (number))` `TEST-GF`"
-                      (dref 'test-gf '(method () (number))))
-                "`(method () (number))` [`TEST-GF`][044a]"))
+    (check-head (list "`TEST-GF` `(method (number))`"
+                      (dref 'test-gf '(method (number))))
+                "[`TEST-GF`][fcc6] `(method (number))`")
+    (check-head (list "`(method (number))` `TEST-GF`"
+                      (dref 'test-gf '(method (number))))
+                "`(method (number))` [`TEST-GF`][fcc6]"))
   (with-test ("escaped autolinking")
     (check-head "`\\PRINT`" "`PRINT`"))
   (with-test ("used to fail")
@@ -1085,8 +1085,8 @@ This is [Self-referencing][e042].
   (with-failure-expected ((alexandria:featurep :clisp))
     (signals-not (locate-error)
       (check-document
-       (dref '(setf setf-gf) '(method () (string)))
-       "<a id=\"MGL-PAX-TEST:SETF-GF%20%28DREF:SETF-METHOD%20NIL%20%28STRING%29%29\"></a>
+       (dref '(setf setf-gf) '(method (string)))
+       "<a id=\"MGL-PAX-TEST:SETF-GF%20%28DREF:SETF-METHOD%20%28STRING%29%29\"></a>
 
 - [setf-method] **SETF-GF** *(V STRING)*
 
@@ -1197,12 +1197,12 @@ This is [Self-referencing][e042].
 (deftest test-method ()
   (test-method/arglist)
   (signals-not (error)
-    (document (dref 'test-gf '(method () ((eql #.(find-package :cl)))))
+    (document (dref 'test-gf '(method ((eql #.(find-package :cl)))))
               :stream nil))
-  (is (equal (pax::urldecode "MGL-PAX-TEST:TEST-GF%20%28METHOD%20NIL%20%28%28EQL%20%23%3CPACKAGE%20%22COMMON-LISP%22%3E%29%29%29")
-             "MGL-PAX-TEST:TEST-GF (METHOD NIL ((EQL #<PACKAGE \"COMMON-LISP\">)))"))
-  (check-document (dref 'test-gf '(method () (number)))
-                  "<a id=\"MGL-PAX-TEST:TEST-GF%20%28METHOD%20NIL%20%28NUMBER%29%29\"></a>
+  (is (equal (pax::urldecode "MGL-PAX-TEST:TEST-GF%20%28METHOD%20%28%28EQL%20%23%3CPACKAGE%20%22COMMON-LISP%22%3E%29%29%29")
+             "MGL-PAX-TEST:TEST-GF (METHOD ((EQL #<PACKAGE \"COMMON-LISP\">)))"))
+  (check-document (dref 'test-gf '(method (number)))
+                  "<a id=\"MGL-PAX-TEST:TEST-GF%20%28METHOD%20%28NUMBER%29%29\"></a>
 
 - [method] **TEST-GF** *(X NUMBER)*
 
@@ -1210,17 +1210,17 @@ This is [Self-referencing][e042].
 ")
   #+sbcl
   (check-pred (list (definitions 'test-gf)
-                    "TEST-GF `(method () ((eql #<package \"COMMON-LISP\">)))`")
+                    "TEST-GF `(method ((eql #<package \"COMMON-LISP\">)))`")
               ;; The id of the link varies by implementation.
               "[`TEST-GF`][")
   (with-failure-expected ((and (alexandria:featurep :clisp)
                                'failure))
     (check-pred (list (definitions 'test-gf)
-                      "TEST-GF `(method () ((eql #.(find-package :cl))))`")
+                      "TEST-GF `(method ((eql #.(find-package :cl))))`")
                 "[`TEST-GF`][")))
 
 (deftest test-method/arglist ()
-  (check-pred (dref 'test-gf '(method () ((eql :bar))))
+  (check-pred (dref 'test-gf '(method ((eql :bar))))
               "- [method] **TEST-GF** *(X (EQL :BAR))*"))
 
 (deftest test-reader ()
@@ -1986,7 +1986,7 @@ example section
   (with-failure-expected ((alexandria:featurep '(:or :abcl :clisp)))
     (dolist (dref (list (dref 'section 'locative)
                         (dref 'test-gf
-                              '(method () ((eql #.(find-package :cl)))))))
+                              '(method ((eql #.(find-package :cl)))))))
       (check-ref-sets
        (pax::definitions-for-pax-url-path
         (nth-value 2 (pax::parse-url (pax::dref-to-pax-url dref))))

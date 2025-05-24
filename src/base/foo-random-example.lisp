@@ -12,7 +12,7 @@
   (foo-random-state class)
   (state (reader foo-random-state))
   "Hey we can also print states!"
-  (print-object (method () (foo-random-state t)))
+  (print-object (method (foo-random-state t)))
   (*foo-state* variable)
   (gaussian-random function)
   (uniform-random function)

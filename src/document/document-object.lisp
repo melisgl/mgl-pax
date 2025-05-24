@@ -20,28 +20,28 @@
   [@PLAIN-FORMAT note][docstring]")
 
 (defsection @markdown-output (:title "Markdown Output")
-  "[document-object* (method () (dref t))][docstring]
+  "[document-object* (method (dref t))][docstring]
 
   With this default format, PAX supports all locative types, but for
   some DREF::@BASIC-LOCATIVE-TYPES defined in DRef and the
   @PAX-LOCATIVES, special provisions have been made.
 
-  - [document-object* (method () (variable-dref t))][docstring]
-  - [document-object* (method () (setf-dref t))][docstring]
-  - [document-object* (method () (method-dref t))][docstring]
-  - [document-object* (method () (accessor-dref t))][docstring]
-  - [document-object* (method () (structure-accessor-dref t))][docstring]
-  - [document-object* (method () (class-dref t))][docstring]
-  - [document-object* (method () (structure-dref t))][docstring]
-  - [document-object* (method () (condition-dref t))][docstring]
-  - [document-object* (method () (asdf-system-dref t))][docstring]
-  - [document-object* (method () (locative-dref t))][docstring]
-  - [document-object* (method () (section t))][docstring]
-  - [document-object* (method () (glossary-term t))][docstring]
-  - [document-object* (method () (go-dref t))][docstring]
-  - [document-object* (method () (include-dref t))][docstring]
-  - [document-object* (method () (clhs-dref t))][docstring]
-  - [document-object* (method () (unknown-dref t))][docstring]")
+  - [document-object* (method (variable-dref t))][docstring]
+  - [document-object* (method (setf-dref t))][docstring]
+  - [document-object* (method (method-dref t))][docstring]
+  - [document-object* (method (accessor-dref t))][docstring]
+  - [document-object* (method (structure-accessor-dref t))][docstring]
+  - [document-object* (method (class-dref t))][docstring]
+  - [document-object* (method (structure-dref t))][docstring]
+  - [document-object* (method (condition-dref t))][docstring]
+  - [document-object* (method (asdf-system-dref t))][docstring]
+  - [document-object* (method (locative-dref t))][docstring]
+  - [document-object* (method (section t))][docstring]
+  - [document-object* (method (glossary-term t))][docstring]
+  - [document-object* (method (go-dref t))][docstring]
+  - [document-object* (method (include-dref t))][docstring]
+  - [document-object* (method (clhs-dref t))][docstring]
+  - [document-object* (method (unknown-dref t))][docstring]")
 
 (defmethod document-object* ((dref dref) stream)
   "By default, [DREF][class]s are documented in the following format.
@@ -120,7 +120,9 @@
 ;;; specializers are replaced by the name of the class, eql
 ;;; specializers are replaced by `(EQL ,OBJECT).
 (defun method-pretty-arglist (dref)
-  (destructuring-bind (qualifiers specializers) (dref-locative-args dref)
+  (multiple-value-bind (qualifiers specializers)
+      (dref::method-locative-specializer-and-qualifiers
+       (dref-locative-args dref))
     (append qualifiers
             (mapcar (lambda (name spec)
                       (if (eq spec t)

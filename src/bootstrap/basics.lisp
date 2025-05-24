@@ -27,7 +27,7 @@
   References are [XREF][class]s given in the form `(NAME LOCATIVE)`.
   For example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
   SECTION)` says that `@BAR` is a subsection of this
-  one. `(BAZ (METHOD () (T T T)))` refers to the default method of the
+  one. `(BAZ (METHOD (T T T)))` refers to the default method of the
   three argument generic function `BAZ`. `(FOO FUNCTION)` is
   equivalent to `(FOO (FUNCTION))`. See the DRef DREF::@INTRODUCTION
   for more.

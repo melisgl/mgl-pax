@@ -18,11 +18,11 @@
   ignore any internal machinery. The first step is to define the
   @LOCATIVE-TYPE:"
   (nil (include (:start (class locative)
-                 :end (dref::locate* (method () (class (eql class)))))
+                 :end (dref::locate* (method (class (eql class)))))
                 :header-nl "```" :footer-nl "```"))
   "Then, we make it possible to look up CLASS definitions:"
-  (nil (include (:start (dref::locate* (method () (class (eql class))))
-                 :end (resolve* (method () (class-dref))))
+  (nil (include (:start (dref::locate* (method (class (eql class))))
+                 :end (resolve* (method (class-dref))))
                 :header-nl "```" :footer-nl "```"))
   "DEFINE-LOCATOR makes `(LOCATE (FIND-CLASS 'DREF))` work, while
   DEFINE-LOOKUP is for `(DREF 'DREF 'CLASS)`. Naturally, for locative
@@ -32,7 +32,7 @@
   Finally, we define a RESOLVE* method to recover the [CLASS][type]
   object from a CLASS-DREF. We also specialize DOCSTRING* and
   SOURCE-LOCATION*:"
-  (nil (include (:start (resolve* (method () (class-dref)))
+  (nil (include (:start (resolve* (method (class-dref)))
                  :end (dref::%end-of-class-example variable))
                 :header-nl "```" :footer-nl "```"))
   "We took advantage of having just made the class locative type being
@@ -467,7 +467,7 @@
 
       If OBJECT is an XREF, then the [lookup][define-lookup]
       for (XREF-LOCATIVE-TYPE OBJECT) is invoked. For an XREF with the
-      locative `(METHOD () (NUMBER))`, this would be the lookup
+      locative `(METHOD (NUMBER))`, this would be the lookup
       defined as
 
       ```
@@ -557,7 +557,7 @@
   check-locator-return-values function][docstring]")
 
 (defsection @default-downcast (:title "Default Downcast")
-  "[ dref::locate* (method () (dref t))][docstring]")
+  "[ dref::locate* (method (dref t))][docstring]")
 
 ;;; Return a @DEFINITION of OBJECT as an instance of the DREF-CLASS of
 ;;; LOCATIVE-TYPE. This function is for extending LOCATE and is behind
@@ -650,15 +650,15 @@
       ```cl-transcript (:dynenv dref-std-env)
       (defclass foo ()
         ((a :accessor foo-a)))
-      (dref '(setf foo-a) '(method () (t foo)))
+      (dref '(setf foo-a) '(method (t foo)))
       ==> #<DREF FOO-A (ACCESSOR FOO)>
-      (dtypep * '(method () (t foo)))
+      (dtypep * '(method (t foo)))
       => T
       ;; Internally, DTYPEP upcast #<DREF FOO-A (ACCESSOR FOO)>
       ;; and checks that the locative args of the resulting
-      ;; definition match those in (METHOD () (T FOO)).
+      ;; definition match those in (METHOD (T FOO)).
       (locate* ** 'method)
-      ==> #<DREF (SETF FOO-A) (METHOD NIL (T FOO))>
+      ==> #<DREF (SETF FOO-A) (METHOD (T FOO))>
       ```
 
       For even more background, also note that if the name remains the
@@ -671,10 +671,10 @@
         ((r :reader foo-r)))
       (dref 'foo-r '(reader foo))
       ==> #<DREF FOO-R (READER FOO)>
-      (dtypep * '(method () (foo)))
+      (dtypep * '(method (foo)))
       => T
       ;; Behind the scenes, DTYPEP does this:
-      (xref= ** (dref 'foo-r '(method () (foo))))
+      (xref= ** (dref 'foo-r '(method (foo))))
       => T
       ```")
 

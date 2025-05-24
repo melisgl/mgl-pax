@@ -80,7 +80,7 @@
   denoted method:
 
   ```
-  ;;; See RESOLVE* (method () (function-dref)) for how this all works.
+  ;;; See RESOLVE* (method (function-dref)) for how this all works.
   ```""")
 
 ;;; An acronym for Word-And-Locatives-List. This is what
@@ -191,14 +191,14 @@
     NAME LOCATIVE)`). Example inputs of this form:
 
           print function
-          dref-ext:docstring* (method nil (t))
+          dref-ext:docstring* (method (t))
 
   - LOCATIVE NAME: This has the same form as the previous: two sexps,
     but here the first one is the locative. If ambiguous, this is
     considered in addition to the previous one. Example inputs:
 
           function print
-          (method nil (t)) dref-ext:docstring*
+          (method (t)) dref-ext:docstring*
 
   In all of the above NAME is a PAX::@RAW-NAME, meaning that `\print`
   will be recognized as `\PRINT` and `\pax` as `"PAX"`.

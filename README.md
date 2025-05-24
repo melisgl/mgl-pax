@@ -169,7 +169,7 @@ Here is an example of how it all works together:
   (foo-random-state class)
   (state (reader foo-random-state))
   "Hey we can also print states!"
-  (print-object (method () (foo-random-state t)))
+  (print-object (method (foo-random-state t)))
   (*foo-state* variable)
   (gaussian-random function)
   (uniform-random function)
@@ -548,7 +548,7 @@ Now let's examine the most important pieces.
     References are [`XREF`][1538]s given in the form `(NAME LOCATIVE)`.
     For example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
     SECTION)` says that `@BAR` is a subsection of this
-    one. `(BAZ (METHOD () (T T T)))` refers to the default method of the
+    one. `(BAZ (METHOD (T T T)))` refers to the default method of the
     three argument generic function `BAZ`. `(FOO FUNCTION)` is
     equivalent to `(FOO (FUNCTION))`. See the DRef [Introduction][ad80]
     for more.
@@ -1136,7 +1136,7 @@ In the next example, pressing `M-.` on [`RESOLVE*`][d3b3] will visit its
 denoted method:
 
 ```
-;;; See RESOLVE* (method () (function-dref)) for how this all works.
+;;; See RESOLVE* (method (function-dref)) for how this all works.
 ```
 
 
@@ -1169,14 +1169,14 @@ can be specified as follows.
   NAME LOCATIVE)`). Example inputs of this form:
 
         print function
-        dref-ext:docstring* (method nil (t))
+        dref-ext:docstring* (method (t))
 
 - `LOCATIVE` `NAME`: This has the same form as the previous: two sexps,
   but here the first one is the locative. If ambiguous, this is
   considered in addition to the previous one. Example inputs:
 
         function print
-        (method nil (t)) dref-ext:docstring*
+        (method (t)) dref-ext:docstring*
 
 In all of the above `NAME` is a [raw name][f5af], meaning that `print`
 will be recognized as `PRINT` and `pax` as `"PAX"`.
@@ -4010,13 +4010,13 @@ Parsing deviates from `READ` in the following ways.
   locative.
 
 - Read-time evaluation ([#.][ffd7]) follows normal `READ` semantics.
-  Thus, `(method () ((eql #.(find-package 'cl))))` may `INTERN` the
+  Thus, `(method ((eql #.(find-package 'cl))))` may `INTERN` the
   symbol `CL`.
 
 - A locative that involves unreadable objects that print using the
-  `#<` syntax (e.g. `(METHOD () ((EQL #<PACKAGE DREF>)))`) is
-  parsable in the context of a [name][88cf] if each unreadable object in
-  the locative occurs in one of the [`DEFINITIONS`][e196] of that name and it
+  `#<` syntax (e.g. `(METHOD ((EQL #<PACKAGE DREF>)))`) is parsable
+  in the context of a [name][88cf] if each unreadable object in the
+  locative occurs in one of the [`DEFINITIONS`][e196] of that name and it
   [prints to an equivalent string][2f21] (e.g. `#<PACKAGE DREF>` above).
 
 

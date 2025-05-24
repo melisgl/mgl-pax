@@ -390,11 +390,13 @@
 
 ;;;; METHOD locative
 
-(define-locative-type (method method-qualifiers method-specializers) ()
+(define-locative-type (method &rest qualifiers-and-specializers) ()
   "Refers to a METHOD. @NAME must be a [function name][clhs].
-  METHOD-QUALIFIERS and METHOD-SPECIALIZERS are similar to the
-  CL:FIND-METHOD's arguments of the same names. For example, the
-  method
+  METHOD-QUALIFIERS-AND-SPECIALIZERS has the form
+
+      (<QUALIFIER>* <SPECIALIZERS>)
+
+  For example, the method
 
   ```cl-transcript (:dynenv dref-std-env)
   (defgeneric foo-gf (x y z)
@@ -405,8 +407,8 @@
   can be referred to as
 
   ```cl-transcript (:dynenv dref-std-env)
-  (dref 'foo-gf '(method (:around) (t (eql xxx) string)))
-  ==> #<DREF FOO-GF (METHOD (:AROUND) (T (EQL XXX) STRING))>
+  (dref 'foo-gf '(method :around (t (eql xxx) string)))
+  ==> #<DREF FOO-GF (METHOD :AROUND (T (EQL XXX) STRING))>
   ```
 
   METHOD is not EXPORTABLE-LOCATIVE-TYPE-P."
@@ -418,10 +420,24 @@
                (swank-mop:method-generic-function method)))
         (qualifiers (swank-mop:method-qualifiers method))
         (specializers (method-specializers-list method)))
-    (%make-dref name method `(,qualifiers ,specializers))))
+    (%make-dref name method `(,@qualifiers ,specializers))))
+
+(defun method-locative-specializer-and-qualifiers (locative-args)
+  (values (butlast locative-args)
+          (first (last locative-args))))
 
 (define-lookup method (name locative-args)
-  (destructuring-bind (qualifiers specializers) locative-args
+  (unless (and locative-args (listp (first (last locative-args))))
+    (locate-error "Bad arguments ~S for ~S locative: it should have ~
+                  the form (<QUALIFIER>* <SPECIALIZERS>)."
+                  locative-args 'method))
+  (dolist (qualifier (butlast locative-args))
+    (when (listp qualifier)
+      (locate-error "Bad arguments ~S for ~S locative: ~
+                    qualifiers cannot be lists."
+                    locative-args 'method)))
+  (multiple-value-bind (qualifiers specializers)
+      (method-locative-specializer-and-qualifiers locative-args)
     (or (ignore-errors (find-method* name qualifiers specializers))
         (locate-error "Method does not exist.")))
   (%make-dref name method locative-args))
@@ -441,7 +457,8 @@
           (swank-mop:method-specializers method)))
 
 (defmethod resolve* ((dref method-dref))
-  (destructuring-bind (qualifiers specializers) (dref-locative-args dref)
+  (multiple-value-bind (qualifiers specializers)
+      (method-locative-specializer-and-qualifiers (dref-locative-args dref))
     (or (ignore-errors (find-method* (dref-function-name dref)
                                      qualifiers specializers))
         (resolve-error "Method does not exist."))))
@@ -543,19 +560,19 @@
 
 ;;;; SETF-METHOD locative
 
-(define-locative-type (setf-method method-qualifiers method-specializers)
+(define-locative-type (setf-method &rest method-qualifiers-and-specializers)
     (method setf)
   "Refers to a METHOD of a SETF-GENERIC-FUNCTION.
 
   ```cl-transcript (:dynenv dref-std-env)
-  (defgeneric (setf oog) ()
-    (:method ()))
-  (locate (find-method #'(setf oog) () ()))
-  ==> #<DREF OOG (SETF-METHOD NIL NIL)>
-  (dref 'oog '(setf-method () ()))
-  ==> #<DREF OOG (SETF-METHOD NIL NIL)>
-  (dref '(setf oog) '(method () ()))
-  ==> #<DREF OOG (SETF-METHOD NIL NIL)>
+  (defgeneric (setf oog) (v)
+    (:method ((v string))))
+  (locate (find-method #'(setf oog) () (list (find-class 'string))))
+  ==> #<DREF OOG (SETF-METHOD (STRING))>
+  (dref 'oog '(setf-method (string)))
+  ==> #<DREF OOG (SETF-METHOD (STRING))>
+  (dref '(setf oog) '(method (string)))
+  ==> #<DREF OOG (SETF-METHOD (STRING))>
   ```")
 
 (define-lookup setf-method (name locative-args)
@@ -623,7 +640,8 @@
 
 (define-cast reader ((dref method-dref))
   (let ((name (dref-name dref)))
-    (destructuring-bind (qualifiers specializers) (rest (dref-locative dref))
+    (multiple-value-bind (qualifiers specializers)
+        (method-locative-specializer-and-qualifiers (dref-locative-args dref))
       (when (and (endp qualifiers)
                  (= (length specializers) 1)
                  (ignore-errors
@@ -679,7 +697,8 @@
 
 (define-cast writer ((dref method-dref))
   (let ((name (dref-name dref)))
-    (destructuring-bind (qualifiers specializers) (rest (dref-locative dref))
+    (multiple-value-bind (qualifiers specializers)
+        (method-locative-specializer-and-qualifiers (dref-locative-args dref))
       (when (and (endp qualifiers)
                  (= (length specializers) 2)
                  (eq (first specializers) t))
