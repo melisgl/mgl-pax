@@ -71,6 +71,14 @@
     (check-ref-sets (definitions '(setf setf-gf))
                     `(,(xref 'setf-gf 'setf-generic-function)
                       ,(xref 'setf-gf '(setf-method () (string))))))
+  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ccl :clisp
+                                                      :cmucl :ecl))
+                               'failure))
+    (check-ref-sets (definitions 'setf-gf)
+                    `(,(xref 'setf-gf 'generic-function)
+                      ,(xref 'setf-gf '(method () ()))
+                      ,(xref 'setf-gf 'setf-generic-function)
+                      ,(xref 'setf-gf '(setf-method () (string))))))
   (with-failure-expected ((and (alexandria:featurep
                                 '(:or :abcl :clisp :cmucl :ecl))
                                'failure))

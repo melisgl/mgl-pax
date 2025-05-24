@@ -460,7 +460,7 @@
 ;;;
 ;;; Allegro and others:
 ;;; (:AFTER ((EQL 5) CLASS-NAME)) => (:AFTER) ((EQL 5) CLASS-NAME)
-(defun parse-dspec-method-qualifiers-and-specializers (list fn)
+(defun parse-dspec-method-qualifiers-and-specializers (list &optional fn)
   #+(or abcl allegro ccl cmucl)
   (declare (ignore fn))
   #+(or abcl allegro ccl cmucl)
@@ -478,7 +478,8 @@
         count 1))
 
 #+allegro
-(defun method-dspec-to-definition (dspec)
+(defun method-dspec-to-definition (name dspec)
+  (declare (ignore name))
   ;; This screams for a pattern matcher.
   ;; (:OPERATOR (METHOD FOO :AFTER ((EQL 5) CLASS-NAME)))
   ;; (:TYPE (METHOD FOO (T CLASS-NAME)))
@@ -498,7 +499,8 @@
           (dref name `(method ,qualifiers ,specializers)))))))
 
 #+ccl
-(defun method-dspec-to-definition (dspec)
+(defun method-dspec-to-definition (name dspec)
+  (declare (ignore name))
   (cond ((eq (first dspec) :method)
          (multiple-value-bind (qualifiers specializers)
              (parse-dspec-method-qualifiers-and-specializers (nthcdr 2 dspec))

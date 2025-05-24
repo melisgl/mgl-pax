@@ -31,14 +31,23 @@
 
 (defun definitions-with-locative-types (name locative-types)
   (let ((drefs ())
-        (swank-locative-types ()))
+        (swank-name-to-locative-types (make-hash-table :test #'equal)))
     (dolist (locative-type locative-types)
-      (let ((mapper (map-definitions-of-name (lambda (dref)
-                                               (push dref drefs))
-                                             name locative-type)))
+      (multiple-value-bind (mapper swank-name)
+          (map-definitions-of-name (lambda (dref)
+                                     (push dref drefs))
+                                   name locative-type)
+        (unless swank-name
+          (setq swank-name name))
         (when (eq mapper 'swank-definitions)
-          (push locative-type swank-locative-types))))
-    (append drefs (swank-definitions name swank-locative-types))))
+          (push locative-type
+                (gethash swank-name swank-name-to-locative-types)))))
+    (append drefs
+            (loop for swank-name being the hash-key
+                    in swank-name-to-locative-types
+                      using (hash-value swank-locative-types)
+                  append (swank-definitions swank-name
+                                            swank-locative-types)))))
 
 (defun/autoloaded dref-apropos (name &key package external-only case-sensitive
                                      (dtype t))
@@ -257,6 +266,6 @@
   (let ((name-to-drefs (make-hash-table :test #'equal)))
     (dolist (dref drefs)
       (push dref (gethash (dref-name dref) name-to-drefs)))
-    (loop for name being the hash-keys of name-to-drefs
+    (loop for name being the hash-key of name-to-drefs
           append (delete-duplicates (gethash name name-to-drefs)
                                     :test #'xref=))))

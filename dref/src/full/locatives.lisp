@@ -574,8 +574,10 @@
   (call-lookup `(setf ,(dref-name dref)) 'method (dref-locative-args dref)))
 
 (defmethod map-definitions-of-name (fn name (locative-type (eql 'setf-method)))
-  (declare (ignore fn name))
-  'swank-definitions)
+  (declare (ignore fn))
+  (if (setf-name-p name)
+      'swank-definitions
+      (values 'swank-definitions `(setf ,name))))
 
 
 ;;;; METHOD-COMBINATION locative
