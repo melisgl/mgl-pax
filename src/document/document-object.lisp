@@ -41,7 +41,8 @@
   - [document-object* (method (go-dref t))][docstring]
   - [document-object* (method (include-dref t))][docstring]
   - [document-object* (method (clhs-dref t))][docstring]
-  - [document-object* (method (unknown-dref t))][docstring]")
+  - [document-object* (method (unknown-dref t))][docstring]"
+  (@public-superclasses glossary-term))
 
 (defmethod document-object* ((dref dref) stream)
   "By default, [DREF][class]s are documented in the following format.
@@ -219,38 +220,57 @@
 
 (defmethod document-object* ((dref structure-dref) stream)
   "For definitions with a STRUCTURE locative, the arglist printed is
-  the list of immediate superclasses with STRUCTURE-OBJECT and
-  non-exported symbols omitted."
+  the list of @PUBLIC-SUPERCLASSES with STRUCTURE-OBJECT omitted."
   (%document-class dref stream))
 
 (defmethod document-object* ((dref class-dref) stream)
   "For definitions with a CLASS locative, the arglist printed is the
-  list of immediate superclasses with STANDARD-OBJECT, CONDITION and
-  non-exported symbols omitted."
+  list of @PUBLIC-SUPERCLASSES with STANDARD-OBJECT and CONDITION
+  omitted."
   (%document-class dref stream))
 
 (defmethod document-object* ((dref condition-dref) stream)
   "For definitions with a CONDITION locative, the arglist printed is
-  the list of immediate superclasses with STANDARD-OBJECT, CONDITION
-  and non-exported symbols omitted."
+  the list of @PUBLIC-SUPERCLASSES with STANDARD-OBJECT and
+  CONDITION omitted."
   (%document-class dref stream))
 
 (defun %document-class (dref stream)
   (let* ((class (find-class (dref-name dref)))
-         (superclasses
-           (remove-if (lambda (name)
-                        (or (member name '(standard-object condition
-                                           structure-object))
-                            ;; Omit non-exported superclasses.
-                            (not (external-symbol-p name))))
-                      (mapcar #'class-name
-                              (swank-mop:class-direct-superclasses class))))
+         (superclasses (remove-if (lambda (super)
+                                    (member super '(standard-object condition
+                                                    structure-object)))
+                                  (public-superclasses class)))
          (arglist (when superclasses
                     (if (and (not *first-pass*) *document-mark-up-signatures*)
                         (mark-up-superclasses superclasses)
                         superclasses))))
     (documenting-reference (stream :arglist arglist)
       (document-docstring (docstring dref) stream))))
+
+(define-glossary-term @public-superclasses (:title "public superclasses")
+  "[public-superclasses function][docstring]")
+
+(defun public-superclasses (class)
+  "The public superclasses of a class are tightest envelope of
+  superclasses with names exported from some package. This envelope is
+  constructed by recursing depth-first into the superclass hierarchy.
+  If the name of the superclass currently processed is exported from
+  any package, then it is collected as a public superclass, and we do
+  not recurse into its superclasses."
+  (let ((superclasses ()))
+    (labels
+        ((recurse (class)
+           (let ((direct-supers (swank-mop:class-direct-superclasses class)))
+             (dolist (super direct-supers)
+               (let ((super-name (class-name super)))
+                 (if (external-symbol-in-any-package-p super-name)
+                     (pushnew super-name superclasses)
+                     (recurse super)))))))
+      (recurse (if (typep class 'class)
+                   class
+                   (find-class class))))
+    (reverse superclasses)))
 
 (defun mark-up-superclasses (superclasses)
   (with-output-to-string (stream)

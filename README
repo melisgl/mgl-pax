@@ -2514,16 +2514,15 @@ as their arglist.
 printed is the locative's CLASS-NAME argument if provided.
 
 - For definitions with a CLASS locative, the arglist printed is the
-list of immediate superclasses with STANDARD-OBJECT, CONDITION and
-non-exported symbols omitted.
+list of @PUBLIC-SUPERCLASSES with STANDARD-OBJECT and CONDITION
+omitted.
 
 - For definitions with a STRUCTURE locative, the arglist printed is
-the list of immediate superclasses with STRUCTURE-OBJECT and
-non-exported symbols omitted.
+the list of @PUBLIC-SUPERCLASSES with STRUCTURE-OBJECT omitted.
 
 - For definitions with a CONDITION locative, the arglist printed is
-the list of immediate superclasses with STANDARD-OBJECT, CONDITION
-and non-exported symbols omitted.
+the list of @PUBLIC-SUPERCLASSES with STANDARD-OBJECT and
+CONDITION omitted.
 
 - For definitions with a ASDF:SYSTEM locative, their most
 important slots are printed as an unnumbered list.
@@ -2553,6 +2552,15 @@ arglist.
 - For definitions with an UNKNOWN locative, the LOCATIVE-ARGS are
 printed as the arglist. There is no docstring.
 
+
+- [glossary-term] public superclasses
+
+    The public superclasses of a class are tightest envelope of
+    superclasses with names exported from some package. This envelope is
+    constructed by recursing depth-first into the superclass hierarchy.
+    If the name of the superclass currently processed is exported from
+    any package, then it is collected as a public superclass, and we do
+    not recurse into its superclasses.
 
 #### PDF Output
 

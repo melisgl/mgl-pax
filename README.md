@@ -2804,16 +2804,15 @@ as their arglist.
 printed is the locative's `CLASS-NAME` argument if provided.
 
 - For definitions with a [`CLASS`][2060] locative, the arglist printed is the
-list of immediate superclasses with [`STANDARD-OBJECT`][a843], [`CONDITION`][83e1] and
-non-exported symbols omitted.
+list of [public superclasses][ff58] with [`STANDARD-OBJECT`][a843] and [`CONDITION`][83e1]
+omitted.
 
 - For definitions with a [`STRUCTURE`][da65] locative, the arglist printed is
-the list of immediate superclasses with [`STRUCTURE-OBJECT`][2038] and
-non-exported symbols omitted.
+the list of [public superclasses][ff58] with [`STRUCTURE-OBJECT`][2038] omitted.
 
 - For definitions with a [`CONDITION`][c479] locative, the arglist printed is
-the list of immediate superclasses with `STANDARD-OBJECT`, `CONDITION`
-and non-exported symbols omitted.
+the list of [public superclasses][ff58] with `STANDARD-OBJECT` and
+`CONDITION` omitted.
 
 - For definitions with a [`ASDF:SYSTEM`][c097] locative, their most
 important slots are printed as an unnumbered list.
@@ -2843,6 +2842,17 @@ arglist.
 - For definitions with an [`UNKNOWN`][a951] locative, the `LOCATIVE-ARGS` are
 printed as the arglist. There is no docstring.
 
+
+<a id="x-28MGL-PAX-3A-40PUBLIC-SUPERCLASSES-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+
+- [glossary-term] **public superclasses**
+
+    The public superclasses of a class are tightest envelope of
+    superclasses with names exported from some package. This envelope is
+    constructed by recursing depth-first into the superclass hierarchy.
+    If the name of the superclass currently processed is exported from
+    any package, then it is collected as a public superclass, and we do
+    not recurse into its superclasses.
 
 <a id="x-28MGL-PAX-3A-40PDF-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
 
@@ -4718,6 +4728,7 @@ they are presented.
   [fbb1]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pl_plp.htm "++ (MGL-PAX:CLHS VARIABLE)"
   [fe21]: http://www.lispworks.com/documentation/HyperSpec/Body/v_t.htm "T (MGL-PAX:CLHS MGL-PAX:CONSTANT)"
   [fe58]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_rd.htm "READ (MGL-PAX:CLHS FUNCTION)"
+  [ff58]: #x-28MGL-PAX-3A-40PUBLIC-SUPERCLASSES-20MGL-PAX-3AGLOSSARY-TERM-29 "public superclasses"
   [ff76]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_esc.htm "*PRINT-ESCAPE* (MGL-PAX:CLHS VARIABLE)"
   [ffd7]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhf.htm '"2.4.8.6" (MGL-PAX:CLHS MGL-PAX:SECTION)'
 
