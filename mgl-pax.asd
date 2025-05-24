@@ -20,7 +20,10 @@
                "named-readtables" "pythonic-string-reader")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
-  :components ((:module "src/base/"
+  :components (;; Recompile everything on version change so that
+               ;; PAX::*PAX-VERSION* is updated.
+               (:static-file "version.lisp-expr")
+               (:module "src/base/"
                 :serial t
                 :components ((:file "pax")
                              (:file "extension-api")
