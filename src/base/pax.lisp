@@ -297,6 +297,14 @@
                          "mgl-pax" "version.lisp-expr"))
        (read s)))
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (let ((version (format nil "~{~A~^.~}"
+                         (uiop:safe-read-file-form
+                          (asdf:system-relative-pathname
+                           "mgl-pax" "version.lisp-expr")))))
+    (setf (asdf:component-version (asdf:find-system "mgl-pax")) version)
+    (setf (asdf:component-version (asdf:find-system "dref")) version)))
+
 (defun install-pax-elisp (target-dir)
   "Install `mgl-pax.el` distributed with this package in TARGET-DIR."
   (let ((source (asdf:system-relative-pathname "mgl-pax" "src/mgl-pax.el"))
