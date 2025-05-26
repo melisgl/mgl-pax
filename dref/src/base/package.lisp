@@ -59,7 +59,7 @@
   (:use #:common-lisp #:autoload #:dref-ext
         #:editor-hints.named-readtables #:mgl-pax
         #:pythonic-string-reader)
-  ;; Some these are in autoloaded sections, so we export everything
+  ;; Some of these are in autoloaded sections, so we export everything
   ;; manually.
   (:export #:accessor #:arglist #:class #:compiler-macro
            #:condition #:constant #:declaration #:define-dtype

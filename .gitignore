@@ -7,3 +7,8 @@
 *.sse2f
 world/
 doc/
+/test/data/README
+/test/data/README.md
+/test/data/dref/README
+/test/data/dref/README.md
+/test/data/test-output-not-checked-in.tex

@@ -44,11 +44,9 @@ Testing from the command line
 Catching changes in behaviour
 -----------------------------
 
-On SBCL (we don't check in generated files with other Lisps), some
-bugs not caught by the test suite may be caught by
-
-- transcription consistency checking when generating the READMEs, or
-- then show up as diffs.
+On SBCL, the test suite checks that the readme files are up-to-date
+(the committed readmes are generated on SBCL). There are small
+differences in output with other Lisps, so we don't check this there.
 
 For wider coverage, check out PAX World in the top-level directory,
 where the ASDF files are with

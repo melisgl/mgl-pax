@@ -131,7 +131,8 @@
   (test-with-document-context)
   (test-asdf-system-name-of)
   (test-guess-package-from-arglist)
-  (test-pdf))
+  (test-pdf)
+  (test-pax-transcripts))
 
 (deftest test-urlencode ()
   (is (equal (mgl-pax::urlencode "hello") "hello"))
@@ -2021,6 +2022,7 @@ example section
 (deftest test-guess-package-from-arglist ()
   (signals-not (error)
     (is (null (mgl-pax::guess-package-from-arglist '(1 3))))))
+
 
 ;;; See HACKING.md.
 (deftest test-pdf ()
@@ -2045,7 +2047,8 @@ example section
          :pages (let ((source-uri-fn (make-git-source-uri-fn
                                       :mgl-pax
                                       "https://github.com/melisgl/mgl-pax"))
-                      (file "test/data/test-output.tex"))
+                      (file #+sbcl "test/data/test-output.tex"
+                            #-sbcl "test/data/test-output-not-checked-in.tex"))
                   `((:objects (, documentable)
                      :output (,(asdf:system-relative-pathname
                                 "mgl-pax" file)
@@ -2053,3 +2056,36 @@ example section
                      :uri-fragment ,file
                      :source-uri-fn ,source-uri-fn)))
          :format :pdf)))))
+
+(deftest test-pax-transcripts ()
+  ;; The transcripts are created on SBCL, so they should match there.
+  #+sbcl
+  (signals-not (transcription-error :handler #'continue)
+    (pax::update-pax-readmes :output-dir "test/data/"))
+  ;; On other platforms, just power through transcription errors, and
+  ;; check if the readmes can be generated at all.
+  #-sbcl
+  (signals-not (error)
+    (handler-bind ((transcription-error #'continue))
+      (pax::update-pax-readmes :output-dir "test/data/")))
+  #+sbcl
+  (check-files-the-same
+   (asdf:system-relative-pathname "mgl-pax" "README")
+   (asdf:system-relative-pathname "mgl-pax" "test/data/README"))
+  #+sbcl
+  (check-files-the-same
+   (asdf:system-relative-pathname "mgl-pax" "README.md")
+   (asdf:system-relative-pathname "mgl-pax" "test/data/README.md"))
+  #+sbcl
+  (check-files-the-same
+   (asdf:system-relative-pathname "mgl-pax" "dref/README")
+   (asdf:system-relative-pathname "mgl-pax" "test/data/dref/README"))
+  #+sbcl
+  (check-files-the-same
+   (asdf:system-relative-pathname "mgl-pax" "dref/README.md")
+   (asdf:system-relative-pathname "mgl-pax" "test/data/dref/README.md")))
+
+(defun check-files-the-same (file1 file2)
+  (is (equal (alexandria:read-file-into-string (% file1))
+             (alexandria:read-file-into-string (% file2)))
+      :capture nil))

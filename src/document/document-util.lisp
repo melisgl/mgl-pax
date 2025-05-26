@@ -466,7 +466,7 @@
 (defun pax-and-dref-sections ()
   (list @pax-manual dref::@dref-manual))
 
-(defun pax-and-dref-pages (format)
+(defun pax-and-dref-pages (format &key (output-dir ""))
   (let ((source-uri-fn (make-git-source-uri-fn
                         :mgl-pax
                         "https://github.com/melisgl/mgl-pax"))
@@ -485,31 +485,36 @@
                      ((:pdf)
                       (if (string= *pandoc-output-format* "pdf")
                           "dref-manual.pdf"
-                          "test/data/dref-manual.tex")))))
+                          "test/data/dref-manual.tex"))))
+        (output-dir (asdf:system-relative-pathname "mgl-pax" output-dir)))
     `((:objects (, @pax-manual)
-       :output (,(asdf:system-relative-pathname "mgl-pax" pax-file)
+       :output (,(merge-pathnames pax-file output-dir)
                 ,@*default-output-options*)
        ,@(when (member format '(:plain :markdown))
            '(:footer-fn print-markdown-footer))
        :uri-fragment ,pax-file
        :source-uri-fn ,source-uri-fn)
       (:objects (, dref::@dref-manual)
-       :output (,(asdf:system-relative-pathname "mgl-pax" dref-file)
+       :output (,(merge-pathnames dref-file output-dir)
                 ,@*default-output-options*)
        ,@(when (member format '(:plain :markdown))
            '(:footer-fn print-markdown-footer))
        :uri-fragment ,dref-file
        :source-uri-fn ,source-uri-fn))))
 
+(defun update-pax-readmes (&key (output-dir ""))
+  (let ((*document-url-versions* '(1)))
+    (document (pax-and-dref-sections)
+              :pages (pax-and-dref-pages :plain :output-dir output-dir)
+              :format :plain)
+    (document (pax-and-dref-sections)
+              :pages (pax-and-dref-pages :markdown :output-dir output-dir)
+              :format :markdown)))
+
 #+nil
 (progn
   (asdf:load-system :mgl-pax/full)
-  (time
-   (let ((*document-url-versions* '(1)))
-     (document (pax-and-dref-sections) :pages (pax-and-dref-pages :plain)
-                                       :format :plain)
-     (document (pax-and-dref-sections) :pages (pax-and-dref-pages :markdown)
-                                       :format :markdown)))
+  (time (update-pax-readmes))
   (time
    (let ((*document-downcase-uppercase-code* t))
      (update-asdf-system-html-docs (pax-and-dref-sections)

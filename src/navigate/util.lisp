@@ -161,10 +161,13 @@
           (if foundp
               (multiple-value-bind (symbol2 pos)
                   (read-from-string string t nil :start start)
-                (assert (eq symbol symbol2))
-                (if (or junk-allowed (= pos (length string)))
-                    (values symbol2 t pos)
-                    (values symbol2 nil pos)))
+                (cond ((not (eq symbol symbol2))
+                       #+sbcl (assert (eq symbol symbol2))
+                       #-sbcl (values nil nil pos))
+                      ((or junk-allowed (= pos (length string)))
+                       (values symbol2 t pos))
+                      (t
+                       (values symbol2 nil pos))))
               (values nil nil pos))))
     ((or reader-error end-of-file) ())))
 
