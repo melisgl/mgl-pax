@@ -165,6 +165,8 @@ offline documentation.
 
 Maybe this is a special case of dynamically generated documentation.
 ** MAYBE live browsing: allow filtering out local definitions when there is a clhs definition?
+** MAYBE 40ants asdf-system-relative images?
+https://github.com/40ants/doc/commit/4ae22efa20a4a2117da9dd8e96c1117458904d73
 * web
 ** MAYBE implement a wiki on top?
 PAX is already kind of a wiki.
@@ -211,7 +213,16 @@ LOCATIVE-TYPE DREF) 'SECTION) may make more sense.
 Probably it's too much to ask to have a portable introspection library
 factored out of them. Conium seems abandoned. There is no clear scope
 to support a stable API.
-* MAYBE find a catchy name for the method
+* marketing
+** MAYBE find a catchy name for the method
 - Illiterate Programming: Already used in the sense of "not literate programming".
 - Documentation-Driven Development: Exists, and also a misnomer (see https://quotenil.com/multifaceted-development.html).
 - Rubber Doc Development: reeks of pragmatism only unlike bath toys.
+** Pitch for Lispers
+User manuals manifest the design in prose and force clarity, but writing manuals can be a drag and docs tend to lag the code. The tools PAX offers try to minimize the distance between code and its documentation to help keep them in sync.
+
+Also, Common Lisp + SLIME/SLY/etc is a great interactive environment with M-. all the way down. PAX takes interactivity to documentation and makes it easy to navigate the graph of documented objects as well as switching back and forth between code and its documentation.
+
+Explorability is a killer feature of Emacs, and PAX applies to the same idea to Common Lisp, going beyond what Emacs offers (teaching M-. about definition types, more powerful linking, and not having a docstring/info page dichotomy).
+
+PAX shares the goals of literate programming if not its means: documentation lives in code and not vice versa. Nothing is worth giving up interactive development for.
