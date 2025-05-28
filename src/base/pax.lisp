@@ -319,14 +319,21 @@
 
 (defun check-pax-elisp-version (pax-elisp-version)
   (unless (equal pax-elisp-version *pax-version*)
-    (cerror "Ignore version mismatch."
-            "~@<In Emacs, mgl-pax-version is ~S, ~
-            which is different from the CL version ~S. ~
-            You may need to ~S and M-x mgl-pax-reload. ~
-            See ~S for more.~:@>"
-            pax-elisp-version *pax-version* 'mgl-pax:install-pax-elisp
-            '@emacs-setup))
+    (if (uiop:lexicographic< '< pax-elisp-version *pax-version*)
+        (cerror "Ignore version mismatch."
+                "~@<In Emacs, mgl-pax-version is ~S, ~
+                which is lower than the CL version ~S. ~
+                You may need to ~S and M-x mgl-pax-reload. ~
+                See ~S for more.~:@>"
+                pax-elisp-version *pax-version* 'install-pax-elisp
+                '@emacs-setup)
+        (cerror "Ignore version mismatch."
+                "~@<In Emacs, mgl-pax-version is ~S, ~
+                which is higher than the CL version ~S. ~
+                You may need to reload PAX with ~S.~:@>"
+                pax-elisp-version *pax-version* '(asdf:load-system "mgl-pax"))))
   t)
+
 
 (defsection @emacs-keys (:title "Setting up Keys")
   """The recommended key bindings are this:
