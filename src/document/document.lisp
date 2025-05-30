@@ -986,7 +986,13 @@
 
 ;;; Process MARKDOWN-STRING block by block to limit maximum memory usage.
 (defun reprint-in-format (markdown-string markdown-reflinks stream)
-  "- When @BROWSING-LIVE-DOCUMENTATION, the page displayed can be of,
+  (if (eq *format* :pdf)
+      (print-pandoc-pdf (prepare-parse-tree-for-printing-to-pandoc-pdf
+                         (parse-markdown (concatenate 'string markdown-string
+                                                      markdown-reflinks)))
+                        stream)
+      (note @markdown-reflink-definitions
+        "- When @BROWSING-LIVE-DOCUMENTATION, the page displayed can be of,
   say, a single function within what would constitute the offline
   documentation of a library. Because markdown reference link
   definitions, for example
@@ -1001,43 +1007,38 @@
 
       See DEFINE-GLOSSARY-TERM for a better alternative to markdown
       reference links."
-  (if (eq *format* :pdf)
-      (print-pandoc-pdf (prepare-parse-tree-for-printing-to-pandoc-pdf
-                         (parse-markdown (concatenate 'string markdown-string
-                                                      markdown-reflinks)))
-                        stream)
-      (let ((reflinks-parse-tree (parse-markdown markdown-reflinks))
-            ;; The reflink definitions from the most recent
-            ;; MAX-N-REFLINK-BLOCKS.
-            (reflink-defs ())
-            (max-n-reflink-blocks 20)
-            ;; Parse trees of the most recent MAX-N-TREES blocks.
-            (trees ())
-            (max-n-tree-blocks 10))
-        (labels
-            ((add-parse-tree (tree)
-               (when (= (length trees) max-n-tree-blocks)
-                 (write-tree (first (last trees)))
-                 (setq trees (nbutlast trees)))
-               (push tree trees)
-               (push (reflink-defs tree) reflink-defs)
-               (setq reflink-defs (subseq reflink-defs
-                                          0 (min max-n-reflink-blocks
-                                                 (length reflink-defs)))))
-             (reflinks-around ()
-               (apply #'append reflink-defs))
-             (write-tree (tree)
-               (print-markdown (append tree reflinks-parse-tree
-                                       (reflinks-around))
-                               stream :format *format*)))
-          (map-markdown-block-parses (lambda (tree)
-                                       (add-parse-tree
-                                        (prepare-parse-tree-for-printing
-                                         (list tree))))
-                                     markdown-string)
-          ;; FIXME: Really?
-          (loop repeat max-n-tree-blocks
-                do (add-parse-tree ()))))))
+        (let ((reflinks-parse-tree (parse-markdown markdown-reflinks))
+              ;; The reflink definitions from the most recent
+              ;; MAX-N-REFLINK-BLOCKS.
+              (reflink-defs ())
+              (max-n-reflink-blocks 20)
+              ;; Parse trees of the most recent MAX-N-TREES blocks.
+              (trees ())
+              (max-n-tree-blocks 10))
+          (labels
+              ((add-parse-tree (tree)
+                 (when (= (length trees) max-n-tree-blocks)
+                   (write-tree (first (last trees)))
+                   (setq trees (nbutlast trees)))
+                 (push tree trees)
+                 (push (reflink-defs tree) reflink-defs)
+                 (setq reflink-defs (subseq reflink-defs
+                                            0 (min max-n-reflink-blocks
+                                                   (length reflink-defs)))))
+               (reflinks-around ()
+                 (apply #'append reflink-defs))
+               (write-tree (tree)
+                 (print-markdown (append tree reflinks-parse-tree
+                                         (reflinks-around))
+                                 stream :format *format*)))
+            (map-markdown-block-parses (lambda (tree)
+                                         (add-parse-tree
+                                          (prepare-parse-tree-for-printing
+                                           (list tree))))
+                                       markdown-string)
+            ;; FIXME: Really?
+            (loop repeat max-n-tree-blocks
+                  do (add-parse-tree ())))))))
 
 (defun reflink-defs (tree)
   (remove-if-not (lambda (tree)
@@ -1135,7 +1136,7 @@
 (defsection @markdown-in-docstrings (:title "Markdown in Docstrings")
   """[ strip-docstring-indent function][docstring]
 
-  [ reprint-in-format function][docstring]
+  [ @markdown-reflink-definitions note][docstring]
 
   [ sanitize-aggressively-p function][docstring]
 
