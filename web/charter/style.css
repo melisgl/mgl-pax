@@ -196,16 +196,23 @@ ul, ol, dl {
   margin: 0;
 }
 
-a {
+a, a .mjx-math * {
   /* text-decoration: none; */
   /* color: #0233c8; */
   color: #333;
+  text-decoration: underline;
   text-decoration-thickness: 0.04em;
   text-underline-offset: 0.1em;
 }
 
-a:hover {
+a:hover, a:hover .mjx-math * {
   text-decoration: underline;
+}
+
+/* MathJax subscripts, accents, etc */
+a .mjx-sub *, a:hover .mjx-sub *,
+a .mjx-over *, a:hover .mjx-over * {
+  text-decoration: none;
 }
 
 img {
@@ -247,7 +254,7 @@ img {
   font-size: 98%;
 }
 
-.reference-object a {
+.reference-object a, .reference-object a * {
   text-decoration: none;
   border-bottom: none;
 }

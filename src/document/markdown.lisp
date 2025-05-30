@@ -123,6 +123,7 @@
                    (write-char #\\ stream))
                  (write-char char stream))))))))
 
+;;; This only unescapes MARKDOWN-SPECIAL-BLOCK-CHAR-P currently.
 (defun unescape-markdown (string)
   (let ((escaping nil))
     (with-output-to-string (stream)
@@ -130,6 +131,8 @@
         (let ((char (aref string i)))
           (cond (escaping
                  (setq escaping nil)
+                 (unless (markdown-special-inline-char-p char)
+                   (write-char #\\ stream))
                  (write-char char stream))
                 ((eql char #\\)
                  (setq escaping t))
