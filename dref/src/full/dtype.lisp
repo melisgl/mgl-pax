@@ -211,8 +211,20 @@
 ;;;; 3. FILTER-DREFS-BY-DTYPE discards the definitions that are not of
 ;;;;    DTYPE (possible if the upper bound is loose).
 
+(defvar *cover-dtype-cache* nil)
+
+(defmacro with-cover-dtype-cache (&body body)
+  `(let ((*cover-dtype-cache* (make-hash-table :test #'equal)))
+     ,@body))
+
 (defun cover-dtype (dtype)
-  (values (cover-dtype* dtype nil)))
+  (let ((cache *cover-dtype-cache*))
+    (if cache
+        (let ((cover (gethash dtype cache 'not-cached)))
+          (if (eq cover 'not-cached)
+              (setf (gethash dtype cache) (cover-dtype* dtype nil))
+              cover))
+        (values (cover-dtype* dtype nil)))))
 
 (defun cover-dtype* (dtype negatep)
   ;; Expanding gets rid of one level of derived types (but children

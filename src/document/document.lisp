@@ -560,17 +560,18 @@
   (ensure-transcribe-loaded)
   (with-sections-cache ()
     (with-definitions-cached
-      (with-format (format)
-        (let* ((*print-right-margin* (or *print-right-margin* 80))
-               (3bmd-code-blocks:*code-blocks* t)
-               (3bmd-code-blocks:*code-blocks-default-colorize*
-                 (and (not (eq *html-subformat* :w3m))
-                      :common-lisp))
-               (3bmd-code-blocks::*colorize-name-map*
-                 (if (eq *html-subformat* :w3m)
-                     (make-hash-table)
-                     3bmd-code-blocks::*colorize-name-map*)))
-          (document-return stream (%document documentable stream pages)))))))
+      (dref::with-cover-dtype-cache
+        (with-format (format)
+          (let* ((*print-right-margin* (or *print-right-margin* 80))
+                 (3bmd-code-blocks:*code-blocks* t)
+                 (3bmd-code-blocks:*code-blocks-default-colorize*
+                   (and (not (eq *html-subformat* :w3m))
+                        :common-lisp))
+                 (3bmd-code-blocks::*colorize-name-map*
+                   (if (eq *html-subformat* :w3m)
+                       (make-hash-table)
+                       3bmd-code-blocks::*colorize-name-map*)))
+            (document-return stream (%document documentable stream pages))))))))
 
 (defun call-with-format (format fn)
   (case format
