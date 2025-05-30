@@ -518,8 +518,7 @@
   (time
    (let ((*document-downcase-uppercase-code* t))
      (update-asdf-system-html-docs (pax-and-dref-sections)
-                                   :mgl-pax :pages (pax-and-dref-pages
-                                                    :html)
+                                   :mgl-pax :pages (pax-and-dref-pages :html)
                                    :update-css-p t :style :charter)))
   (time
    (let ((pax:*document-downcase-uppercase-code* t))
