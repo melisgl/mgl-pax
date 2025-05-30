@@ -16,27 +16,26 @@
         (nreverse parses))))
 
 (defun map-markdown-block-parses (fn string)
-  (let ((3bmd-grammar:*smart-quotes* nil))
-    (if (< (length string) 1000)
-        (map nil fn (3bmd-grammar:parse-doc string))
-        ;; This is 3BMD-GRAMMAR:PARSE-DOC's currently commented out
-        ;; alternative implementation, which is much faster on long
-        ;; strings but perhaps slower on short strings. This still has
-        ;; a performance problem with large lists, which are processed
-        ;; in one %BLOCK, hence the workaround in PAX-APROPOS*.
-        (let ((block-rule (if (esrap:find-rule '3bmd-grammar::%block)
-                              '3bmd-grammar::%block
-                              ;; Make it work with old 3BMD.
-                              '3bmd-grammar::block)))
-          (progn
-            (loop
-              for start = 0 then pos
-              for (%block pos) = (multiple-value-list
-                                  (esrap:parse block-rule string
-                                               :start start :junk-allowed t))
-              while %block
-              do (funcall fn %block)
-              while pos))))))
+  (if (< (length string) 1000)
+      (map nil fn (3bmd-grammar:parse-doc string))
+      ;; This is 3BMD-GRAMMAR:PARSE-DOC's currently commented out
+      ;; alternative implementation, which is much faster on long
+      ;; strings but perhaps slower on short strings. This still has
+      ;; a performance problem with large lists, which are processed
+      ;; in one %BLOCK, hence the workaround in PAX-APROPOS*.
+      (let ((block-rule (if (esrap:find-rule '3bmd-grammar::%block)
+                            '3bmd-grammar::%block
+                            ;; Make it work with old 3BMD.
+                            '3bmd-grammar::block)))
+        (progn
+          (loop
+            for start = 0 then pos
+            for (%block pos) = (multiple-value-list
+                                (esrap:parse block-rule string
+                                             :start start :junk-allowed t))
+            while %block
+            do (funcall fn %block)
+            while pos)))))
 
 (defmacro with-colorize-silenced (() &body body)
   `(let ((*trace-output* (make-broadcast-stream)))

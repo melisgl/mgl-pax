@@ -1907,9 +1907,9 @@ definitions, for example
 
     can be defined anywhere, they wouldn't be resolvable in that
     case, their use is discouraged. Currently, only reflink
-    definitions in the vicinity of their uses are resolvable. This
-    is left intentionally vague because the specifics are subject to
-    change.
+    definitions within the documentation of the same
+    [definition][2143] are guaranteed to be resolvable. This is left
+    intentionally vague because the specifics are subject to change.
 
     See [`DEFINE-GLOSSARY-TERM`][8ece] for a better alternative to markdown
     reference links.

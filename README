@@ -1711,9 +1711,9 @@ definitions, for example
 
     can be defined anywhere, they wouldn't be resolvable in that
     case, their use is discouraged. Currently, only reflink
-    definitions in the vicinity of their uses are resolvable. This
-    is left intentionally vague because the specifics are subject to
-    change.
+    definitions within the documentation of the same
+    DREF::@DEFINITION are guaranteed to be resolvable. This is left
+    intentionally vague because the specifics are subject to change.
 
     See DEFINE-GLOSSARY-TERM for a better alternative to markdown
     reference links.

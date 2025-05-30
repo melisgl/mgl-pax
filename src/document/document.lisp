@@ -1002,44 +1002,16 @@
 
       can be defined anywhere, they wouldn't be resolvable in that
       case, their use is discouraged. Currently, only reflink
-      definitions in the vicinity of their uses are resolvable. This
-      is left intentionally vague because the specifics are subject to
-      change.
+      definitions within the documentation of the same
+      DREF::@DEFINITION are guaranteed to be resolvable. This is left
+      intentionally vague because the specifics are subject to change.
 
       See DEFINE-GLOSSARY-TERM for a better alternative to markdown
       reference links."
-        (let ((reflinks-parse-tree (parse-markdown markdown-reflinks))
-              ;; The reflink definitions from the most recent
-              ;; MAX-N-REFLINK-BLOCKS.
-              (reflink-defs ())
-              (max-n-reflink-blocks 20)
-              ;; Parse trees of the most recent MAX-N-TREES blocks.
-              (trees ())
-              (max-n-tree-blocks 10))
-          (labels
-              ((add-parse-tree (tree)
-                 (when (= (length trees) max-n-tree-blocks)
-                   (write-tree (first (last trees)))
-                   (setq trees (nbutlast trees)))
-                 (push tree trees)
-                 (push (reflink-defs tree) reflink-defs)
-                 (setq reflink-defs (subseq reflink-defs
-                                            0 (min max-n-reflink-blocks
-                                                   (length reflink-defs)))))
-               (reflinks-around ()
-                 (apply #'append reflink-defs))
-               (write-tree (tree)
-                 (print-markdown (append tree reflinks-parse-tree
-                                         (reflinks-around))
-                                 stream :format *format*)))
-            (map-markdown-block-parses (lambda (tree)
-                                         (add-parse-tree
-                                          (prepare-parse-tree-for-printing
-                                           (list tree))))
-                                       markdown-string)
-            ;; FIXME: Really?
-            (loop repeat max-n-tree-blocks
-                  do (add-parse-tree ())))))))
+        (print-markdown (append (prepare-parse-tree-for-printing
+                                 (parse-markdown markdown-string))
+                                (parse-markdown markdown-reflinks))
+                        stream :format *format*))))
 
 (defun reflink-defs (tree)
   (remove-if-not (lambda (tree)
