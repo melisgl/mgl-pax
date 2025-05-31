@@ -238,7 +238,7 @@
 
   When @BROWSING-WITH-OTHER-BROWSERS, for clicking on the locative
   next to a definition to visit the corresponding source location in
-  Emacs, the following permission needs to be given:
+  Emacs, permission needs to be given:
 
   ```elisp
   (setq slime-enable-evaluate-in-emacs t)
@@ -261,8 +261,14 @@
     Debian, simply install the `w3m-el` package. With other browser
     functions, a [HUNCHENTOOT][package] web server is started.
 
-   - See @TRANSCRIBING-WITH-EMACS for how to use the transcription
-     features. There are no related variables to customize.")
+  - See @TRANSCRIBING-WITH-EMACS for how to use the transcription
+    features. There are no related variables to customize.
+
+  Independently from the Common Lisp side, the Elisp functions
+  `mgl-pax-hideshow-documentation` and `mgl-pax-hideshow-comments`
+  help focus on the code only by folding or unfolding
+  MGL-PAX:DEFSECTION, MGL-PAX:DEFINE-GLOSSARY-TERM forms and long
+  strings, or comments.")
 
 (defsection @emacs-quicklisp (:title "Installing from Quicklisp")
   """If you installed PAX with Quicklisp, the location of `mgl-pax.el`
@@ -359,9 +365,10 @@
   - `C-c C-d a`: replaces `slime-apropos` with `mgl-pax-apropos`
   - `C-c C-d z`: replaces `slime-apropos-all` with `mgl-pax-apropos-all`
   - `C-c C-d p`: replaces `slime-apropos-package` with `mgl-pax-apropos-package`
-  - `C-c C-d d`: replaces `slime-describe-symbol` with `mgl-pax-document`
   - `C-c C-d f`: replaces `slime-describe-function` with `mgl-pax-document`
-  - `C-c C-d c`: installs `mgl-pax-current-definition-toggle-view`
+  - `C-c C-d d`: replaces `slime-describe-symbol` with
+     `mgl-pax-hideshow-documentation`
+  - `C-c C-d c`: installs `mgl-pax-hideshow-comments`
   - `C-c C-d u`: installs `mgl-pax-edit-parent-section`
 
   Calling `mgl-pax-unhijack-slime-doc-keys` reverts these changes.
@@ -496,16 +503,16 @@
           (note "- Else, X is assumed to be REAL number, and we simply
                    add 1 to it."
             (1+ x)))))
-  
+
   (1+* "7")
   => 8
-  
+
   (values (docstring (dref '@1+* 'note)))
   => "This is a seriously overdone example.
-  
+
   - If X is a STRING, then it is parsed as a REAL number.
   It is an error if X does not contain a REAL.
-  
+
   - Else, X is assumed to be REAL number, and we simply
   add 1 to it."
   ```

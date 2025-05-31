@@ -36,6 +36,12 @@
 ;;;;
 ;;;; - Also, see `mgl-pax-current-definition-toggle-view'.
 ;;;;
+;;;; - The functions `mgl-pax-hideshow-documentation' and
+;;;;   `mgl-pax-hideshow-comments' help focus on the code only by
+;;;;   folding or unfolding MGL-PAX:DEFSECTION,
+;;;;   MGL-PAX:DEFINE-GLOSSARY-TERM forms and long strings, or
+;;;;   comments.
+;;;;
 ;;;; - `mgl-pax-apropos', `mgl-pax-apropos-all' and
 ;;;;   `mgl-pax-apropos-package' are replacements for `slime-apropos'
 ;;;;   `slime-apropos-all' and `slime-apropos-package', respectively.
@@ -206,9 +212,10 @@ See MGL-PAX::@EMACS-SETUP."
   '((?a slime-apropos mgl-pax-apropos)
     (?z slime-apropos-all mgl-pax-apropos-all)
     (?p slime-apropos-package mgl-pax-apropos-package)
-    (?d slime-describe-symbol mgl-pax-document)
     (?f slime-describe-function mgl-pax-document)
-    (?c nil mgl-pax-current-definition-toggle-view)
+    (?d slime-describe-symbol mgl-pax-hideshow-documentation)
+    (?c nil mgl-pax-hideshow-comments)
+    (?v nil mgl-pax-current-definition-toggle-view)
     (?u nil mgl-pax-edit-parent-section)))
 
 (defun mgl-pax-hijack-slime-doc-keys ()
@@ -421,7 +428,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
       (funcall fn))))
 
 (defun mgl-pax-comment-lines-bounds ()
-  (when (elt (syntax-ppss) 4)
+  (when (mgl-pax-in-comment-p)
     (let* ((end (save-excursion
                   (re-search-backward comment-start-skip
                                       (line-beginning-position)
@@ -444,6 +451,9 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
                       (forward-char -1)))
                   (point))))
       (list beg end))))
+
+(defun mgl-pax-in-comment-p ()
+  (elt (syntax-ppss) 4))
 
 ;;; Return the sexps before and after (slime-sexp-at-point),
 ;;; skipping some markup.
@@ -1262,7 +1272,7 @@ move point to the beginning of the buffer."
   (mgl-pax-visit-locations dspec-and-location-list))
 
 (defun mgl-pax-sync-current-buffer ()
-  ;; https://emacs.stackexchange.com/questions/10921/why-doesnt-changing-buffer-in-filter-function-have-any-effect-in-ert
+  ;; https://emacs.stackexchange.com/q/10921
   (set-buffer (window-buffer (selected-window))))
 
 
@@ -1284,6 +1294,93 @@ In a PAX doc buffer, it's equivalent to pressing `v'
     (if (eq (cl-first values) :error)
         (error "%s" (cl-second values))
       (cl-second values))))
+
+
+;;;; Hideshow documentation and comments
+;;;;
+;;;; These do not depend on Slime or the Common Lisp side at all.
+
+(defun mgl-pax-hideshow-documentation ()
+  "Toggle the folding and unfolding of DEFSECTION and
+DEFINE-GLOSSARY-TERM forms and strings in the current buffer with
+`hideshow-minor-mode'. If there are such non-hidden forms, then
+hide them, else show them all."
+  (interactive)
+  (hs-minor-mode t)
+  (let ((hs-hide-all-non-comment-function
+         #'mgl-pax-hs-hide-all-non-comment)
+        (hs-block-start-regexp "\\s\"\\|\\s(")
+        (hs-block-end-regexp (concat "\\s\"\\|\\s)"))
+        (hs-c-start-regexp "dsafsoiufd")
+        (orig-n-overlays (mgl-pax-n-overlays))
+        ;; Without this `hs-hide-all' discards all overlays.
+        (hs-allow-nesting t))
+    (hs-hide-all)
+    (let ((new-n-overlays (mgl-pax-n-overlays)))
+      (if (/= new-n-overlays orig-n-overlays)
+          (message "Folded %S documentation forms and long strings"
+                   (- new-n-overlays orig-n-overlays))
+        (mgl-pax-delete-hs-overlays 'code)
+        (let ((new-2-n-overlays (mgl-pax-n-overlays)))
+          (if (/= new-2-n-overlays orig-n-overlays)
+              (message "Unfolded %S documentation forms and long strings"
+                       (- orig-n-overlays new-2-n-overlays))
+            (message "No documentation forms or long strings")))))))
+
+(defun mgl-pax-hideshow-comments ()
+  "Toggle the folding and unfolding comments in the current
+buffer with `hideshow-minor-mode'. If there are non-hidden
+comments, then hide them, else show them all."
+  (interactive)
+  (hs-minor-mode t)
+  (let ((hs-hide-all-non-comment-function (lambda ()))
+        (hs-hide-comments-when-hiding-all t)
+        (orig-n-overlays (mgl-pax-n-overlays))
+        (hs-allow-nesting t))
+    ;; KLUDGE: `hs-hide-comment-region' accumulates overlays with
+    ;; `hs-allow-nesting', so let's delete them.
+    (mgl-pax-delete-hs-overlays 'comment)
+    (hs-hide-all)
+    (let ((new-n-overlays (mgl-pax-n-overlays)))
+      (if (/= new-n-overlays orig-n-overlays)
+          (message "Folded %S comments" (- new-n-overlays orig-n-overlays))
+        (mgl-pax-delete-hs-overlays 'comment)
+        (let ((new-2-n-overlays (mgl-pax-n-overlays)))
+          (if (/= new-2-n-overlays orig-n-overlays)
+              (message "Unfolded %S comments"
+                       (- orig-n-overlays new-2-n-overlays))
+            (message "No comments")))))))
+
+;;; https://emacs.stackexchange.com/a/20925
+(defun mgl-pax-n-overlays ()
+  (length (overlays-in (point-min) (point-max))))
+
+(defun mgl-pax-delete-hs-overlays (kind)
+  (dolist (ov (overlays-in (point-min) (point-max)))
+    (when (eq (overlay-get ov 'hs) kind)
+      (delete-overlay ov))))
+
+;;; To be bound to `hs-hide-all-non-comment-function'
+(defun mgl-pax-hs-hide-all-non-comment ()
+  (cond
+   ;; KLUDGE: This can be called in comments after all.
+   ((mgl-pax-in-comment-p)
+    (goto-char (cl-second (mgl-pax-comment-lines-bounds))))
+   ((and (hs-looking-at-block-start-p)
+         (looking-at mgl-pax-doc-form-regexp))
+    (save-excursion (hs-hide-block))
+    ;; Do not recurse in hidden stuff.
+    (forward-sexp 1))
+   ((looking-at "\\s(")
+    ;; Recurse into lists.
+    (forward-char))
+   ((looking-at "\\s\"")
+    (save-excursion (hs-hide-block))
+    (forward-sexp))))
+
+(defvar mgl-pax-doc-form-regexp
+  ;; \\S- matches non-whitespace
+  "(\\(\\|\\S-+:\\)\\(defsection\\|define-glossary-term\\)")
 
 
 ;;;; Apropos (see MGL-PAX::@APROPOS)

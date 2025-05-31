@@ -274,7 +274,7 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
 <a id="x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 - [system] **"mgl-pax"**
-    - _Version:_ 0.4.3
+    - _Version:_ 0.4.4
     - _Description:_ Documentation system, browser, generator. See the
         [PAX Manual][2415].
     - _Long Description:_ The base system. See [Links and Systems][ba90].
@@ -353,7 +353,7 @@ something like this to your `.emacs`:
 
 When [Browsing with Other Browsers][c434], for clicking on the locative
 next to a definition to visit the corresponding source location in
-Emacs, the following permission needs to be given:
+Emacs, permission needs to be given:
 
 ```elisp
 (setq slime-enable-evaluate-in-emacs t)
@@ -377,8 +377,13 @@ Emacs, the following permission needs to be given:
   functions, a HUNCHENTOOT web server is started.
 
 - See [Transcribing with Emacs][f5bd] for how to use the transcription
-   features. There are no related variables to customize.
+  features. There are no related variables to customize.
 
+Independently from the Common Lisp side, the Elisp functions
+`mgl-pax-hideshow-documentation` and `mgl-pax-hideshow-comments`
+help focus on the code only by folding or unfolding
+[`MGL-PAX:DEFSECTION`][72b4], [`MGL-PAX:DEFINE-GLOSSARY-TERM`][8ece] forms and long
+strings, or comments.
 
 <a id="x-28MGL-PAX-3A-40EMACS-QUICKLISP-20MGL-PAX-3ASECTION-29"></a>
 
@@ -448,11 +453,12 @@ true, then upon loading `mgl-pax`, the following changes are made to
 
 - `C-c C-d p`: replaces `slime-apropos-package` with `mgl-pax-apropos-package`
 
-- `C-c C-d d`: replaces `slime-describe-symbol` with `mgl-pax-document`
-
 - `C-c C-d f`: replaces `slime-describe-function` with `mgl-pax-document`
 
-- `C-c C-d c`: installs `mgl-pax-current-definition-toggle-view`
+- `C-c C-d d`: replaces `slime-describe-symbol` with
+   `mgl-pax-hideshow-documentation`
+
+- `C-c C-d c`: installs `mgl-pax-hideshow-comments`
 
 - `C-c C-d u`: installs `mgl-pax-edit-parent-section`
 
