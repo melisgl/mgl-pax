@@ -540,14 +540,14 @@ Now let's examine the most important pieces.
     
     **NOTE is experimental and as such subject to change.**
     
-    NOTE can be wrapped around any expression that's evaluated without
-    changing its run-time behaviour or introducing any run-time
-    overhead. The names of notes live in the same global namespace
-    regardless of nesting or whether they are top level forms.
-    *These properties come at the price of NOTE being weird: it defines
-    named notes at macro-expansion time (or load time). But the
-    definitions are idempotent, so it's fine to macroexpand NOTE any
-    number of times.*
+    NOTE can occur in an any evaluated position without changing its
+    BODY's run-time behaviour or introducing any run-time overhead. Top
+    level forms remain top level when whrapped in NOTE. The names
+    of notes live in the same global namespace regardless of nesting or
+    whether they are top level forms. *These properties come at
+    the price of NOTE being weird: it defines named notes at
+    macro-expansion time (or load time). But the definitions are
+    idempotent, so it's fine to macroexpand NOTE any number of times.*
     
     Notes are similar to Lisp comments, but they can be included in the
     documentation with the DOCSTRING locative. Notes are intended to
