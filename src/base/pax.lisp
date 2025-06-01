@@ -317,12 +317,12 @@
     target))
 
 (defun check-pax-elisp-version (pax-elisp-version)
-  ;; For upgrading from PAX versions where the version used to be
+  ;; For upgrading from versions where the version used to be a
   ;; version list.
   (when (listp pax-elisp-version)
     (setq pax-elisp-version (uiop:unparse-version pax-elisp-version)))
   (unless (equal pax-elisp-version *pax-version*)
-    (if (uiop:version< '< pax-elisp-version *pax-version*)
+    (if (uiop:version< pax-elisp-version *pax-version*)
         (cerror "Ignore version mismatch."
                 "~@<In Emacs, mgl-pax-version is ~S, ~
                 which is lower than the CL version ~S. ~
