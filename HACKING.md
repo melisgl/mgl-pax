@@ -103,7 +103,7 @@ handlers on and off with:
 Versioning
 ==========
 
-The file `version.lisp-expr` has the version in `(MAJOR MINOR PATCH)`
+The file `version.lisp-expr` has the version in `MAJOR.MINOR.PATCH`
 format. Bump `PATCH` for bug fixes and `MINOR` for significant
 changes. `MAJOR` is constant 0 :-).
 

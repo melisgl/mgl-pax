@@ -3,7 +3,7 @@
 ;;; See DREF::@DREF-MANUAL for the user guide.
 (asdf:defsystem "dref"
   :licence "MIT, see COPYING."
-  ;; :VERSION is set dynamically from version.lisp-expr.
+  :version (:read-file-form "../version.lisp-expr")
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
   :homepage "http://github.com/melisgl/mgl-pax/tree/master/dref"

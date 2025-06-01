@@ -299,17 +299,9 @@
   """)
 
 (defparameter *pax-version*
-  '#.(with-open-file (s (asdf:system-relative-pathname
-                         "mgl-pax" "version.lisp-expr"))
-       (read s)))
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (let ((version (format nil "~{~A~^.~}"
-                         (uiop:safe-read-file-form
-                          (asdf:system-relative-pathname
-                           "mgl-pax" "version.lisp-expr")))))
-    (setf (asdf:component-version (asdf:find-system "mgl-pax")) version)
-    (setf (asdf:component-version (asdf:find-system "dref")) version)))
+  (with-open-file (s (asdf:system-relative-pathname
+                      "mgl-pax" "version.lisp-expr"))
+    (read s)))
 
 (defun install-pax-elisp (target-dir)
   "Install `mgl-pax.el` distributed with this package in TARGET-DIR."
@@ -321,11 +313,16 @@
       (dolist (line (uiop:read-file-lines source))
         (if (string= line "(setq mgl-pax-version (mgl-pax-read-version))")
             (format s "(setq mgl-pax-version '~S)~%" *pax-version*)
-            (write-line line s))))))
+            (write-line line s))))
+    target))
 
 (defun check-pax-elisp-version (pax-elisp-version)
+  ;; For upgrading from PAX versions where the version used to be
+  ;; version list.
+  (when (listp pax-elisp-version)
+    (setq pax-elisp-version (uiop:unparse-version pax-elisp-version)))
   (unless (equal pax-elisp-version *pax-version*)
-    (if (uiop:lexicographic< '< pax-elisp-version *pax-version*)
+    (if (uiop:version< '< pax-elisp-version *pax-version*)
         (cerror "Ignore version mismatch."
                 "~@<In Emacs, mgl-pax-version is ~S, ~
                 which is lower than the CL version ~S. ~

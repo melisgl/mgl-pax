@@ -3,7 +3,7 @@
 ;;; See MGL-PAX::@PAX-MANUAL for the user guide.
 (asdf:defsystem "mgl-pax"
   :licence "MIT, see COPYING."
-  ;; :VERSION is set dynamically from version.lisp-expr.
+  :version (:read-file-form "version.lisp-expr")
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
   :homepage "http://github.com/melisgl/mgl-pax"
@@ -16,10 +16,7 @@
                "named-readtables" "pythonic-string-reader")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
-  :components (;; Recompile everything on version change so that
-               ;; PAX::*PAX-VERSION* is updated.
-               (:static-file "version.lisp-expr")
-               (:module "src/base/"
+  :components ((:module "src/base/"
                 :serial t
                 :components ((:file "pax")
                              (:file "extension-api")
