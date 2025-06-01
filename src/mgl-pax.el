@@ -191,6 +191,7 @@ See MGL-PAX::@EMACS-SETUP."
   (interactive)
   (let ((sourcefile (concat (file-name-sans-extension mgl-pax-file-name)
                             ".el")))
+    (unload-feature 'mgl-pax t)
     (load-file sourcefile)))
 
 ;;; This is called automatically by (unload-feature 'mgl-pax).

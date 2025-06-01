@@ -317,25 +317,49 @@
     target))
 
 (defun check-pax-elisp-version (pax-elisp-version)
-  ;; For upgrading from versions where the version used to be a
-  ;; version list.
-  (when (listp pax-elisp-version)
-    (setq pax-elisp-version (uiop:unparse-version pax-elisp-version)))
-  (unless (equal pax-elisp-version *pax-version*)
+  (loop
+    ;; For upgrading from versions where the version used to be a
+    ;; version list.
+    (when (listp pax-elisp-version)
+      (setq pax-elisp-version (uiop:unparse-version pax-elisp-version)))
+    (when (equal pax-elisp-version *pax-version*)
+      (return t))
     (if (uiop:version< pax-elisp-version *pax-version*)
-        (cerror "Ignore version mismatch."
-                "~@<In Emacs, mgl-pax-version is ~S, ~
-                which is lower than the CL version ~S. ~
-                You may need to ~S and M-x mgl-pax-reload. ~
-                See ~S for more.~:@>"
-                pax-elisp-version *pax-version* 'install-pax-elisp
-                '@emacs-setup)
-        (cerror "Ignore version mismatch."
-                "~@<In Emacs, mgl-pax-version is ~S, ~
-                which is higher than the CL version ~S. ~
-                You may need to reload PAX with ~S.~:@>"
-                pax-elisp-version *pax-version* '(asdf:load-system "mgl-pax"))))
-  t)
+        (restart-case
+            (progn
+              (cerror "Ignore version mismatch."
+                      "~@<In Emacs, mgl-pax-version is ~S, ~
+                      which is lower than the CL version ~S. ~
+                      You may need to ~S and M-x mgl-pax-reload. ~
+                      See ~S for more.~:@>"
+                      pax-elisp-version *pax-version* 'install-pax-elisp
+                      '@emacs-setup)
+              (return t))
+          (reload-elisp ()
+            :report (lambda () "Try evaluating mgl-pax-reload in Emacs.")
+            (setq pax-elisp-version
+                  (uiop:symbol-call '#:swank '#:eval-in-emacs
+                                    '(progn (mgl-pax-reload)
+                                      mgl-pax-version)))))
+        (restart-case
+            (progn
+              (cerror "Ignore version mismatch."
+                      "~@<In Emacs, mgl-pax-version is ~S, ~
+                      which is higher than the CL version ~S. ~
+                      You may need to reload PAX with ~S.~:@>"
+                      pax-elisp-version *pax-version*
+                      '(asdf:load-system "mgl-pax"))
+              (return t))
+          (reload-system ()
+            :report (lambda () "Reload MGL-PAX.")
+            (asdf:load-system "mgl-pax")
+            (dolist (other '("mgl-pax/navigate"
+                             "mgl-pax/document"
+                             "mgl-pax/transcribe"
+                             "mgl-pax/web"
+                             "mgl-pax/full"))
+              (when (dref other 'asdf:system)
+                (asdf:load-system other))))))))
 
 
 (defsection @emacs-keys (:title "Setting up Keys")
