@@ -48,6 +48,7 @@
         - [8.8.1 Plain Output][c879]
         - [8.8.2 Markdown Output][dd29]
         - [8.8.3 PDF Output][19ad]
+        - [8.8.4 Dummy Output][f7e6]
     - [8.9 Documentation Generation Implementation Notes][d1ca]
     - [8.10 Utilities for Generating Documentation][1b1b]
         - [8.10.1 HTML Output][36e1]
@@ -1239,8 +1240,8 @@ For more powerful search, see [Apropos][b7fc].
     Write `DOCUMENTABLE` in `FORMAT` to `STREAM` diverting some output to `PAGES`.
     `FORMAT` is one of [`:PLAIN`][c879],
     [`:MARKDOWN`][dd29], [`:HTML`][36e1] and
-    [`:PDF`][19ad]. `STREAM` may be a [`STREAM`][d5a9] object, `T` or `NIL`
-    as with [`CL:FORMAT`][ad78].
+    [`:PDF`][19ad] or [`NIL`][@nil-output]. `STREAM` may be a
+    [`STREAM`][d5a9] object, `T` or `NIL` as with [`CL:FORMAT`][ad78].
     
     To look up the documentation of the [`DOCUMENT`][432c] function itself:
     
@@ -2942,6 +2943,23 @@ can be customized with the following variables.
     A [Pandoc YAML metadata block][84f2] as a string.
     
     Concatenate to this string to customize it.
+
+<a id="x-28MGL-PAX-3A-40DUMMY-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
+
+#### 8.8.4 Dummy Output
+
+When the `FORMAT` argument of [`DOCUMENT`][432c] is `NIL`, no output is
+generated, but [Transcript Consistency Checking][4c39] is still performed.
+Use this feature to quickly test documentation examples.
+
+For example, in Try the test would look
+like this:
+
+```
+(try:signals-not (transcription-consistency-error)
+  (document ... :format nil))
+```
+
 
 <a id="x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29"></a>
 
@@ -4731,6 +4749,7 @@ they are presented.
   [f5bd]: #x-28MGL-PAX-3A-40TRANSCRIBING-WITH-EMACS-20MGL-PAX-3ASECTION-29 "Transcribing with Emacs"
   [f74b]: #x-28MGL-PAX-3A-40BACKGROUND-20MGL-PAX-3ASECTION-29 "Background"
   [f7a5]: #x-28MGL-PAX-3A-40SPECIFIC-REFLINK-20MGL-PAX-3ASECTION-29 "Specific Reflink"
+  [f7e6]: #x-28MGL-PAX-3A-40DUMMY-OUTPUT-20MGL-PAX-3ASECTION-29 "Dummy Output"
   [f83b]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_l.htm#lisp_read-eval-print_loop '"Lisp read-eval-print loop" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
   [f9fa]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cbe.htm '"22.3.2.5" (MGL-PAX:CLHS MGL-PAX:SECTION)'
   [fa43]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dho.htm '"2.4.8.15" (MGL-PAX:CLHS MGL-PAX:SECTION)'

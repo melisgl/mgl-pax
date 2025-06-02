@@ -2058,6 +2058,15 @@ example section
                      :source-uri-fn ,source-uri-fn)))
          :format :pdf)))))
 
+(deftest test-dummy-output ()
+  ;; The transcripts are created on SBCL, so they should match there.
+  #+sbcl
+  (is (zerop (length
+              (with-output-to-string (*standard-output*)
+                (document (pax::pax-and-dref-sections)
+                          :pages (pax::pax-and-dref-pages :markdown)
+                          :format nil))))))
+
 (deftest test-pax-transcripts ()
   ;; The transcripts are created on SBCL, so they should match there.
   #+sbcl
@@ -2068,7 +2077,8 @@ example section
   #-sbcl
   (signals-not (error)
     (handler-bind ((transcription-error #'continue))
-      (pax::update-pax-readmes :output-dir "test/data/")))
+      (time (document (list pax::@pax-manual dref::@dref-manual)
+                      :format nil))))
   #+sbcl
   (check-files-the-same
    (asdf:system-relative-pathname "mgl-pax" "README")
