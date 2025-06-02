@@ -190,6 +190,7 @@ Well, it's a kind of output, but maybe it would be better for
 consistency checking to treat it as a different kind of output. First,
 capturing interaction with the debugger needs to be though out though.
 ** MAYBE (values 1 2) => 1, 2 on a single line?
+** MAYBE add option to output the new transcript
 * elisp
 ** MAYBE support SLY?
 ** MAYBE support elisp function and variable locatives?
@@ -213,6 +214,8 @@ LOCATIVE-TYPE DREF) 'SECTION) may make more sense.
 Probably it's too much to ask to have a portable introspection library
 factored out of them. Conium seems abandoned. There is no clear scope
 to support a stable API.
+* MAYBE live tutorials notebook style?
+* MAYBE "parent" look up includes (e.g. for NOTEs)
 * marketing
 ** MAYBE find a catchy name for the method
 - Illiterate Programming: Already used in the sense of "not literate programming".
@@ -226,3 +229,38 @@ Also, Common Lisp + SLIME/SLY/etc is a great interactive environment with M-. al
 Explorability is a killer feature of Emacs, and PAX applies to the same idea to Common Lisp, going beyond what Emacs offers (teaching M-. about definition types, more powerful linking, and not having a docstring/info page dichotomy).
 
 PAX shares the goals of literate programming if not its means: documentation lives in code and not vice versa. Nothing is worth giving up interactive development for.
+** vs literate programming
+- scoping of code in chunks can be a problem in LP
+- notebooks are linear
+- Rustdoc can check transcripts, so can doctest
+- no NOTE anywhere
+
+Common Lisp is quite relaxed about the order of function definitions,
+but no so much about DEFMACRO, DEFVAR, DEFPARAMETER, DEFCONSTANT,
+DEFTYPE , DEFCLASS, DEFSTRUCT, DEFMETHOD, DEFINE-COMPILER-MACRO, SET-
+MACRO-CHARACTER, SET-DISPATCH-MACRO-CHARACTER, DEFPACKAGE.
+
+However, code order can for the most part follow narrative order. In
+practice, we end up with some DEFVARs far from their parent
+DEFSECTIONs or with their parent DEFSECTION being far its parent
+DEFSECTION. Either way, with the right tooling, one can quickly go
+from DEFVAR to its parent and see its documentation (generated live).
+
+- Often, one can extract the abstract algorithm of a function without
+  incurring any run-time cost with a macro and document it there.
+- Or with NOTE, the documentation can invade the implementation and be
+  extracted from there.
+
+- Internals manual change too often, and that's basically the LP style
+  . A lot of that is covered by comment and commit messages. User
+  manuals on the otherhand don't change so much, and they explicitly
+  represent the contract.
+
+Leslie Lamport, Turing-Award Winner, 2013, said, approximately:
+
+Writing is Nature's Way of showing you how sloppy your thinking is. Coding is Nature's Way of showing you how sloppy your writing is. Testing is Nature's Way of showing you how sloppy your coding is.
+
+If you can't write, you can't think. If you're not writing, you only think you're thinking.
+
+https://github.com/rebcabin/tangledown
+https://akkartik.name/post/literate-programming
