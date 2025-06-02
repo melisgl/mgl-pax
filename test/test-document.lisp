@@ -2058,6 +2058,15 @@ example section
                      :source-uri-fn ,source-uri-fn)))
          :format :pdf)))))
 
+(deftest test-dummy-output ()
+  ;; The transcripts are created on SBCL, so they should match there.
+  #+sbcl
+  (is (zerop (length
+              (with-output-to-string (*standard-output*)
+                (document (pax::pax-and-dref-sections)
+                          :pages (pax::pax-and-dref-pages :markdown)
+                          :format nil))))))
+
 (deftest test-pax-transcripts ()
   ;; The transcripts are created on SBCL, so they should match there.
   #+sbcl
