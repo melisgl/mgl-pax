@@ -521,8 +521,8 @@
   """Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
   FORMAT is one of [:PLAIN][@plain-output],
   [:MARKDOWN][@markdown-output], [:HTML][@html-output] and
-  [:PDF][@pdf-output]. STREAM may be a [STREAM][type] object, T or NIL
-  as with [CL:FORMAT][].
+  [:PDF][@pdf-output] or [NIL][@nil-output]. STREAM may be a
+  [STREAM][type] object, T or NIL as with [CL:FORMAT][].
 
   To look up the documentation of the DOCUMENT function itself:
 
@@ -918,9 +918,11 @@
 
 
 (defun finalize-page-output (page)
-  (when (page-written-in-first-pass-p page)
-    ;; Now that markdown output for this PAGE is complete, we may want
-    ;; to convert it to the requested *FORMAT*.
+  (when (and (page-written-in-first-pass-p page)
+             ;; With @DUMMY-OUTPUT, discard anything that might be written.
+             *format*)
+    ;; Now that markdown output for this PAGE is complete, we may
+    ;; want to convert it to the requested *FORMAT*.
     (if (and (eq *format* :markdown)
              (null (page-header-fn page))
              (null (page-footer-fn page)))
@@ -1215,11 +1217,19 @@
 ;;; Finally handle *DOCUMENT-BASE-URL* and return the transformed
 ;;; string.
 (defun codify-and-link (string)
-  (when string
-    (with-output-to-string (out)
-      (print-markdown (add-base-url (link (codify (include-docstrings
-                                                   (parse-markdown string)))))
-                      out))))
+  (let ((parse-tree (include-docstrings (parse-markdown string))))
+    (cond (*format*
+           (with-output-to-string (out)
+             (print-markdown (add-base-url (link (codify parse-tree))) out)))
+          (t
+           ;; @DUMMY-OUTPUT
+           (map-markdown-parse-tree
+            '(3bmd-code-blocks::code-block)
+            '(:code :verbatim :image :mailto :reference :raw-html)
+            nil
+            #'translate-code-block
+            parse-tree)
+           ""))))
 
 
 ;;;; Including docstrings
@@ -1928,9 +1938,12 @@
         (if foundp
             (values links label)
             (values nil nil
-                    ;; [print][] and [xxx][clhs] are almost definitely
-                    ;; PAX links.
-                    (if (or empty-definition-p locative-from-def)
+                    ;; [print][], [xxx][clhs] and
+                    ;; [Try][try::@try-manual section] are almost
+                    ;; definitely PAX links.
+                    (if (or empty-definition-p
+                            locative-from-def
+                            (find-if #'whitespacep definition))
                         (signal-unresolvable-reflink reflink locative-from-def)
                         (list reflink))))))))
 

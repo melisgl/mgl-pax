@@ -1089,8 +1089,8 @@ For more powerful search, see @APROPOS.
     Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
     FORMAT is one of :PLAIN,
     :MARKDOWN, :HTML and
-    :PDF. STREAM may be a STREAM object, T or NIL
-    as with CL:FORMAT.
+    :PDF or [NIL][@nil-output]. STREAM may be a
+    STREAM object, T or NIL as with CL:FORMAT.
     
     To look up the documentation of the DOCUMENT function itself:
     
@@ -2640,6 +2640,21 @@ can be customized with the following variables.
     A @PANDOC-YAML-METADATA-BLOCK as a string.
     
     Concatenate to this string to customize it.
+
+#### Dummy Output
+
+When the FORMAT argument of DOCUMENT is NIL, no output is
+generated, but @TRANSCRIPT-CONSISTENCY-CHECKING is still performed.
+Use this feature to quickly test documentation examples.
+
+For example, in Try the test would look
+like this:
+
+```
+(try:signals-not (transcription-consistency-error)
+  (document ... :format nil))
+```
+
 
 ### Documentation Generation Implementation Notes
 

@@ -9,7 +9,8 @@
   (*document-mark-up-signatures* variable)
   (@plain-output section)
   (@markdown-output section)
-  (@pdf-output section))
+  (@pdf-output section)
+  (@dummy-output section))
 
 (defsection @plain-output (:title "Plain Output")
   "This is the default :FORMAT of DOCUMENT, intended to be a
@@ -578,3 +579,18 @@
             (princ (sanitize-docstring child) s)
             (princ (note-docstring child) s))
         (setq firstp nil)))))
+
+
+
+(defsection @dummy-output (:title "Dummy Output")
+  "When the FORMAT argument of DOCUMENT is NIL, no output is
+  generated, but @TRANSCRIPT-CONSISTENCY-CHECKING is still performed.
+  Use this feature to quickly test documentation examples.
+
+  For example, in [Try][try::@try-manual section] the test would look
+  like this:
+
+  ```
+  (try:signals-not (transcription-consistency-error)
+    (document ... :format nil))
+  ```")

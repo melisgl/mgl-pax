@@ -2068,7 +2068,8 @@ example section
   #-sbcl
   (signals-not (error)
     (handler-bind ((transcription-error #'continue))
-      (pax::update-pax-readmes :output-dir "test/data/")))
+      (time (document (list pax::@pax-manual dref::@dref-manual)
+                      :format nil))))
   #+sbcl
   (check-files-the-same
    (asdf:system-relative-pathname "mgl-pax" "README")
