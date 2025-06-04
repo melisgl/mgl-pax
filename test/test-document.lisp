@@ -132,6 +132,7 @@
   (test-asdf-system-name-of)
   (test-guess-package-from-arglist)
   (test-pdf)
+  (test-dummy-output)
   (test-pax-transcripts))
 
 (deftest test-urlencode ()
