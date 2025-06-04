@@ -188,3 +188,7 @@
     (note @in-1 "dsf"
       (* x 7)
       (note @in-2 "aas"))))
+
+(defun fn-with-mathjax ()
+  "$\\hat{x}$_s"
+  nil)

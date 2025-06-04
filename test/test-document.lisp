@@ -2042,7 +2042,7 @@ example section
             (*document-pandoc-pdf-options*
               (remove "--verbose" *document-pandoc-pdf-options*
                       :test #'equal))
-            (documentable dref::@extending-everything-else))
+            (documentable (list #'fn-with-mathjax)))
         ;; This is tolerably slow.
         (document
          documentable
@@ -2051,7 +2051,7 @@ example section
                                       "https://github.com/melisgl/mgl-pax"))
                       (file #+sbcl "test/data/test-output.tex"
                             #-sbcl "test/data/test-output-not-checked-in.tex"))
-                  `((:objects (, documentable)
+                  `((:objects (,@documentable)
                      :output (,(asdf:system-relative-pathname
                                 "mgl-pax" file)
                               ,@pax::*default-output-options*)

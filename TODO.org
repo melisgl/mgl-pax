@@ -167,6 +167,13 @@ Maybe this is a special case of dynamically generated documentation.
 ** MAYBE live browsing: allow filtering out local definitions when there is a clhs definition?
 ** MAYBE 40ants asdf-system-relative images?
 https://github.com/40ants/doc/commit/4ae22efa20a4a2117da9dd8e96c1117458904d73
+** BUG underscores in mathjax are escaped in pdf output
+Probably not just underscores.
+
+This comes about because the intermediate markdown generated is
+escaped automatically (3BMD::PRINT-MD-ESCAPED), and it's hard to make
+it miminal. The right solution seems to be to write a 3BMD mathjax
+extension.
 * web
 ** MAYBE implement a wiki on top?
 PAX is already kind of a wiki.
