@@ -62,8 +62,9 @@
   :source-control ""
   :description "Support for MGL-PAX::@GENERATING-DOCUMENTATION in
   [MGL-PAX][mgl-pax::@pax-manual]."
-  :depends-on ("alexandria" "3bmd" "3bmd-ext-code-blocks" "colorize" "md5"
-               "mgl-pax/navigate" "mgl-pax/transcribe" "trivial-utf-8")
+  :depends-on ("alexandria" "3bmd" "3bmd-ext-code-blocks" "3bmd-ext-math"
+               "colorize" "md5" "mgl-pax/navigate" "mgl-pax/transcribe"
+               "trivial-utf-8")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/document/"

@@ -150,6 +150,19 @@
          (format nil "(~A)" string))
         (t
          (format nil "~S" string))))
+
+(defun escape-markdown-except-mathjax (string)
+  (let ((tree (map-markdown-parse-tree
+               '(:math-inline-1 :math-inline-2 :math-inline-3 :math-block)
+               ()
+               nil
+               (lambda (parent tree)
+                 (declare (ignore parent))
+                 `(,(first tree)
+                   ,(backslash-unescape (second tree))))
+               (parse-markdown (escape-markdown string)))))
+    (with-output-to-string (s)
+      (print-markdown tree s :format :markdown))))
 
 
 ;;;; Parse tree based markdown fragments

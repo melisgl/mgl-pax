@@ -4,6 +4,20 @@
   (and list (null (cdr list))))
 
 
+(defun backslash-escape (string chars)
+  (with-output-to-string (stream)
+    (dotimes (i (length string))
+      (let ((char (aref string i)))
+        (when (find char chars)
+          (write-char #\\ stream))
+        (write-char char stream)))))
+
+(defun backslash-unescape (string)
+  (if (find #\\ string)
+      (read-from-string (format nil "\"~A\"" string))
+      string))
+
+
 ;;;; Cached DREF:DEFINITIONS with all LOCATIVE-TYPES.
 
 (defvar *definitions-cache*)

@@ -563,6 +563,7 @@
       (dref::with-cover-dtype-cache
         (with-format (format)
           (let* ((*print-right-margin* (or *print-right-margin* 80))
+                 (3bmd-math:*math* t)
                  (3bmd-code-blocks:*code-blocks* t)
                  (3bmd-code-blocks:*code-blocks-default-colorize*
                    (and (not (eq *html-subformat* :w3m))
@@ -1184,21 +1185,48 @@
      :url "https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks"))
 
 (defsection @mathjax (:title "MathJax")
-  """Displaying pretty mathematics in TeX format is supported via
-  MathJax. It can be done inline with `$` like this:
+  """Displaying pretty mathematics between in TeX format is
+  supported via MathJax.
 
-      $\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$
+  - _Inline_
 
-  which is displayed as $\int_0^\infty e^{-x^2}
-  dx=\frac{\sqrt{\pi}}{2}$, or it can be delimited by `$$` like this:
+      It can be done inline (within a paragraph):
+
+          Pretty, eh? $\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$ Yes.
+
+      which is displayed as
+
+      Pretty, eh? $\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$ Yes.
+
+      To avoid rendering `between $5 and $6` with inline math, both
+      the opening and the closing `$` character must be followed /
+      preceded by a non-space character. This agrees with Pandoc.
+
+      The following alternative syntaxes are available:
+      ``$`x_0`$`` (renders as $`x_0`$) and `$$x_0$$` (renders as
+      $$x_0$$). These syntaxes have no restrictions on spacing.
+
+  - _Block_
+
+      The `$$` is supported as a block element:
+
+          Pretty, eh?
+
+          $$\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
+
+          Yes.
+
+      which will be rendered in its own paragraph:
+
+      Pretty, eh?
 
       $$\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
 
-  to get: $$\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
+      Yes.
 
-  MathJax will leave code blocks (including those inline with
-  backticks) alone. Outside code blocks, escape `$` by prefixing it
-  with a backslash to scare MathJax off.
+  MathJax will leave inline code (e.g. those between single backticks)
+  and code blocks (triple backtricks) alone. Outside code, use
+  `<span>$</span>` to scare MathJax off.
 
   Escaping all those backslashes in TeX fragments embedded in Lisp
   strings can be a pain. @PYTHONIC-STRING-READER can help with that.""")
@@ -3018,7 +3046,7 @@
                          (xref-locative-type reference)))
          (name (or name (prin1-to-string* (xref-name reference))))
          (md-locative-type (escape-markdown locative-type))
-         (md-name (escape-markdown name)))
+         (md-name (escape-markdown-except-mathjax name)))
     (if *document-mark-up-signatures*
         ;; Insert self links in HTML.
         (case *format*

@@ -301,7 +301,7 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
 - [system] **"mgl-pax/document"**
     - _Description:_ Support for [Generating Documentation][2c93] in
         [MGL-PAX][2415].
-    - *Depends on:* 3bmd, 3bmd-ext-code-blocks, alexandria, colorize, md5, [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], trivial-utf-8
+    - *Depends on:* 3bmd, 3bmd-ext-code-blocks, 3bmd-ext-math, alexandria, colorize, md5, [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], trivial-utf-8
     - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28-22mgl-pax-2Fweb-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
@@ -1968,21 +1968,48 @@ See the documentation of [3BMD][1904] and [Colorize][3076] for the details.
 
 #### 8.3.3 MathJax
 
-Displaying pretty mathematics in TeX format is supported via
-MathJax. It can be done inline with `$` like this:
+Displaying pretty mathematics between in TeX format is
+supported via MathJax.
 
-    $\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$
+- *Inline*
 
-which is displayed as $\int\_0^\infty e^{-x^2}
-dx=\frac{\sqrt{\pi}}{2}$, or it can be delimited by `$$` like this:
+    It can be done inline (within a paragraph):
+
+        Pretty, eh? $\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$ Yes.
+
+    which is displayed as
+
+    Pretty, eh? $\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$ Yes.
+
+    To avoid rendering `between $5 and $6` with inline math, both
+    the opening and the closing `$` character must be followed /
+    preceded by a non-space character. This agrees with Pandoc.
+
+    The following alternative syntaxes are available:
+    ``$`x_0`$`` (renders as $`x_0`$) and `$$x_0$$` (renders as
+    $$x_0$$). These syntaxes have no restrictions on spacing.
+
+- *Block*
+
+    The `$$` is supported as a block element:
+
+        Pretty, eh?
+        
+        $$\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
+        
+        Yes.
+
+    which will be rendered in its own paragraph:
+
+    Pretty, eh?
 
     $$\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
 
-to get: $$\int\_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
+    Yes.
 
-MathJax will leave code blocks (including those inline with
-backticks) alone. Outside code blocks, escape `$` by prefixing it
-with a backslash to scare MathJax off.
+MathJax will leave inline code (e.g. those between single backticks)
+and code blocks (triple backtricks) alone. Outside code, use
+`<span>$</span>` to scare MathJax off.
 
 Escaping all those backslashes in TeX fragments embedded in Lisp
 strings can be a pain. [Pythonic String Reader][d3fc5] can help with that.

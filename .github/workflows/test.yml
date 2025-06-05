@@ -57,6 +57,9 @@ jobs:
       - name: Install latest Named-readtables from GitHub
         run: ros install melisgl/named-readtables
 
+      - name: Install latest 3bmd from GitHub
+        run: ros install 3b/3bmd
+
       - name: Install latest Slime from GitHub
         # KLUDGE: 'ros install slime/slime' fails because it is not
         # interpreted as a github reference but is special cased.

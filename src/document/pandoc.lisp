@@ -4,14 +4,6 @@
 
 ;;;; TeX
 
-(defun backslash-escape (string chars)
-  (with-output-to-string (stream)
-    (dotimes (i (length string))
-      (let ((char (aref string i)))
-        (when (find char chars)
-          (write-char #\\ stream))
-        (write-char char stream)))))
-
 (defvar *tex-special-chars* "&%$#_{}~^\\")
 
 ;;; https://tex.stackexchange.com/a/34586
