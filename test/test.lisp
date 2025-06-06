@@ -27,8 +27,9 @@
   (search "junk" (princ-to-string c) :test #'equalp))
 
 (defun stress-test ()
-  (time (document (pax::pax-apropos* "" nil "" nil nil)
-                  :stream t :format :markdown)))
+  (handler-bind ((error #'continue))
+    (time (document (pax::pax-apropos* "" nil "" nil nil)
+                    :stream t :format :markdown))))
 
 #+nil
 (test)

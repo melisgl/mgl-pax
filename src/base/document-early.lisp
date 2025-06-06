@@ -106,7 +106,8 @@
   are for writing new DOCUMENT-OBJECT* methods, which emit markdown."
   (*format* variable)
   (with-heading macro)
-  (documenting-reference macro)
+  (doctitle* generic-function)
+  (documenting-definition macro)
   (with-dislocated-names macro)
   (document-docstring function)
   (escape-markdown function)
@@ -116,32 +117,57 @@
 (setf (documentation '*format* 'variable)
       "Bound by DOCUMENT to its FORMAT argument, this allows markdown
       output to depend on the output format.")
-(declaim (special *html-subformat*))
+(declaim (special *subformat*))
 
-(defmacro with-heading ((stream object title &key link-title-to)
-                        &body body)
-  "Write a markdown heading with TITLE to STREAM. Nested WITH-HEADINGs
-  produce nested headings. If *DOCUMENT-LINK-SECTIONS*, generate
-  anchors based on the [definition of][locate] OBJECT. LINK-TITLE-TO
-  behaves like the LINK-TITLE-TO argument of DEFSECTION."
-  `(call-with-heading ,stream ,object ,title ,link-title-to
+(defmacro with-heading ((stream &key dref link-title-to) &body body)
+  "Write a Markdown heading with the DOCTITLE of DREF to STREAM.
+
+  - DREF defaults to the definition for which documentation is
+    currently being generated.
+
+  - Nested WITH-HEADINGs produce nested headings.
+
+  - If *DOCUMENT-LINK-SECTIONS*, generate anchors based on DREF.
+
+  - LINK-TITLE-TO behaves like the LINK-TITLE-TO argument of
+    DEFSECTION."
+  `(call-with-heading ,stream ,(if dref
+                                   `(or (locate ,dref)
+                                        *documenting-dref* )
+                                   '*documenting-dref*)
+                      ,link-title-to
                       (lambda (,stream)
                         ,@body)))
 (autoload call-with-heading "mgl-pax/document" :export nil)
 (declaim (special *first-pass*))
 
-(defmacro documenting-reference ((stream &key reference name package readtable
-                                           (arglist nil arglistp))
-                                 &body body)
-  "Write REFERENCE to STREAM as described in
-  *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a
+(autoload doctitle "mgl-pax/document")
+
+(defgeneric doctitle* (object)
+  (:documentation "DOCTITLE* extends DOCTITLE in the same way
+  as DOCSTRING* extends DOCSTRING.
+
+  The default method returns NIL.
+
+  This function is for extension only. Do not call it directly.")
+  (:method (object)
+    (declare (ignore object))
+    nil))
+
+(defmacro documenting-definition ((stream &key dref package readtable
+                                   (arglist nil arglistp))
+                                  &body body)
+  "Write DREF to STREAM as described in
+  *DOCUMENT-MARK-UP-SIGNATURES*, and establish DREF as a
    @LOCAL-DEFINITION for the processing of BODY.
 
-  - REFERENCE defaults to the reference for which documentation is
+  - DREF defaults to the definition for which documentation is
     currently being generated.
 
-  - NAME defaults to `(XREF-NAME REFERENCE)` and is printed after the
-    LOCATIVE-TYPE.
+  - If DREF has a DOCTITLE, then it is PRINCed after the
+    LOCATIVE-TYPE (see @MARKDOWN-IN-TITLES). Else, `(DREF-NAME DREF)`
+    is printed subject to *DOCUMENT-DOWNCASE-UPPERCASE-CODE* but with
+    all Markdown and @MATHJAX markup escaped.
 
   - *PACKAGE* and *READTABLE* are bound to PACKAGE and READTABLE for
     the duration of printing the ARGLIST and the processing of BODY.
@@ -150,8 +176,7 @@
 
   - ARGLIST:
 
-      - If it is not provided, then it defaults to (ARGLIST
-        REFERENCE).
+      - If it is not provided, then it defaults to (ARGLIST DREF).
 
       - If NIL, then it is not printed.
 
@@ -164,28 +189,26 @@
   - It is not allowed to have WITH-HEADING within the [dynamic
     extent][clhs] of BODY."
   (let ((%stream (gensym))
-        (%reference (gensym))
-        (%name (gensym))
+        (%dref (gensym))
         (%arglist (gensym)))
     ;; If WITH-HEADING were allowed in BODY, then we couldn't stop if
     ;; *FIRST-PASS*.
     `(unless *first-pass*
        (let* ((,%stream ,stream)
-              (,%reference ,reference)
-              (,%reference (if ,%reference
-                               (locate ,%reference)
-                               *documenting-reference*))
+              (,%dref ,dref)
+              (,%dref (if ,%dref
+                          (locate ,%dref)
+                          *documenting-dref*))
               (,%arglist ,(if arglistp
                               arglist
-                              (list 'arglist %reference)))
-              (,%name ,name))
+                              (list 'arglist %dref))))
          (when (and *document-link-code*
                     (not (eq *format* :pdf)))
-           (anchor ,%reference ,%stream))
-         (print-reference-bullet ,%reference ,%stream :name ,%name)
+           (anchor ,%dref ,%stream))
+         (print-dref-bullet ,%dref ,%stream)
          (when (and *document-link-code*
                     (eq *format* :pdf))
-           (anchor ,%reference ,%stream))
+           (anchor ,%dref ,%stream))
          (multiple-value-bind (*package* *readtable*)
              ;; In apropos terse view, whatever BODY emits is to be
              ;; skipped. Do not waste time with
@@ -194,20 +217,20 @@
              (if (eq *document-list-view* :terse)
                  (values *package* *readtable*)
                  (guess-package-and-readtable ,package ,readtable
-                                              ,%reference ,%arglist))
+                                              ,%dref ,%arglist))
            (when ,%arglist
              (write-char #\Space ,%stream)
              (print-arglist ,%arglist ,%stream))
            (print-end-bullet ,%stream)
            (unless (eq *document-list-view* :terse)
              (with-local-references
-                 (if (member (dref-locative-type ,%reference)
+                 (if (member (dref-locative-type ,%dref)
                              '(section glossary-term))
                      ;; See @SUPPRESSED-LINKS.
                      ()
-                     ,%reference)
+                     ,%dref)
                ,@body)))))))
-(autoload print-reference-bullet "mgl-pax/document" :export nil)
+(autoload print-dref-bullet "mgl-pax/document" :export nil)
 (declaim (ftype function print-arglist))
 (declaim (ftype function print-end-bullet))
 (declaim (ftype function guess-package-and-readtable))
@@ -243,8 +266,8 @@
 ;;; For DOCUMENT-OBJECT* (METHOD (INCLUDE-DREF T))
 (declaim (ftype function codify-and-link))
 
-;;; We need this for DOCUMENTING-REFERENCE.
-(defvar *documenting-reference* nil)
+;;; We need this for DOCUMENTING-DEFINITION.
+(defvar *documenting-dref* nil)
 
 
 (defsection @github-workflow (:title "GitHub Workflow")

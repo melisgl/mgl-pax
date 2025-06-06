@@ -161,7 +161,7 @@
   (if (starts-with-subseq "    " line)
       line
       (escape-markdown line :escape-html t :escape-inline nil
-                            :escape-block nil)))
+                       :escape-mathjax nil :escape-block nil)))
 
 (defun escape-heading-in-docstring (line)
   """Furthermore, to reduce the chance of inadvertently introducing a

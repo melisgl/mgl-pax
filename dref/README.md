@@ -2630,20 +2630,20 @@ the details, see the Elisp function `slime-goto-source-location`.
 
   [006c]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_4.htm "DEFINE-METHOD-COMBINATION (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [00d4]: #x-28MGL-PAX-3AACCESSOR-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:ACCESSOR MGL-PAX:LOCATIVE"
-  [021a]: #x-28-22dref-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"dref" ASDF/SYSTEM:SYSTEM'
-  [023a]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss049_w.htm '"ISSUE:CLOS-CONDITIONS" (MGL-PAX:CLHS MGL-PAX:SECTION)'
-  [059c]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_o.htm#ordinary_lambda_list '"ordinary lambda list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  [021a]: #x-28-22dref-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "\"dref\" ASDF/SYSTEM:SYSTEM"
+  [023a]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss049_w.htm "\"ISSUE:CLOS-CONDITIONS\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
+  [059c]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_o.htm#ordinary_lambda_list "\"ordinary lambda list\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [0617]: #x-28DREF-3AXREF-3D-20FUNCTION-29 "DREF:XREF= FUNCTION"
   [090c]: #x-28MGL-PAX-3ASTRUCTURE-ACCESSOR-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:STRUCTURE-ACCESSOR MGL-PAX:LOCATIVE"
   [0976]: #x-28DREF-3ADREF-LOCATIVE-ARGS-20FUNCTION-29 "DREF:DREF-LOCATIVE-ARGS FUNCTION"
   [09b7]: #x-28DREF-EXT-3ADELETE-DEFINITION-PROPERTY-20FUNCTION-29 "DREF-EXT:DELETE-DEFINITION-PROPERTY FUNCTION"
   [0a96]: #x-28DREF-EXT-3AARGLIST-2A-20GENERIC-FUNCTION-29 "DREF-EXT:ARGLIST* GENERIC-FUNCTION"
   [0b3a]: #x-28MGL-PAX-3ALOCATIVE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:LOCATIVE MGL-PAX:LOCATIVE"
-  [0c7e]: #x-28-22dref-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 '"dref/full" ASDF/SYSTEM:SYSTEM'
+  [0c7e]: #x-28-22dref-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "\"dref/full\" ASDF/SYSTEM:SYSTEM"
   [0d07]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_2.htm "SYMBOL-NAME (MGL-PAX:CLHS FUNCTION)"
   [0db5]: #x-28DREF-EXT-3ASETF-DREF-20CLASS-29 "DREF-EXT:SETF-DREF CLASS"
   [0fa3]: ../README.md#x-28MGL-PAX-3A-40LOCATIVE-ALIASES-20MGL-PAX-3ASECTION-29 "Locative Aliases"
-  [0ff7]: http://www.lispworks.com/documentation/HyperSpec/Body/04_.htm '"4" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [0ff7]: http://www.lispworks.com/documentation/HyperSpec/Body/04_.htm "\"4\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [10a7]: #x-28DREF-EXT-3ACHECK-LOCATIVE-ARGS-20MGL-PAX-3AMACRO-29 "DREF-EXT:CHECK-LOCATIVE-ARGS MGL-PAX:MACRO"
   [119e]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm "FUNCTION (MGL-PAX:CLHS CLASS)"
   [130a]: #x-28DREF-EXT-3ALOCATIVE-TYPE-DIRECT-SUBS-20FUNCTION-29 "DREF-EXT:LOCATIVE-TYPE-DIRECT-SUBS FUNCTION"
@@ -2664,14 +2664,14 @@ the details, see the Elisp function `slime-goto-source-location`.
   [2060]: #x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "CLASS MGL-PAX:LOCATIVE"
   [2066]: #x-28DREF-EXT-3ADEFINE-CAST-20MGL-PAX-3AMACRO-29 "DREF-EXT:DEFINE-CAST MGL-PAX:MACRO"
   [2143]: #x-28DREF-3A-40DEFINITION-20MGL-PAX-3AGLOSSARY-TERM-29 "definition"
-  [23a8]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#defining_form '"defining form" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  [23a8]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#defining_form "\"defining form\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [23d5]: http://www.lispworks.com/documentation/HyperSpec/Body/m_define.htm "DEFINE-COMPILER-MACRO (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [2415]: ../README.md "PAX Manual"
   [2444]: #x-28DREF-EXT-3ALOCATIVE-ARGS-20FUNCTION-29 "DREF-EXT:LOCATIVE-ARGS FUNCTION"
   [25be]: #x-28DREF-EXT-3ADREF-CLASS-20FUNCTION-29 "DREF-EXT:DREF-CLASS FUNCTION"
   [2638]: #x-28DREF-EXT-3AWRITER-DREF-20CLASS-29 "DREF-EXT:WRITER-DREF CLASS"
   [292a]: ../README.md#x-28MGL-PAX-3A-40PAX-LOCATIVES-20MGL-PAX-3ASECTION-29 "PAX Locatives"
-  [29a1]: http://www.lispworks.com/documentation/HyperSpec/Body/07_fb.htm '"7.6.2" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [29a1]: http://www.lispworks.com/documentation/HyperSpec/Body/07_fb.htm "\"7.6.2\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [2ab8]: #x-28DREF-EXT-3ACALL-LOOKUP-20MGL-PAX-3AMACRO-29 "DREF-EXT:CALL-LOOKUP MGL-PAX:MACRO"
   [2b8b]: http://www.lispworks.com/documentation/HyperSpec/Body/t_satisf.htm "SATISFIES (MGL-PAX:CLHS TYPE)"
   [2c45]: #x-28DREF-EXT-3AMETHOD-DREF-20CLASS-29 "DREF-EXT:METHOD-DREF CLASS"
@@ -2680,19 +2680,19 @@ the details, see the Elisp function `slime-goto-source-location`.
   [32da]: #x-28DREF-3ASOURCE-LOCATION-20FUNCTION-29 "DREF:SOURCE-LOCATION FUNCTION"
   [3301]: #x-28DREF-3ATOP-20DREF-3ADTYPE-29 "DREF:TOP DREF:DTYPE"
   [34b9]: #x-28DREF-EXT-3ASYMBOL-LOCATIVE-DREF-20CLASS-29 "DREF-EXT:SYMBOL-LOCATIVE-DREF CLASS"
-  [35a2]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_expander '"setf expander" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
-  [36e9]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#dynamic_extent '"dynamic extent" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  [35a2]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_expander "\"setf expander\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
+  [36e9]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#dynamic_extent "\"dynamic extent\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [378f]: ../README.md#x-28MGL-PAX-3A-40PARSING-20MGL-PAX-3ASECTION-29 "Parsing"
   [38e4]: http://www.lispworks.com/documentation/HyperSpec/Body/t_rst.htm "RESTART (MGL-PAX:CLHS CLASS)"
   [39c2]: #x-28DREF-EXT-3ASOURCE-LOCATION-BUFFER-20FUNCTION-29 "DREF-EXT:SOURCE-LOCATION-BUFFER FUNCTION"
   [3b96]: #x-28DREF-EXT-3ADEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "DREF-EXT:DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE MGL-PAX:MACRO"
   [3bdc]: #x-28DREF-EXT-3AMAKE-SOURCE-LOCATION-20FUNCTION-29 "DREF-EXT:MAKE-SOURCE-LOCATION FUNCTION"
-  [3c8a]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_o.htm#object '"object" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  [3c8a]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_o.htm#object "\"object\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [3fb5]: http://www.lispworks.com/documentation/HyperSpec/Body/f_equal.htm "EQUAL (MGL-PAX:CLHS FUNCTION)"
   [408d]: #x-28DREF-3A-40CONDITION-SYSTEM-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for the Condition System"
   [41fd]: #x-28COMPILER-MACRO-20MGL-PAX-3ALOCATIVE-29 "COMPILER-MACRO MGL-PAX:LOCATIVE"
   [432c]: ../README.md#x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29 "MGL-PAX:DOCUMENT FUNCTION"
-  [4336]: http://www.lispworks.com/documentation/HyperSpec/Body/03_da.htm '"3.4.1" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [4336]: http://www.lispworks.com/documentation/HyperSpec/Body/03_da.htm "\"3.4.1\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [43bd]: #x-28DREF-3A-40REFERENCE-20MGL-PAX-3AGLOSSARY-TERM-29 "reference"
   [444d]: #x-28DREF-EXT-3ASOURCE-LOCATION-2A-20GENERIC-FUNCTION-29 "DREF-EXT:SOURCE-LOCATION* GENERIC-FUNCTION"
   [462c]: #x-28DREF-3A-40VARIABLELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Variables"
@@ -2705,7 +2705,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [4dd7]: #x-28PACKAGE-20MGL-PAX-3ALOCATIVE-29 "PACKAGE MGL-PAX:LOCATIVE"
   [5119]: ../README.md#x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:GLOSSARY-TERM MGL-PAX:LOCATIVE"
   [5152]: http://www.lispworks.com/documentation/HyperSpec/Body/f_atom.htm "ATOM (MGL-PAX:CLHS FUNCTION)"
-  [5191]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_f.htm#function_name '"function name" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  [5191]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_f.htm#function_name "\"function name\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [51c3]: http://www.lispworks.com/documentation/HyperSpec/Body/t_method.htm "METHOD (MGL-PAX:CLHS CLASS)"
   [5406]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "USE-VALUE (MGL-PAX:CLHS FUNCTION)"
   [5447]: #x-28DREF-3AXREF-NAME-20-28MGL-PAX-3AREADER-20DREF-3AXREF-29-29 "DREF:XREF-NAME (MGL-PAX:READER DREF:XREF)"
@@ -2723,9 +2723,9 @@ the details, see the Elisp function `slime-goto-source-location`.
   [5f91]: #x-28DREF-EXT-3ADEFINITION-PROPERTY-20FUNCTION-29 "DREF-EXT:DEFINITION-PROPERTY FUNCTION"
   [5fc4]: #x-28DREF-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29 "name"
   [5fd4]: http://www.lispworks.com/documentation/HyperSpec/Body/t_eql.htm "EQL (MGL-PAX:CLHS TYPE)"
-  [6067]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#destructuring_lambda_list '"destructuring lambda list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  [6067]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#destructuring_lambda_list "\"destructuring lambda list\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [609c]: http://www.lispworks.com/documentation/HyperSpec/Body/f_fmakun.htm "FMAKUNBOUND (MGL-PAX:CLHS FUNCTION)"
-  [62e7]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#dynamic_environment '"dynamic environment" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  [62e7]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#dynamic_environment "\"dynamic environment\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [6334]: #x-28DREF-EXT-3ALOCATE-ERROR-20CONDITION-29 "DREF-EXT:LOCATE-ERROR CONDITION"
   [6354]: #x-28DREF-EXT-3A-40DREF-CLASSES-20MGL-PAX-3ASECTION-29 "`DREF-CLASS`es"
   [63b4]: #x-28DREF-3ARESOLVE-20FUNCTION-29 "DREF:RESOLVE FUNCTION"
@@ -2758,7 +2758,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [7e92]: #x-28DREF-3ADREF-20FUNCTION-29 "DREF:DREF FUNCTION"
   [7f9a]: http://www.lispworks.com/documentation/HyperSpec/Body/m_deftp.htm "DEFTYPE (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [80a8]: #x-28DREF-EXT-3ALOCATIVE-TYPE-DIRECT-SUPERS-20FUNCTION-29 "DREF-EXT:LOCATIVE-TYPE-DIRECT-SUPERS FUNCTION"
-  [817d]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#deftype_lambda_list '"deftype lambda list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  [817d]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#deftype_lambda_list "\"deftype lambda list\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [81f7]: http://www.lispworks.com/documentation/HyperSpec/Body/s_fn.htm "FUNCTION (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [8269]: ../README.md#x-28MGL-PAX-3ADOCUMENT-OBJECT-2A-20GENERIC-FUNCTION-29 "MGL-PAX:DOCUMENT-OBJECT* GENERIC-FUNCTION"
   [82ae]: http://www.lispworks.com/documentation/HyperSpec/Body/t_mem_m.htm "MEMBER (MGL-PAX:CLHS FUNCTION)"
@@ -2767,7 +2767,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [8529]: #x-28DREF-EXT-3A-40DEFAULT-DOWNCAST-20MGL-PAX-3ASECTION-29 "Default Downcast"
   [852d]: #x-28DREF-3A-40REFERENCES-GLOSSARY-20MGL-PAX-3ASECTION-29 "References Glossary"
   [85ba]: #x-28DREF-3ADTYPE-20MGL-PAX-3ALOCATIVE-29 "DREF:DTYPE MGL-PAX:LOCATIVE"
-  [867c]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function_name '"setf function name" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  [867c]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function_name "\"setf function name\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [87fc]: #x-28DREF-EXT-3A-40INITIAL-DEFINITION-20MGL-PAX-3ASECTION-29 "Initial Definition"
   [8934]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defcon.htm "DEFCONSTANT (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [8f19]: #x-28DREF-3ALOCATE-20FUNCTION-29 "DREF:LOCATE FUNCTION"
@@ -2780,7 +2780,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [97b4]: #x-28DREF-EXT-3AMAP-DEFINITIONS-OF-NAME-20GENERIC-FUNCTION-29 "DREF-EXT:MAP-DEFINITIONS-OF-NAME GENERIC-FUNCTION"
   [97ba]: #x-28DREF-EXT-3ALOCATIVE-TYPE-20FUNCTION-29 "DREF-EXT:LOCATIVE-TYPE FUNCTION"
   [99b0]: #x-28DREF-3ALOCATIVE-TYPES-20FUNCTION-29 "DREF:LOCATIVE-TYPES FUNCTION"
-  [99b05]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function '"setf function" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  [99b05]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function "\"setf function\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [9a71]: http://www.lispworks.com/documentation/HyperSpec/Body/f_specia.htm "SPECIAL-OPERATOR-P (MGL-PAX:CLHS FUNCTION)"
   [9b43]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "DEFPACKAGE (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [9b70]: http://www.lispworks.com/documentation/HyperSpec/Body/t_meth_1.htm "METHOD-COMBINATION (MGL-PAX:CLHS CLASS)"
@@ -2813,7 +2813,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [b4e9]: #x-28DREF-EXT-3ATYPE-DREF-20CLASS-29 "DREF-EXT:TYPE-DREF CLASS"
   [b6c4]: #x-28DREF-EXT-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "DREF-EXT:DEFINE-LOCATIVE-TYPE MGL-PAX:MACRO"
   [b7fc]: ../README.md#x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29 "Apropos"
-  [b8d5]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_f.htm#format_control '"format control" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  [b8d5]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_f.htm#format_control "\"format control\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [b93c]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "STRING (MGL-PAX:CLHS CLASS)"
   [ba62]: #x-28FUNCTION-20MGL-PAX-3ALOCATIVE-29 "FUNCTION MGL-PAX:LOCATIVE"
   [bb23]: #x-28DREF-3ADEFINE-RESTART-20MGL-PAX-3AMACRO-29 "DREF:DEFINE-RESTART MGL-PAX:MACRO"
@@ -2834,7 +2834,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [c9de]: #x-28DREF-EXT-3A-40DEFINITION-PROPERTIES-20MGL-PAX-3ASECTION-29 "Definition Properties"
   [cc04]: #x-28MGL-PAX-3AREADER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:READER MGL-PAX:LOCATIVE"
   [cc049]: #x-28DREF-3ADREF-LOCATIVE-20-28MGL-PAX-3AREADER-20DREF-3ADREF-29-29 "DREF:DREF-LOCATIVE (MGL-PAX:READER DREF:DREF)"
-  [cc32]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_m.htm#macro_lambda_list '"macro lambda list" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  [cc32]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_m.htm#macro_lambda_list "\"macro lambda list\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [cda7]: #x-28DREF-3AXREF-20FUNCTION-29 "DREF:XREF FUNCTION"
   [cf08]: http://www.lispworks.com/documentation/HyperSpec/Body/r_use_va.htm "USE-VALUE (MGL-PAX:CLHS RESTART)"
   [d162]: http://www.lispworks.com/documentation/HyperSpec/Body/e_error.htm "ERROR (MGL-PAX:CLHS CONDITION)"
@@ -2846,7 +2846,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [d6c7]: http://www.lispworks.com/documentation/HyperSpec/Body/f_unionc.htm "UNION (MGL-PAX:CLHS FUNCTION)"
   [d83a]: #x-28SETF-20MGL-PAX-3ALOCATIVE-29 "SETF MGL-PAX:LOCATIVE"
   [d930]: #x-28DREF-3ADREF-20CLASS-29 "DREF:DREF CLASS"
-  [da2e]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss048_w.htm '"ISSUE:CLOS-CONDITIONS-AGAIN" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [da2e]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss048_w.htm "\"ISSUE:CLOS-CONDITIONS-AGAIN\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [da65]: #x-28STRUCTURE-20MGL-PAX-3ALOCATIVE-29 "STRUCTURE MGL-PAX:LOCATIVE"
   [da93]: #x-28DREF-3A-40DREF-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for DRef Constructs"
   [daac]: http://www.lispworks.com/documentation/HyperSpec/Body/f_subtpp.htm "SUBTYPEP (MGL-PAX:CLHS FUNCTION)"
@@ -2860,7 +2860,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [e023]: #x-28RESTART-20MGL-PAX-3ALOCATIVE-29 "RESTART MGL-PAX:LOCATIVE"
   [e196]: #x-28DREF-3ADEFINITIONS-20FUNCTION-29 "DREF:DEFINITIONS FUNCTION"
   [e1d4]: #x-28DREF-3A-40LISTING-DEFINITIONS-20MGL-PAX-3ASECTION-29 "Listing Definitions"
-  [e237]: http://www.lispworks.com/documentation/HyperSpec/Body/09_.htm '"9" (MGL-PAX:CLHS MGL-PAX:SECTION)'
+  [e237]: http://www.lispworks.com/documentation/HyperSpec/Body/09_.htm "\"9\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [e2d1]: http://www.lispworks.com/documentation/HyperSpec/Body/t_or.htm "OR (MGL-PAX:CLHS TYPE)"
   [e548]: #x-28MGL-PAX-3AWRITER-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:WRITER MGL-PAX:LOCATIVE"
   [e576]: #x-28DREF-EXT-3AFUNCTION-DREF-20CLASS-29 "DREF-EXT:FUNCTION-DREF CLASS"

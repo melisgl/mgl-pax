@@ -660,8 +660,8 @@
               (should (eq major-mode 'w3m-mode))
               (should-be-looking-at
                (if (eq mgl-pax-browser-function 'w3m-browse-url)
-                   "2 Syntax Highlighting"
-                 "← ↑ → ↺ λ\n\n2 Syntax Highlighting")))))
+                   "3 Syntax Highlighting"
+                 "← ↑ → ↺ λ\n\n3 Syntax Highlighting")))))
       (when (eq major-mode 'w3m-mode)
         (kill-buffer))))))
 

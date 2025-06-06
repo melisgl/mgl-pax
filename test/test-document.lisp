@@ -13,7 +13,7 @@
 
 (defun document* (object &key (format :markdown) w3m)
   (let ((warnings ())
-        (pax::*html-subformat* (and w3m :w3m)))
+        (pax::*subformat* (and w3m :w3m)))
     (handler-bind ((warning (lambda (w)
                               (push (princ-to-string w) warnings)
                               (muffle-warning w))))
@@ -77,6 +77,7 @@
   (test-downcasing)
   (test-link)
   (test-headings)
+  (test-titles)
   (test-base-url)
   (test-url-versions)
   (test-pages)
@@ -630,19 +631,19 @@ xxx
     (check-document @parent-section-without-title
                     "<a id=\"MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
 
-# `@parent-section-without-title`
+# MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE MGL-PAX:SECTION
 
 ## Table of Contents
 
-- [1 `@section-without-title`][eeac]
+- [1 MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION][eeac]
 
 ###### \\[in package MGL-PAX-TEST\\]
 <a id=\"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
 
-## 1 `@section-without-title`
+## 1 MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION
 
 
-  [eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"`mgl-pax-test::@section-without-title`\"
+  [eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION\"
 ")))
 
 (defun check-downcasing (docstring expected &key (warnings 0))
@@ -792,7 +793,6 @@ xxx
                 "[X Y][4ef3]")
     (check-head (list "[\"X Y\"][package]" (find-package "X Y"))
                 "[\"X Y\"][4ef3]")))
-
 
 
 (defsection @section-with-title (:title "My `Title`" :export nil))
@@ -881,6 +881,44 @@ This is [Self-referencing][e042].
   (check-pred pax::@emacs-setup (lambda (string)
                                   (search (format nil "~%## Emacs Setup~%")
                                           string))))
+
+
+(deftest test-titles ()
+  (check-pred #'$x_0$ "**\\$X\\_0\\$**")
+  (check-pred @mathjax-and-code-in-title "**hey `c` $x_0$**")
+  (signals (warning :pred "Unexpected tag")
+    (document @illegal-title-1))
+  (check-pred @title-with-emph "**x y**")
+  (check-document @parent-tricky-title
+                  "<a id=\"MGL-PAX-TEST:@PARENT-TRICKY-TITLE%20MGL-PAX:SECTION\"></a>
+
+# `CODE` *italic* *italic2* *bold* &quot;
+
+## Table of Contents
+
+- [1 `CODE` *italic* *italic2* *bold* &quot;][629a]
+    - [1.1 \\`\\_\\*\\&][ea45]
+    - [1.2 MGL-PAX-TEST:\\*\\*SUBTRICKY\\*\\* MGL-PAX:SECTION][35ca]
+
+###### \\[in package MGL-PAX-TEST\\]
+<a id=\"MGL-PAX-TEST:@TRICKY-TITLE%20MGL-PAX:SECTION\"></a>
+
+## 1 `CODE` *italic* *italic2* *bold* &quot;
+
+<a id=\"MGL-PAX-TEST:@SUBTRICKY%20MGL-PAX:SECTION\"></a>
+
+### 1.1 \\`\\_\\*\\&
+
+
+<a id=\"MGL-PAX-TEST:**SUBTRICKY**%20MGL-PAX:SECTION\"></a>
+
+### 1.2 MGL-PAX-TEST:\\*\\*SUBTRICKY\\*\\* MGL-PAX:SECTION
+
+
+  [35ca]: #MGL-PAX-TEST:**SUBTRICKY**%20MGL-PAX:SECTION \"MGL-PAX-TEST:**SUBTRICKY** MGL-PAX:SECTION\"
+  [629a]: #MGL-PAX-TEST:@TRICKY-TITLE%20MGL-PAX:SECTION \"`CODE` *italic* *italic2* *bold* &quot;\"
+  [ea45]: #MGL-PAX-TEST:@SUBTRICKY%20MGL-PAX:SECTION \"\\\\`\\\\_\\\\*\\\\&\"
+"))
 
 
 (deftest test-base-url ()
@@ -1589,7 +1627,7 @@ This is [Self-referencing][e042].
   (check-head "[readably][(clhs glossary-term)]" "[readably][278a]")
   (check-document "[non-local exit][clhs]" "[non-local exit][b815]
 
-  [b815]: CLHS/Body/26_glo_n.htm#non-local_exit '\"non-local exit\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)'
+  [b815]: CLHS/Body/26_glo_n.htm#non-local_exit \"\\\"non-local exit\\\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)\"
 ")
   (check-head "[ non-local~%exit ][(clhs glossary-term)]"
               "[ non-local~%exit ][b815]"))
@@ -1917,32 +1955,32 @@ This is [Self-referencing][e042].
 (deftest test-table-of-contents ()
   (check-document (list @parent-section-without-title
                         @test-examples)
-                  "- [`@PARENT-SECTION-WITHOUT-TITLE`][74ce]
-- [`@TEST-EXAMPLES`][bb1c]
+                  "- [MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE MGL-PAX:SECTION][74ce]
+- [MGL-PAX-TEST:@TEST-EXAMPLES MGL-PAX:SECTION][bb1c]
 
 <a id=\"MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
 
-# `@PARENT-SECTION-WITHOUT-TITLE`
+# MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE MGL-PAX:SECTION
 
 ## Table of Contents
 
-- [1 `@SECTION-WITHOUT-TITLE`][eeac]
+- [1 MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION][eeac]
 
 ###### \\[in package MGL-PAX-TEST\\]
 <a id=\"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
 
-## 1 `@SECTION-WITHOUT-TITLE`
+## 1 MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION
 
 <a id=\"MGL-PAX-TEST:@TEST-EXAMPLES%20MGL-PAX:SECTION\"></a>
 
-# `@TEST-EXAMPLES`
+# MGL-PAX-TEST:@TEST-EXAMPLES MGL-PAX:SECTION
 
 ###### \\[in package MGL-PAX-TEST\\]
 example section
 
-  [74ce]: #MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"`MGL-PAX-TEST::@PARENT-SECTION-WITHOUT-TITLE`\"
-  [bb1c]: #MGL-PAX-TEST:@TEST-EXAMPLES%20MGL-PAX:SECTION \"`MGL-PAX-TEST::@TEST-EXAMPLES`\"
-  [eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"`MGL-PAX-TEST::@SECTION-WITHOUT-TITLE`\"
+  [74ce]: #MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE MGL-PAX:SECTION\"
+  [bb1c]: #MGL-PAX-TEST:@TEST-EXAMPLES%20MGL-PAX:SECTION \"MGL-PAX-TEST:@TEST-EXAMPLES MGL-PAX:SECTION\"
+  [eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION\"
 ")
   (test-table-of-contents-reapated-section-depth))
 
@@ -1953,30 +1991,30 @@ example section
   ;; PAX::*HEADING-LEVEL* on the separate page is the same as the
   ;; heading level when in the parent context.
   (check-document (list @parent-section-without-title @section-without-title)
-                  "- [`@PARENT-SECTION-WITHOUT-TITLE`][74ce]
-- [`@SECTION-WITHOUT-TITLE`][eeac]
+                  "- [MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE MGL-PAX:SECTION][74ce]
+- [MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION][eeac]
 
 <a id=\"MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
 
-# `@PARENT-SECTION-WITHOUT-TITLE`
+# MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE MGL-PAX:SECTION
 
 ## Table of Contents
 
-- [1 `@SECTION-WITHOUT-TITLE`][eeac]
+- [1 MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION][eeac]
 
 ###### \\[in package MGL-PAX-TEST\\]
 <a id=\"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
 
-## 1 `@SECTION-WITHOUT-TITLE`
+## 1 MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION
 
 <a id=\"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
 
-## `@SECTION-WITHOUT-TITLE`
+## MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION
 
 ###### \\[in package MGL-PAX-TEST\\]
 
-  [74ce]: #MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"`MGL-PAX-TEST::@PARENT-SECTION-WITHOUT-TITLE`\"
-  [eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"`MGL-PAX-TEST::@SECTION-WITHOUT-TITLE`\"
+  [74ce]: #MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE MGL-PAX:SECTION\"
+  [eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION\"
 "))
 
 

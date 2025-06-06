@@ -886,7 +886,7 @@ PAX adds a few of its own.
            ~C ~% ~\& ~|
         ~~ ~R ~D ~B
         ~O ~X ~F ~E
-        ~G ~$ ~A ~S
+        ~G ~\$ ~A ~S
         ~W ~\_ ~\< ~:>
         ~I ~/ ~T ~\< Justification
         ~> ~\* ~\[ ~\]
@@ -1726,7 +1726,7 @@ definitions, for example
 
 Docstrings of definitions which do not have a @HOME-SECTION and are
 not SECTIONs themselves are assumed to have been written with no
-knowledge of PAX and to conform to markdown only by accident. These
+knowledge of PAX and to conform to Markdown only by accident. These
 docstrings are thus sanitized more aggressively.
 
 - Indentation of what looks like blocks of Lisp code is rounded up to
@@ -1748,12 +1748,31 @@ docstrings are equivalent:
         \#Return are in the whitespace group.
 
 
+#### Markdown in Titles
+
+- [glossary-term] title
+
+    A title is a STRING associated with a DREF::@DEFINITION (e.g. with
+    the TITLE argument of DEFSECTION or DEFINE-GLOSSARY-TERM). Titles
+    are accessible DOCTITLE and processed according to
+    @MARKDOWN-IN-TITLES.
+
+Titles undergo @CODIFICATION and may be a single paragraph
+containing explicit @MARKDOWN/INLINE-CODE, @MARKDOWN/EMPHASIS,
+@MARKDOWN/IMAGEs, inline @MATHJAX and HTML entities (e.g. `&quot;`).
+Other kinds of Markdown markup and block elements are not allowed.
+
+- [function] DOCTITLE OBJECT
+
+    Return the @TITLE of OBJECT if it has one or NIL. For
+    @CODIFICATION, the title is interpreted in the package returned by
+    DOCSTRING. DOCTITLE can be extended via DOCTITLE\*.
+
 #### Syntax Highlighting
 
-For syntax highlighting, GitHub's @FENCED-CODE-BLOCKS markdown
-extension to mark up code
-blocks with triple backticks is enabled so all you need to do is
-write:
+For syntax highlighting, GitHub's @FENCED-CODE-BLOCKS Markdown
+extension to mark up code blocks with triple backticks is enabled so
+all you need to do is write:
 
     ```elisp
     (defun foo ())
@@ -1784,9 +1803,8 @@ supported via MathJax.
     the opening and the closing `$` character must be followed /
     preceded by a non-space character. This agrees with Pandoc.
 
-    The following alternative syntaxes are available:
-    ``$`x_0`$`` (renders as $`x_0`$) and `$$x_0$$` (renders as
-    $$x_0$$). These syntaxes have no restrictions on spacing.
+    Alternatively, the ``$`x_0`$`` syntax may be used (renders as
+    $`x_0`$), which has no restriction on spacing.
 
 - *Block*
 
@@ -1805,6 +1823,10 @@ supported via MathJax.
     $$\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
 
     Yes.
+
+    `$$` is also legal to use inline, but it's not recommended as it
+    gets rendered inline on GitHub but as display math in
+    @PDF-OUTPUT.
 
 MathJax will leave inline code (e.g. those between single backticks)
 and code blocks (triple backtricks) alone. Outside code, use
@@ -2421,7 +2443,7 @@ Furthermore, the purely local definition `(DREF 'X 'ARGUMENT)` is
 established, causing the argument name `X` to be
 codified because `X` is now @INTERESTING.
 
-See DOCUMENTING-REFERENCE and WITH-DISLOCATED-NAMES in
+See DOCUMENTING-DEFINITION and WITH-DISLOCATED-NAMES in
 @EXTENDING-DOCUMENT.
 
 ### Overview of Escaping
@@ -2468,10 +2490,10 @@ in an explicit link.
 - [variable] *DOCUMENT-MARK-UP-SIGNATURES* T
 
     When true, some things such as function names and arglists are
-    rendered as bold and italic. In :HTML and :PDF output, locative
-    types become links to sources (if :SOURCE-URI-FN is provided, see
-    @PAGES), and the symbol becomes a self-link for your permalinking
-    pleasure.
+    rendered as bold and italic. In @HTML-OUTPUT and @PDF-OUTPUT,
+    locative types become links to sources (if :SOURCE-URI-FN is
+    provided, see @PAGES), and the symbol becomes a self-link for your
+    permalinking pleasure.
     
     For example, a reference is rendered in markdown roughly as:
     
@@ -2516,7 +2538,7 @@ By default, DREFs are documented in the following format.
     <docstring>
 ```
 
-The line with the bullet is printed with DOCUMENTING-REFERENCE. The
+The line with the bullet is printed with DOCUMENTING-DEFINITION. The
 docstring is processed with DOCUMENT-DOCSTRING while
 @LOCAL-DEFINITIONs established with WITH-DISLOCATED-NAMES are in
 effect for all variables locally bound in a definition with ARGLIST,
@@ -3804,24 +3826,42 @@ are for writing new DOCUMENT-OBJECT\* methods, which emit markdown.
     Bound by DOCUMENT to its FORMAT argument, this allows markdown
     output to depend on the output format.
 
-- [macro] WITH-HEADING (STREAM OBJECT TITLE &KEY LINK-TITLE-TO) &BODY BODY
+- [macro] WITH-HEADING (STREAM &KEY DREF LINK-TITLE-TO) &BODY BODY
 
-    Write a markdown heading with TITLE to STREAM. Nested WITH-HEADINGs
-    produce nested headings. If *DOCUMENT-LINK-SECTIONS*, generate
-    anchors based on the definition of OBJECT. LINK-TITLE-TO
-    behaves like the LINK-TITLE-TO argument of DEFSECTION.
-
-- [macro] DOCUMENTING-REFERENCE (STREAM &KEY REFERENCE NAME PACKAGE READTABLE (ARGLIST NIL)) &BODY BODY
-
-    Write REFERENCE to STREAM as described in
-    *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a
-     @LOCAL-DEFINITION for the processing of BODY.
+    Write a Markdown heading with the DOCTITLE of DREF to STREAM.
     
-    - REFERENCE defaults to the reference for which documentation is
+    - DREF defaults to the definition for which documentation is
       currently being generated.
     
-    - NAME defaults to `(XREF-NAME REFERENCE)` and is printed after the
-      LOCATIVE-TYPE.
+    - Nested WITH-HEADINGs produce nested headings.
+    
+    - If *DOCUMENT-LINK-SECTIONS*, generate anchors based on DREF.
+    
+    - LINK-TITLE-TO behaves like the LINK-TITLE-TO argument of
+      DEFSECTION.
+
+- [generic-function] DOCTITLE* OBJECT
+
+    DOCTITLE\* extends DOCTITLE in the same way
+    as DOCSTRING\* extends DOCSTRING.
+    
+    The default method returns NIL.
+    
+    This function is for extension only. Do not call it directly.
+
+- [macro] DOCUMENTING-DEFINITION (STREAM &KEY DREF PACKAGE READTABLE (ARGLIST NIL)) &BODY BODY
+
+    Write DREF to STREAM as described in
+    *DOCUMENT-MARK-UP-SIGNATURES*, and establish DREF as a
+     @LOCAL-DEFINITION for the processing of BODY.
+    
+    - DREF defaults to the definition for which documentation is
+      currently being generated.
+    
+    - If DREF has a DOCTITLE, then it is PRINCed after the
+      LOCATIVE-TYPE (see @MARKDOWN-IN-TITLES). Else, `(DREF-NAME DREF)`
+      is printed subject to *DOCUMENT-DOWNCASE-UPPERCASE-CODE* but with
+      all Markdown and @MATHJAX markup escaped.
     
     - *PACKAGE* and *READTABLE* are bound to PACKAGE and READTABLE for
       the duration of printing the ARGLIST and the processing of BODY.
@@ -3830,8 +3870,7 @@ are for writing new DOCUMENT-OBJECT\* methods, which emit markdown.
     
     - ARGLIST:
     
-        - If it is not provided, then it defaults to (ARGLIST
-          REFERENCE).
+        - If it is not provided, then it defaults to (ARGLIST DREF).
     
         - If NIL, then it is not printed.
     
@@ -3855,13 +3894,15 @@ are for writing new DOCUMENT-OBJECT\* methods, which emit markdown.
     is not added to the first line if EXCLUDE-FIRST-LINE-P. If
     PARAGRAPHP, then add a newline before and after the output.
 
-- [function] ESCAPE-MARKDOWN STRING &KEY (ESCAPE-INLINE T) (ESCAPE-HTML T) (ESCAPE-BLOCK T)
+- [function] ESCAPE-MARKDOWN STRING &KEY (ESCAPE-INLINE T) (ESCAPE-MATHJAX T) (ESCAPE-HTML T) (ESCAPE-BLOCK T)
 
     Backslash escape markdown constructs in STRING.
     
     - If ESCAPE-INLINE, then escape the following characters:
     
             *_`[]\
+    
+    - If ESCAPE-MATHJAX, then escape `$` characters.
     
     - If ESCAPE-HTML, then escape the following characters:
     
@@ -3870,7 +3911,7 @@ are for writing new DOCUMENT-OBJECT\* methods, which emit markdown.
     - If ESCAPE-BLOCK, then escape whatever is necessary to avoid
       starting a new markdown block (e.g. a paragraph, heading, etc).
 
-- [function] PRIN1-TO-MARKDOWN OBJECT &KEY (ESCAPE-INLINE T) (ESCAPE-HTML T) (ESCAPE-BLOCK T)
+- [function] PRIN1-TO-MARKDOWN OBJECT &KEY (ESCAPE-INLINE T) (ESCAPE-MATHJAX T) (ESCAPE-HTML T) (ESCAPE-BLOCK T)
 
     Like PRIN1-TO-STRING, but bind *PRINT-CASE* depending on
     *DOCUMENT-DOWNCASE-UPPERCASE-CODE* and *FORMAT*, and
@@ -3906,8 +3947,9 @@ presented.
 
 - [reader] SECTION-TITLE [SECTION][5fac] (:TITLE)
 
-    A markdown string or NIL. Used in generated
-    documentation.
+    A @TITLE or NIL. Used in generated
+    documentation (see @MARKDOWN-OUTPUT) and is returned by DOCTITLE
+    for SECTION objects and SECTION DREF::@DEFINITIONS.
 
 - [function] SECTION-LINK-TITLE-TO SECTION
 
@@ -3934,8 +3976,9 @@ they are presented.
 
 - [reader] GLOSSARY-TERM-TITLE [GLOSSARY-TERM][8251] (:TITLE)
 
-    A markdown string or NIL. Used in generated
-    documentation (see @MARKDOWN-OUTPUT).
+    A @TITLE or NIL. Used in generated
+    documentation (see @MARKDOWN-OUTPUT) and is returned by DOCTITLE
+    for GLOSSARY-TERM objects and GLOSSARY-TERM DREF::@DEFINITIONS..
 
 - [reader] GLOSSARY-TERM-URL [GLOSSARY-TERM][8251] (:URL)
 

@@ -450,7 +450,12 @@
 
 (defun plain-section-title-or-name (section)
   (squeeze-whitespace
-   (process-title (section-title-or-name section) :format :plain)))
+   (document-title (section-title-or-name section) :format :plain)))
+
+(defun section-title-or-name (section)
+  (or (section-title section)
+      (let ((*print-case* :upcase))
+        (prin1-to-string (section-name section)))))
 
 
 ;;;; Generate the READMEs and HTML docs.

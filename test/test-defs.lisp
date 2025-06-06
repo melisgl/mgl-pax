@@ -3,22 +3,33 @@
 (defsection @test-examples (:export nil)
   "example section")
 
-(defsection @test-other (:export nil :title "test other title")
+(defsection @test-other (:title "test other title" :export nil)
   "backlink @TEST")
 
 (defsection @test-section-with-link-to-other-page-in-title
     (:title "Link to @TEST-OTHER" :link-title-to (@test-other section)
-             :export nil)
+     :export nil)
   "Same link in docstring to @TEST-OTHER.")
 
 (defsection @test-section-with-link-to-same-page-in-title
     (:title "Link to @TEST" :link-title-to (@test section)
-            :export nil)
+     :export nil)
   "Same link in docstring to @TEST.")
 
-(defsection @test-tricky-title
-    (:export nil :title "`CODE` *italic* _italic2_ *bold* [link][sdf] <thing>")
-  "backlink @TEST")
+(defsection @parent-tricky-title
+    (:title "`CODE` *italic* _italic2_ *bold* &quot;"
+     :export nil)
+  (@tricky-title section))
+
+(defsection @tricky-title
+    (:title "`CODE` *italic* _italic2_ *bold* &quot;"
+     :export nil)
+  (@subtricky section)
+  (**subtricky** section))
+
+(defsection @subtricky (:title "\\`\\_\\*\\&" :export nil))
+
+(defsection **subtricky** (:export nil))
 
 ;;; LOCATIVE whose name is a symbol in another package.
 (define-locative-type (pax::funny-loc some-arg) ()
@@ -192,3 +203,13 @@
 (defun fn-with-mathjax ()
   "$\\hat{x}$_s"
   nil)
+
+(defun $x_0$ ())
+
+(define-glossary-term @mathjax-and-code-in-title (:title "hey `c` $x_0$"))
+
+(define-glossary-term @illegal-title-1 (:title "x
+
+y"))
+
+(define-glossary-term @title-with-emph (:title "_x_ **y**"))

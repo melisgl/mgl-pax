@@ -99,8 +99,9 @@
     documentation for this section.")
    (title
     :initarg :title :reader section-title
-    :documentation "A markdown string or NIL. Used in generated
-    documentation.")
+    :documentation "A @TITLE or NIL. Used in generated
+    documentation (see @MARKDOWN-OUTPUT) and is returned by DOCTITLE
+    for SECTION objects and SECTION DREF::@DEFINITIONS.")
    ;; DEFSECTION's raw link-title-to argument. Translated to an XREF
    ;; by SECTION-LINK-TITLE-TO, which is defined later so that XREF
    ;; can depend on mgl-pax/basics.
@@ -247,8 +248,9 @@
     this GLOSSARY-TERM object.")
    (title
     :initarg :title :reader glossary-term-title
-    :documentation "A markdown string or NIL. Used in generated
-    documentation (see @MARKDOWN-OUTPUT).")
+    :documentation "A @TITLE or NIL. Used in generated
+    documentation (see @MARKDOWN-OUTPUT) and is returned by DOCTITLE
+    for GLOSSARY-TERM objects and GLOSSARY-TERM DREF::@DEFINITIONS..")
    (url
     :initarg :url :reader glossary-term-url
     :documentation "A string or NIL.")

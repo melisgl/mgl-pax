@@ -24,11 +24,6 @@
   SECTION is EXPORTABLE-LOCATIVE-TYPE-P but not exported by
   default (see EXPORTABLE-REFERENCE-P).")
 
-(defun section-title-or-name (section)
-  (or (section-title section)
-      (let ((*print-case* :upcase))
-        (prin1-to-string (section-name section)))))
-
 (define-locator section ((section section))
   (make-instance 'section-dref :name (section-name section) :locative 'section))
 

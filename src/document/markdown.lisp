@@ -3,8 +3,7 @@
 (in-readtable pythonic-string-syntax)
 
 (defun parse-markdown (string)
-  (let ((3bmd-grammar:*smart-quotes* nil))
-    (clean-up-parsed-parse-tree (parse-markdown-fast string))))
+  (clean-up-parsed-parse-tree (parse-markdown-fast string)))
 
 (defun parse-markdown-fast (string)
   (if (< (length string) 1000)
@@ -76,13 +75,15 @@
 (defun markdown-special-block-char-p (char)
   (member char '(#\# #\Return #\Newline)))
 
-(defun/autoloaded escape-markdown (string &key (escape-inline t)
-                                          (escape-html t) (escape-block t))
+(defun/autoloaded escape-markdown
+    (string &key (escape-inline t) (escape-mathjax t) (escape-html t)
+            (escape-block t))
   "Backslash escape markdown constructs in STRING.
 
   - If ESCAPE-INLINE, then escape the following characters:
 
           *_`[]\\
+  - If ESCAPE-MATHJAX, then escape `$` characters.
 
   - If ESCAPE-HTML, then escape the following characters:
 
@@ -115,6 +116,8 @@
                 (t
                  (when (or (and escape-inline
                                 (markdown-special-inline-char-p char))
+                           (and escape-mathjax
+                                (char= char #\$))
                            (and escape-html
                                 (markdown-special-html-char-p char))
                            (and escape-block
@@ -122,47 +125,6 @@
                                 (blank-line-until-p i)))
                    (write-char #\\ stream))
                  (write-char char stream))))))))
-
-;;; This only unescapes MARKDOWN-SPECIAL-BLOCK-CHAR-P currently.
-(defun unescape-markdown (string)
-  (let ((escaping nil))
-    (with-output-to-string (stream)
-      (dotimes (i (length string))
-        (let ((char (aref string i)))
-          (cond (escaping
-                 (setq escaping nil)
-                 (unless (markdown-special-inline-char-p char)
-                   (write-char #\\ stream))
-                 (write-char char stream))
-                ((eql char #\\)
-                 (setq escaping t))
-                (t
-                 (write-char char stream))))))))
-
-;;; This is a workaround for "\"mgl-pax\" ASDF:SYSTEM" being displayed
-;;; with the backslashes.
-(defun escape-markdown-reflink-definition-title (string)
-  (cond ((not (find #\" string))
-         (format nil "~S" string))
-        ((not (find #\' string))
-         (format nil "'~A'" string))
-        ((not (find #\) string))
-         (format nil "(~A)" string))
-        (t
-         (format nil "~S" string))))
-
-(defun escape-markdown-except-mathjax (string)
-  (let ((tree (map-markdown-parse-tree
-               '(:math-inline-1 :math-inline-2 :math-inline-3 :math-block)
-               ()
-               nil
-               (lambda (parent tree)
-                 (declare (ignore parent))
-                 `(,(first tree)
-                   ,(backslash-unescape (second tree))))
-               (parse-markdown (escape-markdown string)))))
-    (with-output-to-string (s)
-      (print-markdown tree s :format :markdown))))
 
 
 ;;;; Parse tree based markdown fragments

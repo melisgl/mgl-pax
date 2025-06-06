@@ -163,7 +163,7 @@
   (swank/backend:converting-errors-to-error-location
     (swank::with-buffer-syntax (swank::*buffer-package*)
       ;; This is called only for `w3m' and `precheck'. See below.
-      (let ((*html-subformat* (if (uiop:directory-exists-p output) :w3m nil)))
+      (let ((*subformat* (if (uiop:directory-exists-p output) :w3m nil)))
         `(:url ,(document-pax*-url pax*-url output))))))
 
 ;;; Write documentation of PAX*-URL into OUTPUT. Return the (:URL
@@ -204,7 +204,7 @@
   (let ((query
           ;; w3m doesn't like queries on file URLs, so we set
           ;; `slime-buffer-package' instead on the Elisp side.
-          (unless (eq *html-subformat* :w3m)
+          (unless (eq *subformat* :w3m)
             (format nil "pkg=~A" (urlencode (package-name *package*)))))
         (fragment (when fragment
                     (canonicalize-pax-url-fragment fragment))))
@@ -518,21 +518,21 @@
 
 #+nil
 (defun shorten-arglist (string &optional except-reference)
-  (let* ((reference *documenting-reference*)
+  (let* ((reference *documenting-dref*)
          (n-chars (- 64 (length (prin1-to-string
                                  (xref-locative-type reference)))
                      (length (prin1-to-string
                               (xref-name reference))))))
     (if (and except-reference
-             (reference= *documenting-reference* except-reference))
+             (reference= *documenting-dref* except-reference))
         string
         (shorten-string string :n-lines 1 :n-chars n-chars :ellipsis "..."))))
 
 #+nil
 (defun shorten-docstring (docstring &optional except-reference)
   (if (or (stringp (first *objects-being-documented*))
-          (and *documenting-reference* except-reference
-               (reference= *documenting-reference* except-reference)))
+          (and *documenting-dref* except-reference
+               (reference= *documenting-dref* except-reference)))
       docstring
       (shorten-string docstring :n-lines 1 :n-chars 68 :ellipsis "...")))
 
@@ -624,29 +624,10 @@
 
 (defun document/open (documentable &rest args)
   (let ((*document-open-linking* t)
-        (*document-fancy-html-navigation* (not (eq *html-subformat* :w3m)))
-        (*document-url-versions* '(2))
-        (previous-error-string "")
-        (n-repeats 0))
-    (handler-bind
-        ;; CONTINUE continuable errors, but give up if the same error
-        ;; seems to happen again to avoid getting stuck and maybe
-        ;; running out of stack.
-        ((error
-           (lambda (error)
-             (let ((string (with-standard-io-syntax*
-                             (princ-to-string error))))
-               (if (string= string previous-error-string)
-                   (incf n-repeats)
-                   (setq n-repeats 0))
-               (setq previous-error-string string)
-               (warn "~@<Error in ~S: ~A~:@>" 'document error))
-             (if (< 100 n-repeats)
-                 (warn "~@<Sameish error repeated too many times. ~
-                       Not CONTINUEing.~:@>")
-                 (continue error)))))
-      (apply #'document documentable (append args (list :format :html)
-                                             *document/open-extra-args*)))))
+        (*document-fancy-html-navigation* (not (eq *subformat* :w3m)))
+        (*document-url-versions* '(2)))
+    (apply #'document documentable (append args (list :format :html)
+                                           *document/open-extra-args*))))
 
 
 (defun redocument-for-emacs (file-url output
@@ -654,7 +635,7 @@
   (swank/backend:converting-errors-to-error-location
     (swank::with-buffer-syntax (swank::*buffer-package*)
       ;; This is called only for `w3m' and `precheck'.
-      (let ((*html-subformat* (if (uiop:directory-exists-p output) :w3m nil)))
+      (let ((*subformat* (if (uiop:directory-exists-p output) :w3m nil)))
         (multiple-value-bind (scheme authority path query fragment)
             (parse-url file-url)
           (declare (ignore authority query))

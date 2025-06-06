@@ -54,14 +54,14 @@
       <docstring>
   ```
 
-  The line with the bullet is printed with DOCUMENTING-REFERENCE. The
+  The line with the bullet is printed with DOCUMENTING-DEFINITION. The
   docstring is processed with DOCUMENT-DOCSTRING while
   @LOCAL-DEFINITIONs established with WITH-DISLOCATED-NAMES are in
   effect for all variables locally bound in a definition with ARGLIST,
   and *PACKAGE* is bound to the second return value of DOCSTRING."
   (multiple-value-bind (arglist arglist-type) (arglist dref)
     (multiple-value-bind (docstring package) (docstring dref)
-      (documenting-reference (stream :arglist arglist :package package)
+      (documenting-definition (stream :arglist arglist :package package)
         (with-dislocated-names (case arglist-type
                                  ((:macro :deftype :destructuring)
                                   (dref::macro-arg-names arglist))
@@ -93,7 +93,7 @@
                             (shorten-string
                              (prin1-to-string* (if initformp initform value))
                              :n-lines 10 :n-chars 512 :ellipsis " ...")))))))
-        (documenting-reference (stream :arglist arglist)
+        (documenting-definition (stream :arglist arglist)
           (document-docstring (docstring dref) stream))))))
 
 (defmethod document-object* ((dref setf-dref) stream)
@@ -114,7 +114,7 @@
 (defun %document-method (dref stream)
   (declare (type (or method-dref setf-dref) dref))
   (let ((arglist (method-pretty-arglist dref)))
-    (documenting-reference (stream :arglist `(:method ,@arglist))
+    (documenting-definition (stream :arglist `(:method ,@arglist))
       (with-dislocated-names (dref::function-arg-names (arglist dref))
         (document-docstring (docstring dref) stream)))))
 
@@ -178,7 +178,7 @@
 (defun generate-documentation-for-slot-definition (slot-def class stream)
   (let ((arglist (format nil "~A~@[ ~A~]" (md-link (dref class 'class))
                          (slot-def-to-string slot-def))))
-    (documenting-reference (stream :arglist arglist)
+    (documenting-definition (stream :arglist arglist)
       ;; There is no documentation for condition accessors, and some
       ;; implementations signal warnings.
       (unless (subtypep (find-class class) 'condition)
@@ -216,7 +216,7 @@
 (defmethod document-object* ((dref structure-accessor-dref) stream)
   "For definitions with a STRUCTURE-ACCESSOR locative, the arglist
   printed is the locative's CLASS-NAME argument if provided."
-  (documenting-reference (stream :arglist (dref-locative-args dref))
+  (documenting-definition (stream :arglist (dref-locative-args dref))
     (document-docstring (docstring dref) stream)))
 
 (defmethod document-object* ((dref structure-dref) stream)
@@ -246,7 +246,7 @@
                     (if (and (not *first-pass*) *document-mark-up-signatures*)
                         (mark-up-superclasses superclasses)
                         superclasses))))
-    (documenting-reference (stream :arglist arglist)
+    (documenting-definition (stream :arglist arglist)
       (document-docstring (docstring dref) stream))))
 
 (define-glossary-term @public-superclasses (:title "public superclasses")
@@ -302,7 +302,7 @@
   "For definitions with a ASDF:SYSTEM locative, their most
   important slots are printed as an unnumbered list."
   (let ((system (resolve dref)))
-    (documenting-reference (stream :reference dref)
+    (documenting-definition (stream)
       (flet ((foo (name fn &key type)
                (let ((value (funcall fn system)))
                  (when (and value (not (equal value "")))
@@ -322,8 +322,8 @@
                      ((:docstring)
                       (format stream "    - _~A:_ " name)
                       (document-docstring value stream :indentation "        "
-                                                       :exclude-first-line-p t
-                                                       :paragraphp nil)
+                                          :exclude-first-line-p t
+                                          :paragraphp nil)
                       (format stream "~&"))
                      ((:list-of-systems)
                       (document-docstring
@@ -377,7 +377,7 @@
   (let* ((nicknames (package-nicknames (resolve dref)))
          (arglist (when nicknames
                     (list :nicknames nicknames))))
-    (documenting-reference (stream :arglist arglist)
+    (documenting-definition (stream :arglist arglist)
       (document-docstring (docstring dref) stream))))
 
 
@@ -387,7 +387,7 @@
   "For definitions with the LOCATIVE locative type, their
   LOCATIVE-TYPE-DIRECT-SUPERS and LOCATIVE-TYPE-DIRECT-SUBS are
   printed."
-  (documenting-reference (stream)
+  (documenting-definition (stream)
     (let ((locative-type (dref-name dref)))
       (document-docstring
        (with-output-to-string (stream)
@@ -416,8 +416,8 @@
              (*package* (section-package ,section))
              (*readtable* (section-readtable ,section))
              (*section* ,section))
-         (with-heading (,stream ,section (section-title-or-name ,section)
-                                :link-title-to (section-link-title-to ,section))
+         (with-heading (,stream :dref *section*
+                        :link-title-to (section-link-title-to ,section))
            (when (and (not ,same-package) *document-normalize-packages*)
              (format-in-package *package* ,stream))
            ,@body)))))
@@ -453,21 +453,20 @@
 (defmethod document-object* ((glossary-term glossary-term) stream)
   "For definitions with a GLOSSARY-TERM locative, no arglist is
   printed, and if non-NIL, GLOSSARY-TERM-TITLE is printed as name."
-  (let ((name (glossary-term-title-or-name glossary-term)))
-    (documenting-reference (stream :name name)
-      (when (glossary-term-url glossary-term)
-        (document-docstring
-         (format nil "External link to [~A](~A)."
-                 (escape-markdown (glossary-term-url glossary-term))
-                 (glossary-term-url glossary-term))
-         stream))
-      (document-docstring (glossary-term-docstring glossary-term) stream))))
+  (documenting-definition (stream)
+    (when (glossary-term-url glossary-term)
+      (document-docstring
+       (format nil "External link to [~A](~A)."
+               (escape-markdown (glossary-term-url glossary-term))
+               (glossary-term-url glossary-term))
+       stream))
+    (document-docstring (glossary-term-docstring glossary-term) stream)))
 
 (defmethod document-object* ((dref go-dref) stream)
   "For definitions with a GO locative, its LOCATIVE-ARGS are printed
   as its arglist, along with a redirection message."
   (let ((locative-args (dref-locative-args dref)))
-    (documenting-reference (stream :arglist locative-args)
+    (documenting-definition (stream :arglist locative-args)
       (document-docstring
        (format nil "See ~A." (apply #'md-reflink-from
                                     (first (dref-locative-args dref))))
@@ -544,9 +543,9 @@
   arglist."
   (multiple-value-bind (title aliases)
       (find-hyperspec-section-title (dref-name dref))
-    (documenting-reference (stream :arglist
-                                   (append (dref-locative-args dref)
-                                           (ensure-list title)))
+    (documenting-definition (stream :arglist
+                             (append (dref-locative-args dref)
+                                     (ensure-list title)))
       (when aliases
         (format stream "Aliases: ~{~S~^, ~}~%" aliases)))))
 
@@ -554,7 +553,7 @@
   "For definitions with an UNKNOWN locative, the LOCATIVE-ARGS are
   printed as the arglist. There is no docstring."
   (let ((locative-args (dref-locative-args dref)))
-    (documenting-reference
+    (documenting-definition
         (stream :arglist (escape-markdown
                           (with-standard-io-syntax*
                             ;; Are dspecs readable?
