@@ -554,7 +554,7 @@ Now let's examine the most important pieces.
     **Entries**
     
     `ENTRIES` consists of docstrings and references in any order.
-    Docstrings are arbitrary strings in markdown format.
+    Docstrings are arbitrary strings in Markdown format.
     
     References are [`XREF`][1538]s given in the form `(NAME LOCATIVE)`.
     For example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
@@ -587,7 +587,7 @@ Now let's examine the most important pieces.
     
     **Misc**
     
-    `TITLE` is a string containing markdown or `NIL`. If non-`NIL`, it
+    `TITLE` is a string containing Markdown or `NIL`. If non-`NIL`, it
     determines the text of the heading in the generated output.
     `LINK-TITLE-TO` is a reference given as an `(NAME LOCATIVE)` pair or
     `NIL`, to which the heading will link when generating HTML. If not
@@ -624,7 +624,7 @@ Now let's examine the most important pieces.
 
 - [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &BODY DOCSTRING*
 
-    Define a global variable with `NAME`, and set it to a [`GLOSSARY-TERM`][8251] object. `TITLE`, `URL` and `DOCSTRING` are markdown strings or
+    Define a global variable with `NAME`, and set it to a [`GLOSSARY-TERM`][8251] object. `TITLE`, `URL` and `DOCSTRING` are Markdown strings or
     `NIL`. Glossary terms are [`DOCUMENT`][432c]ed in the lightweight bullet +
     locative + name/title style. See the glossary entry [name][88cf] for an
     example.
@@ -635,7 +635,7 @@ Now let's examine the most important pieces.
     
     Glossary entries with a non-`NIL` `URL` are like external links: they
     are linked to their `URL` in the generated documentation. These offer
-    a more reliable alternative to using markdown reference links and
+    a more reliable alternative to using Markdown reference links and
     are usually not included in `SECTION`s.
     
     When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][730f])
@@ -827,7 +827,7 @@ PAX adds a few of its own.
     [`STRING`][b93c] or a [`PATHNAME`][0317], in which case the whole file
     is being pointed to, or it can explicitly supply `START`, `END`
     locatives. `INCLUDE` is typically used to include non-lisp files in
-    the documentation (say markdown or Elisp as in the next example) or
+    the documentation (say Markdown or Elisp as in the next example) or
     regions of Lisp source files. This can reduce clutter and
     duplication.
     
@@ -843,7 +843,7 @@ PAX adds a few of its own.
     ```
     
     In the above example, when documentation is generated, the entire
-    `src/mgl-pax.el` file is included in the markdown output surrounded
+    `src/mgl-pax.el` file is included in the Markdown output surrounded
     by the strings given as `HEADER-NL` and `FOOTER-NL`. The documentation
     of `FOO-EXAMPLE` will be the region of the file from the
     [`SOURCE-LOCATION`][32da] of the `START` reference (inclusive) to the
@@ -870,7 +870,7 @@ PAX adds a few of its own.
     
     - If specified, `LINE-PREFIX` is a string that's prepended to each
       line included in the documentation. For example, a string of four
-      spaces makes markdown think it's a code block.
+      spaces makes Markdown think it's a code block.
     
     - `HEADER` and `FOOTER`, if non-`NIL`, are printed before the included
       string.
@@ -886,7 +886,7 @@ PAX adds a few of its own.
 - [locative] **DOCSTRING**
 
     `DOCSTRING` is a [`PSEUDO`][943a] locative for including the parse tree of
-    the markdown [`DOCSTRING`][affc] of a definition in the parse tree
+    the Markdown [`DOCSTRING`][affc] of a definition in the parse tree
     of a docstring when generating documentation. It has no source
     location information and only works as an explicit link. This
     construct is intended to allow docstrings to live closer to their
@@ -1908,7 +1908,7 @@ following two docstrings are equivalent:
 
 - When [Browsing Live Documentation][a595], the page displayed can be of,
 say, a single function within what would constitute the offline
-documentation of a library. Because markdown reference link
+documentation of a library. Because Markdown reference link
 definitions, for example
 
         [Daring Fireball]: http://daringfireball.net/
@@ -1919,7 +1919,7 @@ definitions, for example
     [definition][2143] are guaranteed to be resolvable. This is left
     intentionally vague because the specifics are subject to change.
 
-    See [`DEFINE-GLOSSARY-TERM`][8ece] for a better alternative to markdown
+    See [`DEFINE-GLOSSARY-TERM`][8ece] for a better alternative to Markdown
     reference links.
 
 Docstrings of definitions which do not have a [Home Section][bdd5] and are
@@ -1935,7 +1935,7 @@ non-space character of the first line is an `(` or a `;` character.
 - Special HTML characters `<&` are escaped.
 
 - Furthermore, to reduce the chance of inadvertently introducing a
-markdown heading, if a line starts with a string of `#` characters,
+Markdown heading, if a line starts with a string of `#` characters,
 then the first one is automatically escaped. Thus, the following two
 docstrings are equivalent:
 
@@ -2070,7 +2070,7 @@ strings can be a pain. [Pythonic String Reader][d3fc5] can help with that.
     
     To suppress codification, add a backslash to the beginning of the
     a [codifiable][b89a] word or right after the leading `*` if it would
-    otherwise be parsed as markdown emphasis:
+    otherwise be parsed as Markdown emphasis:
     
         "\\SECTION *\\PACKAGE*"
     
@@ -2306,11 +2306,11 @@ Markdown reference links (see [Markdown in Docstrings][7bf5]).
     `UNRESOLVABLE-REFLINK` warning.
     
     - If the [`OUTPUT-REFLINK`][2ca9] restart is invoked, then no warning is
-      printed and the markdown link is left unchanged. `MUFFLE-WARNING`([`0`][b8b4] [`1`][6f51]) is
+      printed and the Markdown link is left unchanged. `MUFFLE-WARNING`([`0`][b8b4] [`1`][6f51]) is
       equivalent to `OUTPUT-REFLINK`.
     
     - If the [`OUTPUT-LABEL`][c818] restart is invoked, then no warning is printed
-      and the markdown link is replaced by its label. For example,
+      and the Markdown link is replaced by its label. For example,
       `[NONEXISTENT][function]` becomes `NONEXISTENT`.
     
     - If the warning is not handled, then it is printed to
@@ -2681,7 +2681,7 @@ The following variables control various aspects of links and `URL`s.
 
     Recall that [Markdown reference link][8c00]s (like `[label][id]`) are used for
     [Linking][19e3]. It is desirable to have ids that are short to maintain
-    legibility of the generated markdown, but also stable to reduce the
+    legibility of the generated Markdown, but also stable to reduce the
     spurious diffs in the generated documentation, which can be a pain
     in a version control system.
     
@@ -2691,8 +2691,8 @@ The following variables control various aspects of links and `URL`s.
     of characters, then the length of the hash of the colliding
     reference is increased.
     
-    This variable has no effect on the HTML generated from markdown, but
-    it can make markdown output more readable.
+    This variable has no effect on the HTML generated from Markdown, but
+    it can make Markdown output more readable.
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-BASE-URL-2A-20VARIABLE-29"></a>
 
@@ -2789,7 +2789,7 @@ in an explicit link.
     provided, see [`PAGES`][9c7d]), and the symbol becomes a self-link for your
     permalinking pleasure.
     
-    For example, a reference is rendered in markdown roughly as:
+    For example, a reference is rendered in Markdown roughly as:
     
         - [function] foo x y
     
@@ -3763,7 +3763,7 @@ The main use case for consistency checking is detecting
 out-of-date examples in documentation, although using it for writing
 tests is also a possibility. Here, we focus on the former.
 
-When a markdown code block tagged `cl-transcript` is processed
+When a Markdown code block tagged `cl-transcript` is processed
 during [Generating Documentation][2c93], the code in it is replaced with
 the output of with `(TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
 :CHECK-CONSISTENCY T)`. Suppose we have the following example of the
@@ -4235,13 +4235,13 @@ export the symbols `A` and `AN`.
 
 For all definitions that it encounters, [`DOCUMENT`][432c] calls
 [`DOCUMENT-OBJECT*`][8269] to generate documentation. The following utilities
-are for writing new `DOCUMENT-OBJECT*` methods, which emit markdown.
+are for writing new `DOCUMENT-OBJECT*` methods, which emit Markdown.
 
 <a id="x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29"></a>
 
 - [variable] **\*FORMAT\***
 
-    Bound by [`DOCUMENT`][432c] to its `FORMAT` argument, this allows markdown
+    Bound by [`DOCUMENT`][432c] to its `FORMAT` argument, this allows Markdown
     output to depend on the output format.
 
 <a id="x-28MGL-PAX-3AWITH-HEADING-20MGL-PAX-3AMACRO-29"></a>
@@ -4302,7 +4302,7 @@ are for writing new `DOCUMENT-OBJECT*` methods, which emit markdown.
           is printed without the outermost parens and with the package
           names removed from the argument names.
     
-        - If its is a string, then it must be valid markdown.
+        - If its is a string, then it must be valid Markdown.
     
     - It is not allowed to have [`WITH-HEADING`][80e8] within the [dynamic
       extent][36e9] of `BODY`.
@@ -4317,7 +4317,7 @@ are for writing new `DOCUMENT-OBJECT*` methods, which emit markdown.
 
 - [function] **DOCUMENT-DOCSTRING** *DOCSTRING STREAM &KEY (INDENTATION "    ") EXCLUDE-FIRST-LINE-P (PARAGRAPHP T)*
 
-    Write `DOCSTRING` to `STREAM`, [sanitizing the markdown][7bf5] from it, performing [Codification][f1ab] and
+    Write `DOCSTRING` to `STREAM`, [sanitizing the Markdown][7bf5] from it, performing [Codification][f1ab] and
     [Linking][19e3], finally prefixing each line with `INDENTATION`. The prefix
     is not added to the first line if `EXCLUDE-FIRST-LINE-P`. If
     `PARAGRAPHP`, then add a newline before and after the output.
@@ -4326,7 +4326,7 @@ are for writing new `DOCUMENT-OBJECT*` methods, which emit markdown.
 
 - [function] **ESCAPE-MARKDOWN** *STRING &KEY (ESCAPE-INLINE T) (ESCAPE-MATHJAX T) (ESCAPE-HTML T) (ESCAPE-BLOCK T)*
 
-    Backslash escape markdown constructs in `STRING`.
+    Backslash escape Markdown constructs in `STRING`.
     
     - If `ESCAPE-INLINE`, then escape the following characters:
     
@@ -4339,7 +4339,7 @@ are for writing new `DOCUMENT-OBJECT*` methods, which emit markdown.
             <&
     
     - If `ESCAPE-BLOCK`, then escape whatever is necessary to avoid
-      starting a new markdown block (e.g. a paragraph, heading, etc).
+      starting a new Markdown block (e.g. a paragraph, heading, etc).
 
 <a id="x-28MGL-PAX-3APRIN1-TO-MARKDOWN-20FUNCTION-29"></a>
 
@@ -4403,7 +4403,7 @@ presented.
 
 - [function] **SECTION-ENTRIES** *SECTION*
 
-    A list of markdown docstrings and [`XREF`][1538]s in the order they
+    A list of Markdown docstrings and [`XREF`][1538]s in the order they
     occurred in [`DEFSECTION`][72b4].
 
 <a id="x-28MGL-PAX-3A-40GLOSSARY-TERMS-20MGL-PAX-3ASECTION-29"></a>

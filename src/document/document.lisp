@@ -33,8 +33,8 @@
 ;;; - add prev/next/up links to sections (FANCY-NAVIGATION),
 ;;; - know what definitions are @LINKABLE.
 ;;;
-;;; In the 2.5th pass, we add markdown reference link definitions,
-;;; headers, footers, and convert markdown to another format if
+;;; In the 2.5th pass, we add Markdown reference link definitions,
+;;; headers, footers, and convert Markdown to another format if
 ;;; necessary.
 (defmacro %document (documentable stream page-specs)
   (once-only (documentable stream page-specs)
@@ -135,7 +135,7 @@
                  (*heading-level* (1+ *heading-level*)))
              (funcall fn stream))))))
 
-;;; Add this many #\# to markdown section headings in the output. This
+;;; Add this many #\# to Markdown section headings in the output. This
 ;;; is for when a section that is a subsection of another is
 ;;; documented on its own page by DOCUMENT/OPEN.
 (defvar *heading-offset* 0)
@@ -160,7 +160,7 @@
           1))))
 
 
-;;; A PAGE is basically a single markdown or HTML file to where the
+;;; A PAGE is basically a single Markdown or HTML file to where the
 ;;; documentation of some definitions is written. Constructed by
 ;;; PAGE-SPECS-TO-PAGES.
 (defstruct page
@@ -168,7 +168,7 @@
   ;; output is redirected to this page, when encountering one of these
   ;; definitions.
   boundaries
-  ;; The second pass writes the markdown output to this stream. It's
+  ;; The second pass writes the Markdown output to this stream. It's
   ;; actually STREAM-SPEC (see WITH-OPEN-STREAM-SPEC) to allow the
   ;; temporary stream to
   ;;
@@ -178,8 +178,8 @@
   ;; - be opened multiple times (which is not a given for string
   ;;   streams).
   temp-stream-spec
-  ;; FINALIZE-PAGE-OUTPUT may convert the markdown in TEMP-STREAM-SPEC
-  ;; to a non-markdown format or do final touchups.
+  ;; FINALIZE-PAGE-OUTPUT may convert the Markdown in TEMP-STREAM-SPEC
+  ;; to a non-Markdown format or do final touchups.
   final-stream-spec
   ;; URI-FRAGMENT is a string such as "doc/manual.html" that specifies
   ;; where the page will be deployed on a webserver. It defines how
@@ -334,7 +334,7 @@
 (defun link-to-definition (dref)
   (link-to (find-link dref)))
 
-;;; Link ids are short hashes (as STRINGs), and they go into markdown
+;;; Link ids are short hashes (as STRINGs), and they go into Markdown
 ;;; reference links. Due to possible collisions, they are
 ;;; context-dependent, so to keep LINKs immutable, ids are in this
 ;;; hash table.
@@ -929,7 +929,7 @@
   (when (and (page-written-in-first-pass-p page)
              ;; With @DUMMY-OUTPUT, discard anything that might be written.
              *format*)
-    ;; Now that markdown output for this PAGE is complete, we may
+    ;; Now that Markdown output for this PAGE is complete, we may
     ;; want to convert it to the requested *FORMAT*.
     (if (and (eq *format* :markdown)
              (null (page-header-fn page))
@@ -959,7 +959,7 @@
               (funcall (page-footer-fn page) stream)))))
     (unmake-stream-spec (page-final-stream-spec page))))
 
-;;; Emit markdown definitions for links that were linked to on the
+;;; Emit Markdown definitions for links that were linked to on the
 ;;; current page.
 (defun write-markdown-reference-style-link-definitions (stream)
   (let ((used-links (sort (hash-table-keys (page-used-links *page*))
@@ -995,7 +995,7 @@
       (note @markdown-reflink-definitions
         "- When @BROWSING-LIVE-DOCUMENTATION, the page displayed can be of,
   say, a single function within what would constitute the offline
-  documentation of a library. Because markdown reference link
+  documentation of a library. Because Markdown reference link
   definitions, for example
 
           [Daring Fireball]: http://daringfireball.net/
@@ -1006,7 +1006,7 @@
       DREF::@DEFINITION are guaranteed to be resolvable. This is left
       intentionally vague because the specifics are subject to change.
 
-      See DEFINE-GLOSSARY-TERM for a better alternative to markdown
+      See DEFINE-GLOSSARY-TERM for a better alternative to Markdown
       reference links."
         (print-markdown (append (prepare-parse-tree-for-printing
                                  (parse-markdown markdown-string))
@@ -1134,7 +1134,7 @@
 (defun/autoloaded document-docstring
     (docstring stream &key (indentation "    ")
                exclude-first-line-p (paragraphp t))
-  "Write DOCSTRING to STREAM, [sanitizing the markdown]
+  "Write DOCSTRING to STREAM, [sanitizing the Markdown]
   [@markdown-in-docstrings] from it, performing @CODIFICATION and
   @LINKING, finally prefixing each line with INDENTATION. The prefix
   is not added to the first line if EXCLUDE-FIRST-LINE-P. If
@@ -1325,7 +1325,7 @@
 
 ;;;; Automatic markup of symbols
 
-;;; Take a string in markdown format. Handle the DOCSTRING locative,
+;;; Take a string in Markdown format. Handle the DOCSTRING locative,
 ;;; markup symbols as code (if *DOCUMENT-UPPERCASE-IS-CODE*), autolink
 ;;; (if *DOCUMENT-LINK-SECTIONS*, *DOCUMENT-LINK-CODE*) and always
 ;;; handle explicit links with locatives (e.g. [FOO][function]).
@@ -1358,7 +1358,7 @@
 ;;; semantics the return values.
 (defun translate-docstring-links (parent tree)
   """DOCSTRING is a PSEUDO locative for including the parse tree of
-  the markdown [DOCSTRING][function] of a definition in the parse tree
+  the Markdown [DOCSTRING][function] of a definition in the parse tree
   of a docstring when generating documentation. It has no source
   location information and only works as an explicit link. This
   construct is intended to allow docstrings to live closer to their
@@ -1491,7 +1491,7 @@
 (defun handle-codification-escapes (emph codifiablep word)
   """To suppress codification, add a backslash to the beginning of the
   a @CODIFIABLE word or right after the leading `\\*` if it would
-  otherwise be parsed as markdown emphasis:
+  otherwise be parsed as Markdown emphasis:
 
       "\\SECTION *\\PACKAGE*"
 
@@ -2219,11 +2219,11 @@
   UNRESOLVABLE-REFLINK warning.
 
   - If the OUTPUT-REFLINK restart is invoked, then no warning is
-    printed and the markdown link is left unchanged. MUFFLE-WARNING is
+    printed and the Markdown link is left unchanged. MUFFLE-WARNING is
     equivalent to OUTPUT-REFLINK.
 
   - If the OUTPUT-LABEL restart is invoked, then no warning is printed
-    and the markdown link is replaced by its label. For example,
+    and the Markdown link is replaced by its label. For example,
     `[NONEXISTENT][function]` becomes `NONEXISTENT`.
 
   - If the warning is not handled, then it is printed to
@@ -2488,8 +2488,8 @@
       `(:reference-link :label ,label :definition ,definition)))
 
 ;;; For LABEL (a parse tree fragment) and some references to it
-;;; (REFS), return a markdown parse tree fragment to be spliced into a
-;;; markdown parse tree.
+;;; (REFS), return a Markdown parse tree fragment to be spliced into a
+;;; Markdown parse tree.
 (defun make-reflinks (label explicit-label-p links)
   (if (endp links)
       ;; All references were filtered out.
@@ -2767,7 +2767,7 @@
 (defun print-section-title-link (stream dref title link-title-to)
   (if link-title-to
       ;; Hovering over the section title will show the title of
-      ;; LINK-TITLE-TO from the markdown reference link definition.
+      ;; LINK-TITLE-TO from the Markdown reference link definition.
       (format stream " [~A~A][~A]~%~%"
               (format-heading-number) title
               (link-to-definition link-title-to))
@@ -3041,7 +3041,7 @@
 (defvar/autoloaded *document-min-link-hash-length* 4
   "Recall that @MARKDOWN/REFLINKs (like `[label][id]`) are used for
   @LINKING. It is desirable to have ids that are short to maintain
-  legibility of the generated markdown, but also stable to reduce the
+  legibility of the generated Markdown, but also stable to reduce the
   spurious diffs in the generated documentation, which can be a pain
   in a version control system.
 
@@ -3051,8 +3051,8 @@
   of characters, then the length of the hash of the colliding
   reference is increased.
 
-  This variable has no effect on the HTML generated from markdown, but
-  it can make markdown output more readable.")
+  This variable has no effect on the HTML generated from Markdown, but
+  it can make Markdown output more readable.")
 
 (defun hash-link (string detect-collision-fn
                   &key (min-n-chars *document-min-link-hash-length*))
@@ -3083,7 +3083,7 @@
   provided, see @PAGES), and the symbol becomes a self-link for your
   permalinking pleasure.
 
-  For example, a reference is rendered in markdown roughly as:
+  For example, a reference is rendered in Markdown roughly as:
 
       - [function] foo x y
 
@@ -3192,7 +3192,7 @@
 
 (defun print-arglist (arglist stream)
   (let* ((string (if (stringp arglist)
-                     ;; must be escaped markdown
+                     ;; must be escaped Markdown
                      arglist
                      (arglist-to-markdown arglist)))
          (string (if *print-arglist-key*

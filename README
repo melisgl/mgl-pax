@@ -446,7 +446,7 @@ Now let's examine the most important pieces.
     **Entries**
     
     ENTRIES consists of docstrings and references in any order.
-    Docstrings are arbitrary strings in markdown format.
+    Docstrings are arbitrary strings in Markdown format.
     
     References are XREFs given in the form `(NAME LOCATIVE)`.
     For example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
@@ -479,7 +479,7 @@ Now let's examine the most important pieces.
     
     **Misc**
     
-    TITLE is a string containing markdown or NIL. If non-NIL, it
+    TITLE is a string containing Markdown or NIL. If non-NIL, it
     determines the text of the heading in the generated output.
     LINK-TITLE-TO is a reference given as an `(NAME LOCATIVE)` pair or
     NIL, to which the heading will link when generating HTML. If not
@@ -510,7 +510,7 @@ Now let's examine the most important pieces.
 
 - [macro] DEFINE-GLOSSARY-TERM NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &BODY DOCSTRING
 
-    Define a global variable with NAME, and set it to a GLOSSARY-TERM object. TITLE, URL and DOCSTRING are markdown strings or
+    Define a global variable with NAME, and set it to a GLOSSARY-TERM object. TITLE, URL and DOCSTRING are Markdown strings or
     NIL. Glossary terms are DOCUMENTed in the lightweight bullet +
     locative + name/title style. See the glossary entry @NAME for an
     example.
@@ -521,7 +521,7 @@ Now let's examine the most important pieces.
     
     Glossary entries with a non-NIL URL are like external links: they
     are linked to their URL in the generated documentation. These offer
-    a more reliable alternative to using markdown reference links and
+    a more reliable alternative to using Markdown reference links and
     are usually not included in SECTIONs.
     
     When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
@@ -697,7 +697,7 @@ PAX adds a few of its own.
     STRING or a PATHNAME, in which case the whole file
     is being pointed to, or it can explicitly supply START, END
     locatives. INCLUDE is typically used to include non-lisp files in
-    the documentation (say markdown or Elisp as in the next example) or
+    the documentation (say Markdown or Elisp as in the next example) or
     regions of Lisp source files. This can reduce clutter and
     duplication.
     
@@ -713,7 +713,7 @@ PAX adds a few of its own.
     ```
     
     In the above example, when documentation is generated, the entire
-    `src/mgl-pax.el` file is included in the markdown output surrounded
+    `src/mgl-pax.el` file is included in the Markdown output surrounded
     by the strings given as HEADER-NL and FOOTER-NL. The documentation
     of `FOO-EXAMPLE` will be the region of the file from the
     SOURCE-LOCATION of the START reference (inclusive) to the
@@ -740,7 +740,7 @@ PAX adds a few of its own.
     
     - If specified, LINE-PREFIX is a string that's prepended to each
       line included in the documentation. For example, a string of four
-      spaces makes markdown think it's a code block.
+      spaces makes Markdown think it's a code block.
     
     - HEADER and FOOTER, if non-NIL, are printed before the included
       string.
@@ -754,7 +754,7 @@ PAX adds a few of its own.
 - [locative] DOCSTRING
 
     DOCSTRING is a PSEUDO locative for including the parse tree of
-    the markdown DOCSTRING of a definition in the parse tree
+    the Markdown DOCSTRING of a definition in the parse tree
     of a docstring when generating documentation. It has no source
     location information and only works as an explicit link. This
     construct is intended to allow docstrings to live closer to their
@@ -1710,7 +1710,7 @@ following two docstrings are equivalent:
 
 - When @BROWSING-LIVE-DOCUMENTATION, the page displayed can be of,
 say, a single function within what would constitute the offline
-documentation of a library. Because markdown reference link
+documentation of a library. Because Markdown reference link
 definitions, for example
 
         [Daring Fireball]: http://daringfireball.net/
@@ -1721,7 +1721,7 @@ definitions, for example
     DREF::@DEFINITION are guaranteed to be resolvable. This is left
     intentionally vague because the specifics are subject to change.
 
-    See DEFINE-GLOSSARY-TERM for a better alternative to markdown
+    See DEFINE-GLOSSARY-TERM for a better alternative to Markdown
     reference links.
 
 Docstrings of definitions which do not have a @HOME-SECTION and are
@@ -1737,7 +1737,7 @@ non-space character of the first line is an `(` or a `;` character.
 - Special HTML characters `<&` are escaped.
 
 - Furthermore, to reduce the chance of inadvertently introducing a
-markdown heading, if a line starts with a string of `#` characters,
+Markdown heading, if a line starts with a string of `#` characters,
 then the first one is automatically escaped. Thus, the following two
 docstrings are equivalent:
 
@@ -1858,7 +1858,7 @@ strings can be a pain. @PYTHONIC-STRING-READER can help with that.
     
     To suppress codification, add a backslash to the beginning of the
     a @CODIFIABLE word or right after the leading `*` if it would
-    otherwise be parsed as markdown emphasis:
+    otherwise be parsed as Markdown emphasis:
     
         "\\SECTION *\\PACKAGE*"
     
@@ -2068,11 +2068,11 @@ Markdown reference links (see @MARKDOWN-IN-DOCSTRINGS).
     UNRESOLVABLE-REFLINK warning.
     
     - If the OUTPUT-REFLINK restart is invoked, then no warning is
-      printed and the markdown link is left unchanged. MUFFLE-WARNING is
+      printed and the Markdown link is left unchanged. MUFFLE-WARNING is
       equivalent to OUTPUT-REFLINK.
     
     - If the OUTPUT-LABEL restart is invoked, then no warning is printed
-      and the markdown link is replaced by its label. For example,
+      and the Markdown link is replaced by its label. For example,
       `[NONEXISTENT][function]` becomes `NONEXISTENT`.
     
     - If the warning is not handled, then it is printed to
@@ -2397,7 +2397,7 @@ The following variables control various aspects of links and URLs.
 
     Recall that @MARKDOWN/REFLINKs (like `[label][id]`) are used for
     @LINKING. It is desirable to have ids that are short to maintain
-    legibility of the generated markdown, but also stable to reduce the
+    legibility of the generated Markdown, but also stable to reduce the
     spurious diffs in the generated documentation, which can be a pain
     in a version control system.
     
@@ -2407,8 +2407,8 @@ The following variables control various aspects of links and URLs.
     of characters, then the length of the hash of the colliding
     reference is increased.
     
-    This variable has no effect on the HTML generated from markdown, but
-    it can make markdown output more readable.
+    This variable has no effect on the HTML generated from Markdown, but
+    it can make Markdown output more readable.
 
 - [variable] *DOCUMENT-BASE-URL* NIL
 
@@ -2495,7 +2495,7 @@ in an explicit link.
     provided, see @PAGES), and the symbol becomes a self-link for your
     permalinking pleasure.
     
-    For example, a reference is rendered in markdown roughly as:
+    For example, a reference is rendered in Markdown roughly as:
     
         - [function] foo x y
     
@@ -3391,7 +3391,7 @@ The main use case for consistency checking is detecting
 out-of-date examples in documentation, although using it for writing
 tests is also a possibility. Here, we focus on the former.
 
-When a markdown code block tagged `cl-transcript` is processed
+When a Markdown code block tagged `cl-transcript` is processed
 during @GENERATING-DOCUMENTATION, the code in it is replaced with
 the output of with `(TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
 :CHECK-CONSISTENCY T)`. Suppose we have the following example of the
@@ -3819,11 +3819,11 @@ export the symbols `A` and `AN`.
 
 For all definitions that it encounters, DOCUMENT calls
 DOCUMENT-OBJECT\* to generate documentation. The following utilities
-are for writing new DOCUMENT-OBJECT\* methods, which emit markdown.
+are for writing new DOCUMENT-OBJECT\* methods, which emit Markdown.
 
 - [variable] *FORMAT*
 
-    Bound by DOCUMENT to its FORMAT argument, this allows markdown
+    Bound by DOCUMENT to its FORMAT argument, this allows Markdown
     output to depend on the output format.
 
 - [macro] WITH-HEADING (STREAM &KEY DREF LINK-TITLE-TO) &BODY BODY
@@ -3878,7 +3878,7 @@ are for writing new DOCUMENT-OBJECT\* methods, which emit markdown.
           is printed without the outermost parens and with the package
           names removed from the argument names.
     
-        - If its is a string, then it must be valid markdown.
+        - If its is a string, then it must be valid Markdown.
     
     - It is not allowed to have WITH-HEADING within the dynamic
       extent of BODY.
@@ -3889,14 +3889,14 @@ are for writing new DOCUMENT-OBJECT\* methods, which emit markdown.
 
 - [function] DOCUMENT-DOCSTRING DOCSTRING STREAM &KEY (INDENTATION "    ") EXCLUDE-FIRST-LINE-P (PARAGRAPHP T)
 
-    Write DOCSTRING to STREAM, sanitizing the markdown from it, performing @CODIFICATION and
+    Write DOCSTRING to STREAM, sanitizing the Markdown from it, performing @CODIFICATION and
     @LINKING, finally prefixing each line with INDENTATION. The prefix
     is not added to the first line if EXCLUDE-FIRST-LINE-P. If
     PARAGRAPHP, then add a newline before and after the output.
 
 - [function] ESCAPE-MARKDOWN STRING &KEY (ESCAPE-INLINE T) (ESCAPE-MATHJAX T) (ESCAPE-HTML T) (ESCAPE-BLOCK T)
 
-    Backslash escape markdown constructs in STRING.
+    Backslash escape Markdown constructs in STRING.
     
     - If ESCAPE-INLINE, then escape the following characters:
     
@@ -3909,7 +3909,7 @@ are for writing new DOCUMENT-OBJECT\* methods, which emit markdown.
             <&
     
     - If ESCAPE-BLOCK, then escape whatever is necessary to avoid
-      starting a new markdown block (e.g. a paragraph, heading, etc).
+      starting a new Markdown block (e.g. a paragraph, heading, etc).
 
 - [function] PRIN1-TO-MARKDOWN OBJECT &KEY (ESCAPE-INLINE T) (ESCAPE-MATHJAX T) (ESCAPE-HTML T) (ESCAPE-BLOCK T)
 
@@ -3955,7 +3955,7 @@ presented.
 
 - [function] SECTION-ENTRIES SECTION
 
-    A list of markdown docstrings and XREFs in the order they
+    A list of Markdown docstrings and XREFs in the order they
     occurred in DEFSECTION.
 
 ### Glossary Terms

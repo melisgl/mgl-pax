@@ -8,7 +8,7 @@
 
 
 (defun section-entries (section)
-  "A list of markdown docstrings and [XREF][class]s in the order they
+  "A list of Markdown docstrings and [XREF][class]s in the order they
   occurred in DEFSECTION."
   (let ((%entries (slot-value section '%entries)))
     (if (eq (first %entries) '%to-xref)

@@ -149,8 +149,8 @@
 
 
 ;;;; The right way to avoid HTML and headings would be to transform
-;;;; the markdown parse tree. Currently, the transformed tree would
-;;;; need to be printed back to markdown only to be parsed back later,
+;;;; the Markdown parse tree. Currently, the transformed tree would
+;;;; need to be printed back to Markdown only to be parsed back later,
 ;;;; which -- apart from being a performance issue -- would bring out
 ;;;; 3BMD's parse/print inconsistencies. So instead, we resort to
 ;;;; fragile heuristics, knowing that they are applied to non-PAX
@@ -165,7 +165,7 @@
 
 (defun escape-heading-in-docstring (line)
   """Furthermore, to reduce the chance of inadvertently introducing a
-  markdown heading, if a line starts with a string of `#` characters,
+  Markdown heading, if a line starts with a string of `#` characters,
   then the first one is automatically escaped. Thus, the following two
   docstrings are equivalent:
 

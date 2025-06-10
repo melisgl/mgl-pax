@@ -1322,7 +1322,7 @@
   out-of-date examples in documentation, although using it for writing
   tests is also a possibility. Here, we focus on the former.
 
-  When a markdown code block tagged `cl-transcript` is processed
+  When a Markdown code block tagged `cl-transcript` is processed
   during @GENERATING-DOCUMENTATION, the code in it is replaced with
   the output of with `(TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
   :CHECK-CONSISTENCY T)`. Suppose we have the following example of the

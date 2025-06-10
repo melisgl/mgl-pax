@@ -252,7 +252,7 @@
   [STRING][type] or a [PATHNAME][type], in which case the whole file
   is being pointed to, or it can explicitly supply START, END
   locatives. INCLUDE is typically used to include non-lisp files in
-  the documentation (say markdown or Elisp as in the next example) or
+  the documentation (say Markdown or Elisp as in the next example) or
   regions of Lisp source files. This can reduce clutter and
   duplication.
 
@@ -268,7 +268,7 @@
   ```
 
   In the above example, when documentation is generated, the entire
-  `src/mgl-pax.el` file is included in the markdown output surrounded
+  `src/mgl-pax.el` file is included in the Markdown output surrounded
   by the strings given as HEADER-NL and FOOTER-NL. The documentation
   of `FOO-EXAMPLE` will be the region of the file from the
   SOURCE-LOCATION of the START reference (inclusive) to the
@@ -295,7 +295,7 @@
 
   - If specified, LINE-PREFIX is a string that's prepended to each
     line included in the documentation. For example, a string of four
-    spaces makes markdown think it's a code block.
+    spaces makes Markdown think it's a code block.
 
   - HEADER and FOOTER, if non-NIL, are printed before the included
     string.

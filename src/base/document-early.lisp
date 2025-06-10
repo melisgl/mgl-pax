@@ -103,7 +103,7 @@
 (defsection @extending-document (:title "Extending DOCUMENT")
   "For all definitions that it encounters, DOCUMENT calls
   DOCUMENT-OBJECT* to generate documentation. The following utilities
-  are for writing new DOCUMENT-OBJECT* methods, which emit markdown."
+  are for writing new DOCUMENT-OBJECT* methods, which emit Markdown."
   (*format* variable)
   (with-heading macro)
   (doctitle* generic-function)
@@ -115,7 +115,7 @@
 
 (defvar *format*)
 (setf (documentation '*format* 'variable)
-      "Bound by DOCUMENT to its FORMAT argument, this allows markdown
+      "Bound by DOCUMENT to its FORMAT argument, this allows Markdown
       output to depend on the output format.")
 (declaim (special *subformat*))
 
@@ -184,7 +184,7 @@
         is printed without the outermost parens and with the package
         names removed from the argument names.
 
-      - If its is a string, then it must be valid markdown.
+      - If its is a string, then it must be valid Markdown.
 
   - It is not allowed to have WITH-HEADING within the [dynamic
     extent][clhs] of BODY."

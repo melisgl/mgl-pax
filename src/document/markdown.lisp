@@ -46,7 +46,7 @@
      (preprocess-parse-tree-for-printing parse-tree format) stream format)))
 
 
-;;;; Text based markdown fragments
+;;;; Text based Markdown fragments
 
 (defun heading (level stream)
   (loop repeat (1+ level) do (write-char #\# stream)))
@@ -78,7 +78,7 @@
 (defun/autoloaded escape-markdown
     (string &key (escape-inline t) (escape-mathjax t) (escape-html t)
             (escape-block t))
-  "Backslash escape markdown constructs in STRING.
+  "Backslash escape Markdown constructs in STRING.
 
   - If ESCAPE-INLINE, then escape the following characters:
 
@@ -90,7 +90,7 @@
           <&
 
   - If ESCAPE-BLOCK, then escape whatever is necessary to avoid
-    starting a new markdown block (e.g. a paragraph, heading, etc)."
+    starting a new Markdown block (e.g. a paragraph, heading, etc)."
   (flet ((blank-line-until-p (pos)
            (loop for i downfrom (1- pos) downto 0
                  for char = (aref string i)
@@ -127,7 +127,7 @@
                  (write-char char stream))))))))
 
 
-;;;; Parse tree based markdown fragments
+;;;; Parse tree based Markdown fragments
 
 (declaim (inline parse-tree-p))
 (defun parse-tree-p (parse-tree tag)
@@ -295,7 +295,7 @@
       (concatenate 'string string "\\")
       string))
 
-;;; Post-process the markdown parse tree to make it prettier on w3m
+;;; Post-process the Markdown parse tree to make it prettier on w3m
 ;;; and maybe make relative links absolute.
 (defun prepare-parse-tree-for-printing-to-w3m (parse-tree)
   (flet ((translate (parent tree)
@@ -317,7 +317,7 @@
 
 ;;; Call FN with STRING and START, END indices of @WORDS.
 ;;;
-;;; FN must return two values: a replacement markdown parse tree
+;;; FN must return two values: a replacement Markdown parse tree
 ;;; fragment (or NIL, if the subseq shall not be replaced), whether
 ;;; the replacement shall be sliced into the result list. MAP-WORDS
 ;;; returns a parse tree fragment that's a list of non-replaced parts
