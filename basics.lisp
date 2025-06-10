@@ -22,7 +22,7 @@
   **Entries**
 
   ENTRIES consists of docstrings and references in any order.
-  Docstrings are arbitrary strings in markdown format.
+  Docstrings are arbitrary strings in Markdown format.
 
   References are [XREF][class]s given in the form `(NAME LOCATIVE)`.
   For example, `(FOO FUNCTION)` refers to the function `FOO`, `(@BAR
@@ -55,7 +55,7 @@
 
   **Misc**
 
-  TITLE is a string containing markdown or NIL. If non-NIL, it
+  TITLE is a string containing Markdown or NIL. If non-NIL, it
   determines the text of the heading in the generated output.
   LINK-TITLE-TO is a reference given as an `(NAME LOCATIVE)` pair or
   NIL, to which the heading will link when generating HTML. If not
@@ -261,7 +261,7 @@
     (name (&key title url (discard-documentation-p *discard-documentation-p*))
      &body docstring)
   "Define a global variable with NAME, and set it to a [GLOSSARY-TERM]
-  [class] object. TITLE, URL and DOCSTRING are markdown strings or
+  [class] object. TITLE, URL and DOCSTRING are Markdown strings or
   NIL. Glossary terms are DOCUMENTed in the lightweight bullet +
   locative + name/title style. See the glossary entry @NAME for an
   example.
@@ -272,7 +272,7 @@
 
   Glossary entries with a non-NIL URL are like external links: they
   are linked to their URL in the generated documentation. These offer
-  a more reliable alternative to using markdown reference links and
+  a more reliable alternative to using Markdown reference links and
   are usually not included in SECTIONs.
 
   When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
