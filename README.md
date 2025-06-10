@@ -1240,7 +1240,7 @@ For more powerful search, see [Apropos][b7fc].
     Write `DOCUMENTABLE` in `FORMAT` to `STREAM` diverting some output to `PAGES`.
     `FORMAT` is one of [`:PLAIN`][c879],
     [`:MARKDOWN`][dd29], [`:HTML`][36e1] and
-    [`:PDF`][19ad] or [`NIL`][@nil-output]. `STREAM` may be a
+    [`:PDF`][19ad] or [`NIL`][f7e6]. `STREAM` may be a
     [`STREAM`][d5a9] object, `T` or `NIL` as with [`CL:FORMAT`][ad78].
     
     To look up the documentation of the [`DOCUMENT`][432c] function itself:

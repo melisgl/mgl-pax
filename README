@@ -1089,7 +1089,7 @@ For more powerful search, see @APROPOS.
     Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
     FORMAT is one of :PLAIN,
     :MARKDOWN, :HTML and
-    :PDF or [NIL][@nil-output]. STREAM may be a
+    :PDF or NIL. STREAM may be a
     STREAM object, T or NIL as with CL:FORMAT.
     
     To look up the documentation of the DOCUMENT function itself:

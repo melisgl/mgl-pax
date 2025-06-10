@@ -521,7 +521,7 @@
   """Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
   FORMAT is one of [:PLAIN][@plain-output],
   [:MARKDOWN][@markdown-output], [:HTML][@html-output] and
-  [:PDF][@pdf-output] or [NIL][@nil-output]. STREAM may be a
+  [:PDF][@pdf-output] or [NIL][@dummy-output]. STREAM may be a
   [STREAM][type] object, T or NIL as with [CL:FORMAT][].
 
   To look up the documentation of the DOCUMENT function itself:
