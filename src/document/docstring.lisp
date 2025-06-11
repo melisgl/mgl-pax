@@ -20,10 +20,11 @@
 
 
 (defun strip-docstring-indent (docstring indentation first-line-special-p)
-  """- Docstrings can be indented in any of the usual styles. PAX
-  normalizes indentation by stripping the longest run of leading
-  spaces common to all non-blank lines except the first. Thus, the
-  following two docstrings are equivalent:
+  """
+  - Docstrings can be indented in any of the usual styles. PAX
+    normalizes indentation by stripping the longest run of leading
+    spaces common to all non-blank lines except the first. Thus, the
+    following two docstrings are equivalent:
 
           (defun foo ()
             "This is

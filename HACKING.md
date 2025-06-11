@@ -59,6 +59,8 @@ After changing the code, regenerate the readmes and PAX World (see
 that you need to `cd` into `world/` and get the diff there too because
 it is a separate git checkout.
 
+The above help catch changes in performance, too.
+
 Testing PDF generation
 ----------------------
 
@@ -75,7 +77,7 @@ Stress testing
 In a similar vein, `mgl-pax-test::stress-test` generates a detailed
 apropos page for all definitions in the system. This is not part of
 the normal test suite. Load a lot of code, run this, and see if it
-crashes.
+crashes. It doubles as a benchmark for documentation generation.
 
 
 Debugging
@@ -103,7 +105,7 @@ handlers on and off with:
 Versioning
 ==========
 
-The file `version.lisp-expr` has the version in `MAJOR.MINOR.PATCH`
+The version string in file `version.lisp-expr` has `MAJOR.MINOR.PATCH`
 format. Bump `PATCH` for bug fixes and `MINOR` for significant
 changes. `MAJOR` is constant 0 :-).
 

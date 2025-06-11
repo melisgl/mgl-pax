@@ -29,7 +29,7 @@
 (defun stress-test ()
   (handler-bind ((error #'continue))
     (time (document (pax::pax-apropos* "" nil "" nil nil)
-                    :stream t :format :markdown))))
+                    :stream (make-broadcast-stream) :format :markdown))))
 
 #+nil
 (test)

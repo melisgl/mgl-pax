@@ -1904,9 +1904,9 @@ The [Markdown][a317] in docstrings is processed with the [3BMD][1904] library.
 #### 8.3.1 Markdown in Docstrings
 
 - Docstrings can be indented in any of the usual styles. PAX
-normalizes indentation by stripping the longest run of leading
-spaces common to all non-blank lines except the first. Thus, the
-following two docstrings are equivalent:
+  normalizes indentation by stripping the longest run of leading
+  spaces common to all non-blank lines except the first. Thus, the
+  following two docstrings are equivalent:
 
         (defun foo ()
           "This is
@@ -2822,8 +2822,8 @@ very similar to `:MARKDOWN`, but most of the markup that would make
 reading in, say, the REPL unpleasant is removed.
 
 - Markup for [Markdown emphasis][c624], [Markdown inline code][68c1],
-[Markdown reference link][8c00]s and [fenced code blocks][1322] is stripped from the
-output.
+  [Markdown reference link][8c00]s and [fenced code blocks][1322] is stripped from
+  the output.
 
 - No link anchors are emitted.
 

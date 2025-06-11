@@ -320,9 +320,10 @@
 
 (defun prepare-parse-tree-for-printing-to-plain (parse-tree)
   (note @plain-strip-markup
-    "- Markup for @MARKDOWN/EMPHASIS, @MARKDOWN/INLINE-CODE,
-       @MARKDOWN/REFLINKs and @FENCED-CODE-BLOCKS is stripped from the
-       output."
+    "
+    - Markup for @MARKDOWN/EMPHASIS, @MARKDOWN/INLINE-CODE,
+      @MARKDOWN/REFLINKs and @FENCED-CODE-BLOCKS is stripped from
+      the output."
     (flet ((translate (parent tree)
              (declare (ignore parent))
              (ecase (first tree)
