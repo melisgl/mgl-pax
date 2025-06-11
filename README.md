@@ -276,6 +276,7 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
 <a id="x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 - [system] **"mgl-pax"**
+
     - _Version:_ 0.4.4
     - _Description:_ Documentation system, browser, generator. See the
         [PAX Manual][2415].
@@ -292,6 +293,7 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
 <a id="x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 - [system] **"mgl-pax/navigate"**
+
     - _Description:_ Support for [Navigating Sources in Emacs][3386] via Slime's
         [`M-.`][cb15] in [MGL-PAX][2415].
     - *Depends on:* alexandria, [dref/full][0c7e], [mgl-pax][6fdb], swank(?)
@@ -300,6 +302,7 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
 <a id="x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 - [system] **"mgl-pax/document"**
+
     - _Description:_ Support for [Generating Documentation][2c93] in
         [MGL-PAX][2415].
     - *Depends on:* 3bmd, 3bmd-ext-code-blocks, 3bmd-ext-math, alexandria, colorize, md5, [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], trivial-utf-8
@@ -308,6 +311,7 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
 <a id="x-28-22mgl-pax-2Fweb-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 - [system] **"mgl-pax/web"**
+
     - _Description:_ Web server for [Browsing Live Documentation][a595]
         in [MGL-PAX][2415].
     - *Depends on:* hunchentoot, [mgl-pax/document][4bb8]
@@ -316,6 +320,7 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
 <a id="x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 - [system] **"mgl-pax/transcribe"**
+
     - _Description:_ Support for [Transcripts][6300] in
         [MGL-PAX][2415].
     - *Depends on:* alexandria, [mgl-pax/navigate][f155]
@@ -324,6 +329,7 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
 <a id="x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
 - [system] **"mgl-pax/full"**
+
     - _Description:_ The [`mgl-pax`][6fdb] system with all features
         preloaded.
     - *Depends on:* [mgl-pax/document][4bb8], [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], [mgl-pax/web][a8c5]
@@ -1002,37 +1008,39 @@ PAX adds a few of its own.
     - *sections*:
     
         - *by section number*: `[3.4][clhs]` or `[3.4][(clhs
-           section)]` ([3.4][e442])
+          section)]` ([3.4][e442])
     
         - *by section title*: With the locative `(CLHS SECTION)`,
-           substring matching against the title starting at word
-           boundaries is performed. With the locative [`CLHS`][ed5f] (where
-           `SECTION` is not specified explicitly), the name must match
-           the title exactly. For example, `[lambda list][(clhs
-           section)]` refers to the same definition as `[lambda
-           lists][clhs]` ([Lambda Lists][e442]).
+          substring matching against the title starting at word
+          boundaries is performed. With the locative [`CLHS`][ed5f] (where
+          `SECTION` is not specified explicitly), the name must match
+          the title exactly. For example, `[lambda list][(clhs
+          section)]` refers to the same definition as `[lambda
+          lists][clhs]` ([Lambda Lists][e442]).
     
         - *by filename*: `[03_d][clhs]` or `[03_d][(clhs
-           section)]` ([03\_d][e442])
+          section)]` ([03\_d][e442])
     
-        - *by alias*: [Format directives][d273] are
-           aliases of the sections describing them. Thus, `[~c][clhs]`
-           is equivalent to `[22.3.1.1][clhs]` and `[Tilde C:
-           Character][clhs]`. The full list is
-           [~C][0cac] [~%][7bd6] [~\&][0684] [~|][3fa1]
-        [~~][65bc] [~R][9927] [~D][3e6e] [~B][6897]
-        [~O][76df] [~X][f9fa] [~F][cae2] [~E][1567]
-        [~G][76ab] [~\$][5b4d] [~A][f275] [~S][b39f]
-        [~W][e6d3] [~\_][31c5] [~\<][ed9f] [~:>][ed9f]
-        [~I][1959] [~/][db38] [~T][2352] [~\< Justification][11f1]
-        [~>][bf38] [~\*][bdd6] [~\[][76ea] [~\]][945b]
-        [~{][550b] [~}][886c] [~?][0db0] [~(][ac30]
-        [~)][051b] [~P][60e4] [~;][d296] [~^][02e3]
-        [~Newline][0165].
+        - *by alias*
     
-            Similarly, [reader macro][3972] characters are aliases of
-            the sections describing them. The full list is
-            [(][040b] [)][e43c] ['][8e92] [;][56ba]
+            - [Format directives][d273] are aliases of
+              the sections describing them. Thus, `[~c][clhs]` is
+              equivalent to `[22.3.1.1][clhs]` and `[Tilde C:
+              Character][clhs]`. The full list is
+              [~C][0cac] [~%][7bd6] [~\&][0684] [~|][3fa1]
+            [~~][65bc] [~R][9927] [~D][3e6e] [~B][6897]
+            [~O][76df] [~X][f9fa] [~F][cae2] [~E][1567]
+            [~G][76ab] [~\$][5b4d] [~A][f275] [~S][b39f]
+            [~W][e6d3] [~\_][31c5] [~\<][ed9f] [~:>][ed9f]
+            [~I][1959] [~/][db38] [~T][2352] [~\< Justification][11f1]
+            [~>][bf38] [~\*][bdd6] [~\[][76ea] [~\]][945b]
+            [~{][550b] [~}][886c] [~?][0db0] [~(][ac30]
+            [~)][051b] [~P][60e4] [~;][d296] [~^][02e3]
+            [~Newline][0165].
+    
+            - Similarly, [reader macro][3972] characters are aliases of
+              the sections describing them. The full list is
+              [(][040b] [)][e43c] ['][8e92] [;][56ba]
             ["][cd66] [\`][309c] [,][826b] [#][698d]
             [\#\\][7b6f] [#'][8a5e] [#(][7a7f] [#\*][adf2]
             [\#:][ac5e] [#.][ffd7] [#B][c93e] [#O][68d2]
@@ -1041,12 +1049,13 @@ PAX adds a few of its own.
             [\#+][d5e1] [#-][81b3] [#|][342d] [#\<][0f42]
             [\#)][9478].
     
-            Finally, [loop keywords][21f4] have aliases
-            to the sections describing them. For example, the strings
-            `loop:for`, `for` and `:for` are aliases of `CLHS` [`6.1.2.1`][142c].
-            The `loop:*` aliases are convenient for completion at the
-            prompt when [Browsing Live Documentation][a595], while the other
-            aliases are for defaulting to buffer contents.
+            - Finally, [loop keywords][21f4] have
+              aliases to the sections describing them. For example, the
+              strings `loop:for`, `for` and `:for` are aliases of `CLHS`
+              [`6.1.2.1`][142c]. The `loop:*` aliases are convenient for
+              completion at the prompt when
+              [Browsing Live Documentation][a595], while the other aliases are
+              for defaulting to buffer contents.
     
     As the above examples show, the `NESTED-LOCATIVE` argument of the [`CLHS`][ed5f]
     locative may be omitted. In that case, definitions, glossary terms,
@@ -2199,7 +2208,7 @@ warning is signalled.
 
 *Examples:*
 
-- `[``EQL`([`0`][db03] [`1`][5fd4])`][type]` *renders as* [`EQL`][5fd4].
+- ``[`EQL`][type]`` *renders as* [`EQL`][5fd4].
 
 - `[EQL][type]` *renders as* [`EQL`][5fd4].
 
@@ -2566,7 +2575,7 @@ table of contents and navigation links.
     
     - D's page is relativizable to C.
     
-    In the above,\_D's page\_ is the last of the pages in the
+    In the above, *D's page* is the last of the pages in the
     [`DOCUMENTABLE`][0702] to which D's documentation is written (see `:OBJECTS` in
     [`PAGES`][9c7d]), and we say that a page is *relativizable* to another if it
     is possible to construct a relative link between their
@@ -2809,13 +2818,9 @@ replacement for [`CL:DOCUMENTATION`][c5ae]. `:PLAIN` (short for plain text) is
 very similar to `:MARKDOWN`, but most of the markup that would make
 reading in, say, the REPL unpleasant is removed.
 
-- No additional markup is introduced (e.g.
-  [`*DOCUMENT-UPPERCASE-IS-CODE*`][f25f] is ignored), but explicit markup
-  is not stripped.
-
-- [Linking][19e3] is turned off. Explicit links to definitions (such
-  as `[PRINT][clhs]`) are replaced by their labels (here,
-  [`PRINT`][d451]).
+- Markup for [Markdown emphasis][c624], [Markdown inline code][68c1],
+[Markdown reference link][8c00]s and [fenced code blocks][1322] is stripped from the
+output.
 
 - No link anchors are emitted.
 

@@ -317,6 +317,24 @@
                           nil t)))))
     (map-markdown-parse-tree '(:code :verbatim 3bmd-code-blocks::code-block)
                              '() nil #'translate parse-tree)))
+
+(defun prepare-parse-tree-for-printing-to-plain (parse-tree)
+  (note @plain-strip-markup
+    "- Markup for @MARKDOWN/EMPHASIS, @MARKDOWN/INLINE-CODE,
+       @MARKDOWN/REFLINKs and @FENCED-CODE-BLOCKS is stripped from the
+       output."
+    (flet ((translate (parent tree)
+             (declare (ignore parent))
+             (ecase (first tree)
+               ((:emph :strong :code)
+                (values (rest tree) t t))
+               ((:reference-link)
+                (values (pt-get tree :label) t t))
+               ((3bmd-code-blocks::code-block)
+                (values `(:verbatim ,(pt-get tree :content)))))))
+      (map-markdown-parse-tree '(:emph :strong :code :reference-link
+                                 3bmd-code-blocks::code-block)
+                               '() nil #'translate parse-tree))))
 
 
 ;;; Call FN with STRING and START, END indices of @WORDS.

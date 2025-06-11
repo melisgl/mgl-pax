@@ -624,10 +624,10 @@
 
 (defun document/open (documentable &rest args)
   (let ((*document-open-linking* t)
-        (*document-fancy-html-navigation* (not (eq *subformat* :w3m)))
         (*document-url-versions* '(2)))
-    (apply #'document documentable (append args (list :format :html)
-                                           *document/open-extra-args*))))
+    (apply #'document documentable
+           (append args (list :format (or *subformat* :html))
+                   *document/open-extra-args*))))
 
 
 (defun redocument-for-emacs (file-url output

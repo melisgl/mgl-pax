@@ -423,35 +423,38 @@
   - *sections*:
 
       - *by section number*: `[3.4][clhs]` or `[3.4][(clhs
-         section)]` ([3.4][clhs])
+        section)]` ([3.4][clhs])
 
       - *by section title*: With the locative `(CLHS SECTION)`,
-         substring matching against the title starting at word
-         boundaries is performed. With the locative CLHS (where
-         `\\SECTION` is not specified explicitly), the name must match
-         the title exactly. For example, `[lambda list][(clhs
-         section)]` refers to the same definition as `[lambda
-         lists][clhs]` ([Lambda Lists][clhs]).
+        substring matching against the title starting at word
+        boundaries is performed. With the locative CLHS (where
+        `\\SECTION` is not specified explicitly), the name must match
+        the title exactly. For example, `[lambda list][(clhs
+        section)]` refers to the same definition as `[lambda
+        lists][clhs]` ([Lambda Lists][clhs]).
 
       - *by filename*: `[03_d][clhs]` or `[03_d][(clhs
-         section)]` ([03_d][clhs])
+        section)]` ([03_d][clhs])
 
-      - *by alias*: [Format directives][(clhs glossary-term)] are
-         aliases of the sections describing them. Thus, `[~c][clhs]`
-         is equivalent to `[22.3.1.1][clhs]` and `[Tilde C:
-         Character][clhs]`. The full list is
-         [*format-directive-alias-links* variable][docstring].
+      - *by alias*
 
-          Similarly, [reader macro][clhs] characters are aliases of
-          the sections describing them. The full list is
-          [*reader-macro-alias-links* variable][docstring].
+          - [Format directives][(clhs glossary-term)] are aliases of
+            the sections describing them. Thus, `[~c][clhs]` is
+            equivalent to `[22.3.1.1][clhs]` and `[Tilde C:
+            Character][clhs]`. The full list is
+            [*format-directive-alias-links* variable][docstring].
 
-          Finally, [loop keywords][(clhs glossary-term)] have aliases
-          to the sections describing them. For example, the strings
-          `loop:for`, `for` and `:for` are aliases of CLHS `6.1.2.1`.
-          The `loop:*` aliases are convenient for completion at the
-          prompt when @BROWSING-LIVE-DOCUMENTATION, while the other
-          aliases are for defaulting to buffer contents.
+          - Similarly, [reader macro][clhs] characters are aliases of
+            the sections describing them. The full list is
+            [*reader-macro-alias-links* variable][docstring].
+
+          - Finally, [loop keywords][(clhs glossary-term)] have
+            aliases to the sections describing them. For example, the
+            strings `loop:for`, `for` and `:for` are aliases of CLHS
+            `6.1.2.1`. The `loop:*` aliases are convenient for
+            completion at the prompt when
+            @BROWSING-LIVE-DOCUMENTATION, while the other aliases are
+            for defaulting to buffer contents.
 
   As the above examples show, the NESTED-LOCATIVE argument of the CLHS
   locative may be omitted. In that case, definitions, glossary terms,

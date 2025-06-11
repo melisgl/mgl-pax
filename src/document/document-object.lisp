@@ -333,6 +333,7 @@
                      ((nil)
                       (format stream "    - _~A:_ ~A~%" name value)))))))
         (unless *omit-asdf-slots*
+          (terpri stream)
           (foo "Version" 'asdf/component:component-version)
           (foo "Description" 'asdf/system:system-description :type :docstring)
           (foo "Long Description" 'asdf/system:system-long-description

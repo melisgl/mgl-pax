@@ -106,7 +106,6 @@ with URLs. See EXTERNAL-DREF-P and co.
 and values of variables. Unfortunately, there seems to be no way to
 use the lisp pretty printer for this because output also includes
 markup. We could get the original indentation from the sources.
-** MAYBE remove some markup in :PLAIN format?
 ** MAYBE get variable initforms from source?
 Or fall back on this for deficient ARGLISTs. Will be really slow.
 ** MAYBE use SECTION-PACKAGE from "first" enclosing section?

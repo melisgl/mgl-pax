@@ -511,7 +511,7 @@
        (call-with-format ,format #',fn))))
 
 ;;; NIL, :PLAIN (only possibly with *FORMAT* :MARKDOWN), or :W3M (only
-;;; possibly with *FORMAT* :HTML)
+;;; possibly with *FORMAT* :HTML or :MARKDOWN)
 (defvar *subformat* nil)
 
 (defun/autoloaded document (documentable &key (stream t) pages (format :plain))
@@ -579,13 +579,7 @@
      ;; make :PLAIN equivalent to :MARKDOWN without all the bells and
      ;; whistles.
      (note @plain-format
-       "- No additional markup is introduced (e.g.
-         *DOCUMENT-UPPERCASE-IS-CODE* is ignored), but explicit markup
-         is not stripped.
-
-       - @LINKING is turned off. Explicit links to definitions (such
-         as `[PRINT][clhs]`) are replaced by their labels (here,
-         `PRINT`).
+       "[@PLAIN-STRIP-MARKUP NOTE][docstring]
 
        - No link anchors are emitted.
 
@@ -594,9 +588,6 @@
        - No [table of contents][*document-max-table-of-contents-level*]."
        (let ((*format* :markdown)
              (*subformat* :plain)
-             (*document-uppercase-is-code* nil)
-             (*document-link-code* nil)
-             (*document-link-sections* nil)
              (*document-mark-up-signatures* nil)
              (*document-max-numbering-level* 0)
              (*document-max-table-of-contents-level* 0)
@@ -605,6 +596,7 @@
            (funcall fn)))))
     (:pdf
      (let ((*format* format)
+           (*subformat* nil)
            (*document-pandoc-pdf-metadata-block*
              (concatenate
               'string
@@ -624,8 +616,20 @@
            (*document-text-navigation* nil)
            (*document-url-versions* '(1)))
        (funcall fn)))
+    (:w3m
+     (let ((*format* :html)
+           (*subformat* :w3m)
+           (*document-fancy-html-navigation* nil))
+       (funcall fn)))
+    ;; Testing only
+    (:md-w3m
+     (let ((*format* :markdown)
+           (*subformat* :w3m)
+           (*document-fancy-html-navigation* nil))
+       (funcall fn)))
     (t
-     (let ((*format* format))
+     (let ((*format* format)
+           (*subformat* nil))
        (funcall fn)))))
 
 
@@ -750,6 +754,7 @@
        :boundaries (page-spec-objects-to-definitions objects)
        ;; See FINALIZE-PAGE-OUTPUT.
        :temp-stream-spec (if (and (eq *format* :markdown)
+                                  (null *subformat*)
                                   (null header-fn)
                                   (null footer-fn))
                              stream-spec
@@ -932,6 +937,7 @@
     ;; Now that Markdown output for this PAGE is complete, we may
     ;; want to convert it to the requested *FORMAT*.
     (if (and (eq *format* :markdown)
+             (null *subformat*)
              (null (page-header-fn page))
              (null (page-footer-fn page)))
         (with-temp-output-to-page (stream page)
@@ -943,13 +949,15 @@
                       (read-stream-content-into-string stream))))
               (markdown-reflinks
                 (with-output-to-string (stream)
-                  (let ((*page* page))
-                    (write-markdown-reference-style-link-definitions stream)))))
+                  (unless (eq *subformat* :plain)
+                    (let ((*page* page))
+                      (write-markdown-reference-style-link-definitions stream))))))
           (delete-stream-spec (page-temp-stream-spec page))
           (with-final-output-to-page (stream page)
             (when (page-header-fn page)
               (funcall (page-header-fn page) stream))
-            (cond ((eq *format* :markdown)
+            (cond ((and (eq *format* :markdown)
+                        (null *subformat*))
                    (write-string markdown-string stream)
                    (write-string markdown-reflinks stream))
                   (t
@@ -1008,10 +1016,21 @@
 
       See DEFINE-GLOSSARY-TERM for a better alternative to Markdown
       reference links."
-        (print-markdown (append (prepare-parse-tree-for-printing
-                                 (parse-markdown markdown-string))
-                                (parse-markdown markdown-reflinks))
-                        stream :format *format*))))
+        (multiple-value-bind (3bmd::*md-default-block-chars-to-escape*
+                              3bmd::*md-default-inline-chars-to-escape*
+                              3bmd::*extension-to-md-block-chars-to-escape*
+                              3bmd::*extension-to-md-inline-chars-to-escape*)
+            (if (eq *subformat* :plain)
+                ;; Turn off all escaping.
+                (values "" "" (make-hash-table) (make-hash-table))
+                (values 3bmd::*md-default-block-chars-to-escape*
+                        3bmd::*md-default-inline-chars-to-escape*
+                        3bmd::*extension-to-md-block-chars-to-escape*
+                        3bmd::*extension-to-md-inline-chars-to-escape*))
+          (print-markdown (append (prepare-parse-tree-for-printing
+                                   (parse-markdown markdown-string))
+                                  (parse-markdown markdown-reflinks))
+                          stream :format *format*)))))
 
 (defun reflink-defs (tree)
   (remove-if-not (lambda (tree)
@@ -1021,6 +1040,8 @@
 (defun prepare-parse-tree-for-printing (parse-tree)
   (cond ((eq *subformat* :w3m)
          (prepare-parse-tree-for-printing-to-w3m parse-tree))
+        ((eq *subformat* :plain)
+         (prepare-parse-tree-for-printing-to-plain parse-tree))
         (t parse-tree)))
 
 
@@ -1839,7 +1860,7 @@
   - D's page is C, or
   - D's page is relativizable to C.
 
-  In the above,_D's page_ is the last of the pages in the
+  In the above, _D's page_ is the last of the pages in the
   @DOCUMENTABLE to which D's documentation is written (see :OBJECTS in
   @PAGES), and we say that a page is _relativizable_ to another if it
   is possible to construct a relative link between their
@@ -2096,7 +2117,7 @@
 
   _Examples:_
 
-  - `[`EQL`][type]` _renders as_ [EQL][type].
+  - ``[`EQL`][type]`` _renders as_ [EQL][type].
 
   - `[EQL][type]` _renders as_ [EQL][type].
 
@@ -2505,24 +2526,27 @@
                                (null page))))
         (cond
           ((< 1 (length links))
-           (if *document-open-linking*
-               ;; [`label`](pax:name)
-               `((:explicit-link
-                  :label ,label
-                  :source ,(finalize-pax-url (name-to-pax-url
-                                              (dref-name ref-1)))))
-               ;; `label`([1][link-id-1] [2][link-id-2])
-               `(,@label
-                 "("
-                 ,@(loop
-                     for i upfrom 0
-                     for link in (dref::sort-references
-                                  links :key #'link-definition)
-                     append `(,@(unless (zerop i)
-                                  '(" "))
-                              ,(%make-reflink `(,(code-fragment i))
-                                              (link-to link))))
-                 ")")))
+           (cond ((eq *subformat* :plain)
+                  label)
+                 (*document-open-linking*
+                  ;; [`label`](pax:name)
+                  `((:explicit-link
+                     :label ,label
+                     :source ,(finalize-pax-url (name-to-pax-url
+                                                 (dref-name ref-1))))))
+                 (t
+                  ;; `label`([1][link-id-1] [2][link-id-2])
+                  `(,@label
+                    "("
+                    ,@(loop
+                        for i upfrom 0
+                        for link in (dref::sort-references
+                                     links :key #'link-definition)
+                        append `(,@(unless (zerop i)
+                                     '(" "))
+                                 ,(%make-reflink `(,(code-fragment i))
+                                                 (link-to link))))
+                    ")"))))
           ((member (xref-locative-type ref-1) '(dislocated argument))
            label)
           (t
@@ -2954,7 +2978,8 @@
   """)
 
 (defun anchor (dref stream)
-  (cond ((not (eq *format* :pdf))
+  (cond ((eq *subformat* :plain))
+        ((not (eq *format* :pdf))
          (let ((v1 (member 1 *document-url-versions*))
                (v2 (member 2 *document-url-versions*)))
            (when (or v1 v2)
@@ -3112,11 +3137,12 @@
     (if (not *document-mark-up-signatures*)
         (format stream
                 ;; Escape if we must. Otherwise, do not clutter the output.
-                (if (eq *format* :pdf)
+                (if (or (eq *format* :pdf)
+                        (eq *subformat* :plain))
                     "- \\[~A] ~A"
                     "- [~A] ~A")
-                md-locative-type label)
-        (case *format*
+                md-locative-type (escape-markdown label))
+        (ecase *format*
           ((:html)
            (let ((source-uri (source-uri dref)))
              ;; When *DOCUMENT-OPEN-LINKING* (this includes (EQ
@@ -3161,8 +3187,12 @@
                  (format stream "`\\paxlocativetype{~A}`{=latex}"
                          (escape-tex locative-type)))
              (format stream "`\\paxname{~A}`{=latex}" (escape-tex label))))
-          (t
-           (format stream "- [~A] ~A" locative-type (bold label nil)))))))
+          ((:markdown)
+           (if *subformat*
+               (format stream "- \\[~A\\] ~A" locative-type
+                       (escape-markdown label))
+               (format stream "- [~A] ~A" locative-type (bold label nil))))
+          ((nil))))))
 
 (defun dref-bullet-label (dref)
   (let ((title (doctitle dref)))

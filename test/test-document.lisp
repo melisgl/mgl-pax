@@ -11,13 +11,12 @@
         :msg msg
         :ctx ("Input: ~S" input))))
 
-(defun document* (object &key (format :markdown) w3m)
-  (let ((warnings ())
-        (pax::*subformat* (and w3m :w3m)))
+(defun document* (object &key (format :markdown))
+  (let ((warnings ()))
     (handler-bind ((warning (lambda (w)
                               (push (princ-to-string w) warnings)
                               (muffle-warning w))))
-      (values (funcall (if w3m
+      (values (funcall (if (member format '(:w3m :md-w3m))
                            #'pax::document/open
                            #'document)
                        object :stream nil :format format)
@@ -29,7 +28,7 @@
           count 1)))
 
 (defun check-head (input expected &key (format :markdown) msg n-lines
-                                    (warnings 0) package w3m)
+                   (warnings 0) package)
   (let* ((*package* (or package (find-package :mgl-pax-test)))
          (*document-hyperspec-root* "CLHS/")
          (*document-url-versions* '(2))
@@ -40,7 +39,7 @@
          (expected (format nil expected))
          (n-lines (or n-lines (count-lines expected))))
     (multiple-value-bind (full-output warnings)
-        (document* input :format format :w3m w3m)
+        (document* input :format format)
       (let ((got (dref::first-lines full-output n-lines)))
         (is (equal got expected)
             :msg msg
@@ -48,11 +47,11 @@
         (is (= (length (% warnings)) n-expected-warnings)
             :ctx ("Input: ~S~%Full output:~%~S" input full-output))))))
 
-(defun check-pred (input pred &key msg w3m (format :markdown))
+(defun check-pred (input pred &key msg (format :markdown))
   (let* ((*package* (find-package :mgl-pax-test))
          (*document-hyperspec-root* "CLHS/")
          (*document-url-versions* '(2))
-         (full-output (document* input :format format :w3m w3m))
+         (full-output (document* input :format format))
          (pred* (if (stringp pred)
                     (lambda (string)
                       (search pred string))
@@ -1453,7 +1452,7 @@ This is [Self-referencing][e042].
                       "docstring")
 
 (deftest test-section ()
-  (check-head "PAX::@INTRODUCTION" "PAX::@INTRODUCTION" :format :plain)
+  (check-head "PAX::@INTRODUCTION" "Introduction" :format :plain)
   (check-head "PAX::@INTRODUCTION" "Introduction")
   (check-head "PAX::@INTRODUCTION" "Introduction" :format :html))
 
@@ -1477,7 +1476,7 @@ This is [Self-referencing][e042].
 
     docstring
 "))
-  (check-head "PAX::@WORD" "PAX::@WORD" :format :plain)
+  (check-head "PAX::@WORD" "word" :format :plain)
   (check-head "PAX::@WORD" "word")
   (check-head "PAX::@WORD" "word" :format :html))
 
@@ -1848,33 +1847,25 @@ This is [Self-referencing][e042].
 (deftest test-document/open ()
   (with-failure-expected ((alexandria:featurep :clisp))
     (with-test ("simplified ambiguous links")
-      (check-head "AMBI" "[`AMBI`](pax:MGL-PAX-TEST:AMBI)" :w3m t))
+      (check-head "AMBI" "[**`AMBI`**](pax:MGL-PAX-TEST:AMBI)" :format :md-w3m))
     (is (find 'package (definitions 'cl) :key #'xref-locative-type))
     (with-test ("escaping of non-ambiguous")
       (check-head "`foo<>&`"
                   "<a href=\"pax:MGL-PAX-TEST:FOO%3C%3E%26%20FUNCTION\" title=\"MGL-PAX-TEST:FOO&lt;&gt;&amp; FUNCTION\"><strong><code>foo&lt;&gt;&amp;</code></strong></a>"
-                  :w3m t :format :html))
+                  :format :w3m))
     (with-test ("escaping of ambiguous")
       (check-head "`ambi<>&`"
                   "<a href=\"pax:MGL-PAX-TEST:AMBI%3C%3E%26\" ><strong><code>ambi&lt;&gt;&amp;</code></strong></a>"
-                  :w3m t :format :html)))
+                  :format :w3m)))
   (let ((*error-output* (make-broadcast-stream))
         (*testing-bad-transcript* t))
-    (check-head (dref 'foo-with-bad-transcript 'function)
-                "<a id=\"MGL-PAX-TEST:FOO-WITH-BAD-TRANSCRIPT%20FUNCTION\"></a>
-
-- [function] **FOO-WITH-BAD-TRANSCRIPT**
-
-    ```common-lisp
-    (1+ 2)
-    => 7
-    ```"
-                :warnings 1 :w3m t))
+    (check-head (dref 'foo-with-bad-transcript 'function) ""
+                :warnings 1 :format :w3m))
   (with-test ("[in package]")
     (let ((*package* (find-package '#:mgl-pax-test)))
       (check-pred @test-examples (lambda (output)
                                    (not (search "in package" output)))
-                  :w3m t)))
+                  :format :md-w3m)))
   (test-document/open/live-vs-static)
   (test-document/open/object)
   (test-document/open/clhs)
@@ -1884,19 +1875,20 @@ This is [Self-referencing][e042].
   (with-test ("prefer live definition to CLHS")
     (with-failure-expected
         ((alexandria:featurep '(:or :abcl :allegro :clisp :ecl)))
-      (check-head "[PRINT][function]" "[`PRINT`][fdd1]" :w3m t))
+      (check-head "[PRINT][function]" "[**`PRINT`**][fdd1]" :format :md-w3m))
     (with-failure-expected ((alexandria:featurep
                              '(:or :abcl :allegro :ccl :clisp :cmucl)))
-      (check-head "[DOCUMENTATION][generic-function]" "[`DOCUMENTATION`][68f1]"
-                  :w3m t)))
+      (check-head "[DOCUMENTATION][generic-function]"
+                  "[**`DOCUMENTATION`**][68f1]"
+                  :format :md-w3m)))
   (when (null (dref 'otherwise 'macro nil))
     (with-test ("if no live definition, then link to CLHS")
-      (check-head "[otherwise][macro]" "[otherwise][c9ce]" :w3m t))))
+      (check-head "[otherwise][macro]" "[otherwise][c9ce]" :format :md-w3m))))
 
 (deftest test-document/open/object ()
   (check-head "[PAX][package] [MGL-PAX][package] [`mgl-pax`][asdf:system]"
-              "[PAX][97b3] [MGL-PAX][97b3] [`mgl-pax`][6fdb]"
-              :w3m t))
+              "[PAX][97b3] [MGL-PAX][97b3] [**`mgl-pax`**][6fdb]"
+              :format :md-w3m))
 
 (deftest test-document/open/clhs ()
   (let ((*document-hyperspec-root* "CLHS/"))
@@ -1920,7 +1912,7 @@ This is [Self-referencing][e042].
 (deftest test-document/open/undefined ()
   (check-head @bad-section
               "<a id=\"MGL-PAX-TEST:@BAD-SECTION%20MGL-PAX:SECTION\"></a>"
-              :warnings 1 :w3m t))
+              :warnings 1 :format :md-w3m))
 
 (defun ambi ())
 (defclass ambi () ())
