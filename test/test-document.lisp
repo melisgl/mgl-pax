@@ -702,7 +702,11 @@ xxx
   (check-head "the EQL function's" "the [`EQL`][db03] function's")
   (with-test ("mixed case name")
     (check-head (list "`|Foo|`" #'|Foo|) "[`|Foo|`][5696]")
-    (check-head (list "`|F o|`" #'|F o|) "[`|F o|`][775e]")))
+    (check-head (list "`|F o|`" #'|F o|) "[`|F o|`][775e]"))
+  (with-test ("newline between name and locative")
+    (check-head "x~%CLHS~%  `6.1.2.1`." "x
+`CLHS`
+  [`6.1.2.1`][142c].")))
 
 (deftest test-reflink ()
   (with-test ("label is a single name")

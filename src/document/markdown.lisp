@@ -264,6 +264,10 @@
           ((and (stringp element) (not (blankp element))
                 (stringp prev) (not (blankp prev)))
            (setf (first result) (concatenate 'string prev element)))
+          ;; Join consecutive blank strings
+          ((and (stringp element) (blankp element)
+                (stringp prev) (blankp prev))
+           (setf (first result) (concatenate 'string prev element)))
           ;; "CL:" (:EMPH "*FEATURES*") - > "CL:*FEATURES*"
           ((and (listp element) (eq (first element) :emph)
                 (stringp prev) (ends-with #\: prev))

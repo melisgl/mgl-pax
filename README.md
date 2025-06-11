@@ -1209,7 +1209,7 @@ case-sensitive. Examples:
 - `pri<TAB>` invokes the usual Slime completion.
 
 - `print <TAB>` (note the space) lists `FUNCTION`([`0`][119e] [`1`][81f7]) and (`PAX:CLHS`
-  `FUNCTION`) as locatives.
+  [`FUNCTION`][aeb6]) as locatives.
 
 - `class dref:<TAB>` lists `DREF:XREF`([`0`][1538] [`1`][cda7]) and `DREF:DREF`([`0`][d930] [`1`][7e92]) (all the classes
   in the package `DREF`).
