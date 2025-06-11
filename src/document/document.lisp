@@ -299,10 +299,13 @@
   (let ((key (link-key dref)))
     (or (get-link key)
         (when (or *document-open-linking* (external-dref-p dref)
-                  ;; KLUDGE: For titled definitions, fake a PAX link,
+                  ;; KLUDGE: For @TITLEd definitions, fake a PAX link,
                   ;; so that they make it to MAKE-REFLINKS, which
                   ;; replaces the fake link with the title.
-                  (doctitle dref))
+                  (doctitle dref)
+                  ;; Similarly for NOTEs, except that MAKE-REFLINKS
+                  ;; will auto-include the note.
+                  (typep dref 'note-dref))
           (set-link key (make-link* dref nil)))
         ;; Maybe fall back on the CLHS definition.
         (when-let (clhs-link (and *document-link-to-hyperspec*
@@ -579,7 +582,7 @@
      ;; make :PLAIN equivalent to :MARKDOWN without all the bells and
      ;; whistles.
      (note @plain-format
-       "[@PLAIN-STRIP-MARKUP NOTE][docstring]
+       "@PLAIN-STRIP-MARKUP
 
        - No link anchors are emitted.
 
@@ -1131,7 +1134,7 @@
 (defsection @markdown-in-docstrings (:title "Markdown in Docstrings")
   """[ strip-docstring-indent function][docstring]
 
-  [ @markdown-reflink-definitions note][docstring]
+  @MARKDOWN-REFLINK-DEFINITIONS
 
   [ sanitize-aggressively-p function][docstring]
 
@@ -1353,19 +1356,20 @@
 ;;; Finally handle *DOCUMENT-BASE-URL* and return the transformed
 ;;; string.
 (defun codify-and-link (string)
-  (let ((parse-tree (include-docstrings (parse-markdown string))))
+  (with-output-to-string (s)
+    (print-markdown (codify-and-link-tree (parse-markdown string)) s)))
+
+(defun codify-and-link-tree (tree)
+  (let ((tree (include-docstrings tree)))
     (cond (*format*
-           (with-output-to-string (out)
-             (print-markdown (add-base-url (link (codify parse-tree))) out)))
+           (add-base-url (link (codify tree))))
           (t
            ;; @DUMMY-OUTPUT
-           (map-markdown-parse-tree
-            '(3bmd-code-blocks::code-block)
-            '(:code :verbatim :image :mailto :reference :raw-html)
-            nil
-            #'translate-code-block
-            parse-tree)
-           ""))))
+           (map-markdown-parse-tree '(3bmd-code-blocks::code-block)
+                                    '(:code :verbatim :image :mailto :reference
+                                      :raw-html)
+                                    nil #'translate-code-block tree)
+           ()))))
 
 
 ;;;; Including docstrings
@@ -2549,6 +2553,8 @@
                     ")"))))
           ((member (xref-locative-type ref-1) '(dislocated argument))
            label)
+          ((typep ref-1 'note-dref)
+           (codify-and-link-tree (translate-dref-docstring ref-1)))
           (t
            (let ((label (or (and (not explicit-label-p)
                                  (document-definition-title ref-1 :format nil))

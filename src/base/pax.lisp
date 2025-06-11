@@ -473,9 +473,12 @@
   idempotent, so it's fine to macroexpand NOTE any number of times._
 
   Notes are similar to Lisp comments, but they can be included in the
-  documentation with the DOCSTRING locative. Notes are intended to
-  help reduce the distance between code and its documentation when
-  there is no convenient definition docstring to use nearby.
+  documentation. In fact, notes are auto-included: a @SPECIFIC-LINK to
+  a note is equivalent to including it with the DOCSTRING locative.
+
+  Notes are intended to help reduce the distance between code and its
+  documentation when there is no convenient definition docstring to
+  use nearby.
 
   ```cl-transcript (:dynenv pax-std-env)
   (note @xxx "We change the package."

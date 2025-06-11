@@ -304,7 +304,7 @@
 
 (define-glossary-term @prints-to-an-equivalent-string
     (:title "prints to an equivalent string")
-  "[@unreadable-prints-to note][docstring]
+  "@UNREADABLE-PRINTS-TO
 
   See the related concept of @STABLE-PRINTED-LOCATIVE, that requires
   the printed representation of entire locatives to be unique and

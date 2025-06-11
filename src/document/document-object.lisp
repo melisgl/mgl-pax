@@ -18,7 +18,7 @@
   very similar to :MARKDOWN, but most of the markup that would make
   reading in, say, the REPL unpleasant is removed.
 
-  [@plain-format note][docstring]")
+  @PLAIN-FORMAT")
 
 (defsection @markdown-output (:title "Markdown Output")
   "[document-object* (method (dref t))][docstring]

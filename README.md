@@ -672,9 +672,12 @@ Now let's examine the most important pieces.
     idempotent, so it's fine to macroexpand `NOTE` any number of times.*
     
     Notes are similar to Lisp comments, but they can be included in the
-    documentation with the [`DOCSTRING`][ce75] locative. Notes are intended to
-    help reduce the distance between code and its documentation when
-    there is no convenient definition docstring to use nearby.
+    documentation. In fact, notes are auto-included: a [Specific Link][0361] to
+    a note is equivalent to including it with the [`DOCSTRING`][ce75] locative.
+    
+    Notes are intended to help reduce the distance between code and its
+    documentation when there is no convenient definition docstring to
+    use nearby.
     
     ```common-lisp
     (note @xxx "We change the package."

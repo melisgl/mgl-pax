@@ -181,7 +181,7 @@
 (note @1+*
   "This is a seriously overdone example."
   (defun 1+* (x)
-    "[@1+* note][docstring]"
+    "@1+*"
     (if (stringp x)
         (note (@1+*/1 :join #\Newline)
           "- If X is a STRING, then it is parsed as a REAL number."
