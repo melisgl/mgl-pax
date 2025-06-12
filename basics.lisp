@@ -207,6 +207,12 @@
   (declare (ignore package symbol locative-args))
   nil)
 
+(defmethod exportable-reference-p (package symbol
+                                   (locative-type (eql 'note))
+                                   locative-args)
+  (declare (ignore package symbol locative-args))
+  nil)
+
 (defgeneric exportable-locative-type-p (locative-type)
   (:documentation "Return true if symbols in references with
   LOCATIVE-TYPE are to be exported by default when they occur in a
@@ -235,9 +241,6 @@
   nil)
 
 (defmethod exportable-locative-type-p ((locative-type (eql 'include)))
-  nil)
-
-(defmethod exportable-locative-type-p ((locative-type (eql 'note)))
   nil)
 
 
