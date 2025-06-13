@@ -197,12 +197,19 @@ ul, ol, dl {
 }
 
 a, a .mjx-math * {
-  /* text-decoration: none; */
-  /* color: #0233c8; */
   color: #333;
   text-decoration: underline;
   text-decoration-thickness: 0.04em;
   text-underline-offset: 0.1em;
+}
+
+h1 a .mjx-math *,
+h2 a .mjx-math *,
+h3 a .mjx-math *,
+h4 a .mjx-math *,
+h5 a .mjx-math *,
+h6 a .mjx-math * {
+  text-decoration: none;
 }
 
 a:hover, a:hover .mjx-math * {
