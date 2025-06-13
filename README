@@ -1670,7 +1670,7 @@ definitions.
 
 ### Markdown Support
 
-The Markdown in docstrings is processed with the 3BMD library.
+Markdown in docstrings and titles is processed with the 3BMD library.
 
 #### Markdown in Docstrings
 
@@ -1706,9 +1706,10 @@ definitions, for example
     reference links.
 
 Docstrings of definitions which do not have a Home Section and are
-not SECTIONs themselves are assumed to have been written with no
-knowledge of PAX and to conform to Markdown only by accident. These
-docstrings are thus sanitized more aggressively.
+not PAX constructs themselves (e.g SECTION, GLOSSARY-TERM, NOTE) are
+assumed to have been written with no knowledge of PAX and to conform
+to Markdown only by accident. These docstrings are thus sanitized
+more aggressively.
 
 - Indentation of what looks like blocks of Lisp code is rounded up to
 a multiple of 4. More precisely, non-zero indented lines between

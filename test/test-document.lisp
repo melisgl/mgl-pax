@@ -68,7 +68,7 @@
   (test-urlencode)
   (test-transform-tree)
   (test-markdown-workarounds)
-  (test-sanitize-docstring-aggressively)
+  (test-sanitize-aggressively)
   (test-parse-dref)
   (test-parse-definitions*)
   (test-funny)
@@ -191,6 +191,10 @@
   (check-head "\\$x$" "$x$" :format :plain))
 
 
+(deftest test-sanitize-aggressively ()
+  (test-sanitize-docstring-aggressively)
+  (test-pax-constructs-are-not-sanitized-agressively))
+
 (deftest test-sanitize-docstring-aggressively ()
   (flet ((test1 (test-name in out)
            (with-test (nil :name test-name)
@@ -219,6 +223,10 @@
     (test1 "heading"  "#x"                  "\\#x")
     (test1 "heading2" "# x"                 "\\# x")
     (test1 "heading3" "x~%~%    # x"        "x~%~%    \\# x")))
+
+(deftest test-pax-constructs-are-not-sanitized-agressively ()
+  (check-pred (dref '@1+* 'note) " ###")
+  (check-pred @some-term " ###"))
 
 
 (deftest test-parse-dref ()

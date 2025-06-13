@@ -187,11 +187,11 @@
   (is (dref::locative-subtype-p 'section 'variable)))
 
 (deftest test-locate/glossary-term ()
-  (check-ref-sets (definitions 'some-term)
-                  `(,(xref 'some-term 'glossary-term)))
+  (check-ref-sets (definitions '@some-term)
+                  `(,(xref '@some-term 'glossary-term)))
   (with-test ("actualized")
-    (check-ref-sets (definitions 'some-term)
-                    `(,(xref 'some-term 'glossary-term))))
+    (check-ref-sets (definitions '@some-term)
+                    `(,(xref '@some-term 'glossary-term))))
   (is (dref::locative-subtype-p 'glossary-term 'variable)))
 
 (deftest test-locate/note ()
@@ -239,7 +239,7 @@
 ;;; `mgl-pax-edit-definitions/test-defs' in test.el in sync.
 (defparameter *navigation-test-cases*
   '((mgl-pax::@pax-manual section (defsection @pax-manual))
-    (some-term glossary-term (define-glossary-term some-term))
+    (@some-term glossary-term (define-glossary-term @some-term))
     (mgl-pax.el (include #.(asdf:system-relative-pathname
                             :mgl-pax "src/mgl-pax.el")
                  :header-nl "```elisp" :footer-nl "```")

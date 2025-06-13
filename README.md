@@ -1897,7 +1897,7 @@ definitions.
 
 ### 8.3 Markdown Support
 
-The [Markdown][a317] in docstrings is processed with the [3BMD][1904] library.
+[Markdown][a317] in docstrings and titles is processed with the [3BMD][1904] library.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-IN-DOCSTRINGS-20MGL-PAX-3ASECTION-29"></a>
 
@@ -1935,9 +1935,10 @@ definitions, for example
     reference links.
 
 Docstrings of definitions which do not have a [Home Section][bdd5] and are
-not [`SECTION`][5fac]s themselves are assumed to have been written with no
-knowledge of PAX and to conform to Markdown only by accident. These
-docstrings are thus sanitized more aggressively.
+not PAX constructs themselves (e.g [`SECTION`][5fac], [`GLOSSARY-TERM`][8251], [`NOTE`][e2ae]) are
+assumed to have been written with no knowledge of PAX and to conform
+to Markdown only by accident. These docstrings are thus sanitized
+more aggressively.
 
 - Indentation of what looks like blocks of Lisp code is rounded up to
 a multiple of 4. More precisely, non-zero indented lines between

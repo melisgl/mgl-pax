@@ -1125,7 +1125,7 @@
 
 
 (defsection @markdown-support (:title "Markdown Support")
-  "The @MARKDOWN in docstrings is processed with the @3BMD library."
+  "@MARKDOWN in docstrings and titles is processed with the @3BMD library."
   (@markdown-in-docstrings section)
   (@markdown-in-titles section)
   (@markdown-syntax-highlighting section)
@@ -1144,13 +1144,15 @@
 
 (defun sanitize-aggressively-p ()
   "Docstrings of definitions which do not have a @HOME-SECTION and are
-  not SECTIONs themselves are assumed to have been written with no
-  knowledge of PAX and to conform to Markdown only by accident. These
-  docstrings are thus sanitized more aggressively."
+  not PAX constructs themselves (e.g SECTION, GLOSSARY-TERM, NOTE) are
+  assumed to have been written with no knowledge of PAX and to conform
+  to Markdown only by accident. These docstrings are thus sanitized
+  more aggressively."
   (and (not (boundp '*section*))
        ;; This is implicit in the above, but docstrings passed
        ;; directly to DOCUMENT are not treated aggressively.
        *documenting-dref*
+       (not (typep *documenting-dref* '(or glossary-term-dref note-dref)))
        (null (home-section *documenting-dref*))))
 
 (defvar *document-docstring-key* nil)

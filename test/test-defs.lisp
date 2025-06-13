@@ -118,8 +118,9 @@
 (define-method-combination my-comb :identity-with-one-argument t
   :documentation "This is MY-COMB.")
 
-(define-glossary-term some-term ()
-  "SOME-TERM is a link.")
+(define-glossary-term @some-term ()
+  "SOME-TERM is a link.
+  ### heading")
 
 (defun ->max ())
 
@@ -179,7 +180,7 @@
 (defun xxxs ())
 
 (note @1+*
-  "This is a seriously overdone example."
+  "### This is a seriously overdone example."
   (defun 1+* (x)
     "@1+*"
     (if (stringp x)

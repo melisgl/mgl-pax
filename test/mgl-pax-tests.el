@@ -316,7 +316,7 @@
       ("readtable xxx-rt" "(named-readtables:defreadtable xxx-rt")
       ("locative my-loc" "(define-locative-type my-loc ")
       ("section mgl-pax::@pax-manual" "(defsection @pax-manual ")
-      ("glossary-term some-term" "(define-glossary-term some-term ")
+      ("glossary-term @some-term" "(define-glossary-term @some-term ")
       ("note @1+*" "(note @1+*")
       ("note @1+*/1" "(note (@1+*/1 :join")
       ("note @in-1" "(note @in-1")
