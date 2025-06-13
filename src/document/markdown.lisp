@@ -245,6 +245,7 @@
                     (defer-tag-handling tags stop-tags
                       handle-strings fn parent tree))
                   parse-tree))
+
 
 (defun clean-up-parsed-parse-tree (parse-tree)
   (transform-tree (lambda (parent tree)
@@ -279,25 +280,35 @@
 
 (defun preprocess-parse-tree-for-printing (parse-tree format)
   (if (eq format :markdown)
-      (map-markdown-parse-tree '() '(:verbatim) t
-                               #'escape-trailing-backslash parse-tree)
+      (map-markdown-parse-tree
+       '() '(:code :verbatim 3bmd-code-blocks::code-block)
+       t #'fudge-markdown-strings parse-tree)
       parse-tree))
 
-;;; KLUDGE: 3BMD parse-print roundtrip loses backslash escapes:
-;;;
-;;; (with-output-to-string (out)
-;;;   (3bmd::print-doc-to-stream-using-format
-;;;    (3bmd-grammar:parse-doc "[\\\\][x]")
-;;;    out :markdown))
-;;; => "[\\][x]"
-;;;
-;;; (3bmd-grammar:parse-doc "[\\][x]")
-;;; => ((:PLAIN "[" "]" (:REFERENCE-LINK :LABEL ("x") :TAIL NIL)))
-(defun escape-trailing-backslash (parent string)
+(defun fudge-markdown-strings (parent string)
   (declare (ignore parent))
-  (if (ends-with #\\ string)
-      (concatenate 'string string "\\")
-      string))
+  ;; KLUDGE: 3BMD parse-print roundtrip loses backslash escapes:
+  ;;
+  ;; (with-output-to-string (out)
+  ;;   (3bmd::print-doc-to-stream-using-format
+  ;;    (3bmd-grammar:parse-doc "[\\\\][x]")
+  ;;    out :markdown))
+  ;; => "[\\][x]"
+  ;;
+  ;; (3bmd-grammar:parse-doc "[\\][x]")
+  ;; => ((:PLAIN "[" "]" (:REFERENCE-LINK :LABEL ("x") :TAIL NIL)))
+  (when (ends-with #\\ string)
+    (setq string (concatenate 'string string "\\")))
+  ;; While we are here, also add a workaround for \$ not escaping math
+  ;; on GitHub. On the other hand, GitHub parses a$x$ as normal text,
+  ;; so let's add a zero-width space before $ characters at the
+  ;; beginning of a word.
+  (when (and (null *subformat*)
+             (starts-with #\$ string))
+    (let ((escape #.(ignore-errors (string (code-char 8203)))))
+      (when escape
+        (setq string (concatenate 'string escape string)))))
+  string)
 
 ;;; Post-process the Markdown parse tree to make it prettier on w3m
 ;;; and maybe make relative links absolute.

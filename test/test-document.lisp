@@ -67,6 +67,7 @@
 (deftest test-document ()
   (test-urlencode)
   (test-transform-tree)
+  (test-markdown-workarounds)
   (test-sanitize-docstring-aggressively)
   (test-parse-dref)
   (test-parse-definitions*)
@@ -182,6 +183,12 @@
                                                 (listp a)
                                                 (not (listp a))))
                                       '(1 (2 (3 4)))))))
+
+(deftest test-markdown-workarounds ()
+  (check-head "[\\\\][x]" "[\\\\][x]")
+  (check-head "[\\\\][x]" "\\\\" :format :plain)
+  (check-head "\\$x$" (format nil "~A~A" (code-char 8203) "\\$x\\$"))
+  (check-head "\\$x$" "$x$" :format :plain))
 
 
 (deftest test-sanitize-docstring-aggressively ()
