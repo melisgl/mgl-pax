@@ -383,7 +383,8 @@ a.symbol:hover { color: #229955; background-color: transparent; text-decoration:
   line-height: 1.0;
 }
 
-#toc a {
+#toc a,
+#toc a * {
   text-decoration: none;
   border-bottom: none;
 }
@@ -421,7 +422,8 @@ a.symbol:hover { color: #229955; background-color: transparent; text-decoration:
   box-shadow: inset -5px 0px 10px -5px #000;
 }
 
-#page-toc a {
+#page-toc a,
+#page-toc a * {
   color: #fff;
 }
 
