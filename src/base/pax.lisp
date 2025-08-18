@@ -620,16 +620,22 @@
       (when parent-name
         (let* ((parent-xref (xref parent-name 'note))
                (parent-note (definition-property parent-xref 'note)))
-          (assert parent-note)
-          (assert (not (eq parent-name name)))
-          ;; If NAMEd, it can acquire more docstrings itself, so push
-          ;; NOTE and let the DOCSTRING method look up its docstrings.
-          ;;
-          ;; Also, PUSHNEW is for the sake of NOTE. DOCSTRING cannot
-          ;; be duplicated because expanding a nameless NOTE without
-          ;; its lexical context makes it parentless and the docstring
-          ;; is discarded.
-          (pushnew (or note docstring) (%note-children parent-note)))))
+          ;; The KLUDGE in EXPAND-NESTED-NOTE does not work on
+          ;; LispWorks.
+          ;; (https://github.com/melisgl/mgl-pax/issues/42).
+          (when (progn #+lispworks parent-note
+                       #-lispworks t)
+            (assert parent-note)
+            (assert (not (eq parent-name name)))
+            ;; If NAMEd, it can acquire more docstrings itself, so
+            ;; push NOTE and let the DOCSTRING method look up its
+            ;; docstrings.
+            ;;
+            ;; Also, PUSHNEW is for the sake of NOTE. DOCSTRING cannot
+            ;; be duplicated because expanding a nameless NOTE without
+            ;; its lexical context makes it parentless and the docstring
+            ;; is discarded.
+            (pushnew (or note docstring) (%note-children parent-note))))))
     (values name body)))
 
 (defun parse-note-body (body)
