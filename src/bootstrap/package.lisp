@@ -16,8 +16,10 @@
       ;; to load into a fresh lisp because DREF-EXT is not yet
       ;; defined.
       (defpackage :dref-ext
+        (:use #:common-lisp)
         (:export #:locative-type #:locative-args))
-      (defpackage :dref))))
+      (defpackage :dref
+        (:use #:common-lisp)))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (locally
