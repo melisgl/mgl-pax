@@ -903,7 +903,7 @@ This is [Self-referencing][e042].
 
 (deftest test-titles ()
   (check-pred #'$x_0$ "**\\$X\\_0\\$**")
-  (check-pred @mathjax-and-code-in-title "**hey `c` $x_0$**")
+  (check-pred @mathjax-and-code-in-glossary-term-title "**hey `c` $x_0$**")
   (signals (warning :pred "Unexpected tag")
     (document @illegal-title-1))
   (check-pred @title-with-emph "**x y**")
@@ -936,7 +936,42 @@ This is [Self-referencing][e042].
   [35ca]: #MGL-PAX-TEST:**SUBTRICKY**%20MGL-PAX:SECTION \"MGL-PAX-TEST:**SUBTRICKY** MGL-PAX:SECTION\"
   [629a]: #MGL-PAX-TEST:@TRICKY-TITLE%20MGL-PAX:SECTION \"`CODE` *italic* *italic2* *bold* &quot;\"
   [ea45]: #MGL-PAX-TEST:@SUBTRICKY%20MGL-PAX:SECTION \"\\\\`\\\\_\\\\*\\\\&\"
+")
+  (with-test ("math in Up: link when browsing live")
+    (is (equal (mgl-pax::format-up-links (list @mathjax-and-code-in-title)
+                                         (locate #'$x_0$))
+               '("Up: [hey `c` ​$x\\_0$](/pax:MGL-PAX-TEST:@MATHJAX-AND-CODE-IN-TITLE%20MGL-PAX:SECTION#MGL-PAX-TEST:%24X_0%24%20FUNCTION)"))))
+  (with-test ("math in non-live links")
+    (let ((*document-text-navigation* t))
+      (check-document @mathjax-and-code-in-title
+                      "<a id=\"MGL-PAX-TEST:@MATHJAX-AND-CODE-IN-TITLE%20MGL-PAX:SECTION\"></a>
+
+Next: [MGL-PAX-TEST:@MATHJAX-SUBSECTION MGL-PAX:SECTION][e38e]
+
+# hey `c` $x_0$
+
+## Table of Contents
+
+- [1 MGL-PAX-TEST:@MATHJAX-SUBSECTION MGL-PAX:SECTION][e38e]
+
+###### \\[in package MGL-PAX-TEST\\]
+<a id=\"MGL-PAX-TEST:%24X_0%24%20FUNCTION\"></a>
+
+- [function] **\\$X\\_0\\$**
+
+<a id=\"MGL-PAX-TEST:@MATHJAX-SUBSECTION%20MGL-PAX:SECTION\"></a>
+
+Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
+
+## 1 MGL-PAX-TEST:@MATHJAX-SUBSECTION MGL-PAX:SECTION
+
+
+  [6e97]: #MGL-PAX-TEST:@MATHJAX-AND-CODE-IN-TITLE%20MGL-PAX:SECTION \"hey `c` $x_0$\"
+  [e38e]: #MGL-PAX-TEST:@MATHJAX-SUBSECTION%20MGL-PAX:SECTION \"MGL-PAX-TEST:@MATHJAX-SUBSECTION MGL-PAX:SECTION\"
 "))
+    (is (equal (mgl-pax::format-up-links (list @mathjax-and-code-in-title)
+                                         (locate #'$x_0$))
+               '("Up: [hey `c` ​$x\\_0$](/pax:MGL-PAX-TEST:@MATHJAX-AND-CODE-IN-TITLE%20MGL-PAX:SECTION#MGL-PAX-TEST:%24X_0%24%20FUNCTION)")))))
 
 
 (deftest test-base-url ()

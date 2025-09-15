@@ -111,11 +111,14 @@
 ;;; PAX-APROPOS* binds this to :DETAILED or :TERSE.
 (defvar *document-list-view* nil)
 
+(defun document-definition-title-or-anchor (dref)
+  (or (document-definition-title dref)
+      (escape-markdown (dref-to-anchor dref))))
+
 ;;; This is the implementation of the WITH-HEADING macro.
 (defun/autoloaded call-with-heading (stream dref link-title-to fn)
   (let ((level *heading-level*)
-        (title (or (document-definition-title dref)
-                   (escape-markdown (dref-to-anchor dref)))))
+        (title (document-definition-title-or-anchor dref)))
     (when (plusp level)
       (incf (nth (1- level) *heading-number*)))
     (when *first-pass*

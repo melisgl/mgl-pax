@@ -440,10 +440,11 @@
        (with-output-to-string (s)
          (format s "Up: ")
          (dolist (section (sort-by-proximity sections dref))
-           (format s "[~A](~A#~A)"
-                   (escape-markdown (section-title-or-name section))
-                   (finalize-pax-url (dref-to-pax-url (locate section)))
-                   (urlencode (dref-to-anchor dref)))))))))
+           (let ((section-dref (locate section)))
+             (format s "[~A](~A#~A)"
+                     (document-definition-title-or-anchor section-dref)
+                     (finalize-pax-url (dref-to-pax-url section-dref))
+                     (urlencode (dref-to-anchor dref))))))))))
 
 (defun format-asdf-detritus (dref)
   (when (typep dref 'dref-ext:asdf-system-dref)

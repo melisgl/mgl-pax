@@ -207,7 +207,14 @@
 
 (defun $x_0$ ())
 
-(define-glossary-term @mathjax-and-code-in-title (:title "hey `c` $x_0$"))
+(define-glossary-term @mathjax-and-code-in-glossary-term-title
+    (:title "hey `c` $x_0$"))
+
+(defsection @mathjax-and-code-in-title (:title "hey `c` $x_0$")
+  ($x_0$ function)
+  (@mathjax-subsection section))
+
+(defsection @mathjax-subsection ())
 
 (define-glossary-term @illegal-title-1 (:title "x
 
