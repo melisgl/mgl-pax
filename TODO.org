@@ -76,7 +76,6 @@ Needs a constant name such as LOCATE* or DREF*.
 MGL-PAX:<LOCATIVE> all over them?
 ** MAYBE document :EXPORT <PGK>?
 Is this the right idea? DRef no longer uses this mechanism.
-** MAYBE DEFSTRUCT* that allows :DOCUMENTATION
 * navigate
 ** BUG (low) locative completion: nicknames don't work
 print f<TAB> -> "print function"

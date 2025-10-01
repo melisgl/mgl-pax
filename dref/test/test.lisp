@@ -448,8 +448,8 @@
     (foo-a (accessor foo) (defclass foo) (a :accessor foo-a))
     (foo-r (reader foo) (defclass foo) (r :reader foo-r))
     (foo-w (writer foo) (defclass foo) (w :writer foo-w))
-    (baz structure (defstruct baz))
-    (baz-aaa structure-accessor (defstruct baz) nil #+cmucl t)
+    (baz structure (defstruct* baz))
+    (baz-aaa structure-accessor (defstruct* baz) nil #+cmucl t)
     ;; DREF::@TYPELIKE-LOCATIVES
     (bar type (deftype bar))
     (foo type (defclass foo))

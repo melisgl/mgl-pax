@@ -63,7 +63,7 @@
   ;; manually.
   (:export #:accessor #:arglist #:class #:compiler-macro
            #:condition #:constant #:declaration #:define-dtype
-           #:define-restart #:definitions #:docstring #:dref
+           #:define-restart #:definitions #:defstruct* #:docstring #:dref
            #:dref-apropos #:dref-locative #:dref-locative-args
            #:dref-locative-type #:dref-name #:dref-origin #:dtype
            #:dtypep #:function #:generic-function #:lambda

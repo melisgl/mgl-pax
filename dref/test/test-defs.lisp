@@ -85,10 +85,8 @@
 ;; KLUDGE: CMUCL clobbers the DEFVAR's source location with that of
 ;; the DEFSTRUCT if they have the same name.
 (defvar bazz)
-(defstruct baz
-  aaa)
-(setf (documentation 'baz-aaa 'function)
-      "BAZ-AAA (structure-accessor baz)")
+(defstruct* baz
+  (aaa nil :documentation "BAZ-AAA (structure-accessor baz)"))
 
 (defgeneric test-gf (x)
   (:documentation "TEST-GF generic-function"))
