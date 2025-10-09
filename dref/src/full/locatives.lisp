@@ -900,48 +900,6 @@
 (defmethod source-location* ((dref structure-accessor-dref))
   (let ((symbol (dref-name dref)))
     (swank-source-location* (symbol-function* symbol) symbol 'function)))
-
-(defmacro defstruct* (name-and-options &rest slot-descriptions)
-  """Like DEFSTRUCT, but support :DOCUMENTATION among slot options.
-  The documentation is attached to the slot's STRUCTURE-ACCESSOR.
-  Example:
-
-      (defstruct* my-struct
-        (my-slot nil :documentation "docstring"))
-
-  In addition normal DEFSTRUCT processing, the above also does the
-  moral equivalent of
-
-      (setf (documentation 'my-struct-my-slot 'function) "docstring")"""
-  (destructuring-bind (name &rest options) (ensure-list name-and-options)
-    (let* ((conc-name (getf options :conc-name (format nil "~A-" name)))
-           (not-found (gensym))
-           (set-doc-forms ())
-           (new-sds
-             (loop
-               for sd in slot-descriptions
-               collect (let ((documentation
-                               (and (listp sd)
-                                    (getf (cddr sd) :documentation not-found))))
-                         (cond
-                           ((or (not (listp sd))
-                                (eq documentation not-found))
-                            sd)
-                           (t
-                            (let ((accessor-name (intern
-                                                  (format nil "~A~A" conc-name
-                                                          (first sd)))))
-                              (push `(setf (documentation ',accessor-name
-                                                          'function)
-                                           ,documentation)
-                                    set-doc-forms))
-                            (let ((sd (copy-seq sd)))
-                              (remf (cddr sd) :documentation)
-                              sd)))))))
-      `(progn
-         (defstruct ,name-and-options
-           ,@new-sds)
-         ,@set-doc-forms))))
 
 
 (defsection @typelike-locatives (:title "Locatives for Types and Declarations")
