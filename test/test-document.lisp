@@ -379,7 +379,9 @@ xxx
     (check-head "|F o|" "|F o|")
     (check-head "|F O|" "|F O|"))
   (with-test ("explicit link label")
-    (check-head "[PACKAGEs](xxx)" "[`PACKAGE`s](xxx)")))
+    (check-head "[PACKAGEs](xxx)" "[`PACKAGE`s](xxx)"))
+  (with-test ("code in math")
+    (check-head "$x < T$" "$x < T$")))
 
 (defun q ())
 (defun qq ())

@@ -1577,7 +1577,8 @@
      (list :emph '3bmd-code-blocks::code-block :reference-link :explicit-link
            :code)
      '(:code :verbatim 3bmd-code-blocks::code-block
-       :image :mailto :reference :raw-html)
+       :image :mailto :reference :raw-html
+       :math-inline-1 :math-inline-2 :math-inline-3)
      t
      #'translate-to-code
      parse-tree)))

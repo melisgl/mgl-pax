@@ -280,6 +280,7 @@ document prepration system)
 Writing is Nature's Way of showing you how sloppy your thinking is.
 Coding is Nature's Way of showing you how sloppy your writing is.
 Testing is Nature's Way of showing you how sloppy your coding is.
+https://news.ycombinator.com/item?id=22035105
 
 If you can't write, you can't think. If you're not writing, you only
 think you're thinking.
