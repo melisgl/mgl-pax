@@ -51,11 +51,11 @@ jobs:
           LISP: ${{ matrix.lisp }}
         run: if [ $LISP = abcl-bin ]; then sudo apt-get -y install maven; fi
 
-      - name: Install latest Try from GitHub
-        run: ros install melisgl/try
-
       - name: Install latest Named-readtables from GitHub
         run: ros install melisgl/named-readtables
+
+      - name: Install latest Try from GitHub
+        run: ros install melisgl/try
 
       - name: Install latest 3bmd from GitHub
         run: ros install 3b/3bmd
