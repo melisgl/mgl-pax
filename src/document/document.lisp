@@ -1341,7 +1341,7 @@
       @PDF-OUTPUT.
 
   MathJax will leave inline code (e.g. those between single backticks)
-  and code blocks (triple backtricks) alone. Outside code, use
+  and code blocks (triple backticks) alone. Outside code, use
   `<span>$</span>` to scare MathJax off.
 
   Escaping all those backslashes in TeX fragments embedded in Lisp

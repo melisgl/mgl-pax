@@ -177,7 +177,7 @@
   repository](https://github.com/melisgl/mgl-pax) and the [HTML
   documentation](http://melisgl.github.io/mgl-pax-world/mgl-pax-manual.html)
   for the latest version. There is also a [PAX channel][pax-yt] on
-  youtube with a couple of videos.
+  YouTube with a couple of videos.
 
     [pax-yt]: https://www.youtube.com/playlist?list=PLxbqYr4DvjX68AEdLky4IiHG69VJu6f5s
 
@@ -465,7 +465,7 @@
 
   NOTE can occur in an any evaluated position without changing its
   BODY's run-time behaviour or introducing any run-time overhead. [Top
-  level forms][clhs] remain top level when whrapped in NOTE. The names
+  level forms][clhs] remain top level when wrapped in NOTE. The names
   of notes live in the same global namespace regardless of nesting or
   whether they are [top level form][clhs]s. _These properties come at
   the price of NOTE being weird: it defines named notes at

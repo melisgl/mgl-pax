@@ -242,7 +242,7 @@ Here is the [official
 repository](https://github.com/melisgl/mgl-pax) and the [HTML
 documentation](http://melisgl.github.io/mgl-pax-world/mgl-pax-manual.html)
 for the latest version. There is also a [PAX channel][pax-yt] on
-youtube with a couple of videos.
+YouTube with a couple of videos.
 
 [pax-yt]: https://www.youtube.com/playlist?list=PLxbqYr4DvjX68AEdLky4IiHG69VJu6f5s
 
@@ -664,7 +664,7 @@ Now let's examine the most important pieces.
     
     `NOTE` can occur in an any evaluated position without changing its
     `BODY`'s run-time behaviour or introducing any run-time overhead. [Top
-    level forms][0f52] remain top level when whrapped in `NOTE`. The names
+    level forms][0f52] remain top level when wrapped in `NOTE`. The names
     of notes live in the same global namespace regardless of nesting or
     whether they are [top level form][0f52]s. *These properties come at
     the price of `NOTE` being weird: it defines named notes at
@@ -2050,7 +2050,7 @@ supported via MathJax.
     [PDF Output][19ad].
 
 MathJax will leave inline code (e.g. those between single backticks)
-and code blocks (triple backtricks) alone. Outside code, use
+and code blocks (triple backticks) alone. Outside code, use
 `<span>$</span>` to scare MathJax off.
 
 Escaping all those backslashes in TeX fragments embedded in Lisp
