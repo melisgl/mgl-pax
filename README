@@ -430,9 +430,9 @@ documentation generator shall also be able figure out what's being
 referred to.
 
 I settled on Markdown as a reasonably non-intrusive format, and a
-few thousand lines later PAX was born. Since then, locatives and
-references were factored out into the DRef
-library to let PAX focus on M-. and documentation.
+few thousand lines later PAX was born. Since then, locatives
+and references were factored out into the DRef library to let PAX focus on M-. and
+documentation.
 
 ## Basics
 
@@ -623,8 +623,12 @@ Now let's examine the most important pieces.
 
 ## PAX Locatives
 
-To the Basic Locative Types defined by DRef,
-PAX adds a few of its own.
+In addition DRef's own,
+PAX defines a few of locative types using the facilities in
+described in Adding New Locatives. Locatives
+allow referenceing definitions, which is used in DEFSECTION,
+Navigating Sources in Emacs and docstrings (see Codification and Linking
+in the context of Generating Documentation).
 
 - [locative] SECTION
 

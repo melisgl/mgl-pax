@@ -2,20 +2,6 @@
 
 (in-readtable pythonic-string-syntax)
 
-(defsection @pax-locatives (:title "PAX Locatives")
-  "To the DREF::@BASIC-LOCATIVE-TYPES defined by DRef,
-  PAX adds a few of its own."
-  (section locative)
-  (glossary-term locative)
-  (note locative)
-  (dislocated locative)
-  (argument locative)
-  (include locative)
-  (docstring locative)
-  (go locative)
-  (clhs locative))
-
-
 ;;;; SECTION locative
 
 (define-locative-type section (variable)

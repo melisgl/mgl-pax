@@ -33,7 +33,7 @@
   for more.
 
   The same name may occur in multiple references, typically with
-  different locatives, but this is not required.
+  different DREF::@LOCATIVEs, but this is not required.
 
   The references are not LOCATEd until documentation is generated, so
   they may refer to things yet to be defined.

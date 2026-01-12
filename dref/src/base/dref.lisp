@@ -479,7 +479,7 @@
 (define-glossary-term @reference (:title "reference")
   "A reference is a @NAME plus a @LOCATIVE, and it identifies a
   possible definition. References are of class XREF. When a reference
-  is a [DREF][class], it may also be called a definition.")
+  is a [DREF][class], it may also be called a @DEFINITION.")
 
 (define-glossary-term @definition (:title "definition")
   "A definition is a @REFERENCE that identifies a concrete definition.

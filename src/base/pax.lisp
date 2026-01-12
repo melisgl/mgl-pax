@@ -437,9 +437,10 @@
   referred to.
 
   I settled on @MARKDOWN as a reasonably non-intrusive format, and a
-  few thousand lines later PAX was born. Since then, locatives and
-  references were factored out into the [DRef][ DREF::@DREF-MANUAL]
-  library to let PAX focus on `\\M-.` and documentation.""")
+  few thousand lines later PAX was born. Since then, DREF::@LOCATIVEs
+  and DREF::@REFERENCEs were factored out into the [DRef][
+  DREF::@DREF-MANUAL] library to let PAX focus on `\\M-.` and
+  documentation.""")
 
 
 (defsection @basics (:title "Basics")

@@ -538,9 +538,9 @@ documentation generator shall also be able figure out what's being
 referred to.
 
 I settled on [Markdown][a317] as a reasonably non-intrusive format, and a
-few thousand lines later PAX was born. Since then, locatives and
-references were factored out into the [DRef][5225]
-library to let PAX focus on `M-.` and documentation.
+few thousand lines later PAX was born. Since then, [locative][7ac8]s
+and [reference][43bd]s were factored out into the [DRef][5225] library to let PAX focus on `M-.` and
+documentation.
 
 <a id="x-28MGL-PAX-3A-40BASICS-20MGL-PAX-3ASECTION-29"></a>
 
@@ -571,7 +571,7 @@ Now let's examine the most important pieces.
     for more.
     
     The same name may occur in multiple references, typically with
-    different locatives, but this is not required.
+    different [locative][7ac8]s, but this is not required.
     
     The references are not [`LOCATE`][8f19]d until documentation is generated, so
     they may refer to things yet to be defined.
@@ -749,8 +749,12 @@ Now let's examine the most important pieces.
 
 ## 6 PAX Locatives
 
-To the [Basic Locative Types][1d1d] defined by DRef,
-PAX adds a few of its own.
+In addition DRef's [own][1d1d],
+PAX defines a few of locative types using the facilities in
+described in [Adding New Locatives][54d8]. [Locative][7ac8]s
+allow [reference][43bd]ing definitions, which is used in [`DEFSECTION`][72b4],
+[Navigating Sources in Emacs][3386] and docstrings (see [Codification][f1ab] and [Linking][19e3]
+in the context of [Generating Documentation][2c93]).
 
 <a id="x-28MGL-PAX-3ASECTION-20MGL-PAX-3ALOCATIVE-29"></a>
 

@@ -467,7 +467,7 @@ The following convenience functions are compositions of
 
     A reference is a [name][5fc4] plus a [locative][7ac8], and it identifies a
     possible definition. References are of class [`XREF`][1538]. When a reference
-    is a [`DREF`][d930], it may also be called a definition.
+    is a [`DREF`][d930], it may also be called a [definition][2143].
 
 <a id="x-28DREF-3A-40DEFINITION-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
 
