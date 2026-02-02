@@ -241,34 +241,10 @@ docstring/info page dichotomy).
 PAX shares the goals of literate programming if not its means:
 documentation lives in code and not vice versa. Nothing is worth
 giving up interactive development for.
-** vs literate programming
-- scoping of code in chunks can be a problem in LP
-- notebooks are linear
+** vs others
 - Rustdoc can check transcripts, so can doctest
 - no NOTE anywhere
-
-Common Lisp is quite relaxed about the order of function definitions,
-but no so much about DEFMACRO, DEFVAR, DEFPARAMETER, DEFCONSTANT,
-DEFTYPE , DEFCLASS, DEFSTRUCT, DEFMETHOD, DEFINE-COMPILER-MACRO, SET-
-MACRO-CHARACTER, SET-DISPATCH-MACRO-CHARACTER, DEFPACKAGE.
-
-However, code order can for the most part follow narrative order. In
-practice, we end up with some DEFVARs far from their parent
-DEFSECTIONs (but DECLAIM SPECIAL helps) or with their parent
-DEFSECTION being far. Either way, with the right tooling, one can
-quickly go from DEFVAR to its parent and see its documentation
-(generated live).
-
-- Often, one can extract the abstract algorithm as a macro out of a
-  function (without incurring any run-time cost, with controlling
-  scope properly) and document it there.
-- Or with NOTE, the documentation can invade the implementation and be
-  extracted from there.
-- Internals manuals change too often, and that's basically the LP
-  style. A lot of that is covered by comment and commit messages. User
-  manuals on the otherhand don't change so much, and they explicitly
-  represent the contract.
-
+** quotes
 "Writing is Nature's way of showing you how sloppy your thinking
 is." - Dick Guindon, cartoonist
 
@@ -287,3 +263,15 @@ think you're thinking.
 
 https://github.com/rebcabin/tangledown
 https://akkartik.name/post/literate-programming
+** vs notebooks
+No, notebooks are not LP. They are execution transcripts.
+
+Notebooks have the strict order problem of LP without the chunking
+tools. Thus, the linear flow they require is driven more by the
+necessities of code than by presentation. Their "IDE" sucks. They have
+a different focus/purpose: the transcript.
+** proximity
+Both humans and AI can check code against its documentation more
+easily if the corresponding pieces are near each other.
+** overlap between info in doc and code: redundancy for striving for correctness
+** extra information in doc relative to code: might be useful when changing the code
