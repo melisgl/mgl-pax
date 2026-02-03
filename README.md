@@ -2638,7 +2638,7 @@ each definition.
 
 #### 8.5.6 Link Format
 
-The following variables control various aspects of links and `URL`s.
+The following variables control various aspects of links and URLs.
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-URL-VERSIONS-2A-20VARIABLE-29"></a>
 

@@ -2934,7 +2934,7 @@
 
 
 (defsection @link-format (:title "Link Format")
-  "The following variables control various aspects of links and \URLs."
+  """The following variables control various aspects of links and \URLs."""
   (*document-url-versions* variable)
   (*document-min-link-hash-length* variable)
   (*document-base-url* variable))
