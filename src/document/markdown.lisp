@@ -279,7 +279,7 @@
            (setf (first result) (concatenate 'string prev element)))
           ;; "CL:" (:EMPH "*FEATURES*") - > "CL:*FEATURES*"
           ((and (listp element) (eq (first element) :emph)
-                (stringp prev) (ends-with #\: prev))
+                (= (length element) 2) (stringp prev) (ends-with #\: prev))
            (setf (first result)
                  (format nil "~A*~A*" prev (second element))))
           (t

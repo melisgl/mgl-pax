@@ -1505,7 +1505,8 @@
 ;;; return value, the new tree.
 (defun translate-uppercase-word (parent tree word)
   (declare (ignore parent))
-  (let ((emph (and (listp tree) (eq :emph (first tree))))
+  (let ((emph (and (listp tree) (eq :emph (first tree))
+                   (= (length tree) 2)))
         (codifiablep (codifiable-word-p word)))
     (nth-value-or 0
       (handle-codification-escapes emph codifiablep word)
