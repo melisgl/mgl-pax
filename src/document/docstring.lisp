@@ -142,8 +142,8 @@
   (and lines
        (let* ((line (first lines))
               (n-spaces (n-leading-spaces line)))
-         (and (<= n-spaces (length line))
-              (member (aref line n-spaces) '(#\( #\;))))))
+         (assert (< n-spaces (length line)))
+         (member (aref line n-spaces) '(#\( #\;)))))
 
 (defun round-up-to-multiple-of (n m)
   (* (ceiling n m) m))
