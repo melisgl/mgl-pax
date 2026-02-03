@@ -368,8 +368,9 @@
                    (when relative-path
                      (format nil uri-format-string git-forge-uri git-version
                              relative-path (1+ line-number))))))
-             (warn "No GIT-VERSION given and can't find .git directory for ~
-                   ASDF system~% ~A. Links to git forge will not be generated."
+             (warn "~@<No GIT-VERSION given and can't find .git directory for ~
+                   ASDF system~% ~A. Links to the git forge will not be ~
+                   generated.~:@>"
                    (asdf:component-name (dref::find-system* asdf-system))))))))
 
 (defun asdf-system-git-root-and-version (system &key default-version)

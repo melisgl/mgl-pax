@@ -19,7 +19,7 @@
      ,@body))
 
 ;;; This is slow but fast enough not to bother with a SECTION-NAME to
-;;; SECTION weak hash table. Some implementations (e.g. SBCL) have
+;;; SECTION weak hash table. Also, some implementations may have
 ;;; scaling issues with weak pointers.
 (defun list-all-sections ()
   (if (boundp '*all-sections*)
@@ -47,9 +47,7 @@
 
 (defun section-definitions-1 (section)
   (loop for entry in (section-entries section)
-        ;; It doesn't make sense to talk about containing an INCLUDE,
-        ;; and it is also a huge performance bottleneck as it accesses
-        ;; files. See DREF* (method (t (eql include) t)).
+        ;; It doesn't make sense to talk about containing an INCLUDE.
         when (and (typep entry 'xref)
                   (not (eq (xref-locative-type entry) 'include)))
           collect (or (locate entry nil)

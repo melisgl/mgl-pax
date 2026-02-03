@@ -11,11 +11,6 @@
         (when (find char chars)
           (write-char #\\ stream))
         (write-char char stream)))))
-
-(defun backslash-unescape (string)
-  (if (find #\\ string)
-      (read-from-string (format nil "\"~A\"" string))
-      string))
 
 
 ;;;; Cached DREF:DEFINITIONS with all LOCATIVE-TYPES.

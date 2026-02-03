@@ -23,8 +23,8 @@
 (defvar *on-read-eval-error* :parse-error)
 
 ;;; A non-interning parser like SWANK::PARSE-SYMBOL, but it supports
-;;; nested lists of symbols, strings and numbers, which is currently
-;;; enough for @NAMEs.
+;;; nested lists of symbols, strings and non-negative real numbers
+;;; (for (GO (1 CLHS)), which is currently enough for PARSE-LOCATIVE.
 ;;;
 ;;; May signal END-OF-FILE, READER-ERROR and PARSE-ERROR if ERRORP.
 ;;;
@@ -264,6 +264,7 @@
 
 ;;;; Trees
 
+;;; Note that NIL is interpreted as (), so FN never sees it.
 (defun find-if-in-tree (fn tree)
   (labels ((recurse (tree)
              (if (listp tree)
@@ -273,6 +274,7 @@
                    (return-from find-if-in-tree tree)))))
     (recurse tree)))
 
+;;; Note NIL is interpreted as (), so it gets removed.
 (defun flatten (tree)
   (let ((r ()))
     (find-if-in-tree (lambda (leaf)

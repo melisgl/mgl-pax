@@ -514,7 +514,8 @@
       default))
 
 (defun asdf-system-dirname (system)
-  (when-let (pathname (slot-value-if-bound system 'asdf/component:absolute-pathname))
+  (when-let (pathname (slot-value-if-bound system
+                                           'asdf/component:absolute-pathname))
     (namestring pathname)))
 
 #+nil
