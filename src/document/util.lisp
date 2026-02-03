@@ -206,8 +206,12 @@
         (when-let (file (file-of-dref package-dref))
           (asdf-system-name-of-filename file))))))
 
+(defun truenameish (filename)
+  (or (ignore-errors (truename filename))
+      (namestring filename)))
+
 (defun asdf-system-name-of-filename (filename)
-  (let ((filename (namestring filename)))
+  (let ((filename (truenameish filename)))
     (if (boundp '*filename-to-asdf-system-name-map*)
         (gethash filename *filename-to-asdf-system-name-map*)
         (filename-to-asdf-system-name filename))))
@@ -218,7 +222,7 @@
        (let ((,system (dref::find-system* ,system-name)))
          (dolist (,component (asdf/component:sub-components ,system))
            (when (typep ,component 'asdf:cl-source-file)
-             (when-let (,filename (namestring
+             (when-let (,filename (truenameish
                                    (slot-value
                                     ,component
                                     'asdf/component:absolute-pathname)))
@@ -231,7 +235,7 @@
     h))
 
 (defun filename-to-asdf-system-name (filename)
-  (let ((filename (namestring filename)))
+  (let ((filename (truenameish filename)))
     (do-asdf-files (system-name filename-1)
       ;; KLUDGE: Compare namestrings so that e.g. NIL vs :NEWEST in
       ;; PATHNAME-VERSION is hopefully not a diference.
