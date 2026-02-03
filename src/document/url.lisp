@@ -239,26 +239,29 @@
 
 
 (defun pathname-to-file-url (pathname)
-  (flet ((sanitize (namestring)
-           ;; On CCL, (NAMESTRING (MAKE-PATHNAME :NAME ":")) => "\\:".
-           #+ccl (remove #\\ namestring)
-           #-ccl namestring))
-    (let* ((pathname (pathname pathname))
-           (pathname-directory (pathname-directory pathname)))
-      (make-url :scheme "file"
-                :encoded-path
-                (sanitize
-                 (namestring
-                  (make-pathname
-                   :directory (and pathname-directory
-                                   (cons (first pathname-directory)
-                                         (mapcar #'urlencode
-                                                 (rest pathname-directory))))
-                   :name (and (pathname-name pathname)
-                              (urlencode (sanitize (pathname-name pathname))))
-                   :type (and (pathname-type pathname)
-                              (urlencode (pathname-type pathname)))
-                   :defaults pathname)))))))
+  ;; Ensure the pathname is absolute. FILE URLs cannot be relative. We
+  ;; use MERGE-PATHNAMES instead of TRUENAME so it works even if the
+  ;; file does not exist yet.
+  (let* ((pathname (merge-pathnames pathname *default-pathname-defaults*))
+         (directory (pathname-directory pathname))
+         (device (pathname-device pathname)))
+    (make-url :scheme "file"
+              :encoded-path
+              (with-output-to-string (out)
+                (when (and device (not (member device '(nil :unspecific))))
+                  (write-string (urlencode (string device)) out)
+                  (write-char #\: out))
+                ;; Skip the first element (:ABSOLUTE)
+                (dolist (dir (rest directory))
+                  (when (stringp dir)
+                    (write-char #\/ out)
+                    (write-string (urlencode dir) out)))
+                (when (pathname-name pathname)
+                  (write-char #\/ out)
+                  (write-string (urlencode (pathname-name pathname)) out))
+                (when (pathname-type pathname)
+                  (write-char #\. out)
+                  (write-string (urlencode (pathname-type pathname)) out))))))
 
 (defun file-url-to-pathname (url)
   (when (starts-with-subseq "file://" url)
