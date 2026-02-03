@@ -50,8 +50,8 @@
     approved by EXPORTABLE-REFERENCE-P.
 
   See DEFINE-PACKAGE if you use the export feature. The idea with
-  confounding documentation and exporting is to force documentation of
-  all exported symbols.
+  conflating documentation and exporting is to force documentation of
+  all exported symbols and to reduce duplication.
 
   **Misc**
 
