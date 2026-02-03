@@ -1473,7 +1473,7 @@
 
   - there is more than one uppercase character and no lowercase
     characters between them (e.g. `\\CLASSes`, `\\nonREADable`,
-    `\\CLASS-NAMEs` but not `\\Classes` or `\\aTe`.")
+    `\\CLASS-NAMEs` but not `\\Classes` or `\\aTe`).")
 
 (defun codifiable-word-p (string)
   (and

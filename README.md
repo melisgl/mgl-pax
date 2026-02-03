@@ -2106,7 +2106,7 @@ strings can be a pain. [Pythonic String Reader][d3fc5] can help with that.
     
     - there is more than one uppercase character and no lowercase
       characters between them (e.g. `CLASSes`, `nonREADable`,
-      `CLASS-NAMEs` but not `Classes` or `aTe`.
+      `CLASS-NAMEs` but not `Classes` or `aTe`).
 
 <a id="x-28MGL-PAX-3A-40INTERESTING-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
 
