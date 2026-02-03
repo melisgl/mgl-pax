@@ -3260,6 +3260,8 @@
         (if (eq (first arglist) :method)
             (values t (rest arglist))
             (values nil arglist))
+      ;; The pretty printing settings do not apply to the arglist as a
+      ;; single object, but to its parts printed individually.
       (let ((*print-pretty* t)
             (*print-right-margin* 80))
         (labels
