@@ -2197,9 +2197,6 @@
   linked to. If NAME has no definitions, then an UNRESOLVABLE-REFLINK
   warning is signalled.
 
-  In this form, if NAME starts with `#\"`, then it's read as a string,
-  else as as symbol.
-
   _Examples:_
 
   - `[see this][print]` _renders as_ [see this][print].

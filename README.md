@@ -2274,9 +2274,6 @@ The [`DEFINITIONS`][e196] of `NAME` are determined, and those definitions are
 linked to. If `NAME` has no definitions, then an [`UNRESOLVABLE-REFLINK`][64be]
 warning is signalled.
 
-In this form, if `NAME` starts with `#\"`, then it's read as a string,
-else as as symbol.
-
 *Examples:*
 
 - `[see this][print]` *renders as* [see this][d451].
