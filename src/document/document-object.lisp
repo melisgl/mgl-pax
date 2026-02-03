@@ -3,7 +3,7 @@
 (in-readtable pythonic-string-syntax)
 
 (declaim (ftype function document-object))
-(declaim (ftype function mark-up-signatures-p))
+(declaim (ftype function mark-up-signatures-with-links-p))
 
 (defsection @output-formats (:title "Output Formats")
   (*document-mark-up-signatures* variable)
@@ -190,7 +190,7 @@
   (when (and slot-def
              (or (swank-mop:slot-definition-initargs slot-def)
                  (swank-mop:slot-definition-initfunction slot-def)))
-    (if (mark-up-signatures-p)
+    (if (mark-up-signatures-with-links-p)
         (let ((initarg-strings
                 (when (swank-mop:slot-definition-initargs slot-def)
                   (mapcar #'prin1-to-markdown

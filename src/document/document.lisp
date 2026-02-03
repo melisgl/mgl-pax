@@ -779,7 +779,7 @@
                           ;; MAKE-GIT-SOURCE-URI-FN is slow as it
                           ;; invokes git. Don't call it if the
                           ;; PAGE-SOURCE-URI-FN won't be used.
-                          (when (or (mark-up-signatures-p)
+                          (when (or (mark-up-signatures-with-links-p)
                                     (fancy-navigation-p))
                             (funcall (second source-uri-fn)))
                           source-uri-fn)))))
@@ -3131,7 +3131,7 @@
   Also, in HTML `**foo**` will be a link to that very entry and
   `[function]` may turn into a link to sources.")
 
-(defun mark-up-signatures-p ()
+(defun mark-up-signatures-with-links-p ()
   (and *document-mark-up-signatures*
        ;; KLUDGE: GitHub has trouble displaying things like
        ;; '`*package*`, so disable this Markdown.
@@ -3267,7 +3267,7 @@
             (*print-right-margin* 80))
         (labels
             ((resolve* (object)
-               (if (mark-up-signatures-p)
+               (if (mark-up-signatures-with-links-p)
                    (codify-and-link (prin1-to-markdown object))
                    (prin1-to-markdown object)))
              (print-arg (arg level)
