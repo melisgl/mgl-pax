@@ -1859,7 +1859,7 @@ strings can be a pain. Pythonic String Reader can help with that.
       lowercase characters at all, or
 
     - there is more than one uppercase character and no lowercase
-      characters between them (e.g. CLASSes, nonREADable,
+      characters between them (e.g. CLASSes, unREADable,
       CLASS-NAMEs but not Classes or aTe).
 
 - [glossary-term] interesting
@@ -3454,7 +3454,7 @@ Navigating Sources in Emacs for names with Lisp DEFINITIONS, and Linking for nam
 definition.
 
 This is not as straightforward as it sounds because it needs to
-handle cases like nonREADable, PRINTed, and all the various forms of
+handle cases like unREADable, PRINTed, and all the various forms of
 Linking in docstrings as well as in comments, and the (NAME
 LOCATIVE) syntax in DEFSECTION.
 
@@ -3576,15 +3576,15 @@ The rules are:
 
 <br/>
 For example, when M-. is pressed while point is over
-nonREADable., the last word of the sentence It may be
-nonREADable., the following raw names are considered until one is
+unREADable., the last word of the sentence It may be
+unREADable., the following raw names are considered until one is
 found with a definition:
 
-1. The entire word, "nonREADable.".
+1. The entire word, "unREADable.".
 
 2. Trimming left does not produce a new raw name.
 
-3. Trimming right removes the dot and gives "nonREADable".
+3. Trimming right removes the dot and gives "unREADable".
 
 4. Trimming both is the same as trimming right.
 

@@ -15,7 +15,7 @@
   definition][locative-types function].
 
   This is not as straightforward as it sounds because it needs to
-  handle cases like nonREADable, PRINTed, and all the various forms of
+  handle cases like unREADable, PRINTed, and all the various forms of
   @LINKING in docstrings as well as in comments, and the `(NAME
   LOCATIVE)` syntax in DEFSECTION."
   (@word glossary-term)
@@ -46,15 +46,15 @@
   (@names-in-raw-names section)
   """<br/>
   For example, when `\\M-.` is pressed while point is over
-  `nonREADable.`, the last word of the sentence `It may be
-  nonREADable.`, the following @RAW-NAMEs are considered until one is
+  `unREADable.`, the last word of the sentence `It may be
+  unREADable.`, the following @RAW-NAMEs are considered until one is
   found with a definition:
 
-  1. The entire word, `"nonREADable."`.
+  1. The entire word, `"unREADable."`.
 
   2. Trimming left does not produce a new raw name.
 
-  3. Trimming right removes the dot and gives `"nonREADable"`.
+  3. Trimming right removes the dot and gives `"unREADable"`.
 
   4. Trimming both is the same as trimming right.
 

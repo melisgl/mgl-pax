@@ -2105,7 +2105,7 @@ strings can be a pain. [Pythonic String Reader][d3fc5] can help with that.
       lowercase characters at all, or
     
     - there is more than one uppercase character and no lowercase
-      characters between them (e.g. `CLASSes`, `nonREADable`,
+      characters between them (e.g. `CLASSes`, `unREADable`,
       `CLASS-NAMEs` but not `Classes` or `aTe`).
 
 <a id="x-28MGL-PAX-3A-40INTERESTING-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
@@ -3941,7 +3941,7 @@ needs to find the [name][88cf], and how that's done varies slightly.
 definition][99b0].
 
 This is not as straightforward as it sounds because it needs to
-handle cases like non[`READ`][fe58]able, [`PRINT`][d451]ed, and all the various forms of
+handle cases like un[`READ`][fe58]able, [`PRINT`][d451]ed, and all the various forms of
 [Linking][19e3] in docstrings as well as in comments, and the `(NAME
 LOCATIVE)` syntax in [`DEFSECTION`][72b4].
 
@@ -4076,15 +4076,15 @@ The rules are:
 
 <br/>
 For example, when `M-.` is pressed while point is over
-`nonREADable.`, the last word of the sentence `It may be
-nonREADable.`, the following [raw name][f5af]s are considered until one is
+`unREADable.`, the last word of the sentence `It may be
+unREADable.`, the following [raw name][f5af]s are considered until one is
 found with a definition:
 
-1. The entire word, `"nonREADable."`.
+1. The entire word, `"unREADable."`.
 
 2. Trimming left does not produce a new raw name.
 
-3. Trimming right removes the dot and gives `"nonREADable"`.
+3. Trimming right removes the dot and gives `"unREADable"`.
 
 4. Trimming both is the same as trimming right.
 
