@@ -3091,8 +3091,8 @@
 (defun hash-link (string detect-collision-fn
                   &key (min-n-chars *document-min-link-hash-length*))
   (let ((hex (byte-array-to-hex-string (md5:md5sum-string string))))
-    (loop for i upfrom min-n-chars below 32
-          do (let ((hash (subseq hex 0 (min 32 i))))
+    (loop for len upfrom min-n-chars upto 32
+          do (let ((hash (subseq hex 0 (min 32 len))))
                (unless (funcall detect-collision-fn hash)
                  (return-from hash-link hash))))
     (assert nil () "MD5 collision detected.")))
