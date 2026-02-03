@@ -1201,7 +1201,7 @@
 
 (define-glossary-term @markdown/image
     (:title "Markdown image"
-     :url "https://daringfireball.net/projects/markdown/syntax#em"))
+     :url "https://daringfireball.net/projects/markdown/syntax#img"))
 
 (define-glossary-term @title (:title "title")
   "A title is a STRING associated with a DREF::@DEFINITION (e.g. with

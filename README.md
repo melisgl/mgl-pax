@@ -4782,7 +4782,7 @@ they are presented.
   [d451]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRINT (MGL-PAX:CLHS FUNCTION)"
   [d4a9]: #x-28MGL-PAX-3A-40EMACS-FUNCTIONALITY-20MGL-PAX-3ASECTION-29 "Functionality Provided"
   [d4e7]: #x-28MGL-PAX-3A-2ADOCUMENT-MAX-TABLE-OF-CONTENTS-LEVEL-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-MAX-TABLE-OF-CONTENTS-LEVEL* VARIABLE"
-  [d534]: https://daringfireball.net/projects/markdown/syntax#em "Markdown image"
+  [d534]: https://daringfireball.net/projects/markdown/syntax#img "Markdown image"
   [d5a2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_car_c.htm "CAR (MGL-PAX:CLHS FUNCTION)"
   [d5a9]: http://www.lispworks.com/documentation/HyperSpec/Body/t_stream.htm "STREAM (MGL-PAX:CLHS CLASS)"
   [d5e1]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhq.htm "\"2.4.8.17\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
