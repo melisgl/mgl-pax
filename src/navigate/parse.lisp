@@ -76,8 +76,8 @@
 
 (define-glossary-term @raw-name (:title "raw name")
   "A _raw name_ is a string from which a @NAME may be read. Raw names
-  correspond to an intermediate parsing step between @WORDs an @NAMEs.
-  See @NAMES-IN-RAW-NAMES.")
+  correspond to an intermediate parsing step between @WORDs and
+  @NAMEs. See @NAMES-IN-RAW-NAMES.")
 
 (define-glossary-term @name (:title "name")
   """A _name_ is a [DRef name][dref::@name]. That is, a symbol, a

@@ -1206,7 +1206,7 @@
 (define-glossary-term @title (:title "title")
   "A title is a STRING associated with a DREF::@DEFINITION (e.g. with
   the TITLE argument of DEFSECTION or DEFINE-GLOSSARY-TERM). Titles
-  are accessible DOCTITLE and processed according to
+  are accessible via DOCTITLE and processed according to
   @MARKDOWN-IN-TITLES.")
 
 (defun/autoloaded doctitle (object)
@@ -3385,7 +3385,7 @@
       DOCUMENT                => [`document`][1234]    (CDA)
       \DOCUMENT               => DOCUMENT              (cda)
       `\DOCUMENT`             => `document`            (CDa)
-      `\\DOCUMENT`            => `DOCUMENT`            (CdA)
+      `\\DOCUMENT`            => `DOCUMENT`            (Cda)
       [DOCUMENT][]            => [`document`][1234]    (CDA)
       [\DOCUMENT][]           => [DOCUMENT][1234]      (cdA)
       [`\DOCUMENT`][]         => [`document`][1234]    (CDA) *

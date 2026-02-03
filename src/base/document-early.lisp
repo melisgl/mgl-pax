@@ -184,7 +184,7 @@
         is printed without the outermost parens and with the package
         names removed from the argument names.
 
-      - If its is a string, then it must be valid Markdown.
+      - If it is a string, then it must be valid Markdown.
 
   - It is not allowed to have WITH-HEADING within the [dynamic
     extent][clhs] of BODY."

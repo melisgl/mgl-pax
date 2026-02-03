@@ -49,14 +49,14 @@
   ;;; This version of FOO has a harder to read docstring because
   ;;; it needs to disambiguate the MY-STRING reference.
   (defun foo (x)
-    "FOO takes and argument X, a [MY-STRING][class] object.")
+    "FOO takes an argument X, a [MY-STRING][class] object.")
 
   ;;; Define OBJECT as an alias for the CLASS locative.
   (define-locative-alias object class)
 
   ;;; Note how no explicit link is needed anymore.
   (defun foo (x)
-    "FOO takes an argument X, a MY-CLASS object.")
+    "FOO takes an argument X, a MY-STRING object.")
   ```
 
   Similarly, defining the indefinite articles as aliases of the CLASS

@@ -35,7 +35,6 @@
   :homepage ""
   :bug-tracker ""
   :source-control ""
-  :licence ""
   :description "Support for MGL-PAX::@NAVIGATING-IN-EMACS via Slime's
   `MGL-PAX::@M-.` in [MGL-PAX][mgl-pax::@pax-manual]."
   :depends-on ("alexandria" "mgl-pax" "dref/full"

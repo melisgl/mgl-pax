@@ -588,8 +588,8 @@ Now let's examine the most important pieces.
       approved by [`EXPORTABLE-REFERENCE-P`][e51f].
     
     See [`DEFINE-PACKAGE`][63f3] if you use the export feature. The idea with
-    confounding documentation and exporting is to force documentation of
-    all exported symbols.
+    conflating documentation and exporting is to force documentation of
+    all exported symbols and to reduce duplication.
     
     **Misc**
     
@@ -750,9 +750,9 @@ Now let's examine the most important pieces.
 ## 6 PAX Locatives
 
 In addition DRef's [own][1d1d],
-PAX defines a few of locative types using the facilities in
-described in [Adding New Locatives][54d8]. [Locative][7ac8]s
-allow [reference][43bd]ing definitions, which is used in [`DEFSECTION`][72b4],
+PAX defines a few locative types using the facilities in described
+in [Adding New Locatives][54d8]. [Locative][7ac8]s allow
+[reference][43bd]ing definitions, which is used in [`DEFSECTION`][72b4],
 [Navigating Sources in Emacs][3386] and docstrings (see [Codification][f1ab] and [Linking][19e3]
 in the context of [Generating Documentation][2c93]).
 
@@ -1496,9 +1496,9 @@ If there are multiple containing sections, the following apply.
   the home section.
 
 For example, `(MGL-PAX:DOCUMENT FUNCTION)` is an entry in the
-`MGL-PAX::@BASICS` section. Unless another section that contains
-it is defined in the MGL-PAX package, the home section is guaranteed
-to be `MGL-PAX::@BASICS` because the `SYMBOL-PACKAGE`s of
+`MGL-PAX::@BASICS` section. Unless another section that contains it
+is defined in the MGL-PAX package, the home section is guaranteed to
+be `MGL-PAX::@BASICS` because the `SYMBOL-PACKAGE`s of
 [`MGL-PAX:DOCUMENT`][432c] and `MGL-PAX::@BASICS` are the same (hence their
 common prefix is maximally long).
 
@@ -1973,7 +1973,7 @@ docstrings are equivalent:
 
     A title is a `STRING`([`0`][b93c] [`1`][dae6]) associated with a [definition][2143] (e.g. with
     the `TITLE` argument of [`DEFSECTION`][72b4] or [`DEFINE-GLOSSARY-TERM`][8ece]). Titles
-    are accessible [`DOCTITLE`][e619] and processed according to
+    are accessible via [`DOCTITLE`][e619] and processed according to
     [Markdown in Titles][165c].
 
 Titles undergo [Codification][f1ab] and may be a single paragraph
@@ -2781,7 +2781,7 @@ and [`*DOCUMENT-LINK-CODE*`][d9ee].
     DOCUMENT                => [`document`][1234]    (CDA)
     \DOCUMENT               => DOCUMENT              (cda)
     `\DOCUMENT`             => `document`            (CDa)
-    `\\DOCUMENT`            => `DOCUMENT`            (CdA)
+    `\\DOCUMENT`            => `DOCUMENT`            (Cda)
     [DOCUMENT][]            => [`document`][1234]    (CDA)
     [\DOCUMENT][]           => [DOCUMENT][1234]      (cdA)
     [`\DOCUMENT`][]         => [`document`][1234]    (CDA) *
@@ -3964,8 +3964,8 @@ LOCATIVE)` syntax in [`DEFSECTION`][72b4].
 - [glossary-term] **raw name**
 
     A *raw name* is a string from which a [name][88cf] may be read. Raw names
-    correspond to an intermediate parsing step between [word][d7b0]s an [name][88cf]s.
-    See [Names in Raw Names][016d].
+    correspond to an intermediate parsing step between [word][d7b0]s and
+    [name][88cf]s. See [Names in Raw Names][016d].
 
 <a id="x-28MGL-PAX-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
 
@@ -4221,14 +4221,14 @@ more naturally by defining an alias.
 ;;; This version of FOO has a harder to read docstring because
 ;;; it needs to disambiguate the MY-STRING reference.
 (defun foo (x)
-  "FOO takes and argument X, a [MY-STRING][class] object.")
+  "FOO takes an argument X, a [MY-STRING][class] object.")
 
 ;;; Define OBJECT as an alias for the CLASS locative.
 (define-locative-alias object class)
 
 ;;; Note how no explicit link is needed anymore.
 (defun foo (x)
-  "FOO takes an argument X, a MY-CLASS object.")
+  "FOO takes an argument X, a MY-STRING object.")
 ```
 
 Similarly, defining the indefinite articles as aliases of the [`CLASS`][2060]
@@ -4315,7 +4315,7 @@ are for writing new `DOCUMENT-OBJECT*` methods, which emit Markdown.
           is printed without the outermost parens and with the package
           names removed from the argument names.
     
-        - If its is a string, then it must be valid Markdown.
+        - If it is a string, then it must be valid Markdown.
     
     - It is not allowed to have [`WITH-HEADING`][80e8] within the [dynamic
       extent][36e9] of `BODY`.

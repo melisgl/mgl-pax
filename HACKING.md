@@ -9,7 +9,7 @@ Testing interactively within Lisp
         (asdf:test-system "mgl-pax")
         (asdf:test-system "dref")
 
-    Or just load the `"mgl-pax/test"` system and do, for example:
+    Or just load the `"mgl-pax-test"` system and do, for example:
 
         (mgl-pax-test:test :debug 'try:unexpected).
         (dref-test:test :print '(or try:failure try:unexpected))
@@ -85,7 +85,7 @@ Debugging
 
 Most PAX functions invoked from Emacs are wrapped in
 `swank/backend:converting-errors-to-error-location`, which handles
-`error`s. Do following turn debugging on and off:
+`error`s. The following turns debugging on and off:
 
     (setq swank/backend:*debug-swank-backend* t)
     (setq swank/backend:*debug-swank-backend* nil)

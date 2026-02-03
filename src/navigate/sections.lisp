@@ -94,10 +94,10 @@
     the home section.
 
   For example, `(MGL-PAX:DOCUMENT FUNCTION)` is an entry in the
-  `\\MGL-PAX::@BASICS` section. Unless another section that contains
-  it is defined in the MGL-PAX package, the home section is guaranteed
-  to be `\\MGL-PAX::@BASICS` because the SYMBOL-PACKAGEs of
-  MGL-PAX:DOCUMENT and `\\MGL-PAX::@BASICS` are the same (hence their
+  `\MGL-PAX::@BASICS` section. Unless another section that contains it
+  is defined in the MGL-PAX package, the home section is guaranteed to
+  be `\MGL-PAX::@BASICS` because the SYMBOL-PACKAGEs of
+  MGL-PAX:DOCUMENT and `\MGL-PAX::@BASICS` are the same (hence their
   common prefix is maximally long).
 
   This scheme would also work, for example, if the [home package][clhs]
