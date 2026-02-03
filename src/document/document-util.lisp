@@ -176,7 +176,7 @@
 
 (defun remove-special-chars (string)
   (remove-if (lambda (char)
-               (find char "!@#$%^&*/"))
+               (find char "!@#$%^&*/\\:?|<>\""))
              string))
 
 (defun copy-css (style target-dir)
