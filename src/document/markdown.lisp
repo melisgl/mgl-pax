@@ -125,6 +125,14 @@
                                 (blank-line-until-p i)))
                    (write-char #\\ stream))
                  (write-char char stream))))))))
+
+;;; Escape #\) characters in URLs in explicit links [LABEL](URL).
+(defun escape-markdown-link (string)
+  (with-output-to-string (out)
+    (loop for char across string
+          do (if (char= char #\))
+                 (write-string "%29" out)
+                 (write-char char out)))))
 
 
 ;;;; Parse tree based Markdown fragments

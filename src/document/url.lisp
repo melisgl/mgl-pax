@@ -199,6 +199,8 @@
        (let ((path-end (position-if (lambda (char)
                                       (member char '(#\# #\?)))
                                     string :start pos)))
+         ;; FIXME: URLDECODEing here is broken, as http://host/a%2Fb
+         ;; and "http://x/y/z" are parsed the same.
          (prog1 (urldecode (subseq string pos path-end))
            (setq pos path-end))))
      ;; query

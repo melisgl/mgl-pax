@@ -1443,7 +1443,21 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
                 "[`MGL-PAX-TEST`][cad4] asdf:system")
     (check-head (list "[MGL-PAX-TEST][asdf:system]"
                       (dref "mgl-pax-test" 'asdf:system))
-                "[MGL-PAX-TEST][cad4]")))
+                "[MGL-PAX-TEST][cad4]"))
+  (with-test ("escape url")
+    (let ((system (asdf:find-system "mgl-pax-test")))
+      (dolist (slot-name '(asdf/system:homepage asdf/system:bug-tracker
+                           asdf/system:source-control asdf/system:mailto))
+        (let ((old-value (slot-value system slot-name)))
+          (unwind-protect
+               (cond ((eq slot-name 'asdf/system:mailto)
+                      (setf (slot-value system slot-name) "x@y (a)")
+                      (check-pred system "[x@y (a)](mailto:x@y (a%29)"))
+                     (t
+                      (setf (slot-value system slot-name) "http://x/y?z=(a)")
+                      (check-pred system
+                                  "[http://x/y?z=(a)](http://x/y?z=(a%29)")))
+            (setf (slot-value system slot-name) old-value)))))))
 
 
 (defpackage interned-pkg-name)
