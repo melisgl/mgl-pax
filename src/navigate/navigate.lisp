@@ -477,15 +477,15 @@
                          ((variable) '("defvar" "defparameter"))
                          ((constant) '("defconstant" "define-constant"))
                          ((macro) '("defmacro"))
-                         ((symbol-macro '("define-symbol-macro")))
-                         ((compiler-macro '("define-compiler-macro")))
+                         ((symbol-macro) '("define-symbol-macro"))
+                         ((compiler-macro) '("define-compiler-macro"))
                          ((function) '("defun"))
                          ((generic-function) '("defgeneric"))
                          ;; Note that DEFMETHOD is intentially omitted
                          ;; because without matching the qualifiers
                          ;; and specializers, it's easy to guess
                          ;; wrong.
-                         ((method-combination '("define-method-combination")))
+                         ((method-combination) '("define-method-combination"))
                          ;; Can't find :READER, :WRITER, :ACCESSOR in DEFCLASS.
                          ;; Can't find STRUCTURE-ACCESSOR.
                          ((type) '("deftype"))
