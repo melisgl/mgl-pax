@@ -266,7 +266,7 @@
    </head>~%~
    <body>~%~
    <div id="content-container">~%"""
-   lang lang title stylesheet charset
+   lang lang (escape-html title) stylesheet charset
    (etypecase head
      ((or null string)
       head)
