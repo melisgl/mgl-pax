@@ -1217,13 +1217,14 @@
       => (1 2)
       ^
 
-  Then you change the printed message and add a comment to the second
+  Then you change the printed message and add comments to the second
   return value:
 
       (values (princ :hello-world) (list 1 2))
       .. HELLO
       => :HELLO
-      => (1
+      => ;; This is a list.
+         (1
           ;; This value is arbitrary.
           2)
 
@@ -1236,7 +1237,8 @@
       |(values (princ :hello-world) (list 1 2))
       .. HELLO
       => :HELLO
-      => (1
+      => ;; This is a list.
+         (1
           ;; This value is arbitrary.
           2)
       ^
@@ -1246,12 +1248,13 @@
       (values (princ :hello-world) (list 1 2))
       .. HELLO-WORLD
       => :HELLO-WORLD
-      => (1
+      => ;; This is a list.
+         (1
           ;; This value is arbitrary.
           2)
       ^
 
-  Note how the indentation and the comment of `(1 2)` were left alone,
+  Note how the indentation and comments of `(1 2)` were left alone,
   but the output and the first return value got updated.
 
   Alternatively, `C-u 1 mgl-pax-transcribe` will emit commented markup:
