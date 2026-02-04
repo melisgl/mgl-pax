@@ -561,9 +561,6 @@
 (defun command-value-captures (command)
   (remove-if-not #'value-capture-p (command-captures command)))
 
-(defun command-error-captures (command)
-  (remove-if-not #'error-capture-p (command-captures command)))
-
 (defun check-command-values (command)
   (when (and (some #'no-value-capture-p (command-captures command))
              (< 1 (count-if #'value-capture-p (command-captures command))))
@@ -597,11 +594,6 @@
 
 (defun readable-capture-p (capture)
   (eq (capture-id capture) :readable))
-
-(defun error-capture-p (capture)
-  (or (no-value-capture-p capture)
-      (readable-capture-p capture)
-      (unreadable-capture-p capture)))
 
 (defun readable-object (readable-capture)
   (assert (readable-capture-p readable-capture))
