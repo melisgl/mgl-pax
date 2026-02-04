@@ -394,15 +394,8 @@
                         :output '(:string :stripped t) :ignore-error-status t)
     (declare (ignore error-output))
     (if (zerop exit-code)
-        (pathname-as-directory toplevel)
+        (uiop:ensure-directory-pathname toplevel)
         nil)))
-
-(defun pathname-as-directory (pathname)
-  (make-pathname :directory (append (pathname-directory pathname)
-                                    (when (pathname-name pathname)
-                                      (list (file-namestring pathname))))
-                 :name nil :type nil
-                 :defaults pathname))
 
 (defun git-version (pathname)
   (multiple-value-bind (version error-output exit-code)
