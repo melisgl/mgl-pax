@@ -547,8 +547,8 @@
 
 
 (defsection @dtypes (:title "DTYPEs")
-  """DTYPEs are to Lisp types what @LOCATIVE-TYPEs are to CLASSes.
-  A DTYPE is either
+  """DTYPEs generalize @LOCATIVE-TYPEs the same way Lisp types
+  generalize CLASSes. A DTYPE is either
 
   - a @LOCATIVE-TYPE such as [FUNCTION][locative], [TYPE][locative]
     and [CLHS][locative], or

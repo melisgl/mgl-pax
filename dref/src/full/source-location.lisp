@@ -82,7 +82,8 @@
   "Return the [defining form][clhs] or a prefix of it as a string or NIL
   if it's not available."
   (and (eq (first location) :location)
-       (getf (fourth location) :snippet)))
+       (let ((snippet-entry (find :snippet (rest location) :key #'first)))
+         (getf snippet-entry :snippet))))
 
 (defun/autoloaded source-location-adjusted-file-position (location)
   "Return the actual file position LOCATION points to allowing for 

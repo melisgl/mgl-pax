@@ -44,8 +44,9 @@ the documentation system.
 - [system] "dref/full"
 
     - Description: DREF with everything loaded. There should be no need
-    to explicitly load this system (or depend on it) as it is autoloaded
-    as necessary by all publicly accessible functionality in DREF.
+    to explicitly load this system (or depend on it) because it is
+    autoloaded as necessary by all publicly accessible functionality in
+    DREF.
 
         However, to get the dependencies, install this system.
 
@@ -415,8 +416,8 @@ DREF-LOCATIVE}.
 
 ## DTYPEs
 
-DTYPEs are to Lisp types what locative types are to CLASSes.
-A DTYPE is either
+DTYPEs generalize locative types the same way Lisp types
+generalize CLASSes. A DTYPE is either
 
 - a locative type such as FUNCTION, TYPE
   and CLHS, or

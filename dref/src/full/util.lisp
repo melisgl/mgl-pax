@@ -498,7 +498,7 @@
                 "automatically generated accessor method"
                 "automatically generated reader method"
                 "automatically generated writer method")
-              :test #'equal)
+              :test #'equalp)
       nil
       docstring))
 

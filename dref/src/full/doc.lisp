@@ -10,9 +10,7 @@
        :source-uri-fn ,uri-fn))))
 
 (register-doc-in-pax-world :dref 'dref-sections 'dref-pages)
+
 
-#+nil
-(progn
-  (asdf:load-system :dref/full)
-  (time
-   (update-asdf-system-readmes (dref-sections) :dref)))
+;;;; To generate cross-linked READMEs with PAX, use
+;;;; src/document/document-util.lisp in PAX.

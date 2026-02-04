@@ -74,8 +74,9 @@ the documentation system.
 - [system] **"dref/full"**
 
     - _Description:_ `DREF`([`0`][d930] [`1`][7e92]) with everything loaded. There should be no need
-        to explicitly load this system (or depend on it) as it is autoloaded
-        as necessary by all publicly accessible functionality in `DREF`.
+        to explicitly load this system (or depend on it) because it is
+        autoloaded as necessary by all publicly accessible functionality in
+        `DREF`.
         
         However, to get the dependencies, install this system.
     - *Depends on:* alexandria, [dref][021a], swank(?)
@@ -552,8 +553,8 @@ The following convenience functions are compositions of
 
 ## 4 `DTYPE`s
 
-`DTYPE`s are to Lisp types what [locative type][a11d]s are to [`CLASS`][1f37]es.
-A `DTYPE` is either
+`DTYPE`s generalize [locative type][a11d]s the same way Lisp types
+generalize [`CLASS`][1f37]es. A `DTYPE` is either
 
 - a [locative type][a11d] such as [`FUNCTION`][ba62], [`TYPE`][926d]
   and [`CLHS`][ed5f], or
