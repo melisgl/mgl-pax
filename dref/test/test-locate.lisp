@@ -377,6 +377,8 @@
     (check-ref (dref 'foo-a '(reader foo)) 'foo-a '(accessor foo)))
   (with-test ("recognize the writer method of an accessor")
     (check-ref (dref 'foo-a '(writer foo)) 'foo-a '(accessor foo)))
+  (with-test ("recognize SETF-METHOD as part of an ACCESSOR")
+    (check-ref (dref 'foo-a '(setf-method (t foo))) 'foo-a '(accessor foo)))
   (signals (locate-error)
     (dref 'foo-r '(accessor foo)))
   (signals (locate-error)

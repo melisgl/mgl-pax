@@ -123,7 +123,7 @@
 ;;; specializers are replaced by `(EQL ,OBJECT).
 (defun method-pretty-arglist (dref)
   (multiple-value-bind (qualifiers specializers)
-      (dref::method-locative-specializer-and-qualifiers
+      (dref::method-locative-qualifiers-and-specializers
        (dref-locative-args dref))
     (append qualifiers
             (mapcar (lambda (name spec)

@@ -423,7 +423,7 @@
         (specializers (method-specializers-list method)))
     (%make-dref name method `(,@qualifiers ,specializers))))
 
-(defun method-locative-specializer-and-qualifiers (locative-args)
+(defun method-locative-qualifiers-and-specializers (locative-args)
   (values (butlast locative-args)
           (first (last locative-args))))
 
@@ -438,7 +438,7 @@
                     qualifiers cannot be lists."
                     locative-args 'method)))
   (multiple-value-bind (qualifiers specializers)
-      (method-locative-specializer-and-qualifiers locative-args)
+      (method-locative-qualifiers-and-specializers locative-args)
     (or (ignore-errors (find-method* name qualifiers specializers))
         (locate-error "Method does not exist.")))
   (%make-dref name method locative-args))
@@ -459,7 +459,7 @@
 
 (defmethod resolve* ((dref method-dref))
   (multiple-value-bind (qualifiers specializers)
-      (method-locative-specializer-and-qualifiers (dref-locative-args dref))
+      (method-locative-qualifiers-and-specializers (dref-locative-args dref))
     (or (ignore-errors (find-method* (dref-function-name dref)
                                      qualifiers specializers))
         (resolve-error "Method does not exist."))))
@@ -642,7 +642,7 @@
 (define-cast reader ((dref method-dref))
   (let ((name (dref-name dref)))
     (multiple-value-bind (qualifiers specializers)
-        (method-locative-specializer-and-qualifiers (dref-locative-args dref))
+        (method-locative-qualifiers-and-specializers (dref-locative-args dref))
       (when (and (endp qualifiers)
                  (= (length specializers) 1)
                  (ignore-errors
@@ -699,7 +699,7 @@
 (define-cast writer ((dref method-dref))
   (let ((name (dref-name dref)))
     (multiple-value-bind (qualifiers specializers)
-        (method-locative-specializer-and-qualifiers (dref-locative-args dref))
+        (method-locative-qualifiers-and-specializers (dref-locative-args dref))
       (when (and (endp qualifiers)
                  (= (length specializers) 2)
                  (eq (first specializers) t))
@@ -778,10 +778,15 @@
       (%make-dref name accessor `(,class)))))
 
 (define-cast accessor ((dref setf-method-dref))
-  (let ((name (dref-name dref))
-        (class (second (third (dref-locative dref)))))
-    (when (ignore-errors (find-accessor-slot-definition name class))
-      (%make-dref name accessor `(,class)))))
+  (let ((name (dref-name dref)))
+    (multiple-value-bind (qualifiers specializers)
+        (method-locative-qualifiers-and-specializers (dref-locative-args dref))
+      (when (and (endp qualifiers)
+                 (= (length specializers) 2)
+                 (eq (first specializers) t))
+        (let ((class-name (second specializers)))
+          (when (ignore-errors (find-accessor-slot-definition name class-name))
+            (%make-dref name accessor `(,class-name))))))))
 
 (define-lookup accessor (name locative-args)
   (unless (ignore-errors
