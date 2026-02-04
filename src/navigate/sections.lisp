@@ -124,13 +124,19 @@
       sections))
 
 (defun find-root-section (object)
-  (let ((sectionp (typep (resolve object nil) 'section)))
+  (let ((sectionp (typep (resolve object nil) 'section))
+        (visited (make-hash-table :test #'eq)))
     (multiple-value-bind (section depth)
         (if sectionp
             (values object 0)
             (values (first (find-parent-sections object)) 1))
       (loop for parent = (first (find-parent-sections section))
             while parent
-            do (setq section parent)
+            do (when (gethash parent visited)
+                 (warn "~@<Cycle in section hierarchy involving ~S and ~S.~:@>"
+                       section parent)
+                 (return (values section depth)))
+               (setf (gethash parent visited) t)
+               (setq section parent)
                (incf depth)
             finally (return (values section depth))))))
