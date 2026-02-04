@@ -48,7 +48,7 @@
              (pkgname (hunchentoot:get-parameter "pkg"))
              (*package* (or (dref::find-package* pkgname)
                             (dref::find-package* (ignore-errors
-                                                  (read-from-string pkgname)))
+                                                  (parse-sexp pkgname)))
                             (dref::find-package :cl)))
              (*pax-live-home-page-override* *pax-live-inputs*)
              (editp (hunchentoot:get-parameter "edit")))
