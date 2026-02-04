@@ -524,8 +524,8 @@
   See XREF-LOCATIVE and DREF-LOCATIVE.")
 
 (define-glossary-term @locative-type (:title "locative type")
-  "The locative type is the part of a @LOCATIVE that identifies
-  what kind definition is being referred to. This is always a symbol.
+  "The locative type is the part of a @LOCATIVE that identifies what
+  kind of definition is being referred to. This is always a symbol.
 
   Locative types are defined with DEFINE-LOCATIVE-TYPE or
   DEFINE-PSEUDO-LOCATIVE-TYPE. See @BASIC-LOCATIVE-TYPES for the list

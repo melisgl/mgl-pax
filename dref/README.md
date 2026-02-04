@@ -524,8 +524,8 @@ The following convenience functions are compositions of
 
 - [glossary-term] **locative type**
 
-    The locative type is the part of a [locative][7ac8] that identifies
-    what kind definition is being referred to. This is always a symbol.
+    The locative type is the part of a [locative][7ac8] that identifies what
+    kind of definition is being referred to. This is always a symbol.
     
     Locative types are defined with [`DEFINE-LOCATIVE-TYPE`][b6c4] or
     [`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4]. See [Basic Locative Types][1d1d] for the list

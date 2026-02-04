@@ -71,7 +71,7 @@
                     'define-locative-type)
                 locative-type superclasses
                 subclass-superclass
-                (if (eq subclass-superclass d2) "" " is a subclass of ~S")
+                (if (eq subclass-superclass d2) "" " (a subclass of ~S)")
                 (if (eq subclass-superclass d2) () `(,d2))
                 'dref-class l2
                 (if pseudop

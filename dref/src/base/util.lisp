@@ -95,7 +95,7 @@
 (defun valid-type-specifier-p (type-specifier)
   (cond ((member-type-specifier-p type-specifier))
         ((satisfies-type-specifier-p type-specifier)
-         (valid-satisisfies-type-specifier-args-p (rest type-specifier)))
+         (valid-satisfies-type-specifier-args-p (rest type-specifier)))
         (t
          ;; TYPEP does not signal errors on ABCL
          #+abcl
@@ -132,7 +132,7 @@
   (and (not (atom type-specifier))
        (eq (first type-specifier) 'satisfies)))
 
-(defun valid-satisisfies-type-specifier-args-p (args)
+(defun valid-satisfies-type-specifier-args-p (args)
   (and (= (length args) 1)
        (symbolp (first args))))
 

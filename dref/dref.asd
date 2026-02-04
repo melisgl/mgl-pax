@@ -37,8 +37,9 @@
   :bug-tracker ""
   :source-control ""
   :description "DREF with everything loaded. There should be no need
-  to explicitly load this system (or depend on it) as it is autoloaded
-  as necessary by all publicly accessible functionality in DREF.
+  to explicitly load this system (or depend on it) because it is
+  autoloaded as necessary by all publicly accessible functionality in
+  DREF.
 
   However, to get the dependencies, install this system."
   :depends-on ("alexandria" "dref" (:feature (:not :swank) "swank"))

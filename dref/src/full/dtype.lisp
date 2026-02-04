@@ -133,7 +133,7 @@
               (when (find dref (mapcar #'locate (rest dtype)) :test #'xref=)
                 t))
              ((satisfies-type-specifier-p dtype)
-              (unless (valid-satisisfies-type-specifier-args-p (rest dtype))
+              (unless (valid-satisfies-type-specifier-args-p (rest dtype))
                 (invalid-dtype dtype))
               (when (funcall (second dtype) dref)
                 t))
@@ -251,7 +251,7 @@
                          (rest dtype))
                  :initial-value ()))
         ((satisfies)
-         (unless (valid-satisisfies-type-specifier-args-p (rest dtype))
+         (unless (valid-satisfies-type-specifier-args-p (rest dtype))
            (invalid-dtype dtype))
          (if negatep
              ()

@@ -5,7 +5,7 @@
 ;;;; - We want to export the normal stuff from the DREF package and
 ;;;;   the extension api from the DREF-EXT package.
 ;;;;
-;;;; - We want export to each symbol from only one package, its home
+;;;; - We want export each symbol from only one package, its home
 ;;;;   package. No reexporting.
 ;;;;
 ;;;; - Some of the definitions for both packages are autoloaded via

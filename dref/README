@@ -391,8 +391,8 @@ DREF-LOCATIVE}.
 
 - [glossary-term] locative type
 
-    The locative type is the part of a locative that identifies
-    what kind definition is being referred to. This is always a symbol.
+    The locative type is the part of a locative that identifies what
+    kind of definition is being referred to. This is always a symbol.
 
     Locative types are defined with DEFINE-LOCATIVE-TYPE or
     DEFINE-PSEUDO-LOCATIVE-TYPE. See Basic Locative Types for the list
