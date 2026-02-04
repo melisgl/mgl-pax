@@ -1098,7 +1098,7 @@
             ;; No continuation prefix, just mark the first line.
             (format stream "~A ~S~%" prefix value)
             ;; FIXME: indentation can be wrong with multiline
-            (write-prefixed-lines (princ-to-string value) continuation-prefix
+            (write-prefixed-lines (prin1-to-string value) continuation-prefix
                                   stream :first-line-prefix prefix))
         ;; They print the same, so use the parsed string, because it
         ;; might have been hand-indented.

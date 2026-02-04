@@ -299,7 +299,9 @@
               ++~%~
               => 2~%~
               +++~%~
-              => 2~%")))
+              => 2~%")
+    (:input ":hello~%;=>"
+     :output ":hello~%;=> :HELLO~%")))
 
 (defun call-format-on-strings (tree)
   (mgl-pax::transform-tree (lambda (parent node)
