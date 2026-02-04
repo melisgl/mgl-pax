@@ -218,6 +218,9 @@
   (make-instance 'hunchentoot:easy-acceptor
                  ;; Any free port
                  :port 0
+                 ;; Do not expose this to the whole web. It's risky
+                 ;; enough on localhost only.
+                 :address "127.0.0.1"
                  :access-log-destination nil
                  :message-log-destination nil))
 
@@ -248,9 +251,10 @@
                                     :hyperspec-root hyperspec-root))))
 
 (defun/autoloaded ensure-web-server (&key port hyperspec-root)
-  """Start or update a web server on PORT for @BROWSING-LIVE-DOCUMENTATION.
-  Returns the base URL of the server (e.g. `http://localhost:32790`),
-  which goes to the @PAX-LIVE-HOME-PAGE. If the web server is running
+  """Start or update a web server on PORT of localhost for
+  @BROWSING-LIVE-DOCUMENTATION. Returns the base URL of the
+  server (e.g. `http://localhost:32790`), which goes to the
+  @PAX-LIVE-HOME-PAGE. If the web server is running
   already `(ENSURE-WEB-SERVER)` simply returns its base URL.
 
   Note that even when using Emacs but @BROWSING-WITH-OTHER-BROWSERS,

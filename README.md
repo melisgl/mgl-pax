@@ -1827,9 +1827,10 @@ up documentation and access [Apropos][b7fc] via the input boxes provided.
 
 - [function] **ENSURE-WEB-SERVER** *&KEY PORT HYPERSPEC-ROOT*
 
-    Start or update a web server on `PORT` for [Browsing Live Documentation][a595].
-    Returns the base `URL` of the server (e.g. `http://localhost:32790`),
-    which goes to the [PAX Live Home Page][9d50]. If the web server is running
+    Start or update a web server on `PORT` of localhost for
+    [Browsing Live Documentation][a595]. Returns the base `URL` of the
+    server (e.g. `http://localhost:32790`), which goes to the
+    [PAX Live Home Page][9d50]. If the web server is running
     already `(ENSURE-WEB-SERVER)` simply returns its base `URL`.
     
     Note that even when using Emacs but [Browsing with Other Browsers][c434],
