@@ -108,8 +108,7 @@
                       ;; Unlike `slime-isearch', we only do full matches.
                       (pos-before (search snippet string
                                           :end2 pos :from-end t))
-                      (pos-after (search snippet string
-                                         :start2 pos :from-end t)))
+                      (pos-after (search snippet string :start2 pos)))
                  (or (and pos-before pos-after
                           (if (< (- pos pos-before)
                                  (- pos-after pos))
