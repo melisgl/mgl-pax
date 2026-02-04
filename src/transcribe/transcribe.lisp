@@ -5,25 +5,33 @@
 ;;;; Utilities
 
 (defun strip-longest-common-prefix (string chars &key (first-line-special-p t)
-                                                   (ignore-blank-lines-p t))
+                                    (ignore-blank-lines-p t))
   (let ((prefix (longest-common-prefix
                  string chars :first-line-special-p first-line-special-p
-                 :ignore-blank-lines-p ignore-blank-lines-p)))
+                 :ignore-blank-lines-p ignore-blank-lines-p))
+        (prefix1 nil))
     (values
      (with-output-to-string (output)
        (with-input-from-string (s string)
          (loop for i upfrom 0
                for line = (read-line s nil nil)
                while line
-               do (if (or (and first-line-special-p (zerop i))
-                          (and ignore-blank-lines-p
-                               (blankp line)
-                               ;; Without this, retranscribing with a
-                               ;; non-empty prefix can keep increasing
-                               ;; the length of the blank line.
-                               (not (starts-with-subseq prefix line))))
-                      (write-line line output)
-                      (write-line (subseq line (length prefix)) output)))))
+               do (cond ((and ignore-blank-lines-p
+                              (blankp line)
+                              ;; Without this, retranscribing with
+                              ;; a non-empty prefix can keep
+                              ;; increasing the length of the
+                              ;; blank line.
+                              (not (starts-with-subseq prefix line)))
+                         (write-line line output))
+                        ((and first-line-special-p (zerop i))
+                         ;; This skips all semicolons and spaces right
+                         ;; of the cursor in Emacs.
+                         (setq prefix1 (matching-prefix line chars))
+                         (write-line (subseq line (length prefix1)) output))
+                        (t
+                         (write-line (subseq line (length prefix)) output))))))
+     prefix1
      prefix)))
 
 ;;; Return the longest common prefix of lines of STRING, where the
@@ -1300,15 +1308,17 @@
         (when (and dynenv (or (not (symbolp dynenv))
                               (not (fboundp dynenv))))
           (error ":dynenv ~S does not name a function." dynenv))
-        (multiple-value-bind (string prefix)
+        (multiple-value-bind (string prefix1 prefix)
             (strip-longest-common-prefix
              string "; " :first-line-special-p first-line-special-p)
-          (prefix-lines prefix
-                        (transcribe string nil
-                                    :default-syntax default-syntax
-                                    :update-only update-only :echo echo
-                                    :dynenv dynenv)
-                        :exclude-first-line-p first-line-special-p))))))
+          (format nil "~A~A"
+                  (if first-line-special-p prefix1 prefix)
+                  (prefix-lines prefix
+                                (transcribe string nil
+                                            :default-syntax default-syntax
+                                            :update-only update-only :echo echo
+                                            :dynenv dynenv)
+                                :exclude-first-line-p t)))))))
 
 
 (defsection @transcript-consistency-checking

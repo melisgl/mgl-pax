@@ -1542,7 +1542,7 @@ input will not be changed."
             (transcript (mgl-pax-transcribe
                          (buffer-substring-no-properties start end)
                          (mgl-pax-transcribe-syntax-arg)
-                         t t nil dynenv)))
+                         t t t dynenv)))
         (if (string= transcript (buffer-substring-no-properties start end))
             (deactivate-mark)
           (if point-at-start-p
