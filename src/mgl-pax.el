@@ -611,7 +611,6 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
             ((= n 2) sexps)
             (t
              (message "Ignoring trailing junk %S" (cl-subseq sexps 2))
-             (sit-for 1)
              (cl-subseq sexps 0 2))))))
 
 (defun mgl-pax-locate-definitions (wall)
