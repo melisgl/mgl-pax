@@ -37,7 +37,8 @@
 
       (setf (documentation 'my-struct-my-slot 'function) \"docstring\")"
   (destructuring-bind (name &rest options) (ensure-list* name-and-options)
-    (let* ((conc-name (getf options :conc-name (format nil "~A-" name)))
+    (let* ((conc-name (or (getf options :conc-name (format nil "~A-" name))
+                          ""))
            (not-found (gensym))
            (set-doc-forms ())
            (new-sds
