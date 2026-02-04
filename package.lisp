@@ -4,9 +4,9 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (locally
       (declare #+sbcl
-               (sb-ext:muffle-conditions sb-kernel::package-at-variance))
+               (sb-ext:muffle-conditions sb-int:package-at-variance))
     (handler-bind
-        (#+sbcl (sb-kernel::package-at-variance #'muffle-warning))
+        (#+sbcl (sb-int:package-at-variance #'muffle-warning))
       ;; Foreshadow some symbols that MGL-PAX-BOOTSTRAP interns, which
       ;; would otherwise lead to conflicts when DREF-EXT is finally
       ;; :USEd. The alternative of SHADOWING-IMPORTing these just
@@ -24,9 +24,9 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (locally
       (declare #+sbcl
-               (sb-ext:muffle-conditions sb-kernel::package-at-variance))
+               (sb-ext:muffle-conditions sb-int:package-at-variance))
     (handler-bind
-        (#+sbcl (sb-kernel::package-at-variance #'muffle-warning))
+        (#+sbcl (sb-int:package-at-variance #'muffle-warning))
       (defpackage :mgl-pax
         (:documentation "See MGL-PAX::@PAX-MANUAL.")
         (:use #:common-lisp #:autoload #:dref #:dref-ext)
