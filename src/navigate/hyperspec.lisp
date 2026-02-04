@@ -73,7 +73,7 @@
     (/ variable "v_sl_sls")
     (// variable "v_sl_sls")
     (/// variable "v_sl_sls")
-    (/= function f_eq_sle)
+    (/= function "f_eq_sle")
     (1+ function "f_1pl_1_")
     (1- function "f_1pl_1_")
     (< function "f_eq_sle")
