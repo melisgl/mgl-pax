@@ -62,6 +62,11 @@
 (eval-when-compile
   ;; For byte-compiling uses of the `w3m-anchor' macro
   (require 'w3m))
+
+(defgroup mgl-pax nil
+  "Interaction with the Common Lisp MGL-PAX library."
+  :group 'lisp
+  :prefix "mgl-pax-")
 
 
 ;;;; Autoloading of MGL-PAX on the Common Lisp side
