@@ -194,8 +194,15 @@ consistency checking to treat it as a different kind of output. First,
 capturing interaction with the debugger needs to be though out though.
 ** MAYBE (values 1 2) => 1, 2 on a single line?
 ** MAYBE add option to output the new transcript
+** MAYBE transcribe debugger sessions
+... e.g. where a restart is selected.
+** MAYBE support trailing comments in values
+E.g.
+*print-level*
+=> NIL ; turned off
 * elisp
 ** MAYBE support SLY?
+https://github.com/melisgl/mgl-pax/issues/37
 ** MAYBE support elisp function and variable locatives?
 Would it be nice to if M-. on "`mgl-pax-document` (elisp) would visit
 the elisp def and C-. would call `describe-function` (elisp)?
@@ -226,6 +233,7 @@ to support a stable API.
 - Illiterate Programming: Already used in the sense of "not literate programming".
 - Documentation-Driven Development: Exists, and also a misnomer (see https://quotenil.com/multifaceted-development.html).
 - Rubber Doc Development: reeks of pragmatism only unlike bath toys.
+- Untangled Literate Programming (https://quotenil.com/untangling-literate-programming.html)
 ** Pitch for Lispers
 User manuals manifest the design in prose and force clarity, but
 writing manuals can be a drag and docs tend to lag the code. The tools
