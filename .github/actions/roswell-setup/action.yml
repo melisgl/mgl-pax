@@ -1,0 +1,92 @@
+name: 'Roswell & SBCL Setup'
+description: 'Installs Roswell and handles custom SBCL binary URLs'
+inputs:
+  lisp:
+    description: >
+      The name of the Lisp implementation as a string. This can simply
+      be what the `--lisp` argument in Roswell supports (e.g.
+      `ccl-bin`, `ecl`, etc).
+
+      In addition, it may be of the form `sbcl-bin-url:<URL>`, where
+      `<URL>` points to tar file from
+      <https://github.com/sbcl/sbcl/releases/tag/latest-dev/> or, more
+      generally, to a file created by SBCL's `binary-distribution.sh`.
+
+      The  environment  variable `ROS_LISP`  is  set  (and shared  via
+      `GITHUB_ENV`),  so that  one can  write `ros  --lisp "$ROS_LISP"
+      run` in later steps.
+    required: true
+
+  sbcl-bin-version:
+    description: >
+      If the `lisp` argument starts with `sbcl-bin-url:`, then the
+      downloaded binary is installed and made available as
+      `sbcl-bin/<SBCL-BIN-VERSION>` under Roswell.
+    required: false
+    default: 'sbcl-bin-url'
+
+  make-default:
+    description: >
+      If `true`, `ROS_LISP` is made the default implementation as in
+      `ros use "$ROS_LISP`.
+    required: false
+    default: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Roswell
+      shell: bash
+      run: |
+        LISP="${{ inputs.lisp }}"
+        if [[ $LISP = sbcl-bin-url:* ]]; then
+            # We will install an SBCL version not known to Roswell
+            # manually below. Until then just get Roswell up and
+            # running.
+            LISP=sbcl-bin
+        fi
+        # Make env var available to later steps
+        echo "ROS_LISP=$LISP" >> $GITHUB_ENV
+        if [ $LISP = clisp ]; then
+            # KLUDGE: If we install CLISP with Roswell, then we either
+            # get complaints about multiple -B options or run into
+            # https://github.com/roswell/roswell/issues/449, so let's
+            # install it with apt. This will be picked up by 'ros
+            # --lisp clisp run'.
+            sudo apt-get -y install clisp
+            LISP=sbcl-bin
+        fi
+        curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
+
+    - name: Install custom SBCL binary
+      if: startsWith(inputs.lisp, 'sbcl-bin-url:')
+      shell: bash
+      run: |
+        set -x
+        name="${{ inputs.lisp }}"
+        url="${name#sbcl-bin-url:}"
+        curl -L -o sbcl-bin.tar "$url"
+        tar xf sbcl-bin.tar
+        # binary-distribution.sh creates a tar file with a single root
+        # directory. Detect it. The following sed command is
+        # equivalent to "head -n 1", but by not exiting early it
+        # avoids the broken pipe error, which for some reason cannot
+        # be silenced with "set +e +o pipefail".
+        cd $(tar tf sbcl-bin.tar | sed -n '1p' | cut -f1 -d"/")
+        ros_lisp_name="sbcl-bin/${{ inputs.sbcl-bin-version }}"
+        INSTALL_ROOT=~/.roswell/impls/x86-64/linux/$ros_lisp_name/ ./install.sh
+        echo "ROS_LISP=$ros_lisp_name" >> $GITHUB_ENV
+
+    - name: Make ROS_LISP the default
+      if: inputs.make-default == 'true'
+      shell: bash
+      run: ros use "$ROS_LISP"
+
+    - name: Check Lisp version
+      shell: bash
+      run: |
+        type=$(ros --lisp "$ROS_LISP" run \
+                   --eval '(princ (lisp-implementation-type))' --quit)
+        version=$(ros --lisp "$ROS_LISP" run \
+                      --eval '(princ (lisp-implementation-version))' --quit)
+        echo "### Implementation: $type $version" >> $GITHUB_STEP_SUMMARY

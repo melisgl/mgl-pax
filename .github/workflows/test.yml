@@ -4,88 +4,68 @@ on:
   push:
   pull_request:
   schedule:
-    # Every Friday at 18:23
-    - cron: "23 18 * * 5"
+    # In addition to testing on push, test every day (at 18:23). This
+    # is intended to detect bit rot caused by changes in the OS and
+    # SBCL, as well as regressions in SBCL's latest-dev rolling
+    # release.
+    - cron: "23 18 * * *"
 
 jobs:
-  test:
+  test-stable:
     name: ${{ matrix.lisp }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
     strategy:
-      matrix:
-        lisp: [abcl-bin, ccl-bin, clisp, cmu-bin/21e, ecl, sbcl-bin]
-        os: [ubuntu-latest]
       fail-fast: false
+      matrix:
+        lisp: [sbcl-bin]
+        os: [ubuntu-latest]
+    steps: &test_steps
+      - uses: actions/checkout@v4
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      # - name: A hack for faster testing of test-dev
+      #   if: github.job == 'test-stable'
+      #   run: exit 1
 
-      ## Very slow
-      # - name: apt-get update
-      #   run: sudo apt-get update
-      #
-      # - name: Install Pandoc and TeX Live
-      #   run: |
-      #     sudo apt-get -y --no-install-recommends install \
-      #         pandoc texlive-latex-extra texlive-fonts-extra
+      - name: Setup Lisp
+        uses: ./.github/actions/roswell-setup
+        with:
+          lisp: ${{ matrix.lisp }}
 
-      - name: Install Roswell
-        env:
-          LISP: ${{ matrix.lisp }}
+      - name: Install Dependencies
         run: |
-          if [ $LISP = clisp ]; then
-              # KLUDGE: If we install CLISP with Roswell, then we
-              # either get complaints about multiple -B options or run
-              # into https://github.com/roswell/roswell/issues/449, so
-              # let's install it with apt. This will be picked up by
-              # 'ros --lisp clisp run'.
-              sudo apt-get -y install clisp
-              LISP=sbcl
+          if [ "$ROS_LISP" = "abcl-bin" ]; then
+              sudo apt-get -y install maven;
           fi
-          curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
-
-      - name: Install Maven for ABCL
-        env:
-          LISP: ${{ matrix.lisp }}
-        run: if [ $LISP = abcl-bin ]; then sudo apt-get -y install maven; fi
-
-      - name: Install latest Named-readtables from GitHub
-        run: ros install melisgl/named-readtables
-
-      - name: Install latest Try from GitHub
-        run: ros install melisgl/try
-
-      - name: Install latest 3bmd from GitHub
-        run: ros install 3b/3bmd
-
-      - name: Install latest Slime from GitHub
-        # KLUDGE: 'ros install slime/slime' fails because it is not
-        # interpreted as a github reference but is special cased.
-        run: |
+          ros install melisgl/named-readtables
+          ros install melisgl/try
+          ros install 3b/3bmd
           cd ~/.roswell/local-projects/
-          git clone https://github.com/slime/slime.git
+          git clone --depth 1 https://github.com/slime/slime.git
 
       - name: Run DRef tests
-        env:
-          LISP: ${{ matrix.lisp }}
         run: |
           ros run -e '(ql:quickload :dref-test)' -q
-          ./dref/test/test.sh $LISP
+          ./dref/test/test.sh $ROS_LISP
 
       - name: Run MGL-PAX tests
-        env:
-          LISP: ${{ matrix.lisp }}
         run: |
           ros run -e '(ql:quickload :mgl-pax-test)' -q
-          ./test/test.sh $LISP
+          ./test/test.sh $ROS_LISP
 
       - name: Run Elisp tests (on SBCL only)
-        env:
-          LISP: ${{ matrix.lisp }}
+        if: startsWith(env.ROS_LISP, 'sbcl')
         run: |
-          if [ "$LISP" = "sbcl" -o "$LISP" = "sbcl-bin" ]; then
-              sudo apt-get -y install emacs-nox w3m-el
-              ./test/test-el.sh "ros --lisp sbcl-bin run"
-          fi
+          sudo apt-get -y install emacs-nox w3m-el
+          ./test/test-el.sh "ros --lisp $ROS_LISP run"
+
+  test-dev:
+    name: ${{ matrix.lisp }} on ${{ matrix.os }}
+    needs: test-stable
+    if: always() && !cancelled()
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        lisp: [sbcl-bin-url:https://github.com/melisgl/sbcl/releases/download/latest-dev/sbcl_linux_x86-64_--with-sb-thread_latest-dev_bin.tar]
+        os: [ubuntu-latest]
+    steps: *test_steps
