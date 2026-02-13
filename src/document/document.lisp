@@ -1627,14 +1627,9 @@
                                          :content ,original))
         code-block)))
 
-;;; FIXME: Export this? One can also CONTINUE on
-;;; TRANSCRIPTION-CONSISTENCY-ERROR.
-(defvar *document-transcribe-check-consistency* t)
-
 (defun transcribe-code-block (transcript args)
   (let ((dynenv (getf args :dynenv))
-        (*transcribe-check-consistency*
-          *document-transcribe-check-consistency*))
+        (*transcribe-check-consistency* t))
     (remf args :dynenv)
     (flet ((call-it ()
              (if *document-open-linking*
@@ -3415,7 +3410,7 @@
 (defun pax-std-env (fn)
   ;; FIXME: Add all others too.
   (let ((*document-downcase-uppercase-code* nil)
-        (*document-transcribe-check-consistency* (featurep :sbcl))
+        (*transcribe-check-consistency* (featurep :sbcl))
         (*package* *package*))
     (handler-bind ((warning #'muffle-warning))
       (unwind-protect
