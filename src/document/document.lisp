@@ -1644,7 +1644,7 @@
             (t
              (when dynenv
                (funcall (if *document-open-linking* 'warn 'error)
-                        "Undefined :DYNENV function ~S" dynenv))
+                        "~@<Undefined ~S function ~S.~:@>" ':dynenv dynenv))
              (call-it))))))
 
 ;;; Undo the :EMPH parsing for code references. E.g. (:EMPH "XXX") ->
@@ -3412,7 +3412,6 @@
   (let ((*document-downcase-uppercase-code* nil)
         (*transcribe-check-consistency* (featurep :sbcl))
         (*package* *package*))
-    (handler-bind ((warning #'muffle-warning))
-      (unwind-protect
-           (funcall fn)
-        (unintern '@example-section :pax)))))
+    (unwind-protect
+         (funcall fn)
+      (unintern '@example-section :pax))))
