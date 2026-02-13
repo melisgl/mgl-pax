@@ -2136,8 +2136,6 @@ example section
                                             :ignore-error-status t))))))
     (with-test ()
       (let ((*document-downcase-uppercase-code* t)
-            (pax::*document-transcribe-check-consistency*
-              (alexandria:featurep :sbcl))
             (pax::*pandoc-output-format* "latex")
             (pax::*git-version-for-test* "master")
             (*document-pandoc-pdf-options*
