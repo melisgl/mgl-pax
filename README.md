@@ -1349,11 +1349,9 @@ non-empty pages in the `PAGES` argument of `DOCUMENT` in that order.
 
 The `PAGES` argument of [`DOCUMENT`][432c] is to create multi-page documents
 by routing some of the generated output to files, strings or
-streams. `PAGES` is a list of page specification elements. A page spec
-is a [property list][b18e] with keys `:OBJECTS`, `:OUTPUT`,
-`:URI-FRAGMENT`, `:SOURCE-URI-FN`, `:HEADER-FN` and `:FOOTER-FN`. `OBJECTS` is
-a list of objects (references are allowed but not required) whose
-documentation is to be sent to `:OUTPUT`.
+streams. `PAGES` is a list of page specs. A page spec is a [property
+list][b18e] with keys `:OBJECTS`, `:OUTPUT`, `:URI-FRAGMENT`,
+`:SOURCE-URI-FN`, `:HEADER-FN` and `:FOOTER-FN`.
 
 `PAGES` may look something like this:
 
@@ -1392,8 +1390,23 @@ documentation is to be sent to `:OUTPUT`.
 ```
 
 Documentation is initially sent to a default stream (the `STREAM`
-argument of `DOCUMENT`), but output is redirected if the thing being
-currently documented is the `:OBJECT` of a `PAGE-SPEC`.
+argument of `DOCUMENT`), but output is temporary redirected to `:OUTPUT`
+for the duration of generating documentation for a docstring or
+[definition][2143] that matches `:OBJECTS`, shadowing any existing
+redirection if any. This nesting typically happens when a [`SECTION`][5fac]
+references another definition and they both have their own page
+specs.
+
+`:OBJECTS` is a list of objects whose definitions are [`LOCATE`][8f19]able. In
+addition, docstrings can be included. The latter can be useful if
+[`DOCUMENTABLE`][0702] includes a docstring.
+
+- A docstring matches `:OBJECTS` if it is [`EQ`][5a82] to one of its elements.
+
+- A [definition][2143] matches `:OBJECTS` if it is [`XREF=`][0617] to one of its
+  [`DREF`][d930] elements.
+
+If multiple page specs match, then the first one has precedence.
 
 - `:OUTPUT` can be a number things:
 

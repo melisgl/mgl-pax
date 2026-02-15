@@ -167,9 +167,10 @@
 ;;; documentation of some definitions is written. Constructed by
 ;;; PAGE-SPECS-TO-PAGES.
 (defstruct page
-  ;; DREFs for the :OBJECTS of the page-spec. In the second pass,
-  ;; output is redirected to this page, when encountering one of these
-  ;; definitions.
+  ;; A list of DREFs and STRINGs, populated by
+  ;; PAGE-SPEC-OBJECTS-TO-BOUNDARIES in the first pass. In the second
+  ;; pass, output is redirected to this page, when encountering one of
+  ;; these definitions.
   boundaries
   ;; The second pass writes the Markdown output to this stream. It's
   ;; actually STREAM-SPEC (see WITH-OPEN-STREAM-SPEC) to allow the
@@ -209,10 +210,24 @@
 (defvar *pages*)
 
 ;;; Return the first page whose PAGE-BOUNDARIES have DREF.
-(defun boundary-page (dref)
-  (dolist (page *pages*)
-    (when (find dref (page-boundaries page) :test #'xref=)
-      (return page))))
+(defun boundary-page (dref-or-string)
+  "- A docstring matches :OBJECTS if it is EQ to one of its elements.
+
+  - A DREF::@DEFINITION matches :OBJECTS if it is XREF= to one of its
+    [DREF][class] elements.
+
+  If multiple page specs match, then the first one has precedence."
+  (etypecase dref-or-string
+    (string
+     (dolist (page *pages*)
+       (when (find dref-or-string (page-boundaries page))
+         (return page))))
+    (dref
+     (dolist (page *pages*)
+       (dolist (boundary (page-boundaries page))
+         (when (and (typep boundary 'dref)
+                    (xref= boundary dref-or-string))
+           (return-from boundary-page page)))))))
 
 ;;; The current page where output is being sent.
 (defvar *page* nil)
@@ -642,11 +657,9 @@
 (defsection @pages (:title "PAGES")
   """The PAGES argument of DOCUMENT is to create multi-page documents
   by routing some of the generated output to files, strings or
-  streams. PAGES is a list of page specification elements. A page spec
-  is a [property list][clhs] with keys :OBJECTS, :OUTPUT,
-  :URI-FRAGMENT, :SOURCE-URI-FN, :HEADER-FN and :FOOTER-FN. OBJECTS is
-  a list of objects (references are allowed but not required) whose
-  documentation is to be sent to :OUTPUT.
+  streams. PAGES is a list of page specs. A page spec is a [property
+  list][clhs] with keys :OBJECTS, :OUTPUT, :URI-FRAGMENT,
+  :SOURCE-URI-FN, :HEADER-FN and :FOOTER-FN.
 
   PAGES may look something like this:
 
@@ -685,8 +698,17 @@
   ```
 
   Documentation is initially sent to a default stream (the STREAM
-  argument of DOCUMENT), but output is redirected if the thing being
-  currently documented is the :OBJECT of a PAGE-SPEC.
+  argument of DOCUMENT), but output is temporary redirected to :OUTPUT
+  for the duration of generating documentation for a docstring or
+  DREF::@DEFINITION that matches :OBJECTS, shadowing any existing
+  redirection if any. This nesting typically happens when a SECTION
+  references another definition and they both have their own page
+  specs.
+
+  [page-spec-objects-to-boundaries function][docstring]
+
+  [boundary-page function][docstring]
+
 
   - :OUTPUT can be a number things:
 
@@ -752,12 +774,12 @@
 
 (defun page-spec-to-page (page)
   (destructuring-bind (&key objects output header-fn footer-fn
-                         (uri-fragment nil uri-fragment-p)
-                         source-uri-fn)
+                       (uri-fragment nil uri-fragment-p)
+                       source-uri-fn)
       page
     (let ((stream-spec (make-stream-spec-from-page-spec-output output)))
       (make-page
-       :boundaries (page-spec-objects-to-definitions objects)
+       :boundaries (page-spec-objects-to-boundaries objects)
        ;; See FINALIZE-PAGE-OUTPUT.
        :temp-stream-spec (if (and (eq *format* :markdown)
                                   (null *subformat*)
@@ -794,12 +816,16 @@
                (append args '(:element-type (unsigned-byte 8)))
                args))))
 
-(defun page-spec-objects-to-definitions (objects)
+(defun page-spec-objects-to-boundaries (objects)
+  ":OBJECTS is a list of objects whose definitions are LOCATEable. In
+  addition, docstrings can be included. The latter can be useful if
+  @DOCUMENTABLE includes a docstring."
   (loop for object in (ensure-list objects)
-        for dref = (and (not (stringp object))
-                        (locate object nil))
-        when dref
-          collect dref))
+        for maybe-located = (if (stringp object)
+                                object
+                                (locate object nil))
+        when maybe-located
+          collect maybe-located))
 
 
 (defsection @package-and-readtable (:title "Package and Readtable")
@@ -890,12 +916,16 @@
   (:method (object stream)
     (document-object (locate object) stream))
   (:method ((string string) stream)
-    (cond (*first-pass*
-           (setf (page-written-in-first-pass-p *page*) t))
-          (t
-           (about-to-write-to-page)
-           (document-docstring string stream :indentation "" :paragraphp nil)
-           (terpri stream))))
+    (let ((page (boundary-page string)))
+      (cond (*first-pass*
+             (let ((*page* (or page *page*)))
+               (setf (page-written-in-first-pass-p *page*) t)))
+            (t
+             (with-temp-output-to-page (stream page)
+               (about-to-write-to-page)
+               (document-docstring string stream :indentation ""
+                                   :paragraphp nil)
+               (terpri stream))))))
   (:method :around ((xref xref) stream)
     (let ((*documenting-dref* xref))
       (call-next-method)))
@@ -957,7 +987,8 @@
                 (with-output-to-string (stream)
                   (unless (eq *subformat* :plain)
                     (let ((*page* page))
-                      (write-markdown-reference-style-link-definitions stream))))))
+                      (write-markdown-reference-style-link-definitions
+                       stream))))))
           (delete-stream-spec (page-temp-stream-spec page))
           (with-final-output-to-page (stream page)
             (when (page-header-fn page)

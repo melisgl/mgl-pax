@@ -1019,7 +1019,6 @@
   page of the web server (if one is started). Here, unless the home
   page is viewed [with w3m][@BROWSING-WITH-W3M], one may directly look
   up documentation and access @APROPOS via the input boxes provided."""
-  ;; FIXME: This may not be loaded.
   (ensure-web-server function)
   (@top-level-pax-sections section)
   (@asdf-systems-and-related-packages section)

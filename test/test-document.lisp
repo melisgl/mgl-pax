@@ -1059,7 +1059,12 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
 "))
         (is (equal (second outputs)
                    "- [function] ->MAX
-"))))))
+")))))
+  (is (equal (let ((docstring "xxx"))
+               (with-output-to-string (s)
+                 (document docstring :pages `((:objects (,docstring)
+                                               :output ,s)))))
+             "xxx")))
 
 
 (defsection @section-with-undefined-stuff ()
