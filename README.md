@@ -277,7 +277,7 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
 
 - [system] **"mgl-pax"**
 
-    - _Version:_ 0.4.7
+    - _Version:_ 0.4.8
     - _Description:_ Documentation system, browser, generator. See the
         [PAX Manual][2415].
     - _Long Description:_ The base system. See [Links and Systems][ba90].

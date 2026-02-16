@@ -349,14 +349,15 @@
         (prin1-to-string object)))))
 
 ;;; Add PREFIX to every line in STRING.
-(defun prefix-lines (prefix string &key exclude-first-line-p)
+(defun prefix-lines (prefix string &key exclude-first-line-p exclude-blank-p)
   (with-output-to-string (out)
     (with-input-from-string (in string)
       (loop for i upfrom 0 do
         (multiple-value-bind (line missing-newline-p) (read-line in nil nil)
           (unless line
             (return))
-          (if (and exclude-first-line-p (= i 0))
+          (if (or (and exclude-first-line-p (= i 0))
+                  (and exclude-blank-p (blankp line)))
               (format out "~a" line)
               (format out "~a~a" prefix line))
           (unless missing-newline-p

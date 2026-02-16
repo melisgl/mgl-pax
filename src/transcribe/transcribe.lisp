@@ -1341,7 +1341,8 @@
                           :dynenv dynenv)
             (list (format nil "~A~A"
                           (if first-line-indent prefix1 prefix)
-                          (prefix-lines prefix output :exclude-first-line-p t))
+                          (prefix-lines prefix output :exclude-first-line-p t
+                                        :exclude-blank-p t))
                   did-something-p)))))))
 
 

@@ -1049,11 +1049,11 @@
    (mark-whole-buffer)
    (call-interactively 'mgl-pax-retranscribe-region)
    (accept-process-output nil 1)
-   (should (equal (buffer-string) "  (1+ 2)\n  => 3\n  \n"))
+   (should (equal (buffer-string) "  (1+ 2)\n  => 3\n\n"))
    (mark-whole-buffer)
    (call-interactively 'mgl-pax-retranscribe-region)
    (accept-process-output nil 1)
-   (should (equal (buffer-string) "  (1+ 2)\n  => 3\n  \n"))))
+   (should (equal (buffer-string) "  (1+ 2)\n  => 3\n\n"))))
 
 (ert-deftest test-mgl-pax-retranscribe-region/first-line-1 ()
   (load-mgl-pax-test-system)
@@ -1108,6 +1108,24 @@
    (call-interactively 'mgl-pax-retranscribe-region)
    (accept-process-output nil 1)
    (should (equal (buffer-string) ";; (list 1 2)\n;; ;=> (1\n;; ;->  2)\n"))))
+
+(ert-deftest test-mgl-pax-retranscribe-region/ends-with-newline ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "  (+ 1 2)\n  => 3\n")
+   (mark-whole-buffer)
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "  (+ 1 2)\n  => 3\n"))))
+
+(ert-deftest test-mgl-pax-retranscribe-region/does-not-end-with-newline ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "  (+ 1 2)\n  => 3\n ")
+   (mark-whole-buffer)
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "  (+ 1 2)\n  => 3\n "))))
 
 
 (provide 'mgl-pax-tests)

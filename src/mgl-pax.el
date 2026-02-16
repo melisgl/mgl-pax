@@ -1545,17 +1545,18 @@ input will not be changed."
   (interactive "r")
   (mgl-pax-with-component (:mgl-pax/transcribe)
     (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
-      (let ((point-at-start-p (= (point) start)))
+      (let ((point-at-start-p (= (point) start))
+            (input (buffer-substring-no-properties start end)))
         (cl-destructuring-bind (transcript did-something-p)
-            (mgl-pax-transcribe
-             (buffer-substring-no-properties start end)
-             (mgl-pax-transcribe-syntax-arg)
-             t t dynenv (save-excursion
-                          (goto-char start)
-                          (current-column)))
+            (mgl-pax-transcribe input (mgl-pax-transcribe-syntax-arg)
+                                t t dynenv (save-excursion
+                                             (goto-char start)
+                                             (current-column)))
+          (unless (string-suffix-p "\n" input)
+            (setq transcript (substring transcript 0 -1)))
           (cond ((not did-something-p)
                  (message "No forms found to transcribe."))
-                ((string= transcript (buffer-substring-no-properties start end))
+                ((string= transcript input)
                  (deactivate-mark))
                 (point-at-start-p
                  (save-excursion
