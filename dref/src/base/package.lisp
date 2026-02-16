@@ -106,14 +106,13 @@
 
 ;;; For MGL-PAX::@TRANSCRIPT-DYNENV
 (defun dref-std-env (fn)
-  (let ((*package* (find-package :dref)))
-    ;; FIXME: Add all others too.
-    (progv '(pax::*document-downcase-uppercase-code*
-             pax::*transcribe-check-consistency*)
-        '(nil #+sbcl t #-sbcl nil)
-      (handler-bind ((warning #'muffle-warning))
-        (unwind-protect
-             (funcall fn)
-          (unintern '*my-var* (find-package :dref)))))))
+  (let ((*package* (find-package :dref))
+        (pax::*transcribe-check-consistency* #+sbcl t #-sbcl nil))
+    ;; This variable is defined later.
+    (declare (special pax::*transcribe-check-consistency*))
+    (handler-bind ((warning #'muffle-warning))
+      (unwind-protect
+           (funcall fn)
+        (unintern '*my-var* (find-package :dref))))))
 
 (import '(dref-std-env) '#:dref-ext)

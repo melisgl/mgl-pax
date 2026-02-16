@@ -56,7 +56,7 @@ the documentation system.
     - _Description:_ Reify definitions, provide portable access to
         docstrings and source locations in an extensible framework.
     - _Long Description:_ [`DEFUN`][f472] defines a first-class object: a `FUNCTION`([`0`][119e] [`1`][81f7]).
-        [`DEFVAR`][7334] does not. This library provides a way to refer to all
+        [`DEFVAR`][7334] does not. The DRef library provides a way to refer to all
         definitions and smooths over the differences between
         implementations. This system has minimal dependencies. It autoloads
         the [`dref/full`][0c7e] `ASDF:SYSTEM`, which depends Alexandria and Swank.

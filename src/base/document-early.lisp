@@ -245,8 +245,6 @@
 (defmacro with-dislocated-names (names &body body)
   "For each name in NAMES, establish a @LOCAL-DEFINITION."
   `(with-local-references (mapcar (lambda (name)
-                                    ;; FIXME: It is ARGUMENT not
-                                    ;; DISLOCATED.
                                     (xref name 'argument))
                                   (ensure-list ,names))
      ,@body))
@@ -272,7 +270,7 @@
 
 (defsection @github-workflow (:title "GitHub Workflow")
   "It is generally recommended to commit generated readmes (see
-  UPDATE-ASDF-SYSTEM-READMES), so that users have something to read
+  UPDATE-ASDF-SYSTEM-READMES) so that users have something to read
   without reading the code and sites like GitHub can display them.
 
   HTML documentation can also be committed, but there is an issue with

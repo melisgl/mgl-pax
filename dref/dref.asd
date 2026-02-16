@@ -12,7 +12,7 @@
   :description "Reify definitions, provide portable access to
   docstrings and source locations in an extensible framework."
   :long-description "DEFUN defines a first-class object: a FUNCTION.
-  DEFVAR does not. This library provides a way to refer to all
+  DEFVAR does not. The DRef library provides a way to refer to all
   definitions and smooths over the differences between
   implementations. This system has minimal dependencies. It autoloads
   the `dref/full` ASDF:SYSTEM, which depends Alexandria and Swank."

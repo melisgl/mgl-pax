@@ -361,9 +361,9 @@
                  ;; parsing names with spaces, colons and all kind of
                  ;; funny characters.
                  (ignore-errors (definitions-for-pax-url-path path))
-                 ;; These follow @PARSING, so that `mgl-pax-document'
-                 ;; either with defaulting or prompting works similarly
-                 ;; to @NAVIGATION and @LINKING.
+                 ;; These follow @PARSING so that `mgl-pax-document'
+                 ;; either with defaulting or prompting works
+                 ;; similarly to @NAVIGATION and @LINKING.
                  (ensure-list (parse-dref path))
                  (parse-definitions* path))))
     (cond ((endp drefs)
@@ -1069,8 +1069,8 @@
 
 (defsection @asdf-systems-and-related-packages
     (:title "ASDF:SYSTEMs and Related PACKAGEs")
-  "The @PAX-LIVE-HOME-PAGE lists all ASDF:SYSTEMs and PACKAGEs in the Lisp.
-  For easier overview, the they are grouped based on their
+  "The @PAX-LIVE-HOME-PAGE lists all ASDF:SYSTEMs and PACKAGEs in the
+  Lisp. For easier overview, they are grouped based on their
   SOURCE-LOCATIONs. Two systems are in the same group if the directory
   of one (i.e. the directory of the `.asd` file in which it was
   defined) is the same or is below the other's.

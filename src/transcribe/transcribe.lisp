@@ -452,10 +452,9 @@
   ;->    2)
   ```
 
-  To translate the above to uncommented syntax,
-  use :DEFAULT-SYNTAX :DEFAULT. If DEFAULT-SYNTAX is NIL (the
-  default), the same syntax will be used in the output as in the input
-  as much as possible.
+  To translate the above to uncommented syntax, use :DEFAULT-SYNTAX
+  :DEFAULT. If DEFAULT-SYNTAX is NIL (the default), the same syntax
+  will be used in the output as in the input as much as possible.
 
   **Dynamic Environment**
 
@@ -1054,7 +1053,6 @@
   (format t "~&~A ~S~A~%~A~A" prefix (type-of c) midfix
           (prefix-lines "  "
                         (if (typep c 'simple-condition)
-                            ;; FIXME: "format control" (CLHS)
                             (apply #'format nil
                                    (simple-condition-format-control c)
                                    (simple-condition-format-arguments c))
@@ -1105,7 +1103,6 @@
         (if (null continuation-prefix)
             ;; No continuation prefix, just mark the first line.
             (format stream "~A ~S~%" prefix value)
-            ;; FIXME: indentation can be wrong with multiline
             (write-prefixed-lines (prin1-to-string value) continuation-prefix
                                   stream :first-line-prefix prefix))
         ;; They print the same, so use the parsed string, because it

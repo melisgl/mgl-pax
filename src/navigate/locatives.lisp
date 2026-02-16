@@ -175,7 +175,7 @@
 ;;;; ARGUMENT locative
 
 (define-pseudo-locative-type argument ()
-  """An alias for [DISLOCATED][locative], so that one can refer to an
+  """An alias for [DISLOCATED][locative], allowing one to refer to an
   argument of a macro without accidentally linking to a class that has
   the same name as that argument. In the following example,
   [FORMAT][dislocated] may link to CL:FORMAT (if we generated

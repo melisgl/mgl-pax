@@ -814,7 +814,7 @@ in the context of [Generating Documentation][2c93]).
 
 - [locative] **ARGUMENT**
 
-    An alias for [`DISLOCATED`][e391], so that one can refer to an
+    An alias for [`DISLOCATED`][e391], allowing one to refer to an
     argument of a macro without accidentally linking to a class that has
     the same name as that argument. In the following example,
     `FORMAT` may link to `CL:FORMAT` (if we generated
@@ -1878,8 +1878,8 @@ that have no other [`SECTION`][5fac]s referencing them (see [`DEFSECTION`][72b4]
 
 ##### `ASDF:SYSTEM`s and Related `PACKAGE`s
 
-The [PAX Live Home Page][9d50] lists all `ASDF:SYSTEM`s and [`PACKAGE`][1d5a]s in the Lisp.
-For easier overview, the they are grouped based on their
+The [PAX Live Home Page][9d50] lists all `ASDF:SYSTEM`s and [`PACKAGE`][1d5a]s in the
+Lisp. For easier overview, they are grouped based on their
 [`SOURCE-LOCATION`][32da]s. Two systems are in the same group if the directory
 of one (i.e. the directory of the `.asd` file in which it was
 defined) is the same or is below the other's.
@@ -3211,7 +3211,7 @@ See the following variables, which control HTML generation.
 #### 8.10.2 GitHub Workflow
 
 It is generally recommended to commit generated readmes (see
-[`UPDATE-ASDF-SYSTEM-READMES`][13a9]), so that users have something to read
+[`UPDATE-ASDF-SYSTEM-READMES`][13a9]) so that users have something to read
 without reading the code and sites like GitHub can display them.
 
 HTML documentation can also be committed, but there is an issue with
@@ -3693,10 +3693,9 @@ Transcription support in Emacs can be enabled by loading
     ;->    2)
     ```
     
-    To translate the above to uncommented syntax,
-    use `:DEFAULT-SYNTAX` `:DEFAULT`. If `DEFAULT-SYNTAX` is `NIL` (the
-    default), the same syntax will be used in the output as in the input
-    as much as possible.
+    To translate the above to uncommented syntax, use `:DEFAULT-SYNTAX`
+    `:DEFAULT`. If `DEFAULT-SYNTAX` is `NIL` (the default), the same syntax
+    will be used in the output as in the input as much as possible.
     
     **Dynamic Environment**
     

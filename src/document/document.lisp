@@ -1571,7 +1571,7 @@
 
 ;;; Find the [approximately] longest @NAME in WORD. Return a 3BMD
 ;;; parse tree fragment with that substring marked up as code and the
-;;; suffixes downcased (so that CLASSES turns into `CLASS`es).
+;;; suffixes downcased (to turn CLASSES into `CLASS`es).
 ;;;
 ;;; Handles the rules laid out in *DOCUMENT-UPPERCASE-IS-CODE* not
 ;;; already handled in the caller TRANSLATE-UPPERCASE-WORD. Trims
@@ -3440,7 +3440,6 @@
 
 
 (defun pax-std-env (fn)
-  ;; FIXME: Add all others too.
   (let ((*document-downcase-uppercase-code* nil)
         (*transcribe-check-consistency* (featurep :sbcl))
         (*package* *package*))
