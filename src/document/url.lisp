@@ -2,7 +2,7 @@
 
 (in-readtable pythonic-string-syntax)
 
-;;;; Escaping V2 of URLs and HTML ID (for HTML5)
+;;;; Escaping v2 of URLs and HTML ID (for HTML5, see *DOCUMENT-URL-VERSIONS*)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun _mark-range (array start end)
@@ -89,7 +89,7 @@
           (trivial-utf-8:utf-8-bytes-to-string bytes)))))
 
 
-;;;; Escaping V1 of URLs and HTML IDs (for HTML4)
+;;;; Escaping v1 of URLs and HTML IDs (for HTML4, see *DOCUMENT-URL-VERSIONS*)
 
 (defparameter +html4-first-name-characters+
   (let ((array (make-array 255 :element-type 'bit :initial-element 0)))
@@ -150,31 +150,27 @@
       string))
 
 
+(defun split-url (string)
+  """Split the URL given as STRING into scheme, authority, path, query
+  and fragment parts. All parts are URLENCODEd strings or NIL if
+  misssing.
 
-;;; (parse-url "http://user@example.com:8080/x/y.html?a=1&b=2#z")
-;;; => "http"
-;;; => "user@example.com:8080"
-;;; => "/x/y.html"
-;;; => "a=1&b=2"
-;;; => "z"
-;;;
-;;; (parse-url "file:x/y")
-;;; => "file"
-;;; => NIL
-;;; => "x/y"
-;;; => NIL
-;;; => NIL
-;;;
-;;; 1. the scheme ("http"),
-;;;
-;;; 2. the authority ("user@example.com:8080"),
-;;;
-;;; 3. the path ("/x/y.html"),
-;;;
-;;; 4. the query ("a=1&b=2"),
-;;;
-;;; 5. and the fragment ("z").
-(defun parse-url (string)
+   ```cl-transcript
+   (split-url "http://user@example.com:8080/x/y.html?a=1&b=2#z")
+   => "http"
+   => "user@example.com:8080"
+   => "/x/y.html"
+   => "a=1&b=2"
+   => "z"
+
+   (split-url "file:x/y")
+   => "file"
+   => NIL
+   => "x/y"
+   => NIL
+   => NIL
+  ```
+  """
   (let ((scheme-end (position #\: string))
         (pos 0)
         (len (length string)))
@@ -191,7 +187,7 @@
               (char= (aref string (1+ pos)) #\/))
          (let ((authority-end
                  (position #\/ string :start (+ pos 2))))
-           (prog1 (urldecode (subseq string (+ pos 2) authority-end))
+           (prog1 (subseq string (+ pos 2) authority-end)
              (setq pos authority-end)))
          nil)
      ;; path
@@ -199,37 +195,33 @@
        (let ((path-end (position-if (lambda (char)
                                       (member char '(#\# #\?)))
                                     string :start pos)))
-         ;; FIXME: URLDECODEing here is broken, as http://host/a%2Fb
-         ;; and "http://x/y/z" are parsed the same.
-         (prog1 (urldecode (subseq string pos path-end))
+         (prog1 (subseq string pos path-end)
            (setq pos path-end))))
      ;; query
      (when (and pos (< pos len) (char= (aref string pos) #\?))
        (let ((query-end (position #\# string :start (1+ pos))))
-         (prog1 (urldecode (subseq string (1+ pos) query-end))
+         (prog1 (subseq string (1+ pos) query-end)
            (setq pos query-end))))
      ;; fragment
      (if (and pos (< pos len) (char= (aref string pos) #\#))
-         (urldecode (subseq string (1+ pos)))
+         (subseq string (1+ pos))
          (assert (null pos))))))
 
-(defun make-url (&key scheme authority path encoded-path encoded-query fragment)
+(defun unsplit-url (&key scheme authority path query fragment)
   (with-output-to-string (out)
     (when scheme
-      (format out "~A:" (urlencode scheme)))
+      (format out "~A:" scheme))
     (when authority
-      (format out "//~A" (urlencode authority)))
+      (format out "//~A" authority))
     (when path
-      (format out "~A" (urlencode path)))
-    (when encoded-path
-      (format out "~A" encoded-path))
-    (when encoded-query
-      (format out "?~A" encoded-query))
+      (format out "~A" path))
+    (when query
+      (format out "?~A" query))
     (when fragment
-      (format out "#~A" (urlencode fragment)))))
+      (format out "#~A" fragment))))
 
 (defun urlp (string)
-  (ignore-errors (parse-url string)))
+  (ignore-errors (split-url string)))
 
 (defun append-to-url (url suffix)
   (if (or (ends-with #\/ url)
@@ -245,23 +237,24 @@
   (let* ((pathname (merge-pathnames pathname *default-pathname-defaults*))
          (directory (pathname-directory pathname))
          (device (pathname-device pathname)))
-    (make-url :scheme "file"
-              :encoded-path
-              (with-output-to-string (out)
-                (when (and device (not (member device '(nil :unspecific))))
-                  (write-string (urlencode (string device)) out)
-                  (write-char #\: out))
-                ;; Skip the first element (:ABSOLUTE)
-                (dolist (dir (rest directory))
-                  (when (stringp dir)
-                    (write-char #\/ out)
-                    (write-string (urlencode dir) out)))
-                (when (pathname-name pathname)
-                  (write-char #\/ out)
-                  (write-string (urlencode (pathname-name pathname)) out))
-                (when (pathname-type pathname)
-                  (write-char #\. out)
-                  (write-string (urlencode (pathname-type pathname)) out))))))
+    (unsplit-url :scheme "file"
+                 :path
+                 (with-output-to-string (out)
+                   (when (and device (not (member device '(nil :unspecific))))
+                     (write-string (urlencode (string device)) out)
+                     (write-char #\: out))
+                   ;; Skip the first element (:ABSOLUTE)
+                   (dolist (dir (rest directory))
+                     (when (stringp dir)
+                       (write-char #\/ out)
+                       (write-string (urlencode dir) out)))
+                   (when (pathname-name pathname)
+                     (write-char #\/ out)
+                     (write-string (urlencode (pathname-name pathname)) out))
+                   (when (pathname-type pathname)
+                     (write-char #\. out)
+                     (write-string (urlencode (pathname-type pathname))
+                                   out))))))
 
 (defun file-url-to-pathname (url)
   (when (starts-with-subseq "file://" url)

@@ -59,7 +59,7 @@
               nil)
             (uiop:with-temporary-file (:pathname temp-file-name)
               (let ((url (document-for-web pax-url temp-file-name)))
-                (multiple-value-bind (scheme authority path) (parse-url url)
+                (multiple-value-bind (scheme authority path) (split-url url)
                   (declare (ignore authority))
                   (if (and (string= scheme "file")
                            (string= path (namestring temp-file-name)))
@@ -106,11 +106,11 @@
 
 (defun edit-pax-url-in-emacs (pax-url)
   (when (swank::default-connection)
-    (multiple-value-bind (scheme authority path) (parse-url pax-url)
+    (multiple-value-bind (scheme authority path) (split-url pax-url)
       (declare (ignore authority))
       (unless (equal scheme "pax")
         (error "~S doesn't have pax: scheme." pax-url))
-      (when-let (drefs (definitions-for-pax-url-path path))
+      (when-let (drefs (definitions-for-pax-url-path (urldecode path)))
         (when (= (length drefs) 1)
           (swank::with-connection ((swank::default-connection))
             (let* ((dref (first drefs))
@@ -137,13 +137,13 @@
   (unless (equal hyperspec-root *web-hyperspec-root*)
     (setq *web-hyperspec-root* hyperspec-root)
     ;; Treat normal file names as file URLs.
-    (if (equal (or (ignore-errors (parse-url hyperspec-root))
+    (if (equal (or (ignore-errors (split-url hyperspec-root))
                    "file")
                "file")
         ;; By default, Chrome and Firefox don't allow linking or
         ;; redirection from a http: URL to a file: URL, so we publish
         ;; the files under CLHS/.
-        (let ((path (or (ignore-errors (nth-value 2 (parse-url hyperspec-root)))
+        (let ((path (or (ignore-errors (nth-value 2 (split-url hyperspec-root)))
                         hyperspec-root)))
           (setq *hyperspec-dispatch-table*
                 (list (hunchentoot:create-folder-dispatcher-and-handler

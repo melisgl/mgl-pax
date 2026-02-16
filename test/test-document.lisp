@@ -142,21 +142,21 @@
   (is (equal (mgl-pax::urlencode "\"") "%22"))
   (is (equal (mgl-pax::urlencode "á") "%C3%A1"))
   (is (match-values
-          (mgl-pax::parse-url "http://x.org:8888/y/z.html?a=1&b=2#frag")
+          (mgl-pax::split-url "http://x.org:8888/y/z.html?a=1&b=2#frag")
         (equal * "http")
         (equal * "x.org:8888")
         (equal * "/y/z.html")
         (equal * "a=1&b=2")
         (equal * "frag")))
   (is (match-values
-          (mgl-pax::parse-url
+          (mgl-pax::split-url
            #.(format nil "pax:pax%3A%3A%40pax-manual%20pax%3Asection~
                           #pax%3Adefsection%20pax%3Amacro"))
         (equal * "pax")
         (null *)
-        (equal * "pax::@pax-manual pax:section")
+        (equal * "pax%3A%3A%40pax-manual%20pax%3Asection")
         (null *)
-        (equal * "pax:defsection pax:macro")))
+        (equal * "pax%3Adefsection%20pax%3Amacro")))
   (is (equal (mgl-pax::urlencode (format nil "~%")) "%0A")))
 
 (deftest test-transform-tree ()
@@ -2098,7 +2098,8 @@ example section
                               '(method ((eql #.(find-package :cl)))))))
       (check-ref-sets
        (pax::definitions-for-pax-url-path
-        (nth-value 2 (pax::parse-url (pax::dref-to-pax-url dref))))
+        (pax::urldecode
+         (nth-value 2 (pax::split-url (pax::dref-to-pax-url dref)))))
        (list dref)))))
 
 (deftest test-with-document-context ()
