@@ -277,7 +277,7 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
 
 - [system] **"mgl-pax"**
 
-    - _Version:_ 0.4.5
+    - _Version:_ 0.4.6
     - _Description:_ Documentation system, browser, generator. See the
         [PAX Manual][2415].
     - _Long Description:_ The base system. See [Links and Systems][ba90].
@@ -3475,6 +3475,24 @@ but in comments too:
     ;;;; .. HELLO
     ;;;; => :HELLO
     ;;;; => (1 2)
+
+With `mgl-pax-transcribe-last-expression`, we strip the
+longest run of leading spaces and semicolons common to
+all lines of the expression in the buffer.
+
+For `mgl-pax-retranscribe-region`, the longest run is
+truncated so that it does not extend beyond the column
+of the first form to be transcribed. Without this rule,
+the syntax used
+
+```common-lisp
+;;(list 1 2)
+;;;=> (1
+;;;->  2)
+```
+
+would be ambiguous, as the `;=>` could refer to `=>` in
+the `:DEFAULT` syntax or to `;=>` in `:COMMENTED-1`.
 
 The dynamic environment of the transcription is determined by the
 `:DYNENV` argument of the enclosing `cl-transcript` code block (see

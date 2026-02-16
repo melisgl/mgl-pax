@@ -4,10 +4,11 @@
 
 ;;;; Utilities
 
-(defun strip-longest-common-prefix (string chars &key (first-line-special-p t)
+(defun strip-longest-common-prefix (string chars &key first-line-indent
                                     (ignore-blank-lines-p t))
   (let ((prefix (longest-common-prefix
-                 string chars :first-line-special-p first-line-special-p
+                 string chars
+                 :first-line-special-p first-line-indent
                  :ignore-blank-lines-p ignore-blank-lines-p))
         (prefix1 nil))
     (values
@@ -24,10 +25,17 @@
                               ;; blank line.
                               (not (starts-with-subseq prefix line)))
                          (write-line line output))
-                        ((and first-line-special-p (zerop i))
+                        ((and first-line-indent (zerop i))
                          ;; This skips all semicolons and spaces right
                          ;; of the cursor in Emacs.
                          (setq prefix1 (matching-prefix line chars))
+                         (when first-line-indent
+                           ;; PREFIX must not extend beyond the column
+                           ;; of first form to be in the transcript.
+                           (setq prefix (subseq prefix 0
+                                                (min (length prefix)
+                                                     (+ first-line-indent
+                                                        (length prefix1))))))
                          (write-line (subseq line (length prefix1)) output))
                         (t
                          (write-line (subseq line (length prefix)) output))))))
@@ -36,8 +44,8 @@
 
 ;;; Return the longest common prefix of lines of STRING, where the
 ;;; prefix is made of CHARS.
-(defun longest-common-prefix (string chars &key (first-line-special-p t)
-                                             (ignore-blank-lines-p t))
+(defun longest-common-prefix (string chars &key first-line-special-p
+                              (ignore-blank-lines-p t))
   (let ((longest-prefix nil))
     (with-input-from-string (s string)
       (loop for i upfrom 0
@@ -55,11 +63,11 @@
     longest-prefix))
 
 (defun matching-prefix (string chars)
-  (let ((position (position-if-not (lambda (char)
-                                     (find char chars))
-                                   string)))
-    (if position
-        (subseq string 0 position)
+  (let ((pos (position-if-not (lambda (char)
+                                (find char chars))
+                              string)))
+    (if pos
+        (subseq string 0 pos)
         string)))
 
 ;;; Read as many consecutive lines starting with PREFIX from STREAM as
@@ -1272,6 +1280,8 @@
       ;;;; => :HELLO
       ;;;; => (1 2)
 
+  @TRANSCRIBE-STRIP-PREFIX
+
   The dynamic environment of the transcription is determined by the
   :DYNENV argument of the enclosing `cl-transcript` code block (see
   @TRANSCRIPT-DYNENV).
@@ -1280,7 +1290,7 @@
   `src/mgl-pax.el`. See @EMACS-SETUP.""")
 
 (defun transcribe-for-emacs (string default-syntax* update-only echo
-                             first-line-special-p dynenv)
+                             dynenv first-line-indent)
   (with-swank ()
     (swank::with-buffer-syntax ()
       (let ((default-syntax (cond ((numberp default-syntax*)
@@ -1295,10 +1305,28 @@
                               (not (fboundp dynenv))))
           (error ":dynenv ~S does not name a function." dynenv))
         (multiple-value-bind (string prefix1 prefix)
-            (strip-longest-common-prefix
-             string "; " :first-line-special-p first-line-special-p)
+            (note @transcribe-strip-prefix
+              "With `mgl-pax-transcribe-last-expression`, we strip the
+              longest run of leading spaces and semicolons common to
+              all lines of the expression in the buffer.
+
+              For `mgl-pax-retranscribe-region`, the longest run is
+              truncated so that it does not extend beyond the column
+              of the first form to be transcribed. Without this rule,
+              the syntax used
+
+              ```cl-transcript
+              ;;(list 1 2)
+              ;;;=> (1
+              ;;;->  2)
+              ```
+
+              would be ambiguous, as the `;=>` could refer to `=>` in
+              the :DEFAULT syntax or to `;=>` in :COMMENTED-1."
+              (strip-longest-common-prefix
+               string "; " " " :first-line-indent first-line-indent))
           (format nil "~A~A"
-                  (if first-line-special-p prefix1 prefix)
+                  (if first-line-indent prefix1 prefix)
                   (prefix-lines prefix
                                 (transcribe string nil
                                             :default-syntax default-syntax

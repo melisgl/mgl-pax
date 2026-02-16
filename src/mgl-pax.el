@@ -1505,7 +1505,7 @@ Without a prefix argument, the first syntax is used."
         (insert "\n"))
       (insert
        (mgl-pax-transcribe sexp (mgl-pax-transcribe-syntax-arg)
-                           nil nil nil dynenv))
+                           nil nil dynenv nil))
       (string-insert-rectangle
        (save-excursion (goto-char start)
                        (forward-line 1)
@@ -1546,7 +1546,9 @@ input will not be changed."
             (transcript (mgl-pax-transcribe
                          (buffer-substring-no-properties start end)
                          (mgl-pax-transcribe-syntax-arg)
-                         t t t dynenv)))
+                         t t dynenv (save-excursion
+                                      (goto-char start)
+                                      (current-column)))))
         (if (string= transcript (buffer-substring-no-properties start end))
             (deactivate-mark)
           (if point-at-start-p
@@ -1580,11 +1582,11 @@ input will not be changed."
             (when (search-forward ":dynenv" nil t)
               (mgl-pax-next-sexp))))))))
 
-(defun mgl-pax-transcribe (string syntax update-only echo
-                                  first-line-special-p dynenv)
+(defun mgl-pax-transcribe (string syntax update-only echo dynenv
+                                  first-line-indent)
   (slime-eval `(mgl-pax::transcribe-for-emacs
-                ,string ',syntax ',update-only ',echo ',first-line-special-p
-                ,dynenv)))
+                ,string ',syntax ',update-only ',echo ,dynenv
+                ,first-line-indent)))
 
 
 (provide 'mgl-pax)
