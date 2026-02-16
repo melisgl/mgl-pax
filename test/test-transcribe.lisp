@@ -4,48 +4,48 @@
   (is (equal (multiple-value-list
               (with-input-from-string (stream (format nil ">1"))
                 (mgl-pax::read-prefixed-lines stream ">")))
-             '("1" 1 nil t 2)))
+             '("1" nil t 2)))
   (is (equal (multiple-value-list
               (with-input-from-string (stream (format nil ">1~%"))
                 (mgl-pax::read-prefixed-lines stream ">")))
-             '("1" 1 nil t 3)))
+             '("1" nil t 3)))
   (is (equal (multiple-value-list
               (with-input-from-string (stream (format nil ">1~%>"))
                 (mgl-pax::read-prefixed-lines stream ">")))
-             `(,(format nil "1~%") 2 nil t 4)))
+             `(,(format nil "1~%") nil t 4)))
   (is (equal (multiple-value-list
               (with-input-from-string (stream (format nil ">1~%>2~%> 3"))
                 (mgl-pax::read-prefixed-lines stream ">")))
-             `(,(format nil "1~%2~%3") 3 nil t 9)))
+             `(,(format nil "1~%2~%3") nil t 9)))
   (is (equal (multiple-value-list
               (with-input-from-string (stream
                                        (format nil ">1~%>2~%> 3~%xy~%"))
                 (mgl-pax::read-prefixed-lines stream ">")))
-             `(,(format nil "1~%2~%3") 3 "xy" nil 10)))
+             `(,(format nil "1~%2~%3") "xy" nil 10)))
   (is (equal (multiple-value-list
               (with-input-from-string (stream (format nil ">1~%>2~%> 3~%xy"))
                 (mgl-pax::read-prefixed-lines stream ">")))
-             `(,(format nil "1~%2~%3") 3 "xy" t 10)))
+             `(,(format nil "1~%2~%3") "xy" t 10)))
   (is (equal (multiple-value-list
               (with-input-from-string (stream (format nil ">1"))
                 (mgl-pax::read-prefixed-lines stream ">"
                                               :first-line-prefix "")))
-             '(">1" 1 nil t 2)))
+             '(">1" nil t 2)))
   (is (equal (multiple-value-list
               (with-input-from-string (stream (format nil ">1~%>2~%> 3"))
                 (mgl-pax::read-prefixed-lines stream ">"
                                               :first-line-prefix "")))
-             `(,(format nil ">1~%2~%3") 3 nil t 9)))
+             `(,(format nil ">1~%2~%3") nil t 9)))
   (is (equal (multiple-value-list
               (with-input-from-string (stream (format nil ">1~%>2~%> 3~%xy~%"))
                 (mgl-pax::read-prefixed-lines stream ">"
                                               :first-line-prefix "")))
-             `(,(format nil ">1~%2~%3") 3 "xy" nil 10)))
+             `(,(format nil ">1~%2~%3") "xy" nil 10)))
   (is (equal (multiple-value-list
               (with-input-from-string (stream (format nil ">1~%>2~%> 3~%xy"))
                 (mgl-pax::read-prefixed-lines stream ">"
                                               :first-line-prefix "")))
-             `(,(format nil ">1~%2~%3") 3 "xy" t 10))))
+             `(,(format nil ">1~%2~%3") "xy" t 10))))
 
 (defclass bbb ()
   ())

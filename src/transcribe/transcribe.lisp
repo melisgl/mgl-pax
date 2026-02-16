@@ -93,7 +93,7 @@
           (when (or (null line)
                     (not (starts-with-subseq prefix line)))
             (return-from read-prefixed-lines
-              (values (get-output-stream-string output) n-lines-read
+              (values (get-output-stream-string output)
                       line missing-newline-p file-position)))
           (unless (zerop n-lines-read)
             (terpri output))
@@ -672,13 +672,10 @@
                                                (first transcript))))
                   (let ((match-length (length prefix))
                         value
-                        n-lines-read
                         file-position-1)
-                    (declare (ignorable n-lines-read))
                     (file-position stream (+ file-position match-length))
                     (multiple-value-setq
-                        (value n-lines-read
-                               line missing-newline-p file-position-1
+                        (value line missing-newline-p file-position-1
                                partial-line-p)
                       (parse-transcript-element stream prefix-id syntax-id
                                                 line match-length))
@@ -720,7 +717,6 @@
          (cond ((every #'whitespacep (subseq first-line match-length))
                 (read-line stream nil nil)
                 (values-list `(,(list nil nil)
-                               1
                                ,@(multiple-value-list
                                   (read-line* stream nil nil))
                                nil)))
@@ -734,7 +730,6 @@
                                  (find-prefix prefix-id syntax-id)))
          (read-line stream nil nil)
          (values-list `(nil
-                        1
                         ,@(multiple-value-list
                            (read-line* stream nil nil))
                         nil)))
@@ -757,8 +752,6 @@
           (t
            (let ((at-bol-p (skip-white-space-till-end-of-line stream)))
              (values-list `(,form-and-string
-                            ;; FIXME: N-LINES-READ
-                            1
                             ,@(multiple-value-list (read-line* stream nil nil))
                             ,(not at-bol-p))))))))
 
@@ -774,15 +767,13 @@
         (parse-readable* stream))))
 
 (defun parse-readable-with-continuation (stream continuation-prefix)
-  (multiple-value-bind (string n-lines-read
-                        next-line missing-newline-p file-position)
+  (multiple-value-bind (string next-line missing-newline-p file-position)
       (read-prefixed-lines stream continuation-prefix
                            :first-line-prefix "")
     ;; FIXME: eof?
     (let ((form (first (with-input-from-string (stream string)
                          (read-form-and-string stream nil)))))
-      (values (list form string) n-lines-read
-              next-line missing-newline-p file-position
+      (values (list form string) next-line missing-newline-p file-position
               nil))))
 
 (defun parse-readable* (stream)
@@ -799,8 +790,6 @@
       (transcription-error* "Trailing junk after readable value ~S."
                             (second form-and-string)))
     (values-list `(,form-and-string
-                   ;; FIXME: N-LINES-READ
-                   1
                    ,@(multiple-value-list (read-line* stream nil nil))
                    nil))))
 
