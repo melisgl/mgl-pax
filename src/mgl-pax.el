@@ -1503,19 +1503,22 @@ Without a prefix argument, the first syntax is used."
                      (mgl-pax-line-prefix))))
       (unless (mgl-pax-blank-line-prefix-p)
         (insert "\n"))
-      (insert
-       (mgl-pax-transcribe sexp (mgl-pax-transcribe-syntax-arg)
-                           nil nil dynenv nil))
-      (string-insert-rectangle
-       (save-excursion (goto-char start)
-                       (forward-line 1)
-                       (point))
-       (save-excursion (forward-line -1) (point))
-       prefix)
-      ;; The transcript ends with a newline. Delete it if it would
-      ;; result in a blank line.
-      (when (looking-at "\n")
-        (delete-char 1)))))
+      (cl-destructuring-bind (transcript did-something-p)
+          (mgl-pax-transcribe sexp (mgl-pax-transcribe-syntax-arg)
+                              nil nil dynenv nil)
+        (if (not did-something-p)
+            (message "No forms found to transcribe.")
+          (insert transcript)
+          (string-insert-rectangle
+           (save-excursion (goto-char start)
+                           (forward-line 1)
+                           (point))
+           (save-excursion (forward-line -1) (point))
+           prefix)
+          ;; The transcript ends with a newline. Delete it if it would
+          ;; result in a blank line.
+          (when (looking-at "\n")
+            (delete-char 1)))))))
 
 (defun mgl-pax-blank-line-prefix-p ()
   (let ((string (buffer-substring-no-properties (line-beginning-position)
@@ -1542,24 +1545,28 @@ input will not be changed."
   (interactive "r")
   (mgl-pax-with-component (:mgl-pax/transcribe)
     (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
-      (let ((point-at-start-p (= (point) start))
-            (transcript (mgl-pax-transcribe
-                         (buffer-substring-no-properties start end)
-                         (mgl-pax-transcribe-syntax-arg)
-                         t t dynenv (save-excursion
-                                      (goto-char start)
-                                      (current-column)))))
-        (if (string= transcript (buffer-substring-no-properties start end))
-            (deactivate-mark)
-          (if point-at-start-p
-              (save-excursion
-                (goto-char start)
-                (delete-region start end)
-                (insert transcript))
-            (save-excursion
-              (goto-char start)
-              (delete-region start end))
-            (insert transcript)))))))
+      (let ((point-at-start-p (= (point) start)))
+        (cl-destructuring-bind (transcript did-something-p)
+            (mgl-pax-transcribe
+             (buffer-substring-no-properties start end)
+             (mgl-pax-transcribe-syntax-arg)
+             t t dynenv (save-excursion
+                          (goto-char start)
+                          (current-column)))
+          (cond ((not did-something-p)
+                 (message "No forms found to transcribe."))
+                ((string= transcript (buffer-substring-no-properties start end))
+                 (deactivate-mark))
+                (point-at-start-p
+                 (save-excursion
+                   (goto-char start)
+                   (delete-region start end)
+                   (insert transcript)))
+                (t
+                 (save-excursion
+                   (goto-char start)
+                   (delete-region start end))
+                 (insert transcript))))))))
 
 (defun mgl-pax-transcribe-syntax-arg ()
   (if current-prefix-arg

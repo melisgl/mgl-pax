@@ -277,7 +277,7 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
 
 - [system] **"mgl-pax"**
 
-    - _Version:_ 0.4.6
+    - _Version:_ 0.4.7
     - _Description:_ Documentation system, browser, generator. See the
         [PAX Manual][2415].
     - _Long Description:_ The base system. See [Links and Systems][ba90].
@@ -3519,7 +3519,9 @@ Transcription support in Emacs can be enabled by loading
     
     `INPUT` can be a stream or a string, while `OUTPUT` can be a stream or
     `NIL`, in which case output goes into a string. The return value is
-    the `OUTPUT` stream or the string that was constructed.
+    the `OUTPUT` stream or the string that was constructed. As the second
+    value, a generalized boolean indicating whether any form was
+    transcribed is returned.
     
     Go up to [Transcribing with Emacs][f5bd] for nice examples. A more
     mind-bending one is this:
@@ -3530,6 +3532,7 @@ Transcription support in Emacs can be enabled by loading
     .. 42
     => 42
     "
+    => T
     ```
     
     However, the above may be a bit confusing since this documentation

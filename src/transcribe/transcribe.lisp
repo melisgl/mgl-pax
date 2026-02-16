@@ -268,7 +268,9 @@
 
   INPUT can be a stream or a string, while OUTPUT can be a stream or
   NIL, in which case output goes into a string. The return value is
-  the OUTPUT stream or the string that was constructed.
+  the OUTPUT stream or the string that was constructed. As the second
+  value, a generalized boolean indicating whether any form was
+  transcribed is returned.
 
   Go up to @TRANSCRIBING-WITH-EMACS for nice examples. A more
   mind-bending one is this:
@@ -279,6 +281,7 @@
   .. 42
   => 42
   "
+  => T
   ```
 
   However, the above may be a bit confusing since this documentation
@@ -471,22 +474,27 @@
   is called with a single argument: a thunk (a function of no
   arguments). See @TRANSCRIPT-DYNENV for an example.
   """
-  (flet ((do-it ()
-           (write-transcript (read-transcript input :syntaxes input-syntaxes)
-                             output
-                             :update-only update-only
-                             :check-consistency check-consistency
-                             :include-no-output include-no-output
-                             :include-no-value include-no-value
-                             :echo echo
-                             :default-syntax default-syntax
-                             :syntaxes output-syntaxes)))
-    ;; There is no point not allowing *READ-EVAL* because we are
-    ;; EVALuating code anyway.
-    (let ((*read-eval* t))
-      (if dynenv
-          (funcall dynenv #'do-it)
-          (do-it)))))
+  (let ((transcript
+          ;; There is no point not allowing *READ-EVAL* because we are
+          ;; EVALuating code anyway.
+          (let ((*read-eval* t))
+            (read-transcript input :syntaxes input-syntaxes))))
+    (flet ((do-it ()
+             (write-transcript transcript output
+                               :update-only update-only
+                               :check-consistency check-consistency
+                               :include-no-output include-no-output
+                               :include-no-value include-no-value
+                               :echo echo
+                               :default-syntax default-syntax
+                               :syntaxes output-syntaxes)))
+      (values (if dynenv
+                  (funcall dynenv #'do-it)
+                  (do-it))
+              (not (not (find-if-not (lambda (command)
+                                       (let ((form-and-string (first command)))
+                                         (eq (first form-and-string) 'eof)))
+                                     transcript)))))))
 
 
 ;;;; Prefix utilities
@@ -845,7 +853,8 @@
 
 (defun call-with-output-stream (fn output)
   (cond ((streamp output)
-         (funcall fn output))
+         (progn (funcall fn output)
+                output))
         ((null output)
          (with-output-to-string (stream)
            (funcall fn stream)))
@@ -854,9 +863,9 @@
 
 (defun write-transcript (transcript output
                          &key update-only (include-no-output update-only)
-                           (include-no-value update-only)
-                           (echo t) check-consistency
-                           default-syntax (syntaxes *transcribe-syntaxes*))
+                         (include-no-value update-only)
+                         (echo t) check-consistency
+                         default-syntax (syntaxes *transcribe-syntaxes*))
   (check-type output (or stream null))
   (with-output-stream (stream output)
     (let ((*transcribe-syntaxes* syntaxes)
@@ -1324,15 +1333,16 @@
               would be ambiguous, as the `;=>` could refer to `=>` in
               the :DEFAULT syntax or to `;=>` in :COMMENTED-1."
               (strip-longest-common-prefix
-               string "; " " " :first-line-indent first-line-indent))
-          (format nil "~A~A"
-                  (if first-line-indent prefix1 prefix)
-                  (prefix-lines prefix
-                                (transcribe string nil
-                                            :default-syntax default-syntax
-                                            :update-only update-only :echo echo
-                                            :dynenv dynenv)
-                                :exclude-first-line-p t)))))))
+               string "; " :first-line-indent first-line-indent))
+          (multiple-value-bind (output did-something-p)
+              (transcribe string nil
+                          :default-syntax default-syntax
+                          :update-only update-only :echo echo
+                          :dynenv dynenv)
+            (list (format nil "~A~A"
+                          (if first-line-indent prefix1 prefix)
+                          (prefix-lines prefix output :exclude-first-line-p t))
+                  did-something-p)))))))
 
 
 (defsection @transcript-consistency-checking
