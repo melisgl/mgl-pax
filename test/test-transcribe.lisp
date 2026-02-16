@@ -301,7 +301,10 @@
               +++~%~
               => 2~%")
     (:input ":hello~%;=>"
-     :output ":hello~%;=> :HELLO~%")))
+     :output ":hello~%;=> :HELLO~%")
+    (:input "(list 1 2)~%;=> ; xxx~%;->"
+     :output ""
+     :errors (11))))
 
 (defun call-format-on-strings (tree)
   (mgl-pax::transform-tree (lambda (parent node)

@@ -770,11 +770,11 @@
   (multiple-value-bind (string next-line missing-newline-p file-position)
       (read-prefixed-lines stream continuation-prefix
                            :first-line-prefix "")
-    ;; FIXME: eof?
-    (let ((form (first (with-input-from-string (stream string)
-                         (read-form-and-string stream nil)))))
-      (values (list form string) next-line missing-newline-p file-position
-              nil))))
+    (let ((form-and-string (with-input-from-string (stream string)
+                             (read-form-and-string stream 'eof))))
+      (when (eq (first form-and-string) 'eof)
+        (transcription-error* "Unexpected EOF while parsing readable value."))
+      (values form-and-string next-line missing-newline-p file-position nil))))
 
 (defun parse-readable* (stream)
   ;; We are after a readable prefix. Eat a single space if any so that
