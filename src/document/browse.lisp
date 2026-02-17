@@ -620,7 +620,7 @@
                           :direction :output
                           :if-does-not-exist :create
                           :if-exists :supersede
-                          :external-format *utf-8-external-format*)
+                          :external-format uiop:*utf-8-external-format*)
     (when title
       (format stream "<title>~A</title>~%" (escape-html title)))
     (document/open stuff :stream stream)))

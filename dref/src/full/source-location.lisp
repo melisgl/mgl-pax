@@ -86,11 +86,12 @@
          (getf snippet-entry :snippet))))
 
 (defun/autoloaded source-location-adjusted-file-position (location)
-  "Return the actual file position LOCATION points to allowing for 
+  "Return the actual file position LOCATION points to allowing for
   some deviation from the raw SOURCE-LOCATION-FILE-POSITION, which is
   adjusted by searching for the nearest occurrence of
-  SOURCE-LOCATION-SNIPPET in the file. Needless to say, this can be a
-  very expensive operation.
+  SOURCE-LOCATION-SNIPPET in the file. The file is read using the same
+  external format that ASDF would use to compile it. Needless to say,
+  this can be a very expensive operation.
 
   If SOURCE-LOCATION-FILE is NIL, NIL is returned. If there is no
   snippet, or it doesn't match, then SOURCE-LOCATION-FILE-POSITION (or
@@ -117,13 +118,15 @@
                      pos-before pos-after)))
           pos))))
 
-(defparameter *utf-8-external-format*
-  #+abcl :utf-8
-  #+allegro :utf-8
-  #+clisp charset:utf-8
-  #-(or abcl allegro clisp) :default)
+(defun asdf-file-external-format (file)
+  #-asdf-encodings
+  (declare (ignore file))
+  (let ((detected-encoding
+          #+asdf-encodings (asdf-encodings:detect-file-encoding file)
+          #-asdf-encodings nil))
+    (uiop:encoding-external-format (or detected-encoding
+                                       uiop:*default-encoding*))))
 
 (defun slurp-file (file)
-  ;; FIXME: Determine the external format somehow?
-  (alexandria:read-file-into-string
-   file :external-format *utf-8-external-format*))
+  (uiop:read-file-string file
+                         :external-format (asdf-file-external-format file)))

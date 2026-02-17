@@ -2628,11 +2628,12 @@ the details, see the Elisp function `slime-goto-source-location`.
 
 - [function] **SOURCE-LOCATION-ADJUSTED-FILE-POSITION** *LOCATION*
 
-    Return the actual file position `LOCATION` points to allowing for 
+    Return the actual file position `LOCATION` points to allowing for
     some deviation from the raw [`SOURCE-LOCATION-FILE-POSITION`][be18], which is
     adjusted by searching for the nearest occurrence of
-    [`SOURCE-LOCATION-SNIPPET`][6ec3] in the file. Needless to say, this can be a
-    very expensive operation.
+    [`SOURCE-LOCATION-SNIPPET`][6ec3] in the file. The file is read using the same
+    external format that ASDF would use to compile it. Needless to say,
+    this can be a very expensive operation.
     
     If [`SOURCE-LOCATION-FILE`][ae5a] is `NIL`, `NIL` is returned. If there is no
     snippet, or it doesn't match, then `SOURCE-LOCATION-FILE-POSITION` (or

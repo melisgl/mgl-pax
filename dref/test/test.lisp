@@ -580,7 +580,7 @@
 (defun read-string-from-file-position (filename position n)
   (with-open-file (stream filename
                           :direction :input
-                          :external-format dref::*utf-8-external-format*)
+                          :external-format uiop:*utf-8-external-format*)
     (file-position stream position)
     (let ((string (make-string n)))
       (read-sequence string stream)
@@ -589,7 +589,7 @@
 (defun read-form-from-file-position (filename position)
   (with-open-file (stream filename
                           :direction :input
-                          :external-format dref::*utf-8-external-format*)
+                          :external-format uiop:*utf-8-external-format*)
     (file-position stream position)
     (read stream)))
 

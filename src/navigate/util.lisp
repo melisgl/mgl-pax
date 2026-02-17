@@ -7,12 +7,6 @@
      ;; With *PRINT-READABLY*, CLISP insists on printing FOO as |FOO|.
      (let (#+clisp (*print-readably* nil))
        ,@body)))
-
-(defparameter *utf-8-external-format*
-  #+abcl :utf-8
-  #+allegro :utf-8
-  #+clisp charset:utf-8
-  #-(or abcl allegro clisp) :default)
 
 
 ;;;; Parsing of symbols, strings, numbers and their nested lists
