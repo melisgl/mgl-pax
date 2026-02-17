@@ -124,26 +124,32 @@
     ((#\))
      (error "~@<Unpaired closing paren.~:@>"))
     ((#\()
-     (assert nil () "FIXME: Unimplemented"))
+     (read-funny-list stream))
     ((#\")
      (read stream eof-error-p eof-value))
     (t
-     (let ((name-1 (read-funny* stream))
-           (next-char (peek-char nil stream nil)))
-       (cond ((eql next-char #\:)
+     (let ((name-1 (read-funny* stream)))
+       (cond ((eql (peek-char nil stream nil) #\:)
               (read-char stream)
-              (find-symbol (read-funny* stream)
-                           (if (zerop (length name-1))
-                               #.(find-package :keyword)
-                               (find-package name-1))))
+              (let ((name-2 (read-funny* stream))
+                    (package (if (zerop (length name-1))
+                                 #.(find-package :keyword)
+                                 (find-package name-1))))
+                (or (find-symbol name-2 package)
+                    (error "~@<Symbol with name ~S not found in package ~S.~:@>"
+                           name-2 (package-name package)))))
              (t
-              (find-symbol name-1 #.(find-package :cl))))))))
+              (let ((package #.(find-package :cl)))
+                (or (find-symbol name-1 package)
+                    (error "~@<Unqualified symbol with name ~S not found in ~
+                         package ~S.~:@>" name-1 (package-name package))))))))))
+
 
 (defun read-funny* (stream)
   (with-output-to-string (s)
     (loop for char = (read-char stream nil)
           while char
-          do ;; These would be escaped if they were part of the name.
+          do ;; These are escaped by PRIN1-FUNNY*.
              (when (member char '(#\: #\Space #\( #\)))
                (unread-char char stream)
                (return))
@@ -151,6 +157,15 @@
                ;; EOF is invalid syntax.
                (setq char (read-char stream)))
              (write-char char s))))
+
+(defun read-funny-list (stream)
+  (assert (char= (read-char stream) #\())
+  (flet ((closep ()
+           (when (eql (peek-char t stream nil nil) #\))
+             (read-char stream)
+             t)))
+    (loop until (closep)
+          collect (read-funny stream))))
 
 (defun prin1-funny-to-string (name)
   (with-output-to-string (stream)

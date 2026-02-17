@@ -295,7 +295,15 @@
   (is (equal (mgl-pax::read-funny*-from-string "x\\y") "xy"))
   (is (equal (mgl-pax::read-funny*-from-string "x\\:y") "x:y"))
   (signals (end-of-file)
-    (mgl-pax::read-funny*-from-string "x\\")))
+    (mgl-pax::read-funny*-from-string "x\\"))
+  (is (equal (mgl-pax::read-funny-from-string
+              (mgl-pax::prin1-funny-to-string '(x y)))
+             '(x y)))
+  (is (equal (mgl-pax::read-funny-from-string
+              (mgl-pax::prin1-funny-to-string '((x) y)))
+             '((x) y)))
+  (signals (error :pred "Unpaired closing paren")
+    (mgl-pax::read-funny-from-string ")")))
 
 
 (deftest test-codify ()

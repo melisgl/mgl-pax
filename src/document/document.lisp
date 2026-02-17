@@ -3075,9 +3075,11 @@
   (with-standard-io-syntax*
     (let ((*print-readably* nil))
       (with-input-from-string (stream path)
-        (let ((name (read-funny stream nil)))
-          (unless name
-            (error "~@<Bad ~S name in PAX URL path ~S~:@>" 'dref::@name path))
+        (let ((name (handler-case
+                        (read-funny stream nil)
+                      (error (e)
+                        (error "~@<Bad ~S name in PAX URL path ~S.~%~A~:@>"
+                               'dref::@name path e)))))
           (let ((drefs (definitions* name))
                 (locative-string (trim-whitespace
                                   (read-stream-content-into-string stream))))
