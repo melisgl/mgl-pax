@@ -6,6 +6,7 @@
 (export '*transcribe-syntaxes*)
 
 (autoload transcribe "mgl-pax/transcribe")
+(autoload standard-transcribe-dynenv "mgl-pax/transcribe")
 (autoload squeeze-whitespace "mgl-pax/transcribe")
 (autoload delete-trailing-whitespace "mgl-pax/transcribe")
 (autoload delete-comments "mgl-pax/transcribe")

@@ -1126,6 +1126,45 @@
    (call-interactively 'mgl-pax-retranscribe-region)
    (accept-process-output nil 1)
    (should (equal (buffer-string) "  (+ 1 2)\n  => 3\n "))))
+
+(defun mark-whole-buffer-but-edges (n-head n-tail)
+  (goto-char (point-min))
+  (forward-line n-head)
+  (push-mark (point) t t)
+  (goto-char (point-max))
+  (forward-line (- n-tail)))
+
+;;; Keep in sync with MGL-PAX-TEST::TEST-DYNENV except the open
+;;; linking tests there, which do not make sense here.
+(ert-deftest test-mgl-pax-retranscribe-region/dynenv ()
+  (load-mgl-pax-test-system)
+  (cl-labels
+      ((input (args-string downcasedp)
+         (format "(in-package :mgl-pax-test)
+```cl-transcript %s
+(make-instance 'bbb)
+==> #<%s>
+```
+"
+                 args-string (if downcasedp "bbb" "BBB")))
+       (expected (args-string downcasedp)
+         (input args-string downcasedp)))
+    (slime-eval '(cl:setq cl:*print-case* :downcase))
+    (unwind-protect
+        (dolist (test-case
+                 '(("(:dynenv funcall)" t nil)
+                   ("" nil nil)
+                   ("junk" nil t)))
+          (cl-destructuring-bind (args downcasedp errorp) test-case
+            (with-temp-lisp-buffer
+             (insert (input args downcasedp))
+             (mark-whole-buffer-but-edges 2 1)
+             (if errorp
+                 (should-error
+                  (call-interactively 'mgl-pax-retranscribe-region))
+               (call-interactively 'mgl-pax-retranscribe-region)
+               (should (equal (buffer-string) (expected args downcasedp)))))))
+      (slime-eval '(cl:setq cl:*print-case* :upcase)))))
 
 
 (provide 'mgl-pax-tests)

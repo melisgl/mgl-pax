@@ -140,50 +140,177 @@
 
 
 (defsection @transcripts (:title "Transcripts")
-  "What are transcripts for? When writing a tutorial, one often wants
-  to include a REPL session with maybe a few defuns and a couple of
-  forms whose output or return values are shown. Also, in a function's
-  docstring an example call with concrete arguments and return values
-  speaks volumes. A transcript is a text that looks like a REPL
-  session, but which has a light markup for printed output and return
-  values, while no markup (i.e. prompt) for Lisp forms. PAX
+  """What are transcripts for? When writing a tutorial, one often
+  wants to include a REPL session with maybe a few defuns and a couple
+  of forms whose output or return values are shown. Also, in a
+  function's docstring an example call with concrete arguments and
+  return values speaks volumes. A transcript is a text that looks like
+  a REPL session, but which has a light markup for printed output and
+  return values, while no markup (i.e. prompt) for Lisp forms. PAX
   transcripts may include output and return values of all forms, or
   only selected ones. In either case, the transcript itself can be
-  easily generated from the source code.
+  easily generated from the source code. The main worry associated
+  with including examples in the documentation is that they tend to
+  get out-of-sync with the code. This is solved by being able to parse
+  back and update transcripts.
 
-  The main worry associated with including examples in the
-  documentation is that they tend to get out-of-sync with the code.
-  This is solved by being able to parse back and update transcripts.
-  In fact, this is exactly what happens during documentation
-  generation with PAX. Code sections tagged with `cl-transcript` are
-  retranscribed and checked for consistency (that is, no difference in
-  output or return values). If the consistency check fails, an error
-  is signalled that includes a reference to the object being
-  documented.
+  Consider this function:
 
-  Going beyond documentation, transcript consistency checks can be
-  used for writing simple tests in a very readable form. For example:
+  ```
+  (defun foo (x)
+    "Return X + 1 and log what happened."
+    (format t "Adding 1 to ~S~%" x)
+    (1+ x))
+  ```
 
-  ```cl-transcript
-  (+ 1 2)
-  => 3
+  Let's add an example to the docstring:
 
-  (values (princ :hello) (list 1 2))
-  .. HELLO
-  => :HELLO
-  => (1 2)
+  ```
+  (defun foo (x)
+    "Return X + 1 and log what happened.
+    For example,
+
+    ```
+    (foo 7)
+    .. Adding 1 to 7
+    ..
+    => 8
+    ```"
+    (format t "Adding 1 to ~S~%" x)
+    (1+ x))
+  ```
+
+  In this transcript above, output lines are prefixed with `".. "` and
+  return values with `"=> "`. The transcript could have been generated
+  with `(TRANSCRIBE "(foo 7)" *STANDARD-OUTPUT*)` or interactively by
+  invoking `mgl-pax-transcribe-last-expression` in Emacs with the
+  point right after `(FOO 7)`.
+
+  If we want PAX to check that the transcript is consistent with the
+  code when @GENERATING-DOCUMENTATION, we add the `cl-transcript` tag
+  to the code block:
+
+  ```
+  (defun foo (x)
+    "Return X + 1 and log what happened.
+    For example,
+
+    ```cl-transcript
+    (foo 7)
+    .. Adding 1 to 7
+    ..
+    => 8
+    ```"
+    (format t "Adding 1 to ~S~%" x)
+    (+ x 2))
+  ```
+
+  Since the code was also changed to `(+ X 2)`, documenting this
+  function causes the following error:
+
+  ```
+  (document #'foo)
+  .. debugger invoked on TRANSCRIPTION-VALUES-CONSISTENCY-ERROR:
+  ..   Transcription error: Readable value "8" in source is not EQUAL to "9".
+  ..     [While documenting (MGL-PAX::FOO COMMON-LISP:FUNCTION)]
+  ..
+  ..   Form:
+  ..   "(foo 7)"
   ```
 
   All in all, transcripts are a handy tool especially when combined
-  with the Emacs support to regenerate them and with
+  with the Emacs support to update them and with
   [PYTHONIC-STRING-READER][asdf:system]'s triple-quoted strings, that
   allow one to work with nested strings with less noise. The
   triple-quote syntax can be enabled with:
 
-      (in-readtable pythonic-string-syntax)"
+      (in-readtable pythonic-string-syntax)"""
   (@transcribing-with-emacs section)
+  (@transcript-dynenv section)
   (@transcript-api section)
   (@transcript-consistency-checking section))
+
+(defsection @transcript-dynenv
+    (:title "Controlling the Dynamic Environment")
+  """When the TRANSCRIBE function is called directly, the forms in the
+  transcript are evaluated in the current dynamic environment with the
+  following exceptions.
+
+  - @@TRANSCRIBE-UPDATE-REPL-VARS
+
+  - @@TRANSCRIBE-OUTPUT-VARS
+
+  If TRANSCRIBE is invoked [by Emacs][ @transcribing-with-emacs] or by
+  the DOCUMENT function, then a new dynamic environment is established
+  by STANDARD-TRANSCRIBE-DYNENV (similar in spirit to
+  WITH-STANDARD-IO-SYNTAX), which binds printer and reader variables
+  to fixed values to make IO more predictable. This default can be
+  overridden with the :DYNENV argument of `cl-transcript`:
+
+      ```cl-transcript (:dynenv my-transcript)
+      ...
+      ```
+
+  In this case, instead of calling TRANSCRIBE directly,
+  `MY-TRANSCRIPT` is called with a thunk (a function of no arguments)
+  that wraps a call to TRANSCRIBE. Once `MY-TRANSCRIPT` establishes
+  the desired dynamic environment, it calls its argument. The
+  following definition of `MY-TRANSCRIPT` simply packages up oft-used
+  settings to TRANSCRIBE.
+
+  ```
+  (defun my-transcript (fn)
+    (standard-transcribe-dynenv
+      (let ((*transcribe-check-consistency*
+              '((:output my-transcript-output=)
+                (:readable equal)
+                (:unreadable nil))))
+        (funcall fn))))
+
+  (defun my-transcript-output= (string1 string2)
+    (string= (my-transcript-normalize-output string1)
+             (my-transcript-normalize-output string2)))
+
+  (defun my-transcript-normalize-output (string)
+    (squeeze-whitespace (delete-trailing-whitespace (delete-comments string))))
+  ```
+
+  The default for :DYNENV is STANDARD-TRANSCRIBE-DYNENV, and it is
+  generally a good idea to use it as the above example does, but this
+  is not required. Specify :DYNENV NIL explicitly if you do not want
+  to use the current dynamic environment without changes.
+
+  A more involved solution could rebind global variables set in
+  transcripts, unintern symbols created or even create a temporary
+  package for evaluation."""
+  (standard-transcribe-dynenv function))
+
+(defun/autoloaded standard-transcribe-dynenv (fn)
+  "Bind printer and reader variables to standard values and call FN.
+
+  The bindings are the same as with WITH-STANDARD-IO-SYNTAX, but
+
+  - *PACKAGE* and *READTABLE* are unaffected (because both DOCUMENT
+    and Emacs set these up);
+
+  - *PRINT-READABLY* is NIL, *PRINT-PRETTY* is T, *PRINT-CIRCLE* is T
+    and *PRINT-RIGHT-MARGIN* is 72.
+
+  This function is the default for the :DYNENV argument of
+  `cl-transcript`. A function that overrides the default may want to
+  call STANDARD-TRANSCRIBE-DYNENV with a lambda that establishes more
+  bindings."
+  (let ((package *package*)
+        (readtable *readtable*))
+    (with-standard-io-syntax
+      (let ((*package* package)
+            (*readtable* readtable)
+            (*print-readably* nil)
+            #-clisp
+            (*print-pretty* t)
+            (*print-circle* t)
+            (*print-right-margin* 72))
+        (funcall fn)))))
 
 
 (defsection @transcript-api (:title "Transcript API")
@@ -256,21 +383,14 @@
            (include-no-value update-only) (echo t)
            (check-consistency *transcribe-check-consistency*)
            default-syntax (input-syntaxes *transcribe-syntaxes*)
-           (output-syntaxes *transcribe-syntaxes*)
-           dynenv)
+           (output-syntaxes *transcribe-syntaxes*))
   """Read forms from INPUT and write them (iff ECHO) to OUTPUT
   followed by any output and return values produced by calling EVAL on
-  the form. The variables [*][variable], [**][], [\***][],
-  [/][variable], [//][], [///][], [-][variable], [+][variable],
-  [++][], [+++][] are locally bound and updated as in a
-  [REPL]["Lisp read-eval-print loop" clhs]. Since TRANSCRIBE EVALuates
-  arbitrary code anyway, forms are read with *READ-EVAL* T.
+  the form.
 
   INPUT can be a stream or a string, while OUTPUT can be a stream or
-  NIL, in which case output goes into a string. The return value is
-  the OUTPUT stream or the string that was constructed. As the second
-  value, a generalized boolean indicating whether any form was
-  transcribed is returned.
+  NIL, in which case output goes into a string.
+  @@TRANSCRIBE-1ST-RETURN-VALUE @@TRANSCRIBE-2ND-RETURN-VALUE
 
   Go up to @TRANSCRIBING-WITH-EMACS for nice examples. A more
   mind-bending one is this:
@@ -443,7 +563,7 @@
   values for a form in INPUT, then the syntax remains undetermined.
 
   When OUTPUT is written, the prefixes to be used are looked up in
-  DEFAULT-SYNTAX of OUTPUT-SYNTAXES, if DEFAULT-SYNTAX is not NIL. If
+  DEFAULT-SYNTAX of OUTPUT-SYNTAXES if DEFAULT-SYNTAX is not NIL. If
   DEFAULT-SYNTAX is NIL, then the syntax used by the same form in the
   INPUT is used or (if that could not be determined) the syntax of the
   previous form. If there was no previous form, then the first syntax
@@ -465,36 +585,24 @@
 
   To translate the above to uncommented syntax, use :DEFAULT-SYNTAX
   :DEFAULT. If DEFAULT-SYNTAX is NIL (the default), the same syntax
-  will be used in the output as in the input as much as possible.
-
-  **Dynamic Environment**
-
-  If DYNENV is non-NIL, then it must be a function that establishes
-  the dynamic environment in which transcription shall take place. It
-  is called with a single argument: a thunk (a function of no
-  arguments). See @TRANSCRIPT-DYNENV for an example.
-  """
-  (let ((transcript
-          ;; There is no point not allowing *READ-EVAL* because we are
-          ;; EVALuating code anyway.
-          (let ((*read-eval* t))
-            (read-transcript input :syntaxes input-syntaxes))))
-    (flet ((do-it ()
-             (write-transcript transcript output
-                               :update-only update-only
-                               :check-consistency check-consistency
-                               :include-no-output include-no-output
-                               :include-no-value include-no-value
-                               :echo echo
-                               :default-syntax default-syntax
-                               :syntaxes output-syntaxes)))
-      (values (if dynenv
-                  (funcall dynenv #'do-it)
-                  (do-it))
-              (not (not (find-if-not (lambda (command)
-                                       (let ((form-and-string (first command)))
-                                         (eq (first form-and-string) 'eof)))
-                                     transcript)))))))
+  will be used in the output as in the input as much as possible."""
+  (let ((transcript (read-transcript input :syntaxes input-syntaxes)))
+    (values (write-transcript transcript output
+                              :update-only update-only
+                              :check-consistency check-consistency
+                              :include-no-output include-no-output
+                              :include-no-value include-no-value
+                              :echo echo
+                              :default-syntax default-syntax
+                              :syntaxes output-syntaxes)
+            (note @@transcribe-2nd-return-value
+              "As the second value, a generalized boolean indicating
+              whether any form was transcribed is returned."
+              (not (not (find-if-not
+                         (lambda (command)
+                           (let ((form-and-string (first command)))
+                             (eq (first form-and-string) 'eof)))
+                         transcript)))))))
 
 
 ;;;; Prefix utilities
@@ -852,6 +960,9 @@
                             ,output))
 
 (defun call-with-output-stream (fn output)
+  (note @@transcribe-1st-return-value
+    "The return value is the OUTPUT stream or the string that was
+    constructed.")
   (cond ((streamp output)
          (progn (funcall fn output)
                 output))
@@ -914,13 +1025,18 @@
                                    include-no-value)))))))))
 
 (defun update-repl-vars (values errorp)
-  (unless errorp
-    (setf /// //
-          // /
-          / values
-          *** **
-          ** *
-          * (car values)))
+  (note @@transcribe-update-repl-vars
+    """The variables [*][variable], [**][], [\***][], [/][variable],
+    [//][], [///][], [-][variable], [+][variable], [++][], [+++][] are
+    locally bound and updated as in a new [REPL]["Lisp read-eval-print
+    loop" clhs] session."""
+    (unless errorp
+      (setf /// //
+            // /
+            / values
+            *** **
+            ** *
+            * (car values))))
   (setf +++ ++
         ++ +
         + -))
@@ -974,24 +1090,11 @@
                                                readable-checker
                                                unreadable-checker)))))))
 
-(defmacro with-transcription-syntax (() &body body)
-  (with-gensyms (package)
-    `(let ((,package *package*))
-       (with-standard-io-syntax
-         (let ((*package* ,package)
-               (*print-readably* nil)
-               #-clisp
-               (*print-pretty* t)
-               (*print-circle* t)
-               (*print-right-margin* 72))
-           ,@body)))))
-
 (defun check-value-consistency (stream form-as-string value value-capture
                                 readable-checker unreadable-checker)
   (assert (not (no-value-capture-p value-capture)))
   (flet ((stringify (object)
-           (with-transcription-syntax ()
-             (prin1-to-string object))))
+           (prin1-to-string object)))
     (let ((value-readable-p (readable-object-p value)))
       (cond ((and value-readable-p
                   (not (readable-capture-p value-capture)))
@@ -1034,25 +1137,29 @@
 
 (defun eval-and-capture (form)
   (let* ((buffer (make-array 0 :element-type 'character
-                               :fill-pointer 0 :adjustable t))
+                             :fill-pointer 0 :adjustable t))
          (values (with-output-to-string (output buffer)
-                   (with-transcription-syntax ()
-                     (let ((*standard-output* output)
-                           (*error-output* output)
-                           (*trace-output* output)
-                           (*debug-io* output)
-                           (*query-io* output)
-                           (*terminal-io* output))
-                       (flet ((handle-error (c)
-                                (print-condition c "debugger invoked on"
-                                                 ":" "")
-                                (return-from eval-and-capture
-                                  (values buffer () t))))
-                         (handler-case
-                             (with-debugger-hook #'handle-error
-                               (multiple-value-list (eval form)))
-                           (error (e)
-                             (handle-error e)))))))))
+                   (note @@transcribe-output-vars
+                     "*STANDARD-OUTPUT*, *ERROR-OUTPUT*,
+                     *TRACE-OUTPUT*, *DEBUG-IO*, *QUERY-IO* and
+                     *TERMINAL-IO* are redirected to capture the
+                     output.")
+                   (let ((*standard-output* output)
+                         (*error-output* output)
+                         (*trace-output* output)
+                         (*debug-io* output)
+                         (*query-io* output)
+                         (*terminal-io* output))
+                     (flet ((handle-error (c)
+                              (print-condition c "debugger invoked on"
+                                               ":" "")
+                              (return-from eval-and-capture
+                                (values buffer () t))))
+                       (handler-case
+                           (with-debugger-hook #'handle-error
+                             (multiple-value-list (eval form)))
+                         (error (e)
+                           (handle-error e))))))))
     (values buffer values)))
 
 (defun print-condition (c prefix midfix suffix)
@@ -1077,20 +1184,19 @@
   (when (if update-only
             captures
             (or include-no-value values))
-    (with-transcription-syntax ()
-      (if (endp values)
-          (when include-no-value
-            (format stream "~A~%" (find-prefix :no-value syntax-id)))
-          (loop for value in values
-                for i upfrom 0
-                for capture = (if (< i (length captures))
-                                  (elt captures i)
-                                  nil)
-                do (if (readable-object-p value)
-                       (transcribe-readable-value
-                        stream value capture syntax-id)
-                       (transcribe-unreadable-value
-                        stream value syntax-id)))))))
+    (if (endp values)
+        (when include-no-value
+          (format stream "~A~%" (find-prefix :no-value syntax-id)))
+        (loop for value in values
+              for i upfrom 0
+              for capture = (if (< i (length captures))
+                                (elt captures i)
+                                nil)
+              do (if (readable-object-p value)
+                     (transcribe-readable-value
+                      stream value capture syntax-id)
+                     (transcribe-unreadable-value
+                      stream value syntax-id))))))
 
 ;;; Assuming that OBJECT prints readably, check that whether CAPTURE
 ;;; is readable and it prints the same.
@@ -1289,7 +1395,7 @@
       ;;;; => :HELLO
       ;;;; => (1 2)
 
-  @TRANSCRIBE-STRIP-PREFIX
+  @@TRANSCRIBE-STRIP-PREFIX
 
   The dynamic environment of the transcription is determined by the
   :DYNENV argument of the enclosing `cl-transcript` code block (see
@@ -1299,51 +1405,63 @@
   `src/mgl-pax.el`. See @EMACS-SETUP.""")
 
 (defun transcribe-for-emacs (string default-syntax* update-only echo
-                             dynenv first-line-indent)
+                             cl-transcript-args-string first-line-indent)
   (with-swank ()
-    (swank::with-buffer-syntax ()
-      (let ((default-syntax (cond ((numberp default-syntax*)
-                                   (first (elt *transcribe-syntaxes*
-                                               default-syntax*)))
-                                  ((null default-syntax*)
-                                   nil)
-                                  (t (error "Unexpected default syntax ~S."
-                                            default-syntax*))))
-            (dynenv (and dynenv (read-from-string dynenv))))
-        (when (and dynenv (or (not (symbolp dynenv))
-                              (not (fboundp dynenv))))
-          (error ":dynenv ~S does not name a function." dynenv))
-        (multiple-value-bind (string prefix1 prefix)
-            (note @transcribe-strip-prefix
-              "With `mgl-pax-transcribe-last-expression`, we strip the
-              longest run of leading spaces and semicolons common to
-              all lines of the expression in the buffer.
+    (swank/backend:converting-errors-to-error-location
+      (swank::with-buffer-syntax ()
+        (let ((default-syntax (cond ((numberp default-syntax*)
+                                     (first (elt *transcribe-syntaxes*
+                                                 default-syntax*)))
+                                    ((null default-syntax*)
+                                     nil)
+                                    (t (error "Unexpected default syntax ~S."
+                                              default-syntax*)))))
+          (multiple-value-bind (dynenv cl-transcript-args)
+              (parse-cl-transcribe-args cl-transcript-args-string)
+            (list :values (funcall (or dynenv #'funcall)
+                                   (lambda ()
+                                     (apply #'transcribe-for-emacs-1
+                                            string first-line-indent
+                                            :default-syntax default-syntax
+                                            :update-only update-only
+                                            :echo echo
+                                            cl-transcript-args))))))))))
 
-              For `mgl-pax-retranscribe-region`, the longest run is
-              truncated so that it does not extend beyond the column
-              of the first form to be transcribed. Without this rule,
-              the syntax used
+(defun parse-cl-transcribe-args (string)
+  (let* ((args (read-from-string string nil nil))
+         (dynenv (getf args :dynenv 'standard-transcribe-dynenv)))
+    (remf args :dynenv)
+    (values dynenv args)))
 
-              ```cl-transcript
-              ;;(list 1 2)
-              ;;;=> (1
-              ;;;->  2)
-              ```
+(defun transcribe-for-emacs-1 (string first-line-indent &rest transcribe-args)
+  (multiple-value-bind (string prefix1 prefix)
+      (note @@transcribe-strip-prefix
+        "With `mgl-pax-transcribe-last-expression`, we strip the
+        longest run of leading spaces and semicolons common to all
+        lines of the expression in the buffer.
 
-              would be ambiguous, as the `;=>` could refer to `=>` in
-              the :DEFAULT syntax or to `;=>` in :COMMENTED-1."
-              (strip-longest-common-prefix
-               string "; " :first-line-indent first-line-indent))
-          (multiple-value-bind (output did-something-p)
-              (transcribe string nil
-                          :default-syntax default-syntax
-                          :update-only update-only :echo echo
-                          :dynenv dynenv)
-            (list (format nil "~A~A"
-                          (if first-line-indent prefix1 prefix)
-                          (prefix-lines prefix output :exclude-first-line-p t
-                                        :exclude-blank-p t))
-                  did-something-p)))))))
+        For `mgl-pax-retranscribe-region`, the longest run is
+        truncated so that it does not extend beyond the column of the
+        first form to be transcribed. Without this rule, the syntax
+        used
+
+        ```cl-transcript
+        ;;(list 1 2)
+        ;;;=> (1
+        ;;;->  2)
+        ```
+
+        would be ambiguous, as the `;=>` could refer to `=>` in the
+        :DEFAULT syntax or to `;=>` in :COMMENTED-1."
+        (strip-longest-common-prefix
+         string "; " :first-line-indent first-line-indent))
+    (multiple-value-bind (output did-something-p)
+        (apply #'transcribe string nil transcribe-args)
+      (list (format nil "~A~A"
+                    (if first-line-indent prefix1 prefix)
+                    (prefix-lines prefix output :exclude-first-line-p t
+                                  :exclude-blank-p t))
+            did-something-p))))
 
 
 (defsection @transcript-consistency-checking
@@ -1378,7 +1496,6 @@
   PRINT-UNREADABLE-OBJECT is used with `:IDENTITY T`.
   """
   (@transcript-finer-grained-consistency-checks section)
-  (@transcript-dynenv section)
   (@transcript-utilities-for-consistency-checking section))
 
 (defsection @transcript-finer-grained-consistency-checks
@@ -1411,43 +1528,9 @@
       (make-condition 'simple-error)
       ==> #<SIMPLE-ERROR {1008A81533}>
       ```
-  """)
 
-(defsection @transcript-dynenv
-    (:title "Controlling the Dynamic Environment")
-  """The dynamic environment in which forms in the transcript are
-  evaluated can be controlled via the :DYNENV argument of
-  `cl-transcript`.
-
-      ```cl-transcript (:dynenv my-transcript)
-      ...
-      ```
-
-  In this case, instead of calling TRANSCRIBE directly, the call will
-  be wrapped in a function of no arguments and passed to the function
-  `MY-TRANSCRIPT`, which establishes the desired dynamic environment
-  and calls its argument. The following definition of `MY-TRANSCRIPT`
-  simply packages up oft-used settings to TRANSCRIBE.
-
-  ```
-  (defun my-transcript (fn)
-    (let ((*transcribe-check-consistency*
-            '((:output my-transcript-output=)
-              (:readable equal)
-              (:unreadable nil))))
-      (funcall fn)))
-
-  (defun my-transcript-output= (string1 string2)
-    (string= (my-transcript-normalize-output string1)
-             (my-transcript-normalize-output string2)))
-
-  (defun my-transcript-normalize-output (string)
-    (squeeze-whitespace (delete-trailing-whitespace (delete-comments string))))
-  ```
-
-  A more involved solution could rebind global variables set in
-  transcripts, unintern symbols created or even create a temporary
-  package for evaluation.
+  It is often a good idea to package up these settings in the
+  :DYNENV argument of `cl-transcript` (see @TRANSCRIPT-DYNENV).
   """)
 
 

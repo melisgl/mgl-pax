@@ -189,7 +189,7 @@ PAX is built on top of the DRef library (bundled in the same repository).
 
 - [system] "mgl-pax"
 
-    - Version: 0.4.8
+    - Version: 0.4.9
 
     - Description: Documentation system, browser, generator. See the
     PAX Manual.
@@ -2929,40 +2929,78 @@ For example, this is how PAX registers itself:
 
 ## Transcripts
 
-What are transcripts for? When writing a tutorial, one often wants
-to include a REPL session with maybe a few defuns and a couple of
-forms whose output or return values are shown. Also, in a function's
-docstring an example call with concrete arguments and return values
-speaks volumes. A transcript is a text that looks like a REPL
-session, but which has a light markup for printed output and return
-values, while no markup (i.e. prompt) for Lisp forms. PAX
+What are transcripts for? When writing a tutorial, one often
+wants to include a REPL session with maybe a few defuns and a couple
+of forms whose output or return values are shown. Also, in a
+function's docstring an example call with concrete arguments and
+return values speaks volumes. A transcript is a text that looks like
+a REPL session, but which has a light markup for printed output and
+return values, while no markup (i.e. prompt) for Lisp forms. PAX
 transcripts may include output and return values of all forms, or
 only selected ones. In either case, the transcript itself can be
-easily generated from the source code.
+easily generated from the source code. The main worry associated
+with including examples in the documentation is that they tend to
+get out-of-sync with the code. This is solved by being able to parse
+back and update transcripts.
 
-The main worry associated with including examples in the
-documentation is that they tend to get out-of-sync with the code.
-This is solved by being able to parse back and update transcripts.
-In fact, this is exactly what happens during documentation
-generation with PAX. Code sections tagged with cl-transcript are
-retranscribed and checked for consistency (that is, no difference in
-output or return values). If the consistency check fails, an error
-is signalled that includes a reference to the object being
-documented.
+Consider this function:
 
-Going beyond documentation, transcript consistency checks can be
-used for writing simple tests in a very readable form. For example:
+    (defun foo (x)
+      "Return X + 1 and log what happened."
+      (format t "Adding 1 to ~S~%" x)
+      (1+ x))
 
-    (+ 1 2)
-    => 3
+Let's add an example to the docstring:
+
+    (defun foo (x)
+      "Return X + 1 and log what happened.
+      For example,
     
-    (values (princ :hello) (list 1 2))
-    .. HELLO
-    => :HELLO
-    => (1 2)
+      ```
+      (foo 7)
+      .. Adding 1 to 7
+      ..
+      => 8
+      ```"
+      (format t "Adding 1 to ~S~%" x)
+      (1+ x))
+
+In this transcript above, output lines are prefixed with ".. " and
+return values with "=> ". The transcript could have been generated
+with (TRANSCRIBE "(foo 7)" *STANDARD-OUTPUT*) or interactively by
+invoking mgl-pax-transcribe-last-expression in Emacs with the
+point right after (FOO 7).
+
+If we want PAX to check that the transcript is consistent with the
+code when Generating Documentation, we add the cl-transcript tag
+to the code block:
+
+    (defun foo (x)
+      "Return X + 1 and log what happened.
+      For example,
+    
+      ```cl-transcript
+      (foo 7)
+      .. Adding 1 to 7
+      ..
+      => 8
+      ```"
+      (format t "Adding 1 to ~S~%" x)
+      (+ x 2))
+
+Since the code was also changed to (+ X 2), documenting this
+function causes the following error:
+
+    (document #'foo)
+    .. debugger invoked on TRANSCRIPTION-VALUES-CONSISTENCY-ERROR:
+    ..   Transcription error: Readable value "8" in source is not EQUAL to "9".
+    ..     [While documenting (MGL-PAX::FOO COMMON-LISP:FUNCTION)]
+    ..
+    ..   Form:
+    ..   "(foo 7)"
 
 All in all, transcripts are a handy tool especially when combined
-with the Emacs support to regenerate them and with
+with the Emacs support to update them and with
 PYTHONIC-STRING-READER's triple-quoted strings, that
 allow one to work with nested strings with less noise. The
 triple-quote syntax can be enabled with:
@@ -3057,20 +3095,20 @@ but in comments too:
     ;;;; => (1 2)
 
 With mgl-pax-transcribe-last-expression, we strip the
-longest run of leading spaces and semicolons common to
-all lines of the expression in the buffer.
+longest run of leading spaces and semicolons common to all
+lines of the expression in the buffer.
 
 For mgl-pax-retranscribe-region, the longest run is
-truncated so that it does not extend beyond the column
-of the first form to be transcribed. Without this rule,
-the syntax used
+truncated so that it does not extend beyond the column of the
+first form to be transcribed. Without this rule, the syntax
+used
 
     ;;(list 1 2)
     ;;;=> (1
     ;;;->  2)
 
-would be ambiguous, as the ;=> could refer to => in
-the :DEFAULT syntax or to ;=> in :COMMENTED-1.
+would be ambiguous, as the ;=> could refer to => in the
+:DEFAULT syntax or to ;=> in :COMMENTED-1.
 
 The dynamic environment of the transcription is determined by the
 :DYNENV argument of the enclosing cl-transcript code block (see
@@ -3079,23 +3117,93 @@ Controlling the Dynamic Environment).
 Transcription support in Emacs can be enabled by loading
 src/mgl-pax.el. See Emacs Setup.
 
+### Controlling the Dynamic Environment
+
+When the TRANSCRIBE function is called directly, the forms in the
+transcript are evaluated in the current dynamic environment with the
+following exceptions.
+
+- The variables *, **, ***, /,
+//, ///, -, +, ++, +++ are
+locally bound and updated as in a new REPL session.
+
+- *STANDARD-OUTPUT*, *ERROR-OUTPUT*,
+*TRACE-OUTPUT*, *DEBUG-IO*, *QUERY-IO* and
+*TERMINAL-IO* are redirected to capture the
+output.
+
+If TRANSCRIBE is invoked by Emacs or by
+the DOCUMENT function, then a new dynamic environment is established
+by STANDARD-TRANSCRIBE-DYNENV (similar in spirit to
+WITH-STANDARD-IO-SYNTAX), which binds printer and reader variables
+to fixed values to make IO more predictable. This default can be
+overridden with the :DYNENV argument of cl-transcript:
+
+    ```cl-transcript (:dynenv my-transcript)
+    ...
+    ```
+
+In this case, instead of calling TRANSCRIBE directly,
+MY-TRANSCRIPT is called with a thunk (a function of no arguments)
+that wraps a call to TRANSCRIBE. Once MY-TRANSCRIPT establishes
+the desired dynamic environment, it calls its argument. The
+following definition of MY-TRANSCRIPT simply packages up oft-used
+settings to TRANSCRIBE.
+
+    (defun my-transcript (fn)
+      (standard-transcribe-dynenv
+        (let ((*transcribe-check-consistency*
+                '((:output my-transcript-output=)
+                  (:readable equal)
+                  (:unreadable nil))))
+          (funcall fn))))
+    
+    (defun my-transcript-output= (string1 string2)
+      (string= (my-transcript-normalize-output string1)
+               (my-transcript-normalize-output string2)))
+    
+    (defun my-transcript-normalize-output (string)
+      (squeeze-whitespace (delete-trailing-whitespace (delete-comments string))))
+
+The default for :DYNENV is STANDARD-TRANSCRIBE-DYNENV, and it is
+generally a good idea to use it as the above example does, but this
+is not required. Specify :DYNENV NIL explicitly if you do not want
+to use the current dynamic environment without changes.
+
+A more involved solution could rebind global variables set in
+transcripts, unintern symbols created or even create a temporary
+package for evaluation.
+
+- [function] STANDARD-TRANSCRIBE-DYNENV FN
+
+    Bind printer and reader variables to standard values and call FN.
+
+    The bindings are the same as with WITH-STANDARD-IO-SYNTAX, but
+
+    - *PACKAGE* and *READTABLE* are unaffected (because both DOCUMENT
+      and Emacs set these up);
+
+    - *PRINT-READABLY* is NIL, *PRINT-PRETTY* is T, *PRINT-CIRCLE* is T
+      and *PRINT-RIGHT-MARGIN* is 72.
+
+    This function is the default for the :DYNENV argument of
+    cl-transcript. A function that overrides the default may want to
+    call STANDARD-TRANSCRIBE-DYNENV with a lambda that establishes more
+    bindings.
+
 ### Transcript API
 
-- [function] TRANSCRIBE INPUT OUTPUT &KEY UPDATE-ONLY (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) (CHECK-CONSISTENCY *TRANSCRIBE-CHECK-CONSISTENCY*) DEFAULT-SYNTAX (INPUT-SYNTAXES *TRANSCRIBE-SYNTAXES*) (OUTPUT-SYNTAXES *TRANSCRIBE-SYNTAXES*) DYNENV
+- [function] TRANSCRIBE INPUT OUTPUT &KEY UPDATE-ONLY (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) (CHECK-CONSISTENCY *TRANSCRIBE-CHECK-CONSISTENCY*) DEFAULT-SYNTAX (INPUT-SYNTAXES *TRANSCRIBE-SYNTAXES*) (OUTPUT-SYNTAXES *TRANSCRIBE-SYNTAXES*)
 
     Read forms from INPUT and write them (iff ECHO) to OUTPUT
     followed by any output and return values produced by calling EVAL on
-    the form. The variables *, **, ***,
-    /, //, ///, -, +,
-    ++, +++ are locally bound and updated as in a
-    REPL. Since TRANSCRIBE EVALuates
-    arbitrary code anyway, forms are read with *READ-EVAL* T.
+    the form.
 
     INPUT can be a stream or a string, while OUTPUT can be a stream or
-    NIL, in which case output goes into a string. The return value is
-    the OUTPUT stream or the string that was constructed. As the second
-    value, a generalized boolean indicating whether any form was
-    transcribed is returned.
+    NIL, in which case output goes into a string.
+    The return value is the OUTPUT stream or the string that was
+    constructed. As the second value, a generalized boolean indicating
+    whether any form was transcribed is returned.
 
     Go up to Transcribing with Emacs for nice examples. A more
     mind-bending one is this:
@@ -3246,7 +3354,7 @@ src/mgl-pax.el. See Emacs Setup.
     values for a form in INPUT, then the syntax remains undetermined.
 
     When OUTPUT is written, the prefixes to be used are looked up in
-    DEFAULT-SYNTAX of OUTPUT-SYNTAXES, if DEFAULT-SYNTAX is not NIL. If
+    DEFAULT-SYNTAX of OUTPUT-SYNTAXES if DEFAULT-SYNTAX is not NIL. If
     DEFAULT-SYNTAX is NIL, then the syntax used by the same form in the
     INPUT is used or (if that could not be determined) the syntax of the
     previous form. If there was no previous form, then the first syntax
@@ -3267,13 +3375,6 @@ src/mgl-pax.el. See Emacs Setup.
     To translate the above to uncommented syntax, use :DEFAULT-SYNTAX
     :DEFAULT. If DEFAULT-SYNTAX is NIL (the default), the same syntax
     will be used in the output as in the input as much as possible.
-
-    Dynamic Environment
-
-    If DYNENV is non-NIL, then it must be a function that establishes
-    the dynamic environment in which transcription shall take place. It
-    is called with a single argument: a thunk (a function of no
-    arguments). See Controlling the Dynamic Environment for an example.
 
 - [variable] *TRANSCRIBE-CHECK-CONSISTENCY* NIL
 
@@ -3402,39 +3503,8 @@ output.
     ==> #<SIMPLE-ERROR {1008A81533}>
     ```
 
-#### Controlling the Dynamic Environment
-
-The dynamic environment in which forms in the transcript are
-evaluated can be controlled via the :DYNENV argument of
-cl-transcript.
-
-    ```cl-transcript (:dynenv my-transcript)
-    ...
-    ```
-
-In this case, instead of calling TRANSCRIBE directly, the call will
-be wrapped in a function of no arguments and passed to the function
-MY-TRANSCRIPT, which establishes the desired dynamic environment
-and calls its argument. The following definition of MY-TRANSCRIPT
-simply packages up oft-used settings to TRANSCRIBE.
-
-    (defun my-transcript (fn)
-      (let ((*transcribe-check-consistency*
-              '((:output my-transcript-output=)
-                (:readable equal)
-                (:unreadable nil))))
-        (funcall fn)))
-    
-    (defun my-transcript-output= (string1 string2)
-      (string= (my-transcript-normalize-output string1)
-               (my-transcript-normalize-output string2)))
-    
-    (defun my-transcript-normalize-output (string)
-      (squeeze-whitespace (delete-trailing-whitespace (delete-comments string))))
-
-A more involved solution could rebind global variables set in
-transcripts, unintern symbols created or even create a temporary
-package for evaluation.
+It is often a good idea to package up these settings in the
+:DYNENV argument of cl-transcript (see Controlling the Dynamic Environment).
 
 #### Utilities for Consistency Checking
 

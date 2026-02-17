@@ -57,11 +57,11 @@
         - [8.10.3 PAX World][1281]
 - [9 Transcripts][6300]
     - [9.1 Transcribing with Emacs][f5bd]
-    - [9.2 Transcript API][9dbc]
-    - [9.3 Transcript Consistency Checking][4c39]
-        - [9.3.1 Finer-Grained Consistency Checks][6e18]
-        - [9.3.2 Controlling the Dynamic Environment][6b59]
-        - [9.3.3 Utilities for Consistency Checking][8423]
+    - [9.2 Controlling the Dynamic Environment][6b59]
+    - [9.3 Transcript API][9dbc]
+    - [9.4 Transcript Consistency Checking][4c39]
+        - [9.4.1 Finer-Grained Consistency Checks][6e18]
+        - [9.4.2 Utilities for Consistency Checking][8423]
 - [10 Parsing][378f]
     - [10.1 Parsing Names][e65d]
         - [10.1.1 Raw Names in Words][f0d5]
@@ -277,7 +277,7 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
 
 - [system] **"mgl-pax"**
 
-    - _Version:_ 0.4.8
+    - _Version:_ 0.4.9
     - _Description:_ Documentation system, browser, generator. See the
         [PAX Manual][2415].
     - _Long Description:_ The base system. See [Links and Systems][ba90].
@@ -3344,42 +3344,86 @@ For example, this is how PAX registers itself:
 
 ## 9 Transcripts
 
-What are transcripts for? When writing a tutorial, one often wants
-to include a REPL session with maybe a few defuns and a couple of
-forms whose output or return values are shown. Also, in a function's
-docstring an example call with concrete arguments and return values
-speaks volumes. A transcript is a text that looks like a REPL
-session, but which has a light markup for printed output and return
-values, while no markup (i.e. prompt) for Lisp forms. PAX
+What are transcripts for? When writing a tutorial, one often
+wants to include a REPL session with maybe a few defuns and a couple
+of forms whose output or return values are shown. Also, in a
+function's docstring an example call with concrete arguments and
+return values speaks volumes. A transcript is a text that looks like
+a REPL session, but which has a light markup for printed output and
+return values, while no markup (i.e. prompt) for Lisp forms. PAX
 transcripts may include output and return values of all forms, or
 only selected ones. In either case, the transcript itself can be
-easily generated from the source code.
+easily generated from the source code. The main worry associated
+with including examples in the documentation is that they tend to
+get out-of-sync with the code. This is solved by being able to parse
+back and update transcripts.
 
-The main worry associated with including examples in the
-documentation is that they tend to get out-of-sync with the code.
-This is solved by being able to parse back and update transcripts.
-In fact, this is exactly what happens during documentation
-generation with PAX. Code sections tagged with `cl-transcript` are
-retranscribed and checked for consistency (that is, no difference in
-output or return values). If the consistency check fails, an error
-is signalled that includes a reference to the object being
-documented.
+Consider this function:
 
-Going beyond documentation, transcript consistency checks can be
-used for writing simple tests in a very readable form. For example:
+```
+(defun foo (x)
+  "Return X + 1 and log what happened."
+  (format t "Adding 1 to ~S~%" x)
+  (1+ x))
+```
 
-```common-lisp
-(+ 1 2)
-=> 3
+Let's add an example to the docstring:
 
-(values (princ :hello) (list 1 2))
-.. HELLO
-=> :HELLO
-=> (1 2)
+```
+(defun foo (x)
+  "Return X + 1 and log what happened.
+  For example,
+
+  ```
+  (foo 7)
+  .. Adding 1 to 7
+  ..
+  => 8
+  ```"
+  (format t "Adding 1 to ~S~%" x)
+  (1+ x))
+```
+
+In this transcript above, output lines are prefixed with `".. "` and
+return values with `"=> "`. The transcript could have been generated
+with `(TRANSCRIBE "(foo 7)" *STANDARD-OUTPUT*)` or interactively by
+invoking `mgl-pax-transcribe-last-expression` in Emacs with the
+point right after `(FOO 7)`.
+
+If we want PAX to check that the transcript is consistent with the
+code when [Generating Documentation][2c93], we add the `cl-transcript` tag
+to the code block:
+
+```
+(defun foo (x)
+  "Return X + 1 and log what happened.
+  For example,
+
+  ```cl-transcript
+  (foo 7)
+  .. Adding 1 to 7
+  ..
+  => 8
+  ```"
+  (format t "Adding 1 to ~S~%" x)
+  (+ x 2))
+```
+
+Since the code was also changed to `(+ X 2)`, documenting this
+function causes the following error:
+
+```
+(document #'foo)
+.. debugger invoked on TRANSCRIPTION-VALUES-CONSISTENCY-ERROR:
+..   Transcription error: Readable value "8" in source is not EQUAL to "9".
+..     [While documenting (MGL-PAX::FOO COMMON-LISP:FUNCTION)]
+..
+..   Form:
+..   "(foo 7)"
 ```
 
 All in all, transcripts are a handy tool especially when combined
-with the Emacs support to regenerate them and with
+with the Emacs support to update them and with
 PYTHONIC-STRING-READER's triple-quoted strings, that
 allow one to work with nested strings with less noise. The
 triple-quote syntax can be enabled with:
@@ -3477,13 +3521,13 @@ but in comments too:
     ;;;; => (1 2)
 
 With `mgl-pax-transcribe-last-expression`, we strip the
-longest run of leading spaces and semicolons common to
-all lines of the expression in the buffer.
+longest run of leading spaces and semicolons common to all
+lines of the expression in the buffer.
 
 For `mgl-pax-retranscribe-region`, the longest run is
-truncated so that it does not extend beyond the column
-of the first form to be transcribed. Without this rule,
-the syntax used
+truncated so that it does not extend beyond the column of the
+first form to be transcribed. Without this rule, the syntax
+used
 
 ```common-lisp
 ;;(list 1 2)
@@ -3491,8 +3535,8 @@ the syntax used
 ;;;->  2)
 ```
 
-would be ambiguous, as the `;=>` could refer to `=>` in
-the `:DEFAULT` syntax or to `;=>` in `:COMMENTED-1`.
+would be ambiguous, as the `;=>` could refer to `=>` in the
+`:DEFAULT` syntax or to `;=>` in `:COMMENTED-1`.
 
 The dynamic environment of the transcription is determined by the
 `:DYNENV` argument of the enclosing `cl-transcript` code block (see
@@ -3501,27 +3545,103 @@ The dynamic environment of the transcription is determined by the
 Transcription support in Emacs can be enabled by loading
 `src/mgl-pax.el`. See [Emacs Setup][8541].
 
+<a id="x-28MGL-PAX-3A-40TRANSCRIPT-DYNENV-20MGL-PAX-3ASECTION-29"></a>
+
+### 9.2 Controlling the Dynamic Environment
+
+When the [`TRANSCRIBE`][f1f0] function is called directly, the forms in the
+transcript are evaluated in the current dynamic environment with the
+following exceptions.
+
+- The variables [\*][9590], [\*\*][78d1], [\*\*\*][ea37], [/][9f2f],
+[//][e433], [///][3831], [-][5483], [+][72a7], [++][fbb1], [+++][4537] are
+locally bound and updated as in a new [REPL][f83b] session.
+
+- [`*STANDARD-OUTPUT*`][e7ee], [`*ERROR-OUTPUT*`][66c6],
+[`*TRACE-OUTPUT*`][2243], [`*DEBUG-IO*`][10ff], [`*QUERY-IO*`][f4bf] and
+[`*TERMINAL-IO*`][633c] are redirected to capture the
+output.
+
+If `TRANSCRIBE` is invoked [by Emacs][f5bd] or by
+the [`DOCUMENT`][432c] function, then a new dynamic environment is established
+by [`STANDARD-TRANSCRIBE-DYNENV`][588c] (similar in spirit to
+[`WITH-STANDARD-IO-SYNTAX`][39df]), which binds printer and reader variables
+to fixed values to make IO more predictable. This default can be
+overridden with the `:DYNENV` argument of `cl-transcript`:
+
+    ```cl-transcript (:dynenv my-transcript)
+    ...
+    ```
+
+In this case, instead of calling `TRANSCRIBE` directly,
+`MY-TRANSCRIPT` is called with a thunk (a function of no arguments)
+that wraps a call to `TRANSCRIBE`. Once `MY-TRANSCRIPT` establishes
+the desired dynamic environment, it calls its argument. The
+following definition of `MY-TRANSCRIPT` simply packages up oft-used
+settings to `TRANSCRIBE`.
+
+```
+(defun my-transcript (fn)
+  (standard-transcribe-dynenv
+    (let ((*transcribe-check-consistency*
+            '((:output my-transcript-output=)
+              (:readable equal)
+              (:unreadable nil))))
+      (funcall fn))))
+
+(defun my-transcript-output= (string1 string2)
+  (string= (my-transcript-normalize-output string1)
+           (my-transcript-normalize-output string2)))
+
+(defun my-transcript-normalize-output (string)
+  (squeeze-whitespace (delete-trailing-whitespace (delete-comments string))))
+```
+
+The default for `:DYNENV` is `STANDARD-TRANSCRIBE-DYNENV`, and it is
+generally a good idea to use it as the above example does, but this
+is not required. Specify `:DYNENV` `NIL` explicitly if you do not want
+to use the current dynamic environment without changes.
+
+A more involved solution could rebind global variables set in
+transcripts, unintern symbols created or even create a temporary
+package for evaluation.
+
+<a id="x-28MGL-PAX-3ASTANDARD-TRANSCRIBE-DYNENV-20FUNCTION-29"></a>
+
+- [function] **STANDARD-TRANSCRIBE-DYNENV** *FN*
+
+    Bind printer and reader variables to standard values and call `FN`.
+    
+    The bindings are the same as with [`WITH-STANDARD-IO-SYNTAX`][39df], but
+    
+    - [`*PACKAGE*`][5ed1] and [`*READTABLE*`][b79a] are unaffected (because both [`DOCUMENT`][432c]
+      and Emacs set these up);
+    
+    - [`*PRINT-READABLY*`][8aca] is `NIL`, [`*PRINT-PRETTY*`][782a] is `T`, [`*PRINT-CIRCLE*`][c8cb] is `T`
+      and [`*PRINT-RIGHT-MARGIN*`][5ab6] is 72.
+    
+    This function is the default for the `:DYNENV` argument of
+    `cl-transcript`. A function that overrides the default may want to
+    call `STANDARD-TRANSCRIBE-DYNENV` with a lambda that establishes more
+    bindings.
+
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-API-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.2 Transcript API
+### 9.3 Transcript API
 
 <a id="x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29"></a>
 
-- [function] **TRANSCRIBE** *INPUT OUTPUT &KEY UPDATE-ONLY (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) (CHECK-CONSISTENCY \*TRANSCRIBE-CHECK-CONSISTENCY\*) DEFAULT-SYNTAX (INPUT-SYNTAXES \*TRANSCRIBE-SYNTAXES\*) (OUTPUT-SYNTAXES \*TRANSCRIBE-SYNTAXES\*) DYNENV*
+- [function] **TRANSCRIBE** *INPUT OUTPUT &KEY UPDATE-ONLY (INCLUDE-NO-OUTPUT UPDATE-ONLY) (INCLUDE-NO-VALUE UPDATE-ONLY) (ECHO T) (CHECK-CONSISTENCY \*TRANSCRIBE-CHECK-CONSISTENCY\*) DEFAULT-SYNTAX (INPUT-SYNTAXES \*TRANSCRIBE-SYNTAXES\*) (OUTPUT-SYNTAXES \*TRANSCRIBE-SYNTAXES\*)*
 
     Read forms from `INPUT` and write them (iff `ECHO`) to `OUTPUT`
     followed by any output and return values produced by calling [`EVAL`][0d6e] on
-    the form. The variables [\*][9590], [\*\*][78d1], [\*\*\*][ea37],
-    [/][9f2f], [//][e433], [///][3831], [-][5483], [+][72a7],
-    [++][fbb1], [+++][4537] are locally bound and updated as in a
-    [REPL][f83b]. Since `TRANSCRIBE` `EVAL`uates
-    arbitrary code anyway, forms are read with [`*READ-EVAL*`][82f7] `T`.
+    the form.
     
     `INPUT` can be a stream or a string, while `OUTPUT` can be a stream or
-    `NIL`, in which case output goes into a string. The return value is
-    the `OUTPUT` stream or the string that was constructed. As the second
-    value, a generalized boolean indicating whether any form was
-    transcribed is returned.
+    `NIL`, in which case output goes into a string.
+    The return value is the `OUTPUT` stream or the string that was
+    constructed. As the second value, a generalized boolean indicating
+    whether any form was transcribed is returned.
     
     Go up to [Transcribing with Emacs][f5bd] for nice examples. A more
     mind-bending one is this:
@@ -3694,7 +3814,7 @@ Transcription support in Emacs can be enabled by loading
     values for a form in `INPUT`, then the syntax remains undetermined.
     
     When `OUTPUT` is written, the prefixes to be used are looked up in
-    `DEFAULT-SYNTAX` of `OUTPUT-SYNTAXES`, if `DEFAULT-SYNTAX` is not `NIL`. If
+    `DEFAULT-SYNTAX` of `OUTPUT-SYNTAXES` if `DEFAULT-SYNTAX` is not `NIL`. If
     `DEFAULT-SYNTAX` is `NIL`, then the syntax used by the same form in the
     `INPUT` is used or (if that could not be determined) the syntax of the
     previous form. If there was no previous form, then the first syntax
@@ -3717,13 +3837,6 @@ Transcription support in Emacs can be enabled by loading
     To translate the above to uncommented syntax, use `:DEFAULT-SYNTAX`
     `:DEFAULT`. If `DEFAULT-SYNTAX` is `NIL` (the default), the same syntax
     will be used in the output as in the input as much as possible.
-    
-    **Dynamic Environment**
-    
-    If `DYNENV` is non-`NIL`, then it must be a function that establishes
-    the dynamic environment in which transcription shall take place. It
-    is called with a single argument: a thunk (a function of no
-    arguments). See [Controlling the Dynamic Environment][6b59] for an example.
 
 <a id="x-28MGL-PAX-3A-2ATRANSCRIBE-CHECK-CONSISTENCY-2A-20VARIABLE-29"></a>
 
@@ -3804,7 +3917,7 @@ Transcription support in Emacs can be enabled by loading
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.3 Transcript Consistency Checking
+### 9.4 Transcript Consistency Checking
 
 The main use case for consistency checking is detecting
 out-of-date examples in documentation, although using it for writing
@@ -3837,7 +3950,7 @@ objects are printed with their `#<>` syntax, especially when
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.3.1 Finer-Grained Consistency Checks
+#### 9.4.1 Finer-Grained Consistency Checks
 
 To get around this problem, consistency checking of output,
 readable and unreadable values can be customized individually by
@@ -3870,48 +3983,12 @@ output.
     ==> #<SIMPLE-ERROR {1008A81533}>
     ```
 
-
-<a id="x-28MGL-PAX-3A-40TRANSCRIPT-DYNENV-20MGL-PAX-3ASECTION-29"></a>
-
-#### 9.3.2 Controlling the Dynamic Environment
-
-The dynamic environment in which forms in the transcript are
-evaluated can be controlled via the `:DYNENV` argument of
-`cl-transcript`.
-
-    ```cl-transcript (:dynenv my-transcript)
-    ...
-    ```
-
-In this case, instead of calling [`TRANSCRIBE`][f1f0] directly, the call will
-be wrapped in a function of no arguments and passed to the function
-`MY-TRANSCRIPT`, which establishes the desired dynamic environment
-and calls its argument. The following definition of `MY-TRANSCRIPT`
-simply packages up oft-used settings to `TRANSCRIBE`.
-
-```
-(defun my-transcript (fn)
-  (let ((*transcribe-check-consistency*
-          '((:output my-transcript-output=)
-            (:readable equal)
-            (:unreadable nil))))
-    (funcall fn)))
-
-(defun my-transcript-output= (string1 string2)
-  (string= (my-transcript-normalize-output string1)
-           (my-transcript-normalize-output string2)))
-
-(defun my-transcript-normalize-output (string)
-  (squeeze-whitespace (delete-trailing-whitespace (delete-comments string))))
-```
-
-A more involved solution could rebind global variables set in
-transcripts, unintern symbols created or even create a temporary
-package for evaluation.
+It is often a good idea to package up these settings in the
+`:DYNENV` argument of `cl-transcript` (see [Controlling the Dynamic Environment][6b59]).
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.3.3 Utilities for Consistency Checking
+#### 9.4.2 Utilities for Consistency Checking
 
 <a id="x-28MGL-PAX-3ASQUEEZE-WHITESPACE-20FUNCTION-29"></a>
 
@@ -4514,6 +4591,7 @@ they are presented.
   [0f42]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dht.htm "\"2.4.8.20\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [0f52]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_t.htm#top_level_form "\"top level form\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [0fa3]: #x-28MGL-PAX-3A-40LOCATIVE-ALIASES-20MGL-PAX-3ASECTION-29 "Locative Aliases"
+  [10ff]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*DEBUG-IO* (MGL-PAX:CLHS VARIABLE)"
   [119e]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm "FUNCTION (MGL-PAX:CLHS CLASS)"
   [11f1]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cfb.htm "\"22.3.6.2\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [1281]: #x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29 "PAX World"
@@ -4547,6 +4625,7 @@ they are presented.
   [2060]: dref/README.md#x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "CLASS MGL-PAX:LOCATIVE"
   [2143]: dref/README.md#x-28DREF-3A-40DEFINITION-20MGL-PAX-3AGLOSSARY-TERM-29 "definition"
   [21f4]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_l.htm#loop_keyword "\"loop keyword\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
+  [2243]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*TRACE-OUTPUT* (MGL-PAX:CLHS VARIABLE)"
   [225d]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhn.htm "\"2.4.8.14\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [227d]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhi.htm "\"2.4.8.9\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [22c2]: #x-28MGL-PAX-3A-40LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29 "Linking to Sections"
@@ -4616,9 +4695,11 @@ they are presented.
   [5875]: dref/README.md#x-28GENERIC-FUNCTION-20MGL-PAX-3ALOCATIVE-29 "GENERIC-FUNCTION MGL-PAX:LOCATIVE"
   [587f]: #x-28MGL-PAX-3AMAKE-GIT-SOURCE-URI-FN-20FUNCTION-29 "MGL-PAX:MAKE-GIT-SOURCE-URI-FN FUNCTION"
   [5884]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_.htm "FIND-IF (MGL-PAX:CLHS FUNCTION)"
+  [588c]: #x-28MGL-PAX-3ASTANDARD-TRANSCRIBE-DYNENV-20FUNCTION-29 "MGL-PAX:STANDARD-TRANSCRIBE-DYNENV FUNCTION"
   [58f6]: #x-28GO-20MGL-PAX-3ALOCATIVE-29 "GO MGL-PAX:LOCATIVE"
   [59d9]: https://pandoc.org/ "Pandoc"
   [5a82]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq.htm "EQ (MGL-PAX:CLHS FUNCTION)"
+  [5ab6]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_rig.htm "*PRINT-RIGHT-MARGIN* (MGL-PAX:CLHS VARIABLE)"
   [5b4d]: http://www.lispworks.com/documentation/HyperSpec/Body/22_ccd.htm "\"22.3.3.4\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [5cd7]: #x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:INCLUDE MGL-PAX:LOCATIVE"
   [5ed1]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm "*PACKAGE* (MGL-PAX:CLHS VARIABLE)"
@@ -4629,6 +4710,7 @@ they are presented.
   [60e4]: http://www.lispworks.com/documentation/HyperSpec/Body/22_chc.htm "\"22.3.8.3\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [6300]: #x-28MGL-PAX-3A-40TRANSCRIPTS-20MGL-PAX-3ASECTION-29 "Transcripts"
   [6334]: dref/README.md#x-28DREF-EXT-3ALOCATE-ERROR-20CONDITION-29 "DREF-EXT:LOCATE-ERROR CONDITION"
+  [633c]: http://www.lispworks.com/documentation/HyperSpec/Body/v_termin.htm "*TERMINAL-IO* (MGL-PAX:CLHS VARIABLE)"
   [6384]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRIN1 (MGL-PAX:CLHS FUNCTION)"
   [63b4]: dref/README.md#x-28DREF-3ARESOLVE-20FUNCTION-29 "DREF:RESOLVE FUNCTION"
   [63ef]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009_w.htm "\"ISSUE:AREF-1D\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
@@ -4667,6 +4749,7 @@ they are presented.
   [76ab]: http://www.lispworks.com/documentation/HyperSpec/Body/22_ccc.htm "\"22.3.3.3\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [76df]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cbd.htm "\"22.3.2.4\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [76ea]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cgb.htm "\"22.3.7.2\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
+  [782a]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_pre.htm "*PRINT-PRETTY* (MGL-PAX:CLHS VARIABLE)"
   [78d1]: http://www.lispworks.com/documentation/HyperSpec/Body/v__stst.htm "** (MGL-PAX:CLHS VARIABLE)"
   [7a4e]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#section "\"section\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [7a7f]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhc.htm "\"2.4.8.3\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
@@ -4690,7 +4773,6 @@ they are presented.
   [8251]: #x-28MGL-PAX-3AGLOSSARY-TERM-20CLASS-29 "MGL-PAX:GLOSSARY-TERM CLASS"
   [8269]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-2A-20GENERIC-FUNCTION-29 "MGL-PAX:DOCUMENT-OBJECT* GENERIC-FUNCTION"
   [826b]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dg.htm "\"2.4.7\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
-  [82f7]: http://www.lispworks.com/documentation/HyperSpec/Body/v_rd_eva.htm "*READ-EVAL* (MGL-PAX:CLHS VARIABLE)"
   [83d5]: #x-28MGL-PAX-3A-40BROWSING-WITH-W3M-20MGL-PAX-3ASECTION-29 "Browsing with w3m"
   [83e1]: http://www.lispworks.com/documentation/HyperSpec/Body/e_cnd.htm "CONDITION (MGL-PAX:CLHS CONDITION)"
   [8423]: #x-28MGL-PAX-3A-40TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Utilities for Consistency Checking"
@@ -4795,6 +4877,7 @@ they are presented.
   [c818]: #x-28MGL-PAX-3AOUTPUT-LABEL-20FUNCTION-29 "MGL-PAX:OUTPUT-LABEL FUNCTION"
   [c819]: dref/README.md#x-28MGL-PAX-3ACONSTANT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CONSTANT MGL-PAX:LOCATIVE"
   [c879]: #x-28MGL-PAX-3A-40PLAIN-OUTPUT-20MGL-PAX-3ASECTION-29 "Plain Output"
+  [c8cb]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_cir.htm "*PRINT-CIRCLE* (MGL-PAX:CLHS VARIABLE)"
   [c930]: #x-28MGL-PAX-3AEXPORTABLE-LOCATIVE-TYPE-P-20GENERIC-FUNCTION-29 "MGL-PAX:EXPORTABLE-LOCATIVE-TYPE-P GENERIC-FUNCTION"
   [c93e]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhg.htm "\"2.4.8.7\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [cae2]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cca.htm "\"22.3.3.1\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
@@ -4875,6 +4958,7 @@ they are presented.
   [f275]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cda.htm "\"22.3.4.1\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [f2f5]: http://www.lispworks.com/documentation/HyperSpec/Body/e_smp_cn.htm "SIMPLE-CONDITION (MGL-PAX:CLHS CONDITION)"
   [f3f4]: #x-28MGL-PAX-3A-40EMACS-QUICKLISP-20MGL-PAX-3ASECTION-29 "Installing from Quicklisp"
+  [f4bf]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*QUERY-IO* (MGL-PAX:CLHS VARIABLE)"
   [f4fd]: #x-28MGL-PAX-3AREGISTER-DOC-IN-PAX-WORLD-20FUNCTION-29 "MGL-PAX:REGISTER-DOC-IN-PAX-WORLD FUNCTION"
   [f585]: #x-28MGL-PAX-3A-2ADOCUMENT-HYPERSPEC-ROOT-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HYPERSPEC-ROOT* VARIABLE"
   [f5af]: #x-28MGL-PAX-3A-40RAW-NAME-20MGL-PAX-3AGLOSSARY-TERM-29 "raw name"

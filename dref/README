@@ -14,7 +14,7 @@ the documentation system.
 
 - [system] "dref"
 
-    - Version: 0.4.8
+    - Version: 0.4.9
 
     - Description: Reify definitions, provide portable access to
     docstrings and source locations in an extensible framework.

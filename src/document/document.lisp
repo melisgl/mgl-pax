@@ -1648,35 +1648,31 @@
   (let ((lang (getf (rest code-block) :lang)))
     (if (starts-with-subseq "cl-transcript" lang)
         (let* ((suffix (subseq lang (length "cl-transcript")))
-               (args (read-from-string suffix nil nil))
                (original (getf (rest code-block) :content)))
           ;; The possibly manually tweaked (e.g. comments in output)
           ;; original goes to the output, but retranscribe it just for
           ;; consistency checking.
-          (transcribe-code-block original args)
+          (transcribe-code-block original suffix)
           `(3bmd-code-blocks::code-block :lang "common-lisp"
                                          :content ,original))
         code-block)))
 
-(defun transcribe-code-block (transcript args)
-  (let ((dynenv (getf args :dynenv))
-        (*transcribe-check-consistency* t))
-    (remf args :dynenv)
-    (flet ((call-it ()
-             (if *document-open-linking*
-                 (handler-case
-                     (apply #'transcribe transcript nil :update-only t args)
-                   (transcription-error (e)
-                     (warn "~A" e)
-                     transcript))
-                 (apply #'transcribe transcript nil :update-only t args))))
-      (cond ((and dynenv (ignore-errors (fdefinition dynenv)))
-             (funcall dynenv #'call-it))
-            (t
-             (when dynenv
-               (funcall (if *document-open-linking* 'warn 'error)
-                        "~@<Undefined ~S function ~S.~:@>" ':dynenv dynenv))
-             (call-it))))))
+(defun transcribe-code-block (transcript args-string)
+  (flet ((call-it ()
+           (multiple-value-bind (dynenv args)
+               (parse-cl-transcribe-args args-string)
+             (let ((*transcribe-check-consistency* t))
+               (funcall (or dynenv #'funcall)
+                        (lambda ()
+                          (apply #'transcribe transcript nil :update-only t
+                                 args)))))))
+    (if *document-open-linking*
+        (handler-case
+            (call-it)
+          (error (e)
+            (warn "~A" e)
+            transcript))
+        (call-it))))
 
 ;;; Undo the :EMPH parsing for code references. E.g. (:EMPH "XXX") ->
 ;;; "*XXX*" if "*XXX*" is to be codified according to
@@ -3444,9 +3440,10 @@
 
 
 (defun pax-std-env (fn)
-  (let ((*document-downcase-uppercase-code* nil)
-        (*transcribe-check-consistency* (featurep :sbcl))
-        (*package* *package*))
-    (unwind-protect
-         (funcall fn)
-      (unintern '@example-section :pax))))
+  (standard-transcribe-dynenv
+   (lambda ()
+     (let ((*document-downcase-uppercase-code* nil)
+           (*transcribe-check-consistency* (featurep :sbcl)))
+       (unwind-protect
+            (funcall fn)
+         (unintern '@example-section :pax))))))

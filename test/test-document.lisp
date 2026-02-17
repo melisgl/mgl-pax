@@ -134,6 +134,7 @@
   (test-guess-package-from-arglist)
   (test-pdf)
   (test-dummy-output)
+  (test-dynenv)
   (test-note)
   (test-pax-transcripts))
 
@@ -2182,6 +2183,48 @@ example section
                 (document (pax::pax-and-dref-sections)
                           :pages (pax::pax-and-dref-pages :markdown)
                           :format nil))))))
+
+;;; Keep in sync with test-mgl-pax-retranscribe-region/dynenv in
+;;; mgl-pax-test.el.
+(deftest test-dynenv ()
+  (flet ((input (args-string downcasedp)
+           (format nil "```cl-transcript ~A~%~
+                       (make-instance 'bbb)~%~
+                       ==> #<~A>~%~
+                       ```"
+                   args-string (if downcasedp "bbb" "BBB")))
+         (expected (downcasedp)
+           (format nil "```common-lisp~%~
+                       (make-instance 'bbb)~%~
+                       ==> #<~A>~%~
+                       ```"
+                   (if downcasedp "bbb" "BBB")))
+         (w3m-expected (downcasedp)
+           (format nil "<i>~%~
+                       ```common-lisp~%  ~
+                       (make-instance 'bbb)~%  ~
+                       ==> #<~A>~%~
+                       ```~%~
+                       </i>"
+                   (if downcasedp "bbb" "BBB"))))
+    (let ((*print-case* :downcase))
+      (with-test ("closed linking :downcase works")
+        (check-head (input "(:dynenv nil)" t) (expected t)))
+      (with-test ("closed linking dynenv default")
+        (check-head (input "" nil) (expected nil)))
+      (with-test ("closed linking and junk")
+        (signals (error)
+          (check-head (input "junk" nil) (expected nil))))
+      (with-test ("open linking :downcase works")
+        (check-head (input "(:dynenv nil)" t) (w3m-expected t)
+                    :format :md-w3m))
+      (with-test ("open linking dynenv default")
+        (check-head (input "" nil) (w3m-expected nil)
+                    :format :md-w3m))
+      (with-test ("open linking with junk")
+        (check-head (input "junk" nil) (w3m-expected nil)
+                    :format :md-w3m :warnings 1)))))
+
 
 (deftest test-note ()
   (check-head "x @@NOTE-WITHOUT-DOCSTRING y" "x  y")

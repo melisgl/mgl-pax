@@ -1494,7 +1494,7 @@ MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
 Without a prefix argument, the first syntax is used."
   (interactive)
   (mgl-pax-with-component (:mgl-pax/transcribe)
-    (let* ((dynenv (mgl-pax-find-cl-transcript-dynenv))
+    (let* ((cl-transcript-args (mgl-pax-find-cl-transcript-args))
            (sexp (mgl-pax-call-uncommented 'slime-last-expression))
            (start (point))
            (prefix (save-excursion
@@ -1505,7 +1505,7 @@ Without a prefix argument, the first syntax is used."
         (insert "\n"))
       (cl-destructuring-bind (transcript did-something-p)
           (mgl-pax-transcribe sexp (mgl-pax-transcribe-syntax-arg)
-                              nil nil dynenv nil)
+                              nil nil cl-transcript-args nil)
         (if (not did-something-p)
             (message "No forms found to transcribe.")
           (insert transcript)
@@ -1544,57 +1544,73 @@ MGL-PAX:TRANSCRIBE. Without a prefix argument, the syntax of the
 input will not be changed."
   (interactive "r")
   (mgl-pax-with-component (:mgl-pax/transcribe)
-    (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
-      (let ((point-at-start-p (= (point) start))
-            (input (buffer-substring-no-properties start end)))
-        (cl-destructuring-bind (transcript did-something-p)
-            (mgl-pax-transcribe input (mgl-pax-transcribe-syntax-arg)
-                                t t dynenv (save-excursion
-                                             (goto-char start)
-                                             (current-column)))
-          (unless (string-suffix-p "\n" input)
-            (setq transcript (substring transcript 0 -1)))
-          (cond ((not did-something-p)
-                 (message "No forms found to transcribe."))
-                ((string= transcript input)
-                 (deactivate-mark))
-                (point-at-start-p
-                 (save-excursion
-                   (goto-char start)
-                   (delete-region start end)
-                   (insert transcript)))
-                (t
-                 (save-excursion
-                   (goto-char start)
-                   (delete-region start end))
-                 (insert transcript))))))))
+    (let ((point-at-start-p (= (point) start))
+          (input (buffer-substring-no-properties start end)))
+      (cl-destructuring-bind (transcript did-something-p)
+          (mgl-pax-transcribe input (mgl-pax-transcribe-syntax-arg) t t
+                              (mgl-pax-find-cl-transcript-args)
+                              (save-excursion
+                                (goto-char start)
+                                (current-column)))
+        (unless (string-suffix-p "\n" input)
+          (setq transcript (substring transcript 0 -1)))
+        (cond ((not did-something-p)
+               (message "No forms found to transcribe."))
+              ((string= transcript input)
+               (deactivate-mark))
+              (point-at-start-p
+               (save-excursion
+                 (goto-char start)
+                 (delete-region start end)
+                 (insert transcript)))
+              (t
+               (save-excursion
+                 (goto-char start)
+                 (delete-region start end))
+               (insert transcript)))))))
 
 (defun mgl-pax-transcribe-syntax-arg ()
   (if current-prefix-arg
       (prefix-numeric-value current-prefix-arg)
     nil))
 
-;;; Within the current defun, find the first occurrence of "```"
-;;; backwards from point, and if it is followed by "cl-transcript",
-;;; return its dynenv argument."
-(defun mgl-pax-find-cl-transcript-dynenv ()
-  (save-excursion
-    (save-restriction
-      (narrow-to-defun)
-      (when (search-backward "```" nil t)
-        (when (looking-at "```cl-transcript")
-          (save-restriction
-            (narrow-to-region (point) (save-excursion
-                                        (end-of-line)
-                                        (point)))
-            (when (search-forward ":dynenv" nil t)
-              (mgl-pax-next-sexp))))))))
+;;; If point is in a Markdown code block (``` ... ```), find the first
+;;; occurrence opening ```, and if it is followed by "cl-transcript",
+;;; then return its argument list as a string.
+(defun mgl-pax-find-cl-transcript-args ()
+  (or (save-excursion
+        (let ((p (point)))
+          (when (search-backward "```cl-transcript " nil t)
+            (let* ((opener-column (current-column))
+                   (args-start (match-end 0))
+                   (args-end (line-end-position))
+                   (found-closed nil))
+              ;; Look for a closing ``` at the same indentation level
+              ;; before point
+              (goto-char args-start)
+              (while (and (not found-closed)
+                          (search-forward "```" p t))
+                (save-excursion
+                  (goto-char (match-beginning 0))
+                  (when (= (current-column) opener-column)
+                    (setq found-closed t))))
+              (unless found-closed
+                (buffer-substring-no-properties args-start args-end))))))
+      ""))
 
-(defun mgl-pax-transcribe (string syntax update-only echo dynenv
+;;; For testing
+(defvar mgl-pax-transcribe-last-message nil)
+
+(defun mgl-pax-transcribe (string syntax update-only echo cl-transcript-args
                                   first-line-indent)
-  (slime-eval `(mgl-pax::transcribe-for-emacs
-                ,string ',syntax ',update-only ',echo ,dynenv
-                ,first-line-indent)))
+  (let ((result (slime-eval `(mgl-pax::transcribe-for-emacs
+                              ,string ',syntax ',update-only ',echo
+                              ,cl-transcript-args ,first-line-indent))))
+    (if (eq (cl-first result) :error)
+        (error "%s\nTo debug, use (setq swank/backend:*debug-swank-backend* t)."
+               (cl-second result))
+      (cl-assert (eq (cl-first result) :values))
+      (cl-second result))))
 
 
 (provide 'mgl-pax)

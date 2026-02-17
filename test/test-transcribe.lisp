@@ -52,7 +52,7 @@
 
 (defmethod print-object ((bbb bbb) stream)
   ;; The exact output of PRINT-UNREADABLE-OBJECT is implementation dependent.
-  (format stream "#<BBB>"))
+  (format stream "#<~S>" 'bbb))
 
 (defclass bbb* ()
   ())
@@ -315,56 +315,58 @@
                            tree))
 
 (deftest test-read-write-transcript ()
-  (let ((*package* (find-package :mgl-pax-test)))
-    (loop for test-case in *transcribe-test-cases* do
-      (with-test (nil :name test-case)
-        (destructuring-bind (&key input transcript output check-consistency
-                             update-only (include-no-output update-only)
-                             (include-no-value update-only)
-                             default-syntax errors output-consistency-errors
-                             values-consistency-errors)
-            test-case
-          (let ((output-consistency-errors* ())
-                (values-consistency-errors* ())
-                (errors* ()))
-            (catch 'here
-              (handler-bind
-                  ((transcription-output-consistency-error
-                     (lambda (e)
-                       (push (mgl-pax::transcription-error-file-position e)
-                             output-consistency-errors*)
-                       (continue)))
-                   (transcription-values-consistency-error
-                     (lambda (e)
-                       (push (mgl-pax::transcription-error-file-position e)
-                             values-consistency-errors*)
-                       (continue)))
-                   (transcription-error
-                     (lambda (e)
-                       (push (mgl-pax::transcription-error-file-position e)
-                             errors*)
-                       (throw 'here nil))))
-                (let* ((input (when input (format nil input)))
-                       (output (when output (format nil output)))
-                       (transcript (call-format-on-strings transcript))
-                       (transcript* (mgl-pax::read-transcript input))
-                       (output*
-                         (mgl-pax::write-transcript
-                          transcript* nil
-                          :check-consistency check-consistency
-                          :update-only update-only
-                          :include-no-output include-no-output
-                          :include-no-value include-no-value
-                          :default-syntax default-syntax)))
-                  (when transcript
-                    (is (equal transcript transcript*)))
-                  (when output
-                    (is (null (mismatch% output output*)))))))
-            (is (equal (reverse errors*) errors))
-            (is (equal (reverse output-consistency-errors*)
-                       output-consistency-errors))
-            (is (equal (reverse values-consistency-errors*)
-                       values-consistency-errors))))))))
+  (standard-transcribe-dynenv
+   (lambda ()
+     (let ((*package* (find-package :mgl-pax-test)))
+       (loop for test-case in *transcribe-test-cases* do
+         (with-test (nil :name test-case)
+           (destructuring-bind (&key input transcript output check-consistency
+                                update-only (include-no-output update-only)
+                                (include-no-value update-only)
+                                default-syntax errors output-consistency-errors
+                                values-consistency-errors)
+               test-case
+             (let ((output-consistency-errors* ())
+                   (values-consistency-errors* ())
+                   (errors* ()))
+               (catch 'here
+                 (handler-bind
+                     ((transcription-output-consistency-error
+                        (lambda (e)
+                          (push (mgl-pax::transcription-error-file-position e)
+                                output-consistency-errors*)
+                          (continue)))
+                      (transcription-values-consistency-error
+                        (lambda (e)
+                          (push (mgl-pax::transcription-error-file-position e)
+                                values-consistency-errors*)
+                          (continue)))
+                      (transcription-error
+                        (lambda (e)
+                          (push (mgl-pax::transcription-error-file-position e)
+                                errors*)
+                          (throw 'here nil))))
+                   (let* ((input (when input (format nil input)))
+                          (output (when output (format nil output)))
+                          (transcript (call-format-on-strings transcript))
+                          (transcript* (mgl-pax::read-transcript input))
+                          (output*
+                            (mgl-pax::write-transcript
+                             transcript* nil
+                             :check-consistency check-consistency
+                             :update-only update-only
+                             :include-no-output include-no-output
+                             :include-no-value include-no-value
+                             :default-syntax default-syntax)))
+                     (when transcript
+                       (is (equal transcript transcript*)))
+                     (when output
+                       (is (null (mismatch% output output*)))))))
+               (is (equal (reverse errors*) errors))
+               (is (equal (reverse output-consistency-errors*)
+                          output-consistency-errors))
+               (is (equal (reverse values-consistency-errors*)
+                          values-consistency-errors))))))))))
 
 (defparameter *transcribe-source-file*
   (asdf:system-relative-pathname
@@ -375,17 +377,21 @@
    :mgl-pax "test/data/transcribe-transcription.lisp"))
 
 (deftest test-transcribe-from-source ()
-  (let ((*package* (find-package :mgl-pax-test)))
-    (check-transcription *transcribe-source-file*
-                         *transcribe-transcription-file*
-                         :check-consistency nil)))
+  (standard-transcribe-dynenv
+   (lambda ()
+     (let ((*package* (find-package :mgl-pax-test)))
+       (check-transcription *transcribe-source-file*
+                            *transcribe-transcription-file*
+                            :check-consistency nil)))))
 
 ;;; Check that repeated transcription produces the same results.
 (deftest test-transcribe-stability ()
-  (let ((*package* (find-package :mgl-pax-test)))
-    (check-transcription *transcribe-transcription-file*
-                         *transcribe-transcription-file*
-                         :check-consistency t)))
+  (standard-transcribe-dynenv
+   (lambda ()
+     (let ((*package* (find-package :mgl-pax-test)))
+       (check-transcription *transcribe-transcription-file*
+                            *transcribe-transcription-file*
+                            :check-consistency t)))))
 
 (defun check-transcription (source-file transcription-file
                             &key check-consistency)
@@ -402,16 +408,28 @@
                                      :if-exists :rename-and-delete)
         (transcribe source transcription :update-only t
                     :check-consistency check-consistency)))))
+
+
+(deftest test-transcribe-specials ()
+  (with-test ("*read-eval* nil")
+    (signals (error)
+      (let ((*read-eval* nil))
+        (transcribe "#.(1+ 2)" nil))))
+  (with-test ("changing *print-case*")
+    (is (equal (let ((*print-case* :upcase)
+                     (*package* (find-package :mgl-pax-test)))
+                 (transcribe "(setq *print-case* :downcase)(prin1 'xxx)" nil))
+               "(setq *print-case* :downcase)
+=> :downcase
+(prin1 'xxx)
+.. xxx
+=> xxx
+"))))
+
 
 (deftest test-transcribe ()
   (test-read-prefixed-lines)
   (test-read-write-transcript)
-  (with-test ("*read-eval* nil")
-    (let ((*read-eval* nil))
-      (signals-not (error)
-        (is (equal (pax:transcribe "#.(1+ 2)" nil)
-                   "#.(1+ 2)
-=> 3
-")))))
   (test-transcribe-from-source)
-  (test-transcribe-stability))
+  (test-transcribe-stability)
+  (test-transcribe-specials))
