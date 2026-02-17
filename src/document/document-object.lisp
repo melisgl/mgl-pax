@@ -319,7 +319,8 @@
                       (cond ((and (listp value) (= (length value) 2))
                              (format stream "    - _~A:_ [~A](~A)~%"
                                      name (escape-markdown
-                                           (princ-to-string (first value)))
+                                           (let ((*print-case* :upcase))
+                                             (princ-to-string (first value))))
                                      (escape-markdown-link (second value))))
                             ((stringp value)
                              (format stream "    - _~A:_ [~A](~A)~%"
