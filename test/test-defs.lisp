@@ -221,3 +221,7 @@
 y"))
 
 (define-glossary-term @title-with-emph (:title "_x_ **y**"))
+
+(note @@note-without-docstring)
+(note @@note-with-empty-docstring
+  "")

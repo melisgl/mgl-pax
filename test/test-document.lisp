@@ -134,6 +134,7 @@
   (test-guess-package-from-arglist)
   (test-pdf)
   (test-dummy-output)
+  (test-note)
   (test-pax-transcripts))
 
 (deftest test-urlencode ()
@@ -2181,6 +2182,11 @@ example section
                 (document (pax::pax-and-dref-sections)
                           :pages (pax::pax-and-dref-pages :markdown)
                           :format nil))))))
+
+(deftest test-note ()
+  (check-head "x @@NOTE-WITHOUT-DOCSTRING y" "x  y")
+  (check-head "x @@NOTE-WITH-EMPTY-DOCSTRING y" "x  y"))
+
 
 (deftest test-pax-transcripts ()
   ;; The transcripts are created on SBCL, so they should match there.

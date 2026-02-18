@@ -318,10 +318,10 @@
     (or (get-link key)
         (when (or *document-open-linking* (external-dref-p dref)
                   ;; KLUDGE: For @TITLEd definitions, fake a PAX link,
-                  ;; so that they make it to MAKE-REFLINKS, which
+                  ;; so that they make it to LINKS-TO-TREE, which
                   ;; replaces the fake link with the title.
                   (doctitle dref)
-                  ;; Similarly for NOTEs, except that MAKE-REFLINKS
+                  ;; Similarly for NOTEs, except that LINKS-TO-TREE
                   ;; will auto-include the note.
                   (typep dref 'note-dref))
           (set-link key (make-link* dref nil)))
@@ -2084,7 +2084,7 @@
           (t
            (dolist (link links)
              (vector-push-extend (link-definition link) linked-refs))
-           (values (make-reflinks (or title-override (pt-get reflink :label))
+           (values (links-to-tree (or title-override (pt-get reflink :label))
                                   title-override links)
                    nil t)))))
 
@@ -2353,7 +2353,7 @@
     (cond (foundp
            (dolist (link links)
              (vector-push-extend (link-definition link) linked-refs))
-           (values (make-reflinks `(,tree) nil links)
+           (values (links-to-tree `(,tree) nil links)
                    nil t))
           (t
            tree))))
@@ -2543,9 +2543,9 @@
       `(:reference-link :label ,label :definition ,definition)))
 
 ;;; For LABEL (a parse tree fragment) and some references to it
-;;; (REFS), return a Markdown parse tree fragment to be spliced into a
-;;; Markdown parse tree.
-(defun make-reflinks (label explicit-label-p links)
+;;; (LINKS), return a Markdown parse tree fragment to be spliced into
+;;; a Markdown parse tree.
+(defun links-to-tree (label explicit-label-p links)
   (if (endp links)
       ;; All references were filtered out.
       label
@@ -2584,7 +2584,9 @@
           ((member (xref-locative-type ref-1) '(dislocated argument))
            label)
           ((typep ref-1 'note-dref)
-           (codify-and-link-tree (translate-dref-docstring ref-1)))
+           (or (codify-and-link-tree (translate-dref-docstring ref-1))
+               ;; Returning NIL would look like we didn't succeed.
+               '("")))
           (t
            (let ((label (or (and (not explicit-label-p)
                                  (document-definition-title ref-1 :format nil))
