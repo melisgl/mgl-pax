@@ -56,12 +56,13 @@
         - [8.10.2 GitHub Workflow][dff6]
         - [8.10.3 PAX World][1281]
 - [9 Transcripts][6300]
-    - [9.1 Transcribing with Emacs][f5bd]
-    - [9.2 Controlling the Dynamic Environment][6b59]
-    - [9.3 Transcript API][9dbc]
-    - [9.4 Transcript Consistency Checking][4c39]
-        - [9.4.1 Finer-Grained Consistency Checks][6e18]
-        - [9.4.2 Utilities for Consistency Checking][8423]
+    - [9.1 Transcribing in Documentation][9bd5]
+    - [9.2 Transcribing with Emacs][f5bd]
+    - [9.3 Controlling the Dynamic Environment][6b59]
+    - [9.4 Transcript API][9dbc]
+    - [9.5 Transcript Consistency Checking][4c39]
+        - [9.5.1 Finer-Grained Consistency Checks][6e18]
+        - [9.5.2 Utilities for Consistency Checking][8423]
 - [10 Parsing][378f]
     - [10.1 Parsing Names][e65d]
         - [10.1.1 Raw Names in Words][f0d5]
@@ -277,7 +278,7 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
 
 - [system] **"mgl-pax"**
 
-    - _Version:_ 0.4.9
+    - _Version:_ 0.4.10
     - _Description:_ Documentation system, browser, generator. See the
         [PAX Manual][2415].
     - _Long Description:_ The base system. See [Links and Systems][ba90].
@@ -3358,6 +3359,10 @@ with including examples in the documentation is that they tend to
 get out-of-sync with the code. This is solved by being able to parse
 back and update transcripts.
 
+<a id="x-28MGL-PAX-3A-40TRANSCRIBING-IN-DOCUMENTATION-20MGL-PAX-3ASECTION-29"></a>
+
+### 9.1 Transcribing in Documentation
+
 Consider this function:
 
 ```
@@ -3386,9 +3391,10 @@ Let's add an example to the docstring:
 
 In this transcript above, output lines are prefixed with `".. "` and
 return values with `"=> "`. The transcript could have been generated
-with `(TRANSCRIBE "(foo 7)" *STANDARD-OUTPUT*)` or interactively by
-invoking `mgl-pax-transcribe-last-expression` in Emacs with the
-point right after `(FOO 7)`.
+with `(TRANSCRIBE` `"(foo 7)" *STANDARD-OUTPUT*)` or interactively
+by invoking `mgl-pax-transcribe-last-expression` in Emacs with the
+point right after `(FOO 7)` (see [Transcript API][9dbc] and
+[Transcribing with Emacs][f5bd]).
 
 If we want PAX to check that the transcript is consistent with the
 code when [Generating Documentation][2c93], we add the `cl-transcript` tag
@@ -3422,6 +3428,9 @@ function causes the following error:
 ..   "(foo 7)"
 ```
 
+When [Browsing Live Documentation][a595], any errors signalled during
+transcription are downgraded to warnings.
+
 All in all, transcripts are a handy tool especially when combined
 with the Emacs support to update them and with
 PYTHONIC-STRING-READER's triple-quoted strings, that
@@ -3433,25 +3442,32 @@ triple-quote syntax can be enabled with:
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIBING-WITH-EMACS-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.1 Transcribing with Emacs
+### 9.2 Transcribing with Emacs
 
-Typical transcript usage from within Emacs is simple: add a Lisp
-form to a docstring or comment at any indentation level. Move the
-cursor right after the end of the form as if you were to evaluate it
-with `C-x C-e`. The cursor is marked by `#\^`:
+With [Emacs set up][8541], we can have two Elisp
+functions at our disposal for working with transcripts.
 
-    This is part of a docstring.
-    
-    ```cl-transcript
+- `mgl-pax-transcribe-last-expression`: Evaluates a single form, and
+  insert its output and return values into the current buffer.
+
+- `mgl-pax-retranscribe-region`: Retranscribes a region as with
+  [`TRANSCRIBE`][f1f0] `:UPDATE-ONLY` `T`. The region defaults to the innermost
+  enclosing `cl-transcript` block if any.
+
+These functions work in any major and minor mode where the basic
+sexp movements are sufficiently Lisp-like. They also work anywhere
+in the buffer, including docstrings and comments at any indentation
+level. Like [`DOCUMENT`][432c], they understand the `:DYNENV` argument of
+`cl-transcript` and pass on the other arguments to `TRANSCRIBE`.
+
+For example, consider this buffer content, which may be part of a
+docstring. Move the cursor right after the end of the form as if you
+were to evaluate it with `C-x C-e`. The cursor is marked by `^`:
+
     (values (princ :hello) (list 1 2))^
-    ```
-
-Note that the use of fenced code blocks with the language tag
-`cl-transcript` is only to tell PAX to perform consistency checks at
-documentation generation time.
 
 Now invoke the Elisp function `mgl-pax-transcribe` where the cursor
-is, and the fenced code block from the docstring becomes:
+is to insert the transcribed output and return values:
 
     (values (princ :hello) (list 1 2))
     .. HELLO
@@ -3459,7 +3475,7 @@ is, and the fenced code block from the docstring becomes:
     => (1 2)
     ^
 
-Then you change the printed message and add comments to the second
+Then, change the printed message and add comments to the second
 return value:
 
     (values (princ :hello-world) (list 1 2))
@@ -3470,10 +3486,10 @@ return value:
         ;; This value is arbitrary.
         2)
 
-When generating the documentation you get a
-[`TRANSCRIPTION-CONSISTENCY-ERROR`][a249] because the printed output and the
-first return value changed, so you regenerate the documentation by
-marking the region bounded by `#\|` and the cursor at `#\^` in the
+Obviously, the transcript is now out-of-date, and if it is in a
+`cl-transcript` code block in a docstring, then `DOCUMENT` will signal
+a [`TRANSCRIPTION-CONSISTENCY-ERROR`][a249]. So, let's update the transcript
+by marking the region bounded by `|` and the cursor at `^` in this
 example:
 
     |(values (princ :hello-world) (list 1 2))
@@ -3485,7 +3501,7 @@ example:
         2)
     ^
 
-then invoke the Elisp function `mgl-pax-retranscribe-region` to get:
+Then, invoke the Elisp function `mgl-pax-retranscribe-region` to get
 
     (values (princ :hello-world) (list 1 2))
     .. HELLO-WORLD
@@ -3498,6 +3514,10 @@ then invoke the Elisp function `mgl-pax-retranscribe-region` to get:
 
 Note how the indentation and comments of `(1 2)` were left alone,
 but the output and the first return value got updated.
+
+Also note that when the cursor is in `cl-transcript` code block,
+`mgl-pax-retranscribe-region` defaults to the whole block when there
+is no active region.
 
 Alternatively, `C-u 1 mgl-pax-transcribe` will emit commented markup:
 
@@ -3542,12 +3562,9 @@ The dynamic environment of the transcription is determined by the
 `:DYNENV` argument of the enclosing `cl-transcript` code block (see
 [Controlling the Dynamic Environment][6b59]).
 
-Transcription support in Emacs can be enabled by loading
-`src/mgl-pax.el`. See [Emacs Setup][8541].
-
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-DYNENV-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.2 Controlling the Dynamic Environment
+### 9.3 Controlling the Dynamic Environment
 
 When the [`TRANSCRIBE`][f1f0] function is called directly, the forms in the
 transcript are evaluated in the current dynamic environment with the
@@ -3562,9 +3579,10 @@ locally bound and updated as in a new [REPL][f83b] session.
 [`*TERMINAL-IO*`][633c] are redirected to capture the
 output.
 
-If `TRANSCRIBE` is invoked [by Emacs][f5bd] or by
-the [`DOCUMENT`][432c] function, then a new dynamic environment is established
-by [`STANDARD-TRANSCRIBE-DYNENV`][588c] (similar in spirit to
+If `TRANSCRIBE` is invoked [by Emacs][f5bd] or
+[by the `DOCUMENT` function][9bd5], a new
+dynamic environment is established by
+[`STANDARD-TRANSCRIBE-DYNENV`][588c] (similar in spirit to
 [`WITH-STANDARD-IO-SYNTAX`][39df]), which binds printer and reader variables
 to fixed values to make IO more predictable. This default can be
 overridden with the `:DYNENV` argument of `cl-transcript`:
@@ -3599,12 +3617,12 @@ settings to `TRANSCRIBE`.
 
 The default for `:DYNENV` is `STANDARD-TRANSCRIBE-DYNENV`, and it is
 generally a good idea to use it as the above example does, but this
-is not required. Specify `:DYNENV` `NIL` explicitly if you do not want
-to use the current dynamic environment without changes.
+is not required. Specify `:DYNENV` `NIL` explicitly if you want to use
+the current dynamic environment without any changes.
 
-A more involved solution could rebind global variables set in
-transcripts, unintern symbols created or even create a temporary
-package for evaluation.
+A more involved solution could establish bindings for global
+variables set in transcripts, unintern symbols created or even
+create a temporary package for evaluation.
 
 <a id="x-28MGL-PAX-3ASTANDARD-TRANSCRIBE-DYNENV-20FUNCTION-29"></a>
 
@@ -3627,7 +3645,7 @@ package for evaluation.
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-API-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.3 Transcript API
+### 9.4 Transcript API
 
 <a id="x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29"></a>
 
@@ -3917,7 +3935,7 @@ package for evaluation.
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29"></a>
 
-### 9.4 Transcript Consistency Checking
+### 9.5 Transcript Consistency Checking
 
 The main use case for consistency checking is detecting
 out-of-date examples in documentation, although using it for writing
@@ -3950,7 +3968,7 @@ objects are printed with their `#<>` syntax, especially when
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.4.1 Finer-Grained Consistency Checks
+#### 9.5.1 Finer-Grained Consistency Checks
 
 To get around this problem, consistency checking of output,
 readable and unreadable values can be customized individually by
@@ -3988,7 +4006,7 @@ It is often a good idea to package up these settings in the
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29"></a>
 
-#### 9.4.2 Utilities for Consistency Checking
+#### 9.5.2 Utilities for Consistency Checking
 
 <a id="x-28MGL-PAX-3ASQUEEZE-WHITESPACE-20FUNCTION-29"></a>
 
@@ -4812,6 +4830,7 @@ they are presented.
   [99b05]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function "\"setf function\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [9b15]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_a.htm#accessible "\"accessible\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [9b43]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "DEFPACKAGE (MGL-PAX:CLHS MGL-PAX:MACRO)"
+  [9bd5]: #x-28MGL-PAX-3A-40TRANSCRIBING-IN-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Transcribing in Documentation"
   [9c7d]: #x-28MGL-PAX-3A-40PAGES-20MGL-PAX-3ASECTION-29 "`PAGES`"
   [9d50]: #x-28MGL-PAX-3A-40PAX-LIVE-HOME-PAGE-20MGL-PAX-3ASECTION-29 "PAX Live Home Page"
   [9db9]: #x-28MGL-PAX-3A-40LOCAL-DEFINITION-20MGL-PAX-3ASECTION-29 "Local Definition"

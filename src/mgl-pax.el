@@ -1494,7 +1494,7 @@ MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
 Without a prefix argument, the first syntax is used."
   (interactive)
   (mgl-pax-with-component (:mgl-pax/transcribe)
-    (let* ((cl-transcript-args (mgl-pax-find-cl-transcript-args))
+    (let* ((cl-transcript-args (cl-first (mgl-pax-find-cl-transcript-block)))
            (sexp (mgl-pax-call-uncommented 'slime-last-expression))
            (start (point))
            (prefix (save-excursion
@@ -1536,67 +1536,95 @@ Without a prefix argument, the first syntax is used."
     (match-string 0)))
 
 (defun mgl-pax-retranscribe-region (start end)
-  "Updates the transcription in the current region (as in calling
-MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T). Use a numeric prefix
-argument as an index to select one of the Common Lisp
-MGL-PAX:*TRANSCRIBE-SYNTAXES* as the SYNTAX argument to
-MGL-PAX:TRANSCRIBE. Without a prefix argument, the syntax of the
-input will not be changed."
-  (interactive "r")
+  "Update the transcription in the active region (as in calling
+MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T). If there is no active region,
+default to the innermost enclosing `cl-transcript' block.
+
+Use a numeric prefix argument as an index to select one of the Common
+Lisp MGL-PAX:*TRANSCRIBE-SYNTAXES* as the SYNTAX argument to
+MGL-PAX:TRANSCRIBE. Without a prefix argument, the syntax of the input
+will not be changed (modulo ambiguity in syntax detection)."
+  (interactive
+   (cond ((use-region-p)
+          (list (region-beginning) (region-end)))
+         ((and (not transient-mark-mode) (mark))
+          (let ((m (mark)))
+            (list (min (point) m) (max (point) m))))
+         (t
+          (list (point) (point)))))
   (mgl-pax-with-component (:mgl-pax/transcribe)
-    (let ((point-at-start-p (= (point) start))
-          (input (buffer-substring-no-properties start end)))
-      (cl-destructuring-bind (transcript did-something-p)
-          (mgl-pax-transcribe input (mgl-pax-transcribe-syntax-arg) t t
-                              (mgl-pax-find-cl-transcript-args)
-                              (save-excursion
-                                (goto-char start)
-                                (current-column)))
-        (unless (string-suffix-p "\n" input)
-          (setq transcript (substring transcript 0 -1)))
-        (cond ((not did-something-p)
-               (message "No forms found to transcribe."))
-              ((string= transcript input)
-               (deactivate-mark))
-              (point-at-start-p
-               (save-excursion
-                 (goto-char start)
-                 (delete-region start end)
-                 (insert transcript)))
-              (t
-               (save-excursion
-                 (goto-char start)
-                 (delete-region start end))
-               (insert transcript)))))))
+    (cl-destructuring-bind (&optional cl-transcript-args block-start block-end)
+        (mgl-pax-find-cl-transcript-block)
+      (when (and (= start end) block-start block-end)
+        (setq start block-start
+              end block-end)
+        (slime-flash-region start end 0.2))
+      (let ((point-at-start-p (= (point) start))
+            (input (buffer-substring-no-properties start end)))
+        (cl-destructuring-bind (transcript did-something-p)
+            (mgl-pax-transcribe input (mgl-pax-transcribe-syntax-arg) t t
+                                cl-transcript-args
+                                (save-excursion
+                                  (goto-char start)
+                                  (current-column)))
+          (unless (string-suffix-p "\n" input)
+            (setq transcript (substring transcript 0 -1)))
+          (cond ((not did-something-p)
+                 (message "No forms found to transcribe."))
+                ((string= transcript input)
+                 (deactivate-mark))
+                (point-at-start-p
+                 (save-excursion
+                   (goto-char start)
+                   (delete-region start end)
+                   (insert transcript)))
+                (t
+                 (save-excursion
+                   (goto-char start)
+                   (delete-region start end))
+                 (insert transcript))))))))
 
 (defun mgl-pax-transcribe-syntax-arg ()
   (if current-prefix-arg
       (prefix-numeric-value current-prefix-arg)
     nil))
 
-;;; If point is in a Markdown code block (``` ... ```), find the first
-;;; occurrence opening ```, and if it is followed by "cl-transcript",
-;;; then return its argument list as a string.
-(defun mgl-pax-find-cl-transcript-args ()
-  (or (save-excursion
-        (let ((p (point)))
-          (when (search-backward "```cl-transcript " nil t)
-            (let* ((opener-column (current-column))
-                   (args-start (match-end 0))
-                   (args-end (line-end-position))
-                   (found-closed nil))
-              ;; Look for a closing ``` at the same indentation level
-              ;; before point
-              (goto-char args-start)
-              (while (and (not found-closed)
-                          (search-forward "```" p t))
-                (save-excursion
-                  (goto-char (match-beginning 0))
-                  (when (= (current-column) opener-column)
-                    (setq found-closed t))))
-              (unless found-closed
-                (buffer-substring-no-properties args-start args-end))))))
-      ""))
+(defun mgl-pax-find-cl-transcript-block ()
+  "If point is in a cl-transcript Markdown code block (```cl-transcript
+  ... ```), return the rest of the line after \"```cl-transcript\", the
+  start of the line following it, and the start of the line of the
+  closing \"```\". If not in such a code block, return nil."
+  (save-excursion
+    (let ((p (point)))
+      ;; Move to the end of the line so that we find match even if
+      ;; point is right over it.
+      (end-of-line)
+      (when (search-backward "```cl-transcript" nil t)
+        (let* ((opener-column (current-column))
+               (args-start (match-end 0))
+               (args-end (line-end-position))
+               (end-pos nil))
+          ;; Look for a closing ``` at the same indentation level
+          (goto-char args-start)
+          (while (and (not end-pos)
+                      (search-forward "```" nil t))
+            (save-excursion
+              (goto-char (match-beginning 0))
+              (when (= (current-column) opener-column)
+                (setq end-pos (point)))))
+          ;; The +3 (the length of "```") allows matching if the
+          ;; cursor is over or right after the match.
+          (when (and end-pos (<= p (+ end-pos 3)))
+            (list (buffer-substring-no-properties args-start args-end)
+                  (save-excursion
+                    (goto-char args-start)
+                    (forward-line 1)
+                    (point))
+                  (when end-pos
+                    (save-excursion
+                      (goto-char end-pos)
+                      (beginning-of-line)
+                      (point))))))))))
 
 ;;; For testing
 (defvar mgl-pax-transcribe-last-message nil)
@@ -1605,7 +1633,8 @@ input will not be changed."
                                   first-line-indent)
   (let ((result (slime-eval `(mgl-pax::transcribe-for-emacs
                               ,string ',syntax ',update-only ',echo
-                              ,cl-transcript-args ,first-line-indent))))
+                              ,(or cl-transcript-args "")
+                              ,first-line-indent))))
     (if (eq (cl-first result) :error)
         (error "%s\nTo debug, use (setq swank/backend:*debug-swank-backend* t)."
                (cl-second result))

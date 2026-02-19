@@ -1031,6 +1031,26 @@
      front-sticky (field inhibit-line-move-field-capture))))
 
 
+;;;; Test `mgl-pax-find-cl-transcript-block'
+
+(ert-deftest test-mgl-pax-find-cl-transcript-block ()
+  (with-temp-lisp-buffer
+   (insert "
+  ```cl-transcript (:dynenv nil)
+  1
+  => 1
+  ```
+")
+   (should (= (point-min) 1))
+   (cl-loop for p upfrom (point-min) upto (point-max)
+            do (goto-char p)
+            (if (or (< p 2) (< 51 p))
+                (should (null (mgl-pax-find-cl-transcript-block)))
+              (should (equal (mgl-pax-find-cl-transcript-block)
+                             (list " (:dynenv nil)" 35 46)))))))
+
+
+
 ;;;; Test `mgl-pax-retranscribe-region'
 
 (ert-deftest test-mgl-pax-retranscribe-region/simple ()

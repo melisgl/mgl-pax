@@ -152,9 +152,16 @@
   easily generated from the source code. The main worry associated
   with including examples in the documentation is that they tend to
   get out-of-sync with the code. This is solved by being able to parse
-  back and update transcripts.
+  back and update transcripts."""
+  (@transcribing-in-documentation section)
+  (@transcribing-with-emacs section)
+  (@transcript-dynenv section)
+  (@transcript-api section)
+  (@transcript-consistency-checking section))
 
-  Consider this function:
+(defsection @transcribing-in-documentation
+    (:title "Transcribing in Documentation")
+  """Consider this function:
 
   ```
   (defun foo (x)
@@ -182,9 +189,10 @@
 
   In this transcript above, output lines are prefixed with `".. "` and
   return values with `"=> "`. The transcript could have been generated
-  with `(TRANSCRIBE "(foo 7)" *STANDARD-OUTPUT*)` or interactively by
-  invoking `mgl-pax-transcribe-last-expression` in Emacs with the
-  point right after `(FOO 7)`.
+  with `(TRANSCRIBE` `"(foo 7)" *STANDARD-OUTPUT*)` or interactively
+  by invoking `mgl-pax-transcribe-last-expression` in Emacs with the
+  point right after `(FOO 7)` (see @TRANSCRIPT-API and
+  @TRANSCRIBING-WITH-EMACS).
 
   If we want PAX to check that the transcript is consistent with the
   code when @GENERATING-DOCUMENTATION, we add the `cl-transcript` tag
@@ -218,17 +226,180 @@
   ..   "(foo 7)"
   ```
 
+  When @BROWSING-LIVE-DOCUMENTATION, any errors signalled during
+  transcription are downgraded to warnings.
+
   All in all, transcripts are a handy tool especially when combined
   with the Emacs support to update them and with
   [PYTHONIC-STRING-READER][asdf:system]'s triple-quoted strings, that
   allow one to work with nested strings with less noise. The
   triple-quote syntax can be enabled with:
 
-      (in-readtable pythonic-string-syntax)"""
-  (@transcribing-with-emacs section)
-  (@transcript-dynenv section)
-  (@transcript-api section)
-  (@transcript-consistency-checking section))
+      (in-readtable pythonic-string-syntax)""")
+
+
+(defsection @transcribing-with-emacs (:title "Transcribing with Emacs")
+  """With [Emacs set up][@emacs-setup], we can have two Elisp
+  functions at our disposal for working with transcripts.
+
+  - `mgl-pax-transcribe-last-expression`: Evaluates a single form, and
+    insert its output and return values into the current buffer.
+
+  - `mgl-pax-retranscribe-region`: Retranscribes a region as with
+    TRANSCRIBE :UPDATE-ONLY T. The region defaults to the innermost
+    enclosing `cl-transcript` block if any.
+
+  These functions work in any major and minor mode where the basic
+  sexp movements are sufficiently Lisp-like. They also work anywhere
+  in the buffer, including docstrings and comments at any indentation
+  level. Like DOCUMENT, they understand the :DYNENV argument of
+  `cl-transcript` and pass on the other arguments to TRANSCRIBE.
+
+  For example, consider this buffer content, which may be part of a
+  docstring. Move the cursor right after the end of the form as if you
+  were to evaluate it with `C-x C-e`. The cursor is marked by `^`:
+
+      (values (princ :hello) (list 1 2))^
+
+  Now invoke the Elisp function `mgl-pax-transcribe` where the cursor
+  is to insert the transcribed output and return values:
+
+      (values (princ :hello) (list 1 2))
+      .. HELLO
+      => :HELLO
+      => (1 2)
+      ^
+
+  Then, change the printed message and add comments to the second
+  return value:
+
+      (values (princ :hello-world) (list 1 2))
+      .. HELLO
+      => :HELLO
+      => ;; This is a list.
+         (1
+          ;; This value is arbitrary.
+          2)
+
+  Obviously, the transcript is now out-of-date, and if it is in a
+  `cl-transcript` code block in a docstring, then DOCUMENT will signal
+  a TRANSCRIPTION-CONSISTENCY-ERROR. So, let's update the transcript
+  by marking the region bounded by `|` and the cursor at `^` in this
+  example:
+
+      |(values (princ :hello-world) (list 1 2))
+      .. HELLO
+      => :HELLO
+      => ;; This is a list.
+         (1
+          ;; This value is arbitrary.
+          2)
+      ^
+
+  Then, invoke the Elisp function `mgl-pax-retranscribe-region` to get
+
+      (values (princ :hello-world) (list 1 2))
+      .. HELLO-WORLD
+      => :HELLO-WORLD
+      => ;; This is a list.
+         (1
+          ;; This value is arbitrary.
+          2)
+      ^
+
+  Note how the indentation and comments of `(1 2)` were left alone,
+  but the output and the first return value got updated.
+
+  Also note that when the cursor is in `cl-transcript` code block,
+  `mgl-pax-retranscribe-region` defaults to the whole block when there
+  is no active region.
+  
+  Alternatively, `C-u 1 mgl-pax-transcribe` will emit commented markup:
+
+      (values (princ :hello) (list 1 2))
+      ;.. HELLO
+      ;=> :HELLO
+      ;=> (1 2)
+
+  `C-u 0 mgl-pax-retranscribe-region` will turn commented into
+  non-commented markup. In general, the numeric prefix argument is the
+  index of the syntax to be used in *TRANSCRIBE-SYNTAXES*. Without a
+  prefix argument, `mgl-pax-retranscribe-region` will not change the
+  markup style.
+
+  Finally, not only do both functions work at any indentation level
+  but in comments too:
+
+      ;;;; (values (princ :hello) (list 1 2))
+      ;;;; .. HELLO
+      ;;;; => :HELLO
+      ;;;; => (1 2)
+
+  @@TRANSCRIBE-STRIP-PREFIX
+
+  The dynamic environment of the transcription is determined by the
+  :DYNENV argument of the enclosing `cl-transcript` code block (see
+  @TRANSCRIPT-DYNENV).""")
+
+(defun transcribe-for-emacs (string default-syntax* update-only echo
+                             cl-transcript-args-string first-line-indent)
+  (with-swank ()
+    (swank/backend:converting-errors-to-error-location
+      (swank::with-buffer-syntax ()
+        (let ((default-syntax (cond ((numberp default-syntax*)
+                                     (first (elt *transcribe-syntaxes*
+                                                 default-syntax*)))
+                                    ((null default-syntax*)
+                                     nil)
+                                    (t (error "Unexpected default syntax ~S."
+                                              default-syntax*)))))
+          (multiple-value-bind (dynenv cl-transcript-args)
+              (parse-cl-transcribe-args cl-transcript-args-string)
+            (list :values (funcall (or dynenv #'funcall)
+                                   (lambda ()
+                                     (apply #'transcribe-for-emacs-1
+                                            string first-line-indent
+                                            :default-syntax default-syntax
+                                            :update-only update-only
+                                            :echo echo
+                                            cl-transcript-args))))))))))
+
+(defun parse-cl-transcribe-args (string)
+  (let* ((args (read-from-string string nil nil))
+         (dynenv (getf args :dynenv 'standard-transcribe-dynenv)))
+    (remf args :dynenv)
+    (values dynenv args)))
+
+(defun transcribe-for-emacs-1 (string first-line-indent &rest transcribe-args)
+  (multiple-value-bind (string prefix1 prefix)
+      (note @@transcribe-strip-prefix
+        "With `mgl-pax-transcribe-last-expression`, we strip the
+        longest run of leading spaces and semicolons common to all
+        lines of the expression in the buffer.
+
+        For `mgl-pax-retranscribe-region`, the longest run is
+        truncated so that it does not extend beyond the column of the
+        first form to be transcribed. Without this rule, the syntax
+        used
+
+        ```cl-transcript
+        ;;(list 1 2)
+        ;;;=> (1
+        ;;;->  2)
+        ```
+
+        would be ambiguous, as the `;=>` could refer to `=>` in the
+        :DEFAULT syntax or to `;=>` in :COMMENTED-1."
+        (strip-longest-common-prefix
+         string "; " :first-line-indent first-line-indent))
+    (multiple-value-bind (output did-something-p)
+        (apply #'transcribe string nil transcribe-args)
+      (list (format nil "~A~A"
+                    (if first-line-indent prefix1 prefix)
+                    (prefix-lines prefix output :exclude-first-line-p t
+                                  :exclude-blank-p t))
+            did-something-p))))
+
 
 (defsection @transcript-dynenv
     (:title "Controlling the Dynamic Environment")
@@ -240,9 +411,10 @@
 
   - @@TRANSCRIBE-OUTPUT-VARS
 
-  If TRANSCRIBE is invoked [by Emacs][ @transcribing-with-emacs] or by
-  the DOCUMENT function, then a new dynamic environment is established
-  by STANDARD-TRANSCRIBE-DYNENV (similar in spirit to
+  If TRANSCRIBE is invoked [by Emacs][ @transcribing-with-emacs] or
+  [by the DOCUMENT function][ @transcribing-in-documentation], a new
+  dynamic environment is established by
+  STANDARD-TRANSCRIBE-DYNENV (similar in spirit to
   WITH-STANDARD-IO-SYNTAX), which binds printer and reader variables
   to fixed values to make IO more predictable. This default can be
   overridden with the :DYNENV argument of `cl-transcript`:
@@ -277,12 +449,12 @@
 
   The default for :DYNENV is STANDARD-TRANSCRIBE-DYNENV, and it is
   generally a good idea to use it as the above example does, but this
-  is not required. Specify :DYNENV NIL explicitly if you do not want
-  to use the current dynamic environment without changes.
+  is not required. Specify :DYNENV NIL explicitly if you want to use
+  the current dynamic environment without any changes.
 
-  A more involved solution could rebind global variables set in
-  transcripts, unintern symbols created or even create a temporary
-  package for evaluation."""
+  A more involved solution could establish bindings for global
+  variables set in transcripts, unintern symbols created or even
+  create a temporary package for evaluation."""
   (standard-transcribe-dynenv function))
 
 (defun/autoloaded standard-transcribe-dynenv (fn)
@@ -1307,161 +1479,6 @@
           :form-as-string form-as-string
           :message message
           :message-args message-args))
-
-
-(defsection @transcribing-with-emacs (:title "Transcribing with Emacs")
-  """Typical transcript usage from within Emacs is simple: add a Lisp
-  form to a docstring or comment at any indentation level. Move the
-  cursor right after the end of the form as if you were to evaluate it
-  with `C-x C-e`. The cursor is marked by `#\^`:
-
-      This is part of a docstring.
-
-      ```cl-transcript
-      (values (princ :hello) (list 1 2))^
-      ```
-
-  Note that the use of fenced code blocks with the language tag
-  `cl-transcript` is only to tell PAX to perform consistency checks at
-  documentation generation time.
-
-  Now invoke the Elisp function `mgl-pax-transcribe` where the cursor
-  is, and the fenced code block from the docstring becomes:
-
-      (values (princ :hello) (list 1 2))
-      .. HELLO
-      => :HELLO
-      => (1 2)
-      ^
-
-  Then you change the printed message and add comments to the second
-  return value:
-
-      (values (princ :hello-world) (list 1 2))
-      .. HELLO
-      => :HELLO
-      => ;; This is a list.
-         (1
-          ;; This value is arbitrary.
-          2)
-
-  When generating the documentation you get a
-  TRANSCRIPTION-CONSISTENCY-ERROR because the printed output and the
-  first return value changed, so you regenerate the documentation by
-  marking the region bounded by `#\|` and the cursor at `#\^` in the
-  example:
-
-      |(values (princ :hello-world) (list 1 2))
-      .. HELLO
-      => :HELLO
-      => ;; This is a list.
-         (1
-          ;; This value is arbitrary.
-          2)
-      ^
-
-  then invoke the Elisp function `mgl-pax-retranscribe-region` to get:
-
-      (values (princ :hello-world) (list 1 2))
-      .. HELLO-WORLD
-      => :HELLO-WORLD
-      => ;; This is a list.
-         (1
-          ;; This value is arbitrary.
-          2)
-      ^
-
-  Note how the indentation and comments of `(1 2)` were left alone,
-  but the output and the first return value got updated.
-
-  Alternatively, `C-u 1 mgl-pax-transcribe` will emit commented markup:
-
-      (values (princ :hello) (list 1 2))
-      ;.. HELLO
-      ;=> :HELLO
-      ;=> (1 2)
-
-  `C-u 0 mgl-pax-retranscribe-region` will turn commented into
-  non-commented markup. In general, the numeric prefix argument is the
-  index of the syntax to be used in *TRANSCRIBE-SYNTAXES*. Without a
-  prefix argument, `mgl-pax-retranscribe-region` will not change the
-  markup style.
-
-  Finally, not only do both functions work at any indentation level
-  but in comments too:
-
-      ;;;; (values (princ :hello) (list 1 2))
-      ;;;; .. HELLO
-      ;;;; => :HELLO
-      ;;;; => (1 2)
-
-  @@TRANSCRIBE-STRIP-PREFIX
-
-  The dynamic environment of the transcription is determined by the
-  :DYNENV argument of the enclosing `cl-transcript` code block (see
-  @TRANSCRIPT-DYNENV).
-
-  Transcription support in Emacs can be enabled by loading
-  `src/mgl-pax.el`. See @EMACS-SETUP.""")
-
-(defun transcribe-for-emacs (string default-syntax* update-only echo
-                             cl-transcript-args-string first-line-indent)
-  (with-swank ()
-    (swank/backend:converting-errors-to-error-location
-      (swank::with-buffer-syntax ()
-        (let ((default-syntax (cond ((numberp default-syntax*)
-                                     (first (elt *transcribe-syntaxes*
-                                                 default-syntax*)))
-                                    ((null default-syntax*)
-                                     nil)
-                                    (t (error "Unexpected default syntax ~S."
-                                              default-syntax*)))))
-          (multiple-value-bind (dynenv cl-transcript-args)
-              (parse-cl-transcribe-args cl-transcript-args-string)
-            (list :values (funcall (or dynenv #'funcall)
-                                   (lambda ()
-                                     (apply #'transcribe-for-emacs-1
-                                            string first-line-indent
-                                            :default-syntax default-syntax
-                                            :update-only update-only
-                                            :echo echo
-                                            cl-transcript-args))))))))))
-
-(defun parse-cl-transcribe-args (string)
-  (let* ((args (read-from-string string nil nil))
-         (dynenv (getf args :dynenv 'standard-transcribe-dynenv)))
-    (remf args :dynenv)
-    (values dynenv args)))
-
-(defun transcribe-for-emacs-1 (string first-line-indent &rest transcribe-args)
-  (multiple-value-bind (string prefix1 prefix)
-      (note @@transcribe-strip-prefix
-        "With `mgl-pax-transcribe-last-expression`, we strip the
-        longest run of leading spaces and semicolons common to all
-        lines of the expression in the buffer.
-
-        For `mgl-pax-retranscribe-region`, the longest run is
-        truncated so that it does not extend beyond the column of the
-        first form to be transcribed. Without this rule, the syntax
-        used
-
-        ```cl-transcript
-        ;;(list 1 2)
-        ;;;=> (1
-        ;;;->  2)
-        ```
-
-        would be ambiguous, as the `;=>` could refer to `=>` in the
-        :DEFAULT syntax or to `;=>` in :COMMENTED-1."
-        (strip-longest-common-prefix
-         string "; " :first-line-indent first-line-indent))
-    (multiple-value-bind (output did-something-p)
-        (apply #'transcribe string nil transcribe-args)
-      (list (format nil "~A~A"
-                    (if first-line-indent prefix1 prefix)
-                    (prefix-lines prefix output :exclude-first-line-p t
-                                  :exclude-blank-p t))
-            did-something-p))))
 
 
 (defsection @transcript-consistency-checking
