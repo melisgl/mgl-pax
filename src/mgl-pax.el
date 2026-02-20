@@ -417,20 +417,30 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
         (save-excursion (insert text-after))
         (funcall fn)))))
 
+(defvar mgl-pax-recomment-fn nil)
+(defvar mgl-pax-call-uncommented-bounds nil)
+
 ;;; If point is in a comment, then call FN in in temporary buffer with
 ;;; all consecutive comment lines uncommented and point position at
 ;;; the original position. Else just call FN.
 (defun mgl-pax-call-uncommented (fn)
-  (let ((comment-bounds (mgl-pax-comment-lines-bounds)))
+  (let* ((comment-bounds (mgl-pax-comment-lines-bounds))
+         (mgl-pax-call-uncommented-bounds comment-bounds))
     (if comment-bounds
-        (let ((comment (apply #'buffer-substring comment-bounds))
+        (let ((comment (apply #'buffer-substring-no-properties comment-bounds))
               (pos (1+ (- (point) (car comment-bounds)))))
           (with-temp-buffer
             (lisp-mode)
             (insert comment)
             (goto-char pos)
-            (uncomment-region (point-min) (point-max))
-            (funcall fn)))
+            ;; In temporary buffers, undo is disabled by default.
+            (setq buffer-undo-list nil)
+            (let ((handle (prepare-change-group (current-buffer))))
+              (uncomment-region (point-min) (point-max))
+              (let ((mgl-pax-recomment-fn
+                     (lambda ()
+                       (cancel-change-group handle))))
+                (funcall fn)))))
       (funcall fn))))
 
 (defun mgl-pax-comment-lines-bounds ()
@@ -461,6 +471,34 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 
 (defun mgl-pax-in-comment-p ()
   (elt (syntax-ppss) 4))
+
+;;; Like slime-last-expression, but also works in comments and returns
+;;; the boundaries of the sexp as well.
+(defun mgl-pax-last-expression-and-bounds ()
+  (mgl-pax-call-uncommented
+   (lambda ()
+     (let ((start (make-marker))
+           (end (make-marker)))
+       (set-marker-insertion-type start t)
+       (set-marker-insertion-type end t)
+       (save-excursion
+         (backward-sexp)
+         (set-marker start (point)))
+       (save-excursion
+         (goto-char start)
+         (forward-sexp)
+         (set-marker end (point)))
+       (let ((offset (if mgl-pax-call-uncommented-bounds
+                         (1- (cl-first mgl-pax-call-uncommented-bounds))
+                       0))
+             (sexp (buffer-substring-no-properties start end)))
+         (when mgl-pax-recomment-fn
+           ;; Undoing uncomment-region moves the start and end
+           ;; markers.
+           (funcall mgl-pax-recomment-fn))
+         (list sexp
+               (+ offset start)
+               (+ offset end)))))))
 
 ;;; Return the sexps before and after (slime-sexp-at-point),
 ;;; skipping some markup.
@@ -1496,7 +1534,7 @@ Without a prefix argument, the first syntax is used."
   (interactive)
   (mgl-pax-with-component (:mgl-pax/transcribe)
     (let* ((cl-transcript-args (cl-first (mgl-pax-find-cl-transcript-block)))
-           (sexp (mgl-pax-call-uncommented 'slime-last-expression))
+           (sexp (cl-first (mgl-pax-last-expression-and-bounds)))
            (start (point))
            (prefix (save-excursion
                      ;; Go to the first line of the sexp.
