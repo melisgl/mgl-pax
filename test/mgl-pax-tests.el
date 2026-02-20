@@ -1148,47 +1148,47 @@
 (ert-deftest test-mgl-pax-retranscribe-region/first-line-1 ()
   (load-mgl-pax-test-system)
   (with-temp-lisp-buffer
-   (insert ";;;; (1+ 2)\n;; =>\n")
+   (insert ";;;; (1+ 2)\n;;;; =>\n")
    (push-mark (1+ (point-min)) nil t)
    (call-interactively 'mgl-pax-retranscribe-region)
    (accept-process-output nil 1)
-   (should (equal (buffer-string) ";;;; (1+ 2)\n;; => 3\n"))))
+   (should (equal (buffer-string) ";;;; (1+ 2)\n;;;; => 3\n"))))
 
 (ert-deftest test-mgl-pax-retranscribe-region/first-line-2 ()
   (load-mgl-pax-test-system)
   (with-temp-lisp-buffer
-   (insert ";;;; (1+ 2)\n;; =>\n")
+   (insert ";;;; (1+ 2)\n;;;; =>\n")
    (push-mark (+ (point-min) 2) nil t)
    (call-interactively 'mgl-pax-retranscribe-region)
    (accept-process-output nil 1)
-   (should (equal (buffer-string) ";;;; (1+ 2)\n;; => 3\n"))))
+   (should (equal (buffer-string) ";;;; (1+ 2)\n;;;; => 3\n"))))
 
 (ert-deftest test-mgl-pax-retranscribe-region/first-line-3 ()
   (load-mgl-pax-test-system)
   (with-temp-lisp-buffer
-   (insert ";;;; (1+ 2)\n;; =>\n")
+   (insert ";;;; (1+ 2)\n;;;; =>\n")
    (push-mark (+ (point-min) 3) nil t)
    (call-interactively 'mgl-pax-retranscribe-region)
    (accept-process-output nil 1)
-   (should (equal (buffer-string) ";;;; (1+ 2)\n;; => 3\n"))))
+   (should (equal (buffer-string) ";;;; (1+ 2)\n;;;; => 3\n"))))
 
 (ert-deftest test-mgl-pax-retranscribe-region/first-line-4 ()
   (load-mgl-pax-test-system)
   (with-temp-lisp-buffer
-   (insert ";;;; (1+ 2)\n;; =>\n")
+   (insert ";;;; (1+ 2)\n;;;; =>\n")
    (push-mark (+ (point-min) 4) nil t)
    (call-interactively 'mgl-pax-retranscribe-region)
    (accept-process-output nil 1)
-   (should (equal (buffer-string) ";;;; (1+ 2)\n;; => 3\n"))))
+   (should (equal (buffer-string) ";;;; (1+ 2)\n;;;; => 3\n"))))
 
 (ert-deftest test-mgl-pax-retranscribe-region/first-line-5 ()
   (load-mgl-pax-test-system)
   (with-temp-lisp-buffer
-   (insert ";;;; (1+ 2)\n;; =>\n")
+   (insert ";;;; (1+ 2)\n;;;; =>\n")
    (push-mark (+ (point-min) 5) nil t)
    (call-interactively 'mgl-pax-retranscribe-region)
    (accept-process-output nil 1)
-   (should (equal (buffer-string) ";;;; (1+ 2)\n;; => 3\n"))))
+   (should (equal (buffer-string) ";;;; (1+ 2)\n;;;; => 3\n"))))
 
 (ert-deftest test-mgl-pax-retranscribe-region/commented-syntax-1 ()
   (load-mgl-pax-test-system)
@@ -1216,6 +1216,15 @@
    (call-interactively 'mgl-pax-retranscribe-region)
    (accept-process-output nil 1)
    (should (equal (buffer-string) "  (+ 1 2)\n  => 3\n "))))
+
+(ert-deftest test-mgl-pax-retranscribe-region/first-line-comment ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert ";;; x\n1\n=> 1\n")
+   (mark-whole-buffer)
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) ";;; x\n1\n=> 1\n"))))
 
 (defun mark-whole-buffer-but-edges (n-head n-tail)
   (goto-char (point-min))

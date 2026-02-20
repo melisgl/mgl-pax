@@ -26,12 +26,21 @@
                               (not (starts-with-subseq prefix line)))
                          (write-line line output))
                         ((and first-line-indent (zerop i))
-                         ;; This skips all semicolons and spaces right
-                         ;; of the cursor in Emacs.
+                         ;; To tolerate sloppily marked regions where
+                         ;; the start is not in the first column, this
+                         ;; skips all semicolons and spaces to the
+                         ;; right of the cursor in Emacs.
                          (setq prefix1 (matching-prefix line chars))
                          (when first-line-indent
+                           ;; We must not remove more than the common
+                           ;; PREFIX.
+                           (setq prefix1 (subseq prefix1 0
+                                                 (max 0
+                                                      (min (- (length prefix)
+                                                              first-line-indent)
+                                                           (length prefix1)))))
                            ;; PREFIX must not extend beyond the column
-                           ;; of first form to be in the transcript.
+                           ;; of first form in the transcript.
                            (setq prefix (subseq prefix 0
                                                 (min (length prefix)
                                                      (+ first-line-indent
