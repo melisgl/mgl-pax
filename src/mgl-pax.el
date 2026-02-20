@@ -1533,46 +1533,66 @@ MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
 Without a prefix argument, the first syntax is used."
   (interactive)
   (mgl-pax-with-component (:mgl-pax/transcribe)
-    (let* ((cl-transcript-args (cl-first (mgl-pax-find-cl-transcript-block)))
-           (sexp (cl-first (mgl-pax-last-expression-and-bounds)))
-           (start (point))
-           (prefix (save-excursion
-                     ;; Go to the first line of the sexp.
-                     (forward-line (- (cl-count ?\n sexp)))
-                     (mgl-pax-line-prefix))))
-      (unless (mgl-pax-blank-line-prefix-p)
-        (insert "\n"))
-      (cl-destructuring-bind (transcript did-something-p)
-          (mgl-pax-transcribe sexp (mgl-pax-transcribe-syntax-arg)
-                              nil nil cl-transcript-args nil)
-        (if (not did-something-p)
-            (message "No forms found to transcribe.")
-          (insert transcript)
-          (string-insert-rectangle
-           (save-excursion (goto-char start)
-                           (forward-line 1)
-                           (point))
-           (save-excursion (forward-line -1) (point))
-           prefix)
-          ;; The transcript ends with a newline. Delete it if it would
-          ;; result in a blank line.
-          (when (looking-at "\n")
-            (delete-char 1)))))))
+    (cl-destructuring-bind (sexp sexp-begin sexp-end)
+        (mgl-pax-last-expression-and-bounds)
+      (let* ((cl-transcript-args (cl-first (mgl-pax-find-cl-transcript-block)))
+             (prefix (save-excursion
+                       (goto-char sexp-begin)
+                       (mgl-pax-transcription-prefix))))
+        (cl-destructuring-bind (transcript did-something-p)
+            (mgl-pax-transcribe sexp (mgl-pax-transcribe-syntax-arg)
+                                nil nil cl-transcript-args nil)
+          (if (not did-something-p)
+              (message "No forms found to transcribe.")
+            (unless (mgl-pax-blank-p (line-beginning-position) (point))
+              (insert "\n")
+              (delete-trailing-whitespace (line-beginning-position 0)
+                                          (line-end-position 0)))
+            (let ((start (point))
+                  (end (progn (insert transcript) (point))))
+              (string-insert-rectangle start (1- end) prefix))
+            (unless (mgl-pax-blank-p (point) (line-end-position))
+              (insert prefix))
+            (mgl-pax-eat-space)))))))
 
-(defun mgl-pax-blank-line-prefix-p ()
-  (let ((string (buffer-substring-no-properties (line-beginning-position)
-                                                (point))))
-    (string-match-p "^[[:space:];]*$" string)))
+(defun mgl-pax-eat-space ()
+  (interactive)
+  (let ((start (point)))
+    (save-excursion
+      (skip-chars-forward " \t" (line-end-position))
+      (when (and (eolp) (not (eobp)))
+        (forward-char 1))
+      (delete-region start (point)))))
 
-;;; Return the longest run of whitespace and semicolon characters at
-;;; the beginning of the current line as a string.
-(defun mgl-pax-line-prefix ()
-  (save-excursion
-    ;; This may move after a prompt on the line ...
-    (move-beginning-of-line nil)
-    ;; ... so don't match the true beginning of the line with ^.
-    (re-search-forward "[[:space:];]*")
-    (match-string 0)))
+(defun mgl-pax-blank-p (start end)
+  (let ((string (buffer-substring-no-properties start end)))
+    (string-match-p "^[ \t]*$" string)))
+
+(defun mgl-pax-transcription-prefix ()
+  (let* ((p (point))
+         (comment-start-pos
+          (when (mgl-pax-in-comment-p)
+            (save-excursion
+              (move-beginning-of-line nil)
+              (when (re-search-forward comment-start-skip p t)
+                (match-beginning 4))))))
+    (if (and comment-start-pos (< comment-start-pos p))
+        (save-excursion
+          (goto-char comment-start-pos)
+          (let ((semicolons ))
+            (concat (make-string (current-column) ?\s)
+                    (progn
+                      (re-search-forward ";*")
+                      (match-string 0))
+                    (progn
+                      (re-search-forward "[[:space:]]*")
+                      (match-string 0)))))
+      (save-excursion
+        ;; This may move after a prompt on the line ...
+        (move-beginning-of-line nil)
+        ;; ... so don't match the true beginning of the line with ^.
+        (re-search-forward "[[:space:]]*")
+        (match-string 0)))))
 
 (defun mgl-pax-retranscribe-region (start end)
   "Update the transcription in the active region (as in calling

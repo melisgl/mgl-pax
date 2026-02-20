@@ -52,7 +52,7 @@ the documentation system.
 
 - [system] **"dref"**
 
-    - _Version:_ 0.4.10
+    - _Version:_ 0.4.11
     - _Description:_ Reify definitions, provide portable access to
         docstrings and source locations in an extensible framework.
     - _Long Description:_ [`DEFUN`][f472] defines a first-class object: a `FUNCTION`([`0`][119e] [`1`][81f7]).

@@ -1002,11 +1002,23 @@
 (ert-deftest test-mgl-pax-transcribe-last-expression/junk-before ()
   (load-mgl-pax-test-system)
   (with-temp-lisp-buffer
-   (insert ";; junk (1+ 2)")
+   (insert "1 ; junk (1+ 2)")
    (mgl-pax-transcribe-last-expression)
    (accept-process-output nil 1)
    (should (eobp))
-   (should (equal (buffer-string) ";; junk (1+ 2)\n;; => 3\n"))))
+   (should (equal (buffer-string) "1 ; junk (1+ 2)\n  ; => 3\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/multi-line-junk-before ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "1 ; junk (+ 2\n  ;         3)")
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (eobp))
+   (should (equal (buffer-string) "1 ; junk (+ 2
+  ;         3)
+  ; => 5
+"))))
 
 (ert-deftest test-mgl-pax-transcribe-last-expression/at-prompt ()
   (load-mgl-pax-test-system)
@@ -1019,6 +1031,64 @@
    (accept-process-output nil 1)
    (should (eobp))
    (should (equal (buffer-string) "CL-USER> (1+ 2)\n=> 3\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/midline-1 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "  1")
+   (save-excursion
+     (insert "  2"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "  1\n  => 1\n  2"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/midline-2 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "  1 ")
+   (save-excursion
+     (insert " 2"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "  1\n  => 1\n  2"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/comment-midline-1 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert " ; 1")
+   (save-excursion
+     (insert "  2"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) " ; 1\n ; => 1\n ; 2"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/comment-midline-2 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert " ; 1 ")
+   (save-excursion
+     (insert " 2"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) " ; 1\n ; => 1\n ; 2"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/trailing-comment-1 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "1 ; x\n")
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "1 ; x\n=> 1\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/trailing-comment-2 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "1")
+   (save-excursion
+     (insert " ; x\n"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "1\n=> 1\n; x\n"))))
 
 (defun mgl-pax-mark-prompt ()
   (add-text-properties
