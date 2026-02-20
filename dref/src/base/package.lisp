@@ -109,9 +109,11 @@
   (funcall (uiop:ensure-function "standard-transcribe-dynenv" :package :pax)
            (lambda ()
              (let ((*package* (find-package :dref))
+                   (pax::*document-downcase-uppercase-code* nil)
                    (pax::*transcribe-check-consistency* #+sbcl t #-sbcl nil))
-               ;; This variable is defined later.
-               (declare (special pax::*transcribe-check-consistency*))
+               ;; These variables are defined later.
+               (declare (special pax::*document-downcase-uppercase-code*
+                                 pax::*transcribe-check-consistency*))
                (handler-bind ((warning #'muffle-warning))
                  (unwind-protect
                       (funcall fn)
