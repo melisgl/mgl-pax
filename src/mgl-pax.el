@@ -452,9 +452,10 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
                   (re-search-backward comment-start-skip
                                       (line-beginning-position)
                                       t)
-                  (ignore-errors
-                    (while (looking-at-p comment-start-skip)
-                      (forward-char -1)))
+                  ;; comment-start-skip matches the space before the
+                  ;; first ; character for some reason
+                  (when (looking-at " ")
+                    (forward-char))
                   (point))))
       (list beg end))))
 
@@ -1529,7 +1530,7 @@ Without a prefix argument, the first syntax is used."
 ;;; the beginning of the current line as a string.
 (defun mgl-pax-line-prefix ()
   (save-excursion
-    ;; This may more after a prompt on the line ...
+    ;; This may move after a prompt on the line ...
     (move-beginning-of-line nil)
     ;; ... so don't match the true beginning of the line with ^.
     (re-search-forward "[[:space:];]*")
