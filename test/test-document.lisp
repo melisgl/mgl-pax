@@ -2158,22 +2158,29 @@ example section
             (*document-pandoc-pdf-options*
               (remove "--verbose" *document-pandoc-pdf-options*
                       :test #'equal))
-            (documentable (list #'fn-with-mathjax)))
+            (documentable (list #'fn-with-mathjax
+                                (dref 'pax:*document-base-url* 'variable)))
+            (*package* (find-package :mgl-pax-test)))
         ;; This is tolerably slow.
         (document
          documentable
          :pages (let ((source-uri-fn (make-git-source-uri-fn
                                       :mgl-pax
                                       "https://github.com/melisgl/mgl-pax"))
-                      (file #+sbcl "test/data/test-output.tex"
-                            #-sbcl "test/data/test-output-not-checked-in.tex"))
+                      (file #+sbcl "test/data/output.tex"
+                            #-sbcl "test/data/output-not-checked-in.tex"))
                   `((:objects (,@documentable)
                      :output (,(asdf:system-relative-pathname
                                 "mgl-pax" file)
                               ,@pax::*default-output-options*)
                      :uri-fragment ,file
                      :source-uri-fn ,source-uri-fn)))
-         :format :pdf)))))
+         :format :pdf))
+      #+sbcl
+      (check-files-the-same
+       (asdf:system-relative-pathname "mgl-pax" "test/data/output.tex")
+       (asdf:system-relative-pathname
+        "mgl-pax" "test/data/test-output.tex")))))
 
 (deftest test-dummy-output ()
   ;; The transcripts are created on SBCL, so they should match there.

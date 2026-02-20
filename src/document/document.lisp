@@ -3168,32 +3168,32 @@
 ;;;
 ;;; When generating HTML, link NAME to the anchor of DREF.
 (defun/autoloaded print-dref-bullet (dref stream)
-  (let* ((locative-type (string-downcase (xref-locative-type dref)))
-         (label (dref-bullet-label dref))
-         (md-locative-type (escape-markdown locative-type)))
-    (if (not *document-mark-up-signatures*)
-        (format stream
-                ;; Escape if we must. Otherwise, do not clutter the output.
-                (if (or (eq *format* :pdf)
-                        (eq *subformat* :plain))
-                    "- \\[~A] ~A"
-                    "- [~A] ~A")
-                md-locative-type (escape-markdown label))
-        (ecase *format*
-          ((:html)
-           (let ((source-uri (source-uri dref)))
-             ;; When *DOCUMENT-OPEN-LINKING* (this includes (EQ
-             ;; *SUBFORMAT* :W3M)), the name is linked to the a
-             ;; pax: URL (which opens a separate page), else they
-             ;; are self-links.
-             (cond ((eq *subformat* :w3m)
-                    (assert *document-open-linking*)
-                    (format stream "- **\\[~A]** [~A](~A)"
-                            md-locative-type label
-                            (finalize-pax-url (dref-to-pax-url dref))))
-                   (*document-open-linking*
-                    (format stream
-                            "- <span class=reference-bullet>~
+  (multiple-value-bind (label escaped-label) (dref-bullet-label dref)
+    (let* ((locative-type (string-downcase (xref-locative-type dref)))
+           (md-locative-type (escape-markdown locative-type)))
+      (if (not *document-mark-up-signatures*)
+          (format stream
+                  ;; Escape if we must. Otherwise, do not clutter the output.
+                  (if (or (eq *format* :pdf)
+                          (eq *subformat* :plain))
+                      "- \\[~A] ~A"
+                      "- [~A] ~A")
+                  md-locative-type escaped-label)
+          (ecase *format*
+            ((:html)
+             (let ((source-uri (source-uri dref)))
+               ;; When *DOCUMENT-OPEN-LINKING* (this includes (EQ
+               ;; *SUBFORMAT* :W3M)), the name is linked to the a
+               ;; pax: URL (which opens a separate page), else they
+               ;; are self-links.
+               (cond ((eq *subformat* :w3m)
+                      (assert *document-open-linking*)
+                      (format stream "- **\\[~A]** [~A](~A)"
+                              md-locative-type escaped-label
+                              (finalize-pax-url (dref-to-pax-url dref))))
+                     (*document-open-linking*
+                      (format stream
+                              "- <span class=reference-bullet>~
                             <span class=reference>~
                             <span class=\"locative-type\">~
                             ~@[<a href=\"~A\" title=\"Edit in Emacs\">~]~
@@ -3201,46 +3201,47 @@
                             </span> ~
                             <span class=\"reference-object\">[~A](~A)</span>~
                             </span>"
-                            source-uri md-locative-type source-uri label
-                            (finalize-pax-url (dref-to-pax-url dref))))
-                   (t
-                    (format stream
-                            "- <span class=reference-bullet>~
-                            <span class=reference>~
-                            <span class=\"locative-type\">~
-                            ~@[<a href=\"~A\">~]\\[~A]~:[~;</a>~]~
-                            </span> ~
-                            <span class=\"reference-object\">[~A](#~A)</span>~
-                            </span>"
-                            source-uri md-locative-type source-uri label
-                            (urlencode (dref-to-anchor dref)))))))
-          ((:pdf)
-           (let ((source-uri (source-uri dref)))
-             (format stream "- ")
-             (if source-uri
-                 (format stream
-                         "`\\paxlocativetypewithsource{~A}{~A}`{=latex}"
-                         (escape-tex source-uri) (escape-tex locative-type))
-                 (format stream "`\\paxlocativetype{~A}`{=latex}"
-                         (escape-tex locative-type)))
-             (format stream "`\\paxname{~A}`{=latex}" (escape-tex label))))
-          ((:markdown)
-           (if *subformat*
-               (format stream "- \\[~A\\] ~A" locative-type
-                       (escape-markdown label))
-               (format stream "- [~A] ~A" locative-type (bold label nil))))
-          ((nil))))))
+                              source-uri md-locative-type source-uri
+                              escaped-label
+                              (finalize-pax-url (dref-to-pax-url dref))))
+                     (t
+                      (format stream
+                              "- <span class=reference-bullet>~
+                              <span class=reference>~
+                              <span class=\"locative-type\">~
+                              ~@[<a href=\"~A\">~]\\[~A]~:[~;</a>~]~
+                              </span> ~
+                              <span class=\"reference-object\">[~A](#~A)</span>~
+                              </span>"
+                              source-uri md-locative-type source-uri
+                              escaped-label
+                              (urlencode (dref-to-anchor dref)))))))
+            ((:pdf)
+             (let ((source-uri (source-uri dref)))
+               (format stream "- ")
+               (if source-uri
+                   (format stream
+                           "`\\paxlocativetypewithsource{~A}{~A}`{=latex}"
+                           (escape-tex source-uri) (escape-tex locative-type))
+                   (format stream "`\\paxlocativetype{~A}`{=latex}"
+                           (escape-tex locative-type)))
+               (format stream "`\\paxname{~A}`{=latex}" (escape-tex label))))
+            ((:markdown)
+             (if *subformat*
+                 (format stream "- \\[~A\\] ~A" locative-type escaped-label)
+                 (format stream "- [~A] ~A" locative-type
+                         (bold escaped-label nil))))
+            ((nil)))))))
 
 (defun dref-bullet-label (dref)
   (let ((title (doctitle dref)))
     (if title
-        (document-title title :dref dref
-                        ;; Emphasis is set in the context.
-                        :deemph t)
-        (let ((name (prin1-to-string* (xref-name dref))))
-          (if (eq *subformat* :plain)
-              name
-              (escape-markdown name))))))
+        (let ((label (document-title title :dref dref
+                                     ;; Emphasis is set in the context.
+                                     :deemph t)))
+          (values label label))
+        (let ((label (prin1-to-string* (xref-name dref))))
+          (values label (escape-markdown label))))))
 
 (defun print-end-bullet (stream)
   (if (and (eq *format* :html)
@@ -3356,7 +3357,7 @@
 
 (defvar/autoloaded *document-base-url* nil
   """When *DOCUMENT-BASE-URL* is non-NIL, this is prepended to all
-  Markdown relative URLs. It must be a valid URL without no query and
+  Markdown relative URLs. It must be a valid URL without query or
   fragment parts (that is, _http://lisp.org/doc/_ but not
   _http://lisp.org/doc?a=1_ or _http://lisp.org/doc#fragment_). Note
   that intra-page links using only URL fragments (e.g. and explicit

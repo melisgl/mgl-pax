@@ -166,10 +166,6 @@ Maybe this is a special case of dynamically generated documentation.
 ** MAYBE live browsing: allow filtering out local definitions when there is a clhs definition?
 ** MAYBE 40ants asdf-system-relative images?
 https://github.com/40ants/doc/commit/4ae22efa20a4a2117da9dd8e96c1117458904d73
-** BUG markdown and pdf escaping confusing
-(pax:document (dref:dref '*print-level* 'variable)
-              :format :pdf :stream "x.pdf")
-... and the name in pdf has no earmuffs.
 * web
 ** MAYBE implement a wiki on top?
 PAX is already kind of a wiki.
