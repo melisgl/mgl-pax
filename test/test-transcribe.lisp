@@ -260,6 +260,9 @@
               ;..   The variable => is unbound.~%~
               1~%~
               ;=> 1~%")
+    #+sbcl
+    (:input "(error \"x\")"
+     :output "(error \"x\")~%.. debugger invoked on SIMPLE-ERROR:~%..   x~%")
     ;; REPL variables -
     (:input "(princ -)~%"
      :output "(princ -)~%~

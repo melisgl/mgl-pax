@@ -69,7 +69,7 @@
                                      0 (or (mismatch longest-prefix prefix)
                                            (length longest-prefix)))
                              prefix))))))
-    longest-prefix))
+    (or longest-prefix "")))
 
 (defun matching-prefix (string chars)
   (let ((pos (position-if-not (lambda (char)
