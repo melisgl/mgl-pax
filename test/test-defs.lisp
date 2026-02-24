@@ -225,3 +225,7 @@ y"))
 (note @@note-without-docstring)
 (note @@note-with-empty-docstring
   "")
+
+(defun dynenv-with-consistency (fn)
+  (let ((*transcribe-check-consistency* t))
+    (funcall fn)))

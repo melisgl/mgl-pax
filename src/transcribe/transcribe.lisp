@@ -371,6 +371,7 @@
                                             :default-syntax default-syntax
                                             :update-only update-only
                                             :echo echo
+                                            :check-consistency nil
                                             cl-transcript-args))))))))))
 
 (defun parse-cl-transcribe-args (string)

@@ -1226,6 +1226,23 @@
    (accept-process-output nil 1)
    (should (equal (buffer-string) ";;; x\n1\n=> 1\n"))))
 
+(ert-deftest test-mgl-pax-retranscribe-region/inconsistent ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "```cl-transcript (:dynenv mgl-pax-test::dynenv-with-consistency)
+1
+=> 2
+")
+   (save-excursion
+     (insert "```\n"))
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "```cl-transcript (:dynenv mgl-pax-test::dynenv-with-consistency)
+1
+=> 1
+```
+"))))
+
 (defun mark-whole-buffer-but-edges (n-head n-tail)
   (goto-char (point-min))
   (forward-line n-head)
