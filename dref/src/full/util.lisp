@@ -326,10 +326,10 @@
       (let ((*package* (symbol-package symbol)))
         (with-input-from-string (s text)
           (when (eql (read-char s nil) #\()
-            ;; Skip DEFUN, DEFTYPE or similar and the name.
+            ;; Skip DEFUN, DEFTYPE or similar and the name (assuming
+            ;; it's the first argument).
             (let ((*read-suppress* t))
               (read s nil)
-              ;; FIXME: check that it's similar to NAME.
               (read s nil))
             (multiple-value-bind (arglist error)
                 (ignore-errors (read s))

@@ -1071,8 +1071,6 @@
   (declare (ignore fn name))
   (values))
 
-;;; FIXME: implement a new doc-type for DOCUMENTATION?
-
 (defmethod source-location* ((dref declaration-dref))
   #+sbcl
   (swank-backend:find-source-location
