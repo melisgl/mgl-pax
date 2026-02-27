@@ -12,7 +12,7 @@ function run_test_case {
   local test_case_name="\"$1\""
   shift
   echo "SHTEST: Running ${test_case_name} $@"
-  $@
+  "$@"
   local retval=$?
   if ((retval == 22)); then
     echo
@@ -29,7 +29,7 @@ function lisp_tests {
   local lisp_name="$1"
   shift
 
-  run_test_case "lisp test suite on ${lisp_name}" $@ <<EOF
+  run_test_case "lisp test suite on ${lisp_name}" "$@" <<EOF
 (require :asdf)
 (asdf:load-system :dref-test)
 (when (try:passedp (dref-test:test :debug ${debug} :print ${print}
@@ -42,56 +42,56 @@ function autoload_tests {
   local lisp_name="$1"
   shift
 
-  run_test_case "test-locate-autoload on ${lisp_name}" $@ <<EOF
+  run_test_case "test-locate-autoload on ${lisp_name}" "$@" <<EOF
 (asdf:load-system :dref-test/autoload)
 (in-package :dref-test-autoload)
 (when (passedp (try 'test-locate-autoload))
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "test-resolve-autoload on ${lisp_name}" $@ <<EOF
+  run_test_case "test-resolve-autoload on ${lisp_name}" "$@" <<EOF
 (asdf:load-system :dref-test/autoload)
 (in-package :dref-test-autoload)
 (when (passedp (try 'test-resolve-autoload))
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "test-arglist-autoload on ${lisp_name}" $@ <<EOF
+  run_test_case "test-arglist-autoload on ${lisp_name}" "$@" <<EOF
 (asdf:load-system :dref-test/autoload)
 (in-package :dref-test-autoload)
 (when (passedp (try 'test-arglist-autoload))
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "test-docstring-autoload on ${lisp_name}" $@ <<EOF
+  run_test_case "test-docstring-autoload on ${lisp_name}" "$@" <<EOF
 (asdf:load-system :dref-test/autoload)
 (in-package :dref-test-autoload)
 (when (passedp (try 'test-docstring-autoload))
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "test-source-location-autoload on ${lisp_name}" $@ <<EOF
+  run_test_case "test-source-location-autoload on ${lisp_name}" "$@" <<EOF
 (asdf:load-system :dref-test/autoload)
 (in-package :dref-test-autoload)
 (when (passedp (try 'test-source-location-autoload))
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "test-definitions-autoload on ${lisp_name}" $@ <<EOF
+  run_test_case "test-definitions-autoload on ${lisp_name}" "$@" <<EOF
 (asdf:load-system :dref-test/autoload)
 (in-package :dref-test-autoload)
 (when (passedp (try 'test-definitions-autoload))
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "test-dref-apropos-autoload on ${lisp_name}" $@ <<EOF
+  run_test_case "test-dref-apropos-autoload on ${lisp_name}" "$@" <<EOF
 (asdf:load-system :dref-test/autoload)
 (in-package :dref-test-autoload)
 (when (passedp (try 'test-dref-apropos-autoload))
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "test-dref-this-source-location-autoload on ${lisp_name}" $@ <<EOF
+  run_test_case "test-dref-this-source-location-autoload on ${lisp_name}" "$@" <<EOF
 (asdf:load-system :dref-test/autoload)
 (in-package :dref-test-autoload)
 (when (passedp (try 'test-dref-this-source-location-autoload))
@@ -103,7 +103,7 @@ function basic_load_tests {
   local lisp_name="$1"
   shift
 
-  run_test_case "load dref on ${lisp_name}" $@ <<EOF
+  run_test_case "load dref on ${lisp_name}" "$@" <<EOF
 (progn
   (asdf:load-system :dref)
   (uiop/image:quit 22))
@@ -118,8 +118,8 @@ function run_tests {
   echo "SHTEST: running test suite ${test_suite} with ${lisp} $@"
   num_failures=0
   num_passes=0
-  ros --lisp "${lisp}" run --eval '(ql:quickload :dref)' --quit -- $@
-  ${test_suite} ${lisp} ros --lisp ${lisp} run -- $@
+  ros --lisp "${lisp}" run --eval '(ql:quickload :dref)' --quit -- "$@"
+  ${test_suite} ${lisp} ros --lisp ${lisp} run -- "$@"
   if ((num_failures > 0)); then
     if [ "${stop_on_failure}" = "t" ]; then
       echo "SHTEST: Aborting with ${num_failures} failures,"\
