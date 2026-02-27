@@ -236,7 +236,7 @@
 
 
 (defparameter *failure-on-long-setf*
-  (and (not (alexandria:featurep '(:or :ccl :clisp :sbcl)))
+  (and (not (alexandria:featurep '(:or :abcl :ccl :clisp :cmucl :ecl :sbcl)))
        'failure))
 
 (defparameter *failure-on-setf-arglist*

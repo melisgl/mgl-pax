@@ -95,11 +95,14 @@
       (has-setf-function-p symbol)))
 
 (defun has-setf-expander-p (symbol)
-  ;; FIXME: other implementations
+  #+abcl (get symbol 'system::setf-expander)
   #+ccl (ccl::%setf-method symbol)
   #+clisp (get symbol 'system::setf-expander)
+  #+cmucl (or (c::info setf inverse symbol)
+              (c::info setf expander symbol))
+  #+ecl (si:get-sysprop symbol 'si::setf-method)
   #+sbcl (swank/sbcl::setf-expander symbol)
-  #-(or ccl clisp sbcl)
+  #-(or abcl ccl clisp cmucl ecl sbcl)
   ;; KLUDGE: When there is no setf expansion, we get this:
   ;;
   ;;   (nth-value 3 (get-setf-expansion '(undefined)))
