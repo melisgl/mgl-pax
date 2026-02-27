@@ -96,9 +96,6 @@
     (loop for dspec in (swank-dspecs name)
           for dref = (dspec-to-definition dspec name)
           when (member (dref-locative-type dref) locative-types)
-            ;; FIXME:
-            ;; (definitions 'sb-pcl:make-specializer-form-using-class)
-            ;; puts the method combination among the specializers.
             collect dref)))
 
 ;;; Return a Swank source location for a definition of NAME. Try
