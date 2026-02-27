@@ -95,7 +95,8 @@
       (has-setf-function-p symbol)))
 
 (defun has-setf-expander-p (symbol)
-  #+abcl (get symbol 'system::setf-expander)
+  #+abcl (or (get symbol 'system::setf-inverse)
+             (get symbol 'system::setf-expander))
   #+ccl (ccl::%setf-method symbol)
   #+clisp (get symbol 'system::setf-expander)
   #+cmucl (or (c::info setf inverse symbol)
