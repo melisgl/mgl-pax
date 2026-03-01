@@ -323,8 +323,10 @@
 
 (deftest test-locate/method-combination ()
   (check-ref (dref 'my-comb 'method-combination) 'my-comb 'method-combination)
-  (with-failure-expected ((and (alexandria:featurep '(:not (:or :ccl :sbcl)))
-                               'failure))
+  (with-failure-expected
+      ((and (alexandria:featurep
+             '(:not (:or :abcl :ccl :clisp :cmucl :ecl :sbcl)))
+            'failure))
     (with-test ("How to detect method combinations?")
       (signals (locate-error)
         (dref 'undefined 'method-combination))))

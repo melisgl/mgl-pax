@@ -57,10 +57,7 @@
       dspec-and-locations))
 
 ;;; This can be awfully slow because it may READ sources to get the
-;;; source locations. The rest below, on the other hand, are Lisp
-;;; implementation specific Swank implementations of
-;;; SWANK-BACKEND:FIND-DEFINITIONS modified not to read files or
-;;; buffers.
+;;; source locations.
 #-sbcl
 (defun swank-dspecs (name)
   (multiple-value-bind (name foundp) (swank-definition-name name)
@@ -72,6 +69,8 @@
                            (first dspec-and-location)))
               (swank-dspecs-and-locations name)))))
 
+;;; This is SWANK-BACKEND:FIND-DEFINITIONS modified to not read files
+;;; or buffers.
 #+sbcl
 (defun swank-dspecs (name)
   (multiple-value-bind (name foundp) (swank-definition-name name)
@@ -369,8 +368,6 @@
         ;; no function with that name.
         (locate-error ()
           nil))
-      ;; There are also dspecs that we just plain don't recognize.
-      ;; Either way, let's just stuff it into an UNKNOWN.
       (make-instance 'unknown-dref :name name :locative `(unknown ,dspec))))
 
 (defun dspec-to-definition* (dspec name)

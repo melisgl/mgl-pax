@@ -607,10 +607,18 @@
   METHOD-COMBINATION references do not RESOLVE.")
 
 (define-lookup method-combination (name locative-args)
+  ;; Pretend that method combination live in a proper namespace, but
+  ;; see https://didierverna.net/news/2013-08-16-method-combinations/
+  ;; for the whole story.
   (unless (and (symbolp name)
-               ;; FIXME
-               #+ccl (ccl::method-combination-info name)
-               #+sbcl (gethash name sb-pcl::**method-combinations**))
+               #+(or abcl ccl clisp cmucl ecl sbcl)
+               (ignore-errors
+                (#+abcl mop:find-method-combination
+                 #+ccl ccl:find-method-combination
+                 #+cmucl pcl:find-method-combination
+                 #+(or clisp ecl) clos:find-method-combination
+                 #+sbcl sb-mop:find-method-combination
+                 #'documentation name ())))
     (locate-error))
   (%make-dref name method-combination))
 
