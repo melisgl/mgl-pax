@@ -865,11 +865,16 @@
         (%make-dref name structure-accessor `(,structure-name))))))
 
 (defun structure-name-of-accessor (symbol)
-  #-(or ccl sbcl) (declare (ignore symbol))
+  #-(or ccl cmucl sbcl) (declare (ignore symbol))
   #+ccl
   (values (let ((info (ccl::structref-info symbol)))
             (when (ccl::accessor-structref-info-p info)
               (cdr info)))
+          t)
+  #+cmucl
+  (values (let ((info (ext:info :function :accessor-for symbol)))
+            (when (kernel:structure-class-p info)
+              (kernel::structure-class-name info)))
           t)
   #+sbcl
   (values (let ((info (sb-kernel:structure-instance-accessor-p symbol)))
@@ -902,9 +907,9 @@
   'swank-definitions)
 
 (defmethod resolve* ((dref structure-accessor-dref))
-  #+(or ccl sbcl)
+  #+(or ccl cmucl sbcl)
   (symbol-function* (dref-name dref))
-  #-(or ccl sbcl)
+  #-(or ccl cmucl sbcl)
   (resolve-error))
 
 (defmethod docstring* ((dref structure-accessor-dref))

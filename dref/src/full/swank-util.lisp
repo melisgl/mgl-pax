@@ -169,6 +169,7 @@
       (setf-function (swank-function-dspec setf-name))
       (generic-function (swank-generic-function-dspec name))
       (setf-generic-function (swank-generic-function-dspec setf-name))
+      (structure-accessor (swank-structure-accessor-dspec name))
       (method (swank-method-dspec name (butlast args) (first (last args))))
       (setf-method (swank-method-dspec setf-name (first args) (second args)))
       (accessor (swank-accessor-dspec name (first args) t))
@@ -295,6 +296,10 @@
   :allegro `(:operator ,name)
   :ccl `(function ,name))
 
+(define-dspec swank-structure-accessor-dspec (name)
+  (declare (ignorable name))
+  #+ccl :ccl #+ccl `(ccl::structure-accessor ,name))
+
 ;;; QUALIFIERS and SPECIALIZERS are straight from the DEFMETHOD form.
 ;;; That is, SPECIALIZERS contains names such as NUMBER or (EQL 7),
 ;;; not class objects and eql specializer objects.
@@ -393,6 +398,8 @@
                        (generic-function ,(swank-generic-function-dspec name))
                        (setf-generic-function
                         ,(swank-generic-function-dspec setf-name))
+                       (structure-accessor
+                        ,(swank-structure-accessor-dspec name))
                        (method-combination
                         ,(swank-method-combination-dspec name))
                        (type ,(swank-type-dspec name))
