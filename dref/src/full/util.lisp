@@ -16,7 +16,17 @@
 
 (defun special-variable-name-p (obj)
   (and (symbolp obj)
+       ;; Note that this returns true for all symbols on other
+       ;; platforms.
+       #+abcl (ext:special-variable-p obj)
+       #+allegro (member (sys:variable-information obj)
+                         '(:special :constant))
        #+ccl (member (ccl::variable-information obj) '(:special :constant))
+       #+clisp (ext:special-variable-p obj)
+       #+cmucl (member (ext:info :variable :kind obj)
+                       '(:special :constant))
+       #+ecl (or (si:specialp obj)
+                 (constant-variable-name-p obj))
        #+sbcl (member (sb-int:info :variable :kind obj)
                       '(:special :constant))))
 
