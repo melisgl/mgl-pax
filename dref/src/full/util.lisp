@@ -78,6 +78,7 @@
 
 (defun symbol-macro-p (name)
   (and (symbolp name)
+       ;; FIXME: port
        #+ccl (gethash name ccl::*symbol-macros*)
        #+sbcl (sb-int:info :variable :macro-expansion name)))
 
@@ -105,6 +106,7 @@
       (has-setf-function-p symbol)))
 
 (defun has-setf-expander-p (symbol)
+  ;; FIXME: port
   #+abcl (or (get symbol 'system::setf-inverse)
              (get symbol 'system::setf-expander))
   #+ccl (ccl::%setf-method symbol)
@@ -424,6 +426,22 @@
         ((typep object 'ccl:eql-specializer)
          `(eql ,(ccl:eql-specializer-object object)))
         (t object)))
+
+
+;;;; Method combinations
+
+(defun find-method-combination* (name)
+  (declare (ignorable name))
+  #+(or abcl allegro ccl clisp cmucl ecl sbcl)
+  (ignore-errors
+   (#+(or abcl allegro) mop:find-method-combination
+      #+ccl ccl:find-method-combination
+      #+cmucl clos-mop:find-method-combination
+      #+(or clisp clasp ecl lispworks) clos:find-method-combination
+      #+mezzano mezzano.clos:find-method-combination
+      #+sbcl sb-mop:find-method-combination
+      #+sicl sicl-clos:find-method-combination
+      #'documentation name ())))
 
 
 ;;;; Strings

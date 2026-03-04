@@ -79,11 +79,8 @@
                       ,(xref 'setf-gf '(method ()))
                       ,(xref 'setf-gf 'setf-generic-function)
                       ,(xref 'setf-gf '(setf-method (string))))))
-  (with-failure-expected ((and (alexandria:featurep
-                                '(:or :abcl :clisp :cmucl :ecl))
-                               'failure))
-    (check-ref-sets (definitions 'my-comb)
-                    `(,(xref 'my-comb 'method-combination))))
+  (check-ref-sets (definitions 'my-comb)
+                  `(,(xref 'my-comb 'method-combination)))
   ;; There _may_ be a GENERIC-FUNCTION and a SETF generic function too.
   (with-failure-expected ((and (alexandria:featurep '(:or :abcl :clisp :ecl))
                                'failure))

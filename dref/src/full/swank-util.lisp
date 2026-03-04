@@ -326,6 +326,8 @@
 (define-dspec swank-method-combination-dspec (name)
   :allegro `(:define-method-combination ,name)
   :ccl `(method-combination ,name)
+  :clisp `(,name define-method-combination)
+  :ecl `(does-not-exist-in-swank ,name)
   :sbcl `(define-method-combination ,name))
 
 (define-dspec swank-type-dspec (name)

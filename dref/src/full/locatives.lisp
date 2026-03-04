@@ -607,25 +607,18 @@
   METHOD-COMBINATION references do not RESOLVE.")
 
 (define-lookup method-combination (name locative-args)
-  ;; Pretend that method combination live in a proper namespace, but
+  ;; Pretend that method combinations live in a proper namespace, but
   ;; see https://didierverna.net/news/2013-08-16-method-combinations/
   ;; for the whole story.
   (unless (and (symbolp name)
-               #+(or abcl ccl clisp cmucl ecl sbcl)
-               (ignore-errors
-                (#+abcl mop:find-method-combination
-                 #+ccl ccl:find-method-combination
-                 #+cmucl pcl:find-method-combination
-                 #+(or clisp ecl) clos:find-method-combination
-                 #+sbcl sb-mop:find-method-combination
-                 #'documentation name ())))
+               (find-method-combination* name))
     (locate-error))
   (%make-dref name method-combination))
 
 (defmethod map-definitions-of-name
     (fn name (locative-type (eql 'method-combination)))
-  (declare (ignore fn name))
-  'swank-definitions)
+  (when-let (dref (dref name 'method-combination nil))
+    (funcall fn dref)))
 
 (defmethod docstring* ((dref method-combination-dref))
   (documentation* (dref-name dref) 'method-combination))
