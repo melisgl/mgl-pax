@@ -60,6 +60,28 @@
         (subtypep type1 type2)
       (error ()
         (values nil t)))))
+
+(defparameter *clhs-type-names*
+  ;; (loop for d in (dref:dref-apropos nil :dtype '(pax:clhs type))
+  ;;       collect (dref:dref-name d)) =>
+  '(and atom base-char base-string bignum bit boolean compiled-function
+    double-float eql extended-char fixnum keyword long-float member
+    mod nil not or satisfies short-float signed-byte simple-array
+    simple-base-string simple-bit-vector simple-string simple-vector
+    single-float standard-char unsigned-byte values))
+
+(defun maybe-type-name-p (name)
+  (and (symbolp name)
+       ;; On most Lisps, SWANK-BACKEND:TYPE-SPECIFIER-P is not
+       ;; reliable.
+       #-(or abcl allegro clisp cmucl ecl sbcl)
+       (swank-backend:type-specifier-p name)
+       #+ecl
+       (or (c::type-name-p name)
+           ;; https://gitlab.com/embeddable-common-lisp/ecl/-/issues/819
+           (member name *clhs-type-names*))
+       #+sbcl
+       (sb-ext:defined-type-name-p name)))
 
 
 ;;;; Macros

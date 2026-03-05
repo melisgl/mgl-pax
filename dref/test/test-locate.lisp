@@ -430,8 +430,9 @@
   (check-ref (dref nil 'type) nil 'type)
   (check-ref (dref 'foo 'type) 'foo 'class)
   (check-ref (dref 'my-error 'type) 'my-error 'condition)
-  (with-failure-expected ((and (alexandria:featurep '(:not (:or :ccl :sbcl)))
-                               'failure))
+  (with-failure-expected
+      ((and (alexandria:featurep '(:not (:or :ccl :ecl :sbcl)))
+            'failure))
     (with-test ("How to detect types?")
       (signals (locate-error)
         (dref 'undefined 'type))))

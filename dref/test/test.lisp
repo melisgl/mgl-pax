@@ -47,7 +47,7 @@
                         (list (xref "DREF" 'package)
                               (xref "dref" 'asdf:system))
                         (list (xref "dref" 'asdf:system)))))
-  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :clisp :ecl))
+  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :clisp))
                                'failure))
     (check-ref-sets (definitions 'bar)
                     `(,(xref 'bar 'macro)

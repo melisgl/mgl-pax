@@ -332,7 +332,7 @@
   :sbcl `(define-method-combination ,name))
 
 (define-dspec swank-type-dspec (name)
-  (:or :abcl :cmucl :sbcl) `(deftype ,name)
+  (:or :abcl :cmucl :ecl :sbcl) `(deftype ,name)
   :allegro `(:type ,name)
   :ccl `(type ,name))
 

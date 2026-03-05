@@ -944,18 +944,16 @@
   TYPE references do not RESOLVE.")
 
 (define-lookup type (symbol locative-args)
-  (unless (and (symbolp symbol)
-               ;; On most Lisps, SWANK-BACKEND:TYPE-SPECIFIER-P is not
-               ;; reliable.
-               #-(or abcl allegro clisp cmucl ecl sbcl)
-               (swank-backend:type-specifier-p symbol)
-               #+sbcl
-               (sb-ext:defined-type-name-p symbol))
+  (unless (maybe-type-name-p symbol)
     (locate-error "~S is not a valid type specifier." symbol))
   (%make-dref symbol type))
 
 (defmethod map-definitions-of-name (fn name (locative-type (eql 'type)))
   (declare (ignore fn name))
+  #+(or ecl sbcl)
+  (when-let (dref (dref name 'type nil))
+    (funcall fn dref))
+  #-(or ecl sbcl)
   'swank-definitions)
 
 (defmethod arglist* ((dref type-dref))
