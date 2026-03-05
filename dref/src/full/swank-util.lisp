@@ -93,7 +93,7 @@
   (when (and (or (symbolp name) (stringp name) (listp name))
              locative-types)
     (loop for dspec in (swank-dspecs name)
-          for dref = (dspec-to-definition dspec name)
+          for dref = (dspec-to-definition (normalize-dspec dspec) name)
           when (member (dref-locative-type dref) locative-types)
             collect dref)))
 
@@ -322,6 +322,7 @@
                        (,@(when writerp (list (find-class t)))
                         ,(find-class class-name))))
   :cmucl `(method ,name () (,@(when writerp '(t)) ,class-name))
+  :ecl `(does-not-exist-in-swank ,name)
   :sbcl `(defmethod ,name ,@(when writerp '(t)) ,class-name))
 
 (define-dspec swank-method-combination-dspec (name)
@@ -379,8 +380,7 @@
       (make-instance 'unknown-dref :name name :locative `(unknown ,dspec))))
 
 (defun dspec-to-definition* (dspec name)
-  (let ((dspec (normalize-dspec dspec))
-        (setf-name `(setf ,name)))
+  (let ((setf-name `(setf ,name)))
     (or (package-dspec-to-definition dspec)
         (method-dspec-to-definition name dspec)
         ;; Handle the symbol-based cases where the DPSEC is unique and
