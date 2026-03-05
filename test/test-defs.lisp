@@ -171,8 +171,6 @@
 
 (define-locative-type my-loc ())
 
-(defpackage "X Y")
-
 (defsection @inc ()
   (nil (include #.(asdf:system-relative-pathname :mgl-pax "test/inc.md"))))
 

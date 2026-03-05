@@ -812,18 +812,21 @@ xxx
     (check-head "*[x][y]*" "*[x][y]*"))
   (with-test ("mixed case name")
     (check-head (list "[|Foo|][function]" #'|Foo|) "[|Foo|][5696]"))
-  (with-test ("spaces in names")
-    (check-head (list "[see this][\"X Y\" package]" (find-package "X Y"))
-                "[see this][4ef3]")
-    (is (internedp '|X Y|))
-    (check-head (list "[see this][|X Y| package]" (find-package "X Y"))
-                "[see this][4ef3]")
-    (check-head (list "[|X Y|][package]" (find-package "X Y"))
-                "[|X Y|][4ef3]")
-    (check-head (list "[X Y][package]" (find-package "X Y"))
-                "[X Y][4ef3]")
-    (check-head (list "[\"X Y\"][package]" (find-package "X Y"))
-                "[\"X Y\"][4ef3]")))
+  (unwind-protect
+       (with-test ("spaces in names")
+         (defpackage "X Y")
+         (check-head (list "[see this][\"X Y\" package]" (find-package "X Y"))
+                     "[see this][4ef3]")
+         (is (internedp '|X Y|))
+         (check-head (list "[see this][|X Y| package]" (find-package "X Y"))
+                     "[see this][4ef3]")
+         (check-head (list "[|X Y|][package]" (find-package "X Y"))
+                     "[|X Y|][4ef3]")
+         (check-head (list "[X Y][package]" (find-package "X Y"))
+                     "[X Y][4ef3]")
+         (check-head (list "[\"X Y\"][package]" (find-package "X Y"))
+                     "[\"X Y\"][4ef3]"))
+    (delete-package "X Y")))
 
 
 (defsection @section-with-title (:title "My `Title`" :export nil))
@@ -1476,32 +1479,35 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
             (setf (slot-value system slot-name) old-value)))))))
 
 
-(defpackage interned-pkg-name)
-(defpackage #:non-interned-pkg-name)
-
 (deftest test-package ()
-  (check-head (list "INTERNED-PKG-NAME"
-                    (dref 'interned-pkg-name 'package))
-              "`INTERNED-PKG-NAME`")
-  (check-head (list "INTERNED-PKG-NAME package"
-                    (dref 'interned-pkg-name 'package))
-              "[`INTERNED-PKG-NAME`][0651] package")
-  (check-head (list "[INTERNED-PKG-NAME][package]"
-                    (dref 'interned-pkg-name 'package))
-              "[`INTERNED-PKG-NAME`][0651]")
-  (let ((*package* (find-package :mgl-pax-test)))
-    (is (not (internedp '#:non-interned-pkg-name))))
-  (check-head (list "NON-INTERNED-PKG-NAME"
-                    (dref '#:non-interned-pkg-name 'package))
-              "NON-INTERNED-PKG-NAME")
-  (check-head (list "NON-INTERNED-PKG-NAME package"
-                    (dref '#:non-interned-pkg-name 'package))
-              "NON-INTERNED-PKG-NAME package")
-  (check-head (list "[NON-INTERNED-PKG-NAME][package]"
-                    (dref '#:non-interned-pkg-name 'package))
-              "[NON-INTERNED-PKG-NAME][5a00]")
-  (check-pred (dref "PAX" 'package)
-              "- [package] **\"MGL-PAX\"** *NICKNAMES (\"PAX\")*"))
+  (unwind-protect
+       (progn
+         (defpackage interned-pkg-name)
+         (defpackage #:non-interned-pkg-name)
+         (check-head (list "INTERNED-PKG-NAME"
+                           (dref 'interned-pkg-name 'package))
+                     "`INTERNED-PKG-NAME`")
+         (check-head (list "INTERNED-PKG-NAME package"
+                           (dref 'interned-pkg-name 'package))
+                     "[`INTERNED-PKG-NAME`][0651] package")
+         (check-head (list "[INTERNED-PKG-NAME][package]"
+                           (dref 'interned-pkg-name 'package))
+                     "[`INTERNED-PKG-NAME`][0651]")
+         (let ((*package* (find-package :mgl-pax-test)))
+           (is (not (internedp '#:non-interned-pkg-name))))
+         (check-head (list "NON-INTERNED-PKG-NAME"
+                           (dref '#:non-interned-pkg-name 'package))
+                     "NON-INTERNED-PKG-NAME")
+         (check-head (list "NON-INTERNED-PKG-NAME package"
+                           (dref '#:non-interned-pkg-name 'package))
+                     "NON-INTERNED-PKG-NAME package")
+         (check-head (list "[NON-INTERNED-PKG-NAME][package]"
+                           (dref '#:non-interned-pkg-name 'package))
+                     "[NON-INTERNED-PKG-NAME][5a00]")
+         (check-pred (dref "PAX" 'package)
+                     "- [package] **\"MGL-PAX\"** *NICKNAMES (\"PAX\")*"))
+    (delete-package 'interned-pkg-name)
+    (delete-package '#:non-interned-pkg-name)))
 
 
 (deftest test-readtable ()
