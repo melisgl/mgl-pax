@@ -463,16 +463,24 @@
                    (format nil "- [~A][cl:package]"
                            (escape-codification
                             (escape-markdown (package-name package))))))
-            (append
-             (when packages-defined
-               (list* "### Packages Defined"
-                      (mapcar #'format-package packages-defined)))
-             (when related-asdf-systems
-               (list* "### [Related][PAX::@RELATED] ASDF Systems"
-                      (mapcar #'format-system related-asdf-systems)))
-             (when related-packages
-               (list* "### [Related][PAX::@RELATED] Packages"
-                      (mapcar #'format-package related-packages))))))))))
+            (let ((pax-entry-points
+                    (entry-point-sections
+                     (loop for package in related-packages
+                           append (list-sections-in-package package)))))
+              (append
+               (when pax-entry-points
+                 (list "### PAX Entry Points"
+                       (break-long-list
+                        (sections-tightly pax-entry-points))))
+               (when packages-defined
+                 (list* "### Packages Defined"
+                        (mapcar #'format-package packages-defined)))
+               (when related-asdf-systems
+                 (list* "### [Related][PAX::@RELATED] ASDF Systems"
+                        (mapcar #'format-system related-asdf-systems)))
+               (when related-packages
+                 (list* "### [Related][PAX::@RELATED] Packages"
+                        (mapcar #'format-package related-packages)))))))))))
 
 ;;; Return the packages defined directly in files of ASDF-SYSTEM, or
 ;;; packages defined in files below the directory of ASDF-SYSTEM.
