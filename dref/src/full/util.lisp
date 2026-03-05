@@ -157,11 +157,19 @@
       (if kind
           (values (second name) kind)
           name))
-    ;; ABCL has function names like (FOO (SYSTEM::INTERPRETED)).
     #+abcl
-    (if (and (listp name) (not (eq (first name) 'setf)))
-        (first name)
-        name)))
+    (cond ((atom name)
+           name)
+          ((and (eq (first name) :macro-object)
+                (eq (second name) 'macro-function))
+           (third name))
+          ((eq (first name) 'macro-function)
+           (second name))
+          ;; Handle names like (FOO (SYSTEM::INTERPRETED)).
+          ((not (eq (first name) 'setf))
+           (first name))
+          (t
+           name))))
 
 ;;; Like SYMBOL-FUNCTION but sees through encapsulated functions.
 (defun symbol-function* (symbol)
