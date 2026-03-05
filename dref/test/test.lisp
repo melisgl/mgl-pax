@@ -72,7 +72,7 @@
                     `(,(xref 'setf-gf 'setf-generic-function)
                       ,(xref 'setf-gf '(setf-method (string))))))
   (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ccl :clisp
-                                                      :cmucl :ecl))
+                                                      :cmucl))
                                'failure))
     (check-ref-sets (definitions 'setf-gf)
                     `(,(xref 'setf-gf 'generic-function)

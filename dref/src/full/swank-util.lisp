@@ -460,10 +460,13 @@
                 (locative `(method ,@qualifiers ,specializers)))
             (dref name locative)))))))
 
-;;; (:AFTER (EQL 5) CLASS-NAME) => (:AFTER) ((EQL 5) CLASS-NAME)
+;;; Non-spliced:
 ;;;
-;;; Allegro and others:
-;;; (:AFTER ((EQL 5) CLASS-NAME)) => (:AFTER) ((EQL 5) CLASS-NAME)
+;;;     (:AFTER (EQL 5) CLASS-NAME) => (:AFTER) ((EQL 5) CLASS-NAME)
+;;;
+;;; Spliced:
+;;;
+;;;     (:AFTER ((EQL 5) CLASS-NAME)) => (:AFTER) ((EQL 5) CLASS-NAME)
 (defun parse-dspec-method-qualifiers-and-specializers (list &optional fn)
   #+(or abcl allegro ccl cmucl)
   (declare (ignore fn))
@@ -472,13 +475,21 @@
   #-(or abcl allegro ccl cmucl)
   ;; What's a qualifier and what's a specializer in (DEFMETHOD :OR
   ;; MY-COMB NUMBER) is ambiguous without knowing GF-N-REQUIRED-ARGS.
-  (let ((n-qualifiers (- (length list) (gf-n-required-args fn))))
-    (values (subseq list 0 n-qualifiers)
-            (subseq list n-qualifiers))))
+  (let ((n-required (gf-n-required-args fn)))
+    ;; KLUDGE: ECL generally follows the non-spliced format, but for
+    ;; no arguments where we get the non-spliced (DEFMETHOD NAME NIL)
+    ;; instead of the spliced (DEFMETHOD NAME).
+    #+ecl
+    (when (and (zerop n-required)
+               (eq (last-elt list) nil))
+      (setq list (butlast list)))
+    (let ((n-qualifiers (- (length list) n-required)))
+      (values (subseq list 0 n-qualifiers)
+              (subseq list n-qualifiers)))))
 
 (defun gf-n-required-args (fn)
   (loop for arg in (function-arglist fn)
-        while (not (member arg '(&optional &rest &key)))
+        until (member arg '(&optional &rest &key))
         count 1))
 
 #+allegro
