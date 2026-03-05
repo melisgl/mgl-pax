@@ -900,9 +900,11 @@
   'swank-definitions)
 
 (defmethod resolve* ((dref structure-accessor-dref))
-  #+(or ccl cmucl sbcl)
+  #+(or ccl sbcl)
   (symbol-function* (dref-name dref))
-  #-(or ccl cmucl sbcl)
+  ;; Don't resolve on CMUCL because we cannot LOCATE the definition
+  ;; from the function object.
+  #-(or ccl sbcl)
   (resolve-error))
 
 (defmethod docstring* ((dref structure-accessor-dref))

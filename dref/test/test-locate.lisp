@@ -395,7 +395,8 @@
             (dref::find-method* '(setf foo-a) () '(t foo))))))
 
 (deftest test-locate/structure-accessor ()
-  (let ((lacks-name (alexandria:featurep '(:not (:or :ccl :cmucl :sbcl)))))
+  (let ((lacks-name (alexandria:featurep '(:not (:or :ccl :cmucl :sbcl))))
+        (no-resolve (alexandria:featurep '(:not (:or :ccl :sbcl)))))
     (with-failure-expected ((and lacks-name 'failure))
       (check-ref (dref 'baz-aaa 'structure-accessor)
                  'baz-aaa '(structure-accessor baz)))
@@ -424,7 +425,7 @@
         (dref 'baz-aaa '(structure-accessor 1))))
     (signals (locate-error :pred "Bad arguments")
       (dref 'baz-aaa '(structure-accessor 1 2)))
-    (with-failure-expected ((and lacks-name 'failure))
+    (with-failure-expected ((and no-resolve 'failure))
       (is (eq (resolve (xref 'baz-aaa 'structure-accessor) nil)
               #'baz-aaa)))))
 
