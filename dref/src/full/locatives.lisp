@@ -961,6 +961,9 @@
     (nth-value-or* 1
       #+ccl
       (function-arglist (gethash name ccl::%deftype-expanders%) :deftype)
+      #+ecl
+      (when-let (arglist (third (si:get-sysprop name 'si::deftype-form)))
+        (values arglist :deftype))
       (let ((arglist (swank-backend:type-specifier-arglist name)))
         (if (listp arglist)
             (values arglist :deftype)

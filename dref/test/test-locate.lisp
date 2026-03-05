@@ -190,6 +190,7 @@
     (dref 'foo '(compiler-macro 7)))
   (signals (locate-error)
     (dref '(setf "sdf") 'compiler-macro))
+  ;; https://gitlab.com/embeddable-common-lisp/ecl/-/issues/818
   (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ecl))
                                'failure))
     (is (eq (resolve (xref 'foo 'compiler-macro) nil)
@@ -198,10 +199,12 @@
 (deftest test-locate/setf-compiler-macro ()
   (check-ref (dref '(setf setf-fn) 'compiler-macro)
              'setf-fn 'setf-compiler-macro)
+  ;; https://gitlab.com/embeddable-common-lisp/ecl/-/issues/818
   (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ecl))
                                'failure))
     (check-ref (locate (dref::compiler-macro-function* '(setf setf-fn)) nil)
                'setf-fn 'setf-compiler-macro))
+  ;; https://gitlab.com/embeddable-common-lisp/ecl/-/issues/818
   (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ecl))
                                'failure))
     (is (eq (resolve (xref '(setf setf-fn) 'compiler-macro) nil)

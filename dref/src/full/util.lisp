@@ -241,6 +241,7 @@
                        (eq (car function) 'si:macro))
               function)
       #+ecl (find-type-in-sexp (function-lambda-expression function) 'function)
+      #+ecl (find function si::*trace-list* :key #'second)
       #+sbcl (maybe-find-encapsulated-function function)
       function))
 

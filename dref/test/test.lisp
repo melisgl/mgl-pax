@@ -82,6 +82,7 @@
   (check-ref-sets (definitions 'my-comb)
                   `(,(xref 'my-comb 'method-combination)))
   ;; There _may_ be a GENERIC-FUNCTION and a SETF generic function too.
+  ;; https://gitlab.com/embeddable-common-lisp/ecl/-/issues/822
   (with-failure-expected ((and (alexandria:featurep '(:or :abcl :clisp :ecl))
                                'failure))
     (check-ref-sets (remove-if (lambda (dref)
@@ -227,6 +228,7 @@
           (eq * :macro)))))
 
 (deftest test-arglist/compiler-macro ()
+  ;; https://gitlab.com/embeddable-common-lisp/ecl/-/issues/823
   (with-failure-expected ((and (alexandria:featurep
                                 '(:or :abcl :clisp :ecl))
                                'failure))
@@ -257,6 +259,7 @@
   (is (match-values (arglist (dref 'function-with-fancy-args 'function))
         (equal * '(x &optional (o 1) &key (k 2 kp)))
         (eq * :ordinary)))
+  ;; https://gitlab.com/embeddable-common-lisp/ecl/-/issues/820
   (with-failure-expected ((and (alexandria:featurep '(:or :abcl :clisp :ecl))
                                'failure))
     (is (match-values (arglist (dref 'traced-foo 'function))
@@ -272,6 +275,7 @@
   (is (match-values (arglist (dref 'test-gf 'generic-function))
         (equal * '(x))
         (eq * :ordinary)))
+  ;; https://gitlab.com/embeddable-common-lisp/ecl/-/issues/820
   (with-failure-expected ((and (alexandria:featurep '(:or :clisp :ecl))
                                'failure))
     (is (match-values (arglist (dref 'traced-gf 'function))
@@ -299,7 +303,7 @@
 
 (deftest test-arglist/type ()
   (with-failure-expected ((alexandria:featurep '(:or :abcl :allegro :clisp
-                                                 :ccl :cmucl :ecl)))
+                                                 :ccl :cmucl)))
     (is (match-values (arglist (dref 'bar 'type))
           (equal * '(x &rest r))
           (eq * :deftype))))
@@ -372,6 +376,7 @@
              "FOO-R (reader foo)"))
   (is (equal (docstring (dref 'foo-w '(writer foo)))
              "FOO-W (writer foo)"))
+  ;; https://gitlab.com/embeddable-common-lisp/ecl/-/issues/821
   (with-failure-expected ((and (alexandria:featurep '(:or :clisp :ecl))
                                'failure))
     (is (equal (docstring (dref 'baz-aaa '(structure-accessor baz)))
@@ -509,6 +514,7 @@
           ((eq type 'generic-function)
            ;; AllegroCL is off by one form.
            (alexandria:featurep '(:not :allegro)))
+          ;; https://gitlab.com/embeddable-common-lisp/ecl/-/issues/822
           ((eq type 'method-combination)
            (alexandria:featurep '(:not (:or :abcl :cmucl :ecl))))
           ((member type '(reader writer accessor))
