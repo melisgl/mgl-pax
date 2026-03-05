@@ -65,12 +65,14 @@
                       ,(xref 'test-gf '(method ((eql 7))))
                       ,(xref 'test-gf '(method
                                         ((eql #.(find-package :cl))))))))
+  ;; https://github.com/Clozure/ccl/issues/548
   (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ccl :clisp
                                                       :cmucl))
                                'failure))
     (check-ref-sets (definitions '(setf setf-gf))
                     `(,(xref 'setf-gf 'setf-generic-function)
-                      ,(xref 'setf-gf '(setf-method (string))))))
+                       ,(xref 'setf-gf '(setf-method (string))))))
+  ;; https://github.com/Clozure/ccl/issues/548
   (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ccl :clisp
                                                       :cmucl))
                                'failure))
@@ -155,7 +157,8 @@
   (check-dspec-roundtrip (dref 'test-gf 'generic-function))
   (with-failure-expected ((alexandria:featurep '(:or :clisp)))
     (check-dspec-roundtrip (dref 'setf-gf 'setf-generic-function)))
-  (with-failure-expected ((alexandria:featurep '(:or :abcl :ccl :cmucl)))
+  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ccl :cmucl))
+                               'failure))
     (check-dspec-roundtrip (dref 'setf-gf '(setf-method (string)))))
   (check-dspec-roundtrip (dref 'test-gf '(method ((eql 7)))))
   (check-dspec-roundtrip
@@ -507,8 +510,6 @@
            nil)
           ((alexandria:featurep :clisp)
            nil)
-          ((eq type 'symbol-macro)
-           (alexandria:featurep '(:not :ccl)))
           ((eq type 'declaration)
            (alexandria:featurep :sbcl))
           ((eq type 'generic-function)

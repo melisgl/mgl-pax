@@ -12,7 +12,7 @@ function run_test_case {
   local test_case_name="\"$1\""
   shift
   echo "SHTEST: Running ${test_case_name} $@"
-  $@
+  "$@"
   local retval=$?
   if ((retval == 22)); then
     echo
@@ -29,7 +29,7 @@ function lisp_tests {
   local lisp_name="$1"
   shift
 
-  run_test_case "lisp test suite on ${lisp_name}" $@ <<EOF
+  run_test_case "lisp test suite on ${lisp_name}" "$@" <<EOF
 (require :asdf)
 (asdf:load-system :mgl-pax-test)
 (when (try:passedp (mgl-pax-test:test :debug ${debug} :print ${print}
@@ -42,7 +42,7 @@ function autoload_tests {
   local lisp_name="$1"
   shift
 
-  run_test_case "test-exports on ${lisp_name}" $@ <<EOF
+  run_test_case "test-exports on ${lisp_name}" "$@" <<EOF
 (asdf:load-system :mgl-pax-test/extension)
 (asdf:load-system :mgl-pax/full)
 (in-package :mgl-pax-test-extension)
@@ -50,14 +50,14 @@ function autoload_tests {
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "test-document-autoload on ${lisp_name}" $@ <<EOF
+  run_test_case "test-document-autoload on ${lisp_name}" "$@" <<EOF
 (asdf:load-system :mgl-pax-test/extension)
 (in-package :mgl-pax-test-extension)
 (when (passedp (try 'test-document-autoload))
   (uiop/image:quit 22))
 EOF
 
-  run_test_case "test-transcribe-autoload on ${lisp_name}" $@ <<EOF
+  run_test_case "test-transcribe-autoload on ${lisp_name}" "$@" <<EOF
 (asdf:load-system :mgl-pax-test/extension)
 (in-package :mgl-pax-test-extension)
 (when (passedp (try 'test-transcribe-autoload))
@@ -71,7 +71,7 @@ function basic_load_tests {
 
   for system in mgl-pax mgl-pax/navigate mgl-pax/document mgl-pax/web \
                 mgl-pax/transcribe mgl-pax/full; do
-      run_test_case "load ${system} on ${lisp_name}" $@ <<EOF
+      run_test_case "load ${system} on ${lisp_name}" "$@" <<EOF
 (progn
   (asdf:load-system "${system}")
   (uiop/image:quit 22))
@@ -95,11 +95,11 @@ function run_tests {
       '(handler-bind
            ((error (function continue)))
          (ql:quickload :mgl-pax/full))' \
-      --quit -- $@
+      --quit -- "$@"
   else
-    ros --lisp "${lisp}" run --eval '(ql:quickload :mgl-pax/full)' --quit -- $@
+    ros --lisp "${lisp}" run --eval '(ql:quickload :mgl-pax/full)' --quit -- "$@"
   fi
-  ${test_suite} ${lisp} ros --lisp ${lisp} run -- $@
+  ${test_suite} ${lisp} ros --lisp ${lisp} run -- "$@"
   if ((num_failures > 0)); then
     if [ "${failure_expected}" = "t" ]; then
       echo "SHTEST: ${num_failures} expected failures,"\

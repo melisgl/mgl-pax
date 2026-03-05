@@ -2167,8 +2167,7 @@ example section
          :pages (let ((source-uri-fn (make-git-source-uri-fn
                                       :mgl-pax
                                       "https://github.com/melisgl/mgl-pax"))
-                      (file #+sbcl "test/data/output.tex"
-                            #-sbcl "test/data/output-not-checked-in.tex"))
+                      (file "test/data/output.tex"))
                   `((:objects (,@documentable)
                      :output (,(asdf:system-relative-pathname
                                 "mgl-pax" file)

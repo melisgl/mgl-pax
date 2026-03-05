@@ -142,7 +142,7 @@ else
   run_tests lisp_tests ccl-bin --batch
   run_tests lisp_tests cmu-bin -batch
   run_tests lisp_tests ecl
-  run_tests lisp_tests clisp -on-error exit;
+  run_tests lisp_tests clisp -on-error exit
   run_tests lisp_tests abcl-bin
 
   # We run the autoload tests on the faster ones only.
