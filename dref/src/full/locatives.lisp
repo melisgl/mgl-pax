@@ -951,7 +951,7 @@
   (%make-dref symbol type))
 
 (defmethod map-definitions-of-name (fn name (locative-type (eql 'type)))
-  (declare (ignore fn name))
+  (declare (ignorable fn name))
   #+(or ecl sbcl)
   (when-let (dref (dref name 'type nil))
     (funcall fn dref))
