@@ -53,7 +53,7 @@
                     `(,(xref 'bar 'macro)
                       ,(xref 'bar 'constant)
                       ,(xref 'bar 'type))))
-  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :clisp :ecl))
+  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :clisp))
                                'failure))
     (check-ref-sets (definitions 'short-setf-with-fn)
                     `(,(xref 'short-setf-with-fn 'setf))))

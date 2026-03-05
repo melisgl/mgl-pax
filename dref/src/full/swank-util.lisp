@@ -282,7 +282,8 @@
   (:or :abcl :sbcl) `(define-setf-expander ,name)
   :allegro `(:setf-method ,name)
   #+ccl :ccl #+ccl `(ccl::setf-expander ,name)
-  :cmucl `(setf ,name))
+  :cmucl `(setf ,name)
+  :ecl `(defsetf ,name))
 
 (define-dspec swank-function-dspec (name)
   (declare (ignorable name))

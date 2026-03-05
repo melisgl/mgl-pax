@@ -175,6 +175,7 @@
 
 (deftest test-locate/compiler-macro ()
   (check-ref (dref 'foo 'compiler-macro) 'foo 'compiler-macro)
+  ;; https://gitlab.com/embeddable-common-lisp/ecl/-/issues/818
   (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ecl))
                                'failure))
     (with-test ("How to detect compiler macro functions?")
@@ -396,6 +397,7 @@
       (check-ref (dref 'baz-aaa 'structure-accessor)
                  'baz-aaa '(structure-accessor baz)))
     (with-test ("How to detect structure accessors?")
+      ;; https://gitlab.com/embeddable-common-lisp/ecl/-/issues/818
       (with-failure-expected ((and (alexandria:featurep
                                     '(:or :abcl :allegro :cmucl :ecl))
                                    'failure))
