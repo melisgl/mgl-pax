@@ -53,13 +53,13 @@ the documentation system.
 - [system] **"dref"**
 
     - _Version:_ 0.4.11
-    - _Description:_ Reify definitions, provide portable access to
+    - _Description:_ Reify definitions, provide portable access to arglist,
         docstrings and source locations in an extensible framework.
     - _Long Description:_ [`DEFUN`][f472] defines a first-class object: a `FUNCTION`([`0`][119e] [`1`][81f7]).
         [`DEFVAR`][7334] does not. The DRef library provides a way to refer to all
         definitions and smooths over the differences between
         implementations. This system has minimal dependencies. It autoloads
-        the [`dref/full`][0c7e] `ASDF:SYSTEM`, which depends Alexandria and Swank.
+        the [`dref/full`][0c7e] `ASDF:SYSTEM`, which depends on Alexandria and Swank.
     - _Licence:_ MIT, see COPYING.
     - _Author:_ Gábor Melis
     - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)

@@ -16,14 +16,14 @@ the documentation system.
 
     - Version: 0.4.11
 
-    - Description: Reify definitions, provide portable access to
+    - Description: Reify definitions, provide portable access to arglist,
     docstrings and source locations in an extensible framework.
 
     - Long Description: DEFUN defines a first-class object: a FUNCTION.
     DEFVAR does not. The DRef library provides a way to refer to all
     definitions and smooths over the differences between
     implementations. This system has minimal dependencies. It autoloads
-    the dref/full ASDF:SYSTEM, which depends Alexandria and Swank.
+    the dref/full ASDF:SYSTEM, which depends on Alexandria and Swank.
 
     - Licence: MIT, see COPYING.
 

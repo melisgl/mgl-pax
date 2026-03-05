@@ -9,13 +9,13 @@
   :homepage "http://github.com/melisgl/mgl-pax/tree/master/dref"
   :bug-tracker "https://github.com/melisgl/mgl-pax/issues"
   :source-control (:git "https://github.com/melisgl/mgl-pax.git")
-  :description "Reify definitions, provide portable access to
+  :description "Reify definitions, provide portable access to arglist,
   docstrings and source locations in an extensible framework."
   :long-description "DEFUN defines a first-class object: a FUNCTION.
   DEFVAR does not. The DRef library provides a way to refer to all
   definitions and smooths over the differences between
   implementations. This system has minimal dependencies. It autoloads
-  the `dref/full` ASDF:SYSTEM, which depends Alexandria and Swank."
+  the `dref/full` ASDF:SYSTEM, which depends on Alexandria and Swank."
   :depends-on ("autoload" "mgl-pax-bootstrap" "named-readtables"
                "pythonic-string-reader")
   :defsystem-depends-on ("mgl-pax.asdf")
