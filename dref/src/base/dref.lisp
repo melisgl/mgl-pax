@@ -74,7 +74,7 @@
   Finally, existing definitions can be queried with DEFINITIONS and
   DREF-APROPOS:
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (definitions 'dref-ext:arglist*)
   ==> (#<DREF ARGLIST* GENERIC-FUNCTION>
   -->  #<DREF ARGLIST* (METHOD (MGL-PAX::GO-DREF))>
