@@ -157,7 +157,7 @@
   (check-dspec-roundtrip (dref 'test-gf 'generic-function))
   (with-failure-expected ((alexandria:featurep '(:or :clisp)))
     (check-dspec-roundtrip (dref 'setf-gf 'setf-generic-function)))
-  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ccl :cmucl))
+  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :cmucl))
                                'failure))
     (check-dspec-roundtrip (dref 'setf-gf '(setf-method (string)))))
   (check-dspec-roundtrip (dref 'test-gf '(method ((eql 7)))))
