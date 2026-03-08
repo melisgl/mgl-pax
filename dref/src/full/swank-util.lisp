@@ -127,10 +127,11 @@
           `(:error ,(format nil "Could not find source location for ~S."
                             dspecs))))))
 
-;;; Like FIND-DEFINITION, but tries to get the definition of OBJECT
-;;; (for example a FUNCTION or METHOD object) with the fast but not
-;;; widely supported SWANK-BACKEND:FIND-SOURCE-LOCATION before calling
-;;; the much slower but more complete SWANK-BACKEND:FIND-DEFINITIONS.
+;;; Like SWANK-SOURCE-LOCATION, but tries to get the definition of
+;;; OBJECT (for example a FUNCTION or METHOD object) with the fast but
+;;; not widely supported SWANK-BACKEND:FIND-SOURCE-LOCATION before
+;;; calling the much slower but more complete
+;;; SWANK-BACKEND:FIND-DEFINITIONS.
 (defun/autoloaded swank-source-location* (object name &rest locatives)
   (swank::converting-errors-to-error-location
     (or (swank-object-source-location object)

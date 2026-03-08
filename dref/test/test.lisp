@@ -155,11 +155,8 @@
   (check-dspec-roundtrip (dref 'setf-fn 'setf))
   (check-dspec-roundtrip (dref 'foo 'function))
   (check-dspec-roundtrip (dref 'test-gf 'generic-function))
-  (with-failure-expected ((alexandria:featurep '(:or :clisp)))
-    (check-dspec-roundtrip (dref 'setf-gf 'setf-generic-function)))
-  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :cmucl))
-                               'failure))
-    (check-dspec-roundtrip (dref 'setf-gf '(setf-method (string)))))
+  (check-dspec-roundtrip (dref 'setf-gf 'setf-generic-function))
+  (check-dspec-roundtrip (dref 'setf-gf '(setf-method (string))))
   (check-dspec-roundtrip (dref 'test-gf '(method ((eql 7)))))
   (check-dspec-roundtrip
    (dref 'test-gf '(method ((eql #.(find-package :cl))))))
@@ -305,8 +302,9 @@
         (eq * :ordinary))))
 
 (deftest test-arglist/type ()
-  (with-failure-expected ((alexandria:featurep '(:or :abcl :allegro :clisp
-                                                 :ccl :cmucl)))
+  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :allegro :clisp
+                                                      :cmucl))
+                               'failure))
     (is (match-values (arglist (dref 'bar 'type))
           (equal * '(x &rest r))
           (eq * :deftype))))
