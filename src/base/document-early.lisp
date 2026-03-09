@@ -182,7 +182,8 @@
 
       - If it is a list, then it is must be a [lambda list][clhs] and
         is printed without the outermost parens and with the package
-        names removed from the argument names.
+        names removed from the argument names. [Keywords][clhs] are
+        printed with a leading colon.
 
       - If it is a string, then it must be valid Markdown.
 
