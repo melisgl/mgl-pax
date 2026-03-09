@@ -184,8 +184,8 @@
 
 
 (deftest test-arglist ()
-  (test-macro-arg-names)
-  (test-function-arg-names)
+  (test-arglist-parameters/ordinary)
+  (test-arglist-parameters/macro)
   (is (null (arglist (dref 'my-smac 'symbol-macro))))
   (test-arglist/macro)
   (test-arglist/compiler-macro)
@@ -198,20 +198,22 @@
   (test-arglist/symbol-locative)
   (test-arglist/lambda))
 
-(deftest test-macro-arg-names ()
-  (is (equal '(x a b c)
-             (dref::macro-arg-names '((&key (x y)) (a b) &key (c d))))))
-
-(deftest test-function-arg-names ()
-  (is (equal (dref::function-arg-names '(x &optional (o 1) &key (k 2 kp)))
+(deftest test-arglist-parameters/ordinary ()
+  (is (equal (arglist-parameters '(x &optional (o 1) &key (k 2 kp))
+                                 :ordinary)
              '(x o k kp)))
-  (is (equal (dref::function-arg-names '(&key ((:xxx xxx))))
+  (is (equal (arglist-parameters '(&key ((:xxx xxx))) :ordinary)
              '(xxx)))
-  (is (equal (dref::function-arg-names '(&key ((:xxx xxx) nil xxxp)))
+  (is (equal (arglist-parameters '(&key ((:xxx xxx) nil xxxp)) :ordinary)
              '(xxx xxxp)))
-  (is (equal (dref::function-arg-names '(&key ((:xxx xxx) nil xxxp)
-                                         &allow-other-keys &aux (a 7)))
+  (is (equal (arglist-parameters '(&key ((:xxx xxx) nil xxxp)
+                                   &allow-other-keys &aux (a 7))
+                                 :ordinary)
              '(xxx xxxp a))))
+
+(deftest test-arglist-parameters/macro ()
+  (is (equal (arglist-parameters '((&key (x y)) (a b) &key (c d)) :macro)
+             '(x a b c))))
 
 (deftest test-arglist/macro ()
   (with-failure-expected ((and (alexandria:featurep
@@ -290,16 +292,16 @@
 (deftest test-arglist/method ()
   (is (match-values (arglist (dref 'gf2 '(method :around (t))))
         (equal * '(x &key))
-        (eq * :ordinary)))
+        (eq * :specialized)))
   (is (match-values (arglist (dref 'gf2 '(method :after (t))))
         (equal * '(x &key y))
-        (eq * :ordinary)))
+        (eq * :specialized)))
   (is (match-values (arglist (dref 'gf2 '(method (number))))
-        (equal * '(x &key ((:x y) t)))
-        (eq * :ordinary)))
+        (equal * '((x number) &key ((:x y) t)))
+        (eq * :specialized)))
   (is (match-values (arglist (dref '(setf setf-gf) '(method (string))))
-        (equal * '(v))
-        (eq * :ordinary))))
+        (equal * '((v string)))
+        (eq * :specialized))))
 
 (deftest test-arglist/type ()
   (with-failure-expected ((and (alexandria:featurep '(:or :abcl :allegro :clisp
@@ -604,7 +606,8 @@
   (test-narrowest-supertype-of-locative-type)
   (test-dtypep)
   (test-cover-dtype)
-  (test-inexact-dtype-cover-p))
+  (test-exact-dtype-cover-p)
+  (test-support-dtype-p))
 
 (deftest test-widest-subtype-of-locative-type ()
   (is (eq (dref::widest-subtype-of-locative-type 'reader) nil))
@@ -827,23 +830,36 @@
   (is (set-equal-p (dref::cover-dtype '(not (satisfies f))) (locative-types))))
 
 
-(deftest test-inexact-dtype-cover-p ()
-  (is (not (dref::inexact-dtype-cover-p 'top)))
-  (is (not (dref::inexact-dtype-cover-p t)))
-  (is (not (dref::inexact-dtype-cover-p nil)))
-  (is (not (dref::inexact-dtype-cover-p 'pseudo)))
-  (is (not (dref::inexact-dtype-cover-p 'class)))
-  (is (not (dref::inexact-dtype-cover-p '(or))))
-  (is (not (dref::inexact-dtype-cover-p '(or class))))
-  (is (not (dref::inexact-dtype-cover-p '(and))))
-  (is (not (dref::inexact-dtype-cover-p '(and class))))
-  (is (not (dref::inexact-dtype-cover-p '(not class))))
-  (is (dref::inexact-dtype-cover-p '(method (number))))
-  (is (dref::inexact-dtype-cover-p '(or (method (number)))))
-  (is (dref::inexact-dtype-cover-p '(and (method (number)))))
-  (is (dref::inexact-dtype-cover-p '(not (method (number)))))
-  (is (dref::inexact-dtype-cover-p '(member)))
-  (is (dref::inexact-dtype-cover-p '(satisfies foo))))
+(deftest test-exact-dtype-cover-p ()
+  (is (dref::exact-dtype-cover-p 'top))
+  (is (dref::exact-dtype-cover-p t))
+  (is (dref::exact-dtype-cover-p nil))
+  (is (dref::exact-dtype-cover-p 'pseudo))
+  (is (dref::exact-dtype-cover-p 'class))
+  (is (dref::exact-dtype-cover-p '(or)))
+  (is (dref::exact-dtype-cover-p '(or class)))
+  (is (dref::exact-dtype-cover-p '(and)))
+  (is (dref::exact-dtype-cover-p '(and class)))
+  (is (dref::exact-dtype-cover-p '(not class)))
+  (is (dref::exact-dtype-cover-p '(member)))
+  (is (not (dref::exact-dtype-cover-p '(method (number)))))
+  (is (not (dref::exact-dtype-cover-p '(or (method (number))))))
+  (is (not (dref::exact-dtype-cover-p '(and (method (number))))))
+  (is (not (dref::exact-dtype-cover-p '(not (method (number))))))
+  (is (not (dref::exact-dtype-cover-p '(satisfies foo)))))
+
+
+(deftest test-support-dtype-p ()
+  (is (set-equal-p (dref::support-dtype 'class) '(class structure condition)))
+  (is (set-equal-p (dref::support-dtype '(and class (satisfies xxx)))
+                   ()))
+  (is (set-equal-p (dref::support-dtype '(or function class))
+                   '(function generic-function setf-function
+                     setf-generic-function structure-accessor
+                     class structure condition)))
+  (is (set-equal-p (dref::support-dtype '(or (and function (satisfies foo))
+                                          class))
+                   '(class structure condition))))
 
 
 ;;;; TEST-APROPOS

@@ -46,10 +46,10 @@
     (with-swank ()
       (let* ((pax-url (request-pax*-url))
              (pkgname (hunchentoot:get-parameter "pkg"))
-             (*package* (or (dref::find-package* pkgname)
-                            (dref::find-package* (ignore-errors
-                                                  (parse-sexp pkgname)))
-                            (dref::find-package :cl)))
+             ;; See DREF::FIND-PACKAGE* for why IGNORE-ERRORS is used.
+             (*package* (or (ignore-errors (find-package pkgname))
+                            (ignore-errors (find-package (parse-sexp pkgname)))
+                            (find-package :cl)))
              (*pax-live-home-page-override* *pax-live-inputs*)
              (editp (hunchentoot:get-parameter "edit")))
         (if editp
@@ -114,7 +114,7 @@
         (when (= (length drefs) 1)
           (swank::with-connection ((swank::default-connection))
             (let* ((dref (first drefs))
-                   (dspec (dref::definition-to-dspec dref))
+                   (dspec (definition-to-dspec dref))
                    (location (source-location dref)))
               (when location
                 (swank:eval-in-emacs `(mgl-pax-edit-for-cl

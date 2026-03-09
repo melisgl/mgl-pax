@@ -219,7 +219,7 @@
                (try-parse-symbol raw))
              (unless symbols-only
                (funcall fn raw raw)
-               (let ((adjusted (dref::adjust-string-case raw)))
+               (let ((adjusted (adjust-string-case raw)))
                  (when (string/= adjusted raw)
                    (funcall fn raw adjusted)))))))))
 
@@ -315,17 +315,15 @@
 ;;; the locative type parsed is not defined. If ERRORP, then
 ;;; PARSE-ERROR may be signalled.
 (defun parse-locative (string &key junk-allowed (errorp nil)
-                                (on-unreadable :error) (name 'no-name))
+                       (on-unreadable :error) (name 'no-name))
   (multiple-value-bind (locative pos)
       (parse-sexp string :junk-allowed junk-allowed :errorp errorp
-                         :on-unreadable (if (eq name 'no-name)
-                                            on-unreadable
-                                            (make-unreadable-reader name)))
+                  :on-unreadable (if (eq name 'no-name)
+                                     on-unreadable
+                                     (make-unreadable-reader name)))
     (let ((locative-type (locative-type locative)))
-      (if (dref locative-type 'locative nil)
-          (values locative pos)
-          (when errorp
-            (dref::invalid-locative-type locative-type))))))
+      (when (dref locative-type 'locative errorp)
+        (values locative pos)))))
 
 (defun make-unreadable-reader (name)
   (let ((unreadables :uninitialized))

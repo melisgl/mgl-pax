@@ -349,7 +349,7 @@
                                                  'arglist))))
     `(unless (ignore-errors
               (destructuring-bind ,lambda-list ,locative-args
-                (declare (ignore ,@(macro-arg-names lambda-list)))
+                (declare (ignore ,@(macro-arglist-parameters lambda-list)))
                 t))
        (locate-error "Bad arguments ~S for locative ~S with lambda list ~S."
                      ,locative-args ',locative-type ',lambda-list))))
@@ -362,7 +362,8 @@
     (unless (ignore-errors
              (handler-bind ((warning #'muffle-warning))
                (eval `(destructuring-bind ,lambda-list ',locative-args
-                        (declare (ignore ,@(macro-arg-names lambda-list)))
+                        (declare (ignore ,@(macro-arglist-parameters
+                                            lambda-list)))
                         t))))
       (error "~@<Bad arguments ~S for locative ~S with lambda list ~S.~:@>"
              locative-args locative-type lambda-list))))
@@ -892,8 +893,10 @@
   (map-definitions-of-name generic-function)
   (map-definitions-of-type generic-function)
   (arglist* generic-function)
+  (arglist-parameters* generic-function)
   (docstring* generic-function)
   (source-location* generic-function)
+  (nth-value-or-with-obj-or-def macro)
   (@definition-properties section))
 
 (defvar *resolving-dref*)
@@ -972,13 +975,6 @@
     ;; See DREF-APROPOS about the magic symbol TRY-INTERNED-SYMBOLS.
     'try-interned-symbols))
 
-(defun map-names-for-type (fn locative-type)
-  ;; This is wasteful in that a DREF is created from an XREF while we
-  ;; are only interested in the XREF-NAME.
-  (map-definitions-of-type (lambda (dref)
-                             (funcall fn (xref-name (dref-origin dref))))
-                           locative-type))
-
 (defgeneric arglist* (object)
   (:documentation "To extend ARGLIST, specialize OBJECT on a normal
   Lisp type or on a subclass of [DREF][class].
@@ -1006,6 +1002,13 @@
     (values nil nil))
   (:method ((dref dref))
     (values-list (definition-property dref 'arglist))))
+
+(defgeneric arglist-parameters* (arglist arglist-type)
+  (:documentation "To extend ARGLIST-PARAMETERS*, EQL-specialize
+  ARGLIST-TYPE on, say, :BOA (see [BOA lambda lists][clhs]. This must
+  be done if ARGLIST* is extended to return an unsupported value.
+
+  This function is for extension only. Do not call it directly."))
 
 (defgeneric docstring* (object)
   (:documentation "To extend DOCSTRING, specialize OBJECT on a normal

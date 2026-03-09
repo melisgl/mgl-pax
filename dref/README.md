@@ -82,7 +82,7 @@ the documentation system.
         `DREF`.
         
         However, to get the dependencies, install this system.
-    - *Depends on:* alexandria, [dref][021a], swank(?)
+    - *Depends on:* alexandria, [dref][021a], [mgl-pax][6fdb], swank(?)
     - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28DREF-3A-40INTRODUCTION-20MGL-PAX-3ASECTION-29"></a>
@@ -143,15 +143,16 @@ Finally, existing definitions can be queried with [`DEFINITIONS`][e196] and
 ```common-lisp
 (definitions 'dref-ext:arglist*)
 ==> (#<DREF ARGLIST* GENERIC-FUNCTION>
--->  #<DREF ARGLIST* (METHOD (MGL-PAX::GO-DREF))>
--->  #<DREF ARGLIST* (METHOD (LAMBDA-DREF))>
--->  #<DREF ARGLIST* (METHOD (TYPE-DREF))>
--->  #<DREF ARGLIST* (METHOD (METHOD-DREF))>
--->  #<DREF ARGLIST* (METHOD (FUNCTION-DREF))>
+-->  #<DREF ARGLIST* (METHOD (CLASS-DREF))>
 -->  #<DREF ARGLIST* (METHOD (COMPILER-MACRO-DREF))>
+-->  #<DREF ARGLIST* (METHOD (FUNCTION-DREF))>
+-->  #<DREF ARGLIST* (METHOD (LAMBDA-DREF))>
 -->  #<DREF ARGLIST* (METHOD (MACRO-DREF))>
--->  #<DREF ARGLIST* (METHOD (SETF-DREF))> #<DREF ARGLIST* (METHOD (T))>
--->  #<DREF ARGLIST* (METHOD (DREF))>
+-->  #<DREF ARGLIST* (METHOD (METHOD-DREF))>
+-->  #<DREF ARGLIST* (METHOD (SETF-DREF))>
+-->  #<DREF ARGLIST* (METHOD (TYPE-DREF))> #<DREF ARGLIST* (METHOD (DREF))>
+-->  #<DREF ARGLIST* (METHOD (MGL-PAX::GO-DREF))>
+-->  #<DREF ARGLIST* (METHOD (T))>
 -->  #<DREF ARGLIST* (UNKNOWN
 -->                   (DECLAIM ARGLIST*
 -->                            FTYPE))>)
@@ -710,7 +711,7 @@ definitions as in
 
 <a id="x-28DREF-3ADEFINITIONS-20FUNCTION-29"></a>
 
-- [function] **DEFINITIONS** *NAME &KEY (DTYPE T)*
+- [function] **DEFINITIONS** *NAME &KEY (DTYPE T) (SORT T)*
 
     List all definitions of `NAME` that are of `DTYPE` as [`DREF`s][d930].
     
@@ -724,7 +725,7 @@ definitions as in
     
     ```common-lisp
     (definitions 'mgl-pax)
-    ==> (#<DREF "mgl-pax" ASDF/SYSTEM:SYSTEM> #<DREF "MGL-PAX" PACKAGE>)
+    ==> (#<DREF "MGL-PAX" PACKAGE> #<DREF "mgl-pax" ASDF/SYSTEM:SYSTEM>)
     ```
     
     Similarly, [`DREF-LOCATIVE-TYPE`][a22e] may be more made more specific:
@@ -734,11 +735,13 @@ definitions as in
     ==> (#<DREF LOCATE-ERROR CONDITION>)
     ```
     
+    If `SORT`, the returned list is ordered according to [`SORT-REFERENCES`][1db8].
+    
     Can be extended via [`MAP-DEFINITIONS-OF-NAME`][97b4].
 
 <a id="x-28DREF-3ADREF-APROPOS-20FUNCTION-29"></a>
 
-- [function] **DREF-APROPOS** *NAME &KEY PACKAGE EXTERNAL-ONLY CASE-SENSITIVE (DTYPE T)*
+- [function] **DREF-APROPOS** *NAME &KEY PACKAGE EXTERNAL-ONLY CASE-SENSITIVE (DTYPE T) (SORT T)*
 
     Return a list of [`DREF`][d930]s corresponding to existing
     definitions that match the various arguments. First, `(DREF-APROPOS
@@ -826,18 +829,65 @@ definitions as in
     
     - `DTYPE` matches candidate definition `D` if `(DTYPEP D DTYPE)`.
     
+    If `SORT`, the returned list is ordered according to [`SORT-REFERENCES`][1db8].
+    
     Can be extended via MAP-REFERENCES-OF-TYPE and
     [`MAP-DEFINITIONS-OF-NAME`][97b4].
+
+<a id="x-28DREF-3AWITH-DEFINITIONS-CACHED-20MGL-PAX-3AMACRO-29"></a>
+
+- [macro] **WITH-DEFINITIONS-CACHED** *(&KEY (DTYPE ''TOP)) &BODY BODY*
+
+    Allow caching of definition lookups and [`DTYPE`][a459] computations.
+    This can provide a speedup when multiple calls are made to
+    [`DEFINITIONS`][e196] or [`DREF-APROPOS`][65b4] within `BODY`.
+    
+    Using this macro makes the promise that, during the [dynamic
+    extent][36e9] of `BODY`, the following are unchanged:
+    
+    - the set of [definition][2143]s of `DTYPE`,
+    
+    - the set of all [locative type][a11d]s,
+    
+    - the set of all [`DTYPE`s][a459].
+    
+    Note that definitions *not* of `DTYPE` are allowed to be made or
+    deleted.
+
+<a id="x-28DREF-EXT-3ASORT-REFERENCES-20FUNCTION-29"></a>
+
+- [function] **SORT-REFERENCES** *REFERENCES &KEY KEY*
+
+    Order `REFERENCES` in an implementation independent way.
+    
+    - Non-symbol named references go first and are
+    [sorted by the locative type][cf03] first, then by name and
+    locative args.
+    
+    - Symbol-based references go after and are
+    sorted by name first, then [by the
+    locative-type][cf03], finally
+    by the locative args.
+
+<a id="x-28DREF-EXT-3ASORT-LOCATIVE-TYPES-20FUNCTION-29"></a>
+
+- [function] **SORT-LOCATIVE-TYPES** *LOCATIVE-TYPES*
+
+    Sort `LOCATIVE-TYPES` in an implementation independent way.
+    The order is alphabetical in [`SYMBOL-NAME`][0d07], with the [`PACKAGE-NAME`][db68]
+    acting as a tie breaker. If `UNKNOWN` is present among `LOCATIVE-TYPES`,
+    it goes last.
 
 <a id="x-28DREF-3A-40REVERSE-DEFINITION-ORDER-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
 
 - [glossary-term] **reverse definition order**
 
-    Lists of [locative type][a11d]s and aliases are sometimes in reverse order
-    of the time of their definition. This order is not affected by
-    redefinition, regardless of whether it's by [`DEFINE-LOCATIVE-TYPE`][b6c4],
-    [`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4], [`DEFINE-SYMBOL-LOCATIVE-TYPE`][ee9b] or
-    [`DEFINE-LOCATIVE-ALIAS`][548e].
+    The lists of [locative type][a11d]s returned by e.g. [`LOCATIVE-TYPES`][99b0],
+    [`LISP-LOCATIVE-TYPES`][30ad], [`PSEUDO-LOCATIVE-TYPES`][c340] and [`LOCATIVE-ALIASES`][94d1] are
+    in reverse order of the time of their definition. This order is not
+    affected by redefinition, regardless of whether it's by
+    [`DEFINE-LOCATIVE-TYPE`][b6c4], [`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4],
+    [`DEFINE-SYMBOL-LOCATIVE-TYPE`][ee9b] or [`DEFINE-LOCATIVE-ALIAS`][548e].
 
 <a id="x-28DREF-3ALOCATIVE-TYPES-20FUNCTION-29"></a>
 
@@ -913,6 +963,12 @@ The following functions take a single argument, which may be a
     ```
     
     ```common-lisp
+    (arglist (dref 'arglist* '(method (method-dref))))
+    => ((DREF METHOD-DREF))
+    => :SPECIALIZED
+    ```
+    
+    ```common-lisp
     (arglist (dref 'method 'locative))
     => (&REST QUALIFIERS-AND-SPECIALIZERS)
     => :DESTRUCTURING
@@ -932,7 +988,31 @@ The following functions take a single argument, which may be a
     
     - various edge cases involving traced functions.
     
-    Can be extended via [`ARGLIST*`][0a96]
+    Can be extended via [`ARGLIST*`][0a96].
+
+<a id="x-28DREF-3AARGLIST-PARAMETERS-20FUNCTION-29"></a>
+
+- [function] **ARGLIST-PARAMETERS** *ARGLIST &OPTIONAL (ARGLIST-TYPE :ORDINARY)*
+
+    A utility to extract the names of the parameters from `ARGLIST` of
+    `ARGLIST-TYPE`. See the function [`ARGLIST`][e6bd], for the possible values of
+    `ARGLIST-TYPE`.
+    
+    Note that if `ARGLIST` is `NIL`, then `ARGLIST-TYPE` may also be `NIL`, in
+    which case `NIL` is returned.
+    
+    ```common-lisp
+    (arglist #'source-location)
+    => (OBJECT &KEY ERROR)
+    => :ORDINARY
+    ```
+    
+    ```common-lisp
+    (multiple-value-call 'arglist-parameters (arglist #'source-location))
+    => (OBJECT ERROR)
+    ```
+    
+    Can be extended via [`ARGLIST-PARAMETERS*`][d9ad].
 
 <a id="x-28MGL-PAX-3ADOCSTRING-20FUNCTION-29"></a>
 
@@ -1268,6 +1348,13 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     An `:ACCESSOR` in `DEFCLASS` creates a reader and a writer method.
     Somewhat arbitrarily, `ACCESSOR` references [`RESOLVE`][63b4] to the writer
     method but can be [`LOCATE`][8f19]d with either.
+
+<a id="x-28DREF-3AACCESSOR-SLOT-DEFINITION-20FUNCTION-29"></a>
+
+- [function] **ACCESSOR-SLOT-DEFINITION** *DREF*
+
+    Return the SLOT-DEFINITION object corresponding to `DREF`, which may
+    denote a `READER`, a `WRITER` or an `ACCESSOR`.
 
 <a id="x-28MGL-PAX-3ASTRUCTURE-ACCESSOR-20MGL-PAX-3ALOCATIVE-29"></a>
 
@@ -2251,6 +2338,16 @@ macros.
     
     This function is for extension only. Do not call it directly.
 
+<a id="x-28DREF-3AARGLIST-PARAMETERS-2A-20GENERIC-FUNCTION-29"></a>
+
+- [generic-function] **ARGLIST-PARAMETERS\*** *ARGLIST ARGLIST-TYPE*
+
+    To extend [`ARGLIST-PARAMETERS`][b123]*, `EQL`([`0`][db03] [`1`][5fd4])-specialize
+    `ARGLIST-TYPE` on, say, :BOA (see [BOA lambda lists][830e]. This must
+    be done if `ARGLIST`* is extended to return an unsupported value.
+    
+    This function is for extension only. Do not call it directly.
+
 <a id="x-28DREF-EXT-3ADOCSTRING-2A-20GENERIC-FUNCTION-29"></a>
 
 - [generic-function] **DOCSTRING\*** *OBJECT*
@@ -2305,6 +2402,16 @@ macros.
         ```
     
     This function is for extension only. Do not call it directly.
+
+<a id="x-28DREF-EXT-3ANTH-VALUE-OR-WITH-OBJ-OR-DEF-20MGL-PAX-3AMACRO-29"></a>
+
+- [macro] **NTH-VALUE-OR-WITH-OBJ-OR-DEF** *(OBJ NTH-VALUE) &BODY BODY*
+
+    Evaluate `BODY`. If its `NTH-VALUE` is `NIL`, evaluate it again with `OBJ`
+    bound to a [`RESOLVE`][63b4]d object (if `OBJ` was a definition) or a
+    definition (if `OBJ` was not a definition). This is intended for
+    implementing new operations with the fallback mechanism of [`ARGLIST`][e6bd]*,
+    [`DOCSTRING`][affc]* and [`SOURCE-LOCATION*`][444d].
 
 <a id="x-28DREF-EXT-3A-40DEFINITION-PROPERTIES-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2686,6 +2793,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [1d1d]: #x-28DREF-3A-40BASIC-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29 "Basic Locative Types"
   [1d59]: #x-28DREF-3A-40FUNCTIONLIKE-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for Functions and Methods"
   [1d5a]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pkg.htm "PACKAGE (MGL-PAX:CLHS CLASS)"
+  [1db8]: #x-28DREF-EXT-3ASORT-REFERENCES-20FUNCTION-29 "DREF-EXT:SORT-REFERENCES FUNCTION"
   [1e36]: #x-28DREF-3ADREF-NAME-20-28MGL-PAX-3AREADER-20DREF-3ADREF-29-29 "DREF:DREF-NAME (MGL-PAX:READER DREF:DREF)"
   [1f37]: http://www.lispworks.com/documentation/HyperSpec/Body/t_class.htm "CLASS (MGL-PAX:CLHS CLASS)"
   [2060]: #x-28CLASS-20MGL-PAX-3ALOCATIVE-29 "CLASS MGL-PAX:LOCATIVE"
@@ -2773,6 +2881,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [6ec3]: #x-28DREF-EXT-3ASOURCE-LOCATION-SNIPPET-20FUNCTION-29 "DREF-EXT:SOURCE-LOCATION-SNIPPET FUNCTION"
   [6f15]: #x-28DREF-3A-40DISSECTING-REFERENCES-20MGL-PAX-3ASECTION-29 "Dissecting References"
   [6f95]: http://www.lispworks.com/documentation/HyperSpec/Body/f_file_p.htm "FILE-POSITION (MGL-PAX:CLHS FUNCTION)"
+  [6fdb]: ../README.md#x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "\"mgl-pax\" ASDF/SYSTEM:SYSTEM"
   [7328]: http://www.lispworks.com/documentation/HyperSpec/Body/f_apropo.htm "APROPOS-LIST (MGL-PAX:CLHS FUNCTION)"
   [7334]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpar.htm "DEFVAR (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [7506]: #x-28READTABLE-20MGL-PAX-3ALOCATIVE-29 "READTABLE MGL-PAX:LOCATIVE"
@@ -2790,6 +2899,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [8269]: ../README.md#x-28MGL-PAX-3ADOCUMENT-OBJECT-2A-20GENERIC-FUNCTION-29 "MGL-PAX:DOCUMENT-OBJECT* GENERIC-FUNCTION"
   [82ae]: http://www.lispworks.com/documentation/HyperSpec/Body/t_mem_m.htm "MEMBER (MGL-PAX:CLHS FUNCTION)"
   [82e0]: #x-28METHOD-COMBINATION-20MGL-PAX-3ALOCATIVE-29 "METHOD-COMBINATION MGL-PAX:LOCATIVE"
+  [830e]: http://www.lispworks.com/documentation/HyperSpec/Body/03_df.htm "\"3.4.6\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [840e]: #x-28DREF-3AXREF-LOCATIVE-TYPE-20FUNCTION-29 "DREF:XREF-LOCATIVE-TYPE FUNCTION"
   [8529]: #x-28DREF-EXT-3A-40DEFAULT-DOWNCAST-20MGL-PAX-3ASECTION-29 "Default Downcast"
   [852d]: #x-28DREF-3A-40REFERENCES-GLOSSARY-20MGL-PAX-3ASECTION-29 "References Glossary"
@@ -2836,6 +2946,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [ae5a]: #x-28DREF-EXT-3ASOURCE-LOCATION-FILE-20FUNCTION-29 "DREF-EXT:SOURCE-LOCATION-FILE FUNCTION"
   [affc]: #x-28MGL-PAX-3ADOCSTRING-20FUNCTION-29 "MGL-PAX:DOCSTRING FUNCTION"
   [b038]: #x-28DREF-EXT-3A-2ACHECK-LOCATE-2A-20VARIABLE-29 "DREF-EXT:*CHECK-LOCATE* VARIABLE"
+  [b123]: #x-28DREF-3AARGLIST-PARAMETERS-20FUNCTION-29 "DREF:ARGLIST-PARAMETERS FUNCTION"
   [b3a7]: #x-28DREF-EXT-3ACLASS-DREF-20CLASS-29 "DREF-EXT:CLASS-DREF CLASS"
   [b4e9]: #x-28DREF-EXT-3ATYPE-DREF-20CLASS-29 "DREF-EXT:TYPE-DREF CLASS"
   [b6c4]: #x-28DREF-EXT-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29 "DREF-EXT:DEFINE-LOCATIVE-TYPE MGL-PAX:MACRO"
@@ -2863,6 +2974,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [cc049]: #x-28DREF-3ADREF-LOCATIVE-20-28MGL-PAX-3AREADER-20DREF-3ADREF-29-29 "DREF:DREF-LOCATIVE (MGL-PAX:READER DREF:DREF)"
   [cc32]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_m.htm#macro_lambda_list "\"macro lambda list\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [cda7]: #x-28DREF-3AXREF-20FUNCTION-29 "DREF:XREF FUNCTION"
+  [cf03]: #x-28DREF-EXT-3ASORT-LOCATIVE-TYPES-20FUNCTION-29 "DREF-EXT:SORT-LOCATIVE-TYPES FUNCTION"
   [cf08]: http://www.lispworks.com/documentation/HyperSpec/Body/r_use_va.htm "USE-VALUE (MGL-PAX:CLHS RESTART)"
   [d162]: http://www.lispworks.com/documentation/HyperSpec/Body/e_error.htm "ERROR (MGL-PAX:CLHS CONDITION)"
   [d2cb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_3.htm "DEFINE-SETF-EXPANDER (MGL-PAX:CLHS MGL-PAX:MACRO)"
@@ -2873,6 +2985,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [d6c7]: http://www.lispworks.com/documentation/HyperSpec/Body/f_unionc.htm "UNION (MGL-PAX:CLHS FUNCTION)"
   [d83a]: #x-28SETF-20MGL-PAX-3ALOCATIVE-29 "SETF MGL-PAX:LOCATIVE"
   [d930]: #x-28DREF-3ADREF-20CLASS-29 "DREF:DREF CLASS"
+  [d9ad]: #x-28DREF-3AARGLIST-PARAMETERS-2A-20GENERIC-FUNCTION-29 "DREF:ARGLIST-PARAMETERS* GENERIC-FUNCTION"
   [da2e]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss048_w.htm "\"ISSUE:CLOS-CONDITIONS-AGAIN\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [da65]: #x-28STRUCTURE-20MGL-PAX-3ALOCATIVE-29 "STRUCTURE MGL-PAX:LOCATIVE"
   [da93]: #x-28DREF-3A-40DREF-LOCATIVES-20MGL-PAX-3ASECTION-29 "Locatives for DRef Constructs"

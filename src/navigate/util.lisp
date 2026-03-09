@@ -376,3 +376,11 @@
             (if missing-newline-p
                 (write-string line out)
                 (write-line line out))))))))
+
+(defun adjust-string-case (string)
+  (declare (type string string))
+  (ecase (readtable-case *readtable*)
+    ((:upcase) (string-upcase string))
+    ((:downcase) (string-downcase string))
+    ;; We don't care about convenience with :INVERT.
+    ((:preserve :invert) string)))

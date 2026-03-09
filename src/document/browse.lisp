@@ -487,7 +487,7 @@
 (defun asdf-packages (asdf-system)
   (let* ((packages ())
          (related ())
-         (system (dref::find-system* asdf-system))
+         (system (find-system* asdf-system))
          (system-name (dref-name (locate system)))
          (system-dirname (asdf-system-dirname system)))
     (dolist (package (sort (list-all-packages) #'string< :key #'package-name))
@@ -497,18 +497,18 @@
               ((and system-dirname
                     (starts-with-subseq system-dirname
                                         (asdf-system-dirname
-                                         (dref::find-system* name))))
+                                         (find-system* name))))
                (push package related)))))
     (values (reverse packages) (reverse related))))
 
 (defun related-asdf-systems (asdf-system)
   (let* ((related ())
-         (system (dref::find-system* asdf-system))
+         (system (find-system* asdf-system))
          (system-dirname (asdf-system-dirname system))
          (root-dirname system-dirname))
     (when system-dirname
       (dolist (name (sort (asdf:registered-systems) #'string<))
-        (let* ((system-1 (dref::find-system* name))
+        (let* ((system-1 (find-system* name))
                (dirname-1 (asdf-system-dirname system-1)))
           (when (and (not (eq system system-1))
                      dirname-1
@@ -619,7 +619,7 @@
       (document/open/file
        filename (cons (format nil "## Disambiguation for [~A][pax:dislocated]"
                               (escape-markdown title))
-                      (dref::sort-references (replace-go-targets references)))
+                      (sort-references (replace-go-targets references)))
        :title title)
       filename)))
 
@@ -682,7 +682,7 @@
                      (location (source-location dref)))
                 (when (eq (first location) :location)
                   ;; List of one Swank dspec and location.
-                  `((,(dref::definition-to-dspec dref) ,location)))))))))))
+                  `((,(definition-to-dspec dref) ,location)))))))))))
 
 
 (defun current-definition-pax-url-for-emacs (buffer filename possibilities)
@@ -953,12 +953,12 @@
       (unless (= pos (length string))
         (error "~@<Trailing junk from index ~S in ~S.~:@>" pos string))
       (cond ((and (symbolp pattern)
-                  (equal (dref::adjust-string-case (symbol-name pattern))
-                         (dref::adjust-string-case "none")))
+                  (equal (adjust-string-case (symbol-name pattern))
+                         (adjust-string-case "none")))
              :none)
             ((and (symbolp pattern)
-                  (equal (dref::adjust-string-case (symbol-name pattern))
-                         (dref::adjust-string-case "any")))
+                  (equal (adjust-string-case (symbol-name pattern))
+                         (adjust-string-case "any")))
              :any)
             (t
              pattern)))))
@@ -1153,7 +1153,7 @@
       ;; Sort in reverse order so that PACKAGES in GROUPS come out in
       ;; forward order.
       (dolist (asdf-system-name (sort (asdf:registered-systems) #'string>))
-        (let* ((system (dref::find-system* asdf-system-name))
+        (let* ((system (find-system* asdf-system-name))
                (dir (asdf-system-dirname system)))
           (add-system dir system)))
       (dolist (package (sort (list-all-packages) #'string> :key #'package-name))

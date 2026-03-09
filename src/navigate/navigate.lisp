@@ -159,8 +159,13 @@
 (defun locate-definitions-for-emacs-1 (wall)
   (loop for definition in (definitions-of-wall wall)
         for location = (source-location definition :error :error)
-        collect `(,(prin1-to-string (dref::definition-to-dspec definition))
+        collect `(,(prin1-to-string (definition-to-dspec definition))
                   ,location)))
+
+(defun definition-to-dspec (dref)
+  (if (eq (dref-locative-type dref) 'unknown)
+      (first (dref-locative-args dref))
+      (list (dref-name dref) (dref-locative dref))))
 
 
 (defsection @m-.-prompting (:title "`\\\\M-.` Prompting")
@@ -262,8 +267,15 @@
                         (starts-with-subseq prefix name))
                (push name names))))
       (dolist (locative-type locative-types)
-        (dref::map-names-for-type #'maybe-add locative-type)))
+        (map-names-for-type #'maybe-add locative-type)))
     names))
+
+(defun map-names-for-type (fn locative-type)
+  ;; This is wasteful in that a DREF is created from an XREF while we
+  ;; are only interested in the XREF-NAME.
+  (map-definitions-of-type (lambda (dref)
+                             (funcall fn (xref-name (dref-origin dref))))
+                           locative-type))
 
 ;;; Called when completing the second sexp at the prompt.
 (defun names-or-locatives-for-emacs (sexp-1 prefix
@@ -323,7 +335,7 @@
                         (or (null locative-args)
                             (dref name locative nil)))
                (push name names))))
-      (dref::map-names-for-type #'add locative-type)
+      (map-names-for-type #'add locative-type)
       names)))
 
 (defun list-names-for-locative (prefix locative)
@@ -337,7 +349,7 @@
                         (or (null locative-args)
                             (dref name locative nil)))
                (push name names))))
-      (if (eq (dref::map-names-for-type #'add locative-type)
+      (if (eq (map-names-for-type #'add locative-type)
               'dref::try-interned-symbols)
           (append (list-symbols-for-locative prefix locative) names)
           names))))
@@ -355,7 +367,7 @@
                               (locative-types-maybe-with-definitions))))))))
 
 (defun locative-types-maybe-with-definitions ()
-  (dref::sort-locative-types
+  (sort-locative-types
    (loop for locative-type in (locative-types)
          when (and (external-symbol-p locative-type)
                    (locative-type-may-have-definitions-p locative-type))
@@ -363,7 +375,7 @@
 
 (defun locative-type-may-have-definitions-p (locative-type)
   (eq 'dref::try-interned-symbols
-      (dref::map-names-for-type
+      (map-names-for-type
        (lambda (name)
          (declare (ignore name))
          (return-from locative-type-may-have-definitions-p t))
@@ -390,7 +402,7 @@
 
 (defun dspec-and-source-location-for-emacs (dref)
   (let ((location (source-location dref)))
-    `(,(prin1-to-string (dref::definition-to-dspec dref))
+    `(,(prin1-to-string (definition-to-dspec dref))
       ,(if (null location)
            '(:error "No source location.")
            location))))

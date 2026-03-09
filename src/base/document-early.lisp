@@ -217,8 +217,7 @@
              ;; expensive.
              (if (eq *document-list-view* :terse)
                  (values *package* *readtable*)
-                 (guess-package-and-readtable ,package ,readtable
-                                              ,%dref ,%arglist))
+                 (guess-package-and-readtable ,%dref ,package ,readtable))
            (when ,%arglist
              (write-char #\Space ,%stream)
              (print-arglist ,%arglist ,%stream))
@@ -370,13 +369,19 @@
              (warn "~@<No GIT-VERSION given and can't find .git directory for ~
                    ASDF system~% ~A. Links to the git forge will not be ~
                    generated.~:@>"
-                   (asdf:component-name (dref::find-system* asdf-system))))))))
+                   (asdf:component-name (find-system* asdf-system))))))))
 
 (defun asdf-system-git-root-and-version (system &key default-version)
-  (let ((file (asdf:system-source-file (dref::find-system* system))))
+  (let ((file (asdf:system-source-file (find-system* system))))
     (when (in-git-p file)
       (values (git-root file)
               (or (git-version file) default-version)))))
+
+(defun find-system* (name)
+  ;; This goes through DREF::FIND-SYSTEM*.
+  (let ((dref (dref name 'asdf:system nil)))
+    (when dref
+      (resolve dref))))
 
 (defun in-git-p (pathname)
   (zerop (nth-value

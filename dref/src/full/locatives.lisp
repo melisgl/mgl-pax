@@ -312,6 +312,7 @@
   (reader locative)
   (writer locative)
   (accessor locative)
+  (accessor-slot-definition function)
   (structure-accessor locative)
   (defstruct* macro))
 
@@ -465,7 +466,33 @@
         (resolve-error "Method does not exist."))))
 
 (defmethod arglist* ((dref method-dref))
-  (values (method-arglist (resolve dref)) :ordinary))
+  ;; Some implementations include the specializers, some don't. In any
+  ;; case, we want to replace the specializer objects with their sexp
+  ;; representation.
+  (let* ((arglist (swank-mop:method-lambda-list (resolve dref)))
+         ;; KLUDGE: With ENSURE-LIST, this method works for READER,
+         ;; WRITER and ACCESSOR, too.
+         (specializers (ensure-list (last-elt (dref-locative-args dref))))
+         (n-specializers (length specializers))
+         (seen-special-p nil))
+    (values (loop for arg in arglist
+                  for i upfrom 0
+                  do (when (member arg '(&key &optional &rest &aux
+                                         &allow-other-keys))
+                       (setq seen-special-p t))
+                  collect (let ((name (if (and (not seen-special-p)
+                                               (listp arg)
+                                               (= (length arg) 2))
+                                          (first arg)
+                                          arg)))
+                            (if (and (< i n-specializers)
+                                     ;; Do not clutter the arglist
+                                     ;; with the superfluous T
+                                     ;; specializer.
+                                     (not (eq (elt specializers i) t)))
+                                (list name (elt specializers i))
+                                name)))
+            :specialized)))
 
 (defmethod docstring* ((dref method-dref))
   (documentation* (resolve dref) t))
@@ -690,6 +717,16 @@
     (swank-source-location* (find-method* symbol ()
                                           (list (first locative-args)))
                             symbol `(reader ,(first locative-args)))))
+
+(defun/autoloaded accessor-slot-definition (dref)
+  "Return the SLOT-DEFINITION object corresponding to DREF, which may
+  denote a READER, a WRITER or an ACCESSOR."
+  (nth-value-or-with-obj-or-def (dref 0)
+    (accessor-slot-definition* dref)))
+
+(defmethod accessor-slot-definition* ((dref reader-dref))
+  (find-reader-slot-definition (dref-name dref)
+                               (first (dref-locative-args dref))))
 
 
 ;;;; WRITER locative
@@ -755,6 +792,10 @@
     (swank-source-location* (find-method* symbol ()
                                           (list t (first locative-args)))
                             symbol `(writer ,(first locative-args)))))
+
+(defmethod accessor-slot-definition* ((dref writer-dref))
+  (find-writer-slot-definition (dref-name dref)
+                               (first (dref-locative-args dref))))
 
 
 ;;;; ACCESSOR locative
@@ -828,6 +869,10 @@
     (swank-source-location* (find-method* symbol ()
                                           (list (first locative-args)))
                             symbol `(accessor ,(first locative-args)))))
+
+(defmethod accessor-slot-definition* ((dref accessor-dref))
+  (find-accessor-slot-definition (dref-name dref)
+                                 (first (dref-locative-args dref))))
 
 
 ;;;; STRUCTURE-ACCESSOR locative
@@ -1007,6 +1052,10 @@
   (swank-source-location* (resolve dref) (dref-name dref) 'class))
 
 (defvar %end-of-class-example)
+
+(defmethod arglist* ((dref class-dref))
+  ;; FIXME: Return compound type specifier arglist if any.
+  ())
 
 
 ;;;; STRUCTURE locative

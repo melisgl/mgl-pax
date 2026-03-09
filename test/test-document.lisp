@@ -2147,7 +2147,7 @@ example section
 
 (deftest test-guess-package-from-arglist ()
   (signals-not (error)
-    (is (null (mgl-pax::guess-package-from-arglist '(1 3))))))
+    (is (null (mgl-pax::guess-package-from-arglist '(1 3) :ordinary)))))
 
 
 ;;; See HACKING.md.

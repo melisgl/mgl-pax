@@ -423,7 +423,8 @@
       (setf (page-written-in-second-pass-p *page*) t)))
 
 ;;; Stuff a description of *OBJECTS-BEING-DOCUMENTED* into known
-;;; conditions.
+;;; conditions. Resignal the rest as SIMPLE-ERROR or SIMPLE-WARNING
+;;; with the context in the message.
 (defmacro with-document-context (&body body)
   `(handler-bind ((locate-error
                     (lambda (e)
@@ -441,33 +442,32 @@
                                         (print-document-context nil))))
                         (setf (slot-value e 'message) "~?~A"
                               (slot-value e 'message-args) args))))
-                  (simple-error
+                  ((and error (not locate-error) (not transcription-error))
                     (lambda (e)
                       (if (find-restart 'continue e)
-                          (cerror "Continue."
-                                  "~?~A" (simple-condition-format-control e)
-                                  (simple-condition-format-arguments e)
+                          (cerror "Continue." "~S:~%~A~A" (type-of e) e
                                   (print-document-context nil))
-                          (error "~?~A" (simple-condition-format-control e)
-                                 (simple-condition-format-arguments e)
+                          (error "~S:~%~A~A" (type-of e) e
                                  (print-document-context nil)))))
-                  (simple-warning
+                  (warning
                     (lambda (w)
-                      (warn "~?~A" (simple-condition-format-control w)
-                            (simple-condition-format-arguments w)
-                            (print-document-context nil))
-                      (muffle-warning w))))
+                      (unless (search "While documenting" (princ-to-string w))
+                        (warn "~S~%~A~A" (type-of w) w
+                              (print-document-context nil))
+                        (muffle-warning w)))))
      ,@body))
 
-(defun print-document-context (stream)
+(defun print-document-context (destination)
   (let ((*package* (find-package :keyword))
         (context (loop for object in *objects-being-documented*
                        when (typep object 'dref)
                          collect (list (dref-name object)
                                        (dref-locative object)))))
     (if context
-        (format stream "~%  [While documenting ~{~S~^~%   in ~}]~%" context)
-        (format stream ""))))
+        (format destination "~%  [While documenting ~{~S~^~%   in ~}]~%"
+                context)
+        (format destination ""))))
+
 
 (defun document-documentable (documentable stream)
   (with-document-context
@@ -577,21 +577,20 @@
   ;; documentables to change from the 1st pass to the 2nd.
   (ensure-transcribe-loaded)
   (with-sections-cache ()
-    (with-definitions-cached
-      (dref::with-cover-dtype-cache
-        (with-format (format)
-          (let* ((*print-right-margin* (or *print-right-margin* 80))
-                 (3bmd-grammar:*smart-quotes* nil)
-                 (3bmd-math:*math* t)
-                 (3bmd-code-blocks:*code-blocks* t)
-                 (3bmd-code-blocks:*code-blocks-default-colorize*
-                   (and (not (eq *subformat* :w3m))
-                        :common-lisp))
-                 (3bmd-code-blocks::*colorize-name-map*
-                   (if (eq *subformat* :w3m)
-                       (make-hash-table)
-                       3bmd-code-blocks::*colorize-name-map*)))
-            (document-return stream (%document documentable stream pages))))))))
+    (with-definitions-cached (:dtype '(not (or argument dislocated)))
+      (with-format (format)
+        (let* ((*print-right-margin* (or *print-right-margin* 80))
+               (3bmd-grammar:*smart-quotes* nil)
+               (3bmd-math:*math* t)
+               (3bmd-code-blocks:*code-blocks* t)
+               (3bmd-code-blocks:*code-blocks-default-colorize*
+                 (and (not (eq *subformat* :w3m))
+                      :common-lisp))
+               (3bmd-code-blocks::*colorize-name-map*
+                 (if (eq *subformat* :w3m)
+                     (make-hash-table)
+                     3bmd-code-blocks::*colorize-name-map*)))
+          (document-return stream (%document documentable stream pages)))))))
 
 (defun call-with-format (format fn)
   (case format
@@ -867,28 +866,27 @@
 (defsection @home-section (:title "Home Section")
   "[home-section function][docstring]")
 
-(defun guess-package-and-readtable (requested-package requested-readtable
-                                    reference arglist)
-  (if (and requested-package requested-readtable)
-      (values requested-package requested-readtable)
-      (let ((home-section (first (find-parent-sections reference))))
-        (if home-section
-            (values (or requested-package (section-package home-section))
-                    (or requested-readtable (section-readtable home-section)))
-            (values (or requested-package
-                        (guess-package-from-arglist arglist)
-                        (and (symbolp (xref-name reference))
-                             (symbol-package (xref-name reference)))
-                        (find-package :cl-user))
-                    (or requested-readtable
-                        named-readtables::*standard-readtable*))))))
+(defun guess-package-and-readtable (dref requested-package requested-readtable)
+  (multiple-value-bind (arglist arglist-type) (arglist dref)
+    (if (and requested-package requested-readtable)
+        (values requested-package requested-readtable)
+        (let ((home-section (first (find-parent-sections dref))))
+          (if home-section
+              (values (or requested-package (section-package home-section))
+                      (or requested-readtable (section-readtable home-section)))
+              (values (or requested-package
+                          (guess-package-from-arglist arglist arglist-type)
+                          (and (symbolp (dref-name dref))
+                               (symbol-package (dref-name dref)))
+                          (find-package :cl-user))
+                      (or requested-readtable
+                          named-readtables::*standard-readtable*)))))))
 
 ;;; Unexported argument names are highly informative about *PACKAGE*
 ;;; at read time. No one ever uses fully-qualified internal symbols
 ;;; from another package for arguments, right?
-(defun guess-package-from-arglist (arglist)
-  (let ((args (or (ignore-errors (dref::function-arg-names arglist))
-                  (ignore-errors (dref::macro-arg-names arglist)))))
+(defun guess-package-from-arglist (arglist arglist-type)
+  (let ((args (or (ignore-errors (arglist-parameters arglist arglist-type)))))
     (dolist (arg args)
       (when (and (symbolp arg)
                  (not (external-symbol-in-any-package-p arg)))
@@ -897,8 +895,8 @@
 (defmacro with-dref-doc-package-and-readtable ((dref) &body body)
   (alexandria:once-only (dref)
     `(multiple-value-bind (*package* *readtable*)
-         (guess-package-and-readtable (nth-value 1 (docstring ,dref))
-                                      *readtable* ,dref (arglist ,dref))
+         (guess-package-and-readtable ,dref (nth-value 1 (docstring ,dref))
+                                      *readtable*)
        ,@body)))
 
 (defvar/autoloaded *document-normalize-packages* t
@@ -1244,7 +1242,7 @@
   "Return the @TITLE of OBJECT if it has one or NIL. For
   @CODIFICATION, the title is interpreted in the package returned by
   DOCSTRING. DOCTITLE can be extended via DOCTITLE*."
-  (dref::nth-value-or-with-obj-or-def (object 0)
+  (nth-value-or-with-obj-or-def (object 0)
     (doctitle* object)))
 
 (defmethod doctitle* ((section section))
@@ -2570,8 +2568,8 @@
                     "("
                     ,@(loop
                         for i upfrom 0
-                        for link in (dref::sort-references
-                                     links :key #'link-definition)
+                        for link in (sort-references links
+                                                     :key #'link-definition)
                         append `(,@(unless (zerop i)
                                      '(" "))
                                  ,(%make-reflink `(,(code-fragment i))

@@ -43,7 +43,7 @@
   DREF.
 
   However, to get the dependencies, install this system."
-  :depends-on ("alexandria" "dref" (:feature (:not :swank) "swank"))
+  :depends-on ("alexandria" "dref" "mgl-pax" (:feature (:not :swank) "swank"))
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/full/"

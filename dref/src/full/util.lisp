@@ -379,42 +379,6 @@
               (when (and (null error)
                          (listp arglist))
                 (values arglist foundp)))))))))
-
-;;; Return the names of the function arguments in ARGLIST, which is an
-;;; [ordinary lambda list][clhs]. Handles &KEY, &OPTIONAL, &REST,
-;;; &AUX, &ALLOW-OTHER-KEYS.
-(defun function-arg-names (arglist)
-  (multiple-value-bind (requireds optionals rest keywords other-keys-p auxs)
-      (alexandria:parse-ordinary-lambda-list arglist)
-    (declare (ignore other-keys-p))
-    (let ((names requireds))
-      (dolist (optional optionals)
-        (push (first optional) names)
-        ;; SUPPLIEDP
-        (when (third optional)
-          (push (third optional) names)))
-      (when rest
-        (push rest names))
-      (dolist (keyword keywords)
-        (push (second (first keyword)) names)
-        (when (third keyword)
-          (push (third keyword) names)))
-      (dolist (aux auxs)
-        (push (first aux) names))
-      (reverse names))))
-
-(defun method-arglist (method)
-  (let ((arglist (swank-mop:method-lambda-list method))
-        (seen-special-p nil))
-    ;; Some implementations include the specializers. Remove them.
-    (loop for arg in arglist
-          do (when (member arg '(&key &optional &rest &aux &allow-other-keys))
-               (setq seen-special-p t))
-          collect (if (and (not seen-special-p)
-                           (listp arg)
-                           (= (length arg) 2))
-                      (first arg)
-                      arg))))
 
 
 ;;;; Methods
@@ -481,14 +445,6 @@
 (defun character-string (string)
   (make-array (length string) :element-type 'character
               :initial-contents string))
-
-(defun adjust-string-case (string)
-  (declare (type string string))
-  (ecase (readtable-case *readtable*)
-    ((:upcase) (string-upcase string))
-    ((:downcase) (string-downcase string))
-    ;; We don't care about convenience with :INVERT.
-    ((:preserve :invert) string)))
 
 (defun first-lines (string &optional (n-lines 1))
   (with-output-to-string (out)

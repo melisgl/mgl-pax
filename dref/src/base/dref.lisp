@@ -78,15 +78,16 @@
   ```cl-transcript (:dynenv dref-std-env)
   (definitions 'dref-ext:arglist*)
   ==> (#<DREF ARGLIST* GENERIC-FUNCTION>
-  -->  #<DREF ARGLIST* (METHOD (MGL-PAX::GO-DREF))>
-  -->  #<DREF ARGLIST* (METHOD (LAMBDA-DREF))>
-  -->  #<DREF ARGLIST* (METHOD (TYPE-DREF))>
-  -->  #<DREF ARGLIST* (METHOD (METHOD-DREF))>
-  -->  #<DREF ARGLIST* (METHOD (FUNCTION-DREF))>
+  -->  #<DREF ARGLIST* (METHOD (CLASS-DREF))>
   -->  #<DREF ARGLIST* (METHOD (COMPILER-MACRO-DREF))>
+  -->  #<DREF ARGLIST* (METHOD (FUNCTION-DREF))>
+  -->  #<DREF ARGLIST* (METHOD (LAMBDA-DREF))>
   -->  #<DREF ARGLIST* (METHOD (MACRO-DREF))>
-  -->  #<DREF ARGLIST* (METHOD (SETF-DREF))> #<DREF ARGLIST* (METHOD (T))>
-  -->  #<DREF ARGLIST* (METHOD (DREF))>
+  -->  #<DREF ARGLIST* (METHOD (METHOD-DREF))>
+  -->  #<DREF ARGLIST* (METHOD (SETF-DREF))>
+  -->  #<DREF ARGLIST* (METHOD (TYPE-DREF))> #<DREF ARGLIST* (METHOD (DREF))>
+  -->  #<DREF ARGLIST* (METHOD (MGL-PAX::GO-DREF))>
+  -->  #<DREF ARGLIST* (METHOD (T))>
   -->  #<DREF ARGLIST* (UNKNOWN
   -->                   (DECLAIM ARGLIST*
   -->                            FTYPE))>)
@@ -597,6 +598,9 @@
 (defsection @listing-definitions (:title "Listing Definitions")
   (definitions function)
   (dref-apropos function)
+  (with-definitions-cached macro)
+  (sort-references function)
+  (sort-locative-types function)
   (@reverse-definition-order glossary-term)
   (locative-types function)
   (lisp-locative-types function)
@@ -610,11 +614,12 @@
 
 (define-glossary-term @reverse-definition-order
     (:title "reverse definition order")
-  "Lists of @LOCATIVE-TYPEs and aliases are sometimes in reverse order
-  of the time of their definition. This order is not affected by
-  redefinition, regardless of whether it's by DEFINE-LOCATIVE-TYPE,
-  DEFINE-PSEUDO-LOCATIVE-TYPE, DEFINE-SYMBOL-LOCATIVE-TYPE or
-  DEFINE-LOCATIVE-ALIAS.")
+  "The lists of @LOCATIVE-TYPEs returned by e.g. LOCATIVE-TYPES,
+  LISP-LOCATIVE-TYPES, PSEUDO-LOCATIVE-TYPES and LOCATIVE-ALIASES are
+  in reverse order of the time of their definition. This order is not
+  affected by redefinition, regardless of whether it's by
+  DEFINE-LOCATIVE-TYPE, DEFINE-PSEUDO-LOCATIVE-TYPE,
+  DEFINE-SYMBOL-LOCATIVE-TYPE or DEFINE-LOCATIVE-ALIAS.")
 
 ;;; This is only for not losing track of @REVERSE-DEFINITION-ORDER of
 ;;; locative types and aliases.
@@ -723,13 +728,16 @@
   [DREF][class], or an object denoting its own definition (see
   LOCATE)."
   (arglist function)
+  (arglist-parameters function)
   (docstring function)
   (source-location function))
 
-;;; Evaluate BODY. If its NTH-VALUE is NIL, evaluate it again with OBJ
-;;; bound to a RESOLVEd object (if OBJ was a definition) or a
-;;; definition (if OBJ was not a definition).
 (defmacro nth-value-or-with-obj-or-def ((obj nth-value) &body body)
+  "Evaluate BODY. If its NTH-VALUE is NIL, evaluate it again with OBJ
+  bound to a RESOLVEd object (if OBJ was a definition) or a
+  definition (if OBJ was not a definition). This is intended for
+  implementing new operations with the fallback mechanism of ARGLIST*,
+  DOCSTRING* and SOURCE-LOCATION*."
   (let ((%body (gensym "BODY"))
         (%obj (gensym "OBJ")))
     `(flet ((,%body (,obj) ,@body))
@@ -769,6 +777,11 @@
   => :MACRO
   ```
   ```cl-transcript (:dynenv dref-std-env)
+  (arglist (dref 'arglist* '(method (method-dref))))
+  => ((DREF METHOD-DREF))
+  => :SPECIALIZED
+  ```
+  ```cl-transcript (:dynenv dref-std-env)
   (arglist (dref 'method 'locative))
   => (&REST QUALIFIERS-AND-SPECIALIZERS)
   => :DESTRUCTURING
@@ -786,10 +799,34 @@
   - default values in MACRO lambda lists on AllegroCL;
   - various edge cases involving traced functions.
 
-  Can be extended via ARGLIST*"
+  Can be extended via ARGLIST*."
   (ensure-dref-loaded)
   (nth-value-or-with-obj-or-def (object 1)
     (arglist* object)))
+
+(declaim (ftype function arglist-parameters*))
+
+(defun arglist-parameters (arglist &optional (arglist-type :ordinary))
+  "A utility to extract the names of the parameters from ARGLIST of
+  ARGLIST-TYPE. See the function ARGLIST, for the possible values of
+  ARGLIST-TYPE.
+
+  Note that if ARGLIST is NIL, then ARGLIST-TYPE may also be NIL, in
+  which case NIL is returned.
+
+  ```cl-transcript
+  (arglist #'source-location)
+  => (OBJECT &KEY ERROR)
+  => :ORDINARY
+  ```
+  ```cl-transcript
+  (multiple-value-call 'arglist-parameters (arglist #'source-location))
+  => (OBJECT ERROR)
+  ```
+
+  Can be extended via ARGLIST-PARAMETERS*."
+  (ensure-dref-loaded)
+  (arglist-parameters* arglist arglist-type))
 
 (declaim (ftype function docstring*))
 

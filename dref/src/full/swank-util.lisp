@@ -40,8 +40,7 @@
 ;;; SWANK-BACKEND:FIND-DEFINITIONS.
 (defun swank-definition-name (object)
   (cond ((stringp object)
-         ;; E.g. to find the package when OBJECT is "DREF".
-         (values (make-symbol (adjust-string-case object)) t))
+         (values (make-symbol object) t))
         ((keywordp object)
          ;; E.g. to find the package when OBJECT is :DREF. On SBCL,
          ;; SWANK-BACKEND:FIND-DEFINITIONS barfs on keywords.

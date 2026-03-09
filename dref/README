@@ -53,7 +53,7 @@ the documentation system.
 
         However, to get the dependencies, install this system.
 
-    - Depends on: alexandria, dref, swank(?)
+    - Depends on: alexandria, dref, mgl-pax, swank(?)
 
     - Defsystem depends on: mgl-pax.asdf
 
@@ -104,15 +104,16 @@ DREF-APROPOS:
 
     (definitions 'dref-ext:arglist*)
     ==> (#<DREF ARGLIST* GENERIC-FUNCTION>
-    -->  #<DREF ARGLIST* (METHOD (MGL-PAX::GO-DREF))>
-    -->  #<DREF ARGLIST* (METHOD (LAMBDA-DREF))>
-    -->  #<DREF ARGLIST* (METHOD (TYPE-DREF))>
-    -->  #<DREF ARGLIST* (METHOD (METHOD-DREF))>
-    -->  #<DREF ARGLIST* (METHOD (FUNCTION-DREF))>
+    -->  #<DREF ARGLIST* (METHOD (CLASS-DREF))>
     -->  #<DREF ARGLIST* (METHOD (COMPILER-MACRO-DREF))>
+    -->  #<DREF ARGLIST* (METHOD (FUNCTION-DREF))>
+    -->  #<DREF ARGLIST* (METHOD (LAMBDA-DREF))>
     -->  #<DREF ARGLIST* (METHOD (MACRO-DREF))>
-    -->  #<DREF ARGLIST* (METHOD (SETF-DREF))> #<DREF ARGLIST* (METHOD (T))>
-    -->  #<DREF ARGLIST* (METHOD (DREF))>
+    -->  #<DREF ARGLIST* (METHOD (METHOD-DREF))>
+    -->  #<DREF ARGLIST* (METHOD (SETF-DREF))>
+    -->  #<DREF ARGLIST* (METHOD (TYPE-DREF))> #<DREF ARGLIST* (METHOD (DREF))>
+    -->  #<DREF ARGLIST* (METHOD (MGL-PAX::GO-DREF))>
+    -->  #<DREF ARGLIST* (METHOD (T))>
     -->  #<DREF ARGLIST* (UNKNOWN
     -->                   (DECLAIM ARGLIST*
     -->                            FTYPE))>)
@@ -542,7 +543,7 @@ definitions as in
 
 ## Listing Definitions
 
-- [function] DEFINITIONS NAME &KEY (DTYPE T)
+- [function] DEFINITIONS NAME &KEY (DTYPE T) (SORT T)
 
     List all definitions of NAME that are of DTYPE as DREFs.
 
@@ -553,16 +554,18 @@ definitions as in
         ==> (#<DREF "MGL-PAX" PACKAGE>)
 
         (definitions 'mgl-pax)
-        ==> (#<DREF "mgl-pax" ASDF/SYSTEM:SYSTEM> #<DREF "MGL-PAX" PACKAGE>)
+        ==> (#<DREF "MGL-PAX" PACKAGE> #<DREF "mgl-pax" ASDF/SYSTEM:SYSTEM>)
 
     Similarly, DREF-LOCATIVE-TYPE may be more made more specific:
 
         (definitions 'dref:locate-error :dtype 'type)
         ==> (#<DREF LOCATE-ERROR CONDITION>)
 
+    If SORT, the returned list is ordered according to SORT-REFERENCES.
+
     Can be extended via MAP-DEFINITIONS-OF-NAME.
 
-- [function] DREF-APROPOS NAME &KEY PACKAGE EXTERNAL-ONLY CASE-SENSITIVE (DTYPE T)
+- [function] DREF-APROPOS NAME &KEY PACKAGE EXTERNAL-ONLY CASE-SENSITIVE (DTYPE T) (SORT T)
 
     Return a list of DREFs corresponding to existing
     definitions that match the various arguments. First, (DREF-APROPOS
@@ -642,16 +645,57 @@ definitions as in
 
     - DTYPE matches candidate definition D if (DTYPEP D DTYPE).
 
+    If SORT, the returned list is ordered according to SORT-REFERENCES.
+
     Can be extended via MAP-REFERENCES-OF-TYPE and
     MAP-DEFINITIONS-OF-NAME.
 
+- [macro] WITH-DEFINITIONS-CACHED (&KEY (DTYPE ''TOP)) &BODY BODY
+
+    Allow caching of definition lookups and DTYPE computations.
+    This can provide a speedup when multiple calls are made to
+    DEFINITIONS or DREF-APROPOS within BODY.
+
+    Using this macro makes the promise that, during the dynamic
+    extent of BODY, the following are unchanged:
+
+    - the set of definitions of DTYPE,
+
+    - the set of all locative types,
+
+    - the set of all DTYPEs.
+
+    Note that definitions not of DTYPE are allowed to be made or
+    deleted.
+
+- [function] SORT-REFERENCES REFERENCES &KEY KEY
+
+    Order REFERENCES in an implementation independent way.
+
+    - Non-symbol named references go first and are
+    sorted by the locative type first, then by name and
+    locative args.
+
+    - Symbol-based references go after and are
+    sorted by name first, then by the
+    locative-type, finally
+    by the locative args.
+
+- [function] SORT-LOCATIVE-TYPES LOCATIVE-TYPES
+
+    Sort LOCATIVE-TYPES in an implementation independent way.
+    The order is alphabetical in SYMBOL-NAME, with the PACKAGE-NAME
+    acting as a tie breaker. If UNKNOWN is present among LOCATIVE-TYPES,
+    it goes last.
+
 - [glossary-term] reverse definition order
 
-    Lists of locative types and aliases are sometimes in reverse order
-    of the time of their definition. This order is not affected by
-    redefinition, regardless of whether it's by DEFINE-LOCATIVE-TYPE,
-    DEFINE-PSEUDO-LOCATIVE-TYPE, DEFINE-SYMBOL-LOCATIVE-TYPE or
-    DEFINE-LOCATIVE-ALIAS.
+    The lists of locative types returned by e.g. LOCATIVE-TYPES,
+    LISP-LOCATIVE-TYPES, PSEUDO-LOCATIVE-TYPES and LOCATIVE-ALIASES are
+    in reverse order of the time of their definition. This order is not
+    affected by redefinition, regardless of whether it's by
+    DEFINE-LOCATIVE-TYPE, DEFINE-PSEUDO-LOCATIVE-TYPE,
+    DEFINE-SYMBOL-LOCATIVE-TYPE or DEFINE-LOCATIVE-ALIAS.
 
 - [function] LOCATIVE-TYPES
 
@@ -710,6 +754,10 @@ LOCATE).
             DOCSTRING DREF-DEFCLASS-FORM)
         => :MACRO
 
+        (arglist (dref 'arglist* '(method (method-dref))))
+        => ((DREF METHOD-DREF))
+        => :SPECIALIZED
+
         (arglist (dref 'method 'locative))
         => (&REST QUALIFIERS-AND-SPECIALIZERS)
         => :DESTRUCTURING
@@ -728,7 +776,25 @@ LOCATE).
 
     - various edge cases involving traced functions.
 
-    Can be extended via ARGLIST*
+    Can be extended via ARGLIST*.
+
+- [function] ARGLIST-PARAMETERS ARGLIST &OPTIONAL (ARGLIST-TYPE :ORDINARY)
+
+    A utility to extract the names of the parameters from ARGLIST of
+    ARGLIST-TYPE. See the function ARGLIST, for the possible values of
+    ARGLIST-TYPE.
+
+    Note that if ARGLIST is NIL, then ARGLIST-TYPE may also be NIL, in
+    which case NIL is returned.
+
+        (arglist #'source-location)
+        => (OBJECT &KEY ERROR)
+        => :ORDINARY
+
+        (multiple-value-call 'arglist-parameters (arglist #'source-location))
+        => (OBJECT ERROR)
+
+    Can be extended via ARGLIST-PARAMETERS*.
 
 - [function] DOCSTRING OBJECT
 
@@ -998,6 +1064,11 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
     An :ACCESSOR in DEFCLASS creates a reader and a writer method.
     Somewhat arbitrarily, ACCESSOR references RESOLVE to the writer
     method but can be LOCATEd with either.
+
+- [function] ACCESSOR-SLOT-DEFINITION DREF
+
+    Return the SLOT-DEFINITION object corresponding to DREF, which may
+    denote a READER, a WRITER or an ACCESSOR.
 
 - [locative] STRUCTURE-ACCESSOR &OPTIONAL STRUCTURE-CLASS-NAME
 
@@ -1798,6 +1869,14 @@ macros.
 
     This function is for extension only. Do not call it directly.
 
+- [generic-function] ARGLIST-PARAMETERS* ARGLIST ARGLIST-TYPE
+
+    To extend ARGLIST-PARAMETERS, EQL-specialize
+    ARGLIST-TYPE on, say, :BOA (see BOA lambda lists. This must
+    be done if ARGLIST is extended to return an unsupported value.
+
+    This function is for extension only. Do not call it directly.
+
 - [generic-function] DOCSTRING* OBJECT
 
     To extend DOCSTRING, specialize OBJECT on a normal
@@ -1844,6 +1923,14 @@ macros.
                   (this-source-location))
 
     This function is for extension only. Do not call it directly.
+
+- [macro] NTH-VALUE-OR-WITH-OBJ-OR-DEF (OBJ NTH-VALUE) &BODY BODY
+
+    Evaluate BODY. If its NTH-VALUE is NIL, evaluate it again with OBJ
+    bound to a RESOLVEd object (if OBJ was a definition) or a
+    definition (if OBJ was not a definition). This is intended for
+    implementing new operations with the fallback mechanism of ARGLIST,
+    DOCSTRING and SOURCE-LOCATION*.
 
 #### Definition Properties
 

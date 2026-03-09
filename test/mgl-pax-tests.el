@@ -357,7 +357,7 @@
   (with-temp-lisp-buffer
    (should (null (mgl-pax-locate-definitions '(("non-existent" ())))))
    (let ((location (mgl-pax-locate-definitions '(("cl" ("package"))))))
-     (should (equal (caar location) "(DEFPACKAGE \"COMMON-LISP\")"))
+     (should (equal (caar location) "(\"COMMON-LISP\" PACKAGE)"))
      (should (eq (cl-first (cl-second (cl-first location))) :error)))))
 
 

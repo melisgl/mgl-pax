@@ -564,14 +564,25 @@
       ;; unsepcified according to the CLHS. In practice,
       ;; implementations seem to follow the order of macroexpansion,
       ;; so we may be good.
-      (dref::load-time-value* (handle-note ',parent-name ',args))
+      (load-time-value* (handle-note ',parent-name ',args))
       (locally ,@body))))
 
 (defmacro mark-this-source-location (xref)
-  `(dref::load-time-value*
+  `(load-time-value*
     (when (or *compile-file-truename* *load-truename*)
       (setf (definition-property ,xref 'source-location)
             (this-source-location)))))
+
+(defmacro load-time-value* (form)
+  "Like LOAD-TIME-VALUE, but evaluate FORM exactly once."
+  ;; The standard is not clear on whether LOAD-TIME-VALUE may evaluate
+  ;; its argument zero times. Allegro and CLISP seem to need some
+  ;; prodding to avoid that.
+  ;;
+  ;; Second, we rule out the problematic "same list" case in the spec
+  ;; by including a GENSYM in the form.
+  #+(or allegro clisp) `(setq *used* (load-time-value (progn ',(gensym) ,form)))
+  #-(or allegro clisp) `(load-time-value (progn ',(gensym) ,form)))
 
 (defstruct %note
   name

@@ -30,7 +30,7 @@
   - [document-object* (method (variable-dref t))][docstring]
   - [document-object* (method (setf-dref t))][docstring]
   - [document-object* (method (method-dref t))][docstring]
-  - [document-object* (method (accessor-dref t))][docstring]
+  - [document-object* (method (reader-dref t))][docstring]
   - [document-object* (method (structure-accessor-dref t))][docstring]
   - [document-object* (method (class-dref t))][docstring]
   - [document-object* (method (structure-dref t))][docstring]
@@ -62,14 +62,11 @@
   (multiple-value-bind (arglist arglist-type) (arglist dref)
     (multiple-value-bind (docstring package) (docstring dref)
       (documenting-definition (stream :arglist arglist :package package)
-        (with-dislocated-names (case arglist-type
-                                 ((:macro :deftype :destructuring)
-                                  (dref::macro-arg-names arglist))
-                                 ((:ordinary)
-                                  (or
-                                   (ignore-errors
-                                    (dref::function-arg-names arglist))
-                                   (dref::macro-arg-names arglist))))
+        (with-dislocated-names
+            ;; IGNORE-ERRORS is to handle bad arglists such as
+            ;; SB-C::IR1-CONVERT-NLX-PROTECT, which has &BODY. See
+            ;; MGL-TEST::TEST-NON-FUNCTION-FUNCTION-ARGLIST.
+            (ignore-errors (arglist-parameters arglist arglist-type))
           (document-docstring docstring stream))))))
 
 (declaim (ftype function prin1-to-string*))
@@ -113,25 +110,11 @@
 
 (defun %document-method (dref stream)
   (declare (type (or method-dref setf-dref) dref))
-  (let ((arglist (method-pretty-arglist dref)))
+  (let ((arglist (append (butlast (dref-locative-args dref))
+                         (arglist dref))))
     (documenting-definition (stream :arglist `(:method ,@arglist))
-      (with-dislocated-names (dref::function-arg-names (arglist dref))
+      (with-dislocated-names (arglist-parameters (arglist dref) :specialized)
         (document-docstring (docstring dref) stream)))))
-
-;;; Return a "pretty" list of the method's specializers. Normal
-;;; specializers are replaced by the name of the class, eql
-;;; specializers are replaced by `(EQL ,OBJECT).
-(defun method-pretty-arglist (dref)
-  (multiple-value-bind (qualifiers specializers)
-      (dref::method-locative-qualifiers-and-specializers
-       (dref-locative-args dref))
-    (append qualifiers
-            (mapcar (lambda (name spec)
-                      (if (eq spec t)
-                          name
-                          (list name spec)))
-                    (dref::method-arglist (resolve dref))
-                    specializers))))
 
 
 ;;;; Utilities
@@ -151,29 +134,16 @@
 
 ;;;; ACCESSOR, READER and WRITER locatives
 
-(defmethod document-object* ((dref accessor-dref) stream)
+(defmethod document-object* ((dref reader-dref) stream)
   "For definitions with an [ACCESSOR][locative], [READER][locative] or
   WRITER locative, the class on which they are specialized is printed
   as their arglist."
-  (let ((symbol (dref-name dref))
-        (locative-args (dref-locative-args dref)))
-    (generate-documentation-for-slot-definition
-     (dref::find-accessor-slot-definition symbol (first locative-args))
-     (first locative-args) stream)))
-
-(defmethod document-object* ((dref reader-dref) stream)
-  (let ((symbol (dref-name dref))
-        (locative-args (dref-locative-args dref)))
-    (generate-documentation-for-slot-definition
-     (dref::find-reader-slot-definition symbol (first locative-args))
-     (first locative-args) stream)))
+  (generate-documentation-for-slot-definition
+   (accessor-slot-definition dref) (first (dref-locative-args dref)) stream))
 
 (defmethod document-object* ((dref writer-dref) stream)
-  (let ((symbol (dref-name dref))
-        (locative-args (dref-locative-args dref)))
-    (generate-documentation-for-slot-definition
-     (dref::find-writer-slot-definition symbol (first locative-args))
-     (first locative-args) stream)))
+  (generate-documentation-for-slot-definition
+   (accessor-slot-definition dref) (first (dref-locative-args dref)) stream))
 
 (defun generate-documentation-for-slot-definition (slot-def class stream)
   (let ((arglist (format nil "~A~@[ ~A~]" (md-link (dref class 'class))

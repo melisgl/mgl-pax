@@ -24,6 +24,9 @@
   docstring or source location.")
 
 
+(autoload accessor-slot-definition "dref/full" :export nil)
+
+
 (defmacro defstruct* (name-and-options &rest slot-descriptions)
   "Like DEFSTRUCT, but support :DOCUMENTATION among slot options.
   The documentation is attached to the slot's STRUCTURE-ACCESSOR.

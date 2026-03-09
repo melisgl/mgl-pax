@@ -1,8 +1,8 @@
 (in-package :mgl-pax-test)
 
 (defmacro dref-set= (set-1 set-2)
-  `(endp (different-elements (dref::sort-references ,set-1)
-                             (dref::sort-references ,set-2)
+  `(endp (different-elements (sort-references ,set-1)
+                             (sort-references ,set-2)
                              :pred (lambda (r1 r2)
                                      (and (typep r1 'xref)
                                           (typep r2 'xref)
@@ -149,7 +149,7 @@
   (let ((refs (mapcar (lambda (ref)
                         (list (xref-name ref)
                               (xref-locative ref)))
-                      (dref::sort-references (pax::definitions-of-wall wall)))))
+                      (sort-references (pax::definitions-of-wall wall)))))
     (is (equal refs expected-refs)
         :ctx ("WORD-AND-LOCATIVES-LIST = ~S" wall))))
 

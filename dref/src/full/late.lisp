@@ -2,7 +2,78 @@
 
 (in-readtable pythonic-string-syntax)
 
-(defun/autoloaded definitions (name &key (dtype t))
+(defmethod arglist-parameters* ((arglist null) (arglist-type null))
+  nil)
+
+(defmethod arglist-parameters* (arglist (arglist-type (eql :ordinary)))
+  (multiple-value-bind (requireds optionals rest keywords other-keys-p auxs)
+      (alexandria:parse-ordinary-lambda-list arglist)
+    (declare (ignore other-keys-p))
+    (let ((names requireds))
+      (dolist (optional optionals)
+        (push (first optional) names)
+        ;; SUPPLIEDP
+        (when (third optional)
+          (push (third optional) names)))
+      (when rest
+        (push rest names))
+      (dolist (keyword keywords)
+        (push (second (first keyword)) names)
+        (when (third keyword)
+          (push (third keyword) names)))
+      (dolist (aux auxs)
+        (push (first aux) names))
+      (reverse names))))
+
+(defmethod arglist-parameters* (arglist (arglist-type (eql :macro)))
+  (macro-arglist-parameters arglist))
+
+(defmethod arglist-parameters* (arglist (arglist-type (eql :specialized)))
+  (let ((seen-special-p nil))
+    (loop for arg in arglist
+          for i upfrom 0
+          do (when (member arg '(&key &optional &rest &aux &allow-other-keys))
+               (setq seen-special-p t))
+          collect (if (and (not seen-special-p)
+                           (listp arg)
+                           (= (length arg) 2))
+                      (first arg)
+                      arg))))
+
+(defmethod arglist-parameters* (arglist (arglist-type (eql :deftype)))
+  (arglist-parameters* arglist :macro))
+
+(defmethod arglist-parameters* (arglist (arglist-type (eql :destructuring)))
+  (arglist-parameters* arglist :macro))
+
+
+(defvar *definitions-cache*)
+(defvar *cachable-locative-types*)
+(defvar *non-cachable-locative-types*)
+
+(defmacro with-definitions-cached ((&key (dtype ''top)) &body body)
+  "Allow caching of definition lookups and [DTYPE][@dtypes] computations.
+  This can provide a speedup when multiple calls are made to
+  DEFINITIONS or DREF-APROPOS within BODY.
+
+  Using this macro makes the promise that, during the [dynamic
+  extent][clhs] of BODY, the following are unchanged:
+
+  - the set of @DEFINITIONs of DTYPE,
+  - the set of all @LOCATIVE-TYPEs,
+  - the set of all @DTYPES.
+
+  Note that definitions _not_ of DTYPE are allowed to be made or
+  deleted."
+  (once-only (dtype)
+    `(with-cover-dtype-cache
+       (let* ((*definitions-cache* (make-hash-table :test #'equal))
+              (*cachable-locative-types* (support-dtype ,dtype))
+              (*non-cachable-locative-types*
+                (set-difference (locative-types) *cachable-locative-types*)))
+         ,@body))))
+
+(defun/autoloaded definitions (name &key (dtype t) (sort t))
   """List all definitions of NAME that are of DTYPE as [DREFs][class].
 
   Just as `(DREF NAME LOCATIVE)` returns the canonical definition, the
@@ -15,7 +86,7 @@
 
   ```cl-transcript
   (definitions 'mgl-pax)
-  ==> (#<DREF "mgl-pax" ASDF/SYSTEM:SYSTEM> #<DREF "MGL-PAX" PACKAGE>)
+  ==> (#<DREF "MGL-PAX" PACKAGE> #<DREF "mgl-pax" ASDF/SYSTEM:SYSTEM>)
   ```
 
   Similarly, DREF-LOCATIVE-TYPE may be more made more specific:
@@ -25,9 +96,32 @@
   ==> (#<DREF LOCATE-ERROR CONDITION>)
   ```
 
+  If SORT, the returned list is ordered according to SORT-REFERENCES.
+
   Can be extended via MAP-DEFINITIONS-OF-NAME."""
-  (let ((drefs (definitions-with-locative-types name (cover-dtype dtype))))
-    (filter-covered-drefs (delete-duplicates drefs :test #'xref=) dtype)))
+  (labels
+      ((definitions* (locative-types)
+         (definitions-with-locative-types name locative-types))
+       (maybe-cached ()
+         (if (boundp '*definitions-cache*)
+             (multiple-value-bind (drefs presentp)
+                 (gethash name *definitions-cache*)
+               ;; The common case is DTYPE T or TOP. Hence, we
+               ;; currently cache all cachable definitions even if
+               ;; e.g. DTYPE is a single locative type.
+               (unless presentp
+                 (setq drefs (definitions* *cachable-locative-types*))
+                 (setf (gethash name *definitions-cache*) drefs))
+               (when *non-cachable-locative-types*
+                 (alexandria:appendf drefs (definitions*
+                                            *non-cachable-locative-types*)))
+               (filter-drefs (delete-duplicates drefs :test #'xref=) dtype))
+             (let ((drefs (definitions* (cover-dtype dtype))))
+               (filter-covered-drefs (delete-duplicates drefs :test #'xref=)
+                                     dtype)))))
+    (if sort
+        (sort-references (maybe-cached))
+        (maybe-cached))))
 
 (defun definitions-with-locative-types (name locative-types)
   (let ((drefs ())
@@ -50,7 +144,7 @@
                                             swank-locative-types)))))
 
 (defun/autoloaded dref-apropos (name &key package external-only case-sensitive
-                                     (dtype t))
+                                     (dtype t) (sort t))
   """Return a list of [DREF][class]s corresponding to existing
   definitions that match the various arguments. First, `(DREF-APROPOS
   NIL)` lists all definitions in the running Lisp and maybe more (e.g.
@@ -135,6 +229,8 @@
 
   - DTYPE matches candidate definition `D` if `(DTYPEP D DTYPE)`.
 
+  If SORT, the returned list is ordered according to SORT-REFERENCES.
+
   Can be extended via MAP-REFERENCES-OF-TYPE and
   MAP-DEFINITIONS-OF-NAME."""
   (let ((locative-types (cover-dtype dtype))
@@ -200,9 +296,11 @@
                                      external-only)
               do (dolist (dref (definitions-with-locative-types symbol to-try))
                    (push dref drefs))))
-      (sort-references
-       (filter-covered-drefs (remove-duplicate-drefs/nonstable drefs)
-                             dtype)))))
+      (let ((drefs (filter-covered-drefs
+                    (remove-duplicate-drefs/nonstable drefs) dtype)))
+        (if sort
+            (sort-references drefs)
+            drefs)))))
 
 (defun matching-symbols (package-pred symbol-pred external-only)
   (let ((h (make-hash-table)))
@@ -223,9 +321,13 @@
                           (return))))))))
     h))
 
-;;; Order REFERENCES in an implementation independent way.
-;;; PAX:PAX-APROPOS depends on non-symbol names coming first.
+
 (defun sort-references (references &key key)
+  "Order REFERENCES in an implementation independent way.
+
+  - @SORT-REFERENCES-NON-SYMBOL
+
+  - @SORT-REFERENCES-SYMBOL"
   (flet ((sort-key (reference)
            (let* ((reference (if key (funcall key reference) reference))
                   (locative-type (xref-locative-type reference)))
@@ -233,19 +335,24 @@
                ;; Avoid mentions of BASE-CHAR and such.
                (let ((*print-readably* nil))
                  (if (not (symbolp (xref-name reference)))
-                     ;; Non-symbol named references go first ("1.")
-                     ;; and are sorted by locative type, name,
-                     ;; locative args in that order.
-                     (format nil "1. ~A ~S ~S"
-                             (locative-type-to-sort-key locative-type)
-                             (xref-name reference)
-                             (xref-locative-args reference))
-                     ;; Symbol-based reference go after ("2.") and are
-                     ;; sorted by name first.
-                     (format nil "2. ~S ~A ~S"
-                             (xref-name reference)
-                             (locative-type-to-sort-key locative-type)
-                             (xref-locative-args reference))))))))
+                     (note @sort-references-non-symbol
+                       """Non-symbol named references go first and are
+                       [sorted by the locative type][
+                       sort-locative-types] first, then by name and
+                       locative args."""
+                       (format nil "1. ~A ~S ~S"
+                               (locative-type-to-sort-key locative-type)
+                               (xref-name reference)
+                               (xref-locative-args reference)))
+                     (note @sort-references-symbol
+                       """Symbol-based references go after and are
+                       sorted by name first, then [by the
+                       locative-type][ sort-locative-types], finally
+                       by the locative args."""
+                       (format nil "2. ~S ~A ~S"
+                               (xref-name reference)
+                               (locative-type-to-sort-key locative-type)
+                               (xref-locative-args reference)))))))))
     (sort-list-with-precomputed-key references #'string< :key #'sort-key)))
 
 (defun locative-type-to-sort-key (locative-type)
@@ -258,6 +365,10 @@
           (package-name (symbol-package locative-type))))
 
 (defun sort-locative-types (locative-types)
+  "Sort LOCATIVE-TYPES in an implementation independent way.
+  The order is alphabetical in SYMBOL-NAME, with the PACKAGE-NAME
+  acting as a tie breaker. If UNKNOWN is present among LOCATIVE-TYPES,
+  it goes last."
   (sort locative-types #'string< :key #'locative-type-to-sort-key))
 
 ;;; Like REMOVE-DUPLICATES but does not maintain a stable order and

@@ -40,11 +40,14 @@
            #:make-source-location #:map-definitions-of-name
            #:map-definitions-of-type #:method-combination-dref
            #:method-dref #:move-definition-properties
+           #:nth-value-or-with-obj-or-def
            #:package-dref #:reader-dref #:readtable-dref
            #:resolve* #:resolve-error #:restart-dref
            #:setf-compiler-macro-dref #:setf-dref
            #:setf-function-dref #:setf-generic-function-dref
-           #:setf-method-dref #:source-location*
+           #:setf-method-dref
+           #:sort-locative-types #:sort-references
+           #:source-location*
            #:source-location-adjusted-file-position
            #:source-location-buffer
            #:source-location-buffer-position
@@ -61,7 +64,8 @@
         #:pythonic-string-reader)
   ;; Some of these are in autoloaded sections, so we export everything
   ;; manually.
-  (:export #:accessor #:arglist #:class #:compiler-macro
+  (:export #:accessor #:accessor-slot-definition
+           #:arglist #:arglist-parameters #:class #:compiler-macro
            #:condition #:constant #:declaration #:define-dtype
            #:define-restart #:definitions #:defstruct* #:docstring #:dref
            #:dref-apropos #:dref-locative #:dref-locative-args
@@ -77,7 +81,7 @@
            #:setf-generic-function #:setf-method
            #:source-location #:structure #:structure-accessor
            #:symbol-macro #:top #:type #:unknown
-           #:variable #:writer #:xref
+           #:variable #:with-definitions-cached #:writer #:xref
            #:xref-locative #:xref-locative-args
            #:xref-locative-type #:xref-name #:xref=))
 

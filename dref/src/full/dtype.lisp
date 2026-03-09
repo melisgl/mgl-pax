@@ -220,11 +220,12 @@
 (defun cover-dtype (dtype)
   (let ((cache *cover-dtype-cache*))
     (if cache
-        (let ((cover (gethash dtype cache 'not-cached)))
-          (if (eq cover 'not-cached)
-              (setf (gethash dtype cache) (cover-dtype* dtype nil))
-              cover))
-        (values (cover-dtype* dtype nil)))))
+        (multiple-value-bind (cover presentp) (gethash dtype cache)
+          (if presentp
+              cover
+              (setf (gethash dtype cache)
+                    (order-locative-types (cover-dtype* dtype nil)))))
+        (values (order-locative-types (cover-dtype* dtype nil))))))
 
 (defun cover-dtype* (dtype negatep)
   ;; Expanding gets rid of one level of derived types (but children
@@ -286,22 +287,30 @@
   (error "~@<Invalid ~S ~S.~:@>" 'dtype dtype))
 
 
+;;; Like COVER-DTYPE, but return the list of locative types fully
+;;; contained in DTYPE.
+(defun support-dtype (dtype)
+  (let ((cover (cover-dtype `(not ,dtype))))
+    ;; This maintains ORDER-LOCATIVE-TYPES order.
+    (loop for locative-type in (locative-types)
+          unless (member locative-type cover)
+            collect locative-type)))
+
+(defun exact-dtype-cover-p (dtype)
+  ;; Both are in ORDER-LOCATIVE-TYPES order.
+  (equal (cover-dtype dtype) (support-dtype dtype)))
+
 ;;; Filter DREFS that match one of the locative types in (COVER-DTYPE
-;;; DTYPE), such as when come from DEFINITIONS or DREF-APROPOS, to
+;;; DTYPE), such as those coming from DEFINITIONS or DREF-APROPOS, to
 ;;; match DTYPE.
 (defun filter-covered-drefs (drefs dtype)
-  (if (inexact-dtype-cover-p dtype)
+  (if (exact-dtype-cover-p dtype)
+      drefs
+      (filter-drefs drefs dtype)))
+
+(defun filter-drefs (drefs dtype)
+  (if (eq dtype 'top)
+      drefs
       (loop for dref in drefs
             when (dtypep dref dtype)
-              collect dref)
-      drefs))
-
-(defun inexact-dtype-cover-p (dtype)
-  (let ((dtype (dtypexpand dtype)))
-    (unless (atom dtype)
-      (if (member (first dtype) '(and or not))
-          (loop for child in (rest dtype)
-                  thereis (inexact-dtype-cover-p child))
-          ;; This a bit conservative. For example, it deems (FUNCTION)
-          ;; inexact.
-          t))))
+              collect dref)))

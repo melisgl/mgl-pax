@@ -2,7 +2,6 @@
 
 (defun list-of-one-p (list)
   (and list (null (cdr list))))
-
 
 (defun backslash-escape (string chars)
   (with-output-to-string (stream)
@@ -13,28 +12,8 @@
         (write-char char stream)))))
 
 
-;;;; Cached DREF:DEFINITIONS with all LOCATIVE-TYPES.
-
-(defvar *definitions-cache*)
-
-(defmacro with-definitions-cached (&body body)
-  `(let ((*definitions-cache* (make-hash-table :test 'equal)))
-     ,@body))
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defparameter *local-dtype* '(or argument dislocated)))
-
-(defparameter *non-local-dtype* `(not ,*local-dtype*))
-
 (defun definitions* (name)
-  (if (boundp '*definitions-cache*)
-      (multiple-value-bind (drefs presentp) (gethash name *definitions-cache*)
-        (unless presentp
-          (setq drefs (definitions name :dtype *non-local-dtype*))
-          (setf (gethash name *definitions-cache*) drefs))
-        ;; @LOCAL-DEFINITIONs are not cacheable.
-        (append drefs (definitions name :dtype *local-dtype*)))
-      (definitions name :dtype 'top)))
+  (definitions name :dtype 'top :sort nil))
 
 
 ;;;; Like the DREF function and DEFINITIONS*, but for references and
@@ -229,7 +208,7 @@
 (defmacro do-asdf-files ((system-name filename) &body body)
   (alexandria:with-unique-names (system component)
     `(dolist (,system-name (asdf:registered-systems))
-       (let ((,system (dref::find-system* ,system-name)))
+       (let ((,system (find-system* ,system-name)))
          (dolist (,component (asdf/component:sub-components ,system))
            (when (typep ,component 'asdf:cl-source-file)
              (when-let (,filename (truenameish
