@@ -7,10 +7,12 @@
 ;;; about. If no source location is found, then return NIL.
 (defun swank-object-source-location (object)
   (when object
-    (let ((location (swank-backend:find-source-location
-                     (if (functionp object)
-                         (unencapsulated-function object)
-                         object))))
+    ;; Source files may have #. in them.
+    (let* ((*read-eval* t)
+           (location (swank-backend:find-source-location
+                      (if (functionp object)
+                          (unencapsulated-function object)
+                          object))))
       (when (and (listp location)
                  (eq (first location) :location))
         location))))
