@@ -1,3 +1,5 @@
+![](web/pax-logo.jpg)
+
 <a id="x-28MGL-PAX-3A-40PAX-MANUAL-20MGL-PAX-3ASECTION-29"></a>
 
 # PAX Manual

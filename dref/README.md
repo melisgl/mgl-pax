@@ -1,3 +1,5 @@
+![](../web/dref-logo.jpg)
+
 <a id="x-28DREF-3A-40DREF-MANUAL-20MGL-PAX-3ASECTION-29"></a>
 
 # DRef Manual

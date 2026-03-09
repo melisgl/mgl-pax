@@ -478,16 +478,24 @@ GitHub if possible.")
        :output (,(merge-pathnames pax-file output-dir)
                 ,@*default-output-options*)
        ,@(when (member format '(:plain :markdown))
-           '(:footer-fn print-markdown-footer))
+           '(:header-fn print-pax-markdown-header
+             :footer-fn print-markdown-footer))
        :uri-fragment ,pax-file
        :source-uri-fn ,source-uri-fn)
       (:objects (, dref::@dref-manual)
        :output (,(merge-pathnames dref-file output-dir)
                 ,@*default-output-options*)
        ,@(when (member format '(:plain :markdown))
-           '(:footer-fn print-markdown-footer))
+           '(:header-fn print-dref-markdown-header
+             :footer-fn print-markdown-footer))
        :uri-fragment ,dref-file
        :source-uri-fn ,source-uri-fn))))
+
+(defun print-pax-markdown-header (stream)
+  (format stream "![](web/pax-logo.jpg)~%~%"))
+
+(defun print-dref-markdown-header (stream)
+  (format stream "![](../web/dref-logo.jpg)~%~%"))
 
 (defun update-pax-readmes (&key (output-dir ""))
   (let ((*document-url-versions* '(1)))
