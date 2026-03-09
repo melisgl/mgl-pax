@@ -2575,10 +2575,10 @@ the details, see the Elisp function `slime-goto-source-location`.
 
 - [function] **MAKE-SOURCE-LOCATION** *&KEY FILE FILE-POSITION BUFFER BUFFER-POSITION SNIPPET*
 
-    Make a Swank source location. The ultimate reference is `slime.el`.
-    When `SNIPPET` is provided, the match nearest to `FILE-POSITION` is
-    determined (see the Elisp `slime-isearch` and
-    [`SOURCE-LOCATION-ADJUSTED-FILE-POSITION`][daacd]).
+    Make a Swank source location. The ultimate reference is
+    `slime-goto-source-location` in `slime.el`. When `SNIPPET` is
+    provided, the match nearest to `FILE-POSITION` is determined (see the
+    Elisp `slime-isearch` and [`SOURCE-LOCATION-ADJUSTED-FILE-POSITION`][daacd]).
 
 <a id="x-28DREF-EXT-3ASOURCE-LOCATION-P-20FUNCTION-29"></a>
 

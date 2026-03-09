@@ -18,10 +18,10 @@
 
 (defun/autoloaded make-source-location (&key file file-position
                                              buffer buffer-position snippet)
-  "Make a Swank source location. The ultimate reference is `slime.el`.
-  When SNIPPET is provided, the match nearest to FILE-POSITION is
-  determined (see the Elisp `slime-isearch` and
-  SOURCE-LOCATION-ADJUSTED-FILE-POSITION)."
+  "Make a Swank source location. The ultimate reference is
+  `slime-goto-source-location` in `slime.el`. When SNIPPET is
+  provided, the match nearest to FILE-POSITION is determined (see the
+  Elisp `slime-isearch` and SOURCE-LOCATION-ADJUSTED-FILE-POSITION)."
   (list :location
         (cond ((and file buffer)
                (list :buffer-and-file buffer (namestring file)))

@@ -1190,11 +1190,12 @@
 (defmethod source-location* ((dref asdf-system-dref))
   (let ((system (resolve dref)))
     (if-let (location (asdf/system:system-source-file system))
-      `(:location
-        (:file ,(namestring location))
-        (:position 1)
-        (:snippet ,(format nil "defsystem ~S" (dref-name dref))))
-      `(:error ,(format nil "ASDF system ~A doesn't contain any location information."
+      (make-source-location
+       :file (namestring location)
+       :file-position 1
+       :snippet (format nil "defsystem ~S" (dref-name dref)))
+      `(:error ,(format nil "ASDF system ~A doesn't contain ~
+                            source location information."
                         (asdf:primary-system-name system))))))
 
 
@@ -1379,12 +1380,12 @@
       (values docstring (find-package* package)))))
 
 (defmethod source-location* ((dref lambda-dref))
-  (let* ((args (dref-locative-args dref))
-         (file (getf args :file))
-         (file-position (getf args :file-position))
-         (snippet (getf args :snippet)))
-    (make-source-location :file file :file-position file-position
-                          :snippet snippet)))
+  (let ((args (dref-locative-args dref)))
+    (make-source-location :file (getf args :file)
+                          :file-position (getf args :file-position)
+                          :buffer (getf args :buffer)
+                          :buffer-position (getf args :buffer-position)
+                          :snippet (getf args :snippet))))
 
 
 (defsection @unknown-definitions (:title "Locatives for Unknown Definitions")

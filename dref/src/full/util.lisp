@@ -166,8 +166,7 @@
 
 (defun function-name (function)
   (let* ((function (unencapsulated-function function))
-         (name #-clisp (swank-backend:function-name function)
-               #+clisp (system::function-name function)))
+         (name (swank-backend:function-name function)))
     #-abcl
     (let ((kind (and (listp name)
                      (= (length name) 2)
