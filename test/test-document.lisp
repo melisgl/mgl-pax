@@ -1505,7 +1505,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
                            (dref '#:non-interned-pkg-name 'package))
                      "[NON-INTERNED-PKG-NAME][5a00]")
          (check-pred (dref "PAX" 'package)
-                     "- [package] **\"MGL-PAX\"** *NICKNAMES (\"PAX\")*"))
+                     "- [package] **\"MGL-PAX\"** *:NICKNAMES (\"PAX\")*"))
     (delete-package 'interned-pkg-name)
     (delete-package '#:non-interned-pkg-name)))
 

@@ -4442,7 +4442,8 @@ are for writing new `DOCUMENT-OBJECT*` methods, which emit Markdown.
     
         - If it is a list, then it is must be a [lambda list][98ff] and
           is printed without the outermost parens and with the package
-          names removed from the argument names.
+          names removed from the argument names. [Keywords][88a0] are
+          printed with a leading colon.
     
         - If it is a string, then it must be valid Markdown.
     
@@ -4801,6 +4802,7 @@ they are presented.
   [875e]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-TO-HYPERSPEC* VARIABLE"
   [876d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_ensu_1.htm "ENSURE-DIRECTORIES-EXIST (MGL-PAX:CLHS FUNCTION)"
   [886c]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cge.htm "\"22.3.7.5\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
+  [88a0]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_k.htm#keyword "\"keyword\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [88a7]: #x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "MGL-PAX:SECTION-READTABLE (MGL-PAX:READER MGL-PAX:SECTION)"
   [88cf]: #x-28MGL-PAX-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29 "name"
   [8a58]: #x-28MGL-PAX-3A-40SECTIONS-20MGL-PAX-3ASECTION-29 "Sections"

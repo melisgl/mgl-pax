@@ -3308,7 +3308,9 @@
                       (format out "~A"
                               (escape-markdown
                                (maybe-downcase-all-uppercase-code
-                                (symbol-name arg)))))
+                                (if (keywordp arg)
+                                    (prin1-to-string arg)
+                                    (symbol-name arg))))))
                      ((atom arg)
                       (format out "~A" (prin1-to-markdown arg)))
                      (*nesting-possible-p*

@@ -3897,7 +3897,8 @@ are for writing new DOCUMENT-OBJECT* methods, which emit Markdown.
 
         - If it is a list, then it is must be a lambda list and
           is printed without the outermost parens and with the package
-          names removed from the argument names.
+          names removed from the argument names. Keywords are
+          printed with a leading colon.
 
         - If it is a string, then it must be valid Markdown.
 
