@@ -45,10 +45,10 @@
       => T
       ```
 
-      It is an error if DTYPE is an ATOM but is not a @LOCATIVE-TYPE,
-      but (the empty) argument list of bare locative types are not
-      checked even if having no arguments makes them [invalid
-      locatives][@locative].
+      It is an error if DTYPE is an ATOM but not a @LOCATIVE-TYPE. On
+      the other hand, (the empty) argument list of atomic locatives is
+      not checked even if having no arguments makes them
+      [invalid][@locative].
 
   - _[Compound locatives][@locative]:_ Locatives in their compound
     form are validated and must match exactly (under EQUAL, as in

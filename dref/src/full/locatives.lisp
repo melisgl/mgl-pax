@@ -14,9 +14,9 @@
 
 
 (defsection @basic-locative-types (:title "Basic Locative Types")
-  """The following are the @LOCATIVE-TYPEs supported out of the
-  box. As all locative types, they are named by symbols. When there is
-  a CL type corresponding to the reference's locative type, the
+  """The following are the @LOCATIVE-TYPEs supported out of the box.
+  Like all locative types, they are named by symbols. When there is a
+  CL type corresponding to the reference's locative type, the
   references can be RESOLVEd to a unique object as is the case in
 
   ```cl-transcript (:dynenv dref-std-env)
@@ -925,7 +925,7 @@
 ;;;; TYPE locative
 
 (define-locative-type type ()
-  "This locative can refer to [types and classes][clhs] and
+  "This locative can refer to [types and classes][clhs] as well as
   [conditions][clhs], simply put, to things defined by DEFTYPE,
   DEFCLASS and DEFINE-CONDITION.
 

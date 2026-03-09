@@ -263,8 +263,8 @@
       interpreted as LOCATIVE-TYPE, and LAMBDA-LIST is NIL.
 
   - LOCATIVE-SUPERTYPES is a list of @LOCATIVE-TYPEs whose
-    DREF-CLASSes are added to prepended to the list of superclasses
-    this definition.
+    DREF-CLASSes are prepended to the list of superclasses this
+    definition.
 
   Locative types defined with DEFINE-LOCATIVE-TYPE can be listed with
   LISP-LOCATIVE-TYPES."""
@@ -439,7 +439,7 @@
   - If the OBJECT argument of LOCATE is a DREF, then it is returned
     without processing.
 
-  Else, LOCATE first needs to finds the initial definition."
+  Else, LOCATE first needs to find the initial definition."
   (let* ((*locating-object* object)
          (dref (locate-initial-definition object)))
     (declare (type dref dref))
@@ -575,10 +575,10 @@
   (:method (object locative-type)
     nil)
   (:method ((dref dref) locative-type)
-    "Downcasting to [direct locative subtypes][
-    locative-type-direct-subs] is performed by default by looking up
-    the definition where the locative type is replaced with its sub
-    while the name and the locative args remain the same."
+    "By default, downcasting to [direct locative subtypes][
+    locative-type-direct-subs] is performed by looking up the
+    definition where the locative type is replaced with its sub while
+    the name and the locative args remain the same."
     (when (member locative-type (locative-type-direct-subs
                                  (dref-locative-type dref)))
       (with-locate-error-ignored
@@ -817,8 +817,8 @@
   to an instance DREF-CLASS, which denotes a valid but potentially
   [non-canonical][ @canonicalization] definition.
 
-  Note the @DEFAULT-DOWNCAST often suffices, and defining a cast is
-  only necessary if the [name][ @cast-name-change] or the locative
+  Note that the @DEFAULT-DOWNCAST often suffices, and defining a cast
+  is only necessary if the [name][ @cast-name-change] or the locative
   args change:
 
   ```
@@ -835,7 +835,7 @@
   - If LOCATIVE-TYPE is one of PSEUDO-LOCATIVE-TYPES, then DREF-CLASS
     must be of another pseudo locative type.
 
-  - DREF-CLASS is either a direct _downcast_ or an potentially
+  - DREF-CLASS is either a direct _downcast_ or a potentially
     non-direct _upcast_.
 
       - _Downcast:_ In this case, LOCATIVE-TYPE is one of
@@ -843,7 +843,7 @@
         DREF-CLASS).
 
           Downcasting to non-direct subtypes is done in multiple
-          steps. Consequently,the BODY of a downcast can rely on
+          steps. Consequently, the BODY of a downcast can rely on
           (CLASS-OF DREF) being CLASS, not any subclass thereof.
 
       - _Upcast:_ LOCATIVE-TYPE is different but reachable

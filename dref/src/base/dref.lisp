@@ -29,8 +29,9 @@
   Some [defining forms][clhs] do not create first-class
   [objects][(clhs glossary-term)]. For example, DEFUN creates
   [FUNCTION][class] objects, but DEFVAR does not create variable
-  objects as no such thing exists. The main purpose of this library is
-  to fill this gap with the introduction of [DREF][class] objects:
+  objects, as no such thing exists in Common Lisp. The main purpose of
+  this library is to fill this gap with the introduction of
+  [DREF][class] objects:
 
   ```cl-transcript
   (defvar *my-var* nil

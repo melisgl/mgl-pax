@@ -18,8 +18,9 @@ the documentation system.
 
     - Version: 0.4.11
 
-    - Description: Reify definitions, provide portable access to arglist,
-    docstrings and source locations in an extensible framework.
+    - Description: Reify definitions, provide portable access to
+    arglists, docstrings and source locations in an extensible
+    framework.
 
     - Long Description: DEFUN defines a first-class object: a FUNCTION.
     DEFVAR does not. The DRef library provides a way to refer to all
@@ -63,8 +64,9 @@ What if definitions were first-class objects?
 Some defining forms do not create first-class
 objects. For example, DEFUN creates
 FUNCTION objects, but DEFVAR does not create variable
-objects as no such thing exists. The main purpose of this library is
-to fill this gap with the introduction of DREF objects:
+objects, as no such thing exists in Common Lisp. The main purpose of
+this library is to fill this gap with the introduction of
+DREF objects:
 
     (defvar *my-var* nil
       "This is my var.")
@@ -495,10 +497,10 @@ definitions as in
             (dtypep (dref 'number 'class) 'type)
             => T
 
-        It is an error if DTYPE is an ATOM but is not a locative type,
-        but (the empty) argument list of bare locative types are not
-        checked even if having no arguments makes them invalid
-        locatives.
+        It is an error if DTYPE is an ATOM but not a locative type. On
+        the other hand, (the empty) argument list of atomic locatives is
+        not checked even if having no arguments makes them
+        invalid.
 
     - Compound locatives: Locatives in their compound
       form are validated and must match exactly (under EQUAL, as in
@@ -578,7 +580,7 @@ definitions as in
 
     PAX has a live browsing frontend.
 
-    Roughly speaking, when NAME or PACKAGE is a SYMBOL, they must match
+    Roughly speaking, when NAME or PACKAGE is a SYMBOL, it must match
     the whole name of the definition:
 
         (dref-apropos 'method :package :dref :external-only t)
@@ -773,9 +775,9 @@ LOCATE).
 
 ## Basic Locative Types
 
-The following are the locative types supported out of the
-box. As all locative types, they are named by symbols. When there is
-a CL type corresponding to the reference's locative type, the
+The following are the locative types supported out of the box.
+Like all locative types, they are named by symbols. When there is a
+CL type corresponding to the reference's locative type, the
 references can be RESOLVEd to a unique object as is the case in
 
     (resolve (dref 'print 'function))
@@ -1030,7 +1032,7 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
 
     - Direct locative subtypes: CLASS
 
-    This locative can refer to types and classes and
+    This locative can refer to types and classes as well as
     conditions, simply put, to things defined by DEFTYPE,
     DEFCLASS and DEFINE-CONDITION.
 
@@ -1105,7 +1107,7 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
 
     Associate a definition with the name of a restart, which must be a symbol.
     LAMBDA-LIST should be what calls like (INVOKE-RESTART '<SYMBOL>
-    ...) must conform to, but this not enforced.
+    ...) must conform to, but this is not enforced.
 
     PAX "defines" standard CL restarts such as USE-VALUE with
     DEFINE-RESTART:
@@ -1372,8 +1374,8 @@ by DEFINE-LOCATIVE-TYPE and DEFINE-PSEUDO-LOCATIVE-TYPE.
         interpreted as LOCATIVE-TYPE, and LAMBDA-LIST is NIL.
 
     - LOCATIVE-SUPERTYPES is a list of locative types whose
-      DREF-CLASSes are added to prepended to the list of superclasses
-      this definition.
+      DREF-CLASSes are prepended to the list of superclasses this
+      definition.
 
     Locative types defined with DEFINE-LOCATIVE-TYPE can be listed with
     LISP-LOCATIVE-TYPES.
@@ -1466,7 +1468,7 @@ is as follows.
 - If the OBJECT argument of LOCATE is a DREF, then it is returned
   without processing.
 
-Else, LOCATE first needs to finds the initial definition.
+Else, LOCATE first needs to find the initial definition.
 
 #### Initial Definition
 
@@ -1521,9 +1523,9 @@ cast fails.
 
 ##### Default Downcast
 
-Downcasting to direct locative subtypes is performed by default by looking up
-the definition where the locative type is replaced with its sub
-while the name and the locative args remain the same.
+By default, downcasting to direct locative subtypes is performed by looking up the
+definition where the locative type is replaced with its sub while
+the name and the locative args remain the same.
 
 ##### Cast Name Change
 
@@ -1661,8 +1663,8 @@ macros.
     to an instance DREF-CLASS, which denotes a valid but potentially
     non-canonical definition.
 
-    Note the Default Downcast often suffices, and defining a cast is
-    only necessary if the name or the locative
+    Note that the Default Downcast often suffices, and defining a cast
+    is only necessary if the name or the locative
     args change:
 
         (define-cast accessor ((dref reader-dref))
@@ -1677,7 +1679,7 @@ macros.
     - If LOCATIVE-TYPE is one of PSEUDO-LOCATIVE-TYPES, then DREF-CLASS
       must be of another pseudo locative type.
 
-    - DREF-CLASS is either a direct downcast or an potentially
+    - DREF-CLASS is either a direct downcast or a potentially
       non-direct upcast.
 
         - Downcast: In this case, LOCATIVE-TYPE is one of
@@ -1685,7 +1687,7 @@ macros.
           DREF-CLASS).
 
             Downcasting to non-direct subtypes is done in multiple
-            steps. Consequently,the BODY of a downcast can rely on
+            steps. Consequently, the BODY of a downcast can rely on
             (CLASS-OF DREF) being CLASS, not any subclass thereof.
 
         - Upcast: LOCATIVE-TYPE is different but reachable

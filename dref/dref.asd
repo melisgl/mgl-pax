@@ -9,8 +9,9 @@
   :homepage "http://github.com/melisgl/mgl-pax/tree/master/dref"
   :bug-tracker "https://github.com/melisgl/mgl-pax/issues"
   :source-control (:git "https://github.com/melisgl/mgl-pax.git")
-  :description "Reify definitions, provide portable access to arglist,
-  docstrings and source locations in an extensible framework."
+  :description "Reify definitions, provide portable access to
+  arglists, docstrings and source locations in an extensible
+  framework."
   :long-description "DEFUN defines a first-class object: a FUNCTION.
   DEFVAR does not. The DRef library provides a way to refer to all
   definitions and smooths over the differences between

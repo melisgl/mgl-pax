@@ -9,7 +9,7 @@
 (define-definer-for-symbol-locative-type define-restart restart
   "Associate a definition with the name of a restart, which must be a symbol.
   LAMBDA-LIST should be what calls like `(INVOKE-RESTART '<SYMBOL>
-  ...)` must conform to, but this not enforced.
+  ...)` must conform to, but this is not enforced.
 
   PAX \"defines\" standard CL restarts such as USE-VALUE with
   DEFINE-RESTART:

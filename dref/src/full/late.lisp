@@ -65,7 +65,7 @@
 
   PAX has a live browsing [frontend][PAX::@APROPOS].
 
-  Roughly speaking, when NAME or PACKAGE is a SYMBOL, they must match
+  Roughly speaking, when NAME or PACKAGE is a SYMBOL, it must match
   the whole @NAME of the definition:
 
   ```cl-transcript

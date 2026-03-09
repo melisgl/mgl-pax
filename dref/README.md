@@ -55,8 +55,9 @@ the documentation system.
 - [system] **"dref"**
 
     - _Version:_ 0.4.11
-    - _Description:_ Reify definitions, provide portable access to arglist,
-        docstrings and source locations in an extensible framework.
+    - _Description:_ Reify definitions, provide portable access to
+        arglists, docstrings and source locations in an extensible
+        framework.
     - _Long Description:_ [`DEFUN`][f472] defines a first-class object: a `FUNCTION`([`0`][119e] [`1`][81f7]).
         [`DEFVAR`][7334] does not. The DRef library provides a way to refer to all
         definitions and smooths over the differences between
@@ -93,8 +94,9 @@ the documentation system.
 Some [defining forms][23a8] do not create first-class
 [objects][3c8a]. For example, [`DEFUN`][f472] creates
 [`FUNCTION`][119e] objects, but [`DEFVAR`][7334] does not create variable
-objects as no such thing exists. The main purpose of this library is
-to fill this gap with the introduction of [`DREF`][d930] objects:
+objects, as no such thing exists in Common Lisp. The main purpose of
+this library is to fill this gap with the introduction of
+[`DREF`][d930] objects:
 
 ```common-lisp
 (defvar *my-var* nil
@@ -651,10 +653,10 @@ definitions as in
         => T
         ```
     
-        It is an error if `DTYPE` is an `ATOM`([`0`][5152] [`1`][a657]) but is not a [locative type][a11d],
-        but (the empty) argument list of bare locative types are not
-        checked even if having no arguments makes them [invalid
-        locatives][7ac8].
+        It is an error if `DTYPE` is an `ATOM`([`0`][5152] [`1`][a657]) but not a [locative type][a11d]. On
+        the other hand, (the empty) argument list of atomic locatives is
+        not checked even if having no arguments makes them
+        [invalid][7ac8].
     
     - *[Compound locatives][7ac8]:* Locatives in their compound
       form are validated and must match exactly (under [`EQUAL`][3fb5], as in
@@ -754,7 +756,7 @@ definitions as in
     
     PAX has a live browsing [frontend][b7fc].
     
-    Roughly speaking, when `NAME` or `PACKAGE` is a `SYMBOL`, they must match
+    Roughly speaking, when `NAME` or `PACKAGE` is a `SYMBOL`, it must match
     the whole [name][5fc4] of the definition:
     
     ```common-lisp
@@ -983,9 +985,9 @@ The following functions take a single argument, which may be a
 
 ## 7 Basic Locative Types
 
-The following are the [locative type][a11d]s supported out of the
-box. As all locative types, they are named by symbols. When there is
-a CL type corresponding to the reference's locative type, the
+The following are the [locative type][a11d]s supported out of the box.
+Like all locative types, they are named by symbols. When there is a
+CL type corresponding to the reference's locative type, the
 references can be [`RESOLVE`][63b4]d to a unique object as is the case in
 
 ```common-lisp
@@ -1308,7 +1310,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 
     - Direct locative subtypes: [`CLASS`][2060]
 
-    This locative can refer to [types and classes][0ff7] and
+    This locative can refer to [types and classes][0ff7] as well as
     [conditions][e237], simply put, to things defined by [`DEFTYPE`][7f9a],
     [`DEFCLASS`][ead6] and [`DEFINE-CONDITION`][f7e4].
     
@@ -1407,7 +1409,7 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
 
     Associate a definition with the name of a restart, which must be a symbol.
     `LAMBDA-LIST` should be what calls like `(INVOKE-RESTART '<SYMBOL>
-    ...)` must conform to, but this not enforced.
+    ...)` must conform to, but this is not enforced.
     
     PAX "defines" standard CL restarts such as `USE-VALUE`([`0`][5406] [`1`][cf08]) with
     `DEFINE-RESTART`:
@@ -1745,8 +1747,8 @@ by [`DEFINE-LOCATIVE-TYPE`][b6c4] and [`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4].
         interpreted as `LOCATIVE-TYPE`, and `LAMBDA-LIST` is `NIL`.
     
     - `LOCATIVE-SUPERTYPES` is a list of [locative type][a11d]s whose
-      [`DREF-CLASS`][25be]es are added to prepended to the list of superclasses
-      this definition.
+      [`DREF-CLASS`][25be]es are prepended to the list of superclasses this
+      definition.
     
     Locative types defined with `DEFINE-LOCATIVE-TYPE` can be listed with
     [`LISP-LOCATIVE-TYPES`][30ad].
@@ -1859,7 +1861,7 @@ is as follows.
 - If the `OBJECT` argument of `LOCATE` is a `DREF`, then it is returned
   without processing.
 
-Else, `LOCATE` first needs to finds the initial definition.
+Else, `LOCATE` first needs to find the initial definition.
 
 <a id="x-28DREF-EXT-3A-40INITIAL-DEFINITION-20MGL-PAX-3ASECTION-29"></a>
 
@@ -1927,9 +1929,9 @@ cast fails.
 
 ##### Default Downcast
 
-Downcasting to [direct locative subtypes][130a] is performed by default by looking up
-the definition where the locative type is replaced with its sub
-while the name and the locative args remain the same.
+By default, downcasting to [direct locative subtypes][130a] is performed by looking up the
+definition where the locative type is replaced with its sub while
+the name and the locative args remain the same.
 
 <a id="x-28DREF-EXT-3A-40CAST-NAME-CHANGE-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2092,8 +2094,8 @@ macros.
     to an instance `DREF-CLASS`, which denotes a valid but potentially
     [non-canonical][9383] definition.
     
-    Note the [Default Downcast][8529] often suffices, and defining a cast is
-    only necessary if the [name][c68e] or the locative
+    Note that the [Default Downcast][8529] often suffices, and defining a cast
+    is only necessary if the [name][c68e] or the locative
     args change:
     
     ```
@@ -2110,7 +2112,7 @@ macros.
     - If `LOCATIVE-TYPE` is one of [`PSEUDO-LOCATIVE-TYPES`][c340], then `DREF-CLASS`
       must be of another pseudo locative type.
     
-    - `DREF-CLASS` is either a direct *downcast* or an potentially
+    - `DREF-CLASS` is either a direct *downcast* or a potentially
       non-direct *upcast*.
     
         - *Downcast:* In this case, `LOCATIVE-TYPE` is one of
@@ -2118,7 +2120,7 @@ macros.
           `DREF-CLASS`).
     
             Downcasting to non-direct subtypes is done in multiple
-            steps. Consequently,the `BODY` of a downcast can rely on
+            steps. Consequently, the `BODY` of a downcast can rely on
             ([`CLASS-OF`][6a98] `DREF`) being [`CLASS`][1f37], not any subclass thereof.
     
         - *Upcast:* `LOCATIVE-TYPE` is different but reachable
