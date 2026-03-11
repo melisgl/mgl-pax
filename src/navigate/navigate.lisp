@@ -428,7 +428,9 @@
               (equal loc-snippet "")
               (let ((mismatch-pos (mismatch loc-snippet snippet)))
                 (or (null mismatch-pos)
-                    (= (length snippet) mismatch-pos))))))
+                    (= (min (length snippet)
+                            (length loc-snippet))
+                       mismatch-pos))))))
       (dolist (dref
                ;; Only LISP-LOCATIVE-TYPES have source location.
                (definitions name))
