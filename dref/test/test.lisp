@@ -1015,16 +1015,17 @@
     (test-dtypes)
     (test-apropos)))
 
-(defun test (&key (debug nil) (print 'unexpected) (describe *describe*))
-  ;; Bind *PACKAGE* so that names of tests printed have package names,
-  ;; and M-. works on them in Slime.
+(defun test (&key (debug nil) (print 'leaf) (describe *describe*))
   (handler-bind ((warning (lambda (c)
                             (when (expected-style-warning-p c)
                               (muffle-warning)))))
     (with-compilation-unit (:override t)
+      ;; Bind *PACKAGE* so that names of tests printed have package
+      ;; names, and M-. works on them in Slime.
       (let ((*package* (find-package :common-lisp))
             (*print-duration* nil)
             (*print-compactly* t)
+            (*print-parent* nil)
             (*defer-describe* t))
         (warn-on-tests-not-run ((find-package :dref-test))
           (print (try 'test-all :debug debug :print print

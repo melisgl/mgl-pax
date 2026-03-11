@@ -7,7 +7,7 @@
     (test-document)
     (test-transcribe)))
 
-(defun test (&key (debug nil) (print 'unexpected) (describe *describe*))
+(defun test (&key (debug nil) (print 'leaf) (describe *describe*))
   (handler-bind ((warning (lambda (c)
                             (when (expected-style-warning-p c)
                               (muffle-warning)))))
@@ -18,6 +18,7 @@
         (let ((*package* (find-package :common-lisp))
               (*print-duration* nil)
               (*print-compactly* t)
+              (*print-parent* nil)
               (*defer-describe* t))
           (warn-on-tests-not-run ((find-package :mgl-pax-test))
             (print (try 'test-all :debug debug :print print
