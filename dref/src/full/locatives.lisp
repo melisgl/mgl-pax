@@ -64,10 +64,6 @@
     (locate-error))
   (%make-dref name variable))
 
-(defmethod map-definitions-of-name (fn name (locative-type (eql 'variable)))
-  (declare (ignore fn name))
-  'swank-definitions)
-
 (defmethod docstring* ((dref variable-dref))
   (documentation* (dref-name dref) 'variable))
 
@@ -125,12 +121,6 @@
                    (documentation* symbol 'setf)))
     (locate-error "~S does not have a SETF expansion." symbol))
   (%make-dref symbol setf locative-args))
-
-;;; SWANK-BACKEND:FIND-DEFINITIONS does not support setf on CCL.
-#-ccl
-(defmethod map-definitions-of-name (fn name (locative-type (eql 'setf)))
-  (declare (ignore fn name))
-  'swank-definitions)
 
 (defmethod arglist* ((dref setf-dref))
   #+sbcl
@@ -225,12 +215,6 @@
   (unless (symbol-macro-p name)
     (locate-error "~S does not name a symbol macro." name))
   (%make-dref name symbol-macro))
-
-;;; SWANK-BACKEND:FIND-DEFINITIONS does not support symbol macros on CCL.
-#-ccl
-(defmethod map-definitions-of-name (fn name (locative-type (eql 'symbol-macro)))
-  (declare (ignore fn name))
-  'swank-definitions)
 
 (defmethod documentation ((symbol symbol) (doc-type (eql 'symbol-macro)))
   (gethash symbol *symbol-macro-docstrings*))
@@ -445,8 +429,10 @@
   (%make-dref name method locative-args))
 
 (defmethod map-definitions-of-name (fn name (locative-type (eql 'method)))
-  (declare (ignore fn name))
-  'swank-definitions)
+  (let ((f (ignore-errors (fdefinition* name))))
+    (when (typep f 'generic-function)
+      (loop for method in (swank-mop:generic-function-methods f)
+            do (funcall fn (locate method))))))
 
 ;;; Return the specializers in a format suitable as the second
 ;;; argument to FIND-METHOD.
@@ -619,10 +605,13 @@
   (call-lookup `(setf ,(dref-name dref)) 'method (dref-locative-args dref)))
 
 (defmethod map-definitions-of-name (fn name (locative-type (eql 'setf-method)))
-  (declare (ignore fn))
-  (if (setf-name-p name)
-      'swank-definitions
-      (values 'swank-definitions `(setf ,name))))
+  (map-definitions-of-name (lambda (dref)
+                             (when (typep dref 'setf-method-dref)
+                               (funcall fn dref)))
+                           (if (setf-name-p name)
+                               name
+                               `(setf ,name))
+                           'method))
 
 
 ;;;; METHOD-COMBINATION locative
@@ -641,11 +630,6 @@
                (find-method-combination* name))
     (locate-error))
   (%make-dref name method-combination))
-
-(defmethod map-definitions-of-name
-    (fn name (locative-type (eql 'method-combination)))
-  (when-let (dref (dref name 'method-combination nil))
-    (funcall fn dref)))
 
 (defmethod docstring* ((dref method-combination-dref))
   (documentation* (dref-name dref) 'method-combination))
@@ -695,10 +679,6 @@
   #-cmucl (declare (ignore class))
   #-cmucl t
   #+cmucl (not (subtypep class 'condition)))
-
-(defmethod map-definitions-of-name (fn name (locative-type (eql 'reader)))
-  (declare (ignore fn name))
-  'swank-definitions)
 
 (defmethod resolve* ((dref reader-dref))
   (let ((symbol (dref-name dref))
@@ -768,10 +748,6 @@
           (return-from find-writer-slot-definition slot-def))))
     (locate-error "Could not find writer ~S for class ~S."
                   accessor-symbol class-symbol)))
-
-(defmethod map-definitions-of-name (fn name (locative-type (eql 'writer)))
-  (declare (ignore fn name))
-  'swank-definitions)
 
 (defmethod resolve* ((dref writer-dref))
   (let ((symbol (dref-name dref))
@@ -847,10 +823,6 @@
         (return-from find-accessor-slot-definition slot-def)))
     (locate-error "Could not find accessor ~S for class ~S."
                   accessor-symbol class-symbol)))
-
-(defmethod map-definitions-of-name (fn name (locative-type (eql 'accessor)))
-  (declare (ignore fn name))
-  'swank-definitions)
 
 (defmethod resolve* ((dref accessor-dref))
   (let ((symbol (dref-name dref))
@@ -941,8 +913,10 @@
 
 (defmethod map-definitions-of-name
     (fn name (locative-type (eql 'structure-accessor)))
-  (declare (ignore fn name))
-  'swank-definitions)
+  (when-let (f (ignore-errors (fdefinition* name)))
+    (when-let (dref (locate f nil))
+      (when (typep dref 'structure-accessor-dref)
+        (funcall fn dref)))))
 
 (defmethod resolve* ((dref structure-accessor-dref))
   #+(or ccl sbcl)
@@ -1001,7 +975,7 @@
   (when-let (dref (dref name 'type nil))
     (funcall fn dref))
   #-(or ecl sbcl)
-  'swank-definitions)
+  (map nil fn (swank-definitions name '(type))))
 
 (defmethod arglist* ((dref type-dref))
   (let ((name (dref-name dref)))
@@ -1126,8 +1100,7 @@
   ;; Lacking DECLARATION-INFORMATION form CLTL2 on other Lisps,
   ;; DREF* always succeeds.
   #-(or ccl sbcl)
-  (declare (ignore fn name))
-  (values))
+  (declare (ignore fn name)))
 
 (defmethod source-location* ((dref declaration-dref))
   #+sbcl
@@ -1470,8 +1443,7 @@
   (%make-dref name unknown locative-args))
 
 (defmethod map-definitions-of-name (fn name (locative-type (eql 'unknown)))
-  (declare (ignore fn name))
-  'swank-definitions)
+  (map nil fn (swank-definitions name '(unknown))))
 
 (defmethod source-location* ((dref unknown-dref))
   (let ((dspec-and-location-list (swank-dspecs-and-locations (dref-name dref)))

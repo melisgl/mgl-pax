@@ -954,8 +954,7 @@
   (:method (fn name locative-type)
     (let ((located (dref name locative-type nil)))
       (when located
-        (funcall fn located)
-        (values)))))
+        (funcall fn located)))))
 
 (defgeneric map-definitions-of-type (fn locative-type)
   (:documentation "Call FN with [DREF][class]s which can be LOCATEd

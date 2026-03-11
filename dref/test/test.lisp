@@ -10,8 +10,7 @@
   (is (dref::has-setf-p 'setf-fn))
   (is (dref::has-setf-p 'setf-gf))
   (is (null (dref::has-setf-p 'defun)))
-  (with-failure-expected (*failure-on-long-setf*)
-    (is (dref::has-setf-p 'long-setf))))
+  (is (dref::has-setf-p 'long-setf)))
 
 
 (deftest test-definitions ()
@@ -66,15 +65,13 @@
                       ,(xref 'test-gf '(method
                                         ((eql #.(find-package :cl))))))))
   ;; https://github.com/Clozure/ccl/issues/548
-  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ccl :clisp
-                                                      :cmucl))
+  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ccl :clisp))
                                'failure))
     (check-ref-sets (definitions '(setf setf-gf))
                     `(,(xref 'setf-gf 'setf-generic-function)
                        ,(xref 'setf-gf '(setf-method (string))))))
   ;; https://github.com/Clozure/ccl/issues/548
-  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ccl :clisp
-                                                      :cmucl))
+  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ccl :clisp))
                                'failure))
     (check-ref-sets (definitions 'setf-gf)
                     `(,(xref 'setf-gf 'generic-function)
@@ -250,12 +247,11 @@
     (is (match-values (arglist (dref 'short-setf-with-macro 'setf))
           (equal * '(x (&key y)))
           (eq * :macro))))
-  (with-failure-expected (*failure-on-long-setf*)
-    (signals-not (locate-error)
-      (with-failure-expected (*failure-on-setf-arglist*)
-        (is (match-values (arglist (dref 'long-setf 'setf))
-              (equal * '(x))
-              (eq * :ordinary)))))))
+  (signals-not (locate-error)
+    (with-failure-expected (*failure-on-setf-arglist*)
+      (is (match-values (arglist (dref 'long-setf 'setf))
+            (equal * '(x))
+            (eq * :ordinary))))))
 
 (deftest test-arglist/function ()
   (is (match-values (arglist (dref 'function-with-fancy-args 'function))

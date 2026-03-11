@@ -124,24 +124,12 @@
         (maybe-cached))))
 
 (defun definitions-with-locative-types (name locative-types)
-  (let ((drefs ())
-        (swank-name-to-locative-types (make-hash-table :test #'equal)))
+  (let ((drefs ()))
     (dolist (locative-type locative-types)
-      (multiple-value-bind (mapper swank-name)
-          (map-definitions-of-name (lambda (dref)
-                                     (push dref drefs))
-                                   name locative-type)
-        (unless swank-name
-          (setq swank-name name))
-        (when (eq mapper 'swank-definitions)
-          (push locative-type
-                (gethash swank-name swank-name-to-locative-types)))))
-    (append drefs
-            (loop for swank-name being the hash-key
-                    in swank-name-to-locative-types
-                      using (hash-value swank-locative-types)
-                  append (swank-definitions swank-name
-                                            swank-locative-types)))))
+      (map-definitions-of-name (lambda (dref)
+                                 (push dref drefs))
+                               name locative-type))
+    drefs))
 
 (defun/autoloaded dref-apropos (name &key package external-only case-sensitive
                                      (dtype t) (sort t))

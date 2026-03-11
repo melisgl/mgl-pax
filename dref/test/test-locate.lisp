@@ -142,7 +142,8 @@
 
 (deftest test-locate/symbol-macro ()
   (check-ref (dref 'my-smac 'symbol-macro) 'my-smac 'symbol-macro)
-  (with-failure-expected ((and (alexandria:featurep '(:not (:or :ccl :sbcl)))
+  (with-failure-expected ((and (alexandria:featurep
+                                '(:not (:or :ccl :cmucl :sbcl)))
                                'failure))
     (with-test ("How to detect symbol macros?")
       (signals (locate-error :pred "does not name")
@@ -170,10 +171,9 @@
   (check-ref (dref 'short-setf-with-macro 'setf)
              'short-setf-with-macro 'setf)
   (is (null (resolve (xref 'short-setf-with-macro 'setf) nil)))
-  (with-failure-expected (*failure-on-long-setf*)
-    (signals-not (locate-error)
-      (check-ref (dref 'long-setf 'setf) 'long-setf 'setf)
-      (is (null (resolve (xref 'long-setf 'setf) nil))))))
+  (signals-not (locate-error)
+    (check-ref (dref 'long-setf 'setf) 'long-setf 'setf)
+    (is (null (resolve (xref 'long-setf 'setf) nil)))))
 
 (deftest test-locate/compiler-macro ()
   (check-ref (dref 'foo 'compiler-macro) 'foo 'compiler-macro)
