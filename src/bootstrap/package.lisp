@@ -28,9 +28,9 @@
     (handler-bind
         (#+sbcl (sb-int:package-at-variance #'muffle-warning))
       (defpackage :mgl-pax
+        (:nicknames #:pax)
         (:documentation "See MGL-PAX::@PAX-MANUAL.")
         (:use #:common-lisp #:autoload #:dref #:dref-ext)
-        (:nicknames #:pax)
         ;; These are the exports from MGL-PAX-BOOTSTRAP.
         (:export #:define-package
          #:defsection #:section

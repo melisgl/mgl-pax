@@ -140,7 +140,7 @@
 ;;; package-inferred systems and warn on unexpected errors.
 (defun find-system* (name &key (errorp t) (warnp t))
   ;; To have a better chance of READing DEFPACKAGE forms in
-  ;; package-inferred systems.
+  ;; package-inferred systems. Also, see @SOURCE-FILE-READ-EVAL.
   (let ((*read-eval* t)
         (*package* #.(find-package :cl-user))
         (*readtable* (named-readtables:find-readtable :standard)))

@@ -18,10 +18,10 @@
   ignore any internal machinery. The first step is to define the
   @LOCATIVE-TYPE:"
   (nil (include (:start (class locative)
-                 :end (dref::locate* (method (class (eql class)))))
+                 :end (locate* (method (class (eql class)))))
                 :header-nl "```" :footer-nl "```"))
   "Then, we make it possible to look up CLASS definitions:"
-  (nil (include (:start (dref::locate* (method (class (eql class))))
+  (nil (include (:start (locate* (method (class (eql class))))
                  :end (resolve* (method (class-dref))))
                 :header-nl "```" :footer-nl "```"))
   "DEFINE-LOCATOR makes `(LOCATE (FIND-CLASS 'DREF))` work, while
@@ -33,7 +33,7 @@
   object from a CLASS-DREF. We also specialize DOCSTRING* and
   SOURCE-LOCATION*:"
   (nil (include (:start (resolve* (method (class-dref)))
-                 :end (dref::%end-of-class-example variable))
+                 :end (%end-of-class-example variable))
                 :header-nl "```" :footer-nl "```"))
   "We took advantage of having just made the class locative type being
   RESOLVEable, by specializing DOCSTRING* on the CLASS class.
@@ -422,7 +422,7 @@
 ;;;; points LOCATE* and DREF*, on top of which the public API rests
 
 (defsection @extending-locate (:title "Extending LOCATE")
-  "[ dref::%locate function][docstring]"
+  "[ %locate function][docstring]"
   (@initial-definition section)
   (@canonicalization section)
   (@defining-lookups-locators-and-casts section))
@@ -448,7 +448,7 @@
     (canonicalize-dref dref)))
 
 (defsection @initial-definition (:title "Initial Definition")
-  "[ dref::locate-initial-definition function][docstring]")
+  "[ locate-initial-definition function][docstring]")
 
 (defun locate-initial-definition (object)
   "LOCATE can find the initial definition in one of two ways:
@@ -514,7 +514,7 @@
       (error last-locate-error))))
 
 (defsection @canonicalization (:title "Canonicalization")
-  "[ dref::canonicalize-dref function][docstring]"
+  "[ canonicalize-dref function][docstring]"
   (@default-downcast section)
   (@cast-name-change section))
 
@@ -557,7 +557,7 @@
   check-locator-return-values function][docstring]")
 
 (defsection @default-downcast (:title "Default Downcast")
-  "[ dref::locate* (method (dref t))][docstring]")
+  "[ locate* (method (dref t))][docstring]")
 
 ;;; Return a @DEFINITION of OBJECT as an instance of the DREF-CLASS of
 ;;; LOCATIVE-TYPE. This function is for extending LOCATE and is behind

@@ -357,8 +357,8 @@
 (defun locative-types-maybe-with-definitions ()
   (dref::sort-locative-types
    (loop for locative-type in (locative-types)
-         unless (or (not (external-symbol-p locative-type))
-                    (not (locative-type-may-have-definitions-p locative-type)))
+         when (and (external-symbol-p locative-type)
+                   (locative-type-may-have-definitions-p locative-type))
            collect locative-type)))
 
 (defun locative-type-may-have-definitions-p (locative-type)

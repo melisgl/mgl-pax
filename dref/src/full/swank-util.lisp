@@ -2,12 +2,17 @@
 
 ;;;; Swank utilities with no dependency on DREF
 
+(note @source-file-read-eval
+  "Source files may have #. in them. There is no point in *READ-EVAL*
+  NIL, as the we only read files that have been loaded into the
+  system, which couldn't have worked if *READ-EVAL* was NIL.")
+
 ;;; Return the source location of OBJECT, which may be a FUNCTION,
 ;;; CLASS, etc. Anything that SWANK-BACKEND:FIND-SOURCE-LOCATION knows
 ;;; about. If no source location is found, then return NIL.
 (defun swank-object-source-location (object)
   (when object
-    ;; Source files may have #. in them.
+    ;; @SOURCE-FILE-READ-EVAL
     (let* ((*read-eval* t)
            (location (swank-backend:find-source-location
                       (if (functionp object)
@@ -27,7 +32,7 @@
                               (swank-dspecs-and-locations-1 object)))))
 
 (defun swank-dspecs-and-locations-1 (object)
-  ;; Source files may have #. in them.
+  ;; @SOURCE-FILE-READ-EVAL
   (let ((*read-eval* t))
     (swank-backend::find-definitions (swank-definition-name object))))
 

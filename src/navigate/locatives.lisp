@@ -554,5 +554,5 @@
 
 (defun clhs-dref (name locative)
   ;; Pick off the impossible cases quickly.
-  (when  (member (locative-type locative) *hyperspec-definition-locative-types*)
+  (when (member (locative-type locative) *hyperspec-definition-locative-types*)
     (dref name `(clhs ,locative) nil)))
