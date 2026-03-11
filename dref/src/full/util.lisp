@@ -16,6 +16,7 @@
 
 (defun special-variable-name-p (obj)
   (and (symbolp obj)
+       (not (keywordp obj))
        ;; Note that this returns true for all symbols on other
        ;; platforms.
        #+abcl (ext:special-variable-p obj)

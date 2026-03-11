@@ -103,7 +103,9 @@
     (dref '*package* '(variable 7 8)))
   (with-test ("How to detect specials?")
     (signals (locate-error)
-      (dref '*non-existent* 'variable))))
+      (dref '*non-existent* 'variable)))
+  (signals (locate-error)
+    (dref :xxx 'variable)))
 
 (deftest test-locate/constant ()
   (check-ref (dref 'bar 'constant) 'bar 'constant)
