@@ -1328,11 +1328,9 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
                     "TEST-GF `(method ((eql #<package \"COMMON-LISP\">)))`")
               ;; The id of the link varies by implementation.
               "[`TEST-GF`][")
-  (with-failure-expected ((and (alexandria:featurep :clisp)
-                               'failure))
-    (check-pred (list (definitions 'test-gf)
-                      "TEST-GF `(method ((eql #.(find-package :cl))))`")
-                "[`TEST-GF`][")))
+  (check-pred (list (definitions 'test-gf)
+                    "TEST-GF `(method ((eql #.(find-package :cl))))`")
+              "[`TEST-GF`]["))
 
 (deftest test-method/arglist ()
   (check-pred (dref 'test-gf '(method ((eql :bar))))

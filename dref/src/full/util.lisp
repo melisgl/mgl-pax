@@ -100,11 +100,7 @@
            #+ccl (eq name 'declare))))
 
 (defun symbol-macro-p (name)
-  (and (symbolp name)
-       ;; FIXME: port
-       #+ccl (gethash name ccl::*symbol-macros*)
-       #+cmucl (eq (ext:info :variable :kind name) :macro)
-       #+sbcl (sb-int:info :variable :macro-expansion name)))
+  (and (symbolp name) (nth-value 1 (macroexpand name))))
 
 
 ;;;; Compiler macros

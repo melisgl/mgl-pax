@@ -142,12 +142,9 @@
 
 (deftest test-locate/symbol-macro ()
   (check-ref (dref 'my-smac 'symbol-macro) 'my-smac 'symbol-macro)
-  (with-failure-expected ((and (alexandria:featurep
-                                '(:not (:or :ccl :cmucl :sbcl)))
-                               'failure))
-    (with-test ("How to detect symbol macros?")
-      (signals (locate-error :pred "does not name")
-        (dref 'foo 'symbol-macro))))
+  (with-test ("How to detect symbol macros?")
+    (signals (locate-error :pred "does not name")
+      (dref 'foo 'symbol-macro)))
   (signals (locate-error)
     (dref "xxx" 'symbol-macro))
   (signals (locate-error :pred "Bad arguments")
