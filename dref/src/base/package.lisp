@@ -20,11 +20,11 @@
         #:mgl-pax #:pythonic-string-reader)
   ;; So, we export the extension api manually and import DREF-EXT into
   ;; DREF below.
-  (:export #:*check-locate* #:accessor-dref #:arglist*
-           #:asdf-system-dref #:call-cast #:call-locator
+  (:export #:*check-locate* #:accessor-dref #:append-condition-context
+           #:arglist* #:asdf-system-dref #:call-cast #:call-locator
            #:call-lookup #:check-locative-args #:class-dref
-           #:compiler-macro-dref #:condition-dref #:constant-dref
-           #:declaration-dref #:define-cast
+           #:compiler-macro-dref #:condition-dref #:condition-context-mixin
+           #:constant-dref #:declaration-dref #:define-cast
            #:define-definer-for-symbol-locative-type
            #:define-locative-alias #:define-locative-type
            #:define-locator #:define-lookup

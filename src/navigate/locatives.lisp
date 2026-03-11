@@ -297,7 +297,7 @@
                  :name name
                  :locative (cons 'include locative-args)))
 
-(define-condition include-error (error)
+(define-condition include-error (error condition-context-mixin)
   ((format-control :initarg :format-control :reader format-control)
    (format-args :initarg :format-args :reader format-args))
   (:report (lambda (condition stream)

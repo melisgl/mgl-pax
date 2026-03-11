@@ -2330,7 +2330,7 @@ Markdown reference links (see [Markdown in Docstrings][7bf5]).
 
 <a id="x-28MGL-PAX-3AUNRESOLVABLE-REFLINK-20CONDITION-29"></a>
 
-- [condition] **UNRESOLVABLE-REFLINK** *[WARNING][bcb6]*
+- [condition] **UNRESOLVABLE-REFLINK** *[WARNING][bcb6] CONDITION-CONTEXT-MIXIN*
 
     When [`DOCUMENT`][432c] encounters a [Reflink][cbc4] that looks
     like a PAX construct but has no matching definition, it signals an
@@ -3905,7 +3905,7 @@ create a temporary package for evaluation.
 
 <a id="x-28MGL-PAX-3ATRANSCRIPTION-ERROR-20CONDITION-29"></a>
 
-- [condition] **TRANSCRIPTION-ERROR** *[ERROR][d162]*
+- [condition] **TRANSCRIPTION-ERROR** *[ERROR][d162] CONDITION-CONTEXT-MIXIN*
 
     Represents syntactic errors in the `SOURCE` argument
     of [`TRANSCRIBE`][f1f0] and also serves as the superclass of

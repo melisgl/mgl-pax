@@ -1416,7 +1416,7 @@
 
 ;;;; Conditions
 
-(define-condition transcription-error (error)
+(define-condition transcription-error (error condition-context-mixin)
   (;; The file position at which the error was encountered or NIL if
    ;; unknown.
    (file-position

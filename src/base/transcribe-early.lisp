@@ -14,7 +14,7 @@
 
 ;;; Silence SBCL compiler notes.
 #+sbcl
-(define-condition transcription-error (error) ())
+(define-condition transcription-error (error condition-context-mixin) ())
 (export 'transcription-error)
 
 #+sbcl

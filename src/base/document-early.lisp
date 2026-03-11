@@ -27,7 +27,7 @@
 (export '*document-link-code*)
 ;;; Silence SBCL compiler notes.
 #+sbcl
-(define-condition unresolvable-reflink (warning) ())
+(define-condition unresolvable-reflink (warning condition-context-mixin) ())
 (export 'unresolvable-reflink)
 (export 'output-reflink)
 (export 'output-label)

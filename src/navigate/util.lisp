@@ -53,7 +53,7 @@
             (parse-sexp-error "Junk in string ~S." string))
           (values sexp (+ start pos)))))))
 
-(define-condition parse-sexp-error (parse-error)
+(define-condition parse-sexp-error (parse-error condition-context-mixin)
   ((format-control :initarg :format-control :reader format-control)
    (format-args :initarg :format-args :reader format-args))
   (:report (lambda (condition stream)

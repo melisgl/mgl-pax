@@ -426,30 +426,18 @@
 ;;; conditions. Resignal the rest as SIMPLE-ERROR or SIMPLE-WARNING
 ;;; with the context in the message.
 (defmacro with-document-context (&body body)
-  `(handler-bind ((locate-error
-                    (lambda (e)
-                      #-cmucl
-                      (let ((args (list (slot-value e 'dref::message)
-                                        (slot-value e 'dref::message-args)
-                                        (print-document-context nil))))
-                        (setf (slot-value e 'dref::message) "~?~A"
-                              (slot-value e 'dref::message-args) args))))
-                  (transcription-error
-                    (lambda (e)
-                      #-cmucl
-                      (let ((args (list (slot-value e 'message)
-                                        (slot-value e 'message-args)
-                                        (print-document-context nil))))
-                        (setf (slot-value e 'message) "~?~A"
-                              (slot-value e 'message-args) args))))
-                  ((and error (not locate-error) (not transcription-error))
+  `(handler-bind ((condition-context-mixin
+                    (lambda (c)
+                      (append-condition-context
+                       c "~A" (print-document-context nil))))
+                  ((and error (not condition-context-mixin))
                     (lambda (e)
                       (if (find-restart 'continue e)
                           (cerror "Continue." "~S:~%~A~A" (type-of e) e
                                   (print-document-context nil))
                           (error "~S:~%~A~A" (type-of e) e
                                  (print-document-context nil)))))
-                  (warning
+                  ((and warning (not condition-context-mixin))
                     (lambda (w)
                       (unless (search "While documenting" (princ-to-string w))
                         (warn "~S~%~A~A" (type-of w) w
@@ -1286,7 +1274,7 @@
               (parse-markdown (prin1-to-string* (dref-name dref)))))))
    tree))
 
-(define-condition title-parsing-failure (warning)
+(define-condition title-parsing-failure (warning condition-context-mixin)
   ((tag :initarg :tag :reader title-parsing-failure-tag)
    (title :initarg :title :reader title-parsing-failure-title))
   (:report print-title-parsing-failure))
@@ -1298,8 +1286,7 @@
     (format stream
             "~@<Unexpected tag ~S in the parse tree of title ~S. ~
             This means that the title does not follow the rules in ~S~:@>"
-            tag title '@markdown-in-titles)
-    (print-document-context stream)))
+            tag title '@markdown-in-titles)))
 
 
 (defsection @markdown-syntax-highlighting (:title "Syntax Highlighting")
@@ -2259,7 +2246,7 @@
   (output-reflink function)
   (output-label function))
 
-(define-condition unresolvable-reflink (warning)
+(define-condition unresolvable-reflink (warning condition-context-mixin)
   ((reflink :initarg :reflink :reader unresolvable-reflink-string)
    (locative :initarg :locative :reader unresolvable-reflink-locative))
   (:report print-unresolvable-reflink)
@@ -2291,8 +2278,7 @@
         (format stream "~@<No ~S found for ~S although ~S looks ~
                        like a ~S.~:@>"
                 'dref reflink locative '@locative)
-        (format stream "~@<No ~S found for ~S.~:@>" 'definitions reflink))
-    (print-document-context stream)))
+        (format stream "~@<No ~S found for ~S.~:@>" 'definitions reflink))))
 
 (defun signal-unresolvable-reflink (reflink locative)
   (restart-case

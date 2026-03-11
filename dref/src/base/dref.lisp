@@ -253,7 +253,7 @@
               (xref-locative xref))))
 
 
-(define-condition locate-error (error)
+(define-condition locate-error (error condition-context-mixin)
   ((object :initarg :object :reader locate-error-object)
    (message :initarg :message :reader locate-error-message)
    (message-args :initarg :message-args :reader locate-error-message-args))
@@ -349,7 +349,7 @@
   "Shorthand for `(LOCATE (XREF NAME LOCATIVE) ERRORP)`."
   (locate (xref name locative) errorp))
 
-(define-condition resolve-error (error)
+(define-condition resolve-error (error condition-context-mixin)
   ((dref :initarg :dref :reader resolve-error-dref)
    (message :initarg :message :reader resolve-error-message))
   (:documentation "Signalled by RESOLVE when the object defined cannot

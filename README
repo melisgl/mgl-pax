@@ -2052,7 +2052,7 @@ Markdown reference links (see Markdown in Docstrings).
 
 ##### Unresolvable Links
 
-- [condition] UNRESOLVABLE-REFLINK WARNING
+- [condition] UNRESOLVABLE-REFLINK WARNING CONDITION-CONTEXT-MIXIN
 
     When DOCUMENT encounters a Reflink that looks
     like a PAX construct but has no matching definition, it signals an
@@ -3432,7 +3432,7 @@ create a temporary package for evaluation.
 
     See TRANSCRIBE for how the actual syntax to be used is selected.
 
-- [condition] TRANSCRIPTION-ERROR ERROR
+- [condition] TRANSCRIPTION-ERROR ERROR CONDITION-CONTEXT-MIXIN
 
     Represents syntactic errors in the SOURCE argument
     of TRANSCRIBE and also serves as the superclass of

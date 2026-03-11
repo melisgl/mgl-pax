@@ -344,14 +344,14 @@ deal with references (discussed in the [Extending DRef][68fb]).
 
 <a id="x-28DREF-EXT-3ALOCATE-ERROR-20CONDITION-29"></a>
 
-- [condition] **LOCATE-ERROR** *[ERROR][d162]*
+- [condition] **LOCATE-ERROR** *[ERROR][d162] CONDITION-CONTEXT-MIXIN*
 
     Signalled by [`LOCATE`][8f19] when the definition cannot be
     found, and `ERRORP` is true.
 
 <a id="x-28DREF-EXT-3ARESOLVE-ERROR-20CONDITION-29"></a>
 
-- [condition] **RESOLVE-ERROR** *[ERROR][d162]*
+- [condition] **RESOLVE-ERROR** *[ERROR][d162] CONDITION-CONTEXT-MIXIN*
 
     Signalled by [`RESOLVE`][63b4] when the object defined cannot
     be returned, and `ERRORP` is true.

@@ -261,12 +261,12 @@ deal with references (discussed in the Extending DRef).
 
     Can be extended via RESOLVE*.
 
-- [condition] LOCATE-ERROR ERROR
+- [condition] LOCATE-ERROR ERROR CONDITION-CONTEXT-MIXIN
 
     Signalled by LOCATE when the definition cannot be
     found, and ERRORP is true.
 
-- [condition] RESOLVE-ERROR ERROR
+- [condition] RESOLVE-ERROR ERROR CONDITION-CONTEXT-MIXIN
 
     Signalled by RESOLVE when the object defined cannot
     be returned, and ERRORP is true.

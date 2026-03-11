@@ -142,3 +142,28 @@
              (when (not errorp)
                (return-from find-system* nil)))))
       (asdf:find-system name t))))
+
+
+(define-condition condition-context-mixin ()
+  ((context-message
+    :initform ""
+    :initarg :context-message
+    :accessor condition-context-message)
+   (context-message-args
+    :initform nil
+    :initarg :context-message-args
+    :accessor condition-context-message-args)))
+
+(defun append-condition-context (condition format-control &rest format-args)
+  (setf (condition-context-message condition)
+        (concatenate 'string (condition-context-message condition)
+                     format-control))
+  (setf (condition-context-message-args condition)
+        (append (condition-context-message-args condition) format-args)))
+
+(defun format-condition-context (destination condition)
+  (apply #'format destination (condition-context-message condition)
+         (condition-context-message-args condition))  )
+
+(defmethod print-object :after ((condition condition-context-mixin) stream)
+  (format-condition-context stream condition))
