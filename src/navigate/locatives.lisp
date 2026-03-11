@@ -550,7 +550,7 @@
     (loop for entry in *hyperspec-issues*
           do (foo (first entry) '(clhs section))
              (foo (second entry) '(clhs section)))
-    'dref::try-interned-symbols))
+    :try-interned-symbols))
 
 (defun clhs-dref (name locative)
   ;; Pick off the impossible cases quickly.

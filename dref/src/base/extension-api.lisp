@@ -944,11 +944,8 @@
   simply does `(DREF NAME LOCATIVE-TYPE NIL)` and calls FN with result
   if [DREF][function] succeeds.
 
-  FN must not be called with the same (under XREF=) definition
-  multiple times.
-
-  This function is for extending DEFINITIONS and DREF-APROPOS. Do not
-  call it directly.")
+  FN is not called with the same (under XREF=) definition multiple
+  times.")
   ;; See DEFINITIONS for how the efficiency hack of returning the
   ;; magic symbol SWANK-DEFINITIONS instead of mapping with FN works.
   (:method (fn name locative-type)
@@ -957,22 +954,21 @@
         (funcall fn located)))))
 
 (defgeneric map-definitions-of-type (fn locative-type)
-  (:documentation "Call FN with [DREF][class]s which can be LOCATEd
+  (:documentation "Call FN with [DREF][class]s that can be LOCATEd
   with an XREF with LOCATIVE-TYPE with some NAME and LOCATIVE-ARGS.
 
-  The default method forms XREFs by combining each interned symbol as
-  @NAMEs with LOCATIVE-TYPE and no LOCATIVE-ARGS and calls FN if it
-  LOCATEs a definition.
+  - Return NIL if all possibilities have been exhausted.
 
-  FN may be called with DREFs that are XREF= but differ in the XREF in
-  their DREF-ORIGIN.
+  - Return true if there may be definitions left unmapped. In this
+    case, the caller is responsible for trying all interned symbols
+    with MAP-DEFINITIONS-OF-NAME. The default method simply returns
+    true.
 
-  This function is for extending DREF-APROPOS. Do not call it
-  directly.")
+  FN may be called with DREFs that are XREF= and differ only in their
+  DREF-ORIGIN.")
   (:method (fn locative-type)
     (declare (ignore fn locative-type))
-    ;; See DREF-APROPOS about the magic symbol TRY-INTERNED-SYMBOLS.
-    'try-interned-symbols))
+    :try-interned-symbols))
 
 (defgeneric arglist* (object)
   (:documentation "To extend ARGLIST, specialize OBJECT on a normal

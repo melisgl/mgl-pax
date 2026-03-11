@@ -1826,26 +1826,23 @@ macros.
     simply does (DREF NAME LOCATIVE-TYPE NIL) and calls FN with result
     if DREF succeeds.
 
-    FN must not be called with the same (under XREF=) definition
-    multiple times.
-
-    This function is for extending DEFINITIONS and DREF-APROPOS. Do not
-    call it directly.
+    FN is not called with the same (under XREF=) definition multiple
+    times.
 
 - [generic-function] MAP-DEFINITIONS-OF-TYPE FN LOCATIVE-TYPE
 
-    Call FN with DREFs which can be LOCATEd
+    Call FN with DREFs that can be LOCATEd
     with an XREF with LOCATIVE-TYPE with some NAME and LOCATIVE-ARGS.
 
-    The default method forms XREFs by combining each interned symbol as
-    names with LOCATIVE-TYPE and no LOCATIVE-ARGS and calls FN if it
-    LOCATEs a definition.
+    - Return NIL if all possibilities have been exhausted.
 
-    FN may be called with DREFs that are XREF= but differ in the XREF in
-    their DREF-ORIGIN.
+    - Return true if there may be definitions left unmapped. In this
+      case, the caller is responsible for trying all interned symbols
+      with MAP-DEFINITIONS-OF-NAME. The default method simply returns
+      true.
 
-    This function is for extending DREF-APROPOS. Do not call it
-    directly.
+    FN may be called with DREFs that are XREF= and differ only in their
+    DREF-ORIGIN.
 
 - [generic-function] ARGLIST* OBJECT
 

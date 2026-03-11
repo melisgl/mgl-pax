@@ -2289,28 +2289,25 @@ macros.
     simply does `(DREF NAME LOCATIVE-TYPE NIL)` and calls `FN` with result
     if [`DREF`][7e92] succeeds.
     
-    `FN` must not be called with the same (under [`XREF=`][0617]) definition
-    multiple times.
-    
-    This function is for extending [`DEFINITIONS`][e196] and [`DREF-APROPOS`][65b4]. Do not
-    call it directly.
+    `FN` is not called with the same (under [`XREF=`][0617]) definition multiple
+    times.
 
 <a id="x-28DREF-EXT-3AMAP-DEFINITIONS-OF-TYPE-20GENERIC-FUNCTION-29"></a>
 
 - [generic-function] **MAP-DEFINITIONS-OF-TYPE** *FN LOCATIVE-TYPE*
 
-    Call `FN` with [`DREF`][d930]s which can be [`LOCATE`][8f19]d
+    Call `FN` with [`DREF`][d930]s that can be [`LOCATE`][8f19]d
     with an `XREF`([`0`][1538] [`1`][cda7]) with `LOCATIVE-TYPE` with some `NAME` and [`LOCATIVE-ARGS`][2444].
     
-    The default method forms `XREF`s by combining each interned symbol as
-    [name][5fc4]s with `LOCATIVE-TYPE` and no `LOCATIVE-ARGS` and calls `FN` if it
-    `LOCATE`s a definition.
+    - Return `NIL` if all possibilities have been exhausted.
     
-    `FN` may be called with `DREF`s that are [`XREF=`][0617] but differ in the `XREF` in
-    their [`DREF-ORIGIN`][e742].
+    - Return true if there may be definitions left unmapped. In this
+      case, the caller is responsible for trying all interned symbols
+      with [`MAP-DEFINITIONS-OF-NAME`][97b4]. The default method simply returns
+      true.
     
-    This function is for extending [`DREF-APROPOS`][65b4]. Do not call it
-    directly.
+    `FN` may be called with `DREF`s that are [`XREF=`][0617] and differ only in their
+    [`DREF-ORIGIN`][e742].
 
 <a id="x-28DREF-EXT-3AARGLIST-2A-20GENERIC-FUNCTION-29"></a>
 

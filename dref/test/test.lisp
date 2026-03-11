@@ -52,7 +52,7 @@
                     `(,(xref 'bar 'macro)
                       ,(xref 'bar 'constant)
                       ,(xref 'bar 'type))))
-  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :clisp))
+  (with-failure-expected ((and (alexandria:featurep '(:or :clisp))
                                'failure))
     (check-ref-sets (definitions 'short-setf-with-fn)
                     `(,(xref 'short-setf-with-fn 'setf))))
@@ -64,14 +64,10 @@
                       ,(xref 'test-gf '(method ((eql 7))))
                       ,(xref 'test-gf '(method
                                         ((eql #.(find-package :cl))))))))
-  ;; https://github.com/Clozure/ccl/issues/548
-  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ccl :clisp))
-                               'failure))
-    (check-ref-sets (definitions '(setf setf-gf))
-                    `(,(xref 'setf-gf 'setf-generic-function)
-                       ,(xref 'setf-gf '(setf-method (string))))))
-  ;; https://github.com/Clozure/ccl/issues/548
-  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :ccl :clisp))
+  (check-ref-sets (definitions '(setf setf-gf))
+                  `(,(xref 'setf-gf 'setf-generic-function)
+                    ,(xref 'setf-gf '(setf-method (string)))))
+  (with-failure-expected ((and (alexandria:featurep '(:or :clisp))
                                'failure))
     (check-ref-sets (definitions 'setf-gf)
                     `(,(xref 'setf-gf 'generic-function)
@@ -81,8 +77,7 @@
   (check-ref-sets (definitions 'my-comb)
                   `(,(xref 'my-comb 'method-combination)))
   ;; There _may_ be a GENERIC-FUNCTION and a SETF generic function too.
-  ;; https://gitlab.com/embeddable-common-lisp/ecl/-/issues/822
-  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :clisp :ecl))
+  (with-failure-expected ((and (alexandria:featurep '(:or :abcl :clisp))
                                'failure))
     (check-ref-sets (remove-if (lambda (dref)
                                  (or (typep dref 'generic-function-dref)

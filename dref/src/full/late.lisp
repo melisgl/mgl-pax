@@ -271,10 +271,8 @@
       ;; Populate MATCHING-NAMES with @NAMEs that combine with some
       ;; locative whose type is in LOCATIVE-TYPES.
       (dolist (locative-type locative-types)
-        (let ((mapper (map-definitions-of-type #'consider-dref locative-type)))
-          (when (and mapper (symbolp mapper))
-            (assert (eq mapper 'try-interned-symbols))
-            (push locative-type to-try))))
+        (when (map-definitions-of-type #'consider-dref locative-type)
+          (push locative-type to-try)))
       ;; For many locative types, we need to consider all symbols as
       ;; @NAMEs. Iterating over many symbols takes time, so iterate
       ;; once for all locative types TO-TRY.

@@ -272,7 +272,9 @@
 
 (defun map-names-for-type (fn locative-type)
   ;; This is wasteful in that a DREF is created from an XREF while we
-  ;; are only interested in the XREF-NAME.
+  ;; are only interested in the XREF-NAME. Like
+  ;; MAP-DEFINITIONS-OF-TYPE, if it returns true, then the caller must
+  ;; try all interned symbols.
   (map-definitions-of-type (lambda (dref)
                              (funcall fn (xref-name (dref-origin dref))))
                            locative-type))
@@ -349,8 +351,7 @@
                         (or (null locative-args)
                             (dref name locative nil)))
                (push name names))))
-      (if (eq (map-names-for-type #'add locative-type)
-              'dref::try-interned-symbols)
+      (if (map-names-for-type #'add locative-type)
           (append (list-symbols-for-locative prefix locative) names)
           names))))
 
@@ -374,12 +375,11 @@
            collect locative-type)))
 
 (defun locative-type-may-have-definitions-p (locative-type)
-  (eq 'dref::try-interned-symbols
-      (map-names-for-type
-       (lambda (name)
-         (declare (ignore name))
-         (return-from locative-type-may-have-definitions-p t))
-       locative-type)))
+  (map-names-for-type
+   (lambda (name)
+     (declare (ignore name))
+     (return-from locative-type-may-have-definitions-p t))
+   locative-type))
 
 
 ;;;; The Common Lisp side of `mgl-pax-find-parent-section'
