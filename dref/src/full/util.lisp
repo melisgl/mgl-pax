@@ -73,16 +73,21 @@
 
 (defun maybe-type-name-p (name)
   (and (symbolp name)
-       ;; On most Lisps, SWANK-BACKEND:TYPE-SPECIFIER-P is not
-       ;; reliable.
-       #-(or abcl allegro clisp cmucl ecl sbcl)
-       (swank-backend:type-specifier-p name)
-       #+ecl
-       (or (c::type-name-p name)
-           ;; https://gitlab.com/embeddable-common-lisp/ecl/-/issues/819
-           (member name *clhs-type-names*))
        #+sbcl
-       (sb-ext:defined-type-name-p name)))
+       (sb-ext:defined-type-name-p name)
+       #-sbcl
+       (or #+abcl (get name 'system::deftype-definition)
+           #+ccl (ccl:type-specifier-p name)
+           #+clisp (get name 'system::deftype-expander)
+           #+cmucl (ext:info :type :expander name)
+           #+ecl (c::type-name-p name)
+           ;; On most Lisps, SWANK-BACKEND:TYPE-SPECIFIER-P is not
+           ;; reliable.
+           #-(or abcl allegro ccl clisp cmucl ecl)
+           (swank-backend:type-specifier-p name)
+           (ignore-errors (find-class name))
+           ;; https://gitlab.com/embeddable-common-lisp/ecl/-/issues/819
+           (member name *clhs-type-names*))))
 
 
 ;;;; Macros

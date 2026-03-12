@@ -971,11 +971,8 @@
 
 (defmethod map-definitions-of-name (fn name (locative-type (eql 'type)))
   (declare (ignorable fn name))
-  #+(or ecl sbcl)
   (when-let (dref (dref name 'type nil))
-    (funcall fn dref))
-  #-(or ecl sbcl)
-  (map nil fn (swank-definitions name '(type))))
+    (funcall fn dref)))
 
 (defmethod arglist* ((dref type-dref))
   (let ((name (dref-name dref)))
