@@ -1699,6 +1699,9 @@ object from a [`CLASS-DREF`][b3a7]. We also specialize [`DOCSTRING*`][9fd4] and
   (documentation* class t))
 
 (defmethod source-location* ((dref class-dref))
+  #+sbcl
+  (sb-one-source-location (dref-name dref) :class)
+  #-sbcl
   (swank-source-location* (resolve dref) (dref-name dref) 'class))
 
 ```

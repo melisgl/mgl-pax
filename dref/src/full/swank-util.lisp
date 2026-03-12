@@ -33,8 +33,17 @@
 
 (defun swank-dspecs-and-locations-1 (object)
   ;; @SOURCE-FILE-READ-EVAL
-  (let ((*read-eval* t))
-    (swank-backend::find-definitions (swank-definition-name object))))
+  (let* ((*read-eval* t)
+         (dspec-and-location-list (swank-backend:find-definitions
+                                   (swank-definition-name object))))
+    #-abcl
+    dspec-and-location-list
+    #+abcl
+    (mapcar (lambda (dspec-and-location)
+              (if (eq (first dspec-and-location) :primitive)
+                  (list '(function) (second dspec-and-location))
+                  dspec-and-location))
+            dspec-and-location-list)))
 
 ;;; Turn OBJECT into a symbol suitable as an argument to
 ;;; SWANK-BACKEND:FIND-DEFINITIONS.
@@ -63,55 +72,24 @@
       dspec-and-locations))
 
 ;;; This can be awfully slow because it may READ sources to get the
-;;; source locations.
-#-sbcl
-(defun swank-dspecs (name)
+;;; source locations. Also, the "at-least" in the name indicates that
+;;; we actually return more than just the UNKNOWN dspecs (actually
+;;; all).
+(defun at-least-unknown-dspecs (name &key include-location)
   (multiple-value-bind (name foundp) (swank-definition-name name)
     (when foundp
-      (mapcar #-abcl #'first
-              #+abcl (lambda (dspec-and-location)
-                       (if (eq (first dspec-and-location) :primitive)
-                           '(function)
-                           (first dspec-and-location)))
-              (swank-dspecs-and-locations name)))))
-
-#+sbcl
-(defparameter *unknown-swank-definition-types*
-  '(:transform :deftransform
-    :optimizer :defoptimizer
-    :vop :define-vop
-    :source-transform :define-source-transform
-    :ir1-convert :def-ir1-translator
-    :declaration declaim
-    :alien-type :define-alien-type))
-
-;;; This is SWANK-BACKEND:FIND-DEFINITIONS modified to not read files
-;;; or buffers and to iterate over only the definition types that are
-;;; not supported directly by DRef.
-#+sbcl
-(defun swank-dspecs (name)
-  (multiple-value-bind (name foundp) (swank-definition-name name)
-    (when foundp
-      (loop for type in *unknown-swank-definition-types* by #'cddr
-            for defsrcs = (sb-introspect:find-definition-sources-by-name
-                           name type)
-            for filtered-defsrcs
-              = (if (eq type :generic-function)
-                    (remove :invalid defsrcs
-                            :key #'swank/sbcl::categorize-definition-source)
-                    defsrcs)
-            append (loop for defsrc in filtered-defsrcs
-                         collect (swank/sbcl::make-dspec type name defsrc))))))
+      (if include-location
+          (swank-dspecs-and-locations name)
+          (mapcar #'first (swank-dspecs-and-locations name))))))
 
 
 ;;;; Swank utilities that depend on DREF
 
-(defun swank-definitions (name locative-types)
-  (when (and (or (symbolp name) (stringp name) (listp name))
-             locative-types)
-    (loop for dspec in (swank-dspecs name)
+(defun unknown-definitions (name)
+  (when (and (or (symbolp name) (stringp name) (listp name)))
+    (loop for dspec in (at-least-unknown-dspecs name)
           for dref = (dspec-to-definition (normalize-dspec dspec) name)
-          when (member (dref-locative-type dref) locative-types)
+          when (eq (dref-locative-type dref) 'unknown)
             collect dref)))
 
 ;;; Return a Swank source location for a definition of NAME with one
@@ -146,13 +124,6 @@
   (swank::converting-errors-to-error-location
     (or (swank-object-source-location object)
         (apply #'swank-source-location name locatives))))
-
-
-#+sbcl
-(defun/autoloaded translate-sb-source-location (sb-source-location)
-  (swank/sbcl::definition-source-for-emacs
-   (sb-introspect::translate-source-location sb-source-location)
-   nil nil))
 
 
 ;;;; Conversions between DREFs and Swank dspecs

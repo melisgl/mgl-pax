@@ -1332,6 +1332,9 @@ SOURCE-LOCATION*:
       (documentation* class t))
     
     (defmethod source-location* ((dref class-dref))
+      #+sbcl
+      (sb-one-source-location (dref-name dref) :class)
+      #-sbcl
       (swank-source-location* (resolve dref) (dref-name dref) 'class))
 
 We took advantage of having just made the class locative type being

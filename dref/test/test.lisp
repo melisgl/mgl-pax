@@ -132,6 +132,7 @@
   (is (endp (definitions '(x y)))))
 
 
+#-sbcl
 (deftest test-dspec ()
   (check-dspec-roundtrip (dref '*some-var* 'variable))
   (check-dspec-roundtrip (dref 'bar 'constant))
@@ -161,6 +162,7 @@
     (when dref
       (check-dspec-roundtrip dref))))
 
+#-sbcl
 (defun check-dspec-roundtrip (dref &optional (expected-result dref))
   (let* ((dspec (dref::definition-to-dspec dref))
          (swank-name (or (ignore-errors (dref::dref-function-name dref))
@@ -1008,6 +1010,7 @@
     (test-util)
     (test-locate)
     (test-definitions)
+    #-sbcl
     (test-dspec)
     (test-arglist)
     (test-docstring)

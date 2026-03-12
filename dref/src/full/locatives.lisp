@@ -68,6 +68,9 @@
   (documentation* (dref-name dref) 'variable))
 
 (defmethod source-location* ((dref variable-dref))
+  #+sbcl
+  (sb-one-source-location (dref-name dref) :variable)
+  #-sbcl
   (swank-source-location (dref-name dref) 'variable))
 
 
@@ -90,6 +93,9 @@
   (documentation* (dref-name dref) 'variable))
 
 (defmethod source-location* ((dref constant-dref))
+  #+sbcl
+  (sb-one-source-location (dref-name dref) :constant)
+  #-sbcl
   (swank-source-location (dref-name dref) 'constant))
 
 
@@ -145,6 +151,9 @@
   (documentation* (dref-name dref) 'setf))
 
 (defmethod source-location* ((dref setf-dref))
+  #+sbcl
+  (sb-one-source-location (dref-name dref) :setf-expander)
+  #-sbcl
   (swank-source-location (dref-name dref) 'setf))
 
 
@@ -186,9 +195,12 @@
   (documentation* (dref-name dref) 'function))
 
 (defmethod source-location* ((dref macro-dref))
-  (let ((symbol (dref-name dref)))
-    (when-let (fn (macro-function symbol))
-      (swank-source-location* fn symbol 'macro))))
+  (let ((name (dref-name dref)))
+    #+sbcl
+    (sb-one-source-location name :macro)
+    #-sbcl
+    (when-let (fn (macro-function name))
+      (swank-source-location* fn name 'macro))))
 
 
 ;;;; SYMBOL-MACRO locative
@@ -227,6 +239,9 @@
   (documentation* (dref-name dref) 'symbol-macro))
 
 (defmethod source-location* ((dref symbol-macro-dref))
+  #+sbcl
+  (sb-one-source-location (dref-name dref) :symbol-macro)
+  #-sbcl
   (swank-source-location (dref-name dref) 'symbol-macro))
 
 
@@ -272,6 +287,9 @@
 
 (defmethod source-location* ((dref compiler-macro-dref))
   (let ((name (dref-function-name dref)))
+    #+sbcl
+    (sb-one-source-location name :compiler-macro)
+    #-sbcl
     (swank-source-location* (compiler-macro-function* name) name
                             'compiler-macro)))
 
@@ -348,6 +366,9 @@
 
 (defmethod source-location* ((dref function-dref))
   (let ((name (dref-function-name dref)))
+    #+sbcl
+    (sb-one-source-location name :function)
+    #-sbcl
     (swank-source-location* (fdefinition* name) name 'function)))
 
 
@@ -371,6 +392,9 @@
 
 (defmethod source-location* ((dref generic-function-dref))
   (let ((name (dref-function-name dref)))
+    #+sbcl
+    (sb-one-source-location name :generic-function)
+    #-sbcl
     (swank-source-location* (fdefinition* name) name 'generic-function)))
 
 
@@ -484,9 +508,16 @@
   (documentation* (resolve dref) t))
 
 (defmethod source-location* ((dref method-dref))
-  (swank-source-location* (resolve dref)
-                          (dref-function-name dref)
-                          `(method ,@(dref-locative-args dref))))
+  (let ((name (dref-function-name dref)))
+    #+sbcl
+    (sb-one-source-location
+     name :method
+     ;; (:AROUND (STRING T)) => (:AROUND STRING T)
+     :description (let ((args (dref-locative-args dref)))
+                    (append (butlast args) (last-elt args))))
+    #-sbcl
+    (swank-source-location* (resolve dref) name
+                            `(method ,@(dref-locative-args dref)))))
 
 
 ;;;; SETF-COMPILER-MACRO locative
@@ -635,6 +666,9 @@
   (documentation* (dref-name dref) 'method-combination))
 
 (defmethod source-location* ((dref method-combination-dref))
+  #+sbcl
+  (sb-one-source-location (dref-name dref) :method-combination)
+  #-sbcl
   (swank-source-location (dref-name dref) 'method-combination))
 
 
@@ -692,6 +726,10 @@
      (find-reader-slot-definition symbol (first locative-args)))))
 
 (defmethod source-location* ((dref reader-dref))
+  #+sbcl
+  (sb-one-source-location (dref-name dref) :method
+                          :description (dref-locative-args dref))
+  #-sbcl
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
     (swank-source-location* (find-method* symbol ()
@@ -763,6 +801,10 @@
      (find-writer-slot-definition symbol (first locative-args)))))
 
 (defmethod source-location* ((dref writer-dref))
+  #+sbcl
+  (sb-one-source-location (dref-name dref) :method
+                          :description `(t ,@(dref-locative-args dref)))
+  #-sbcl
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
     (swank-source-location* (find-method* symbol ()
@@ -836,6 +878,10 @@
      (find-accessor-slot-definition symbol (first locative-args)))))
 
 (defmethod source-location* ((dref accessor-dref))
+  #+sbcl
+  (sb-one-source-location (dref-name dref) :method
+                          :description (dref-locative-args dref))
+  #-sbcl
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
     (swank-source-location* (find-method* symbol ()
@@ -930,6 +976,9 @@
   (documentation* (dref-name dref) 'function))
 
 (defmethod source-location* ((dref structure-accessor-dref))
+  #+sbcl
+  (sb-one-source-location (dref-name dref) :function)
+  #-sbcl
   (let ((symbol (dref-name dref)))
     (swank-source-location* (symbol-function* symbol) symbol 'function)))
 
@@ -991,6 +1040,9 @@
   (documentation* (dref-name dref) 'type))
 
 (defmethod source-location* ((dref type-dref))
+  #+sbcl
+  (sb-one-source-location (dref-name dref) :type)
+  #-sbcl
   (swank-source-location (dref-name dref) 'type 'class 'condition))
 
 
@@ -1020,6 +1072,9 @@
   (documentation* class t))
 
 (defmethod source-location* ((dref class-dref))
+  #+sbcl
+  (sb-one-source-location (dref-name dref) :class)
+  #-sbcl
   (swank-source-location* (resolve dref) (dref-name dref) 'class))
 
 (defvar %end-of-class-example)
@@ -1043,6 +1098,9 @@
     (%make-dref symbol structure)))
 
 (defmethod source-location* ((dref structure-dref))
+  #+sbcl
+  (sb-one-source-location (dref-name dref) :structure)
+  #-sbcl
   (swank-source-location* (resolve dref) (dref-name dref) 'structure))
 
 
@@ -1143,6 +1201,9 @@
   (documentation* (find-class (dref-name dref)) t))
 
 (defmethod source-location* ((dref condition-dref))
+  #+sbcl
+  (sb-one-source-location (dref-name dref) :condition)
+  #-sbcl
   (swank-source-location* (resolve dref) (dref-name dref) 'condition))
 
 
@@ -1249,6 +1310,9 @@
   (documentation* (resolve dref) t))
 
 (defmethod source-location* ((dref package-dref))
+  #+sbcl
+  (sb-one-source-location (make-symbol (dref-name dref)) :package)
+  #-sbcl
   (let ((name (dref-name dref)))
     (swank-source-location* (find-package* name)
                             (if (stringp name)
@@ -1435,15 +1499,17 @@
 (define-lookup unknown (name locative-args)
   (unless (and (symbolp name)
                locative-args
-               (find (first locative-args) (swank-dspecs name) :test #'equal))
+               (find (first locative-args) (at-least-unknown-dspecs name)
+                     :test #'equal))
     (locate-error))
   (%make-dref name unknown locative-args))
 
 (defmethod map-definitions-of-name (fn name (locative-type (eql 'unknown)))
-  (map nil fn (swank-definitions name '(unknown))))
+  (map nil fn (unknown-definitions name)))
 
 (defmethod source-location* ((dref unknown-dref))
-  (let ((dspec-and-location-list (swank-dspecs-and-locations (dref-name dref)))
+  (let ((dspec-and-location-list (at-least-unknown-dspecs (dref-name dref)
+                                                          :include-location t))
         (dspec (first (dref-locative-args dref))))
     (second (find dspec dspec-and-location-list :key #'first :test #'equal))))
 
