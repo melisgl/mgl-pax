@@ -185,6 +185,7 @@
   (test-arglist/generic-function)
   (test-arglist/method)
   (test-arglist/type)
+  (test-arglist/class)
   (test-arglist/locative)
   (test-arglist/symbol-locative)
   (test-arglist/lambda))
@@ -301,6 +302,11 @@
           (equal * '(x &rest r))
           (eq * :deftype))))
   (is (listp (arglist (dref 'debug0-non-constant-type 'type)))))
+
+(deftest test-arglist/class ()
+  (is (match-values (arglist (dref 'float 'class))
+        (eq (first *) '&optional)
+        (eq * :deftype))))
 
 (deftest test-arglist/locative ()
   (is (match-values (arglist (dref 'loc-with-args 'locative))

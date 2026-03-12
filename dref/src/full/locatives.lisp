@@ -1031,10 +1031,18 @@
       #+ecl
       (when-let (arglist (third (si:get-sysprop name 'si::deftype-form)))
         (values arglist :deftype))
-      (let ((arglist (swank-backend:type-specifier-arglist name)))
-        (if (listp arglist)
-            (values arglist :deftype)
-            nil)))))
+      #+sbcl (when-let (arglist (sb-introspect:deftype-lambda-list name))
+               ;; For SBCL before 2026-03-12
+               (unless (eq arglist :unknown)
+                 (values arglist :deftype)))
+      #-(or ccl ecl sbcl)
+      (standard-type-specifier-arglist name))))
+
+(defun standard-type-specifier-arglist (name)
+  (let ((arglist (swank-backend:type-specifier-arglist name)))
+    (if (listp arglist)
+        (values arglist :deftype)
+        nil)))
 
 (defmethod docstring* ((dref type-dref))
   (documentation* (dref-name dref) 'type))
@@ -1080,8 +1088,9 @@
 (defvar %end-of-class-example)
 
 (defmethod arglist* ((dref class-dref))
-  ;; FIXME: Return compound type specifier arglist if any.
-  ())
+  ;; Return the [compound type specifier][clhs] of [system
+  ;; class][clhs]es (e.g. [FLOAT][(clhs class)]).
+  (standard-type-specifier-arglist (dref-name dref)))
 
 
 ;;;; STRUCTURE locative
