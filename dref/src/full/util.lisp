@@ -63,8 +63,8 @@
         (values nil t)))))
 
 (defparameter *clhs-type-names*
-  ;; (loop for d in (dref:dref-apropos nil :dtype '(pax:clhs type))
-  ;;       collect (dref:dref-name d)) =>
+  ;; (loop for d in (dref-apropos nil :dtype '(pax:clhs type))
+  ;;       collect (dref-name d)) =>
   '(and atom base-char base-string bignum bit boolean compiled-function
     double-float eql extended-char fixnum keyword long-float member
     mod nil not or satisfies short-float signed-byte simple-array
@@ -84,10 +84,49 @@
            ;; On most Lisps, SWANK-BACKEND:TYPE-SPECIFIER-P is not
            ;; reliable.
            #-(or abcl allegro ccl clisp cmucl ecl)
-           (swank-backend:type-specifier-p name)
+           (swank/backend:type-specifier-p name)
            (ignore-errors (find-class name))
            ;; https://gitlab.com/embeddable-common-lisp/ecl/-/issues/819
            (member name *clhs-type-names*))))
+
+(defparameter *clhs-compound-type-specifier-arglists*
+  '((and                . (&rest type-specifiers))
+    (array              . (&optional element-type dimension-spec))
+    (base-string        . (&optional size))
+    (bit-vector         . (&optional size))
+    (complex            . (&optional type-specifier))
+    (cons               . (&optional car-typespec cdr-typespec))
+    (double-float       . (&optional lower-limit upper-limit))
+    (eql                . (object))
+    (float              . (&optional lower-limit upper-limit))
+    (function           . (&optional arg-typespec value-typespec))
+    (integer            . (&optional lower-limit upper-limit))
+    (long-float         . (&optional lower-limit upper-limit))
+    (member             . (&rest eql-objects))
+    (mod                . (n))
+    (not                . (type-specifier))
+    (or                 . (&rest type-specifiers))
+    (rational           . (&optional lower-limit upper-limit))
+    (real               . (&optional lower-limit upper-limit))
+    (satisfies          . (predicate-symbol))
+    (short-float        . (&optional lower-limit upper-limit))
+    (signed-byte        . (&optional size))
+    (simple-array       . (&optional element-type dimension-spec))
+    (simple-base-string . (&optional size))
+    (simple-bit-vector  . (&optional size))
+    (simple-string      . (&optional size))
+    (single-float       . (&optional lower-limit upper-limit))
+    (simple-vector      . (&optional size))
+    (string             . (&optional size))
+    (unsigned-byte      . (&optional size))
+    (values             . (&rest typespecs))
+    (vector             . (&optional element-type size))))
+
+(defun clhs-type-specifier-arglist (name)
+  (let ((entry (assoc name *clhs-compound-type-specifier-arglists*)))
+    (if entry
+        (values (cdr entry) :deftype)
+        (values nil nil))))
 
 
 ;;;; Macros
@@ -139,7 +178,7 @@
   #+cmucl (or (c::info setf inverse symbol)
               (c::info setf expander symbol))
   #+ecl (si:get-sysprop symbol 'si::setf-method)
-  #+sbcl (swank/sbcl::setf-expander symbol)
+  #+sbcl (sb-int:info :setf :expander symbol)
   #-(or abcl ccl clisp cmucl ecl sbcl)
   ;; KLUDGE: When there is no setf expansion, we get this:
   ;;
@@ -169,7 +208,7 @@
 
 (defun function-name (function)
   (let* ((function (unencapsulated-function function))
-         (name (swank-backend:function-name function)))
+         (name (%function-name function)))
     #-abcl
     (let ((kind (and (listp name)
                      (= (length name) 2)
@@ -194,6 +233,10 @@
            (first name))
           (t
            name))))
+
+(defun %function-name (function)
+  #+sbcl (sb-impl::%fun-name function)
+  #-sbcl (swank/backend:function-name function))
 
 ;;; Like SYMBOL-FUNCTION but sees through encapsulated functions.
 (defun symbol-function* (symbol)
@@ -294,7 +337,7 @@
             (values function-designator (fdefinition* function-designator)))
       (declare (ignorable function-name function))
       #-(or abcl allegro ccl)
-      (let ((arglist (swank-backend:arglist function-designator)))
+      (let ((arglist (%function-arglist function-designator)))
         (if (eq arglist :not-available)
             (values nil nil)
             (values arglist foundp)))
@@ -332,7 +375,7 @@
         ;; CCL:FUNCTION-SOURCE-NOTE. This is also the way to get
         ;; DEFTYPE expanders arglists.
         (function-arglist-from-source-note function foundp)
-        (let ((arglist (swank-backend:arglist
+        (let ((arglist (swank/backend:arglist
                         (or (and (functionp function-designator)
                                  (function-name function-designator))
                             function-designator))))
@@ -347,6 +390,12 @@
                            x))
                      arglist)
              foundp)))))))
+
+(defun %function-arglist (function)
+  #+sbcl
+  (sb-introspect:function-lambda-list function)
+  #-sbcl
+  (swank/backend:arglist function))
 
 #+ccl
 (defun function-arglist-from-source-note (function foundp)

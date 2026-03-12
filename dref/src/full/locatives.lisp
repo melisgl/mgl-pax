@@ -1036,13 +1036,7 @@
                (unless (eq arglist :unknown)
                  (values arglist :deftype)))
       #-(or ccl ecl sbcl)
-      (standard-type-specifier-arglist name))))
-
-(defun standard-type-specifier-arglist (name)
-  (let ((arglist (swank-backend:type-specifier-arglist name)))
-    (if (listp arglist)
-        (values arglist :deftype)
-        nil)))
+      (clhs-type-specifier-arglist name))))
 
 (defmethod docstring* ((dref type-dref))
   (documentation* (dref-name dref) 'type))
@@ -1088,9 +1082,7 @@
 (defvar %end-of-class-example)
 
 (defmethod arglist* ((dref class-dref))
-  ;; Return the [compound type specifier][clhs] of [system
-  ;; class][clhs]es (e.g. [FLOAT][(clhs class)]).
-  (standard-type-specifier-arglist (dref-name dref)))
+  (clhs-type-specifier-arglist (dref-name dref)))
 
 
 ;;;; STRUCTURE locative
@@ -1168,8 +1160,10 @@
 
 (defmethod source-location* ((dref declaration-dref))
   #+sbcl
-  (swank-backend:find-source-location
-   (sb-int:info :declaration :known (dref-name dref)))
+  (let ((name (dref-name dref)))
+    (when-let (defsrc (sb-introspect:find-definition-source
+                       (sb-int:info :declaration :known name)))
+      (swank/sbcl::definition-source-for-emacs defsrc 'declaration name)))
   #-sbcl
   '(:error "Don't know how to find the source location of declarations."))
 

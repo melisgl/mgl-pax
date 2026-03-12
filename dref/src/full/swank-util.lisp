@@ -14,7 +14,7 @@
   (when object
     ;; @SOURCE-FILE-READ-EVAL
     (let* ((*read-eval* t)
-           (location (swank-backend:find-source-location
+           (location (swank/backend:find-source-location
                       (if (functionp object)
                           (unencapsulated-function object)
                           object))))
@@ -34,7 +34,7 @@
 (defun swank-dspecs-and-locations-1 (object)
   ;; @SOURCE-FILE-READ-EVAL
   (let* ((*read-eval* t)
-         (dspec-and-location-list (swank-backend:find-definitions
+         (dspec-and-location-list (swank/backend:find-definitions
                                    (swank-definition-name object))))
     #-abcl
     dspec-and-location-list
@@ -63,7 +63,7 @@
   (if (eq (first dspec-and-locations) :error)
       ()
       #+allegro
-      ;; (swank-backend::find-definitions :xxx)
+      ;; (swank/backend::find-definitions :xxx)
       ;; => ((:XXX (:ERROR "Unknown source location for :XXX")))
       (remove-if (lambda (dspec-and-location)
                    (not (listp (first dspec-and-location))))
@@ -97,7 +97,7 @@
 ;;; `(:ERROR ...)`. The implementation is based on the rather
 ;;; expensive SWANK-BACKEND:FIND-DEFINITIONS function.
 (defun swank-source-location (name &rest locatives)
-  (swank::converting-errors-to-error-location
+  (swank/backend:converting-errors-to-error-location
     (let ((dref-and-location-list
             (loop for (dspec location) in (swank-dspecs-and-locations name)
                   collect (list (dspec-to-definition (normalize-dspec dspec)
@@ -121,7 +121,7 @@
 ;;; calling the much slower but more complete
 ;;; SWANK-BACKEND:FIND-DEFINITIONS.
 (defun/autoloaded swank-source-location* (object name &rest locatives)
-  (swank::converting-errors-to-error-location
+  (swank/backend:converting-errors-to-error-location
     (or (swank-object-source-location object)
         (apply #'swank-source-location name locatives))))
 
