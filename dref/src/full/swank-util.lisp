@@ -75,13 +75,24 @@
                            (first dspec-and-location)))
               (swank-dspecs-and-locations name)))))
 
+#+sbcl
+(defparameter *unknown-swank-definition-types*
+  '(:transform :deftransform
+    :optimizer :defoptimizer
+    :vop :define-vop
+    :source-transform :define-source-transform
+    :ir1-convert :def-ir1-translator
+    :declaration declaim
+    :alien-type :define-alien-type))
+
 ;;; This is SWANK-BACKEND:FIND-DEFINITIONS modified to not read files
-;;; or buffers.
+;;; or buffers and to iterate over only the definition types that are
+;;; not supported directly by DRef.
 #+sbcl
 (defun swank-dspecs (name)
   (multiple-value-bind (name foundp) (swank-definition-name name)
     (when foundp
-      (loop for type in swank/sbcl::*definition-types* by #'cddr
+      (loop for type in *unknown-swank-definition-types* by #'cddr
             for defsrcs = (sb-introspect:find-definition-sources-by-name
                            name type)
             for filtered-defsrcs
