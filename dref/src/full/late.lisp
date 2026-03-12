@@ -150,7 +150,7 @@
   Roughly speaking, when NAME or PACKAGE is a SYMBOL, it must match
   the whole @NAME of the definition:
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (dref-apropos 'method :package :dref :external-only t)
   ==> (#<DREF METHOD CLASS> #<DREF METHOD LOCATIVE>)
   ```
@@ -158,7 +158,7 @@
   On the other hand, when NAME or PACKAGE is a STRING, they are
   matched as substrings to the definition's name PRINC-TO-STRINGed:
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (dref-apropos "method" :package :dref :external-only t)
   ==> (#<DREF SETF-METHOD LOCATIVE> #<DREF METHOD CLASS>
   -->  #<DREF METHOD LOCATIVE> #<DREF METHOD-COMBINATION CLASS>
@@ -167,7 +167,7 @@
 
   Definitions that are not of DTYPE (see DTYPEP) are filtered out:
 
-  ```cl-transcript
+  ```cl-transcript (:dynenv dref-std-env)
   (dref-apropos "method" :package :dref :external-only t :dtype 'class)
   ==> (#<DREF METHOD CLASS> #<DREF METHOD-COMBINATION CLASS>)
   ```
