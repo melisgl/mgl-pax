@@ -29,7 +29,7 @@
        #+ecl (or (si:specialp obj)
                  (constant-variable-name-p obj))
        #+sbcl (member (sb-int:info :variable :kind obj)
-                      '(:special :constant))))
+                      '(:global :special :constant))))
 
 (defun constant-variable-name-p (obj)
   (and (symbolp obj)

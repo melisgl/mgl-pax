@@ -52,6 +52,8 @@
   '(xxx 34)
   "*TEST-VARIABLE* is not a link.")
 (defvar *some-var*)
+#+sbcl
+(sb-ext:defglobal global-var 7)
 
 (define-restart some-restart (arg1)
   "This is SOME-RESTART with ARG1.")

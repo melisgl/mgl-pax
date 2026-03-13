@@ -105,7 +105,9 @@
     (signals (locate-error)
       (dref '*non-existent* 'variable)))
   (signals (locate-error)
-    (dref :xxx 'variable)))
+    (dref :xxx 'variable))
+  #+sbcl
+  (check-ref (dref 'global-var 'variable) 'global-var 'variable))
 
 (deftest test-locate/constant ()
   (check-ref (dref 'bar 'constant) 'bar 'constant)
