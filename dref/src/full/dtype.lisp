@@ -101,7 +101,7 @@
          (d-locative-type (locative-type d-locative)))
     (labels
         ((d-is-of-atomic-locative-p (locative-type)
-           (locative-subtype-p d-locative-type locative-type))
+           (extended-locative-subtype-p d-locative-type locative-type))
          (d-is-of-compound-locative-p (locative)
            (or
             ;; Pick off the exact match case.
@@ -144,11 +144,11 @@
               (d-is-of-compound-locative-p dtype)))))
       (values (recurse dtype)))))
 
-(defun locative-subtypes (locative-type)
+(defun extended-locative-subtypes (locative-type)
+  ;; T and NIL are not a locative types but DTYPEs. Thes are for the
+  ;; convenience of COVER-BASIC-DTYPE.
   (cond ((eq locative-type nil)
          ())
-        ;; T is not a locative type but a DTYPE. This is just for the
-        ;; convenience of COVER-BASIC-DTYPE.
         ((eq locative-type t)
          *lisp-locative-types*)
         (t
@@ -258,11 +258,12 @@
              ()
              *locative-types*))
         (t
-         (locative-subtypes (cover-dtype/single dtype negatep)))))))
+         (extended-locative-subtypes (cover-dtype/single dtype negatep)))))))
 
 (defun cover-object-with-locative-types (object negatep)
   (when-let ((dref (locate object nil)))
-    (locative-subtypes (cover-dtype/single (dref-locative dref) negatep))))
+    (extended-locative-subtypes (cover-dtype/single (dref-locative dref)
+                                                    negatep))))
 
 ;;; In the base case, we cover DTYPE with a single locative type, NIL
 ;;; or T (where NIL and T are not locative types).

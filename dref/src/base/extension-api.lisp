@@ -49,7 +49,8 @@
   [ check-lisp-and-pseudo-are-distinct function ][docstring]"
   (dref-class function)
   (locative-type-direct-supers function)
-  (locative-type-direct-subs function))
+  (locative-type-direct-subs function)
+  (locative-subtype-p function))
 
 (defun check-lisp-and-pseudo-are-distinct (pseudop locative-type superclasses)
   "The hierarchies of LISP-LOCATIVE-TYPES and PSEUDO-LOCATIVE-TYPES
@@ -186,6 +187,16 @@
           collect locative-type-1))
 
 (defun locative-subtype-p (locative-type-1 locative-type-2)
+  "Check if LOCATIVE-TYPE-1 is in the transitive closure of
+  LOCATIVE-TYPE-2 via LOCATIVE-TYPE-DIRECT-SUBS. It is an error if
+  LOCATIVE-TYPE-1 or LOCATIVE-TYPE-2 is not a valid locative type."
+  (let ((class1 (or (dref-class locative-type-1)
+                    (invalid-locative-type locative-type-1)))
+        (class2 (or (dref-class locative-type-2)
+                    (invalid-locative-type locative-type-2))))
+    (subtypep class1 class2)))
+
+(defun extended-locative-subtype-p (locative-type-1 locative-type-2)
   (cond ((or (eq locative-type-1 locative-type-2)
              (eq locative-type-1 nil)
              (eq locative-type-2 'top))
@@ -194,11 +205,7 @@
          (when (find locative-type-1 *lisp-locative-types*)
            (values t t)))
         (t
-         (let ((class1 (or (dref-class locative-type-1)
-                           (invalid-locative-type locative-type-1)))
-               (class2 (or (dref-class locative-type-2)
-                           (invalid-locative-type locative-type-2))))
-           (subtypep class1 class2)))))
+         (locative-subtype-p locative-type-1 locative-type-2))))
 
 
 (defsection @defining-locative-types (:title "Defining Locative Types")

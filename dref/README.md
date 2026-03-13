@@ -1776,6 +1776,14 @@ by [`DEFINE-LOCATIVE-TYPE`][b6c4] and [`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4].
     
     This list is in [reverse definition order][9bf9].
 
+<a id="x-28DREF-EXT-3ALOCATIVE-SUBTYPE-P-20FUNCTION-29"></a>
+
+- [function] **LOCATIVE-SUBTYPE-P** *LOCATIVE-TYPE-1 LOCATIVE-TYPE-2*
+
+    Check if `LOCATIVE-TYPE-1` is in the transitive closure of
+    `LOCATIVE-TYPE-2` via [`LOCATIVE-TYPE-DIRECT-SUBS`][130a]. It is an error if
+    `LOCATIVE-TYPE-1` or `LOCATIVE-TYPE-2` is not a valid locative type.
+
 <a id="x-28DREF-EXT-3A-40DEFINING-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29"></a>
 
 ### 8.3 Defining Locative Types

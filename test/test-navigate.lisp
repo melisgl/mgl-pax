@@ -184,7 +184,7 @@
   (with-test ("actualized")
     (check-ref-sets (definitions '@test-examples :dtype 'variable)
                     `(,(xref '@test-examples 'section))))
-  (is (dref::locative-subtype-p 'section 'variable)))
+  (is (locative-subtype-p 'section 'variable)))
 
 (deftest test-locate/glossary-term ()
   (check-ref-sets (definitions '@some-term)
@@ -192,7 +192,7 @@
   (with-test ("actualized")
     (check-ref-sets (definitions '@some-term)
                     `(,(xref '@some-term 'glossary-term))))
-  (is (dref::locative-subtype-p 'glossary-term 'variable)))
+  (is (locative-subtype-p 'glossary-term 'variable)))
 
 (deftest test-locate/note ()
   (check-ref (dref '@1+* 'note nil) '@1+* 'note)

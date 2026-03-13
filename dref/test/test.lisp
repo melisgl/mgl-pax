@@ -778,7 +778,7 @@
   (is (set-equal-p (dref::cover-dtype '(not t)) (pseudo-locative-types)))
   (is (set-equal-p (dref::cover-dtype '(not class))
                    (set-difference (locative-types)
-                                   (dref::locative-subtypes 'class))))
+                                   (dref::extended-locative-subtypes 'class))))
   (is (set-equal-p (dref::cover-dtype '(and t (not (method ()))))
                    (lisp-locative-types))))
 
@@ -790,10 +790,10 @@
                    '(accessor)))
   (is (set-equal-p (dref::cover-dtype '(not (and class)))
                    (set-difference (locative-types)
-                                   (dref::locative-subtypes 'class))))
+                                   (dref::extended-locative-subtypes 'class))))
   (is (set-equal-p (dref::cover-dtype '(not (or class)))
                    (set-difference (locative-types)
-                                   (dref::locative-subtypes 'class)))))
+                                   (dref::extended-locative-subtypes 'class)))))
 
 (deftest test-cover-dtype/compound ()
   (is (set-equal-p (dref::cover-dtype '(method (number)))

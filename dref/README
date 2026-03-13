@@ -1395,6 +1395,12 @@ by DEFINE-LOCATIVE-TYPE and DEFINE-PSEUDO-LOCATIVE-TYPE.
 
     This list is in reverse definition order.
 
+- [function] LOCATIVE-SUBTYPE-P LOCATIVE-TYPE-1 LOCATIVE-TYPE-2
+
+    Check if LOCATIVE-TYPE-1 is in the transitive closure of
+    LOCATIVE-TYPE-2 via LOCATIVE-TYPE-DIRECT-SUBS. It is an error if
+    LOCATIVE-TYPE-1 or LOCATIVE-TYPE-2 is not a valid locative type.
+
 ### Defining Locative Types
 
 - [macro] DEFINE-LOCATIVE-TYPE LOCATIVE-TYPE-AND-LAMBDA-LIST LOCATIVE-SUPERTYPES &OPTIONAL DOCSTRING DREF-DEFCLASS-FORM

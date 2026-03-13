@@ -34,7 +34,7 @@
            #:delete-definition-property #:docstring* #:dref-class
            #:dtype-dref #:function-dref #:generic-function-dref
            #:lambda-dref #:locate-error #:locative-args
-           #:locative-dref #:locative-type
+           #:locative-dref #:locative-subtype-p #:locative-type
            #:locative-type-direct-subs
            #:locative-type-direct-supers #:macro-dref
            #:make-source-location #:map-definitions-of-name
