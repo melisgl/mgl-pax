@@ -1127,7 +1127,13 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
 
     Naturally, CLASS is the locative type for CLASSes.
 
-    Also, see the related CONDITION locative.
+    ARGLIST returns the compound type specifier syntax
+    associated with system classes. E.g. for the INTEGER
+    class:
+
+        (arglist (find-class 'integer))
+        => (&OPTIONAL LOWER-LIMIT UPPER-LIMIT)
+        => :DEFTYPE
 
 - [locative] STRUCTURE
 
@@ -1303,7 +1309,15 @@ locative type:
     (define-locative-type class (type)
       "Naturally, CLASS is the locative type for [CLASS][class]es.
     
-      Also, see the related CONDITION locative.")
+      ARGLIST returns the [compound type specifier][clhs] syntax
+      associated with [system class][clhs]es. E.g. for the [INTEGER][clhs]
+      class:
+    
+      ```cl-transcript (:dynenv dref-std-env)
+      (arglist (find-class 'integer))
+      => (&OPTIONAL LOWER-LIMIT UPPER-LIMIT)
+      => :DEFTYPE
+      ```")
 
 Then, we make it possible to look up CLASS definitions:
 
@@ -1336,6 +1350,9 @@ SOURCE-LOCATION*:
       (sb-one-source-location (dref-name dref) :class)
       #-sbcl
       (swank-source-location* (resolve dref) (dref-name dref) 'class))
+    
+    (defmethod arglist* ((dref class-dref))
+      (clhs-type-specifier-arglist (dref-name dref)))
 
 We took advantage of having just made the class locative type being
 RESOLVEable, by specializing DOCSTRING* on the CLASS class.

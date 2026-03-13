@@ -1056,7 +1056,15 @@
 (define-locative-type class (type)
   "Naturally, CLASS is the locative type for [CLASS][class]es.
 
-  Also, see the related CONDITION locative.")
+  ARGLIST returns the [compound type specifier][clhs] syntax
+  associated with [system class][clhs]es. E.g. for the [INTEGER][clhs]
+  class:
+
+  ```cl-transcript (:dynenv dref-std-env)
+  (arglist (find-class 'integer))
+  => (&OPTIONAL LOWER-LIMIT UPPER-LIMIT)
+  => :DEFTYPE
+  ```")
 
 (define-locator class ((class class))
   (make-instance 'class-dref :name (class-name class) :locative 'class))
@@ -1079,10 +1087,10 @@
   #-sbcl
   (swank-source-location* (resolve dref) (dref-name dref) 'class))
 
-(defvar %end-of-class-example)
-
 (defmethod arglist* ((dref class-dref))
   (clhs-type-specifier-arglist (dref-name dref)))
+
+(defvar %end-of-class-example)
 
 
 ;;;; STRUCTURE locative
