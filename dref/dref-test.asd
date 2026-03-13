@@ -13,7 +13,8 @@
   :source-control ""
   :description "Test system for DREF."
   :long-description ""
-  :depends-on ("dref/full" "mgl-pax" "try")
+  :depends-on ("dref/full" "mgl-pax"  "try"
+               (:feature (:not :swank) "swank"))
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "test/"

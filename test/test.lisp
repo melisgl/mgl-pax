@@ -2,10 +2,23 @@
 
 (deftest test-all ()
   (let ((*check-locate* t))
-    (test-util)
-    (test-navigate)
-    (test-document)
-    (test-transcribe)))
+    (flet ((all ()
+             (test-util)
+             (test-navigate)
+             (test-document)
+             (test-transcribe) ))
+      #+sbcl
+      (with-test ("with swank")
+        (let ((dref::*do-not-use-swank* nil))
+          (is (dref::use-swank-p))
+          (all)))
+      #+sbcl
+      (with-test ("without swank")
+        (let ((dref::*do-not-use-swank* t))
+          (is (not (dref::use-swank-p)))
+          (all)))
+      #-sbcl
+      (all))))
 
 (defun test (&key (debug nil) (print 'leaf) (describe *describe*))
   (handler-bind ((warning (lambda (c)

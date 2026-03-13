@@ -3,8 +3,8 @@
 lisp="$1"
 stop_on_failure="${2:-t}"
 debug="${3:-nil}"
-print="${4:-(quote try:unexpected)}"
-describe="${5:-(quote try:unexpected)}"
+print="${4:-(quote try:leaf)}"
+describe="${5:-(quote (or try:unexpected try:failure))}"
 num_passes=
 num_failures=
 
@@ -118,7 +118,7 @@ function run_tests {
   echo "SHTEST: running test suite ${test_suite} with ${lisp} $@"
   num_failures=0
   num_passes=0
-  ros --lisp "${lisp}" run --eval '(ql:quickload :dref)' --quit -- "$@"
+  ros --lisp "${lisp}" run --eval '(ql:quickload :dref-test)' --quit -- "$@"
   ${test_suite} ${lisp} ros --lisp ${lisp} run -- "$@"
   if ((num_failures > 0)); then
     if [ "${stop_on_failure}" = "t" ]; then

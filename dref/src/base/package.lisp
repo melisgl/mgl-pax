@@ -114,7 +114,9 @@
            (lambda ()
              (let ((*package* (find-package :dref))
                    (pax::*document-downcase-uppercase-code* nil)
-                   (pax::*transcribe-check-consistency* #+sbcl t #-sbcl nil))
+                   (pax::*transcribe-check-consistency*
+                     #+sbcl (use-swank-p)
+                     #-sbcl nil))
                ;; These variables are defined later.
                (declare (special pax::*document-downcase-uppercase-code*
                                  pax::*transcribe-check-consistency*))

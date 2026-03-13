@@ -113,9 +113,16 @@
   #+sbcl
   (check-ref-sets+ (definitions 'print)
                    `(,(xref 'print 'function)
-                     ,(xref 'print '(unknown (:defoptimizer print
-                                                 sb-c:derive-type)))
-                     ,(xref 'print '(unknown (declaim print sb-c:defknown)))))
+                     ,(xref 'print `(unknown (,(if (dref::use-swank-p)
+                                                   :defoptimizer
+                                                   :optimizer)
+                                              print
+                                              sb-c:derive-type)))
+                     ,(xref 'print `(unknown (,(if (dref::use-swank-p)
+                                                   'declaim
+                                                   :declaration)
+                                              print
+                                              sb-c:defknown)))))
   ;; This is a primitive object, that (SWANK-BACKEND:FIND-DEFINITIONS
   ;; 'SB-C::CATCH-BLOCK) returns as a TYPE.
   #+sbcl
@@ -413,8 +420,8 @@
 
 ;;;; TEST-SOURCE-LOCATION
 
-(defparameter *source-location-test-cases*
-  '(;; DREF::@VARIABLELIKE-LOCATIVES
+(defun source-location-test-cases ()
+  `(;; DREF::@VARIABLELIKE-LOCATIVES
     (foo-a variable (defvar foo-a))
     (foo-r variable (defvar foo-r))
     (foo-w variable (defvar foo-w))
@@ -424,8 +431,8 @@
     (my-smac symbol-macro (define-symbol-macro my-smac))
     (foo compiler-macro (define-compiler-macro foo))
     (short-setf-with-fn setf (defsetf short-setf-with-fn) nil
-     ;; No source location for DEFSETF on any implementation.
-     t)
+                        ;; No source location for DEFSETF on any implementation.
+                        t)
     ((setf setf-fn) function (defun (setf setf-fn)) nil
      #.(alexandria:featurep '(:or :allegro :cmucl)))
     ((setf setf-fn) compiler-macro
@@ -460,13 +467,14 @@
     ;; DREF::@PACKAGELIKE-LOCATIVES
     (mgl-pax asdf:system ())
     (mgl-pax package
-     (eval-when (:compile-toplevel :load-toplevel :execute))
-     (cl:defpackage))
+             (eval-when (:compile-toplevel :load-toplevel :execute))
+             (cl:defpackage))
     (xxx-rt readtable
-     #-ecl "(named-readtables:defreadtable xxx-rt"
-     #+ecl "
-
-(unless (named-readtables:find-readtable 'xxx-rt)")
+            #-ecl "(named-readtables:defreadtable xxx-rt"
+            #+ecl ,(format nil "~%~%(unless (named-readtables:find-readtable ~
+                                             'xxx-rt)")
+            #+sbcl ,@(unless (dref::use-swank-p)
+                       '("(unless (named-readtables:find-readtable 'xxx-rt")))
     ;; DREF-EXT::@DEFINING-LOCATIVE-TYPES
     (my-loc locative (define-locative-type my-loc))
     (object locative (define-locative-alias object class))))
@@ -481,7 +489,7 @@
     (source-location 777 :error t))
   (test-make-source-location)
   (let ((*package* (find-package :dref-test)))
-    (dolist (test-case *source-location-test-cases*)
+    (dolist (test-case (source-location-test-cases))
       (apply #'check-source-location test-case)))
   (signals-not (error)
     (source-location (xref 'function 'locative)))
@@ -1012,18 +1020,31 @@
 
 
 (deftest test-all ()
-  (let ((dref::*check-locate* t))
-    (test-util)
-    (test-locate)
-    (test-definitions)
-    #-sbcl
-    (test-dspec)
-    (test-arglist)
-    (test-docstring)
-    (test-source-location)
-    (test-hierarchy)
-    (test-dtypes)
-    (test-apropos)))
+  (let ((*check-locate* t))
+    (flet ((all ()
+             (test-util)
+             (test-locate)
+             (test-definitions)
+             #-sbcl
+             (test-dspec)
+             (test-arglist)
+             (test-docstring)
+             (test-source-location)
+             (test-hierarchy)
+             (test-dtypes)
+             (test-apropos)))
+      #+sbcl
+      (with-test ("with swank")
+        (let ((dref::*do-not-use-swank* nil))
+          (is (dref::use-swank-p))
+          (all)))
+      #+sbcl
+      (with-test ("without swank")
+        (let ((dref::*do-not-use-swank* t))
+          (is (not (dref::use-swank-p)))
+          (all)))
+      #-sbcl
+      (all))))
 
 (defun test (&key (debug nil) (print 'leaf) (describe *describe*))
   (handler-bind ((warning (lambda (c)

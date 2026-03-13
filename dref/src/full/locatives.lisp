@@ -426,9 +426,9 @@
     ()))
 
 (define-locator method ((method method))
-  (let ((name (swank-mop:generic-function-name
-               (swank-mop:method-generic-function method)))
-        (qualifiers (swank-mop:method-qualifiers method))
+  (let ((name (closer-mop:generic-function-name
+               (closer-mop:method-generic-function method)))
+        (qualifiers (method-qualifiers method))
         (specializers (method-specializers-list method)))
     (%make-dref name method `(,@qualifiers ,specializers))))
 
@@ -455,7 +455,7 @@
 (defmethod map-definitions-of-name (fn name (locative-type (eql 'method)))
   (let ((f (ignore-errors (fdefinition* name))))
     (when (typep f 'generic-function)
-      (loop for method in (swank-mop:generic-function-methods f)
+      (loop for method in (closer-mop:generic-function-methods f)
             do (funcall fn (locate method))))))
 
 ;;; Return the specializers in a format suitable as the second
@@ -463,10 +463,10 @@
 (defun method-specializers-list (method)
   (mapcar (lambda (spec)
             (typecase spec
-              (swank-mop:eql-specializer
-               `(eql ,(swank-mop:eql-specializer-object spec)))
-              (t (swank-mop:class-name spec))))
-          (swank-mop:method-specializers method)))
+              (closer-mop:eql-specializer
+               `(eql ,(closer-mop:eql-specializer-object spec)))
+              (t (class-name spec))))
+          (closer-mop:method-specializers method)))
 
 (defmethod resolve* ((dref method-dref))
   (multiple-value-bind (qualifiers specializers)
@@ -479,7 +479,7 @@
   ;; Some implementations include the specializers, some don't. In any
   ;; case, we want to replace the specializer objects with their sexp
   ;; representation.
-  (let* ((arglist (swank-mop:method-lambda-list (resolve dref)))
+  (let* ((arglist (closer-mop:method-lambda-list (resolve dref)))
          ;; KLUDGE: With ENSURE-LIST, this method works for READER,
          ;; WRITER and ACCESSOR, too.
          (specializers (ensure-list (last-elt (dref-locative-args dref))))
@@ -703,8 +703,8 @@
 
 (defun find-reader-slot-definition (reader-symbol class-symbol)
   (when (class-slots-supported-p class-symbol)
-    (dolist (slot-def (swank-mop:class-direct-slots (find-class class-symbol)))
-      (when (find reader-symbol (swank-mop:slot-definition-readers slot-def))
+    (dolist (slot-def (closer-mop:class-direct-slots (find-class class-symbol)))
+      (when (find reader-symbol (closer-mop:slot-definition-readers slot-def))
         (return-from find-reader-slot-definition slot-def)))
     (locate-error "Could not find reader ~S for class ~S." reader-symbol
                   class-symbol)))
@@ -722,8 +722,8 @@
 (defmethod docstring* ((dref reader-dref))
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
-    (swank-mop:slot-definition-documentation
-     (find-reader-slot-definition symbol (first locative-args)))))
+    (documentation (find-reader-slot-definition symbol (first locative-args))
+                   t)))
 
 (defmethod source-location* ((dref reader-dref))
   #+sbcl
@@ -779,8 +779,8 @@
 
 (defun find-writer-slot-definition (accessor-symbol class-symbol)
   (when (class-slots-supported-p class-symbol)
-    (dolist (slot-def (swank-mop:class-direct-slots (find-class class-symbol)))
-      (let ((writers (swank-mop:slot-definition-writers slot-def)))
+    (dolist (slot-def (closer-mop:class-direct-slots (find-class class-symbol)))
+      (let ((writers (closer-mop:slot-definition-writers slot-def)))
         (when (or (find accessor-symbol writers)
                   (find `(setf ,accessor-symbol) writers :test #'equal))
           (return-from find-writer-slot-definition slot-def))))
@@ -797,8 +797,8 @@
 (defmethod docstring* ((dref writer-dref))
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
-    (swank-mop:slot-definition-documentation
-     (find-writer-slot-definition symbol (first locative-args)))))
+    (documentation (find-writer-slot-definition symbol (first locative-args))
+                   t)))
 
 (defmethod source-location* ((dref writer-dref))
   #+sbcl
@@ -856,11 +856,11 @@
 
 (defun find-accessor-slot-definition (accessor-symbol class-symbol)
   (when (class-slots-supported-p class-symbol)
-    (dolist (slot-def (swank-mop:class-direct-slots (find-class class-symbol)))
+    (dolist (slot-def (closer-mop:class-direct-slots (find-class class-symbol)))
       (when (and (find accessor-symbol
-                       (swank-mop:slot-definition-readers slot-def))
+                       (closer-mop:slot-definition-readers slot-def))
                  (find `(setf ,accessor-symbol)
-                       (swank-mop:slot-definition-writers slot-def)
+                       (closer-mop:slot-definition-writers slot-def)
                        :test #'equal))
         (return-from find-accessor-slot-definition slot-def)))
     (locate-error "Could not find accessor ~S for class ~S."
@@ -874,8 +874,8 @@
 (defmethod docstring* ((dref accessor-dref))
   (let ((symbol (dref-name dref))
         (locative-args (dref-locative-args dref)))
-    (swank-mop:slot-definition-documentation
-     (find-accessor-slot-definition symbol (first locative-args)))))
+    (documentation (find-accessor-slot-definition symbol (first locative-args))
+                   t)))
 
 (defmethod source-location* ((dref accessor-dref))
   #+sbcl
@@ -1171,7 +1171,7 @@
   (let ((name (dref-name dref)))
     (when-let (defsrc (sb-introspect:find-definition-source
                        (sb-int:info :declaration :known name)))
-      (swank/sbcl::definition-source-for-emacs defsrc 'declaration name)))
+      (definition-source-to-source-location defsrc :declaration name)))
   #-sbcl
   '(:error "Don't know how to find the source location of declarations."))
 

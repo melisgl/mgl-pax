@@ -32,14 +32,60 @@
                    when (equal (sb-introspect::definition-source-description
                                 defsrc)
                                description)
-                     return (ignore-errors
-                             (swank/sbcl::definition-source-for-emacs
-                              defsrc type name))))
+                     return (definition-source-to-source-location
+                             defsrc type name)))
             (t
              (assert (= (length defsrcs) 1))
-             (ignore-errors
-              (swank/sbcl::definition-source-for-emacs (first defsrcs)
-                                                       type name)))))))
+             (definition-source-to-source-location (first defsrcs)
+                                                   type name))))))
+
+(defvar *do-not-use-swank* nil)
+
+(defun use-swank-p ()
+  (and (find-package '#:swank)
+       (not *do-not-use-swank*)))
+
+(defun definition-source-to-source-location (defsrc &optional type name)
+  (if (use-swank-p)
+      (ignore-errors
+       (uiop:symbol-call '#:swank/sbcl '#:definition-source-for-emacs
+                         defsrc type name))
+      (let ((file (sb-introspect:definition-source-pathname defsrc)))
+        (when file
+          (make-source-location
+           :file file
+           :file-position (or (ignore-errors (defsrc-file-position defsrc))
+                              0))))))
+
+(defun defsrc-file-position (defsrc)
+  (let ((pathname (sb-introspect:definition-source-pathname defsrc))
+        (offset (sb-introspect:definition-source-character-offset defsrc))
+        (form-path (first (sb-introspect:definition-source-form-path defsrc))))
+    (when (and pathname (probe-file pathname))
+      (with-open-file (s pathname)
+        (if offset
+            (file-position s offset)
+            (let ((*read-suppress* t))
+              (loop repeat form-path
+                    do (read s nil nil))))
+        ;; We are just after the previous form.
+        (skip-to-next-form s)
+        (file-position s)))))
+
+(defun skip-to-next-form (stream)
+  (loop
+    (let ((char (peek-char t stream nil nil)))
+      ;; FIXME: We should also skip over inactive reader conditionals.
+      (if (eql char #\;)
+          (read-line stream)
+          (return)))))
+
+(defun make-dspec (type name defsrc)
+  (if (use-swank-p)
+      (ignore-errors
+       (uiop:symbol-call '#:swank/sbcl '#:make-dspec type name defsrc))
+      (let ((description (sb-introspect::definition-source-description defsrc)))
+        (list* type name (ensure-list description)))))
 
 
 (defparameter *unknown-definition-types*
@@ -63,10 +109,10 @@
         append (loop
                  for defsrc in defsrcs
                  collect
-                 (let ((dspec (swank/sbcl::make-dspec type name defsrc)))
+                 (let ((dspec (make-dspec type name defsrc)))
                    (if include-location
                        (list dspec
-                             (swank/sbcl::definition-source-for-emacs
+                             (definition-source-to-source-location
                               defsrc type name))
                        dspec)))))))
 
@@ -88,6 +134,6 @@
 
 
 (defun/autoloaded translate-sb-source-location (sb-source-location)
-  (swank/sbcl::definition-source-for-emacs
+  (definition-source-to-source-location
    (sb-introspect::translate-source-location sb-source-location)
    nil nil))

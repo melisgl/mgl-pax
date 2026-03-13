@@ -62,7 +62,7 @@ the documentation system.
         [`DEFVAR`][7334] does not. The DRef library provides a way to refer to all
         definitions and smooths over the differences between
         implementations. This system has minimal dependencies. It autoloads
-        the [`dref/full`][0c7e] `ASDF:SYSTEM`, which depends on Alexandria and Swank.
+        the [`dref/full`][0c7e] `ASDF:SYSTEM`.
     - _Licence:_ MIT, see COPYING.
     - _Author:_ Gábor Melis
     - _Mailto:_ [mega@retes.hu](mailto:mega@retes.hu)
@@ -82,7 +82,11 @@ the documentation system.
         `DREF`.
         
         However, to get the dependencies, install this system.
-    - *Depends on:* alexandria, [dref][021a], [mgl-pax][6fdb], swank(?)
+        
+        On SBCL, DRef does not depend on `swank`. If it's not
+        loaded, then [`DREF:SOURCE-LOCATION`][32da] loses precision beyond toplevel
+        forms. On other Lisps, `swank` is a hard dependency.
+    - *Depends on:* alexandria, closer-mop, [dref][021a], [mgl-pax][6fdb], sb-introspect(?), swank(?)
     - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28DREF-3A-40INTRODUCTION-20MGL-PAX-3ASECTION-29"></a>
@@ -1059,6 +1063,10 @@ The following functions take a single argument, which may be a
     Note that the availability of source location information varies
     greatly across Lisp implementations.
     
+    Also note that on SBCL, `swank` is not a hard
+    dependency of [`dref/full`][0c7e]. If `swank` is not loaded,
+    then `DREF:SOURCE-LOCATION` loses precision beyond toplevel forms.
+    
     Can be extended via [`SOURCE-LOCATION*`][444d].
 
 <a id="x-28DREF-3A-40BASIC-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29"></a>
@@ -1510,12 +1518,13 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     `DEFINE-RESTART`:
     
     ```common-lisp
-    (first-line (source-location-snippet
-                 (source-location (dref 'use-value 'restart))))
-    => "(define-restart use-value (value)"
+    (dref 'use-value 'restart)
+    ==> #<DREF USE-VALUE RESTART>
+    (assert (docstring *))
+    (assert (source-location **))
     ```
     
-    Note that while there is a [`CL:RESTART`][38e4] class, its instances have no
+    Note that while there is a [`CL:RESTART`][38e4] class, its *instances* have no
     docstring or source location.
 
 <a id="x-28DREF-3A-40PACKAGELIKE-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>

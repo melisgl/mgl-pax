@@ -15,12 +15,13 @@
   DEFINE-RESTART:
 
   ```cl-transcript (:dynenv dref-std-env)
-  (first-line (source-location-snippet
-               (source-location (dref 'use-value 'restart))))
-  => \"(define-restart use-value (value)\"
+  (dref 'use-value 'restart)
+  ==> #<DREF USE-VALUE RESTART>
+  (assert (docstring *))
+  (assert (source-location **))
   ```
 
-  Note that while there is a CL:RESTART class, its instances have no
+  Note that while there is a CL:RESTART class, its _instances_ have no
   docstring or source location.")
 
 
