@@ -431,8 +431,7 @@
     (my-smac symbol-macro (define-symbol-macro my-smac))
     (foo compiler-macro (define-compiler-macro foo))
     (short-setf-with-fn setf (defsetf short-setf-with-fn) nil
-                        ;; No source location for DEFSETF on any implementation.
-                        t)
+                        #+(or ccl cmucl) t)
     ((setf setf-fn) function (defun (setf setf-fn)) nil
      #.(alexandria:featurep '(:or :allegro :cmucl)))
     ((setf setf-fn) compiler-macro
