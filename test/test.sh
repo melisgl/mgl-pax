@@ -3,8 +3,8 @@
 lisp="$1"
 stop_on_failure="${2:-t}"
 debug="${3:-nil}"
-print="${4:-(quote try:unexpected)}"
-describe="${5:-(quote try:unexpected)}"
+print="${4:-(quote try:leaf)}"
+describe="${5:-(quote (or try:unexpected try:failure))}"
 num_passes=
 num_failures=
 
@@ -97,7 +97,8 @@ function run_tests {
          (ql:quickload :mgl-pax/full))' \
       --quit -- "$@"
   else
-    ros --lisp "${lisp}" run --eval '(ql:quickload :mgl-pax/full)' --quit -- "$@"
+    ros --lisp "${lisp}" run --eval '(ql:quickload :mgl-pax-test)' \
+        --quit -- "$@"
   fi
   ${test_suite} ${lisp} ros --lisp ${lisp} run -- "$@"
   if ((num_failures > 0)); then

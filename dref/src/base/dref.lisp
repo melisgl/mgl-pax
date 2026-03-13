@@ -874,6 +874,10 @@
   Note that the availability of source location information varies
   greatly across Lisp implementations.
 
+  Also note that on SBCL, [`swank`][asdf:system] is not a hard
+  dependency of [`dref/full`][asdf:system]. If `swank` is not loaded,
+  then DREF:SOURCE-LOCATION loses precision beyond toplevel forms.
+
   Can be extended via SOURCE-LOCATION*."""
   (ensure-dref-loaded)
   (let* ((swank-error nil)

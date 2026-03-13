@@ -16,7 +16,7 @@
   DEFVAR does not. The DRef library provides a way to refer to all
   definitions and smooths over the differences between
   implementations. This system has minimal dependencies. It autoloads
-  the `dref/full` ASDF:SYSTEM, which depends on Alexandria and Swank."
+  the `dref/full` ASDF:SYSTEM."
   :depends-on ("autoload" "mgl-pax-bootstrap" "named-readtables"
                "pythonic-string-reader")
   :defsystem-depends-on ("mgl-pax.asdf")
@@ -42,8 +42,14 @@
   autoloaded as necessary by all publicly accessible functionality in
   DREF.
 
-  However, to get the dependencies, install this system."
-  :depends-on ("alexandria" "dref" "mgl-pax" (:feature (:not :swank) "swank"))
+  However, to get the dependencies, install this system.
+
+  On SBCL, DRef does not depend on [`swank`][asdf:system]. If it's not
+  loaded, then DREF:SOURCE-LOCATION loses precision beyond toplevel
+  forms. On other Lisps, `swank` is a hard dependency."
+  :depends-on ("alexandria" "closer-mop" "dref" "mgl-pax"
+               (:feature (:not (:or :swank :sbcl)) "swank")
+               (:feature :sbcl "sb-introspect"))
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/full/"

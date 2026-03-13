@@ -2255,32 +2255,33 @@ example section
 
 (deftest test-pax-transcripts ()
   ;; The transcripts are created on SBCL, so they should match there.
-  #+sbcl
-  (signals-not (transcription-error :handler #'continue)
-    (pax::update-pax-readmes :output-dir "test/data/"))
-  ;; On other platforms, just power through transcription errors, and
-  ;; check if the readmes can be generated at all.
-  #-sbcl
-  (signals-not (error)
-    (handler-bind ((transcription-error #'continue))
-      (time (document (list pax::@pax-manual dref::@dref-manual)
-                      :format nil))))
-  #+sbcl
-  (check-files-the-same
-   (asdf:system-relative-pathname "mgl-pax" "README")
-   (asdf:system-relative-pathname "mgl-pax" "test/data/README"))
-  #+sbcl
-  (check-files-the-same
-   (asdf:system-relative-pathname "mgl-pax" "README.md")
-   (asdf:system-relative-pathname "mgl-pax" "test/data/README.md"))
-  #+sbcl
-  (check-files-the-same
-   (asdf:system-relative-pathname "mgl-pax" "dref/README")
-   (asdf:system-relative-pathname "mgl-pax" "test/data/dref/README"))
-  #+sbcl
-  (check-files-the-same
-   (asdf:system-relative-pathname "mgl-pax" "dref/README.md")
-   (asdf:system-relative-pathname "mgl-pax" "test/data/dref/README.md")))
+  (when #+sbcl (dref::use-swank-p) #-sbcl t
+    #+sbcl
+    (signals-not (transcription-error :handler #'continue)
+      (pax::update-pax-readmes :output-dir "test/data/"))
+    ;; On other platforms, just power through transcription errors, and
+    ;; check if the readmes can be generated at all.
+    #-sbcl
+    (signals-not (error)
+      (handler-bind ((transcription-error #'continue))
+        (time (document (list pax::@pax-manual dref::@dref-manual)
+                        :format nil))))
+    #+sbcl
+    (check-files-the-same
+     (asdf:system-relative-pathname "mgl-pax" "README")
+     (asdf:system-relative-pathname "mgl-pax" "test/data/README"))
+    #+sbcl
+    (check-files-the-same
+     (asdf:system-relative-pathname "mgl-pax" "README.md")
+     (asdf:system-relative-pathname "mgl-pax" "test/data/README.md"))
+    #+sbcl
+    (check-files-the-same
+     (asdf:system-relative-pathname "mgl-pax" "dref/README")
+     (asdf:system-relative-pathname "mgl-pax" "test/data/dref/README"))
+    #+sbcl
+    (check-files-the-same
+     (asdf:system-relative-pathname "mgl-pax" "dref/README.md")
+     (asdf:system-relative-pathname "mgl-pax" "test/data/dref/README.md"))))
 
 (defun check-files-the-same (file1 file2)
   (is (equal (alexandria:read-file-into-string (% file1))

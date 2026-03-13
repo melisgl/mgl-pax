@@ -234,30 +234,39 @@
     (dref nil '(include (:end (undefined variable))))))
 
 
-;;; Keep *NAVIGATION-TEST-CASES* plus
-;;; DREF-TEST::*SOURCE-LOCATION-TEST-CASES* and
+;;; Keep NAVIGATION-TEST-CASES plus
+;;; DREF-TEST::SOURCE-LOCATION-TEST-CASES and
 ;;; `mgl-pax-edit-definitions/test-defs' in test.el in sync.
-(defparameter *navigation-test-cases*
-  '((mgl-pax::@pax-manual section (defsection @pax-manual))
+(defun navigation-test-cases ()
+  `((mgl-pax::@pax-manual section (defsection @pax-manual))
     (@some-term glossary-term (define-glossary-term @some-term))
     (mgl-pax.el (include #.(asdf:system-relative-pathname
                             :mgl-pax "src/mgl-pax.el")
-                 :header-nl "```elisp" :footer-nl "```")
-     ";;;; mgl-pax.el --- MGL-PAX Emacs integration -*- lexical-binding: t -*-")
+                         :header-nl "```elisp" :footer-nl "```")
+                ";;;; mgl-pax.el --- MGL-PAX Emacs integration -*- lexical-binding: t -*-")
     (foo-example (include (:start (dref-ext:make-source-location function)
                            :end (dref-ext:source-location-p function))
-                  :header-nl "```"
-                  :footer-nl "```")
-     (defun/autoloaded make-source-location))
+                          :header-nl "```"
+                          :footer-nl "```")
+                 (defun/autoloaded make-source-location))
     (@1+* note (note @1+*))
     (@1+*/1 note (note (@1+*/1 :join #\Newline))
-     #+ccl (defun 1+*) #-(or ccl sbcl) (note @1+*))
-    (@in-1 note (note @in-1) #-sbcl (defun fn-with-inside-note))
-    (@in-2 note (note @in-2) #-sbcl (defun fn-with-inside-note))))
+            #+ccl (defun 1+*)
+            #+sbcl ,@(unless (dref::use-swank-p)
+                       '((note @1+*)))
+            #-(or ccl sbcl) (note @1+*))
+    (@in-1 note (note @in-1)
+           ,@(when (or (not (alexandria:featurep :sbcl))
+                       #+sbcl (not (dref::use-swank-p)))
+               '((defun fn-with-inside-note))))
+    (@in-2 note (note @in-2)
+           ,@(when (or (not (alexandria:featurep :sbcl))
+                       #+sbcl (not (dref::use-swank-p)))
+               '((defun fn-with-inside-note))))))
 
 (deftest test-navigation-to-source ()
   (let ((*package* (find-package :mgl-pax-test)))
-    (dolist (test-case *navigation-test-cases*)
+    (dolist (test-case (navigation-test-cases))
       (apply #'check-source-location test-case)))
   (signals-not (error)
     (source-location (xref 'function 'locative)))

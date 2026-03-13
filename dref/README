@@ -26,7 +26,7 @@ the documentation system.
     DEFVAR does not. The DRef library provides a way to refer to all
     definitions and smooths over the differences between
     implementations. This system has minimal dependencies. It autoloads
-    the dref/full ASDF:SYSTEM, which depends on Alexandria and Swank.
+    the dref/full ASDF:SYSTEM.
 
     - Licence: MIT, see COPYING.
 
@@ -53,7 +53,11 @@ the documentation system.
 
         However, to get the dependencies, install this system.
 
-    - Depends on: alexandria, dref, mgl-pax, swank(?)
+        On SBCL, DRef does not depend on swank. If it's not
+        loaded, then DREF:SOURCE-LOCATION loses precision beyond toplevel
+        forms. On other Lisps, swank is a hard dependency.
+
+    - Depends on: alexandria, closer-mop, dref, mgl-pax, sb-introspect(?), swank(?)
 
     - Defsystem depends on: mgl-pax.asdf
 
@@ -837,6 +841,10 @@ LOCATE).
     Note that the availability of source location information varies
     greatly across Lisp implementations.
 
+    Also note that on SBCL, swank is not a hard
+    dependency of dref/full. If swank is not loaded,
+    then DREF:SOURCE-LOCATION loses precision beyond toplevel forms.
+
     Can be extended via SOURCE-LOCATION*.
 
 ## Basic Locative Types
@@ -1189,9 +1197,10 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
     PAX "defines" standard CL restarts such as USE-VALUE with
     DEFINE-RESTART:
 
-        (first-line (source-location-snippet
-                     (source-location (dref 'use-value 'restart))))
-        => "(define-restart use-value (value)"
+        (dref 'use-value 'restart)
+        ==> #<DREF USE-VALUE RESTART>
+        (assert (docstring *))
+        (assert (source-location **))
 
     Note that while there is a CL:RESTART class, its instances have no
     docstring or source location.
