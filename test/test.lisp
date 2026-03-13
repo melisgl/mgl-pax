@@ -1,7 +1,7 @@
 (in-package :mgl-pax-test)
 
 (deftest test-all ()
-  (let ((dref::*check-locate* t))
+  (let ((*check-locate* t))
     (test-util)
     (test-navigate)
     (test-document)

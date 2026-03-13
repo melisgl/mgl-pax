@@ -40,12 +40,23 @@
          (n-lines (or n-lines (count-lines expected))))
     (multiple-value-bind (full-output warnings)
         (document* input :format format)
-      (let ((got (dref::first-lines full-output n-lines)))
+      (let ((got (first-lines full-output n-lines)))
         (is (equal got expected)
             :msg msg
             :ctx ("Input: ~S~%Full output:~%~S" input full-output))
         (is (= (length (% warnings)) n-expected-warnings)
             :ctx ("Input: ~S~%Full output:~%~S" input full-output))))))
+
+(defun first-lines (string &optional (n-lines 1))
+  (with-output-to-string (out)
+    (with-input-from-string (in string)
+      (loop for i below n-lines do
+        (let ((line (read-line in nil nil)))
+          (when line
+            (cond ((< i (1- n-lines))
+                   (write-line line out))
+                  ((= i (1- n-lines))
+                   (write-string line out)))))))))
 
 (defun check-pred (input pred &key msg (format :markdown))
   (let* ((*package* (find-package :mgl-pax-test))
