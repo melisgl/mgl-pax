@@ -39,14 +39,8 @@
              (definition-source-to-source-location (first defsrcs)
                                                    type name))))))
 
-(defvar *do-not-use-swank* nil)
-
-(defun use-swank-p ()
-  (and (find-package '#:swank)
-       (not *do-not-use-swank*)))
-
 (defun definition-source-to-source-location (defsrc &optional type name)
-  (if (use-swank-p)
+  (if (eq (backend) :swank)
       (ignore-errors
        (uiop:symbol-call '#:swank/sbcl '#:definition-source-for-emacs
                          defsrc type name))
@@ -81,7 +75,7 @@
           (return)))))
 
 (defun make-dspec (type name defsrc)
-  (if (use-swank-p)
+  (if (eq (backend) :swank)
       (ignore-errors
        (uiop:symbol-call '#:swank/sbcl '#:make-dspec type name defsrc))
       (let ((description (sb-introspect::definition-source-description defsrc)))

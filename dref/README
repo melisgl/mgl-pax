@@ -53,9 +53,7 @@ the documentation system.
 
         However, to get the dependencies, install this system.
 
-        On SBCL, DRef does not depend on swank. If it's not
-        loaded, then DREF:SOURCE-LOCATION loses precision beyond toplevel
-        forms. On other Lisps, swank is a hard dependency.
+        For a discussion of conditional dependencies, see Backends.
 
     - Depends on: alexandria, closer-mop, dref, mgl-pax, sb-introspect(?), swank(?)
 
@@ -841,9 +839,8 @@ LOCATE).
     Note that the availability of source location information varies
     greatly across Lisp implementations.
 
-    Also note that on SBCL, swank is not a hard
-    dependency of dref/full. If swank is not loaded,
-    then DREF:SOURCE-LOCATION loses precision beyond toplevel forms.
+    With the NIL BACKEND, DREF:SOURCE-LOCATION loses
+    precision beyond toplevel forms.
 
     Can be extended via SOURCE-LOCATION*.
 
@@ -1304,6 +1301,42 @@ based on the DOC-TYPE argument of CL:DOCUMENTATION.
         => "xxx.el"
 
     Also, see the PAX:INCLUDE locative.
+
+## Backends
+
+On SBCL, the swank ASDF:SYSTEM is not a dependency of
+dref/full because DRef is able to function without
+it. However, when Swank is available in the Lisp image, DRef can use
+it to provide more precise SOURCE-LOCATIONs.
+
+On other Lisps, DRef curently gets ARGLISTs and SOURCE-LOCATIONs via
+Swank and swank is an ASDF dependency of dref/full.
+
+- [function] BACKEND-AVAILABLE-P BACKEND
+
+    Check if BACKEND is currently available in the running Lisp.
+    BACKEND may be :SWANK or NIL. Currently, on SBCL, both are
+    available; on other Lisps, only :SWANK is.
+
+- [function] BACKEND
+
+    Return the backend being used. This is either :SWANK or NIL. The
+    default backend is :SWANK if it is available when first loading
+    dref into the image, else it is NIL.
+
+    Note that on Lisps other than SBCL, this is currently always :SWANK,
+    which is available due to the ASDF dependency of
+    dref/full on the swank ASDF:SYSTEM.
+
+- [setf] BACKEND BACKEND
+
+    SETFing BACKEND to a BACKEND that is not
+    BACKEND-AVAILABLE-P is an error.
+
+- [macro] WITH-BACKEND (BACKEND) &BODY BODY
+
+    Like SETF BACKEND, but only change BACKEND during the dynamic
+    extent of BODY.
 
 ## Extending DRef
 

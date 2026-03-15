@@ -65,7 +65,9 @@
   ;; Some of these are in autoloaded sections, so we export everything
   ;; manually.
   (:export #:accessor #:accessor-slot-definition
-           #:arglist #:arglist-parameters #:class #:compiler-macro
+           #:arglist #:arglist-parameters
+           #:backend #:backend-available-p
+           #:class #:compiler-macro
            #:condition #:constant #:declaration #:define-dtype
            #:define-restart #:definitions #:defstruct* #:docstring #:dref
            #:dref-apropos #:dref-locative #:dref-locative-args
@@ -81,7 +83,8 @@
            #:setf-generic-function #:setf-method
            #:source-location #:structure #:structure-accessor
            #:symbol-macro #:top #:type #:unknown
-           #:variable #:with-definitions-cached #:writer #:xref
+           #:variable #:with-backend
+           #:with-definitions-cached #:writer #:xref
            #:xref-locative #:xref-locative-args
            #:xref-locative-type #:xref-name #:xref=))
 
@@ -108,6 +111,8 @@
                                    symbol locative-type locative-args)
   nil)
 
+(declaim (ftype function backend))
+
 ;;; For MGL-PAX::@TRANSCRIPT-DYNENV
 (defun dref-std-env (fn)
   (funcall (uiop:ensure-function "standard-transcribe-dynenv" :package :pax)
@@ -115,7 +120,7 @@
              (let ((*package* (find-package :dref))
                    (pax::*document-downcase-uppercase-code* nil)
                    (pax::*transcribe-check-consistency*
-                     #+sbcl (use-swank-p)
+                     #+sbcl (eq (backend) :swank)
                      #-sbcl nil))
                ;; These variables are defined later.
                (declare (special pax::*document-downcase-uppercase-code*

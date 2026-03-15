@@ -10,6 +10,7 @@
   (@listing-definitions section)
   (@basic-operations section)
   (@basic-locative-types section)
+  (@backends section)
   (dref-ext::@extending-dref section))
 
 (defsection @links-and-systems (:title "Links and Systems")
@@ -22,6 +23,67 @@
   the documentation system."
   ("dref" asdf:system)
   ("dref/full" asdf:system))
+
+
+(defsection @backends (:title "Backends")
+  """On SBCL, the `swank` ASDF:SYSTEM is not a dependency of
+  [`dref/full`][asdf:system] because DRef is able to function without
+  it. However, when Swank is available in the Lisp image, DRef can use
+  it to provide more precise SOURCE-LOCATIONs.
+
+  On other Lisps, DRef curently gets ARGLISTs and SOURCE-LOCATIONs via
+  Swank and `swank` is an ASDF dependency of `dref/full`."""
+  (backend-available-p function)
+  (backend function)
+  (backend setf)
+  (with-backend macro))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun backend-available-p (backend)
+    "Check if BACKEND is currently available in the running Lisp.
+    BACKEND may be :SWANK or NIL. Currently, on SBCL, both are
+    available; on other Lisps, only :SWANK is."
+    (case backend
+      ((:swank)
+       #+sbcl (find-package '#:swank)
+       ;; The dref/full system depends on it.
+       #-sbcl t)
+      ((nil)
+       #+sbcl t
+       #-sbcl nil))))
+
+(defvar *backend*
+  (if (backend-available-p :swank)
+      :swank
+      nil))
+
+(declaim (inline backend))
+(defun backend ()
+  "Return the backend being used. This is either :SWANK or NIL. The
+  default backend is :SWANK if it is available when first loading
+  [`dref`][asdf:system] into the image, else it is NIL.
+
+  Note that on Lisps other than SBCL, this is currently always :SWANK,
+  which is available due to the ASDF dependency of
+  [`dref/full`][asdf:system] on the `swank` ASDF:SYSTEM."
+  *backend*)
+
+(defsetf backend set-backend
+  "SETFing [BACKEND][function] to a BACKEND that is not
+  BACKEND-AVAILABLE-P is an error.")
+
+(defun set-backend (backend)
+  (unless (backend-available-p backend)
+    (error "~@<Backend ~S is not available.~:@>" backend))
+  (setq *backend* backend))
+
+(defmacro with-backend ((backend) &body body)
+  "Like SETF BACKEND, but only change BACKEND during the dynamic
+  extent of BODY."
+  `(let ((*backend* *backend*))
+     (setf (backend) ,backend)
+     ,@body))
+
 
 (defsection @introduction (:title "Introduction")
   """_What if definitions were first-class objects?_
@@ -874,9 +936,8 @@
   Note that the availability of source location information varies
   greatly across Lisp implementations.
 
-  Also note that on SBCL, [`swank`][asdf:system] is not a hard
-  dependency of [`dref/full`][asdf:system]. If `swank` is not loaded,
-  then DREF:SOURCE-LOCATION loses precision beyond toplevel forms.
+  With the NIL [BACKEND][function], DREF:SOURCE-LOCATION loses
+  precision beyond toplevel forms.
 
   Can be extended via SOURCE-LOCATION*."""
   (ensure-dref-loaded)

@@ -2255,7 +2255,7 @@ example section
 
 (deftest test-pax-transcripts ()
   ;; The transcripts are created on SBCL, so they should match there.
-  (when #+sbcl (dref::use-swank-p) #-sbcl t
+  (when #+sbcl (eq (backend) :swank) #-sbcl t
     #+sbcl
     (signals-not (transcription-error :handler #'continue)
       (pax::update-pax-readmes :output-dir "test/data/"))

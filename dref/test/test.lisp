@@ -113,12 +113,12 @@
   #+sbcl
   (check-ref-sets+ (definitions 'print)
                    `(,(xref 'print 'function)
-                     ,(xref 'print `(unknown (,(if (dref::use-swank-p)
+                     ,(xref 'print `(unknown (,(if (eq (backend) :swank)
                                                    :defoptimizer
                                                    :optimizer)
                                               print
                                               sb-c:derive-type)))
-                     ,(xref 'print `(unknown (,(if (dref::use-swank-p)
+                     ,(xref 'print `(unknown (,(if (eq (backend) :swank)
                                                    'declaim
                                                    :declaration)
                                               print
@@ -472,7 +472,7 @@
             #-ecl "(named-readtables:defreadtable xxx-rt"
             #+ecl ,(format nil "~%~%(unless (named-readtables:find-readtable ~
                                              'xxx-rt)")
-            #+sbcl ,@(unless (dref::use-swank-p)
+            #+sbcl ,@(unless (eq (backend) :swank)
                        '("(unless (named-readtables:find-readtable 'xxx-rt")))
     ;; DREF-EXT::@DEFINING-LOCATIVE-TYPES
     (my-loc locative (define-locative-type my-loc))
@@ -1032,16 +1032,16 @@
              (test-hierarchy)
              (test-dtypes)
              (test-apropos)))
-      #+sbcl
-      (with-test ("with swank")
-        (let ((dref::*do-not-use-swank* nil))
-          (is (dref::use-swank-p))
-          (all)))
-      #+sbcl
-      (with-test ("without swank")
-        (let ((dref::*do-not-use-swank* t))
-          (is (not (dref::use-swank-p)))
-          (all)))
+      (when (backend-available-p :swank)
+        (with-test ("with swank")
+          (with-backend (:swank)
+            (is (eq (backend) :swank))
+            (all))))
+      (when (backend-available-p nil)
+        (with-test ("without swank")
+          (with-backend (nil)
+            (is (null (backend)))
+            (all))))
       #-sbcl
       (all))))
 

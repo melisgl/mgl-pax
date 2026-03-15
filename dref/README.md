@@ -23,19 +23,20 @@
     - [7.6 Locatives for Packages and Readtables][c339]
     - [7.7 Locatives for Unknown Definitions][58f1]
     - [7.8 Locatives for DRef Constructs][da93]
-- [8 Extending DRef][68fb]
-    - [8.1 Extension Tutorial][9d60]
-    - [8.2 Locative Type Hierarchy][c9ab]
-    - [8.3 Defining Locative Types][f494]
-        - [8.3.1 Symbol Locatives][59c9]
-    - [8.4 Extending `LOCATE`][4c16]
-        - [8.4.1 Initial Definition][87fc]
-        - [8.4.2 Canonicalization][9383]
-        - [8.4.3 Defining Lookups, Locators and Casts][adc7]
-    - [8.5 Extending Everything Else][793d]
-        - [8.5.1 Definition Properties][c9de]
-    - [8.6 `DREF-CLASS`es][6354]
-    - [8.7 Source Locations][a078]
+- [8 Backends][884d]
+- [9 Extending DRef][68fb]
+    - [9.1 Extension Tutorial][9d60]
+    - [9.2 Locative Type Hierarchy][c9ab]
+    - [9.3 Defining Locative Types][f494]
+        - [9.3.1 Symbol Locatives][59c9]
+    - [9.4 Extending `LOCATE`][4c16]
+        - [9.4.1 Initial Definition][87fc]
+        - [9.4.2 Canonicalization][9383]
+        - [9.4.3 Defining Lookups, Locators and Casts][adc7]
+    - [9.5 Extending Everything Else][793d]
+        - [9.5.1 Definition Properties][c9de]
+    - [9.6 `DREF-CLASS`es][6354]
+    - [9.7 Source Locations][a078]
 
 ###### \[in package DREF\]
 <a id="x-28DREF-3A-40LINKS-AND-SYSTEMS-20MGL-PAX-3ASECTION-29"></a>
@@ -83,9 +84,7 @@ the documentation system.
         
         However, to get the dependencies, install this system.
         
-        On SBCL, DRef does not depend on `swank`. If it's not
-        loaded, then [`DREF:SOURCE-LOCATION`][32da] loses precision beyond toplevel
-        forms. On other Lisps, `swank` is a hard dependency.
+        For a discussion of conditional dependencies, see [Backends][884d].
     - *Depends on:* alexandria, closer-mop, [dref][021a], [mgl-pax][6fdb], sb-introspect(?), swank(?)
     - *Defsystem depends on:* mgl-pax.asdf
 
@@ -1063,9 +1062,8 @@ The following functions take a single argument, which may be a
     Note that the availability of source location information varies
     greatly across Lisp implementations.
     
-    Also note that on SBCL, `swank` is not a hard
-    dependency of [`dref/full`][0c7e]. If `swank` is not loaded,
-    then `DREF:SOURCE-LOCATION` loses precision beyond toplevel forms.
+    With the `NIL` [`BACKEND`][1048], `DREF:SOURCE-LOCATION` loses
+    precision beyond toplevel forms.
     
     Can be extended via [`SOURCE-LOCATION*`][444d].
 
@@ -1663,13 +1661,59 @@ based on the `DOC-TYPE` argument of [`CL:DOCUMENTATION`][c5ae].
     
     Also, see the [`PAX:INCLUDE`][5cd7] locative.
 
+<a id="x-28DREF-3A-40BACKENDS-20MGL-PAX-3ASECTION-29"></a>
+
+## 8 Backends
+
+On SBCL, the `swank` `ASDF:SYSTEM` is not a dependency of
+[`dref/full`][0c7e] because DRef is able to function without
+it. However, when Swank is available in the Lisp image, DRef can use
+it to provide more precise [`SOURCE-LOCATION`][32da]s.
+
+On other Lisps, DRef curently gets [`ARGLIST`][e6bd]s and `SOURCE-LOCATION`s via
+Swank and `swank` is an ASDF dependency of `dref/full`.
+
+<a id="x-28DREF-3ABACKEND-AVAILABLE-P-20FUNCTION-29"></a>
+
+- [function] **BACKEND-AVAILABLE-P** *BACKEND*
+
+    Check if `BACKEND` is currently available in the running Lisp.
+    `BACKEND` may be `:SWANK` or `NIL`. Currently, on SBCL, both are
+    available; on other Lisps, only `:SWANK` is.
+
+<a id="x-28DREF-3ABACKEND-20FUNCTION-29"></a>
+
+- [function] **BACKEND**
+
+    Return the backend being used. This is either `:SWANK` or `NIL`. The
+    default backend is `:SWANK` if it is available when first loading
+    [`dref`][021a] into the image, else it is `NIL`.
+    
+    Note that on Lisps other than SBCL, this is currently always `:SWANK`,
+    which is available due to the ASDF dependency of
+    [`dref/full`][0c7e] on the `swank` `ASDF:SYSTEM`.
+
+<a id="x-28DREF-3ABACKEND-20SETF-29"></a>
+
+- [setf] **BACKEND** *BACKEND*
+
+    [`SETF`][a138]ing [`BACKEND`][1048] to a `BACKEND` that is not
+    [`BACKEND-AVAILABLE-P`][f5a0] is an error.
+
+<a id="x-28DREF-3AWITH-BACKEND-20MGL-PAX-3AMACRO-29"></a>
+
+- [macro] **WITH-BACKEND** *(BACKEND) &BODY BODY*
+
+    Like [`SETF`][a138] [`BACKEND`][14a4], but only change `BACKEND` during the dynamic
+    extent of `BODY`.
+
 <a id="x-28DREF-EXT-3A-40EXTENDING-DREF-20MGL-PAX-3ASECTION-29"></a>
 
-## 8 Extending DRef
+## 9 Extending DRef
 
 <a id="x-28DREF-EXT-3A-40EXTENSION-TUTORIAL-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.1 Extension Tutorial
+### 9.1 Extension Tutorial
 
 Let's see how to tell DRef about new kinds of definitions through
 the example of the implementation of the [`CLASS`][2060] locative. Note that
@@ -1744,7 +1788,7 @@ following, we describe the pieces in detail.
 
 <a id="x-28DREF-EXT-3A-40LOCATIVE-TYPE-HIERARCHY-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.2 Locative Type Hierarchy
+### 9.2 Locative Type Hierarchy
 
 [Locative types][a11d] form their own hierarchy, that
 is only superficially similar to the Lisp [`CLASS`][1f37] hierarchy.
@@ -1814,7 +1858,7 @@ by [`DEFINE-LOCATIVE-TYPE`][b6c4] and [`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4].
 
 <a id="x-28DREF-EXT-3A-40DEFINING-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.3 Defining Locative Types
+### 9.3 Defining Locative Types
 
 <a id="x-28DREF-EXT-3ADEFINE-LOCATIVE-TYPE-20MGL-PAX-3AMACRO-29"></a>
 
@@ -1927,7 +1971,7 @@ by [`DEFINE-LOCATIVE-TYPE`][b6c4] and [`DEFINE-PSEUDO-LOCATIVE-TYPE`][68b4].
 
 <a id="x-28DREF-EXT-3A-40SYMBOL-LOCATIVES-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.3.1 Symbol Locatives
+#### 9.3.1 Symbol Locatives
 
 Let's see how the opaque [`DEFINE-SYMBOL-LOCATIVE-TYPE`][ee9b] and the
 obscure [`DEFINE-DEFINER-FOR-SYMBOL-LOCATIVE-TYPE`][3b96] macros work together
@@ -1976,7 +2020,7 @@ in a certain context.
 
 <a id="x-28DREF-EXT-3A-40EXTENDING-LOCATE-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.4 Extending `LOCATE`
+### 9.4 Extending `LOCATE`
 
 Internally, [`LOCATE`][8f19] finds an initial [`DREF`][d930] of its `OBJECT`
 argument with a [lookup][49b5] or with a
@@ -1991,7 +2035,7 @@ Else, `LOCATE` first needs to find the initial definition.
 
 <a id="x-28DREF-EXT-3A-40INITIAL-DEFINITION-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.4.1 Initial Definition
+#### 9.4.1 Initial Definition
 
 [`LOCATE`][8f19] can find the initial definition in one of two ways:
 
@@ -2032,7 +2076,7 @@ search*
 
 <a id="x-28DREF-EXT-3A-40CANONICALIZATION-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.4.2 Canonicalization
+#### 9.4.2 Canonicalization
 
 The initial definition thus found is then canonicalized so that
 there is a unique [definition][2143] under [`XREF=`][0617]:
@@ -2107,7 +2151,7 @@ upcast the returned value to the `DREF` argument's `DREF-LOCATIVE-TYPE`.
 
 <a id="x-28DREF-EXT-3A-40DEFINING-LOOKUPS-LOCATORS-AND-CASTS-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.4.3 Defining Lookups, Locators and Casts
+#### 9.4.3 Defining Lookups, Locators and Casts
 
 As we have seen, the [Initial Definition][87fc] is provided either by a
 lookup or a locator, then [Canonicalization][9383] works with
@@ -2286,7 +2330,7 @@ macros.
 
 <a id="x-28DREF-EXT-3A-40EXTENDING-EVERYTHING-ELSE-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.5 Extending Everything Else
+### 9.5 Extending Everything Else
 
 <a id="x-28DREF-EXT-3ARESOLVE-2A-20GENERIC-FUNCTION-29"></a>
 
@@ -2451,7 +2495,7 @@ macros.
 
 <a id="x-28DREF-EXT-3A-40DEFINITION-PROPERTIES-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.5.1 Definition Properties
+#### 9.5.1 Definition Properties
 
 Arbitrary data may be associated with definitions.
 This mechanism is used by [`ARGLIST*`][0a96], [`DOCSTRING*`][9fd4] and
@@ -2498,7 +2542,7 @@ non-existent definitions.
 
 <a id="x-28DREF-EXT-3A-40DREF-CLASSES-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.6 `DREF-CLASS`es
+### 9.6 `DREF-CLASS`es
 
 These are the [`DREF-CLASS`][25be]es corresponding to [Basic Locative Types][1d1d].
 They are exported to make it possible to go beyond the
@@ -2712,7 +2756,7 @@ They are exported to make it possible to go beyond the
 
 <a id="x-28DREF-EXT-3A-40SOURCE-LOCATIONS-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.7 Source Locations
+### 9.7 Source Locations
 
 These represent the file or buffer position of a [defining
 form][23a8] and are returned by the [`SOURCE-LOCATION`][32da] function. For
@@ -2813,11 +2857,13 @@ the details, see the Elisp function `slime-goto-source-location`.
   [0db5]: #x-28DREF-EXT-3ASETF-DREF-20CLASS-29 "DREF-EXT:SETF-DREF CLASS"
   [0fa3]: ../README.md#x-28MGL-PAX-3A-40LOCATIVE-ALIASES-20MGL-PAX-3ASECTION-29 "Locative Aliases"
   [0ff7]: http://www.lispworks.com/documentation/HyperSpec/Body/04_.htm "\"4\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
+  [1048]: #x-28DREF-3ABACKEND-20FUNCTION-29 "DREF:BACKEND FUNCTION"
   [10a7]: #x-28DREF-EXT-3ACHECK-LOCATIVE-ARGS-20MGL-PAX-3AMACRO-29 "DREF-EXT:CHECK-LOCATIVE-ARGS MGL-PAX:MACRO"
   [119e]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm "FUNCTION (MGL-PAX:CLHS CLASS)"
   [12814]: #x-28DREF-3ADEFSTRUCT-2A-20MGL-PAX-3AMACRO-29 "DREF:DEFSTRUCT* MGL-PAX:MACRO"
   [130a]: #x-28DREF-EXT-3ALOCATIVE-TYPE-DIRECT-SUBS-20FUNCTION-29 "DREF-EXT:LOCATIVE-TYPE-DIRECT-SUBS FUNCTION"
   [1490]: #x-28DREF-3AXREF-LOCATIVE-ARGS-20FUNCTION-29 "DREF:XREF-LOCATIVE-ARGS FUNCTION"
+  [14a4]: #x-28DREF-3ABACKEND-20SETF-29 "DREF:BACKEND SETF"
   [14cb]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defmac.htm "DEFMACRO (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [14ea]: #x-28DREF-3A-40REFERENCES-20MGL-PAX-3ASECTION-29 "References"
   [1538]: #x-28DREF-3AXREF-20CLASS-29 "DREF:XREF CLASS"
@@ -2943,6 +2989,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [85ba]: #x-28DREF-3ADTYPE-20MGL-PAX-3ALOCATIVE-29 "DREF:DTYPE MGL-PAX:LOCATIVE"
   [867c]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function_name "\"setf function name\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [87fc]: #x-28DREF-EXT-3A-40INITIAL-DEFINITION-20MGL-PAX-3ASECTION-29 "Initial Definition"
+  [884d]: #x-28DREF-3A-40BACKENDS-20MGL-PAX-3ASECTION-29 "Backends"
   [8934]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defcon.htm "DEFCONSTANT (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [8f19]: #x-28DREF-3ALOCATE-20FUNCTION-29 "DREF:LOCATE FUNCTION"
   [926d]: #x-28TYPE-20MGL-PAX-3ALOCATIVE-29 "TYPE MGL-PAX:LOCATIVE"
@@ -3059,6 +3106,7 @@ the details, see the Elisp function `slime-goto-source-location`.
   [f3cc]: #x-28MGL-PAX-3AMACRO-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:MACRO MGL-PAX:LOCATIVE"
   [f472]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defun.htm "DEFUN (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [f494]: #x-28DREF-EXT-3A-40DEFINING-LOCATIVE-TYPES-20MGL-PAX-3ASECTION-29 "Defining Locative Types"
+  [f5a0]: #x-28DREF-3ABACKEND-AVAILABLE-P-20FUNCTION-29 "DREF:BACKEND-AVAILABLE-P FUNCTION"
   [f7e4]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defi_5.htm "DEFINE-CONDITION (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [fe9f]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rest.htm "REST (MGL-PAX:CLHS FUNCTION)"
   [ffd0]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#system_class "\"system class\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"

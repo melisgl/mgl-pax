@@ -6,17 +6,17 @@
              (test-util)
              (test-navigate)
              (test-document)
-             (test-transcribe) ))
-      #+sbcl
-      (with-test ("with swank")
-        (let ((dref::*do-not-use-swank* nil))
-          (is (dref::use-swank-p))
-          (all)))
-      #+sbcl
-      (with-test ("without swank")
-        (let ((dref::*do-not-use-swank* t))
-          (is (not (dref::use-swank-p)))
-          (all)))
+             (test-transcribe)))
+      (when (backend-available-p :swank)
+        (with-test ("with swank")
+          (with-backend (:swank)
+            (is (eq (backend) :swank))
+            (all))))
+      (when (backend-available-p nil)
+        (with-test ("without swank")
+          (with-backend (nil)
+            (is (null (backend)))
+            (all))))
       #-sbcl
       (all))))
 

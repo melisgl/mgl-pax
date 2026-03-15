@@ -44,9 +44,7 @@
 
   However, to get the dependencies, install this system.
 
-  On SBCL, DRef does not depend on [`swank`][asdf:system]. If it's not
-  loaded, then DREF:SOURCE-LOCATION loses precision beyond toplevel
-  forms. On other Lisps, `swank` is a hard dependency."
+  For a discussion of conditional dependencies, see DREF::@BACKENDS."
   :depends-on ("alexandria" "closer-mop" "dref" "mgl-pax"
                (:feature (:not (:or :swank :sbcl)) "swank")
                (:feature :sbcl "sb-introspect"))
