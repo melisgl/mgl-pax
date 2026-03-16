@@ -91,7 +91,6 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defparameter *name-left-trim* "#<{;\"'`")
   (defparameter *name-right-trim* ",;:.>}\"'`"))
-
 
 
 (defsection @raw-names-in-words (:title "Raw Names in Words")

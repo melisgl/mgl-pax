@@ -723,7 +723,7 @@
   (check-locative-args macro))
 
 ;;; To speed LOCATE up, when we know that the actual condition object
-;;; does not matter (because *IGNORE-LOCATE-ERROR* is true), use this
+;;; does not matter (because *LOCATE-ERROR-IGNORED* is true), use this
 ;;; premade one.
 (defvar *dummy-locate-error*
   (make-condition 'locate-error :object nil :message "" :message-args nil))

@@ -1283,7 +1283,11 @@
     (if-let (location (asdf/system:system-source-file system))
       (make-source-location
        :file (namestring location)
-       :file-position 1
+       :file-position 0
+       ;; FIXME: This does not necessarily match the source text
+       ;; because DEFSYSTEM's NAME is a designator, and we only have
+       ;; the canonical form here. Also, spacing can differ, etc.
+       ;; Should we should search the file here?
        :snippet (format nil "defsystem ~S" (dref-name dref)))
       `(:error ,(format nil "ASDF system ~A doesn't contain ~
                             source location information."

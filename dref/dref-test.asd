@@ -1,7 +1,7 @@
 ;;;; -*- mode: Lisp -*-
 
 ;;; This is in a separate .asd file help OS-level packaging by making
-;;; the dependency graph of .asd files (as opposed to just ASDF
+;;; the dependency graph of .asd files (as opposed to that of ASDF
 ;;; systems) acyclic. See https://github.com/melisgl/try/issues/5.
 
 (asdf:defsystem "dref-test"

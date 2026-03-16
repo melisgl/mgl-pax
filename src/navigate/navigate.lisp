@@ -434,51 +434,52 @@
         ;; To be more resistant to edits since the last definition,
         ;; only match the beginning.
         (snippet (first-lines snippet 2)))
-    (flet ((snippets-match (loc-snippet)
-             (or
-              ;; E.g. ASDF:SYSTEMs on SBCL
-              (equal loc-snippet "")
-              (let ((mismatch-pos (mismatch loc-snippet snippet)))
-                (or (null mismatch-pos)
-                    (= (min (length snippet)
-                            (length loc-snippet))
-                       mismatch-pos))))))
-      (dolist (dref
-               ;; Only LISP-LOCATIVE-TYPES have source location.
-               (definitions name))
-        (let ((location (source-location dref)))
-          (if (source-location-p location)
-              (let ((loc-file (source-location-file location))
-                    (loc-buffer (source-location-buffer location))
-                    (loc-pos (source-location-buffer-position location))
-                    (loc-snippet (source-location-snippet location)))
-                (when (and
-                       ;; The files must always match (even if NIL).
-                       (equal file loc-file)
-                       ;; The buffers must match, but LOC-BUFFER may be
-                       ;; NIL (e.g. if the file wasn't compiled via
-                       ;; Slime).
-                       (or (null loc-buffer) (equal buffer loc-buffer))
-                       ;; A match in LOCATION-SNIPPET is most
-                       ;; trustworthy, but it's not always available.
-                       (if loc-snippet
-                           (snippets-match loc-snippet)
-                           (<= (abs (- loc-pos pos))
-                               (abs (- closest-pos pos)))))
-                  ;; Multiple definitions may have the exact source
-                  ;; location (e.g. DEFGENERIC with :METHODs in it on
-                  ;; SBCL). They may then all match the snippet.
-                  (unless (and (typep closest-definition 'generic-function-dref)
-                               (typep dref 'method-dref)
-                               (eql closest-pos pos))
-                    (setq closest-definition dref
-                          closest-pos loc-pos))))
-              ;; No source location
-              (when (and (null closest-definition)
-                         (dref-and-snippet-match-p dref snippet))
-                (setq closest-definition dref
-                      closest-pos most-positive-fixnum)))))
-      closest-definition)))
+    (dolist (dref
+             ;; Only LISP-LOCATIVE-TYPES have source location.
+             (definitions name))
+      (let ((location (source-location dref)))
+        (if (source-location-p location)
+            (let ((loc-file (source-location-file location))
+                  (loc-buffer (source-location-buffer location))
+                  (loc-pos (source-location-buffer-position location))
+                  (loc-snippet (source-location-snippet location)))
+              (when (and
+                     ;; The files must always match (even if NIL).
+                     (equal file loc-file)
+                     ;; The buffers must match, but LOC-BUFFER may be
+                     ;; NIL (e.g. if the file wasn't compiled via
+                     ;; Slime).
+                     (or (null loc-buffer) (equal buffer loc-buffer))
+                     ;; A match in LOCATION-SNIPPET is most
+                     ;; trustworthy, but it's not always available.
+                     (if loc-snippet
+                         (snippets-match loc-snippet snippet)
+                         (<= (abs (- loc-pos pos))
+                             (abs (- closest-pos pos)))))
+                ;; Multiple definitions may have the exact source
+                ;; location (e.g. DEFGENERIC with :METHODs in it on
+                ;; SBCL). They may then all match the snippet.
+                (unless (and (typep closest-definition 'generic-function-dref)
+                             (typep dref 'method-dref)
+                             (eql closest-pos pos))
+                  (setq closest-definition dref
+                        closest-pos loc-pos))))
+            ;; No source location
+            (when (and (null closest-definition)
+                       (dref-and-snippet-match-p dref snippet))
+              (setq closest-definition dref
+                    closest-pos most-positive-fixnum)))))
+    closest-definition))
+
+(defun snippets-match (source-location-snippet buffer-snippet)
+  (or
+   ;; E.g. ASDF:SYSTEMs on SBCL
+   (equal source-location-snippet "")
+   (let ((mismatch-pos (mismatch source-location-snippet buffer-snippet)))
+     (or (null mismatch-pos)
+         (= (min (length buffer-snippet)
+                 (length source-location-snippet))
+            mismatch-pos)))))
 
 ;;; This could use the macroexpanded form instead of the snippet and a
 ;;; generic function specialized on the locative type, but since it's
@@ -507,7 +508,7 @@
                          ((condition) '("define-condition"))
                          ((declaration) '("define-declaration"))
                          ((restart) '("define-restart"))
-                         ((asdf:system) '("defsystem"))
+                         ((asdf:system) '("defsystem" "asdf:defsystem"))
                          ((package) '("defpackage" "define-package"))
                          ((readtable) '("defreadtable"))
                          ((section) '("defsection"))
