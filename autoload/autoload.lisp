@@ -1,58 +1,60 @@
 (in-package :autoload)
 
-;;; Define a function with NAME that loads ASDF-SYSTEM-NAME (neither
-;;; evaluated) that calls the function of the same name, which is
-;;; expected to have been redefined by the loaded system. If not
-;;; redefined, then an error will be signalled and all subsequent
-;;; calls to the function will produce the same error without
-;;; attempting to load the system again.
-(defmacro autoload (name asdf-system-name &key (export t) macro)
-  `(eval-when (:compile-toplevel :load-toplevel :execute)
-     ,(if (not macro)
-          `(unless (fboundp ',name)
-             (declaim (notinline ,name))
-             ;; Workaround for the CMUCL bug that results in "Function
-             ;; with declared result type NIL returned" errors when
-             ;; the real function definition returns.
-             #+cmucl
-             (declaim (ftype function ,name))
-             (defun ,name (&rest args)
-               ,(format nil "Autoloaded function in system [~A][asdf:system]."
-                        ;; ESCAPE-MARKDOWN, which should be used here,
-                        ;; is itself autoloaded. This should be fine
-                        ;; because asdf system names are rarely funny.
-                        asdf-system-name)
-               ;; Prevent infinite recursion which would happen if the
-               ;; loaded system doesn't redefine the function.
-               (setf (symbol-function ',name)
-                     (lambda (&rest args)
-                       (declare (ignore args))
-                       (error "~@<Autoloaded function ~S was not redefined ~
-                        by system [~A][asdf:system].~:@>"
-                              ',name ,asdf-system-name)))
-               (asdf:load-system ,asdf-system-name)
-               ;; Make sure that the function redefined by LOAD-SYSTEM
-               ;; is invoked and not this stub, which could be the
-               ;; case without the SYMBOL-FUNCTION call.
-               (apply (symbol-function ',name) args)))
-          ;; Autoloading macros like this should work, but what's the
-          ;; point? Macro-expansion happens (most often) at compile
-          ;; time, and autoloading should be about run time. Actually,
-          ;; when the fasls are loaded, this won't usually trigger.
-          `(unless (macro-function ',name)
-             (defmacro ,name (&rest args)
-               ,(format nil "Autoloaded macro in system [~A][asdf:system]."
-                        asdf-system-name)
-               (setf (macro-function ',name)
-                     (lambda (&rest args)
-                       (declare (ignore args))
-                       (error "~@<Autoloaded macro ~S was not redefined ~
-                        by system [~A][asdf:system].~:@>"
-                              ',name ,asdf-system-name)))
-               (asdf:load-system ,asdf-system-name)
-               (apply (macro-function ',name) args))))
-     ,@(when export
-         `((export ',name)))))
+(defmacro autoload (name asdf-system-name &key (export t))
+  "Unless NAME already has an FDEFINITION, define a stub function with
+  NAME to autoload ASDF-SYSTEM-NAME. When called, this stub will do
+  the following:
+
+  1. Set the FDEFINITION of NAME to a function that signals an error.
+  2. Call ASDF:LOAD-SYSTEM on ASDF-SYSTEM-NAME.
+  3. Call NAME with the original arguments.
+
+  Thus, the loaded system is expected to redefine the stub. If it
+  doesn't, then an error will be signalled and all subsequent calls to
+  the function will produce the same error without attempting to load
+  the system again.
+
+  When EXPORT is true and NAME is a symbol, then also EXPORT NAME from
+  *PACKAGE*.
+
+  The stub is not defined at [compilation time][clhs], which matches
+  the required semantics of DEFUN. Exporting behaves similary."
+  `(progn
+     (eval-when (:compile-toplevel)
+       ;; This is mainly to prevent undefined function compilation
+       ;; warnings about NAME.
+       ;;
+       ;; Also, this works around a CMUCL bug that results in
+       ;; "Function with declared result type NIL returned" errors
+       ;; when the real function definition returns.
+       (declaim (ftype function ,name)))
+     (eval-when (:load-toplevel :execute)
+       (unless (ignore-errors (fdefinition ',name))
+         (declaim (notinline ,name))
+         (defun ,name (&rest args)
+           ;; ~A ASDF:SYSTEM is autolinked by PAX in generated
+           ;; documentation. To be really correct, we should
+           ;; PAX:ESCAPE-MARKDOWN the name, but we cannot because
+           ;; mgl-pax-bootstrap depends on autoload. If needed, PAX
+           ;; could patch this up, but ASDF system names are rarely
+           ;; funny.
+           ,(format nil "Autoloaded function in the ~A ASDF:SYSTEM."
+                    asdf-system-name)
+           ;; Prevent infinite recursion which would happen if the
+           ;; loaded system doesn't redefine the function.
+           (setf (fdefinition ',name)
+                 (lambda (&rest args)
+                   (declare (ignore args))
+                   (error "~@<Autoloaded function ~S was not redefined ~
+                         by the ~A ASDF:SYSTEM.~:@>"
+                          ',name ,asdf-system-name)))
+           (asdf:load-system ,asdf-system-name)
+           ;; Make sure that the function redefined by ASDF:LOAD-SYSTEM
+           ;; is invoked and not this stub, which could be the case
+           ;; without the FDEFINITION call.
+           (apply (fdefinition ',name) args)))
+       ,@(when (and export (symbolp name))
+           `((export ',name))))))
 
 (defmacro without-redefinition-warnings (&body body)
   #+sbcl
@@ -63,20 +65,33 @@
   #-sbcl
   `(progn ,@body))
 
-;;; Like DEFUN, but silences redefinition warnings. We could also
-;;; remember autoloaded functions (in an :AROUND-COMPILE in the ASDF
-;;; system definition) and generate autoload definitions.
 (defmacro defun/autoloaded (name lambda-list &body body)
-  (unless (ignore-errors (fdefinition name))
-    (warn "~S function ~S not defined." 'defun/autoloaded name))
-  `(without-redefinition-warnings
-     (defun ,name ,lambda-list
-       ,@body)))
+  "Like DEFUN, but silence redefinition warnings."
+  ;; We could also remember autoloaded functions (e.g. in an
+  ;; :AROUND-COMPILE in the ASDF system definition) and generate
+  ;; autoload definitions.
+  `(progn
+     (unless (ignore-errors (fdefinition ',name))
+       (warn "~S function ~S not defined." 'defun/autoloaded ',name))
+     (without-redefinition-warnings
+       (defun ,name ,lambda-list
+         ,@body))))
 
-;;; Like DEFVAR, but works with the global binding. This is for (LET
-;;; ((*X* 1)) (DEFVAR/AUTOLOADED *X* 2)) to work like (PROGN (DEFVAR
-;;; *X* 2) (LET ((*X* 1)) ...)).
 (defmacro defvar/autoloaded (var &optional (val nil valp) (doc nil docp))
+  "Like DEFVAR, but works with the global binding on Lisps that
+  support it (currently Allegro, CCL, ECL, SBCL). This is to
+  handle the case when a system that uses DEFVAR with a default value
+  is autoloaded while that variable is locally bound:
+
+  ```cl-transcript
+  ;; Some base system only foreshadows *X*.
+  (declaim (special *x*))
+  (let ((*x* 1))
+    ;; Imagine that the system that defines *X* is autoload here.
+    (defvar/autoloaded *x* 2)
+    *x*)
+  => 1
+  ```"
   (assert (special-variable-name-p var))
   `(progn
      (defvar ,var)
@@ -88,9 +103,22 @@
 
 (defun special-variable-name-p (obj)
   (and (symbolp obj)
-       #+ccl (member (ccl::variable-information obj) '(:special :constant))
-       #+sbcl (member (sb-int:info :variable :kind obj)
-                      '(:special :constant))))
+       #+abcl (ext:special-variable-p obj)
+       #+allegro (eq (sys:variable-information obj) :special)
+       #+ccl (eq (ccl::variable-information obj) :special)
+       #+clisp (and (ext:special-variable-p obj)
+                    (not (constant-variable-name-p obj)))
+       #+cmucl (eq (ext:info :variable :kind obj) :special)
+       #+ecl (or (si:specialp obj)
+                 (constant-variable-name-p obj))
+       #+sbcl (member (sb-int:info :variable :kind obj) '(:special))))
+
+(defun constant-variable-name-p (obj)
+  (and (symbolp obj)
+       (not (keywordp obj))
+       ;; CONSTANTP may detect constant symbol macros, for example.
+       (boundp obj)
+       (constantp obj)))
 
 
 ;;;; Global bindings of specials
@@ -125,7 +153,7 @@
 
 (defun set-symbol-global-value (symbol value)
   #+allegro
-  (setf (sys:global-symbol-value) value)
+  (setf (sys:global-symbol-value symbol) value)
   #+ccl
   (ccl::%set-sym-global-value symbol value)
   #+ecl
