@@ -17,7 +17,7 @@
   When EXPORT is true and NAME is a symbol, then also EXPORT NAME from
   *PACKAGE*.
 
-  The stub is not defined at [compilation time][clhs], which matches
+  The stub is not defined at [compile time][pax:clhs], which matches
   the required semantics of DEFUN. Exporting behaves similary."
   `(progn
      (eval-when (:compile-toplevel)

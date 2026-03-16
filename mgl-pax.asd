@@ -12,8 +12,8 @@
   :description "Documentation system, browser, generator. See the
   MGL-PAX::@PAX-MANUAL."
   :long-description "The base system. See MGL-PAX::@LINKS-AND-SYSTEMS."
-  :depends-on ("mgl-pax-bootstrap" "dref"
-               "named-readtables" "pythonic-string-reader")
+  :depends-on ("mgl-pax-bootstrap" "dref" "named-readtables"
+               "pythonic-string-reader")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/base/"
@@ -37,7 +37,7 @@
   :source-control ""
   :description "Support for MGL-PAX::@NAVIGATING-IN-EMACS via Slime's
   `MGL-PAX::@M-.` in [MGL-PAX][mgl-pax::@pax-manual]."
-  :depends-on ("alexandria" "mgl-pax" "dref/full"
+  :depends-on ("alexandria" "autoload-doc" "mgl-pax" "dref/full"
                (:feature (:not :swank) "swank"))
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
@@ -61,9 +61,9 @@
   :source-control ""
   :description "Support for MGL-PAX::@GENERATING-DOCUMENTATION in
   [MGL-PAX][mgl-pax::@pax-manual]."
-  :depends-on ("alexandria" "3bmd" "3bmd-ext-code-blocks" "3bmd-ext-math"
-               "colorize" "md5" "mgl-pax/navigate" "mgl-pax/transcribe"
-               "trivial-utf-8")
+  :depends-on ("3bmd" "3bmd-ext-code-blocks" "3bmd-ext-math"
+               "alexandria" "autoload-doc" "colorize" "md5" "mgl-pax/navigate"
+               "mgl-pax/transcribe" "trivial-utf-8")
   :defsystem-depends-on ("mgl-pax.asdf")
   :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "src/document/"

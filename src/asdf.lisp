@@ -1,10 +1,12 @@
 (defpackage :mgl-pax.asdf
   (:use :common-lisp)
-  (:export #:compile-per-file
-           #:compile-with-source-info
-           #:compile-pax
-           #:call-with-wrappers
-           #:compose-wrappers))
+  (:export
+   #:compile-per-file
+   #:compile-with-source-info
+   #:compile-with-standardized-behaviour
+   #:compile-pax
+   #:call-with-wrappers
+   #:compose-wrappers))
 
 (in-package :mgl-pax.asdf)
 
@@ -21,14 +23,14 @@
         (excl:*load-source-debug-info* t))
     (funcall continuation)))
 
-(defun compile-without-some-warnings (continuation)
+(defun compile-with-standardized-behaviour (continuation)
   (let (#+allegro (compiler:*cltl1-compile-file-toplevel-compatibility-p* nil)
         #+allegro (excl:*redefinition-warnings* nil))
     (funcall continuation)))
 
 (defun compile-pax (continuation)
   (call-with-wrappers '(compile-per-file compile-with-source-info
-                        compile-without-some-warnings)
+                        compile-with-standardized-behaviour)
                       continuation))
 
 (defun call-with-wrappers (wrappers fn)
