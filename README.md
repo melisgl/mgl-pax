@@ -291,7 +291,6 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
     - _Bug tracker:_ [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
     - _Source control:_ [GIT](https://github.com/melisgl/mgl-pax.git)
     - *Depends on:* [dref][021a], mgl-pax-bootstrap, named-readtables, pythonic-string-reader
-    - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
@@ -299,8 +298,7 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
 
     - _Description:_ Support for [Navigating Sources in Emacs][3386] via Slime's
         [`M-.`][cb15] in [MGL-PAX][2415].
-    - *Depends on:* alexandria, [dref/full][0c7e], [mgl-pax][6fdb], swank(?)
-    - *Defsystem depends on:* mgl-pax.asdf
+    - *Depends on:* alexandria, autoload-doc, [dref/full][0c7e], [mgl-pax][6fdb], swank(?)
 
 <a id="x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
@@ -308,8 +306,7 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
 
     - _Description:_ Support for [Generating Documentation][2c93] in
         [MGL-PAX][2415].
-    - *Depends on:* 3bmd, 3bmd-ext-code-blocks, 3bmd-ext-math, alexandria, colorize, md5, [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], trivial-utf-8
-    - *Defsystem depends on:* mgl-pax.asdf
+    - *Depends on:* 3bmd, 3bmd-ext-code-blocks, 3bmd-ext-math, alexandria, autoload-doc, colorize, md5, [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], trivial-utf-8
 
 <a id="x-28-22mgl-pax-2Fweb-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
@@ -318,7 +315,6 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
     - _Description:_ Web server for [Browsing Live Documentation][a595]
         in [MGL-PAX][2415].
     - *Depends on:* hunchentoot, [mgl-pax/document][4bb8]
-    - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
@@ -327,7 +323,6 @@ PAX is built on top of the [DRef library][5225] (bundled in the same repository)
     - _Description:_ Support for [Transcripts][6300] in
         [MGL-PAX][2415].
     - *Depends on:* alexandria, [mgl-pax/navigate][f155]
-    - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 

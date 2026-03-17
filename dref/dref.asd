@@ -19,8 +19,12 @@
   the `dref/full` ASDF:SYSTEM."
   :depends-on ("autoload" "mgl-pax-bootstrap" "named-readtables"
                "pythonic-string-reader")
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
+  ;; We compile each file in a separate compilation units (even though
+  ;; they are all nested in another WITH-COMPILATION-UNIT) to get
+  ;; warnings about forward references from one file to a later one.
+  :around-compile (lambda (thunk)
+                    (with-compilation-unit (:override t)
+                      (funcall thunk)))
   :components ((:module "src/base/"
                 :serial t
                 :components ((:file "package")
@@ -48,8 +52,9 @@
   :depends-on ("alexandria" "closer-mop" "dref" "mgl-pax"
                (:feature (:not (:or :swank :sbcl)) "swank")
                (:feature :sbcl "sb-introspect"))
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
+  :around-compile (lambda (thunk)
+                    (with-compilation-unit (:override t)
+                      (funcall thunk)))
   :components ((:module "src/full/"
                 :serial t
                 :components ((:file "package")

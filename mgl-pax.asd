@@ -14,8 +14,12 @@
   :long-description "The base system. See MGL-PAX::@LINKS-AND-SYSTEMS."
   :depends-on ("mgl-pax-bootstrap" "dref" "named-readtables"
                "pythonic-string-reader")
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
+  ;; We compile each file in a separate compilation units (even though
+  ;; they are all nested in another WITH-COMPILATION-UNIT) to get
+  ;; warnings about forward references from one file to a later one.
+  :around-compile (lambda (thunk)
+                    (with-compilation-unit (:override t)
+                      (funcall thunk)))
   :components ((:module "src/base/"
                 :serial t
                 :components ((:file "pax")
@@ -39,8 +43,9 @@
   `MGL-PAX::@M-.` in [MGL-PAX][mgl-pax::@pax-manual]."
   :depends-on ("alexandria" "autoload-doc" "mgl-pax" "dref/full"
                (:feature (:not :swank) "swank"))
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
+  :around-compile (lambda (thunk)
+                    (with-compilation-unit (:override t)
+                      (funcall thunk)))
   :components ((:module "src/navigate/"
                 :serial t
                 :components ((:file "package")
@@ -64,8 +69,9 @@
   :depends-on ("3bmd" "3bmd-ext-code-blocks" "3bmd-ext-math"
                "alexandria" "autoload-doc" "colorize" "md5" "mgl-pax/navigate"
                "mgl-pax/transcribe" "trivial-utf-8")
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
+  :around-compile (lambda (thunk)
+                    (with-compilation-unit (:override t)
+                      (funcall thunk)))
   :components ((:module "src/document/"
                 :serial t
                 :components ((:file "util")
@@ -90,8 +96,9 @@
   :description "Web server for MGL-PAX::@BROWSING-LIVE-DOCUMENTATION
   in [MGL-PAX][mgl-pax::@pax-manual]."
   :depends-on ("hunchentoot" "mgl-pax/document")
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
+  :around-compile (lambda (thunk)
+                    (with-compilation-unit (:override t)
+                      (funcall thunk)))
   :components ((:module "src/web/"
                 :serial t
                 :components ((:file "web"))))
@@ -107,8 +114,9 @@
   :description "Support for MGL-PAX::@TRANSCRIPTS in
   [MGL-PAX][mgl-pax::@pax-manual]."
   :depends-on ("alexandria" "mgl-pax/navigate")
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
+  :around-compile (lambda (thunk)
+                    (with-compilation-unit (:override t)
+                      (funcall thunk)))
   :components ((:module "src/transcribe/"
                 :serial t
                 :components ((:file "transcribe"))))

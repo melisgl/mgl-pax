@@ -71,7 +71,6 @@ the documentation system.
     - _Bug tracker:_ [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
     - _Source control:_ [GIT](https://github.com/melisgl/mgl-pax.git)
     - *Depends on:* autoload, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
-    - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28-22dref-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
@@ -86,7 +85,6 @@ the documentation system.
         
         For a discussion of conditional dependencies, see [Backends][884d].
     - *Depends on:* alexandria, closer-mop, [dref][021a], [mgl-pax][6fdb], sb-introspect(?), swank(?)
-    - *Defsystem depends on:* mgl-pax.asdf
 
 <a id="x-28DREF-3A-40INTRODUCTION-20MGL-PAX-3ASECTION-29"></a>
 

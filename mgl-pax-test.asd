@@ -14,8 +14,6 @@
   :depends-on (#-cmucl "mgl-pax/full"
                #+cmucl "mgl-pax/document"
                "dref-test" "try")
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "test"
                 :serial t
                 :components ((:file "package")
@@ -38,8 +36,6 @@
   :description "Test system for MGL-PAX extensions."
   :long-description "Runnable by test/test.sh only."
   :depends-on ("mgl-pax" "try")
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "test"
                 :serial t
                 :components ((:file "test-extension")))))

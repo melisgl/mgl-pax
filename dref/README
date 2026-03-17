@@ -42,8 +42,6 @@ the documentation system.
 
     - Depends on: autoload, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
 
-    - Defsystem depends on: mgl-pax.asdf
-
 - [system] "dref/full"
 
     - Description: DREF with everything loaded. There should be no need
@@ -56,8 +54,6 @@ the documentation system.
         For a discussion of conditional dependencies, see Backends.
 
     - Depends on: alexandria, closer-mop, dref, mgl-pax, sb-introspect(?), swank(?)
-
-    - Defsystem depends on: mgl-pax.asdf
 
 ## Introduction
 

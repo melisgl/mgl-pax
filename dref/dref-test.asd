@@ -15,8 +15,6 @@
   :long-description ""
   :depends-on ("dref/full" "mgl-pax"  "try"
                (:feature (:not :swank) "swank"))
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "test/"
                 :serial t
                 :components ((:file "package")
@@ -36,8 +34,6 @@
   :description "Test system for DREF autoload."
   :long-description "Runnable by test/test.sh only."
   :depends-on ("dref" "try")
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
   :components ((:module "test"
                 :serial t
                 :components ((:file "test-autoload")))))

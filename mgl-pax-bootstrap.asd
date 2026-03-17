@@ -9,8 +9,9 @@
   not for public consumption but solely for systems on which PAX
   depends and which also use PAX."
   :depends-on ("autoload")
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
+  :around-compile (lambda (thunk)
+                    (with-compilation-unit (:override t)
+                      (funcall thunk)))
   :components ((:module "src/bootstrap/"
                 :serial t
                 :components ((:file "package")

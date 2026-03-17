@@ -212,25 +212,19 @@ PAX is built on top of the DRef library (bundled in the same repository).
 
     - Depends on: dref, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
 
-    - Defsystem depends on: mgl-pax.asdf
-
 - [system] "mgl-pax/navigate"
 
     - Description: Support for Navigating Sources in Emacs via Slime's
     M-. in MGL-PAX.
 
-    - Depends on: alexandria, dref/full, mgl-pax, swank(?)
-
-    - Defsystem depends on: mgl-pax.asdf
+    - Depends on: alexandria, autoload-doc, dref/full, mgl-pax, swank(?)
 
 - [system] "mgl-pax/document"
 
     - Description: Support for Generating Documentation in
     MGL-PAX.
 
-    - Depends on: 3bmd, 3bmd-ext-code-blocks, 3bmd-ext-math, alexandria, colorize, md5, mgl-pax/navigate, mgl-pax/transcribe, trivial-utf-8
-
-    - Defsystem depends on: mgl-pax.asdf
+    - Depends on: 3bmd, 3bmd-ext-code-blocks, 3bmd-ext-math, alexandria, autoload-doc, colorize, md5, mgl-pax/navigate, mgl-pax/transcribe, trivial-utf-8
 
 - [system] "mgl-pax/web"
 
@@ -239,16 +233,12 @@ PAX is built on top of the DRef library (bundled in the same repository).
 
     - Depends on: hunchentoot, mgl-pax/document
 
-    - Defsystem depends on: mgl-pax.asdf
-
 - [system] "mgl-pax/transcribe"
 
     - Description: Support for Transcripts in
     MGL-PAX.
 
     - Depends on: alexandria, mgl-pax/navigate
-
-    - Defsystem depends on: mgl-pax.asdf
 
 - [system] "mgl-pax/full"
 
