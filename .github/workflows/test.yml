@@ -57,6 +57,9 @@ jobs:
       - name: Install latest Try from GitHub
         run: ros install melisgl/try
 
+      - name: Install latest autoload from GitHub
+        run: ros install melisgl/autoload
+
       - name: Install latest 3bmd from GitHub
         run: ros install 3b/3bmd
 

@@ -90,14 +90,19 @@
 (defvar *document-html-bottom-blocks-of-links*)
 (export '*document-html-bottom-blocks-of-links*)
 
-(autoload downcasingp "mgl-pax/document" :export nil)
-(autoload document "mgl-pax/document")
-(autoload update-asdf-system-readmes "mgl-pax/document")
-(autoload update-asdf-system-html-docs "mgl-pax/document")
+(defmacro autoload* (name asdf-system-name)
+  `(progn
+     (autoload ,name ,asdf-system-name)
+     (export ',name)))
+
+(autoload downcasingp "mgl-pax/document")
+(autoload* document "mgl-pax/document")
+(autoload* update-asdf-system-readmes "mgl-pax/document")
+(autoload* update-asdf-system-html-docs "mgl-pax/document")
 ;;; UPDATE-PAX-WORLD generates documentation for PAX itself, so load
 ;;; MGL-PAX/FULL to have all documentation. Otherwise,
 ;;; MGL-PAX/DOCUMENT would be enough.
-(autoload update-pax-world "mgl-pax/full")
+(autoload* update-pax-world "mgl-pax/full")
 
 
 (defsection @extending-document (:title "Extending DOCUMENT")
@@ -138,10 +143,10 @@
                       ,link-title-to
                       (lambda (,stream)
                         ,@body)))
-(autoload call-with-heading "mgl-pax/document" :export nil)
+(autoload call-with-heading "mgl-pax/document")
 (declaim (special *first-pass*))
 
-(autoload doctitle "mgl-pax/document")
+(autoload* doctitle "mgl-pax/document")
 
 (defgeneric doctitle* (object)
   (:documentation "DOCTITLE* extends DOCTITLE in the same way
@@ -230,7 +235,7 @@
                      ()
                      ,%dref)
                ,@body)))))))
-(autoload print-dref-bullet "mgl-pax/document" :export nil)
+(autoload print-dref-bullet "mgl-pax/document")
 (declaim (ftype function print-arglist))
 (declaim (ftype function print-end-bullet))
 (declaim (ftype function guess-package-and-readtable))
@@ -249,10 +254,10 @@
                                   (ensure-list ,names))
      ,@body))
 
-(autoload document-docstring "mgl-pax/document")
-(autoload escape-markdown "mgl-pax/document")
-(autoload prin1-to-markdown "mgl-pax/document")
-(autoload escape-tex "mgl-pax/document")
+(autoload* document-docstring "mgl-pax/document")
+(autoload* escape-markdown "mgl-pax/document")
+(autoload* prin1-to-markdown "mgl-pax/document")
+(autoload* escape-tex "mgl-pax/document")
 
 
 ;;;; Early non-exported definitions
