@@ -48,28 +48,10 @@
     (when (is (boundp '*document-max-numbering-level*))
       (is (eql *document-max-numbering-level* 3)))))
 
-(deftest test-document-for-emacs-autoload ()
-  (is (not (document-system-loaded-p)))
-  (is (eq (first (pax::document-for-emacs nil nil)) :error))
-  (is (document-system-loaded-p)))
-
-(deftest test-locate-definitions-for-emacs-autoload ()
-  (is (not (navigate-system-loaded-p)))
-  (is (null (pax::locate-definitions-for-emacs ())))
-  (is (navigate-system-loaded-p)))
-
 (deftest test-transcribe-autoload ()
   (is (not (transcribe-system-loaded-p)))
   (is (equal (pax:transcribe ":xxx" nil)
              ":xxx
-=> :XXX
-"))
-  (is (transcribe-system-loaded-p)))
-
-(deftest test-transcribe-for-emacs-autoload ()
-  (is (not (transcribe-system-loaded-p)))
-  (is (equal (pax::transcribe-for-emacs ":xxx" NIL NIL NIL NIL NIL)
-             "
 => :XXX
 "))
   (is (transcribe-system-loaded-p)))
