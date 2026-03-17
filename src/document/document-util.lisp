@@ -450,10 +450,7 @@ GitHub if possible.")
 
 ;;;; Generate the READMEs and HTML docs.
 
-(defun pax-and-dref-sections ()
-  (list @pax-manual dref::@dref-manual))
-
-(defun pax-and-dref-pages (format &key (output-dir ""))
+(defun pax-pages* (format &key (output-dir ""))
   (let ((source-uri-fn (make-git-source-uri-fn
                         :mgl-pax
                         "https://github.com/melisgl/mgl-pax"))
@@ -465,45 +462,26 @@ GitHub if possible.")
                      (if (string= *pandoc-output-format* "pdf")
                          "pax-manual.pdf"
                          "test/data/pax-manual.tex"))))
-        (dref-file (ecase format
-                     ((:plain) "dref/README")
-                     ((:markdown) "dref/README.md")
-                     ((:html) "doc/dref-manual.html")
-                     ((:pdf)
-                      (if (string= *pandoc-output-format* "pdf")
-                          "dref-manual.pdf"
-                          "test/data/dref-manual.tex"))))
         (output-dir (asdf:system-relative-pathname "mgl-pax" output-dir)))
     `((:objects (, @pax-manual)
        :output (,(merge-pathnames pax-file output-dir)
                 ,@*default-output-options*)
-       ,@(when (member format '(:plain :markdown))
+       ,@(when (eq format :markdown)
            '(:header-fn print-pax-markdown-header
              :footer-fn print-markdown-footer))
        :uri-fragment ,pax-file
-       :source-uri-fn ,source-uri-fn)
-      (:objects (, dref::@dref-manual)
-       :output (,(merge-pathnames dref-file output-dir)
-                ,@*default-output-options*)
-       ,@(when (member format '(:plain :markdown))
-           '(:header-fn print-dref-markdown-header
-             :footer-fn print-markdown-footer))
-       :uri-fragment ,dref-file
        :source-uri-fn ,source-uri-fn))))
 
 (defun print-pax-markdown-header (stream)
   (format stream "![](web/pax-logo.jpg)~%~%"))
 
-(defun print-dref-markdown-header (stream)
-  (format stream "![](../web/dref-logo.jpg)~%~%"))
-
 (defun update-pax-readmes (&key (output-dir ""))
   (let ((*document-url-versions* '(1)))
-    (document (pax-and-dref-sections)
-              :pages (pax-and-dref-pages :plain :output-dir output-dir)
+    (document (pax-sections)
+              :pages (pax-pages* :plain :output-dir output-dir)
               :format :plain)
-    (document (pax-and-dref-sections)
-              :pages (pax-and-dref-pages :markdown :output-dir output-dir)
+    (document (pax-sections)
+              :pages (pax-pages* :markdown :output-dir output-dir)
               :format :markdown)))
 
 #+nil
@@ -512,13 +490,12 @@ GitHub if possible.")
   (time (update-pax-readmes))
   (time
    (let ((*document-downcase-uppercase-code* t))
-     (update-asdf-system-html-docs (pax-and-dref-sections)
-                                   :mgl-pax :pages (pax-and-dref-pages :html)
+     (update-asdf-system-html-docs (pax-sections)
+                                   :mgl-pax :pages (pax-pages* :html)
                                    :update-css-p t :style :charter)))
   (time
    (let ((pax:*document-downcase-uppercase-code* t))
-     (document (pax-and-dref-sections) :pages (pax-and-dref-pages :pdf)
-                                       :format :pdf))))
+     (document (pax-sections) :pages (pax-pages* :pdf) :format :pdf))))
 
 
 ;;; Load systems that use PAX and generate PAX World in

@@ -474,8 +474,7 @@
 (defun pax-pages ()
   `((:objects ,(pax-sections)
      :source-uri-fn ,(make-git-source-uri-fn
-                      :mgl-pax
-                      "https://github.com/melisgl/mgl-pax"))))
+                      "mgl-pax" "https://github.com/melisgl/mgl-pax"))))
 
 (register-doc-in-pax-world :pax 'pax-sections 'pax-pages)
 

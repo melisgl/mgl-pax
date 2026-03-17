@@ -51,31 +51,21 @@ jobs:
           LISP: ${{ matrix.lisp }}
         run: if [ $LISP = abcl-bin ]; then sudo apt-get -y install maven; fi
 
-      - name: Install latest Named-readtables from GitHub
-        run: ros install melisgl/named-readtables
-
-      - name: Install latest Try from GitHub
-        run: ros install melisgl/try
-
-      - name: Install latest autoload from GitHub
-        run: ros install melisgl/autoload
-
-      - name: Install latest 3bmd from GitHub
-        run: ros install 3b/3bmd
-
-      - name: Install latest Slime from GitHub
-        # KLUDGE: 'ros install slime/slime' fails because it is not
-        # interpreted as a github reference but is special cased.
+      - name: Install latest stuff from GitHub
         run: |
+          # KLUDGE: 'ros install' wants to compile things immediately
+          # after downloading, but there are circular dependencies on
+          # the repository level. There are no circular dependencies
+          # at the ASDF level though, so let's just clone everything
+          # before compiling.
           cd ~/.roswell/local-projects/
-          git clone https://github.com/slime/slime.git
-
-      - name: Run DRef tests
-        env:
-          LISP: ${{ matrix.lisp }}
-        run: |
-          ros run -e '(ql:quickload :dref-test)' -q
-          ./dref/test/test.sh $LISP
+          git clone --depth 1 https://github.com/melisgl/autoload
+          git clone --depth 1 https://github.com/melisgl/named-readtables
+          git clone --depth 1 https://github.com/melisgl/try
+          git clone --depth 1 https://github.com/melisgl/dref
+          # KLUDGE: 'ros install slime/slime' fails because it is not
+          # interpreted as a github reference but is special cased.
+          git clone --depth 1 https://github.com/slime/slime.git
 
       - name: Run MGL-PAX tests
         env:
