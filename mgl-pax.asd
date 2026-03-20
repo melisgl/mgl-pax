@@ -21,7 +21,7 @@
   :record-autoloads ("src/base/autoloads.lisp"
                      :package #:mgl-pax
                      :exports t)
-  ;; We compile each file in a separate compilation units (even though
+  ;; We compile each file in a separate compilation unit (even though
   ;; they are all nested in another WITH-COMPILATION-UNIT) to get
   ;; warnings about forward references from one file to a later one.
   :around-compile (lambda (thunk)
