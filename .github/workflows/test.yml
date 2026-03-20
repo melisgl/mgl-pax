@@ -60,7 +60,7 @@ jobs:
           # before compiling.
           cd ~/.roswell/local-projects/
           git clone --depth 1 https://github.com/melisgl/autoload
-          (cd autoload && git co wip)
+          (cd autoload && git checkout wip)
           git clone --depth 1 https://github.com/melisgl/named-readtables
           git clone --depth 1 https://github.com/melisgl/try
           git clone --depth 1 https://github.com/melisgl/dref
