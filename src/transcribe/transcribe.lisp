@@ -467,7 +467,7 @@
   create a temporary package for evaluation."""
   (standard-transcribe-dynenv function))
 
-(defun/autoloaded standard-transcribe-dynenv (fn)
+(defun/auto standard-transcribe-dynenv (fn)
   "Bind printer and reader variables to standard values and call FN.
 
   The bindings are the same as with WITH-STANDARD-IO-SYNTAX, but
@@ -504,7 +504,7 @@
   (transcription-output-consistency-error condition)
   (transcription-values-consistency-error condition))
 
-(defvar/autoloaded *transcribe-syntaxes*
+(defvar/auto *transcribe-syntaxes*
   '((:default
      (:output "..")
      ;; To give precedence to this no-value marker, it is listed
@@ -557,10 +557,10 @@
 
   See TRANSCRIBE for how the actual syntax to be used is selected.")
 
-(defvar/autoloaded *transcribe-check-consistency* nil
+(defvar/auto *transcribe-check-consistency* nil
   "The default value of TRANSCRIBE's CHECK-CONSISTENCY argument.")
 
-(defun/autoloaded transcribe
+(defun/auto transcribe
     (input output &key update-only (include-no-output update-only)
            (include-no-value update-only) (echo t)
            (check-consistency *transcribe-check-consistency*)
@@ -1567,7 +1567,7 @@
   (delete-trailing-whitespace function)
   (delete-comments function))
 
-(defun/autoloaded squeeze-whitespace (string)
+(defun/auto squeeze-whitespace (string)
   "Replace consecutive whitespace characters with a single space in
   STRING and trim whitespace from the right. This is useful to undo
   the effects of pretty printing when building comparison functions
@@ -1584,7 +1584,7 @@
                    (write-char char out))
                  (setq prev-whitespace-p whitespacep))))))
 
-(defun/autoloaded delete-trailing-whitespace (string)
+(defun/auto delete-trailing-whitespace (string)
   "Delete whitespace characters after the last non-whitespace
   character in each line in STRING."
   (flet ((delete-on-one-line (string)
@@ -1595,7 +1595,7 @@
               while line
               do (write-line (delete-on-one-line line) out))))))
 
-(defun/autoloaded delete-comments (string &key (pattern ";"))
+(defun/auto delete-comments (string &key (pattern ";"))
   """For each line in STRING delete the rest of the line after and
   including the first occurrence of PATTERN. On changed lines, delete
   trailing whitespace too. This function does not parse STRING as Lisp
@@ -1636,4 +1636,4 @@
               while line
               do (write-line (delete-on-one-line line) out))))))
 
-(defun/autoloaded ensure-transcribe-loaded ())
+(defun/auto ensure-transcribe-loaded ())

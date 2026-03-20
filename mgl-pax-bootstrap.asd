@@ -1,6 +1,8 @@
-;;; This is in a separate .asd file help OS-level packaging by making
-;;; the dependency graph of .asd files (as opposed to just ASDF
-;;; systems) acyclic. See https://github.com/melisgl/try/issues/5.
+;;;; -*- mode: Lisp -*-
+
+;;; This is in a separate .asd file to help OS-level packaging
+;;; (https://github.com/melisgl/try/issues/5) by making the dependency
+;;; graph of .asd files (as opposed to that of ASDF systems) acyclic.
 (asdf:defsystem "mgl-pax-bootstrap"
   :licence "MIT, see COPYING."
   :author "Gábor Melis"
@@ -8,7 +10,6 @@
   :description "Use the [mgl-pax][asdf:system] system. This system is
   not for public consumption but solely for systems on which PAX
   depends and which also use PAX."
-  :depends-on ("autoload")
   :around-compile (lambda (thunk)
                     (with-compilation-unit (:override t)
                       (funcall thunk)))

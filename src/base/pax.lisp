@@ -3,6 +3,7 @@
 ;;;; USE-PACKAGEs that were not available in MGL-PAX-BOOTSTRAP.
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
+  (use-package '#:autoload)
   (use-package '#:named-readtables)
   (use-package '#:pythonic-string-reader))
 
@@ -572,6 +573,9 @@
     (when (or *compile-file-truename* *load-truename*)
       (setf (definition-property ,xref 'source-location)
             (this-source-location)))))
+
+#+(or allegro clisp)
+(defvar *used*)
 
 (defmacro load-time-value* (form)
   "Like LOAD-TIME-VALUE, but evaluate FORM exactly once."

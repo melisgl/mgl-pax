@@ -116,7 +116,7 @@
       (escape-markdown (dref-to-anchor dref))))
 
 ;;; This is the implementation of the WITH-HEADING macro.
-(defun/autoloaded call-with-heading (stream dref link-title-to fn)
+(defun/auto call-with-heading (stream dref link-title-to fn)
   (let ((level *heading-level*)
         (title (document-definition-title-or-anchor dref)))
     (when (plusp level)
@@ -408,7 +408,7 @@
     The structure of the list is otherwise unimportant."
   (*document-tight* variable))
 
-(defvar/autoloaded *document-tight* nil
+(defvar/auto *document-tight* nil
   "If NIL, then DOCUMENT adds a newline between consecutive
   [atomic][clhs] documentables on the same [page][@pages].")
 
@@ -523,7 +523,7 @@
 ;;; possibly with *FORMAT* :HTML or :MARKDOWN)
 (defvar *subformat* nil)
 
-(defun/autoloaded document (documentable &key (stream t) pages (format :plain))
+(defun/auto document (documentable &key (stream t) pages (format :plain))
   """Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
   FORMAT is one of [:PLAIN][@plain-output],
   [:MARKDOWN][@markdown-output], [:HTML][@html-output] and
@@ -887,7 +887,7 @@
                                       *readtable*)
        ,@body)))
 
-(defvar/autoloaded *document-normalize-packages* t
+(defvar/auto *document-normalize-packages* t
   "Whether to print `[in package <package-name>]` in the documentation
   when the package changes.")
 
@@ -1177,7 +1177,7 @@
 
 (defvar *document-docstring-key* nil)
 
-(defun/autoloaded document-docstring
+(defun/auto document-docstring
     (docstring stream &key (indentation "    ")
                exclude-first-line-p (paragraphp t))
   "Write DOCSTRING to STREAM, [sanitizing the Markdown]
@@ -1226,7 +1226,7 @@
   are accessible via DOCTITLE and processed according to
   @MARKDOWN-IN-TITLES.")
 
-(defun/autoloaded doctitle (object)
+(defun/auto doctitle (object)
   "Return the @TITLE of OBJECT if it has one or NIL. For
   @CODIFICATION, the title is interpreted in the package returned by
   DOCSTRING. DOCTITLE can be extended via DOCTITLE*."
@@ -1461,7 +1461,7 @@
   (@interesting glossary-term)
   (*document-downcase-uppercase-code* variable))
 
-(defvar/autoloaded *document-uppercase-is-code* t
+(defvar/auto *document-uppercase-is-code* t
   """When true, @INTERESTING @NAMEs extracted from @CODIFIABLE @WORDs
   marked up as code with backticks. For example, this docstring
 
@@ -1678,7 +1678,7 @@
       (values tree t nil)))
 
 
-(defvar/autoloaded *document-downcase-uppercase-code* nil
+(defvar/auto *document-downcase-uppercase-code* nil
   """If true, then all @MARKDOWN/INLINE-CODE (e.g. \`code\`, _which
   renders as_ `\code`) – including @CODIFICATION – which has no
   lowercase characters is downcased in the output. Characters of
@@ -1709,7 +1709,7 @@
     (:title "Markdown inline code"
      :url "https://daringfireball.net/projects/markdown/syntax#code"))
 
-(defun/autoloaded downcasingp ()
+(defun/auto downcasingp ()
   (or (and *document-downcase-uppercase-code*
            (not (eq *document-downcase-uppercase-code*
                     :only-in-markup)))
@@ -1723,7 +1723,7 @@
                           :upcase)))
     (prin1-to-string object)))
 
-(defun/autoloaded prin1-to-markdown
+(defun/auto prin1-to-markdown
     (object &key (escape-inline t) (escape-mathjax t) (escape-html t)
             (escape-block t))
   "Like PRIN1-TO-STRING, but bind *PRINT-CASE* depending on
@@ -1840,7 +1840,7 @@
   (@specific-link section)
   (@unspecific-link section))
 
-(defvar/autoloaded *document-link-code* t
+(defvar/auto *document-link-code* t
   """Whether definitions of things other than [SECTION][class]s
   are allowed to be @LINKABLE.""")
 
@@ -2580,7 +2580,7 @@
   (*document-link-to-hyperspec* variable)
   (*document-hyperspec-root* variable))
 
-(defvar/autoloaded *document-link-to-hyperspec* t
+(defvar/auto *document-link-to-hyperspec* t
   """If true, consider definitions found in the Common Lisp HyperSpec
   for linking. For example,
 
@@ -2604,7 +2604,7 @@
   Note that linking explicitly with the CLHS locative is not subject
   to the value of this variable.""")
 
-(defvar/autoloaded *document-hyperspec-root*
+(defvar/auto *document-hyperspec-root*
   "http://www.lispworks.com/documentation/HyperSpec/"
   """A \URL of the Common Lisp HyperSpec.
   The default value is the canonical location. When [invoked from
@@ -2686,19 +2686,19 @@
   (*document-text-navigation* variable)
   (*document-fancy-html-navigation* variable))
 
-(defvar/autoloaded *document-link-sections* t
+(defvar/auto *document-link-sections* t
   "When true, HTML anchors and PDF destinations are generated before
   the headings (e.g. of sections), which allows the table of contents
   to contain links and also code-like references to sections (like
   `@FOO-MANUAL`) to be translated to links with the
   [TITLE][DEFSECTION] being the link text.")
 
-(defvar/autoloaded *document-max-numbering-level* 3
+(defvar/auto *document-max-numbering-level* 3
   "A non-negative integer. In their hierarchy, sections on levels less
   than this value get numbered in the format of `3.1.2`. Setting it to
   0 turns numbering off.")
 
-(defvar/autoloaded *document-max-table-of-contents-level* 3
+(defvar/auto *document-max-table-of-contents-level* 3
   "An integer that determines the depth of the table of contents.
 
   - If negative, then no table of contents is generated.
@@ -2713,12 +2713,12 @@
   If *DOCUMENT-LINK-SECTIONS* is true, then the tables will link to
   the sections.")
 
-(defvar/autoloaded *document-text-navigation* nil
+(defvar/auto *document-text-navigation* nil
   "If true, then before each heading a line is printed with links to
   the previous, parent and next section. Needs
   *DOCUMENT-LINK-SECTIONS* to be on to work.")
 
-(defvar/autoloaded *document-fancy-html-navigation* t
+(defvar/auto *document-fancy-html-navigation* t
   "If true and the output format is HTML, then headings get a
   navigation component that consists of links to the previous, parent,
   next section, a self-link, and a link to the definition in the
@@ -2945,7 +2945,7 @@
   (*document-min-link-hash-length* variable)
   (*document-base-url* variable))
 
-(defvar/autoloaded *document-url-versions* '(2 1)
+(defvar/auto *document-url-versions* '(2 1)
   """A list of versions of PAX \URL formats to support in the
   generated documentation. The first in the list is used to generate
   links.
@@ -3084,7 +3084,7 @@
                             :test #'string=)))))))))))
 
 
-(defvar/autoloaded *document-min-link-hash-length* 4
+(defvar/auto *document-min-link-hash-length* 4
   "Recall that @MARKDOWN/REFLINKs (like `[label][id]`) are used for
   @LINKING. It is desirable to have ids that are short to maintain
   legibility of the generated Markdown, but also stable to reduce the
@@ -3122,7 +3122,7 @@
     s))
 
 
-(defvar/autoloaded *document-mark-up-signatures* t
+(defvar/auto *document-mark-up-signatures* t
   "When true, some things such as function names and arglists are
   rendered as bold and italic. In @HTML-OUTPUT and @PDF-OUTPUT,
   locative types become links to sources (if :SOURCE-URI-FN is
@@ -3151,7 +3151,7 @@
 ;;;     - [locative-type] name
 ;;;
 ;;; When generating HTML, link NAME to the anchor of DREF.
-(defun/autoloaded print-dref-bullet (dref stream)
+(defun/auto print-dref-bullet (dref stream)
   (multiple-value-bind (label escaped-label) (dref-bullet-label dref)
     (let* ((locative-type (string-downcase (xref-locative-type dref)))
            (md-locative-type (escape-markdown locative-type)))
@@ -3341,7 +3341,7 @@
     (apply #'append (reverse results))))
 
 
-(defvar/autoloaded *document-base-url* nil
+(defvar/auto *document-base-url* nil
   """When *DOCUMENT-BASE-URL* is non-NIL, this is prepended to all
   Markdown relative URLs. It must be a valid URL without query or
   fragment parts (that is, _http://lisp.org/doc/_ but not

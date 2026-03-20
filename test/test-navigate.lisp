@@ -247,7 +247,7 @@
                            :end (dref-ext:source-location-p function))
                           :header-nl "```"
                           :footer-nl "```")
-                 (defun/autoloaded make-source-location))
+                 (defun/auto make-source-location))
     (@1+* note (note @1+*))
     (@1+*/1 note (note (@1+*/1 :join #\Newline))
             #+ccl (defun 1+*)

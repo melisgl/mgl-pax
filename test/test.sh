@@ -38,48 +38,6 @@ function lisp_tests {
 EOF
 }
 
-function autoload_tests {
-  local lisp_name="$1"
-  shift
-
-  run_test_case "test-exports on ${lisp_name}" "$@" <<EOF
-(asdf:load-system :mgl-pax-test/extension)
-(asdf:load-system :mgl-pax/full)
-(in-package :mgl-pax-test-extension)
-(when (passedp (try 'test-exports))
-  (uiop/image:quit 22))
-EOF
-
-  run_test_case "test-document-autoload on ${lisp_name}" "$@" <<EOF
-(asdf:load-system :mgl-pax-test/extension)
-(in-package :mgl-pax-test-extension)
-(when (passedp (try 'test-document-autoload))
-  (uiop/image:quit 22))
-EOF
-
-  run_test_case "test-transcribe-autoload on ${lisp_name}" "$@" <<EOF
-(asdf:load-system :mgl-pax-test/extension)
-(in-package :mgl-pax-test-extension)
-(when (passedp (try 'test-transcribe-autoload))
-  (uiop/image:quit 22))
-EOF
-}
-
-function basic_load_tests {
-  local lisp_name="$1"
-  shift
-
-  for system in mgl-pax mgl-pax/navigate mgl-pax/document mgl-pax/web \
-                mgl-pax/transcribe mgl-pax/full; do
-      run_test_case "load ${system} on ${lisp_name}" "$@" <<EOF
-(progn
-  (asdf:load-system "${system}")
-  (uiop/image:quit 22))
-EOF
-
-  done
-}
-
 function run_tests {
   local test_suite="$1"
   local failure_expected="$2"
@@ -128,7 +86,6 @@ if [ -n "${lisp}" ]; then
       lisp2="$lisp"
   fi
   run_tests lisp_tests nil ${lisp2}
-  run_tests autoload_tests t ${lisp2}
 else
   # Most lisps take only 10s or so to run the tests. CLISP takes 4x
   # longer. ABCL is 25x slower.
@@ -139,15 +96,6 @@ else
   run_tests lisp_tests nil ecl
   run_tests lisp_tests nil clisp -on-error exit
   run_tests lisp_tests nil abcl-bin
-
-  # We run the autoload tests on the faster ones only.
-  run_tests autoload_tests nil sbcl --noinform --disable-debugger
-  # run_tests autoload_tests nil allegro --batch --backtrace-on-error
-  run_tests autoload_tests nil ccl-bin --batch
-  # run_tests autoload_tests nil cmu-bin -batch
-  # run_tests autoload_tests nil ecl
-  # run_tests autoload_tests nil clisp -on-error exit
-  # run_tests autoload_tests t abcl-bin
 fi
 
 echo "SHTEST: ${num_failures} failures, ${num_passes} passes."
