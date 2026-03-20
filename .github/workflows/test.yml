@@ -59,7 +59,7 @@ jobs:
           # at the ASDF level though, so let's just clone everything
           # before compiling.
           cd ~/.roswell/local-projects/
-          git clone --depth 1 https://github.com/melisgl/autoload
+          git clone --depth 1 https://github.com/melisgl/autoload/wip
           git clone --depth 1 https://github.com/melisgl/named-readtables
           git clone --depth 1 https://github.com/melisgl/try
           git clone --depth 1 https://github.com/melisgl/dref
