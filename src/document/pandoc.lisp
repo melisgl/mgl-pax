@@ -7,7 +7,7 @@
 (defvar *tex-special-chars* "&%$#_{}~^\\")
 
 ;;; https://tex.stackexchange.com/a/34586
-(defun/autoloaded escape-tex (string)
+(defun/auto escape-tex (string)
   "Construct a new string from STRING by adding a backslash before
   special TeX characters
 
@@ -56,11 +56,11 @@
 (define-glossary-term @pandoc (:title "Pandoc"
                                :url "https://pandoc.org/"))
 
-(defvar/autoloaded *document-pandoc-program* "pandoc"
+(defvar/auto *document-pandoc-program* "pandoc"
   """The name of the Pandoc binary. It need not be an absolute pathname
   as `\\PATH` is searched.""")
 
-(defvar/autoloaded *document-pandoc-pdf-options*
+(defvar/auto *document-pandoc-pdf-options*
   `(("-V" "papersize=a4")
     ("-V" "margin-left=1.03in")
     ("-V" "margin-right=1.03in")
@@ -82,7 +82,7 @@
   *DOCUMENT-PANDOC-PDF-HEADER-INCLUDES* and
   *DOCUMENT-PANDOC-PDF-METADATA-BLOCK*.")
 
-(defvar/autoloaded *document-pandoc-pdf-metadata-block* ""
+(defvar/auto *document-pandoc-pdf-metadata-block* ""
   "A @PANDOC-YAML-METADATA-BLOCK as a string.
 
   Concatenate to this string to customize it.")
@@ -145,7 +145,7 @@
   \hspace{0.1em}\fcolorbox[HTML]{606060}{f5f5f5}{\textbf{#1}}}
 """)
 
-(defvar/autoloaded *document-pandoc-pdf-header-includes*
+(defvar/auto *document-pandoc-pdf-header-includes*
     (default-pandoc-pdf-header-includes)
     "LaTeX code (a string) to include in the preamble via
   [`header-includes`](https://pandoc.org/MANUAL.html#layout).

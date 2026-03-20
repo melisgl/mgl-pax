@@ -12,9 +12,14 @@
   :description "Documentation system, browser, generator. See the
   MGL-PAX::@PAX-MANUAL."
   :long-description "The base system. See MGL-PAX::@LINKS-AND-SYSTEMS."
-  :depends-on ("mgl-pax-bootstrap" "dref" "named-readtables"
+  :depends-on ("autoload" "mgl-pax-bootstrap" "dref" "named-readtables"
                "pythonic-string-reader")
-  ;; We compile each file in a separate compilation units (even though
+  :defsystem-depends-on ("autoload")
+  :class "autoload:autoload-system"
+  :auto-depends-on ("mgl-pax/navigate" "mgl-pax/document"
+                    "mgl-pax/transcribe" "mgl-pax/web")
+  :auto-loaddefs ("src/base/loaddefs.lisp" :packages #:mgl-pax)
+  ;; We compile each file in a separate compilation unit (even though
   ;; they are all nested in another WITH-COMPILATION-UNIT) to get
   ;; warnings about forward references from one file to a later one.
   :around-compile (lambda (thunk)
@@ -22,10 +27,10 @@
                       (funcall thunk)))
   :components ((:module "src/base/"
                 :serial t
-                :components ((:file "pax")
+                :components ((:file "loaddefs")
+                             (:file "pax")
                              (:file "extension-api")
                              (:file "document-early")
-                             (:file "web-early")
                              (:file "transcribe-early")
                              (:file "locatives-early"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
@@ -43,6 +48,8 @@
   `MGL-PAX::@M-.` in [MGL-PAX][mgl-pax::@pax-manual]."
   :depends-on ("alexandria" "autoload-doc" "mgl-pax" "dref/full"
                (:feature (:not :swank) "swank"))
+  :defsystem-depends-on ("autoload")
+  :class "autoload:autoload-system"
   :around-compile (lambda (thunk)
                     (with-compilation-unit (:override t)
                       (funcall thunk)))
@@ -69,6 +76,8 @@
   :depends-on ("3bmd" "3bmd-ext-code-blocks" "3bmd-ext-math"
                "alexandria" "autoload-doc" "colorize" "md5" "mgl-pax/navigate"
                "mgl-pax/transcribe" "trivial-utf-8")
+  :defsystem-depends-on ("autoload")
+  :class "autoload:autoload-system"
   :around-compile (lambda (thunk)
                     (with-compilation-unit (:override t)
                       (funcall thunk)))
@@ -96,6 +105,8 @@
   :description "Web server for MGL-PAX::@BROWSING-LIVE-DOCUMENTATION
   in [MGL-PAX][mgl-pax::@pax-manual]."
   :depends-on ("hunchentoot" "mgl-pax/document")
+  :defsystem-depends-on ("autoload")
+  :class "autoload:autoload-system"
   :around-compile (lambda (thunk)
                     (with-compilation-unit (:override t)
                       (funcall thunk)))
@@ -114,6 +125,8 @@
   :description "Support for MGL-PAX::@TRANSCRIPTS in
   [MGL-PAX][mgl-pax::@pax-manual]."
   :depends-on ("alexandria" "mgl-pax/navigate")
+  :defsystem-depends-on ("autoload")
+  :class "autoload:autoload-system"
   :around-compile (lambda (thunk)
                     (with-compilation-unit (:override t)
                       (funcall thunk)))
@@ -139,4 +152,6 @@
                ;; doesn't find libcrypto.
                #-(or abcl clisp cmucl) "mgl-pax/web"
                "mgl-pax/transcribe")
+  :defsystem-depends-on ("autoload")
+  :class "autoload:autoload-system"
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))

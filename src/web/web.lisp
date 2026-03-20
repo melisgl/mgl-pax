@@ -250,7 +250,7 @@
     `(:base-url ,(ensure-web-server :port port
                                     :hyperspec-root hyperspec-root))))
 
-(defun/autoloaded ensure-web-server (&key port hyperspec-root)
+(defun/auto ensure-web-server (&key port hyperspec-root)
   """Start or update a web server on PORT of localhost for
   @BROWSING-LIVE-DOCUMENTATION. Returns the base URL of the
   server (e.g. `http://localhost:32790`), which goes to the

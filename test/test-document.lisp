@@ -2140,6 +2140,15 @@ example section
         (with-compilation-unit (:override t)
           (compile nil '(lambda () x)))))))
 
+(defmacro without-redefinition-warnings (&body body)
+  #+sbcl
+  `(locally
+       (declare (sb-ext:muffle-conditions sb-kernel:redefinition-warning))
+     (handler-bind ((sb-kernel:redefinition-warning #'muffle-warning))
+       ,@body))
+  #-sbcl
+  `(progn ,@body))
+
 (deftest test-asdf-system-name-of ()
   (with-failure-expected ((alexandria:featurep :clisp))
     (is (equal "mgl-pax" (mgl-pax::asdf-system-name-of mgl-pax::@pax-manual)))
@@ -2147,7 +2156,7 @@ example section
       (mgl-pax::with-filename-to-asdf-system-name-map
         (is (equal "mgl-pax"
                    (mgl-pax::asdf-system-name-of mgl-pax::@pax-manual)))))
-    (autoload::without-redefinition-warnings
+    (without-redefinition-warnings
       (eval '(defun no-source ())))
     (is (null (mgl-pax::asdf-system-name-of (dref 'no-source 'function))))
     (with-failure-expected ((not (dref-test::working-locative-p 'package)))

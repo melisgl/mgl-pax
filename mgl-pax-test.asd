@@ -25,17 +25,3 @@
                              (:file "test"))))
   :perform (asdf:test-op (o s)
              (uiop:symbol-call '#:mgl-pax-test '#:test)))
-
-(asdf:defsystem "mgl-pax-test/extension"
-  :licence "MIT, see COPYING."
-  :author "Gábor Melis"
-  :mailto "mega@retes.hu"
-  :homepage ""
-  :bug-tracker ""
-  :source-control ""
-  :description "Test system for MGL-PAX extensions."
-  :long-description "Runnable by test/test.sh only."
-  :depends-on ("mgl-pax" "try")
-  :components ((:module "test"
-                :serial t
-                :components ((:file "test-extension")))))

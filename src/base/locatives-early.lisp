@@ -2,6 +2,9 @@
 
 (in-readtable pythonic-string-syntax)
 
+;;; Used by [mgl-pax][asdf:system] dependency [autoload][asdf:system].
+;;; So, let's keep this around for (AUTOLOAD:RECORD-LOADDEFS
+;;; "mgl-pax").
 (defsection @pax-locatives (:title "PAX Locatives")
   "In addition DRef's [own][dref::@basic-locative-types],
   PAX defines a few locative types using the facilities in described

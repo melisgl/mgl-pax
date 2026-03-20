@@ -75,7 +75,7 @@
 (defun markdown-special-block-char-p (char)
   (member char '(#\# #\Return #\Newline)))
 
-(defun/autoloaded escape-markdown
+(defun/auto escape-markdown
     (string &key (escape-inline t) (escape-mathjax t) (escape-html t)
             (escape-block t))
   "Backslash escape Markdown constructs in STRING.
