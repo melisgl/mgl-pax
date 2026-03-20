@@ -208,7 +208,9 @@ PAX is built on top of the DRef library (bundled in the same repository).
 
     - Source control: [GIT](https://github.com/melisgl/mgl-pax.git)
 
-    - Depends on: dref, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
+    - Depends on: autoload, dref, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
+
+    - Defsystem depends on: autoload
 
 - [system] "mgl-pax/navigate"
 
@@ -217,12 +219,16 @@ PAX is built on top of the DRef library (bundled in the same repository).
 
     - Depends on: alexandria, autoload-doc, dref/full, mgl-pax, swank(?)
 
+    - Defsystem depends on: autoload
+
 - [system] "mgl-pax/document"
 
     - Description: Support for Generating Documentation in
     MGL-PAX.
 
     - Depends on: 3bmd, 3bmd-ext-code-blocks, 3bmd-ext-math, alexandria, autoload-doc, colorize, md5, mgl-pax/navigate, mgl-pax/transcribe, trivial-utf-8
+
+    - Defsystem depends on: autoload
 
 - [system] "mgl-pax/web"
 
@@ -231,6 +237,8 @@ PAX is built on top of the DRef library (bundled in the same repository).
 
     - Depends on: hunchentoot, mgl-pax/document
 
+    - Defsystem depends on: autoload
+
 - [system] "mgl-pax/transcribe"
 
     - Description: Support for Transcripts in
@@ -238,12 +246,16 @@ PAX is built on top of the DRef library (bundled in the same repository).
 
     - Depends on: alexandria, mgl-pax/navigate
 
+    - Defsystem depends on: autoload
+
 - [system] "mgl-pax/full"
 
     - Description: The mgl-pax system with all features
     preloaded.
 
     - Depends on: mgl-pax/document, mgl-pax/navigate, mgl-pax/transcribe, mgl-pax/web
+
+    - Defsystem depends on: autoload
 
 ## Emacs Setup
 

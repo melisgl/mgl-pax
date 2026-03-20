@@ -30,7 +30,7 @@
       (defpackage :mgl-pax
         (:nicknames #:pax)
         (:documentation "See MGL-PAX::@PAX-MANUAL.")
-        (:use #:common-lisp #:autoload #:dref #:dref-ext)
+        (:use #:common-lisp #:dref #:dref-ext)
         ;; These are the exports from MGL-PAX-BOOTSTRAP.
         (:export #:define-package
          #:defsection #:section

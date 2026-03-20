@@ -4,105 +4,12 @@
 
 (declaim (special *document-open-linking*))
 
-;;; @DOCUMENTABLE
-(defvar *document-tight*)
-(export '*document-tight*)
-
-;;; @PACKAGE-AND-READTABLE
-(defvar *document-normalize-packages*)
-(export '*document-normalize-packages*)
-
-;;; @BROWSING-WITH-OTHER-BROWSERS
-(defvar *browse-html-style*)
-(export '*browse-html-style*)
-
-;;; @CODIFICATION
-(defvar *document-uppercase-is-code*)
-(export '*document-uppercase-is-code*)
-(defvar *document-downcase-uppercase-code*)
-(export '*document-downcase-uppercase-code*)
-
-;;; @LINKING
-(defvar *document-link-code*)
-(export '*document-link-code*)
 ;;; Silence SBCL compiler notes.
 #+sbcl
 (define-condition unresolvable-reflink (warning condition-context-mixin) ())
 (export 'unresolvable-reflink)
 (export 'output-reflink)
 (export 'output-label)
-
-;;; @LINKING-TO-THE-HYPERSPEC
-(defvar *document-link-to-hyperspec*)
-(export '*document-link-to-hyperspec*)
-(defvar *document-hyperspec-root*)
-(export '*document-hyperspec-root*)
-
-;;; @LINKING-TO-SECTIONS
-(defvar *document-link-sections*)
-(export '*document-link-sections*)
-(defvar *document-max-numbering-level*)
-(export '*document-max-numbering-level*)
-(defvar *document-max-table-of-contents-level*)
-(export '*document-max-table-of-contents-level*)
-(defvar *document-text-navigation*)
-(export '*document-text-navigation*)
-(defvar *document-fancy-html-navigation*)
-(export '*document-fancy-html-navigation*)
-
-;;; @LINK-FORMAT
-(defvar *document-url-versions*)
-(export '*document-url-versions*)
-(defvar *document-min-link-hash-length*)
-(export '*document-min-link-hash-length*)
-(defvar *document-base-url*)
-(export '*document-base-url*)
-
-;;; @OUTPUT-FORMATS
-(defvar *document-mark-up-signatures*)
-(export '*document-mark-up-signatures*)
-
-;;; @PDF-OUTPUT
-(defvar *document-pandoc-program*)
-(export '*document-pandoc-program*)
-(defvar *document-pandoc-pdf-options*)
-(export '*document-pandoc-pdf-options*)
-(defvar *document-pandoc-pdf-header-includes*)
-(export '*document-pandoc-pdf-header-includes*)
-(defvar *document-pandoc-pdf-metadata-block*)
-(export '*document-pandoc-pdf-metadata-block*)
-
-;;; @HTML-OUTPUT
-(defvar *document-html-default-style*)
-(export '*document-html-default-style*)
-(defvar *document-html-max-navigation-table-of-contents-level*)
-(export '*document-html-max-navigation-table-of-contents-level*)
-(defvar *document-html-lang*)
-(export '*document-html-lang*)
-(defvar *document-html-charset*)
-(export '*document-html-charset*)
-(defvar *document-html-head*)
-(export '*document-html-head*)
-(defvar *document-html-sidebar*)
-(export '*document-html-sidebar*)
-(defvar *document-html-top-blocks-of-links*)
-(export '*document-html-top-blocks-of-links*)
-(defvar *document-html-bottom-blocks-of-links*)
-(export '*document-html-bottom-blocks-of-links*)
-
-(defmacro autoload* (name asdf-system-name)
-  `(progn
-     (autoload ,name ,asdf-system-name)
-     (export ',name)))
-
-(autoload downcasingp "mgl-pax/document")
-(autoload* document "mgl-pax/document")
-(autoload* update-asdf-system-readmes "mgl-pax/document")
-(autoload* update-asdf-system-html-docs "mgl-pax/document")
-;;; UPDATE-PAX-WORLD generates documentation for PAX itself, so load
-;;; MGL-PAX/FULL to have all documentation. Otherwise,
-;;; MGL-PAX/DOCUMENT would be enough.
-(autoload* update-pax-world "mgl-pax/full")
 
 
 (defsection @extending-document (:title "Extending DOCUMENT")
@@ -145,8 +52,6 @@
                         ,@body)))
 (autoload call-with-heading "mgl-pax/document")
 (declaim (special *first-pass*))
-
-(autoload* doctitle "mgl-pax/document")
 
 (defgeneric doctitle* (object)
   (:documentation "DOCTITLE* extends DOCTITLE in the same way
@@ -253,11 +158,6 @@
                                     (xref name 'argument))
                                   (ensure-list ,names))
      ,@body))
-
-(autoload* document-docstring "mgl-pax/document")
-(autoload* escape-markdown "mgl-pax/document")
-(autoload* prin1-to-markdown "mgl-pax/document")
-(autoload* escape-tex "mgl-pax/document")
 
 
 ;;;; Early non-exported definitions

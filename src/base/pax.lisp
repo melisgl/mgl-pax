@@ -3,6 +3,7 @@
 ;;;; USE-PACKAGEs that were not available in MGL-PAX-BOOTSTRAP.
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
+  (use-package '#:autoload)
   (use-package '#:named-readtables)
   (use-package '#:pythonic-string-reader))
 

@@ -290,7 +290,8 @@ PAX is built on top of the DRef library (bundled in the same repository).
     - _Homepage:_ [http://github.com/melisgl/mgl-pax](http://github.com/melisgl/mgl-pax)
     - _Bug tracker:_ [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
     - _Source control:_ [GIT](https://github.com/melisgl/mgl-pax.git)
-    - *Depends on:* dref, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
+    - *Depends on:* autoload, dref, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
+    - *Defsystem depends on:* autoload
 
 <a id="x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
@@ -299,6 +300,7 @@ PAX is built on top of the DRef library (bundled in the same repository).
     - _Description:_ Support for [Navigating Sources in Emacs][3386] via Slime's
         [`M-.`][cb15] in [MGL-PAX][2415].
     - *Depends on:* alexandria, autoload-doc, dref/full, [mgl-pax][6fdb], swank(?)
+    - *Defsystem depends on:* autoload
 
 <a id="x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
@@ -307,6 +309,7 @@ PAX is built on top of the DRef library (bundled in the same repository).
     - _Description:_ Support for [Generating Documentation][2c93] in
         [MGL-PAX][2415].
     - *Depends on:* 3bmd, 3bmd-ext-code-blocks, 3bmd-ext-math, alexandria, autoload-doc, colorize, md5, [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], trivial-utf-8
+    - *Defsystem depends on:* autoload
 
 <a id="x-28-22mgl-pax-2Fweb-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
@@ -315,6 +318,7 @@ PAX is built on top of the DRef library (bundled in the same repository).
     - _Description:_ Web server for [Browsing Live Documentation][a595]
         in [MGL-PAX][2415].
     - *Depends on:* hunchentoot, [mgl-pax/document][4bb8]
+    - *Defsystem depends on:* autoload
 
 <a id="x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
@@ -323,6 +327,7 @@ PAX is built on top of the DRef library (bundled in the same repository).
     - _Description:_ Support for [Transcripts][6300] in
         [MGL-PAX][2415].
     - *Depends on:* alexandria, [mgl-pax/navigate][f155]
+    - *Defsystem depends on:* autoload
 
 <a id="x-28-22mgl-pax-2Ffull-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
 
@@ -331,6 +336,7 @@ PAX is built on top of the DRef library (bundled in the same repository).
     - _Description:_ The [`mgl-pax`][6fdb] system with all features
         preloaded.
     - *Depends on:* [mgl-pax/document][4bb8], [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], [mgl-pax/web][a8c5]
+    - *Defsystem depends on:* autoload
 
 <a id="x-28MGL-PAX-3A-40EMACS-SETUP-20MGL-PAX-3ASECTION-29"></a>
 

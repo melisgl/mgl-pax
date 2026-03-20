@@ -8,7 +8,6 @@
   :description "Use the [mgl-pax][asdf:system] system. This system is
   not for public consumption but solely for systems on which PAX
   depends and which also use PAX."
-  :depends-on ("autoload")
   :around-compile (lambda (thunk)
                     (with-compilation-unit (:override t)
                       (funcall thunk)))
