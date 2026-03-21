@@ -19,8 +19,7 @@
   :autoloaded-systems ("mgl-pax/navigate" "mgl-pax/document"
                        "mgl-pax/transcribe" "mgl-pax/web")
   :record-autoloads ("src/base/autoloads.lisp"
-                     :package #:mgl-pax
-                     :exports t)
+                     :package #:mgl-pax :export-from #:mgl-pax)
   ;; We compile each file in a separate compilation unit (even though
   ;; they are all nested in another WITH-COMPILATION-UNIT) to get
   ;; warnings about forward references from one file to a later one.

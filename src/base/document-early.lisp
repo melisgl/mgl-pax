@@ -50,7 +50,7 @@
                       ,link-title-to
                       (lambda (,stream)
                         ,@body)))
-(autoload call-with-heading "mgl-pax/document")
+
 (declaim (special *first-pass*))
 
 (defgeneric doctitle* (object)
@@ -140,7 +140,7 @@
                      ()
                      ,%dref)
                ,@body)))))))
-(autoload print-dref-bullet "mgl-pax/document")
+
 (declaim (ftype function print-arglist))
 (declaim (ftype function print-end-bullet))
 (declaim (ftype function guess-package-and-readtable))
