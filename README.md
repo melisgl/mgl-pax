@@ -2421,7 +2421,7 @@ first.
 [Local Definition][9db9] or was linked to before in the same docstring:
 
 - "`My other CAR is also a CAR`" *renders as* "My other [`CAR`][d5a2] is also a
-  `CAR`".
+`CAR`".
 
 - "`[COS][] and COS`" *renders as* "[`COS`][c4a3] and `COS`".
 
@@ -2435,8 +2435,9 @@ first.
 - "`T and NIL`" *renders as* "`T` and `NIL`".
 
 As an exception, a single link (be it either a [Specific Link][0361] or an
-unambiguous [Unspecific Link][8e71]) to a [`SECTION`][5fac] or [`GLOSSARY-TERM`][8251] is not
-suppressed to allow their titles to be displayed properly:
+unambiguous [Unspecific Link][8e71]) to a [`SECTION`][5fac], [`GLOSSARY-TERM`][8251] or [`NOTE`][e2ae] is
+not suppressed to allow their titles to be displayed or their
+docstring to be included properly:
 
 - "`@NAME and @NAME`" *renders as* "[name][88cf] and [name][88cf]".
 

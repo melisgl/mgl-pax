@@ -2259,7 +2259,8 @@ example section
 
 (deftest test-note ()
   (check-head "x @@NOTE-WITHOUT-DOCSTRING y" "x  y")
-  (check-head "x @@NOTE-WITH-EMPTY-DOCSTRING y" "x  y"))
+  (check-head "x @@NOTE-WITH-EMPTY-DOCSTRING y" "x  y")
+  (check-head "@@NOTE-X @@NOTE-X" "x x"))
 
 
 (deftest test-pax-transcripts ()
