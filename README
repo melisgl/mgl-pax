@@ -2132,7 +2132,7 @@ Unspecific Autolinking is suppressed if the name found has a
 Local Definition or was linked to before in the same docstring:
 
 - "My other CAR is also a CAR" renders as "My other CAR is also a
-  CAR".
+CAR".
 
 - "[COS][] and COS" renders as "COS and COS".
 
@@ -2146,8 +2146,9 @@ Unspecific Autolinking to T and NIL is also suppressed (see
 - "T and NIL" renders as "T and NIL".
 
 As an exception, a single link (be it either a Specific Link or an
-unambiguous Unspecific Link) to a SECTION or GLOSSARY-TERM is not
-suppressed to allow their titles to be displayed properly:
+unambiguous Unspecific Link) to a SECTION, GLOSSARY-TERM or NOTE is
+not suppressed to allow their titles to be displayed or their
+docstring to be included properly:
 
 - "@NAME and @NAME" renders as "name and name".
 

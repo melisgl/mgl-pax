@@ -8,15 +8,14 @@
 
 (autoload::ensure-package-names "mgl-pax" '("pax"))
 
-(setf (documentation (find-package (autoload::native-name "mgl-pax")) t)
-        "See MGL-PAX::@PAX-MANUAL.")
+(autoload::set-package-documentation "mgl-pax" "See MGL-PAX::@PAX-MANUAL.")
 
-(autoload::use-package/existing
+(autoload::use-package*
  '("autoload" "common-lisp" "dref" "dref-ext" "editor-hints.named-readtables"
    "pythonic-string-reader")
  "mgl-pax")
 
-(autoload::import/existing
+(autoload::import*
  '(("alexandria" . "compose") ("alexandria" . "curry")
    ("alexandria" . "ends-with") ("alexandria" . "ends-with-subseq")
    ("alexandria" . "featurep") ("alexandria" . "first-elt")
@@ -28,10 +27,10 @@
    ("alexandria" . "read-stream-content-into-string")
    ("alexandria" . "starts-with") ("alexandria" . "starts-with-subseq")
    ("alexandria" . "when-let") ("alexandria" . "with-gensyms")
-   ("common-lisp" . "go") ("common-lisp" . "go"))
+   ("common-lisp" . "go"))
  "mgl-pax")
 
-(autoload::intern-and-export
+(autoload::export*
  '("*browse-html-style*" "*discard-documentation-p*" "*document-base-url*"
    "*document-downcase-uppercase-code*" "*document-fancy-html-navigation*"
    "*document-html-bottom-blocks-of-links*" "*document-html-charset*"
@@ -48,27 +47,24 @@
    "*document-pandoc-program*" "*document-text-navigation*"
    "*document-tight*" "*document-uppercase-is-code*"
    "*document-url-versions*" "*format*" "*transcribe-check-consistency*"
-   "*transcribe-syntaxes*" "accessor" "accessor" "argument" "clhs" "constant"
-   "constant" "define-glossary-term" "define-package" "defsection"
-   "delete-comments" "delete-trailing-whitespace" "dislocated" "docstring"
-   "docstring" "doctitle" "doctitle*" "document" "document-docstring"
-   "document-object*" "documenting-definition" "ensure-web-server"
-   "escape-markdown" "exportable-locative-type-p" "exportable-reference-p"
-   "glossary-term" "glossary-term-name" "glossary-term-title"
-   "glossary-term-url" "go" "go" "include" "install-pax-elisp" "locative"
-   "locative" "macro" "macro" "make-git-source-uri-fn"
+   "*transcribe-syntaxes*" "accessor" "argument" "clhs" "constant"
+   "define-glossary-term" "define-package" "defsection" "delete-comments"
+   "delete-trailing-whitespace" "dislocated" "docstring" "doctitle"
+   "doctitle*" "document" "document-docstring" "document-object*"
+   "documenting-definition" "ensure-web-server" "escape-markdown"
+   "exportable-locative-type-p" "exportable-reference-p" "glossary-term"
+   "glossary-term-name" "glossary-term-title" "glossary-term-url" "go"
+   "include" "install-pax-elisp" "locative" "macro" "make-git-source-uri-fn"
    "make-github-source-uri-fn" "note" "output-label" "output-reflink"
-   "prin1-to-markdown" "reader" "reader" "register-doc-in-pax-world"
-   "section" "section-entries" "section-link-title-to" "section-name"
-   "section-package" "section-readtable" "section-title" "squeeze-whitespace"
-   "standard-transcribe-dynenv" "structure-accessor" "structure-accessor"
-   "symbol-macro" "symbol-macro" "transcribe"
-   "transcription-consistency-error" "transcription-error"
+   "prin1-to-markdown" "reader" "register-doc-in-pax-world" "section"
+   "section-entries" "section-link-title-to" "section-name" "section-package"
+   "section-readtable" "section-title" "squeeze-whitespace"
+   "standard-transcribe-dynenv" "structure-accessor" "symbol-macro"
+   "transcribe" "transcription-consistency-error" "transcription-error"
    "transcription-output-consistency-error"
-   "transcription-values-consistency-error" "unknown" "unknown"
-   "unresolvable-reflink" "update-asdf-system-html-docs"
-   "update-asdf-system-readmes" "update-pax-world" "with-dislocated-names"
-   "with-heading" "writer" "writer")
+   "transcription-values-consistency-error" "unknown" "unresolvable-reflink"
+   "update-asdf-system-html-docs" "update-asdf-system-readmes"
+   "update-pax-world" "with-dislocated-names" "with-heading" "writer")
  "mgl-pax")
 
 (autoload::foreshadow-defvar mgl-pax:*browse-html-style* :init :charter

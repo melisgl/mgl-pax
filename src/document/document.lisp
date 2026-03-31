@@ -2452,7 +2452,7 @@
   @LOCAL-DEFINITION or was linked to before in the same docstring:
 
   - "`My other CAR is also a CAR`" _renders as_ "My other CAR is also a
-    CAR".
+  CAR".
 
   - "`[COS][] and COS`" _renders as_ "[COS][] and COS".
 
@@ -2466,8 +2466,9 @@
   - "`T and NIL`" _renders as_ "T and NIL".
 
   As an exception, a single link (be it either a @SPECIFIC-LINK or an
-  unambiguous @UNSPECIFIC-LINK) to a SECTION or GLOSSARY-TERM is not
-  suppressed to allow their titles to be displayed properly:
+  unambiguous @UNSPECIFIC-LINK) to a SECTION, GLOSSARY-TERM or NOTE is
+  not suppressed to allow their titles to be displayed or their
+  docstring to be included properly:
 
   - "`@NAME and @NAME`" _renders as_ "@NAME and @NAME"."""
   (when drefs
@@ -2481,7 +2482,9 @@
                  thereis (find (xref-name dref) linked-refs
                                :test #'xref-name=))
          (not (and (= (length drefs) 1)
-                   (doctitle (first drefs))))))))
+                   (let ((dref (first drefs)))
+                     (or (doctitle dref)
+                         (typep dref 'note-dref)))))))))
 
 
 (defsection @escaping-autolinking (:title "Escaping Autolinking")

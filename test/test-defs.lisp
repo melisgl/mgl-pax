@@ -2,6 +2,19 @@
 
 (named-readtables:in-readtable pythonic-string-reader:pythonic-string-syntax)
 
+(defvar *pdf-test* 7
+  """When *DOCUMENT-BASE-URL* is non-NIL, this is prepended to all
+  Markdown relative URLs. It must be a valid URL without query or
+  fragment parts (that is, _http://lisp.org/doc/_ but not
+  _http://lisp.org/doc?a=1_ or _http://lisp.org/doc#fragment_). Note
+  that intra-page links using only URL fragments (e.g. and explicit
+  HTML links (e.g. `<a href="...">`) in Markdown are not
+  affected.""")
+
+(defun fn-with-mathjax ()
+  "$\\hat{x}$_s"
+  nil)
+
 (defsection @test-examples (:export nil)
   "example section")
 
@@ -201,10 +214,6 @@
       (* x 7)
       (note @in-2 "aas"))))
 
-(defun fn-with-mathjax ()
-  "$\\hat{x}$_s"
-  nil)
-
 (defun $x_0$ ())
 
 (define-glossary-term @mathjax-and-code-in-glossary-term-title
@@ -225,16 +234,8 @@ y"))
 (note @@note-without-docstring)
 (note @@note-with-empty-docstring
   "")
+(note @@note-x "x")
 
 (defun dynenv-with-consistency (fn)
   (let ((*transcribe-check-consistency* t))
     (funcall fn)))
-
-(defvar *pdf-test* 7
-  """When *DOCUMENT-BASE-URL* is non-NIL, this is prepended to all
-  Markdown relative URLs. It must be a valid URL without query or
-  fragment parts (that is, _http://lisp.org/doc/_ but not
-  _http://lisp.org/doc?a=1_ or _http://lisp.org/doc#fragment_). Note
-  that intra-page links using only URL fragments (e.g. and explicit
-  HTML links (e.g. `<a href="...">`) in Markdown are not
-  affected.""")
