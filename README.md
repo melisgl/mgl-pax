@@ -678,6 +678,7 @@ Now let's examine the most important pieces.
     Notes are similar to Lisp comments, but they can be included in the
     documentation. In fact, notes are auto-included: a [Specific Link][0361] to
     a note is equivalent to including it with the [`DOCSTRING`][ce75] locative.
+    Thus, `NOTE` can double as a tool to avoid boilerplate.
     
     Notes are intended to help reduce the distance between code and its
     documentation when there is no convenient definition docstring to
@@ -3310,8 +3311,8 @@ World](https://melisgl.github.io/mgl-pax-world/).
     Register `SECTIONS` and `PAGE-SPECS` under `NAME` (a symbol) in PAX
     World. By default, [`UPDATE-PAX-WORLD`][ee51] generates documentation for all
     of these. `SECTIONS` and `PAGE-SPECS` must be lists of [`SECTION`][5fac]s and
-    `PAGE-SPEC`s (SEE [`DOCUMENT`][432c]) or designators of function of no arguments
-    that return such lists.
+    `PAGE-SPEC`s (SEE [`DOCUMENT`][432c]) or designators of functions with no
+    arguments that return such lists.
 
 For example, this is how PAX registers itself:
 

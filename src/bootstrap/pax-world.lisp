@@ -25,8 +25,8 @@
   "Register SECTIONS and PAGE-SPECS under NAME (a symbol) in PAX
   World. By default, UPDATE-PAX-WORLD generates documentation for all
   of these. SECTIONS and PAGE-SPECS must be lists of SECTIONs and
-  PAGE-SPECs (SEE DOCUMENT) or designators of function of no arguments
-  that return such lists."
+  PAGE-SPECs (SEE DOCUMENT) or designators of functions with no
+  arguments that return such lists."
   (declare (type symbol name))
   (setq *registered-pax-world-docs*
         (remove name *registered-pax-world-docs* :key #'first))
