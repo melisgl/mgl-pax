@@ -210,6 +210,8 @@ PAX is built on top of the DRef library (bundled in the same repository).
 
     - Depends on: autoload, dref, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
 
+    - Auto depends on: mgl-pax/document, mgl-pax/navigate, mgl-pax/transcribe, mgl-pax/web
+
     - Defsystem depends on: autoload
 
 - [system] "mgl-pax/navigate"

@@ -291,6 +291,7 @@ PAX is built on top of the DRef library (bundled in the same repository).
     - _Bug tracker:_ [https://github.com/melisgl/mgl-pax/issues](https://github.com/melisgl/mgl-pax/issues)
     - _Source control:_ [GIT](https://github.com/melisgl/mgl-pax.git)
     - *Depends on:* autoload, dref, mgl-pax-bootstrap, named-readtables, pythonic-string-reader
+    - *Auto depends on:* [mgl-pax/document][4bb8], [mgl-pax/navigate][f155], [mgl-pax/transcribe][5825], [mgl-pax/web][a8c5]
     - *Defsystem depends on:* autoload
 
 <a id="x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29"></a>
