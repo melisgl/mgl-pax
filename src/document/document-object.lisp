@@ -324,6 +324,9 @@
           (foo "Source control" 'asdf/system:system-source-control
                :type :source-control)
           (foo "Depends on" 'asdf:system-depends-on :type :list-of-systems)
+          (when (typep system 'autoload-system)
+            (foo "Auto depends on" 'system-auto-depends-on
+                 :type :list-of-systems))
           (foo "Defsystem depends on" 'asdf:system-defsystem-depends-on
                :type :list-of-systems))))))
 
