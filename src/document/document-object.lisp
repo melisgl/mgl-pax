@@ -278,24 +278,24 @@
                  (when (and value (not (equal value "")))
                    (case type
                      ((:link)
-                      (format stream "    - _~A:_ [~A](~A)~%" name
-                              (escape-markdown value)
-                              (escape-markdown-link value)))
+                      (format stream "    - _~A:_ <~A>~%" name
+                              (escape-markdown-for-angle-brackets value)))
                      ((:mailto)
                       (format stream "    - _~A:_ [~A](mailto:~A)~%"
                               name (escape-markdown value)
-                              (escape-markdown-link value)))
+                              (escape-markdown-for-link-destination value)))
                      ((:source-control)
                       (cond ((and (listp value) (= (length value) 2))
                              (format stream "    - _~A:_ [~A](~A)~%"
                                      name (escape-markdown
                                            (let ((*print-case* :upcase))
                                              (princ-to-string (first value))))
-                                     (escape-markdown-link (second value))))
+                                     (escape-markdown-for-link-destination
+                                      (second value))))
                             ((stringp value)
-                             (format stream "    - _~A:_ [~A](~A)~%"
-                                     name (escape-markdown value)
-                                     (escape-markdown-link value)))))
+                             (format stream "    - _~A:_ <~A>~%" name
+                                     (escape-markdown-for-angle-brackets
+                                      value)))))
                      ((:docstring)
                       (format stream "    - _~A:_ " name)
                       (document-docstring value stream :indentation "        "

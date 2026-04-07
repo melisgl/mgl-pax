@@ -127,12 +127,26 @@
                  (write-char char stream))))))))
 
 ;;; Escape #\) characters in URLs in explicit links [LABEL](URL).
-(defun escape-markdown-link (string)
+(defun escape-markdown-for-link-destination (string)
   (with-output-to-string (out)
     (loop for char across string
           do (if (char= char #\))
                  (write-string "%29" out)
                  (write-char char out)))))
+
+;;; Escape #\<, #\> and #\Space characters in URLs in Markdown <URL>.
+(defun escape-markdown-for-angle-brackets (string)
+  (with-output-to-string (out)
+    (loop for char across string
+          do (case char
+               ((#\<)
+                (write-string #.(urlencode "<") out))
+               ((#\>)
+                (write-string #.(urlencode ">") out))
+               ((#\Space)
+                (write-string #.(urlencode " ") out))
+               (t
+                (write-char char out))))))
 
 
 ;;;; Parse tree based Markdown fragments
