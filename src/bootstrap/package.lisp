@@ -31,12 +31,15 @@
         (:nicknames #:pax)
         (:documentation "See MGL-PAX::@PAX-MANUAL.")
         (:use #:common-lisp #:dref #:dref-ext)
-        ;; These are the exports from MGL-PAX-BOOTSTRAP.
-        (:export #:define-package
+        (:export
+         ;; Defined in MGL-PAX-BOOTSTRAP.
+         #:define-package
          #:defsection #:section
          #:exportable-reference-p
          #:exportable-locative-type-p
          #:define-glossary-term #:glossary-term
          #:make-github-source-uri-fn
          #:make-git-source-uri-fn
-         #:register-doc-in-pax-world)))))
+         #:register-doc-in-pax-world
+         ;; Not defined. Provided for importing convenience.
+         #:clhs)))))
