@@ -1482,9 +1482,8 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
                       (setf (slot-value system slot-name) "x@y (a)")
                       (check-pred system "[x@y (a)](mailto:x@y (a%29)"))
                      (t
-                      (setf (slot-value system slot-name) "http://x/y?z=(a)")
-                      (check-pred system
-                                  "[http://x/y?z=(a)](http://x/y?z=(a%29)")))
+                      (setf (slot-value system slot-name) "http://x/y?z=<a>")
+                      (check-pred system "<http://x/y?z=%3Ca%3E>")))
             (setf (slot-value system slot-name) old-value)))))))
 
 
