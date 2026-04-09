@@ -212,9 +212,7 @@
          (dolist (,component (asdf/component:sub-components ,system))
            (when (typep ,component 'asdf:cl-source-file)
              (when-let (,filename (truenameish
-                                   (slot-value
-                                    ,component
-                                    'asdf/component:absolute-pathname)))
+                                   (asdf:component-pathname ,component)))
                ,@body)))))))
 
 (defun filename-to-asdf-system-name-map ()
