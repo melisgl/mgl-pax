@@ -311,17 +311,17 @@
                       (format stream "    - _~A:_ ~A~%" name value)))))))
         (unless *omit-asdf-slots*
           (terpri stream)
-          (foo "Version" 'asdf/component:component-version)
-          (foo "Description" 'asdf/system:system-description :type :docstring)
-          (foo "Long Description" 'asdf/system:system-long-description
+          (foo "Version" 'asdf:component-version)
+          (foo "Description" 'asdf:system-description :type :docstring)
+          (foo "Long Description" 'asdf:system-long-description
                :type :docstring)
-          (foo "Licence" 'asdf/system:system-licence)
-          (foo "Author" 'asdf/system:system-author)
-          (foo "Maintainer" 'asdf/system:system-maintainer)
-          (foo "Mailto" 'asdf/system:system-mailto :type :mailto)
-          (foo "Homepage" 'asdf/system:system-homepage :type :link)
-          (foo "Bug tracker" 'asdf/system:system-bug-tracker :type :link)
-          (foo "Source control" 'asdf/system:system-source-control
+          (foo "Licence" 'asdf:system-licence)
+          (foo "Author" 'asdf:system-author)
+          (foo "Maintainer" 'asdf:system-maintainer)
+          (foo "Mailto" 'asdf:system-mailto :type :mailto)
+          (foo "Homepage" 'asdf:system-homepage :type :link)
+          (foo "Bug tracker" 'asdf:system-bug-tracker :type :link)
+          (foo "Source control" 'asdf:system-source-control
                :type :source-control)
           (foo "Depends on" 'asdf:system-depends-on :type :list-of-systems)
           (when (typep system 'autoload-system)

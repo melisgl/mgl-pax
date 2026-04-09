@@ -34,7 +34,7 @@ function lisp_tests {
 (asdf:load-system :mgl-pax-test)
 (when (try:passedp (mgl-pax-test:test :debug ${debug} :print ${print}
                                       :describe ${describe}))
-  (uiop/image:quit 22))
+  (uiop:quit 22))
 EOF
 }
 
