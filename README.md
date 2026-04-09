@@ -1597,7 +1597,7 @@ In interactive use, `mgl-pax-document` behaves similarly to
 
 - It works in non-`lisp-mode` buffers by reinterpreting a few lines
   of text surrounding point as lisp code (hence the suggested
-  *global* binding).
+  *global* binding) in package `MGL-PAX`.
 
 - It supports fragment syntax at the prompt:
 
