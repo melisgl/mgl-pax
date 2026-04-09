@@ -412,10 +412,11 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
                        (line-beginning-position 4)))
           (lisp-mode-hook ()))
       (with-temp-buffer
-        (lisp-mode)
-        (insert text-before)
-        (save-excursion (insert text-after))
-        (funcall fn)))))
+        (let ((slime-buffer-package "MGL-PAX"))
+          (lisp-mode)
+          (insert text-before)
+          (save-excursion (insert text-after))
+          (funcall fn))))))
 
 (defvar mgl-pax-recomment-fn nil)
 (defvar mgl-pax-call-uncommented-bounds nil)

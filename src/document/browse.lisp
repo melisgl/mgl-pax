@@ -57,7 +57,7 @@
 
   - It works in non-`lisp-mode` buffers by reinterpreting a few lines
     of text surrounding point as lisp code (hence the suggested
-    _global_ binding).
+    _global_ binding) in package `MGL-PAX`.
 
   - It supports fragment syntax at the prompt:
 
