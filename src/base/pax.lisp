@@ -237,6 +237,20 @@
   (global-set-key (kbd "s-x r") 'mgl-pax-retranscribe-region)
   ```
 
+  Alternatively, with `\use-package`:
+
+  ```elisp
+  (use-package mgl-pax
+    :load-path "~/quicklisp"
+    :after slime
+    :demand t
+    :bind (("C-." . mgl-pax-document)
+           ("s-x t" . mgl-pax-transcribe-last-expression)
+           ("s-x r" . mgl-pax-retranscribe-region))
+    :config
+    (mgl-pax-hijack-slime-doc-keys))
+  ```
+
   When @BROWSING-WITH-OTHER-BROWSERS, for clicking on the locative
   next to a definition to visit the corresponding source location in
   Emacs, permission needs to be given:
