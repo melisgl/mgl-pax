@@ -170,10 +170,10 @@ other mgl-pax commands in interactive use."
                (cl:t
                 (cl:format
                  cl:t
-                 ";; FAILED autoloading ~S.~%~
+                 ";; FAILED to autoload ~S.~%~
                   ;; Evaluate (ASDF:LOAD-SYSTEM ~S) to debug.~%~
                   ;; If there are missing dependencies, ~
-                  under Quicklisp for example, evaluate~%~
+                  (e.g. under Quicklisp), evaluate~%~
                   ;; (QL:QUICKLOAD ~S).~%~
                   ;;~%~
                   ;; Proceeding to unload mgl-pax from Emacs.~%~
@@ -1650,10 +1650,10 @@ will not be changed (modulo ambiguity in syntax detection)."
     nil))
 
 (defun mgl-pax-find-cl-transcript-block ()
-  "If point is in a cl-transcript Markdown code block (```cl-transcript
-  ... ```), return the rest of the line after \"```cl-transcript\", the
-  start of the line following it, and the start of the line of the
-  closing \"```\". If not in such a code block, return nil."
+  "If point is in a  cl-transcript Markdown code block (```cl-transcript
+... ```),  return the rest  of the line after  \"```cl-transcript\", the
+start of the line following it, and the start of the line of the closing
+\"```\". If not in such a code block, return nil."
   (save-excursion
     (let ((p (point)))
       ;; Move to the end of the line so that we find match even if

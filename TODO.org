@@ -1,6 +1,6 @@
-#+STARTUP: overview
-#+SEQ_TODO: TODO(t@) NEXT(n@) STARTED(s@) WAITING(w@) | DONE(d@) OLD(o@) CANCELLED(c@)
-#+TODO: MAYBE(m@) FAILED(f@) LOG(l@) DEFERRED(e@) BUG(b@)
+#+STARTUP: overview nologdone
+#+SEQ_TODO: TODO(t) NEXT(n) STARTED(s) WAITING(w) | DONE(d) OLD(o) CANCELLED(c)
+#+TODO: MAYBE(m) FAILED(f) LOG(l) DEFERRED(e) BUG(b)
 * pax base
 ** MAYBE swap the MGL-PAX package name with the PAX nickname
 ... somehow without breaking existing URLs, which have
@@ -21,6 +21,7 @@ second sexp, which should be informed by the first sexp.
 
 Normal completion includes nicknames as "pax:" without relisting all
 symbols.
+** MAYBE "parent" look up includes (e.g. for NOTEs)
 * document
 ** OPT parse and print markdown once when *format* is :html?
 This would involve rewriting everything to emit parse tree fragments or be able to produce html directly. Either way, it is not without cost.
@@ -97,10 +98,16 @@ Maybe this is a special case of dynamically generated documentation.
 ** MAYBE live browsing: allow filtering out local definitions when there is a clhs definition?
 ** MAYBE 40ants asdf-system-relative images?
 https://github.com/40ants/doc/commit/4ae22efa20a4a2117da9dd8e96c1117458904d73
+** MAYBE alternative links
+[ironclad][asdf:system] is a broken link if ironclad is not loaded
+(live doc) or not being documented (offline).
+
+Maybe a fallback to an URL (or nothing) would be useful.
 ** TODO support generating cross-linked READMEs easily
 * web
 ** MAYBE implement a wiki on top?
-PAX is already kind of a wiki.
+PAX is already kind of a wiki. Live interaction is the next step,
+which would move towards notebooks and GUIs.
 * apropos
 ** MAYBE when exported by pax, we know the exact definition being exported
 mgl-pax-apropos-package could take advantage?
@@ -155,13 +162,13 @@ Probably it's too much to ask to have a portable introspection library
 factored out of them. Conium seems abandoned. There is no clear scope
 to support a stable API.
 * MAYBE live tutorials notebook style?
-* MAYBE "parent" look up includes (e.g. for NOTEs)
 * marketing
-** MAYBE find a catchy name for the method
+** DONE find a catchy name for the method
 - Illiterate Programming: Already used in the sense of "not literate programming".
-- Documentation-Driven Development: Exists, and also a misnomer (see https://quotenil.com/multifaceted-development.html).
+- Essay as a name: https://quotenil.com/multifaceted-development.html
+  - Documentation-Driven Development: Exists, and also a misnomer.
 - Rubber Doc Development: reeks of pragmatism only unlike bath toys.
-- Untangled Literate Programming (https://quotenil.com/untangling-literate-programming.html)
+- Untangled Literate Programming: https://quotenil.com/untangling-literate-programming.html
 ** Pitch for Lispers
 User manuals manifest the design in prose and force clarity, but
 writing manuals can be a drag and docs tend to lag the code. The tools
