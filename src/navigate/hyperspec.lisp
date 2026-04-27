@@ -1540,7 +1540,8 @@
      :loop-keyword ( ,@(loop-kw "with")))
     ("06_abba" "6.1.2.2.1" "Examples of WITH clause")
     ("06_ac" "6.1.3" "Value Accumulation Clauses"
-     :loop-keyword (,@(loop-kw "collect") ,@(loop-kw "collecting")
+     :loop-keyword (,@(loop-kw "collect")
+                    ,@(loop-kw "collecting")
                     ,@(loop-kw "append") ,@(loop-kw "appending")
                     ,@(loop-kw "nconc") ,@(loop-kw "noncing")
                     ,@(loop-kw "sum") ,@(loop-kw "summing")
@@ -1563,8 +1564,7 @@
     ("06_adb" "6.1.4.2" "Examples of ALWAYS, NEVER, and THEREIS clauses")
     ("06_adc" "6.1.4.3" "Examples of WHILE and UNTIL clauses")
     ("06_ae" "6.1.5" "Unconditional Execution Clauses"
-     :loop-keyword (,@(loop-kw "do") ,@(loop-kw "doing")
-                    ,@(loop-kw "return")))
+     :loop-keyword (,@(loop-kw "do") ,@(loop-kw "doing") ,@(loop-kw "return")))
     ("06_aea" "6.1.5.1" "Examples of unconditional execution")
     ("06_af" "6.1.6" "Conditional Execution Clauses"
      :loop-keyword (,@(loop-kw "if")

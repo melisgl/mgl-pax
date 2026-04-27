@@ -745,7 +745,7 @@
 ;;; that evaluates a call to this function. NAME and PACKAGE are
 ;;; strings, EXTERNAL-ONLY and CASE-SENSITIVE are boolean.
 (defun pax-apropos* (name &optional external-only package case-sensitive
-                            (just-list t))
+                     (just-list t))
   (let ((name0 name)
         (package0 package))
     (multiple-value-bind (name dtype package)
@@ -766,9 +766,9 @@
         (multiple-value-bind (non-symbol-definitions symbol-definitions)
             (split-apropos-definitions
              (dref-apropos name :external-only external-only
-                                :package package
-                                :case-sensitive case-sensitive
-                                :dtype dtype))
+                           :package package
+                           :case-sensitive case-sensitive
+                           :dtype dtype))
           (values
            `((progv '(*document-max-table-of-contents-level*) '(-1))
              ,@(when %packagep

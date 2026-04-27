@@ -461,7 +461,7 @@
   (unless *first-pass*
     (let ((locative-args (dref-locative-args dref)))
       (destructuring-bind (source &key (line-prefix "") header footer
-                                    header-nl footer-nl) locative-args
+                           header-nl footer-nl) locative-args
         (handler-case
             (multiple-value-bind (file start-loc end-loc)
                 (include-region source)

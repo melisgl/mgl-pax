@@ -34,7 +34,7 @@
 ;;; the # character. It should return the parsed unreadable object
 ;;; (with FILE-POSITION of STREAM updated) or signal PARSE-SEXP-ERROR.
 (defun parse-sexp (string &key (start 0) junk-allowed (errorp t)
-                            (on-unreadable :error) )
+                   (on-unreadable :error) )
   (handler-bind (((or end-of-file reader-error parse-error)
                    (lambda (c)
                      (declare (ignore c))
@@ -62,7 +62,7 @@
 
 (defun parse-sexp-error (format-control &rest format-args)
   (error 'parse-sexp-error :format-control format-control
-                           :format-args format-args))
+         :format-args format-args))
 
 (defun parse-sexp* (stream string)
   (let ((next (peek-char t stream nil)))
@@ -130,7 +130,7 @@
           (t
            (multiple-value-bind (symbol foundp end-pos)
                (parse-interned-symbol string :start (file-position stream)
-                                             :junk-allowed t)
+                                      :junk-allowed t)
              (unless foundp
                (parse-sexp-error "~S does not name an interned symbol."
                                  (subseq string (file-position stream)
@@ -145,7 +145,7 @@
 (defun skip-sexp (string &key (start 0))
   (nth-value 1 (let ((*read-suppress* t))
                  (read-from-string string t nil :start start
-                                                :preserve-whitespace t))))
+                                   :preserve-whitespace t))))
 
 (defun parse-interned-symbol (string &key (start 0) junk-allowed)
   (handler-case

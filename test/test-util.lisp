@@ -49,16 +49,16 @@
          (s (format nil "~S1" unreadable)))
     (multiple-value-bind (obj pos)
         (pax::parse-sexp s :junk-allowed t
-                           :on-unreadable (lambda (stream)
-                                            (pax::read-unreadable
-                                             stream (list unreadable))))
+                         :on-unreadable (lambda (stream)
+                                          (pax::read-unreadable
+                                           stream (list unreadable))))
       (is (eq obj unreadable))
       (is (eql pos (1- (length s)))))
     (signals (parse-error :pred "Unrecognized unreadable")
       (pax::parse-sexp s :junk-allowed t
-                         :on-unreadable (lambda (stream)
-                                          (pax::read-unreadable
-                                           stream ())))))
+                       :on-unreadable (lambda (stream)
+                                        (pax::read-unreadable
+                                         stream ())))))
   (signals (pax::parse-sexp-error)
     (pax::parse-sexp "#.(mgl-pax-test::junk)" :errorp t)))
 

@@ -326,7 +326,7 @@
         (target (merge-pathnames "mgl-pax.el"
                                  (uiop:ensure-directory-pathname target-dir))))
     (with-open-file (s target :direction :output :if-does-not-exist :create
-                              :if-exists :supersede)
+                       :if-exists :supersede)
       (dolist (line (uiop:read-file-lines source))
         (if (string= line "(setq mgl-pax-version (mgl-pax-read-version))")
             (format s "(setq mgl-pax-version '~S)~%" *pax-version*)

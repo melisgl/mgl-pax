@@ -243,12 +243,12 @@
 
 (defun html-header
     (stream &key title stylesheet (lang *document-html-lang*)
-              (charset *document-html-charset*)
-              link-to-pax-world-p
-              (head *document-html-head*)
-              (sidebar *document-html-sidebar*)
-              (top-blocks-of-links *document-html-top-blocks-of-links*)
-              (bottom-blocks-of-links *document-html-bottom-blocks-of-links*))
+     (charset *document-html-charset*)
+     link-to-pax-world-p
+     (head *document-html-head*)
+     (sidebar *document-html-sidebar*)
+     (top-blocks-of-links *document-html-top-blocks-of-links*)
+     (bottom-blocks-of-links *document-html-bottom-blocks-of-links*))
   (format
    stream
    """<!DOCTYPE html>~%~
@@ -297,9 +297,9 @@
              by MGL-PAX]</a></li></ul>~
        </div>~%~
      </div>~%"""
-     (blocks-of-links-to-html-string top-blocks-of-links)
-     link-to-pax-world-p
-     (blocks-of-links-to-html-string bottom-blocks-of-links)))
+          (blocks-of-links-to-html-string top-blocks-of-links)
+          link-to-pax-world-p
+          (blocks-of-links-to-html-string bottom-blocks-of-links)))
 
 (defun blocks-of-links-to-html-string (blocks-of-links)
   (if (listp blocks-of-links)
@@ -339,7 +339,7 @@
               ;; KLUDGE: It's not strictly a reflink, but close enough.
               (signal-unresolvable-reflink
                `(:reference-link :label (,text)
-                                 :definition (,(princ-to-string url)))
+                 :definition (,(princ-to-string url)))
                url))))))
 
 (defvar *google-analytics-id* nil)

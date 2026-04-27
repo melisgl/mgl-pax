@@ -347,8 +347,8 @@
 ;;; NAME for DOCUMENT or for M-. from an Emacs buffer with strange
 ;;; stuff in it.
 (defun parse-locative-around (string &key junk-allowed (errorp nil)
-                                       (on-unreadable :error)
-                                       (name 'no-name))
+                              (on-unreadable :error)
+                              (name 'no-name))
   (parse-locative
    ;; It is assumed that names of locative types are not funny, and we
    ;; can trim aggressively.

@@ -10,9 +10,9 @@
   building a binary application.")
 
 (defmacro defsection (name (&key (package '*package*) (readtable '*readtable*)
-                              (export t) title link-title-to
-                              (discard-documentation-p
-                               *discard-documentation-p*))
+                            (export t) title link-title-to
+                            (discard-documentation-p
+                             *discard-documentation-p*))
                       &body entries)
   "Define a documentation section and maybe export referenced symbols.
   A bit behind the scenes, a global variable with NAME is defined and

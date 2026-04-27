@@ -1848,7 +1848,7 @@
 ;;; :REFERENCE-LINK for [symbol][locative]). Don't hurt other links.
 (defun link (parse-tree)
   (let ((linked-refs (make-array 0 :fill-pointer t :adjustable t
-                                   :element-type 'dref)))
+                                 :element-type 'dref)))
     (map-markdown-parse-tree
      '(:code :reference-link)
      '(:explicit-link :image :mailto :raw-html)

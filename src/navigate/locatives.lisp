@@ -45,7 +45,7 @@
 
 (define-locator glossary-term ((glossary-term glossary-term))
   (make-instance 'glossary-term-dref :name (glossary-term-name glossary-term)
-                                     :locative 'glossary-term))
+                 :locative 'glossary-term))
 
 (define-lookup glossary-term (symbol locative-args)
   (unless (and (symbolp symbol)
@@ -125,9 +125,9 @@
   (destructuring-bind ((go-name go-locative)) locative-args
     (let ((go-dref (dref go-name go-locative)))
       (make-instance 'go-dref :name name
-                              :locative `(go (,(dref-name go-dref)
-                                              ,(dref-locative go-dref)))
-                              :target-dref go-dref))))
+                     :locative `(go (,(dref-name go-dref)
+                                     ,(dref-locative go-dref)))
+                     :target-dref go-dref))))
 
 (defun go-embedded-dref (go-dref)
   (apply #'dref (first (dref-locative-args go-dref))))
@@ -306,7 +306,7 @@
 
 (defun include-error (format-control &rest format-args)
   (error 'include-error :format-control format-control
-                        :format-args format-args))
+         :format-args format-args))
 
 ;;; Return the filename plus the START, END source locations of the
 ;;; region to be included.

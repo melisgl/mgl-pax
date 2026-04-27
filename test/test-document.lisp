@@ -2,7 +2,7 @@
 
 (defun check-document (input expected
                        &key (package (find-package :mgl-pax-test)) msg
-                         (url-versions '(2)) (format :markdown))
+                       (url-versions '(2)) (format :markdown))
   (let ((output (let ((*package* package)
                       (*document-hyperspec-root* "CLHS/")
                       (*document-url-versions* url-versions))
@@ -1276,7 +1276,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
                ((alexandria:featurep ':abcl)
                 t)))
       (check-document (dref 'encapsulated-generic-function
-                              'generic-function nil)
+                            'generic-function nil)
                       expected))
     (with-failure-expected ((and (alexandria:featurep '(:or :abcl))
                                  'failure))
@@ -1406,9 +1406,9 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
 (deftest test-condition ()
   (check-document
    (list (dref 'transcription-values-consistency-error
-                'condition)
+               'condition)
          (dref 'transcription-consistency-error
-                'condition))
+               'condition))
    "<a id=\"MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR%20CONDITION\"></a>
 
 - [condition] **TRANSCRIPTION-VALUES-CONSISTENCY-ERROR** *[TRANSCRIPTION-CONSISTENCY-ERROR][a249]*
@@ -1545,7 +1545,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
 
 (define-glossary-term @external-link (:title "See X"
                                       :url "http://example.com/x")
-                      "docstring")
+  "docstring")
 
 (deftest test-section ()
   (check-head "PAX::@INTRODUCTION" "Introduction" :format :plain)

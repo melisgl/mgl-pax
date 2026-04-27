@@ -146,8 +146,8 @@
 """)
 
 (defvar/auto *document-pandoc-pdf-header-includes*
-    (default-pandoc-pdf-header-includes)
-    "LaTeX code (a string) to include in the preamble via
+  (default-pandoc-pdf-header-includes)
+  "LaTeX code (a string) to include in the preamble via
   [`header-includes`](https://pandoc.org/MANUAL.html#layout).
 
   The default includes have no configuration knobs. Look at the value
@@ -204,8 +204,8 @@
                           :format :markdown)
           (format *error-output* "~@<;; [PAX] Latex output~:@>~&"))
         (with-open-file (input input :direction :output
-                                     :if-does-not-exist :create
-                                     :if-exists :supersede)
+                               :if-does-not-exist :create
+                               :if-exists :supersede)
           (write-string metadata input)
           (print-markdown parse-tree input :format :markdown)))
       (uiop:with-temporary-file (:pathname output)
