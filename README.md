@@ -631,7 +631,7 @@ Now let's examine the most important pieces.
 
 <a id="x-28MGL-PAX-3ADEFINE-PACKAGE-20MGL-PAX-3AMACRO-29"></a>
 
-- [macro] **DEFINE-PACKAGE** *PACKAGE &REST OPTIONS*
+- [macro] **DEFINE-PACKAGE** *PACKAGE &BODY OPTIONS*
 
     This is like [`CL:DEFPACKAGE`][9b43] but silences warnings and errors
     signalled when the redefined package is at variance with the current

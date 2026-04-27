@@ -287,7 +287,7 @@
                                   (apply #'concatenate 'string docstring)))))
 
 
-(defmacro define-package (package &rest options)
+(defmacro define-package (package &body options)
   "This is like CL:DEFPACKAGE but silences warnings and errors
   signalled when the redefined package is at variance with the current
   state of the package. Typically this situation occurs when symbols
