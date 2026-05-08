@@ -1312,8 +1312,7 @@ move point to the beginning of the buffer."
   ;; There may be no `lisp-mode' buffer at all.
   (ignore-errors (slime-recently-visited-buffer 'lisp-mode))
   (mgl-pax-sync-current-buffer)
-  (x-focus-frame nil)
-  (raise-frame)
+  (select-frame-set-input-focus (selected-frame))
   (mgl-pax-visit-locations dspec-and-location-list))
 
 (defun mgl-pax-sync-current-buffer ()

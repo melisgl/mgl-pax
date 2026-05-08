@@ -501,7 +501,7 @@ GitHub if possible.")
 ;;; Load systems that use PAX and generate PAX World in
 ;;; <mgl-pax-asdf-system-dir>/world/. To update
 ;;; https://github.com/melisgl/mgl-pax-world, check out its gh-pages
-;;; branch in that directory, update pax world, commit and push the
+;;; branch in that directory, UPDATE-PAX-WORLD*, commit and push the
 ;;; changes to GitHub.
 (defun update-pax-world* ()
   ;; KLUDGE: Bind *READTABLE* so that when evaluating in Slime (e.g.

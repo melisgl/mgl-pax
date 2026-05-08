@@ -147,11 +147,13 @@ The error message is large and useless.
 * literate programming
 ** MAYBE reorder source definitions
 ** MAYBE local functions?
-** MAYBE named one-off local functions?
+** CANCELLED named one-off local functions?
 (defun foo (x)
   ;; Just for the name, really. Maybe control what it can close over?
   (subfoo ()
    ))
+
+Looks like NOTE does this already.
 ** MAYBE generate internals manual, which includes code
 ... but is ordered according to the documentation.
 * MAYBE do not test the locative type of a DREF with EQ
