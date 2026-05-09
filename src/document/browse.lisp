@@ -465,7 +465,8 @@
                             (escape-markdown (package-name package))))))
             (let ((pax-entry-points
                     (entry-point-sections
-                     (loop for package in related-packages
+                     (loop for package in (append packages-defined
+                                                  related-packages)
                            append (list-sections-in-package package)))))
               (append
                (when pax-entry-points
