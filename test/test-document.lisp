@@ -1487,23 +1487,24 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
             (setf (slot-value system slot-name) old-value))))))
   (with-test ("live browsing")
     (let ((dref (locate (asdf:find-system "mgl-pax"))))
-      (is (equal (pax::documentable-for-reference dref)
-                 `("Up: [Links and Systems](/pax:MGL-PAX:@LINKS-AND-SYSTEMS%20MGL-PAX:SECTION#%22mgl-pax%22%20ASDF%2FSYSTEM:SYSTEM)"
-                   ,dref
-                   "### PAX Entry Points"
-                   ((PROGV '(*DOCUMENT-TIGHT*) '(T))
-                    "- [MGL-PAX::@PAX-MANUAL][pax:section]")
-                   "### [Related][PAX::@RELATED] ASDF Systems"
-                   "- [mgl-pax-bootstrap][asdf:system]"
-                   "- [mgl-pax-test][asdf:system]"
-                   "- [mgl-pax/document][asdf:system]"
-                   "- [mgl-pax/full][asdf:system]"
-                   "- [mgl-pax/navigate][asdf:system]"
-                   "- [mgl-pax/transcribe][asdf:system]"
-                   "- [mgl-pax/web][asdf:system]"
-                   "### [Related][PAX::@RELATED] Packages"
-                   "- [\\MGL-PAX][cl:package]"
-                   "- [\\MGL-PAX-TEST][cl:package]"))))))
+      (with-failure-expected ((alexandria:featurep '(:not (:or :ccl :sbcl))))
+        (is (equal (pax::documentable-for-reference dref)
+                   `("Up: [Links and Systems](/pax:MGL-PAX:@LINKS-AND-SYSTEMS%20MGL-PAX:SECTION#%22mgl-pax%22%20ASDF%2FSYSTEM:SYSTEM)"
+                     ,dref
+                     "### PAX Entry Points"
+                     ((PROGV '(*DOCUMENT-TIGHT*) '(T))
+                      "- [MGL-PAX::@PAX-MANUAL][pax:section]")
+                     "### [Related][PAX::@RELATED] ASDF Systems"
+                     "- [mgl-pax-bootstrap][asdf:system]"
+                     "- [mgl-pax-test][asdf:system]"
+                     "- [mgl-pax/document][asdf:system]"
+                     "- [mgl-pax/full][asdf:system]"
+                     "- [mgl-pax/navigate][asdf:system]"
+                     "- [mgl-pax/transcribe][asdf:system]"
+                     "- [mgl-pax/web][asdf:system]"
+                     "### [Related][PAX::@RELATED] Packages"
+                     "- [\\MGL-PAX][cl:package]"
+                     "- [\\MGL-PAX-TEST][cl:package]")))))))
 
 
 (deftest test-package ()
@@ -2292,7 +2293,7 @@ example section
     #-sbcl
     (signals-not (error)
       (handler-bind ((transcription-error #'continue))
-        (time (document dref::@dref-manual :format nil))))
+        (document dref::@dref-manual :format nil)))
     #+sbcl
     (check-files-the-same
      (asdf:system-relative-pathname "mgl-pax" "README")
