@@ -2513,7 +2513,9 @@ This renders as `DOCUMENT`. Alternatively, the
 
 - [variable] **\*DOCUMENT-HYPERSPEC-ROOT\*** *"http://www.lispworks.com/documentation/HyperSpec/"*
 
-    A URL of the Common Lisp HyperSpec.
+    A URL to the Common Lisp HyperSpec.
+    The URL may not have a scheme, in which case `file` is assumed.
+    
     The default value is the canonical location. When [invoked from
     Emacs][a595], the Elisp variable
     `common-lisp-hyperspec-root` is in effect.

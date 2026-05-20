@@ -150,7 +150,7 @@
       string))
 
 
-(defun split-url (string)
+(defun split-url (string &key default-scheme)
   """Split the URL given as STRING into scheme, authority, path, query
   and fragment parts. All parts are URLENCODEd strings or NIL if
   misssing.
@@ -170,16 +170,22 @@
    => NIL
    => NIL
   ```
+
+  If STRING does not specify a scheme (i.e. there is no colon
+  character in it), then we fall back to DEFAULT-SCHEME. If
+  DEFAULT-SCHEME is needed but it's NIL, then an error is signalled.
   """
   (let ((scheme-end (position #\: string))
         (pos 0)
         (len (length string)))
-    (unless scheme-end
+    (unless (or scheme-end default-scheme)
       (error "~S has no URL scheme." string))
     (values
      ;; scheme
-     (prog1 (subseq string 0 scheme-end)
-       (setq pos (1+ scheme-end)))
+     (if scheme-end
+         (prog1 (subseq string 0 scheme-end)
+           (setq pos (1+ scheme-end)))
+         default-scheme)
      ;; authority
      (if (and pos
               (< (+ pos 2) len)

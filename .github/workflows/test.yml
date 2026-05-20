@@ -78,6 +78,7 @@ jobs:
         env:
           LISP: ${{ matrix.lisp }}
         run: |
+          apt-get -y install hyperspec
           if [ "$LISP" = "sbcl" -o "$LISP" = "sbcl-bin" ]; then
               sudo apt-get -y install emacs-nox w3m-el
               ./test/test-el.sh "ros --lisp sbcl-bin run"

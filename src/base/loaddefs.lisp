@@ -191,7 +191,9 @@
 
 (autoload::foreshadow-defvar mgl-pax:*document-hyperspec-root* :init
                              "http://www.lispworks.com/documentation/HyperSpec/"
-                             :docstring "A \\URL of the Common Lisp HyperSpec.
+                             :docstring "A \\URL to the Common Lisp HyperSpec.
+  The \\URL may not have a scheme, in which case `file` is assumed.
+
   The default value is the canonical location. When [invoked from
   Emacs][ @browsing-live-documentation], the Elisp variable
   `common-lisp-hyperspec-root` is in effect.")

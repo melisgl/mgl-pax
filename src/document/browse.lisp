@@ -212,7 +212,7 @@
       ;; Redirect to external or a PAX URL.
       ((stringp place)
        (multiple-value-bind (p-scheme p-authority p-path p-query p-fragment)
-           (split-url place)
+           (split-url place :default-scheme "file")
          ;; Add the canonicalized fragment when redirecting to a PAX URL.
          (cond ((string= p-scheme "pax")
                 (assert (null p-authority))
@@ -221,7 +221,9 @@
                 (unsplit-url :scheme p-scheme :path p-path
                              :query query :fragment fragment))
                (t
-                place))))
+                (unsplit-url :scheme p-scheme :authority p-authority
+                             :path p-path :query p-query
+                             :fragment p-fragment)))))
       ;; Output was written to this file.
       ((pathnamep place)
        (multiple-value-bind (f-scheme f-authority f-path f-query f-fragment)
