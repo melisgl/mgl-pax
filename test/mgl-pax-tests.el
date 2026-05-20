@@ -668,40 +668,42 @@
 ;;; Disabled because these tests need a network connection
 
 (ert-deftest test-mgl-pax-document/external ()
-  (let ((common-lisp-hyperspec-root "/usr/share/doc/hyperspec/"))
-    (with-browsers
-     (unwind-protect
-         (progn
-           (mgl-pax-document "pax:readably")
-           (slime-sync-to-top-level 1)
-           (mgl-pax-sync-current-buffer)
-           (should (eq major-mode 'w3m-mode))
-           ;; Wait for 5 seconds for the page to load and render.
-           (cl-loop repeat 50
-                    until (looking-at "readably adv.")
-                    do (sit-for 0.1))
-           (should-be-looking-at "readably adv.")))))
-  (when (eq major-mode 'w3m-mode)
-    (kill-buffer)))
+  (when (file-directory-p "/usr/share/doc/hyperspec/")
+    (let ((common-lisp-hyperspec-root "/usr/share/doc/hyperspec/"))
+      (with-browsers
+       (unwind-protect
+           (progn
+             (mgl-pax-document "pax:readably")
+             (slime-sync-to-top-level 1)
+             (mgl-pax-sync-current-buffer)
+             (should (eq major-mode 'w3m-mode))
+             ;; Wait for 5 seconds for the page to load and render.
+             (cl-loop repeat 50
+                      until (looking-at "readably adv.")
+                      do (sit-for 0.1))
+             (should-be-looking-at "readably adv."))
+         (when (eq major-mode 'w3m-mode)
+           (kill-buffer)))))))
 
 (ert-deftest test-mgl-pax-document/external/context ()
-  (let ((common-lisp-hyperspec-root "file:///usr/share/doc/hyperspec/"))
-    (with-browsers
-     (with-temp-lisp-and-non-lisp-buffer
-      (insert "readably")
-      (unwind-protect
-          (progn
-            (call-interactively 'mgl-pax-document)
-            (slime-sync-to-top-level 1)
-            (mgl-pax-sync-current-buffer)
-            (should (eq major-mode 'w3m-mode))
-            ;; Wait for 5 seconds for the page to load and render.
-            (cl-loop repeat 50
-                     until (looking-at "readably adv.")
-                     do (sit-for 0.1))
-            (should-be-looking-at "readably adv.")))
-      (when (eq major-mode 'w3m-mode)
-        (kill-buffer))))))
+  (when (file-directory-p "/usr/share/doc/hyperspec/")
+    (let ((common-lisp-hyperspec-root "file:///usr/share/doc/hyperspec/"))
+      (with-browsers
+       (with-temp-lisp-and-non-lisp-buffer
+        (insert "readably")
+        (unwind-protect
+            (progn
+              (call-interactively 'mgl-pax-document)
+              (slime-sync-to-top-level 1)
+              (mgl-pax-sync-current-buffer)
+              (should (eq major-mode 'w3m-mode))
+              ;; Wait for 5 seconds for the page to load and render.
+              (cl-loop repeat 50
+                       until (looking-at "readably adv.")
+                       do (sit-for 0.1))
+              (should-be-looking-at "readably adv."))
+          (when (eq major-mode 'w3m-mode)
+            (kill-buffer))))))))
 
 (ert-deftest test-mgl-pax-document/go ()
   (with-browsers
