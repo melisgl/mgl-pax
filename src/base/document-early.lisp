@@ -215,27 +215,32 @@
 (defvar *git-version-for-test* nil)
 
 (defun make-git-source-uri-fn (asdf-system git-forge-uri
-                               &key git-version
+                               &key git-version git-root
                                (uri-format-string "~A/blob/~A/~A#L~S"))
   """Return an object suitable as :SOURCE-URI-FN of a page spec (see
   the PAGES argument of DOCUMENT). The function looks at the source
   location of the object passed to it, and if the location is found,
-  the path is made relative to the top-level directory of the git
-  checkout containing the file of the ASDF-SYSTEM and finally an \URI
-  pointing to your git forge (such as GitHub) is returned. A warning
-  is signalled whenever the source location lookup fails or if the
-  source location points to a directory not below the directory of
-  ASDF-SYSTEM.
+  the path is made relative to the GIT-ROOT (the top-level directory
+  of the git checkout), and finally an \URI pointing to your git
+  forge (such as GitHub) is returned.
+
+  - If ASDF-SYSTEM is non-NIL, then GIT-ROOT defaults to the directory
+    of the `.asd` file of the system. Similarly, GIT-VERSION defaults
+    current commit id in the checkout at GIT-ROOT.
+
+  - If both GIT-ROOT and GIT-VERSION are explicitly provided,
+    ASDF-SYSTEM has no effect.
+
+  If GIT-ROOT is not specified and cannot be determined from
+  ASDF-SYSTEM, then no links to the git forge will be generated.
+
+  A warning is signalled whenever the source location lookup fails or
+  if the source location points to a directory not below GIT-ROOT.
 
   If GIT-FORGE-URI is `"https://github.com/melisgl/mgl-pax/"` and
   GIT-VERSION is `"master"`, then the returned \URI may look like this:
 
       https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
-
-  If GIT-VERSION is NIL, then an attempt is made to determine to
-  current commit id from the `.git` in the directory holding
-  ASDF-SYSTEM. If no `.git` directory is found, then no links to
-  the git forge will be generated.
 
   URI-FORMAT-STRING is a CL:FORMAT control string for four arguments:
 
@@ -253,28 +258,33 @@
   ;; start of DOCUMENT.
   `(:maker
     ,(lambda ()
-       (multiple-value-bind (git-root git-version)
-           (asdf-system-git-root-and-version asdf-system
-                                             :default-version git-version)
+       (multiple-value-bind (git-root1 git-version1)
+           (git-root-and-version asdf-system :git-root git-root
+                                 :default-version git-version)
          (when *git-version-for-test*
-           (setq git-version *git-version-for-test*))
-         (if git-version
+           (setq git-version1 *git-version-for-test*))
+         (if git-version1
              (let ((line-file-position-cache (make-hash-table :test #'equal)))
                (lambda (object)
                  (multiple-value-bind (relative-path line-number)
                      (convert-source-location
-                      (source-location object) git-root object
+                      (source-location object) git-root1 object
                       line-file-position-cache)
                    (when relative-path
-                     (format nil uri-format-string git-forge-uri git-version
+                     (format nil uri-format-string git-forge-uri git-version1
                              relative-path (1+ line-number))))))
-             (warn "~@<No GIT-VERSION given and can't find .git directory for ~
-                   ASDF system~% ~A. Links to the git forge will not be ~
-                   generated.~:@>"
-                   (asdf:component-name (find-system* asdf-system))))))))
+             (if asdf-system
+                 (warn "~@<No :GIT-VERSION given and can't find .git ~
+                       directory for ASDF system~% ~A. Links to the git ~
+                       forge will not be generated.~:@>"
+                       (asdf:component-name (find-system* asdf-system)))
+                 (warn "~@<No :GIT-VERSION given and can't find .git ~
+                       directory under directory~% ~A. Links to the git ~
+                       forge will not be generated.~:@>"
+                       git-root)))))))
 
-(defun asdf-system-git-root-and-version (system &key default-version)
-  (let ((file (asdf:system-source-file (find-system* system))))
+(defun git-root-and-version (system &key git-root default-version)
+  (let ((file (or git-root (asdf:system-source-file (find-system* system)))))
     (when (in-git-p file)
       (values (git-root file)
               (or (git-version file) default-version)))))
@@ -287,11 +297,15 @@
 
 (defun in-git-p (pathname)
   (zerop (nth-value
-          2 (uiop:run-program (list "git" "-C" (directory-namestring pathname)
-                                    "ls-files" "--error-unmatch"
-                                    (file-namestring pathname))
-                              :output nil
-                              :ignore-error-status t))))
+          2 (uiop:run-program
+             (list "git" "-C" (directory-namestring pathname)
+                   "ls-files" "--error-unmatch"
+                   (let ((file (file-namestring pathname)))
+                     (if (plusp (length file))
+                         file
+                         ".")))
+             :output nil
+             :ignore-error-status t))))
 
 (defun git-root (pathname)
   (multiple-value-bind (toplevel error-output exit-code)

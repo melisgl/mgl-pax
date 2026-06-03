@@ -3298,27 +3298,32 @@ and the gh-pages site.
 
 <a id="x-28MGL-PAX-3AMAKE-GIT-SOURCE-URI-FN-20FUNCTION-29"></a>
 
-- [function] **MAKE-GIT-SOURCE-URI-FN** *ASDF-SYSTEM GIT-FORGE-URI &KEY GIT-VERSION (URI-FORMAT-STRING "~A/blob/~A/~A#L~S")*
+- [function] **MAKE-GIT-SOURCE-URI-FN** *ASDF-SYSTEM GIT-FORGE-URI &KEY GIT-VERSION GIT-ROOT (URI-FORMAT-STRING "~A/blob/~A/~A#L~S")*
 
     Return an object suitable as `:SOURCE-URI-FN` of a page spec (see
     the `PAGES` argument of [`DOCUMENT`][432c]). The function looks at the source
     location of the object passed to it, and if the location is found,
-    the path is made relative to the top-level directory of the git
-    checkout containing the file of the `ASDF-SYSTEM` and finally an URI
-    pointing to your git forge (such as GitHub) is returned. A warning
-    is signalled whenever the source location lookup fails or if the
-    source location points to a directory not below the directory of
-    `ASDF-SYSTEM`.
+    the path is made relative to the `GIT-ROOT` (the top-level directory
+    of the git checkout), and finally an URI pointing to your git
+    forge (such as GitHub) is returned.
+    
+    - If `ASDF-SYSTEM` is non-`NIL`, then `GIT-ROOT` defaults to the directory
+      of the `.asd` file of the system. Similarly, `GIT-VERSION` defaults
+      current commit id in the checkout at `GIT-ROOT`.
+    
+    - If both `GIT-ROOT` and `GIT-VERSION` are explicitly provided,
+      `ASDF-SYSTEM` has no effect.
+    
+    If `GIT-ROOT` is not specified and cannot be determined from
+    `ASDF-SYSTEM`, then no links to the git forge will be generated.
+    
+    A warning is signalled whenever the source location lookup fails or
+    if the source location points to a directory not below `GIT-ROOT`.
     
     If `GIT-FORGE-URI` is `"https://github.com/melisgl/mgl-pax/"` and
     `GIT-VERSION` is `"master"`, then the returned URI may look like this:
     
         https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
-    
-    If `GIT-VERSION` is `NIL`, then an attempt is made to determine to
-    current commit id from the `.git` in the directory holding
-    `ASDF-SYSTEM`. If no `.git` directory is found, then no links to
-    the git forge will be generated.
     
     `URI-FORMAT-STRING` is a [`CL:FORMAT`][ad78] control string for four arguments:
     
