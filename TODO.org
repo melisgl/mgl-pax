@@ -104,6 +104,10 @@ https://github.com/40ants/doc/commit/4ae22efa20a4a2117da9dd8e96c1117458904d73
 
 Maybe a fallback to an URL (or nothing) would be useful.
 ** TODO support generating cross-linked READMEs easily
+** MAYBE Can we sometimes drop the package from a name?
+The package can be considered somewhat unnecessary if a link to
+SB-THREAD:JOIN-THREAD is output. On the other hand, we can't drop the
+package from non-link code.
 * web
 ** MAYBE implement a wiki on top?
 PAX is already kind of a wiki. Live interaction is the next step,

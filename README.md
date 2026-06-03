@@ -1475,27 +1475,44 @@ If multiple page specs match, then the first one has precedence.
 
 #### 8.1.4 Package and Readtable
 
-While generating documentation, symbols may be read (e.g. from
-docstrings) and printed. What values of [`*PACKAGE*`][5ed1] and [`*READTABLE*`][b79a]
-are used is determined separately for each definition being
-documented.
+While generating documentation, symbols may be read from
+docstrings and printed. Our goal in general is to use the [`*PACKAGE*`][5ed1]
+and [`*READTABLE*`][b79a] in effect at the time the docstring was [`READ`][fe58]. This
+keeps the tight correspondence between [`M-.`][cb15] and [Linking][19e3].
 
-- If the values of `*PACKAGE*` and `*READTABLE*` in effect at the time
-  of definition were captured (e.g. by `DEFINE-LOCATIVE-TYPE` and
-  [`DEFSECTION`][72b4]), then they are used.
+What values of `*PACKAGE*` and `*READTABLE*` are used is determined
+separately for each definition being documented. For a [`SECTION`][5fac], its
+[`SECTION-PACKAGE`][a5b1] and [`SECTION-READTABLE`][88a7] are in effect.
 
-- Else, if the definition has a [Home Section][bdd5] (see below), then the
-  home section's [`SECTION-PACKAGE`][a5b1] and [`SECTION-READTABLE`][88a7] are used.
+For non-`SECTION` definitions, the package and the readtable are given
+by the following rules. If multiple rules provide a non-`NIL` package,
+then the first such rule takes precedence and similarly for the
+readtable.
 
-- Else, if the definition has an argument list, then the package of
-  the first argument that's not external in any package is used.
+- `DOCSTRING`: The second value returned by `DOCSTRING` for the
+  definition provides the package.
 
-- Else, if the definition is named by a symbol, then its
-  [`SYMBOL-PACKAGE`][e5ab] is used, and `*READTABLE*` is set to the standard
-  readtable `(NAMED-READTABLES:FIND-READTABLE :COMMON-LISP)`.
+    - If the value of `*PACKAGE*` in effect at the time of definition
+      was captured (e.g. by `DEFINE-LOCATIVE-TYPE`), then `DOCSTRING`
+      returns that.
 
-- Else, `*PACKAGE*` is set to the `CL-USER` package and `*READTABLE*` to
-  the standard readtable.
+    - The user may provide defaults for the package. See
+      `DREF-EXT:DOCSTRING*` (especially the *package-wide default*).
+
+- *Home section*: If the definition has a [home section][96bb], then the
+  home section's `SECTION-PACKAGE` and `SECTION-READTABLE` are used.
+
+- *Arglist heuristic*: If the definition has an argument list, then
+  the package of the first argument that's not external in any
+  package is used.
+
+- *Name heuristic*: If the definition is named by a symbol,
+  then its [`SYMBOL-PACKAGE`][e5ab] is used, and `*READTABLE*` is set to the
+  standard readtable `(NAMED-READTABLES:FIND-READTABLE
+  :COMMON-LISP)`.
+
+- *Default*: `*PACKAGE*` is set to the `CL-USER` package and
+  `*READTABLE*` to the standard readtable.
 
 The values thus determined come into effect after the name itself is
 printed, for printing of the arglist and the docstring.
@@ -1508,43 +1525,43 @@ printed, for printing of the arglist and the docstring.
 In the above, the `<!>` marks the place where `*PACKAGE*` and
 `*READTABLE*` are bound.
 
-<a id="x-28MGL-PAX-3A-40HOME-SECTION-20MGL-PAX-3ASECTION-29"></a>
+<a id="x-28MGL-PAX-3A-40HOME-SECTION-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
 
-##### Home Section
+- [glossary-term] **home section**
 
-The home section of an object is a [`SECTION`][5fac] that contains the
-object's definition in its [`SECTION-ENTRIES`][d850] or `NIL`. In the
-overwhelming majority of cases there should be at most one
-containing section.
-
-If there are multiple containing sections, the following apply.
-
-- If the name of the definition is a non-keyword symbol, only
-  those containing sections are considered whose package is closest
-  to the [`SYMBOL-PACKAGE`][e5ab] of the name, where closest is defined as
-  having the longest common prefix between the two [`PACKAGE-NAME`][db68]s.
-
-- If there are multiple sections with equally long matches or the
-  name is not a non-keyword symbol, then it's undefined which one is
-  the home section.
-
-For example, `(MGL-PAX:DOCUMENT FUNCTION)` is an entry in the
-`MGL-PAX::@BASICS` section. Unless another section that contains it
-is defined in the MGL-PAX package, the home section is guaranteed to
-be `MGL-PAX::@BASICS` because the `SYMBOL-PACKAGE`s of
-[`MGL-PAX:DOCUMENT`][432c] and `MGL-PAX::@BASICS` are the same (hence their
-common prefix is maximally long).
-
-This scheme would also work, for example, if the [home package][407c]
-of `DOCUMENT` were `MGL-PAX/IMPL`, and it were reexported from
-`MGL-PAX` because the only way to externally change the home package
-would be to define a containing section in a package like
-`MGL-PAX/IMP`.
-
-Thus, relying on the package system makes it possible to find the
-intended home section of a definition among multiple containing
-sections with high probability. However, for names which are not
-symbols, there is no package system to advantage of.
+    The home section of an object is a [`SECTION`][5fac] that contains the
+    object's definition in its [`SECTION-ENTRIES`][d850] or `NIL`. In the
+    overwhelming majority of cases there should be at most one
+    containing section.
+    
+    If there are multiple containing sections, the following apply.
+    
+    - If the name of the definition is a non-keyword symbol, only
+      those containing sections are considered whose package is closest
+      to the [`SYMBOL-PACKAGE`][e5ab] of the name, where closest is defined as
+      having the longest common prefix between the two [`PACKAGE-NAME`][db68]s.
+    
+    - If there are multiple sections with equally long matches or the
+      name is not a non-keyword symbol, then it's undefined which one is
+      the home section.
+    
+    For example, `(MGL-PAX:DOCUMENT FUNCTION)` is an entry in the
+    `MGL-PAX::@BASICS` section. Unless another section that contains it
+    is defined in the MGL-PAX package, the home section is guaranteed to
+    be `MGL-PAX::@BASICS` because the `SYMBOL-PACKAGE`s of
+    [`MGL-PAX:DOCUMENT`][432c] and `MGL-PAX::@BASICS` are the same (hence their
+    common prefix is maximally long).
+    
+    This scheme would also work, for example, if the [home package][407c]
+    of `DOCUMENT` were `MGL-PAX/IMPL`, and it were reexported from
+    `MGL-PAX` because the only way to externally change the home package
+    would be to define a containing section in a package like
+    `MGL-PAX/IMP`.
+    
+    Thus, relying on the package system makes it possible to find the
+    intended home section of a definition among multiple containing
+    sections with high probability. However, for names which are not
+    symbols, there is no package system to advantage of.
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20VARIABLE-29"></a>
 
@@ -1972,7 +1989,7 @@ definitions, for example
     See [`DEFINE-GLOSSARY-TERM`][8ece] for a better alternative to Markdown
     reference links.
 
-Docstrings of definitions which do not have a [Home Section][bdd5] and are
+Docstrings of definitions which do not have a [home section][96bb] and are
 not PAX constructs themselves (e.g [`SECTION`][5fac], [`GLOSSARY-TERM`][8251], [`NOTE`][e2ae]) are
 assumed to have been written with no knowledge of PAX and to conform
 to Markdown only by accident. These docstrings are thus sanitized
@@ -4347,7 +4364,7 @@ there are only a couple of PAX generic functions left to extend.
     [`EXPORTABLE-REFERENCE-P`][e51f] to decide what symbols `DEFSECTION` shall
     export when its `EXPORT` argument is true.
 
-Also note that due to the [Home Section][bdd5] logic, especially for
+Also note that due to the [home section][96bb] logic, especially for
 locative types with string names, `DREF-EXT:DOCSTRING*` should
 probably return a non-`NIL` package.
 
@@ -4812,6 +4829,7 @@ they are presented.
   [9478]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhv.htm "\"2.4.8.22\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [94c7]: #x-28MGL-PAX-3A-40BASICS-20MGL-PAX-3ASECTION-29 "Basics"
   [9590]: http://www.lispworks.com/documentation/HyperSpec/Body/v_stst.htm "* (MGL-PAX:CLHS VARIABLE)"
+  [96bb]: #x-28MGL-PAX-3A-40HOME-SECTION-20MGL-PAX-3AGLOSSARY-TERM-29 "home section"
   [98ff]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_l.htm#lambda_list "\"lambda list\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [9927]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cba.htm "\"22.3.2.1\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [99b0]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function "\"setf function\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
@@ -4856,7 +4874,6 @@ they are presented.
   [bb12]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-HTML-DOCS-20FUNCTION-29 "MGL-PAX:UPDATE-ASDF-SYSTEM-HTML-DOCS FUNCTION"
   [bc83]: #x-28MGL-PAX-3A-40MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29 "Syntax Highlighting"
   [bcb6]: http://www.lispworks.com/documentation/HyperSpec/Body/e_warnin.htm "WARNING (MGL-PAX:CLHS CONDITION)"
-  [bdd5]: #x-28MGL-PAX-3A-40HOME-SECTION-20MGL-PAX-3ASECTION-29 "Home Section"
   [bdd6]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cga.htm "\"22.3.7.1\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [bf38]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cfc.htm "\"22.3.6.3\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [bfaa]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhk.htm "\"2.4.8.11\" (MGL-PAX:CLHS MGL-PAX:SECTION)"

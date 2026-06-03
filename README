@@ -1281,27 +1281,44 @@ If multiple page specs match, then the first one has precedence.
 
 #### Package and Readtable
 
-While generating documentation, symbols may be read (e.g. from
-docstrings) and printed. What values of *PACKAGE* and *READTABLE*
-are used is determined separately for each definition being
-documented.
+While generating documentation, symbols may be read from
+docstrings and printed. Our goal in general is to use the *PACKAGE*
+and *READTABLE* in effect at the time the docstring was READ. This
+keeps the tight correspondence between M-. and Linking.
 
-- If the values of *PACKAGE* and *READTABLE* in effect at the time
-  of definition were captured (e.g. by DEFINE-LOCATIVE-TYPE and
-  DEFSECTION), then they are used.
+What values of *PACKAGE* and *READTABLE* are used is determined
+separately for each definition being documented. For a SECTION, its
+SECTION-PACKAGE and SECTION-READTABLE are in effect.
 
-- Else, if the definition has a Home Section (see below), then the
+For non-SECTION definitions, the package and the readtable are given
+by the following rules. If multiple rules provide a non-NIL package,
+then the first such rule takes precedence and similarly for the
+readtable.
+
+- DOCSTRING: The second value returned by DOCSTRING for the
+  definition provides the package.
+
+    - If the value of *PACKAGE* in effect at the time of definition
+      was captured (e.g. by DEFINE-LOCATIVE-TYPE), then DOCSTRING
+      returns that.
+
+    - The user may provide defaults for the package. See
+      DREF-EXT:DOCSTRING* (especially the package-wide default).
+
+- Home section: If the definition has a home section, then the
   home section's SECTION-PACKAGE and SECTION-READTABLE are used.
 
-- Else, if the definition has an argument list, then the package of
-  the first argument that's not external in any package is used.
+- Arglist heuristic: If the definition has an argument list, then
+  the package of the first argument that's not external in any
+  package is used.
 
-- Else, if the definition is named by a symbol, then its
-  SYMBOL-PACKAGE is used, and *READTABLE* is set to the standard
-  readtable (NAMED-READTABLES:FIND-READTABLE :COMMON-LISP).
+- Name heuristic: If the definition is named by a symbol,
+  then its SYMBOL-PACKAGE is used, and *READTABLE* is set to the
+  standard readtable (NAMED-READTABLES:FIND-READTABLE
+  :COMMON-LISP).
 
-- Else, *PACKAGE* is set to the CL-USER package and *READTABLE* to
-  the standard readtable.
+- Default: *PACKAGE* is set to the CL-USER package and
+  *READTABLE* to the standard readtable.
 
 The values thus determined come into effect after the name itself is
 printed, for printing of the arglist and the docstring.
@@ -1314,41 +1331,41 @@ printed, for printing of the arglist and the docstring.
 In the above, the <!> marks the place where *PACKAGE* and
 *READTABLE* are bound.
 
-##### Home Section
+- [glossary-term] home section
 
-The home section of an object is a SECTION that contains the
-object's definition in its SECTION-ENTRIES or NIL. In the
-overwhelming majority of cases there should be at most one
-containing section.
+    The home section of an object is a SECTION that contains the
+    object's definition in its SECTION-ENTRIES or NIL. In the
+    overwhelming majority of cases there should be at most one
+    containing section.
 
-If there are multiple containing sections, the following apply.
+    If there are multiple containing sections, the following apply.
 
-- If the name of the definition is a non-keyword symbol, only
-  those containing sections are considered whose package is closest
-  to the SYMBOL-PACKAGE of the name, where closest is defined as
-  having the longest common prefix between the two PACKAGE-NAMEs.
+    - If the name of the definition is a non-keyword symbol, only
+      those containing sections are considered whose package is closest
+      to the SYMBOL-PACKAGE of the name, where closest is defined as
+      having the longest common prefix between the two PACKAGE-NAMEs.
 
-- If there are multiple sections with equally long matches or the
-  name is not a non-keyword symbol, then it's undefined which one is
-  the home section.
+    - If there are multiple sections with equally long matches or the
+      name is not a non-keyword symbol, then it's undefined which one is
+      the home section.
 
-For example, (MGL-PAX:DOCUMENT FUNCTION) is an entry in the
-MGL-PAX::@BASICS section. Unless another section that contains it
-is defined in the MGL-PAX package, the home section is guaranteed to
-be MGL-PAX::@BASICS because the SYMBOL-PACKAGEs of
-MGL-PAX:DOCUMENT and MGL-PAX::@BASICS are the same (hence their
-common prefix is maximally long).
+    For example, (MGL-PAX:DOCUMENT FUNCTION) is an entry in the
+    MGL-PAX::@BASICS section. Unless another section that contains it
+    is defined in the MGL-PAX package, the home section is guaranteed to
+    be MGL-PAX::@BASICS because the SYMBOL-PACKAGEs of
+    MGL-PAX:DOCUMENT and MGL-PAX::@BASICS are the same (hence their
+    common prefix is maximally long).
 
-This scheme would also work, for example, if the home package
-of DOCUMENT were MGL-PAX/IMPL, and it were reexported from
-MGL-PAX because the only way to externally change the home package
-would be to define a containing section in a package like
-MGL-PAX/IMP.
+    This scheme would also work, for example, if the home package
+    of DOCUMENT were MGL-PAX/IMPL, and it were reexported from
+    MGL-PAX because the only way to externally change the home package
+    would be to define a containing section in a package like
+    MGL-PAX/IMP.
 
-Thus, relying on the package system makes it possible to find the
-intended home section of a definition among multiple containing
-sections with high probability. However, for names which are not
-symbols, there is no package system to advantage of.
+    Thus, relying on the package system makes it possible to find the
+    intended home section of a definition among multiple containing
+    sections with high probability. However, for names which are not
+    symbols, there is no package system to advantage of.
 
 - [variable] *DOCUMENT-NORMALIZE-PACKAGES* T
 
@@ -1740,7 +1757,7 @@ definitions, for example
     See DEFINE-GLOSSARY-TERM for a better alternative to Markdown
     reference links.
 
-Docstrings of definitions which do not have a Home Section and are
+Docstrings of definitions which do not have a home section and are
 not PAX constructs themselves (e.g SECTION, GLOSSARY-TERM, NOTE) are
 assumed to have been written with no knowledge of PAX and to conform
 to Markdown only by accident. These docstrings are thus sanitized
@@ -3816,7 +3833,7 @@ there are only a couple of PAX generic functions left to extend.
     EXPORTABLE-REFERENCE-P to decide what symbols DEFSECTION shall
     export when its EXPORT argument is true.
 
-Also note that due to the Home Section logic, especially for
+Also note that due to the home section logic, especially for
 locative types with string names, DREF-EXT:DOCSTRING* should
 probably return a non-NIL package.
 

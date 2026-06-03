@@ -816,27 +816,44 @@
 
 
 (defsection @package-and-readtable (:title "Package and Readtable")
-  "While generating documentation, symbols may be read (e.g. from
-  docstrings) and printed. What values of *PACKAGE* and *READTABLE*
-  are used is determined separately for each definition being
-  documented.
+  "While generating documentation, symbols may be read from
+  docstrings and printed. Our goal in general is to use the *PACKAGE*
+  and *READTABLE* in effect at the time the docstring was READ. This
+  keeps the tight correspondence between @M-. and @LINKING.
 
-  - If the values of *PACKAGE* and *READTABLE* in effect at the time
-    of definition were captured (e.g. by DEFINE-LOCATIVE-TYPE and
-    DEFSECTION), then they are used.
+  What values of *PACKAGE* and *READTABLE* are used is determined
+  separately for each definition being documented. For a SECTION, its
+  SECTION-PACKAGE and SECTION-READTABLE are in effect.
 
-  - Else, if the definition has a @HOME-SECTION (see below), then the
+  For non-SECTION definitions, the package and the readtable are given
+  by the following rules. If multiple rules provide a non-NIL package,
+  then the first such rule takes precedence and similarly for the
+  readtable.
+
+  - `\\DOCSTRING`: The second value returned by DOCSTRING for the
+    definition provides the package.
+
+      - If the value of *PACKAGE* in effect at the time of definition
+        was captured (e.g. by DEFINE-LOCATIVE-TYPE), then DOCSTRING
+        returns that.
+
+      - The user may provide defaults for the package. See
+        DREF-EXT:DOCSTRING* (especially the _package-wide default_).
+
+  - _Home section_: If the definition has a @HOME-SECTION, then the
     home section's SECTION-PACKAGE and SECTION-READTABLE are used.
 
-  - Else, if the definition has an argument list, then the package of
-    the first argument that's not external in any package is used.
+  - _Arglist heuristic_: If the definition has an argument list, then
+    the package of the first argument that's not external in any
+    package is used.
 
-  - Else, if the definition is DREF::@NAMEd by a symbol, then its
-    SYMBOL-PACKAGE is used, and *READTABLE* is set to the standard
-    readtable `(NAMED-READTABLES:FIND-READTABLE :COMMON-LISP)`.
+  - _Name heuristic_: If the definition is DREF::@NAMEd by a symbol,
+    then its SYMBOL-PACKAGE is used, and *READTABLE* is set to the
+    standard readtable `(NAMED-READTABLES:FIND-READTABLE
+    :COMMON-LISP)`.
 
-  - Else, *PACKAGE* is set to the `CL-USER` package and *READTABLE* to
-    the standard readtable.
+  - _Default_: *PACKAGE* is set to the `CL-USER` package and
+    *READTABLE* to the standard readtable.
 
   The values thus determined come into effect after the name itself is
   printed, for printing of the arglist and the docstring.
@@ -848,10 +865,10 @@
 
   In the above, the `<!>` marks the place where *PACKAGE* and
   *READTABLE* are bound."
-  (@home-section section)
+  (@home-section glossary-term)
   (*document-normalize-packages* variable))
 
-(defsection @home-section (:title "Home Section")
+(define-glossary-term @home-section (:title "home section")
   "[home-section function][docstring]")
 
 (defun guess-package-and-readtable (dref requested-package requested-readtable)
