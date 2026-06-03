@@ -23,7 +23,8 @@
 
   ```
   (with-open-file (s "x.pdf" :direction :output :if-exists :supersede
-                             :if-does-not-exist :create)
+                             :if-does-not-exist :create
+                             :element-type '(unsigned-byte 8))
     (pax:document "Hello, World!" :stream s :format :pdf))
   ```
 

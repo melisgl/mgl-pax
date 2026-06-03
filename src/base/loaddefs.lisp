@@ -54,11 +54,11 @@
    "documenting-definition" "ensure-web-server" "escape-markdown"
    "exportable-locative-type-p" "exportable-reference-p" "glossary-term"
    "glossary-term-name" "glossary-term-title" "glossary-term-url" "go"
-   "include" "install-pax-elisp" "locative" "macro" "make-git-source-uri-fn"
-   "make-github-source-uri-fn" "note" "output-label" "output-reflink"
-   "prin1-to-markdown" "reader" "register-doc-in-pax-world" "section"
-   "section-entries" "section-link-title-to" "section-name" "section-package"
-   "section-readtable" "section-title" "squeeze-whitespace"
+   "home-section" "include" "install-pax-elisp" "locative" "macro"
+   "make-git-source-uri-fn" "make-github-source-uri-fn" "note" "output-label"
+   "output-reflink" "prin1-to-markdown" "reader" "register-doc-in-pax-world"
+   "section" "section-entries" "section-link-title-to" "section-name"
+   "section-package" "section-readtable" "section-title" "squeeze-whitespace"
    "standard-transcribe-dynenv" "structure-accessor" "symbol-macro"
    "transcribe" "transcription-consistency-error" "transcription-error"
    "transcription-output-consistency-error"
@@ -614,6 +614,42 @@
 
   - If ESCAPE-BLOCK, then escape whatever is necessary to avoid
     starting a new Markdown block (e.g. a paragraph, heading, etc).")
+
+(autoload:autoload mgl-pax:home-section "mgl-pax/document" :arglist
+                   "(mgl-pax::object)" :docstring
+                   "The home section of an object is a SECTION that contains the
+  object's definition in its SECTION-ENTRIES or NIL. In the
+  overwhelming majority of cases there should be at most one
+  containing section.
+
+  If there are multiple containing sections, the following apply.
+
+  - If the DREF::@NAME of the definition is a non-keyword symbol, only
+    those containing sections are considered whose package is closest
+    to the SYMBOL-PACKAGE of the name, where closest is defined as
+    having the longest common prefix between the two PACKAGE-NAMEs.
+
+  - If there are multiple sections with equally long matches or the
+    name is not a non-keyword symbol, then it's undefined which one is
+    the home section.
+
+  For example, `(MGL-PAX:DOCUMENT FUNCTION)` is an entry in the
+  `\\MGL-PAX::@BASICS` section. Unless another section that contains it
+  is defined in the `MGL-PAX` package, the home section is guaranteed
+  to be `\\MGL-PAX::@BASICS` because the SYMBOL-PACKAGEs of
+  MGL-PAX:DOCUMENT and `\\MGL-PAX::@BASICS` are the same (hence their
+  common prefix is maximally long).
+
+  This scheme would also work, for example, if the [home package][clhs]
+  of DOCUMENT were `MGL-PAX/IMPL`, and it were reexported from
+  `MGL-PAX` because the only way to externally change the home package
+  would be to define a containing section in a package like
+  `MGL-PAX/IMP`.
+
+  Thus, relying on the package system makes it possible to find the
+  intended home section of a definition among multiple containing
+  sections with high probability. However, for names which are not
+  symbols, there is no package system to advantage of.")
 
 (autoload:autoload mgl-pax:prin1-to-markdown "mgl-pax/document" :arglist
                    "(mgl-pax::object &key (mgl-pax::escape-inline t) (mgl-pax::escape-mathjax t) (mgl-pax::escape-html t) (mgl-pax::escape-block t))"

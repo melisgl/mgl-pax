@@ -157,6 +157,8 @@
                      (exportablep section-name package1 name locative))
             (export name package1)))))))
 
+(defvar *on-exporting-non-accessible* nil)
+
 (defun exportablep (section-name package symbol locative)
   (let* ((locative (if (listp locative) locative (list locative)))
          (exportablep (exportable-reference-p package symbol (first locative)
@@ -164,13 +166,15 @@
     (when exportablep
       (if (symbol-accessible-in-package-p symbol package)
           t
-          (when (eq exportablep :warn)
+          (when (eq *on-exporting-non-accessible* :warn)
             (warn "~@<~S for ~S: Cannot export non-accessible ~
                   symbol ~S from ~S.~:@>"
                   'defsection section-name symbol package))))))
 
 (defun symbol-accessible-in-package-p (symbol package)
-  (eq symbol (find-symbol (symbol-name symbol) package)))
+  (multiple-value-bind (symbol1 foundp)
+      (find-symbol (symbol-name symbol) package)
+    (and foundp (eq symbol1 symbol))))
 
 (defgeneric exportable-reference-p (package symbol locative-type locative-args)
   (:documentation "Return true if SYMBOL is to be exported from

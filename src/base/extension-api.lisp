@@ -16,7 +16,7 @@
   (document-object* generic-function)
   (exportable-reference-p generic-function)
   (exportable-locative-type-p generic-function)
-  "Also note that due to the @HOME-SECTION logic, especially for
+  "Also note that due to the HOME-SECTION logic, especially for
   locative types with string names, DREF-EXT:DOCSTRING* should
   probably return a non-NIL package.")
 

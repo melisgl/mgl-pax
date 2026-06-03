@@ -1478,7 +1478,11 @@ If multiple page specs match, then the first one has precedence.
 While generating documentation, symbols may be read from
 docstrings and printed. Our goal in general is to use the [`*PACKAGE*`][5ed1]
 and [`*READTABLE*`][b79a] in effect at the time the docstring was [`READ`][fe58]. This
-keeps the tight correspondence between [`M-.`][cb15] and [Linking][19e3].
+keeps the correspondence between
+
+- [`M-.`][cb15] and [Linking][19e3], and
+
+- interned symbols and [Codification][f1ab].
 
 What values of `*PACKAGE*` and `*READTABLE*` are used is determined
 separately for each definition being documented. For a [`SECTION`][5fac], its
@@ -1499,7 +1503,7 @@ readtable.
     - The user may provide defaults for the package. See
       `DREF-EXT:DOCSTRING*` (especially the *package-wide default*).
 
-- *Home section*: If the definition has a [home section][96bb], then the
+- *Home section*: If the definition has a [`HOME-SECTION`][fda4], then the
   home section's `SECTION-PACKAGE` and `SECTION-READTABLE` are used.
 
 - *Arglist heuristic*: If the definition has an argument list, then
@@ -1525,9 +1529,9 @@ printed, for printing of the arglist and the docstring.
 In the above, the `<!>` marks the place where `*PACKAGE*` and
 `*READTABLE*` are bound.
 
-<a id="x-28MGL-PAX-3A-40HOME-SECTION-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+<a id="x-28MGL-PAX-3AHOME-SECTION-20FUNCTION-29"></a>
 
-- [glossary-term] **home section**
+- [function] **HOME-SECTION** *OBJECT*
 
     The home section of an object is a [`SECTION`][5fac] that contains the
     object's definition in its [`SECTION-ENTRIES`][d850] or `NIL`. In the
@@ -1547,8 +1551,8 @@ In the above, the `<!>` marks the place where `*PACKAGE*` and
     
     For example, `(MGL-PAX:DOCUMENT FUNCTION)` is an entry in the
     `MGL-PAX::@BASICS` section. Unless another section that contains it
-    is defined in the MGL-PAX package, the home section is guaranteed to
-    be `MGL-PAX::@BASICS` because the `SYMBOL-PACKAGE`s of
+    is defined in the `MGL-PAX` package, the home section is guaranteed
+    to be `MGL-PAX::@BASICS` because the `SYMBOL-PACKAGE`s of
     [`MGL-PAX:DOCUMENT`][432c] and `MGL-PAX::@BASICS` are the same (hence their
     common prefix is maximally long).
     
@@ -1989,7 +1993,7 @@ definitions, for example
     See [`DEFINE-GLOSSARY-TERM`][8ece] for a better alternative to Markdown
     reference links.
 
-Docstrings of definitions which do not have a [home section][96bb] and are
+Docstrings of definitions that do not have a [`HOME-SECTION`][fda4] and are
 not PAX constructs themselves (e.g [`SECTION`][5fac], [`GLOSSARY-TERM`][8251], [`NOTE`][e2ae]) are
 assumed to have been written with no knowledge of PAX and to conform
 to Markdown only by accident. These docstrings are thus sanitized
@@ -2995,7 +2999,8 @@ are installed.
 
 ```
 (with-open-file (s "x.pdf" :direction :output :if-exists :supersede
-                           :if-does-not-exist :create)
+                           :if-does-not-exist :create
+                           :element-type '(unsigned-byte 8))
   (pax:document "Hello, World!" :stream s :format :pdf))
 ```
 
@@ -4364,7 +4369,7 @@ there are only a couple of PAX generic functions left to extend.
     [`EXPORTABLE-REFERENCE-P`][e51f] to decide what symbols `DEFSECTION` shall
     export when its `EXPORT` argument is true.
 
-Also note that due to the [home section][96bb] logic, especially for
+Also note that due to the [`HOME-SECTION`][fda4] logic, especially for
 locative types with string names, `DREF-EXT:DOCSTRING*` should
 probably return a non-`NIL` package.
 
@@ -4829,7 +4834,6 @@ they are presented.
   [9478]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhv.htm "\"2.4.8.22\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [94c7]: #x-28MGL-PAX-3A-40BASICS-20MGL-PAX-3ASECTION-29 "Basics"
   [9590]: http://www.lispworks.com/documentation/HyperSpec/Body/v_stst.htm "* (MGL-PAX:CLHS VARIABLE)"
-  [96bb]: #x-28MGL-PAX-3A-40HOME-SECTION-20MGL-PAX-3AGLOSSARY-TERM-29 "home section"
   [98ff]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_l.htm#lambda_list "\"lambda list\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [9927]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cba.htm "\"22.3.2.1\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [99b0]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_function "\"setf function\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
@@ -4973,6 +4977,7 @@ they are presented.
   [fa43]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dho.htm "\"2.4.8.15\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [fb17]: #x-28MGL-PAX-3A-40SPECIFIC-REFLINK-WITH-TEXT-20MGL-PAX-3ASECTION-29 "Specific Reflink with Text"
   [fbb1]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pl_plp.htm "++ (MGL-PAX:CLHS VARIABLE)"
+  [fda4]: #x-28MGL-PAX-3AHOME-SECTION-20FUNCTION-29 "MGL-PAX:HOME-SECTION FUNCTION"
   [fe21]: http://www.lispworks.com/documentation/HyperSpec/Body/v_t.htm "T (MGL-PAX:CLHS MGL-PAX:CONSTANT)"
   [fe58]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_rd.htm "READ (MGL-PAX:CLHS FUNCTION)"
   [ff58]: #x-28MGL-PAX-3A-40PUBLIC-SUPERCLASSES-20MGL-PAX-3AGLOSSARY-TERM-29 "public superclasses"

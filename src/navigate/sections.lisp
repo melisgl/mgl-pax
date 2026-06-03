@@ -74,42 +74,6 @@
       (let ((sections (sections-that-contain (list-all-sections) dref)))
         (sort-by-proximity sections (dref-name dref))))))
 
-(defun home-section (object)
-  """The home section of an object is a SECTION that contains the
-  object's definition in its SECTION-ENTRIES or NIL. In the
-  overwhelming majority of cases there should be at most one
-  containing section.
-
-  If there are multiple containing sections, the following apply.
-
-  - If the DREF::@NAME of the definition is a non-keyword symbol, only
-    those containing sections are considered whose package is closest
-    to the SYMBOL-PACKAGE of the name, where closest is defined as
-    having the longest common prefix between the two PACKAGE-NAMEs.
-
-  - If there are multiple sections with equally long matches or the
-    name is not a non-keyword symbol, then it's undefined which one is
-    the home section.
-
-  For example, `(MGL-PAX:DOCUMENT FUNCTION)` is an entry in the
-  `\MGL-PAX::@BASICS` section. Unless another section that contains it
-  is defined in the MGL-PAX package, the home section is guaranteed to
-  be `\MGL-PAX::@BASICS` because the SYMBOL-PACKAGEs of
-  MGL-PAX:DOCUMENT and `\MGL-PAX::@BASICS` are the same (hence their
-  common prefix is maximally long).
-
-  This scheme would also work, for example, if the [home package][clhs]
-  of DOCUMENT were `MGL-PAX/IMPL`, and it were reexported from
-  `MGL-PAX` because the only way to externally change the home package
-  would be to define a containing section in a package like
-  `MGL-PAX/IMP`.
-
-  Thus, relying on the package system makes it possible to find the
-  intended home section of a definition among multiple containing
-  sections with high probability. However, for names which are not
-  symbols, there is no package system to advantage of."""
-  (first (find-parent-sections object)))
-
 (defun sort-by-proximity (sections object)
   (if (and (symbolp object)
            (not (keywordp object)))

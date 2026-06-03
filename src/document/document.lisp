@@ -819,7 +819,10 @@
   "While generating documentation, symbols may be read from
   docstrings and printed. Our goal in general is to use the *PACKAGE*
   and *READTABLE* in effect at the time the docstring was READ. This
-  keeps the tight correspondence between @M-. and @LINKING.
+  keeps the correspondence between
+
+  - @M-. and @LINKING, and
+  - interned symbols and @CODIFICATION.
 
   What values of *PACKAGE* and *READTABLE* are used is determined
   separately for each definition being documented. For a SECTION, its
@@ -840,7 +843,7 @@
       - The user may provide defaults for the package. See
         DREF-EXT:DOCSTRING* (especially the _package-wide default_).
 
-  - _Home section_: If the definition has a @HOME-SECTION, then the
+  - _Home section_: If the definition has a HOME-SECTION, then the
     home section's SECTION-PACKAGE and SECTION-READTABLE are used.
 
   - _Arglist heuristic_: If the definition has an argument list, then
@@ -865,32 +868,65 @@
 
   In the above, the `<!>` marks the place where *PACKAGE* and
   *READTABLE* are bound."
-  (@home-section glossary-term)
+  (home-section function)
   (*document-normalize-packages* variable))
 
-(define-glossary-term @home-section (:title "home section")
-  "[home-section function][docstring]")
+(defun/auto home-section (object)
+  """The home section of an object is a SECTION that contains the
+  object's definition in its SECTION-ENTRIES or NIL. In the
+  overwhelming majority of cases there should be at most one
+  containing section.
+
+  If there are multiple containing sections, the following apply.
+
+  - If the DREF::@NAME of the definition is a non-keyword symbol, only
+    those containing sections are considered whose package is closest
+    to the SYMBOL-PACKAGE of the name, where closest is defined as
+    having the longest common prefix between the two PACKAGE-NAMEs.
+
+  - If there are multiple sections with equally long matches or the
+    name is not a non-keyword symbol, then it's undefined which one is
+    the home section.
+
+  For example, `(MGL-PAX:DOCUMENT FUNCTION)` is an entry in the
+  `\MGL-PAX::@BASICS` section. Unless another section that contains it
+  is defined in the `MGL-PAX` package, the home section is guaranteed
+  to be `\MGL-PAX::@BASICS` because the SYMBOL-PACKAGEs of
+  MGL-PAX:DOCUMENT and `\MGL-PAX::@BASICS` are the same (hence their
+  common prefix is maximally long).
+
+  This scheme would also work, for example, if the [home package][clhs]
+  of DOCUMENT were `MGL-PAX/IMPL`, and it were reexported from
+  `MGL-PAX` because the only way to externally change the home package
+  would be to define a containing section in a package like
+  `MGL-PAX/IMP`.
+
+  Thus, relying on the package system makes it possible to find the
+  intended home section of a definition among multiple containing
+  sections with high probability. However, for names which are not
+  symbols, there is no package system to advantage of."""
+  (first (find-parent-sections object)))
 
 (defun guess-package-and-readtable (dref requested-package requested-readtable)
-  (multiple-value-bind (arglist arglist-type) (arglist dref)
-    (if (and requested-package requested-readtable)
-        (values requested-package requested-readtable)
-        (let ((home-section (first (find-parent-sections dref))))
-          (if home-section
-              (values (or requested-package (section-package home-section))
-                      (or requested-readtable (section-readtable home-section)))
-              (values (or requested-package
-                          (guess-package-from-arglist arglist arglist-type)
-                          (and (symbolp (dref-name dref))
-                               (symbol-package (dref-name dref)))
-                          (find-package :cl-user))
-                      (or requested-readtable
-                          named-readtables::*standard-readtable*)))))))
+  (if (and requested-package requested-readtable)
+      ;; Avoid the high cost of HOME-SECTION.
+      (values requested-package requested-readtable)
+      (let ((home-section (home-section dref)))
+        (values (or requested-package
+                    (and home-section (section-package home-section))
+                    (multiple-value-call #'guess-package-from-arglist
+                      (arglist dref))
+                    (and (symbolp (dref-name dref))
+                         (symbol-package (dref-name dref)))
+                    (find-package :cl-user))
+                (or requested-readtable
+                    (and home-section (section-readtable home-section))
+                    named-readtables::*standard-readtable*)))))
 
 ;;; Unexported argument names are highly informative about *PACKAGE*
 ;;; at read time. No one ever uses fully-qualified internal symbols
 ;;; from another package for arguments, right?
-(defun guess-package-from-arglist (arglist arglist-type)
+(defun guess-package-from-arglist (arglist &optional arglist-type)
   (let ((args (or (ignore-errors (arglist-parameters arglist arglist-type)))))
     (dolist (arg args)
       (when (and (symbolp arg)
@@ -1180,7 +1216,7 @@
   - [ escape-heading-in-docstring function][docstring]""")
 
 (defun sanitize-aggressively-p ()
-  "Docstrings of definitions which do not have a @HOME-SECTION and are
+  "Docstrings of definitions that do not have a HOME-SECTION and are
   not PAX constructs themselves (e.g SECTION, GLOSSARY-TERM, NOTE) are
   assumed to have been written with no knowledge of PAX and to conform
   to Markdown only by accident. These docstrings are thus sanitized

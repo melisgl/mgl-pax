@@ -1284,7 +1284,11 @@ If multiple page specs match, then the first one has precedence.
 While generating documentation, symbols may be read from
 docstrings and printed. Our goal in general is to use the *PACKAGE*
 and *READTABLE* in effect at the time the docstring was READ. This
-keeps the tight correspondence between M-. and Linking.
+keeps the correspondence between
+
+- M-. and Linking, and
+
+- interned symbols and Codification.
 
 What values of *PACKAGE* and *READTABLE* are used is determined
 separately for each definition being documented. For a SECTION, its
@@ -1305,7 +1309,7 @@ readtable.
     - The user may provide defaults for the package. See
       DREF-EXT:DOCSTRING* (especially the package-wide default).
 
-- Home section: If the definition has a home section, then the
+- Home section: If the definition has a HOME-SECTION, then the
   home section's SECTION-PACKAGE and SECTION-READTABLE are used.
 
 - Arglist heuristic: If the definition has an argument list, then
@@ -1331,7 +1335,7 @@ printed, for printing of the arglist and the docstring.
 In the above, the <!> marks the place where *PACKAGE* and
 *READTABLE* are bound.
 
-- [glossary-term] home section
+- [function] HOME-SECTION OBJECT
 
     The home section of an object is a SECTION that contains the
     object's definition in its SECTION-ENTRIES or NIL. In the
@@ -1351,8 +1355,8 @@ In the above, the <!> marks the place where *PACKAGE* and
 
     For example, (MGL-PAX:DOCUMENT FUNCTION) is an entry in the
     MGL-PAX::@BASICS section. Unless another section that contains it
-    is defined in the MGL-PAX package, the home section is guaranteed to
-    be MGL-PAX::@BASICS because the SYMBOL-PACKAGEs of
+    is defined in the MGL-PAX package, the home section is guaranteed
+    to be MGL-PAX::@BASICS because the SYMBOL-PACKAGEs of
     MGL-PAX:DOCUMENT and MGL-PAX::@BASICS are the same (hence their
     common prefix is maximally long).
 
@@ -1757,7 +1761,7 @@ definitions, for example
     See DEFINE-GLOSSARY-TERM for a better alternative to Markdown
     reference links.
 
-Docstrings of definitions which do not have a home section and are
+Docstrings of definitions that do not have a HOME-SECTION and are
 not PAX constructs themselves (e.g SECTION, GLOSSARY-TERM, NOTE) are
 assumed to have been written with no knowledge of PAX and to conform
 to Markdown only by accident. These docstrings are thus sanitized
@@ -2640,7 +2644,8 @@ uses [LaTeX](https://www.latex-project.org/). Make sure that they
 are installed.
 
     (with-open-file (s "x.pdf" :direction :output :if-exists :supersede
-                               :if-does-not-exist :create)
+                               :if-does-not-exist :create
+                               :element-type '(unsigned-byte 8))
       (pax:document "Hello, World!" :stream s :format :pdf))
 
 To see how the output looks like, visit
@@ -3833,7 +3838,7 @@ there are only a couple of PAX generic functions left to extend.
     EXPORTABLE-REFERENCE-P to decide what symbols DEFSECTION shall
     export when its EXPORT argument is true.
 
-Also note that due to the home section logic, especially for
+Also note that due to the HOME-SECTION logic, especially for
 locative types with string names, DREF-EXT:DOCSTRING* should
 probably return a non-NIL package.
 
