@@ -19,6 +19,7 @@
                 :components ((:file "package")
                              (:file "test-defs")
                              (:file "test-util")
+                             (:file "test-hyperspec")
                              (:file "test-navigate")
                              (:file "test-document")
                              (:file "test-transcribe")

@@ -4,6 +4,7 @@
   (let ((*check-locate* t))
     (flet ((all ()
              (test-util)
+             (test-hyperspec)
              (test-navigate)
              (test-document)
              (test-transcribe)))
