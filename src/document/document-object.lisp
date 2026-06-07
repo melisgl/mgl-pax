@@ -90,8 +90,9 @@
                             (shorten-string
                              (prin1-to-string* (if initformp initform value))
                              :n-lines 10 :n-chars 512 :ellipsis " ...")))))))
-        (documenting-definition (stream :arglist arglist)
-          (document-docstring (docstring dref) stream))))))
+        (multiple-value-bind (docstring package) (docstring dref)
+          (documenting-definition (stream :arglist arglist :package package)
+            (document-docstring docstring stream)))))))
 
 (defmethod document-object* ((dref setf-dref) stream)
   "Depending of what the SETF locative refers to, the ARGLIST of the
@@ -112,9 +113,11 @@
   (declare (type (or method-dref setf-dref) dref))
   (let ((arglist (append (butlast (dref-locative-args dref))
                          (arglist dref))))
-    (documenting-definition (stream :arglist `(:method ,@arglist))
-      (with-dislocated-names (arglist-parameters (arglist dref) :specialized)
-        (document-docstring (docstring dref) stream)))))
+    (multiple-value-bind (docstring package) (docstring dref)
+      (documenting-definition (stream :arglist `(:method ,@arglist)
+                               :package package)
+        (with-dislocated-names (arglist-parameters (arglist dref) :specialized)
+          (document-docstring docstring stream))))))
 
 
 ;;;; Utilities
@@ -186,8 +189,12 @@
 (defmethod document-object* ((dref structure-accessor-dref) stream)
   "For definitions with a STRUCTURE-ACCESSOR locative, the arglist
   printed is the locative's CLASS-NAME argument if provided."
-  (documenting-definition (stream :arglist (dref-locative-args dref))
-    (document-docstring (docstring dref) stream)))
+  (multiple-value-bind (docstring package) (docstring dref)
+    (documenting-definition (stream :arglist (dref-locative-args dref)
+                             :package package)
+      (with-dislocated-names (arglist-parameters (dref-locative-args dref)
+                                                 :ordinary)
+        (document-docstring docstring stream)))))
 
 (defmethod document-object* ((dref structure-dref) stream)
   "For definitions with a STRUCTURE locative, the arglist printed is
@@ -216,8 +223,9 @@
                     (if (and (not *first-pass*) *document-mark-up-signatures*)
                         (mark-up-superclasses superclasses)
                         superclasses))))
-    (documenting-definition (stream :arglist arglist)
-      (document-docstring (docstring dref) stream))))
+    (multiple-value-bind (docstring package) (docstring dref)
+      (documenting-definition (stream :arglist arglist :package package)
+        (document-docstring docstring stream)))))
 
 (define-glossary-term @public-superclasses (:title "public superclasses")
   "[public-superclasses function][docstring]")
@@ -358,8 +366,9 @@
   (let* ((nicknames (package-nicknames (resolve dref)))
          (arglist (when nicknames
                     (list :nicknames nicknames))))
-    (documenting-definition (stream :arglist arglist)
-      (document-docstring (docstring dref) stream))))
+    (multiple-value-bind (docstring package) (docstring dref)
+      (documenting-definition (stream :arglist arglist :package package)
+        (document-docstring docstring stream)))))
 
 
 ;;;; LOCATIVE locative
@@ -368,20 +377,22 @@
   "For definitions with the LOCATIVE locative type, their
   LOCATIVE-TYPE-DIRECT-SUPERS and LOCATIVE-TYPE-DIRECT-SUBS are
   printed."
-  (documenting-definition (stream)
-    (let ((locative-type (dref-name dref)))
-      (document-docstring
-       (with-output-to-string (stream)
-         (when-let ((direct-supers (locative-type-direct-supers locative-type)))
-           (format stream "- Direct locative supertypes: ~{~A~^, ~}~%"
-                   (loop for super in direct-supers
-                         collect (md-link (dref super 'locative)))))
-         (when-let ((direct-subs (locative-type-direct-subs locative-type)))
-           (format stream "- Direct locative subtypes: ~{~A~^, ~}~%"
-                   (loop for sub in direct-subs
-                         collect (md-link (dref sub 'locative))))))
-       stream))
-    (document-docstring (docstring dref) stream)))
+  (multiple-value-bind (docstring package) (docstring dref)
+    (documenting-definition (stream :package package)
+      (let ((locative-type (dref-name dref)))
+        (document-docstring
+         (with-output-to-string (stream)
+           (when-let ((direct-supers (locative-type-direct-supers
+                                      locative-type)))
+             (format stream "- Direct locative supertypes: ~{~A~^, ~}~%"
+                     (loop for super in direct-supers
+                           collect (md-link (dref super 'locative)))))
+           (when-let ((direct-subs (locative-type-direct-subs locative-type)))
+             (format stream "- Direct locative subtypes: ~{~A~^, ~}~%"
+                     (loop for sub in direct-subs
+                           collect (md-link (dref sub 'locative))))))
+         stream))
+      (document-docstring docstring stream))))
 
 
 ;;;; SECTION locative
