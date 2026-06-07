@@ -301,11 +301,13 @@
     (reverse result)))
 
 (defun preprocess-parse-tree-for-printing (parse-tree format)
-  (if (eq format :markdown)
-      (map-markdown-parse-tree
-       '() '(:code :verbatim 3bmd-code-blocks::code-block)
-       t #'fudge-markdown-strings parse-tree)
-      parse-tree))
+  (let ((stop-tags '(:code :verbatim 3bmd-code-blocks::code-block
+                     :entity :image :explicit-link :math-inline-1
+                     :math-inline-2 :math-inline-3)))
+    (if (eq format :markdown)
+        (map-markdown-parse-tree '() stop-tags t
+                                 #'fudge-markdown-strings parse-tree)
+        parse-tree)))
 
 (defun fudge-markdown-strings (parent string)
   (declare (ignore parent))

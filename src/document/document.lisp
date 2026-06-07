@@ -1537,7 +1537,7 @@
 (define-glossary-term @codifiable (:title "codifiable")
   "A @WORD is _codifiable_ if
 
-  - it has a single uppercase character (e.g. it's `T`) and no
+  - it has a single uppercase character (e.g. it's `\\\\T`) and no
     lowercase characters at all, or
 
   - there is more than one uppercase character and no lowercase

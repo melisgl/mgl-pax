@@ -108,6 +108,12 @@ Maybe a fallback to an URL (or nothing) would be useful.
 The package can be considered somewhat unnecessary if a link to
 SB-THREAD:JOIN-THREAD is output. On the other hand, we can't drop the
 package from non-link code.
+** CANCELLED smart quotes
+We could convert "--" to en dash and touch up the typography in other
+ways. But this would mean that a lazy docstring containing "git --
+<path>" (not marked as code with backticks) would cease to be
+copy-pastable. Similar problems would arise if straight double quotes
+were replaced with their curly counterparts.
 * web
 ** MAYBE implement a wiki on top?
 PAX is already kind of a wiki. Live interaction is the next step,

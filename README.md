@@ -2012,10 +2012,10 @@ then the first one is automatically escaped. Thus, the following two
 docstrings are equivalent:
 
         The characters #\Space, #\Tab and
-        #Return are in the whitespace group.
+        #\Return are in the whitespace group.
     
         The characters #\Space, #\Tab and
-        \#Return are in the whitespace group.
+        \#\Return are in the whitespace group.
 
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-IN-TITLES-20MGL-PAX-3ASECTION-29"></a>

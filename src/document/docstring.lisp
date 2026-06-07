@@ -149,14 +149,13 @@
   (* (ceiling n m) m))
 
 
-;;;; The right way to avoid HTML and headings would be to transform
-;;;; the Markdown parse tree. Currently, the transformed tree would
-;;;; need to be printed back to Markdown only to be parsed back later,
-;;;; which -- apart from being a performance issue -- would bring out
-;;;; 3BMD's parse/print inconsistencies. So instead, we resort to
-;;;; fragile heuristics, knowing that they are applied to non-PAX
-;;;; stuff only (i.e. when SANITIZE-AGGRESSIVELY-P).
-
+;;; The right way to avoid HTML and headings would be to transform the
+;;; Markdown parse tree. Currently, the transformed tree would need to
+;;; be printed back to Markdown only to be parsed back later, which --
+;;; apart from being a performance issue -- would bring out 3BMD's
+;;; parse/print inconsistencies. So instead, we resort to fragile
+;;; heuristics, knowing that they are applied to non-PAX stuff only
+;;; (i.e. when SANITIZE-AGGRESSIVELY-P).
 (defun escape-html-in-docstring (line)
   "Special HTML characters `<&` are escaped."
   (if (starts-with-subseq "    " line)
@@ -171,10 +170,10 @@
   docstrings are equivalent:
 
           The characters #\Space, #\Tab and
-          #Return are in the whitespace group.
+          #\Return are in the whitespace group.
 
           The characters #\Space, #\Tab and
-          \#Return are in the whitespace group."""
+          \#\Return are in the whitespace group."""
   (let ((n-spaces (n-leading-spaces line)))
     (if (and (< n-spaces (length line))
              (char= (aref line n-spaces) #\#))

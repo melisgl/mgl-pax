@@ -24,6 +24,7 @@
 
 (defvar *format*)
 (setf (documentation '*format* 'variable)
+      ;; FIXME: Not quite
       "Bound by DOCUMENT to its FORMAT argument, this allows Markdown
       output to depend on the output format.")
 (declaim (special *subformat*))
