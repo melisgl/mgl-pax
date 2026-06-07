@@ -177,9 +177,16 @@ hr {
   background-color: #CCCCCC;
 }
 
-blockquote, table, pre {
+table, pre {
   line-height: var(--line-height);
   margin: var(--parsep) 0 0 0;
+}
+
+blockquote {
+  line-height: var(--line-height);
+  margin: var(--parsep) 0 0 0.1em;
+  padding-left: calc(var(--line-height) - 0.1em - 0.2em);
+  border-left: 0.2em solid #CCCCCC;
 }
 
 pre {
