@@ -89,12 +89,14 @@ If anywhere, this belongs in the Lisp.
 ** MAYBE generate offline documentation for everything in quicklisp?
 Like https://quickref.common-lisp.net/index-per-library.html, but more
 useful?
-** MAYBE documentation conditional on live/offline
+** TODO documentation conditional on live/offline
 E.g. in DREF::@LOCATIVE-TYPE, we could link to the apropos page
 linking all locatives in the running lisp, which makes no sense in
 offline documentation.
 
 Maybe this is a special case of dynamically generated documentation.
+
+This would come in handy in the SBCL documentation as well.
 ** MAYBE live browsing: allow filtering out local definitions when there is a clhs definition?
 ** MAYBE 40ants asdf-system-relative images?
 https://github.com/40ants/doc/commit/4ae22efa20a4a2117da9dd8e96c1117458904d73
@@ -114,6 +116,9 @@ ways. But this would mean that a lazy docstring containing "git --
 <path>" (not marked as code with backticks) would cease to be
 copy-pastable. Similar problems would arise if straight double quotes
 were replaced with their curly counterparts.
+** TODO generate function, variable, etc indices
+The scope and location must be  controllable by the caller; tacking on
+indices after everything else in a PAX:DOCUMENT call is brittle.
 * web
 ** MAYBE implement a wiki on top?
 PAX is already kind of a wiki. Live interaction is the next step,
@@ -154,6 +159,7 @@ the elisp def and C-. would call `describe-function` (elisp)?
 ** MAYBE M-. and C-. on large sexps (e.g. whole defun)
 The error message is large and useless.
 ** MAYBE make tests more reliable
+** TODO consider font-locking codifiable and linkable stuff in docstrings
 * literate programming
 ** MAYBE reorder source definitions
 ** MAYBE local functions?
