@@ -335,8 +335,9 @@
           (null source-location)
           ;; SBCL, AllegroCL
           (eq (first source-location) :error))
-         (warn "~@<No source location found for ~:_~A: ~:_~A~%~@:>"
-               object (second source-location)))
+         (warn "~@<No source location found for ~:_~A~:[.~;: ~:_~A~]~@:>"
+               object (when (plusp (length (second source-location)))
+                        (second source-location))))
         (t
          (assert (eq (first source-location) :location))
          (let* ((filename (second (assoc :file (rest source-location))))
