@@ -13,15 +13,62 @@
 (define-locator section ((section section))
   (make-instance 'section-dref :name (section-name section) :locative 'section))
 
+;;; We also allow magic values of the form
+;;;
+;;;     ((:%pax-lazy-section <var-name> <fn-designator>)
+;;;      . <args>)
+;;;
+;;; to denote a section definition. This is experimental and
+;;; definitely not public. SBCL's SB-MANUAL uses it.
+(define-locator section ((list list))
+  (unless (and (lazy-section-p list)
+               (proper-lazy-section-name-p (lazy-section-name list)))
+    (locate-error))
+  (make-instance 'section-dref :name (lazy-section-name list)
+                 :locative 'section))
+
+(defun lazy-section-p (object)
+  (and (consp object)
+       (consp (car object))
+       (eq (caar object) :%pax-lazy-section)))
+
+(defun lazy-section-name (lazy)
+  (second (first lazy)))
+
+(defun proper-lazy-section-name-p (object)
+  (and (symbolp object)
+       (boundp object)
+       (let ((value (symbol-value object)))
+         (and (lazy-section-p value)
+              (eq (lazy-section-name value) object)))))
+
+;;; This is for LOCATE to work on variables whose value is either a
+;;; SECTION or a lazy section.
 (define-lookup section (symbol locative-args)
   (unless (and (symbolp symbol)
                (boundp symbol)
-               (typep (symbol-value symbol) 'section))
+               (or (typep (symbol-value symbol) 'section)
+                   (proper-lazy-section-name-p symbol)))
     (locate-error))
   (make-instance 'section-dref :name symbol :locative 'section))
 
+;;; To RESOLVE, we just take the SYMBOL-VALUE, which should be a
+;;; SECTION. If its a lazy section, then we call its function and
+;;; check the SYMBOL-VALUE again.
 (defmethod resolve* ((dref section-dref))
-  (symbol-value (dref-name dref)))
+  (let ((value (symbol-value (dref-name dref))))
+    (cond ((lazy-section-p value)
+           (destructuring-bind ((marker name fn) &rest args) value
+             (declare (ignore marker))
+             (apply fn name args))
+           (let ((new (symbol-value (dref-name dref))))
+             (assert (typep new 'section) ()
+                     "~@<Lazy loaded ~S for ~S, got ~S, ~
+                     which is not a ~S.~:@>"
+                     value dref new 'section)
+             new))
+          (t
+           value))))
 
 (defmethod docstring* ((dref section-dref))
   nil)
