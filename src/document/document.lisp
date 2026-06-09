@@ -202,7 +202,7 @@
   ;; Any output written to this page (including plain docstrings)?
   written-in-first-pass-p
   written-in-second-pass-p
-  ;; LINKS made from this page. For LINK-TO-DEFINITION and
+  ;; LINKs made from this page. For LINK-TO-DEFINITION and
   ;; WRITE-MARKDOWN-REFERENCE-STYLE-LINK-DEFINITIONS.
   (used-links (make-hash-table :test #'eq) :type hash-table))
 
@@ -503,7 +503,6 @@
         (progv (eval symbols-form) (eval values-form)
           (funcall fn (rest documentable))))
       (funcall fn documentable)))
-
 
 
 (defsection @document-function (:title "The DOCUMENT Function")
@@ -1053,8 +1052,8 @@
       (format stream "~%")
       (dolist (link used-links)
         (assert (not (link-p (link-page link))))
-        ;; The format is [label]: url "title"
-        ;; E.g.  [1]: http://example.org/Hobbit#Lifestyle "Hobbit lifestyles"
+        ;; The format is [label]: url "title". Example:
+        ;;   [1]: http://example.org/Hobbit#Lifestyle "Hobbit lifestyles"
         (format stream "  [~A]: ~A ~S~%"
                 (link-id link)
                 (if (stringp (link-page link))
@@ -3236,13 +3235,13 @@
                      (*document-open-linking*
                       (format stream
                               "- <span class=reference-bullet>~
-                            <span class=reference>~
-                            <span class=\"locative-type\">~
-                            ~@[<a href=\"~A\" title=\"Edit in Emacs\">~]~
-                            \\[~A]~:[~;</a>~]~
-                            </span> ~
-                            <span class=\"reference-object\">[~A](~A)</span>~
-                            </span>"
+                              <span class=reference>~
+                              <span class=\"locative-type\">~
+                              ~@[<a href=\"~A\" title=\"Edit in Emacs\">~]~
+                              \\[~A]~:[~;</a>~]~
+                              </span> ~
+                              <span class=\"reference-object\">[~A](~A)</span>~
+                              </span>"
                               source-uri md-locative-type source-uri
                               escaped-label
                               (finalize-pax-url (dref-to-pax-url dref))))

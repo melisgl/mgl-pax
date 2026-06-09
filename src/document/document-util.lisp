@@ -394,10 +394,8 @@
       (create-pax-world sections pages dir update-css-p style))))
 
 (defun sections-and-pages (registered-docs)
-  (values (apply #'append (mapcar #'denoted-list
-                                  (mapcar #'second registered-docs)))
-          (apply #'append (mapcar #'denoted-list
-                                  (mapcar #'third registered-docs)))))
+  (values (mapcan #'denoted-list (mapcar #'second registered-docs))
+          (mapcan #'denoted-list (mapcar #'third registered-docs))))
 
 ;;; See LIST-DESIGNATOR.
 (defun denoted-list (designator)

@@ -119,6 +119,9 @@ were replaced with their curly counterparts.
 ** TODO generate function, variable, etc indices
 The scope and location must be  controllable by the caller; tacking on
 indices after everything else in a PAX:DOCUMENT call is brittle.
+** TODO make it possible to see ambiguous links live
+When using the live browser to develop, it is useful to see how the
+dead output will look like.
 * web
 ** MAYBE implement a wiki on top?
 PAX is already kind of a wiki. Live interaction is the next step,
