@@ -394,10 +394,10 @@
       (create-pax-world sections pages dir update-css-p style))))
 
 (defun sections-and-pages (registered-docs)
-  (values (apply #'append (mapcar #'denoted-list
-                                  (mapcar #'second registered-docs)))
-          (apply #'append (mapcar #'denoted-list
-                                  (mapcar #'third registered-docs)))))
+  (values (loop for registered-doc in registered-docs
+                append (denoted-list (second registered-doc)))
+          (loop for registered-doc in registered-docs
+                append (denoted-list (third registered-doc)))))
 
 ;;; See LIST-DESIGNATOR.
 (defun denoted-list (designator)
@@ -503,7 +503,7 @@ GitHub if possible.")
 ;;; https://github.com/melisgl/mgl-pax-world, check out its gh-pages
 ;;; branch in that directory, UPDATE-PAX-WORLD*, commit and push the
 ;;; changes to GitHub.
-(defun update-pax-world* ()
+(defun update-pax-world* (&key dir)
   ;; KLUDGE: Bind *READTABLE* so that when evaluating in Slime (e.g.
   ;; with C-x C-e), the file's readtable is not used (which leads to a
   ;; reader macro conflict with CL-SYNTAX).
@@ -520,7 +520,7 @@ GitHub if possible.")
     (asdf:load-system :lmdb))
   (time
    (let ((*document-downcase-uppercase-code* t))
-     (update-pax-world :update-css-p t :style :charter))))
+     (update-pax-world :dir dir :update-css-p t :style :charter))))
 
 #+nil
 (update-pax-world*)

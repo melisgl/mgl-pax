@@ -312,7 +312,19 @@
 
   Concatenate to this string to customize it.")
 
-(autoload::foreshadow-defvar mgl-pax:*document-pandoc-pdf-options* :docstring
+(autoload::foreshadow-defvar mgl-pax:*document-pandoc-pdf-options* :init
+                             '(("-V" "papersize=a4")
+                               ("-V" "margin-left=1.03in")
+                               ("-V" "margin-right=1.03in")
+                               ("-V" "margin-top=1.435in")
+                               ("-V" "margin-bottom=1.435in")
+                               ("-V" "fontfamily=XCharter")
+                               ("-V" "fontsize=11pt")
+                               ("-V" "colorlinks=true")
+                               ("-V" "linkcolor=blue")
+                               ("-V" "urlcolor=Maroon")
+                               ("-V" "toccolor=blue") "--verbose")
+                             :docstring
                              "The command-line options to invoke *DOCUMENT-PANDOC-PROGRAM* with.
   For ease of manipulation, related options are grouped into sublists,
   but the entire nested list is flattened to get the list of options
@@ -916,7 +928,7 @@
 
 (autoload:autoload mgl-pax:update-asdf-system-readmes "mgl-pax/document"
                    :arglist
-                   "(mgl-pax::object mgl-pax::asdf-system &key (mgl-pax::url-versions '(1)) (mgl-pax::formats '(:markdown)))"
+                   "(mgl-pax::object mgl-pax::asdf-system &key (mgl-pax::url-versions (quote (1))) (mgl-pax::formats (quote (:markdown))))"
                    :docstring
                    "Convenience function to generate up to two readme files in the
   directory holding the ASDF-SYSTEM definition. OBJECT is passed on to

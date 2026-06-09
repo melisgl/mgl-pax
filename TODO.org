@@ -97,6 +97,9 @@ offline documentation.
 Maybe this is a special case of dynamically generated documentation.
 
 This would come in handy in the SBCL documentation as well.
+
+Or maybe this is better thought of as a fallback to external link if
+not being documented.
 ** MAYBE live browsing: allow filtering out local definitions when there is a clhs definition?
 ** MAYBE 40ants asdf-system-relative images?
 https://github.com/40ants/doc/commit/4ae22efa20a4a2117da9dd8e96c1117458904d73
@@ -105,7 +108,8 @@ https://github.com/40ants/doc/commit/4ae22efa20a4a2117da9dd8e96c1117458904d73
 (live doc) or not being documented (offline).
 
 Maybe a fallback to an URL (or nothing) would be useful.
-** TODO support generating cross-linked READMEs easily
+** MAYBE support generating cross-linked READMEs easily
+PAX World does this.
 ** MAYBE Can we sometimes drop the package from a name?
 The package can be considered somewhat unnecessary if a link to
 SB-THREAD:JOIN-THREAD is output. On the other hand, we can't drop the
@@ -119,24 +123,27 @@ were replaced with their curly counterparts.
 ** TODO generate function, variable, etc indices
 The scope and location must be  controllable by the caller; tacking on
 indices after everything else in a PAX:DOCUMENT call is brittle.
+** TODO make it possible to see ambiguous links live
+When using the live browser to develop, it is useful to see how the
+dead output will look like.
+** MAYBE make *document-downcase-uppercase-code* default to T in sections?
+What if @DOCUMENTABLE is a list of sections and random stuff?
+** MAYBE make "a" and "an" locative aliases of the "type"
+so that one can write "X is a STRING" without having to disambiguate
+with "X is a [STRING][class]".
+** MAYBE use https://codeberg.org/dlowe/metaspectre for something?
+** TODO fix scalability of FIND-PARENT-SECTIONS
 * web
 ** MAYBE implement a wiki on top?
 PAX is already kind of a wiki. Live interaction is the next step,
 which would move towards notebooks and GUIs.
-* apropos
-** MAYBE when exported by pax, we know the exact definition being exported
-mgl-pax-apropos-package could take advantage?
 ** MAYBE web: have apropos name be editable?
 This would make the PAX Live home page more capable without Emacs.
-** MAYBE dref-apropos: add :SOURCE-LOCATION arg?
-SOURCE-LOCATION may be anything with a source location, and DREF-
-APROPOS would keep only definitions with source location below that.
 ** MAYBE option to sort apropos results by source location
 Files in ASDF system order. Maybe this make sense for generating
 documentation for a non-PAX system.
-** CANCELLED Should DREF-APROPOS be made more flexible?
-Regexp, generic filter functions, non-listing maps? Revisit if
-filtering the list is a performance problem.
+* world
+** document packages, systems like as in live browsing
 * transcribe
 ** MAYBE don't treat "debugger invoked on" as output
 Well, it's a kind of output, but maybe it would be better for

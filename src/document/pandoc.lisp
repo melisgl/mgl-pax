@@ -62,7 +62,7 @@
   as `\\PATH` is searched.""")
 
 (defvar/auto *document-pandoc-pdf-options*
-  `(("-V" "papersize=a4")
+  '(("-V" "papersize=a4")
     ("-V" "margin-left=1.03in")
     ("-V" "margin-right=1.03in")
     ("-V" "margin-top=1.435in")
