@@ -2939,13 +2939,15 @@ cross-linked HTML documentation pages for all the registered
 documents. There is an official [PAX
 World](https://melisgl.github.io/mgl-pax-world/).
 
-- [function] REGISTER-DOC-IN-PAX-WORLD NAME SECTIONS PAGE-SPECS
+- [function] REGISTER-DOC-IN-PAX-WORLD ID SECTIONS PAGE-SPECS
 
-    Register SECTIONS and PAGE-SPECS under NAME (a symbol) in PAX
-    World. By default, UPDATE-PAX-WORLD generates documentation for all
-    of these. SECTIONS and PAGE-SPECS must be lists of SECTIONs and
+    Register SECTIONS and PAGE-SPECS under ID (an arbitrary symbol) in
+    PAX World. By default, UPDATE-PAX-WORLD generates documentation for
+    all of these. SECTIONS and PAGE-SPECS must be lists of SECTIONs and
     PAGE-SPECs (SEE DOCUMENT) or designators of functions with no
     arguments that return such lists.
+
+    Using an existing ID overwrites the previous registration.
 
 For example, this is how PAX registers itself:
 

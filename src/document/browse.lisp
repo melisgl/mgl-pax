@@ -1093,30 +1093,34 @@
   [unrelated][@asdf-systems-and-related-packages] to any ASDF:SYSTEM
   as systemless.")
 
+(defmacro with-ragged-right ((stream) &body body)
+  ;; FIXME: https://github.com/3b/3bmd/issues/75 needs to be fixed.
+  (declare (ignore stream))
+  `(progn ,@body))
+
 (defun asdf-systems-and-packages-grouped-documentable ()
   (multiple-value-bind (groups orphan-packages)
       (asdf-systems-and-packages-grouped)
-    (list
-     "### [ASDF:SYSTEMs and Related PACKAGEs][
-     @asdf-systems-and-related-packages]"
-     (loop for (root-dir systems packages) in groups
-           collect (with-output-to-string (s)
-                     (format s "~%- ~{[~A][asdf:system]~^, ~}~%~%"
-                             (mapcar (compose 'escape-markdown 'dref-name
-                                              'locate)
-                                     systems))
-                     (loop for package in packages
-                           do (format s "    - [~A][package]~%"
-                                      (escape-codification
-                                       (escape-markdown
-                                        (package-name package)))))))
-     (when orphan-packages
-       (with-output-to-string (s)
-         (format s "### [Systemless Packages][@systemless-packages]~%~%")
-         (loop for package in orphan-packages
-               do (format s "    - [~A][cl:package]~%"
-                          (escape-codification
-                           (escape-markdown (package-name package))))))))))
+    (with-output-to-string (s)
+      (format s "### [ASDF:SYSTEMs and Related PACKAGEs][
+                @asdf-systems-and-related-packages]")
+      (with-ragged-right (s)
+        (loop for (root-dir systems packages) in groups
+              do (format s "~%- ~{[~A][asdf:system]~^, ~}~%~%"
+                         (mapcar (compose 'escape-markdown 'dref-name
+                                          'locate)
+                                 systems))
+                 (loop for package in packages
+                       do (format s "    - [~A][package]~%"
+                                  (escape-codification
+                                   (escape-markdown
+                                    (package-name package)))))))
+      (when orphan-packages
+        (with-ragged-right (s)
+          (loop for package in orphan-packages
+                do (format s "    - [~A][cl:package]~%"
+                           (escape-codification
+                            (escape-markdown (package-name package))))))))))
 
 (defun escape-codification (raw)
   (if (codifiable-word-p raw)

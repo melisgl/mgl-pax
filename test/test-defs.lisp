@@ -219,7 +219,7 @@
 (define-glossary-term @mathjax-and-code-in-glossary-term-title
     (:title "hey `c` $x_0$"))
 
-(defsection @mathjax-and-code-in-title (:title "hey `c` $x_0$")
+(defsection @mathjax-and-code-in-title (:title "hey `c` $x_0$" :export nil)
   ($x_0$ function)
   (@mathjax-subsection section))
 

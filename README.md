@@ -3350,13 +3350,15 @@ World](https://melisgl.github.io/mgl-pax-world/).
 
 <a id="x-28MGL-PAX-3AREGISTER-DOC-IN-PAX-WORLD-20FUNCTION-29"></a>
 
-- [function] **REGISTER-DOC-IN-PAX-WORLD** *NAME SECTIONS PAGE-SPECS*
+- [function] **REGISTER-DOC-IN-PAX-WORLD** *ID SECTIONS PAGE-SPECS*
 
-    Register `SECTIONS` and `PAGE-SPECS` under `NAME` (a symbol) in PAX
-    World. By default, [`UPDATE-PAX-WORLD`][ee51] generates documentation for all
-    of these. `SECTIONS` and `PAGE-SPECS` must be lists of [`SECTION`][5fac]s and
+    Register `SECTIONS` and `PAGE-SPECS` under `ID` (an arbitrary symbol) in
+    PAX World. By default, [`UPDATE-PAX-WORLD`][ee51] generates documentation for
+    all of these. `SECTIONS` and `PAGE-SPECS` must be lists of [`SECTION`][5fac]s and
     `PAGE-SPEC`s (SEE [`DOCUMENT`][432c]) or designators of functions with no
     arguments that return such lists.
+    
+    Using an existing `ID` overwrites the previous registration.
 
 For example, this is how PAX registers itself:
 
