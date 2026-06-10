@@ -477,3 +477,42 @@ a.symbol:hover { color: #229955; background-color: transparent; text-decoration:
 #paxToDocument, #paxToApropos {
   min-width: 17em;
 }
+
+.pax-index {
+  text-align: left;
+  font-size: 90%;
+}
+
+.pax-index a {
+  text-decoration-color: #aaa;
+}
+
+.pax-index > ul > li > p:first-child > a:first-child {
+  text-decoration-color: #111;
+}
+
+.pax-index ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.pax-index ul ul {
+  padding-left: 1em;
+}
+
+.pax-index li {
+  /* Hanging indent */
+  padding-left: 1em;
+  text-indent: -1em;
+}
+
+.pax-index > ul {
+  /* padding-left: 0; */
+  /* margin-left: 0; */
+}
+
+/* Ensure paragraph wrappers from Markdown don't break the first-line
+ * indent */
+.pax-index li > p {
+  display: inline;
+}

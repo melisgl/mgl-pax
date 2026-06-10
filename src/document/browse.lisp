@@ -528,21 +528,21 @@
 
 #+nil
 (defun shorten-arglist (string &optional except-reference)
-  (let* ((reference *documenting-dref*)
+  (let* ((reference *dref-being-documented*)
          (n-chars (- 64 (length (prin1-to-string
                                  (xref-locative-type reference)))
                      (length (prin1-to-string
                               (xref-name reference))))))
     (if (and except-reference
-             (reference= *documenting-dref* except-reference))
+             (reference= *dref-being-documented* except-reference))
         string
         (shorten-string string :n-lines 1 :n-chars n-chars :ellipsis "..."))))
 
 #+nil
 (defun shorten-docstring (docstring &optional except-reference)
   (if (or (stringp (first *objects-being-documented*))
-          (and *documenting-dref* except-reference
-               (reference= *documenting-dref* except-reference)))
+          (and *dref-being-documented* except-reference
+               (reference= *dref-being-documented* except-reference)))
       docstring
       (shorten-string docstring :n-lines 1 :n-chars 68 :ellipsis "...")))
 

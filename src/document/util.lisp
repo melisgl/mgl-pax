@@ -10,6 +10,13 @@
         (when (find char chars)
           (write-char #\\ stream))
         (write-char char stream)))))
+
+(defun lexicographic< (pred x y)
+  (cond ((null y) nil)
+        ((null x) t)
+        ((funcall pred (car x) (car y)) t)
+        ((funcall pred (car y) (car x)) nil)
+        (t (lexicographic< pred (cdr x) (cdr y)))))
 
 
 (defun definitions* (name)
@@ -232,3 +239,77 @@
 (defun file-of-dref (dref)
   (when-let (source-location (source-location dref))
     (source-location-file source-location)))
+
+
+;;;; Radix trees
+
+;;; Turn KEYS (a sequence) into a radix tree whose depth-first
+;;; ordering reproduces KEYS (if unique). Each key in KEYS is a
+;;; sequence of subkeys. TEST is the comparison function for subkeys.
+;;;
+;;; KEYS is assumed to be lexicographically sorted in ascending order
+;;; (so that "a" is before "ab") in a way compatible with TEST.
+;;;
+;;; Each node in the tree is of the form (SUBKEY-LIST &REST CHILDREN).
+;;; SUBKEY-LIST maybe empty. As an exception, a child can be NIL,
+;;; signifying the end of the key. This is necessary to distinguish
+;;; ("ab") from ("a" "ab").
+(defun radix-tree (keys &key (test #'eql))
+  (let ((children (radix-tree*
+                   ;; Make it a list of lists.
+                   (map 'list (lambda (subkey)
+                                (coerce subkey 'list))
+                        keys)
+                   test)))
+    ;; Add root
+    (cons () children)))
+
+(defun radix-tree* (keys test)
+  (loop
+    while keys
+    for key = (pop keys)
+    collect (when key
+              (destructuring-bind (lead &rest suffix) key
+                ;; Collect the suffixes after the same LEAD. This is
+                ;; why KEYS must be sorted.
+                (let ((suffixes
+                        (cons suffix
+                              (loop while (and keys (funcall test lead
+                                                             (caar keys)))
+                                    for suffix = (rest (pop keys))
+                                    when suffix
+                                      collect suffix))))
+                  (merge-rt-nodes (radix-tree* suffixes test) key))))))
+
+(defun merge-rt-nodes (children &optional key)
+  (assert children)
+  (cond
+    ;; Multiple children
+    ((cdr children)
+     (cons (list (first key))
+           ;; We choose to leave identical twins alone.
+           children))
+    ;; A single, empty child
+    ((null (first children))
+     (list key ()))
+    ;; A single, non-empty child
+    (t
+     ;; We are not making a trie: merge non-branching branches.
+     (let ((child (first children)))
+       (push (first key) (car child))
+       child))))
+
+(defun map-radix-tree (fn tree &key (complete-only t))
+  (labels ((recurse (tree key-runs)
+             (cond ((null tree)
+                    (funcall fn key-runs t))
+                   (t
+                    (let ((key-runs (cons (first tree) key-runs))
+                          (completep (and (cdr tree)
+                                          (null (second tree)))))
+                      (when (and (not complete-only)
+                                 (not completep))
+                        (funcall fn key-runs nil))
+                      (dolist (child (rest tree))
+                        (recurse child key-runs)))))))
+    (recurse tree ())))

@@ -33,16 +33,19 @@
 (autoload::export*
  '("*browse-html-style*" "*discard-documentation-p*" "*document-base-url*"
    "*document-downcase-uppercase-code*" "*document-fancy-html-navigation*"
-   "*document-html-bottom-blocks-of-links*" "*document-html-charset*"
-   "*document-html-default-style*" "*document-html-head*"
-   "*document-html-lang*"
+   "*document-generate-indices*" "*document-html-bottom-blocks-of-links*"
+   "*document-html-charset*" "*document-html-default-style*"
+   "*document-html-head*" "*document-html-lang*"
    "*document-html-max-navigation-table-of-contents-level*"
    "*document-html-sidebar*" "*document-html-top-blocks-of-links*"
-   "*document-hyperspec-root*" "*document-link-code*"
-   "*document-link-sections*" "*document-link-to-hyperspec*"
-   "*document-mark-up-signatures*" "*document-max-numbering-level*"
-   "*document-max-table-of-contents-level*" "*document-min-link-hash-length*"
-   "*document-normalize-packages*" "*document-pandoc-pdf-header-includes*"
+   "*document-hyperspec-root*" "*document-index-formats*"
+   "*document-index-referee-locative-type-abbrevs*"
+   "*document-index-referrer-dtype-abbrevs*" "*document-index-sections*"
+   "*document-indices*" "*document-link-code*" "*document-link-sections*"
+   "*document-link-to-hyperspec*" "*document-mark-up-signatures*"
+   "*document-max-numbering-level*" "*document-max-table-of-contents-level*"
+   "*document-min-link-hash-length*" "*document-normalize-packages*"
+   "*document-pandoc-pdf-header-includes*"
    "*document-pandoc-pdf-metadata-block*" "*document-pandoc-pdf-options*"
    "*document-pandoc-program*" "*document-text-navigation*"
    "*document-tight*" "*document-uppercase-is-code*"
@@ -53,12 +56,13 @@
    "doctitle*" "document" "document-docstring" "document-object*"
    "documenting-definition" "ensure-web-server" "escape-markdown"
    "exportable-locative-type-p" "exportable-reference-p" "glossary-term"
-   "glossary-term-name" "glossary-term-title" "glossary-term-url" "go"
-   "home-section" "include" "install-pax-elisp" "locative" "macro"
-   "make-git-source-uri-fn" "make-github-source-uri-fn" "note" "output-label"
-   "output-reflink" "prin1-to-markdown" "reader" "register-doc-in-pax-world"
-   "section" "section-entries" "section-link-title-to" "section-name"
-   "section-package" "section-readtable" "section-title" "squeeze-whitespace"
+   "glossary-term-concepts" "glossary-term-name" "glossary-term-title"
+   "glossary-term-url" "go" "home-section" "include" "install-pax-elisp"
+   "locative" "macro" "make-git-source-uri-fn" "make-github-source-uri-fn"
+   "note" "output-label" "output-reflink" "prin1-to-markdown" "reader"
+   "register-doc-in-pax-world" "section" "section-concepts" "section-entries"
+   "section-link-title-to" "section-name" "section-package"
+   "section-readtable" "section-title" "squeeze-whitespace"
    "standard-transcribe-dynenv" "structure-accessor" "symbol-macro"
    "transcribe" "transcription-consistency-error" "transcription-error"
    "transcription-output-consistency-error"
@@ -197,6 +201,31 @@
   The default value is the canonical location. When [invoked from
   Emacs][ @browsing-live-documentation], the Elisp variable
   `common-lisp-hyperspec-root` is in effect.")
+
+(autoload::foreshadow-defvar mgl-pax:*document-index-formats* :init
+                             '(:html :pdf) :docstring
+                             "The list of @OUTPUT-FORMATS for which index generation is enabled.")
+
+(autoload::foreshadow-defvar
+ mgl-pax:*document-index-referee-locative-type-abbrevs*)
+
+(autoload::foreshadow-defvar mgl-pax:*document-index-referrer-dtype-abbrevs*
+                             :docstring
+                             "When @INDEXING, a . A list of (DTYPE SUBKEY) elements. See DREF::@DTYPES.")
+
+(autoload::foreshadow-defvar mgl-pax:*document-index-sections* :init
+                             :homeless-documentable :docstring
+                             "Controls what sections get an @INDEX.
+
+  - NIL: No indices are generated.
+
+  - :DOCUMENTABLE: Sections that are appear in @DOCUMENTABLE (at any
+    level) get indices. Their subsections do not.
+
+  - :HOMELESS-DOCUMENTABLE: Sections that appear in @DOCUMENTABLE and
+    have no HOME-SECTION get indices.")
+
+(autoload::foreshadow-defvar mgl-pax:*document-indices*)
 
 (autoload::foreshadow-defvar mgl-pax:*document-link-code* :init t :docstring
                              "Whether definitions of things other than [SECTION][class]s
