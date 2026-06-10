@@ -1,7 +1,9 @@
 (in-package :mgl-pax-test)
 
 (deftest test-all ()
-  (let ((*check-locate* t))
+  (let ((*check-locate* t)
+        (*document-index-sections* nil)
+        (*document-downcase-uppercase-code* nil))
     (flet ((all ()
              (test-util)
              (test-hyperspec)

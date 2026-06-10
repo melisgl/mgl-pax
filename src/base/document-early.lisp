@@ -22,6 +22,7 @@
   (escape-markdown function)
   (prin1-to-markdown function))
 
+(defvar *real-format*)
 (defvar *format*)
 (setf (documentation '*format* 'variable)
       ;; FIXME: Not quite
@@ -43,8 +44,8 @@
     DEFSECTION."
   `(call-with-heading ,stream ,(if dref
                                    `(or (locate ,dref)
-                                        *documenting-dref* )
-                                   '*documenting-dref*)
+                                        *dref-being-documented* )
+                                   '*dref-being-documented*)
                       ,link-title-to
                       (lambda (,stream)
                         ,@body)))
@@ -107,7 +108,7 @@
               (,%dref ,dref)
               (,%dref (if ,%dref
                           (locate ,%dref)
-                          *documenting-dref*))
+                          *dref-being-documented*))
               (,%arglist ,(if arglistp
                               arglist
                               (list 'arglist %dref))))
@@ -168,7 +169,7 @@
 (declaim (ftype function codify-and-link))
 
 ;;; We need this for DOCUMENTING-DEFINITION.
-(defvar *documenting-dref* nil)
+(defvar *dref-being-documented* nil)
 
 
 (defsection @github-workflow (:title "GitHub Workflow")

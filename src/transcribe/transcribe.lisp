@@ -186,7 +186,7 @@
     "Return X + 1 and log what happened.
     For example,
 
-    ```
+    ```cl
     (foo 7)
     .. Adding 1 to 7
     ..

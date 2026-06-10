@@ -138,12 +138,18 @@
   \end{Verbatim}%
   \end{snugshade}%
 }
+
+\usepackage{enumitem}
 \renewcommand{\labelitemii}{$\circ$}
+
 \newcommand\paxlocativetype[1]{\textbf{[#1]}}
 \newcommand\paxlocativetypewithsource[2]{%
   \href{#1}{\textcolor{black}{\textbf{[#2]}}}}
 \newcommand\paxname[1]{%
   \hspace{0.1em}\fcolorbox[HTML]{606060}{f5f5f5}{\textbf{#1}}}
+
+\usepackage{newunicodechar}
+\newunicodechar{↩}{\ensuremath{\hookleftarrow}}
 """)
 
 (defvar/auto *document-pandoc-pdf-header-includes*
@@ -225,13 +231,6 @@
         (write-sequence (alexandria:read-file-into-byte-vector output)
                         stream)))))
 
-(declaim (ftype function target-definition))
-(declaim (ftype function target-page))
-(declaim (ftype function anchor-id))
-(declaim (ftype function page-p))
-(declaim (special *id-to-target*))
-(declaim (special *page*))
-
 (defun prepare-parse-tree-for-printing-to-pandoc-pdf (parse-tree)
   (map-markdown-parse-tree '(:code 3bmd-code-blocks::code-block :reference-link)
                            '() nil #'translate-for-pandoc-pdf
@@ -275,7 +274,7 @@
               (split-off-last-code label)
             (values `((:code
                        ,(format nil "\\paxlink{~A}{"
-                                (anchor-id (target-definition target))))
+                                (anchor-id (target-dref target))))
                       "{=latex}"
                       ,@label
                       ;; If the last element of label is :CODE, then
@@ -307,3 +306,33 @@
                      (t
                       (write-char char out)))
                (setq prev-char char)))))
+
+
+(defmethod write-begin-index ((format (eql :pdf)) stream)
+  (write-string """```{=latex}
+\begingroup
+\small
+\raggedright
+
+\setlistdepth{9}
+\renewlist{itemize}{itemize}{9}
+\setlist[itemize]{
+  label={}, % Strip all bullets
+  labelsep=0pt,
+  itemsep=0pt,
+  parsep=0pt,
+  itemindent=-1em,
+  leftmargin=2em,
+}
+\setlist[itemize,1]{leftmargin=1em}
+```
+"""
+                stream))
+
+(defmethod write-end-index ((format (eql :pdf)) stream)
+  (write-string """
+```{=latex}
+\endgroup
+```
+"""
+                stream))

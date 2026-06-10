@@ -454,7 +454,7 @@ documentation.
 
 Now let's examine the most important pieces.
 
-- [macro] DEFSECTION NAME (&KEY (PACKAGE '*PACKAGE*) (READTABLE '*READTABLE*) (EXPORT T) TITLE LINK-TITLE-TO (DISCARD-DOCUMENTATION-P *DISCARD-DOCUMENTATION-P*)) &BODY ENTRIES
+- [macro] DEFSECTION NAME (&KEY (PACKAGE '*PACKAGE*) (READTABLE '*READTABLE*) (EXPORT T) TITLE LINK-TITLE-TO (DISCARD-DOCUMENTATION-P *DISCARD-DOCUMENTATION-P*) CONCEPTS) &BODY ENTRIES
 
     Define a documentation section and maybe export referenced symbols.
     A bit behind the scenes, a global variable with NAME is defined and
@@ -526,7 +526,7 @@ Now let's examine the most important pieces.
     The bottom line is that if you rely on DEFSECTION to do the
     exporting, then you'd better use DEFINE-PACKAGE.
 
-- [macro] DEFINE-GLOSSARY-TERM NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P *DISCARD-DOCUMENTATION-P*)) &BODY DOCSTRING
+- [macro] DEFINE-GLOSSARY-TERM NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P *DISCARD-DOCUMENTATION-P*) CONCEPTS) &BODY DOCSTRING
 
     Define a global variable with NAME, and set it to a GLOSSARY-TERM object. TITLE, URL and DOCSTRING are Markdown strings or
     NIL. Glossary terms are DOCUMENTed in the lightweight bullet +
@@ -2509,6 +2509,56 @@ Note that in the example marked with *, the single backslash,
 that would normally turn autolinking off, is ignored because it is
 in an explicit link.
 
+### MGL-PAX:@INDEXING MGL-PAX:SECTION
+
+- [glossary-term] referrer
+
+- [glossary-term] referee
+
+- [glossary-term] index key
+
+- [glossary-term] index subkey
+
+- [variable] *DOCUMENT-INDEX-SECTIONS* :HOMELESS-DOCUMENTABLE
+
+    Controls what sections get an @INDEX.
+
+    - NIL: No indices are generated.
+
+    - :DOCUMENTABLE: Sections that are appear in DOCUMENTABLE (at any
+      level) get indices. Their subsections do not.
+
+    - :HOMELESS-DOCUMENTABLE: Sections that appear in DOCUMENTABLE and
+      have no HOME-SECTION get indices.
+
+- [variable] *DOCUMENT-INDEX-FORMATS* (:HTML :PDF)
+
+    The list of Output Formats for which index generation is enabled.
+
+- [variable] *DOCUMENT-INDICES* ((:TITLE "Indices" :DOCUMENT-REFERRER-ABBREVS T :CHILDREN
+  ((:DTYPE (OR SECTION GLOSSARY-TERM PSEUDO) :INDEX NIL)
+   (:DTYPE (OR FUNCTION MACRO COMPILER-MACRO) :TITLE
+"Function and Macro Index")
+   (:DTYPE VARIABLE :TITLE "Variable and Constant Index")
+   (:DTYPE TYPE :TITLE "Type Index") (:DTYPE T :TITLE "Misc Index")
+   (:CONCEPTS T :TITLE "Concept Index"))))
+
+- [variable] *DOCUMENT-INDEX-REFEREE-LOCATIVE-TYPE-ABBREVS* ((GENERIC-FUNCTION "_(gf)_") #'"_(fn)_" (VARIABLE "_(var)_")
+ (ASDF/SYSTEM:SYSTEM "_(asdf:system)_"))
+
+- [variable] *DOCUMENT-INDEX-REFERRER-DTYPE-ABBREVS* (((OR FUNCTION MACRO COMPILER-MACRO METHOD) "↩ _f_:" :DOCUMENTATION
+  "_f_: for definitions in the function namespace
+(macros, compiler macros and also methods)")
+ (TYPE "↩ _t_:" :DOCUMENTATION "_t_: `DEFTYPE`s, classes, conditions, structs")
+ ((OR SECTION GLOSSARY-TERM) "↩ _d_:" :DOCUMENTATION
+  "_d_: documentation sections and glossary terms")
+ ((OR LOCATIVE DTYPE) "↩ _l_:" :DOCUMENTATION
+  "_l_: definitions of definition types")
+ (ASDF/SYSTEM:SYSTEM "↩ _s_:" :DOCUMENTATION "_s_: ASDF systems")
+ (PACKAGE  ...
+
+    When @INDEXING, a . A list of (DTYPE SUBKEY) elements. See DTYPEs.
+
 ### Output Formats
 
 - [variable] *DOCUMENT-MARK-UP-SIGNATURES* T
@@ -3004,7 +3054,7 @@ Let's add an example to the docstring:
       "Return X + 1 and log what happened.
       For example,
     
-      ```
+      ```cl
       (foo 7)
       .. Adding 1 to 7
       ..
@@ -4021,6 +4071,8 @@ presented.
 
 - [function] SECTION-LINK-TITLE-TO SECTION
 
+- [reader] SECTION-CONCEPTS SECTION (:CONCEPTS = NIL)
+
 - [function] SECTION-ENTRIES SECTION
 
     A list of Markdown docstrings and XREFs in the order they
@@ -4047,6 +4099,8 @@ they are presented.
     A title or NIL. Used in generated
     documentation (see Markdown Output) and is returned by DOCTITLE
     for GLOSSARY-TERM objects and GLOSSARY-TERM definitions..
+
+- [reader] GLOSSARY-TERM-CONCEPTS GLOSSARY-TERM (:CONCEPTS = NIL)
 
 - [reader] GLOSSARY-TERM-URL GLOSSARY-TERM (:URL)
 
