@@ -342,7 +342,7 @@
 
 ;;; Increment the link counter for the current page and return the
 ;;; link id.
-(defun link-to (target)
+(defun link-to-target (target)
   (declare (type target target))
   (when (let ((page (target-page target)))
           (or (null page)
@@ -354,7 +354,7 @@
     (ensure-target-id target)))
 
 (defun link-to-definition (dref)
-  (link-to (find-target dref)))
+  (link-to-target (find-target dref)))
 
 ;;; TARGET ids are short hashes (as STRINGs), and they go into
 ;;; Markdown reference links. Due to possible collisions, they are
@@ -2615,7 +2615,7 @@
                         append `(,@(unless (zerop i)
                                      '(" "))
                                  ,(%make-reflink `(,(code-fragment i))
-                                                 (link-to target))))
+                                                 (link-to-target target))))
                     ")"))))
           ((member (xref-locative-type ref-1) '(dislocated argument))
            label)
@@ -2629,7 +2629,7 @@
                             label)))
              (if fake-target-p
                  label
-                 `(,(%make-reflink label (link-to target-1))))))))))
+                 `(,(%make-reflink label (link-to-target target-1))))))))))
 
 
 (defsection @linking-to-the-hyperspec (:title "Linking to the HyperSpec")
