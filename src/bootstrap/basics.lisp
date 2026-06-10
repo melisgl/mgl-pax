@@ -12,8 +12,10 @@
 (defmacro defsection (name (&key (package '*package*) (readtable '*readtable*)
                             (export t) title link-title-to
                             (discard-documentation-p
-                             *discard-documentation-p*))
+                             *discard-documentation-p*)
+                            concepts)
                       &body entries)
+  ;; FIXME
   "Define a documentation section and maybe export referenced symbols.
   A bit behind the scenes, a global variable with NAME is defined and
   is bound to a [SECTION][class] object. By convention, section names
@@ -65,6 +67,7 @@
   is true, ENTRIES will not be recorded to save memory."
   (check-section-entries entries name)
   (check-link-title-to link-title-to name)
+  (check-indexing-concepts concepts 'section name)
   `(progn
      (eval-when (:compile-toplevel :load-toplevel :execute)
        (when ,export
@@ -81,8 +84,13 @@
                       :readtable ,readtable
                       :title ,title
                       :link-title-to ',link-title-to
+                      :concepts ',concepts
                       :entries ',(and (not discard-documentation-p)
                                       (cons '%to-xref entries))))))
+
+(defgeneric concepts* (object)
+  (:method (object)
+    ()))
 
 (defclass section ()
   ((name
@@ -106,6 +114,9 @@
    ;; by SECTION-LINK-TITLE-TO, which is defined later so that XREF
    ;; can depend on mgl-pax/basics.
    (%link-title-to :initform nil :initarg :link-title-to)
+   (concepts :initform () :initarg :concepts
+             :reader section-concepts
+             :reader concepts*)
    ;; DEFSECTION's raw ENTRIES argument. See SECTION-ENTRIES.
    (%entries :initarg :entries))
   (:documentation "DEFSECTION stores its NAME, TITLE, [PACKAGE][type],
@@ -131,14 +142,30 @@
                                          section-name)))
 
 (defun malformed-ref-list-in-section-error (what ref-list section-name)
-  (error "~@<Malformed ~A ~S in SECTION ~S. ~
+  (error "~@<Malformed ~A ~S in ~S ~A. ~
          It should be of form (NAME LOCATIVE).~:@>"
          what (prin1-to-string/fully-qualified ref-list)
-         (prin1-to-string/fully-qualified section-name)))
+         'section (prin1-to-string/fully-qualified section-name)))
 
 (defun prin1-to-string/fully-qualified (object)
   (let ((*package* (find-package :keyword)))
     (prin1-to-string object)))
+
+(defun check-indexing-concepts (concepts type name)
+  (unless (loop for concept in concepts
+                always (or (index-subkey-p concept)
+                           (and (listp concept)
+                                (every #'index-subkey-p concept))))
+    (error "~@<Malformed ~S ~S in ~S ~A. ~
+           It should be a list of lists of strings or conses of strings.~:@>"
+           :concepts concepts type
+           (prin1-to-string/fully-qualified name))))
+
+(defun index-subkey-p (object)
+  (or (stringp object)
+      (and (consp object)
+           (stringp (car object))
+           (stringp (cdr object)))))
 
 
 ;;;; Exporting
@@ -254,6 +281,9 @@
     :documentation "A @TITLE or NIL. Used in generated
     documentation (see @MARKDOWN-OUTPUT) and is returned by DOCTITLE
     for GLOSSARY-TERM objects and GLOSSARY-TERM DREF::@DEFINITIONS..")
+   (concepts :initform () :initarg :concepts
+             :reader glossary-term-concepts
+             :reader concepts*)
    (url
     :initarg :url :reader glossary-term-url
     :documentation "A string or NIL.")
@@ -261,8 +291,10 @@
   (:documentation "See DEFINE-GLOSSARY-TERM."))
 
 (defmacro define-glossary-term
-    (name (&key title url (discard-documentation-p *discard-documentation-p*))
+    (name (&key title url (discard-documentation-p *discard-documentation-p*)
+           concepts)
      &body docstring)
+  ;; FIXME
   "Define a global variable with NAME, and set it to a [GLOSSARY-TERM]
   [class] object. TITLE, URL and DOCSTRING are Markdown strings or
   NIL. Glossary terms are DOCUMENTed in the lightweight bullet +
@@ -280,9 +312,11 @@
 
   When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
   is true, DOCSTRING will not be recorded to save memory."
+  (check-indexing-concepts concepts 'glossary-term name)
   `(defparameter ,name
      (make-instance 'glossary-term
                     :name ',name :title ,title :url ,url
+                    :concepts ',concepts
                     :docstring ,(unless discard-documentation-p
                                   (apply #'concatenate 'string docstring)))))
 

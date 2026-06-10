@@ -47,16 +47,17 @@
         - [8.5.6 Link Format][c0d2]
     - [8.6 Local Definition][9db9]
     - [8.7 Overview of Escaping][2634]
-    - [8.8 Output Formats][8d9b]
-        - [8.8.1 Plain Output][c879]
-        - [8.8.2 Markdown Output][dd29]
-        - [8.8.3 PDF Output][19ad]
-        - [8.8.4 Dummy Output][f7e6]
-    - [8.9 Documentation Generation Implementation Notes][d1ca]
-    - [8.10 Utilities for Generating Documentation][1b1b]
-        - [8.10.1 HTML Output][36e1]
-        - [8.10.2 GitHub Workflow][dff6]
-        - [8.10.3 PAX World][1281]
+    - [8.8 MGL-PAX:@INDEXING MGL-PAX:SECTION][adf8]
+    - [8.9 Output Formats][8d9b]
+        - [8.9.1 Plain Output][c879]
+        - [8.9.2 Markdown Output][dd29]
+        - [8.9.3 PDF Output][19ad]
+        - [8.9.4 Dummy Output][f7e6]
+    - [8.10 Documentation Generation Implementation Notes][d1ca]
+    - [8.11 Utilities for Generating Documentation][1b1b]
+        - [8.11.1 HTML Output][36e1]
+        - [8.11.2 GitHub Workflow][dff6]
+        - [8.11.3 PAX World][1281]
 - [9 Transcripts][6300]
     - [9.1 Transcribing in Documentation][9bd5]
     - [9.2 Transcribing with Emacs][f5bd]
@@ -569,7 +570,7 @@ Now let's examine the most important pieces.
 
 <a id="x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29"></a>
 
-- [macro] **DEFSECTION** *NAME (&KEY (PACKAGE '\*PACKAGE\*) (READTABLE '\*READTABLE\*) (EXPORT T) TITLE LINK-TITLE-TO (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &BODY ENTRIES*
+- [macro] **DEFSECTION** *NAME (&KEY (PACKAGE '\*PACKAGE\*) (READTABLE '\*READTABLE\*) (EXPORT T) TITLE LINK-TITLE-TO (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*) CONCEPTS) &BODY ENTRIES*
 
     Define a documentation section and maybe export referenced symbols.
     A bit behind the scenes, a global variable with `NAME` is defined and
@@ -647,7 +648,7 @@ Now let's examine the most important pieces.
 
 <a id="x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20MGL-PAX-3AMACRO-29"></a>
 
-- [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*)) &BODY DOCSTRING*
+- [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*) CONCEPTS) &BODY DOCSTRING*
 
     Define a global variable with `NAME`, and set it to a [`GLOSSARY-TERM`][8251] object. `TITLE`, `URL` and `DOCSTRING` are Markdown strings or
     `NIL`. Glossary terms are [`DOCUMENT`][432c]ed in the lightweight bullet +
@@ -2847,9 +2848,79 @@ Note that in the example marked with `*`, the single backslash,
 that would normally turn autolinking off, is ignored because it is
 in an explicit link.
 
+<a id="x-28MGL-PAX-3A-40INDEXING-20MGL-PAX-3ASECTION-29"></a>
+
+### 8.8 MGL-PAX:@INDEXING MGL-PAX:SECTION
+
+<a id="x-28MGL-PAX-3A-40REFERRER-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+
+- [glossary-term] **referrer**
+
+<a id="x-28MGL-PAX-3A-40REFEREE-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+
+- [glossary-term] **referee**
+
+<a id="x-28MGL-PAX-3A-40INDEX-KEY-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+
+- [glossary-term] **index key**
+
+<a id="x-28MGL-PAX-3A-40INDEX-SUBKEY-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+
+- [glossary-term] **index subkey**
+
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-INDEX-SECTIONS-2A-20VARIABLE-29"></a>
+
+- [variable] **\*DOCUMENT-INDEX-SECTIONS\*** *:HOMELESS-DOCUMENTABLE*
+
+    Controls what sections get an @INDEX.
+    
+    - `NIL`: No indices are generated.
+    
+    - `:DOCUMENTABLE`: Sections that are appear in [`DOCUMENTABLE`][0702] (at any
+      level) get indices. Their subsections do not.
+    
+    - `:HOMELESS-DOCUMENTABLE`: Sections that appear in [`DOCUMENTABLE`][0702] and
+      have no [`HOME-SECTION`][fda4] get indices.
+
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-INDEX-FORMATS-2A-20VARIABLE-29"></a>
+
+- [variable] **\*DOCUMENT-INDEX-FORMATS\*** *(:HTML :PDF)*
+
+    The list of [Output Formats][8d9b] for which index generation is enabled.
+
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-INDICES-2A-20VARIABLE-29"></a>
+
+- [variable] **\*DOCUMENT-INDICES\*** *((:TITLE "Indices" :DOCUMENT-REFERRER-ABBREVS T :CHILDREN
+  ((:DTYPE (OR SECTION GLOSSARY-TERM PSEUDO) :INDEX NIL)
+   (:DTYPE (OR FUNCTION MACRO COMPILER-MACRO) :TITLE
+    "Function and Macro Index")
+   (:DTYPE VARIABLE :TITLE "Variable and Constant Index")
+   (:DTYPE TYPE :TITLE "Type Index") (:DTYPE T :TITLE "Misc Index")
+   (:CONCEPTS T :TITLE "Concept Index"))))*
+
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-INDEX-REFEREE-LOCATIVE-TYPE-ABBREVS-2A-20VARIABLE-29"></a>
+
+- [variable] **\*DOCUMENT-INDEX-REFEREE-LOCATIVE-TYPE-ABBREVS\*** *((GENERIC-FUNCTION "\_(gf)\_") #'"\_(fn)\_" (VARIABLE "\_(var)\_")
+ (ASDF/SYSTEM:SYSTEM "\_(asdf:system)\_"))*
+
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-INDEX-REFERRER-DTYPE-ABBREVS-2A-20VARIABLE-29"></a>
+
+- [variable] **\*DOCUMENT-INDEX-REFERRER-DTYPE-ABBREVS\*** *(((OR FUNCTION MACRO COMPILER-MACRO METHOD) "↩ \_f\_:" :DOCUMENTATION
+  "\_f\_: for definitions in the function namespace
+(macros, compiler macros and also methods)")
+ (TYPE "↩ \_t\_:" :DOCUMENTATION "\_t\_: \`DEFTYPE\`s, classes, conditions, structs")
+ ((OR SECTION GLOSSARY-TERM) "↩ \_d\_:" :DOCUMENTATION
+  "\_d\_: documentation sections and glossary terms")
+ ((OR LOCATIVE DTYPE) "↩ \_l\_:" :DOCUMENTATION
+  "\_l\_: definitions of definition types")
+ (ASDF/SYSTEM:SYSTEM "↩ \_s\_:" :DOCUMENTATION "\_s\_: ASDF systems")
+ (PACKAGE  ...*
+
+    When [`@INDEXING`][adf8], a . A list of (`DTYPE` `SUBKEY`) elements. See `DTYPE`s.
+
 <a id="x-28MGL-PAX-3A-40OUTPUT-FORMATS-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.8 Output Formats
+### 8.9 Output Formats
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-MARK-UP-SIGNATURES-2A-20VARIABLE-29"></a>
 
@@ -2874,7 +2945,7 @@ in an explicit link.
 
 <a id="x-28MGL-PAX-3A-40PLAIN-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.8.1 Plain Output
+#### 8.9.1 Plain Output
 
 This is the default `:FORMAT` of [`DOCUMENT`][432c], intended to be a
 replacement for [`CL:DOCUMENTATION`][c5ae]. `:PLAIN` (short for plain text) is
@@ -2894,7 +2965,7 @@ reading in, say, the REPL unpleasant is removed.
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.8.2 Markdown Output
+#### 8.9.2 Markdown Output
 
 By default, `DREF`s are documented in the following format.
 
@@ -2990,7 +3061,7 @@ printed as the arglist. There is no docstring.
 
 <a id="x-28MGL-PAX-3A-40PDF-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.8.3 PDF Output
+#### 8.9.3 PDF Output
 
 When invoked with `:FORMAT` `:PDF`, [`DOCUMENT`][432c] generates
 [Markdown Output][dd29] and converts it to PDF with [Pandoc][59d9], which in turn
@@ -3071,7 +3142,7 @@ can be customized with the following variables.
 
 <a id="x-28MGL-PAX-3A-40DUMMY-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.8.4 Dummy Output
+#### 8.9.4 Dummy Output
 
 When the `FORMAT` argument of [`DOCUMENT`][432c] is `NIL`, no output is
 generated, but [Transcript Consistency Checking][4c39] is still performed.
@@ -3088,7 +3159,7 @@ like this:
 
 <a id="x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.9 Documentation Generation Implementation Notes
+### 8.10 Documentation Generation Implementation Notes
 
 Documentation Generation is supported on ABCL, AllegroCL, CLISP,
 CCL, CMUCL, ECL and SBCL, but their outputs may differ due to the
@@ -3104,7 +3175,7 @@ doesn't work.
 
 <a id="x-28MGL-PAX-3A-40DOCUMENTATION-UTILITIES-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.10 Utilities for Generating Documentation
+### 8.11 Utilities for Generating Documentation
 
 Two convenience functions are provided to serve the common case of
 having an ASDF system with some readmes and a directory with for the
@@ -3139,7 +3210,7 @@ HTML documentation and the default CSS stylesheet.
 
 <a id="x-28MGL-PAX-3A-40HTML-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.10.1 HTML Output
+#### 8.11.1 HTML Output
 
 <a id="x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-HTML-DOCS-20FUNCTION-29"></a>
 
@@ -3253,7 +3324,7 @@ See the following variables, which control HTML generation.
 
 <a id="x-28MGL-PAX-3A-40GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.10.2 GitHub Workflow
+#### 8.11.2 GitHub Workflow
 
 It is generally recommended to commit generated readmes (see
 [`UPDATE-ASDF-SYSTEM-READMES`][13a9]) so that users have something to read
@@ -3341,7 +3412,7 @@ and the gh-pages site.
 
 <a id="x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29"></a>
 
-#### 8.10.3 PAX World
+#### 8.11.3 PAX World
 
 PAX World is a registry of documents, which can generate
 cross-linked HTML documentation pages for all the registered
@@ -3429,7 +3500,7 @@ Let's add an example to the docstring:
   "Return X + 1 and log what happened.
   For example,
 
-  ```
+  ```cl
   (foo 7)
   .. Adding 1 to 7
   ..
@@ -4591,6 +4662,10 @@ presented.
 
 - [function] **SECTION-LINK-TITLE-TO** *SECTION*
 
+<a id="x-28MGL-PAX-3ASECTION-CONCEPTS-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
+
+- [reader] **SECTION-CONCEPTS** *[SECTION][5fac] (:CONCEPTS = NIL)*
+
 <a id="x-28MGL-PAX-3ASECTION-ENTRIES-20FUNCTION-29"></a>
 
 - [function] **SECTION-ENTRIES** *SECTION*
@@ -4627,6 +4702,10 @@ they are presented.
     A [title][090e] or `NIL`. Used in generated
     documentation (see [Markdown Output][dd29]) and is returned by [`DOCTITLE`][e619]
     for [`GLOSSARY-TERM`][8251] objects and `GLOSSARY-TERM` definitions..
+
+<a id="x-28MGL-PAX-3AGLOSSARY-TERM-CONCEPTS-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29"></a>
+
+- [reader] **GLOSSARY-TERM-CONCEPTS** *[GLOSSARY-TERM][8251] (:CONCEPTS = NIL)*
 
 <a id="x-28MGL-PAX-3AGLOSSARY-TERM-URL-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29"></a>
 
@@ -4866,6 +4945,7 @@ they are presented.
   [ac5e]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhe.htm "\"2.4.8.5\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [ad78]: http://www.lispworks.com/documentation/HyperSpec/Body/f_format.htm "FORMAT (MGL-PAX:CLHS FUNCTION)"
   [adf2]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhd.htm "\"2.4.8.4\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
+  [adf8]: #x-28MGL-PAX-3A-40INDEXING-20MGL-PAX-3ASECTION-29 "MGL-PAX:@INDEXING MGL-PAX:SECTION"
   [aeb6]: http://www.lispworks.com/documentation/HyperSpec/Body/a_fn.htm "FUNCTION MGL-PAX:CLHS"
   [af78]: #x-28MGL-PAX-3AGLOSSARY-TERM-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29 "MGL-PAX:GLOSSARY-TERM-TITLE (MGL-PAX:READER MGL-PAX:GLOSSARY-TERM)"
   [b033]: #x-28MGL-PAX-3A-40ASDF-SYSTEMS-AND-RELATED-PACKAGES-20MGL-PAX-3ASECTION-29 "`ASDF:SYSTEM`s and Related `PACKAGE`s"

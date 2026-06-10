@@ -83,6 +83,7 @@
   (test-parse-dref)
   (test-parse-definitions*)
   (test-funny)
+  (test-radix-tree)
   (test-codify)
   (test-names)
   (test-downcasing)
@@ -147,7 +148,8 @@
   (test-dummy-output)
   (test-dynenv)
   (test-note)
-  (test-pax-transcripts))
+  (test-pax-transcripts)
+  (test-indexing))
 
 (deftest test-urlencode ()
   (is (equal (mgl-pax::urlencode "hello") "hello"))
@@ -317,6 +319,34 @@
              '((x) y)))
   (signals (error :pred "Unpaired closing paren")
     (mgl-pax::read-funny-from-string ")")))
+
+
+(deftest test-radix-tree ()
+  (flet ((test (keys &optional expected)
+           (is (equal (mapcar (lambda (key)
+                                (coerce key 'string))
+                              (list-radix-tree (pax::radix-tree keys)))
+                      (or expected keys)))))
+    (test '())
+    (test '(""))
+    (test '("1"))
+    (test '("12"))
+    (test '("123"))
+    (test '("1" "2"))
+    (test '("a1" "a2"))
+    (test '("ab1" "ab2"))
+    (test '("a" "a1"))
+    (test '("a" "ab1" "ab2"))
+    ;; Duplicate
+    (test '("a" "a") '("a"))))
+
+(defun list-radix-tree (tree)
+  (let ((keys ()))
+    (pax::map-radix-tree (lambda (key-runs completep)
+                           (assert completep)
+                           (push (apply #'append (reverse key-runs)) keys))
+                         tree)
+    (nreverse keys)))
 
 
 (deftest test-codify ()
@@ -2307,3 +2337,197 @@ example section
   (is (equal (alexandria:read-file-into-string (% file1))
              (alexandria:read-file-into-string (% file2)))
       :capture nil))
+
+
+(deftest test-indexing ()
+  (test-print-index-key-tree)
+  (test-write-index/sorting)
+  (test-write-index/sort-as)
+  (test-write-index/concepts/dead)
+  (test-write-index/concepts/live))
+
+(deftest test-print-index-key-tree ()
+  (flet ((test (keys output)
+           (is (equal (with-output-to-string (s)
+                        (pax::print-index-key-tree
+                         (pax::radix-tree keys) s
+                         (lambda (key i depth)
+                           (format s "~S,~S,~S" key i depth))))
+                      (format nil output)))))
+    (test '((0)) "- 0(0),0,1~%")
+    (test '((0) (1)) "- 0(0),0,1~%- 1(1),1,1~%")
+    (test '((0) (0 1)) "- 0(0),0,1~%    - 1(0 1),1,2~%")
+    (test '((0 1) (0 2)) "- 0~%    - 1(0 1),0,2~%    - 2(0 2),1,2~%")
+    (test '((0) (0 1) (0 1 2))
+          "- 0(0),0,1~%    - 1(0 1),1,2~%        - 2(0 1 2),2,3~%")
+    (test '((0 1) (0 1 2)) "- 0 1(0 1),0,1~%    - 2(0 1 2),1,2~%")))
+
+
+(defun i-fn ()
+  "I-FN function"
+  nil)
+(defvar *i-var* nil
+  "I-FN function")
+(defmacro i-z ()
+  "I-FN function"
+  nil)
+(define-compiler-macro i-fn ()
+  "I-FN function"
+  nil)
+
+(defsection @index-test (:title "Index Test")
+  (i-fn function)
+  (*i-var* variable)
+  (i-z macro)
+  (i-fn compiler-macro))
+
+(deftest test-write-index/sorting ()
+  (let* ((*document-index-sections* :homeless-documentable)
+         (*document-index-formats* '(:plain :markdown))
+         (*document-indices*
+           '((:title "Indices"
+              :children ((:dtype t
+                          :title "Misc Index"))))))
+    (with-test ("plain")
+      (let* ((out (document @index-test :stream nil :format :plain))
+             (pos (search "## Indices" out)))
+        (is pos)
+        (is (equal (subseq out (or pos 0))
+                   "## Indices
+
+### Misc Index
+
+- I-FN (compiler-macro)
+
+- I-FN (fn)
+
+    - ↩ f: I-FN, I-Z
+
+    - ↩ v: *I-VAR*
+
+- *I-VAR* (var)
+
+- I-Z (macro)
+"))))
+    (with-test ("markdown")
+      (let* ((out (document @index-test :stream nil :format :markdown))
+             (pos (search "## 1 Indices" out)))
+        (is pos)
+        (is (equal (subseq out (or pos 0))
+                   "## 1 Indices
+
+
+<a id=\"x-28-222-22-20MGL-PAX-3A-3ADYN-29\"></a>
+<a id=\"%222%22%20MGL-PAX::DYN\"></a>
+
+### 1.1 Misc Index
+
+- [`I-FN`][3189] _(compiler-macro)_
+- [`I-FN`][a3be] _(fn)_
+
+    - ↩ _f_: [`I-FN`][3189], [`I-Z`][2387]
+    - ↩ _v_: [`*I-VAR*`][b534]
+
+- [`*I-VAR*`][b534] _(var)_
+- [`I-Z`][2387] _(macro)_
+
+
+  [053c]: #%222%22%20MGL-PAX::DYN \"Misc Index\"
+  [2387]: #MGL-PAX-TEST:I-Z%20MGL-PAX:MACRO \"MGL-PAX-TEST:I-Z MGL-PAX:MACRO\"
+  [3189]: #MGL-PAX-TEST:I-FN%20COMPILER-MACRO \"MGL-PAX-TEST:I-FN COMPILER-MACRO\"
+  [a3be]: #MGL-PAX-TEST:I-FN%20FUNCTION \"MGL-PAX-TEST:I-FN FUNCTION\"
+  [b534]: #MGL-PAX-TEST:*I-VAR*%20VARIABLE \"MGL-PAX-TEST:*I-VAR* VARIABLE\"
+  [bad5]: #%221%22%20MGL-PAX::DYN \"Indices\"
+"))))))
+
+(deftest test-write-index/sort-as ()
+  (let* ((*document-index-sections* :homeless-documentable)
+         (*document-index-formats* '(:plain :markdown))
+         (*document-indices*
+           '((:title "Indices"
+              :children ((:dtype t
+                          :title "Misc Index")))))
+         (*document-index-referrer-dtype-abbrevs*
+           '(((or function macro compiler-macro) "< f:")
+             (variable ("< v:" . "a"))))
+         (*document-index-referee-locative-type-abbrevs*
+           '((function ("(fun)" . "a"))
+             (variable ("(var)" . "v"))
+             (macro ("(mac)" . "m"))
+             (compiler-macro ("(cmac)" . "c"))))
+         (out (document @index-test :stream nil :format :plain))
+         (pos (search "## Indices" out)))
+    (is pos)
+    (is (equal (subseq out pos)
+               "## Indices
+
+### Misc Index
+
+- I-FN (fun)
+
+    - < f: I-FN, I-Z
+
+    - < v: *I-VAR*
+
+- I-FN (cmac)
+
+- *I-VAR* (var)
+
+- I-Z (mac)
+"))))
+
+
+(defsection @concept-test (:title "Concept Test")
+  (c-foo function)
+  (@c-whatever glossary-term))
+
+(define-glossary-term @c-hidden (:title ""
+                                 :concepts (("defining" "macros")
+                                            ("macros," "defining"))))
+
+(define-glossary-term @c-whatever
+    (:concepts ((("whatever" . "%sortas")))))
+
+(defun c-foo ()
+  "@C-HIDDEN @C-WHATEVER"
+  nil)
+
+(deftest test-write-index/concepts/dead ()
+  (let* ((*document-index-sections* :homeless-documentable)
+         (*document-index-formats* '(:plain :markdown))
+         (*document-indices* '((:title "Indices" :concepts t)))
+         (out (document @concept-test :stream nil :format :plain))
+         (pos (search "## Indices" out)))
+    (is pos :ctx ("output: ~S" out))
+    (is (equal (subseq out pos)
+               "## Indices
+
+- whatever ↩ f: C-FOO
+
+- defining macros ↩ f: C-FOO
+
+- macros, defining ↩ f: C-FOO
+"))))
+
+(deftest test-write-index/concepts/live ()
+  (let* ((*document-index-sections* :homeless-documentable)
+         (*document-index-formats* '(:md-w3m))
+         (*document-indices* '((:title "Indices" :concepts t)))
+         (out (document* @concept-test :format :md-w3m))
+         (pos (search "## 1 Indices" out)))
+    (is pos :ctx ("output: ~S" out))
+    (is (equal (subseq out pos)
+               "## 1 Indices
+
+- whatever ↩ *f*: [**`C-FOO`**][cceb]
+
+- defining macros ↩ *f*: [**`C-FOO`**][cceb]
+
+- macros, defining ↩ *f*: [**`C-FOO`**][cceb]
+
+[6f6c]: #MGL-PAX-TEST:@C-WHATEVER%20MGL-PAX:GLOSSARY-TERM \"MGL-PAX-TEST:@C-WHATEVER MGL-PAX:GLOSSARY-TERM\"
+
+[870f]: pax:MGL-PAX-TEST:@C-HIDDEN%20MGL-PAX:GLOSSARY-TERM \"\"
+
+[cceb]: #MGL-PAX-TEST:C-FOO%20FUNCTION \"MGL-PAX-TEST:C-FOO FUNCTION\"
+"))))

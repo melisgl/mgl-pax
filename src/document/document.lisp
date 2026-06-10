@@ -10,6 +10,7 @@
   (@linking section)
   (@local-definition section)
   (@overview-of-escaping section)
+  (@indexing section)
   (@output-formats section)
   (@document-implementation-notes section)
   (@documentation-utilities section))
@@ -204,33 +205,12 @@
   written-in-second-pass-p
   ;; The set of TARGETs linked to from this page. For
   ;; WRITE-MARKDOWN-REFERENCE-STYLE-LINK-DEFINITIONS and
-  ;; LINK-TO-DEFINITION.
+  ;; LINK-TO-DEFINITION. Populated in the 2nd pass. EQ is fine because
+  ;; we only use it with with TARGET-DREFs and TARGETs are interned in
+  ;; *TARGETS*.
   (linked-to (make-hash-table :test #'eq) :type hash-table)
-  ;; For numbering DYNAMIC-SECTION-DREFs. Reset to 0 in FINALIZE-PAGES
-  ;; so that the second pass produces the same ids (assuming some
-  ;; determinism in the dynamic generation).
+  ;; For numbering DYNAMIC-SECTION-DREFs.
   (next-dyn-id 0 :type integer))
-
-(defun next-dyn-id ()
-  (incf (page-next-dyn-id *page*)))
-
-(defun maybe-generate-indices (stream)
-  (declare (ignore stream))
-  #+nil
-  (document-object (make-instance 'dynamic-section-dref
-                                  :title "xxx"
-                                  :locative 'dyn
-                                  :fn #'identity)
-                   stream))
-
-(defclass dynamic-section-dref (dref)
-  ((title :initarg :title :reader doctitle*)
-   (dref::name :initform (format nil "~S" (next-dyn-id)))
-   (fn :initarg :fn :reader fn-of)))
-
-(defmethod document-object* ((dref dynamic-section-dref) stream)
-  (with-heading (stream :dref dref)
-    (funcall (fn-of dref) stream)))
 
 ;;; All the PAGEs in a DOCUMENT call.
 (defvar *pages*)
@@ -257,6 +237,9 @@
 
 ;;; The current page where output is being sent.
 (defvar *page* nil)
+
+(defun next-dyn-id ()
+  (incf (page-next-dyn-id *page*)))
 
 (defvar *page-stream*)
 
@@ -331,6 +314,8 @@
     (setf (page-definitions page) (reverse (page-definitions page)))
     (dolist (dref (page-definitions page))
       (set-target (target-key dref) (make-target* dref page)))
+    ;; Reset to 0 so that the second pass produces the same ids
+    ;; (assuming some determinism in the dynamic generation).
     (setf (page-next-dyn-id page) 0)))
 
 ;;; Whether all definitions present in the running Lisp are @LINKABLE
@@ -343,14 +328,22 @@
   (assert (not *first-pass*))
   (let ((key (target-key dref)))
     (or (get-target key)
-        (when (or *document-open-linking* (external-dref-p dref)
-                  ;; KLUDGE: For @TITLEd definitions, fake a PAX link,
-                  ;; so that they make it to TARGETS-TO-TREE, which
-                  ;; replaces the fake target with the title.
+        (when (or *document-open-linking*
+                  (external-dref-p dref)
+                  ;; Under the following conditions we fake PAX links
+                  ;; (i.e. TARGET-PAGE NIL), so that they make it to
+                  ;; TARGETS-TO-TREE.
+                  ;;
+                  ;; For @TITLEd definitions, to get the link replaced
+                  ;; with with their title.
                   (doctitle dref)
-                  ;; Similarly for NOTEs, except that TARGETS-TO-TREE
-                  ;; will auto-include the note.
-                  (typep dref 'note-dref))
+                  ;; For NOTEs, to get auto-included.
+                  (typep dref 'note-dref)
+                  ;; Finally, for definitions with INDEXING-CONCEPTS,
+                  ;; to allow e.g. GLOSSARY-TERMS that are not being
+                  ;; documented and have no title to act as concept
+                  ;; multiplexers.
+                  (concepts dref))
           (set-target key (make-target* dref nil)))
         ;; Maybe fall back on the CLHS definition.
         (when-let (clhs-target (and *document-link-to-hyperspec*
@@ -366,18 +359,31 @@
           (set-target (target-key clhs-dref) (make-target* clhs-dref nil))))))
 
 
-;;; Increment the link counter for the current page and return the
-;;; link id.
+;;; Record that a link is made from *DREF-BEING-DOCUMENTED* on *PAGE*
+;;; to TARGET and return the TARGET-ID for TARGET. TARGET must be
+;;; @LINKABLE.
 (defun link-to-target (target)
   (declare (type target target))
-  (when (let ((page (target-page target)))
-          (or (null page)
-              (eq *page* page)
-              (stringp page)
-              (and (page-uri-fragment *page*)
-                   (page-uri-fragment page))))
+  (assert (not *first-pass*))
+  (let ((page (target-page target)))
+    (assert (linkable-page-p page))
     (setf (gethash target (page-linked-to *page*)) t)
     (ensure-target-id target)))
+
+(declaim (ftype function concepts))
+
+(defun maybe-add-cross-references (target)
+  (when *indexing-section*
+    (let ((target-dref (target-dref target))
+          (source-dref *dref-being-documented*))
+      (when (and source-dref
+                 (indexablep source-dref)
+                 (not (xref= source-dref target-dref)))
+        ;; We currently do not index external definitions.
+        (unless (stringp (target-page target))
+          (pushnew source-dref (dref-to-referrers target-dref)))
+        (dolist (concept (concepts target-dref))
+          (pushnew source-dref (concept-to-referrers concept)))))))
 
 (defun link-to-definition (dref)
   (link-to-target (find-target dref)))
@@ -603,68 +609,78 @@
                (3bmd-code-blocks::*colorize-name-map*
                  (if (eq *subformat* :w3m)
                      (make-hash-table)
-                     3bmd-code-blocks::*colorize-name-map*)))
+                     3bmd-code-blocks::*colorize-name-map*))
+               ;; Prevent leaking context into a nested DOCUMENT call.
+               ;; See the transcript in TRANSLATE-DOCSTRING-LINKS,
+               ;; which does (DOCUMENT #'DIV2).
+               (*section* nil)
+               (*dref-being-documented* nil)
+               (*indexing-section* nil)
+               (*indexing-definitions* nil)
+               (*indexing-dref-to-referrers* nil)
+               (*indexing-concept-to-referrers* nil))
           (document-return stream (%document documentable stream pages)))))))
 
 (defun call-with-format (format fn)
-  (case format
-    (:plain
-     ;; 3BMD's :PLAIN is very broken. Take matters into our hands, and
-     ;; make :PLAIN equivalent to :MARKDOWN without all the bells and
-     ;; whistles.
-     (note @plain-format
-       "@PLAIN-STRIP-MARKUP
+  (let ((*real-format* format))
+    (case format
+      (:plain
+       ;; 3BMD's :PLAIN is very broken. Take matters into our hands, and
+       ;; make :PLAIN equivalent to :MARKDOWN without all the bells and
+       ;; whistles.
+       (note @plain-format
+         "@PLAIN-STRIP-MARKUP
 
        - No link anchors are emitted.
 
        - No [section numbering][*document-max-numbering-level*].
 
        - No [table of contents][*document-max-table-of-contents-level*]."
-       (let ((*format* :markdown)
-             (*subformat* :plain)
-             (*document-mark-up-signatures* nil)
+         (let ((*format* :markdown)
+               (*subformat* :plain)
+               (*document-mark-up-signatures* nil)
+               (*document-max-numbering-level* 0)
+               (*document-max-table-of-contents-level* 0)
+               (*document-text-navigation* nil))
+           (handler-bind ((unresolvable-reflink #'output-label))
+             (funcall fn)))))
+      (:pdf
+       (let ((*format* format)
+             (*subformat* nil)
+             (*document-pandoc-pdf-metadata-block*
+               (concatenate
+                'string
+                (cond ((plusp *document-max-numbering-level*)
+                       (format nil "numbersections: true~%secnumdepth: ~A~%"
+                               *document-max-numbering-level*))
+                      (t
+                       (format nil "numbersections: false~%")))
+                (cond ((plusp *document-max-table-of-contents-level*)
+                       (format nil "toc: true~%toc-depth: ~A~%"
+                               *document-max-table-of-contents-level*))
+                      (t
+                       (format nil "toc: false~%")))
+                *document-pandoc-pdf-metadata-block*))
              (*document-max-numbering-level* 0)
              (*document-max-table-of-contents-level* 0)
-             (*document-text-navigation* nil))
-         (handler-bind ((unresolvable-reflink #'output-label))
-           (funcall fn)))))
-    (:pdf
-     (let ((*format* format)
-           (*subformat* nil)
-           (*document-pandoc-pdf-metadata-block*
-             (concatenate
-              'string
-              (cond ((plusp *document-max-numbering-level*)
-                     (format nil "numbersections: true~%secnumdepth: ~A~%"
-                             *document-max-numbering-level*))
-                    (t
-                     (format nil "numbersections: false~%")))
-              (cond ((plusp *document-max-table-of-contents-level*)
-                     (format nil "toc: true~%toc-depth: ~A~%"
-                             *document-max-table-of-contents-level*))
-                    (t
-                     (format nil "toc: false~%")))
-              *document-pandoc-pdf-metadata-block*))
-           (*document-max-numbering-level* 0)
-           (*document-max-table-of-contents-level* 0)
-           (*document-text-navigation* nil)
-           (*document-url-versions* '(1)))
-       (funcall fn)))
-    (:w3m
-     (let ((*format* :html)
-           (*subformat* :w3m)
-           (*document-fancy-html-navigation* nil))
-       (funcall fn)))
-    ;; Testing only
-    (:md-w3m
-     (let ((*format* :markdown)
-           (*subformat* :w3m)
-           (*document-fancy-html-navigation* nil))
-       (funcall fn)))
-    (t
-     (let ((*format* format)
-           (*subformat* nil))
-       (funcall fn)))))
+             (*document-text-navigation* nil)
+             (*document-url-versions* '(1)))
+         (funcall fn)))
+      (:w3m
+       (let ((*format* :html)
+             (*subformat* :w3m)
+             (*document-fancy-html-navigation* nil))
+         (funcall fn)))
+      ;; Testing only
+      (:md-w3m
+       (let ((*format* :markdown)
+             (*subformat* :w3m)
+             (*document-fancy-html-navigation* nil))
+         (funcall fn)))
+      (t
+       (let ((*format* format)
+             (*subformat* nil))
+         (funcall fn))))))
 
 
 (defsection @pages (:title "PAGES")
@@ -977,7 +993,10 @@
   (:method :around (object stream)
     (declare (ignorable stream))
     (let ((*objects-being-documented* (cons object *objects-being-documented*)))
-      (call-next-method)))
+      (if (typep object 'dref)
+          (let ((*dref-being-documented* object))
+            (call-next-method))
+          (call-next-method))))
   (:method (object stream)
     (document-object (locate object) stream))
   (:method ((string string) stream)
@@ -991,10 +1010,6 @@
                (document-docstring string stream :indentation ""
                                    :paragraphp nil)
                (terpri stream))))))
-  (:method :around ((xref xref) stream)
-    ;; FIXME: Is it actually a non-DREF XREF?
-    (let ((*documenting-dref* xref))
-      (call-next-method)))
   ;; LOCATE non-DREF XREFs.
   (:method ((xref xref) stream)
     (let ((warn-if-undefined
@@ -1021,6 +1036,8 @@
            (lambda (warning)
              (when (sanitize-aggressively-p)
                (muffle-warning warning)))))
+      (when *indexing-section*
+        (push dref *indexing-definitions*))
       (let ((page (boundary-page dref)))
         (if *first-pass*
             (let ((*page* (or page *page*)))
@@ -1068,6 +1085,7 @@
             (when (page-footer-fn page)
               (funcall (page-footer-fn page) stream)))))
     (unmake-stream-spec (page-final-stream-spec page))))
+
 
 ;;; Emit Markdown definitions for links that were linked to on the
 ;;; current page.
@@ -1094,6 +1112,9 @@
   (let ((dref (target-dref target)))
     (or (document-definition-title dref)
         (dref-to-anchor dref))))
+
+(declaim (ftype function prepare-parse-tree-for-printing-to-pandoc-pdf))
+(declaim (ftype function print-pandoc-pdf))
 
 ;;; Process MARKDOWN-STRING block by block to limit maximum memory usage.
 (defun reprint-in-format (markdown-string markdown-reflinks stream)
@@ -1250,9 +1271,9 @@
   (and (null *section*)
        ;; This is implicit in the above, but docstrings passed
        ;; directly to DOCUMENT are not treated aggressively.
-       *documenting-dref*
-       (not (typep *documenting-dref* '(or glossary-term-dref note-dref)))
-       (null (home-section *documenting-dref*))))
+       *dref-being-documented*
+       (not (typep *dref-being-documented* '(or glossary-term-dref note-dref)))
+       (null (home-section *dref-being-documented*))))
 
 (defvar *document-docstring-key* nil)
 
@@ -1325,7 +1346,9 @@
     (if format
         (with-output-to-string (out)
           (print-markdown tree out :format format))
-        tree)))
+        (or tree
+            ;; Return non-NIL for the empty string.
+            '((:plain ""))))))
 
 ;;; Sets up *PACKAGE* and *READTABLE*.
 (defun document-definition-title (dref &key deemph (format :markdown))
@@ -1867,7 +1890,17 @@
                     (funcall fn char nil in-string))))))
 
 
-(defsection @linking (:title "Linking")
+(defsection @linking (:title "Linking"
+                      ;; FIXME
+                      :concepts (("linking")
+                                 ("linking" "markdown")
+                                 ("markdown" "linking")
+                                 ("1")
+                                 ("1" "2")
+                                 ("1" "2" "3")
+                                 ("1" "2" "3" "4")
+                                 ("1" "2" "3" "4" "5")
+                                 ("1" "2" "3" "4" "5" "6")))
   """PAX supports linking to DREF::@DEFINITIONS either with
   explicit @REFLINKs or with @AUTOLINKs.
 
@@ -2617,8 +2650,7 @@
              (ref-1 (target-dref target-1))
              (page (target-page target-1))
              ;; This DREF was let through in FIND-TARGET with PAGE
-             ;; NIL, as if with *DOCUMENT-OPEN-LINKING*, just to
-             ;; substitute its title here.
+             ;; NIL, as if with *DOCUMENT-OPEN-LINKING*.
              (fake-target-p (and (not *document-open-linking*)
                                  (not (external-dref-p ref-1))
                                  (null page))))
@@ -2627,6 +2659,8 @@
            (cond ((eq *subformat* :plain)
                   label)
                  (*document-open-linking*
+                  (dolist (target targets)
+                    (maybe-add-cross-references target))
                   ;; [`label`](pax:name)
                   `((:explicit-link
                      :label ,label
@@ -2640,6 +2674,7 @@
                         for i upfrom 0
                         for target in (sort-references targets
                                                        :key #'target-dref)
+                        do (maybe-add-cross-references target)
                         append `(,@(unless (zerop i)
                                      '(" "))
                                  ,(%make-reflink `(,(code-fragment i))
@@ -2655,6 +2690,7 @@
            (let ((label (or (and (not explicit-label-p)
                                  (document-definition-title ref-1 :format nil))
                             label)))
+             (maybe-add-cross-references target-1)
              (if fake-target-p
                  label
                  `(,(%make-reflink label (link-to-target target-1))))))))))
@@ -2838,6 +2874,8 @@
   (when (zerop *heading-level*)
     (let ((rest (list-headings dref *heading-level*))
           (toc-title-printed nil))
+      ;; FIXME: Use WITH-DYNAMIC-SECTION (needs :UNNUMBERED in
+      ;; CALL-WITH-HEADING).
       (flet ((ensure-toc-title ()
                (unless toc-title-printed
                  (heading (+ *heading-level* 1 *heading-offset*) stream)
@@ -2880,7 +2918,7 @@
     (unless (eq *format* :pdf)
       (anchor dref stream))
     (navigation-link dref stream)
-    (format stream "~A" (fancy-navigation dref)))
+    (format stream "~A" (or (fancy-navigation dref) "")))
   (heading (+ *heading-level* *heading-offset*) stream)
   (cond ((and *document-link-sections*
               (eq *format* :html))
@@ -2899,7 +2937,7 @@
          (format stream " [~A~A][~A]~%~%"
                  (format-heading-number) title
                  (link-to-definition link-title-to)))
-        ((typep dref 'dynamic-section-dref)
+        ((in-context-only-p dref)
          (format stream " ~A~A~%~%" (format-heading-number) title))
         (t
          (format stream " <a href=\"~A\">~A~A</a>~%~%"
@@ -2916,10 +2954,10 @@
        (eq *format* :html)))
 
 (defun fancy-navigation (dref)
-  (if (fancy-navigation-p)
-      (let* ((position (position dref *headings* :key #'heading-object
-                                 :test #'xref=))
-             (level (heading-level (elt *headings* position)))
+  (when (fancy-navigation-p)
+    (when-let ((position (position dref *headings* :key #'heading-object
+                                   :test #'xref=)))
+      (let* ((level (heading-level (elt *headings* position)))
              (n (length *headings*))
              (prev (when (and (plusp position)
                               (plusp level))
@@ -2933,8 +2971,8 @@
                        ;; section.
                        (unless (zerop (heading-level next))
                          next))))
-             (source-uri (source-uri dref))
-             (dynamicp (typep dref 'dynamic-section-dref)))
+             (source-uri (when (not (in-context-only-p dref))
+                           (source-uri dref))))
         (format nil "<span class=\"outer-navigation\">~
                     <span class=\"navigation\">~
                     ~@[ [&#8592;][~A]~]~
@@ -2949,12 +2987,11 @@
                   (link-to-definition (heading-object up)))
                 (when next
                   (link-to-definition (heading-object next)))
-                (unless dynamicp
-                  (link-to-definition dref))
-                (if (and (not dynamicp) source-uri)
+                (link-to-definition dref)
+                (if source-uri
                     (format nil " <a href=~S>&#955;</a>" source-uri)
-                    "")))
-      ""))
+                    ""))))
+    ""))
 
 (defun write-navigation-link (heading stream)
   (let ((target-id (link-to-definition (heading-object heading))))
@@ -3465,7 +3502,11 @@
       parse-tree))
 
 
-(defsection @overview-of-escaping (:title "Overview of Escaping")
+(defsection @overview-of-escaping
+    (:title "Overview of Escaping"
+     ;; FIXME
+     :concepts (("markdown" "escaping")
+                ("escaping" "markdown")))
   """Let's recap how escaping @CODIFICATION,
   [downcasing][\*document-downcase-uppercase-code*], and @LINKING
   works.

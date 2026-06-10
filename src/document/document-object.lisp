@@ -408,11 +408,12 @@
              (*package* (section-package ,section))
              (*readtable* (section-readtable ,section))
              (*section* ,section))
-         (with-heading (,stream :dref *section*
-                        :link-title-to (section-link-title-to ,section))
-           (when (and (not ,same-package) *document-normalize-packages*)
-             (format-in-package *package* ,stream))
-           ,@body)))))
+         (with-indexing-context (*section*)
+           (with-heading (,stream :dref *section*
+                          :link-title-to (section-link-title-to ,section))
+             (when (and (not ,same-package) *document-normalize-packages*)
+               (format-in-package *package* ,stream))
+             ,@body))))))
 
 (declaim (ftype function maybe-generate-indices))
 
