@@ -202,9 +202,10 @@
   ;; Any output written to this page (including plain docstrings)?
   written-in-first-pass-p
   written-in-second-pass-p
-  ;; TARGETs linked to from this page. For LINK-TO-DEFINITION and
-  ;; WRITE-MARKDOWN-REFERENCE-STYLE-LINK-DEFINITIONS.
-  (used-targets (make-hash-table :test #'eq) :type hash-table))
+  ;; The set of TARGETs linked to from this page. For
+  ;; WRITE-MARKDOWN-REFERENCE-STYLE-LINK-DEFINITIONS and
+  ;; LINK-TO-DEFINITION.
+  (linked-to (make-hash-table :test #'eq) :type hash-table))
 
 ;;; All the PAGEs in a DOCUMENT call.
 (defvar *pages*)
@@ -349,7 +350,7 @@
               (stringp page)
               (and (page-uri-fragment *page*)
                    (page-uri-fragment page))))
-    (setf (gethash target (page-used-targets *page*)) t)
+    (setf (gethash target (page-linked-to *page*)) t)
     (ensure-target-id target)))
 
 (defun link-to-definition (dref)
@@ -1045,12 +1046,12 @@
 ;;; Emit Markdown definitions for links that were linked to on the
 ;;; current page.
 (defun write-markdown-reference-style-link-definitions (stream)
-  (let ((used-targets (sort (hash-table-keys (page-used-targets *page*))
-                            #'string< :key #'target-id))
+  (let ((targets (sort (hash-table-keys (page-linked-to *page*))
+                       #'string< :key #'target-id))
         (*package* (find-package :keyword)))
-    (when used-targets
+    (when targets
       (format stream "~%")
-      (dolist (target used-targets)
+      (dolist (target targets)
         (assert (not (target-p (target-page target))))
         ;; The format is [label]: url "title". Example:
         ;;   [1]: http://example.org/Hobbit#Lifestyle "Hobbit lifestyles"
