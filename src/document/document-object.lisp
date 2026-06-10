@@ -262,7 +262,7 @@
 (defun write-md-link (dref stream)
   (unless *first-pass*
     (let ((name (prin1-to-markdown (dref-name dref))))
-      (if (find-link dref)
+      (if (find-target dref)
           (format stream "[~A][~A]" name (link-to-definition dref))
           (format stream "~A" name)))))
 

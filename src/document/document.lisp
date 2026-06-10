@@ -39,7 +39,7 @@
 (defmacro %document (documentable stream page-specs)
   (once-only (documentable stream page-specs)
     `(with-documentable-bindings (documentable)
-       (with-link-maps ()
+       (with-target-maps ()
          (let ((*local-references* ())
                (*pages* (page-specs-to-pages ,documentable ,stream
                                              ,page-specs)))
@@ -202,9 +202,9 @@
   ;; Any output written to this page (including plain docstrings)?
   written-in-first-pass-p
   written-in-second-pass-p
-  ;; LINKs made from this page. For LINK-TO-DEFINITION and
+  ;; TARGETs linked to from this page. For LINK-TO-DEFINITION and
   ;; WRITE-MARKDOWN-REFERENCE-STYLE-LINK-DEFINITIONS.
-  (used-links (make-hash-table :test #'eq) :type hash-table))
+  (used-targets (make-hash-table :test #'eq) :type hash-table))
 
 ;;; All the PAGEs in a DOCUMENT call.
 (defvar *pages*)
@@ -261,129 +261,129 @@
        ,@body)))
 
 
-;;; A LINK (a possible link target, really) is a definition that
-;;; resides on PAGE. Note that the same definition may be written to
-;;; multiple pages.
-(defstruct link
+;;; A link TARGET identifies a definition on a PAGE. Note that the
+;;; same definition may be written to multiple pages (usually a bad
+;;; idea).
+(defstruct target
   (definition nil :type dref)
   ;; STRING pages denote URLs (see EXTERNAL-DREF-URLs). NULL pages are
   ;; to support "pax:" URLs for *DOCUMENT-OPEN-LINKING*.
   (page nil :type (or page string null)))
 
-(defun make-link* (dref page)
+(defun make-target* (dref page)
   (or (when-let (url (external-dref-url dref))
-        (make-link :definition dref :page url))
-      (make-link :definition dref :page page)))
+        (make-target :definition dref :page url))
+      (make-target :definition dref :page page)))
 
 ;;; An EQUAL hash table, mapping a DREF in (NAME . LOCATIVE) form to
-;;; its LINK within a single DOCUMENT call. FINALIZE-PAGES populates
+;;; its TARGET within a single DOCUMENT call. FINALIZE-PAGES populates
 ;;; this after the first pass with all definitions that are being
 ;;; documented. In case the same definition is documented on multiple
-;;; pages, links will go to the last such page.
+;;; pages, links will target the last such page.
 ;;;
-;;; FIND-LINK may add more links in the second pass for
+;;; FIND-TARGET may add more TARGETs in the second pass for
 ;;; *DOCUMENT-OPEN-LINKING* and CLHS definitions.
-(defvar *links*)
+(defvar *targets*)
 
-(defmacro link-key (dref)
+(defmacro target-key (dref)
   (once-only ((dref dref))
     `(cons (dref-name ,dref) (dref-locative ,dref))))
 
-(declaim (inline set-link))
-(defun set-link (key link)
-  (setf (gethash key *links*) link))
+(declaim (inline set-target))
+(defun set-target (key target)
+  (setf (gethash key *targets*) target))
 
-(declaim (inline get-link))
-(defun get-link (key)
-  (gethash key *links*))
+(declaim (inline get-target))
+(defun get-target (key)
+  (gethash key *targets*))
 
 ;;; Called at the end of the first pass. Reverse PAGE-DEFINITIONS so
-;;; that it's in depth-first order, and add a LINK to *LINKS* for all
-;;; definitions on each page.
+;;; that it's in depth-first order, and add a TARGET to *TARGETS* for
+;;; all definitions on each page.
 (defun finalize-pages (pages)
   (dolist (page pages)
     (setf (page-definitions page) (reverse (page-definitions page)))
     (dolist (dref (page-definitions page))
-      (set-link (link-key dref) (make-link* dref page)))))
+      (set-target (target-key dref) (make-target* dref page)))))
 
 ;;; Whether all definitions present in the running Lisp are @LINKABLE
 ;;; with magic "pax:" URLs. This is to support
 ;;; @BROWSING-LIVE-DOCUMENTATION.
 (defvar *document-open-linking* nil)
 
-(defun find-link (dref)
+(defun find-target (dref)
   (declare (type dref dref))
   (assert (not *first-pass*))
-  (let ((key (link-key dref)))
-    (or (get-link key)
+  (let ((key (target-key dref)))
+    (or (get-target key)
         (when (or *document-open-linking* (external-dref-p dref)
                   ;; KLUDGE: For @TITLEd definitions, fake a PAX link,
-                  ;; so that they make it to LINKS-TO-TREE, which
-                  ;; replaces the fake link with the title.
+                  ;; so that they make it to TARGETS-TO-TREE, which
+                  ;; replaces the fake target with the title.
                   (doctitle dref)
-                  ;; Similarly for NOTEs, except that LINKS-TO-TREE
+                  ;; Similarly for NOTEs, except that TARGETS-TO-TREE
                   ;; will auto-include the note.
                   (typep dref 'note-dref))
-          (set-link key (make-link* dref nil)))
+          (set-target key (make-target* dref nil)))
         ;; Maybe fall back on the CLHS definition.
-        (when-let (clhs-link (and *document-link-to-hyperspec*
-                                  (clhs-link dref)))
-          (set-link key clhs-link)))))
+        (when-let (clhs-target (and *document-link-to-hyperspec*
+                                    (clhs-target dref)))
+          (set-target key clhs-target)))))
 
-(defun clhs-link (dref)
+(defun clhs-target (dref)
   (let ((clhs-dref (clhs-dref (dref-name dref) (dref-locative dref))))
     (when clhs-dref
-      (or (get-link (link-key clhs-dref))
+      (or (get-target (target-key clhs-dref))
           ;; Ensure that if two CLHS DREFs are XREF=, then they are
-          ;; EQ, so they have the same id (see ENSURE-LINK-ID).
-          (set-link (link-key clhs-dref) (make-link* clhs-dref nil))))))
+          ;; EQ, so they have the same id (see ENSURE-TARGET-ID).
+          (set-target (target-key clhs-dref) (make-target* clhs-dref nil))))))
 
 
 ;;; Increment the link counter for the current page and return the
 ;;; link id.
-(defun link-to (link)
-  (declare (type link link))
-  (when (let ((page (link-page link)))
+(defun link-to (target)
+  (declare (type target target))
+  (when (let ((page (target-page target)))
           (or (null page)
               (eq *page* page)
               (stringp page)
               (and (page-uri-fragment *page*)
                    (page-uri-fragment page))))
-    (setf (gethash link (page-used-links *page*)) t)
-    (ensure-link-id link)))
+    (setf (gethash target (page-used-targets *page*)) t)
+    (ensure-target-id target)))
 
 (defun link-to-definition (dref)
-  (link-to (find-link dref)))
+  (link-to (find-target dref)))
 
-;;; Link ids are short hashes (as STRINGs), and they go into Markdown
-;;; reference links. Due to possible collisions, they are
-;;; context-dependent, so to keep LINKs immutable, ids are in this
+;;; TARGET ids are short hashes (as STRINGs), and they go into
+;;; Markdown reference links. Due to possible collisions, they are
+;;; context-dependent, so to keep TARGETs immutable, ids are in this
 ;;; hash table.
-(defvar *link-to-id*)
-;;; A LINK-ID to LINK hash table for MD5 collision detection.
-(defvar *id-to-link*)
+(defvar *target-to-id*)
+;;; A TARGET-ID to TARGET hash table for MD5 collision detection.
+(defvar *id-to-target*)
 
-(defun link-id (link)
-  (gethash link *link-to-id*))
+(defun target-id (target)
+  (gethash target *target-to-id*))
 
-(defun ensure-link-id (link)
-  (or (gethash link *link-to-id*)
-      (let ((id (hash-link (dref-to-anchor (link-definition link))
-                           #'find-link-by-id)))
-        (setf (gethash id *id-to-link*) link)
-        (setf (gethash link *link-to-id*) id))))
+(defun ensure-target-id (target)
+  (or (gethash target *target-to-id*)
+      (let ((id (hash-target-anchor (dref-to-anchor (target-definition target))
+                                    #'find-target-by-id)))
+        (setf (gethash id *id-to-target*) target)
+        (setf (gethash target *target-to-id*) id))))
 
-(defun find-link-by-id (id)
-  (gethash id *id-to-link*))
+(defun find-target-by-id (id)
+  (gethash id *id-to-target*))
 
 (defun definition-page (dref)
-  (when-let (link (find-link dref))
-    (link-page link)))
+  (when-let (target (find-target dref))
+    (target-page target)))
 
-(defmacro with-link-maps (() &body body)
-  `(let ((*links* (make-hash-table :test #'equal))
-         (*link-to-id* (make-hash-table :test #'eq))
-         (*id-to-link* (make-hash-table :test #'equal)))
+(defmacro with-target-maps (() &body body)
+  `(let ((*targets* (make-hash-table :test #'equal))
+         (*target-to-id* (make-hash-table :test #'eq))
+         (*id-to-target* (make-hash-table :test #'equal)))
      (locally ,@body)))
 
 
@@ -1045,26 +1045,26 @@
 ;;; Emit Markdown definitions for links that were linked to on the
 ;;; current page.
 (defun write-markdown-reference-style-link-definitions (stream)
-  (let ((used-links (sort (hash-table-keys (page-used-links *page*))
-                          #'string< :key #'link-id))
+  (let ((used-targets (sort (hash-table-keys (page-used-targets *page*))
+                            #'string< :key #'target-id))
         (*package* (find-package :keyword)))
-    (when used-links
+    (when used-targets
       (format stream "~%")
-      (dolist (link used-links)
-        (assert (not (link-p (link-page link))))
+      (dolist (target used-targets)
+        (assert (not (target-p (target-page target))))
         ;; The format is [label]: url "title". Example:
         ;;   [1]: http://example.org/Hobbit#Lifestyle "Hobbit lifestyles"
         (format stream "  [~A]: ~A ~S~%"
-                (link-id link)
-                (if (stringp (link-page link))
+                (target-id target)
+                (if (stringp (target-page target))
                     ;; Link to external page.
-                    (link-page link)
+                    (target-page target)
                     ;; Link to documentation generated in the same run.
-                    (link-to-uri link))
-                (reflink-definition-title link))))))
+                    (target-uri target))
+                (reflink-definition-title target))))))
 
-(defun reflink-definition-title (link)
-  (let ((dref (link-definition link)))
+(defun reflink-definition-title (target)
+  (let ((dref (target-definition target)))
     (or (document-definition-title dref)
         (dref-to-anchor dref))))
 
@@ -1154,10 +1154,10 @@
 
 ;;;; URIs of stuff
 
-(defun object-to-uri (object)
+(defun object-uri (object)
   (when-let (dref (locate object))
-    (when-let (link (find-link dref))
-      (link-to-uri link))))
+    (when-let (target (find-target dref))
+      (target-uri target))))
 
 ;;; With w3m, the URLs are like "pax:clhs", but with MGL-PAX/WEB, they
 ;;; are like "http://localhost:8888/pax:clhs", so we need an extra /.
@@ -1166,15 +1166,15 @@
       url
       (format nil "/~A" url)))
 
-(defun link-to-uri (link)
-  (let ((target-page (link-page link)))
+(defun target-uri (target)
+  (let ((target-page (target-page target)))
     (if (null target-page)
-        (finalize-pax-url (dref-to-pax-url (link-definition link)))
+        (finalize-pax-url (dref-to-pax-url (target-definition target)))
         (let ((target-page-definitions (page-definitions target-page))
               (target-page-uri-fragment (page-uri-fragment target-page)))
           ;; Don't generate anchors when linking to the first
           ;; definition on the page.
-          (if (and (xref= (link-definition link)
+          (if (and (xref= (target-definition target)
                           (first target-page-definitions))
                    target-page-uri-fragment)
               (if (eq target-page *page*)
@@ -1187,7 +1187,7 @@
                       (if (eq target-page *page*)
                           ""
                           (relative-page-uri-fragment target-page *page*))
-                      (anchor-id (link-definition link))))))))
+                      (anchor-id (target-definition target))))))))
 
 (defun relative-page-uri-fragment (page definition-page)
   (let ((fragment (page-uri-fragment page))
@@ -1956,21 +1956,21 @@
             (and (page-uri-fragment *page*)
                  (page-uri-fragment page)))))))
 
-(defun linkablep (link)
-  (linkable-dref-p (link-definition link) :page (link-page link)))
+(defun linkablep (target)
+  (linkable-dref-p (target-definition target) :page (target-page target)))
 
 (defun linkable-drefs (drefs)
   (remove-if-not #'linkable-dref-p drefs))
 
-(defun drefs-to-links (drefs)
-  ;; FIND-LINK may fall back on the CLHS definition, not knowing if
+(defun drefs-to-targets (drefs)
+  ;; FIND-TARGET may fall back on the CLHS definition, not knowing if
   ;; that CLHS definition is already present.
   (delete-duplicates
    (loop for dref in drefs
-         for link = (find-link dref)
-         when (and link (linkablep link))
-           collect link)
-   :key #'link-definition
+         for target = (find-target dref)
+         when (and target (linkablep target))
+           collect target)
+   :key #'target-definition
    :test #'xref=))
 
 (defsection @specific-link (:title "Specific Link")
@@ -1993,8 +1993,8 @@
       (substitute-clhs-for-missing-standard-definition
        (dref name locative nil) name locative)))
 
-(defun dref-to-links/specific (dref)
-  (drefs-to-links (filter-clhs-dref (replace-go-targets (list dref)))))
+(defun dref-to-targets/specific (dref)
+  (drefs-to-targets (filter-clhs-dref (replace-go-targets (list dref)))))
 
 (defsection @unspecific-link (:title "Unspecific Link")
   """Unspecific links are those @REFLINKs and @AUTOLINKs that do not
@@ -2011,7 +2011,7 @@
 
   3. Non-[@LINKABLE][] definitions are removed.
 
-  4. [filter-method-links function][docstring]
+  4. [filter-method-targets function][docstring]
 
   If at most a single definition remains, then the output is the same
   as with a @SPECIFIC-LINK. If multiple definitions remain, then the
@@ -2027,9 +2027,9 @@
   ;; (DREF 'MGL-PAX 'PACKAGE).
   (filter-string-based-drefs (definitions* name)))
 
-(defun drefs-to-links/unspecific (drefs)
-  (filter-method-links
-   (drefs-to-links
+(defun drefs-to-targets/unspecific (drefs)
+  (filter-method-targets
+   (drefs-to-targets
     (filter-locative-drefs
      (filter-clhs-dref
       (replace-go-targets drefs))))))
@@ -2053,27 +2053,27 @@
 (defun string-based-dref-p (dref)
   (stringp (dref-name dref)))
 
-(defun filter-method-links (links)
+(defun filter-method-targets (targets)
   "If the definitions include a [GENERIC-FUNCTION][locative], then
   all definitions with LOCATIVE-TYPE [METHOD][locative],
   [ACCESSOR][locative], [READER][locative] and [WRITER][locative] are
   removed to avoid linking to a possibly large number of methods."
-  (flet ((non-method-links ()
-           (remove-if (lambda (link)
-                        (member (link-locative-type link)
+  (flet ((non-method-targets ()
+           (remove-if (lambda (target)
+                        (member (target-locative-type target)
                                 '(accessor reader writer method)))
-                      links)))
+                      targets)))
     (cond
       ;; If in doubt, prefer the generic function to methods.
-      ((find 'generic-function links :key #'link-locative-type)
-       (non-method-links))
+      ((find 'generic-function targets :key #'target-locative-type)
+       (non-method-targets))
       ;; No generic function, prefer non-methods to methods.
-      ((non-method-links))
+      ((non-method-targets))
       (t
-       links))))
+       targets))))
 
-(defun link-locative-type (link)
-  (dref-locative-type (link-definition link)))
+(defun target-locative-type (target)
+  (dref-locative-type (target-definition target)))
 
 (defun filter-locative-drefs (drefs)
   "All references with LOCATIVE-TYPE LOCATIVE are filtered out."
@@ -2107,7 +2107,7 @@
 ;;; - and those with no locative (:REFERENCE-LINK :LABEL ((:CODE
 ;;;   "SOMETHING")) :TAIL "[]"), the parse of [`SOMETHING`][].
 (defun translate-reflink (reflink linked-refs)
-  (multiple-value-bind (links title-override replacement-tree)
+  (multiple-value-bind (targets title-override replacement-tree)
       (dissect-reflink reflink linked-refs)
     (cond (replacement-tree
            ;; A non-PAX link like [something][user-defined-id] or
@@ -2115,10 +2115,10 @@
            ;; SIGNAL-UNRESOLVABLE-REFLINK.
            (values replacement-tree nil t))
           (t
-           (dolist (link links)
-             (vector-push-extend (link-definition link) linked-refs))
-           (values (links-to-tree (or title-override (pt-get reflink :label))
-                                  title-override links)
+           (dolist (target targets)
+             (vector-push-extend (target-definition target) linked-refs))
+           (values (targets-to-tree (or title-override (pt-get reflink :label))
+                                    title-override targets)
                    nil t)))))
 
 (defun dissect-reflink (reflink linked-refs)
@@ -2132,7 +2132,7 @@
            (locative-from-def (and definition (parse-locative definition)))
            (label-string (trim-whitespace
                           (parse-tree-to-text label :deemph nil))))
-      (multiple-value-bind (links foundp label)
+      (multiple-value-bind (targets foundp label)
           (nth-value-or 1
             (when (and label-string locative-from-def)
               (specific-reflink label-string locative-from-def linked-refs))
@@ -2143,7 +2143,7 @@
             (when (null locative-from-def)
               (unspecific-reflink-with-text label definition)))
         (if foundp
-            (values links label)
+            (values targets label)
             (values nil nil
                     ;; [print][], [xxx][clhs] and
                     ;; [Try][try::@try-manual section] are almost
@@ -2203,7 +2203,7 @@
                    (vector-push-extend xref linked-refs)
                    ())
                   (t
-                   (dref-to-links/specific xref)))
+                   (dref-to-targets/specific xref)))
             t)))
 
 (defsection @specific-reflink-with-text (:title "Specific Reflink with Text")
@@ -2225,7 +2225,7 @@
 
 (defun specific-reflink-with-text (label definition)
   (when-let (dref (parse-dref definition))
-    (values (dref-to-links/specific dref) t label)))
+    (values (dref-to-targets/specific dref) t label)))
 
 (defsection @unspecific-reflink (:title "Unspecific Reflink")
   """_Format:_ `[` [WORD][@WORD] `][]`
@@ -2247,7 +2247,7 @@
 (defun unspecific-reflink (label-string)
   (when-let (drefs (find-name #'unspecific-link-definitions* label-string
                               :symbols-only t :depluralize t))
-    (values (drefs-to-links/unspecific drefs) t)))
+    (values (drefs-to-targets/unspecific drefs) t)))
 
 (defsection @unspecific-reflink-with-text
     (:title "Unspecific Reflink with Text")
@@ -2267,7 +2267,7 @@
 (defun unspecific-reflink-with-text (label definition)
   (when-let (drefs (find-name #'unspecific-link-definitions* definition
                               :symbols-only t))
-    (values (drefs-to-links/unspecific drefs) t label)))
+    (values (drefs-to-targets/unspecific drefs) t label)))
 
 (defsection @markdown-reflink (:title "Markdown Reflink")
   """_Format:_ `[label][id]`
@@ -2376,16 +2376,16 @@
 ;;; :DEFINITION ("function")) if there is a single function reference
 ;;; to it.
 (defun autolink (parent tree word linked-refs)
-  (multiple-value-bind (links foundp)
+  (multiple-value-bind (targets foundp)
       (nth-value-or 1
         ;; This prefers a @SPECIFIC-AUTOLINK with a shorter name to an
         ;; @UNSPECIFIED-LOCATIVE with a longer one.
         (specific-autolink word parent tree linked-refs)
         (unspecific-autolink word linked-refs))
     (cond (foundp
-           (dolist (link links)
-             (vector-push-extend (link-definition link) linked-refs))
-           (values (links-to-tree `(,tree) nil links)
+           (dolist (target targets)
+             (vector-push-extend (target-definition target) linked-refs))
+           (values (targets-to-tree `(,tree) nil targets)
                    nil t))
           (t
            tree))))
@@ -2423,7 +2423,7 @@
            (vector-push-extend xref linked-refs)
            (values () t))
           (t
-           (values (dref-to-links/specific xref) t)))))
+           (values (dref-to-targets/specific xref) t)))))
 
 (defun specific-autolink-dref (parent tree name)
   (loop for locative in (find-locatives-around parent tree name)
@@ -2486,7 +2486,7 @@
 (defun unspecific-autolink (word linked-refs)
   (when-let (drefs (find-name #'unspecific-link-definitions* word
                               :symbols-only t :depluralize t))
-    (values (drefs-to-links/unspecific
+    (values (drefs-to-targets/unspecific
              (filter-suppressed-references drefs linked-refs))
             t)))
 
@@ -2577,24 +2577,24 @@
       `(:reference-link :label ,label :definition (,definition))
       `(:reference-link :label ,label :definition ,definition)))
 
-;;; For LABEL (a parse tree fragment) and some references to it
-;;; (LINKS), return a Markdown parse tree fragment to be spliced into
+;;; For LABEL (a parse tree fragment) and some references (in
+;;; TARGETS), return a Markdown parse tree fragment to be spliced into
 ;;; a Markdown parse tree.
-(defun links-to-tree (label explicit-label-p links)
-  (if (endp links)
+(defun targets-to-tree (label explicit-label-p targets)
+  (if (endp targets)
       ;; All references were filtered out.
       label
-      (let* ((link-1 (first links))
-             (ref-1 (link-definition link-1))
-             (page (link-page link-1))
-             ;; This DREF was let through in FIND-LINK with PAGE NIL,
-             ;; as if with *DOCUMENT-OPEN-LINKING*, just to substitute
-             ;; its title here.
-             (fake-link-p (and (not *document-open-linking*)
-                               (not (external-dref-p ref-1))
-                               (null page))))
+      (let* ((target-1 (first targets))
+             (ref-1 (target-definition target-1))
+             (page (target-page target-1))
+             ;; This DREF was let through in FIND-TARGET with PAGE
+             ;; NIL, as if with *DOCUMENT-OPEN-LINKING*, just to
+             ;; substitute its title here.
+             (fake-target-p (and (not *document-open-linking*)
+                                 (not (external-dref-p ref-1))
+                                 (null page))))
         (cond
-          ((< 1 (length links))
+          ((< 1 (length targets))
            (cond ((eq *subformat* :plain)
                   label)
                  (*document-open-linking*
@@ -2609,12 +2609,12 @@
                     "("
                     ,@(loop
                         for i upfrom 0
-                        for link in (sort-references links
-                                                     :key #'link-definition)
+                        for target in (sort-references targets
+                                                       :key #'target-definition)
                         append `(,@(unless (zerop i)
                                      '(" "))
                                  ,(%make-reflink `(,(code-fragment i))
-                                                 (link-to link))))
+                                                 (link-to target))))
                     ")"))))
           ((member (xref-locative-type ref-1) '(dislocated argument))
            label)
@@ -2626,9 +2626,9 @@
            (let ((label (or (and (not explicit-label-p)
                                  (document-definition-title ref-1 :format nil))
                             label)))
-             (if fake-link-p
+             (if fake-target-p
                  label
-                 `(,(%make-reflink label (link-to link-1))))))))))
+                 `(,(%make-reflink label (link-to target-1))))))))))
 
 
 (defsection @linking-to-the-hyperspec (:title "Linking to the HyperSpec")
@@ -2839,10 +2839,10 @@
         (number (heading-number heading)))
     (loop repeat (* 4 (1- level))
           do (write-char #\Space stream))
-    (let ((link-id (link-to-definition dref)))
-      (if (and *document-link-sections* link-id)
+    (let ((target-id (link-to-definition dref)))
+      (if (and *document-link-sections* target-id)
           (format stream "- [~A~A][~A]" (format-heading-number number) title
-                  link-id)
+                  target-id)
           (format stream "- ~A~A" (format-heading-number number) title)))
     (terpri stream)))
 
@@ -2875,7 +2875,7 @@
               ;; separate page.
               (if *document-open-linking*
                   (finalize-pax-url (dref-to-pax-url dref))
-                  (object-to-uri dref))
+                  (object-uri dref))
               (format-heading-number) title)))
 
 (defun fancy-navigation-p ()
@@ -2923,8 +2923,8 @@
       ""))
 
 (defun write-navigation-link (heading stream)
-  (let ((link-id (link-to-definition (heading-object heading))))
-    (format stream "[~A][~A]" (heading-title heading) link-id)))
+  (let ((target-id (link-to-definition (heading-object heading))))
+    (format stream "[~A][~A]" (heading-title heading) target-id)))
 
 (defun navigation-link (dref stream)
   (when (and *document-link-sections* *document-text-navigation*)
@@ -3157,13 +3157,13 @@
   This variable has no effect on the HTML generated from Markdown, but
   it can make Markdown output more readable.")
 
-(defun hash-link (string detect-collision-fn
-                  &key (min-n-chars *document-min-link-hash-length*))
+(defun hash-target-anchor (string detect-collision-fn
+                           &key (min-n-chars *document-min-link-hash-length*))
   (let ((hex (byte-array-to-hex-string (md5:md5sum-string string))))
     (loop for len upfrom min-n-chars upto 32
           do (let ((hash (subseq hex 0 (min 32 len))))
                (unless (funcall detect-collision-fn hash)
-                 (return-from hash-link hash))))
+                 (return-from hash-target-anchor hash))))
     (assert nil () "MD5 collision detected.")))
 
 (defun byte-array-to-hex-string (byte-array)

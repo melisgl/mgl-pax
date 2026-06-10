@@ -225,11 +225,11 @@
         (write-sequence (alexandria:read-file-into-byte-vector output)
                         stream)))))
 
-(declaim (ftype function link-definition))
-(declaim (ftype function link-page))
+(declaim (ftype function target-definition))
+(declaim (ftype function target-page))
 (declaim (ftype function anchor-id))
 (declaim (ftype function page-p))
-(declaim (special *id-to-link*))
+(declaim (special *id-to-target*))
 (declaim (special *page*))
 
 (defun prepare-parse-tree-for-printing-to-pandoc-pdf (parse-tree)
@@ -258,8 +258,8 @@
     (:reference-link
      (let* ((label (pt-get tree :label))
             (definition (first (pt-get tree :definition)))
-            (link (gethash definition *id-to-link*))
-            (target-page (and link (link-page link))))
+            (target (gethash definition *id-to-target*))
+            (target-page (and target (target-page target))))
        (assert (page-p *page*))
        (cond
          ((not (page-p target-page))
@@ -275,7 +275,7 @@
               (split-off-last-code label)
             (values `((:code
                        ,(format nil "\\paxlink{~A}{"
-                                (anchor-id (link-definition link))))
+                                (anchor-id (target-definition target))))
                       "{=latex}"
                       ,@label
                       ;; If the last element of label is :CODE, then

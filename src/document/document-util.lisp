@@ -320,7 +320,7 @@
             (format stream "<a href=~A>~A</a>"
                     (if (stringp uri)
                         uri
-                        (object-to-uri uri))
+                        (object-uri uri))
                     title)
             (format stream "~A" title))
         (format stream "</span>"))
@@ -330,17 +330,17 @@
       (princ "</ul></div>" stream))))
 
 (defun link-in-block-to-html (link-in-block)
-  (destructuring-bind (url text) link-in-block
-    (if (stringp url)
-        (format nil "<a href=\"~A\">~A</a>" url text)
-        (let ((uri (object-to-uri url)))
+  (destructuring-bind (url-or-object text) link-in-block
+    (if (stringp url-or-object)
+        (format nil "<a href=\"~A\">~A</a>" url-or-object text)
+        (let ((uri (object-uri url-or-object)))
           (if uri
               (format nil "<a href=\"~A\">~A</a>" uri text)
               ;; KLUDGE: It's not strictly a reflink, but close enough.
               (signal-unresolvable-reflink
                `(:reference-link :label (,text)
-                 :definition (,(princ-to-string url)))
-               url))))))
+                 :definition (,(princ-to-string url-or-object)))
+               nil))))))
 
 (defvar *google-analytics-id* nil)
 
