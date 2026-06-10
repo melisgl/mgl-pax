@@ -161,7 +161,7 @@
 ;;;; Early non-exported definitions
 
 ;;; These are used only by the DOCUMENT-OBJECT* (METHOD CLASS-DREF T).
-(declaim (ftype function find-link))
+(declaim (ftype function find-target))
 (declaim (ftype function link-to-definition))
 
 ;;; For DOCUMENT-OBJECT* (METHOD (INCLUDE-DREF T))
