@@ -266,15 +266,15 @@
 ;;; same definition may be written to multiple pages (usually a bad
 ;;; idea).
 (defstruct target
-  (definition nil :type dref)
+  (dref nil :type dref)
   ;; STRING pages denote URLs (see EXTERNAL-DREF-URLs). NULL pages are
   ;; to support "pax:" URLs for *DOCUMENT-OPEN-LINKING*.
   (page nil :type (or page string null)))
 
 (defun make-target* (dref page)
   (or (when-let (url (external-dref-url dref))
-        (make-target :definition dref :page url))
-      (make-target :definition dref :page page)))
+        (make-target :dref dref :page url))
+      (make-target :dref dref :page page)))
 
 ;;; An EQUAL hash table, mapping a DREF in (NAME . LOCATIVE) form to
 ;;; its TARGET within a single DOCUMENT call. FINALIZE-PAGES populates
@@ -369,7 +369,7 @@
 
 (defun ensure-target-id (target)
   (or (gethash target *target-to-id*)
-      (let ((id (hash-target-anchor (dref-to-anchor (target-definition target))
+      (let ((id (hash-target-anchor (dref-to-anchor (target-dref target))
                                     #'find-target-by-id)))
         (setf (gethash id *id-to-target*) target)
         (setf (gethash target *target-to-id*) id))))
@@ -1065,7 +1065,7 @@
                 (reflink-definition-title target))))))
 
 (defun reflink-definition-title (target)
-  (let ((dref (target-definition target)))
+  (let ((dref (target-dref target)))
     (or (document-definition-title dref)
         (dref-to-anchor dref))))
 
@@ -1170,12 +1170,12 @@
 (defun target-uri (target)
   (let ((target-page (target-page target)))
     (if (null target-page)
-        (finalize-pax-url (dref-to-pax-url (target-definition target)))
+        (finalize-pax-url (dref-to-pax-url (target-dref target)))
         (let ((target-page-definitions (page-definitions target-page))
               (target-page-uri-fragment (page-uri-fragment target-page)))
           ;; Don't generate anchors when linking to the first
           ;; definition on the page.
-          (if (and (xref= (target-definition target)
+          (if (and (xref= (target-dref target)
                           (first target-page-definitions))
                    target-page-uri-fragment)
               (if (eq target-page *page*)
@@ -1188,7 +1188,7 @@
                       (if (eq target-page *page*)
                           ""
                           (relative-page-uri-fragment target-page *page*))
-                      (anchor-id (target-definition target))))))))
+                      (anchor-id (target-dref target))))))))
 
 (defun relative-page-uri-fragment (page definition-page)
   (let ((fragment (page-uri-fragment page))
@@ -1958,7 +1958,7 @@
                  (page-uri-fragment page)))))))
 
 (defun linkablep (target)
-  (linkable-dref-p (target-definition target) :page (target-page target)))
+  (linkable-dref-p (target-dref target) :page (target-page target)))
 
 (defun linkable-drefs (drefs)
   (remove-if-not #'linkable-dref-p drefs))
@@ -1971,7 +1971,7 @@
          for target = (find-target dref)
          when (and target (linkablep target))
            collect target)
-   :key #'target-definition
+   :key #'target-dref
    :test #'xref=))
 
 (defsection @specific-link (:title "Specific Link")
@@ -2074,7 +2074,7 @@
        targets))))
 
 (defun target-locative-type (target)
-  (dref-locative-type (target-definition target)))
+  (dref-locative-type (target-dref target)))
 
 (defun filter-locative-drefs (drefs)
   "All references with LOCATIVE-TYPE LOCATIVE are filtered out."
@@ -2117,7 +2117,7 @@
            (values replacement-tree nil t))
           (t
            (dolist (target targets)
-             (vector-push-extend (target-definition target) linked-refs))
+             (vector-push-extend (target-dref target) linked-refs))
            (values (targets-to-tree (or title-override (pt-get reflink :label))
                                     title-override targets)
                    nil t)))))
@@ -2385,7 +2385,7 @@
         (unspecific-autolink word linked-refs))
     (cond (foundp
            (dolist (target targets)
-             (vector-push-extend (target-definition target) linked-refs))
+             (vector-push-extend (target-dref target) linked-refs))
            (values (targets-to-tree `(,tree) nil targets)
                    nil t))
           (t
@@ -2586,7 +2586,7 @@
       ;; All references were filtered out.
       label
       (let* ((target-1 (first targets))
-             (ref-1 (target-definition target-1))
+             (ref-1 (target-dref target-1))
              (page (target-page target-1))
              ;; This DREF was let through in FIND-TARGET with PAGE
              ;; NIL, as if with *DOCUMENT-OPEN-LINKING*, just to
@@ -2611,7 +2611,7 @@
                     ,@(loop
                         for i upfrom 0
                         for target in (sort-references targets
-                                                       :key #'target-definition)
+                                                       :key #'target-dref)
                         append `(,@(unless (zerop i)
                                      '(" "))
                                  ,(%make-reflink `(,(code-fragment i))
