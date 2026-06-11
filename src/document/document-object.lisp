@@ -397,14 +397,14 @@
 
 ;;;; SECTION locative
 
-(defvar *section*)
+;;; The section being documented.
+(defvar *section* nil)
 
 (defmacro documenting-section ((section stream) &body body)
   (with-gensyms (same-package)
     (once-only (section)
       `(let ((,same-package (and (eq *package* (section-package ,section))
-                                 (or (boundp '*section*)
-                                     *document-open-linking*)))
+                                 (or *section* *document-open-linking*)))
              (*package* (section-package ,section))
              (*readtable* (section-readtable ,section))
              (*section* ,section))
