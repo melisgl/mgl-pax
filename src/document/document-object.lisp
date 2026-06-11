@@ -414,6 +414,8 @@
              (format-in-package *package* ,stream))
            ,@body)))))
 
+(declaim (ftype function maybe-generate-indices))
+
 (defmethod document-object* ((section section) stream)
   "When documentation is being generated for a definition with
   the SECTION locative, a new (sub)section is opened (see
@@ -426,7 +428,8 @@
         (if firstp
             (setq firstp nil)
             (terpri stream))
-        (document-object entry stream)))))
+        (document-object entry stream)))
+    (maybe-generate-indices stream)))
 
 (defun format-in-package (package stream)
   (let ((name (escape-markdown (package-name package)))

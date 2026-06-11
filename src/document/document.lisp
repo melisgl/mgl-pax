@@ -205,7 +205,32 @@
   ;; The set of TARGETs linked to from this page. For
   ;; WRITE-MARKDOWN-REFERENCE-STYLE-LINK-DEFINITIONS and
   ;; LINK-TO-DEFINITION.
-  (linked-to (make-hash-table :test #'eq) :type hash-table))
+  (linked-to (make-hash-table :test #'eq) :type hash-table)
+  ;; For numbering DYNAMIC-SECTION-DREFs. Reset to 0 in FINALIZE-PAGES
+  ;; so that the second pass produces the same ids (assuming some
+  ;; determinism in the dynamic generation).
+  (next-dyn-id 0 :type integer))
+
+(defun next-dyn-id ()
+  (incf (page-next-dyn-id *page*)))
+
+(defun maybe-generate-indices (stream)
+  (declare (ignore stream))
+  #+nil
+  (document-object (make-instance 'dynamic-section-dref
+                                  :title "xxx"
+                                  :locative 'dyn
+                                  :fn #'identity)
+                   stream))
+
+(defclass dynamic-section-dref (dref)
+  ((title :initarg :title :reader doctitle*)
+   (dref::name :initform (format nil "~S" (next-dyn-id)))
+   (fn :initarg :fn :reader fn-of)))
+
+(defmethod document-object* ((dref dynamic-section-dref) stream)
+  (with-heading (stream :dref dref)
+    (funcall (fn-of dref) stream)))
 
 ;;; All the PAGEs in a DOCUMENT call.
 (defvar *pages*)
@@ -305,7 +330,8 @@
   (dolist (page pages)
     (setf (page-definitions page) (reverse (page-definitions page)))
     (dolist (dref (page-definitions page))
-      (set-target (target-key dref) (make-target* dref page)))))
+      (set-target (target-key dref) (make-target* dref page)))
+    (setf (page-next-dyn-id page) 0)))
 
 ;;; Whether all definitions present in the running Lisp are @LINKABLE
 ;;; with magic "pax:" URLs. This is to support
@@ -2867,19 +2893,22 @@
          (terpri stream))))
 
 (defun print-section-title-link (stream dref title link-title-to)
-  (if link-title-to
-      ;; Hovering over the section title will show the title of
-      ;; LINK-TITLE-TO from the Markdown reference link definition.
-      (format stream " [~A~A][~A]~%~%"
-              (format-heading-number) title
-              (link-to-definition link-title-to))
-      (format stream " <a href=\"~A\">~A~A</a>~%~%"
-              ;; As in PRINT-DREF-BULLET, open linking is to a
-              ;; separate page.
-              (if *document-open-linking*
-                  (finalize-pax-url (dref-to-pax-url dref))
-                  (object-uri dref))
-              (format-heading-number) title)))
+  (cond (link-title-to
+         ;; Hovering over the section title will show the title of
+         ;; LINK-TITLE-TO from the Markdown reference link definition.
+         (format stream " [~A~A][~A]~%~%"
+                 (format-heading-number) title
+                 (link-to-definition link-title-to)))
+        ((typep dref 'dynamic-section-dref)
+         (format stream " ~A~A~%~%" (format-heading-number) title))
+        (t
+         (format stream " <a href=\"~A\">~A~A</a>~%~%"
+                 ;; As in PRINT-DREF-BULLET, open linking is to a
+                 ;; separate page.
+                 (if *document-open-linking*
+                     (finalize-pax-url (dref-to-pax-url dref))
+                     (object-uri dref))
+                 (format-heading-number) title))))
 
 (defun fancy-navigation-p ()
   (and *document-fancy-html-navigation*
@@ -2904,13 +2933,14 @@
                        ;; section.
                        (unless (zerop (heading-level next))
                          next))))
-             (source-uri (source-uri dref)))
+             (source-uri (source-uri dref))
+             (dynamicp (typep dref 'dynamic-section-dref)))
         (format nil "<span class=\"outer-navigation\">~
                     <span class=\"navigation\">~
                     ~@[ [&#8592;][~A]~]~
                     ~@[ [&#8593;][~A]~]~
                     ~@[ [&#8594;][~A]~] ~
-                    [&#8634;][~A]~
+                    ~@[ [&#8634;][~A]~] ~
                     ~A~
                     </span></span>~%"
                 (when prev
@@ -2919,8 +2949,9 @@
                   (link-to-definition (heading-object up)))
                 (when next
                   (link-to-definition (heading-object next)))
-                (link-to-definition dref)
-                (if source-uri
+                (unless dynamicp
+                  (link-to-definition dref))
+                (if (and (not dynamicp) source-uri)
                     (format nil " <a href=~S>&#955;</a>" source-uri)
                     "")))
       ""))
