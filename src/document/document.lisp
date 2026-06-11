@@ -1017,7 +1017,7 @@
              (null (page-header-fn page))
              (null (page-footer-fn page)))
         (with-temp-output-to-page (stream page)
-          (write-markdown-reference-style-link-definitions stream))
+          (write-markdown-reflink-definitions stream))
         (let ((markdown-string
                 (if (typep (page-temp-stream-spec page) 'string-stream-spec)
                     (string-stream-spec-string (page-temp-stream-spec page))
@@ -1027,8 +1027,7 @@
                 (with-output-to-string (stream)
                   (unless (eq *subformat* :plain)
                     (let ((*page* page))
-                      (write-markdown-reference-style-link-definitions
-                       stream))))))
+                      (write-markdown-reflink-definitions stream))))))
           (delete-stream-spec (page-temp-stream-spec page))
           (with-final-output-to-page (stream page)
             (when (page-header-fn page)
@@ -1046,7 +1045,7 @@
 
 ;;; Emit Markdown definitions for links that were linked to on the
 ;;; current page.
-(defun write-markdown-reference-style-link-definitions (stream)
+(defun write-markdown-reflink-definitions (stream)
   (let ((targets (sort (hash-table-keys (page-linked-to *page*))
                        #'string< :key #'target-id))
         (*package* (find-package :keyword)))
@@ -1944,19 +1943,21 @@
     (and (if (typep dref 'section-dref)
              *document-link-sections*
              *document-link-code*)
-         (let ((page (or page (definition-page dref))))
-           (or
-            ;; pax: URLs are always linkable.
-            (null page)
-            ;; Intrapage links always work.
-            (eq *page* page)
-            ;; Absolute URLs always work.
-            (stringp page)
-            ;; PAGE is a PAGE structure. We need to know the
-            ;; URI-FRAGMENT of both pages. See
-            ;; RELATIVE-PAGE-URI-FRAGMENT.
-            (and (page-uri-fragment *page*)
-                 (page-uri-fragment page)))))))
+         (linkable-page-p (or page (definition-page dref))))))
+
+(defun linkable-page-p (page)
+  (or
+   ;; "pax:" URLs are always linkable.
+   (null page)
+   ;; Intrapage links always work.
+   (eq *page* page)
+   ;; Absolute URLs always work.
+   (stringp page)
+   ;; PAGE is a PAGE structure. We need to know the
+   ;; URI-FRAGMENT of both pages. See
+   ;; RELATIVE-PAGE-URI-FRAGMENT.
+   (and (page-uri-fragment *page*)
+        (page-uri-fragment page))))
 
 (defun linkablep (target)
   (linkable-dref-p (target-dref target) :page (target-page target)))
