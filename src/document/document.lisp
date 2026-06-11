@@ -966,6 +966,7 @@
                                    :paragraphp nil)
                (terpri stream))))))
   (:method :around ((xref xref) stream)
+    ;; FIXME: Is it actually a non-DREF XREF?
     (let ((*documenting-dref* xref))
       (call-next-method)))
   ;; LOCATE non-DREF XREFs.
@@ -977,7 +978,7 @@
                  ;; that `mgl-pax-document' produces errors when it
                  ;; must), but we want to document what we can even if
                  ;; a section contains undefined stuff.
-                 (boundp '*section*))))
+                 *section*)))
       (if warn-if-undefined
           (multiple-value-bind (dref error)
               (handler-case
@@ -1221,7 +1222,7 @@
   assumed to have been written with no knowledge of PAX and to conform
   to Markdown only by accident. These docstrings are thus sanitized
   more aggressively."
-  (and (not (boundp '*section*))
+  (and (null *section*)
        ;; This is implicit in the above, but docstrings passed
        ;; directly to DOCUMENT are not treated aggressively.
        *documenting-dref*
