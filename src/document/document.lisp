@@ -279,11 +279,6 @@
   ;; to support "pax:" URLs for *DOCUMENT-OPEN-LINKING*.
   (page nil :type (or page string null)))
 
-(defun make-target* (dref page)
-  (or (when-let (url (external-dref-url dref))
-        (make-target :dref dref :page url))
-      (make-target :dref dref :page page)))
-
 ;;; An EQUAL hash table, mapping a DREF in (NAME . LOCATIVE) form to
 ;;; its TARGET within a single DOCUMENT call. FINALIZE-PAGES populates
 ;;; this after the first pass with all definitions that are being
@@ -313,14 +308,13 @@
   (dolist (page pages)
     (setf (page-definitions page) (reverse (page-definitions page)))
     (dolist (dref (page-definitions page))
-      (set-target (target-key dref) (make-target* dref page)))
+      (set-target (target-key dref) (make-target :dref dref :page page)))
     ;; Reset to 0 so that the second pass produces the same ids
     ;; (assuming some determinism in the dynamic generation).
     (setf (page-next-dyn-id page) 0)))
 
 ;;; Whether all definitions present in the running Lisp are @LINKABLE
-;;; with magic "pax:" URLs. This is to support
-;;; @BROWSING-LIVE-DOCUMENTATION.
+;;; with magic "pax:" URLs. For @BROWSING-LIVE-DOCUMENTATION.
 (defvar *document-open-linking* nil)
 
 (defun find-target (dref)
@@ -328,27 +322,34 @@
   (assert (not *first-pass*))
   (let ((key (target-key dref)))
     (or (get-target key)
-        (when (or *document-open-linking*
-                  (external-dref-p dref)
-                  ;; Under the following conditions we fake PAX links
-                  ;; (i.e. TARGET-PAGE NIL), so that they make it to
-                  ;; TARGETS-TO-TREE.
-                  ;;
-                  ;; For @TITLEd definitions, to get the link replaced
-                  ;; with with their title.
-                  (doctitle dref)
-                  ;; For NOTEs, to get auto-included.
-                  (typep dref 'note-dref)
-                  ;; Finally, for definitions with INDEXING-CONCEPTS,
-                  ;; to allow e.g. GLOSSARY-TERMS that are not being
-                  ;; documented and have no title to act as concept
-                  ;; multiplexers.
-                  (concepts dref))
-          (set-target key (make-target* dref nil)))
+        (when-let (url (external-dref-url dref))
+          (set-target key (make-target :dref dref :page url)))
+        (maybe-add-pax-target key dref)
         ;; Maybe fall back on the CLHS definition.
         (when-let (clhs-target (and *document-link-to-hyperspec*
                                     (clhs-target dref)))
           (set-target key clhs-target)))))
+
+;;; Create a "pax:" TARGET (null TARGET-PAGE) if open-linking
+(defun maybe-add-pax-target (key dref)
+  (when (or *document-open-linking*
+            ;; Under the following conditions, we `fake' a PAX target,
+            ;; so that it to TARGETS-TO-TREE for relevant processing.
+            ;;
+            ;; For @TITLEd definitions, to get the link replaced with
+            ;; with their title.
+            (doctitle dref)
+            ;; For NOTEs, to get auto-included.
+            (typep dref 'note-dref)
+            ;; Finally, for definitions with INDEXING-CONCEPTS, to
+            ;; allow e.g. GLOSSARY-TERMS that are not being documented
+            ;; and have no title to act as concept multiplexers.
+            (concepts dref))
+    (set-target key (make-target :dref dref :page nil))))
+
+(defun fake-pax-target-p (target)
+  (and (not *document-open-linking*)
+       (null (target-page target))))
 
 (defun clhs-target (dref)
   (let ((clhs-dref (clhs-dref (dref-name dref) (dref-locative dref))))
@@ -356,7 +357,9 @@
       (or (get-target (target-key clhs-dref))
           ;; Ensure that if two CLHS DREFs are XREF=, then they are
           ;; EQ, so they have the same id (see ENSURE-TARGET-ID).
-          (set-target (target-key clhs-dref) (make-target* clhs-dref nil))))))
+          (set-target (target-key clhs-dref)
+                      (make-target :dref clhs-dref
+                                   :page (find-clhs-url clhs-dref)))))))
 
 
 ;;; Record that a link is made from *DREF-BEING-DOCUMENTED* on *PAGE*
@@ -2648,12 +2651,7 @@
       label
       (let* ((target-1 (first targets))
              (ref-1 (target-dref target-1))
-             (page (target-page target-1))
-             ;; This DREF was let through in FIND-TARGET with PAGE
-             ;; NIL, as if with *DOCUMENT-OPEN-LINKING*.
-             (fake-target-p (and (not *document-open-linking*)
-                                 (not (external-dref-p ref-1))
-                                 (null page))))
+             (fake-target-p (fake-pax-target-p target-1)))
         (cond
           ((< 1 (length targets))
            (cond ((eq *subformat* :plain)
