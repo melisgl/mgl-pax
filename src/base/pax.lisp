@@ -1,11 +1,31 @@
 (in-package :mgl-pax)
 
+(in-readtable pythonic-string-syntax)
+
 ;;;; USE-PACKAGEs that were not available in MGL-PAX-BOOTSTRAP.
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (use-package '#:autoload)
   (use-package '#:named-readtables)
   (use-package '#:pythonic-string-reader))
+
+
+(defmacro without-redefinition-warnings (&body body)
+  #+sbcl
+  `(locally
+       (declare (sb-ext:muffle-conditions sb-kernel:redefinition-warning))
+     (handler-bind ((sb-kernel:redefinition-warning #'muffle-warning))
+       ,@body))
+  #-sbcl
+  `(progn ,@body))
+
+(without-redefinition-warnings
+  (defgeneric index-keys* (object)
+    (:method (object)
+      ()))
+  (defgeneric multiplexing-index-keys* (object)
+    (:method (object)
+      ())))
 
 
 (defun section-entries (section)
@@ -33,8 +53,6 @@
             (xref name locative))
           link-title-to))))
 
-
-(in-readtable pythonic-string-syntax)
 
 (defsection @pax-manual (:title "PAX Manual")
   (@introduction section)

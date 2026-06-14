@@ -2,8 +2,6 @@
 
 (in-readtable pythonic-string-syntax)
 
-;;;; For DYNAMIC-SECTION-DREF
-
 ;;; Whether this DREF should be recorded when its generated
 ;;; documentation refers to another definition. For example, index
 ;;; sections are not indexable although they link to lots of stuff.
@@ -18,7 +16,6 @@
 (defgeneric in-context-only-p (dref)
   (:method (dref)
     nil))
-
 
 ;;; The outermost section being documented. It's always explicitly on
 ;;; @DOCUMENTABLE.
@@ -30,16 +27,8 @@
 ;;; docstrings reference them. For constructing indices. Populated in
 ;;; the 2nd pass.
 (defvar *indexing-dref-to-referrers* nil)
-;;; Like PAGE-REFERRERS, but the keyed by concept.
-(defvar *indexing-concept-to-referrers* nil)
-
-(defmacro dref-to-referrers (dref)
-  `(gethash ,(once-only (dref)
-               `(cons (dref-name ,dref) (dref-locative ,dref)))
-            *indexing-dref-to-referrers*))
-
-(defmacro concept-to-referrers (concept)
-  `(gethash ,concept *indexing-concept-to-referrers*))
+;;; Like the previous, but keyed by index keys.
+(defvar *indexing-key-to-referrers* nil)
 
 (defmacro with-indexing-context ((section) &body body)
   (with-gensyms (vars values)
@@ -50,10 +39,51 @@
            (values '(*indexing-section*
                      *indexing-definitions*
                      *indexing-dref-to-referrers*
-                     *indexing-concept-to-referrers*)
+                     *indexing-key-to-referrers*)
                    (list ,section
                          ()
                          (make-hash-table :test #'equal)
                          (make-hash-table :test #'equal))))
        (progv ,vars ,values
          ,@body))))
+
+(defmacro dref-to-referrers (dref)
+  `(gethash ,(once-only (dref)
+               `(cons (dref-name ,dref) (dref-locative ,dref)))
+            *indexing-dref-to-referrers*))
+
+(defmacro index-key-to-referrers (concept)
+  `(gethash ,concept *indexing-key-to-referrers*))
+
+(defun index-keys (object)
+  (resolve-concept-symbols
+   (nth-value-or-with-obj-or-def (object 0)
+     (index-keys* object))))
+
+(defun multiplexing-index-keys (object)
+  (resolve-concept-symbols
+   (nth-value-or-with-obj-or-def (object 0)
+     (multiplexing-index-keys* object))))
+
+(defun resolve-concept-symbols (list)
+  (if (find-if #'symbolp list)
+      (loop for x in list
+            append (if (symbolp x)
+                       ;; FIXME: downgrade failures to warning?
+                       (multiplexing-index-keys (dref x 'concept))
+                       (list x)))
+      list))
+
+(defun maybe-index-link (source-dref target-dref)
+  (when (and *indexing-section*
+             (indexablep source-dref)
+             (not (xref= source-dref target-dref)))
+    (pushnew source-dref (dref-to-referrers target-dref))
+    (dolist (key (multiplexing-index-keys target-dref))
+      (pushnew source-dref (index-key-to-referrers key)))))
+
+(defun maybe-index-dref (dref)
+  (when (and *indexing-section*
+             (indexablep dref))
+    (dolist (key (index-keys dref))
+      (pushnew dref (index-key-to-referrers key)))))

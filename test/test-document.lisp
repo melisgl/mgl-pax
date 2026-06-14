@@ -2189,15 +2189,6 @@ example section
         (with-compilation-unit (:override t)
           (compile nil '(lambda () x)))))))
 
-(defmacro without-redefinition-warnings (&body body)
-  #+sbcl
-  `(locally
-       (declare (sb-ext:muffle-conditions sb-kernel:redefinition-warning))
-     (handler-bind ((sb-kernel:redefinition-warning #'muffle-warning))
-       ,@body))
-  #-sbcl
-  `(progn ,@body))
-
 (deftest test-asdf-system-name-of ()
   (with-failure-expected ((alexandria:featurep :clisp))
     (is (equal "mgl-pax" (mgl-pax::asdf-system-name-of mgl-pax::@pax-manual)))
@@ -2479,55 +2470,96 @@ example section
 
 (defsection @concept-test (:title "Concept Test")
   (c-foo function)
-  (@c-whatever glossary-term))
+  (c-bar function)
+  (@whatever glossary-term))
 
-(define-glossary-term @c-hidden (:title ""
-                                 :concepts (("defining" "macros")
-                                            ("macros," "defining"))))
+(define-concept ~hidden (:keys (("defining" "macros")
+                                ("macros," "defining"))))
 
-(define-glossary-term @c-whatever
-    (:concepts ((("whatever" . "%sortas")))))
+(define-concept @shown (:title "defining macros" :keys (~hidden)))
+
+(define-glossary-term @whatever (:keys ((("whatever" . "%sortas"))
+                                        "not-a-list")))
 
 (defun c-foo ()
-  "@C-HIDDEN @C-WHATEVER"
+  "~HIDDEN @WHATEVER"
+  nil)
+
+(defun c-bar ()
+  "@SHOWN"
   nil)
 
 (deftest test-write-index/concepts/dead ()
   (let* ((*document-index-sections* :homeless-documentable)
          (*document-index-formats* '(:plain :markdown))
          (*document-indices* '((:title "Indices" :concepts t)))
-         (out (document @concept-test :stream nil :format :plain))
-         (pos (search "## Indices" out)))
-    (is pos :ctx ("output: ~S" out))
-    (is (equal (subseq out pos)
-               "## Indices
+         (out (document @concept-test :stream nil :format :plain)))
+    (is (equal out
+               "# Concept Test
 
-- whatever ↩ f: C-FOO
+###### [in package MGL-PAX-TEST]
 
-- defining macros ↩ f: C-FOO
+- [function] C-FOO
 
-- macros, defining ↩ f: C-FOO
+    @WHATEVER
+
+- [function] C-BAR
+
+    defining macros
+
+- [glossary-term] @WHATEVER
+
+## Indices
+
+- whatever ↩ d: @WHATEVER
+
+- defining macros ↩ f: C-BAR, C-FOO
+
+- macros, defining ↩ f: C-BAR, C-FOO
+
+- not-a-list ↩ d: @WHATEVER
 "))))
 
 (deftest test-write-index/concepts/live ()
   (let* ((*document-index-sections* :homeless-documentable)
          (*document-index-formats* '(:md-w3m))
          (*document-indices* '((:title "Indices" :concepts t)))
-         (out (document* @concept-test :format :md-w3m))
-         (pos (search "## 1 Indices" out)))
-    (is pos :ctx ("output: ~S" out))
-    (is (equal (subseq out pos)
-               "## 1 Indices
+         (*document-max-table-of-contents-level* 0)
+         (*document-link-sections* nil)
+         (*package* (find-package :mgl-pax-test))
+         (out (document* @concept-test :format :md-w3m)))
+    (is (equal out
+               "# Concept Test
 
-- whatever ↩ *f*: [**`C-FOO`**][cceb]
+<a id=\"MGL-PAX-TEST:C-FOO%20FUNCTION\"></a>
 
-- defining macros ↩ *f*: [**`C-FOO`**][cceb]
+- \\[function\\] C-FOO
 
-- macros, defining ↩ *f*: [**`C-FOO`**][cceb]
+    [**`@WHATEVER`**][02aa]
 
-[6f6c]: #MGL-PAX-TEST:@C-WHATEVER%20MGL-PAX:GLOSSARY-TERM \"MGL-PAX-TEST:@C-WHATEVER MGL-PAX:GLOSSARY-TERM\"
+<a id=\"MGL-PAX-TEST:C-BAR%20FUNCTION\"></a>
 
-[870f]: pax:MGL-PAX-TEST:@C-HIDDEN%20MGL-PAX:GLOSSARY-TERM \"\"
+- \\[function\\] C-BAR
+
+    defining macros
+
+<a id=\"MGL-PAX-TEST:@WHATEVER%20MGL-PAX:GLOSSARY-TERM\"></a>
+
+- \\[glossary-term\\] @WHATEVER
+
+## 1 Indices
+
+- whatever ↩ *d*: [**`@WHATEVER`**][02aa]
+
+- defining macros ↩ *f*: [**`C-BAR`**][5be5], [**`C-FOO`**][cceb]
+
+- macros, defining ↩ *f*: [**`C-BAR`**][5be5], [**`C-FOO`**][cceb]
+
+- not-a-list ↩ *d*: [**`@WHATEVER`**][02aa]
+
+[02aa]: #MGL-PAX-TEST:@WHATEVER%20MGL-PAX:GLOSSARY-TERM \"MGL-PAX-TEST:@WHATEVER MGL-PAX:GLOSSARY-TERM\"
+
+[5be5]: #MGL-PAX-TEST:C-BAR%20FUNCTION \"MGL-PAX-TEST:C-BAR FUNCTION\"
 
 [cceb]: #MGL-PAX-TEST:C-FOO%20FUNCTION \"MGL-PAX-TEST:C-FOO FUNCTION\"
 "))))

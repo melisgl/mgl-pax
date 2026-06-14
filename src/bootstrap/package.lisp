@@ -37,6 +37,7 @@
          #:defsection #:section
          #:exportable-reference-p
          #:exportable-locative-type-p
+         #:define-concept #:concept
          #:define-glossary-term #:glossary-term
          #:make-github-source-uri-fn
          #:make-git-source-uri-fn
