@@ -5,8 +5,6 @@
 ;;;; - docs
 ;;;;
 ;;;; - use concepts in PAX?
-;;;;
-;;;; - add the "owner" of the concepts as a referrer to its concepts?
 
 
 ;;;; Dynamically generated sections
@@ -99,16 +97,11 @@
       (when (dtypep dref dtype)
         (return-from find-index index)))))
 
-(defun find-index-for-concept (concept)
-  (declare (ignore concept))
+(defun find-index-for-key (key)
+  (declare (ignore key))
   (do-indices (index depth)
     (when (getf index :concepts)
-      (return-from find-index-for-concept index))))
-
-
-(defun concepts (object)
-  (nth-value-or-with-obj-or-def (object 0)
-    (concepts* object)))
+      (return-from find-index-for-key index))))
 
 
 (declaim (inline make-index-subkey))
@@ -165,19 +158,19 @@
     (let ((index-to-indexables
             (group-indexables-per-index
              *indexing-definitions*
-             (hash-table-keys *indexing-concept-to-referrers*))))
+             (hash-table-keys *indexing-key-to-referrers*))))
       (format stream "~&~%")
       (dolist (index *document-indices*)
         (maybe-generate-index index stream index-to-indexables)))))
 
-(defun group-indexables-per-index (drefs concepts)
+(defun group-indexables-per-index (drefs index-keys)
   (let ((grouping (make-hash-table)))
     (dolist (dref drefs)
       (when-let (index (find-index dref))
         (push dref (gethash index grouping))))
-    (dolist (concept concepts)
-      (when-let (index (find-index-for-concept concept))
-        (push concept (gethash index grouping))))
+    (dolist (key index-keys)
+      (when-let (index (find-index-for-key key))
+        (push key (gethash index grouping))))
     (let ((groups ()))
       (do-indices (index)
         (when (and (getf index :index t)
@@ -227,7 +220,7 @@
                      (let ((dref indexable))
                        (list (dref-index-name dref)
                              (dref-index-referee-abbrev dref)))
-                     indexable)))
+                     (ensure-list indexable))))
         (push (cons key indexable) key-and-indexable-pairs)))
     (setq key-and-indexable-pairs
           (sort (coerce key-and-indexable-pairs 'vector) #'index-key-<
@@ -281,13 +274,13 @@
 
 (defun sort-as-symbol-name (symbol)
   (let ((name (symbol-name symbol)))
-    (subseq name (or (position-if #'alphanumericp name) 0))))
+    (string-downcase (subseq name (or (position-if #'alphanumericp name) 0)))))
 
 (defun print-referrers (indexable depth stream)
   (let ((drefs
           (if (typep indexable 'dref)
               (dref-to-referrers indexable)
-              (concept-to-referrers indexable)))
+              (index-key-to-referrers indexable)))
         (*package* (maybe-dref-name-package indexable))
         (groups (make-hash-table :test #'equal)))
     (dolist (dref drefs)

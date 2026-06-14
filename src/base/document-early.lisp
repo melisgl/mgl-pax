@@ -56,16 +56,17 @@
 
 (declaim (special *first-pass*))
 
-(defgeneric doctitle* (object)
-  (:documentation "DOCTITLE* extends DOCTITLE in the same way
-  as DOCSTRING* extends DOCSTRING.
+(without-redefinition-warnings
+  (defgeneric doctitle* (object)
+    (:documentation "DOCTITLE* extends DOCTITLE in the same way
+    as DOCSTRING* extends DOCSTRING.
 
-  The default method returns NIL.
+    The default method returns NIL.
 
-  This function is for extension only. Do not call it directly.")
-  (:method (object)
-    (declare (ignore object))
-    nil))
+    This function is for extension only. Do not call it directly.")
+    (:method (object)
+      (declare (ignore object))
+      nil)))
 
 (defmacro documenting-definition ((stream &key dref package readtable
                                    (arglist nil arglistp))

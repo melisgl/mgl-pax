@@ -341,10 +341,9 @@
             (doctitle dref)
             ;; For NOTEs, to get auto-included.
             (typep dref 'note-dref)
-            ;; Finally, for definitions with INDEXING-CONCEPTS, to
-            ;; allow e.g. GLOSSARY-TERMS that are not being documented
-            ;; and have no title to act as concept multiplexers.
-            (concepts dref))
+            ;; Finally, this is to allow indexing CONCEPTs (see
+            ;; MAYBE-INDEX-LINK).
+            (multiplexing-index-keys dref))
     (set-target key (make-target :dref dref :page nil))))
 
 (defun fake-pax-target-p (target)
@@ -368,25 +367,19 @@
 (defun link-to-target (target)
   (declare (type target target))
   (assert (not *first-pass*))
+  (assert (not (typep (target-dref target) 'concept-dref)))
   (let ((page (target-page target)))
     (assert (linkable-page-p page))
     (setf (gethash target (page-linked-to *page*)) t)
     (ensure-target-id target)))
 
-(declaim (ftype function concepts))
-
-(defun maybe-add-cross-references (target)
-  (when *indexing-section*
-    (let ((target-dref (target-dref target))
-          (source-dref *dref-being-documented*))
-      (when (and source-dref
-                 (indexablep source-dref)
-                 (not (xref= source-dref target-dref)))
-        ;; We currently do not index external definitions.
-        (unless (stringp (target-page target))
-          (pushnew source-dref (dref-to-referrers target-dref)))
-        (dolist (concept (concepts target-dref))
-          (pushnew source-dref (concept-to-referrers concept)))))))
+(defun maybe-index (target)
+  (let ((target-dref (target-dref target))
+        (source-dref *dref-being-documented*))
+    (when (and source-dref
+               ;; We currently do not index external definitions.
+               (not (stringp (target-page target))))
+      (maybe-index-link source-dref target-dref))))
 
 (defun link-to-definition (dref)
   (link-to-target (find-target dref)))
@@ -621,7 +614,7 @@
                (*indexing-section* nil)
                (*indexing-definitions* nil)
                (*indexing-dref-to-referrers* nil)
-               (*indexing-concept-to-referrers* nil))
+               (*indexing-key-to-referrers* nil))
           (document-return stream (%document documentable stream pages)))))))
 
 (defun call-with-format (format fn)
@@ -998,6 +991,7 @@
     (let ((*objects-being-documented* (cons object *objects-being-documented*)))
       (if (typep object 'dref)
           (let ((*dref-being-documented* object))
+            (maybe-index-dref object)
             (call-next-method))
           (call-next-method))))
   (:method (object stream)
@@ -1895,15 +1889,15 @@
 
 (defsection @linking (:title "Linking"
                       ;; FIXME
-                      :concepts (("linking")
-                                 ("linking" "markdown")
-                                 ("markdown" "linking")
-                                 ("1")
-                                 ("1" "2")
-                                 ("1" "2" "3")
-                                 ("1" "2" "3" "4")
-                                 ("1" "2" "3" "4" "5")
-                                 ("1" "2" "3" "4" "5" "6")))
+                      :keys (("linking")
+                             ("linking" "markdown")
+                             ("markdown" "linking")
+                             ("1")
+                             ("1" "2")
+                             ("1" "2" "3")
+                             ("1" "2" "3" "4")
+                             ("1" "2" "3" "4" "5")
+                             ("1" "2" "3" "4" "5" "6")))
   """PAX supports linking to DREF::@DEFINITIONS either with
   explicit @REFLINKs or with @AUTOLINKs.
 
@@ -2650,15 +2644,14 @@
       ;; All references were filtered out.
       label
       (let* ((target-1 (first targets))
-             (ref-1 (target-dref target-1))
-             (fake-target-p (fake-pax-target-p target-1)))
+             (ref-1 (target-dref target-1)))
         (cond
           ((< 1 (length targets))
            (cond ((eq *subformat* :plain)
                   label)
                  (*document-open-linking*
                   (dolist (target targets)
-                    (maybe-add-cross-references target))
+                    (maybe-index target))
                   ;; [`label`](pax:name)
                   `((:explicit-link
                      :label ,label
@@ -2672,11 +2665,12 @@
                         for i upfrom 0
                         for target in (sort-references targets
                                                        :key #'target-dref)
-                        do (maybe-add-cross-references target)
-                        append `(,@(unless (zerop i)
-                                     '(" "))
-                                 ,(%make-reflink `(,(code-fragment i))
-                                                 (link-to-target target))))
+                        do (maybe-index target)
+                        unless (typep (target-dref target) 'concept-dref)
+                          append `(,@(unless (zerop i)
+                                       '(" "))
+                                   ,(%make-reflink `(,(code-fragment i))
+                                                   (link-to-target target))))
                     ")"))))
           ((member (xref-locative-type ref-1) '(dislocated argument))
            label)
@@ -2684,14 +2678,20 @@
            (or (codify-and-link-tree (translate-dref-docstring ref-1))
                ;; Returning NIL would look like we didn't succeed.
                '("")))
+          ((typep ref-1 'concept-dref)
+           (maybe-index target-1)
+           ;; We ignore EXPLICIT-LABEL-P
+           (or (document-definition-title ref-1 :format nil)
+               '("")))
           (t
            (let ((label (or (and (not explicit-label-p)
                                  (document-definition-title ref-1 :format nil))
                             label)))
-             (maybe-add-cross-references target-1)
-             (if fake-target-p
-                 label
-                 `(,(%make-reflink label (link-to-target target-1))))))))))
+             (cond ((fake-pax-target-p target-1)
+                    label)
+                   (t
+                    (maybe-index target-1)
+                    `(,(%make-reflink label (link-to-target target-1)))))))))))
 
 
 (defsection @linking-to-the-hyperspec (:title "Linking to the HyperSpec")
@@ -2988,8 +2988,7 @@
                 (link-to-definition dref)
                 (if source-uri
                     (format nil " <a href=~S>&#955;</a>" source-uri)
-                    ""))))
-    ""))
+                    ""))))))
 
 (defun write-navigation-link (heading stream)
   (let ((target-id (link-to-definition (heading-object heading))))
@@ -3503,8 +3502,8 @@
 (defsection @overview-of-escaping
     (:title "Overview of Escaping"
      ;; FIXME
-     :concepts (("markdown" "escaping")
-                ("escaping" "markdown")))
+     :keys (("markdown" "escaping")
+            ("escaping" "markdown")))
   """Let's recap how escaping @CODIFICATION,
   [downcasing][\*document-downcase-uppercase-code*], and @LINKING
   works.

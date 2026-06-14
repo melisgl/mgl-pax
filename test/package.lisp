@@ -5,4 +5,5 @@
    #:dref-test
    #:check-ref
    #:check-ref-sets
-   #:check-source-location))
+   #:check-source-location)
+  (:import-from #:mgl-pax #:without-redefinition-warnings))

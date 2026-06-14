@@ -39,6 +39,7 @@
   - [document-object* (method (locative-dref t))][docstring]
   - [document-object* (method (section t))][docstring]
   - [document-object* (method (glossary-term t))][docstring]
+  - [document-object* (method (concept t))][docstring]
   - [document-object* (method (go-dref t))][docstring]
   - [document-object* (method (include-dref t))][docstring]
   - [document-object* (method (clhs-dref t))][docstring]
@@ -457,6 +458,11 @@
                (glossary-term-url glossary-term))
        stream))
     (document-docstring (glossary-term-docstring glossary-term) stream)))
+
+(defmethod document-object* ((concept concept) stream)
+  "For definitions with a CONCEPT locative, no documentation is
+  generated."
+  (values))
 
 (defmethod document-object* ((dref go-dref) stream)
   "For definitions with a GO locative, its LOCATIVE-ARGS are printed

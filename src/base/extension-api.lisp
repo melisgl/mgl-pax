@@ -82,7 +82,6 @@
   (section-readtable (reader section))
   (section-title (reader section))
   (section-link-title-to function)
-  (section-concepts (reader section))
   (section-entries function))
 
 
@@ -94,5 +93,4 @@
   (glossary-term class)
   (glossary-term-name (reader glossary-term))
   (glossary-term-title (reader glossary-term))
-  (glossary-term-concepts (reader glossary-term))
   (glossary-term-url (reader glossary-term)))

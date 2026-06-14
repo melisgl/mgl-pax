@@ -108,6 +108,69 @@
   (glossary-term-docstring (resolve dref)))
 
 
+;;;; CONCEPT locative
+
+(defmethod print-object ((concept concept) stream)
+  (print-unreadable-object (concept stream :type t)
+    (format stream "~a" (concept-name concept))))
+
+(define-locative-type concept (variable)
+  "FIXME")
+
+(define-locator concept ((concept concept))
+  (make-instance 'concept-dref :name (concept-name concept)
+                 :locative 'concept))
+
+(define-locator concept ((list list))
+  (unless (and (lazy-concept-p list)
+               (proper-lazy-concept-name-p (lazy-concept-name list)))
+    (locate-error))
+  (make-instance 'concept-dref :name (lazy-concept-name list)
+                 :locative 'section))
+
+;;; FIXME: refactor with the section equivalents
+(defun lazy-concept-p (object)
+  (and (consp object)
+       (consp (car object))
+       (eq (caar object) :%pax-lazy-concept)))
+
+(defun lazy-concept-name (lazy)
+  (second (first lazy)))
+
+(defun proper-lazy-concept-name-p (object)
+  (and (symbolp object)
+       (boundp object)
+       (let ((value (symbol-value object)))
+         (and (lazy-concept-p value)
+              (eq (lazy-concept-name value) object)))))
+
+(define-lookup concept (symbol locative-args)
+  (unless (and (symbolp symbol)
+               (boundp symbol)
+               (or (typep (symbol-value symbol) 'concept)
+                   (proper-lazy-concept-name-p symbol)))
+    (locate-error))
+  (make-instance 'concept-dref :name symbol :locative 'concept))
+
+(defmethod resolve* ((dref concept-dref))
+  (let ((value (symbol-value (dref-name dref))))
+    (cond ((lazy-concept-p value)
+           (destructuring-bind ((marker name fn) &rest args) value
+             (declare (ignore marker))
+             (apply fn name args))
+           (let ((new (symbol-value (dref-name dref))))
+             (assert (typep new 'concept) ()
+                     "~@<Lazy loaded ~S for ~S, got ~S, ~
+                     which is not a ~S.~:@>"
+                     value dref new 'concept)
+             new))
+          (t
+           value))))
+
+(defmethod docstring* ((dref concept-dref))
+  nil)
+
+
 ;;;; NOTE locative
 
 (define-locative-type note ()
