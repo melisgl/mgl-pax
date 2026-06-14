@@ -8,6 +8,7 @@
              (test-util)
              (test-hyperspec)
              (test-navigate)
+             (test-markdown)
              (test-document)
              (test-transcribe)))
       (when (backend-available-p :swank)

@@ -262,24 +262,20 @@
              (cond (title
                     (format nil "[~A][~A]" title target-id))
                    ((symbolp name)
-                    (format nil "[`~A`][~A]~@[ \\[`~A`\\]~]"
-                            ;; FIXME: Cannot escape #\`, but it can be
-                            ;; replaced maybe.
-                            (maybe-downcase (funcall symbol-name-fn name))
+                    (format nil "[~A][~A]~@[ \\[~A\\]~]"
+                            (maybe-downcase
+                             (md-code (funcall symbol-name-fn name)))
                             target-id
                             (unless (let ((package (symbol-package name)))
                                       (or (eq package #.(find-package :cl))
-                                          (eq package *package*)
-                                          ;; FIXME: Is this misguided?
-                                          #+nil
-                                          (member package (package-use-list
-                                                           *package*))))
+                                          (eq package *package*)))
                               (maybe-downcase
-                               (package-name (symbol-package name))))))
+                               (md-code (package-name
+                                         (symbol-package name)))))))
                    ((stringp name)
-                    (format nil "[`~A`][~A]" name target-id))
+                    (format nil "[~A][~A]" (md-code name) target-id))
                    (t
-                    (format nil "[`~S`][~A]" name target-id)))))
+                    (format nil "[~S][~A]" (md-code name) target-id)))))
       (make-index-subkey (foo (link-to-definition dref) 'symbol-name)
                          (foo "" 'sort-as-symbol-name)))))
 
@@ -383,7 +379,8 @@
     (destructuring-bind (dtype abbrev &rest plist) entry
       (if-let (doc (getf plist :documentation))
         (format stream "- ~A~%" doc)
-        (format stream "- `~S` `~A`~%" abbrev (prin1-to-markdown dtype))))))
+        (format stream "- ~A ~A~%" (md-code (prin1-to-string abbrev))
+                (md-code (prin1-to-string dtype)))))))
 
 (defun dref-index-referee-abbrev (dref)
   (or (second (find (dref-locative-type dref)
