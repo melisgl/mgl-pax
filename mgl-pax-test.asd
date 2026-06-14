@@ -21,6 +21,7 @@
                              (:file "test-util")
                              (:file "test-hyperspec")
                              (:file "test-navigate")
+                             (:file "test-markdown")
                              (:file "test-document")
                              (:file "test-transcribe")
                              (:file "test"))))

@@ -51,10 +51,36 @@
 (defun heading (level stream)
   (loop repeat (1+ level) do (write-char #\# stream)))
 
-(defun code (string)
-  (if (zerop (length string))
-      ""
-      (format nil "`~A`" string)))
+;;; Wraps STRING in the correct number of Markdown backticks, padding
+;;; with spaces if necessary.
+(defun md-code (object)
+  (let* ((string (if (stringp object)
+                     object
+                     (prin1-to-string object)))
+         (n (length string)))
+    (if (zerop n)
+        ""
+        (let ((max-ticks 0)
+              (n-ticks 0))
+          ;; Find the longest contiguous sequence of backticks in the string.
+          (loop for char across string
+                do (if (char= char #\`)
+                       (incf n-ticks)
+                       (setq n-ticks 0))
+                do (setq max-ticks (max max-ticks n-ticks)))
+          ;; The code delimiters must have one more backtick.
+          (let* ((ticks (make-string (if (zerop max-ticks) 1 (1+ max-ticks))
+                                     :initial-element #\`))
+                 ;; Prevent backticks in STRING from touching the delimiters.
+                 (left-pad (if (and (plusp n)
+                                    (char= (char string 0) #\`))
+                               " "
+                               ""))
+                 (right-pad (if (and (plusp n)
+                                     (char= (char string (1- n)) #\`))
+                                " "
+                                "")))
+            (format nil "~A~A~A~A~A" ticks left-pad string right-pad ticks))))))
 
 (defun bold (string stream)
   (if (zerop (length string))
