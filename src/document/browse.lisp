@@ -337,9 +337,12 @@
       (member symbol '(nil t))))
 
 (defun make-pax-eval-url (form)
-  (finalize-pax-url (format nil "pax-eval:~A"
-                            (urlencode (with-standard-io-syntax*
-                                         (prin1-to-string form))))))
+  (finalize-pax-url
+   (format nil "pax-eval:~A"
+           (urlencode (with-standard-io-syntax*
+                        ;; Avoid mentions of BASE-CHAR and such.
+                        (let ((*print-readably* nil))
+                          (prin1-to-string form)))))))
 
 
 ;;;; Handling of "pax:" URLs
@@ -565,10 +568,7 @@
               (and (eq (xref-locative-type reference) 'method)
                    (xref-name reference))))
         (when generic-function-name
-          (emit "the generic-function `~A`"
-                (prin1-to-markdown generic-function-name
-                                   ;; It goes between backticks.
-                                   :escape-inline nil))))
+          (emit "the generic-function ~A" (md-code generic-function-name))))
       (when (< 1 (length (definitions* (xref-name reference))))
         (emit "the [disambiguation page](~A)"
               (finalize-pax-url (name-to-pax-url (xref-name reference)))))
@@ -1175,8 +1175,9 @@
 
 (defun enumerate-locative-types-in-markdown (locative-types)
   (loop for locative-type in locative-types
-        collect (format nil "- [`~S`](~A)" locative-type
+        collect (format nil "- [~S](~A)" locative-type
                         (make-pax-eval-url
                          `(pax-apropos* ,(with-standard-io-syntax*
-                                           (format nil " ~S" locative-type))
+                                           (let ((*print-readably* nil))
+                                             (format nil " ~S" locative-type)))
                                         t)))))
