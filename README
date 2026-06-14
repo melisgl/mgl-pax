@@ -3823,9 +3823,9 @@ there are only a couple of PAX generic functions left to extend.
     The default method calls EXPORTABLE-LOCATIVE-TYPE-P with
     LOCATIVE-TYPE and ignores the other arguments.
 
-    By default, SECTIONs and GLOSSARY-TERMs are not exported although
-    they are EXPORTABLE-LOCATIVE-TYPE-P. To export symbols naming
-    sections from MGL-PAX, the following method could be added:
+    By default, SECTIONs, GLOSSARY-TERMs and NOTEs are not exported
+    although they are EXPORTABLE-LOCATIVE-TYPE-P. To export symbols
+    naming sections from MGL-PAX, the following method could be added:
 
         (defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
                                            symbol (locative-type (eql 'section))
@@ -3837,9 +3837,8 @@ there are only a couple of PAX generic functions left to extend.
     Return true if symbols in references with
     LOCATIVE-TYPE are to be exported by default when they occur in a
     DEFSECTION. The default method returns T, while the methods for
-    locative types SECTION, GLOSSARY-TERM,
-    PACKAGE, ASDF:SYSTEM, METHOD and
-    INCLUDE return NIL.
+    locative types PACKAGE, METHOD,
+    ASDF:SYSTEM, and INCLUDE return NIL.
 
     This function is called by the default method of
     EXPORTABLE-REFERENCE-P to decide what symbols DEFSECTION shall

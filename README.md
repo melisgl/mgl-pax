@@ -4350,9 +4350,9 @@ there are only a couple of PAX generic functions left to extend.
     The default method calls [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] with
     `LOCATIVE-TYPE` and ignores the other arguments.
     
-    By default, [`SECTION`][5fac]s and [`GLOSSARY-TERM`][8251]s are not exported although
-    they are `EXPORTABLE-LOCATIVE-TYPE-P`. To export symbols naming
-    sections from MGL-PAX, the following method could be added:
+    By default, [`SECTION`][5fac]s, [`GLOSSARY-TERM`][8251]s and [`NOTE`][e2ae]s are not exported
+    although they are `EXPORTABLE-LOCATIVE-TYPE-P`. To export symbols
+    naming sections from MGL-PAX, the following method could be added:
     
     ```
     (defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
@@ -4368,9 +4368,8 @@ there are only a couple of PAX generic functions left to extend.
     Return true if symbols in references with
     `LOCATIVE-TYPE` are to be exported by default when they occur in a
     [`DEFSECTION`][72b4]. The default method returns `T`, while the methods for
-    locative types [`SECTION`][672f], [`GLOSSARY-TERM`][5119],
-    `PACKAGE`, `ASDF:SYSTEM`, [`METHOD`][51c3] and
-    [`INCLUDE`][5cd7] return `NIL`.
+    locative types `PACKAGE`, `METHOD`,
+    `ASDF:SYSTEM`, and [`INCLUDE`][5cd7] return `NIL`.
     
     This function is called by the default method of
     [`EXPORTABLE-REFERENCE-P`][e51f] to decide what symbols `DEFSECTION` shall
@@ -4733,7 +4732,6 @@ they are presented.
   [4c39]: #x-28MGL-PAX-3A-40TRANSCRIPT-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Transcript Consistency Checking"
   [4e05]: #x-28MGL-PAX-3A-40UNSPECIFIC-REFLINK-20MGL-PAX-3ASECTION-29 "Unspecific Reflink"
   [5119]: #x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:GLOSSARY-TERM MGL-PAX:LOCATIVE"
-  [51c3]: http://www.lispworks.com/documentation/HyperSpec/Body/t_method.htm "METHOD (MGL-PAX:CLHS CLASS)"
   [5483]: http://www.lispworks.com/documentation/HyperSpec/Body/v__.htm "- (MGL-PAX:CLHS VARIABLE)"
   [54d8]: #x-28MGL-PAX-3A-40ADDING-NEW-LOCATIVES-20MGL-PAX-3ASECTION-29 "Adding New Locatives"
   [550b]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cgd.htm "\"22.3.7.4\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
