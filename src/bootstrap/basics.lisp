@@ -185,9 +185,9 @@
   The default method calls EXPORTABLE-LOCATIVE-TYPE-P with
   LOCATIVE-TYPE and ignores the other arguments.
 
-  By default, SECTIONs and GLOSSARY-TERMs are not exported although
-  they are EXPORTABLE-LOCATIVE-TYPE-P. To export symbols naming
-  sections from MGL-PAX, the following method could be added:
+  By default, SECTIONs, GLOSSARY-TERMs and NOTEs are not exported
+  although they are EXPORTABLE-LOCATIVE-TYPE-P. To export symbols
+  naming sections from MGL-PAX, the following method could be added:
 
   ```
   (defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
@@ -199,21 +199,18 @@
     (declare (ignore package symbol locative-args))
     (exportable-locative-type-p locative-type)))
 
-(defmethod exportable-reference-p (package symbol
-                                   (locative-type (eql 'section))
-                                   locative-args)
+(defmethod exportable-reference-p
+    (package symbol (locative-type (eql 'section)) locative-args)
   (declare (ignore package symbol locative-args))
   nil)
 
-(defmethod exportable-reference-p (package symbol
-                                   (locative-type (eql 'glossary-term))
-                                   locative-args)
+(defmethod exportable-reference-p
+    (package symbol (locative-type (eql 'glossary-term)) locative-args)
   (declare (ignore package symbol locative-args))
   nil)
 
-(defmethod exportable-reference-p (package symbol
-                                   (locative-type (eql 'note))
-                                   locative-args)
+(defmethod exportable-reference-p
+    (package symbol (locative-type (eql 'note)) locative-args)
   (declare (ignore package symbol locative-args))
   nil)
 
@@ -221,9 +218,8 @@
   (:documentation "Return true if symbols in references with
   LOCATIVE-TYPE are to be exported by default when they occur in a
   DEFSECTION. The default method returns T, while the methods for
-  locative types [SECTION][locative], [GLOSSARY-TERM][locative],
-  [PACKAGE][locative], [ASDF:SYSTEM][locative], METHOD and
-  [INCLUDE][locative] return NIL.
+  locative types [PACKAGE][locative], [METHOD][locative],
+  [ASDF:SYSTEM][locative], and [INCLUDE][locative] return NIL.
 
   This function is called by the default method of
   EXPORTABLE-REFERENCE-P to decide what symbols DEFSECTION shall
@@ -235,13 +231,13 @@
 ;;;; These methods must be defined here else the DEFSECTION forms in
 ;;;; pax.lisp will export too much.
 
-(defmethod exportable-locative-type-p ((locative-type (eql 'asdf:system)))
-  nil)
-
 (defmethod exportable-locative-type-p ((locative-type (eql 'package)))
   nil)
 
 (defmethod exportable-locative-type-p ((locative-type (eql 'method)))
+  nil)
+
+(defmethod exportable-locative-type-p ((locative-type (eql 'asdf:system)))
   nil)
 
 (defmethod exportable-locative-type-p ((locative-type (eql 'include)))
