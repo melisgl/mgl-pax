@@ -57,9 +57,10 @@
 
 (defun ook ())
 
-(defun traced-foo (x)
-  "XXX"
-  x)
+(without-redefinition-warnings
+  (defun traced-foo (x)
+    "XXX"
+    x))
 (handler-bind ((warning #'muffle-warning))
   (trace traced-foo))
 (defun foo (ook x)

@@ -126,7 +126,7 @@
   (test-go)
   (test-docstring)
   (test-include)
-  (test-hyperspec)
+  (test-clhs)
   (test-clhs-definitions)
   (test-clhs-section)
   (test-clhs-glossary-entries)
@@ -1638,7 +1638,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
 (deftest test-include ()
   (check-pred @inc "This is in [`@INC`][0a52]"))
 
-(deftest test-hyperspec ()
+(deftest test-clhs ()
   (check-head "FIND-IF" "[`FIND-IF`][5884]")
   (check-head "LIST" "`LIST`([`0`][79d8] [`1`][6d9f])")
   (check-head "[LIST][type]" "[`LIST`][79d8]")
