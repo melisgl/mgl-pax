@@ -9,31 +9,69 @@
 
 ;;;; Dynamically generated sections
 
+(define-locative-type dynamic-section (section)
+  "nothing"
+  (defclass dynamic-section-dref ()
+    ((title :initarg :title :reader doctitle*)
+     (indexable :initform t :initarg :indexable :reader indexablep)
+     (in-context-only :initform nil :initarg :in-context-only
+                      :reader in-context-only-p)
+     (anchor :initform nil)
+     (fn :initarg :fn :reader fn-of))))
+
+(defmethod resolve* ((dref dynamic-section-dref))
+  (resolve-error))
+
 ;;; Create a SECTION, and generate documentation for it.
 (defmacro with-dynamic-section ((stream &key title (indexable t)
                                  in-context-only)
                                 &body body)
   (assert (symbolp stream))
-  `(document-object (make-instance 'dynamic-section-dref
-                                   :title ,title
-                                   :indexable ,indexable
-                                   :in-context-only ,in-context-only
-                                   :locative 'dyn
-                                   :fn (lambda (,stream)
-                                         ,@body))
-                    ,stream))
+  `(call-with-dynamic-section stream ,title ,indexable ,in-context-only
+                              (lambda (,stream) ,@body)))
 
-(defclass dynamic-section-dref (dref)
-  ((title :initarg :title :reader doctitle*)
-   (dref::name :initarg :name :initform (princ-to-string (next-dyn-id)))
-   (fn :initarg :fn :reader fn-of)
-   (indexable :initform t :initarg :indexable :reader indexablep)
-   (in-context-only :initform nil :initarg :in-context-only
-                    :reader in-context-only-p)))
+(defun call-with-dynamic-section (stream title indexable in-context-only fn)
+  (document-object
+   (let* ((id (incf (page-next-dyn-id *page*)))
+          ;; Dynamic section from the previous pass, if any.
+          (prev (gethash id (page-id-to-dynamic-section *page*))))
+     (cond (prev
+            (assert (equal title (doctitle* prev)))
+            (assert (eq (not indexable) (not (indexablep prev))))
+            (assert (eq (not in-context-only) (not (in-context-only-p prev))))
+            (setf (slot-value prev 'fn) fn)
+            prev)
+           (t
+            (setf (gethash id (page-id-to-dynamic-section *page*))
+                  (make-instance 'dynamic-section-dref
+                                 :name (prin1-to-string id)
+                                 :locative 'dynamic-section
+                                 :title title
+                                 :indexable indexable
+                                 :in-context-only in-context-only
+                                 :fn fn)))))
+   stream))
 
 (defmethod document-object* ((dref dynamic-section-dref) stream)
   (with-heading (stream :dref dref)
     (funcall (fn-of dref) stream)))
+
+(defmethod dref-to-anchor ((dref dynamic-section-dref))
+  (dynamic-section-anchor dref))
+
+(defmethod dref-to-anchor-v1 ((dref dynamic-section-dref))
+  (dynamic-section-anchor dref))
+
+(defun dynamic-section-anchor (dref)
+  (with-slots (anchor title) dref
+    (or anchor
+        (let ((proposed-anchor title)
+              (used (page-used-dynamic-anchors *page*)))
+          (loop for i upfrom 1
+                while (gethash proposed-anchor used)
+                do (setq proposed-anchor (format nil "~A-~A" title i)))
+          (setf (gethash proposed-anchor used) t)
+          (setf anchor proposed-anchor)))))
 
 
 (in-readtable pythonic-string-syntax)

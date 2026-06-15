@@ -210,7 +210,9 @@
   ;; *TARGETS*.
   (linked-to (make-hash-table :test #'eq) :type hash-table)
   ;; For numbering DYNAMIC-SECTION-DREFs.
-  (next-dyn-id 0 :type integer))
+  (next-dyn-id 0 :type integer)
+  (id-to-dynamic-section (make-hash-table))
+  (used-dynamic-anchors (make-hash-table :test #'equal)))
 
 ;;; All the PAGEs in a DOCUMENT call.
 (defvar *pages*)
@@ -237,9 +239,6 @@
 
 ;;; The current page where output is being sent.
 (defvar *page* nil)
-
-(defun next-dyn-id ()
-  (incf (page-next-dyn-id *page*)))
 
 (defvar *page-stream*)
 
@@ -3145,19 +3144,21 @@
 
 ;;; Return the unescaped name of the HTML anchor for DREF. See
 ;;; URLENCODE.
-(defun dref-to-anchor (dref)
-  (with-standard-io-syntax*
-    ;; The locative may not be readable (e.g. methods with EQL
-    ;; specializers with unreadable stuff).
-    (let ((*print-readably* nil))
-      (format nil "~A ~S" (prin1-funny-to-string (dref-name dref))
-              (dref-locative dref)))))
+(defgeneric dref-to-anchor (dref)
+  (:method (dref)
+    (with-standard-io-syntax*
+      ;; The locative may not be readable (e.g. methods with EQL
+      ;; specializers with unreadable stuff).
+      (let ((*print-readably* nil))
+        (format nil "~A ~S" (prin1-funny-to-string (dref-name dref))
+                (dref-locative dref))))))
 
-(defun dref-to-anchor-v1 (dref)
-  (with-standard-io-syntax*
-    (let ((*print-readably* nil))
-      (format nil "(~A ~S)" (prin1-funny-to-string (dref-name dref))
-              (dref-locative dref)))))
+(defgeneric dref-to-anchor-v1 (dref)
+  (:method (dref)
+    (with-standard-io-syntax*
+      (let ((*print-readably* nil))
+        (format nil "(~A ~S)" (prin1-funny-to-string (dref-name dref))
+                (dref-locative dref))))))
 
 (defun dref-to-pax-url (dref)
   (urlencode

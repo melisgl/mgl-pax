@@ -19,6 +19,8 @@
 
 ;;; The outermost section being documented. It's always explicitly on
 ;;; @DOCUMENTABLE.
+(defvar *top-level-section* nil)
+;;; The root of the indexing context.
 (defvar *indexing-section* nil)
 ;;; Like PAGE-DEFINITIONS, but only lists the definitions documented
 ;;; under *INDEXING-SECTION* in the 2nd pass.
@@ -30,22 +32,34 @@
 ;;; Like the previous, but keyed by index keys.
 (defvar *indexing-key-to-referrers* nil)
 
-(defmacro with-indexing-context ((section) &body body)
+(declaim (special *section*))
+
+(defun indexing-context-boundary-p ()
+  (and (null *indexing-section*)
+       (member *real-format* *document-index-formats*)
+       (ecase *document-index-sections*
+         ((nil) nil)
+         ((:documentable)
+          (eq *section* *top-level-section*))
+         ((:homeless-documentable)
+          (and (eq *section* *top-level-section*)
+               (null (home-section *section*)))))))
+
+(defmacro with-indexing-context (() &body body)
   (with-gensyms (vars values)
-    `(multiple-value-bind (,vars ,values)
-         (when (and *document-index-sections*
-                    (null *indexing-section*)
-                    (member *real-format* *document-index-formats*))
-           (values '(*indexing-section*
-                     *indexing-definitions*
-                     *indexing-dref-to-referrers*
-                     *indexing-key-to-referrers*)
-                   (list ,section
-                         ()
-                         (make-hash-table :test #'equal)
-                         (make-hash-table :test #'equal))))
-       (progv ,vars ,values
-         ,@body))))
+    `(let ((*top-level-section* (or *top-level-section* *section*)))
+       (multiple-value-bind (,vars ,values)
+           (when (indexing-context-boundary-p)
+             (values '(*indexing-section*
+                       *indexing-definitions*
+                       *indexing-dref-to-referrers*
+                       *indexing-key-to-referrers*)
+                     (list *section*
+                           ()
+                           (make-hash-table :test #'equal)
+                           (make-hash-table :test #'equal))))
+         (progv ,vars ,values
+           ,@body)))))
 
 (defmacro dref-to-referrers (dref)
   `(gethash ,(once-only (dref)
