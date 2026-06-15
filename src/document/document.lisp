@@ -2647,11 +2647,11 @@
              (ref-1 (target-dref target-1)))
         (cond
           ((< 1 (length targets))
+           (dolist (target targets)
+             (maybe-index target))
            (cond ((eq *subformat* :plain)
                   label)
                  (*document-open-linking*
-                  (dolist (target targets)
-                    (maybe-index target))
                   ;; [`label`](pax:name)
                   `((:explicit-link
                      :label ,label
@@ -2665,7 +2665,6 @@
                         for i upfrom 0
                         for target in (sort-references targets
                                                        :key #'target-dref)
-                        do (maybe-index target)
                         unless (typep (target-dref target) 'concept-dref)
                           append `(,@(unless (zerop i)
                                        '(" "))

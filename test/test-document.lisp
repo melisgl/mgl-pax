@@ -2360,7 +2360,7 @@ example section
 (defvar *i-var* nil
   "I-FN function")
 (defmacro i-z ()
-  "I-FN function"
+  "I-FN"
   nil)
 (define-compiler-macro i-fn ()
   "I-FN function"
@@ -2388,7 +2388,7 @@ example section
 
 ### Misc Index
 
-- I-FN (compiler-macro)
+- I-FN (compiler-macro) ↩ f: I-Z
 
 - I-FN (fn)
 
@@ -2413,7 +2413,7 @@ example section
 
 ### 1.1 Misc Index
 
-- [`I-FN`][3189] _(compiler-macro)_
+- [`I-FN`][3189] _(compiler-macro)_ ↩ _f_: [`I-Z`][2387]
 - [`I-FN`][a3be] _(fn)_
 
     - ↩ _f_: [`I-FN`][3189], [`I-Z`][2387]
@@ -2460,7 +2460,7 @@ example section
 
     - < v: *I-VAR*
 
-- I-FN (cmac)
+- I-FN (cmac) < f: I-Z
 
 - *I-VAR* (var)
 

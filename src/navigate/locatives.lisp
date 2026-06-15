@@ -1,6 +1,90 @@
 (in-package :mgl-pax)
 
 (in-readtable pythonic-string-syntax)
+
+
+;;;; Lazy doc definitions
+;;;;
+;;;; A "doc" here is a SECTION, GLOSSARY-TERM or CONCEPT (but not
+;;;; NOTE), which are implemented as variables. PAX recognizes as lazy
+;;;; doc definitions variables whose value is of the form
+;;;;
+;;;;   ((:%PAX-LAZY-DOC <NAME> <KIND> <LOADER-FN>) . <PAYLOAD>)
+;;;;
+;;;; upon accessing them (with DREF:LOCATE and DREF:RESOLVE),
+;;;; LOADER-FN is APPLYd to PAYLOAD. LOADER-FN's job is to redefine
+;;;; the variable as a normal PAX construct (e.g. with
+;;;; PAX:DEFSECTION).
+;;;;
+;;;; NAME is the name of the variable holding the value, and KIND is
+;;;; :SECTION, :GLOSSARY-TERM, :CONCEPT or :NOTE.
+;;;;
+;;;; This is experimental and definitely not public. SBCL's SB-MANUAL
+;;;; contrib uses it to avoid a hard dependency on PAX but make use of
+;;;; PAX if it's loaded.
+;;;;
+;;;; SB-MANUAL has its own dummy DEFSECTION implementation, which just
+;;;; sets the variable NAME to the (DEFSECTION <NAME> ...) defining
+;;;; form itself plus the :%PAX-LAZY-DOC metadata. Its LOADER-FN
+;;;; substitutes some symbols in this form with their PAX equivalents
+;;;; (e.g. SB-MANUAL::DEFSECTION becomes PAX:DEFSECTION,
+;;;; SB-MANUAL::MACRO becomes DREF:MACRO) and EVALs the resulting
+;;;; form, which sets NAME to a normal PAX doc object.
+
+(defun lazy-doc-p (object kind)
+  (and (consp object)
+       (consp (car object))
+       (eq (caar object) :%pax-lazy-doc)
+       (or (null kind)
+           (eq kind (third (first object))))))
+
+(defun lazy-doc-name (lazy)
+  (second (first lazy)))
+
+(defun proper-lazy-doc-name-p (object kind)
+  (and (symbolp object)
+       (boundp object)
+       (let ((value (symbol-value object)))
+         (and (lazy-doc-p value kind)
+              (eq (lazy-doc-name value) object)))))
+
+(defun locate-lazy-doc (list kind dref-class locative-type)
+  (unless (and (lazy-doc-p list kind)
+               (proper-lazy-doc-name-p (lazy-doc-name list) kind))
+    (locate-error))
+  (make-instance dref-class :name (lazy-doc-name list)
+                 :locative locative-type))
+
+(defun resolve-lazy-doc (lazy dref)
+  (destructuring-bind ((marker name locative fn) &rest payload) lazy
+    (declare (ignore marker locative))
+    (apply fn name payload))
+  (let ((new (symbol-value (dref-name dref)))
+        (expected-type (dref-locative-type dref)))
+    (assert (typep new expected-type) ()
+            "~@<Lazy loaded ~S for ~S, got ~S, which is not a ~S.~:@>"
+            lazy dref new expected-type)
+    new))
+
+(defmacro define-lazy-locate-and-resolve (locative-type (kind dref-class))
+  `(progn
+     (define-locator ,locative-type ((list list))
+       (locate-lazy-doc list ,kind ',dref-class ',locative-type))
+
+     (define-lookup ,locative-type (symbol locative-args)
+       (unless (and (symbolp symbol)
+                    (boundp symbol)
+                    (or (typep (symbol-value symbol) ',locative-type)
+                        (proper-lazy-doc-name-p symbol ,kind)))
+         (locate-error))
+       (make-instance ',dref-class :name symbol :locative ',locative-type))
+
+     (defmethod resolve* ((dref ,dref-class))
+       (let ((value (symbol-value (dref-name dref))))
+         (if (lazy-doc-p value ,kind)
+             (resolve-lazy-doc value dref)
+             value)))))
+
 
 ;;;; SECTION locative
 
@@ -11,64 +95,10 @@
   default (see EXPORTABLE-REFERENCE-P).")
 
 (define-locator section ((section section))
-  (make-instance 'section-dref :name (section-name section) :locative 'section))
-
-;;; We also allow magic values of the form
-;;;
-;;;     ((:%pax-lazy-section <var-name> <fn-designator>)
-;;;      . <args>)
-;;;
-;;; to denote a section definition. This is experimental and
-;;; definitely not public. SBCL's SB-MANUAL uses it.
-(define-locator section ((list list))
-  (unless (and (lazy-section-p list)
-               (proper-lazy-section-name-p (lazy-section-name list)))
-    (locate-error))
-  (make-instance 'section-dref :name (lazy-section-name list)
+  (make-instance 'section-dref :name (section-name section)
                  :locative 'section))
 
-(defun lazy-section-p (object)
-  (and (consp object)
-       (consp (car object))
-       (eq (caar object) :%pax-lazy-section)))
-
-(defun lazy-section-name (lazy)
-  (second (first lazy)))
-
-(defun proper-lazy-section-name-p (object)
-  (and (symbolp object)
-       (boundp object)
-       (let ((value (symbol-value object)))
-         (and (lazy-section-p value)
-              (eq (lazy-section-name value) object)))))
-
-;;; This is for LOCATE to work on variables whose value is either a
-;;; SECTION or a lazy section.
-(define-lookup section (symbol locative-args)
-  (unless (and (symbolp symbol)
-               (boundp symbol)
-               (or (typep (symbol-value symbol) 'section)
-                   (proper-lazy-section-name-p symbol)))
-    (locate-error))
-  (make-instance 'section-dref :name symbol :locative 'section))
-
-;;; To RESOLVE, we just take the SYMBOL-VALUE, which should be a
-;;; SECTION. If its a lazy section, then we call its function and
-;;; check the SYMBOL-VALUE again.
-(defmethod resolve* ((dref section-dref))
-  (let ((value (symbol-value (dref-name dref))))
-    (cond ((lazy-section-p value)
-           (destructuring-bind ((marker name fn) &rest args) value
-             (declare (ignore marker))
-             (apply fn name args))
-           (let ((new (symbol-value (dref-name dref))))
-             (assert (typep new 'section) ()
-                     "~@<Lazy loaded ~S for ~S, got ~S, ~
-                     which is not a ~S.~:@>"
-                     value dref new 'section)
-             new))
-          (t
-           value))))
+(define-lazy-locate-and-resolve section (:section section-dref))
 
 (defmethod docstring* ((dref section-dref))
   nil)
@@ -94,15 +124,8 @@
   (make-instance 'glossary-term-dref :name (glossary-term-name glossary-term)
                  :locative 'glossary-term))
 
-(define-lookup glossary-term (symbol locative-args)
-  (unless (and (symbolp symbol)
-               (boundp symbol)
-               (typep (symbol-value symbol) 'glossary-term))
-    (locate-error))
-  (make-instance 'glossary-term-dref :name symbol :locative 'glossary-term))
-
-(defmethod resolve* ((dref glossary-term-dref))
-  (symbol-value (dref-name dref)))
+(define-lazy-locate-and-resolve glossary-term
+    (:glossary-term glossary-term-dref))
 
 (defmethod docstring* ((dref glossary-term-dref))
   (glossary-term-docstring (resolve dref)))
@@ -121,51 +144,7 @@
   (make-instance 'concept-dref :name (concept-name concept)
                  :locative 'concept))
 
-(define-locator concept ((list list))
-  (unless (and (lazy-concept-p list)
-               (proper-lazy-concept-name-p (lazy-concept-name list)))
-    (locate-error))
-  (make-instance 'concept-dref :name (lazy-concept-name list)
-                 :locative 'section))
-
-;;; FIXME: refactor with the section equivalents
-(defun lazy-concept-p (object)
-  (and (consp object)
-       (consp (car object))
-       (eq (caar object) :%pax-lazy-concept)))
-
-(defun lazy-concept-name (lazy)
-  (second (first lazy)))
-
-(defun proper-lazy-concept-name-p (object)
-  (and (symbolp object)
-       (boundp object)
-       (let ((value (symbol-value object)))
-         (and (lazy-concept-p value)
-              (eq (lazy-concept-name value) object)))))
-
-(define-lookup concept (symbol locative-args)
-  (unless (and (symbolp symbol)
-               (boundp symbol)
-               (or (typep (symbol-value symbol) 'concept)
-                   (proper-lazy-concept-name-p symbol)))
-    (locate-error))
-  (make-instance 'concept-dref :name symbol :locative 'concept))
-
-(defmethod resolve* ((dref concept-dref))
-  (let ((value (symbol-value (dref-name dref))))
-    (cond ((lazy-concept-p value)
-           (destructuring-bind ((marker name fn) &rest args) value
-             (declare (ignore marker))
-             (apply fn name args))
-           (let ((new (symbol-value (dref-name dref))))
-             (assert (typep new 'concept) ()
-                     "~@<Lazy loaded ~S for ~S, got ~S, ~
-                     which is not a ~S.~:@>"
-                     value dref new 'concept)
-             new))
-          (t
-           value))))
+(define-lazy-locate-and-resolve concept (:concept concept-dref))
 
 (defmethod docstring* ((dref concept-dref))
   nil)

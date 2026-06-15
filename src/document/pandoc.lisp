@@ -314,6 +314,10 @@
 \small
 \raggedright
 
+\renewcommand{\paxlink}[2]{%
+  \hyperref[#1]{#2} \textcolor{black!60}{\footnotesize\pageref*{#1}}%
+}
+
 \setlistdepth{9}
 \renewlist{itemize}{itemize}{9}
 \setlist[itemize]{

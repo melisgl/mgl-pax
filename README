@@ -454,7 +454,7 @@ documentation.
 
 Now let's examine the most important pieces.
 
-- [macro] DEFSECTION NAME (&KEY (PACKAGE '*PACKAGE*) (READTABLE '*READTABLE*) (EXPORT T) TITLE LINK-TITLE-TO (DISCARD-DOCUMENTATION-P *DISCARD-DOCUMENTATION-P*) CONCEPTS) &BODY ENTRIES
+- [macro] DEFSECTION NAME (&KEY (PACKAGE '*PACKAGE*) (READTABLE '*READTABLE*) (EXPORT T) TITLE LINK-TITLE-TO (DISCARD-DOCUMENTATION-P *DISCARD-DOCUMENTATION-P*) KEYS) &BODY ENTRIES
 
     Define a documentation section and maybe export referenced symbols.
     A bit behind the scenes, a global variable with NAME is defined and
@@ -526,7 +526,7 @@ Now let's examine the most important pieces.
     The bottom line is that if you rely on DEFSECTION to do the
     exporting, then you'd better use DEFINE-PACKAGE.
 
-- [macro] DEFINE-GLOSSARY-TERM NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P *DISCARD-DOCUMENTATION-P*) CONCEPTS) &BODY DOCSTRING
+- [macro] DEFINE-GLOSSARY-TERM NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P *DISCARD-DOCUMENTATION-P*) KEYS) &BODY DOCSTRING
 
     Define a global variable with NAME, and set it to a GLOSSARY-TERM object. TITLE, URL and DOCSTRING are Markdown strings or
     NIL. Glossary terms are DOCUMENTed in the lightweight bullet +
@@ -650,6 +650,8 @@ in the context of Generating Documentation).
 - [locative] SECTION
 
     - Direct locative supertypes: VARIABLE
+
+    - Direct locative subtypes: DYNAMIC-SECTION
 
     Refers to a SECTION defined by DEFSECTION.
 
@@ -2665,6 +2667,9 @@ entries except the last.
 - For definitions with a GLOSSARY-TERM locative, no arglist is
 printed, and if non-NIL, GLOSSARY-TERM-TITLE is printed as name.
 
+- For definitions with a CONCEPT locative, no documentation is
+generated.
+
 - For definitions with a GO locative, its LOCATIVE-ARGS are printed
 as its arglist, along with a redirection message.
 
@@ -3873,9 +3878,10 @@ there are only a couple of PAX generic functions left to extend.
     The default method calls EXPORTABLE-LOCATIVE-TYPE-P with
     LOCATIVE-TYPE and ignores the other arguments.
 
-    By default, SECTIONs, GLOSSARY-TERMs and NOTEs are not exported
-    although they are EXPORTABLE-LOCATIVE-TYPE-P. To export symbols
-    naming sections from MGL-PAX, the following method could be added:
+    By default, SECTIONs, GLOSSARY-TERMs, CONCEPTs and NOTEs are not
+    exported although they are EXPORTABLE-LOCATIVE-TYPE-P. To export
+    symbols naming sections from MGL-PAX, the following method could be
+    added:
 
         (defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
                                            symbol (locative-type (eql 'section))
@@ -4072,8 +4078,6 @@ presented.
 
 - [function] SECTION-LINK-TITLE-TO SECTION
 
-- [reader] SECTION-CONCEPTS SECTION (:CONCEPTS = NIL)
-
 - [function] SECTION-ENTRIES SECTION
 
     A list of Markdown docstrings and XREFs in the order they
@@ -4100,8 +4104,6 @@ they are presented.
     A title or NIL. Used in generated
     documentation (see Markdown Output) and is returned by DOCTITLE
     for GLOSSARY-TERM objects and GLOSSARY-TERM definitions..
-
-- [reader] GLOSSARY-TERM-CONCEPTS GLOSSARY-TERM (:CONCEPTS = NIL)
 
 - [reader] GLOSSARY-TERM-URL GLOSSARY-TERM (:URL)
 

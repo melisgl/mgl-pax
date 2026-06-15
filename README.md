@@ -570,7 +570,7 @@ Now let's examine the most important pieces.
 
 <a id="x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29"></a>
 
-- [macro] **DEFSECTION** *NAME (&KEY (PACKAGE '\*PACKAGE\*) (READTABLE '\*READTABLE\*) (EXPORT T) TITLE LINK-TITLE-TO (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*) CONCEPTS) &BODY ENTRIES*
+- [macro] **DEFSECTION** *NAME (&KEY (PACKAGE '\*PACKAGE\*) (READTABLE '\*READTABLE\*) (EXPORT T) TITLE LINK-TITLE-TO (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*) KEYS) &BODY ENTRIES*
 
     Define a documentation section and maybe export referenced symbols.
     A bit behind the scenes, a global variable with `NAME` is defined and
@@ -648,7 +648,7 @@ Now let's examine the most important pieces.
 
 <a id="x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20MGL-PAX-3AMACRO-29"></a>
 
-- [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*) CONCEPTS) &BODY DOCSTRING*
+- [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*) KEYS) &BODY DOCSTRING*
 
     Define a global variable with `NAME`, and set it to a [`GLOSSARY-TERM`][8251] object. `TITLE`, `URL` and `DOCSTRING` are Markdown strings or
     `NIL`. Glossary terms are [`DOCUMENT`][432c]ed in the lightweight bullet +
@@ -782,6 +782,8 @@ in the context of [Generating Documentation][2c93]).
 - [locative] **SECTION**
 
     - Direct locative supertypes: `VARIABLE`
+    
+    - Direct locative subtypes: `DYNAMIC-SECTION`
 
     Refers to a [`SECTION`][5fac] defined by [`DEFSECTION`][72b4].
     
@@ -3035,6 +3037,9 @@ entries except the last.
 - For definitions with a [`GLOSSARY-TERM`][5119] locative, no arglist is
 printed, and if non-`NIL`, [`GLOSSARY-TERM-TITLE`][af78] is printed as name.
 
+- For definitions with a `CONCEPT` locative, no documentation is
+generated.
+
 - For definitions with a [`GO`][58f6] locative, its `LOCATIVE-ARGS` are printed
 as its arglist, along with a redirection message.
 
@@ -4421,9 +4426,10 @@ there are only a couple of PAX generic functions left to extend.
     The default method calls [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] with
     `LOCATIVE-TYPE` and ignores the other arguments.
     
-    By default, [`SECTION`][5fac]s, [`GLOSSARY-TERM`][8251]s and [`NOTE`][e2ae]s are not exported
-    although they are `EXPORTABLE-LOCATIVE-TYPE-P`. To export symbols
-    naming sections from MGL-PAX, the following method could be added:
+    By default, [`SECTION`][5fac]s, [`GLOSSARY-TERM`][8251]s, `CONCEPT`s and [`NOTE`][e2ae]s are not
+    exported although they are `EXPORTABLE-LOCATIVE-TYPE-P`. To export
+    symbols naming sections from MGL-PAX, the following method could be
+    added:
     
     ```
     (defmethod exportable-reference-p ((package (eql (find-package 'mgl-pax)))
@@ -4662,10 +4668,6 @@ presented.
 
 - [function] **SECTION-LINK-TITLE-TO** *SECTION*
 
-<a id="x-28MGL-PAX-3ASECTION-CONCEPTS-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29"></a>
-
-- [reader] **SECTION-CONCEPTS** *[SECTION][5fac] (:CONCEPTS = NIL)*
-
 <a id="x-28MGL-PAX-3ASECTION-ENTRIES-20FUNCTION-29"></a>
 
 - [function] **SECTION-ENTRIES** *SECTION*
@@ -4702,10 +4704,6 @@ they are presented.
     A [title][090e] or `NIL`. Used in generated
     documentation (see [Markdown Output][dd29]) and is returned by [`DOCTITLE`][e619]
     for [`GLOSSARY-TERM`][8251] objects and `GLOSSARY-TERM` definitions..
-
-<a id="x-28MGL-PAX-3AGLOSSARY-TERM-CONCEPTS-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29"></a>
-
-- [reader] **GLOSSARY-TERM-CONCEPTS** *[GLOSSARY-TERM][8251] (:CONCEPTS = NIL)*
 
 <a id="x-28MGL-PAX-3AGLOSSARY-TERM-URL-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29"></a>
 
