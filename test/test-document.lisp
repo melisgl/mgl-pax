@@ -2332,19 +2332,19 @@ example section
 
 (deftest test-indexing ()
   (test-print-index-key-tree)
-  (test-write-index/sorting)
-  (test-write-index/sort-as)
-  (test-write-index/concepts/dead)
-  (test-write-index/concepts/live))
+  (test-indexing/sorting)
+  (test-indexing/sort-as)
+  (test-indexing/concepts/dead)
+  (test-indexing/concepts/live))
 
 (deftest test-print-index-key-tree ()
   (flet ((test (keys output)
-           (is (equal (with-output-to-string (s)
-                        (pax::print-index-key-tree
-                         (pax::radix-tree keys) s
-                         (lambda (key i depth)
-                           (format s "~S,~S,~S" key i depth))))
-                      (format nil output)))))
+           (is (null (mismatch% (with-output-to-string (s)
+                                  (pax::print-index-key-tree
+                                   (pax::radix-tree keys) s
+                                   (lambda (key i depth)
+                                     (format s "~S,~S,~S" key i depth))))
+                                (format nil output))))))
     (test '((0)) "- 0(0),0,1~%")
     (test '((0) (1)) "- 0(0),0,1~%- 1(1),1,1~%")
     (test '((0) (0 1)) "- 0(0),0,1~%    - 1(0 1),1,2~%")
@@ -2372,7 +2372,7 @@ example section
   (i-z macro)
   (i-fn compiler-macro))
 
-(deftest test-write-index/sorting ()
+(deftest test-indexing/sorting ()
   (let* ((*document-index-sections* :homeless-documentable)
          (*document-index-formats* '(:plain :markdown))
          (*document-indices*
@@ -2382,9 +2382,9 @@ example section
     (with-test ("plain")
       (let* ((out (document @index-test :stream nil :format :plain))
              (pos (search "## Indices" out)))
-        (is pos)
-        (is (equal (subseq out (or pos 0))
-                   "## Indices
+        (when (is pos :ctx ("output: ~S" out))
+          (is (null (mismatch% (subseq out pos)
+                               "## Indices
 
 ### Misc Index
 
@@ -2399,17 +2399,17 @@ example section
 - *I-VAR* (var)
 
 - I-Z (macro)
-"))))
+"))))))
     (with-test ("markdown")
       (let* ((out (document @index-test :stream nil :format :markdown))
              (pos (search "## 1 Indices" out)))
         (is pos)
-        (is (equal (subseq out (or pos 0))
-                   "## 1 Indices
+        (is (null (mismatch% (subseq out (or pos 0))
+                             "## 1 Indices
 
 
-<a id=\"x-28-222-22-20MGL-PAX-3A-3ADYN-29\"></a>
-<a id=\"%222%22%20MGL-PAX::DYN\"></a>
+<a id=\"Misc-20Index\"></a>
+<a id=\"Misc%20Index\"></a>
 
 ### 1.1 Misc Index
 
@@ -2423,15 +2423,15 @@ example section
 - [`I-Z`][2387] _(macro)_
 
 
-  [053c]: #%222%22%20MGL-PAX::DYN \"Misc Index\"
+  [0a8e]: #Indices \"Indices\"
   [2387]: #MGL-PAX-TEST:I-Z%20MGL-PAX:MACRO \"MGL-PAX-TEST:I-Z MGL-PAX:MACRO\"
   [3189]: #MGL-PAX-TEST:I-FN%20COMPILER-MACRO \"MGL-PAX-TEST:I-FN COMPILER-MACRO\"
   [a3be]: #MGL-PAX-TEST:I-FN%20FUNCTION \"MGL-PAX-TEST:I-FN FUNCTION\"
   [b534]: #MGL-PAX-TEST:*I-VAR*%20VARIABLE \"MGL-PAX-TEST:*I-VAR* VARIABLE\"
-  [bad5]: #%221%22%20MGL-PAX::DYN \"Indices\"
-"))))))
+  [d87e]: #Misc%20Index \"Misc Index\"
+")))))))
 
-(deftest test-write-index/sort-as ()
+(deftest test-indexing/sort-as ()
   (let* ((*document-index-sections* :homeless-documentable)
          (*document-index-formats* '(:plain :markdown))
          (*document-indices*
@@ -2449,8 +2449,8 @@ example section
          (out (document @index-test :stream nil :format :plain))
          (pos (search "## Indices" out)))
     (is pos)
-    (is (equal (subseq out pos)
-               "## Indices
+    (is (null (mismatch% (subseq out pos)
+                         "## Indices
 
 ### Misc Index
 
@@ -2465,7 +2465,7 @@ example section
 - *I-VAR* (var)
 
 - I-Z (mac)
-"))))
+")))))
 
 
 (defsection @concept-test (:title "Concept Test")
@@ -2489,13 +2489,13 @@ example section
   "@SHOWN"
   nil)
 
-(deftest test-write-index/concepts/dead ()
+(deftest test-indexing/concepts/dead ()
   (let* ((*document-index-sections* :homeless-documentable)
          (*document-index-formats* '(:plain :markdown))
          (*document-indices* '((:title "Indices" :concepts t)))
          (out (document @concept-test :stream nil :format :plain)))
-    (is (equal out
-               "# Concept Test
+    (is (null (mismatch% out
+                         "# Concept Test
 
 ###### [in package MGL-PAX-TEST]
 
@@ -2518,9 +2518,9 @@ example section
 - macros, defining ↩ f: C-BAR, C-FOO
 
 - not-a-list ↩ d: @WHATEVER
-"))))
+")))))
 
-(deftest test-write-index/concepts/live ()
+(deftest test-indexing/concepts/live ()
   (let* ((*document-index-sections* :homeless-documentable)
          (*document-index-formats* '(:md-w3m))
          (*document-indices* '((:title "Indices" :concepts t)))
@@ -2528,8 +2528,8 @@ example section
          (*document-link-sections* nil)
          (*package* (find-package :mgl-pax-test))
          (out (document* @concept-test :format :md-w3m)))
-    (is (equal out
-               "# Concept Test
+    (is (null (mismatch% out
+                         "# Concept Test
 
 <a id=\"MGL-PAX-TEST:C-FOO%20FUNCTION\"></a>
 
@@ -2562,4 +2562,11 @@ example section
 [5be5]: #MGL-PAX-TEST:C-BAR%20FUNCTION \"MGL-PAX-TEST:C-BAR FUNCTION\"
 
 [cceb]: #MGL-PAX-TEST:C-FOO%20FUNCTION \"MGL-PAX-TEST:C-FOO FUNCTION\"
-"))))
+")))))
+
+(deftest test-indexing/index-sections ()
+  (let* ((*document-index-sections* :homeless-documentable)
+         (*document-index-formats* '(:plain :markdown))
+         (*document-indices* '((:title "Indices" :concepts t :dtype t))))
+    (is (not (search "Indices" (document pax::@codification :stream nil
+                                         :format :markdown))))))

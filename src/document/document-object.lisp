@@ -409,7 +409,7 @@
              (*package* (section-package ,section))
              (*readtable* (section-readtable ,section))
              (*section* ,section))
-         (with-indexing-context (*section*)
+         (with-indexing-context ()
            (with-heading (,stream :dref *section*
                           :link-title-to (section-link-title-to ,section))
              (when (and (not ,same-package) *document-normalize-packages*)
