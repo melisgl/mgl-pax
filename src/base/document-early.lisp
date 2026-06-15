@@ -175,6 +175,21 @@
 
 ;;; We need this for DOCUMENTING-DEFINITION.
 (defvar *dref-being-documented* nil)
+
+;;; This may eventually be exported
+(defmacro with-errors-downgraded-when-open-linking ((&key on-error) &body body)
+  (let ((body-fn (gensym))
+        (error (gensym)))
+    `(flet ((,body-fn ()
+              ,@body))
+       (declare (special *document-open-linking*))
+       (if *document-open-linking*
+           (handler-case
+               (,body-fn)
+             (error (,error)
+               (warn "~A" ,error)
+               ,on-error))
+           (,body-fn)))))
 
 
 (defsection @github-workflow (:title "GitHub Workflow")

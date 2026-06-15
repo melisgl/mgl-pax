@@ -235,8 +235,7 @@
   ..   "(foo 7)"
   ```
 
-  When @BROWSING-LIVE-DOCUMENTATION, any errors signalled during
-  transcription are downgraded to warnings.
+  @TRANSCRIPTION-ERROR-DOWNGRADE
 
   All in all, transcripts are a handy tool especially when combined
   with the Emacs support to update them and with

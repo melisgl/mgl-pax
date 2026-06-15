@@ -1742,21 +1742,17 @@
         code-block)))
 
 (defun transcribe-code-block (transcript args-string)
-  (flet ((call-it ()
-           (multiple-value-bind (dynenv args)
-               (parse-cl-transcribe-args args-string)
-             (let ((*transcribe-check-consistency* t))
-               (funcall (or dynenv #'funcall)
-                        (lambda ()
-                          (apply #'transcribe transcript nil :update-only t
-                                 args)))))))
-    (if *document-open-linking*
-        (handler-case
-            (call-it)
-          (error (e)
-            (warn "~A" e)
-            transcript))
-        (call-it))))
+  (note @transcription-error-downgrade
+    "When @BROWSING-LIVE-DOCUMENTATION, any errors signalled during
+    transcription are downgraded to warnings."
+    (with-errors-downgraded-when-open-linking (:on-error transcript)
+      (multiple-value-bind (dynenv args)
+          (parse-cl-transcribe-args args-string)
+        (let ((*transcribe-check-consistency* t))
+          (funcall (or dynenv #'funcall)
+                   (lambda ()
+                     (apply #'transcribe transcript nil :update-only t
+                            args))))))))
 
 ;;; Undo the :EMPH parsing for code references. E.g. (:EMPH "XXX") ->
 ;;; "*XXX*" if "*XXX*" is to be codified according to

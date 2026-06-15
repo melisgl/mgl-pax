@@ -69,8 +69,8 @@
   (if (find-if #'symbolp list)
       (loop for x in list
             append (if (symbolp x)
-                       ;; FIXME: downgrade failures to warning?
-                       (multiplexing-index-keys (dref x 'concept))
+                       (with-errors-downgraded-when-open-linking ()
+                         (multiplexing-index-keys (dref x 'concept)))
                        (list x)))
       list))
 
