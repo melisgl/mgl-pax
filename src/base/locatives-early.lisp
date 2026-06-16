@@ -14,6 +14,7 @@
   in the context of @GENERATING-DOCUMENTATION)."
   (section locative)
   (glossary-term locative)
+  (concept locative)
   (note locative)
   (dislocated locative)
   (argument locative)

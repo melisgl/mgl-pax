@@ -20,10 +20,10 @@
    ("alexandria" . "ends-with") ("alexandria" . "ends-with-subseq")
    ("alexandria" . "featurep") ("alexandria" . "first-elt")
    ("alexandria" . "hash-table-keys") ("alexandria" . "hash-table-plist")
-   ("alexandria" . "if-let") ("alexandria" . "last-elt")
-   ("alexandria" . "nth-value-or") ("alexandria" . "once-only")
-   ("alexandria" . "plist-hash-table") ("alexandria" . "rcurry")
-   ("alexandria" . "read-file-into-string")
+   ("alexandria" . "hash-table-values") ("alexandria" . "if-let")
+   ("alexandria" . "last-elt") ("alexandria" . "nth-value-or")
+   ("alexandria" . "once-only") ("alexandria" . "plist-hash-table")
+   ("alexandria" . "rcurry") ("alexandria" . "read-file-into-string")
    ("alexandria" . "read-stream-content-into-string")
    ("alexandria" . "starts-with") ("alexandria" . "starts-with-subseq")
    ("alexandria" . "when-let") ("alexandria" . "with-gensyms")
@@ -33,14 +33,14 @@
 (autoload::export*
  '("*browse-html-style*" "*discard-documentation-p*" "*document-base-url*"
    "*document-downcase-uppercase-code*" "*document-fancy-html-navigation*"
-   "*document-generate-indices*" "*document-html-bottom-blocks-of-links*"
-   "*document-html-charset*" "*document-html-default-style*"
-   "*document-html-head*" "*document-html-lang*"
+   "*document-html-bottom-blocks-of-links*" "*document-html-charset*"
+   "*document-html-default-style*" "*document-html-head*"
+   "*document-html-lang*"
    "*document-html-max-navigation-table-of-contents-level*"
    "*document-html-sidebar*" "*document-html-top-blocks-of-links*"
    "*document-hyperspec-root*" "*document-index-formats*"
-   "*document-index-referee-locative-type-abbrevs*"
-   "*document-index-referrer-dtype-abbrevs*" "*document-index-sections*"
+   "*document-index-referent-locative-type-abbrevs*"
+   "*document-index-referrer-groups*" "*document-index-sections*"
    "*document-indices*" "*document-link-code*" "*document-link-sections*"
    "*document-link-to-hyperspec*" "*document-mark-up-signatures*"
    "*document-max-numbering-level*" "*document-max-table-of-contents-level*"
@@ -56,13 +56,12 @@
    "doctitle" "doctitle*" "document" "document-docstring" "document-object*"
    "documenting-definition" "ensure-web-server" "escape-markdown"
    "exportable-locative-type-p" "exportable-reference-p" "glossary-term"
-   "glossary-term-concepts" "glossary-term-name" "glossary-term-title"
-   "glossary-term-url" "go" "home-section" "include" "install-pax-elisp"
-   "locative" "macro" "make-git-source-uri-fn" "make-github-source-uri-fn"
-   "note" "output-label" "output-reflink" "prin1-to-markdown" "reader"
-   "register-doc-in-pax-world" "section" "section-concepts" "section-entries"
-   "section-link-title-to" "section-name" "section-package"
-   "section-readtable" "section-title" "squeeze-whitespace"
+   "glossary-term-name" "glossary-term-title" "glossary-term-url" "go"
+   "home-section" "include" "install-pax-elisp" "locative" "macro"
+   "make-git-source-uri-fn" "make-github-source-uri-fn" "note" "output-label"
+   "output-reflink" "prin1-to-markdown" "reader" "register-doc-in-pax-world"
+   "section" "section-entries" "section-link-title-to" "section-name"
+   "section-package" "section-readtable" "section-title" "squeeze-whitespace"
    "standard-transcribe-dynenv" "structure-accessor" "symbol-macro"
    "transcribe" "transcription-consistency-error" "transcription-error"
    "transcription-output-consistency-error"
@@ -204,28 +203,100 @@
 
 (autoload::foreshadow-defvar mgl-pax:*document-index-formats* :init
                              '(:html :pdf) :docstring
-                             "The list of @OUTPUT-FORMATS for which index generation is enabled.")
+                             "The list of @OUTPUT-FORMATS for which index generation is allowed.")
 
 (autoload::foreshadow-defvar
- mgl-pax:*document-index-referee-locative-type-abbrevs*)
+ mgl-pax:*document-index-referent-locative-type-abbrevs* :docstring
+ "A list of `(LOCATIVE-TYPE ABBREV)` elements, where `ABBREV` (a
+  Markdown string) is printed instead of the @REFERENT's locative when
+  its DREF-LOCATIVE-TYPE is LOCATIVE-TYPE.
 
-(autoload::foreshadow-defvar mgl-pax:*document-index-referrer-dtype-abbrevs*
+  The default behaviour is to bind *PACKAGE* to the package of the
+  symbol naming the definition (if it's a symbol) and print the
+  locative with *PRINT-CASE* :DOWNCASE, omitting the package of the
+  locative type.")
+
+(autoload::foreshadow-defvar mgl-pax:*document-index-referrer-groups*
                              :docstring
-                             "When @INDEXING, a . A list of (DTYPE SUBKEY) elements. See DREF::@DTYPES.")
+                             "A list of `(DTYPE ABBREV &KEY DOCUMENTATION)` elements that defines
+  the grouping of @REFERRERs of similar types in referrer lists. For
+  example, the default value of this variable has this element:
+
+      ((or function macro compiler-macro method) \"↩ _f_:\"
+         :documentation \"_f_: for definitions in the function namespace ...\")
+
+  Thus, in the following example, the definitions of `BAR` and `BAZ`
+  are grouped together under `↩ f:` because they are both DTYPEP `(OR
+  FUNCTION MACRO COMPILER-MACRO METHOD)`:
+
+      foo [my-lib] (fn)
+        ↩ d: My Lib Utilities
+        ↩ f: bar, baz
+
+  - In general, the first matching `\\DTYPE` wins. See DREF::@DTYPES.
+
+  - ABBREV may be a Markdown string or a cons of strings to control
+    sort order in the manner of @CONCEPT-SUBKEYs.
+
+  - `\\DOCUMENTATION` is a Markdown string for
+    :DOCUMENT-REFERRER-GROUPS in *DOCUMENT-INDICES*.")
 
 (autoload::foreshadow-defvar mgl-pax:*document-index-sections* :init
                              :homeless-documentable :docstring
-                             "Controls what sections get an @INDEX.
+                             "Controls what sections can get an index (if *DOCUMENT-INDEX-FORMATS*
+  also allows it and they are non-empty).
 
   - NIL: No indices are generated.
 
-  - :DOCUMENTABLE: Sections that are appear in @DOCUMENTABLE (at any
-    level) get indices. Their subsections do not.
+  - :DOCUMENTABLE: Sections that appear in @DOCUMENTABLE (at any
+    level) can get indices. Their subsections cannot.
 
   - :HOMELESS-DOCUMENTABLE: Sections that appear in @DOCUMENTABLE and
-    have no HOME-SECTION get indices.")
+    have no HOME-SECTION can get indices.")
 
-(autoload::foreshadow-defvar mgl-pax:*document-indices*)
+(autoload::foreshadow-defvar mgl-pax:*document-indices* :docstring
+                             "A nested list of index specifications. Each spec is of the form
+
+      (&key title documentation document-referrer-groups
+            dtype concepts children)
+
+  Non-`CONCEPT` @REFERENTs recorded during documentation generation
+  are assigned to the first (in depth-first order) spec with a
+  [matching][dtypep] `\\DTYPE`. For @REFERENTs that are concepts, their
+  keys are assigned to the first spec with :CONCEPTS true.
+
+  Specs are processed in the following way and order:
+
+  - If a spec and all its :CHILDREN are empty (nothing was assigned to
+    them above), then they are not output.
+
+  - Else, a dynamically generated SECTION with TITLE (a Markdown
+    string) is entered.
+
+  - If DOCUMENTATION is non-NIL, then it is a Markdown docstring and
+    is written as is to the output.
+
+  - If `DOCUMENT-REFERRER-GROUPS` is true, then the `\\ABBREV`s and
+    `\\DOCUMENTATION`s in *DOCUMENT-INDEX-REFERRER-GROUPS* are listed
+    in the output.
+
+  - The @REFERENTs assigned to this spec are output along with their
+    @REFERRERs (see the examples in @INDEXING-CONCEPTS).
+
+  - The `CHILDREN` specs are processed.
+
+  - The dynamically generated section is closed.
+
+  The default value specifies separate indices for
+
+  - functions and macros
+  - variables
+  - types
+  - other things
+  - CONCEPTs and GLOSSARY-TERMs.
+
+  They are all grouped under an \"Indices\" section, that has
+  :DOCUMENT-REFERRER-GROUPS.")
 
 (autoload::foreshadow-defvar mgl-pax:*document-link-code* :init t :docstring
                              "Whether definitions of things other than [SECTION][class]s

@@ -13,9 +13,8 @@
                             (export t) title link-title-to
                             (discard-documentation-p
                              *discard-documentation-p*)
-                            keys)
+                            concepts)
                       &body entries)
-  ;; FIXME
   "Define a documentation section and maybe export referenced symbols.
   A bit behind the scenes, a global variable with NAME is defined and
   is bound to a [SECTION][class] object. By convention, section names
@@ -57,17 +56,21 @@
 
   **Misc**
 
-  TITLE is a string containing Markdown or NIL. If non-NIL, it
-  determines the text of the heading in the generated output.
-  LINK-TITLE-TO is a reference given as an `(NAME LOCATIVE)` pair or
-  NIL, to which the heading will link when generating HTML. If not
-  specified, the heading will link to its own anchor.
+  - TITLE is a string containing Markdown or NIL. If non-NIL, it
+    determines the text of the heading in the generated output.
+    LINK-TITLE-TO is a reference given as an `(NAME LOCATIVE)` pair or
+    NIL, to which the heading will link when generating HTML. If not
+    specified, the heading will link to its own anchor.
 
-  When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
-  is true, ENTRIES will not be recorded to save memory."
+  - When DISCARD-DOCUMENTATION-P (defaults to
+    *DISCARD-DOCUMENTATION-P*) is true, ENTRIES will not be recorded
+    to save memory.
+
+  - CONCEPTS is a list of concept names and @CONCEPT-KEYs, for which
+    this section is a _primary source_. See @INDEXING-CONCEPTS."
   (check-section-entries entries name)
   (check-link-title-to link-title-to name)
-  (check-index-keys keys 'section name)
+  (check-concept-keys concepts 'section name)
   `(progn
      (eval-when (:compile-toplevel :load-toplevel :execute)
        (when ,export
@@ -84,7 +87,7 @@
                       :readtable ,readtable
                       :title ,title
                       :link-title-to ',link-title-to
-                      :keys ',keys
+                      :concepts ',concepts
                       :entries ',(and (not discard-documentation-p)
                                       (cons '%to-xref entries))))))
 
@@ -110,7 +113,7 @@
    ;; by SECTION-LINK-TITLE-TO, which is defined later so that XREF
    ;; can depend on mgl-pax/basics.
    (%link-title-to :initform nil :initarg :link-title-to)
-   (keys :initform () :initarg :keys :reader index-keys*)
+   (concepts :initform () :initarg :concepts :reader concept-keys*)
    ;; DEFSECTION's raw ENTRIES argument. See SECTION-ENTRIES.
    (%entries :initarg :entries))
   (:documentation "DEFSECTION stores its NAME, TITLE, [PACKAGE][type],
@@ -145,11 +148,11 @@
   (let ((*package* (find-package :keyword)))
     (prin1-to-string object)))
 
-(defun check-index-keys (keys type name)
+(defun check-concept-keys (keys type name)
   (unless (and (listp keys) (every #'index-key-p keys))
     (error "~@<Malformed ~S ~S in ~S ~A. It should be a list of ~S~:@>"
            :keys keys type (prin1-to-string/fully-qualified name)
-           '@index-key)))
+           '@concept-key)))
 
 (defun index-key-p (object)
   (or (symbolp object)
@@ -283,7 +286,7 @@
     :documentation "A @TITLE or NIL. Used in generated
     documentation (see @MARKDOWN-OUTPUT) and is returned by DOCTITLE
     for GLOSSARY-TERM objects and GLOSSARY-TERM DREF::@DEFINITIONS..")
-   (keys :initform () :initarg :keys :reader index-keys*)
+   (concepts :initform () :initarg :concepts :reader concept-keys*)
    (url
     :initarg :url :reader glossary-term-url
     :documentation "A string or NIL.")
@@ -292,30 +295,35 @@
 
 (defmacro define-glossary-term
     (name (&key title url (discard-documentation-p *discard-documentation-p*)
-           keys)
+           concepts)
      &body docstring)
-  ;; FIXME
   "Define a global variable with NAME, and set it to a [GLOSSARY-TERM]
   [class] object. TITLE, URL and DOCSTRING are Markdown strings or
   NIL. Glossary terms are DOCUMENTed in the lightweight bullet +
   locative + name/title style. See the glossary entry @NAME for an
   example.
 
-  When a glossary term is linked to in documentation, its TITLE will
-  be the link text instead of the name of the symbol (as with
-  SECTIONs).
+  - When a glossary term is linked to in documentation, its TITLE will
+    be the link text instead of the name of the symbol (as with
+    SECTIONs).
 
-  Glossary entries with a non-NIL URL are like external links: they
-  are linked to their URL in the generated documentation. These offer
-  a more reliable alternative to using Markdown reference links and
-  are usually not included in SECTIONs.
+  - Glossary terms with non-NIL URLs are like external links: they are
+    linked to their URL in the generated documentation. These offer a
+    more reliable alternative to using Markdown reference links and
+    are usually not included in SECTIONs.
 
-  When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
-  is true, DOCSTRING will not be recorded to save memory."
-  (check-index-keys keys 'glossary-term name)
+  - When DISCARD-DOCUMENTATION-P (defaults to *DISCARD-DOCUMENTATION-P*)
+    is true, DOCSTRING will not be recorded to save memory.
+
+  - CONCEPTS is a list of concept names and @CONCEPT-KEYs, for which
+    this term is a _primary source_. See @INDEXING-CONCEPTS.
+
+  By [default][*document-indices*], glossary terms are indexed
+  alongside concepts."
+  (check-concept-keys concepts 'glossary-term name)
   `(defparameter ,name
      (make-instance 'glossary-term
-                    :name ',name :title ,title :url ,url :keys ',keys
+                    :name ',name :title ,title :url ,url :concepts ',concepts
                     :docstring ,(unless discard-documentation-p
                                   (apply #'concatenate 'string docstring)))))
 
@@ -326,12 +334,40 @@
     :documentation "The name of the global variable whose value is
     this CONCEPT object.")
    (title :initarg :title :reader doctitle*)
-   (keys :initarg :keys :reader multiplexing-index-keys*))
-  (:documentation "See DEFINE-CONCEPT."))
+   (keys :initarg :keys :reader multiplexing-concept-keys*))
+  (:documentation
+   "An OBJECT defined with DEFINE-CONCEPT. See also the CONCEPT locative
+   type."))
 
 (defmacro define-concept (name (&key title keys))
-  "FIXME"
-  (check-index-keys keys 'concept name)
+  "Define a CONCEPT for @INDEXING-CONCEPTS. TITLE is a STRING or NIL,
+  while KEYS is a list of @CONCEPT-KEYs and SYMBOLs (naming other
+  concepts, see below).
+
+  When @GENERATING-DOCUMENTATION, if a [link][@linking] would be made
+  to a CONCEPT, then:
+
+  - The concept's :KEYS are recorded as @REFERENTs with the definition
+    being documented as the @REFERRER.
+
+      SYMBOLs in :KEYS are resolved to the concepts they name, and
+      they are substituted with their keys recursively (circularities
+      are not allowed, but there are no checks for them).
+
+  - In the docstring being processed, the text denoting the name of
+    the concept is replaced by the concept's :TITLE or the empty
+    string if the title is NIL. In an ambiguous @UNSPECIFIC-LINK, the
+    links to concepts are simply removed.
+
+  By convention, names of TITLEd concepts start with a #\\@ character,
+  to indicate that these names are part of the sentence flow, as their
+  titles are substituted for their mentions. Names of unTITLEd
+  concepts start with a #\\~ character to indicate that they are pure
+  index key multiplexers, and do not appear in the generated
+  documentation.
+
+  See also DEFINE-GLOSSARY-TERM."
+  (check-concept-keys keys 'concept name)
   `(defparameter ,name
      (make-instance 'concept :name ',name :title ,title :keys ',keys)))
 

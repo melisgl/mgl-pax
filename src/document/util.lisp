@@ -267,8 +267,7 @@
 (defun radix-tree* (keys test)
   (loop
     while keys
-    for key = (pop keys)
-    collect (when key
+    collect (when-let (key (pop keys))
               (destructuring-bind (lead &rest suffix) key
                 ;; Collect the suffixes after the same LEAD. This is
                 ;; why KEYS must be sorted.
@@ -276,9 +275,8 @@
                         (cons suffix
                               (loop while (and keys (funcall test lead
                                                              (caar keys)))
-                                    for suffix = (rest (pop keys))
-                                    when suffix
-                                      collect suffix))))
+                                    when (rest (pop keys))
+                                      collect it))))
                   (merge-rt-nodes (radix-tree* suffixes test) key))))))
 
 (defun merge-rt-nodes (children &optional key)

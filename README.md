@@ -47,7 +47,10 @@
         - [8.5.6 Link Format][c0d2]
     - [8.6 Local Definition][9db9]
     - [8.7 Overview of Escaping][2634]
-    - [8.8 MGL-PAX:@INDEXING MGL-PAX:SECTION][adf8]
+    - [8.8 Indexing][adf8]
+        - [8.8.1 Indexing Definitions][34d3]
+        - [8.8.2 Indexing Concepts][c001]
+        - [8.8.3 Configuring Indices][b0b0]
     - [8.9 Output Formats][8d9b]
         - [8.9.1 Plain Output][c879]
         - [8.9.2 Markdown Output][dd29]
@@ -570,7 +573,7 @@ Now let's examine the most important pieces.
 
 <a id="x-28MGL-PAX-3ADEFSECTION-20MGL-PAX-3AMACRO-29"></a>
 
-- [macro] **DEFSECTION** *NAME (&KEY (PACKAGE '\*PACKAGE\*) (READTABLE '\*READTABLE\*) (EXPORT T) TITLE LINK-TITLE-TO (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*) KEYS) &BODY ENTRIES*
+- [macro] **DEFSECTION** *NAME (&KEY (PACKAGE '\*PACKAGE\*) (READTABLE '\*READTABLE\*) (EXPORT T) TITLE LINK-TITLE-TO (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*) CONCEPTS) &BODY ENTRIES*
 
     Define a documentation section and maybe export referenced symbols.
     A bit behind the scenes, a global variable with `NAME` is defined and
@@ -613,14 +616,18 @@ Now let's examine the most important pieces.
     
     **Misc**
     
-    `TITLE` is a string containing Markdown or `NIL`. If non-`NIL`, it
-    determines the text of the heading in the generated output.
-    `LINK-TITLE-TO` is a reference given as an `(NAME LOCATIVE)` pair or
-    `NIL`, to which the heading will link when generating HTML. If not
-    specified, the heading will link to its own anchor.
+    - `TITLE` is a string containing Markdown or `NIL`. If non-`NIL`, it
+      determines the text of the heading in the generated output.
+      `LINK-TITLE-TO` is a reference given as an `(NAME LOCATIVE)` pair or
+      `NIL`, to which the heading will link when generating HTML. If not
+      specified, the heading will link to its own anchor.
     
-    When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][730f])
-    is true, `ENTRIES` will not be recorded to save memory.
+    - When `DISCARD-DOCUMENTATION-P` (defaults to
+      [`*DISCARD-DOCUMENTATION-P*`][730f]) is true, `ENTRIES` will not be recorded
+      to save memory.
+    
+    - `CONCEPTS` is a list of concept names and [concept key][b19d]s, for which
+      this section is a *primary source*. See [Indexing Concepts][c001].
 
 <a id="x-28MGL-PAX-3A-2ADISCARD-DOCUMENTATION-P-2A-20VARIABLE-29"></a>
 
@@ -648,24 +655,30 @@ Now let's examine the most important pieces.
 
 <a id="x-28MGL-PAX-3ADEFINE-GLOSSARY-TERM-20MGL-PAX-3AMACRO-29"></a>
 
-- [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*) KEYS) &BODY DOCSTRING*
+- [macro] **DEFINE-GLOSSARY-TERM** *NAME (&KEY TITLE URL (DISCARD-DOCUMENTATION-P \*DISCARD-DOCUMENTATION-P\*) CONCEPTS) &BODY DOCSTRING*
 
     Define a global variable with `NAME`, and set it to a [`GLOSSARY-TERM`][8251] object. `TITLE`, `URL` and `DOCSTRING` are Markdown strings or
     `NIL`. Glossary terms are [`DOCUMENT`][432c]ed in the lightweight bullet +
     locative + name/title style. See the glossary entry [name][88cf] for an
     example.
     
-    When a glossary term is linked to in documentation, its `TITLE` will
-    be the link text instead of the name of the symbol (as with
-    [`SECTION`][5fac]s).
+    - When a glossary term is linked to in documentation, its `TITLE` will
+      be the link text instead of the name of the symbol (as with
+      [`SECTION`][5fac]s).
     
-    Glossary entries with a non-`NIL` `URL` are like external links: they
-    are linked to their `URL` in the generated documentation. These offer
-    a more reliable alternative to using Markdown reference links and
-    are usually not included in `SECTION`s.
+    - Glossary terms with non-`NIL` `URL`s are like external links: they are
+      linked to their `URL` in the generated documentation. These offer a
+      more reliable alternative to using Markdown reference links and
+      are usually not included in `SECTION`s.
     
-    When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][730f])
-    is true, `DOCSTRING` will not be recorded to save memory.
+    - When `DISCARD-DOCUMENTATION-P` (defaults to [`*DISCARD-DOCUMENTATION-P*`][730f])
+      is true, `DOCSTRING` will not be recorded to save memory.
+    
+    - `CONCEPTS` is a list of concept names and [concept key][b19d]s, for which
+      this term is a *primary source*. See [Indexing Concepts][c001].
+    
+    By [default][8894], glossary terms are indexed
+    alongside concepts.
 
 <a id="x-28MGL-PAX-3ANOTE-20MGL-PAX-3AMACRO-29"></a>
 
@@ -694,7 +707,8 @@ Now let's examine the most important pieces.
     Notes are similar to Lisp comments, but they can be included in the
     documentation. In fact, notes are auto-included: a [Specific Link][0361] to
     a note is equivalent to including it with the [`DOCSTRING`][ce75] locative.
-    Thus, `NOTE` can double as a tool to avoid boilerplate.
+    Thus, `NOTE` can double as a tool to avoid boilerplate. An
+    [Unspecific Link][8e71] to a note has no effect.
     
     Notes are intended to help reduce the distance between code and its
     documentation when there is no convenient definition docstring to
@@ -801,15 +815,31 @@ in the context of [Generating Documentation][2c93]).
     `GLOSSARY-TERM` is [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] but not exported by
     default (see [`EXPORTABLE-REFERENCE-P`][e51f]).
 
+<a id="x-28MGL-PAX-3ACONCEPT-20MGL-PAX-3ALOCATIVE-29"></a>
+
+- [locative] **CONCEPT**
+
+    - Direct locative supertypes: `VARIABLE`
+
+    Refers to a named group of [concept key][b19d]s defined by [`DEFINE-CONCEPT`][b80d]
+    for multiplexing its keys to definitions that link to it in their
+    docstrings. See [Indexing Concepts][c001] for more.
+    
+    `CONCEPT` is [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] but not exported by
+    default (see [`EXPORTABLE-REFERENCE-P`][e51f]).
+    
+    `CONCEPT`s have no `ARGLIST` or `DOCSTRING`.
+
 <a id="x-28MGL-PAX-3ANOTE-20MGL-PAX-3ALOCATIVE-29"></a>
 
 - [locative] **NOTE**
 
     Refers to named notes defined by the [`NOTE`][e2ae] macro.
     
-    If a single link would be made to a `NOTE` (be it either a
-    [Specific Link][0361] or an unambiguous [Unspecific Link][8e71]), then the `NOTE`'s
-    `DOCSTRING` is included as if with the [`DOCSTRING`][ce75] locative.
+    When [Generating Documentation][2c93], if a single link would be made to a
+    `NOTE` (be it either a [Specific Link][0361] or an unambiguous
+    [Unspecific Link][8e71]), then the `NOTE`'s `DOCSTRING` is included as if with
+    the [`DOCSTRING`][ce75] locative.
     
     `NOTE` is [`EXPORTABLE-LOCATIVE-TYPE-P`][c930] but not exported by default (see
     [`EXPORTABLE-REFERENCE-P`][e51f]).
@@ -2852,73 +2882,338 @@ in an explicit link.
 
 <a id="x-28MGL-PAX-3A-40INDEXING-20MGL-PAX-3ASECTION-29"></a>
 
-### 8.8 MGL-PAX:@INDEXING MGL-PAX:SECTION
+### 8.8 Indexing
+
+PAX can create indices that cross-reference definitions and
+[concept key][b19d]s with where they are mentioned in the documentation.
 
 <a id="x-28MGL-PAX-3A-40REFERRER-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
 
 - [glossary-term] **referrer**
 
-<a id="x-28MGL-PAX-3A-40REFEREE-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+    If the documentation of a definition [links to][19e3]
+    another definition, the former is considered a referrer to the
+    latter. See [referent][ad8e].
 
-- [glossary-term] **referee**
+<a id="x-28MGL-PAX-3A-40REFERENT-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
 
-<a id="x-28MGL-PAX-3A-40INDEX-KEY-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+- [glossary-term] **referent**
 
-- [glossary-term] **index key**
+    A definition is considered a referent of another definition
+    if the latter's documentation [links to][19e3] it. See
+    [referrer][e7e0].
 
-<a id="x-28MGL-PAX-3A-40INDEX-SUBKEY-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+<a id="x-28MGL-PAX-3A-40INDEXING-DEFINITIONS-20MGL-PAX-3ASECTION-29"></a>
 
-- [glossary-term] **index subkey**
+#### 8.8.1 Indexing Definitions
+
+PAX generates indices with entries like this:
+
+    foo [my-lib] (fn)
+      ↩ d: My Lib Utilities
+      ↩ f: bar, baz
+
+`MY-LIB:FOO` here is a function whose documentation has been [linked
+to][19e3] by the `My Lib Utilities` [`SECTION`][5fac] as well as the `BAR`
+and `BAZ` functions (grouped together under `f`). For example, BAR
+could be defined like this:
+
+    (defun bar (x)
+      "Extends FOO."
+      (1+ (foo x)))
+
+In this example, `MY-LIB:FOO` is the [referent][ad8e] and the others are
+the [referrer][e7e0]s. If there are no referrers or they are in the same
+group, then a single line is printed. Here is an example for the
+latter:
+
+    foo [my-lib] (fn) ↩ f: bar, baz
+
+
+<a id="x-28MGL-PAX-3A-40INDEXING-CONCEPTS-20MGL-PAX-3ASECTION-29"></a>
+
+#### 8.8.2 Indexing Concepts
+
+Let's first [`DEFINE-CONCEPT`][b80d]s:
+
+```common-lisp
+(define-concept @albert-einstein (:title "Albert Einstein"
+                                  :keys ("Einstein, Albert")))
+
+(define-concept @einstein-summation (:title "Einstein summation"
+                                     :keys ("Einstein summation")))
+```
+
+`CONCEPT`s are definitions, but in the generated documentation,
+[links][19e3] to them are [*hidden*][56b9], and they
+are not meant to be documented themselves. They exist to endow their
+[referrer][e7e0]s with [concept key][b19d]s:
+
+```common-lisp
+(defun einsum (x)
+  "Implement @EINSTEIN-SUMMATION by @ALBERT-EINSTEIN."
+  x)
+```
+
+This makes `EINSUM` a [referrer][e7e0] to the concept
+`@EINSTEIN-SUMMATION`, and thus will be indexed under the concept
+keys of `@EINSTEIN-SUMMATION`.
+
+[`DEFSECTION`][72b4] and [`DEFINE-GLOSSARY-TERM`][8ece] can associate concepts with the
+section or glossary term being defined:
+
+```common-lisp
+(defsection @famous-people (:title "Famous People"
+                            :concepts (@albert-einstein))
+  "Let's start with one of the most famous, Albert Einstein.")
+```
+
+This is like the mention in `EINSUM`, but it also makes the section
+a *primary source* of information. These are typeset more
+prominently in the generated documentation. If the section only
+mentions Einstein in passing, then don't use the `:CONCEPTS` argument,
+just mention `@ALBERT-EINSTEIN` in a section docstring as `EINSUM`
+does.
+
+Now, let's define a section to hold them together, configure a
+minimal index, and see what comes out:
+
+```common-lisp
+(defsection @test (:title "Test" :export nil)
+  (@famous-people section)
+  (einsum function))
+
+(defun print-concept-index (documentable)
+  (let* ((*document-index-formats* '(:plain))
+         (*document-indices* '((:concepts t :title "Concept Index")))
+         (output (document documentable :stream nil)))
+    (princ (subseq output (search "## Concept Index" output)))))
+
+(print-concept-index @test)
+.. ## Concept Index
+..
+.. - Einstein summation ↩ f: EINSUM
+..
+.. - Einstein, Albert
+..
+..     - ↩ d: Famous People
+..
+..     - ↩ f: EINSUM
+..
+```
+
+This is okay, but let's group `summation` and `Albert` under
+`Einstein` by breaking the string keys into lists of strings:
+
+```common-lisp
+(define-concept @albert-einstein (:title "Albert Einstein"
+                                  :keys (("Einstein" "Albert"))))
+
+(define-concept @einstein-summation (:title "Einstein summation"
+                                     :keys (("Einstein" "summation"))))
+
+(print-concept-index @test)
+.. ## Concept Index
+..
+.. - Einstein
+..
+..     - Albert
+..
+..         - ↩ d: Famous People
+..
+..         - ↩ f: EINSUM
+..
+..     - summation ↩ f: EINSUM
+..
+```
+
+
+See [`DEFINE-CONCEPT`][b80d] about *pure multiplexer concepts* (those
+without `:TITLE`s) and how concepts can inherit the keys of other
+concepts.
+
+Also, see [concept subkey][5920] on how to order concepts in the output.
+
+<a id="x-28MGL-PAX-3ADEFINE-CONCEPT-20MGL-PAX-3AMACRO-29"></a>
+
+- [macro] **DEFINE-CONCEPT** *NAME (&KEY TITLE KEYS)*
+
+    Define a `CONCEPT` for [Indexing Concepts][c001]. `TITLE` is a `STRING`([`0`][b93c] [`1`][dae6]) or `NIL`,
+    while `KEYS` is a list of [concept key][b19d]s and [`SYMBOL`][e5af]s (naming other
+    concepts, see below).
+    
+    When [Generating Documentation][2c93], if a [link][19e3] would be made
+    to a `CONCEPT`, then:
+    
+    - The concept's `:KEYS` are recorded as [referent][ad8e]s with the definition
+      being documented as the [referrer][e7e0].
+    
+        `SYMBOL`s in `:KEYS` are resolved to the concepts they name, and
+        they are substituted with their keys recursively (circularities
+        are not allowed, but there are no checks for them).
+    
+    - In the docstring being processed, the text denoting the name of
+      the concept is replaced by the concept's `:TITLE` or the empty
+      string if the title is `NIL`. In an ambiguous [Unspecific Link][8e71], the
+      links to concepts are simply removed.
+    
+    By convention, names of `TITLE`d concepts start with a #\@ character,
+    to indicate that these names are part of the sentence flow, as their
+    titles are substituted for their mentions. Names of un`TITLE`d
+    concepts start with a #\~ character to indicate that they are pure
+    index key multiplexers, and do not appear in the generated
+    documentation.
+    
+    See also [`DEFINE-GLOSSARY-TERM`][8ece].
+
+<a id="x-28MGL-PAX-3A-40CONCEPT-KEY-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+
+- [glossary-term] **concept key**
+
+    A concept key identifies an entry in an index.
+    It is a [concept subkey][5920] or a list of [concept subkey][5920]s. Concept keys
+    occur in [`DEFINE-CONCEPT`][b80d], [`DEFSECTION`][72b4] and [`DEFINE-GLOSSARY-TERM`][8ece].
+    
+    - *Single subkey*: For example, the key `"Einstein, Albert"`
+      consists of a single subkey. A single subkey is equivalent to a
+      one-element list.
+    
+    - *List of subkeys*: When Einstein summation is also referenced, we
+      can instead use the lists `("Einstein," "Albert")` and `("Einstein,"
+      "summation")` to ensure that their [referrer][e7e0]s are grouped together
+      under `"Einstein,"`.
+    
+        List concept keys can be arbitrarily long, although the
+        [PDF Output][19ad] imposes a limit of 9.
+
+<a id="x-28MGL-PAX-3A-40CONCEPT-SUBKEY-20MGL-PAX-3AGLOSSARY-TERM-29"></a>
+
+- [glossary-term] **concept subkey**
+
+    A concept subkey (a part of a [concept key][b19d]) can be a string or a
+    cons of strings. In the latter form, the [`CAR`][d5a2] is for printing, and
+    the [`CDR`][e012] is for sorting. For example, use `("Éclair" . "Eclair")` to
+    have `"Éclair"` printed but sorted as if it were `"Eclair"`. Sorting
+    is done with plain [`STRING<`][519c], which is not Unicode-aware.
+    
+    Note that print names are [`ESCAPE-MARKDOWN`][3026]ed.
+
+<a id="x-28MGL-PAX-3A-40CONFIGURING-INDICES-20MGL-PAX-3ASECTION-29"></a>
+
+#### 8.8.3 Configuring Indices
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-INDEX-SECTIONS-2A-20VARIABLE-29"></a>
 
 - [variable] **\*DOCUMENT-INDEX-SECTIONS\*** *:HOMELESS-DOCUMENTABLE*
 
-    Controls what sections get an @INDEX.
+    Controls what sections can get an index (if [`*DOCUMENT-INDEX-FORMATS*`][ba76]
+    also allows it and they are non-empty).
     
     - `NIL`: No indices are generated.
     
-    - `:DOCUMENTABLE`: Sections that are appear in [`DOCUMENTABLE`][0702] (at any
-      level) get indices. Their subsections do not.
+    - `:DOCUMENTABLE`: Sections that appear in [`DOCUMENTABLE`][0702] (at any
+      level) can get indices. Their subsections cannot.
     
     - `:HOMELESS-DOCUMENTABLE`: Sections that appear in [`DOCUMENTABLE`][0702] and
-      have no [`HOME-SECTION`][fda4] get indices.
+      have no [`HOME-SECTION`][fda4] can get indices.
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-INDEX-FORMATS-2A-20VARIABLE-29"></a>
 
 - [variable] **\*DOCUMENT-INDEX-FORMATS\*** *(:HTML :PDF)*
 
-    The list of [Output Formats][8d9b] for which index generation is enabled.
+    The list of [Output Formats][8d9b] for which index generation is allowed.
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-INDICES-2A-20VARIABLE-29"></a>
 
-- [variable] **\*DOCUMENT-INDICES\*** *((:TITLE "Indices" :DOCUMENT-REFERRER-ABBREVS T :CHILDREN
-  ((:DTYPE (OR SECTION GLOSSARY-TERM PSEUDO) :INDEX NIL)
-   (:DTYPE (OR FUNCTION MACRO COMPILER-MACRO) :TITLE
-    "Function and Macro Index")
-   (:DTYPE VARIABLE :TITLE "Variable and Constant Index")
-   (:DTYPE TYPE :TITLE "Type Index") (:DTYPE T :TITLE "Misc Index")
-   (:CONCEPTS T :TITLE "Concept Index"))))*
+- [variable] **\*DOCUMENT-INDICES\*** *"\<value omitted>"*
 
-<a id="x-28MGL-PAX-3A-2ADOCUMENT-INDEX-REFEREE-LOCATIVE-TYPE-ABBREVS-2A-20VARIABLE-29"></a>
+    A nested list of index specifications. Each spec is of the form
+    
+        (&key title documentation document-referrer-groups
+              dtype concepts children)
+    
+    Non-`CONCEPT` [referent][ad8e]s recorded during documentation generation
+    are assigned to the first (in depth-first order) spec with a
+    matching `DTYPE`. For [referent][ad8e]s that are concepts, their
+    keys are assigned to the first spec with `:CONCEPTS` true.
+    
+    Specs are processed in the following way and order:
+    
+    - If a spec and all its `:CHILDREN` are empty (nothing was assigned to
+      them above), then they are not output.
+    
+    - Else, a dynamically generated [`SECTION`][5fac] with `TITLE` (a Markdown
+      string) is entered.
+    
+    - If [`DOCUMENTATION`][c5ae] is non-`NIL`, then it is a Markdown docstring and
+      is written as is to the output.
+    
+    - If `DOCUMENT-REFERRER-GROUPS` is true, then the `ABBREV`s and
+      `DOCUMENTATION`s in [`*DOCUMENT-INDEX-REFERRER-GROUPS*`][85c9] are listed
+      in the output.
+    
+    - The [referent][ad8e]s assigned to this spec are output along with their
+      [referrer][e7e0]s (see the examples in [Indexing Concepts][c001]).
+    
+    - The `CHILDREN` specs are processed.
+    
+    - The dynamically generated section is closed.
+    
+    The default value specifies separate indices for
+    
+    - functions and macros
+    
+    - variables
+    
+    - types
+    
+    - other things
+    
+    - `CONCEPT`s and [`GLOSSARY-TERM`][8251]s.
+    
+    They are all grouped under an "Indices" section, that has
+    `:DOCUMENT-REFERRER-GROUPS`.
 
-- [variable] **\*DOCUMENT-INDEX-REFEREE-LOCATIVE-TYPE-ABBREVS\*** *((GENERIC-FUNCTION "\_(gf)\_") #'"\_(fn)\_" (VARIABLE "\_(var)\_")
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-INDEX-REFERENT-LOCATIVE-TYPE-ABBREVS-2A-20VARIABLE-29"></a>
+
+- [variable] **\*DOCUMENT-INDEX-REFERENT-LOCATIVE-TYPE-ABBREVS\*** *((GENERIC-FUNCTION "\_(gf)\_") #'"\_(fn)\_" (VARIABLE "\_(var)\_")
  (ASDF/SYSTEM:SYSTEM "\_(asdf:system)\_"))*
 
-<a id="x-28MGL-PAX-3A-2ADOCUMENT-INDEX-REFERRER-DTYPE-ABBREVS-2A-20VARIABLE-29"></a>
+    A list of `(LOCATIVE-TYPE ABBREV)` elements, where `ABBREV` (a
+    Markdown string) is printed instead of the [referent][ad8e]'s locative when
+    its `DREF-LOCATIVE-TYPE` is `LOCATIVE-TYPE`.
+    
+    The default behaviour is to bind [`*PACKAGE*`][5ed1] to the package of the
+    symbol naming the definition (if it's a symbol) and print the
+    locative with [`*PRINT-CASE*`][443b] `:DOWNCASE`, omitting the package of the
+    locative type.
 
-- [variable] **\*DOCUMENT-INDEX-REFERRER-DTYPE-ABBREVS\*** *(((OR FUNCTION MACRO COMPILER-MACRO METHOD) "↩ \_f\_:" :DOCUMENTATION
-  "\_f\_: for definitions in the function namespace
-(macros, compiler macros and also methods)")
- (TYPE "↩ \_t\_:" :DOCUMENTATION "\_t\_: \`DEFTYPE\`s, classes, conditions, structs")
- ((OR SECTION GLOSSARY-TERM) "↩ \_d\_:" :DOCUMENTATION
-  "\_d\_: documentation sections and glossary terms")
- ((OR LOCATIVE DTYPE) "↩ \_l\_:" :DOCUMENTATION
-  "\_l\_: definitions of definition types")
- (ASDF/SYSTEM:SYSTEM "↩ \_s\_:" :DOCUMENTATION "\_s\_: ASDF systems")
- (PACKAGE  ...*
+<a id="x-28MGL-PAX-3A-2ADOCUMENT-INDEX-REFERRER-GROUPS-2A-20VARIABLE-29"></a>
 
-    When [`@INDEXING`][adf8], a . A list of (`DTYPE` `SUBKEY`) elements. See `DTYPE`s.
+- [variable] **\*DOCUMENT-INDEX-REFERRER-GROUPS\*** *"\<value omitted>"*
+
+    A list of `(DTYPE ABBREV &KEY DOCUMENTATION)` elements that defines
+    the grouping of [referrer][e7e0]s of similar types in referrer lists. For
+    example, the default value of this variable has this element:
+    
+        ((or function macro compiler-macro method) "↩ _f_:"
+           :documentation "_f_: for definitions in the function namespace ...")
+    
+    Thus, in the following example, the definitions of `BAR` and `BAZ`
+    are grouped together under `↩ f:` because they are both `DTYPEP` `(OR
+    FUNCTION MACRO COMPILER-MACRO METHOD)`:
+    
+        foo [my-lib] (fn)
+          ↩ d: My Lib Utilities
+          ↩ f: bar, baz
+    
+    - In general, the first matching `DTYPE` wins. See `DTYPE`s.
+    
+    - `ABBREV` may be a Markdown string or a cons of strings to control
+      sort order in the manner of [concept subkey][5920]s.
+    
+    - `DOCUMENTATION` is a Markdown string for
+      `:DOCUMENT-REFERRER-GROUPS` in [`*DOCUMENT-INDICES*`][8894].
 
 <a id="x-28MGL-PAX-3A-40OUTPUT-FORMATS-20MGL-PAX-3ASECTION-29"></a>
 
@@ -3037,7 +3332,7 @@ entries except the last.
 - For definitions with a [`GLOSSARY-TERM`][5119] locative, no arglist is
 printed, and if non-`NIL`, [`GLOSSARY-TERM-TITLE`][af78] is printed as name.
 
-- For definitions with a `CONCEPT` locative, no documentation is
+- For definitions with a [`CONCEPT`][56b9] locative, no documentation is
 generated.
 
 - For definitions with a [`GO`][58f6] locative, its `LOCATIVE-ARGS` are printed
@@ -4780,6 +5075,7 @@ they are presented.
   [342d]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhs.htm "\"2.4.8.19\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [3473]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_s.htm "FIND-SYMBOL (MGL-PAX:CLHS FUNCTION)"
   [34b8]: #x-28MGL-PAX-3A-40UNSPECIFIC-REFLINK-WITH-TEXT-20MGL-PAX-3ASECTION-29 "Unspecific Reflink with Text"
+  [34d3]: #x-28MGL-PAX-3A-40INDEXING-DEFINITIONS-20MGL-PAX-3ASECTION-29 "Indexing Definitions"
   [35a2]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_expander "\"setf expander\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [36e1]: #x-28MGL-PAX-3A-40HTML-OUTPUT-20MGL-PAX-3ASECTION-29 "HTML Output"
   [36e9]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#dynamic_extent "\"dynamic extent\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
@@ -4809,9 +5105,11 @@ they are presented.
   [4c39]: #x-28MGL-PAX-3A-40TRANSCRIPT-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Transcript Consistency Checking"
   [4e05]: #x-28MGL-PAX-3A-40UNSPECIFIC-REFLINK-20MGL-PAX-3ASECTION-29 "Unspecific Reflink"
   [5119]: #x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:GLOSSARY-TERM MGL-PAX:LOCATIVE"
+  [519c]: http://www.lispworks.com/documentation/HyperSpec/Body/f_stgeq_.htm "STRING< (MGL-PAX:CLHS FUNCTION)"
   [5483]: http://www.lispworks.com/documentation/HyperSpec/Body/v__.htm "- (MGL-PAX:CLHS VARIABLE)"
   [54d8]: #x-28MGL-PAX-3A-40ADDING-NEW-LOCATIVES-20MGL-PAX-3ASECTION-29 "Adding New Locatives"
   [550b]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cgd.htm "\"22.3.7.4\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
+  [56b9]: #x-28MGL-PAX-3ACONCEPT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CONCEPT MGL-PAX:LOCATIVE"
   [56ba]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dd.htm "\"2.4.4\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [574a]: #x-28MGL-PAX-3A-40EXTENDING-DOCUMENT-20MGL-PAX-3ASECTION-29 "Extending `DOCUMENT`"
   [5825]: #x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "\"mgl-pax/transcribe\" ASDF/SYSTEM:SYSTEM"
@@ -4819,6 +5117,7 @@ they are presented.
   [5884]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_.htm "FIND-IF (MGL-PAX:CLHS FUNCTION)"
   [588c]: #x-28MGL-PAX-3ASTANDARD-TRANSCRIBE-DYNENV-20FUNCTION-29 "MGL-PAX:STANDARD-TRANSCRIBE-DYNENV FUNCTION"
   [58f6]: #x-28GO-20MGL-PAX-3ALOCATIVE-29 "GO MGL-PAX:LOCATIVE"
+  [5920]: #x-28MGL-PAX-3A-40CONCEPT-SUBKEY-20MGL-PAX-3AGLOSSARY-TERM-29 "concept subkey"
   [59d9]: https://pandoc.org/ "Pandoc"
   [5a82]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq.htm "EQ (MGL-PAX:CLHS FUNCTION)"
   [5ab6]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_rig.htm "*PRINT-RIGHT-MARGIN* (MGL-PAX:CLHS VARIABLE)"
@@ -4891,10 +5190,12 @@ they are presented.
   [8492]: #x-28MGL-PAX-3ATRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR CONDITION"
   [84f2]: https://pandoc.org/MANUAL.html#extension-yaml_metadata_block "Pandoc YAML metadata block"
   [8541]: #x-28MGL-PAX-3A-40EMACS-SETUP-20MGL-PAX-3ASECTION-29 "Emacs Setup"
+  [85c9]: #x-28MGL-PAX-3A-2ADOCUMENT-INDEX-REFERRER-GROUPS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-INDEX-REFERRER-GROUPS* VARIABLE"
   [8710]: #x-28MGL-PAX-3AARGUMENT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:ARGUMENT MGL-PAX:LOCATIVE"
   [875e]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-TO-HYPERSPEC* VARIABLE"
   [876d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_ensu_1.htm "ENSURE-DIRECTORIES-EXIST (MGL-PAX:CLHS FUNCTION)"
   [886c]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cge.htm "\"22.3.7.5\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
+  [8894]: #x-28MGL-PAX-3A-2ADOCUMENT-INDICES-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-INDICES* VARIABLE"
   [88a0]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_k.htm#keyword "\"keyword\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [88a7]: #x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "MGL-PAX:SECTION-READTABLE (MGL-PAX:READER MGL-PAX:SECTION)"
   [88cf]: #x-28MGL-PAX-3A-40NAME-20MGL-PAX-3AGLOSSARY-TERM-29 "name"
@@ -4942,21 +5243,26 @@ they are presented.
   [ac30]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cha.htm "\"22.3.8.1\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [ac5e]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhe.htm "\"2.4.8.5\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [ad78]: http://www.lispworks.com/documentation/HyperSpec/Body/f_format.htm "FORMAT (MGL-PAX:CLHS FUNCTION)"
+  [ad8e]: #x-28MGL-PAX-3A-40REFERENT-20MGL-PAX-3AGLOSSARY-TERM-29 "referent"
   [adf2]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhd.htm "\"2.4.8.4\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
-  [adf8]: #x-28MGL-PAX-3A-40INDEXING-20MGL-PAX-3ASECTION-29 "MGL-PAX:@INDEXING MGL-PAX:SECTION"
+  [adf8]: #x-28MGL-PAX-3A-40INDEXING-20MGL-PAX-3ASECTION-29 "Indexing"
   [aeb6]: http://www.lispworks.com/documentation/HyperSpec/Body/a_fn.htm "FUNCTION MGL-PAX:CLHS"
   [af78]: #x-28MGL-PAX-3AGLOSSARY-TERM-TITLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3AGLOSSARY-TERM-29-29 "MGL-PAX:GLOSSARY-TERM-TITLE (MGL-PAX:READER MGL-PAX:GLOSSARY-TERM)"
   [b033]: #x-28MGL-PAX-3A-40ASDF-SYSTEMS-AND-RELATED-PACKAGES-20MGL-PAX-3ASECTION-29 "`ASDF:SYSTEM`s and Related `PACKAGE`s"
+  [b0b0]: #x-28MGL-PAX-3A-40CONFIGURING-INDICES-20MGL-PAX-3ASECTION-29 "Configuring Indices"
   [b18e]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_p.htm#property_list "\"property list\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
+  [b19d]: #x-28MGL-PAX-3A-40CONCEPT-KEY-20MGL-PAX-3AGLOSSARY-TERM-29 "concept key"
   [b2e4]: #x-28MGL-PAX-3A-40FILTERING-LINKS-20MGL-PAX-3ASECTION-29 "Filtering Links"
   [b39f]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cdb.htm "\"22.3.4.2\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [b4f0]: http://www.lispworks.com/documentation/HyperSpec/Body/f_intern.htm "INTERN (MGL-PAX:CLHS FUNCTION)"
   [b79a]: http://www.lispworks.com/documentation/HyperSpec/Body/v_rdtabl.htm "*READTABLE* (MGL-PAX:CLHS VARIABLE)"
   [b7fc]: #x-28MGL-PAX-3A-40APROPOS-20MGL-PAX-3ASECTION-29 "Apropos"
+  [b80d]: #x-28MGL-PAX-3ADEFINE-CONCEPT-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-CONCEPT MGL-PAX:MACRO"
   [b81d]: #x-28MGL-PAX-3ATRANSCRIPTION-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-ERROR CONDITION"
   [b89a]: #x-28MGL-PAX-3A-40CODIFIABLE-20MGL-PAX-3AGLOSSARY-TERM-29 "codifiable"
   [b8b4]: http://www.lispworks.com/documentation/HyperSpec/Body/f_abortc.htm "MUFFLE-WARNING (MGL-PAX:CLHS FUNCTION)"
   [b93c]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "STRING (MGL-PAX:CLHS CLASS)"
+  [ba76]: #x-28MGL-PAX-3A-2ADOCUMENT-INDEX-FORMATS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-INDEX-FORMATS* VARIABLE"
   [ba90]: #x-28MGL-PAX-3A-40LINKS-AND-SYSTEMS-20MGL-PAX-3ASECTION-29 "Links and Systems"
   [bb12]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-HTML-DOCS-20FUNCTION-29 "MGL-PAX:UPDATE-ASDF-SYSTEM-HTML-DOCS FUNCTION"
   [bc83]: #x-28MGL-PAX-3A-40MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29 "Syntax Highlighting"
@@ -4964,6 +5270,7 @@ they are presented.
   [bdd6]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cga.htm "\"22.3.7.1\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [bf38]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cfc.htm "\"22.3.6.3\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [bfaa]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhk.htm "\"2.4.8.11\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
+  [c001]: #x-28MGL-PAX-3A-40INDEXING-CONCEPTS-20MGL-PAX-3ASECTION-29 "Indexing Concepts"
   [c0d2]: #x-28MGL-PAX-3A-40LINK-FORMAT-20MGL-PAX-3ASECTION-29 "Link Format"
   [c2d3]: #x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29 "Markdown Support"
   [c2fd]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_i.htm#implicit_progn "\"implicit progn\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
@@ -5014,6 +5321,7 @@ they are presented.
   [dd37]: #x-28MGL-PAX-3A-2ADOCUMENT-PANDOC-PROGRAM-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-PANDOC-PROGRAM* VARIABLE"
   [dded]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhm.htm "\"2.4.8.13\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [dff6]: #x-28MGL-PAX-3A-40GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29 "GitHub Workflow"
+  [e012]: http://www.lispworks.com/documentation/HyperSpec/Body/f_car_c.htm "CDR (MGL-PAX:CLHS FUNCTION)"
   [e016]: http://www.lispworks.com/documentation/HyperSpec/Body/06_aab.htm "\"6.1.1.2\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [e216]: #x-28MGL-PAX-3A-2ADOCUMENT-HTML-TOP-BLOCKS-OF-LINKS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* VARIABLE"
   [e2a4]: #x-28MGL-PAX-3A-40UNSPECIFIC-AUTOLINK-20MGL-PAX-3ASECTION-29 "Unspecific Autolink"
@@ -5029,6 +5337,7 @@ they are presented.
   [e619]: #x-28MGL-PAX-3ADOCTITLE-20FUNCTION-29 "MGL-PAX:DOCTITLE FUNCTION"
   [e65d]: #x-28MGL-PAX-3A-40PARSING-NAMES-20MGL-PAX-3ASECTION-29 "Parsing Names"
   [e6d3]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cdc.htm "\"22.3.4.3\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
+  [e7e0]: #x-28MGL-PAX-3A-40REFERRER-20MGL-PAX-3AGLOSSARY-TERM-29 "referrer"
   [e7ee]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*STANDARD-OUTPUT* (MGL-PAX:CLHS VARIABLE)"
   [ea37]: http://www.lispworks.com/documentation/HyperSpec/Body/v__stst_.htm "*** (MGL-PAX:CLHS VARIABLE)"
   [ebd3]: #x-28MGL-PAX-3A-2ATRANSCRIBE-SYNTAXES-2A-20VARIABLE-29 "MGL-PAX:*TRANSCRIBE-SYNTAXES* VARIABLE"

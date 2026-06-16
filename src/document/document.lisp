@@ -342,7 +342,7 @@
             (typep dref 'note-dref)
             ;; Finally, this is to allow indexing CONCEPTs (see
             ;; MAYBE-INDEX-LINK).
-            (multiplexing-index-keys dref))
+            (multiplexing-concept-keys dref))
     (set-target key (make-target :dref dref :page nil))))
 
 (defun fake-pax-target-p (target)
@@ -609,11 +609,12 @@
                ;; See the transcript in TRANSLATE-DOCSTRING-LINKS,
                ;; which does (DOCUMENT #'DIV2).
                (*section* nil)
+               (*top-level-section* nil)
                (*dref-being-documented* nil)
                (*indexing-section* nil)
                (*indexing-definitions* nil)
                (*indexing-dref-to-referrers* nil)
-               (*indexing-key-to-referrers* nil))
+               (*indexing-concept-key-to-referrers* nil))
           (document-return stream (%document documentable stream pages)))))))
 
 (defun call-with-format (format fn)
@@ -1032,8 +1033,7 @@
            (lambda (warning)
              (when (sanitize-aggressively-p)
                (muffle-warning warning)))))
-      (when *indexing-section*
-        (push dref *indexing-definitions*))
+      (maybe-record-index-referent dref)
       (let ((page (boundary-page dref)))
         (if *first-pass*
             (let ((*page* (or page *page*)))
@@ -1882,17 +1882,7 @@
                     (funcall fn char nil in-string))))))
 
 
-(defsection @linking (:title "Linking"
-                      ;; FIXME
-                      :keys (("linking")
-                             ("linking" "markdown")
-                             ("markdown" "linking")
-                             ("1")
-                             ("1" "2")
-                             ("1" "2" "3")
-                             ("1" "2" "3" "4")
-                             ("1" "2" "3" "4" "5")
-                             ("1" "2" "3" "4" "5" "6")))
+(defsection @linking (:title "Linking")
   """PAX supports linking to DREF::@DEFINITIONS either with
   explicit @REFLINKs or with @AUTOLINKs.
 
@@ -2620,7 +2610,7 @@
 
 ;;;; Common code for @LINKING
 
-;;; With older versions it's a STRING or NIL.
+;;; In older versions it's a STRING or NIL.
 (defparameter *3bmd-reflink-definition-is-list*
   (not (atom (pt-get (esrap:parse '3bmd-grammar::reference-link "[x][y]")
                      :definition))))
@@ -2639,53 +2629,80 @@
       ;; All references were filtered out.
       label
       (let* ((target-1 (first targets))
-             (ref-1 (target-dref target-1)))
-        (cond
-          ((< 1 (length targets))
-           (dolist (target targets)
-             (maybe-index target))
-           (cond ((eq *subformat* :plain)
-                  label)
-                 (*document-open-linking*
-                  ;; [`label`](pax:name)
-                  `((:explicit-link
-                     :label ,label
-                     :source ,(finalize-pax-url (name-to-pax-url
-                                                 (dref-name ref-1))))))
-                 (t
-                  ;; `label`([1][link-id-1] [2][link-id-2])
-                  `(,@label
-                    "("
-                    ,@(loop
-                        for i upfrom 0
-                        for target in (sort-references targets
-                                                       :key #'target-dref)
-                        unless (typep (target-dref target) 'concept-dref)
-                          append `(,@(unless (zerop i)
-                                       '(" "))
-                                   ,(%make-reflink `(,(code-fragment i))
-                                                   (link-to-target target))))
-                    ")"))))
-          ((member (xref-locative-type ref-1) '(dislocated argument))
-           label)
-          ((typep ref-1 'note-dref)
-           (or (codify-and-link-tree (translate-dref-docstring ref-1))
-               ;; Returning NIL would look like we didn't succeed.
-               '("")))
-          ((typep ref-1 'concept-dref)
-           (maybe-index target-1)
-           ;; We ignore EXPLICIT-LABEL-P
-           (or (document-definition-title ref-1 :format nil)
-               '("")))
-          (t
+             (ref-1 (target-dref target-1))
+             (ambiguousp (cdr targets)))
+        ;; Pick off the special cases
+        (when (not ambiguousp)
+          (cond ((local-reference-p ref-1)
+                 (return-from targets-to-tree label))
+                ((typep ref-1 'note-dref)
+                 (return-from targets-to-tree
+                   (or (codify-and-link-tree (translate-dref-docstring ref-1))
+                       ;; Returning NIL would look like we didn't succeed.
+                       '(""))))
+                ((typep ref-1 'concept-dref)
+                 (maybe-index target-1)
+                 (return-from targets-to-tree
+                   ;; We ignore EXPLICIT-LABEL-P
+                   (or (document-definition-title ref-1 :format nil)
+                       '(""))))))
+        (normal-targets-to-tree
+         label explicit-label-p
+         (%filter-and-maybe-index-special-targets targets)))))
+
+(defun %filter-and-maybe-index-special-targets (targets)
+  (loop for target in targets
+        ;; Because local references suppress linking in
+        ;; @UNSPECIFIC-AUTOLINK and in the @UNSPECIFIC-LINK case they
+        ;; are filtered out (because FIND-TARGET returns NIL in
+        ;; DREFS-TO-TARGETS), these can come only from
+        ;; @SPECIFIC-LINKs, which are always unambiguous (there is at
+        ;; most one TARGET for the reflink).
+        do (assert (not (local-reference-p (target-dref target))))
+        unless (typep (target-dref target) 'note-dref)
+          do (maybe-index target)
+        unless (typep (target-dref target) '(or concept-dref note-dref))
+          ;; Because CONCEPTs and NOTEs live in the VARIABLE
+          ;; namespace, we leave at least one unfiltered (we rely on
+          ;; TARGETS-TO-TREE having handled the single CONCEPT and
+          ;; single NOTE cases.
+          collect target))
+
+;;; TARGETS have global definitions that can be linked to. All the
+;;; special cases have been handled already.
+(defun normal-targets-to-tree (label explicit-label-p targets)
+  (let* ((target-1 (first targets))
+         (ref-1 (target-dref target-1))
+         (ambiguousp (cdr targets)))
+    (cond ((not ambiguousp)
            (let ((label (or (and (not explicit-label-p)
-                                 (document-definition-title ref-1 :format nil))
+                                 (document-definition-title
+                                  ref-1 :format nil))
                             label)))
              (cond ((fake-pax-target-p target-1)
                     label)
                    (t
-                    (maybe-index target-1)
-                    `(,(%make-reflink label (link-to-target target-1)))))))))))
+                    `(,(%make-reflink label (link-to-target target-1)))))))
+          ((eq *subformat* :plain)
+           label)
+          (*document-open-linking*
+           ;; [`label`](pax:name)
+           `((:explicit-link
+              :label ,label
+              :source ,(finalize-pax-url
+                        (name-to-pax-url (dref-name ref-1))))))
+          (t
+           ;; `label`([1][link-id-1] [2][link-id-2])
+           `(,@label
+             "("
+             ,@(loop
+                 for i upfrom 0
+                 for target in (sort-references targets :key #'target-dref)
+                 append `(,@(unless (zerop i)
+                              '(" "))
+                          ,(%make-reflink `(,(code-fragment i))
+                                          (link-to-target target))))
+             ")")))))
 
 
 (defsection @linking-to-the-hyperspec (:title "Linking to the HyperSpec")
@@ -3056,6 +3073,9 @@
 
 (defun has-local-reference-p (name)
   (find name *local-references* :test #'xref-name=))
+
+(defun local-reference-p (dref)
+  (find dref *local-references*))
 
 
 (defsection @link-format (:title "Link Format")
@@ -3181,7 +3201,7 @@
         (let ((name (handler-case
                         (read-funny stream nil)
                       (error (e)
-                        (error "~@<Bad ~S name in PAX URL path ~S.~%~A~:@>"
+                        (error "~@<Bad ~S in PAX URL path ~S.~%~A~:@>"
                                'dref::@name path e)))))
           (let ((drefs (definitions* name))
                 (locative-string (trim-whitespace
@@ -3193,7 +3213,7 @@
                    ;; may be unreadable. Just validate the locative
                    ;; type.
                    (unless (validate-parsed-locative-type locative-string)
-                     (error "~@<Bad ~S name in PAX URL path ~S~:@>"
+                     (error "~@<Bad ~S in PAX URL path ~S~:@>"
                             'dref::@locative-type path))
                    (ensure-list
                     ;; Since PATH was generated by DREF-TO-PAX-URL, we
@@ -3495,11 +3515,7 @@
       parse-tree))
 
 
-(defsection @overview-of-escaping
-    (:title "Overview of Escaping"
-     ;; FIXME
-     :keys (("markdown" "escaping")
-            ("escaping" "markdown")))
+(defsection @overview-of-escaping (:title "Overview of Escaping")
   """Let's recap how escaping @CODIFICATION,
   [downcasing][\*document-downcase-uppercase-code*], and @LINKING
   works.
@@ -3555,7 +3571,20 @@
   (standard-transcribe-dynenv
    (lambda ()
      (let ((*document-downcase-uppercase-code* nil)
+           (*document-index-sections* :homeless-documentable)
            (*transcribe-check-consistency* (featurep :sbcl)))
+       ;; KLUDGE: There are multiple transcripts that rely on these
+       ;; definitions, but they cannot be left around because they are
+       ;; recognized by @BROWSING-LIVE-DOCUMENTATION as "PAX Entry
+       ;; Points".
+       (defsection @test (:title "Test" :export nil)
+         (@famous-people section)
+         (einsum function))
+       (defsection @famous-people (:title "Famous People"
+                                   :concepts (@albert-einstein))
+         "Let's start with one the most famous, Albert Einstein.")
        (unwind-protect
             (funcall fn)
-         (unintern '@example-section :pax))))))
+         (locally (declare (special @test @famous-people))
+           (setq @test nil)
+           (setq @famous-people nil)))))))

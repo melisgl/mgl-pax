@@ -125,6 +125,7 @@ When using the live browser to develop, it is useful to see how the
 dead output will look like.
 ** MAYBE make *document-downcase-uppercase-code* default to T in sections?
 What if @DOCUMENTABLE is a list of sections and random stuff?
+** MAYBE make the rest of the define-concept :keys render as "See also <first key>"
 ** MAYBE make "a" and "an" locative aliases of the "type"
 so that one can write "X is a STRING" without having to disambiguate
 with "X is a [STRING][class]".
