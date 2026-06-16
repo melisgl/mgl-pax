@@ -20,10 +20,10 @@
   `(progn ,@body))
 
 (without-redefinition-warnings
-  (defgeneric index-keys* (object)
+  (defgeneric concept-keys* (object)
     (:method (object)
       ()))
-  (defgeneric multiplexing-index-keys* (object)
+  (defgeneric multiplexing-concept-keys* (object)
     (:method (object)
       ())))
 
@@ -509,7 +509,8 @@
   Notes are similar to Lisp comments, but they can be included in the
   documentation. In fact, notes are auto-included: a @SPECIFIC-LINK to
   a note is equivalent to including it with the DOCSTRING locative.
-  Thus, NOTE can double as a tool to avoid boilerplate.
+  Thus, NOTE can double as a tool to avoid boilerplate. An
+  @UNSPECIFIC-LINK to a note has no effect.
 
   Notes are intended to help reduce the distance between code and its
   documentation when there is no convenient definition docstring to

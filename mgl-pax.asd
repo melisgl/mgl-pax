@@ -91,6 +91,7 @@
                              (:file "index-early")
                              (:file "document-object")
                              (:file "document")
+                             (:file "dynamic-section")
                              (:file "index")
                              (:file "pandoc")
                              (:file "document-util")

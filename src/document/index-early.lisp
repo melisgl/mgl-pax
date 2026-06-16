@@ -3,9 +3,9 @@
 (in-readtable pythonic-string-syntax)
 
 ;;; Whether this DREF should be recorded when its generated
-;;; documentation refers to another definition. For example, index
-;;; sections are not indexable although they link to lots of stuff.
-(defgeneric indexablep (dref)
+;;; documentation refers to another definition. For example, links
+;;; from index sections are not to be indexed.
+(defgeneric indexable-referrer-p (dref)
   (:method (dref)
     t))
 
@@ -29,8 +29,8 @@
 ;;; docstrings reference them. For constructing indices. Populated in
 ;;; the 2nd pass.
 (defvar *indexing-dref-to-referrers* nil)
-;;; Like the previous, but keyed by index keys.
-(defvar *indexing-key-to-referrers* nil)
+;;; Like the previous, but keyed by concept keys.
+(defvar *indexing-concept-key-to-referrers* nil)
 
 (declaim (special *section*))
 
@@ -53,51 +53,62 @@
              (values '(*indexing-section*
                        *indexing-definitions*
                        *indexing-dref-to-referrers*
-                       *indexing-key-to-referrers*)
+                       *indexing-concept-key-to-referrers*)
                      (list *section*
-                           ()
+                           (make-hash-table :test #'equal)
                            (make-hash-table :test #'equal)
                            (make-hash-table :test #'equal))))
          (progv ,vars ,values
            ,@body)))))
 
+(declaim (inline dref-ht-key))
+(defun dref-ht-key (dref)
+  (cons (dref-name dref) (dref-locative dref)))
+
 (defmacro dref-to-referrers (dref)
-  `(gethash ,(once-only (dref)
-               `(cons (dref-name ,dref) (dref-locative ,dref)))
-            *indexing-dref-to-referrers*))
+  `(gethash (dref-ht-key ,dref) *indexing-dref-to-referrers*))
 
-(defmacro index-key-to-referrers (concept)
-  `(gethash ,concept *indexing-key-to-referrers*))
+(defmacro concept-key-to-referrers (concept)
+  ;; We consider (("x" . "a")) and (("x" . "b")) different. No good
+  ;; semantics for that in sight.
+  `(gethash ,concept *indexing-concept-key-to-referrers*))
 
-(defun index-keys (object)
-  (resolve-concept-symbols
+(defun concept-keys (object)
+  (resolve-concept-symbols-and-normalize
    (nth-value-or-with-obj-or-def (object 0)
-     (index-keys* object))))
+     (concept-keys* object))))
 
-(defun multiplexing-index-keys (object)
-  (resolve-concept-symbols
+(defun multiplexing-concept-keys (object)
+  (resolve-concept-symbols-and-normalize
    (nth-value-or-with-obj-or-def (object 0)
-     (multiplexing-index-keys* object))))
+     (multiplexing-concept-keys* object))))
 
-(defun resolve-concept-symbols (list)
-  (if (find-if #'symbolp list)
-      (loop for x in list
-            append (if (symbolp x)
-                       (with-errors-downgraded-when-open-linking ()
-                         (multiplexing-index-keys (dref x 'concept)))
-                       (list x)))
-      list))
+(defun resolve-concept-symbols-and-normalize (keys)
+  (loop for key in keys
+        append (cond ((symbolp key)
+                      (with-errors-downgraded-when-open-linking ()
+                        (multiplexing-concept-keys (dref key 'concept))))
+                     ((index-subkey-p key)
+                      (list (list key)))
+                     ((atom key)
+                      (assert nil () "Invalid concept key ~S" key))
+                     (t
+                      (list key)))))
+
+(defun maybe-record-index-referent (dref)
+  (when *indexing-section*
+    (setf (gethash (dref-ht-key dref) *indexing-definitions*)
+          dref)))
 
 (defun maybe-index-link (source-dref target-dref)
   (when (and *indexing-section*
-             (indexablep source-dref)
+             (indexable-referrer-p source-dref)
              (not (xref= source-dref target-dref)))
     (pushnew source-dref (dref-to-referrers target-dref))
-    (dolist (key (multiplexing-index-keys target-dref))
-      (pushnew source-dref (index-key-to-referrers key)))))
+    (dolist (key (multiplexing-concept-keys target-dref))
+      (pushnew source-dref (concept-key-to-referrers key)))))
 
 (defun maybe-index-dref (dref)
-  (when (and *indexing-section*
-             (indexablep dref))
-    (dolist (key (index-keys dref))
-      (pushnew dref (index-key-to-referrers key)))))
+  (when *indexing-section*
+    (dolist (key (concept-keys dref))
+      (pushnew dref (concept-key-to-referrers key)))))

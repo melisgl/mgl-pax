@@ -2332,45 +2332,84 @@ example section
 
 (deftest test-indexing ()
   (test-print-index-key-tree)
+  (test-index-key-sorting)
+  (test-dref-name-index-subkey)
   (test-indexing/sorting)
   (test-indexing/sort-as)
   (test-indexing/concepts/dead)
-  (test-indexing/concepts/live))
+  (test-indexing/concepts/live)
+  (test-indexing/index-sections)
+  (test-indexing/dup))
 
 (deftest test-print-index-key-tree ()
-  (flet ((test (keys output)
-           (is (null (mismatch% (with-output-to-string (s)
-                                  (pax::print-index-key-tree
-                                   (pax::radix-tree keys) s
-                                   (lambda (key i depth)
-                                     (format s "~S,~S,~S" key i depth))))
-                                (format nil output))))))
-    (test '((0)) "- 0(0),0,1~%")
-    (test '((0) (1)) "- 0(0),0,1~%- 1(1),1,1~%")
-    (test '((0) (0 1)) "- 0(0),0,1~%    - 1(0 1),1,2~%")
-    (test '((0 1) (0 2)) "- 0~%    - 1(0 1),0,2~%    - 2(0 2),1,2~%")
+  (flet ((test (keys expected)
+           (let ((output
+                   (with-output-to-string (s)
+                     (pax::print-index-key-tree
+                      (pax::radix-tree keys) s
+                      (lambda (key i depth)
+                        (format s "~S,~S,~S" key i depth)))))
+                 (expected (format nil expected)))
+             (is (null (mismatch% output expected))
+                 :ctx ("KEYS = ~S" keys)))))
+    (test '((0)) "- 0(0),0,1~%~%")
+    (test '((0) (1)) "- 0(0),0,1~%~%- 1(1),1,1~%~%")
+    (test '((0) (0 1)) "- 0(0),0,1~%~%    - 1(0 1),1,2~%~%")
+    (test '((0 1) (0 2)) "- 0~%~%    - 1(0 1),0,2~%~%    - 2(0 2),1,2~%~%")
     (test '((0) (0 1) (0 1 2))
-          "- 0(0),0,1~%    - 1(0 1),1,2~%        - 2(0 1 2),2,3~%")
-    (test '((0 1) (0 1 2)) "- 0 1(0 1),0,1~%    - 2(0 1 2),1,2~%")))
+          "- 0(0),0,1~%~%    - 1(0 1),1,2~%~%        - 2(0 1 2),2,3~%~%")
+    (test '((0 1) (0 1 2)) "- 0 1(0 1),0,1~%~%    - 2(0 1 2),1,2~%~%")))
+
+(deftest test-index-key-sorting ()
+  (flet ((foo (a b)
+           (is (pax::index-key-sorts-before-p a b))
+           (is (not (pax::index-key-sorts-before-p b a)))))
+    (foo '("a") '("b"))
+    (foo '("a") '("a" "b"))
+    (foo '("b") '(("a" . "z")))
+    (foo '(("z" . "a")) '(("a" . "k")))
+    (foo '(("a" . "k")) '(("b" . "k")))
+    (foo '("A") '("a"))
+    (foo '("a") '(("x" . "A")))
+    (foo '("a") '(("x" . "a")))))
+
+(deftest test-dref-name-index-subkey ()
+  (flet ((foo (name &key expected title (target-id "7"))
+           (let ((dref (make-instance 'dref :name name :locative nil)))
+             (is (equalp (cons (pax::dref-name-index-subkey-name
+                                dref title target-id)
+                               (pax::dref-name-index-subkey-sort-as
+                                dref title))
+                         expected)))))
+    (let ((*package* (find-package :mgl-pax-test)))
+      (foo nil :title "ttt" :expected (cons "[ttt][7]" "ttt"))
+      (foo 'xxx :expected (cons "[`XXX`][7]" "xxx"))
+      (foo '|xxx| :expected (cons "[`xxx`][7]" "xxx"))
+      (foo '*%xxx* :expected (cons "[`*%XXX*`][7]" "xxx*"))
+      (foo 'pax::md-code :expected (cons "[`MD-CODE`][7] \\[`MGL-PAX`\\]"
+                                         "md-code [MGL-PAX]"))
+      (let ((*package* (find-package :pax)))
+        (foo 'pax::md-code :expected (cons "[`MD-CODE`][7]" "md-code")))
+      (foo "Abc" :expected (cons "[`Abc`][7]" "Abc"))
+      (foo '("A" b) :expected (cons "[`(\"A\" B)`][7]" "(\"A\" B)")))))
 
 
-(defun i-fn ()
-  "I-FN function"
-  nil)
+(defgeneric i-fn ()
+  (:documentation "I-FN function")
+  (:method ()
+    "I-FN function"
+    nil))
 (defvar *i-var* nil
   "I-FN function")
 (defmacro i-z ()
-  "I-FN"
-  nil)
-(define-compiler-macro i-fn ()
-  "I-FN function"
+  "[I-FN][function] [I-FN][(method ())]"
   nil)
 
 (defsection @index-test (:title "Index Test")
   (i-fn function)
   (*i-var* variable)
   (i-z macro)
-  (i-fn compiler-macro))
+  (i-fn (method ())))
 
 (deftest test-indexing/sorting ()
   (let* ((*document-index-sections* :homeless-documentable)
@@ -2388,13 +2427,13 @@ example section
 
 ### Misc Index
 
-- I-FN (compiler-macro) ↩ f: I-Z
-
-- I-FN (fn)
+- I-FN (gf)
 
     - ↩ f: I-FN, I-Z
 
     - ↩ v: *I-VAR*
+
+- I-FN (method nil) ↩ f: I-Z
 
 - *I-VAR* (var)
 
@@ -2407,26 +2446,28 @@ example section
         (is (null (mismatch% (subseq out (or pos 0))
                              "## 1 Indices
 
-
 <a id=\"Misc-20Index\"></a>
 <a id=\"Misc%20Index\"></a>
 
 ### 1.1 Misc Index
 
-- [`I-FN`][3189] _(compiler-macro)_ ↩ _f_: [`I-Z`][2387]
-- [`I-FN`][a3be] _(fn)_
+- [`I-FN`][0977] _(gf)_
 
-    - ↩ _f_: [`I-FN`][3189], [`I-Z`][2387]
+    - ↩ _f_: [`I-FN`][69a5], [`I-Z`][2387]
+
     - ↩ _v_: [`*I-VAR*`][b534]
 
+- [`I-FN`][69a5] _(method nil)_ ↩ _f_: [`I-Z`][2387]
+
 - [`*I-VAR*`][b534] _(var)_
+
 - [`I-Z`][2387] _(macro)_
 
 
+  [0977]: #MGL-PAX-TEST:I-FN%20GENERIC-FUNCTION \"MGL-PAX-TEST:I-FN GENERIC-FUNCTION\"
   [0a8e]: #Indices \"Indices\"
   [2387]: #MGL-PAX-TEST:I-Z%20MGL-PAX:MACRO \"MGL-PAX-TEST:I-Z MGL-PAX:MACRO\"
-  [3189]: #MGL-PAX-TEST:I-FN%20COMPILER-MACRO \"MGL-PAX-TEST:I-FN COMPILER-MACRO\"
-  [a3be]: #MGL-PAX-TEST:I-FN%20FUNCTION \"MGL-PAX-TEST:I-FN FUNCTION\"
+  [69a5]: #MGL-PAX-TEST:I-FN%20%28METHOD%20NIL%29 \"MGL-PAX-TEST:I-FN (METHOD NIL)\"
   [b534]: #MGL-PAX-TEST:*I-VAR*%20VARIABLE \"MGL-PAX-TEST:*I-VAR* VARIABLE\"
   [d87e]: #Misc%20Index \"Misc Index\"
 ")))))))
@@ -2438,10 +2479,10 @@ example section
            '((:title "Indices"
               :children ((:dtype t
                           :title "Misc Index")))))
-         (*document-index-referrer-dtype-abbrevs*
-           '(((or function macro compiler-macro) "< f:")
+         (*document-index-referrer-groups*
+           '(((or function macro compiler-macro method) "< f:")
              (variable ("< v:" . "a"))))
-         (*document-index-referee-locative-type-abbrevs*
+         (*document-index-referent-locative-type-abbrevs*
            '((function ("(fun)" . "a"))
              (variable ("(var)" . "v"))
              (macro ("(mac)" . "m"))
@@ -2454,13 +2495,13 @@ example section
 
 ### Misc Index
 
-- I-FN (fun)
+- I-FN (generic-function)
 
     - < f: I-FN, I-Z
 
     - < v: *I-VAR*
 
-- I-FN (cmac) < f: I-Z
+- I-FN (method nil) < f: I-Z
 
 - *I-VAR* (var)
 
@@ -2478,8 +2519,8 @@ example section
 
 (define-concept @shown (:title "defining macros" :keys (~hidden)))
 
-(define-glossary-term @whatever (:keys ((("whatever" . "%sortas"))
-                                        "not-a-list")))
+(define-glossary-term @whatever (:concepts ((("whatever" . "%sortas"))
+                                            "not-a-list")))
 
 (defun c-foo ()
   "~HIDDEN @WHATEVER"
@@ -2570,3 +2611,15 @@ example section
          (*document-indices* '((:title "Indices" :concepts t :dtype t))))
     (is (not (search "Indices" (document pax::@codification :stream nil
                                          :format :markdown))))))
+
+(defsection @dup ()
+  (format function)
+  (format function)
+  (print function)
+  (print function))
+
+(deftest test-indexing/dup ()
+  (let* ((*document-index-sections* :homeless-documentable)
+         (*document-index-formats* '(:plain))
+         (*document-indices* '((:title "Index" :dtype t))))
+    (document @dup :stream nil)))

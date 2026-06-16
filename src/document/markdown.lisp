@@ -82,6 +82,10 @@
                                 "")))
             (format nil "~A~A~A~A~A" ticks left-pad string right-pad ticks))))))
 
+(defun md-indent (level stream)
+  (loop repeat (* 4 level)
+        do (write-char #\Space stream)))
+
 (defun bold (string stream)
   (if (zerop (length string))
       ""

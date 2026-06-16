@@ -138,7 +138,14 @@
     (format stream "~a" (concept-name concept))))
 
 (define-locative-type concept (variable)
-  "FIXME")
+  "Refers to a named group of @CONCEPT-KEYs defined by DEFINE-CONCEPT
+  for multiplexing its keys to definitions that link to it in their
+  docstrings. See @INDEXING-CONCEPTS for more.
+
+  CONCEPT is EXPORTABLE-LOCATIVE-TYPE-P but not exported by
+  default (see EXPORTABLE-REFERENCE-P).
+
+  CONCEPTs have no ARGLIST or DOCSTRING.")
 
 (define-locator concept ((concept concept))
   (make-instance 'concept-dref :name (concept-name concept)
@@ -155,9 +162,10 @@
 (define-locative-type note ()
   "Refers to named notes defined by the NOTE macro.
 
-  If a single link would be made to a NOTE (be it either a
-  @SPECIFIC-LINK or an unambiguous @UNSPECIFIC-LINK), then the NOTE's
-  DOCSTRING is included as if with the DOCSTRING locative.
+  When @GENERATING-DOCUMENTATION, if a single link would be made to a
+  NOTE (be it either a @SPECIFIC-LINK or an unambiguous
+  @UNSPECIFIC-LINK), then the NOTE's DOCSTRING is included as if with
+  the DOCSTRING locative.
 
   NOTE is EXPORTABLE-LOCATIVE-TYPE-P but not exported by default (see
   EXPORTABLE-REFERENCE-P).")
