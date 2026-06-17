@@ -4,9 +4,13 @@
 
 (declaim (special *document-open-linking*))
 
-;;; Silence SBCL compiler notes.
+;;; Silence SBCL compiler notes about undefined types when these are
+;;; used in a condition handler.
 #+sbcl
-(define-condition unresolvable-reflink (warning condition-context-mixin) ())
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (unless (find-class 'unresolvable-reflink nil)
+    (define-condition unresolvable-reflink (warning condition-context-mixin)
+      ())))
 
 
 (defsection @extending-document (:title "Extending DOCUMENT")
