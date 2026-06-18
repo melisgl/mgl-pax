@@ -496,31 +496,3 @@ GitHub if possible.")
   (time
    (let ((pax:*document-downcase-uppercase-code* t))
      (document (pax-sections) :pages (pax-pages* :pdf) :format :pdf))))
-
-
-;;; Load systems that use PAX and generate PAX World in
-;;; <mgl-pax-asdf-system-dir>/world/. To update
-;;; https://github.com/melisgl/mgl-pax-world, check out its gh-pages
-;;; branch in that directory, UPDATE-PAX-WORLD*, commit and push the
-;;; changes to GitHub.
-(defun update-pax-world* (&key dir)
-  ;; KLUDGE: Bind *READTABLE* so that when evaluating in Slime (e.g.
-  ;; with C-x C-e), the file's readtable is not used (which leads to a
-  ;; reader macro conflict with CL-SYNTAX).
-  (let ((*readtable* (named-readtables:find-readtable :standard)))
-    (asdf:load-system :mgl-pax/full)
-    (asdf:load-system :mgl-mat)
-    (asdf:load-system :named-readtables)
-    (asdf:load-system :micmac)
-    (asdf:load-system :mgl-gpr)
-    (asdf:load-system :mgl)
-    (asdf:load-system :journal)
-    (asdf:load-system :trivial-utf-8)
-    (asdf:load-system :try)
-    (asdf:load-system :lmdb))
-  (time
-   (let ((*document-downcase-uppercase-code* t))
-     (update-pax-world :dir dir :update-css-p t :style :charter))))
-
-#+nil
-(update-pax-world*)
