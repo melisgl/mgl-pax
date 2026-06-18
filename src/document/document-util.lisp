@@ -410,11 +410,11 @@
     (format s "~A~%~%"
             "# PAX World
 
-This is a list of documents generated with [MGL-PAX][@pax-manual]. The
-documents are cross-linked: links to other documents are added
-automatically when a reference is found. Note that clicking on the
-locative type (e.g. `[function]`) will take you to the sources on
-GitHub if possible.")
+This is a list of documents generated with
+[MGL-PAX][pax::@pax-manual]. The documents are cross-linked: links to
+other documents are added automatically when a reference is found.
+Note that clicking on the locative type (e.g. `[function]`) will take
+you to the sources on GitHub if possible.")
     (let ((objects (sort (copy-seq sections) #'string<
                          :key #'plain-section-title-or-name)))
       (dolist (object objects)
