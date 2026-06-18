@@ -242,6 +242,7 @@
 (defmacro with-debugger-hook (fn &body body)
   (with-gensyms (prev-debugger-hook condition this-hook)
     `(let* ((,prev-debugger-hook *debugger-hook*)
+            #+sbcl (sb-ext:*invoke-debugger-hook* nil)
             (*debugger-hook* (lambda (,condition ,this-hook)
                                (declare (ignore ,this-hook))
                                (funcall ,fn ,condition)
