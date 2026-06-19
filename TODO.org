@@ -130,7 +130,6 @@ What if @DOCUMENTABLE is a list of sections and random stuff?
 so that one can write "X is a STRING" without having to disambiguate
 with "X is a [STRING][class]".
 ** MAYBE use https://codeberg.org/dlowe/metaspectre for something?
-** TODO fix scalability of FIND-PARENT-SECTIONS
 * web
 ** MAYBE implement a wiki on top?
 PAX is already kind of a wiki. Live interaction is the next step,

@@ -92,8 +92,9 @@
      ,@body))
 
 (defun document-for-web (pax-url filename)
-  (with-document-open-args-for-web ((urldecode pax-url))
-    (document-pax*-url pax-url filename)))
+  (with-sections-cache ()
+    (with-document-open-args-for-web ((urldecode pax-url))
+      (document-pax*-url pax-url filename))))
 
 (defun reference-to-edit-uri (dref)
   (let ((url (finalize-pax-url (dref-to-pax-url dref))))
@@ -188,8 +189,9 @@
 (defun handle-homepage-request ()
   (with-errors-to-html
     (with-document-open-args-for-web ("PAX" :link-to-home nil)
-      (document/open (pax-live-home-page :override *pax-live-inputs*)
-                     :stream nil))))
+      (with-sections-cache ()
+        (document/open (pax-live-home-page :override *pax-live-inputs*)
+                       :stream nil)))))
 
 ;;; HUNCHENTOOT:*DISPATCH-TABLE* will be bound to this locally to
 ;;; avoid conflicts with other HUNCHENTOOT servers running in the same

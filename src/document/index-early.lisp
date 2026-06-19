@@ -61,10 +61,6 @@
          (progv ,vars ,values
            ,@body)))))
 
-(declaim (inline dref-ht-key))
-(defun dref-ht-key (dref)
-  (cons (dref-name dref) (dref-locative dref)))
-
 (defmacro dref-to-referrers (dref)
   `(gethash (dref-ht-key ,dref) *indexing-dref-to-referrers*))
 
