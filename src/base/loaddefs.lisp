@@ -1054,7 +1054,7 @@
   GitHub.")
 
 (autoload:autoload mgl-pax:update-pax-world "mgl-pax/document" :arglist
-                   "(&key (mgl-pax::docs mgl-pax::*registered-pax-world-docs*) mgl-pax::dir mgl-pax::update-css-p (mgl-pax::style mgl-pax:*document-html-default-style*))"
+                   "(&key (mgl-pax::docs mgl-pax::*registered-pax-world-docs*) (mgl-pax::formats (quote (:html))) mgl-pax::dir mgl-pax::update-css-p (mgl-pax::style mgl-pax:*document-html-default-style*))"
                    :docstring
                    "Generate HTML documentation for all DOCS. Files are created in
   DIR (`(asdf:system-relative-pathname :mgl-pax \"world/\")` by

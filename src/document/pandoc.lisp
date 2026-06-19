@@ -150,6 +150,11 @@
 
 \usepackage{newunicodechar}
 \newunicodechar{↩}{\ensuremath{\hookleftarrow}}
+\newunicodechar{⊟}{\ensuremath{\boxminus}}
+\newunicodechar{⊠}{\ensuremath{\boxtimes}}
+\newunicodechar{⊡}{\ensuremath{\boxdot}}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{⋅}{\ensuremath{\cdot}}
 """)
 
 (defvar/auto *document-pandoc-pdf-header-includes*
