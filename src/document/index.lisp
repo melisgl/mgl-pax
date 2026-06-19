@@ -403,7 +403,7 @@
     (dolist (indexable indexables)
       (let ((key (if (typep indexable 'dref)
                      (let ((dref indexable))
-                       (list (dref-name-index-subkey dref)
+                       (list (dref-name-index-subkey dref nil)
                              (dref-index-referent-abbrev dref)))
                      (escape-markdown-in-concept-key indexable))))
         (push (cons key indexable) key-and-indexable-pairs)))
@@ -444,30 +444,37 @@
   (:method ((format (eql :html)) stream)
     (format stream "~% </div>~%")))
 
-(defun dref-name-index-subkey (dref)
-  (let ((title (document-definition-title dref)))
-    (cons (dref-name-index-subkey-name dref title (link-to-definition dref))
+(defun dref-name-index-subkey (dref primaryp)
+  (let ((title (document-definition-title dref :deemph t)))
+    (cons (dref-name-index-subkey-name dref title (link-to-definition dref)
+                                       primaryp)
           (dref-name-index-subkey-sort-as dref title))))
 
-(defun dref-name-index-subkey-name (dref title target-id)
+(defun dref-name-index-subkey-name (dref title target-id primaryp)
   (let ((*print-readably* nil)
         (name (dref-name dref)))
-    (cond (title
-           (format nil "[~A][~A]" title target-id))
-          ((symbolp name)
-           (format nil "[~A][~A]~@[ \\[~A\\]~]"
-                   (maybe-downcase (md-code (symbol-name name)))
-                   target-id
-                   (unless (let ((package (symbol-package name)))
-                             (or (eq package #.(find-package :cl))
-                                 (eq package *package*)))
-                     (maybe-downcase
-                      (md-code (package-name (symbol-package name)))))))
-          ((stringp name)
-           (format nil "[~A][~A]" (md-code name) target-id))
-          (t
-           (format nil "[~A][~A]" (md-code (prin1-to-string name))
-                   target-id)))))
+    (flet ((maybe-strong (string)
+             (if primaryp
+                 (md-strong string)
+                 string)))
+      (cond (title
+             (format nil "[~A][~A]" (maybe-strong title) target-id))
+            ((symbolp name)
+             (format nil "[~A][~A]~@[ \\[~A\\]~]"
+                     (maybe-strong
+                      (maybe-downcase (md-code (symbol-name name))))
+                     target-id
+                     (unless (let ((package (symbol-package name)))
+                               (or (eq package #.(find-package :cl))
+                                   (eq package *package*)))
+                       (maybe-downcase
+                        (md-code (package-name (symbol-package name)))))))
+            ((stringp name)
+             (format nil "[~A][~A]" (maybe-strong (md-code name)) target-id))
+            (t
+             (format nil "[~A][~A]"
+                     (maybe-strong (md-code (prin1-to-string name)))
+                     target-id))))))
 
 ;;; Reproduce DREF-NAME-INDEX-SUBKEY-NAME's rendered, user-visible
 ;;; output. No downcasing is needed as sorting is case-insensitive.
@@ -490,14 +497,17 @@
     (string-downcase (subseq name (or (position-if #'alphanumericp name) 0)))))
 
 (defun print-referrers (indexable depth stream)
-  (let ((drefs (if (typep indexable 'dref)
-                   (dref-to-referrers indexable)
-                   (concept-key-to-referrers indexable)))
+  (let ((drefs* (if (typep indexable 'dref)
+                    (dref-to-referrers indexable)
+                    (concept-key-to-referrers indexable)))
         (*package* (maybe-dref-name-package indexable))
         (groups (make-hash-table :test #'equal)))
-    (dolist (dref drefs)
-      (push (dref-name-index-subkey dref)
-            (gethash (dref-index-referrer-abbrev dref) groups)))
+    (dolist (dref* drefs*)
+      (multiple-value-bind (primaryp dref) (if (listp dref*)
+                                               (values t (second dref*))
+                                               (values nil dref*))
+        (push (dref-name-index-subkey dref primaryp)
+              (gethash (dref-index-referrer-abbrev dref) groups))))
     (let* ((abbrevs (sort (hash-table-keys groups)
                           #'index-subkey-sorts-before-p))
            (itemizep (cdr abbrevs)))

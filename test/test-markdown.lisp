@@ -1,7 +1,9 @@
 (in-package :mgl-pax-test)
 
 (deftest test-markdown ()
-  (test-md-code))
+  (test-md-code)
+  (test-md-emph)
+  (test-md-strong))
 
 (deftest test-md-code ()
   (is (equal (pax::md-code "") ""))
@@ -11,3 +13,19 @@
   (is (equal (pax::md-code "`y") "`` `y``"))
   (is (equal (pax::md-code "x`y") "``x`y``"))
   (is (equal (pax::md-code "``") "``` `` ```")))
+
+(deftest test-md-emph ()
+  (is (equal (pax::md-emph "") ""))
+  (is (equal (pax::md-emph "x") "*x*"))
+  (is (equal (pax::md-emph "*x*") "*\\*x\\**"))
+  (is (equal (pax::md-emph "x*y") "*x\\*y*"))
+  (is (equal (pax::md-emph "x\\*y") "*x\\\\*y*"))
+  (is (equal (pax::md-emph "x\\*y" nil) "*x\\*y*")))
+
+(deftest test-md-strong ()
+  (is (equal (pax::md-strong "") ""))
+  (is (equal (pax::md-strong "x") "**x**"))
+  (is (equal (pax::md-strong "*x*") "**\\*x\\***"))
+  (is (equal (pax::md-strong "x*y") "**x\\*y**"))
+  (is (equal (pax::md-strong "x\\*y") "**x\\\\*y**"))
+  (is (equal (pax::md-strong "x\\*y" nil) "**x\\*y**")))

@@ -111,4 +111,4 @@
 (defun maybe-index-dref (dref)
   (when *indexing-section*
     (dolist (key (concept-keys dref))
-      (pushnew dref (concept-key-to-referrers key)))))
+      (pushnew (list :primary dref) (concept-key-to-referrers key)))))

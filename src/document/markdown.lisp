@@ -80,21 +80,34 @@
                                      (char= (char string (1- n)) #\`))
                                 " "
                                 "")))
-            (format nil "~A~A~A~A~A" ticks left-pad string right-pad ticks))))))
+            (format nil "~A~A~A~A~A"
+                    ticks left-pad string right-pad ticks))))))
+
+(defun md-emph (object &optional (escape t))
+  (%md-emph-or-strong object t escape))
+
+(defun md-strong (object &optional (escape t))
+  (%md-emph-or-strong object nil escape))
+
+(defun %md-emph-or-strong (object emphp escape)
+  (let ((string (if (stringp object)
+                    object
+                    (prin1-to-string object))))
+    (if (zerop (length string))
+        ""
+        (with-output-to-string (out)
+          (write-string (if emphp "*" "**") out)
+          (if escape
+              (loop for char across string
+                    do (when (char= char #\*)
+                         (write-char #\\ out))
+                       (write-char char out))
+              (write-string string out))
+          (write-string (if emphp "*" "**") out)))))
 
 (defun md-indent (level stream)
   (loop repeat (* 4 level)
         do (write-char #\Space stream)))
-
-(defun bold (string stream)
-  (if (zerop (length string))
-      ""
-      (format stream "**~A**" string)))
-
-(defun italic (string stream)
-  (if (zerop (length string))
-      ""
-      (format stream "*~A*" string)))
 
 (defun markdown-special-inline-char-p (char)
   (member char '(#\\ #\* #\_ #\` #\[ #\])))
@@ -368,9 +381,10 @@
 ;;; and maybe make relative links absolute.
 (defun prepare-parse-tree-for-printing-to-w3m (parse-tree)
   (flet ((translate (parent tree)
-           (declare (ignore parent))
            (cond ((eq (first tree) :code)
-                  `(:strong ,tree))
+                  (if (parse-tree-p parent :strong)
+                      tree
+                      `(:strong ,tree)))
                  ((eq (first tree) :verbatim)
                   (values `((:raw-html #.(format nil "<i>~%"))
                             ,(indent-verbatim tree) (:raw-html "</i>"))
