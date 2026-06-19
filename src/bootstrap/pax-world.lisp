@@ -25,7 +25,7 @@
   "Register SECTIONS and PAGE-SPECS under ID (an arbitrary symbol) in
   PAX World. By default, UPDATE-PAX-WORLD generates documentation for
   all of these. SECTIONS and PAGE-SPECS must be lists of SECTIONs and
-  PAGE-SPECs (SEE DOCUMENT) or designators of functions with no
+  PAGE-SPECs (see @PAGES) or designators of functions with no
   arguments that return such lists.
 
   Using an existing ID overwrites the previous registration."

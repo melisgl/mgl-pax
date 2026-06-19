@@ -90,10 +90,10 @@
 
 (defun/auto update-asdf-system-html-docs
     (sections asdf-system &key pages
-              (target-dir (asdf:system-relative-pathname
-                           asdf-system "doc/"))
-              (update-css-p t)
-              (style *document-html-default-style*))
+     (target-dir (asdf:system-relative-pathname
+                  asdf-system "doc/"))
+     (update-css-p t)
+     (style *document-html-default-style*))
   "Generate pretty HTML documentation for a single ASDF system,
   possibly linking to GitHub. If UPDATE-CSS-P, copy the STYLE files to
   TARGET-DIR (see *DOCUMENT-HTML-DEFAULT-STYLE*).
@@ -115,64 +115,68 @@
                         :mgl-pax
                         \"https://github.com/melisgl/mgl-pax\"))))
   ```"
-  (document-html sections pages target-dir update-css-p style nil))
-
-;;; Generate with the default HTML look.
-(defun document-html (documentables page-specs target-dir update-css-p style
-                      link-to-pax-world-p)
+  ;; FIXME: Do pages whose :OUTPUT goes to a subdirectory find this?
   (when update-css-p
     (copy-css style target-dir))
-  (document documentables
-            :pages (add-html-defaults-to-page-specs
-                    (ensure-list documentables) page-specs target-dir
-                    link-to-pax-world-p)
+  (document sections
+            :pages (add-defaults-to-page-specs
+                    (ensure-list sections) :html pages target-dir nil)
             :format :html))
 
-(defun add-html-defaults-to-page-specs (documentables page-specs dir
-                                        link-to-pax-world-p)
-  (flet ((has-page-spec-p (documentable)
+;;; Give those objects in OBJECTS that do not have a page spec in
+;;; PAGE-SPECS a separate page, and update the page specs of the
+;;; others to enforce some uniformity (e.g. :HEADER, :FOOTER).
+(defun add-defaults-to-page-specs (objects format page-specs target-dir
+                                   link-to-pax-world-p)
+  (flet ((has-page-spec-p (object)
            (some (lambda (page-spec)
-                   (member documentable (getf page-spec :objects)))
+                   (member object (getf page-spec :objects)))
                  page-specs)))
     (mapcar (lambda (page-spec)
-              (add-html-defaults-to-page-spec page-spec dir
-                                              link-to-pax-world-p))
+              (add-defaults-to-page-spec page-spec format target-dir
+                                         link-to-pax-world-p))
             (append page-specs
                     (mapcar (lambda (section)
                               `(:objects (,section)))
-                            (remove-if #'has-page-spec-p documentables))))))
+                            (remove-if #'has-page-spec-p objects))))))
 
-(defun add-html-defaults-to-page-spec (page-spec dir link-to-pax-world-p)
+(defun add-defaults-to-page-spec (page-spec format target-dir
+                                  link-to-pax-world-p)
   (let* ((objects (getf page-spec :objects))
          (section (if (and (= 1 (length objects))
                            (typep (first objects) 'section))
                       (first objects)
                       nil)))
-    (flet ((header (stream)
+    (flet ((html-header* (stream)
              (let ((title (if section
                               (plain-section-title-or-name section)
                               nil)))
                (html-header stream :title title
                             :stylesheet "style.css"
-                            :link-to-pax-world-p link-to-pax-world-p)))
-           (footer (stream)
-             (html-footer stream)))
+                            :link-to-pax-world-p link-to-pax-world-p))))
       `(,@page-spec
         ,@(when (eq (getf page-spec :output '%missing) '%missing)
-            `(:output (,(and dir (sections-to-filename objects dir))
+            `(:output (,(and target-dir
+                             (sections-to-filename objects format target-dir))
                        ,@*default-output-options*)))
-        ,@(when (eq (getf page-spec :header-fn '%missing) '%missing)
-            `(:header-fn ,#'header))
-        ,@(when (eq (getf page-spec :footer-fn '%missing) '%missing)
-            `(:footer-fn ,#'footer))))))
+        ,@(when (and (eq format :html)
+                     (eq (getf page-spec :header-fn '%missing) '%missing))
+            `(:header-fn ,#'html-header*))
+        ,@(when (and (eq format :html)
+                     (eq (getf page-spec :footer-fn '%missing) '%missing))
+            `(:footer-fn ,#'html-footer))))))
 
-(defun sections-to-filename (sections dir)
+(defun sections-to-filename (sections format target-dir)
   (flet ((name (section)
            (string-downcase
             (remove-special-chars (symbol-name (section-name section))))))
-    (merge-pathnames (format nil "~{~A~^-~}.html"
-                             (mapcar #'name sections))
-                     dir)))
+    (make-pathname :name (format nil "~{~A~^-~}" (mapcar #'name sections))
+                   :type (ecase format
+                           (:plain "txt")
+                           (:markdown "md")
+                           (:html "html")
+                           (:pdf "pdf"))
+                   :defaults target-dir)))
 
 (defun remove-special-chars (string)
   (remove-if (lambda (char)
@@ -376,8 +380,8 @@
 ;;;; The autoloaded part of @PAX-WORLD
 
 (defun/auto update-pax-world
-    (&key (docs *registered-pax-world-docs*) dir update-css-p
-          (style *document-html-default-style*))
+    (&key (docs *registered-pax-world-docs*) (formats '(:html)) dir
+     update-css-p (style *document-html-default-style*))
   "Generate HTML documentation for all DOCS. Files are created in
   DIR (`(asdf:system-relative-pathname :mgl-pax \"world/\")` by
   default if DIR is NIL). DOCS is a list of entries of the form (NAME
@@ -391,7 +395,7 @@
   If necessary a default page spec is created for every section."
   (let ((dir (or dir (asdf:system-relative-pathname :mgl-pax "world/"))))
     (multiple-value-bind (sections pages) (sections-and-pages docs)
-      (create-pax-world sections pages dir update-css-p style))))
+      (create-pax-world sections pages formats dir update-css-p style))))
 
 (defun sections-and-pages (registered-docs)
   (values (loop for registered-doc in registered-docs
@@ -405,34 +409,63 @@
       designator
       (funcall designator)))
 
-(defun make-pax-world-text (sections)
+(defun make-pax-world-text (sections format-and-pages-alist target-dir)
   (with-output-to-string (s)
-    (format s "~A~%~%"
-            "# PAX World
+    (labels ((page-objects (page)
+               (getf page :objects))
+             (relative-url (format section)
+               (let* ((pages (cdr (assoc format format-and-pages-alist)))
+                      (output (getf (find section pages :key #'page-objects
+                                          :test #'member)
+                                    :output)))
+                 (enough-namestring (first output) target-dir))))
+      (let ((objects (sort (copy-seq sections) #'string<
+                           :key #'plain-section-title-or-name))
+            (formats (mapcar #'car format-and-pages-alist)))
+        (format s "# PAX World
 
-This is a list of documents generated with
-[MGL-PAX][pax::@pax-manual]. The documents are cross-linked: links to
-other documents are added automatically when a reference is found.
-Note that clicking on the locative type (e.g. `[function]`) will take
-you to the sources on GitHub if possible.")
-    (let ((objects (sort (copy-seq sections) #'string<
-                         :key #'plain-section-title-or-name)))
-      (dolist (object objects)
-        (format s "- ~S~%~%" (section-name object))))))
+This is a list of documents generated with [MGL-PAX](~A). The
+documents are cross-linked: links to other documents are added
+automatically when a reference is found. Note that clicking on the
+locative type (e.g. `[function]`) will take you to the sources on a
+git forge if possible.~%~%"
+                (relative-url :html @pax-manual))
+        (dolist (object objects)
+          (let ((label (or (document-definition-title (locate object))
+                           (prin1-to-markdown (section-name object)))))
+            (format s "- [~A](~A) (" label (relative-url :html object))
+            (loop for format in (remove :html formats)
+                  for i upfrom 0
+                  do (format s "~A[~A](~A)" (if (zerop i) "" ", ")
+                             (ecase format
+                               (:plain "txt")
+                               (:markdown "md")
+                               (:pdf "pdf"))
+                             (relative-url format object)))
+            (format s ")~%~%")))))))
 
-(defun create-pax-world (sections page-specs dir update-css-p style)
-  (let ((text (make-pax-world-text sections)))
-    (document-html
-     (cons text sections)
-     (cons `(:objects (,text)
-             :output (,(merge-pathnames "index.html" dir)
-                      ,@*default-output-options*)
-             :header-fn ,(lambda (stream)
-                           (html-header stream :title "PAX World"
-                                        :stylesheet "style.css"
-                                        :link-to-pax-world-p nil)))
-           page-specs)
-     dir update-css-p style t)))
+(defun create-pax-world (sections page-specs formats target-dir
+                         update-css-p css-style)
+  (let ((format-and-pages-alist ()))
+    (dolist (format formats)
+      (let ((pages (add-defaults-to-page-specs
+                    (ensure-list sections) format page-specs target-dir t)))
+        (document sections :pages pages :format format)
+        (push (cons format pages) format-and-pages-alist)))
+    (when update-css-p
+      (copy-css css-style target-dir))
+    (let ((text (make-pax-world-text sections format-and-pages-alist
+                                     target-dir)))
+      (document text
+                :pages `((:objects (,text)
+                          :output (,(merge-pathnames "index.html" target-dir)
+                                   ,@*default-output-options*)
+                          :header-fn ,(lambda (stream)
+                                        (html-header stream :title "PAX World"
+                                                     :stylesheet "style.css"
+                                                     :link-to-pax-world-p nil))
+                          :footer-fn ,#'html-footer))
+                :format :html))))
 
 (defun sections-registered-in-pax-world ()
   (loop for doc in *registered-pax-world-docs*

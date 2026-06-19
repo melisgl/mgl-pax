@@ -499,11 +499,10 @@
                                       (declare (ignorable ,documentable))
                                       ,@body)))
 
-;;; Call FN with each thing within DOCUMENTABLE (an argument of the
-;;; same name of DOCUMENT). Handle special PROGV forms, which allow
-;;; controlling the dynamic environment around DOCUMENT-OBJECT calls.
-;;; This is only used by PAX-APROPOS* and is not part of DOCUMENT's
-;;; contract.
+;;; Call FN with each thing within DOCUMENTABLE (see @DOCUMENTABLE).
+;;; Handle special PROGV forms, which allow controlling the dynamic
+;;; environment around DOCUMENT-OBJECT calls. This is not part of
+;;; DOCUMENT's contract.
 (defun map-documentable (fn documentable)
   (if (not (listp documentable))
       (funcall fn documentable)

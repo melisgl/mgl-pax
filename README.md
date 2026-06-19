@@ -3726,7 +3726,7 @@ World](https://melisgl.github.io/mgl-pax-world/).
     Register `SECTIONS` and `PAGE-SPECS` under `ID` (an arbitrary symbol) in
     PAX World. By default, [`UPDATE-PAX-WORLD`][ee51] generates documentation for
     all of these. `SECTIONS` and `PAGE-SPECS` must be lists of [`SECTION`][5fac]s and
-    `PAGE-SPEC`s (SEE [`DOCUMENT`][432c]) or designators of functions with no
+    `PAGE-SPEC`s (see [`PAGES`][9c7d]) or designators of functions with no
     arguments that return such lists.
     
     Using an existing `ID` overwrites the previous registration.
@@ -3748,7 +3748,7 @@ For example, this is how PAX registers itself:
 
 <a id="x-28MGL-PAX-3AUPDATE-PAX-WORLD-20FUNCTION-29"></a>
 
-- [function] **UPDATE-PAX-WORLD** *&KEY (DOCS \*REGISTERED-PAX-WORLD-DOCS\*) DIR UPDATE-CSS-P (STYLE \*DOCUMENT-HTML-DEFAULT-STYLE\*)*
+- [function] **UPDATE-PAX-WORLD** *&KEY (DOCS \*REGISTERED-PAX-WORLD-DOCS\*) (FORMATS '(:HTML)) DIR UPDATE-CSS-P (STYLE \*DOCUMENT-HTML-DEFAULT-STYLE\*)*
 
     Generate HTML documentation for all `DOCS`. Files are created in
     `DIR` (`(asdf:system-relative-pathname :mgl-pax "world/")` by
