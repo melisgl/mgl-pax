@@ -2374,24 +2374,40 @@ example section
     (foo '("a") '(("x" . "a")))))
 
 (deftest test-dref-name-index-subkey ()
-  (flet ((foo (name &key expected title (target-id "7"))
+  (flet ((foo (name &key expected title (target-id "7") primary)
            (let ((dref (make-instance 'dref :name name :locative nil)))
              (is (equalp (cons (pax::dref-name-index-subkey-name
-                                dref title target-id)
+                                dref title target-id primary)
                                (pax::dref-name-index-subkey-sort-as
                                 dref title))
                          expected)))))
     (let ((*package* (find-package :mgl-pax-test)))
-      (foo nil :title "ttt" :expected (cons "[ttt][7]" "ttt"))
-      (foo 'xxx :expected (cons "[`XXX`][7]" "xxx"))
-      (foo '|xxx| :expected (cons "[`xxx`][7]" "xxx"))
-      (foo '*%xxx* :expected (cons "[`*%XXX*`][7]" "xxx*"))
-      (foo 'pax::md-code :expected (cons "[`MD-CODE`][7] \\[`MGL-PAX`\\]"
-                                         "md-code [MGL-PAX]"))
-      (let ((*package* (find-package :pax)))
-        (foo 'pax::md-code :expected (cons "[`MD-CODE`][7]" "md-code")))
-      (foo "Abc" :expected (cons "[`Abc`][7]" "Abc"))
-      (foo '("A" b) :expected (cons "[`(\"A\" B)`][7]" "(\"A\" B)")))))
+      (with-test ("plain")
+        (foo nil :title "ttt" :expected (cons "[ttt][7]" "ttt"))
+        (foo 'xxx :expected (cons "[`XXX`][7]" "xxx"))
+        (foo '|xxx| :expected (cons "[`xxx`][7]" "xxx"))
+        (foo '*%xxx* :expected (cons "[`*%XXX*`][7]" "xxx*"))
+        (foo 'pax::md-code :expected (cons "[`MD-CODE`][7] \\[`MGL-PAX`\\]"
+                                           "md-code [MGL-PAX]"))
+        (let ((*package* (find-package :pax)))
+          (foo 'pax::md-code :expected (cons "[`MD-CODE`][7]" "md-code")))
+        (foo "Abc" :expected (cons "[`Abc`][7]" "Abc"))
+        (foo '("A" b) :expected (cons "[`(\"A\" B)`][7]" "(\"A\" B)")))
+      (with-test ("primary")
+        (foo nil :title "ttt" :primary t
+             :expected (cons "[**ttt**][7]" "ttt"))
+        (foo 'xxx :primary t :expected (cons "[**`XXX`**][7]" "xxx"))
+        (foo '|xxx| :primary t :expected (cons "[**`xxx`**][7]" "xxx"))
+        (foo '*%xxx* :primary t :expected (cons "[**`\\*%XXX\\*`**][7]" "xxx*"))
+        (foo 'pax::md-code :primary t
+             :expected (cons "[**`MD-CODE`**][7] \\[`MGL-PAX`\\]"
+                             "md-code [MGL-PAX]"))
+        (let ((*package* (find-package :pax)))
+          (foo 'pax::md-code :primary t
+               :expected (cons "[**`MD-CODE`**][7]" "md-code")))
+        (foo "Abc" :primary t :expected (cons "[**`Abc`**][7]" "Abc"))
+        (foo '("A" b) :primary t
+             :expected (cons "[**`(\"A\" B)`**][7]" "(\"A\" B)"))))))
 
 
 (defgeneric i-fn ()

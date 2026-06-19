@@ -3355,7 +3355,7 @@
              (if *subformat*
                  (format stream "- \\[~A\\] ~A" locative-type escaped-label)
                  (format stream "- [~A] ~A" locative-type
-                         (bold escaped-label nil))))
+                         (md-strong escaped-label nil))))
             ((nil)))))))
 
 (defun dref-bullet-label (dref)
@@ -3397,7 +3397,7 @@
                 (not (eq *subformat* :w3m)))
            (format stream "<span class=\"locative-args\">~A</span>" string))
           (t
-           (italic string stream)))))
+           (write-string (md-emph string nil) stream)))))
 
 ;;; Print a lambda list of any kind (ordinary, macro, etc) or a method
 ;;; arglist to a string. Arg names are printed without the package
