@@ -943,7 +943,8 @@
   intended home section of a definition among multiple containing
   sections with high probability. However, for names which are not
   symbols, there is no package system to advantage of."""
-  (first (find-parent-sections object)))
+  (with-sections-cache ()
+    (first (find-parent-sections object))))
 
 (defun guess-package-and-readtable (dref requested-package requested-readtable)
   (if (and requested-package requested-readtable)

@@ -162,9 +162,10 @@
 (defun document-for-emacs (pax*-url output &optional *document-hyperspec-root*)
   (swank/backend:converting-errors-to-error-location
     (swank::with-buffer-syntax (swank::*buffer-package*)
-      ;; This is called only for `w3m' and `precheck'. See below.
-      (let ((*subformat* (if (uiop:directory-exists-p output) :w3m nil)))
-        `(:url ,(document-pax*-url pax*-url output))))))
+      (with-sections-cache ()
+        ;; This is called only for `w3m' and `precheck'. See below.
+        (let ((*subformat* (if (uiop:directory-exists-p output) :w3m nil)))
+          `(:url ,(document-pax*-url pax*-url output)))))))
 
 ;;; Write documentation of PAX*-URL into OUTPUT. Return the (:URL
 ;;; <URL>) to visit or (:ERROR <STRING>). PAX*-URL may be a `pax:',
@@ -434,8 +435,7 @@
 
 (defun documentable-for-reference (reference)
   (remove nil
-          (append (format-up-links (sections-that-contain (list-all-sections)
-                                                          reference)
+          (append (format-up-links (find-parent-sections reference)
                                    reference)
                   (list reference)
                   (format-asdf-detritus reference)
@@ -1063,13 +1063,13 @@
 
 (defun entry-point-sections (sections)
   (loop for section in sections
-        for ref = (locate section)
-        unless (or (sections-that-contain sections ref)
+        for dref = (locate section)
+        unless (or (home-section dref)
                    (member (package-name (symbol-package
                                           (section-name section)))
                            '(#:dref-test #:mgl-pax-test)
                            :test #'string=))
-          collect ref))
+          collect dref))
 
 
 (defsection @asdf-systems-and-related-packages

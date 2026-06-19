@@ -388,17 +388,19 @@
   (with-swank ()
     (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
-        (let ((dref (find-current-definition buffer filename possibilities)))
-          (if (null dref)
-              '(:error "Cannot determine current definition.")
-              (let ((sections (find-parent-sections dref)))
-                (if sections
-                    (loop for section in sections
-                          collect (dspec-and-source-location-for-emacs
-                                   (locate section)))
-                    `(:error ,(format nil "Cannot find parent section of ~S ~S."
-                                      (dref-name dref)
-                                      (dref-locative dref)))))))))))
+        (with-sections-cache ()
+          (let ((dref (find-current-definition buffer filename possibilities)))
+            (if (null dref)
+                '(:error "Cannot determine current definition.")
+                (let ((sections (find-parent-sections dref)))
+                  (if sections
+                      (loop for section in sections
+                            collect (dspec-and-source-location-for-emacs
+                                     (locate section)))
+                      `(:error ,(format nil
+                                        "Cannot find parent section of ~S ~S."
+                                        (dref-name dref)
+                                        (dref-locative dref))))))))))))
 
 (defun dspec-and-source-location-for-emacs (dref)
   (let ((location (source-location dref)))
