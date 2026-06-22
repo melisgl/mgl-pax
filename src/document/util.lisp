@@ -1,5 +1,7 @@
 (in-package :mgl-pax)
 
+(in-readtable pythonic-string-syntax)
+
 (defun list-of-one-p (list)
   (and list (null (cdr list))))
 
@@ -311,3 +313,84 @@
                       (dolist (child (rest tree))
                         (recurse child key-runs)))))))
     (recurse tree ())))
+
+
+(defun git-repository-root (filename)
+  (let* ((path (uiop:ensure-absolute-pathname (pathname filename)
+                                              (uiop:getcwd)))
+         (dir (uiop:pathname-directory-pathname path))
+         (native-path (uiop:native-namestring path)))
+    (when (eql 0 (nth-value 2 (uiop:run-program
+                               (list "git" "ls-files" "--error-unmatch"
+                                     native-path)
+                               :directory dir
+                               :output nil
+                               :error-output nil
+                               :ignore-error-status t)))
+      (let ((output (trim-whitespace
+                     (uiop:run-program '("git" "rev-parse" "--show-toplevel")
+                                       :directory dir
+                                       :output :string
+                                       :error-output nil
+                                       :ignore-error-status t))))
+        (when (plusp (length output))
+          (uiop:ensure-directory-pathname output))))))
+
+(defparameter *git-info-sh*
+  """#!/usr/bin/env bash
+
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "Error: Not a git repository." >&2
+    exit 1
+fi
+
+commit=$(git rev-parse --short HEAD 2>/dev/null)
+# This will be empty with a detached HEAD
+branch=$(git branch --show-current 2>/dev/null)
+remote_url=""
+remote_branch=""
+
+if [ -n "$branch" ]; then
+    remote_name=$(
+        git config --get "branch.${branch}.pushRemote" || \
+        git config --get "remote.pushDefault" || \
+        git config --get "branch.${branch}.remote"
+    )
+    remote_name=${remote_name:-origin}
+    remote_url=$(git config --get "remote.${remote_name}.url" 2>/dev/null)
+
+    # Get the raw tracking branch (e.g. refs/heads/main)
+    merge_ref=$(git config --get "branch.${branch}.merge" 2>/dev/null)
+
+    if [ -n "$merge_ref" ]; then
+        # Strip the 'refs/heads/' prefix to get just the branch name
+        remote_branch=${merge_ref#refs/heads/}
+    else
+        # Predict the remote branch name (assuming push.default=simple)
+        remote_branch="${branch}"
+    fi
+else
+    # Fallback for detached HEAD
+    remote_url=$(git config --get "remote.origin.url" 2>/dev/null)
+fi
+
+echo "${remote_url}"
+echo "${remote_branch}"
+echo "${commit}"
+""")
+
+(defun git-info (dir)
+  (let ((output (trim-whitespace
+                 (with-input-from-string (script-stream *git-info-sh*)
+                   (uiop:run-program '("bash" "-s")
+                                     :input script-stream
+                                     :directory dir
+                                     :output :string
+                                     :error-output nil
+                                     :ignore-error-status t)))))
+    (with-input-from-string (s output)
+      (values (read-line s)
+              (let ((line (read-line s)))
+                (and (plusp (length line))
+                     line))
+              (read-line s)))))

@@ -360,9 +360,9 @@
                object (when (plusp (length (second source-location)))
                         (second source-location))))
         (t
-         (assert (eq (first source-location) :location))
-         (let* ((filename (second (assoc :file (rest source-location))))
-                (position (second (assoc :position (rest source-location))))
+         (assert (source-location-p source-location))
+         (let* ((filename (source-location-file source-location))
+                (position (source-location-file-position source-location))
                 (relative-path (and filename
                                     (enough-namestring filename git-dir))))
            (if (and relative-path
@@ -374,8 +374,9 @@
                      (values relative-path line-number)
                      (warn "~@<Source location information in file ~S ~
                             is out of date.~@:>" filename)))
-               (warn "~@<Source location for ~S is not below the git ~
-                     top-level directory ~S.~%~@:>" object git-dir))))))
+               (warn "~@<Source location ~S of ~S is not below the git ~
+                     top-level directory ~S.~%~@:>"
+                     filename object git-dir))))))
 
 (defun file-position-to-line-number (filename file-position cache)
   (if (null file-position)
