@@ -113,7 +113,7 @@ h5 {
 }
 
 h6 {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: normal;
   line-height: var(--line-height);
   margin: calc(0.75*var(--line-height)) 0;

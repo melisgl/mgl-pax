@@ -153,7 +153,11 @@
                               nil)))
                (html-header stream :title title
                             :stylesheet "style.css"
-                            :link-to-pax-world-p link-to-pax-world-p))))
+                            :link-to-pax-world-p link-to-pax-world-p)))
+           (html-footer* (stream)
+             (format stream "<h6>[Generated ~A]</h6>~%"
+                     (documentation-generation-date-string))
+             (html-footer stream)))
       `(,@page-spec
         ,@(when (eq (getf page-spec :output '%missing) '%missing)
             `(:output (,(and target-dir
@@ -164,7 +168,7 @@
             `(:header-fn ,#'html-header*))
         ,@(when (and (eq format :html)
                      (eq (getf page-spec :footer-fn '%missing) '%missing))
-            `(:footer-fn ,#'html-footer))))))
+            `(:footer-fn ,#'html-footer*))))))
 
 (defun sections-to-filename (sections format target-dir)
   (flet ((name (section)
@@ -393,9 +397,10 @@
   location specifications (based on the name of the section).
 
   If necessary a default page spec is created for every section."
-  (let ((dir (or dir (asdf:system-relative-pathname :mgl-pax "world/"))))
-    (multiple-value-bind (sections pages) (sections-and-pages docs)
-      (create-pax-world sections pages formats dir update-css-p style))))
+  (with-filename-to-asdf-system-name-map
+    (let ((dir (or dir (asdf:system-relative-pathname :mgl-pax "world/"))))
+      (multiple-value-bind (sections pages) (sections-and-pages docs)
+        (create-pax-world sections pages formats dir update-css-p style)))))
 
 (defun sections-and-pages (registered-docs)
   (values (loop for registered-doc in registered-docs
@@ -418,22 +423,33 @@
                       (output (getf (find section pages :key #'page-objects
                                           :test #'member)
                                     :output)))
-                 (enough-namestring (first output) target-dir))))
+                 (enough-namestring (first output) target-dir)))
+             (source-uri (format section)
+               (let* ((pages (cdr (assoc format format-and-pages-alist)))
+                      (source-uri-fn (getf (find section pages
+                                                 :key #'page-objects
+                                                 :test #'member)
+                                           :source-uri-fn)))
+                 (when (and (listp source-uri-fn)
+                            (eq (first source-uri-fn) :maker))
+                   (setq source-uri-fn (funcall (second source-uri-fn))))
+                 (when source-uri-fn
+                   (funcall source-uri-fn section)))))
       (let ((objects (sort (copy-seq sections) #'string<
                            :key #'plain-section-title-or-name))
             (formats (mapcar #'car format-and-pages-alist)))
         (format s "# PAX World
 
-This is a list of documents generated with [MGL-PAX](~A). The
-documents are cross-linked: links to other documents are added
-automatically when a reference is found. Note that clicking on the
-locative type (e.g. `[function]`) will take you to the sources on a
-git forge if possible.~%~%"
+This is a list of documents generated with [MGL-PAX](~A). The \\\\HTML
+and Markdown documents are cross-linked: links to other documents are
+added automatically when a reference is found. Note that clicking on
+the locative type (e.g. `[function]`) will take you to the sources on
+a git forge if possible.~%~%"
                 (relative-url :html @pax-manual))
         (dolist (object objects)
           (let ((label (or (document-definition-title (locate object))
                            (prin1-to-markdown (section-name object)))))
-            (format s "- [~A](~A) (" label (relative-url :html object))
+            (format s "- [~A](~A) <small>\\[" label (relative-url :html object))
             (loop for format in (remove :html formats)
                   for i upfrom 0
                   do (format s "~A[~A](~A)" (if (zerop i) "" ", ")
@@ -442,15 +458,74 @@ git forge if possible.~%~%"
                                (:markdown "md")
                                (:pdf "pdf"))
                              (relative-url format object)))
-            (format s ")~%~%")))))))
+            (format s "\\] ⋅ ")
+            (describe-version s object (source-uri :html object))
+            (format s "</small>~%~%")))
+        (format s "###### \\[Generated ~A\\]~%"
+                (documentation-generation-date-string))))))
+
+(defun describe-version (stream object source-uri)
+  (multiple-value-bind (git-url git-branch git-version)
+      (git-info-for-object object)
+    (let ((git-url (when git-url
+                     (escape-markdown git-url)))
+          (git-branch (if git-branch
+                          (if (or (equal git-branch "master")
+                                  (equal git-branch "main"))
+                              nil
+                              (format nil "~A @"
+                                      (escape-markdown git-branch)))
+                          "<detached> "))
+          (git-version (when git-version
+                         (escape-markdown git-version))))
+      (cond (source-uri
+             (format stream "[`~A`](~A)"
+                     (if git-version
+                         (format nil "~@[~A ~]~A"
+                                 git-branch git-version)
+                         "src")
+                     source-uri))
+            (git-version
+             (format stream "`~A, ~@[~A @ ~]~A`" git-url git-branch
+                     git-version))
+            (t
+             (format stream "`~A`"
+                     (escape-markdown (system-version-for-object object))))))))
+
+(defun git-info-for-object (object)
+  (when-let (git-root (git-repository-root (source-location-file
+                                            (source-location object))))
+    (git-info git-root)))
+
+(defun system-version-for-object (object)
+  (let* ((system-name (asdf-system-name-of (locate object)))
+         (system-dir (asdf:system-source-directory system-name))
+         (dists-dir (merge-pathnames "dists/" ql:*quicklisp-home*)))
+    (cond
+      ((null system-dir)
+       "unknown")
+      ((uiop:subpathp system-dir dists-dir)
+       (let* ((release (ql-dist:release system-name))
+              (dist (ql-dist:dist release)))
+         (format nil "~A ~A" (ql-dist:name dist)
+                 (ql-dist:version dist))))
+      (t
+       "local project"))))
+
+(defun documentation-generation-date-string ()
+  (multiple-value-bind (second minute hour day month year)
+      (decode-universal-time (get-universal-time) 0)
+    (format nil "~D-~2,'0D-~2,'0DT~2,'0D:~2,'0D:~2,'0DZ"
+            year month day hour minute second)))
 
 (defun create-pax-world (sections page-specs formats target-dir
                          update-css-p css-style)
   (let ((format-and-pages-alist ()))
-    (dolist (format formats)
+    (dolist (format '(:plain :markdown :html :pdf))
       (let ((pages (add-defaults-to-page-specs
                     (ensure-list sections) format page-specs target-dir t)))
-        (document sections :pages pages :format format)
+        (when (member format formats)
+          (document sections :pages pages :format format))
         (push (cons format pages) format-and-pages-alist)))
     (when update-css-p
       (copy-css css-style target-dir))
