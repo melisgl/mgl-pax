@@ -86,11 +86,10 @@
 
 ## 1 Introduction
 
-*What if documentation really lived in the code?*
+*What if documentation were code?*
 
-Docstrings are already there. If some narrative glued them together,
-we'd be able develop and explore the code along with the
-documentation due to their physical proximity. The main tool that
+If some narrative glued docstrings together, we'd be able to develop
+and explore the code alongside its documentation. The main tool that
 PAX provides for this is [`DEFSECTION`][72b4]:
 
 ```
@@ -101,10 +100,10 @@ PAX provides for this is [`DEFSECTION`][72b4]:
   (@foo-random-examples section))
 ```
 
-Like this one, sections can have docstrings and
+Like the one above, sections can have docstrings and
 references to
-definitions (e.g. `(UNIFORM-RANDOM FUNCTION)`). These docstrings and
-references are the glue. To support interactive development, PAX
+definitions (e.g. `(UNIFORM-RANDOM FUNCTION)`). These are the glue.
+To support interactive development, PAX
 
 - makes [SLIME][6be7]'s [`M-.`][cb15] work with references and
 
@@ -116,11 +115,8 @@ Beyond interactive workflows, [Generating Documentation][2c93] from
 sections and all the referenced items in Markdown or HTML format is
 also implemented.
 
-With the simplistic tools provided, one may emphasize the narrative
-as with Literate Programming, but documentation is generated from
-code, not vice versa, and there is no support for chunking.
-
-*Code is first, code must look pretty, documentation is code*.
+PAX [emphasizes the narrative][bbc6] much like
+Literate Programming, but it is an [untangled LP][3e20] system.
 
 ##### Docstrings
 
@@ -223,8 +219,7 @@ Note how `(VARIABLE *FOO-STATE*)` in the [`DEFSECTION`][72b4] form both
 exports `*FOO-STATE*` and includes its documentation in
 `@FOO-RANDOM-MANUAL`. The symbols `VARIABLE` and
 `FUNCTION` are just two instances of locatives,
-which are used in `DEFSECTION` to refer to definitions tied to
-symbols.
+used in `DEFSECTION` to refer to definitions tied to symbols.
 
 `(DOCUMENT @FOO-RANDOM-MANUAL)` generates fancy Markdown or HTML
 output with [automatic markup][f25f] and [Autolink][ec7a]s uppercase [word][d7b0]s found in docstrings,
@@ -5087,6 +5082,7 @@ they are presented.
   [3972]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_r.htm#reader_macro "\"reader macro\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [39df]: http://www.lispworks.com/documentation/HyperSpec/Body/m_w_std_.htm "WITH-STANDARD-IO-SYNTAX (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [3da8]: #x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29 "MGL-PAX:*FORMAT* VARIABLE"
+  [3e20]: https://quotenil.com/untangling-literate-programming.html "untangled LP"
   [3e6e]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cbb.htm "\"22.3.2.2\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [3f2e]: http://www.lispworks.com/documentation/HyperSpec/Body/f_pr_obj.htm "PRINT-OBJECT (MGL-PAX:CLHS GENERIC-FUNCTION)"
   [3fa1]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cad.htm "\"22.3.1.4\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
@@ -5265,6 +5261,7 @@ they are presented.
   [ba76]: #x-28MGL-PAX-3A-2ADOCUMENT-INDEX-FORMATS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-INDEX-FORMATS* VARIABLE"
   [ba90]: #x-28MGL-PAX-3A-40LINKS-AND-SYSTEMS-20MGL-PAX-3ASECTION-29 "Links and Systems"
   [bb12]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-HTML-DOCS-20FUNCTION-29 "MGL-PAX:UPDATE-ASDF-SYSTEM-HTML-DOCS FUNCTION"
+  [bbc6]: https://quotenil.com/multifaceted-development.html "PAX development style"
   [bc83]: #x-28MGL-PAX-3A-40MARKDOWN-SYNTAX-HIGHLIGHTING-20MGL-PAX-3ASECTION-29 "Syntax Highlighting"
   [bcb6]: http://www.lispworks.com/documentation/HyperSpec/Body/e_warnin.htm "WARNING (MGL-PAX:CLHS CONDITION)"
   [bdd6]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cga.htm "\"22.3.7.1\" (MGL-PAX:CLHS MGL-PAX:SECTION)"

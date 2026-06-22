@@ -4,11 +4,10 @@
 
 ## Introduction
 
-What if documentation really lived in the code?
+What if documentation were code?
 
-Docstrings are already there. If some narrative glued them together,
-we'd be able develop and explore the code along with the
-documentation due to their physical proximity. The main tool that
+If some narrative glued docstrings together, we'd be able to develop
+and explore the code alongside its documentation. The main tool that
 PAX provides for this is DEFSECTION:
 
     (defsection @foo-random-manual (:title "Foo Random manual")
@@ -17,10 +16,10 @@ PAX provides for this is DEFSECTION:
       (uniform-random function)
       (@foo-random-examples section))
 
-Like this one, sections can have docstrings and
+Like the one above, sections can have docstrings and
 references to
-definitions (e.g. (UNIFORM-RANDOM FUNCTION)). These docstrings and
-references are the glue. To support interactive development, PAX
+definitions (e.g. (UNIFORM-RANDOM FUNCTION)). These are the glue.
+To support interactive development, PAX
 
 - makes SLIME's M-. work with references and
 
@@ -32,11 +31,8 @@ Beyond interactive workflows, Generating Documentation from
 sections and all the referenced items in Markdown or HTML format is
 also implemented.
 
-With the simplistic tools provided, one may emphasize the narrative
-as with Literate Programming, but documentation is generated from
-code, not vice versa, and there is no support for chunking.
-
-Code is first, code must look pretty, documentation is code.
+PAX emphasizes the narrative much like
+Literate Programming, but it is an untangled LP system.
 
 ##### Docstrings
 
@@ -133,8 +129,7 @@ Note how (VARIABLE *FOO-STATE*) in the DEFSECTION form both
 exports *FOO-STATE* and includes its documentation in
 @FOO-RANDOM-MANUAL. The symbols VARIABLE and
 FUNCTION are just two instances of locatives,
-which are used in DEFSECTION to refer to definitions tied to
-symbols.
+used in DEFSECTION to refer to definitions tied to symbols.
 
 (DOCUMENT @FOO-RANDOM-MANUAL) generates fancy Markdown or HTML
 output with automatic markup and Autolinks uppercase words found in docstrings,

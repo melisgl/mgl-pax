@@ -88,12 +88,19 @@
     (:title "w3m"
      :url "https://emacs-w3m.github.io/info/emacs-w3m.html"))
 
-(defsection @introduction (:title "Introduction")
-  """_What if documentation really lived in the code?_
+(define-glossary-term @untangled-lp
+    (:title "untangled LP"
+     :url "https://quotenil.com/untangling-literate-programming.html"))
 
-  Docstrings are already there. If some narrative glued them together,
-  we'd be able develop and explore the code along with the
-  documentation due to their physical proximity. The main tool that
+(define-glossary-term @pax-development-style
+    (:title "PAX development style"
+     :url "https://quotenil.com/multifaceted-development.html"))
+
+(defsection @introduction (:title "Introduction")
+  """_What if documentation were code?_
+
+  If some narrative glued docstrings together, we'd be able to develop
+  and explore the code alongside its documentation. The main tool that
   PAX provides for this is DEFSECTION:
 
   ```
@@ -104,10 +111,10 @@
     (@foo-random-examples section))
   ```
 
-  Like this one, sections can have docstrings and
+  Like the one above, sections can have docstrings and
   [references][dref::@dref-manual] to
-  definitions (e.g. `(UNIFORM-RANDOM FUNCTION)`). These docstrings and
-  references are the glue. To support interactive development, PAX
+  definitions (e.g. `(UNIFORM-RANDOM FUNCTION)`). These are the glue.
+  To support interactive development, PAX
 
   - makes @SLIME's @M-. work with references and
 
@@ -119,11 +126,8 @@
   sections and all the referenced items in Markdown or HTML format is
   also implemented.
 
-  With the simplistic tools provided, one may emphasize the narrative
-  as with Literate Programming, but documentation is generated from
-  code, not vice versa, and there is no support for chunking.
-
-  _Code is first, code must look pretty, documentation is code_.
+  PAX [emphasizes the narrative][@pax-development-style] much like
+  Literate Programming, but it is an @UNTANGLED-LP system.
 
   ##### Docstrings
 
@@ -172,8 +176,7 @@
   exports `*FOO-STATE*` and includes its documentation in
   `@FOO-RANDOM-MANUAL`. The symbols [VARIABLE][locative] and
   [FUNCTION][locative] are just two instances of DREF::@LOCATIVEs,
-  which are used in DEFSECTION to refer to definitions tied to
-  symbols.
+  used in DEFSECTION to refer to definitions tied to symbols.
 
   `(DOCUMENT @FOO-RANDOM-MANUAL)` generates fancy Markdown or HTML
   output with [automatic markup][\*document-uppercase-is-code\*
