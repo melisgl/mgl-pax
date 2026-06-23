@@ -581,7 +581,7 @@
       (document (dref:locate 'foo 'type))
 
   There are quite a few special variables that affect how output is
-  generated, see @CODIFICATION, @LINKING-TO-THE-HYPERSPEC,
+  generated. See @CODIFICATION, @LINKING-TO-THE-HYPERSPEC,
   @LINKING-TO-SECTIONS, @LINK-FORMAT and @OUTPUT-FORMATS.
 
   For the details, see the following sections, starting with
@@ -734,7 +734,7 @@
   [boundary-page function][docstring]
 
 
-  - :OUTPUT can be a number things:
+  - :OUTPUT can be a number of things:
 
       - If it's NIL, then output will be collected in a string.
 
@@ -941,7 +941,7 @@
   Thus, relying on the package system makes it possible to find the
   intended home section of a definition among multiple containing
   sections with high probability. However, for names which are not
-  symbols, there is no package system to advantage of."""
+  symbols, there is no package system to take advantage of."""
   (with-sections-cache ()
     (first (find-parent-sections object))))
 
@@ -1412,8 +1412,7 @@
      :url "https://help.github.com/articles/github-flavored-markdown#fenced-code-blocks"))
 
 (defsection @mathjax (:title "MathJax")
-  """Displaying pretty mathematics between in TeX format is
-  supported via MathJax.
+  """Displaying pretty mathematics in TeX format is supported via MathJax.
 
   - _Inline_
 
@@ -1561,7 +1560,7 @@
 
 (defvar/auto *document-uppercase-is-code* t
   """When true, @INTERESTING @NAMEs extracted from @CODIFIABLE @WORDs
-  marked up as code with backticks. For example, this docstring
+  are marked up as code with backticks. For example, this docstring
 
       "T PRINT CLASSes SECTION *PACKAGE* MGL-PAX ASDF
       CaMeL Capital"
@@ -2586,7 +2585,7 @@
 (defsection @escaping-autolinking (:title "Escaping Autolinking")
   """In the common case, when [*DOCUMENT-UPPERCASE-IS-CODE*][] is true,
   prefixing an uppercase @WORD with a backslash prevents it from being
-  codified and thus also prevents @AUTOLINKing form kicking in. For
+  codified and thus also prevents @AUTOLINKing from kicking in. For
   example,
 
       \DOCUMENT

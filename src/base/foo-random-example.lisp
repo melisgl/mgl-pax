@@ -29,8 +29,8 @@
   "Much like *RANDOM-STATE* but uses the FOO algorithm.")
 
 (defun uniform-random (limit &key (random-state *foo-state*))
-  "Return a random number from the between 0 and LIMIT (exclusive)
-  uniform distribution."
+  "Return a random number from the uniform distribution between 0 and
+  LIMIT (exclusive)."
   nil)
 
 (defun gaussian-random (stddev &key (random-state *foo-state*))

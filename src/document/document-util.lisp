@@ -5,7 +5,7 @@
 (defsection @documentation-utilities
     (:title "Utilities for Generating Documentation")
   "Two convenience functions are provided to serve the common case of
-  having an ASDF system with some readmes and a directory with for the
+  having an ASDF system with some readmes and a directory with the
   HTML documentation and the default CSS stylesheet."
   (update-asdf-system-readmes function)
   (@html-output section)
@@ -242,7 +242,7 @@
   above the table of contents. A block is of the form `(&KEY TITLE ID
   LINKS)`, where TITLE will be displayed at the top of the block in a
   HTML `DIV` with `ID` followed by the links. LINKS is a list of `(URI
-  LABEL)` elements, where `URI` maybe a string or an object being
+  LABEL)` elements, where `URI` may be a string or an object being
   DOCUMENTed or a REFERENCE thereof.")
 
 (defvar/auto *document-html-bottom-blocks-of-links* ()

@@ -91,7 +91,7 @@ other mgl-pax commands in interactive use."
 ;;; See MGL-PAX::CHECK-PAX-ELISP-VERSION.
 (defvar mgl-pax-version)
 ;;; The next line is `(setq mgl-pax-version (mgl-pax-read-version))`
-;;; in the sources, which gets replaced by the the version in
+;;; in the sources, which gets replaced by the version in
 ;;; `version.lisp-expr` by MGL-PAX:INSTALL-PAX-ELISP.
 (setq mgl-pax-version (mgl-pax-read-version))
 
@@ -372,16 +372,16 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 ;;;
 ;;; `slime-sexp-at-point' works fine in code, but in printed
 ;;; representations and docstrings heuristics are needed (just think
-;;; "SYM." and "#<SYM"), which we leave for the the Common Lisp side
-;;; to resolve. However, we handle here the complications caused by
+;;; "SYM." and "#<SYM"), which we leave for the Common Lisp side to
+;;; resolve. However, we handle here the complications caused by
 ;;; Markdown, whose syntax for code (`nil`) and reference links
 ;;; ([title][id]) is used by PAX, maybe both at the same time as in
 ;;; [`FOO`][function] or [FOO][`function`]. ?` is a delimiter, but ?\[
-;;; is not, which means that `slime-sexp-at-point' on FOO will
-;;; result in NAME being "FOO" or "[FOO][". "[FOO][" is a valid symbol
-;;; name, so we definitely want to look up definitions for it. In
-;;; addition, we also look up definitions for the symbol whose name
-;;; has the parts beyond [] cut off.
+;;; is not, which means that `slime-sexp-at-point' on FOO will result
+;;; in NAME being "FOO" or "[FOO][". "[FOO][" is a valid symbol name,
+;;; so we definitely want to look up definitions for it. In addition,
+;;; we also look up definitions for the symbol whose name has the
+;;; parts beyond [] cut off.
 (defun mgl-pax-wall-at-point ()
   ;; `mgl-pax-call-in-lisp-mode' makes this function work even in
   ;; non-lisp buffers.

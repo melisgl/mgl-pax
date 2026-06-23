@@ -96,7 +96,7 @@
             (document-docstring docstring stream)))))))
 
 (defmethod document-object* ((dref setf-dref) stream)
-  "Depending of what the SETF locative refers to, the ARGLIST of the
+  "Depending on what the SETF locative refers to, the ARGLIST of the
   [setf expander][clhs], [setf function][clhs], or the method
   signature is printed as with the METHOD locative."
   (let ((resolved (resolve dref nil)))
@@ -232,7 +232,7 @@
   "[public-superclasses function][docstring]")
 
 (defun public-superclasses (class)
-  "The public superclasses of a class are tightest envelope of
+  "The public superclasses of a class are the tightest envelope of
   superclasses with names exported from some package. This envelope is
   constructed by recursing depth-first into the superclass hierarchy.
   If the name of the superclass currently processed is exported from

@@ -287,7 +287,7 @@
 
 
 ;;;; Handling of "pax-wall:" URLs. WALL is the acronym of
-;;;; Word-And-Locatives-List (also, see the WALL type).
+;;;; Word-And-Locatives-List (see also the WALL type).
 
 ;;; pax-wall:<URLENCODED-STRINGIFIED-WALL>. The list is encoded in an
 ;;; URL to make the Elisp side simpler as what to document goes
@@ -1080,9 +1080,9 @@
   of one (i.e. the directory of the `.asd` file in which it was
   defined) is the same or is below the other's.
 
-  A PACKAGE presented under a group of systems, if the SOURCE-LOCATION
-  of the package is below the the top-most directory among the systems
-  in the group.")
+  A PACKAGE is presented under a group of systems if the
+  SOURCE-LOCATION of the package is below the top-most directory among
+  the systems in the group.")
 
 (define-glossary-term @related (:title "related")
   "Two definitions are _related_ if the directory of one's
