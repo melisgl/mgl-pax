@@ -408,6 +408,7 @@
       (let ((*document-link-code* nil))
         (check-head "*PACKAGE*" "`*PACKAGE*`")
         (check-head "CL:*PACKAGE*" "`CL:*PACKAGE*`")
+        (check-head "CL:*PRINT-LENGTH*" "`CL:*PRINT-LENGTH*`")
         (check-head "CL:*PACKAGE XXX*" "CL:*`PACKAGE` `XXX`*"))))
   (with-test ("reflink")
     (with-test ("no refs")

@@ -335,10 +335,13 @@
                 (stringp prev) (blankp prev))
            (setf (first result) (concatenate 'string prev element)))
           ;; "CL:" (:EMPH "*FEATURES*") - > "CL:*FEATURES*"
-          ((and (listp element) (eq (first element) :emph)
-                (= (length element) 2) (stringp prev) (ends-with #\: prev))
+          ((and (parse-tree-p element :emph)
+                (stringp prev)
+                (ends-with #\: prev)
+                (= 2 (length (join-stuff-in-list element))))
            (setf (first result)
-                 (format nil "~A*~A*" prev (second element))))
+                 (format nil "~A*~A*" prev
+                         (second (join-stuff-in-list element)))))
           (t
            (push element result)))))
     (reverse result)))
