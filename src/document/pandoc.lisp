@@ -262,7 +262,7 @@
     (:reference-link
      (let* ((label (pt-get tree :label))
             (definition (first (pt-get tree :definition)))
-            (target (gethash definition *id-to-target*))
+            (target (gethash definition (page-id-to-target *page*)))
             (target-page (and target (target-page target))))
        (assert (page-p *page*))
        (cond

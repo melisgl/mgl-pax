@@ -203,6 +203,13 @@
   ;; Any output written to this page (including plain docstrings)?
   written-in-first-pass-p
   written-in-second-pass-p
+  ;; TARGET ids are short hashes (as STRINGs), and they go into
+  ;; Markdown reference links. Due to possible collisions, they are
+  ;; context-dependent, so to keep TARGETs immutable, ids are in this
+  ;; hash table.
+  (target-to-id (make-hash-table :test #'eq))
+  ;; A TARGET-ID to TARGET hash table for MD5 collision detection
+  (id-to-target (make-hash-table :test #'equal))
   ;; The set of TARGETs linked to from this page. For
   ;; WRITE-MARKDOWN-REFERENCE-STYLE-LINK-DEFINITIONS and
   ;; LINK-TO-DEFINITION. Populated in the 2nd pass. EQ is fine because
@@ -383,35 +390,27 @@
 (defun link-to-definition (dref)
   (link-to-target (find-target dref)))
 
-;;; TARGET ids are short hashes (as STRINGs), and they go into
-;;; Markdown reference links. Due to possible collisions, they are
-;;; context-dependent, so to keep TARGETs immutable, ids are in this
-;;; hash table.
-(defvar *target-to-id*)
-;;; A TARGET-ID to TARGET hash table for MD5 collision detection.
-(defvar *id-to-target*)
-
 (defun target-id (target)
-  (gethash target *target-to-id*))
+  (gethash target (page-target-to-id *page*)))
 
 (defun ensure-target-id (target)
-  (or (gethash target *target-to-id*)
-      (let ((id (hash-target-anchor (dref-to-anchor (target-dref target))
-                                    #'find-target-by-id)))
-        (setf (gethash id *id-to-target*) target)
-        (setf (gethash target *target-to-id*) id))))
+  (let ((target-to-id (page-target-to-id *page*))
+        (id-to-target (page-id-to-target *page*)))
+    (or (gethash target target-to-id)
+        (let ((id (hash-target-anchor (dref-to-anchor (target-dref target))
+                                      #'find-target-by-id)))
+          (setf (gethash id id-to-target) target)
+          (setf (gethash target target-to-id) id)))))
 
 (defun find-target-by-id (id)
-  (gethash id *id-to-target*))
+  (gethash id (page-id-to-target *page*)))
 
 (defun definition-page (dref)
   (when-let (target (find-target dref))
     (target-page target)))
 
 (defmacro with-target-maps (() &body body)
-  `(let ((*targets* (make-hash-table :test #'equal))
-         (*target-to-id* (make-hash-table :test #'eq))
-         (*id-to-target* (make-hash-table :test #'equal)))
+  `(let ((*targets* (make-hash-table :test #'equal)))
      (locally ,@body)))
 
 
