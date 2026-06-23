@@ -191,8 +191,8 @@ Here is an example of how it all works together:
   "Much like *RANDOM-STATE* but uses the FOO algorithm.")
 
 (defun uniform-random (limit &key (random-state *foo-state*))
-  "Return a random number from the between 0 and LIMIT (exclusive)
-  uniform distribution."
+  "Return a random number from the uniform distribution between 0 and
+  LIMIT (exclusive)."
   nil)
 
 (defun gaussian-random (stddev &key (random-state *foo-state*))
@@ -453,7 +453,7 @@ If loading fails, `mgl-pax` will be unloaded from Emacs and any
 
 ### 3.4 Setting up Keys
 
-The recommended key bindings are this:
+The recommended key bindings are
 
 ```
 (global-set-key (kbd "C-.") 'mgl-pax-document)
@@ -552,8 +552,8 @@ information was available in the `DEFSECTION` forms. The design
 constraint imposed on documentation generation was that following
 the typical style of upcasing symbols in docstrings, there should be
 no need to explicitly mark up links: if `M-.` works, then the
-documentation generator shall also be able figure out what's being
-referred to.
+documentation generator shall also be able to figure out what's
+being referred to.
 
 I settled on [Markdown][a317] as a reasonably non-intrusive format, and a
 few thousand lines later PAX was born. Since then, locatives
@@ -690,10 +690,10 @@ Now let's examine the most important pieces.
     
     **`NOTE` is experimental and as such subject to change.**
     
-    `NOTE` can occur in an any evaluated position without changing its
-    `BODY`'s run-time behaviour or introducing any run-time overhead. [Top
-    level forms][0f52] remain top level when wrapped in `NOTE`. The names
-    of notes live in the same global namespace regardless of nesting or
+    `NOTE` can occur in any evaluated position without changing its `BODY`'s
+    run-time behaviour or introducing any run-time overhead. [Top level
+    forms][0f52] remain top level when wrapped in `NOTE`. The names of
+    notes live in the same global namespace regardless of nesting or
     whether they are [top level form][0f52]s. *These properties come at
     the price of `NOTE` being weird: it defines named notes at
     macro-expansion time (or load time). But the definitions are
@@ -732,7 +732,7 @@ Now let's examine the most important pieces.
                   (unless (realp obj)
                     (assert nil)))
                 (1+ obj)))
-            (note "- Else, X is assumed to be REAL number, and we simply
+            (note "- Else, X is assumed to be a REAL number, and we simply
                      add 1 to it."
               (1+ x)))))
     
@@ -745,7 +745,7 @@ Now let's examine the most important pieces.
     - If X is a STRING, then it is parsed as a REAL number.
     It is an error if X does not contain a REAL.
     
-    - Else, X is assumed to be REAL number, and we simply
+    - Else, X is assumed to be a REAL number, and we simply
     add 1 to it."
     ```
     
@@ -779,9 +779,9 @@ Now let's examine the most important pieces.
 
 ## 6 PAX Locatives
 
-In addition DRef's own,
-PAX defines a few locative types using the facilities in described
-in [Adding New Locatives][54d8]. Locatives allow
+In addition to DRef's own,
+PAX defines a few locative types using the facilities described in
+[Adding New Locatives][54d8]. Locatives allow
 referenceing definitions, which is used in [`DEFSECTION`][72b4],
 [Navigating Sources in Emacs][3386] and docstrings (see [Codification][f1ab] and [Linking][19e3]
 in the context of [Generating Documentation][2c93]).
@@ -1333,7 +1333,7 @@ For more powerful search, see [Apropos][b7fc].
         (document (dref:locate 'foo 'type))
     
     There are quite a few special variables that affect how output is
-    generated, see [Codification][f1ab], [Linking to the HyperSpec][7cc3],
+    generated. See [Codification][f1ab], [Linking to the HyperSpec][7cc3],
     [Linking to Sections][22c2], [Link Format][c0d2] and [Output Formats][8d9b].
     
     For the details, see the following sections, starting with
@@ -1456,7 +1456,7 @@ addition, docstrings can be included. The latter can be useful if
 
 If multiple page specs match, then the first one has precedence.
 
-- `:OUTPUT` can be a number things:
+- `:OUTPUT` can be a number of things:
 
     - If it's `NIL`, then output will be collected in a string.
 
@@ -1593,7 +1593,7 @@ In the above, the `<!>` marks the place where `*PACKAGE*` and
     Thus, relying on the package system makes it possible to find the
     intended home section of a definition among multiple containing
     sections with high probability. However, for names which are not
-    symbols, there is no package system to advantage of.
+    symbols, there is no package system to take advantage of.
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-NORMALIZE-PACKAGES-2A-20VARIABLE-29"></a>
 
@@ -1953,9 +1953,9 @@ Lisp. For easier overview, they are grouped based on their
 of one (i.e. the directory of the `.asd` file in which it was
 defined) is the same or is below the other's.
 
-A `PACKAGE` presented under a group of systems, if the `SOURCE-LOCATION`
-of the package is below the the top-most directory among the systems
-in the group.
+A `PACKAGE` is presented under a group of systems if the
+`SOURCE-LOCATION` of the package is below the top-most directory among
+the systems in the group.
 
 <a id="x-28MGL-PAX-3A-40SYSTEMLESS-PACKAGES-20MGL-PAX-3ASECTION-29"></a>
 
@@ -2094,8 +2094,7 @@ See the documentation of [3BMD][1904] and [Colorize][3076] for the details.
 
 #### 8.3.4 MathJax
 
-Displaying pretty mathematics between in TeX format is
-supported via MathJax.
+Displaying pretty mathematics in TeX format is supported via MathJax.
 
 - *Inline*
 
@@ -2152,7 +2151,7 @@ strings can be a pain. [Pythonic String Reader][d3fc5] can help with that.
 - [variable] **\*DOCUMENT-UPPERCASE-IS-CODE\*** *T*
 
     When true, [interesting][7445] [name][88cf]s extracted from [codifiable][b89a] [word][d7b0]s
-    marked up as code with backticks. For example, this docstring
+    are marked up as code with backticks. For example, this docstring
     
         "T PRINT CLASSes SECTION *PACKAGE* MGL-PAX ASDF
         CaMeL Capital"
@@ -2513,7 +2512,7 @@ docstring to be included properly:
 
 In the common case, when [`*DOCUMENT-UPPERCASE-IS-CODE*`][f25f] is true,
 prefixing an uppercase [word][d7b0] with a backslash prevents it from being
-codified and thus also prevents [Autolink][ec7a]ing form kicking in. For
+codified and thus also prevents [Autolink][ec7a]ing from kicking in. For
 example,
 
     \DOCUMENT
@@ -3285,7 +3284,7 @@ globally unbound, then no arglist is printed.
 
 When the printed initform is too long, it is truncated.
 
-- Depending of what the `SETF` locative refers to, the `ARGLIST` of the
+- Depending on what the `SETF` locative refers to, the `ARGLIST` of the
 [setf expander][35a2], [setf function][99b0], or the method
 signature is printed as with the `METHOD` locative.
 
@@ -3347,7 +3346,7 @@ printed as the arglist. There is no docstring.
 
 - [glossary-term] **public superclasses**
 
-    The public superclasses of a class are tightest envelope of
+    The public superclasses of a class are the tightest envelope of
     superclasses with names exported from some package. This envelope is
     constructed by recursing depth-first into the superclass hierarchy.
     If the name of the superclass currently processed is exported from
@@ -3473,7 +3472,7 @@ doesn't work.
 ### 8.11 Utilities for Generating Documentation
 
 Two convenience functions are provided to serve the common case of
-having an ASDF system with some readmes and a directory with for the
+having an ASDF system with some readmes and a directory with the
 HTML documentation and the default CSS stylesheet.
 
 <a id="x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-READMES-20FUNCTION-29"></a>
@@ -3607,7 +3606,7 @@ See the following variables, which control HTML generation.
     above the table of contents. A block is of the form `(&KEY TITLE ID
     LINKS)`, where `TITLE` will be displayed at the top of the block in a
     HTML `DIV` with `ID` followed by the links. `LINKS` is a list of `(URI
-    LABEL)` elements, where `URI` maybe a string or an object being
+    LABEL)` elements, where `URI` may be a string or an object being
     [`DOCUMENT`][432c]ed or a `REFERENCE` thereof.
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS-2A-20VARIABLE-29"></a>
@@ -4175,8 +4174,8 @@ create a temporary package for evaluation.
     string is different from what was in `INPUT`, provided that `INPUT`
     contained the output. Similarly, for values, a continuable
     [`TRANSCRIPTION-VALUES-CONSISTENCY-ERROR`][238c] is signalled if a value read
-    from the source does not print as the as the value returned by `EVAL`.
-    This allows readable values to be hand-indented without failing
+    from the source does not print as the value returned by `EVAL`. This
+    allows readable values to be hand-indented without failing
     consistency checks:
     
     ```
@@ -4359,7 +4358,7 @@ tests is also a possibility. Here, we focus on the former.
 
 When a Markdown code block tagged `cl-transcript` is processed
 during [Generating Documentation][2c93], the code in it is replaced with
-the output of with `(TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
+the output of `(TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
 :CHECK-CONSISTENCY T)`. Suppose we have the following example of the
 function `GREET`, that prints `hello` and returns 7.
 
@@ -4538,7 +4537,7 @@ restricted to symbols (see [Names in Raw Names][016d]).
   provided by explicitly [`IMPORT`][8f46]ing symbols.
 
 
-For a word, a number of [raw name][f5af]s is generated by trimming
+For a word, a number of [raw name][f5af]s are generated by trimming
 delimiter characters and plural markers, and for each raw name a
 number of names are considered until one is found suitable in the
 context. The following subsections describe the details of the

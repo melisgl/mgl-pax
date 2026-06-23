@@ -189,7 +189,7 @@
   above the table of contents. A block is of the form `(&KEY TITLE ID
   LINKS)`, where TITLE will be displayed at the top of the block in a
   HTML `DIV` with `ID` followed by the links. LINKS is a list of `(URI
-  LABEL)` elements, where `URI` maybe a string or an object being
+  LABEL)` elements, where `URI` may be a string or an object being
   DOCUMENTed or a REFERENCE thereof.")
 
 (autoload::foreshadow-defvar mgl-pax:*document-hyperspec-root* :init
@@ -452,7 +452,7 @@
 (autoload::foreshadow-defvar mgl-pax:*document-uppercase-is-code* :init t
                              :docstring
                              "When true, @INTERESTING @NAMEs extracted from @CODIFIABLE @WORDs
-  marked up as code with backticks. For example, this docstring
+  are marked up as code with backticks. For example, this docstring
 
       \"T PRINT CLASSes SECTION *PACKAGE* MGL-PAX ASDF
       CaMeL Capital\"
@@ -666,7 +666,7 @@
       (document (dref:locate 'foo 'type))
 
   There are quite a few special variables that affect how output is
-  generated, see @CODIFICATION, @LINKING-TO-THE-HYPERSPEC,
+  generated. See @CODIFICATION, @LINKING-TO-THE-HYPERSPEC,
   @LINKING-TO-SECTIONS, @LINK-FORMAT and @OUTPUT-FORMATS.
 
   For the details, see the following sections, starting with
@@ -761,7 +761,7 @@
   Thus, relying on the package system makes it possible to find the
   intended home section of a definition among multiple containing
   sections with high probability. However, for names which are not
-  symbols, there is no package system to advantage of.")
+  symbols, there is no package system to take advantage of.")
 
 (autoload:autoload mgl-pax:prin1-to-markdown "mgl-pax/document" :arglist
                    "(mgl-pax::object &key (mgl-pax::escape-inline t) (mgl-pax::escape-mathjax t) (mgl-pax::escape-html t) (mgl-pax::escape-block t))"
@@ -903,8 +903,8 @@
   string is different from what was in INPUT, provided that INPUT
   contained the output. Similarly, for values, a continuable
   TRANSCRIPTION-VALUES-CONSISTENCY-ERROR is signalled if a value read
-  from the source does not print as the as the value returned by EVAL.
-  This allows readable values to be hand-indented without failing
+  from the source does not print as the value returned by EVAL. This
+  allows readable values to be hand-indented without failing
   consistency checks:
 
   ```

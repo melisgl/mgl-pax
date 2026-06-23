@@ -378,7 +378,7 @@
 
 
 (defsection @emacs-keys (:title "Setting up Keys")
-  """The recommended key bindings are this:
+  """The recommended key bindings are
 
   ```
   (global-set-key (kbd "C-.") 'mgl-pax-document)
@@ -469,8 +469,8 @@
   constraint imposed on documentation generation was that following
   the typical style of upcasing symbols in docstrings, there should be
   no need to explicitly mark up links: if `\\M-.` works, then the
-  documentation generator shall also be able figure out what's being
-  referred to.
+  documentation generator shall also be able to figure out what's
+  being referred to.
 
   I settled on @MARKDOWN as a reasonably non-intrusive format, and a
   few thousand lines later PAX was born. Since then, DREF::@LOCATIVEs
@@ -500,10 +500,10 @@
 
   __NOTE is experimental and as such subject to change.__
 
-  NOTE can occur in an any evaluated position without changing its
-  BODY's run-time behaviour or introducing any run-time overhead. [Top
-  level forms][clhs] remain top level when wrapped in NOTE. The names
-  of notes live in the same global namespace regardless of nesting or
+  NOTE can occur in any evaluated position without changing its BODY's
+  run-time behaviour or introducing any run-time overhead. [Top level
+  forms][clhs] remain top level when wrapped in NOTE. The names of
+  notes live in the same global namespace regardless of nesting or
   whether they are [top level form][clhs]s. _These properties come at
   the price of NOTE being weird: it defines named notes at
   macro-expansion time (or load time). But the definitions are
@@ -542,7 +542,7 @@
                 (unless (realp obj)
                   (assert nil)))
               (1+ obj)))
-          (note "- Else, X is assumed to be REAL number, and we simply
+          (note "- Else, X is assumed to be a REAL number, and we simply
                    add 1 to it."
             (1+ x)))))
 
@@ -555,7 +555,7 @@
   - If X is a STRING, then it is parsed as a REAL number.
   It is an error if X does not contain a REAL.
 
-  - Else, X is assumed to be REAL number, and we simply
+  - Else, X is assumed to be a REAL number, and we simply
   add 1 to it."
   ```
 

@@ -671,8 +671,8 @@
   string is different from what was in INPUT, provided that INPUT
   contained the output. Similarly, for values, a continuable
   TRANSCRIPTION-VALUES-CONSISTENCY-ERROR is signalled if a value read
-  from the source does not print as the as the value returned by EVAL.
-  This allows readable values to be hand-indented without failing
+  from the source does not print as the value returned by EVAL. This
+  allows readable values to be hand-indented without failing
   consistency checks:
 
   ```
@@ -1498,7 +1498,7 @@
 
   When a Markdown code block tagged `cl-transcript` is processed
   during @GENERATING-DOCUMENTATION, the code in it is replaced with
-  the output of with `(TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
+  the output of `(TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
   :CHECK-CONSISTENCY T)`. Suppose we have the following example of the
   function `GREET`, that prints `hello` and returns 7.
 

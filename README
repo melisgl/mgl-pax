@@ -102,8 +102,8 @@ Here is an example of how it all works together:
       "Much like *RANDOM-STATE* but uses the FOO algorithm.")
     
     (defun uniform-random (limit &key (random-state *foo-state*))
-      "Return a random number from the between 0 and LIMIT (exclusive)
-      uniform distribution."
+      "Return a random number from the uniform distribution between 0 and
+      LIMIT (exclusive)."
       nil)
     
     (defun gaussian-random (stddev &key (random-state *foo-state*))
@@ -348,7 +348,7 @@ overridden Slime key bindings restored.
 
 ### Setting up Keys
 
-The recommended key bindings are this:
+The recommended key bindings are
 
     (global-set-key (kbd "C-.") 'mgl-pax-document)
     (global-set-key (kbd "s-x t") 'mgl-pax-transcribe-last-expression)
@@ -437,8 +437,8 @@ information was available in the DEFSECTION forms. The design
 constraint imposed on documentation generation was that following
 the typical style of upcasing symbols in docstrings, there should be
 no need to explicitly mark up links: if M-. works, then the
-documentation generator shall also be able figure out what's being
-referred to.
+documentation generator shall also be able to figure out what's
+being referred to.
 
 I settled on Markdown as a reasonably non-intrusive format, and a
 few thousand lines later PAX was born. Since then, locatives
@@ -563,10 +563,10 @@ Now let's examine the most important pieces.
 
     NOTE is experimental and as such subject to change.
 
-    NOTE can occur in an any evaluated position without changing its
-    BODY's run-time behaviour or introducing any run-time overhead. Top
-    level forms remain top level when wrapped in NOTE. The names
-    of notes live in the same global namespace regardless of nesting or
+    NOTE can occur in any evaluated position without changing its BODY's
+    run-time behaviour or introducing any run-time overhead. Top level
+    forms remain top level when wrapped in NOTE. The names of
+    notes live in the same global namespace regardless of nesting or
     whether they are top level forms. These properties come at
     the price of NOTE being weird: it defines named notes at
     macro-expansion time (or load time). But the definitions are
@@ -602,7 +602,7 @@ Now let's examine the most important pieces.
                       (unless (realp obj)
                         (assert nil)))
                     (1+ obj)))
-                (note "- Else, X is assumed to be REAL number, and we simply
+                (note "- Else, X is assumed to be a REAL number, and we simply
                          add 1 to it."
                   (1+ x)))))
         
@@ -615,7 +615,7 @@ Now let's examine the most important pieces.
         - If X is a STRING, then it is parsed as a REAL number.
         It is an error if X does not contain a REAL.
         
-        - Else, X is assumed to be REAL number, and we simply
+        - Else, X is assumed to be a REAL number, and we simply
         add 1 to it."
 
     The parsing of ARGS:
@@ -646,9 +646,9 @@ Now let's examine the most important pieces.
 
 ## PAX Locatives
 
-In addition DRef's own,
-PAX defines a few locative types using the facilities in described
-in Adding New Locatives. Locatives allow
+In addition to DRef's own,
+PAX defines a few locative types using the facilities described in
+Adding New Locatives. Locatives allow
 referenceing definitions, which is used in DEFSECTION,
 Navigating Sources in Emacs and docstrings (see Codification and Linking
 in the context of Generating Documentation).
@@ -1147,7 +1147,7 @@ For more powerful search, see Apropos.
         (document (dref:locate 'foo 'type))
 
     There are quite a few special variables that affect how output is
-    generated, see Codification, Linking to the HyperSpec,
+    generated. See Codification, Linking to the HyperSpec,
     Linking to Sections, Link Format and Output Formats.
 
     For the details, see the following sections, starting with
@@ -1259,7 +1259,7 @@ DOCUMENTABLE includes a docstring.
 
 If multiple page specs match, then the first one has precedence.
 
-- :OUTPUT can be a number things:
+- :OUTPUT can be a number of things:
 
     - If it's NIL, then output will be collected in a string.
 
@@ -1391,7 +1391,7 @@ In the above, the <!> marks the place where *PACKAGE* and
     Thus, relying on the package system makes it possible to find the
     intended home section of a definition among multiple containing
     sections with high probability. However, for names which are not
-    symbols, there is no package system to advantage of.
+    symbols, there is no package system to take advantage of.
 
 - [variable] *DOCUMENT-NORMALIZE-PACKAGES* T
 
@@ -1725,9 +1725,9 @@ SOURCE-LOCATIONs. Two systems are in the same group if the directory
 of one (i.e. the directory of the .asd file in which it was
 defined) is the same or is below the other's.
 
-A PACKAGE presented under a group of systems, if the SOURCE-LOCATION
-of the package is below the the top-most directory among the systems
-in the group.
+A PACKAGE is presented under a group of systems if the
+SOURCE-LOCATION of the package is below the top-most directory among
+the systems in the group.
 
 ##### Systemless Packages
 
@@ -1845,8 +1845,7 @@ See the documentation of 3BMD and Colorize for the details.
 
 #### MathJax
 
-Displaying pretty mathematics between in TeX format is
-supported via MathJax.
+Displaying pretty mathematics in TeX format is supported via MathJax.
 
 - Inline
 
@@ -1899,7 +1898,7 @@ strings can be a pain. Pythonic String Reader can help with that.
 - [variable] *DOCUMENT-UPPERCASE-IS-CODE* T
 
     When true, interesting names extracted from codifiable words
-    marked up as code with backticks. For example, this docstring
+    are marked up as code with backticks. For example, this docstring
 
         "T PRINT CLASSes SECTION *PACKAGE* MGL-PAX ASDF
         CaMeL Capital"
@@ -2214,7 +2213,7 @@ docstring to be included properly:
 
 In the common case, when *DOCUMENT-UPPERCASE-IS-CODE* is true,
 prefixing an uppercase word with a backslash prevents it from being
-codified and thus also prevents Autolinking form kicking in. For
+codified and thus also prevents Autolinking from kicking in. For
 example,
 
     \DOCUMENT
@@ -2890,7 +2889,7 @@ globally unbound, then no arglist is printed.
 
 When the printed initform is too long, it is truncated.
 
-- Depending of what the SETF locative refers to, the ARGLIST of the
+- Depending on what the SETF locative refers to, the ARGLIST of the
 setf expander, setf function, or the method
 signature is printed as with the METHOD locative.
 
@@ -2949,7 +2948,7 @@ printed as the arglist. There is no docstring.
 
 - [glossary-term] public superclasses
 
-    The public superclasses of a class are tightest envelope of
+    The public superclasses of a class are the tightest envelope of
     superclasses with names exported from some package. This envelope is
     constructed by recursing depth-first into the superclass hierarchy.
     If the name of the superclass currently processed is exported from
@@ -3054,7 +3053,7 @@ doesn't work.
 ### Utilities for Generating Documentation
 
 Two convenience functions are provided to serve the common case of
-having an ASDF system with some readmes and a directory with for the
+having an ASDF system with some readmes and a directory with the
 HTML documentation and the default CSS stylesheet.
 
 - [function] UPDATE-ASDF-SYSTEM-READMES OBJECT ASDF-SYSTEM &KEY (URL-VERSIONS '(1)) (FORMATS '(:MARKDOWN))
@@ -3162,7 +3161,7 @@ See the following variables, which control HTML generation.
     above the table of contents. A block is of the form (&KEY TITLE ID
     LINKS), where TITLE will be displayed at the top of the block in a
     HTML DIV with ID followed by the links. LINKS is a list of (URI
-    LABEL) elements, where URI maybe a string or an object being
+    LABEL) elements, where URI may be a string or an object being
     DOCUMENTed or a REFERENCE thereof.
 
 - [variable] *DOCUMENT-HTML-BOTTOM-BLOCKS-OF-LINKS* NIL
@@ -3670,8 +3669,8 @@ create a temporary package for evaluation.
     string is different from what was in INPUT, provided that INPUT
     contained the output. Similarly, for values, a continuable
     TRANSCRIPTION-VALUES-CONSISTENCY-ERROR is signalled if a value read
-    from the source does not print as the as the value returned by EVAL.
-    This allows readable values to be hand-indented without failing
+    from the source does not print as the value returned by EVAL. This
+    allows readable values to be hand-indented without failing
     consistency checks:
 
         (list 1 2)
@@ -3830,7 +3829,7 @@ tests is also a possibility. Here, we focus on the former.
 
 When a Markdown code block tagged cl-transcript is processed
 during Generating Documentation, the code in it is replaced with
-the output of with (TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
+the output of (TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
 :CHECK-CONSISTENCY T). Suppose we have the following example of the
 function GREET, that prints hello and returns 7.
 
@@ -3984,7 +3983,7 @@ restricted to symbols (see Names in Raw Names).
   littering the documentation with links without the control
   provided by explicitly IMPORTing symbols.
 
-For a word, a number of raw names is generated by trimming
+For a word, a number of raw names are generated by trimming
 delimiter characters and plural markers, and for each raw name a
 number of names are considered until one is found suitable in the
 context. The following subsections describe the details of the
