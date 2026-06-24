@@ -143,10 +143,13 @@
                      ;; See @SUPPRESSED-LINKS.
                      ()
                      ,%dref)
-               ,@body)))))))
+               (multiple-value-prog1
+                   (progn ,@body)
+                 (print-also-see ,%dref ,%stream)))))))))
 
 (declaim (ftype function print-arglist))
 (declaim (ftype function print-end-bullet))
+(declaim (ftype function print-also-see))
 (declaim (ftype function guess-package-and-readtable))
 (declaim (ftype function anchor))
 (declaim (special *document-list-view*))

@@ -2252,7 +2252,13 @@ DISLOCATED or the ARGUMENT locative may be used as in
     [T][constant] (that links to T).
 
     Note that linking explicitly with the CLHS locative is not subject
-    to the value of this variable.
+    to the value of this variable, so
+
+    - [PRINT][clhs] always renders as PRINT, and
+
+    - PRINT clhs always renders as  PRINT clhs.
+
+    See also the filtering of Unspecific Links.
 
 - [variable] *DOCUMENT-HYPERSPEC-ROOT* "http://www.lispworks.com/documentation/HyperSpec/"
 
@@ -2375,11 +2381,15 @@ PACKAGEs, ASDF:SYSTEMs and CLHS
 sections from cluttering the documentation without the control
 provided by importing symbols.
 
-2. All references with LOCATIVE-TYPE LOCATIVE are filtered out.
+2. Links to the CLHS are filtered out when the
+corresponding non-CLHS definition is being
+documented (and thus among the links).
 
-3. Non-linkable definitions are removed.
+3. All references with LOCATIVE-TYPE LOCATIVE are filtered out.
 
-4. If the definitions include a GENERIC-FUNCTION, then
+4. Non-linkable definitions are removed.
+
+5. If the definitions include a GENERIC-FUNCTION, then
 all definitions with LOCATIVE-TYPE METHOD,
 ACCESSOR, READER and WRITER are
 removed to avoid linking to a possibly large number of methods.

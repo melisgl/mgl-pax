@@ -2036,7 +2036,9 @@
        (dref name locative nil) name locative)))
 
 (defun dref-to-targets/specific (dref)
-  (drefs-to-targets (filter-clhs-dref (replace-go-targets (list dref)))))
+  (drefs-to-targets
+   (maybe-filter-clhs-drefs
+    (replace-go-targets (list dref)))))
 
 (defsection @unspecific-link (:title "Unspecific Link")
   """Unspecific links are those @REFLINKs and @AUTOLINKs that do not
@@ -2049,11 +2051,13 @@
 
   1. [filter-string-based-drefs function][docstring]
 
-  2. [filter-locative-drefs function][docstring]
+  2. @FILTER-CLHS-FOR-STUFF-BEING-DOCUMENTED
 
-  3. Non-[@LINKABLE][] definitions are removed.
+  3. [filter-locative-drefs function][docstring]
 
-  4. [filter-method-targets function][docstring]
+  4. Non-[@LINKABLE][] definitions are removed.
+
+  5. [filter-method-targets function][docstring]
 
   If at most a single definition remains, then the output is the same
   as with a @SPECIFIC-LINK. If multiple definitions remain, then the
@@ -2073,7 +2077,7 @@
   (filter-method-targets
    (drefs-to-targets
     (filter-locative-drefs
-     (filter-clhs-dref
+     (maybe-filter-clhs-drefs
       (replace-go-targets drefs))))))
 
 (defun replace-go-targets (drefs)
@@ -2209,7 +2213,7 @@
 ;;; However, if *DOCUMENT-LINK-TO-HYPERSPEC* is NIL, this substitution
 ;;; must be later filtered out, but an explicit [EQL][(clhs type)]
 ;;; must be always kept, so we mark explicit CLHS links for
-;;; FILTER-CLHS-REFERENCES.
+;;; MAYBE-FILTER-CLHS-DREFS.
 (defun substitute-clhs-for-missing-standard-definition (dref name locative)
   (cond (dref
          (when (eq (dref-locative-type dref) 'clhs)
@@ -2729,7 +2733,43 @@
   `[T][constant]` (that links to [T][constant]).
 
   Note that linking explicitly with the CLHS locative is not subject
-  to the value of this variable.""")
+  to the value of this variable, so
+
+  - `[PRINT][clhs]` always _renders as_ [PRINT][clhs], and
+
+  - `PRINT clhs` always _renders as_  PRINT clhs.
+
+  See also the filtering of @UNSPECIFIC-LINKs.""")
+
+(defun maybe-filter-clhs-drefs (drefs)
+  (let ((clhs-drefs-for-stuff-being-documented
+          (loop for dref in drefs
+                when (clhs-dref (dref-name dref) (dref-locative dref))
+                  collect it)))
+    (remove-if
+     (lambda (dref)
+       (and (typep dref 'clhs-dref)
+            (or (note @filter-clhs-for-stuff-being-documented
+                  "Links to the CLHS are filtered out when the
+                  corresponding non-CLHS definition is being
+                  documented (and thus among the links)."
+                  (find dref clhs-drefs-for-stuff-being-documented
+                        :test #'xref=))
+                (and (not *document-link-to-hyperspec*)
+                     (not (clhs-dref-explicit-p dref))))))
+     drefs)))
+
+(defun print-also-see (dref stream)
+  (when (and (not *first-pass*) *document-link-to-hyperspec*
+             (not *document-open-linking*))
+    (when-let ((clhs-dref (clhs-dref (dref-name dref)
+                                     (dref-locative dref))))
+      (fresh-line stream)
+      (document-docstring
+       (format nil "Also, see the [\\CLHS][~A ~A]."
+               (prin1-to-markdown (dref-name clhs-dref))
+               (prin1-to-markdown (dref-locative clhs-dref)))
+       stream))))
 
 (defvar/auto *document-hyperspec-root*
   "http://www.lispworks.com/documentation/HyperSpec/"
@@ -2756,14 +2796,6 @@
             (t
              (find-hyperspec-definition-url name locative
                                             *document-hyperspec-root*))))))
-
-(defun filter-clhs-dref (drefs)
-  (if *document-link-to-hyperspec*
-      drefs
-      (remove-if (lambda (dref)
-                   (and (typep dref 'clhs-dref)
-                        (not (clhs-dref-explicit-p dref))))
-                 drefs)))
 
 ;;; Just for the generated docstrings. See CLHS locative.
 (defvar *format-directive-alias-links* nil
