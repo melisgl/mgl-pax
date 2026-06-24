@@ -258,7 +258,9 @@
     (compiled-function type "t_cmpd_f")
     (compiled-function-p function "f_cmpd_f")
     ;; Adding symbols that CL:DOCUMENTATION specializes on leads to
-    ;; lots of ambiguous links in the documentation.
+    ;; lots of ambiguous links in the documentation. And
+    ;; JOIN-AMBIGUOUS-CLHS-TARGETS needs to be taught about equivalent
+    ;; names.
     #+nil
     (compiler-macro (go (documentation (clhs generic-function))) "f_docume")
     (compiler-macro-function function "f_cmp_ma")
@@ -1085,10 +1087,7 @@
                          (format nil "~A.htm" filename))
                    (gethash name map)))
     (loop for (name filename) in *hyperspec-disambiguations*
-          do ;; KLUDGE: LAMBDA has two pages, but one of them is a
-             ;; "symbol" page, which we don't have.
-             (unless (eq name 'lambda)
-               (assert (<= 1 (length (gethash name map)))))
+          do (assert (<= 1 (length (gethash name map))))
              (push (list nil (format nil "~A.htm" filename))
                    (gethash name map)))
     map))

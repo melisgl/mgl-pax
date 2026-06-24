@@ -2264,7 +2264,8 @@
 
   _Examples:_
 
-  - `[see this][eql type]` _renders as_ [see this][eql type].
+  - `[see this][output-label restart]` _renders as_ [see
+    this][output-label restart].
 
   - `[see this]["MGL-PAX" package]` _renders as_ [see this]["MGL-PAX" package].
   """)
@@ -2285,7 +2286,7 @@
 
   - single link: `[PRINT][]` _renders as_ [PRINT][].
 
-  - multiple links: `[EQL][]` _renders as_ [EQL][].
+  - multiple links: `[OUTPUT-LABEL][]` _renders as_ [OUTPUT-LABEL][].
 
   - no definitions: `[BAD-NAME][]` _renders as_ BAD-NAME.
   """)
@@ -2307,7 +2308,7 @@
 
   - `[see this][print]` _renders as_ [see this][print].
 
-  - `[see this][eql]` _renders as_ [see this][eql].
+  - `[see this][output-label]` _renders as_ [see this][output-label].
   """)
 
 (defun unspecific-reflink-with-text (label definition)
@@ -2341,6 +2342,8 @@
 
 (defsection @unresolvable-reflinks (:title "Unresolvable Links")
   (unresolvable-reflink condition)
+  (output-reflink restart)
+  (output-label restart)
   (output-reflink function)
   (output-label function))
 
@@ -2350,18 +2353,11 @@
   (:report print-unresolvable-reflink)
   (:documentation """When DOCUMENT encounters a @REFLINK that looks
   like a PAX construct but has no matching definition, it signals an
-  UNRESOLVABLE-REFLINK warning.
+  UNRESOLVABLE-REFLINK warning with the [OUTPUT-REFLINK][restart] and
+  OUTPUT-LABEL restarts available.
 
-  - If the OUTPUT-REFLINK restart is invoked, then no warning is
-    printed and the Markdown link is left unchanged. MUFFLE-WARNING is
-    equivalent to OUTPUT-REFLINK.
-
-  - If the OUTPUT-LABEL restart is invoked, then no warning is printed
-    and the Markdown link is replaced by its label. For example,
-    `[NONEXISTENT][function]` becomes `NONEXISTENT`.
-
-  - If the warning is not handled, then it is printed to
-    *ERROR-OUTPUT*, and it behaves as if OUTPUT-LABEL was invoked."""))
+  If the warning is not handled, then it is printed to *ERROR-OUTPUT*,
+  and it behaves as if [OUTPUT-LABEL][restart] was invoked."""))
 
 (defun print-unresolvable-reflink (unresolvable-reflink stream)
   (let* ((c unresolvable-reflink)
@@ -2390,13 +2386,23 @@
       :report "Output the whole reflink."
       reflink)))
 
+(define-restart output-reflink ()
+  "In the context of an UNRESOLVABLE-REFLINK, print no warning, and leave
+  the Markdown link unchanged. MUFFLE-WARNING is equivalent to
+  OUTPUT-REFLINK.")
+
 (defun output-reflink (&optional condition)
-  "Invoke the OUTPUT-REFLINK restart. See UNRESOLVABLE-REFLINK."
+  "Invoke the OUTPUT-REFLINK restart."
   (declare (ignore condition))
   (invoke-restart 'output-reflink))
 
+(define-restart output-label ()
+  "In the context of an UNRESOLVABLE-REFLINK, print no warning, and
+  replace the Markdown link by its label. For example,
+  `[NONEXISTENT][function]` becomes `NONEXISTENT`.")
+
 (defun output-label (&optional condition)
-  "Invoke the OUTPUT-LABEL restart. See UNRESOLVABLE-REFLINK."
+  "Invoke the OUTPUT-LABEL restart."
   (declare (ignore condition))
   (invoke-restart 'output-label))
 
@@ -2650,7 +2656,55 @@
                        '(""))))))
         (normal-targets-to-tree
          label explicit-label-p
-         (%filter-and-maybe-index-special-targets targets)))))
+         (join-ambiguous-clhs-targets
+          (%filter-and-maybe-index-special-targets targets))))))
+
+;;; Instead of linking to individual CLHS pages with the same name,
+;;; link to the disambiguation page.
+(defun join-ambiguous-clhs-targets (targets)
+  (labels ((%dref-name (dref)
+             ;; KLUDGE: This is currently the only case in
+             ;; *HYPERSPEC-DEFINITIONS* where a GO locative (already
+             ;; resolved) screws up equivalence by name.
+             (let ((name (dref-name dref)))
+               (if (and (equal name "s_lambda")
+                        (equal (dref-locative dref) '(clhs section)))
+                   'lambda
+                   name)))
+           (disambiguation-target (dref)
+             ;; This may be NIL for CLASS-NAME, which has defintions
+             ;; as GENERIC-FUNCTION and SETF-GENERIC-FUNCTION, but no
+             ;; disambiguation page in the CLHS because the name there
+             ;; is (SETF CLASS-NAME) for one of them.
+             (find-target (make-instance 'clhs-dref
+                                         :name (%dref-name dref)
+                                         :locative '(clhs nil)))))
+    (let ((maybe-to-replace ())
+          (to-replace ())
+          (to-remove ()))
+      (dolist (target targets)
+        (let ((dref (target-dref target)))
+          (when (and (typep dref 'clhs-dref)
+                     (disambiguation-target dref))
+            (let* ((name (%dref-name dref))
+                   (clhs-dref (find name maybe-to-replace :key #'%dref-name)))
+              (cond (clhs-dref
+                     (pushnew clhs-dref to-replace)
+                     (push dref to-remove))
+                    (t
+                     (push dref maybe-to-replace)))))))
+      (if to-replace
+          (let ((new-targets ()))
+            (dolist (target targets)
+              (let ((dref (target-dref target)))
+                (unless (member dref to-remove)
+                  (push (if (member dref to-replace)
+                            (or (disambiguation-target dref)
+                                (assert nil))
+                            target)
+                        new-targets))))
+            (reverse new-targets))
+          targets))))
 
 (defun %filter-and-maybe-index-special-targets (targets)
   (loop for target in targets

@@ -2052,7 +2052,8 @@ else as a symbol.
 
 Examples:
 
-- [see this][eql type] renders as see this.
+- [see this][output-label restart] renders as see
+  this.
 
 - [see this]["MGL-PAX" package] renders as see this.
 
@@ -2069,7 +2070,7 @@ Examples:
 
 - single link: [PRINT][] renders as PRINT.
 
-- multiple links: [EQL][] renders as EQL.
+- multiple links: [OUTPUT-LABEL][] renders as OUTPUT-LABEL.
 
 - no definitions: [BAD-NAME][] renders as BAD-NAME.
 
@@ -2085,7 +2086,7 @@ Examples:
 
 - [see this][print] renders as see this.
 
-- [see this][eql] renders as see this.
+- [see this][output-label] renders as see this.
 
 ##### Markdown Reflink
 
@@ -2113,26 +2114,31 @@ Markdown reference links (see Markdown in Docstrings).
 
     When DOCUMENT encounters a Reflink that looks
     like a PAX construct but has no matching definition, it signals an
-    UNRESOLVABLE-REFLINK warning.
+    UNRESOLVABLE-REFLINK warning with the OUTPUT-REFLINK and
+    OUTPUT-LABEL restarts available.
 
-    - If the OUTPUT-REFLINK restart is invoked, then no warning is
-      printed and the Markdown link is left unchanged. MUFFLE-WARNING is
-      equivalent to OUTPUT-REFLINK.
+    If the warning is not handled, then it is printed to *ERROR-OUTPUT*,
+    and it behaves as if OUTPUT-LABEL was invoked.
 
-    - If the OUTPUT-LABEL restart is invoked, then no warning is printed
-      and the Markdown link is replaced by its label. For example,
-      [NONEXISTENT][function] becomes NONEXISTENT.
+- [restart] OUTPUT-REFLINK
 
-    - If the warning is not handled, then it is printed to
-      *ERROR-OUTPUT*, and it behaves as if OUTPUT-LABEL was invoked.
+    In the context of an UNRESOLVABLE-REFLINK, print no warning, and leave
+    the Markdown link unchanged. MUFFLE-WARNING is equivalent to
+    OUTPUT-REFLINK.
+
+- [restart] OUTPUT-LABEL
+
+    In the context of an UNRESOLVABLE-REFLINK, print no warning, and
+    replace the Markdown link by its label. For example,
+    [NONEXISTENT][function] becomes NONEXISTENT.
 
 - [function] OUTPUT-REFLINK &OPTIONAL CONDITION
 
-    Invoke the OUTPUT-REFLINK restart. See UNRESOLVABLE-REFLINK.
+    Invoke the OUTPUT-REFLINK restart.
 
 - [function] OUTPUT-LABEL &OPTIONAL CONDITION
 
-    Invoke the OUTPUT-LABEL restart. See UNRESOLVABLE-REFLINK.
+    Invoke the OUTPUT-LABEL restart.
 
 #### Autolink
 
