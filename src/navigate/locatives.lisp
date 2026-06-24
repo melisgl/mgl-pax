@@ -649,7 +649,33 @@
              (foo (second entry) '(clhs section)))
     :try-interned-symbols))
 
+(declaim (inline dref-ht-key))
+(defun dref-ht-key (dref)
+  (cons (dref-name dref) (dref-locative dref)))
+
+(defvar *more-specific-implementation-dref-to-clhs-dref*)
+
+(defun init-clhs-dref ()
+  (let ((ht (make-hash-table :test #'equal)))
+    (dolist (clhs-dref (dref-apropos nil :dtype '(and clhs (not (clhs section))
+                                                  (not (clhs glossary-term)))))
+      (let ((dref (dref (dref-name clhs-dref)
+                        (first (dref-locative-args clhs-dref))
+                        nil)))
+        (when (and dref
+                   (or (not (equal (dref-name dref)
+                                   (dref-name clhs-dref)))
+                       (not (equal (dref-locative dref)
+                                   (first (dref-locative-args clhs-dref))))))
+          (setf (gethash (dref-ht-key dref) ht) clhs-dref))))
+    (setq *more-specific-implementation-dref-to-clhs-dref* ht)))
+
 (defun clhs-dref (name locative)
+  (unless (boundp '*more-specific-implementation-dref-to-clhs-dref*)
+    (init-clhs-dref))
   ;; Pick off the impossible cases quickly.
-  (when (member (locative-type locative) *hyperspec-definition-locative-types*)
-    (dref name `(clhs ,locative) nil)))
+  (or (when (member (locative-type locative)
+                    *hyperspec-definition-locative-types*)
+        (dref name `(clhs ,locative) nil))
+      (gethash (cons name locative)
+               *more-specific-implementation-dref-to-clhs-dref*)))

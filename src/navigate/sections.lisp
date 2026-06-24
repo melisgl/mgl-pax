@@ -7,10 +7,6 @@
 (defvar *all-sections*)
 (defvar *definition-to-parents*)
 
-(declaim (inline dref-ht-key))
-(defun dref-ht-key (dref)
-  (cons (dref-name dref) (dref-locative dref)))
-
 (defun new-section-cache ()
   (let ((all-sections (mapcar #'resolve
                               (dref-apropos nil :dtype 'section :sort nil)))
