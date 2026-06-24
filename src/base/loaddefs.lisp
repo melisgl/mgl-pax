@@ -333,7 +333,13 @@
   `[T][constant]` (that links to [T][constant]).
 
   Note that linking explicitly with the CLHS locative is not subject
-  to the value of this variable.")
+  to the value of this variable, so
+
+  - `[PRINT][clhs]` always _renders as_ [PRINT][clhs], and
+
+  - `PRINT clhs` always _renders as_  PRINT clhs.
+
+  See also the filtering of @UNSPECIFIC-LINKs.")
 
 (autoload::foreshadow-defvar mgl-pax:*document-mark-up-signatures* :init t
                              :docstring

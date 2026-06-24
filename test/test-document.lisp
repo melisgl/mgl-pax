@@ -1472,8 +1472,11 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
     This is the name of the [`RESTART`][38e4] to which [`USE-VALUE`][5406]
     transfers control.
 
+    Also, see the [CLHS][cf08].
+
   [38e4]: CLHS/Body/t_rst.htm \"RESTART (MGL-PAX:CLHS CLASS)\"
   [5406]: CLHS/Body/f_abortc.htm \"USE-VALUE (MGL-PAX:CLHS FUNCTION)\"
+  [cf08]: CLHS/Body/r_use_va.htm \"USE-VALUE (MGL-PAX:CLHS RESTART)\"
 "))
 
 
@@ -1729,7 +1732,10 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
     (check-head (list "[PRINT][function] [PRINT][pax:clhs]")
                 "[`PRINT`][d451] [`PRINT`][d451]")
     (check-head (list "[PRINT][clhs] [PRINT][function]")
-                "[`PRINT`][d451] [`PRINT`][d451]")))
+                "[`PRINT`][d451] [`PRINT`][d451]"))
+  (with-test ("filter clhs for stuff being documented")
+    (check-head (list "PRINT" #'print) "[`PRINT`][fdd1]")
+    (check-pred (list "PRINT" #'print) "Also, see the [CLHS][d451].")))
 
 (deftest test-clhs-section ()
   (let ((*document-link-to-hyperspec* t))

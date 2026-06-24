@@ -2555,7 +2555,13 @@ This renders as `DOCUMENT`. Alternatively, the
     `[T][constant]` (that links to [`T`][fe21]).
     
     Note that linking explicitly with the [`CLHS`][ed5f] locative is not subject
-    to the value of this variable.
+    to the value of this variable, so
+    
+    - `[PRINT][clhs]` always *renders as* [`PRINT`][d451], and
+    
+    - `PRINT clhs` always *renders as*  [`PRINT`][d451] clhs.
+    
+    See also the filtering of [Unspecific Link][8e71]s.
 
 <a id="x-28MGL-PAX-3A-2ADOCUMENT-HYPERSPEC-ROOT-2A-20VARIABLE-29"></a>
 
@@ -2702,11 +2708,15 @@ is not a symbol) are filtered out to prevent unrelated
 sections from cluttering the documentation without the control
 provided by importing symbols.
 
-2. All references with `LOCATIVE-TYPE` `LOCATIVE` are filtered out.
+2. Links to the `CLHS` are filtered out when the
+corresponding non-`CLHS` definition is being
+documented (and thus among the links).
 
-3. Non-[linkable][7eb5] definitions are removed.
+3. All references with `LOCATIVE-TYPE` `LOCATIVE` are filtered out.
 
-4. If the definitions include a `GENERIC-FUNCTION`, then
+4. Non-[linkable][7eb5] definitions are removed.
+
+5. If the definitions include a `GENERIC-FUNCTION`, then
 all definitions with `LOCATIVE-TYPE` `METHOD`,
 `ACCESSOR`, `READER` and `WRITER` are
 removed to avoid linking to a possibly large number of methods.
