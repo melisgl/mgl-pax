@@ -4253,7 +4253,7 @@ are for writing new DOCUMENT-OBJECT* methods, which emit Markdown.
 
     This function is for extension only. Do not call it directly.
 
-- [macro] DOCUMENTING-DEFINITION (STREAM &KEY DREF PACKAGE READTABLE (ARGLIST NIL)) &BODY BODY
+- [macro] DOCUMENTING-DEFINITION (STREAM &KEY DREF PACKAGE READTABLE ARGLIST) &BODY BODY
 
     Write DREF to STREAM as described in
     *DOCUMENT-MARK-UP-SIGNATURES*, and establish DREF as a
@@ -4282,6 +4282,9 @@ are for writing new DOCUMENT-OBJECT* methods, which emit Markdown.
           is printed without the outermost parens and with the package
           names removed from the argument names. Keywords are
           printed with a leading colon.
+
+            &AUX variables and SUPPLIED-P-PARAMETERs of &OPTIONAL and
+            &KEY arguments are considered internal and are not printed.
 
         - If it is a string, then it must be valid Markdown.
 

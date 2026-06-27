@@ -1264,7 +1264,11 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
 
 - [function] **FOO2** *OOK X*
 
-    `FOO2` has args [`OOK`][0e7e] and `X`.")))
+    `FOO2` has args [`OOK`][0e7e] and `X`."))
+  (check-document #'foo3 "- [function] FOO3 &KEY (X 7) Y Z
+" :format :plain)
+  (check-document #'foo4 "- [function] FOO4
+" :format :plain))
 
 (when (fboundp 'encapsulated-function)
   (handler-bind ((warning #'muffle-warning))

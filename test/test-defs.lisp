@@ -55,6 +55,14 @@
   (declare (ignore ook x))
   nil)
 
+(defun foo3 (&key (x 7 xp) (y nil yp) (z))
+  (declare (ignore x xp y yp z))
+  nil)
+
+(defun foo4 (&aux x y)
+  (declare (ignore x y))
+  nil)
+
 (defun ook ())
 
 (without-redefinition-warnings

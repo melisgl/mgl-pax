@@ -99,6 +99,9 @@
         names removed from the argument names. [Keywords][clhs] are
         printed with a leading colon.
 
+          &AUX variables and `SUPPLIED-P-PARAMETER`s of &OPTIONAL and
+          &KEY arguments are considered internal and are not printed.
+
       - If it is a string, then it must be valid Markdown.
 
   - It is not allowed to have WITH-HEADING within the [dynamic

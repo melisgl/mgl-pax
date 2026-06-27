@@ -4850,7 +4850,7 @@ are for writing new `DOCUMENT-OBJECT*` methods, which emit Markdown.
 
 <a id="x-28MGL-PAX-3ADOCUMENTING-DEFINITION-20MGL-PAX-3AMACRO-29"></a>
 
-- [macro] **DOCUMENTING-DEFINITION** *(STREAM &KEY DREF PACKAGE READTABLE (ARGLIST NIL)) &BODY BODY*
+- [macro] **DOCUMENTING-DEFINITION** *(STREAM &KEY DREF PACKAGE READTABLE ARGLIST) &BODY BODY*
 
     Write `DREF` to `STREAM` as described in
     [`*DOCUMENT-MARK-UP-SIGNATURES*`][8fb6], and establish `DREF` as a
@@ -4879,6 +4879,9 @@ are for writing new `DOCUMENT-OBJECT*` methods, which emit Markdown.
           is printed without the outermost parens and with the package
           names removed from the argument names. [Keywords][88a0] are
           printed with a leading colon.
+    
+            [`&AUX`][4336] variables and `SUPPLIED-P-PARAMETER`s of [`&OPTIONAL`][4336] and
+            [`&KEY`][4336] arguments are considered internal and are not printed.
     
         - If it is a string, then it must be valid Markdown.
     
@@ -5111,6 +5114,7 @@ they are presented.
   [4143]: http://www.lispworks.com/documentation/HyperSpec/Body/f_stgeq_.htm "STRING= (MGL-PAX:CLHS FUNCTION)"
   [4317]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cerror.htm "CERROR (MGL-PAX:CLHS FUNCTION)"
   [432c]: #x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29 "MGL-PAX:DOCUMENT FUNCTION"
+  [4336]: http://www.lispworks.com/documentation/HyperSpec/Body/03_da.htm "\"3.4.1\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [443b]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_cas.htm "*PRINT-CASE* (MGL-PAX:CLHS VARIABLE)"
   [4537]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pl_plp.htm "+++ (MGL-PAX:CLHS VARIABLE)"
   [460e]: #x-28MGL-PAX-3A-40M--2E-DEFAULTING-20MGL-PAX-3ASECTION-29 "`M-.` Defaulting"

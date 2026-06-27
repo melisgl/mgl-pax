@@ -3499,7 +3499,7 @@
             (values t (rest arglist))
             (values nil arglist))
       ;; The pretty printing settings do not apply to the arglist as a
-      ;; single object, but to its parts printed individually.
+      ;; single object but to its parts printed individually.
       (let ((*print-pretty* t)
             (*print-right-margin* 80))
         (labels
@@ -3524,14 +3524,20 @@
                       (format out "~A" (prin1-to-markdown arg)))
                      (*nesting-possible-p*
                       (print-arglist arg (1+ level)))
-                     (t
-                      (if (symbolp (first arg))
-                          (format out "(~A~{ ~A~})"
+                     ;; &KEY or &OPTIONAL default values
+                     ((and (symbolp (first arg))
+                           (<= (length arg) 3))
+                      (if (second arg)
+                          ;; (X 7 XP) or (X 7) renders as (X 7)
+                          (format out "(~A ~A)"
                                   (escape-markdown
                                    (maybe-downcase-all-uppercase-code
                                     (symbol-name (first arg))))
-                                  (mapcar #'resolve* (rest arg)))
-                          (format out "~A" (prin1-to-markdown arg))))))
+                                  (resolve* (second arg)))
+                          ;; (X NIL XP), (X NIL), (X) renders as X
+                          (format out "~A" (prin1-to-markdown (first arg)))))
+                     (t
+                      (format out "~A" (prin1-to-markdown arg)))))
              (print-arglist (arglist level)
                (let ((*nesting-possible-p* (not methodp)))
                  (declare (special *nesting-possible-p*))
@@ -3539,7 +3545,9 @@
                    (format out "("))
                  (loop for i upfrom 0
                        for rest on arglist
-                       do (unless (zerop i)
+                       do (when (eq (first rest) '&aux)
+                            (return))
+                          (unless (zerop i)
                             (format out " "))
                           (print-arg (car rest) level)
                           ;; Handle (&WHOLE FORM NAME . ARGS) and similar.
