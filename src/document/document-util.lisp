@@ -441,12 +441,15 @@
             (formats (mapcar #'car format-and-pages-alist)))
         (format s "# PAX World
 
-This is a list of documents generated with [MGL-PAX](~A). The \\\\HTML
-and Markdown documents are cross-linked: links to other documents are
-added automatically when a reference is found. Note that clicking on
-the locative type (e.g. `[function]`) will take you to the sources on
-a git forge if possible.~%~%"
-                (relative-url :html @pax-manual))
+This is a list of documents generated with [MGL-PAX](~A). See [PAX
+World](~A) for how to get your project included.
+
+The \\\\HTML and Markdown documents are cross-linked: links to other
+documents are added automatically when a reference is found. Note that
+clicking on the locative type (e.g. `[function]`) will take you to the
+sources on a git forge if possible.~%~%"
+                (relative-url :html @pax-manual)
+                "https://fixnum.com/pax-manual.html#MGL-PAX:@PAX-WORLD%20MGL-PAX:SECTION")
         (dolist (object objects)
           (let ((label (or (document-definition-title (locate object))
                            (prin1-to-markdown (section-name object)))))
