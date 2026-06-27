@@ -3,8 +3,11 @@
 (defsection @pax-world (:title "PAX World")
   "PAX World is a registry of documents, which can generate
   cross-linked HTML documentation pages for all the registered
-  documents. There is an official [PAX
-  World](https://melisgl.github.io/mgl-pax-world/)."
+  documents. There is an official PAX World at <https://fixnum.com/>,
+  which is updated every few hours. To have your stuff there,
+  REGISTER-DOC-IN-PAX-WORLD in your ASDF system and file an issue at
+  <https://github.com/melisgl/mgl-pax-world/issues> to make PAX World
+  actually load it."
   (register-doc-in-pax-world function)
   "For example, this is how PAX registers itself:"
   (register-doc-example (include (:start (pax-sections function)

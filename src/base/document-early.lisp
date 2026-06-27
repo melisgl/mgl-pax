@@ -203,11 +203,15 @@
   UPDATE-ASDF-SYSTEM-READMES) so that users have something to read
   without reading the code and sites like GitHub can display them.
 
-  HTML documentation can also be committed, but there is an issue with
-  that: when linking to the sources (see MAKE-GIT-SOURCE-URI-FN), the
-  commit id is in the link. This means that code changes need to be
-  committed first, and only then can HTML documentation be regenerated
-  and committed in a followup commit.
+  Also, by registering in @PAX-WORLD, you get documentation generated
+  in various formats periodically. If you want to manage this
+  yourself, there are a couple of things to keep in mind.
+
+  First, HTML documentation can also be committed, but there is an
+  issue with that: when linking to the sources (see
+  MAKE-GIT-SOURCE-URI-FN), the commit id is in the link. This means
+  that code changes need to be committed first, and only then can HTML
+  documentation be regenerated and committed in a followup commit.
 
   The second issue is that GitHub is not very good at serving HTML
   files from the repository itself (and
