@@ -295,10 +295,6 @@
 ;;; *DOCUMENT-OPEN-LINKING* and CLHS definitions.
 (defvar *targets*)
 
-(defmacro target-key (dref)
-  (once-only ((dref dref))
-    `(cons (dref-name ,dref) (dref-locative ,dref))))
-
 (declaim (inline set-target))
 (defun set-target (key target)
   (setf (gethash key *targets*) target))
@@ -307,14 +303,14 @@
 (defun get-target (key)
   (gethash key *targets*))
 
-;;; Called at the end of the first pass. Reverse PAGE-DEFINITIONS so
-;;; that it's in depth-first order, and add a TARGET to *TARGETS* for
+;;; Called at the end of the first pass. Reverse PAGE-DEFINITIONS (so
+;;; that it's in depth-first order) and add a TARGET to *TARGETS* for
 ;;; all definitions on each page.
 (defun finalize-pages (pages)
   (dolist (page pages)
     (setf (page-definitions page) (reverse (page-definitions page)))
     (dolist (dref (page-definitions page))
-      (set-target (target-key dref) (make-target :dref dref :page page)))
+      (set-target (dref-ht-key dref) (make-target :dref dref :page page)))
     ;; Reset to 0 so that the second pass produces the same ids
     ;; (assuming some determinism in the dynamic generation).
     (setf (page-next-dyn-id page) 0)))
@@ -326,7 +322,7 @@
 (defun find-target (dref)
   (declare (type dref dref))
   (assert (not *first-pass*))
-  (let ((key (target-key dref)))
+  (let ((key (dref-ht-key dref)))
     (or (get-target key)
         (when-let (url (external-dref-url dref))
           (set-target key (make-target :dref dref :page url)))
@@ -340,7 +336,7 @@
 (defun maybe-add-pax-target (key dref)
   (when (or *document-open-linking*
             ;; Under the following conditions, we `fake' a PAX target,
-            ;; so that it to TARGETS-TO-TREE for relevant processing.
+            ;; so that it makes to TARGETS-TO-TREE for relevant processing.
             ;;
             ;; For @TITLEd definitions, to get the link replaced with
             ;; with their title.
@@ -359,10 +355,10 @@
 (defun clhs-target (dref)
   (let ((clhs-dref (clhs-dref (dref-name dref) (dref-locative dref))))
     (when clhs-dref
-      (or (get-target (target-key clhs-dref))
+      (or (get-target (dref-ht-key clhs-dref))
           ;; Ensure that if two CLHS DREFs are XREF=, then they are
           ;; EQ, so they have the same id (see ENSURE-TARGET-ID).
-          (set-target (target-key clhs-dref)
+          (set-target (dref-ht-key clhs-dref)
                       (make-target :dref clhs-dref
                                    :page (find-clhs-url clhs-dref)))))))
 
@@ -1933,7 +1929,7 @@
   (@unspecific-link section))
 
 (defvar/auto *document-link-code* t
-  """Whether definitions of things other than [SECTION][class]s
+  """Whether definitions of things other than SECTIONs
   are allowed to be @LINKABLE.""")
 
 ;;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
@@ -1966,7 +1962,7 @@
 
   - We are @BROWSING-LIVE-DOCUMENTATION, or
   - D is an external definition ([CLHS][locative] or denotes a
-    [GLOSSARY-TERM][class] with a [\URL][define-glossary-term]), or
+    [GLOSSARY-TERM][class] with a [URL][define-glossary-term]), or
   - D's page is C, or
   - D's page is relativizable to C.
 
@@ -2060,9 +2056,12 @@
   5. [filter-method-targets function][docstring]
 
   If at most a single definition remains, then the output is the same
-  as with a @SPECIFIC-LINK. If multiple definitions remain, then the
-  link text is output followed by a number of numbered links, one to
-  each definition.""")
+  as with a @SPECIFIC-LINK.
+
+  If multiple definitions remain, then the link text is output
+  followed by a number of numbered links, one to each definition. When
+  @BROWSING-LIVE-DOCUMENTATION, ambiguities can be much more frequent;
+  and thus a single disambiguation page is linked to instead.""")
 
 ;;; Get the DEFINITIONS* for NAME. This includes ARGUMENTs (which
 ;;; depend on the documentation context via *LOCAL-REFERENCES*) and
@@ -2748,7 +2747,7 @@
               :source ,(finalize-pax-url
                         (name-to-pax-url (dref-name ref-1))))))
           (t
-           ;; `label`([1][link-id-1] [2][link-id-2])
+           ;; `label`([0][link-id-1] [1][link-id-2])
            `(,@label
              "("
              ,@(loop

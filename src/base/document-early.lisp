@@ -188,7 +188,6 @@
         (error (gensym)))
     `(flet ((,body-fn ()
               ,@body))
-       (declare (special *document-open-linking*))
        (if *document-open-linking*
            (handler-case
                (,body-fn)

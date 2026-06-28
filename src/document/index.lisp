@@ -206,8 +206,9 @@
 
   Non-`CONCEPT` @REFERENTs recorded during documentation generation
   are assigned to the first (in depth-first order) spec with a
-  [matching][dtypep] `\DTYPE`. For @REFERENTs that are concepts, their
-  keys are assigned to the first spec with :CONCEPTS true.
+  [matching][dtypep] [DTYPE][dislocated]. For @REFERENTs that are
+  concepts, their keys are assigned to the first spec with :CONCEPTS
+  true.
 
   Specs are processed in the following way and order:
 
@@ -217,17 +218,17 @@
   - Else, a dynamically generated SECTION with TITLE (a Markdown
     string) is entered.
 
-  - If DOCUMENTATION is non-NIL, then it is a Markdown docstring and
-    is written as is to the output.
+  - If [DOCUMENTATION][dislocated] is non-NIL, then it is a Markdown
+    docstring and is written as is to the output.
 
-  - If `DOCUMENT-REFERRER-GROUPS` is true, then the `\ABBREV`s and
-    `\DOCUMENTATION`s in *DOCUMENT-INDEX-REFERRER-GROUPS* are listed
-    in the output.
+  - If `DOCUMENT-REFERRER-GROUPS` is true, then the
+    [ABBREV][dislocated]s and DOCUMENTATIONs in
+    *DOCUMENT-INDEX-REFERRER-GROUPS* are listed in the output.
 
   - The @REFERENTs assigned to this spec are output along with their
     @REFERRERs (see the examples in @INDEXING-CONCEPTS).
 
-  - The `CHILDREN` specs are processed.
+  - The CHILDREN specs are processed.
 
   - The dynamically generated section is closed.
 

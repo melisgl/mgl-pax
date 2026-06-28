@@ -1614,8 +1614,8 @@ exploration of the Lisp, much like `describe-function`,
 `apropos-command` and other online help commands in Emacs, for which
 direct parallels are provided.
 
-Still, even without Emacs and [SLIME][6be7], limited functionality can be
-accessed through [PAX Live Home Page][9d50] by starting the live
+Still, even without Emacs and [SLIME][6be7], limited functionality is
+available through the [PAX Live Home Page][9d50] by starting the live
 documentation web server [manually][72cc].
 
 If [Emacs Setup][8541] has been done, the Elisp function
@@ -1709,8 +1709,8 @@ In addition, the following PAX-specific key bindings are available:
 
 - `p` moves to the previous PAX definition on the page.
 
-- `u` follows the first `Up:` link (to the first containing
-  [`SECTION`][5fac]) if any.
+- `u` follows the first `Up:` link (to the first containing [`SECTION`][5fac])
+  if any.
 
 - `U` is like `u` but positions the cursor at the top of the page.
 
@@ -2731,9 +2731,12 @@ all definitions with `LOCATIVE-TYPE` `METHOD`,
 removed to avoid linking to a possibly large number of methods.
 
 If at most a single definition remains, then the output is the same
-as with a [Specific Link][0361]. If multiple definitions remain, then the
-link text is output followed by a number of numbered links, one to
-each definition.
+as with a [Specific Link][0361].
+
+If multiple definitions remain, then the link text is output
+followed by a number of numbered links, one to each definition. When
+[Browsing Live Documentation][a595], ambiguities can be much more frequent;
+and thus a single disambiguation page is linked to instead.
 
 <a id="x-28MGL-PAX-3A-40LINK-FORMAT-20MGL-PAX-3ASECTION-29"></a>
 
@@ -3147,8 +3150,9 @@ Also, see [concept subkey][5920] on how to order concepts in the output.
     
     Non-`CONCEPT` [referent][ad8e]s recorded during documentation generation
     are assigned to the first (in depth-first order) spec with a
-    matching `DTYPE`. For [referent][ad8e]s that are concepts, their
-    keys are assigned to the first spec with `:CONCEPTS` true.
+    matching `DTYPE`. For [referent][ad8e]s that are
+    concepts, their keys are assigned to the first spec with `:CONCEPTS`
+    true.
     
     Specs are processed in the following way and order:
     
@@ -3158,12 +3162,12 @@ Also, see [concept subkey][5920] on how to order concepts in the output.
     - Else, a dynamically generated [`SECTION`][5fac] with `TITLE` (a Markdown
       string) is entered.
     
-    - If [`DOCUMENTATION`][c5ae] is non-`NIL`, then it is a Markdown docstring and
-      is written as is to the output.
+    - If `DOCUMENTATION` is non-`NIL`, then it is a Markdown
+      docstring and is written as is to the output.
     
-    - If `DOCUMENT-REFERRER-GROUPS` is true, then the `ABBREV`s and
-      `DOCUMENTATION`s in [`*DOCUMENT-INDEX-REFERRER-GROUPS*`][85c9] are listed
-      in the output.
+    - If `DOCUMENT-REFERRER-GROUPS` is true, then the
+      `ABBREV`s and `DOCUMENTATION`s in
+      [`*DOCUMENT-INDEX-REFERRER-GROUPS*`][85c9] are listed in the output.
     
     - The [referent][ad8e]s assigned to this spec are output along with their
       [referrer][e7e0]s (see the examples in [Indexing Concepts][c001]).
@@ -3557,10 +3561,10 @@ See the following variables, which control HTML generation.
 
 - [variable] **\*DOCUMENT-HTML-DEFAULT-STYLE\*** *:DEFAULT*
 
-    The HTML style to use. It's either `STYLE` is either `:DEFAULT` or
-    `:CHARTER`. The `:DEFAULT` CSS stylesheet relies on the default
-    fonts (sans-serif, serif, monospace), while `:CHARTER` bundles some
-    fonts for a more controlled look.
+    The HTML style to use. It's either `:DEFAULT` or `:CHARTER`. The `:DEFAULT`
+    CSS stylesheet relies on the default fonts (sans-serif, serif,
+    monospace), while `:CHARTER` bundles some fonts for a more controlled
+    look.
     
     The value of this variable affects the default style of
     [`UPDATE-ASDF-SYSTEM-HTML-DOCS`][bb12].
@@ -3780,7 +3784,7 @@ For example, this is how PAX registers itself:
     `PAGE-SPECS` is augmented with HTML headers, footers and output
     location specifications (based on the name of the section).
     
-    If necessary a default page spec is created for every section.
+    If necessary, a default page spec is created for every section.
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPTS-20MGL-PAX-3ASECTION-29"></a>
 

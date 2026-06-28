@@ -80,10 +80,10 @@
   (*document-html-bottom-blocks-of-links* variable))
 
 (defvar/auto *document-html-default-style* :default
-  "The HTML style to use. It's either STYLE is either :DEFAULT or
-  :CHARTER. The :DEFAULT CSS stylesheet relies on the default
-  fonts (sans-serif, serif, monospace), while :CHARTER bundles some
-  fonts for a more controlled look.
+  "The HTML style to use. It's either :DEFAULT or :CHARTER. The :DEFAULT
+  CSS stylesheet relies on the default fonts (sans-serif, serif,
+  monospace), while :CHARTER bundles some fonts for a more controlled
+  look.
 
   The value of this variable affects the default style of
   UPDATE-ASDF-SYSTEM-HTML-DOCS.")
@@ -397,7 +397,7 @@
   PAGE-SPECS is augmented with HTML headers, footers and output
   location specifications (based on the name of the section).
 
-  If necessary a default page spec is created for every section."
+  If necessary, a default page spec is created for every section."
   (with-filename-to-asdf-system-name-map
     (let ((dir (or dir (asdf:system-relative-pathname :mgl-pax "world/"))))
       (multiple-value-bind (sections pages) (sections-and-pages docs)

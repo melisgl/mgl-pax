@@ -12,8 +12,8 @@
   `apropos-command` and other online help commands in Emacs, for which
   direct parallels are provided.
 
-  Still, even without Emacs and @SLIME, limited functionality can be
-  accessed through @PAX-LIVE-HOME-PAGE by starting the live
+  Still, even without Emacs and @SLIME, limited functionality is
+  available through the @PAX-LIVE-HOME-PAGE by starting the live
   documentation web server [manually][ensure-web-server].
 
   If @EMACS-SETUP has been done, the Elisp function
@@ -112,8 +112,8 @@
 
   - `p` moves to the previous PAX definition on the page.
 
-  - `u` follows the first `Up:` link (to the first containing
-    [SECTION][class]) if any.
+  - `u` follows the first `Up:` link (to the first containing SECTION)
+    if any.
 
   - `\\U` is like `u` but positions the cursor at the top of the page.
 
@@ -393,7 +393,7 @@
             path output)))))
 
 ;;; See if (DOCUMENT REFERENCE) with *DOCUMENT-OPEN-LINKING* T would
-;;; try to document an external reference, and return it.
+;;; try to document an external reference and return it.
 (defun open-reference-if-external (reference)
   (let ((*document-open-linking* t))
     (let ((dref (locate reference)))

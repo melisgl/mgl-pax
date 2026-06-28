@@ -19,7 +19,6 @@
                                     definition-to-parents)))))
     (list all-sections definition-to-parents)))
 
-;;; Lazily cache results of LIST-ALL-SECTIONS in BODY.
 (defmacro with-sections-cache (() &body body)
   `(progv (unless (boundp '*all-sections*)
             '(*all-sections* *definition-to-parents*))
