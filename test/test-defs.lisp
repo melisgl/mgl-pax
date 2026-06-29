@@ -146,6 +146,8 @@
   "SOME-TERM is a link.
   ### heading")
 
+(define-concept ~concept ())
+
 (defun ->max ())
 
 (defmacro define-declaration (decl-name (decl-spec env) &body body)

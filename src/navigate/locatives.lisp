@@ -66,16 +66,28 @@
             lazy dref new expected-type)
     new))
 
-(defmacro define-lazy-locate-and-resolve (locative-type (kind dref-class))
+(defmacro define-lazy-locate-and-resolve
+    (locative-type (kind dref-class proper-name-p name-fn))
   `(progn
      (define-locator ,locative-type ((list list))
        (locate-lazy-doc list ,kind ',dref-class ',locative-type))
 
+     (defun ,proper-name-p (symbol)
+       (and (symbolp symbol)
+            (boundp symbol)
+            (let ((value (symbol-value symbol)))
+              (and (typep value ',locative-type)
+                   (eq (,name-fn value) symbol)))))
+
+     (define-locator ,locative-type ((object ,locative-type))
+       (let ((name (,name-fn object)))
+         (unless (,proper-name-p name)
+           (locate-error))
+         (make-instance ',dref-class :name name :locative ',locative-type)))
+
      (define-lookup ,locative-type (symbol locative-args)
-       (unless (and (symbolp symbol)
-                    (boundp symbol)
-                    (or (typep (symbol-value symbol) ',locative-type)
-                        (proper-lazy-doc-name-p symbol ,kind)))
+       (unless (or (,proper-name-p symbol)
+                   (proper-lazy-doc-name-p symbol ,kind))
          (locate-error))
        (make-instance ',dref-class :name symbol :locative ',locative-type))
 
@@ -94,11 +106,8 @@
   SECTION is EXPORTABLE-LOCATIVE-TYPE-P but not exported by
   default (see EXPORTABLE-REFERENCE-P).")
 
-(define-locator section ((section section))
-  (make-instance 'section-dref :name (section-name section)
-                 :locative 'section))
-
-(define-lazy-locate-and-resolve section (:section section-dref))
+(define-lazy-locate-and-resolve section
+    (:section section-dref proper-section-name-p section-name))
 
 (defmethod docstring* ((dref section-dref))
   nil)
@@ -120,12 +129,9 @@
   GLOSSARY-TERM is EXPORTABLE-LOCATIVE-TYPE-P but not exported by
   default (see EXPORTABLE-REFERENCE-P).")
 
-(define-locator glossary-term ((glossary-term glossary-term))
-  (make-instance 'glossary-term-dref :name (glossary-term-name glossary-term)
-                 :locative 'glossary-term))
-
 (define-lazy-locate-and-resolve glossary-term
-    (:glossary-term glossary-term-dref))
+    (:glossary-term glossary-term-dref
+     proper-glossary-term-name-p glossary-term-name))
 
 (defmethod docstring* ((dref glossary-term-dref))
   (glossary-term-docstring (resolve dref)))
@@ -147,11 +153,8 @@
 
   CONCEPTs have no ARGLIST or DOCSTRING.")
 
-(define-locator concept ((concept concept))
-  (make-instance 'concept-dref :name (concept-name concept)
-                 :locative 'concept))
-
-(define-lazy-locate-and-resolve concept (:concept concept-dref))
+(define-lazy-locate-and-resolve concept
+    (:concept concept-dref proper-concept-name-p concept-name))
 
 (defmethod docstring* ((dref concept-dref))
   nil)
