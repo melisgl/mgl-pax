@@ -31,8 +31,9 @@
  "mgl-pax")
 
 (autoload::export*
- '("*browse-html-style*" "*discard-documentation-p*" "*document-base-url*"
-   "*document-downcase-uppercase-code*" "*document-fancy-html-navigation*"
+ '("*browse-context*" "*browse-html-style*" "*discard-documentation-p*"
+   "*document-base-url*" "*document-downcase-uppercase-code*"
+   "*document-fancy-html-navigation*"
    "*document-html-bottom-blocks-of-links*" "*document-html-charset*"
    "*document-html-default-style*" "*document-html-head*"
    "*document-html-lang*"
@@ -69,6 +70,17 @@
    "update-asdf-system-html-docs" "update-asdf-system-readmes"
    "update-pax-world" "with-dislocated-names" "with-heading" "writer")
  "mgl-pax")
+
+(autoload::foreshadow-defvar mgl-pax:*browse-context* :docstring
+                             "When set to a @DOCUMENTABLE, live browsing will link only to
+      definitions reachable from it as opposed to linking to all
+      definitions in the running Lisp when it is unbound. This makes
+      it easier to see how offline generated documentation will turn
+      out.
+
+      For convenience, setting *BROWSE-CONTEXT* to :PAX-WORLD is
+      equivalent to listing all [registered][
+      register-doc-in-pax-world] sections.")
 
 (autoload::foreshadow-defvar mgl-pax:*browse-html-style* :init :charter
                              :docstring

@@ -81,10 +81,67 @@
   The convenience function
   `mgl-pax-current-definition-toggle-view` (`C-c C-d c`) documents the
   definition with point in it."""
+  (*browse-context* variable)
   (@browsing-with-w3m section)
   (@browsing-with-other-browsers section)
   (@apropos section)
   (@pax-live-home-page section))
+
+
+(defvar/auto *browse-context*)
+(setf (documentation '*browse-context* 'variable)
+      "When set to a @DOCUMENTABLE, live browsing will link only to
+      definitions reachable from it as opposed to linking to all
+      definitions in the running Lisp when it is unbound. This makes
+      it easier to see how offline generated documentation will turn
+      out.
+
+      For convenience, setting *BROWSE-CONTEXT* to :PAX-WORLD is
+      equivalent to listing all [registered][
+      register-doc-in-pax-world] sections.")
+(defvar *browse-context-definitions* ())
+
+(defvar *document/live-extra-args* ())
+
+(defun document/live (documentable &rest args)
+  (let ((*document-url-versions* '(2))
+        (*document-live* t))
+    (with-sections-cache ()
+      (multiple-value-bind (*document-open-linking*
+                            *browse-context-definitions*)
+          (if (boundp '*browse-context*)
+              (values nil (reachable-definitions
+                           (if (eq *browse-context* :pax-world)
+                               (sections-registered-in-pax-world)
+                               *browse-context*)))
+              (values t ()))
+        (apply #'document documentable
+               (append args (list :format (or *subformat* :html))
+                       *document/live-extra-args*))))))
+
+(defun maybe-add-targets-for-live-definitions ()
+  (dolist (dref *browse-context-definitions*)
+    (set-target (dref-ht-key dref)
+                (make-target :dref dref
+                             :page (finalize-pax-url
+                                    (dref-to-pax-url dref))))))
+
+(defun reachable-definitions (documentable)
+  (let ((ht (make-hash-table :test #'equal)))
+    (labels ((recurse (dref level)
+               (unless (gethash (dref-ht-key dref) ht)
+                 (setf (gethash (dref-ht-key dref) ht) dref)
+                 (when (typep dref 'section-dref)
+                   (dolist (entry (section-entries (resolve dref)))
+                     (when-let (child (and (typep entry 'xref)
+                                           (locate entry nil)))
+                       (recurse child (1+ level))))))))
+      (map-documentable (lambda (object)
+                          (when-let (dref (locate object nil))
+                            (recurse dref 0)))
+                        documentable))
+    (hash-table-values ht)))
+
 
 (define-glossary-term @w3m-key-bindings
     (:title "w3m's default key bindings"
@@ -318,7 +375,7 @@
              (filename (filename-for-pax-url
                         output
                         (format nil "pax-eval:~A" (urlencode canonical-path)))))
-        (document/open/file filename stuff :title path)
+        (document/live/file filename stuff :title path)
         filename))))
 
 (defun pax-eval (form)
@@ -422,7 +479,7 @@
          #+nil
          (*document-docstring-key*
            (and packagep (rcurry 'shorten-docstring reference))))
-    (document/open/file filename
+    (document/live/file filename
                         (if packagep
                             (pax-apropos* nil t
                                           (make-symbol
@@ -613,14 +670,14 @@
   (assert (< 1 (length references)))
   (when output
     (let ((filename (filename-for-pax-url output pax-url)))
-      (document/open/file
+      (document/live/file
        filename (cons (format nil "## Disambiguation for [~A][pax:dislocated]"
                               (escape-markdown title))
                       (sort-references (replace-go-targets references)))
        :title title)
       filename)))
 
-(defun document/open/file (filename stuff &key title)
+(defun document/live/file (filename stuff &key title)
   (with-open-file (stream (ensure-directories-exist filename)
                           :direction :output
                           :if-does-not-exist :create
@@ -628,16 +685,7 @@
                           :external-format uiop:*utf-8-external-format*)
     (when title
       (format stream "<title>~A</title>~%" (escape-html title)))
-    (document/open stuff :stream stream)))
-
-(defvar *document/open-extra-args* ())
-
-(defun document/open (documentable &rest args)
-  (let ((*document-open-linking* t)
-        (*document-url-versions* '(2)))
-    (apply #'document documentable
-           (append args (list :format (or *subformat* :html))
-                   *document/open-extra-args*))))
+    (document/live stuff :stream stream)))
 
 
 (defun redocument-for-emacs (file-url output

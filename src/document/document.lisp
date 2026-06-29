@@ -141,7 +141,7 @@
 
 ;;; Add this many #\# to Markdown section headings in the output. This
 ;;; is for when a section that is a subsection of another is
-;;; documented on its own page by DOCUMENT/OPEN.
+;;; documented on its own page by DOCUMENT/LIVE.
 (defvar *heading-offset* 0)
 
 (defmacro with-heading-offset ((object) &body body)
@@ -303,6 +303,8 @@
 (defun get-target (key)
   (gethash key *targets*))
 
+(declaim (ftype function maybe-add-targets-for-live-definitions))
+
 ;;; Called at the end of the first pass. Reverse PAGE-DEFINITIONS (so
 ;;; that it's in depth-first order) and add a TARGET to *TARGETS* for
 ;;; all definitions on each page.
@@ -313,7 +315,11 @@
       (set-target (dref-ht-key dref) (make-target :dref dref :page page)))
     ;; Reset to 0 so that the second pass produces the same ids
     ;; (assuming some determinism in the dynamic generation).
-    (setf (page-next-dyn-id page) 0)))
+    (setf (page-next-dyn-id page) 0))
+  (maybe-add-targets-for-live-definitions))
+
+;;; Whether we are @BROWSING-LIVE-DOCUMENTATION.
+(defvar *document-live* nil)
 
 ;;; Whether all definitions present in the running Lisp are @LINKABLE
 ;;; with magic "pax:" URLs. For @BROWSING-LIVE-DOCUMENTATION.
@@ -1207,26 +1213,30 @@
 
 (defun target-uri (target)
   (let ((target-page (target-page target)))
-    (if (null target-page)
-        (finalize-pax-url (dref-to-pax-url (target-dref target)))
-        (let ((target-page-definitions (page-definitions target-page))
-              (target-page-uri-fragment (page-uri-fragment target-page)))
-          ;; Don't generate anchors when linking to the first
-          ;; definition on the page.
-          (if (and (xref= (target-dref target)
-                          (first target-page-definitions))
-                   target-page-uri-fragment)
-              (if (eq target-page *page*)
-                  ;; "xxx.html"
-                  (format nil "~A.~A" (pathname-name target-page-uri-fragment)
-                          (pathname-type target-page-uri-fragment))
-                  ;; "../xxx.html"
-                  (relative-page-uri-fragment target-page *page*))
-              (format nil "~A#~A"
-                      (if (eq target-page *page*)
-                          ""
-                          (relative-page-uri-fragment target-page *page*))
-                      (anchor-id (target-dref target))))))))
+    (typecase target-page
+      (null
+       (finalize-pax-url (dref-to-pax-url (target-dref target))))
+      (string
+       target-page)
+      (t
+       (let ((target-page-definitions (page-definitions target-page))
+             (target-page-uri-fragment (page-uri-fragment target-page)))
+         ;; Don't generate anchors when linking to the first
+         ;; definition on the page.
+         (if (and (xref= (target-dref target)
+                         (first target-page-definitions))
+                  target-page-uri-fragment)
+             (if (eq target-page *page*)
+                 ;; "xxx.html"
+                 (format nil "~A.~A" (pathname-name target-page-uri-fragment)
+                         (pathname-type target-page-uri-fragment))
+                 ;; "../xxx.html"
+                 (relative-page-uri-fragment target-page *page*))
+             (format nil "~A#~A"
+                     (if (eq target-page *page*)
+                         ""
+                         (relative-page-uri-fragment target-page *page*))
+                     (anchor-id (target-dref target)))))))))
 
 (defun relative-page-uri-fragment (page definition-page)
   (let ((fragment (page-uri-fragment page))
@@ -1738,7 +1748,7 @@
   (note @transcription-error-downgrade
     "When @BROWSING-LIVE-DOCUMENTATION, any errors signalled during
     transcription are downgraded to warnings."
-    (with-errors-downgraded-when-open-linking (:on-error transcript)
+    (with-errors-downgraded-when-live (:on-error transcript)
       (multiple-value-bind (dynenv args)
           (parse-cl-transcribe-args args-string)
         (let ((*transcribe-check-consistency* t))
@@ -2061,7 +2071,8 @@
   If multiple definitions remain, then the link text is output
   followed by a number of numbered links, one to each definition. When
   @BROWSING-LIVE-DOCUMENTATION, ambiguities can be much more frequent;
-  and thus a single disambiguation page is linked to instead.""")
+  and thus a single disambiguation page is linked to instead (but see
+  *BROWSE-CONTEXT*).""")
 
 ;;; Get the DEFINITIONS* for NAME. This includes ARGUMENTs (which
 ;;; depend on the documentation context via *LOCAL-REFERENCES*) and

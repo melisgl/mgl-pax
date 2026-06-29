@@ -1478,6 +1478,17 @@ The convenience function
 mgl-pax-current-definition-toggle-view (C-c C-d c) documents the
 definition with point in it.
 
+- [variable] *BROWSE-CONTEXT*
+
+    When set to a DOCUMENTABLE, live browsing will link only to
+    definitions reachable from it as opposed to linking to all
+    definitions in the running Lisp when it is unbound. This makes
+    it easier to see how offline generated documentation will turn
+    out.
+
+    For convenience, setting *BROWSE-CONTEXT* to :PAX-WORLD is
+    equivalent to listing all registered sections.
+
 #### Browsing with w3m
 
 When the value of the Elisp variable mgl-pax-browser-function
@@ -2405,7 +2416,8 @@ as with a Specific Link.
 If multiple definitions remain, then the link text is output
 followed by a number of numbered links, one to each definition. When
 Browsing Live Documentation, ambiguities can be much more frequent;
-and thus a single disambiguation page is linked to instead.
+and thus a single disambiguation page is linked to instead (but see
+*BROWSE-CONTEXT*).
 
 #### Link Format
 

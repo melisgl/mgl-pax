@@ -81,7 +81,7 @@
          (*document-html-top-blocks-of-links*
            (when ,link-to-home
              '((:id "link-to-home" :links (("/" "PAX Home"))))))
-         (*document/open-extra-args*
+         (*document/live-extra-args*
            `(:pages ((:objects :default
                       :header-fn ,(lambda (stream)
                                     (html-header stream
@@ -190,7 +190,7 @@
   (with-errors-to-html
     (with-document-open-args-for-web ("PAX" :link-to-home nil)
       (with-sections-cache ()
-        (document/open (pax-live-home-page :override *pax-live-inputs*)
+        (document/live (pax-live-home-page :override *pax-live-inputs*)
                        :stream nil)))))
 
 ;;; HUNCHENTOOT:*DISPATCH-TABLE* will be bound to this locally to

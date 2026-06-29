@@ -2,7 +2,7 @@
 
 (in-readtable pythonic-string-syntax)
 
-(declaim (special *document-open-linking*))
+(declaim (special *document-live*))
 
 ;;; Silence SBCL compiler notes about undefined types when these are
 ;;; used in a condition handler.
@@ -183,12 +183,12 @@
 (defvar *dref-being-documented* nil)
 
 ;;; This may eventually be exported
-(defmacro with-errors-downgraded-when-open-linking ((&key on-error) &body body)
+(defmacro with-errors-downgraded-when-live ((&key on-error) &body body)
   (let ((body-fn (gensym))
         (error (gensym)))
     `(flet ((,body-fn ()
               ,@body))
-       (if *document-open-linking*
+       (if *document-live*
            (handler-case
                (,body-fn)
              (error (,error)

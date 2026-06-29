@@ -1684,6 +1684,19 @@ The convenience function
 `mgl-pax-current-definition-toggle-view` (`C-c C-d c`) documents the
 definition with point in it.
 
+<a id="x-28MGL-PAX-3A-2ABROWSE-CONTEXT-2A-20VARIABLE-29"></a>
+
+- [variable] **\*BROWSE-CONTEXT\***
+
+    When set to a [`DOCUMENTABLE`][0702], live browsing will link only to
+    definitions reachable from it as opposed to linking to all
+    definitions in the running Lisp when it is unbound. This makes
+    it easier to see how offline generated documentation will turn
+    out.
+    
+    For convenience, setting `*BROWSE-CONTEXT*` to `:PAX-WORLD` is
+    equivalent to listing all [registered][f4fd] sections.
+
 <a id="x-28MGL-PAX-3A-40BROWSING-WITH-W3M-20MGL-PAX-3ASECTION-29"></a>
 
 #### 8.2.1 Browsing with w3m
@@ -2736,7 +2749,8 @@ as with a [Specific Link][0361].
 If multiple definitions remain, then the link text is output
 followed by a number of numbered links, one to each definition. When
 [Browsing Live Documentation][a595], ambiguities can be much more frequent;
-and thus a single disambiguation page is linked to instead.
+and thus a single disambiguation page is linked to instead (but see
+[`*BROWSE-CONTEXT*`][805d]).
 
 <a id="x-28MGL-PAX-3A-40LINK-FORMAT-20MGL-PAX-3ASECTION-29"></a>
 
@@ -5208,6 +5222,7 @@ they are presented.
   [7eb5]: #x-28MGL-PAX-3A-40LINKABLE-20MGL-PAX-3AGLOSSARY-TERM-29 "linkable"
   [7f1f]: #x-28MGL-PAX-3ADOCUMENT-DOCSTRING-20FUNCTION-29 "MGL-PAX:DOCUMENT-DOCSTRING FUNCTION"
   [7f9a]: http://www.lispworks.com/documentation/HyperSpec/Body/m_deftp.htm "DEFTYPE (MGL-PAX:CLHS MGL-PAX:MACRO)"
+  [805d]: #x-28MGL-PAX-3A-2ABROWSE-CONTEXT-2A-20VARIABLE-29 "MGL-PAX:*BROWSE-CONTEXT* VARIABLE"
   [80e8]: #x-28MGL-PAX-3AWITH-HEADING-20MGL-PAX-3AMACRO-29 "MGL-PAX:WITH-HEADING MGL-PAX:MACRO"
   [8106]: #x-28MGL-PAX-3A-40M--2E-MINIBUFFER-SYNTAX-20MGL-PAX-3ASECTION-29 "`M-.` Minibuffer Syntax"
   [81b3]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhr.htm "\"2.4.8.18\" (MGL-PAX:CLHS MGL-PAX:SECTION)"

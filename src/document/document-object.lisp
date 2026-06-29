@@ -401,6 +401,8 @@
 ;;; The section being documented.
 (defvar *section* nil)
 
+(declaim (special *document-open-linking*))
+
 (defmacro documenting-section ((section stream) &body body)
   (with-gensyms (same-package)
     (once-only (section)

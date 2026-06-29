@@ -82,7 +82,7 @@
 (defun resolve-concept-symbols-and-normalize (keys)
   (loop for key in keys
         append (cond ((symbolp key)
-                      (with-errors-downgraded-when-open-linking ()
+                      (with-errors-downgraded-when-live ()
                         (multiplexing-concept-keys (dref key 'concept))))
                      ((index-subkey-p key)
                       (list (list key)))

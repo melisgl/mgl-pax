@@ -120,9 +120,6 @@ ways. But this would mean that a lazy docstring containing "git --
 <path>" (not marked as code with backticks) would cease to be
 copy-pastable. Similar problems would arise if straight double quotes
 were replaced with their curly counterparts.
-** TODO make it possible to see ambiguous links live
-When using the live browser to develop, it is useful to see how the
-dead output will look like.
 ** MAYBE make *document-downcase-uppercase-code* default to T in sections?
 What if @DOCUMENTABLE is a list of sections and random stuff?
 ** MAYBE make the rest of the define-concept :keys render as "See also <first key>"

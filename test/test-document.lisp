@@ -17,7 +17,7 @@
                               (push (princ-to-string w) warnings)
                               (muffle-warning w))))
       (values (funcall (if (member format '(:w3m :md-w3m))
-                           #'pax::document/open
+                           #'pax::document/live
                            #'document)
                        object :stream nil :format format)
               warnings))))
@@ -138,7 +138,7 @@
   ;; Misc
   (test-apropos)
   (test-cl-transcript)
-  (test-document/open)
+  (test-document/live)
   (test-map-documentable)
   (test-table-of-contents)
   (test-definitions-for-pax-url-path)
@@ -2020,7 +2020,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
   (let ((*transcribe-check-consistency* *testing-bad-transcript*))
     (funcall fn)))
 
-(deftest test-document/open ()
+(deftest test-document/live ()
   (with-failure-expected ((alexandria:featurep :clisp))
     (with-test ("simplified ambiguous links")
       (check-head "AMBI" "[**`AMBI`**](pax:MGL-PAX-TEST:AMBI)" :format :md-w3m))
@@ -2042,12 +2042,13 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
       (check-pred @test-examples (lambda (output)
                                    (not (search "in package" output)))
                   :format :md-w3m)))
-  (test-document/open/live-vs-static)
-  (test-document/open/object)
-  (test-document/open/clhs)
-  (test-document/open/undefined))
+  (test-document/live/live-vs-static)
+  (test-document/live/object)
+  (test-document/live/context)
+  (test-document/live/clhs)
+  (test-document/live/undefined))
 
-(deftest test-document/open/live-vs-static ()
+(deftest test-document/live/live-vs-static ()
   (with-test ("prefer live definition to CLHS")
     (with-failure-expected
         ((alexandria:featurep '(:or :abcl :allegro :clisp :ecl)))
@@ -2061,12 +2062,20 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
     (with-test ("if no live definition, then link to CLHS")
       (check-head "[otherwise][macro]" "[otherwise][c9ce]" :format :md-w3m))))
 
-(deftest test-document/open/object ()
+(deftest test-document/live/object ()
   (check-head "[PAX][package] [MGL-PAX][package] [`mgl-pax`][asdf:system]"
               "[PAX][97b3] [MGL-PAX][97b3] [**`mgl-pax`**][6fdb]"
               :format :md-w3m))
 
-(deftest test-document/open/clhs ()
+(deftest test-document/live/context ()
+  (check-head "FUNCTION" "[**`FUNCTION`**](pax:FUNCTION)"
+              :format :md-w3m)
+  (let ((*browse-context* pax::@pax-manual))
+    (check-head "DOCUMENT" "[**`DOCUMENT`**][432c]" :format :md-w3m))
+  (let ((*browse-context* pax::@overview-of-escaping))
+    (check-head "DOCUMENT" "**`DOCUMENT`**" :format :md-w3m)))
+
+(deftest test-document/live/clhs ()
   (let ((*document-hyperspec-root* "CLHS/"))
     (loop for (object locative) in '((print function)
                                      (single-float type))
@@ -2085,7 +2094,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
 (defsection @bad-section (:export nil)
   (undefined function))
 
-(deftest test-document/open/undefined ()
+(deftest test-document/live/undefined ()
   (check-head @bad-section
               "<a id=\"MGL-PAX-TEST:@BAD-SECTION%20MGL-PAX:SECTION\"></a>"
               :warnings 1 :format :md-w3m))
