@@ -19,6 +19,12 @@
         ((funcall pred (car x) (car y)) t)
         ((funcall pred (car y) (car x)) nil)
         (t (lexicographic< pred (cdr x) (cdr y)))))
+
+(defmacro progv/find-symbol (((symbol-name package-name) value) &body body)
+  (with-gensyms (sym)
+    `(let ((,sym (ignore-errors (find-symbol ,symbol-name ,package-name))))
+       (progv (when ,sym (list ,sym)) (when ,sym (list ,value))
+         ,@body))))
 
 
 (defun definitions* (name)

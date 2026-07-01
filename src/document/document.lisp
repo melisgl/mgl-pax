@@ -615,7 +615,9 @@
                (*indexing-definitions* nil)
                (*indexing-dref-to-referrers* nil)
                (*indexing-concept-key-to-referrers* nil))
-          (document-return stream (%document documentable stream pages)))))))
+          (progv/find-symbol (("*NORMALIZE-SBCL-DOCSTRINGS*" "SB-PCL") nil)
+            (document-return stream (%document documentable stream
+                                               pages))))))))
 
 (defun call-with-format (format fn)
   (let ((*real-format* format))
