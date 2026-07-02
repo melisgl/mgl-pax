@@ -1625,7 +1625,7 @@
 ;;; return value, the new tree.
 (defun translate-uppercase-word (parent tree word)
   (declare (ignore parent))
-  (let ((emph (and (listp tree) (eq :emph (first tree))
+  (let ((emph (and (parse-tree-p tree :emph)
                    (= (length tree) 2)))
         (codifiablep (codifiable-word-p word)))
     (nth-value-or 0
@@ -1635,7 +1635,14 @@
              ;; Don't change anything.
              nil)
             (emph
-             (codify-uppercase-word (format nil "*~A*" word)))
+             (nth-value-or 0
+               (codify-uppercase-word (format nil "*~A*" word))
+               (multiple-value-bind (new-tree slicep)
+                   (codify-uppercase-word (format nil "~A" word))
+                 (when new-tree
+                   (if slicep
+                       `(:emph ,@new-tree)
+                       `(:emph ,new-tree))))))
             (t
              (codify-uppercase-word word))))))
 
@@ -1765,13 +1772,13 @@
 (defun translate-emph (parent tree)
   (if (and (= 2 (length tree))
            (stringp (second tree)))
-      (let ((translation (translate-uppercase-word parent tree (second tree))))
-        (if translation
+      (multiple-value-bind (new-tree slicep)
+          (translate-uppercase-word parent tree (second tree))
+        (if new-tree
             ;; Replace TREE with TRANSLATION, don't process
-            ;; TRANSLATION again recursively, slice the return value
-            ;; into the list of children of PARENT.
-            (values translation nil t)
-            ;; leave it alone, don't recurse, don't slice
+            ;; TRANSLATION again recursively.
+            (values new-tree nil slicep)
+            ;; Leave it alone, don't recurse, don't slice.
             (values tree nil nil)))
       ;; Tell MAP-MARKDOWN-PARSE-TREE to leave TREE unchanged,
       ;; recurse, don't slice.
