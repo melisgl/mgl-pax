@@ -42,7 +42,10 @@
            (t
             (setf (gethash id (page-id-to-dynamic-section *page*))
                   (make-instance 'dynamic-section-dref
-                                 :name (prin1-to-string id)
+                                 ;; Keep the DREF-HT-KEY unique across pages.
+                                 :name (format nil "~S-~S"
+                                               (position *page* *pages*)
+                                               id)
                                  :locative 'dynamic-section
                                  :title title
                                  :indexable-referrer indexable-referrer
