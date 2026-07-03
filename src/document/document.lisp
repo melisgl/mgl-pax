@@ -224,26 +224,6 @@
 ;;; All the PAGEs in a DOCUMENT call.
 (defvar *pages*)
 
-;;; Return the first page whose PAGE-BOUNDARIES have DREF.
-(defun boundary-page (dref-or-string)
-  "- A docstring matches :OBJECTS if it is EQ to one of its elements.
-
-  - A DREF::@DEFINITION matches :OBJECTS if it is XREF= to one of its
-    [DREF][class] elements.
-
-  If multiple page specs match, then the first one has precedence."
-  (etypecase dref-or-string
-    (string
-     (dolist (page *pages*)
-       (when (find dref-or-string (page-boundaries page))
-         (return page))))
-    (dref
-     (dolist (page *pages*)
-       (dolist (boundary (page-boundaries page))
-         (when (and (typep boundary 'dref)
-                    (xref= boundary dref-or-string))
-           (return-from boundary-page page)))))))
-
 ;;; The current page where output is being sent.
 (defvar *page* nil)
 
@@ -439,7 +419,7 @@
 
 (defvar/auto *document-tight* nil
   "If NIL, then DOCUMENT adds a newline between consecutive
-  [atomic][clhs] documentables on the same [page][@pages].")
+  [atomic][clhs] @DOCUMENTABLEs on the same [page][@pages].")
 
 (defvar *objects-being-documented* ())
 
@@ -484,7 +464,6 @@
         (format destination "~%  [While documenting ~{~S~^~%   in ~}]~%"
                 context)
         (format destination ""))))
-
 
 (defun document-documentable (documentable stream)
   (with-document-context
@@ -629,11 +608,11 @@
        (note @plain-format
          "@PLAIN-STRIP-MARKUP
 
-       - No link anchors are emitted.
+         - No link anchors are emitted.
 
-       - No [section numbering][*document-max-numbering-level*].
+         - No [section numbering][*document-max-numbering-level*].
 
-       - No [table of contents][*document-max-table-of-contents-level*]."
+         - No [table of contents][*document-max-table-of-contents-level*]."
          (let ((*format* :markdown)
                (*subformat* :plain)
                (*document-mark-up-signatures* nil)
@@ -648,16 +627,14 @@
              (*document-pandoc-pdf-metadata-block*
                (concatenate
                 'string
-                (cond ((plusp *document-max-numbering-level*)
-                       (format nil "numbersections: true~%secnumdepth: ~A~%"
-                               *document-max-numbering-level*))
-                      (t
-                       (format nil "numbersections: false~%")))
-                (cond ((plusp *document-max-table-of-contents-level*)
-                       (format nil "toc: true~%toc-depth: ~A~%"
-                               *document-max-table-of-contents-level*))
-                      (t
-                       (format nil "toc: false~%")))
+                (if (plusp *document-max-numbering-level*)
+                    (format nil "numbersections: true~%secnumdepth: ~A~%"
+                            *document-max-numbering-level*)
+                    (format nil "numbersections: false~%"))
+                (if (plusp *document-max-table-of-contents-level*)
+                    (format nil "toc: true~%toc-depth: ~A~%"
+                            *document-max-table-of-contents-level*)
+                    (format nil "toc: false~%"))
                 *document-pandoc-pdf-metadata-block*))
              (*document-max-numbering-level* 0)
              (*document-max-table-of-contents-level* 0)
@@ -669,7 +646,7 @@
              (*subformat* :w3m)
              (*document-fancy-html-navigation* nil))
          (funcall fn)))
-      ;; Testing only
+      ;; For testing only
       (:md-w3m
        (let ((*format* :markdown)
              (*subformat* :w3m)
@@ -736,7 +713,6 @@
 
   [boundary-page function][docstring]
 
-
   - :OUTPUT can be a number of things:
 
       - If it's NIL, then output will be collected in a string.
@@ -745,16 +721,16 @@
 
       - If it's a stream, then output will be sent to that stream.
 
-      - If it's a list whose first element is a string or a pathname, then
-        output will be sent to the file denoted by that and the rest of
-        the elements of the list are passed on to CL:OPEN. One extra
-        keyword argument is :ENSURE-DIRECTORIES-EXIST. If it's true,
-        ENSURE-DIRECTORIES-EXIST will be called on the pathname before
-        it's opened.
+      - If it's a list whose first element is a string or a pathname,
+        then output will be sent to the file denoted by that and the
+        rest of the elements of the list are passed on to CL:OPEN. One
+        extra keyword argument is :ENSURE-DIRECTORIES-EXIST. If it's
+        true, ENSURE-DIRECTORIES-EXIST will be called on the pathname
+        before it's opened.
 
-      Note that even if PAGES is specified, STREAM acts as a catch all,
-      absorbing the generated documentation for references not claimed by
-      any pages.
+      Note that even if PAGES is specified, STREAM acts as a catch
+      all, absorbing the generated documentation for references not
+      claimed by any pages.
 
   - :HEADER-FN, if not NIL, is a function of a single stream argument,
     which is called just before the first write to the page. Since
@@ -853,13 +829,33 @@
                                 (locate object nil))
         when maybe-located
           collect maybe-located))
+
+;;; Return the first page whose PAGE-BOUNDARIES have DREF.
+(defun boundary-page (dref-or-string)
+  "- A docstring matches :OBJECTS if it is EQ to one of its elements.
+
+  - A DREF::@DEFINITION matches :OBJECTS if it is XREF= to one of its
+    [DREF][class] elements.
+
+  If multiple page specs match, then the first one has precedence."
+  (etypecase dref-or-string
+    (string
+     (dolist (page *pages*)
+       (when (find dref-or-string (page-boundaries page))
+         (return page))))
+    (dref
+     (dolist (page *pages*)
+       (dolist (boundary (page-boundaries page))
+         (when (and (typep boundary 'dref)
+                    (xref= boundary dref-or-string))
+           (return-from boundary-page page)))))))
 
 
 (defsection @package-and-readtable (:title "Package and Readtable")
-  "While generating documentation, symbols may be read from
-  docstrings and printed. Our goal in general is to use the *PACKAGE*
-  and *READTABLE* in effect at the time the docstring was READ. This
-  keeps the correspondence between
+  "While generating documentation, symbols may be read from docstrings
+  and printed. Our goal in general is to use the *PACKAGE* and
+  *READTABLE* in effect at the time the docstring was READ. This keeps
+  the correspondence between
 
   - @M-. and @LINKING, and
   - interned symbols and @CODIFICATION.
@@ -1001,15 +997,13 @@
     (document-object (locate object) stream))
   (:method ((string string) stream)
     (let ((page (boundary-page string)))
-      (cond (*first-pass*
-             (let ((*page* (or page *page*)))
-               (setf (page-written-in-first-pass-p *page*) t)))
-            (t
-             (with-temp-output-to-page (stream page)
-               (about-to-write-to-page)
-               (document-docstring string stream :indentation ""
-                                   :paragraphp nil)
-               (terpri stream))))))
+      (if *first-pass*
+          (let ((*page* (or page *page*)))
+            (setf (page-written-in-first-pass-p *page*) t))
+          (with-temp-output-to-page (stream page)
+            (about-to-write-to-page)
+            (document-docstring string stream :indentation "" :paragraphp nil)
+            (terpri stream)))))
   ;; LOCATE non-DREF XREFs.
   (:method ((xref xref) stream)
     (let ((warn-if-undefined
@@ -1284,7 +1278,7 @@
     (docstring stream &key (indentation "    ")
                exclude-first-line-p (paragraphp t))
   "Write DOCSTRING to STREAM, [sanitizing the Markdown]
-  [@markdown-in-docstrings] from it, performing @CODIFICATION and
+  [@markdown-in-docstrings] in it, performing @CODIFICATION and
   @LINKING, finally prefixing each line with INDENTATION. The prefix
   is not added to the first line if EXCLUDE-FIRST-LINE-P. If
   PARAGRAPHP, then add a newline before and after the output."
@@ -1786,7 +1780,7 @@
 
 
 (defvar/auto *document-downcase-uppercase-code* nil
-  """If true, then all @MARKDOWN/INLINE-CODE (e.g. \`code\`, _which
+  """If true, then all @MARKDOWN/INLINE-CODE (e.g. `` `code` ``, _which
   renders as_ `\code`) – including @CODIFICATION – which has no
   lowercase characters is downcased in the output. Characters of
   literal strings in the code may be of any case. If this variable is

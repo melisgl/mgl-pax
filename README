@@ -1175,7 +1175,7 @@ one of the following:
 - [variable] *DOCUMENT-TIGHT* NIL
 
     If NIL, then DOCUMENT adds a newline between consecutive
-    atomic documentables on the same page.
+    atomic DOCUMENTABLEs on the same page.
 
 #### Return Values
 
@@ -1266,16 +1266,16 @@ If multiple page specs match, then the first one has precedence.
 
     - If it's a stream, then output will be sent to that stream.
 
-    - If it's a list whose first element is a string or a pathname, then
-      output will be sent to the file denoted by that and the rest of
-      the elements of the list are passed on to CL:OPEN. One extra
-      keyword argument is :ENSURE-DIRECTORIES-EXIST. If it's true,
-      ENSURE-DIRECTORIES-EXIST will be called on the pathname before
-      it's opened.
+    - If it's a list whose first element is a string or a pathname,
+      then output will be sent to the file denoted by that and the
+      rest of the elements of the list are passed on to CL:OPEN. One
+      extra keyword argument is :ENSURE-DIRECTORIES-EXIST. If it's
+      true, ENSURE-DIRECTORIES-EXIST will be called on the pathname
+      before it's opened.
 
-    Note that even if PAGES is specified, STREAM acts as a catch all,
-    absorbing the generated documentation for references not claimed by
-    any pages.
+    Note that even if PAGES is specified, STREAM acts as a catch
+    all, absorbing the generated documentation for references not
+    claimed by any pages.
 
 - :HEADER-FN, if not NIL, is a function of a single stream argument,
   which is called just before the first write to the page. Since
@@ -1302,10 +1302,10 @@ If multiple page specs match, then the first one has precedence.
 
 #### Package and Readtable
 
-While generating documentation, symbols may be read from
-docstrings and printed. Our goal in general is to use the *PACKAGE*
-and *READTABLE* in effect at the time the docstring was READ. This
-keeps the correspondence between
+While generating documentation, symbols may be read from docstrings
+and printed. Our goal in general is to use the *PACKAGE* and
+*READTABLE* in effect at the time the docstring was READ. This keeps
+the correspondence between
 
 - M-. and Linking, and
 
@@ -4327,7 +4327,7 @@ are for writing new DOCUMENT-OBJECT* methods, which emit Markdown.
 
 - [function] DOCUMENT-DOCSTRING DOCSTRING STREAM &KEY (INDENTATION "    ") EXCLUDE-FIRST-LINE-P (PARAGRAPHP T)
 
-    Write DOCSTRING to STREAM, sanitizing the Markdown from it, performing Codification and
+    Write DOCSTRING to STREAM, sanitizing the Markdown in it, performing Codification and
     Linking, finally prefixing each line with INDENTATION. The prefix
     is not added to the first line if EXCLUDE-FIRST-LINE-P. If
     PARAGRAPHP, then add a newline before and after the output.

@@ -109,7 +109,7 @@
 
 (autoload::foreshadow-defvar mgl-pax:*document-downcase-uppercase-code* :init
                              nil :docstring
-                             "If true, then all @MARKDOWN/INLINE-CODE (e.g. \\`code\\`, _which
+                             "If true, then all @MARKDOWN/INLINE-CODE (e.g. `` `code` ``, _which
   renders as_ `\\code`) – including @CODIFICATION – which has no
   lowercase characters is downcased in the output. Characters of
   literal strings in the code may be of any case. If this variable is
@@ -473,7 +473,7 @@
 
 (autoload::foreshadow-defvar mgl-pax:*document-tight* :init nil :docstring
                              "If NIL, then DOCUMENT adds a newline between consecutive
-  [atomic][clhs] documentables on the same [page][@pages].")
+  [atomic][clhs] @DOCUMENTABLEs on the same [page][@pages].")
 
 (autoload::foreshadow-defvar mgl-pax:*document-uppercase-is-code* :init t
                              :docstring
@@ -701,7 +701,7 @@
                    "(mgl-pax:docstring stream &key (mgl-pax::indentation \"    \") mgl-pax::exclude-first-line-p (mgl-pax::paragraphp t))"
                    :docstring
                    "Write DOCSTRING to STREAM, [sanitizing the Markdown]
-  [@markdown-in-docstrings] from it, performing @CODIFICATION and
+  [@markdown-in-docstrings] in it, performing @CODIFICATION and
   @LINKING, finally prefixing each line with INDENTATION. The prefix
   is not added to the first line if EXCLUDE-FIRST-LINE-P. If
   PARAGRAPHP, then add a newline before and after the output.")

@@ -1367,7 +1367,7 @@ one of the following:
 - [variable] **\*DOCUMENT-TIGHT\*** *NIL*
 
     If `NIL`, then [`DOCUMENT`][432c] adds a newline between consecutive
-    [atomic][13c7] documentables on the same [page][9c7d].
+    [atomic][13c7] [`DOCUMENTABLE`][0702]s on the same [page][9c7d].
 
 <a id="x-28MGL-PAX-3A-40DOCUMENT-RETURN-20MGL-PAX-3ASECTION-29"></a>
 
@@ -1464,16 +1464,16 @@ If multiple page specs match, then the first one has precedence.
 
     - If it's a stream, then output will be sent to that stream.
 
-    - If it's a list whose first element is a string or a pathname, then
-      output will be sent to the file denoted by that and the rest of
-      the elements of the list are passed on to [`CL:OPEN`][6547]. One extra
-      keyword argument is `:ENSURE-DIRECTORIES-EXIST`. If it's true,
-      [`ENSURE-DIRECTORIES-EXIST`][876d] will be called on the pathname before
-      it's opened.
+    - If it's a list whose first element is a string or a pathname,
+      then output will be sent to the file denoted by that and the
+      rest of the elements of the list are passed on to [`CL:OPEN`][6547]. One
+      extra keyword argument is `:ENSURE-DIRECTORIES-EXIST`. If it's
+      true, [`ENSURE-DIRECTORIES-EXIST`][876d] will be called on the pathname
+      before it's opened.
 
-    Note that even if `PAGES` is specified, `STREAM` acts as a catch all,
-    absorbing the generated documentation for references not claimed by
-    any pages.
+    Note that even if `PAGES` is specified, `STREAM` acts as a catch
+    all, absorbing the generated documentation for references not
+    claimed by any pages.
 
 - `:HEADER-FN`, if not `NIL`, is a function of a single stream argument,
   which is called just before the first write to the page. Since
@@ -1503,10 +1503,10 @@ If multiple page specs match, then the first one has precedence.
 
 #### 8.1.4 Package and Readtable
 
-While generating documentation, symbols may be read from
-docstrings and printed. Our goal in general is to use the [`*PACKAGE*`][5ed1]
-and [`*READTABLE*`][b79a] in effect at the time the docstring was [`READ`][fe58]. This
-keeps the correspondence between
+While generating documentation, symbols may be read from docstrings
+and printed. Our goal in general is to use the [`*PACKAGE*`][5ed1] and
+[`*READTABLE*`][b79a] in effect at the time the docstring was [`READ`][fe58]. This keeps
+the correspondence between
 
 - [`M-.`][cb15] and [Linking][19e3], and
 
@@ -2221,7 +2221,7 @@ strings can be a pain. [Pythonic String Reader][d3fc5] can help with that.
 
 - [variable] **\*DOCUMENT-DOWNCASE-UPPERCASE-CODE\*** *NIL*
 
-    If true, then all [Markdown inline code][68c1] (e.g. \`code\`, *which
+    If true, then all [Markdown inline code][68c1] (e.g. `` `code` ``, *which
     renders as* `code`) – including [Codification][f1ab] – which has no
     lowercase characters is downcased in the output. Characters of
     literal strings in the code may be of any case. If this variable is
@@ -4933,7 +4933,7 @@ are for writing new `DOCUMENT-OBJECT*` methods, which emit Markdown.
 
 - [function] **DOCUMENT-DOCSTRING** *DOCSTRING STREAM &KEY (INDENTATION "    ") EXCLUDE-FIRST-LINE-P (PARAGRAPHP T)*
 
-    Write `DOCSTRING` to `STREAM`, [sanitizing the Markdown][7bf5] from it, performing [Codification][f1ab] and
+    Write `DOCSTRING` to `STREAM`, [sanitizing the Markdown][7bf5] in it, performing [Codification][f1ab] and
     [Linking][19e3], finally prefixing each line with `INDENTATION`. The prefix
     is not added to the first line if `EXCLUDE-FIRST-LINE-P`. If
     `PARAGRAPHP`, then add a newline before and after the output.
