@@ -79,7 +79,6 @@ li {
 /* } */
 
 ul + p, ol + p, dl + p {
-  margin: calc(2*var(--parsep)) 0 0 0;
   text-indent: 0;
 }
 
@@ -257,7 +256,7 @@ img {
 .dref-bullet {
   display: block;
   text-align: left;
-  margin-top: calc(2*var(--parsep));
+  margin-top: calc(2.5*var(--parsep));
   hyphens: none;
 }
 
@@ -523,11 +522,6 @@ a.symbol:hover { color: #229955; background-color: transparent; text-decoration:
   /* Hanging indent */
   padding-left: 1em;
   text-indent: -1em;
-}
-
-.pax-index > ul {
-  /* padding-left: 0; */
-  /* margin-left: 0; */
 }
 
 /* Ensure paragraph wrappers from Markdown don't break the first-line
