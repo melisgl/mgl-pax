@@ -222,14 +222,14 @@ img {
   margin: auto;
 }
 
-.reference-bullet {
+.dref-bullet {
   display: block;
   text-align: left;
   margin-top: calc(2*var(--parsep));
   hyphens: none;
 }
 
-.reference {
+.dref {
   /* padding: 0.3em 0; */
   /* background-color: #EEEEEE; */
 }
@@ -243,7 +243,7 @@ img {
   text-decoration: none;
 }
 
-.reference-object {
+.dref-name {
   background-color: #EBE8E2;
   /* The live browser does not lowercase. Balance the space around
    * uppercase characters manually. */
@@ -255,16 +255,16 @@ img {
   font-size: 98%;
 }
 
-.reference-object a, .reference-object a * {
+.dref-name a, .dref-name a * {
   text-decoration: none;
   border-bottom: none;
 }
 
-.locative-args {
+.arglist {
   font-style: italic;
 }
 
-.locative-args code {
+.arglist code {
   font-family: var(--font-family);
   font-size: 1rem;
 }

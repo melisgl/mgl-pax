@@ -3421,25 +3421,25 @@
                               (finalize-pax-url (dref-to-pax-url dref))))
                      (*document-open-linking*
                       (format stream
-                              "- <span class=reference-bullet>~
-                              <span class=reference>~
+                              "- <span class=dref-bullet>~
+                              <span class=dref>~
                               <span class=\"locative-type\">~
                               ~@[<a href=\"~A\" title=\"Edit in Emacs\">~]~
                               \\[~A]~:[~;</a>~]~
                               </span> ~
-                              <span class=\"reference-object\">[~A](~A)</span>~
+                              <span class=\"dref-name\">[~A](~A)</span>~
                               </span>"
                               source-uri md-locative-type source-uri
                               escaped-label
                               (finalize-pax-url (dref-to-pax-url dref))))
                      (t
                       (format stream
-                              "- <span class=reference-bullet>~
-                              <span class=reference>~
+                              "- <span class=dref-bullet>~
+                              <span class=dref>~
                               <span class=\"locative-type\">~
                               ~@[<a href=\"~A\">~]\\[~A]~:[~;</a>~]~
                               </span> ~
-                              <span class=\"reference-object\">[~A](#~A)</span>~
+                              <span class=\"dref-name\">[~A](#~A)</span>~
                               </span>"
                               source-uri md-locative-type source-uri
                               escaped-label
@@ -3474,7 +3474,7 @@
 (defun print-end-bullet (stream)
   (if (and (eq *format* :html)
            (not (eq *subformat* :w3m)))
-      ;; end "reference-bullet" span
+      ;; end "dref-bullet" span
       (format stream "</span>~%")
       (format stream "~%")))
 
@@ -3498,7 +3498,7 @@
            (format stream "~A" string))
           ((and (eq *format* :html)
                 (not (eq *subformat* :w3m)))
-           (format stream "<span class=\"locative-args\">~A</span>" string))
+           (format stream "<span class=\"arglist\">~A</span>" string))
           (t
            (write-string (md-emph string nil) stream)))))
 

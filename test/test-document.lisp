@@ -1148,7 +1148,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
                     "<p><a id=\"MGL-PAX-TEST:*NASTY-VAR*%20VARIABLE\"></a></p>
 
 <ul>
-<li><p><span class=reference-bullet><span class=reference><span class=\"locative-type\">[variable]</span> <span class=\"reference-object\"><a href=\"#MGL-PAX-TEST:*NASTY-VAR*%20VARIABLE\" >*NASTY-VAR*</a></span></span> <span class=\"locative-args\">&quot; 
+<li><p><span class=dref-bullet><span class=dref><span class=\"locative-type\">[variable]</span> <span class=\"dref-name\"><a href=\"#MGL-PAX-TEST:*NASTY-VAR*%20VARIABLE\" >*NASTY-VAR*</a></span></span> <span class=\"arglist\">&quot; 
 \\
 \\&quot;</span></span></p>
 
