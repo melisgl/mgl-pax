@@ -2836,10 +2836,17 @@ The following variables control various aspects of links and URLs.
 
     When `*DOCUMENT-BASE-URL*` is non-`NIL`, this is prepended to all
     Markdown relative `URL`s. It must be a valid `URL` without query or
-    fragment parts (that is, *http://lisp.org/doc/* but not
-    *http://lisp.org/doc?a=1* or *http://lisp.org/doc#fragment*). Note
-    that intra-page links using only `URL` fragments (e.g. and explicit
-    HTML links (e.g. `<a href="...">`) in Markdown are not
+    fragment parts. For example,
+    
+        http://lisp.org/doc/
+    
+    but not either of the following:
+    
+        http://lisp.org/doc?a=1
+        http://lisp.org/doc#fragment.
+    
+    Note that intra-page links using only `URL` fragments (e.g. and
+    explicit HTML links (e.g. `<a href="...">`) in Markdown are not
     affected.
 
 <a id="x-28MGL-PAX-3A-40LOCAL-DEFINITION-20MGL-PAX-3ASECTION-29"></a>

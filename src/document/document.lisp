@@ -3588,10 +3588,17 @@
 (defvar/auto *document-base-url* nil
   """When *DOCUMENT-BASE-URL* is non-NIL, this is prepended to all
   Markdown relative URLs. It must be a valid URL without query or
-  fragment parts (that is, _http://lisp.org/doc/_ but not
-  _http://lisp.org/doc?a=1_ or _http://lisp.org/doc#fragment_). Note
-  that intra-page links using only URL fragments (e.g. and explicit
-  HTML links (e.g. `<a href="...">`) in Markdown are not
+  fragment parts. For example,
+
+      http://lisp.org/doc/
+
+  but not either of the following:
+
+      http://lisp.org/doc?a=1
+      http://lisp.org/doc#fragment.
+
+  Note that intra-page links using only URL fragments (e.g. and
+  explicit HTML links (e.g. `<a href="...">`) in Markdown are not
   affected.""")
 
 (defun add-base-url (parse-tree)
