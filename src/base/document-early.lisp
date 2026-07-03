@@ -140,7 +140,7 @@
              (print-arglist ,%arglist ,%stream))
            (print-end-bullet ,%stream)
            (unless (eq *document-list-view* :terse)
-             (with-local-references
+             (with-local-definitions
                  (if (member (dref-locative-type ,%dref)
                              '(section glossary-term))
                      ;; See @SUPPRESSED-LINKS.
@@ -157,14 +157,15 @@
 (declaim (ftype function anchor))
 (declaim (special *document-list-view*))
 
-(declaim (special *local-references*))
-(defmacro with-local-references (refs &body body)
-  `(let ((*local-references* (append (ensure-list ,refs) *local-references*)))
+(declaim (special *local-definitions*))
+(defmacro with-local-definitions (refs &body body)
+  `(let ((*local-definitions* (append (ensure-list ,refs)
+                                      *local-definitions*)))
      ,@body))
 
 (defmacro with-dislocated-names (names &body body)
   "For each name in NAMES, establish a @LOCAL-DEFINITION."
-  `(with-local-references (mapcar (lambda (name)
+  `(with-local-definitions (mapcar (lambda (name)
                                     (xref name 'argument))
                                   (ensure-list ,names))
      ,@body))

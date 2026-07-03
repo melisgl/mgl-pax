@@ -293,13 +293,13 @@
 
   ARGUMENT references do not RESOLVE.""")
 
-(defvar *local-references* ())
+(defvar *local-definitions* ())
 
-(defun find-local-reference (xref)
-  (find xref *local-references* :test #'xref=))
+(defun find-local-definition (xref)
+  (find xref *local-definitions* :test #'xref=))
 
 (define-lookup argument (symbol locative-args)
-  (if (find-local-reference (xref symbol 'argument))
+  (if (find-local-definition (xref symbol 'argument))
       (make-instance 'dref :name symbol :locative 'argument)
       (locate-error)))
 
@@ -311,7 +311,7 @@
 
 (defmethod map-definitions-of-type (fn (locative-type (eql 'argument)))
   (declare (ignorable fn))
-  (dolist (dref *local-references*)
+  (dolist (dref *local-definitions*)
     (when (eq (dref-locative-type dref) 'argument)
       (funcall fn dref)))
   nil)

@@ -41,7 +41,7 @@
   (once-only (documentable stream page-specs)
     `(with-documentable-bindings (documentable)
        (with-target-maps ()
-         (let ((*local-references* ())
+         (let ((*local-definitions* ())
                (*pages* (page-specs-to-pages ,documentable ,stream
                                              ,page-specs)))
            (with-headings ()
@@ -1616,7 +1616,7 @@
   (or (and (symbolp name)
            (or (<= 3 (length raw))
                (external-symbol-p name)))
-      (has-local-reference-p name)))
+      (has-local-definition-p name)))
 
 ;;; The core of the implementation of *DOCUMENT-UPPERCASE-IS-CODE*.
 ;;;
@@ -2084,7 +2084,7 @@
   *BROWSE-CONTEXT*).""")
 
 ;;; Get the DEFINITIONS* for NAME. This includes ARGUMENTs (which
-;;; depend on the documentation context via *LOCAL-REFERENCES*) and
+;;; depend on the documentation context via *LOCAL-DEFINITIONS*) and
 ;;; CLHS.
 (defun unspecific-link-definitions* (name)
   ;; Although this is called only through FIND-NAME with :SYMBOLS-ONLY
@@ -2598,7 +2598,7 @@
     (or (some (lambda (dref)
                 (let ((name (dref-name dref)))
                   (or (member name '(t nil))
-                      (has-local-reference-p name))))
+                      (has-local-definition-p name))))
               drefs)
         (and
          (loop for dref in drefs
@@ -2660,7 +2660,7 @@
              (ambiguousp (cdr targets)))
         ;; Pick off the special cases
         (when (not ambiguousp)
-          (cond ((local-reference-p ref-1)
+          (cond ((local-definition-p ref-1)
                  (return-from targets-to-tree label))
                 ((typep ref-1 'note-dref)
                  (return-from targets-to-tree
@@ -2733,7 +2733,7 @@
         ;; DREFS-TO-TARGETS), these can come only from
         ;; @SPECIFIC-LINKs, which are always unambiguous (there is at
         ;; most one TARGET for the reflink).
-        do (assert (not (local-reference-p (target-dref target))))
+        do (assert (not (local-definition-p (target-dref target))))
         unless (typep (target-dref target) 'note-dref)
           do (maybe-index target)
         unless (typep (target-dref target) '(or concept-dref note-dref))
@@ -3171,14 +3171,14 @@
 ;;; A list of references with special rules for linking. The
 ;;; definition being documented is always on this list (see
 ;;; DOCUMENTING-DEFINITION). Arguments of functions and similar
-;;; typically also are. Bound by WITH-LOCAL-REFERENCES.
-(defvar *local-references*)
+;;; typically also are. Bound by WITH-LOCAL-DEFINITIONS.
+(defvar *local-definitions*)
 
-(defun has-local-reference-p (name)
-  (find name *local-references* :test #'xref-name=))
+(defun has-local-definition-p (name)
+  (find name *local-definitions* :test #'xref-name=))
 
-(defun local-reference-p (dref)
-  (find dref *local-references*))
+(defun local-definition-p (dref)
+  (find dref *local-definitions*))
 
 
 (defsection @link-format (:title "Link Format")
