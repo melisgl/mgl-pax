@@ -3095,7 +3095,11 @@
                   (link-to-definition (heading-object next)))
                 (link-to-definition dref)
                 (if source-uri
-                    (format nil " <a href=~S>&#955;</a>" source-uri)
+                    (format nil " <a href=~S title=~S>&#955;</a>"
+                            source-uri
+                            (if *document-live*
+                                "Edit in Emacs"
+                                "View definition"))
                     ""))))))
 
 (defun write-navigation-link (heading stream)
@@ -3429,7 +3433,8 @@
                               "- <span class=dref-bullet>~
                               <span class=dref>~
                               <span class=\"locative-type\">~
-                              ~@[<a href=\"~A\">~]\\[~A]~:[~;</a>~]~
+                              ~@[<a href=\"~A\" title=\"View definition\">~]~
+                              \\[~A]~:[~;</a>~]~
                               </span> ~
                               <span class=\"dref-name\">[~A](#~A)</span>~
                               </span>"

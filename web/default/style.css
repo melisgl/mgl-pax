@@ -193,6 +193,7 @@ a, a .mjx-math * {
   color: #333;
   text-decoration: underline;
   text-decoration-thickness: 0.04em;
+  text-decoration-color: #999;
   text-underline-offset: 0.1em;
 }
 
@@ -205,8 +206,11 @@ h6 a .mjx-math * {
   text-decoration: none;
 }
 
-a:hover, a:hover .mjx-math * {
-  text-decoration: underline;
+a:hover,
+a:hover *,
+a:hover .mjx-math * {
+  color: #3366CC;
+  text-decoration-color: #3366CC;
 }
 
 /* MathJax subscripts, accents, etc */
@@ -226,11 +230,6 @@ img {
   text-align: left;
   margin-top: calc(2.5*var(--parsep));
   hyphens: none;
-}
-
-.dref {
-  /* padding: 0.3em 0; */
-  /* background-color: #EEEEEE; */
 }
 
 .locative-type {
@@ -269,9 +268,13 @@ img {
 }
 
 .navigation a {
-  color: #CCCCCC;
-  text-shadow: none;
-  border-bottom: none;
+  color: #AAA;
+  text-decoration: none;
+}
+
+.navigation a:hover {
+  color: #3366CC;
+  text-decoration: none;
 }
 
 /* Option 1 for navigation links: just hide the links in the previous
@@ -376,7 +379,7 @@ a.symbol:hover { color: #229955; background-color: transparent; text-decoration:
   overflow-x: hidden;
   background: #333;
   box-shadow: inset -5px 0 5px 0px #000;
-  color: #aaa;
+  color: #AAA;
   text-align: left;
 }
 
@@ -424,13 +427,13 @@ a.symbol:hover { color: #229955; background-color: transparent; text-decoration:
 }
 
 #toc .toc-active {
-  background: #336699;
+  background: #3366CC;
   box-shadow: inset -5px 0px 10px -5px #000;
 }
 
 #page-toc a,
 #page-toc a * {
-  color: #fff;
+  color: #FFF;
 }
 
 .menu-block {
@@ -467,10 +470,6 @@ a.symbol:hover { color: #229955; background-color: transparent; text-decoration:
 .pax-index {
   text-align: left;
   font-size: 90%;
-}
-
-.pax-index a {
-  text-decoration-color: #aaa;
 }
 
 .pax-index > ul > li > p:first-child > a:first-child {
