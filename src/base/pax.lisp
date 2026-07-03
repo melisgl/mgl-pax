@@ -196,7 +196,7 @@
 
 (defsection @links-and-systems (:title "Links and Systems")
   "The official repository is <https://github.com/melisgl/mgl-pax>, and
-  this document in available in various formats on
+  this document is available in various formats on
   <https://fixnum.com> for the latest version. There is also a [PAX
   channel][pax-yt] on YouTube with a couple of videos.
 
@@ -330,8 +330,7 @@
   PAX will be loaded in the connected Lisp on-demand via @SLIME.
 
   If loading fails, `mgl-pax` will be unloaded from Emacs and any
-  [overridden Slime key bindings][@EMACS-KEYS] restored.
-  """)
+  [overridden Slime key bindings][@EMACS-KEYS] restored.""")
 
 ;;; This is not a DEFVAR so that it picks up version changes on
 ;;; reload. Set to NIL by the DONT-CHECK restart.
@@ -406,8 +405,7 @@
   - `C-c C-d c`: installs `mgl-pax-hideshow-comments`
   - `C-c C-d u`: installs `mgl-pax-edit-parent-section`
 
-  Calling `mgl-pax-unhijack-slime-doc-keys` reverts these changes.
-  """)
+  Calling `mgl-pax-unhijack-slime-doc-keys` reverts these changes.""")
 
 (defsection @background (:title "Background")
   """As a user, I frequently run into documentation that's incomplete
@@ -497,7 +495,7 @@
   brackets indicate optional arguments. See below for the details of
   parsing ARGS.
 
-  __NOTE is experimental and as such subject to change.__
+  > _Note_: NOTE is experimental and, as such, subject to change.
 
   NOTE can occur in any evaluated position without changing its BODY's
   run-time behaviour or introducing any run-time overhead. [Top level

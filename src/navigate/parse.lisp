@@ -44,27 +44,7 @@
   parsing algorithm."
   (@raw-names-in-words section)
   (@names-in-raw-names section)
-  """<br/>
-  For example, when `\\M-.` is pressed while point is over
-  `unREADable.`, the last word of the sentence `It may be
-  unREADable.`, the following @RAW-NAMEs are considered until one is
-  found with a definition:
-
-  1. The entire word, `"unREADable."`.
-
-  2. Trimming left does not produce a new raw name.
-
-  3. Trimming right removes the dot and gives `"unREADable"`.
-
-  4. Trimming both is the same as trimming right.
-
-  5. No plural markers are found.
-
-  6. The lowercase prefix and suffix is removed around the uppercase
-     core, giving `"READ"`. This names an interned symbol which has a
-     definition, so `\\M-.` will visit it.
-
-  When @GENERATING-DOCUMENTATION, @AUTOLINKing behaves similarly.""")
+  (@name-parsing-example section))
 
 (define-glossary-term @word (:title "word")
   "A _word_ is a string from which we want to extract a @NAME. When
@@ -277,6 +257,29 @@
         (subseq string uppercase-start uppercase-end)))))
 
 
+(defsection @name-parsing-example (:title "Name Parsing Example")
+  """For example, when `\\M-.` is pressed while point is over
+  `unREADable.`, the last word of the sentence `It may be
+  unREADable.`, the following @RAW-NAMEs are considered until one is
+  found with a definition:
+
+  1. The entire word, `"unREADable."`.
+
+  2. Trimming left does not produce a new raw name.
+
+  3. Trimming right removes the dot and gives `"unREADable"`.
+
+  4. Trimming both is the same as trimming right.
+
+  5. No plural markers are found.
+
+  6. The lowercase prefix and suffix is removed around the uppercase
+     core, giving `"READ"`. This names an interned symbol which has a
+     definition, so `\\M-.` will visit it.
+
+  When @GENERATING-DOCUMENTATION, @AUTOLINKing behaves similarly.""")
+
+
 (defsection @parsing-locatives (:title "Parsing Locatives")
   """Locatives are parsed almost as if by READ. They are found in
   buffer contents around a @WORD when @M-.-DEFAULTING or
@@ -290,8 +293,8 @@
     contains uninterned symbols, then it is not parsable as a
     locative.
 
-  - Read-time evaluation ([#.][clhs]) follows normal READ semantics.
-    Thus, `(method ((eql #.(find-package 'cl))))` may INTERN the
+  - Read-time evaluation ([`#.`][clhs]) follows normal READ semantics.
+    Thus, `(METHOD ((EQL #.(FIND-PACKAGE 'CL))))` may INTERN the
     symbol `CL`.
 
   - A locative that involves unreadable objects that print using the

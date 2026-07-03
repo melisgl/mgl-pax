@@ -1556,8 +1556,7 @@
       ```
 
   It is often a good idea to package up these settings in the
-  :DYNENV argument of `cl-transcript` (see @TRANSCRIPT-DYNENV).
-  """)
+  :DYNENV argument of `cl-transcript` (see @TRANSCRIPT-DYNENV).""")
 
 
 (defsection @transcript-utilities-for-consistency-checking

@@ -285,7 +285,7 @@
     :initarg :title :reader glossary-term-title
     :documentation "A @TITLE or NIL. Used in generated
     documentation (see @MARKDOWN-OUTPUT) and is returned by DOCTITLE
-    for GLOSSARY-TERM objects and GLOSSARY-TERM DREF::@DEFINITIONS..")
+    for GLOSSARY-TERM objects and GLOSSARY-TERM DREF::@DEFINITIONS.")
    (concepts :initform () :initarg :concepts :reader concept-keys*)
    (url
     :initarg :url :reader glossary-term-url

@@ -501,17 +501,17 @@
   `<a id=\"MGL-PAX:FOO%20FUNCTION\">`, and its \\URL will end
   with `\\\\#MGL-PAX:FOO%20FUNCTION`.
 
-  _Note that to make the \\URL independent of whether a symbol is
-  [internal or external][find-symbol] to their SYMBOL-PACKAGE, single
-  colon is printed where a double colon would be expected. Package and
-  symbol names are both printed verbatim except for escaping colons
-  and spaces with a backslash. For exported symbols with no funny
-  characters, this coincides with how PRIN1 would print the symbol,
-  while having the benefit of making the \\URL independent of the Lisp
-  printer's escaping strategy and producing human-readable output for
-  mixed-case symbols. No such promises are made for non-ASCII
-  characters, and their \\URLs may change in future versions. Locatives
-  are printed with PRIN1._
+  > _Note_: To make the \\URL independent of whether a symbol is
+  > [internal or external][find-symbol] to their SYMBOL-PACKAGE,
+  > single colon is printed where a double colon would be expected.
+  > Package and symbol names are both printed verbatim except for
+  > escaping colons and spaces with a backslash. For exported symbols
+  > with no funny characters, this coincides with how PRIN1 would
+  > print the symbol, while having the benefit of making the \\URL
+  > independent of the Lisp printer's escaping strategy and producing
+  > human-readable output for mixed-case symbols. No such promises are
+  > made for non-ASCII characters, and their \\URLs may change in
+  > future versions. Locatives are printed with PRIN1.
 
   Version 1 is based on the more strict HTML4 standard and the id of
   `FOO` is `\"x-28MGL-PAX-3A-3AFOO-20FUNCTION-29\"`. This is supported
@@ -537,8 +537,7 @@
 
   - [function] **FOO** *X*
   \")
-  ```
-  ")
+  ```")
 
 (autoload::foreshadow-defvar mgl-pax:*transcribe-check-consistency* :init nil
                              :docstring
@@ -656,7 +655,7 @@
                    :docstring
                    "Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
   FORMAT is one of [:PLAIN][@plain-output],
-  [:MARKDOWN][@markdown-output], [:HTML][@html-output] and
+  [:MARKDOWN][@markdown-output], [:HTML][@html-output],
   [:PDF][@pdf-output] or [NIL][@dummy-output]. STREAM may be a
   [STREAM][type] object, T or NIL as with [CL:FORMAT][].
 

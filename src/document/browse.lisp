@@ -61,10 +61,10 @@
 
   - It supports fragment syntax at the prompt:
 
-          NAME LOCATIVE FRAGMENT-NAME FRAGMENT-LOCATIVE
+          <name> <locative> <fragment-name> <fragment-locative>
 
-      This is like `NAME LOCATIVE`, but the browser scrolls to the
-      definition of `FRAGMENT-NAME FRAGMENT-LOCATIVE` within that
+      This is like `<NAME> <LOCATIVE>`, but the browser scrolls to the
+      definition of `<FRAGMENT-NAME> <FRAGMENT-LOCATIVE>` within that
       page.
 
       For example, entering this at the prompt will generate the
@@ -178,8 +178,7 @@
     under the cursor or the first one above it).
 
   - `\\V` visits the source location of the first definition on the
-    page.
-  """)
+    page.""")
 
 (defsection @browsing-with-other-browsers
     (:title "Browsing with Other Browsers")

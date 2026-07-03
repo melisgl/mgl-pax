@@ -418,8 +418,8 @@
 
 (defsection @documentable (:title "DOCUMENTABLE")
   "The DOCUMENTABLE argument of DOCUMENT may be a single object (e.g.
-  `#'PRINT`'), a DREF::@DEFINITION such as `(DREF 'PRINT 'FUNCTION)`,
-  a string, or a nested list of these. More precisely, DOCUMENTABLE is
+  `#'PRINT`), a DREF::@DEFINITION such as `(DREF 'PRINT 'FUNCTION)`, a
+  string, or a nested list of these. More precisely, DOCUMENTABLE is
   one of the following:
 
   - _single definition designator_: A [DREF][class] or anything else
@@ -553,7 +553,7 @@
 (defun/auto document (documentable &key (stream t) pages (format :plain))
   """Write DOCUMENTABLE in FORMAT to STREAM diverting some output to PAGES.
   FORMAT is one of [:PLAIN][@plain-output],
-  [:MARKDOWN][@markdown-output], [:HTML][@html-output] and
+  [:MARKDOWN][@markdown-output], [:HTML][@html-output],
   [:PDF][@pdf-output] or [NIL][@dummy-output]. STREAM may be a
   [STREAM][type] object, T or NIL as with [CL:FORMAT][].
 
@@ -2258,8 +2258,7 @@
 
   The Markdown link definition (i.e. `type` above) needs no backticks
   to mark it as code, but here and below, the second example relies on
-  *DOCUMENT-UPPERCASE-IS-CODE* being true.
-  """)
+  *DOCUMENT-UPPERCASE-IS-CODE* being true.""")
 
 (defun specific-reflink (label-string locative-from-def linked-refs)
   (when-let (xref (find-name (rcurry #'specific-link-dref locative-from-def)
@@ -2307,8 +2306,7 @@
 
   - multiple links: `[OUTPUT-LABEL][]` _renders as_ [OUTPUT-LABEL][].
 
-  - no definitions: `[BAD-NAME][]` _renders as_ BAD-NAME.
-  """)
+  - no definitions: `[BAD-NAME][]` _renders as_ BAD-NAME.""")
 
 (defun unspecific-reflink (label-string)
   (when-let (drefs (find-name #'unspecific-link-definitions* label-string
@@ -2327,8 +2325,7 @@
 
   - `[see this][print]` _renders as_ [see this][print].
 
-  - `[see this][output-label]` _renders as_ [see this][output-label].
-  """)
+  - `[see this][output-label]` _renders as_ [see this][output-label].""")
 
 (defun unspecific-reflink-with-text (label definition)
   (when-let (drefs (find-name #'unspecific-link-definitions* definition
@@ -2355,8 +2352,7 @@
       ```
 
   Use URLs with DEFINE-GLOSSARY-TERM as a better alternative to
-  Markdown reference links (see @MARKDOWN-IN-DOCSTRINGS).
-  """)
+  Markdown reference links (see @MARKDOWN-IN-DOCSTRINGS).""")
 
 
 (defsection @unresolvable-reflinks (:title "Unresolvable Links")
@@ -2484,8 +2480,7 @@
 
       DREF-NAME `(reader dref)`
 
-  _renders as_ DREF-NAME `(reader dref)`.
-  """)
+  _renders as_ DREF-NAME `(reader dref)`.""")
 
 (defun specific-autolink (word parent tree linked-refs)
   (when-let (xref (find-name (curry #'specific-autolink-dref parent tree)
@@ -2551,8 +2546,7 @@
 
   - `\EQL` _renders as_ EQL.
 
-  [suppressed-link-p function][docstring]
-  """)
+  [suppressed-link-p function][docstring]""")
 
 (defun unspecific-autolink (word linked-refs)
   (when-let (drefs (find-name #'unspecific-link-definitions* word
@@ -3165,8 +3159,7 @@
   [codified][@codification] because `X` is now @INTERESTING.
 
   See DOCUMENTING-DEFINITION and WITH-DISLOCATED-NAMES in
-  @EXTENDING-DOCUMENT.
-  """)
+  @EXTENDING-DOCUMENT.""")
 
 ;;; A list of references with special rules for linking. The
 ;;; definition being documented is always on this list (see
@@ -3198,17 +3191,17 @@
   `<a id="MGL-PAX:FOO%20FUNCTION">`, and its \URL will end
   with `\\#MGL-PAX:FOO%20FUNCTION`.
 
-  _Note that to make the \URL independent of whether a symbol is
-  [internal or external][find-symbol] to their SYMBOL-PACKAGE, single
-  colon is printed where a double colon would be expected. Package and
-  symbol names are both printed verbatim except for escaping colons
-  and spaces with a backslash. For exported symbols with no funny
-  characters, this coincides with how PRIN1 would print the symbol,
-  while having the benefit of making the \URL independent of the Lisp
-  printer's escaping strategy and producing human-readable output for
-  mixed-case symbols. No such promises are made for non-ASCII
-  characters, and their \URLs may change in future versions. Locatives
-  are printed with PRIN1._
+  > _Note_: To make the \URL independent of whether a symbol is
+  > [internal or external][find-symbol] to their SYMBOL-PACKAGE,
+  > single colon is printed where a double colon would be expected.
+  > Package and symbol names are both printed verbatim except for
+  > escaping colons and spaces with a backslash. For exported symbols
+  > with no funny characters, this coincides with how PRIN1 would
+  > print the symbol, while having the benefit of making the \URL
+  > independent of the Lisp printer's escaping strategy and producing
+  > human-readable output for mixed-case symbols. No such promises are
+  > made for non-ASCII characters, and their \URLs may change in
+  > future versions. Locatives are printed with PRIN1.
 
   Version 1 is based on the more strict HTML4 standard and the id of
   `FOO` is `"x-28MGL-PAX-3A-3AFOO-20FUNCTION-29"`. This is supported
@@ -3234,8 +3227,7 @@
 
   - [function] **FOO** *X*
   ")
-  ```
-  """)
+  ```""")
 
 (defun anchor (dref stream)
   (cond ((eq *subformat* :plain))
