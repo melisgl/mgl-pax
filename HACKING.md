@@ -54,10 +54,9 @@ where the ASDF files are with
     git clone https://github.com/melisgl/mgl-pax-world.git world/
 
 After changing the code, regenerate the readmes and PAX World (see
-`#+nil`ed out forms near the bottom of
-`src/document/document-util.lisp`), then check the `git diff`s. Note
-that you need to `cd` into `world/` and get the diff there too because
-it is a separate git checkout.
+`#+nil`ed out forms near the bottom of `world/update-pax-world.lisp`),
+then check the `git diff`s. Note that you need to `cd` into `world/`
+and get the diff there too because it is a separate git checkout.
 
 The above help catch changes in performance, too.
 

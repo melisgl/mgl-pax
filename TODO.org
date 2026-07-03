@@ -24,12 +24,15 @@ symbols.
 ** MAYBE "parent" look up includes (e.g. for NOTEs)
 * document
 ** OPT parse and print markdown once when *format* is :html?
-This would involve rewriting everything to emit parse tree fragments or be able to produce html directly. Either way, it is not without cost.
+This would involve rewriting everything to emit parse tree fragments
+or be able to produce html directly. Either way, it is not without
+cost.
 ** OPT 3bmd parsing performance on large blocks
 https://github.com/3b/3bmd/issues/56
-** MAYBE consider CommonDoc from the 40ants fork
-Or maybe just have a good api in MGL-PAX::@EXTENDING-DOCUMENT? Pandoc
-helps to convert to many formats.
+** CANCELLED consider CommonDoc from the 40ants fork
+The API is Markdown. This is all that docstrings have. There is no
+reason to have anything beyond what MGL-PAX::@EXTENDING-DOCUMENT
+currently offers.
 ** MAYBE support external links
 This is partially done. There is CLHS and there are glossary terms
 with URLs. See EXTERNAL-DREF-P and co.
@@ -40,10 +43,6 @@ use the lisp pretty printer for this because output also includes
 markup. We could get the original indentation from the sources.
 ** MAYBE get variable initforms from source?
 Or fall back on this for deficient ARGLISTs. Will be really slow.
-** MAYBE use SECTION-PACKAGE from "first" enclosing section?
-That is, when generating documentation for something that's referenced
-by one or more sections. See PAX::SECTIONS-THAT-CONTAIN and
-PAX::SORT-BY-PROXIMITY.
 ** BUG (low) C-. history depends on current package
 E.g. 'clhs' works in a package where PAX is :USEd but not elsewhere.
 
@@ -52,8 +51,8 @@ But so does M-.'s history.
 CLOSED: [2025-05-07 Wed 09:29]
 - State "CANCELLED" from "MAYBE" [2025-05-07 Wed 09:29] \\
   Autoloading is very restricted in its abilities, and I can't see a
-  perfect way to make it work for e.g. sections. It think accessing
-  the section's variable should trigger autoloading the real section
+  perfect way to make it work for e.g. sections. I think accessing the
+  section's variable should trigger autoloading the real section
   definition, but that's not possible to catch. Maybe it's too much
   complexity for little gain, especially since generating
   documentation loads dref/full.
@@ -73,10 +72,6 @@ CLOSED: [2025-05-07 Wed 09:40]
 ** CANCELLED provide way to autoload from live documentation?
 CLOSED: [2025-05-07 Wed 09:40]
 - State "CANCELLED"  from "MAYBE"      [2025-05-07 Wed 09:40]
-** MAYBE web: link asdf system to definitions in it?
-Packages defined are linked already, which handles many cases but not
-all, and of course includes definitions (e.g methods) not defined in
-the system.
 ** CANCELLED live browsing: reload page automatically on redefinition
 Its value is dubious. Not even Emacs help does this.
 ** CANCELLED print ASDF/SYSTEM:SYSTEM as ASDF:SYSTEM
@@ -86,59 +81,76 @@ This is doable when printing symbols directly, but not so easy when
 the symbol is in a list or similar, so consistency would be a problem.
 If anywhere, this belongs in the Lisp.
 ** MAYBE always replace titles but follow the link suppression rules?
-** MAYBE generate offline documentation for everything in quicklisp?
-Like https://quickref.common-lisp.net/index-per-library.html, but more
-useful?
 ** TODO documentation conditional on live/offline
 E.g. in DREF::@LOCATIVE-TYPE, we could link to the apropos page
 linking all locatives in the running lisp, which makes no sense in
 offline documentation.
 
 Maybe this is a special case of dynamically generated documentation.
+Or related to [[support external links]].
 
 This would come in handy in the SBCL documentation as well.
 
-Or maybe this is better thought of as a fallback to external link if
-not being documented.
-** MAYBE live browsing: allow filtering out local definitions when there is a clhs definition?
+Or maybe this is better thought of as a fallback to an external link
+if not being documented: [ironclad][asdf:system] is a broken link if
+ironclad is not loaded (live doc) or not being documented (offline).
 ** MAYBE 40ants asdf-system-relative images?
 https://github.com/40ants/doc/commit/4ae22efa20a4a2117da9dd8e96c1117458904d73
-** MAYBE alternative links
-[ironclad][asdf:system] is a broken link if ironclad is not loaded
-(live doc) or not being documented (offline).
-
-Maybe a fallback to an URL (or nothing) would be useful.
 ** MAYBE support generating cross-linked READMEs easily
 PAX World does this.
 ** MAYBE Can we sometimes drop the package from a name?
 The package can be considered somewhat unnecessary if a link to
 SB-THREAD:JOIN-THREAD is output. On the other hand, we can't drop the
-package from non-link code.
-** CANCELLED smart quotes
+package from non-link code. Conversely, outputting JOIN-THREAD just
+because the package uses SB-THREAD exposes internals.
+** MAYBE smart quotes
 We could convert "--" to en dash and touch up the typography in other
 ways. But this would mean that a lazy docstring containing "git --
 <path>" (not marked as code with backticks) would cease to be
 copy-pastable. Similar problems would arise if straight double quotes
 were replaced with their curly counterparts.
-** MAYBE make *document-downcase-uppercase-code* default to T in sections?
-What if @DOCUMENTABLE is a list of sections and random stuff?
+
+Maybe this could be reserved for when there is a HOME-SECTION (so
+written-with-pax-in-mind can be assumed)?
+
+Notes:
+- 3bmd's smart quote escaping does't roundtrip.
+- 3bmd's smart quote includes lots of stuff (e.g. arrows).
+- Pandoc markdown+smart to pdf works nicely except where we output
+  code as non-code (e.g. in the bullet line "- [function] ...")
+** MAYBE make *document-downcase-uppercase-code* the default when HOME-SECTION?
+And the output is not :PLAIN. As a side effect, this would make it
+apparent that sanitization is happening.
 ** MAYBE make the rest of the define-concept :keys render as "See also <first key>"
-** MAYBE make "a" and "an" locative aliases of the "type"
+** CANCELLED make "a" and "an" locative aliases of the "type"
+- State "CANCELLED"  from "MAYBE"      [2026-07-02 Thu 16:29] \\
+  This can be done by client code. Exporting A and AN would be a tad annoying.
 so that one can write "X is a STRING" without having to disambiguate
 with "X is a [STRING][class]". Even less important now that PAX links
 to CLHS disambiguation pages.
 ** MAYBE use https://codeberg.org/dlowe/metaspectre for something?
-* web
-** MAYBE implement a wiki on top?
-PAX is already kind of a wiki. Live interaction is the next step,
-which would move towards notebooks and GUIs.
-** MAYBE web: have apropos name be editable?
+* live
+** MAYBE live browsing: allow filtering out local definitions when there is a clhs definition?
+** MAYBE have apropos name be editable?
 This would make the PAX Live home page more capable without Emacs.
 ** MAYBE option to sort apropos results by source location
 Files in ASDF system order. Maybe this make sense for generating
 documentation for a non-PAX system.
+** MAYBE link asdf system to definitions in it?
+Packages defined are linked already, which handles many cases but not
+all, and of course includes definitions (e.g methods) not defined in
+the system.
+* web
+** MAYBE implement a wiki on top?
+PAX is already kind of a wiki. Live interaction is the next step,
+which would move towards notebooks and GUIs.
 * world
-** document packages, systems like as in live browsing
+** MAYBE generate offline documentation for everything in quicklisp?
+Like https://quickref.common-lisp.net/index-per-library.html, but more
+useful?
+
+Documenting packages, systems like as in live browsing would be a
+start.
 * transcribe
 ** MAYBE don't treat "debugger invoked on" as output
 Well, it's a kind of output, but maybe it would be better for
