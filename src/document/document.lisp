@@ -591,16 +591,18 @@
                  (if (eq *subformat* :w3m)
                      (make-hash-table)
                      3bmd-code-blocks::*colorize-name-map*))
+               (*dref-being-documented* nil)
                ;; Prevent leaking context into a nested DOCUMENT call.
                ;; See the transcript in TRANSLATE-DOCSTRING-LINKS,
                ;; which does (DOCUMENT #'DIV2).
                (*section* nil)
                (*top-level-section* nil)
-               (*dref-being-documented* nil)
                (*indexing-section* nil)
                (*indexing-definitions* nil)
                (*indexing-dref-to-referrers* nil)
-               (*indexing-concept-key-to-referrers* nil))
+               (*indexing-concept-key-to-referrers* nil)
+               (*document-title-cache* (make-hash-table :test #'equal)))
+          (declare (special *document-title-cache*))
           (progv/find-symbol (("*NORMALIZE-SBCL-DOCSTRINGS*" "SB-PCL") nil)
             (document-return stream (%document documentable stream
                                                pages))))))))
@@ -1329,9 +1331,17 @@
 (defmethod doctitle* ((glossary-term glossary-term))
   (glossary-term-title glossary-term))
 
+(defvar *document-title-cache*)
+
 ;;; *PACKAGE* and *READTABLE* is assumed to be set up.
 (defun document-title (string &key deemph (format :markdown) dref)
-  (let ((tree (codify (parse-markdown string) :leave-autolink-escape nil)))
+  (let ((tree (if (boundp '*document-title-cache*)
+                  (or (gethash string *document-title-cache*)
+                      (setf (gethash string *document-title-cache*)
+                            (codify (parse-markdown string)
+                                    :leave-autolink-escape nil)))
+                  (codify (parse-markdown string)
+                          :leave-autolink-escape nil))))
     (setq tree (check-title-parse-tree tree string :deemph deemph :dref dref))
     (if format
         (with-output-to-string (out)
@@ -1590,9 +1600,12 @@
     `\\CLASS-NAMEs` but not `\\Classes` or `\\aTe`).")
 
 (defun codifiable-word-p (string)
+  (declare (type simple-string string)
+           (optimize speed))
   (and
    ;; Check that it's a @WORD too.
-   (notany #'whitespacep string)
+   (loop for char across string
+         never (whitespacep char))
    (uppercase-core-bounds string)))
 
 (define-glossary-term @interesting (:title "interesting")

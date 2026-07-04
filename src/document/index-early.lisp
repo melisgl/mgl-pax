@@ -69,15 +69,14 @@
   ;; semantics for that in sight.
   `(gethash ,concept *indexing-concept-key-to-referrers*))
 
-(defun concept-keys (object)
-  (resolve-concept-symbols-and-normalize
-   (nth-value-or-with-obj-or-def (object 0)
-     (concept-keys* object))))
+(defun concept-keys (dref)
+  (when-let ((object (resolve dref nil)))
+    (resolve-concept-symbols-and-normalize (concept-keys* object))))
 
-(defun multiplexing-concept-keys (object)
-  (resolve-concept-symbols-and-normalize
-   (nth-value-or-with-obj-or-def (object 0)
-     (multiplexing-concept-keys* object))))
+(defun multiplexing-concept-keys (dref)
+  (when (typep dref 'concept-dref)
+    (resolve-concept-symbols-and-normalize
+     (multiplexing-concept-keys* (resolve dref)))))
 
 (defun resolve-concept-symbols-and-normalize (keys)
   (loop for key in keys

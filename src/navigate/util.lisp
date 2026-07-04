@@ -40,7 +40,12 @@
                      (declare (ignore c))
                      (unless errorp
                        (return-from parse-sexp nil)))))
-    (let ((string (subseq string start)))
+    (let ((string
+            ;; Faster than (SUBSEQ STRING START)
+            (make-array (- (length string) start)
+                        :element-type (array-element-type string)
+                        :displaced-to string
+                        :displaced-index-offset start)))
       (with-input-from-string (stream string)
         (let* ((*on-unreadable* on-unreadable)
                (*truncating-on-unreadable* nil)
@@ -318,6 +323,8 @@
   (defparameter *whitespace-chars*
     (coerce '(#\Space #\Tab #\Return #\Newline #\Linefeed #\Page) 'string)))
 
+#+sbcl
+(declaim (sb-ext:maybe-inline whitepace))
 (defun whitespacep (char)
   (declare (type character char))
   (and (<= (char-code char) 32)
