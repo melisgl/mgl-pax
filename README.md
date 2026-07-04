@@ -5068,6 +5068,7 @@ they are presented.
   [0684]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cac.htm "\"22.3.1.3\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [0702]: #x-28MGL-PAX-3A-40DOCUMENTABLE-20MGL-PAX-3ASECTION-29 "`DOCUMENTABLE`"
   [090e]: #x-28MGL-PAX-3A-40TITLE-20MGL-PAX-3AGLOSSARY-TERM-29 "title"
+
   [0c4f]: http://www.lispworks.com/documentation/HyperSpec/Body/f_export.htm "EXPORT (MGL-PAX:CLHS FUNCTION)"
   [0cac]: http://www.lispworks.com/documentation/HyperSpec/Body/22_caa.htm "\"22.3.1.1\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [0d07]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_2.htm "SYMBOL-NAME (MGL-PAX:CLHS FUNCTION)"
@@ -5078,6 +5079,7 @@ they are presented.
   [0f52]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_t.htm#top_level_form "\"top level form\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [0fa3]: #x-28MGL-PAX-3A-40LOCATIVE-ALIASES-20MGL-PAX-3ASECTION-29 "Locative Aliases"
   [10ff]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*DEBUG-IO* (MGL-PAX:CLHS VARIABLE)"
+
   [119e]: http://www.lispworks.com/documentation/HyperSpec/Body/t_fn.htm "FUNCTION (MGL-PAX:CLHS CLASS)"
   [11f1]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cfb.htm "\"22.3.6.2\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [1281]: #x-28MGL-PAX-3A-40PAX-WORLD-20MGL-PAX-3ASECTION-29 "PAX World"
@@ -5088,6 +5090,7 @@ they are presented.
   [1539]: https://quicklisp.org/ "Quicklisp"
   [1567]: http://www.lispworks.com/documentation/HyperSpec/Body/22_ccb.htm "\"22.3.3.2\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [165c]: #x-28MGL-PAX-3A-40MARKDOWN-IN-TITLES-20MGL-PAX-3ASECTION-29 "Markdown in Titles"
+
   [1743]: https://emacs-w3m.github.io/info/emacs-w3m_10.html#Key-Binding "w3m's default key bindings"
   [17e0]: #x-28MGL-PAX-3A-2ADOCUMENT-URL-VERSIONS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-URL-VERSIONS* VARIABLE"
   [1867]: http://www.lispworks.com/documentation/HyperSpec/Body/r_contin.htm "CONTINUE (MGL-PAX:CLHS RESTART)"
@@ -5098,6 +5101,7 @@ they are presented.
   [19e3]: #x-28MGL-PAX-3A-40LINKING-20MGL-PAX-3ASECTION-29 "Linking"
   [1aed]: #x-28MGL-PAX-3AINSTALL-PAX-ELISP-20FUNCTION-29 "MGL-PAX:INSTALL-PAX-ELISP FUNCTION"
   [1b1b]: #x-28MGL-PAX-3A-40DOCUMENTATION-UTILITIES-20MGL-PAX-3ASECTION-29 "Utilities for Generating Documentation"
+
   [1b28]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-SECTIONS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-SECTIONS* VARIABLE"
   [1c08]: http://www.lispworks.com/documentation/HyperSpec/Body/a_t.htm "T (MGL-PAX:CLHS NIL)"
   [1d5a]: http://www.lispworks.com/documentation/HyperSpec/Body/t_pkg.htm "PACKAGE (MGL-PAX:CLHS CLASS)"
@@ -5108,6 +5112,7 @@ they are presented.
   [2243]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*TRACE-OUTPUT* (MGL-PAX:CLHS VARIABLE)"
   [225d]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhn.htm "\"2.4.8.14\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [227d]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhi.htm "\"2.4.8.9\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
+
   [22c2]: #x-28MGL-PAX-3A-40LINKING-TO-SECTIONS-20MGL-PAX-3ASECTION-29 "Linking to Sections"
   [2352]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cfa.htm "\"22.3.6.1\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [238c]: #x-28MGL-PAX-3ATRANSCRIPTION-VALUES-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION"
@@ -5118,6 +5123,7 @@ they are presented.
   [2c93]: #x-28MGL-PAX-3A-40GENERATING-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Generating Documentation"
   [2cd5]: #x-28MGL-PAX-3A-2ADOCUMENT-PANDOC-PDF-HEADER-INCLUDES-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-PANDOC-PDF-HEADER-INCLUDES* VARIABLE"
   [2d48]: #x-28MGL-PAX-3AWITH-DISLOCATED-NAMES-20MGL-PAX-3AMACRO-29 "MGL-PAX:WITH-DISLOCATED-NAMES MGL-PAX:MACRO"
+
   [2f21]: #x-28MGL-PAX-3A-40PRINTS-TO-AN-EQUIVALENT-STRING-20MGL-PAX-3AGLOSSARY-TERM-29 "prints to an equivalent string"
   [3026]: #x-28MGL-PAX-3AESCAPE-MARKDOWN-20FUNCTION-29 "MGL-PAX:ESCAPE-MARKDOWN FUNCTION"
   [3076]: https://github.com/redline6561/colorize/ "Colorize"
@@ -5128,6 +5134,7 @@ they are presented.
   [3473]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_s.htm "FIND-SYMBOL (MGL-PAX:CLHS FUNCTION)"
   [34b8]: #x-28MGL-PAX-3A-40UNSPECIFIC-REFLINK-WITH-TEXT-20MGL-PAX-3ASECTION-29 "Unspecific Reflink with Text"
   [34d3]: #x-28MGL-PAX-3A-40INDEXING-DEFINITIONS-20MGL-PAX-3ASECTION-29 "Indexing Definitions"
+
   [35a2]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_s.htm#setf_expander "\"setf expander\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [36e1]: #x-28MGL-PAX-3A-40HTML-OUTPUT-20MGL-PAX-3ASECTION-29 "HTML Output"
   [36e9]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_d.htm#dynamic_extent "\"dynamic extent\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
@@ -5138,6 +5145,7 @@ they are presented.
   [38de]: #x-28MGL-PAX-3A-40SPECIFIC-AUTOLINK-20MGL-PAX-3ASECTION-29 "Specific Autolink"
   [3942]: #x-28MGL-PAX-3A-40STABLE-PRINTED-LOCATIVE-20MGL-PAX-3AGLOSSARY-TERM-29 "stable printed locative"
   [3972]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_r.htm#reader_macro "\"reader macro\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
+
   [39df]: http://www.lispworks.com/documentation/HyperSpec/Body/m_w_std_.htm "WITH-STANDARD-IO-SYNTAX (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [3da8]: #x-28MGL-PAX-3A-2AFORMAT-2A-20VARIABLE-29 "MGL-PAX:*FORMAT* VARIABLE"
   [3e20]: https://quotenil.com/untangling-literate-programming.html "untangled LP"
@@ -5148,6 +5156,7 @@ they are presented.
   [407c]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_h.htm#home_package "\"home package\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [4143]: http://www.lispworks.com/documentation/HyperSpec/Body/f_stgeq_.htm "STRING= (MGL-PAX:CLHS FUNCTION)"
   [4317]: http://www.lispworks.com/documentation/HyperSpec/Body/f_cerror.htm "CERROR (MGL-PAX:CLHS FUNCTION)"
+
   [432c]: #x-28MGL-PAX-3ADOCUMENT-20FUNCTION-29 "MGL-PAX:DOCUMENT FUNCTION"
   [4336]: http://www.lispworks.com/documentation/HyperSpec/Body/03_da.htm "\"3.4.1\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [443b]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_cas.htm "*PRINT-CASE* (MGL-PAX:CLHS VARIABLE)"
@@ -5158,6 +5167,7 @@ they are presented.
   [48f1]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rdtabl.htm "READTABLE-CASE (MGL-PAX:CLHS FUNCTION)"
   [4bb8]: #x-28-22mgl-pax-2Fdocument-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "\"mgl-pax/document\" ASDF/SYSTEM:SYSTEM"
   [4c39]: #x-28MGL-PAX-3A-40TRANSCRIPT-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29 "Transcript Consistency Checking"
+
   [4e05]: #x-28MGL-PAX-3A-40UNSPECIFIC-REFLINK-20MGL-PAX-3ASECTION-29 "Unspecific Reflink"
   [5119]: #x-28MGL-PAX-3AGLOSSARY-TERM-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:GLOSSARY-TERM MGL-PAX:LOCATIVE"
   [519c]: http://www.lispworks.com/documentation/HyperSpec/Body/f_stgeq_.htm "STRING< (MGL-PAX:CLHS FUNCTION)"
@@ -5168,6 +5178,7 @@ they are presented.
   [56ba]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dd.htm "\"2.4.4\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [574a]: #x-28MGL-PAX-3A-40EXTENDING-DOCUMENT-20MGL-PAX-3ASECTION-29 "Extending `DOCUMENT`"
   [5825]: #x-28-22mgl-pax-2Ftranscribe-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "\"mgl-pax/transcribe\" ASDF/SYSTEM:SYSTEM"
+
   [587f]: #x-28MGL-PAX-3AMAKE-GIT-SOURCE-URI-FN-20FUNCTION-29 "MGL-PAX:MAKE-GIT-SOURCE-URI-FN FUNCTION"
   [5884]: http://www.lispworks.com/documentation/HyperSpec/Body/f_find_.htm "FIND-IF (MGL-PAX:CLHS FUNCTION)"
   [588c]: #x-28MGL-PAX-3ASTANDARD-TRANSCRIBE-DYNENV-20FUNCTION-29 "MGL-PAX:STANDARD-TRANSCRIBE-DYNENV FUNCTION"
@@ -5178,6 +5189,7 @@ they are presented.
   [5ab6]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_rig.htm "*PRINT-RIGHT-MARGIN* (MGL-PAX:CLHS VARIABLE)"
   [5b4d]: http://www.lispworks.com/documentation/HyperSpec/Body/22_ccd.htm "\"22.3.3.4\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [5cd7]: #x-28MGL-PAX-3AINCLUDE-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:INCLUDE MGL-PAX:LOCATIVE"
+
   [5ed1]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pkg.htm "*PACKAGE* (MGL-PAX:CLHS VARIABLE)"
   [5fac]: #x-28MGL-PAX-3ASECTION-20CLASS-29 "MGL-PAX:SECTION CLASS"
   [5fd4]: http://www.lispworks.com/documentation/HyperSpec/Body/t_eql.htm "EQL (MGL-PAX:CLHS TYPE)"
@@ -5188,6 +5200,7 @@ they are presented.
   [6384]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRIN1 (MGL-PAX:CLHS FUNCTION)"
   [63ef]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss009_w.htm "\"ISSUE:AREF-1D\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [63f3]: #x-28MGL-PAX-3ADEFINE-PACKAGE-20MGL-PAX-3AMACRO-29 "MGL-PAX:DEFINE-PACKAGE MGL-PAX:MACRO"
+
   [64be]: #x-28MGL-PAX-3AUNRESOLVABLE-REFLINK-20CONDITION-29 "MGL-PAX:UNRESOLVABLE-REFLINK CONDITION"
   [6547]: http://www.lispworks.com/documentation/HyperSpec/Body/f_open.htm "OPEN (MGL-PAX:CLHS FUNCTION)"
   [659d]: #x-28MGL-PAX-3A-40BROWSE-BY-LOCATIVE-TYPE-20MGL-PAX-3ASECTION-29 "Browse by Locative Types"
@@ -5198,6 +5211,7 @@ they are presented.
   [676d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRINC (MGL-PAX:CLHS FUNCTION)"
   [6832]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defmet.htm "DEFMETHOD (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [685e]: #x-28MGL-PAX-3A-40INTRODUCTION-20MGL-PAX-3ASECTION-29 "Introduction"
+
   [6897]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cbc.htm "\"22.3.2.3\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [68c1]: https://daringfireball.net/projects/markdown/syntax#code "Markdown inline code"
   [68cc]: http://www.lispworks.com/documentation/HyperSpec/Body/a_string.htm "STRING (MGL-PAX:CLHS NIL)"
@@ -5208,6 +5222,7 @@ they are presented.
   [6b59]: #x-28MGL-PAX-3A-40TRANSCRIPT-DYNENV-20MGL-PAX-3ASECTION-29 "Controlling the Dynamic Environment"
   [6be7]: https://slime.common-lisp.dev/ "SLIME"
   [6e18]: #x-28MGL-PAX-3A-40TRANSCRIPT-FINER-GRAINED-CONSISTENCY-CHECKS-20MGL-PAX-3ASECTION-29 "Finer-Grained Consistency Checks"
+
   [6fdb]: #x-28-22mgl-pax-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "\"mgl-pax\" ASDF/SYSTEM:SYSTEM"
   [7163]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhl.htm "\"2.4.8.12\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [72a7]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pl_plp.htm "+ (MGL-PAX:CLHS VARIABLE)"
@@ -5218,6 +5233,7 @@ they are presented.
   [7445]: #x-28MGL-PAX-3A-40INTERESTING-20MGL-PAX-3AGLOSSARY-TERM-29 "interesting"
   [76ab]: http://www.lispworks.com/documentation/HyperSpec/Body/22_ccc.htm "\"22.3.3.3\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [76df]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cbd.htm "\"22.3.2.4\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
+
   [76ea]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cgb.htm "\"22.3.7.2\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [782a]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_pre.htm "*PRINT-PRETTY* (MGL-PAX:CLHS VARIABLE)"
   [78d1]: http://www.lispworks.com/documentation/HyperSpec/Body/v__stst_.htm "** (MGL-PAX:CLHS VARIABLE)"
@@ -5228,6 +5244,7 @@ they are presented.
   [7bf5]: #x-28MGL-PAX-3A-40MARKDOWN-IN-DOCSTRINGS-20MGL-PAX-3ASECTION-29 "Markdown in Docstrings"
   [7c9f]: http://www.lispworks.com/documentation/HyperSpec/Body/d_type.htm "TYPE (MGL-PAX:CLHS DECLARATION)"
   [7cc3]: #x-28MGL-PAX-3A-40LINKING-TO-THE-HYPERSPEC-20MGL-PAX-3ASECTION-29 "Linking to the HyperSpec"
+
   [7d18]: http://c2.com/cgi/wiki?OnceAndOnlyOnce "OAOO"
   [7dc7]: #x-28MGL-PAX-3A-40DOCUMENT-RETURN-20MGL-PAX-3ASECTION-29 "Return Values"
   [7eb5]: #x-28MGL-PAX-3A-40LINKABLE-20MGL-PAX-3AGLOSSARY-TERM-29 "linkable"
@@ -5238,6 +5255,7 @@ they are presented.
   [8106]: #x-28MGL-PAX-3A-40M--2E-MINIBUFFER-SYNTAX-20MGL-PAX-3ASECTION-29 "`M-.` Minibuffer Syntax"
   [81b3]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhr.htm "\"2.4.8.18\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [8251]: #x-28MGL-PAX-3AGLOSSARY-TERM-20CLASS-29 "MGL-PAX:GLOSSARY-TERM CLASS"
+
   [8269]: #x-28MGL-PAX-3ADOCUMENT-OBJECT-2A-20GENERIC-FUNCTION-29 "MGL-PAX:DOCUMENT-OBJECT* GENERIC-FUNCTION"
   [826b]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dg.htm "\"2.4.7\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [83d5]: #x-28MGL-PAX-3A-40BROWSING-WITH-W3M-20MGL-PAX-3ASECTION-29 "Browsing with w3m"
@@ -5248,6 +5266,7 @@ they are presented.
   [8541]: #x-28MGL-PAX-3A-40EMACS-SETUP-20MGL-PAX-3ASECTION-29 "Emacs Setup"
   [85c9]: #x-28MGL-PAX-3A-2ADOCUMENT-INDEX-REFERRER-GROUPS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-INDEX-REFERRER-GROUPS* VARIABLE"
   [8710]: #x-28MGL-PAX-3AARGUMENT-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:ARGUMENT MGL-PAX:LOCATIVE"
+
   [875e]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-TO-HYPERSPEC-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-TO-HYPERSPEC* VARIABLE"
   [876d]: http://www.lispworks.com/documentation/HyperSpec/Body/f_ensu_1.htm "ENSURE-DIRECTORIES-EXIST (MGL-PAX:CLHS FUNCTION)"
   [886c]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cge.htm "\"22.3.7.5\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
@@ -5258,6 +5277,7 @@ they are presented.
   [8a58]: #x-28MGL-PAX-3A-40SECTIONS-20MGL-PAX-3ASECTION-29 "Sections"
   [8a5e]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhb.htm "\"2.4.8.2\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [8aca]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_rda.htm "*PRINT-READABLY* (MGL-PAX:CLHS VARIABLE)"
+
   [8c00]: https://daringfireball.net/projects/markdown/syntax#link "Markdown reference link"
   [8d9b]: #x-28MGL-PAX-3A-40OUTPUT-FORMATS-20MGL-PAX-3ASECTION-29 "Output Formats"
   [8e71]: #x-28MGL-PAX-3A-40UNSPECIFIC-LINK-20MGL-PAX-3ASECTION-29 "Unspecific Link"
@@ -5268,6 +5288,7 @@ they are presented.
   [90fa]: #x-28MGL-PAX-3A-2ADOCUMENT-HTML-DEFAULT-STYLE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HTML-DEFAULT-STYLE* VARIABLE"
   [935f]: http://www.lispworks.com/documentation/HyperSpec/Issues/iss045.htm "\"SUMMARY:CHARACTER-PROPOSAL:2-6-5\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [9439]: http://www.lispworks.com/documentation/HyperSpec/Body/m_pr_unr.htm "PRINT-UNREADABLE-OBJECT (MGL-PAX:CLHS MGL-PAX:MACRO)"
+
   [945b]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cgc.htm "\"22.3.7.3\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [9478]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhv.htm "\"2.4.8.22\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [94c7]: #x-28MGL-PAX-3A-40BASICS-20MGL-PAX-3ASECTION-29 "Basics"
@@ -5278,6 +5299,7 @@ they are presented.
   [9b15]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_a.htm#accessible "\"accessible\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
   [9b43]: http://www.lispworks.com/documentation/HyperSpec/Body/m_defpkg.htm "DEFPACKAGE (MGL-PAX:CLHS MGL-PAX:MACRO)"
   [9bd5]: #x-28MGL-PAX-3A-40TRANSCRIBING-IN-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Transcribing in Documentation"
+
   [9c7d]: #x-28MGL-PAX-3A-40PAGES-20MGL-PAX-3ASECTION-29 "`PAGES`"
   [9d50]: #x-28MGL-PAX-3A-40PAX-LIVE-HOME-PAGE-20MGL-PAX-3ASECTION-29 "PAX Live Home Page"
   [9dac]: http://www.lispworks.com/documentation/HyperSpec/Body/a_muffle.htm "MUFFLE-WARNING (MGL-PAX:CLHS NIL)"
@@ -5288,6 +5310,7 @@ they are presented.
   [a249]: #x-28MGL-PAX-3ATRANSCRIPTION-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION"
   [a270]: #x-28MGL-PAX-3A-40ESCAPING-AUTOLINKING-20MGL-PAX-3ASECTION-29 "Escaping Autolinking"
   [a317]: https://daringfireball.net/projects/markdown/ "Markdown"
+
   [a412]: #x-28MGL-PAX-3ADOCUMENTING-DEFINITION-20MGL-PAX-3AMACRO-29 "MGL-PAX:DOCUMENTING-DEFINITION MGL-PAX:MACRO"
   [a51f]: http://www.lispworks.com/documentation/HyperSpec/Body/a_fn.htm "FUNCTION (MGL-PAX:CLHS NIL)"
   [a595]: #x-28MGL-PAX-3A-40BROWSING-LIVE-DOCUMENTATION-20MGL-PAX-3ASECTION-29 "Browsing Live Documentation"
@@ -5298,6 +5321,7 @@ they are presented.
   [ab38]: #x-28MGL-PAX-3A-40PARSING-LOCATIVES-20MGL-PAX-3ASECTION-29 "Parsing Locatives"
   [ab7e]: #x-28MGL-PAX-3A-40PACKAGE-AND-READTABLE-20MGL-PAX-3ASECTION-29 "Package and Readtable"
   [ac30]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cha.htm "\"22.3.8.1\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
+
   [ac5e]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhe.htm "\"2.4.8.5\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [ad78]: http://www.lispworks.com/documentation/HyperSpec/Body/f_format.htm "FORMAT (MGL-PAX:CLHS FUNCTION)"
   [ad8e]: #x-28MGL-PAX-3A-40REFERENT-20MGL-PAX-3AGLOSSARY-TERM-29 "referent"
@@ -5308,6 +5332,7 @@ they are presented.
   [b033]: #x-28MGL-PAX-3A-40ASDF-SYSTEMS-AND-RELATED-PACKAGES-20MGL-PAX-3ASECTION-29 "`ASDF:SYSTEM`s and Related `PACKAGE`s"
   [b0b0]: #x-28MGL-PAX-3A-40CONFIGURING-INDICES-20MGL-PAX-3ASECTION-29 "Configuring Indices"
   [b18e]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_p.htm#property_list "\"property list\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
+
   [b19d]: #x-28MGL-PAX-3A-40CONCEPT-KEY-20MGL-PAX-3AGLOSSARY-TERM-29 "concept key"
   [b2e4]: #x-28MGL-PAX-3A-40FILTERING-LINKS-20MGL-PAX-3ASECTION-29 "Filtering Links"
   [b39f]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cdb.htm "\"22.3.4.2\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
@@ -5318,6 +5343,7 @@ they are presented.
   [b81d]: #x-28MGL-PAX-3ATRANSCRIPTION-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-ERROR CONDITION"
   [b89a]: #x-28MGL-PAX-3A-40CODIFIABLE-20MGL-PAX-3AGLOSSARY-TERM-29 "codifiable"
   [b93c]: http://www.lispworks.com/documentation/HyperSpec/Body/t_string.htm "STRING (MGL-PAX:CLHS CLASS)"
+
   [ba76]: #x-28MGL-PAX-3A-2ADOCUMENT-INDEX-FORMATS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-INDEX-FORMATS* VARIABLE"
   [ba90]: #x-28MGL-PAX-3A-40LINKS-AND-SYSTEMS-20MGL-PAX-3ASECTION-29 "Links and Systems"
   [bb12]: #x-28MGL-PAX-3AUPDATE-ASDF-SYSTEM-HTML-DOCS-20FUNCTION-29 "MGL-PAX:UPDATE-ASDF-SYSTEM-HTML-DOCS FUNCTION"
@@ -5328,6 +5354,7 @@ they are presented.
   [bdd6]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cga.htm "\"22.3.7.1\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [bf38]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cfc.htm "\"22.3.6.3\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [bfaa]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhk.htm "\"2.4.8.11\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
+
   [c001]: #x-28MGL-PAX-3A-40INDEXING-CONCEPTS-20MGL-PAX-3ASECTION-29 "Indexing Concepts"
   [c0d2]: #x-28MGL-PAX-3A-40LINK-FORMAT-20MGL-PAX-3ASECTION-29 "Link Format"
   [c2d3]: #x-28MGL-PAX-3A-40MARKDOWN-SUPPORT-20MGL-PAX-3ASECTION-29 "Markdown Support"
@@ -5338,6 +5365,7 @@ they are presented.
   [c4ce]: #x-28MGL-PAX-3A-40EXTENSION-API-20MGL-PAX-3ASECTION-29 "Writing Extensions"
   [c5ae]: http://www.lispworks.com/documentation/HyperSpec/Body/f_docume.htm "DOCUMENTATION (MGL-PAX:CLHS GENERIC-FUNCTION)"
   [c624]: https://daringfireball.net/projects/markdown/syntax#em "Markdown emphasis"
+
   [c818]: #x-28MGL-PAX-3AOUTPUT-LABEL-20FUNCTION-29 "MGL-PAX:OUTPUT-LABEL FUNCTION"
   [c879]: #x-28MGL-PAX-3A-40PLAIN-OUTPUT-20MGL-PAX-3ASECTION-29 "Plain Output"
   [c8cb]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_cir.htm "*PRINT-CIRCLE* (MGL-PAX:CLHS VARIABLE)"
@@ -5348,6 +5376,7 @@ they are presented.
   [cbc4]: #x-28MGL-PAX-3A-40REFLINK-20MGL-PAX-3ASECTION-29 "Reflink"
   [cd66]: http://www.lispworks.com/documentation/HyperSpec/Body/02_de.htm "\"2.4.5\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [ce75]: #x-28MGL-PAX-3ADOCSTRING-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:DOCSTRING MGL-PAX:LOCATIVE"
+
   [cfab]: #x-28MGL-PAX-3A-40EMACS-KEYS-20MGL-PAX-3ASECTION-29 "Setting up Keys"
   [d162]: http://www.lispworks.com/documentation/HyperSpec/Body/e_error.htm "ERROR (MGL-PAX:CLHS CONDITION)"
   [d1ca]: #x-28MGL-PAX-3A-40DOCUMENT-IMPLEMENTATION-NOTES-20MGL-PAX-3ASECTION-29 "Documentation Generation Implementation Notes"
@@ -5358,6 +5387,7 @@ they are presented.
   [d3fc5]: https://github.com/smithzvk/pythonic-string-reader "Pythonic String Reader"
   [d451]: http://www.lispworks.com/documentation/HyperSpec/Body/f_wr_pr.htm "PRINT (MGL-PAX:CLHS FUNCTION)"
   [d4a9]: #x-28MGL-PAX-3A-40EMACS-FUNCTIONALITY-20MGL-PAX-3ASECTION-29 "Functionality Provided"
+
   [d4e7]: #x-28MGL-PAX-3A-2ADOCUMENT-MAX-TABLE-OF-CONTENTS-LEVEL-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-MAX-TABLE-OF-CONTENTS-LEVEL* VARIABLE"
   [d534]: https://daringfireball.net/projects/markdown/syntax#img "Markdown image"
   [d5a2]: http://www.lispworks.com/documentation/HyperSpec/Body/f_car_c.htm "CAR (MGL-PAX:CLHS FUNCTION)"
@@ -5368,6 +5398,7 @@ they are presented.
   [d813]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_fro.htm "READ-FROM-STRING (MGL-PAX:CLHS FUNCTION)"
   [d850]: #x-28MGL-PAX-3ASECTION-ENTRIES-20FUNCTION-29 "MGL-PAX:SECTION-ENTRIES FUNCTION"
   [d9ee]: #x-28MGL-PAX-3A-2ADOCUMENT-LINK-CODE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-LINK-CODE* VARIABLE"
+
   [da14]: http://www.lispworks.com/documentation/HyperSpec/Body/f_smp_cn.htm "SIMPLE-CONDITION-FORMAT-ARGUMENTS (MGL-PAX:CLHS FUNCTION)"
   [db03]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eql.htm "EQL (MGL-PAX:CLHS FUNCTION)"
   [db38]: http://www.lispworks.com/documentation/HyperSpec/Body/22_ced.htm "\"22.3.5.4\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
@@ -5378,6 +5409,7 @@ they are presented.
   [dd37]: #x-28MGL-PAX-3A-2ADOCUMENT-PANDOC-PROGRAM-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-PANDOC-PROGRAM* VARIABLE"
   [dded]: http://www.lispworks.com/documentation/HyperSpec/Body/02_dhm.htm "\"2.4.8.13\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [dff6]: #x-28MGL-PAX-3A-40GITHUB-WORKFLOW-20MGL-PAX-3ASECTION-29 "GitHub Workflow"
+
   [e012]: http://www.lispworks.com/documentation/HyperSpec/Body/f_car_c.htm "CDR (MGL-PAX:CLHS FUNCTION)"
   [e016]: http://www.lispworks.com/documentation/HyperSpec/Body/06_aab.htm "\"6.1.1.2\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [e216]: #x-28MGL-PAX-3A-2ADOCUMENT-HTML-TOP-BLOCKS-OF-LINKS-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS* VARIABLE"
@@ -5388,6 +5420,7 @@ they are presented.
   [e43c]: http://www.lispworks.com/documentation/HyperSpec/Body/02_db.htm "\"2.4.2\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [e442]: http://www.lispworks.com/documentation/HyperSpec/Body/03_d.htm "\"3.4\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
   [e444]: #x-28MGL-PAX-3A-40M--2E-COMPLETION-20MGL-PAX-3ASECTION-29 "`M-.` Completion"
+
   [e51f]: #x-28MGL-PAX-3AEXPORTABLE-REFERENCE-P-20GENERIC-FUNCTION-29 "MGL-PAX:EXPORTABLE-REFERENCE-P GENERIC-FUNCTION"
   [e5ab]: http://www.lispworks.com/documentation/HyperSpec/Body/f_symb_3.htm "SYMBOL-PACKAGE (MGL-PAX:CLHS FUNCTION)"
   [e5af]: http://www.lispworks.com/documentation/HyperSpec/Body/t_symbol.htm "SYMBOL (MGL-PAX:CLHS CLASS)"
@@ -5398,6 +5431,7 @@ they are presented.
   [e7ee]: http://www.lispworks.com/documentation/HyperSpec/Body/v_debug_.htm "*STANDARD-OUTPUT* (MGL-PAX:CLHS VARIABLE)"
   [ea37]: http://www.lispworks.com/documentation/HyperSpec/Body/v__stst_.htm "*** (MGL-PAX:CLHS VARIABLE)"
   [ebd3]: #x-28MGL-PAX-3A-2ATRANSCRIBE-SYNTAXES-2A-20VARIABLE-29 "MGL-PAX:*TRANSCRIBE-SYNTAXES* VARIABLE"
+
   [ec7a]: #x-28MGL-PAX-3A-40AUTOLINK-20MGL-PAX-3ASECTION-29 "Autolink"
   [ed46]: #x-28MGL-PAX-3A-40M--2E-PROMPTING-20MGL-PAX-3ASECTION-29 "`M-.` Prompting"
   [ed5f]: #x-28MGL-PAX-3ACLHS-20MGL-PAX-3ALOCATIVE-29 "MGL-PAX:CLHS MGL-PAX:LOCATIVE"
@@ -5408,6 +5442,7 @@ they are presented.
   [f12d]: #x-28MGL-PAX-3A-2ADOCUMENT-MAX-NUMBERING-LEVEL-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-MAX-NUMBERING-LEVEL* VARIABLE"
   [f155]: #x-28-22mgl-pax-2Fnavigate-22-20ASDF-2FSYSTEM-3ASYSTEM-29 "\"mgl-pax/navigate\" ASDF/SYSTEM:SYSTEM"
   [f1ab]: #x-28MGL-PAX-3A-40CODIFICATION-20MGL-PAX-3ASECTION-29 "Codification"
+
   [f1f0]: #x-28MGL-PAX-3ATRANSCRIBE-20FUNCTION-29 "MGL-PAX:TRANSCRIBE FUNCTION"
   [f25f]: #x-28MGL-PAX-3A-2ADOCUMENT-UPPERCASE-IS-CODE-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-UPPERCASE-IS-CODE* VARIABLE"
   [f275]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cda.htm "\"22.3.4.1\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
@@ -5418,6 +5453,7 @@ they are presented.
   [f585]: #x-28MGL-PAX-3A-2ADOCUMENT-HYPERSPEC-ROOT-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-HYPERSPEC-ROOT* VARIABLE"
   [f5af]: #x-28MGL-PAX-3A-40RAW-NAME-20MGL-PAX-3AGLOSSARY-TERM-29 "raw name"
   [f5bd]: #x-28MGL-PAX-3A-40TRANSCRIBING-WITH-EMACS-20MGL-PAX-3ASECTION-29 "Transcribing with Emacs"
+
   [f74b]: #x-28MGL-PAX-3A-40BACKGROUND-20MGL-PAX-3ASECTION-29 "Background"
   [f7a5]: #x-28MGL-PAX-3A-40SPECIFIC-REFLINK-20MGL-PAX-3ASECTION-29 "Specific Reflink"
   [f7e6]: #x-28MGL-PAX-3A-40DUMMY-OUTPUT-20MGL-PAX-3ASECTION-29 "Dummy Output"
@@ -5428,6 +5464,7 @@ they are presented.
   [fbb1]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pl_plp.htm "++ (MGL-PAX:CLHS VARIABLE)"
   [fda4]: #x-28MGL-PAX-3AHOME-SECTION-20FUNCTION-29 "MGL-PAX:HOME-SECTION FUNCTION"
   [fe21]: http://www.lispworks.com/documentation/HyperSpec/Body/v_t.htm "T (MGL-PAX:CLHS MGL-PAX:CONSTANT)"
+
   [fe58]: http://www.lispworks.com/documentation/HyperSpec/Body/f_rd_rd.htm "READ (MGL-PAX:CLHS FUNCTION)"
   [ff58]: #x-28MGL-PAX-3A-40PUBLIC-SUPERCLASSES-20MGL-PAX-3AGLOSSARY-TERM-29 "public superclasses"
   [ff76]: http://www.lispworks.com/documentation/HyperSpec/Body/v_pr_esc.htm "*PRINT-ESCAPE* (MGL-PAX:CLHS VARIABLE)"

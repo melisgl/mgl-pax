@@ -1087,19 +1087,21 @@
                        #'string< :key #'target-id))
         (*package* (find-package :keyword)))
     (when targets
-      (format stream "~%")
-      (dolist (target targets)
-        (assert (not (target-p (target-page target))))
-        ;; The format is [label]: url "title". Example:
-        ;;   [1]: http://example.org/Hobbit#Lifestyle "Hobbit lifestyles"
-        (format stream "  [~A]: ~A ~S~%"
-                (target-id target)
-                (if (stringp (target-page target))
-                    ;; Link to external page.
-                    (target-page target)
-                    ;; Link to documentation generated in the same run.
-                    (target-uri target))
-                (reflink-definition-title target))))))
+      (loop for i upfrom 0
+            for target in targets
+            do (when (zerop (mod i 10))
+                 (terpri stream))
+               (assert (not (target-p (target-page target))))
+               ;; The format is [label]: url "title". Example:
+               ;;   [1]: http://example.org/Hobbit#Lifestyle "Hobbit lifestyles"
+               (format stream "  [~A]: ~A ~S~%"
+                       (target-id target)
+                       (if (stringp (target-page target))
+                           ;; Link to external page.
+                           (target-page target)
+                           ;; Link to documentation generated in the same run.
+                           (target-uri target))
+                       (reflink-definition-title target))))))
 
 (defun reflink-definition-title (target)
   (let ((dref (target-dref target)))

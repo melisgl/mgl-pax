@@ -19,9 +19,10 @@
       (map nil fn (3bmd-grammar:parse-doc string))
       ;; This is 3BMD-GRAMMAR:PARSE-DOC's currently commented out
       ;; alternative implementation, which is much faster on long
-      ;; strings but perhaps slower on short strings. This still has
-      ;; a performance problem with large lists, which are processed
-      ;; in one %BLOCK, hence the workaround in PAX-APROPOS*.
+      ;; strings but perhaps slower on short strings. This still has a
+      ;; performance problem with large lists, which are processed in
+      ;; one %BLOCK, hence the workaround in PAX-APROPOS* and
+      ;; WRITE-MARKDOWN-REFERENCE-STYLE-LINK-DEFINITIONS.
       (let ((block-rule (if (esrap:find-rule '3bmd-grammar::%block)
                             '3bmd-grammar::%block
                             ;; Make it work with old 3BMD.
