@@ -429,7 +429,6 @@ xxx
 xxx
 
 [some]: PRINT \"DO\"
-
 "))
   (is (internedp 'references))
   (check-head "REFERENCEs" "`REFERENCE`s" :msg "interned lowercase plural")
@@ -714,12 +713,12 @@ xxx
 - [1 MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION][eeac]
 
 ###### \\[in package MGL-PAX-TEST\\]
+
 <a id=\"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
 
 ## 1 MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION
 
-
-  [eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION\"
+[eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION\"
 ")))
 
 (defun check-downcasing (docstring expected &key (warnings 0))
@@ -852,11 +851,10 @@ xxx
 
   [print]: #ttt"
                   "[see this][d451]")))
-  (when pax::*3bmd-reflink-definition-is-list*
-    (with-test ("emph in reflink definition")
-      (check-head "[xxx][*print-length* variable]" "[xxx][8f7a]"))
-    (with-test ("backtick in reflink definition")
-      (check-head "[xxx][`*print-length*` variable]" "[xxx][8f7a]")))
+  (with-test ("emph in reflink definition")
+    (check-head "[xxx][*print-length* variable]" "[xxx][8f7a]"))
+  (with-test ("backtick in reflink definition")
+    (check-head "[xxx][`*print-length*` variable]" "[xxx][8f7a]"))
   (with-test ("emph around reflink")
     (check-head "*[x][y]*" "*[x][y]*"))
   (with-test ("mixed case name")
@@ -933,18 +931,18 @@ xxx
   (check-document #'self-referencing
                   "<a id=\"MGL-PAX-TEST:SELF-REFERENCING%20FUNCTION\"></a>
 
-- [function] **SELF-REFERENCING**
+- \\[function\\] **SELF-REFERENCING**
 
     This is `SELF-REFERENCING`.
 ")
   (check-document @self-referencing-term
                   "<a id=\"MGL-PAX-TEST:@SELF-REFERENCING-TERM%20MGL-PAX:GLOSSARY-TERM\"></a>
 
-- [glossary-term] **Self-referencing Term**
+- \\[glossary-term\\] **Self-referencing Term**
 
     This is [Self-referencing Term][a79b].
 
-  [a79b]: #MGL-PAX-TEST:@SELF-REFERENCING-TERM%20MGL-PAX:GLOSSARY-TERM \"Self-referencing Term\"
+[a79b]: #MGL-PAX-TEST:@SELF-REFERENCING-TERM%20MGL-PAX:GLOSSARY-TERM \"Self-referencing Term\"
 ")
   (let ((*document-max-table-of-contents-level* 0))
     (check-document @self-referencing
@@ -953,9 +951,10 @@ xxx
 # Self-referencing
 
 ###### \\[in package MGL-PAX-TEST\\]
+
 This is [Self-referencing][e042].
 
-  [e042]: #MGL-PAX-TEST:@SELF-REFERENCING%20MGL-PAX:SECTION \"Self-referencing\"
+[e042]: #MGL-PAX-TEST:@SELF-REFERENCING%20MGL-PAX:SECTION \"Self-referencing\"
 ")))
 
 
@@ -967,7 +966,9 @@ This is [Self-referencing][e042].
 
 
 (deftest test-titles ()
-  (check-pred #'$x_0$ "**\\$X\\_0\\$**")
+  (check-pred #'$x_0$ (format nil "**~A\\$X\\_0\\$**"
+                              ;; See FUDGE-MARKDOWN-STRINGS
+                              (code-char 8203)))
   (check-pred @mathjax-and-code-in-glossary-term-title "**hey `c` $x_0$**")
   (signals (warning :pred "Unexpected tag")
     (document @illegal-title-1))
@@ -980,10 +981,13 @@ This is [Self-referencing][e042].
 ## Table of Contents
 
 - [1 `CODE` *italic* *italic2* *bold* &quot;][629a]
+
     - [1.1 \\`\\_\\*\\&][ea45]
+
     - [1.2 MGL-PAX-TEST:\\*\\*SUBTRICKY\\*\\* MGL-PAX:SECTION][35ca]
 
 ###### \\[in package MGL-PAX-TEST\\]
+
 <a id=\"MGL-PAX-TEST:@TRICKY-TITLE%20MGL-PAX:SECTION\"></a>
 
 ## 1 `CODE` *italic* *italic2* *bold* &quot;
@@ -992,15 +996,15 @@ This is [Self-referencing][e042].
 
 ### 1.1 \\`\\_\\*\\&
 
-
 <a id=\"MGL-PAX-TEST:**SUBTRICKY**%20MGL-PAX:SECTION\"></a>
 
 ### 1.2 MGL-PAX-TEST:\\*\\*SUBTRICKY\\*\\* MGL-PAX:SECTION
 
+[35ca]: #MGL-PAX-TEST:**SUBTRICKY**%20MGL-PAX:SECTION \"MGL-PAX-TEST:**SUBTRICKY** MGL-PAX:SECTION\"
 
-  [35ca]: #MGL-PAX-TEST:**SUBTRICKY**%20MGL-PAX:SECTION \"MGL-PAX-TEST:**SUBTRICKY** MGL-PAX:SECTION\"
-  [629a]: #MGL-PAX-TEST:@TRICKY-TITLE%20MGL-PAX:SECTION \"`CODE` *italic* *italic2* *bold* &quot;\"
-  [ea45]: #MGL-PAX-TEST:@SUBTRICKY%20MGL-PAX:SECTION \"\\\\`\\\\_\\\\*\\\\&\"
+[629a]: #MGL-PAX-TEST:@TRICKY-TITLE%20MGL-PAX:SECTION \"`CODE` *italic* *italic2* *bold* &quot;\"
+
+[ea45]: #MGL-PAX-TEST:@SUBTRICKY%20MGL-PAX:SECTION \"\\\\`\\\\_\\\\*\\\\&\"
 ")
   (with-test ("math in Up: link when browsing live")
     (is (equal (mgl-pax::format-up-links (list @mathjax-and-code-in-title)
@@ -1009,7 +1013,7 @@ This is [Self-referencing][e042].
   (with-test ("math in non-live links")
     (let ((*document-text-navigation* t))
       (check-document @mathjax-and-code-in-title
-                      "<a id=\"MGL-PAX-TEST:@MATHJAX-AND-CODE-IN-TITLE%20MGL-PAX:SECTION\"></a>
+                      (format nil "<a id=\"MGL-PAX-TEST:@MATHJAX-AND-CODE-IN-TITLE%20MGL-PAX:SECTION\"></a>
 
 Next: [MGL-PAX-TEST:@MATHJAX-SUBSECTION MGL-PAX:SECTION][e38e]
 
@@ -1020,9 +1024,10 @@ Next: [MGL-PAX-TEST:@MATHJAX-SUBSECTION MGL-PAX:SECTION][e38e]
 - [1 MGL-PAX-TEST:@MATHJAX-SUBSECTION MGL-PAX:SECTION][e38e]
 
 ###### \\[in package MGL-PAX-TEST\\]
+
 <a id=\"MGL-PAX-TEST:%24X_0%24%20FUNCTION\"></a>
 
-- [function] **\\$X\\_0\\$**
+- \\[function\\] **~A\\$X\\_0\\$**
 
 <a id=\"MGL-PAX-TEST:@MATHJAX-SUBSECTION%20MGL-PAX:SECTION\"></a>
 
@@ -1030,10 +1035,10 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
 
 ## 1 MGL-PAX-TEST:@MATHJAX-SUBSECTION MGL-PAX:SECTION
 
+[6e97]: #MGL-PAX-TEST:@MATHJAX-AND-CODE-IN-TITLE%20MGL-PAX:SECTION \"hey `c` $x_0$\"
 
-  [6e97]: #MGL-PAX-TEST:@MATHJAX-AND-CODE-IN-TITLE%20MGL-PAX:SECTION \"hey `c` $x_0$\"
-  [e38e]: #MGL-PAX-TEST:@MATHJAX-SUBSECTION%20MGL-PAX:SECTION \"MGL-PAX-TEST:@MATHJAX-SUBSECTION MGL-PAX:SECTION\"
-"))
+[e38e]: #MGL-PAX-TEST:@MATHJAX-SUBSECTION%20MGL-PAX:SECTION \"MGL-PAX-TEST:@MATHJAX-SUBSECTION MGL-PAX:SECTION\"
+" (code-char 8203))))
     (is (equal (mgl-pax::format-up-links (list @mathjax-and-code-in-title)
                                          (locate #'$x_0$))
                '("Up: [hey `c` ​$x\\_0$](/pax:MGL-PAX-TEST:@MATHJAX-AND-CODE-IN-TITLE%20MGL-PAX:SECTION#MGL-PAX-TEST:%24X_0%24%20FUNCTION)")))))
@@ -1080,7 +1085,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
   (check-document (xref 'foo2 'function)
                   "<a id=\"x-28MGL-PAX-TEST-3AFOO2-20FUNCTION-29\"></a>
 
-- [function] **FOO2** *OOK X*
+- \\[function\\] **FOO2** *OOK X*
 
     `FOO2` has args `OOK` and `X`.
 "
@@ -1088,7 +1093,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
   (check-document (xref 'foo2 'function)
                   "<a id=\"MGL-PAX-TEST:FOO2%20FUNCTION\"></a>
 
-- [function] **FOO2** *OOK X*
+- \\[function\\] **FOO2** *OOK X*
 
     `FOO2` has args `OOK` and `X`.
 "
@@ -1097,7 +1102,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
                   "<a id=\"x-28MGL-PAX-TEST-3AFOO2-20FUNCTION-29\"></a>
 <a id=\"MGL-PAX-TEST:FOO2%20FUNCTION\"></a>
 
-- [function] **FOO2** *OOK X*
+- \\[function\\] **FOO2** *OOK X*
 
     `FOO2` has args `OOK` and `X`.
 "
@@ -1148,28 +1153,28 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
                     "<p><a id=\"MGL-PAX-TEST:*NASTY-VAR*%20VARIABLE\"></a></p>
 
 <ul>
-<li><p><span class=dref-bullet><span class=dref><span class=\"locative-type\">[variable]</span> <span class=\"dref-name\"><a href=\"#MGL-PAX-TEST:*NASTY-VAR*%20VARIABLE\" >*NASTY-VAR*</a></span></span> <span class=\"arglist\">&quot; 
-\\
+<li><p><span class=dref-bullet><span class=dref><span class=\"locative-type\">[variable]</span> <span class=\"dref-name\"> <a href=\"#MGL-PAX-TEST:*NASTY-VAR*%20VARIABLE\" >*NASTY-VAR*</a></span></span> <span class=\"arglist\">
+&quot; 
+	\\
 \\&quot;</span></span></p>
-
-<p>docstring</p></li>
+docstring</li>
 </ul>
 "
                     :format :html))
   (with-test ("initform")
     (check-pred (dref '*some-var* '(variable 7))
-                "- [variable] **\\*SOME-VAR\\*** *7*")))
+                "- \\[variable\\] **\\*SOME-VAR\\*** *7*")))
 
 
 (deftest test-constant ()
   (check-pred (dref 'bar 'constant)
-              "- [constant] **BAR** *2*")
+              "- \\[constant\\] **BAR** *2*")
   (with-test ("actualizing")
     (check-pred (dref 'bar 'variable)
-                "- [constant] **BAR** *2*"))
+                "- \\[constant\\] **BAR** *2*"))
   (with-test ("actualizing and initform")
     (check-pred (dref 'bar '(variable 7))
-                "- [constant] **BAR** *7*")))
+                "- \\[constant\\] **BAR** *7*")))
 
 
 (deftest test-macro ()
@@ -1200,7 +1205,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
   (check-document (dref 'my-smac 'symbol-macro)
                   "<a id=\"MGL-PAX-TEST:MY-SMAC%20MGL-PAX:SYMBOL-MACRO\"></a>
 
-- [symbol-macro] **MY-SMAC**
+- \\[symbol-macro\\] **MY-SMAC**
 
     This is `MY-SMAC`.
 "))
@@ -1218,7 +1223,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
     (check-document (dref 'has-setf-expander 'setf)
                     "<a id=\"MGL-PAX-TEST:HAS-SETF-EXPANDER%20SETF\"></a>
 
-- [setf] **HAS-SETF-EXPANDER**
+- \\[setf\\] **HAS-SETF-EXPANDER**
 
     ddd
 ")))
@@ -1229,7 +1234,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
     (check-document (dref '(setf setf-fn) 'function)
                     "<a id=\"MGL-PAX-TEST:SETF-FN%20DREF:SETF-FUNCTION\"></a>
 
-- [setf-function] **SETF-FN** *V*
+- \\[setf-function\\] **SETF-FN** *V*
 
     eee
 ")))
@@ -1240,7 +1245,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
     (check-document (dref '(setf setf-gf) 'generic-function)
                   "<a id=\"MGL-PAX-TEST:SETF-GF%20DREF:SETF-GENERIC-FUNCTION\"></a>
 
-- [setf-generic-function] **SETF-GF** *V*
+- \\[setf-generic-function\\] **SETF-GF** *V*
 
     fff
 ")))
@@ -1252,7 +1257,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
        (dref '(setf setf-gf) '(method (string)))
        "<a id=\"MGL-PAX-TEST:SETF-GF%20%28DREF:SETF-METHOD%20%28STRING%29%29\"></a>
 
-- [setf-method] **SETF-GF** *(V STRING)*
+- \\[setf-method\\] **SETF-GF** *(V STRING)*
 
     ggg
 "))))
@@ -1268,13 +1273,13 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
     (check-head (list #'foo2 #'ook)
                 "<a id=\"MGL-PAX-TEST:FOO2%20FUNCTION\"></a>
 
-- [function] **FOO2** *OOK X*
+- \\[function\\] **FOO2** *OOK X*
 
     `FOO2` has args [`OOK`][0e7e] and `X`."))
-  (check-document #'foo3 "- [function] FOO3 &KEY (X 7) Y Z
-" :format :plain)
-  (check-document #'foo4 "- [function] FOO4
-" :format :plain))
+  (check-document #'foo3 (format nil "- [function] FOO3 &KEY (X 7) Y Z~%")
+                  :format :plain)
+  (check-document #'foo4 (format nil "- [function] FOO4 ~%")
+                  :format :plain))
 
 (when (fboundp 'encapsulated-function)
   (handler-bind ((warning #'muffle-warning))
@@ -1297,7 +1302,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
 (deftest test-function/encapsulated ()
   (let ((expected "<a id=\"MGL-PAX-TEST:ENCAPSULATED-FUNCTION%20FUNCTION\"></a>
 
-- [function] **ENCAPSULATED-FUNCTION** *X &REST ARGS*
+- \\[function\\] **ENCAPSULATED-FUNCTION** *X \\&REST ARGS*
 
     This may be encapsulated.
 "))
@@ -1308,7 +1313,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
         (check-document #'encapsulated-function expected))))
   (let ((expected "<a id=\"MGL-PAX-TEST:ENCAPSULATED-GENERIC-FUNCTION%20GENERIC-FUNCTION\"></a>
 
-- [generic-function] **ENCAPSULATED-GENERIC-FUNCTION** *X*
+- \\[generic-function\\] **ENCAPSULATED-GENERIC-FUNCTION** *X*
 
     This may be encapsulated.
 "))
@@ -1339,7 +1344,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
   (check-document #'sb-c::ir1-convert-nlx-protect
                   "<a id=\"SB-C:IR1-CONVERT-NLX-PROTECT%20FUNCTION\"></a>
 
-- [function] **SB-C::IR1-CONVERT-NLX-PROTECT** *PROTECTED &BODY CLEANUP*
+- \\[function\\] **SB-C::IR1-CONVERT-NLX-PROTECT** *PROTECTED \\&BODY CLEANUP*
 "))
 
 
@@ -1356,7 +1361,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
     (check-document (dref 'my-comb 'method-combination)
                     "<a id=\"MGL-PAX-TEST:MY-COMB%20METHOD-COMBINATION\"></a>
 
-- [method-combination] **MY-COMB**
+- \\[method-combination\\] **MY-COMB**
 
     This is `MY-COMB`.
 ")))
@@ -1372,7 +1377,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
   (check-document (dref 'test-gf '(method (number)))
                   "<a id=\"MGL-PAX-TEST:TEST-GF%20%28METHOD%20%28NUMBER%29%29\"></a>
 
-- [method] **TEST-GF** *(X NUMBER)*
+- \\[method\\] **TEST-GF** *(X NUMBER)*
 
     `TEST-GF` is not a link. `X` is not a link.
 ")
@@ -1387,12 +1392,12 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
 
 (deftest test-method/arglist ()
   (check-pred (dref 'test-gf '(method ((eql :bar))))
-              "- [method] **TEST-GF** *(X (EQL :BAR))*"))
+              "- \\[method\\] **TEST-GF** *(X (EQL :BAR))*"))
 
 (deftest test-reader ()
   (check-pred (list (dref 'foo-r '(reader foo))
                     (dref 'foo 'class))
-              "- [reader] **FOO-R** *[FOO][b01d]*")
+              "- \\[reader\\] **FOO-R** *[FOO][b01d]*")
   (check-head (list "FOO-R `(reader foo)`"
                     (dref 'foo-r '(reader foo))
                     (dref 'foo-r 'variable))
@@ -1400,13 +1405,13 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
   (check-document (dref 'foo-r '(reader foo))
                   "<a id=\"MGL-PAX-TEST:FOO-R%20%28MGL-PAX:READER%20MGL-PAX-TEST::FOO%29\"></a>
 
-- [reader] **FOO-R** *FOO*
+- \\[reader\\] **FOO-R** *FOO*
 "))
 
 (deftest test-writer ()
   (check-pred (list (dref 'foo-w '(writer foo))
                     (dref 'foo 'class))
-              "- [writer] **FOO-W** *[FOO][b01d]*")
+              "- \\[writer\\] **FOO-W** *[FOO][b01d]*")
   (check-head (list "FOO-W `(writer foo)`"
                     (dref 'foo-w '(writer foo))
                     (dref 'foo-w 'variable))
@@ -1415,7 +1420,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
 (deftest test-accessor ()
   (check-pred (list (dref 'foo-a '(accessor foo))
                     (dref 'foo 'class))
-              "- [accessor] **FOO-A** *[FOO][b01d]*")
+              "- \\[accessor\\] **FOO-A** *[FOO][b01d]*")
   (check-head (list "FOO-A `(accessor foo)`"
                     (dref 'foo-a '(accessor foo))
                     (dref 'foo-a 'variable))
@@ -1423,7 +1428,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
 
 (deftest test-structure-accessor ()
   (check-pred (dref 'baz-aaa '(structure-accessor baz))
-              "- [structure-accessor] **BAZ-AAA** *BAZ*
+              "- \\[structure-accessor\\] **BAZ-AAA** *BAZ*
 "))
 
 
@@ -1435,7 +1440,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
     (export '(baz) (find-package :mgl-pax-test))
     (unwind-protect
          (check-pred (dref 'baz2 'structure)
-                     "- [structure] **BAZ2** *BAZ*")
+                     "- \\[structure\\] **BAZ2** *BAZ*")
       (unexport '(baz) (find-package :mgl-pax-test)))))
 
 
@@ -1453,7 +1458,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
                'condition))
    "<a id=\"MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR%20CONDITION\"></a>
 
-- [condition] **TRANSCRIPTION-VALUES-CONSISTENCY-ERROR** *[TRANSCRIPTION-CONSISTENCY-ERROR][a249]*
+- \\[condition\\] **TRANSCRIPTION-VALUES-CONSISTENCY-ERROR** *[TRANSCRIPTION-CONSISTENCY-ERROR][a249]*
 
     Signalled (with [`CERROR`][4317]) by `TRANSCRIBE` when invoked
     with `:CHECK-CONSISTENCY` and the values of a form are inconsistent
@@ -1461,15 +1466,17 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
 
 <a id=\"MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR%20CONDITION\"></a>
 
-- [condition] **TRANSCRIPTION-CONSISTENCY-ERROR** *TRANSCRIPTION-ERROR*
+- \\[condition\\] **TRANSCRIPTION-CONSISTENCY-ERROR** *TRANSCRIPTION-ERROR*
 
     A common superclass for
     `TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR` and
     [`TRANSCRIPTION-VALUES-CONSISTENCY-ERROR`][238c].
 
-  [238c]: #MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR%20CONDITION \"MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION\"
-  [4317]: CLHS/Body/f_cerror.htm \"CERROR (MGL-PAX:CLHS FUNCTION)\"
-  [a249]: #MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR%20CONDITION \"MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION\"
+[238c]: #MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR%20CONDITION \"MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION\"
+
+[4317]: CLHS/Body/f_cerror.htm \"CERROR (MGL-PAX:CLHS FUNCTION)\"
+
+[a249]: #MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR%20CONDITION \"MGL-PAX:TRANSCRIPTION-CONSISTENCY-ERROR CONDITION\"
 "))
 
 
@@ -1478,16 +1485,18 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
   (check-document (dref 'use-value 'restart)
                   "<a id=\"USE-VALUE%20RESTART\"></a>
 
-- [restart] **USE-VALUE** *VALUE*
+- \\[restart\\] **USE-VALUE** *VALUE*
 
     This is the name of the [`RESTART`][38e4] to which [`USE-VALUE`][5406]
     transfers control.
 
     Also, see the [CLHS][cf08].
 
-  [38e4]: CLHS/Body/t_rst.htm \"RESTART (MGL-PAX:CLHS CLASS)\"
-  [5406]: CLHS/Body/f_abortc.htm \"USE-VALUE (MGL-PAX:CLHS FUNCTION)\"
-  [cf08]: CLHS/Body/r_use_va.htm \"USE-VALUE (MGL-PAX:CLHS RESTART)\"
+[38e4]: CLHS/Body/t_rst.htm \"RESTART (MGL-PAX:CLHS CLASS)\"
+
+[5406]: CLHS/Body/f_abortc.htm \"USE-VALUE (MGL-PAX:CLHS FUNCTION)\"
+
+[cf08]: CLHS/Body/r_use_va.htm \"USE-VALUE (MGL-PAX:CLHS RESTART)\"
 "))
 
 
@@ -1525,7 +1534,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
           (unwind-protect
                (cond ((eq slot-name 'asdf/system:mailto)
                       (setf (slot-value system slot-name) "x@y (a)")
-                      (check-pred system "[x@y (a)](mailto:x@y (a%29)"))
+                      (check-pred system "[x@y (a)](mailto:x@y%20%28a%29)"))
                      (t
                       (setf (slot-value system slot-name) "http://x/y?z=<a>")
                       (check-pred system "<http://x/y?z=%3Ca%3E>")))
@@ -1578,7 +1587,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
                            (dref '#:non-interned-pkg-name 'package))
                      "[NON-INTERNED-PKG-NAME][5a00]")
          (check-pred (dref "PAX" 'package)
-                     "- [package] **\"MGL-PAX\"** *:NICKNAMES (\"PAX\")*"))
+                     "- \\[package\\] **\"MGL-PAX\"** *:NICKNAMES (\"PAX\")*"))
     (delete-package 'interned-pkg-name)
     (delete-package '#:non-interned-pkg-name)))
 
@@ -1588,7 +1597,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
     (check-document (named-readtables:find-readtable 'xxx-rt)
                     "<a id=\"MGL-PAX-TEST:XXX-RT%20READTABLE\"></a>
 
-- [readtable] **XXX-RT**
+- \\[readtable\\] **XXX-RT**
 
     ddd
 "))
@@ -1603,7 +1612,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
   (check-document (dref 'pax::funny-loc 'locative)
                   "<a id=\"MGL-PAX:FUNNY-LOC%20MGL-PAX:LOCATIVE\"></a>
 
-- [locative] **MGL-PAX::FUNNY-LOC** *SOME-ARG*
+- \\[locative\\] **MGL-PAX::FUNNY-LOC** *SOME-ARG*
 
     This is `SOME-ARG`.
 " :package (find-package :cl)))
@@ -1621,17 +1630,17 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
   (with-test ("external links")
     (check-document "@EXTERNAL-LINK" "[See X][ffc6]
 
-  [ffc6]: http://example.com/x \"See X\"
+[ffc6]: http://example.com/x \"See X\"
 ")
     (check-document "[xxx][@external-link]" "[xxx][ffc6]
 
-  [ffc6]: http://example.com/x \"See X\"
+[ffc6]: http://example.com/x \"See X\"
 ")
     (check-document
      @external-link
      "<a id=\"MGL-PAX-TEST:@EXTERNAL-LINK%20MGL-PAX:GLOSSARY-TERM\"></a>
 
-- [glossary-term] **See X**
+- \\[glossary-term\\] **See X**
 
     External link to [http://example.com/x](http://example.com/x).
 
@@ -1695,7 +1704,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
   (with-failure-expected ((alexandria:featurep :clisp))
     (check-head "CLASS-NAME" "`CLASS-NAME`([`0`][b679] [`1`][03fa])"))
   (check-pred #'print (lambda (output)
-                        (search "- [function] **PRINT**" output))))
+                        (search "- \\[function\\] **PRINT**" output))))
 
 (deftest test-clhs-definitions ()
   (check-ref (dref 'function '(clhs class) nil)
@@ -1720,14 +1729,14 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
 
 [`PRINT`][d451]
 
-  [d451]: CLHS/Body/f_wr_pr.htm \"PRINT (MGL-PAX:CLHS FUNCTION)\"
+[d451]: CLHS/Body/f_wr_pr.htm \"PRINT (MGL-PAX:CLHS FUNCTION)\"
 ")
     (check-document (list "PRINT" "[PRINT][clhs]")
                     "[`PRINT`][d451]
 
 [`PRINT`][d451]
 
-  [d451]: CLHS/Body/f_wr_pr.htm \"PRINT (MGL-PAX:CLHS FUNCTION)\"
+[d451]: CLHS/Body/f_wr_pr.htm \"PRINT (MGL-PAX:CLHS FUNCTION)\"
 "))
   (with-test ("prefer live definition to CLHS")
     (with-failure-expected ((alexandria:featurep '(:or :abcl :allegro :ecl)))
@@ -1812,7 +1821,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
   (check-head "[readably][(clhs glossary-term)]" "[readably][278a]")
   (check-document "[non-local exit][clhs]" "[non-local exit][b815]
 
-  [b815]: CLHS/Body/26_glo_n.htm#non-local_exit \"\\\"non-local exit\\\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)\"
+[b815]: CLHS/Body/26_glo_n.htm#non-local_exit \"\\\"non-local exit\\\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)\"
 ")
   (check-head "[ non-local~%exit ][(clhs glossary-term)]"
               "[ non-local~%exit ][b815]"))
@@ -1851,7 +1860,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
   (check-head (list #'argument-shadow (dref 'section 'class))
               "<a id=\"MGL-PAX-TEST:ARGUMENT-SHADOW%20FUNCTION\"></a>
 
-- [function] **ARGUMENT-SHADOW** *SECTIONS*
+- \\[function\\] **ARGUMENT-SHADOW** *SECTIONS*
 
     `SECTIONS`, `SECTIONS`s, `SECTIONS`, `SECTIONS`s, `SECTIONS`,
     [`SECTIONS`][5fac]")
@@ -1998,7 +2007,6 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
 .. :HELLO 
 => :HELLO
 ```
-
 "))
     (check-document input expected)
     (signals (transcription-consistency-error)
@@ -2033,7 +2041,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
     (is (find 'package (definitions 'cl) :key #'xref-locative-type))
     (with-test ("escaping of non-ambiguous")
       (check-head "`foo<>&`"
-                  "<a href=\"pax:MGL-PAX-TEST:FOO%3C%3E%26%20FUNCTION\" title=\"MGL-PAX-TEST:FOO&lt;&gt;&amp; FUNCTION\"><strong><code>foo&lt;&gt;&amp;</code></strong></a>"
+                  "<p><a href=\"pax:MGL-PAX-TEST:FOO%3C%3E%26%20FUNCTION\" title=\"MGL-PAX-TEST:FOO&lt;&gt;&amp; FUNCTION\"><strong><code>foo&lt;&gt;&amp;</code></strong></a></p>"
                   :format :w3m))
     (with-test ("escaping of ambiguous")
       (check-head "`ambi<>&`"
@@ -2144,6 +2152,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
   (check-document (list @parent-section-without-title
                         @test-examples)
                   "- [MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE MGL-PAX:SECTION][74ce]
+
 - [MGL-PAX-TEST:@TEST-EXAMPLES MGL-PAX:SECTION][bb1c]
 
 <a id=\"MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
@@ -2155,6 +2164,7 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
 - [1 MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION][eeac]
 
 ###### \\[in package MGL-PAX-TEST\\]
+
 <a id=\"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
 
 ## 1 MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION
@@ -2164,11 +2174,14 @@ Prev: [hey `c` $x_0$][6e97] Up: [hey `c` $x_0$][6e97]
 # MGL-PAX-TEST:@TEST-EXAMPLES MGL-PAX:SECTION
 
 ###### \\[in package MGL-PAX-TEST\\]
+
 example section
 
-  [74ce]: #MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE MGL-PAX:SECTION\"
-  [bb1c]: #MGL-PAX-TEST:@TEST-EXAMPLES%20MGL-PAX:SECTION \"MGL-PAX-TEST:@TEST-EXAMPLES MGL-PAX:SECTION\"
-  [eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION\"
+[74ce]: #MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE MGL-PAX:SECTION\"
+
+[bb1c]: #MGL-PAX-TEST:@TEST-EXAMPLES%20MGL-PAX:SECTION \"MGL-PAX-TEST:@TEST-EXAMPLES MGL-PAX:SECTION\"
+
+[eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION\"
 ")
   (test-table-of-contents-reapated-section-depth))
 
@@ -2180,6 +2193,7 @@ example section
   ;; heading level when in the parent context.
   (check-document (list @parent-section-without-title @section-without-title)
                   "- [MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE MGL-PAX:SECTION][74ce]
+
 - [MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION][eeac]
 
 <a id=\"MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
@@ -2191,6 +2205,7 @@ example section
 - [1 MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION][eeac]
 
 ###### \\[in package MGL-PAX-TEST\\]
+
 <a id=\"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION\"></a>
 
 ## 1 MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION
@@ -2201,8 +2216,9 @@ example section
 
 ###### \\[in package MGL-PAX-TEST\\]
 
-  [74ce]: #MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE MGL-PAX:SECTION\"
-  [eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION\"
+[74ce]: #MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"MGL-PAX-TEST:@PARENT-SECTION-WITHOUT-TITLE MGL-PAX:SECTION\"
+
+[eeac]: #MGL-PAX-TEST:@SECTION-WITHOUT-TITLE%20MGL-PAX:SECTION \"MGL-PAX-TEST:@SECTION-WITHOUT-TITLE MGL-PAX:SECTION\"
 "))
 
 
@@ -2512,25 +2528,29 @@ example section
 
 ### 1.1 Misc Index
 
-- [`I-FN`][0977] _(gf)_
+- [`I-FN`][0977] *(gf)*
 
-    - ↩ _f_: [`I-FN`][69a5], [`I-Z`][2387]
+    - ↩ *f*: [`I-FN`][69a5], [`I-Z`][2387]
 
-    - ↩ _v_: [`*I-VAR*`][b534]
+    - ↩ *v*: [`*I-VAR*`][b534]
 
-- [`I-FN`][69a5] _(method nil)_ ↩ _f_: [`I-Z`][2387]
+- [`I-FN`][69a5] *(method nil)* ↩ *f*: [`I-Z`][2387]
 
-- [`*I-VAR*`][b534] _(var)_
+- [`*I-VAR*`][b534] *(var)*
 
-- [`I-Z`][2387] _(macro)_
+- [`I-Z`][2387] *(macro)*
 
+[0977]: #MGL-PAX-TEST:I-FN%20GENERIC-FUNCTION \"MGL-PAX-TEST:I-FN GENERIC-FUNCTION\"
 
-  [0977]: #MGL-PAX-TEST:I-FN%20GENERIC-FUNCTION \"MGL-PAX-TEST:I-FN GENERIC-FUNCTION\"
-  [0a8e]: #Indices \"Indices\"
-  [2387]: #MGL-PAX-TEST:I-Z%20MGL-PAX:MACRO \"MGL-PAX-TEST:I-Z MGL-PAX:MACRO\"
-  [69a5]: #MGL-PAX-TEST:I-FN%20%28METHOD%20NIL%29 \"MGL-PAX-TEST:I-FN (METHOD NIL)\"
-  [b534]: #MGL-PAX-TEST:*I-VAR*%20VARIABLE \"MGL-PAX-TEST:*I-VAR* VARIABLE\"
-  [d87e]: #Misc%20Index \"Misc Index\"
+[0a8e]: #Indices \"Indices\"
+
+[2387]: #MGL-PAX-TEST:I-Z%20MGL-PAX:MACRO \"MGL-PAX-TEST:I-Z MGL-PAX:MACRO\"
+
+[69a5]: #MGL-PAX-TEST:I-FN%20%28METHOD%20NIL%29 \"MGL-PAX-TEST:I-FN (METHOD NIL)\"
+
+[b534]: #MGL-PAX-TEST:*I-VAR*%20VARIABLE \"MGL-PAX-TEST:*I-VAR* VARIABLE\"
+
+[d87e]: #Misc%20Index \"Misc Index\"
 ")))))))
 
 (deftest test-indexing/sort-as ()
@@ -2603,7 +2623,7 @@ example section
 
 - [function] C-FOO
 
-    @WHATEVER
+     @WHATEVER
 
 - [function] C-BAR
 
@@ -2635,19 +2655,19 @@ example section
 
 <a id=\"MGL-PAX-TEST:C-FOO%20FUNCTION\"></a>
 
-- \\[function\\] C-FOO
+- \\[function\\] **C-FOO**
 
-    [**`@WHATEVER`**][02aa]
+     [**`@WHATEVER`**][02aa]
 
 <a id=\"MGL-PAX-TEST:C-BAR%20FUNCTION\"></a>
 
-- \\[function\\] C-BAR
+- \\[function\\] **C-BAR**
 
     defining macros
 
 <a id=\"MGL-PAX-TEST:@WHATEVER%20MGL-PAX:GLOSSARY-TERM\"></a>
 
-- \\[glossary-term\\] @WHATEVER
+- \\[glossary-term\\] **@WHATEVER**
 
 ## 1 Indices
 

@@ -16,7 +16,8 @@
 (defsection @extending-document (:title "Extending DOCUMENT")
   "For all definitions that it encounters, DOCUMENT calls
   DOCUMENT-OBJECT* to generate documentation. The following utilities
-  are for writing new DOCUMENT-OBJECT* methods, which emit Markdown."
+  are for writing new DOCUMENT-OBJECT* methods. They emit Markdown
+  encoded in an unspecified format internal to DOCUMENT."
   (*format* variable)
   (with-heading macro)
   (doctitle* generic-function)
@@ -24,7 +25,8 @@
   (with-dislocated-names macro)
   (document-docstring function)
   (escape-markdown function)
-  (prin1-to-markdown function))
+  (prin1-to-markdown function)
+  (ensure-md-paragraph function))
 
 (defvar *real-format*)
 (defvar *format*)
@@ -136,7 +138,7 @@
                  (values *package* *readtable*)
                  (guess-package-and-readtable ,%dref ,package ,readtable))
            (when ,%arglist
-             (write-char #\Space ,%stream)
+             (write-markdown-pt '((:plain " ")) nil 0 ,%stream)
              (print-arglist ,%arglist ,%stream))
            (print-end-bullet ,%stream)
            (unless (eq *document-list-view* :terse)

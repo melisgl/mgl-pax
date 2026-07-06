@@ -55,14 +55,15 @@
    "define-concept" "define-glossary-term" "define-package" "defsection"
    "delete-comments" "delete-trailing-whitespace" "dislocated" "docstring"
    "doctitle" "doctitle*" "document" "document-docstring" "document-object*"
-   "documenting-definition" "ensure-web-server" "escape-markdown"
-   "exportable-locative-type-p" "exportable-reference-p" "glossary-term"
-   "glossary-term-name" "glossary-term-title" "glossary-term-url" "go"
-   "home-section" "include" "install-pax-elisp" "locative" "macro"
-   "make-git-source-uri-fn" "make-github-source-uri-fn" "note" "output-label"
-   "output-reflink" "prin1-to-markdown" "reader" "register-doc-in-pax-world"
-   "section" "section-entries" "section-link-title-to" "section-name"
-   "section-package" "section-readtable" "section-title" "squeeze-whitespace"
+   "documenting-definition" "ensure-md-paragraph" "ensure-web-server"
+   "escape-markdown" "exportable-locative-type-p" "exportable-reference-p"
+   "glossary-term" "glossary-term-name" "glossary-term-title"
+   "glossary-term-url" "go" "home-section" "include" "install-pax-elisp"
+   "locative" "macro" "make-git-source-uri-fn" "make-github-source-uri-fn"
+   "note" "output-label" "output-reflink" "prin1-to-markdown" "reader"
+   "register-doc-in-pax-world" "section" "section-entries"
+   "section-link-title-to" "section-name" "section-package"
+   "section-readtable" "section-title" "squeeze-whitespace"
    "standard-transcribe-dynenv" "structure-accessor" "symbol-macro"
    "transcribe" "transcription-consistency-error" "transcription-error"
    "transcription-output-consistency-error"
@@ -472,8 +473,10 @@
   *DOCUMENT-LINK-SECTIONS* to be on to work.")
 
 (autoload::foreshadow-defvar mgl-pax:*document-tight* :init nil :docstring
-                             "If NIL, then DOCUMENT adds a newline between consecutive
-  [atomic][clhs] @DOCUMENTABLEs on the same [page][@pages].")
+                             "Normally, DOCUMENT calls ENSURE-MD-PARAGRAPH before and after
+  documenting each [atomic][clhs] @DOCUMENTABLE. If *DOCUMENT-TIGHT*
+  is true, then this doesn't happen for top-level string
+  documentables.")
 
 (autoload::foreshadow-defvar mgl-pax:*document-uppercase-is-code* :init t
                              :docstring
@@ -705,6 +708,13 @@
   @LINKING, finally prefixing each line with INDENTATION. The prefix
   is not added to the first line if EXCLUDE-FIRST-LINE-P. If
   PARAGRAPHP, then add a newline before and after the output.")
+
+(autoload:autoload mgl-pax:ensure-md-paragraph "mgl-pax/document" :arglist
+                   "(stream)" :docstring
+                   "Ensure that output previously written to STREAM is in a separate
+  Markdown paragraph than the output that follows. Calling this
+  function multiple times without writing anything else to STREAM in
+  between is equivalent to calling it once.")
 
 (autoload:autoload mgl-pax:ensure-web-server "mgl-pax/web" :arglist
                    "(&key mgl-pax::port mgl-pax::hyperspec-root)" :docstring

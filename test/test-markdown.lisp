@@ -3,7 +3,8 @@
 (deftest test-markdown ()
   (test-md-code)
   (test-md-emph)
-  (test-md-strong))
+  (test-md-strong)
+  (test-parse-md-after-tree))
 
 (deftest test-md-code ()
   (is (equal (pax::md-code "") ""))
@@ -29,3 +30,27 @@
   (is (equal (pax::md-strong "x*y") "**x\\*y**"))
   (is (equal (pax::md-strong "x\\*y") "**x\\\\*y**"))
   (is (equal (pax::md-strong "x\\*y" nil) "**x\\*y**")))
+
+(deftest test-parse-md-after-tree ()
+  (is (equal (pax::parse-md-after-tree '((:plain "x")) "y" :paragraphp nil)
+             '((:plain "xy"))))
+  (is (equal (pax::parse-md-after-tree '((:plain "x")) "y" :paragraphp t)
+             '((:paragraph "x") (:plain "y"))))
+  (is (equal (pax::parse-md-after-tree
+              '((:bullet-list (:list-item (:plain "x"))))
+              "y" :paragraphp nil)
+             '((:bullet-list (:list-item (:plain "xy"))))))
+  (is (equal (pax::parse-md-after-tree
+              '((:bullet-list (:list-item (:plain "x"))))
+              "    y" :paragraphp t)
+             '((:bullet-list (:list-item (:paragraph "x") (:paragraph "y"))))))
+  (is (equal (pax::parse-md-after-tree
+              '((:bullet-list (:list-item (:plain "x"))))
+              (format nil "y~%~%z") :paragraphp nil)
+             '((:bullet-list (:list-item (:plain "xy")))
+               (:plain "z"))))
+  (is (equal (pax::parse-md-after-tree
+              '((:bullet-list (:list-item (:plain "x"))))
+              (format nil "    y~%~%z") :paragraphp t)
+             '((:bullet-list (:list-item (:paragraph "x") (:paragraph "y")))
+               (:plain "z")))))

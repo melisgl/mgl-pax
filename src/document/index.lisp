@@ -345,7 +345,7 @@
             (group-indexables-per-index
              (hash-table-values *indexing-definitions*)
              (hash-table-keys *indexing-concept-key-to-referrers*))))
-      (format stream "~&~%")
+      (%ensure-md-paragraph stream)
       (dolist (index *document-indices*)
         (maybe-generate-index index stream index-to-indexables)))))
 

@@ -21,10 +21,11 @@
   probably return a non-NIL package.")
 
 (defgeneric document-object* (object stream)
-  (:documentation "Write OBJECT in *FORMAT* to STREAM.
-  Specialize this on a subclass of [DREF][class] if that subclass is
-  not RESOLVEable, else on the type of object it resolves to. This
-  function is for extension only. Don't call it directly.")
+  (:documentation "Write the documentation of OBJECT in Markdown to STREAM.
+  The output may depend on *FORMAT*. Specialize this on a subclass of
+  [DREF][class] if that subclass is not RESOLVEable, else on the type
+  of object it resolves to. This function is for extension only. Don't
+  call it directly.")
   (:method (object stream)
     (let ((dref (locate object nil)))
       (when dref

@@ -316,18 +316,24 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defparameter *whitespace-chars*
-    '(#\Space #\Tab #\Return #\Newline #\Linefeed #\Page)))
+    (coerce '(#\Space #\Tab #\Return #\Newline #\Linefeed #\Page) 'string)))
 
 (defun whitespacep (char)
-  (member char *whitespace-chars*))
+  (declare (type character char))
+  (and (<= (char-code char) 32)
+       (find char *whitespace-chars*)))
 
-(defun blankp (string-or-nil &key (start 0))
-  (loop for i upfrom start below (length string-or-nil)
-        always (whitespacep (aref string-or-nil i))))
+(defun blankp (string-or-nil &key (start 0) (end (length string-or-nil)))
+  (declare (optimize speed)
+           (type (or simple-string null) string-or-nil)
+           (type fixnum start end))
+  (let ((end (min end (length string-or-nil))))
+    (loop for i upfrom start below end
+          always (whitespacep (aref string-or-nil i)))))
 
 (defun trim-whitespace (string-or-nil)
   (if string-or-nil
-      (string-trim #.(format nil "~{~A~}" *whitespace-chars*) string-or-nil)
+      (string-trim *whitespace-chars* string-or-nil)
       nil))
 
 (defun mixed-case-p (string)

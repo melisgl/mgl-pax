@@ -312,10 +312,13 @@
                                           :paragraphp nil)
                       (format stream "~&"))
                      ((:list-of-systems)
-                      (document-docstring
-                       (format nil "- _~A:_ ~{~A~^, ~}~%"
-                               name (asdf-deps value))
-                       stream :paragraphp nil))
+                      (format stream "    - _~A:_ " name)
+                      (document-docstring (format nil "~{~A~^, ~}~%"
+                                                  (asdf-deps value))
+                                          stream :indentation "        "
+                                          :exclude-first-line-p t
+                                          :paragraphp nil)
+                      (format stream "~&"))
                      ((nil)
                       (format stream "    - _~A:_ ~A~%" name value)))))))
         (unless *omit-asdf-slots*
@@ -423,30 +426,34 @@
 (defmethod document-object* ((section section) stream)
   "When documentation is being generated for a definition with
   the SECTION locative, a new (sub)section is opened (see
-  WITH-HEADING), within which documentation for its each of its
-  SECTION-ENTRIES is generated. A fresh line is printed after all
-  entries except the last."
+  WITH-HEADING), within which documentation for its SECTION-ENTRIES is
+  generated, separated from each other by ENSURE-MD-PARAGRAPH."
   (documenting-section (section stream)
-    (let ((firstp t))
-      (dolist (entry (section-entries section))
-        (if firstp
-            (setq firstp nil)
-            (terpri stream))
-        (document-object entry stream)))
+    (dolist (entry (section-entries section))
+      (document-object entry stream))
     (maybe-generate-indices stream)))
 
 (defun format-in-package (package stream)
-  (let ((name (escape-markdown (package-name package)))
+  (let ((name (package-name package))
         (nicknames (if (package-nicknames *package*)
                        (format nil " with nicknames ~{~A~^, ~}"
-                               (mapcar #'escape-markdown
-                                       (package-nicknames package)))
+                               (package-nicknames package))
                        "")))
     (if (eq *format* :pdf)
-        (format stream "`\\subsubsection*{\\normalfont~
-                       \\textcolor[HTML]{606060}{[in package ~A~A]}}`{=latex}~%"
-                name nicknames)
-        (format stream "###### \\[in package ~A~A\\]~%" name nicknames))))
+        (write-markdown-pt
+         `((:plain
+            ,@(inline-pandoc-latex
+               `("\\subsubsection*{\\normalfont\\textcolor[HTML]{606060}"
+                 "{[in package "
+                 ,(escape-tex name)
+                 ,(escape-tex nicknames)
+                 "]}}"))))
+         t 0 stream)
+        (write-markdown-pt
+         `((:heading
+            :level 6
+            :contents (,(format nil "[in package ~A~A]" name nicknames))))
+         t 0 stream))))
 
 
 (defmethod document-object* ((glossary-term glossary-term) stream)

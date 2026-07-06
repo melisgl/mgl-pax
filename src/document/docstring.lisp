@@ -35,20 +35,22 @@
             "This is
           indented
           differently")"""
-  (with-output-to-string (out)
-    (with-input-from-string (s docstring)
-      (loop for i upfrom 0
-            do (multiple-value-bind (line missing-newline-p)
-                   (read-line s nil nil)
-                 (unless line
-                   (return))
-                 (write-string (if (and first-line-special-p
-                                        (zerop i))
-                                   line
-                                   (subseq* line indentation))
-                               out)
-                 (unless missing-newline-p
-                   (terpri out)))))))
+  (if (zerop indentation)
+      docstring
+      (with-output-to-string (out)
+        (with-input-from-string (s docstring)
+          (loop for i upfrom 0
+                do (multiple-value-bind (line missing-newline-p)
+                       (read-line s nil nil)
+                     (unless line
+                       (return))
+                     (write-string (if (and first-line-special-p
+                                            (zerop i))
+                                       line
+                                       (subseq* line indentation))
+                                   out)
+                     (unless missing-newline-p
+                       (terpri out))))))))
 
 (defun n-leading-spaces (line)
   (let ((n 0))
@@ -60,17 +62,26 @@
 ;;; Return the minimum number of leading spaces in non-blank lines
 ;;; after the first.
 (defun docstring-indentation (docstring &key (first-line-special-p t))
-  (let ((n-min-indentation nil))
-    (with-input-from-string (s docstring)
-      (loop for i upfrom 0
-            for line = (read-line s nil nil)
-            while line
-            do (when (and (or (not first-line-special-p) (plusp i))
-                          (not (blankp line)))
-                 (when (or (null n-min-indentation)
-                           (< (n-leading-spaces line) n-min-indentation))
-                   (setq n-min-indentation (n-leading-spaces line))))))
-    (or n-min-indentation 0)))
+  (declare (type string docstring)
+           (optimize speed))
+  (let ((min-indent most-positive-fixnum)
+        (len (length docstring)))
+    (declare (type fixnum min-indent))
+    (loop for start = 0 then (1+ end)
+          for end = (or (position #\Newline docstring :start start) len)
+          while (<= start len)
+          do (when (and (or (not first-line-special-p) (plusp start))
+                        (not (blankp docstring :start start :end end)))
+               (let* ((first-non-space-pos (position #\Space docstring
+                                                     :test-not #'char=
+                                                     :start start :end end))
+                      (n-spaces (- first-non-space-pos start)))
+                 (setq min-indent (min min-indent n-spaces))))
+             (unless (< end len)
+               (return)))
+    (if (= min-indent most-positive-fixnum)
+        0
+        min-indent)))
 
 (defun docstring-indentation* (lines &key (first-line-special-p t))
   (let ((n-min-indentation nil))
@@ -144,6 +155,9 @@
               (n-spaces (n-leading-spaces line)))
          (assert (< n-spaces (length line)))
          (member (aref line n-spaces) '(#\( #\;)))))
+
+(defun round-down-to-multiple-of (n m)
+  (* (floor n m) m))
 
 (defun round-up-to-multiple-of (n m)
   (* (ceiling n m) m))

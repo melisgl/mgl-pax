@@ -1,50 +1,6 @@
 (in-package :mgl-pax)
 
 (in-readtable pythonic-string-syntax)
-
-(defun parse-markdown (string)
-  (clean-up-parsed-parse-tree (parse-markdown-fast string)))
-
-(defun parse-markdown-fast (string)
-  (if (< (length string) 1000)
-      (3bmd-grammar:parse-doc string)
-      (let ((parses ()))
-        (map-markdown-block-parses (lambda (parse)
-                                     (push parse parses))
-                                   string)
-        (nreverse parses))))
-
-(defun map-markdown-block-parses (fn string)
-  (if (< (length string) 1000)
-      (map nil fn (3bmd-grammar:parse-doc string))
-      ;; This is 3BMD-GRAMMAR:PARSE-DOC's currently commented out
-      ;; alternative implementation, which is much faster on long
-      ;; strings but perhaps slower on short strings. This still has a
-      ;; performance problem with large lists, which are processed in
-      ;; one %BLOCK, hence the workaround in PAX-APROPOS* and
-      ;; WRITE-MARKDOWN-REFERENCE-STYLE-LINK-DEFINITIONS.
-      (let ((block-rule (if (esrap:find-rule '3bmd-grammar::%block)
-                            '3bmd-grammar::%block
-                            ;; Make it work with old 3BMD.
-                            '3bmd-grammar::block)))
-        (progn
-          (loop
-            for start = 0 then pos
-            for (%block pos) = (multiple-value-list
-                                (esrap:parse block-rule string
-                                             :start start :junk-allowed t))
-            while %block
-            do (funcall fn %block)
-            while pos)))))
-
-(defmacro with-colorize-silenced (() &body body)
-  `(let ((*trace-output* (make-broadcast-stream)))
-     ,@body))
-
-(defun print-markdown (parse-tree stream &key (format :markdown))
-  (with-colorize-silenced ()
-    (3bmd::print-doc-to-stream-using-format
-     (preprocess-parse-tree-for-printing parse-tree format) stream format)))
 
 
 ;;;; Text based Markdown fragments
@@ -170,13 +126,15 @@
                    (write-char #\\ stream))
                  (write-char char stream))))))))
 
-;;; Escape #\) characters in URLs in explicit links [LABEL](URL).
+;;; Escape URL in explicit links [LABEL](URL).
 (defun escape-markdown-for-link-destination (string)
   (with-output-to-string (out)
     (loop for char across string
-          do (if (char= char #\))
-                 (write-string "%29" out)
-                 (write-char char out)))))
+          do (case char
+               ((#\() (write-string "%28" out))
+               ((#\)) (write-string "%29" out))
+               ((#\Space) (write-string "%20" out))
+               (t (write-char char out))))))
 
 ;;; Escape #\<, #\> and #\Space characters in URLs in Markdown <URL>.
 (defun escape-markdown-for-angle-brackets (string)
@@ -252,6 +210,19 @@
     (recurse parse-tree)))
 
 
+;;;; TeX
+
+(defun inline-pandoc-latex (tree)
+  `((:code ,@tree) "{=latex}"))
+
+(defun escape-tex-in-parse-tree (tree)
+  (map-markdown-parse-tree () () t
+                           (lambda (parent string)
+                             (declare (ignore parent))
+                             (escape-tex string))
+                           tree))
+
+
 ;;;; Markdown parse tree transformation
 
 ;;; Perform a depth-first traversal of TREE. Call FN with the parent
@@ -313,39 +284,61 @@
                   parse-tree))
 
 
-(defun clean-up-parsed-parse-tree (parse-tree)
-  (transform-tree (lambda (parent tree)
-                    (declare (ignore parent))
-                    (if (and (listp tree)
-                             (not (parse-tree-p tree :verbatim)))
-                        (values (join-stuff-in-list tree) t nil)
-                        tree))
-                  parse-tree))
+;;; Call FN with STRING and START, END indices of @WORDS.
+;;;
+;;; FN must return two values: a replacement Markdown parse tree
+;;; fragment (or NIL, if the subseq shall not be replaced), whether
+;;; the replacement shall be sliced into the result list. MAP-WORDS
+;;; returns a parse tree fragment that's a list of non-replaced parts
+;;; of STRING and replacements (maybe sliced). Consecutive strings are
+;;; concatenated.
+(defun map-words (string fn)
+  (declare (type string string))
+  (let ((translated ())
+        (n (length string))
+        (start 0))
+    (flet ((add (a)
+             (if (and (stringp a)
+                      (stringp (first translated)))
+                 (setf (first translated)
+                       (concatenate 'string (first translated) a))
+                 (push a translated))))
+      (loop while (< start n)
+            do (let* ((at-delimiter-p (delimiterp (aref string start)))
+                      (end (or (if at-delimiter-p
+                                   (position-if-not #'delimiterp string
+                                                    :start start)
+                                   (position-if #'delimiterp string
+                                                :start start))
+                               n)))
+                 (if at-delimiter-p
+                     (add (subseq string start end))
+                     (multiple-value-bind (replacement slice)
+                         (funcall fn string start end)
+                       (cond ((null replacement)
+                              (add (subseq string start end)))
+                             (slice
+                              (dolist (a replacement)
+                                (add a)))
+                             (t
+                              (add replacement)))))
+                 (setq start end))))
+    (nreverse translated)))
 
-(defun join-stuff-in-list (tree)
-  (let ((result ()))
-    (dolist (element tree)
-      (let ((prev (first result)))
-        (cond
-          ;; Join consecutive non-blank strings: "x" "y" -> "xy"
-          ((and (stringp element) (not (blankp element))
-                (stringp prev) (not (blankp prev)))
-           (setf (first result) (concatenate 'string prev element)))
-          ;; Join consecutive blank strings
-          ((and (stringp element) (blankp element)
-                (stringp prev) (blankp prev))
-           (setf (first result) (concatenate 'string prev element)))
-          ;; "CL:" (:EMPH "*FEATURES*") - > "CL:*FEATURES*"
-          ((and (parse-tree-p element :emph)
-                (stringp prev)
-                (ends-with #\: prev)
-                (= 2 (length (join-stuff-in-list element))))
-           (setf (first result)
-                 (format nil "~A*~A*" prev
-                         (second (join-stuff-in-list element)))))
-          (t
-           (push element result)))))
-    (reverse result)))
+(defun delimiterp (char)
+  (or (whitespacep char) (find char "()'`\"")))
+
+
+;;;; Printing parse trees
+
+(defmacro with-colorize-silenced (() &body body)
+  `(let ((*trace-output* (make-broadcast-stream)))
+     ,@body))
+
+(defun print-markdown (parse-tree stream &key (format :markdown))
+  (with-colorize-silenced ()
+    (3bmd::print-doc-to-stream-using-format
+     (preprocess-parse-tree-for-printing parse-tree format) stream format)))
 
 (defun preprocess-parse-tree-for-printing (parse-tree format)
   (let ((stop-tags '(:code :verbatim 3bmd-code-blocks::code-block
@@ -421,46 +414,296 @@
                                '() nil #'translate parse-tree))))
 
 
-;;; Call FN with STRING and START, END indices of @WORDS.
-;;;
-;;; FN must return two values: a replacement Markdown parse tree
-;;; fragment (or NIL, if the subseq shall not be replaced), whether
-;;; the replacement shall be sliced into the result list. MAP-WORDS
-;;; returns a parse tree fragment that's a list of non-replaced parts
-;;; of STRING and replacements (maybe sliced). Consecutive strings are
-;;; concatenated.
-(defun map-words (string fn)
-  (declare (type string string))
-  (let ((translated ())
-        (n (length string))
-        (start 0))
-    (flet ((add (a)
-             (if (and (stringp a)
-                      (stringp (first translated)))
-                 (setf (first translated)
-                       (concatenate 'string (first translated) a))
-                 (push a translated))))
-      (loop while (< start n)
-            do (let* ((at-delimiter-p (delimiterp (aref string start)))
-                      (end (or (if at-delimiter-p
-                                   (position-if-not #'delimiterp string
-                                                    :start start)
-                                   (position-if #'delimiterp string
-                                                :start start))
-                               n)))
-                 (if at-delimiter-p
-                     (add (subseq string start end))
-                     (multiple-value-bind (replacement slice)
-                         (funcall fn string start end)
-                       (cond ((null replacement)
-                              (add (subseq string start end)))
-                             (slice
-                              (dolist (a replacement)
-                                (add a)))
-                             (t
-                              (add replacement)))))
-                 (setq start end))))
-    (nreverse translated)))
+;;;; Parsing Markdown
 
-(defun delimiterp (char)
-  (or (whitespacep char) (find char "()'`\"")))
+(defun parse-markdown (string)
+  (clean-up-parsed-parse-tree (parse-markdown-fast string)))
+
+(defun clean-up-parsed-parse-tree (parse-tree)
+  (transform-tree (lambda (parent tree)
+                    (declare (ignore parent))
+                    (if (and (listp tree)
+                             (not (parse-tree-p tree :verbatim)))
+                        (values (join-stuff-in-list tree) t nil)
+                        tree))
+                  parse-tree))
+
+(defun join-stuff-in-list (tree)
+  (let ((result ()))
+    (dolist (element tree)
+      (let ((prev (first result)))
+        (cond
+          ;; Join consecutive non-blank strings: "x" "y" -> "xy"
+          ((and (stringp element) (not (blankp element))
+                (stringp prev) (not (blankp prev)))
+           (setf (first result) (concatenate 'string prev element)))
+          ;; Join consecutive blank strings
+          ((and (stringp element) (blankp element)
+                (stringp prev) (blankp prev))
+           (setf (first result) (concatenate 'string prev element)))
+          ;; "CL:" (:EMPH "*FEATURES*") - > "CL:*FEATURES*"
+          ((and (parse-tree-p element :emph)
+                (stringp prev)
+                (ends-with #\: prev)
+                (= 2 (length (join-stuff-in-list element))))
+           (setf (first result)
+                 (format nil "~A*~A*" prev
+                         (second (join-stuff-in-list element)))))
+          (t
+           (push element result)))))
+    (reverse result)))
+
+;;; We parse 3BMD-GRAMMAR::%BLOCKs like 3BMD-GRAMMAR:PARSE-DOC's
+;;; currently commented out alternative implementation, which is much
+;;; faster on long strings but perhaps slower on short strings. This
+;;; still has a performance problem with large lists, which are
+;;; processed in one block, hence the workaround in PAX-APROPOS*.
+(defun parse-markdown-fast (string &key (start 0) end)
+  (loop for start1 = start then pos
+        for (%block pos) = (multiple-value-list
+                            (%parse-md-block string :start start1 :end end
+                                             :junk-allowed t))
+        while %block
+        collect %block
+        while pos))
+
+(defun %parse-md-block (string &key (start 0) end junk-allowed)
+  (esrap:parse '#.(if (esrap:find-rule '3bmd-grammar::%block)
+                      '3bmd-grammar::%block
+                      ;; Make it work with old 3BMD.
+                      '3bmd-grammar::block)
+               string :start start :end end :junk-allowed junk-allowed))
+
+
+;;;; Mixed I/O for Markdown strings and parse trees
+;;;;
+;;;; @EXTENDING-DOCUMENT expects Markdown to be output. Thus, Markdown
+;;;; is our extension API. This makes some sense since docstrings are
+;;;; written in Markdown anyway. As a consequence, we have to first
+;;;; generate a complete Markdown output and REPRINT-IN-FORMAT if the
+;;;; final output format is not Markdown. Note that most Markdown
+;;;; strings are parsed and their parse tree is transformed (e.g. by
+;;;; CODIFY-AND-LINK-TREE). Printing these parse trees as Markdown
+;;;; only for REPRINT-IN-FORMAT to parse them slows DOCUMENT down 2x
+;;;; (parsing the is main bottleneck).
+;;;;
+;;;; Thus, we allow parse trees to be output in the middle of Markdown
+;;;; to avoid the re-parsing penalty. In the future, we could even
+;;;; stream the output (modulo the reflink definitions).
+;;;;
+;;;; This is not as easy as it sounds because Markdown strings cannot
+;;;; be parsed in arbitrary segmentations. For example, splitting a
+;;;; list item and its indented child causes the child to be parsed as
+;;;; an indented code block.
+
+(declaim (inline %ensure-md-paragraph))
+(defun %ensure-md-paragraph (stream)
+  (write-string #.(with-standard-io-syntax
+                    (format nil "~A " #\Soh))
+                stream))
+
+(defun/auto ensure-md-paragraph (stream)
+  "Ensure that output previously written to STREAM is in a separate
+  Markdown paragraph than the output that follows. Calling this
+  function multiple times without writing anything else to STREAM in
+  between is equivalent to calling it once."
+  (%ensure-md-paragraph stream))
+
+(defun write-markdown-pt (tree paragraphp level stream)
+  (when paragraphp
+    (%ensure-md-paragraph stream))
+  (when tree
+    (with-standard-io-syntax
+      (format stream "~A~S ~S " #\Soh level tree))
+    (when paragraphp
+      (%ensure-md-paragraph stream))))
+
+(defun %read-soh (string start)
+  (assert (char= (aref string start) #\Soh))
+  (if (char= (aref string (1+ start)) #\Space)
+      (values -1 () (+ start 2))
+      (with-standard-io-syntax
+        (multiple-value-bind (level pos)
+            (read-from-string string t nil :start (1+ start))
+          (multiple-value-bind (blocks pos)
+              (read-from-string string t nil :start pos
+                                ;; Without this, some implementations
+                                ;; read the following space, some don't.
+                                :preserve-whitespace t)
+            (assert (char= (aref string pos) #\Space))
+            (values level blocks (1+ pos)))))))
+
+(defparameter *debug-parse-mixed-markdown* nil)
+
+(defun parse-mixed-markdown (string)
+  (let ((%blocks ())
+        (%blocks-last nil)
+        (paragraph-boundary t)
+        (start 0))
+    (labels
+        ((add-blocks (blocks new-paragraph level)
+           (when *debug-parse-mixed-markdown*
+             (let ((*print-length* 4)
+                   (*print-level* 8))
+               (format t "pt: ~S ~S ~S~%" new-paragraph level blocks)))
+           (if %blocks
+               (add-to-forest %blocks-last blocks new-paragraph level)
+               (setq %blocks blocks))
+           (finish-update))
+         (replace-last-block (string start end blocks)
+           (when *debug-parse-mixed-markdown*
+             (format t "md: ~S~%" (subseq string start end)))
+           (if %blocks
+               (setf (car %blocks-last) (car blocks)
+                     (cdr %blocks-last) (cdr blocks))
+               (setq %blocks blocks))
+           (finish-update))
+         (finish-update ()
+           (setq %blocks-last (last (or %blocks-last %blocks)))
+           (when *debug-parse-mixed-markdown*
+             (let ((*print-length* 4)
+                   (*print-level* 8))
+               (format t "=> ~S~%" %blocks-last)))))
+      (loop
+        do (if (and (< start (length string))
+                    (char= (aref string start) #\Soh))
+               (multiple-value-bind (level blocks pos)
+                   (%read-soh string start)
+                 (cond ((eql level -1)
+                        (setq paragraph-boundary t))
+                       (blocks
+                        (add-blocks blocks paragraph-boundary level)
+                        (setq paragraph-boundary nil)))
+                 (setq start pos))
+               (let* ((end (position #\Soh string :start start))
+                      (blocks (parse-md-after-tree
+                               %blocks-last string :start start :end end
+                               :paragraphp paragraph-boundary)))
+                 (replace-last-block string start end blocks)
+                 (setq paragraph-boundary
+                       ;; FIXME: Some parses (e.g. fenced code blocks)
+                       ;; end the paragraph in all cases.
+                       (ends-with-blank-p string start end))
+                 (setq start end)))
+        while (and start (< start (length string)))))
+    (clean-up-parsed-parse-tree %blocks)))
+
+;;; Parse a Markdown STRING as if it followed what has been parsed as
+;;; TREE.
+(defun parse-md-after-tree (tree string &key (start 0) end (paragraphp t))
+  (if (and paragraphp (zerop (pt-nesting-level (first tree))))
+      ;; TREE does not affect the parse of STRING.
+      (let ((parse-tree (parse-markdown-fast string :start start
+                                             :end end)))
+        (when *debug-parse-mixed-markdown*
+          (format t "contextless md: ~S~%" (subseq string start end)))
+        (close-open-paragraph tree)
+        (append tree parse-tree))
+      ;; Fall back to the inefficient case: print TREE, start a new
+      ;; paragraph if PARAGRAPHP, add the relevant substring of
+      ;; STRING, and parse the whole thing.
+      ;;
+      ;; There are very few cases where this branch currently
+      ;; triggers. Within PAX, it's better to fix these cases by using
+      ;; WRITE-MARKDOWN-PT instead of outputting Markdown strings.
+      ;;
+      ;; If this ever becomes an bottleneck, a possible optimization
+      ;; is to print only a minimal structural equivalent of TREE
+      ;; (i.e. what has the same nesting structure and maybe some
+      ;; trailing strings if PARAGRAPHP is NIL), but then TREE is no
+      ;; longer simply replaced by the new parse.
+      (let ((context (tree-context tree paragraphp)))
+        (when *debug-parse-mixed-markdown*
+          (format t "context: ~S~%md: ~S~%" context (subseq string start end)))
+        (parse-markdown-fast (concatenate 'string context
+                                          (subseq string start end))))))
+
+(defun tree-context (tree paragraphp)
+  (let ((context (string-right-trim #.(format nil "~%")
+                                    (with-output-to-string (s)
+                                      (3bmd:print-doc-to-stream
+                                       tree s :format :markdown)))))
+    
+    (if paragraphp
+        (concatenate 'string context #.(format nil "~%~%"))
+        context)))
+
+(defun ends-with-blank-p (string start end)
+  (when-let (pos2 (position #\Newline string :from-end t
+                            :start start :end end))
+    (when-let (pos1 (position #\Newline string :from-end t
+                              :start start :end pos2))
+      (blankp string :start pos1 :end pos2))))
+
+;;; Add the parse of a string (NEW-FOREST) to the parse of a previous
+;;; string (FOREST) such that we get the parse of the concatenation of
+;;; the two strings (with the latter indented by 4*LEVEL spaces).
+;;;
+;;; If not NEW-PARAGRAPH, then extend PT-OPEN-PARAGRAPH of the last
+;;; tree in FOREST.
+(defun add-to-forest (forest new-forest new-paragraph level)
+  (assert forest)
+  (when new-forest
+    (let ((last-tree (first (last forest))))
+      (cond ((not new-paragraph)
+             (let ((open-paragraph (pt-open-paragraph (first (last forest))))
+                   (first-new-tree (first new-forest)))
+               (cond
+                 ((null open-paragraph)
+                  (nconc forest new-forest))
+                 ;; (... (:PLAIN "X")) + (:PARAGRAPH "Y") =>
+                 ;; (... (:PARAGRAPH "X" "Y"))
+                 ((or (parse-tree-p first-new-tree :plain)
+                      (parse-tree-p first-new-tree :paragraph))
+                  (setf (first open-paragraph) (first first-new-tree))
+                  (nconc open-paragraph (rest first-new-tree))
+                  (nconc forest (rest new-forest)))
+                 (t
+                  (setf (first open-paragraph) :paragraph)
+                  (nconc forest new-forest)))))
+            ((zerop level)
+             (let ((last-tree (first (last forest))))
+               (when (parse-tree-p last-tree :plain)
+                 (setf (first last-tree) :paragraph))
+               (nconc forest new-forest)))
+            (t
+             (let ((list-item (pt-last-list-item last-tree)))
+               ;; FIXME: soften this?
+               (assert list-item ()
+                       "~@<Cannot add to ~S because ~
+                       it is not a Markdown list.~:@>"
+                       last-tree)
+               (setf (cdr list-item)
+                     (add-to-forest (cdr list-item) new-forest new-paragraph
+                                    (1- level)))))))))
+
+;;; Return the "open" :PLAIN or :PARAGRAPH subtree of TREE or NIL.
+;;; This is the paragraph to which stuff could have been added had the
+;;; string from which TREE was parsed been longer.
+(defun pt-open-paragraph (tree)
+  (cond ((atom tree)
+         nil)
+        ((or (parse-tree-p tree :plain)
+             (parse-tree-p tree :paragraph))
+         tree)
+        (t
+         (pt-open-paragraph (first (last tree))))))
+
+(defun close-open-paragraph (forest)
+  (when-let (open-paragraph (pt-open-paragraph (first (last forest))))
+    (setf (first open-paragraph) :paragraph)))
+
+(defun pt-last-list-item (tree)
+  (when (or (parse-tree-p tree :bullet-list)
+            (parse-tree-p tree :counted-list))
+    (let ((elt (first (last tree))))
+      (assert (parse-tree-p elt :list-item))
+      elt)))
+
+(defun pt-nesting-level (tree)
+  (if (or (parse-tree-p tree :bullet-list)
+          (parse-tree-p tree :counted-list))
+      (1+ (let ((elt (first (last tree))))
+            (assert (parse-tree-p elt :list-item))
+            (pt-nesting-level (first (last elt)))))
+      0))

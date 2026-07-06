@@ -1174,8 +1174,10 @@ one of the following:
 
 - [variable] *DOCUMENT-TIGHT* NIL
 
-    If NIL, then DOCUMENT adds a newline between consecutive
-    atomic DOCUMENTABLEs on the same page.
+    Normally, DOCUMENT calls ENSURE-MD-PARAGRAPH before and after
+    documenting each atomic DOCUMENTABLE. If *DOCUMENT-TIGHT*
+    is true, then this doesn't happen for top-level string
+    documentables.
 
 #### Return Values
 
@@ -1813,7 +1815,7 @@ docstrings are equivalent:
 
         The characters #\Space, #\Tab and
         #\Return are in the whitespace group.
-        
+    
         The characters #\Space, #\Tab and
         \#\Return are in the whitespace group.
 
@@ -2113,7 +2115,6 @@ This is a normal Markdown reference link if id is not a valid locative.
 
         (document "[see this][user-defined]" :format :markdown)
         .. [see this][user-defined]
-        ..
 
 Use URLs with DEFINE-GLOSSARY-TERM as a better alternative to
 Markdown reference links (see Markdown in Docstrings).
@@ -2547,7 +2548,7 @@ works.
   and downcasing off. Use this for things that are not Lisp code but
   which need to be in a monospace font.
 
-In the following examples capital C/D/A letters mark the presence,
+In the following examples, capital C/D/A letters mark the presence,
 and a/b/c the absence of codification, downcasing, and autolinking
 assuming all these features are enabled by
 *DOCUMENT-UPPERCASE-IS-CODE*, *DOCUMENT-DOWNCASE-UPPERCASE-CODE*,
@@ -2564,8 +2565,8 @@ and *DOCUMENT-LINK-CODE*.
     [DOCUMENT][dislocated]  => `document`            (CDa)
 
 Note that in the example marked with *, the single backslash,
-that would normally turn autolinking off, is ignored because it is
-in an explicit link.
+that would normally turn autolinking off is ignored because it is in
+an explicit link.
 
 ### Indexing
 
@@ -2962,9 +2963,8 @@ printed.
 
 - When documentation is being generated for a definition with
 the SECTION locative, a new (sub)section is opened (see
-WITH-HEADING), within which documentation for its each of its
-SECTION-ENTRIES is generated. A fresh line is printed after all
-entries except the last.
+WITH-HEADING), within which documentation for its SECTION-ENTRIES is
+generated, separated from each other by ENSURE-MD-PARAGRAPH.
 
 - For definitions with a GLOSSARY-TERM locative, no arglist is
 printed, and if non-NIL, GLOSSARY-TERM-TITLE is printed as name.
@@ -4173,10 +4173,11 @@ there are only a couple of PAX generic functions left to extend.
 
 - [generic-function] DOCUMENT-OBJECT* OBJECT STREAM
 
-    Write OBJECT in *FORMAT* to STREAM.
-    Specialize this on a subclass of DREF if that subclass is
-    not RESOLVEable, else on the type of object it resolves to. This
-    function is for extension only. Don't call it directly.
+    Write the documentation of OBJECT in Markdown to STREAM.
+    The output may depend on *FORMAT*. Specialize this on a subclass of
+    DREF if that subclass is not RESOLVEable, else on the type
+    of object it resolves to. This function is for extension only. Don't
+    call it directly.
 
 - [generic-function] EXPORTABLE-REFERENCE-P PACKAGE SYMBOL LOCATIVE-TYPE LOCATIVE-ARGS
 
@@ -4253,7 +4254,8 @@ export the symbols A and AN.
 
 For all definitions that it encounters, DOCUMENT calls
 DOCUMENT-OBJECT* to generate documentation. The following utilities
-are for writing new DOCUMENT-OBJECT* methods, which emit Markdown.
+are for writing new DOCUMENT-OBJECT* methods. They emit Markdown
+encoded in an unspecified format internal to DOCUMENT.
 
 - [variable] *FORMAT*
 
@@ -4354,6 +4356,13 @@ are for writing new DOCUMENT-OBJECT* methods, which emit Markdown.
     Like PRIN1-TO-STRING, but bind *PRINT-CASE* depending on
     *DOCUMENT-DOWNCASE-UPPERCASE-CODE* and *FORMAT*, and
     ESCAPE-MARKDOWN.
+
+- [function] ENSURE-MD-PARAGRAPH STREAM
+
+    Ensure that output previously written to STREAM is in a separate
+    Markdown paragraph than the output that follows. Calling this
+    function multiple times without writing anything else to STREAM in
+    between is equivalent to calling it once.
 
 ### Sections
 

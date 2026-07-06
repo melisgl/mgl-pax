@@ -112,24 +112,29 @@
 ;;; PAX-APROPOS* binds this to :DETAILED or :TERSE.
 (defvar *document-list-view* nil)
 
-(defun document-definition-title-or-anchor (dref)
-  (or (document-definition-title dref)
-      (escape-markdown (dref-to-anchor dref))))
+(defun document-definition-title-or-anchor (dref &key (format :markdown))
+  (or (document-definition-title dref :format format)
+      (ecase format
+        ((:markdown)
+         (escape-markdown (dref-to-anchor dref)))
+        ((nil)
+         (list (dref-to-anchor dref))))))
 
 ;;; This is the implementation of the WITH-HEADING macro.
 (defun/auto call-with-heading (stream dref link-title-to fn)
   (let ((level *heading-level*)
-        (title (document-definition-title-or-anchor dref)))
+        (title-pt (document-definition-title-or-anchor dref :format nil)))
     (when (plusp level)
       (incf (nth (1- level) *heading-number*)))
     (when *first-pass*
-      (collect-heading dref title))
+      (collect-heading dref (with-output-to-string (s)
+                              (print-markdown title-pt s))))
     (cond (*document-list-view*
            (documenting-definition (stream :arglist (ensure-list
                                                      (doctitle dref)))))
           (t
            (unless *first-pass*
-             (print-section-title stream dref title link-title-to)
+             (print-section-title stream dref title-pt link-title-to)
              (print-table-of-contents dref stream))
            (let ((*heading-number*
                    (append *heading-number*
@@ -211,10 +216,9 @@
   ;; A TARGET-ID to TARGET hash table for MD5 collision detection
   (id-to-target (make-hash-table :test #'equal))
   ;; The set of TARGETs linked to from this page. For
-  ;; WRITE-MARKDOWN-REFERENCE-STYLE-LINK-DEFINITIONS and
-  ;; LINK-TO-DEFINITION. Populated in the 2nd pass. EQ is fine because
-  ;; we only use it with with TARGET-DREFs and TARGETs are interned in
-  ;; *TARGETS*.
+  ;; REFLINK-DEFINITIONS and LINK-TO-DEFINITION. Populated in the 2nd
+  ;; pass. EQ is fine because we only use it with with TARGET-DREFs
+  ;; and TARGETs are interned in *TARGETS*.
   (linked-to (make-hash-table :test #'eq) :type hash-table)
   ;; For numbering DYNAMIC-SECTION-DREFs.
   (next-dyn-id 0 :type integer)
@@ -418,17 +422,20 @@
   (*document-tight* variable))
 
 (defvar/auto *document-tight* nil
-  "If NIL, then DOCUMENT adds a newline between consecutive
-  [atomic][clhs] @DOCUMENTABLEs on the same [page][@pages].")
+  "Normally, DOCUMENT calls ENSURE-MD-PARAGRAPH before and after
+  documenting each [atomic][clhs] @DOCUMENTABLE. If *DOCUMENT-TIGHT*
+  is true, then this doesn't happen for top-level string
+  documentables.")
 
 (defvar *objects-being-documented* ())
 
 (defun about-to-write-to-page ()
   (assert (not *first-pass*))
   (if (page-written-in-second-pass-p *page*)
-      (when (and (not *document-tight*)
-                 (list-of-one-p *objects-being-documented*))
-        (terpri *page-stream*))
+      (unless (and *document-tight*
+                   (list-of-one-p *objects-being-documented*)
+                   (stringp (first *objects-being-documented*)))
+        (%ensure-md-paragraph *page-stream*))
       (setf (page-written-in-second-pass-p *page*) t)))
 
 ;;; Stuff a description of *OBJECTS-BEING-DOCUMENTED* into known
@@ -783,13 +790,7 @@
     (let ((stream-spec (make-stream-spec-from-page-spec-output output)))
       (make-page
        :boundaries (page-spec-objects-to-boundaries objects)
-       ;; See FINALIZE-PAGE-OUTPUT.
-       :temp-stream-spec (if (and (eq *format* :markdown)
-                                  (null *subformat*)
-                                  (null header-fn)
-                                  (null footer-fn))
-                             stream-spec
-                             (make-instance 'string-stream-spec))
+       :temp-stream-spec (make-instance 'string-stream-spec)
        :final-stream-spec stream-spec
        :uri-fragment (or uri-fragment
                          (if (and (not uri-fragment-p)
@@ -1002,8 +1003,8 @@
             (setf (page-written-in-first-pass-p *page*) t))
           (with-temp-output-to-page (stream page)
             (about-to-write-to-page)
-            (document-docstring string stream :indentation "" :paragraphp nil)
-            (terpri stream)))))
+            (document-docstring string stream :indentation ""
+                                :paragraphp nil)))))
   ;; LOCATE non-DREF XREFs.
   (:method ((xref xref) stream)
     (let ((warn-if-undefined
@@ -1039,69 +1040,49 @@
               (document-object* (or (resolve dref nil) dref) stream))
             (with-temp-output-to-page (stream page)
               (about-to-write-to-page)
-              (document-object* (or (resolve dref nil) dref) stream)))))))
+              (document-object* (or (resolve dref nil) dref) stream)
+              (%ensure-md-paragraph stream)))))))
 
 
 (defun finalize-page-output (page)
   (when (and (page-written-in-first-pass-p page)
              ;; With @DUMMY-OUTPUT, discard anything that might be written.
              *format*)
-    ;; Now that Markdown output for this PAGE is complete, we may
-    ;; want to convert it to the requested *FORMAT*.
-    (if (and (eq *format* :markdown)
-             (null *subformat*)
-             (null (page-header-fn page))
-             (null (page-footer-fn page)))
-        (with-temp-output-to-page (stream page)
-          (write-markdown-reflink-definitions stream))
-        (let ((markdown-string
-                (if (typep (page-temp-stream-spec page) 'string-stream-spec)
-                    (string-stream-spec-string (page-temp-stream-spec page))
-                    (with-temp-input-from-page (stream page)
-                      (read-stream-content-into-string stream))))
-              (markdown-reflinks
-                (with-output-to-string (stream)
-                  (unless (eq *subformat* :plain)
-                    (let ((*page* page))
-                      (write-markdown-reflink-definitions stream))))))
-          (delete-stream-spec (page-temp-stream-spec page))
-          (with-final-output-to-page (stream page)
-            (when (page-header-fn page)
-              (funcall (page-header-fn page) stream))
-            (cond ((and (eq *format* :markdown)
-                        (null *subformat*))
-                   (write-string markdown-string stream)
-                   (write-string markdown-reflinks stream))
-                  (t
-                   (reprint-in-format markdown-string markdown-reflinks
-                                      stream)))
-            (when (page-footer-fn page)
-              (funcall (page-footer-fn page) stream)))))
+    (let ((markdown-string
+            (if (typep (page-temp-stream-spec page) 'string-stream-spec)
+                (string-stream-spec-string (page-temp-stream-spec page))
+                (with-temp-input-from-page (stream page)
+                  (read-stream-content-into-string stream))))
+          (reflink-definitions (reflink-definitions page)))
+      (delete-stream-spec (page-temp-stream-spec page))
+      (with-final-output-to-page (stream page)
+        (when (page-header-fn page)
+          (funcall (page-header-fn page) stream))
+        ;; To see the raw WRITE-MARKDOWN-PT output.
+        #+nil
+        (write-string markdown-string stream)
+        (reprint-in-format markdown-string reflink-definitions stream)
+        (when (page-footer-fn page)
+          (funcall (page-footer-fn page) stream))))
     (unmake-stream-spec (page-final-stream-spec page))))
 
 
-;;; Emit Markdown definitions for links that were linked to on the
-;;; current page.
-(defun write-markdown-reflink-definitions (stream)
-  (let ((targets (sort (hash-table-keys (page-linked-to *page*))
-                       #'string< :key #'target-id))
-        (*package* (find-package :keyword)))
-    (when targets
-      (loop for i upfrom 0
-            for target in targets
-            do (when (zerop (mod i 10))
-                 (terpri stream))
-               (assert (not (target-p (target-page target))))
-               ;; The format is [label]: url "title". Example:
-               ;;   [1]: http://example.org/Hobbit#Lifestyle "Hobbit lifestyles"
-               (format stream "  [~A]: ~A ~S~%"
-                       (target-id target)
-                       (if (stringp (target-page target))
-                           ;; Link to external page.
-                           (target-page target)
-                           ;; Link to documentation generated in the same run.
-                           (target-uri target))
-                       (reflink-definition-title target))))))
+;;; Return a list definitions for reference links that were linked to
+;;; on the current page.
+(defun reflink-definitions (page)
+  (unless (eq *subformat* :plain)
+    (let* ((*page* page)
+           (targets (sort (hash-table-keys (page-linked-to *page*))
+                          #'string< :key #'target-id))
+           (*package* (find-package :keyword)))
+      (loop for target in targets
+            do (assert (not (target-p (target-page target))))
+            collect `(:reference
+                      :label (,(target-id target))
+                      :source ,(if (stringp (target-page target))
+                                   (target-page target)
+                                   (target-uri target))
+                      :title ,(reflink-definition-title target))))))
 
 (defun reflink-definition-title (target)
   (let ((dref (target-dref target)))
@@ -1113,13 +1094,19 @@
 
 ;;; Process MARKDOWN-STRING block by block to limit maximum memory usage.
 (defun reprint-in-format (markdown-string markdown-reflinks stream)
-  (if (eq *format* :pdf)
-      (print-pandoc-pdf (prepare-parse-tree-for-printing-to-pandoc-pdf
-                         (parse-markdown (concatenate 'string markdown-string
-                                                      markdown-reflinks)))
-                        stream)
-      (note @markdown-reflink-definitions
-        "- When @BROWSING-LIVE-DOCUMENTATION, the page displayed can be of,
+  (let ((markdown-pt (parse-mixed-markdown markdown-string))
+        (reflinks-pt (if (listp markdown-reflinks)
+                         markdown-reflinks
+                         (parse-markdown markdown-reflinks))))
+    (when reflinks-pt
+      (close-open-paragraph markdown-pt))
+    (if (eq *format* :pdf)
+        (print-pandoc-pdf (append (prepare-parse-tree-for-printing-to-pandoc-pdf
+                                   markdown-pt)
+                                  reflinks-pt)
+                          stream)
+        (note @markdown-reflink-definitions
+          "- When @BROWSING-LIVE-DOCUMENTATION, the page displayed can be of,
   say, a single function within what would constitute the offline
   documentation of a library. Because Markdown reference link
   definitions, for example
@@ -1134,21 +1121,21 @@
 
       See DEFINE-GLOSSARY-TERM for a better alternative to Markdown
       reference links."
-        (multiple-value-bind (3bmd::*md-default-block-chars-to-escape*
-                              3bmd::*md-default-inline-chars-to-escape*
-                              3bmd::*extension-to-md-block-chars-to-escape*
-                              3bmd::*extension-to-md-inline-chars-to-escape*)
-            (if (eq *subformat* :plain)
-                ;; Turn off all escaping.
-                (values "" "" (make-hash-table) (make-hash-table))
-                (values 3bmd::*md-default-block-chars-to-escape*
-                        3bmd::*md-default-inline-chars-to-escape*
-                        3bmd::*extension-to-md-block-chars-to-escape*
-                        3bmd::*extension-to-md-inline-chars-to-escape*))
-          (print-markdown (append (prepare-parse-tree-for-printing
-                                   (parse-markdown markdown-string))
-                                  (parse-markdown markdown-reflinks))
-                          stream :format *format*)))))
+          (multiple-value-bind (3bmd::*md-default-block-chars-to-escape*
+                                3bmd::*md-default-inline-chars-to-escape*
+                                3bmd::*extension-to-md-block-chars-to-escape*
+                                3bmd::*extension-to-md-inline-chars-to-escape*)
+              (if (eq *subformat* :plain)
+                  ;; Turn off all escaping.
+                  (values "" "" (make-hash-table) (make-hash-table))
+                  (values 3bmd::*md-default-block-chars-to-escape*
+                          3bmd::*md-default-inline-chars-to-escape*
+                          3bmd::*extension-to-md-block-chars-to-escape*
+                          3bmd::*extension-to-md-inline-chars-to-escape*))
+            (print-markdown (append (prepare-parse-tree-for-printing
+                                     markdown-pt)
+                                    reflinks-pt)
+                            stream :format *format*))))))
 
 (defun reflink-defs (tree)
   (remove-if-not (lambda (tree)
@@ -1276,9 +1263,8 @@
 
 (defvar *document-docstring-key* nil)
 
-(defun/auto document-docstring
-    (docstring stream &key (indentation "    ")
-               exclude-first-line-p (paragraphp t))
+(defun/auto document-docstring (docstring stream &key (indentation "    ")
+                                exclude-first-line-p (paragraphp t))
   "Write DOCSTRING to STREAM, [sanitizing the Markdown]
   [@markdown-in-docstrings] in it, performing @CODIFICATION and
   @LINKING, finally prefixing each line with INDENTATION. The prefix
@@ -1289,18 +1275,23 @@
              ;; If the output is going to /dev/null, then skip this
              ;; operation because it's costly.
              (not *first-pass*))
-    (let ((docstring (funcall (or *document-docstring-key* #'identity)
-                              docstring)))
-      (when docstring
-        (let* ((docstring (sanitize-docstring
-                           docstring :aggressivep (sanitize-aggressively-p)))
-               (reindented (prefix-lines
-                            indentation (codify-and-link docstring)
-                            :exclude-first-line-p exclude-first-line-p)))
-          (when (plusp (length docstring))
-            (if paragraphp
-                (format stream "~%~A~&" reindented)
-                (format stream "~A" reindented))))))))
+    (when-let (docstring (funcall (or *document-docstring-key* #'identity)
+                                  docstring))
+      (let ((docstring (sanitize-docstring
+                        docstring :aggressivep (sanitize-aggressively-p))))
+        (if (and exclude-first-line-p (plusp (length indentation)))
+            (let ((reindented (prefix-lines
+                               indentation
+                               (codify-and-link docstring)
+                               :exclude-first-line-p exclude-first-line-p)))
+              (when (plusp (length docstring))
+                (if paragraphp
+                    (format stream "~%~A~&" reindented)
+                    (format stream "~A" reindented))))
+            (write-markdown-pt (codify-and-link-tree
+                                (parse-markdown docstring))
+                               paragraphp (floor (length indentation) 4)
+                               stream))))))
 
 
 (defsection @markdown-in-titles (:title "Markdown in Titles")
@@ -1356,24 +1347,31 @@
       (document-title title :deemph deemph :format format :dref dref))))
 
 (defun check-title-parse-tree (tree title &key deemph dref)
-  (transform-tree
-   (lambda (parent tree)
-     (declare (ignore parent))
-     (cond ((atom tree)
-            tree)
-           ((and deemph
-                 (member (first tree) '(:emph :strong)))
-            (values (rest tree) t t))
-           ((or (listp (first tree))
-                (member (first tree) '(:plain :emph :strong :code :entity
-                                       :image :explicit-link :math-inline-1
-                                       :math-inline-2 :math-inline-3)))
-            (values tree t))
-           (t
-            (warn 'title-parsing-failure :tag (first tree) :title title)
-            (return-from check-title-parse-tree
-              (parse-markdown (prin1-to-string* (dref-name dref)))))))
-   tree))
+  (flet ((fail ()
+           (warn 'title-parsing-failure :tag (first tree) :title title)
+           (return-from check-title-parse-tree
+             (parse-markdown (prin1-to-string* (dref-name dref))))))
+    (unless (and (listp tree)
+                 (= (length tree) 1)
+                 (parse-tree-p (first tree) :plain))
+      (fail))
+    (cdar (transform-tree
+           (lambda (parent tree)
+             (declare (ignore parent))
+             (cond ((atom tree)
+                    tree)
+                   ((and deemph
+                         (member (first tree) '(:emph :strong)))
+                    (values (rest tree) t t))
+                   ((or (listp (first tree))
+                        (member (first tree) '(:plain :emph :strong :code
+                                               :entity :image :explicit-link
+                                               :math-inline-1 :math-inline-2
+                                               :math-inline-3)))
+                    (values tree t))
+                   (t
+                    (fail))))
+           tree))))
 
 (define-condition title-parsing-failure (warning condition-context-mixin)
   ((tag :initarg :tag :reader title-parsing-failure-tag)
@@ -2344,7 +2342,6 @@
       ```cl-transcript (:dynenv pax-std-env)
       (document "[see this][user-defined]" :format :markdown)
       .. [see this][user-defined]
-      ..
       ```
 
   Use URLs with DEFINE-GLOSSARY-TERM as a better alternative to
@@ -2627,16 +2624,9 @@
 
 ;;;; Common code for @LINKING
 
-;;; In older versions it's a STRING or NIL.
-(defparameter *3bmd-reflink-definition-is-list*
-  (not (atom (pt-get (esrap:parse '3bmd-grammar::reference-link "[x][y]")
-                     :definition))))
-
 (declaim (inline %make-reflink))
 (defun %make-reflink (label definition)
-  (if *3bmd-reflink-definition-is-list*
-      `(:reference-link :label ,label :definition (,definition))
-      `(:reference-link :label ,label :definition ,definition)))
+  `(:reference-link :label ,label :definition (,definition)))
 
 ;;; For LABEL (a parse tree fragment) and some references (in
 ;;; TARGETS), return a Markdown parse tree fragment to be spliced into
@@ -2827,7 +2817,6 @@
              (not *document-open-linking*))
     (when-let ((clhs-dref (clhs-dref (dref-name dref)
                                      (dref-locative dref))))
-      (fresh-line stream)
       (document-docstring
        (format nil "Also, see the [\\CLHS][~A ~A]."
                (prin1-to-markdown (dref-name clhs-dref))
@@ -2963,7 +2952,7 @@
       (with-temp-output-to-page (stream page)
         (dolist (heading toplevel-headings)
           (print-table-of-contents-entry heading stream))
-        (terpri stream)))))
+        (%ensure-md-paragraph stream)))))
 
 (defun toplevel-headings-on-page (page)
   (loop for heading in *headings*
@@ -2990,7 +2979,7 @@
                    (ensure-toc-title)
                    (print-table-of-contents-entry heading stream))))
       (when toc-title-printed
-        (terpri stream)))))
+        (%ensure-md-paragraph stream)))))
 
 ;;; Return the tail of *HEADINGS* from DREF at HEADING-LEVEL or NIL.
 (defun list-headings (dref heading-level)
@@ -3013,49 +3002,50 @@
           (format stream "- [~A~A][~A]" (format-heading-number number) title
                   target-id)
           (format stream "- ~A~A" (format-heading-number number) title)))
+    (terpri stream)
     (terpri stream)))
 
-(defun print-section-title (stream dref title link-title-to)
+(defun print-section-title (stream dref title-pt link-title-to)
   (when *document-link-sections*
     (unless (eq *format* :pdf)
       (anchor dref stream))
     (navigation-link dref stream)
-    (format stream "~A" (or (fancy-navigation dref) "")))
-  (heading (+ *heading-level* *heading-offset*) stream)
-  (cond ((and *document-link-sections*
-              (eq *format* :html))
-         (print-section-title-link stream dref title link-title-to))
-        (t
-         (format stream " ~A~A~%" (format-heading-number) title)
-         (when (and *document-link-sections*
-                    (eq *format* :pdf))
-           (anchor dref stream))
-         (terpri stream))))
+    (fancy-navigation dref stream))
+  (write-markdown-pt `((:heading
+                        :level ,(+ 1 *heading-level* *heading-offset*)
+                        :contents ,(section-title-link-pt dref title-pt
+                                                          link-title-to)))
+                     t 0 stream)
+  (when (and *document-link-sections*
+             (eq *format* :pdf))
+    (anchor dref stream)))
 
-(defun print-section-title-link (stream dref title link-title-to)
-  (cond (link-title-to
+(defun section-title-link-pt (dref title-pt link-title-to)
+  (cond ((not (and *document-link-sections*
+                   (eq *format* :html)))
+         (cons (format-heading-number) title-pt))
+        (link-title-to
          ;; Hovering over the section title will show the title of
          ;; LINK-TITLE-TO from the Markdown reference link definition.
-         (format stream " [~A~A][~A]~%~%"
-                 (format-heading-number) title
-                 (link-to-definition link-title-to)))
+         `((:reference-link :label ,(cons (format-heading-number) title-pt)
+            :definition (,(link-to-definition link-title-to)))))
         ((in-context-only-p dref)
-         (format stream " ~A~A~%~%" (format-heading-number) title))
+         (cons (format-heading-number) title-pt))
         (t
-         (format stream " <a href=\"~A\">~A~A</a>~%~%"
-                 ;; As in PRINT-DREF-BULLET, open linking is to a
-                 ;; separate page.
-                 (if *document-open-linking*
-                     (finalize-pax-url (dref-to-pax-url dref))
-                     (object-uri dref))
-                 (format-heading-number) title))))
+         `((:raw-html ,(format nil "<a href=~S>"
+                               (if *document-live*
+                                   (finalize-pax-url (dref-to-pax-url dref))
+                                   (object-uri dref))))
+           ,(format-heading-number)
+           ,@title-pt
+           (:raw-html "</a>")))))
 
 (defun fancy-navigation-p ()
   (and *document-fancy-html-navigation*
        *document-link-sections*
        (eq *format* :html)))
 
-(defun fancy-navigation (dref)
+(defun fancy-navigation (dref stream)
   (when (fancy-navigation-p)
     (when-let ((position (position dref *headings* :key #'heading-object
                                    :test #'xref=)))
@@ -3075,28 +3065,34 @@
                          next))))
              (source-uri (when (not (in-context-only-p dref))
                            (source-uri dref))))
-        (format nil "<span class=\"outer-navigation\">~
-                    <span class=\"navigation\">~
-                    ~@[ [&#8592;][~A]~]~
-                    ~@[ [&#8593;][~A]~]~
-                    ~@[ [&#8594;][~A]~] ~
-                    ~@[ [&#8634;][~A]~] ~
-                    ~A~
-                    </span></span>~%"
-                (when prev
-                  (link-to-definition (heading-object prev)))
-                (when up
-                  (link-to-definition (heading-object up)))
-                (when next
-                  (link-to-definition (heading-object next)))
-                (link-to-definition dref)
-                (if source-uri
-                    (format nil " <a href=~S title=~S>&#955;</a>"
-                            source-uri
-                            (if *document-live*
-                                "Edit in Emacs"
-                                "View definition"))
-                    ""))))))
+        (write-markdown-pt
+         `((:plain
+            (:raw-html "<span class=\"outer-navigation\">")
+            (:raw-html "<span class=\"navigation\">")
+            ,@(when prev
+                `((:reference-link :label ((:entity "&#8592;"))
+                   :definition (,(link-to-definition
+                                  (heading-object prev))))))
+            ,@(when up
+                `(" " (:reference-link :label ((:entity "&#8593;"))
+                       :definition (,(link-to-definition
+                                      (heading-object up))))))
+            ,@(when next
+                `(" " (:reference-link :label ((:entity "&#8594;"))
+                       :definition (,(link-to-definition
+                                      (heading-object next))))))
+            " "
+            (:reference-link :label ((:entity "&#8634;"))
+             :definition (,(link-to-definition dref)))
+            ,@(when source-uri
+                `(" " (:raw-html ,(format nil "<a href=~S title=~S>&#955;</a>"
+                                   source-uri
+                                   (if *document-live*
+                                       "Edit in Emacs"
+                                       "View definition")))))
+            (:raw-html "</span>")
+            (:raw-html "</span>")))
+         t 0 stream)))))
 
 (defun write-navigation-link (heading stream)
   (let ((target-id (link-to-definition (heading-object heading))))
@@ -3235,22 +3231,34 @@
          (let ((v1 (member 1 *document-url-versions*))
                (v2 (member 2 *document-url-versions*)))
            (when (or v1 v2)
-             (when v1
-               (format stream "<a id=~S></a>~%"
-                       (html4-safe-name (dref-to-anchor-v1 dref))))
-             (when v2
-               (format stream "<a id=~S></a>~%"
-                       (urlencode (dref-to-anchor dref))))
-             (terpri stream))))
+             (write-markdown-pt
+              `((:paragraph
+                 ,@(when v1
+                     `((:raw-html ,(format nil "<a id=~S>"
+                                           (html4-safe-name
+                                            (dref-to-anchor-v1 dref))))
+                       (:raw-html "</a>")))
+                 ,@(when v2
+                     `(,@(when v1
+                           `(,(format nil "~%")))
+                       (:raw-html ,(format nil "<a id=~S>"
+                                           (urlencode
+                                            (dref-to-anchor dref))))
+                       (:raw-html "</a>")))))
+              t 0 stream))))
         ;; :PDF works only with URL v1. Since PDF destinations are not
         ;; really usable reliably anyway when opening the PDF, we
         ;; don't care what *DOCUMENT-URL-VERSIONS* says.
-        ((typep dref 'section-dref)
-         (format stream "`\\label{~A}`{=latex}~%"
-                 (html4-safe-name (dref-to-anchor-v1 dref))))
         (t
-         (format stream "`\\phantomsection\\label{~A}`{=latex}~%"
-                 (html4-safe-name (dref-to-anchor-v1 dref))))))
+         (write-markdown-pt
+          `((:plain
+             ,@(inline-pandoc-latex
+                `(,@(unless (typep dref 'section-dref)
+                      '("\\phantomsection"))
+                  "\\label{"
+                  ,(html4-safe-name (dref-to-anchor-v1 dref))
+                  "}"))))
+          nil 0 stream))))
 
 (defun anchor-id (dref)
   (if (= (first *document-url-versions*) 1)
@@ -3388,88 +3396,83 @@
 ;;;
 ;;; When generating HTML, link NAME to the anchor of DREF.
 (defun/auto print-dref-bullet (dref stream)
-  (multiple-value-bind (label escaped-label) (dref-bullet-label dref)
-    (let* ((locative-type (string-downcase (xref-locative-type dref)))
-           (md-locative-type (escape-markdown locative-type)))
-      (if (not *document-mark-up-signatures*)
-          (format stream
-                  ;; Escape if we must. Otherwise, do not clutter the output.
-                  (if (or (eq *format* :pdf)
-                          (eq *subformat* :plain))
-                      "- \\[~A] ~A"
-                      "- [~A] ~A")
-                  md-locative-type escaped-label)
-          (ecase *format*
-            ((:html)
-             (let ((source-uri (source-uri dref)))
-               ;; When *DOCUMENT-OPEN-LINKING* (this includes (EQ
-               ;; *SUBFORMAT* :W3M)), the name is linked to the a
-               ;; pax: URL (which opens a separate page), else they
-               ;; are self-links.
-               (cond ((eq *subformat* :w3m)
-                      (assert *document-open-linking*)
-                      (format stream "- **\\[~A]** [~A](~A)"
-                              md-locative-type escaped-label
-                              (finalize-pax-url (dref-to-pax-url dref))))
-                     (*document-open-linking*
-                      (format stream
-                              "- <span class=dref-bullet>~
-                              <span class=dref>~
-                              <span class=\"locative-type\">~
-                              ~@[<a href=\"~A\" title=\"Edit in Emacs\">~]~
-                              \\[~A]~:[~;</a>~]~
-                              </span> ~
-                              <span class=\"dref-name\">[~A](~A)</span>~
-                              </span>"
-                              source-uri md-locative-type source-uri
-                              escaped-label
-                              (finalize-pax-url (dref-to-pax-url dref))))
-                     (t
-                      (format stream
-                              "- <span class=dref-bullet>~
-                              <span class=dref>~
-                              <span class=\"locative-type\">~
-                              ~@[<a href=\"~A\" title=\"View definition\">~]~
-                              \\[~A]~:[~;</a>~]~
-                              </span> ~
-                              <span class=\"dref-name\">[~A](#~A)</span>~
-                              </span>"
-                              source-uri md-locative-type source-uri
-                              escaped-label
-                              (urlencode (dref-to-anchor dref)))))))
-            ((:pdf)
-             (let ((source-uri (source-uri dref)))
-               (format stream "- ")
-               (if source-uri
-                   (format stream
-                           "`\\paxlocativetypewithsource{~A}{~A}`{=latex}"
-                           (escape-tex source-uri) (escape-tex locative-type))
-                   (format stream "`\\paxlocativetype{~A}`{=latex}"
-                           (escape-tex locative-type)))
-               (format stream "`\\paxname{~A}`{=latex}" (escape-tex label))))
-            ((:markdown)
-             (if *subformat*
-                 (format stream "- \\[~A\\] ~A" locative-type escaped-label)
-                 (format stream "- [~A] ~A" locative-type
-                         (md-strong escaped-label nil))))
-            ((nil)))))))
+  (let ((label-pt (dref-bullet-label dref))
+        (locative-type (string-downcase (xref-locative-type dref))))
+    (write-markdown-pt
+     `((:bullet-list
+        (:list-item
+         ,(if (not *document-mark-up-signatures*)
+              `(:plain "[" ,locative-type "] " ,@label-pt)
+              (ecase *format*
+                ((:html)
+                 (let ((source-uri (source-uri dref)))
+                   `(:plain
+                     ,@(unless (eq *subformat* :w3m)
+                         `((:raw-html "<span class=dref-bullet>")
+                           (:raw-html "<span class=dref>")
+                           (:raw-html "<span class=\"locative-type\">")
+                           ,@(when source-uri
+                               `((:raw-html
+                                  ,(format nil "<a href=~S title=~S>"
+                                           source-uri
+                                           (if *document-live*
+                                               "Edit in Emacs"
+                                               "View definition")))))))
+                     (:plain ,(format nil "[~A]" locative-type))
+                     ,@(unless (eq *subformat* :w3m)
+                         `(,@(when source-uri
+                               '((:raw-html "</a>")))
+                           (:raw-html "</span> ")
+                           (:raw-html "<span class=\"dref-name\">")))
+                     " "
+                     (:explicit-link :label ,label-pt
+                      :source ,(if *document-live*
+                                   ;; Link to a separate pax: page.
+                                   (finalize-pax-url (dref-to-pax-url dref))
+                                   ;; Link to self within the page.
+                                   (format nil "#~A"
+                                           (urlencode (dref-to-anchor dref)))))
+                     ,@(unless (eq *subformat* :w3m)
+                         '((:raw-html "</span>")
+                           (:raw-html "</span>"))))))
+                ((:pdf)
+                 (let ((source-uri (source-uri dref)))
+                   `(:plain
+                     ,@(if source-uri
+                           (inline-pandoc-latex
+                            `("\\paxlocativetypewithsource{"
+                              ,(escape-tex source-uri)
+                              "}{"
+                              ,(escape-tex locative-type)
+                              "}"))
+                           (inline-pandoc-latex
+                            `("\\paxlocativetype{"
+                              ,(escape-tex locative-type)
+                              "}")))
+                     ,@(inline-pandoc-latex
+                        `("\\paxname{"
+                          ,@(escape-tex-in-parse-tree label-pt)
+                          "}")))))
+                ((:markdown)
+                 `(:plain ,(format nil "[~A] " locative-type)
+                   (:strong ,@label-pt)))
+                ((nil)))))))
+     nil 0 stream)))
 
 (defun dref-bullet-label (dref)
   (let ((title (doctitle dref)))
     (if title
-        (let ((label (document-title title :dref dref
-                                     ;; Emphasis is set in the context.
-                                     :deemph t)))
-          (values label label))
-        (let ((label (prin1-to-string* (xref-name dref))))
-          (values label (escape-markdown label))))))
+        (document-title title :dref dref
+                        ;; Emphasis is set in the context.
+                        :deemph t :format nil)
+        (list (prin1-to-string* (xref-name dref))))))
 
 (defun print-end-bullet (stream)
-  (if (and (eq *format* :html)
-           (not (eq *subformat* :w3m)))
-      ;; end "dref-bullet" span
-      (format stream "</span>~%")
-      (format stream "~%")))
+  (when (and (eq *format* :html)
+             (not (eq *subformat* :w3m)))
+    ;; End the "dref-bullet" span left open by PRINT-DREF-BULLET
+    (write-markdown-pt '((:plain (:raw-html "</span>"))) nil 0 stream))
+  (%ensure-md-paragraph stream))
 
 (defun source-uri (reference)
   (let ((fn (page-source-uri-fn *page*)))
@@ -3484,16 +3487,21 @@
                      ;; must be escaped Markdown
                      arglist
                      (arglist-to-markdown arglist)))
-         (string (if *print-arglist-key*
-                     (funcall *print-arglist-key* string)
-                     string)))
-    (cond ((not *document-mark-up-signatures*)
-           (format stream "~A" string))
-          ((and (eq *format* :html)
-                (not (eq *subformat* :w3m)))
-           (format stream "<span class=\"arglist\">~A</span>" string))
-          (t
-           (write-string (md-emph string nil) stream)))))
+         (tree (parse-markdown (if *print-arglist-key*
+                                   (funcall *print-arglist-key* string)
+                                   string))))
+    (write-markdown-pt
+     (cond ((not *document-mark-up-signatures*)
+            tree)
+           ((and (eq *format* :html)
+                 (not (eq *subformat* :w3m)))
+            `((:plain
+               (:raw-html "<span class=\"arglist\">")
+               ,@tree
+               (:raw-html "</span>"))))
+           (t
+            `((:plain (:emph ,@tree)))))
+     nil 0 stream)))
 
 ;;; Print a lambda list of any kind (ordinary, macro, etc) or a method
 ;;; arglist to a string. Arg names are printed without the package
@@ -3642,7 +3650,7 @@
   - Two backslashes right after an opening backtick turns autolinking
     and downcasing off. Use this for things that are not Lisp code but
     which need to be in a monospace font."""
-  """In the following examples capital C/D/A letters mark the presence,
+  """In the following examples, capital C/D/A letters mark the presence,
   and a/b/c the absence of codification, downcasing, and autolinking
   assuming all these features are enabled by
   *DOCUMENT-UPPERCASE-IS-CODE*, *DOCUMENT-DOWNCASE-UPPERCASE-CODE*,
@@ -3659,8 +3667,8 @@
       [DOCUMENT][dislocated]  => `document`            (CDa)
 
   Note that in the example marked with `\*`, the single backslash,
-  that would normally turn autolinking off, is ignored because it is
-  in an explicit link.""")
+  that would normally turn autolinking off is ignored because it is in
+  an explicit link.""")
 
 
 (defsection @document-implementation-notes

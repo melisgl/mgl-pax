@@ -23,10 +23,6 @@ Normal completion includes nicknames as "pax:" without relisting all
 symbols.
 ** MAYBE "parent" look up includes (e.g. for NOTEs)
 * document
-** OPT parse and print markdown once when *format* is :html?
-This would involve rewriting everything to emit parse tree fragments
-or be able to produce html directly. Either way, it is not without
-cost.
 ** OPT 3bmd parsing performance on large blocks
 https://github.com/3b/3bmd/issues/56
 ** CANCELLED consider CommonDoc from the 40ants fork
