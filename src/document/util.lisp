@@ -129,6 +129,8 @@
                     (package (if (zerop (length name-1))
                                  #.(find-package :keyword)
                                  (find-package name-1))))
+                (unless package
+                  (error "~@<Package ~S does not exist.~:@>" name-1))
                 (or (find-symbol name-2 package)
                     (error "~@<Symbol with name ~S not found in package ~S.~:@>"
                            name-2 (package-name package)))))

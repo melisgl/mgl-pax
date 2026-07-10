@@ -719,7 +719,7 @@
           (declare (ignore authority))
           (unless (equal scheme "pax")
             (error "~S doesn't have pax: scheme." pax-url))
-          (let ((drefs (definitions-for-pax-url-path path)))
+          (let ((drefs (definitions-for-pax-url-path (urldecode path))))
             (assert (<= (length drefs) 1))
             (when drefs
               (let* ((dref (first drefs))
