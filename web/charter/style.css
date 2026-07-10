@@ -14,7 +14,7 @@
   --font-size-monospace-in-code: 88%;
   /* Match the tightness of Charter. */
   --letter-spacing-in-code: -0.03em;
-  --code-color: #000;
+  --code-color: #111;
   /* With DejaVu Sans Mono 81% gets about 80 characters per line at full
    * width (73ch). */
   --font-size-monospace-in-pre: 82%;
