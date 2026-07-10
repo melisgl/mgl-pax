@@ -443,11 +443,11 @@
         (write-markdown-pt
          `((:plain
             ,@(inline-pandoc-latex
-               `("\\subsubsection*{\\normalfont\\textcolor[HTML]{606060}"
-                 "{[in package "
-                 ,(escape-tex name)
-                 ,(escape-tex nicknames)
-                 "]}}"))))
+               "\\subsubsection*{\\normalfont\\textcolor[HTML]{606060}"
+               "{[in package "
+               (escape-tex name)
+               (escape-tex nicknames)
+               "]}}")))
          t 0 stream)
         (write-markdown-pt
          `((:heading

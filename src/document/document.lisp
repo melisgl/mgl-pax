@@ -3266,11 +3266,11 @@
          (write-markdown-pt
           `((:plain
              ,@(inline-pandoc-latex
-                `(,@(unless (typep dref 'section-dref)
-                      '("\\phantomsection"))
-                  "\\label{"
-                  ,(html4-safe-name (dref-to-anchor-v1 dref))
-                  "}"))))
+                (unless (typep dref 'section-dref)
+                  "\\phantomsection")
+                "\\label{"
+                (html4-safe-name (dref-to-anchor-v1 dref))
+                "}")))
           nil 0 stream))))
 
 (defun anchor-id (dref)
@@ -3453,19 +3453,22 @@
                    `(:plain
                      ,@(if source-uri
                            (inline-pandoc-latex
-                            `("\\paxlocativetypewithsource{"
-                              ,(escape-tex source-uri)
-                              "}{"
-                              ,(escape-tex locative-type)
-                              "}"))
+                            "\\paxlocativetypewithsource{"
+                            (escape-tex source-uri)
+                            "}{"
+                            (escape-tex locative-type)
+                            "}")
                            (inline-pandoc-latex
-                            `("\\paxlocativetype{"
-                              ,(escape-tex locative-type)
-                              "}")))
+                            "\\paxlocativetype{"
+                            (escape-tex locative-type)
+                            "}"))
                      ,@(inline-pandoc-latex
-                        `("\\paxname{"
-                          ,@(escape-tex-in-parse-tree label-pt)
-                          "}")))))
+                        "\\paxname{"
+                        (escape-tex
+                         (trim-whitespace
+                          (with-output-to-string (s)
+                            (print-markdown label-pt s :format :plain))))
+                        "}"))))
                 ((:markdown)
                  `(:plain ,(format nil "[~A] " locative-type)
                    (:strong ,@label-pt)))

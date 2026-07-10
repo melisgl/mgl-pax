@@ -314,7 +314,9 @@
 
 
 (defmethod write-begin-index ((format (eql :pdf)) stream)
-  (write-string """```{=latex}
+  (write-string """
+
+```{=latex}
 \begingroup
 \small
 \raggedright
@@ -340,6 +342,7 @@
 
 (defmethod write-end-index ((format (eql :pdf)) stream)
   (write-string """
+
 ```{=latex}
 \endgroup
 ```

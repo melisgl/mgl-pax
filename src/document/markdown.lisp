@@ -212,15 +212,12 @@
 
 ;;;; TeX
 
-(defun inline-pandoc-latex (tree)
-  `((:code ,@tree) "{=latex}"))
-
-(defun escape-tex-in-parse-tree (tree)
-  (map-markdown-parse-tree () () t
-                           (lambda (parent string)
-                             (declare (ignore parent))
-                             (escape-tex string))
-                           tree))
+(defun inline-pandoc-latex (&rest args)
+  `((:code ,(with-output-to-string (s)
+              (dolist (arg args)
+                (when arg
+                  (write-string arg s)))))
+    "{=latex}"))
 
 
 ;;;; Markdown parse tree transformation
