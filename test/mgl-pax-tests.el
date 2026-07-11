@@ -45,7 +45,7 @@
            until (eq major-mode 'w3m-mode)
            do (sit-for 0.1))
   ;; Wait for fontification to finish.
-  (sit-for 0.1))
+  (sit-for 0.2))
 
 (defun substringp (sub string)
   (string-match-p (regexp-quote sub) string))
@@ -268,7 +268,7 @@
 (defun mgl-pax-test-sync-hard ()
   (slime-sync-to-top-level 1)
   (mgl-pax-sync-current-buffer)
-  (sit-for 0.2))
+  (sit-for 0.4))
 
 (def-slime-test mgl-pax-edit-definitions/test-defs
     (name snippet &optional snippet2)
