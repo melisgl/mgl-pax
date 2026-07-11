@@ -508,11 +508,13 @@
   (%ensure-md-paragraph stream))
 
 (defun write-markdown-pt (tree paragraphp level stream)
+  (assert (<= 0 level))
   (when paragraphp
     (%ensure-md-paragraph stream))
   (when tree
     (with-standard-io-syntax
-      (format stream "~A~S ~S " #\Soh level tree))
+      (let ((*print-readably* nil))
+        (format stream "~A~S ~S " #\Soh level tree)))
     (when paragraphp
       (%ensure-md-paragraph stream))))
 
@@ -633,12 +635,16 @@
                               :start start :end pos2))
       (blankp string :start pos1 :end pos2))))
 
-;;; Add the parse of a string (NEW-FOREST) to the parse of a previous
-;;; string (FOREST) such that we get the parse of the concatenation of
-;;; the two strings (with the latter indented by 4*LEVEL spaces).
+;;; Add (destructively) the parse of a string (NEW-FOREST) to the
+;;; parse of a previous string (FOREST) such that we get the parse of
+;;; the concatenation of the two strings (with the latter indented by
+;;; 4*LEVEL spaces).
 ;;;
 ;;; If not NEW-PARAGRAPH, then extend PT-OPEN-PARAGRAPH of the last
 ;;; tree in FOREST.
+;;;
+;;; Since this is called only from freshly READ object, we can mutate
+;;; freely.
 (defun add-to-forest (forest new-forest new-paragraph level)
   (assert forest)
   (when new-forest
@@ -663,6 +669,15 @@
              (let ((last-tree (first (last forest))))
                (when (parse-tree-p last-tree :plain)
                  (setf (first last-tree) :paragraph))
+               (let ((tag (first last-tree)))
+                 ;; ((:BULLET-LIST (:LIST-ITEM <X>))) + ((:BULLET-LIST
+                 ;; (:LIST-ITEM <Y>))) => ((:BULLET-LIST (:LIST-ITEM
+                 ;; <X>) (:LIST-ITEM <Y>)))
+                 (when (or (eq tag :bullet-list)
+                           (eq tag :counted-list))
+                   (loop while (eq (first (first new-forest)) tag)
+                         do (nconc last-tree (rest (first new-forest)))
+                            (pop new-forest))))
                (nconc forest new-forest)))
             (t
              (let ((list-item (pt-last-list-item last-tree)))
@@ -673,7 +688,8 @@
                        last-tree)
                (setf (cdr list-item)
                      (add-to-forest (cdr list-item) new-forest new-paragraph
-                                    (1- level)))))))))
+                                    (1- level)))
+               forest))))))
 
 ;;; Return the "open" :PLAIN or :PARAGRAPH subtree of TREE or NIL.
 ;;; This is the paragraph to which stuff could have been added had the

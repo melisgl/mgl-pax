@@ -54,7 +54,7 @@ p {
 }
 
 li {
-  margin: calc(0.5*var(--parsep)) 0 0 0;
+  margin: var(--parsep) 0 0 0;
 }
 
 /* p + p { */

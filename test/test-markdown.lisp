@@ -4,6 +4,7 @@
   (test-md-code)
   (test-md-emph)
   (test-md-strong)
+  (test-add-to-forest)
   (test-parse-md-after-tree))
 
 (deftest test-md-code ()
@@ -30,6 +31,15 @@
   (is (equal (pax::md-strong "x*y") "**x\\*y**"))
   (is (equal (pax::md-strong "x\\*y") "**x\\\\*y**"))
   (is (equal (pax::md-strong "x\\*y" nil) "**x\\*y**")))
+
+(deftest test-add-to-forest ()
+  (is (equal (mgl-pax::add-to-forest
+              (copy-tree '((:bullet-list (:list-item (:plain "1")))))
+              (copy-tree '((:bullet-list (:list-item (:plain "2")))))
+              t 0)
+             '((:bullet-list
+                (:list-item (:plain "1"))
+                (:list-item (:plain "2")))))))
 
 (deftest test-parse-md-after-tree ()
   (is (equal (pax::parse-md-after-tree '((:plain "x")) "y" :paragraphp nil)

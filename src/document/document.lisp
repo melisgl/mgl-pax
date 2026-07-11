@@ -127,8 +127,7 @@
     (when (plusp level)
       (incf (nth (1- level) *heading-number*)))
     (when *first-pass*
-      (collect-heading dref (with-output-to-string (s)
-                              (print-markdown title-pt s))))
+      (collect-heading dref title-pt))
     (cond (*document-list-view*
            (documenting-definition (stream :arglist (ensure-list
                                                      (doctitle dref)))))
@@ -3008,15 +3007,17 @@
         (title (heading-title heading))
         (level (heading-level heading))
         (number (heading-number heading)))
-    (loop repeat (* 4 (1- level))
-          do (write-char #\Space stream))
     (let ((target-id (link-to-definition dref)))
-      (if (and *document-link-sections* target-id)
-          (format stream "- [~A~A][~A]" (format-heading-number number) title
-                  target-id)
-          (format stream "- ~A~A" (format-heading-number number) title)))
-    (terpri stream)
-    (terpri stream)))
+      (write-markdown-pt
+       `((:bullet-list
+          (:list-item
+           (:plain
+            ,@(if (and *document-link-sections* target-id)
+                  `((:reference-link
+                     :label (,(format-heading-number number) ,@title)
+                     :definition (,target-id)))
+                  `(,(format-heading-number number) ,title))))))
+       t (max 0 (1- level)) stream))))
 
 (defun print-section-title (stream dref title-pt link-title-to)
   (when *document-link-sections*
@@ -3108,8 +3109,10 @@
          t 0 stream)))))
 
 (defun write-navigation-link (heading stream)
-  (let ((target-id (link-to-definition (heading-object heading))))
-    (format stream "[~A][~A]" (heading-title heading) target-id)))
+  (let ((target-id (link-to-definition (heading-object heading)))
+        (title (with-output-to-string (s)
+                 (print-markdown (heading-title heading) s))))
+    (format stream "[~A][~A]" title target-id)))
 
 (defun navigation-link (dref stream)
   (when (and *document-link-sections* *document-text-navigation*)
