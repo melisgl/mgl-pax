@@ -64,7 +64,7 @@ jobs:
           git clone --depth 1 https://github.com/melisgl/try
           git clone --depth 1 https://github.com/melisgl/dref
           # FIXME: remove later
-          git clone --branch fix-code-markdown-printer --depth 1 https://github.com/melisgl/3bmd
+          git clone --branch optimize-grammar --depth 1 https://github.com/melisgl/3bmd
           # git clone --depth 1 https://github.com/3b/3bmd
           # KLUDGE: 'ros install slime/slime' fails because it is not
           # interpreted as a github reference but is special cased.
