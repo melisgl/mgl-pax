@@ -268,8 +268,7 @@
           (format stream "~A" name)))))
 
 (defun md-link (dref)
-  (with-output-to-string (stream)
-    (write-md-link dref stream)))
+  (write-md-link dref nil))
 
 
 ;;;; ASDF:SYSTEM locative

@@ -4652,7 +4652,7 @@ Depending on the context, trimming and depluralization may be
 enabled (see [Raw Names in Words][f0d5]), while the possible names may be
 restricted to symbols (see [Names in Raw Names][016d]).
 
-- *Trimming:* Enabled for [`M-.` Defaulting][460e] and [Codification][f1ab].
+- *Trimming*: Enabled for [`M-.` Defaulting][460e] and [Codification][f1ab].
 
 - *Depluralization:* Enabled when the [word][d7b0] is part of the normal
   flow of text (i.e. not for [Specific Reflink with Text][fb17],
@@ -4660,7 +4660,7 @@ restricted to symbols (see [Names in Raw Names][016d]).
   `mgl-pax-apropos` unless they determine their argument from buffer
   contents).
 
-- *Symbols only:* This is the case for [Codification][f1ab] and
+- *Symbols only*: This is the case for [Codification][f1ab] and
   [Unspecific Autolink][e2a4] to prevent string-based definitions from
   littering the documentation with links without the control
   provided by explicitly [`IMPORT`][8f46]ing symbols.

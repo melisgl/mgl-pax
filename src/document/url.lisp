@@ -44,17 +44,14 @@
                              :adjustable t
                              :fill-pointer 0))
          (unreserved *unreserved-url-characters*)
-         (escape-char *url-escape-char*)
-         (escape-char-code (char-code escape-char)))
+         (escape-char *url-escape-char*))
     (declare (type (simple-array bit (256)) unreserved)
              (type character escape-char))
     (with-output-to-string (out output)
       (loop for code across bytes
-            do (cond ((and (= (sbit unreserved code) 1)
-                           (/= code escape-char-code))
-                      (write-char (code-char code) out))
-                     (t
-                      (format out "~A~:@(~16,2,'0r~)" escape-char code)))))
+            do (if (= (sbit unreserved code) 1)
+                   (write-char (code-char code) out)
+                   (format out "~A~:@(~16,2,'0R~)" escape-char code))))
     (coerce output 'simple-string)))
 
 (declaim (inline hex-digit-to-int))

@@ -1343,8 +1343,7 @@
                           :leave-autolink-escape nil))))
     (setq tree (check-title-parse-tree tree string :deemph deemph :dref dref))
     (if format
-        (with-output-to-string (out)
-          (print-markdown tree out :format format))
+        (print-markdown tree nil :format format)
         (or tree
             ;; Return non-NIL for the empty string.
             '((:plain ""))))))
@@ -2427,8 +2426,7 @@
   (invoke-restart 'output-label))
 
 (defun reflink-to-string (tree)
-  (with-output-to-string (stream)
-    (print-markdown (list tree) stream)))
+  (print-markdown (list tree) nil))
 
 
 (defsection @autolink (:title "Autolink")
@@ -3110,8 +3108,7 @@
 
 (defun write-navigation-link (heading stream)
   (let ((target-id (link-to-definition (heading-object heading)))
-        (title (with-output-to-string (s)
-                 (print-markdown (heading-title heading) s))))
+        (title (print-markdown (heading-title heading) nil)))
     (format stream "[~A][~A]" title target-id)))
 
 (defun navigation-link (dref stream)
@@ -3469,8 +3466,7 @@
                         "\\paxname{"
                         (escape-tex
                          (trim-whitespace
-                          (with-output-to-string (s)
-                            (print-markdown label-pt s :format :plain))))
+                          (print-markdown label-pt nil :format :plain)))
                         "}"))))
                 ((:markdown)
                  `(:plain ,(format nil "[~A] " locative-type)

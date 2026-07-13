@@ -25,6 +25,19 @@
     `(let ((,sym (ignore-errors (find-symbol ,symbol-name ,package-name))))
        (progv (when ,sym (list ,sym)) (when ,sym (list ,value))
          ,@body))))
+
+(defmacro with-formatlike-streams ((stream) &body body)
+  (with-gensyms (with-formatlike-streams-body)
+    `(flet ((,with-formatlike-streams-body (,stream)
+              ,@body))
+       (case ,stream
+         ((nil)
+          (with-output-to-string (,stream)
+            (,with-formatlike-streams-body ,stream)))
+         ((t)
+          (,with-formatlike-streams-body *standard-output*))
+         (t
+          (,with-formatlike-streams-body ,stream))))))
 
 
 (defun definitions* (name)

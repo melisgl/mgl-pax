@@ -25,7 +25,7 @@
   enabled (see @RAW-NAMES-IN-WORDS), while the possible names may be
   restricted to symbols (see @NAMES-IN-RAW-NAMES).
 
-  - _Trimming:_ Enabled for @M-.-DEFAULTING and @CODIFICATION.
+  - _Trimming_: Enabled for @M-.-DEFAULTING and @CODIFICATION.
 
   - _Depluralization:_ Enabled when the @WORD is part of the normal
     flow of text (i.e. not for @SPECIFIC-REFLINK-WITH-TEXT,
@@ -33,7 +33,7 @@
     `mgl-pax-apropos` unless they determine their argument from buffer
     contents).
 
-  - _Symbols only:_ This is the case for @CODIFICATION and
+  - _Symbols only_: This is the case for @CODIFICATION and
     @UNSPECIFIC-AUTOLINK to prevent string-based definitions from
     littering the documentation with links without the control
     provided by explicitly IMPORTing symbols."
@@ -369,9 +369,3 @@
 (defun validate-parsed-locative-type (string)
   (let ((locative (parse-sexp string :errorp nil :on-unreadable :truncate)))
     (dref (locative-type locative) 'locative nil)))
-
-(defun read-locative-type-from-string (string &key (start 0))
-  (multiple-value-bind (symbol foundp pos)
-      (parse-interned-symbol string :start start)
-    (when (and foundp (dref symbol 'locative nil))
-      (values symbol pos))))

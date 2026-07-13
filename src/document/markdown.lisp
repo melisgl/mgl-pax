@@ -334,9 +334,10 @@
      ,@body))
 
 (defun print-markdown (parse-tree stream &key (format :markdown))
-  (with-colorize-silenced ()
-    (3bmd::print-doc-to-stream-using-format
-     (preprocess-parse-tree-for-printing parse-tree format) stream format)))
+  (with-formatlike-streams (stream)
+    (with-colorize-silenced ()
+      (3bmd::print-doc-to-stream-using-format
+       (preprocess-parse-tree-for-printing parse-tree format) stream format))))
 
 (defun preprocess-parse-tree-for-printing (parse-tree format)
   (let ((stop-tags '(:code :verbatim 3bmd-code-blocks::code-block
