@@ -14,7 +14,7 @@
 
 (defvar *on-unreadable* :error)
 (defvar *truncating-on-unreadable* nil)
-(defvar *on-read-eval-error* :parse-error)
+(defvar *parse-sexp-error-p*)
 
 ;;; A non-interning parser like SWANK::PARSE-SYMBOL, but it supports
 ;;; nested lists of symbols, strings and non-negative real numbers
@@ -23,8 +23,8 @@
 ;;; May signal END-OF-FILE, READER-ERROR and PARSE-ERROR if ERRORP.
 ;;;
 ;;; *READTABLE* is ignored, and no macro dispatch character is handled
-;;; except #. (this is allowed to INTERN) and #<, which behave as in
-;;; the standard readtable.
+;;; except #. (this is allowed to INTERN), #:, and #<, which behave as
+;;; in the standard readtable.
 ;;
 ;;; If ON-UNREADABLE is :TRUNCATE, then the already read stuff is
 ;;; returned with the symbol PAX::UNREADABLE marking the location.
@@ -34,12 +34,8 @@
 ;;; the # character. It should return the parsed unreadable object
 ;;; (with FILE-POSITION of STREAM updated) or signal PARSE-SEXP-ERROR.
 (defun parse-sexp (string &key (start 0) junk-allowed (errorp t)
-                   (on-unreadable :error) )
-  (handler-bind (((or end-of-file reader-error parse-error)
-                   (lambda (c)
-                     (declare (ignore c))
-                     (unless errorp
-                       (return-from parse-sexp nil)))))
+                   (on-unreadable :error))
+  (catch 'parse-sexp-error
     (let ((string
             ;; Faster than (SUBSEQ STRING START)
             (make-array (- (length string) start)
@@ -49,7 +45,7 @@
       (with-input-from-string (stream string)
         (let* ((*on-unreadable* on-unreadable)
                (*truncating-on-unreadable* nil)
-               (*on-read-eval-error* (if errorp :parse-error nil))
+               (*parse-sexp-error-p* errorp)
                (sexp (parse-sexp* stream string))
                (pos (file-position stream)))
           (when (and (not junk-allowed)
@@ -66,8 +62,10 @@
                      (format-args condition)))))
 
 (defun parse-sexp-error (format-control &rest format-args)
-  (error 'parse-sexp-error :format-control format-control
-         :format-args format-args))
+  (if *parse-sexp-error-p*
+      (error 'parse-sexp-error :format-control format-control
+             :format-args format-args)
+      (throw 'parse-sexp-error nil)))
 
 (defun parse-sexp* (stream string)
   (let ((next (peek-char t stream nil)))
@@ -92,9 +90,8 @@
                       (handler-bind
                           ((error
                              (lambda (e)
-                               (when (eq *on-read-eval-error* :parse-error)
-                                 (parse-sexp-error "#.~A failed with:~:@_  ~A"
-                                                   object e)))))
+                               (parse-sexp-error "#.~A failed with:~:@_  ~A"
+                                                 object e))))
                         (eval object))))
                    ((eql next #\<)
                     (cond ((eq *on-unreadable* :error)
