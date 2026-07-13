@@ -78,10 +78,11 @@
 ;;; mutable list of integers, whose length is the nesting depth. The
 ;;; number of top-level headings is '(), but they append a 0 to the
 ;;; end of *HEADING-NUMBER* for the processing of headings nested in
-;;; them. When such a nested WITH-HEADING is encountered, the last
-;;; number is INCFed, and that will be its heading numbers (i.e. (1)
-;;; here). Then another 0 is added to the end of *HEADING-NUMBER* for
-;;; the BODY of WITH-HEADING, and processing goes on.
+;;; them (or a NIL for unnumbered headings). When such a nested
+;;; WITH-HEADING is encountered, the last number is INCFed, and that
+;;; will be its heading numbers (i.e. (1) here). Then another 0 is
+;;; added to the end of *HEADING-NUMBER* for the BODY of WITH-HEADING,
+;;; and processing goes on.
 (defvar *heading-number* ())
 
 ;;; (LENGTH *HEADING-NUMBER*)
@@ -91,6 +92,9 @@
 ;;; during the second pass. It's in reverse order while being
 ;;; accumulated in the first pass.
 (defvar *headings* ())
+
+(defun numbered-heading-number-p (heading-number)
+  (not (member nil heading-number)))
 
 ;;; Called at the end of the first pass. Reverse the order of
 ;;; *HEADINGS*.
@@ -121,11 +125,15 @@
          (list (dref-to-anchor dref))))))
 
 ;;; This is the implementation of the WITH-HEADING macro.
-(defun/auto call-with-heading (stream dref link-title-to fn)
+(defun/auto call-with-heading (stream dref link-title-to numbered fn)
+  (assert (= *heading-level* (length *heading-number*)))
   (let ((level *heading-level*)
+        (numbered (and numbered (numbered-heading-number-p *heading-number*)))
         (title-pt (document-definition-title-or-anchor dref :format nil)))
-    (when (plusp level)
-      (incf (nth (1- level) *heading-number*)))
+    (when (and numbered (plusp level))
+      (let ((last (last *heading-number*)))
+        (when (first last)
+          (incf (first last)))))
     (when *first-pass*
       (collect-heading dref title-pt))
     (cond (*document-list-view*
@@ -133,13 +141,14 @@
                                                      (doctitle dref)))))
           (t
            (unless *first-pass*
-             (print-section-title stream dref title-pt link-title-to)
+             (print-section-title stream dref
+                                  (if numbered
+                                      (cons (format-heading-number) title-pt)
+                                      title-pt)
+                                  link-title-to)
              (print-table-of-contents dref stream))
-           (let ((*heading-number*
-                   (append *heading-number*
-                           (loop repeat (max 0 (- (1+ level)
-                                                  (length *heading-number*)))
-                                 collect 0)))
+           (let ((*heading-number* (append *heading-number*
+                                           (list (if numbered 0 nil))))
                  (*heading-level* (1+ *heading-level*)))
              (funcall fn stream))))))
 
@@ -2975,8 +2984,6 @@
   (when (zerop *heading-level*)
     (let ((rest (list-headings dref *heading-level*))
           (toc-title-printed nil))
-      ;; FIXME: Use WITH-DYNAMIC-SECTION (needs :UNNUMBERED in
-      ;; CALL-WITH-HEADING).
       (flet ((ensure-toc-title ()
                (unless toc-title-printed
                  (heading (+ *heading-level* 1 *heading-offset*) stream)
@@ -3035,20 +3042,19 @@
 (defun section-title-link-pt (dref title-pt link-title-to)
   (cond ((not (and *document-link-sections*
                    (eq *format* :html)))
-         (cons (format-heading-number) title-pt))
+         title-pt)
         (link-title-to
          ;; Hovering over the section title will show the title of
          ;; LINK-TITLE-TO from the Markdown reference link definition.
          `((:reference-link :label ,(cons (format-heading-number) title-pt)
             :definition (,(link-to-definition link-title-to)))))
         ((in-context-only-p dref)
-         (cons (format-heading-number) title-pt))
+         title-pt)
         (t
          `((:raw-html ,(format nil "<a href=~S>"
                                (if *document-live*
                                    (finalize-pax-url (dref-to-pax-url dref))
                                    (object-uri dref))))
-           ,(format-heading-number)
            ,@title-pt
            (:raw-html "</a>")))))
 
@@ -3141,7 +3147,9 @@
 
 (defun format-heading-number (&optional (heading-number *heading-number*))
   (format nil "~@[~{~D~^.~} ~]"
-          (when (<= (length heading-number) *document-max-numbering-level*)
+          (when (and (<= (length heading-number)
+                         *document-max-numbering-level*)
+                     (numbered-heading-number-p heading-number))
             heading-number)))
 
 

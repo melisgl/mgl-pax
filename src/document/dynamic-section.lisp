@@ -8,6 +8,7 @@
   "nothing"
   (defclass dynamic-section-dref ()
     ((title :initarg :title :reader doctitle*)
+     (numberedp :initform t :initarg :numbered :reader numberedp)
      (indexable-referrer :initform t :initarg :indexable-referrer
                          :reader indexable-referrer-p)
      (in-context-only :initform nil :initarg :in-context-only
@@ -19,14 +20,14 @@
   (resolve-error))
 
 ;;; Create a SECTION, and generate documentation for it.
-(defmacro with-dynamic-section ((stream &key title (indexable-referrer t)
-                                 in-context-only)
+(defmacro with-dynamic-section ((stream &key title (numbered t)
+                                 (indexable-referrer t) in-context-only)
                                 &body body)
   (assert (symbolp stream))
-  `(call-with-dynamic-section stream ,title ,indexable-referrer
+  `(call-with-dynamic-section ,stream ,title ,numbered ,indexable-referrer
                               ,in-context-only (lambda (,stream) ,@body)))
 
-(defun call-with-dynamic-section (stream title indexable-referrer
+(defun call-with-dynamic-section (stream title numbered indexable-referrer
                                   in-context-only fn)
   (document-object
    (let* ((id (incf (page-next-dyn-id *page*)))
@@ -48,13 +49,14 @@
                                                id)
                                  :locative 'dynamic-section
                                  :title title
+                                 :numbered numbered
                                  :indexable-referrer indexable-referrer
                                  :in-context-only in-context-only
                                  :fn fn)))))
    stream))
 
 (defmethod document-object* ((dref dynamic-section-dref) stream)
-  (with-heading (stream :dref dref)
+  (with-heading (stream :dref dref :numbered (numberedp dref))
     (funcall (fn-of dref) stream)))
 
 (defmethod dref-to-anchor ((dref dynamic-section-dref))

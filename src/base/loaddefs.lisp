@@ -600,7 +600,7 @@
   See TRANSCRIBE for how the actual syntax to be used is selected.")
 
 (autoload:autoload mgl-pax::call-with-heading "mgl-pax/document" :arglist
-                   "(stream dref:dref mgl-pax::link-title-to mgl-pax::fn)")
+                   "(stream dref:dref mgl-pax::link-title-to mgl-pax::numbered mgl-pax::fn)")
 
 (autoload:autoload mgl-pax::downcasingp "mgl-pax/document" :arglist "nil")
 

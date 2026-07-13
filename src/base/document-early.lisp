@@ -36,7 +36,8 @@
       output to depend on the output format.")
 (declaim (special *subformat*))
 
-(defmacro with-heading ((stream &key dref link-title-to) &body body)
+(defmacro with-heading ((stream &key dref link-title-to (numbered t))
+                        &body body)
   "Write a Markdown heading with the DOCTITLE of DREF to STREAM.
 
   - DREF defaults to the definition for which documentation is
@@ -47,12 +48,18 @@
   - If *DOCUMENT-LINK-SECTIONS*, generate anchors based on DREF.
 
   - LINK-TITLE-TO behaves like the LINK-TITLE-TO argument of
-    DEFSECTION."
+    DEFSECTION.
+
+  - NUMBERED controls whether a heading number is assigned to the
+    heading. The heading number reflects the nesting structure of
+    WITH-HEADINGS (e.g. 3.1.2). Descendants of unnumbered headings are
+    unnumbered regardless of NUMBERED."
   `(call-with-heading ,stream ,(if dref
                                    `(or (locate ,dref)
                                         *dref-being-documented* )
                                    '*dref-being-documented*)
                       ,link-title-to
+                      ,numbered
                       (lambda (,stream)
                         ,@body)))
 

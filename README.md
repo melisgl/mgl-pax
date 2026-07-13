@@ -4933,7 +4933,7 @@ encoded in an unspecified format internal to `DOCUMENT`.
 
 <a id="x-28MGL-PAX-3AWITH-HEADING-20MGL-PAX-3AMACRO-29"></a>
 
-- \[macro\] **WITH-HEADING** *(STREAM \&KEY DREF LINK-TITLE-TO) \&BODY BODY*
+- \[macro\] **WITH-HEADING** *(STREAM \&KEY DREF LINK-TITLE-TO (NUMBERED T)) \&BODY BODY*
 
     Write a Markdown heading with the [`DOCTITLE`][e619] of `DREF` to `STREAM`.
 
@@ -4946,6 +4946,11 @@ encoded in an unspecified format internal to `DOCUMENT`.
 
     - `LINK-TITLE-TO` behaves like the `LINK-TITLE-TO` argument of
       [`DEFSECTION`][72b4].
+
+    - `NUMBERED` controls whether a heading number is assigned to the
+      heading. The heading number reflects the nesting structure of
+      `WITH-HEADINGS` (e.g. 3.1.2). Descendants of unnumbered headings are
+      unnumbered regardless of `NUMBERED`.
 
 <a id="x-28MGL-PAX-3ADOCTITLE-2A-20GENERIC-FUNCTION-29"></a>
 
