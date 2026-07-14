@@ -2495,7 +2495,8 @@
   _renders as_ DREF-NAME `(reader dref)`.""")
 
 (defun specific-autolink (word parent tree linked-refs)
-  (when-let (xref (find-name (curry #'specific-autolink-dref parent tree)
+  (when-let (xref (find-name (lambda (name)
+                               (specific-autolink-dref parent tree name))
                              word :depluralize t))
     (cond ((eq (xref-locative-type xref) 'dislocated)
            (vector-push-extend xref linked-refs)
