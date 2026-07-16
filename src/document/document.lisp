@@ -49,7 +49,6 @@
              (let ((*first-pass* t)
                    (*page* (last-elt *pages*)))
                (document-documentable ,documentable (make-broadcast-stream)))
-             (finalize-headings)
              (finalize-pages *pages*)
              ;; 2nd pass
              (let ((*first-pass* nil))
@@ -69,7 +68,7 @@
 ;;;; Numbering and collecting headings
 
 (defmacro with-headings (() &body body)
-  `(let ((*headings* ())
+  `(let ((*headings* (make-array 128 :adjustable t :fill-pointer 0))
          (*heading-number* ())
          (*heading-level* 0))
      ,@body))
@@ -88,18 +87,12 @@
 ;;; (LENGTH *HEADING-NUMBER*)
 (defvar *heading-level* 0)
 
-;;; This is a list of HEADING objects in the order of generation
-;;; during the second pass. It's in reverse order while being
-;;; accumulated in the first pass.
-(defvar *headings* ())
+;;; This is a vector of HEADING objects in the order of generation
+;;; during the second pass.
+(defvar *headings*)
 
 (defun numbered-heading-number-p (heading-number)
   (not (member nil heading-number)))
-
-;;; Called at the end of the first pass. Reverse the order of
-;;; *HEADINGS*.
-(defun finalize-headings ()
-  (setq *headings* (reverse *headings*)))
 
 (defstruct heading
   object
@@ -108,10 +101,10 @@
   level)
 
 (defun collect-heading (object title)
-  (push (make-heading :object object :title title
-                      :number (copy-list *heading-number*)
-                      :level *heading-level*)
-        *headings*))
+  (vector-push-extend (make-heading :object object :title title
+                                    :number (copy-list *heading-number*)
+                                    :level *heading-level*)
+                      *headings*))
 
 ;;; PAX-APROPOS* binds this to :DETAILED or :TERSE.
 (defvar *document-list-view* nil)
@@ -2975,7 +2968,7 @@
         (%ensure-md-paragraph stream)))))
 
 (defun toplevel-headings-on-page (page)
-  (loop for heading in *headings*
+  (loop for heading across *headings*
         when (and (zerop (heading-level heading))
                   (find (heading-object heading) (page-definitions page)
                         :test #'xref=))
@@ -2983,14 +2976,15 @@
 
 (defun print-table-of-contents (dref stream)
   (when (zerop *heading-level*)
-    (let ((rest (list-headings dref *heading-level*))
+    (let ((pos (heading-position dref *heading-level*))
           (toc-title-printed nil))
       (flet ((ensure-toc-title ()
                (unless toc-title-printed
                  (heading (+ *heading-level* 1 *heading-offset*) stream)
                  (format stream " Table of Contents~%~%")
                  (setq toc-title-printed t))))
-        (loop for heading in (rest rest)
+        (loop for i upfrom (1+ pos) below (length *headings*)
+              for heading = (aref *headings* i)
               while (plusp (heading-level heading))
               do (when (<= (heading-level heading)
                            *document-max-table-of-contents-level*)
@@ -2999,14 +2993,13 @@
       (when toc-title-printed
         (%ensure-md-paragraph stream)))))
 
-;;; Return the tail of *HEADINGS* from DREF at HEADING-LEVEL or NIL.
-(defun list-headings (dref heading-level)
+(defun heading-position (dref heading-level)
   ;; DREF may be DOCUMENTed multiple times at different depths. See
   ;; MGL-PAX-TEST::TEST-TABLE-OF-CONTENTS-REAPATED-SECTION-DEPTH.
-  (member-if (lambda (heading)
-               (and (xref= (heading-object heading) dref)
-                    (= (heading-level heading) heading-level)))
-             *headings*))
+  (position-if (lambda (heading)
+                 (and (xref= (heading-object heading) dref)
+                      (= (heading-level heading) heading-level)))
+               *headings*))
 
 (defun print-table-of-contents-entry (heading stream)
   (let ((dref (heading-object heading))
@@ -3068,16 +3061,16 @@
   (when (fancy-navigation-p)
     (when-let ((position (position dref *headings* :key #'heading-object
                                    :test #'xref=)))
-      (let* ((level (heading-level (elt *headings* position)))
+      (let* ((level (heading-level (aref *headings* position)))
              (n (length *headings*))
              (prev (when (and (plusp position)
                               (plusp level))
-                     (elt *headings* (1- position))))
+                     (aref *headings* (1- position))))
              (up (when (plusp level)
                    (find (1- level) (subseq *headings* 0 position)
                          :from-end t :key #'heading-level)))
              (next (when (< position (1- n))
-                     (let ((next (elt *headings* (1+ position))))
+                     (let ((next (aref *headings* (1+ position))))
                        ;; Prev and next stay within the same top-level
                        ;; section.
                        (unless (zerop (heading-level next))
@@ -3122,18 +3115,18 @@
   (when (and *document-link-sections* *document-text-navigation*)
     (let* ((position (position dref *headings* :key #'heading-object
                                :test #'xref=))
-           (level (heading-level (elt *headings* position)))
+           (level (heading-level (aref *headings* position)))
            (n (length *headings*))
            (writtenp nil))
       (when (< position (1- n))
         (format stream "Next: ")
-        (write-navigation-link (elt *headings* (1+ position)) stream)
+        (write-navigation-link (aref *headings* (1+ position)) stream)
         (setq writtenp t))
       (when (plusp position)
         (when writtenp
           (format stream " "))
         (format stream "Prev: ")
-        (write-navigation-link (elt *headings* (1- position)) stream)
+        (write-navigation-link (aref *headings* (1- position)) stream)
         (setq writtenp t))
       (when (plusp level)
         (when writtenp
