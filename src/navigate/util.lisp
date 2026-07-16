@@ -9,6 +9,89 @@
        ,@body)))
 
 
+;;;; Strings
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter *whitespace-chars*
+    (coerce '(#\Space #\Tab #\Return #\Newline #\Linefeed #\Page) 'string)))
+
+#+sbcl
+(declaim (sb-ext:maybe-inline whitespacep))
+(defun whitespacep (char)
+  (declare (type character char))
+  (and (<= (char-code char) 32)
+       (find char #.*whitespace-chars*)))
+
+(defun blankp (string-or-nil &key (start 0) (end (length string-or-nil)))
+  (declare (optimize speed)
+           (type (or simple-string null) string-or-nil)
+           (type fixnum start end))
+  (let ((end (min end (length string-or-nil))))
+    (loop for i upfrom start below end
+          always (whitespacep (aref string-or-nil i)))))
+
+(defun trim-whitespace (string-or-nil)
+  (if string-or-nil
+      (string-trim *whitespace-chars* string-or-nil)
+      nil))
+
+(defun mixed-case-p (string)
+  (and (some #'upper-case-p string)
+       (some #'lower-case-p string)))
+
+(defun prin1-to-string/case (object case)
+  (let ((package *package*))
+    (with-standard-io-syntax*
+      (let ((*print-case* case)
+            ;; Avoid mentions of BASE-CHAR and such.
+            (*print-readably* nil)
+            (*package* package))
+        (prin1-to-string object)))))
+
+;;; Add PREFIX to every line in STRING.
+(defun prefix-lines (prefix string &key exclude-first-line-p exclude-blank-p)
+  (with-output-to-string (out)
+    (with-input-from-string (in string)
+      (loop for i upfrom 0 do
+        (multiple-value-bind (line missing-newline-p) (read-line in nil nil)
+          (unless line
+            (return))
+          (if (or (and exclude-first-line-p (= i 0))
+                  (and exclude-blank-p (blankp line)))
+              (format out "~a" line)
+              (format out "~a~a" prefix line))
+          (unless missing-newline-p
+            (terpri out)))))))
+
+(defun shorten-string (string &key n-lines n-chars ellipsis)
+  (let ((shortened string))
+    (when n-lines
+      (setq shortened (first-lines shortened n-lines)))
+    (when (and n-chars (< n-chars (length shortened)))
+      (setq shortened (subseq shortened 0 n-chars)))
+    (if (and ellipsis (< (length shortened) (length string)))
+        (concatenate 'string shortened ellipsis)
+        shortened)))
+
+(defun first-lines (string &optional (n-lines 1))
+  (with-output-to-string (out)
+    (with-input-from-string (in string)
+      (loop for i below n-lines do
+        (multiple-value-bind (line missing-newline-p) (read-line in nil nil)
+          (when line
+            (if missing-newline-p
+                (write-string line out)
+                (write-line line out))))))))
+
+(defun adjust-string-case (string)
+  (declare (type string string))
+  (ecase (readtable-case *readtable*)
+    ((:upcase) (string-upcase string))
+    ((:downcase) (string-downcase string))
+    ;; We don't care about convenience with :INVERT.
+    ((:preserve :invert) string)))
+
+
 ;;;; Parsing of symbols, strings, numbers and their nested lists
 ;;;; without interning and recognizing some unreadable values
 
@@ -312,86 +395,3 @@
       ;; no such troubles with the equivalent ().
       (make-pathname :directory () :defaults pathname)
       pathname))
-
-
-;;;; Strings
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defparameter *whitespace-chars*
-    (coerce '(#\Space #\Tab #\Return #\Newline #\Linefeed #\Page) 'string)))
-
-#+sbcl
-(declaim (sb-ext:maybe-inline whitepace))
-(defun whitespacep (char)
-  (declare (type character char))
-  (and (<= (char-code char) 32)
-       (find char *whitespace-chars*)))
-
-(defun blankp (string-or-nil &key (start 0) (end (length string-or-nil)))
-  (declare (optimize speed)
-           (type (or simple-string null) string-or-nil)
-           (type fixnum start end))
-  (let ((end (min end (length string-or-nil))))
-    (loop for i upfrom start below end
-          always (whitespacep (aref string-or-nil i)))))
-
-(defun trim-whitespace (string-or-nil)
-  (if string-or-nil
-      (string-trim *whitespace-chars* string-or-nil)
-      nil))
-
-(defun mixed-case-p (string)
-  (and (some #'upper-case-p string)
-       (some #'lower-case-p string)))
-
-(defun prin1-to-string/case (object case)
-  (let ((package *package*))
-    (with-standard-io-syntax*
-      (let ((*print-case* case)
-            ;; Avoid mentions of BASE-CHAR and such.
-            (*print-readably* nil)
-            (*package* package))
-        (prin1-to-string object)))))
-
-;;; Add PREFIX to every line in STRING.
-(defun prefix-lines (prefix string &key exclude-first-line-p exclude-blank-p)
-  (with-output-to-string (out)
-    (with-input-from-string (in string)
-      (loop for i upfrom 0 do
-        (multiple-value-bind (line missing-newline-p) (read-line in nil nil)
-          (unless line
-            (return))
-          (if (or (and exclude-first-line-p (= i 0))
-                  (and exclude-blank-p (blankp line)))
-              (format out "~a" line)
-              (format out "~a~a" prefix line))
-          (unless missing-newline-p
-            (terpri out)))))))
-
-(defun shorten-string (string &key n-lines n-chars ellipsis)
-  (let ((shortened string))
-    (when n-lines
-      (setq shortened (first-lines shortened n-lines)))
-    (when (and n-chars (< n-chars (length shortened)))
-      (setq shortened (subseq shortened 0 n-chars)))
-    (if (and ellipsis (< (length shortened) (length string)))
-        (concatenate 'string shortened ellipsis)
-        shortened)))
-
-(defun first-lines (string &optional (n-lines 1))
-  (with-output-to-string (out)
-    (with-input-from-string (in string)
-      (loop for i below n-lines do
-        (multiple-value-bind (line missing-newline-p) (read-line in nil nil)
-          (when line
-            (if missing-newline-p
-                (write-string line out)
-                (write-line line out))))))))
-
-(defun adjust-string-case (string)
-  (declare (type string string))
-  (ecase (readtable-case *readtable*)
-    ((:upcase) (string-upcase string))
-    ((:downcase) (string-downcase string))
-    ;; We don't care about convenience with :INVERT.
-    ((:preserve :invert) string)))
