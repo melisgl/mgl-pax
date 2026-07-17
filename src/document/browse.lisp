@@ -1141,17 +1141,18 @@
   as systemless.")
 
 (defmacro with-ragged-right ((stream) &body body)
-  ;; FIXME: https://github.com/3b/3bmd/issues/75 needs to be fixed.
-  (declare (ignore stream))
-  `(progn ,@body))
+  `(progn
+     (format ,stream "~&~%<div class=ragged-right>~%~%")
+     ,@body
+     (format ,stream "~&~%<div>~%~%")))
 
 (defun asdf-systems-and-packages-grouped-documentable ()
   (multiple-value-bind (groups orphan-packages)
       (asdf-systems-and-packages-grouped)
     (with-output-to-string (s)
-      (format s "### [ASDF:SYSTEMs and Related PACKAGEs][
-                @asdf-systems-and-related-packages]")
       (with-ragged-right (s)
+       (format s "### [ASDF:SYSTEMs and Related PACKAGEs][
+                @asdf-systems-and-related-packages]")
         (loop for (root-dir systems packages) in groups
               do (format s "~%- ~{[~A][asdf:system]~^, ~}~%~%"
                          (mapcar (compose 'escape-markdown 'dref-name
@@ -1161,9 +1162,8 @@
                        do (format s "    - [~A][package]~%"
                                   (escape-codification
                                    (escape-markdown
-                                    (package-name package)))))))
-      (when orphan-packages
-        (with-ragged-right (s)
+                                    (package-name package))))))
+        (when orphan-packages
           (loop for package in orphan-packages
                 do (format s "    - [~A][cl:package]~%"
                            (escape-codification

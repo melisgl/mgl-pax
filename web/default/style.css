@@ -496,3 +496,7 @@ a.symbol:hover { color: #229955; background-color: transparent; text-decoration:
 .pax-index li > p {
   display: inline;
 }
+
+.ragged-right {
+  text-align: left;
+}
