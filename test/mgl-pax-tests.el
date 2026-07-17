@@ -18,7 +18,8 @@
   `(with-temp-buffer
      (lisp-mode)
      (load-mgl-pax-test-system)
-     ,@body))
+     ,@body
+     (slime-sync-to-top-level 1)))
 
 (cl-defmacro with-temp-lisp-and-non-lisp-buffer (&body body)
   `(progn
@@ -266,7 +267,7 @@
 ;;;; Test `mgl-pax-edit-definitions'
 
 (defun mgl-pax-test-sync-hard ()
-  (slime-sync-to-top-level 1)
+  (slime-sync-to-top-level 5)
   (mgl-pax-sync-current-buffer)
   (sit-for 0.4))
 
@@ -706,17 +707,20 @@
             (kill-buffer))))))))
 
 (ert-deftest test-mgl-pax-document/go ()
-  (with-browsers
-   (unwind-protect
-       (progn
-         (mgl-pax-document (concat "pax:"
-                                   (w3m-url-encode-string
-                                    "defun (go (print function))")))
-         (mgl-pax-test-sync-hard)
-         (should (eq major-mode 'w3m-mode))
-         (should (substringp "  * [function] PRINT" (w3m-contents))))
-     (when (eq major-mode 'w3m-mode)
-       (kill-buffer)))))
+  (mgl-pax-maybe-autoload
+   "mgl-pax/web" t
+   (lambda (loadedp)
+     (with-browsers
+      (unwind-protect
+          (progn
+            (mgl-pax-document (concat "pax:"
+                                      (w3m-url-encode-string
+                                       "defun (go (print function))")))
+            (mgl-pax-test-sync-hard)
+            (should (eq major-mode 'w3m-mode))
+            (should (substringp "  * [function] PRINT" (w3m-contents))))
+        (when (eq major-mode 'w3m-mode)
+          (kill-buffer)))))))
 
 (ert-deftest test-mgl-pax-document/go/context ()
   (with-browsers
