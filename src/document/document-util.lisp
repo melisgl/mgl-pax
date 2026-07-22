@@ -503,18 +503,21 @@ sources on a git forge if possible.~%~%"
 
 (defun system-version-for-object (object)
   (let* ((system-name (asdf-system-name-of (locate object)))
-         (system-dir (asdf:system-source-directory system-name))
-         (dists-dir (merge-pathnames "dists/" ql:*quicklisp-home*)))
+         (system-dir (asdf:system-source-directory system-name)))
+    (declare (ignorable system-name))
     (cond
-      ((null system-dir)
-       "unknown")
-      ((uiop:subpathp system-dir dists-dir)
-       (let* ((release (ql-dist:release system-name))
-              (dist (ql-dist:dist release)))
-         (format nil "~A ~A" (ql-dist:name dist)
-                 (ql-dist:version dist))))
-      (t
-       "local project"))))
+      ((null system-dir) "unknown")
+      #+quicklisp
+      ((ql-dist-name system-name system-dir))
+      (t "local project"))))
+
+#+quicklisp
+(defun ql-dist-name (system-name system-dir)
+  (let ((dists-dir (merge-pathnames "dists/" ql:*quicklisp-home*)))
+    (when (uiop:subpathp system-dir dists-dir)
+      (let* ((release (ql-dist:release system-name))
+             (dist (ql-dist:dist release)))
+        (format nil "~A ~A" (ql-dist:name dist) (ql-dist:version dist))))))
 
 (defun documentation-generation-date-string ()
   (multiple-value-bind (second minute hour day month year)
