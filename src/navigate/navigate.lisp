@@ -300,13 +300,54 @@
         (when locative
           (list-string-names-for-locative (subseq prefix 1) locative))
         (append (and locative (list-names-for-locative prefix locative))
-                (list-locatives-for-name sexp-1 definitions)))))
+                (list-locatives-for-name sexp-1 prefix definitions)))))
 
-(defun list-locatives-for-name (name definitions)
-  (flet ((match (name)
-           (loop for dref in (funcall definitions name)
-                 collect (dref-locative dref))))
-    (find-name #'match name)))
+(defun list-locatives-for-name (name prefix definitions)
+  (let ((prefix-case (guess-print-case prefix)))
+    (flet ((match (name)
+             (loop for dref in (funcall definitions name)
+                   when (let ((locative (dref-locative dref)))
+                          ;; PREFIX is currently ignored when there
+                          ;; are locative args because it's too
+                          ;; complicated to match arbitrary package
+                          ;; prefixes in sexps.
+                          (if (listp locative)
+                              locative
+                              (matching-locative prefix locative prefix-case)))
+                     collect it)))
+      (find-name #'match name))))
+
+;;; Return a string (if any) with PREFIX that READs as LOCATIVE.
+(defun matching-locative (prefix locative prefix-case)
+  (declare (type symbol locative))
+  (let* ((colon-pos (position #\: prefix))
+         (double-colon-p (and colon-pos
+                              (< (1+ colon-pos) (length prefix))
+                              (char= (aref prefix (1+ colon-pos)) #\:)))
+         (name-prefix (cond (double-colon-p (subseq prefix (+ colon-pos 2)))
+                            (colon-pos (subseq prefix (1+ colon-pos)))
+                            (t prefix))))
+    (and (starts-with-subseq name-prefix (symbol-name locative)
+                             :test #'char-equal)
+         (let ((package-name (when colon-pos
+                               (subseq prefix 0 colon-pos))))
+           (when-let (package (if package-name
+                                  (or (find-package package-name)
+                                      (find-package
+                                       (string-upcase package-name)))
+                                  (symbol-package locative)))
+             (multiple-value-bind (symbol status)
+                 (find-symbol (symbol-name locative) package)
+               (when (and status (eq symbol locative)
+                          (or double-colon-p (eq status :external)))
+                 (with-output-to-string (s)
+                   (when colon-pos
+                     (format s "~A:~A" package-name
+                             (if double-colon-p ":" "")))
+                   (write-string (if (eq prefix-case :upcase)
+                                     (string-upcase (symbol-name locative))
+                                     (string-downcase (symbol-name locative)))
+                                 s)))))))))
 
 (defun list-symbols-for-locative (prefix locative)
   (let ((symbols ())

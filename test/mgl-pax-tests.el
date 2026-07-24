@@ -393,7 +393,7 @@
               ;; The non-matching ones get filtered out by the
               ;; standard Emacs completion mechanism.
               '("dref::function-name-mixin" "dref:dref" "dref:xref"
-                "class" "mgl-pax:locative")))
+                "dref:class" "dref:locative")))
      (insert "\n\"lambda list")
      (should (null (cl-third (mgl-pax-completions-at-point))))
      (let ((mgl-pax-completing-for 'document))

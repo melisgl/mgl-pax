@@ -42,13 +42,15 @@
        (some #'lower-case-p string)))
 
 (defun prin1-to-string/case (object case)
-  (let ((package *package*))
-    (with-standard-io-syntax*
-      (let ((*print-case* case)
-            ;; Avoid mentions of BASE-CHAR and such.
-            (*print-readably* nil)
-            (*package* package))
-        (prin1-to-string object)))))
+  (if (stringp object)
+      object
+      (let ((package *package*))
+        (with-standard-io-syntax*
+          (let ((*print-case* case)
+                ;; Avoid mentions of BASE-CHAR and such.
+                (*print-readably* nil)
+                (*package* package))
+            (prin1-to-string object))))))
 
 ;;; Add PREFIX to every line in STRING.
 (defun prefix-lines (prefix string &key exclude-first-line-p exclude-blank-p)

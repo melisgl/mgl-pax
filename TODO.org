@@ -8,19 +8,6 @@ MGL-PAX:<LOCATIVE> all over them?
 ** MAYBE document :EXPORT <PGK>?
 Is this the right idea? DRef no longer uses this mechanism.
 * navigate
-** BUG (low) locative completion: nicknames don't work
-print f<TAB> -> "print function"
-print dref:f<TAB> -> no completions
-(eq 'function 'dref:function) => t
-
-print (mgl-pax:clh<TAB> -> works
-print (pax:clh<TAB> -> no completions
-
-Actually, it's not just the completion of the locative, but of the
-second sexp, which should be informed by the first sexp.
-
-Normal completion includes nicknames as "pax:" without relisting all
-symbols.
 ** MAYBE "parent" look up includes (e.g. for NOTEs)
 * document
 ** OPT 3bmd parsing performance on large blocks
