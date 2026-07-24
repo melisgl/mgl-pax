@@ -1727,7 +1727,8 @@ up documentation and access Apropos via the input boxes provided.
 ##### Top-level PAX Sections
 
 The PAX Live Home Page lists the top-level PAX sections: those
-that have no other SECTIONs referencing them (see DEFSECTION).
+that have no other SECTIONs referencing them (see HOME-SECTION) and
+those registered in PAX World.
 
 ##### ASDF:SYSTEMs and Related PACKAGEs
 

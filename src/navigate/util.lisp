@@ -1,5 +1,7 @@
 (in-package :mgl-pax)
 
+(in-readtable pythonic-string-syntax)
+
 ;;;; I/O
 
 (defmacro with-standard-io-syntax* (&body body)
@@ -361,33 +363,53 @@
                        (push leaf r)
                        nil)
                      tree)
-    (reverse r)))
+    (nreverse r)))
 
 
 ;;;; Pathnames
 
 (defun relativize-pathname (pathname reference-pathname)
-  "Return a pathname that's equivalent to PATHNAME but relative to
-  REFERENCE-PATHNAME if possible. Like ENOUGH-NAMESTRING, but inserts
-  :UP components if necessary."
-  (let ((pathname (merge-pathnames pathname *default-pathname-defaults*))
-        (reference-pathname (merge-pathnames reference-pathname
-                                             *default-pathname-defaults*)))
-    (assert (equal (pathname-host pathname)
-                   (pathname-host reference-pathname)))
-    (assert (equal (pathname-device pathname)
-                   (pathname-device reference-pathname)))
-    (let* ((dir (remove :relative (pathname-directory pathname)))
-           (ref-dir (remove :relative (pathname-directory reference-pathname)))
-           (mismatch-index (or (mismatch dir ref-dir :test #'equal)
-                               (length dir))))
-      (normalize-pathname
-       (make-pathname :directory (nconc (list :relative)
-                                        (make-list (- (length ref-dir)
-                                                      mismatch-index)
-                                                   :initial-element :up)
-                                        (subseq dir mismatch-index))
-                      :defaults pathname)))))
+  """Return a pathname that's equivalent to PATHNAME (merged with
+  *DEFAULT-PATHNAME-DEFAULTS*) but relative to REFERENCE-PATHNAME
+  (merged similarly) if possible. If no such relative path exists (due
+  to differing PATHNAME-HOSTs or PATHNAME-DEVICEs), PATHNAME is
+  returned. This is a generalization of ENOUGH-NAMESTRING.
+
+  ```cl-transcript
+  (enough-namestring "/a/b/c" "/a/d/")
+  => "/a/b/c"
+  (relativize-pathname "/a/b/c" "/a/d/")
+  => #P"../b/c"
+
+  (enough-namestring "x/y" "x/")
+  => "x/y"
+  (relativize-pathname "x/y" "x/")
+  => #P"y"
+
+  (let ((c (make-pathname :device "C" :directory '(:absolute "c")))
+        (d (make-pathname :device "D" :directory '(:absolute "d"))))
+    (relativize-pathname c d))
+  => #P"/c/"
+  ```"""
+  (if (and (equal (pathname-host pathname)
+                  (pathname-host reference-pathname))
+           (equal (pathname-device pathname)
+                  (pathname-device reference-pathname)))
+      (let* ((pathname (merge-pathnames pathname))
+             (reference-pathname (merge-pathnames reference-pathname))
+             (dir (remove :relative (pathname-directory pathname)))
+             (ref-dir (remove :relative (pathname-directory
+                                         reference-pathname)))
+             (mismatch-index (or (mismatch dir ref-dir :test #'equal)
+                                 (length dir))))
+        (normalize-pathname
+         (make-pathname :directory (nconc (list :relative)
+                                          (make-list (- (length ref-dir)
+                                                        mismatch-index)
+                                                     :initial-element :up)
+                                          (subseq dir mismatch-index))
+                        :defaults pathname)))
+      pathname))
 
 (defun normalize-pathname (pathname)
   (if (equal '(:relative) (pathname-directory pathname))
@@ -395,3 +417,13 @@
       ;; no such troubles with the equivalent ().
       (make-pathname :directory () :defaults pathname)
       pathname))
+
+
+;;;; DREF
+
+(declaim (inline dref-ht-key))
+(defun dref-ht-key (dref)
+  (cons (dref-name dref) (dref-locative dref)))
+
+(defun delete-duplicate-xrefs (xrefs &key key)
+  (delete-duplicates xrefs :key key :test #'xref=))

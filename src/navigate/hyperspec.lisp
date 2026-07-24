@@ -1,6 +1,6 @@
-(in-package :mgl-pax)
-
 ;;;; Low-level interface to HyperSpec Lisp definitions
+
+(in-package :mgl-pax)
 
 (defparameter *hyperspec-definitions*
   ;; (SYMBOL LOCATIVE FILENAME)

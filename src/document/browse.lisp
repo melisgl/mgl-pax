@@ -1098,13 +1098,13 @@
 
 (defsection @top-level-pax-sections (:title "Top-level PAX Sections")
   "The @PAX-LIVE-HOME-PAGE lists the top-level PAX sections: those
-  that have no other SECTIONs referencing them (see DEFSECTION).")
+  that have no other SECTIONs referencing them (see HOME-SECTION) and
+  those registered in @PAX-WORLD.")
 
 (defun top-level-pax-sections ()
-  (sort (remove-duplicates
+  (sort (delete-duplicate-xrefs
          (append (mapcar #'locate (sections-registered-in-pax-world))
-                 (entry-point-sections (list-all-sections)))
-         :test #'xref=)
+                 (entry-point-sections (list-all-sections))))
         #'string< :key (alexandria:compose 'plain-section-title-or-name
                                            'resolve)))
 

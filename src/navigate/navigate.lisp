@@ -91,7 +91,7 @@
 (deftype wall () 'list)
 
 (defun definitions-of-wall (wall &key (definitions #'definitions))
-  (delete-duplicates
+  (delete-duplicate-xrefs
    (or
     ;; First, try with the given locatives.
     (loop for (word locative-strings) in wall
@@ -99,8 +99,8 @@
                        append (ensure-list (wal-dref word locative-string))))
     ;; Then, fall back on the no-locative case.
     (loop for entry in wall
-          append (find-name definitions (first entry) :trim t :depluralize t)))
-   :test #'xref=))
+          append (find-name definitions (first entry)
+                            :trim t :depluralize t)))))
 
 (defun wal-dref (word locative-string)
   (find-name (make-def-lookup-fn locative-string) word :trim t :depluralize t))

@@ -2029,13 +2029,11 @@
 (defun drefs-to-targets (drefs)
   ;; FIND-TARGET may fall back on the CLHS definition, not knowing if
   ;; that CLHS definition is already present.
-  (delete-duplicates
-   (loop for dref in drefs
-         for target = (find-target dref)
-         when (and target (linkablep target))
-           collect target)
-   :key #'target-dref
-   :test #'xref=))
+  (delete-duplicate-xrefs (loop for dref in drefs
+                                for target = (find-target dref)
+                                when (and target (linkablep target))
+                                  collect target)
+                          :key #'target-dref))
 
 (defsection @specific-link (:title "Specific Link")
   """Specific links are those @REFLINKs and @AUTOLINKs that have a

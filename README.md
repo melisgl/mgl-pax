@@ -2045,7 +2045,8 @@ up documentation and access [Apropos][b7fc] via the input boxes provided.
 ##### Top-level PAX Sections
 
 The [PAX Live Home Page][9d50] lists the top-level PAX sections: those
-that have no other [`SECTION`][5fac]s referencing them (see [`DEFSECTION`][72b4]).
+that have no other [`SECTION`][5fac]s referencing them (see [`HOME-SECTION`][fda4]) and
+those registered in [PAX World][1281].
 
 <a id="x-28MGL-PAX-3A-40ASDF-SYSTEMS-AND-RELATED-PACKAGES-20MGL-PAX-3ASECTION-29"></a>
 

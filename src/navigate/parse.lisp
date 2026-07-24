@@ -210,9 +210,8 @@
   `ES` (e.g. `BUSES`), `S` (e.g. `\\CARS`), `ZES` (e.g. `FEZZES`), and
   `REN` (e.g. `CHILDREN`)."
   ;; Mostly following https://www.grammarly.com/blog/plural-nouns/ but
-  ;; keeping only the rules that remove suffixes (e.g. cities -> city
-  ;; is not allowed) because that would result in `CITY`s, which looks
-  ;; bad.
+  ;; keeping only the rules that remove suffixes because we don't want
+  ;; to mark up CITIES as `CITY`s.
   (let ((l (length string))
         (r ()))
     (labels ((suffixp (suffix)

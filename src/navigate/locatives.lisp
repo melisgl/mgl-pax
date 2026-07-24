@@ -412,10 +412,10 @@
 ;;; region to be included.
 (defun include-region (source)
   (cond ((or (stringp source) (pathnamep source))
-         (assert (uiop/pathname:absolute-pathname-p source) ()
-                 "Pathnames given as the SOURCE argument of the ~
-                 INCLUDE locative must be absolute, but ~S is not."
-                 source)
+         (unless (uiop/pathname:absolute-pathname-p source)
+           (include-error "Pathnames given as the SOURCE argument of the ~
+                          INCLUDE locative must be absolute, but ~S is not."
+                          source))
          (values source nil nil))
         ((and source (listp source))
          (destructuring-bind (&key start end) source
@@ -652,10 +652,9 @@
              (foo (second entry) '(clhs section)))
     :try-interned-symbols))
 
-(declaim (inline dref-ht-key))
-(defun dref-ht-key (dref)
-  (cons (dref-name dref) (dref-locative dref)))
-
+;;; For example, SINGLE-FLOAT is documented as a TYPE in the CLHS, but
+;;; it may be implemented as a CLASS. This maps (SINGLE-FLOAT . CLASS)
+;;; to corresponding CLHS DREF.
 (defvar *more-specific-implementation-dref-to-clhs-dref*)
 
 (defun init-clhs-dref ()
@@ -676,9 +675,10 @@
 (defun clhs-dref (name locative)
   (unless (boundp '*more-specific-implementation-dref-to-clhs-dref*)
     (init-clhs-dref))
-  ;; Pick off the impossible cases quickly.
-  (or (when (member (locative-type locative)
-                    *hyperspec-definition-locative-types*)
-        (dref name `(clhs ,locative) nil))
-      (gethash (cons name locative)
-               *more-specific-implementation-dref-to-clhs-dref*)))
+  (or
+   ;; Pick off the impossible cases quickly, without calling DREF.
+   (when (member (locative-type locative)
+                 *hyperspec-definition-locative-types*)
+     (dref name `(clhs ,locative) nil))
+   (gethash (cons name locative)
+            *more-specific-implementation-dref-to-clhs-dref*)))
