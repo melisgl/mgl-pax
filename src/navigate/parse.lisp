@@ -229,22 +229,20 @@
       r)))
 
 (defun uppercase-core-bounds (string)
-  (declare (type simple-string string))
-  (let ((first-uppercase-pos (loop for i below (length string)
-                                   when (upper-case-p (aref string i))
-                                     return i)))
-    (when first-uppercase-pos
-      (let ((last-uppercase-pos (loop for i downfrom (1- (length string))
-                                      downto first-uppercase-pos
-                                      when (upper-case-p (aref string i))
-                                        return i)))
-        (when (and first-uppercase-pos
-                   (if (= last-uppercase-pos first-uppercase-pos)
-                       (notany #'lower-case-p string)
-                       (not (find-if #'lower-case-p string
-                                     :start (1+ first-uppercase-pos)
-                                     :end last-uppercase-pos))))
-          (values first-uppercase-pos (1+ last-uppercase-pos)))))))
+  (declare (optimize speed (space 0) (debug 0))
+           (type simple-string string))
+  (with-type-dispatch ((string ((vector base-char) (vector character))))
+    (let ((first-uppercase-pos (position-if #'upper-case-p string)))
+      (when first-uppercase-pos
+        (let ((last-uppercase-pos (position-if #'upper-case-p string
+                                               :from-end t)))
+          (when (and first-uppercase-pos
+                     (if (= last-uppercase-pos first-uppercase-pos)
+                         (notany #'lower-case-p string)
+                         (not (find-if #'lower-case-p string
+                                       :start (1+ first-uppercase-pos)
+                                       :end last-uppercase-pos))))
+            (values first-uppercase-pos (1+ last-uppercase-pos))))))))
 
 (defun trim-uppercase-core (string)
   "removing the prefix before the first, and the suffix after the last

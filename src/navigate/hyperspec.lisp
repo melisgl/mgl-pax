@@ -2108,14 +2108,15 @@
 ;;; Return the first section in *SORTED-HYPERSPEC-SECTIONS* whose
 ;;; title contains STRING.
 (defun find-hyperspec-section (string &optional (match :word-prefix))
-  (find-if (lambda (entry)
-             (let ((title (third entry)))
-               (if (eq match :word-prefix)
-                   (or (starts-with-subseq string title :test #'char-equal)
-                       (search (format nil " ~A" string) title
-                               :test #'char-equal))
-                   (string-equal string title))))
-           *sorted-hyperspec-sections*))
+  (let ((word-prefix-pattern (when (eq match :word-prefix)
+                               (format nil " ~A" string))))
+    (find-if (lambda (entry)
+               (let ((title (third entry)))
+                 (if word-prefix-pattern
+                     (or (starts-with-subseq string title :test #'char-equal)
+                         (search word-prefix-pattern title :test #'char-equal))
+                     (string-equal string title))))
+             *sorted-hyperspec-sections*)))
 
 ;;; Return the title and a list of aliases as the second value.
 (defun find-hyperspec-section-title (id)

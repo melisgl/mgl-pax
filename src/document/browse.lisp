@@ -865,7 +865,9 @@
            dref-apropos-form))))))
 
 (defun pax-apropos*-process-args (name package)
-  (multiple-value-bind (name dtype) (parse-apropos-input name)
+  (multiple-value-bind (name dtype) (if name
+                                        (parse-apropos-input name)
+                                        (values nil t))
     (let ((package (cond
                      ;; For DOCUMENT-FOR-EMACS/REFERENCE-1
                      ((symbolp package)

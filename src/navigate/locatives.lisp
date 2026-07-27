@@ -81,7 +81,9 @@
 
      (define-locator ,locative-type ((object ,locative-type))
        (let ((name (,name-fn object)))
-         (unless (,proper-name-p name)
+         (unless (and (symbolp name)
+                      (boundp name)
+                      (eq (symbol-value name) object))
            (locate-error))
          (make-instance ',dref-class :name name :locative ',locative-type)))
 

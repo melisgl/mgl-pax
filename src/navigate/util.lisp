@@ -2,6 +2,17 @@
 
 (in-readtable pythonic-string-syntax)
 
+;;; Compile BODY for when VAR being a type in TYPES separately. This
+;;; may allow the compiler to generate more efficient code.
+(defmacro with-type-dispatch (var-and-types-alist &body body)
+  (if (null var-and-types-alist)
+      `(progn ,@body)
+      (destructuring-bind ((var types) . rest) var-and-types-alist
+        `(etypecase ,var
+           ,@(loop for type in types
+                   collect `(,type (with-type-dispatch ,rest ,@body)))))))
+
+
 ;;;; I/O
 
 (defmacro with-standard-io-syntax* (&body body)
@@ -17,27 +28,27 @@
   (defparameter *whitespace-chars*
     (coerce '(#\Space #\Tab #\Return #\Newline #\Linefeed #\Page) 'string)))
 
-#+sbcl
-(declaim (sb-ext:maybe-inline whitespacep))
+(declaim (inline whitespacep))
 (defun whitespacep (char)
   (declare (type character char))
   (and (<= (char-code char) 32)
        (find char #.*whitespace-chars*)))
 
-(defun blankp (string-or-nil &key (start 0) (end (length string-or-nil)))
+(defun blankp (string &key (start 0) (end (length string)))
   (declare (optimize speed)
-           (type (or simple-string null) string-or-nil)
+           (type simple-string string)
            (type fixnum start end))
-  (let ((end (min end (length string-or-nil))))
+  (with-type-dispatch ((string ((vector base-char) (vector character))))
     (loop for i upfrom start below end
-          always (whitespacep (aref string-or-nil i)))))
+          always (whitespacep (aref string i)))))
 
-(defun trim-whitespace (string-or-nil)
-  (if string-or-nil
-      (string-trim *whitespace-chars* string-or-nil)
-      nil))
+(declaim (inline trim-whitespace))
+(defun trim-whitespace (string)
+  (string-trim #.*whitespace-chars* string))
 
 (defun mixed-case-p (string)
+  (declare (optimize speed (space 0) (debug 0))
+           (type simple-string string))
   (and (some #'upper-case-p string)
        (some #'lower-case-p string)))
 

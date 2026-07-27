@@ -1680,9 +1680,10 @@
 ;;; already handled in the caller TRANSLATE-UPPERCASE-WORD. Trims
 ;;; separators and depluralizes.
 (defun codify-uppercase-word (word)
+  (declare (type simple-string word))
   (when-let (match (parse-uppercase-word word))
     (destructuring-bind (raw name) match
-      (when (and raw (interesting-name-p raw name))
+      (when (interesting-name-p raw name)
         (let ((pos (search raw word :test #'char-equal)))
           (assert pos)
           (values `(,@(when (plusp pos)
@@ -1696,6 +1697,8 @@
 
 (defun parse-uppercase-word (word)
   (flet ((match (raw name)
+           (declare (optimize speed (space 0) (debug 0))
+                    (type simple-string raw))
            (when (and (notany #'lower-case-p raw)
                       (interesting-name-p raw name))
              (list raw name))))
