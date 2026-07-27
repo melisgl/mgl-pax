@@ -1181,21 +1181,33 @@ docstring</li>
   (test-macro/arglist))
 
 (deftest test-macro/arglist ()
-  ;; C is a parameter. If it were treated as a default value, then
-  ;; *DOCUMENT-MARK-UP-SIGNATURES* would be accessed, and this would
-  ;; fail.
-  (progv (list '*document-mark-up-signatures*) ()
-    (is (equal (mgl-pax::arglist-to-markdown '((&key a) (b c)))
-               "(&KEY A) (B C)")))
-  (with-test ("macro-with-whole-and-dot")
-    (is (equal (mgl-pax::arglist-to-markdown '(name . args))
-               "NAME . ARGS")))
-  (with-test ("macro-with-body-and-dot")
-    (is (equal (mgl-pax::arglist-to-markdown '(&body (name . args)))
-               "&BODY (NAME . ARGS)")))
-  (with-test ("macro-with-rest-and-dot")
-    (is (equal (mgl-pax::arglist-to-markdown '(&rest (x y . z)))
-               "&REST (X Y . Z)"))))
+  (let ((*document-downcase-uppercase-code* t)
+        (*package* (find-package :mgl-pax-test)))
+    (is (equal (pax::print-markdown (mgl-pax::arglist-to-tree '((&key a) (b c)))
+                                    nil)
+               "(\\&key a) (b c)"))
+    (with-test ("macro-with-whole-and-dot")
+      (is (equal (pax::print-markdown (mgl-pax::arglist-to-tree '(name . args))
+                                      nil)
+                 "name . args")))
+    (with-test ("macro-with-body-and-dot")
+      (is (equal (pax::print-markdown (mgl-pax::arglist-to-tree
+                                       '(&body (name . args)))
+                                      nil)
+                 "\\&body (name . args)")))
+    (with-test ("macro-with-rest-and-dot")
+      (is (equal (pax::print-markdown (mgl-pax::arglist-to-tree
+                                       '(&rest (x y . z)))
+                                      nil)
+                 "\\&rest (x y . z)")))
+    (with-test ("macro-key-3")
+      (is (equal (pax::print-markdown (mgl-pax::arglist-to-tree
+                                       '(&key ((:x *x*) 7)))
+                                      nil)
+                 "\\&key ((:x \\*x\\*) 7)")))
+    (is (equal (let ((*format* :html))
+                 (mgl-pax::arglist-to-tree '(&key (x *x*))))
+               '((:plain "&key" " " "(" "x" " " "*x*" ")"))))))
 
 
 (defsection @test-symbol-macro (:export nil)
@@ -1279,7 +1291,24 @@ docstring</li>
   (check-document #'foo3 (format nil "- [function] FOO3 &KEY (X 7) Y Z~%")
                   :format :plain)
   (check-document #'foo4 (format nil "- [function] FOO4 ~%")
-                  :format :plain))
+                  :format :plain)
+  (check-document #'foo5 "<p><a id=\"MGL-PAX-TEST:FOO5%20FUNCTION\"></a></p>
+
+<ul>
+<li><p><span class=dref-bullet><span class=dref><span class=\"locative-type\">[function]</span> <span class=\"dref-name\"> <a href=\"#MGL-PAX-TEST:FOO5%20FUNCTION\" >FOO5</a></span></span> <span class=\"arglist\">
+&amp;KEY (X (<a href=\"CLHS/Body/a_list.htm\" title=\"LIST (MGL-PAX:CLHS NIL)\">LIST</a> *SOME-VAR*))</span></span></p></li>
+</ul>
+"
+                  :format :html)
+  (let ((*document-downcase-uppercase-code* t))
+    (check-document #'foo5 "<p><a id=\"MGL-PAX-TEST:FOO5%20FUNCTION\"></a></p>
+
+<ul>
+<li><p><span class=dref-bullet><span class=dref><span class=\"locative-type\">[function]</span> <span class=\"dref-name\"> <a href=\"#MGL-PAX-TEST:FOO5%20FUNCTION\" >foo5</a></span></span> <span class=\"arglist\">
+&amp;key (x (<a href=\"CLHS/Body/a_list.htm\" title=\"LIST (MGL-PAX:CLHS NIL)\">list</a> *some-var*))</span></span></p></li>
+</ul>
+"
+                    :format :html)))
 
 (when (fboundp 'encapsulated-function)
   (handler-bind ((warning #'muffle-warning))

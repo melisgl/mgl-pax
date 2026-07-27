@@ -208,6 +208,11 @@
                (t
                 (return-from parse-tree-to-text nil)))))
     (recurse parse-tree)))
+
+(defun unwrap-plain-md (tree)
+  (when (and (null (cdr tree))
+             (parse-tree-p (first tree) :plain))
+    (rest (first tree))))
 
 
 ;;;; TeX

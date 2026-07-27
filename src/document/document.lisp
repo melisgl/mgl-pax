@@ -3498,16 +3498,10 @@
         (funcall fn reference)
         nil)))
 
-(defvar *print-arglist-key* nil)
-
 (defun print-arglist (arglist stream)
-  (let* ((string (if (stringp arglist)
-                     ;; must be escaped Markdown
-                     arglist
-                     (arglist-to-markdown arglist)))
-         (tree (parse-markdown (if *print-arglist-key*
-                                   (funcall *print-arglist-key* string)
-                                   string))))
+  (let* ((tree (if (stringp arglist)
+                   (parse-markdown arglist)
+                   (arglist-to-tree arglist))))
     (write-markdown-pt
      (cond ((not *document-mark-up-signatures*)
             tree)
@@ -3530,71 +3524,94 @@
 ;;; (:method (x string) y (z (eql 7)) ...)
 ;;;
 ;;; else the specializers are printed without package information.
-(defun arglist-to-markdown (arglist)
-  (with-output-to-string (out)
-    (multiple-value-bind (methodp arglist)
-        (if (eq (first arglist) :method)
-            (values t (rest arglist))
-            (values nil arglist))
-      ;; The pretty printing settings do not apply to the arglist as a
-      ;; single object but to its parts printed individually.
-      (let ((*print-pretty* t)
-            (*print-right-margin* 80))
-        (labels
-            ((resolve* (object)
-               (if (mark-up-signatures-with-links-p)
-                   (codify-and-link (prin1-to-markdown object))
-                   (prin1-to-markdown object)))
-             (print-arg (arg level)
+(defun arglist-to-tree (arglist)
+  (multiple-value-bind (methodp arglist)
+      (if (eq (first arglist) :method)
+          (values t (rest arglist))
+          (values nil arglist))
+    ;; The pretty printing settings do not apply to the arglist as a
+    ;; single object but to its parts printed individually.
+    (let ((*print-pretty* t)
+          (*print-right-margin* 80)
+          (children ()))
+      (labels
+          ((add (&rest args)
+             (dolist (arg args)
+               (push arg children)))
+           (resolve* (object)
+             (if (mark-up-signatures-with-links-p)
+                 (apply #'add (arglist-object-to-md-trees object))
+                 (add (prin1-to-string* object))))
+           (add-arg (arg level)
+             (declare (special *nesting-possible-p*))
+             (cond ((member arg '(&key &optional &rest &body))
+                    (when (member arg '(&key &optional))
+                      (setq *nesting-possible-p* nil))
+                    (add (prin1-to-string* arg)))
+                   ((symbolp arg)
+                    (add (maybe-downcase-all-uppercase-code
+                          (if (keywordp arg)
+                              (prin1-to-string arg)
+                              (symbol-name arg)))))
+                   ((atom arg)
+                    (add (prin1-to-string* arg)))
+                   (*nesting-possible-p*
+                    (add-arglist arg (1+ level)))
+                   ;; &KEY or &OPTIONAL default values
+                   ((and (symbolp (first arg))
+                         (<= (length arg) 3))
+                    (cond ((second arg)
+                           ;; (X 7 XP) or (X 7) renders as (X 7)
+                           (add "("
+                                (maybe-downcase-all-uppercase-code
+                                 (symbol-name (first arg)))
+                                " ")
+                           (resolve* (second arg))
+                           (add ")"))
+                          (t
+                           ;; (X NIL XP), (X NIL), (X) renders as X
+                           (add (prin1-to-string* (first arg))))))
+                   (t
+                    (add (prin1-to-string* arg)))))
+           (add-arglist (arglist level)
+             (let ((*nesting-possible-p* (not methodp)))
                (declare (special *nesting-possible-p*))
-               (cond ((member arg '(&key &optional &rest &body))
-                      (when (member arg '(&key &optional))
-                        (setq *nesting-possible-p* nil))
-                      (format out "~A" (prin1-to-markdown arg)))
-                     ((symbolp arg)
-                      (format out "~A"
-                              (escape-markdown
-                               (maybe-downcase-all-uppercase-code
-                                (if (keywordp arg)
-                                    (prin1-to-string arg)
-                                    (symbol-name arg))))))
-                     ((atom arg)
-                      (format out "~A" (prin1-to-markdown arg)))
-                     (*nesting-possible-p*
-                      (print-arglist arg (1+ level)))
-                     ;; &KEY or &OPTIONAL default values
-                     ((and (symbolp (first arg))
-                           (<= (length arg) 3))
-                      (if (second arg)
-                          ;; (X 7 XP) or (X 7) renders as (X 7)
-                          (format out "(~A ~A)"
-                                  (escape-markdown
-                                   (maybe-downcase-all-uppercase-code
-                                    (symbol-name (first arg))))
-                                  (resolve* (second arg)))
-                          ;; (X NIL XP), (X NIL), (X) renders as X
-                          (format out "~A" (prin1-to-markdown (first arg)))))
-                     (t
-                      (format out "~A" (prin1-to-markdown arg)))))
-             (print-arglist (arglist level)
-               (let ((*nesting-possible-p* (not methodp)))
-                 (declare (special *nesting-possible-p*))
-                 (unless (= level 0)
-                   (format out "("))
-                 (loop for i upfrom 0
-                       for rest on arglist
-                       do (when (eq (first rest) '&aux)
-                            (return))
-                          (unless (zerop i)
-                            (format out " "))
-                          (print-arg (car rest) level)
-                          ;; Handle (&WHOLE FORM NAME . ARGS) and similar.
-                          (unless (listp (cdr rest))
-                            (format out " . ")
-                            (print-arg (cdr rest) level)))
-                 (unless (= level 0)
-                   (format out ")")))))
-          (print-arglist arglist 0))))))
+               (unless (= level 0)
+                 (add "("))
+               (loop for i upfrom 0
+                     for rest on arglist
+                     do (when (eq (first rest) '&aux)
+                          (return))
+                        (unless (zerop i)
+                          (add " "))
+                        (add-arg (car rest) level)
+                        ;; Handle (&WHOLE FORM NAME . ARGS) and similar.
+                        (unless (listp (cdr rest))
+                          (add " . ")
+                          (add-arg (cdr rest) level)))
+               (unless (= level 0)
+                 (add ")")))))
+        (add-arglist arglist 0)
+        `((:plain ,@(nreverse children)))))))
+
+(defun arglist-object-to-md-trees (object)
+  (let* ((*document-uppercase-is-code* t)
+         (tree (unwrap-plain-md
+                (codify-and-link-tree
+                 (parse-markdown
+                  (let ((*document-downcase-uppercase-code* nil))
+                    (prin1-to-markdown object)))))))
+    ;; Remove inline code because if we want to typeset the entire
+    ;; arglist in monospace then it's redundant, and if we don't, then
+    ;; it's just bad.
+    (map-markdown-parse-tree '(:code)
+                             '(:verbatim :image :mailto :reference :raw-html)
+                             nil
+                             (lambda (parent tree)
+                               (declare (ignore parent))
+                               (assert (parse-tree-p tree :code))
+                               (values (rest tree) nil t))
+                             tree)))
 
 (defun map-dotted (fn list*)
   (if (listp list*)

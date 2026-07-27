@@ -112,6 +112,15 @@ so that one can write "X is a STRING" without having to disambiguate
 with "X is a [STRING][class]". Even less important now that PAX links
 to CLHS disambiguation pages.
 ** MAYBE use https://codeberg.org/dlowe/metaspectre for something?
+** TODO linking in arglist default values is broken
+We can't disambiguate 100% correctly: &KEY (TYPE 'FUNCTION), which can
+clutter the index.
+
+But e.g. BYTES &KEY (END (LENGTH BYTES)) shouldn't link to CL:BYTE.
+
+Maybe on link only simple cases?
+
+See ARGLIST-TO-TREE and ARGLIST-OBJECT-TO-MD-TREES.
 * live
 ** MAYBE live browsing: allow filtering out local definitions when there is a clhs definition?
 ** MAYBE have apropos name be editable?

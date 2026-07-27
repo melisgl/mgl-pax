@@ -50,6 +50,8 @@
 (define-locative-type (pax::funny-loc some-arg) ()
   "This is SOME-ARG.")
 
+(defvar *some-var*)
+
 (defun foo2 (ook x)
   "FOO2 has args [OOK][] and X."
   (declare (ignore ook x))
@@ -61,6 +63,10 @@
 
 (defun foo4 (&aux x y)
   (declare (ignore x y))
+  nil)
+
+(defun foo5 (&key (x (list *some-var*)))
+  (declare (ignore x))
   nil)
 
 (defun ook ())
@@ -93,7 +99,6 @@
 (defparameter *test-variable*
   '(xxx 34)
   "*TEST-VARIABLE* is not a link.")
-(defvar *some-var*)
 
 (define-restart some-restart (arg1)
   "This is SOME-RESTART with ARG1.")
