@@ -26,10 +26,10 @@ use the lisp pretty printer for this because output also includes
 markup. We could get the original indentation from the sources.
 ** MAYBE get variable initforms from source?
 Or fall back on this for deficient ARGLISTs. Will be really slow.
-** BUG (low) C-. history depends on current package
+** CANCELLED C-. history depends on current package
 E.g. 'clhs' works in a package where PAX is :USEd but not elsewhere.
 
-But so does M-.'s history.
+But so does M-.'s history. This should be fixed in Slime if anywhere.
 ** CANCELLED autoload documentation when needed?
 CLOSED: [2025-05-07 Wed 09:29]
 - State "CANCELLED" from "MAYBE" [2025-05-07 Wed 09:29] \\
@@ -139,6 +139,8 @@ start.
 Well, it's a kind of output, but maybe it would be better for
 consistency checking to treat it as a different kind of output. First,
 capturing interaction with the debugger needs to be though out though.
+
+Maybe capture output per stream?
 ** MAYBE (values 1 2) => 1, 2 on a single line?
 ** MAYBE add option to output the new transcript
 ** MAYBE transcribe debugger sessions
@@ -156,10 +158,13 @@ the elisp def and C-. would call `describe-function` (elisp)?
 ** MAYBE M-. and C-. on large sexps (e.g. whole defun)
 The error message is large and useless.
 ** MAYBE make tests more reliable
-** TODO consider font-locking codifiable and linkable stuff in docstrings
+** MAYBE consider font-locking codifiable and linkable stuff in docstrings
+This should be doable with a lot of caching.
 * literate programming
-** MAYBE reorder source definitions
-** MAYBE local functions?
+** CANCELLED reorder source definitions
+May be a bit against the general source-first philosopy of PAX.
+** CANCELLED local functions?
+This is probably covered by NOTEs.
 ** CANCELLED named one-off local functions?
 (defun foo (x)
   ;; Just for the name, really. Maybe control what it can close over?
