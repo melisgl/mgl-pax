@@ -33,9 +33,12 @@
 
 (defparameter *url-escape-char* #\%)
 
-;;; This is adapted from HTML-Encode. Note that we also use this in
-;;; html <a id="...">, which is valid in HTML5 because there is no
-;;; space in it.
+#+sbcl
+(declaim (sb-ext:always-bound *unreserved-url-characters* *url-escape-char*))
+
+;;; This is adapted from HTML-Encode. Note that we also use this in <a
+;;; id="...">, which is valid in HTML5 because there is no space in
+;;; it.
 (defun urlencode (string)
   (declare (type string string))
   (let* ((bytes (trivial-utf-8:string-to-utf-8-bytes string))
@@ -45,7 +48,8 @@
                              :fill-pointer 0))
          (unreserved *unreserved-url-characters*)
          (escape-char *url-escape-char*))
-    (declare (type (simple-array bit (256)) unreserved)
+    (declare (type (simple-array (unsigned-byte 8) (*)) bytes)
+             (type (simple-array bit (256)) unreserved)
              (type character escape-char))
     (with-output-to-string (out output)
       (loop for code across bytes
@@ -89,7 +93,7 @@
 ;;;; Escaping v1 of URLs and HTML IDs (for HTML4, see *DOCUMENT-URL-VERSIONS*)
 
 (defparameter +html4-first-name-characters+
-  (let ((array (make-array 255 :element-type 'bit :initial-element 0)))
+  (let ((array (make-array 128 :element-type 'bit :initial-element 0)))
     (_mark-range array #\a #\z)
     (_mark-range array #\A #\Z)
     array))
@@ -106,30 +110,32 @@
     array))
 
 (defun html4-safe-name (name)
-  (declare (type simple-string name))
+  (declare (type simple-string name)
+           (optimize speed))
   (let ((output (make-array (truncate (length name) 2/3)
                             :element-type 'character
                             :adjustable t
                             :fill-pointer 0))
-	(first? t))
+	(first? t)
+        (valid-cont-chars +html4-name-characters+))
     (with-output-to-string (out output)
       (loop for char across name
             for code = (char-code char)
-            for valid = +html4-first-name-characters+
-              then +html4-name-characters+
-            do (cond ((and (< code 255)
+            for valid = +html4-first-name-characters+ then valid-cont-chars
+            do (cond ((and (< code 128)
                            (= (sbit valid code) 1))
                       (write-char char out))
                      (t
-                      ;; See http://www.w3.org/TR/html4/types.html#h-6.2
-                      ;; ID and NAME tokens must begin with a letter ([A-Za-z])
-                      ;; and may be followed by any number of letters,
-                      ;; digits ([0-9]), hyphens ("-"), underscores ("_"),
-                      ;; colons (":"), and periods (".").
+                      ;; ID and NAME tokens must begin with a letter
+                      ;; ([A-Za-z]) and may be followed by any number
+                      ;; of letters, digits ([0-9]), hyphens ("-"),
+                      ;; underscores ("_"), colons (":"), and periods
+                      ;; ("."). See
+                      ;; http://www.w3.org/TR/html4/types.html#h-6.2.
                       (when first?
                         (write-char #\x out))
                       (format out "-~:@(~16r~)" code)))
-               (setf first? nil)))
+               (setq first? nil)))
     (coerce output 'simple-string)))
 
 

@@ -212,15 +212,17 @@
   ;; Mostly following https://www.grammarly.com/blog/plural-nouns/ but
   ;; keeping only the rules that remove suffixes because we don't want
   ;; to mark up CITIES as `CITY`s.
+  (declare (type simple-string string))
   (let ((l (length string))
         (r ()))
-    (labels ((suffixp (suffix)
-               (ends-with-subseq suffix string :test #'char-equal))
-             (%desuffix (suffix)
-               (subseq string 0 (- l (length suffix))))
+    (labels ((%desuffix (suffix)
+               (let ((pos (- l (length suffix))))
+                 (when (and (<= 0 pos)
+                            (string-equal suffix string :start2 pos))
+                   (subseq string 0 pos))))
              (desuffix (suffix)
-               (when (suffixp suffix)
-                 (push (%desuffix suffix) r))))
+               (when-let (x (%desuffix suffix))
+                 (push x r))))
       (desuffix "ses")
       (desuffix "es")
       (desuffix "s")

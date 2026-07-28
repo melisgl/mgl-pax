@@ -35,29 +35,34 @@
             "This is
           indented
           differently")"""
+  (declare (type fixnum indentation)
+           (type string docstring))
   (if (zerop indentation)
       docstring
       (with-output-to-string (out)
-        (with-input-from-string (s docstring)
-          (loop for i upfrom 0
-                do (multiple-value-bind (line missing-newline-p)
-                       (read-line s nil nil)
-                     (unless line
-                       (return))
-                     (write-string (if (and first-line-special-p
-                                            (zerop i))
-                                       line
-                                       (subseq* line indentation))
-                                   out)
-                     (unless missing-newline-p
-                       (terpri out))))))))
+        (let ((len (length docstring)))
+          (do ((start 0)
+               (first? t nil))
+              ((>= start len))
+            (let* ((end (position #\Newline docstring :start start))
+                   (line-end (or end len))
+                   (line-len (- line-end start)))
+              (if (and first-line-special-p first?)
+                  (write-string docstring out :start start :end line-end)
+                  (when (< indentation line-len)
+                    (write-string docstring out :start (+ start indentation)
+                                  :end line-end)))
+              (cond (end
+                     (terpri out)
+                     (setf start (1+ end)))
+                    (t
+                     (return)))))))))
 
 (defun n-leading-spaces (line)
-  (let ((n 0))
-    (loop for i below (length line)
-          while (char= (aref line i) #\Space)
-          do (incf n))
-    n))
+  (declare (type simple-string line))
+  (loop for i below (length line)
+        while (char= (aref line i) #\Space)
+        count t))
 
 ;;; Return the minimum number of leading spaces in non-blank lines
 ;;; after the first.

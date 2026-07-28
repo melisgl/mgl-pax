@@ -94,6 +94,8 @@
 (defun numbered-heading-number-p (heading-number)
   (not (member nil heading-number)))
 
+#+sbcl
+(declaim (sb-ext:freeze-type heading))
 (defstruct heading
   object
   title
@@ -173,6 +175,8 @@
 ;;; A PAGE is basically a single Markdown or HTML file to where the
 ;;; documentation of some definitions is written. Constructed by
 ;;; PAGE-SPECS-TO-PAGES.
+#+sbcl
+(declaim (sb-ext:freeze-type page))
 (defstruct page
   ;; A list of DREFs and STRINGs, populated by
   ;; PAGE-SPEC-OBJECTS-TO-BOUNDARIES in the first pass. In the second
@@ -264,6 +268,8 @@
 ;;; A link TARGET identifies a definition on a PAGE. Note that the
 ;;; same definition may be written to multiple pages (usually a bad
 ;;; idea).
+#+sbcl
+(declaim (sb-ext:freeze-type target))
 (defstruct target
   (dref nil :type dref)
   ;; STRING pages denote URLs (see EXTERNAL-DREF-URLs). NULL pages are

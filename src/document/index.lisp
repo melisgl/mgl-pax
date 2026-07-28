@@ -244,10 +244,12 @@
   :DOCUMENT-REFERRER-GROUPS.""")
 
 (defun map-indices (fn &optional (indices *document-indices*) (depth 0))
-  (dolist (index indices)
-    (funcall fn index depth)
-    (when-let (children (getf index :children))
-      (map-indices fn children (1+ depth)))))
+  (declare (type fixnum depth))
+  (let ((fn (coerce fn 'function)))
+    (dolist (index indices)
+      (funcall fn index depth)
+      (when-let (children (getf index :children))
+        (map-indices fn children (1+ depth))))))
 
 (defmacro do-indices ((index &optional (depth (gensym))) &body body)
   `(map-indices (lambda (,index ,depth)

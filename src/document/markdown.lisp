@@ -433,29 +433,29 @@
                   parse-tree))
 
 (defun join-stuff-in-list (tree)
-  (let ((result ()))
+  (let ((result ())
+        (emph-joined nil))
     (dolist (element tree)
-      (let ((prev (first result)))
+      (let* ((prev (first result))
+             (element-string-p (stringp element))
+             (element-blank-p (and element-string-p (blankp element)))
+             (prev-string-p (stringp prev))
+             (prev-blank-p (and prev-string-p (blankp prev))))
         (cond
-          ;; Join consecutive non-blank strings: "x" "y" -> "xy"
-          ((and (stringp element) (not (blankp element))
-                (stringp prev) (not (blankp prev)))
-           (setf (first result) (concatenate 'string prev element)))
-          ;; Join consecutive blank strings
-          ((and (stringp element) (blankp element)
-                (stringp prev) (blankp prev))
+          ;; Join consecutive blanks strings and consecutive non-blank strings.
+          ((and element-string-p prev-string-p
+                (eq (not element-blank-p) (not prev-blank-p)))
            (setf (first result) (concatenate 'string prev element)))
           ;; "CL:" (:EMPH "*FEATURES*") - > "CL:*FEATURES*"
-          ((and (parse-tree-p element :emph)
-                (stringp prev)
+          ((and prev-string-p (parse-tree-p element :emph)
                 (ends-with #\: prev)
-                (= 2 (length (join-stuff-in-list element))))
+                (null (cdr (setq emph-joined
+                                 (join-stuff-in-list (rest element))))))
            (setf (first result)
-                 (format nil "~A*~A*" prev
-                         (second (join-stuff-in-list element)))))
+                 (format nil "~A*~A*" prev (first emph-joined))))
           (t
            (push element result)))))
-    (reverse result)))
+    (nreverse result)))
 
 ;;; We parse 3BMD-GRAMMAR::%BLOCKs like 3BMD-GRAMMAR:PARSE-DOC's
 ;;; currently commented out alternative implementation, which is much
@@ -520,24 +520,28 @@
   (when tree
     (with-standard-io-syntax
       (let ((*print-readably* nil))
-        (format stream "~A~S ~S " #\Soh level tree)))
+        (format stream "~C~D ~S " #\Soh level tree)))
     (when paragraphp
       (%ensure-md-paragraph stream))))
+
+(defvar *case-preserving-readtable* (named-readtables:find-readtable :modern))
 
 (defun %read-soh (string start)
   (assert (char= (aref string start) #\Soh))
   (if (char= (aref string (1+ start)) #\Space)
       (values -1 () (+ start 2))
       (with-standard-io-syntax
-        (multiple-value-bind (level pos)
-            (read-from-string string t nil :start (1+ start))
-          (multiple-value-bind (blocks pos)
-              (read-from-string string t nil :start pos
-                                ;; Without this, some implementations
-                                ;; read the following space, some don't.
-                                :preserve-whitespace t)
-            (assert (char= (aref string pos) #\Space))
-            (values level blocks (1+ pos)))))))
+        ;; WRITE-MARKDOWN-PT prints in uppercase, so we don't need to upcase.
+        (let ((*readtable* *case-preserving-readtable*))
+          (multiple-value-bind (level pos)
+              (parse-integer string :start (1+ start) :junk-allowed t)
+            (multiple-value-bind (blocks pos)
+                (read-from-string string t nil :start pos
+                                  ;; Without this, some implementations
+                                  ;; read the following space, some don't.
+                                  :preserve-whitespace t)
+              (assert (char= (aref string pos) #\Space))
+              (values level blocks (1+ pos))))))))
 
 (defparameter *debug-parse-mixed-markdown* nil)
 
