@@ -122,7 +122,15 @@
   breaklines, breaknonspaceingroup, breakanywhere,
   fontsize=\small}
 \usepackage[htt]{hyphenat}
-\renewcommand\texttt[1]{{\ttfamily\color{.!80!yellow}#1}}
+\makeatletter
+\renewcommand\texttt[1]{%
+  {\ttfamily
+   \ifx\current@color\default@color
+     \color{.!80!yellow}%
+   \fi
+   #1}%
+}
+\makeatother
 \usepackage{framed}
 \definecolor{shadecolor}{RGB}{248,248,248}
 \usepackage{etoolbox}
