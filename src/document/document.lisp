@@ -584,8 +584,8 @@
   ;; situations, but when documenting PAX itself, it would cause the
   ;; documentables to change from the 1st pass to the 2nd.
   (ensure-transcribe-loaded)
-  (with-sections-cache ()
-    (with-definitions-cached (:dtype '(not (or argument dislocated)))
+  (with-definitions-cached (:dtype '(not (or argument dislocated)))
+    (with-sections-cache ()
       (with-format (format)
         (let* ((*print-right-margin* (or *print-right-margin* 80))
                (3bmd-grammar:*smart-quotes* nil)
