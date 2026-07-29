@@ -420,8 +420,207 @@
 
 ;;;; Parsing Markdown
 
-(defun parse-markdown (string)
-  (clean-up-parsed-parse-tree (parse-markdown-fast string)))
+;;; Use PARSE-SIMPLE-MARKDOWN-WORDS when possible.
+(defvar *use-fast-parse* t)
+(defvar *test-fast-parse* nil)
+
+;;; We parse 3BMD-GRAMMAR::%BLOCKs like 3BMD-GRAMMAR:PARSE-DOC's
+;;; currently commented out alternative implementation, which is much
+;;; faster on long strings but perhaps slower on short strings. This
+;;; still has a performance problem with large lists, which are
+;;; processed in one block, hence the workaround in PAX-APROPOS*.
+(defun parse-markdown (string &key (start 0) end)
+  (flet ((foo ()
+           (loop for start1 = start then pos
+                 for (%blocks pos) = (multiple-value-list
+                                      (%parse-md-block string :start start1
+                                                       :end end))
+                 while %blocks
+                 collect %blocks
+                 while pos)))
+    (if *test-fast-parse*
+        (let* ((*use-fast-parse* t)
+               (fast-parse (foo))
+               (*use-fast-parse* nil)
+               (3bmd-parse (foo)))
+          (assert (equal fast-parse 3bmd-parse))
+          fast-parse)
+        (foo))))
+
+;;; Parse a 3BMD block, maybe with the fast parse optimization.
+(defun %parse-md-block (string &key (start 0) end)
+  (declare (type simple-string string)
+           (type fixnum start)
+           (type (or fixnum null) end)
+           (optimize speed))
+  (let ((end (or end (length string))))
+    (when (< start end)
+      (multiple-value-bind (md-start-pos force-paragraph-p)
+          (if *use-fast-parse*
+              (possible-md-start-position string :start start :end end)
+              (values start nil))
+        (declare (type fixnum md-start-pos))
+        (let ((simple-tree (when (< start md-start-pos)
+                             (parse-simple-markdown-words
+                              string start md-start-pos
+                              force-paragraph-p (= md-start-pos end)))))
+          (multiple-value-bind (tree pos)
+              (when (and (or (null simple-tree)
+                             (parse-tree-p simple-tree :plain))
+                         (< md-start-pos end))
+                (parse-3bmd-block string md-start-pos end))
+            (declare (type (or fixnum null) pos))
+            #+nil
+            (when (< start md-start-pos)
+              (format t "simple (~S): ~S~%  => ~S~%"
+                      start (subseq string start md-start-pos) simple-tree))
+            #+nil
+            (when (and pos (< md-start-pos pos))
+              (format t "3bmd (~S):  ~S~%  => ~S~%"
+                      start (subseq string md-start-pos pos) tree))
+            (cond ((and tree simple-tree)
+                   (assert (parse-tree-p simple-tree :plain))
+                   (assert (or (parse-tree-p tree :plain)
+                               (parse-tree-p tree :paragraph)))
+                   (setq tree (clean-up-parsed-parse-tree
+                               `(,(first tree) ,@(rest simple-tree)
+                                               ,@(rest tree)))))
+                  (tree
+                   (setq tree (clean-up-parsed-parse-tree tree)))
+                  (simple-tree
+                   (setq tree simple-tree)))
+            (values tree (or pos md-start-pos))))))))
+
+(defun parse-3bmd-block (string start end)
+  (multiple-value-bind (tree pos)
+      (esrap:parse '#.(if (esrap:find-rule '3bmd-grammar::%block)
+                          '3bmd-grammar::%block
+                          ;; Make it work with old 3BMD.
+                          '3bmd-grammar::block)
+                   string :start start :end end :junk-allowed t)
+    (values tree (and tree (or pos end)))))
+
+(defparameter *special-inline-md-chars*
+  (let ((mask (make-array 128 :element-type 'bit :initial-element 0)))
+    (dolist (c '(#\* #\_ #\` #\& #\[ #\] #\< #\! #\\ #\$))
+      (setf (sbit mask (char-code c)) 1))
+    mask))
+
+;;; Return two values: a position in the delimited Markdown STRING up
+;;; to which it can be parsed with PARSE-SIMPLE-MARKDOWN-WORDS, and a
+;;; boolean indicating whether the split is exactly at a definitive
+;;; block boundary (like a blank line). To keep this function fast,
+;;; the returned position may not be the latest possible.
+(defun possible-md-start-position (string &key (start 0) (end (length string)))
+  (declare (optimize speed)
+           (type simple-string string)
+           (type fixnum start end))
+  (loop while (and (< start end)
+                   (char= (aref string start) #\Newline))
+        do (incf start))
+  (when (< start end)
+    (let ((first-char (aref string start)))
+      (when (or (char= first-char #\Space)
+                (char= first-char #\Tab)
+                (char= first-char #\#)
+                (char= first-char #\>))
+        (return-from possible-md-start-position start))))
+  (let ((special-inline-md-chars *special-inline-md-chars*))
+    (declare (type (simple-array bit (128)) special-inline-md-chars))
+    (labels ((special-inline-md-char-p (char)
+               (let ((code (char-code char)))
+                 (and (< code 128) (= 1 (sbit special-inline-md-chars code)))))
+             (numbered-list-p (start)
+               (and (< start end)
+                    (char<= #\0 (aref string start) #\9)
+                    (loop for j from (1+ start) below end
+                          for c = (aref string j)
+                          do (cond ((char<= #\0 c #\9)
+                                    nil)
+                                   ((or (char= c #\.) (char= c #\)))
+                                    (return (and (< (1+ j) end)
+                                                 (char= (aref string (1+ j))
+                                                        #\Space))))
+                                   (t
+                                    (return nil))))))
+             (block-start-p (start)
+               (or (numbered-list-p start)
+                   (find (aref string start)
+                         #.(coerce '(#\- #\+ #\* #\# #\>) 'string)))))
+      (let ((last-safe-word-start start)
+            (in-space-p t)
+            (blank-line-start start))
+        (declare (type fixnum last-safe-word-start))
+        (loop for i from start below end
+              for char = (aref string i)
+              for spacep = (whitespacep char)
+              do (when (and in-space-p (not spacep))
+                   (when (and (eql blank-line-start start)
+                              (or (find char #.(coerce '(#\- #\+ #\*) 'string))
+                                  (numbered-list-p i)))
+                     (return start))
+                   (when (and (eql blank-line-start (1- i))
+                              (or (char= char #\#)
+                                  (char= char #\>)))
+                     (return (values (max start (1- i)) t)))
+                   (unless (block-start-p i)
+                     (setq last-safe-word-start i)))
+                 (setq in-space-p spacep)
+                 (cond ((char= char #\Newline)
+                        ;; "Title~%===" is to be parsed as a heading.
+                        (when (and (< (+ i 3) end)
+                                   (or (and (char= (aref string (+ i 1)) #\=)
+                                            (char= (aref string (+ i 2)) #\=)
+                                            (char= (aref string (+ i 3)) #\=))
+                                       (and (char= (aref string (+ i 1)) #\-)
+                                            (char= (aref string (+ i 2)) #\-)
+                                            (char= (aref string (+ i 3)) #\-))))
+                          (return start))
+                        (when blank-line-start
+                          (return (1+ i)))
+                        (setq blank-line-start i))
+                       ((not spacep)
+                        (setq blank-line-start nil)))
+                 (when (special-inline-md-char-p char)
+                   (return last-safe-word-start))
+              finally (return end))))))
+
+;;; Skip leading newlines like 3BMD-GRAMMAR:PARSE-DOC and parse the
+;;; delimited STRING as a partial (:PLAIN) or a full paragraph
+;;; (:PARAGRAPH) of whitespace strings and non-whitespace words.
+(defun parse-simple-markdown-words (string start end force-paragraph-p
+                                    end-of-input-p)
+  (declare (type string string))
+  (let* ((length (length string))
+         (end (or end length))
+         (start start)
+         (result '()))
+    (loop while (and (< start end)
+                     (char= (aref string start) #\Newline))
+          do (incf start))
+    (when (< start end)
+      (let ((prev-space-p (whitespacep (aref string start))))
+        (loop for i from start below end
+              for spacep = (whitespacep (aref string i))
+              when (not (eq (not spacep) (not prev-space-p)))
+                do (push (subseq string start i) result)
+                   (setq start i
+                         prev-space-p spacep)
+              finally (return
+                        (let ((last (subseq string start end)))
+                          (cond ((<= 2 (count #\Newline last))
+                                 `(:paragraph ,@(nreverse result)))
+                                (force-paragraph-p
+                                 `(:paragraph
+                                   ,@(nreverse (cons last result))))
+                                (t
+                                 `(:plain
+                                   ,@(nreverse
+                                      (if (and end-of-input-p
+                                               (string= last
+                                                        #.(string #\Newline)))
+                                          result
+                                          (cons last result)))))))))))))
 
 (defun clean-up-parsed-parse-tree (parse-tree)
   (transform-tree (lambda (parent tree)
@@ -456,27 +655,6 @@
           (t
            (push element result)))))
     (nreverse result)))
-
-;;; We parse 3BMD-GRAMMAR::%BLOCKs like 3BMD-GRAMMAR:PARSE-DOC's
-;;; currently commented out alternative implementation, which is much
-;;; faster on long strings but perhaps slower on short strings. This
-;;; still has a performance problem with large lists, which are
-;;; processed in one block, hence the workaround in PAX-APROPOS*.
-(defun parse-markdown-fast (string &key (start 0) end)
-  (loop for start1 = start then pos
-        for (%block pos) = (multiple-value-list
-                            (%parse-md-block string :start start1 :end end
-                                             :junk-allowed t))
-        while %block
-        collect %block
-        while pos))
-
-(defun %parse-md-block (string &key (start 0) end junk-allowed)
-  (esrap:parse '#.(if (esrap:find-rule '3bmd-grammar::%block)
-                      '3bmd-grammar::%block
-                      ;; Make it work with old 3BMD.
-                      '3bmd-grammar::block)
-               string :start start :end end :junk-allowed junk-allowed))
 
 
 ;;;; Mixed I/O for Markdown strings and parse trees
@@ -603,8 +781,7 @@
 (defun parse-md-after-tree (tree string &key (start 0) end (paragraphp t))
   (if (and paragraphp (zerop (pt-nesting-level (first tree))))
       ;; TREE does not affect the parse of STRING.
-      (let ((parse-tree (parse-markdown-fast string :start start
-                                             :end end)))
+      (let ((parse-tree (parse-markdown string :start start :end end)))
         (when *debug-parse-mixed-markdown*
           (format t "contextless md: ~S~%" (subseq string start end)))
         (close-open-paragraph tree)
@@ -625,8 +802,8 @@
       (let ((context (tree-context tree paragraphp)))
         (when *debug-parse-mixed-markdown*
           (format t "context: ~S~%md: ~S~%" context (subseq string start end)))
-        (parse-markdown-fast (concatenate 'string context
-                                          (subseq string start end))))))
+        (parse-markdown (concatenate 'string context
+                                     (subseq string start end))))))
 
 (defun tree-context (tree paragraphp)
   (let ((context (string-right-trim #.(format nil "~%")
