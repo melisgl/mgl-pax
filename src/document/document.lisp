@@ -1967,22 +1967,22 @@
   """Whether definitions of things other than SECTIONs
   are allowed to be @LINKABLE.""")
 
+(defvar *linked-names*)
+
 ;;; Handle *DOCUMENT-LINK-CODE* (:CODE for `SYMBOL` and
 ;;; :REFERENCE-LINK for [symbol][locative]). Don't hurt other links.
 (defun link (parse-tree)
-  (let ((linked-refs (make-array 0 :fill-pointer t :adjustable t
-                                 :element-type 'dref)))
-    (map-markdown-parse-tree
-     '(:code :reference-link)
-     '(:explicit-link :image :mailto :raw-html)
-     nil
-     (rcurry #'translate-to-links linked-refs)
-     parse-tree)))
+  (let ((*linked-names* ()))
+    (map-markdown-parse-tree '(:code :reference-link)
+                             '(:explicit-link :image :mailto :raw-html)
+                             nil
+                             (rcurry #'translate-to-links)
+                             parse-tree)))
 
-(defun translate-to-links (parent tree linked-refs)
+(defun translate-to-links (parent tree)
   (nth-value-or 0
-    (maybe-unescape-or-autolink parent tree linked-refs)
-    (maybe-translate-reflink tree linked-refs)
+    (maybe-unescape-or-autolink parent tree)
+    (maybe-translate-reflink tree)
     (assert nil)))
 
 (define-glossary-term @linkable (:title "linkable")
@@ -2170,10 +2170,10 @@
   (@markdown-reflink section)
   (@unresolvable-reflinks section))
 
-(defun maybe-translate-reflink (tree linked-refs)
+(defun maybe-translate-reflink (tree)
   (when (eq :reference-link (first tree))
     (if (or (pt-get tree :definition) (pt-get tree :tail))
-        (translate-reflink tree linked-refs)
+        (translate-reflink tree)
         ;; (:REFERENCE-LINK :LABEL ("xxx") :TAIL NIL), the parse of [xxx].
         (values `(:plain "[" ,@(pt-get tree :label) "]") t nil))))
 
@@ -2185,9 +2185,9 @@
 ;;;
 ;;; - and those with no locative (:REFERENCE-LINK :LABEL ((:CODE
 ;;;   "SOMETHING")) :TAIL "[]"), the parse of [`SOMETHING`][].
-(defun translate-reflink (reflink linked-refs)
+(defun translate-reflink (reflink)
   (multiple-value-bind (targets title-override replacement-tree)
-      (dissect-reflink reflink linked-refs)
+      (dissect-reflink reflink)
     (cond (replacement-tree
            ;; A non-PAX link like [something][user-defined-id] or
            ;; [something] or the return value of
@@ -2195,12 +2195,13 @@
            (values replacement-tree nil t))
           (t
            (dolist (target targets)
-             (vector-push-extend (target-dref target) linked-refs))
+             (pushnew (dref-name (target-dref target)) *linked-names*
+                      :test #'equal))
            (values (targets-to-tree (or title-override (pt-get reflink :label))
                                     title-override targets)
                    nil t)))))
 
-(defun dissect-reflink (reflink linked-refs)
+(defun dissect-reflink (reflink)
   (assert (parse-tree-p reflink :reference-link))
   (destructuring-bind (&key label definition tail) (rest reflink)
     (let* ((empty-definition-p (and (zerop (length definition))
@@ -2214,7 +2215,7 @@
       (multiple-value-bind (targets foundp label)
           (nth-value-or 1
             (when (and label-string locative-from-def)
-              (specific-reflink label-string locative-from-def linked-refs))
+              (specific-reflink label-string locative-from-def))
             (when (and definition (null locative-from-def))
               (specific-reflink-with-text label definition))
             (when (and label-string empty-definition-p)
@@ -2274,11 +2275,11 @@
   to mark it as code, but here and below, the second example relies on
   *DOCUMENT-UPPERCASE-IS-CODE* being true.""")
 
-(defun specific-reflink (label-string locative-from-def linked-refs)
+(defun specific-reflink (label-string locative-from-def)
   (when-let (xref (find-name (rcurry #'specific-link-dref locative-from-def)
                              label-string :depluralize t))
     (values (cond ((eq (xref-locative-type xref) 'dislocated)
-                   (vector-push-extend xref linked-refs)
+                   (pushnew (xref-name xref) *linked-names* :test #'equal)
                    ())
                   (t
                    (dref-to-targets/specific xref)))
@@ -2454,16 +2455,17 @@
 ;;; it to, for example, (:REFERENCE-LINK :LABEL ((:CODE "SOMETHING"))
 ;;; :DEFINITION ("function")) if there is a single function reference
 ;;; to it.
-(defun autolink (parent tree word linked-refs)
+(defun autolink (parent tree word)
   (multiple-value-bind (targets foundp)
       (nth-value-or 1
         ;; This prefers a @SPECIFIC-AUTOLINK with a shorter name to an
         ;; @UNSPECIFIED-LOCATIVE with a longer one.
-        (specific-autolink word parent tree linked-refs)
-        (unspecific-autolink word linked-refs))
+        (specific-autolink word parent tree)
+        (unspecific-autolink word))
     (cond (foundp
            (dolist (target targets)
-             (vector-push-extend (target-dref target) linked-refs))
+             (pushnew (dref-name (target-dref target)) *linked-names*
+                      :test #'equal))
            (values (targets-to-tree `(,tree) nil targets)
                    nil t))
           (t
@@ -2494,12 +2496,12 @@
 
   _renders as_ DREF-NAME `(reader dref)`.""")
 
-(defun specific-autolink (word parent tree linked-refs)
+(defun specific-autolink (word parent tree)
   (when-let (xref (find-name (lambda (name)
                                (specific-autolink-dref parent tree name))
                              word :depluralize t))
     (cond ((eq (xref-locative-type xref) 'dislocated)
-           (vector-push-extend xref linked-refs)
+           (pushnew (xref-name xref) *linked-names* :test #'equal)
            (values () t))
           (t
            (values (dref-to-targets/specific xref) t)))))
@@ -2561,15 +2563,14 @@
 
   [suppressed-link-p function][docstring]""")
 
-(defun unspecific-autolink (word linked-refs)
+(defun unspecific-autolink (word)
   (when-let (drefs (find-name #'unspecific-link-definitions* word
                               :symbols-only t :depluralize t))
-    (values (drefs-to-targets/unspecific
-             (filter-suppressed-references drefs linked-refs))
+    (values (drefs-to-targets/unspecific (filter-suppressed-references drefs))
             t)))
 
-(defun filter-suppressed-references (refs linked-refs)
-  (if (suppressed-link-p refs linked-refs)
+(defun filter-suppressed-references (refs)
+  (if (suppressed-link-p refs *linked-names*)
       ()
       refs))
 
@@ -2577,7 +2578,7 @@
 (defun xref-name= (name ref)
   (equal name (xref-name ref)))
 
-(defun suppressed-link-p (drefs linked-refs)
+(defun suppressed-link-p (drefs linked-names)
   """@UNSPECIFIC-AUTOLINKing is suppressed if the name found has a
   @LOCAL-DEFINITION or was linked to before in the same docstring:
 
@@ -2601,20 +2602,16 @@
   docstring to be included properly:
 
   - "`@NAME and @NAME`" _renders as_ "@NAME and @NAME"."""
-  (when drefs
-    (or (some (lambda (dref)
-                (let ((name (dref-name dref)))
-                  (or (member name '(t nil))
-                      (has-local-definition-p name))))
-              drefs)
-        (and
-         (loop for dref in drefs
-                 thereis (find (xref-name dref) linked-refs
-                               :test #'xref-name=))
-         (not (and (= (length drefs) 1)
-                   (let ((dref (first drefs)))
-                     (or (doctitle dref)
-                         (typep dref 'note-dref)))))))))
+  (and (loop for dref in drefs
+             for name = (dref-name dref)
+             do (when (or (member name '(t nil))
+                          (has-local-definition-p name))
+                  (return-from suppressed-link-p t))
+             thereis (find name linked-names :test #'equal))
+       (not (and drefs (null (cdr drefs))
+                 (let ((dref (first drefs)))
+                   (or (doctitle dref)
+                       (typep dref 'note-dref)))))))
 
 
 (defsection @escaping-autolinking (:title "Escaping Autolinking")
@@ -2634,12 +2631,12 @@
   [DISLOCATED][locative] or the ARGUMENT locative may be used as in
   `[DOCUMENT][dislocated]`.""")
 
-(defun maybe-unescape-or-autolink (parent tree linked-refs)
+(defun maybe-unescape-or-autolink (parent tree)
   (when (parse-tree-p tree :code)
     (let ((string (second tree)))
       (if (starts-with #\\ string)
           `(:code ,(subseq string 1))
-          (autolink parent tree string linked-refs)))))
+          (autolink parent tree string)))))
 
 
 ;;;; Common code for @LINKING
