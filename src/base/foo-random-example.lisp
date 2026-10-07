@@ -12,7 +12,7 @@
   (foo-random-state class)
   (state (reader foo-random-state))
   "Hey we can also print states!"
-  (print-object (method () (foo-random-state t)))
+  (print-object (method (foo-random-state t)))
   (*foo-state* variable)
   (gaussian-random function)
   (uniform-random function)
@@ -29,8 +29,8 @@
   "Much like *RANDOM-STATE* but uses the FOO algorithm.")
 
 (defun uniform-random (limit &key (random-state *foo-state*))
-  "Return a random number from the between 0 and LIMIT (exclusive)
-  uniform distribution."
+  "Return a random number from the uniform distribution between 0 and
+  LIMIT (exclusive)."
   nil)
 
 (defun gaussian-random (stddev &key (random-state *foo-state*))

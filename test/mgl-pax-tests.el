@@ -18,7 +18,8 @@
   `(with-temp-buffer
      (lisp-mode)
      (load-mgl-pax-test-system)
-     ,@body))
+     ,@body
+     (slime-sync-to-top-level 1)))
 
 (cl-defmacro with-temp-lisp-and-non-lisp-buffer (&body body)
   `(progn
@@ -45,7 +46,7 @@
            until (eq major-mode 'w3m-mode)
            do (sit-for 0.1))
   ;; Wait for fontification to finish.
-  (sit-for 0.1))
+  (sit-for 0.2))
 
 (defun substringp (sub string)
   (string-match-p (regexp-quote sub) string))
@@ -162,14 +163,14 @@
    (should (equal (mgl-pax-wall-at-point)
                   '(("foo" ("xxx" "yyy")))))))
 
-;;; xxx FOO `(method () number)`
+;;; xxx FOO `(method number)`
 (ert-deftest test-mgl-pax-wall-at-point/locative-in-backticks ()
   (with-temp-lisp-and-non-lisp-buffer
    (insert "xxx foo")
    (save-excursion
-     (insert " `(method () number)`"))
+     (insert " `(method number)`"))
    (should (equal (mgl-pax-wall-at-point)
-                  '(("foo" ("xxx" "(method () number)")))))))
+                  '(("foo" ("xxx" "(method number)")))))))
 
 ;;; ;;; xxx FOO yyy
 (ert-deftest test-mgl-pax-wall-at-point/comment-1 ()
@@ -180,15 +181,15 @@
    (should (equal (mgl-pax-wall-at-point)
                   '(("foo" ("xxx" "yyy")))))))
 
-;;; ;;; xxx FOO (method ()
+;;; ;;; xxx FOO (method
 ;;; ;;;          (number))
 (ert-deftest test-mgl-pax-wall-at-point/comment-2 ()
   (with-temp-lisp-and-non-lisp-buffer
    (insert ";;; xxx foo")
    (save-excursion
-     (insert " (method ()\n;;; (number))"))
+     (insert " (method\n;;; (number))"))
    (should (equal (mgl-pax-wall-at-point)
-                  '(("foo" ("xxx" "(method ()\n(number))")))))))
+                  '(("foo" ("xxx" "(method\n(number))")))))))
 
 ;;; xxx [FOO][function] yyy
 (ert-deftest test-mgl-pax-wall-at-point/reflink-1 ()
@@ -266,9 +267,9 @@
 ;;;; Test `mgl-pax-edit-definitions'
 
 (defun mgl-pax-test-sync-hard ()
-  (slime-sync-to-top-level 1)
+  (slime-sync-to-top-level 5)
   (mgl-pax-sync-current-buffer)
-  (sit-for 0.2))
+  (sit-for 0.4))
 
 (def-slime-test mgl-pax-edit-definitions/test-defs
     (name snippet &optional snippet2)
@@ -286,19 +287,21 @@
       ("setf-compiler-macro setf-fn"
        "(define-compiler-macro (setf setf-fn) ")
       ("setf-function setf-gf" "(defgeneric (setf setf-gf) ")
-      ("(setf-method () (string)) setf-gf"
+      ("(setf-method (string)) setf-gf"
        "(defmethod (setf setf-gf) ((v string))")
       ("function foo" "(defun foo ")
       ("function |Foo|" "(defun |Foo| ")
       ("traced-foo" "(defun traced-foo ")
       ("generic-function test-gf" "(defgeneric test-gf ")
-      ("(method () (number)) test-gf" "(defmethod test-gf ")
-      ("(method nil ((eql #.(find-package '#:mgl-pax-test)) T T T)) exportable-reference-p"
+      ("(method (number)) test-gf" "(defmethod test-gf ")
+      ("(method ((eql #.(find-package '#:mgl-pax-test)) T T T)) exportable-reference-p"
        "(defmethod exportable-reference-p")
       ("method-combination my-comb" "(define-method-combination my-comb ")
       ("(reader foo) foo-r" "(defclass foo " "(r :reader foo-r)")
       ("(writer foo) foo-w" "(defclass foo " "(w :writer foo-w)")
       ("(accessor foo) foo-a" "(defclass foo " "(a :accessor foo-a)")
+      ("structure baz" "(defstruct baz")
+      ("structure-accessor baz-aaa" "(defstruct baz")
       ("type bar" "(deftype bar ")
       ("type foo" "(defclass foo ")
       ("type my-error" "(define-condition my-error ")
@@ -314,7 +317,11 @@
       ("readtable xxx-rt" "(named-readtables:defreadtable xxx-rt")
       ("locative my-loc" "(define-locative-type my-loc ")
       ("section mgl-pax::@pax-manual" "(defsection @pax-manual ")
-      ("glossary-term some-term" "(define-glossary-term some-term "))
+      ("glossary-term @some-term" "(define-glossary-term @some-term ")
+      ("note @1+*" "(note @1+*")
+      ("note @1+*/1" "(note (@1+*/1 :join")
+      ("note @in-1" "(note @in-1")
+      ("note @in-2" "(note @in-2"))
   (load-mgl-pax-test-system)
   (let ((slime-buffer-package "MGL-PAX-TEST")
         (test-name (format "%S visits snippet %S or %S."
@@ -340,8 +347,8 @@
               (buffer-substring-no-properties (point)
                                               (min (point-max)
                                                    (+ (point) 400))))
-             (or (looking-at snippet)
-                 (and snippet2 (looking-at snippet2))))
+             (or (looking-at (regexp-quote snippet))
+                 (and snippet2 (looking-at (regexp-quote snippet2)))))
          (slime-pop-find-definition-stack))
        (should (eq (current-buffer) tmpbuffer))
        (should (= (point) start-pos)))
@@ -351,7 +358,7 @@
   (with-temp-lisp-buffer
    (should (null (mgl-pax-locate-definitions '(("non-existent" ())))))
    (let ((location (mgl-pax-locate-definitions '(("cl" ("package"))))))
-     (should (equal (caar location) "(DEFPACKAGE \"COMMON-LISP\")"))
+     (should (equal (caar location) "(\"COMMON-LISP\" PACKAGE)"))
      (should (eq (cl-first (cl-second (cl-first location))) :error)))))
 
 
@@ -386,7 +393,7 @@
               ;; The non-matching ones get filtered out by the
               ;; standard Emacs completion mechanism.
               '("dref::function-name-mixin" "dref:dref" "dref:xref"
-                "class" "mgl-pax:locative")))
+                "dref:class" "dref:locative")))
      (insert "\n\"lambda list")
      (should (null (cl-third (mgl-pax-completions-at-point))))
      (let ((mgl-pax-completing-for 'document))
@@ -449,27 +456,36 @@
 
 (ert-deftest test-mgl-pax-current-definition-possible-names/list-name ()
   (with-temp-lisp-and-non-lisp-buffer
-   (insert "(list () foo t)")
+   (insert "(defun (setf mgl-pax-test::setf-fn) nil)")
    (goto-char 1)
    (should (equal (mgl-pax-current-definition-possible-names)
-                  '()))))
+                  '(("(setf mgl-pax-test::setf-fn)"
+                     "(defun (setf mgl-pax-test::setf-fn) nil)"
+                     1))))))
 
 (ert-deftest test-mgl-pax-current-definition-possible-names/wrapped ()
   (with-temp-lisp-and-non-lisp-buffer
-   (insert "(locally (defun foo () t)")
+   (insert "(locally (defun foo () t))")
    (goto-char 13)
    (should (equal (mgl-pax-current-definition-possible-names)
-                  '(("foo" "(defun foo () t)" 10))))))
+                  '(("foo" "(defun foo () t)" 10)
+                    ("(defun foo () t)" "(locally (defun foo () t))" 1))))))
 
 (ert-deftest test-mgl-pax-current-definition-possible-names/wrapped-2 ()
   (with-temp-lisp-and-non-lisp-buffer
-   (insert "(locally (deftype foo () t) (defun foo () t)")
+   (insert "(locally (deftype foo () t) (defun foo () t))")
    (goto-char 13)
    (should (equal (mgl-pax-current-definition-possible-names)
-                  '(("foo" "(deftype foo () t)" 10))))
+                  '(("foo" "(deftype foo () t)" 10)
+                    ("(deftype foo () t)"
+                     "(locally (deftype foo () t) (defun foo () t))"
+                     1))))
    (goto-char 30)
    (should (equal (mgl-pax-current-definition-possible-names)
-                  '(("foo" "(defun foo () t)" 29))))))
+                  '(("foo" "(defun foo () t)" 29)
+                    ("(deftype foo () t)"
+                     "(locally (deftype foo () t) (defun foo () t))"
+                     1))))))
 
 
 ;;;; Test `mgl-pax-edit-parent-section'
@@ -645,63 +661,66 @@
               (should (eq major-mode 'w3m-mode))
               (should-be-looking-at
                (if (eq mgl-pax-browser-function 'w3m-browse-url)
-                   "2 Syntax Highlighting"
-                 "← ↑ → ↺ λ\n\n2 Syntax Highlighting")))))
+                   "3 Syntax Highlighting"
+                 "← ↑ → ↺ λ\n\n3 Syntax Highlighting")))))
       (when (eq major-mode 'w3m-mode)
         (kill-buffer))))))
 
 ;;; Disabled because these tests need a network connection
 
-;; (ert-deftest test-mgl-pax-document/external ()
-;;   (let ((common-lisp-hyperspec-root
-;;          "http://localhost/documentation/HyperSpec/"))
-;;     (with-browsers
-;;      (unwind-protect
-;;          (progn
-;;            (mgl-pax-document "pax:readably")
-;;            (slime-sync-to-top-level 1)
-;;            (mgl-pax-sync-current-buffer)
-;;            (should (eq major-mode 'w3m-mode))
-;;            ;; Wait for 5 seconds for the page to load and render.
-;;            (cl-loop repeat 50
-;;                     until (looking-at "readably adv.")
-;;                     do (sit-for 0.1))
-;;            (should-be-looking-at "readably adv.")))))
-;;   (when (eq major-mode 'w3m-mode)
-;;     (kill-buffer)))
-;; 
-;; (ert-deftest test-mgl-pax-document/external/context ()
-;;   (let ((common-lisp-hyperspec-root
-;;          "http://www.lispworks.com/documentation/HyperSpec/"))
-;;     (with-browsers
-;;      (with-temp-lisp-and-non-lisp-buffer
-;;       (insert "readably")
-;;       (unwind-protect
-;;           (progn
-;;             (call-interactively 'mgl-pax-document)
-;;             (slime-sync-to-top-level 1)
-;;             (mgl-pax-sync-current-buffer)
-;;             (should (eq major-mode 'w3m-mode))
-;;             ;; Wait for 5 seconds for the page to load and render.
-;;             (cl-loop repeat 50
-;;                      until (looking-at "readably adv.")
-;;                      do (sit-for 0.1))
-;;             (should-be-looking-at "readably adv.")))
-;;       (when (eq major-mode 'w3m-mode)
-;;         (kill-buffer))))))
+(ert-deftest test-mgl-pax-document/external ()
+  (when (file-directory-p "/usr/share/doc/hyperspec/")
+    (let ((common-lisp-hyperspec-root "/usr/share/doc/hyperspec/"))
+      (with-browsers
+       (unwind-protect
+           (progn
+             (mgl-pax-document "pax:readably")
+             (slime-sync-to-top-level 1)
+             (mgl-pax-sync-current-buffer)
+             (should (eq major-mode 'w3m-mode))
+             ;; Wait for 5 seconds for the page to load and render.
+             (cl-loop repeat 50
+                      until (looking-at "readably adv.")
+                      do (sit-for 0.1))
+             (should-be-looking-at "readably adv."))
+         (when (eq major-mode 'w3m-mode)
+           (kill-buffer)))))))
+
+(ert-deftest test-mgl-pax-document/external/context ()
+  (when (file-directory-p "/usr/share/doc/hyperspec/")
+    (let ((common-lisp-hyperspec-root "file:///usr/share/doc/hyperspec/"))
+      (with-browsers
+       (with-temp-lisp-and-non-lisp-buffer
+        (insert "readably")
+        (unwind-protect
+            (progn
+              (call-interactively 'mgl-pax-document)
+              (slime-sync-to-top-level 1)
+              (mgl-pax-sync-current-buffer)
+              (should (eq major-mode 'w3m-mode))
+              ;; Wait for 5 seconds for the page to load and render.
+              (cl-loop repeat 50
+                       until (looking-at "readably adv.")
+                       do (sit-for 0.1))
+              (should-be-looking-at "readably adv."))
+          (when (eq major-mode 'w3m-mode)
+            (kill-buffer))))))))
 
 (ert-deftest test-mgl-pax-document/go ()
-  (with-browsers
-   (unwind-protect
-       (progn
-         (mgl-pax-document (concat "pax:"
-                                   (w3m-url-encode-string
-                                    "defun (go (print function))")))
-         (mgl-pax-test-sync-hard)
-         (should (eq major-mode 'w3m-mode))
-         (should (substringp "  * [function] PRINT" (w3m-contents))))
-     (when (eq major-mode 'w3m-mode)
-       (kill-buffer)))))
+  (mgl-pax-maybe-autoload
+   "mgl-pax/web" t
+   (lambda (loadedp)
+     (with-browsers
+      (unwind-protect
+          (progn
+            (mgl-pax-document (concat "pax:"
+                                      (w3m-url-encode-string
+                                       "defun (go (print function))")))
+            (mgl-pax-test-sync-hard)
+            (should (eq major-mode 'w3m-mode))
+            (should (substringp "  * [function] PRINT" (w3m-contents))))
+        (when (eq major-mode 'w3m-mode)
+          (kill-buffer)))))))
 
 (ert-deftest test-mgl-pax-document/go/context ()
   (with-browsers
@@ -748,7 +767,14 @@
       (mgl-pax-test-sync-hard)
       (should (eq major-mode 'w3m-mode))
       (should (substringp "* [function] FOO-SIMPLE" (w3m-contents)))
-      (kill-buffer)
+      (when (eq mgl-pax-browser-function 'w3m-browse-url)
+        (mgl-pax-doc-edit-current-definition)
+        (accept-process-output nil 1)
+        (slime-sync-to-top-level 1)
+        (mgl-pax-test-sync-hard)
+        (should (eq major-mode 'lisp-mode))
+        (should-be-looking-at "(defun foo-simple"))
+      (kill-buffer "*w3m*")
       (mgl-pax-sync-current-buffer)))))
 
 (ert-deftest test-mgl-pax-current-definition-toggle-view/url-encoding ()
@@ -854,6 +880,37 @@
       (should (substringp "* [package] \"MGL-PAX-TEST\"" (w3m-contents)))
       (kill-buffer)
       (mgl-pax-sync-current-buffer)))))
+
+(ert-deftest test-mgl-pax-current-definition-toggle-view/methods ()
+  (with-browsers
+   (with-temp-lisp-buffer
+    (let ((tmpbuffer (current-buffer)))
+      ;; Compiled only because MGL-PAX::DREF-AND-SNIPPET-MATCH-P does
+      ;; not handle methods.
+      (insert "(defmethod foom\n  ((x string)))\n")
+      (slime-compile-defun)
+      (slime-sync-to-top-level 1)
+      (insert "(defmethod foom\n  ((x number)))\n")
+      (slime-compile-defun)
+      (slime-sync-to-top-level 1)
+      ;; Test second method
+      (backward-sexp)
+      (mgl-pax-current-definition-toggle-view)
+      (mgl-pax-test-sync-hard)
+      (should (eq major-mode 'w3m-mode))
+      (should (substringp "* [method] FOOM (X NUMBER)" (w3m-contents)))
+      (kill-buffer)
+      (switch-to-buffer tmpbuffer)
+      (mgl-pax-sync-current-buffer)
+      ;; Test first method
+      (backward-sexp)
+      (mgl-pax-current-definition-toggle-view)
+      (mgl-pax-test-sync-hard)
+      (should (eq major-mode 'w3m-mode))
+      (should (substringp "* [method] FOOM (X STRING)" (w3m-contents)))
+      (kill-buffer)
+      (switch-to-buffer tmpbuffer)
+      (mgl-pax-sync-current-buffer)))))
 
 
 ;;; Test `mgl-pax-apropos'
@@ -874,7 +931,7 @@
 
 ;;;; Test `mgl-pax-transcribe-last-expression'
 
-(ert-deftest test-mgl-pax-transcribe-last-expression/simple-1 ()
+(ert-deftest test-mgl-pax-transcribe-last-expression/simple-same-line ()
   (load-mgl-pax-test-system)
   (with-temp-lisp-buffer
    (insert "(1+ 2)")
@@ -884,7 +941,7 @@
    (should (equal (point) 13))
    (should (equal (buffer-string) "(1+ 2)\n=> 3\n"))))
 
-(ert-deftest test-mgl-pax-transcribe-last-expression/simple-2 ()
+(ert-deftest test-mgl-pax-transcribe-last-expression/simple-next-line ()
   (load-mgl-pax-test-system)
   (with-temp-lisp-buffer
    (insert "(1+ 2)\n")
@@ -916,21 +973,63 @@
 (ert-deftest test-mgl-pax-transcribe-last-expression/multi-line-comment ()
   (load-mgl-pax-test-system)
   (with-temp-lisp-buffer
-   (insert ";; (1+\n;; 2)")
+   (insert ";; (1+\n;;    2)")
    (save-excursion (insert "\nxxx\n"))
    (mgl-pax-transcribe-last-expression)
    (accept-process-output nil 1)
-   (should (equal (point) 22))
-   (should (equal (buffer-string) ";; (1+\n;; 2)\n;; => 3\nxxx\n"))))
+   (should (looking-at "xxx"))
+   (should (equal (buffer-string) ";; (1+\n;;    2)\n;; => 3\nxxx\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/multi-line-comment-2 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert ";; foo (1+\n;;        2)")
+   (save-excursion (insert "\nxxx\n"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (looking-at "xxx"))
+   (should (equal (buffer-string) ";; foo (1+\n;;        2)\n;; => 3\nxxx\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/multi-line ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert " (1+\n    2)")
+   (save-excursion (insert "\nxxx\n"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (looking-at "xxx"))
+   (should (equal (buffer-string) " (1+\n    2)\n => 3\nxxx\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/multi-line-2 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert " foo (1+\n        2)")
+   (save-excursion (insert "\nxxx\n"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (looking-at "xxx"))
+   (should (equal (buffer-string) " foo (1+\n        2)\n => 3\nxxx\n"))))
 
 (ert-deftest test-mgl-pax-transcribe-last-expression/junk-before ()
   (load-mgl-pax-test-system)
   (with-temp-lisp-buffer
-   (insert ";; junk (1+ 2)")
+   (insert "1 ; junk (1+ 2)")
    (mgl-pax-transcribe-last-expression)
    (accept-process-output nil 1)
    (should (eobp))
-   (should (equal (buffer-string) ";; junk (1+ 2)\n;; => 3\n"))))
+   (should (equal (buffer-string) "1 ; junk (1+ 2)\n  ; => 3\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/multi-line-junk-before ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "1 ; junk (+ 2\n  ;         3)")
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (eobp))
+   (should (equal (buffer-string) "1 ; junk (+ 2
+  ;         3)
+  ; => 5
+"))))
 
 (ert-deftest test-mgl-pax-transcribe-last-expression/at-prompt ()
   (load-mgl-pax-test-system)
@@ -944,6 +1043,64 @@
    (should (eobp))
    (should (equal (buffer-string) "CL-USER> (1+ 2)\n=> 3\n"))))
 
+(ert-deftest test-mgl-pax-transcribe-last-expression/midline-1 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "  1")
+   (save-excursion
+     (insert "  2"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "  1\n  => 1\n  2"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/midline-2 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "  1 ")
+   (save-excursion
+     (insert " 2"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "  1\n  => 1\n  2"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/comment-midline-1 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert " ; 1")
+   (save-excursion
+     (insert "  2"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) " ; 1\n ; => 1\n ; 2"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/comment-midline-2 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert " ; 1 ")
+   (save-excursion
+     (insert " 2"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) " ; 1\n ; => 1\n ; 2"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/trailing-comment-1 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "1 ; x\n")
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "1 ; x\n=> 1\n"))))
+
+(ert-deftest test-mgl-pax-transcribe-last-expression/trailing-comment-2 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "1")
+   (save-excursion
+     (insert " ; x\n"))
+   (mgl-pax-transcribe-last-expression)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "1\n=> 1\n; x\n"))))
+
 (defun mgl-pax-mark-prompt ()
   (add-text-properties
    (point-at-bol)
@@ -953,6 +1110,26 @@
      rear-nonsticky t
      field output
      front-sticky (field inhibit-line-move-field-capture))))
+
+
+;;;; Test `mgl-pax-find-cl-transcript-block'
+
+(ert-deftest test-mgl-pax-find-cl-transcript-block ()
+  (with-temp-lisp-buffer
+   (insert "
+  ```cl-transcript (:dynenv nil)
+  1
+  => 1
+  ```
+")
+   (should (= (point-min) 1))
+   (cl-loop for p upfrom (point-min) upto (point-max)
+            do (goto-char p)
+            (if (or (< p 2) (< 51 p))
+                (should (null (mgl-pax-find-cl-transcript-block)))
+              (should (equal (mgl-pax-find-cl-transcript-block)
+                             (list " (:dynenv nil)" 35 46)))))))
+
 
 
 ;;;; Test `mgl-pax-retranscribe-region'
@@ -973,7 +1150,148 @@
    (mark-whole-buffer)
    (call-interactively 'mgl-pax-retranscribe-region)
    (accept-process-output nil 1)
-   (should (equal (buffer-string) "  (1+ 2)\n  => 3\n  \n"))))
+   (should (equal (buffer-string) "  (1+ 2)\n  => 3\n\n"))
+   (mark-whole-buffer)
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "  (1+ 2)\n  => 3\n\n"))))
+
+(ert-deftest test-mgl-pax-retranscribe-region/first-line-1 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert ";;;; (1+ 2)\n;;;; =>\n")
+   (push-mark (1+ (point-min)) nil t)
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) ";;;; (1+ 2)\n;;;; => 3\n"))))
+
+(ert-deftest test-mgl-pax-retranscribe-region/first-line-2 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert ";;;; (1+ 2)\n;;;; =>\n")
+   (push-mark (+ (point-min) 2) nil t)
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) ";;;; (1+ 2)\n;;;; => 3\n"))))
+
+(ert-deftest test-mgl-pax-retranscribe-region/first-line-3 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert ";;;; (1+ 2)\n;;;; =>\n")
+   (push-mark (+ (point-min) 3) nil t)
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) ";;;; (1+ 2)\n;;;; => 3\n"))))
+
+(ert-deftest test-mgl-pax-retranscribe-region/first-line-4 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert ";;;; (1+ 2)\n;;;; =>\n")
+   (push-mark (+ (point-min) 4) nil t)
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) ";;;; (1+ 2)\n;;;; => 3\n"))))
+
+(ert-deftest test-mgl-pax-retranscribe-region/first-line-5 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert ";;;; (1+ 2)\n;;;; =>\n")
+   (push-mark (+ (point-min) 5) nil t)
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) ";;;; (1+ 2)\n;;;; => 3\n"))))
+
+(ert-deftest test-mgl-pax-retranscribe-region/commented-syntax-1 ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert ";; (list 1 2)\n;; ;=> (1\n;; ;->  2)\n")
+   (mark-whole-buffer)
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) ";; (list 1 2)\n;; ;=> (1\n;; ;->  2)\n"))))
+
+(ert-deftest test-mgl-pax-retranscribe-region/ends-with-newline ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "  (+ 1 2)\n  => 3\n")
+   (mark-whole-buffer)
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "  (+ 1 2)\n  => 3\n"))))
+
+(ert-deftest test-mgl-pax-retranscribe-region/does-not-end-with-newline ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "  (+ 1 2)\n  => 3\n ")
+   (mark-whole-buffer)
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "  (+ 1 2)\n  => 3\n "))))
+
+(ert-deftest test-mgl-pax-retranscribe-region/first-line-comment ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert ";;; x\n1\n=> 1\n")
+   (mark-whole-buffer)
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) ";;; x\n1\n=> 1\n"))))
+
+(ert-deftest test-mgl-pax-retranscribe-region/inconsistent ()
+  (load-mgl-pax-test-system)
+  (with-temp-lisp-buffer
+   (insert "```cl-transcript (:dynenv mgl-pax-test::dynenv-with-consistency)
+1
+=> 2
+")
+   (save-excursion
+     (insert "```\n"))
+   (call-interactively 'mgl-pax-retranscribe-region)
+   (accept-process-output nil 1)
+   (should (equal (buffer-string) "```cl-transcript (:dynenv mgl-pax-test::dynenv-with-consistency)
+1
+=> 1
+```
+"))))
+
+(defun mark-whole-buffer-but-edges (n-head n-tail)
+  (goto-char (point-min))
+  (forward-line n-head)
+  (push-mark (point) t t)
+  (goto-char (point-max))
+  (forward-line (- n-tail)))
+
+;;; Keep in sync with MGL-PAX-TEST::TEST-DYNENV except the open
+;;; linking tests there, which do not make sense here.
+(ert-deftest test-mgl-pax-retranscribe-region/dynenv ()
+  (load-mgl-pax-test-system)
+  (cl-labels
+      ((input (args-string downcasedp)
+         (format "(in-package :mgl-pax-test)
+```cl-transcript %s
+(make-instance 'bbb)
+==> #<%s>
+```
+"
+                 args-string (if downcasedp "bbb" "BBB")))
+       (expected (args-string downcasedp)
+         (input args-string downcasedp)))
+    (slime-eval '(cl:setq cl:*print-case* :downcase))
+    (unwind-protect
+        (dolist (test-case
+                 '(("(:dynenv funcall)" t nil)
+                   ("" nil nil)
+                   ("junk" nil t)))
+          (cl-destructuring-bind (args downcasedp errorp) test-case
+            (with-temp-lisp-buffer
+             (insert (input args downcasedp))
+             (mark-whole-buffer-but-edges 2 1)
+             (if errorp
+                 (should-error
+                  (call-interactively 'mgl-pax-retranscribe-region))
+               (call-interactively 'mgl-pax-retranscribe-region)
+               (should (equal (buffer-string) (expected args downcasedp)))))))
+      (slime-eval '(cl:setq cl:*print-case* :upcase)))))
 
 
 (provide 'mgl-pax-tests)

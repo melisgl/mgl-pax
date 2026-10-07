@@ -12,8 +12,8 @@
   `apropos-command` and other online help commands in Emacs, for which
   direct parallels are provided.
 
-  Still, even without Emacs and @SLIME, limited functionality can be
-  accessed through @PAX-LIVE-HOME-PAGE by starting the live
+  Still, even without Emacs and @SLIME, limited functionality is
+  available through the @PAX-LIVE-HOME-PAGE by starting the live
   documentation web server [manually][ensure-web-server].
 
   If @EMACS-SETUP has been done, the Elisp function
@@ -57,14 +57,14 @@
 
   - It works in non-`lisp-mode` buffers by reinterpreting a few lines
     of text surrounding point as lisp code (hence the suggested
-    _global_ binding).
+    _global_ binding) in package `MGL-PAX`.
 
   - It supports fragment syntax at the prompt:
 
-          NAME LOCATIVE FRAGMENT-NAME FRAGMENT-LOCATIVE
+          <name> <locative> <fragment-name> <fragment-locative>
 
-      This is like `NAME LOCATIVE`, but the browser scrolls to the
-      definition of `FRAGMENT-NAME FRAGMENT-LOCATIVE` within that
+      This is like `<NAME> <LOCATIVE>`, but the browser scrolls to the
+      definition of `<FRAGMENT-NAME> <FRAGMENT-LOCATIVE>` within that
       page.
 
       For example, entering this at the prompt will generate the
@@ -81,10 +81,67 @@
   The convenience function
   `mgl-pax-current-definition-toggle-view` (`C-c C-d c`) documents the
   definition with point in it."""
+  (*browse-context* variable)
   (@browsing-with-w3m section)
   (@browsing-with-other-browsers section)
   (@apropos section)
   (@pax-live-home-page section))
+
+
+(defvar/auto *browse-context*)
+(setf (documentation '*browse-context* 'variable)
+      "When set to a @DOCUMENTABLE, live browsing will link only to
+      definitions reachable from it as opposed to linking to all
+      definitions in the running Lisp when it is unbound. This makes
+      it easier to see how offline generated documentation will turn
+      out.
+
+      For convenience, setting *BROWSE-CONTEXT* to :PAX-WORLD is
+      equivalent to listing all [registered][
+      register-doc-in-pax-world] sections.")
+(defvar *browse-context-definitions* ())
+
+(defvar *document/live-extra-args* ())
+
+(defun document/live (documentable &rest args)
+  (let ((*document-url-versions* '(2))
+        (*document-live* t))
+    (with-sections-cache ()
+      (multiple-value-bind (*document-open-linking*
+                            *browse-context-definitions*)
+          (if (boundp '*browse-context*)
+              (values nil (reachable-definitions
+                           (if (eq *browse-context* :pax-world)
+                               (sections-registered-in-pax-world)
+                               *browse-context*)))
+              (values t ()))
+        (apply #'document documentable
+               (append args (list :format (or *subformat* :html))
+                       *document/live-extra-args*))))))
+
+(defun maybe-add-targets-for-live-definitions ()
+  (dolist (dref *browse-context-definitions*)
+    (set-target (dref-ht-key dref)
+                (make-target :dref dref
+                             :page (finalize-pax-url
+                                    (dref-to-pax-url dref))))))
+
+(defun reachable-definitions (documentable)
+  (let ((ht (make-hash-table :test #'equal)))
+    (labels ((recurse (dref level)
+               (unless (gethash (dref-ht-key dref) ht)
+                 (setf (gethash (dref-ht-key dref) ht) dref)
+                 (when (typep dref 'section-dref)
+                   (dolist (entry (section-entries (resolve dref)))
+                     (when-let (child (and (typep entry 'xref)
+                                           (locate entry nil)))
+                       (recurse child (1+ level))))))))
+      (map-documentable (lambda (object)
+                          (when-let (dref (locate object nil))
+                            (recurse dref 0)))
+                        documentable))
+    (hash-table-values ht)))
+
 
 (define-glossary-term @w3m-key-bindings
     (:title "w3m's default key bindings"
@@ -112,17 +169,16 @@
 
   - `p` moves to the previous PAX definition on the page.
 
-  - `u` follows the first `Up:` link (to the first containing
-    [SECTION][class]) if any.
+  - `u` follows the first `Up:` link (to the first containing SECTION)
+    if any.
 
-  - `U` is like `u` but positions the cursor at the top of the page.
+  - `\\U` is like `u` but positions the cursor at the top of the page.
 
   - `v` visits the source location of the current definition (the one
     under the cursor or the first one above it).
 
-  - `V` visits the source location of the first definition on the
-    page.
-  """)
+  - `\\V` visits the source location of the first definition on the
+    page.""")
 
 (defsection @browsing-with-other-browsers
     (:title "Browsing with Other Browsers")
@@ -151,7 +207,7 @@
   variable `mgl-pax-web-server-port` is nil."""
   (*browse-html-style* variable))
 
-(defvar *browse-html-style* :charter
+(defvar/auto *browse-html-style* :charter
   "The HTML style to use for browsing live documentation. Affects only
   non-w3m browsers. See *DOCUMENT-HTML-DEFAULT-STYLE* for the possible
   values.
@@ -160,11 +216,11 @@
   the browser (often `C-<f5>`).")
 
 (defun document-for-emacs (pax*-url output &optional *document-hyperspec-root*)
-  (with-swank-compatibility ()
-    (swank/backend:converting-errors-to-error-location
-      (swank::with-buffer-syntax (swank::*buffer-package*)
+  (swank/backend:converting-errors-to-error-location
+    (swank::with-buffer-syntax (swank::*buffer-package*)
+      (with-sections-cache ()
         ;; This is called only for `w3m' and `precheck'. See below.
-        (let ((*html-subformat* (if (uiop:directory-exists-p output) :w3m nil)))
+        (let ((*subformat* (if (uiop:directory-exists-p output) :w3m nil)))
           `(:url ,(document-pax*-url pax*-url output)))))))
 
 ;;; Write documentation of PAX*-URL into OUTPUT. Return the (:URL
@@ -187,7 +243,7 @@
 ;;;    `w3m' case.
 (defun document-pax*-url (url output)
   (declare (type (or pathname string null) output))
-  (multiple-value-bind (scheme authority path query fragment) (parse-url url)
+  (multiple-value-bind (scheme authority path query fragment) (split-url url)
     ;; The only QUERY is PKG handled by the web server.
     (declare (ignore query))
     (let ((place (cond ((string= scheme "pax")
@@ -205,7 +261,7 @@
   (let ((query
           ;; w3m doesn't like queries on file URLs, so we set
           ;; `slime-buffer-package' instead on the Elisp side.
-          (unless (eq *html-subformat* :w3m)
+          (unless (eq *subformat* :w3m)
             (format nil "pkg=~A" (urlencode (package-name *package*)))))
         (fragment (when fragment
                     (canonicalize-pax-url-fragment fragment))))
@@ -213,38 +269,40 @@
       ;; Redirect to external or a PAX URL.
       ((stringp place)
        (multiple-value-bind (p-scheme p-authority p-path p-query p-fragment)
-           (parse-url place)
+           (split-url place :default-scheme "file")
          ;; Add the canonicalized fragment when redirecting to a PAX URL.
          (cond ((string= p-scheme "pax")
                 (assert (null p-authority))
                 (assert (null p-query))
                 (assert (null p-fragment))
-                (make-url :scheme p-scheme :path p-path
-                          :encoded-query query :fragment fragment))
+                (unsplit-url :scheme p-scheme :path p-path
+                             :query query :fragment fragment))
                (t
-                place))))
+                (unsplit-url :scheme p-scheme :authority p-authority
+                             :path p-path :query p-query
+                             :fragment p-fragment)))))
       ;; Output was written to this file.
       ((pathnamep place)
        (multiple-value-bind (f-scheme f-authority f-path f-query f-fragment)
-           (parse-url (pathname-to-file-url place))
+           (split-url (pathname-to-file-url place))
          (assert (string= f-scheme "file"))
          (assert (null f-authority))
          (assert (null f-query))
          (assert (null f-fragment))
-         (make-url :scheme "file" :path f-path
-                   :encoded-query query :fragment fragment)))
+         (unsplit-url :scheme "file" :path f-path
+                      :query query :fragment fragment)))
       ;; OUTPUT was NIL and there was no redirection to an external
       ;; URL.
       ((null place)
        ;; Return the original PAX URL with the package in QUERY and a
        ;; possibly updated FRAGMENT.
-       (make-url :scheme scheme :authority authority :path path
-                 :encoded-query query :fragment fragment)))))
+       (unsplit-url :scheme scheme :authority authority :path path
+                    :query query :fragment fragment)))))
 
 (defun canonicalize-pax-url-fragment (fragment)
-  (let ((dref (parse-dref fragment)))
+  (let ((dref (parse-dref (urldecode fragment))))
     (if dref
-        (dref-to-anchor dref)
+        (urlencode (dref-to-anchor dref))
         fragment)))
 
 (defun filename-for-pax-url (output pax-url)
@@ -285,13 +343,14 @@
 
 
 ;;;; Handling of "pax-wall:" URLs. WALL is the acronym of
-;;;; Word-And-Locatives-List (also, see the WALL type).
+;;;; Word-And-Locatives-List (see also the WALL type).
 
 ;;; pax-wall:<URLENCODED-STRINGIFIED-WALL>. The list is encoded in an
 ;;; URL to make the Elisp side simpler as what to document goes
 ;;; through `mgl-pax-w3m-goto-url'.
-(defun document-pax-wall-url (pax-url path dirname)
-  (let* ((wall (read-from-string path))
+(defun document-pax-wall-url (pax-url url-path dirname)
+  (let* ((path (urldecode url-path))
+         (wall (read-from-string path))
          (definitions (definitions-of-wall wall :definitions #'definitions*)))
     (case (length definitions)
       ((0) (error "No definitions for ~{~S~^ or ~} (in ~S)."
@@ -305,16 +364,17 @@
 
 ;;;; Handling of "pax-eval:" URLs
 
-(defun document-pax-eval-url (path output)
-  (let* ((form (read-from-string (urldecode path)))
+(defun document-pax-eval-url (url-path output)
+  (let* ((path (urldecode url-path))
+         (form (read-from-string path))
          (stuff (pax-eval form)))
     (when output
-      (let* ((url-path (with-standard-io-syntax*
-                         (prin1-to-string form)))
+      (let* ((canonical-path (with-standard-io-syntax*
+                               (prin1-to-string form)))
              (filename (filename-for-pax-url
                         output
-                        (format nil "pax-eval:~A" (urlencode url-path)))))
-        (document/open/file filename stuff :title path)
+                        (format nil "pax-eval:~A" (urlencode canonical-path)))))
+        (document/live/file filename stuff :title path)
         filename))))
 
 (defun pax-eval (form)
@@ -334,9 +394,12 @@
       (member symbol '(nil t))))
 
 (defun make-pax-eval-url (form)
-  (finalize-pax-url (format nil "pax-eval:~A"
-                            (urlencode (with-standard-io-syntax*
-                                         (prin1-to-string form))))))
+  (finalize-pax-url
+   (format nil "pax-eval:~A"
+           (urlencode (with-standard-io-syntax*
+                        ;; Avoid mentions of BASE-CHAR and such.
+                        (let ((*print-readably* nil))
+                          (prin1-to-string form)))))))
 
 
 ;;;; Handling of "pax:" URLs
@@ -349,21 +412,22 @@
              (format stream "~@<~?~:@>" (message-of condition)
                      (message-args-of condition)))))
 
-(defun document-pax-url (path output)
-  (unless path
+(defun document-pax-url (url-path output)
+  (unless url-path
     (error "Nothing to document."))
-  (let ((drefs (or
-                ;; This handles PAX URLs generated by DREF-TO-PAX-URL,
-                ;; NAME-TO-PAX-URL) (e.g for open linking or
-                ;; CURRENT-DEFINITION-PAX-URL-FOR-EMACS), properly
-                ;; parsing names with spaces, colons and all kind of
-                ;; funny characters.
-                (ignore-errors (definitions-for-pax-url-path path))
-                ;; These follow @PARSING, so that `mgl-pax-document'
-                ;; either with defaulting or prompting works similarly
-                ;; to @NAVIGATION and @LINKING.
-                (ensure-list (parse-dref path))
-                (parse-definitions* path))))
+  (let* ((path (urldecode url-path))
+         (drefs (or
+                 ;; This handles PAX URLs generated by DREF-TO-PAX-URL,
+                 ;; NAME-TO-PAX-URL) (e.g for open linking or
+                 ;; CURRENT-DEFINITION-PAX-URL-FOR-EMACS), properly
+                 ;; parsing names with spaces, colons and all kind of
+                 ;; funny characters.
+                 (ignore-errors (definitions-for-pax-url-path path))
+                 ;; These follow @PARSING so that `mgl-pax-document'
+                 ;; either with defaulting or prompting works
+                 ;; similarly to @NAVIGATION and @LINKING.
+                 (ensure-list (parse-dref path))
+                 (parse-definitions* path))))
     (cond ((endp drefs)
            (multiple-value-bind (dref locative junk) (parse-dref path)
              (declare (ignore dref))
@@ -385,7 +449,7 @@
             path output)))))
 
 ;;; See if (DOCUMENT REFERENCE) with *DOCUMENT-OPEN-LINKING* T would
-;;; try to document an external reference, and return it.
+;;; try to document an external reference and return it.
 (defun open-reference-if-external (reference)
   (let ((*document-open-linking* t))
     (let ((dref (locate reference)))
@@ -407,14 +471,8 @@
          (packagep (packagep (resolve reference nil)))
          (*package* (if packagep
                         (resolve reference)
-                        *package*))
-         #+nil
-         (*print-arglist-key*
-           (and packagep (rcurry 'shorten-arglist reference)))
-         #+nil
-         (*document-docstring-key*
-           (and packagep (rcurry 'shorten-docstring reference))))
-    (document/open/file filename
+                        *package*)))
+    (document/live/file filename
                         (if packagep
                             (pax-apropos* nil t
                                           (make-symbol
@@ -427,8 +485,7 @@
 
 (defun documentable-for-reference (reference)
   (remove nil
-          (append (format-up-links (sections-that-contain (list-all-sections)
-                                                          reference)
+          (append (format-up-links (find-parent-sections reference)
                                    reference)
                   (list reference)
                   (format-asdf-detritus reference)
@@ -441,10 +498,11 @@
        (with-output-to-string (s)
          (format s "Up: ")
          (dolist (section (sort-by-proximity sections dref))
-           (format s "<a href='~A#~A'>~A</a> "
-                   (finalize-pax-url (dref-to-pax-url (locate section)))
-                   (urlencode (dref-to-anchor dref))
-                   (section-title-or-name section))))))))
+           (let ((section-dref (locate section)))
+             (format s "[~A](~A#~A)"
+                     (document-definition-title-or-anchor section-dref)
+                     (finalize-pax-url (dref-to-pax-url section-dref))
+                     (urlencode (dref-to-anchor dref))))))))))
 
 (defun format-asdf-detritus (dref)
   (when (typep dref 'dref-ext:asdf-system-dref)
@@ -458,24 +516,34 @@
                            (escape-markdown (dref-name (locate system)))))
                  (format-package (package)
                    (format nil "- [~A][cl:package]"
-                           (escape-markdown (package-name package)))))
-            (append
-             (when packages-defined
-               (list* "### Packages Defined"
-                      (mapcar #'format-package packages-defined)))
-             (when related-asdf-systems
-               (list* "### [Related][PAX::@RELATED] ASDF Systems"
-                      (mapcar #'format-system related-asdf-systems)))
-             (when related-packages
-               (list* "### [Related][PAX::@RELATED] Packages"
-                      (mapcar #'format-package related-packages))))))))))
+                           (escape-codification
+                            (escape-markdown (package-name package))))))
+            (let ((pax-entry-points
+                    (entry-point-sections
+                     (loop for package in (append packages-defined
+                                                  related-packages)
+                           append (list-sections-in-package package)))))
+              (append
+               (when pax-entry-points
+                 (list "### PAX Entry Points"
+                       (break-long-list
+                        (sections-tightly pax-entry-points))))
+               (when packages-defined
+                 (list* "### Packages Defined"
+                        (mapcar #'format-package packages-defined)))
+               (when related-asdf-systems
+                 (list* "### [Related][PAX::@RELATED] ASDF Systems"
+                        (mapcar #'format-system related-asdf-systems)))
+               (when related-packages
+                 (list* "### [Related][PAX::@RELATED] Packages"
+                        (mapcar #'format-package related-packages)))))))))))
 
 ;;; Return the packages defined directly in files of ASDF-SYSTEM, or
 ;;; packages defined in files below the directory of ASDF-SYSTEM.
 (defun asdf-packages (asdf-system)
   (let* ((packages ())
          (related ())
-         (system (asdf:find-system asdf-system))
+         (system (find-system* asdf-system))
          (system-name (dref-name (locate system)))
          (system-dirname (asdf-system-dirname system)))
     (dolist (package (sort (list-all-packages) #'string< :key #'package-name))
@@ -485,18 +553,18 @@
               ((and system-dirname
                     (starts-with-subseq system-dirname
                                         (asdf-system-dirname
-                                         (asdf:find-system name))))
+                                         (find-system* name))))
                (push package related)))))
     (values (reverse packages) (reverse related))))
 
 (defun related-asdf-systems (asdf-system)
   (let* ((related ())
-         (system (asdf:find-system asdf-system))
+         (system (find-system* asdf-system))
          (system-dirname (asdf-system-dirname system))
          (root-dirname system-dirname))
     (when system-dirname
       (dolist (name (sort (asdf:registered-systems) #'string<))
-        (let* ((system-1 (asdf:find-system name))
+        (let* ((system-1 (find-system* name))
                (dirname-1 (asdf-system-dirname system-1)))
           (when (and (not (eq system system-1))
                      dirname-1
@@ -508,28 +576,8 @@
     (values (reverse related) root-dirname)))
 
 (defun asdf-system-dirname (system)
-  (when-let (pathname (slot-value system 'asdf/component:absolute-pathname))
+  (when-let (pathname (asdf:component-pathname system))
     (namestring pathname)))
-
-#+nil
-(defun shorten-arglist (string &optional except-reference)
-  (let* ((reference *documenting-reference*)
-         (n-chars (- 64 (length (prin1-to-string
-                                 (xref-locative-type reference)))
-                     (length (prin1-to-string
-                              (xref-name reference))))))
-    (if (and except-reference
-             (reference= *documenting-reference* except-reference))
-        string
-        (shorten-string string :n-lines 1 :n-chars n-chars :ellipsis "..."))))
-
-#+nil
-(defun shorten-docstring (docstring &optional except-reference)
-  (if (or (stringp (first *objects-being-documented*))
-          (and *documenting-reference* except-reference
-               (reference= *documenting-reference* except-reference)))
-      docstring
-      (shorten-string docstring :n-lines 1 :n-chars 68 :ellipsis "...")))
 
 (defun format-also-see (reference)
   (let ((entries ())
@@ -550,10 +598,7 @@
               (and (eq (xref-locative-type reference) 'method)
                    (xref-name reference))))
         (when generic-function-name
-          (emit "the generic-function `~A`"
-                (prin1-to-markdown generic-function-name
-                                   ;; It goes between backticks.
-                                   :escape-inline nil))))
+          (emit "the generic-function ~A" (md-code generic-function-name))))
       (when (< 1 (length (definitions* (xref-name reference))))
         (emit "the [disambiguation page](~A)"
               (finalize-pax-url (name-to-pax-url (xref-name reference)))))
@@ -598,50 +643,22 @@
   (assert (< 1 (length references)))
   (when output
     (let ((filename (filename-for-pax-url output pax-url)))
-      (document/open/file
+      (document/live/file
        filename (cons (format nil "## Disambiguation for [~A][pax:dislocated]"
                               (escape-markdown title))
-                      (dref::sort-references (replace-go-targets references)))
+                      (sort-references (replace-go-targets references)))
        :title title)
       filename)))
 
-(defun document/open/file (filename stuff &key title)
+(defun document/live/file (filename stuff &key title)
   (with-open-file (stream (ensure-directories-exist filename)
                           :direction :output
                           :if-does-not-exist :create
                           :if-exists :supersede
-                          :external-format *utf-8-external-format*)
+                          :external-format uiop:*utf-8-external-format*)
     (when title
       (format stream "<title>~A</title>~%" (escape-html title)))
-    (document/open stuff :stream stream)))
-
-(defvar *document/open-extra-args* ())
-
-(defun document/open (documentable &rest args)
-  (let ((*document-open-linking* t)
-        (*document-fancy-html-navigation* (not (eq *html-subformat* :w3m)))
-        (*document-url-versions* '(2))
-        (previous-error-string "")
-        (n-repeats 0))
-    (handler-bind
-        ;; CONTINUE continuable errors, but give up if the same error
-        ;; seems to happen again to avoid getting stuck and maybe
-        ;; running out of stack.
-        ((error
-           (lambda (error)
-             (let ((string (with-standard-io-syntax*
-                             (princ-to-string error))))
-               (if (string= string previous-error-string)
-                   (incf n-repeats)
-                   (setq n-repeats 0))
-               (setq previous-error-string string)
-               (warn "~@<Error in ~S: ~A~:@>" 'document error))
-             (if (< 100 n-repeats)
-                 (warn "~@<Sameish error repeated too many times. ~
-                       Not CONTINUEing.~:@>")
-                 (continue error)))))
-      (apply #'document documentable (append args (list :format :html)
-                                             *document/open-extra-args*)))))
+    (document/live stuff :stream stream)))
 
 
 (defun redocument-for-emacs (file-url output
@@ -649,9 +666,9 @@
   (swank/backend:converting-errors-to-error-location
     (swank::with-buffer-syntax (swank::*buffer-package*)
       ;; This is called only for `w3m' and `precheck'.
-      (let ((*html-subformat* (if (uiop:directory-exists-p output) :w3m nil)))
+      (let ((*subformat* (if (uiop:directory-exists-p output) :w3m nil)))
         (multiple-value-bind (scheme authority path query fragment)
-            (parse-url file-url)
+            (split-url file-url)
           (declare (ignore authority query))
           (when (equal scheme "file")
             (assert (null fragment))
@@ -672,18 +689,18 @@
   (with-swank-compatibility ()
     (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
-        (multiple-value-bind (scheme authority path) (parse-url pax-url)
+        (multiple-value-bind (scheme authority path) (split-url pax-url)
           (declare (ignore authority))
           (unless (equal scheme "pax")
             (error "~S doesn't have pax: scheme." pax-url))
-          (let ((drefs (definitions-for-pax-url-path path)))
+          (let ((drefs (definitions-for-pax-url-path (urldecode path))))
             (assert (<= (length drefs) 1))
             (when drefs
               (let* ((dref (first drefs))
                      (location (source-location dref)))
                 (when (eq (first location) :location)
                   ;; List of one Swank dspec and location.
-                  `((,(dref::definition-to-dspec dref) ,location)))))))))))
+                  `((,(definition-to-dspec dref) ,location)))))))))))
 
 
 (defun current-definition-pax-url-for-emacs (buffer filename possibilities)
@@ -732,7 +749,7 @@
     arguments.
 
   - One may switch between list, and detailed view. The list view only
-    shows the first, [bulleted line][@output-details] for each
+    shows the first, [bulleted line][@markdown-output] for each
     definition, while the detailed view includes the full
     documentation of definitions with the exception of SECTIONs.
 
@@ -752,7 +769,7 @@
 ;;; that evaluates a call to this function. NAME and PACKAGE are
 ;;; strings, EXTERNAL-ONLY and CASE-SENSITIVE are boolean.
 (defun pax-apropos* (name &optional external-only package case-sensitive
-                            (just-list t))
+                     (just-list t))
   (let ((name0 name)
         (package0 package))
     (multiple-value-bind (name dtype package)
@@ -773,9 +790,9 @@
         (multiple-value-bind (non-symbol-definitions symbol-definitions)
             (split-apropos-definitions
              (dref-apropos name :external-only external-only
-                                :package package
-                                :case-sensitive case-sensitive
-                                :dtype dtype))
+                           :package package
+                           :case-sensitive case-sensitive
+                           :dtype dtype))
           (values
            `((progv '(*document-max-table-of-contents-level*) '(-1))
              ,@(when %packagep
@@ -822,7 +839,9 @@
            dref-apropos-form))))))
 
 (defun pax-apropos*-process-args (name package)
-  (multiple-value-bind (name dtype) (parse-apropos-input name)
+  (multiple-value-bind (name dtype) (if name
+                                        (parse-apropos-input name)
+                                        (values nil t))
     (let ((package (cond
                      ;; For DOCUMENT-FOR-EMACS/REFERENCE-1
                      ((symbolp package)
@@ -906,8 +925,7 @@
     types (LOCATIVE-TYPES)."""
   (if (blankp string :start start)
       t
-      (multiple-value-bind (dtype pos)
-          (read-from-string string  t nil :start start)
+      (multiple-value-bind (dtype pos) (parse-sexp string :start start)
         (unless (blankp string :start pos)
           (error "~@<Junk following ~S from position ~S in ~S.~:@>"
                  'dtype pos string))
@@ -955,12 +973,12 @@
       (unless (= pos (length string))
         (error "~@<Trailing junk from index ~S in ~S.~:@>" pos string))
       (cond ((and (symbolp pattern)
-                  (equal (dref::adjust-string-case (symbol-name pattern))
-                         (dref::adjust-string-case "none")))
+                  (equal (adjust-string-case (symbol-name pattern))
+                         (adjust-string-case "none")))
              :none)
             ((and (symbolp pattern)
-                  (equal (dref::adjust-string-case (symbol-name pattern))
-                         (dref::adjust-string-case "any")))
+                  (equal (adjust-string-case (symbol-name pattern))
+                         (adjust-string-case "any")))
              :any)
             (t
              pattern)))))
@@ -1032,7 +1050,6 @@
   page of the web server (if one is started). Here, unless the home
   page is viewed [with w3m][@BROWSING-WITH-W3M], one may directly look
   up documentation and access @APROPOS via the input boxes provided."""
-  ;; FIXME: This may not be loaded.
   (ensure-web-server function)
   (@top-level-pax-sections section)
   (@asdf-systems-and-related-packages section)
@@ -1057,38 +1074,38 @@
 
 (defsection @top-level-pax-sections (:title "Top-level PAX Sections")
   "The @PAX-LIVE-HOME-PAGE lists the top-level PAX sections: those
-  that have no other SECTIONs referencing them (see DEFSECTION).")
+  that have no other SECTIONs referencing them (see HOME-SECTION) and
+  those registered in @PAX-WORLD.")
 
 (defun top-level-pax-sections ()
-  (sort (remove-duplicates
+  (sort (delete-duplicate-xrefs
          (append (mapcar #'locate (sections-registered-in-pax-world))
-                 (entry-point-sections (list-all-sections)))
-         :test #'xref=)
+                 (entry-point-sections (list-all-sections))))
         #'string< :key (alexandria:compose 'plain-section-title-or-name
                                            'resolve)))
 
 (defun entry-point-sections (sections)
   (loop for section in sections
-        for ref = (locate section)
-        unless (or (sections-that-contain sections ref)
+        for dref = (locate section)
+        unless (or (home-section dref)
                    (member (package-name (symbol-package
                                           (section-name section)))
                            '(#:dref-test #:mgl-pax-test)
                            :test #'string=))
-          collect ref))
+          collect dref))
 
 
 (defsection @asdf-systems-and-related-packages
     (:title "ASDF:SYSTEMs and Related PACKAGEs")
-  "The @PAX-LIVE-HOME-PAGE lists all ASDF:SYSTEMs and PACKAGEs in the Lisp.
-  For easier overview, the they are grouped based on their
+  "The @PAX-LIVE-HOME-PAGE lists all ASDF:SYSTEMs and PACKAGEs in the
+  Lisp. For easier overview, they are grouped based on their
   SOURCE-LOCATIONs. Two systems are in the same group if the directory
   of one (i.e. the directory of the `.asd` file in which it was
   defined) is the same or is below the other's.
 
-  A PACKAGE presented under a group of systems, if the SOURCE-LOCATION
-  of the package is below the the top-most directory among the systems
-  in the group.")
+  A PACKAGE is presented under a group of systems if the
+  SOURCE-LOCATION of the package is below the top-most directory among
+  the systems in the group.")
 
 (define-glossary-term @related (:title "related")
   "Two definitions are _related_ if the directory of one's
@@ -1099,29 +1116,34 @@
   [unrelated][@asdf-systems-and-related-packages] to any ASDF:SYSTEM
   as systemless.")
 
+(defmacro with-ragged-right ((stream) &body body)
+  `(progn
+     (format ,stream "~&~%<div class=ragged-right>~%~%")
+     ,@body
+     (format ,stream "~&~%<div>~%~%")))
+
 (defun asdf-systems-and-packages-grouped-documentable ()
   (multiple-value-bind (groups orphan-packages)
       (asdf-systems-and-packages-grouped)
-    (list
-     "### [ASDF:SYSTEMs and Related PACKAGEs][@asdf-systems-and-related-packages]"
-     (loop for (root-dir systems packages) in groups
-           collect (with-output-to-string (s)
-                     (format s "~%- ~{[~A][asdf:system]~^, ~}~%~%"
-                             (mapcar (compose #'escape-markdown #'dref-name
-                                              #'locate)
-                                     systems))
-                     (loop for package in packages
-                           do (format s "    - [~A][package]~%"
-                                      (escape-codification
-                                       (escape-markdown
-                                        (package-name package)))))))
-     (when orphan-packages
-       (with-output-to-string (s)
-         (format s "### [Systemless Packages][@systemless-packages]~%~%")
-         (loop for package in orphan-packages
-               do (format s "    - [~A][cl:package]~%"
-                          (escape-codification
-                           (escape-markdown (package-name package))))))))))
+    (with-output-to-string (s)
+      (with-ragged-right (s)
+       (format s "### [ASDF:SYSTEMs and Related PACKAGEs][
+                @asdf-systems-and-related-packages]")
+        (loop for (root-dir systems packages) in groups
+              do (format s "~%- ~{[~A][asdf:system]~^, ~}~%~%"
+                         (mapcar (compose 'escape-markdown 'dref-name
+                                          'locate)
+                                 systems))
+                 (loop for package in packages
+                       do (format s "    - [~A][package]~%"
+                                  (escape-codification
+                                   (escape-markdown
+                                    (package-name package))))))
+        (when orphan-packages
+          (loop for package in orphan-packages
+                do (format s "    - [~A][cl:package]~%"
+                           (escape-codification
+                            (escape-markdown (package-name package))))))))))
 
 (defun escape-codification (raw)
   (if (codifiable-word-p raw)
@@ -1155,7 +1177,7 @@
       ;; Sort in reverse order so that PACKAGES in GROUPS come out in
       ;; forward order.
       (dolist (asdf-system-name (sort (asdf:registered-systems) #'string>))
-        (let* ((system (asdf:find-system asdf-system-name))
+        (let* ((system (find-system* asdf-system-name))
                (dir (asdf-system-dirname system)))
           (add-system dir system)))
       (dolist (package (sort (list-all-packages) #'string> :key #'package-name))
@@ -1176,8 +1198,9 @@
 
 (defun enumerate-locative-types-in-markdown (locative-types)
   (loop for locative-type in locative-types
-        collect (format nil "- [`~S`](~A)" locative-type
+        collect (format nil "- [~S](~A)" locative-type
                         (make-pax-eval-url
                          `(pax-apropos* ,(with-standard-io-syntax*
-                                           (format nil " ~S" locative-type))
+                                           (let ((*print-readably* nil))
+                                             (format nil " ~S" locative-type)))
                                         t)))))

@@ -36,6 +36,12 @@
 ;;;;
 ;;;; - Also, see `mgl-pax-current-definition-toggle-view'.
 ;;;;
+;;;; - The functions `mgl-pax-hideshow-documentation' and
+;;;;   `mgl-pax-hideshow-comments' help focus on the code only by
+;;;;   folding or unfolding MGL-PAX:DEFSECTION,
+;;;;   MGL-PAX:DEFINE-GLOSSARY-TERM forms and long strings, or
+;;;;   comments.
+;;;;
 ;;;; - `mgl-pax-apropos', `mgl-pax-apropos-all' and
 ;;;;   `mgl-pax-apropos-package' are replacements for `slime-apropos'
 ;;;;   `slime-apropos-all' and `slime-apropos-package', respectively.
@@ -58,6 +64,11 @@
 (eval-when-compile
   ;; For byte-compiling uses of the `w3m-anchor' macro
   (require 'w3m))
+
+(defgroup mgl-pax nil
+  "Interaction with the Common Lisp MGL-PAX library."
+  :group 'lisp
+  :prefix "mgl-pax-")
 
 
 ;;;; A protocol for interfacing with an underlying Lisp interaction
@@ -188,9 +199,22 @@ other mgl-pax commands in interactive use."
   :type 'boolean
   :group 'mgl-pax)
 
+(defun mgl-pax-find-file-up (file-name)
+  (concat (locate-dominating-file load-file-name file-name)
+          file-name))
+
+(defun mgl-pax-read-version ()
+  (with-temp-buffer
+    (insert-file-contents (mgl-pax-find-file-up "version.lisp-expr"))
+    (goto-char (point-min))
+    (read (current-buffer))))
+
 ;;; See MGL-PAX::CHECK-PAX-ELISP-VERSION.
 (defvar mgl-pax-version)
-(setq mgl-pax-version  '(0 4 1))
+;;; The next line is `(setq mgl-pax-version (mgl-pax-read-version))`
+;;; in the sources, which gets replaced by the version in
+;;; `version.lisp-expr` by MGL-PAX:INSTALL-PAX-ELISP.
+(setq mgl-pax-version (mgl-pax-read-version))
 
 ;;; Check that the Elisp and CL PAX versions match, ensure that
 ;;; ASDF-SYSTEM is loaded (in the sense of ASDF:COMPONENT-LOADED-P),
@@ -270,11 +294,16 @@ other mgl-pax commands in interactive use."
                (cl:t
                 (cl:format
                  cl:t
-                 ";; FAILED autoloading ~S~%~
-                     ;; Proceeding to unload mgl-pax from Emacs~%~
-                     ;; Once PAX loads cleanly, you may want to ~
-                     (require 'mgl-pax) in Emacs.~%"
-                 ',asdf-system)
+                 ";; FAILED to autoload ~S.~%~
+                  ;; Evaluate (ASDF:LOAD-SYSTEM ~S) to debug.~%~
+                  ;; If there are missing dependencies, ~
+                  (e.g. under Quicklisp), evaluate~%~
+                  ;; (QL:QUICKLOAD ~S).~%~
+                  ;;~%~
+                  ;; Proceeding to unload mgl-pax from Emacs.~%~
+                  ;; Once PAX loads cleanly, you may want to ~
+                  (require 'mgl-pax) in Emacs.~%"
+                 ',asdf-system ',asdf-system ',asdf-system)
                 :failed)))
             cont)))))
 
@@ -291,13 +320,33 @@ See MGL-PAX::@EMACS-SETUP."
   (interactive)
   (let ((sourcefile (concat (file-name-sans-extension mgl-pax-file-name)
                             ".el")))
+    (unload-feature 'mgl-pax t)
     (load-file sourcefile)))
 
 
 ;;;; MGL-PAX::@EMACS-SETUP
 
-;;;; Most of the logic now lives in the backend-specific files. See
-;;;; either MGL-PAX::@SLIME-SETUP or MGL-PAX::@SLY-SETUP, as appropriate.
+(defcustom mgl-pax-hijack-slime-doc-keys t
+  "If true, then bind mgl-pax functions in `slime-mode-map'
+  by `mgl-pax-hijack-slime-doc-keys' upon loading `mgl-pax'. See
+  MGL-PAX::@EMACS-KEYS for details."
+  :type 'boolean
+  :group 'mgl-pax)
+
+(defvar mgl-pax-slime-doc-map-overrides
+  '((?a slime-apropos mgl-pax-apropos)
+    (?z slime-apropos-all mgl-pax-apropos-all)
+    (?p slime-apropos-package mgl-pax-apropos-package)
+    (?f slime-describe-function mgl-pax-document)
+    (?d slime-describe-symbol mgl-pax-hideshow-documentation)
+    (?c nil mgl-pax-hideshow-comments)
+    (?v nil mgl-pax-current-definition-toggle-view)
+    (?u nil mgl-pax-edit-parent-section)))
+
+(defun mgl-pax-hijack-slime-doc-keys ()
+  "See MGL-PAX::@EMACS-SETUP."
+  (interactive)
+  (mgl-pax-override-keys slime-doc-map mgl-pax-slime-doc-map-overrides))
 
 (defun mgl-pax-override-keys (keymap overrides &optional reversep)
   (cl-loop for (key old new) in overrides do
@@ -435,23 +484,23 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 ;;;
 ;;; `slime-sexp-at-point' works fine in code, but in printed
 ;;; representations and docstrings heuristics are needed (just think
-;;; "SYM." and "#<SYM"), which we leave for the the Common Lisp side
-;;; to resolve. However, we handle here the complications caused by
+;;; "SYM." and "#<SYM"), which we leave for the Common Lisp side to
+;;; resolve. However, we handle here the complications caused by
 ;;; Markdown, whose syntax for code (`nil`) and reference links
 ;;; ([title][id]) is used by PAX, maybe both at the same time as in
 ;;; [`FOO`][function] or [FOO][`function`]. ?` is a delimiter, but ?\[
-;;; is not, which means that `slime-sexp-at-point' on FOO will
-;;; result in NAME being "FOO" or "[FOO][". "[FOO][" is a valid symbol
-;;; name, so we definitely want to look up definitions for it. In
-;;; addition, we also look up definitions for the symbol whose name
-;;; has the parts beyond [] cut off.
+;;; is not, which means that `slime-sexp-at-point' on FOO will result
+;;; in NAME being "FOO" or "[FOO][". "[FOO][" is a valid symbol name,
+;;; so we definitely want to look up definitions for it. In addition,
+;;; we also look up definitions for the symbol whose name has the
+;;; parts beyond [] cut off.
 (defun mgl-pax-wall-at-point ()
   ;; `mgl-pax-call-in-lisp-mode' makes this function work even in
   ;; non-lisp buffers.
   (mgl-pax-call-in-lisp-mode
    (lambda ()
      ;; So that locatives spanning multiple comment lines are parsed
-     ;; without the semicolons.
+     ;; without the semicolons
      (mgl-pax-call-uncommented
       (lambda ()
         (let ((word (mgl-pax-sexp-at-point))
@@ -475,29 +524,40 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
                        (line-beginning-position 4)))
           (lisp-mode-hook ()))
       (with-temp-buffer
-        (lisp-mode)
-        (insert text-before)
-        (save-excursion (insert text-after))
-        (funcall fn)))))
+        (let ((slime-buffer-package "MGL-PAX"))
+          (lisp-mode)
+          (insert text-before)
+          (save-excursion (insert text-after))
+          (funcall fn))))))
+
+(defvar mgl-pax-recomment-fn nil)
+(defvar mgl-pax-call-uncommented-bounds nil)
 
 ;;; If point is in a comment, then call FN in in temporary buffer with
 ;;; all consecutive comment lines uncommented and point position at
 ;;; the original position. Else just call FN.
 (defun mgl-pax-call-uncommented (fn)
-  (let ((comment-bounds (mgl-pax-comment-lines-bounds)))
+  (let* ((comment-bounds (mgl-pax-comment-lines-bounds))
+         (mgl-pax-call-uncommented-bounds comment-bounds))
     (if comment-bounds
-        (let ((comment (apply #'buffer-substring comment-bounds))
+        (let ((comment (apply #'buffer-substring-no-properties comment-bounds))
               (pos (1+ (- (point) (car comment-bounds)))))
           (with-temp-buffer
             (lisp-mode)
             (insert comment)
             (goto-char pos)
-            (uncomment-region (point-min) (point-max))
-            (funcall fn)))
+            ;; In temporary buffers, undo is disabled by default.
+            (setq buffer-undo-list nil)
+            (let ((handle (prepare-change-group (current-buffer))))
+              (uncomment-region (point-min) (point-max))
+              (let ((mgl-pax-recomment-fn
+                     (lambda ()
+                       (cancel-change-group handle))))
+                (funcall fn)))))
       (funcall fn))))
 
 (defun mgl-pax-comment-lines-bounds ()
-  (when (elt (syntax-ppss) 4)
+  (when (mgl-pax-in-comment-p)
     (let* ((end (save-excursion
                   (re-search-backward comment-start-skip
                                       (line-beginning-position)
@@ -515,11 +575,43 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
                   (re-search-backward comment-start-skip
                                       (line-beginning-position)
                                       t)
-                  (ignore-errors
-                    (while (looking-at-p comment-start-skip)
-                      (forward-char -1)))
+                  ;; comment-start-skip matches the space before the
+                  ;; first ; character for some reason
+                  (when (looking-at " ")
+                    (forward-char))
                   (point))))
       (list beg end))))
+
+(defun mgl-pax-in-comment-p ()
+  (elt (syntax-ppss) 4))
+
+;;; Like slime-last-expression, but also works in comments and returns
+;;; the boundaries of the sexp as well.
+(defun mgl-pax-last-expression-and-bounds ()
+  (mgl-pax-call-uncommented
+   (lambda ()
+     (let ((start (make-marker))
+           (end (make-marker)))
+       (set-marker-insertion-type start t)
+       (set-marker-insertion-type end t)
+       (save-excursion
+         (backward-sexp)
+         (set-marker start (point)))
+       (save-excursion
+         (goto-char start)
+         (forward-sexp)
+         (set-marker end (point)))
+       (let ((offset (if mgl-pax-call-uncommented-bounds
+                         (1- (cl-first mgl-pax-call-uncommented-bounds))
+                       0))
+             (sexp (buffer-substring-no-properties start end)))
+         (when mgl-pax-recomment-fn
+           ;; Undoing uncomment-region moves the start and end
+           ;; markers.
+           (funcall mgl-pax-recomment-fn))
+         (list sexp
+               (+ offset start)
+               (+ offset end)))))))
 
 ;;; Return the sexps before and after (slime-sexp-at-point),
 ;;; skipping some markup.
@@ -622,7 +714,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 ;;; - Ensure that :MGL-PAX/NAVIGATE is loaded.
 ;;;
 ;;; - Instead of `slime-symbol-at-point' default to
-;;;  `slime-sexp-at-point' to support string names.
+;;;  `slime-sexp-at-point' to support string and list names.
 ;;;
 ;;; - Capture the buffer context in `mgl-pax-edit-definition-wall'
 ;;;   when defaulting.
@@ -674,7 +766,6 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
             ((= n 2) sexps)
             (t
              (message "Ignoring trailing junk %S" (cl-subseq sexps 2))
-             (sit-for 1)
              (cl-subseq sexps 0 2))))))
 
 (defun mgl-pax-locate-definitions (wall)
@@ -802,10 +893,10 @@ buffer."
              while (ignore-errors (backward-up-list 1 t t)
                                   t))))
 
-;;; Return 1. the first argument of the current sexp if it's a symbol,
-;;; 2. the Slime source location :SNIPPET, 3. the start position of
-;;; the sexp. If any movement fails or the first argument is not a
-;;; looks like a list, then return nil.
+;;; Return 1. the second element of the current sexp (where the name
+;;; often is in definition forms) 2. the Slime source location
+;;; :SNIPPET, 3. the start position of the sexp. If any movement
+;;; fails, then return nil.
 (defun mgl-pax-current-sexp-first-arg-snippet-and-pos ()
   (ignore-errors
     (save-excursion
@@ -817,12 +908,9 @@ buffer."
         (down-list)
         (mgl-pax-forward-sexp)
         (forward-char)
-        ;; `name' is commonly a symbol or a string.
-        (let ((name (mgl-pax-next-sexp)))
-          ;; FIXME: DREF::@NAME allows lists, but we ignoring them for
-          ;; expediency.
-          (unless (string-prefix-p "(" name)
-            (list name snippet pos)))))))
+        (let ((next (mgl-pax-next-sexp)))
+          (when next
+            (list next snippet pos)))))))
 
 
 ;;;; MGL-PAX documentation browser (see
@@ -894,27 +982,29 @@ macro on that page."
   ;; Handle the interactive defaults here because it involves async
   ;; calls.
   (mgl-pax-with-component (:mgl-pax/document)
-    (cond (pax-url
-           (mgl-pax-document-pax-url pax-url))
-          ;; interactive with prefix arg
-          (current-prefix-arg
-           (mgl-pax-prompt-and-document))
-          ;; interactive without prefix arg, point over a pax URL
-          ((and (null current-prefix-arg)
-                (mgl-pax-in-doc-buffer-p)
-                (mgl-pax-doc-pax-url (mgl-pax-doc-url)))
-           (mgl-pax-document-pax-url (mgl-pax-doc-pax-url (mgl-pax-doc-url))))
-          ;; interactive without prefix arg, point not over a pax URL
-          (t
-           (let ((wall (mgl-pax-wall-at-point)))
-             (if wall
-                 (mgl-pax-document-pax-url
-                  (concat "pax-wall:" (url-hexify-string (format "%S" wall))))
-               (mgl-pax-prompt-and-document)))))))
+    (cond
+     ;; non-interactive
+     (pax-url
+      (mgl-pax-document-pax-url pax-url))
+     ;; interactive, prefix arg
+     (current-prefix-arg
+      (mgl-pax-prompt-and-document))
+     ;; interactive, no prefix arg, point over a PAX URL in a doc
+     ;; buffer
+     ((and (mgl-pax-in-doc-buffer-p)
+           (mgl-pax-doc-pax-url (mgl-pax-doc-url)))
+      (mgl-pax-document-pax-url (mgl-pax-doc-pax-url (mgl-pax-doc-url))))
+     ;; interactive, no prefix arg, point not over a PAX URL in a doc
+     ;; buffer
+     (t
+      (let ((wall (mgl-pax-wall-at-point)))
+        (if wall
+            (mgl-pax-document-pax-url
+             (concat "pax-wall:" (url-hexify-string (format "%S" wall))))
+          (mgl-pax-prompt-and-document)))))))
 
 (defun mgl-pax-prompt-and-document ()
   (mgl-pax-document-pax-url
-   ;; FIXME: rename urllike?
    (mgl-pax-urllike-to-url
     (mgl-pax-read-from-minibuffer "View Documentation of: " 'document))))
 
@@ -1082,7 +1172,7 @@ macro on that page."
       (let ((w3m-confirm-leaving-secure-page nil))
         (apply oldfun url args))
     ;; Set up pax e.g. when the user starts w3m, then presses g and
-    ;; enters a pax url.
+    ;; enters a PAX URL.
     (unless (mgl-pax-in-doc-buffer-p)
       (mgl-pax-set-up-doc-buffer
        (file-name-as-directory (make-temp-file "pax-doc" t))))
@@ -1326,13 +1416,11 @@ move point to the beginning of the buffer."
   ;; There may be no `lisp-mode' buffer at all.
   (ignore-errors (mgl-pax-recently-visited-buffer 'lisp-mode))
   (mgl-pax-sync-current-buffer)
-  (x-focus-frame nil)
-  (raise-frame)
-  (mgl-pax-visit-locations dspec-and-location-list)
-  t)
+  (select-frame-set-input-focus (selected-frame))
+  (mgl-pax-visit-locations dspec-and-location-list))
 
 (defun mgl-pax-sync-current-buffer ()
-  ;; https://emacs.stackexchange.com/questions/10921/why-doesnt-changing-buffer-in-filter-function-have-any-effect-in-ert
+  ;; https://emacs.stackexchange.com/q/10921
   (set-buffer (window-buffer (selected-window))))
 
 
@@ -1355,6 +1443,93 @@ In a PAX doc buffer, it's equivalent to pressing `v'
     (if (eq (cl-first values) :error)
         (error "%s" (cl-second values))
       (cl-second values))))
+
+
+;;;; Hideshow documentation and comments
+;;;;
+;;;; These do not depend on Slime or the Common Lisp side at all.
+
+(defun mgl-pax-hideshow-documentation ()
+  "Toggle the folding and unfolding of DEFSECTION and
+DEFINE-GLOSSARY-TERM forms and strings in the current buffer with
+`hideshow-minor-mode'. If there are such non-hidden forms, then
+hide them, else show them all."
+  (interactive)
+  (hs-minor-mode t)
+  (let ((hs-hide-all-non-comment-function
+         #'mgl-pax-hs-hide-all-non-comment)
+        (hs-block-start-regexp "\\s\"\\|\\s(")
+        (hs-block-end-regexp (concat "\\s\"\\|\\s)"))
+        (hs-c-start-regexp "dsafsoiufd")
+        (orig-n-overlays (mgl-pax-n-overlays))
+        ;; Without this `hs-hide-all' discards all overlays.
+        (hs-allow-nesting t))
+    (hs-hide-all)
+    (let ((new-n-overlays (mgl-pax-n-overlays)))
+      (if (/= new-n-overlays orig-n-overlays)
+          (message "Folded %S documentation forms and long strings"
+                   (- new-n-overlays orig-n-overlays))
+        (mgl-pax-delete-hs-overlays 'code)
+        (let ((new-2-n-overlays (mgl-pax-n-overlays)))
+          (if (/= new-2-n-overlays orig-n-overlays)
+              (message "Unfolded %S documentation forms and long strings"
+                       (- orig-n-overlays new-2-n-overlays))
+            (message "No documentation forms or long strings")))))))
+
+(defun mgl-pax-hideshow-comments ()
+  "Toggle the folding and unfolding comments in the current
+buffer with `hideshow-minor-mode'. If there are non-hidden
+comments, then hide them, else show them all."
+  (interactive)
+  (hs-minor-mode t)
+  (let ((hs-hide-all-non-comment-function (lambda ()))
+        (hs-hide-comments-when-hiding-all t)
+        (orig-n-overlays (mgl-pax-n-overlays))
+        (hs-allow-nesting t))
+    ;; KLUDGE: `hs-hide-comment-region' accumulates overlays with
+    ;; `hs-allow-nesting', so let's delete them.
+    (mgl-pax-delete-hs-overlays 'comment)
+    (hs-hide-all)
+    (let ((new-n-overlays (mgl-pax-n-overlays)))
+      (if (/= new-n-overlays orig-n-overlays)
+          (message "Folded %S comments" (- new-n-overlays orig-n-overlays))
+        (mgl-pax-delete-hs-overlays 'comment)
+        (let ((new-2-n-overlays (mgl-pax-n-overlays)))
+          (if (/= new-2-n-overlays orig-n-overlays)
+              (message "Unfolded %S comments"
+                       (- orig-n-overlays new-2-n-overlays))
+            (message "No comments")))))))
+
+;;; https://emacs.stackexchange.com/a/20925
+(defun mgl-pax-n-overlays ()
+  (length (overlays-in (point-min) (point-max))))
+
+(defun mgl-pax-delete-hs-overlays (kind)
+  (dolist (ov (overlays-in (point-min) (point-max)))
+    (when (eq (overlay-get ov 'hs) kind)
+      (delete-overlay ov))))
+
+;;; To be bound to `hs-hide-all-non-comment-function'
+(defun mgl-pax-hs-hide-all-non-comment ()
+  (cond
+   ;; KLUDGE: This can be called in comments after all.
+   ((mgl-pax-in-comment-p)
+    (goto-char (cl-second (mgl-pax-comment-lines-bounds))))
+   ((and (hs-looking-at-block-start-p)
+         (looking-at mgl-pax-doc-form-regexp))
+    (save-excursion (hs-hide-block))
+    ;; Do not recurse in hidden stuff.
+    (forward-sexp 1))
+   ((looking-at "\\s(")
+    ;; Recurse into lists.
+    (forward-char))
+   ((looking-at "\\s\"")
+    (save-excursion (hs-hide-block))
+    (forward-sexp))))
+
+(defvar mgl-pax-doc-form-regexp
+  ;; \\S- matches non-whitespace
+  "(\\(\\|\\S-+:\\)\\(defsection\\|define-glossary-term\\)")
 
 
 ;;;; Apropos (see MGL-PAX::@APROPOS)
@@ -1462,93 +1637,172 @@ MGL-PAX:*SYNTAXES* as the SYNTAX argument to MGL-PAX:TRANSCRIBE.
 Without a prefix argument, the first syntax is used."
   (interactive)
   (mgl-pax-with-component (:mgl-pax/transcribe)
-    (let ((dynenv (mgl-pax-find-cl-transcript-dynenv))
-          (sexp (mgl-pax-call-uncommented 'mgl-pax-last-expression))
-          (start (point))
-          (prefix (mgl-pax-line-prefix)))
-      (unless (mgl-pax-blank-line-prefix-p)
-        (insert "\n"))
-      (insert
-       (mgl-pax-transcribe sexp (mgl-pax-transcribe-syntax-arg)
-                           nil nil nil dynenv))
-      (string-insert-rectangle
-       (save-excursion (goto-char start)
-                       (forward-line 1)
-                       (point))
-       (save-excursion (forward-line -1) (point))
-       prefix)
-      ;; The transcript ends with a newline. Delete it if it would
-      ;; result in a blank line.
-      (when (looking-at "\n")
-        (delete-char 1)))))
+    (cl-destructuring-bind (sexp sexp-begin sexp-end)
+        (mgl-pax-last-expression-and-bounds)
+      (let* ((cl-transcript-args (cl-first (mgl-pax-find-cl-transcript-block)))
+             (prefix (save-excursion
+                       (goto-char sexp-begin)
+                       (mgl-pax-transcription-prefix))))
+        (cl-destructuring-bind (transcript did-something-p)
+            (mgl-pax-transcribe sexp (mgl-pax-transcribe-syntax-arg)
+                                nil nil cl-transcript-args nil)
+          (if (not did-something-p)
+              (message "No forms found to transcribe.")
+            (unless (mgl-pax-blank-p (line-beginning-position) (point))
+              (insert "\n")
+              (delete-trailing-whitespace (line-beginning-position 0)
+                                          (line-end-position 0)))
+            (let ((start (point))
+                  (end (progn (insert transcript) (point))))
+              (string-insert-rectangle start (1- end) prefix))
+            (unless (mgl-pax-blank-p (point) (line-end-position))
+              (insert prefix))
+            (mgl-pax-eat-space)))))))
 
-(defun mgl-pax-blank-line-prefix-p ()
-  (let ((string (buffer-substring-no-properties (line-beginning-position)
-                                                (point))))
-    (string-match-p "^[[:space:]]*$" string)))
-
-;;; Return the longest run of whitespace and semicolon characters at
-;;; the beginning of the current line as a string.
-(defun mgl-pax-line-prefix ()
-  (let ((bound (point)))
+(defun mgl-pax-eat-space ()
+  (interactive)
+  (let ((start (point)))
     (save-excursion
-      (move-beginning-of-line nil)
-      (re-search-forward "[[:space:];]*" bound)
-      (match-string 0))))
+      (skip-chars-forward " \t" (line-end-position))
+      (when (and (eolp) (not (eobp)))
+        (forward-char 1))
+      (delete-region start (point)))))
+
+(defun mgl-pax-blank-p (start end)
+  (let ((string (buffer-substring-no-properties start end)))
+    (string-match-p "^[ \t]*$" string)))
+
+(defun mgl-pax-transcription-prefix ()
+  (let* ((p (point))
+         (comment-start-pos
+          (when (mgl-pax-in-comment-p)
+            (save-excursion
+              (move-beginning-of-line nil)
+              (when (re-search-forward comment-start-skip p t)
+                (match-beginning 4))))))
+    (if (and comment-start-pos (< comment-start-pos p))
+        (save-excursion
+          (goto-char comment-start-pos)
+          (let ((semicolons ))
+            (concat (make-string (current-column) ?\s)
+                    (progn
+                      (re-search-forward ";*")
+                      (match-string 0))
+                    (progn
+                      (re-search-forward "[[:space:]]*")
+                      (match-string 0)))))
+      (save-excursion
+        ;; This may move after a prompt on the line ...
+        (move-beginning-of-line nil)
+        ;; ... so don't match the true beginning of the line with ^.
+        (re-search-forward "[[:space:]]*")
+        (match-string 0)))))
 
 (defun mgl-pax-retranscribe-region (start end)
-  "Updates the transcription in the current region (as in calling
-MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T). Use a numeric prefix
-argument as an index to select one of the Common Lisp
-MGL-PAX:*TRANSCRIBE-SYNTAXES* as the SYNTAX argument to
-MGL-PAX:TRANSCRIBE. Without a prefix argument, the syntax of the
-input will not be changed."
-  (interactive "r")
+  "Update the transcription in the active region (as in calling
+MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T). If there is no active region,
+default to the innermost enclosing `cl-transcript' block.
+
+Use a numeric prefix argument as an index to select one of the Common
+Lisp MGL-PAX:*TRANSCRIBE-SYNTAXES* as the SYNTAX argument to
+MGL-PAX:TRANSCRIBE. Without a prefix argument, the syntax of the input
+will not be changed (modulo ambiguity in syntax detection)."
+  (interactive
+   (cond ((use-region-p)
+          (list (region-beginning) (region-end)))
+         ((and (not transient-mark-mode) (mark))
+          (let ((m (mark)))
+            (list (min (point) m) (max (point) m))))
+         (t
+          (list (point) (point)))))
   (mgl-pax-with-component (:mgl-pax/transcribe)
-    (let ((dynenv (mgl-pax-find-cl-transcript-dynenv)))
+    (cl-destructuring-bind (&optional cl-transcript-args block-start block-end)
+        (mgl-pax-find-cl-transcript-block)
+      (when (and (= start end) block-start block-end)
+        (setq start block-start
+              end block-end)
+        (slime-flash-region start end 0.2))
       (let ((point-at-start-p (= (point) start))
-            (transcript (mgl-pax-transcribe
-                         (buffer-substring-no-properties start end)
-                         (mgl-pax-transcribe-syntax-arg)
-                         t t nil dynenv)))
-        (if (string= transcript (buffer-substring-no-properties start end))
-            (deactivate-mark)
-          (if point-at-start-p
-              (save-excursion
-                (goto-char start)
-                (delete-region start end)
-                (insert transcript))
-            (save-excursion
-              (goto-char start)
-              (delete-region start end))
-            (insert transcript)))))))
+            (input (buffer-substring-no-properties start end)))
+        (cl-destructuring-bind (transcript did-something-p)
+            (mgl-pax-transcribe input (mgl-pax-transcribe-syntax-arg) t t
+                                cl-transcript-args
+                                (save-excursion
+                                  (goto-char start)
+                                  (current-column)))
+          (unless (string-suffix-p "\n" input)
+            (setq transcript (substring transcript 0 -1)))
+          (cond ((not did-something-p)
+                 (message "No forms found to transcribe."))
+                ((string= transcript input)
+                 (deactivate-mark))
+                (point-at-start-p
+                 (save-excursion
+                   (goto-char start)
+                   (delete-region start end)
+                   (insert transcript)))
+                (t
+                 (save-excursion
+                   (goto-char start)
+                   (delete-region start end))
+                 (insert transcript))))))))
 
 (defun mgl-pax-transcribe-syntax-arg ()
   (if current-prefix-arg
       (prefix-numeric-value current-prefix-arg)
     nil))
 
-;;; Within the current defun, find the first occurrence of "```"
-;;; backwards from point, and if it is followed by "cl-transcript",
-;;; return its dynenv argument."
-(defun mgl-pax-find-cl-transcript-dynenv ()
+(defun mgl-pax-find-cl-transcript-block ()
+  "If point is in a  cl-transcript Markdown code block (```cl-transcript
+... ```),  return the rest  of the line after  \"```cl-transcript\", the
+start of the line following it, and the start of the line of the closing
+\"```\". If not in such a code block, return nil."
   (save-excursion
-    (save-restriction
-      (narrow-to-defun)
-      (when (search-backward "```" nil t)
-        (when (looking-at "```cl-transcript")
-          (save-restriction
-            (narrow-to-region (point) (save-excursion
-                                        (end-of-line)
-                                        (point)))
-            (when (search-forward ":dynenv" nil t)
-              (mgl-pax-next-sexp))))))))
+    (let ((p (point)))
+      ;; Move to the end of the line so that we find match even if
+      ;; point is right over it.
+      (end-of-line)
+      (when (search-backward "```cl-transcript" nil t)
+        (let* ((opener-column (current-column))
+               (args-start (match-end 0))
+               (args-end (line-end-position))
+               (end-pos nil))
+          ;; Look for a closing ``` at the same indentation level
+          (goto-char args-start)
+          (while (and (not end-pos)
+                      (search-forward "```" nil t))
+            (save-excursion
+              (goto-char (match-beginning 0))
+              (when (= (current-column) opener-column)
+                (setq end-pos (point)))))
+          ;; The +3 (the length of "```") allows matching if the
+          ;; cursor is over or right after the match.
+          (when (and end-pos (<= p (+ end-pos 3)))
+            (list (buffer-substring-no-properties args-start args-end)
+                  (save-excursion
+                    (goto-char args-start)
+                    (forward-line 1)
+                    (point))
+                  (when end-pos
+                    (save-excursion
+                      (goto-char end-pos)
+                      (beginning-of-line)
+                      (point))))))))))
 
-(defun mgl-pax-transcribe (string syntax update-only echo
-                                  first-line-special-p dynenv)
-  (mgl-pax-eval `(mgl-pax::transcribe-for-emacs
-                  ,string ',syntax ',update-only ',echo ',first-line-special-p
-                  ,dynenv)))
+;;; For testing
+(defvar mgl-pax-transcribe-last-message nil)
+
+(defun mgl-pax-transcribe (string syntax update-only echo cl-transcript-args
+                                  first-line-indent)
+  (let ((result (slime-eval `(mgl-pax::transcribe-for-emacs
+                              ,string ',syntax ',update-only ',echo
+                              ,(or cl-transcript-args "")
+                              ,first-line-indent))))
+    (if (eq (cl-first result) :error)
+        (error "%s\nTo debug, use (setq swank/backend:*debug-swank-backend* t)."
+               (cl-second result))
+      (cl-assert (eq (cl-first result) :values))
+      (cl-second result))))
 
 
 (provide 'mgl-pax)

@@ -4,27 +4,57 @@
 
 ;;;; Utilities
 
-(defun strip-longest-common-prefix (string chars &key (first-line-special-p t)
-                                                   (ignore-blank-lines-p t))
+(defun strip-longest-common-prefix (string chars &key first-line-indent
+                                    (ignore-blank-lines-p t))
   (let ((prefix (longest-common-prefix
-                 string chars :first-line-special-p first-line-special-p
-                 :ignore-blank-lines-p ignore-blank-lines-p)))
+                 string chars
+                 :first-line-special-p first-line-indent
+                 :ignore-blank-lines-p ignore-blank-lines-p))
+        (prefix1 nil))
     (values
      (with-output-to-string (output)
        (with-input-from-string (s string)
          (loop for i upfrom 0
                for line = (read-line s nil nil)
                while line
-               do (if (or (and first-line-special-p (zerop i))
-                          (and ignore-blank-lines-p (blankp line)))
-                      (write-line line output)
-                      (write-line (subseq line (length prefix)) output)))))
+               do (cond ((and ignore-blank-lines-p
+                              (blankp line)
+                              ;; Without this, retranscribing with
+                              ;; a non-empty prefix can keep
+                              ;; increasing the length of the
+                              ;; blank line.
+                              (not (starts-with-subseq prefix line)))
+                         (write-line line output))
+                        ((and first-line-indent (zerop i))
+                         ;; To tolerate sloppily marked regions where
+                         ;; the start is not in the first column, this
+                         ;; skips all semicolons and spaces to the
+                         ;; right of the cursor in Emacs.
+                         (setq prefix1 (matching-prefix line chars))
+                         (when first-line-indent
+                           ;; We must not remove more than the common
+                           ;; PREFIX.
+                           (setq prefix1 (subseq prefix1 0
+                                                 (max 0
+                                                      (min (- (length prefix)
+                                                              first-line-indent)
+                                                           (length prefix1)))))
+                           ;; PREFIX must not extend beyond the column
+                           ;; of first form in the transcript.
+                           (setq prefix (subseq prefix 0
+                                                (min (length prefix)
+                                                     (+ first-line-indent
+                                                        (length prefix1))))))
+                         (write-line (subseq line (length prefix1)) output))
+                        (t
+                         (write-line (subseq line (length prefix)) output))))))
+     prefix1
      prefix)))
 
 ;;; Return the longest common prefix of lines of STRING, where the
 ;;; prefix is made of CHARS.
-(defun longest-common-prefix (string chars &key (first-line-special-p t)
-                                             (ignore-blank-lines-p t))
+(defun longest-common-prefix (string chars &key first-line-special-p
+                              (ignore-blank-lines-p t))
   (let ((longest-prefix nil))
     (with-input-from-string (s string)
       (loop for i upfrom 0
@@ -39,14 +69,14 @@
                                      0 (or (mismatch longest-prefix prefix)
                                            (length longest-prefix)))
                              prefix))))))
-    longest-prefix))
+    (or longest-prefix "")))
 
 (defun matching-prefix (string chars)
-  (let ((position (position-if-not (lambda (char)
-                                     (find char chars))
-                                   string)))
-    (if position
-        (subseq string 0 position)
+  (let ((pos (position-if-not (lambda (char)
+                                (find char chars))
+                              string)))
+    (if pos
+        (subseq string 0 pos)
         string)))
 
 ;;; Read as many consecutive lines starting with PREFIX from STREAM as
@@ -71,7 +101,7 @@
 ;;;     .. 2
 ;;;     ..
 (defun read-prefixed-lines (stream prefix &key (first-line-prefix prefix)
-                                            (eat-one-space-p t))
+                            (eat-one-space-p t))
   (with-output-to-string (output)
     (loop for n-lines-read upfrom 0 do
       (multiple-value-bind (line missing-newline-p file-position)
@@ -80,7 +110,7 @@
           (when (or (null line)
                     (not (starts-with-subseq prefix line)))
             (return-from read-prefixed-lines
-              (values (get-output-stream-string output) n-lines-read
+              (values (get-output-stream-string output)
                       line missing-newline-p file-position)))
           (unless (zerop n-lines-read)
             (terpri output))
@@ -100,7 +130,7 @@
 ;;; The inverse of READ-PREFIXED-LINES. If ADD-ONE-SPACE-P, a space
 ;;; character is printed after the prefix if the line is zero length.
 (defun write-prefixed-lines (string prefix stream &key (add-one-space-p t)
-                                                    (first-line-prefix prefix))
+                             (first-line-prefix prefix))
   (let ((last-newline-missing-p nil))
     (with-input-from-string (s string)
       (loop for n-lines-read upfrom 0 do
@@ -119,51 +149,349 @@
 
 
 (defsection @transcripts (:title "Transcripts")
-  "What are transcripts for? When writing a tutorial, one often wants
-  to include a REPL session with maybe a few defuns and a couple of
-  forms whose output or return values are shown. Also, in a function's
-  docstring an example call with concrete arguments and return values
-  speaks volumes. A transcript is a text that looks like a REPL
-  session, but which has a light markup for printed output and return
-  values, while no markup (i.e. prompt) for Lisp forms. PAX
+  """What are transcripts for? When writing a tutorial, one often
+  wants to include a REPL session with maybe a few defuns and a couple
+  of forms whose output or return values are shown. Also, in a
+  function's docstring an example call with concrete arguments and
+  return values speaks volumes. A transcript is a text that looks like
+  a REPL session, but which has a light markup for printed output and
+  return values, while no markup (i.e. prompt) for Lisp forms. PAX
   transcripts may include output and return values of all forms, or
   only selected ones. In either case, the transcript itself can be
-  easily generated from the source code.
+  easily generated from the source code. The main worry associated
+  with including examples in the documentation is that they tend to
+  get out-of-sync with the code. This is solved by being able to parse
+  back and update transcripts."""
+  (@transcribing-in-documentation section)
+  (@transcribing-with-emacs section)
+  (@transcript-dynenv section)
+  (@transcript-api section)
+  (@transcript-consistency-checking section))
 
-  The main worry associated with including examples in the
-  documentation is that they tend to get out-of-sync with the code.
-  This is solved by being able to parse back and update transcripts.
-  In fact, this is exactly what happens during documentation
-  generation with PAX. Code sections tagged with `cl-transcript` are
-  retranscribed and checked for consistency (that is, no difference in
-  output or return values). If the consistency check fails, an error
-  is signalled that includes a reference to the object being
-  documented.
+(defsection @transcribing-in-documentation
+    (:title "Transcribing in Documentation")
+  """Consider this function:
 
-  Going beyond documentation, transcript consistency checks can be
-  used for writing simple tests in a very readable form. For example:
-
-  ```cl-transcript
-  (+ 1 2)
-  => 3
-
-  (values (princ :hello) (list 1 2))
-  .. HELLO
-  => :HELLO
-  => (1 2)
+  ```
+  (defun foo (x)
+    "Return X + 1 and log what happened."
+    (format t "Adding 1 to ~S~%" x)
+    (1+ x))
   ```
 
+  Let's add an example to the docstring:
+
+  ```
+  (defun foo (x)
+    "Return X + 1 and log what happened.
+    For example,
+
+    ```cl
+    (foo 7)
+    .. Adding 1 to 7
+    ..
+    => 8
+    ```"
+    (format t "Adding 1 to ~S~%" x)
+    (1+ x))
+  ```
+
+  In this transcript above, output lines are prefixed with `".. "` and
+  return values with `"=> "`. The transcript could have been generated
+  with `(TRANSCRIBE` `"(foo 7)" *STANDARD-OUTPUT*)` or interactively
+  by invoking `mgl-pax-transcribe-last-expression` in Emacs with the
+  point right after `(FOO 7)` (see @TRANSCRIPT-API and
+  @TRANSCRIBING-WITH-EMACS).
+
+  If we want PAX to check that the transcript is consistent with the
+  code when @GENERATING-DOCUMENTATION, we add the `cl-transcript` tag
+  to the code block:
+
+  ```
+  (defun foo (x)
+    "Return X + 1 and log what happened.
+    For example,
+
+    ```cl-transcript
+    (foo 7)
+    .. Adding 1 to 7
+    ..
+    => 8
+    ```"
+    (format t "Adding 1 to ~S~%" x)
+    (+ x 2))
+  ```
+
+  Since the code was also changed to `(+ X 2)`, documenting this
+  function causes the following error:
+
+  ```
+  (document #'foo)
+  .. debugger invoked on TRANSCRIPTION-VALUES-CONSISTENCY-ERROR:
+  ..   Transcription error: Readable value "8" in source is not EQUAL to "9".
+  ..     [While documenting (MGL-PAX::FOO COMMON-LISP:FUNCTION)]
+  ..
+  ..   Form:
+  ..   "(foo 7)"
+  ```
+
+  @TRANSCRIPTION-ERROR-DOWNGRADE
+
   All in all, transcripts are a handy tool especially when combined
-  with the Emacs support to regenerate them and with
+  with the Emacs support to update them and with
   [PYTHONIC-STRING-READER][asdf:system]'s triple-quoted strings, that
   allow one to work with nested strings with less noise. The
   triple-quote syntax can be enabled with:
 
-      (in-readtable pythonic-string-syntax)"
-  (mgl-pax/transcribe asdf:system)
-  (@transcribing-with-emacs section)
-  (@transcript-api section)
-  (@transcript-consistency-checking section))
+      (in-readtable pythonic-string-syntax)""")
+
+
+(defsection @transcribing-with-emacs (:title "Transcribing with Emacs")
+  """With [Emacs set up][@emacs-setup], we can have two Elisp
+  functions at our disposal for working with transcripts.
+
+  - `mgl-pax-transcribe-last-expression`: Evaluates a single form, and
+    insert its output and return values into the current buffer.
+
+  - `mgl-pax-retranscribe-region`: Retranscribes a region as with
+    TRANSCRIBE :UPDATE-ONLY T. The region defaults to the innermost
+    enclosing `cl-transcript` block if any.
+
+  These functions work in any major and minor mode where the basic
+  sexp movements are sufficiently Lisp-like. They also work anywhere
+  in the buffer, including docstrings and comments at any indentation
+  level. Like DOCUMENT, they understand the :DYNENV argument of
+  `cl-transcript` and pass on the other arguments to TRANSCRIBE.
+
+  For example, consider this buffer content, which may be part of a
+  docstring. Move the cursor right after the end of the form as if you
+  were to evaluate it with `C-x C-e`. The cursor is marked by `^`:
+
+      (values (princ :hello) (list 1 2))^
+
+  Now invoke the Elisp function `mgl-pax-transcribe` where the cursor
+  is to insert the transcribed output and return values:
+
+      (values (princ :hello) (list 1 2))
+      .. HELLO
+      => :HELLO
+      => (1 2)
+      ^
+
+  Then, change the printed message and add comments to the second
+  return value:
+
+      (values (princ :hello-world) (list 1 2))
+      .. HELLO
+      => :HELLO
+      => ;; This is a list.
+         (1
+          ;; This value is arbitrary.
+          2)
+
+  Obviously, the transcript is now out-of-date, and if it is in a
+  `cl-transcript` code block in a docstring, then DOCUMENT will signal
+  a TRANSCRIPTION-CONSISTENCY-ERROR. So, let's update the transcript
+  by marking the region bounded by `|` and the cursor at `^` in this
+  example:
+
+      |(values (princ :hello-world) (list 1 2))
+      .. HELLO
+      => :HELLO
+      => ;; This is a list.
+         (1
+          ;; This value is arbitrary.
+          2)
+      ^
+
+  Then, invoke the Elisp function `mgl-pax-retranscribe-region` to get
+
+      (values (princ :hello-world) (list 1 2))
+      .. HELLO-WORLD
+      => :HELLO-WORLD
+      => ;; This is a list.
+         (1
+          ;; This value is arbitrary.
+          2)
+      ^
+
+  Note how the indentation and comments of `(1 2)` were left alone,
+  but the output and the first return value got updated.
+
+  Also note that when the cursor is in `cl-transcript` code block,
+  `mgl-pax-retranscribe-region` defaults to the whole block when there
+  is no active region.
+  
+  Alternatively, `C-u 1 mgl-pax-transcribe` will emit commented markup:
+
+      (values (princ :hello) (list 1 2))
+      ;.. HELLO
+      ;=> :HELLO
+      ;=> (1 2)
+
+  `C-u 0 mgl-pax-retranscribe-region` will turn commented into
+  non-commented markup. In general, the numeric prefix argument is the
+  index of the syntax to be used in *TRANSCRIBE-SYNTAXES*. Without a
+  prefix argument, `mgl-pax-retranscribe-region` will not change the
+  markup style.
+
+  Finally, not only do both functions work at any indentation level
+  but in comments too:
+
+      ;;;; (values (princ :hello) (list 1 2))
+      ;;;; .. HELLO
+      ;;;; => :HELLO
+      ;;;; => (1 2)
+
+  @@TRANSCRIBE-STRIP-PREFIX
+
+  The dynamic environment of the transcription is determined by the
+  :DYNENV argument of the enclosing `cl-transcript` code block (see
+  @TRANSCRIPT-DYNENV).""")
+
+(defun transcribe-for-emacs (string default-syntax* update-only echo
+                             cl-transcript-args-string first-line-indent)
+  (with-swank ()
+    (swank/backend:converting-errors-to-error-location
+      (swank::with-buffer-syntax ()
+        (let ((default-syntax (cond ((numberp default-syntax*)
+                                     (first (elt *transcribe-syntaxes*
+                                                 default-syntax*)))
+                                    ((null default-syntax*)
+                                     nil)
+                                    (t (error "Unexpected default syntax ~S."
+                                              default-syntax*)))))
+          (multiple-value-bind (dynenv cl-transcript-args)
+              (parse-cl-transcribe-args cl-transcript-args-string)
+            (list :values (funcall (or dynenv #'funcall)
+                                   (lambda ()
+                                     (apply #'transcribe-for-emacs-1
+                                            string first-line-indent
+                                            :default-syntax default-syntax
+                                            :update-only update-only
+                                            :echo echo
+                                            :check-consistency nil
+                                            cl-transcript-args))))))))))
+
+(defun parse-cl-transcribe-args (string)
+  (let* ((args (read-from-string string nil nil))
+         (dynenv (getf args :dynenv 'standard-transcribe-dynenv)))
+    (remf args :dynenv)
+    (values dynenv args)))
+
+(defun transcribe-for-emacs-1 (string first-line-indent &rest transcribe-args)
+  (multiple-value-bind (string prefix1 prefix)
+      (note @@transcribe-strip-prefix
+        "With `mgl-pax-transcribe-last-expression`, we strip the
+        longest run of leading spaces and semicolons common to all
+        lines of the expression in the buffer.
+
+        For `mgl-pax-retranscribe-region`, the longest run is
+        truncated so that it does not extend beyond the column of the
+        first form to be transcribed. Without this rule, the syntax
+        used
+
+        ```cl-transcript
+        ;;(list 1 2)
+        ;;;=> (1
+        ;;;->  2)
+        ```
+
+        would be ambiguous, as the `;=>` could refer to `=>` in the
+        :DEFAULT syntax or to `;=>` in :COMMENTED-1."
+        (strip-longest-common-prefix
+         string "; " :first-line-indent first-line-indent))
+    (multiple-value-bind (output did-something-p)
+        (apply #'transcribe string nil transcribe-args)
+      (list (format nil "~A~A"
+                    (if first-line-indent prefix1 prefix)
+                    (prefix-lines prefix output :exclude-first-line-p t
+                                  :exclude-blank-p t))
+            did-something-p))))
+
+
+(defsection @transcript-dynenv
+    (:title "Controlling the Dynamic Environment")
+  """When the TRANSCRIBE function is called directly, the forms in the
+  transcript are evaluated in the current dynamic environment with the
+  following exceptions.
+
+  - @@TRANSCRIBE-UPDATE-REPL-VARS
+
+  - @@TRANSCRIBE-OUTPUT-VARS
+
+  If TRANSCRIBE is invoked [by Emacs][ @transcribing-with-emacs] or
+  [by the DOCUMENT function][ @transcribing-in-documentation], a new
+  dynamic environment is established by
+  STANDARD-TRANSCRIBE-DYNENV (similar in spirit to
+  WITH-STANDARD-IO-SYNTAX), which binds printer and reader variables
+  to fixed values to make IO more predictable. This default can be
+  overridden with the :DYNENV argument of `cl-transcript`:
+
+      ```cl-transcript (:dynenv my-transcript)
+      ...
+      ```
+
+  In this case, instead of calling TRANSCRIBE directly,
+  `MY-TRANSCRIPT` is called with a thunk (a function of no arguments)
+  that wraps a call to TRANSCRIBE. Once `MY-TRANSCRIPT` establishes
+  the desired dynamic environment, it calls its argument. The
+  following definition of `MY-TRANSCRIPT` simply packages up oft-used
+  settings to TRANSCRIBE.
+
+  ```
+  (defun my-transcript (fn)
+    (standard-transcribe-dynenv
+      (let ((*transcribe-check-consistency*
+              '((:output my-transcript-output=)
+                (:readable equal)
+                (:unreadable nil))))
+        (funcall fn))))
+
+  (defun my-transcript-output= (string1 string2)
+    (string= (my-transcript-normalize-output string1)
+             (my-transcript-normalize-output string2)))
+
+  (defun my-transcript-normalize-output (string)
+    (squeeze-whitespace (delete-trailing-whitespace (delete-comments string))))
+  ```
+
+  The default for :DYNENV is STANDARD-TRANSCRIBE-DYNENV, and it is
+  generally a good idea to use it as the above example does, but this
+  is not required. Specify :DYNENV NIL explicitly if you want to use
+  the current dynamic environment without any changes.
+
+  A more involved solution could establish bindings for global
+  variables set in transcripts, unintern symbols created or even
+  create a temporary package for evaluation."""
+  (standard-transcribe-dynenv function))
+
+(defun/auto standard-transcribe-dynenv (fn)
+  "Bind printer and reader variables to standard values and call FN.
+
+  The bindings are the same as with WITH-STANDARD-IO-SYNTAX, but
+
+  - *PACKAGE* and *READTABLE* are unaffected (because both DOCUMENT
+    and Emacs set these up);
+
+  - *PRINT-READABLY* is NIL, *PRINT-PRETTY* is T, *PRINT-CIRCLE* is T
+    and *PRINT-RIGHT-MARGIN* is 72.
+
+  This function is the default for the :DYNENV argument of
+  `cl-transcript`. A function that overrides the default may want to
+  call STANDARD-TRANSCRIBE-DYNENV with a lambda that establishes more
+  bindings."
+  (let ((package *package*)
+        (readtable *readtable*))
+    (with-standard-io-syntax
+      (let ((*package* package)
+            (*readtable* readtable)
+            (*print-readably* nil)
+            #-clisp
+            (*print-pretty* t)
+            (*print-circle* t)
+            (*print-right-margin* 72))
+        (funcall fn)))))
 
 
 (defsection @transcript-api (:title "Transcript API")
@@ -175,7 +503,7 @@
   (transcription-output-consistency-error condition)
   (transcription-values-consistency-error condition))
 
-(defvar *transcribe-syntaxes*
+(defvar/auto *transcribe-syntaxes*
   '((:default
      (:output "..")
      ;; To give precedence to this no-value marker, it is listed
@@ -228,27 +556,22 @@
 
   See TRANSCRIBE for how the actual syntax to be used is selected.")
 
-(defvar *transcribe-check-consistency* nil
+(defvar/auto *transcribe-check-consistency* nil
   "The default value of TRANSCRIBE's CHECK-CONSISTENCY argument.")
 
-(defun/autoloaded transcribe
+(defun/auto transcribe
     (input output &key update-only (include-no-output update-only)
            (include-no-value update-only) (echo t)
            (check-consistency *transcribe-check-consistency*)
            default-syntax (input-syntaxes *transcribe-syntaxes*)
-           (output-syntaxes *transcribe-syntaxes*)
-           dynenv)
+           (output-syntaxes *transcribe-syntaxes*))
   """Read forms from INPUT and write them (iff ECHO) to OUTPUT
   followed by any output and return values produced by calling EVAL on
-  the form. The variables [*][variable], [**][], [\***][],
-  [/][variable], [//][], [///][], [-][variable], [+][variable],
-  [++][], [+++][] are locally bound and updated as in a
-  [REPL]["Lisp read-eval-print loop" clhs]. Since TRANSCRIBE EVALuates
-  arbitrary code anyway, forms are read with *READ-EVAL* T.
+  the form.
 
   INPUT can be a stream or a string, while OUTPUT can be a stream or
-  NIL, in which case output goes into a string. The return value is
-  the OUTPUT stream or the string that was constructed.
+  NIL, in which case output goes into a string.
+  @@TRANSCRIBE-1ST-RETURN-VALUE @@TRANSCRIBE-2ND-RETURN-VALUE
 
   Go up to @TRANSCRIBING-WITH-EMACS for nice examples. A more
   mind-bending one is this:
@@ -259,6 +582,7 @@
   .. 42
   => 42
   "
+  => T
   ```
 
   However, the above may be a bit confusing since this documentation
@@ -347,8 +671,8 @@
   string is different from what was in INPUT, provided that INPUT
   contained the output. Similarly, for values, a continuable
   TRANSCRIPTION-VALUES-CONSISTENCY-ERROR is signalled if a value read
-  from the source does not print as the as the value returned by EVAL.
-  This allows readable values to be hand-indented without failing
+  from the source does not print as the value returned by EVAL. This
+  allows readable values to be hand-indented without failing
   consistency checks:
 
   ```
@@ -420,7 +744,7 @@
   values for a form in INPUT, then the syntax remains undetermined.
 
   When OUTPUT is written, the prefixes to be used are looked up in
-  DEFAULT-SYNTAX of OUTPUT-SYNTAXES, if DEFAULT-SYNTAX is not NIL. If
+  DEFAULT-SYNTAX of OUTPUT-SYNTAXES if DEFAULT-SYNTAX is not NIL. If
   DEFAULT-SYNTAX is NIL, then the syntax used by the same form in the
   INPUT is used or (if that could not be determined) the syntax of the
   previous form. If there was no previous form, then the first syntax
@@ -440,34 +764,26 @@
   ;->    2)
   ```
 
-  To translate the above to uncommented syntax,
-  use :DEFAULT-SYNTAX :DEFAULT. If DEFAULT-SYNTAX is NIL (the
-  default), the same syntax will be used in the output as in the input
-  as much as possible.
-
-  **Dynamic Environment**
-
-  If DYNENV is non-NIL, then it must be a function that establishes
-  the dynamic environment in which transcription shall take place. It
-  is called with a single argument: a thunk (a function of no
-  arguments). See @TRANSCRIPT-DYNENV for an example.
-  """
-  (flet ((do-it ()
-           (write-transcript (read-transcript input :syntaxes input-syntaxes)
-                             output
-                             :update-only update-only
-                             :check-consistency check-consistency
-                             :include-no-output include-no-output
-                             :include-no-value include-no-value
-                             :echo echo
-                             :default-syntax default-syntax
-                             :syntaxes output-syntaxes)))
-    ;; There is no point not allowing *READ-EVAL* because we are
-    ;; EVALuating code anyway.
-    (let ((*read-eval* t))
-      (if dynenv
-          (funcall dynenv #'do-it)
-          (do-it)))))
+  To translate the above to uncommented syntax, use :DEFAULT-SYNTAX
+  :DEFAULT. If DEFAULT-SYNTAX is NIL (the default), the same syntax
+  will be used in the output as in the input as much as possible."""
+  (let ((transcript (read-transcript input :syntaxes input-syntaxes)))
+    (values (write-transcript transcript output
+                              :update-only update-only
+                              :check-consistency check-consistency
+                              :include-no-output include-no-output
+                              :include-no-value include-no-value
+                              :echo echo
+                              :default-syntax default-syntax
+                              :syntaxes output-syntaxes)
+            (note @@transcribe-2nd-return-value
+              "As the second value, a generalized boolean indicating
+              whether any form was transcribed is returned."
+              (not (not (find-if-not
+                         (lambda (command)
+                           (let ((form-and-string (first command)))
+                             (eq (first form-and-string) 'eof)))
+                         transcript)))))))
 
 
 ;;;; Prefix utilities
@@ -557,9 +873,6 @@
 (defun command-value-captures (command)
   (remove-if-not #'value-capture-p (command-captures command)))
 
-(defun command-error-captures (command)
-  (remove-if-not #'error-capture-p (command-captures command)))
-
 (defun check-command-values (command)
   (when (and (some #'no-value-capture-p (command-captures command))
              (< 1 (count-if #'value-capture-p (command-captures command))))
@@ -593,11 +906,6 @@
 
 (defun readable-capture-p (capture)
   (eq (capture-id capture) :readable))
-
-(defun error-capture-p (capture)
-  (or (no-value-capture-p capture)
-      (readable-capture-p capture)
-      (unreadable-capture-p capture)))
 
 (defun readable-object (readable-capture)
   (assert (readable-capture-p readable-capture))
@@ -669,13 +977,10 @@
                                                (first transcript))))
                   (let ((match-length (length prefix))
                         value
-                        n-lines-read
                         file-position-1)
-                    (declare (ignorable n-lines-read))
                     (file-position stream (+ file-position match-length))
                     (multiple-value-setq
-                        (value n-lines-read
-                               line missing-newline-p file-position-1
+                        (value line missing-newline-p file-position-1
                                partial-line-p)
                       (parse-transcript-element stream prefix-id syntax-id
                                                 line match-length))
@@ -717,7 +1022,6 @@
          (cond ((every #'whitespacep (subseq first-line match-length))
                 (read-line stream nil nil)
                 (values-list `(,(list nil nil)
-                               1
                                ,@(multiple-value-list
                                   (read-line* stream nil nil))
                                nil)))
@@ -731,7 +1035,6 @@
                                  (find-prefix prefix-id syntax-id)))
          (read-line stream nil nil)
          (values-list `(nil
-                        1
                         ,@(multiple-value-list
                            (read-line* stream nil nil))
                         nil)))
@@ -754,8 +1057,6 @@
           (t
            (let ((at-bol-p (skip-white-space-till-end-of-line stream)))
              (values-list `(,form-and-string
-                            ;; FIXME: N-LINES-READ
-                            1
                             ,@(multiple-value-list (read-line* stream nil nil))
                             ,(not at-bol-p))))))))
 
@@ -771,16 +1072,14 @@
         (parse-readable* stream))))
 
 (defun parse-readable-with-continuation (stream continuation-prefix)
-  (multiple-value-bind (string n-lines-read
-                        next-line missing-newline-p file-position)
+  (multiple-value-bind (string next-line missing-newline-p file-position)
       (read-prefixed-lines stream continuation-prefix
                            :first-line-prefix "")
-    ;; FIXME: eof?
-    (let ((form (first (with-input-from-string (stream string)
-                         (read-form-and-string stream nil)))))
-      (values (list form string) n-lines-read
-              next-line missing-newline-p file-position
-              nil))))
+    (let ((form-and-string (with-input-from-string (stream string)
+                             (read-form-and-string stream 'eof))))
+      (when (eq (first form-and-string) 'eof)
+        (transcription-error* "Unexpected EOF while parsing readable value."))
+      (values form-and-string next-line missing-newline-p file-position nil))))
 
 (defun parse-readable* (stream)
   ;; We are after a readable prefix. Eat a single space if any so that
@@ -796,8 +1095,6 @@
       (transcription-error* "Trailing junk after readable value ~S."
                             (second form-and-string)))
     (values-list `(,form-and-string
-                   ;; FIXME: N-LINES-READ
-                   1
                    ,@(multiple-value-list (read-line* stream nil nil))
                    nil))))
 
@@ -844,8 +1141,12 @@
                             ,output))
 
 (defun call-with-output-stream (fn output)
+  (note @@transcribe-1st-return-value
+    "The return value is the OUTPUT stream or the string that was
+    constructed.")
   (cond ((streamp output)
-         (funcall fn output))
+         (progn (funcall fn output)
+                output))
         ((null output)
          (with-output-to-string (stream)
            (funcall fn stream)))
@@ -854,9 +1155,9 @@
 
 (defun write-transcript (transcript output
                          &key update-only (include-no-output update-only)
-                           (include-no-value update-only)
-                           (echo t) check-consistency
-                           default-syntax (syntaxes *transcribe-syntaxes*))
+                         (include-no-value update-only)
+                         (echo t) check-consistency
+                         default-syntax (syntaxes *transcribe-syntaxes*))
   (check-type output (or stream null))
   (with-output-stream (stream output)
     (let ((*transcribe-syntaxes* syntaxes)
@@ -905,13 +1206,18 @@
                                    include-no-value)))))))))
 
 (defun update-repl-vars (values errorp)
-  (unless errorp
-    (setf /// //
-          // /
-          / values
-          *** **
-          ** *
-          * (car values)))
+  (note @@transcribe-update-repl-vars
+    """The variables [*][variable], [**][], [\***][], [/][variable],
+    [//][], [///][], [-][variable], [+][variable], [++][], [+++][] are
+    locally bound and updated as in a new [REPL]["Lisp read-eval-print
+    loop" clhs] session."""
+    (unless errorp
+      (setf /// //
+            // /
+            / values
+            *** **
+            ** *
+            * (car values))))
   (setf +++ ++
         ++ +
         + -))
@@ -965,24 +1271,11 @@
                                                readable-checker
                                                unreadable-checker)))))))
 
-(defmacro with-transcription-syntax (() &body body)
-  (with-gensyms (package)
-    `(let ((,package *package*))
-       (with-standard-io-syntax
-         (let ((*package* ,package)
-               (*print-readably* nil)
-               #-clisp
-               (*print-pretty* t)
-               (*print-circle* t)
-               (*print-right-margin* 72))
-           ,@body)))))
-
 (defun check-value-consistency (stream form-as-string value value-capture
                                 readable-checker unreadable-checker)
   (assert (not (no-value-capture-p value-capture)))
   (flet ((stringify (object)
-           (with-transcription-syntax ()
-             (prin1-to-string object))))
+           (prin1-to-string object)))
     (let ((value-readable-p (readable-object-p value)))
       (cond ((and value-readable-p
                   (not (readable-capture-p value-capture)))
@@ -1025,32 +1318,35 @@
 
 (defun eval-and-capture (form)
   (let* ((buffer (make-array 0 :element-type 'character
-                               :fill-pointer 0 :adjustable t))
+                             :fill-pointer 0 :adjustable t))
          (values (with-output-to-string (output buffer)
-                   (with-transcription-syntax ()
-                     (let ((*standard-output* output)
-                           (*error-output* output)
-                           (*trace-output* output)
-                           (*debug-io* output)
-                           (*query-io* output)
-                           (*terminal-io* output))
-                       (flet ((handle-error (c)
-                                (print-condition c "debugger invoked on"
-                                                 ":" "")
-                                (return-from eval-and-capture
-                                  (values buffer () t))))
-                         (handler-case
-                             (with-debugger-hook #'handle-error
-                               (multiple-value-list (eval form)))
-                           (error (e)
-                             (handle-error e)))))))))
+                   (note @@transcribe-output-vars
+                     "*STANDARD-OUTPUT*, *ERROR-OUTPUT*,
+                     *TRACE-OUTPUT*, *DEBUG-IO*, *QUERY-IO* and
+                     *TERMINAL-IO* are redirected to capture the
+                     output.")
+                   (let ((*standard-output* output)
+                         (*error-output* output)
+                         (*trace-output* output)
+                         (*debug-io* output)
+                         (*query-io* output)
+                         (*terminal-io* output))
+                     (flet ((handle-error (c)
+                              (print-condition c "debugger invoked on"
+                                               ":" "")
+                              (return-from eval-and-capture
+                                (values buffer () t))))
+                       (handler-case
+                           (with-debugger-hook #'handle-error
+                             (multiple-value-list (eval form)))
+                         (error (e)
+                           (handle-error e))))))))
     (values buffer values)))
 
 (defun print-condition (c prefix midfix suffix)
   (format t "~&~A ~S~A~%~A~A" prefix (type-of c) midfix
           (prefix-lines "  "
                         (if (typep c 'simple-condition)
-                            ;; FIXME: "format control" (CLHS)
                             (apply #'format nil
                                    (simple-condition-format-control c)
                                    (simple-condition-format-arguments c))
@@ -1069,20 +1365,19 @@
   (when (if update-only
             captures
             (or include-no-value values))
-    (with-transcription-syntax ()
-      (if (endp values)
-          (when include-no-value
-            (format stream "~A~%" (find-prefix :no-value syntax-id)))
-          (loop for value in values
-                for i upfrom 0
-                for capture = (if (< i (length captures))
-                                  (elt captures i)
-                                  nil)
-                do (if (readable-object-p value)
-                       (transcribe-readable-value
-                        stream value capture syntax-id)
-                       (transcribe-unreadable-value
-                        stream value syntax-id)))))))
+    (if (endp values)
+        (when include-no-value
+          (format stream "~A~%" (find-prefix :no-value syntax-id)))
+        (loop for value in values
+              for i upfrom 0
+              for capture = (if (< i (length captures))
+                                (elt captures i)
+                                nil)
+              do (if (readable-object-p value)
+                     (transcribe-readable-value
+                      stream value capture syntax-id)
+                     (transcribe-unreadable-value
+                      stream value syntax-id))))))
 
 ;;; Assuming that OBJECT prints readably, check that whether CAPTURE
 ;;; is readable and it prints the same.
@@ -1101,8 +1396,7 @@
         (if (null continuation-prefix)
             ;; No continuation prefix, just mark the first line.
             (format stream "~A ~S~%" prefix value)
-            ;; FIXME: indentation can be wrong with multiline
-            (write-prefixed-lines (princ-to-string value) continuation-prefix
+            (write-prefixed-lines (prin1-to-string value) continuation-prefix
                                   stream :first-line-prefix prefix))
         ;; They print the same, so use the parsed string, because it
         ;; might have been hand-indented.
@@ -1121,7 +1415,7 @@
 
 ;;;; Conditions
 
-(define-condition transcription-error (error)
+(define-condition transcription-error (error condition-context-mixin)
   (;; The file position at which the error was encountered or NIL if
    ;; unknown.
    (file-position
@@ -1196,131 +1490,15 @@
           :message-args message-args))
 
 
-(defsection @transcribing-with-emacs (:title "Transcribing with Emacs")
-  """Typical transcript usage from within Emacs is simple: add a Lisp
-  form to a docstring or comment at any indentation level. Move the
-  cursor right after the end of the form as if you were to evaluate it
-  with `C-x C-e`. The cursor is marked by `#\^`:
-
-      This is part of a docstring.
-
-      ```cl-transcript
-      (values (princ :hello) (list 1 2))^
-      ```
-
-  Note that the use of fenced code blocks with the language tag
-  `cl-transcript` is only to tell PAX to perform consistency checks at
-  documentation generation time.
-
-  Now invoke the Elisp function `mgl-pax-transcribe` where the cursor
-  is, and the fenced code block from the docstring becomes:
-
-      (values (princ :hello) (list 1 2))
-      .. HELLO
-      => :HELLO
-      => (1 2)
-      ^
-
-  Then you change the printed message and add a comment to the second
-  return value:
-
-      (values (princ :hello-world) (list 1 2))
-      .. HELLO
-      => :HELLO
-      => (1
-          ;; This value is arbitrary.
-          2)
-
-  When generating the documentation you get a
-  TRANSCRIPTION-CONSISTENCY-ERROR because the printed output and the
-  first return value changed, so you regenerate the documentation by
-  marking the region bounded by `#\|` and the cursor at `#\^` in the
-  example:
-
-      |(values (princ :hello-world) (list 1 2))
-      .. HELLO
-      => :HELLO
-      => (1
-          ;; This value is arbitrary.
-          2)
-      ^
-
-  then invoke the Elisp function `mgl-pax-retranscribe-region` to get:
-
-      (values (princ :hello-world) (list 1 2))
-      .. HELLO-WORLD
-      => :HELLO-WORLD
-      => (1
-          ;; This value is arbitrary.
-          2)
-      ^
-
-  Note how the indentation and the comment of `(1 2)` were left alone,
-  but the output and the first return value got updated.
-
-  Alternatively, `C-u 1 mgl-pax-transcribe` will emit commented markup:
-
-      (values (princ :hello) (list 1 2))
-      ;.. HELLO
-      ;=> :HELLO
-      ;=> (1 2)
-
-  `C-u 0 mgl-pax-retranscribe-region` will turn commented into
-  non-commented markup. In general, the numeric prefix argument is the
-  index of the syntax to be used in *TRANSCRIBE-SYNTAXES*. Without a
-  prefix argument, `mgl-pax-retranscribe-region` will not change the
-  markup style.
-
-  Finally, not only do both functions work at any indentation level
-  but in comments too:
-
-      ;;;; (values (princ :hello) (list 1 2))
-      ;;;; .. HELLO
-      ;;;; => :HELLO
-      ;;;; => (1 2)
-
-  The dynamic environment of the transcription is determined by the
-  :DYNENV argument of the enclosing `cl-transcript` code block (see
-  @TRANSCRIPT-DYNENV).
-
-  Transcription support in Emacs can be enabled by loading
-  `src/mgl-pax.el`. See @EMACS-SETUP.""")
-
-(defun transcribe-for-emacs (string default-syntax* update-only echo
-                             first-line-special-p dynenv)
-  (with-swank-compatibility ()
-    (swank::with-buffer-syntax ()
-      (let ((default-syntax (cond ((numberp default-syntax*)
-                                   (first (elt *transcribe-syntaxes*
-                                               default-syntax*)))
-                                  ((null default-syntax*)
-                                   nil)
-                                  (t (error "Unexpected default syntax ~S."
-                                            default-syntax*))))
-            (dynenv (and dynenv (read-from-string dynenv))))
-        (when (and dynenv (or (not (symbolp dynenv))
-                              (not (fboundp dynenv))))
-          (error ":dynenv ~S does not name a function." dynenv))
-        (multiple-value-bind (string prefix)
-            (strip-longest-common-prefix
-             string "; " :first-line-special-p first-line-special-p)
-          (prefix-lines prefix
-                        (transcribe string nil
-                                    :default-syntax default-syntax
-                                    :update-only update-only :echo echo
-                                    :dynenv dynenv)
-                        :exclude-first-line-p first-line-special-p))))))
-
-
 (defsection @transcript-consistency-checking
     (:title "Transcript Consistency Checking")
   """The main use case for consistency checking is detecting
   out-of-date examples in documentation, although using it for writing
   tests is also a possibility. Here, we focus on the former.
 
-  When a markdown code block tagged `cl-transcript` is processed
+  When a Markdown code block tagged `cl-transcript` is processed
   during @GENERATING-DOCUMENTATION, the code in it is replaced with
-  the output of with `(TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
+  the output of `(TRANSCRIBE <CODE> NIL :UPDATE-ONLY T
   :CHECK-CONSISTENCY T)`. Suppose we have the following example of the
   function `GREET`, that prints `hello` and returns 7.
 
@@ -1344,7 +1522,6 @@
   PRINT-UNREADABLE-OBJECT is used with `:IDENTITY T`.
   """
   (@transcript-finer-grained-consistency-checks section)
-  (@transcript-dynenv section)
   (@transcript-utilities-for-consistency-checking section))
 
 (defsection @transcript-finer-grained-consistency-checks
@@ -1376,44 +1553,10 @@
 
       (make-condition 'simple-error)
       ==> #<SIMPLE-ERROR {1008A81533}>
-  """)
-
-(defsection @transcript-dynenv
-    (:title "Controlling the Dynamic Environment")
-  """The dynamic environment in which forms in the transcript are
-  evaluated can be controlled via the :DYNENV argument of
-  `cl-transcript`.
-
-      ```cl-transcript (:dynenv my-transcript)
-      ...
       ```
 
-  In this case, instead of calling TRANSCRIBE directly, the call will
-  be wrapped in a function of no arguments and passed to the function
-  `MY-TRANSCRIPT`, which establishes the desired dynamic environment
-  and calls its argument. The following definition of `MY-TRANSCRIPT`
-  simply packages up oft-used settings to TRANSCRIBE.
-
-  ```
-  (defun my-transcript (fn)
-    (let ((*transcribe-check-consistency*
-            '((:output my-transcript-output=)
-              (:readable equal)
-              (:unreadable nil))))
-      (funcall fn)))
-
-  (defun my-transcript-output= (string1 string2)
-    (string= (my-transcript-normalize-output string1)
-             (my-transcript-normalize-output string2)))
-
-  (defun my-transcript-normalize-output (string)
-    (squeeze-whitespace (delete-trailing-whitespace (delete-comments string))))
-  ```
-
-  A more involved solution could rebind global variables set in
-  transcripts, unintern symbols created or even create a temporary
-  package for evaluation.
-  """)
+  It is often a good idea to package up these settings in the
+  :DYNENV argument of `cl-transcript` (see @TRANSCRIPT-DYNENV).""")
 
 
 (defsection @transcript-utilities-for-consistency-checking
@@ -1422,22 +1565,24 @@
   (delete-trailing-whitespace function)
   (delete-comments function))
 
-(defun/autoloaded squeeze-whitespace (string)
+(defun/auto squeeze-whitespace (string)
   "Replace consecutive whitespace characters with a single space in
-  STRING. This is useful to undo the effects of pretty printing when
-  building comparison functions for TRANSCRIBE."
-  (with-output-to-string (s)
+  STRING and trim whitespace from the right. This is useful to undo
+  the effects of pretty printing when building comparison functions
+  for TRANSCRIBE."
+  (with-output-to-string (out)
     (let ((prev-whitespace-p nil))
       (loop for char across string
-            do (cond ((whitespacep char)
-                      (unless prev-whitespace-p
-                        (write-char #\Space s)
-                        (setq prev-whitespace-p t)))
-                     (t
-                      (write-char char s)
-                      (setq prev-whitespace-p nil)))))))
+            do (let ((whitespacep (whitespacep char)))
+                 ;; Nothing to do for whitespace chars until followed
+                 ;; by a non-whitespace char.
+                 (unless whitespacep
+                   (when prev-whitespace-p
+                     (write-char #\Space out))
+                   (write-char char out))
+                 (setq prev-whitespace-p whitespacep))))))
 
-(defun/autoloaded delete-trailing-whitespace (string)
+(defun/auto delete-trailing-whitespace (string)
   "Delete whitespace characters after the last non-whitespace
   character in each line in STRING."
   (flet ((delete-on-one-line (string)
@@ -1448,7 +1593,7 @@
               while line
               do (write-line (delete-on-one-line line) out))))))
 
-(defun/autoloaded delete-comments (string &key (pattern ";"))
+(defun/auto delete-comments (string &key (pattern ";"))
   """For each line in STRING delete the rest of the line after and
   including the first occurrence of PATTERN. On changed lines, delete
   trailing whitespace too. This function does not parse STRING as Lisp
@@ -1489,4 +1634,4 @@
               while line
               do (write-line (delete-on-one-line line) out))))))
 
-(defun/autoloaded ensure-transcribe-loaded ())
+(defun/auto ensure-transcribe-loaded ())

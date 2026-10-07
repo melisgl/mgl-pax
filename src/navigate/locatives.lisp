@@ -1,18 +1,103 @@
 (in-package :mgl-pax)
 
 (in-readtable pythonic-string-syntax)
+
 
-(defsection @pax-locatives (:title "PAX Locatives")
-  "To the DREF::@BASIC-LOCATIVE-TYPES defined by DRef,
-  PAX adds a few of its own."
-  (section locative)
-  (glossary-term locative)
-  (dislocated locative)
-  (argument locative)
-  (include locative)
-  (docstring locative)
-  (go locative)
-  (clhs locative))
+;;;; Lazy doc definitions
+;;;;
+;;;; A "doc" here is a SECTION, GLOSSARY-TERM or CONCEPT (but not
+;;;; NOTE), which are implemented as variables. PAX recognizes as lazy
+;;;; doc definitions variables whose value is of the form
+;;;;
+;;;;   ((:%PAX-LAZY-DOC <NAME> <KIND> <LOADER-FN>) . <PAYLOAD>)
+;;;;
+;;;; upon accessing them (with DREF:LOCATE and DREF:RESOLVE),
+;;;; LOADER-FN is APPLYd to PAYLOAD. LOADER-FN's job is to redefine
+;;;; the variable as a normal PAX construct (e.g. with
+;;;; PAX:DEFSECTION).
+;;;;
+;;;; NAME is the name of the variable holding the value, and KIND is
+;;;; :SECTION, :GLOSSARY-TERM, :CONCEPT or :NOTE.
+;;;;
+;;;; This is experimental and definitely not public. SBCL's SB-MANUAL
+;;;; contrib uses it to avoid a hard dependency on PAX but make use of
+;;;; PAX if it's loaded.
+;;;;
+;;;; SB-MANUAL has its own dummy DEFSECTION implementation, which just
+;;;; sets the variable NAME to the (DEFSECTION <NAME> ...) defining
+;;;; form itself plus the :%PAX-LAZY-DOC metadata. Its LOADER-FN
+;;;; substitutes some symbols in this form with their PAX equivalents
+;;;; (e.g. SB-MANUAL::DEFSECTION becomes PAX:DEFSECTION,
+;;;; SB-MANUAL::MACRO becomes DREF:MACRO) and EVALs the resulting
+;;;; form, which sets NAME to a normal PAX doc object.
+
+(defun lazy-doc-p (object kind)
+  (and (consp object)
+       (consp (car object))
+       (eq (caar object) :%pax-lazy-doc)
+       (or (null kind)
+           (eq kind (third (first object))))))
+
+(defun lazy-doc-name (lazy)
+  (second (first lazy)))
+
+(defun proper-lazy-doc-name-p (object kind)
+  (and (symbolp object)
+       (boundp object)
+       (let ((value (symbol-value object)))
+         (and (lazy-doc-p value kind)
+              (eq (lazy-doc-name value) object)))))
+
+(defun locate-lazy-doc (list kind dref-class locative-type)
+  (unless (and (lazy-doc-p list kind)
+               (proper-lazy-doc-name-p (lazy-doc-name list) kind))
+    (locate-error))
+  (make-instance dref-class :name (lazy-doc-name list)
+                 :locative locative-type))
+
+(defun resolve-lazy-doc (lazy dref)
+  (destructuring-bind ((marker name locative fn) &rest payload) lazy
+    (declare (ignore marker locative))
+    (apply fn name payload))
+  (let ((new (symbol-value (dref-name dref)))
+        (expected-type (dref-locative-type dref)))
+    (assert (typep new expected-type) ()
+            "~@<Lazy loaded ~S for ~S, got ~S, which is not a ~S.~:@>"
+            lazy dref new expected-type)
+    new))
+
+(defmacro define-lazy-locate-and-resolve
+    (locative-type (kind dref-class proper-name-p name-fn))
+  `(progn
+     (define-locator ,locative-type ((list list))
+       (locate-lazy-doc list ,kind ',dref-class ',locative-type))
+
+     (defun ,proper-name-p (symbol)
+       (and (symbolp symbol)
+            (boundp symbol)
+            (let ((value (symbol-value symbol)))
+              (and (typep value ',locative-type)
+                   (eq (,name-fn value) symbol)))))
+
+     (define-locator ,locative-type ((object ,locative-type))
+       (let ((name (,name-fn object)))
+         (unless (and (symbolp name)
+                      (boundp name)
+                      (eq (symbol-value name) object))
+           (locate-error))
+         (make-instance ',dref-class :name name :locative ',locative-type)))
+
+     (define-lookup ,locative-type (symbol locative-args)
+       (unless (or (,proper-name-p symbol)
+                   (proper-lazy-doc-name-p symbol ,kind))
+         (locate-error))
+       (make-instance ',dref-class :name symbol :locative ',locative-type))
+
+     (defmethod resolve* ((dref ,dref-class))
+       (let ((value (symbol-value (dref-name dref))))
+         (if (lazy-doc-p value ,kind)
+             (resolve-lazy-doc value dref)
+             value)))))
 
 
 ;;;; SECTION locative
@@ -23,23 +108,8 @@
   SECTION is EXPORTABLE-LOCATIVE-TYPE-P but not exported by
   default (see EXPORTABLE-REFERENCE-P).")
 
-(defun section-title-or-name (section)
-  (or (section-title section)
-      (let ((*print-case* :upcase))
-        (prin1-to-string (section-name section)))))
-
-(define-locator section ((section section))
-  (make-instance 'section-dref :name (section-name section) :locative 'section))
-
-(define-lookup section (symbol locative-args)
-  (unless (and (symbolp symbol)
-               (boundp symbol)
-               (typep (symbol-value symbol) 'section))
-    (locate-error))
-  (make-instance 'section-dref :name symbol :locative 'section))
-
-(defmethod resolve* ((dref section-dref))
-  (symbol-value (dref-name dref)))
+(define-lazy-locate-and-resolve section
+    (:section section-dref proper-section-name-p section-name))
 
 (defmethod docstring* ((dref section-dref))
   nil)
@@ -61,22 +131,56 @@
   GLOSSARY-TERM is EXPORTABLE-LOCATIVE-TYPE-P but not exported by
   default (see EXPORTABLE-REFERENCE-P).")
 
-(define-locator glossary-term ((glossary-term glossary-term))
-  (make-instance 'glossary-term-dref :name (glossary-term-name glossary-term)
-                                     :locative 'glossary-term))
-
-(define-lookup glossary-term (symbol locative-args)
-  (unless (and (symbolp symbol)
-               (boundp symbol)
-               (typep (symbol-value symbol) 'glossary-term))
-    (locate-error))
-  (make-instance 'glossary-term-dref :name symbol :locative 'glossary-term))
-
-(defmethod resolve* ((dref glossary-term-dref))
-  (symbol-value (dref-name dref)))
+(define-lazy-locate-and-resolve glossary-term
+    (:glossary-term glossary-term-dref
+     proper-glossary-term-name-p glossary-term-name))
 
 (defmethod docstring* ((dref glossary-term-dref))
   (glossary-term-docstring (resolve dref)))
+
+
+;;;; CONCEPT locative
+
+(defmethod print-object ((concept concept) stream)
+  (print-unreadable-object (concept stream :type t)
+    (format stream "~a" (concept-name concept))))
+
+(define-locative-type concept (variable)
+  "Refers to a named group of @CONCEPT-KEYs defined by DEFINE-CONCEPT
+  for multiplexing its keys to definitions that link to it in their
+  docstrings. See @INDEXING-CONCEPTS for more.
+
+  CONCEPT is EXPORTABLE-LOCATIVE-TYPE-P but not exported by
+  default (see EXPORTABLE-REFERENCE-P).
+
+  CONCEPTs have no ARGLIST or DOCSTRING.")
+
+(define-lazy-locate-and-resolve concept
+    (:concept concept-dref proper-concept-name-p concept-name))
+
+(defmethod docstring* ((dref concept-dref))
+  nil)
+
+
+;;;; NOTE locative
+
+(define-locative-type note ()
+  "Refers to named notes defined by the NOTE macro.
+
+  When @GENERATING-DOCUMENTATION, if a single link would be made to a
+  NOTE (be it either a @SPECIFIC-LINK or an unambiguous
+  @UNSPECIFIC-LINK), then the NOTE's DOCSTRING is included as if with
+  the DOCSTRING locative.
+
+  NOTE is EXPORTABLE-LOCATIVE-TYPE-P but not exported by default (see
+  EXPORTABLE-REFERENCE-P).")
+
+(define-lookup note (name locative-args)
+  (unless (and (symbolp name)
+               (symbol-package name)
+               (definition-property (xref name 'note) 'note))
+    (locate-error))
+  (make-instance 'note-dref :name name :locative 'note))
 
 
 ;;;;; GO locative
@@ -123,9 +227,9 @@
   (destructuring-bind ((go-name go-locative)) locative-args
     (let ((go-dref (dref go-name go-locative)))
       (make-instance 'go-dref :name name
-                              :locative `(go (,(dref-name go-dref)
-                                              ,(dref-locative go-dref)))
-                              :target-dref go-dref))))
+                     :locative `(go (,(dref-name go-dref)
+                                     ,(dref-locative go-dref)))
+                     :target-dref go-dref))))
 
 (defun go-embedded-dref (go-dref)
   (apply #'dref (first (dref-locative-args go-dref))))
@@ -173,7 +277,7 @@
 ;;;; ARGUMENT locative
 
 (define-pseudo-locative-type argument ()
-  """An alias for [DISLOCATED][locative], so that one can refer to an
+  """An alias for [DISLOCATED][locative], allowing one to refer to an
   argument of a macro without accidentally linking to a class that has
   the same name as that argument. In the following example,
   [FORMAT][dislocated] may link to CL:FORMAT (if we generated
@@ -191,13 +295,13 @@
 
   ARGUMENT references do not RESOLVE.""")
 
-(defvar *local-references* ())
+(defvar *local-definitions* ())
 
-(defun find-local-reference (xref)
-  (find xref *local-references* :test #'xref=))
+(defun find-local-definition (xref)
+  (find xref *local-definitions* :test #'xref=))
 
 (define-lookup argument (symbol locative-args)
-  (if (find-local-reference (xref symbol 'argument))
+  (if (find-local-definition (xref symbol 'argument))
       (make-instance 'dref :name symbol :locative 'argument)
       (locate-error)))
 
@@ -209,7 +313,7 @@
 
 (defmethod map-definitions-of-type (fn (locative-type (eql 'argument)))
   (declare (ignorable fn))
-  (dolist (dref *local-references*)
+  (dolist (dref *local-definitions*)
     (when (eq (dref-locative-type dref) 'argument)
       (funcall fn dref)))
   nil)
@@ -236,7 +340,7 @@
   [STRING][type] or a [PATHNAME][type], in which case the whole file
   is being pointed to, or it can explicitly supply START, END
   locatives. INCLUDE is typically used to include non-lisp files in
-  the documentation (say markdown or Elisp as in the next example) or
+  the documentation (say Markdown or Elisp as in the next example) or
   regions of Lisp source files. This can reduce clutter and
   duplication.
 
@@ -252,7 +356,7 @@
   ```
 
   In the above example, when documentation is generated, the entire
-  `src/mgl-pax.el` file is included in the markdown output surrounded
+  `src/mgl-pax.el` file is included in the Markdown output surrounded
   by the strings given as HEADER-NL and FOOTER-NL. The documentation
   of `FOO-EXAMPLE` will be the region of the file from the
   SOURCE-LOCATION of the START reference (inclusive) to the
@@ -279,7 +383,7 @@
 
   - If specified, LINE-PREFIX is a string that's prepended to each
     line included in the documentation. For example, a string of four
-    spaces makes markdown think it's a code block.
+    spaces makes Markdown think it's a code block.
 
   - HEADER and FOOTER, if non-NIL, are printed before the included
     string.
@@ -291,25 +395,29 @@
   not RESOLVE.""")
 
 (define-lookup include (name locative-args)
-  (destructuring-bind (source &key line-prefix header footer
-                                header-nl footer-nl) locative-args
-    (declare (ignore line-prefix header footer header-nl footer-nl))
-    ;; Called mostly for validation.
-    (let ((file (include-region source)))
-      (unless (and file (probe-file file))
-        (locate-error "File ~S does not exist." file)))
-    (make-instance 'include-dref
-                   :name name
-                   :locative (cons 'include locative-args))))
+  (make-instance 'include-dref
+                 :name name
+                 :locative (cons 'include locative-args)))
+
+(define-condition include-error (error condition-context-mixin)
+  ((format-control :initarg :format-control :reader format-control)
+   (format-args :initarg :format-args :reader format-args))
+  (:report (lambda (condition stream)
+             (format stream "~@<~?~:@>" (format-control condition)
+                     (format-args condition)))))
+
+(defun include-error (format-control &rest format-args)
+  (error 'include-error :format-control format-control
+         :format-args format-args))
 
 ;;; Return the filename plus the START, END source locations of the
 ;;; region to be included.
 (defun include-region (source)
   (cond ((or (stringp source) (pathnamep source))
-         (assert (uiop/pathname:absolute-pathname-p source) ()
-                 "Pathnames given as the SOURCE argument of the ~
-                 INCLUDE locative must be absolute, but ~S is not."
-                 source)
+         (unless (uiop/pathname:absolute-pathname-p source)
+           (include-error "Pathnames given as the SOURCE argument of the ~
+                          INCLUDE locative must be absolute, but ~S is not."
+                          source))
          (values source nil nil))
         ((and source (listp source))
          (destructuring-bind (&key start end) source
@@ -326,30 +434,29 @@
                (when (and start* end*
                           (string/= (namestring (truename start-file))
                                     (namestring (truename end-file))))
-                 (locate-error "~S starts in file ~S and ends in ~
-                               another file ~S."
-                               'include start-file end-file))
+                 (include-error
+                  "~S starts in file ~S and ends in another file ~S."
+                  'include start-file end-file))
                (let ((file (or start-file end-file)))
                  (unless file
-                   (locate-error "No file specified."))
+                   (include-error "No file specified."))
                  (values file start* end*))))))
         (t
-         (locate-error "Malformed ~S ~S." 'include 'source source))))
+         (include-error "Malformed ~S ~S." 'include 'source source))))
 
 (defun check-source-location (ref location)
   (unless (source-location-p location)
-    (locate-error "~S of ~S is ~S, which is not SOURCE-LOCATION-P."
-                  'source-location ref location)))
+    (include-error "~S of ~S is ~S, which is not SOURCE-LOCATION-P."
+                   'source-location ref location)))
 
 (defmethod source-location* ((dref include-dref))
   (handler-case
-      (let ((dref::*locating-object* nil))
-        (multiple-value-bind (file start-location)
-            (include-region (first (dref-locative-args dref)))
-          (or start-location
-              (make-source-location :file file))))
-    (locate-error ()
-      nil)))
+      (multiple-value-bind (file start-location)
+          (include-region (first (dref-locative-args dref)))
+        (or start-location
+            (make-source-location :file file)))
+    (include-error (c)
+      `(:error ,(princ-to-string c)))))
 
 
 ;;;; CLHS locative
@@ -404,30 +511,38 @@
   - *sections*:
 
       - *by section number*: `[3.4][clhs]` or `[3.4][(clhs
-         section)]` ([3.4][clhs])
+        section)]` ([3.4][clhs])
 
-      - *by section title* (substring match): `[lambda lists][clhs]`
-         or `[lambda lists][(clhs section)]` ([lambda lists][clhs])
+      - *by section title*: With the locative `(CLHS SECTION)`,
+        substring matching against the title starting at word
+        boundaries is performed. With the locative CLHS (where
+        `\\SECTION` is not specified explicitly), the name must match
+        the title exactly. For example, `[lambda list][(clhs
+        section)]` refers to the same definition as `[lambda
+        lists][clhs]` ([Lambda Lists][clhs]).
 
       - *by filename*: `[03_d][clhs]` or `[03_d][(clhs
-         section)]` ([03_d][clhs])
+        section)]` ([03_d][clhs])
 
-      - *by alias*: [Format directives][(clhs glossary-term)] are
-         aliases of the sections describing them. Thus, `[~c][clhs]`
-         is equivalent to `[22.3.1.1][clhs]` and `[Tilde C:
-         Character][clhs]`. The full list is
-         [*format-directive-alias-links* variable][docstring].
+      - *by alias*
 
-          Similarly, [reader macro][clhs] characters are aliases of
-          the sections describing them. The full list is
-          [*reader-macro-alias-links* variable][docstring].
+          - [Format directives][(clhs glossary-term)] are aliases of
+            the sections describing them. Thus, `[~c][clhs]` is
+            equivalent to `[22.3.1.1][clhs]` and `[Tilde C:
+            Character][clhs]`. The full list is
+            [*format-directive-alias-links* variable][docstring].
 
-          Finally, [loop keywords][(clhs glossary-term)] have aliases
-          to the sections describing them. For example, the strings
-          `loop:for`, `for` and `:for` are aliases of CLHS `6.1.2.1`.
-          The `loop:*` aliases are convenient for completion at the
-          prompt when @BROWSING-LIVE-DOCUMENTATION, while the other
-          aliases are for defaulting to buffer contents.
+          - Similarly, [reader macro][clhs] characters are aliases of
+            the sections describing them. The full list is
+            [*reader-macro-alias-links* variable][docstring].
+
+          - Finally, [loop keywords][(clhs glossary-term)] have
+            aliases to the sections describing them. For example, the
+            strings `loop:for`, `for` and `:for` are aliases of CLHS
+            `6.1.2.1`. The `loop:*` aliases are convenient for
+            completion at the prompt when
+            @BROWSING-LIVE-DOCUMENTATION, while the other aliases are
+            for defaulting to buffer contents.
 
   As the above examples show, the NESTED-LOCATIVE argument of the CLHS
   locative may be omitted. In that case, definitions, glossary terms,
@@ -450,6 +565,8 @@
   (defclass clhs-dref ()
     ((explicit-p :initform nil :accessor clhs-dref-explicit-p))))
 
+(defvar *clhs-force-exact-match* nil)
+
 (define-lookup clhs (name locative-args)
   (or (let ((name-string (if (stringp name)
                              name
@@ -460,13 +577,17 @@
                      (make-instance 'clhs-dref
                                     :name id
                                     :locative '(clhs glossary-term)))))
-               (issue-or-section? ()
+               (issue-or-section? (&optional (match-title :word-prefix))
+                 (when *clhs-force-exact-match*
+                   (setq match-title :exact))
                  (or (let ((id (find-hyperspec-issue-id name-string)))
                        (when id
                          (make-instance 'clhs-dref
                                         :name id
                                         :locative '(clhs section))))
-                     (let ((id (find-hyperspec-section-id name-string)))
+                     (let ((id (find-hyperspec-section-id
+                                name-string :match-title match-title)))
+                       ;; ex clhs
                        (when id
                          (make-instance 'clhs-dref
                                         :name id
@@ -487,7 +608,9 @@
                 ((equal locative-args '(section))
                  (issue-or-section?))
                 ((endp locative-args)
-                 (or (definition?) (glossary-term?) (issue-or-section?)))
+                 (or (definition?)
+                     (glossary-term?)
+                     (issue-or-section? :exact)))
                 (t
                  (definition?)))))
       (locate-error)))
@@ -501,8 +624,15 @@
         (t
          (when-let (dref (dref name '(clhs glossary-term) nil))
            (funcall fn dref))
-         (when-let (dref (dref name '(clhs section) nil))
-           (funcall fn dref)))))
+         ;; (DREF "EX" 'CLHS) is a LOCATE-ERROR, but here we are
+         ;; trying (DREF "EX" '(CLHS SECTION)), which matches a
+         ;; :WORD-PREFIX in the title "Language Extensions". This is
+         ;; fine when the user explicitly specifies (CLHS SECTION),
+         ;; but here SECTION is just one of the things we try, so
+         ;; reduce noise by requiring an exact match.
+         (let ((*clhs-force-exact-match* t))
+           (when-let (dref (dref name '(clhs section) nil))
+             (funcall fn dref))))))
 
 (defmethod map-definitions-of-type (fn (locative-type (eql 'clhs)))
   (flet ((foo (name locative)
@@ -522,9 +652,35 @@
     (loop for entry in *hyperspec-issues*
           do (foo (first entry) '(clhs section))
              (foo (second entry) '(clhs section)))
-    'dref::try-interned-symbols))
+    :try-interned-symbols))
+
+;;; For example, SINGLE-FLOAT is documented as a TYPE in the CLHS, but
+;;; it may be implemented as a CLASS. This maps (SINGLE-FLOAT . CLASS)
+;;; to corresponding CLHS DREF.
+(defvar *more-specific-implementation-dref-to-clhs-dref*)
+
+(defun init-clhs-dref ()
+  (let ((ht (make-hash-table :test #'equal)))
+    (dolist (clhs-dref (dref-apropos nil :dtype '(and clhs (not (clhs section))
+                                                  (not (clhs glossary-term)))))
+      (let ((dref (dref (dref-name clhs-dref)
+                        (first (dref-locative-args clhs-dref))
+                        nil)))
+        (when (and dref
+                   (or (not (equal (dref-name dref)
+                                   (dref-name clhs-dref)))
+                       (not (equal (dref-locative dref)
+                                   (first (dref-locative-args clhs-dref))))))
+          (setf (gethash (dref-ht-key dref) ht) clhs-dref))))
+    (setq *more-specific-implementation-dref-to-clhs-dref* ht)))
 
 (defun clhs-dref (name locative)
-  ;; Pick off the impossible cases quickly.
-  (when  (member (locative-type locative) *hyperspec-definition-locative-types*)
-    (dref name `(clhs ,locative) nil)))
+  (unless (boundp '*more-specific-implementation-dref-to-clhs-dref*)
+    (init-clhs-dref))
+  (or
+   ;; Pick off the impossible cases quickly, without calling DREF.
+   (when (member (locative-type locative)
+                 *hyperspec-definition-locative-types*)
+     (dref name `(clhs ,locative) nil))
+   (gethash (cons name locative)
+            *more-specific-implementation-dref-to-clhs-dref*)))

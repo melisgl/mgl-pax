@@ -7,3 +7,7 @@
 *.sse2f
 world/
 doc/
+/test/data/README
+/test/data/README.md
+/test/data/output.tex
+/test/data/actual-output.tex

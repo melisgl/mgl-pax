@@ -5,7 +5,7 @@
 (defsection @documentation-utilities
     (:title "Utilities for Generating Documentation")
   "Two convenience functions are provided to serve the common case of
-  having an ASDF system with some readmes and a directory with for the
+  having an ASDF system with some readmes and a directory with the
   HTML documentation and the default CSS stylesheet."
   (update-asdf-system-readmes function)
   (@html-output section)
@@ -17,7 +17,7 @@
     :if-exists :supersede
     :ensure-directories-exist t))
 
-(defun/autoloaded update-asdf-system-readmes
+(defun/auto update-asdf-system-readmes
     (object asdf-system &key (url-versions '(1)) (formats '(:markdown)))
   "Convenience function to generate up to two readme files in the
   directory holding the ASDF-SYSTEM definition. OBJECT is passed on to
@@ -47,7 +47,7 @@
                             :direction :output
                             :if-does-not-exist :create
                             :if-exists :supersede
-                            :external-format *utf-8-external-format*)
+                            :external-format uiop:*utf-8-external-format*)
       (let ((*document-url-versions* url-versions))
         (document object :stream stream :format :markdown))
       (print-markdown-footer stream)))
@@ -57,7 +57,7 @@
                             :direction :output
                             :if-does-not-exist :create
                             :if-exists :supersede
-                            :external-format *utf-8-external-format*)
+                            :external-format uiop:*utf-8-external-format*)
       (document object :stream stream :format :plain)
       (print-markdown-footer stream))))
 
@@ -79,21 +79,21 @@
   (*document-html-top-blocks-of-links* variable)
   (*document-html-bottom-blocks-of-links* variable))
 
-(defvar *document-html-default-style* :default
-  "The HTML style to use. It's either STYLE is either :DEFAULT or
-  :CHARTER. The :DEFAULT CSS stylesheet relies on the default
-  fonts (sans-serif, serif, monospace), while :CHARTER bundles some
-  fonts for a more controlled look.
+(defvar/auto *document-html-default-style* :default
+  "The HTML style to use. It's either :DEFAULT or :CHARTER. The :DEFAULT
+  CSS stylesheet relies on the default fonts (sans-serif, serif,
+  monospace), while :CHARTER bundles some fonts for a more controlled
+  look.
 
   The value of this variable affects the default style of
   UPDATE-ASDF-SYSTEM-HTML-DOCS.")
 
-(defun/autoloaded update-asdf-system-html-docs
+(defun/auto update-asdf-system-html-docs
     (sections asdf-system &key pages
-              (target-dir (asdf:system-relative-pathname
-                           asdf-system "doc/"))
-              (update-css-p t)
-              (style *document-html-default-style*))
+     (target-dir (asdf:system-relative-pathname
+                  asdf-system "doc/"))
+     (update-css-p t)
+     (style *document-html-default-style*))
   "Generate pretty HTML documentation for a single ASDF system,
   possibly linking to GitHub. If UPDATE-CSS-P, copy the STYLE files to
   TARGET-DIR (see *DOCUMENT-HTML-DEFAULT-STYLE*).
@@ -115,68 +115,77 @@
                         :mgl-pax
                         \"https://github.com/melisgl/mgl-pax\"))))
   ```"
-  (document-html sections pages target-dir update-css-p style nil))
-
-;;; Generate with the default HTML look.
-(defun document-html (sections page-specs target-dir update-css-p style
-                      link-to-pax-world-p)
+  ;; FIXME: Do pages whose :OUTPUT goes to a subdirectory find this?
   (when update-css-p
     (copy-css style target-dir))
   (document sections
-            :pages (add-html-defaults-to-page-specs
-                    (ensure-list sections) page-specs target-dir
-                    link-to-pax-world-p)
+            :pages (add-defaults-to-page-specs
+                    (ensure-list sections) :html pages target-dir nil)
             :format :html))
 
-(defun add-html-defaults-to-page-specs (sections page-specs dir
-                                        link-to-pax-world-p)
-  (flet ((section-has-page-spec-p (section)
+;;; Give those objects in OBJECTS that do not have a page spec in
+;;; PAGE-SPECS a separate page, and update the page specs of the
+;;; others to enforce some uniformity (e.g. :HEADER, :FOOTER).
+(defun add-defaults-to-page-specs (objects format page-specs target-dir
+                                   link-to-pax-world-p)
+  (flet ((has-page-spec-p (object)
            (some (lambda (page-spec)
-                   (member section (getf page-spec :objects)))
+                   (member object (getf page-spec :objects)))
                  page-specs)))
     (mapcar (lambda (page-spec)
-              (add-html-defaults-to-page-spec page-spec dir
-                                              link-to-pax-world-p))
+              (add-defaults-to-page-spec page-spec format target-dir
+                                         link-to-pax-world-p))
             (append page-specs
                     (mapcar (lambda (section)
                               `(:objects (,section)))
-                            (remove-if #'section-has-page-spec-p sections))))))
+                            (remove-if #'has-page-spec-p objects))))))
 
-(defun add-html-defaults-to-page-spec (page-spec dir link-to-pax-world-p)
+(defun add-defaults-to-page-spec (page-spec format target-dir
+                                  link-to-pax-world-p)
   (let* ((objects (getf page-spec :objects))
          (section (if (and (= 1 (length objects))
                            (typep (first objects) 'section))
                       (first objects)
-                      nil))
-         (filename (and dir (sections-to-filename objects dir))))
-    (flet ((header (stream)
+                      nil)))
+    (flet ((html-header* (stream)
              (let ((title (if section
                               (plain-section-title-or-name section)
                               nil)))
                (html-header stream :title title
-                                   :stylesheet "style.css"
-                                   :link-to-pax-world-p link-to-pax-world-p)))
-           (footer (stream)
+                            :stylesheet "style.css"
+                            :link-to-pax-world-p link-to-pax-world-p)))
+           (html-footer* (stream)
+             (when link-to-pax-world-p
+               (format stream "<h6>[Generated ~A]</h6>~%"
+                       (documentation-generation-date-string)))
              (html-footer stream)))
       `(,@page-spec
         ,@(when (eq (getf page-spec :output '%missing) '%missing)
-            `(:output (,filename ,@*default-output-options*)))
-        ,@(when (eq (getf page-spec :header-fn '%missing) '%missing)
-            `(:header-fn ,#'header))
-        ,@(when (eq (getf page-spec :footer-fn '%missing) '%missing)
-            `(:footer-fn ,#'footer))))))
+            `(:output (,(and target-dir
+                             (sections-to-filename objects format target-dir))
+                       ,@*default-output-options*)))
+        ,@(when (and (eq format :html)
+                     (eq (getf page-spec :header-fn '%missing) '%missing))
+            `(:header-fn ,#'html-header*))
+        ,@(when (and (eq format :html)
+                     (eq (getf page-spec :footer-fn '%missing) '%missing))
+            `(:footer-fn ,#'html-footer*))))))
 
-(defun sections-to-filename (sections dir)
+(defun sections-to-filename (sections format target-dir)
   (flet ((name (section)
            (string-downcase
             (remove-special-chars (symbol-name (section-name section))))))
-    (merge-pathnames (format nil "~{~A~^-~}.html"
-                             (mapcar #'name sections))
-                     dir)))
+    (make-pathname :name (format nil "~{~A~^-~}" (mapcar #'name sections))
+                   :type (ecase format
+                           (:plain "txt")
+                           (:markdown "md")
+                           (:html "html")
+                           (:pdf "pdf"))
+                   :defaults target-dir)))
 
 (defun remove-special-chars (string)
   (remove-if (lambda (char)
-               (find char "!@#$%^&*/"))
+               (find char "!@#$%^&*/\\:?|<>\""))
              string))
 
 (defun copy-css (style target-dir)
@@ -197,15 +206,15 @@
                                             ((:default) "web/default/")
                                             ((:charter) "web/charter/"))))
 
-(defvar *document-html-lang* "en"
+(defvar/auto *document-html-lang* "en"
   "The value for the `html` element's `xml:lang` and `lang`
   attributes in the generated HTML.")
 
-(defvar *document-html-charset* "UTF-8"
+(defvar/auto *document-html-charset* "UTF-8"
   "The value for `charset` attribute of the `<meta http-equiv='Content-Type'
   content='text/html'>` element in the generated HTML.")
 
-(defvar *document-html-head* nil
+(defvar/auto *document-html-head* nil
   "Stuff to be included in the `<head>` of the generated HTML.
 
   - If NIL, nothing is included.
@@ -216,7 +225,7 @@
   - If a function designator, then it is called with a single
     argument, the HTML stream, where it must write the output.")
 
-(defvar *document-html-sidebar* nil
+(defvar/auto *document-html-sidebar* nil
   "Stuff to be included in the HTML sidebar.
 
   - If NIL, a default sidebar is generated, with
@@ -229,26 +238,26 @@
   - If a function designator, then it is called with a single
     argument, the HTML stream, where it must write the output.")
 
-(defvar *document-html-top-blocks-of-links* ()
+(defvar/auto *document-html-top-blocks-of-links* ()
   "A list of blocks of links to be displayed on the sidebar on the left,
   above the table of contents. A block is of the form `(&KEY TITLE ID
   LINKS)`, where TITLE will be displayed at the top of the block in a
   HTML `DIV` with `ID` followed by the links. LINKS is a list of `(URI
-  LABEL)` elements, where `URI` maybe a string or an object being
+  LABEL)` elements, where `URI` may be a string or an object being
   DOCUMENTed or a REFERENCE thereof.")
 
-(defvar *document-html-bottom-blocks-of-links* ()
+(defvar/auto *document-html-bottom-blocks-of-links* ()
   "Like *DOCUMENT-HTML-TOP-BLOCKS-OF-LINKS*, only it is displayed
   below the table of contents.")
 
 (defun html-header
     (stream &key title stylesheet (lang *document-html-lang*)
-              (charset *document-html-charset*)
-              link-to-pax-world-p
-              (head *document-html-head*)
-              (sidebar *document-html-sidebar*)
-              (top-blocks-of-links *document-html-top-blocks-of-links*)
-              (bottom-blocks-of-links *document-html-bottom-blocks-of-links*))
+     (charset *document-html-charset*)
+     link-to-pax-world-p
+     (head *document-html-head*)
+     (sidebar *document-html-sidebar*)
+     (top-blocks-of-links *document-html-top-blocks-of-links*)
+     (bottom-blocks-of-links *document-html-bottom-blocks-of-links*))
   (format
    stream
    """<!DOCTYPE html>~%~
@@ -261,20 +270,12 @@
    <meta name="viewport" content="width=device-width">~%~
    <script src="jquery.min.js"></script>~%~
    <script src="toc.min.js"></script>~%~
-   <script type="text/x-mathjax-config">
-     MathJax.Hub.Config({
-       tex2jax: {
-         inlineMath: [['$','$']],
-         processEscapes: true
-       }
-     });
-   </script>
    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
    ~@[~A~]~%~
    </head>~%~
    <body>~%~
    <div id="content-container">~%"""
-   lang lang title stylesheet charset
+   lang lang (escape-html title) stylesheet charset
    (etypecase head
      ((or null string)
       head)
@@ -305,9 +306,9 @@
              by MGL-PAX]</a></li></ul>~
        </div>~%~
      </div>~%"""
-     (blocks-of-links-to-html-string top-blocks-of-links)
-     link-to-pax-world-p
-     (blocks-of-links-to-html-string bottom-blocks-of-links)))
+          (blocks-of-links-to-html-string top-blocks-of-links)
+          link-to-pax-world-p
+          (blocks-of-links-to-html-string bottom-blocks-of-links)))
 
 (defun blocks-of-links-to-html-string (blocks-of-links)
   (if (listp blocks-of-links)
@@ -328,7 +329,7 @@
             (format stream "<a href=~A>~A</a>"
                     (if (stringp uri)
                         uri
-                        (object-to-uri uri))
+                        (object-uri uri))
                     title)
             (format stream "~A" title))
         (format stream "</span>"))
@@ -338,17 +339,17 @@
       (princ "</ul></div>" stream))))
 
 (defun link-in-block-to-html (link-in-block)
-  (destructuring-bind (url text) link-in-block
-    (if (stringp url)
-        (format nil "<a href=\"~A\">~A</a>" url text)
-        (let ((uri (object-to-uri url)))
+  (destructuring-bind (url-or-object text) link-in-block
+    (if (stringp url-or-object)
+        (format nil "<a href=\"~A\">~A</a>" url-or-object text)
+        (let ((uri (object-uri url-or-object)))
           (if uri
               (format nil "<a href=\"~A\">~A</a>" uri text)
               ;; KLUDGE: It's not strictly a reflink, but close enough.
               (signal-unresolvable-reflink
                `(:reference-link :label (,text)
-                                 :definition (,(princ-to-string url)))
-               url))))))
+                 :definition (,(princ-to-string url-or-object)))
+               nil))))))
 
 (defvar *google-analytics-id* nil)
 
@@ -368,7 +369,7 @@
    (toc-options)
    google-analytics-id google-analytics-id))
 
-(defvar *document-html-max-navigation-table-of-contents-level* nil
+(defvar/auto *document-html-max-navigation-table-of-contents-level* nil
   "NIL or a non-negative integer. If non-NIL, it overrides
   *DOCUMENT-MAX-NUMBERING-LEVEL* in the dynamic HTML table of contents
   on the left of the page.")
@@ -383,9 +384,9 @@
 
 ;;;; The autoloaded part of @PAX-WORLD
 
-(defun/autoloaded update-pax-world
-    (&key (docs *registered-pax-world-docs*) dir update-css-p
-          (style *document-html-default-style*))
+(defun/auto update-pax-world
+    (&key (docs *registered-pax-world-docs*) (formats '(:html)) dir
+     update-css-p (style *document-html-default-style*))
   "Generate HTML documentation for all DOCS. Files are created in
   DIR (`(asdf:system-relative-pathname :mgl-pax \"world/\")` by
   default if DIR is NIL). DOCS is a list of entries of the form (NAME
@@ -396,16 +397,17 @@
   PAGE-SPECS is augmented with HTML headers, footers and output
   location specifications (based on the name of the section).
 
-  If necessary a default page spec is created for every section."
-  (let ((dir (or dir (asdf:system-relative-pathname :mgl-pax "world/"))))
-    (multiple-value-bind (sections pages) (sections-and-pages docs)
-      (create-pax-world sections pages dir update-css-p style))))
+  If necessary, a default page spec is created for every section."
+  (with-filename-to-asdf-system-name-map
+    (let ((dir (or dir (asdf:system-relative-pathname :mgl-pax "world/"))))
+      (multiple-value-bind (sections pages) (sections-and-pages docs)
+        (create-pax-world sections pages formats dir update-css-p style)))))
 
 (defun sections-and-pages (registered-docs)
-  (values (apply #'append (mapcar #'denoted-list
-                                  (mapcar #'second registered-docs)))
-          (apply #'append (mapcar #'denoted-list
-                                  (mapcar #'third registered-docs)))))
+  (values (loop for registered-doc in registered-docs
+                append (denoted-list (second registered-doc)))
+          (loop for registered-doc in registered-docs
+                append (denoted-list (third registered-doc)))))
 
 ;;; See LIST-DESIGNATOR.
 (defun denoted-list (designator)
@@ -413,126 +415,199 @@
       designator
       (funcall designator)))
 
-(defvar @pax-world-dummy)
+(defun make-pax-world-text (sections format-and-pages-alist target-dir)
+  (with-output-to-string (s)
+    (labels ((page-objects (page)
+               (getf page :objects))
+             (relative-url (format section)
+               (let* ((pages (cdr (assoc format format-and-pages-alist)))
+                      (output (getf (find section pages :key #'page-objects
+                                          :test #'member)
+                                    :output)))
+                 (enough-namestring (first output) target-dir)))
+             (source-uri (format section)
+               (let* ((pages (cdr (assoc format format-and-pages-alist)))
+                      (source-uri-fn (getf (find section pages
+                                                 :key #'page-objects
+                                                 :test #'member)
+                                           :source-uri-fn)))
+                 (when (and (listp source-uri-fn)
+                            (eq (first source-uri-fn) :maker))
+                   (setq source-uri-fn (funcall (second source-uri-fn))))
+                 (when source-uri-fn
+                   (funcall source-uri-fn section)))))
+      (let ((objects (sort (copy-seq sections) #'string<
+                           :key #'plain-section-title-or-name))
+            (formats (mapcar #'car format-and-pages-alist)))
+        (format s "# PAX World
 
-;;; This section is not in the documentation of PAX-WORLD itself. It
-;;; is dynamically extended with the list of sections for which
-;;; UPDATE-PAX-WORLD was called. FIXME: this makes CREATE-PAX-WORLD
-;;; not thread-safe.
-(defun define-pax-world-dummy ()
-  (defsection @pax-world-dummy (:title "PAX World")
-    "This is a list of documents generated with
-    [MGL-PAX][@pax-manual]. The documents are cross-linked: links to
-    other documents are added automatically when a reference is found.
-    Note that clicking on the locative type (e.g. `[function]`) will
-    take you to the sources on GitHub if possible."))
+This is a list of documents generated with [MGL-PAX](~A). See [PAX
+World](~A) for how to get your project included.
 
-(defun create-pax-world (sections page-specs dir update-css-p style)
-  (define-pax-world-dummy)
-  (unwind-protect
-       (progn
-         (set-pax-world-list sections)
-         (document-html (cons @pax-world-dummy sections)
-                        (cons `(:objects
-                                ,(list @pax-world-dummy)
-                                :output (,(merge-pathnames "index.html" dir)
-                                         ,@*default-output-options*))
-                              page-specs)
-                        dir update-css-p style t))
-    (setq @pax-world-dummy nil)))
+The \\\\HTML and Markdown documents are cross-linked: links to other
+documents are added automatically when a reference is found. Note that
+clicking on the locative type (e.g. `[function]`) will take you to the
+sources on a git forge if possible.~%~%"
+                (relative-url :html @pax-manual)
+                "https://fixnum.com/pax-manual.html#MGL-PAX:@PAX-WORLD%20MGL-PAX:SECTION")
+        (dolist (object objects)
+          (let ((label (or (document-definition-title (locate object))
+                           (prin1-to-markdown (section-name object)))))
+            (format s "- [~A](~A) <small>\\[" label (relative-url :html object))
+            (loop for format in (remove :html formats)
+                  for i upfrom 0
+                  do (format s "~A[~A](~A)" (if (zerop i) "" ", ")
+                             (ecase format
+                               (:plain "txt")
+                               (:markdown "md")
+                               (:pdf "pdf"))
+                             (relative-url format object)))
+            (format s "\\] ⋅ ")
+            (describe-version s object (source-uri :html object))
+            (format s "</small>~%~%")))
+        (format s "###### \\[Generated ~A\\]~%"
+                (documentation-generation-date-string))))))
 
-(defun set-pax-world-list (objects)
-  (setf (slot-value @pax-world-dummy '%entries)
-        (list
-         ;; This is the docstring of @PAX-WORLD-DUMMY above.
-         (first (section-entries @pax-world-dummy))
-         (let ((objects (sort (copy-seq objects) #'string<
-                              :key #'plain-section-title-or-name)))
-           (with-output-to-string (stream)
-             (dolist (object objects)
-               (format stream "- ~S~%~%" (section-name object))))))))
+(defun describe-version (stream object source-uri)
+  (multiple-value-bind (git-url git-branch git-version)
+      (git-info-for-object object)
+    (let ((git-url (when git-url
+                     (escape-markdown git-url)))
+          (git-branch (if git-branch
+                          (if (or (equal git-branch "master")
+                                  (equal git-branch "main"))
+                              nil
+                              (format nil "~A @"
+                                      (escape-markdown git-branch)))
+                          "<detached> "))
+          (git-version (when git-version
+                         (escape-markdown git-version))))
+      (cond (source-uri
+             (format stream "[`~A`](~A)"
+                     (if git-version
+                         (format nil "~@[~A ~]~A"
+                                 git-branch git-version)
+                         "src")
+                     source-uri))
+            (git-version
+             (format stream "`~A, ~@[~A @ ~]~A`" git-url git-branch
+                     git-version))
+            (t
+             (format stream "`~A`"
+                     (escape-markdown (system-version-for-object object))))))))
+
+(defun git-info-for-object (object)
+  (when-let (git-root (git-repository-root (source-location-file
+                                            (source-location object))))
+    (git-info git-root)))
+
+(defun system-version-for-object (object)
+  (let* ((system-name (asdf-system-name-of (locate object)))
+         (system-dir (asdf:system-source-directory system-name)))
+    (declare (ignorable system-name))
+    (cond
+      ((null system-dir) "unknown")
+      #+quicklisp
+      ((ql-dist-name system-name system-dir))
+      (t "local project"))))
+
+#+quicklisp
+(defun ql-dist-name (system-name system-dir)
+  (let ((dists-dir (merge-pathnames "dists/" ql:*quicklisp-home*)))
+    (when (uiop:subpathp system-dir dists-dir)
+      (let* ((release (ql-dist:release system-name))
+             (dist (ql-dist:dist release)))
+        (format nil "~A ~A" (ql-dist:name dist) (ql-dist:version dist))))))
+
+(defun documentation-generation-date-string ()
+  (multiple-value-bind (second minute hour day month year)
+      (decode-universal-time (get-universal-time) 0)
+    (format nil "~D-~2,'0D-~2,'0DT~2,'0D:~2,'0D:~2,'0DZ"
+            year month day hour minute second)))
+
+(defun create-pax-world (sections page-specs formats target-dir
+                         update-css-p css-style)
+  (let ((format-and-pages-alist ()))
+    (dolist (format '(:plain :markdown :html :pdf))
+      (let ((pages (add-defaults-to-page-specs
+                    (ensure-list sections) format page-specs target-dir t)))
+        (when (member format formats)
+          (document sections :pages pages :format format))
+        (push (cons format pages) format-and-pages-alist)))
+    (when update-css-p
+      (copy-css css-style target-dir))
+    (let ((text (make-pax-world-text sections format-and-pages-alist
+                                     target-dir)))
+      (document text
+                :pages `((:objects (,text)
+                          :output (,(merge-pathnames "index.html" target-dir)
+                                   ,@*default-output-options*)
+                          :header-fn ,(lambda (stream)
+                                        (html-header stream :title "PAX World"
+                                                     :stylesheet "style.css"
+                                                     :link-to-pax-world-p nil))
+                          :footer-fn ,#'html-footer))
+                :format :html))))
 
 (defun sections-registered-in-pax-world ()
   (loop for doc in *registered-pax-world-docs*
         append (denoted-list (second doc))))
 
 (defun plain-section-title-or-name (section)
-  (normalize-whitespace
-   (process-title (section-title-or-name section) :format :plain)))
+  (squeeze-whitespace
+   (document-title (section-title-or-name section) :format :plain)))
+
+(defun section-title-or-name (section)
+  (or (section-title section)
+      (let ((*print-case* :upcase))
+        (prin1-to-string (section-name section)))))
 
 
 ;;;; Generate the READMEs and HTML docs.
 
-(defun pax-and-dref-sections ()
-  (list @pax-manual dref::@dref-manual))
-
-(defun pax-and-dref-pages (format)
+(defun pax-pages* (format &key (output-dir ""))
   (let ((source-uri-fn (make-git-source-uri-fn
                         :mgl-pax
                         "https://github.com/melisgl/mgl-pax"))
         (pax-file (ecase format
                     ((:plain) "README")
                     ((:markdown) "README.md")
-                    ((:html) "doc/pax-manual.html")))
-        (dref-file (ecase format
-                     ((:plain) "dref/README")
-                     ((:markdown) "dref/README.md")
-                     ((:html) "doc/dref-manual.html"))))
+                    ((:html) "doc/pax-manual.html")
+                    ((:pdf)
+                     (if (string= *pandoc-output-format* "pdf")
+                         "pax-manual.pdf"
+                         "test/data/pax-manual.tex"))))
+        (output-dir (asdf:system-relative-pathname "mgl-pax" output-dir)))
     `((:objects (, @pax-manual)
-       :output (,(asdf:system-relative-pathname "mgl-pax" pax-file)
+       :output (,(merge-pathnames pax-file output-dir)
                 ,@*default-output-options*)
-       ,@(unless (eq format :html)
-           '(:footer-fn print-markdown-footer))
+       ,@(when (eq format :markdown)
+           '(:header-fn print-pax-markdown-header
+             :footer-fn print-markdown-footer))
        :uri-fragment ,pax-file
-       :source-uri-fn ,source-uri-fn)
-      (:objects (, dref::@dref-manual)
-       :output (,(asdf:system-relative-pathname "mgl-pax" dref-file)
-                ,@*default-output-options*)
-       ,@(unless (eq format :html)
-           '(:footer-fn print-markdown-footer))
-       :uri-fragment ,dref-file
        :source-uri-fn ,source-uri-fn))))
+
+(defun print-pax-markdown-header (stream)
+  (format stream "![](web/pax-logo.jpg)~%~%"))
+
+(defun update-pax-readmes (&key (output-dir ""))
+  (let ((*document-url-versions* '(1)))
+    (document (pax-sections)
+              :pages (pax-pages* :plain :output-dir output-dir)
+              :format :plain)
+    (document (pax-sections)
+              :pages (pax-pages* :markdown :output-dir output-dir)
+              :format :markdown)))
 
 #+nil
 (progn
-  (asdf:load-system :mgl-pax/web)
-  (time
-   (let ((*document-url-versions* '(1)))
-     (document (pax-and-dref-sections) :pages (pax-and-dref-pages :plain)
-                                       :format :plain)
-     (document (pax-and-dref-sections) :pages (pax-and-dref-pages :markdown)
-                                       :format :markdown)))
+  (asdf:load-system :mgl-pax/full)
+  (time (update-pax-readmes))
   (time
    (let ((*document-downcase-uppercase-code* t))
-     (update-asdf-system-html-docs (pax-and-dref-sections)
-                                   :mgl-pax :pages (pax-and-dref-pages
-                                                    :html)
-                                   :update-css-p t :style :charter))))
-
-
-;;; Load systems that use PAX and generate PAX World in
-;;; <mgl-pax-asdf-system-dir>/world/. To update
-;;; https://github.com/melisgl/mgl-pax-world, check out its gh-pages
-;;; branch in that directory, update pax world, commit and push the
-;;; changes to GitHub.
-(defun update-pax-world* ()
-  ;; KLUDGE: Bind *READTABLE* so that when evaluating in Slime (e.g.
-  ;; with C-x C-e), the file's readtable is not used (which leads to a
-  ;; reader macro conflict with CL-SYNTAX).
-  (let ((*readtable* (named-readtables:find-readtable :standard)))
-    (asdf:load-system :mgl-pax/web)
-    (asdf:load-system :mgl-mat)
-    (asdf:load-system :named-readtables)
-    (asdf:load-system :micmac)
-    (asdf:load-system :mgl-gpr)
-    (asdf:load-system :mgl)
-    (asdf:load-system :journal)
-    (asdf:load-system :trivial-utf-8)
-    (asdf:load-system :try)
-    (asdf:load-system :lmdb))
+     (update-asdf-system-html-docs (pax-sections)
+                                   :mgl-pax :pages (pax-pages* :html)
+                                   :update-css-p t :style :charter)))
   (time
-   (let ((*document-downcase-uppercase-code* t))
-     (update-pax-world :update-css-p t :style :charter))))
-
-#+nil
-(update-pax-world*)
+   (let ((pax:*document-downcase-uppercase-code* t))
+     (document (pax-sections) :pages (pax-pages* :pdf) :format :pdf))))

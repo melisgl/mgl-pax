@@ -12,11 +12,9 @@
                  alexandria:once-only alexandria:with-gensyms
                  alexandria:read-stream-content-into-string
                  alexandria:read-file-into-string
-                 alexandria:hash-table-keys
+                 alexandria:hash-table-keys alexandria:hash-table-values
                  alexandria:plist-hash-table alexandria:hash-table-plist
-                 alexandria:compose
-                 alexandria:rcurry
-                 alexandria:featurep
-                 alexandria:parse-ordinary-lambda-list)))
+                 alexandria:compose alexandria:curry alexandria:rcurry
+                 alexandria:featurep)))
   (dolist (symbol imports)
     (import symbol)))

@@ -1,6 +1,6 @@
-(in-package :mgl-pax)
-
 ;;;; Low-level interface to HyperSpec Lisp definitions
+
+(in-package :mgl-pax)
 
 (defparameter *hyperspec-definitions*
   ;; (SYMBOL LOCATIVE FILENAME)
@@ -16,9 +16,9 @@
     (&rest (go ("3.4.1" clhs)) "03_da")
     (&whole (go ("3.4.4" clhs)) "03_dd")
     (* function "f_st")
-    (* variable "v_stst")
-    (** variable "v__stst")
-    (*** variable "v__stst")
+    (* variable "v__stst_")
+    (** variable "v__stst_")
+    (*** variable "v__stst_")
     (*break-on-signals* variable "v_break_")
     (*compile-file-pathname* variable "v_cmp_fi")
     (*compile-file-truename* variable "v_cmp_fi")
@@ -73,7 +73,7 @@
     (/ variable "v_sl_sls")
     (// variable "v_sl_sls")
     (/// variable "v_sl_sls")
-    (/= function f_eq_sle)
+    (/= function "f_eq_sle")
     (1+ function "f_1pl_1_")
     (1- function "f_1pl_1_")
     (< function "f_eq_sle")
@@ -243,6 +243,7 @@
     (cis function "f_cis")
     (class class "t_class")
     (class-name generic-function "f_class_")
+    (class-name setf-generic-function "f_opsetf")
     (class-of function "f_clas_1")
     (clear-input function "f_clear_")
     (clear-output function "f_finish")
@@ -257,7 +258,9 @@
     (compiled-function type "t_cmpd_f")
     (compiled-function-p function "f_cmpd_f")
     ;; Adding symbols that CL:DOCUMENTATION specializes on leads to
-    ;; lots of ambiguous links in the documentation.
+    ;; lots of ambiguous links in the documentation. And
+    ;; JOIN-AMBIGUOUS-CLHS-TARGETS needs to be taught about equivalent
+    ;; names.
     #+nil
     (compiler-macro (go (documentation (clhs generic-function))) "f_docume")
     (compiler-macro-function function "f_cmp_ma")
@@ -604,7 +607,7 @@
     (maplist function "f_mapc_")
     (mask-field function "f_mask_f")
     (max function "f_max_m")
-    (member function "t_mem_m")
+    (member function "f_mem_m")
     (member type "t_member")
     (member-if function "f_mem_m")
     (member-if-not function "f_mem_m")
@@ -887,7 +890,7 @@
     (step macro "m_step")
     (storage-condition condition "e_storag")
     (store-value function "f_abortc")
-    (store-value restart "r_store")
+    (store-value restart "r_store_")
     (stream class "t_stream")
     (stream-element-type function "f_stm_el")
     (stream-error condition "e_stm_er")
@@ -1084,10 +1087,7 @@
                          (format nil "~A.htm" filename))
                    (gethash name map)))
     (loop for (name filename) in *hyperspec-disambiguations*
-          do ;; KLUDGE: LAMBDA has two pages, but one of them is a
-             ;; "symbol" page, which we don't have.
-             (unless (eq name 'lambda)
-               (assert (<= 1 (length (gethash name map)))))
+          do (assert (<= 1 (length (gethash name map))))
              (push (list nil (format nil "~A.htm" filename))
                    (gethash name map)))
     map))
@@ -1107,7 +1107,8 @@
           do (let ((locative-type (locative-type locative)))
                (unless (member locative-type '(go operator))
                  (setf (gethash locative-type locative-types) t))))
-    (hash-table-keys locative-types)))
+    ;; See KLUDGE in FIND-HYPERSPEC-DEFINITION-URL.
+    (cons 'structure (hash-table-keys locative-types))))
 
 ;;; Find stuff in *HYPERSPEC-DEFINITIONS* and
 ;;; *HYPERSPEC-DISAMBIGUATIONS*. Return the URL corresponding to NAME
@@ -1115,6 +1116,12 @@
 ;;; disambiguation page.
 (defun find-hyperspec-definition-url (name locative &optional hyperspec-root)
   (declare (special *hyperspec-name-to-locatives*))
+  ;; KLUDGE: There are no structures in the spec, but on e.g. SBCL
+  ;; (DREF 'PACKAGE 'TYPE) ==> #<DREF PACKAGE STRUCTURE>, so to be
+  ;; able to find the CLHS entry. The correct general solution is to
+  ;; try the locative supertypes.
+  (when (eq (unlist1 locative) 'structure)
+    (setq locative 'class))
   (let* ((entries (gethash name *hyperspec-name-to-locatives*))
          (entry (if locative
                     ;; UNLIST1 is to (FUNCTION) -> FUNCTION.
@@ -1426,6 +1433,7 @@
     ("03_gb" "3.7.2" "Transfer of Control during a Destructive Operation")
     ("03_gba" "3.7.2.1"
      "Examples of Transfer of Control during a Destructive Operation")
+    ("c_evalua" "3.8" "The Evaluation and Compilation Dictionary")
     ("04_" "4" "Types and Classes")
     ("04_a" "4.1" "Introduction")
     ("04_b" "4.2" "Types")
@@ -1448,6 +1456,7 @@
     ("04_cfb" "4.3.6.2" "Initializing Newly Added Local Slots")
     ("04_cfc" "4.3.6.3" "Customizing Class Redefinition")
     ("04_cg" "4.3.7" "Integrating Types and Classes")
+    ("c_types_" "4.4" "The Types and Classes Dictionary")
     ("05_" "5" "Data and Control Flow")
     ("05_a" "5.1" "Generalized Reference")
     ("05_aa" "5.1.1" "Overview of Places and Generalized Reference")
@@ -1467,6 +1476,7 @@
     ("05_abi" "5.1.2.9" "Other Compound Forms as Places")
     ("05_ac" "5.1.3" "Treatment of Other Macros Based on SETF")
     ("05_b" "5.2" "Transfer of Control to an Exit Point")
+    ("c_data_a" "5.3" "The Data and Control Flow Dictionary")
     ("06_" "6" "Iteration")
     ("06_a" "6.1" "The LOOP Facility")
     ("06_aa" "6.1.1" "Overview of the Loop Facility")
@@ -1533,7 +1543,8 @@
      :loop-keyword ( ,@(loop-kw "with")))
     ("06_abba" "6.1.2.2.1" "Examples of WITH clause")
     ("06_ac" "6.1.3" "Value Accumulation Clauses"
-     :loop-keyword (,@(loop-kw "collect") ,@(loop-kw "collecting")
+     :loop-keyword (,@(loop-kw "collect")
+                    ,@(loop-kw "collecting")
                     ,@(loop-kw "append") ,@(loop-kw "appending")
                     ,@(loop-kw "nconc") ,@(loop-kw "noncing")
                     ,@(loop-kw "sum") ,@(loop-kw "summing")
@@ -1556,8 +1567,7 @@
     ("06_adb" "6.1.4.2" "Examples of ALWAYS, NEVER, and THEREIS clauses")
     ("06_adc" "6.1.4.3" "Examples of WHILE and UNTIL clauses")
     ("06_ae" "6.1.5" "Unconditional Execution Clauses"
-     :loop-keyword (,@(loop-kw "do") ,@(loop-kw "doing")
-                    ,@(loop-kw "return")))
+     :loop-keyword (,@(loop-kw "do") ,@(loop-kw "doing") ,@(loop-kw "return")))
     ("06_aea" "6.1.5.1" "Examples of unconditional execution")
     ("06_af" "6.1.6" "Conditional Execution Clauses"
      :loop-keyword (,@(loop-kw "if")
@@ -1576,6 +1586,7 @@
     ("06_ah" "6.1.8" "Examples of Miscellaneous Loop Features")
     ("06_aha" "6.1.8.1" "Examples of clause grouping")
     ("06_ai" "6.1.9" "Notes about Loop")
+    ("c_iterat" "6.2" "The Iteration Dictionary")
     ("07_" "7" "Objects")
     ("07_a" "7.1" "Object Creation and Initialization")
     ("07_aa" "7.1.1" "Initialization Arguments")
@@ -1616,7 +1627,9 @@
     ("07_ffc" "7.6.6.3" "Declarative Method Combination")
     ("07_ffd" "7.6.6.4" "Built-in Method Combination Types")
     ("07_fg" "7.6.7" "Inheritance of Methods")
+    ("c_object" "7.7" "The Objects Dictionary")
     ("08_" "8" "Structures")
+    ("c_struct" "8.1" "The Structures Dictionary")
     ("09_" "9" "Conditions")
     ("09_a" "9.1" "Condition System Concepts")
     ("09_aa" "9.1.1" "Condition Types")
@@ -1642,8 +1655,10 @@
     ("09_adbd" "9.1.4.2.4" "Associating a Restart with a Condition")
     ("09_ae" "9.1.5" "Assertions")
     ("09_af" "9.1.6" "Notes about the Condition System's Background")
+    ("c_condit" "9.2" "The Conditions Dictionary")
     ("10_" "10" "Symbols")
     ("10_a" "10.1" "Symbol Concepts")
+    ("c_symbol" "10.2" "The Symbols Dictionary")
     ("11_" "11" "Packages")
     ("11_a" "11.1" "Package Concepts")
     ("11_aa" "11.1.1" "Introduction to Packages")
@@ -1667,6 +1682,7 @@
     ("11_abca" "11.1.2.3.1" "Interning a Symbol in the KEYWORD Package")
     ("11_abcb" "11.1.2.3.2" "Notes about The KEYWORD Package")
     ("11_abd" "11.1.2.4" "Implementation-Defined Packages")
+    ("c_packag" "11.2" "The Packages Dictionary")
     ("12_" "12" "Numbers")
     ("12_a" "12.1" "Number Concepts")
     ("12_aa" "12.1.1" "Numeric Operations")
@@ -1699,6 +1715,7 @@
     ("12_aed" "12.1.5.4" "Principal Values and Branch Cuts")
     ("12_af" "12.1.6" "Interval Designators")
     ("12_ag" "12.1.7" "Random-State Operations")
+    ("c_number" "12.2" "The Numbers Dictionary")
     ("13_" "13" "Characters")
     ("13_a" "13.1" "Character Concepts")
     ("13_aa" "13.1.1" "Introduction to Characters")
@@ -1723,6 +1740,7 @@
     ("13_ah" "13.1.8" "Treatment of Newline during Input and Output")
     ("13_ai" "13.1.9" "Character Encodings")
     ("13_aj" "13.1.10" "Documentation of Implementation-Defined Scripts")
+    ("c_charac" "13.2" "The Characters Dictionary")
     ("14_" "14" "Conses")
     ("14_a" "14.1" "Cons Concepts")
     ("14_aa" "14.1.1" "Conses as Trees")
@@ -1733,6 +1751,7 @@
     ("14_abb" "14.1.2.2" "Lists as Sets")
     ("14_abc" "14.1.2.3"
      "General Restrictions on Parameters that must be Lists")
+    ("c_conses" "14.2" "The Conses Dictionary")
     ("15_" "15" "Arrays")
     ("15_a" "15.1" "Array Concepts")
     ("15_aa" "15.1.1" "Array Elements")
@@ -1749,10 +1768,12 @@
     ("15_ab" "15.1.2" "Specialized Arrays")
     ("15_aba" "15.1.2.1" "Array Upgrading")
     ("15_abb" "15.1.2.2" "Required Kinds of Specialized Arrays")
+    ("c_arrays" "15.2" "The Arrays Dictionary")
     ("16_" "16" "Strings")
     ("16_a" "16.1" "String Concepts")
     ("16_aa" "16.1.1" "Implications of Strings Being Arrays")
     ("16_ab" "16.1.2" "Subtypes of STRING")
+    ("c_string" "16.2" "The Strings Dictionary")
     ("17_" "17" "Sequences")
     ("17_a" "17.1" "Sequence Concepts")
     ("17_aa" "17.1.1"
@@ -1762,6 +1783,7 @@
     ("17_baa" "17.2.1.1" "Examples of Satisfying a Two-Argument Test")
     ("17_bb" "17.2.2" "Satisfying a One-Argument Test")
     ("17_bba" "17.2.2.1" "Examples of Satisfying a One-Argument Test")
+    ("c_sequen" "17.3" "The Sequences Dictionary")
     ("18_" "18" "Hash Tables")
     ("18_a" "18.1" "Hash Table Concepts")
     ("18_aa" "18.1.1" "Hash-Table Operations")
@@ -1783,6 +1805,7 @@
     ("18_abcc" "18.1.2.3.3"
      "Visible Modification of Hash Tables with respect to EQUALP")
     ("18_abd" "18.1.2.4" "Visible Modifications by Language Extensions")
+    ("c_hash_t" "18.2" "The Hash Tables Dictionary")
     ("19_" "19" "Filenames")
     ("19_a" "19.1" "Overview of Filenames")
     ("19_aa" "19.1.1" "Namestrings as Filenames")
@@ -1845,12 +1868,14 @@
     ("19_cb" "19.3.2" "Logical Pathname Components")
     ("19_cba" "19.3.2.1" "Unspecific Components of a Logical Pathname")
     ("19_cbb" "19.3.2.2" "Null Strings as Components of a Logical Pathname")
+    ("c_filena" "19.4" "The Filenames Dictionary")
     ("20_" "20" "Files")
     ("20_a" "20.1" "File System Concepts")
     ("20_aa" "20.1.1" "Coercion of Streams to Pathnames")
     ("20_ab" "20.1.2" "File Operations on Open and Closed Streams")
     ("20_ac" "20.1.3" "Truenames")
     ("20_aca" "20.1.3.1" "Examples of Truenames")
+    ("c_files" "20.2" "The Files Dictionary")
     ("21_" "21" "Streams")
     ("21_a" "21.1" "Stream Concepts")
     ("21_aa" "21.1.1" "Introduction to Streams")
@@ -1864,6 +1889,7 @@
     ("21_ab" "21.1.2" "Stream Variables")
     ("21_ac" "21.1.3" "Stream Arguments to Standardized Functions")
     ("21_ad" "21.1.4" "Restrictions on Composite Streams")
+    ("c_stream" "21.2" "The Streams Dictionary")
     ("22_" "22" "Printer")
     ("22_a" "22.1" "The Lisp Printer")
     ("22_aa" "22.1.1" "Overview of The Lisp Printer")
@@ -1973,6 +1999,7 @@
     ("22_cjd" "22.3.10.4" "Undefined FORMAT Modifier Combinations")
     ("22_ck" "22.3.11" "Examples of FORMAT")
     ("22_cl" "22.3.12" "Notes about FORMAT")
+    ("c_printe" "22.4" "The Printer Dictionary")
     ("23_" "23" "Reader")
     ("23_a" "23.1" "Reader Concepts")
     ("23_aa" "23.1.1" "Dynamic Control of the Lisp Reader")
@@ -1982,12 +2009,14 @@
     ("23_ac" "23.1.3" "Argument Conventions of Some Reader Functions")
     ("23_aca" "23.1.3.1" "The EOF-ERROR-P argument")
     ("23_acb" "23.1.3.2" "The RECURSIVE-P argument")
+    ("c_reader" "23.2" "The Reader Dictionary")
     ("24_" "24" "System Construction")
     ("24_a" "24.1" "System Construction Concepts")
     ("24_aa" "24.1.1" "Loading")
     ("24_ab" "24.1.2" "Features")
     ("24_aba" "24.1.2.1" "Feature Expressions")
     ("24_abaa" "24.1.2.1.1" "Examples of Feature Expressions")
+    ("c_system" "24.2" "The System Construction Dictionary")
     ("25_" "25" "Environment")
     ("25_a" "25.1" "The External Environment")
     ("25_aa" "25.1.1" "Top level loop")
@@ -1998,6 +2027,7 @@
     ("25_adb" "25.1.4.2" "Universal Time")
     ("25_adc" "25.1.4.3" "Internal Time")
     ("25_add" "25.1.4.4" "Seconds")
+    ("c_enviro" "25.2" "The Environment Dictionary")
     ("26_" "26" "Glossary")
     ("26_a" "26.1" "Glossary")
     ("27_" "A" "Appendix")
@@ -2077,48 +2107,40 @@
 
 ;;; Return the first section in *SORTED-HYPERSPEC-SECTIONS* whose
 ;;; title contains STRING.
-(defun find-hyperspec-section (string &optional (substring t))
-  (let ((string (string-downcase string)))
+(defun find-hyperspec-section (string &optional (match :word-prefix))
+  (let ((word-prefix-pattern (when (eq match :word-prefix)
+                               (format nil " ~A" string))))
     (find-if (lambda (entry)
-               (let ((title (string-downcase (third entry))))
-                 (if substring
-                     (search string title)
-                     (string= string title))))
+               (let ((title (third entry)))
+                 (if word-prefix-pattern
+                     (or (starts-with-subseq string title :test #'char-equal)
+                         (search word-prefix-pattern title :test #'char-equal))
+                     (string-equal string title))))
              *sorted-hyperspec-sections*)))
-
-(defun find-hyperspec-section-id (string &key (match-title t))
-  (let ((string (normalize-whitespace string)))
-    (or (first (gethash string *hyperspec-section-map*))
-        (second (and match-title (find-hyperspec-section string))))))
 
 ;;; Return the title and a list of aliases as the second value.
 (defun find-hyperspec-section-title (id)
   (let ((entry (gethash id *hyperspec-section-map*)))
     (values (third entry) (nthcdr 3 entry))))
 
+;;; :MATCH-TITLE :EXACT does case-insensitive exact matching.
+;;; :MATCH-TITLE :WORD-PREFIX does case-insensitive matching of word
+;;; prefixes.
+(defun find-hyperspec-section-id (string &key (match-title :word-prefix))
+  (let ((string (squeeze-whitespace string)))
+    (or (first (gethash string *hyperspec-section-map*))
+        (second (and match-title
+                     (find-hyperspec-section string match-title))))))
+
 (defun find-hyperspec-section-url
-    (string hyperspec-root &key (substring-match t))
-  (let* ((string (normalize-whitespace string))
+    (string hyperspec-root &key (match-title :word-prefix))
+  (let* ((string (squeeze-whitespace string))
          (filename (or (second (gethash string *hyperspec-section-map*))
-                       (first (and substring-match
-                                   (find-hyperspec-section string))))))
+                       (first (and match-title
+                                   (find-hyperspec-section string
+                                                           match-title))))))
     (when filename
       (hyperspec-link hyperspec-root "Body/" filename ".htm"))))
-
-;;; Replace consecutive WHITESPACEP characters with a single space,
-;;; and trim whitespace from the right.
-(defun normalize-whitespace (title)
-  (with-output-to-string (out)
-    (let ((prev-whitespace-p nil))
-      (loop for char across title
-            do (let ((whitespacep (whitespacep char)))
-                 ;; Nothing to do for whitespace chars until followed
-                 ;; by a non-whitespace char.
-                 (unless whitespacep
-                   (when prev-whitespace-p
-                     (write-char #\Space out))
-                   (write-char char out))
-                 (setq prev-whitespace-p whitespacep))))))
 
 
 ;;;; Low-level interface to HyperSpec glossary entries
@@ -2327,11 +2349,11 @@
   (make-hyperspec-glossary-entry-map))
 
 (defun find-hyperspec-glossary-entry-id (string)
-  (let ((string (normalize-whitespace string)))
+  (let ((string (squeeze-whitespace string)))
     (first (gethash string *hyperspec-glossary-entry-map*))))
 
 (defun find-hyperspec-glossary-entry-url (name &optional hyperspec-root)
-  (let ((filename (second (gethash (normalize-whitespace name)
+  (let ((filename (second (gethash (squeeze-whitespace name)
                                    *hyperspec-glossary-entry-map*))))
     (when filename
       (hyperspec-link hyperspec-root "Body/26_glo_" filename))))

@@ -12,10 +12,13 @@
    * This is slightly larger to allow inline code to stand out a tiny
    * bit more without becoming an eye sore. */
   --font-size-monospace-in-code: 88%;
+  /* Match the tightness of Charter. */
+  --letter-spacing-in-code: -0.03em;
   --code-color: #111;
-  /* With DejaVu Sans Mono 97% gets about 80 characters per line at full
+  /* With DejaVu Sans Mono 81% gets about 80 characters per line at full
    * width (73ch). */
-  --font-size-monospace-in-pre: 97%;
+  --font-size-monospace-in-pre: 82%;
+  --letter-spacing-in-pre: 0.0em;
 
   --line-height: 1.35rem;
   --parsep: 0.3375rem;
@@ -67,7 +70,7 @@ p {
 }
 
 li {
-  margin: calc(0.5*var(--parsep)) 0 0 0;
+  margin: var(--parsep) 0 0 0;
 }
 
 /* p + p { */
@@ -76,7 +79,6 @@ li {
 /* } */
 
 ul + p, ol + p, dl + p {
-  margin: calc(2*var(--parsep)) 0 0 0;
   text-indent: 0;
 }
 
@@ -90,7 +92,7 @@ h1 {
   font-weight: normal;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  word-spacing: 0.08em;
+  --letter-spacing-in-code: 0.08em;
   line-height: calc(2*var(--line-height));
   font-size: 2.0rem;
   margin: calc(2*var(--line-height)) 0;
@@ -100,6 +102,8 @@ h1 {
 h2 {
   font-size: 1.3rem;
   font-weight: bold;
+  letter-spacing: 0.02em;
+  --letter-spacing-in-code: 0.02em;
   line-height: var(--line-height);
   margin: var(--line-height) 0;
 }
@@ -107,6 +111,8 @@ h2 {
 h3 {
   font-size: 1.2rem;
   font-weight: bold;
+  letter-spacing: 0.02em;
+  --letter-spacing-in-code: 0.02em;
   line-height: var(--line-height);
   margin: var(--line-height) 0;
 }
@@ -114,6 +120,8 @@ h3 {
 h4 {
   font-size: 1.1rem;
   font-weight: bold;
+  letter-spacing: 0.02em;
+  --letter-spacing-in-code: 0.02em;
   line-height: var(--line-height);
   margin: var(--line-height) 0;
 }
@@ -121,12 +129,14 @@ h4 {
 h5 {
   font-size: 1rem;
   font-weight: bold;
+  letter-spacing: 0.02em;
+  --letter-spacing-in-code: 0.02em;
   line-height: var(--line-height);
   margin: var(--line-height) 0;
 }
 
 h6 {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: normal;
   line-height: var(--line-height);
   margin: calc(0.75*var(--line-height)) 0;
@@ -161,13 +171,21 @@ h6 a {
 pre {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-in-pre);
+  --letter-spacing-in-code: var(--letter-spacing-in-pre);
+  color: var(--code-color);
 }
 
 code {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-in-code);
+  letter-spacing: var(--letter-spacing-in-code);
   color: var(--code-color);
   hyphens: none;
+}
+
+code b,
+code strong {
+  letter-spacing: 0;
 }
 
 hr {
@@ -177,9 +195,16 @@ hr {
   background-color: #CCCCCC;
 }
 
-blockquote, table, pre {
+table, pre {
   line-height: var(--line-height);
   margin: var(--parsep) 0 0 0;
+}
+
+blockquote {
+  line-height: var(--line-height);
+  margin: var(--parsep) 0 0 0.1em;
+  padding-left: calc(var(--line-height) - 0.1em - 0.2em);
+  border-left: 0.2em solid #CCCCCC;
 }
 
 pre {
@@ -196,16 +221,34 @@ ul, ol, dl {
   margin: 0;
 }
 
-a {
-  /* text-decoration: none; */
-  /* color: #0233c8; */
+a, a .mjx-math * {
   color: #333;
+  text-decoration: underline;
   text-decoration-thickness: 0.04em;
+  text-decoration-color: #999;
   text-underline-offset: 0.1em;
 }
 
-a:hover {
-  text-decoration: underline;
+h1 a .mjx-math *,
+h2 a .mjx-math *,
+h3 a .mjx-math *,
+h4 a .mjx-math *,
+h5 a .mjx-math *,
+h6 a .mjx-math * {
+  text-decoration: none;
+}
+
+a:hover,
+a:hover *,
+a:hover .mjx-math * {
+  color: #3366CC;
+  text-decoration-color: #3366CC;
+}
+
+/* MathJax subscripts, accents, etc */
+a .mjx-sub *, a:hover .mjx-sub *,
+a .mjx-over *, a:hover .mjx-over * {
+  text-decoration: none;
 }
 
 img {
@@ -214,16 +257,11 @@ img {
   margin: auto;
 }
 
-.reference-bullet {
+.dref-bullet {
   display: block;
   text-align: left;
-  margin-top: calc(2*var(--parsep));
+  margin-top: calc(2.5*var(--parsep));
   hyphens: none;
-}
-
-.reference {
-  /* padding: 0.3em 0; */
-  /* background-color: #EEEEEE; */
 }
 
 .locative-type {
@@ -235,7 +273,7 @@ img {
   text-decoration: none;
 }
 
-.reference-object {
+.dref-name {
   background-color: #EBE8E2;
   /* The live browser does not lowercase. Balance the space around
    * uppercase characters manually. */
@@ -247,24 +285,28 @@ img {
   font-size: 98%;
 }
 
-.reference-object a {
+.dref-name a, .dref-name a * {
   text-decoration: none;
   border-bottom: none;
 }
 
-.locative-args {
+.arglist {
   font-style: italic;
 }
 
-.locative-args code {
+.arglist code {
   font-family: var(--font-family);
   font-size: 1rem;
 }
 
 .navigation a {
-  color: #CCCCCC;
-  text-shadow: none;
-  border-bottom: none;
+  color: #AAA;
+  text-decoration: none;
+}
+
+.navigation a:hover {
+  color: #3366CC;
+  text-decoration: none;
 }
 
 /* Option 1 for navigation links: just hide the links in the previous
@@ -369,7 +411,7 @@ a.symbol:hover { color: #229955; background-color: transparent; text-decoration:
   overflow-x: hidden;
   background: #333;
   box-shadow: inset -5px 0 5px 0px #000;
-  color: #aaa;
+  color: #AAA;
   text-align: left;
 }
 
@@ -382,7 +424,8 @@ a.symbol:hover { color: #229955; background-color: transparent; text-decoration:
   line-height: 1.0;
 }
 
-#toc a {
+#toc a,
+#toc a * {
   text-decoration: none;
   border-bottom: none;
 }
@@ -416,12 +459,13 @@ a.symbol:hover { color: #229955; background-color: transparent; text-decoration:
 }
 
 #toc .toc-active {
-  background: #336699;
+  background: #3366CC;
   box-shadow: inset -5px 0px 10px -5px #000;
 }
 
-#page-toc a {
-  color: #fff;
+#page-toc a,
+#page-toc a * {
+  color: #FFF;
 }
 
 .menu-block {
@@ -453,4 +497,38 @@ a.symbol:hover { color: #229955; background-color: transparent; text-decoration:
 
 #paxToDocument, #paxToApropos {
   min-width: 17em;
+}
+
+.pax-index {
+  text-align: left;
+  font-size: 90%;
+}
+
+.pax-index > ul > li > p:first-child > a:first-child {
+  text-decoration-color: #111;
+}
+
+.pax-index ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.pax-index ul ul {
+  padding-left: 1em;
+}
+
+.pax-index li {
+  /* Hanging indent */
+  padding-left: 1em;
+  text-indent: -1em;
+}
+
+/* Ensure paragraph wrappers from Markdown don't break the first-line
+ * indent */
+.pax-index li > p {
+  display: inline;
+}
+
+.ragged-right {
+  text-align: left;
 }

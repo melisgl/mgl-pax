@@ -1,15 +1,15 @@
 Testing
 =======
 
-Testing within Lisp
--------------------
+Testing interactively within Lisp
+---------------------------------
 
 - Run the Common Lisp tests with
 
         (asdf:test-system "mgl-pax")
         (asdf:test-system "dref")
 
-    Or just load the `"mgl-pax/test"` system and do, for example:
+    Or just load the `"mgl-pax-test"` system and do, for example:
 
         (mgl-pax-test:test :debug 'try:unexpected).
         (dref-test:test :print '(or try:failure try:unexpected))
@@ -28,10 +28,9 @@ Testing from the command line
 - `test/test.sh` and `dref/test/test.sh` test the Common Lisp side.
   They run the tests on several Lisp implementations assuming that
   they are installed under Roswell (e.g. `ros --lisp sbcl run` works).
-  So install ABCL, AllegroCL, CCL, CMUCL, CLISP, ECL, and SBCL under
-  Roswell:
+  So install ABCL, CCL, CMUCL, CLISP, ECL, and SBCL under Roswell:
 
-        for lisp in allegro abcl-bin ccl-bin clisp cmu-bin ecl sbcl-bin; do
+        for lisp in abcl-bin ccl-bin clisp cmu-bin ecl sbcl; do
             ros install $lisp
         done
 
@@ -45,18 +44,40 @@ Testing from the command line
 Catching changes in behaviour
 -----------------------------
 
-Some bugs not caught by the test suite may be caught by transcription
-consistency checking or show up in the diffs of the generated
-documentation. Check out PAX World in the top-level directory, where
-the ASDF files are with
+On SBCL, the test suite checks that the readme files are up-to-date
+(the committed readmes are generated on SBCL). There are small
+differences in output with other Lisps, so we don't check this there.
+
+For wider coverage, check out PAX World in the top-level directory,
+where the ASDF files are with
 
     git clone https://github.com/melisgl/mgl-pax-world.git world/
 
 After changing the code, regenerate the readmes and PAX World (see
-`#+nil`ed out forms near the bottom of
-`src/document/document-util.lisp`), then check the `git diff`s. Note
-that you need to `cd` into `world/` and get the diff there too because
-it is a separate git checkout.
+`#+nil`ed out forms near the bottom of `world/update-pax-world.lisp`),
+then check the `git diff`s. Note that you need to `cd` into `world/`
+and get the diff there too because it is a separate git checkout.
+
+The above help catch changes in performance, too.
+
+Testing PDF generation
+----------------------
+
+In the test suite, `mgl-pax-test::test-pdf` only tests if a part of
+the manual in PDF form is generated without error; there is no
+checking of the content on this level. However, the intermediate LaTeX
+(between Markdown and PDF) is written to `test/data/actual-output.tex`
+and is checked against the version controlled
+`test/data/expected-output.tex`, which can then be inspected for diffs
+(on SBCL only).
+
+Stress testing
+--------------
+
+In a similar vein, `mgl-pax-test::stress-test` generates a detailed
+apropos page for all definitions in the system. This is not part of
+the normal test suite. Load a lot of code, run this, and see if it
+crashes. It doubles as a benchmark for documentation generation.
 
 
 Debugging
@@ -64,7 +85,7 @@ Debugging
 
 Most PAX functions invoked from Emacs are wrapped in
 `swank/backend:converting-errors-to-error-location`, which handles
-`error`s. Do following turn debugging on and off:
+`error`s. The following turns debugging on and off:
 
     (setq swank/backend:*debug-swank-backend* t)
     (setq swank/backend:*debug-swank-backend* nil)
@@ -84,12 +105,12 @@ handlers on and off with:
 Versioning
 ==========
 
-`:VERSION` in the ASDF system definition is in the usual
-`MAJOR.MINOR.PATCH` format. Bump `MINOR` for significant changes.
-Bumping `PATCH` is optional. `MAJOR` is constant 0 :-).
+The version string in file `version.lisp-expr` has `MAJOR.MINOR.PATCH`
+format. Bump `PATCH` for bug fixes and `MINOR` for significant
+changes. `MAJOR` is constant 0 :-).
 
-When making an incompatible change to the Elisp-CL interface or even a
-bugfix to the ELisp side, bump `:VERSION` in the ASDF and copy it to
-`mgl-pax-version` and `MGL-PAX::CHECK-PAX-ELISP-VERSION`. This way the
-user will be notified if the Elisp code is incompatible with the Lisp
-side or it lacks available bug fixes.
+The version file is read by both the Elisp and CL sides, to detect
+incompatibilities. When making an incompatible change to either side
+of the Elisp-CL interface or even a bugfix to the ELisp side, bump the
+version. This way the user will be notified if the Elisp code is
+incompatible with the Lisp side or it lacks available bug fixes.

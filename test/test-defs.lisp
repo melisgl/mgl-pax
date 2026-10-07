@@ -1,39 +1,80 @@
 (in-package :mgl-pax-test)
 
+(named-readtables:in-readtable pythonic-string-reader:pythonic-string-syntax)
+
+(defvar *pdf-test* 7
+  """When *DOCUMENT-BASE-URL* is non-NIL, this is prepended to all
+  Markdown relative URLs. It must be a valid URL without query or
+  fragment parts (that is, _http://lisp.org/doc/_ but not
+  _http://lisp.org/doc?a=1_ or _http://lisp.org/doc#fragment_). Note
+  that intra-page links using only URL fragments (e.g. and explicit
+  HTML links (e.g. `<a href="...">`) in Markdown are not
+  affected.""")
+
+(defun fn-with-mathjax ()
+  "$\\hat{x}$_s"
+  nil)
+
 (defsection @test-examples (:export nil)
   "example section")
 
-(defsection @test-other (:export nil :title "test other title")
+(defsection @test-other (:title "test other title" :export nil)
   "backlink @TEST")
 
 (defsection @test-section-with-link-to-other-page-in-title
     (:title "Link to @TEST-OTHER" :link-title-to (@test-other section)
-             :export nil)
+     :export nil)
   "Same link in docstring to @TEST-OTHER.")
 
 (defsection @test-section-with-link-to-same-page-in-title
     (:title "Link to @TEST" :link-title-to (@test section)
-            :export nil)
+     :export nil)
   "Same link in docstring to @TEST.")
 
-(defsection @test-tricky-title
-    (:export nil :title "`CODE` *italic* _italic2_ *bold* [link][sdf] <thing>")
-  "backlink @TEST")
+(defsection @parent-tricky-title
+    (:title "`CODE` *italic* _italic2_ *bold* &quot;"
+     :export nil)
+  (@tricky-title section))
+
+(defsection @tricky-title
+    (:title "`CODE` *italic* _italic2_ *bold* &quot;"
+     :export nil)
+  (@subtricky section)
+  (**subtricky** section))
+
+(defsection @subtricky (:title "\\`\\_\\*\\&" :export nil))
+
+(defsection **subtricky** (:export nil))
 
 ;;; LOCATIVE whose name is a symbol in another package.
 (define-locative-type (pax::funny-loc some-arg) ()
   "This is SOME-ARG.")
+
+(defvar *some-var*)
 
 (defun foo2 (ook x)
   "FOO2 has args [OOK][] and X."
   (declare (ignore ook x))
   nil)
 
+(defun foo3 (&key (x 7 xp) (y nil yp) (z))
+  (declare (ignore x xp y yp z))
+  nil)
+
+(defun foo4 (&aux x y)
+  (declare (ignore x y))
+  nil)
+
+(defun foo5 (&key (x (list *some-var*)))
+  (declare (ignore x))
+  nil)
+
 (defun ook ())
 
-(defun traced-foo (x)
-  "XXX"
-  x)
+(without-redefinition-warnings
+  (defun traced-foo (x)
+    "XXX"
+    x))
 (handler-bind ((warning #'muffle-warning))
   (trace traced-foo))
 (defun foo (ook x)
@@ -58,7 +99,6 @@
 (defparameter *test-variable*
   '(xxx 34)
   "*TEST-VARIABLE* is not a link.")
-(defvar *some-var*)
 
 (define-restart some-restart (arg1)
   "This is SOME-RESTART with ARG1.")
@@ -107,8 +147,11 @@
 (define-method-combination my-comb :identity-with-one-argument t
   :documentation "This is MY-COMB.")
 
-(define-glossary-term some-term ()
-  "SOME-TERM is a link.")
+(define-glossary-term @some-term ()
+  "SOME-TERM is a link.
+  ### heading")
+
+(define-concept ~concept ())
 
 (defun ->max ())
 
@@ -159,10 +202,56 @@
 
 (define-locative-type my-loc ())
 
-(defpackage "X Y")
-
 (defsection @inc ()
   (nil (include #.(asdf:system-relative-pathname :mgl-pax "test/inc.md"))))
 
 (defun xxx ())
 (defun xxxs ())
+
+(note @1+*
+  "### This is a seriously overdone example."
+  (defun 1+* (x)
+    "@1+*"
+    (if (stringp x)
+        (note (@1+*/1 :join #\Newline)
+          "- If X is a STRING, then it is parsed as a REAL number."
+          (let ((obj (read-from-string x)))
+            (note "It is an error if X does not contain a REAL."
+              (unless (realp obj)
+                (assert nil)))
+            (1+ obj)))
+        (note "- Else, X is assumed to be REAL number, and we simply
+                 add 1 to it."
+          (1+ x)))))
+
+(defun fn-with-inside-note ()
+  (let ((x 7))
+    (note @in-1 "dsf"
+      (* x 7)
+      (note @in-2 "aas"))))
+
+(defun $x_0$ ())
+
+(define-glossary-term @mathjax-and-code-in-glossary-term-title
+    (:title "hey `c` $x_0$"))
+
+(defsection @mathjax-and-code-in-title (:title "hey `c` $x_0$" :export nil)
+  ($x_0$ function)
+  (@mathjax-subsection section))
+
+(defsection @mathjax-subsection ())
+
+(define-glossary-term @illegal-title-1 (:title "x
+
+y"))
+
+(define-glossary-term @title-with-emph (:title "_x_ **y**"))
+
+(note @@note-without-docstring)
+(note @@note-with-empty-docstring
+  "")
+(note @@note-x "x")
+
+(defun dynenv-with-consistency (fn)
+  (let ((*transcribe-check-consistency* t))
+    (funcall fn)))

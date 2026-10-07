@@ -1,33 +1,25 @@
 (in-package :mgl-pax)
 
-(defvar *transcribe-check-consistency*)
-(export '*transcribe-check-consistency*)
-(defvar *transcribe-syntaxes*)
-(export '*transcribe-syntaxes*)
-
-(autoload transcribe "mgl-pax/transcribe")
-(autoload squeeze-whitespace "mgl-pax/transcribe")
-(autoload delete-trailing-whitespace "mgl-pax/transcribe")
-(autoload delete-comments "mgl-pax/transcribe")
-(autoload ensure-transcribe-loaded "mgl-pax/transcribe" :export nil)
-
-;;; Silence SBCL compiler notes.
+;;; Silence SBCL compiler notes about undefined types when these are
+;;; used in a condition handler.
 #+sbcl
-(define-condition transcription-error (error) ())
-(export 'transcription-error)
-
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (unless (find-class 'transcription-error nil)
+    (define-condition transcription-error (error condition-context-mixin) ())))
 #+sbcl
-(define-condition transcription-consistency-error (transcription-error) ())
-(export 'transcription-consistency-error)
-
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (unless (find-class 'transcription-consistency-error nil)
+    (define-condition transcription-consistency-error (transcription-error)
+      ())))
 #+sbcl
-(define-condition transcription-consistency-error (transcription-error) ())
-(export 'transcription-values-consistency-error)
-
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (unless (find-class 'transcription-values-consistency-error nil)
+    (define-condition transcription-values-consistency-error
+        (transcription-consistency-error)
+      ())))
 #+sbcl
-(define-condition transcription-consistency-error (transcription-error) ())
-(export 'transcription-output-consistency-error)
-
-(defsection @transcripts (:title "Transcripts")
-  "This is a placeholder until MGL-PAX/TRANSCRIBE is loaded."
-  (mgl-pax/transcribe asdf:system))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (unless (find-class 'transcription-output-consistency-error nil)
+    (define-condition transcription-output-consistency-error
+        (transcription-consistency-error)
+      ())))

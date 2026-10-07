@@ -4,9 +4,9 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (locally
       (declare #+sbcl
-               (sb-ext:muffle-conditions sb-kernel::package-at-variance))
+               (sb-ext:muffle-conditions sb-int:package-at-variance))
     (handler-bind
-        (#+sbcl (sb-kernel::package-at-variance #'muffle-warning))
+        (#+sbcl (sb-int:package-at-variance #'muffle-warning))
       ;; Foreshadow some symbols that MGL-PAX-BOOTSTRAP interns, which
       ;; would otherwise lead to conflicts when DREF-EXT is finally
       ;; :USEd. The alternative of SHADOWING-IMPORTing these just
@@ -16,25 +16,31 @@
       ;; to load into a fresh lisp because DREF-EXT is not yet
       ;; defined.
       (defpackage :dref-ext
+        (:use #:common-lisp)
         (:export #:locative-type #:locative-args))
-      (defpackage :dref))))
+      (defpackage :dref
+        (:use #:common-lisp)))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (locally
       (declare #+sbcl
-               (sb-ext:muffle-conditions sb-kernel::package-at-variance))
+               (sb-ext:muffle-conditions sb-int:package-at-variance))
     (handler-bind
-        (#+sbcl (sb-kernel::package-at-variance #'muffle-warning))
+        (#+sbcl (sb-int:package-at-variance #'muffle-warning))
       (defpackage :mgl-pax
+        (:nicknames #:pax)
         (:documentation "See MGL-PAX::@PAX-MANUAL.")
         (:use #:common-lisp #:dref #:dref-ext)
-        (:nicknames #:pax)
-        ;; These are the exports from MGL-PAX-BOOTSTRAP.
-        (:export #:define-package
+        (:export
+         ;; Defined in MGL-PAX-BOOTSTRAP.
+         #:define-package
          #:defsection #:section
          #:exportable-reference-p
          #:exportable-locative-type-p
+         #:define-concept #:concept
          #:define-glossary-term #:glossary-term
          #:make-github-source-uri-fn
          #:make-git-source-uri-fn
-         #:register-doc-in-pax-world)))))
+         #:register-doc-in-pax-world
+         ;; Not defined. Provided for importing convenience.
+         #:clhs)))))

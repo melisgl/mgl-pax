@@ -1,8 +1,8 @@
 (in-package :mgl-pax-test)
 
 (defmacro dref-set= (set-1 set-2)
-  `(endp (different-elements (dref::sort-references ,set-1)
-                             (dref::sort-references ,set-2)
+  `(endp (different-elements (sort-references ,set-1)
+                             (sort-references ,set-2)
                              :pred (lambda (r1 r2)
                                      (and (typep r1 'xref)
                                           (typep r2 'xref)
@@ -68,15 +68,12 @@
     (is (match-values (mgl-pax::parse-locative "function junk" :junk-allowed t)
           (eq * 'function)
           (= * 9)))
-    (let ((locative (mgl-pax::parse-locative "(function yyy)")))
-      (is (eq (first locative) 'function))
-      (is (string= (symbol-name (second locative)) (string '#:yyy)))
-      (is (eq (symbol-package (second locative)) *package*)))
+    (is (null (mgl-pax::parse-locative "(function non-interned)")))
     (with-test ("markdown and M-.")
       (dolist (string '("function." "function," "function;" "function:"
                         "function`" "function'" "function>" "<function>"
                         "\"function\""))
-        (is (eq (mgl-pax::parse-locative/noisy (% string)) 'function))))))
+        (is (eq (mgl-pax::parse-locative-around (% string)) 'function))))))
 
 ;;; We have no Emacs based tests. This tests the CL side of `M-.' when
 ;;; it's invoked with point on FOO in the test cases below. The actual
@@ -140,14 +137,19 @@
     (with-test ("deduplication")
       (check-dowall '(("print" ("function")) ("print" ("function")))
                     '((print function)))
-      (check-dowall '(("Lists" ("Lambda" "clhs")) ("Lambda  Lists" ("clhs")))
-                    '(("3.4" (clhs section)))))))
+      (check-dowall '(("lambda lis" ("clhs")) ("Lambda  Lists" ("clhs")))
+                    '(("3.4" (clhs section)))))
+    #+sbcl
+    (with-test ("unreadable")
+      (check-dowall '(("test-gf"
+                       ("(method ((eql #<package \"COMMON-LISP\">)))")))
+                    `((test-gf (method ((eql ,(find-package :cl))))))))))
 
 (defun check-dowall (wall expected-refs)
   (let ((refs (mapcar (lambda (ref)
                         (list (xref-name ref)
                               (xref-locative ref)))
-                      (dref::sort-references (pax::definitions-of-wall wall)))))
+                      (sort-references (pax::definitions-of-wall wall)))))
     (is (equal refs expected-refs)
         :ctx ("WORD-AND-LOCATIVES-LIST = ~S" wall))))
 
@@ -172,6 +174,8 @@
 (deftest test-locate ()
   (test-locate/section)
   (test-locate/glossary-term)
+  (test-locate/concept)
+  (test-locate/note)
   (test-locate/go)
   (test-locate/include))
 
@@ -181,15 +185,34 @@
   (with-test ("actualized")
     (check-ref-sets (definitions '@test-examples :dtype 'variable)
                     `(,(xref '@test-examples 'section))))
-  (is (dref::locative-subtype-p 'section 'variable)))
+  (is (locative-subtype-p 'section 'variable))
+  (is (null (locate (make-instance 'section :name 'xxx) nil))))
 
 (deftest test-locate/glossary-term ()
-  (check-ref-sets (definitions 'some-term)
-                  `(,(xref 'some-term 'glossary-term)))
+  (check-ref-sets (definitions '@some-term)
+                  `(,(xref '@some-term 'glossary-term)))
   (with-test ("actualized")
-    (check-ref-sets (definitions 'some-term)
-                    `(,(xref 'some-term 'glossary-term))))
-  (is (dref::locative-subtype-p 'glossary-term 'variable)))
+    (check-ref-sets (definitions '@some-term :dtype 'variable)
+                    `(,(xref '@some-term 'glossary-term))))
+  (is (locative-subtype-p 'glossary-term 'variable))
+  (is (null (locate (make-instance 'glossary-term :name 'xxx) nil))))
+
+(deftest test-locate/concept ()
+  (check-ref-sets (definitions '~concept)
+                  `(,(xref '~concept 'concept)))
+  (with-test ("actualized")
+    (check-ref-sets (definitions '~concept :dtype 'variable)
+                    `(,(xref '~concept 'concept))))
+  (is (locative-subtype-p 'concept 'variable))
+  (is (null (locate (make-instance 'concept :name 'xxx) nil))))
+
+(deftest test-locate/note ()
+  (check-ref (dref '@1+* 'note nil) '@1+* 'note)
+  (check-ref (dref '@1+*/1 'note nil) '@1+*/1 'note)
+  (check-ref (dref '@in-1 'note nil) '@in-1 'note)
+  (check-ref (dref '@in-2 'note nil) '@in-2 'note)
+  (check-ref-sets (definitions '@in-1)
+                  `(,(xref '@in-1 'note))))
 
 (deftest test-locate/go ()
   (check-ref (dref 'xxx '(go (foo function)))
@@ -198,48 +221,63 @@
              "xxx" '(go (foo function)) 'pax::go-dref)
   (signals (locate-error)
     (dref 'xxx '(go (undefined function))))
+  #+ecl (skip-trial)
+  ;; On GitHub, ECL fails with "Detected access to an invalid or
+  ;; protected memory address.".
   (signals (locate-error :pred "Bad arguments")
     (dref 'xxx '(go 1 2))))
 
 (deftest test-locate/include ()
   (check-ref (dref nil '(include #.(asdf:system-relative-pathname
-                                      "mgl-pax" "HACKING.md")))
+                                    "mgl-pax" "HACKING.md")))
              nil '(include #.(asdf:system-relative-pathname
                               "mgl-pax" "HACKING.md"))
              'pax::include-dref)
-  (signals (locate-error :pred "/non-existent")
+  (signals-not (locate-error)
     (dref nil '(include "/non-existent/file")))
-  (with-failure-expected ((and (alexandria:featurep '(:or :clisp))
-                               'failure))
-    (signals-not (locate-error)
-      (dref nil '(include (:start (*some-var* variable)))))
-    (signals-not (locate-error)
-      (dref nil '(include (:end (*some-var* variable))))))
-  (signals (locate-error :pred "UNDEFINED")
+  (signals-not (locate-error)
+    (dref nil '(include (:start (*some-var* variable)))))
+  (signals-not (locate-error)
+    (dref nil '(include (:end (*some-var* variable)))))
+  (signals-not (locate-error :pred "UNDEFINED")
     (dref nil '(include (:start (undefined variable)))))
-  (signals (locate-error :pred "UNDEFINED")
+  (signals-not (locate-error :pred "UNDEFINED")
     (dref nil '(include (:end (undefined variable))))))
 
 
-;;; Keep *NAVIGATION-TEST-CASES* plus
-;;; DREF-TEST::*SOURCE-LOCATION-TEST-CASES* and
+;;; Keep NAVIGATION-TEST-CASES plus
+;;; DREF-TEST::SOURCE-LOCATION-TEST-CASES and
 ;;; `mgl-pax-edit-definitions/test-defs' in test.el in sync.
-(defparameter *navigation-test-cases*
-  '((mgl-pax::@pax-manual section (defsection @pax-manual))
-    (some-term glossary-term (define-glossary-term some-term))
+(defun navigation-test-cases ()
+  `((mgl-pax::@pax-manual section (defsection @pax-manual))
+    (@some-term glossary-term (define-glossary-term @some-term))
     (mgl-pax.el (include #.(asdf:system-relative-pathname
                             :mgl-pax "src/mgl-pax.el")
-                 :header-nl "```elisp" :footer-nl "```")
-     ";;;; mgl-pax.el --- MGL-PAX Emacs integration -*- lexical-binding: t -*-")
+                         :header-nl "```elisp" :footer-nl "```")
+                ";;;; mgl-pax.el --- MGL-PAX Emacs integration -*- lexical-binding: t -*-")
     (foo-example (include (:start (dref-ext:make-source-location function)
                            :end (dref-ext:source-location-p function))
-                  :header-nl "```"
-                  :footer-nl "```")
-     (defun/autoloaded make-source-location))))
+                          :header-nl "```"
+                          :footer-nl "```")
+                 (defun/auto make-source-location))
+    (@1+* note (note @1+*))
+    (@1+*/1 note (note (@1+*/1 :join #\Newline))
+            #+ccl (defun 1+*)
+            #+sbcl ,@(unless (eq (backend) :swank)
+                       '((note @1+*)))
+            #-(or ccl sbcl) (note @1+*))
+    (@in-1 note (note @in-1)
+           ,@(when (or (not (alexandria:featurep :sbcl))
+                       #+sbcl (not (eq (backend) :swank)))
+               '((defun fn-with-inside-note))))
+    (@in-2 note (note @in-2)
+           ,@(when (or (not (alexandria:featurep :sbcl))
+                       #+sbcl (not (eq (backend) :swank)))
+               '((defun fn-with-inside-note))))))
 
 (deftest test-navigation-to-source ()
   (let ((*package* (find-package :mgl-pax-test)))
-    (dolist (test-case *navigation-test-cases*)
+    (dolist (test-case (navigation-test-cases))
       (apply #'check-source-location test-case)))
   (signals-not (error)
     (source-location (xref 'function 'locative)))

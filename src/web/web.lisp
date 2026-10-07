@@ -26,37 +26,6 @@
   (with-output-to-string (out)
     (trivial-backtrace:print-backtrace error :output out)))
 
-(defun handle-pax*-request ()
-  (with-errors-to-html
-    (with-swank-compatibility ()
-      (let* ((pax-url (request-pax*-url))
-             (pkgname (hunchentoot:get-parameter "pkg"))
-             (*package* (or (dref::find-package* pkgname)
-                            (dref::find-package* (ignore-errors
-                                                  (read-from-string pkgname)))
-                            (dref::find-package :cl)))
-             (*pax-live-home-page-override* *pax-live-inputs*)
-             (editp (hunchentoot:get-parameter "edit")))
-        (if editp
-            (progn
-              (edit-pax-url-in-emacs pax-url)
-              (setf (hunchentoot:return-code*) hunchentoot:+http-no-content+)
-              nil)
-            (uiop:with-temporary-file (:pathname temp-file-name)
-              (let ((url (document-for-web pax-url temp-file-name)))
-                (multiple-value-bind (scheme authority path) (parse-url url)
-                  (declare (ignore authority))
-                  (if (and (string= scheme "file")
-                           (string= path (namestring temp-file-name)))
-                      (read-file-into-string path)
-                      (unless (starts-with-subseq "pax" url)
-                        (hunchentoot:redirect url)))))))))))
-
-(defun request-pax*-url ()
-  (let ((uri (hunchentoot:request-uri*)))
-    (assert (char= (aref uri 0) #\/))
-    (subseq uri 1)))
-
 (defparameter *pax-live-inputs*
   """View Documentation of:
   <input type="text" id="paxToDocument"
@@ -72,6 +41,37 @@
 
   See @APROPOS for the syntax.""")
 
+(defun handle-pax*-request ()
+  (with-errors-to-html
+    (with-swank ()
+      (let* ((pax-url (request-pax*-url))
+             (pkgname (hunchentoot:get-parameter "pkg"))
+             ;; See DREF::FIND-PACKAGE* for why IGNORE-ERRORS is used.
+             (*package* (or (ignore-errors (find-package pkgname))
+                            (ignore-errors (find-package (parse-sexp pkgname)))
+                            (find-package :cl)))
+             (*pax-live-home-page-override* *pax-live-inputs*)
+             (editp (hunchentoot:get-parameter "edit")))
+        (if editp
+            (progn
+              (edit-pax-url-in-emacs pax-url)
+              (setf (hunchentoot:return-code*) hunchentoot:+http-no-content+)
+              nil)
+            (uiop:with-temporary-file (:pathname temp-file-name)
+              (let ((url (document-for-web pax-url temp-file-name)))
+                (multiple-value-bind (scheme authority path) (split-url url)
+                  (declare (ignore authority))
+                  (if (and (string= scheme "file")
+                           (string= path (namestring temp-file-name)))
+                      (read-file-into-string path)
+                      (unless (starts-with-subseq "pax" url)
+                        (hunchentoot:redirect url)))))))))))
+
+(defun request-pax*-url ()
+  (let ((uri (hunchentoot:request-uri*)))
+    (assert (char= (aref uri 0) #\/))
+    (subseq uri 1)))
+
 (defparameter *pax-live-html-head*
   """<script src="live.js"></script>""")
 
@@ -81,7 +81,7 @@
          (*document-html-top-blocks-of-links*
            (when ,link-to-home
              '((:id "link-to-home" :links (("/" "PAX Home"))))))
-         (*document/open-extra-args*
+         (*document/live-extra-args*
            `(:pages ((:objects :default
                       :header-fn ,(lambda (stream)
                                     (html-header stream
@@ -92,8 +92,9 @@
      ,@body))
 
 (defun document-for-web (pax-url filename)
-  (with-document-open-args-for-web ((urldecode pax-url))
-    (document-pax*-url pax-url filename)))
+  (with-sections-cache ()
+    (with-document-open-args-for-web ((urldecode pax-url))
+      (document-pax*-url pax-url filename))))
 
 (defun reference-to-edit-uri (dref)
   (let ((url (finalize-pax-url (dref-to-pax-url dref))))
@@ -105,21 +106,20 @@
            (format nil "~A?edit" url)))))
 
 (defun edit-pax-url-in-emacs (pax-url)
-  (with-lisp-interaction-mode (*latest-interaction-mode*)
-    (when (default-connection)
-      (multiple-value-bind (scheme authority path) (parse-url pax-url)
-        (declare (ignore authority))
-        (unless (equal scheme "pax")
-          (error "~S doesn't have pax: scheme." pax-url))
-        (when-let (drefs (definitions-for-pax-url-path path))
-          (when (= (length drefs) 1)
-            (with-connection ((default-connection))
-              (let* ((dref (first drefs))
-                     (dspec (dref::definition-to-dspec dref))
-                     (location (source-location dref)))
-                (when location
-                  (eval-in-emacs `(mgl-pax-edit-for-cl
-                                   '((,dspec ,location)))))))))))))
+  (when (swank::default-connection)
+    (multiple-value-bind (scheme authority path) (split-url pax-url)
+      (declare (ignore authority))
+      (unless (equal scheme "pax")
+        (error "~S doesn't have pax: scheme." pax-url))
+      (when-let (drefs (definitions-for-pax-url-path (urldecode path)))
+        (when (= (length drefs) 1)
+          (swank::with-connection ((swank::default-connection))
+            (let* ((dref (first drefs))
+                   (dspec (definition-to-dspec dref))
+                   (location (source-location dref)))
+              (when location
+                (swank:eval-in-emacs `(mgl-pax-edit-for-cl
+                                       '((,dspec ,location))))))))))))
 
 
 ;;;; HyperSpec
@@ -138,13 +138,13 @@
   (unless (equal hyperspec-root *web-hyperspec-root*)
     (setq *web-hyperspec-root* hyperspec-root)
     ;; Treat normal file names as file URLs.
-    (if (equal (or (ignore-errors (parse-url hyperspec-root))
+    (if (equal (or (ignore-errors (split-url hyperspec-root))
                    "file")
                "file")
         ;; By default, Chrome and Firefox don't allow linking or
         ;; redirection from a http: URL to a file: URL, so we publish
         ;; the files under CLHS/.
-        (let ((path (or (ignore-errors (nth-value 2 (parse-url hyperspec-root)))
+        (let ((path (or (ignore-errors (nth-value 2 (split-url hyperspec-root)))
                         hyperspec-root)))
           (setq *hyperspec-dispatch-table*
                 (list (hunchentoot:create-folder-dispatcher-and-handler
@@ -189,8 +189,9 @@
 (defun handle-homepage-request ()
   (with-errors-to-html
     (with-document-open-args-for-web ("PAX" :link-to-home nil)
-      (document/open (pax-live-home-page :override *pax-live-inputs*)
-                     :stream nil))))
+      (with-sections-cache ()
+        (document/live (pax-live-home-page :override *pax-live-inputs*)
+                       :stream nil)))))
 
 ;;; HUNCHENTOOT:*DISPATCH-TABLE* will be bound to this locally to
 ;;; avoid conflicts with other HUNCHENTOOT servers running in the same
@@ -219,6 +220,9 @@
   (make-instance 'hunchentoot:easy-acceptor
                  ;; Any free port
                  :port 0
+                 ;; Do not expose this to the whole web. It's risky
+                 ;; enough on localhost only.
+                 :address "127.0.0.1"
                  :access-log-destination nil
                  :message-log-destination nil))
 
@@ -248,10 +252,11 @@
     `(:base-url ,(ensure-web-server :port port
                                     :hyperspec-root hyperspec-root))))
 
-(defun/autoloaded ensure-web-server (&key port hyperspec-root)
-  """Start or update a web server on PORT for @BROWSING-LIVE-DOCUMENTATION.
-  Returns the base URL of the server (e.g. `http://localhost:32790`),
-  which goes to the @PAX-LIVE-HOME-PAGE. If the web server is running
+(defun/auto ensure-web-server (&key port hyperspec-root)
+  """Start or update a web server on PORT of localhost for
+  @BROWSING-LIVE-DOCUMENTATION. Returns the base URL of the
+  server (e.g. `http://localhost:32790`), which goes to the
+  @PAX-LIVE-HOME-PAGE. If the web server is running
   already `(ENSURE-WEB-SERVER)` simply returns its base URL.
 
   Note that even when using Emacs but @BROWSING-WITH-OTHER-BROWSERS,

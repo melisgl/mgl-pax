@@ -3,35 +3,34 @@
 ;;; See MGL-PAX::@PAX-MANUAL for the user guide.
 (asdf:defsystem "mgl-pax"
   :licence "MIT, see COPYING."
-  :version "0.4.0"
+  :version (:read-file-form "version.lisp-expr")
   :author "Gábor Melis"
   :mailto "mega@retes.hu"
-  :homepage "http://melisgl.github.io/mgl-pax"
+  :homepage "http://github.com/melisgl/mgl-pax"
   :bug-tracker "https://github.com/melisgl/mgl-pax/issues"
   :source-control (:git "https://github.com/melisgl/mgl-pax.git")
   :description "Documentation system, browser, generator. See the
   MGL-PAX::@PAX-MANUAL."
-  :long-description "The set of dependencies of the
-  [`mgl-pax`][asdf:system] system is kept light, and its heavier
-  dependencies are autoloaded via ASDF when the relevant functionality
-  is accessed. See the [`mgl-pax/navigate`][asdf:system],
-  [`mgl-pax/document`][asdf:system],
-  [`mgl-pax/transcribe`][asdf:system] and
-  [`mgl-pax/full`][asdf:system] systems. To keep deployed code small,
-  client systems should declare an ASDF dependency on this system,
-  never on the others, which are intended for autoloading and
-  interactive use."
-  :depends-on ("mgl-pax-bootstrap" "dref"
-               "named-readtables" "pythonic-string-reader")
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
+  :long-description "The base system. See MGL-PAX::@LINKS-AND-SYSTEMS."
+  :depends-on ("autoload" "mgl-pax-bootstrap" "dref" "named-readtables"
+               "pythonic-string-reader")
+  :defsystem-depends-on ("autoload")
+  :class "autoload:autoload-system"
+  :auto-depends-on ("mgl-pax/navigate" "mgl-pax/document"
+                    "mgl-pax/transcribe" "mgl-pax/web")
+  :auto-loaddefs ("src/base/loaddefs.lisp" :packages #:mgl-pax)
+  ;; We compile each file in a separate compilation unit (even though
+  ;; they are all nested in another WITH-COMPILATION-UNIT) to get
+  ;; warnings about forward references from one file to a later one.
+  :around-compile (lambda (thunk)
+                    (with-compilation-unit (:override t)
+                      (funcall thunk)))
   :components ((:module "src/base/"
                 :serial t
-                :components ((:file "autoload")
+                :components ((:file "loaddefs")
                              (:file "pax")
                              (:file "extension-api")
                              (:file "document-early")
-                             (:file "web-early")
                              (:file "transcribe-early")
                              (:file "locatives-early"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
@@ -76,21 +75,23 @@
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
 
 (asdf:defsystem "mgl-pax/navigate"
-  :licence "MIT, see COPYING."
-  :author "Gábor Melis"
-  :mailto "mega@retes.hu"
-  ;; Prevent inheritance of slot values from the MGL-PAX system.
+  ;; KLUDGE: Prevent inheritance of slot values from the MGL-PAX
+  ;; system to keep the generated documentation lean.
+  :licence ""
+  :author ""
+  :mailto ""
   :homepage ""
   :bug-tracker ""
   :source-control ""
   :description "Support for MGL-PAX::@NAVIGATING-IN-EMACS via Slime's
   `MGL-PAX::@M-.` in [MGL-PAX][mgl-pax::@pax-manual]."
-  :long-description "Do not declare a dependency on this system. It is
-  autoloaded by Elisp or by accessing the functionality provided if the
-  [`mgl-pax`][asdf:system] system is loaded."
-  :depends-on ("mgl-pax/compatibility" "dref/full")
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
+  :depends-on ("alexandria" "autoload-doc" "mgl-pax" "dref/full"
+               (:feature (:not :swank) "swank"))
+  :defsystem-depends-on ("autoload")
+  :class "autoload:autoload-system"
+  :around-compile (lambda (thunk)
+                    (with-compilation-unit (:override t)
+                      (funcall thunk)))
   :components ((:module "src/navigate/"
                 :serial t
                 :components ((:file "util")
@@ -102,84 +103,96 @@
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
 
 (asdf:defsystem "mgl-pax/document"
-  :licence "MIT, see COPYING."
-  :author "Gábor Melis"
-  :mailto "mega@retes.hu"
+  :licence ""
+  :author ""
+  :mailto ""
   :homepage ""
   :bug-tracker ""
   :source-control ""
   :description "Support for MGL-PAX::@GENERATING-DOCUMENTATION in
   [MGL-PAX][mgl-pax::@pax-manual]."
-  :long-description "Do not declare a dependency on this system. It is
-  autoloaded by Elisp or by accessing the functionality provided if the
-  [`mgl-pax`][asdf:system] system is loaded."
-  :depends-on ("alexandria" "3bmd" "3bmd-ext-code-blocks" "colorize" "md5"
-               "mgl-pax/navigate" "mgl-pax/transcribe" "trivial-utf-8")
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
+  :depends-on ("3bmd" "3bmd-ext-code-blocks" "3bmd-ext-math"
+               "alexandria" "autoload-doc" "colorize" "md5" "mgl-pax/navigate"
+               "mgl-pax/transcribe" "trivial-utf-8")
+  :defsystem-depends-on ("autoload")
+  :class "autoload:autoload-system"
+  :around-compile (lambda (thunk)
+                    (with-compilation-unit (:override t)
+                      (funcall thunk)))
   :components ((:module "src/document/"
                 :serial t
-                :components ((:file "url")
+                :components ((:file "util")
+                             (:file "url")
                              (:file "markdown")
                              (:file "stream-spec")
                              (:file "docstring")
-                             (:file "util")
+                             (:file "index-early")
                              (:file "document-object")
                              (:file "document")
+                             (:file "dynamic-section")
+                             (:file "index")
+                             (:file "pandoc")
                              (:file "document-util")
                              (:file "browse"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
 
 (asdf:defsystem "mgl-pax/web"
-  :licence "MIT, see COPYING."
-  :author "Gábor Melis"
-  :mailto "mega@retes.hu"
+  :licence ""
+  :author ""
+  :mailto ""
   :homepage ""
   :bug-tracker ""
   :source-control ""
   :description "Web server for MGL-PAX::@BROWSING-LIVE-DOCUMENTATION
   in [MGL-PAX][mgl-pax::@pax-manual]."
-  :long-description "Do not declare a dependency on this system. It is
-  autoloaded by Elisp or by accessing the functionality provided if the
-  [`mgl-pax`][asdf:system] system is loaded."
   :depends-on ("hunchentoot" "mgl-pax/document")
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
+  :defsystem-depends-on ("autoload")
+  :class "autoload:autoload-system"
+  :around-compile (lambda (thunk)
+                    (with-compilation-unit (:override t)
+                      (funcall thunk)))
   :components ((:module "src/web/"
                 :serial t
                 :components ((:file "web"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
 
 (asdf:defsystem "mgl-pax/transcribe"
-  :licence "MIT, see COPYING."
-  :author "Gábor Melis"
-  :mailto "mega@retes.hu"
+  :licence ""
+  :author ""
+  :mailto ""
   :homepage ""
   :bug-tracker ""
   :source-control ""
   :description "Support for MGL-PAX::@TRANSCRIPTS in
   [MGL-PAX][mgl-pax::@pax-manual]."
-  :long-description "Do not declare a dependency on this system. It is
-  autoloaded by Elisp or by accessing the functionality provided if
-  the [`mgl-pax`][asdf:system] system is loaded."
   :depends-on ("alexandria" "mgl-pax/navigate")
-  :defsystem-depends-on ("mgl-pax.asdf")
-  :around-compile "mgl-pax.asdf:compile-pax"
+  :defsystem-depends-on ("autoload")
+  :class "autoload:autoload-system"
+  :around-compile (lambda (thunk)
+                    (with-compilation-unit (:override t)
+                      (funcall thunk)))
   :components ((:module "src/transcribe/"
                 :serial t
                 :components ((:file "transcribe"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
 
 (asdf:defsystem "mgl-pax/full"
-  :licence "MIT, see COPYING."
-  :author "Gábor Melis"
-  :mailto "mega@retes.hu"
+  :licence ""
+  :author ""
+  :mailto ""
   :homepage ""
   :bug-tracker ""
   :source-control ""
   :description "The [`mgl-pax`][asdf:system] system with all features
-  preloaded except [`mgl-pax/web`][asdf:system]."
-  :long-description "Do not declare a dependency on this system. It
-  is for interactive use."
-  :depends-on ("mgl-pax/navigate" "mgl-pax/document" "mgl-pax/transcribe")
+  preloaded."
+  :depends-on ("mgl-pax/navigate" "mgl-pax/document"
+               ;; KLUDGE: On ABCL, some systems get the error "Class
+               ;; not found: com.sun.jna.Pointer" although Maven is
+               ;; installed. HUNCHENTOOT depends on BORDEAUX-THREADS,
+               ;; which does not support CLISP. On CMUCL, CL+SSL
+               ;; doesn't find libcrypto.
+               #-(or abcl clisp cmucl) "mgl-pax/web"
+               "mgl-pax/transcribe")
+  :defsystem-depends-on ("autoload")
+  :class "autoload:autoload-system"
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))

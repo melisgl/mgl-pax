@@ -2,132 +2,95 @@
 
 (in-readtable pythonic-string-syntax)
 
-(declaim (special *document-open-linking*))
+(declaim (special *document-live*))
 
-;;; @PACKAGE-AND-READTABLE
-(defvar *document-normalize-packages*)
-(export '*document-normalize-packages*)
-
-;;; @BROWSING-WITH-OTHER-BROWSERS
-(defvar *browse-html-style*)
-(export '*browse-html-style*)
-
-;;; @CODIFICATION
-(defvar *document-uppercase-is-code*)
-(export '*document-uppercase-is-code*)
-(defvar *document-downcase-uppercase-code*)
-(export '*document-downcase-uppercase-code*)
-
-;;; @LINKING
-(defvar *document-link-code*)
-(export '*document-link-code*)
-;;; Silence SBCL compiler notes.
+;;; Silence SBCL compiler notes about undefined types when these are
+;;; used in a condition handler.
 #+sbcl
-(define-condition unresolvable-reflink (warning) ())
-(export 'unresolvable-reflink)
-(export 'output-reflink)
-(export 'output-label)
-
-;;; @LINKING-TO-THE-HYPERSPEC
-(defvar *document-link-to-hyperspec*)
-(export '*document-link-to-hyperspec*)
-(defvar *document-hyperspec-root*)
-(export '*document-hyperspec-root*)
-
-;;; @LINKING-TO-SECTIONS
-(defvar *document-link-sections*)
-(export '*document-link-sections*)
-(defvar *document-max-numbering-level*)
-(export '*document-max-numbering-level*)
-(defvar *document-max-table-of-contents-level*)
-(export '*document-max-table-of-contents-level*)
-(defvar *document-text-navigation*)
-(export '*document-text-navigation*)
-(defvar *document-fancy-html-navigation*)
-(export '*document-fancy-html-navigation*)
-
-;;; @LINK-FORMAT
-(defvar *document-url-versions*)
-(export '*document-url-versions*)
-(defvar *document-min-link-hash-length*)
-(export '*document-min-link-hash-length*)
-(defvar *document-base-url*)
-(export '*document-base-url*)
-
-;;; @OUTPUT-DETAILS
-(defvar *document-mark-up-signatures*)
-(export '*document-mark-up-signatures*)
-
-;;; @HTML-OUTPUT
-(defvar *document-html-default-style*)
-(export '*document-html-default-style*)
-(defvar *document-html-max-navigation-table-of-contents-level*)
-(export '*document-html-max-navigation-table-of-contents-level*)
-(defvar *document-html-lang*)
-(export '*document-html-lang*)
-(defvar *document-html-charset*)
-(export '*document-html-charset*)
-(defvar *document-html-head*)
-(export '*document-html-head*)
-(defvar *document-html-sidebar*)
-(export '*document-html-sidebar*)
-(defvar *document-html-top-blocks-of-links*)
-(export '*document-html-top-blocks-of-links*)
-(defvar *document-html-bottom-blocks-of-links*)
-(export '*document-html-bottom-blocks-of-links*)
-
-(autoload downcasingp "mgl-pax/document" :export nil)
-(autoload document "mgl-pax/document")
-(autoload update-asdf-system-readmes "mgl-pax/document")
-(autoload update-asdf-system-html-docs "mgl-pax/document")
-;;; UPDATE-PAX-WORLD generates documentation for PAX itself, so load
-;;; MGL-PAX/FULL to have all documentation. Otherwise,
-;;; MGL-PAX/DOCUMENT would be enough.
-(autoload update-pax-world "mgl-pax/full")
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (unless (find-class 'unresolvable-reflink nil)
+    (define-condition unresolvable-reflink (warning condition-context-mixin)
+      ())))
 
 
 (defsection @extending-document (:title "Extending DOCUMENT")
   "For all definitions that it encounters, DOCUMENT calls
   DOCUMENT-OBJECT* to generate documentation. The following utilities
-  are for writing new DOCUMENT-OBJECT* methods, which emit markdown."
+  are for writing new DOCUMENT-OBJECT* methods. They emit Markdown
+  encoded in an unspecified format internal to DOCUMENT."
   (*format* variable)
   (with-heading macro)
-  (documenting-reference macro)
+  (doctitle* generic-function)
+  (documenting-definition macro)
   (with-dislocated-names macro)
   (document-docstring function)
   (escape-markdown function)
-  (prin1-to-markdown function))
+  (prin1-to-markdown function)
+  (ensure-md-paragraph function))
 
+(defvar *real-format*)
 (defvar *format*)
 (setf (documentation '*format* 'variable)
-      "Bound by DOCUMENT to its FORMAT argument, this allows markdown
+      ;; FIXME: Not quite
+      "Bound by DOCUMENT to its FORMAT argument, this allows Markdown
       output to depend on the output format.")
-(declaim (special *html-subformat*))
+(declaim (special *subformat*))
 
-(defmacro with-heading ((stream object title &key link-title-to)
+(defmacro with-heading ((stream &key dref link-title-to (numbered t))
                         &body body)
-  "Write a markdown heading with TITLE to STREAM. Nested WITH-HEADINGs
-  produce nested headings. If *DOCUMENT-LINK-SECTIONS*, generate
-  anchors based on the [definition of][locate] OBJECT. LINK-TITLE-TO
-  behaves like the LINK-TITLE-TO argument of DEFSECTION."
-  `(call-with-heading ,stream ,object ,title ,link-title-to
-                      (lambda (,stream)
-                        ,@body)))
-(autoload call-with-heading "mgl-pax/document" :export nil)
-(declaim (special *first-pass*))
+  "Write a Markdown heading with the DOCTITLE of DREF to STREAM.
 
-(defmacro documenting-reference ((stream &key reference name package readtable
-                                           (arglist nil arglistp))
-                                 &body body)
-  "Write REFERENCE to STREAM as described in
-  *DOCUMENT-MARK-UP-SIGNATURES*, and establish REFERENCE as a
-   @LOCAL-DEFINITION for the processing of BODY.
-
-  - REFERENCE defaults to the reference for which documentation is
+  - DREF defaults to the definition for which documentation is
     currently being generated.
 
-  - NAME defaults to `(XREF-NAME REFERENCE)` and is printed after the
-    LOCATIVE-TYPE.
+  - Nested WITH-HEADINGs produce nested headings.
+
+  - If *DOCUMENT-LINK-SECTIONS*, generate anchors based on DREF.
+
+  - LINK-TITLE-TO behaves like the LINK-TITLE-TO argument of
+    DEFSECTION.
+
+  - NUMBERED controls whether a heading number is assigned to the
+    heading. The heading number reflects the nesting structure of
+    WITH-HEADINGS (e.g. 3.1.2). Descendants of unnumbered headings are
+    unnumbered regardless of NUMBERED."
+  `(call-with-heading ,stream ,(if dref
+                                   `(or (locate ,dref)
+                                        *dref-being-documented* )
+                                   '*dref-being-documented*)
+                      ,link-title-to
+                      ,numbered
+                      (lambda (,stream)
+                        ,@body)))
+
+(declaim (special *first-pass*))
+
+(without-redefinition-warnings
+  (defgeneric doctitle* (object)
+    (:documentation "DOCTITLE* extends DOCTITLE in the same way
+    as DOCSTRING* extends DOCSTRING.
+
+    The default method returns NIL.
+
+    This function is for extension only. Do not call it directly.")
+    (:method (object)
+      (declare (ignore object))
+      nil)))
+
+(defmacro documenting-definition ((stream &key dref package readtable
+                                   (arglist nil arglistp))
+                                  &body body)
+  "Write DREF to STREAM as described in
+  *DOCUMENT-MARK-UP-SIGNATURES*, and establish DREF as a
+   @LOCAL-DEFINITION for the processing of BODY.
+
+  - DREF defaults to the definition for which documentation is
+    currently being generated.
+
+  - If DREF has a DOCTITLE, then it is PRINCed after the
+    LOCATIVE-TYPE (see @MARKDOWN-IN-TITLES). Else, `(DREF-NAME DREF)`
+    is printed subject to *DOCUMENT-DOWNCASE-UPPERCASE-CODE* but with
+    all Markdown and @MATHJAX markup escaped.
 
   - *PACKAGE* and *READTABLE* are bound to PACKAGE and READTABLE for
     the duration of printing the ARGLIST and the processing of BODY.
@@ -136,38 +99,43 @@
 
   - ARGLIST:
 
-      - If it is not provided, then it defaults to (ARGLIST
-        REFERENCE).
+      - If it is not provided, then it defaults to (ARGLIST DREF).
 
       - If NIL, then it is not printed.
 
       - If it is a list, then it is must be a [lambda list][clhs] and
         is printed without the outermost parens and with the package
-        names removed from the argument names.
+        names removed from the argument names. [Keywords][clhs] are
+        printed with a leading colon.
 
-      - If its is a string, then it must be valid markdown.
+          &AUX variables and `SUPPLIED-P-PARAMETER`s of &OPTIONAL and
+          &KEY arguments are considered internal and are not printed.
+
+      - If it is a string, then it must be valid Markdown.
 
   - It is not allowed to have WITH-HEADING within the [dynamic
     extent][clhs] of BODY."
   (let ((%stream (gensym))
-        (%reference (gensym))
-        (%name (gensym))
+        (%dref (gensym))
         (%arglist (gensym)))
     ;; If WITH-HEADING were allowed in BODY, then we couldn't stop if
     ;; *FIRST-PASS*.
     `(unless *first-pass*
        (let* ((,%stream ,stream)
-              (,%reference ,reference)
-              (,%reference (if ,%reference
-                               (locate ,%reference)
-                               *documenting-reference*))
+              (,%dref ,dref)
+              (,%dref (if ,%dref
+                          (locate ,%dref)
+                          *dref-being-documented*))
               (,%arglist ,(if arglistp
                               arglist
-                              (list 'arglist %reference)))
-              (,%name ,name))
-         (when *document-link-code*
-           (anchor ,%reference ,%stream))
-         (print-reference-bullet ,%reference ,%stream :name ,%name)
+                              (list 'arglist %dref))))
+         (when (and *document-link-code*
+                    (not (eq *format* :pdf)))
+           (anchor ,%dref ,%stream))
+         (print-dref-bullet ,%dref ,%stream)
+         (when (and *document-link-code*
+                    (eq *format* :pdf))
+           (anchor ,%dref ,%stream))
          (multiple-value-bind (*package* *readtable*)
              ;; In apropos terse view, whatever BODY emits is to be
              ;; skipped. Do not waste time with
@@ -175,74 +143,84 @@
              ;; expensive.
              (if (eq *document-list-view* :terse)
                  (values *package* *readtable*)
-                 (guess-package-and-readtable ,package ,readtable
-                                              ,%reference ,%arglist))
+                 (guess-package-and-readtable ,%dref ,package ,readtable))
            (when ,%arglist
-             (write-char #\Space ,%stream)
+             (write-markdown-pt '((:plain " ")) nil 0 ,%stream)
              (print-arglist ,%arglist ,%stream))
            (print-end-bullet ,%stream)
            (unless (eq *document-list-view* :terse)
-             (with-local-references
-                 (if (member (dref-locative-type ,%reference)
+             (with-local-definitions
+                 (if (member (dref-locative-type ,%dref)
                              '(section glossary-term))
                      ;; See @SUPPRESSED-LINKS.
                      ()
-                     ,%reference)
-               ,@body)))))))
-(autoload print-reference-bullet "mgl-pax/document" :export nil)
+                     ,%dref)
+               (multiple-value-prog1
+                   (progn ,@body)
+                 (print-also-see ,%dref ,%stream)))))))))
+
 (declaim (ftype function print-arglist))
 (declaim (ftype function print-end-bullet))
+(declaim (ftype function print-also-see))
 (declaim (ftype function guess-package-and-readtable))
 (declaim (ftype function anchor))
 (declaim (special *document-list-view*))
 
-(declaim (special *local-references*))
-(defmacro with-local-references (refs &body body)
-  `(let ((*local-references* (append (ensure-list ,refs) *local-references*)))
+(declaim (special *local-definitions*))
+(defmacro with-local-definitions (refs &body body)
+  `(let ((*local-definitions* (append (ensure-list ,refs)
+                                      *local-definitions*)))
      ,@body))
-
-(defun ensure-list (object)
-  (if (listp object)
-      object
-      (list object)))
 
 (defmacro with-dislocated-names (names &body body)
   "For each name in NAMES, establish a @LOCAL-DEFINITION."
-  `(with-local-references (mapcar (lambda (name)
-                                    ;; FIXME: It is ARGUMENT not
-                                    ;; DISLOCATED.
+  `(with-local-definitions (mapcar (lambda (name)
                                     (xref name 'argument))
                                   (ensure-list ,names))
      ,@body))
-
-(autoload document-docstring "mgl-pax/document")
-(autoload escape-markdown "mgl-pax/document")
-(autoload prin1-to-markdown "mgl-pax/document")
 
 
 ;;;; Early non-exported definitions
 
-;;; These are used only by the DOCUMENT-OBJECT* (METHOD () CLASS-DREF T).
-(declaim (ftype function find-link))
+;;; These are used only by the DOCUMENT-OBJECT* (METHOD CLASS-DREF T).
+(declaim (ftype function find-target))
 (declaim (ftype function link-to-definition))
 
-;;; For DOCUMENT-OBJECT* (METHOD () (INCLUDE-DREF T))
+;;; For DOCUMENT-OBJECT* (METHOD (INCLUDE-DREF T))
 (declaim (ftype function codify-and-link))
 
-;;; We need this for DOCUMENTING-REFERENCE.
-(defvar *documenting-reference* nil)
+;;; We need this for DOCUMENTING-DEFINITION.
+(defvar *dref-being-documented* nil)
+
+;;; This may eventually be exported
+(defmacro with-errors-downgraded-when-live ((&key on-error) &body body)
+  (let ((body-fn (gensym))
+        (error (gensym)))
+    `(flet ((,body-fn ()
+              ,@body))
+       (if *document-live*
+           (handler-case
+               (,body-fn)
+             (error (,error)
+               (warn "~A" ,error)
+               ,on-error))
+           (,body-fn)))))
 
 
 (defsection @github-workflow (:title "GitHub Workflow")
   "It is generally recommended to commit generated readmes (see
-  UPDATE-ASDF-SYSTEM-READMES), so that users have something to read
+  UPDATE-ASDF-SYSTEM-READMES) so that users have something to read
   without reading the code and sites like GitHub can display them.
 
-  HTML documentation can also be committed, but there is an issue with
-  that: when linking to the sources (see MAKE-GIT-SOURCE-URI-FN), the
-  commit id is in the link. This means that code changes need to be
-  committed first, and only then can HTML documentation be regenerated
-  and committed in a followup commit.
+  Also, by registering in @PAX-WORLD, you get documentation generated
+  in various formats periodically. If you want to manage this
+  yourself, there are a couple of things to keep in mind.
+
+  First, HTML documentation can also be committed, but there is an
+  issue with that: when linking to the sources (see
+  MAKE-GIT-SOURCE-URI-FN), the commit id is in the link. This means
+  that code changes need to be committed first, and only then can HTML
+  documentation be regenerated and committed in a followup commit.
 
   The second issue is that GitHub is not very good at serving HTML
   files from the repository itself (and
@@ -262,8 +240,9 @@
 
       http://<username>.github.io/<repo-name>
 
-  It is probably a good idea to add sections like the @LINKS section
-  to allow jumping between the repository and the gh-pages site."
+  It is probably a good idea to add sections like the
+  @LINKS-AND-SYSTEMS section to allow jumping between the repository
+  and the gh-pages site."
   (make-github-source-uri-fn function)
   (make-git-source-uri-fn function))
 
@@ -274,28 +253,35 @@
   URI-FORMAT-STRING at its default, which is suitable for GitHub."
   (make-git-source-uri-fn asdf-system github-uri :git-version git-version))
 
+(defvar *git-version-for-test* nil)
+
 (defun make-git-source-uri-fn (asdf-system git-forge-uri
-                               &key git-version
-                                 (uri-format-string "~A/blob/~A/~A#L~S"))
+                               &key git-version git-root
+                               (uri-format-string "~A/blob/~A/~A#L~S"))
   """Return an object suitable as :SOURCE-URI-FN of a page spec (see
   the PAGES argument of DOCUMENT). The function looks at the source
   location of the object passed to it, and if the location is found,
-  the path is made relative to the top-level directory of the git
-  checkout containing the file of the ASDF-SYSTEM and finally an \URI
-  pointing to your git forge (such as GitHub) is returned. A warning
-  is signalled whenever the source location lookup fails or if the
-  source location points to a directory not below the directory of
-  ASDF-SYSTEM.
+  the path is made relative to the GIT-ROOT (the top-level directory
+  of the git checkout), and finally an \URI pointing to your git
+  forge (such as GitHub) is returned.
+
+  - If ASDF-SYSTEM is non-NIL, then GIT-ROOT defaults to the directory
+    of the `.asd` file of the system. Similarly, GIT-VERSION defaults
+    current commit id in the checkout at GIT-ROOT.
+
+  - If both GIT-ROOT and GIT-VERSION are explicitly provided,
+    ASDF-SYSTEM has no effect.
+
+  If GIT-ROOT is not specified and cannot be determined from
+  ASDF-SYSTEM, then no links to the git forge will be generated.
+
+  A warning is signalled whenever the source location lookup fails or
+  if the source location points to a directory not below GIT-ROOT.
 
   If GIT-FORGE-URI is `"https://github.com/melisgl/mgl-pax/"` and
   GIT-VERSION is `"master"`, then the returned \URI may look like this:
 
       https://github.com/melisgl/mgl-pax/blob/master/src/pax-early.lisp#L12
-
-  If GIT-VERSION is NIL, then an attempt is made to determine to
-  current commit id from the `.git` in the directory holding
-  ASDF-SYSTEM. If no `.git` directory is found, then no links to
-  the git forge will be generated.
 
   URI-FORMAT-STRING is a CL:FORMAT control string for four arguments:
 
@@ -313,36 +299,54 @@
   ;; start of DOCUMENT.
   `(:maker
     ,(lambda ()
-       (multiple-value-bind (git-root git-version)
-           (asdf-system-git-root-and-version asdf-system
-                                             :default-version git-version)
-         (if git-version
+       (multiple-value-bind (git-root1 git-version1)
+           (git-root-and-version asdf-system :git-root git-root
+                                 :default-version git-version)
+         (when *git-version-for-test*
+           (setq git-version1 *git-version-for-test*))
+         (if git-version1
              (let ((line-file-position-cache (make-hash-table :test #'equal)))
                (lambda (object)
                  (multiple-value-bind (relative-path line-number)
                      (convert-source-location
-                      (source-location object) git-root object
+                      (source-location object) git-root1 object
                       line-file-position-cache)
                    (when relative-path
-                     (format nil uri-format-string git-forge-uri git-version
+                     (format nil uri-format-string git-forge-uri git-version1
                              relative-path (1+ line-number))))))
-             (warn "No GIT-VERSION given and can't find .git directory for ~
-                   ASDF system~% ~A. Links to git forge will not be generated."
-                   (asdf:component-name (asdf:find-system asdf-system))))))))
+             (if asdf-system
+                 (warn "~@<No :GIT-VERSION given and can't find .git ~
+                       directory for ASDF system~% ~A. Links to the git ~
+                       forge will not be generated.~:@>"
+                       (asdf:component-name (find-system* asdf-system)))
+                 (warn "~@<No :GIT-VERSION given and can't find .git ~
+                       directory under directory~% ~A. Links to the git ~
+                       forge will not be generated.~:@>"
+                       git-root)))))))
 
-(defun asdf-system-git-root-and-version (system &key default-version)
-  (let ((file (asdf:system-source-file (asdf:find-system system))))
+(defun git-root-and-version (system &key git-root default-version)
+  (let ((file (or git-root (asdf:system-source-file (find-system* system)))))
     (when (in-git-p file)
       (values (git-root file)
               (or (git-version file) default-version)))))
 
+(defun find-system* (name)
+  ;; This goes through DREF::FIND-SYSTEM*.
+  (let ((dref (dref name 'asdf:system nil)))
+    (when dref
+      (resolve dref))))
+
 (defun in-git-p (pathname)
   (zerop (nth-value
-          2 (uiop:run-program (list "git" "-C" (directory-namestring pathname)
-                                    "ls-files" "--error-unmatch"
-                                    (file-namestring pathname))
-                              :output nil
-                              :ignore-error-status t))))
+          2 (uiop:run-program
+             (list "git" "-C" (directory-namestring pathname)
+                   "ls-files" "--error-unmatch"
+                   (let ((file (file-namestring pathname)))
+                     (if (plusp (length file))
+                         file
+                         ".")))
+             :output nil
+             :ignore-error-status t))))
 
 (defun git-root (pathname)
   (multiple-value-bind (toplevel error-output exit-code)
@@ -351,15 +355,8 @@
                         :output '(:string :stripped t) :ignore-error-status t)
     (declare (ignore error-output))
     (if (zerop exit-code)
-        (pathname-as-directory toplevel)
+        (uiop:ensure-directory-pathname toplevel)
         nil)))
-
-(defun pathname-as-directory (pathname)
-  (make-pathname :directory (append (pathname-directory pathname)
-                                    (when (pathname-name pathname)
-                                      (list (file-namestring pathname))))
-                 :name nil :type nil
-                 :defaults pathname))
 
 (defun git-version (pathname)
   (multiple-value-bind (version error-output exit-code)
@@ -378,12 +375,13 @@
           (null source-location)
           ;; SBCL, AllegroCL
           (eq (first source-location) :error))
-         (warn "~@<No source location found for ~:_~A: ~:_~A~%~@:>"
-               object (second source-location)))
+         (warn "~@<No source location found for ~:_~A~:[.~;: ~:_~A~]~@:>"
+               object (when (plusp (length (second source-location)))
+                        (second source-location))))
         (t
-         (assert (eq (first source-location) :location))
-         (let* ((filename (second (assoc :file (rest source-location))))
-                (position (second (assoc :position (rest source-location))))
+         (assert (source-location-p source-location))
+         (let* ((filename (source-location-file source-location))
+                (position (source-location-file-position source-location))
                 (relative-path (and filename
                                     (enough-namestring filename git-dir))))
            (if (and relative-path
@@ -395,8 +393,9 @@
                      (values relative-path line-number)
                      (warn "~@<Source location information in file ~S ~
                             is out of date.~@:>" filename)))
-               (warn "~@<Source location for ~S is not below the git ~
-                     top-level directory ~S.~%~@:>" object git-dir))))))
+               (warn "~@<Source location ~S of ~S is not below the git ~
+                     top-level directory ~S.~%~@:>"
+                     filename object git-dir))))))
 
 (defun file-position-to-line-number (filename file-position cache)
   (if (null file-position)
@@ -429,8 +428,7 @@
 (defun pax-pages ()
   `((:objects ,(pax-sections)
      :source-uri-fn ,(make-git-source-uri-fn
-                      :mgl-pax
-                      "https://github.com/melisgl/mgl-pax"))))
+                      "mgl-pax" "https://github.com/melisgl/mgl-pax"))))
 
 (register-doc-in-pax-world :pax 'pax-sections 'pax-pages)
 
