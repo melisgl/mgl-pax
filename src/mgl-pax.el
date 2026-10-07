@@ -65,8 +65,9 @@
 
 (defvar mgl-pax-backend)
 
-(defun mgl-pax-backend-function-name-for (symbol)
-  (intern (concat (symbol-name symbol) "/backend")))
+(eval-and-compile
+  (defun mgl-pax-backend-function-name-for (symbol)
+    (intern (concat (symbol-name symbol) "/backend"))))
 
 (cl-defmacro mgl-pax-definterface (name (&rest lambda-list) &body body)
   (declare (indent defun))

@@ -48,15 +48,19 @@
   (sly-forward-sexp))
 
 (defun mgl-pax-sly-edit-xrefs (xrefs &optional method)
-  ;; Copied verbatim from the body of `sly-edit-definition', as Sly
-  ;; offers no way of directly jumping to a xref
   (cl-destructuring-bind (1loc file-alist) (sly-analyze-xrefs xrefs)
     (cond (1loc
            (sly-push-definition-stack)
            (sly--pop-to-source-location
             (sly-xref.location (car xrefs)) method))
-          ((null (cdr xrefs))      ; ((:error "..."))
-           (error "%s" xrefs))
+          ((null (cdr xrefs))
+           (let ((xref (car xrefs)))
+             (if (eq (car-safe (sly-xref.location xref)) :error)
+                 (error "No source location for %s: %s"
+                        (sly-xref.dspec xref)
+                        (cadr (sly-xref.location xref)))
+               ;; ((:error "..."))
+               (error "%s" xrefs))))
           (t
            (sly-push-definition-stack)
            (sly-xref--show-results file-alist 'definition nil
@@ -86,6 +90,9 @@
   (local-set-key (kbd "M-.") 'sly-edit-definition)
   (local-set-key (kbd "M-,") 'sly-pop-find-definition-stack)
   (local-set-key (kbd "C-c C-d") 'sly-doc-map))
+
+(mgl-pax-defimpl mgl-pax-bounds-of-symbol-at-point :sly ()
+  (sly-bounds-of-symbol-at-point))
 
 
 ;;;; Cleanup
@@ -94,6 +101,7 @@
 (defun mgl-pax-sly-unload-function ()
   (mgl-pax-unhijack-sly-doc-keys)
   (advice-remove 'sly-edit-definition #'sly-edit-definition@mgl-pax)
+  (advice-remove 'sly--setup-completion #'sly--setup-completion@mgl-pax)
   (setq mgl-pax-loaded-backends (delq 'mgl-pax-sly mgl-pax-loaded-backends)))
 
 
@@ -115,13 +123,31 @@
     (?c nil mgl-pax-current-definition-toggle-view)
     (?u nil mgl-pax-edit-parent-section)))
 
+(defun mgl-pax-sly--override-plain-doc-keys (&optional reversep)
+  "Bind (with REVERSEP unbind) the plain versions of keys in
+  `MGL-PAX-SLY-DOC-MAP-OVERRIDES'.  Because Sly only binds control
+   variants and so there's no old binding, `MGL-PAX-OVERRIDE-KEYS'
+   doesn't handle this."
+  (cl-loop for (key old new) in mgl-pax-sly-doc-map-overrides
+           when old
+           do (let ((k `[,key]))
+                (if reversep
+                    (when (eq (lookup-key sly-doc-map k) new)
+                      (define-key sly-doc-map k nil))
+                  (unless (lookup-key sly-doc-map k)
+                    (define-key sly-doc-map k new))))))
+
+
 (defun mgl-pax-hijack-sly-doc-keys ()
   "See MGL-PAX::@EMACS-SETUP."
   (interactive)
-  (mgl-pax-override-keys sly-doc-map mgl-pax-sly-doc-map-overrides))
+  (mgl-pax-override-keys sly-doc-map mgl-pax-sly-doc-map-overrides)
+  (mgl-pax-sly--override-plain-doc-keys))
 
 (defun mgl-pax-unhijack-sly-doc-keys ()
   (interactive)
+  ;; Plain keys must come first
+  (mgl-pax-sly--override-plain-doc-keys t)
   (mgl-pax-override-keys sly-doc-map mgl-pax-sly-doc-map-overrides t))
 
 (when mgl-pax-hijack-sly-doc-keys
@@ -143,10 +169,10 @@
 
 ;;;; Locative completion
 
-(defun mgl-pax-sly-set-up-completion-at-point-functions ()
-  (cl-pushnew 'mgl-pax-completions-at-point completion-at-point-functions))
-
-(add-hook 'sly-mode-hook 'mgl-pax-sly-set-up-completion-at-point-functions)
+(define-advice sly--setup-completion (:after () mgl-pax)
+  ;; `mgl-pax-completing-for' is bound by `mgl-pax-read-from-minibuffer'.
+  (when mgl-pax-completing-for
+    (add-hook 'completion-at-point-functions #'mgl-pax-completions-at-point nil t)))
 
 
 
