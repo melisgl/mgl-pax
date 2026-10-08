@@ -28,7 +28,7 @@
 
 (defmacro definterface (name (&rest lambda-list) &body defgeneric-body)
   (multiple-value-bind (required optional rest keyword aok? aux key?)
-      (parse-ordinary-lambda-list lambda-list)
+      (alexandria:parse-ordinary-lambda-list lambda-list)
     (declare (ignore aux))
     (labels ((ensure-suppliedp (binding prefix)
                (destructuring-bind (name default-value suppliedp) binding
