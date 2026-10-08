@@ -1,5 +1,9 @@
 (in-package :mgl-pax)
 
+;;; Replaces stub defined in interaction-mode.lisp
+(defun/auto load-sly-glue ()
+  nil)
+
 (defimpl default-connection :sly ()
   (slynk-api:default-connection))
 

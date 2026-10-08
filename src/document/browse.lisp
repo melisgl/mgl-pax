@@ -216,12 +216,13 @@
   the browser (often `C-<f5>`).")
 
 (defun document-for-emacs (pax*-url output &optional *document-hyperspec-root*)
-  (swank/backend:converting-errors-to-error-location
-    (swank::with-buffer-syntax (swank::*buffer-package*)
-      (with-sections-cache ()
-        ;; This is called only for `w3m' and `precheck'. See below.
-        (let ((*subformat* (if (uiop:directory-exists-p output) :w3m nil)))
-          `(:url ,(document-pax*-url pax*-url output)))))))
+  (with-swank-compatibility ()
+    (swank/backend:converting-errors-to-error-location
+     (swank::with-buffer-syntax (swank::*buffer-package*)
+       (with-sections-cache ()
+         ;; This is called only for `w3m' and `precheck'. See below.
+         (let ((*subformat* (if (uiop:directory-exists-p output) :w3m nil)))
+           `(:url ,(document-pax*-url pax*-url output))))))))
 
 ;;; Write documentation of PAX*-URL into OUTPUT. Return the (:URL
 ;;; <URL>) to visit or (:ERROR <STRING>). PAX*-URL may be a `pax:',

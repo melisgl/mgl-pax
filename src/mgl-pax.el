@@ -134,6 +134,14 @@
   conditionals into account. If `count' is provided and a positive
   integer, step over that many expressions.")
 
+(mgl-pax-definterface mgl-pax-flash-region (start end &optional timeout)
+  "Temporarily highlight the region from `start' to `end' for `timeout'
+seconds, or a default if `nil'.")
+
+(mgl-pax-definterface mgl-pax-call-with-buffer-package (package function)
+  "Call `function' with no arguments. The Common Lisp package associated
+with the current buffer is the string `package' for the call.")
+
 (mgl-pax-definterface mgl-pax-visit-lisp-location (dspec-and-location-list)
   "Visit the buffer containing `dspec-and-location-list'.")
 
@@ -326,28 +334,6 @@ See MGL-PAX::@EMACS-SETUP."
 
 ;;;; MGL-PAX::@EMACS-SETUP
 
-(defcustom mgl-pax-hijack-slime-doc-keys t
-  "If true, then bind mgl-pax functions in `slime-mode-map'
-  by `mgl-pax-hijack-slime-doc-keys' upon loading `mgl-pax'. See
-  MGL-PAX::@EMACS-KEYS for details."
-  :type 'boolean
-  :group 'mgl-pax)
-
-(defvar mgl-pax-slime-doc-map-overrides
-  '((?a slime-apropos mgl-pax-apropos)
-    (?z slime-apropos-all mgl-pax-apropos-all)
-    (?p slime-apropos-package mgl-pax-apropos-package)
-    (?f slime-describe-function mgl-pax-document)
-    (?d slime-describe-symbol mgl-pax-hideshow-documentation)
-    (?c nil mgl-pax-hideshow-comments)
-    (?v nil mgl-pax-current-definition-toggle-view)
-    (?u nil mgl-pax-edit-parent-section)))
-
-(defun mgl-pax-hijack-slime-doc-keys ()
-  "See MGL-PAX::@EMACS-SETUP."
-  (interactive)
-  (mgl-pax-override-keys slime-doc-map mgl-pax-slime-doc-map-overrides))
-
 (defun mgl-pax-override-keys (keymap overrides &optional reversep)
   (cl-loop for (key old new) in overrides do
            (when reversep
@@ -524,11 +510,13 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
                        (line-beginning-position 4)))
           (lisp-mode-hook ()))
       (with-temp-buffer
-        (let ((slime-buffer-package "MGL-PAX"))
-          (lisp-mode)
-          (insert text-before)
-          (save-excursion (insert text-after))
-          (funcall fn))))))
+        (mgl-pax-call-with-buffer-package
+         "MGL-PAX"
+         (lambda ()
+           (lisp-mode)
+           (insert text-before)
+           (save-excursion (insert text-after))
+           (funcall fn)))))))
 
 (defvar mgl-pax-recomment-fn nil)
 (defvar mgl-pax-call-uncommented-bounds nil)
@@ -1413,20 +1401,25 @@ move point to the beginning of the buffer."
 ;;;; definition (see MGL-PAX::@BROWSING-WITH-OTHER-BROWSERS).
 
 (defun mgl-pax-edit-for-cl (dspec-and-location-list)
-  ;; There may be no `lisp-mode' buffer at all.
+  "Visits the source locations that Lisp found for a definition.
+Each element in DSPEC-AND-LOCATION-LIST is a (DSPEC LOCATION) pair
+as Lisp hands them to Emacs.  Note that there may be no `lisp-mode'
+buffer at all."
   (ignore-errors (mgl-pax-recently-visited-buffer 'lisp-mode))
   (mgl-pax-sync-current-buffer)
   (select-frame-set-input-focus (selected-frame))
-  (mgl-pax-visit-locations dspec-and-location-list))
+  (mgl-pax-visit-locations dspec-and-location-list)
+  ;; We have to return something Slynk can serialize.
+  t)
 
 (defun mgl-pax-sync-current-buffer ()
-  ;; https://emacs.stackexchange.com/q/10921
+  "See https://emacs.stackexchange.com/q/10921."
   (set-buffer (window-buffer (selected-window))))
 
 
 (defun mgl-pax-current-definition-toggle-view ()
   "Document the definition `point' is in with `mgl-pax-document'.
-In a PAX doc buffer, it's equivalent to pressing `v'
+In a PAX doc buffer, it's equivalent to pressing `v'.
 (`mgl-pax-doc-edit-current-definition')."
   (interactive)
   (if (mgl-pax-in-doc-buffer-p)
@@ -1700,12 +1693,12 @@ Without a prefix argument, the first syntax is used."
 
 (defun mgl-pax-retranscribe-region (start end)
   "Update the transcription in the active region (as in calling
-MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T). If there is no active region,
+MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T).  If there is no active region,
 default to the innermost enclosing `cl-transcript' block.
 
 Use a numeric prefix argument as an index to select one of the Common
 Lisp MGL-PAX:*TRANSCRIBE-SYNTAXES* as the SYNTAX argument to
-MGL-PAX:TRANSCRIBE. Without a prefix argument, the syntax of the input
+MGL-PAX:TRANSCRIBE.  Without a prefix argument, the syntax of the input
 will not be changed (modulo ambiguity in syntax detection)."
   (interactive
    (cond ((use-region-p)
@@ -1721,7 +1714,7 @@ will not be changed (modulo ambiguity in syntax detection)."
       (when (and (= start end) block-start block-end)
         (setq start block-start
               end block-end)
-        (slime-flash-region start end 0.2))
+        (mgl-pax-flash-region start end 0.2))
       (let ((point-at-start-p (= (point) start))
             (input (buffer-substring-no-properties start end)))
         (cl-destructuring-bind (transcript did-something-p)
@@ -1737,15 +1730,17 @@ will not be changed (modulo ambiguity in syntax detection)."
                 ((string= transcript input)
                  (deactivate-mark))
                 (point-at-start-p
-                 (save-excursion
-                   (goto-char start)
-                   (delete-region start end)
-                   (insert transcript)))
+                  (save-excursion
+                    (goto-char start)
+                    (delete-region start end)
+                    (insert transcript)))
                 (t
                  (save-excursion
                    (goto-char start)
                    (delete-region start end))
                  (insert transcript))))))))
+
+
 
 (defun mgl-pax-transcribe-syntax-arg ()
   (if current-prefix-arg
@@ -1794,7 +1789,7 @@ start of the line following it, and the start of the line of the closing
 
 (defun mgl-pax-transcribe (string syntax update-only echo cl-transcript-args
                                   first-line-indent)
-  (let ((result (slime-eval `(mgl-pax::transcribe-for-emacs
+  (let ((result (mgl-pax-eval `(mgl-pax::transcribe-for-emacs
                               ,string ',syntax ',update-only ',echo
                               ,(or cl-transcript-args "")
                               ,first-line-indent))))

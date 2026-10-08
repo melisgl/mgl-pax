@@ -213,7 +213,7 @@ PAX is built on top of the DRef library. See <https://github.com/melisgl/dref>.
     - Description: Support for Navigating Sources in Emacs via Slime's
     M-. in MGL-PAX.
 
-    - Depends on: alexandria, autoload-doc, dref/full, mgl-pax, swank(?)
+    - Depends on: alexandria, autoload-doc, dref/full, mgl-pax, mgl-pax/compatibility, swank(?)
 
     - Defsystem depends on: autoload
 

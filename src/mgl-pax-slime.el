@@ -40,6 +40,13 @@
 (mgl-pax-defimpl mgl-pax-forward-sexp :slime ()
   (slime-forward-sexp))
 
+(mgl-pax-defimpl mgl-pax-flash-region :slime (start end &optional timeout)
+  (slime-flash-region start end timeout))
+
+(mgl-pax-defimpl mgl-pax-call-with-buffer-package :slime (package function)
+  (let ((slime-buffer-package package))
+    (funcall function)))
+
 (mgl-pax-defimpl mgl-pax-visit-lisp-location :slime (dspec-and-location-list)
   (slime-edit-definition-cont
    (slime-postprocess-xrefs dspec-and-location-list)
@@ -88,9 +95,10 @@
   '((?a slime-apropos mgl-pax-apropos)
     (?z slime-apropos-all mgl-pax-apropos-all)
     (?p slime-apropos-package mgl-pax-apropos-package)
-    (?d slime-describe-symbol mgl-pax-document)
     (?f slime-describe-function mgl-pax-document)
-    (?c nil mgl-pax-current-definition-toggle-view)
+    (?d slime-describe-symbol mgl-pax-hideshow-documentation)
+    (?c nil mgl-pax-hideshow-comments)
+    (?v nil mgl-pax-current-definition-toggle-view)
     (?u nil mgl-pax-edit-parent-section)))
 
 (defun mgl-pax-hijack-slime-doc-keys ()

@@ -6,6 +6,7 @@
         (*document-downcase-uppercase-code* nil)
         (pax::*test-fast-parse* t))
     (pax::with-sections-cache ()
+      (test-interaction-mode)
       (flet ((all ()
                (test-util)
                (test-hyperspec)

@@ -38,6 +38,17 @@
       (sly-flash-region (car bounds) (cdr bounds)))
     (buffer-substring-no-properties (car bounds) (cdr bounds))))
 
+(mgl-pax-defimpl mgl-pax-flash-region :sly (start end &optional timeout)
+  "`sly-flash-region' takes a :PATTERN of durations. :TIMEOUT cannot be
+combined with its default pattern."
+  (if timeout
+      (sly-flash-region start end :pattern (list timeout))
+    (sly-flash-region start end)))
+
+(mgl-pax-defimpl mgl-pax-call-with-buffer-package :sly (package function)
+  (let ((sly-buffer-package package))
+    (funcall function)))
+
 (mgl-pax-defimpl mgl-pax-symbol-start-pos :sly ()
   (sly-symbol-start-pos))
 
@@ -118,9 +129,10 @@
   '((?a sly-apropos mgl-pax-apropos)
     (?z sly-apropos-all mgl-pax-apropos-all)
     (?p sly-apropos-package mgl-pax-apropos-package)
-    (?d sly-describe-symbol mgl-pax-document)
     (?f sly-describe-function mgl-pax-document)
-    (?c nil mgl-pax-current-definition-toggle-view)
+    (?d sly-describe-symbol mgl-pax-hideshow-documentation)
+    (?c nil mgl-pax-hideshow-comments)
+    (?v nil mgl-pax-current-definition-toggle-view)
     (?u nil mgl-pax-edit-parent-section)))
 
 (defun mgl-pax-sly--override-plain-doc-keys (&optional reversep)
@@ -182,4 +194,3 @@
 ;; TODO web documentation requires `sly-enable-evaluate-in-emacs' to
 ;; be true for edit in Emacs to work; this should probably be left to
 ;; the user to decide.
-

@@ -15,6 +15,7 @@
                  alexandria:hash-table-keys alexandria:hash-table-values
                  alexandria:plist-hash-table alexandria:hash-table-plist
                  alexandria:compose alexandria:curry alexandria:rcurry
-                 alexandria:featurep)))
+                 alexandria:featurep
+                 alexandria:parse-ordinary-lambda-list)))
   (dolist (symbol imports)
     (import symbol)))

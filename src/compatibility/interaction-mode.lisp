@@ -11,6 +11,10 @@
      ,@body))
 
 (defun call-with-lisp-interaction-mode (interaction-mode thunk)
+  "Since the :SLY methods for DEFAULT-CONNECTION, WITH-CONNECTION, and
+  EVAL-IN-EMACS are in MGL-PAX/SLY, it has to be loaded first."
+  (when (eq interaction-mode :sly)
+    (load-sly-glue))
   (let ((*current-interaction-mode* interaction-mode))
     (setf *latest-interaction-mode* *current-interaction-mode*)
     (funcall thunk)))
@@ -98,7 +102,10 @@
   (swank::eval-in-emacs form nowait))
 
 
+;;; MGL-PAX/SLY depends on Slynk, so load it when first :SLY request
+;;; arrives. LOAD-SLY-GLUE is redefined by MGL-PAX/SLY.
+(autoload load-sly-glue "mgl-pax/sly" :arglist "()")
 
 (defimpl call-with-swank-compatibility :sly (function)
-  (with-autoloading ("mgl-pax/sly")
-    (call-next-method)))
+  (load-sly-glue)
+  (call-next-method))

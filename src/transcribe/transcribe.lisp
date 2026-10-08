@@ -351,7 +351,7 @@
 
 (defun transcribe-for-emacs (string default-syntax* update-only echo
                              cl-transcript-args-string first-line-indent)
-  (with-swank ()
+  (with-swank-compatibility ()
     (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
         (let ((default-syntax (cond ((numberp default-syntax*)

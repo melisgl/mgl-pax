@@ -42,13 +42,12 @@
   :homepage ""
   :bug-tracker ""
   :source-control ""
-  :description "Abstractions for supporting multiple Lisp interaction modes on the Emacs side of
-  [MGL-PAX][mgl-pax::@pax-manual]."
+  :description "Abstractions for supporting multiple Lisp interaction modes on
+  the Emacs side of [MGL-PAX][mgl-pax::@pax-manual]."
   :long-description "Do not declare a dependency on this system. It is
   autoloaded by Elisp or by accessing the functionality provided if the
   [`mgl-pax`][asdf:system] system is loaded."
   :depends-on ("mgl-pax" "alexandria" (:feature (:not :swank) "swank"))
-  :defsystem-depends-on ("mgl-pax.asdf")
   :components ((:module "src/compatibility/"
                 :serial t
                 :components ((:file "package")
@@ -68,7 +67,6 @@
   autoloaded by Elisp or by accessing the functionality provided if the
   [`mgl-pax`][asdf:system] system is loaded."
   :depends-on ("mgl-pax/compatibility" (:feature (:not :slynk) "slynk"))
-  :defsystem-depends-on ("mgl-pax.asdf")
   :components ((:module "src/compatibility/"
                 :serial t
                 :components ((:file "sly"))))
@@ -85,8 +83,8 @@
   :source-control ""
   :description "Support for MGL-PAX::@NAVIGATING-IN-EMACS via Slime's
   `MGL-PAX::@M-.` in [MGL-PAX][mgl-pax::@pax-manual]."
-  :depends-on ("alexandria" "autoload-doc" "mgl-pax" "dref/full"
-               (:feature (:not :swank) "swank"))
+  :depends-on ("alexandria" "autoload-doc" "mgl-pax" "mgl-pax/compatibility"
+                            "dref/full" (:feature (:not :swank) "swank"))
   :defsystem-depends-on ("autoload")
   :class "autoload:autoload-system"
   :around-compile (lambda (thunk)
