@@ -664,23 +664,24 @@
 
 (defun redocument-for-emacs (file-url output
                              &optional *document-hyperspec-root*)
-  (swank/backend:converting-errors-to-error-location
-    (swank::with-buffer-syntax (swank::*buffer-package*)
-      ;; This is called only for `w3m' and `precheck'.
-      (let ((*subformat* (if (uiop:directory-exists-p output) :w3m nil)))
-        (multiple-value-bind (scheme authority path query fragment)
-            (split-url file-url)
-          (declare (ignore authority query))
-          (when (equal scheme "file")
-            (assert (null fragment))
-            (let ((dir (make-pathname :name nil :type nil :defaults path)))
-              (when (string= (namestring dir) output)
-                (let ((new-file-url (document-pax*-url
-                                     (pax-url-from-filename
-                                      (pathname-name path))
-                                     dir)))
-                  (assert (string= new-file-url file-url)))))))))
-    (values)))
+  (with-swank-compatibility ()
+    (swank/backend:converting-errors-to-error-location
+     (swank::with-buffer-syntax (swank::*buffer-package*)
+       ;; This is called only for `w3m' and `precheck'.
+       (let ((*subformat* (if (uiop:directory-exists-p output) :w3m nil)))
+         (multiple-value-bind (scheme authority path query fragment)
+             (split-url file-url)
+           (declare (ignore authority query))
+           (when (equal scheme "file")
+             (assert (null fragment))
+             (let ((dir (make-pathname :name nil :type nil :defaults path)))
+               (when (string= (namestring dir) output)
+                 (let ((new-file-url (document-pax*-url
+                                      (pax-url-from-filename
+                                       (pathname-name path))
+                                      dir)))
+                   (assert (string= new-file-url file-url)))))))))
+     (values))))
 
 
 ;;; Find the source location of the path component of PAX-URL, and
