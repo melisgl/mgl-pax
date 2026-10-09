@@ -49,7 +49,7 @@
 (define-glossary-term @word (:title "word")
   "A _word_ is a string from which we want to extract a @NAME. When
   [Navigating][@navigating-in-emacs section], the word is
-  `slime-sexp-at-point` or the label of a @MARKDOWN/REFLINK if point
+  sexp or the label of a @MARKDOWN/REFLINK if point
   is over one. Similarly, when @GENERATING-DOCUMENTATION, it is a
   non-empty string between whitespace characters in a docstring or the
   label of a @MARKDOWN/REFLINK.")

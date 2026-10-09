@@ -12,7 +12,7 @@
   `apropos-command` and other online help commands in Emacs, for which
   direct parallels are provided.
 
-  Still, even without Emacs and @SLIME, limited functionality is
+  Still, even without Emacs and @SLIME or @SLY, limited functionality is
   available through the @PAX-LIVE-HOME-PAGE by starting the live
   documentation web server [manually][ensure-web-server].
 
@@ -720,10 +720,10 @@
   `mgl-pax-apropos-package` can display the results of DREF-APROPOS in
   the [live documentation browser] [@browsing-live-documentation].
   These extend the functionality of `slime-apropos`,
-  `slime-apropos-all` and `slime-apropos-package` to support more
-  kinds of DREF::@DEFINITIONs in an extensible way. The correspondence
-  is so close that the PAX versions might [take over the Slime key
-  bindings][@EMACS-SETUP].
+  `slime-apropos-all` and `slime-apropos-package` (and their `sly-` versions)
+  to support more kinds of DREF::@DEFINITIONs in an extensible way. The
+  correspondence is so close that the PAX versions might [take over the Slime
+  key bindings][@EMACS-SETUP].
 
   Note that apropos functionality is also exposed via the
   @PAX-LIVE-HOME-PAGE.

@@ -121,7 +121,7 @@ combined with its default pattern."
 ;;;; MGL-PAX::@SLY-SETUP (also see MGL-PAX::@EMACS-SETUP)
 
 (defcustom mgl-pax-hijack-sly-doc-keys t
-  "If true, then bind mgl-pax functions in `sly-mode-map' by
+  "If true, then bind mgl-pax functions in `sly-doc-map' by
   `mgl-pax-hijack-sly-doc-keys' upon loading `mgl-pax-sly'. See
   MGL-PAX::@EMACS-KEYS for details."
   :type 'boolean

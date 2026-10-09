@@ -3,13 +3,13 @@
 (in-readtable pythonic-string-syntax)
 
 (defsection @navigating-in-emacs (:title "Navigating Sources in Emacs")
-  """Integration into @SLIME's @M-. (`slime-edit-definition`) allows
+  """Integration into @SLIME's or @SLY's @M-. (`slime-edit-definition`) allows
   one to visit the SOURCE-LOCATION of a DREF::@DEFINITION. PAX extends
   standard Slime functionality by
 
   - adding support for all kinds of definitions (see e.g.
     [ASDF:SYSTEM][locative], [READTABLE][locative] in
-    DREF::@BASIC-LOCATIVE-TYPES), not just the ones Slime knows about,
+    DREF::@BASIC-LOCATIVE-TYPES), not just the ones the client knows about,
 
   - providing a portable way to refer to even standard definitions,
 
@@ -37,11 +37,11 @@
   current buffer at point. If no name is found, then it
   [prompts][@M-.-PROMPTING].
 
-  First, `(slime-sexp-at-point)` is taken as a @WORD, from which the
-  @NAME will be [parsed][@parsing]. Then, candidate locatives are
-  looked for before and after the @WORD. Thus, if a locative is the
-  previous or the next expression, then `\\M-.` will go straight to the
-  definition which corresponds to the locative. If that fails, `\\M-.`
+  First, the sexp at point `(slime-sexp-at-point)` or `(sly-sexp-at-point)` is
+  taken as a @WORD,from which the @NAME will be [parsed][@parsing]. Then,
+  candidate locatives are looked for before and after the @WORD. Thus, if a
+  locative is the previous or the next expression, then `\\M-.` will go straight
+  to the definition which corresponds to the locative. If that fails, `\\M-.`
   will try to find the definitions in the normal way, which may
   involve popping up an xref buffer and letting the user interactively
   select one of possible definitions.
@@ -195,8 +195,8 @@
   will be recognized as `\PRINT` and `\pax` as `"PAX"`.
 
   The package in which symbols are read is the Elisp
-  `slime-current-package`. In Lisp buffers, this is the buffer's
-  package, else it's the package of the Slime repl buffer.""")
+  `slime-current-package` or `sly-current package`. In Lisp buffers,this is
+  the buffer's package, else it's the package of the Slime repl buffer.""")
 
 
 ;;;; Completion of names and locatives for the Elisp function
@@ -209,7 +209,7 @@
   explicitly with an opening quotation mark, and they are
   case-sensitive. Examples:
 
-  - `pri<TAB>` invokes the usual Slime completion.
+  - `pri<TAB>` invokes the usual client completion.
 
   - `print <TAB>` (note the space) lists FUNCTION and (PAX:CLHS
     FUNCTION) as locatives.
