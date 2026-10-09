@@ -1,11 +1,14 @@
 ;;;; -*- lexical-binding: t -*-
 
 (eval-and-compile
-  (require 'mgl-pax)
+  (require 'mgl-pax))
+
+;; set this before requiring `slime' since that triggers loading the default backend
+(defvar mgl-pax-backend :slime) ; default if not already set
+
+(eval-and-compile
   (require 'slime))
 
-
-(defvar mgl-pax-backend :slime) ; default if not already set
 
 ;;;; SLIME implementation of the Lisp interaction mode protocol
 

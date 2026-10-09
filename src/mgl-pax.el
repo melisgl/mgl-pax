@@ -1801,3 +1801,26 @@ start of the line following it, and the start of the line of the closing
 
 
 (provide 'mgl-pax)
+
+
+;;;; Default backend
+
+;;; Before splitting client specific code for the sake of Sly compatibility,
+;;; `(require 'mgl-pax)' set up SLIME. To avoid breaking the old convention,
+;;; this loads the backend of the first client that gets loaded. A backend
+;;; sets `mgl-pax-backend' before it requires its client, so this does nothing
+;;; if one has been loaded explicitly or is being loaded. To use a different client,
+;;; `require' its backend, i.e. `mgl-pax-slime' or `mgl-pax-sly'.
+;;;
+;;; This must come after `provide' because the backends require `mgl-pax'. Admittedly,
+;;; having this after (provide 'mgl-pax) feels a little hacky.
+
+(defun mgl-pax-load-default-backend (backend)
+  (unless (boundp 'mgl-pax-backend)
+    (require backend)))
+
+(with-eval-after-load 'slime
+  (mgl-pax-load-default-backend 'mgl-pax-slime))
+
+(with-eval-after-load 'sly
+  (mgl-pax-load-default-backend 'mgl-pax-sly))

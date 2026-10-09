@@ -1,12 +1,14 @@
 ;;;; -*- lexical-binding: t; -*-
 
 (eval-and-compile
-  (require 'mgl-pax)
+  (require 'mgl-pax))
+
+;; set this before requiring `sly' since that triggers loading the default backend
+(defvar mgl-pax-backend :sly) ; default if not already set
+
+(eval-and-compile
   (require 'sly))
-
 
-
-(defvar mgl-pax-backend :sly)
 
 ;;;; Sly implementation of the Lisp interaction mode protocol
 
