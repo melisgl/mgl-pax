@@ -1182,7 +1182,8 @@ docstring</li>
 
 (deftest test-macro/arglist ()
   (let ((*document-downcase-uppercase-code* t)
-        (*package* (find-package :mgl-pax-test)))
+        (*package* (find-package :mgl-pax-test))
+        (pax::*format* :markdown))
     (is (equal (pax::print-markdown (mgl-pax::arglist-to-tree '((&key a) (b c)))
                                     nil)
                "(\\&key a) (b c)"))
@@ -1204,7 +1205,7 @@ docstring</li>
       (is (equal (pax::print-markdown (mgl-pax::arglist-to-tree
                                        '(&key ((:x *x*) 7)))
                                       nil)
-                 "\\&key ((:x \\*x\\*) 7)")))
+                 "\\&key (x 7)")))
     (is (equal (let ((*format* :html))
                  (mgl-pax::arglist-to-tree '(&key (x *x*))))
                '((:plain "&key" " " "(" "x" " " "*x*" ")"))))))

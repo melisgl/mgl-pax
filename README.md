@@ -4993,11 +4993,19 @@ encoded in an unspecified format internal to `DOCUMENT`.
 
         - If it is a list, then it is must be a [lambda list][98ff] and
           is printed without the outermost parens and with the package
-          names removed from the argument names. [Keywords][88a0] are
-          printed with a leading colon.
+          names removed from the argument names.
 
-            [`&AUX`][4336] variables and `SUPPLIED-P-PARAMETER`s of [`&OPTIONAL`][4336] and
-            [`&KEY`][4336] arguments are considered internal and are not printed.
+            [`&AUX`][4336] variables, `SUPPLIED-P-PARAMETER`s, and `VAR` in
+            the ([`KEYWORD`][077a] `VAR`) form of keyword arguments f are considered
+            internal and are not printed. If the default value of an
+            optional or keyword argument is `NIL`, then it is not printed.
+            See [Ordinary Lambda List][059c]. Thus,
+
+                (x &key a (b nil) (c nil cp) ((:d *d*) 4) (e 5 ep) &aux f g)
+
+            is documented as
+
+                x &key a b c (d 4) (e 5)
 
         - If it is a string, then it must be valid Markdown.
 
@@ -5162,9 +5170,13 @@ they are presented.
 
 [051b]: http://www.lispworks.com/documentation/HyperSpec/Body/22_chb.htm "\"22.3.8.2\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
 
+[059c]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_o.htm#ordinary_lambda_list "\"ordinary lambda list\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
+
 [0684]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cac.htm "\"22.3.1.3\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
 
 [0702]: #x-28MGL-PAX-3A-40DOCUMENTABLE-20MGL-PAX-3ASECTION-29 "`DOCUMENTABLE`"
+
+[077a]: http://www.lispworks.com/documentation/HyperSpec/Body/t_kwd.htm "KEYWORD (MGL-PAX:CLHS TYPE)"
 
 [090e]: #x-28MGL-PAX-3A-40TITLE-20MGL-PAX-3AGLOSSARY-TERM-29 "title"
 
@@ -5535,8 +5547,6 @@ they are presented.
 [886c]: http://www.lispworks.com/documentation/HyperSpec/Body/22_cge.htm "\"22.3.7.5\" (MGL-PAX:CLHS MGL-PAX:SECTION)"
 
 [8894]: #x-28MGL-PAX-3A-2ADOCUMENT-INDICES-2A-20VARIABLE-29 "MGL-PAX:*DOCUMENT-INDICES* VARIABLE"
-
-[88a0]: http://www.lispworks.com/documentation/HyperSpec/Body/26_glo_k.htm#keyword "\"keyword\" (MGL-PAX:CLHS MGL-PAX:GLOSSARY-TERM)"
 
 [88a7]: #x-28MGL-PAX-3ASECTION-READTABLE-20-28MGL-PAX-3AREADER-20MGL-PAX-3ASECTION-29-29 "MGL-PAX:SECTION-READTABLE (MGL-PAX:READER MGL-PAX:SECTION)"
 
