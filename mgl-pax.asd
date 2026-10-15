@@ -81,7 +81,7 @@
   :homepage ""
   :bug-tracker ""
   :source-control ""
-  :description "Support for MGL-PAX::@NAVIGATING-IN-EMACS via Slime's
+  :description "Support for MGL-PAX::@NAVIGATING-IN-EMACS via Slime's or Sly's
   `MGL-PAX::@M-.` in [MGL-PAX][mgl-pax::@pax-manual]."
   :depends-on ("alexandria" "autoload-doc" "mgl-pax" "mgl-pax/compatibility"
                             "dref/full" (:feature (:not :swank) "swank"))

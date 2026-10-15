@@ -5,7 +5,7 @@
 (defsection @navigating-in-emacs (:title "Navigating Sources in Emacs")
   """Integration into @SLIME's or @SLY's @M-. (`slime-edit-definition`) allows
   one to visit the SOURCE-LOCATION of a DREF::@DEFINITION. PAX extends
-  standard Slime functionality by
+  standard Slime/Sly functionality by
 
   - adding support for all kinds of definitions (see e.g.
     [ASDF:SYSTEM][locative], [READTABLE][locative] in
@@ -195,8 +195,8 @@
   will be recognized as `\PRINT` and `\pax` as `"PAX"`.
 
   The package in which symbols are read is the Elisp
-  `slime-current-package` or `sly-current package`. In Lisp buffers,this is
-  the buffer's package, else it's the package of the Slime repl buffer.""")
+  `slime-current-package` or `sly-current-package`. In Lisp buffers,this is
+  the buffer's package, else it's the package of the client repl buffer.""")
 
 
 ;;;; Completion of names and locatives for the Elisp function

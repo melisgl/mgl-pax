@@ -1,5 +1,3 @@
-![](web/pax-logo.jpg)
-
 <a id="x-28MGL-PAX-3A-40PAX-MANUAL-20MGL-PAX-3ASECTION-29"></a>
 
 # PAX Manual
@@ -384,7 +382,7 @@ PAX is built on top of the DRef library. See <https://github.com/melisgl/dref>.
 
 - \[system\] **"mgl-pax/navigate"**
 
-    - *Description:* Support for [Navigating Sources in Emacs][3386] via Slime's
+    - *Description:* Support for [Navigating Sources in Emacs][3386] via Slime's or Sly's
     [`M-.`][cb15] in [MGL-PAX][2415].
 
     - *Depends on:* alexandria, autoload-doc, dref/full, [mgl-pax][6fdb], mgl-pax/compatibility, swank(?)
@@ -474,7 +472,7 @@ Alternatively, with `use-package`:
   (mgl-pax-hijack-slime-doc-keys))
 ```
 
-The same for Sly:
+The equivalent for Sly:
 
 ```elisp
 (use-package mgl-pax
@@ -597,7 +595,7 @@ the `swank` ASDF system must be loadable. It is if SLIME is
 installed or Swank is available through [Quicklisp][1539]. Swank is not
 started as a server. The Elisp functions
 `mgl-pax-hijack-sly-doc-keys` and `mgl-pax-unhijack-sly-doc-keys`
-are the Sly counterparts of those for SLIME (see [Setting up Keys][cfab]).
+are the Sly counterparts of those for SLIME (see [Setting up Keys][cfab]). 
 
 <a id="x-28MGL-PAX-3A-40EMACS-KEYS-20MGL-PAX-3ASECTION-29"></a>
 
@@ -613,7 +611,7 @@ The recommended key bindings are
 
 The global key bindings above are global because their commands work
 in any mode. If that's not desired, one may bind `C-.` locally in
-all Slime related modes like this:
+all Slime related modes like this (swap out `slime` for `sly` if using Sly):
 
 ```elisp
 (slime-bind-keys slime-parent-map nil '(("C-." mgl-pax-document)))
@@ -638,6 +636,9 @@ true, then upon loading `mgl-pax`, the following changes are made to
 
 - `C-c C-d u`: installs `mgl-pax-edit-parent-section`
 
+If `mgl-pax-hijack-sly-doc-keys` is true, the equivalent holds for
+`sly-apropos`, etc. in `sly-doc-map`.
+
 Calling `mgl-pax-unhijack-slime-doc-keys` reverts these changes.
 For Sly, `mgl-pax-hijack-sly-doc-keys` (controlled by
 `mgl-pax-hijack-sly-doc-keys` the same way) makes the same changes
@@ -652,9 +653,9 @@ binds the plain ones (`C-c C-d a`) as well where they are free.
 
 As a user, I frequently run into documentation that's incomplete
 and out of date, so I tend to stay in the editor and explore the
-code by jumping around with [SLIME][6be7]'s [`M-.`][cb15] (`slime-edit-definition`).
-As a library author, I spend a great deal of time polishing code but
-precious little writing documentation.
+code by jumping around with [SLIME][6be7]'s or [Sly][0146]'s [`M-.`][cb15] (`slime-edit-definition`
+or `sly-edit-definition`). As a library author, I spend a great deal of time
+polishing code but precious little writing documentation.
 
 In fact, I rarely write anything more comprehensive than docstrings
 for exported stuff. Writing docstrings feels easier than writing a
@@ -1292,7 +1293,7 @@ in the context of [Generating Documentation][2c93]).
 
 Integration into [SLIME][6be7]'s or [Sly][0146]'s [`M-.`][cb15] (`slime-edit-definition`) allows
 one to visit the `SOURCE-LOCATION` of a definition. PAX extends
-standard Slime functionality by
+standard Slime/Sly functionality by
 
 - adding support for all kinds of definitions (see e.g.
   `ASDF:SYSTEM`, `READTABLE` in
@@ -1412,8 +1413,8 @@ In all of the above `NAME` is a [raw name][f5af], meaning that `print`
 will be recognized as `PRINT` and `pax` as `"PAX"`.
 
 The package in which symbols are read is the Elisp
-`slime-current-package` or `sly-current package`. In Lisp buffers,this is
-the buffer's package, else it's the package of the Slime repl buffer.
+`slime-current-package` or `sly-current-package`. In Lisp buffers,this is
+the buffer's package, else it's the package of the client repl buffer.
 
 <a id="x-28MGL-PAX-3A-40M--2E-COMPLETION-20MGL-PAX-3ASECTION-29"></a>
 
@@ -1938,7 +1939,7 @@ the [live documentation browser][a595].
 These extend the functionality of `slime-apropos`,
 `slime-apropos-all` and `slime-apropos-package` (and their `sly-` versions)
 to support more kinds of definitions in an extensible way. The
-correspondence is so close that the PAX versions might [take over the Slime
+correspondence is so close that the PAX versions might [take over the client
 key bindings][8541].
 
 Note that apropos functionality is also exposed via the
@@ -2374,7 +2375,7 @@ strings can be a pain. [Pythonic String Reader][d3fc5] can help with that.
 
 - \[variable\] **\*DOCUMENT-DOWNCASE-UPPERCASE-CODE\*** *NIL*
 
-    If true, then all [Markdown inline code][68c1] (e.g. `` `code` ``, *which
+    If true, then all [Markdown inline code][68c1] (e.g. ```code```, *which
     renders as* `code`) – including [Codification][f1ab] – which has no
     lowercase characters is downcased in the output. Characters of
     literal strings in the code may be of any case. If this variable is
@@ -5318,7 +5319,7 @@ they are presented.
 
 [238c]: #x-28MGL-PAX-3ATRANSCRIPTION-VALUES-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION"
 
-[2415]: README.md "PAX Manual"
+[2415]: #x-28MGL-PAX-3A-40PAX-MANUAL-20MGL-PAX-3ASECTION-29 "PAX Manual"
 
 [2634]: #x-28MGL-PAX-3A-40OVERVIEW-OF-ESCAPING-20MGL-PAX-3ASECTION-29 "Overview of Escaping"
 

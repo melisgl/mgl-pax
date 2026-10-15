@@ -274,7 +274,7 @@
     (mgl-pax-hijack-slime-doc-keys))
   ```
 
-  The same for Sly:
+  The equivalent for Sly:
 
   ```elisp
   (use-package mgl-pax
@@ -383,7 +383,7 @@
   installed or Swank is available through @QUICKLISP. Swank is not
   started as a server. The Elisp functions
   `mgl-pax-hijack-sly-doc-keys` and `mgl-pax-unhijack-sly-doc-keys`
-  are the Sly counterparts of those for SLIME (see @EMACS-KEYS).""")
+  are the Sly counterparts of those for SLIME (see @EMACS-KEYS). """)
 
 ;;; This is not a DEFVAR so that it picks up version changes on
 ;;; reload. Set to NIL by the DONT-CHECK restart.
@@ -450,7 +450,7 @@
 
   The global key bindings above are global because their commands work
   in any mode. If that's not desired, one may bind `\\C-.` locally in
-  all Slime related modes like this:
+  all Slime related modes like this (swap out `slime` for `sly` if using Sly):
 
   ```elisp
   (slime-bind-keys slime-parent-map nil '(("C-." mgl-pax-document)))
@@ -469,6 +469,9 @@
   - `C-c C-d c`: installs `mgl-pax-hideshow-comments`
   - `C-c C-d u`: installs `mgl-pax-edit-parent-section`
 
+  If `mgl-pax-hijack-sly-doc-keys` is true, the equivalent holds for
+  `sly-apropos`, etc. in `sly-doc-map`.
+
   Calling `mgl-pax-unhijack-slime-doc-keys` reverts these changes.
   For Sly, `mgl-pax-hijack-sly-doc-keys` (controlled by
   `mgl-pax-hijack-sly-doc-keys` the same way) makes the same changes
@@ -480,9 +483,9 @@
 (defsection @background (:title "Background")
   """As a user, I frequently run into documentation that's incomplete
   and out of date, so I tend to stay in the editor and explore the
-  code by jumping around with @SLIME's @M-. (`slime-edit-definition`).
-  As a library author, I spend a great deal of time polishing code but
-  precious little writing documentation.
+  code by jumping around with @SLIME's or @SLY's @M-. (`slime-edit-definition`
+  or `sly-edit-definition`). As a library author, I spend a great deal of time
+  polishing code but precious little writing documentation.
 
   In fact, I rarely write anything more comprehensive than docstrings
   for exported stuff. Writing docstrings feels easier than writing a

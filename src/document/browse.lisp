@@ -722,7 +722,7 @@
   These extend the functionality of `slime-apropos`,
   `slime-apropos-all` and `slime-apropos-package` (and their `sly-` versions)
   to support more kinds of DREF::@DEFINITIONs in an extensible way. The
-  correspondence is so close that the PAX versions might [take over the Slime
+  correspondence is so close that the PAX versions might [take over the client
   key bindings][@EMACS-SETUP].
 
   Note that apropos functionality is also exposed via the
