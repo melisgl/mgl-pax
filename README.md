@@ -1,3 +1,5 @@
+![](web/pax-logo.jpg)
+
 <a id="x-28MGL-PAX-3A-40PAX-MANUAL-20MGL-PAX-3ASECTION-29"></a>
 
 # PAX Manual
@@ -2375,7 +2377,7 @@ strings can be a pain. [Pythonic String Reader][d3fc5] can help with that.
 
 - \[variable\] **\*DOCUMENT-DOWNCASE-UPPERCASE-CODE\*** *NIL*
 
-    If true, then all [Markdown inline code][68c1] (e.g. ```code```, *which
+    If true, then all [Markdown inline code][68c1] (e.g. `` `code` ``, *which
     renders as* `code`) – including [Codification][f1ab] – which has no
     lowercase characters is downcased in the output. Characters of
     literal strings in the code may be of any case. If this variable is
@@ -5319,7 +5321,7 @@ they are presented.
 
 [238c]: #x-28MGL-PAX-3ATRANSCRIPTION-VALUES-CONSISTENCY-ERROR-20CONDITION-29 "MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION"
 
-[2415]: #x-28MGL-PAX-3A-40PAX-MANUAL-20MGL-PAX-3ASECTION-29 "PAX Manual"
+[2415]: README.md "PAX Manual"
 
 [2634]: #x-28MGL-PAX-3A-40OVERVIEW-OF-ESCAPING-20MGL-PAX-3ASECTION-29 "Overview of Escaping"
 
