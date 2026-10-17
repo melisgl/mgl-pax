@@ -34,12 +34,25 @@ Testing from the command line
             ros install $lisp
         done
 
-- `test/test-el.sh` runs the Elisp tests. This currently only tests
-  with SBCL and needs the value of `SLIME_DIR` to be specified in the
-  script.
+- `test/test-el.sh` runs the Elisp tests once for each client. This
+  currently only tests with SBCL and needs the value of `SLIME_DIR` to
+  be specified in the script.
+
+    To test only with a specific client, e.g. Sly:
+    `MGL_PAX_TEST_CLIENTS=sly test/test-el.sh`.
+
+    The Elisp tests are written against client neutral names that get
+    defined in `test/mgl-pax-test-client.el`, which maps to SLIME or
+    SLY equivalents. SLY needs SWANK to be loadable on the Lisp side.
 
     Debugging test failures can be easier if `--batch` is removed from
     the script.
+
+- `test/test-mock.sh` runs the Elisp tests that use a mock backend and
+  need neither a client nor a Lisp. `test/test-default-backend.sh`
+  checks which backend `(require 'mgl-pax)` loads for various orders
+  of loading the clients. `test/test-sly.sh` runs the Lisp-side Sly
+  tests and needs Slynk (`SLYNK_DIR`).
 
 Catching changes in behaviour
 -----------------------------

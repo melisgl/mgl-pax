@@ -70,6 +70,9 @@
 (define-glossary-term @slime (:title "SLIME"
                               :url "https://slime.common-lisp.dev/"))
 
+(define-glossary-term @sly (:title "Sly"
+                            :url "https://github.com/joaotavora/sly"))
+
 (define-glossary-term @m-.
     (:title "`\\\\M-.`"
      :url "http://common-lisp.net/project/slime/doc/html/Finding-definitions.html#Finding-definitions"))
@@ -116,7 +119,7 @@
   definitions (e.g. `(UNIFORM-RANDOM FUNCTION)`). These are the glue.
   To support interactive development, PAX
 
-  - makes @SLIME's @M-. work with references and
+  - makes @SLIME's or @SLY's @M-. work with references and
 
   - adds a documentation browser.
 
@@ -236,8 +239,8 @@
   ("mgl-pax/full" asdf:system))
 
 (defsection @emacs-setup (:title "Emacs Setup")
-  """Here is a quick recipe for setting up PAX for use via @SLIME to
-  take advantage of the [conveniences on offer][@EMACS-FUNCTIONALITY].
+  """Here is a quick recipe for setting up PAX for use via @SLIME or
+  @SLY to take advantage of the [conveniences on offer][@EMACS-FUNCTIONALITY].
   Conversely, there is no need to do any of this just to use
   DEFSECTION, write docstrings and for @GENERATING-DOCUMENTATION.
 
@@ -271,23 +274,47 @@
     (mgl-pax-hijack-slime-doc-keys))
   ```
 
+  The equivalent for Sly:
+
+  ```elisp
+  (use-package mgl-pax
+    :load-path "~/quicklisp"
+    :after sly
+    :demand t
+    :bind (("C-." . mgl-pax-document)
+           ("s-x t" . mgl-pax-transcribe-last-expression)
+           ("s-x r" . mgl-pax-retranscribe-region))
+    :config
+    (mgl-pax-hijack-sly-doc-keys))
+  ```
+
   When @BROWSING-WITH-OTHER-BROWSERS, for clicking on the locative
   next to a definition to visit the corresponding source location in
   Emacs, permission needs to be given:
 
   ```elisp
   (setq slime-enable-evaluate-in-emacs t)
-  ```"""
+  ```
+
+  or, with Sly:
+
+  ```elisp
+  (setq sly-enable-evaluate-in-emacs t)
+  ```
+
+  See @EMACS-CLIENTS for how PAX picks between SLIME and Sly, and for
+  what Sly needs on the Lisp side."""
   (@emacs-functionality section)
   (@emacs-quicklisp section)
   (@emacs-loading section)
+  (@emacs-clients section)
   (@emacs-keys section))
 
 (defsection @emacs-functionality (:title "Functionality Provided")
-  "- For @NAVIGATING-IN-EMACS, loading `mgl-pax` extends
-    `slime-edit-definitions` (@M-.) by adding
-    `mgl-pax-edit-definitions` to `slime-edit-definition-hooks`. There
-    are no related variables to customize.
+  "- For @NAVIGATING-IN-EMACS, loading `mgl-pax` extends the
+    client's @M-. (`slime-edit-definition` or `sly-edit-definition`)
+    to handle references. There are no related variables to
+    customize.
 
   - For @BROWSING-LIVE-DOCUMENTATION, `mgl-pax-browser-function` and
     `mgl-pax-web-server-port` can be customized in Elisp. To browse
@@ -308,8 +335,8 @@
 (defsection @emacs-quicklisp (:title "Installing from Quicklisp")
   """If you installed PAX with Quicklisp, the location of `mgl-pax.el`
   may change with updates, and you may want to copy the current
-  version of `mgl-pax.el` to a stable location by evaluating this in
-  CL:
+  version of `mgl-pax.el` (and the files it loads for SLIME and Sly
+  to a stable location by evaluating this in CL:
 
       (mgl-pax:install-pax-elisp "~/quicklisp/")
 
@@ -327,10 +354,36 @@
   ```
 
   If the Elisp variable `mgl-pax-autoload` is true (the default), then
-  PAX will be loaded in the connected Lisp on-demand via @SLIME.
+  PAX will be loaded in the connected Lisp on-demand via @SLIME or @SLY.
 
   If loading fails, `mgl-pax` will be unloaded from Emacs and any
-  [overridden Slime key bindings][@EMACS-KEYS] restored.""")
+  [overridden key bindings][@EMACS-KEYS] restored.""")
+
+(defsection @emacs-clients (:title "SLIME and Sly")
+  """The code that is specific to a client lives in `mgl-pax-slime.el`
+  and `mgl-pax-sly.el`, and `mgl-pax.el` loads one of them:
+
+  - `(require 'mgl-pax)` loads the one for the first of `slime` and
+    `sly` that is loaded. If either has been loaded already, it loads
+    immediately, otherwise when the client has been loaded.
+    If both have been loaded already, then SLIME's is chosen.
+    So the setup above works without change for both.
+
+  - To choose explicitly, `(require 'mgl-pax-slime)` or
+    `(require 'mgl-pax-sly)` before the other client is loaded. Do not
+    set the Elisp variable `mgl-pax-backend` instead: that stops
+    `mgl-pax` from loading either.
+
+  - Only one client can be used per Emacs session. Loading both
+    backends at once is not supported.
+
+  With Sly, Slynk provides the connection, but the Lisp side of PAX
+  still uses Swank as a library (e.g. to find source locations), so
+  the `swank` ASDF system must be loadable. It is if SLIME is
+  installed or Swank is available through @QUICKLISP. Swank is not
+  started as a server. The Elisp functions
+  `mgl-pax-hijack-sly-doc-keys` and `mgl-pax-unhijack-sly-doc-keys`
+  are the Sly counterparts of those for SLIME (see @EMACS-KEYS). """)
 
 ;;; This is not a DEFVAR so that it picks up version changes on
 ;;; reload. Set to NIL by the DONT-CHECK restart.
@@ -339,18 +392,29 @@
                       "mgl-pax" "version.lisp-expr"))
     (read s)))
 
+(defparameter *pax-elisp-files*
+  '("mgl-pax.el" "mgl-pax-slime.el" "mgl-pax-sly.el"))
+
 (defun install-pax-elisp (target-dir)
-  "Install `mgl-pax.el` distributed with this package in TARGET-DIR."
-  (let ((source (asdf:system-relative-pathname "mgl-pax" "src/mgl-pax.el"))
-        (target (merge-pathnames "mgl-pax.el"
-                                 (uiop:ensure-directory-pathname target-dir))))
-    (with-open-file (s target :direction :output :if-does-not-exist :create
-                       :if-exists :supersede)
-      (dolist (line (uiop:read-file-lines source))
-        (if (string= line "(setq mgl-pax-version (mgl-pax-read-version))")
-            (format s "(setq mgl-pax-version '~S)~%" *pax-version*)
-            (write-line line s))))
-    target))
+  "Install `mgl-pax.el` and the backends it loads for SLIME and Sly
+  (`mgl-pax-slime.el` and `mgl-pax-sly.el`) that are distributed with
+  this package in TARGET-DIR. Return the pathname of `mgl-pax.el`."
+  (let ((target-dir (uiop:ensure-directory-pathname target-dir))
+        (result nil))
+    (dolist (file *pax-elisp-files*)
+      (let ((source (asdf:system-relative-pathname
+                     "mgl-pax" (format nil "src/~A" file)))
+            (target (merge-pathnames file target-dir)))
+        (with-open-file (s target :direction :output :if-does-not-exist :create
+                                  :if-exists :supersede)
+          (dolist (line (uiop:read-file-lines source))
+            (if (string= line "(setq mgl-pax-version (mgl-pax-read-version))")
+                (format s "(setq mgl-pax-version '~S)~%" *pax-version*)
+                (write-line line s))))
+        (when (string= file "mgl-pax.el")
+          (setq result target))))
+    result))
+
 
 (defun check-pax-elisp-version (pax-elisp-version)
   (when *pax-version*
@@ -386,7 +450,7 @@
 
   The global key bindings above are global because their commands work
   in any mode. If that's not desired, one may bind `\\C-.` locally in
-  all Slime related modes like this:
+  all Slime related modes like this (swap out `slime` for `sly` if using Sly):
 
   ```elisp
   (slime-bind-keys slime-parent-map nil '(("C-." mgl-pax-document)))
@@ -405,14 +469,23 @@
   - `C-c C-d c`: installs `mgl-pax-hideshow-comments`
   - `C-c C-d u`: installs `mgl-pax-edit-parent-section`
 
-  Calling `mgl-pax-unhijack-slime-doc-keys` reverts these changes.""")
+  If `mgl-pax-hijack-sly-doc-keys` is true, the equivalent holds for
+  `sly-apropos`, etc. in `sly-doc-map`.
+
+  Calling `mgl-pax-unhijack-slime-doc-keys` reverts these changes.
+  For Sly, `mgl-pax-hijack-sly-doc-keys` (controlled by
+  `mgl-pax-hijack-sly-doc-keys` the same way) makes the same changes
+  to `sly-doc-map` with `sly-apropos` and so on in place of the
+  `slime-` commands, and `mgl-pax-unhijack-sly-doc-keys` reverts them.
+  Sly binds only the control variants (e.g. `C-c C-d C-a`), so PAX
+  binds the plain ones (`C-c C-d a`) as well where they are free.""")
 
 (defsection @background (:title "Background")
   """As a user, I frequently run into documentation that's incomplete
   and out of date, so I tend to stay in the editor and explore the
-  code by jumping around with @SLIME's @M-. (`slime-edit-definition`).
-  As a library author, I spend a great deal of time polishing code but
-  precious little writing documentation.
+  code by jumping around with @SLIME's or @SLY's @M-. (`slime-edit-definition`
+  or `sly-edit-definition`). As a library author, I spend a great deal of time
+  polishing code but precious little writing documentation.
 
   In fact, I rarely write anything more comprehensive than docstrings
   for exported stuff. Writing docstrings feels easier than writing a

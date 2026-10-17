@@ -3,13 +3,13 @@
 (in-readtable pythonic-string-syntax)
 
 (defsection @navigating-in-emacs (:title "Navigating Sources in Emacs")
-  """Integration into @SLIME's @M-. (`slime-edit-definition`) allows
+  """Integration into @SLIME's or @SLY's @M-. (`slime-edit-definition`) allows
   one to visit the SOURCE-LOCATION of a DREF::@DEFINITION. PAX extends
-  standard Slime functionality by
+  standard Slime/Sly functionality by
 
   - adding support for all kinds of definitions (see e.g.
     [ASDF:SYSTEM][locative], [READTABLE][locative] in
-    DREF::@BASIC-LOCATIVE-TYPES), not just the ones Slime knows about,
+    DREF::@BASIC-LOCATIVE-TYPES), not just the ones the client knows about,
 
   - providing a portable way to refer to even standard definitions,
 
@@ -37,11 +37,11 @@
   current buffer at point. If no name is found, then it
   [prompts][@M-.-PROMPTING].
 
-  First, `(slime-sexp-at-point)` is taken as a @WORD, from which the
-  @NAME will be [parsed][@parsing]. Then, candidate locatives are
-  looked for before and after the @WORD. Thus, if a locative is the
-  previous or the next expression, then `\\M-.` will go straight to the
-  definition which corresponds to the locative. If that fails, `\\M-.`
+  First, the sexp at point `(slime-sexp-at-point)` or `(sly-sexp-at-point)` is
+  taken as a @WORD,from which the @NAME will be [parsed][@parsing]. Then,
+  candidate locatives are looked for before and after the @WORD. Thus, if a
+  locative is the previous or the next expression, then `\\M-.` will go straight
+  to the definition which corresponds to the locative. If that fails, `\\M-.`
   will try to find the definitions in the normal way, which may
   involve popping up an xref buffer and letting the user interactively
   select one of possible definitions.
@@ -126,20 +126,6 @@
         (when (and locative (not (eq locative 'unreadable)))
           (dref name locative nil))))))
 
-;;; Ensure that some Swank internal facilities (such as
-;;; SWANK::FIND-DEFINITIONS-FIND-SYMBOL-OR-PACKAGE,
-;;; SWANK::WITH-BUFFER-SYNTAX, SWANK::PARSE-SYMBOL) are operational
-;;; even when not running under Slime.
-(defmacro with-swank (() &body body)
-  `(let* ((swank::*buffer-package* (if (boundp 'swank::*buffer-package*)
-                                       swank::*buffer-package*
-                                       *package*))
-          (swank::*buffer-readtable*
-            (if (boundp 'swank::*buffer-readtable*)
-                swank::*buffer-readtable*
-                (swank::guess-buffer-readtable swank::*buffer-package*))))
-     ,@body))
-
 ;;; List Swank source locations (suitable for `make-slime-xref') for
 ;;; the things that the Elisp side considers possible around the point
 ;;; when M-. is invoked. The return value is a list of (DSPEC
@@ -151,7 +137,7 @@
 ;;; Each element in the list WALL consists of a @WORD and a list of
 ;;; possible DREF::@LOCATIVEs found next to it in the Emacs buffer.
 (defun locate-definitions-for-emacs (wall)
-  (with-swank ()
+  (with-swank-compatibility ()
     (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
         (locate-definitions-for-emacs-1 wall)))))
@@ -209,8 +195,8 @@
   will be recognized as `\PRINT` and `\pax` as `"PAX"`.
 
   The package in which symbols are read is the Elisp
-  `slime-current-package`. In Lisp buffers, this is the buffer's
-  package, else it's the package of the Slime repl buffer.""")
+  `slime-current-package` or `sly-current-package`. In Lisp buffers,this is
+  the buffer's package, else it's the package of the client repl buffer.""")
 
 
 ;;;; Completion of names and locatives for the Elisp function
@@ -223,7 +209,7 @@
   explicitly with an opening quotation mark, and they are
   case-sensitive. Examples:
 
-  - `pri<TAB>` invokes the usual Slime completion.
+  - `pri<TAB>` invokes the usual client completion.
 
   - `print <TAB>` (note the space) lists FUNCTION and (PAX:CLHS
     FUNCTION) as locatives.
@@ -254,7 +240,7 @@
 ;;; documenting.
 (defun string-name-completions-for-emacs (prefix &key (locative-types
                                                        (lisp-locative-types)))
-  (with-swank ()
+  (with-swank-compatibility ()
     (swank::with-buffer-syntax ()
       (mapcar #'prin1-to-string
               (string-name-completions-for-emacs-1
@@ -282,7 +268,7 @@
 ;;; Called when completing the second sexp at the prompt.
 (defun names-or-locatives-for-emacs (sexp-1 prefix
                                      &key (definitions #'definitions))
-  (with-swank ()
+  (with-swank-compatibility ()
     (swank::with-buffer-syntax ()
       `(:names ,(mapcar (rcurry #'prin1-to-string/case
                                 (guess-print-case prefix))
@@ -400,7 +386,7 @@
 ;;; which @DTYPES may be built. This is not exhaustive because (METHOD
 ;;; () (NUMBER)) would also need NUMBER.
 (defun dtype-symbols-for-emacs (prefix)
-  (with-swank ()
+  (with-swank-compatibility ()
     (swank::with-buffer-syntax ()
       (swank/backend:converting-errors-to-error-location
         `(:ok ,(mapcar (rcurry #'prin1-to-string/case
@@ -426,7 +412,7 @@
 ;;;; The Common Lisp side of `mgl-pax-find-parent-section'
 
 (defun find-parent-section-for-emacs (buffer filename possibilities)
-  (with-swank ()
+  (with-swank-compatibility ()
     (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
         (with-sections-cache ()

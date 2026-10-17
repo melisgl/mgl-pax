@@ -1,11 +1,32 @@
 (in-package :mgl-pax-test)
 
+(deftest test-install-pax-elisp ()
+  (let ((dir (ensure-directories-exist
+              (merge-pathnames (format nil "mgl-pax-elisp-test-~A/" (get-universal-time))
+                               (uiop:temporary-directory)))))
+    (unwind-protect
+         (let ((result (pax:install-pax-elisp dir)))
+           (is (equal (pathname-name result) "mgl-pax"))
+           (dolist (file '("mgl-pax.el" "mgl-pax-slime.el" "mgl-pax-sly.el"))
+             (is (probe-file (merge-pathnames file dir))
+                 :msg ("~S is installed." file)))
+           (with-test ("the version is filled in")
+             (let ((text (alexandria:read-file-into-string result)))
+               ;; A comment also quotes the line, so look for it at the
+               ;; beginning of a line.
+               (is (not (search (format nil "~%(setq mgl-pax-version (mgl-pax-read-version))")
+                                text)))
+               (is (search "(setq mgl-pax-version '" text)))))
+      (uiop:delete-directory-tree dir :validate t :if-does-not-exist :ignore))))
+
 (deftest test-all ()
   (let ((*check-locate* t)
         (*document-index-sections* nil)
         (*document-downcase-uppercase-code* nil)
         (pax::*test-fast-parse* t))
     (pax::with-sections-cache ()
+      (test-interaction-mode)
+      (test-install-pax-elisp)
       (flet ((all ()
                (test-util)
                (test-hyperspec)

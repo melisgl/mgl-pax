@@ -4,10 +4,10 @@
 (require 'ert)
 (require 'cl-lib)
 (require 'w3m)
-(require 'slime-tests)
+(require 'mgl-pax-test-client)
 
 (defun load-mgl-pax-test-system ()
-  (slime-eval '(cl:if (cl:find-package '#:mgl-pax-test)
+  (mgl-pax-test-eval '(cl:if (cl:find-package '#:mgl-pax-test)
                       t
                       ;; Prevent recursive-edit through sldb-setup
                       (cl:ignore-errors
@@ -19,7 +19,7 @@
      (lisp-mode)
      (load-mgl-pax-test-system)
      ,@body
-     (slime-sync-to-top-level 1)))
+     (mgl-pax-test-sync-to-top-level 1)))
 
 (cl-defmacro with-temp-lisp-and-non-lisp-buffer (&body body)
   `(progn
@@ -52,42 +52,12 @@
   (string-match-p (regexp-quote sub) string))
 
 (defun should-be-looking-at (string)
-  (slime-check
+  (mgl-pax-test-check
    ("In buffer %S, looking at: %S" (buffer-name)
     (buffer-substring-no-properties (point)
                                     (min (point-max)
                                          (+ (point) 40))))
    (looking-at (regexp-quote string))))
-
-;;; Redefine this without truncate-string-to-width.
-(defun slime-test-ert-test-for (name input i doc _body fails-for style fname)
-  `(define-slime-ert-test
-     ,(intern (format "%s-%d" name i)) ()
-     ,(format "For input %s, %s" input
-              ;; (truncate-string-to-width
-              ;;  (format "%s" input)
-              ;;  15 nil nil 'ellipsis)
-              (replace-regexp-in-string "^.??\\(\\w+\\)"
-                                        (lambda (s) (downcase s))
-                                        doc
-                                        t))
-     ,@(if fails-for
-           `(:expected-result '(satisfies
-                                (lambda (result)
-                                  (ert-test-result-type-p
-                                   result
-                                   (if (member
-                                        (slime-lisp-implementation-name)
-                                        ',fails-for)
-                                       :failed
-                                     :passed))))))
-
-     ,@(when style
-         `((let ((style (slime-communication-style)))
-             (when (not (member style ',style))
-               (slime-skip-test (format "test not applicable for style %s"
-                                        style))))))
-     (apply #',fname ',input)))
 
 
 (ert-deftest test-mgl-pax-parse-lisp-string-to-sexps ()
@@ -108,15 +78,18 @@
                  '(("x" "") ((1 . 2) (3 . 3))))))
 
 (ert-deftest test-mgl-pax-urllike-to-url ()
-  (should
-   (equal (url-unhex-string (mgl-pax-urllike-to-url "1 2"))
-          "pax-wall:((\"1\" (\"2\")) (\"2\" (\"1\")))?pkg=COMMON-LISP-USER"))
-  (should
-   (equal
-    (url-unhex-string
-     (mgl-pax-urllike-to-url
-      "pax::@pax-manual pax:section pax:defsection pax:macro"))
-    "pax:pax::@pax-manual pax:section?pkg=COMMON-LISP-USER#pax:defsection pax:macro")))
+  "The package comes from the buffer, so don't just use the current buffer."
+  (with-temp-buffer
+    (mgl-pax-test-with-buffer-package "COMMON-LISP-USER"
+      (should
+       (equal (url-unhex-string (mgl-pax-urllike-to-url "1 2"))
+              "pax-wall:((\"1\" (\"2\")) (\"2\" (\"1\")))?pkg=COMMON-LISP-USER"))
+      (should
+       (equal
+        (url-unhex-string
+         (mgl-pax-urllike-to-url
+          "pax::@pax-manual pax:section pax:defsection pax:macro"))
+        "pax:pax::@pax-manual pax:section?pkg=COMMON-LISP-USER#pax:defsection pax:macro")))))
 
 
 ;;;; Test `mgl-pax-wall-at-point'
@@ -267,11 +240,11 @@
 ;;;; Test `mgl-pax-edit-definitions'
 
 (defun mgl-pax-test-sync-hard ()
-  (slime-sync-to-top-level 5)
+  (mgl-pax-test-sync-to-top-level 5)
   (mgl-pax-sync-current-buffer)
   (sit-for 0.4))
 
-(def-slime-test mgl-pax-edit-definitions/test-defs
+(mgl-pax-test-def-test mgl-pax-edit-definitions/test-defs
     (name snippet &optional snippet2)
     "Test `M-.' on PAX references."
     ;; These mirror DREF-TEST::*SOURCE-LOCATION-TEST-CASES* plus
@@ -323,36 +296,36 @@
       ("note @in-1" "(note @in-1")
       ("note @in-2" "(note @in-2"))
   (load-mgl-pax-test-system)
-  (let ((slime-buffer-package "MGL-PAX-TEST")
-        (test-name (format "%S visits snippet %S or %S."
-                           name snippet snippet2)))
-    (message "Test case: %s" test-name)
-    (with-temp-lisp-buffer
-     (slime-check-top-level)
-     (insert name)
-     (let ((tmpbuffer (current-buffer))
-           (start-pos (point)))
-       (call-interactively 'slime-edit-definition)
-       (mgl-pax-test-sync-hard)
-       (slime-check ("%s: %S is found in another buffer" test-name name)
-                    (not (eq tmpbuffer (current-buffer))))
-       (format "%S visits snippet %S or %S.\n"
-               name snippet snippet2 (buffer-name)
+  (mgl-pax-test-with-buffer-package "MGL-PAX-TEST"
+    (let ((test-name (format "%S visits snippet %S or %S."
+                             name snippet snippet2)))
+      (message "Test case: %s" test-name)
+      (with-temp-lisp-buffer
+       (mgl-pax-test-check-top-level)
+       (insert name)
+       (let ((tmpbuffer (current-buffer))
+             (start-pos (point)))
+         (call-interactively 'mgl-pax-test-edit-definition)
+         (mgl-pax-test-sync-hard)
+         (mgl-pax-test-check ("%s: %S is found in another buffer" test-name name)
+                             (not (eq tmpbuffer (current-buffer))))
+         (format "%S visits snippet %S or %S.\n"
+                 name snippet snippet2 (buffer-name)
+                 (buffer-substring-no-properties (point)
+                                                 (min (point-max)
+                                                      (+ (point) 40))))
+         (unwind-protect
+             (mgl-pax-test-check
+              ("%s: In buffer %S, looking at: %S" test-name (buffer-name)
                (buffer-substring-no-properties (point)
                                                (min (point-max)
-                                                    (+ (point) 40))))
-       (unwind-protect
-           (slime-check
-             ("%s: In buffer %S, looking at: %S" test-name (buffer-name)
-              (buffer-substring-no-properties (point)
-                                              (min (point-max)
-                                                   (+ (point) 400))))
-             (or (looking-at (regexp-quote snippet))
-                 (and snippet2 (looking-at (regexp-quote snippet2)))))
-         (slime-pop-find-definition-stack))
-       (should (eq (current-buffer) tmpbuffer))
-       (should (= (point) start-pos)))
-     (slime-check-top-level))))
+                                                    (+ (point) 400))))
+              (or (looking-at (regexp-quote snippet))
+                  (and snippet2 (looking-at (regexp-quote snippet2)))))
+           (mgl-pax-test-pop-find-definition-stack))
+         (should (eq (current-buffer) tmpbuffer))
+         (should (= (point) start-pos)))
+       (mgl-pax-test-check-top-level)))))
 
 (ert-deftest test-mgl-pax-locate-definitions ()
   (with-temp-lisp-buffer
@@ -366,7 +339,7 @@
 
 (ert-deftest test-mgl-pax-completions-at-point ()
   (let ((mgl-pax-completing-for 'navigate)
-        (n-locatives (slime-eval '(cl:length (dref:locative-types)))))
+        (n-locatives (mgl-pax-test-eval '(cl:length (dref:locative-types)))))
     (with-temp-lisp-buffer
      (insert "prin1-to-str")
      ;; This is left for Slime to complete.
@@ -385,7 +358,7 @@
          (should (seq-set-equal-p
                   (cl-third (mgl-pax-completions-at-point))
                   (cl-second
-                   (slime-eval '(mgl-pax::dtype-symbols-for-emacs "")))
+                   (mgl-pax-test-eval '(mgl-pax::dtype-symbols-for-emacs "")))
                   'equal))))
      (insert "\nclass dref:")
      (should (seq-set-equal-p
@@ -409,12 +382,12 @@
                         :test 'equal)))
      (insert "\npackage ")
      (should (= (length (cl-third (mgl-pax-completions-at-point)))
-                (+ (slime-eval '(cl:length (cl:list-all-packages)))
+                (+ (mgl-pax-test-eval '(cl:length (cl:list-all-packages)))
                    ;; CLASS and MGL-PAX:LOCATIVE
                    2)))
      (let ((mgl-pax-completing-for 'document))
        (should (= (length (cl-third (mgl-pax-completions-at-point)))
-                  (+ (slime-eval '(cl:length (cl:list-all-packages)))
+                  (+ (mgl-pax-test-eval '(cl:length (cl:list-all-packages)))
                      ;; CLASS, (MGL-PAX:CLHS CLASS) and MGL-PAX:LOCATIVE
                      3))))
      (insert "\n\"#")
@@ -493,89 +466,89 @@
 (ert-deftest test-mgl-pax-edit-parent-section/simple ()
   (with-temp-lisp-and-non-lisp-buffer
    (insert "(pax:defsection @test-xxx ()\n  (foo function)\n  (foo type))\n")
-   (slime-compile-defun)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-compile-defun)
+   (mgl-pax-test-sync-to-top-level 1)
    (insert "(defun foo () t)")
    ;; Interpreted FOO
-   (slime-eval-last-expression)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-eval-last-expression)
+   (mgl-pax-test-sync-to-top-level 1)
    (backward-char)
    (mgl-pax-edit-parent-section)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-sync-to-top-level 1)
    (should (looking-at "(pax:defsection @test-xxx"))
-   (slime-pop-find-definition-stack)
+   (mgl-pax-test-pop-find-definition-stack)
    (should (looking-at ")"))
    ;; Compiled FOO
-   (slime-compile-defun)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-compile-defun)
+   (mgl-pax-test-sync-to-top-level 1)
    (mgl-pax-edit-parent-section)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-sync-to-top-level 1)
    (should (looking-at "(pax:defsection @test-xxx"))
-   (slime-pop-find-definition-stack)
+   (mgl-pax-test-pop-find-definition-stack)
    (should (looking-at ")"))))
 
 (ert-deftest test-mgl-pax-edit-parent-section/wrapped ()
   (with-temp-lisp-and-non-lisp-buffer
    (insert "(pax:defsection @test-xxx ()\n  (foo function)\n  (foo type))\n")
-   (slime-compile-defun)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-compile-defun)
+   (mgl-pax-test-sync-to-top-level 1)
    (insert "(locally (defun foo () t))")
    ;; Interpreted FOO
-   (slime-eval-last-expression)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-eval-last-expression)
+   (mgl-pax-test-sync-to-top-level 1)
    (backward-char 3)
    (mgl-pax-edit-parent-section)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-sync-to-top-level 1)
    (should (looking-at "(pax:defsection @test-xxx"))
-   (slime-pop-find-definition-stack)
+   (mgl-pax-test-pop-find-definition-stack)
    (should (looking-at "t))"))
    ;; Compiled FOO
-   (slime-compile-defun)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-compile-defun)
+   (mgl-pax-test-sync-to-top-level 1)
    (mgl-pax-edit-parent-section)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-sync-to-top-level 1)
    (should (looking-at "(pax:defsection @test-xxx"))
-   (slime-pop-find-definition-stack)
+   (mgl-pax-test-pop-find-definition-stack)
    (should (looking-at "t))"))))
 
 (ert-deftest test-mgl-pax-edit-parent-section/wrapped-2 ()
   (with-temp-lisp-and-non-lisp-buffer
    (insert "(pax:defsection @test-xxx ()\n  (foo function)\n  (foo type))\n")
-   (slime-compile-defun)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-compile-defun)
+   (mgl-pax-test-sync-to-top-level 1)
    (insert "(locally (defun foo () t) (deftype foo () 'fixnum))")
    ;; Interpreted
-   (slime-eval-last-expression)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-eval-last-expression)
+   (mgl-pax-test-sync-to-top-level 1)
    ;; DEFTYPE
    (search-backward "deftype")
    (mgl-pax-edit-parent-section)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-sync-to-top-level 1)
    (should (looking-at "(pax:defsection @test-xxx"))
-   (slime-pop-find-definition-stack)
+   (mgl-pax-test-pop-find-definition-stack)
    (should (looking-at "deftype"))
    ;; DEFUN
    (search-backward "defun")
    (mgl-pax-edit-parent-section)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-sync-to-top-level 1)
    (should (looking-at "(pax:defsection @test-xxx"))
-   (slime-pop-find-definition-stack)
+   (mgl-pax-test-pop-find-definition-stack)
    (should (looking-at "defun"))
    ;; Compiled
-   (slime-compile-defun)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-compile-defun)
+   (mgl-pax-test-sync-to-top-level 1)
    ;; DEFUN
    (mgl-pax-edit-parent-section)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-sync-to-top-level 1)
    (should (looking-at "(pax:defsection @test-xxx"))
-   (slime-pop-find-definition-stack)
+   (mgl-pax-test-pop-find-definition-stack)
    (should (looking-at "defun"))
    ;; DEFTYPE
    (search-forward "deftype")
    (mgl-pax-edit-parent-section)
-   (slime-sync-to-top-level 1)
+   (mgl-pax-test-sync-to-top-level 1)
    (should (looking-at "(pax:defsection @test-xxx"))
-   (slime-pop-find-definition-stack)
+   (mgl-pax-test-pop-find-definition-stack)
    (should (looking-at " foo () 'fixnum"))))
 
 
@@ -585,8 +558,8 @@
   (with-browsers
    (with-temp-lisp-and-non-lisp-buffer
     (insert "(defun foo-simple () \"docstring\" t)")
-    (slime-compile-defun)
-    (slime-sync-to-top-level 1)
+    (mgl-pax-test-compile-defun)
+    (mgl-pax-test-sync-to-top-level 1)
     (mgl-pax-document "pax:foo-simple")
     (mgl-pax-test-sync-hard)
     (should (eq major-mode 'w3m-mode))
@@ -597,8 +570,8 @@
   (with-browsers
    (with-temp-lisp-and-non-lisp-buffer
     (insert "(defun foo-simple () \"docstring\" t)")
-    (slime-compile-defun)
-    (slime-sync-to-top-level 1)
+    (mgl-pax-test-compile-defun)
+    (mgl-pax-test-sync-to-top-level 1)
     (unwind-protect
         (progn
           (mgl-pax-document "pax:foo-simple")
@@ -612,8 +585,8 @@
   (with-browsers
    (with-temp-lisp-and-non-lisp-buffer
     (insert "(defun %foo-simple () \"docstring\" t)")
-    (slime-compile-defun)
-    (slime-sync-to-top-level 1)
+    (mgl-pax-test-compile-defun)
+    (mgl-pax-test-sync-to-top-level 1)
     (unwind-protect
         (progn
           (insert "%foo-simple")
@@ -628,8 +601,8 @@
   (with-browsers
    (with-temp-lisp-and-non-lisp-buffer
     (insert "(defun %foo-simple () \"docstring\" t)")
-    (slime-compile-defun)
-    (slime-sync-to-top-level 1)
+    (mgl-pax-test-compile-defun)
+    (mgl-pax-test-sync-to-top-level 1)
     (unwind-protect
         (progn
           (mgl-pax-document (concat "pax:" (url-hexify-string "%foo-simple")))
@@ -637,7 +610,7 @@
           (should (eq major-mode 'w3m-mode))
           (should (substringp "* [function] %FOO-SIMPLE" (w3m-contents)))
           (mgl-pax-doc-reload)
-          (slime-sync-to-top-level 1))
+          (mgl-pax-test-sync-to-top-level 1))
       (when (eq major-mode 'w3m-mode)
         (kill-buffer))))))
 
@@ -675,7 +648,7 @@
        (unwind-protect
            (progn
              (mgl-pax-document "pax:readably")
-             (slime-sync-to-top-level 1)
+             (mgl-pax-test-sync-to-top-level 1)
              (mgl-pax-sync-current-buffer)
              (should (eq major-mode 'w3m-mode))
              ;; Wait for 5 seconds for the page to load and render.
@@ -695,7 +668,7 @@
         (unwind-protect
             (progn
               (call-interactively 'mgl-pax-document)
-              (slime-sync-to-top-level 1)
+              (mgl-pax-test-sync-to-top-level 1)
               (mgl-pax-sync-current-buffer)
               (should (eq major-mode 'w3m-mode))
               ;; Wait for 5 seconds for the page to load and render.
@@ -750,8 +723,8 @@
     (let ((tmpbuffer (current-buffer)))
       (insert "(defun foo-simple () \"docstring\" t)")
       ;; Interpreted
-      (slime-eval-last-expression)
-      (slime-sync-to-top-level 1)
+      (mgl-pax-test-eval-last-expression)
+      (mgl-pax-test-sync-to-top-level 1)
       (backward-char)
       (mgl-pax-current-definition-toggle-view)
       (mgl-pax-test-sync-hard)
@@ -761,8 +734,8 @@
       (switch-to-buffer tmpbuffer)
       (mgl-pax-sync-current-buffer)
       ;; Compiled
-      (slime-compile-defun)
-      (slime-sync-to-top-level 1)
+      (mgl-pax-test-compile-defun)
+      (mgl-pax-test-sync-to-top-level 1)
       (mgl-pax-current-definition-toggle-view)
       (mgl-pax-test-sync-hard)
       (should (eq major-mode 'w3m-mode))
@@ -770,7 +743,7 @@
       (when (eq mgl-pax-browser-function 'w3m-browse-url)
         (mgl-pax-doc-edit-current-definition)
         (accept-process-output nil 1)
-        (slime-sync-to-top-level 1)
+        (mgl-pax-test-sync-to-top-level 1)
         (mgl-pax-test-sync-hard)
         (should (eq major-mode 'lisp-mode))
         (should-be-looking-at "(defun foo-simple"))
@@ -783,8 +756,8 @@
     (let ((tmpbuffer (current-buffer)))
       (insert "(defun %foo-simple () \"docstring\" t)")
       ;; Interpreted
-      (slime-eval-last-expression)
-      (slime-sync-to-top-level 1)
+      (mgl-pax-test-eval-last-expression)
+      (mgl-pax-test-sync-to-top-level 1)
       (backward-char)
       (mgl-pax-current-definition-toggle-view)
       (mgl-pax-test-sync-hard)
@@ -794,8 +767,8 @@
       (switch-to-buffer tmpbuffer)
       (mgl-pax-sync-current-buffer)
       ;; Compiled
-      (slime-compile-defun)
-      (slime-sync-to-top-level 1)
+      (mgl-pax-test-compile-defun)
+      (mgl-pax-test-sync-to-top-level 1)
       (mgl-pax-current-definition-toggle-view)
       (mgl-pax-test-sync-hard)
       (should (eq major-mode 'w3m-mode))
@@ -809,8 +782,8 @@
     (let ((tmpbuffer (current-buffer)))
       (insert "(defun |F: \\\\o| () \"docstring\" t)")
       ;; Interpreted
-      (slime-eval-last-expression)
-      (slime-sync-to-top-level 1)
+      (mgl-pax-test-eval-last-expression)
+      (mgl-pax-test-sync-to-top-level 1)
       (backward-char)
       (mgl-pax-current-definition-toggle-view)
       (mgl-pax-test-sync-hard)
@@ -820,8 +793,8 @@
       (switch-to-buffer tmpbuffer)
       (mgl-pax-sync-current-buffer)
       ;; Compiled
-      (slime-compile-defun)
-      (slime-sync-to-top-level 1)
+      (mgl-pax-test-compile-defun)
+      (mgl-pax-test-sync-to-top-level 1)
       (mgl-pax-current-definition-toggle-view)
       (mgl-pax-test-sync-hard)
       (should (eq major-mode 'w3m-mode))
@@ -835,8 +808,8 @@
     (let ((tmpbuffer (current-buffer)))
       (insert "(defpackage \"MGL-PAX-TEST\")")
       ;; Interpreted
-      (slime-eval-last-expression)
-      (slime-sync-to-top-level 1)
+      (mgl-pax-test-eval-last-expression)
+      (mgl-pax-test-sync-to-top-level 1)
       (backward-char)
       (mgl-pax-current-definition-toggle-view)
       (mgl-pax-test-sync-hard)
@@ -846,8 +819,8 @@
       (switch-to-buffer tmpbuffer)
       (mgl-pax-sync-current-buffer)
       ;; Compiled
-      (slime-compile-defun)
-      (slime-sync-to-top-level 1)
+      (mgl-pax-test-compile-defun)
+      (mgl-pax-test-sync-to-top-level 1)
       (mgl-pax-current-definition-toggle-view)
       (mgl-pax-test-sync-hard)
       (should (eq major-mode 'w3m-mode))
@@ -861,8 +834,8 @@
     (let ((tmpbuffer (current-buffer)))
       (insert "(defpackage #:mgl-pax-test)")
       ;; Interpreted
-      (slime-eval-last-expression)
-      (slime-sync-to-top-level 1)
+      (mgl-pax-test-eval-last-expression)
+      (mgl-pax-test-sync-to-top-level 1)
       (backward-char)
       (mgl-pax-current-definition-toggle-view)
       (mgl-pax-test-sync-hard)
@@ -872,8 +845,8 @@
       (switch-to-buffer tmpbuffer)
       (mgl-pax-sync-current-buffer)
       ;; Compiled
-      (slime-compile-defun)
-      (slime-sync-to-top-level 1)
+      (mgl-pax-test-compile-defun)
+      (mgl-pax-test-sync-to-top-level 1)
       (mgl-pax-current-definition-toggle-view)
       (mgl-pax-test-sync-hard)
       (should (eq major-mode 'w3m-mode))
@@ -888,11 +861,11 @@
       ;; Compiled only because MGL-PAX::DREF-AND-SNIPPET-MATCH-P does
       ;; not handle methods.
       (insert "(defmethod foom\n  ((x string)))\n")
-      (slime-compile-defun)
-      (slime-sync-to-top-level 1)
+      (mgl-pax-test-compile-defun)
+      (mgl-pax-test-sync-to-top-level 1)
       (insert "(defmethod foom\n  ((x number)))\n")
-      (slime-compile-defun)
-      (slime-sync-to-top-level 1)
+      (mgl-pax-test-compile-defun)
+      (mgl-pax-test-sync-to-top-level 1)
       ;; Test second method
       (backward-sexp)
       (mgl-pax-current-definition-toggle-view)
@@ -1276,7 +1249,7 @@
                  args-string (if downcasedp "bbb" "BBB")))
        (expected (args-string downcasedp)
          (input args-string downcasedp)))
-    (slime-eval '(cl:setq cl:*print-case* :downcase))
+    (mgl-pax-test-eval '(cl:setq cl:*print-case* :downcase))
     (unwind-protect
         (dolist (test-case
                  '(("(:dynenv funcall)" t nil)
@@ -1291,7 +1264,7 @@
                   (call-interactively 'mgl-pax-retranscribe-region))
                (call-interactively 'mgl-pax-retranscribe-region)
                (should (equal (buffer-string) (expected args downcasedp)))))))
-      (slime-eval '(cl:setq cl:*print-case* :upcase)))))
+      (mgl-pax-test-eval '(cl:setq cl:*print-case* :upcase)))))
 
 
 (provide 'mgl-pax-tests)

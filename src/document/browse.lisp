@@ -12,7 +12,7 @@
   `apropos-command` and other online help commands in Emacs, for which
   direct parallels are provided.
 
-  Still, even without Emacs and @SLIME, limited functionality is
+  Still, even without Emacs and @SLIME or @SLY, limited functionality is
   available through the @PAX-LIVE-HOME-PAGE by starting the live
   documentation web server [manually][ensure-web-server].
 
@@ -216,12 +216,13 @@
   the browser (often `C-<f5>`).")
 
 (defun document-for-emacs (pax*-url output &optional *document-hyperspec-root*)
-  (swank/backend:converting-errors-to-error-location
-    (swank::with-buffer-syntax (swank::*buffer-package*)
-      (with-sections-cache ()
-        ;; This is called only for `w3m' and `precheck'. See below.
-        (let ((*subformat* (if (uiop:directory-exists-p output) :w3m nil)))
-          `(:url ,(document-pax*-url pax*-url output)))))))
+  (with-swank-compatibility ()
+    (swank/backend:converting-errors-to-error-location
+     (swank::with-buffer-syntax (swank::*buffer-package*)
+       (with-sections-cache ()
+         ;; This is called only for `w3m' and `precheck'. See below.
+         (let ((*subformat* (if (uiop:directory-exists-p output) :w3m nil)))
+           `(:url ,(document-pax*-url pax*-url output))))))))
 
 ;;; Write documentation of PAX*-URL into OUTPUT. Return the (:URL
 ;;; <URL>) to visit or (:ERROR <STRING>). PAX*-URL may be a `pax:',
@@ -663,30 +664,31 @@
 
 (defun redocument-for-emacs (file-url output
                              &optional *document-hyperspec-root*)
-  (swank/backend:converting-errors-to-error-location
-    (swank::with-buffer-syntax (swank::*buffer-package*)
-      ;; This is called only for `w3m' and `precheck'.
-      (let ((*subformat* (if (uiop:directory-exists-p output) :w3m nil)))
-        (multiple-value-bind (scheme authority path query fragment)
-            (split-url file-url)
-          (declare (ignore authority query))
-          (when (equal scheme "file")
-            (assert (null fragment))
-            (let ((dir (make-pathname :name nil :type nil :defaults path)))
-              (when (string= (namestring dir) output)
-                (let ((new-file-url (document-pax*-url
-                                     (pax-url-from-filename
-                                      (pathname-name path))
-                                     dir)))
-                  (assert (string= new-file-url file-url)))))))))
-    (values)))
+  (with-swank-compatibility ()
+    (swank/backend:converting-errors-to-error-location
+     (swank::with-buffer-syntax (swank::*buffer-package*)
+       ;; This is called only for `w3m' and `precheck'.
+       (let ((*subformat* (if (uiop:directory-exists-p output) :w3m nil)))
+         (multiple-value-bind (scheme authority path query fragment)
+             (split-url file-url)
+           (declare (ignore authority query))
+           (when (equal scheme "file")
+             (assert (null fragment))
+             (let ((dir (make-pathname :name nil :type nil :defaults path)))
+               (when (string= (namestring dir) output)
+                 (let ((new-file-url (document-pax*-url
+                                      (pax-url-from-filename
+                                       (pathname-name path))
+                                      dir)))
+                   (assert (string= new-file-url file-url)))))))))
+     (values))))
 
 
 ;;; Find the source location of the path component of PAX-URL, and
 ;;; return its dspec and source location. Ignore the fragment. This is
 ;;; what M-. in a w3m PAX doc buffer does.
 (defun locate-pax-url-for-emacs (pax-url)
-  (with-swank ()
+  (with-swank-compatibility ()
     (swank/backend:converting-errors-to-error-location
       (swank::with-buffer-syntax ()
         (multiple-value-bind (scheme authority path) (split-url pax-url)
@@ -704,7 +706,7 @@
 
 
 (defun current-definition-pax-url-for-emacs (buffer filename possibilities)
-  (with-swank ()
+  (with-swank-compatibility ()
     (swank::with-buffer-syntax ()
       (let ((reference (find-current-definition buffer filename
                                                 possibilities)))
@@ -718,10 +720,10 @@
   `mgl-pax-apropos-package` can display the results of DREF-APROPOS in
   the [live documentation browser] [@browsing-live-documentation].
   These extend the functionality of `slime-apropos`,
-  `slime-apropos-all` and `slime-apropos-package` to support more
-  kinds of DREF::@DEFINITIONs in an extensible way. The correspondence
-  is so close that the PAX versions might [take over the Slime key
-  bindings][@EMACS-SETUP].
+  `slime-apropos-all` and `slime-apropos-package` (and their `sly-` versions)
+  to support more kinds of DREF::@DEFINITIONs in an extensible way. The
+  correspondence is so close that the PAX versions might [take over the client
+  key bindings][@EMACS-SETUP].
 
   Note that apropos functionality is also exposed via the
   @PAX-LIVE-HOME-PAGE.

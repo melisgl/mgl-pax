@@ -24,6 +24,7 @@
                              (:file "test-markdown")
                              (:file "test-document")
                              (:file "test-transcribe")
+                             (:file "test-interaction-mode")
                              (:file "test"))))
   :perform (asdf:test-op (o s)
              (uiop:symbol-call '#:mgl-pax-test '#:test)))
