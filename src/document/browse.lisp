@@ -496,10 +496,10 @@
     (with-standard-io-syntax*
       (list
        (with-output-to-string (s)
-         (format s "Up: ")
+         (format s "Up:")
          (dolist (section (sort-by-proximity sections dref))
            (let ((section-dref (locate section)))
-             (format s "[~A](~A#~A)"
+             (format s " [~A](~A#~A)"
                      (document-definition-title-or-anchor section-dref)
                      (finalize-pax-url (dref-to-pax-url section-dref))
                      (urlencode (dref-to-anchor dref))))))))))
