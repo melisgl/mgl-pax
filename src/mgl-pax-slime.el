@@ -1,9 +1,10 @@
-;;;; -*- lexical-binding: t -*-
+;;;; mgl-pax-slime.el --- SLIME client -*- lexical-binding: t -*-
 
 (eval-and-compile
   (require 'mgl-pax))
 
-;; set this before requiring `slime' since that triggers loading the default backend
+;;; Set this before requiring `slime' since that triggers loading the
+;;; default backend.
 (defvar mgl-pax-backend :slime) ; default if not already set
 
 (eval-and-compile
@@ -55,7 +56,8 @@
    (slime-postprocess-xrefs dspec-and-location-list)
    "dummy name" nil))
 
-(mgl-pax-defimpl mgl-pax-read-lisp-from-minibuffer :slime (prompt &optional initial-value history)
+(mgl-pax-defimpl mgl-pax-read-lisp-from-minibuffer :slime
+  (prompt &optional initial-value history)
   (slime-read-from-minibuffer prompt initial-value history))
 
 (mgl-pax-defimpl mgl-pax-current-package :slime ()
@@ -64,7 +66,8 @@
 (mgl-pax-defimpl mgl-pax-set-buffer-package :slime (package)
   (setq slime-buffer-package package))
 
-(mgl-pax-defimpl mgl-pax-read-package-name :slime (prompt &optional initial-value)
+(mgl-pax-defimpl mgl-pax-read-package-name :slime
+  (prompt &optional initial-value)
   (slime-read-package-name prompt initial-value))
 
 (mgl-pax-defimpl mgl-pax-list-all-package-names :slime ()
@@ -80,6 +83,7 @@
 
 ;;; This is called automatically by (unload-feature 'mgl-pax-slime).
 (defun mgl-pax-slime-unload-function ()
+  "Hook into (unload-feature 'mgl-pax-slime)."
   (mgl-pax-unhijack-slime-doc-keys)
   (advice-remove 'slime-edit-definition #'slime-edit-definition@mgl-pax)
   (setq mgl-pax-loaded-backends (delq 'mgl-pax-slime mgl-pax-loaded-backends)))
@@ -88,9 +92,10 @@
 ;;;; MGL-PAX::@SLIME-SETUP (also see MGL-PAX::@EMACS-SETUP)
 
 (defcustom mgl-pax-hijack-slime-doc-keys t
-  "If true, then bind mgl-pax functions in `slime-mode-map' by
-  `mgl-pax-hijack-slime-doc-keys' upon loading `mgl-pax-slime'. See
-  MGL-PAX::@EMACS-KEYS for details."
+  "Variable for user option that controls PAX-SLIME keybindings.
+If true, then bind mgl-pax functions in `slime-mode-map' with
+`mgl-pax-hijack-slime-doc-keys' upon loading `mgl-pax-slime'.  See
+MGL-PAX::@EMACS-KEYS for details."
   :type 'boolean
   :group 'mgl-pax)
 
@@ -120,7 +125,9 @@
 
 ;;;; Integration with `M-.'
 
-(define-advice slime-edit-definition (:around (oldfun &optional name where) mgl-pax)
+(define-advice slime-edit-definition (:around
+                                      (oldfun &optional name where)
+                                      mgl-pax)
   (interactive)
   (mgl-pax-edit-definition-advice (called-interactively-p 'any)
                                   oldfun name where))
@@ -135,4 +142,6 @@
 
 
 (add-to-list 'mgl-pax-loaded-backends 'mgl-pax-slime)
+
+
 (provide 'mgl-pax-slime)

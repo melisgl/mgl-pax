@@ -83,13 +83,16 @@
     (mgl-pax-test-with-buffer-package "COMMON-LISP-USER"
       (should
        (equal (url-unhex-string (mgl-pax-urllike-to-url "1 2"))
-              "pax-wall:((\"1\" (\"2\")) (\"2\" (\"1\")))?pkg=COMMON-LISP-USER"))
+              (concat
+               "pax-wall"
+               ":((\"1\" (\"2\")) (\"2\" (\"1\")))?pkg=COMMON-LISP-USER")))
       (should
        (equal
         (url-unhex-string
          (mgl-pax-urllike-to-url
           "pax::@pax-manual pax:section pax:defsection pax:macro"))
-        "pax:pax::@pax-manual pax:section?pkg=COMMON-LISP-USER#pax:defsection pax:macro")))))
+        (concat "pax:pax::@pax-manual pax:section"
+                "?pkg=COMMON-LISP-USER#pax:defsection pax:macro"))))))
 
 
 ;;;; Test `mgl-pax-wall-at-point'
@@ -307,7 +310,8 @@
              (start-pos (point)))
          (call-interactively 'mgl-pax-test-edit-definition)
          (mgl-pax-test-sync-hard)
-         (mgl-pax-test-check ("%s: %S is found in another buffer" test-name name)
+         (mgl-pax-test-check ("%s: %S is found in another buffer"
+                              test-name name)
                              (not (eq tmpbuffer (current-buffer))))
          (format "%S visits snippet %S or %S.\n"
                  name snippet snippet2 (buffer-name)

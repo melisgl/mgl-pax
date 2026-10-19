@@ -4,8 +4,8 @@
 (defvar *latest-interaction-mode* nil)
 
 (defmacro with-binding-defaults* ((&rest vars) &body body)
-  "Like LET*, but for each pair (VAR VALUE) in VARS, bind VARIABLE to VALUE within BODY only if it
-  isn't already BOUNDP."
+  "Like LET*, but for each pair (VAR VALUE) in VARS, bind VARIABLE to
+  VALUE within BODY only if it isn't already BOUNDP."
   `(let* (,@(loop for (var default) in vars
                   collect `(,var (if (boundp ',var) ,var ,default))))
      ,@body))
@@ -32,10 +32,15 @@
     (declare (ignore aux))
     (labels ((ensure-suppliedp (binding prefix)
                (destructuring-bind (name default-value suppliedp) binding
-                 (list name default-value (or suppliedp (gensym (string prefix)))))))
+                 (list name default-value
+                       (or suppliedp (gensym (string prefix)))))))
       (let* ((generic-function (backend-function-name-for name))
-             (optional (mapcar (lambda (arg) (ensure-suppliedp arg (first arg))) optional))
-             (keyword (mapcar (lambda (arg) (ensure-suppliedp arg (second (first arg)))) keyword))
+             (optional (mapcar
+                        (lambda (arg) (ensure-suppliedp arg (first arg)))
+                        optional))
+             (keyword (mapcar
+                       (lambda (arg)
+                         (ensure-suppliedp arg (second (first arg)))) keyword))
              (wrapper-lambda-list
                `(,@required
                  ,@(when optional `(&optional ,@optional))
@@ -54,11 +59,14 @@
                ,@(if rest
                      `((values-list ,rest))
                      (loop for ((keyword value) nil providedp) in keyword
-                           collect `(if ,providedp (values ,keyword ,value) (values))))))
+                           collect `(if ,providedp
+                                        (values ,keyword ,value)
+                                        (values))))))
            ',name)))))
 
 (defmacro defimpl (name interaction-mode (&rest lambda-list) &body body)
-  `(defmethod ,(backend-function-name-for name) ((backend (eql ',interaction-mode)) ,@lambda-list)
+  `(defmethod ,(backend-function-name-for name)
+       ((backend (eql ',interaction-mode)) ,@lambda-list)
      ,@body))
 
 

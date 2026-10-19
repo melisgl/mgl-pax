@@ -93,67 +93,70 @@
 
 (cl-defmacro mgl-pax-defimpl (name backend (&rest lambda-list) &body body)
   (declare (indent defun))
-  `(cl-defmethod ,(mgl-pax-backend-function-name-for name) ((backend (eql ',backend)) ,@lambda-list)
+  `(cl-defmethod ,(mgl-pax-backend-function-name-for name)
+     ((backend (eql ',backend)) ,@lambda-list)
      ,@body))
-
 
 (mgl-pax-definterface mgl-pax-eval (sexp &optional package)
   "Evaluate `sexp' under the current Common Lisp connection, possibly
-  under `package'.")
+under `package'.")
 
 (mgl-pax-definterface mgl-pax-remote-execute-sexp (sexp package &key ok abort)
   "Asynchronously execute `sexp' inside `package' under the current
-  Common Lisp connection, calling either `ok' with the results of the
-  evaluation or `abort' with the description of an error condition.")
+Common Lisp connection, calling either `ok' with the results of the
+evaluation or `abort' with the description of an error condition.")
 
 (mgl-pax-definterface mgl-pax-check-connected ()
   "Asserts that we have an active Common Lisp connection, signaling
-  otherwise.")
+otherwise.")
 
 (mgl-pax-definterface mgl-pax-sexp-at-point (&optional interactive)
   "Returns a string representation of the expression at point, or
-  `nil'.")
+`nil'.")
 
 (mgl-pax-definterface mgl-pax-bounds-of-sexp-at-point ()
   "Returns, as a pair, the bounds of the current expression at point,
-  or `nil'.")
+or `nil'.")
 
 (mgl-pax-definterface mgl-pax-bounds-of-symbol-at-point ()
   "Returns, as a pair, the bounds of the current symbol at point, or
-  `nil'.")
+`nil'.")
 
 (mgl-pax-definterface mgl-pax-symbol-start-pos ()
   "Returns the start position of the symbol at point.")
 
 (mgl-pax-definterface mgl-pax-last-expression ()
   "Returns a string representation of the last expression before
-  point.")
+point.")
 
 (mgl-pax-definterface mgl-pax-forward-sexp (&optional count)
   "Steps point over the current expression, taking comments and reader
-  conditionals into account. If `count' is provided and a positive
-  integer, step over that many expressions.")
+conditionals into account. If `count' is provided and a positive
+integer, step over that many expressions.")
 
 (mgl-pax-definterface mgl-pax-flash-region (start end &optional timeout)
-  "Temporarily highlight the region from `start' to `end' for `timeout'
-seconds, or a default if `nil'.")
+  "Temporarily highlight the region from `start' to `end' for
+`timeout' seconds, or a default if `nil'.")
 
 (mgl-pax-definterface mgl-pax-call-with-buffer-package (package function)
-  "Call `function' with no arguments. The Common Lisp package associated
-with the current buffer is the string `package' for the call.")
+  "Call `function' with no arguments. The Common Lisp package
+associated with the current buffer is the string `package' for the
+call.")
 
 (mgl-pax-definterface mgl-pax-visit-lisp-location (dspec-and-location-list)
   "Visit the buffer containing `dspec-and-location-list'.")
 
 (mgl-pax-definterface mgl-pax-set-up-backend-doc-keybindings ()
   "Set up buffer-local keybindings in such a way that, among other
-  things, `M-.' and `M-.' can be used to navigate the find-definition
-  stack as if under a Lisp buffer.")
+things, `M-.' and `M-.' can be used to navigate the find-definition
+stack as if under a Lisp buffer.")
 
-(mgl-pax-definterface mgl-pax-read-lisp-from-minibuffer (prompt &optional initial-value history)
+(mgl-pax-definterface mgl-pax-read-lisp-from-minibuffer (prompt
+                                                         &optional
+                                                         initial-value history)
   "Read a string from the minibuffer, possibly prompting with Common
-  Lisp-specific editing features and completions. `prompt',
-  `initial-value' and `history' are as for `read-from-minibuffer'.")
+Lisp-specific editing features and completions. `prompt',
+`initial-value' and `history' are as for `read-from-minibuffer'.")
 
 (mgl-pax-definterface mgl-pax-current-package ()
   "Return the Common Lisp package for the current context.")
@@ -166,18 +169,19 @@ with the current buffer is the string `package' for the call.")
 
 (mgl-pax-definterface mgl-pax-list-all-package-names ()
   "Enumerate all package names known to the currently-connected Common
-  Lisp system.")
-
+Lisp system.")
 
 (defvar mgl-pax-loaded-backends nil)
 
 (defvar mgl-pax-edit-lisp-definition-hook nil)
 
 (defun mgl-pax-run-edit-lisp-definition-hooks (name where)
+  "Client-neutral function for running hooks with NAME and WHERE."
   (run-hook-with-args-until-success 'mgl-pax-edit-lisp-definition-hook
                                     name where))
 
 (defun mgl-pax-propagating-lisp-interaction-mode (mode cl-form)
+  "Wraps a Common Lisp CL-FORM so that the Lisp image knows wich MODE sent it."
   `(cl:funcall
     (cl:or (cl:when (cl:find-package "MGL-PAX")
              (cl:find-symbol "CALL-WITH-LISP-INTERACTION-MODE" "MGL-PAX"))
@@ -189,7 +193,7 @@ with the current buffer is the string `package' for the call.")
 ;;; Taken verbatim from `slime-recently-visited-buffer'.
 (defun mgl-pax-recently-visited-buffer (mode)
   "Return the most recently visited buffer whose major-mode is MODE.
-  Only considers buffers that are not already visible."
+Only considers buffers that are not already visible."
   (cl-loop for buffer in (buffer-list)
            when (and (with-current-buffer buffer (eq major-mode mode))
                      (not (string-match "^ " (buffer-name buffer)))
@@ -238,7 +242,8 @@ other mgl-pax commands in interactive use."
 ;;; is nil, then `:mgl-pax/web' is loaded instead and the web server
 ;;; is started.
 (cl-defmacro mgl-pax-with-component
-    ((asdf-system &optional (interactivep `(called-interactively-p 'any))) &body body)
+    ((asdf-system &optional
+                  (interactivep `(called-interactively-p 'any))) &body body)
   (declare (indent 1))
   `(let* ((asdf-system (if (and (eq ',asdf-system :mgl-pax/document)
                                 (not (mgl-pax-use-w3m)))
@@ -770,7 +775,7 @@ See `mgl-pax-autoload'. If nil, then a free port will be used."
 ;;;; MGL-PAX::@M-.-COMPLETION) and also for `mgl-pax-document',
 ;;;; `mgl-pax-apropos' and `mgl-pax-apropos-all'.
 
-;;;; The backend is responsible to arrange for
+;;;; The backend is responsible for arranging for
 ;;;; `mgl-pax-completions-at-point' to be called at the right time.
 
 ;;; The context in which `mgl-pax-completions-at-point' is invoked.
@@ -1401,9 +1406,9 @@ move point to the beginning of the buffer."
 ;;;; definition (see MGL-PAX::@BROWSING-WITH-OTHER-BROWSERS).
 
 (defun mgl-pax-edit-for-cl (dspec-and-location-list)
-  "Visits the source locations that Lisp found for a definition.
-Each element in DSPEC-AND-LOCATION-LIST is a (DSPEC LOCATION) pair
-as Lisp hands them to Emacs.  Note that there may be no `lisp-mode'
+  "Visits the DSPEC-AND-LOCATION-LIST elements that Lisp found.
+Each element in DSPEC-AND-LOCATION-LIST is a (DSPEC LOCATION) pair as
+Lisp hands them to Emacs.  Note that there may be no `lisp-mode'
 buffer at all."
   (ignore-errors (mgl-pax-recently-visited-buffer 'lisp-mode))
   (mgl-pax-sync-current-buffer)
@@ -1612,7 +1617,9 @@ Also, see `mgl-pax-apropos-all'."
   "Show apropos listing for symbols in PACKAGE.
 With prefix argument include internal symbols.
 The empty string means the current package."
-  (interactive (list (let ((pkg (mgl-pax-read-package-name "PAX Apropos for Package: ")))
+  (interactive (list
+                (let ((pkg
+                       (mgl-pax-read-package-name "PAX Apropos for Package: ")))
                        (if (string= pkg "") (mgl-pax-current-package) pkg))
                      current-prefix-arg))
   (mgl-pax-with-component (:mgl-pax/document)
@@ -1805,15 +1812,17 @@ start of the line following it, and the start of the line of the closing
 
 ;;;; Default backend
 
-;;; Before splitting client specific code for the sake of Sly compatibility,
-;;; `(require 'mgl-pax)' set up SLIME. To avoid breaking the old convention,
-;;; this loads the backend of the first client that gets loaded. A backend
-;;; sets `mgl-pax-backend' before it requires its client, so this does nothing
-;;; if one has been loaded explicitly or is being loaded. To use a different client,
-;;; `require' its backend, i.e. `mgl-pax-slime' or `mgl-pax-sly'.
-;;;
-;;; This must come after `provide' because the backends require `mgl-pax'. Admittedly,
-;;; having this after (provide 'mgl-pax) feels a little hacky.
+;;;; Before splitting client specific code for the sake of Sly
+;;;; compatibility, `(require 'mgl-pax)' set up SLIME. To avoid
+;;;; breaking the old convention, this loads the backend of the first
+;;;; client that gets loaded. A backend sets `mgl-pax-backend' before
+;;;; it requires its client, so this does nothing if one has been
+;;;; loaded explicitly or is being loaded. To use a different client,
+;;;; `require' its backend, i.e. `mgl-pax-slime' or `mgl-pax-sly'.
+;;;;
+;;;; This must come after `provide' because the backends require
+;;;; `mgl-pax'. Admittedly, having this after (provide 'mgl-pax) feels
+;;;; a little hacky.
 
 (defun mgl-pax-load-default-backend (backend)
   (unless (boundp 'mgl-pax-backend)

@@ -1,9 +1,10 @@
-;;;; -*- lexical-binding: t; -*-
+;;;; mgl-pax-sly.el --- Sly client -*- lexical-binding: t -*-
 
 (eval-and-compile
   (require 'mgl-pax))
 
-;; set this before requiring `sly' since that triggers loading the default backend
+;;; Set this before requiring `sly' since that triggers loading the
+;;; default backend.
 (defvar mgl-pax-backend :sly) ; default if not already set
 
 (eval-and-compile
@@ -61,6 +62,9 @@ combined with its default pattern."
   (sly-forward-sexp))
 
 (defun mgl-pax-sly-edit-xrefs (xrefs &optional method)
+  "Takes XREFS from PAX and displays them.
+If 'window or 'frame is passed as METHOD, displays to another window
+or a new frame."
   (cl-destructuring-bind (1loc file-alist) (sly-analyze-xrefs xrefs)
     (cond (1loc
            (sly-push-definition-stack)
@@ -72,7 +76,6 @@ combined with its default pattern."
                  (error "No source location for %s: %s"
                         (sly-xref.dspec xref)
                         (cadr (sly-xref.location xref)))
-               ;; ((:error "..."))
                (error "%s" xrefs))))
           (t
            (sly-push-definition-stack)
@@ -84,7 +87,8 @@ combined with its default pattern."
 (mgl-pax-defimpl mgl-pax-visit-lisp-location :sly (dspec-and-location-list)
   (mgl-pax-sly-edit-xrefs dspec-and-location-list))
 
-(mgl-pax-defimpl mgl-pax-read-lisp-from-minibuffer :sly (prompt &optional initial-value history)
+(mgl-pax-defimpl mgl-pax-read-lisp-from-minibuffer :sly
+  (prompt &optional initial-value history)
   (sly-read-from-minibuffer prompt initial-value history))
 
 (mgl-pax-defimpl mgl-pax-current-package :sly ()
@@ -112,6 +116,7 @@ combined with its default pattern."
 
 ;;; This is called automatically by (unload-feature 'mgl-pax-sly).
 (defun mgl-pax-sly-unload-function ()
+  "Hook into (unload-feature 'mgl-pax-sly)."
   (mgl-pax-unhijack-sly-doc-keys)
   (advice-remove 'sly-edit-definition #'sly-edit-definition@mgl-pax)
   (advice-remove 'sly--setup-completion #'sly--setup-completion@mgl-pax)
@@ -121,10 +126,11 @@ combined with its default pattern."
 ;;;; MGL-PAX::@SLY-SETUP (also see MGL-PAX::@EMACS-SETUP)
 
 (defcustom mgl-pax-hijack-sly-doc-keys t
-  "If true, then bind mgl-pax functions in `sly-doc-map' by
-  `mgl-pax-hijack-sly-doc-keys' upon loading `mgl-pax-sly'. See
-  MGL-PAX::@EMACS-KEYS for details."
-  :type 'boolean
+  "Variable for user option that controls PAX-SLIME keybindings.
+If true, then bind mgl-pax functions in `sly-doc-map' with
+`mgl-pax-hijack-sly-doc-keys' upon loading `mgl-pax-sly'.  See
+MGL-PAX::@EMACS-KEYS for details."
+  :Type 'boolean
   :group 'mgl-pax)
 
 (defvar mgl-pax-sly-doc-map-overrides
@@ -138,10 +144,10 @@ combined with its default pattern."
     (?u nil mgl-pax-edit-parent-section)))
 
 (defun mgl-pax-sly--override-plain-doc-keys (&optional reversep)
-  "Bind (with REVERSEP unbind) the plain versions of keys in
-  `MGL-PAX-SLY-DOC-MAP-OVERRIDES'.  Because Sly only binds control
-   variants and so there's no old binding, `MGL-PAX-OVERRIDE-KEYS'
-   doesn't handle this."
+  "Bind (with REVERSEP unbind) the plain versions of keys.
+Uses `MGL-PAX-SLY-DOC-MAP-OVERRIDES'.  Because Sly only binds control
+variants and so there's no old binding, `MGL-PAX-OVERRIDE-KEYS'
+doesn't handle this."
   (cl-loop for (key old new) in mgl-pax-sly-doc-map-overrides
            when old
            do (let ((k `[,key]))
@@ -159,8 +165,9 @@ combined with its default pattern."
   (mgl-pax-sly--override-plain-doc-keys))
 
 (defun mgl-pax-unhijack-sly-doc-keys ()
+  "See MGL-PAX::@EMACS-SETUP."
   (interactive)
-  ;; Plain keys must come first
+  ;; Plain keys must come first.
   (mgl-pax-sly--override-plain-doc-keys t)
   (mgl-pax-override-keys sly-doc-map mgl-pax-sly-doc-map-overrides t))
 
@@ -170,7 +177,9 @@ combined with its default pattern."
 
 ;;;; Integration with `M-.'
 
-(define-advice sly-edit-definition (:around (oldfun &optional name where) mgl-pax)
+(define-advice sly-edit-definition (:around
+                                    (oldfun &optional name where)
+                                    mgl-pax)
   (interactive)
   (mgl-pax-edit-definition-advice
    (called-interactively-p 'any)
@@ -186,13 +195,12 @@ combined with its default pattern."
 (define-advice sly--setup-completion (:after () mgl-pax)
   ;; `mgl-pax-completing-for' is bound by `mgl-pax-read-from-minibuffer'.
   (when mgl-pax-completing-for
-    (add-hook 'completion-at-point-functions #'mgl-pax-completions-at-point nil t)))
+    (add-hook 'completion-at-point-functions
+              #'mgl-pax-completions-at-point nil t)))
 
 
 
 (add-to-list 'mgl-pax-loaded-backends 'mgl-pax-sly)
-(provide 'mgl-pax-sly)
+
 
-;; TODO web documentation requires `sly-enable-evaluate-in-emacs' to
-;; be true for edit in Emacs to work; this should probably be left to
-;; the user to decide.
+(provide 'mgl-pax-sly)

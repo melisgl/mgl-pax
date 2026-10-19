@@ -240,9 +240,10 @@
 
 (defsection @emacs-setup (:title "Emacs Setup")
   """Here is a quick recipe for setting up PAX for use via @SLIME or
-  @SLY to take advantage of the [conveniences on offer][@EMACS-FUNCTIONALITY].
-  Conversely, there is no need to do any of this just to use
-  DEFSECTION, write docstrings and for @GENERATING-DOCUMENTATION.
+  @SLY to take advantage of the [conveniences on
+  offer][@EMACS-FUNCTIONALITY].  Conversely, there is no need to do
+  any of this just to use DEFSECTION, write docstrings and for
+  @GENERATING-DOCUMENTATION.
 
   If PAX was installed from @QUICKLISP, then evaluate this in CL to
   [install][install-pax-elisp] the Elisp code in a stable location:
@@ -311,10 +312,9 @@
   (@emacs-keys section))
 
 (defsection @emacs-functionality (:title "Functionality Provided")
-  "- For @NAVIGATING-IN-EMACS, loading `mgl-pax` extends the
-    client's @M-. (`slime-edit-definition` or `sly-edit-definition`)
-    to handle references. There are no related variables to
-    customize.
+  "- For @NAVIGATING-IN-EMACS, loading `mgl-pax` extends the client's
+    @M-. (`slime-edit-definition` or `sly-edit-definition`) to handle
+    references. There are no related variables to customize.
 
   - For @BROWSING-LIVE-DOCUMENTATION, `mgl-pax-browser-function` and
     `mgl-pax-web-server-port` can be customized in Elisp. To browse
@@ -335,8 +335,8 @@
 (defsection @emacs-quicklisp (:title "Installing from Quicklisp")
   """If you installed PAX with Quicklisp, the location of `mgl-pax.el`
   may change with updates, and you may want to copy the current
-  version of `mgl-pax.el` (and the files it loads for SLIME and Sly
-  to a stable location by evaluating this in CL:
+  version of `mgl-pax.el` (and the files it loads for SLIME and Sly to
+  a stable location by evaluating this in CL:
 
       (mgl-pax:install-pax-elisp "~/quicklisp/")
 
@@ -365,14 +365,14 @@
 
   - `(require 'mgl-pax)` loads the one for the first of `slime` and
     `sly` that is loaded. If either has been loaded already, it loads
-    immediately, otherwise when the client has been loaded.
-    If both have been loaded already, then SLIME's is chosen.
-    So the setup above works without change for both.
+    immediately, otherwise when the client has been loaded.  If both
+    have been loaded already, then SLIME's is chosen.  So the setup
+    above works without change for both.
 
-  - To choose explicitly, `(require 'mgl-pax-slime)` or
-    `(require 'mgl-pax-sly)` before the other client is loaded. Do not
-    set the Elisp variable `mgl-pax-backend` instead: that stops
-    `mgl-pax` from loading either.
+  - To choose explicitly, `(require 'mgl-pax-slime)` or `(require
+    'mgl-pax-sly)` before the other client is loaded. Do not set the
+    Elisp variable `mgl-pax-backend` instead: that stops `mgl-pax`
+    from loading either.
 
   - Only one client can be used per Emacs session. Loading both
     backends at once is not supported.
@@ -450,7 +450,8 @@
 
   The global key bindings above are global because their commands work
   in any mode. If that's not desired, one may bind `\\C-.` locally in
-  all Slime related modes like this (swap out `slime` for `sly` if using Sly):
+  all Slime related modes like this (swap out `slime` for `sly` if
+  using Sly):
 
   ```elisp
   (slime-bind-keys slime-parent-map nil '(("C-." mgl-pax-document)))
@@ -483,9 +484,10 @@
 (defsection @background (:title "Background")
   """As a user, I frequently run into documentation that's incomplete
   and out of date, so I tend to stay in the editor and explore the
-  code by jumping around with @SLIME's or @SLY's @M-. (`slime-edit-definition`
-  or `sly-edit-definition`). As a library author, I spend a great deal of time
-  polishing code but precious little writing documentation.
+  code by jumping around with @SLIME's or @SLY's
+  @M-. (`slime-edit-definition` or `sly-edit-definition`). As a
+  library author, I spend a great deal of time polishing code but
+  precious little writing documentation.
 
   In fact, I rarely write anything more comprehensive than docstrings
   for exported stuff. Writing docstrings feels easier than writing a

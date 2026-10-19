@@ -12,8 +12,8 @@
   `apropos-command` and other online help commands in Emacs, for which
   direct parallels are provided.
 
-  Still, even without Emacs and @SLIME or @SLY, limited functionality is
-  available through the @PAX-LIVE-HOME-PAGE by starting the live
+  Still, even without Emacs and @SLIME or @SLY, limited functionality
+  is available through the @PAX-LIVE-HOME-PAGE by starting the live
   documentation web server [manually][ensure-web-server].
 
   If @EMACS-SETUP has been done, the Elisp function
@@ -71,7 +71,8 @@
       entire PAX manual as a single page and scroll to the very
       section you are reading within it:
 
-          pax::@pax-manual pax:section pax::@browsing-live-documentation pax:section
+          pax::@pax-manual pax:section pax::@browsing-live-documentation
+          pax:section
 
   - If the empty string is entered at the prompt, and there is no
     existing w3m buffer or w3m is not used, then @PAX-LIVE-HOME-PAGE
@@ -720,10 +721,10 @@
   `mgl-pax-apropos-package` can display the results of DREF-APROPOS in
   the [live documentation browser] [@browsing-live-documentation].
   These extend the functionality of `slime-apropos`,
-  `slime-apropos-all` and `slime-apropos-package` (and their `sly-` versions)
-  to support more kinds of DREF::@DEFINITIONs in an extensible way. The
-  correspondence is so close that the PAX versions might [take over the client
-  key bindings][@EMACS-SETUP].
+  `slime-apropos-all` and `slime-apropos-package` (and their `sly-`
+  versions) to support more kinds of DREF::@DEFINITIONs in an
+  extensible way. The correspondence is so close that the PAX versions
+  might [take over the client key bindings][@EMACS-SETUP].
 
   Note that apropos functionality is also exposed via the
   @PAX-LIVE-HOME-PAGE.

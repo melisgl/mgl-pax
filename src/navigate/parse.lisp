@@ -48,11 +48,11 @@
 
 (define-glossary-term @word (:title "word")
   "A _word_ is a string from which we want to extract a @NAME. When
-  [Navigating][@navigating-in-emacs section], the word is
-  sexp or the label of a @MARKDOWN/REFLINK if point
-  is over one. Similarly, when @GENERATING-DOCUMENTATION, it is a
-  non-empty string between whitespace characters in a docstring or the
-  label of a @MARKDOWN/REFLINK.")
+  [Navigating][@navigating-in-emacs section], the word is sexp or the
+  label of a @MARKDOWN/REFLINK if point is over one. Similarly, when
+  @GENERATING-DOCUMENTATION, it is a non-empty string between
+  whitespace characters in a docstring or the label of a
+  @MARKDOWN/REFLINK.")
 
 (define-glossary-term @raw-name (:title "raw name")
   "A _raw name_ is a string from which a @NAME may be read. Raw names

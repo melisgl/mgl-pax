@@ -1,11 +1,11 @@
 (in-package :mgl-pax-test)
 
 ;;;; Tests for the Lisp side of the Sly support. They simulate what
-;;;; Slynk does when Emacs evaluates a form (see SLYNK::EVAL-FOR-EMACS):
-;;;; SLYNK-API:*BUFFER-PACKAGE* and SLYNK-API:*BUFFER-READTABLE* are
-;;;; bound, but *PACKAGE* is not. No Emacs connection is needed.
-;;;;
-;;;; These need Slynk to be loaded, hence the separate system.
+;;;; Slynk does when Emacs evaluates a form (see
+;;;; SLYNK::EVAL-FOR-EMACS): SLYNK-API:*BUFFER-PACKAGE* and
+;;;; SLYNK-API:*BUFFER-READTABLE* are bound, but *PACKAGE* is not. No
+;;;; Emacs connection is needed.  These need Slynk to be loaded, hence
+;;;; the separate system.
 
 (deftest test-sly ()
   (test-sly-buffer-package)
@@ -107,8 +107,9 @@
     (let ((*package* (find-package :mgl-pax-test)))
       (is (eq (pax::buffer-package) (find-package :mgl-pax-test))))))
 
-;;; REDOCUMENT-FOR-EMACS is used to read SWANK::*BUFFER-PACKAGE* without
-;;; WITH-SWANK-COMPATIBILITY, since this is unbound with Slynk.
+;;; REDOCUMENT-FOR-EMACS is used to read SWANK::*BUFFER-PACKAGE*
+;;; without WITH-SWANK-COMPATIBILITY, since this is unbound with
+;;; Slynk.
 (deftest test-sly-redocument-for-emacs ()
   (with-simulated-slynk-request (:mgl-pax-test)
     (let ((result (pax::redocument-for-emacs "file:///no/such/doc.html"

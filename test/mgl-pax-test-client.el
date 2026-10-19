@@ -1,4 +1,4 @@
-;;; mgl-pax-test-client.el --- Client neutral names for the Elisp tests -*- lexical-binding: t -*-
+;;;; mgl-pax-test-client.el --- Test client aliases -*- lexical-binding: t -*-
 
 (require 'cl-lib)
 (require 'ert)
@@ -11,8 +11,9 @@
     "Return the symbol NAME prefixed with the client name."
     (intern (format "%s-%s" mgl-pax-test-client name))))
 
-;; A client NAME needs there to be a NAME-tests library that provides
-;; NAME-check, def-NAME-test, and the other functions aliased here.
+;;;; A client NAME needs there to be a NAME-tests library that
+;;;; provides NAME-check, def-NAME-test, and the other functions
+;;;; aliased here.
 
 (require (intern (format "%s-tests" mgl-pax-test-client)))
 
@@ -36,10 +37,10 @@
 
 (defun mgl-pax-test-batch-test (&optional test-name randomize)
   "Test by selecting by TEST-NAME in batch mode with the client.
-If RANDOMIZE, they get run in random order.  This shuffles the test names rather
-than letting the client do it since this would put the test objects (including
-function bodies) in the selector that gets printed by ERT, which makes for rather
-messy test outputs."
+If RANDOMIZE, they get run in random order.  This shuffles the test
+names rather than letting the client do it since this would put the
+test objects (including function bodies) in the selector that gets
+printed by ERT, which makes for rather messy test outputs."
   (funcall (mgl-pax-test-client-symbol "batch-test")
            (if randomize
                `(member ,@(mapcar #'ert-test-name
@@ -79,4 +80,3 @@ messy test outputs."
   #'mgl-pax-test-ert-test-for)
 
 (provide 'mgl-pax-test-client)
-;;; mgl-pax-test-client.el ends here
