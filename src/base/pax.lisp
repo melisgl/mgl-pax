@@ -251,7 +251,7 @@
       (mgl-pax:install-pax-elisp "~/quicklisp/")
 
   Assuming the Elisp file is in the `~/quicklisp/` directory and
-  you're using Slime, add something like this to your `.emacs`:
+  you're using SLIME, add something like this to your `.emacs`:
 
   ```elisp
   (add-to-list 'load-path "~/quicklisp/")
@@ -361,13 +361,14 @@
 
 (defsection @emacs-clients (:title "SLIME and Sly")
   """The code that is specific to a client lives in `mgl-pax-slime.el`
-  and `mgl-pax-sly.el`, and `mgl-pax.el` loads one of them:
+  and `mgl-pax-sly.el`:
 
-  - `(require 'mgl-pax)` loads the one for the first of `slime` and
-    `sly` that is loaded. If either has been loaded already, it loads
-    immediately, otherwise when the client has been loaded. If both
-    have been loaded already, then SLIME's is chosen. So the setup
-    above works without change for both.
+  - The behavior of `(require 'mgl-pax)` depends on the status of
+    SLIME and SLY in Emacs. If SLIME has already been loaded into
+    Emacs, it loads `mgl-pax-slime` (even if SLY has been loaded too).
+    If SLY has been loaded, it loads `mgl-pax-sly`. If neither has
+    been loaded, then loading a backend is deferred until one of SLIME
+    or SLY is loaded into Emacs.
 
   - To choose explicitly, `(require 'mgl-pax-slime)` or `(require
     'mgl-pax-sly)` before the other client is loaded. Do not set the
@@ -377,13 +378,12 @@
   - Only one client can be used per Emacs session. Loading both
     backends at once is not supported.
 
-  With Sly, Slynk provides the connection, but the Lisp side of PAX
-  still uses Swank as a library (e.g. to find source locations), so
-  the `swank` ASDF system must be loadable. It is if SLIME is
-  installed or Swank is available through @QUICKLISP. Swank is not
-  started as a server. The Elisp functions
-  `mgl-pax-hijack-sly-doc-keys` and `mgl-pax-unhijack-sly-doc-keys`
-  are the Sly counterparts of those for SLIME (see @EMACS-KEYS). """)
+  When using SLY, no Swank server is started; it is used purely as an
+  introspection library.
+
+  The Elisp functions `mgl-pax-hijack-sly-doc-keys` and
+  `mgl-pax-unhijack-sly-doc-keys` are the Sly counterparts of those
+  for SLIME (see @EMACS-KEYS). """)
 
 ;;; This is not a DEFVAR so that it picks up version changes on
 ;;; reload. Set to NIL by the DONT-CHECK restart.
@@ -467,11 +467,10 @@
   - `C-c C-d c`: installs `mgl-pax-hideshow-comments`
   - `C-c C-d u`: installs `mgl-pax-edit-parent-section`
 
-  If `mgl-pax-hijack-sly-doc-keys` is true, the equivalent holds for
-  `sly-apropos`, etc. in `sly-doc-map`.
-
-  Calling `mgl-pax-unhijack-slime-doc-keys` reverts these changes.
-  For Sly, `mgl-pax-hijack-sly-doc-keys` (controlled by
+  If `mgl-pax-hijack-slime-doc-keys` is true, the equivalent holds for
+  `sly-apropos`, etc. in `sly-doc-map`. Calling
+  `mgl-pax-unhijack-slime-doc-keys` reverts these changes. For Sly,
+  `mgl-pax-hijack-sly-doc-keys` (controlled by
   `mgl-pax-hijack-sly-doc-keys` the same way) makes the same changes
   to `sly-doc-map` with `sly-apropos` and so on in place of the
   `slime-` commands, and `mgl-pax-unhijack-sly-doc-keys` reverts them.
