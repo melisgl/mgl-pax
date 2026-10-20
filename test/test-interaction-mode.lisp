@@ -2,7 +2,7 @@
 
 ;;;; Tests for the Lisp interaction mode protocol (DEFINTERFACE,
 ;;;; DEFIMPL, WITH-LISP-INTERACTION-MODE). These do not need SLIME,
-;;;; Sly, Swank backends or an Emacs connection.
+;;;; SLY, Swank backends or an Emacs connection.
 
 (deftest test-interaction-mode ()
   (test-with-lisp-interaction-mode)

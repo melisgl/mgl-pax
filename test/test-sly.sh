@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Run the Lisp-side tests of the Sly support (test/test-sly.lisp) and of the interaction mode
+# Run the Lisp-side tests of the SLY support (test/test-sly.lisp) and of the interaction mode
 # protocol (test/test-interaction-mode.lisp, which is part of the main MGL-PAX-TEST suite too).
 # These tests don't need Emacs or a running Slynk server, but Slynk has to be loadable.
 #
@@ -9,7 +9,7 @@
 # Environment:
 #   LISP       the Lisp to run (default: sbcl)
 #   SLYNK_DIR  directory containing slynk-loader.lisp (default: the
-#              slynk directory of the newest sly package under
+#              slynk directory of the newest SLY package under
 #              ~/.emacs.d/elpa/)
 
 cd $(dirname $0)/..

@@ -72,7 +72,7 @@
 
 
 ;;;; A protocol for interfacing with an underlying Lisp interaction
-;;;; mode (such as SLIME, or Sly).
+;;;; mode (such as SLIME, or SLY).
 
 (defvar mgl-pax-backend)
 

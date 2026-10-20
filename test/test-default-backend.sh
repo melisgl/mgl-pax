@@ -15,7 +15,7 @@ SLY_DIR=${SLY_DIR:-$(newest sly)}
 W3M_DIR=${W3M_DIR:-$(newest w3m)}
 for dir in "${SLIME_DIR}" "${SLY_DIR}"; do
     if [ ! -d "${dir}" ]; then
-        echo "Cannot find both SLIME and Sly. Set SLIME_DIR and SLY_DIR." >&2
+        echo "Cannot find both SLIME and SLY. Set SLIME_DIR and SLY_DIR." >&2
         exit 2
     fi
 done

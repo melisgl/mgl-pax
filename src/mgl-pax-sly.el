@@ -1,4 +1,4 @@
-;;;; mgl-pax-sly.el --- Sly client -*- lexical-binding: t -*-
+;;;; mgl-pax-sly.el --- SLY client -*- lexical-binding: t -*-
 
 (eval-and-compile
   (require 'mgl-pax))
@@ -11,7 +11,7 @@
   (require 'sly))
 
 
-;;;; Sly implementation of the Lisp interaction mode protocol
+;;;; SLY implementation of the Lisp interaction mode protocol
 
 (mgl-pax-defimpl mgl-pax-eval :sly (sexp &optional package)
   (sly-eval (mgl-pax-propagating-lisp-interaction-mode :sly sexp) package))
@@ -145,7 +145,7 @@ MGL-PAX::@EMACS-KEYS for details."
 
 (defun mgl-pax-sly--override-plain-doc-keys (&optional reversep)
   "Bind (with REVERSEP unbind) the plain versions of keys.
-Uses `MGL-PAX-SLY-DOC-MAP-OVERRIDES'. Because Sly only binds control
+Uses `MGL-PAX-SLY-DOC-MAP-OVERRIDES'. Because SLY only binds control
 variants and so there's no old binding, `MGL-PAX-OVERRIDE-KEYS'
 doesn't handle this."
   (cl-loop for (key old new) in mgl-pax-sly-doc-map-overrides

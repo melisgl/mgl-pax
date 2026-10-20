@@ -1,15 +1,15 @@
 (in-package :mgl-pax)
 
 ;;;; DREF's default backend is :SWANK only if SWANK is loaded when
-;;;; DREF is loaded, which happens with Slime but not Sly. With lisps
+;;;; DREF is loaded, which happens with Slime but not SLY. With lisps
 ;;;; other than SBCL, Swank is required. With SBCL it's not, but
 ;;;; without it, the backend is NIL, and SB-INTROSPECT gets used
-;;;; directly, with reduced functionality. If we're using Sly mainly
+;;;; directly, with reduced functionality. If we're using SLY mainly
 ;;;; but have Swank available, then Swank gets used as an
 ;;;; introspection library in effect. It would be worth setting things
-;;;; up so that Swank isn't required at all if Sly provides the main
+;;;; up so that Swank isn't required at all if SLY provides the main
 ;;;; Lisp image, but this would require modifying the DREF library.
-;;;; Currently, SWANK should be loadable even if using Sly.
+;;;; Currently, SWANK should be loadable even if using SLY.
 
 (when (and (null (dref:backend)) (dref:backend-available-p :swank))
   (setf (dref:backend) :swank))

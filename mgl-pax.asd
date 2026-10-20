@@ -62,7 +62,7 @@
   :bug-tracker ""
   :source-control ""
   :description "Supporting definitions for interacting with the Emacs
-  side of [MGL-PAX][mgl-pax::@pax-manual] through Sly."
+  side of [MGL-PAX][mgl-pax::@pax-manual] through SLY."
   :long-description "Do not declare a dependency on this system. It is
   autoloaded by Elisp or by accessing the functionality provided if
   the [`mgl-pax`][asdf:system] system is loaded."
@@ -81,8 +81,8 @@
   :homepage ""
   :bug-tracker ""
   :source-control ""
-  :description "Support for MGL-PAX::@NAVIGATING-IN-EMACS via Slime's
-  or Sly's `MGL-PAX::@M-.` in [MGL-PAX][mgl-pax::@pax-manual]."
+  :description "Support for MGL-PAX::@NAVIGATING-IN-EMACS via SLIME's
+  or SLY's `MGL-PAX::@M-.` in [MGL-PAX][mgl-pax::@pax-manual]."
   :depends-on ("alexandria" "autoload-doc" "mgl-pax" "mgl-pax/compatibility"
                             "dref/full" (:feature (:not :swank) "swank"))
   :defsystem-depends-on ("autoload")

@@ -1,6 +1,6 @@
 (in-package :mgl-pax-test)
 
-;;;; Tests for the Lisp side of the Sly support. They simulate what
+;;;; Tests for the Lisp side of the SLY support. They simulate what
 ;;;; Slynk does when Emacs evaluates a form (see
 ;;;; SLYNK::EVAL-FOR-EMACS): SLYNK-API:*BUFFER-PACKAGE* and
 ;;;; SLYNK-API:*BUFFER-READTABLE* are bound, but *PACKAGE* is not. No
@@ -37,7 +37,7 @@
     (with-simulated-slynk-request (:cl-user :readtable readtable)
       (with-test ("the buffer's readtable is Slynk's")
         (is (eq (pax::buffer-readtable) readtable)))))
-  (with-test ("without Sly, it is *PACKAGE* (that is what tests rely on)")
+  (with-test ("without SLY, it is *PACKAGE* (that is what tests rely on)")
     (let ((*package* (find-package :mgl-pax-test))
           (pax::*current-interaction-mode* nil))
       (is (eq (pax::buffer-package) (find-package :mgl-pax-test))))))

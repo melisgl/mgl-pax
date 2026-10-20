@@ -38,7 +38,7 @@ Testing from the command line
   currently only tests with SBCL and needs the value of `SLIME_DIR` to
   be specified in the script.
 
-    To test only with a specific client, e.g. Sly:
+    To test only with a specific client, e.g. SLY:
     `MGL_PAX_TEST_CLIENTS=sly test/test-el.sh`.
 
     The Elisp tests are written against client neutral names that get
@@ -51,7 +51,7 @@ Testing from the command line
 - `test/test-mock.sh` runs the Elisp tests that use a mock backend and
   need neither a client nor a Lisp. `test/test-default-backend.sh`
   checks which backend `(require 'mgl-pax)` loads for various orders
-  of loading the clients. `test/test-sly.sh` runs the Lisp-side Sly
+  of loading the clients. `test/test-sly.sh` runs the Lisp-side SLY
   tests and needs Slynk (`SLYNK_DIR`).
 
 Catching changes in behaviour
