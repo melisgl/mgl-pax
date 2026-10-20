@@ -110,8 +110,9 @@
   (swank::eval-in-emacs form nowait))
 
 
-;;; MGL-PAX/SLY depends on Slynk, so load it when first :SLY request
-;;; arrives. ENSURE-SLY-GLUE-LOADED is redefined by MGL-PAX/SLY.
+;;; MGL-PAX/SLY depends on Slynk, so load it when the first :SLY
+;;; request arrives. ENSURE-SLY-GLUE-LOADED is redefined by
+;;; MGL-PAX/SLY.
 (autoload ensure-sly-glue-loaded "mgl-pax/sly" :arglist "()")
 
 (defimpl call-with-swank-compatibility :sly (function)

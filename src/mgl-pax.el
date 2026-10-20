@@ -131,7 +131,7 @@ point.")
 
 (mgl-pax-definterface mgl-pax-forward-sexp (&optional count)
   "Steps point over the current expression, taking comments and reader
-conditionals into account. If `count' is provided and a positive
+conditionals into account. If `count' is provided and it is a positive
 integer, step over that many expressions.")
 
 (mgl-pax-definterface mgl-pax-flash-region (start end &optional timeout)
