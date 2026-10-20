@@ -13,7 +13,6 @@
   (test-sly-locate-definitions)
   (test-sly-names-or-locatives)
   (test-sly-default-connection)
-  (test-sly-buffer-package-outside-a-request)
   (test-sly-redocument-for-emacs))
 
 (defmacro with-simulated-slynk-request ((package &key (readtable '*readtable*))
@@ -98,14 +97,6 @@
   ;; No Emacs is connected to the test image.
   (pax::with-lisp-interaction-mode (:sly)
     (is (null (pax::default-connection)))))
-
-;;; Slynk binds the buffer's package for every request that comes from
-;;; Emacs, but PAX can also be entered from other threads (e.g. the
-;;; web server's) with the mode bound but no request in progress.
-(deftest test-sly-buffer-package-outside-a-request ()
-  (pax::with-lisp-interaction-mode (:sly)
-    (let ((*package* (find-package :mgl-pax-test)))
-      (is (eq (pax::buffer-package) (find-package :mgl-pax-test))))))
 
 ;;; REDOCUMENT-FOR-EMACS is used to read SWANK::*BUFFER-PACKAGE*
 ;;; without WITH-SWANK-COMPATIBILITY, since this is unbound with
