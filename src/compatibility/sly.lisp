@@ -15,7 +15,7 @@
   (setf (dref:backend) :swank))
 
 ;;; Replaces stub defined in interaction-mode.lisp.
-(defun/auto load-sly-glue ()
+(defun/auto ensure-sly-glue-loaded ()
   nil)
 
 (defimpl default-connection :sly ()
