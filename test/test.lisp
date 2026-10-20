@@ -6,13 +6,14 @@
                                        (get-universal-time))
                                (uiop:temporary-directory)))))
     (unwind-protect
-         (let ((result (pax:install-pax-elisp dir)))
-           (is (equal (pathname-name result) "mgl-pax"))
+         (progn
+           (pax:install-pax-elisp dir)
            (dolist (file '("mgl-pax.el" "mgl-pax-slime.el" "mgl-pax-sly.el"))
              (is (probe-file (merge-pathnames file dir))
                  :msg ("~S is installed." file)))
            (with-test ("the version is filled in")
-             (let ((text (alexandria:read-file-into-string result)))
+             (let ((text (alexandria:read-file-into-string
+                          (merge-pathnames "mgl-pax.el" dir))))
                ;; A comment also quotes the line, so look for it at
                ;; the beginning of a line.
                (is (not

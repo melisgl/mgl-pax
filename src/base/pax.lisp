@@ -397,10 +397,9 @@
 
 (defun install-pax-elisp (target-dir)
   "Install `mgl-pax.el` and the backends it loads for SLIME and Sly
-  (`mgl-pax-slime.el` and `mgl-pax-sly.el`) that are distributed with
-  this package in TARGET-DIR. Return the pathname of `mgl-pax.el`."
-  (let ((target-dir (uiop:ensure-directory-pathname target-dir))
-        (result nil))
+  (`mgl-pax-slime.el` and `mgl-pax-sly.el`), which are distributed
+  with this package, in TARGET-DIR."
+  (let ((target-dir (uiop:ensure-directory-pathname target-dir)))
     (dolist (file *pax-elisp-files*)
       (let ((source (asdf:system-relative-pathname
                      "mgl-pax" (format nil "src/~A" file)))
@@ -410,10 +409,8 @@
           (dolist (line (uiop:read-file-lines source))
             (if (string= line "(setq mgl-pax-version (mgl-pax-read-version))")
                 (format s "(setq mgl-pax-version '~S)~%" *pax-version*)
-                (write-line line s))))
-        (when (string= file "mgl-pax.el")
-          (setq result target))))
-    result))
+                (write-line line s)))))))
+  nil)
 
 
 (defun check-pax-elisp-version (pax-elisp-version)
