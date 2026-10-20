@@ -210,8 +210,8 @@ PAX is built on top of the DRef library. See <https://github.com/melisgl/dref>.
 
 - [system] "mgl-pax/navigate"
 
-    - Description: Support for Navigating Sources in Emacs via Slime's or Sly's
-    M-. in MGL-PAX.
+    - Description: Support for Navigating Sources in Emacs via Slime's
+    or Sly's M-. in MGL-PAX.
 
     - Depends on: alexandria, autoload-doc, dref/full, mgl-pax, mgl-pax/compatibility, swank(?)
 
@@ -256,17 +256,18 @@ PAX is built on top of the DRef library. See <https://github.com/melisgl/dref>.
 ## Emacs Setup
 
 Here is a quick recipe for setting up PAX for use via SLIME or
-Sly to take advantage of the conveniences on offer.
-Conversely, there is no need to do any of this just to use
-DEFSECTION, write docstrings and for Generating Documentation.
+Sly to take advantage of the conveniences on
+offer. Conversely, there is no need to do any
+of this just to use DEFSECTION, write docstrings and for
+Generating Documentation.
 
 If PAX was installed from Quicklisp, then evaluate this in CL to
 install the Elisp code in a stable location:
 
     (mgl-pax:install-pax-elisp "~/quicklisp/")
 
-Assuming the Elisp file is in the ~/quicklisp/ directory, add
-something like this to your .emacs:
+Assuming the Elisp file is in the ~/quicklisp/ directory and
+you're using SLIME, add something like this to your .emacs:
 
     (add-to-list 'load-path "~/quicklisp/")
     (require 'mgl-pax)
@@ -313,10 +314,9 @@ what Sly needs on the Lisp side.
 
 ### Functionality Provided
 
-- For Navigating Sources in Emacs, loading mgl-pax extends the
-  client's M-. (slime-edit-definition or sly-edit-definition)
-  to handle references. There are no related variables to
-  customize.
+- For Navigating Sources in Emacs, loading mgl-pax extends the client's
+  M-. (slime-edit-definition or sly-edit-definition) to handle
+  references. There are no related variables to customize.
 
 - For Browsing Live Documentation, mgl-pax-browser-function and
   mgl-pax-web-server-port can be customized in Elisp. To browse
@@ -338,8 +338,8 @@ strings, or comments.
 
 If you installed PAX with Quicklisp, the location of mgl-pax.el
 may change with updates, and you may want to copy the current
-version of mgl-pax.el (and the files it loads for SLIME and Sly
-to a stable location by evaluating this in CL:
+version of mgl-pax.el and the distributed elisp files to
+a stable location by evaluating this in CL:
 
     (mgl-pax:install-pax-elisp "~/quicklisp/")
 
@@ -349,8 +349,8 @@ step.
 - [function] INSTALL-PAX-ELISP TARGET-DIR
 
     Install mgl-pax.el and the backends it loads for SLIME and Sly
-    (mgl-pax-slime.el and mgl-pax-sly.el) that are distributed with
-    this package in TARGET-DIR. Return the pathname of mgl-pax.el.
+    (mgl-pax-slime.el and mgl-pax-sly.el), which are distributed
+    with this package, in TARGET-DIR.
 
 ### Loading PAX
 
@@ -369,29 +369,29 @@ overridden key bindings restored.
 ### SLIME and Sly
 
 The code that is specific to a client lives in mgl-pax-slime.el
-and mgl-pax-sly.el, and mgl-pax.el loads one of them:
+and mgl-pax-sly.el:
 
-- (require 'mgl-pax) loads the one for the first of slime and
-  sly that is loaded. If either has been loaded already, it loads
-  immediately, otherwise when the client has been loaded.
-  If both have been loaded already, then SLIME's is chosen.
-  So the setup above works without change for both.
+- The behavior of (require 'mgl-pax) depends on the status of
+  SLIME and SLY in Emacs. If SLIME has already been loaded into
+  Emacs, it loads mgl-pax-slime (even if SLY has been loaded too).
+  If SLY has been loaded, it loads mgl-pax-sly. If neither has
+  been loaded, then loading a backend is deferred until one of SLIME
+  or SLY is loaded into Emacs.
 
-- To choose explicitly, (require 'mgl-pax-slime) or
-  (require 'mgl-pax-sly) before the other client is loaded. Do not
-  set the Elisp variable mgl-pax-backend instead: that stops
-  mgl-pax from loading either.
+- To choose explicitly, (require 'mgl-pax-slime) or (require
+  'mgl-pax-sly) before the other client is loaded. Do not set the
+  Elisp variable mgl-pax-backend instead: that stops mgl-pax
+  from loading either.
 
 - Only one client can be used per Emacs session. Loading both
   backends at once is not supported.
 
-With Sly, Slynk provides the connection, but the Lisp side of PAX
-still uses Swank as a library (e.g. to find source locations), so
-the swank ASDF system must be loadable. It is if SLIME is
-installed or Swank is available through Quicklisp. Swank is not
-started as a server. The Elisp functions
-mgl-pax-hijack-sly-doc-keys and mgl-pax-unhijack-sly-doc-keys
-are the Sly counterparts of those for SLIME (see Setting up Keys). 
+When using SLY, no Swank server is started; it is used purely as an
+introspection library.
+
+The Elisp functions mgl-pax-hijack-sly-doc-keys and
+mgl-pax-unhijack-sly-doc-keys are the Sly counterparts of those
+for SLIME (see Setting up Keys). 
 
 ### Setting up Keys
 
@@ -403,7 +403,8 @@ The recommended key bindings are
 
 The global key bindings above are global because their commands work
 in any mode. If that's not desired, one may bind C-. locally in
-all Slime related modes like this (swap out slime for sly if using Sly):
+all Slime related modes like this (swap out slime for sly if
+using Sly):
 
     (slime-bind-keys slime-parent-map nil '(("C-." mgl-pax-document)))
 
@@ -426,11 +427,10 @@ slime-doc-map (assuming it's bound to C-c C-d):
 
 - C-c C-d u: installs mgl-pax-edit-parent-section
 
-If mgl-pax-hijack-sly-doc-keys is true, the equivalent holds for
-sly-apropos, etc. in sly-doc-map.
-
-Calling mgl-pax-unhijack-slime-doc-keys reverts these changes.
-For Sly, mgl-pax-hijack-sly-doc-keys (controlled by
+If mgl-pax-hijack-slime-doc-keys is true, the equivalent holds for
+sly-apropos, etc. in sly-doc-map. Calling
+mgl-pax-unhijack-slime-doc-keys reverts these changes. For Sly,
+mgl-pax-hijack-sly-doc-keys (controlled by
 mgl-pax-hijack-sly-doc-keys the same way) makes the same changes
 to sly-doc-map with sly-apropos and so on in place of the
 slime- commands, and mgl-pax-unhijack-sly-doc-keys reverts them.
@@ -441,9 +441,10 @@ binds the plain ones (C-c C-d a) as well where they are free.
 
 As a user, I frequently run into documentation that's incomplete
 and out of date, so I tend to stay in the editor and explore the
-code by jumping around with SLIME's or Sly's M-. (slime-edit-definition
-or sly-edit-definition). As a library author, I spend a great deal of time
-polishing code but precious little writing documentation.
+code by jumping around with SLIME's or Sly's
+M-. (slime-edit-definition or sly-edit-definition). As a
+library author, I spend a great deal of time polishing code but
+precious little writing documentation.
 
 In fact, I rarely write anything more comprehensive than docstrings
 for exported stuff. Writing docstrings feels easier than writing a
@@ -1023,13 +1024,15 @@ in the context of Generating Documentation).
 
 ## Navigating Sources in Emacs
 
-Integration into SLIME's or Sly's M-. (slime-edit-definition) allows
-one to visit the SOURCE-LOCATION of a definition. PAX extends
-standard Slime/Sly functionality by
+Integration into SLIME's or Sly's
+M-. (slime-edit-definition) allows one to visit the
+SOURCE-LOCATION of a definition. PAX extends standard
+Slime/Sly functionality by
 
 - adding support for all kinds of definitions (see e.g.
   ASDF:SYSTEM, READTABLE in
-  Basic Locative Types), not just the ones the client knows about,
+  Basic Locative Types), not just the ones the client knows
+  about,
 
 - providing a portable way to refer to even standard definitions,
 
@@ -1055,14 +1058,15 @@ When M-. is invoked, it first tries to find a name in the
 current buffer at point. If no name is found, then it
 prompts.
 
-First, the sexp at point (slime-sexp-at-point) or (sly-sexp-at-point) is
-taken as a word,from which the name will be parsed. Then,
-candidate locatives are looked for before and after the word. Thus, if a
-locative is the previous or the next expression, then M-. will go straight
-to the definition which corresponds to the locative. If that fails, M-.
-will try to find the definitions in the normal way, which may
-involve popping up an xref buffer and letting the user interactively
-select one of possible definitions.
+First, the sexp at point (slime-sexp-at-point) or
+(sly-sexp-at-point) is taken as a word,from which the name will
+be parsed. Then, candidate locatives are looked for
+before and after the word. Thus, if a locative is the previous or
+the next expression, then M-. will go straight to the definition
+which corresponds to the locative. If that fails, M-. will try
+to find the definitions in the normal way, which may involve popping
+up an xref buffer and letting the user interactively select one of
+possible definitions.
 
 M-. works on parenthesized references, such as those in
 DEFSECTION:
@@ -1135,8 +1139,9 @@ In all of the above NAME is a raw name, meaning that print
 will be recognized as PRINT and pax as "PAX".
 
 The package in which symbols are read is the Elisp
-slime-current-package or sly-current-package. In Lisp buffers,this is
-the buffer's package, else it's the package of the client repl buffer.
+slime-current-package or sly-current-package. In Lisp
+buffers,this is the buffer's package, else it's the package of the
+client repl buffer.
 
 #### M-. Completion
 
@@ -1467,8 +1472,8 @@ exploration of the Lisp, much like describe-function,
 apropos-command and other online help commands in Emacs, for which
 direct parallels are provided.
 
-Still, even without Emacs and SLIME or Sly, limited functionality is
-available through the PAX Live Home Page by starting the live
+Still, even without Emacs and SLIME or Sly, limited functionality
+is available through the PAX Live Home Page by starting the live
 documentation web server manually.
 
 If Emacs Setup has been done, the Elisp function
@@ -1526,7 +1531,8 @@ M-. except:
     entire PAX manual as a single page and scroll to the very
     section you are reading within it:
 
-        pax::@pax-manual pax:section pax::@browsing-live-documentation pax:section
+        pax::@pax-manual pax:section pax::@browsing-live-documentation
+        pax:section
 
 - If the empty string is entered at the prompt, and there is no
   existing w3m buffer or w3m is not used, then PAX Live Home Page
@@ -1623,10 +1629,10 @@ The Elisp functions mgl-pax-apropos, mgl-pax-apropos-all, and
 mgl-pax-apropos-package can display the results of DREF-APROPOS in
 the live documentation browser.
 These extend the functionality of slime-apropos,
-slime-apropos-all and slime-apropos-package (and their sly- versions)
-to support more kinds of definitions in an extensible way. The
-correspondence is so close that the PAX versions might take over the client
-key bindings.
+slime-apropos-all and slime-apropos-package (and their sly-
+versions) to support more kinds of definitions in an
+extensible way. The correspondence is so close that the PAX versions
+might take over the client key bindings.
 
 Note that apropos functionality is also exposed via the
 PAX Live Home Page.
@@ -4051,11 +4057,11 @@ LOCATIVE) syntax in DEFSECTION.
 - [glossary-term] word
 
     A word is a string from which we want to extract a name. When
-    Navigating, the word is
-    sexp or the label of a Markdown reference link if point
-    is over one. Similarly, when Generating Documentation, it is a
-    non-empty string between whitespace characters in a docstring or the
-    label of a Markdown reference link.
+    Navigating, the word is the sexp or
+    the label of a Markdown reference link if point is over one. Similarly,
+    when Generating Documentation, it is a non-empty string between
+    whitespace characters in a docstring or the label of a
+    Markdown reference link.
 
 - [glossary-term] raw name
 
