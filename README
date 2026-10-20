@@ -21,7 +21,7 @@ references to
 definitions (e.g. (UNIFORM-RANDOM FUNCTION)). These are the glue.
 To support interactive development, PAX
 
-- makes SLIME's or Sly's M-. work with references and
+- makes SLIME's or SLY's M-. work with references and
 
 - adds a documentation browser.
 
@@ -210,8 +210,8 @@ PAX is built on top of the DRef library. See <https://github.com/melisgl/dref>.
 
 - [system] "mgl-pax/navigate"
 
-    - Description: Support for Navigating Sources in Emacs via Slime's
-    or Sly's M-. in MGL-PAX.
+    - Description: Support for Navigating Sources in Emacs via SLIME's
+    or SLY's M-. in MGL-PAX.
 
     - Depends on: alexandria, autoload-doc, dref/full, mgl-pax, mgl-pax/compatibility, swank(?)
 
@@ -256,7 +256,7 @@ PAX is built on top of the DRef library. See <https://github.com/melisgl/dref>.
 ## Emacs Setup
 
 Here is a quick recipe for setting up PAX for use via SLIME or
-Sly to take advantage of the conveniences on
+SLY to take advantage of the conveniences on
 offer. Conversely, there is no need to do any
 of this just to use DEFSECTION, write docstrings and for
 Generating Documentation.
@@ -287,7 +287,7 @@ Alternatively, with use-package:
       :config
       (mgl-pax-hijack-slime-doc-keys))
 
-The equivalent for Sly:
+The equivalent for SLY:
 
     (use-package mgl-pax
       :load-path "~/quicklisp"
@@ -305,11 +305,11 @@ Emacs, permission needs to be given:
 
     (setq slime-enable-evaluate-in-emacs t)
 
-or, with Sly:
+or, with SLY:
 
     (setq sly-enable-evaluate-in-emacs t)
 
-See SLIME and Sly for how PAX picks between SLIME and Sly, and for
+See SLIME and SLY for how PAX picks between SLIME and SLY, and for
 what Sly needs on the Lisp side.
 
 ### Functionality Provided
@@ -348,7 +348,7 @@ step.
 
 - [function] INSTALL-PAX-ELISP TARGET-DIR
 
-    Install mgl-pax.el and the backends it loads for SLIME and Sly
+    Install mgl-pax.el and the backends it loads for SLIME and SLY
     (mgl-pax-slime.el and mgl-pax-sly.el), which are distributed
     with this package, in TARGET-DIR.
 
@@ -361,22 +361,22 @@ something like this to your .emacs:
     (require 'mgl-pax)
 
 If the Elisp variable mgl-pax-autoload is true (the default), then
-PAX will be loaded in the connected Lisp on-demand via SLIME or Sly.
+PAX will be loaded in the connected Lisp on-demand via SLIME or SLY.
 
 If loading fails, mgl-pax will be unloaded from Emacs and any
 overridden key bindings restored.
 
-### SLIME and Sly
+### SLIME and SLY
 
 The code that is specific to a client lives in mgl-pax-slime.el
 and mgl-pax-sly.el:
 
 - The behavior of (require 'mgl-pax) depends on the status of
   SLIME and SLY in Emacs. If SLIME has already been loaded into
-  Emacs, it loads mgl-pax-slime (even if SLY has been loaded too).
-  If SLY has been loaded, it loads mgl-pax-sly. If neither has
-  been loaded, then loading a backend is deferred until one of SLIME
-  or SLY is loaded into Emacs.
+  Emacs, it loads mgl-pax-slime (even if SLY has been loaded
+  too). If SLY has been loaded, it loads mgl-pax-sly. If neither
+  has been loaded, then loading a backend is deferred until one of
+  SLIME or SLY is loaded into Emacs.
 
 - To choose explicitly, (require 'mgl-pax-slime) or (require
   'mgl-pax-sly) before the other client is loaded. Do not set the
@@ -390,8 +390,8 @@ When using SLY, no Swank server is started; it is used purely as an
 introspection library.
 
 The Elisp functions mgl-pax-hijack-sly-doc-keys and
-mgl-pax-unhijack-sly-doc-keys are the Sly counterparts of those
-for SLIME (see Setting up Keys). 
+mgl-pax-unhijack-sly-doc-keys are the SLY counterparts of those
+for SLIME (see Setting up Keys).
 
 ### Setting up Keys
 
@@ -403,8 +403,8 @@ The recommended key bindings are
 
 The global key bindings above are global because their commands work
 in any mode. If that's not desired, one may bind C-. locally in
-all Slime related modes like this (swap out slime for sly if
-using Sly):
+all @Slime related modes like this (swap out slime for sly if
+using SLY):
 
     (slime-bind-keys slime-parent-map nil '(("C-." mgl-pax-document)))
 
@@ -429,19 +429,19 @@ slime-doc-map (assuming it's bound to C-c C-d):
 
 If mgl-pax-hijack-slime-doc-keys is true, the equivalent holds for
 sly-apropos, etc. in sly-doc-map. Calling
-mgl-pax-unhijack-slime-doc-keys reverts these changes. For Sly,
+mgl-pax-unhijack-slime-doc-keys reverts these changes. For SLY,
 mgl-pax-hijack-sly-doc-keys (controlled by
 mgl-pax-hijack-sly-doc-keys the same way) makes the same changes
 to sly-doc-map with sly-apropos and so on in place of the
 slime- commands, and mgl-pax-unhijack-sly-doc-keys reverts them.
-Sly binds only the control variants (e.g. C-c C-d C-a), so PAX
+SLY binds only the control variants (e.g. C-c C-d C-a), so PAX
 binds the plain ones (C-c C-d a) as well where they are free.
 
 ## Background
 
 As a user, I frequently run into documentation that's incomplete
 and out of date, so I tend to stay in the editor and explore the
-code by jumping around with SLIME's or Sly's
+code by jumping around with SLIME's or SLY's
 M-. (slime-edit-definition or sly-edit-definition). As a
 library author, I spend a great deal of time polishing code but
 precious little writing documentation.
@@ -1024,7 +1024,7 @@ in the context of Generating Documentation).
 
 ## Navigating Sources in Emacs
 
-Integration into SLIME's or Sly's
+Integration into SLIME's or SLY's
 M-. (slime-edit-definition) allows one to visit the
 SOURCE-LOCATION of a definition. PAX extends standard
 Slime/Sly functionality by
@@ -1472,7 +1472,7 @@ exploration of the Lisp, much like describe-function,
 apropos-command and other online help commands in Emacs, for which
 direct parallels are provided.
 
-Still, even without Emacs and SLIME or Sly, limited functionality
+Still, even without Emacs and SLIME or SLY, limited functionality
 is available through the PAX Live Home Page by starting the live
 documentation web server manually.
 
