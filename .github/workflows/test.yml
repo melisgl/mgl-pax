@@ -69,6 +69,7 @@ jobs:
           # KLUDGE: 'ros install slime/slime' fails because it is not
           # interpreted as a github reference but is special cased.
           git clone --depth 1 https://github.com/slime/slime.git
+          git clone --depth 1 https://github.com/joaotavora/sly.git
 
       - name: Run MGL-PAX tests
         env:
