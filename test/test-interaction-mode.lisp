@@ -5,10 +5,10 @@
 ;;;; SLY, Swank backends or an Emacs connection.
 
 (deftest test-interaction-mode ()
-  (test-with-lisp-interaction-mode)
   (test-definterface)
+  (test-with-lisp-interaction-mode)
   (test-with-binding-defaults*))
-
+
 
 ;;;; A made-up interface to test the macros with
 
@@ -25,6 +25,7 @@
 
 (pax::defimpl %test-iface-key :test-mode (a &key b)
   (list :impl a b))
+
 
 (deftest test-definterface ()
   (with-test ("default method, the mode is NIL")
@@ -47,9 +48,6 @@
     (is (equal (%test-iface/backend :other 1) '(:default :other 1 nil)))
     (is (equal (%test-iface-key/backend :test-mode 1 :b 3) '(:impl 1 3)))))
 
-
-;;;; WITH-LISP-INTERACTION-MODE
-
 (deftest test-with-lisp-interaction-mode ()
   (let ((saved pax::*latest-interaction-mode*))
     (unwind-protect
@@ -63,13 +61,10 @@
              (is (eq pax::*current-interaction-mode* :foo)))
            (with-test ("the current mode is dynamically scoped")
              (is (null pax::*current-interaction-mode*)))
-           (with-test ("the latest mode outlives the dynamic extent (the web
-server thread relies on this)")
+           (with-test ("the latest mode outlives the dynamic extent")
+             ;; The web server thread relies on this.
              (is (eq pax::*latest-interaction-mode* :bar))))
       (setf pax::*latest-interaction-mode* saved))))
-
-
-;;;; WITH-BINDING-DEFAULTS*
 
 (defvar *test-unbound-variable*)
 (defvar *test-bound-variable* :global)

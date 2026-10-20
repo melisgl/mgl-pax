@@ -68,7 +68,6 @@
   `(defmethod ,(backend-function-name-for name)
        ((backend (eql ',interaction-mode)) ,@lambda-list)
      ,@body))
-
 
 
 (definterface buffer-package ()
@@ -108,8 +107,8 @@
 
 (defimpl eval-in-emacs :slime (form &optional nowait)
   (swank::eval-in-emacs form nowait))
-
 
+
 ;;; MGL-PAX/SLY depends on Slynk, so load it when the first :SLY
 ;;; request arrives. ENSURE-SLY-GLUE-LOADED is redefined by
 ;;; MGL-PAX/SLY.

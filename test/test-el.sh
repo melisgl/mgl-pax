@@ -4,7 +4,7 @@
 #
 # Usage: test-el.sh [LISP [SELECTOR]]
 #
-#   MGL_PAX_TEST_CLIENTS: space separated list of clients (default: "slime sly").
+# - MGL_PAX_TEST_CLIENTS: space separated list of clients (default: "slime sly")
 
 set -e
 
@@ -18,10 +18,12 @@ fi
 CLIENT_DIRS=()
 ROS_LOAD_PATH=~/.roswell/local-projects/
 
-# Github action expects to find SLIME in ~/.roswell/local-projects/. For local testing,
-# we also look for it where elpa would install it for Emacs. The same should work for Sly.
-# Hypothetically, if you needed to add another client that didn't fit this pattern,
-# it would be easiest to exclude it from CLIENTS and add it to CLIENT_DIRS after this loop.
+# The Github test action expects to find SLIME in
+# ~/.roswell/local-projects/. For local testing, we also look for it
+# where elpa would install it for Emacs. The same should work for Sly.
+# Hypothetically, if you needed to add another client that didn't fit
+# this pattern, it would be easiest to exclude it from CLIENTS and add
+# it to CLIENT_DIRS after this loop.
 
 newest() {
     ls -d ~/.emacs.d/elpa/"$1"-[0-9]* 2>/dev/null | sort -V | tail -n 1
@@ -63,7 +65,9 @@ for i in "${!CLIENT_DIRS[@]}"; do
     set +e
     ${EMACS} -q --no-splash --batch ${LOAD_PATH} \
             --eval "(setq mgl-pax-test-client '${client})" \
-            --eval "(require 'mgl-pax-${client})" \
+            --eval "(setq mgl-pax-backend :${client})" \
+            --eval "(require '${client})" \
+            --eval "(require 'mgl-pax)" \
             --eval "(setq inferior-lisp-program \"${LISP}\")" \
             --eval "(${client}-setup)" \
             --eval "(require 'mgl-pax-tests)" \

@@ -1,15 +1,4 @@
-;;;; mgl-pax-slime.el --- SLIME client -*- lexical-binding: t -*-
-
-(eval-and-compile
-  (require 'mgl-pax))
-
-;;; Set this before requiring `slime' since that triggers loading the
-;;; default backend.
-(defvar mgl-pax-backend :slime) ; default if not already set
-
-(eval-and-compile
-  (require 'slime))
-
+;;;; mgl-pax-slime.el --- SLIME backend -*- lexical-binding: t -*-
 
 ;;;; SLIME implementation of the Lisp interaction mode protocol
 
@@ -86,13 +75,13 @@
   "Hook into (unload-feature 'mgl-pax-slime)."
   (mgl-pax-unhijack-slime-doc-keys)
   (advice-remove 'slime-edit-definition #'slime-edit-definition@mgl-pax)
-  (setq mgl-pax-loaded-backends (delq 'mgl-pax-slime mgl-pax-loaded-backends)))
+  (mgl-pax-remove-backend :slime))
 
 
-;;;; MGL-PAX::@SLIME-SETUP (also see MGL-PAX::@EMACS-SETUP)
+;;;; MGL-PAX::@EMACS-KEYS
 
 (defcustom mgl-pax-hijack-slime-doc-keys t
-  "Variable for user option that controls PAX-SLIME keybindings.
+  "Variable for user option that controls PAX-SLIME key bindings.
 If true, then bind mgl-pax functions in `slime-mode-map' with
 `mgl-pax-hijack-slime-doc-keys' upon loading `mgl-pax-slime'. See
 MGL-PAX::@EMACS-KEYS for details."
@@ -139,9 +128,6 @@ MGL-PAX::@EMACS-KEYS for details."
 
 (add-to-list 'slime-completion-at-point-functions
              'mgl-pax-completions-at-point)
-
-
-(add-to-list 'mgl-pax-loaded-backends 'mgl-pax-slime)
 
 
 (provide 'mgl-pax-slime)

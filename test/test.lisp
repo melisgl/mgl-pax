@@ -2,8 +2,9 @@
 
 (deftest test-install-pax-elisp ()
   (let ((dir (ensure-directories-exist
-              (merge-pathnames (format nil "mgl-pax-elisp-test-~A/"
-                                       (get-universal-time))
+              (merge-pathnames (format nil "mgl-pax-elisp-test-~A-~A/"
+                                       (get-universal-time)
+                                       (get-internal-real-time))
                                (uiop:temporary-directory)))))
     (unwind-protect
          (progn
@@ -13,14 +14,12 @@
                  :msg ("~S is installed." file)))
            (with-test ("the version is filled in")
              (let ((text (alexandria:read-file-into-string
-                          (merge-pathnames "mgl-pax.el" dir))))
-               ;; A comment also quotes the line, so look for it at
-               ;; the beginning of a line.
-               (is (not
-                    (search
-                     (format nil
-                             "~%(setq mgl-pax-version (mgl-pax-read-version))")
-                     text)))
+                          (merge-pathnames "mgl-pax.el" dir)))
+                   ;; A comment also quotes the line, so look for it
+                   ;; at the beginning of a line.
+                   (placeholder (format nil "~%(setq mgl-pax-version ~
+                                            (mgl-pax-read-version))")))
+               (is (not (search placeholder text)))
                (is (search "(setq mgl-pax-version '" text)))))
       (uiop:delete-directory-tree dir :validate t :if-does-not-exist :ignore))))
 

@@ -43,7 +43,8 @@
   :bug-tracker ""
   :source-control ""
   :description "Abstractions for supporting multiple Lisp interaction
-  modes on the Emacs side of [MGL-PAX][mgl-pax::@pax-manual]."
+  modes on the Emacs side of [MGL-PAX][mgl-pax::@pax-manual]. See
+  MGL-PAX::@EMACS-BACKENDS."
   :long-description "Do not declare a dependency on this system. It is
   autoloaded by Elisp or by accessing the functionality provided if
   the [`mgl-pax`][asdf:system] system is loaded."
@@ -62,7 +63,8 @@
   :bug-tracker ""
   :source-control ""
   :description "Supporting definitions for interacting with the Emacs
-  side of [MGL-PAX][mgl-pax::@pax-manual] through SLY."
+  side of [MGL-PAX][mgl-pax::@pax-manual] through SLY. See
+  MGL-PAX::@EMACS-BACKENDS."
   :long-description "Do not declare a dependency on this system. It is
   autoloaded by Elisp or by accessing the functionality provided if
   the [`mgl-pax`][asdf:system] system is loaded."

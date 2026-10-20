@@ -1,15 +1,4 @@
-;;;; mgl-pax-sly.el --- SLY client -*- lexical-binding: t -*-
-
-(eval-and-compile
-  (require 'mgl-pax))
-
-;;; Set this before requiring `sly' since that triggers loading the
-;;; default backend.
-(defvar mgl-pax-backend :sly) ; default if not already set
-
-(eval-and-compile
-  (require 'sly))
-
+;;;; mgl-pax-sly.el --- SLY backend -*- lexical-binding: t -*-
 
 ;;;; SLY implementation of the Lisp interaction mode protocol
 
@@ -120,13 +109,13 @@ or a new frame."
   (mgl-pax-unhijack-sly-doc-keys)
   (advice-remove 'sly-edit-definition #'sly-edit-definition@mgl-pax)
   (advice-remove 'sly--setup-completion #'sly--setup-completion@mgl-pax)
-  (setq mgl-pax-loaded-backends (delq 'mgl-pax-sly mgl-pax-loaded-backends)))
+  (mgl-pax-remove-backend :sly))
 
 
-;;;; MGL-PAX::@SLY-SETUP (also see MGL-PAX::@EMACS-SETUP)
+;;;; MGL-PAX::@EMACS-KEYS
 
 (defcustom mgl-pax-hijack-sly-doc-keys t
-  "Variable for user option that controls PAX-SLIME keybindings.
+  "Variable for user option that controls PAX-SLY key bindings.
 If true, then bind mgl-pax functions in `sly-doc-map' with
 `mgl-pax-hijack-sly-doc-keys' upon loading `mgl-pax-sly'. See
 MGL-PAX::@EMACS-KEYS for details."
@@ -198,9 +187,6 @@ doesn't handle this."
     (add-hook 'completion-at-point-functions
               #'mgl-pax-completions-at-point nil t)))
 
-
-
-(add-to-list 'mgl-pax-loaded-backends 'mgl-pax-sly)
 
 
 (provide 'mgl-pax-sly)

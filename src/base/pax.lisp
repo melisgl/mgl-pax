@@ -303,12 +303,12 @@
   (setq sly-enable-evaluate-in-emacs t)
   ```
 
-  See @EMACS-CLIENTS for how PAX picks between @SLIME and @SLY, and for
-  what Sly needs on the Lisp side."""
+  See @EMACS-BACKENDS for how PAX picks between @SLIME and @SLY, and
+  for what Sly needs on the Lisp side."""
   (@emacs-functionality section)
   (@emacs-quicklisp section)
   (@emacs-loading section)
-  (@emacs-clients section)
+  (@emacs-backends section)
   (@emacs-keys section))
 
 (defsection @emacs-functionality (:title "Functionality Provided")
@@ -335,8 +335,8 @@
 (defsection @emacs-quicklisp (:title "Installing from Quicklisp")
   """If you installed PAX with Quicklisp, the location of `mgl-pax.el`
   may change with updates, and you may want to copy the current
-  version of `mgl-pax.el` and the distributed elisp files to
-  a stable location by evaluating this in CL:
+  version of `mgl-pax.el` and the distributed Elisp files to a stable
+  location by evaluating this in CL:
 
       (mgl-pax:install-pax-elisp "~/quicklisp/")
 
@@ -359,31 +359,23 @@
   If loading fails, `mgl-pax` will be unloaded from Emacs and any
   [overridden key bindings][@EMACS-KEYS] restored.""")
 
-(defsection @emacs-clients (:title "SLIME and SLY")
-  """The code that is specific to a client lives in `mgl-pax-slime.el`
-  and `mgl-pax-sly.el`:
+(defsection @emacs-backends (:title "SLIME and SLY")
+  """Client-specific code is loaded when the corresponding client
+  (@SLIME or @SLY) is loaded into Emacs.
 
-  - The behavior of `(require 'mgl-pax)` depends on the status of
-    @SLIME and @SLY in Emacs. If @SLIME has already been loaded into
-    Emacs, it loads `mgl-pax-slime` (even if @SLY has been loaded
-    too). If @SLY has been loaded, it loads `mgl-pax-sly`. If neither
-    has been loaded, then loading a backend is deferred until one of
-    @SLIME or @SLY is loaded into Emacs.
+  When `mgl-pax` is loaded, it loads the backends for @SLIME and
+  @SLY (in that order) if the `slime` and `sly` features is loaded. If
+  they are not yet available, loading the corresponding backends is
+  deferred until they are.
 
-  - To choose explicitly, `(require 'mgl-pax-slime)` or `(require
-    'mgl-pax-sly)` before the other client is loaded. Do not set the
-    Elisp variable `mgl-pax-backend` instead: that stops `mgl-pax`
-    from loading either.
+  When a backend is loaded into Emacs and `mgl-pax-backend` is `nil`,
+  `mgl-pax-backend` is set to `:slime` or `:sly` appropriately.
 
-  - Only one client can be used per Emacs session. Loading both
-    backends at once is not supported.
+  One may also choose explicitly by setting the Elisp variable
+  `mgl-pax-backend` to either `:slime` or `:sly`.
 
-  When using @SLY, no Swank server is started; it is used purely as an
-  introspection library.
-
-  The Elisp functions `mgl-pax-hijack-sly-doc-keys` and
-  `mgl-pax-unhijack-sly-doc-keys` are the @SLY counterparts of those
-  for @SLIME (see @EMACS-KEYS).""")
+  > _Note_: When using @SLY, no Swank server is started; Swank is used
+  > purely as an introspection library in this case.""")
 
 ;;; This is not a DEFVAR so that it picks up version changes on
 ;;; reload. Set to NIL by the DONT-CHECK restart.
@@ -396,7 +388,7 @@
   '("mgl-pax.el" "mgl-pax-slime.el" "mgl-pax-sly.el"))
 
 (defun install-pax-elisp (target-dir)
-  "Install `mgl-pax.el` and the backends it loads for SLIME and SLY
+  "Install `mgl-pax.el` and the backends it may load for SLIME and SLY
   (`mgl-pax-slime.el` and `mgl-pax-sly.el`), which are distributed
   with this package, in TARGET-DIR."
   (let ((target-dir (uiop:ensure-directory-pathname target-dir)))
@@ -467,15 +459,15 @@
   - `C-c C-d c`: installs `mgl-pax-hideshow-comments`
   - `C-c C-d u`: installs `mgl-pax-edit-parent-section`
 
-  If `mgl-pax-hijack-slime-doc-keys` is true, the equivalent holds for
-  `sly-apropos`, etc. in `sly-doc-map`. Calling
-  `mgl-pax-unhijack-slime-doc-keys` reverts these changes. For @SLY,
-  `mgl-pax-hijack-sly-doc-keys` (controlled by
-  `mgl-pax-hijack-sly-doc-keys` the same way) makes the same changes
-  to `sly-doc-map` with `sly-apropos` and so on in place of the
-  `slime-` commands, and `mgl-pax-unhijack-sly-doc-keys` reverts them.
-  @SLY binds only the control variants (e.g. `C-c C-d C-a`), so PAX
-  binds the plain ones (`C-c C-d a`) as well where they are free.""")
+  Calling `mgl-pax-unhijack-slime-doc-keys` reverts these changes.
+
+  For @SLY, the function `mgl-pax-hijack-sly-doc-keys` (controlled by
+  the variable `mgl-pax-hijack-sly-doc-keys` the same way) makes the
+  same changes to `sly-doc-map` with `sly-apropos` and so on in place
+  of the `slime-` commands, and `mgl-pax-unhijack-sly-doc-keys`
+  reverts them. @SLY binds only the control variants (e.g. `C-c C-d
+  C-a`), so PAX binds the plain ones (`C-c C-d a`) as well where they
+  are free.""")
 
 (defsection @background (:title "Background")
   """As a user, I frequently run into documentation that's incomplete

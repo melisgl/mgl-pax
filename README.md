@@ -18,7 +18,7 @@
 
     - [3.3 Loading PAX][d3fc]
 
-    - [3.4 SLIME and SLY][5a7b]
+    - [3.4 SLIME and SLY][07c3]
 
     - [3.5 Setting up Keys][cfab]
 
@@ -503,8 +503,8 @@ or, with [SLY][0146]:
 (setq sly-enable-evaluate-in-emacs t)
 ```
 
-See [SLIME and SLY][5a7b] for how PAX picks between [SLIME][6be7] and [SLY][0146], and for
-what Sly needs on the Lisp side.
+See [SLIME and SLY][07c3] for how PAX picks between [SLIME][6be7] and [SLY][0146], and
+for what Sly needs on the Lisp side.
 
 <a id="x-28MGL-PAX-3A-40EMACS-FUNCTIONALITY-20MGL-PAX-3ASECTION-29"></a>
 
@@ -536,8 +536,8 @@ strings, or comments.
 
 If you installed PAX with Quicklisp, the location of `mgl-pax.el`
 may change with updates, and you may want to copy the current
-version of `mgl-pax.el` and the distributed elisp files to
-a stable location by evaluating this in CL:
+version of `mgl-pax.el` and the distributed Elisp files to a stable
+location by evaluating this in CL:
 
     (mgl-pax:install-pax-elisp "~/quicklisp/")
 
@@ -548,7 +548,7 @@ step.
 
 - \[function\] **INSTALL-PAX-ELISP** *TARGET-DIR*
 
-    Install `mgl-pax.el` and the backends it loads for SLIME and SLY
+    Install `mgl-pax.el` and the backends it may load for SLIME and SLY
     (`mgl-pax-slime.el` and `mgl-pax-sly.el`), which are distributed
     with this package, in `TARGET-DIR`.
 
@@ -570,34 +570,26 @@ PAX will be loaded in the connected Lisp on-demand via [SLIME][6be7] or [SLY][01
 If loading fails, `mgl-pax` will be unloaded from Emacs and any
 [overridden key bindings][cfab] restored.
 
-<a id="x-28MGL-PAX-3A-40EMACS-CLIENTS-20MGL-PAX-3ASECTION-29"></a>
+<a id="x-28MGL-PAX-3A-40EMACS-BACKENDS-20MGL-PAX-3ASECTION-29"></a>
 
 ### 3.4 SLIME and SLY
 
-The code that is specific to a client lives in `mgl-pax-slime.el`
-and `mgl-pax-sly.el`:
+Client-specific code is loaded when the corresponding client
+([SLIME][6be7] or [SLY][0146]) is loaded into Emacs.
 
-- The behavior of `(require 'mgl-pax)` depends on the status of
-  [SLIME][6be7] and [SLY][0146] in Emacs. If [SLIME][6be7] has already been loaded into
-  Emacs, it loads `mgl-pax-slime` (even if [SLY][0146] has been loaded
-  too). If [SLY][0146] has been loaded, it loads `mgl-pax-sly`. If neither
-  has been loaded, then loading a backend is deferred until one of
-  [SLIME][6be7] or [SLY][0146] is loaded into Emacs.
+When `mgl-pax` is loaded, it loads the backends for [SLIME][6be7] and
+[SLY][0146] (in that order) if the `slime` and `sly` features is loaded. If
+they are not yet available, loading the corresponding backends is
+deferred until they are.
 
-- To choose explicitly, `(require 'mgl-pax-slime)` or `(require
-  'mgl-pax-sly)` before the other client is loaded. Do not set the
-  Elisp variable `mgl-pax-backend` instead: that stops `mgl-pax`
-  from loading either.
+When a backend is loaded into Emacs and `mgl-pax-backend` is `nil`,
+`mgl-pax-backend` is set to `:slime` or `:sly` appropriately.
 
-- Only one client can be used per Emacs session. Loading both
-  backends at once is not supported.
+One may also choose explicitly by setting the Elisp variable
+`mgl-pax-backend` to either `:slime` or `:sly`.
 
-When using [SLY][0146], no Swank server is started; it is used purely as an
-introspection library.
-
-The Elisp functions `mgl-pax-hijack-sly-doc-keys` and
-`mgl-pax-unhijack-sly-doc-keys` are the [SLY][0146] counterparts of those
-for [SLIME][6be7] (see [Setting up Keys][cfab]).
+> *Note*: When using [SLY][0146], no Swank server is started; Swank is used
+> purely as an introspection library in this case.
 
 <a id="x-28MGL-PAX-3A-40EMACS-KEYS-20MGL-PAX-3ASECTION-29"></a>
 
@@ -639,15 +631,15 @@ true, then upon loading `mgl-pax`, the following changes are made to
 
 - `C-c C-d u`: installs `mgl-pax-edit-parent-section`
 
-If `mgl-pax-hijack-slime-doc-keys` is true, the equivalent holds for
-`sly-apropos`, etc. in `sly-doc-map`. Calling
-`mgl-pax-unhijack-slime-doc-keys` reverts these changes. For [SLY][0146],
-`mgl-pax-hijack-sly-doc-keys` (controlled by
-`mgl-pax-hijack-sly-doc-keys` the same way) makes the same changes
-to `sly-doc-map` with `sly-apropos` and so on in place of the
-`slime-` commands, and `mgl-pax-unhijack-sly-doc-keys` reverts them.
-[SLY][0146] binds only the control variants (e.g. `C-c C-d C-a`), so PAX
-binds the plain ones (`C-c C-d a`) as well where they are free.
+Calling `mgl-pax-unhijack-slime-doc-keys` reverts these changes.
+
+For [SLY][0146], the function `mgl-pax-hijack-sly-doc-keys` (controlled by
+the variable `mgl-pax-hijack-sly-doc-keys` the same way) makes the
+same changes to `sly-doc-map` with `sly-apropos` and so on in place
+of the `slime-` commands, and `mgl-pax-unhijack-sly-doc-keys`
+reverts them. [SLY][0146] binds only the control variants (e.g. `C-c C-d
+C-a`), so PAX binds the plain ones (`C-c C-d a`) as well where they
+are free.
 
 <a id="x-28MGL-PAX-3A-40BACKGROUND-20MGL-PAX-3ASECTION-29"></a>
 
@@ -5251,6 +5243,8 @@ they are presented.
 
 [077a]: http://www.lispworks.com/documentation/HyperSpec/Body/t_kwd.htm "KEYWORD (MGL-PAX:CLHS TYPE)"
 
+[07c3]: #x-28MGL-PAX-3A-40EMACS-BACKENDS-20MGL-PAX-3ASECTION-29 "SLIME and SLY"
+
 [090e]: #x-28MGL-PAX-3A-40TITLE-20MGL-PAX-3AGLOSSARY-TERM-29 "title"
 
 [0c4f]: http://www.lispworks.com/documentation/HyperSpec/Body/f_export.htm "EXPORT (MGL-PAX:CLHS FUNCTION)"
@@ -5464,8 +5458,6 @@ they are presented.
 [5920]: #x-28MGL-PAX-3A-40CONCEPT-SUBKEY-20MGL-PAX-3AGLOSSARY-TERM-29 "concept subkey"
 
 [59d9]: https://pandoc.org/ "Pandoc"
-
-[5a7b]: #x-28MGL-PAX-3A-40EMACS-CLIENTS-20MGL-PAX-3ASECTION-29 "SLIME and SLY"
 
 [5a82]: http://www.lispworks.com/documentation/HyperSpec/Body/f_eq.htm "EQ (MGL-PAX:CLHS FUNCTION)"
 

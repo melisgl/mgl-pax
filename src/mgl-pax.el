@@ -10,11 +10,19 @@
 ;;;;
 ;;;; - `mgl-pax-reload'
 ;;;;
-;;;; - `mgl-pax-hijack-slime-doc-keys'
-;;;;
 ;;;; - `mgl-pax-browser-function'
 ;;;;
 ;;;; - `mgl-pax-web-server-port'
+;;;;
+;;;; Backend-specific key bindings setup (see MGL-PAX::@EMACS-KEYS):
+;;;;
+;;;; - `mgl-pax-hijack-slime-doc-keys' variable and function
+;;;;
+;;;; - `mgl-pax-unhijack-slime-doc-keys' function
+;;;;
+;;;; - `mgl-pax-hijack-sly-doc-keys' variable and function
+;;;;
+;;;; - `mgl-pax-unhijack-sly-doc-keys' function
 ;;;;
 ;;;; NAVIGATE (see MGL-PAX::@NAVIGATING-IN-EMACS)
 ;;;; --------------------------------------------
@@ -72,9 +80,9 @@
 
 
 ;;;; A protocol for interfacing with an underlying Lisp interaction
-;;;; mode (such as SLIME, or SLY).
+;;;; mode (such as :slime or :sly).
 
-(defvar mgl-pax-backend)
+(defvar mgl-pax-backend nil)
 
 (eval-and-compile
   (defun mgl-pax-backend-function-name-for (symbol)
@@ -171,12 +179,10 @@ Lisp-specific editing features and completions. `prompt',
   "Enumerate all package names known to the currently-connected Common
 Lisp system.")
 
-(defvar mgl-pax-loaded-backends nil)
-
 (defvar mgl-pax-edit-lisp-definition-hook nil)
 
 (defun mgl-pax-run-edit-lisp-definition-hooks (name where)
-  "Client-neutral function for running hooks with NAME and WHERE."
+  "Backend-neutral function for running hooks with NAME and WHERE."
   (run-hook-with-args-until-success 'mgl-pax-edit-lisp-definition-hook
                                     name where))
 
@@ -272,9 +278,9 @@ other mgl-pax commands in interactive use."
                        (format "mgl-pax-autoload is %s" mgl-pax-autoload))))
 
 (defun mgl-pax-autoloading-failed-error (asdf-system)
-  (dolist (backend mgl-pax-loaded-backends)
-    (unload-feature backend :force))
-  (unload-feature 'mgl-pax :force)
+  (dolist (feature '(mgl-pax-slime mgl-pax-sly mgl-pax))
+    (when (featurep feature)
+      (unload-feature feature :force)))
   (error "Loading the ASDF system %s failed. Unloaded mgl-pax from Emacs."
          asdf-system))
 
@@ -1620,8 +1626,8 @@ The empty string means the current package."
   (interactive (list
                 (let ((pkg
                        (mgl-pax-read-package-name "PAX Apropos for Package: ")))
-                       (if (string= pkg "") (mgl-pax-current-package) pkg))
-                     current-prefix-arg))
+                  (if (string= pkg "") (mgl-pax-current-package) pkg))
+                current-prefix-arg))
   (mgl-pax-with-component (:mgl-pax/document)
     (mgl-pax-apropos "" (not internal) `'(,package) nil)))
 
@@ -1737,10 +1743,10 @@ will not be changed (modulo ambiguity in syntax detection)."
                 ((string= transcript input)
                  (deactivate-mark))
                 (point-at-start-p
-                  (save-excursion
-                    (goto-char start)
-                    (delete-region start end)
-                    (insert transcript)))
+                 (save-excursion
+                   (goto-char start)
+                   (delete-region start end)
+                   (insert transcript)))
                 (t
                  (save-excursion
                    (goto-char start)
@@ -1795,9 +1801,9 @@ start of the line following it, and the start of the line of the closing
 (defun mgl-pax-transcribe (string syntax update-only echo cl-transcript-args
                                   first-line-indent)
   (let ((result (mgl-pax-eval `(mgl-pax::transcribe-for-emacs
-                              ,string ',syntax ',update-only ',echo
-                              ,(or cl-transcript-args "")
-                              ,first-line-indent))))
+                                ,string ',syntax ',update-only ',echo
+                                ,(or cl-transcript-args "")
+                                ,first-line-indent))))
     (if (eq (cl-first result) :error)
         (error "%s\nTo debug, use (setq swank/backend:*debug-swank-backend* t)."
                (cl-second result))
@@ -1806,22 +1812,25 @@ start of the line following it, and the start of the line of the closing
 
 
 (provide 'mgl-pax)
+
 
+;;;; Backend manipulation
 
-;;;; Default backend
+(defun mgl-pax-load-backend (backend-feature backend)
+  (require backend-feature)
+  (unless mgl-pax-backend
+    (setq mgl-pax-backend backend)))
 
-;;;; This loads the backend of the first client that gets loaded.
-;;;;
-;;;; This must come after `provide' because the backends require
-;;;; `mgl-pax'. Admittedly, having this after (provide 'mgl-pax) feels
-;;;; a little hacky.
+(defun mgl-pax-remove-backend (backend)
+  (when (eq mgl-pax-backend backend)
+    (setq mgl-pax-backend nil)))
 
-(defun mgl-pax-load-default-backend (backend)
-  (unless (boundp 'mgl-pax-backend)
-    (require backend)))
-
+;;; This loads the backend of the first client that gets loaded.
+;;;
+;;; This must come after `provide' because the backends require
+;;; `mgl-pax'. Admittedly, having this after (provide 'mgl-pax) feels
+;;; a little hacky.
 (with-eval-after-load 'slime
-  (mgl-pax-load-default-backend 'mgl-pax-slime))
-
+  (mgl-pax-load-backend 'mgl-pax-slime :slime))
 (with-eval-after-load 'sly
-  (mgl-pax-load-default-backend 'mgl-pax-sly))
+  (mgl-pax-load-backend 'mgl-pax-sly :sly))

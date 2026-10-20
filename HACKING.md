@@ -41,18 +41,8 @@ Testing from the command line
     To test only with a specific client, e.g. SLY:
     `MGL_PAX_TEST_CLIENTS=sly test/test-el.sh`.
 
-    The Elisp tests are written against client neutral names that get
-    defined in `test/mgl-pax-test-client.el`, which maps to SLIME or
-    SLY equivalents. SLY needs SWANK to be loadable on the Lisp side.
-
     Debugging test failures can be easier if `--batch` is removed from
     the script.
-
-- `test/test-mock.sh` runs the Elisp tests that use a mock backend and
-  need neither a client nor a Lisp. `test/test-default-backend.sh`
-  checks which backend `(require 'mgl-pax)` loads for various orders
-  of loading the clients. `test/test-sly.sh` runs the Lisp-side SLY
-  tests and needs Slynk (`SLYNK_DIR`).
 
 Catching changes in behaviour
 -----------------------------
