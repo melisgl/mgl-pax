@@ -163,6 +163,14 @@
 \newunicodechar{⊡}{\ensuremath{\boxdot}}
 \newunicodechar{×}{\ensuremath{\times}}
 \newunicodechar{⋅}{\ensuremath{\cdot}}
+
+%% Adjust the width of section numbers in the PDF table of contents, so
+%% that e.g "17.10.13" doesn't protude from its box.
+\makeatletter
+% \@dottedtocline{level}{indent_before_number}{width_of_number_box}
+\renewcommand*\l@subsection{\@dottedtocline{2}{1.5em}{2.8em}}
+\renewcommand*\l@subsubsection{\@dottedtocline{3}{4.3em}{4.0em}}
+\makeatother
 """)
 
 (defvar/auto *document-pandoc-pdf-header-includes*

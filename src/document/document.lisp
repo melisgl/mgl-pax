@@ -3561,19 +3561,22 @@
                    (*nesting-possible-p*
                     (add-arglist arg (1+ level)))
                    ;; &KEY or &OPTIONAL default values
-                   ((and (symbolp (first arg))
-                         (<= (length arg) 3))
-                    (cond ((second arg)
-                           ;; (X 7 XP) or (X 7) renders as (X 7)
-                           (add "("
-                                (maybe-downcase-all-uppercase-code
-                                 (symbol-name (first arg)))
-                                " ")
-                           (resolve* (second arg))
-                           (add ")"))
-                          (t
-                           ;; (X NIL XP), (X NIL), (X) renders as X
-                           (add (prin1-to-string* (first arg))))))
+                   ((<= (length arg) 3)
+                    (let ((print-name
+                            (maybe-downcase-all-uppercase-code
+                             (symbol-name
+                              (if (consp (first arg))
+                                  ;; Find :X in ((:X *X*) 7).
+                                  (caar arg)
+                                  (first arg))))))
+                      (cond ((second arg)
+                             ;; (X 7 XP) or (X 7) renders as (X 7)
+                             (add "(" print-name " ")
+                             (resolve* (second arg))
+                             (add ")"))
+                            (t
+                             ;; (X NIL XP), (X NIL), (X) renders as X
+                             (add print-name)))))
                    (t
                     (add (prin1-to-string* arg)))))
            (add-arglist (arglist level)
@@ -3605,8 +3608,8 @@
                   (let ((*document-downcase-uppercase-code* nil))
                     (prin1-to-markdown object)))))))
     ;; Remove inline code because if we want to typeset the entire
-    ;; arglist in monospace then it's redundant, and if we don't, then
-    ;; it's just bad.
+    ;; arglist in monospace, then it's redundant, and if we don't,
+    ;; then it's just bad.
     (map-markdown-parse-tree '(:code)
                              '(:verbatim :image :mailto :reference :raw-html)
                              nil

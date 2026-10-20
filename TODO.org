@@ -121,6 +121,13 @@ But e.g. BYTES &KEY (END (LENGTH BYTES)) shouldn't link to CL:BYTE.
 Maybe on link only simple cases?
 
 See ARGLIST-TO-TREE and ARGLIST-OBJECT-TO-MD-TREES.
+** TODO add checked code block
+```cl-checked xxx-that-returns-a-string
+...
+```
+** MAYBE add @shortcontents
+Generalize it, of course. It should be enabled by default (conditional
+on space gained or something).
 * live
 ** MAYBE live browsing: allow filtering out local definitions when there is a clhs definition?
 ** MAYBE have apropos name be editable?

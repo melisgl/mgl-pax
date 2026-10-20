@@ -4381,11 +4381,19 @@ encoded in an unspecified format internal to DOCUMENT.
 
         - If it is a list, then it is must be a lambda list and
           is printed without the outermost parens and with the package
-          names removed from the argument names. Keywords are
-          printed with a leading colon.
+          names removed from the argument names.
 
-            &AUX variables and SUPPLIED-P-PARAMETERs of &OPTIONAL and
-            &KEY arguments are considered internal and are not printed.
+            &AUX variables, SUPPLIED-P-PARAMETERs, and VAR in
+            the (KEYWORD VAR) form of keyword arguments f are considered
+            internal and are not printed. If the default value of an
+            optional or keyword argument is NIL, then it is not printed.
+            See Ordinary Lambda List. Thus,
+
+                (x &key a (b nil) (c nil cp) ((:d *d*) 4) (e 5 ep) &aux f g)
+
+            is documented as
+
+                x &key a b c (d 4) (e 5)
 
         - If it is a string, then it must be valid Markdown.
 
