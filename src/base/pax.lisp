@@ -250,8 +250,8 @@
 
       (mgl-pax:install-pax-elisp "~/quicklisp/")
 
-  Assuming the Elisp file is in the `~/quicklisp/` directory, add
-  something like this to your `.emacs`:
+  Assuming the Elisp file is in the `~/quicklisp/` directory and
+  you're using Slime, add something like this to your `.emacs`:
 
   ```elisp
   (add-to-list 'load-path "~/quicklisp/")
@@ -335,7 +335,7 @@
 (defsection @emacs-quicklisp (:title "Installing from Quicklisp")
   """If you installed PAX with Quicklisp, the location of `mgl-pax.el`
   may change with updates, and you may want to copy the current
-  version of `mgl-pax.el` (and the files it loads for SLIME and Sly to
+  version of `mgl-pax.el` and the distributed elisp files to
   a stable location by evaluating this in CL:
 
       (mgl-pax:install-pax-elisp "~/quicklisp/")

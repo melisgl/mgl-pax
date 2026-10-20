@@ -1418,7 +1418,7 @@ buffer at all."
   t)
 
 (defun mgl-pax-sync-current-buffer ()
-  "See https://emacs.stackexchange.com/q/10921."
+  ;; See https://emacs.stackexchange.com/q/10921.
   (set-buffer (window-buffer (selected-window))))
 
 
@@ -1747,8 +1747,6 @@ will not be changed (modulo ambiguity in syntax detection)."
                    (delete-region start end))
                  (insert transcript))))))))
 
-
-
 (defun mgl-pax-transcribe-syntax-arg ()
   (if current-prefix-arg
       (prefix-numeric-value current-prefix-arg)
@@ -1812,13 +1810,7 @@ start of the line following it, and the start of the line of the closing
 
 ;;;; Default backend
 
-;;;; Before splitting client specific code for the sake of Sly
-;;;; compatibility, `(require 'mgl-pax)' set up SLIME. To avoid
-;;;; breaking the old convention, this loads the backend of the first
-;;;; client that gets loaded. A backend sets `mgl-pax-backend' before
-;;;; it requires its client, so this does nothing if one has been
-;;;; loaded explicitly or is being loaded. To use a different client,
-;;;; `require' its backend, i.e. `mgl-pax-slime' or `mgl-pax-sly'.
+;;;; This loads the backend of the first client that gets loaded.
 ;;;;
 ;;;; This must come after `provide' because the backends require
 ;;;; `mgl-pax'. Admittedly, having this after (provide 'mgl-pax) feels
