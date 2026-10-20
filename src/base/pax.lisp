@@ -241,8 +241,8 @@
 (defsection @emacs-setup (:title "Emacs Setup")
   """Here is a quick recipe for setting up PAX for use via @SLIME or
   @SLY to take advantage of the [conveniences on
-  offer][@EMACS-FUNCTIONALITY].  Conversely, there is no need to do
-  any of this just to use DEFSECTION, write docstrings and for
+  offer][@EMACS-FUNCTIONALITY]. Conversely, there is no need to do any
+  of this just to use DEFSECTION, write docstrings and for
   @GENERATING-DOCUMENTATION.
 
   If PAX was installed from @QUICKLISP, then evaluate this in CL to
@@ -365,8 +365,8 @@
 
   - `(require 'mgl-pax)` loads the one for the first of `slime` and
     `sly` that is loaded. If either has been loaded already, it loads
-    immediately, otherwise when the client has been loaded.  If both
-    have been loaded already, then SLIME's is chosen.  So the setup
+    immediately, otherwise when the client has been loaded. If both
+    have been loaded already, then SLIME's is chosen. So the setup
     above works without change for both.
 
   - To choose explicitly, `(require 'mgl-pax-slime)` or `(require

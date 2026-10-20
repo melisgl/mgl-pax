@@ -1408,8 +1408,8 @@ move point to the beginning of the buffer."
 (defun mgl-pax-edit-for-cl (dspec-and-location-list)
   "Visits the DSPEC-AND-LOCATION-LIST elements that Lisp found.
 Each element in DSPEC-AND-LOCATION-LIST is a (DSPEC LOCATION) pair as
-Lisp hands them to Emacs.  Note that there may be no `lisp-mode'
-buffer at all."
+Lisp hands them to Emacs. Note that there may be no `lisp-mode' buffer
+at all."
   (ignore-errors (mgl-pax-recently-visited-buffer 'lisp-mode))
   (mgl-pax-sync-current-buffer)
   (select-frame-set-input-focus (selected-frame))
@@ -1700,12 +1700,12 @@ Without a prefix argument, the first syntax is used."
 
 (defun mgl-pax-retranscribe-region (start end)
   "Update the transcription in the active region (as in calling
-MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T).  If there is no active region,
+MGL-PAX:TRANSCRIBE with :UPDATE-ONLY T). If there is no active region,
 default to the innermost enclosing `cl-transcript' block.
 
 Use a numeric prefix argument as an index to select one of the Common
 Lisp MGL-PAX:*TRANSCRIBE-SYNTAXES* as the SYNTAX argument to
-MGL-PAX:TRANSCRIBE.  Without a prefix argument, the syntax of the input
+MGL-PAX:TRANSCRIBE. Without a prefix argument, the syntax of the input
 will not be changed (modulo ambiguity in syntax detection)."
   (interactive
    (cond ((use-region-p)

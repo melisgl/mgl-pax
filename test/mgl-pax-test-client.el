@@ -36,11 +36,11 @@
      ,@body))
 
 (defun mgl-pax-test-batch-test (&optional test-name randomize)
-  "Test by selecting by TEST-NAME in batch mode with the client.
-If RANDOMIZE, they get run in random order.  This shuffles the test
-names rather than letting the client do it since this would put the
-test objects (including function bodies) in the selector that gets
-printed by ERT, which makes for rather messy test outputs."
+  "Test by selecting by TEST-NAME in batch mode with the client. If
+RANDOMIZE, they get run in random order. This shuffles the test names
+rather than letting the client do it since this would put the test
+objects (including function bodies) in the selector that gets printed
+by ERT, which makes for rather messy test outputs."
   (funcall (mgl-pax-test-client-symbol "batch-test")
            (if randomize
                `(member ,@(mapcar #'ert-test-name

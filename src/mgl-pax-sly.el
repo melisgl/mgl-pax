@@ -145,7 +145,7 @@ MGL-PAX::@EMACS-KEYS for details."
 
 (defun mgl-pax-sly--override-plain-doc-keys (&optional reversep)
   "Bind (with REVERSEP unbind) the plain versions of keys.
-Uses `MGL-PAX-SLY-DOC-MAP-OVERRIDES'.  Because Sly only binds control
+Uses `MGL-PAX-SLY-DOC-MAP-OVERRIDES'. Because Sly only binds control
 variants and so there's no old binding, `MGL-PAX-OVERRIDE-KEYS'
 doesn't handle this."
   (cl-loop for (key old new) in mgl-pax-sly-doc-map-overrides

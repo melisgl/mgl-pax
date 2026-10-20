@@ -94,7 +94,7 @@
 (defcustom mgl-pax-hijack-slime-doc-keys t
   "Variable for user option that controls PAX-SLIME keybindings.
 If true, then bind mgl-pax functions in `slime-mode-map' with
-`mgl-pax-hijack-slime-doc-keys' upon loading `mgl-pax-slime'.  See
+`mgl-pax-hijack-slime-doc-keys' upon loading `mgl-pax-slime'. See
 MGL-PAX::@EMACS-KEYS for details."
   :type 'boolean
   :group 'mgl-pax)
