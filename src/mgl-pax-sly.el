@@ -128,9 +128,9 @@ or a new frame."
 (defcustom mgl-pax-hijack-sly-doc-keys t
   "Variable for user option that controls PAX-SLIME keybindings.
 If true, then bind mgl-pax functions in `sly-doc-map' with
-`mgl-pax-hijack-sly-doc-keys' upon loading `mgl-pax-sly'.  See
+`mgl-pax-hijack-sly-doc-keys' upon loading `mgl-pax-sly'. See
 MGL-PAX::@EMACS-KEYS for details."
-  :Type 'boolean
+  :type 'boolean
   :group 'mgl-pax)
 
 (defvar mgl-pax-sly-doc-map-overrides
