@@ -287,7 +287,7 @@
   (setq sly-enable-evaluate-in-emacs t)
   ```
 
-  See @EMACS-BACKENDS for how PAX chooses between them, and for what
+  See @EMACS-BACKENDS for how PAX chooses between them and for what
   SLY needs on the Lisp side."""
   (@emacs-functionality section)
   (@emacs-quicklisp section)

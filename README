@@ -295,7 +295,7 @@ or, with SLY:
 
     (setq sly-enable-evaluate-in-emacs t)
 
-See Emacs Backends for how PAX chooses between them, and for what
+See Emacs Backends for how PAX chooses between them and for what
 SLY needs on the Lisp side.
 
 ### Functionality Provided
@@ -3460,13 +3460,150 @@ function causes the following error:
 When Browsing Live Documentation, any errors signalled during
 transcription are downgraded to warnings.
 
+When such fancy transcripts are not required, Raw String Matching
+is also an option.
+
 All in all, transcripts are a handy tool especially when combined
 with the Emacs support to update them and with
-PYTHONIC-STRING-READER's triple-quoted strings, that
+PYTHONIC-STRING-READER's triple-quoted strings, which
 allow one to work with nested strings with less noise. The
 triple-quote syntax can be enabled with:
 
     (in-readtable pythonic-string-syntax)
+
+### cl-transcript
+
+The cl-transcript code blocks have the following syntax:
+
+    ```cl-transcript (&key dynenv expect (lang "common-lisp") &allow-other-keys)
+    <content>
+    ```
+
+Note that arguments matching &ALLOW-OTHER-KEYS are passed to the
+EXPECT function (if provided) or
+TRANSCRIBE.
+
+#### Controlling the Dynamic Environment
+
+When the TRANSCRIBE function is called directly, the forms in the
+transcript are evaluated in the current dynamic environment with the
+following exceptions.
+
+- The variables *, **, ***, /,
+//, ///, -, +, ++, +++ are
+locally bound and updated as in a new REPL session.
+
+- *STANDARD-OUTPUT*, *ERROR-OUTPUT*,
+*TRACE-OUTPUT*, *DEBUG-IO*, *QUERY-IO* and
+*TERMINAL-IO* are redirected to capture the
+output.
+
+If TRANSCRIBE or the EXPECT function is
+invoked by Emacs or by the DOCUMENT
+function, a new dynamic
+environment is established by STANDARD-TRANSCRIBE-DYNENV (similar in
+spirit to WITH-STANDARD-IO-SYNTAX), which binds printer and reader
+variables to fixed values to make IO more predictable. This default
+can be overridden with the :DYNENV argument of cl-transcript:
+
+    ```cl-transcript (:dynenv my-transcript)
+    ...
+    ```
+
+In this case, instead of calling TRANSCRIBE directly,
+MY-TRANSCRIPT is called with a thunk (a function of no arguments)
+that wraps a call to TRANSCRIBE. Once MY-TRANSCRIPT establishes
+the desired dynamic environment, it should call its argument. The
+following definition of MY-TRANSCRIPT simply packages up oft-used
+settings to TRANSCRIBE.
+
+    (defun my-transcript (fn)
+      (standard-transcribe-dynenv
+        (let ((*transcribe-check-consistency*
+                '((:output my-transcript-output=)
+                  (:readable equal)
+                  (:unreadable nil))))
+          (funcall fn))))
+    
+    (defun my-transcript-output= (string1 string2)
+      (string= (my-transcript-normalize-output string1)
+               (my-transcript-normalize-output string2)))
+    
+    (defun my-transcript-normalize-output (string)
+      (squeeze-whitespace (delete-trailing-whitespace (delete-comments string))))
+
+The default for :DYNENV is STANDARD-TRANSCRIBE-DYNENV, and it is
+generally a good idea to use it as the above example does, but this
+is not required. Specify :DYNENV NIL explicitly if you want to use
+the current dynamic environment without any changes.
+
+A more involved solution could establish bindings for global
+variables set in transcripts, unintern symbols created or even
+create a temporary package for evaluation.
+
+- [function] STANDARD-TRANSCRIBE-DYNENV FN
+
+    Bind printer and reader variables to standard values and call FN.
+
+    The bindings are the same as with WITH-STANDARD-IO-SYNTAX, but
+
+    - *PACKAGE* and *READTABLE* are unaffected (because both DOCUMENT
+      and Emacs set these up);
+
+    - *PRINT-READABLY* is NIL, *PRINT-PRETTY* is T, *PRINT-CIRCLE* is T
+      and *PRINT-RIGHT-MARGIN* is 72.
+
+    This function is the default for the :DYNENV argument of
+    cl-transcript. A function that overrides the default may want to
+    call STANDARD-TRANSCRIBE-DYNENV with a lambda that establishes more
+    bindings.
+
+#### Raw String Matching
+
+Transcripts consist of forms to be evaluated, their output and
+return values. However, there are situations where this is too
+restrictive. Perhaps we don't want to include the form in the code
+block because it's too hairy or is described elsewhere. In this
+case, instead of transcribing with TRANSCRIBE, use the :EXPECT
+argument to cl-transcribe to take matters into your own hands and
+specify a function that computes the exact string that the code
+block should match:
+
+    (defun foo (x)
+      "Return X + 1 and log what happened.
+      For example, `(FOO 7)` prints
+    
+      ```cl-transcript (:expect log-of-foo-7)
+      Adding 1 to 7
+      ```"
+      (format t "Adding 1 to ~S~%" x)
+      (+ x 2))
+    
+    (defun log-of-foo-7 ()
+      "Adding 1 to 7")
+
+The returned string need not include the final newline.
+
+Signals TRANSCRIPTION-CONSISTENCY-ERROR if the expected string and
+the actual code block contents are not STRING=.
+
+#### Controlling the Output Language
+
+The LANG argument of cl-transcript controls the language of the
+output code block when generating documentation. By default, the
+output code block start with
+
+    ```common-lisp
+
+If LANG is NIL, then no language is specified in the output:
+
+    ```
+
+Else, LANG is written (as if by PRINC with *PRINT-CASE* :DOWNCASE)
+to the output. For example, if LANG is the symbol SOME-PKG::ELISP,
+the output is
+
+    ```elisp
 
 ### Transcribing with Emacs
 
@@ -3483,8 +3620,9 @@ functions at our disposal for working with transcripts.
 These functions work in any major and minor mode where the basic
 sexp movements are sufficiently Lisp-like. They also work anywhere
 in the buffer, including docstrings and comments at any indentation
-level. Like DOCUMENT, they understand the :DYNENV argument of
-cl-transcript and pass on the other arguments to TRANSCRIBE.
+level. Like DOCUMENT, they understand :DYNENV, :EXPECT and :LANG
+arguments of cl-transcript and pass on the other arguments to
+TRANSCRIBE or the :EXPECT function.
 
 For example, consider this buffer content, which may be part of a
 docstring. Move the cursor right after the end of the form as if you
@@ -3585,81 +3723,6 @@ would be ambiguous, as the ;=> could refer to => in the
 The dynamic environment of the transcription is determined by the
 :DYNENV argument of the enclosing cl-transcript code block (see
 Controlling the Dynamic Environment).
-
-### Controlling the Dynamic Environment
-
-When the TRANSCRIBE function is called directly, the forms in the
-transcript are evaluated in the current dynamic environment with the
-following exceptions.
-
-- The variables *, **, ***, /,
-//, ///, -, +, ++, +++ are
-locally bound and updated as in a new REPL session.
-
-- *STANDARD-OUTPUT*, *ERROR-OUTPUT*,
-*TRACE-OUTPUT*, *DEBUG-IO*, *QUERY-IO* and
-*TERMINAL-IO* are redirected to capture the
-output.
-
-If TRANSCRIBE is invoked by Emacs or
-by the DOCUMENT function, a new
-dynamic environment is established by
-STANDARD-TRANSCRIBE-DYNENV (similar in spirit to
-WITH-STANDARD-IO-SYNTAX), which binds printer and reader variables
-to fixed values to make IO more predictable. This default can be
-overridden with the :DYNENV argument of cl-transcript:
-
-    ```cl-transcript (:dynenv my-transcript)
-    ...
-    ```
-
-In this case, instead of calling TRANSCRIBE directly,
-MY-TRANSCRIPT is called with a thunk (a function of no arguments)
-that wraps a call to TRANSCRIBE. Once MY-TRANSCRIPT establishes
-the desired dynamic environment, it calls its argument. The
-following definition of MY-TRANSCRIPT simply packages up oft-used
-settings to TRANSCRIBE.
-
-    (defun my-transcript (fn)
-      (standard-transcribe-dynenv
-        (let ((*transcribe-check-consistency*
-                '((:output my-transcript-output=)
-                  (:readable equal)
-                  (:unreadable nil))))
-          (funcall fn))))
-    
-    (defun my-transcript-output= (string1 string2)
-      (string= (my-transcript-normalize-output string1)
-               (my-transcript-normalize-output string2)))
-    
-    (defun my-transcript-normalize-output (string)
-      (squeeze-whitespace (delete-trailing-whitespace (delete-comments string))))
-
-The default for :DYNENV is STANDARD-TRANSCRIBE-DYNENV, and it is
-generally a good idea to use it as the above example does, but this
-is not required. Specify :DYNENV NIL explicitly if you want to use
-the current dynamic environment without any changes.
-
-A more involved solution could establish bindings for global
-variables set in transcripts, unintern symbols created or even
-create a temporary package for evaluation.
-
-- [function] STANDARD-TRANSCRIBE-DYNENV FN
-
-    Bind printer and reader variables to standard values and call FN.
-
-    The bindings are the same as with WITH-STANDARD-IO-SYNTAX, but
-
-    - *PACKAGE* and *READTABLE* are unaffected (because both DOCUMENT
-      and Emacs set these up);
-
-    - *PRINT-READABLY* is NIL, *PRINT-PRETTY* is T, *PRINT-CIRCLE* is T
-      and *PRINT-RIGHT-MARGIN* is 72.
-
-    This function is the default for the :DYNENV argument of
-    cl-transcript. A function that overrides the default may want to
-    call STANDARD-TRANSCRIBE-DYNENV with a lambda that establishes more
-    bindings.
 
 ### Transcript API
 
@@ -3895,7 +3958,8 @@ create a temporary package for evaluation.
 
     A common superclass for
     TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR and
-    TRANSCRIPTION-VALUES-CONSISTENCY-ERROR.
+    TRANSCRIPTION-VALUES-CONSISTENCY-ERROR. Signalled by
+    Raw String Matching.
 
 - [condition] TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR TRANSCRIPTION-CONSISTENCY-ERROR
 
@@ -3974,7 +4038,7 @@ output.
     ```
 
 It is often a good idea to package up these settings in the
-:DYNENV argument of cl-transcript (see Controlling the Dynamic Environment).
+:DYNENV argument of cl-transcript (see @TRANSCRIPT-DYNENV).
 
 #### Utilities for Consistency Checking
 

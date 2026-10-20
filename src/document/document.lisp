@@ -1038,7 +1038,9 @@
     (handler-bind
         (((and warning (not title-parsing-failure))
            (lambda (warning)
-             (when (sanitize-aggressively-p)
+             (when (and (sanitize-aggressively-p)
+                        ;; KLUDGE
+                        (not (search "Transcript" (princ-to-string warning))))
                (muffle-warning warning)))))
       (maybe-record-index-referent dref)
       (let ((page (boundary-page dref)))
@@ -1757,30 +1759,31 @@
 ;;;     (3BMD-CODE-BLOCKS::CODE-BLOCK :LANG "commonlisp" :CONTENT "42")
 (defun translate-code-block (parent code-block)
   (declare (ignore parent))
-  (let ((lang (getf (rest code-block) :lang)))
-    (if (starts-with-subseq "cl-transcript" lang)
-        (let* ((suffix (subseq lang (length "cl-transcript")))
-               (original (getf (rest code-block) :content)))
-          ;; The possibly manually tweaked (e.g. comments in output)
-          ;; original goes to the output, but retranscribe it just for
-          ;; consistency checking.
-          (transcribe-code-block original suffix)
-          `(3bmd-code-blocks::code-block :lang "common-lisp"
-                                         :content ,original))
+  (let ((block-lang (getf (rest code-block) :lang)))
+    (if (starts-with-subseq "cl-transcript" block-lang)
+        (let ((transcript (getf (rest code-block) :content))
+              (args-string (subseq block-lang (length "cl-transcript"))))
+          (note @transcription-error-downgrade
+            "When @BROWSING-LIVE-DOCUMENTATION, any errors signalled during
+            transcription are downgraded to warnings."
+            (with-errors-downgraded-when-live
+                (:on-error `(3bmd-code-blocks::code-block
+                             :lang "common-lisp"
+                             :content ,transcript))
+              (multiple-value-bind (dynenv expect output-lang args)
+                  (parse-cl-transcribe-args args-string)
+                (let ((*transcribe-check-consistency* t))
+                  ;; Check consistency and ignore the output.
+                  (call-in-dynenv dynenv
+                                  (lambda ()
+                                    (check-cl-transcript expect transcript
+                                                         args))))
+                ;; The possibly manually tweaked (e.g. comments in
+                ;; output) original goes to the output.
+                `(3bmd-code-blocks::code-block
+                  :lang ,(transcript-output-lang output-lang)
+                  :content ,transcript)))))
         code-block)))
-
-(defun transcribe-code-block (transcript args-string)
-  (note @transcription-error-downgrade
-    "When @BROWSING-LIVE-DOCUMENTATION, any errors signalled during
-    transcription are downgraded to warnings."
-    (with-errors-downgraded-when-live (:on-error transcript)
-      (multiple-value-bind (dynenv args)
-          (parse-cl-transcribe-args args-string)
-        (let ((*transcribe-check-consistency* t))
-          (funcall (or dynenv #'funcall)
-                   (lambda ()
-                     (apply #'transcribe transcript nil :update-only t
-                            args))))))))
 
 ;;; Undo the :EMPH parsing for code references. E.g. (:EMPH "XXX") ->
 ;;; "*XXX*" if "*XXX*" is to be codified according to

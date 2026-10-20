@@ -1500,7 +1500,8 @@ docstring</li>
 
     A common superclass for
     `TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR` and
-    [`TRANSCRIPTION-VALUES-CONSISTENCY-ERROR`][238c].
+    [`TRANSCRIPTION-VALUES-CONSISTENCY-ERROR`][238c]. Signalled by
+    Raw String Matching.
 
 [238c]: #MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR%20CONDITION \"MGL-PAX:TRANSCRIPTION-VALUES-CONSISTENCY-ERROR CONDITION\"
 
@@ -2045,7 +2046,38 @@ docstring</li>
 ..
 .. :WORLD
 => :HELLO
-```"))))
+```")))
+  (with-test (":LANG NIL")
+    (let ((input "```cl-transcript (:lang nil)
+1
+```")
+          (expected "```
+1
+```
+"))
+      (check-document input expected)))
+  (with-test (":EXPECT success")
+    (let ((input "```cl-transcript (:expect some-expectation)
+1
+```")
+          (expected "```common-lisp
+1
+```
+"))
+      (check-document input expected)))
+  (with-test (":EXPECT failure")
+    (let ((input "```cl-transcript (:expect some-expectation)
+2
+```")
+          (expected "```common-lisp
+2
+```
+"))
+      (signals (transcription-consistency-error :handler #'continue)
+        (check-document input expected)))))
+
+(defun some-expectation ()
+  "1")
 
 
 (defvar *testing-bad-transcript* nil)

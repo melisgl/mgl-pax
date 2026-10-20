@@ -163,8 +163,8 @@
   get out-of-sync with the code. This is solved by being able to parse
   back and update transcripts."""
   (@transcribing-in-documentation section)
+  (@cl-transcript section)
   (@transcribing-with-emacs section)
-  (@transcript-dynenv section)
   (@transcript-api section)
   (@transcript-consistency-checking section))
 
@@ -237,9 +237,12 @@
 
   @TRANSCRIPTION-ERROR-DOWNGRADE
 
+  When such fancy transcripts are not required, @CL-TRANSCRIPT-EXPECT
+  is also an option.
+
   All in all, transcripts are a handy tool especially when combined
   with the Emacs support to update them and with
-  [PYTHONIC-STRING-READER][asdf:system]'s triple-quoted strings, that
+  [PYTHONIC-STRING-READER][asdf:system]'s triple-quoted strings, which
   allow one to work with nested strings with less noise. The
   triple-quote syntax can be enabled with:
 
@@ -260,8 +263,9 @@
   These functions work in any major and minor mode where the basic
   sexp movements are sufficiently Lisp-like. They also work anywhere
   in the buffer, including docstrings and comments at any indentation
-  level. Like DOCUMENT, they understand the :DYNENV argument of
-  `cl-transcript` and pass on the other arguments to TRANSCRIBE.
+  level. Like DOCUMENT, they understand :DYNENV, :EXPECT and :LANG
+  arguments of `cl-transcript` and pass on the other arguments to
+  TRANSCRIBE or the :EXPECT function.
 
   For example, consider this buffer content, which may be part of a
   docstring. Move the cursor right after the end of the form as if you
@@ -321,7 +325,7 @@
   Also note that when the cursor is in `cl-transcript` code block,
   `mgl-pax-retranscribe-region` defaults to the whole block when there
   is no active region.
-  
+
   Alternatively, `C-u 1 mgl-pax-transcribe` will emit commented markup:
 
       (values (princ :hello) (list 1 2))
@@ -346,8 +350,8 @@
   @@TRANSCRIBE-STRIP-PREFIX
 
   The dynamic environment of the transcription is determined by the
-  :DYNENV argument of the enclosing `cl-transcript` code block (see
-  @TRANSCRIPT-DYNENV).""")
+  :DYNENV argument of the enclosing @CL-TRANSCRIPT code block (see
+  @CL-TRANSCRIPT-DYNENV).""")
 
 (defun transcribe-for-emacs (string default-syntax* update-only echo
                              cl-transcript-args-string first-line-indent)
@@ -361,25 +365,42 @@
                                      nil)
                                     (t (error "Unexpected default syntax ~S."
                                               default-syntax*)))))
-          (multiple-value-bind (dynenv cl-transcript-args)
+          (multiple-value-bind (dynenv expect lang args)
               (parse-cl-transcribe-args cl-transcript-args-string)
+            (declare (ignore lang))
             (list :values (funcall (or dynenv #'funcall)
                                    (lambda ()
-                                     (apply #'transcribe-for-emacs-1
-                                            string first-line-indent
-                                            :default-syntax default-syntax
-                                            :update-only update-only
-                                            :echo echo
-                                            :check-consistency nil
-                                            cl-transcript-args))))))))))
+                                     (transcribe-for-emacs-1
+                                      string first-line-indent
+                                      :expect expect
+                                      :default-syntax default-syntax
+                                      :update-only update-only
+                                      :echo echo
+                                      :cl-transcript-args args))))))))))
 
 (defun parse-cl-transcribe-args (string)
-  (let* ((args (read-from-string string nil nil))
-         (dynenv (getf args :dynenv 'standard-transcribe-dynenv)))
-    (remf args :dynenv)
-    (values dynenv args)))
+  (note @@cl-transcript-syntax
+    "The `cl-transcript` code blocks have the following syntax:
 
-(defun transcribe-for-emacs-1 (string first-line-indent &rest transcribe-args)
+        ```cl-transcript (&key dynenv expect (lang \"common-lisp\") &allow-other-keys)
+        <content>
+        ```
+
+    Note that arguments matching &ALLOW-OTHER-KEYS are passed to the
+    [EXPECT function][ @cl-transcript-expect] (if provided) or
+    TRANSCRIBE.")
+  (let* ((args (read-from-string string nil nil))
+         (dynenv (getf args :dynenv 'standard-transcribe-dynenv))
+         (expect (getf args :expect))
+         (lang (getf args :lang "common-lisp")))
+    (remf args :dynenv)
+    (remf args :expect)
+    (remf args :lang)
+    (values dynenv expect lang args)))
+
+(defun transcribe-for-emacs-1 (string first-line-indent
+                               &key expect default-syntax update-only
+                               echo cl-transcript-args)
   (multiple-value-bind (string prefix1 prefix)
       (note @@transcribe-strip-prefix
         "With `mgl-pax-transcribe-last-expression`, we strip the
@@ -402,15 +423,31 @@
         (strip-longest-common-prefix
          string "; " :first-line-indent first-line-indent))
     (multiple-value-bind (output did-something-p)
-        (apply #'transcribe string nil transcribe-args)
+        (if expect
+            (values (get-expected expect cl-transcript-args) t)
+            (apply #'transcribe string nil
+                   :default-syntax default-syntax
+                   :update-only update-only
+                   :echo echo
+                   cl-transcript-args))
       (list (format nil "~A~A"
                     (if first-line-indent prefix1 prefix)
                     (prefix-lines prefix output :exclude-first-line-p t
                                   :exclude-blank-p t))
             did-something-p))))
+
+(defun get-expected (expect-fn args)
+  ;; The closing ``` must be on a fresh line.
+  (format nil "~A~&" (apply expect-fn args)))
 
 
-(defsection @transcript-dynenv
+(defsection @cl-transcript (:title "`cl-transcript`")
+  "@@CL-TRANSCRIPT-SYNTAX"
+  (@cl-transcript-dynenv section)
+  (@cl-transcript-expect section)
+  (@cl-transcript-lang section))
+
+(defsection @cl-transcript-dynenv
     (:title "Controlling the Dynamic Environment")
   """When the TRANSCRIBE function is called directly, the forms in the
   transcript are evaluated in the current dynamic environment with the
@@ -420,13 +457,13 @@
 
   - @@TRANSCRIBE-OUTPUT-VARS
 
-  If TRANSCRIBE is invoked [by Emacs][ @transcribing-with-emacs] or
-  [by the DOCUMENT function][ @transcribing-in-documentation], a new
-  dynamic environment is established by
-  STANDARD-TRANSCRIBE-DYNENV (similar in spirit to
-  WITH-STANDARD-IO-SYNTAX), which binds printer and reader variables
-  to fixed values to make IO more predictable. This default can be
-  overridden with the :DYNENV argument of `cl-transcript`:
+  If TRANSCRIBE or the [EXPECT function][ @cl-transcript-expect] is
+  invoked [by Emacs][ @transcribing-with-emacs] or [by the DOCUMENT
+  function][ @transcribing-in-documentation], a new dynamic
+  environment is established by STANDARD-TRANSCRIBE-DYNENV (similar in
+  spirit to WITH-STANDARD-IO-SYNTAX), which binds printer and reader
+  variables to fixed values to make IO more predictable. This default
+  can be overridden with the :DYNENV argument of `cl-transcript`:
 
       ```cl-transcript (:dynenv my-transcript)
       ...
@@ -435,7 +472,7 @@
   In this case, instead of calling TRANSCRIBE directly,
   `MY-TRANSCRIPT` is called with a thunk (a function of no arguments)
   that wraps a call to TRANSCRIBE. Once `MY-TRANSCRIPT` establishes
-  the desired dynamic environment, it calls its argument. The
+  the desired dynamic environment, it should call its argument. The
   following definition of `MY-TRANSCRIPT` simply packages up oft-used
   settings to TRANSCRIBE.
 
@@ -466,6 +503,11 @@
   create a temporary package for evaluation."""
   (standard-transcribe-dynenv function))
 
+(defun call-in-dynenv (dynenv fn)
+  (if dynenv
+      (funcall dynenv fn)
+      (funcall fn)))
+
 (defun/auto standard-transcribe-dynenv (fn)
   "Bind printer and reader variables to standard values and call FN.
 
@@ -492,6 +534,77 @@
             (*print-circle* t)
             (*print-right-margin* 72))
         (funcall fn)))))
+
+(defsection @cl-transcript-expect (:title "Raw String Matching")
+  """Transcripts consist of forms to be evaluated, their output and
+  return values. However, there are situations where this is too
+  restrictive. Perhaps we don't want to include the form in the code
+  block because it's too hairy or is described elsewhere. In this
+  case, instead of transcribing with TRANSCRIBE, use the :EXPECT
+  argument to `cl-transcribe` to take matters into your own hands and
+  specify a function that computes the exact string that the code
+  block should match:
+
+  ```
+  (defun foo (x)
+    "Return X + 1 and log what happened.
+    For example, `(FOO 7)` prints
+
+    ```cl-transcript (:expect log-of-foo-7)
+    Adding 1 to 7
+    ```"
+    (format t "Adding 1 to ~S~%" x)
+    (+ x 2))
+
+  (defun log-of-foo-7 ()
+    "Adding 1 to 7")
+
+  ```
+
+  The returned string need not include the final newline.
+
+  Signals TRANSCRIPTION-CONSISTENCY-ERROR if the expected string and
+  the actual code block contents are not STRING=.""")
+
+(defun check-cl-transcript (expect transcript args)
+  (if expect
+      (check-expected expect transcript args)
+      (apply #'transcribe transcript nil
+             :update-only t
+             args)))
+
+(defun check-expected (expect transcript args)
+  (let ((expected (get-expected expect args))
+        (transcript (format nil "~A~&" transcript)))
+    (unless (string= expected transcript)
+      (consistency-error 'transcription-consistency-error
+                         nil nil
+                         ":EXPECT ~S mismatch.~%~%~
+                         Source: ~:_~S~%~%Expected: ~:_~S~%"
+                         expect transcript expected))))
+
+(defsection @cl-transcript-lang (:title "Controlling the Output Language")
+  """The LANG argument of @CL-TRANSCRIPT controls the language of the
+  output code block when generating documentation. By default, the
+  output code block start with
+
+      ```common-lisp
+
+  If LANG is NIL, then no language is specified in the output:
+
+      ```
+
+  Else, LANG is written (as if by PRINC with *PRINT-CASE* :DOWNCASE)
+  to the output. For example, if LANG is the symbol SOME-PKG::ELISP,
+  the output is
+
+      ```elisp""")
+
+(defun transcript-output-lang (output-lang)
+  (if output-lang
+      (let ((*print-case* :downcase))
+        (princ-to-string output-lang))
+      ""))
 
 
 (defsection @transcript-api (:title "Transcript API")
@@ -824,9 +937,9 @@
 ;;;; WRITE-TRANSCRIPT by TRANSCRIBE. This parse tree is simply called
 ;;;; _transcript_ and is a list of transcript commands.
 ;;;;
-;;;; A transcript command, or simply _command_, is the parsed
-;;;; representation of a single top-level form together with its
-;;;; output and values. The following transcript of one command:
+;;;; A transcript command is the parsed representation of a single
+;;;; top-level form together with its output and values. The following
+;;;; transcript of one command:
 ;;;;
 ;;;;     ;;; This is a comment before the form.
 ;;;;     (values (find-package :keyword) (princ 42))
@@ -834,7 +947,7 @@
 ;;;;     ==> #<PACKAGE "KEYWORD">
 ;;;;     => 42
 ;;;;
-;;;; is parsed as:
+;;;; is parsed as
 ;;;;
 ;;;;     ((((VALUES (FIND-PACKAGE :KEYWORD) (PRINC 42))
 ;;;;        ";;; This is a comment before the form.
@@ -1465,7 +1578,8 @@
   ()
   (:documentation "A common superclass for
   TRANSCRIPTION-OUTPUT-CONSISTENCY-ERROR and
-  TRANSCRIPTION-VALUES-CONSISTENCY-ERROR."))
+  TRANSCRIPTION-VALUES-CONSISTENCY-ERROR. Signalled by
+  @CL-TRANSCRIPT-EXPECT."))
 
 (define-condition transcription-output-consistency-error
     (transcription-consistency-error)
