@@ -45,6 +45,7 @@ body {
   /* max-width: calc(73ch + 8*var(--line-height)); */
   hyphens: auto;
   hyphenate-limit-chars: 4 2 2;
+  overflow-wrap: anywhere;
   min-height: 100vh;
   line-height: var(--line-height);
 }
