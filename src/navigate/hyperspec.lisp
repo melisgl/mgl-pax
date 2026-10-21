@@ -476,7 +476,7 @@
     (ignore-errors macro "m_ignore")
     (imagpart function "f_realpa")
     (import function "f_import")
-    ;; Defeat Slime's IN-PACKAGE parser.
+    ;; Defeat SLIME's IN-PACKAGE parser.
     (#.'in-package macro "m_in_pkg")
     (incf macro "m_incf_")
     (initialize-instance generic-function "f_init_i")

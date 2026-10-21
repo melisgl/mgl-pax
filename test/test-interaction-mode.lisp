@@ -64,7 +64,7 @@
            (with-test ("the latest mode outlives the dynamic extent")
              ;; The web server thread relies on this.
              (is (eq pax::*latest-interaction-mode* :bar))))
-      (setf pax::*latest-interaction-mode* saved))))
+      (setq pax::*latest-interaction-mode* saved))))
 
 (defvar *test-unbound-variable*)
 (defvar *test-bound-variable* :global)

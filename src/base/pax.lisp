@@ -250,8 +250,8 @@
 
       (mgl-pax:install-pax-elisp "~/quicklisp/")
 
-  Assuming the Elisp file is in the `~/quicklisp/` directory and
-  you're using @SLIME, add something like this to your `.emacs`:
+  Assuming the Elisp file is in the `~/quicklisp/` directory, add
+  something like this to your `.emacs`:
 
   ```elisp
   (add-to-list 'load-path "~/quicklisp/")
@@ -266,27 +266,11 @@
   ```elisp
   (use-package mgl-pax
     :load-path "~/quicklisp"
-    :after slime
+    :after (:any slime sly)
     :demand t
     :bind (("C-." . mgl-pax-document)
            ("s-x t" . mgl-pax-transcribe-last-expression)
-           ("s-x r" . mgl-pax-retranscribe-region))
-    :config
-    (mgl-pax-hijack-slime-doc-keys))
-  ```
-
-  The equivalent for @SLY:
-
-  ```elisp
-  (use-package mgl-pax
-    :load-path "~/quicklisp"
-    :after sly
-    :demand t
-    :bind (("C-." . mgl-pax-document)
-           ("s-x t" . mgl-pax-transcribe-last-expression)
-           ("s-x r" . mgl-pax-retranscribe-region))
-    :config
-    (mgl-pax-hijack-sly-doc-keys))
+           ("s-x r" . mgl-pax-retranscribe-region)))
   ```
 
   When @BROWSING-WITH-OTHER-BROWSERS, for clicking on the locative
@@ -303,8 +287,8 @@
   (setq sly-enable-evaluate-in-emacs t)
   ```
 
-  See @EMACS-BACKENDS for how PAX picks between @SLIME and @SLY, and
-  for what Sly needs on the Lisp side."""
+  See @EMACS-BACKENDS for how PAX chooses between them, and for what
+  SLY needs on the Lisp side."""
   (@emacs-functionality section)
   (@emacs-quicklisp section)
   (@emacs-loading section)
@@ -359,23 +343,25 @@
   If loading fails, `mgl-pax` will be unloaded from Emacs and any
   [overridden key bindings][@EMACS-KEYS] restored.""")
 
-(defsection @emacs-backends (:title "SLIME and SLY")
+(defsection @emacs-backends (:title "Emacs Backends")
   """Client-specific code is loaded when the corresponding client
   (@SLIME or @SLY) is loaded into Emacs.
 
-  When `mgl-pax` is loaded, it loads the backends for @SLIME and
-  @SLY (in that order) if the `slime` and `sly` features is loaded. If
-  they are not yet available, loading the corresponding backends is
-  deferred until they are.
+  When `mgl-pax` is loaded into Emacs, it loads the backends for
+  @SLIME and @SLY (in that order) if the `slime` and `sly` features
+  are loaded. If they are not yet available, loading the corresponding
+  backends is deferred until they are.
 
   When a backend is loaded into Emacs and `mgl-pax-backend` is `nil`,
   `mgl-pax-backend` is set to `:slime` or `:sly` appropriately.
 
   One may also choose explicitly by setting the Elisp variable
-  `mgl-pax-backend` to either `:slime` or `:sly`.
+  `mgl-pax-backend` to either `:slime` or `:sly`. However, PAX never
+  loads SLIME or SLY itself.
 
-  > _Note_: When using @SLY, no Swank server is started; Swank is used
-  > purely as an introspection library in this case.""")
+  > _Note_: When using @SLY, Swank is still used but only for
+  > introspection via the [DRef][dref::@dref-manual] library. No Swank
+  > server is started.""")
 
 ;;; This is not a DEFVAR so that it picks up version changes on
 ;;; reload. Set to NIL by the DONT-CHECK restart.
@@ -388,9 +374,8 @@
   '("mgl-pax.el" "mgl-pax-slime.el" "mgl-pax-sly.el"))
 
 (defun install-pax-elisp (target-dir)
-  "Install `mgl-pax.el` and the backends it may load for SLIME and SLY
-  (`mgl-pax-slime.el` and `mgl-pax-sly.el`), which are distributed
-  with this package, in TARGET-DIR."
+  "Install `mgl-pax.el` and the @EMACS-BACKENDS it may load
+  (`mgl-pax-slime.el` and `mgl-pax-sly.el`) in TARGET-DIR."
   (let ((target-dir (uiop:ensure-directory-pathname target-dir)))
     (dolist (file *pax-elisp-files*)
       (let ((source (asdf:system-relative-pathname
@@ -439,7 +424,7 @@
 
   The global key bindings above are global because their commands work
   in any mode. If that's not desired, one may bind `\\C-.` locally in
-  all @Slime related modes like this (swap out `slime` for `sly` if
+  all @SLIME related modes like this (swap out `slime` for `sly` if
   using @SLY):
 
   ```elisp

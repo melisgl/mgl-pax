@@ -35,45 +35,6 @@
                              (:file "locatives-early"))))
   :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
 
-(asdf:defsystem "mgl-pax/compatibility"
-  :licence "MIT, see COPYING."
-  :author "Gábor Melis"
-  :mailto "mega@retes.hu"
-  :homepage ""
-  :bug-tracker ""
-  :source-control ""
-  :description "Abstractions for supporting multiple Lisp interaction
-  modes on the Emacs side of [MGL-PAX][mgl-pax::@pax-manual]. See
-  MGL-PAX::@EMACS-BACKENDS."
-  :long-description "Do not declare a dependency on this system. It is
-  autoloaded by Elisp or by accessing the functionality provided if
-  the [`mgl-pax`][asdf:system] system is loaded."
-  :depends-on ("mgl-pax" "alexandria" (:feature (:not :swank) "swank"))
-  :components ((:module "src/compatibility/"
-                :serial t
-                :components ((:file "package")
-                             (:file "interaction-mode"))))
-  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
-
-(asdf:defsystem "mgl-pax/sly"
-  :licence "MIT, see COPYING."
-  :author "Gábor Melis"
-  :mailto "mega@retes.hu"
-  :homepage ""
-  :bug-tracker ""
-  :source-control ""
-  :description "Supporting definitions for interacting with the Emacs
-  side of [MGL-PAX][mgl-pax::@pax-manual] through SLY. See
-  MGL-PAX::@EMACS-BACKENDS."
-  :long-description "Do not declare a dependency on this system. It is
-  autoloaded by Elisp or by accessing the functionality provided if
-  the [`mgl-pax`][asdf:system] system is loaded."
-  :depends-on ("mgl-pax/compatibility" (:feature (:not :slynk) "slynk"))
-  :components ((:module "src/compatibility/"
-                :serial t
-                :components ((:file "sly"))))
-  :in-order-to ((asdf:test-op (asdf:test-op "mgl-pax-test"))))
-
 (asdf:defsystem "mgl-pax/navigate"
   ;; KLUDGE: Prevent inheritance of slot values from the MGL-PAX
   ;; system to keep the generated documentation lean.
@@ -85,8 +46,8 @@
   :source-control ""
   :description "Support for MGL-PAX::@NAVIGATING-IN-EMACS via SLIME's
   or SLY's `MGL-PAX::@M-.` in [MGL-PAX][mgl-pax::@pax-manual]."
-  :depends-on ("alexandria" "autoload-doc" "mgl-pax" "mgl-pax/compatibility"
-                            "dref/full" (:feature (:not :swank) "swank"))
+  :depends-on ("alexandria" "autoload-doc" "mgl-pax" "dref/full"
+               (:feature (:not :swank) "swank"))
   :defsystem-depends-on ("autoload")
   :class "autoload:autoload-system"
   :around-compile (lambda (thunk)
@@ -94,7 +55,9 @@
                       (funcall thunk)))
   :components ((:module "src/navigate/"
                 :serial t
-                :components ((:file "util")
+                :components ((:file "package")
+                             (:file "util")
+                             (:file "interaction-mode")
                              (:file "hyperspec")
                              (:file "parse")
                              (:file "locatives")

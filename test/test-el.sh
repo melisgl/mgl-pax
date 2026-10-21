@@ -20,7 +20,7 @@ ROS_LOAD_PATH=~/.roswell/local-projects/
 
 # The Github test action expects to find SLIME in
 # ~/.roswell/local-projects/. For local testing, we also look for it
-# where elpa would install it for Emacs. The same should work for Sly.
+# where elpa would install it for Emacs. The same should work for SLY.
 # Hypothetically, if you needed to add another client that didn't fit
 # this pattern, it would be easiest to exclude it from CLIENTS and add
 # it to CLIENT_DIRS after this loop.

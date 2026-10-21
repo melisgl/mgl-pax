@@ -18,7 +18,7 @@
 
     - [3.3 Loading PAX][d3fc]
 
-    - [3.4 SLIME and SLY][07c3]
+    - [3.4 Emacs Backends][07c3]
 
     - [3.5 Setting up Keys][cfab]
 
@@ -387,7 +387,7 @@ PAX is built on top of the DRef library. See <https://github.com/melisgl/dref>.
     - *Description:* Support for [Navigating Sources in Emacs][3386] via SLIME's
     or SLY's [`M-.`][cb15] in [MGL-PAX][2415].
 
-    - *Depends on:* alexandria, autoload-doc, dref/full, [mgl-pax][6fdb], mgl-pax/compatibility, swank(?)
+    - *Depends on:* alexandria, autoload-doc, dref/full, [mgl-pax][6fdb], swank(?)
 
     - *Defsystem depends on:* autoload
 
@@ -450,8 +450,8 @@ If PAX was installed from [Quicklisp][1539], then evaluate this in CL to
 
     (mgl-pax:install-pax-elisp "~/quicklisp/")
 
-Assuming the Elisp file is in the `~/quicklisp/` directory and
-you're using [SLIME][6be7], add something like this to your `.emacs`:
+Assuming the Elisp file is in the `~/quicklisp/` directory, add
+something like this to your `.emacs`:
 
 ```elisp
 (add-to-list 'load-path "~/quicklisp/")
@@ -466,27 +466,11 @@ Alternatively, with `use-package`:
 ```elisp
 (use-package mgl-pax
   :load-path "~/quicklisp"
-  :after slime
+  :after (:any slime sly)
   :demand t
   :bind (("C-." . mgl-pax-document)
          ("s-x t" . mgl-pax-transcribe-last-expression)
-         ("s-x r" . mgl-pax-retranscribe-region))
-  :config
-  (mgl-pax-hijack-slime-doc-keys))
-```
-
-The equivalent for [SLY][0146]:
-
-```elisp
-(use-package mgl-pax
-  :load-path "~/quicklisp"
-  :after sly
-  :demand t
-  :bind (("C-." . mgl-pax-document)
-         ("s-x t" . mgl-pax-transcribe-last-expression)
-         ("s-x r" . mgl-pax-retranscribe-region))
-  :config
-  (mgl-pax-hijack-sly-doc-keys))
+         ("s-x r" . mgl-pax-retranscribe-region)))
 ```
 
 When [Browsing with Other Browsers][c434], for clicking on the locative
@@ -503,8 +487,8 @@ or, with [SLY][0146]:
 (setq sly-enable-evaluate-in-emacs t)
 ```
 
-See [SLIME and SLY][07c3] for how PAX picks between [SLIME][6be7] and [SLY][0146], and
-for what Sly needs on the Lisp side.
+See [Emacs Backends][07c3] for how PAX chooses between them, and for what
+SLY needs on the Lisp side.
 
 <a id="x-28MGL-PAX-3A-40EMACS-FUNCTIONALITY-20MGL-PAX-3ASECTION-29"></a>
 
@@ -548,9 +532,8 @@ step.
 
 - \[function\] **INSTALL-PAX-ELISP** *TARGET-DIR*
 
-    Install `mgl-pax.el` and the backends it may load for SLIME and SLY
-    (`mgl-pax-slime.el` and `mgl-pax-sly.el`), which are distributed
-    with this package, in `TARGET-DIR`.
+    Install `mgl-pax.el` and the [Emacs Backends][07c3] it may load
+    (`mgl-pax-slime.el` and `mgl-pax-sly.el`) in `TARGET-DIR`.
 
 <a id="x-28MGL-PAX-3A-40EMACS-LOADING-20MGL-PAX-3ASECTION-29"></a>
 
@@ -572,24 +555,26 @@ If loading fails, `mgl-pax` will be unloaded from Emacs and any
 
 <a id="x-28MGL-PAX-3A-40EMACS-BACKENDS-20MGL-PAX-3ASECTION-29"></a>
 
-### 3.4 SLIME and SLY
+### 3.4 Emacs Backends
 
 Client-specific code is loaded when the corresponding client
 ([SLIME][6be7] or [SLY][0146]) is loaded into Emacs.
 
-When `mgl-pax` is loaded, it loads the backends for [SLIME][6be7] and
-[SLY][0146] (in that order) if the `slime` and `sly` features is loaded. If
-they are not yet available, loading the corresponding backends is
-deferred until they are.
+When `mgl-pax` is loaded into Emacs, it loads the backends for
+[SLIME][6be7] and [SLY][0146] (in that order) if the `slime` and `sly` features
+are loaded. If they are not yet available, loading the corresponding
+backends is deferred until they are.
 
 When a backend is loaded into Emacs and `mgl-pax-backend` is `nil`,
 `mgl-pax-backend` is set to `:slime` or `:sly` appropriately.
 
 One may also choose explicitly by setting the Elisp variable
-`mgl-pax-backend` to either `:slime` or `:sly`.
+`mgl-pax-backend` to either `:slime` or `:sly`. However, PAX never
+loads SLIME or SLY itself.
 
-> *Note*: When using [SLY][0146], no Swank server is started; Swank is used
-> purely as an introspection library in this case.
+> *Note*: When using [SLY][0146], Swank is still used but only for
+> introspection via the DRef library. No Swank
+> server is started.
 
 <a id="x-28MGL-PAX-3A-40EMACS-KEYS-20MGL-PAX-3ASECTION-29"></a>
 
@@ -605,7 +590,7 @@ The recommended key bindings are
 
 The global key bindings above are global because their commands work
 in any mode. If that's not desired, one may bind `C-.` locally in
-all @Slime related modes like this (swap out `slime` for `sly` if
+all [SLIME][6be7] related modes like this (swap out `slime` for `sly` if
 using [SLY][0146]):
 
 ```elisp
@@ -1288,8 +1273,8 @@ in the context of [Generating Documentation][2c93]).
 
 Integration into [SLIME][6be7]'s or [SLY][0146]'s
 [`M-.`][cb15] (`slime-edit-definition`) allows one to visit the
-`SOURCE-LOCATION` of a definition. PAX extends standard
-Slime/Sly functionality by
+`SOURCE-LOCATION` of a definition. PAX extends standard SLIME /
+SLY functionality by
 
 - adding support for all kinds of definitions (see e.g.
   `ASDF:SYSTEM`, `READTABLE` in
@@ -5243,7 +5228,7 @@ they are presented.
 
 [077a]: http://www.lispworks.com/documentation/HyperSpec/Body/t_kwd.htm "KEYWORD (MGL-PAX:CLHS TYPE)"
 
-[07c3]: #x-28MGL-PAX-3A-40EMACS-BACKENDS-20MGL-PAX-3ASECTION-29 "SLIME and SLY"
+[07c3]: #x-28MGL-PAX-3A-40EMACS-BACKENDS-20MGL-PAX-3ASECTION-29 "Emacs Backends"
 
 [090e]: #x-28MGL-PAX-3A-40TITLE-20MGL-PAX-3AGLOSSARY-TERM-29 "title"
 

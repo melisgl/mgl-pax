@@ -66,7 +66,6 @@
   ;; For emacs 23, look for bundled version
   (require 'cl-lib "lib/cl-lib")
   (require 'cl-generic)
-  (require 'subr-x)
   (require 'url-util))
 
 (eval-when-compile
@@ -94,10 +93,23 @@
         (docstring (when (stringp (car body)) (car body))))
     `(progn
        (cl-defgeneric ,generic-function (backend ,@lambda-list)
-         ,@body)
+         ,@body
+         (:method (backend ,@lambda-list)
+           (mgl-pax-check-backend backend)))
        (defun ,name (&rest args)
          ,(help-add-fundoc-usage (or docstring "") lambda-list)
          (apply #',generic-function mgl-pax-backend args)))))
+
+(defun mgl-pax-check-backend (backend)
+  (cl-case backend
+    ((:slime)
+     (unless (featurep 'slime)
+       (error "Can't use :slime mgl-pax-backend because SLIME is not loaded.")))
+    ((:sly)
+     (unless (featurep 'sly)
+       (error "Can't use :sly mgl-pax-backend because SLY is not loaded.")))
+    (t
+     (error "Unsupported mgl-pax-backend %s" backend))))
 
 (cl-defmacro mgl-pax-defimpl (name backend (&rest lambda-list) &body body)
   (declare (indent defun))
@@ -1420,11 +1432,11 @@ at all."
   (mgl-pax-sync-current-buffer)
   (select-frame-set-input-focus (selected-frame))
   (mgl-pax-visit-locations dspec-and-location-list)
-  ;; We have to return something Slynk can serialize.
+  ;; We have to return something SLYNK can serialize.
   t)
 
 (defun mgl-pax-sync-current-buffer ()
-  ;; See https://emacs.stackexchange.com/q/10921.
+  ;; https://emacs.stackexchange.com/q/10921
   (set-buffer (window-buffer (selected-window))))
 
 
@@ -1811,9 +1823,6 @@ start of the line following it, and the start of the line of the closing
       (cl-second result))))
 
 
-(provide 'mgl-pax)
-
-
 ;;;; Backend manipulation
 
 (defun mgl-pax-load-backend (backend-feature backend)
@@ -1825,12 +1834,11 @@ start of the line following it, and the start of the line of the closing
   (when (eq mgl-pax-backend backend)
     (setq mgl-pax-backend nil)))
 
-;;; This loads the backend of the first client that gets loaded.
-;;;
-;;; This must come after `provide' because the backends require
-;;; `mgl-pax'. Admittedly, having this after (provide 'mgl-pax) feels
-;;; a little hacky.
+;;; Arrange for the backends to be loaded lazily
 (with-eval-after-load 'slime
   (mgl-pax-load-backend 'mgl-pax-slime :slime))
 (with-eval-after-load 'sly
   (mgl-pax-load-backend 'mgl-pax-sly :sly))
+
+
+(provide 'mgl-pax)

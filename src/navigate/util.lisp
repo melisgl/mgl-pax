@@ -2,6 +2,13 @@
 
 (in-readtable pythonic-string-syntax)
 
+;;; Like LET*, but for each pair (VAR VALUE) in VARS, bind VAR to
+;;; VALUE within BODY only if it isn't already BOUNDP.
+(defmacro with-binding-defaults* ((&rest vars) &body body)
+  `(let* (,@(loop for (var default) in vars
+                  collect `(,var (if (boundp ',var) ,var ,default))))
+     ,@body))
+
 ;;; Compile BODY for when VAR being a type in TYPES separately. This
 ;;; may allow the compiler to generate more efficient code.
 (defmacro with-type-dispatch (var-and-types-alist &body body)

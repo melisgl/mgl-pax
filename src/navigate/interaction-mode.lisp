@@ -1,23 +1,19 @@
+;;;; An abstraction over SLIME and SLY
+
 (in-package :mgl-pax)
+
+;;;; Machinery
 
 (defvar *current-interaction-mode* nil)
 (defvar *latest-interaction-mode* nil)
 
-(defmacro with-binding-defaults* ((&rest vars) &body body)
-  "Like LET*, but for each pair (VAR VALUE) in VARS, bind VARIABLE to
-  VALUE within BODY only if it isn't already BOUNDP."
-  `(let* (,@(loop for (var default) in vars
-                  collect `(,var (if (boundp ',var) ,var ,default))))
-     ,@body))
-
 (defun call-with-lisp-interaction-mode (interaction-mode thunk)
-  "Since the :SLY methods for DEFAULT-CONNECTION, WITH-CONNECTION, and
-  EVAL-IN-EMACS are in MGL-PAX/SLY, it has to be loaded first."
   (when (eq interaction-mode :sly)
-    (ensure-sly-glue-loaded))
+    (check-sly))
   (let ((*current-interaction-mode* interaction-mode))
-    (setf *latest-interaction-mode* *current-interaction-mode*)
-    (funcall thunk)))
+    (setq *latest-interaction-mode* *current-interaction-mode*)
+    (dref:with-backend (:swank)
+      (funcall thunk))))
 
 (defmacro with-lisp-interaction-mode ((interaction-mode) &body body)
   `(call-with-lisp-interaction-mode ,interaction-mode (lambda () ,@body)))
@@ -70,6 +66,8 @@
      ,@body))
 
 
+;;;; Interface
+
 (definterface buffer-package ()
   (:method (backend)
     *package*))
@@ -98,6 +96,8 @@
 (definterface eval-in-emacs (form &optional nowait))
 
 
+;;;; SLIME implementation
+
 (defimpl default-connection :slime ()
   (swank::default-connection))
 
@@ -109,11 +109,39 @@
   (swank::eval-in-emacs form nowait))
 
 
-;;; MGL-PAX/SLY depends on Slynk, so load it when the first :SLY
-;;; request arrives. ENSURE-SLY-GLUE-LOADED is redefined by
-;;; MGL-PAX/SLY.
-(autoload ensure-sly-glue-loaded "mgl-pax/sly" :arglist "()")
+;;;; SLY implementation
+;;;;
+;;;; We only need SLYNK if running under SLY in Emacs, in which case
+;;;; SLYNK is loaded already. So, PAX systems get away with no
+;;;; dependency on SLYNK, but we need to wrap the SLYNK access in
+;;;; READ-FROM-STRING to make things work when SLYNK is not loaded.
+;;;;
+;;;; This soft dependency on SLYNK allows MGL-PAX/FULL to include SLY
+;;;; support regardless of the presence of SLYNK.
 
-(defimpl call-with-swank-compatibility :sly (function)
-  (ensure-sly-glue-loaded)
-  (call-next-method))
+(defun check-sly ()
+  (unless (find-package :slynk)
+    (error "~@<In Emacs, the value of mgl-pax-backend is :sly, ~
+           but there is no SLYNK package on the CL side.~:@>")))
+
+(defimpl default-connection :sly ()
+  (funcall (read-from-string "slynk-api:default-connection")))
+
+(let ((fn nil))
+  (defimpl call-with-connection :sly (connection thunk)
+    (unless fn
+      (setq fn (let ((*package* (find-package :mgl-pax)))
+                 (compile nil (read-from-string
+                               "(lambda (connection thunk)
+                                  (slynk-api:with-connection (connection)
+                                    (funcall thunk)))")))))
+    (funcall fn connection thunk)))
+
+(defimpl eval-in-emacs :sly (form &optional nowait)
+  (funcall (read-from-string "slynk:eval-in-emacs") form nowait))
+
+(defimpl buffer-package :sly ()
+  (symbol-value (read-from-string "slynk-api:*buffer-package*")))
+
+(defimpl buffer-readtable :sly ()
+  (symbol-value (read-from-string "slynk-api:*buffer-readtable*")))

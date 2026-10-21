@@ -5,8 +5,8 @@
 (defsection @navigating-in-emacs (:title "Navigating Sources in Emacs")
   """Integration into @SLIME's or @SLY's
   @M-. (`slime-edit-definition`) allows one to visit the
-  SOURCE-LOCATION of a DREF::@DEFINITION. PAX extends standard
-  Slime/Sly functionality by
+  SOURCE-LOCATION of a DREF::@DEFINITION. PAX extends standard SLIME /
+  SLY functionality by
 
   - adding support for all kinds of definitions (see e.g.
     [ASDF:SYSTEM][locative], [READTABLE][locative] in
@@ -240,7 +240,7 @@
 ;;;
 ;;; This only completes explicit string prefixes (i.e. starting with a
 ;;; #\") to avoid cluttering the match list. Completing other prefixes
-;;; is left to Slime. LOCATIVE-TYPES is (LOCATIVE-TYPES) for
+;;; is left to SLIME. LOCATIVE-TYPES is (LOCATIVE-TYPES) for
 ;;; documenting.
 (defun string-name-completions-for-emacs (prefix &key (locative-types
                                                        (lisp-locative-types)))
@@ -481,7 +481,7 @@
                      (equal file loc-file)
                      ;; The buffers must match, but LOC-BUFFER may be
                      ;; NIL (e.g. if the file wasn't compiled via
-                     ;; Slime).
+                     ;; SLIME).
                      (or (null loc-buffer) (equal buffer loc-buffer))
                      ;; A match in LOCATION-SNIPPET is most
                      ;; trustworthy, but it's not always available.

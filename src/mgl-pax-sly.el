@@ -26,7 +26,8 @@
 
 (mgl-pax-defimpl mgl-pax-sexp-at-point :sly (&optional interactive)
   (when-let (bounds (mgl-pax-bounds-of-sexp-at-point))
-    (when interactive ; mimic `sly-sexp-at-point'
+    (when interactive
+      ;; mimic `sly-sexp-at-point'
       (sly-flash-region (car bounds) (cdr bounds)))
     (buffer-substring-no-properties (car bounds) (cdr bounds))))
 
