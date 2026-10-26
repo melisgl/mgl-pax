@@ -429,6 +429,7 @@
                    :default-syntax default-syntax
                    :update-only update-only
                    :echo echo
+                   :check-consistency nil
                    cl-transcript-args))
       (list (format nil "~A~A"
                     (if first-line-indent prefix1 prefix)
@@ -520,7 +521,7 @@
     and *PRINT-RIGHT-MARGIN* is 72.
 
   This function is the default for the :DYNENV argument of
-  `cl-transcript`. A function that overrides the default may want to
+  @CL-TRANSCRIPT. A function that overrides the default may want to
   call STANDARD-TRANSCRIBE-DYNENV with a lambda that establishes more
   bindings."
   (let ((package *package*)
@@ -1670,7 +1671,7 @@
       ```
 
   It is often a good idea to package up these settings in the
-  :DYNENV argument of `cl-transcript` (see @TRANSCRIPT-DYNENV).""")
+  :DYNENV argument of `cl-transcript` (see @CL-TRANSCRIPT-DYNENV).""")
 
 
 (defsection @transcript-utilities-for-consistency-checking

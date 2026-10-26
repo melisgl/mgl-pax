@@ -825,7 +825,7 @@
     and *PRINT-RIGHT-MARGIN* is 72.
 
   This function is the default for the :DYNENV argument of
-  `cl-transcript`. A function that overrides the default may want to
+  @CL-TRANSCRIPT. A function that overrides the default may want to
   call STANDARD-TRANSCRIBE-DYNENV with a lambda that establishes more
   bindings.")
 

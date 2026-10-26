@@ -4133,7 +4133,7 @@ create a temporary package for evaluation.
       and [`*PRINT-RIGHT-MARGIN*`][5ab6] is 72.
 
     This function is the default for the `:DYNENV` argument of
-    `cl-transcript`. A function that overrides the default may want to
+    [`cl-transcript`][3bdb]. A function that overrides the default may want to
     call `STANDARD-TRANSCRIBE-DYNENV` with a lambda that establishes more
     bindings.
 
@@ -4674,7 +4674,7 @@ output.
     ```
 
 It is often a good idea to package up these settings in the
-`:DYNENV` argument of `cl-transcript` (see @TRANSCRIPT-DYNENV).
+`:DYNENV` argument of `cl-transcript` (see [Controlling the Dynamic Environment][d85f]).
 
 <a id="x-28MGL-PAX-3A-40TRANSCRIPT-UTILITIES-FOR-CONSISTENCY-CHECKING-20MGL-PAX-3ASECTION-29"></a>
 
