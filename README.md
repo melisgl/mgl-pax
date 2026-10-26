@@ -361,7 +361,7 @@ PAX is built on top of the DRef library. See <https://github.com/melisgl/dref>.
 
 - \[system\] **"mgl-pax"**
 
-    - *Version:* 0.5
+    - *Version:* 0.6
 
     - *Description:* Documentation system, browser, generator. See the
     [PAX Manual][2415].
