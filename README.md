@@ -1476,7 +1476,7 @@ For more powerful search, see [Apropos][b7fc].
     Definitions that do not define a first-class object are supported
     via DRef:
 
-        (document (dref:locate 'foo 'type))
+        (document (dref:dref 'foo 'type))
 
     There are quite a few special variables that affect how output is
     generated. See [Codification][f1ab], [Linking to the HyperSpec][7cc3],
@@ -2825,7 +2825,7 @@ table of contents and navigation links.
 
     ... and
 
-    - We are [Browsing Live Documentation][a595], or
+    - we are [Browsing Live Documentation][a595], or
 
     - D is an external definition ([`CLHS`][ed5f] or denotes a
       [`GLOSSARY-TERM`][8251] with a [`URL`][8ece]), or
@@ -3420,9 +3420,8 @@ Also, see [concept subkey][5920] on how to order concepts in the output.
 
 #### 8.9.1 Plain Output
 
-This is the default `:FORMAT` of [`DOCUMENT`][432c], intended to be a
-replacement for [`CL:DOCUMENTATION`][c5ae]. `:PLAIN` (short for plain text) is
-very similar to `:MARKDOWN`, but most of the markup that would make
+This is the default `:FORMAT` of [`DOCUMENT`][432c]. `:PLAIN` (short for plain text)
+is very similar to `:MARKDOWN`, but most of the markup that would make
 reading in, say, the REPL unpleasant is removed.
 
 - Markup for [Markdown emphasis][c624], [Markdown inline code][68c1],
@@ -3434,6 +3433,25 @@ reading in, say, the REPL unpleasant is removed.
 - No [section numbering][f12d].
 
 - No [table of contents][d4e7].
+
+`:PLAIN` is used by the following methods, which hook PAX constructs
+into standard [`CL:DOCUMENTATION`][c5ae].
+
+<a id="x-28DOCUMENTATION-20-28METHOD-20-28MGL-PAX-3ASECTION-20-28EQL-20T-29-29-29-29"></a>
+
+- \[method\] **DOCUMENTATION** *(SECTION SECTION) (DOC-TYPE (EQL T))*
+
+<a id="x-28DOCUMENTATION-20-28METHOD-20-28SYMBOL-20-28EQL-20MGL-PAX-3ASECTION-29-29-29-29"></a>
+
+- \[method\] **DOCUMENTATION** *(SYMBOL SYMBOL) (DOC-TYPE (EQL SECTION))*
+
+<a id="x-28DOCUMENTATION-20-28METHOD-20-28MGL-PAX-3AGLOSSARY-TERM-20-28EQL-20T-29-29-29-29"></a>
+
+- \[method\] **DOCUMENTATION** *(GLOSSARY-TERM GLOSSARY-TERM) (DOC-TYPE (EQL T))*
+
+<a id="x-28DOCUMENTATION-20-28METHOD-20-28SYMBOL-20-28EQL-20MGL-PAX-3AGLOSSARY-TERM-29-29-29-29"></a>
+
+- \[method\] **DOCUMENTATION** *(SYMBOL SYMBOL) (DOC-TYPE (EQL GLOSSARY-TERM))*
 
 <a id="x-28MGL-PAX-3A-40MARKDOWN-OUTPUT-20MGL-PAX-3ASECTION-29"></a>
 

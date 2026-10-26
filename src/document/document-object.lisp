@@ -13,12 +13,18 @@
   (@dummy-output section))
 
 (defsection @plain-output (:title "Plain Output")
-  "This is the default :FORMAT of DOCUMENT, intended to be a
-  replacement for CL:DOCUMENTATION. :PLAIN (short for plain text) is
-  very similar to :MARKDOWN, but most of the markup that would make
+  "This is the default :FORMAT of DOCUMENT. :PLAIN (short for plain text)
+  is very similar to :MARKDOWN, but most of the markup that would make
   reading in, say, the REPL unpleasant is removed.
 
-  @PLAIN-FORMAT")
+  @PLAIN-FORMAT
+
+  :PLAIN is used by the following methods, which hook PAX constructs
+  into standard CL:DOCUMENTATION."
+  (documentation (method (section (eql t))))
+  (documentation (method (symbol (eql section))))
+  (documentation (method (glossary-term (eql t))))
+  (documentation (method (symbol (eql glossary-term)))))
 
 (defsection @markdown-output (:title "Markdown Output")
   "[document-object* (method (dref t))][docstring]

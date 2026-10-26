@@ -441,3 +441,29 @@
 (register-doc-in-pax-world :pax 'pax-sections 'pax-pages)
 
 (defvar end-of-register-doc-example)
+
+
+(defmethod documentation ((section section) (doc-type (eql t)))
+  (print-documentation section))
+
+(defmethod documentation ((symbol symbol) (doc-type (eql 'section)))
+  (let ((dref (dref symbol 'section nil)))
+    (when dref
+      (print-documentation (resolve dref)))))
+
+(defmethod documentation ((glossary-term glossary-term) (doc-type (eql t)))
+  (print-documentation glossary-term))
+
+(defmethod documentation ((symbol symbol) (doc-type (eql 'glossary-term)))
+  (let ((dref (dref symbol 'glossary-term nil)))
+    (when dref
+      (print-documentation (resolve dref)))))
+
+(defun print-documentation (object)
+  ;; FIXME: Up: links?
+  ;;
+  ;; FIXME: Print symbols somehow relative to *PACKAGE* to be M-.
+  ;; friendly? Maybe it would be easier to somehow tell the repl what
+  ;; package is in effect.
+  (let ((*document-normalize-packages* nil))
+    (document object :stream nil)))

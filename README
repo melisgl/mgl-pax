@@ -1184,7 +1184,7 @@ For more powerful search, see Apropos.
     Definitions that do not define a first-class object are supported
     via DRef:
 
-        (document (dref:locate 'foo 'type))
+        (document (dref:dref 'foo 'type))
 
     There are quite a few special variables that affect how output is
     generated. See Codification, Linking to the HyperSpec,
@@ -2399,7 +2399,7 @@ table of contents and navigation links.
 
     ... and
 
-    - We are Browsing Live Documentation, or
+    - we are Browsing Live Documentation, or
 
     - D is an external definition (CLHS or denotes a
       GLOSSARY-TERM with a URL), or
@@ -2930,9 +2930,8 @@ Also, see concept subkey on how to order concepts in the output.
 
 #### Plain Output
 
-This is the default :FORMAT of DOCUMENT, intended to be a
-replacement for CL:DOCUMENTATION. :PLAIN (short for plain text) is
-very similar to :MARKDOWN, but most of the markup that would make
+This is the default :FORMAT of DOCUMENT. :PLAIN (short for plain text)
+is very similar to :MARKDOWN, but most of the markup that would make
 reading in, say, the REPL unpleasant is removed.
 
 - Markup for Markdown emphasis, Markdown inline code,
@@ -2944,6 +2943,17 @@ reading in, say, the REPL unpleasant is removed.
 - No section numbering.
 
 - No table of contents.
+
+:PLAIN is used by the following methods, which hook PAX constructs
+into standard CL:DOCUMENTATION.
+
+- [method] DOCUMENTATION (SECTION SECTION) (DOC-TYPE (EQL T))
+
+- [method] DOCUMENTATION (SYMBOL SYMBOL) (DOC-TYPE (EQL SECTION))
+
+- [method] DOCUMENTATION (GLOSSARY-TERM GLOSSARY-TERM) (DOC-TYPE (EQL T))
+
+- [method] DOCUMENTATION (SYMBOL SYMBOL) (DOC-TYPE (EQL GLOSSARY-TERM))
 
 #### Markdown Output
 

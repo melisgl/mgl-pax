@@ -572,7 +572,7 @@
   Definitions that do not define a first-class object are supported
   via [DRef][dref::@dref-manual]:
 
-      (document (dref:locate 'foo 'type))
+      (document (dref:dref 'foo 'type))
 
   There are quite a few special variables that affect how output is
   generated. See @CODIFICATION, @LINKING-TO-THE-HYPERSPEC,
@@ -1962,6 +1962,8 @@
 
 (defsection @filtering-links (:title "Filtering Links")
   (*document-link-code* variable)
+  ;; FIXME: This is misplaced as it applies to sections as well. Maybe
+  ;; *DOCUMENT-LINK-SECTIONS* belongs here.
   (@linkable glossary-term)
   (@specific-link section)
   (@unspecific-link section))
@@ -1998,7 +2000,7 @@
 
   ... and
 
-  - We are @BROWSING-LIVE-DOCUMENTATION, or
+  - we are @BROWSING-LIVE-DOCUMENTATION, or
   - D is an external definition ([CLHS][locative] or denotes a
     [GLOSSARY-TERM][class] with a [URL][define-glossary-term]), or
   - D's page is C, or
