@@ -3337,7 +3337,7 @@ Also, see [concept subkey][5920] on how to order concepts in the output.
 
     The default value specifies separate indices for
 
-    - functions and macros
+    - functions, macros and methods
 
     - variables
 

@@ -188,7 +188,7 @@
      :document-referrer-groups t
      :children ((:dtype (or section pseudo)
                  :index nil)
-                (:dtype (or function macro compiler-macro)
+                (:dtype (or function macro compiler-macro method)
                  :title "Function and Macro Index")
                 (:dtype (and variable (not glossary-term))
                  :title "Variable and Constant Index")
@@ -234,7 +234,7 @@
 
   The default value specifies separate indices for
 
-  - functions and macros
+  - functions, macros and methods
   - variables
   - types
   - other things

@@ -310,7 +310,7 @@
 
   The default value specifies separate indices for
 
-  - functions and macros
+  - functions, macros and methods
   - variables
   - types
   - other things
@@ -691,7 +691,7 @@
   Definitions that do not define a first-class object are supported
   via [DRef][dref::@dref-manual]:
 
-      (document (dref:locate 'foo 'type))
+      (document (dref:dref 'foo 'type))
 
   There are quite a few special variables that affect how output is
   generated. See @CODIFICATION, @LINKING-TO-THE-HYPERSPEC,
