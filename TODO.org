@@ -112,6 +112,9 @@ so that one can write "X is a STRING" without having to disambiguate
 with "X is a [STRING][class]". Even less important now that PAX links
 to CLHS disambiguation pages.
 ** MAYBE use https://codeberg.org/dlowe/metaspectre for something?
+Or just link to metaspec.dev instead of the hyperspec? They have
+different URL structure though. It would be nice if metaspec.dev were
+a drop-in for the hyperspec (with possibly more pages).
 ** TODO linking in arglist default values is broken
 We can't disambiguate 100% correctly: &KEY (TYPE 'FUNCTION), which can
 clutter the index.

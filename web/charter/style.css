@@ -408,12 +408,17 @@ a.symbol:hover { color: #229955; background-color: transparent; text-decoration:
   left: 0px;
   height: 100%;
   position: fixed;
+  max-height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
   background: #333;
   box-shadow: inset -5px 0 5px 0px #000;
   color: #AAA;
   text-align: left;
+}
+
+#page-toc {
+    position: relative;
 }
 
 #toc ul {
